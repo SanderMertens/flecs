@@ -3103,6 +3103,2364 @@ void NonFragmentingChildOf_this_src_childof_tag_w_parent_single_child(void) {
     ecs_fini(world);
 }
 
+void NonFragmentingChildOf_this_src_childof_tag_w_parent_single_child_at_offset(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_entity_t p_0 = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p_1 = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p_2 = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p_3 = ecs_new(world);
+
+    ecs_entity_t c1 = ecs_insert(world, ecs_value(EcsParent, {p_0}));
+    ecs_entity_t c2 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
+    ecs_entity_t c3 = ecs_new_w_pair(world, EcsChildOf, p_1);
+    ecs_entity_t c4 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
+    /* ecs_entity_t c5 = */ ecs_new_w_pair(world, EcsChildOf, p_1);
+
+    /* ecs_entity_t c6 = */ ecs_new_w_pair(world, EcsChildOf, p_2);
+    ecs_entity_t c7 = ecs_insert(world, ecs_value(EcsParent, {p_2}));
+
+    /* ecs_entity_t c8 = */ ecs_new_w_pair(world, EcsChildOf, p_3);
+    ecs_entity_t c9 = ecs_new_w_pair(world, EcsChildOf, p_3);
+    ecs_entity_t c10 = ecs_new_w_pair(world, EcsChildOf, p_3);
+    ecs_entity_t c11 = ecs_new_w_pair(world, EcsChildOf, p_3);
+
+    ecs_add(world, c1, Foo);
+    ecs_add(world, c2, Foo);
+    ecs_add(world, c3, Foo);
+    ecs_add(world, c4, Bar);
+
+    ecs_add(world, c7, Foo);
+
+    ecs_add(world, c9, Foo);
+    ecs_add(world, c10, Foo);
+    ecs_add(world, c11, Foo);
+    ecs_add(world, c11, Bar);
+
+    {
+        ecs_query_t *q = ecs_query(world, {
+            .terms = {
+                { Foo },
+                { ecs_childof(p_1) }
+            },
+            .cache_kind = cache_kind
+        });
+
+        test_assert(q != NULL);
+
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(c2, it.entities[0]);
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(ecs_childof(p_1), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 1));
+
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(c3, it.entities[0]);
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(ecs_childof(p_1), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 1));
+
+        test_bool(false, ecs_query_next(&it));
+
+        ecs_query_fini(q);
+    }
+
+    {
+        ecs_query_t *q = ecs_query(world, {
+            .terms = {
+                { Foo },
+                { ecs_childof(p_2) }
+            },
+            .cache_kind = cache_kind
+        });
+
+        test_assert(q != NULL);
+
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(c7, it.entities[0]);
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(ecs_childof(p_2), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 1));
+        test_bool(false, ecs_query_next(&it));
+
+        ecs_query_fini(q);
+    }
+
+    {
+        ecs_query_t *q = ecs_query(world, {
+            .terms = {
+                { Foo },
+                { ecs_childof(p_3) }
+            },
+            .cache_kind = cache_kind
+        });
+
+        test_assert(q != NULL);
+
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(2, it.count);
+        test_uint(c9, it.entities[0]);
+        test_uint(c10, it.entities[1]);
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(ecs_childof(p_3), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 1));
+
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(c11, it.entities[0]);
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(ecs_childof(p_3), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 1));
+
+        test_bool(false, ecs_query_next(&it));
+
+        ecs_query_fini(q);
+    }
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_this_src_childof_tag_w_parent_single_child_after_range(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p_1 = ecs_entity(world, { .name = "p_1" });
+    ecs_entity_t p_2 = ecs_entity(world, { .name = "p_2" });
+    ecs_entity_t p_3 = ecs_entity(world, { .name = "p_3" });
+
+    ecs_entity_t e_1 = ecs_entity(world, { .name = "e_1" });
+    ecs_entity_t e_2 = ecs_entity(world, { .name = "e_2" });
+    ecs_entity_t e_3 = ecs_entity(world, { .name = "e_3" });
+
+    ecs_set(world, e_1, EcsParent, {p_1});
+    ecs_set(world, e_2, EcsParent, {p_2});
+    ecs_set(world, e_3, EcsParent, {p_3});
+
+    {
+        ecs_query_t *q = ecs_query(world, {
+            .expr = "$this == p_1.e_1, (ChildOf, p_1)",
+            .cache_kind = cache_kind
+        });
+
+        test_assert(q != NULL);
+
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(e_1, it.entities[0]);
+        test_uint(ecs_childof(p_1), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_bool(false, ecs_query_next(&it));
+
+        ecs_query_fini(q);
+    }
+
+    {
+        ecs_query_t *q = ecs_query(world, {
+            .expr = "$this == p_2.e_2, (ChildOf, p_2)",
+            .cache_kind = cache_kind
+        });
+
+        test_assert(q != NULL);
+
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(e_2, it.entities[0]);
+        test_uint(ecs_childof(p_2), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_bool(false, ecs_query_next(&it));
+
+        ecs_query_fini(q);
+    }
+
+    {
+        ecs_query_t *q = ecs_query(world, {
+            .expr = "$this == p_3.e_3, (ChildOf, p_3)",
+            .cache_kind = cache_kind
+        });
+
+        test_assert(q != NULL);
+
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(e_3, it.entities[0]);
+        test_uint(ecs_childof(p_3), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_bool(false, ecs_query_next(&it));
+
+        ecs_query_fini(q);
+    }
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_this_src_childof_tag_w_parent_n_children_after_toggle_range(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Foo, CanToggle);
+
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
+    ecs_entity_t p_3 = ecs_new(world);
+
+    ecs_entity_t e_1 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
+    ecs_entity_t e_2 = ecs_insert(world, ecs_value(EcsParent, {p_2}));
+    ecs_entity_t e_3 = ecs_insert(world, ecs_value(EcsParent, {p_3}));
+    
+    ecs_add(world, e_1, Foo);
+    ecs_add(world, e_2, Foo);
+    ecs_add(world, e_3, Foo);
+
+    ecs_enable_id(world, e_1, Foo, false);
+    ecs_enable_id(world, e_2, Foo, true);
+    ecs_enable_id(world, e_3, Foo, true);
+
+    {
+        ecs_query_t *q = ecs_query(world, {
+            .terms = {{ Foo }, { ecs_childof(p_1) }},
+            .cache_kind = cache_kind
+        });
+
+        test_assert(q != NULL);
+
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(false, ecs_query_next(&it));
+
+        ecs_query_fini(q);
+    }
+
+    {
+        ecs_query_t *q = ecs_query(world, {
+            .terms = {{ Foo }, { ecs_childof(p_2) }},
+            .cache_kind = cache_kind
+        });
+
+        test_assert(q != NULL);
+
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(e_2, it.entities[0]);
+        test_uint(ecs_childof(p_2), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_bool(false, ecs_query_next(&it));
+
+        ecs_query_fini(q);
+    }
+
+    {
+        ecs_query_t *q = ecs_query(world, {
+            .terms = {{ Foo }, { ecs_childof(p_3) }},
+            .cache_kind = cache_kind
+        });
+
+        test_assert(q != NULL);
+
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(e_3, it.entities[0]);
+        test_uint(ecs_childof(p_3), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_bool(false, ecs_query_next(&it));
+
+        ecs_query_fini(q);
+    }
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_this_src_childof_tag_w_parent_1_child_after_set_range(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
+    ecs_entity_t p_3 = ecs_new(world);
+
+    ecs_entity_t e_1 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
+    ecs_entity_t e_2 = ecs_insert(world, ecs_value(EcsParent, {p_2}));
+    ecs_entity_t e_3 = ecs_insert(world, ecs_value(EcsParent, {p_3}));
+    
+    ecs_add(world, e_1, Foo);
+    ecs_add(world, e_2, Foo);
+    ecs_add(world, e_3, Foo);
+
+    ecs_table_t *table = ecs_get_table(world, e_1);
+    test_assert(table == ecs_get_table(world, e_2));
+    test_assert(table == ecs_get_table(world, e_3));
+
+    {
+        ecs_query_t *q = ecs_query(world, {
+            .terms = {{ Foo }, { ecs_childof(p_1) }},
+            .cache_kind = cache_kind
+        });
+
+        test_assert(q != NULL);
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 0, .count = 2 });
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_1, it.entities[0]);
+            test_uint(ecs_childof(p_1), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 1, .count = 2 });
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        ecs_query_fini(q);
+    }
+
+    {
+        ecs_query_t *q = ecs_query(world, {
+            .terms = {{ Foo }, { ecs_childof(p_2) }},
+            .cache_kind = cache_kind
+        });
+
+        test_assert(q != NULL);
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 0, .count = 2 });
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_2, it.entities[0]);
+            test_uint(ecs_childof(p_2), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 1, .count = 2 });
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_2, it.entities[0]);
+            test_uint(ecs_childof(p_2), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        ecs_query_fini(q);
+    }
+
+    {
+        ecs_query_t *q = ecs_query(world, {
+            .terms = {{ Foo }, { ecs_childof(p_3) }},
+            .cache_kind = cache_kind
+        });
+
+        test_assert(q != NULL);
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 0, .count = 2 });
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 1, .count = 2 });
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_3, it.entities[0]);
+            test_uint(ecs_childof(p_3), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        ecs_query_fini(q);
+    }
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_this_src_childof_tag_w_parent_n_children_after_set_range(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
+    ecs_entity_t p_3 = ecs_new(world);
+
+    ecs_entity_t e_1_1 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
+    ecs_entity_t e_1_2 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
+    ecs_entity_t e_2_1 = ecs_insert(world, ecs_value(EcsParent, {p_2}));
+    ecs_entity_t e_2_2 = ecs_insert(world, ecs_value(EcsParent, {p_2}));
+    ecs_entity_t e_3_1 = ecs_insert(world, ecs_value(EcsParent, {p_3}));
+    ecs_entity_t e_3_2 = ecs_insert(world, ecs_value(EcsParent, {p_3}));
+    
+    ecs_add(world, e_1_1, Foo);
+    ecs_add(world, e_2_1, Foo);
+    ecs_add(world, e_3_1, Foo);
+    ecs_add(world, e_1_2, Foo);
+    ecs_add(world, e_2_2, Foo);
+    ecs_add(world, e_3_2, Foo);
+
+    ecs_table_t *table = ecs_get_table(world, e_1_1);
+    test_assert(table == ecs_get_table(world, e_2_1));
+    test_assert(table == ecs_get_table(world, e_3_1));
+    test_assert(table == ecs_get_table(world, e_1_2));
+    test_assert(table == ecs_get_table(world, e_2_2));
+    test_assert(table == ecs_get_table(world, e_3_2));
+
+    {
+        ecs_query_t *q = ecs_query(world, {
+            .terms = {{ Foo }, { ecs_childof(p_1) }},
+            .cache_kind = cache_kind
+        });
+
+        test_assert(q != NULL);
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 0, .count = 2 });
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_1_1, it.entities[0]);
+            test_uint(ecs_childof(p_1), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 1, .count = 2 });
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 2, .count = 2 });
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_1_2, it.entities[0]);
+            test_uint(ecs_childof(p_1), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 3, .count = 2 });
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_1_2, it.entities[0]);
+            test_uint(ecs_childof(p_1), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 4, .count = 2 });
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        ecs_query_fini(q);
+    }
+
+    {
+        ecs_query_t *q = ecs_query(world, {
+            .terms = {{ Foo }, { ecs_childof(p_2) }},
+            .cache_kind = cache_kind
+        });
+
+        test_assert(q != NULL);
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 0, .count = 2 });
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_2_1, it.entities[0]);
+            test_uint(ecs_childof(p_2), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 1, .count = 2 });
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_2_1, it.entities[0]);
+            test_uint(ecs_childof(p_2), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 2, .count = 2 });
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 3, .count = 2 });
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_2_2, it.entities[0]);
+            test_uint(ecs_childof(p_2), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 4, .count = 2 });
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_2_2, it.entities[0]);
+            test_uint(ecs_childof(p_2), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        ecs_query_fini(q);
+    }
+
+    {
+        ecs_query_t *q = ecs_query(world, {
+            .terms = {{ Foo }, { ecs_childof(p_3) }},
+            .cache_kind = cache_kind
+        });
+
+        test_assert(q != NULL);
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 0, .count = 2 });
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 1, .count = 2 });
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_3_1, it.entities[0]);
+            test_uint(ecs_childof(p_3), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 2, .count = 2 });
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_3_1, it.entities[0]);
+            test_uint(ecs_childof(p_3), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 3, .count = 2 });
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 4, .count = 2 });
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_3_2, it.entities[0]);
+            test_uint(ecs_childof(p_3), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        ecs_query_fini(q);
+    }
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_this_src_childof_tag_w_parent_n_children_after_set_range_2(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
+    ecs_entity_t p_3 = ecs_new(world);
+
+    ecs_entity_t e_1_1 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
+    ecs_entity_t e_1_2 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
+    ecs_entity_t e_2_1 = ecs_insert(world, ecs_value(EcsParent, {p_2}));
+    ecs_entity_t e_2_2 = ecs_insert(world, ecs_value(EcsParent, {p_2}));
+    ecs_entity_t e_3_1 = ecs_insert(world, ecs_value(EcsParent, {p_3}));
+    ecs_entity_t e_3_2 = ecs_insert(world, ecs_value(EcsParent, {p_3}));
+    
+    ecs_add(world, e_1_1, Foo);
+    ecs_add(world, e_2_1, Foo);
+    ecs_add(world, e_3_1, Foo);
+    ecs_add(world, e_1_2, Foo);
+    ecs_add(world, e_2_2, Foo);
+    ecs_add(world, e_3_2, Foo);
+
+    ecs_table_t *table = ecs_get_table(world, e_1_1);
+    test_assert(table == ecs_get_table(world, e_2_1));
+    test_assert(table == ecs_get_table(world, e_3_1));
+    test_assert(table == ecs_get_table(world, e_1_2));
+    test_assert(table == ecs_get_table(world, e_2_2));
+    test_assert(table == ecs_get_table(world, e_3_2));
+
+    {
+        ecs_query_t *q = ecs_query(world, {
+            .terms = {{ Foo }, { ecs_childof(p_1) }},
+            .cache_kind = cache_kind
+        });
+
+        test_assert(q != NULL);
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 0, .count = 3 });
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_1_1, it.entities[0]);
+            test_uint(ecs_childof(p_1), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 1, .count = 3 });
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_1_2, it.entities[0]);
+            test_uint(ecs_childof(p_1), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 2, .count = 3 });
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_1_2, it.entities[0]);
+            test_uint(ecs_childof(p_1), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 3, .count = 3 });
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_1_2, it.entities[0]);
+            test_uint(ecs_childof(p_1), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        ecs_query_fini(q);
+    }
+
+    {
+        ecs_query_t *q = ecs_query(world, {
+            .terms = {{ Foo }, { ecs_childof(p_2) }},
+            .cache_kind = cache_kind
+        });
+
+        test_assert(q != NULL);
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 0, .count = 3 });
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_2_1, it.entities[0]);
+            test_uint(ecs_childof(p_2), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 1, .count = 3 });
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_2_1, it.entities[0]);
+            test_uint(ecs_childof(p_2), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 2, .count = 3 });
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_2_2, it.entities[0]);
+            test_uint(ecs_childof(p_2), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 3, .count = 3 });
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_2_2, it.entities[0]);
+            test_uint(ecs_childof(p_2), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        ecs_query_fini(q);
+    }
+
+    {
+        ecs_query_t *q = ecs_query(world, {
+            .terms = {{ Foo }, { ecs_childof(p_3) }},
+            .cache_kind = cache_kind
+        });
+
+        test_assert(q != NULL);
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 0, .count = 3 });
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_3_1, it.entities[0]);
+            test_uint(ecs_childof(p_3), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 1, .count = 3 });
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_3_1, it.entities[0]);
+            test_uint(ecs_childof(p_3), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 2, .count = 3 });
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_3_1, it.entities[0]);
+            test_uint(ecs_childof(p_3), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 3, .count = 3 });
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_3_2, it.entities[0]);
+            test_uint(ecs_childof(p_3), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        ecs_query_fini(q);
+    }
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_this_src_childof_tag_w_parent_n_children_after_set_range_3(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
+    ecs_entity_t p_3 = ecs_new(world);
+
+    ecs_entity_t e_1_1 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
+    ecs_entity_t e_1_2 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
+    ecs_entity_t e_2_1 = ecs_insert(world, ecs_value(EcsParent, {p_2}));
+    ecs_entity_t e_2_2 = ecs_insert(world, ecs_value(EcsParent, {p_2}));
+    ecs_entity_t e_3_1 = ecs_insert(world, ecs_value(EcsParent, {p_3}));
+    ecs_entity_t e_3_2 = ecs_insert(world, ecs_value(EcsParent, {p_3}));
+    
+    ecs_add(world, e_1_1, Foo);
+    ecs_add(world, e_2_1, Foo);
+    ecs_add(world, e_3_1, Foo);
+    ecs_add(world, e_1_2, Foo);
+    ecs_add(world, e_2_2, Foo);
+    ecs_add(world, e_3_2, Foo);
+
+    ecs_table_t *table = ecs_get_table(world, e_1_1);
+    test_assert(table == ecs_get_table(world, e_2_1));
+    test_assert(table == ecs_get_table(world, e_3_1));
+    test_assert(table == ecs_get_table(world, e_1_2));
+    test_assert(table == ecs_get_table(world, e_2_2));
+    test_assert(table == ecs_get_table(world, e_3_2));
+
+    {
+        ecs_query_t *q = ecs_query(world, {
+            .terms = {{ Foo }, { ecs_childof(p_1) }},
+            .cache_kind = cache_kind
+        });
+
+        test_assert(q != NULL);
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 0, .count = 4 });
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_1_1, it.entities[0]);
+            test_uint(ecs_childof(p_1), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_1_2, it.entities[0]);
+            test_uint(ecs_childof(p_1), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 1, .count = 4 });
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_1_2, it.entities[0]);
+            test_uint(ecs_childof(p_1), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 2, .count = 4 });
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_1_2, it.entities[0]);
+            test_uint(ecs_childof(p_1), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        ecs_query_fini(q);
+    }
+
+    {
+        ecs_query_t *q = ecs_query(world, {
+            .terms = {{ Foo }, { ecs_childof(p_2) }},
+            .cache_kind = cache_kind
+        });
+
+        test_assert(q != NULL);
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 0, .count = 4 });
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_2_1, it.entities[0]);
+            test_uint(ecs_childof(p_2), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 1, .count = 4 });
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_2_1, it.entities[0]);
+            test_uint(ecs_childof(p_2), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_2_2, it.entities[0]);
+            test_uint(ecs_childof(p_2), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 2, .count = 4 });
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_2_2, it.entities[0]);
+            test_uint(ecs_childof(p_2), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        ecs_query_fini(q);
+    }
+
+    {
+        ecs_query_t *q = ecs_query(world, {
+            .terms = {{ Foo }, { ecs_childof(p_3) }},
+            .cache_kind = cache_kind
+        });
+
+        test_assert(q != NULL);
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 0, .count = 4 });
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_3_1, it.entities[0]);
+            test_uint(ecs_childof(p_3), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 1, .count = 4 });
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_3_1, it.entities[0]);
+            test_uint(ecs_childof(p_3), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 2, .count = 4 });
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_3_1, it.entities[0]);
+            test_uint(ecs_childof(p_3), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_3_2, it.entities[0]);
+            test_uint(ecs_childof(p_3), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        ecs_query_fini(q);
+    }
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_this_src_childof_tag_w_wildcard_mixed(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_entity_t p_1 = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p_2 = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p_3 = ecs_new(world);
+
+    /* ecs_entity_t c1 = */ ecs_insert(world, ecs_value(EcsParent, {p_1}));
+    ecs_entity_t c2 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
+    ecs_entity_t c3 = ecs_new_w_pair(world, EcsChildOf, p_1);
+    ecs_entity_t c4 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
+    /* ecs_entity_t c5 = */ ecs_new_w_pair(world, EcsChildOf, p_1);
+
+    /* ecs_entity_t c6 = */ ecs_new_w_pair(world, EcsChildOf, p_2);
+    ecs_entity_t c7 = ecs_insert(world, ecs_value(EcsParent, {p_2}));
+
+    /* ecs_entity_t c8 = */ ecs_new_w_pair(world, EcsChildOf, p_3);
+    ecs_entity_t c9 = ecs_new_w_pair(world, EcsChildOf, p_3);
+    ecs_entity_t c10 = ecs_new_w_pair(world, EcsChildOf, p_3);
+    ecs_entity_t c11 = ecs_new_w_pair(world, EcsChildOf, p_3);
+
+    ecs_add(world, c2, Foo);
+    ecs_add(world, c3, Foo);
+    ecs_add(world, c4, Bar);
+
+    ecs_add(world, c7, Foo);
+
+    ecs_add(world, c9, Foo);
+    ecs_add(world, c10, Foo);
+    ecs_add(world, c11, Foo);
+    ecs_add(world, c11, Bar);
+
+    {
+        ecs_query_t *q = ecs_query(world, {
+            .terms = {
+                { Foo },
+                { ecs_childof(EcsWildcard) }
+            },
+            .cache_kind = cache_kind
+        });
+
+        test_assert(q != NULL);
+
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(c2, it.entities[0]);
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(ecs_childof(p_1), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 1));
+
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(c7, it.entities[0]);
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(ecs_childof(p_2), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 1));
+
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(c3, it.entities[0]);
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(ecs_childof(p_1), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 1));
+
+        test_bool(true, ecs_query_next(&it));
+        test_int(2, it.count);
+        test_uint(c9, it.entities[0]);
+        test_uint(c10, it.entities[1]);
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(ecs_childof(p_3), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 1));
+
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(c11, it.entities[0]);
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(ecs_childof(p_3), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 1));
+
+        test_bool(false, ecs_query_next(&it));
+
+        ecs_query_fini(q);
+    }
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_this_src_childof_tag_w_wildcard_single_child(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
+    ecs_entity_t p_3 = ecs_new(world);
+
+    ecs_entity_t c1 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
+    ecs_entity_t c2 = ecs_insert(world, ecs_value(EcsParent, {p_2}));
+    ecs_entity_t c3 = ecs_insert(world, ecs_value(EcsParent, {p_3}));
+
+    ecs_add(world, c1, Foo);
+    ecs_add(world, c2, Foo);
+    ecs_add(world, c3, Foo);
+
+    {
+        ecs_query_t *q = ecs_query(world, {
+            .terms = {
+                { Foo },
+                { ecs_childof(EcsWildcard) }
+            },
+            .cache_kind = cache_kind
+        });
+
+        test_assert(q != NULL);
+
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(c1, it.entities[0]);
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(ecs_childof(p_1), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 1));
+
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(c2, it.entities[0]);
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(ecs_childof(p_2), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 1));
+
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(c3, it.entities[0]);
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(ecs_childof(p_3), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 1));
+
+        test_bool(false, ecs_query_next(&it));
+
+        ecs_query_fini(q);
+    }
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_this_src_childof_tag_w_wildcard_single_child_at_offset(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
+    ecs_entity_t p_3 = ecs_new(world);
+
+    ecs_entity_t c1_1 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
+    ecs_entity_t c1_2 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
+    ecs_entity_t c2_1 = ecs_insert(world, ecs_value(EcsParent, {p_2}));
+    ecs_entity_t c2_2 = ecs_insert(world, ecs_value(EcsParent, {p_2}));
+    ecs_entity_t c3_1 = ecs_insert(world, ecs_value(EcsParent, {p_3}));
+    ecs_entity_t c3_2 = ecs_insert(world, ecs_value(EcsParent, {p_3}));
+
+    ecs_add(world, c1_1, Foo);
+    ecs_add(world, c2_1, Foo);
+    ecs_add(world, c3_1, Foo);
+    ecs_add(world, c1_2, Foo);
+    ecs_add(world, c2_2, Foo);
+    ecs_add(world, c3_2, Foo);
+
+    {
+        ecs_query_t *q = ecs_query(world, {
+            .terms = {
+                { Foo },
+                { ecs_childof(EcsWildcard) }
+            },
+            .cache_kind = cache_kind
+        });
+
+        test_assert(q != NULL);
+
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(c1_1, it.entities[0]);
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(ecs_childof(p_1), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 1));
+
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(c2_1, it.entities[0]);
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(ecs_childof(p_2), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 1));
+
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(c3_1, it.entities[0]);
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(ecs_childof(p_3), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 1));
+
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(c1_2, it.entities[0]);
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(ecs_childof(p_1), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 1));
+
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(c2_2, it.entities[0]);
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(ecs_childof(p_2), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 1));
+
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(c3_2, it.entities[0]);
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(ecs_childof(p_3), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 1));
+
+        test_bool(false, ecs_query_next(&it));
+
+        ecs_query_fini(q);
+    }
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_this_src_childof_tag_w_wildcard_1_child_after_set_range(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
+    ecs_entity_t p_3 = ecs_new(world);
+
+    ecs_entity_t e_1 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
+    ecs_entity_t e_2 = ecs_insert(world, ecs_value(EcsParent, {p_2}));
+    ecs_entity_t e_3 = ecs_insert(world, ecs_value(EcsParent, {p_3}));
+    
+    ecs_add(world, e_1, Foo);
+    ecs_add(world, e_2, Foo);
+    ecs_add(world, e_3, Foo);
+
+    ecs_table_t *table = ecs_get_table(world, e_1);
+    test_assert(table == ecs_get_table(world, e_2));
+    test_assert(table == ecs_get_table(world, e_3));
+
+    {
+        ecs_query_t *q = ecs_query(world, {
+            .terms = {{ Foo }, { ecs_childof(EcsWildcard) }},
+            .cache_kind = cache_kind
+        });
+
+        test_assert(q != NULL);
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 0, .count = 2 });
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_1, it.entities[0]);
+            test_uint(ecs_childof(p_1), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_2, it.entities[0]);
+            test_uint(ecs_childof(p_2), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 1, .count = 2 });
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_2, it.entities[0]);
+            test_uint(ecs_childof(p_2), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_3, it.entities[0]);
+            test_uint(ecs_childof(p_3), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        ecs_query_fini(q);
+    }
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_this_src_childof_tag_w_wildcard_n_children_after_set_range(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
+    ecs_entity_t p_3 = ecs_new(world);
+
+    ecs_entity_t e_1_1 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
+    ecs_entity_t e_1_2 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
+    ecs_entity_t e_2_1 = ecs_insert(world, ecs_value(EcsParent, {p_2}));
+    ecs_entity_t e_2_2 = ecs_insert(world, ecs_value(EcsParent, {p_2}));
+    ecs_entity_t e_3_1 = ecs_insert(world, ecs_value(EcsParent, {p_3}));
+    ecs_entity_t e_3_2 = ecs_insert(world, ecs_value(EcsParent, {p_3}));
+    
+    ecs_add(world, e_1_1, Foo);
+    ecs_add(world, e_2_1, Foo);
+    ecs_add(world, e_3_1, Foo);
+    ecs_add(world, e_1_2, Foo);
+    ecs_add(world, e_2_2, Foo);
+    ecs_add(world, e_3_2, Foo);
+
+    ecs_table_t *table = ecs_get_table(world, e_1_1);
+    test_assert(table == ecs_get_table(world, e_2_1));
+    test_assert(table == ecs_get_table(world, e_3_1));
+    test_assert(table == ecs_get_table(world, e_1_2));
+    test_assert(table == ecs_get_table(world, e_2_2));
+    test_assert(table == ecs_get_table(world, e_3_2));
+
+    {
+        ecs_query_t *q = ecs_query(world, {
+            .terms = {{ Foo }, { ecs_childof(EcsWildcard) }},
+            .cache_kind = cache_kind
+        });
+
+        test_assert(q != NULL);
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 0, .count = 2 });
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_1_1, it.entities[0]);
+            test_uint(ecs_childof(p_1), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_2_1, it.entities[0]);
+            test_uint(ecs_childof(p_2), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 1, .count = 2 });
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_2_1, it.entities[0]);
+            test_uint(ecs_childof(p_2), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_3_1, it.entities[0]);
+            test_uint(ecs_childof(p_3), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 2, .count = 2 });
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_3_1, it.entities[0]);
+            test_uint(ecs_childof(p_3), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_1_2, it.entities[0]);
+            test_uint(ecs_childof(p_1), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 3, .count = 2 });
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_1_2, it.entities[0]);
+            test_uint(ecs_childof(p_1), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_2_2, it.entities[0]);
+            test_uint(ecs_childof(p_2), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 4, .count = 2 });
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_2_2, it.entities[0]);
+            test_uint(ecs_childof(p_2), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_3_2, it.entities[0]);
+            test_uint(ecs_childof(p_3), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        ecs_query_fini(q);
+    }
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_this_src_childof_tag_w_wildcard_n_children_after_set_range_2(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
+    ecs_entity_t p_3 = ecs_new(world);
+
+    ecs_entity_t e_1_1 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
+    ecs_entity_t e_1_2 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
+    ecs_entity_t e_2_1 = ecs_insert(world, ecs_value(EcsParent, {p_2}));
+    ecs_entity_t e_2_2 = ecs_insert(world, ecs_value(EcsParent, {p_2}));
+    ecs_entity_t e_3_1 = ecs_insert(world, ecs_value(EcsParent, {p_3}));
+    ecs_entity_t e_3_2 = ecs_insert(world, ecs_value(EcsParent, {p_3}));
+    
+    ecs_add(world, e_1_1, Foo);
+    ecs_add(world, e_2_1, Foo);
+    ecs_add(world, e_3_1, Foo);
+    ecs_add(world, e_1_2, Foo);
+    ecs_add(world, e_2_2, Foo);
+    ecs_add(world, e_3_2, Foo);
+
+    ecs_table_t *table = ecs_get_table(world, e_1_1);
+    test_assert(table == ecs_get_table(world, e_2_1));
+    test_assert(table == ecs_get_table(world, e_3_1));
+    test_assert(table == ecs_get_table(world, e_1_2));
+    test_assert(table == ecs_get_table(world, e_2_2));
+    test_assert(table == ecs_get_table(world, e_3_2));
+
+    {
+        ecs_query_t *q = ecs_query(world, {
+            .terms = {{ Foo }, { ecs_childof(EcsWildcard) }},
+            .cache_kind = cache_kind
+        });
+
+        test_assert(q != NULL);
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 0, .count = 3 });
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_1_1, it.entities[0]);
+            test_uint(ecs_childof(p_1), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_2_1, it.entities[0]);
+            test_uint(ecs_childof(p_2), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_3_1, it.entities[0]);
+            test_uint(ecs_childof(p_3), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 1, .count = 3 });
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_2_1, it.entities[0]);
+            test_uint(ecs_childof(p_2), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_3_1, it.entities[0]);
+            test_uint(ecs_childof(p_3), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_1_2, it.entities[0]);
+            test_uint(ecs_childof(p_1), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 2, .count = 3 });
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_3_1, it.entities[0]);
+            test_uint(ecs_childof(p_3), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_1_2, it.entities[0]);
+            test_uint(ecs_childof(p_1), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_2_2, it.entities[0]);
+            test_uint(ecs_childof(p_2), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 3, .count = 3 });
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_1_2, it.entities[0]);
+            test_uint(ecs_childof(p_1), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_2_2, it.entities[0]);
+            test_uint(ecs_childof(p_2), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_3_2, it.entities[0]);
+            test_uint(ecs_childof(p_3), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        ecs_query_fini(q);
+    }
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_this_src_childof_tag_w_wildcard_n_children_after_set_range_3(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
+    ecs_entity_t p_3 = ecs_new(world);
+
+    ecs_entity_t e_1_1 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
+    ecs_entity_t e_1_2 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
+    ecs_entity_t e_2_1 = ecs_insert(world, ecs_value(EcsParent, {p_2}));
+    ecs_entity_t e_2_2 = ecs_insert(world, ecs_value(EcsParent, {p_2}));
+    ecs_entity_t e_3_1 = ecs_insert(world, ecs_value(EcsParent, {p_3}));
+    ecs_entity_t e_3_2 = ecs_insert(world, ecs_value(EcsParent, {p_3}));
+    
+    ecs_add(world, e_1_1, Foo);
+    ecs_add(world, e_2_1, Foo);
+    ecs_add(world, e_3_1, Foo);
+    ecs_add(world, e_1_2, Foo);
+    ecs_add(world, e_2_2, Foo);
+    ecs_add(world, e_3_2, Foo);
+
+    ecs_table_t *table = ecs_get_table(world, e_1_1);
+    test_assert(table == ecs_get_table(world, e_2_1));
+    test_assert(table == ecs_get_table(world, e_3_1));
+    test_assert(table == ecs_get_table(world, e_1_2));
+    test_assert(table == ecs_get_table(world, e_2_2));
+    test_assert(table == ecs_get_table(world, e_3_2));
+
+    {
+        ecs_query_t *q = ecs_query(world, {
+            .terms = {{ Foo }, { ecs_childof(EcsWildcard) }},
+            .cache_kind = cache_kind
+        });
+
+        test_assert(q != NULL);
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 0, .count = 4 });
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_1_1, it.entities[0]);
+            test_uint(ecs_childof(p_1), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_2_1, it.entities[0]);
+            test_uint(ecs_childof(p_2), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_3_1, it.entities[0]);
+            test_uint(ecs_childof(p_3), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_1_2, it.entities[0]);
+            test_uint(ecs_childof(p_1), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 1, .count = 4 });
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_2_1, it.entities[0]);
+            test_uint(ecs_childof(p_2), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_3_1, it.entities[0]);
+            test_uint(ecs_childof(p_3), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_1_2, it.entities[0]);
+            test_uint(ecs_childof(p_1), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_2_2, it.entities[0]);
+            test_uint(ecs_childof(p_2), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 2, .count = 4 });
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_3_1, it.entities[0]);
+            test_uint(ecs_childof(p_3), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_1_2, it.entities[0]);
+            test_uint(ecs_childof(p_1), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_2_2, it.entities[0]);
+            test_uint(ecs_childof(p_2), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+
+            test_bool(true, ecs_query_next(&it));
+            test_int(1, it.count);
+            test_uint(e_3_2, it.entities[0]);
+            test_uint(ecs_childof(p_3), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        ecs_query_fini(q);
+    }
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_this_src_childof_tag_w_any_mixed(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_entity_t p_1 = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p_2 = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p_3 = ecs_new(world);
+
+    /* ecs_entity_t c1 = */ ecs_insert(world, ecs_value(EcsParent, {p_1}));
+    ecs_entity_t c2 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
+    ecs_entity_t c3 = ecs_new_w_pair(world, EcsChildOf, p_1);
+    ecs_entity_t c4 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
+    /* ecs_entity_t c5 = */ ecs_new_w_pair(world, EcsChildOf, p_1);
+
+    /* ecs_entity_t c6 = */ ecs_new_w_pair(world, EcsChildOf, p_2);
+    ecs_entity_t c7 = ecs_insert(world, ecs_value(EcsParent, {p_2}));
+
+    /* ecs_entity_t c8 = */ ecs_new_w_pair(world, EcsChildOf, p_3);
+    ecs_entity_t c9 = ecs_new_w_pair(world, EcsChildOf, p_3);
+    ecs_entity_t c10 = ecs_new_w_pair(world, EcsChildOf, p_3);
+    ecs_entity_t c11 = ecs_new_w_pair(world, EcsChildOf, p_3);
+
+    ecs_add(world, c2, Foo);
+    ecs_add(world, c3, Foo);
+    ecs_add(world, c4, Bar);
+
+    ecs_add(world, c7, Foo);
+
+    ecs_add(world, c9, Foo);
+    ecs_add(world, c10, Foo);
+    ecs_add(world, c11, Foo);
+    ecs_add(world, c11, Bar);
+
+    {
+        ecs_query_t *q = ecs_query(world, {
+            .terms = {
+                { Foo },
+                { ecs_childof(EcsAny) }
+            },
+            .cache_kind = cache_kind
+        });
+
+        test_assert(q != NULL);
+
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(2, it.count);
+        test_uint(c2, it.entities[0]);
+        test_uint(c7, it.entities[1]);
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(ecs_childof(EcsWildcard), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 1));
+
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(c3, it.entities[0]);
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(ecs_childof(EcsWildcard), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 1));
+
+        test_bool(true, ecs_query_next(&it));
+        test_int(2, it.count);
+        test_uint(c9, it.entities[0]);
+        test_uint(c10, it.entities[1]);
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(ecs_childof(EcsWildcard), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 1));
+
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(c11, it.entities[0]);
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(ecs_childof(EcsWildcard), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 1));
+
+        test_bool(false, ecs_query_next(&it));
+
+        ecs_query_fini(q);
+    }
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_this_src_childof_tag_w_any_single_child(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
+    ecs_entity_t p_3 = ecs_new(world);
+
+    ecs_entity_t c1 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
+    ecs_entity_t c2 = ecs_insert(world, ecs_value(EcsParent, {p_2}));
+    ecs_entity_t c3 = ecs_insert(world, ecs_value(EcsParent, {p_3}));
+
+    ecs_add(world, c1, Foo);
+    ecs_add(world, c2, Foo);
+    ecs_add(world, c3, Foo);
+
+    {
+        ecs_query_t *q = ecs_query(world, {
+            .terms = {
+                { Foo },
+                { ecs_childof(EcsAny) }
+            },
+            .cache_kind = cache_kind
+        });
+
+        test_assert(q != NULL);
+
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(3, it.count);
+        test_uint(c1, it.entities[0]);
+        test_uint(c2, it.entities[1]);
+        test_uint(c3, it.entities[2]);
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(ecs_childof(EcsWildcard), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 1));
+
+        test_bool(false, ecs_query_next(&it));
+
+        ecs_query_fini(q);
+    }
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_this_src_childof_tag_w_any_single_child_at_offset(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
+    ecs_entity_t p_3 = ecs_new(world);
+
+    ecs_entity_t c1_1 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
+    ecs_entity_t c1_2 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
+    ecs_entity_t c2_1 = ecs_insert(world, ecs_value(EcsParent, {p_2}));
+    ecs_entity_t c2_2 = ecs_insert(world, ecs_value(EcsParent, {p_2}));
+    ecs_entity_t c3_1 = ecs_insert(world, ecs_value(EcsParent, {p_3}));
+    ecs_entity_t c3_2 = ecs_insert(world, ecs_value(EcsParent, {p_3}));
+
+    ecs_add(world, c1_1, Foo);
+    ecs_add(world, c2_1, Foo);
+    ecs_add(world, c3_1, Foo);
+    ecs_add(world, c1_2, Foo);
+    ecs_add(world, c2_2, Foo);
+    ecs_add(world, c3_2, Foo);
+
+    {
+        ecs_query_t *q = ecs_query(world, {
+            .terms = {
+                { Foo },
+                { ecs_childof(EcsAny) }
+            },
+            .cache_kind = cache_kind
+        });
+
+        test_assert(q != NULL);
+
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(6, it.count);
+        test_uint(c1_1, it.entities[0]);
+        test_uint(c2_1, it.entities[1]);
+        test_uint(c3_1, it.entities[2]);
+        test_uint(c1_2, it.entities[3]);
+        test_uint(c2_2, it.entities[4]);
+        test_uint(c3_2, it.entities[5]);
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(ecs_childof(EcsWildcard), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 1));
+
+        test_bool(false, ecs_query_next(&it));
+
+        ecs_query_fini(q);
+    }
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_this_src_childof_tag_w_any_1_child_after_set_range(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
+    ecs_entity_t p_3 = ecs_new(world);
+
+    ecs_entity_t e_1 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
+    ecs_entity_t e_2 = ecs_insert(world, ecs_value(EcsParent, {p_2}));
+    ecs_entity_t e_3 = ecs_insert(world, ecs_value(EcsParent, {p_3}));
+    
+    ecs_add(world, e_1, Foo);
+    ecs_add(world, e_2, Foo);
+    ecs_add(world, e_3, Foo);
+
+    ecs_table_t *table = ecs_get_table(world, e_1);
+    test_assert(table == ecs_get_table(world, e_2));
+    test_assert(table == ecs_get_table(world, e_3));
+
+    {
+        ecs_query_t *q = ecs_query(world, {
+            .terms = {{ Foo }, { ecs_childof(EcsAny) }},
+            .cache_kind = cache_kind
+        });
+
+        test_assert(q != NULL);
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 0, .count = 2 });
+            test_bool(true, ecs_query_next(&it));
+            test_int(2, it.count);
+            test_uint(e_1, it.entities[0]);
+            test_uint(e_2, it.entities[1]);
+            test_uint(ecs_childof(EcsWildcard), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 1, .count = 2 });
+            test_bool(true, ecs_query_next(&it));
+            test_int(2, it.count);
+            test_uint(e_2, it.entities[0]);
+            test_uint(e_3, it.entities[1]);
+            test_uint(ecs_childof(EcsWildcard), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        ecs_query_fini(q);
+    }
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_this_src_childof_tag_w_any_n_children_after_set_range(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
+    ecs_entity_t p_3 = ecs_new(world);
+
+    ecs_entity_t e_1_1 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
+    ecs_entity_t e_1_2 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
+    ecs_entity_t e_2_1 = ecs_insert(world, ecs_value(EcsParent, {p_2}));
+    ecs_entity_t e_2_2 = ecs_insert(world, ecs_value(EcsParent, {p_2}));
+    ecs_entity_t e_3_1 = ecs_insert(world, ecs_value(EcsParent, {p_3}));
+    ecs_entity_t e_3_2 = ecs_insert(world, ecs_value(EcsParent, {p_3}));
+    
+    ecs_add(world, e_1_1, Foo);
+    ecs_add(world, e_2_1, Foo);
+    ecs_add(world, e_3_1, Foo);
+    ecs_add(world, e_1_2, Foo);
+    ecs_add(world, e_2_2, Foo);
+    ecs_add(world, e_3_2, Foo);
+
+    ecs_table_t *table = ecs_get_table(world, e_1_1);
+    test_assert(table == ecs_get_table(world, e_2_1));
+    test_assert(table == ecs_get_table(world, e_3_1));
+    test_assert(table == ecs_get_table(world, e_1_2));
+    test_assert(table == ecs_get_table(world, e_2_2));
+    test_assert(table == ecs_get_table(world, e_3_2));
+
+    {
+        ecs_query_t *q = ecs_query(world, {
+            .terms = {{ Foo }, { ecs_childof(EcsAny) }},
+            .cache_kind = cache_kind
+        });
+
+        test_assert(q != NULL);
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 0, .count = 2 });
+            test_bool(true, ecs_query_next(&it));
+            test_int(2, it.count);
+            test_uint(e_1_1, it.entities[0]);
+            test_uint(e_2_1, it.entities[1]);
+            test_uint(ecs_childof(EcsWildcard), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 1, .count = 2 });
+            test_bool(true, ecs_query_next(&it));
+            test_int(2, it.count);
+            test_uint(e_2_1, it.entities[0]);
+            test_uint(e_3_1, it.entities[1]);
+            test_uint(ecs_childof(EcsWildcard), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 2, .count = 2 });
+            test_bool(true, ecs_query_next(&it));
+            test_int(2, it.count);
+            test_uint(e_3_1, it.entities[0]);
+            test_uint(e_1_2, it.entities[1]);
+            test_uint(ecs_childof(EcsWildcard), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 3, .count = 2 });
+            test_bool(true, ecs_query_next(&it));
+            test_int(2, it.count);
+            test_uint(e_1_2, it.entities[0]);
+            test_uint(e_2_2, it.entities[1]);
+            test_uint(ecs_childof(EcsWildcard), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 4, .count = 2 });
+            test_bool(true, ecs_query_next(&it));
+            test_int(2, it.count);
+            test_uint(e_2_2, it.entities[0]);
+            test_uint(e_3_2, it.entities[1]);
+            test_uint(ecs_childof(EcsWildcard), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        ecs_query_fini(q);
+    }
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_this_src_childof_tag_w_any_n_children_after_set_range_2(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
+    ecs_entity_t p_3 = ecs_new(world);
+
+    ecs_entity_t e_1_1 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
+    ecs_entity_t e_1_2 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
+    ecs_entity_t e_2_1 = ecs_insert(world, ecs_value(EcsParent, {p_2}));
+    ecs_entity_t e_2_2 = ecs_insert(world, ecs_value(EcsParent, {p_2}));
+    ecs_entity_t e_3_1 = ecs_insert(world, ecs_value(EcsParent, {p_3}));
+    ecs_entity_t e_3_2 = ecs_insert(world, ecs_value(EcsParent, {p_3}));
+    
+    ecs_add(world, e_1_1, Foo);
+    ecs_add(world, e_2_1, Foo);
+    ecs_add(world, e_3_1, Foo);
+    ecs_add(world, e_1_2, Foo);
+    ecs_add(world, e_2_2, Foo);
+    ecs_add(world, e_3_2, Foo);
+
+    ecs_table_t *table = ecs_get_table(world, e_1_1);
+    test_assert(table == ecs_get_table(world, e_2_1));
+    test_assert(table == ecs_get_table(world, e_3_1));
+    test_assert(table == ecs_get_table(world, e_1_2));
+    test_assert(table == ecs_get_table(world, e_2_2));
+    test_assert(table == ecs_get_table(world, e_3_2));
+
+    {
+        ecs_query_t *q = ecs_query(world, {
+            .terms = {{ Foo }, { ecs_childof(EcsAny) }},
+            .cache_kind = cache_kind
+        });
+
+        test_assert(q != NULL);
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 0, .count = 3 });
+            test_bool(true, ecs_query_next(&it));
+            test_int(3, it.count);
+            test_uint(e_1_1, it.entities[0]);
+            test_uint(e_2_1, it.entities[1]);
+            test_uint(e_3_1, it.entities[2]);
+            test_uint(ecs_childof(EcsWildcard), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 1, .count = 3 });
+            test_bool(true, ecs_query_next(&it));
+            test_int(3, it.count);
+            test_uint(e_2_1, it.entities[0]);
+            test_uint(e_3_1, it.entities[1]);
+            test_uint(e_1_2, it.entities[2]);
+            test_uint(ecs_childof(EcsWildcard), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+
+            test_bool(false, ecs_query_next(&it));
+        }
+    
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 2, .count = 3 });
+            test_bool(true, ecs_query_next(&it));
+            test_int(3, it.count);
+            test_uint(e_3_1, it.entities[0]);
+            test_uint(e_1_2, it.entities[1]);
+            test_uint(e_2_2, it.entities[2]);
+            test_uint(ecs_childof(EcsWildcard), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 3, .count = 3 });
+            test_bool(true, ecs_query_next(&it));
+            test_int(3, it.count);
+            test_uint(e_1_2, it.entities[0]);
+            test_uint(e_2_2, it.entities[1]);
+            test_uint(e_3_2, it.entities[2]);
+            test_uint(ecs_childof(EcsWildcard), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        ecs_query_fini(q);
+    }
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_this_src_childof_tag_w_any_n_children_after_set_range_3(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
+    ecs_entity_t p_3 = ecs_new(world);
+
+    ecs_entity_t e_1_1 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
+    ecs_entity_t e_1_2 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
+    ecs_entity_t e_2_1 = ecs_insert(world, ecs_value(EcsParent, {p_2}));
+    ecs_entity_t e_2_2 = ecs_insert(world, ecs_value(EcsParent, {p_2}));
+    ecs_entity_t e_3_1 = ecs_insert(world, ecs_value(EcsParent, {p_3}));
+    ecs_entity_t e_3_2 = ecs_insert(world, ecs_value(EcsParent, {p_3}));
+    
+    ecs_add(world, e_1_1, Foo);
+    ecs_add(world, e_2_1, Foo);
+    ecs_add(world, e_3_1, Foo);
+    ecs_add(world, e_1_2, Foo);
+    ecs_add(world, e_2_2, Foo);
+    ecs_add(world, e_3_2, Foo);
+
+    ecs_table_t *table = ecs_get_table(world, e_1_1);
+    test_assert(table == ecs_get_table(world, e_2_1));
+    test_assert(table == ecs_get_table(world, e_3_1));
+    test_assert(table == ecs_get_table(world, e_1_2));
+    test_assert(table == ecs_get_table(world, e_2_2));
+    test_assert(table == ecs_get_table(world, e_3_2));
+
+    {
+        ecs_query_t *q = ecs_query(world, {
+            .terms = {{ Foo }, { ecs_childof(EcsAny) }},
+            .cache_kind = cache_kind
+        });
+
+        test_assert(q != NULL);
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 0, .count = 4 });
+            test_bool(true, ecs_query_next(&it));
+            test_int(4, it.count);
+            test_uint(e_1_1, it.entities[0]);
+            test_uint(e_2_1, it.entities[1]);
+            test_uint(e_3_1, it.entities[2]);
+            test_uint(e_1_2, it.entities[3]);
+            test_uint(ecs_childof(EcsWildcard), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 1, .count = 4 });
+            test_bool(true, ecs_query_next(&it));
+            test_int(4, it.count);
+            test_uint(e_2_1, it.entities[0]);
+            test_uint(e_3_1, it.entities[1]);
+            test_uint(e_1_2, it.entities[2]);
+            test_uint(e_2_2, it.entities[3]);
+            test_uint(ecs_childof(EcsWildcard), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        {
+            ecs_iter_t it = ecs_query_iter(world, q);
+            ecs_iter_set_var_as_range(&it, 0, &(ecs_table_range_t){ .table = table, .offset = 2, .count = 4 });
+            test_bool(true, ecs_query_next(&it));
+            test_int(4, it.count);
+            test_uint(e_3_1, it.entities[0]);
+            test_uint(e_1_2, it.entities[1]);
+            test_uint(e_2_2, it.entities[2]);
+            test_uint(e_3_2, it.entities[3]);
+            test_uint(ecs_childof(EcsWildcard), ecs_field_id(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 1));
+
+            test_bool(false, ecs_query_next(&it));
+        }
+
+        ecs_query_fini(q);
+    }
+
+    ecs_fini(world);
+}
+
 void NonFragmentingChildOf_this_src_childof_tag_w_parent_single_child_table(void) {
     ecs_world_t *world = ecs_mini();
 

@@ -830,6 +830,8 @@
                 "named_children_same_table_w_same_name",
                 "add_parent_to_entity_w_component",
                 "add_parent_to_prefab",
+                "add_parent_to_prefab_after_add_parent",
+                "reparent_to_prefab",
                 "lookup",
                 "lookup_2_lvls",
                 "lookup_from",

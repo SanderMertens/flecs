@@ -2398,7 +2398,27 @@ void NonFragmentingChildOf_this_src_childof_parent_w_component_single_child(void
 void NonFragmentingChildOf_this_src_childof_parent_w_component_single_child_table(void);
 void NonFragmentingChildOf_this_src_childof_tag_w_parent(void);
 void NonFragmentingChildOf_this_src_childof_tag_w_parent_single_child(void);
-void NonFragmentingChildOf_this_src_childof_tag_w_parent_single_child_table(void);
+void NonFragmentingChildOf_this_src_childof_tag_w_parent_single_child_at_offset(void);
+void NonFragmentingChildOf_this_src_childof_tag_w_parent_single_child_after_range(void);
+void NonFragmentingChildOf_this_src_childof_tag_w_parent_n_children_after_toggle_range(void);
+void NonFragmentingChildOf_this_src_childof_tag_w_parent_1_child_after_set_range(void);
+void NonFragmentingChildOf_this_src_childof_tag_w_parent_n_children_after_set_range(void);
+void NonFragmentingChildOf_this_src_childof_tag_w_parent_n_children_after_set_range_2(void);
+void NonFragmentingChildOf_this_src_childof_tag_w_parent_n_children_after_set_range_3(void);
+void NonFragmentingChildOf_this_src_childof_tag_w_wildcard_mixed(void);
+void NonFragmentingChildOf_this_src_childof_tag_w_wildcard_single_child(void);
+void NonFragmentingChildOf_this_src_childof_tag_w_wildcard_single_child_at_offset(void);
+void NonFragmentingChildOf_this_src_childof_tag_w_wildcard_1_child_after_set_range(void);
+void NonFragmentingChildOf_this_src_childof_tag_w_wildcard_n_children_after_set_range(void);
+void NonFragmentingChildOf_this_src_childof_tag_w_wildcard_n_children_after_set_range_2(void);
+void NonFragmentingChildOf_this_src_childof_tag_w_wildcard_n_children_after_set_range_3(void);
+void NonFragmentingChildOf_this_src_childof_tag_w_any_mixed(void);
+void NonFragmentingChildOf_this_src_childof_tag_w_any_single_child(void);
+void NonFragmentingChildOf_this_src_childof_tag_w_any_single_child_at_offset(void);
+void NonFragmentingChildOf_this_src_childof_tag_w_any_1_child_after_set_range(void);
+void NonFragmentingChildOf_this_src_childof_tag_w_any_n_children_after_set_range(void);
+void NonFragmentingChildOf_this_src_childof_tag_w_any_n_children_after_set_range_2(void);
+void NonFragmentingChildOf_this_src_childof_tag_w_any_n_children_after_set_range_3(void);
 void NonFragmentingChildOf_this_src_childof_component_w_parent(void);
 void NonFragmentingChildOf_this_src_childof_component_w_parent_single_child(void);
 void NonFragmentingChildOf_this_src_childof_component_w_parent_single_child_table(void);
@@ -12143,8 +12163,88 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
         NonFragmentingChildOf_this_src_childof_tag_w_parent_single_child
     },
     {
-        "this_src_childof_tag_w_parent_single_child_table",
-        NonFragmentingChildOf_this_src_childof_tag_w_parent_single_child_table
+        "this_src_childof_tag_w_parent_single_child_at_offset",
+        NonFragmentingChildOf_this_src_childof_tag_w_parent_single_child_at_offset
+    },
+    {
+        "this_src_childof_tag_w_parent_single_child_after_range",
+        NonFragmentingChildOf_this_src_childof_tag_w_parent_single_child_after_range
+    },
+    {
+        "this_src_childof_tag_w_parent_n_children_after_toggle_range",
+        NonFragmentingChildOf_this_src_childof_tag_w_parent_n_children_after_toggle_range
+    },
+    {
+        "this_src_childof_tag_w_parent_1_child_after_set_range",
+        NonFragmentingChildOf_this_src_childof_tag_w_parent_1_child_after_set_range
+    },
+    {
+        "this_src_childof_tag_w_parent_n_children_after_set_range",
+        NonFragmentingChildOf_this_src_childof_tag_w_parent_n_children_after_set_range
+    },
+    {
+        "this_src_childof_tag_w_parent_n_children_after_set_range_2",
+        NonFragmentingChildOf_this_src_childof_tag_w_parent_n_children_after_set_range_2
+    },
+    {
+        "this_src_childof_tag_w_parent_n_children_after_set_range_3",
+        NonFragmentingChildOf_this_src_childof_tag_w_parent_n_children_after_set_range_3
+    },
+    {
+        "this_src_childof_tag_w_wildcard_mixed",
+        NonFragmentingChildOf_this_src_childof_tag_w_wildcard_mixed
+    },
+    {
+        "this_src_childof_tag_w_wildcard_single_child",
+        NonFragmentingChildOf_this_src_childof_tag_w_wildcard_single_child
+    },
+    {
+        "this_src_childof_tag_w_wildcard_single_child_at_offset",
+        NonFragmentingChildOf_this_src_childof_tag_w_wildcard_single_child_at_offset
+    },
+    {
+        "this_src_childof_tag_w_wildcard_1_child_after_set_range",
+        NonFragmentingChildOf_this_src_childof_tag_w_wildcard_1_child_after_set_range
+    },
+    {
+        "this_src_childof_tag_w_wildcard_n_children_after_set_range",
+        NonFragmentingChildOf_this_src_childof_tag_w_wildcard_n_children_after_set_range
+    },
+    {
+        "this_src_childof_tag_w_wildcard_n_children_after_set_range_2",
+        NonFragmentingChildOf_this_src_childof_tag_w_wildcard_n_children_after_set_range_2
+    },
+    {
+        "this_src_childof_tag_w_wildcard_n_children_after_set_range_3",
+        NonFragmentingChildOf_this_src_childof_tag_w_wildcard_n_children_after_set_range_3
+    },
+    {
+        "this_src_childof_tag_w_any_mixed",
+        NonFragmentingChildOf_this_src_childof_tag_w_any_mixed
+    },
+    {
+        "this_src_childof_tag_w_any_single_child",
+        NonFragmentingChildOf_this_src_childof_tag_w_any_single_child
+    },
+    {
+        "this_src_childof_tag_w_any_single_child_at_offset",
+        NonFragmentingChildOf_this_src_childof_tag_w_any_single_child_at_offset
+    },
+    {
+        "this_src_childof_tag_w_any_1_child_after_set_range",
+        NonFragmentingChildOf_this_src_childof_tag_w_any_1_child_after_set_range
+    },
+    {
+        "this_src_childof_tag_w_any_n_children_after_set_range",
+        NonFragmentingChildOf_this_src_childof_tag_w_any_n_children_after_set_range
+    },
+    {
+        "this_src_childof_tag_w_any_n_children_after_set_range_2",
+        NonFragmentingChildOf_this_src_childof_tag_w_any_n_children_after_set_range_2
+    },
+    {
+        "this_src_childof_tag_w_any_n_children_after_set_range_3",
+        NonFragmentingChildOf_this_src_childof_tag_w_any_n_children_after_set_range_3
     },
     {
         "this_src_childof_component_w_parent",
@@ -13778,7 +13878,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NonFragmentingChildOf_setup,
         NULL,
-        283,
+        303,
         NonFragmentingChildOf_testcases,
         1,
         NonFragmentingChildOf_params

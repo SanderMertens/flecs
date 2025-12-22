@@ -39943,7 +39943,6 @@ void flecs_on_non_fragmenting_child_move_add(
     for (; i < end; i ++) {
         ecs_entity_t e = ecs_table_entities(dst)[i];
         ecs_entity_t p = parents[i].value;
-        // ecs_assert(p != 0, ECS_INTERNAL_ERROR, NULL);
 
         ecs_component_record_t *cr = flecs_components_get(world, ecs_childof(p));
         if (src->flags & EcsTableHasParent) {
@@ -83234,24 +83233,30 @@ bool flecs_query_tree_with_parent(
     const ecs_query_run_ctx_t *ctx)
 {
     ecs_query_tree_ctx_t *op_ctx = flecs_op_ctx(ctx, tree);
+    ecs_table_range_t range = op_ctx->range;
 
 repeat:
     if (redo) {
         op_ctx->cur ++;
-        if (op_ctx->cur >= op_ctx->range.count) {
-            flecs_query_src_set_range(op, &op_ctx->range, ctx);
-            return false;
-        }
     }
 
+    if ((op_ctx->cur - range.offset) >= range.count) {
+        flecs_query_src_set_range(op, &op_ctx->range, ctx);
+        return false;
+    }
+
+    ecs_assert(op_ctx->cur >= range.offset, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(op_ctx->cur < (range.offset + range.count), ECS_INTERNAL_ERROR, NULL);
+
     ecs_entity_t tgt = op_ctx->tgt;
-    ecs_entity_t parent = op_ctx->parents[op_ctx->cur].value;
+    ecs_entity_t parent = op_ctx->parents[op_ctx->cur - range.offset].value;
 
     ecs_iter_t *it = ctx->it;
     flecs_query_iter_set_id(it, op->field_index, ecs_childof(parent));
 
     if (tgt != EcsWildcard) {
         if (parent != op_ctx->tgt) {
+            redo = true;
             goto repeat;
         }
     }
@@ -83558,6 +83563,7 @@ bool flecs_query_tree_with(
             } else {
                 op_ctx->parents = parents;
                 op_ctx->tgt = tgt;
+                op_ctx->cur = range.offset;
                 return flecs_query_tree_with_parent(op, redo, ctx);
             }
 
@@ -83583,9 +83589,13 @@ bool flecs_query_tree_with(
             int32_t cur = ECS_RECORD_TO_ROW(r->row);
 
             if (pr->count == 1) {
-                /* Table contains a single entity for parent, return it */
-                ecs_entity_t parent = parents[cur].value;
-                flecs_query_iter_set_id(it, op->field_index, ecs_childof(parent));
+                /* Table contains a single entity for parent */
+                if ((range.offset > cur) || ((range.offset + range.count) <= cur)) {
+                    /* Entity does not fall within range */
+                    return false;
+                }
+                
+                flecs_query_iter_set_id(it, op->field_index, ecs_childof(tgt));
                 flecs_query_src_set_single(op, cur, ctx);
                 return true;
             }
@@ -83593,7 +83603,7 @@ bool flecs_query_tree_with(
             /* Table contains multiple entities for same parent, scan */
             op_ctx->parents = parents;
             op_ctx->tgt = tgt;
-            op_ctx->cur = cur;
+            op_ctx->cur = range.offset;
 
             return flecs_query_tree_with_parent(op, redo, ctx);
         }
@@ -83624,7 +83634,7 @@ bool flecs_query_tree_with_pre(
         return result;
     }
 
-    if (range.table->flags & (EcsTableHasChildOf|EcsTableHasParent)) {
+    if (range.table->flags & EcsTableHasParent) {
         flecs_query_iter_set_id(
             ctx->it, op->field_index, ecs_pair(EcsChildOf, EcsWildcard));
         return true;

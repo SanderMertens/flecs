@@ -243,7 +243,6 @@ void flecs_on_non_fragmenting_child_move_add(
     for (; i < end; i ++) {
         ecs_entity_t e = ecs_table_entities(dst)[i];
         ecs_entity_t p = parents[i].value;
-        // ecs_assert(p != 0, ECS_INTERNAL_ERROR, NULL);
 
         ecs_component_record_t *cr = flecs_components_get(world, ecs_childof(p));
         if (src->flags & EcsTableHasParent) {
