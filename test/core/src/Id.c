@@ -399,7 +399,7 @@ void Id_value_pair_w_rel_wildcard_is_wildcard(void) {
 void Id_value_pair_w_obj_wildcard_is_wildcard(void) {
     ecs_world_t *world = ecs_mini();
     ecs_entity_t r = ecs_new(world);
-    test_assert( ecs_id_is_wildcard(ecs_value_pair(r, EcsWildcard)) );
+    test_assert( !ecs_id_is_wildcard(ecs_value_pair(r, EcsWildcard)) );
     ecs_fini(world);
 }
 
@@ -416,7 +416,7 @@ void Id_value_pair_w_rel_any_is_wildcard(void) {
 void Id_value_pair_w_obj_any_is_wildcard(void) {
     ecs_world_t *world = ecs_mini();
     ecs_entity_t r = ecs_new(world);
-    test_assert( ecs_id_is_wildcard(ecs_value_pair(r, EcsAny)) );
+    test_assert( !ecs_id_is_wildcard(ecs_value_pair(r, EcsAny)) );
     ecs_fini(world);
 }
 

@@ -12090,6 +12090,10 @@ bool ecs_id_is_wildcard(
     }
 
     ecs_entity_t first = ECS_PAIR_FIRST(id);
+    if (ECS_IS_VALUE_PAIR(id)) {
+        return (first == EcsWildcard) || (first == EcsAny);
+    }
+
     ecs_entity_t second = ECS_PAIR_SECOND(id);
 
     return (first == EcsWildcard) || (second == EcsWildcard) ||
@@ -12294,12 +12298,6 @@ bool ecs_id_is_tag(
                 if (ecs_is_valid(world, rel)) {
                     if (ecs_has_id(world, rel, EcsPairIsTag)) {
                         return true;
-                    }
-
-                    if (ECS_IS_VALUE_PAIR(id)) {
-                        if (flecs_type_info_get(world, rel) == NULL) {
-                            return true;
-                        }
                     }
                 } else {
                     /* During bootstrap it's possible that not all ids are valid
