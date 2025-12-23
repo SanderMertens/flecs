@@ -11972,3 +11972,221 @@ void Traversal_2_this_up_w_singleton_w_component_w_table_change_components(void)
 
     ecs_fini(world);
 }
+
+void Traversal_this_up_childof_any(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { ecs_childof(EcsAny), .src.id = EcsUp },
+            { ecs_id(Position) },
+        },
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_set(world, e1, Position, {10, 20});
+
+    ecs_entity_t e2 = ecs_new_w_pair(world, EcsChildOf, e1);
+    ecs_set(world, e2, Position, {30, 40});
+
+    ecs_entity_t e3 = ecs_new_w_pair(world, EcsChildOf, e2);
+    ecs_set(world, e3, Position, {50, 60});
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_uint(e3, it.entities[0]);
+    test_uint(ecs_childof(e1), ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(e2, ecs_field_src(&it, 0));
+    test_uint(0, ecs_field_src(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(true, ecs_field_is_set(&it, 1));
+    {
+        const Position *p = ecs_field(&it, Position, 1);
+        test_assert(p != NULL);
+        test_int(p->x, 50);
+        test_int(p->y, 60);
+    }
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Traversal_this_self_up_childof_any(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { ecs_childof(EcsAny), .src.id = EcsSelf | EcsUp },
+            { ecs_id(Position) }
+        },
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_set(world, e1, Position, {10, 20});
+
+    ecs_entity_t e2 = ecs_new_w_pair(world, EcsChildOf, e1);
+    ecs_set(world, e2, Position, {30, 40});
+
+    ecs_entity_t e3 = ecs_new_w_pair(world, EcsChildOf, e2);
+    ecs_set(world, e3, Position, {50, 60});
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_uint(e2, it.entities[0]);
+    test_uint(ecs_childof(e1), ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(0, ecs_field_src(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(true, ecs_field_is_set(&it, 1));
+    {
+        const Position *p = ecs_field(&it, Position, 1);
+        test_assert(p != NULL);
+        test_int(p->x, 30);
+        test_int(p->y, 40);
+    }
+
+    test_bool(true, ecs_query_next(&it));
+    test_uint(e3, it.entities[0]);
+    test_uint(ecs_childof(e2), ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(0, ecs_field_src(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(true, ecs_field_is_set(&it, 1));
+    {
+        const Position *p = ecs_field(&it, Position, 1);
+        test_assert(p != NULL);
+        test_int(p->x, 50);
+        test_int(p->y, 60);
+    }
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Traversal_this_written_up_childof_any(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { ecs_id(Position) }, 
+            { ecs_childof(EcsAny), .src.id = EcsUp }
+        },
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_set(world, e1, Position, {10, 20});
+
+    ecs_entity_t e2 = ecs_new_w_pair(world, EcsChildOf, e1);
+    ecs_set(world, e2, Position, {30, 40});
+
+    ecs_entity_t e3 = ecs_new_w_pair(world, EcsChildOf, e2);
+    ecs_set(world, e3, Position, {50, 60});
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_uint(e3, it.entities[0]);
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+    test_uint(ecs_childof(e1), ecs_field_id(&it, 1));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(e2, ecs_field_src(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(true, ecs_field_is_set(&it, 1));
+    {
+        const Position *p = ecs_field(&it, Position, 0);
+        test_assert(p != NULL);
+        test_int(p->x, 50);
+        test_int(p->y, 60);
+    }
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Traversal_this_written_self_up_childof_any(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { ecs_id(Position) }, 
+            { ecs_childof(EcsAny), .src.id = EcsSelf | EcsUp }
+        },
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_set(world, e1, Position, {10, 20});
+
+    ecs_entity_t e2 = ecs_new_w_pair(world, EcsChildOf, e1);
+    ecs_set(world, e2, Position, {30, 40});
+
+    ecs_entity_t e3 = ecs_new_w_pair(world, EcsChildOf, e2);
+    ecs_set(world, e3, Position, {50, 60});
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_uint(e2, it.entities[0]);
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+    test_uint(ecs_childof(e1), ecs_field_id(&it, 1));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(0, ecs_field_src(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(true, ecs_field_is_set(&it, 1));
+    {
+        const Position *p = ecs_field(&it, Position, 0);
+        test_assert(p != NULL);
+        test_int(p->x, 30);
+        test_int(p->y, 40);
+    }
+
+    test_bool(true, ecs_query_next(&it));
+    test_uint(e3, it.entities[0]);
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+    test_uint(ecs_childof(e2), ecs_field_id(&it, 1));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(0, ecs_field_src(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(true, ecs_field_is_set(&it, 1));
+    {
+        const Position *p = ecs_field(&it, Position, 0);
+        test_assert(p != NULL);
+        test_int(p->x, 50);
+        test_int(p->y, 60);
+    }
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}

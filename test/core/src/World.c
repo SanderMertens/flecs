@@ -2730,6 +2730,28 @@ void World_delete_empty_component_record_w_shrink(void) {
     ecs_fini(world);
 }
 
+void World_delete_empty_hi_component_record_w_shrink(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Tgt);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add_pair(world, e, Rel, Tgt);
+
+    test_assert(flecs_components_get(world, ecs_pair(Rel, Tgt)) != NULL);
+
+    ecs_delete(world, e);
+    
+    test_assert(flecs_components_get(world, ecs_pair(Rel, Tgt)) != NULL);
+
+    ecs_shrink(world);
+
+    test_assert(flecs_components_get(world, ecs_pair(Rel, Tgt)) == NULL);
+
+    ecs_fini(world);
+}
+
 void World_delete_empty_queried_for_component_record_w_shrink(void) {
     ecs_world_t *world = ecs_mini();
 

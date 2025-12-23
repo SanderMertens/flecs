@@ -251,11 +251,10 @@ void flecs_instantiate_children(
      * its parent. This would cause the hierarchy to instantiate itself
      * which would cause infinite recursion. */
     const ecs_entity_t *children = ecs_table_entities(child_table);
-    int32_t start = child_range.offset, end = start + child_range.count;
 
 #ifdef FLECS_DEBUG
-    for (j = start; j < end; j ++) {
-        ecs_entity_t child = children[j];        
+    for (j = 0; j < child_range.count; j ++) {
+        ecs_entity_t child = children[j + child_range.offset];        
         ecs_check(child != instance, ECS_INVALID_PARAMETER, 
             "cycle detected in IsA relationship");
     }
@@ -274,7 +273,7 @@ void flecs_instantiate_children(
     }
 
     for (j = 0; j < child_range.count; j ++) {
-        ecs_entity_t prefab_child = children[j + start];
+        ecs_entity_t prefab_child = children[j + child_range.offset];
         if ((uint32_t)prefab_child < (uint32_t)ctx_cur.root_prefab) {
             /* Child id is smaller than root prefab id, can't use offset */
             child_ids[j] = flecs_new_id(world);
@@ -312,17 +311,17 @@ void flecs_instantiate_children(
 
     /* If children are slots, add slot relationships to parent */
     if (slot_of) {
-        for (j = start; j < end; j ++) {
-            ecs_entity_t child = children[j];
+        for (j = 0; j < child_range.count; j ++) {
+            ecs_entity_t child = children[j + child_range.offset];
             ecs_entity_t i_child = i_children[j];
-            flecs_instantiate_slot(world, base, instance, slot_of,
-                child, i_child);
+            flecs_instantiate_slot(
+                world, base, instance, slot_of, child, i_child);
         }
     }
 
     /* If prefab child table has children itself, recursively instantiate */
     for (j = 0; j < child_range.count; j ++) {
-        ecs_entity_t child = children[j];
+        ecs_entity_t child = children[j + child_range.offset];
         flecs_instantiate(world, child, i_children[j], &ctx_cur);
     }
 
@@ -445,7 +444,7 @@ void flecs_instantiate(
                 flecs_instantiate_children(
                     world, base, instance, range, ctx);
             }
-            ecs_os_perf_trace_pop("flecs.instantiate");
         }
+        ecs_os_perf_trace_pop("flecs.instantiate");
     }
 }

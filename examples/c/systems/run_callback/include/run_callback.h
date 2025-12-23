@@ -2,7 +2,7 @@
 #define CUSTOM_RUNNER_H
 
 /* This generated file contains includes for project dependencies */
-#include "custom_runner/bake_config.h"
+#include "run_callback/bake_config.h"
 
 #ifdef __cplusplus
 extern "C" {

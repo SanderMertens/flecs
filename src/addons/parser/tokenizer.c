@@ -88,6 +88,8 @@ const char* flecs_token_kind_str(
         return "keyword ";
     case EcsTokIdentifier:
         return "identifier ";
+    case EcsTokFunction:
+        return "function ";
     case EcsTokString:
         return "string ";
     case EcsTokChar:
@@ -158,6 +160,7 @@ const char* flecs_token_str(
     case EcsTokKeywordTemplate: return "template";
     case EcsTokKeywordModule: return "module";
     case EcsTokIdentifier: return "identifier";
+    case EcsTokFunction: return "function";
     case EcsTokString: return "string";
     case EcsTokChar: return "char";
     case EcsTokNumber: return "number";
@@ -306,21 +309,13 @@ const char* flecs_tokenizer_identifier(
                     }
                 } while (true);
 
-                if (outpos && parser) {
-                    *outpos = '\0';
-                    parser->token_cur = outpos + 1;
-                }
-                return pos;
+                goto done;
             } else if (c == '>') {
                 ecs_parser_error(name, code, pos - code, 
                     "> without < in identifier");
                 return NULL;
             } else {
-                if (outpos && parser) {
-                    *outpos = '\0';
-                    parser->token_cur = outpos + 1;
-                }
-                return pos;
+                goto done;
             }
         }
 
@@ -331,6 +326,23 @@ const char* flecs_tokenizer_identifier(
 
         pos ++;
     } while (true);
+
+done:
+    if (outpos) {
+        *outpos = '\0';
+        if (parser) {
+            parser->token_cur = outpos + 1;
+        }
+    }
+
+    if (parser && parser->function_token) {
+        if (pos[0] == '(') {
+            out->kind = EcsTokFunction;
+            pos ++;
+        }
+    }
+
+    return pos;
 }
 
 // Number token static

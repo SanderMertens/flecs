@@ -946,6 +946,7 @@ INPUT                  = include/flecs.h \
                          docs/Docs.md \
                          docs/FAQ.md \
                          docs/Quickstart.md \
+                         docs/BuildingFlecs.md \
                          docs/DesignWithFlecs.md \
                          docs/EntitiesComponents.md \
                          docs/Queries.md \
@@ -956,7 +957,6 @@ INPUT                  = include/flecs.h \
                          docs/ComponentTraits.md \
                          docs/Relationships.md \
                          docs/FlecsScript.md \
-                         docs/FlecsScriptTutorial.md \
                          docs/FlecsRemoteApi.md \
                          docs/Manual.md \
                          docs/MigrationGuide.md

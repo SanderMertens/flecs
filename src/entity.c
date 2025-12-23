@@ -674,9 +674,9 @@ void flecs_add_to_root_table(
     ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(r->table == NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_table_diff_t diff = ECS_TABLE_DIFF_INIT;
-    flecs_new_entity(world, e, r, &world->store.root, &diff, false, 0);
-    ecs_assert(r->table == &world->store.root, ECS_INTERNAL_ERROR, NULL);
+    int32_t row = flecs_table_append(world, &world->store.root, e, false, false);
+    r->table = &world->store.root;
+    r->row = ECS_ROW_TO_RECORD(row, r->row & ECS_ROW_FLAGS_MASK);
 
     flecs_journal(world, EcsJournalNew, e, 0, 0);
 }
@@ -1141,7 +1141,7 @@ void flecs_deferred_add_remove(
     const ecs_entity_desc_t *desc,
     ecs_entity_t scope,
     ecs_id_t with,
-    bool flecs_new_entity,
+    bool new_entity,
     bool name_assigned)
 {
     const char *sep = desc->sep;
@@ -1149,8 +1149,8 @@ void flecs_deferred_add_remove(
 
     /* If this is a new entity without a name, add the scope. If a name is
      * provided, the scope will be added by the add_path_w_sep function */
-    if (flecs_new_entity) {
-        if (flecs_new_entity && scope && !name && !name_assigned) {
+    if (new_entity) {
+        if (new_entity && scope && !name && !name_assigned) {
             ecs_add_id(world, entity, ecs_pair(EcsChildOf, scope));
         }
 
@@ -1296,7 +1296,7 @@ ecs_entity_t ecs_entity_init(
     }
 
     const char *root_sep = desc->root_sep;
-    bool flecs_new_entity = false;
+    bool new_entity = false;
     bool name_assigned = false;
 
     /* Remove optional prefix from name. Entity names can be derived from 
@@ -1344,7 +1344,7 @@ ecs_entity_t ecs_entity_init(
             } else {
                 result = ecs_new(world);
             }
-            flecs_new_entity = true;
+            new_entity = true;
             ecs_assert(ecs_get_type(world, result) != NULL,
                 ECS_INTERNAL_ERROR, NULL);
             ecs_assert(ecs_get_type(world, result)->count == 0,
@@ -1399,10 +1399,10 @@ ecs_entity_t ecs_entity_init(
 
     if (ecs_is_deferred(world)) {
         flecs_deferred_add_remove((ecs_world_t*)stage, result, name, desc, 
-            scope, with, flecs_new_entity, name_assigned);
+            scope, with, new_entity, name_assigned);
     } else {
         if (flecs_traverse_add(world, result, name, desc,
-            scope, with, flecs_new_entity, name_assigned)) 
+            scope, with, new_entity, name_assigned)) 
         {
             return 0;
         }
@@ -2419,7 +2419,7 @@ bool flecs_can_toggle(
 {
     ecs_component_record_t *cr = flecs_components_get(world, component);
     if (!cr) {
-        return false;
+        return ecs_has_id(world, component, EcsCanToggle);
     }
 
     return (cr->flags & EcsIdCanToggle) != 0;
@@ -2993,9 +2993,10 @@ void ecs_make_alive(
     ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(r->table == NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_table_diff_t diff = ECS_TABLE_DIFF_INIT;
-    flecs_new_entity(world, entity, r, &world->store.root, &diff, false, 0);
-    ecs_assert(r->table == &world->store.root, ECS_INTERNAL_ERROR, NULL);
+    int32_t row = flecs_table_append(
+        world, &world->store.root, entity, false, false);
+    r->table = &world->store.root;
+    r->row = ECS_ROW_TO_RECORD(row, r->row & ECS_ROW_FLAGS_MASK);
 error:
     return;
 }
@@ -3070,6 +3071,13 @@ void ecs_set_version(
             entities[row] = entity_with_generation;
         }
     }
+}
+
+
+uint32_t ecs_get_version(
+    ecs_entity_t entity)
+{
+    return flecs_uto(uint32_t, ECS_GENERATION(entity));
 }
 
 ecs_table_t* ecs_get_table(

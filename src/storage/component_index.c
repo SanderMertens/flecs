@@ -825,7 +825,8 @@ int32_t flecs_component_release(
     ecs_component_record_t *cr)
 {
     int32_t rc = -- cr->refcount;
-    ecs_assert(rc >= 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(rc >= 0, ECS_INTERNAL_ERROR, 
+        flecs_errstr(ecs_id_str(world, cr->id)));
 
     if (!rc) {
         flecs_component_free(world, cr);

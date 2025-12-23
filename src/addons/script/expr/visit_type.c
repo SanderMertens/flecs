@@ -263,6 +263,7 @@ bool flecs_expr_oper_valid_for_type(
     case EcsTokMatch:
     case EcsTokRange:
     case EcsTokIdentifier:
+    case EcsTokFunction:
     case EcsTokChar:
     case EcsTokString:
     case EcsTokNumber:
@@ -375,6 +376,7 @@ int flecs_expr_type_for_operator(
     case EcsTokMatch:
     case EcsTokRange:
     case EcsTokIdentifier:
+    case EcsTokFunction:
     case EcsTokChar:
     case EcsTokString:
     case EcsTokNumber:

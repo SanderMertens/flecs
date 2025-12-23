@@ -424,6 +424,17 @@ struct entity_builder : entity_view {
         return this->auto_override<First>(_::type<Second>::id(this->world_));
     }
 
+    /** Mark pair for auto-overriding.
+     * @see auto_override(flecs::id_t) const
+     *
+     * @tparam Second The second element of the pair.
+     * @param first The first element of the pair.
+     */
+    template <typename Second>
+    const Self& auto_override_second(flecs::entity_t first) const  {
+        return this->auto_override(first, _::type<Second>::id(this->world_));
+    }
+
     /** Set component, mark component for auto-overriding.
      * @see auto_override(flecs::id_t) const
      *
@@ -674,13 +685,13 @@ struct entity_builder : entity_view {
     }
 
     const Self& set_ptr(entity_t comp, const void *ptr) const  {
-        const flecs::Component *cptr = ecs_get(
-            this->world_, comp, EcsComponent);
+
+       const ecs_type_info_t *type_info = ecs_get_type_info(this->world_, comp);
 
         /* Can't set if it's not a component */
-        ecs_assert(cptr != NULL, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(type_info != NULL, ECS_INVALID_PARAMETER, NULL);
 
-        return set_ptr(comp, cptr->size, ptr);
+        return set_ptr(comp, type_info->size, ptr);
     }
 
     /** Set a component for an entity.

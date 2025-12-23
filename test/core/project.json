@@ -179,6 +179,7 @@
                 "set_version_on_nonempty_entity",
                 "set_version_while_deferred",
                 "set_version_on_not_alive",
+                "get_version_after_reuse",
                 "commit_w_on_add",
                 "commit_w_on_remove",
                 "commit_w_cmd_in_observer",
@@ -213,7 +214,9 @@
                 "entity_w_parent_w_set_w_parent",
                 "entity_w_new_id_and_double_dot",
                 "entity_w_existing_id_and_double_dot",
-                "entity_w_large_id_name"
+                "entity_w_large_id_name",
+                "toggle_component",
+                "toggle_component_before_add"
             ]
         }, {
             "id": "Each",
@@ -692,7 +695,9 @@
                 "check_sparse_exclusive_target_in_regular_observer",
                 "check_regular_in_sparse_observer",
                 "check_regular_target_in_sparse_observer",
-                "check_regular_exclusive_target_in_sparse_observer"
+                "check_regular_exclusive_target_in_sparse_observer",
+                "child_of_component_w_sparse",
+                "child_of_component_w_sparse_exclusive"
             ]
         }, {
             "id": "Hierarchies",
@@ -848,6 +853,9 @@
                 "get_ordered_children_from_prefab_instance_3_children",
                 "get_ordered_children_from_prefab_instance_3_children_different_table",
                 "get_ordered_children_from_prefab_instance_nested_children",
+                "prefab_w_nested_ordered_children",
+                "prefab_w_nested_ordered_children_2",
+                "prefab_w_slots",
                 "recreate_named_child",
                 "lookup_after_move_to_root",
                 "lookup_after_clear",
@@ -1396,7 +1404,9 @@
                 "copy_ctor_w_override",
                 "copy_ctor_w_override_w_emplace",
                 "copy_ctor_w_override_w_ensure",
-                "shrink"
+                "shrink",
+                "dtor_after_add_exclusive_component",
+                "dtor_after_add_exclusive_component_last"
             ]
         }, {
             "id": "Pairs",
@@ -1932,6 +1942,7 @@
                 "2_singleton_terms_field_size_w_tag",
                 "1_on_set_overridden_term_field_size_w_tag",
                 "2_on_set_overridden_terms_field_size_w_tag",
+                "create_observer_in_observer",
                 "cache_test_1",
                 "cache_test_2",
                 "cache_test_3",
@@ -2232,6 +2243,23 @@
                 "prefab_1_child_offset_id_occupied",
                 "prefab_1_child_offset_id_recycled_occupied",
                 "prefab_child_offset_w_smaller_child_id",
+                "prefab_ordered_children_1_child_offset_id",
+                "prefab_ordered_children_2_children_offset_id",
+                "prefab_ordered_children_3_children_offset_id",
+                "prefab_ordered_children_2_children_2_types_offset_id",
+                "prefab_ordered_children_3_children_3_types_offset_id",
+                "prefab_ordered_children_2_children_2_types_reverse_offset_id",
+                "prefab_ordered_children_3_children_3_types_reverse_offset_id",
+                "prefab_ordered_children_2_lvl_nested_children_offset_id",
+                "prefab_ordered_children_3_lvl_nested_children_offset_id",
+                "prefab_ordered_children_recycled_children_offset_id",
+                "prefab_ordered_children_recycled_instance_offset_id",
+                "prefab_ordered_children_children_recycled_offset_id",
+                "prefab_ordered_children_recycled_children_recycled_offset_id",
+                "prefab_ordered_children_recycled_children_recycled_offset_id_different_generation",
+                "prefab_ordered_children_1_child_offset_id_occupied",
+                "prefab_ordered_children_1_child_offset_id_recycled_occupied",
+                "prefab_ordered_children_child_offset_w_smaller_child_id",
                 "prefab_w_union",
                 "prefab_child_w_union",
                 "prefab_w_union_and_component",
@@ -2352,6 +2380,7 @@
                 "init_create_delete_random_2_entities_shrink_fini",
                 "recreate_tables_after_shrink",
                 "delete_empty_component_record_w_shrink",
+                "delete_empty_hi_component_record_w_shrink",
                 "delete_empty_queried_for_component_record_w_shrink",
                 "delete_empty_sparse_component_record_w_shrink",
                 "delete_empty_dont_fragment_component_record_w_shrink",
@@ -2569,6 +2598,8 @@
         }, {
             "id": "Commands",
             "testcases": [
+                "is_deferred",
+                "is_defer_suspended",
                 "defer_new",
                 "defer_bulk_new",
                 "defer_add",

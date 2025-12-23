@@ -375,6 +375,8 @@ ecs_query_t* ecs_query_init(
     ecs_world_t *world, 
     const ecs_query_desc_t *const_desc)
 {
+    ecs_os_perf_trace_push("flecs.query_init");
+
     ecs_world_t *world_arg = world;
     ecs_stage_t *stage = flecs_stage_from_world(&world);
 
@@ -446,10 +448,15 @@ ecs_query_t* ecs_query_init(
         flecs_poly_modified(world, entity, ecs_query_t);
     }
 
+    ecs_os_perf_trace_pop("flecs.query_init");
+
     return &result->pub;
 error:
     result->pub.entity = 0;
     ecs_query_fini(&result->pub);
+
+    ecs_os_perf_trace_pop("flecs.query_init");
+
     return NULL;
 }
 

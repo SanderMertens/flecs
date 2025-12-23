@@ -645,10 +645,6 @@ paren: {
                 )
             )
     )
-    // // (Likes, Apples)
-    // Parse_4(EcsTokIdentifier, ',', EcsTokIdentifier, ')',
-    //     goto pair;
-    // )
 }
 
 // (Likes, Apples)

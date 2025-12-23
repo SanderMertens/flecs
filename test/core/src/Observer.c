@@ -11719,3 +11719,34 @@ void Observer_2_on_set_overridden_terms_field_size_w_tag(void) {
 
     ecs_fini(world);
 }
+
+static void register_observer(ecs_iter_t *it) {
+    for (int i = 0; i < 10; i ++) {
+        ecs_observer(it->world, {
+            .query.terms = {{ ecs_id(Position) }},
+            .events = { EcsOnAdd },
+            .callback = Dummy
+        });
+    }
+}
+
+void Observer_create_observer_in_observer(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+
+    for (int i = 0; i < 10; i ++) {
+        ecs_observer(world, {
+            .query.terms = {{ ecs_id(Position) }},
+            .events = { EcsOnAdd },
+            .callback = register_observer
+        });
+    }
+
+    test_expect_abort();
+    ecs_new_w(world, Position);
+
+    ecs_fini(world);
+}

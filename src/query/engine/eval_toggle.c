@@ -150,7 +150,7 @@ bool flecs_query_toggle_cmp(
 
     /* Shared fields are evaluated, can be ignored from now on */
     // and_fields &= ~up_fields;
-    not_fields &= ~up_fields;
+    not_fields &= flecs_uto(uint64_t, ~up_fields);
 
     if (!(table->flags & EcsTableHasToggle)) {
         if (not_fields) {

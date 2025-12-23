@@ -35,7 +35,7 @@
 /* Flecs version macros */
 #define FLECS_VERSION_MAJOR 4  /**< Flecs major version. */
 #define FLECS_VERSION_MINOR 1  /**< Flecs minor version. */
-#define FLECS_VERSION_PATCH 2  /**< Flecs patch version. */
+#define FLECS_VERSION_PATCH 4  /**< Flecs patch version. */
 
 /** Flecs version. */
 #define FLECS_VERSION FLECS_VERSION_IMPL(\
@@ -2026,6 +2026,10 @@ struct ecs_map_t {
     unsigned count : 26;
     unsigned bucket_shift : 6;
     struct ecs_allocator_t *allocator;
+#ifdef FLECS_DEBUG
+    int32_t change_count;           /* Track modifications while iterating */
+    ecs_map_key_t last_iterated;    /* Currently iterated element */
+#endif
 };
 
 typedef struct ecs_map_iter_t {
@@ -2033,6 +2037,9 @@ typedef struct ecs_map_iter_t {
     ecs_bucket_t *bucket;
     ecs_bucket_entry_t *entry;
     ecs_map_data_t *res;
+#ifdef FLECS_DEBUG
+    int32_t change_count;
+#endif
 } ecs_map_iter_t;
 
 /* Function/macro postfixes meaning:
@@ -2131,6 +2138,11 @@ void ecs_map_clear(
 FLECS_API
 ecs_map_iter_t ecs_map_iter(
     const ecs_map_t *map);
+
+/** Return whether map iterator is valid. */
+FLECS_API
+bool ecs_map_iter_valid(
+    ecs_map_iter_t *iter);
 
 /** Obtain next element in map from iterator. */
 FLECS_API
@@ -6085,24 +6097,11 @@ void ecs_merge(
  * @see ecs_is_deferred()
  * @see ecs_defer_resume()
  * @see ecs_defer_suspend()
+ * @see ecs_is_defer_suspended()
  */
 FLECS_API
 bool ecs_defer_begin(
     ecs_world_t *world);
-
-/** Test if deferring is enabled for current stage.
- *
- * @param world The world.
- * @return True if deferred, false if not.
- *
- * @see ecs_defer_begin()
- * @see ecs_defer_end()
- * @see ecs_defer_resume()
- * @see ecs_defer_suspend()
- */
-FLECS_API
-bool ecs_is_deferred(
-    const ecs_world_t *world);
 
 /** End block of operations to defer.
  * See ecs_defer_begin().
@@ -6152,6 +6151,36 @@ void ecs_defer_suspend(
 FLECS_API
 void ecs_defer_resume(
     ecs_world_t *world);
+
+/** Test if deferring is enabled for current stage.
+ *
+ * @param world The world.
+ * @return True if deferred, false if not.
+ *
+ * @see ecs_defer_begin()
+ * @see ecs_defer_end()
+ * @see ecs_defer_resume()
+ * @see ecs_defer_suspend()
+ * @see ecs_is_defer_suspended()
+ */
+FLECS_API
+bool ecs_is_deferred(
+    const ecs_world_t *world);
+
+/** Test if deferring is suspended for current stage.
+ *
+ * @param world The world.
+ * @return True if suspended, false if not.
+ *
+ * @see ecs_defer_begin()
+ * @see ecs_defer_end()
+ * @see ecs_is_deferred()
+ * @see ecs_defer_resume()
+ * @see ecs_defer_suspend()
+ */
+FLECS_API
+bool ecs_is_defer_suspended(
+    const ecs_world_t *world);
 
 /** Configure world to have N stages.
  * This initializes N stages, which allows applications to defer operations to
@@ -7360,6 +7389,15 @@ bool ecs_exists(
 FLECS_API
 void ecs_set_version(
     ecs_world_t *world,
+    ecs_entity_t entity);
+
+/** Get generation of an entity.
+ *
+ * @param entity Entity for which to get the generation of.
+ * @return The generation of the entity.
+ */
+FLECS_API
+uint32_t ecs_get_version(
     ecs_entity_t entity);
 
 /** @} */
@@ -10348,12 +10386,12 @@ int ecs_value_move_ctor(
 /* Forward declare a query. */
 #define ECS_QUERY_DECLARE(name)         ecs_query_t* name
 
-/** Define a forward declared observer.
+/** Define a forward declared query.
  *
  * Example:
  *
  * @code
- * ECS_QUERY_DEFINE(world, AddPosition, Position);
+ * ECS_QUERY_DEFINE(world, Move, Position, [in] Velocity);
  * @endcode
  */
 #define ECS_QUERY_DEFINE(world, name_, ...)\
@@ -10367,12 +10405,12 @@ int ecs_value_move_ctor(
         ecs_assert(name_ != NULL, ECS_INVALID_PARAMETER, "failed to create query %s", #name_);\
     }
 
-/** Declare & define an observer.
+/** Declare & define a query.
  *
  * Example:
  *
  * @code
- * ECS_OBSERVER(world, AddPosition, EcsOnAdd, Position);
+ * ECS_QUERY(world, Move, Position, [in] Velocity);
  * @endcode
  */
 #define ECS_QUERY(world, name, ...)\
@@ -10410,9 +10448,12 @@ int ecs_value_move_ctor(
 /** Shorthand for creating a query with ecs_query_cache_init.
  *
  * Example:
+ * 
+ * @code
  *   ecs_query(world, {
  *     .terms = {{ ecs_id(Position) }}
  *   });
+ * @endcode
  */
 #define ecs_query(world, ...)\
     ecs_query_init(world, &(ecs_query_desc_t) __VA_ARGS__ )
@@ -22623,6 +22664,7 @@ struct world {
      * @see flecs::world::is_deferred()
      * @see flecs::world::defer_resume()
      * @see flecs::world::defer_suspend()
+     * @see flecs::world::is_defer_suspended()
      */
     bool defer_begin() const {
         return ecs_defer_begin(world_);
@@ -22641,6 +22683,7 @@ struct world {
      * @see flecs::world::is_deferred()
      * @see flecs::world::defer_resume()
      * @see flecs::world::defer_suspend()
+     * @see flecs::world::is_defer_suspended()
      */
     bool defer_end() const {
         return ecs_defer_end(world_);
@@ -22656,9 +22699,26 @@ struct world {
      * @see flecs::world::defer_end()
      * @see flecs::world::defer_resume()
      * @see flecs::world::defer_suspend()
+     * @see flecs::world::is_defer_suspended()
      */
     bool is_deferred() const {
         return ecs_is_deferred(world_);
+    }
+
+    /** Test whether deferring is suspended.
+     *
+     * @return True if deferred, false if not.
+     *
+     * @see ecs_is_defer_suspended()
+     * @see flecs::world::defer()
+     * @see flecs::world::defer_begin()
+     * @see flecs::world::defer_end()
+     * @see flecs::world::is_deferred()
+     * @see flecs::world::defer_resume()
+     * @see flecs::world::defer_suspend()
+     */
+    bool is_defer_suspended() const {
+        return ecs_is_defer_suspended(world_);
     }
 
     /** Configure world to have N stages.
@@ -23546,6 +23606,14 @@ struct world {
      */
     void set_version(flecs::entity_t e) const {
         ecs_set_version(world_, e);
+    }
+
+    /** Get version of provided entity.
+     * 
+     * @see ecs_get_version()
+     */
+    uint32_t get_version(flecs::entity_t e) const {
+        return ecs_get_version(e);
     }
 
     /* Run callback after completing frame */
@@ -26230,6 +26298,17 @@ struct entity_view : public id {
             _::type<Second>::id(world_));
     }
 
+    /** Check if entity owns the provided pair.
+     *
+     * @param first The first element of the pair.
+     * @tparam Second The second element of the pair.
+     * @return True if the entity owns the provided component, false otherwise.
+     */
+    template <typename Second>
+    bool owns_second(flecs::entity_t first) const {
+        return owns(first, _::type<Second>::id(world_));
+    }
+
     /** Test if id is enabled.
      *
      * @param id The id to test.
@@ -26991,6 +27070,17 @@ struct entity_builder : entity_view {
         return this->auto_override<First>(_::type<Second>::id(this->world_));
     }
 
+    /** Mark pair for auto-overriding.
+     * @see auto_override(flecs::id_t) const
+     *
+     * @tparam Second The second element of the pair.
+     * @param first The first element of the pair.
+     */
+    template <typename Second>
+    const Self& auto_override_second(flecs::entity_t first) const  {
+        return this->auto_override(first, _::type<Second>::id(this->world_));
+    }
+
     /** Set component, mark component for auto-overriding.
      * @see auto_override(flecs::id_t) const
      *
@@ -27241,13 +27331,13 @@ struct entity_builder : entity_view {
     }
 
     const Self& set_ptr(entity_t comp, const void *ptr) const  {
-        const flecs::Component *cptr = ecs_get(
-            this->world_, comp, EcsComponent);
+
+       const ecs_type_info_t *type_info = ecs_get_type_info(this->world_, comp);
 
         /* Can't set if it's not a component */
-        ecs_assert(cptr != NULL, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(type_info != NULL, ECS_INVALID_PARAMETER, NULL);
 
-        return set_ptr(comp, cptr->size, ptr);
+        return set_ptr(comp, type_info->size, ptr);
     }
 
     /** Set a component for an entity.

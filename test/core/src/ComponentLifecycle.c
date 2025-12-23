@@ -4353,3 +4353,60 @@ void ComponentLifecycle_shrink(void) {
 
     ecs_fini(world);
 }
+
+
+void ComponentLifecycle_dtor_after_add_exclusive_component(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ecs_add_id(world, ecs_id(Position), EcsExclusive);
+
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = ecs_ctor(Position),
+        .move = ecs_move(Position),
+        .copy = ecs_copy(Position),
+        .dtor = ecs_dtor(Position)
+    });
+
+    ecs_entity_t e1 = ecs_insert(world, ecs_value_pair(Position, TgtB, {10, 20}));
+    ecs_insert(world, ecs_value_pair(Position, TgtB, {20, 30}));
+
+    ecs_set_pair(world, e1, Position, TgtA, {10, 20});
+    test_int(dtor_position, 1);
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_dtor_after_add_exclusive_component_last(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ecs_add_id(world, ecs_id(Position), EcsExclusive);
+
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = ecs_ctor(Position),
+        .move = ecs_move(Position),
+        .copy = ecs_copy(Position),
+        .dtor = ecs_dtor(Position)
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set_pair(world, e, Position, TgtB, {10, 20});
+    ecs_set_pair(world, e, Position, TgtA, {10, 20});
+
+    test_int(dtor_position, 1);
+
+    ecs_fini(world);
+}

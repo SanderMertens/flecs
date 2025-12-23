@@ -172,6 +172,7 @@ void Entity_entity_from_conflicting_digit(void);
 void Entity_set_version_on_nonempty_entity(void);
 void Entity_set_version_while_deferred(void);
 void Entity_set_version_on_not_alive(void);
+void Entity_get_version_after_reuse(void);
 void Entity_commit_w_on_add(void);
 void Entity_commit_w_on_remove(void);
 void Entity_commit_w_cmd_in_observer(void);
@@ -207,6 +208,8 @@ void Entity_entity_w_parent_w_set_w_parent(void);
 void Entity_entity_w_new_id_and_double_dot(void);
 void Entity_entity_w_existing_id_and_double_dot(void);
 void Entity_entity_w_large_id_name(void);
+void Entity_toggle_component(void);
+void Entity_toggle_component_before_add(void);
 
 // Testsuite 'Each'
 void Each_each_tag(void);
@@ -663,6 +666,8 @@ void Sparse_check_sparse_exclusive_target_in_regular_observer(void);
 void Sparse_check_regular_in_sparse_observer(void);
 void Sparse_check_regular_target_in_sparse_observer(void);
 void Sparse_check_regular_exclusive_target_in_sparse_observer(void);
+void Sparse_child_of_component_w_sparse(void);
+void Sparse_child_of_component_w_sparse_exclusive(void);
 
 // Testsuite 'Hierarchies'
 void Hierarchies_setup(void);
@@ -814,6 +819,9 @@ void OrderedChildren_get_ordered_children_from_prefab_instance_no_children(void)
 void OrderedChildren_get_ordered_children_from_prefab_instance_3_children(void);
 void OrderedChildren_get_ordered_children_from_prefab_instance_3_children_different_table(void);
 void OrderedChildren_get_ordered_children_from_prefab_instance_nested_children(void);
+void OrderedChildren_prefab_w_nested_ordered_children(void);
+void OrderedChildren_prefab_w_nested_ordered_children_2(void);
+void OrderedChildren_prefab_w_slots(void);
 void OrderedChildren_recreate_named_child(void);
 void OrderedChildren_lookup_after_move_to_root(void);
 void OrderedChildren_lookup_after_clear(void);
@@ -1338,6 +1346,8 @@ void ComponentLifecycle_copy_ctor_w_override(void);
 void ComponentLifecycle_copy_ctor_w_override_w_emplace(void);
 void ComponentLifecycle_copy_ctor_w_override_w_ensure(void);
 void ComponentLifecycle_shrink(void);
+void ComponentLifecycle_dtor_after_add_exclusive_component(void);
+void ComponentLifecycle_dtor_after_add_exclusive_component_last(void);
 
 // Testsuite 'Pairs'
 void Pairs_type_w_one_pair(void);
@@ -1867,6 +1877,7 @@ void Observer_1_singleton_term_field_size_w_tag(void);
 void Observer_2_singleton_terms_field_size_w_tag(void);
 void Observer_1_on_set_overridden_term_field_size_w_tag(void);
 void Observer_2_on_set_overridden_terms_field_size_w_tag(void);
+void Observer_create_observer_in_observer(void);
 void Observer_cache_test_1(void);
 void Observer_cache_test_2(void);
 void Observer_cache_test_3(void);
@@ -2155,6 +2166,23 @@ void Prefab_prefab_recycled_children_recycled_offset_id_different_generation(voi
 void Prefab_prefab_1_child_offset_id_occupied(void);
 void Prefab_prefab_1_child_offset_id_recycled_occupied(void);
 void Prefab_prefab_child_offset_w_smaller_child_id(void);
+void Prefab_prefab_ordered_children_1_child_offset_id(void);
+void Prefab_prefab_ordered_children_2_children_offset_id(void);
+void Prefab_prefab_ordered_children_3_children_offset_id(void);
+void Prefab_prefab_ordered_children_2_children_2_types_offset_id(void);
+void Prefab_prefab_ordered_children_3_children_3_types_offset_id(void);
+void Prefab_prefab_ordered_children_2_children_2_types_reverse_offset_id(void);
+void Prefab_prefab_ordered_children_3_children_3_types_reverse_offset_id(void);
+void Prefab_prefab_ordered_children_2_lvl_nested_children_offset_id(void);
+void Prefab_prefab_ordered_children_3_lvl_nested_children_offset_id(void);
+void Prefab_prefab_ordered_children_recycled_children_offset_id(void);
+void Prefab_prefab_ordered_children_recycled_instance_offset_id(void);
+void Prefab_prefab_ordered_children_children_recycled_offset_id(void);
+void Prefab_prefab_ordered_children_recycled_children_recycled_offset_id(void);
+void Prefab_prefab_ordered_children_recycled_children_recycled_offset_id_different_generation(void);
+void Prefab_prefab_ordered_children_1_child_offset_id_occupied(void);
+void Prefab_prefab_ordered_children_1_child_offset_id_recycled_occupied(void);
+void Prefab_prefab_ordered_children_child_offset_w_smaller_child_id(void);
 void Prefab_prefab_w_union(void);
 void Prefab_prefab_child_w_union(void);
 void Prefab_prefab_w_union_and_component(void);
@@ -2273,6 +2301,7 @@ void World_init_create_delete_random_1_entities_shrink_fini(void);
 void World_init_create_delete_random_2_entities_shrink_fini(void);
 void World_recreate_tables_after_shrink(void);
 void World_delete_empty_component_record_w_shrink(void);
+void World_delete_empty_hi_component_record_w_shrink(void);
 void World_delete_empty_queried_for_component_record_w_shrink(void);
 void World_delete_empty_sparse_component_record_w_shrink(void);
 void World_delete_empty_dont_fragment_component_record_w_shrink(void);
@@ -2482,6 +2511,8 @@ void Type_large_type_expr(void);
 void Type_large_type_expr_limit(void);
 
 // Testsuite 'Commands'
+void Commands_is_deferred(void);
+void Commands_is_defer_suspended(void);
 void Commands_defer_new(void);
 void Commands_defer_bulk_new(void);
 void Commands_defer_add(void);
@@ -3469,6 +3500,10 @@ bake_test_case Entity_testcases[] = {
         Entity_set_version_on_not_alive
     },
     {
+        "get_version_after_reuse",
+        Entity_get_version_after_reuse
+    },
+    {
         "commit_w_on_add",
         Entity_commit_w_on_add
     },
@@ -3607,6 +3642,14 @@ bake_test_case Entity_testcases[] = {
     {
         "entity_w_large_id_name",
         Entity_entity_w_large_id_name
+    },
+    {
+        "toggle_component",
+        Entity_toggle_component
+    },
+    {
+        "toggle_component_before_add",
+        Entity_toggle_component_before_add
     }
 };
 
@@ -5373,6 +5416,14 @@ bake_test_case Sparse_testcases[] = {
     {
         "check_regular_exclusive_target_in_sparse_observer",
         Sparse_check_regular_exclusive_target_in_sparse_observer
+    },
+    {
+        "child_of_component_w_sparse",
+        Sparse_child_of_component_w_sparse
+    },
+    {
+        "child_of_component_w_sparse_exclusive",
+        Sparse_child_of_component_w_sparse_exclusive
     }
 };
 
@@ -5963,6 +6014,18 @@ bake_test_case OrderedChildren_testcases[] = {
     {
         "get_ordered_children_from_prefab_instance_nested_children",
         OrderedChildren_get_ordered_children_from_prefab_instance_nested_children
+    },
+    {
+        "prefab_w_nested_ordered_children",
+        OrderedChildren_prefab_w_nested_ordered_children
+    },
+    {
+        "prefab_w_nested_ordered_children_2",
+        OrderedChildren_prefab_w_nested_ordered_children_2
+    },
+    {
+        "prefab_w_slots",
+        OrderedChildren_prefab_w_slots
     },
     {
         "recreate_named_child",
@@ -7979,6 +8042,14 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "shrink",
         ComponentLifecycle_shrink
+    },
+    {
+        "dtor_after_add_exclusive_component",
+        ComponentLifecycle_dtor_after_add_exclusive_component
+    },
+    {
+        "dtor_after_add_exclusive_component_last",
+        ComponentLifecycle_dtor_after_add_exclusive_component_last
     }
 };
 
@@ -10082,6 +10153,10 @@ bake_test_case Observer_testcases[] = {
         Observer_2_on_set_overridden_terms_field_size_w_tag
     },
     {
+        "create_observer_in_observer",
+        Observer_create_observer_in_observer
+    },
+    {
         "cache_test_1",
         Observer_cache_test_1
     },
@@ -11196,6 +11271,74 @@ bake_test_case Prefab_testcases[] = {
         Prefab_prefab_child_offset_w_smaller_child_id
     },
     {
+        "prefab_ordered_children_1_child_offset_id",
+        Prefab_prefab_ordered_children_1_child_offset_id
+    },
+    {
+        "prefab_ordered_children_2_children_offset_id",
+        Prefab_prefab_ordered_children_2_children_offset_id
+    },
+    {
+        "prefab_ordered_children_3_children_offset_id",
+        Prefab_prefab_ordered_children_3_children_offset_id
+    },
+    {
+        "prefab_ordered_children_2_children_2_types_offset_id",
+        Prefab_prefab_ordered_children_2_children_2_types_offset_id
+    },
+    {
+        "prefab_ordered_children_3_children_3_types_offset_id",
+        Prefab_prefab_ordered_children_3_children_3_types_offset_id
+    },
+    {
+        "prefab_ordered_children_2_children_2_types_reverse_offset_id",
+        Prefab_prefab_ordered_children_2_children_2_types_reverse_offset_id
+    },
+    {
+        "prefab_ordered_children_3_children_3_types_reverse_offset_id",
+        Prefab_prefab_ordered_children_3_children_3_types_reverse_offset_id
+    },
+    {
+        "prefab_ordered_children_2_lvl_nested_children_offset_id",
+        Prefab_prefab_ordered_children_2_lvl_nested_children_offset_id
+    },
+    {
+        "prefab_ordered_children_3_lvl_nested_children_offset_id",
+        Prefab_prefab_ordered_children_3_lvl_nested_children_offset_id
+    },
+    {
+        "prefab_ordered_children_recycled_children_offset_id",
+        Prefab_prefab_ordered_children_recycled_children_offset_id
+    },
+    {
+        "prefab_ordered_children_recycled_instance_offset_id",
+        Prefab_prefab_ordered_children_recycled_instance_offset_id
+    },
+    {
+        "prefab_ordered_children_children_recycled_offset_id",
+        Prefab_prefab_ordered_children_children_recycled_offset_id
+    },
+    {
+        "prefab_ordered_children_recycled_children_recycled_offset_id",
+        Prefab_prefab_ordered_children_recycled_children_recycled_offset_id
+    },
+    {
+        "prefab_ordered_children_recycled_children_recycled_offset_id_different_generation",
+        Prefab_prefab_ordered_children_recycled_children_recycled_offset_id_different_generation
+    },
+    {
+        "prefab_ordered_children_1_child_offset_id_occupied",
+        Prefab_prefab_ordered_children_1_child_offset_id_occupied
+    },
+    {
+        "prefab_ordered_children_1_child_offset_id_recycled_occupied",
+        Prefab_prefab_ordered_children_1_child_offset_id_recycled_occupied
+    },
+    {
+        "prefab_ordered_children_child_offset_w_smaller_child_id",
+        Prefab_prefab_ordered_children_child_offset_w_smaller_child_id
+    },
+    {
         "prefab_w_union",
         Prefab_prefab_w_union
     },
@@ -11657,6 +11800,10 @@ bake_test_case World_testcases[] = {
     {
         "delete_empty_component_record_w_shrink",
         World_delete_empty_component_record_w_shrink
+    },
+    {
+        "delete_empty_hi_component_record_w_shrink",
+        World_delete_empty_hi_component_record_w_shrink
     },
     {
         "delete_empty_queried_for_component_record_w_shrink",
@@ -12470,6 +12617,14 @@ bake_test_case Type_testcases[] = {
 };
 
 bake_test_case Commands_testcases[] = {
+    {
+        "is_deferred",
+        Commands_is_deferred
+    },
+    {
+        "is_defer_suspended",
+        Commands_is_defer_suspended
+    },
     {
         "defer_new",
         Commands_defer_new
@@ -13786,7 +13941,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        149,
+        152,
         Entity_testcases
     },
     {
@@ -13856,7 +14011,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         Sparse_setup,
         NULL,
-        210,
+        212,
         Sparse_testcases,
         1,
         Sparse_params
@@ -13872,7 +14027,7 @@ static bake_test_suite suites[] = {
         "OrderedChildren",
         NULL,
         NULL,
-        42,
+        45,
         OrderedChildren_testcases
     },
     {
@@ -13956,7 +14111,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         ComponentLifecycle_setup,
         NULL,
-        132,
+        134,
         ComponentLifecycle_testcases
     },
     {
@@ -13977,7 +14132,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        293,
+        294,
         Observer_testcases
     },
     {
@@ -14019,14 +14174,14 @@ static bake_test_suite suites[] = {
         "Prefab",
         Prefab_setup,
         NULL,
-        176,
+        193,
         Prefab_testcases
     },
     {
         "World",
         World_setup,
         NULL,
-        151,
+        152,
         World_testcases
     },
     {
@@ -14054,7 +14209,7 @@ static bake_test_suite suites[] = {
         "Commands",
         NULL,
         NULL,
-        168,
+        170,
         Commands_testcases
     },
     {

@@ -313,6 +313,7 @@ int flecs_value_binary(
     case EcsTokMatch:
     case EcsTokRange:
     case EcsTokIdentifier:
+    case EcsTokFunction:
     case EcsTokString:
     case EcsTokChar:
     case EcsTokNumber:

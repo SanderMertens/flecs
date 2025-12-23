@@ -354,6 +354,7 @@ struct world {
      * @see flecs::world::is_deferred()
      * @see flecs::world::defer_resume()
      * @see flecs::world::defer_suspend()
+     * @see flecs::world::is_defer_suspended()
      */
     bool defer_begin() const {
         return ecs_defer_begin(world_);
@@ -372,6 +373,7 @@ struct world {
      * @see flecs::world::is_deferred()
      * @see flecs::world::defer_resume()
      * @see flecs::world::defer_suspend()
+     * @see flecs::world::is_defer_suspended()
      */
     bool defer_end() const {
         return ecs_defer_end(world_);
@@ -387,9 +389,26 @@ struct world {
      * @see flecs::world::defer_end()
      * @see flecs::world::defer_resume()
      * @see flecs::world::defer_suspend()
+     * @see flecs::world::is_defer_suspended()
      */
     bool is_deferred() const {
         return ecs_is_deferred(world_);
+    }
+
+    /** Test whether deferring is suspended.
+     *
+     * @return True if deferred, false if not.
+     *
+     * @see ecs_is_defer_suspended()
+     * @see flecs::world::defer()
+     * @see flecs::world::defer_begin()
+     * @see flecs::world::defer_end()
+     * @see flecs::world::is_deferred()
+     * @see flecs::world::defer_resume()
+     * @see flecs::world::defer_suspend()
+     */
+    bool is_defer_suspended() const {
+        return ecs_is_defer_suspended(world_);
     }
 
     /** Configure world to have N stages.
@@ -1277,6 +1296,14 @@ struct world {
      */
     void set_version(flecs::entity_t e) const {
         ecs_set_version(world_, e);
+    }
+
+    /** Get version of provided entity.
+     * 
+     * @see ecs_get_version()
+     */
+    uint32_t get_version(flecs::entity_t e) const {
+        return ecs_get_version(e);
     }
 
     /* Run callback after completing frame */
