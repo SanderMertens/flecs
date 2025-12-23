@@ -2577,6 +2577,25 @@ void NonFragmentingChildOf_add_parent_to_prefab_after_add_parent(void) {
     ecs_fini(world);
 }
 
+void NonFragmentingChildOf_deep_hierarchy(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t root = ecs_new(world), cur = root;
+    for (int i = 0; i < 1000; i ++) {
+        ecs_entity_t e = ecs_new(world);
+        ecs_set(world, e, EcsParent, {cur});
+        cur = e;
+    }
+
+    test_int(ecs_count(world, EcsParent), 1000);
+
+    ecs_delete(world, root);
+
+    test_int(ecs_count(world, EcsParent), 0);
+
+    ecs_fini(world);
+}
+
 void NonFragmentingChildOf_lookup(void) {
     ecs_world_t *world = ecs_mini();
 
