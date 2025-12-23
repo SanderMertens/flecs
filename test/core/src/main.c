@@ -808,6 +808,7 @@ void NonFragmentingChildOf_lookup_after_reparent(void);
 void NonFragmentingChildOf_lookup_after_remove_parent(void);
 void NonFragmentingChildOf_lookup_after_clear(void);
 void NonFragmentingChildOf_lookup_after_delete(void);
+void NonFragmentingChildOf_deep_hierarchy(void);
 void NonFragmentingChildOf_instantiate_tree_1_child(void);
 void NonFragmentingChildOf_instantiate_tree_2_children(void);
 void NonFragmentingChildOf_instantiate_tree_3_children(void);
@@ -6183,6 +6184,10 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "lookup_after_delete",
         NonFragmentingChildOf_lookup_after_delete
+    },
+    {
+        "deep_hierarchy",
+        NonFragmentingChildOf_deep_hierarchy
     },
     {
         "instantiate_tree_1_child",
@@ -15035,7 +15040,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NULL,
         NULL,
-        110,
+        111,
         NonFragmentingChildOf_testcases
     },
     {
