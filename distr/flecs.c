@@ -506,7 +506,7 @@ struct ecs_component_record_t {
      * queried for. */
     int32_t keep_alive;
 
-#ifdef FLECS_SAFETY_LOCKS
+#ifdef FLECS_MUT_ALIAS_LOCKS
     /* lock for when sparse components are read or written to */
     int32_t sparse_lock;
 #endif
@@ -616,22 +616,20 @@ void flecs_component_ordered_children_init(
     ecs_world_t *world,
     ecs_component_record_t *cr);
 
-#ifdef FLECS_SAFETY_LOCKS
+#ifdef FLECS_MUT_ALIAS_LOCKS
 
 FLECS_ALWAYS_INLINE int32_t flecs_sparse_id_record_lock_inc(
-    ecs_component_record_t *idr);
+    ecs_component_record_t *cr);
 
 FLECS_ALWAYS_INLINE int32_t flecs_sparse_id_record_lock_inc_multithreaded(
-    ecs_component_record_t *idr);
+    ecs_component_record_t *cr);
 
 FLECS_ALWAYS_INLINE int32_t flecs_sparse_id_record_lock_dec(
-    ecs_component_record_t *idr);
+    ecs_component_record_t *cr);
 
 FLECS_ALWAYS_INLINE int32_t flecs_sparse_id_record_lock_dec_multithreaded(
-    ecs_component_record_t *idr);
+    ecs_component_record_t *cr);
     
-#endif
-
 #endif
 #endif
 
@@ -915,7 +913,7 @@ struct ecs_table_t {
                                       *  - count(T)..count(C): column -> type index
                                       */
 
-#ifdef FLECS_SAFETY_LOCKS
+#ifdef FLECS_MUT_ALIAS_LOCKS
     int32_t *column_lock;            /* Lock columns for writing and reading */
 #endif
 
@@ -1066,7 +1064,7 @@ ecs_hashmap_t* flecs_table_get_name_index(
     const ecs_world_t *world,
     const ecs_table_t *table);
 
-#ifdef FLECS_SAFETY_LOCKS
+#ifdef FLECS_MUT_ALIAS_LOCKS
 
 /* resize column locks for all tables. */
 void flecs_tables_resize_column_locks(
@@ -2995,32 +2993,29 @@ void flecs_enqueue(
 #ifndef FLECS_ENTITY_H
 #define FLECS_ENTITY_H
 
-#ifdef FLECS_SAFETY_LOCKS
-    #define FLECS_SI_INIT(cr_, table_, col_) \
-     .si = (ecs_safety_info_t){ .cr = (cr_), .table = (table_), .column_index = (int16_t)(col_) },
+#ifdef FLECS_MUT_ALIAS_LOCKS
+    #define FLECS_LOCK_TARGET_INIT(cr_, table_, col_) \
+     .lock_target = (ecs_lock_target_t){ .cr = (cr_), .table = (table_), .column_index = (int16_t)(col_) },
 #else
-    #define FLECS_SI_INIT(cr_, table_, col_) /* nothing */
+    #define FLECS_LOCK_TARGET_INIT(cr_, table_, col_) /* nothing */
 #endif
 
 #define ecs_get_low_id(table, r, id)\
     ecs_assert(table->component_map != NULL, ECS_INTERNAL_ERROR, NULL);\
     int16_t column_index = table->component_map[id];\
     if (column_index > 0) {\
-        --column_index;\
-        ecs_column_t *column = &table->data.columns[column_index];\
-        void *ptr = ECS_ELEM(column->data, column->ti->size, \
-            ECS_RECORD_TO_ROW(r->row));\
+        ecs_column_t *column = &table->data.columns[--column_index];\
         return (ecs_get_ptr_t){\
-            .component_ptr = ptr,\
-            FLECS_SI_INIT(NULL, table, column_index)\
+            .ptr = ECS_ELEM(column->data, column->ti->size, ECS_RECORD_TO_ROW(r->row)),\
+            FLECS_LOCK_TARGET_INIT(NULL, table, column_index)\
         };\
     }
 
 typedef struct {
     const ecs_type_info_t *ti;
     void *ptr;
-#ifdef FLECS_SAFETY_LOCKS
-    ecs_safety_info_t si;
+#ifdef FLECS_MUT_ALIAS_LOCKS
+    ecs_lock_target_t lock_target;
 #endif
 } flecs_component_ptr_t;
 
@@ -5975,7 +5970,7 @@ void* flecs_defer_ensure(
         void *base = NULL;
         if (table && (table->flags & EcsTableHasIsA)) {
             ecs_component_record_t *cr = flecs_components_get(world, id);
-            base = flecs_get_base_component(world, table, id, cr, 0).component_ptr;
+            base = flecs_get_base_component(world, table, id, cr, 0).ptr;
         }
 
         if (!base) {
@@ -7925,7 +7920,7 @@ flecs_component_ptr_t flecs_table_get_component(
     return (flecs_component_ptr_t){
         .ti = column->ti,
         .ptr = ECS_ELEM(column->data, column->ti->size, row),
-        FLECS_SI_INIT(NULL, table, column_index)
+        FLECS_LOCK_TARGET_INIT(NULL, table, column_index)
     };
 }
 
@@ -7943,11 +7938,10 @@ flecs_component_ptr_t flecs_get_component_ptr(
     }
 
     if (cr->flags & (EcsIdSparse|EcsIdDontFragment)) {
-        ecs_entity_t entity = ecs_table_entities(table)[row];
         return (flecs_component_ptr_t){
             .ti = cr->type_info,
-            .ptr = flecs_component_sparse_get(world, cr, table, entity),
-            FLECS_SI_INIT(cr, NULL, -1)
+            .ptr = flecs_component_sparse_get(world, cr, table, ecs_table_entities(table)[row]),
+            FLECS_LOCK_TARGET_INIT(cr, NULL, -1)
         };
     }
 
@@ -8016,35 +8010,32 @@ ecs_get_ptr_t flecs_get_base_component(
         const ecs_table_record_t *tr = flecs_component_get_table(cr, table);
         if (!tr) {
             if (cr->flags & EcsIdDontFragment) {
-                void *sparse_ptr = flecs_component_sparse_get(world, cr, table, base);
                 ptr = (ecs_get_ptr_t){
-                    .component_ptr = sparse_ptr,
-                    FLECS_SI_INIT(cr, NULL, -1)
+                    .ptr = flecs_component_sparse_get(world, cr, table, base),
+                    FLECS_LOCK_TARGET_INIT(cr, NULL, -1)
                 };
             }
 
-            if (!ptr.component_ptr) {
+            if (!ptr.ptr) {
                 ptr = flecs_get_base_component(world, table, component, cr, 
                     recur_depth + 1);
             }
         } else {
             if (cr->flags & EcsIdSparse) {
-                void *sparse_ptr = flecs_component_sparse_get(world, cr, table, base);
                 return (ecs_get_ptr_t){
-                    .component_ptr = sparse_ptr,
-                    FLECS_SI_INIT(cr, NULL, -1)
+                    .ptr = flecs_component_sparse_get(world, cr, table, base),
+                    FLECS_LOCK_TARGET_INIT(cr, NULL, -1)
                 };
             } else if (tr->column != -1) {
                 int32_t row = ECS_RECORD_TO_ROW(r->row);
                 int16_t column = tr->column;
-                void *get_ptr = flecs_table_get_component(table, column, row).ptr;
                 return (ecs_get_ptr_t){
-                    .component_ptr = get_ptr,
-                    FLECS_SI_INIT(NULL, table, column)
+                    .ptr = flecs_table_get_component(table, column, row).ptr,
+                    FLECS_LOCK_TARGET_INIT(NULL, table, column)
                 };
             }
         }
-    } while (!ptr.component_ptr && (i < end));
+    } while (!ptr.ptr && (i < end));
 
     return ptr;
 error:
@@ -9831,8 +9822,8 @@ ecs_get_ptr_t flecs_record_get_id(
         void *ptr = flecs_component_sparse_get(world, cr, table, entity);
         if (ptr) {
             return (ecs_get_ptr_t){
-                .component_ptr = ptr,
-                FLECS_SI_INIT(cr, NULL, -1)
+                .ptr = ptr,
+                FLECS_LOCK_TARGET_INIT(cr, NULL, -1)
             };
         }
     }
@@ -9842,10 +9833,9 @@ ecs_get_ptr_t flecs_record_get_id(
         return flecs_get_base_component(world, table, component, cr, 0);
     } else {
         if (cr->flags & EcsIdSparse) {
-            void *sparse_ptr = flecs_component_sparse_get(world, cr, table, entity);
             return (ecs_get_ptr_t){
-                .component_ptr = sparse_ptr,
-                FLECS_SI_INIT(cr, NULL, -1)
+                .ptr = flecs_component_sparse_get(world, cr, table, entity),
+                FLECS_LOCK_TARGET_INIT(cr, NULL, -1)
             };
         }
         ecs_check(tr->column != -1, ECS_INVALID_PARAMETER,
@@ -9855,10 +9845,9 @@ ecs_get_ptr_t flecs_record_get_id(
 
     int32_t row = ECS_RECORD_TO_ROW(r->row);
     int32_t column_index = tr->column;
-    void *get_ptr = flecs_table_get_component(table, column_index, row).ptr;
     return (ecs_get_ptr_t){
-        .component_ptr = get_ptr,
-        FLECS_SI_INIT(NULL, table, column_index)
+        .ptr = flecs_table_get_component(table, column_index, row).ptr,
+        FLECS_LOCK_TARGET_INIT(NULL, table, column_index)
     };
 error:
     return (ecs_get_ptr_t){0};
@@ -9875,7 +9864,7 @@ const void* ecs_get_id(
 
     ecs_record_t *r = flecs_entities_get(world, entity);
 
-    return flecs_record_get_id(world, entity, r, component).component_ptr;
+    return flecs_record_get_id(world, entity, r, component).ptr;
 error:
     return NULL;
 }
@@ -9924,9 +9913,9 @@ ecs_get_ptr_t flecs_record_get_mut_id(
     int32_t row = ECS_RECORD_TO_ROW(r->row);
     flecs_component_ptr_t component_ptr = flecs_get_component_ptr(world, r->table, row, cr);
     return (ecs_get_ptr_t) {
-        .component_ptr = component_ptr.ptr
-        #ifdef FLECS_SAFETY_LOCKS
-        , .si = component_ptr.si
+        .ptr = component_ptr.ptr
+        #ifdef FLECS_MUT_ALIAS_LOCKS
+        , .lock_target = component_ptr.lock_target
         #endif  
     };
 error:
@@ -9946,7 +9935,7 @@ void* ecs_get_mut_id(
 
     ecs_record_t *r = flecs_entities_get(world, entity);
 
-    return flecs_record_get_mut_id(world, r, component).component_ptr;
+    return flecs_record_get_mut_id(world, r, component).ptr;
 
 error:
     return NULL;
@@ -10577,7 +10566,7 @@ bool ecs_has_id(
                 return true;
             } else {
                 return flecs_get_base_component(
-                    world, table, component, cr, 0).component_ptr != NULL;
+                    world, table, component, cr, 0).ptr != NULL;
             }
         }
 
@@ -20826,7 +20815,7 @@ void ecs_set_stage_count(
     ecs_assert(stage_count >= 1 || (world->flags & EcsWorldFini), 
         ECS_INTERNAL_ERROR, NULL);
 
-#ifdef FLECS_SAFETY_LOCKS
+#ifdef FLECS_MUT_ALIAS_LOCKS
     flecs_tables_resize_column_locks(world,world->stage_count,stage_count);
 #endif
 
@@ -21109,14 +21098,6 @@ bool ecs_is_defer_suspended(
 error:
     return false;
 }
-
-
-
-/**
- * @file tree_spawner.c
- * @brief Data structure used to speed up the creation of hierarchies.
- */
-
 
 static
 void flecs_tree_spawner_release_tables(
@@ -41371,82 +41352,83 @@ void flecs_component_update_childof_depth(
 
     flecs_component_update_childof_w_depth(world, cr, new_depth);
 }
-#ifdef FLECS_SAFETY_LOCKS
+
+#ifdef FLECS_MUT_ALIAS_LOCKS
 
 int32_t flecs_sparse_id_record_lock_inc(
-    ecs_component_record_t *idr)
+    ecs_component_record_t *cr)
 {
-    ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
-    return ++idr->sparse_lock;
+    ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
+    return ++cr->sparse_lock;
 }
 
 int32_t flecs_sparse_id_record_lock_inc_multithreaded(
-    ecs_component_record_t *idr)
+    ecs_component_record_t *cr)
 {
-    ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
-    return ecs_os_ainc(&idr->sparse_lock);
+    ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
+    return ecs_os_ainc(&cr->sparse_lock);
 }
 
 int32_t flecs_sparse_id_record_lock_dec(
-    ecs_component_record_t *idr)
+    ecs_component_record_t *cr)
 {
-    ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
-    return --idr->sparse_lock;
+    ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
+    return --cr->sparse_lock;
 }
 
 int32_t flecs_sparse_id_record_lock_dec_multithreaded(
-    ecs_component_record_t *idr)
+    ecs_component_record_t *cr)
 {
-    ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
-    return ecs_os_adec(&idr->sparse_lock);
+    ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
+    return ecs_os_adec(&cr->sparse_lock);
 }
 
 bool flecs_sparse_id_record_lock_read_begin(
-    ecs_component_record_t *idr)
+    ecs_component_record_t *cr)
 {
-    return flecs_sparse_id_record_lock_inc(idr) <= 0;
+    return flecs_sparse_id_record_lock_inc(cr) <= 0;
 }
 
 bool flecs_sparse_id_record_lock_read_begin_multithreaded(
-    ecs_component_record_t *idr)
+    ecs_component_record_t *cr)
 {
-    return flecs_sparse_id_record_lock_inc_multithreaded(idr) <= 0;
+    return flecs_sparse_id_record_lock_inc_multithreaded(cr) <= 0;
 }
 
 bool flecs_sparse_id_record_lock_read_end(
-    ecs_component_record_t *idr)
+    ecs_component_record_t *cr)
 {
-    return flecs_sparse_id_record_lock_dec(idr) < 0;
+    return flecs_sparse_id_record_lock_dec(cr) < 0;
 }
 
 bool flecs_sparse_id_record_lock_read_end_multithreaded(
-    ecs_component_record_t *idr)
+    ecs_component_record_t *cr)
 {
-    return flecs_sparse_id_record_lock_dec_multithreaded(idr) < 0;
+    return flecs_sparse_id_record_lock_dec_multithreaded(cr) < 0;
 }
 
 bool flecs_sparse_id_record_lock_write_begin(
-    ecs_component_record_t *idr)
+    ecs_component_record_t *cr)
 {
-    return flecs_sparse_id_record_lock_dec(idr) != -1;
+    return flecs_sparse_id_record_lock_dec(cr) != -1;
 }
 
 bool flecs_sparse_id_record_lock_write_begin_multithreaded(
-    ecs_component_record_t *idr)
+    ecs_component_record_t *cr)
 {
-    return flecs_sparse_id_record_lock_dec_multithreaded(idr) != -1;
+    return flecs_sparse_id_record_lock_dec_multithreaded(cr) != -1;
 }
 
 bool flecs_sparse_id_record_lock_write_end(
-    ecs_component_record_t *idr)
+    ecs_component_record_t *cr)
 {
-    return flecs_sparse_id_record_lock_inc(idr) != 0;
+    return flecs_sparse_id_record_lock_inc(cr) != 0;
 }
 
 bool flecs_sparse_id_record_lock_write_end_multithreaded(
-    ecs_component_record_t *idr)
+    ecs_component_record_t *cr)
 {
-    return flecs_sparse_id_record_lock_inc_multithreaded(idr) != 0;
+    return flecs_sparse_id_record_lock_inc_multithreaded(cr) != 0;
 }
 
 #endif
@@ -43279,7 +43261,7 @@ void* flecs_component_sparse_emplace(
 
 const int16_t flecs_table_empty_component_map[FLECS_HI_COMPONENT_ID] = {0};
 
-#ifdef FLECS_SAFETY_LOCKS
+#ifdef FLECS_MUT_ALIAS_LOCKS
 void flecs_table_init_column_locks(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -43472,7 +43454,7 @@ void flecs_table_init_data(
 {
     flecs_table_init_columns(world, table, table->column_count);
 
-#ifdef FLECS_SAFETY_LOCKS
+#ifdef FLECS_MUT_ALIAS_LOCKS
     flecs_table_init_column_locks(world, table,ecs_get_stage_count(world));
 #endif
 
@@ -44462,7 +44444,7 @@ void flecs_table_fini_data(
             flecs_wfree_n(world, ecs_column_t, table->column_count, columns);
             table->data.columns = NULL;
 
-        #ifdef FLECS_SAFETY_LOCKS
+        #ifdef FLECS_MUT_ALIAS_LOCKS
             if(table->column_lock)
             {
                 flecs_wfree_n(world, int32_t, ecs_get_stage_count(world) * column_count, table->column_lock);
@@ -46338,7 +46320,7 @@ char* ecs_table_str(
     }
 }
 
-#ifdef FLECS_SAFETY_LOCKS
+#ifdef FLECS_MUT_ALIAS_LOCKS
 
 void flecs_table_init_column_locks(
     ecs_world_t *world,
@@ -46545,19 +46527,6 @@ bool flecs_table_column_lock_write_end_multithreaded(
 }
 
 #endif
-
-/**
- * @file storage/table_cache.c
- * @brief Data structure for fast table iteration/lookups.
- * 
- * A table cache is a data structure that provides constant time operations for
- * insertion and removal of tables, and for testing whether a table is registered
- * with the cache. A table cache also provides functions to iterate the tables
- * in a cache.
- * 
- * The world stores a table cache per (component) id inside the component record 
- * administration. Cached queries store a table cache with matched tables.
- */
 
 #define FLECS_TABLE_CACHE_INDEX_THRESHOLD (4)
 
