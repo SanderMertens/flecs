@@ -9,8 +9,26 @@
 #ifdef FLECS_MUT_ALIAS_LOCKS
     #define FLECS_LOCK_TARGET_INIT(cr_, table_, col_) \
      .lock_target = (ecs_lock_target_t){ .cr = (cr_), .table = (table_), .column_index = (int16_t)(col_) },
+    
+    /* Construct ecs_get_ptr_t with lock target info */
+    #define ECS_GET_PTR(ptr_, cr_, table_, col_) \
+        (ecs_get_ptr_t){ \
+            .ptr = (ptr_), \
+            .lock_target = (ecs_lock_target_t){ .cr = (cr_), .table = (table_), .column_index = (int16_t)(col_) } \
+        }
+    
+    /* Construct null ecs_get_ptr_t */
+    #define ECS_GET_PTR_NULL (ecs_get_ptr_t){0}
+    
+    /* Extract the pointer from ecs_get_ptr_t */
+    #define ECS_GET_PTR_PTR(get_ptr_) ((get_ptr_).ptr)
 #else
     #define FLECS_LOCK_TARGET_INIT(cr_, table_, col_) /* nothing */
+    
+    /* When FLECS_MUT_ALIAS_LOCKS is not defined, ecs_get_ptr_t is just void* */
+    #define ECS_GET_PTR(ptr_, cr_, table_, col_) ((ecs_get_ptr_t)(ptr_))
+    #define ECS_GET_PTR_NULL ((ecs_get_ptr_t)NULL)
+    #define ECS_GET_PTR_PTR(get_ptr_) (get_ptr_)
 #endif
 
 #define ecs_get_low_id(table, r, id)\
@@ -18,10 +36,9 @@
     int16_t column_index = table->component_map[id];\
     if (column_index > 0) {\
         ecs_column_t *column = &table->data.columns[--column_index];\
-        return (ecs_get_ptr_t){\
-            .ptr = ECS_ELEM(column->data, column->ti->size, ECS_RECORD_TO_ROW(r->row)),\
-            FLECS_LOCK_TARGET_INIT(NULL, table, column_index)\
-        };\
+        return ECS_GET_PTR(\
+            ECS_ELEM(column->data, column->ti->size, ECS_RECORD_TO_ROW(r->row)),\
+            NULL, table, column_index);\
     }
 
 typedef struct {
