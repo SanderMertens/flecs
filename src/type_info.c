@@ -651,16 +651,17 @@ const ecs_type_info_t* flecs_determine_type_info_for_component(
             return flecs_type_info_get(world, id);
         }
     } else {
-        ecs_entity_t rel = ecs_pair_first(world, id);
-        if (rel) {
-            if (ecs_has_id(world, rel, EcsPairIsTag)) {
-                return NULL;
-            }
+        ecs_entity_t rel = ECS_PAIR_FIRST(id);
+        rel = flecs_entities_get_alive(world, rel);
+        ecs_assert(ecs_is_alive(world, rel), ECS_INTERNAL_ERROR, NULL);
 
-            const ecs_type_info_t *ti = flecs_type_info_get(world, rel);
-            if (ti) {
-                return ti;
-            }
+        if (ecs_owns_id(world, rel, EcsPairIsTag)) {
+            return NULL;
+        }
+
+        const ecs_type_info_t *ti = flecs_type_info_get(world, rel);
+        if (ti) {
+            return ti;
         }
 
         if (!ECS_IS_VALUE_PAIR(id)) {

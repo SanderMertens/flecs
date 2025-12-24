@@ -307,15 +307,19 @@ void flecs_notify_on_add(
     const ecs_type_t *added = &diff->added;
 
     if (added->count) {
-        ecs_flags32_t diff_flags = 
-            diff->added_flags|(table->flags & (EcsTableHasTraversable|EcsTableHasParent));
-        if (!diff_flags) {
-            return;
+        ecs_flags32_t table_flags = table->flags;
+        if (table_flags & EcsTableHasTraversable) {
+            flecs_emit_propagate_invalidate(world, table, row, count);
         }
 
-        if (diff_flags & EcsTableHasParent) {
+        if (table_flags & EcsTableHasParent) {
             flecs_on_non_fragmenting_child_move_add(
                 world, table, other_table, row, count);
+        }
+
+        ecs_flags32_t diff_flags = diff->added_flags;
+        if (!diff_flags) {
+            return;
         }
 
         if (diff_flags & EcsTableEdgeReparent) {
@@ -362,13 +366,12 @@ void flecs_notify_on_remove(
                 "removing components from builtin entities is not allowed");
         }
 
-        ecs_flags32_t diff_flags = 
-            diff->removed_flags|(table->flags & (EcsTableHasTraversable|EcsTableHasParent));
-        if (!diff_flags) {
-            return;
+        ecs_flags32_t table_flags = table->flags;
+        if (table_flags & EcsTableHasTraversable) {
+            flecs_emit_propagate_invalidate(world, table, row, count);
         }
-        
-        if (diff_flags & EcsTableHasParent) {
+
+        if (table_flags & EcsTableHasParent) {
             bool update_parent_records = true;
             if (diff->added.count && (table->flags & EcsTableHasParent)) {
                 update_parent_records = false;
@@ -376,6 +379,11 @@ void flecs_notify_on_remove(
 
             flecs_on_non_fragmenting_child_move_remove(
                 world, other_table, table, row, count, update_parent_records);
+        }
+
+        ecs_flags32_t diff_flags = diff->removed_flags;
+        if (!diff_flags) {
+            return;
         }
 
         if (diff_flags & (EcsTableEdgeReparent|EcsTableHasOrderedChildren)) {
@@ -392,7 +400,7 @@ void flecs_notify_on_remove(
             }
         }
 
-        if (diff_flags & (EcsTableHasOnRemove|EcsTableHasTraversable)) {
+        if (diff_flags & EcsTableHasOnRemove) {
             flecs_emit(world, world, &(ecs_event_desc_t) {
                 .event = EcsOnRemove,
                 .ids = removed,

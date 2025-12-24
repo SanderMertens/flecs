@@ -281,6 +281,7 @@ ecs_flags32_t flecs_component_event_flags(
         |EcsIdHasOnSet
         |EcsIdHasOnTableCreate
         |EcsIdHasOnTableDelete);
+
     return result;
 }
 
@@ -312,93 +313,25 @@ ecs_flags32_t flecs_component_get_flags_intern(
     ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_table_t *table = r->table;
 
-    if (ecs_table_has_id(world, table, ecs_pair(EcsWith, EcsWildcard))) {
-        result |= EcsIdWith;
-    }
-
-    if (ecs_table_has_id(world, table, EcsCanToggle)) {
-        result |= EcsIdCanToggle;
-    }
-
-    if (ecs_table_has_id(world, table, EcsInheritable)) {
-        result |= EcsIdInheritable;
-    }
-
-    if (ecs_table_has_id(world, table, EcsSingleton)) {
-        result |= EcsIdSingleton;
-    }
-
-    if (id == ecs_id(EcsParent)) {
-        result |= EcsIdTraversable;
-    }
-
-    ecs_entity_t on_delete_kind = ecs_table_get_target(world, table, EcsOnDelete, 0);
-    if (on_delete_kind == EcsRemove) {
-        result |= EcsIdOnDeleteRemove;
-    } else if (on_delete_kind == EcsDelete) {
-        result |= EcsIdOnDeleteDelete;
-    } else if (on_delete_kind == EcsPanic) {
-        result |= EcsIdOnDeletePanic;
-    }
-
-    on_delete_kind = ecs_table_get_target(world, table, EcsOnDeleteTarget, 0);
-    if (on_delete_kind == EcsRemove) {
-        result |= EcsIdOnDeleteTargetRemove;
-    } else if (on_delete_kind == EcsDelete) {
-        result |= EcsIdOnDeleteTargetDelete;
-    } else if (on_delete_kind == EcsPanic) {
-        result |= EcsIdOnDeleteTargetPanic;
-    }
-
-    ecs_entity_t inherit_kind = ecs_table_get_target(world, table, EcsOnInstantiate, 0);
-    if (inherit_kind == EcsInherit) {
-        result |= EcsIdOnInstantiateInherit;
-    } else if (inherit_kind == EcsDontInherit) {
-        result |= EcsIdOnInstantiateDontInherit;
-    } else if (inherit_kind == EcsOverride) {
-        result |= EcsIdOnInstantiateOverride;
-    }
+    result = table->trait_flags;
 
     if (tgt) {
-        if (ecs_table_has_id(world, table, EcsExclusive)) {
-            result |= EcsIdExclusive;
-        }
+        if (ti && (ti->component == tgt)) {
+            /* Target determines the type, so unset storage flags */
+            result &= ~EcsIdSparse;
+            result &= ~EcsIdDontFragment;
 
-        if (ecs_table_has_id(world, table, EcsTraversable)) {
-            result |= EcsIdTraversable;
-        }
+            if (ecs_owns_id(world, tgt, EcsSparse)) {
+                result |= EcsIdSparse;
+            }
 
-        if (ecs_table_has_id(world, table, EcsPairIsTag)) {
-            result |= EcsIdPairIsTag;
-        }
-
-        if (ecs_table_has_id(world, table, EcsTransitive)) {
-            result |= EcsIdIsTransitive;
-        }
-
-        if (rel == EcsChildOf) {
-            if (ecs_has_id(world, tgt, EcsOrderedChildren)) {
-                result |= EcsIdOrderedChildren;
+            if (ecs_owns_id(world, tgt, EcsDontFragment)) {
+                result |= EcsIdDontFragment;
             }
         }
-    }
-
-    if (tgt && ti && (ti->component == tgt)) {
-        if (ecs_has_id(world, tgt, EcsSparse)) {
-            result |= EcsIdSparse;
-        }
-
-        if (ecs_has_id(world, tgt, EcsDontFragment)) {
-            result |= EcsIdDontFragment;
-        }
     } else {
-        if (ecs_table_has_id(world, table, EcsSparse)) {
-            result |= EcsIdSparse;
-        }
-
-        if (ecs_table_has_id(world, table, EcsDontFragment)) {
-            result |= EcsIdDontFragment;
-        }
+        /* Disable flags that only apply to pairs */
+        result &= ~(EcsIdExclusive|EcsIdTraversable|EcsIdPairIsTag|EcsIdIsTransitive);
     }
 
     result |= flecs_component_event_flags(world, id);
@@ -1190,6 +1123,10 @@ void flecs_component_update_childof_w_depth(
     ecs_pair_record_t *pair = cr->pair;
     ecs_assert(pair != NULL, ECS_INTERNAL_ERROR, NULL);
 
+    if (cr->flags & EcsIdMarkedForDelete) {
+        return;
+    }
+
     /* If depth changed, propagate downwards */
     if (depth != pair->depth) {
         pair->depth = depth;
@@ -1208,6 +1145,10 @@ void flecs_component_update_childof_depth(
     ecs_assert(cr->pair != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(ECS_PAIR_SECOND(cr->id) == (uint32_t)tgt, 
         ECS_INTERNAL_ERROR, NULL);
+
+    if (cr->flags & EcsIdMarkedForDelete) {
+        return;
+    }
 
     int32_t new_depth;
     if (tgt) {

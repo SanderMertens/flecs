@@ -68,7 +68,7 @@ void NonFragmentingChildOf_0_src_childof_0(void) {
 void NonFragmentingChildOf_fixed_src_childof_0(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t c1 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_entity_t c2 = ecs_new_w_pair(world, EcsChildOf, p);
 
@@ -128,7 +128,7 @@ void NonFragmentingChildOf_fixed_src_childof_0(void) {
 void NonFragmentingChildOf_fixed_src_not_childof_wildcard(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t c1 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_entity_t c2 = ecs_new_w_pair(world, EcsChildOf, p);
 
@@ -188,8 +188,8 @@ void NonFragmentingChildOf_fixed_src_not_childof_wildcard(void) {
 void NonFragmentingChildOf_fixed_src_childof_parent(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t p_1 = ecs_new_w_id(world, EcsOrderedChildren);
-    ecs_entity_t p_2 = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
     ecs_entity_t c_2 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
     ecs_entity_t c_3 = ecs_insert(world, ecs_value(EcsParent, {p_2}));
@@ -320,8 +320,8 @@ void NonFragmentingChildOf_fixed_src_childof_parent_w_tag(void) {
 
     ECS_TAG(world, Foo);
 
-    ecs_entity_t p_1 = ecs_new_w_id(world, EcsOrderedChildren);
-    ecs_entity_t p_2 = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
     ecs_entity_t c_2 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
     ecs_entity_t c_3 = ecs_insert(world, ecs_value(EcsParent, {p_2}));
@@ -471,8 +471,8 @@ void NonFragmentingChildOf_fixed_src_childof_parent_w_component(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t p_1 = ecs_new_w_id(world, EcsOrderedChildren);
-    ecs_entity_t p_2 = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
     ecs_entity_t c_2 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
     ecs_entity_t c_3 = ecs_insert(world, ecs_value(EcsParent, {p_2}));
@@ -640,8 +640,8 @@ void NonFragmentingChildOf_fixed_src_childof_parent_w_component(void) {
 void NonFragmentingChildOf_fixed_src_childof_wildcard(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t p_1 = ecs_new_w_id(world, EcsOrderedChildren);
-    ecs_entity_t p_2 = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
     ecs_entity_t c_2 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
     ecs_entity_t c_3 = ecs_insert(world, ecs_value(EcsParent, {p_2}));
@@ -756,8 +756,8 @@ void NonFragmentingChildOf_fixed_src_childof_wildcard_w_tag(void) {
 
     ECS_TAG(world, Foo);
 
-    ecs_entity_t p_1 = ecs_new_w_id(world, EcsOrderedChildren);
-    ecs_entity_t p_2 = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
     ecs_entity_t c_2 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
     ecs_entity_t c_3 = ecs_insert(world, ecs_value(EcsParent, {p_2}));
@@ -890,8 +890,8 @@ void NonFragmentingChildOf_fixed_src_childof_wildcard_w_component(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t p_1 = ecs_new_w_id(world, EcsOrderedChildren);
-    ecs_entity_t p_2 = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
     ecs_entity_t c_2 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
     ecs_entity_t c_3 = ecs_insert(world, ecs_value(EcsParent, {p_2}));
@@ -1042,8 +1042,8 @@ void NonFragmentingChildOf_fixed_src_childof_wildcard_w_component(void) {
 void NonFragmentingChildOf_fixed_src_childof_any(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t p_1 = ecs_new_w_id(world, EcsOrderedChildren);
-    ecs_entity_t p_2 = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
     ecs_entity_t c_2 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
     ecs_entity_t c_3 = ecs_insert(world, ecs_value(EcsParent, {p_2}));
@@ -1156,8 +1156,8 @@ void NonFragmentingChildOf_fixed_src_childof_any(void) {
 void NonFragmentingChildOf_fixed_src_childof_var(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t p_1 = ecs_new_w_id(world, EcsOrderedChildren);
-    ecs_entity_t p_2 = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
     ecs_entity_t c_2 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
     ecs_entity_t c_3 = ecs_insert(world, ecs_value(EcsParent, {p_2}));
@@ -1289,8 +1289,8 @@ void NonFragmentingChildOf_fixed_src_childof_var(void) {
 void NonFragmentingChildOf_fixed_src_childof_set_var(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t p_1 = ecs_new_w_id(world, EcsOrderedChildren);
-    ecs_entity_t p_2 = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
     ecs_entity_t c_2 = ecs_insert(world, ecs_value(EcsParent, {p_2}));
 
@@ -1511,7 +1511,7 @@ void NonFragmentingChildOf_any_src_childof_parent(void) {
 void NonFragmentingChildOf_any_src_childof_var(void) {
     ecs_world_t *world = ecs_mini();
     
-    ecs_entity_t parent = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t parent = ecs_new(world);
     ecs_set_name(world, parent, "parent");
 
     ecs_query_t *q = ecs_query(world, {
@@ -1838,7 +1838,7 @@ void NonFragmentingChildOf_this_src_childof_0(void) {
 void NonFragmentingChildOf_this_src_not_childof_wildcard(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     /* ecs_entity_t c1 = */ ecs_insert(world, ecs_value(EcsParent, {p}));
     /* ecs_entity_t c2 = */ ecs_new_w_pair(world, EcsChildOf, p);
     ecs_entity_t c3 = ecs_new(world);
@@ -1854,20 +1854,15 @@ void NonFragmentingChildOf_this_src_not_childof_wildcard(void) {
 
     ecs_iter_t it = ecs_query_iter(world, q);
     test_bool(true, ecs_query_next(&it));
-    test_int(1, it.count);
-    test_uint(c3, it.entities[0]);
+    test_int(2, it.count);
+    test_uint(p, it.entities[0]);
+    test_uint(c3, it.entities[1]);
     test_uint(ecs_childof(0), ecs_field_id(&it, 0));
     test_bool(true, ecs_field_is_set(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(EcsFlecs, it.entities[0]);
-    test_uint(ecs_childof(0), ecs_field_id(&it, 0));
-    test_bool(true, ecs_field_is_set(&it, 0));
-
-    test_bool(true, ecs_query_next(&it));
-    test_int(1, it.count);
-    test_uint(p, it.entities[0]);
     test_uint(ecs_childof(0), ecs_field_id(&it, 0));
     test_bool(true, ecs_field_is_set(&it, 0));
 
@@ -1881,7 +1876,7 @@ void NonFragmentingChildOf_this_src_not_childof_wildcard(void) {
 void NonFragmentingChildOf_this_src_not_childof_any(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     /* ecs_entity_t c1 = */ ecs_insert(world, ecs_value(EcsParent, {p}));
     /* ecs_entity_t c2 = */ ecs_new_w_pair(world, EcsChildOf, p);
     ecs_entity_t c3 = ecs_new(world);
@@ -1897,20 +1892,15 @@ void NonFragmentingChildOf_this_src_not_childof_any(void) {
 
     ecs_iter_t it = ecs_query_iter(world, q);
     test_bool(true, ecs_query_next(&it));
-    test_int(1, it.count);
-    test_uint(c3, it.entities[0]);
+    test_int(2, it.count);
+    test_uint(p, it.entities[0]);
+    test_uint(c3, it.entities[1]);
     test_uint(ecs_childof(0), ecs_field_id(&it, 0));
     test_bool(true, ecs_field_is_set(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(EcsFlecs, it.entities[0]);
-    test_uint(ecs_childof(0), ecs_field_id(&it, 0));
-    test_bool(true, ecs_field_is_set(&it, 0));
-
-    test_bool(true, ecs_query_next(&it));
-    test_int(1, it.count);
-    test_uint(p, it.entities[0]);
     test_uint(ecs_childof(0), ecs_field_id(&it, 0));
     test_bool(true, ecs_field_is_set(&it, 0));
 
@@ -1927,8 +1917,8 @@ void NonFragmentingChildOf_this_src_childof_parent(void) {
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
-    ecs_entity_t p_1 = ecs_new_w_id(world, EcsOrderedChildren);
-    ecs_entity_t p_2 = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
     ecs_entity_t p_3 = ecs_new(world);
 
     ecs_entity_t c1 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
@@ -2044,8 +2034,8 @@ void NonFragmentingChildOf_this_src_childof_parent_w_tag(void) {
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
-    ecs_entity_t p_1 = ecs_new_w_id(world, EcsOrderedChildren);
-    ecs_entity_t p_2 = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
     ecs_entity_t p_3 = ecs_new(world);
 
     /* ecs_entity_t c1 = */ ecs_insert(world, ecs_value(EcsParent, {p_1}));
@@ -2164,8 +2154,8 @@ void NonFragmentingChildOf_this_src_childof_parent_w_tag_single_child(void) {
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
-    ecs_entity_t p_1 = ecs_new_w_id(world, EcsOrderedChildren);
-    ecs_entity_t p_2 = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
     ecs_entity_t p_3 = ecs_new(world);
 
     /* ecs_entity_t c1 = */ ecs_insert(world, ecs_value(EcsParent, {p_1}));
@@ -2293,8 +2283,8 @@ void NonFragmentingChildOf_this_src_childof_parent_w_tag_single_child_table(void
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
-    ecs_entity_t p_1 = ecs_new_w_id(world, EcsOrderedChildren);
-    ecs_entity_t p_2 = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
     ecs_entity_t p_3 = ecs_new(world);
 
     /* ecs_entity_t c1 = */ ecs_insert(world, ecs_value(EcsParent, {p_1}));
@@ -2413,8 +2403,8 @@ void NonFragmentingChildOf_this_src_childof_parent_w_component(void) {
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Bar);
 
-    ecs_entity_t p_1 = ecs_new_w_id(world, EcsOrderedChildren);
-    ecs_entity_t p_2 = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
     ecs_entity_t p_3 = ecs_new(world);
 
     /* ecs_entity_t c1 = */ ecs_insert(world, ecs_value(EcsParent, {p_1}));
@@ -2557,8 +2547,8 @@ void NonFragmentingChildOf_this_src_childof_parent_w_component_single_child(void
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Bar);
 
-    ecs_entity_t p_1 = ecs_new_w_id(world, EcsOrderedChildren);
-    ecs_entity_t p_2 = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
     ecs_entity_t p_3 = ecs_new(world);
 
     /* ecs_entity_t c1 = */ ecs_insert(world, ecs_value(EcsParent, {p_1}));
@@ -2716,8 +2706,8 @@ void NonFragmentingChildOf_this_src_childof_parent_w_component_single_child_tabl
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Bar);
 
-    ecs_entity_t p_1 = ecs_new_w_id(world, EcsOrderedChildren);
-    ecs_entity_t p_2 = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
     ecs_entity_t p_3 = ecs_new(world);
 
     /* ecs_entity_t c1 = */ ecs_insert(world, ecs_value(EcsParent, {p_1}));
@@ -2860,8 +2850,8 @@ void NonFragmentingChildOf_this_src_childof_tag_w_parent(void) {
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
-    ecs_entity_t p_1 = ecs_new_w_id(world, EcsOrderedChildren);
-    ecs_entity_t p_2 = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
     ecs_entity_t p_3 = ecs_new(world);
 
     /* ecs_entity_t c1 = */ ecs_insert(world, ecs_value(EcsParent, {p_1}));
@@ -2980,8 +2970,8 @@ void NonFragmentingChildOf_this_src_childof_tag_w_parent_single_child(void) {
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
-    ecs_entity_t p_1 = ecs_new_w_id(world, EcsOrderedChildren);
-    ecs_entity_t p_2 = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
     ecs_entity_t p_3 = ecs_new(world);
 
     /* ecs_entity_t c1 = */ ecs_insert(world, ecs_value(EcsParent, {p_1}));
@@ -3109,9 +3099,9 @@ void NonFragmentingChildOf_this_src_childof_tag_w_parent_single_child_at_offset(
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
-    ecs_entity_t p_0 = ecs_new_w_id(world, EcsOrderedChildren);
-    ecs_entity_t p_1 = ecs_new_w_id(world, EcsOrderedChildren);
-    ecs_entity_t p_2 = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p_0 = ecs_new(world);
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
     ecs_entity_t p_3 = ecs_new(world);
 
     ecs_entity_t c1 = ecs_insert(world, ecs_value(EcsParent, {p_0}));
@@ -4137,8 +4127,8 @@ void NonFragmentingChildOf_this_src_childof_tag_w_wildcard_mixed(void) {
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
-    ecs_entity_t p_1 = ecs_new_w_id(world, EcsOrderedChildren);
-    ecs_entity_t p_2 = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
     ecs_entity_t p_3 = ecs_new(world);
 
     /* ecs_entity_t c1 = */ ecs_insert(world, ecs_value(EcsParent, {p_1}));
@@ -4902,8 +4892,8 @@ void NonFragmentingChildOf_this_src_childof_tag_w_any_mixed(void) {
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
-    ecs_entity_t p_1 = ecs_new_w_id(world, EcsOrderedChildren);
-    ecs_entity_t p_2 = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
     ecs_entity_t p_3 = ecs_new(world);
 
     /* ecs_entity_t c1 = */ ecs_insert(world, ecs_value(EcsParent, {p_1}));
@@ -5467,8 +5457,8 @@ void NonFragmentingChildOf_this_src_childof_tag_w_parent_single_child_table(void
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
-    ecs_entity_t p_1 = ecs_new_w_id(world, EcsOrderedChildren);
-    ecs_entity_t p_2 = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
     ecs_entity_t p_3 = ecs_new(world);
 
     /* ecs_entity_t c1 = */ ecs_insert(world, ecs_value(EcsParent, {p_1}));
@@ -5587,8 +5577,8 @@ void NonFragmentingChildOf_this_src_childof_component_w_parent(void) {
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Bar);
 
-    ecs_entity_t p_1 = ecs_new_w_id(world, EcsOrderedChildren);
-    ecs_entity_t p_2 = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
     ecs_entity_t p_3 = ecs_new(world);
 
     /* ecs_entity_t c1 = */ ecs_insert(world, ecs_value(EcsParent, {p_1}));
@@ -5731,8 +5721,8 @@ void NonFragmentingChildOf_this_src_childof_component_w_parent_single_child(void
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Bar);
 
-    ecs_entity_t p_1 = ecs_new_w_id(world, EcsOrderedChildren);
-    ecs_entity_t p_2 = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
     ecs_entity_t p_3 = ecs_new(world);
 
     /* ecs_entity_t c1 = */ ecs_insert(world, ecs_value(EcsParent, {p_1}));
@@ -5890,8 +5880,8 @@ void NonFragmentingChildOf_this_src_childof_component_w_parent_single_child_tabl
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Bar);
 
-    ecs_entity_t p_1 = ecs_new_w_id(world, EcsOrderedChildren);
-    ecs_entity_t p_2 = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
     ecs_entity_t p_3 = ecs_new(world);
 
     /* ecs_entity_t c1 = */ ecs_insert(world, ecs_value(EcsParent, {p_1}));
@@ -6034,8 +6024,8 @@ void NonFragmentingChildOf_this_src_childof_wildcard(void) {
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
-    ecs_entity_t p_1 = ecs_new_w_id(world, EcsOrderedChildren);
-    ecs_entity_t p_2 = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
     ecs_entity_t p_3 = ecs_new(world);
 
     ecs_entity_t c1 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
@@ -6124,8 +6114,8 @@ void NonFragmentingChildOf_this_src_childof_wildcard_w_tag(void) {
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
-    ecs_entity_t p_1 = ecs_new_w_id(world, EcsOrderedChildren);
-    ecs_entity_t p_2 = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
     ecs_entity_t p_3 = ecs_new(world);
 
     /* ecs_entity_t c1 = */ ecs_insert(world, ecs_value(EcsParent, {p_1}));
@@ -6263,8 +6253,8 @@ void NonFragmentingChildOf_this_src_childof_wildcard_w_component(void) {
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Bar);
 
-    ecs_entity_t p_1 = ecs_new_w_id(world, EcsOrderedChildren);
-    ecs_entity_t p_2 = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
     ecs_entity_t p_3 = ecs_new(world);
 
     /* ecs_entity_t c1 = */ ecs_insert(world, ecs_value(EcsParent, {p_1}));
@@ -6458,8 +6448,8 @@ void NonFragmentingChildOf_this_src_childof_any(void) {
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
-    ecs_entity_t p_1 = ecs_new_w_id(world, EcsOrderedChildren);
-    ecs_entity_t p_2 = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
     ecs_entity_t p_3 = ecs_new(world);
 
     ecs_entity_t c1 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
@@ -6565,8 +6555,8 @@ void NonFragmentingChildOf_this_src_childof_any_w_tag(void) {
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
-    ecs_entity_t p_1 = ecs_new_w_id(world, EcsOrderedChildren);
-    ecs_entity_t p_2 = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
     ecs_entity_t p_3 = ecs_new(world);
 
     /* ecs_entity_t c1 = */ ecs_insert(world, ecs_value(EcsParent, {p_1}));
@@ -6655,8 +6645,8 @@ void NonFragmentingChildOf_this_src_childof_any_w_component(void) {
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Bar);
 
-    ecs_entity_t p_1 = ecs_new_w_id(world, EcsOrderedChildren);
-    ecs_entity_t p_2 = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
     ecs_entity_t p_3 = ecs_new(world);
 
     /* ecs_entity_t c1 = */ ecs_insert(world, ecs_value(EcsParent, {p_1}));
@@ -6763,8 +6753,8 @@ void NonFragmentingChildOf_this_src_childof_var(void) {
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
-    ecs_entity_t p_1 = ecs_new_w_id(world, EcsOrderedChildren);
-    ecs_entity_t p_2 = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
     ecs_entity_t p_3 = ecs_new(world);
 
     ecs_entity_t c1 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
@@ -6861,8 +6851,8 @@ void NonFragmentingChildOf_this_src_childof_set_var(void) {
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
-    ecs_entity_t p_1 = ecs_new_w_id(world, EcsOrderedChildren);
-    ecs_entity_t p_2 = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
     ecs_entity_t p_3 = ecs_new(world);
 
     ecs_entity_t c1 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
@@ -6963,7 +6953,7 @@ void NonFragmentingChildOf_this_src_1_table_1_child(void) {
 
     ECS_TAG(world, Foo);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t e = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_add(world, e, Foo);
 
@@ -6992,7 +6982,7 @@ void NonFragmentingChildOf_this_src_1_table_1_child_w_expr(void) {
 
     ECS_TAG(world, Foo);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_set_name(world, p, "p");
 
     ecs_entity_t e = ecs_insert(world, ecs_value(EcsParent, {p}));
@@ -7023,7 +7013,7 @@ void NonFragmentingChildOf_this_src_1_table_2_children(void) {
 
     ECS_TAG(world, Foo);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t e1 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_entity_t e2 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_add(world, e1, Foo);
@@ -7055,8 +7045,8 @@ void NonFragmentingChildOf_this_src_1_table_2_children_mixed_parents(void) {
 
     ECS_TAG(world, Foo);
 
-    ecs_entity_t p_1 = ecs_new_w_id(world, EcsOrderedChildren);
-    ecs_entity_t p_2 = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
     ecs_entity_t e1 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
     ecs_entity_t e2 = ecs_insert(world, ecs_value(EcsParent, {p_2}));
     ecs_add(world, e1, Foo);
@@ -7108,8 +7098,8 @@ void NonFragmentingChildOf_this_src_1_table_n_children_mixed_parents(void) {
 
     ECS_TAG(world, Foo);
 
-    ecs_entity_t p_1 = ecs_new_w_id(world, EcsOrderedChildren);
-    ecs_entity_t p_2 = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
     ecs_entity_t e1 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
     ecs_entity_t e2 = ecs_insert(world, ecs_value(EcsParent, {p_2}));
     ecs_entity_t e3 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
@@ -7167,7 +7157,7 @@ void NonFragmentingChildOf_this_src_1_table_1_child_w_tag(void) {
 
     ECS_TAG(world, Foo);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t e = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_add(world, e, Foo);
 
@@ -7197,7 +7187,7 @@ void NonFragmentingChildOf_this_src_1_table_2_children_w_tag(void) {
 
     ECS_TAG(world, Foo);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t e1 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_entity_t e2 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_add(world, e1, Foo);
@@ -7239,8 +7229,8 @@ void NonFragmentingChildOf_this_src_1_table_2_children_mixed_parents_w_tag(void)
 
     ECS_TAG(world, Foo);
 
-    ecs_entity_t p_1 = ecs_new_w_id(world, EcsOrderedChildren);
-    ecs_entity_t p_2 = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
     ecs_entity_t e1 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
     ecs_entity_t e2 = ecs_insert(world, ecs_value(EcsParent, {p_2}));
     ecs_add(world, e1, Foo);
@@ -7296,8 +7286,8 @@ void NonFragmentingChildOf_this_src_1_table_n_children_mixed_parents_w_tag(void)
 
     ECS_TAG(world, Foo);
 
-    ecs_entity_t p_1 = ecs_new_w_id(world, EcsOrderedChildren);
-    ecs_entity_t p_2 = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
     ecs_entity_t e1 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
     ecs_entity_t e2 = ecs_insert(world, ecs_value(EcsParent, {p_2}));
     ecs_entity_t e3 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
@@ -7374,7 +7364,7 @@ void NonFragmentingChildOf_this_src_1_table_no_children(void) {
 
     ECS_TAG(world, Foo);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_new_w(world, Foo);
 
     ecs_query_t *q = ecs_query(world, {
@@ -7406,7 +7396,7 @@ void NonFragmentingChildOf_this_src_written_1_table_1_child(void) {
 
     ECS_TAG(world, Foo);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t e = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_add(world, e, Foo);
 
@@ -7437,7 +7427,7 @@ void NonFragmentingChildOf_this_src_written_1_table_2_children(void) {
 
     ECS_TAG(world, Foo);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t e1 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_entity_t e2 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_add(world, e1, Foo);
@@ -7479,8 +7469,8 @@ void NonFragmentingChildOf_this_src_written_1_table_2_children_mixed_parents(voi
 
     ECS_TAG(world, Foo);
 
-    ecs_entity_t p_1 = ecs_new_w_id(world, EcsOrderedChildren);
-    ecs_entity_t p_2 = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
     ecs_entity_t e1 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
     ecs_entity_t e2 = ecs_insert(world, ecs_value(EcsParent, {p_2}));
     ecs_add(world, e1, Foo);
@@ -7536,8 +7526,8 @@ void NonFragmentingChildOf_this_src_written_1_table_n_children_mixed_parents(voi
 
     ECS_TAG(world, Foo);
 
-    ecs_entity_t p_1 = ecs_new_w_id(world, EcsOrderedChildren);
-    ecs_entity_t p_2 = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
     ecs_entity_t e1 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
     ecs_entity_t e2 = ecs_insert(world, ecs_value(EcsParent, {p_2}));
     ecs_entity_t e3 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
@@ -7614,7 +7604,7 @@ void NonFragmentingChildOf_this_src_1_table_1_child_w_wildcard(void) {
 
     ECS_TAG(world, Foo);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t e = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_add(world, e, Foo);
 
@@ -7647,7 +7637,7 @@ void NonFragmentingChildOf_this_src_1_table_2_children_w_wildcard(void) {
 
     ECS_TAG(world, Foo);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t e1 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_entity_t e2 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_add(world, e1, Foo);
@@ -7683,8 +7673,8 @@ void NonFragmentingChildOf_this_src_1_table_2_children_mixed_parents_w_wildcard(
 
     ECS_TAG(world, Foo);
 
-    ecs_entity_t p_1 = ecs_new_w_id(world, EcsOrderedChildren);
-    ecs_entity_t p_2 = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
     ecs_entity_t e1 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
     ecs_entity_t e2 = ecs_insert(world, ecs_value(EcsParent, {p_2}));
     ecs_add(world, e1, Foo);
@@ -7725,8 +7715,8 @@ void NonFragmentingChildOf_this_src_1_table_n_children_mixed_parents_w_wildcard(
 
     ECS_TAG(world, Foo);
 
-    ecs_entity_t p_1 = ecs_new_w_id(world, EcsOrderedChildren);
-    ecs_entity_t p_2 = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
     ecs_entity_t e1 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
     ecs_entity_t e2 = ecs_insert(world, ecs_value(EcsParent, {p_2}));
     ecs_entity_t e3 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
@@ -7773,7 +7763,7 @@ void NonFragmentingChildOf_this_src_1_table_1_child_w_tag_w_wildcard(void) {
 
     ECS_TAG(world, Foo);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t e = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_add(world, e, Foo);
 
@@ -7803,7 +7793,7 @@ void NonFragmentingChildOf_this_src_1_table_2_children_w_tag_w_wildcard(void) {
 
     ECS_TAG(world, Foo);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t e1 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_entity_t e2 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_add(world, e1, Foo);
@@ -7845,8 +7835,8 @@ void NonFragmentingChildOf_this_src_1_table_2_children_mixed_parents_w_tag_w_wil
 
     ECS_TAG(world, Foo);
 
-    ecs_entity_t p_1 = ecs_new_w_id(world, EcsOrderedChildren);
-    ecs_entity_t p_2 = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
     ecs_entity_t e1 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
     ecs_entity_t e2 = ecs_insert(world, ecs_value(EcsParent, {p_2}));
     ecs_add(world, e1, Foo);
@@ -7908,8 +7898,8 @@ void NonFragmentingChildOf_this_src_1_table_n_children_mixed_parents_w_tag_w_wil
 
     ECS_TAG(world, Foo);
 
-    ecs_entity_t p_1 = ecs_new_w_id(world, EcsOrderedChildren);
-    ecs_entity_t p_2 = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
     ecs_entity_t e1 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
     ecs_entity_t e2 = ecs_insert(world, ecs_value(EcsParent, {p_2}));
     ecs_entity_t e3 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
@@ -8007,7 +7997,7 @@ void NonFragmentingChildOf_this_src_written_1_table_1_child_w_wildcard(void) {
 
     ECS_TAG(world, Foo);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t e = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_add(world, e, Foo);
 
@@ -8038,7 +8028,7 @@ void NonFragmentingChildOf_this_src_written_1_table_2_children_w_wildcard(void) 
 
     ECS_TAG(world, Foo);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t e1 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_entity_t e2 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_add(world, e1, Foo);
@@ -8080,8 +8070,8 @@ void NonFragmentingChildOf_this_src_written_1_table_2_children_mixed_parents_w_w
 
     ECS_TAG(world, Foo);
 
-    ecs_entity_t p_1 = ecs_new_w_id(world, EcsOrderedChildren);
-    ecs_entity_t p_2 = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
     ecs_entity_t e1 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
     ecs_entity_t e2 = ecs_insert(world, ecs_value(EcsParent, {p_2}));
     ecs_add(world, e1, Foo);
@@ -8125,8 +8115,8 @@ void NonFragmentingChildOf_this_src_written_1_table_n_children_mixed_parents_w_w
 
     ECS_TAG(world, Foo);
 
-    ecs_entity_t p_1 = ecs_new_w_id(world, EcsOrderedChildren);
-    ecs_entity_t p_2 = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
     ecs_entity_t e1 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
     ecs_entity_t e2 = ecs_insert(world, ecs_value(EcsParent, {p_2}));
     ecs_entity_t e3 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
@@ -8190,7 +8180,7 @@ void NonFragmentingChildOf_this_src_1_table_1_child_w_any(void) {
 
     ECS_TAG(world, Foo);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t e = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_add(world, e, Foo);
 
@@ -8224,7 +8214,7 @@ void NonFragmentingChildOf_this_src_1_table_2_children_w_any(void) {
 
     ECS_TAG(world, Foo);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t e1 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_entity_t e2 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_add(world, e1, Foo);
@@ -8261,8 +8251,8 @@ void NonFragmentingChildOf_this_src_1_table_2_children_mixed_parents_w_any(void)
 
     ECS_TAG(world, Foo);
 
-    ecs_entity_t p_1 = ecs_new_w_id(world, EcsOrderedChildren);
-    ecs_entity_t p_2 = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
     ecs_entity_t e1 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
     ecs_entity_t e2 = ecs_insert(world, ecs_value(EcsParent, {p_2}));
     ecs_add(world, e1, Foo);
@@ -8301,8 +8291,8 @@ void NonFragmentingChildOf_this_src_1_table_n_children_mixed_parents_w_any(void)
 
     ECS_TAG(world, Foo);
 
-    ecs_entity_t p_1 = ecs_new_w_id(world, EcsOrderedChildren);
-    ecs_entity_t p_2 = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
     ecs_entity_t e1 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
     ecs_entity_t e2 = ecs_insert(world, ecs_value(EcsParent, {p_2}));
     ecs_entity_t e3 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
@@ -8347,7 +8337,7 @@ void NonFragmentingChildOf_this_src_1_table_1_child_w_tag_w_any(void) {
 
     ECS_TAG(world, Foo);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t e = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_add(world, e, Foo);
 
@@ -8377,7 +8367,7 @@ void NonFragmentingChildOf_this_src_1_table_2_children_w_tag_w_any(void) {
 
     ECS_TAG(world, Foo);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t e1 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_entity_t e2 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_add(world, e1, Foo);
@@ -8412,8 +8402,8 @@ void NonFragmentingChildOf_this_src_1_table_2_children_mixed_parents_w_tag_w_any
 
     ECS_TAG(world, Foo);
 
-    ecs_entity_t p_1 = ecs_new_w_id(world, EcsOrderedChildren);
-    ecs_entity_t p_2 = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
     ecs_entity_t e1 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
     ecs_entity_t e2 = ecs_insert(world, ecs_value(EcsParent, {p_2}));
     ecs_add(world, e1, Foo);
@@ -8449,8 +8439,8 @@ void NonFragmentingChildOf_this_src_1_table_n_children_mixed_parents_w_tag_w_any
 
     ECS_TAG(world, Foo);
 
-    ecs_entity_t p_1 = ecs_new_w_id(world, EcsOrderedChildren);
-    ecs_entity_t p_2 = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
     ecs_entity_t e1 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
     ecs_entity_t e2 = ecs_insert(world, ecs_value(EcsParent, {p_2}));
     ecs_entity_t e3 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
@@ -8580,7 +8570,7 @@ void NonFragmentingChildOf_this_src_written_1_table_1_child_w_any(void) {
 
     ECS_TAG(world, Foo);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t e = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_add(world, e, Foo);
 
@@ -8611,7 +8601,7 @@ void NonFragmentingChildOf_this_src_written_1_table_2_children_w_any(void) {
 
     ECS_TAG(world, Foo);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t e1 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_entity_t e2 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_add(world, e1, Foo);
@@ -8646,8 +8636,8 @@ void NonFragmentingChildOf_this_src_written_1_table_2_children_mixed_parents_w_a
 
     ECS_TAG(world, Foo);
 
-    ecs_entity_t p_1 = ecs_new_w_id(world, EcsOrderedChildren);
-    ecs_entity_t p_2 = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
     ecs_entity_t e1 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
     ecs_entity_t e2 = ecs_insert(world, ecs_value(EcsParent, {p_2}));
     ecs_add(world, e1, Foo);
@@ -8684,8 +8674,8 @@ void NonFragmentingChildOf_this_src_written_1_table_n_children_mixed_parents_w_a
 
     ECS_TAG(world, Foo);
 
-    ecs_entity_t p_1 = ecs_new_w_id(world, EcsOrderedChildren);
-    ecs_entity_t p_2 = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
     ecs_entity_t e1 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
     ecs_entity_t e2 = ecs_insert(world, ecs_value(EcsParent, {p_2}));
     ecs_entity_t e3 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
@@ -8729,7 +8719,7 @@ void NonFragmentingChildOf_this_src_2_tables_childof_w_any(void) {
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t e1 = ecs_new_w_pair(world, EcsChildOf, p);
     ecs_entity_t e2 = ecs_new_w_pair(world, EcsChildOf, p);
     
@@ -8774,7 +8764,7 @@ void NonFragmentingChildOf_this_src_2_tables_parent_w_any(void) {
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t e1 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_entity_t e2 = ecs_insert(world, ecs_value(EcsParent, {p}));
     
@@ -8819,7 +8809,7 @@ void NonFragmentingChildOf_this_src_2_tables_mixed_w_any(void) {
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t e1 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_entity_t e2 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_entity_t e3 = ecs_new_w_pair(world, EcsChildOf, p);
@@ -8885,7 +8875,7 @@ void NonFragmentingChildOf_this_src_written_2_tables_childof_w_any(void) {
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t e1 = ecs_new_w_pair(world, EcsChildOf, p);
     ecs_entity_t e2 = ecs_new_w_pair(world, EcsChildOf, p);
     
@@ -8930,7 +8920,7 @@ void NonFragmentingChildOf_this_src_written_2_tables_parent_w_any(void) {
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t e1 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_entity_t e2 = ecs_insert(world, ecs_value(EcsParent, {p}));
     
@@ -8975,7 +8965,7 @@ void NonFragmentingChildOf_this_src_written_2_tables_mixed_w_any(void) {
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t e1 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_entity_t e2 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_entity_t e3 = ecs_new_w_pair(world, EcsChildOf, p);
@@ -9041,7 +9031,7 @@ void NonFragmentingChildOf_this_up_childof(void) {
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_add(world, p, Bar);
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_entity_t c_2 = ecs_insert(world, ecs_value(EcsParent, {p}));
@@ -9084,7 +9074,7 @@ void NonFragmentingChildOf_this_up_childof_w_component(void) {
     ECS_TAG(world, Foo);
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_set(world, p, Position, {10, 20});
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_entity_t c_2 = ecs_insert(world, ecs_value(EcsParent, {p}));
@@ -9139,7 +9129,7 @@ void NonFragmentingChildOf_this_up_childof_w_component_inherited(void) {
 
     ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
-    ecs_entity_t b = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t b = ecs_new(world);
     ecs_set(world, b, Position, {10, 20});
 
     ecs_entity_t p = ecs_new_w_pair(world, EcsIsA, b);
@@ -9194,7 +9184,7 @@ void NonFragmentingChildOf_this_up_childof_2_lvl(void) {
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_entity_t c_2 = ecs_insert(world, ecs_value(EcsParent, {p}));
 
@@ -9246,7 +9236,7 @@ void NonFragmentingChildOf_this_up_childof_2_lvl_w_component(void) {
     ECS_TAG(world, Foo);
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_entity_t c_2 = ecs_insert(world, ecs_value(EcsParent, {p}));
 
@@ -9316,7 +9306,7 @@ void NonFragmentingChildOf_this_up_childof_2_lvl_w_component_inherited(void) {
 
     ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_entity_t c_2 = ecs_insert(world, ecs_value(EcsParent, {p}));
 
@@ -9384,7 +9374,7 @@ void NonFragmentingChildOf_this_up_childof_2_lvl_w_owned(void) {
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_entity_t c_2 = ecs_insert(world, ecs_value(EcsParent, {p}));
 
@@ -9437,7 +9427,7 @@ void NonFragmentingChildOf_this_self_up_childof(void) {
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_add(world, p, Bar);
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_entity_t c_2 = ecs_insert(world, ecs_value(EcsParent, {p}));
@@ -9486,7 +9476,7 @@ void NonFragmentingChildOf_this_self_up_childof_w_component(void) {
     ECS_TAG(world, Foo);
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_set(world, p, Position, {10, 20});
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_entity_t c_2 = ecs_insert(world, ecs_value(EcsParent, {p}));
@@ -9552,7 +9542,7 @@ void NonFragmentingChildOf_this_self_up_childof_w_component_inherited(void) {
 
     ecs_entity_t b = ecs_new(world);
     ecs_set(world, b, Position, {10, 20});
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_add_pair(world, p, EcsIsA, b);
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_entity_t c_2 = ecs_insert(world, ecs_value(EcsParent, {p}));
@@ -9616,7 +9606,7 @@ void NonFragmentingChildOf_this_self_up_childof_2_lvl(void) {
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_entity_t c_2 = ecs_insert(world, ecs_value(EcsParent, {p}));
 
@@ -9674,7 +9664,7 @@ void NonFragmentingChildOf_this_self_up_childof_2_lvl_w_component(void) {
     ECS_TAG(world, Foo);
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_entity_t c_2 = ecs_insert(world, ecs_value(EcsParent, {p}));
 
@@ -9754,7 +9744,7 @@ void NonFragmentingChildOf_this_self_up_childof_2_lvl_w_component_inherited(void
 
     ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_entity_t c_2 = ecs_insert(world, ecs_value(EcsParent, {p}));
 
@@ -9833,7 +9823,7 @@ void NonFragmentingChildOf_this_self_up_childof_2_lvl_w_owned(void) {
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_entity_t c_2 = ecs_insert(world, ecs_value(EcsParent, {p}));
 
@@ -9891,7 +9881,7 @@ void NonFragmentingChildOf_this_up_childof_2_lvl_children(void) {
 
     ECS_TAG(world, Bar);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_add(world, p, Bar);
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_entity_t c_2 = ecs_insert(world, ecs_value(EcsParent, {p}));
@@ -9938,7 +9928,7 @@ void NonFragmentingChildOf_this_up_childof_2_lvl_children_w_component(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_set(world, p, Position, {10, 20});
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_entity_t c_2 = ecs_insert(world, ecs_value(EcsParent, {p}));
@@ -10002,7 +9992,7 @@ void NonFragmentingChildOf_this_up_childof_2_lvl_children_on_instantiate_inherit
 
     ecs_entity_t b = ecs_new(world);
     ecs_add(world, b, Bar);
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_add_pair(world, p, EcsIsA, b);
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_entity_t c_2 = ecs_insert(world, ecs_value(EcsParent, {p}));
@@ -10053,7 +10043,7 @@ void NonFragmentingChildOf_this_up_childof_2_lvl_children_w_component_on_instant
 
     ecs_entity_t b = ecs_new(world);
     ecs_set(world, b, Position, {10, 20});
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_add_pair(world, p, EcsIsA, b);
 
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p}));
@@ -10118,7 +10108,7 @@ void NonFragmentingChildOf_this_up_childof_2_lvl_children_on_instantiate_dont_in
 
     ecs_entity_t b = ecs_new(world);
     ecs_add(world, b, Bar);
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_add_pair(world, p, EcsIsA, b);
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_insert(world, ecs_value(EcsParent, {p}));
@@ -10147,7 +10137,7 @@ void NonFragmentingChildOf_this_self_up_childof_2_lvl_children(void) {
 
     ECS_TAG(world, Bar);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_add(world, p, Bar);
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_entity_t c_2 = ecs_insert(world, ecs_value(EcsParent, {p}));
@@ -10200,7 +10190,7 @@ void NonFragmentingChildOf_this_self_up_childof_2_lvl_children_w_component(void)
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_set(world, p, Position, {10, 20});
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_entity_t c_2 = ecs_insert(world, ecs_value(EcsParent, {p}));
@@ -10273,7 +10263,7 @@ void NonFragmentingChildOf_this_self_up_childof_2_lvl_children_on_instantiate_in
 
     ecs_entity_t b = ecs_new(world);
     ecs_add(world, b, Bar);
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_add_pair(world, p, EcsIsA, b);
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_entity_t c_2 = ecs_insert(world, ecs_value(EcsParent, {p}));
@@ -10328,7 +10318,7 @@ void NonFragmentingChildOf_this_self_up_childof_2_lvl_children_on_instantiate_do
 
     ecs_entity_t b = ecs_new(world);
     ecs_add(world, b, Bar);
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_add_pair(world, p, EcsIsA, b);
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_add_id(world, c_1, EcsOrderedChildren);
@@ -10362,7 +10352,7 @@ void NonFragmentingChildOf_this_up_childof_2_lvl_children_from_child(void) {
 
     ECS_TAG(world, Bar);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_add(world, c_1, Bar);
     ecs_add_id(world, c_1, EcsOrderedChildren);
@@ -10396,7 +10386,7 @@ void NonFragmentingChildOf_this_up_childof_2_lvl_children_w_component_from_child
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_set(world, c_1, Position, {10, 20});
     ecs_add_id(world, c_1, EcsOrderedChildren);
@@ -10437,7 +10427,7 @@ void NonFragmentingChildOf_this_up_childof_2_lvl_children_from_child_on_instanti
 
     ecs_add_pair(world, Bar, EcsOnInstantiate, EcsInherit);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t b = ecs_new(world);
     ecs_add(world, b, Bar);
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p}));
@@ -10475,7 +10465,7 @@ void NonFragmentingChildOf_this_up_childof_2_lvl_children_from_child_on_instanti
 
     ecs_add_pair(world, Bar, EcsOnInstantiate, EcsDontInherit);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t b = ecs_new(world);
     ecs_add(world, b, Bar);
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p}));
@@ -10505,7 +10495,7 @@ void NonFragmentingChildOf_this_self_up_childof_2_lvl_children_from_child(void) 
 
     ECS_TAG(world, Bar);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_add(world, c_1, Bar);
@@ -10546,7 +10536,7 @@ void NonFragmentingChildOf_this_self_up_childof_2_lvl_children_w_component_from_
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_set(world, c_1, Position, {10, 20});
     ecs_add_id(world, c_1, EcsOrderedChildren);
@@ -10598,7 +10588,7 @@ void NonFragmentingChildOf_this_self_up_childof_2_lvl_children_from_child_on_ins
 
     ecs_add_pair(world, Bar, EcsOnInstantiate, EcsInherit);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t b = ecs_new(world);
     ecs_add(world, b, Bar);
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p}));
@@ -10642,7 +10632,7 @@ void NonFragmentingChildOf_this_self_up_childof_2_lvl_children_from_child_on_ins
 
     ecs_add_pair(world, Bar, EcsOnInstantiate, EcsDontInherit);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t b = ecs_new(world);
     ecs_add(world, b, Bar);
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p}));
@@ -10679,7 +10669,7 @@ void NonFragmentingChildOf_this_written_up_childof(void) {
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_add(world, p, Bar);
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_entity_t c_2 = ecs_insert(world, ecs_value(EcsParent, {p}));
@@ -10824,6 +10814,311 @@ void NonFragmentingChildOf_this_up_childof_2_tables_3_parents(void) {
     ecs_fini(world);
 }
 
+void NonFragmentingChildOf_this_written_single_child_w_recycled_id(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
+
+    ecs_entity_t e_old = ecs_new(world);
+    ecs_delete(world, e_old);
+    ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
+    test_assert((uint32_t)c_1 == e_old);
+    ecs_entity_t c_2 = ecs_insert(world, ecs_value(EcsParent, {p_2}));
+
+    ecs_add(world, c_1, Foo);
+    ecs_add(world, c_2, Foo);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { Foo },
+            { ecs_childof(p_1) }
+        },
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(it.entities[0], c_1);
+    test_uint(Foo, ecs_field_id(&it, 0));
+    test_uint(ecs_childof(p_1), ecs_field_id(&it, 1));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(0, ecs_field_src(&it, 1));
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_this_written_single_child_after_two_children(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
+    ecs_entity_t c_2 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
+
+    ecs_add(world, c_1, Foo);
+    ecs_add(world, c_2, Foo);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { Foo },
+            { ecs_childof(p_1) }
+        },
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(it.entities[0], c_1);
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(ecs_childof(p_1), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(0, ecs_field_src(&it, 1));
+
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(it.entities[0], c_2);
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(ecs_childof(p_1), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(0, ecs_field_src(&it, 1));
+
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_delete(world, c_2);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(it.entities[0], c_1);
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(ecs_childof(p_1), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(0, ecs_field_src(&it, 1));
+
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_this_written_single_child_after_two_children_2(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
+    ecs_entity_t c_2 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
+
+    ecs_add(world, c_1, Foo);
+    ecs_add(world, c_2, Foo);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { Foo },
+            { ecs_childof(p_1) }
+        },
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(it.entities[0], c_1);
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(ecs_childof(p_1), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(0, ecs_field_src(&it, 1));
+
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(it.entities[0], c_2);
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(ecs_childof(p_1), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(0, ecs_field_src(&it, 1));
+
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_delete(world, c_1);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(it.entities[0], c_2);
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(ecs_childof(p_1), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(0, ecs_field_src(&it, 1));
+
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_this_written_single_child_after_two_children_3(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
+    ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
+    ecs_entity_t c_2 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
+    ecs_entity_t c_3 = ecs_insert(world, ecs_value(EcsParent, {p_2}));
+    ecs_entity_t c_4 = ecs_insert(world, ecs_value(EcsParent, {p_2}));
+
+    ecs_add(world, c_1, Foo);
+    ecs_add(world, c_2, Foo);
+    ecs_add(world, c_3, Foo);
+    ecs_add(world, c_4, Foo);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { Foo },
+            { ecs_childof(p_1) }
+        },
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(it.entities[0], c_1);
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(ecs_childof(p_1), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(0, ecs_field_src(&it, 1));
+
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(it.entities[0], c_2);
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(ecs_childof(p_1), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(0, ecs_field_src(&it, 1));
+
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_delete(world, c_2);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(it.entities[0], c_1);
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(ecs_childof(p_1), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(0, ecs_field_src(&it, 1));
+
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_this_written_single_child_after_two_children_4(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
+    ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
+    ecs_entity_t c_2 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
+    ecs_entity_t c_3 = ecs_insert(world, ecs_value(EcsParent, {p_2}));
+    ecs_entity_t c_4 = ecs_insert(world, ecs_value(EcsParent, {p_2}));
+
+    ecs_add(world, c_1, Foo);
+    ecs_add(world, c_2, Foo);
+    ecs_add(world, c_3, Foo);
+    ecs_add(world, c_4, Foo);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { Foo },
+            { ecs_childof(p_1) }
+        },
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(it.entities[0], c_1);
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(ecs_childof(p_1), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(0, ecs_field_src(&it, 1));
+
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(it.entities[0], c_2);
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(ecs_childof(p_1), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(0, ecs_field_src(&it, 1));
+
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_delete(world, c_1);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(it.entities[0], c_2);
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(ecs_childof(p_1), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(0, ecs_field_src(&it, 1));
+
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
 void NonFragmentingChildOf_this_self_up_childof_1_table_3_parents(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -10949,7 +11244,7 @@ void NonFragmentingChildOf_this_written_up_childof_w_component(void) {
     ECS_TAG(world, Foo);
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_set(world, p, Position, {10, 20});
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_entity_t c_2 = ecs_insert(world, ecs_value(EcsParent, {p}));
@@ -11009,7 +11304,7 @@ void NonFragmentingChildOf_this_written_up_childof_w_component_inherited(void) {
 
     ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
-    ecs_entity_t b = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t b = ecs_new(world);
     ecs_set(world, b, Position, {10, 20});
 
     ecs_entity_t p = ecs_new_w_pair(world, EcsIsA, b);
@@ -11070,7 +11365,7 @@ void NonFragmentingChildOf_this_written_up_childof_2_lvl(void) {
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_entity_t c_2 = ecs_insert(world, ecs_value(EcsParent, {p}));
 
@@ -11130,7 +11425,7 @@ void NonFragmentingChildOf_this_written_up_childof_2_lvl_w_component(void) {
     ECS_TAG(world, Foo);
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_entity_t c_2 = ecs_insert(world, ecs_value(EcsParent, {p}));
 
@@ -11207,7 +11502,7 @@ void NonFragmentingChildOf_this_written_up_childof_2_lvl_w_component_inherited(v
 
     ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_entity_t c_2 = ecs_insert(world, ecs_value(EcsParent, {p}));
 
@@ -11283,7 +11578,7 @@ void NonFragmentingChildOf_this_written_up_childof_2_lvl_w_owned(void) {
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_entity_t c_2 = ecs_insert(world, ecs_value(EcsParent, {p}));
 
@@ -11344,7 +11639,7 @@ void NonFragmentingChildOf_this_written_self_up_childof(void) {
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_add(world, p, Bar);
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_entity_t c_2 = ecs_insert(world, ecs_value(EcsParent, {p}));
@@ -11401,7 +11696,7 @@ void NonFragmentingChildOf_this_written_self_up_childof_w_component(void) {
     ECS_TAG(world, Foo);
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_set(world, p, Position, {10, 20});
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_entity_t c_2 = ecs_insert(world, ecs_value(EcsParent, {p}));
@@ -11475,7 +11770,7 @@ void NonFragmentingChildOf_this_written_self_up_childof_w_component_inherited(vo
 
     ecs_entity_t b = ecs_new(world);
     ecs_set(world, b, Position, {10, 20});
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_add_pair(world, p, EcsIsA, b);
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_entity_t c_2 = ecs_insert(world, ecs_value(EcsParent, {p}));
@@ -11548,7 +11843,7 @@ void NonFragmentingChildOf_this_written_self_up_childof_2_lvl(void) {
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_entity_t c_2 = ecs_insert(world, ecs_value(EcsParent, {p}));
 
@@ -11617,7 +11912,7 @@ void NonFragmentingChildOf_this_written_self_up_childof_2_lvl_w_component(void) 
     ECS_TAG(world, Foo);
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_entity_t c_2 = ecs_insert(world, ecs_value(EcsParent, {p}));
 
@@ -11708,7 +12003,7 @@ void NonFragmentingChildOf_this_written_self_up_childof_2_lvl_w_component_inheri
 
     ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_entity_t c_2 = ecs_insert(world, ecs_value(EcsParent, {p}));
 
@@ -11799,7 +12094,7 @@ void NonFragmentingChildOf_this_written_self_up_childof_2_lvl_w_owned(void) {
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_entity_t c_2 = ecs_insert(world, ecs_value(EcsParent, {p}));
 
@@ -11869,7 +12164,7 @@ void NonFragmentingChildOf_this_written_up_childof_2_lvl_children(void) {
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_add(world, p, Bar);
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_entity_t c_2 = ecs_insert(world, ecs_value(EcsParent, {p}));
@@ -11928,7 +12223,7 @@ void NonFragmentingChildOf_this_written_up_childof_2_lvl_children_w_component(vo
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Foo);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_set(world, p, Position, {10, 20});
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_entity_t c_2 = ecs_insert(world, ecs_value(EcsParent, {p}));
@@ -12004,7 +12299,7 @@ void NonFragmentingChildOf_this_written_up_childof_2_lvl_children_on_instantiate
 
     ecs_entity_t b = ecs_new(world);
     ecs_add(world, b, Bar);
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_add_pair(world, p, EcsIsA, b);
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_entity_t c_2 = ecs_insert(world, ecs_value(EcsParent, {p}));
@@ -12067,7 +12362,7 @@ void NonFragmentingChildOf_this_written_up_childof_2_lvl_children_w_component_on
 
     ecs_entity_t b = ecs_new(world);
     ecs_set(world, b, Position, {10, 20});
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_add_pair(world, p, EcsIsA, b);
 
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p}));
@@ -12144,7 +12439,7 @@ void NonFragmentingChildOf_this_written_up_childof_2_lvl_children_on_instantiate
 
     ecs_entity_t b = ecs_new(world);
     ecs_add(world, b, Bar);
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_add_pair(world, p, EcsIsA, b);
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_entity_t c_2 = ecs_insert(world, ecs_value(EcsParent, {p}));
@@ -12179,7 +12474,7 @@ void NonFragmentingChildOf_this_written_self_up_childof_2_lvl_children(void) {
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_add(world, p, Bar);
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_entity_t c_2 = ecs_insert(world, ecs_value(EcsParent, {p}));
@@ -12247,7 +12542,7 @@ void NonFragmentingChildOf_this_written_self_up_childof_2_lvl_children_w_compone
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Foo);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_set(world, p, Position, {10, 20});
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_entity_t c_2 = ecs_insert(world, ecs_value(EcsParent, {p}));
@@ -12335,7 +12630,7 @@ void NonFragmentingChildOf_this_written_self_up_childof_2_lvl_children_on_instan
 
     ecs_entity_t b = ecs_new(world);
     ecs_add(world, b, Bar);
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_add_pair(world, p, EcsIsA, b);
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_entity_t c_2 = ecs_insert(world, ecs_value(EcsParent, {p}));
@@ -12406,7 +12701,7 @@ void NonFragmentingChildOf_this_written_self_up_childof_2_lvl_children_on_instan
 
     ecs_entity_t b = ecs_new(world);
     ecs_add(world, b, Bar);
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_add_pair(world, p, EcsIsA, b);
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_add_id(world, c_1, EcsOrderedChildren);
@@ -12448,7 +12743,7 @@ void NonFragmentingChildOf_this_written_up_childof_2_lvl_children_from_child(voi
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_add(world, c_1, Bar);
     ecs_add_id(world, c_1, EcsOrderedChildren);
@@ -12489,7 +12784,7 @@ void NonFragmentingChildOf_this_written_up_childof_2_lvl_children_w_component_fr
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Foo);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_set(world, c_1, Position, {10, 20});
     ecs_add_id(world, c_1, EcsOrderedChildren);
@@ -12537,7 +12832,7 @@ void NonFragmentingChildOf_this_written_up_childof_2_lvl_children_from_child_on_
 
     ecs_add_pair(world, Bar, EcsOnInstantiate, EcsInherit);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t b = ecs_new(world);
     ecs_add(world, b, Bar);
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p}));
@@ -12582,7 +12877,7 @@ void NonFragmentingChildOf_this_written_up_childof_2_lvl_children_from_child_on_
 
     ecs_add_pair(world, Bar, EcsOnInstantiate, EcsDontInherit);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t b = ecs_new(world);
     ecs_add(world, b, Bar);
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p}));
@@ -12617,7 +12912,7 @@ void NonFragmentingChildOf_this_written_self_up_childof_2_lvl_children_from_chil
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_add(world, c_1, Bar);
@@ -12667,7 +12962,7 @@ void NonFragmentingChildOf_this_written_self_up_childof_2_lvl_children_w_compone
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Foo);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p}));
     ecs_set(world, c_1, Position, {10, 20});
     ecs_add_id(world, c_1, EcsOrderedChildren);
@@ -12728,7 +13023,7 @@ void NonFragmentingChildOf_this_written_self_up_childof_2_lvl_children_from_chil
 
     ecs_add_pair(world, Bar, EcsOnInstantiate, EcsInherit);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t b = ecs_new(world);
     ecs_add(world, b, Bar);
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p}));
@@ -12783,7 +13078,7 @@ void NonFragmentingChildOf_this_written_self_up_childof_2_lvl_children_from_chil
 
     ecs_add_pair(world, Bar, EcsOnInstantiate, EcsDontInherit);
 
-    ecs_entity_t p = ecs_new_w_id(world, EcsOrderedChildren);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t b = ecs_new(world);
     ecs_add(world, b, Bar);
     ecs_entity_t c_1 = ecs_insert(world, ecs_value(EcsParent, {p}));
