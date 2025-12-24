@@ -4835,12 +4835,7 @@ ecs_table_t* flecs_bootstrap_component_table(
     world->cr_childof_0 = flecs_components_ensure(world, 
         ecs_pair(EcsChildOf, 0));
 
-    /* Set observer flags for Parent component. These theoretically only need to
-     * be in sync with ChildOf, but that would add a bunch of complexity in 
-     * other places so instead just set them all. */
-    cr = flecs_components_ensure(world, ecs_id(EcsParent));
-    cr->flags |= EcsIdHasOnSet|EcsIdHasOnAdd|EcsIdHasOnRemove|
-        EcsIdHasOnTableCreate|EcsIdHasOnTableDelete;
+    flecs_components_ensure(world, ecs_id(EcsParent));
 
     /* Initialize root table */
     flecs_init_root_table(world);
@@ -16052,6 +16047,16 @@ void flecs_inc_observer_count(
 
         flecs_event_id_record_remove(evt, id);
         ecs_os_free(idt);
+    }
+
+    if (ECS_PAIR_FIRST(id) == EcsChildOf) {
+        if (event == EcsOnAdd) {
+            flecs_inc_observer_count(
+                world, EcsOnSet, evt, ecs_id(EcsParent), value);
+        } else {
+            flecs_inc_observer_count(
+                world, event, evt, ecs_id(EcsParent), value);
+        }
     }
 }
 
@@ -45086,7 +45091,8 @@ ecs_table_t* flecs_find_table_without(
     }
 
     if (without == ecs_id(EcsParent)) {
-        flecs_type_remove(world, &dst_type, ecs_pair(EcsParentDepth, EcsWildcard));
+        flecs_type_remove(world, &dst_type, 
+            ecs_pair(EcsParentDepth, EcsWildcard));
     }
 
     return flecs_table_ensure(world, &dst_type, true, node);

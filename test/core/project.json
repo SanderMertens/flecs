@@ -2099,6 +2099,7 @@
                 "2_on_set_overridden_terms_field_size_w_tag",
                 "create_observer_in_observer",
                 "on_add_childof_w_parent_component",
+                "on_add_childof_w_parent_component_observer_after_table",
                 "on_add_childof_wildcard_w_parent_component",
                 "on_add_childof_any_w_parent_component",
                 "on_remove_childof_w_parent_component",

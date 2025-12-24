@@ -2032,6 +2032,7 @@ void Observer_1_on_set_overridden_term_field_size_w_tag(void);
 void Observer_2_on_set_overridden_terms_field_size_w_tag(void);
 void Observer_create_observer_in_observer(void);
 void Observer_on_add_childof_w_parent_component(void);
+void Observer_on_add_childof_w_parent_component_observer_after_table(void);
 void Observer_on_add_childof_wildcard_w_parent_component(void);
 void Observer_on_add_childof_any_w_parent_component(void);
 void Observer_on_remove_childof_w_parent_component(void);
@@ -10973,6 +10974,10 @@ bake_test_case Observer_testcases[] = {
         Observer_on_add_childof_w_parent_component
     },
     {
+        "on_add_childof_w_parent_component_observer_after_table",
+        Observer_on_add_childof_w_parent_component_observer_after_table
+    },
+    {
         "on_add_childof_wildcard_w_parent_component",
         Observer_on_add_childof_wildcard_w_parent_component
     },
@@ -15159,7 +15164,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        324,
+        325,
         Observer_testcases
     },
     {
