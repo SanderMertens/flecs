@@ -2581,13 +2581,13 @@ void NonFragmentingChildOf_deep_hierarchy(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t root = ecs_new(world), cur = root;
-    for (int i = 0; i < 1000; i ++) {
+    for (int i = 0; i < FLECS_DAG_DEPTH_MAX; i ++) {
         ecs_entity_t e = ecs_new(world);
         ecs_set(world, e, EcsParent, {cur});
         cur = e;
     }
 
-    test_int(ecs_count(world, EcsParent), 1000);
+    test_int(ecs_count(world, EcsParent), FLECS_DAG_DEPTH_MAX);
 
     ecs_delete(world, root);
 

@@ -690,12 +690,7 @@ ecs_table_t* flecs_bootstrap_component_table(
     world->cr_childof_0 = flecs_components_ensure(world, 
         ecs_pair(EcsChildOf, 0));
 
-    /* Set observer flags for Parent component. These theoretically only need to
-     * be in sync with ChildOf, but that would add a bunch of complexity in 
-     * other places so instead just set them all. */
-    cr = flecs_components_ensure(world, ecs_id(EcsParent));
-    cr->flags |= EcsIdHasOnSet|EcsIdHasOnAdd|EcsIdHasOnRemove|
-        EcsIdHasOnTableCreate|EcsIdHasOnTableDelete;
+    flecs_components_ensure(world, ecs_id(EcsParent));
 
     /* Initialize root table */
     flecs_init_root_table(world);

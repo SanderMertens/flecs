@@ -109,6 +109,16 @@ void flecs_inc_observer_count(
         flecs_event_id_record_remove(evt, id);
         ecs_os_free(idt);
     }
+
+    if (ECS_PAIR_FIRST(id) == EcsChildOf) {
+        if (event == EcsOnAdd) {
+            flecs_inc_observer_count(
+                world, EcsOnSet, evt, ecs_id(EcsParent), value);
+        } else {
+            flecs_inc_observer_count(
+                world, event, evt, ecs_id(EcsParent), value);
+        }
+    }
 }
 
 static

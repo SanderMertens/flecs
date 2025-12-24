@@ -11788,6 +11788,45 @@ void Observer_on_add_childof_w_parent_component(void) {
     ecs_fini(world);
 }
 
+void Observer_on_add_childof_w_parent_component_observer_after_table(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    Probe ctx = {0};
+
+    ecs_entity_t parent_a = ecs_new(world);
+    ecs_entity_t parent_b = ecs_new(world);
+
+    ecs_insert(world, ecs_value(EcsParent, {parent_a}));
+
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {{ ecs_childof(parent_a) }},
+        .events = { EcsOnAdd },
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    test_int(ctx.invoked, 0);
+
+    ecs_set(world, e, EcsParent, {parent_a});
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnAdd);
+    test_uint(ctx.e[0], e);
+    test_uint(ctx.s[0][0], 0);
+    test_uint(ctx.c[0][0], ecs_childof(parent_a));
+
+    ecs_os_zeromem(&ctx);
+
+    ecs_set(world, e, EcsParent, {parent_b});
+    test_int(ctx.invoked, 0);
+
+    ecs_fini(world);
+}
+
 void Observer_on_add_childof_wildcard_w_parent_component(void) {
     ecs_world_t *world = ecs_mini();
 
