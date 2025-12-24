@@ -59,17 +59,22 @@ typedef struct ecs_lock_target_t{
     ecs_table_t *table;
     int16_t column_index;
 } ecs_lock_target_t;
-#endif
 
 /* a wrapper around a void* which represents a component pointer. 
  * When FLECS_MUT_ALIAS_LOCKS is defined, then this also provides additional safety information about the pointer.
  */
 struct ecs_get_ptr_t{
     void *ptr;
-#ifdef FLECS_MUT_ALIAS_LOCKS
     ecs_lock_target_t lock_target;
-#endif
 };
+
+#else
+
+/* When FLECS_MUT_ALIAS_LOCKS is not defined, ecs_get_ptr_t is just a void* 
+ * for zero-overhead abstraction */
+typedef void* ecs_get_ptr_t;
+
+#endif
 
 
 

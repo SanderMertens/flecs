@@ -1270,7 +1270,9 @@ typedef struct ecs_record_t ecs_record_t;
 typedef struct ecs_component_record_t ecs_component_record_t;
 
 /** the void* returned from flecs_record_get_id fns which optionally returns origin of the ptr when FLECS_MUT_ALIAS_LOCKS is defined` */
+#ifdef FLECS_MUT_ALIAS_LOCKS
 typedef struct ecs_get_ptr_t ecs_get_ptr_t;
+#endif
 
 /** A poly object.
  * A poly (short for polymorph) object is an object that has a variable list of
@@ -4481,17 +4483,22 @@ typedef struct ecs_lock_target_t{
     ecs_table_t *table;
     int16_t column_index;
 } ecs_lock_target_t;
-#endif
 
 /* a wrapper around a void* which represents a component pointer. 
  * When FLECS_MUT_ALIAS_LOCKS is defined, then this also provides additional safety information about the pointer.
  */
 struct ecs_get_ptr_t{
     void *ptr;
-#ifdef FLECS_MUT_ALIAS_LOCKS
     ecs_lock_target_t lock_target;
-#endif
 };
+
+#else
+
+/* When FLECS_MUT_ALIAS_LOCKS is not defined, ecs_get_ptr_t is just a void* 
+ * for zero-overhead abstraction */
+typedef void* ecs_get_ptr_t;
+
+#endif
 
 
 
