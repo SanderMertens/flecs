@@ -253,59 +253,105 @@ void flecs_table_init_flags(
             table->flags |= EcsTableNotQueryable;
         } else if (id == ecs_id(EcsParent)) {
             table->flags |= EcsTableHasParent;
-        } else {
-            if (ECS_IS_PAIR(id)) {
-                ecs_entity_t r = ECS_PAIR_FIRST(id);
+            table->trait_flags |= EcsIdTraversable;
+        } else if (ECS_PAIR_FIRST(id) == EcsWith) {
+            table->trait_flags |= EcsIdWith;
+        } else if (ECS_PAIR_FIRST(id) == EcsOnDelete) {
+            ecs_entity_t on_delete_kind = ECS_PAIR_SECOND(id);
+            if (on_delete_kind == EcsRemove) {
+                table->trait_flags |= EcsIdOnDeleteRemove;
+            } else if (on_delete_kind == EcsDelete) {
+                table->trait_flags |= EcsIdOnDeleteDelete;
+            } else if (on_delete_kind == EcsPanic) {
+                table->trait_flags |= EcsIdOnDeletePanic;
+            }
+        } else if (ECS_PAIR_FIRST(id) == EcsOnDeleteTarget) {
+            ecs_entity_t on_delete_kind = ECS_PAIR_SECOND(id);
+            if (on_delete_kind == EcsRemove) {
+                table->trait_flags |= EcsIdOnDeleteTargetRemove;
+            } else if (on_delete_kind == EcsDelete) {
+                table->trait_flags |= EcsIdOnDeleteTargetDelete;
+            } else if (on_delete_kind == EcsPanic) {
+                table->trait_flags |= EcsIdOnDeleteTargetPanic;
+            }
+        } else if (ECS_PAIR_FIRST(id) == EcsOnInstantiate) {
+            ecs_entity_t inherit_kind = ECS_PAIR_SECOND(id);
+            if (inherit_kind == EcsInherit) {
+                table->trait_flags |= EcsIdOnInstantiateInherit;
+            } else if (inherit_kind == EcsDontInherit) {
+                table->trait_flags |= EcsIdOnInstantiateDontInherit;
+            } else if (inherit_kind == EcsOverride) {
+                table->trait_flags |= EcsIdOnInstantiateOverride;
+            }
+        } else if (id == EcsCanToggle) {
+            table->trait_flags |= EcsIdCanToggle;
+        } else if (id == EcsInheritable) {
+            table->trait_flags |= EcsIdInheritable;
+        } else if (id == EcsSingleton) {
+            table->trait_flags |= EcsIdSingleton;
+        } else if (id == EcsSparse) {
+            table->trait_flags |= EcsIdSparse;
+        } else if (id == EcsDontFragment) {
+            table->trait_flags |= EcsIdDontFragment;
+        } else if (id ==  EcsExclusive) {
+            table->trait_flags |= EcsIdExclusive;   
+        } else if (id == EcsTraversable) {
+            table->trait_flags |= EcsIdTraversable;
+        } else if (id == EcsPairIsTag) {
+            table->trait_flags |= EcsIdPairIsTag;
+        } else if (id == EcsTransitive) {
+            table->trait_flags |= EcsIdIsTransitive;
+        } else if (ECS_IS_PAIR(id)) {
+            ecs_entity_t r = ECS_PAIR_FIRST(id);
 
-                table->flags |= EcsTableHasPairs;
+            table->flags |= EcsTableHasPairs;
 
-                if (r == EcsIsA) {
-                    table->flags |= EcsTableHasIsA;
-                } else if (r == EcsChildOf) {
-                    table->flags |= EcsTableHasChildOf;
-                    ecs_entity_t tgt = ecs_pair_second(world, id);
-                    ecs_assert(tgt != 0, ECS_INTERNAL_ERROR, NULL);
+            if (r == EcsIsA) {
+                table->flags |= EcsTableHasIsA;
+            } else if (r == EcsChildOf) {
+                table->flags |= EcsTableHasChildOf;
+                ecs_entity_t tgt = ecs_pair_second(world, id);
+                ecs_assert(tgt != 0, ECS_INTERNAL_ERROR, NULL);
 
-                    /* If table contains entities that are inside one of the 
-                     * builtin modules, it contains builtin entities */
+                /* If table contains entities that are inside one of the 
+                    * builtin modules, it contains builtin entities */
 
-                    if (tgt == EcsFlecsCore || tgt == EcsFlecsInternals) {
-                        table->flags |= EcsTableHasBuiltins;
-                    }
+                if (tgt == EcsFlecsCore || tgt == EcsFlecsInternals) {
+                    table->flags |= EcsTableHasBuiltins;
+                }
 
-                    if (ecs_has_id(world, tgt, EcsModule)) {
-                        table->flags |= EcsTableHasModule;
-                    }
-
-#ifdef FLECS_DEBUG_INFO
-                    table->_->parent.id = tgt;
-#endif
-                } else if (id == ecs_pair_t(EcsIdentifier, EcsName)) {
-                    table->flags |= EcsTableHasName;
-#ifdef FLECS_DEBUG_INFO
-                    table->_->name_column = flecs_ito(int16_t, i);  
-#endif
-                } else if (r == ecs_id(EcsPoly)) {
+                if (ecs_has_id(world, tgt, EcsModule)) {
                     table->flags |= EcsTableHasModule;
                 }
-#if defined(FLECS_DEBUG_INFO) && defined(FLECS_DOC)
-                else if (id == ecs_pair_t(EcsDocDescription, EcsName)) {
-                    table->_->doc_name_column = flecs_ito(int16_t, i);
-                }
-#endif
-            } else {
-                if (ECS_HAS_ID_FLAG(id, TOGGLE)) {
-                    ecs_table__t *meta = table->_;
-                    table->flags |= EcsTableHasToggle;
 
-                    if (!meta->bs_count) {
-                        meta->bs_offset = flecs_ito(int16_t, i);
-                    }
-                    meta->bs_count ++;
+#ifdef FLECS_DEBUG_INFO
+                table->_->parent.id = tgt;
+#endif
+            } else if (id == ecs_pair_t(EcsIdentifier, EcsName)) {
+                table->flags |= EcsTableHasName;
+#ifdef FLECS_DEBUG_INFO
+                table->_->name_column = flecs_ito(int16_t, i);  
+#endif
+            } else if (r == ecs_id(EcsPoly)) {
+                table->flags |= EcsTableHasModule;
+            }
+#if defined(FLECS_DEBUG_INFO) && defined(FLECS_DOC)
+            else if (id == ecs_pair_t(EcsDocDescription, EcsName)) {
+                table->_->doc_name_column = flecs_ito(int16_t, i);
+            }
+#endif
+        } else {
+            if (ECS_HAS_ID_FLAG(id, TOGGLE)) {
+                ecs_table__t *meta = table->_;
+                table->flags |= EcsTableHasToggle;
+
+                if (!meta->bs_count) {
+                    meta->bs_offset = flecs_ito(int16_t, i);
                 }
-                if (ECS_HAS_ID_FLAG(id, AUTO_OVERRIDE)) {
-                    table->flags |= EcsTableHasOverrides;
-                }
+                meta->bs_count ++;
+            }
+            if (ECS_HAS_ID_FLAG(id, AUTO_OVERRIDE)) {
+                table->flags |= EcsTableHasOverrides;
             }
         }
     }

@@ -27,6 +27,7 @@ void flecs_add_non_fragmenting_child_to_table(
         }
     } else {
         elem->count ++;
+        elem->first_entity = 0;
     }
 }
 
@@ -58,44 +59,22 @@ void flecs_remove_non_fragmenting_child_from_table(
             ecs_assert(cr->pair->prefab_tables >= 0, 
                 ECS_INTERNAL_ERROR, NULL);
         }
-    } else {
-        if (elem->first_entity == (uint32_t)entity) {
-            EcsParent *parents = ecs_table_get(world, table, EcsParent, 0);
-            int32_t i, count = ecs_table_count(table);
-
-            for (i = 0; i < count; i ++) {
-                row --;
-                if (row < 0) {
-                    row = count - 1;
-                }
-
-                if (parents[row].value == parent) {
-                    elem->first_entity = 
-                        (uint32_t)ecs_table_entities(table)[row];
-                    break;
-                }
-            }
-
-            /* Table should contain other children for parent */
-            ecs_assert(i != count, ECS_INTERNAL_ERROR, NULL);
-        }
     }
 }
 
-static
-ecs_component_record_t* flecs_add_non_fragmenting_child(
+int flecs_add_non_fragmenting_child_w_records(
     ecs_world_t *world,
     ecs_entity_t parent,
-    ecs_entity_t entity)
+    ecs_entity_t entity,
+    ecs_component_record_t *cr,
+    const ecs_record_t *r)
 {
-    ecs_component_record_t *cr = flecs_components_ensure(world, 
-        ecs_pair(EcsChildOf, parent));
-
-    ecs_check(cr != NULL, ECS_INTERNAL_ERROR, NULL);
-
+    ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(r->table != NULL, ECS_INTERNAL_ERROR, NULL);
+    
     if (!(cr->flags & EcsIdOrderedChildren)) {
         flecs_component_ordered_children_init(world, cr);
-        ecs_add_id(world, parent, EcsOrderedChildren);
         flecs_ordered_children_populate(world, cr);
     }
 
@@ -106,12 +85,27 @@ ecs_component_record_t* flecs_add_non_fragmenting_child(
     
     flecs_ordered_entities_append(world, cr->pair, entity);
 
-    ecs_record_t *r = flecs_entities_get(world, entity);
-    ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(r->table != NULL, ECS_INTERNAL_ERROR, NULL);
-
     flecs_add_non_fragmenting_child_to_table(world, cr, entity, r->table);
+
+    return 0;
 error:
+    return -1;
+}
+
+static
+ecs_component_record_t* flecs_add_non_fragmenting_child(
+    ecs_world_t *world,
+    ecs_entity_t parent,
+    ecs_entity_t entity)
+{
+    ecs_component_record_t *cr = flecs_components_ensure(world, 
+        ecs_pair(EcsChildOf, parent));
+    ecs_record_t *r = flecs_entities_get(world, entity);
+    
+    if (flecs_add_non_fragmenting_child_w_records(world, parent, entity, cr, r)) {
+        return NULL;
+    }
+
     return cr;
 }
 
@@ -244,11 +238,14 @@ void flecs_on_non_fragmenting_child_move_add(
         ecs_entity_t e = ecs_table_entities(dst)[i];
         ecs_entity_t p = parents[i].value;
 
-        ecs_component_record_t *cr = flecs_components_get(world, ecs_childof(p));
-        if (src->flags & EcsTableHasParent) {
+        ecs_component_record_t *cr = flecs_components_get(
+            world, ecs_childof(p));
+
+        if (src && (src->flags & EcsTableHasParent)) {
             flecs_remove_non_fragmenting_child_from_table(
                 world, cr, p, e, src, 0);
         }
+
         flecs_add_non_fragmenting_child_to_table(world, cr, e, dst);
     }
 }
@@ -261,7 +258,7 @@ void flecs_on_non_fragmenting_child_move_remove(
     int32_t count,
     bool update_parent_records)
 {
-    ecs_assert(dst != NULL, ECS_INTERNAL_ERROR, NULL);
+    // ecs_assert(dst != NULL, ECS_INTERNAL_ERROR, NULL);
 
     EcsIdentifier *names = NULL;
     if (src->flags & EcsTableHasName) {
@@ -285,7 +282,7 @@ void flecs_on_non_fragmenting_child_move_remove(
                 world, cr, p, e, src, 0);
         }
 
-        if (dst->flags & EcsTableHasParent) {
+        if (dst && (dst->flags & EcsTableHasParent)) {
             if (update_parent_records) {
                 flecs_add_non_fragmenting_child_to_table(world, cr, e, dst);
             }
