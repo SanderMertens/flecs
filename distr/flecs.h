@@ -7590,6 +7590,11 @@ ecs_entity_t ecs_get_parent(
     const ecs_world_t *world,
     ecs_entity_t entity);
 
+FLECS_API
+ecs_entity_t ecs_new_child(
+    ecs_world_t *world,
+    ecs_entity_t parent);
+
 /** Get the target of a relationship for a given component.
  * This operation returns the first entity that has the provided component by 
  * following the relationship. If the entity itself has the component then it 

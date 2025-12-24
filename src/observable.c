@@ -1328,10 +1328,6 @@ void flecs_emit(
     ecs_event_id_record_t *iders[5] = {0};
     ecs_table_record_t dummy_tr;
 
-    if (count && has_observed) {
-        flecs_emit_propagate_invalidate(world, table, offset, count);
-    }
-
 repeat_event:
     /* This is the core event logic, which is executed for each event. By 
      * default this is just the event kind from the ecs_event_desc_t struct, but

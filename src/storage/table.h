@@ -148,6 +148,7 @@ struct ecs_table_t {
     int16_t column_count;            /* Number of components (excluding tags) */
     uint16_t version;                /* Version of table */
     uint64_t bloom_filter;           /* For quick matching with queries */
+    ecs_flags32_t trait_flags;
     ecs_type_t type;                 /* Vector with component ids */
 
     ecs_data_t data;                 /* Component storage */

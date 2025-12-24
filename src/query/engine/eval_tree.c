@@ -394,13 +394,15 @@ bool flecs_query_tree_with(
                 return false;
             }
 
-            ecs_record_t *r = flecs_entities_get_any(
-                ctx->world, pr->first_entity);
-            ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
-            ecs_assert(r->table == range.table, ECS_INTERNAL_ERROR, NULL);
-            int32_t cur = ECS_RECORD_TO_ROW(r->row);
+            ecs_entity_t child = pr->first_entity;
+            if (child) {
+                ecs_assert(pr->count == 1, ECS_INTERNAL_ERROR, NULL);
+                ecs_record_t *r = flecs_entities_get_any(
+                    ctx->world, pr->first_entity);
+                ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+                ecs_assert(r->table == range.table, ECS_INTERNAL_ERROR, NULL);
+                int32_t cur = ECS_RECORD_TO_ROW(r->row);
 
-            if (pr->count == 1) {
                 /* Table contains a single entity for parent */
                 if ((range.offset > cur) || ((range.offset + range.count) <= cur)) {
                     /* Entity does not fall within range */

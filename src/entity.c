@@ -1725,7 +1725,7 @@ void ecs_delete(
 
             int32_t row = ECS_RECORD_TO_ROW(r->row);
             flecs_notify_on_remove(
-                world, table, &world->store.root, row, 1, &diff);
+                world, table, NULL, row, 1, &diff);
             flecs_entity_remove_non_fragmenting(world, entity, r);
             flecs_table_delete(world, table, row, true);
         }
@@ -2788,6 +2788,45 @@ ecs_entity_t ecs_get_parent(
     return flecs_entities_get_alive(world, ECS_PAIR_SECOND(id));
 error:
     return 0;
+}
+
+ecs_entity_t ecs_new_child(
+    ecs_world_t *world,
+    ecs_entity_t parent)
+{
+    ecs_component_record_t *cr = flecs_components_ensure(
+        world, ecs_childof(parent));
+    ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_pair_record_t *pr = cr->pair;
+    ecs_assert(pr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_id_t type_ids[] = {
+        ecs_id(EcsParent), ecs_value_pair(EcsParentDepth, pr->depth)};
+
+    ecs_type_t type = { .count = 2, .array = type_ids };
+
+    ecs_table_t *table = flecs_table_find_or_create(world, &type);
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_entity_t entity = flecs_new_id(world);
+    ecs_record_t *r = flecs_entities_get(world, entity);
+    ecs_flags32_t flags = table->flags & EcsTableAddEdgeFlags;
+
+    ecs_table_diff_t table_diff = { 
+        .added = table->type,
+        .added_flags = flags
+    };
+
+    flecs_new_entity(world, entity, r, table, &table_diff, true, 0);
+
+    EcsParent *parent_ptr = table->data.columns[0].data;
+    parent_ptr = &parent_ptr[ECS_RECORD_TO_ROW(r->row)];
+    parent_ptr->value = parent;
+
+    flecs_add_non_fragmenting_child_w_records(world, parent, entity, cr, r);
+
+    return entity;
 }
 
 ecs_entity_t ecs_get_target_for_id(

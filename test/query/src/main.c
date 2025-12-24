@@ -2500,6 +2500,11 @@ void NonFragmentingChildOf_this_written_up_childof_1_table_3_parents(void);
 void NonFragmentingChildOf_this_written_up_childof_2_tables_3_parents(void);
 void NonFragmentingChildOf_this_written_self_up_childof_1_table_3_parents(void);
 void NonFragmentingChildOf_this_written_self_up_childof_2_tables_3_parents(void);
+void NonFragmentingChildOf_this_written_single_child_w_recycled_id(void);
+void NonFragmentingChildOf_this_written_single_child_after_two_children(void);
+void NonFragmentingChildOf_this_written_single_child_after_two_children_2(void);
+void NonFragmentingChildOf_this_written_single_child_after_two_children_3(void);
+void NonFragmentingChildOf_this_written_single_child_after_two_children_4(void);
 void NonFragmentingChildOf_this_up_w_3_levels_ccc(void);
 void NonFragmentingChildOf_this_up_w_3_levels_ccp(void);
 void NonFragmentingChildOf_this_up_w_3_levels_cpc(void);
@@ -12571,6 +12576,26 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
         NonFragmentingChildOf_this_written_self_up_childof_2_tables_3_parents
     },
     {
+        "this_written_single_child_w_recycled_id",
+        NonFragmentingChildOf_this_written_single_child_w_recycled_id
+    },
+    {
+        "this_written_single_child_after_two_children",
+        NonFragmentingChildOf_this_written_single_child_after_two_children
+    },
+    {
+        "this_written_single_child_after_two_children_2",
+        NonFragmentingChildOf_this_written_single_child_after_two_children_2
+    },
+    {
+        "this_written_single_child_after_two_children_3",
+        NonFragmentingChildOf_this_written_single_child_after_two_children_3
+    },
+    {
+        "this_written_single_child_after_two_children_4",
+        NonFragmentingChildOf_this_written_single_child_after_two_children_4
+    },
+    {
         "this_up_w_3_levels_ccc",
         NonFragmentingChildOf_this_up_w_3_levels_ccc
     },
@@ -13878,7 +13903,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NonFragmentingChildOf_setup,
         NULL,
-        303,
+        308,
         NonFragmentingChildOf_testcases,
         1,
         NonFragmentingChildOf_params
