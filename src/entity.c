@@ -2550,12 +2550,10 @@ ecs_entities_t ecs_get_ordered_children(
             "the OrderedChildren trait",
                 flecs_errstr(ecs_get_path(world, parent)));
 
-    ecs_assert(cr->pair != NULL, ECS_INTERNAL_ERROR, NULL);
-
     return (ecs_entities_t){
-        .count = ecs_vec_count(&cr->pair->ordered_children),
-        .alive_count = ecs_vec_count(&cr->pair->ordered_children),
-        .ids = ecs_vec_first(&cr->pair->ordered_children),
+        .count = ecs_vec_count(&flecs_pair_record(cr)->ordered_children),
+        .alive_count = ecs_vec_count(&flecs_pair_record(cr)->ordered_children),
+        .ids = ecs_vec_first(&flecs_pair_record(cr)->ordered_children),
     };
 error:
     return (ecs_entities_t){0};
@@ -2798,7 +2796,7 @@ ecs_entity_t ecs_new_child(
         world, ecs_childof(parent));
     ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_pair_record_t *pr = cr->pair;
+    ecs_pair_record_t *pr = flecs_pair_record(cr);
     ecs_assert(pr != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_id_t type_ids[] = {

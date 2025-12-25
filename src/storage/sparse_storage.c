@@ -164,7 +164,7 @@ void flecs_component_sparse_dont_fragment_pair_remove(
     ecs_component_record_t *cr,
     ecs_entity_t entity)
 {
-    ecs_component_record_t *parent = cr->pair->parent;
+    ecs_component_record_t *parent = flecs_pair_record(cr)->parent;
     ecs_assert(parent != NULL, ECS_INTERNAL_ERROR, NULL);
     if (!parent->sparse) {
         /* It's not the relationship that's non-fragmenting, but the target */
@@ -206,7 +206,7 @@ void flecs_component_sparse_dont_fragment_exclusive_remove(
     ecs_component_record_t *cr,
     ecs_entity_t entity)
 {
-    ecs_component_record_t *parent = cr->pair->parent;
+    ecs_component_record_t *parent = flecs_pair_record(cr)->parent;
     ecs_assert(parent != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(parent->sparse != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -368,7 +368,7 @@ void flecs_component_sparse_dont_fragment_pair_insert(
     ecs_component_record_t *cr,
     ecs_entity_t entity)
 {
-    ecs_component_record_t *parent = cr->pair->parent;
+    ecs_component_record_t *parent = flecs_pair_record(cr)->parent;
     
     ecs_assert(parent != NULL, ECS_INTERNAL_ERROR, NULL);
     if (!parent->sparse) {
@@ -389,7 +389,7 @@ void flecs_component_sparse_dont_fragment_exclusive_insert(
     int32_t row,
     ecs_entity_t entity)
 {
-    ecs_component_record_t *parent = cr->pair->parent;
+    ecs_component_record_t *parent = flecs_pair_record(cr)->parent;
     ecs_assert(parent != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(parent->sparse != NULL, ECS_INTERNAL_ERROR, NULL);
 

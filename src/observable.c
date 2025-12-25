@@ -322,9 +322,9 @@ void flecs_emit_propagate_id(
 
     if ((trav == EcsChildOf) && (flecs_component_has_non_fragmenting_childof(cur))) {
         ecs_assert(ECS_PAIR_FIRST(cur->id) == EcsChildOf, ECS_INTERNAL_ERROR, NULL);
-
-        int32_t i, count = ecs_vec_count(&cur->pair->ordered_children);
-        ecs_entity_t *children = ecs_vec_first(&cur->pair->ordered_children);
+        ecs_pair_record_t *pr = flecs_pair_record(cur);
+        int32_t i, count = ecs_vec_count(&pr->ordered_children);
+        ecs_entity_t *children = ecs_vec_first(&pr->ordered_children);
         for (i = 0; i < count; i ++) {
             ecs_record_t *r = flecs_entities_get(world, children[i]);
             ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -388,7 +388,7 @@ void flecs_emit_propagate(
     /* Propagate to records of traversable relationships */
     ecs_component_record_t *cur = tgt_cr;
     while ((cur = flecs_component_trav_next(cur))) {
-        cur->pair->reachable.generation ++; /* Invalidate cache */
+        flecs_pair_record(cur)->reachable.generation ++; /* Invalidate cache */
 
         /* Get traversed relationship */
         ecs_entity_t trav = ECS_PAIR_FIRST(cur->id);
@@ -421,7 +421,8 @@ void flecs_emit_propagate_invalidate_tables(
     /* Invalidate records of traversable relationships */
     ecs_component_record_t *cur = tgt_cr;
     while ((cur = flecs_component_trav_next(cur))) {
-        ecs_reachable_cache_t *rc = &cur->pair->reachable;
+        ecs_pair_record_t *pr = flecs_pair_record(cur);
+        ecs_reachable_cache_t *rc = &pr->reachable;
         if (rc->current != rc->generation) {
             /* Subtree is already marked invalid */
             continue;
@@ -430,8 +431,8 @@ void flecs_emit_propagate_invalidate_tables(
         rc->generation ++;
 
         if (flecs_component_has_non_fragmenting_childof(cur)) {
-            int32_t i, count = ecs_vec_count(&cur->pair->ordered_children);
-            ecs_entity_t *children = ecs_vec_first(&cur->pair->ordered_children);
+            int32_t i, count = ecs_vec_count(&pr->ordered_children);
+            ecs_entity_t *children = ecs_vec_first(&pr->ordered_children);
 
             for (i = 0; i < count; i ++) {
                 ecs_component_record_t *cr_t = flecs_components_get(
@@ -780,8 +781,7 @@ void flecs_emit_forward_table_up(
 
     /* If tgt_cr is out of sync but is not the current component record being updated,
      * keep track so that we can update two records for the cost of one. */
-    ecs_assert(tgt_cr->pair != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_reachable_cache_t *rc = &tgt_cr->pair->reachable;
+    ecs_reachable_cache_t *rc = &flecs_pair_record(tgt_cr)->reachable;
     bool parent_revalidate = (reachable_ids != &rc->ids) && 
         (rc->current != rc->generation);
     if (parent_revalidate) {
@@ -830,8 +830,7 @@ void flecs_emit_forward_table_up(
                 ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
             }
 
-            ecs_assert(cr->pair != NULL, ECS_INTERNAL_ERROR, NULL);
-            ecs_reachable_cache_t *cr_rc = &cr->pair->reachable;
+            ecs_reachable_cache_t *cr_rc = &flecs_pair_record(cr)->reachable;
             if (cr_rc->current == cr_rc->generation) {
                 /* Cache hit, use cached ids to prevent traversing the same
                  * hierarchy multiple times. This especially speeds up code 
@@ -968,8 +967,7 @@ void flecs_emit_forward(
     ecs_table_t *table,
     ecs_component_record_t *cr)
 {
-    ecs_assert(cr->pair != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_reachable_cache_t *rc = &cr->pair->reachable;
+    ecs_reachable_cache_t *rc = &flecs_pair_record(cr)->reachable;
 
     if (rc->current != rc->generation) {
         /* Cache miss, iterate the tree to find ids to forward */

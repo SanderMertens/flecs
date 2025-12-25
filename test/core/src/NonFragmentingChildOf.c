@@ -1260,7 +1260,7 @@ void NonFragmentingChildOf_table_child_count_n_children(void) {
     test_int(pr->count, 1);
 
     ecs_entity_t c2 = ecs_insert(world, ecs_value(EcsParent, {p}));
-    test_uint(pr->first_entity, c1);
+    test_uint(pr->first_entity, 0);
     test_int(pr->count, 2);
 
     ecs_entities_t entities = ecs_get_ordered_children(world, p);
@@ -1288,12 +1288,12 @@ void NonFragmentingChildOf_table_child_count_n_children_remove_parent(void) {
     test_int(pr->count, 1);
 
     ecs_entity_t c2 = ecs_insert(world, ecs_value(EcsParent, {p}));
-    test_uint(pr->first_entity, c1);
+    test_uint(pr->first_entity, 0);
     test_int(pr->count, 2);
 
     ecs_remove(world, c1, EcsParent);
 
-    test_uint(pr->first_entity, c2);
+    test_uint(pr->first_entity, 0);
     test_int(pr->count, 1);
 
     ecs_remove(world, c2, EcsParent);
@@ -1323,12 +1323,12 @@ void NonFragmentingChildOf_table_child_count_n_children_delete_children(void) {
     test_int(pr->count, 1);
 
     ecs_entity_t c2 = ecs_insert(world, ecs_value(EcsParent, {p}));
-    test_uint(pr->first_entity, c1);
+    test_uint(pr->first_entity, 0);
     test_int(pr->count, 2);
 
     ecs_delete(world, c1);
 
-    test_uint(pr->first_entity, c2);
+    test_uint(pr->first_entity, 0);
     test_int(pr->count, 1);
 
     ecs_delete(world, c2);
@@ -1358,12 +1358,12 @@ void NonFragmentingChildOf_table_child_count_n_children_remove_parent_reverse(vo
     test_int(pr->count, 1);
 
     ecs_entity_t c2 = ecs_insert(world, ecs_value(EcsParent, {p}));
-    test_uint(pr->first_entity, c1);
+    test_uint(pr->first_entity, 0);
     test_int(pr->count, 2);
 
     ecs_remove(world, c2, EcsParent);
 
-    test_uint(pr->first_entity, c1);
+    test_uint(pr->first_entity, 0);
     test_int(pr->count, 1);
 
     ecs_remove(world, c1, EcsParent);
@@ -1393,12 +1393,12 @@ void NonFragmentingChildOf_table_child_count_n_children_delete_children_reverse(
     test_int(pr->count, 1);
 
     ecs_entity_t c2 = ecs_insert(world, ecs_value(EcsParent, {p}));
-    test_uint(pr->first_entity, c1);
+    test_uint(pr->first_entity, 0);
     test_int(pr->count, 2);
 
     ecs_delete(world, c2);
 
-    test_uint(pr->first_entity, c1);
+    test_uint(pr->first_entity, 0);
     test_int(pr->count, 1);
 
     ecs_delete(world, c1);

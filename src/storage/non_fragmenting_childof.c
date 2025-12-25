@@ -7,9 +7,10 @@ void flecs_add_non_fragmenting_child_to_table(
     ecs_entity_t entity,
     const ecs_table_t *table)
 {
-    ecs_map_init_if(&cr->pair->children_tables, &world->allocator);
+    ecs_pair_record_t *pr = flecs_pair_record(cr);
+    ecs_map_init_if(&pr->children_tables, &world->allocator);
     ecs_parent_record_t *elem = (ecs_parent_record_t*)
-        ecs_map_ensure(&cr->pair->children_tables, table->id);
+        ecs_map_ensure(&pr->children_tables, table->id);
     ecs_assert(elem != NULL, ECS_INTERNAL_ERROR, NULL);
 
     /* Encode id of first entity in table + the total number of entities in the
@@ -20,10 +21,10 @@ void flecs_add_non_fragmenting_child_to_table(
         elem->count = 1;
 
         if (table->flags & EcsTableIsDisabled) {
-            cr->pair->disabled_tables ++;
+            pr->disabled_tables ++;
         }
         if (table->flags & EcsTableIsPrefab) {
-            cr->pair->prefab_tables ++;
+            pr->prefab_tables ++;
         }
     } else {
         elem->count ++;
@@ -48,15 +49,16 @@ void flecs_remove_non_fragmenting_child_from_table(
     elem->count --;
 
     if (!elem->count) {
-        ecs_map_remove(&cr->pair->children_tables, table->id);
+        ecs_pair_record_t *pr = flecs_pair_record(cr);
+        ecs_map_remove(&pr->children_tables, table->id);
         if (table->flags & EcsTableIsDisabled) {
-            cr->pair->disabled_tables --;
-            ecs_assert(cr->pair->disabled_tables >= 0, 
+            pr->disabled_tables --;
+            ecs_assert(pr->disabled_tables >= 0, 
                 ECS_INTERNAL_ERROR, NULL);
         }
         if (table->flags & EcsTableIsPrefab) {
-            cr->pair->prefab_tables --;
-            ecs_assert(cr->pair->prefab_tables >= 0, 
+            pr->prefab_tables --;
+            ecs_assert(pr->prefab_tables >= 0, 
                 ECS_INTERNAL_ERROR, NULL);
         }
     }
@@ -83,7 +85,7 @@ int flecs_add_non_fragmenting_child_w_records(
     ecs_check(ecs_is_alive(world, parent), ECS_INVALID_OPERATION, 
         "cannot set Parent component to entity that is not alive");
     
-    flecs_ordered_entities_append(world, cr->pair, entity);
+    flecs_ordered_entities_append(world, flecs_pair_record(cr), entity);
 
     flecs_add_non_fragmenting_child_to_table(world, cr, entity, r->table);
 
@@ -125,7 +127,7 @@ void flecs_remove_non_fragmenting_child(
         return;
     }
 
-    flecs_ordered_entities_remove(cr->pair, entity);
+    flecs_ordered_entities_remove(flecs_pair_record(cr), entity);
 
     ecs_record_t *r = flecs_entities_get(world, entity);
     ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -201,7 +203,7 @@ void flecs_on_replace_parent(ecs_iter_t *it) {
                 world, e, &names[i], old_parent, cr_parent);
         }
 
-        int32_t depth = cr_parent->pair->depth;
+        int32_t depth = flecs_pair_record(cr_parent)->depth;
         ecs_add_id(world, e, ecs_value_pair(EcsParentDepth, depth));
 
         ecs_component_record_t *cr = flecs_components_get(world, ecs_childof(e));
@@ -287,7 +289,7 @@ void flecs_on_non_fragmenting_child_move_remove(
                 flecs_add_non_fragmenting_child_to_table(world, cr, e, dst);
             }
         } else {
-            flecs_ordered_entities_remove(cr->pair, e);
+            flecs_ordered_entities_remove(flecs_pair_record(cr), e);
 
             if (names) {
                 flecs_on_reparent_update_name(world, e, &names[i], p, NULL);
@@ -399,7 +401,7 @@ bool flecs_component_has_non_fragmenting_childof(
     ecs_component_record_t *cr)
 {
     if (cr->flags & EcsIdOrderedChildren) {
-        return ecs_map_count(&cr->pair->children_tables) != 0;
+        return ecs_map_count(&flecs_pair_record(cr)->children_tables) != 0;
     }
     return false;
 }

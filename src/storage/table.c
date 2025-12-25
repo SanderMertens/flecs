@@ -415,7 +415,7 @@ void flecs_table_init_overrides(
         ecs_assert(ECS_PAIR_FIRST(cr->id) == EcsIsA, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(first->count == 1, ECS_INTERNAL_ERROR, NULL);
         o->is._1.generation = -1;
-        o->is._1.pair = cr->pair;
+        o->is._1.pair = flecs_pair_record(cr);
     }
 
     o->refs = flecs_wcalloc_n(world, ecs_ref_t, table->column_count);
@@ -467,8 +467,8 @@ void flecs_table_update_overrides(
         int32_t *generations = o->is._n.generations;
         int32_t i = tr->index, end = i + tr->count;
         for (; i < end; i ++) {
-            ecs_component_record_t *cr = records[i].hdr.cr;
-            if (cr->pair->reachable.generation != *generations) {
+            ecs_pair_record_t *pr = flecs_pair_record(records[i].hdr.cr);
+            if (pr->reachable.generation != *generations) {
                 break;
             }
             generations ++;
@@ -482,8 +482,8 @@ void flecs_table_update_overrides(
         generations = o->is._n.generations;
         i = tr->index; end = i + tr->count;
         for (; i < end; i ++) {
-            ecs_component_record_t *cr = records[i].hdr.cr;
-            generations[0] = cr->pair->reachable.generation;
+            ecs_pair_record_t *pr = flecs_pair_record(records[i].hdr.cr);
+            generations[0] = pr->reachable.generation;
             generations ++;
         }
     } else {
@@ -689,12 +689,9 @@ void flecs_table_init(
                 r = ECS_PAIR_FIRST(dst_id);
                 if (r == EcsChildOf) {
                     childof_cr = p_cr;
-                    ecs_assert(childof_cr->pair != NULL, 
-                        ECS_INTERNAL_ERROR, NULL);
                 }
 
-                ecs_assert(p_cr->pair != NULL, ECS_INTERNAL_ERROR, NULL);
-                cr = p_cr->pair->parent; /* (R, *) */
+                cr = flecs_pair_record(p_cr)->parent; /* (R, *) */
                 ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
 
                 tr = ecs_vec_append_t(a, records, ecs_table_record_t);
@@ -826,11 +823,11 @@ void flecs_table_init(
     if (childof_cr) {
         if (table->flags & EcsTableHasName) {
             flecs_component_name_index_ensure(world, childof_cr);
-            ecs_assert(childof_cr->pair->name_index != NULL, 
+            ecs_assert(flecs_pair_record(childof_cr)->name_index != NULL, 
                 ECS_INTERNAL_ERROR, NULL);
         }
 
-        table->_->childof_r = childof_cr->pair;
+        table->_->childof_r = flecs_pair_record(childof_cr);
     }
 
     /* If table has IsA pairs, create overrides cache */

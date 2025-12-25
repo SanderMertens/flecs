@@ -4,8 +4,8 @@ void flecs_ordered_children_init(
     ecs_world_t *world,
     ecs_component_record_t *cr)
 {
-    ecs_vec_init_t(
-        &world->allocator, &cr->pair->ordered_children, ecs_entity_t, 0);
+    ecs_vec_init_t(&world->allocator, &flecs_pair_record(cr)->ordered_children, 
+        ecs_entity_t, 0);
 }
 
 void flecs_ordered_children_fini(
@@ -13,15 +13,15 @@ void flecs_ordered_children_fini(
     ecs_component_record_t *cr)
 {
     ecs_vec_fini_t(
-        &world->allocator, &cr->pair->ordered_children, ecs_entity_t);
-    ecs_map_fini(&cr->pair->children_tables);
+        &world->allocator, &flecs_pair_record(cr)->ordered_children, ecs_entity_t);
+    ecs_map_fini(&flecs_pair_record(cr)->children_tables);
 }
 
 void flecs_ordered_children_populate(
     ecs_world_t *world,
     ecs_component_record_t *cr)
 {    
-    ecs_vec_t *v = &cr->pair->ordered_children;
+    ecs_vec_t *v = &flecs_pair_record(cr)->ordered_children;
     ecs_assert(ecs_vec_count(v) == 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(ECS_IS_PAIR(cr->id), ECS_INTERNAL_ERROR, NULL);
     ecs_assert(ECS_PAIR_FIRST(cr->id) ==  EcsChildOf, 
@@ -40,13 +40,13 @@ void flecs_ordered_children_populate(
 void flecs_ordered_children_clear(
     ecs_component_record_t *cr)
 {    
-    ecs_vec_t *v = &cr->pair->ordered_children;
+    ecs_vec_t *v = &flecs_pair_record(cr)->ordered_children;
     ecs_assert(ECS_IS_PAIR(cr->id), ECS_INTERNAL_ERROR, NULL);
     ecs_assert(ECS_PAIR_FIRST(cr->id) ==  EcsChildOf, 
         ECS_INTERNAL_ERROR, NULL);
 
     if (!(cr->flags & EcsIdMarkedForDelete)) {
-        ecs_assert(!ecs_map_count(&cr->pair->children_tables),
+        ecs_assert(!ecs_map_count(&flecs_pair_record(cr)->children_tables),
             ECS_UNSUPPORTED,
             "cannot remove OrderedChildren trait from parent that has "
             "children which use the Parent component");
@@ -153,7 +153,7 @@ void flecs_ordered_children_reorder(
         "the OrderedChildren trait", 
             flecs_errstr(ecs_get_path(world, parent)));
 
-    ecs_vec_t *vec = &cr->pair->ordered_children;
+    ecs_vec_t *vec = &flecs_pair_record(cr)->ordered_children;
     ecs_entity_t *parent_children = ecs_vec_first_t(vec, ecs_entity_t);
     int32_t parent_child_count = ecs_vec_count(vec);
     ecs_check(parent_child_count == child_count, ECS_INVALID_PARAMETER,

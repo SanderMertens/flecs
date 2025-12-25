@@ -659,9 +659,7 @@ bool flecs_query_ids_check(
             return false;
         }
 
-        ecs_assert(cur->pair != NULL, ECS_INTERNAL_ERROR, NULL);
-
-        if (!ecs_vec_count(&cur->pair->ordered_children)) {
+        if (!ecs_vec_count(&flecs_pair_record(cur)->ordered_children)) {
             return false;
         }
     }

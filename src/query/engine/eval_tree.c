@@ -104,8 +104,7 @@ bool flecs_query_tree_select(
         }
 
         ecs_assert(op_ctx->tgt != EcsWildcard, ECS_INTERNAL_ERROR, NULL);
-        ecs_assert(cr->pair != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_vec_t *v_children = &cr->pair->ordered_children;
+        ecs_vec_t *v_children = &flecs_pair_record(cr)->ordered_children;
         op_ctx->entities = ecs_vec_first_t(v_children, ecs_entity_t);
         op_ctx->range.count = ecs_vec_count(v_children);
         if (!op_ctx->range.count) {
@@ -221,8 +220,7 @@ next:
         }
 
         if (cr->flags & EcsIdOrderedChildren) {
-            ecs_assert(cr->pair != NULL, ECS_INTERNAL_ERROR, NULL);
-            ecs_vec_t *v_children = &cr->pair->ordered_children;
+            ecs_vec_t *v_children = &flecs_pair_record(cr)->ordered_children;
             if (bulk_return) {
                 op_ctx->state = EcsQueryTreeIterNext;
                 it->entities = ecs_vec_first_t(v_children, ecs_entity_t);
@@ -489,7 +487,7 @@ bool flecs_query_children_select(
             goto next;
         }
 
-        ecs_pair_record_t *pr = cr->pair;
+        ecs_pair_record_t *pr = flecs_pair_record(cr);
         ecs_assert(pr != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_vec_t *v_children = &pr->ordered_children;
         uint32_t filter = flecs_ito(uint32_t, op->other);

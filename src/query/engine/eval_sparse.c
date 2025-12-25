@@ -149,11 +149,11 @@ bool flecs_query_sparse_select_wildcard(
         }
 
         if (ECS_PAIR_FIRST(id) == EcsWildcard) {
-            op_ctx->cr = cr->pair->second.next;
+            op_ctx->cr = flecs_pair_record(cr)->second.next;
         } else {
             ecs_assert(ECS_PAIR_SECOND(id) == EcsWildcard, 
                 ECS_INTERNAL_ERROR, NULL);
-            op_ctx->cr = cr->pair->first.next;
+            op_ctx->cr = flecs_pair_record(cr)->first.next;
         }
     } else {
         goto next_select;
@@ -180,11 +180,11 @@ next_select:
 next_component: {
         ecs_component_record_t *cr = op_ctx->cr;
         if (ECS_PAIR_FIRST(id) == EcsWildcard) {
-            cr = op_ctx->cr = cr->pair->second.next;
+            cr = op_ctx->cr = flecs_pair_record(cr)->second.next;
         } else {
             ecs_assert(ECS_PAIR_SECOND(id) == EcsWildcard, 
                 ECS_INTERNAL_ERROR, NULL);
-            cr = op_ctx->cr = cr->pair->first.next;
+            cr = op_ctx->cr = flecs_pair_record(cr)->first.next;
         }
 
         if (!cr) {
@@ -374,11 +374,11 @@ bool flecs_query_sparse_with_wildcard(
 
         if (!not) {
             if (ECS_PAIR_FIRST(id) == EcsWildcard) {
-                op_ctx->cr = cr->pair->second.next;
+                op_ctx->cr = flecs_pair_record(cr)->second.next;
             } else {
                 ecs_assert(ECS_PAIR_SECOND(id) == EcsWildcard, 
                     ECS_INTERNAL_ERROR, NULL);
-                op_ctx->cr = cr->pair->first.next;
+                op_ctx->cr = flecs_pair_record(cr)->first.next;
             }
         } else {
             op_ctx->cr = cr;
@@ -419,11 +419,11 @@ next_component: {
         ecs_component_record_t *cr = op_ctx->cr;
         if (!not) {
             if (ECS_PAIR_FIRST(id) == EcsWildcard) {
-                cr = op_ctx->cr = cr->pair->second.next;
+                cr = op_ctx->cr = flecs_pair_record(cr)->second.next;
             } else {
                 ecs_assert(ECS_PAIR_SECOND(id) == EcsWildcard, 
                     ECS_INTERNAL_ERROR, NULL);
-                cr = op_ctx->cr = cr->pair->first.next;
+                cr = op_ctx->cr = flecs_pair_record(cr)->first.next;
             }
         } else {
             cr = NULL;

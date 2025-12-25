@@ -169,7 +169,7 @@ void flecs_trav_entity_down_iter_children(
     (void)trav;
     (void)empty;
 
-    ecs_vec_t *children = &cr_trav->pair->ordered_children;
+    ecs_vec_t *children = &flecs_pair_record(cr_trav)->ordered_children;
     int32_t i, count = ecs_vec_count(children);
     ecs_entity_t *elems = ecs_vec_first(children);
 

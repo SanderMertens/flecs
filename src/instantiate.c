@@ -423,7 +423,7 @@ void flecs_instantiate(
     if (cr && flecs_table_cache_all_iter((ecs_table_cache_t*)cr, &it)) {
         ecs_os_perf_trace_push("flecs.instantiate");
         if (cr->flags & EcsIdOrderedChildren) {
-            ecs_vec_t *children_vec = &cr->pair->ordered_children;
+            ecs_vec_t *children_vec = &flecs_pair_record(cr)->ordered_children;
             int32_t i, count = ecs_vec_count(children_vec);
             ecs_entity_t *children = ecs_vec_first(children_vec);
             for (i = 0; i < count; i ++) {

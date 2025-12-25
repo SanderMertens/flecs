@@ -123,7 +123,7 @@ ecs_iter_t ecs_children_w_rel(
     }
 
     if (cr->flags & EcsIdOrderedChildren) {
-        ecs_vec_t *v = &cr->pair->ordered_children;
+        ecs_vec_t *v = &flecs_pair_record(cr)->ordered_children;
         it.entities = ecs_vec_first_t(v, ecs_entity_t);
         it.count = ecs_vec_count(v);
         it.next = flecs_children_next_ordered;

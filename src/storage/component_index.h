@@ -27,8 +27,43 @@ typedef struct ecs_reachable_cache_t {
     ecs_vec_t ids; /* vec<reachable_elem_t> */
 } ecs_reachable_cache_t;
 
-/* Component index data that just applies to pairs */
+/* Payload for id index which contains all data structures for an id. */
+struct ecs_component_record_t {
+    /* Cache with all tables that contain the id. Must be first member. */
+    ecs_table_cache_t cache; /* table_cache<ecs_table_record_t> */
+
+    /* Component id of record */
+    ecs_id_t id;
+
+    /* Flags for id */
+    ecs_flags32_t flags;
+
+#ifdef FLECS_DEBUG_INFO
+    /* String representation of id (used for debug visualization) */
+    char *str;
+#endif
+
+    /* Cached pointer to type info for id, if id contains data. */
+    const ecs_type_info_t *type_info;
+
+    /* Storage for sparse components */
+    void *sparse;
+
+    /* Backref to tables with edges to non-fragmenting component ids */
+    ecs_vec_t dont_fragment_tables;
+
+    /* All non-fragmenting ids */
+    ecs_id_record_elem_t non_fragmenting;
+
+    /* Refcount */
+    int32_t refcount;
+};
+
+/* Extension of component record with data specific for pair ids */
 typedef struct ecs_pair_record_t {
+    /* Base component record */
+    ecs_component_record_t base;
+
     /* Name lookup index (currently only used for ChildOf pairs) */
     ecs_hashmap_t *name_index;
 
@@ -61,41 +96,6 @@ typedef struct ecs_pair_record_t {
     /* Cache for finding components that are reachable through a relationship */
     ecs_reachable_cache_t reachable;
 } ecs_pair_record_t;
-
-/* Payload for id index which contains all data structures for an id. */
-struct ecs_component_record_t {
-    /* Cache with all tables that contain the id. Must be first member. */
-    ecs_table_cache_t cache; /* table_cache<ecs_table_record_t> */
-
-    /* Component id of record */
-    ecs_id_t id;
-
-    /* Flags for id */
-    ecs_flags32_t flags;
-
-#ifdef FLECS_DEBUG_INFO
-    /* String representation of id (used for debug visualization) */
-    char *str;
-#endif
-
-    /* Cached pointer to type info for id, if id contains data. */
-    const ecs_type_info_t *type_info;
-
-    /* Storage for sparse components */
-    void *sparse;
-
-    /* Backref to tables with edges to non-fragmenting component ids */
-    ecs_vec_t dont_fragment_tables;
-
-    /* Pair data */
-    ecs_pair_record_t *pair;
-
-    /* All non-fragmenting ids */
-    ecs_id_record_elem_t non_fragmenting;
-
-    /* Refcount */
-    int32_t refcount;
-};
 
 /* Bootstrap cached id records */
 void flecs_components_init(
@@ -198,5 +198,12 @@ void flecs_component_update_childof_w_depth(
 void flecs_component_ordered_children_init(
     ecs_world_t *world,
     ecs_component_record_t *cr);
+
+#ifdef FLECS_DEBUG
+ecs_pair_record_t* flecs_pair_record(
+    const ecs_component_record_t *cr);
+#else
+#define flecs_pair_record(cr) ((ecs_pair_record_t*)(cr))
+#endif
 
 #endif

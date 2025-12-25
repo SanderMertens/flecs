@@ -249,8 +249,8 @@ void ecs_component_record_memory_get(
     }
 #endif
 
-    if (cr->pair) {
-        ecs_pair_record_t *pair = cr->pair;
+    if (ECS_IS_PAIR(cr->id)) {
+        ecs_pair_record_t *pair = flecs_pair_record(cr);
 
         result->bytes_component_record += ECS_SIZEOF(ecs_pair_record_t);
         

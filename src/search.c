@@ -411,8 +411,7 @@ int32_t flecs_relation_depth(
             const ecs_table_record_t *tr = &table->_->records[tr_wc->index];
             ecs_component_record_t *cr = tr->hdr.cr;
             ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
-            ecs_assert(cr->pair != NULL, ECS_INTERNAL_ERROR, NULL);
-            return cr->pair->depth;
+            return flecs_pair_record(cr)->depth;
         } else if (table->flags & EcsTableHasParent) {
             ecs_component_record_t *cr_wc = flecs_components_get(
                 world, ecs_pair(EcsParentDepth, EcsWildcard));
