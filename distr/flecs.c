@@ -1126,21 +1126,21 @@ void flecs_component_sparse_remove_all(
 /* Initialize ordered children storage. */
 void flecs_ordered_children_init(
     ecs_world_t *world,
-    ecs_component_record_t *cr);
+    ecs_pair_record_t *pr);
 
 /* Free ordered children storage. */
 void flecs_ordered_children_fini(
     ecs_world_t *world,
-    ecs_component_record_t *cr);
+    ecs_pair_record_t *pr);
 
 /* Populate ordered children storage with existing children. */
 void flecs_ordered_children_populate(
     ecs_world_t *world,
-    ecs_component_record_t *cr);
+    ecs_pair_record_t *pr);
 
 /* Clear ordered children storage. */
 void flecs_ordered_children_clear(
-    ecs_component_record_t *cr);
+    ecs_pair_record_t *pr);
 
 /* Reparent entities in ordered children storage. */
 void flecs_ordered_children_reparent(
@@ -1224,7 +1224,7 @@ int flecs_add_non_fragmenting_child_w_records(
     ecs_world_t *world,
     ecs_entity_t parent,
     ecs_entity_t entity,
-    ecs_component_record_t *cr,
+    ecs_pair_record_t *pr,
     const ecs_record_t *r);
 
 #endif
@@ -4740,8 +4740,8 @@ void flecs_register_ordered_children(ecs_iter_t *it) {
             ecs_component_record_t *cr = flecs_components_ensure(
                 it->world, ecs_childof(parent));
             if (!(cr->flags & EcsIdOrderedChildren)) {
-                flecs_ordered_children_init(it->world, cr);
-                flecs_ordered_children_populate(it->world, cr);
+                flecs_ordered_children_init(it->world, flecs_pair_record(cr));
+                flecs_ordered_children_populate(it->world, flecs_pair_record(cr));
                 cr->flags |= EcsIdOrderedChildren;
             }
         }
@@ -4752,7 +4752,7 @@ void flecs_register_ordered_children(ecs_iter_t *it) {
             ecs_component_record_t *cr = flecs_components_get(
                 it->world, ecs_childof(parent));
             if (cr && (cr->flags & EcsIdOrderedChildren)) {
-                flecs_ordered_children_clear(cr);
+                flecs_ordered_children_clear(flecs_pair_record(cr));
                 cr->flags &= ~EcsIdOrderedChildren;
             }
         }
@@ -10473,7 +10473,7 @@ ecs_entity_t ecs_new_child(
     parent_ptr = &parent_ptr[ECS_RECORD_TO_ROW(r->row)];
     parent_ptr->value = parent;
 
-    flecs_add_non_fragmenting_child_w_records(world, parent, entity, cr, r);
+    flecs_add_non_fragmenting_child_w_records(world, parent, entity, pr, r);
 
     return entity;
 }
@@ -14697,7 +14697,9 @@ void flecs_emit_propagate_id(
 {
     ecs_table_cache_iter_t idt;
 
-    if ((trav == EcsChildOf) && (flecs_component_has_non_fragmenting_childof(cur))) {
+    if ((trav == EcsChildOf) && 
+        (flecs_component_has_non_fragmenting_childof(cur))) 
+    {
         ecs_assert(ECS_PAIR_FIRST(cur->id) == EcsChildOf, ECS_INTERNAL_ERROR, NULL);
         ecs_pair_record_t *pr = flecs_pair_record(cur);
         int32_t i, count = ecs_vec_count(&pr->ordered_children);
@@ -38394,7 +38396,7 @@ void flecs_component_ordered_children_init(
     ecs_component_record_t *cr)
 {
     cr->flags |= EcsIdOrderedChildren;
-    flecs_ordered_children_init(world, cr);
+    flecs_ordered_children_init(world, flecs_pair_record(cr));
 }
 
 static
@@ -38814,7 +38816,7 @@ void flecs_component_free(
 
     if (ECS_IS_PAIR(id)) {
         ecs_pair_record_t *pr = flecs_pair_record(cr);
-        flecs_ordered_children_fini(world, cr);
+        flecs_ordered_children_fini(world, flecs_pair_record(cr));
         flecs_name_index_free(pr->name_index);
         ecs_vec_fini_t(&world->allocator, &pr->reachable.ids, 
             ecs_reachable_elem_t);
@@ -39697,11 +39699,10 @@ const uint64_t* flecs_entity_index_ids(
 static
 void flecs_add_non_fragmenting_child_to_table(
     ecs_world_t *world,
-    ecs_component_record_t *cr,
+    ecs_pair_record_t *pr,
     ecs_entity_t entity,
     const ecs_table_t *table)
 {
-    ecs_pair_record_t *pr = flecs_pair_record(cr);
     ecs_map_init_if(&pr->children_tables, &world->allocator);
     ecs_parent_record_t *elem = (ecs_parent_record_t*)
         ecs_map_ensure(&pr->children_tables, table->id);
@@ -39729,13 +39730,14 @@ void flecs_add_non_fragmenting_child_to_table(
 static
 void flecs_remove_non_fragmenting_child_from_table(
     ecs_world_t *world,
-    ecs_component_record_t *cr,
+    ecs_pair_record_t *pr,
     ecs_entity_t parent,
     ecs_entity_t entity,
     const ecs_table_t *table,
     int32_t row)
 {
-    ecs_parent_record_t *elem = flecs_component_get_parent_record(cr, table);
+    ecs_parent_record_t *elem = flecs_component_get_parent_record(
+        &pr->base, table);
     if (!elem) {
         return;
     }
@@ -39743,7 +39745,6 @@ void flecs_remove_non_fragmenting_child_from_table(
     elem->count --;
 
     if (!elem->count) {
-        ecs_pair_record_t *pr = flecs_pair_record(cr);
         ecs_map_remove(&pr->children_tables, table->id);
         if (table->flags & EcsTableIsDisabled) {
             pr->disabled_tables --;
@@ -39762,16 +39763,16 @@ int flecs_add_non_fragmenting_child_w_records(
     ecs_world_t *world,
     ecs_entity_t parent,
     ecs_entity_t entity,
-    ecs_component_record_t *cr,
+    ecs_pair_record_t *pr,
     const ecs_record_t *r)
 {
-    ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(pr != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(r->table != NULL, ECS_INTERNAL_ERROR, NULL);
     
-    if (!(cr->flags & EcsIdOrderedChildren)) {
-        flecs_component_ordered_children_init(world, cr);
-        flecs_ordered_children_populate(world, cr);
+    if (!(pr->base.flags & EcsIdOrderedChildren)) {
+        flecs_component_ordered_children_init(world, &pr->base);
+        flecs_ordered_children_populate(world, pr);
     }
 
     ecs_check(parent != 0, ECS_INVALID_OPERATION, 
@@ -39779,9 +39780,9 @@ int flecs_add_non_fragmenting_child_w_records(
     ecs_check(ecs_is_alive(world, parent), ECS_INVALID_OPERATION, 
         "cannot set Parent component to entity that is not alive");
     
-    flecs_ordered_entities_append(world, flecs_pair_record(cr), entity);
+    flecs_ordered_entities_append(world, pr, entity);
 
-    flecs_add_non_fragmenting_child_to_table(world, cr, entity, r->table);
+    flecs_add_non_fragmenting_child_to_table(world, pr, entity, r->table);
 
     return 0;
 error:
@@ -39798,7 +39799,9 @@ ecs_component_record_t* flecs_add_non_fragmenting_child(
         ecs_pair(EcsChildOf, parent));
     ecs_record_t *r = flecs_entities_get(world, entity);
     
-    if (flecs_add_non_fragmenting_child_w_records(world, parent, entity, cr, r)) {
+    if (flecs_add_non_fragmenting_child_w_records(
+        world, parent, entity, flecs_pair_record(cr), r)) 
+    {
         return NULL;
     }
 
@@ -39821,7 +39824,9 @@ void flecs_remove_non_fragmenting_child(
         return;
     }
 
-    flecs_ordered_entities_remove(flecs_pair_record(cr), entity);
+    ecs_pair_record_t *pr = flecs_pair_record(cr);
+
+    flecs_ordered_entities_remove(pr, entity);
 
     ecs_record_t *r = flecs_entities_get(world, entity);
     ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -39829,7 +39834,7 @@ void flecs_remove_non_fragmenting_child(
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
     flecs_remove_non_fragmenting_child_from_table(
-        world, cr, parent, entity, table, ECS_RECORD_TO_ROW(r->row));
+        world, pr, parent, entity, table, ECS_RECORD_TO_ROW(r->row));
 }
 
 static
@@ -39939,10 +39944,11 @@ void flecs_on_non_fragmenting_child_move_add(
 
         if (src && (src->flags & EcsTableHasParent)) {
             flecs_remove_non_fragmenting_child_from_table(
-                world, cr, p, e, src, 0);
+                world, flecs_pair_record(cr), p, e, src, 0);
         }
 
-        flecs_add_non_fragmenting_child_to_table(world, cr, e, dst);
+        flecs_add_non_fragmenting_child_to_table(
+            world, flecs_pair_record(cr), e, dst);
     }
 }
 
@@ -39972,18 +39978,19 @@ void flecs_on_non_fragmenting_child_move_remove(
 
         ecs_component_record_t *cr = flecs_components_ensure(
             world, ecs_childof(p));
+        ecs_pair_record_t *pr = flecs_pair_record(cr);
         
         if (update_parent_records) {
             flecs_remove_non_fragmenting_child_from_table(
-                world, cr, p, e, src, 0);
+                world, pr, p, e, src, 0);
         }
 
         if (dst && (dst->flags & EcsTableHasParent)) {
             if (update_parent_records) {
-                flecs_add_non_fragmenting_child_to_table(world, cr, e, dst);
+                flecs_add_non_fragmenting_child_to_table(world, pr, e, dst);
             }
         } else {
-            flecs_ordered_entities_remove(flecs_pair_record(cr), e);
+            flecs_ordered_entities_remove(pr, e);
 
             if (names) {
                 flecs_on_reparent_update_name(world, e, &names[i], p, NULL);
@@ -40094,6 +40101,9 @@ void flecs_non_fragmenting_childof_unparent(
 bool flecs_component_has_non_fragmenting_childof(
     ecs_component_record_t *cr)
 {
+    if (!ECS_IS_PAIR(cr->id)) {
+        return false;
+    }
     if (cr->flags & EcsIdOrderedChildren) {
         return ecs_map_count(&flecs_pair_record(cr)->children_tables) != 0;
     }
@@ -40112,32 +40122,30 @@ void flecs_bootstrap_parent_component(
 
 void flecs_ordered_children_init(
     ecs_world_t *world,
-    ecs_component_record_t *cr)
+    ecs_pair_record_t *pr)
 {
-    ecs_vec_init_t(&world->allocator, &flecs_pair_record(cr)->ordered_children, 
-        ecs_entity_t, 0);
+    ecs_vec_init_t(&world->allocator, &pr->ordered_children, ecs_entity_t, 0);
 }
 
 void flecs_ordered_children_fini(
     ecs_world_t *world,
-    ecs_component_record_t *cr)
+    ecs_pair_record_t *pr)
 {
     ecs_vec_fini_t(
-        &world->allocator, &flecs_pair_record(cr)->ordered_children, ecs_entity_t);
-    ecs_map_fini(&flecs_pair_record(cr)->children_tables);
+        &world->allocator, &pr->ordered_children, ecs_entity_t);
+    ecs_map_fini(&pr->children_tables);
 }
 
 void flecs_ordered_children_populate(
     ecs_world_t *world,
-    ecs_component_record_t *cr)
+    ecs_pair_record_t *pr)
 {    
-    ecs_vec_t *v = &flecs_pair_record(cr)->ordered_children;
+    ecs_vec_t *v = &pr->ordered_children;
     ecs_assert(ecs_vec_count(v) == 0, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(ECS_IS_PAIR(cr->id), ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(ECS_PAIR_FIRST(cr->id) ==  EcsChildOf, 
+    ecs_assert(ECS_PAIR_FIRST(pr->base.id) ==  EcsChildOf, 
         ECS_INTERNAL_ERROR, NULL);
 
-    ecs_iter_t it = ecs_each_id(world, cr->id);
+    ecs_iter_t it = ecs_each_id(world, pr->base.id);
     while (ecs_each_next(&it)) {
         int32_t i;
         for (i = 0; i < it.count; i ++) {
@@ -40148,15 +40156,14 @@ void flecs_ordered_children_populate(
 }
 
 void flecs_ordered_children_clear(
-    ecs_component_record_t *cr)
+    ecs_pair_record_t *pr)
 {    
-    ecs_vec_t *v = &flecs_pair_record(cr)->ordered_children;
-    ecs_assert(ECS_IS_PAIR(cr->id), ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(ECS_PAIR_FIRST(cr->id) ==  EcsChildOf, 
+    ecs_vec_t *v = &pr->ordered_children;
+    ecs_assert(ECS_PAIR_FIRST(pr->base.id) ==  EcsChildOf, 
         ECS_INTERNAL_ERROR, NULL);
 
-    if (!(cr->flags & EcsIdMarkedForDelete)) {
-        ecs_assert(!ecs_map_count(&flecs_pair_record(cr)->children_tables),
+    if (!(pr->base.flags & EcsIdMarkedForDelete)) {
+        ecs_assert(!ecs_map_count(&pr->children_tables),
             ECS_UNSUPPORTED,
             "cannot remove OrderedChildren trait from parent that has "
             "children which use the Parent component");

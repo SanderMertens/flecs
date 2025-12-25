@@ -2822,7 +2822,7 @@ ecs_entity_t ecs_new_child(
     parent_ptr = &parent_ptr[ECS_RECORD_TO_ROW(r->row)];
     parent_ptr->value = parent;
 
-    flecs_add_non_fragmenting_child_w_records(world, parent, entity, cr, r);
+    flecs_add_non_fragmenting_child_w_records(world, parent, entity, pr, r);
 
     return entity;
 }

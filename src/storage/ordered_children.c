@@ -2,32 +2,30 @@
 
 void flecs_ordered_children_init(
     ecs_world_t *world,
-    ecs_component_record_t *cr)
+    ecs_pair_record_t *pr)
 {
-    ecs_vec_init_t(&world->allocator, &flecs_pair_record(cr)->ordered_children, 
-        ecs_entity_t, 0);
+    ecs_vec_init_t(&world->allocator, &pr->ordered_children, ecs_entity_t, 0);
 }
 
 void flecs_ordered_children_fini(
     ecs_world_t *world,
-    ecs_component_record_t *cr)
+    ecs_pair_record_t *pr)
 {
     ecs_vec_fini_t(
-        &world->allocator, &flecs_pair_record(cr)->ordered_children, ecs_entity_t);
-    ecs_map_fini(&flecs_pair_record(cr)->children_tables);
+        &world->allocator, &pr->ordered_children, ecs_entity_t);
+    ecs_map_fini(&pr->children_tables);
 }
 
 void flecs_ordered_children_populate(
     ecs_world_t *world,
-    ecs_component_record_t *cr)
+    ecs_pair_record_t *pr)
 {    
-    ecs_vec_t *v = &flecs_pair_record(cr)->ordered_children;
+    ecs_vec_t *v = &pr->ordered_children;
     ecs_assert(ecs_vec_count(v) == 0, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(ECS_IS_PAIR(cr->id), ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(ECS_PAIR_FIRST(cr->id) ==  EcsChildOf, 
+    ecs_assert(ECS_PAIR_FIRST(pr->base.id) ==  EcsChildOf, 
         ECS_INTERNAL_ERROR, NULL);
 
-    ecs_iter_t it = ecs_each_id(world, cr->id);
+    ecs_iter_t it = ecs_each_id(world, pr->base.id);
     while (ecs_each_next(&it)) {
         int32_t i;
         for (i = 0; i < it.count; i ++) {
@@ -38,15 +36,14 @@ void flecs_ordered_children_populate(
 }
 
 void flecs_ordered_children_clear(
-    ecs_component_record_t *cr)
+    ecs_pair_record_t *pr)
 {    
-    ecs_vec_t *v = &flecs_pair_record(cr)->ordered_children;
-    ecs_assert(ECS_IS_PAIR(cr->id), ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(ECS_PAIR_FIRST(cr->id) ==  EcsChildOf, 
+    ecs_vec_t *v = &pr->ordered_children;
+    ecs_assert(ECS_PAIR_FIRST(pr->base.id) ==  EcsChildOf, 
         ECS_INTERNAL_ERROR, NULL);
 
-    if (!(cr->flags & EcsIdMarkedForDelete)) {
-        ecs_assert(!ecs_map_count(&flecs_pair_record(cr)->children_tables),
+    if (!(pr->base.flags & EcsIdMarkedForDelete)) {
+        ecs_assert(!ecs_map_count(&pr->children_tables),
             ECS_UNSUPPORTED,
             "cannot remove OrderedChildren trait from parent that has "
             "children which use the Parent component");

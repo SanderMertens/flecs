@@ -297,7 +297,7 @@ void flecs_component_ordered_children_init(
     ecs_component_record_t *cr)
 {
     cr->flags |= EcsIdOrderedChildren;
-    flecs_ordered_children_init(world, cr);
+    flecs_ordered_children_init(world, flecs_pair_record(cr));
 }
 
 static
@@ -717,7 +717,7 @@ void flecs_component_free(
 
     if (ECS_IS_PAIR(id)) {
         ecs_pair_record_t *pr = flecs_pair_record(cr);
-        flecs_ordered_children_fini(world, cr);
+        flecs_ordered_children_fini(world, flecs_pair_record(cr));
         flecs_name_index_free(pr->name_index);
         ecs_vec_fini_t(&world->allocator, &pr->reachable.ids, 
             ecs_reachable_elem_t);

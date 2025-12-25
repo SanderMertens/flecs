@@ -320,7 +320,9 @@ void flecs_emit_propagate_id(
 {
     ecs_table_cache_iter_t idt;
 
-    if ((trav == EcsChildOf) && (flecs_component_has_non_fragmenting_childof(cur))) {
+    if ((trav == EcsChildOf) && 
+        (flecs_component_has_non_fragmenting_childof(cur))) 
+    {
         ecs_assert(ECS_PAIR_FIRST(cur->id) == EcsChildOf, ECS_INTERNAL_ERROR, NULL);
         ecs_pair_record_t *pr = flecs_pair_record(cur);
         int32_t i, count = ecs_vec_count(&pr->ordered_children);

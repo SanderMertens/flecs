@@ -45,7 +45,7 @@ int flecs_add_non_fragmenting_child_w_records(
     ecs_world_t *world,
     ecs_entity_t parent,
     ecs_entity_t entity,
-    ecs_component_record_t *cr,
+    ecs_pair_record_t *pr,
     const ecs_record_t *r);
 
 #endif

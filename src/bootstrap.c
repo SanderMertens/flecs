@@ -587,8 +587,8 @@ void flecs_register_ordered_children(ecs_iter_t *it) {
             ecs_component_record_t *cr = flecs_components_ensure(
                 it->world, ecs_childof(parent));
             if (!(cr->flags & EcsIdOrderedChildren)) {
-                flecs_ordered_children_init(it->world, cr);
-                flecs_ordered_children_populate(it->world, cr);
+                flecs_ordered_children_init(it->world, flecs_pair_record(cr));
+                flecs_ordered_children_populate(it->world, flecs_pair_record(cr));
                 cr->flags |= EcsIdOrderedChildren;
             }
         }
@@ -599,7 +599,7 @@ void flecs_register_ordered_children(ecs_iter_t *it) {
             ecs_component_record_t *cr = flecs_components_get(
                 it->world, ecs_childof(parent));
             if (cr && (cr->flags & EcsIdOrderedChildren)) {
-                flecs_ordered_children_clear(cr);
+                flecs_ordered_children_clear(flecs_pair_record(cr));
                 cr->flags &= ~EcsIdOrderedChildren;
             }
         }
