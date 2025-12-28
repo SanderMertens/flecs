@@ -1966,7 +1966,7 @@ ECS_COMPONENT(world, TimeOfDay);
 // Set singleton
 ecs_singleton_set(world, TimeOfDay, { 0.5 });
 
-// Unregister the component
+// Get singleton
 const TimeOfDay *t = ecs_singleton_get(world, TimeOfDay);
 ```
 
