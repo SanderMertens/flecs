@@ -739,6 +739,9 @@ const char* ecs_entity_from_json(
     const char *json,
     const ecs_from_json_desc_t *desc_arg)
 {
+    ecs_assert(!ecs_is_deferred(world), ECS_INVALID_OPERATION, 
+        "cannot deserialize while world is deferred");
+
     ecs_from_json_desc_t desc = {0};
     if (desc_arg) {
         desc = *desc_arg;
