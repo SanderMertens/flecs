@@ -1725,7 +1725,7 @@ void ecs_delete(
 
             int32_t row = ECS_RECORD_TO_ROW(r->row);
             flecs_notify_on_remove(
-                world, table, NULL, row, 1, &diff);
+                world, table, &world->store.root, row, 1, &diff);
             flecs_entity_remove_non_fragmenting(world, entity, r);
             flecs_table_delete(world, table, row, true);
         }
