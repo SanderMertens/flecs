@@ -83,3 +83,11 @@ void flecs_notify_on_set_ids(
     int32_t row,
     int32_t count,
     ecs_type_t *ids);
+
+void flecs_simple_notify_on_remove(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_table_t *other_table,
+    int32_t row,
+    int32_t count,
+    const ecs_table_diff_t *diff);

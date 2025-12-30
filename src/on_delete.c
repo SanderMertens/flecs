@@ -140,25 +140,111 @@ ecs_entity_t flecs_get_delete_action(
 }
 
 static
-void flecs_component_mark_non_fragmenting_childof(
+void flecs_simple_delete(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_record_t *r)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(entity != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_check(!ecs_has_pair(world, entity, EcsOnDelete, EcsPanic),
+        ECS_CONSTRAINT_VIOLATED,
+            "cannot delete entity '%s' with (OnDelete, Panic) trait",
+                flecs_errstr(ecs_get_path(world, entity)));
+
+    flecs_journal_begin(world, EcsJournalDelete, entity, NULL, NULL);
+
+    /* Entity is still in use by a query */
+    ecs_assert((world->flags & EcsWorldQuit) || 
+            !flecs_component_is_delete_locked(world, entity), 
+        ECS_INVALID_OPERATION, 
+        "cannot delete '%s' as it is still in use by queries",
+            flecs_errstr(ecs_id_str(world, entity)));
+
+    ecs_table_t *table = r->table;
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_table_diff_t diff = {
+        .removed = table->type,
+        .removed_flags = table->flags & EcsTableRemoveEdgeFlags
+    };
+
+    int32_t row = ECS_RECORD_TO_ROW(r->row);
+    flecs_simple_notify_on_remove(
+        world, table, NULL, row, 1, &diff);
+    flecs_entity_remove_non_fragmenting(world, entity, r);
+    flecs_table_delete(world, table, row, true);
+
+    flecs_entities_remove(world, entity);
+
+    flecs_journal_end();
+error:
+    return;
+}
+
+static
+void flecs_component_delete_non_fragmenting_childof(
+    ecs_world_t *world,
+    ecs_component_record_t *cr)
+{
+    ecs_pair_record_t *pr = cr->pair;
+    int32_t i, count = ecs_vec_count(&pr->ordered_children);
+    ecs_entity_t *children = ecs_vec_first(&pr->ordered_children);
+
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t e = children[i];
+
+        ecs_record_t *r = flecs_entities_get_any(world, e);
+        if ((r->row & EcsEntityIsTraversable)) {
+            ecs_component_record_t *child_cr = flecs_components_get(
+                world, ecs_childof(e));
+            if (child_cr) {
+                flecs_component_delete_non_fragmenting_childof(world, child_cr);
+            }
+        }
+
+        flecs_simple_delete(world, e, r);
+    }
+
+    ecs_component_record_t *tgt_wc = pr->second.prev;
+    ecs_assert(ECS_PAIR_FIRST(tgt_wc->id) == EcsWildcard, ECS_INTERNAL_ERROR, NULL);
+
+    flecs_component_release(world, tgt_wc);
+}
+
+static
+bool flecs_component_mark_non_fragmenting_childof(
     ecs_world_t *world,
     ecs_component_record_t *cr)
 {
     ecs_entity_t tgt = ECS_PAIR_SECOND(cr->id);
+
     ecs_component_record_t *childof_cr = flecs_components_get(
         world, ecs_childof(tgt));
     if (!childof_cr) {
-        return;
+        return false;
     }
 
     ecs_flags32_t flags = childof_cr->flags;
 
     if (flags & EcsIdMarkedForDelete) {
-        return;
+        return false;
     }
 
-    if (!(childof_cr->flags & EcsIdOrderedChildren)) {
-        return;
+    if (!flecs_component_has_non_fragmenting_childof(childof_cr)) {
+        return false;
+    }
+
+    ecs_pair_record_t *pr = childof_cr->pair;
+
+    if (!pr->second.next) {
+        if (ECS_PAIR_FIRST(pr->second.prev->id) == EcsWildcard) {
+            /* Entity is only used as ChildOf target */
+            flecs_component_delete_non_fragmenting_childof(world, childof_cr);
+            return true;
+        }
     }
 
     flecs_marked_id_push(world, childof_cr, EcsDelete, true);
@@ -176,6 +262,8 @@ void flecs_component_mark_non_fragmenting_childof(
 
         flecs_component_mark_for_delete(world, tgt_cr, 0, true);
     }
+
+    return false;
 }
 
 static
@@ -195,7 +283,9 @@ void flecs_component_mark_for_delete(
 
     bool delete_target = flecs_id_is_delete_target(id, action);
     if (delete_target) {
-        flecs_component_mark_non_fragmenting_childof(world, cr);
+        if (flecs_component_mark_non_fragmenting_childof(world, cr)) {
+            return;
+        }
     }
 
     /* Mark all tables with the id for delete */

@@ -748,6 +748,19 @@ ecs_component_record_t* flecs_components_get(
     const ecs_world_t *world,
     ecs_id_t id)
 {
+    // if (!(world->flags & EcsWorldInit)) {
+    //     ecs_trace("get %s, %u", 
+    //         ECS_PAIR_FIRST(id) == EcsChildOf
+    //             ? "ChildOf"
+    //             : ECS_PAIR_FIRST(id) == EcsWildcard
+    //                 ? "*"
+    //                 : "Flag", 
+    //         ECS_PAIR_SECOND(id), EcsChildOf, EcsWildcard);
+    //     if (ecs_should_log(0)) {
+    //         flecs_dump_backtrace(stdout);
+    //     }
+    // }
+
     flecs_poly_assert(world, ecs_world_t);
     if (id == ecs_pair(EcsIsA, EcsWildcard)) {
         return world->cr_isa_wildcard;
@@ -794,6 +807,7 @@ int32_t flecs_component_release(
     ecs_component_record_t *cr)
 {
     int32_t rc = -- cr->refcount;
+
     ecs_assert(rc >= 0, ECS_INTERNAL_ERROR, 
         flecs_errstr(ecs_id_str(world, cr->id)));
 
