@@ -809,6 +809,13 @@ void NonFragmentingChildOf_lookup_after_remove_parent(void);
 void NonFragmentingChildOf_lookup_after_clear(void);
 void NonFragmentingChildOf_lookup_after_delete(void);
 void NonFragmentingChildOf_deep_hierarchy(void);
+void NonFragmentingChildOf_create_delete_mixed_tree(void);
+void NonFragmentingChildOf_create_delete_tree_w_tgt_of_other_rel_1(void);
+void NonFragmentingChildOf_create_delete_tree_w_tgt_of_other_rel_2(void);
+void NonFragmentingChildOf_create_delete_tree_w_tgt_of_other_rel_3(void);
+void NonFragmentingChildOf_create_delete_tree_w_tgt_of_other_rel_4(void);
+void NonFragmentingChildOf_create_delete_tree_w_tag(void);
+void NonFragmentingChildOf_create_delete_tree_w_component(void);
 void NonFragmentingChildOf_instantiate_tree_1_child(void);
 void NonFragmentingChildOf_instantiate_tree_2_children(void);
 void NonFragmentingChildOf_instantiate_tree_3_children(void);
@@ -6189,6 +6196,34 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "deep_hierarchy",
         NonFragmentingChildOf_deep_hierarchy
+    },
+    {
+        "create_delete_mixed_tree",
+        NonFragmentingChildOf_create_delete_mixed_tree
+    },
+    {
+        "create_delete_tree_w_tgt_of_other_rel_1",
+        NonFragmentingChildOf_create_delete_tree_w_tgt_of_other_rel_1
+    },
+    {
+        "create_delete_tree_w_tgt_of_other_rel_2",
+        NonFragmentingChildOf_create_delete_tree_w_tgt_of_other_rel_2
+    },
+    {
+        "create_delete_tree_w_tgt_of_other_rel_3",
+        NonFragmentingChildOf_create_delete_tree_w_tgt_of_other_rel_3
+    },
+    {
+        "create_delete_tree_w_tgt_of_other_rel_4",
+        NonFragmentingChildOf_create_delete_tree_w_tgt_of_other_rel_4
+    },
+    {
+        "create_delete_tree_w_tag",
+        NonFragmentingChildOf_create_delete_tree_w_tag
+    },
+    {
+        "create_delete_tree_w_component",
+        NonFragmentingChildOf_create_delete_tree_w_component
     },
     {
         "instantiate_tree_1_child",
@@ -15045,7 +15080,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NULL,
         NULL,
-        111,
+        118,
         NonFragmentingChildOf_testcases
     },
     {

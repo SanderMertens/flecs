@@ -171,9 +171,10 @@ void flecs_simple_delete(
         .removed_flags = table->flags & EcsTableRemoveEdgeFlags
     };
 
+    diff.removed_flags &= ~(EcsTableEdgeReparent|EcsTableHasOrderedChildren);
+
     int32_t row = ECS_RECORD_TO_ROW(r->row);
-    flecs_simple_notify_on_remove(
-        world, table, NULL, row, 1, &diff);
+    flecs_actions_delete_tree(world, table, row, 1, &diff);
     flecs_entity_remove_non_fragmenting(world, entity, r);
     flecs_table_delete(world, table, row, true);
 
@@ -182,6 +183,22 @@ void flecs_simple_delete(
     flecs_journal_end();
 error:
     return;
+}
+
+static
+bool flecs_is_childof_tgt_only(
+    const ecs_component_record_t *cr)
+{
+    ecs_pair_record_t *pr = cr->pair;
+    if (pr->second.next) {
+        return false;
+    }
+
+    if (ECS_PAIR_FIRST(pr->second.prev->id) != EcsWildcard) {
+        return false;
+    }
+
+    return true;
 }
 
 static
@@ -197,11 +214,21 @@ void flecs_component_delete_non_fragmenting_childof(
         ecs_entity_t e = children[i];
 
         ecs_record_t *r = flecs_entities_get_any(world, e);
-        if ((r->row & EcsEntityIsTraversable)) {
+        if ((r->row & EcsEntityIsTarget)) {
             ecs_component_record_t *child_cr = flecs_components_get(
                 world, ecs_childof(e));
             if (child_cr) {
-                flecs_component_delete_non_fragmenting_childof(world, child_cr);
+                if (!flecs_is_childof_tgt_only(child_cr)) {
+                    /* Entity is used as target with other relationships, go
+                     * through regular cleanup path. */
+                    flecs_target_mark_for_delete(world, e);
+                } else {
+                    flecs_component_delete_non_fragmenting_childof(world, child_cr);
+                }
+            } else {
+                /* Entity is a target but is not a ChildOf target. Go through
+                 * regular cleanup path. */
+                flecs_target_mark_for_delete(world, e);
             }
         }
 
@@ -447,7 +474,7 @@ void flecs_remove_from_table(
                 }
             }
 
-            flecs_notify_on_remove(world, table, dst_table, 0, table_count, &td);
+            flecs_actions_move_remove(world, table, dst_table, 0, table_count, &td);
             ecs_log_pop_3();
         }
 

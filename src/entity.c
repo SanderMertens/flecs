@@ -178,7 +178,7 @@ ecs_record_t* flecs_new_entity(
     record->row = ECS_ROW_TO_RECORD(row, record->row & ECS_ROW_FLAGS_MASK);
 
     ecs_assert(ecs_table_count(table) > row, ECS_INTERNAL_ERROR, NULL);
-    flecs_notify_on_add(world, table, NULL, row, 1, diff, evt_flags, ctor, true);
+    flecs_actions_new(world, table, row, 1, diff, evt_flags, ctor, true);
     ecs_assert(table == record->table, ECS_INTERNAL_ERROR, NULL);
 
     return record;
@@ -212,7 +212,7 @@ void flecs_move_entity(
         false, false);
 
     /* Invoke remove actions for removed components */
-    flecs_notify_on_remove(world, src_table, dst_table, src_row, 1, diff);
+    flecs_actions_move_remove(world, src_table, dst_table, src_row, 1, diff);
 
     /* Copy entity & components from src_table to dst_table */
     flecs_table_move(world, entity, entity, dst_table, dst_row, 
@@ -225,7 +225,7 @@ void flecs_move_entity(
     
     flecs_table_delete(world, src_table, src_row, false);
 
-    flecs_notify_on_add(world, dst_table, src_table, dst_row, 1, diff, 
+    flecs_actions_move_add(world, dst_table, src_table, dst_row, 1, diff, 
         evt_flags, ctor, true);
 
     ecs_assert(record->table == dst_table, ECS_INTERNAL_ERROR, NULL);
@@ -260,11 +260,11 @@ void flecs_commit(
             diff->added_flags |= non_fragment_flags;
             diff->removed_flags |= non_fragment_flags;
 
-            flecs_notify_on_add(world, src_table, src_table, 
+            flecs_actions_move_add(world, src_table, src_table, 
                 ECS_RECORD_TO_ROW(record->row), 1, diff, evt_flags, 
                     construct, true);
 
-            flecs_notify_on_remove(world, src_table, src_table, 
+            flecs_actions_move_remove(world, src_table, src_table, 
                 ECS_RECORD_TO_ROW(record->row), 1, diff);
         }
         flecs_journal_end();
@@ -340,7 +340,7 @@ const ecs_entity_t* flecs_bulk_new(
         component_array.count = type.count;
     }
 
-    flecs_notify_on_add(world, table, NULL, row, count, diff,
+    flecs_actions_move_add(world, table, NULL, row, count, diff,
         (component_data == NULL) ? 0 : EcsEventNoOnSet, true, true);
 
     if (component_data) {
@@ -1724,7 +1724,7 @@ void ecs_delete(
             };
 
             int32_t row = ECS_RECORD_TO_ROW(r->row);
-            flecs_notify_on_remove(
+            flecs_actions_move_remove(
                 world, table, &world->store.root, row, 1, &diff);
             flecs_entity_remove_non_fragmenting(world, entity, r);
             flecs_table_delete(world, table, row, true);
