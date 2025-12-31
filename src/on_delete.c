@@ -171,8 +171,6 @@ void flecs_simple_delete(
         .removed_flags = table->flags & EcsTableRemoveEdgeFlags
     };
 
-    diff.removed_flags &= ~(EcsTableEdgeReparent|EcsTableHasOrderedChildren);
-
     int32_t row = ECS_RECORD_TO_ROW(r->row);
     flecs_actions_delete_tree(world, table, row, 1, &diff);
     flecs_entity_remove_non_fragmenting(world, entity, r);

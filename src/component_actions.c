@@ -304,12 +304,12 @@ void flecs_actions_on_add_intern(
     bool construct,
     bool sparse)
 {
-    const ecs_type_t *added = &diff->added;
-
     ecs_flags32_t diff_flags = diff->added_flags;
     if (!diff_flags) {
         return;
     }
+
+    const ecs_type_t *added = &diff->added;
 
     if (diff_flags & EcsTableEdgeReparent) {
         flecs_on_reparent(world, table, other_table, row, count);
@@ -372,9 +372,6 @@ void flecs_actions_on_remove_intern(
     if (diff_flags & EcsTableHasSparse) {
         flecs_sparse_on_remove(world, table, row, count, removed);
     }
-
-error:
-    return;
 }
 
 void flecs_actions_on_remove_intern_w_reparent(
@@ -396,7 +393,6 @@ void flecs_actions_on_remove_intern_w_reparent(
         return;
     }
 
-    const ecs_type_t *removed = &diff->removed;
     if (diff_flags & (EcsTableEdgeReparent|EcsTableHasOrderedChildren)) {
         if (!other_table || !(other_table->flags & EcsTableHasChildOf)) {
             flecs_on_unparent(world, table, other_table, row, count);
@@ -516,8 +512,6 @@ void flecs_actions_move_remove(
         flecs_actions_on_remove_intern_w_reparent(
             world, table, other_table, row, count, diff);
     }
-error:
-    return;
 }
 
 void flecs_notify_on_set_ids(
