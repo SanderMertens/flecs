@@ -472,6 +472,11 @@ typedef struct ecs_record_t ecs_record_t;
 /** Information about a (component) id, such as type info and tables with the id */
 typedef struct ecs_component_record_t ecs_component_record_t;
 
+/** the void* returned from flecs_record_get_id fns which optionally returns origin of the ptr when FLECS_MUT_ALIAS_LOCKS is defined` */
+#ifdef FLECS_MUT_ALIAS_LOCKS
+typedef struct ecs_get_ptr_t ecs_get_ptr_t;
+#endif
+
 /** A poly object.
  * A poly (short for polymorph) object is an object that has a variable list of
  * capabilities, determined by a mixin table. This is the current list of types
@@ -3289,6 +3294,8 @@ FLECS_ALWAYS_INLINE const void* ecs_get_id(
  * @param entity The entity.
  * @param component The component to get.
  * @return The component pointer, NULL if the entity does not have the component.
+ * 
+ * @see ecs_get_id()
  */
 FLECS_API
 FLECS_ALWAYS_INLINE void* ecs_get_mut_id(

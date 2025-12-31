@@ -429,6 +429,11 @@ jobs:
           bake rebuild --strict -D FLECS_NO_LOG
           bake rebuild --strict --cfg release -D FLECS_NO_LOG
 
+      - name: FLECS_MUT_ALIAS_LOCKS
+        run: |
+          bake rebuild --strict -D FLECS_MUT_ALIAS_LOCKS
+          bake rebuild --strict --cfg release -D FLECS_MUT_ALIAS_LOCKS
+
       - name: FLECS_DEFAULT
         run: |
           bake rebuild --strict
@@ -1080,6 +1085,30 @@ jobs:
 
       - name: build flecs
         run: bake --cfg sanitize -D FLECS_USE_OS_ALLOC
+
+      - name: run tests
+        run: |
+          bake run test/core --cfg sanitize -- -j 8
+
+  test-flecs-safety-core:
+    needs: [ build-linux ]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest ]
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: install bake
+        run: |
+          git clone https://github.com/SanderMertens/bake
+          make -C bake/build-$(uname)
+          bake/bake setup
+
+      - name: build flecs
+        run: bake --cfg sanitize -D FLECS_MUT_ALIAS_LOCKS
 
       - name: run tests
         run: |

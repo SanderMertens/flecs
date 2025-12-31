@@ -48,6 +48,36 @@ typedef struct ecs_table_diff_t {
 } ecs_table_diff_t;
 
 
+#ifdef FLECS_MUT_ALIAS_LOCKS
+/** safety information of where the ptr from `get` functions originates from.
+ * when component record is null, that means it comes from a table.
+ * when table is null, that means it comes from a sparse storage.
+ * this is used for column locking / component record locking.
+ */
+typedef struct ecs_lock_target_t{
+    ecs_component_record_t *cr;
+    ecs_table_t *table;
+    int16_t column_index;
+} ecs_lock_target_t;
+
+/* a wrapper around a void* which represents a component pointer. 
+ * When FLECS_MUT_ALIAS_LOCKS is defined, then this also provides additional safety information about the pointer.
+ */
+struct ecs_get_ptr_t{
+    void *ptr;
+    ecs_lock_target_t lock_target;
+};
+
+#else
+
+/* When FLECS_MUT_ALIAS_LOCKS is not defined, ecs_get_ptr_t is just a void* 
+ * for zero-overhead abstraction */
+typedef void* ecs_get_ptr_t;
+
+#endif
+
+
+
 /** Find record for entity. 
  * An entity record contains the table and row for the entity.
  * 
@@ -140,6 +170,55 @@ const ecs_record_t* ecs_read_begin(
 FLECS_API
 void ecs_read_end(
     const ecs_record_t *record);
+
+/** Get an immutable pointer to a component by providing the entity record.
+ * This operation obtains a const pointer to the requested component. The
+ * operation accepts the component entity id.
+ * 
+ * This operation can return inherited components reachable through an `IsA`
+ * relationship.
+ *
+ * @param world The world.
+ * @param entity The entity.
+ * @param r The entity record.
+ * @param component The component to get.
+ * @return The component pointer, NULL if the entity does not have the component.
+ *
+ * @see ecs_get_id()
+ * @see ecs_get_mut_id()
+ * @see flecs_record_get_mut_id()
+ */
+FLECS_API
+FLECS_ALWAYS_INLINE ecs_get_ptr_t flecs_record_get_id(
+    const ecs_world_t *world,
+    ecs_entity_t entity,
+    const ecs_record_t *r,
+    ecs_id_t component);
+
+/**
+ * Get a mutable pointer to a component, providing the entity record.
+ * This operation obtains a mutable pointer to the requested component. The
+ * operation accepts the component entity id.
+ *
+ * Unlike flecs_record_get_id(), this operation does not return inherited components.
+ * This is to prevent errors where an application accidentally resolves an
+ * inherited component shared with many entities and modifies it, while thinking
+ * it is modifying an owned component.
+ *
+ * @param world The world.
+ * @param r The entity record.
+ * @param component The component to get.
+ * @return The component pointer, NULL if the entity does not have the component.
+ * 
+ * @see flecs_record_get_id()
+ * @see ecs_get_mut_id()
+ * @see ecs_get_id()
+ */
+FLECS_API
+FLECS_ALWAYS_INLINE ecs_get_ptr_t flecs_record_get_mut_id(
+    const ecs_world_t *world,
+    const ecs_record_t *r,
+    ecs_id_t component);
 
 /** Get component from entity record.
  * This operation returns a pointer to a component for the entity
@@ -341,6 +420,186 @@ FLECS_ALWAYS_INLINE ecs_table_t *flecs_table_traverse_add(
     ecs_table_t *table,
     ecs_id_t *id_ptr,
     ecs_table_diff_t *diff);
+
+#ifdef FLECS_MUT_ALIAS_LOCKS
+
+/** Begin read lock on sparse component record.
+ * a sparse id is a component marked either as sparse or non-fragmenting
+ * 
+ * @param cr The component record.
+ * @return true if the mut alias was violated, false otherwise.
+ */
+FLECS_API
+FLECS_ALWAYS_INLINE bool flecs_sparse_id_record_lock_read_begin(
+    ecs_component_record_t *cr);
+
+/** End read lock on sparse component record. 
+ * a sparse id is a component marked either as sparse or non-fragmenting
+ * 
+ * @param cr The component record.
+ * @return true if the mut alias was violated, false otherwise.
+*/
+FLECS_API
+FLECS_ALWAYS_INLINE bool flecs_sparse_id_record_lock_read_end(
+    ecs_component_record_t *cr);
+
+/** Begin write lock on sparse component record. 
+ * a sparse id is a component marked either as sparse or non-fragmenting
+ * 
+ * @param cr The component record.
+ * @return true if the mut alias was violated, false otherwise.
+*/
+FLECS_API
+FLECS_ALWAYS_INLINE bool flecs_sparse_id_record_lock_write_begin(
+    ecs_component_record_t *cr);
+
+/** End write lock on sparse component record. 
+ * a sparse id is a component marked either as sparse or non-fragmenting
+ * 
+ * @param cr The component record.
+ * @return true if the mut alias was violated, false otherwise.
+*/
+FLECS_API
+FLECS_ALWAYS_INLINE bool flecs_sparse_id_record_lock_write_end(
+    ecs_component_record_t *cr);
+
+/** Begin read lock on table column. 
+ * 
+ * @param table The table.
+ * @param column_index The column index in the table.
+ * @return true if the mut alias was violated, false otherwise.
+*/
+FLECS_API
+FLECS_ALWAYS_INLINE bool flecs_table_column_lock_read_begin(
+    ecs_table_t *table,
+    const int16_t column_index);
+
+/** End read lock on table column. 
+ * 
+ * @param table The table.
+ * @param column_index The column index in the table.
+ * @return true if the mut alias was violated, false otherwise.
+*/
+FLECS_API
+FLECS_ALWAYS_INLINE bool flecs_table_column_lock_read_end(
+    ecs_table_t *table,
+    const int16_t column_index);
+
+/** Begin write lock on table column. 
+ * 
+ * @param table The table.
+ * @param column_index The column index in the table.
+ * @return true if the mut alias was violated, false otherwise.
+*/
+FLECS_API
+FLECS_ALWAYS_INLINE bool flecs_table_column_lock_write_begin(
+    ecs_table_t *table,
+    const int16_t column_index);
+
+/** End write lock on table column. 
+ * 
+ * @param table The table.
+ * @param column_index The column index in the table.
+ * @return true if the mut alias was violated, false otherwise.
+*/
+FLECS_API
+FLECS_ALWAYS_INLINE bool flecs_table_column_lock_write_end(
+    ecs_table_t *table,
+    const int16_t column_index);
+
+/** Begin read lock on sparse component record in multithreaded context. 
+ * a sparse id is a component marked either as sparse or non-fragmenting
+ *
+ * @param cr The component record.
+ * @return true if the mut alias was violated, false otherwise.
+*/
+FLECS_API
+FLECS_ALWAYS_INLINE bool flecs_sparse_id_record_lock_read_begin_multithreaded(
+    ecs_component_record_t *cr);
+
+/** End read lock on sparse component record in multithreaded context. 
+ * a sparse id is a component marked either as sparse or non-fragmenting
+ *
+ * @param cr The component record.
+ * @return true if the mut alias was violated, false otherwise.
+*/
+FLECS_API
+FLECS_ALWAYS_INLINE bool flecs_sparse_id_record_lock_read_end_multithreaded(
+    ecs_component_record_t *cr);
+
+/** Begin write lock on sparse component record in multithreaded context. 
+ * a sparse id is a component marked either as sparse or non-fragmenting
+ * 
+ * @param cr The component record.
+ * @return true if the mut alias was violated, false otherwise.
+*/
+FLECS_API
+FLECS_ALWAYS_INLINE bool flecs_sparse_id_record_lock_write_begin_multithreaded(
+    ecs_component_record_t *cr);
+
+/** End write lock on sparse component record in multithreaded context. 
+ * a sparse id is a component marked either as sparse or non-fragmenting
+ * 
+ * @param cr The component record.
+ * @return true if the mut alias was violated, false otherwise.
+*/
+FLECS_API
+FLECS_ALWAYS_INLINE bool flecs_sparse_id_record_lock_write_end_multithreaded(
+    ecs_component_record_t *cr);
+
+/** Begin read lock on table column in multithreaded context. 
+ * 
+ * @param table The table.
+ * @param column_index The column index in the table.
+ * @param stage_id The stage id of the calling thread.
+ * @return true if the mut alias was violated, false otherwise.
+*/
+FLECS_API
+FLECS_ALWAYS_INLINE bool flecs_table_column_lock_read_begin_multithreaded(
+    ecs_table_t *table,
+    const int16_t column_index,
+    const int32_t stage_id);
+
+/** End read lock on table column in multithreaded context. 
+ * 
+ * @param table The table.
+ * @param column_index The column index in the table.
+ * @param stage_id The stage id of the calling thread.
+ * @return true if the mut alias was violated, false otherwise.
+*/
+FLECS_API
+FLECS_ALWAYS_INLINE bool flecs_table_column_lock_read_end_multithreaded(
+    ecs_table_t *table,
+    const int16_t column_index,
+    const int32_t stage_id);
+
+/** Begin write lock on table column in multithreaded context. 
+ * 
+ * @param table The table.
+ * @param column_index The column index in the table.
+ * @param stage_id The stage id of the calling thread.
+ * @return true if the mut alias was violated, false otherwise.
+*/
+FLECS_API
+FLECS_ALWAYS_INLINE bool flecs_table_column_lock_write_begin_multithreaded(
+    ecs_table_t *table,
+    const int16_t column_index,
+    const int32_t stage_id);
+
+/** End write lock on table column in multithreaded context.
+ * 
+ * @param table The table.
+ * @param column_index The column index in the table.
+ * @param stage_id The stage id of the calling thread.
+ * @return true if the mut alias was violated, false otherwise.
+*/
+FLECS_API
+FLECS_ALWAYS_INLINE bool flecs_table_column_lock_write_end_multithreaded(
+    ecs_table_t *table,
+    const int16_t column_index,
+    const int32_t stage_id);
+
+#endif
 
 #ifdef __cplusplus
 }
