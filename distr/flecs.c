@@ -2678,8 +2678,35 @@ bool flecs_sparse_on_add_cr(
     bool construct,
     void **ptr_out);
 
-/* Run add actions for components added to entity. */
-void flecs_notify_on_add(
+/* Run actions for creating new entity in table. */
+void flecs_actions_new(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    int32_t row,
+    int32_t count,
+    const ecs_table_diff_t *diff,
+    ecs_flags32_t flags,
+    bool construct,
+    bool sparse);
+
+/* Run actions for deleting an entity. */
+void flecs_actions_delete(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    int32_t row,
+    int32_t count,
+    const ecs_table_diff_t *diff);
+
+/* Same as flecs_actions_delete, but for entities whose parent is also deleted */
+void flecs_actions_delete_tree(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    int32_t row,
+    int32_t count,
+    const ecs_table_diff_t *diff);
+
+/* Run actions for added components in table move */
+void flecs_actions_move_add(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_table_t *other_table,
@@ -2690,8 +2717,8 @@ void flecs_notify_on_add(
     bool construct,
     bool sparse);
 
-/* Run remove actions for components removed from entity. */
-void flecs_notify_on_remove(
+/* Run actions for removed components in table move */
+void flecs_actions_move_remove(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_table_t *other_table,
@@ -6512,7 +6539,7 @@ void flecs_cmd_batch_for_entity(
 
         if (r->row & EcsEntityIsTraversable) {
             /* Update monitors since we didn't do this in flecs_commit. Do this
-             * before calling flecs_notify_on_add() since this can trigger 
+             * before calling flecs_actions_move_add() since this can trigger 
              * prefab instantiation logic. When that happens, prefab children
              * can be created for this instance which would mean that the table
              * count of r->cr would always be >0.
@@ -6527,7 +6554,7 @@ void flecs_cmd_batch_for_entity(
         }
 
         flecs_defer_begin(world, world->stages[0]);
-        flecs_notify_on_add(world, r->table, start_table,
+        flecs_actions_move_add(world, r->table, start_table,
             ECS_RECORD_TO_ROW(r->row), 1, &add_diff, 0, true, false);
         flecs_defer_end(world, world->stages[0]);
     }
@@ -7169,7 +7196,170 @@ void flecs_entity_remove_non_fragmenting(
     r->row &= ~EcsEntityHasDontFragment;
 }
 
-void flecs_notify_on_add(
+static
+void flecs_actions_on_add_intern(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_table_t *other_table,
+    int32_t row,
+    int32_t count,
+    const ecs_table_diff_t *diff,
+    ecs_flags32_t flags,
+    bool construct,
+    bool sparse)
+{
+    const ecs_type_t *added = &diff->added;
+
+    ecs_flags32_t diff_flags = diff->added_flags;
+    if (!diff_flags) {
+        return;
+    }
+
+    if (diff_flags & EcsTableEdgeReparent) {
+        flecs_on_reparent(world, table, other_table, row, count);
+    }
+
+    if (sparse && (diff_flags & EcsTableHasSparse)) {
+        if (flecs_sparse_on_add(world, table, row, count, added, construct)) {
+            diff_flags |= EcsTableHasOnAdd;
+        }
+    }
+
+    if (diff_flags & (EcsTableHasOnAdd|EcsTableHasTraversable)) {
+        flecs_emit(world, world, &(ecs_event_desc_t){
+            .event = EcsOnAdd,
+            .ids = added,
+            .table = table,
+            .other_table = other_table,
+            .offset = row,
+            .count = count,
+            .observable = world,
+            .flags = flags
+        });
+    }
+}
+
+static
+void flecs_actions_on_remove_intern(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_table_t *other_table,
+    int32_t row,
+    int32_t count,
+    const ecs_table_diff_t *diff,
+    ecs_flags32_t diff_flags)
+{
+    const ecs_type_t *removed = &diff->removed;
+
+    ecs_assert(diff_flags != 0, ECS_INTERNAL_ERROR, NULL);
+
+    if (diff_flags & EcsTableHasDontFragment) {
+        if (flecs_dont_fragment_on_remove(
+            world, table, row, count, removed)) 
+        {
+            diff_flags |= EcsTableHasOnRemove;
+        }
+    }
+
+    if (diff_flags & EcsTableHasOnRemove) {
+        flecs_emit(world, world, &(ecs_event_desc_t) {
+            .event = EcsOnRemove,
+            .ids = removed,
+            .table = table,
+            .other_table = other_table,
+            .offset = row,
+            .count = count,
+            .observable = world
+        });
+    }
+
+    if (diff_flags & EcsTableHasSparse) {
+        flecs_sparse_on_remove(world, table, row, count, removed);
+    }
+
+error:
+    return;
+}
+
+void flecs_actions_on_remove_intern_w_reparent(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_table_t *other_table,
+    int32_t row,
+    int32_t count,
+    const ecs_table_diff_t *diff)
+{
+    if (!(world->flags & EcsWorldFini)) {
+        ecs_check(!(table->flags & EcsTableHasBuiltins), 
+            ECS_INVALID_OPERATION,
+            "removing components from builtin entities is not allowed");
+    }
+
+    ecs_flags32_t diff_flags = diff->removed_flags;
+    if (!diff_flags) {
+        return;
+    }
+
+    const ecs_type_t *removed = &diff->removed;
+    if (diff_flags & (EcsTableEdgeReparent|EcsTableHasOrderedChildren)) {
+        if (!other_table || !(other_table->flags & EcsTableHasChildOf)) {
+            flecs_on_unparent(world, table, other_table, row, count);
+        }
+    }
+
+    flecs_actions_on_remove_intern(
+        world, table, other_table, row, count, diff, diff_flags);
+
+error:
+    return;
+}
+
+void flecs_actions_new(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    int32_t row,
+    int32_t count,
+    const ecs_table_diff_t *diff,
+    ecs_flags32_t flags,
+    bool construct,
+    bool sparse)
+{
+    flecs_actions_on_add_intern(
+        world, table, NULL, row, count, diff, flags, construct, sparse);
+}
+
+void flecs_actions_delete(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    int32_t row,
+    int32_t count,
+    const ecs_table_diff_t *diff)
+{
+    if (diff->removed.count) {
+        flecs_actions_on_remove_intern_w_reparent(
+            world, table, NULL, row, count, diff);
+    }
+}
+
+void flecs_actions_delete_tree(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    int32_t row,
+    int32_t count,
+    const ecs_table_diff_t *diff)
+{
+    if (diff->removed.count) {
+        ecs_flags32_t diff_flags = diff->removed_flags;
+        if (!diff_flags) {
+            return;
+        }
+
+        flecs_actions_on_remove_intern(
+            world, table, NULL, row, count, diff, diff_flags);
+    }
+}
+
+void flecs_actions_move_add(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_table_t *other_table,
@@ -7185,6 +7375,7 @@ void flecs_notify_on_add(
 
     if (added->count) {
         ecs_flags32_t table_flags = table->flags;
+
         if (table_flags & EcsTableHasTraversable) {
             flecs_emit_propagate_invalidate(world, table, row, count);
         }
@@ -7194,37 +7385,12 @@ void flecs_notify_on_add(
                 world, table, other_table, row, count);
         }
 
-        ecs_flags32_t diff_flags = diff->added_flags;
-        if (!diff_flags) {
-            return;
-        }
-
-        if (diff_flags & EcsTableEdgeReparent) {
-            flecs_on_reparent(world, table, other_table, row, count);
-        }
-
-        if (sparse && (diff_flags & EcsTableHasSparse)) {
-            if (flecs_sparse_on_add(world, table, row, count, added, construct)) {
-                diff_flags |= EcsTableHasOnAdd;
-            }
-        }
-
-        if (diff_flags & (EcsTableHasOnAdd|EcsTableHasTraversable)) {
-            flecs_emit(world, world, &(ecs_event_desc_t){
-                .event = EcsOnAdd,
-                .ids = added,
-                .table = table,
-                .other_table = other_table,
-                .offset = row,
-                .count = count,
-                .observable = world,
-                .flags = flags
-            });
-        }
+        flecs_actions_on_add_intern(world, table, other_table, row, count, diff, 
+            flags, construct, sparse);
     }
 }
 
-void flecs_notify_on_remove(
+void flecs_actions_move_remove(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_table_t *other_table,
@@ -7233,16 +7399,9 @@ void flecs_notify_on_remove(
     const ecs_table_diff_t *diff)
 {
     ecs_assert(diff != NULL, ECS_INTERNAL_ERROR, NULL);
-    const ecs_type_t *removed = &diff->removed;
     ecs_assert(count != 0, ECS_INTERNAL_ERROR, NULL);
 
-    if (removed->count) {
-        if (!(world->flags & EcsWorldFini)) {
-            ecs_check(!(table->flags & EcsTableHasBuiltins), 
-                ECS_INVALID_OPERATION,
-                "removing components from builtin entities is not allowed");
-        }
-
+    if (diff->removed.count) {
         ecs_flags32_t table_flags = table->flags;
         if (table_flags & EcsTableHasTraversable) {
             flecs_emit_propagate_invalidate(world, table, row, count);
@@ -7258,40 +7417,8 @@ void flecs_notify_on_remove(
                 world, other_table, table, row, count, update_parent_records);
         }
 
-        ecs_flags32_t diff_flags = diff->removed_flags;
-        if (!diff_flags) {
-            return;
-        }
-
-        if (diff_flags & (EcsTableEdgeReparent|EcsTableHasOrderedChildren)) {
-            if (!other_table || !(other_table->flags & EcsTableHasChildOf)) {
-                flecs_on_unparent(world, table, other_table, row, count);
-            }
-        }
-
-        if (diff_flags & EcsTableHasDontFragment) {
-            if (flecs_dont_fragment_on_remove(
-                world, table, row, count, removed)) 
-            {
-                diff_flags |= EcsTableHasOnRemove;
-            }
-        }
-
-        if (diff_flags & EcsTableHasOnRemove) {
-            flecs_emit(world, world, &(ecs_event_desc_t) {
-                .event = EcsOnRemove,
-                .ids = removed,
-                .table = table,
-                .other_table = other_table,
-                .offset = row,
-                .count = count,
-                .observable = world
-            });
-        }
-
-        if (diff_flags & EcsTableHasSparse) {
-            flecs_sparse_on_remove(world, table, row, count, removed);
-        }
+        flecs_actions_on_remove_intern_w_reparent(
+            world, table, other_table, row, count, diff);
     }
 error:
     return;
@@ -7822,7 +7949,7 @@ ecs_record_t* flecs_new_entity(
     record->row = ECS_ROW_TO_RECORD(row, record->row & ECS_ROW_FLAGS_MASK);
 
     ecs_assert(ecs_table_count(table) > row, ECS_INTERNAL_ERROR, NULL);
-    flecs_notify_on_add(world, table, NULL, row, 1, diff, evt_flags, ctor, true);
+    flecs_actions_new(world, table, row, 1, diff, evt_flags, ctor, true);
     ecs_assert(table == record->table, ECS_INTERNAL_ERROR, NULL);
 
     return record;
@@ -7856,7 +7983,7 @@ void flecs_move_entity(
         false, false);
 
     /* Invoke remove actions for removed components */
-    flecs_notify_on_remove(world, src_table, dst_table, src_row, 1, diff);
+    flecs_actions_move_remove(world, src_table, dst_table, src_row, 1, diff);
 
     /* Copy entity & components from src_table to dst_table */
     flecs_table_move(world, entity, entity, dst_table, dst_row, 
@@ -7869,7 +7996,7 @@ void flecs_move_entity(
     
     flecs_table_delete(world, src_table, src_row, false);
 
-    flecs_notify_on_add(world, dst_table, src_table, dst_row, 1, diff, 
+    flecs_actions_move_add(world, dst_table, src_table, dst_row, 1, diff, 
         evt_flags, ctor, true);
 
     ecs_assert(record->table == dst_table, ECS_INTERNAL_ERROR, NULL);
@@ -7904,11 +8031,11 @@ void flecs_commit(
             diff->added_flags |= non_fragment_flags;
             diff->removed_flags |= non_fragment_flags;
 
-            flecs_notify_on_add(world, src_table, src_table, 
+            flecs_actions_move_add(world, src_table, src_table, 
                 ECS_RECORD_TO_ROW(record->row), 1, diff, evt_flags, 
                     construct, true);
 
-            flecs_notify_on_remove(world, src_table, src_table, 
+            flecs_actions_move_remove(world, src_table, src_table, 
                 ECS_RECORD_TO_ROW(record->row), 1, diff);
         }
         flecs_journal_end();
@@ -7984,7 +8111,7 @@ const ecs_entity_t* flecs_bulk_new(
         component_array.count = type.count;
     }
 
-    flecs_notify_on_add(world, table, NULL, row, count, diff,
+    flecs_actions_move_add(world, table, NULL, row, count, diff,
         (component_data == NULL) ? 0 : EcsEventNoOnSet, true, true);
 
     if (component_data) {
@@ -9368,8 +9495,8 @@ void ecs_delete(
             };
 
             int32_t row = ECS_RECORD_TO_ROW(r->row);
-            flecs_notify_on_remove(
-                world, table, NULL, row, 1, &diff);
+            flecs_actions_move_remove(
+                world, table, &world->store.root, row, 1, &diff);
             flecs_entity_remove_non_fragmenting(world, entity, r);
             flecs_table_delete(world, table, row, true);
         }
@@ -17548,25 +17675,138 @@ ecs_entity_t flecs_get_delete_action(
 }
 
 static
-void flecs_component_mark_non_fragmenting_childof(
+void flecs_simple_delete(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_record_t *r)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(entity != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_check(!ecs_has_pair(world, entity, EcsOnDelete, EcsPanic),
+        ECS_CONSTRAINT_VIOLATED,
+            "cannot delete entity '%s' with (OnDelete, Panic) trait",
+                flecs_errstr(ecs_get_path(world, entity)));
+
+    flecs_journal_begin(world, EcsJournalDelete, entity, NULL, NULL);
+
+    /* Entity is still in use by a query */
+    ecs_assert((world->flags & EcsWorldQuit) || 
+            !flecs_component_is_delete_locked(world, entity), 
+        ECS_INVALID_OPERATION, 
+        "cannot delete '%s' as it is still in use by queries",
+            flecs_errstr(ecs_id_str(world, entity)));
+
+    ecs_table_t *table = r->table;
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_table_diff_t diff = {
+        .removed = table->type,
+        .removed_flags = table->flags & EcsTableRemoveEdgeFlags
+    };
+
+    diff.removed_flags &= ~(EcsTableEdgeReparent|EcsTableHasOrderedChildren);
+
+    int32_t row = ECS_RECORD_TO_ROW(r->row);
+    flecs_actions_delete_tree(world, table, row, 1, &diff);
+    flecs_entity_remove_non_fragmenting(world, entity, r);
+    flecs_table_delete(world, table, row, true);
+
+    flecs_entities_remove(world, entity);
+
+    flecs_journal_end();
+error:
+    return;
+}
+
+static
+bool flecs_is_childof_tgt_only(
+    const ecs_component_record_t *cr)
+{
+    ecs_pair_record_t *pr = cr->pair;
+    if (pr->second.next) {
+        return false;
+    }
+
+    if (ECS_PAIR_FIRST(pr->second.prev->id) != EcsWildcard) {
+        return false;
+    }
+
+    return true;
+}
+
+static
+void flecs_component_delete_non_fragmenting_childof(
+    ecs_world_t *world,
+    ecs_component_record_t *cr)
+{
+    ecs_pair_record_t *pr = cr->pair;
+    int32_t i, count = ecs_vec_count(&pr->ordered_children);
+    ecs_entity_t *children = ecs_vec_first(&pr->ordered_children);
+
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t e = children[i];
+
+        ecs_record_t *r = flecs_entities_get_any(world, e);
+        if ((r->row & EcsEntityIsTarget)) {
+            ecs_component_record_t *child_cr = flecs_components_get(
+                world, ecs_childof(e));
+            if (child_cr) {
+                if (!flecs_is_childof_tgt_only(child_cr)) {
+                    /* Entity is used as target with other relationships, go
+                     * through regular cleanup path. */
+                    flecs_target_mark_for_delete(world, e);
+                } else {
+                    flecs_component_delete_non_fragmenting_childof(world, child_cr);
+                }
+            } else {
+                /* Entity is a target but is not a ChildOf target. Go through
+                 * regular cleanup path. */
+                flecs_target_mark_for_delete(world, e);
+            }
+        }
+
+        flecs_simple_delete(world, e, r);
+    }
+
+    ecs_component_record_t *tgt_wc = pr->second.prev;
+    ecs_assert(ECS_PAIR_FIRST(tgt_wc->id) == EcsWildcard, ECS_INTERNAL_ERROR, NULL);
+
+    flecs_component_release(world, tgt_wc);
+}
+
+static
+bool flecs_component_mark_non_fragmenting_childof(
     ecs_world_t *world,
     ecs_component_record_t *cr)
 {
     ecs_entity_t tgt = ECS_PAIR_SECOND(cr->id);
+
     ecs_component_record_t *childof_cr = flecs_components_get(
         world, ecs_childof(tgt));
     if (!childof_cr) {
-        return;
+        return false;
     }
 
     ecs_flags32_t flags = childof_cr->flags;
 
     if (flags & EcsIdMarkedForDelete) {
-        return;
+        return false;
     }
 
-    if (!(childof_cr->flags & EcsIdOrderedChildren)) {
-        return;
+    if (!flecs_component_has_non_fragmenting_childof(childof_cr)) {
+        return false;
+    }
+
+    ecs_pair_record_t *pr = childof_cr->pair;
+
+    if (!pr->second.next) {
+        if (ECS_PAIR_FIRST(pr->second.prev->id) == EcsWildcard) {
+            /* Entity is only used as ChildOf target */
+            flecs_component_delete_non_fragmenting_childof(world, childof_cr);
+            return true;
+        }
     }
 
     flecs_marked_id_push(world, childof_cr, EcsDelete, true);
@@ -17584,6 +17824,8 @@ void flecs_component_mark_non_fragmenting_childof(
 
         flecs_component_mark_for_delete(world, tgt_cr, 0, true);
     }
+
+    return false;
 }
 
 static
@@ -17603,7 +17845,9 @@ void flecs_component_mark_for_delete(
 
     bool delete_target = flecs_id_is_delete_target(id, action);
     if (delete_target) {
-        flecs_component_mark_non_fragmenting_childof(world, cr);
+        if (flecs_component_mark_non_fragmenting_childof(world, cr)) {
+            return;
+        }
     }
 
     /* Mark all tables with the id for delete */
@@ -17765,7 +18009,7 @@ void flecs_remove_from_table(
                 }
             }
 
-            flecs_notify_on_remove(world, table, dst_table, 0, table_count, &td);
+            flecs_actions_move_remove(world, table, dst_table, 0, table_count, &td);
             ecs_log_pop_3();
         }
 
@@ -38846,6 +39090,19 @@ ecs_component_record_t* flecs_components_get(
     const ecs_world_t *world,
     ecs_id_t id)
 {
+    // if (!(world->flags & EcsWorldInit)) {
+    //     ecs_trace("get %s, %u", 
+    //         ECS_PAIR_FIRST(id) == EcsChildOf
+    //             ? "ChildOf"
+    //             : ECS_PAIR_FIRST(id) == EcsWildcard
+    //                 ? "*"
+    //                 : "Flag", 
+    //         ECS_PAIR_SECOND(id), EcsChildOf, EcsWildcard);
+    //     if (ecs_should_log(0)) {
+    //         flecs_dump_backtrace(stdout);
+    //     }
+    // }
+
     flecs_poly_assert(world, ecs_world_t);
     if (id == ecs_pair(EcsIsA, EcsWildcard)) {
         return world->cr_isa_wildcard;
@@ -38892,6 +39149,7 @@ int32_t flecs_component_release(
     ecs_component_record_t *cr)
 {
     int32_t rc = -- cr->refcount;
+
     ecs_assert(rc >= 0, ECS_INTERNAL_ERROR, 
         flecs_errstr(ecs_id_str(world, cr->id)));
 
@@ -41781,7 +42039,7 @@ void flecs_table_notify_on_remove(
         ecs_table_diff_t diff = ECS_TABLE_DIFF_INIT;
         diff.removed = table->type;
         diff.removed_flags = table->flags & EcsTableRemoveEdgeFlags;
-        flecs_notify_on_remove(world, table, &world->store.root, 0, count, &diff);
+        flecs_actions_move_remove(world, table, &world->store.root, 0, count, &diff);
     }
 }
 

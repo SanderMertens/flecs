@@ -2575,6 +2575,147 @@ void NonFragmentingChildOf_add_parent_to_prefab_after_add_parent(void) {
     ecs_fini(world);
 }
 
+void NonFragmentingChildOf_create_delete_mixed_tree(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p_1 = ecs_new(world);
+
+    ecs_entity_t c1 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
+    ecs_entity_t c2 = ecs_new_w_pair(world, EcsChildOf, p_1);
+    ecs_entity_t c3 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
+    ecs_entity_t c4 = ecs_new_w_pair(world, EcsChildOf, p_1);
+
+    ecs_delete(world, p_1);
+
+    test_assert(!ecs_is_alive(world, p_1));
+    test_assert(!ecs_is_alive(world, c1));
+    test_assert(!ecs_is_alive(world, c2));
+    test_assert(!ecs_is_alive(world, c3));
+    test_assert(!ecs_is_alive(world, c4));
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_create_delete_tree_w_tgt_of_other_rel_1(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+
+    ecs_entity_t p_1 = ecs_new(world);
+
+    ecs_entity_t c1 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
+    ecs_entity_t c2 = ecs_insert(world, ecs_value(EcsParent, {c1}));
+    ecs_entity_t c3 = ecs_insert(world, ecs_value(EcsParent, {c2}));
+    ecs_entity_t c4 = ecs_insert(world, ecs_value(EcsParent, {c3}));
+
+    ecs_entity_t e = ecs_new_w_pair(world, Rel, c1);
+
+    ecs_delete(world, p_1);
+
+    test_assert(!ecs_is_alive(world, p_1));
+    test_assert(!ecs_is_alive(world, c1));
+    test_assert(!ecs_is_alive(world, c2));
+    test_assert(!ecs_is_alive(world, c3));
+    test_assert(!ecs_is_alive(world, c4));
+
+    test_assert(!ecs_has_pair(world, e, Rel, c1));
+    test_assert(!ecs_has_pair(world, e, Rel, EcsWildcard));
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_create_delete_tree_w_tgt_of_other_rel_2(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+
+    ecs_entity_t p_1 = ecs_new(world);
+
+    ecs_entity_t c1 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
+    ecs_entity_t c2 = ecs_insert(world, ecs_value(EcsParent, {c1}));
+    ecs_entity_t c3 = ecs_insert(world, ecs_value(EcsParent, {c2}));
+    ecs_entity_t c4 = ecs_insert(world, ecs_value(EcsParent, {c3}));
+
+    ecs_entity_t e = ecs_new_w_pair(world, Rel, c2);
+
+    ecs_delete(world, p_1);
+
+    test_assert(!ecs_is_alive(world, p_1));
+    test_assert(!ecs_is_alive(world, c1));
+    test_assert(!ecs_is_alive(world, c2));
+    test_assert(!ecs_is_alive(world, c3));
+    test_assert(!ecs_is_alive(world, c4));
+
+    test_assert(!ecs_has_pair(world, e, Rel, c2));
+    test_assert(!ecs_has_pair(world, e, Rel, EcsWildcard));
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_create_delete_tree_w_tgt_of_other_rel_3(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+
+    ecs_entity_t p_1 = ecs_new(world);
+
+    ecs_entity_t c1 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
+    ecs_entity_t c2 = ecs_insert(world, ecs_value(EcsParent, {c1}));
+    ecs_entity_t c3 = ecs_insert(world, ecs_value(EcsParent, {c2}));
+    ecs_entity_t c4 = ecs_insert(world, ecs_value(EcsParent, {c3}));
+
+    ecs_entity_t e = ecs_new_w_pair(world, Rel, c3);
+
+    ecs_delete(world, p_1);
+
+    test_assert(!ecs_is_alive(world, p_1));
+    test_assert(!ecs_is_alive(world, c1));
+    test_assert(!ecs_is_alive(world, c2));
+    test_assert(!ecs_is_alive(world, c3));
+    test_assert(!ecs_is_alive(world, c4));
+
+    test_assert(!ecs_has_pair(world, e, Rel, c3));
+    test_assert(!ecs_has_pair(world, e, Rel, EcsWildcard));
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_create_delete_tree_w_tgt_of_other_rel_4(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+
+    ecs_entity_t p_1 = ecs_new(world);
+
+    ecs_entity_t c1 = ecs_insert(world, ecs_value(EcsParent, {p_1}));
+    ecs_entity_t c2 = ecs_insert(world, ecs_value(EcsParent, {c1}));
+    ecs_entity_t c3 = ecs_insert(world, ecs_value(EcsParent, {c2}));
+    ecs_entity_t c4 = ecs_insert(world, ecs_value(EcsParent, {c3}));
+
+    ecs_entity_t e = ecs_new_w_pair(world, Rel, c4);
+
+    ecs_delete(world, p_1);
+
+    test_assert(!ecs_is_alive(world, p_1));
+    test_assert(!ecs_is_alive(world, c1));
+    test_assert(!ecs_is_alive(world, c2));
+    test_assert(!ecs_is_alive(world, c3));
+    test_assert(!ecs_is_alive(world, c4));
+
+    test_assert(!ecs_has_pair(world, e, Rel, c4));
+    test_assert(!ecs_has_pair(world, e, Rel, EcsWildcard));
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_create_delete_tree_w_tag(void) {
+    // Implement testcase
+}
+
+void NonFragmentingChildOf_create_delete_tree_w_component(void) {
+    // Implement testcase
+}
+
 void NonFragmentingChildOf_deep_hierarchy(void) {
     ecs_world_t *world = ecs_mini();
 
