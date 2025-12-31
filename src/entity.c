@@ -2805,7 +2805,6 @@ ecs_entity_t ecs_new_child(
         ecs_id(EcsParent), ecs_value_pair(EcsParentDepth, pr->depth)};
 
     ecs_type_t type = { .count = 2, .array = type_ids };
-
     ecs_table_t *table = flecs_table_find_or_create(world, &type);
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -2818,10 +2817,14 @@ ecs_entity_t ecs_new_child(
         .added_flags = flags
     };
 
-    flecs_new_entity(world, entity, r, table, &table_diff, true, 0);
+    int32_t row = flecs_table_append(world, table, entity, false, false);
+    r->table = table;
+    r->row = row;
+
+    flecs_actions_new(world, table, row, 1, &table_diff, 0, false, true);
 
     EcsParent *parent_ptr = table->data.columns[0].data;
-    parent_ptr = &parent_ptr[ECS_RECORD_TO_ROW(r->row)];
+    parent_ptr = &parent_ptr[row];
     parent_ptr->value = parent;
 
     flecs_add_non_fragmenting_child_w_records(world, parent, entity, cr, r);
