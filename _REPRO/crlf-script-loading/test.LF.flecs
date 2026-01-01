@@ -1,0 +1,22 @@
+using flecs.meta
+ 
+struct MaxSpeed {
+  value = f32
+}
+ 
+struct Position {
+  x = f32
+  y = f32
+}
+ 
+prefab SpaceShip {
+  MaxSpeed: {value: 100}
+ 
+  cockpit {
+    Position: {x: -10, y: 0}
+  }
+}
+ 
+my_spaceship : SpaceShip {
+  Position: {x: 10, y: 20}
+}
