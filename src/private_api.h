@@ -179,6 +179,11 @@ char * ecs_ftoa(
     char * buf, 
     int precision);
 
+/* Remove all occurrences of a character from a string */
+char* flecs_str_remove_all_occurrences_of_char(
+    char *str,
+    char ch);
+
 /* Replace #[color] tokens with terminal color symbols. */
 void flecs_colorize_buf(
     char *msg,
