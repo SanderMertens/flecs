@@ -243,6 +243,9 @@ char* flecs_load_from_file(
 
     fclose(file);
 
+    /* Normalize line endings by removing carriage returns */
+    flecs_str_remove_all_occurrences_of_char(content, '\r');
+
     return content;
 error:
     if (file) {
@@ -516,4 +519,21 @@ const char* flecs_errstr_5(
     ecs_os_strncpy(flecs_errstr_buf_5, str, FLECS_ERRSTR_MAX - 1);
     ecs_os_free(str);
     return flecs_errstr_buf_5;
+}
+
+char* flecs_str_remove_all_occurrences_of_char(
+    char *str,
+    char ch)
+{
+    if (!str) return NULL;
+    char *read_ptr = str, *write_ptr = str;
+    while (*read_ptr) {
+        if (*read_ptr == ch) {
+            read_ptr++;
+        } else {
+            *write_ptr++ = *read_ptr++;
+        }
+    }
+    *write_ptr = '\0';
+    return str;
 }
