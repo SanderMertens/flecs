@@ -2923,6 +2923,49 @@ void World_dont_delete_non_empty_dont_fragment_component_record_w_shrink(void) {
     ecs_fini(world);
 }
 
+
+void World_remove_from_traversable_after_shrink(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }},
+        .events = { EcsOnRemove },
+        .callback = DummyHook
+    });
+
+    ecs_entity_t p = ecs_new_w(world, Position);
+    ecs_entity_t c = ecs_new_w_pair(world, EcsChildOf, p);
+
+    ecs_delete(world, c);
+
+    ecs_shrink(world);
+
+    ecs_remove(world, p, Position);
+
+    test_int(dummy_hook_invoked, 1);
+
+    ecs_fini(world);
+}
+
+void World_shrink_non_fragmenting_childof(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t p = ecs_new(world);
+    ecs_insert(world, ecs_value(EcsParent, {p}));
+
+    test_assert(flecs_components_get(world, ecs_childof(p)) != NULL);
+
+    ecs_shrink(world);
+
+    test_assert(flecs_components_get(world, ecs_childof(p)) != NULL);
+
+    ecs_fini(world);
+}
+
 void World_mini_all_tables_builtin(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -3755,29 +3798,4 @@ void World_add_traversable_after_pair_query(void) {
     test_expect_abort();
 
     ecs_add_id(world, ecs_id(Position), EcsTraversable);
-}
-
-void World_remove_from_traversable_after_shrink(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_observer(world, {
-        .query.terms = {{ ecs_id(Position) }},
-        .events = { EcsOnRemove },
-        .callback = DummyHook
-    });
-
-    ecs_entity_t p = ecs_new_w(world, Position);
-    ecs_entity_t c = ecs_new_w_pair(world, EcsChildOf, p);
-
-    ecs_delete(world, c);
-
-    ecs_shrink(world);
-
-    ecs_remove(world, p, Position);
-
-    test_int(dummy_hook_invoked, 1);
-
-    ecs_fini(world);
 }
