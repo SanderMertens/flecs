@@ -2501,6 +2501,7 @@ void World_dont_delete_non_empty_queried_for_component_record_w_shrink(void);
 void World_dont_delete_non_empty_sparse_component_record_w_shrink(void);
 void World_dont_delete_non_empty_dont_fragment_component_record_w_shrink(void);
 void World_remove_from_traversable_after_shrink(void);
+void World_shrink_non_fragmenting_childof(void);
 void World_mini_all_tables_builtin(void);
 void World_mini_all_tables_builtin_after_add(void);
 void World_user_component_not_builtin(void);
@@ -12810,6 +12811,10 @@ bake_test_case World_testcases[] = {
         World_remove_from_traversable_after_shrink
     },
     {
+        "shrink_non_fragmenting_childof",
+        World_shrink_non_fragmenting_childof
+    },
+    {
         "mini_all_tables_builtin",
         World_mini_all_tables_builtin
     },
@@ -15248,7 +15253,7 @@ static bake_test_suite suites[] = {
         "World",
         World_setup,
         NULL,
-        152,
+        153,
         World_testcases
     },
     {

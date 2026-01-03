@@ -23127,6 +23127,8 @@ bool flecs_component_record_in_use(
 {
     if (cr->flags & EcsIdDontFragment) {
         return flecs_sparse_count(cr->sparse) != 0;
+    } else if (cr->flags & EcsIdOrderedChildren) {
+        return ecs_vec_count(&cr->pair->ordered_children) != 0;
     } else {
         return cr->cache.tables.count != 0;
     }
