@@ -36,6 +36,7 @@
 #include "observable.h"
 #include "iter.h"
 #include "poly.h"
+#include "spawner.h"
 #include "stage.h"
 #include "world.h"
 #include "addons/journal.h"
