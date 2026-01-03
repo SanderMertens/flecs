@@ -23,6 +23,9 @@ typedef struct ecs_world_allocators_t {
 
     /* Temporary vectors used for creating table diff id sequences */
     ecs_table_diff_builder_t diff_builder;
+
+    /* Temporary vector for tree spawner */
+    ecs_vec_t tree_spawner;
 } ecs_world_allocators_t;
 
 /* Component monitor */

@@ -5343,10 +5343,25 @@ typedef struct EcsDefaultChildComponent {
     ecs_id_t component;  /**< Default component id. */
 } EcsDefaultChildComponent;
 
-/* Non-fragmenting ChildOf relationship. Experimental! Do not use! */
+/* Non-fragmenting ChildOf relationship. */
 typedef struct EcsParent {
     ecs_entity_t value;
 } EcsParent;
+
+/* Component with data to instantiate a non-fragmenting tree. */
+typedef struct {
+    ecs_table_t *table;
+    int32_t parent_index; /* Index into children vector */
+} ecs_tree_spawner_child_t;
+
+typedef struct {
+    ecs_vec_t children; /* vector<ecs_tree_spawner_child_t> */
+} ecs_tree_spawner_t;
+
+typedef struct EcsTreeSpawner {
+    int32_t depth_offset;       /* Offset for depth index. */
+    ecs_tree_spawner_t data[6]; /* Tree instantiation cache, indexed by depth. */
+} EcsTreeSpawner;
 
 /** @} */
 /** @} */
@@ -5423,6 +5438,9 @@ FLECS_API extern const ecs_entity_t ecs_id(EcsPoly);
 
 /** Parent component id. */
 FLECS_API extern const ecs_entity_t ecs_id(EcsParent);
+
+/** Component with data to instantiate a tree. */
+FLECS_API extern const ecs_entity_t ecs_id(EcsTreeSpawner);
 
 /** DefaultChildComponent component id. */
 FLECS_API extern const ecs_entity_t ecs_id(EcsDefaultChildComponent);
@@ -5740,7 +5758,7 @@ FLECS_API extern const ecs_entity_t EcsConstant;    /**< Tag added to enum/bitma
 
 /** Value used to quickly check if component is builtin. This is used to quickly
  * filter out tables with builtin components (for example for ecs_delete()) */
-#define EcsLastInternalComponentId (ecs_id(EcsPoly))
+#define EcsLastInternalComponentId (ecs_id(EcsTreeSpawner))
 
 /** The first user-defined component starts from this id. Ids up to this number
  * are reserved for builtin components */
