@@ -1,0 +1,3 @@
+prefab Troll : Enemy {
+	HitPoints: {value: 20}
+}
