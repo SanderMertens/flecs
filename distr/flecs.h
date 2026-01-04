@@ -340,6 +340,12 @@
 #define FLECS_DAG_DEPTH_MAX 128
 #endif
 
+/** @def FLECS_TREE_SPAWNER_DEPTH_CACHE_SIZE
+ * Size of depth cache in tree spawner component. Higher values speed up prefab
+ * instantiation for deeper hierarchies, at the cost of slightly more memory.
+ */
+#define FLECS_TREE_SPAWNER_DEPTH_CACHE_SIZE (6)
+
 /** @} */
 
 /**
@@ -5350,7 +5356,7 @@ typedef struct EcsParent {
 
 /* Component with data to instantiate a non-fragmenting tree. */
 typedef struct {
-    ecs_table_t *table;
+    ecs_table_t *table;   /* Table in which child will be stored */
     int32_t parent_index; /* Index into children vector */
 } ecs_tree_spawner_child_t;
 
@@ -5359,8 +5365,12 @@ typedef struct {
 } ecs_tree_spawner_t;
 
 typedef struct EcsTreeSpawner {
-    int32_t depth_offset;       /* Offset for depth index. */
-    ecs_tree_spawner_t data[6]; /* Tree instantiation cache, indexed by depth. */
+    /* Tree instantiation cache, indexed by depth. Tables will have a 
+     * (ParentDepth, depth) pair indicating the hierarchy depth. This means that
+     * for different depths, the tables the children are created in will also be
+     * different. Caching tables for different depths therefore speeds up
+     * instantiating trees even when the top level entity is not at the root. */
+    ecs_tree_spawner_t data[FLECS_TREE_SPAWNER_DEPTH_CACHE_SIZE];
 } EcsTreeSpawner;
 
 /** @} */

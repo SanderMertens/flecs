@@ -846,11 +846,22 @@
                 "create_delete_tree_w_tgt_of_other_rel_2",
                 "create_delete_tree_w_tgt_of_other_rel_3",
                 "create_delete_tree_w_tgt_of_other_rel_4",
-                "create_delete_tree_w_tag",
-                "create_delete_tree_w_component",
                 "instantiate_tree_1_child",
                 "instantiate_tree_2_children",
-                "instantiate_tree_3_children"
+                "instantiate_tree_3_children",
+                "instantiate_w_dont_inherit",
+                "instantiate_w_inherit",
+                "instantiate_w_auto_override",
+                "instantiate_w_isa",
+                "instantiate_tree_twice",
+                "instantiate_tree_at_depth_1_w_parent",
+                "instantiate_tree_at_depth_2_w_parent",
+                "instantiate_tree_at_depth_n_w_parent",
+                "instantiate_tree_at_depth_1_w_childof",
+                "instantiate_tree_at_depth_2_w_childof",
+                "instantiate_tree_at_depth_n_w_childof",
+                "reparent_instantiated_tree_w_parent",
+                "reparent_instantiated_tree_w_childof"
             ]
         }, {
             "id": "Hierarchies",
