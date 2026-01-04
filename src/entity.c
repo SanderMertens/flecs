@@ -2819,7 +2819,7 @@ ecs_entity_t ecs_new_child(
 
     int32_t row = flecs_table_append(world, table, entity, false, false);
     r->table = table;
-    r->row = row;
+    r->row = (uint32_t)row;
 
     flecs_actions_new(world, table, row, 1, &table_diff, 0, false, true);
 

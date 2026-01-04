@@ -814,11 +814,22 @@ void NonFragmentingChildOf_create_delete_tree_w_tgt_of_other_rel_1(void);
 void NonFragmentingChildOf_create_delete_tree_w_tgt_of_other_rel_2(void);
 void NonFragmentingChildOf_create_delete_tree_w_tgt_of_other_rel_3(void);
 void NonFragmentingChildOf_create_delete_tree_w_tgt_of_other_rel_4(void);
-void NonFragmentingChildOf_create_delete_tree_w_tag(void);
-void NonFragmentingChildOf_create_delete_tree_w_component(void);
 void NonFragmentingChildOf_instantiate_tree_1_child(void);
 void NonFragmentingChildOf_instantiate_tree_2_children(void);
 void NonFragmentingChildOf_instantiate_tree_3_children(void);
+void NonFragmentingChildOf_instantiate_w_dont_inherit(void);
+void NonFragmentingChildOf_instantiate_w_inherit(void);
+void NonFragmentingChildOf_instantiate_w_auto_override(void);
+void NonFragmentingChildOf_instantiate_w_isa(void);
+void NonFragmentingChildOf_instantiate_tree_twice(void);
+void NonFragmentingChildOf_instantiate_tree_at_depth_1_w_parent(void);
+void NonFragmentingChildOf_instantiate_tree_at_depth_2_w_parent(void);
+void NonFragmentingChildOf_instantiate_tree_at_depth_n_w_parent(void);
+void NonFragmentingChildOf_instantiate_tree_at_depth_1_w_childof(void);
+void NonFragmentingChildOf_instantiate_tree_at_depth_2_w_childof(void);
+void NonFragmentingChildOf_instantiate_tree_at_depth_n_w_childof(void);
+void NonFragmentingChildOf_reparent_instantiated_tree_w_parent(void);
+void NonFragmentingChildOf_reparent_instantiated_tree_w_childof(void);
 
 // Testsuite 'Hierarchies'
 void Hierarchies_setup(void);
@@ -6219,14 +6230,6 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
         NonFragmentingChildOf_create_delete_tree_w_tgt_of_other_rel_4
     },
     {
-        "create_delete_tree_w_tag",
-        NonFragmentingChildOf_create_delete_tree_w_tag
-    },
-    {
-        "create_delete_tree_w_component",
-        NonFragmentingChildOf_create_delete_tree_w_component
-    },
-    {
         "instantiate_tree_1_child",
         NonFragmentingChildOf_instantiate_tree_1_child
     },
@@ -6237,6 +6240,58 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "instantiate_tree_3_children",
         NonFragmentingChildOf_instantiate_tree_3_children
+    },
+    {
+        "instantiate_w_dont_inherit",
+        NonFragmentingChildOf_instantiate_w_dont_inherit
+    },
+    {
+        "instantiate_w_inherit",
+        NonFragmentingChildOf_instantiate_w_inherit
+    },
+    {
+        "instantiate_w_auto_override",
+        NonFragmentingChildOf_instantiate_w_auto_override
+    },
+    {
+        "instantiate_w_isa",
+        NonFragmentingChildOf_instantiate_w_isa
+    },
+    {
+        "instantiate_tree_twice",
+        NonFragmentingChildOf_instantiate_tree_twice
+    },
+    {
+        "instantiate_tree_at_depth_1_w_parent",
+        NonFragmentingChildOf_instantiate_tree_at_depth_1_w_parent
+    },
+    {
+        "instantiate_tree_at_depth_2_w_parent",
+        NonFragmentingChildOf_instantiate_tree_at_depth_2_w_parent
+    },
+    {
+        "instantiate_tree_at_depth_n_w_parent",
+        NonFragmentingChildOf_instantiate_tree_at_depth_n_w_parent
+    },
+    {
+        "instantiate_tree_at_depth_1_w_childof",
+        NonFragmentingChildOf_instantiate_tree_at_depth_1_w_childof
+    },
+    {
+        "instantiate_tree_at_depth_2_w_childof",
+        NonFragmentingChildOf_instantiate_tree_at_depth_2_w_childof
+    },
+    {
+        "instantiate_tree_at_depth_n_w_childof",
+        NonFragmentingChildOf_instantiate_tree_at_depth_n_w_childof
+    },
+    {
+        "reparent_instantiated_tree_w_parent",
+        NonFragmentingChildOf_reparent_instantiated_tree_w_parent
+    },
+    {
+        "reparent_instantiated_tree_w_childof",
+        NonFragmentingChildOf_reparent_instantiated_tree_w_childof
     }
 };
 
@@ -15085,7 +15140,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NULL,
         NULL,
-        118,
+        129,
         NonFragmentingChildOf_testcases
     },
     {

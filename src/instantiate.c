@@ -424,9 +424,12 @@ void flecs_instantiate(
 
         if (cr->flags & EcsIdOrderedChildren) {
             if (flecs_component_has_non_fragmenting_childof(cr)) {
-                const EcsTreeSpawner *ts = ecs_get(world, base, EcsTreeSpawner);
+                
+                EcsTreeSpawner *ts = flecs_get_mut(
+                    world, base, ecs_id(EcsTreeSpawner), record, 
+                    sizeof(EcsTreeSpawner)).ptr;
                 if (!ts) {
-                    ts = flecs_build_prefab_spawner(world, base);
+                    ts = flecs_prefab_spawner_build(world, base);
                 }
 
                 if (ts) {

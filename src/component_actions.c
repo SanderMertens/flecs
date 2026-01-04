@@ -374,6 +374,7 @@ void flecs_actions_on_remove_intern(
     }
 }
 
+static
 void flecs_actions_on_remove_intern_w_reparent(
     ecs_world_t *world,
     ecs_table_t *table,
