@@ -3799,3 +3799,49 @@ void World_add_traversable_after_pair_query(void) {
 
     ecs_add_id(world, ecs_id(Position), EcsTraversable);
 }
+
+void World_set_component_after_in_use(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t c = ecs_new(world);
+    ecs_entity_t tgt_a = ecs_new(world);
+    ecs_entity_t tgt_b = ecs_new(world);
+    ecs_entity_t rel_a = ecs_new(world);
+    ecs_entity_t rel_b = ecs_new(world);
+
+    ecs_component_record_t *cr_c = flecs_components_ensure(world, c);
+    test_assert(flecs_component_get_type_info(cr_c) == NULL);
+
+    ecs_component_record_t *cr_c_tgt_a = flecs_components_ensure(world, ecs_pair(c, tgt_a));
+    test_assert(flecs_component_get_type_info(cr_c_tgt_a) == NULL);
+
+    ecs_component_record_t *cr_c_tgt_b = flecs_components_ensure(world, ecs_pair(c, tgt_b));
+    test_assert(flecs_component_get_type_info(cr_c_tgt_b) == NULL);
+
+    ecs_component_record_t *cr_rel_a_c = flecs_components_ensure(world, ecs_pair(rel_a, c));
+    test_assert(flecs_component_get_type_info(cr_rel_a_c) == NULL);
+
+    ecs_component_record_t *cr_rel_b_c = flecs_components_ensure(world, ecs_pair(rel_b, c));
+    test_assert(flecs_component_get_type_info(cr_rel_b_c) == NULL);
+
+    ecs_component_record_t *cr_c_wc = flecs_components_ensure(world, ecs_pair(c, EcsWildcard));
+    test_assert(flecs_component_get_type_info(cr_c_wc) == NULL);
+
+    ecs_component_record_t *cr_wc_c = flecs_components_ensure(world, ecs_pair(EcsWildcard, c));
+    test_assert(flecs_component_get_type_info(cr_wc_c) == NULL);
+
+    ecs_set(world, c, EcsComponent, {4, 4});
+
+    const ecs_type_info_t *ti = ecs_get_type_info(world, c);
+
+    test_assert(flecs_component_get_type_info(cr_c) == ti);
+    test_assert(flecs_component_get_type_info(cr_c_tgt_a) == ti);
+    test_assert(flecs_component_get_type_info(cr_c_tgt_b) == ti);
+    test_assert(flecs_component_get_type_info(cr_rel_a_c) == ti);
+    test_assert(flecs_component_get_type_info(cr_rel_b_c) == ti);
+
+    test_assert(flecs_component_get_type_info(cr_c_wc) == NULL);
+    test_assert(flecs_component_get_type_info(cr_wc_c) == NULL);
+
+    ecs_fini(world);
+}

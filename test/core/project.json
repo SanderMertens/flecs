@@ -2641,7 +2641,8 @@
                 "add_sparse_after_pair_query",
                 "add_dont_fragment_after_pair_query",
                 "add_can_toggle_after_pair_query",
-                "add_traversable_after_pair_query"
+                "add_traversable_after_pair_query",
+                "set_component_after_in_use"
             ]
         }, {
             "id": "ExclusiveAccess",

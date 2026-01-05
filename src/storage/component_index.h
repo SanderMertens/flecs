@@ -105,11 +105,6 @@ void flecs_components_init(
 void flecs_components_fini(
     ecs_world_t *world);
 
-/* Ensure component record for id */
-ecs_component_record_t* flecs_components_ensure(
-    ecs_world_t *world,
-    ecs_id_t id);
-
 /* Like flecs_components_ensure, but creates only if world is not in threaded mode */
 ecs_component_record_t* flecs_components_try_ensure(
     ecs_world_t *world,

@@ -2561,6 +2561,7 @@ void World_add_sparse_after_pair_query(void);
 void World_add_dont_fragment_after_pair_query(void);
 void World_add_can_toggle_after_pair_query(void);
 void World_add_traversable_after_pair_query(void);
+void World_set_component_after_in_use(void);
 
 // Testsuite 'ExclusiveAccess'
 void ExclusiveAccess_self(void);
@@ -13060,6 +13061,10 @@ bake_test_case World_testcases[] = {
     {
         "add_traversable_after_pair_query",
         World_add_traversable_after_pair_query
+    },
+    {
+        "set_component_after_in_use",
+        World_set_component_after_in_use
     }
 };
 
@@ -15308,7 +15313,7 @@ static bake_test_suite suites[] = {
         "World",
         World_setup,
         NULL,
-        153,
+        154,
         World_testcases
     },
     {
