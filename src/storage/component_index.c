@@ -867,6 +867,13 @@ bool flecs_component_set_type_info(
     return changed;
 }
 
+const ecs_type_info_t* flecs_component_get_type_info(
+    const ecs_component_record_t *cr)
+{
+    ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
+    return cr->type_info;
+}
+
 ecs_hashmap_t* flecs_component_name_index_ensure(
     ecs_world_t *world,
     ecs_component_record_t *cr)

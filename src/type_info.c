@@ -578,7 +578,7 @@ bool flecs_type_info_init_id(
     /* All id records with component as relationship inherit type info */
     cr = flecs_components_get(world, ecs_pair(component, EcsWildcard));
     if (cr) {
-        do {
+        while ((cr = flecs_component_first_next(cr))) {
             if (is_tag) {
                 changed |= flecs_component_set_type_info(world, cr, NULL);
             } else if (ti) {
@@ -588,23 +588,19 @@ bool flecs_type_info_init_id(
             {
                 changed |= flecs_component_set_type_info(world, cr, NULL);
             }
-        } while ((cr = flecs_component_first_next(cr)));
+        } 
     }
 
     /* All non-tag id records with component as object inherit type info,
      * if relationship doesn't have type info */
     cr = flecs_components_get(world, ecs_pair(EcsWildcard, component));
     if (cr) {
-        do {
+        while ((cr = flecs_component_second_next(cr))) {
             if (!(cr->flags & EcsIdPairIsTag) && !cr->type_info) {
                 changed |= flecs_component_set_type_info(world, cr, ti);
             }
-        } while ((cr = flecs_component_first_next(cr)));
+        }
     }
-
-    /* Type info of (*, component) should always point to component */
-    // ecs_assert(flecs_components_get(world, ecs_pair(EcsWildcard, component))->
-    //     type_info == ti, ECS_INTERNAL_ERROR, NULL);
 
     return changed;
 }

@@ -517,11 +517,6 @@ void flecs_components_init(
 void flecs_components_fini(
     ecs_world_t *world);
 
-/* Ensure component record for id */
-ecs_component_record_t* flecs_components_ensure(
-    ecs_world_t *world,
-    ecs_id_t id);
-
 /* Like flecs_components_ensure, but creates only if world is not in threaded mode */
 ecs_component_record_t* flecs_components_try_ensure(
     ecs_world_t *world,
@@ -21100,7 +21095,7 @@ bool flecs_type_info_init_id(
     /* All id records with component as relationship inherit type info */
     cr = flecs_components_get(world, ecs_pair(component, EcsWildcard));
     if (cr) {
-        do {
+        while ((cr = flecs_component_first_next(cr))) {
             if (is_tag) {
                 changed |= flecs_component_set_type_info(world, cr, NULL);
             } else if (ti) {
@@ -21110,23 +21105,19 @@ bool flecs_type_info_init_id(
             {
                 changed |= flecs_component_set_type_info(world, cr, NULL);
             }
-        } while ((cr = flecs_component_first_next(cr)));
+        } 
     }
 
     /* All non-tag id records with component as object inherit type info,
      * if relationship doesn't have type info */
     cr = flecs_components_get(world, ecs_pair(EcsWildcard, component));
     if (cr) {
-        do {
+        while ((cr = flecs_component_second_next(cr))) {
             if (!(cr->flags & EcsIdPairIsTag) && !cr->type_info) {
                 changed |= flecs_component_set_type_info(world, cr, ti);
             }
-        } while ((cr = flecs_component_first_next(cr)));
+        }
     }
-
-    /* Type info of (*, component) should always point to component */
-    // ecs_assert(flecs_components_get(world, ecs_pair(EcsWildcard, component))->
-    //     type_info == ti, ECS_INTERNAL_ERROR, NULL);
 
     return changed;
 }
@@ -39526,6 +39517,13 @@ bool flecs_component_set_type_info(
     cr->type_info = ti;
 
     return changed;
+}
+
+const ecs_type_info_t* flecs_component_get_type_info(
+    const ecs_component_record_t *cr)
+{
+    ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
+    return cr->type_info;
 }
 
 ecs_hashmap_t* flecs_component_name_index_ensure(
