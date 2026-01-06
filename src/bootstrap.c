@@ -716,8 +716,6 @@ ecs_table_t* flecs_bootstrap_component_table(
     world->cr_childof_0 = flecs_components_ensure(world, 
         ecs_pair(EcsChildOf, 0));
 
-    flecs_components_ensure(world, ecs_id(EcsParent));
-
     /* Initialize root table */
     flecs_init_root_table(world);
 

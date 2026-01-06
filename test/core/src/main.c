@@ -2056,6 +2056,8 @@ void Observer_on_add_childof_any_w_parent_component(void);
 void Observer_on_remove_childof_w_parent_component(void);
 void Observer_on_add_childof_w_parent_component_multi_term(void);
 void Observer_on_add_childof_wildcard_w_parent_component_multi_term(void);
+void Observer_on_add_childof_wildcard_w_parent_component_multi_term_after_shrink(void);
+void Observer_on_add_childof_wildcard_w_parent_component_multi_term_delete_observer(void);
 void Observer_on_add_childof_any_w_parent_component_multi_term(void);
 void Observer_on_remove_childof_w_parent_component_multi_term(void);
 void Observer_up_forward_w_parent_component(void);
@@ -11090,6 +11092,14 @@ bake_test_case Observer_testcases[] = {
         Observer_on_add_childof_wildcard_w_parent_component_multi_term
     },
     {
+        "on_add_childof_wildcard_w_parent_component_multi_term_after_shrink",
+        Observer_on_add_childof_wildcard_w_parent_component_multi_term_after_shrink
+    },
+    {
+        "on_add_childof_wildcard_w_parent_component_multi_term_delete_observer",
+        Observer_on_add_childof_wildcard_w_parent_component_multi_term_delete_observer
+    },
+    {
         "on_add_childof_any_w_parent_component_multi_term",
         Observer_on_add_childof_any_w_parent_component_multi_term
     },
@@ -15264,7 +15274,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        325,
+        327,
         Observer_testcases
     },
     {
