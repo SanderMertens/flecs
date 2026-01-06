@@ -12995,3 +12995,144 @@ void Eval_pair_after_const_identifier(void) {
 
     ecs_fini(world);
 }
+
+void Eval_tree_parent(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr = 
+    HEAD "@tree Parent"
+    LINE "e {"
+    LINE "  f { }"
+    LINE "}"
+    LINE "";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    ecs_entity_t f = ecs_lookup_child(world, e, "f");
+    test_assert(f != 0);
+
+    test_assert(!ecs_has_pair(world, f, EcsChildOf, EcsWildcard));
+    test_assert(ecs_has(world, f, EcsParent));
+
+    const EcsParent *p = ecs_get(world, f, EcsParent);
+    test_assert(p != NULL);
+    test_uint(p->value, e);
+
+    ecs_fini(world);
+}
+
+void Eval_tree_parent_nested(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr = 
+    HEAD "@tree Parent"
+    LINE "e {"
+    LINE "  f {"
+    LINE "    g {}"
+    LINE "  }"
+    LINE "}"
+    LINE "";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    ecs_entity_t f = ecs_lookup_child(world, e, "f");
+    test_assert(f != 0);
+    ecs_entity_t g = ecs_lookup_child(world, f, "g");
+    test_assert(g != 0);
+
+    {
+        test_assert(!ecs_has_pair(world, f, EcsChildOf, EcsWildcard));
+        test_assert(ecs_has(world, f, EcsParent));
+
+        const EcsParent *p = ecs_get(world, f, EcsParent);
+        test_assert(p != NULL);
+        test_uint(p->value, e);
+    }
+
+    {
+        test_assert(!ecs_has_pair(world, g, EcsChildOf, EcsWildcard));
+        test_assert(ecs_has(world, g, EcsParent));
+
+        const EcsParent *p = ecs_get(world, g, EcsParent);
+        test_assert(p != NULL);
+        test_uint(p->value, f);
+    }
+
+    ecs_fini(world);
+}
+
+void Eval_tree_parent_nested_childof(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr = 
+    HEAD "@tree Parent"
+    LINE "e {"
+    LINE "  @tree ChildOf"
+    LINE "  f {"
+    LINE "    g {}"
+    LINE "  }"
+    LINE "}"
+    LINE "";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    ecs_entity_t f = ecs_lookup_child(world, e, "f");
+    test_assert(f != 0);
+    ecs_entity_t g = ecs_lookup_child(world, f, "g");
+    test_assert(g != 0);
+
+    {
+        test_assert(!ecs_has_pair(world, f, EcsChildOf, EcsWildcard));
+        test_assert(ecs_has(world, f, EcsParent));
+
+        const EcsParent *p = ecs_get(world, f, EcsParent);
+        test_assert(p != NULL);
+        test_uint(p->value, e);
+    }
+
+    test_assert(ecs_has_pair(world, g, EcsChildOf, f));
+
+    ecs_fini(world);
+}
+
+void Eval_tree_childof_nested_parent(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr = 
+    HEAD "@tree ChildOf"
+    LINE "e {"
+    LINE "  @tree Parent"
+    LINE "  f {"
+    LINE "    g {}"
+    LINE "  }"
+    LINE "}"
+    LINE "";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    ecs_entity_t f = ecs_lookup_child(world, e, "f");
+    test_assert(f != 0);
+    ecs_entity_t g = ecs_lookup_child(world, f, "g");
+    test_assert(g != 0);
+
+    test_assert(ecs_has_pair(world, f, EcsChildOf, e));
+
+    {
+        test_assert(!ecs_has_pair(world, g, EcsChildOf, EcsWildcard));
+        test_assert(ecs_has(world, g, EcsParent));
+
+        const EcsParent *p = ecs_get(world, g, EcsParent);
+        test_assert(p != NULL);
+        test_uint(p->value, f);
+    }
+
+    ecs_fini(world);
+}

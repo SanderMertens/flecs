@@ -402,6 +402,10 @@ void Eval_opaque_vector_i32_export_var(void);
 void Eval_pair_after_const_int(void);
 void Eval_pair_after_const_string(void);
 void Eval_pair_after_const_identifier(void);
+void Eval_tree_parent(void);
+void Eval_tree_parent_nested(void);
+void Eval_tree_parent_nested_childof(void);
+void Eval_tree_childof_nested_parent(void);
 
 // Testsuite 'Template'
 void Template_template_no_scope(void);
@@ -2689,6 +2693,22 @@ bake_test_case Eval_testcases[] = {
     {
         "pair_after_const_identifier",
         Eval_pair_after_const_identifier
+    },
+    {
+        "tree_parent",
+        Eval_tree_parent
+    },
+    {
+        "tree_parent_nested",
+        Eval_tree_parent_nested
+    },
+    {
+        "tree_parent_nested_childof",
+        Eval_tree_parent_nested_childof
+    },
+    {
+        "tree_childof_nested_parent",
+        Eval_tree_childof_nested_parent
     }
 };
 
@@ -5514,7 +5534,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        393,
+        397,
         Eval_testcases
     },
     {

@@ -398,7 +398,7 @@ void ecs_on_set(EcsIdentifier)(
                 ecs_component_record_t *cr = flecs_components_get(
                     world, ecs_childof(parents[i].value));
                 ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
-                index = flecs_component_name_index_get(world, cr);
+                index = flecs_component_name_index_ensure(world, cr);
             }
         }
 

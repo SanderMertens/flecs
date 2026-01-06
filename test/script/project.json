@@ -405,7 +405,11 @@
                 "opaque_vector_i32_export_var",
                 "pair_after_const_int",
                 "pair_after_const_string",
-                "pair_after_const_identifier"
+                "pair_after_const_identifier",
+                "tree_parent",
+                "tree_parent_nested",
+                "tree_parent_nested_childof",
+                "tree_childof_nested_parent"
             ]
         }, {
             "id": "Template",
