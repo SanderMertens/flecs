@@ -79,7 +79,7 @@ static ECS_DTOR(EcsPoly, ptr, {
 static
 void EcsTreeSpawner_free(EcsTreeSpawner *ptr) {
     int32_t i;
-    for (i = 0; i < 3; i ++) {
+    for (i = 0; i < FLECS_TREE_SPAWNER_DEPTH_CACHE_SIZE; i ++) {
         ecs_vec_fini_t(NULL, &ptr->data[i].children, ecs_tree_spawner_child_t);
     }
 }

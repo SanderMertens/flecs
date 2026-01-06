@@ -192,6 +192,9 @@ void flecs_on_replace_parent(ecs_iter_t *it) {
 
         ecs_component_record_t *cr_parent = 
             flecs_add_non_fragmenting_child(world, new_parent, e);
+        if (!cr_parent) {
+            continue;
+        }
 
         if (names) {
             flecs_on_reparent_update_name(

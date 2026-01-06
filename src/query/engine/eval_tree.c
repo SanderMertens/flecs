@@ -580,7 +580,7 @@ bool flecs_query_children_with(
      * behavior should be in this case. For now the query engine only supports
      * constraining the query to a single entity or an entire table. */
     ecs_assert(range.count < 2, ECS_UNSUPPORTED, 
-        "can only use set_var with single entity for ChildOf($this, parent) terms");
+        "can only use set_var() to a single entity for ChildOf($this, parent) terms");
 
     if (range.count == 0) {
         /* If matching the entire table, return true. Even though not all 
