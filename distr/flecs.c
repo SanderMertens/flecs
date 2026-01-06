@@ -3455,7 +3455,7 @@ flecs_poly_dtor_t* flecs_get_dtor(
 
 /**
  * @file spawner.h
- * @brief TODO
+ * @brief Data structure used to speed up the creation of hierarchies.
  */
 
 #ifndef FLECS_SPAWNER_H
@@ -4269,7 +4269,7 @@ static ECS_DTOR(EcsPoly, ptr, {
 static
 void EcsTreeSpawner_free(EcsTreeSpawner *ptr) {
     int32_t i;
-    for (i = 0; i < 3; i ++) {
+    for (i = 0; i < FLECS_TREE_SPAWNER_DEPTH_CACHE_SIZE; i ++) {
         ecs_vec_fini_t(NULL, &ptr->data[i].children, ecs_tree_spawner_child_t);
     }
 }
@@ -19795,7 +19795,7 @@ int32_t flecs_relation_depth(
 
 /**
  * @file spawner.c
- * @brief TODO.
+ * @brief Data structure used to speed up the creation of hierarchies.
  */
 
 
@@ -19950,7 +19950,7 @@ EcsTreeSpawner* flecs_prefab_spawner_build(
 
     /* Initialize remaining vectors */
     int32_t i;
-    for (i = 1; i < 3; i ++) {
+    for (i = 1; i < FLECS_TREE_SPAWNER_DEPTH_CACHE_SIZE; i ++) {
         ecs_vec_init_t(
             NULL, &ts->data[i].children, ecs_tree_spawner_child_t, 0);
     }
@@ -39789,7 +39789,7 @@ void flecs_entities_update_childof_depth(
             ecs_entity_t tgt = entities[i];
             ecs_component_record_t *tgt_cr = flecs_components_get(
                 world, ecs_childof(tgt));
-            if (!cr) {
+            if (!tgt_cr) {
                 return;
             }
 
@@ -40468,6 +40468,9 @@ void flecs_on_replace_parent(ecs_iter_t *it) {
 
         ecs_component_record_t *cr_parent = 
             flecs_add_non_fragmenting_child(world, new_parent, e);
+        if (!cr_parent) {
+            continue;
+        }
 
         if (names) {
             flecs_on_reparent_update_name(
@@ -51796,6 +51799,7 @@ void flecs_json_serialize_iter_this(
         flecs_json_memberl(buf, "parent");
         char *path = ecs_get_path_w_sep(it->real_world, 0, parent, ".", "");
         flecs_json_string(buf, path);
+        ecs_os_free(path);
     }
 
     flecs_json_memberl(buf, "name");
@@ -84381,7 +84385,7 @@ bool flecs_query_children_with(
      * behavior should be in this case. For now the query engine only supports
      * constraining the query to a single entity or an entire table. */
     ecs_assert(range.count < 2, ECS_UNSUPPORTED, 
-        "can only use set_var with single entity for ChildOf($this, parent) terms");
+        "can only use set_var() to a single entity for ChildOf($this, parent) terms");
 
     if (range.count == 0) {
         /* If matching the entire table, return true. Even though not all 

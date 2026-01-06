@@ -1134,7 +1134,7 @@ void flecs_entities_update_childof_depth(
             ecs_entity_t tgt = entities[i];
             ecs_component_record_t *tgt_cr = flecs_components_get(
                 world, ecs_childof(tgt));
-            if (!cr) {
+            if (!tgt_cr) {
                 return;
             }
 

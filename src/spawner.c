@@ -1,6 +1,6 @@
 /**
  * @file spawner.c
- * @brief TODO.
+ * @brief Data structure used to speed up the creation of hierarchies.
  */
 
 #include "private_api.h"
@@ -156,7 +156,7 @@ EcsTreeSpawner* flecs_prefab_spawner_build(
 
     /* Initialize remaining vectors */
     int32_t i;
-    for (i = 1; i < 3; i ++) {
+    for (i = 1; i < FLECS_TREE_SPAWNER_DEPTH_CACHE_SIZE; i ++) {
         ecs_vec_init_t(
             NULL, &ts->data[i].children, ecs_tree_spawner_child_t, 0);
     }

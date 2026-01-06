@@ -1,6 +1,6 @@
 /**
  * @file spawner.h
- * @brief TODO
+ * @brief Data structure used to speed up the creation of hierarchies.
  */
 
 #ifndef FLECS_SPAWNER_H

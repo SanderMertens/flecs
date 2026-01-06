@@ -349,6 +349,7 @@ void flecs_json_serialize_iter_this(
         flecs_json_memberl(buf, "parent");
         char *path = ecs_get_path_w_sep(it->real_world, 0, parent, ".", "");
         flecs_json_string(buf, path);
+        ecs_os_free(path);
     }
 
     flecs_json_memberl(buf, "name");
