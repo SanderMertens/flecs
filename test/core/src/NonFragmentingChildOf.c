@@ -2876,6 +2876,23 @@ void NonFragmentingChildOf_lookup_after_delete(void) {
     ecs_fini(world);
 }
 
+void NonFragmentingChildOf_set_name_after_create(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
+    ecs_entity_t child = ecs_insert(world, ecs_value(EcsParent, {parent}));
+
+    ecs_set_name(world, child, "child");
+
+    test_assert(ecs_lookup(world, "parent") == parent);
+    test_assert(ecs_lookup(world, "parent.child") != 0);
+    test_assert(ecs_lookup(world, "parent.child") == child);
+    test_assert(ecs_lookup_child(world, parent, "child") != 0);
+    test_assert(ecs_lookup_child(world, parent, "child") == child);
+    
+    ecs_fini(world);
+}
+
 void NonFragmentingChildOf_instantiate_tree_1_child(void) {
     ecs_world_t *world = ecs_mini();
 

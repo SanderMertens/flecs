@@ -11496,7 +11496,7 @@ void ecs_on_set(EcsIdentifier)(
                 ecs_component_record_t *cr = flecs_components_get(
                     world, ecs_childof(parents[i].value));
                 ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
-                index = flecs_component_name_index_get(world, cr);
+                index = flecs_component_name_index_ensure(world, cr);
             }
         }
 
@@ -49059,6 +49059,7 @@ struct ecs_script_entity_t {
     const char *name;
     bool name_is_var;
     bool kind_w_expr;
+    bool non_fragmenting_parent;
     ecs_script_scope_t *scope;
     ecs_expr_node_t *name_expr;
 
@@ -68545,7 +68546,13 @@ ecs_entity_t flecs_script_create_entity(
 
     ecs_entity_desc_t desc = {0};
     desc.name = name;
-    desc.parent = v->parent;
+
+    if (v->entity && v->entity->non_fragmenting_parent) {
+        desc.id = ecs_new_child(v->world, v->parent);
+    } else {
+        desc.parent = v->parent;
+    }
+
     desc.set = with;
     return ecs_entity_init(v->world, &desc);
 }
@@ -68801,28 +68808,63 @@ int flecs_script_eval_scope(
 }
 
 static
+void flecs_script_apply_non_fragmenting_childof(
+    ecs_world_t *world,
+    ecs_script_entity_t *node,
+    bool enabled)
+{
+    node->non_fragmenting_parent = enabled;
+
+    int32_t i, count = ecs_vec_count(&node->scope->stmts);
+    ecs_script_node_t **stmts = ecs_vec_first(&node->scope->stmts);
+    for (i = 0; i < count; i ++) {
+        ecs_script_node_t *stmt = stmts[i];
+        if (stmt->kind != EcsAstEntity) {
+            continue;
+        }
+
+        flecs_script_apply_non_fragmenting_childof(
+            world, (ecs_script_entity_t*)stmt, enabled);
+    }
+}
+
+static
 int flecs_script_apply_annot(
     ecs_script_eval_visitor_t *v,
-    ecs_entity_t entity,
-    ecs_script_annot_t *node)
+    ecs_script_entity_t *node,
+    ecs_script_annot_t *annot)
 {
-    if (!ecs_os_strcmp(node->name, "name")) {
-        ecs_doc_set_name(v->world, entity, node->expr);
+    ecs_entity_t e = node->eval;
+
+    if (!ecs_os_strcmp(annot->name, "name")) {
+        ecs_doc_set_name(v->world, e, annot->expr);
     } else
-    if (!ecs_os_strcmp(node->name, "brief")) {
-        ecs_doc_set_brief(v->world, entity, node->expr);
+    if (!ecs_os_strcmp(annot->name, "brief")) {
+        ecs_doc_set_brief(v->world, e, annot->expr);
     } else 
-    if (!ecs_os_strcmp(node->name, "detail")) {
-        ecs_doc_set_detail(v->world, entity, node->expr);
+    if (!ecs_os_strcmp(annot->name, "detail")) {
+        ecs_doc_set_detail(v->world, e, annot->expr);
     } else
-    if (!ecs_os_strcmp(node->name, "link")) {
-        ecs_doc_set_link(v->world, entity, node->expr);
+    if (!ecs_os_strcmp(annot->name, "link")) {
+        ecs_doc_set_link(v->world, e, annot->expr);
     } else
-    if (!ecs_os_strcmp(node->name, "color")) {
-        ecs_doc_set_color(v->world, entity, node->expr);
+    if (!ecs_os_strcmp(annot->name, "color")) {
+        ecs_doc_set_color(v->world, e, annot->expr);
+    } else
+    if (!ecs_os_strcmp(annot->name, "tree")) {
+        if (!ecs_os_strcmp(annot->expr, "Parent")) {
+            flecs_script_apply_non_fragmenting_childof(v->world, node, true);
+        } else if (!ecs_os_strcmp(annot->expr, "ChildOf")) {
+            flecs_script_apply_non_fragmenting_childof(v->world, node, false);
+        } else {
+            flecs_script_eval_error(v, annot, 
+                "invalid value for tree annotation: '%s' (expected 'Parent' or 'ChildOf')",
+                annot->expr);
+            return -1;            
+        }
     } else {
-        flecs_script_eval_error(v, node, "unknown annotation '%s'",
-            node->name);
+        flecs_script_eval_error(v, annot, "unknown annotation '%s'",
+            annot->name);
         return -1;
     }
     
@@ -68913,7 +68955,7 @@ int flecs_script_eval_entity(
     if (count) {
         ecs_script_annot_t **annots = ecs_vec_first(&v->r->annot);
         for (i = 0; i < count ; i ++) {
-            flecs_script_apply_annot(v, node->eval, annots[i]);
+            flecs_script_apply_annot(v, node, annots[i]);
         }
         ecs_vec_clear(&v->r->annot);
     }

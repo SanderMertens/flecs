@@ -840,6 +840,7 @@
                 "lookup_after_remove_parent",
                 "lookup_after_clear",
                 "lookup_after_delete",
+                "set_name_after_create",
                 "deep_hierarchy",
                 "create_delete_mixed_tree",
                 "create_delete_tree_w_tgt_of_other_rel_1",
