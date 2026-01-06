@@ -2123,6 +2123,8 @@
                 "on_remove_childof_w_parent_component",
                 "on_add_childof_w_parent_component_multi_term",
                 "on_add_childof_wildcard_w_parent_component_multi_term",
+                "on_add_childof_wildcard_w_parent_component_multi_term_after_shrink",
+                "on_add_childof_wildcard_w_parent_component_multi_term_delete_observer",
                 "on_add_childof_any_w_parent_component_multi_term",
                 "on_remove_childof_w_parent_component_multi_term",
                 "up_forward_w_parent_component",

@@ -4906,8 +4906,6 @@ ecs_table_t* flecs_bootstrap_component_table(
     world->cr_childof_0 = flecs_components_ensure(world, 
         ecs_pair(EcsChildOf, 0));
 
-    flecs_components_ensure(world, ecs_id(EcsParent));
-
     /* Initialize root table */
     flecs_init_root_table(world);
 
@@ -16268,7 +16266,9 @@ void flecs_inc_observer_count(
             if (event == EcsOnSet || event == EcsWildcard) {
                 if (id < FLECS_HI_COMPONENT_ID) {
                     world->non_trivial_set[id] = true;
-                } else if (id == EcsWildcard || id == EcsAny) {
+                }
+                
+                if (id == EcsWildcard || id == EcsAny) {
                     ecs_os_memset_n(world->non_trivial_set, true, bool, 
                         FLECS_HI_COMPONENT_ID);
                 }
@@ -16294,9 +16294,12 @@ void flecs_inc_observer_count(
     }
 
     if (ECS_PAIR_FIRST(id) == EcsChildOf) {
+        ecs_observable_t *observable = &world->observable;
         if (event == EcsOnAdd) {
+            ecs_event_record_t *er_onset = 
+                flecs_event_record_ensure(observable, EcsOnSet);
             flecs_inc_observer_count(
-                world, EcsOnSet, evt, ecs_id(EcsParent), value);
+                world, EcsOnSet, er_onset, ecs_id(EcsParent), value);
         } else {
             flecs_inc_observer_count(
                 world, event, evt, ecs_id(EcsParent), value);
