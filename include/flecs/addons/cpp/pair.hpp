@@ -80,8 +80,11 @@ using raw_type_t = remove_pointer_t<remove_reference_t<T>>;
 /** Test if type is a pair. */
 template <typename T>
 struct is_pair {
-    static constexpr bool value = is_base_of<_::pair_base, raw_type_t<T> >::value;
+    static constexpr bool value = is_base_of_v<_::pair_base, raw_type_t<T>>;
 };
+
+template <typename T>
+inline constexpr bool is_pair_v = is_pair<T>::value;
 
 /** Get pair::first from pair while preserving cv qualifiers. */
 template <typename P>
@@ -136,8 +139,10 @@ using base_arg_type_t = typename base_arg_type<T>::type;
 // Test if type is the same as its actual type
 template <typename T>
 struct is_actual {
-    static constexpr bool value =
-        std::is_same<T, actual_type_t<T> >::value;
+    static constexpr bool value = is_same_v<T, actual_type_t<T>>;
 };
+
+template <typename T>
+inline constexpr bool is_actual_v = is_actual<T>::value;
 
 } // flecs

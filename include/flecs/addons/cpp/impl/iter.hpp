@@ -63,8 +63,7 @@ inline flecs::table_range iter::range() const {
         iter_->offset, iter_->count);
 }
 
-template <typename T, typename A,
-    typename std::enable_if<std::is_const<T>::value, void>::type*>
+template <typename T, typename A, if_t< is_const_v<T> >>
 inline flecs::field<A> iter::field(int8_t index) const {
     ecs_assert(!(iter_->flags & EcsIterCppEach) || 
                ecs_field_src(iter_, index) != 0, ECS_INVALID_OPERATION,
@@ -73,9 +72,7 @@ inline flecs::field<A> iter::field(int8_t index) const {
     return get_field<A>(index);
 }
 
-template <typename T, typename A,
-    typename std::enable_if<
-        std::is_const<T>::value == false, void>::type*>
+template <typename T, typename A, if_not_t< is_const_v<T> >>
 inline flecs::field<A> iter::field(int8_t index) const {
     ecs_assert(!(iter_->flags & EcsIterCppEach) || 
                ecs_field_src(iter_, index) != 0, ECS_INVALID_OPERATION,
