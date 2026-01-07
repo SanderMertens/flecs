@@ -855,6 +855,7 @@
                 "instantiate_w_auto_override",
                 "instantiate_w_isa",
                 "instantiate_tree_twice",
+                "instantiate_tree_twice_different_table",
                 "instantiate_tree_at_depth_1_w_parent",
                 "instantiate_tree_at_depth_2_w_parent",
                 "instantiate_tree_at_depth_n_w_parent",
