@@ -82,6 +82,8 @@ private:
 
     template <typename T>
     void populate_self_field(const ecs_iter_t *iter, size_t index) {
+        (void)iter; (void)index;
+
         using A = remove_pointer_t<actual_type_t<T>>;
         if constexpr (!is_empty_v<A>) {
             fields_[index].ptr = ecs_field_w_size(iter, sizeof(A), 

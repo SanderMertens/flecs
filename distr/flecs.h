@@ -19272,6 +19272,7 @@ public:
 
 template <typename E>
 inline static void init_enum(flecs::world_t *world, flecs::entity_t id) {
+    (void)world; (void)id;
     if constexpr (is_enum_v<E>) {
         _::enum_type<E>::get().register_for_world(world, id);
     }
@@ -28524,6 +28525,8 @@ private:
 
     template <typename T>
     void populate_self_field(const ecs_iter_t *iter, size_t index) {
+        (void)iter; (void)index;
+
         using A = remove_pointer_t<actual_type_t<T>>;
         if constexpr (!is_empty_v<A>) {
             fields_[index].ptr = ecs_field_w_size(iter, sizeof(A), 
@@ -29453,6 +29456,7 @@ void register_lifecycle_actions(
     ecs_world_t *world,
     ecs_entity_t component)
 {
+    (void)world; (void)component;
     if constexpr (!std::is_trivial<T>::value) {
         // If the component is non-trivial, register component lifecycle actions.
         // Depending on the type not all callbacks may be available.

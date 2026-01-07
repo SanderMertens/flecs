@@ -431,6 +431,7 @@ public:
 
 template <typename E>
 inline static void init_enum(flecs::world_t *world, flecs::entity_t id) {
+    (void)world; (void)id;
     if constexpr (is_enum_v<E>) {
         _::enum_type<E>::get().register_for_world(world, id);
     }

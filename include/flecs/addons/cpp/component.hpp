@@ -88,6 +88,7 @@ void register_lifecycle_actions(
     ecs_world_t *world,
     ecs_entity_t component)
 {
+    (void)world; (void)component;
     if constexpr (!std::is_trivial<T>::value) {
         // If the component is non-trivial, register component lifecycle actions.
         // Depending on the type not all callbacks may be available.
