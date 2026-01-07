@@ -823,6 +823,7 @@ void NonFragmentingChildOf_instantiate_w_inherit(void);
 void NonFragmentingChildOf_instantiate_w_auto_override(void);
 void NonFragmentingChildOf_instantiate_w_isa(void);
 void NonFragmentingChildOf_instantiate_tree_twice(void);
+void NonFragmentingChildOf_instantiate_tree_twice_different_table(void);
 void NonFragmentingChildOf_instantiate_tree_at_depth_1_w_parent(void);
 void NonFragmentingChildOf_instantiate_tree_at_depth_2_w_parent(void);
 void NonFragmentingChildOf_instantiate_tree_at_depth_n_w_parent(void);
@@ -6268,6 +6269,10 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "instantiate_tree_twice",
         NonFragmentingChildOf_instantiate_tree_twice
+    },
+    {
+        "instantiate_tree_twice_different_table",
+        NonFragmentingChildOf_instantiate_tree_twice_different_table
     },
     {
         "instantiate_tree_at_depth_1_w_parent",
@@ -15160,7 +15165,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NULL,
         NULL,
-        130,
+        131,
         NonFragmentingChildOf_testcases
     },
     {

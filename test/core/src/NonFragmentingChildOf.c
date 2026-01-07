@@ -3249,6 +3249,78 @@ void NonFragmentingChildOf_instantiate_tree_twice(void) {
     ecs_fini(world);
 }
 
+void NonFragmentingChildOf_instantiate_tree_twice_different_table(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_set(world, p, Position, {10, 20});
+        ecs_entity_t p_c = ecs_insert(world, ecs_value(EcsParent, { p }));
+        ecs_set(world, p_c, Position, {11, 21});
+
+    ecs_entity_t i1 = ecs_new_w_pair(world, EcsIsA, p);
+    test_assert(!ecs_has(world, i1, EcsTreeSpawner));
+    {
+        {
+            const Position *p = ecs_get(world, i1, Position);
+            test_assert(p != NULL);
+            test_int(p->x, 10);
+            test_int(p->y, 20);
+        }
+
+        ecs_entities_t entities = ecs_get_ordered_children(world, i1);
+        test_int(entities.count, 1);
+        
+        ecs_entity_t i_c = entities.ids[0];
+        test_assert(ecs_has_pair(world, i_c, EcsIsA, p_c));
+        {
+            const EcsParent *i_cp = ecs_get(world, i_c, EcsParent);
+            test_assert(i_cp != NULL);
+            test_uint(i_cp->value, i1);
+        }
+        {
+            const Position *p = ecs_get(world, i_c, Position);
+            test_assert(p != NULL);
+            test_int(p->x, 11);
+            test_int(p->y, 21);
+        }
+    }
+
+    ecs_entity_t i2 = ecs_new_w(world, Foo);
+    ecs_add_pair(world, i2, EcsIsA, p);
+    test_assert(!ecs_has(world, i2, EcsTreeSpawner));
+    test_assert(ecs_get_table(world, i1) != ecs_get_table(world, i2));
+    {
+        {
+            const Position *p = ecs_get(world, i2, Position);
+            test_assert(p != NULL);
+            test_int(p->x, 10);
+            test_int(p->y, 20);
+        }
+
+        ecs_entities_t entities = ecs_get_ordered_children(world, i2);
+        test_int(entities.count, 1);
+        
+        ecs_entity_t i_c = entities.ids[0];
+        test_assert(ecs_has_pair(world, i_c, EcsIsA, p_c));
+        {
+            const EcsParent *i_cp = ecs_get(world, i_c, EcsParent);
+            test_assert(i_cp != NULL);
+            test_uint(i_cp->value, i2);
+        }
+        {
+            const Position *p = ecs_get(world, i_c, Position);
+            test_assert(p != NULL);
+            test_int(p->x, 11);
+            test_int(p->y, 21);
+        }
+    }
+
+    ecs_fini(world);
+}
+
 void NonFragmentingChildOf_instantiate_tree_at_depth_1_w_parent(void) {
     ecs_world_t *world = ecs_mini();
 
