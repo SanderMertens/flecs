@@ -53,66 +53,55 @@ struct field_ptrs {
     using array = flecs::array<_::field_ptr, sizeof...(Components)>;
 
     void populate(const ecs_iter_t *iter) {
-        populate(iter, 0, static_cast<
-            remove_reference_t<
-                remove_pointer_t<Components>>
-                    *>(nullptr)...);
+        populate_impl(iter, std::index_sequence_for<Components...>{});
     }
 
     void populate_self(const ecs_iter_t *iter) {
-        populate_self(iter, 0, static_cast<
-            remove_reference_t<
-                remove_pointer_t<Components>>
-                    *>(nullptr)...);
+        populate_self_impl(iter, std::index_sequence_for<Components...>{});
     }
 
     array fields_;
 
 private:
-    void populate(const ecs_iter_t*, size_t) { }
+    template <typename T>
+    void populate_field(const ecs_iter_t *iter, size_t index) {
+        using A = remove_pointer_t<actual_type_t<T>>;
+        if constexpr (!is_empty_v<A>) {
+            if (iter->row_fields & (1llu << index)) {
+                /* Need to fetch the value with ecs_field_at() */
+                fields_[index].is_row = true;
+                fields_[index].is_ref = true;
+                fields_[index].index = static_cast<int8_t>(index);
+            } else {
+                fields_[index].ptr = ecs_field_w_size(iter, sizeof(A), 
+                    static_cast<int8_t>(index));
+                fields_[index].is_ref = iter->sources[index] != 0;
+            }
+        }
+    }
 
-    template <typename T, typename... Targs, 
-        typename A = remove_pointer_t<actual_type_t<T>>,
-            if_not_t< is_empty<A>::value > = 0>
-    void populate(const ecs_iter_t *iter, size_t index, T, Targs... comps) {
-        if (iter->row_fields & (1llu << index)) {
-            /* Need to fetch the value with ecs_field_at() */
-            fields_[index].is_row = true;
-            fields_[index].is_ref = true;
-            fields_[index].index = static_cast<int8_t>(index);
-        } else {
+    template <typename T>
+    void populate_self_field(const ecs_iter_t *iter, size_t index) {
+        (void)iter; (void)index;
+
+        using A = remove_pointer_t<actual_type_t<T>>;
+        if constexpr (!is_empty_v<A>) {
             fields_[index].ptr = ecs_field_w_size(iter, sizeof(A), 
                 static_cast<int8_t>(index));
-            fields_[index].is_ref = iter->sources[index] != 0;
+            fields_[index].is_ref = false;
         }
-
-        populate(iter, index + 1, comps ...);
     }
 
-    template <typename T, typename... Targs, 
-        typename A = remove_pointer_t<actual_type_t<T>>,
-            if_t< is_empty<A>::value > = 0>
-    void populate(const ecs_iter_t *iter, size_t index, T, Targs... comps) {
-        populate(iter, index + 1, comps ...);
+    template <size_t... Is>
+    void populate_impl(const ecs_iter_t *iter, std::index_sequence<Is...>) {
+        (void)iter;
+        (populate_field<Components>(iter, Is), ...);
     }
 
-    void populate_self(const ecs_iter_t*, size_t) { }
-
-    template <typename T, typename... Targs, 
-        typename A = remove_pointer_t<actual_type_t<T>>,
-            if_not_t< is_empty<A>::value > = 0>
-    void populate_self(const ecs_iter_t *iter, size_t index, T, Targs... comps) {
-        fields_[index].ptr = ecs_field_w_size(iter, sizeof(A), 
-            static_cast<int8_t>(index));
-        fields_[index].is_ref = false;
-        populate_self(iter, index + 1, comps ...);
-    }
-
-    template <typename T, typename... Targs,
-        typename A = remove_pointer_t<actual_type_t<T>>,
-            if_t< is_empty<A>::value > = 0>
-    void populate_self(const ecs_iter_t *iter, size_t index, T, Targs... comps) {
-        populate(iter, index + 1, comps ...);
+    template <size_t... Is>
+    void populate_self_impl(const ecs_iter_t *iter, std::index_sequence<Is...>) {
+        (void)iter;
+        (populate_self_field<Components>(iter, Is), ...);
     }
 };
 
@@ -670,17 +659,8 @@ struct entity_with_delegate_impl<arg_list<Args ...>> {
     using DummyArray = flecs::array<int, sizeof...(Args)>;
     using IdArray = flecs::array<id_t, sizeof...(Args)>;
 
-    static bool const_args() {
-        static flecs::array<bool, sizeof...(Args)> is_const_args ({
-            flecs::is_const<flecs::remove_reference_t<Args>>::value...
-        });
-
-        for (auto is_const : is_const_args) {
-            if (!is_const) {
-                return false;
-            }
-        }
-        return true;
+    static constexpr bool const_args() {
+        return (is_const_v<remove_reference_t<Args>> && ...);
     }
 
     static 
@@ -781,7 +761,7 @@ struct entity_with_delegate_impl<arg_list<Args ...>> {
 
     template <typename Func>
     static bool invoke_get(world_t *world, entity_t e, const Func& func) {
-        if (const_args()) {
+        if constexpr (const_args()) {
             return invoke_read(world, e, func);
         } else {
             return invoke_write(world, e, func);

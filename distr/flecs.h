@@ -18479,26 +18479,12 @@ template <> struct condition<true> {
     template <typename T, typename F> using type = T;
 };
 
-// C++11/C++14 convenience template replacements
-
-template <bool C, typename T, typename F>
-using conditional_t = typename condition<C>::template type<T, F>;
-
-template <typename T>
-using decay_t = typename std::decay<T>::type;
-
-template <bool V, typename T = void>
-using enable_if_t = typename std::enable_if<V, T>::type;
-
-template <typename T>
-using remove_pointer_t = typename std::remove_pointer<T>::type;
-
-template <typename T>
-using remove_reference_t = typename std::remove_reference<T>::type;
-
-template <typename T>
-using underlying_type_t = typename std::underlying_type<T>::type;
-
+using std::conditional_t;
+using std::decay_t;
+using std::enable_if_t;
+using std::remove_pointer_t;
+using std::remove_reference_t;
+using std::underlying_type_t;
 using std::is_base_of;
 using std::is_empty;
 using std::is_const;
@@ -18507,60 +18493,37 @@ using std::is_reference;
 using std::is_volatile;
 using std::is_same;
 using std::is_enum;
-
-// GCC 4.9.2 compatibility: missing C++11 type traits
-#if defined(__GNUC__) && (__GNUC__ == 4) && (__GNUC_MINOR__ == 9)
-// Direct implementations for missing type traits in GCC 4.9.2
-} // namespace flecs
-
-namespace std {
-    // Only implement the ones that are actually missing in GCC 4.9.2
-    template<typename T>
-    struct is_trivially_constructible {
-        static const bool value = __is_pod(T);
-    };
-
-    template<typename T>
-    struct is_trivially_move_assignable {
-        static const bool value = __is_pod(T);
-    };
-
-    template<typename T>
-    struct is_trivially_copy_assignable {
-        static const bool value = __is_pod(T);
-    };
-
-    template<typename T>
-    struct is_trivially_copy_constructible {
-        static const bool value = __is_pod(T);
-    };
-
-    template<typename T>
-    struct is_trivially_move_constructible {
-        static const bool value = __is_pod(T);
-    };
-
-    template<typename T>
-    struct is_trivially_copyable {
-        static const bool value = __is_pod(T);
-    };
-}
-
-namespace flecs {
-#else
 using std::is_trivially_constructible;
 using std::is_trivially_move_assignable;
 using std::is_trivially_copy_assignable;
 using std::is_trivially_copy_constructible;
 using std::is_trivially_move_constructible;
 using std::is_trivially_copyable;
-#endif
-
-// These exist in GCC 4.9.2, so we can always use them
 using std::is_move_assignable;
 using std::is_move_constructible;
 using std::is_copy_constructible;
 using std::is_trivially_destructible;
+using std::is_empty_v;
+using std::is_const_v;
+using std::is_pointer_v;
+using std::is_reference_v;
+using std::is_volatile_v;
+using std::is_same_v;
+using std::is_enum_v;
+using std::is_base_of_v;
+using std::is_trivially_constructible_v;
+using std::is_trivially_destructible_v;
+using std::is_trivially_copyable_v;
+using std::is_trivially_move_constructible_v;
+using std::is_trivially_copy_constructible_v;
+using std::is_trivially_move_assignable_v;
+using std::is_trivially_copy_assignable_v;
+using std::is_default_constructible_v;
+using std::is_move_constructible_v;
+using std::is_copy_constructible_v;
+using std::is_move_assignable_v;
+using std::is_copy_assignable_v;
+using std::is_destructible_v;
 
 // Determine constness even if T is a pointer type
 template <typename T>
@@ -19172,16 +19135,13 @@ private:
      * @brief Handler struct for generating compile-time count of enum constants.
      */
     struct reflection_count {
-        template <U Value, 
-            flecs::if_not_t< enum_constant_is_valid_wrap<E, Value>() > = 0>
+        template <U Value>
         static constexpr U handle_constant(U last_value) {
-            return last_value;
-        }
-
-        template <U Value, 
-            flecs::if_t< enum_constant_is_valid_wrap<E, Value>() > = 0>
-        static constexpr U handle_constant(U last_value) {
-            return 1 + last_value;
+            if constexpr (enum_constant_is_valid_wrap<E, Value>()) {
+                return 1 + last_value;
+            } else {
+                return last_value;
+            }
         }
     };
 
@@ -19193,50 +19153,47 @@ private:
      * to determine continuity, and use that as a lookup heuristic later on.
      */
     struct reflection_init {
-        template <U Value, 
-            flecs::if_not_t< enum_constant_is_valid_wrap<E, Value>() > = 0>
-        static U handle_constant(U last_value, This&) {
-            // Search for constant failed. Pass last valid value through.
-            return last_value;
-        }
-
-        template <U Value, 
-            flecs::if_t< enum_constant_is_valid_wrap<E, Value>() > = 0>
+        template <U Value>
         static U handle_constant(U last_value, This& me) {
-            // Constant is valid, so fill reflection data.
-            auto v = Value;
-            const char *name = enum_constant_to_name<E, flecs_enum_cast(E, Value)>();
+            if constexpr (enum_constant_is_valid_wrap<E, Value>()) {
+                // Constant is valid, so fill reflection data.
+                auto v = Value;
+                const char *name = enum_constant_to_name<E, flecs_enum_cast(E, Value)>();
 
-            ++me.max; // Increment cursor as we build constants array.
+                ++me.max; // Increment cursor as we build constants array.
 
-            // If the enum was previously contiguous, and continues to be 
-            // through the current value...
-            if (me.has_contiguous && static_cast<U>(me.max) == v && me.contiguous_until == v) {
-                ++me.contiguous_until;
+                // If the enum was previously contiguous, and continues to be 
+                // through the current value...
+                if (me.has_contiguous && static_cast<U>(me.max) == v && me.contiguous_until == v) {
+                    ++me.contiguous_until;
+                }
+
+                // else, if the enum was never contiguous and hasn't been set as not
+                // contiguous...
+                else if (!me.contiguous_until && me.has_contiguous) {
+                    me.has_contiguous = false;
+                }
+
+                ecs_assert(!(last_value > 0 && 
+                    v < std::numeric_limits<U>::min() + last_value), 
+                    ECS_UNSUPPORTED,
+                    "Signed integer enums causes integer overflow when recording "
+                    "offset from high positive to low negative. Consider using "
+                    "unsigned integers as underlying type.");
+
+                me.constants[me.max].value = v;
+                me.constants[me.max].offset = v - last_value;
+                me.constants[me.max].name = name;
+                if (!me.constants[me.max].index) {
+                    me.constants[me.max].index = 
+                        flecs_component_ids_index_get();
+                }
+
+                return v;
+            } else {
+                // Search for constant failed. Pass last valid value through.
+                return last_value;
             }
-
-            // else, if the enum was never contiguous and hasn't been set as not
-            // contiguous...
-            else if (!me.contiguous_until && me.has_contiguous) {
-                me.has_contiguous = false;
-            }
-
-            ecs_assert(!(last_value > 0 && 
-                v < std::numeric_limits<U>::min() + last_value), 
-                ECS_UNSUPPORTED,
-                "Signed integer enums causes integer overflow when recording "
-                "offset from high positive to low negative. Consider using "
-                "unsigned integers as underlying type.");
-
-            me.constants[me.max].value = v;
-            me.constants[me.max].offset = v - last_value;
-            me.constants[me.max].name = name;
-            if (!me.constants[me.max].index) {
-                me.constants[me.max].index = 
-                    flecs_component_ids_index_get();
-            }
-
-            return v;
         }
     };
 public:
@@ -19313,13 +19270,13 @@ public:
     #endif
 };
 
-template <typename E, if_t< is_enum<E>::value > = 0>
+template <typename E>
 inline static void init_enum(flecs::world_t *world, flecs::entity_t id) {
-    _::enum_type<E>::get().register_for_world(world, id);
+    (void)world; (void)id;
+    if constexpr (is_enum_v<E>) {
+        _::enum_type<E>::get().register_for_world(world, id);
+    }
 }
-
-template <typename E, if_not_t< is_enum<E>::value > = 0>
-inline static void init_enum(flecs::world_t*, flecs::entity_t) { }
 
 } // namespace _
 
@@ -21742,8 +21699,11 @@ using raw_type_t = remove_pointer_t<remove_reference_t<T>>;
 /** Test if type is a pair. */
 template <typename T>
 struct is_pair {
-    static constexpr bool value = is_base_of<_::pair_base, raw_type_t<T> >::value;
+    static constexpr bool value = is_base_of_v<_::pair_base, raw_type_t<T>>;
 };
+
+template <typename T>
+inline constexpr bool is_pair_v = is_pair<T>::value;
 
 /** Get pair::first from pair while preserving cv qualifiers. */
 template <typename P>
@@ -21798,9 +21758,11 @@ using base_arg_type_t = typename base_arg_type<T>::type;
 // Test if type is the same as its actual type
 template <typename T>
 struct is_actual {
-    static constexpr bool value =
-        std::is_same<T, actual_type_t<T> >::value;
+    static constexpr bool value = is_same_v<T, actual_type_t<T>>;
 };
+
+template <typename T>
+inline constexpr bool is_actual_v = is_actual<T>::value;
 
 } // flecs
 
@@ -21966,197 +21928,106 @@ struct is_flecs_constructible {
 namespace _
 {
 
-// Trivially constructible
-template <typename T, if_t< std::is_trivially_constructible<T>::value > = 0>
-ecs_xtor_t ctor(ecs_flags32_t &) {
-    return nullptr;
-}
-
-// Not constructible by flecs
-template <typename T, if_t< 
-    ! std::is_default_constructible<T>::value > = 0>
+template <typename T>
 ecs_xtor_t ctor(ecs_flags32_t &flags) {
-    flags |= ECS_TYPE_HOOK_CTOR_ILLEGAL;
-    return nullptr;
+    if constexpr (is_trivially_constructible_v<T>) {
+        return nullptr;
+    } else if constexpr (!is_default_constructible_v<T>) {
+        flags |= ECS_TYPE_HOOK_CTOR_ILLEGAL;
+        return nullptr;
+    } else {
+        return ctor_impl<T>;
+    }
 }
 
-// Default constructible
-template <typename T, if_t<
-    ! std::is_trivially_constructible<T>::value &&
-    std::is_default_constructible<T>::value > = 0>
-ecs_xtor_t ctor(ecs_flags32_t &) {
-    return ctor_impl<T>;
-}
-
-// No dtor
-template <typename T, if_t< std::is_trivially_destructible<T>::value > = 0>
-ecs_xtor_t dtor(ecs_flags32_t &) {
-    return nullptr;
-}
-
-// Dtor
-template <typename T, if_t<
-    std::is_destructible<T>::value &&
-    ! std::is_trivially_destructible<T>::value > = 0>
-ecs_xtor_t dtor(ecs_flags32_t &) {
-    return dtor_impl<T>;
-}
-
-// Assert when the type cannot be destructed
-template <typename T, if_not_t< std::is_destructible<T>::value > = 0>
+template <typename T>
 ecs_xtor_t dtor(ecs_flags32_t &flags) {
-    flecs_static_assert(always_false<T>::value, 
-        "component type must be destructible");
-    flags |= ECS_TYPE_HOOK_DTOR_ILLEGAL;
-    return nullptr;
+    if constexpr (is_trivially_destructible_v<T>) {
+        return nullptr;
+    } else if constexpr (!is_destructible_v<T>) {
+        flecs_static_assert(always_false<T>::value, 
+            "component type must be destructible");
+        flags |= ECS_TYPE_HOOK_DTOR_ILLEGAL;
+        return nullptr;
+    } else {
+        return dtor_impl<T>;
+    }
 }
 
-// Trivially copyable
-template <typename T, if_t< std::is_trivially_copyable<T>::value > = 0>
-ecs_copy_t copy(ecs_flags32_t &) {
-    return nullptr;
-}
-
-// Not copyable
-template <typename T, if_t<
-    ! std::is_trivially_copyable<T>::value &&
-    ! std::is_copy_assignable<T>::value > = 0>
+template <typename T>
 ecs_copy_t copy(ecs_flags32_t &flags) {
-    flags |= ECS_TYPE_HOOK_COPY_ILLEGAL;
-    return nullptr;
+    if constexpr (is_trivially_copyable_v<T>) {
+        return nullptr;
+    } else if constexpr (!is_copy_assignable_v<T>) {
+        flags |= ECS_TYPE_HOOK_COPY_ILLEGAL;
+        return nullptr;
+    } else {
+        return copy_impl<T>;
+    }
 }
 
-// Copy assignment
-template <typename T, if_t<
-    std::is_copy_assignable<T>::value &&
-    ! std::is_trivially_copyable<T>::value > = 0>
-ecs_copy_t copy(ecs_flags32_t &) {
-    return copy_impl<T>;
-}
-
-// Trivially move assignable
-template <typename T, if_t< std::is_trivially_move_assignable<T>::value > = 0>
-ecs_move_t move(ecs_flags32_t &) {
-    return nullptr;
-}
-
-// Component types must be move assignable
-template <typename T, if_not_t< std::is_move_assignable<T>::value > = 0>
+template <typename T>
 ecs_move_t move(ecs_flags32_t &flags) {
-    flags |= ECS_TYPE_HOOK_MOVE_ILLEGAL;
-    return nullptr;
+    if constexpr (is_trivially_move_assignable_v<T>) {
+        return nullptr;
+    } else if constexpr (!is_move_assignable_v<T>) {
+        flags |= ECS_TYPE_HOOK_MOVE_ILLEGAL;
+        return nullptr;
+    } else {
+        return move_impl<T>;
+    }
 }
 
-// Move assignment
-template <typename T, if_t<
-    std::is_move_assignable<T>::value &&
-    ! std::is_trivially_move_assignable<T>::value > = 0>
-ecs_move_t move(ecs_flags32_t &) {
-    return move_impl<T>;
-}
-
-// Trivially copy constructible
-template <typename T, if_t<
-    std::is_trivially_copy_constructible<T>::value > = 0>
-ecs_copy_t copy_ctor(ecs_flags32_t &) {
-    return nullptr;
-}
-
-// No copy ctor
-template <typename T, if_t< ! std::is_copy_constructible<T>::value > = 0>
+template <typename T>
 ecs_copy_t copy_ctor(ecs_flags32_t &flags) {
-       flags |= ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL;
-    return nullptr;
-
+    if constexpr (is_trivially_copy_constructible_v<T>) {
+        return nullptr;
+    } else if constexpr (!is_copy_constructible_v<T>) {
+        flags |= ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL;
+        return nullptr;
+    } else {
+        return copy_ctor_impl<T>;
+    }
 }
 
-// Copy ctor
-template <typename T, if_t<
-    std::is_copy_constructible<T>::value &&
-    ! std::is_trivially_copy_constructible<T>::value > = 0>
-ecs_copy_t copy_ctor(ecs_flags32_t &) {
-    return copy_ctor_impl<T>;
-}
-
-// Trivially move constructible
-template <typename T, if_t<
-    std::is_trivially_move_constructible<T>::value > = 0>
-ecs_move_t move_ctor(ecs_flags32_t &) {
-    return nullptr;
-}
-
-// Component types must be move constructible
-template <typename T, if_not_t< std::is_move_constructible<T>::value > = 0>
+template <typename T>
 ecs_move_t move_ctor(ecs_flags32_t &flags) {
-    flags |= ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL;
-    return nullptr;
+    if constexpr (is_trivially_move_constructible_v<T>) {
+        return nullptr;
+    } else if constexpr (!is_move_constructible_v<T>) {
+        flags |= ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL;
+        return nullptr;
+    } else {
+        return move_ctor_impl<T>;
+    }
 }
 
-// Move ctor
-template <typename T, if_t<
-    std::is_move_constructible<T>::value &&
-    ! std::is_trivially_move_constructible<T>::value > = 0>
-ecs_move_t move_ctor(ecs_flags32_t &) {
-    return move_ctor_impl<T>;
-}
-
-// Trivial merge (move assign + dtor)
-template <typename T, if_t<
-    std::is_trivially_move_constructible<T>::value  &&
-    std::is_trivially_destructible<T>::value > = 0>
-ecs_move_t ctor_move_dtor(ecs_flags32_t &) {
-    return nullptr;
-}
-
-// Component types must be move constructible and destructible
-template <typename T, if_t<
-    ! std::is_move_constructible<T>::value ||
-    ! std::is_destructible<T>::value > = 0>
+template <typename T>
 ecs_move_t ctor_move_dtor(ecs_flags32_t &flags) {
-    flags |= ECS_TYPE_HOOK_CTOR_MOVE_DTOR_ILLEGAL;
-    return nullptr;
+    if constexpr (is_trivially_move_constructible_v<T> && is_trivially_destructible_v<T>) {
+        return nullptr;
+    } else if constexpr (!is_move_constructible_v<T> || !is_destructible_v<T>) {
+        flags |= ECS_TYPE_HOOK_CTOR_MOVE_DTOR_ILLEGAL;
+        return nullptr;
+    } else {
+        return ctor_move_dtor_impl<T>;
+    }
 }
 
-// Merge ctor + dtor
-template <typename T, if_t<
-    !(std::is_trivially_move_constructible<T>::value &&
-      std::is_trivially_destructible<T>::value) &&
-    std::is_move_constructible<T>::value &&
-    std::is_destructible<T>::value > = 0>
-ecs_move_t ctor_move_dtor(ecs_flags32_t &) {
-    return ctor_move_dtor_impl<T>;
-}
-
-// Trivial merge (move assign + dtor)
-template <typename T, if_t<
-    std::is_trivially_move_assignable<T>::value  &&
-    std::is_trivially_destructible<T>::value > = 0>
-ecs_move_t move_dtor(ecs_flags32_t &) {
-    return nullptr;
-}
-
-// Component types must be move constructible and destructible
-template <typename T, if_t<
-    ! std::is_move_assignable<T>::value ||
-    ! std::is_destructible<T>::value > = 0>
+template <typename T>
 ecs_move_t move_dtor(ecs_flags32_t &flags) {
-    flags |= ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL;
-    return nullptr;
-}
-
-// Merge assign + dtor
-template <typename T, if_t<
-    !(std::is_trivially_move_assignable<T>::value &&
-      std::is_trivially_destructible<T>::value) &&
-    std::is_move_assignable<T>::value &&
-    std::is_destructible<T>::value > = 0>
-ecs_move_t move_dtor(ecs_flags32_t &) {
-    return move_dtor_impl<T>;
+    if constexpr (is_trivially_move_assignable_v<T> && is_trivially_destructible_v<T>) {
+        return nullptr;
+    } else if constexpr (!is_move_assignable_v<T> || !is_destructible_v<T>) {
+        flags |= ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL;
+        return nullptr;
+    } else {
+        return move_dtor_impl<T>;
+    }
 }
 
 // Traits to check for operator<, operator>, and operator==
-template<typename...>
-using void_t = void;
+using std::void_t;
 
 // These traits causes a "float comparison warning" in some compilers
 // when `T` is float or double.
@@ -22196,106 +22067,69 @@ template <typename T>
 struct has_operator_equal<T, void_t<decltype(std::declval<const T&>() == std::declval<const T&>())>> : 
     std::is_same<decltype(std::declval<const T&>() == std::declval<const T&>()), bool> {};
 
-// 1. Compare function if `<`, `>`, are defined
-template <typename T, if_t<
-    has_operator_less<T>::value &&
-    has_operator_greater<T>::value &&
-    !has_operator_equal<T>::value > = 0>
+// Selects the best comparison strategy based on available operators
+template <typename T>
 int compare_impl(const void *a, const void *b, const ecs_type_info_t *) {
     const T& lhs = *static_cast<const T*>(a);
     const T& rhs = *static_cast<const T*>(b);
-    if (lhs < rhs) return -1;
-    if (lhs > rhs) return 1;
-    return 0;
-}
-
-// 2. Compare function if `<` and `==` are defined, ignoring `>`
-// if defined.
-template <typename T, if_t<
-    has_operator_less<T>::value &&
-    has_operator_equal<T>::value > = 0>
-int compare_impl(const void *a, const void *b, const ecs_type_info_t *) {
-    const T& lhs = *static_cast<const T*>(a);
-    const T& rhs = *static_cast<const T*>(b);
-    if (lhs == rhs) return 0;
-    if (lhs < rhs) return -1;
-    return 1; // If not less and not equal, must be greater
-}
-
-// 3. Compare function if `>` and `==` are defined, deducing `<`
-template <typename T, if_t<    
-    has_operator_greater<T>::value &&
-    has_operator_equal<T>::value &&
-    !has_operator_less<T>::value > = 0>
-int compare_impl(const void *a, const void *b, const ecs_type_info_t *) {
-    const T& lhs = *static_cast<const T*>(a);
-    const T& rhs = *static_cast<const T*>(b);
-    if (lhs == rhs) return 0;
-    if (lhs > rhs) return 1;
-    return -1; // If not greater and not equal, must be less
-}
-
-// 4. Compare function if only `<` is defined, deducing the rest
-template <typename T, if_t<
-    has_operator_less<T>::value &&
-    !has_operator_greater<T>::value &&
-    !has_operator_equal<T>::value > = 0>
-int compare_impl(const void *a, const void *b, const ecs_type_info_t *) {
-    const T& lhs = *static_cast<const T*>(a);
-    const T& rhs = *static_cast<const T*>(b);
-    if (lhs < rhs) return -1;
-    if (rhs < lhs) return 1;
-    return 0; // If neither is less, they must be equal
-}
-
-// 5. Compare function if only `>` is defined, deducing the rest
-template <typename T, if_t<
-    has_operator_greater<T>::value &&
-    !has_operator_less<T>::value &&
-    !has_operator_equal<T>::value > = 0>
-int compare_impl(const void *a, const void *b, const ecs_type_info_t *) {
-    const T& lhs = *static_cast<const T*>(a);
-    const T& rhs = *static_cast<const T*>(b);
-    if (lhs > rhs) return 1;
-    if (rhs > lhs) return -1;
-    return 0; // If neither is greater, they must be equal
+    
+    if constexpr (has_operator_less<T>::value && has_operator_equal<T>::value) {
+        // 2. Compare function if `<` and `==` are defined (preferred)
+        if (lhs == rhs) return 0;
+        if (lhs < rhs) return -1;
+        return 1;
+    } else if constexpr (has_operator_greater<T>::value && has_operator_equal<T>::value) {
+        // 3. Compare function if `>` and `==` are defined, deducing `<`
+        if (lhs == rhs) return 0;
+        if (lhs > rhs) return 1;
+        return -1;
+    } else if constexpr (has_operator_less<T>::value && has_operator_greater<T>::value) {
+        // 1. Compare function if `<`, `>` are defined
+        if (lhs < rhs) return -1;
+        if (lhs > rhs) return 1;
+        return 0;
+    } else if constexpr (has_operator_less<T>::value) {
+        // 4. Compare function if only `<` is defined
+        if (lhs < rhs) return -1;
+        if (rhs < lhs) return 1;
+        return 0;
+    } else if constexpr (has_operator_greater<T>::value) {
+        // 5. Compare function if only `>` is defined
+        if (lhs > rhs) return 1;
+        if (rhs > lhs) return -1;
+        return 0;
+    } else {
+        // This branch should never be instantiated due to compare() check
+        return 0;
+    }
 }
 
 // In order to have a generated compare hook, at least
 // operator> or operator< must be defined:
-template <typename T, if_t<
-    has_operator_less<T>::value ||
-    has_operator_greater<T>::value > = 0>
+template <typename T>
 ecs_cmp_t compare() {
-    return compare_impl<T>;
+    if constexpr (has_operator_less<T>::value || has_operator_greater<T>::value) {
+        return compare_impl<T>;
+    } else {
+        return NULL;
+    }
 }
 
-template <typename T, if_t<
-    !has_operator_less<T>::value &&
-    !has_operator_greater<T>::value > = 0>
-ecs_cmp_t compare() {
-    return NULL;
-}
-
-// Equals function enabled only if `==` is defined
-template <typename T, if_t<
-    has_operator_equal<T>::value > = 0>
+// Equals implementation
+template <typename T>
 bool equals_impl(const void *a, const void *b, const ecs_type_info_t *) {
     const T& lhs = *static_cast<const T*>(a);
     const T& rhs = *static_cast<const T*>(b);
     return lhs == rhs;
 }
 
-template <typename T, if_t<
-    has_operator_equal<T>::value > = 0>
+template <typename T>
 ecs_equals_t equals() {
-    return equals_impl<T>;
-}
-
-template <typename T, if_t<
-    !has_operator_equal<T>::value > = 0>
-ecs_equals_t equals() {
-    return NULL;
+    if constexpr (has_operator_equal<T>::value) {
+        return equals_impl<T>;
+    } else {
+        return NULL;
+    }
 }
 
 // re-enable the float comparison warning:
@@ -24851,8 +24685,7 @@ public:
      * @param index The field index.
      * @return The field data.
      */
-    template <typename T, typename A = actual_type_t<T>,
-        typename std::enable_if<std::is_const<T>::value, void>::type* = nullptr>
+    template <typename T, typename A = actual_type_t<T>, if_t<is_const_v<T>> = 0>
     flecs::field<A> field(int8_t index) const;
 
     /** Get read/write access to field data.
@@ -24867,9 +24700,7 @@ public:
      * @param index The field index.
      * @return The field data.
      */
-    template <typename T, typename A = actual_type_t<T>,
-        typename std::enable_if<
-            std::is_const<T>::value == false, void>::type* = nullptr>
+    template <typename T, typename A = actual_type_t<T>, if_not_t<is_const_v<T>> = 0>
     flecs::field<A> field(int8_t index) const;
 
     /** Get unchecked access to field data.
@@ -24903,8 +24734,7 @@ public:
     /** Get reference to field at row. 
      * This function may be used to access shared fields when row is set to 0.
      */
-    template <typename T, typename A = actual_type_t<T>,
-        typename std::enable_if<std::is_const<T>::value, void>::type* = nullptr>
+    template <typename T, typename A = actual_type_t<T>, if_t< is_const_v<T> > = 0>
     const A& field_at(int8_t index, size_t row) const {
         if (iter_->row_fields & (1llu << index)) {
             return get_field_at<A>(index, row)[0];
@@ -24916,9 +24746,7 @@ public:
     /** Get reference to field at row. 
      * This function may be used to access shared fields when row is set to 0.
      */
-    template <typename T, typename A = actual_type_t<T>,
-        typename std::enable_if<
-            std::is_const<T>::value == false, void>::type* = nullptr>
+    template <typename T, typename A = actual_type_t<T>, if_not_t< is_const_v<T> > = 0>
     A& field_at(int8_t index, size_t row) const {
         ecs_assert(!ecs_field_is_readonly(iter_, index),
             ECS_ACCESS_VIOLATION, NULL);
@@ -28668,66 +28496,55 @@ struct field_ptrs {
     using array = flecs::array<_::field_ptr, sizeof...(Components)>;
 
     void populate(const ecs_iter_t *iter) {
-        populate(iter, 0, static_cast<
-            remove_reference_t<
-                remove_pointer_t<Components>>
-                    *>(nullptr)...);
+        populate_impl(iter, std::index_sequence_for<Components...>{});
     }
 
     void populate_self(const ecs_iter_t *iter) {
-        populate_self(iter, 0, static_cast<
-            remove_reference_t<
-                remove_pointer_t<Components>>
-                    *>(nullptr)...);
+        populate_self_impl(iter, std::index_sequence_for<Components...>{});
     }
 
     array fields_;
 
 private:
-    void populate(const ecs_iter_t*, size_t) { }
+    template <typename T>
+    void populate_field(const ecs_iter_t *iter, size_t index) {
+        using A = remove_pointer_t<actual_type_t<T>>;
+        if constexpr (!is_empty_v<A>) {
+            if (iter->row_fields & (1llu << index)) {
+                /* Need to fetch the value with ecs_field_at() */
+                fields_[index].is_row = true;
+                fields_[index].is_ref = true;
+                fields_[index].index = static_cast<int8_t>(index);
+            } else {
+                fields_[index].ptr = ecs_field_w_size(iter, sizeof(A), 
+                    static_cast<int8_t>(index));
+                fields_[index].is_ref = iter->sources[index] != 0;
+            }
+        }
+    }
 
-    template <typename T, typename... Targs, 
-        typename A = remove_pointer_t<actual_type_t<T>>,
-            if_not_t< is_empty<A>::value > = 0>
-    void populate(const ecs_iter_t *iter, size_t index, T, Targs... comps) {
-        if (iter->row_fields & (1llu << index)) {
-            /* Need to fetch the value with ecs_field_at() */
-            fields_[index].is_row = true;
-            fields_[index].is_ref = true;
-            fields_[index].index = static_cast<int8_t>(index);
-        } else {
+    template <typename T>
+    void populate_self_field(const ecs_iter_t *iter, size_t index) {
+        (void)iter; (void)index;
+
+        using A = remove_pointer_t<actual_type_t<T>>;
+        if constexpr (!is_empty_v<A>) {
             fields_[index].ptr = ecs_field_w_size(iter, sizeof(A), 
                 static_cast<int8_t>(index));
-            fields_[index].is_ref = iter->sources[index] != 0;
+            fields_[index].is_ref = false;
         }
-
-        populate(iter, index + 1, comps ...);
     }
 
-    template <typename T, typename... Targs, 
-        typename A = remove_pointer_t<actual_type_t<T>>,
-            if_t< is_empty<A>::value > = 0>
-    void populate(const ecs_iter_t *iter, size_t index, T, Targs... comps) {
-        populate(iter, index + 1, comps ...);
+    template <size_t... Is>
+    void populate_impl(const ecs_iter_t *iter, std::index_sequence<Is...>) {
+        (void)iter;
+        (populate_field<Components>(iter, Is), ...);
     }
 
-    void populate_self(const ecs_iter_t*, size_t) { }
-
-    template <typename T, typename... Targs, 
-        typename A = remove_pointer_t<actual_type_t<T>>,
-            if_not_t< is_empty<A>::value > = 0>
-    void populate_self(const ecs_iter_t *iter, size_t index, T, Targs... comps) {
-        fields_[index].ptr = ecs_field_w_size(iter, sizeof(A), 
-            static_cast<int8_t>(index));
-        fields_[index].is_ref = false;
-        populate_self(iter, index + 1, comps ...);
-    }
-
-    template <typename T, typename... Targs,
-        typename A = remove_pointer_t<actual_type_t<T>>,
-            if_t< is_empty<A>::value > = 0>
-    void populate_self(const ecs_iter_t *iter, size_t index, T, Targs... comps) {
-        populate(iter, index + 1, comps ...);
+    template <size_t... Is>
+    void populate_self_impl(const ecs_iter_t *iter, std::index_sequence<Is...>) {
+        (void)iter;
+        (populate_self_field<Components>(iter, Is), ...);
     }
 };
 
@@ -29285,17 +29102,8 @@ struct entity_with_delegate_impl<arg_list<Args ...>> {
     using DummyArray = flecs::array<int, sizeof...(Args)>;
     using IdArray = flecs::array<id_t, sizeof...(Args)>;
 
-    static bool const_args() {
-        static flecs::array<bool, sizeof...(Args)> is_const_args ({
-            flecs::is_const<flecs::remove_reference_t<Args>>::value...
-        });
-
-        for (auto is_const : is_const_args) {
-            if (!is_const) {
-                return false;
-            }
-        }
-        return true;
+    static constexpr bool const_args() {
+        return (is_const_v<remove_reference_t<Args>> && ...);
     }
 
     static 
@@ -29396,7 +29204,7 @@ struct entity_with_delegate_impl<arg_list<Args ...>> {
 
     template <typename Func>
     static bool invoke_get(world_t *world, entity_t e, const Func& func) {
-        if (const_args()) {
+        if constexpr (const_args()) {
             return invoke_read(world, e, func);
         } else {
             return invoke_write(world, e, func);
@@ -29643,38 +29451,34 @@ template <> inline const char* symbol_name<double>() {
 // that obtain the lifecycle callback do detect whether the callback is required
 // adding a special case for trivial types eases the burden a bit on the
 // compiler as it reduces the number of templates to evaluate.
-template<typename T, enable_if_t<
-    std::is_trivial<T>::value == true
-        >* = nullptr>
-void register_lifecycle_actions(ecs_world_t*, ecs_entity_t) { }
-
-// If the component is non-trivial, register component lifecycle actions.
-// Depending on the type not all callbacks may be available.
-template<typename T, enable_if_t<
-    std::is_trivial<T>::value == false
-        >* = nullptr>
+template<typename T>
 void register_lifecycle_actions(
     ecs_world_t *world,
     ecs_entity_t component)
 {
-    ecs_type_hooks_t cl{};
-    cl.ctor = ctor<T>(cl.flags);
-    cl.dtor = dtor<T>(cl.flags);
+    (void)world; (void)component;
+    if constexpr (!std::is_trivial<T>::value) {
+        // If the component is non-trivial, register component lifecycle actions.
+        // Depending on the type not all callbacks may be available.
+        ecs_type_hooks_t cl{};
+        cl.ctor = ctor<T>(cl.flags);
+        cl.dtor = dtor<T>(cl.flags);
 
-    cl.copy = copy<T>(cl.flags);
-    cl.copy_ctor = copy_ctor<T>(cl.flags);
-    cl.move = move<T>(cl.flags);
-    cl.move_ctor = move_ctor<T>(cl.flags);
+        cl.copy = copy<T>(cl.flags);
+        cl.copy_ctor = copy_ctor<T>(cl.flags);
+        cl.move = move<T>(cl.flags);
+        cl.move_ctor = move_ctor<T>(cl.flags);
 
-    cl.ctor_move_dtor = ctor_move_dtor<T>(cl.flags);
-    cl.move_dtor = move_dtor<T>(cl.flags);
+        cl.ctor_move_dtor = ctor_move_dtor<T>(cl.flags);
+        cl.move_dtor = move_dtor<T>(cl.flags);
 
-    cl.flags &= ECS_TYPE_HOOKS_ILLEGAL;
-    ecs_set_hooks_id(world, component, &cl);
+        cl.flags &= ECS_TYPE_HOOKS_ILLEGAL;
+        ecs_set_hooks_id(world, component, &cl);
 
-    if (cl.flags & (ECS_TYPE_HOOK_MOVE_ILLEGAL|ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL))
-    {
-        ecs_add_id(world, component, flecs::Sparse);
+        if (cl.flags & (ECS_TYPE_HOOK_MOVE_ILLEGAL|ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL))
+        {
+            ecs_add_id(world, component, flecs::Sparse);
+        }
     }
 }
 
@@ -29818,10 +29622,10 @@ struct type_impl {
 };
 
 // Global templated variables that hold component identifier and other info
-template <typename T> int32_t  type_impl<T>::s_index;
-template <typename T> size_t   type_impl<T>::s_size;
-template <typename T> size_t   type_impl<T>::s_alignment;
-template <typename T> bool     type_impl<T>::s_allow_tag( true );
+template <typename T> inline int32_t  type_impl<T>::s_index;
+template <typename T> inline size_t   type_impl<T>::s_size;
+template <typename T> inline size_t   type_impl<T>::s_alignment;
+template <typename T> inline bool     type_impl<T>::s_allow_tag( true );
 
 // Front facing class for implicitly registering a component & obtaining
 // static component data
@@ -35686,8 +35490,7 @@ inline flecs::table_range iter::range() const {
         iter_->offset, iter_->count);
 }
 
-template <typename T, typename A,
-    typename std::enable_if<std::is_const<T>::value, void>::type*>
+template <typename T, typename A, if_t< is_const_v<T> >>
 inline flecs::field<A> iter::field(int8_t index) const {
     ecs_assert(!(iter_->flags & EcsIterCppEach) || 
                ecs_field_src(iter_, index) != 0, ECS_INVALID_OPERATION,
@@ -35696,9 +35499,7 @@ inline flecs::field<A> iter::field(int8_t index) const {
     return get_field<A>(index);
 }
 
-template <typename T, typename A,
-    typename std::enable_if<
-        std::is_const<T>::value == false, void>::type*>
+template <typename T, typename A, if_not_t< is_const_v<T> >>
 inline flecs::field<A> iter::field(int8_t index) const {
     ecs_assert(!(iter_->flags & EcsIterCppEach) || 
                ecs_field_src(iter_, index) != 0, ECS_INVALID_OPERATION,

@@ -248,8 +248,7 @@ public:
      * @param index The field index.
      * @return The field data.
      */
-    template <typename T, typename A = actual_type_t<T>,
-        typename std::enable_if<std::is_const<T>::value, void>::type* = nullptr>
+    template <typename T, typename A = actual_type_t<T>, if_t<is_const_v<T>> = 0>
     flecs::field<A> field(int8_t index) const;
 
     /** Get read/write access to field data.
@@ -264,9 +263,7 @@ public:
      * @param index The field index.
      * @return The field data.
      */
-    template <typename T, typename A = actual_type_t<T>,
-        typename std::enable_if<
-            std::is_const<T>::value == false, void>::type* = nullptr>
+    template <typename T, typename A = actual_type_t<T>, if_not_t<is_const_v<T>> = 0>
     flecs::field<A> field(int8_t index) const;
 
     /** Get unchecked access to field data.
@@ -300,8 +297,7 @@ public:
     /** Get reference to field at row. 
      * This function may be used to access shared fields when row is set to 0.
      */
-    template <typename T, typename A = actual_type_t<T>,
-        typename std::enable_if<std::is_const<T>::value, void>::type* = nullptr>
+    template <typename T, typename A = actual_type_t<T>, if_t< is_const_v<T> > = 0>
     const A& field_at(int8_t index, size_t row) const {
         if (iter_->row_fields & (1llu << index)) {
             return get_field_at<A>(index, row)[0];
@@ -313,9 +309,7 @@ public:
     /** Get reference to field at row. 
      * This function may be used to access shared fields when row is set to 0.
      */
-    template <typename T, typename A = actual_type_t<T>,
-        typename std::enable_if<
-            std::is_const<T>::value == false, void>::type* = nullptr>
+    template <typename T, typename A = actual_type_t<T>, if_not_t< is_const_v<T> > = 0>
     A& field_at(int8_t index, size_t row) const {
         ecs_assert(!ecs_field_is_readonly(iter_, index),
             ECS_ACCESS_VIOLATION, NULL);

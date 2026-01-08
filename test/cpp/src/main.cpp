@@ -95,6 +95,7 @@ void Entity_set_T(void);
 void Entity_set_R_t(void);
 void Entity_set_R_T(void);
 void Entity_set_r_T(void);
+void Entity_set_r_t_generic_no_size(void);
 void Entity_assign_T(void);
 void Entity_assign_R_t(void);
 void Entity_assign_R_T(void);
@@ -157,7 +158,9 @@ void Entity_set_deduced(void);
 void Entity_override(void);
 void Entity_override_id(void);
 void Entity_override_pair(void);
+void Entity_override_pair_second(void);
 void Entity_override_pair_w_tgt_id(void);
+void Entity_override_pair_w_rel_id(void);
 void Entity_override_pair_w_ids(void);
 void Entity_set_override(void);
 void Entity_set_override_lvalue(void);
@@ -1998,6 +2001,10 @@ bake_test_case Entity_testcases[] = {
         Entity_set_r_T
     },
     {
+        "set_r_t_generic_no_size",
+        Entity_set_r_t_generic_no_size
+    },
+    {
         "assign_T",
         Entity_assign_T
     },
@@ -2246,8 +2253,16 @@ bake_test_case Entity_testcases[] = {
         Entity_override_pair
     },
     {
+        "override_pair_second",
+        Entity_override_pair_second
+    },
+    {
         "override_pair_w_tgt_id",
         Entity_override_pair_w_tgt_id
+    },
+    {
+        "override_pair_w_rel_id",
+        Entity_override_pair_w_rel_id
     },
     {
         "override_pair_w_ids",
@@ -8137,7 +8152,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        363,
+        366,
         Entity_testcases
     },
     {

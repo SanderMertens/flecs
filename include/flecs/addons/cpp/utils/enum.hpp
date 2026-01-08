@@ -294,16 +294,13 @@ private:
      * @brief Handler struct for generating compile-time count of enum constants.
      */
     struct reflection_count {
-        template <U Value, 
-            flecs::if_not_t< enum_constant_is_valid_wrap<E, Value>() > = 0>
+        template <U Value>
         static constexpr U handle_constant(U last_value) {
-            return last_value;
-        }
-
-        template <U Value, 
-            flecs::if_t< enum_constant_is_valid_wrap<E, Value>() > = 0>
-        static constexpr U handle_constant(U last_value) {
-            return 1 + last_value;
+            if constexpr (enum_constant_is_valid_wrap<E, Value>()) {
+                return 1 + last_value;
+            } else {
+                return last_value;
+            }
         }
     };
 
@@ -315,50 +312,47 @@ private:
      * to determine continuity, and use that as a lookup heuristic later on.
      */
     struct reflection_init {
-        template <U Value, 
-            flecs::if_not_t< enum_constant_is_valid_wrap<E, Value>() > = 0>
-        static U handle_constant(U last_value, This&) {
-            // Search for constant failed. Pass last valid value through.
-            return last_value;
-        }
-
-        template <U Value, 
-            flecs::if_t< enum_constant_is_valid_wrap<E, Value>() > = 0>
+        template <U Value>
         static U handle_constant(U last_value, This& me) {
-            // Constant is valid, so fill reflection data.
-            auto v = Value;
-            const char *name = enum_constant_to_name<E, flecs_enum_cast(E, Value)>();
+            if constexpr (enum_constant_is_valid_wrap<E, Value>()) {
+                // Constant is valid, so fill reflection data.
+                auto v = Value;
+                const char *name = enum_constant_to_name<E, flecs_enum_cast(E, Value)>();
 
-            ++me.max; // Increment cursor as we build constants array.
+                ++me.max; // Increment cursor as we build constants array.
 
-            // If the enum was previously contiguous, and continues to be 
-            // through the current value...
-            if (me.has_contiguous && static_cast<U>(me.max) == v && me.contiguous_until == v) {
-                ++me.contiguous_until;
+                // If the enum was previously contiguous, and continues to be 
+                // through the current value...
+                if (me.has_contiguous && static_cast<U>(me.max) == v && me.contiguous_until == v) {
+                    ++me.contiguous_until;
+                }
+
+                // else, if the enum was never contiguous and hasn't been set as not
+                // contiguous...
+                else if (!me.contiguous_until && me.has_contiguous) {
+                    me.has_contiguous = false;
+                }
+
+                ecs_assert(!(last_value > 0 && 
+                    v < std::numeric_limits<U>::min() + last_value), 
+                    ECS_UNSUPPORTED,
+                    "Signed integer enums causes integer overflow when recording "
+                    "offset from high positive to low negative. Consider using "
+                    "unsigned integers as underlying type.");
+
+                me.constants[me.max].value = v;
+                me.constants[me.max].offset = v - last_value;
+                me.constants[me.max].name = name;
+                if (!me.constants[me.max].index) {
+                    me.constants[me.max].index = 
+                        flecs_component_ids_index_get();
+                }
+
+                return v;
+            } else {
+                // Search for constant failed. Pass last valid value through.
+                return last_value;
             }
-
-            // else, if the enum was never contiguous and hasn't been set as not
-            // contiguous...
-            else if (!me.contiguous_until && me.has_contiguous) {
-                me.has_contiguous = false;
-            }
-
-            ecs_assert(!(last_value > 0 && 
-                v < std::numeric_limits<U>::min() + last_value), 
-                ECS_UNSUPPORTED,
-                "Signed integer enums causes integer overflow when recording "
-                "offset from high positive to low negative. Consider using "
-                "unsigned integers as underlying type.");
-
-            me.constants[me.max].value = v;
-            me.constants[me.max].offset = v - last_value;
-            me.constants[me.max].name = name;
-            if (!me.constants[me.max].index) {
-                me.constants[me.max].index = 
-                    flecs_component_ids_index_get();
-            }
-
-            return v;
         }
     };
 public:
@@ -435,13 +429,13 @@ public:
     #endif
 };
 
-template <typename E, if_t< is_enum<E>::value > = 0>
+template <typename E>
 inline static void init_enum(flecs::world_t *world, flecs::entity_t id) {
-    _::enum_type<E>::get().register_for_world(world, id);
+    (void)world; (void)id;
+    if constexpr (is_enum_v<E>) {
+        _::enum_type<E>::get().register_for_world(world, id);
+    }
 }
-
-template <typename E, if_not_t< is_enum<E>::value > = 0>
-inline static void init_enum(flecs::world_t*, flecs::entity_t) { }
 
 } // namespace _
 

@@ -79,26 +79,12 @@ template <> struct condition<true> {
     template <typename T, typename F> using type = T;
 };
 
-// C++11/C++14 convenience template replacements
-
-template <bool C, typename T, typename F>
-using conditional_t = typename condition<C>::template type<T, F>;
-
-template <typename T>
-using decay_t = typename std::decay<T>::type;
-
-template <bool V, typename T = void>
-using enable_if_t = typename std::enable_if<V, T>::type;
-
-template <typename T>
-using remove_pointer_t = typename std::remove_pointer<T>::type;
-
-template <typename T>
-using remove_reference_t = typename std::remove_reference<T>::type;
-
-template <typename T>
-using underlying_type_t = typename std::underlying_type<T>::type;
-
+using std::conditional_t;
+using std::decay_t;
+using std::enable_if_t;
+using std::remove_pointer_t;
+using std::remove_reference_t;
+using std::underlying_type_t;
 using std::is_base_of;
 using std::is_empty;
 using std::is_const;
@@ -107,60 +93,37 @@ using std::is_reference;
 using std::is_volatile;
 using std::is_same;
 using std::is_enum;
-
-// GCC 4.9.2 compatibility: missing C++11 type traits
-#if defined(__GNUC__) && (__GNUC__ == 4) && (__GNUC_MINOR__ == 9)
-// Direct implementations for missing type traits in GCC 4.9.2
-} // namespace flecs
-
-namespace std {
-    // Only implement the ones that are actually missing in GCC 4.9.2
-    template<typename T>
-    struct is_trivially_constructible {
-        static const bool value = __is_pod(T);
-    };
-
-    template<typename T>
-    struct is_trivially_move_assignable {
-        static const bool value = __is_pod(T);
-    };
-
-    template<typename T>
-    struct is_trivially_copy_assignable {
-        static const bool value = __is_pod(T);
-    };
-
-    template<typename T>
-    struct is_trivially_copy_constructible {
-        static const bool value = __is_pod(T);
-    };
-
-    template<typename T>
-    struct is_trivially_move_constructible {
-        static const bool value = __is_pod(T);
-    };
-
-    template<typename T>
-    struct is_trivially_copyable {
-        static const bool value = __is_pod(T);
-    };
-}
-
-namespace flecs {
-#else
 using std::is_trivially_constructible;
 using std::is_trivially_move_assignable;
 using std::is_trivially_copy_assignable;
 using std::is_trivially_copy_constructible;
 using std::is_trivially_move_constructible;
 using std::is_trivially_copyable;
-#endif
-
-// These exist in GCC 4.9.2, so we can always use them
 using std::is_move_assignable;
 using std::is_move_constructible;
 using std::is_copy_constructible;
 using std::is_trivially_destructible;
+using std::is_empty_v;
+using std::is_const_v;
+using std::is_pointer_v;
+using std::is_reference_v;
+using std::is_volatile_v;
+using std::is_same_v;
+using std::is_enum_v;
+using std::is_base_of_v;
+using std::is_trivially_constructible_v;
+using std::is_trivially_destructible_v;
+using std::is_trivially_copyable_v;
+using std::is_trivially_move_constructible_v;
+using std::is_trivially_copy_constructible_v;
+using std::is_trivially_move_assignable_v;
+using std::is_trivially_copy_assignable_v;
+using std::is_default_constructible_v;
+using std::is_move_constructible_v;
+using std::is_copy_constructible_v;
+using std::is_move_assignable_v;
+using std::is_copy_assignable_v;
+using std::is_destructible_v;
 
 // Determine constness even if T is a pointer type
 template <typename T>
