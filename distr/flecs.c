@@ -1590,6 +1590,11 @@ typedef struct {
     bool has_bitset;
 } ecs_query_toggle_ctx_t;
 
+/* Optional context */
+typedef struct {
+    ecs_table_range_t range;
+} ecs_query_optional_ctx_t;
+
 typedef struct ecs_query_op_ctx_t {
     union {
         ecs_query_all_ctx_t all;
@@ -1609,6 +1614,7 @@ typedef struct ecs_query_op_ctx_t {
         ecs_query_tree_ctx_t tree;
         ecs_query_tree_pre_ctx_t tree_pre;
         ecs_query_tree_wildcard_ctx_t tree_wildcard;
+        ecs_query_optional_ctx_t optional;
     } is;
 } ecs_query_op_ctx_t;
 
@@ -37818,7 +37824,7 @@ int flecs_query_finalize_terms(
             }
         }
 
-        if (term->trav == EcsChildOf && term->oper == EcsAnd) {
+        if (term->trav == EcsChildOf && (term->oper == EcsAnd || term->oper == EcsOptional)) {
             if (!(term->flags_ & EcsTermIsOr)) {
                 has_childof = true;
             }
@@ -77960,9 +77966,12 @@ void flecs_query_insert_cache_search(
                 continue;
             }
 
-            if (term->trav == EcsChildOf && term->oper == EcsAnd) {
+            if (term->trav == EcsChildOf && (term->oper == EcsAnd || term->oper == EcsOptional)) {
+                ecs_oper_kind_t oper = q->terms[i].oper;
+                q->terms[i].oper = EcsAnd;
                 flecs_query_compile_term(
                     q->world, query, &q->terms[i], ctx);
+                q->terms[i].oper = (int16_t)oper;
             }
         }
     }
@@ -81365,9 +81374,23 @@ bool flecs_query_optional(
     ecs_query_run_ctx_t *ctx)
 {   
     bool result = flecs_query_run_block_w_reset(op, redo, ctx);
+
+    ecs_query_optional_ctx_t *op_ctx = flecs_op_ctx(ctx, optional);
+    
     if (!redo) {
+        op_ctx->range = flecs_query_get_range(op, &op->src, EcsQuerySrc, ctx);
         return true; /* Return at least once */
     } else {
+        if (!result) {
+            ecs_table_range_t range = flecs_query_get_range(
+                op, &op->src, EcsQuerySrc, ctx);
+            if (range.offset != op_ctx->range.offset) {
+                /* Different range is returned, so yield again. */
+                result = true;
+                op_ctx->range = range;
+            }
+        }
+
         return result;
     }
 }
@@ -84625,10 +84648,49 @@ bool flecs_query_tree_up_post(
     /* Shouldn't have gotten here if the table has neither ChildOf or Parent */
     ecs_assert(range.table->flags & EcsTableHasParent, ECS_INTERNAL_ERROR, NULL);
 
-    if (self) {
-        return flecs_query_self_up_with(op, redo, ctx);
+    const ecs_term_t *term = &ctx->query->pub.terms[op->term_index];
+
+    if (term->oper == EcsOptional) {
+        if (!redo) {
+            if (!range.count) {
+                range.count = ecs_table_count(range.table);
+            }
+
+            op_ctx->range = range;
+            op_ctx->cur = range.offset - 1;
+        }
+
+        op_ctx->cur ++;
+
+        if (op_ctx->cur >= op_ctx->range.count) {
+            flecs_query_src_set_range(op, &op_ctx->range, ctx);
+            return false;
+        }
+
+        bool result = false;
+
+        flecs_query_src_set_single(op, op_ctx->cur, ctx);
+
+        if (self) {
+            result = flecs_query_self_up_with(op, false, ctx);
+        } else {
+            result = flecs_query_up_with(op, false, ctx);
+        }
+
+        uint64_t field_bit = 1llu << op->field_index;
+        if (!result) {
+            ctx->it->set_fields &= (ecs_termset_t)~field_bit;
+        } else {
+            ctx->it->set_fields |= (ecs_termset_t)field_bit;
+        }
+
+        return true;
     } else {
-        return flecs_query_up_with(op, redo, ctx);
+        if (self) {
+            return flecs_query_self_up_with(op, redo, ctx);
+        } else {
+            return flecs_query_up_with(op, redo, ctx);
+        }
     }
 }
 

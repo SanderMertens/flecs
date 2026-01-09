@@ -361,6 +361,11 @@ typedef struct {
     bool has_bitset;
 } ecs_query_toggle_ctx_t;
 
+/* Optional context */
+typedef struct {
+    ecs_table_range_t range;
+} ecs_query_optional_ctx_t;
+
 typedef struct ecs_query_op_ctx_t {
     union {
         ecs_query_all_ctx_t all;
@@ -380,6 +385,7 @@ typedef struct ecs_query_op_ctx_t {
         ecs_query_tree_ctx_t tree;
         ecs_query_tree_pre_ctx_t tree_pre;
         ecs_query_tree_wildcard_ctx_t tree_wildcard;
+        ecs_query_optional_ctx_t optional;
     } is;
 } ecs_query_op_ctx_t;
 

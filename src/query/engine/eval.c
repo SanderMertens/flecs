@@ -1383,9 +1383,23 @@ bool flecs_query_optional(
     ecs_query_run_ctx_t *ctx)
 {   
     bool result = flecs_query_run_block_w_reset(op, redo, ctx);
+
+    ecs_query_optional_ctx_t *op_ctx = flecs_op_ctx(ctx, optional);
+    
     if (!redo) {
+        op_ctx->range = flecs_query_get_range(op, &op->src, EcsQuerySrc, ctx);
         return true; /* Return at least once */
     } else {
+        if (!result) {
+            ecs_table_range_t range = flecs_query_get_range(
+                op, &op->src, EcsQuerySrc, ctx);
+            if (range.offset != op_ctx->range.offset) {
+                /* Different range is returned, so yield again. */
+                result = true;
+                op_ctx->range = range;
+            }
+        }
+
         return result;
     }
 }
