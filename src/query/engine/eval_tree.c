@@ -777,9 +777,48 @@ bool flecs_query_tree_up_post(
     /* Shouldn't have gotten here if the table has neither ChildOf or Parent */
     ecs_assert(range.table->flags & EcsTableHasParent, ECS_INTERNAL_ERROR, NULL);
 
-    if (self) {
-        return flecs_query_self_up_with(op, redo, ctx);
+    const ecs_term_t *term = &ctx->query->pub.terms[op->term_index];
+
+    if (term->oper == EcsOptional) {
+        if (!redo) {
+            if (!range.count) {
+                range.count = ecs_table_count(range.table);
+            }
+
+            op_ctx->range = range;
+            op_ctx->cur = range.offset - 1;
+        }
+
+        op_ctx->cur ++;
+
+        if (op_ctx->cur >= op_ctx->range.count) {
+            flecs_query_src_set_range(op, &op_ctx->range, ctx);
+            return false;
+        }
+
+        bool result = false;
+
+        flecs_query_src_set_single(op, op_ctx->cur, ctx);
+
+        if (self) {
+            result = flecs_query_self_up_with(op, false, ctx);
+        } else {
+            result = flecs_query_up_with(op, false, ctx);
+        }
+
+        uint64_t field_bit = 1llu << op->field_index;
+        if (!result) {
+            ctx->it->set_fields &= (ecs_termset_t)~field_bit;
+        } else {
+            ctx->it->set_fields |= (ecs_termset_t)field_bit;
+        }
+
+        return true;
     } else {
-        return flecs_query_up_with(op, redo, ctx);
+        if (self) {
+            return flecs_query_self_up_with(op, redo, ctx);
+        } else {
+            return flecs_query_up_with(op, redo, ctx);
+        }
     }
 }
