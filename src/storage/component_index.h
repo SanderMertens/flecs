@@ -81,6 +81,16 @@ struct ecs_component_record_t {
 
     /* Refcount */
     int32_t refcount;
+
+    /* Keep alive count. This count must be 0 when the component record is deleted. If
+     * it is not 0, an application attempted to delete an id that was still
+     * queried for. */
+    int32_t keep_alive;
+
+#ifdef FLECS_MUT_ALIAS_LOCKS
+    /* lock for when sparse components are read or written to */
+    int32_t sparse_lock;
+#endif
 };
 
 /* Bootstrap cached id records */
@@ -170,4 +180,19 @@ void flecs_component_record_init_exclusive(
 void flecs_component_shrink(
     ecs_component_record_t *cr);
 
+#ifdef FLECS_MUT_ALIAS_LOCKS
+
+FLECS_ALWAYS_INLINE int32_t flecs_sparse_id_record_lock_inc(
+    ecs_component_record_t *cr);
+
+FLECS_ALWAYS_INLINE int32_t flecs_sparse_id_record_lock_inc_multithreaded(
+    ecs_component_record_t *cr);
+
+FLECS_ALWAYS_INLINE int32_t flecs_sparse_id_record_lock_dec(
+    ecs_component_record_t *cr);
+
+FLECS_ALWAYS_INLINE int32_t flecs_sparse_id_record_lock_dec_multithreaded(
+    ecs_component_record_t *cr);
+    
+#endif
 #endif
