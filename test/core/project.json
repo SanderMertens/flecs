@@ -863,7 +863,15 @@
                 "instantiate_tree_at_depth_2_w_childof",
                 "instantiate_tree_at_depth_n_w_childof",
                 "reparent_instantiated_tree_w_parent",
-                "reparent_instantiated_tree_w_childof"
+                "reparent_instantiated_tree_w_childof",
+                "delete_with_parent",
+                "delete_with_parent_nested",
+                "delete_with_parent_nested_2",
+                "delete_with_parent_nested_3",
+                "delete_with_parent_nested_4",
+                "delete_with_parent_w_up_observer",
+                "delete_with_parent_nested_w_up_observer",
+                "delete_with_parent_mixed_nested_w_up_observer"
             ]
         }, {
             "id": "Hierarchies",

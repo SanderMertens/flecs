@@ -406,6 +406,8 @@ void Eval_tree_parent(void);
 void Eval_tree_parent_nested(void);
 void Eval_tree_parent_nested_childof(void);
 void Eval_tree_childof_nested_parent(void);
+void Eval_tree_parent_update(void);
+void Eval_tree_parent_update_script(void);
 
 // Testsuite 'Template'
 void Template_template_no_scope(void);
@@ -2709,6 +2711,14 @@ bake_test_case Eval_testcases[] = {
     {
         "tree_childof_nested_parent",
         Eval_tree_childof_nested_parent
+    },
+    {
+        "tree_parent_update",
+        Eval_tree_parent_update
+    },
+    {
+        "tree_parent_update_script",
+        Eval_tree_parent_update_script
     }
 };
 
@@ -5534,7 +5544,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        397,
+        399,
         Eval_testcases
     },
     {
