@@ -258,6 +258,8 @@ bool flecs_component_mark_non_fragmenting_childof(
         return false;
     }
 
+    childof_cr->flags |= EcsIdMarkedForDelete;
+
     if (!flecs_component_has_non_fragmenting_childof(childof_cr)) {
         return false;
     }

@@ -14900,19 +14900,21 @@ void flecs_emit_propagate_id(
     if ((trav == EcsChildOf) && (flecs_component_has_non_fragmenting_childof(cur))) {
         ecs_assert(ECS_PAIR_FIRST(cur->id) == EcsChildOf, ECS_INTERNAL_ERROR, NULL);
 
-        int32_t i, count = ecs_vec_count(&cur->pair->ordered_children);
-        ecs_entity_t *children = ecs_vec_first(&cur->pair->ordered_children);
-        for (i = 0; i < count; i ++) {
-            ecs_record_t *r = flecs_entities_get(world, children[i]);
-            ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+        if (!(cur->flags & EcsIdMarkedForDelete)) {
+            int32_t i, count = ecs_vec_count(&cur->pair->ordered_children);
+            ecs_entity_t *children = ecs_vec_first(&cur->pair->ordered_children);
+            for (i = 0; i < count; i ++) {
+                ecs_record_t *r = flecs_entities_get(world, children[i]);
+                ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
 
-            flecs_emit_propagate_id_for_range(
-                world, it, cr, trav, iders, ider_count, 
-                    &(ecs_table_range_t){
-                        .table = r->table,
-                        .offset = ECS_RECORD_TO_ROW(r->row),
-                        .count = 1
-                    });
+                flecs_emit_propagate_id_for_range(
+                    world, it, cr, trav, iders, ider_count, 
+                        &(ecs_table_range_t){
+                            .table = r->table,
+                            .offset = ECS_RECORD_TO_ROW(r->row),
+                            .count = 1
+                        });
+            }
         }
 
         return;
@@ -17875,6 +17877,8 @@ bool flecs_component_mark_non_fragmenting_childof(
     if (flags & EcsIdMarkedForDelete) {
         return false;
     }
+
+    childof_cr->flags |= EcsIdMarkedForDelete;
 
     if (!flecs_component_has_non_fragmenting_childof(childof_cr)) {
         return false;
