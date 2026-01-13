@@ -486,7 +486,8 @@ void flecs_remove_from_table(
 
 static
 bool flecs_on_delete_clear_entities(
-    ecs_world_t *world)
+    ecs_world_t *world,
+    bool force_delete)
 {
     /* Iterate in reverse order so that DAGs get deleted bottom to top */
     int32_t i, last = ecs_vec_count(&world->store.marked_ids), first = 0;
@@ -503,6 +504,18 @@ bool flecs_on_delete_clear_entities(
                 const ecs_table_record_t *tr;
                 while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
                     ecs_table_t *table = tr->hdr.table;
+
+                    /* If table contains prefabs and we're not deleting the 
+                     * prefab entity itself (!force_delete), don't delete table.
+                     * This means that delete_with/remove_all can be used safely
+                     * for game entities without risking modifying prefabs. 
+                     * If force_delete is true, it means that one of the 
+                     * components, relationships or relationship targets is 
+                     * being deleted in which case the table must go too. */
+                    if ((table->flags & EcsTableIsPrefab) && !force_delete) {
+                        table->flags &= ~EcsTableMarkedForDelete;
+                        continue;
+                    }
 
                     if ((action == EcsRemove) || 
                         !(table->flags & EcsTableMarkedForDelete))
@@ -571,11 +584,14 @@ void flecs_on_delete_clear_sparse(
 
 static
 bool flecs_on_delete_clear_ids(
-    ecs_world_t *world)
+    ecs_world_t *world,
+    bool force_delete)
 {
     int32_t i, count = ecs_vec_count(&world->store.marked_ids);
     ecs_marked_id_t *ids = ecs_vec_first(&world->store.marked_ids);
     int twice = 2;
+
+    (void)force_delete;
 
     do {
         for (i = 0; i < count; i ++) {
@@ -610,7 +626,7 @@ bool flecs_on_delete_clear_ids(
             }
 
             if (flecs_component_release_tables(world, cr)) {
-                ecs_assert(!delete_id, ECS_INVALID_OPERATION, 
+                ecs_assert(!force_delete, ECS_INVALID_OPERATION, 
                     "cannot delete component '%s': tables are keeping it alive",
                     flecs_errstr(ecs_id_str(world, cr->id)));
 
@@ -618,6 +634,7 @@ bool flecs_on_delete_clear_ids(
                  * flecs_table_keep has been called for a table, which is used
                  * whenever code doesn't want a table to get deleted. */
                 cr->flags &= ~EcsIdMarkedForDelete;
+                flecs_component_release(world, cr);
             } else {
                 /* Release the claim taken by flecs_marked_id_push. This may delete the
                 * component record as all other claims may have been released. */
@@ -665,7 +682,8 @@ void flecs_on_delete(
     ecs_world_t *world,
     ecs_id_t id,
     ecs_entity_t action,
-    bool delete_id)
+    bool delete_id,
+    bool force_delete)
 {
     /* Cleanup can happen recursively. If a cleanup action is already in 
      * progress, only append ids to the marked_ids. The topmost cleanup
@@ -681,10 +699,10 @@ void flecs_on_delete(
         ecs_log_push_2();
 
         /* Delete all the entities from the to be deleted tables/components */
-        flecs_on_delete_clear_entities(world);
+        flecs_on_delete_clear_entities(world, force_delete);
 
         /* Release remaining references to the ids */
-        flecs_on_delete_clear_ids(world);
+        flecs_on_delete_clear_ids(world, force_delete);
 
         /* Ids are deleted, clear stack */
         ecs_vec_clear(&world->store.marked_ids);
@@ -714,7 +732,7 @@ void ecs_delete_with(
         return;
     }
 
-    flecs_on_delete(world, id, EcsDelete, false);
+    flecs_on_delete(world, id, EcsDelete, false, false);
     flecs_defer_end(world, stage);
 
     flecs_journal_end();
@@ -731,7 +749,7 @@ void ecs_remove_all(
         return;
     }
 
-    flecs_on_delete(world, id, EcsRemove, false);
+    flecs_on_delete(world, id, EcsRemove, false, false);
     flecs_defer_end(world, stage);
 
     flecs_journal_end();

@@ -837,7 +837,14 @@ bool flecs_component_release_tables(
     if (flecs_table_cache_all_iter(&cr->cache, &it)) {
         const ecs_table_record_t *tr;
         while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
-            if (tr->hdr.table->keep) {
+            ecs_table_t *table = tr->hdr.table;
+
+            if (table->keep) {
+                remaining = true;
+                continue;
+            }
+
+            if (ecs_table_count(table)) {
                 remaining = true;
                 continue;
             }

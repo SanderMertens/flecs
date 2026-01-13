@@ -3626,6 +3626,7 @@ void NonFragmentingChildOf_instantiate_instance_after_remove_all_tag(void) {
         test_assert(!ecs_has(world, entities.ids[0], Foo));
     }
 
+    test_assert(ecs_is_alive(world, c));
     test_assert(ecs_has(world, c, Foo));
 
     {
@@ -3666,8 +3667,9 @@ void NonFragmentingChildOf_instantiate_instance_after_delete_with_tag(void) {
     {
         ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, base);
         ecs_entities_t entities = ecs_get_ordered_children(world, i);
-        test_int(entities.count, 1);
-        test_assert(!ecs_has(world, entities.ids[0], Foo));
+        test_int(entities.count, 2);
+        test_assert(ecs_has(world, entities.ids[0], Foo));
+        test_assert(!ecs_has(world, entities.ids[1], Foo));
     }
 
     ecs_fini(world);

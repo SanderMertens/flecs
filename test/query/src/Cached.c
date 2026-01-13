@@ -3524,14 +3524,14 @@ void Cached_rematch_empty_table_w_superset(void) {
         .cache_kind = EcsQueryCacheAuto
     });
 
-    ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t base = ecs_new(world);
     ecs_add(world, base, Foo);
     test_assert( ecs_is_alive(world, base));
 
     ecs_delete_with(world, Foo);
     test_assert( !ecs_is_alive(world, base));
 
-    base = ecs_new_w_id(world, EcsPrefab);
+    base = ecs_new(world);
     ecs_add(world, base, Foo);
 
     ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
@@ -3542,6 +3542,10 @@ void Cached_rematch_empty_table_w_superset(void) {
     ecs_remove(world, inst, Bar);
 
     ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], base);
+
     test_bool(true, ecs_query_next(&it));
     test_int(it.count, 1);
     test_uint(it.entities[0], inst);

@@ -2506,7 +2506,9 @@
                 "create_instances_w_override_and_ctor",
                 "create_instances_w_override_and_copy_ctor",
                 "create_instances_w_override_and_on_add",
-                "create_instances_w_override_and_on_set"
+                "create_instances_w_override_and_on_set",
+                "remove_all",
+                "delete_with"
             ]
         }, {
             "id": "World",
