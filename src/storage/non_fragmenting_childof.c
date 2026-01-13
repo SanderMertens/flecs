@@ -312,6 +312,10 @@ void flecs_non_fragmenting_childof_reparent(
 {
     ecs_assert(dst != NULL, ECS_INTERNAL_ERROR, NULL);
 
+    if (!src) {
+        return;
+    }
+
     ecs_pair_record_t *dst_pair = dst->_->childof_r;
     ecs_assert(dst_pair != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_pair_record_t *src_pair = src ? src->_->childof_r : NULL;
@@ -327,7 +331,7 @@ void flecs_non_fragmenting_childof_reparent(
         return;
     }
 
-    if (!ecs_table_has_traversable(dst)) {
+    if (!ecs_table_has_traversable(src)) {
         /* If table doesn't contain any traversable entities (meaning there 
          * can't be any parents in the table) there can't be any cached depth
          * values to update. */
