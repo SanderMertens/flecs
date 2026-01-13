@@ -148,7 +148,8 @@ struct ecs_table_t {
     int16_t column_count;            /* Number of components (excluding tags) */
     uint16_t version;                /* Version of table */
     uint64_t bloom_filter;           /* For quick matching with queries */
-    ecs_flags32_t trait_flags;
+    ecs_flags32_t trait_flags;       /* Cached trait flags for entities in table */
+    int16_t keep;
     ecs_type_t type;                 /* Vector with component ids */
 
     ecs_data_t data;                 /* Component storage */
@@ -311,5 +312,11 @@ const ecs_ref_t* flecs_table_get_override(
     ecs_id_t id,
     const ecs_component_record_t *cr,
     ecs_ref_t *storage);
+
+void flecs_table_keep(
+    ecs_table_t *table);
+
+void flecs_table_release(
+    ecs_table_t *table);
 
 #endif

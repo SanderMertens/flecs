@@ -512,7 +512,7 @@ bool flecs_on_delete_clear_entities(
                         ecs_dbg_3(
                             "#[red]delete#[reset] entities from table %u", 
                             (uint32_t)table->id);
-                        flecs_table_delete_entities(world, table);
+                        ecs_table_clear_entities(world, table);
                     }
                 }
             }
@@ -609,26 +609,35 @@ bool flecs_on_delete_clear_ids(
                 }
             }
 
-            flecs_component_release_tables(world, cr);
+            if (flecs_component_release_tables(world, cr)) {
+                ecs_assert(!delete_id, ECS_INVALID_OPERATION, 
+                    "cannot delete component '%s': tables are keeping it alive",
+                    flecs_errstr(ecs_id_str(world, cr->id)));
 
-            /* Release the claim taken by flecs_marked_id_push. This may delete the
-             * component record as all other claims may have been released. */
-            int32_t rc = flecs_component_release(world, cr);
-            ecs_assert(rc >= 0, ECS_INTERNAL_ERROR, NULL);
-            (void)rc;
+                /* There are still tables remaining. This can happen when 
+                 * flecs_table_keep has been called for a table, which is used
+                 * whenever code doesn't want a table to get deleted. */
+                cr->flags &= ~EcsIdMarkedForDelete;
+            } else {
+                /* Release the claim taken by flecs_marked_id_push. This may delete the
+                * component record as all other claims may have been released. */
+                int32_t rc = flecs_component_release(world, cr);
+                ecs_assert(rc >= 0, ECS_INTERNAL_ERROR, NULL);
+                (void)rc;
 
-            /* If rc is 0, the id was likely deleted by a nested delete_with call
-             * made by an on_remove handler/OnRemove observer */
-            if (rc) {
-                if (delete_id) {
-                    /* If id should be deleted, release initial claim. This happens when
-                     * a component, tag, or part of a pair is deleted. */
-                    flecs_component_release(world, cr);
-                } else {
-                    /* If id should not be deleted, unmark component record for deletion. This
-                     * happens when all instances *of* an id are deleted, for example
-                     * when calling ecs_remove_all or ecs_delete_with. */
-                    cr->flags &= ~EcsIdMarkedForDelete;
+                /* If rc is 0, the id was likely deleted by a nested delete_with call
+                * made by an on_remove handler/OnRemove observer */
+                if (rc) {
+                    if (delete_id) {
+                        /* If id should be deleted, release initial claim. This happens when
+                         * a component, tag, or part of a pair is deleted. */
+                        flecs_component_release(world, cr);
+                    } else {
+                        /* If id should not be deleted, unmark component record for deletion. This
+                        * happens when all instances *of* an id are deleted, for example
+                        * when calling ecs_remove_all or ecs_delete_with. */
+                        cr->flags &= ~EcsIdMarkedForDelete;
+                    }
                 }
             }
         }
@@ -676,17 +685,6 @@ void flecs_on_delete(
 
         /* Release remaining references to the ids */
         flecs_on_delete_clear_ids(world);
-
-        /* Verify deleted ids are no longer in use */
-#ifdef FLECS_DEBUG
-        ecs_marked_id_t *ids = ecs_vec_first(&world->store.marked_ids);
-        count = ecs_vec_count(&world->store.marked_ids);
-        for (i = 0; i < count; i ++) {
-            ecs_assert(!ecs_id_in_use(world, ids[i].id), 
-                ECS_INTERNAL_ERROR, NULL);
-        }
-#endif
-        ecs_assert(!ecs_id_in_use(world, id), ECS_INTERNAL_ERROR, NULL);
 
         /* Ids are deleted, clear stack */
         ecs_vec_clear(&world->store.marked_ids);

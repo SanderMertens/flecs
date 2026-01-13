@@ -121,7 +121,7 @@ int32_t flecs_component_release(
     ecs_component_record_t *cr);
 
 /* Release all empty tables in component record */
-void flecs_component_release_tables(
+bool flecs_component_release_tables(
     ecs_world_t *world,
     ecs_component_record_t *cr);
 

@@ -1244,7 +1244,6 @@ const ecs_entity_t* ecs_table_entities(
     return table->data.entities;
 }
 
-/* Cleanup, no OnRemove, retain allocations */
 void ecs_table_clear_entities(
     ecs_world_t* world,
     ecs_table_t* table)
@@ -1252,7 +1251,6 @@ void ecs_table_clear_entities(
     flecs_table_fini_data(world, table, true, false);
 }
 
-/* Cleanup, run OnRemove, free allocations */
 void flecs_table_delete_entities(
     ecs_world_t *world,
     ecs_table_t *table)
@@ -1280,6 +1278,9 @@ void flecs_table_fini(
 
     bool is_root = table == &world->store.root;
     ecs_assert(!table->_->lock, ECS_LOCKED_STORAGE, FLECS_LOCKED_STORAGE_MSG("table deletion"));
+    ecs_assert((world->flags & EcsWorldFini) || !table->keep, ECS_INVALID_OPERATION, 
+        "cannot delete table (still in use): '[%s]'",
+        flecs_errstr(ecs_table_str(world, table)));
     ecs_assert(is_root || table->id != 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(is_root || flecs_sparse_is_alive(&world->store.tables, table->id),
         ECS_INTERNAL_ERROR, NULL);
@@ -2638,6 +2639,19 @@ const ecs_ref_t* flecs_table_get_override(
     }
 
     return r;
+}
+
+void flecs_table_keep(
+    ecs_table_t *table)
+{
+    table->keep ++;
+}
+
+void flecs_table_release(
+    ecs_table_t *table)
+{
+    table->keep --;
+    ecs_assert(table->keep >= 0, ECS_INTERNAL_ERROR, NULL);
 }
 
 

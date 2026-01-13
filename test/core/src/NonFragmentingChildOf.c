@@ -2893,6 +2893,120 @@ void NonFragmentingChildOf_set_name_after_create(void) {
     ecs_fini(world);
 }
 
+void NonFragmentingChildOf_prefab_child_has_prefab_w_insert(void) {
+    ecs_world_t *world = ecs_mini();
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t c = ecs_insert(world, ecs_value(EcsParent, {p}));
+
+    test_assert(ecs_has_id(world, c, EcsPrefab));
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_prefab_child_has_prefab_w_new_child(void) {
+    ecs_world_t *world = ecs_mini();
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t c = ecs_new_child(world, p);
+
+    test_assert(ecs_has_id(world, c, EcsPrefab));
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_prefab_child_has_prefab_w_set(void) {
+    ecs_world_t *world = ecs_mini();
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t c = ecs_new(world);
+    ecs_set(world, c, EcsParent, {p});
+
+    test_assert(ecs_has_id(world, c, EcsPrefab));
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_prefab_child_nested_has_prefab_w_insert(void) {
+    ecs_world_t *world = ecs_mini();
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t c = ecs_insert(world, ecs_value(EcsParent, {p}));
+    ecs_entity_t gc = ecs_insert(world, ecs_value(EcsParent, {c}));
+
+    test_assert(ecs_has_id(world, c, EcsPrefab));
+    test_assert(ecs_has_id(world, gc, EcsPrefab));
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_prefab_child_nested_has_prefab_w_new_child(void) {
+    ecs_world_t *world = ecs_mini();
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t c = ecs_new_child(world, p);
+    ecs_entity_t gc = ecs_new_child(world, c);
+
+    test_assert(ecs_has_id(world, c, EcsPrefab));
+    test_assert(ecs_has_id(world, gc, EcsPrefab));
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_prefab_child_nested_has_prefab_w_set(void) {
+    ecs_world_t *world = ecs_mini();
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t c = ecs_new(world);
+    ecs_set(world, c, EcsParent, {p});
+    ecs_entity_t gc = ecs_new(world);
+    ecs_set(world, gc, EcsParent, {p});
+
+    test_assert(ecs_has_id(world, c, EcsPrefab));
+    test_assert(ecs_has_id(world, gc, EcsPrefab));
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_prefab_variant_w_children(void) {
+    ecs_world_t *world = ecs_mini();
+    ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t base_child = ecs_new_child(world, base);
+    ecs_entity_t variant = ecs_new_w_id(world, EcsPrefab);
+    ecs_add_pair(world, variant, EcsIsA, base);
+
+    test_assert(ecs_has_id(world, base, EcsPrefab));
+    test_assert(ecs_has_id(world, base_child, EcsPrefab));
+    test_assert(ecs_has_id(world, variant, EcsPrefab));
+
+    ecs_entities_t entities = ecs_get_ordered_children(world, variant);
+    test_int(entities.count, 1);
+    test_assert(ecs_has_id(world, entities.ids[0], EcsPrefab));
+    test_assert(ecs_has_pair(world, entities.ids[0], EcsIsA, base_child));
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_prefab_variant_w_nested_children(void) {
+    ecs_world_t *world = ecs_mini();
+    ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t base_child = ecs_new_child(world, base);
+    ecs_entity_t base_grandchild = ecs_new_child(world, base_child);
+    ecs_entity_t variant = ecs_new_w_id(world, EcsPrefab);
+    ecs_add_pair(world, variant, EcsIsA, base);
+
+    test_assert(ecs_has_id(world, base, EcsPrefab));
+    test_assert(ecs_has_id(world, base_child, EcsPrefab));
+    test_assert(ecs_has_id(world, base_grandchild, EcsPrefab));
+    test_assert(ecs_has_id(world, variant, EcsPrefab));
+
+    ecs_entities_t entities = ecs_get_ordered_children(world, variant);
+    test_int(entities.count, 1);
+    test_assert(ecs_has_id(world, entities.ids[0], EcsPrefab));
+    test_assert(ecs_has_pair(world, entities.ids[0], EcsIsA, base_child));
+
+    ecs_entities_t grand_children = ecs_get_ordered_children(world, entities.ids[0]);
+    test_int(grand_children.count, 1);
+    test_assert(ecs_has_id(world, grand_children.ids[0], EcsPrefab));
+    test_assert(ecs_has_pair(world, grand_children.ids[0], EcsIsA, base_grandchild));
+
+    ecs_fini(world);
+}
+
 void NonFragmentingChildOf_instantiate_tree_1_child(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -3487,6 +3601,106 @@ void NonFragmentingChildOf_reparent_instantiated_tree_w_childof(void) {
     {
         ecs_entities_t entities = ecs_get_ordered_children(world, i);
         test_assert(ecs_has_id(world, entities.ids[0], ecs_value_pair(EcsParentDepth, 1)));
+    }
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_instantiate_instance_after_remove_all_tag(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t c = ecs_insert(world, ecs_value(EcsParent, {base}));
+    ecs_add(world, c, Foo);
+
+    {
+        ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, base);
+        ecs_entities_t entities = ecs_get_ordered_children(world, i);
+        test_int(entities.count, 1);
+        test_assert(ecs_has(world, entities.ids[0], Foo));
+
+        ecs_remove_all(world, Foo);
+
+        test_assert(!ecs_has(world, entities.ids[0], Foo));
+    }
+
+    test_assert(ecs_has(world, c, Foo));
+
+    {
+        ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, base);
+        ecs_entities_t entities = ecs_get_ordered_children(world, i);
+        test_int(entities.count, 1);
+        test_assert(ecs_has(world, entities.ids[0], Foo));
+    }
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_instantiate_instance_after_delete_with_tag(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t c1 = ecs_insert(world, ecs_value(EcsParent, {base}));
+    ecs_add(world, c1, Foo);
+    /* ecs_entity_t c2 = */ ecs_insert(world, ecs_value(EcsParent, {base}));
+
+    {
+        ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, base);
+        ecs_entities_t entities = ecs_get_ordered_children(world, i);
+        test_int(entities.count, 2);
+        test_assert(ecs_has(world, entities.ids[0], Foo));
+        test_assert(!ecs_has(world, entities.ids[1], Foo));
+
+        ecs_delete_with(world, Foo);
+
+        entities = ecs_get_ordered_children(world, i);
+        test_int(entities.count, 1);
+        test_assert(ecs_is_alive(world, entities.ids[0]));
+        test_assert(!ecs_has(world, entities.ids[0], Foo));
+    }
+
+    {
+        ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, base);
+        ecs_entities_t entities = ecs_get_ordered_children(world, i);
+        test_int(entities.count, 1);
+        test_assert(!ecs_has(world, entities.ids[0], Foo));
+    }
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_instantiate_instance_after_shrink(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t c1 = ecs_insert(world, ecs_value(EcsParent, {base}));
+    ecs_add(world, c1, Foo);
+    /* ecs_entity_t c2 = */ ecs_insert(world, ecs_value(EcsParent, {base}));
+
+    {
+        ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, base);
+        ecs_entities_t entities = ecs_get_ordered_children(world, i);
+        test_int(entities.count, 2);
+        test_assert(ecs_has(world, entities.ids[0], Foo));
+        test_assert(!ecs_has(world, entities.ids[1], Foo));
+
+        ecs_delete(world, i);
+    }
+
+    ecs_shrink(world);
+
+    {
+        ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, base);
+        ecs_entities_t entities = ecs_get_ordered_children(world, i);
+        test_int(entities.count, 2);
+        test_assert(ecs_has(world, entities.ids[0], Foo));
+        test_assert(!ecs_has(world, entities.ids[1], Foo));
     }
 
     ecs_fini(world);

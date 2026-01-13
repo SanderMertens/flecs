@@ -6,9 +6,22 @@
 #include "private_api.h"
 
 static
+void flecs_tree_spawner_release_tables(
+    ecs_vec_t *v)
+{
+    int32_t i, count = ecs_vec_count(v);
+    ecs_tree_spawner_child_t *elems = ecs_vec_first(v);
+    for (i = 0; i < count; i ++) {
+        ecs_tree_spawner_child_t *elem = &elems[i];
+        flecs_table_release(elem->table);
+    }
+}
+
+static
 void EcsTreeSpawner_free(EcsTreeSpawner *ptr) {
     int32_t i;
     for (i = 0; i < FLECS_TREE_SPAWNER_DEPTH_CACHE_SIZE; i ++) {
+        flecs_tree_spawner_release_tables(&ptr->data[i].children);
         ecs_vec_fini_t(NULL, &ptr->data[i].children, ecs_tree_spawner_child_t);
     }
 }
@@ -115,6 +128,9 @@ void flecs_prefab_spawner_build_from_cr(
         ecs_assert(elem->table != NULL, ECS_INTERNAL_ERROR, NULL);
         flecs_type_free(world, &type);
 
+        /* Make sure table doesn't get freed by shrink() */
+        flecs_table_keep(elem->table);
+
         if (!(r->row & EcsEntityIsTraversable)) {
             continue;
         }
@@ -160,6 +176,8 @@ void flecs_spawner_transpose_depth(
 
         dst_elem->table = flecs_table_traverse_add(
             world, src_elem->table, &depth_pair, &diff);
+        
+        flecs_table_keep(dst_elem->table);
     }
 }
 

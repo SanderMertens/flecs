@@ -827,18 +827,27 @@ int32_t flecs_component_release(
     return rc;
 }
 
-void flecs_component_release_tables(
+bool flecs_component_release_tables(
     ecs_world_t *world,
     ecs_component_record_t *cr)
 {
+    bool remaining = false;
+
     ecs_table_cache_iter_t it;
     if (flecs_table_cache_all_iter(&cr->cache, &it)) {
         const ecs_table_record_t *tr;
         while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
+            if (tr->hdr.table->keep) {
+                remaining = true;
+                continue;
+            }
+
             /* Release current table */
             flecs_table_fini(world, tr->hdr.table);
         }
     }
+
+    return remaining;
 }
 
 bool flecs_component_set_type_info(

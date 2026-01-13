@@ -533,7 +533,7 @@ int32_t flecs_component_release(
     ecs_component_record_t *cr);
 
 /* Release all empty tables in component record */
-void flecs_component_release_tables(
+bool flecs_component_release_tables(
     ecs_world_t *world,
     ecs_component_record_t *cr);
 
@@ -895,7 +895,8 @@ struct ecs_table_t {
     int16_t column_count;            /* Number of components (excluding tags) */
     uint16_t version;                /* Version of table */
     uint64_t bloom_filter;           /* For quick matching with queries */
-    ecs_flags32_t trait_flags;
+    ecs_flags32_t trait_flags;       /* Cached trait flags for entities in table */
+    int16_t keep;
     ecs_type_t type;                 /* Vector with component ids */
 
     ecs_data_t data;                 /* Component storage */
@@ -1058,6 +1059,12 @@ const ecs_ref_t* flecs_table_get_override(
     ecs_id_t id,
     const ecs_component_record_t *cr,
     ecs_ref_t *storage);
+
+void flecs_table_keep(
+    ecs_table_t *table);
+
+void flecs_table_release(
+    ecs_table_t *table);
 
 #endif
 
@@ -2749,7 +2756,7 @@ void flecs_notify_on_set_ids(
  */
 
 
-/* Called during bootstrap to register entity name logic with world. */
+/* Called during bootstrap to register entity name entities with world. */
 void flecs_bootstrap_entity_name(
     ecs_world_t *world);
 
@@ -3466,6 +3473,10 @@ flecs_poly_dtor_t* flecs_get_dtor(
 
 #ifndef FLECS_SPAWNER_H
 #define FLECS_SPAWNER_H
+
+/* Called during bootstrap to register spawner entities with world. */
+void flecs_bootstrap_spawner(
+    ecs_world_t *world);
 
 EcsTreeSpawner* flecs_prefab_spawner_build(
     ecs_world_t *world,
@@ -4268,32 +4279,6 @@ static ECS_DTOR(EcsPoly, ptr, {
         ecs_assert(dtor != NULL, ECS_INTERNAL_ERROR, NULL);
         dtor[0](ptr->poly);
     }
-})
-
-
-/* -- TreeSpawner component -- */
-static
-void EcsTreeSpawner_free(EcsTreeSpawner *ptr) {
-    int32_t i;
-    for (i = 0; i < FLECS_TREE_SPAWNER_DEPTH_CACHE_SIZE; i ++) {
-        ecs_vec_fini_t(NULL, &ptr->data[i].children, ecs_tree_spawner_child_t);
-    }
-}
-
-static ECS_COPY(EcsTreeSpawner, dst, src, {
-    (void)dst;
-    (void)src;
-    ecs_abort(ECS_INVALID_OPERATION, "TreeSpawner component cannot be copied");
-})
-
-static ECS_MOVE(EcsTreeSpawner, dst, src, {
-    EcsTreeSpawner_free(dst);
-    *dst = *src;
-    ecs_os_zeromem(src);
-})
-
-static ECS_DTOR(EcsTreeSpawner, ptr, {
-    EcsTreeSpawner_free(ptr);
 })
 
 
@@ -5131,13 +5116,6 @@ void flecs_bootstrap(
         .ctor = flecs_default_ctor
     });
 
-    flecs_type_info_init(world, EcsTreeSpawner, {
-        .ctor = flecs_default_ctor,
-        .copy = ecs_copy(EcsTreeSpawner),
-        .move = ecs_move(EcsTreeSpawner),
-        .dtor = ecs_dtor(EcsTreeSpawner)
-    });
-
     flecs_type_info_init(world, EcsDefaultChildComponent, { 
         .ctor = flecs_default_ctor,
     });
@@ -5500,7 +5478,6 @@ void flecs_bootstrap(
     /* DontInherit components */
     ecs_add_pair(world, EcsPrefab, EcsOnInstantiate, EcsDontInherit);
     ecs_add_pair(world, ecs_id(EcsComponent), EcsOnInstantiate, EcsDontInherit);
-    ecs_add_pair(world, ecs_id(EcsTreeSpawner), EcsOnInstantiate, EcsDontInherit);
     ecs_add_pair(world, EcsOnDelete, EcsOnInstantiate, EcsDontInherit);
     ecs_add_pair(world, EcsExclusive, EcsOnInstantiate, EcsDontInherit);
     ecs_add_pair(world, EcsDontFragment, EcsOnInstantiate, EcsDontInherit);
@@ -5529,6 +5506,7 @@ void flecs_bootstrap(
     /* Run bootstrap functions for other parts of the code */
     flecs_bootstrap_entity_name(world);
     flecs_bootstrap_parent_component(world);
+    flecs_bootstrap_spawner(world);
 
     /* Register constant tag */
     ecs_component(world, {
@@ -18132,7 +18110,7 @@ bool flecs_on_delete_clear_entities(
                         ecs_dbg_3(
                             "#[red]delete#[reset] entities from table %u", 
                             (uint32_t)table->id);
-                        flecs_table_delete_entities(world, table);
+                        ecs_table_clear_entities(world, table);
                     }
                 }
             }
@@ -18229,26 +18207,35 @@ bool flecs_on_delete_clear_ids(
                 }
             }
 
-            flecs_component_release_tables(world, cr);
+            if (flecs_component_release_tables(world, cr)) {
+                ecs_assert(!delete_id, ECS_INVALID_OPERATION, 
+                    "cannot delete component '%s': tables are keeping it alive",
+                    flecs_errstr(ecs_id_str(world, cr->id)));
 
-            /* Release the claim taken by flecs_marked_id_push. This may delete the
-             * component record as all other claims may have been released. */
-            int32_t rc = flecs_component_release(world, cr);
-            ecs_assert(rc >= 0, ECS_INTERNAL_ERROR, NULL);
-            (void)rc;
+                /* There are still tables remaining. This can happen when 
+                 * flecs_table_keep has been called for a table, which is used
+                 * whenever code doesn't want a table to get deleted. */
+                cr->flags &= ~EcsIdMarkedForDelete;
+            } else {
+                /* Release the claim taken by flecs_marked_id_push. This may delete the
+                * component record as all other claims may have been released. */
+                int32_t rc = flecs_component_release(world, cr);
+                ecs_assert(rc >= 0, ECS_INTERNAL_ERROR, NULL);
+                (void)rc;
 
-            /* If rc is 0, the id was likely deleted by a nested delete_with call
-             * made by an on_remove handler/OnRemove observer */
-            if (rc) {
-                if (delete_id) {
-                    /* If id should be deleted, release initial claim. This happens when
-                     * a component, tag, or part of a pair is deleted. */
-                    flecs_component_release(world, cr);
-                } else {
-                    /* If id should not be deleted, unmark component record for deletion. This
-                     * happens when all instances *of* an id are deleted, for example
-                     * when calling ecs_remove_all or ecs_delete_with. */
-                    cr->flags &= ~EcsIdMarkedForDelete;
+                /* If rc is 0, the id was likely deleted by a nested delete_with call
+                * made by an on_remove handler/OnRemove observer */
+                if (rc) {
+                    if (delete_id) {
+                        /* If id should be deleted, release initial claim. This happens when
+                         * a component, tag, or part of a pair is deleted. */
+                        flecs_component_release(world, cr);
+                    } else {
+                        /* If id should not be deleted, unmark component record for deletion. This
+                        * happens when all instances *of* an id are deleted, for example
+                        * when calling ecs_remove_all or ecs_delete_with. */
+                        cr->flags &= ~EcsIdMarkedForDelete;
+                    }
                 }
             }
         }
@@ -18296,17 +18283,6 @@ void flecs_on_delete(
 
         /* Release remaining references to the ids */
         flecs_on_delete_clear_ids(world);
-
-        /* Verify deleted ids are no longer in use */
-#ifdef FLECS_DEBUG
-        ecs_marked_id_t *ids = ecs_vec_first(&world->store.marked_ids);
-        count = ecs_vec_count(&world->store.marked_ids);
-        for (i = 0; i < count; i ++) {
-            ecs_assert(!ecs_id_in_use(world, ids[i].id), 
-                ECS_INTERNAL_ERROR, NULL);
-        }
-#endif
-        ecs_assert(!ecs_id_in_use(world, id), ECS_INTERNAL_ERROR, NULL);
 
         /* Ids are deleted, clear stack */
         ecs_vec_clear(&world->store.marked_ids);
@@ -19811,6 +19787,43 @@ int32_t flecs_relation_depth(
 
 
 static
+void flecs_tree_spawner_release_tables(
+    ecs_vec_t *v)
+{
+    int32_t i, count = ecs_vec_count(v);
+    ecs_tree_spawner_child_t *elems = ecs_vec_first(v);
+    for (i = 0; i < count; i ++) {
+        ecs_tree_spawner_child_t *elem = &elems[i];
+        flecs_table_release(elem->table);
+    }
+}
+
+static
+void EcsTreeSpawner_free(EcsTreeSpawner *ptr) {
+    int32_t i;
+    for (i = 0; i < FLECS_TREE_SPAWNER_DEPTH_CACHE_SIZE; i ++) {
+        flecs_tree_spawner_release_tables(&ptr->data[i].children);
+        ecs_vec_fini_t(NULL, &ptr->data[i].children, ecs_tree_spawner_child_t);
+    }
+}
+
+static ECS_COPY(EcsTreeSpawner, dst, src, {
+    (void)dst;
+    (void)src;
+    ecs_abort(ECS_INVALID_OPERATION, "TreeSpawner component cannot be copied");
+})
+
+static ECS_MOVE(EcsTreeSpawner, dst, src, {
+    EcsTreeSpawner_free(dst);
+    *dst = *src;
+    ecs_os_zeromem(src);
+})
+
+static ECS_DTOR(EcsTreeSpawner, ptr, {
+    EcsTreeSpawner_free(ptr);
+})
+
+static
 ecs_type_t flecs_prefab_spawner_build_type(
     ecs_world_t *world,
     ecs_entity_t child,
@@ -19896,6 +19909,9 @@ void flecs_prefab_spawner_build_from_cr(
         ecs_assert(elem->table != NULL, ECS_INTERNAL_ERROR, NULL);
         flecs_type_free(world, &type);
 
+        /* Make sure table doesn't get freed by shrink() */
+        flecs_table_keep(elem->table);
+
         if (!(r->row & EcsEntityIsTraversable)) {
             continue;
         }
@@ -19938,8 +19954,11 @@ void flecs_spawner_transpose_depth(
         /* Get table for correct depth */
         ecs_id_t depth_pair = ecs_value_pair(EcsParentDepth, src_depth + depth);
         ecs_table_diff_t diff = ECS_TABLE_DIFF_INIT;
+
         dst_elem->table = flecs_table_traverse_add(
             world, src_elem->table, &depth_pair, &diff);
+        
+        flecs_table_keep(dst_elem->table);
     }
 }
 
@@ -19977,6 +19996,8 @@ void flecs_spawner_instantiate(
     ecs_record_t *r_instance = flecs_entities_get(world, instance);
     int32_t depth = flecs_relation_depth(world, EcsChildOf, r_instance->table);
     int32_t i, child_count = ecs_vec_count(&spawner->data[0].children);
+
+    bool is_prefab = r_instance->table->flags & EcsTableIsPrefab;
     
     /* Use cached spawner for depth if available. */
     ecs_vec_t *vec, tmp_vec;
@@ -20001,10 +20022,19 @@ void flecs_spawner_instantiate(
     ecs_component_record_t *cr = NULL;
     ecs_entity_t old_parent = 0;
 
+    ecs_assert(ecs_vec_count(vec) == child_count, ECS_INTERNAL_ERROR, NULL);
+
     for (i = 0; i < child_count; i ++) {
         ecs_entity_t entity = parents[i + 1] = flecs_new_id(world);
         ecs_tree_spawner_child_t *spawn_child = &spawn_children[i];
         ecs_table_t *table = spawn_child->table;
+        ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        if (is_prefab) {
+            ecs_table_diff_t diff = ECS_TABLE_DIFF_INIT;
+            ecs_id_t id = EcsPrefab;
+            table = flecs_table_traverse_add(world, table, &id, &diff);
+        }
 
         ecs_record_t *r = flecs_entities_get(world, entity);
         ecs_flags32_t flags = table->flags & EcsTableAddEdgeFlags;
@@ -20039,6 +20069,20 @@ void flecs_spawner_instantiate(
     if (vec == &tmp_vec) {
         ecs_vec_fini_t(NULL, vec, ecs_tree_spawner_child_t);
     }
+}
+
+void flecs_bootstrap_spawner(
+    ecs_world_t *world)
+{
+    flecs_type_info_init(world, EcsTreeSpawner, {
+        .ctor = flecs_default_ctor,
+        .copy = ecs_copy(EcsTreeSpawner),
+        .move = ecs_move(EcsTreeSpawner),
+        .dtor = ecs_dtor(EcsTreeSpawner)
+    });
+
+    ecs_add_pair(world, ecs_id(EcsTreeSpawner), 
+        EcsOnInstantiate, EcsDontInherit);
 }
 
 /**
@@ -23277,7 +23321,7 @@ void ecs_shrink(
         ecs_table_t *table = flecs_sparse_get_dense_t(tables, ecs_table_t, i);
         if (ecs_table_count(table)) {
             flecs_table_shrink(world, table);
-        } else {
+        } else if (!table->keep) {
             flecs_table_fini(world, table);
         }
     }
@@ -39493,18 +39537,27 @@ int32_t flecs_component_release(
     return rc;
 }
 
-void flecs_component_release_tables(
+bool flecs_component_release_tables(
     ecs_world_t *world,
     ecs_component_record_t *cr)
 {
+    bool remaining = false;
+
     ecs_table_cache_iter_t it;
     if (flecs_table_cache_all_iter(&cr->cache, &it)) {
         const ecs_table_record_t *tr;
         while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
+            if (tr->hdr.table->keep) {
+                remaining = true;
+                continue;
+            }
+
             /* Release current table */
             flecs_table_fini(world, tr->hdr.table);
         }
     }
+
+    return remaining;
 }
 
 bool flecs_component_set_type_info(
@@ -40371,6 +40424,11 @@ int flecs_add_non_fragmenting_child_w_records(
     flecs_ordered_entities_append(world, cr->pair, entity);
 
     flecs_add_non_fragmenting_child_to_table(world, cr, entity, r->table);
+
+    ecs_record_t *r_parent = flecs_entities_get(world, parent);
+    if (r_parent->table->flags & EcsTableIsPrefab) {
+        ecs_add_id(world, entity, EcsPrefab);
+    }
 
     return 0;
 error:
@@ -42701,7 +42759,6 @@ const ecs_entity_t* ecs_table_entities(
     return table->data.entities;
 }
 
-/* Cleanup, no OnRemove, retain allocations */
 void ecs_table_clear_entities(
     ecs_world_t* world,
     ecs_table_t* table)
@@ -42709,7 +42766,6 @@ void ecs_table_clear_entities(
     flecs_table_fini_data(world, table, true, false);
 }
 
-/* Cleanup, run OnRemove, free allocations */
 void flecs_table_delete_entities(
     ecs_world_t *world,
     ecs_table_t *table)
@@ -42737,6 +42793,9 @@ void flecs_table_fini(
 
     bool is_root = table == &world->store.root;
     ecs_assert(!table->_->lock, ECS_LOCKED_STORAGE, FLECS_LOCKED_STORAGE_MSG("table deletion"));
+    ecs_assert((world->flags & EcsWorldFini) || !table->keep, ECS_INVALID_OPERATION, 
+        "cannot delete table (still in use): '[%s]'",
+        flecs_errstr(ecs_table_str(world, table)));
     ecs_assert(is_root || table->id != 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(is_root || flecs_sparse_is_alive(&world->store.tables, table->id),
         ECS_INTERNAL_ERROR, NULL);
@@ -44095,6 +44154,19 @@ const ecs_ref_t* flecs_table_get_override(
     }
 
     return r;
+}
+
+void flecs_table_keep(
+    ecs_table_t *table)
+{
+    table->keep ++;
+}
+
+void flecs_table_release(
+    ecs_table_t *table)
+{
+    table->keep --;
+    ecs_assert(table->keep >= 0, ECS_INTERNAL_ERROR, NULL);
 }
 
 

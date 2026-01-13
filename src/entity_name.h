@@ -5,7 +5,7 @@
 
 #include "private_api.h"
 
-/* Called during bootstrap to register entity name logic with world. */
+/* Called during bootstrap to register entity name entities with world. */
 void flecs_bootstrap_entity_name(
     ecs_world_t *world);
 
