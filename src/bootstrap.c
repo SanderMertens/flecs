@@ -75,32 +75,6 @@ static ECS_DTOR(EcsPoly, ptr, {
 })
 
 
-/* -- TreeSpawner component -- */
-static
-void EcsTreeSpawner_free(EcsTreeSpawner *ptr) {
-    int32_t i;
-    for (i = 0; i < FLECS_TREE_SPAWNER_DEPTH_CACHE_SIZE; i ++) {
-        ecs_vec_fini_t(NULL, &ptr->data[i].children, ecs_tree_spawner_child_t);
-    }
-}
-
-static ECS_COPY(EcsTreeSpawner, dst, src, {
-    (void)dst;
-    (void)src;
-    ecs_abort(ECS_INVALID_OPERATION, "TreeSpawner component cannot be copied");
-})
-
-static ECS_MOVE(EcsTreeSpawner, dst, src, {
-    EcsTreeSpawner_free(dst);
-    *dst = *src;
-    ecs_os_zeromem(src);
-})
-
-static ECS_DTOR(EcsTreeSpawner, ptr, {
-    EcsTreeSpawner_free(ptr);
-})
-
-
 /* -- Builtin triggers -- */
 
 static
@@ -935,13 +909,6 @@ void flecs_bootstrap(
         .ctor = flecs_default_ctor
     });
 
-    flecs_type_info_init(world, EcsTreeSpawner, {
-        .ctor = flecs_default_ctor,
-        .copy = ecs_copy(EcsTreeSpawner),
-        .move = ecs_move(EcsTreeSpawner),
-        .dtor = ecs_dtor(EcsTreeSpawner)
-    });
-
     flecs_type_info_init(world, EcsDefaultChildComponent, { 
         .ctor = flecs_default_ctor,
     });
@@ -1304,7 +1271,6 @@ void flecs_bootstrap(
     /* DontInherit components */
     ecs_add_pair(world, EcsPrefab, EcsOnInstantiate, EcsDontInherit);
     ecs_add_pair(world, ecs_id(EcsComponent), EcsOnInstantiate, EcsDontInherit);
-    ecs_add_pair(world, ecs_id(EcsTreeSpawner), EcsOnInstantiate, EcsDontInherit);
     ecs_add_pair(world, EcsOnDelete, EcsOnInstantiate, EcsDontInherit);
     ecs_add_pair(world, EcsExclusive, EcsOnInstantiate, EcsDontInherit);
     ecs_add_pair(world, EcsDontFragment, EcsOnInstantiate, EcsDontInherit);
@@ -1333,6 +1299,7 @@ void flecs_bootstrap(
     /* Run bootstrap functions for other parts of the code */
     flecs_bootstrap_entity_name(world);
     flecs_bootstrap_parent_component(world);
+    flecs_bootstrap_spawner(world);
 
     /* Register constant tag */
     ecs_component(world, {

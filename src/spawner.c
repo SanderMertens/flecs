@@ -6,6 +6,30 @@
 #include "private_api.h"
 
 static
+void EcsTreeSpawner_free(EcsTreeSpawner *ptr) {
+    int32_t i;
+    for (i = 0; i < FLECS_TREE_SPAWNER_DEPTH_CACHE_SIZE; i ++) {
+        ecs_vec_fini_t(NULL, &ptr->data[i].children, ecs_tree_spawner_child_t);
+    }
+}
+
+static ECS_COPY(EcsTreeSpawner, dst, src, {
+    (void)dst;
+    (void)src;
+    ecs_abort(ECS_INVALID_OPERATION, "TreeSpawner component cannot be copied");
+})
+
+static ECS_MOVE(EcsTreeSpawner, dst, src, {
+    EcsTreeSpawner_free(dst);
+    *dst = *src;
+    ecs_os_zeromem(src);
+})
+
+static ECS_DTOR(EcsTreeSpawner, ptr, {
+    EcsTreeSpawner_free(ptr);
+})
+
+static
 ecs_type_t flecs_prefab_spawner_build_type(
     ecs_world_t *world,
     ecs_entity_t child,
@@ -133,6 +157,7 @@ void flecs_spawner_transpose_depth(
         /* Get table for correct depth */
         ecs_id_t depth_pair = ecs_value_pair(EcsParentDepth, src_depth + depth);
         ecs_table_diff_t diff = ECS_TABLE_DIFF_INIT;
+
         dst_elem->table = flecs_table_traverse_add(
             world, src_elem->table, &depth_pair, &diff);
     }
@@ -172,6 +197,8 @@ void flecs_spawner_instantiate(
     ecs_record_t *r_instance = flecs_entities_get(world, instance);
     int32_t depth = flecs_relation_depth(world, EcsChildOf, r_instance->table);
     int32_t i, child_count = ecs_vec_count(&spawner->data[0].children);
+
+    bool is_prefab = r_instance->table->flags & EcsTableIsPrefab;
     
     /* Use cached spawner for depth if available. */
     ecs_vec_t *vec, tmp_vec;
@@ -196,10 +223,19 @@ void flecs_spawner_instantiate(
     ecs_component_record_t *cr = NULL;
     ecs_entity_t old_parent = 0;
 
+    ecs_assert(ecs_vec_count(vec) == child_count, ECS_INTERNAL_ERROR, NULL);
+
     for (i = 0; i < child_count; i ++) {
         ecs_entity_t entity = parents[i + 1] = flecs_new_id(world);
         ecs_tree_spawner_child_t *spawn_child = &spawn_children[i];
         ecs_table_t *table = spawn_child->table;
+        ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        if (is_prefab) {
+            ecs_table_diff_t diff = ECS_TABLE_DIFF_INIT;
+            ecs_id_t id = EcsPrefab;
+            table = flecs_table_traverse_add(world, table, &id, &diff);
+        }
 
         ecs_record_t *r = flecs_entities_get(world, entity);
         ecs_flags32_t flags = table->flags & EcsTableAddEdgeFlags;
@@ -234,4 +270,18 @@ void flecs_spawner_instantiate(
     if (vec == &tmp_vec) {
         ecs_vec_fini_t(NULL, vec, ecs_tree_spawner_child_t);
     }
+}
+
+void flecs_bootstrap_spawner(
+    ecs_world_t *world)
+{
+    flecs_type_info_init(world, EcsTreeSpawner, {
+        .ctor = flecs_default_ctor,
+        .copy = ecs_copy(EcsTreeSpawner),
+        .move = ecs_move(EcsTreeSpawner),
+        .dtor = ecs_dtor(EcsTreeSpawner)
+    });
+
+    ecs_add_pair(world, ecs_id(EcsTreeSpawner), 
+        EcsOnInstantiate, EcsDontInherit);
 }

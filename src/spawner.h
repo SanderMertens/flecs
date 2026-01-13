@@ -6,6 +6,10 @@
 #ifndef FLECS_SPAWNER_H
 #define FLECS_SPAWNER_H
 
+/* Called during bootstrap to register spawner entities with world. */
+void flecs_bootstrap_spawner(
+    ecs_world_t *world);
+
 EcsTreeSpawner* flecs_prefab_spawner_build(
     ecs_world_t *world,
     ecs_entity_t base);

@@ -85,6 +85,11 @@ int flecs_add_non_fragmenting_child_w_records(
 
     flecs_add_non_fragmenting_child_to_table(world, cr, entity, r->table);
 
+    ecs_record_t *r_parent = flecs_entities_get(world, parent);
+    if (r_parent->table->flags & EcsTableIsPrefab) {
+        ecs_add_id(world, entity, EcsPrefab);
+    }
+
     return 0;
 error:
     return -1;
