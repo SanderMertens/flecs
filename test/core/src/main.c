@@ -843,6 +843,8 @@ void NonFragmentingChildOf_reparent_instantiated_tree_w_childof(void);
 void NonFragmentingChildOf_instantiate_instance_after_remove_all_tag(void);
 void NonFragmentingChildOf_instantiate_instance_after_delete_with_tag(void);
 void NonFragmentingChildOf_instantiate_instance_after_shrink(void);
+void NonFragmentingChildOf_get_instance_child_from_prefab(void);
+void NonFragmentingChildOf_get_instance_child_from_prefab_variant(void);
 void NonFragmentingChildOf_delete_with_parent(void);
 void NonFragmentingChildOf_delete_with_parent_nested(void);
 void NonFragmentingChildOf_delete_with_parent_nested_2(void);
@@ -6370,6 +6372,14 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "instantiate_instance_after_shrink",
         NonFragmentingChildOf_instantiate_instance_after_shrink
+    },
+    {
+        "get_instance_child_from_prefab",
+        NonFragmentingChildOf_get_instance_child_from_prefab
+    },
+    {
+        "get_instance_child_from_prefab_variant",
+        NonFragmentingChildOf_get_instance_child_from_prefab_variant
     },
     {
         "delete_with_parent",
@@ -15270,7 +15280,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NULL,
         NULL,
-        150,
+        152,
         NonFragmentingChildOf_testcases
     },
     {

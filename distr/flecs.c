@@ -855,7 +855,6 @@ typedef struct ecs_table__t {
     ecs_bitset_t *bs_columns;        /* Bitset columns */
 
     struct ecs_table_record_t *records; /* Array with table records */
-    ecs_pair_record_t *childof_r;       /* ChildOf pair data */
 
 #ifdef FLECS_DEBUG_INFO
     /* Fields used for debug visualization */
@@ -894,9 +893,13 @@ struct ecs_table_t {
     ecs_flags32_t flags;             /* Flags for testing table properties */
     int16_t column_count;            /* Number of components (excluding tags) */
     uint16_t version;                /* Version of table */
+
     uint64_t bloom_filter;           /* For quick matching with queries */
+
     ecs_flags32_t trait_flags;       /* Cached trait flags for entities in table */
-    int16_t keep;
+    int16_t keep;                    /* Refcount for keeping table alive. */
+    int16_t childof_index;           /* Quick access to index of ChildOf pair in table. */
+
     ecs_type_t type;                 /* Vector with component ids */
 
     ecs_data_t data;                 /* Component storage */
@@ -1065,6 +1068,18 @@ void flecs_table_keep(
 
 void flecs_table_release(
     ecs_table_t *table);
+
+ecs_component_record_t* flecs_table_get_childof_cr(
+    const ecs_world_t *world,
+    const ecs_table_t *table);
+
+ecs_pair_record_t* flecs_table_get_childof_pr(
+    const ecs_world_t *world,
+    const ecs_table_t *table);
+
+ecs_hashmap_t* flecs_table_get_name_index(
+    const ecs_world_t *world,
+    const ecs_table_t *table);
 
 #endif
 
@@ -3721,9 +3736,6 @@ struct ecs_world_t {
     /* Array for checking if components can be set trivially */
     ecs_flags8_t non_trivial_set[FLECS_HI_COMPONENT_ID];
 
-    /* Is entity range checking enabled? */
-    bool range_check_enabled;
-
     /* --  Data storage -- */
     ecs_store_t store;
 
@@ -3743,6 +3755,12 @@ struct ecs_world_t {
 
     /* -- Component ids -- */
     ecs_vec_t component_ids;         /* World local component ids */
+
+    /* Index of prefab children in ordered children vector. Used by ecs_get_target. */
+    ecs_map_t prefab_child_indices;
+
+    /* Is entity range checking enabled? */
+    bool range_check_enabled;
 
     /* Internal callback for command inspection. Only one callback can be set at
      * a time. After assignment the action will become active at the start of 
@@ -4858,7 +4876,7 @@ void flecs_bootstrap_builtin(
     name_col[index].hash = name_hash;
     name_col[index].index_hash = 0;
 
-    ecs_hashmap_t *name_index = table->_->childof_r->name_index;
+    ecs_hashmap_t *name_index = flecs_table_get_name_index(world, table);
     name_col[index].index = name_index;
     flecs_name_index_ensure(name_index, entity, name, name_length, name_hash);
 
@@ -11584,18 +11602,9 @@ void flecs_reparent_name_index(
         src = &world->store.root;
     }
 
-    ecs_pair_record_t *src_pair = src->_->childof_r;
-    ecs_pair_record_t *dst_pair = dst->_->childof_r;
-
-    /* Reparenting should only get triggered when an entity changed parent */
-    ecs_assert(src_pair != dst_pair, ECS_INTERNAL_ERROR, NULL);
-
-    /* Even when an entity has no parent, it's still in the root scope */
-    ecs_assert(src_pair != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(dst_pair != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_hashmap_t *src_index = src_pair->name_index;
-    ecs_hashmap_t *dst_index = dst_pair->name_index;
+    ecs_hashmap_t *src_index = flecs_table_get_name_index(world, src);
+    ecs_hashmap_t *dst_index = flecs_table_get_name_index(world, dst);
+    ecs_assert(src_index != dst_index, ECS_INTERNAL_ERROR, NULL);
     if ((!src_index && !dst_index)) {
         return;
     }
@@ -11627,9 +11636,9 @@ void flecs_unparent_name_index(
         return;
     }
 
-    ecs_assert(src->_->childof_r != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_hashmap_t *src_index = src->_->childof_r->name_index;
-    ecs_hashmap_t *dst_index = dst ? dst->_->childof_r->name_index : NULL;
+    ecs_hashmap_t *src_index = flecs_table_get_name_index(world, src);
+    ecs_hashmap_t *dst_index = dst ? flecs_table_get_name_index(world, dst) : NULL;
+    ecs_assert(src_index != NULL, ECS_INTERNAL_ERROR, NULL);
 
     EcsIdentifier *names = ecs_table_get_pair(world, 
         src, EcsIdentifier, EcsName, offset);
@@ -12977,7 +12986,6 @@ void flecs_instantiate(
 
         if (cr->flags & EcsIdOrderedChildren) {
             if (flecs_component_has_non_fragmenting_childof(cr)) {
-                
                 EcsTreeSpawner *ts = flecs_get_mut(
                     world, base, ecs_id(EcsTreeSpawner), record, 
                     sizeof(EcsTreeSpawner)).ptr;
@@ -39932,7 +39940,8 @@ void flecs_component_update_childof_depth(
     if (tgt) {
         ecs_table_t *tgt_table = tgt_r->table;
         if (tgt_table->flags & EcsTableHasChildOf) {
-            ecs_pair_record_t *tgt_childof_pr = tgt_table->_->childof_r;
+            ecs_pair_record_t *tgt_childof_pr = flecs_table_get_childof_pr(
+                world, tgt_table);
             new_depth = tgt_childof_pr->depth + 1;
         } else if (tgt_table->flags & EcsTableHasParent) {
             int32_t column = tgt_table->component_map[ecs_id(EcsParent)];
@@ -40685,9 +40694,9 @@ void flecs_non_fragmenting_childof_reparent(
         return;
     }
 
-    ecs_pair_record_t *dst_pair = dst->_->childof_r;
+    ecs_pair_record_t *dst_pair = flecs_table_get_childof_pr(world, dst);
     ecs_assert(dst_pair != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_pair_record_t *src_pair = src ? src->_->childof_r : NULL;
+    ecs_pair_record_t *src_pair = flecs_table_get_childof_pr(world, src);
 
     int32_t dst_depth = dst_pair->depth;
     int32_t src_depth = 0;
@@ -40731,8 +40740,8 @@ void flecs_non_fragmenting_childof_unparent(
 {
     ecs_assert(src != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_pair_record_t *dst_pair = dst ? dst->_->childof_r : NULL;
-    ecs_pair_record_t *src_pair = src->_->childof_r;
+    ecs_pair_record_t *dst_pair = flecs_table_get_childof_pr(world, dst);
+    ecs_pair_record_t *src_pair = flecs_table_get_childof_pr(world, src);
 
     ecs_assert(src_pair != NULL, ECS_INTERNAL_ERROR, NULL);
     
@@ -40819,8 +40828,7 @@ void flecs_ordered_children_populate(
     while (ecs_each_next(&it)) {
         int32_t i;
         for (i = 0; i < it.count; i ++) {
-            ecs_vec_append_t(
-                &world->allocator, v, ecs_entity_t)[0] = it.entities[i];
+            flecs_ordered_entities_append(world, cr->pair, it.entities[i]);
         }
     }
 }
@@ -40874,13 +40882,14 @@ void flecs_ordered_entities_remove(
 
 static
 void flecs_ordered_entities_unparent_internal(
+    const ecs_world_t *world,
     const ecs_table_t *entities_table,
     const ecs_table_t *table,
     int32_t row,
     int32_t count)
 {
     if (table && (table->flags & EcsTableHasOrderedChildren)) {
-        ecs_pair_record_t *pair = table->_->childof_r;
+        ecs_pair_record_t *pair = flecs_table_get_childof_pr(world, table);
         const ecs_entity_t *entities = ecs_table_entities(entities_table);
         int32_t i = row, end = row + count;
         for (; i < end; i ++) {
@@ -40897,10 +40906,10 @@ void flecs_ordered_children_reparent(
     int32_t row,
     int32_t count)
 {
-    flecs_ordered_entities_unparent_internal(dst, src, row, count);
+    flecs_ordered_entities_unparent_internal(world, dst, src, row, count);
 
     if (dst->flags & EcsTableHasOrderedChildren) {
-        ecs_pair_record_t *pair = dst->_->childof_r;
+        ecs_pair_record_t *pair = flecs_table_get_childof_pr(world, dst);
         const ecs_entity_t *entities = ecs_table_entities(dst);
         int32_t i = row, end = row + count;
         for (; i < end; i ++) {
@@ -40917,7 +40926,7 @@ void flecs_ordered_children_unparent(
     int32_t count)
 {
     (void)world;
-    flecs_ordered_entities_unparent_internal(src, src, row, count);
+    flecs_ordered_entities_unparent_internal(world, src, src, row, count);
 }
 
 void flecs_ordered_children_reorder(
@@ -41783,6 +41792,8 @@ void flecs_table_init_flags(
     table->_->parent.id = 0;
 #endif
 
+    table->childof_index = -1;
+
     int32_t i;
     for (i = 0; i < count; i ++) {
         ecs_id_t id = ids[i];
@@ -41858,6 +41869,8 @@ void flecs_table_init_flags(
                 table->flags |= EcsTableHasIsA;
             } else if (r == EcsChildOf) {
                 table->flags |= EcsTableHasChildOf;
+                table->childof_index = i;
+
                 ecs_entity_t tgt = ecs_pair_second(world, id);
                 ecs_assert(tgt != 0, ECS_INTERNAL_ERROR, NULL);
 
@@ -42369,16 +42382,12 @@ void flecs_table_init(
     table->version = 1;
     flecs_table_init_data(world, table);
 
-    /* If the table doesn't have an explicit ChildOf pair, it will be in the
-     * root which is registered with the (ChildOf, 0) index. */
     if (childof_cr) {
         if (table->flags & EcsTableHasName) {
             flecs_component_name_index_ensure(world, childof_cr);
             ecs_assert(childof_cr->pair->name_index != NULL, 
                 ECS_INTERNAL_ERROR, NULL);
         }
-
-        table->_->childof_r = childof_cr->pair;
     }
 
     /* If table has IsA pairs, create overrides cache */
@@ -44200,6 +44209,52 @@ void flecs_table_release(
 {
     table->keep --;
     ecs_assert(table->keep >= 0, ECS_INTERNAL_ERROR, NULL);
+}
+
+ecs_component_record_t* flecs_table_get_childof_cr(
+    const ecs_world_t *world,
+    const ecs_table_t *table)
+{
+    if (!table) {
+        return NULL;
+    }
+
+    int16_t index = table->childof_index;
+    if (index == -1) {
+        return world->cr_childof_0;
+    } else {
+        return table->_->records[index].hdr.cr;
+    }
+}
+
+ecs_pair_record_t* flecs_table_get_childof_pr(
+    const ecs_world_t *world,
+    const ecs_table_t *table)
+{
+    if (!table) {
+        return NULL;
+    }
+
+    ecs_component_record_t *cr = flecs_table_get_childof_cr(world, table);
+    if (cr) {
+        return cr->pair;
+    }
+    return NULL;
+}
+
+ecs_hashmap_t* flecs_table_get_name_index(
+    const ecs_world_t *world,
+    const ecs_table_t *table)
+{
+    if (!table) {
+        return NULL;
+    }
+
+    ecs_pair_record_t *pr = flecs_table_get_childof_pr(world, table);
+    if (pr) {
+        return pr->name_index;
+    }
+    return NULL;
 }
 
 

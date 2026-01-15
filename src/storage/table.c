@@ -235,6 +235,8 @@ void flecs_table_init_flags(
     table->_->parent.id = 0;
 #endif
 
+    table->childof_index = -1;
+
     int32_t i;
     for (i = 0; i < count; i ++) {
         ecs_id_t id = ids[i];
@@ -310,6 +312,8 @@ void flecs_table_init_flags(
                 table->flags |= EcsTableHasIsA;
             } else if (r == EcsChildOf) {
                 table->flags |= EcsTableHasChildOf;
+                table->childof_index = i;
+
                 ecs_entity_t tgt = ecs_pair_second(world, id);
                 ecs_assert(tgt != 0, ECS_INTERNAL_ERROR, NULL);
 
@@ -821,16 +825,12 @@ void flecs_table_init(
     table->version = 1;
     flecs_table_init_data(world, table);
 
-    /* If the table doesn't have an explicit ChildOf pair, it will be in the
-     * root which is registered with the (ChildOf, 0) index. */
     if (childof_cr) {
         if (table->flags & EcsTableHasName) {
             flecs_component_name_index_ensure(world, childof_cr);
             ecs_assert(childof_cr->pair->name_index != NULL, 
                 ECS_INTERNAL_ERROR, NULL);
         }
-
-        table->_->childof_r = childof_cr->pair;
     }
 
     /* If table has IsA pairs, create overrides cache */
@@ -2652,6 +2652,52 @@ void flecs_table_release(
 {
     table->keep --;
     ecs_assert(table->keep >= 0, ECS_INTERNAL_ERROR, NULL);
+}
+
+ecs_component_record_t* flecs_table_get_childof_cr(
+    const ecs_world_t *world,
+    const ecs_table_t *table)
+{
+    if (!table) {
+        return NULL;
+    }
+
+    int16_t index = table->childof_index;
+    if (index == -1) {
+        return world->cr_childof_0;
+    } else {
+        return table->_->records[index].hdr.cr;
+    }
+}
+
+ecs_pair_record_t* flecs_table_get_childof_pr(
+    const ecs_world_t *world,
+    const ecs_table_t *table)
+{
+    if (!table) {
+        return NULL;
+    }
+
+    ecs_component_record_t *cr = flecs_table_get_childof_cr(world, table);
+    if (cr) {
+        return cr->pair;
+    }
+    return NULL;
+}
+
+ecs_hashmap_t* flecs_table_get_name_index(
+    const ecs_world_t *world,
+    const ecs_table_t *table)
+{
+    if (!table) {
+        return NULL;
+    }
+
+    ecs_pair_record_t *pr = flecs_table_get_childof_pr(world, table);
+    if (pr) {
+        return pr->name_index;
+    }
+    return NULL;
 }
 
 

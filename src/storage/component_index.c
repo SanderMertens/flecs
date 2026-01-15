@@ -1200,7 +1200,8 @@ void flecs_component_update_childof_depth(
     if (tgt) {
         ecs_table_t *tgt_table = tgt_r->table;
         if (tgt_table->flags & EcsTableHasChildOf) {
-            ecs_pair_record_t *tgt_childof_pr = tgt_table->_->childof_r;
+            ecs_pair_record_t *tgt_childof_pr = flecs_table_get_childof_pr(
+                world, tgt_table);
             new_depth = tgt_childof_pr->depth + 1;
         } else if (tgt_table->flags & EcsTableHasParent) {
             int32_t column = tgt_table->component_map[ecs_id(EcsParent)];

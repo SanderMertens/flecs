@@ -134,9 +134,6 @@ struct ecs_world_t {
     /* Array for checking if components can be set trivially */
     ecs_flags8_t non_trivial_set[FLECS_HI_COMPONENT_ID];
 
-    /* Is entity range checking enabled? */
-    bool range_check_enabled;
-
     /* --  Data storage -- */
     ecs_store_t store;
 
@@ -156,6 +153,12 @@ struct ecs_world_t {
 
     /* -- Component ids -- */
     ecs_vec_t component_ids;         /* World local component ids */
+
+    /* Index of prefab children in ordered children vector. Used by ecs_get_target. */
+    ecs_map_t prefab_child_indices;
+
+    /* Is entity range checking enabled? */
+    bool range_check_enabled;
 
     /* Internal callback for command inspection. Only one callback can be set at
      * a time. After assignment the action will become active at the start of 

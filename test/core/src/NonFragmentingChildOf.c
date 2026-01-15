@@ -3708,6 +3708,43 @@ void NonFragmentingChildOf_instantiate_instance_after_shrink(void) {
     ecs_fini(world);
 }
 
+void NonFragmentingChildOf_get_instance_child_from_prefab(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t c1 = ecs_insert(world, ecs_value(EcsParent, {p}));
+    ecs_entity_t c2 = ecs_insert(world, ecs_value(EcsParent, {p}));
+    ecs_entity_t c3 = ecs_insert(world, ecs_value(EcsParent, {p}));
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    ecs_entities_t entities = ecs_get_ordered_children(world, i);
+    test_assert(ecs_get_target(world, i, c1, 0) == entities.ids[0]);
+    test_assert(ecs_get_target(world, i, c2, 0) == entities.ids[1]);
+    test_assert(ecs_get_target(world, i, c3, 0) == entities.ids[2]);
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_get_instance_child_from_prefab_variant(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t c1 = ecs_insert(world, ecs_value(EcsParent, {base}));
+    ecs_entity_t c2 = ecs_insert(world, ecs_value(EcsParent, {base}));
+    ecs_entity_t c3 = ecs_insert(world, ecs_value(EcsParent, {base}));
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_add_pair(world, p, EcsIsA, base);
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    ecs_entities_t entities = ecs_get_ordered_children(world, i);
+    test_assert(ecs_get_target(world, i, c1, 0) == entities.ids[0]);
+    test_assert(ecs_get_target(world, i, c2, 0) == entities.ids[1]);
+    test_assert(ecs_get_target(world, i, c3, 0) == entities.ids[2]);
+
+    ecs_fini(world);
+}
+
 void NonFragmentingChildOf_delete_with_parent(void) {
     ecs_world_t *world = ecs_mini();
 

@@ -500,18 +500,9 @@ void flecs_reparent_name_index(
         src = &world->store.root;
     }
 
-    ecs_pair_record_t *src_pair = src->_->childof_r;
-    ecs_pair_record_t *dst_pair = dst->_->childof_r;
-
-    /* Reparenting should only get triggered when an entity changed parent */
-    ecs_assert(src_pair != dst_pair, ECS_INTERNAL_ERROR, NULL);
-
-    /* Even when an entity has no parent, it's still in the root scope */
-    ecs_assert(src_pair != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(dst_pair != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_hashmap_t *src_index = src_pair->name_index;
-    ecs_hashmap_t *dst_index = dst_pair->name_index;
+    ecs_hashmap_t *src_index = flecs_table_get_name_index(world, src);
+    ecs_hashmap_t *dst_index = flecs_table_get_name_index(world, dst);
+    ecs_assert(src_index != dst_index, ECS_INTERNAL_ERROR, NULL);
     if ((!src_index && !dst_index)) {
         return;
     }
@@ -543,9 +534,9 @@ void flecs_unparent_name_index(
         return;
     }
 
-    ecs_assert(src->_->childof_r != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_hashmap_t *src_index = src->_->childof_r->name_index;
-    ecs_hashmap_t *dst_index = dst ? dst->_->childof_r->name_index : NULL;
+    ecs_hashmap_t *src_index = flecs_table_get_name_index(world, src);
+    ecs_hashmap_t *dst_index = dst ? flecs_table_get_name_index(world, dst) : NULL;
+    ecs_assert(src_index != NULL, ECS_INTERNAL_ERROR, NULL);
 
     EcsIdentifier *names = ecs_table_get_pair(world, 
         src, EcsIdentifier, EcsName, offset);

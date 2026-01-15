@@ -316,9 +316,9 @@ void flecs_non_fragmenting_childof_reparent(
         return;
     }
 
-    ecs_pair_record_t *dst_pair = dst->_->childof_r;
+    ecs_pair_record_t *dst_pair = flecs_table_get_childof_pr(world, dst);
     ecs_assert(dst_pair != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_pair_record_t *src_pair = src ? src->_->childof_r : NULL;
+    ecs_pair_record_t *src_pair = flecs_table_get_childof_pr(world, src);
 
     int32_t dst_depth = dst_pair->depth;
     int32_t src_depth = 0;
@@ -362,8 +362,8 @@ void flecs_non_fragmenting_childof_unparent(
 {
     ecs_assert(src != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_pair_record_t *dst_pair = dst ? dst->_->childof_r : NULL;
-    ecs_pair_record_t *src_pair = src->_->childof_r;
+    ecs_pair_record_t *dst_pair = flecs_table_get_childof_pr(world, dst);
+    ecs_pair_record_t *src_pair = flecs_table_get_childof_pr(world, src);
 
     ecs_assert(src_pair != NULL, ECS_INTERNAL_ERROR, NULL);
     

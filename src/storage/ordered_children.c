@@ -31,8 +31,7 @@ void flecs_ordered_children_populate(
     while (ecs_each_next(&it)) {
         int32_t i;
         for (i = 0; i < it.count; i ++) {
-            ecs_vec_append_t(
-                &world->allocator, v, ecs_entity_t)[0] = it.entities[i];
+            flecs_ordered_entities_append(world, cr->pair, it.entities[i]);
         }
     }
 }
@@ -86,13 +85,14 @@ void flecs_ordered_entities_remove(
 
 static
 void flecs_ordered_entities_unparent_internal(
+    const ecs_world_t *world,
     const ecs_table_t *entities_table,
     const ecs_table_t *table,
     int32_t row,
     int32_t count)
 {
     if (table && (table->flags & EcsTableHasOrderedChildren)) {
-        ecs_pair_record_t *pair = table->_->childof_r;
+        ecs_pair_record_t *pair = flecs_table_get_childof_pr(world, table);
         const ecs_entity_t *entities = ecs_table_entities(entities_table);
         int32_t i = row, end = row + count;
         for (; i < end; i ++) {
@@ -109,10 +109,10 @@ void flecs_ordered_children_reparent(
     int32_t row,
     int32_t count)
 {
-    flecs_ordered_entities_unparent_internal(dst, src, row, count);
+    flecs_ordered_entities_unparent_internal(world, dst, src, row, count);
 
     if (dst->flags & EcsTableHasOrderedChildren) {
-        ecs_pair_record_t *pair = dst->_->childof_r;
+        ecs_pair_record_t *pair = flecs_table_get_childof_pr(world, dst);
         const ecs_entity_t *entities = ecs_table_entities(dst);
         int32_t i = row, end = row + count;
         for (; i < end; i ++) {
@@ -129,7 +129,7 @@ void flecs_ordered_children_unparent(
     int32_t count)
 {
     (void)world;
-    flecs_ordered_entities_unparent_internal(src, src, row, count);
+    flecs_ordered_entities_unparent_internal(world, src, src, row, count);
 }
 
 void flecs_ordered_children_reorder(
