@@ -10533,7 +10533,7 @@ ecs_entity_t flecs_get_prefab_instance_child(
             flecs_errstr_1(ecs_id_str(world, entity)));
 
     ecs_vec_t *v = &childof_cr->pair->ordered_children;
-    int32_t index = *index_ptr;
+    int32_t index = flecs_uto(int32_t, *index_ptr);
     ecs_check(ecs_vec_count(v) >= index, ECS_INVALID_OPERATION, 
         "cannot get target for '%s': children of '%s' have changed since "
         "prefab instantiation",
@@ -10679,9 +10679,10 @@ error:
     return 0;
 }
 
-ecs_entity_t ecs_new_child(
+ecs_entity_t ecs_new_w_parent(
     ecs_world_t *world,
-    ecs_entity_t parent)
+    ecs_entity_t parent,
+    const char *name)
 {
     ecs_component_record_t *cr = flecs_components_ensure(
         world, ecs_childof(parent));
@@ -10690,14 +10691,26 @@ ecs_entity_t ecs_new_child(
     ecs_pair_record_t *pr = cr->pair;
     ecs_assert(pr != NULL, ECS_INTERNAL_ERROR, NULL);
 
+    ecs_entity_t entity = 0;
+    if (name) {
+        ecs_hashmap_t *name_index = pr->name_index;
+        if (name_index) {
+            entity = flecs_name_index_find(name_index, name, 0, 0);
+            if (entity) {
+                return entity;
+            }
+        }
+    }
+
     ecs_id_t type_ids[] = {
         ecs_id(EcsParent), ecs_value_pair(EcsParentDepth, pr->depth)};
 
     ecs_type_t type = { .count = 2, .array = type_ids };
     ecs_table_t *table = flecs_table_find_or_create(world, &type);
+
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_entity_t entity = flecs_new_id(world);
+    entity = flecs_new_id(world);
     ecs_record_t *r = flecs_entities_get(world, entity);
     ecs_flags32_t flags = table->flags & EcsTableAddEdgeFlags;
 
@@ -10715,6 +10728,10 @@ ecs_entity_t ecs_new_child(
     EcsParent *parent_ptr = table->data.columns[0].data;
     parent_ptr = &parent_ptr[row];
     parent_ptr->value = parent;
+
+    if (name) {
+        ecs_set_name(world, entity, name);
+    }
 
     flecs_add_non_fragmenting_child_w_records(world, parent, entity, cr, r);
 
@@ -68829,12 +68846,12 @@ ecs_entity_t flecs_script_create_entity(
     }
 
     ecs_entity_desc_t desc = {0};
-    desc.name = name;
 
     if (v->entity && v->entity->non_fragmenting_parent) {
-        desc.id = ecs_new_child(v->world, v->parent);
+        desc.id = ecs_new_w_parent(v->world, v->parent, name);
     } else {
         desc.parent = v->parent;
+        desc.name = name;
     }
 
     desc.set = with;

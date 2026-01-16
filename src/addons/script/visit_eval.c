@@ -314,12 +314,12 @@ ecs_entity_t flecs_script_create_entity(
     }
 
     ecs_entity_desc_t desc = {0};
-    desc.name = name;
 
     if (v->entity && v->entity->non_fragmenting_parent) {
-        desc.id = ecs_new_child(v->world, v->parent);
+        desc.id = ecs_new_w_parent(v->world, v->parent, name);
     } else {
         desc.parent = v->parent;
+        desc.name = name;
     }
 
     desc.set = with;

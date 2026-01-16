@@ -23342,8 +23342,8 @@ void NonFragmentingChildOf_this_up_optional(void) {
     ecs_entity_t p2 = ecs_new(world);
 
     ecs_entity_t c1 = ecs_new(world);
-    ecs_entity_t c2 = ecs_new_child(world, p1);
-    ecs_entity_t c3 = ecs_new_child(world, p2);
+    ecs_entity_t c2 = ecs_new_w_parent(world, p1, NULL);
+    ecs_entity_t c3 = ecs_new_w_parent(world, p2, NULL);
 
     ecs_add(world, c1, Foo);
     ecs_add(world, c2, Foo);
@@ -23414,9 +23414,9 @@ void NonFragmentingChildOf_this_up_optional_2(void) {
     ecs_entity_t p3 = ecs_new(world);
 
     ecs_entity_t c1 = ecs_new(world);
-    ecs_entity_t c2 = ecs_new_child(world, p1);
-    ecs_entity_t c3 = ecs_new_child(world, p2);
-    ecs_entity_t c4 = ecs_new_child(world, p3);
+    ecs_entity_t c2 = ecs_new_w_parent(world, p1, NULL);
+    ecs_entity_t c3 = ecs_new_w_parent(world, p2, NULL);
+    ecs_entity_t c4 = ecs_new_w_parent(world, p3, NULL);
 
     ecs_add(world, c1, Foo);
     ecs_add(world, c2, Foo);
@@ -23502,8 +23502,8 @@ void NonFragmentingChildOf_this_self_up_optional(void) {
     ecs_entity_t p2 = ecs_new(world);
 
     ecs_entity_t c1 = ecs_new(world);
-    ecs_entity_t c2 = ecs_new_child(world, p1);
-    ecs_entity_t c3 = ecs_new_child(world, p2);
+    ecs_entity_t c2 = ecs_new_w_parent(world, p1, NULL);
+    ecs_entity_t c3 = ecs_new_w_parent(world, p2, NULL);
 
     ecs_add(world, c1, Foo);
     ecs_add(world, c2, Foo);
@@ -23574,9 +23574,9 @@ void NonFragmentingChildOf_this_self_up_optional_2(void) {
     ecs_entity_t p3 = ecs_new(world);
 
     ecs_entity_t c1 = ecs_new(world);
-    ecs_entity_t c2 = ecs_new_child(world, p1);
-    ecs_entity_t c3 = ecs_new_child(world, p2);
-    ecs_entity_t c4 = ecs_new_child(world, p3);
+    ecs_entity_t c2 = ecs_new_w_parent(world, p1, NULL);
+    ecs_entity_t c3 = ecs_new_w_parent(world, p2, NULL);
+    ecs_entity_t c4 = ecs_new_w_parent(world, p3, NULL);
 
     ecs_add(world, c1, Foo);
     ecs_add(world, c2, Foo);
@@ -23664,10 +23664,10 @@ void NonFragmentingChildOf_this_self_up_optional_3(void) {
     ecs_entity_t p3 = ecs_new(world);
 
     ecs_entity_t c1 = ecs_new(world);
-    ecs_entity_t c2 = ecs_new_child(world, p1);
-    ecs_entity_t c3 = ecs_new_child(world, p2);
-    ecs_entity_t c4 = ecs_new_child(world, p2);
-    ecs_entity_t c5 = ecs_new_child(world, p3);
+    ecs_entity_t c2 = ecs_new_w_parent(world, p1, NULL);
+    ecs_entity_t c3 = ecs_new_w_parent(world, p2, NULL);
+    ecs_entity_t c4 = ecs_new_w_parent(world, p2, NULL);
+    ecs_entity_t c5 = ecs_new_w_parent(world, p3, NULL);
 
     ecs_add(world, c1, Foo);
     ecs_add(world, c2, Foo);

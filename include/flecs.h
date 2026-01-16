@@ -3808,10 +3808,24 @@ ecs_entity_t ecs_get_parent(
     const ecs_world_t *world,
     ecs_entity_t entity);
 
+/** Create child with Parent component.
+ * This creates or returns an existing child for the specified parent. If a new
+ * child is created, the Parent component is used to create the parent 
+ * relationship.
+ * 
+ * If a child entity already exists with the specified name, it will be 
+ * returned.
+ * 
+ * @param world The world.
+ * @param parent The parent for which to create the child.
+ * @param name The name with which to create the entity (may be NULL).
+ * @return A new or existing child entity.
+ */
 FLECS_API
-ecs_entity_t ecs_new_child(
+ecs_entity_t ecs_new_w_parent(
     ecs_world_t *world,
-    ecs_entity_t parent);
+    ecs_entity_t parent,
+    const char *name);
 
 /** Get the target of a relationship for a given component.
  * This operation returns the first entity that has the provided component by 

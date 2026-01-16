@@ -2906,7 +2906,7 @@ void NonFragmentingChildOf_prefab_child_has_prefab_w_insert(void) {
 void NonFragmentingChildOf_prefab_child_has_prefab_w_new_child(void) {
     ecs_world_t *world = ecs_mini();
     ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
-    ecs_entity_t c = ecs_new_child(world, p);
+    ecs_entity_t c = ecs_new_w_parent(world, p, NULL);
 
     test_assert(ecs_has_id(world, c, EcsPrefab));
 
@@ -2939,8 +2939,8 @@ void NonFragmentingChildOf_prefab_child_nested_has_prefab_w_insert(void) {
 void NonFragmentingChildOf_prefab_child_nested_has_prefab_w_new_child(void) {
     ecs_world_t *world = ecs_mini();
     ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
-    ecs_entity_t c = ecs_new_child(world, p);
-    ecs_entity_t gc = ecs_new_child(world, c);
+    ecs_entity_t c = ecs_new_w_parent(world, p, NULL);
+    ecs_entity_t gc = ecs_new_w_parent(world, c, NULL);
 
     test_assert(ecs_has_id(world, c, EcsPrefab));
     test_assert(ecs_has_id(world, gc, EcsPrefab));
@@ -2965,7 +2965,7 @@ void NonFragmentingChildOf_prefab_child_nested_has_prefab_w_set(void) {
 void NonFragmentingChildOf_prefab_variant_w_children(void) {
     ecs_world_t *world = ecs_mini();
     ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
-    ecs_entity_t base_child = ecs_new_child(world, base);
+    ecs_entity_t base_child = ecs_new_w_parent(world, base, NULL);
     ecs_entity_t variant = ecs_new_w_id(world, EcsPrefab);
     ecs_add_pair(world, variant, EcsIsA, base);
 
@@ -2984,8 +2984,8 @@ void NonFragmentingChildOf_prefab_variant_w_children(void) {
 void NonFragmentingChildOf_prefab_variant_w_nested_children(void) {
     ecs_world_t *world = ecs_mini();
     ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
-    ecs_entity_t base_child = ecs_new_child(world, base);
-    ecs_entity_t base_grandchild = ecs_new_child(world, base_child);
+    ecs_entity_t base_child = ecs_new_w_parent(world, base, NULL);
+    ecs_entity_t base_grandchild = ecs_new_w_parent(world, base_child, NULL);
     ecs_entity_t variant = ecs_new_w_id(world, EcsPrefab);
     ecs_add_pair(world, variant, EcsIsA, base);
 
@@ -3772,20 +3772,87 @@ void NonFragmentingChildOf_named_prefab_variant_hierarchy(void) {
     ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
     ecs_set_name(world, base, "Base");
 
-    ecs_entity_t base_child = ecs_new_child(world, base);
+    ecs_entity_t base_child = ecs_new_w_parent(world, base, NULL);
     ecs_set_name(world, base_child, "BaseChild");
     ecs_add(world, base_child, Foo);
 
     ecs_entity_t variant = ecs_new_w_id(world, EcsPrefab);
     ecs_add_pair(world, variant, EcsIsA, base);
 
-    ecs_entity_t variant_child = ecs_new_child(world, variant);
+    ecs_entity_t variant_child = ecs_new_w_parent(world, variant, NULL);
     ecs_set_name(world, variant_child, "VariantChild");
 
     ecs_entity_t variant_base_child = ecs_lookup_child(world, variant, "BaseChild");
     test_assert(variant_base_child != 0);
     test_assert(variant_base_child != base_child);
     test_assert(ecs_has(world, variant_base_child, Foo));
+
+    {
+        ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, base);
+        test_assert(ecs_get_name(world, i) == NULL);
+
+        ecs_entities_t entities = ecs_get_ordered_children(world, i);
+        test_int(1, entities.count);
+        test_assert(ecs_get_name(world, entities.ids[0]) == NULL);
+        test_assert(ecs_has_pair(world, entities.ids[0], EcsIsA, base_child));
+    }
+
+    {
+        ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, variant);
+        test_assert(ecs_get_name(world, i) == NULL);
+
+        ecs_entities_t entities = ecs_get_ordered_children(world, i);
+        test_int(2, entities.count);
+        test_assert(ecs_get_name(world, entities.ids[0]) == NULL);
+        test_assert(ecs_get_name(world, entities.ids[1]) == NULL);
+        test_assert(ecs_has_pair(world, entities.ids[0], EcsIsA, base_child));
+        test_assert(ecs_has_pair(world, entities.ids[1], EcsIsA, variant_child));
+        test_assert(ecs_has(world, entities.ids[0], Foo));
+    }
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_named_prefab_hierarchy_new_w_parent(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
+    ecs_set_name(world, base, "Base");
+
+    ecs_entity_t base_child = ecs_new_w_parent(world, base, "BaseChild");
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, base);
+    test_assert(ecs_get_name(world, i) == NULL);
+
+    ecs_entities_t entities = ecs_get_ordered_children(world, i);
+    test_int(1, entities.count);
+    test_assert(ecs_get_name(world, entities.ids[0]) == NULL);
+    test_assert(ecs_has_pair(world, entities.ids[0], EcsIsA, base_child));
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_named_prefab_variant_hierarchy_new_w_parent(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
+    ecs_set_name(world, base, "Base");
+
+    ecs_entity_t base_child = ecs_new_w_parent(world, base, "BaseChild");
+    ecs_add(world, base_child, Foo);
+
+    ecs_entity_t variant = ecs_new_w_id(world, EcsPrefab);
+    ecs_add_pair(world, variant, EcsIsA, base);
+
+    ecs_entity_t variant_base_child = ecs_lookup_child(world, variant, "BaseChild");
+    test_assert(variant_base_child != 0);
+    test_assert(variant_base_child != base_child);
+    test_assert(ecs_has(world, variant_base_child, Foo));
+
+    ecs_entity_t variant_child = ecs_new_w_parent(world, variant, "VariantChild");
+    test_assert(variant_base_child == ecs_new_w_parent(world, variant, "BaseChild"));
 
     {
         ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, base);
