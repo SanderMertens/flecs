@@ -5377,8 +5377,9 @@ typedef struct EcsParent {
 
 /* Component with data to instantiate a non-fragmenting tree. */
 typedef struct {
-    ecs_table_t *table;   /* Table in which child will be stored */
-    int32_t parent_index; /* Index into children vector */
+    const char *child_name; /* Name of prefab child */
+    ecs_table_t *table;     /* Table in which child will be stored */
+    int32_t parent_index;   /* Index into children vector */
 } ecs_tree_spawner_child_t;
 
 typedef struct {
@@ -19723,6 +19724,33 @@ using second_arg_t = typename second_arg<Func>::type;
 } // flecs
 
 
+namespace flecs {
+namespace _ {
+
+// Trick to obtain typename from type, as described here
+// https://blog.molecular-matters.com/2015/12/11/getting-the-type-of-a-template-argument-as-string-without-rtti/
+//
+// The code from the link has been modified to work with more types, and across
+// multiple compilers. The resulting string should be the same on all platforms
+// for all compilers.
+//
+
+#if defined(__GNUC__) || defined(_WIN32)
+template <typename T>
+inline const char* type_name() {
+    static const size_t len = ECS_FUNC_TYPE_LEN(const char*, type_name, ECS_FUNC_NAME);
+    static char result[len + 1] = {};
+    static const size_t front_len = ECS_FUNC_NAME_FRONT(const char*, type_name);
+    static const char* cppTypeName = ecs_cpp_get_type_name(result, ECS_FUNC_NAME, len, front_len);
+    return cppTypeName;
+}
+#else
+#error "implicit component registration not supported"
+#endif
+
+}
+}
+
 
 // Mixin forward declarations
 /**
@@ -25592,7 +25620,8 @@ struct entity_view : public id {
     const T& get() const {
         const T *r = try_get<T>();
         ecs_assert(r != nullptr, ECS_INVALID_OPERATION, 
-            "invalid get: entity does not have component (use try_get)");
+            "invalid get: entity does not have component '%s' (use try_get)",
+                flecs::_::type_name<T>());
         return *r;
     }
 
@@ -25609,7 +25638,8 @@ struct entity_view : public id {
     const A& get() const {
         const A *r = try_get<T>();
         ecs_assert(r != nullptr, ECS_INVALID_OPERATION, 
-            "invalid get: entity does not have component (use try_get)");
+            "invalid get: entity does not have component '%s' (use try_get)",
+            flecs::_::type_name<T>());
         return *r;
     }
     
@@ -29521,27 +29551,6 @@ using delegate = _::each_delegate<typename std::decay<Func>::type, Args...>;
 namespace flecs {
 
 namespace _ {
-
-// Trick to obtain typename from type, as described here
-// https://blog.molecular-matters.com/2015/12/11/getting-the-type-of-a-template-argument-as-string-without-rtti/
-//
-// The code from the link has been modified to work with more types, and across
-// multiple compilers. The resulting string should be the same on all platforms
-// for all compilers.
-//
-
-#if defined(__GNUC__) || defined(_WIN32)
-template <typename T>
-inline const char* type_name() {
-    static const size_t len = ECS_FUNC_TYPE_LEN(const char*, type_name, ECS_FUNC_NAME);
-    static char result[len + 1] = {};
-    static const size_t front_len = ECS_FUNC_NAME_FRONT(const char*, type_name);
-    static const char* cppTypeName = ecs_cpp_get_type_name(result, ECS_FUNC_NAME, len, front_len);
-    return cppTypeName;
-}
-#else
-#error "implicit component registration not supported"
-#endif
 
 // Translate a typename into a language-agnostic identifier. This allows for
 // registration of components/modules across language boundaries.

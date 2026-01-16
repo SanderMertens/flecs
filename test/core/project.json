@@ -877,6 +877,8 @@
                 "instantiate_instance_after_shrink",
                 "get_instance_child_from_prefab",
                 "get_instance_child_from_prefab_variant",
+                "named_prefab_hierarchy",
+                "named_prefab_variant_hierarchy",
                 "delete_with_parent",
                 "delete_with_parent_nested",
                 "delete_with_parent_nested_2",

@@ -21,8 +21,8 @@ void flecs_ordered_children_populate(
     ecs_world_t *world,
     ecs_component_record_t *cr)
 {    
-    ecs_vec_t *v = &cr->pair->ordered_children;
-    ecs_assert(ecs_vec_count(v) == 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ecs_vec_count(&cr->pair->ordered_children) == 0, 
+        ECS_INTERNAL_ERROR, NULL);
     ecs_assert(ECS_IS_PAIR(cr->id), ECS_INTERNAL_ERROR, NULL);
     ecs_assert(ECS_PAIR_FIRST(cr->id) ==  EcsChildOf, 
         ECS_INTERNAL_ERROR, NULL);
@@ -70,7 +70,7 @@ void flecs_ordered_entities_append(
         /* Register index of prefab child so that it can be used to lookup 
          * corresponding instance child. */
         ecs_map_ensure(&world->prefab_child_indices, e)[0] = 
-            ecs_vec_count(&pr->ordered_children) - 1;
+            flecs_ito(uint64_t, ecs_vec_count(&pr->ordered_children) - 1);
     } else {
         ecs_assert(
             !ecs_owns_id(world, ecs_pair_second(world, cr->id), EcsPrefab),

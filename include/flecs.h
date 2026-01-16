@@ -1566,8 +1566,9 @@ typedef struct EcsParent {
 
 /* Component with data to instantiate a non-fragmenting tree. */
 typedef struct {
-    ecs_table_t *table;   /* Table in which child will be stored */
-    int32_t parent_index; /* Index into children vector */
+    const char *child_name; /* Name of prefab child */
+    ecs_table_t *table;     /* Table in which child will be stored */
+    int32_t parent_index;   /* Index into children vector */
 } ecs_tree_spawner_child_t;
 
 typedef struct {

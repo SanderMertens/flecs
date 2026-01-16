@@ -121,6 +121,11 @@ void flecs_prefab_spawner_build_from_cr(
         ecs_tree_spawner_child_t *elem = ecs_vec_append_t(
             NULL, spawner, ecs_tree_spawner_child_t);
         elem->parent_index = parent_index;
+        elem->child_name = NULL;
+
+        if (table->flags & EcsTableHasName) {
+            elem->child_name = ecs_get_name(world, child);
+        }
 
         ecs_type_t type = flecs_prefab_spawner_build_type(
             world, child, table, depth);
@@ -164,6 +169,7 @@ void flecs_spawner_transpose_depth(
         ecs_tree_spawner_child_t *dst_elem = ecs_vec_get_t(
             dst, ecs_tree_spawner_child_t, i);
 
+        dst_elem->child_name = src_elem->child_name;
         dst_elem->parent_index = src_elem->parent_index;
         
         /* Get depth for source element at depth 0 */
@@ -253,6 +259,11 @@ void flecs_spawner_instantiate(
             ecs_table_diff_t diff = ECS_TABLE_DIFF_INIT;
             ecs_id_t id = EcsPrefab;
             table = flecs_table_traverse_add(world, table, &id, &diff);
+
+            if (spawn_child->child_name) {
+                id = ecs_pair_t(EcsIdentifier, EcsName);
+                table = flecs_table_traverse_add(world, table, &id, &diff);
+            }
         }
 
         ecs_record_t *r = flecs_entities_get(world, entity);
@@ -281,6 +292,10 @@ void flecs_spawner_instantiate(
         EcsParent *parent_ptr = table->data.columns[parent_column - 1].data;
         parent_ptr = &parent_ptr[row];
         parent_ptr->value = parent;
+
+        if (is_prefab && spawn_child->child_name) {
+            ecs_set_name(world, entity, spawn_child->child_name);
+        }
 
         flecs_add_non_fragmenting_child_w_records(world, parent, entity, cr, r);
     }

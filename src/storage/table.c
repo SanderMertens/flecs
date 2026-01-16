@@ -312,7 +312,7 @@ void flecs_table_init_flags(
                 table->flags |= EcsTableHasIsA;
             } else if (r == EcsChildOf) {
                 table->flags |= EcsTableHasChildOf;
-                table->childof_index = i;
+                table->childof_index = flecs_ito(int16_t, i);
 
                 ecs_entity_t tgt = ecs_pair_second(world, id);
                 ecs_assert(tgt != 0, ECS_INTERNAL_ERROR, NULL);

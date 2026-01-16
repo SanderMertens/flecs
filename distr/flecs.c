@@ -10521,8 +10521,7 @@ ecs_entity_t flecs_get_prefab_instance_child(
         "cannot get target for '%s': entity '%s' is not an instance of prefab '%s'",
             flecs_errstr(ecs_id_str(world, prefab_child)),
             flecs_errstr_1(ecs_id_str(world, entity)),
-            flecs_errstr_2(
-                ecs_id_str(world, ecs_get_parent(world, prefab))));
+            flecs_errstr_2(ecs_id_str(world, prefab)));
 #endif
 
     ecs_component_record_t *childof_cr = flecs_components_get(
@@ -20002,6 +20001,11 @@ void flecs_prefab_spawner_build_from_cr(
         ecs_tree_spawner_child_t *elem = ecs_vec_append_t(
             NULL, spawner, ecs_tree_spawner_child_t);
         elem->parent_index = parent_index;
+        elem->child_name = NULL;
+
+        if (table->flags & EcsTableHasName) {
+            elem->child_name = ecs_get_name(world, child);
+        }
 
         ecs_type_t type = flecs_prefab_spawner_build_type(
             world, child, table, depth);
@@ -20045,6 +20049,7 @@ void flecs_spawner_transpose_depth(
         ecs_tree_spawner_child_t *dst_elem = ecs_vec_get_t(
             dst, ecs_tree_spawner_child_t, i);
 
+        dst_elem->child_name = src_elem->child_name;
         dst_elem->parent_index = src_elem->parent_index;
         
         /* Get depth for source element at depth 0 */
@@ -20134,6 +20139,11 @@ void flecs_spawner_instantiate(
             ecs_table_diff_t diff = ECS_TABLE_DIFF_INIT;
             ecs_id_t id = EcsPrefab;
             table = flecs_table_traverse_add(world, table, &id, &diff);
+
+            if (spawn_child->child_name) {
+                id = ecs_pair_t(EcsIdentifier, EcsName);
+                table = flecs_table_traverse_add(world, table, &id, &diff);
+            }
         }
 
         ecs_record_t *r = flecs_entities_get(world, entity);
@@ -20162,6 +20172,10 @@ void flecs_spawner_instantiate(
         EcsParent *parent_ptr = table->data.columns[parent_column - 1].data;
         parent_ptr = &parent_ptr[row];
         parent_ptr->value = parent;
+
+        if (is_prefab && spawn_child->child_name) {
+            ecs_set_name(world, entity, spawn_child->child_name);
+        }
 
         flecs_add_non_fragmenting_child_w_records(world, parent, entity, cr, r);
     }
@@ -40900,8 +40914,8 @@ void flecs_ordered_children_populate(
     ecs_world_t *world,
     ecs_component_record_t *cr)
 {    
-    ecs_vec_t *v = &cr->pair->ordered_children;
-    ecs_assert(ecs_vec_count(v) == 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ecs_vec_count(&cr->pair->ordered_children) == 0, 
+        ECS_INTERNAL_ERROR, NULL);
     ecs_assert(ECS_IS_PAIR(cr->id), ECS_INTERNAL_ERROR, NULL);
     ecs_assert(ECS_PAIR_FIRST(cr->id) ==  EcsChildOf, 
         ECS_INTERNAL_ERROR, NULL);
@@ -40949,7 +40963,7 @@ void flecs_ordered_entities_append(
         /* Register index of prefab child so that it can be used to lookup 
          * corresponding instance child. */
         ecs_map_ensure(&world->prefab_child_indices, e)[0] = 
-            ecs_vec_count(&pr->ordered_children) - 1;
+            flecs_ito(uint64_t, ecs_vec_count(&pr->ordered_children) - 1);
     } else {
         ecs_assert(
             !ecs_owns_id(world, ecs_pair_second(world, cr->id), EcsPrefab),
@@ -41968,7 +41982,7 @@ void flecs_table_init_flags(
                 table->flags |= EcsTableHasIsA;
             } else if (r == EcsChildOf) {
                 table->flags |= EcsTableHasChildOf;
-                table->childof_index = i;
+                table->childof_index = flecs_ito(int16_t, i);
 
                 ecs_entity_t tgt = ecs_pair_second(world, id);
                 ecs_assert(tgt != 0, ECS_INTERNAL_ERROR, NULL);

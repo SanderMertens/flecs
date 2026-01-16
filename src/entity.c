@@ -2700,8 +2700,7 @@ ecs_entity_t flecs_get_prefab_instance_child(
         "cannot get target for '%s': entity '%s' is not an instance of prefab '%s'",
             flecs_errstr(ecs_id_str(world, prefab_child)),
             flecs_errstr_1(ecs_id_str(world, entity)),
-            flecs_errstr_2(
-                ecs_id_str(world, ecs_get_parent(world, prefab))));
+            flecs_errstr_2(ecs_id_str(world, prefab)));
 #endif
 
     ecs_component_record_t *childof_cr = flecs_components_get(
