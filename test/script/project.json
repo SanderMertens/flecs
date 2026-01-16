@@ -409,7 +409,10 @@
                 "tree_parent",
                 "tree_parent_nested",
                 "tree_parent_nested_childof",
-                "tree_childof_nested_parent"
+                "tree_childof_nested_parent",
+                "tree_parent_existing_child",
+                "tree_parent_existing_child_2",
+                "tree_prefab_override_child"
             ]
         }, {
             "id": "Template",

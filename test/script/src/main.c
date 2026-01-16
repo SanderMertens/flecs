@@ -406,6 +406,9 @@ void Eval_tree_parent(void);
 void Eval_tree_parent_nested(void);
 void Eval_tree_parent_nested_childof(void);
 void Eval_tree_childof_nested_parent(void);
+void Eval_tree_parent_existing_child(void);
+void Eval_tree_parent_existing_child_2(void);
+void Eval_tree_prefab_override_child(void);
 
 // Testsuite 'Template'
 void Template_template_no_scope(void);
@@ -2709,6 +2712,18 @@ bake_test_case Eval_testcases[] = {
     {
         "tree_childof_nested_parent",
         Eval_tree_childof_nested_parent
+    },
+    {
+        "tree_parent_existing_child",
+        Eval_tree_parent_existing_child
+    },
+    {
+        "tree_parent_existing_child_2",
+        Eval_tree_parent_existing_child_2
+    },
+    {
+        "tree_prefab_override_child",
+        Eval_tree_prefab_override_child
     }
 };
 
@@ -5534,7 +5549,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        397,
+        400,
         Eval_testcases
     },
     {
