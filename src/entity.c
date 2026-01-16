@@ -2666,6 +2666,72 @@ error:
     return false;
 }
 
+static
+ecs_entity_t flecs_get_prefab_instance_child(
+    const ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t prefab_child)
+{
+    ecs_map_val_t *index_ptr = ecs_map_get(
+        &world->prefab_child_indices, prefab_child);
+    if (!index_ptr) {
+        return 0;
+    }
+
+    flecs_assert_entity_valid(world, prefab_child, "get_target");
+    ecs_check(ecs_owns_id(world, prefab_child, EcsPrefab), 
+        ECS_INVALID_OPERATION, 
+        "cannot get target for '%s': entity is not/no longer a prefab",
+        flecs_errstr(ecs_id_str(world, prefab_child)));
+
+#ifdef FLECS_DEBUG
+    ecs_entity_t prefab = ecs_get_parent(world, prefab_child);
+    ecs_check(prefab != 0, ECS_INVALID_OPERATION,
+        "cannot get target for '%s': entity has no parent",
+        flecs_errstr(ecs_id_str(world, prefab_child)));
+
+    ecs_check(ecs_owns_id(world, prefab, EcsPrefab), ECS_INVALID_OPERATION,
+        "cannot get target for '%s': parent is not/no longer a prefab",
+        flecs_errstr(ecs_id_str(world, prefab)),
+        flecs_errstr_1(ecs_id_str(world, prefab_child)));
+
+    ecs_check(ecs_has_pair(world, entity, EcsIsA, prefab),
+        ECS_INVALID_OPERATION,
+        "cannot get target for '%s': entity '%s' is not an instance of prefab '%s'",
+            flecs_errstr(ecs_id_str(world, prefab_child)),
+            flecs_errstr_1(ecs_id_str(world, entity)),
+            flecs_errstr_2(
+                ecs_id_str(world, ecs_get_parent(world, prefab))));
+#endif
+
+    ecs_component_record_t *childof_cr = flecs_components_get(
+        world, ecs_childof(entity));
+    ecs_check(childof_cr != NULL, ECS_INVALID_OPERATION, 
+        "cannot get target for '%s': children of '%s' have changed since "
+        "prefab instantiation",
+            flecs_errstr(ecs_id_str(world, prefab_child)),
+            flecs_errstr_1(ecs_id_str(world, entity)));
+
+    ecs_vec_t *v = &childof_cr->pair->ordered_children;
+    int32_t index = *index_ptr;
+    ecs_check(ecs_vec_count(v) >= index, ECS_INVALID_OPERATION, 
+        "cannot get target for '%s': children of '%s' have changed since "
+        "prefab instantiation",
+            flecs_errstr(ecs_id_str(world, prefab_child)),
+            flecs_errstr_1(ecs_id_str(world, entity)));
+
+    ecs_entity_t tgt = ecs_vec_get_t(v, ecs_entity_t, index)[0];
+    ecs_check(ecs_has_pair(world, tgt, EcsIsA, prefab_child), ECS_INVALID_OPERATION,
+        "cannot get target for '%s': children of '%s' have changed since "
+        "prefab instantiation",
+            flecs_errstr(ecs_id_str(world, prefab_child)),
+            flecs_errstr_1(ecs_id_str(world, entity)));
+
+    return tgt;
+error:
+    return 0;
+}
+
 ecs_entity_t ecs_get_target(
     const ecs_world_t *world,
     ecs_entity_t entity,
@@ -2693,6 +2759,9 @@ ecs_entity_t ecs_get_target(
     ecs_id_t wc = ecs_pair(rel, EcsWildcard);
     ecs_component_record_t *cr = flecs_components_get(world, wc);
     if (!cr) {
+        if (!index) {
+            return flecs_get_prefab_instance_child(world, entity, rel);
+        }
         return 0;
     }
 

@@ -81,7 +81,7 @@ int flecs_add_non_fragmenting_child_w_records(
     ecs_check(ecs_is_alive(world, parent), ECS_INVALID_OPERATION, 
         "cannot set Parent component to entity that is not alive");
     
-    flecs_ordered_entities_append(world, cr->pair, entity);
+    flecs_ordered_entities_append(world, cr, entity);
 
     flecs_add_non_fragmenting_child_to_table(world, cr, entity, r->table);
 
@@ -128,7 +128,7 @@ void flecs_remove_non_fragmenting_child(
         return;
     }
 
-    flecs_ordered_entities_remove(cr->pair, entity);
+    flecs_ordered_entities_remove(world, cr, entity);
 
     ecs_record_t *r = flecs_entities_get(world, entity);
     ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -288,7 +288,7 @@ void flecs_on_non_fragmenting_child_move_remove(
                 flecs_add_non_fragmenting_child_to_table(world, cr, e, dst);
             }
         } else {
-            flecs_ordered_entities_remove(cr->pair, e);
+            flecs_ordered_entities_remove(world, cr, e);
 
             if (names) {
                 flecs_on_reparent_update_name(world, e, &names[i], p, NULL);

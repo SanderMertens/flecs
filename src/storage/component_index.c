@@ -555,6 +555,15 @@ ecs_component_record_t* flecs_component_new(
                 /* ChildOf records can be created often and since we already know
                  * the traits a ChildOf record will have, set them directly. */
                 if (rel == EcsChildOf) {
+                    /* Add flag to indicate that children are prefab children. 
+                     * This is used to determine whether to build the lookup map 
+                     * that allows for:
+                     *   instance_child = instance.target(prefab_child);
+                     */
+                    if (tgt_table->flags & EcsTableIsPrefab) {
+                        cr->flags |= EcsIdPrefabChildren;
+                    }
+
                     /* Check if we should keep a list of ordered children for 
                      * parent */
                     if (ecs_table_has_id(
@@ -566,7 +575,7 @@ ecs_component_record_t* flecs_component_new(
                     flecs_component_update_childof_depth(
                         world, cr, tgt, tgt_r);
 
-                    cr->flags = EcsIdOnDeleteTargetDelete | 
+                    cr->flags |= EcsIdOnDeleteTargetDelete | 
                         EcsIdOnInstantiateDontInherit | EcsIdTraversable | 
                         EcsIdPairIsTag | EcsIdExclusive;
 

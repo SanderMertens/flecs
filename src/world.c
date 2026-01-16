@@ -1033,6 +1033,8 @@ ecs_world_t *ecs_mini(void) {
         ecs_os_get_time(&world->world_start_time);
     }
 
+    ecs_map_init(&world->prefab_child_indices, a);
+
     ecs_set_stage_count(world, 1);
     ecs_default_lookup_path[0] = EcsFlecsCore;
     ecs_set_lookup_path(world, ecs_default_lookup_path);
@@ -1333,6 +1335,7 @@ int ecs_fini(
     flecs_name_index_fini(&world->aliases);
     flecs_name_index_fini(&world->symbols);
     ecs_set_stage_count(world, 0);
+    ecs_map_fini(&world->prefab_child_indices);
     ecs_vec_fini_t(&world->allocator, &world->component_ids, ecs_id_t);
     ecs_log_pop_1();
 
