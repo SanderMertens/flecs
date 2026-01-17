@@ -597,7 +597,6 @@ void flecs_script_apply_non_fragmenting_childof(
     }
 }
 
-static
 int flecs_script_apply_annot(
     ecs_script_eval_visitor_t *v,
     ecs_script_entity_t *node,
@@ -728,7 +727,6 @@ int flecs_script_eval_entity(
         }
         ecs_vec_clear(&v->r->annot);
     }
-
 
     bool old_is_with_scope = v->is_with_scope;
     ecs_entity_t old_template_entity = v->template_entity;
@@ -1530,10 +1528,12 @@ int flecs_script_eval_annot(
         return -1;
     }
     
-    if (v->base.next->kind != EcsAstEntity) {
-        if (v->base.next->kind != EcsAstAnnotation) {
+    ecs_script_node_kind_t next_kind = v->base.next->kind;
+    if (next_kind != EcsAstEntity && next_kind != EcsAstTemplate) {
+        if (next_kind != EcsAstAnnotation) {
             flecs_script_eval_error(v, node,
-                "target of @%s annotation must be an entity", node->name);
+                "target of @%s annotation must be an entity or template", 
+                    node->name);
             return -1;
         }
     }

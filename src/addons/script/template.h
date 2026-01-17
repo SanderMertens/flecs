@@ -26,6 +26,12 @@ struct ecs_script_template_t {
 
     /* Type info for template component */
     const ecs_type_info_t *type_info;
+
+    /* Annotations to apply to template instance */
+    ecs_vec_t annot;
+
+    /* Use non-fragmenting hierarchy */
+    bool non_fragmenting_parent;
 };
 
 #define ECS_TEMPLATE_SMALL_SIZE (36)

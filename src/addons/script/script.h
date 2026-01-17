@@ -94,5 +94,10 @@ int ecs_script_ast_node_to_buf(
 void ecs_script_runtime_clear(
     ecs_script_runtime_t *r);
 
+int flecs_script_apply_annot(
+    ecs_script_eval_visitor_t *v,
+    ecs_script_entity_t *node,
+    ecs_script_annot_t *annot);
+
 #endif // FLECS_SCRIPT
 #endif // FLECS_SCRIPT_PRIVATE_H

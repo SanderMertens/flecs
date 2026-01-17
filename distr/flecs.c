@@ -50160,6 +50160,12 @@ struct ecs_script_template_t {
 
     /* Type info for template component */
     const ecs_type_info_t *type_info;
+
+    /* Annotations to apply to template instance */
+    ecs_vec_t annot;
+
+    /* Use non-fragmenting hierarchy */
+    bool non_fragmenting_parent;
 };
 
 #define ECS_TEMPLATE_SMALL_SIZE (36)
@@ -50248,6 +50254,11 @@ int ecs_script_ast_node_to_buf(
 
 void ecs_script_runtime_clear(
     ecs_script_runtime_t *r);
+
+int flecs_script_apply_annot(
+    ecs_script_eval_visitor_t *v,
+    ecs_script_entity_t *node,
+    ecs_script_annot_t *annot);
 
 #endif // FLECS_SCRIPT
 #endif // FLECS_SCRIPT_PRIVATE_H
@@ -67023,12 +67034,19 @@ void flecs_script_template_instantiate(
 
     v.entity = &instance_node;
 
-    int32_t i, m;
+    int32_t i, m, a;
     for (i = 0; i < count; i ++) {
         v.parent = entities[i];
         ecs_assert(ecs_is_alive(world, v.parent), ECS_INTERNAL_ERROR, NULL);
 
         instance_node.eval = entities[i];
+
+        /* Apply annotations, if any */
+        for (a = 0; a < ecs_vec_count(&template->annot); a ++) {
+            ecs_script_annot_t *annot = ecs_vec_get_t(
+                &template->annot, ecs_script_annot_t*, a)[0];
+            flecs_script_apply_annot(&v, &instance_node, annot);
+        }
 
         /* Create variables to hold template properties */
         ecs_script_vars_t *vars = flecs_script_vars_push(
@@ -67367,6 +67385,7 @@ void flecs_script_template_fini(
     ecs_vec_fini_t(a, &template->prop_defaults, ecs_script_var_t);
 
     ecs_vec_fini_t(a, &template->using_, ecs_entity_t);
+    ecs_vec_fini_t(a, &template->annot, ecs_script_annot_t*);
     ecs_script_vars_fini(template->vars);
     flecs_free_t(a, ecs_script_template_t, template);
 }
@@ -67408,6 +67427,18 @@ int flecs_script_eval_template(
      * hooks for it. */
     if (!ecs_has(v->world, template_entity, EcsComponent)) {
         ecs_set(v->world, template_entity, EcsComponent, {1, 1});
+    }
+
+    /* Consume annotations, if any */
+    int32_t i, count = ecs_vec_count(&v->r->annot);
+    ecs_vec_init_t(NULL, &template->annot, ecs_script_annot_t*, count);
+    if (count) {
+        ecs_script_annot_t **annots = ecs_vec_first(&v->r->annot);
+        for (i = 0; i < count ; i ++) {
+            ecs_vec_append_t(
+                NULL, &template->annot, ecs_script_annot_t*)[0] = annots[i];
+        }
+        ecs_vec_clear(&v->r->annot);
     }
 
     template->type_info = ecs_get_type_info(v->world, template_entity);
@@ -69129,7 +69160,6 @@ void flecs_script_apply_non_fragmenting_childof(
     }
 }
 
-static
 int flecs_script_apply_annot(
     ecs_script_eval_visitor_t *v,
     ecs_script_entity_t *node,
@@ -69260,7 +69290,6 @@ int flecs_script_eval_entity(
         }
         ecs_vec_clear(&v->r->annot);
     }
-
 
     bool old_is_with_scope = v->is_with_scope;
     ecs_entity_t old_template_entity = v->template_entity;
@@ -70062,10 +70091,12 @@ int flecs_script_eval_annot(
         return -1;
     }
     
-    if (v->base.next->kind != EcsAstEntity) {
-        if (v->base.next->kind != EcsAstAnnotation) {
+    ecs_script_node_kind_t next_kind = v->base.next->kind;
+    if (next_kind != EcsAstEntity && next_kind != EcsAstTemplate) {
+        if (next_kind != EcsAstAnnotation) {
             flecs_script_eval_error(v, node,
-                "target of @%s annotation must be an entity", node->name);
+                "target of @%s annotation must be an entity or template", 
+                    node->name);
             return -1;
         }
     }

@@ -493,7 +493,9 @@
                 "redefine_nested_template_w_prefab_3",
                 "template_w_script_component",
                 "template_w_script_pair_component",
-                "template_w_prop_and_pair"
+                "template_w_prop_and_pair",
+                "template_w_name_annotation",
+                "template_w_tree_parent"
             ]
         }, {
             "id": "Error",
