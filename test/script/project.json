@@ -495,7 +495,9 @@
                 "template_w_script_pair_component",
                 "template_w_prop_and_pair",
                 "template_w_name_annotation",
-                "template_w_tree_parent"
+                "template_w_name_annotation_update_script",
+                "template_w_tree_parent",
+                "template_w_tree_parent_change_value"
             ]
         }, {
             "id": "Error",

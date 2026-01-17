@@ -66044,12 +66044,23 @@ void ecs_script_clear(
 
         ecs_iter_t it = ecs_children(world, instance);
         while (ecs_children_next(&it)) {
-            if (ecs_table_has_id(world, it.table, ecs_pair(EcsScriptTemplate, script))) {
+            if (it.table) {
+                if (ecs_table_has_id(world, it.table, ecs_pair(EcsScriptTemplate, script))) {
+                    int32_t i, count = it.count;
+                    for (i = 0; i < count; i ++) {
+                        ecs_vec_append_t(
+                            &world->allocator, &to_delete, ecs_entity_t)[0] = 
+                                it.entities[i];
+                    }
+                }
+            } else {
                 int32_t i, count = it.count;
                 for (i = 0; i < count; i ++) {
-                    ecs_vec_append_t(
-                        &world->allocator, &to_delete, ecs_entity_t)[0] = 
-                            it.entities[i];
+                    ecs_entity_t e = it.entities[i];
+                    if (ecs_has_pair(world, e, EcsScriptTemplate, script)) {
+                        ecs_vec_append_t(
+                            &world->allocator, &to_delete, ecs_entity_t)[0] = e;
+                    }
                 }
             }
         }
@@ -67360,6 +67371,8 @@ ecs_script_template_t* flecs_script_template_init(
     ecs_script_template_t *result = flecs_alloc_t(a, ecs_script_template_t);
     ecs_vec_init_t(NULL, &result->prop_defaults, ecs_script_var_t, 0);
     ecs_vec_init_t(NULL, &result->using_, ecs_entity_t, 0);
+    ecs_vec_init_t(NULL, &result->annot, ecs_script_annot_t*, 0);
+
     result->vars = ecs_script_vars_init(script->pub.world);
     return result;
 }
@@ -67431,12 +67444,11 @@ int flecs_script_eval_template(
 
     /* Consume annotations, if any */
     int32_t i, count = ecs_vec_count(&v->r->annot);
-    ecs_vec_init_t(NULL, &template->annot, ecs_script_annot_t*, count);
     if (count) {
         ecs_script_annot_t **annots = ecs_vec_first(&v->r->annot);
         for (i = 0; i < count ; i ++) {
-            ecs_vec_append_t(
-                NULL, &template->annot, ecs_script_annot_t*)[0] = annots[i];
+            ecs_vec_append_t(&v->base.script->allocator, 
+                &template->annot, ecs_script_annot_t*)[0] = annots[i];
         }
         ecs_vec_clear(&v->r->annot);
     }

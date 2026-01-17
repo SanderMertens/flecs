@@ -489,7 +489,9 @@ void Template_template_w_script_component(void);
 void Template_template_w_script_pair_component(void);
 void Template_template_w_prop_and_pair(void);
 void Template_template_w_name_annotation(void);
+void Template_template_w_name_annotation_update_script(void);
 void Template_template_w_tree_parent(void);
+void Template_template_w_tree_parent_change_value(void);
 
 // Testsuite 'Error'
 void Error_multi_line_comment_after_newline_before_newline_scope_open(void);
@@ -3043,8 +3045,16 @@ bake_test_case Template_testcases[] = {
         Template_template_w_name_annotation
     },
     {
+        "template_w_name_annotation_update_script",
+        Template_template_w_name_annotation_update_script
+    },
+    {
         "template_w_tree_parent",
         Template_template_w_tree_parent
+    },
+    {
+        "template_w_tree_parent_change_value",
+        Template_template_w_tree_parent_change_value
     }
 };
 
@@ -5566,7 +5576,7 @@ static bake_test_suite suites[] = {
         "Template",
         NULL,
         NULL,
-        79,
+        81,
         Template_testcases
     },
     {

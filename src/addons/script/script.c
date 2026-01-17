@@ -89,12 +89,23 @@ void ecs_script_clear(
 
         ecs_iter_t it = ecs_children(world, instance);
         while (ecs_children_next(&it)) {
-            if (ecs_table_has_id(world, it.table, ecs_pair(EcsScriptTemplate, script))) {
+            if (it.table) {
+                if (ecs_table_has_id(world, it.table, ecs_pair(EcsScriptTemplate, script))) {
+                    int32_t i, count = it.count;
+                    for (i = 0; i < count; i ++) {
+                        ecs_vec_append_t(
+                            &world->allocator, &to_delete, ecs_entity_t)[0] = 
+                                it.entities[i];
+                    }
+                }
+            } else {
                 int32_t i, count = it.count;
                 for (i = 0; i < count; i ++) {
-                    ecs_vec_append_t(
-                        &world->allocator, &to_delete, ecs_entity_t)[0] = 
-                            it.entities[i];
+                    ecs_entity_t e = it.entities[i];
+                    if (ecs_has_pair(world, e, EcsScriptTemplate, script)) {
+                        ecs_vec_append_t(
+                            &world->allocator, &to_delete, ecs_entity_t)[0] = e;
+                    }
                 }
             }
         }
