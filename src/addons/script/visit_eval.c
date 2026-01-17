@@ -580,21 +580,78 @@ static
 void flecs_script_apply_non_fragmenting_childof(
     ecs_world_t *world,
     ecs_script_entity_t *node,
+    bool enabled);
+
+static
+void flecs_script_apply_non_fragmenting_childof_to_scope(
+    ecs_world_t *world,
+    ecs_script_scope_t *scope,
+    bool enabled)
+{
+    if (!scope) {
+        return;
+    }
+
+    int32_t i, count = ecs_vec_count(&scope->stmts);
+    ecs_script_node_t **stmts = ecs_vec_first(&scope->stmts);
+    for (i = 0; i < count; i ++) {
+        ecs_script_node_t *stmt = stmts[i];
+        switch(stmt->kind) {
+        case EcsAstScope:
+            flecs_script_apply_non_fragmenting_childof_to_scope(
+                world, (ecs_script_scope_t*)stmt, enabled);
+            break;
+        case EcsAstEntity:
+            flecs_script_apply_non_fragmenting_childof(
+                world, (ecs_script_entity_t*)stmt, enabled);
+            break;
+        case EcsAstIf:
+            flecs_script_apply_non_fragmenting_childof_to_scope(
+                world, ((ecs_script_if_t*)stmt)->if_false, enabled);
+            flecs_script_apply_non_fragmenting_childof_to_scope(
+                world, ((ecs_script_if_t*)stmt)->if_true, enabled);
+            break;
+        case EcsAstFor:
+            flecs_script_apply_non_fragmenting_childof_to_scope(
+                world, ((ecs_script_for_range_t*)stmt)->scope, enabled);
+            break;
+        case EcsAstWith:
+        case EcsAstWithVar:
+        case EcsAstWithTag:
+        case EcsAstWithComponent:
+            flecs_script_apply_non_fragmenting_childof_to_scope(
+                world, ((ecs_script_with_t*)stmt)->scope, enabled);
+            break;
+        case EcsAstPairScope:
+            flecs_script_apply_non_fragmenting_childof_to_scope(
+                world, ((ecs_script_pair_scope_t*)stmt)->scope, enabled);
+            break;
+        case EcsAstTag:
+        case EcsAstComponent:
+        case EcsAstDefaultComponent:
+        case EcsAstVarComponent:        
+        case EcsAstUsing:
+        case EcsAstModule:
+        case EcsAstAnnotation:
+        case EcsAstTemplate:
+        case EcsAstProp:
+        case EcsAstConst:
+        case EcsAstExportConst:
+            break;
+        }
+    }
+}
+
+static
+void flecs_script_apply_non_fragmenting_childof(
+    ecs_world_t *world,
+    ecs_script_entity_t *node,
     bool enabled)
 {
     node->non_fragmenting_parent = enabled;
 
-    int32_t i, count = ecs_vec_count(&node->scope->stmts);
-    ecs_script_node_t **stmts = ecs_vec_first(&node->scope->stmts);
-    for (i = 0; i < count; i ++) {
-        ecs_script_node_t *stmt = stmts[i];
-        if (stmt->kind != EcsAstEntity) {
-            continue;
-        }
-
-        flecs_script_apply_non_fragmenting_childof(
-            world, (ecs_script_entity_t*)stmt, enabled);
-    }
+    flecs_script_apply_non_fragmenting_childof_to_scope(
+        world, node->scope, enabled);
 }
 
 int flecs_script_apply_annot(

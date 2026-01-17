@@ -412,7 +412,12 @@
                 "tree_childof_nested_parent",
                 "tree_parent_existing_child",
                 "tree_parent_existing_child_2",
-                "tree_prefab_override_child"
+                "tree_prefab_override_child",
+                "tree_parent_nested_w_if_scope",
+                "tree_parent_nested_w_if_else_scope",
+                "tree_parent_nested_w_for_scope",
+                "tree_parent_nested_w_pair_scope",
+                "tree_parent_nested_w_with_scope"
             ]
         }, {
             "id": "Template",
