@@ -85026,7 +85026,7 @@ bool flecs_query_tree_up_post(
         op, &op->src, EcsQuerySrc, ctx);
 
     /* Passthrough tables with ChildOf pair */
-    if (range.table->flags & (EcsTableHasChildOf)) {
+    if (!(range.table->flags & EcsTableHasParent)) {
         return !redo;
     }
 
