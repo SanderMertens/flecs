@@ -23373,6 +23373,10 @@ int32_t ecs_delete_empty_tables(
         ecs_table_t *table = flecs_sparse_get_dense_t(&world->store.tables,
             ecs_table_t, i);
 
+        if (table->keep) {
+            continue;
+        }
+
         measure_budget_after --;
 
         if (time_budget && !measure_budget_after) {

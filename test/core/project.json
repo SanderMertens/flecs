@@ -875,6 +875,7 @@
                 "instantiate_instance_after_remove_all_tag",
                 "instantiate_instance_after_delete_with_tag",
                 "instantiate_instance_after_shrink",
+                "instantiate_instance_after_delete_empty_tables",
                 "get_instance_child_from_prefab",
                 "get_instance_child_from_prefab_variant",
                 "named_prefab_hierarchy",

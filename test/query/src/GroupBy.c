@@ -1324,5 +1324,7 @@ void GroupBy_group_by_parent_depth(void) {
 
     test_bool(false, ecs_query_next(&it));
 
+    ecs_os_free(entities);
+
     ecs_fini(world);
 }

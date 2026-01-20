@@ -3708,6 +3708,40 @@ void NonFragmentingChildOf_instantiate_instance_after_shrink(void) {
     ecs_fini(world);
 }
 
+void NonFragmentingChildOf_instantiate_instance_after_delete_empty_tables(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t c1 = ecs_insert(world, ecs_value(EcsParent, {base}));
+    ecs_add(world, c1, Foo);
+    /* ecs_entity_t c2 = */ ecs_insert(world, ecs_value(EcsParent, {base}));
+
+    {
+        ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, base);
+        ecs_entities_t entities = ecs_get_ordered_children(world, i);
+        test_int(entities.count, 2);
+        test_assert(ecs_has(world, entities.ids[0], Foo));
+        test_assert(!ecs_has(world, entities.ids[1], Foo));
+
+        ecs_delete(world, i);
+    }
+
+    ecs_delete_empty_tables(world, &(ecs_delete_empty_tables_desc_t){ .delete_generation = 1 });
+    ecs_delete_empty_tables(world, &(ecs_delete_empty_tables_desc_t){ .delete_generation = 1 });
+
+    {
+        ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, base);
+        ecs_entities_t entities = ecs_get_ordered_children(world, i);
+        test_int(entities.count, 2);
+        test_assert(ecs_has(world, entities.ids[0], Foo));
+        test_assert(!ecs_has(world, entities.ids[1], Foo));
+    }
+
+    ecs_fini(world);
+}
+
 void NonFragmentingChildOf_get_instance_child_from_prefab(void) {
     ecs_world_t *world = ecs_mini();
 
