@@ -1990,7 +1990,8 @@
                 "group_by_move_to_group_after_rematch",
                 "group_by_childof",
                 "remove_all",
-                "recreate_after_remove_all"
+                "recreate_after_remove_all",
+                "group_by_parent_depth"
             ]
         }, {
             "id": "MemberTarget",

@@ -163,7 +163,11 @@ uint64_t flecs_query_cache_default_group_by(
 
     ecs_id_t match;
     if (ecs_search(world, table, ecs_pair(id, EcsWildcard), &match) != -1) {
-        return ecs_pair_second(world, match);
+        if (ECS_IS_VALUE_PAIR(match)) {
+            return ECS_PAIR_SECOND(match);
+        } else {
+            return ecs_pair_second(world, match);
+        }
     }
     return 0;
 }
