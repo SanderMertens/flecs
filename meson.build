@@ -156,7 +156,7 @@ flecs_src = files(
     'src/ref.c',
     'src/stage.c',
     'src/search.c',
-    'src/spawner.c',
+    'src/tree_spawner.c',
     'src/type_info.c',
     'src/value.c',
     'src/world.c',

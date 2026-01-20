@@ -525,6 +525,7 @@ typedef struct {
     ecs_size_t bytes_table_cache;       /** Bytes used by table cache. */
     ecs_size_t bytes_name_index;        /** Bytes used by name index. */
     ecs_size_t bytes_ordered_children;  /** Bytes used by ordered children vector. */
+    ecs_size_t bytes_children_table_map; /** Bytes used by map for non-fragmenting ChildOf table lookups. */
     ecs_size_t bytes_reachable_cache;   /** Bytes used by reachable cache. */
 } ecs_component_index_memory_t;
 
@@ -581,6 +582,7 @@ typedef struct {
     ecs_size_t bytes_rematch_monitor;   /** Memory used by monitor used to track rematches */
     ecs_size_t bytes_component_ids;     /** Memory used for mapping global to world-local component ids. */
     ecs_size_t bytes_reflection;        /** Memory used for component reflection not tracked elsewhere. */
+    ecs_size_t bytes_tree_spawner;      /** Memory used for tree (prefab) spawners. */
     ecs_size_t bytes_stats;             /** Memory used for statistics tracking not tracked elsewhere. */
     ecs_size_t bytes_rest;              /** Memory used by REST HTTP server */
 } ecs_misc_memory_t;
