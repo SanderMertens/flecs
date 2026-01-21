@@ -515,7 +515,7 @@ auto q = world.query_builder<Position>()
 </div>
 
 #### Advantages vs. ChildOf
-The main benefit of `Parent` hierarchies is that they do not significantly change the memory layout of components in the ECS storage. A query that does not interact with the hierarchy will perform the same whether entities are organized in a hierarchy or not. This can be a significant benefit over `ChildOf` hierarchies, especially if the application contains many small (prefab) hierarchies. Switching to `Parent` hierachies can improve performance and reduce memory footprint by over an order of magnitude.
+The main benefit of `Parent` hierarchies is that they do not significantly change the memory layout of components in the ECS storage. A query that does not interact with the hierarchy will perform the same whether entities are organized in a hierarchy or not. This can be a significant benefit over `ChildOf` hierarchies, especially if the application contains many small (prefab) hierarchies. Switching to `Parent` hierarchies can improve performance and reduce memory footprint by over an order of magnitude.
 
 In addition to not fragmenting the storage, `Parent` hierarchies have additional performance benefits when used in combination with prefabs. This is because:
 

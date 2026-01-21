@@ -908,7 +908,7 @@ void NonFragmentingChildOf_table_child_count(void) {
 
     const ecs_parent_record_t *pr = flecs_component_get_parent_record(cr, table);
     test_assert(pr != NULL);
-    test_uint(pr->first_entity, c);
+    test_uint(pr->entity, c);
     test_int(pr->count, 1);
 
     ecs_entities_t entities = ecs_get_ordered_children(world, p);
@@ -1003,7 +1003,7 @@ void NonFragmentingChildOf_table_child_count_set_parent_after_tag(void) {
         const ecs_parent_record_t *pr = flecs_component_get_parent_record(cr, table);
         test_assert(pr != NULL);
 
-        test_uint(pr->first_entity, c);
+        test_uint(pr->entity, c);
         test_int(pr->count, 1);
     }
 
@@ -1032,7 +1032,7 @@ void NonFragmentingChildOf_table_child_count_after_add(void) {
         const ecs_parent_record_t *pr = flecs_component_get_parent_record(cr, table_a);
         test_assert(pr != NULL);
 
-        test_uint(pr->first_entity, c);
+        test_uint(pr->entity, c);
         test_int(pr->count, 1);
     }
 
@@ -1050,7 +1050,7 @@ void NonFragmentingChildOf_table_child_count_after_add(void) {
         const ecs_parent_record_t *pr = flecs_component_get_parent_record(cr, table_b);
         test_assert(pr != NULL);
 
-        test_uint(pr->first_entity, c);
+        test_uint(pr->entity, c);
         test_int(pr->count, 1);
     }
 
@@ -1079,7 +1079,7 @@ void NonFragmentingChildOf_table_child_count_after_remove(void) {
         const ecs_parent_record_t *pr = flecs_component_get_parent_record(cr, table_a);
         test_assert(pr != NULL);
 
-        test_uint(pr->first_entity, c);
+        test_uint(pr->entity, c);
         test_int(pr->count, 1);
     }
 
@@ -1098,7 +1098,7 @@ void NonFragmentingChildOf_table_child_count_after_remove(void) {
         const ecs_parent_record_t *pr = flecs_component_get_parent_record(cr, table_b);
         test_assert(pr != NULL);
 
-        test_uint(pr->first_entity, c);
+        test_uint(pr->entity, c);
         test_int(pr->count, 1);
     }
 
@@ -1127,7 +1127,7 @@ void NonFragmentingChildOf_table_child_count_after_remove_all(void) {
         const ecs_parent_record_t *pr = flecs_component_get_parent_record(cr, table_a);
         test_assert(pr != NULL);
 
-        test_uint(pr->first_entity, c);
+        test_uint(pr->entity, c);
         test_int(pr->count, 1);
     }
 
@@ -1146,7 +1146,7 @@ void NonFragmentingChildOf_table_child_count_after_remove_all(void) {
         const ecs_parent_record_t *pr = flecs_component_get_parent_record(cr, table_b);
         test_assert(pr != NULL);
 
-        test_uint(pr->first_entity, c);
+        test_uint(pr->entity, c);
         test_int(pr->count, 1);
     }
 
@@ -1175,7 +1175,7 @@ void NonFragmentingChildOf_table_child_count_after_clear(void) {
         const ecs_parent_record_t *pr = flecs_component_get_parent_record(cr, table_a);
         test_assert(pr != NULL);
 
-        test_uint(pr->first_entity, c);
+        test_uint(pr->entity, c);
         test_int(pr->count, 1);
     }
 
@@ -1220,7 +1220,7 @@ void NonFragmentingChildOf_table_child_count_after_delete(void) {
         const ecs_parent_record_t *pr = flecs_component_get_parent_record(cr, table_a);
         test_assert(pr != NULL);
 
-        test_uint(pr->first_entity, c);
+        test_uint(pr->entity, c);
         test_int(pr->count, 1);
     }
 
@@ -1256,11 +1256,11 @@ void NonFragmentingChildOf_table_child_count_n_children(void) {
 
     const ecs_parent_record_t *pr = flecs_component_get_parent_record(cr, table);
     test_assert(pr != NULL);
-    test_uint(pr->first_entity, c1);
+    test_uint(pr->entity, c1);
     test_int(pr->count, 1);
 
     ecs_entity_t c2 = ecs_insert(world, ecs_value(EcsParent, {p}));
-    test_uint(pr->first_entity, 0);
+    test_uint(pr->entity, 0);
     test_int(pr->count, 2);
 
     ecs_entities_t entities = ecs_get_ordered_children(world, p);
@@ -1284,16 +1284,16 @@ void NonFragmentingChildOf_table_child_count_n_children_remove_parent(void) {
 
     const ecs_parent_record_t *pr = flecs_component_get_parent_record(cr, table);
     test_assert(pr != NULL);
-    test_uint(pr->first_entity, c1);
+    test_uint(pr->entity, c1);
     test_int(pr->count, 1);
 
     ecs_entity_t c2 = ecs_insert(world, ecs_value(EcsParent, {p}));
-    test_uint(pr->first_entity, 0);
+    test_uint(pr->entity, 0);
     test_int(pr->count, 2);
 
     ecs_remove(world, c1, EcsParent);
 
-    test_uint(pr->first_entity, 0);
+    test_uint(pr->entity, 0);
     test_int(pr->count, 1);
 
     ecs_remove(world, c2, EcsParent);
@@ -1319,16 +1319,16 @@ void NonFragmentingChildOf_table_child_count_n_children_delete_children(void) {
 
     const ecs_parent_record_t *pr = flecs_component_get_parent_record(cr, table);
     test_assert(pr != NULL);
-    test_uint(pr->first_entity, c1);
+    test_uint(pr->entity, c1);
     test_int(pr->count, 1);
 
     ecs_entity_t c2 = ecs_insert(world, ecs_value(EcsParent, {p}));
-    test_uint(pr->first_entity, 0);
+    test_uint(pr->entity, 0);
     test_int(pr->count, 2);
 
     ecs_delete(world, c1);
 
-    test_uint(pr->first_entity, 0);
+    test_uint(pr->entity, 0);
     test_int(pr->count, 1);
 
     ecs_delete(world, c2);
@@ -1354,16 +1354,16 @@ void NonFragmentingChildOf_table_child_count_n_children_remove_parent_reverse(vo
 
     const ecs_parent_record_t *pr = flecs_component_get_parent_record(cr, table);
     test_assert(pr != NULL);
-    test_uint(pr->first_entity, c1);
+    test_uint(pr->entity, c1);
     test_int(pr->count, 1);
 
     ecs_entity_t c2 = ecs_insert(world, ecs_value(EcsParent, {p}));
-    test_uint(pr->first_entity, 0);
+    test_uint(pr->entity, 0);
     test_int(pr->count, 2);
 
     ecs_remove(world, c2, EcsParent);
 
-    test_uint(pr->first_entity, 0);
+    test_uint(pr->entity, 0);
     test_int(pr->count, 1);
 
     ecs_remove(world, c1, EcsParent);
@@ -1389,16 +1389,16 @@ void NonFragmentingChildOf_table_child_count_n_children_delete_children_reverse(
 
     const ecs_parent_record_t *pr = flecs_component_get_parent_record(cr, table);
     test_assert(pr != NULL);
-    test_uint(pr->first_entity, c1);
+    test_uint(pr->entity, c1);
     test_int(pr->count, 1);
 
     ecs_entity_t c2 = ecs_insert(world, ecs_value(EcsParent, {p}));
-    test_uint(pr->first_entity, 0);
+    test_uint(pr->entity, 0);
     test_int(pr->count, 2);
 
     ecs_delete(world, c2);
 
-    test_uint(pr->first_entity, 0);
+    test_uint(pr->entity, 0);
     test_int(pr->count, 1);
 
     ecs_delete(world, c1);
@@ -2469,7 +2469,7 @@ void NonFragmentingChildOf_add_parent_to_entity_w_component(void) {
     ecs_parent_record_t *pr = flecs_component_get_parent_record(cr, table);
     test_assert(pr != NULL);
     test_int(pr->count, 1);
-    test_uint(pr->first_entity, c);
+    test_uint(pr->entity, c);
 
     ecs_fini(world);
 }
@@ -2494,7 +2494,7 @@ void NonFragmentingChildOf_add_parent_to_prefab(void) {
     ecs_parent_record_t *pr = flecs_component_get_parent_record(cr, table);
     test_assert(pr != NULL);
     test_int(pr->count, 1);
-    test_uint(pr->first_entity, c);
+    test_uint(pr->entity, c);
 
     ecs_fini(world);
 }
@@ -2520,7 +2520,7 @@ void NonFragmentingChildOf_reparent_to_prefab(void) {
     ecs_parent_record_t *pr_1 = flecs_component_get_parent_record(cr_1, table);
     test_assert(pr_1 != NULL);
     test_int(pr_1->count, 1);
-    test_uint(pr_1->first_entity, c);
+    test_uint(pr_1->entity, c);
 
     ecs_set(world, c, EcsParent, {p_2});
 
@@ -2530,7 +2530,7 @@ void NonFragmentingChildOf_reparent_to_prefab(void) {
     ecs_parent_record_t *pr_2 = flecs_component_get_parent_record(cr_2, table);
     test_assert(pr_2 != NULL);
     test_int(pr_2->count, 1);
-    test_uint(pr_2->first_entity, c);
+    test_uint(pr_2->entity, c);
 
     test_assert(flecs_component_get_parent_record(cr_1, table) == NULL);
 
@@ -2558,7 +2558,7 @@ void NonFragmentingChildOf_add_parent_to_prefab_after_add_parent(void) {
     ecs_parent_record_t *pr_1 = flecs_component_get_parent_record(cr_1, table);
     test_assert(pr_1 != NULL);
     test_int(pr_1->count, 1);
-    test_uint(pr_1->first_entity, c);
+    test_uint(pr_1->entity, c);
 
     ecs_set(world, c, EcsParent, {p_2});
 
@@ -2568,7 +2568,7 @@ void NonFragmentingChildOf_add_parent_to_prefab_after_add_parent(void) {
     ecs_parent_record_t *pr_2 = flecs_component_get_parent_record(cr_2, table);
     test_assert(pr_2 != NULL);
     test_int(pr_2->count, 1);
-    test_uint(pr_2->first_entity, c);
+    test_uint(pr_2->entity, c);
 
     test_assert(flecs_component_get_parent_record(cr_1, table) == NULL);
 

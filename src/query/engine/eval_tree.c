@@ -394,11 +394,10 @@ bool flecs_query_tree_with(
                 return false;
             }
 
-            ecs_entity_t child = pr->first_entity;
+            ecs_entity_t child = pr->entity;
             if (child) {
                 ecs_assert(pr->count == 1, ECS_INTERNAL_ERROR, NULL);
-                ecs_record_t *r = flecs_entities_get_any(
-                    ctx->world, pr->first_entity);
+                ecs_record_t *r = flecs_entities_get_any(ctx->world, child);
                 ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
                 ecs_assert(r->table == range.table, ECS_INTERNAL_ERROR, NULL);
                 int32_t cur = ECS_RECORD_TO_ROW(r->row);
