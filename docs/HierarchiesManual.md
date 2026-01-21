@@ -173,7 +173,7 @@ Hierarchies can be traversed depth-first by iterating the children of a parent r
 - C++: https://github.com/SanderMertens/flecs/blob/master/examples/cpp/entities/hierarchy/src/main.cpp
 
 ## Breadth-first traversal
-Hierarchies can be traversed breadth-first by using the `cascade` feature of [queries](Queries.md#traversal-flags). For an example, see:
+Hierarchies can be traversed breadth-first by using the `cascade` feature of [queries](https://www.flecs.dev/flecs/md_docs_2Queries.html#relationship-traversal). For an example, see:
 
 - C: https://github.com/SanderMertens/flecs/blob/master/examples/c/queries/hierarchies/src/main.c
 - C++: https://github.com/SanderMertens/flecs/blob/master/examples/cpp/queries/hierarchies/src/main.cpp
@@ -181,7 +181,7 @@ Hierarchies can be traversed breadth-first by using the `cascade` feature of [qu
 ## Namespacing
 Entities are named, which allows them to be looked up in the world by name. Names are namespaced according to the entity hierarchy. For example, an entity named "Cockpit" with a parent called "SpaceShip" will have to be looked up as "SpaceShip.Cockpit" (C) or "SpaceShip::Cockpit" (C++).
 
-For more details, see the [names section](EntitiesComponents.md#names) in the Entities and Components manual.
+For more details, see the [names section](https://www.flecs.dev/flecs/md_docs_2EntitiesComponents.html#names) in the Entities and Components manual.
 
 ## OrderedChildren
 The `OrderedChildren` trait can be added to entities to indicate that creation order or a custom order should be preserved. 
@@ -414,8 +414,8 @@ The behavior of `ChildOf` hierarchies and `Parent` hierarchies is mostly the sam
 - Name lookups work with both storages (`parent.lookup("child_name")`).
 - `ecs_get_parent` / `e.parent()` can be used to obtain a parent with both storages.
 - `ecs_children` / `e.children()` can be used to iterate children with both storages.
-- [Prefab instantiation](PrefabsManual.md#prefab-hierarchies) works with both storages.
-- [JSON serialization](FlecsRemoteApi.md#json-serialization) works for both storages.
+- [Prefab instantiation](https://www.flecs.dev/flecs/md_docs_2PrefabsManual.html#prefab-hierarchies) works with both storages.
+- [JSON serialization](https://www.flecs.dev/flecs/md_docs_2FlecsRemoteApi.html#json-serialization) works for both storages.
 
 There are some differences between `ChildOf` and `Parent` hierarchies:
 
@@ -423,7 +423,7 @@ There are some differences between `ChildOf` and `Parent` hierarchies:
 - `Parent` hierarchies are built on top of the `OrderedChildren` feature, which means that children are stored in well defined order
 - When instantiating a prefab with a `Parent` hierarchy, instance children will inherit from the prefab children. Instantiating a prefab with a `ChildOf` hierarchy copies the prefab child components to the instance child.
 - When instantiating a prefab with a `Parent` hierarchy, the names of the prefab children are not copied over to the instance children.
-- The `Or` and `Not` [query operators](Queries.md#operator-overview) do not yet work with `Parent` hierarchies.
+- The `Or` and `Not` [query operators](https://www.flecs.dev/flecs/md_docs_2Queries.html#operator-overview) do not yet work with `Parent` hierarchies.
 
 The following two sections describe in more detail how the different hierarchy storages are implemented.
 
