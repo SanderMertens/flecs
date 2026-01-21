@@ -38001,7 +38001,6 @@ int flecs_query_finalize_terms(
                 /* If the first term is a ChildOf pair, the query result should
                  * respect the order of parents with the OrderedChildren trait.
                  * This cannot be cached, so unset the IsCacheable bit. */
-                term->flags_ |= EcsTermOrderedChildren;
                 ECS_BIT_CLEAR16(term->flags_, EcsTermIsCacheable);
             }
 

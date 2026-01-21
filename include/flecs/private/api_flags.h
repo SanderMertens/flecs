@@ -199,7 +199,6 @@ extern "C" {
 #define EcsTermIsOr                   (1u << 11)
 #define EcsTermDontFragment           (1u << 12)
 #define EcsTermNonFragmentingChildOf  (1u << 13)
-#define EcsTermOrderedChildren        (1u << 14)
 
 
 ////////////////////////////////////////////////////////////////////////////////
