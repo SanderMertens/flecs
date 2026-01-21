@@ -428,7 +428,7 @@ There are some differences between `ChildOf` and `Parent` hierarchies:
 The following two sections describe in more detail how the different hierarchy storages are implemented.
 
 ### ChildOf storage details
-`ChildOf` hierarchies are implemented as regular "fragmenting" Flecs relationships. This means that each unique `(ChildOf, parent)` pair is conceptually similar to a component. This means that the performance of `ChildOf` hierarchies is predictable, as almost all component operations have O(1) time complexity. Additionally, it also means that querying for components of children for a specific parent is fast, as components can be accessed as plain arrays. For example:
+`ChildOf` hierarchies are implemented as regular "fragmenting" Flecs relationships, where each unique `(ChildOf, parent)` pair is conceptually similar to a component. As a result the performance of `ChildOf` hierarchies is predictable, as almost all component operations have O(1) time complexity. Additionally, it also means that querying for components of children for a specific parent is fast, as components can be accessed as contiguous plain arrays. For example:
 
 ```cpp
 ecs_query_t *q = ecs_query(world, {
@@ -444,7 +444,7 @@ while (ecs_query_next(&it)) {
 }
 ```
 
-These benefits are most noticeable if a parent has many children, or when an application only needs to access children of a specific parent. For example, an application may load multiple scenes into memory, where only one scene is rendered and actively updated. With `ChildOf` hierarchies, children for different parents are stored separately from each other, which means that filtering out entities for a different scene can be (close to) a zero cost operation.
+These benefits are most noticeable if a parent has many children, or when an application only needs to access children of a specific parent. For example, an application may load multiple scenes into memory, where only one scene is rendered and actively updated. With `ChildOf` hierarchies, children for different parents are stored separately from each other, which means that filtering out entities for a different scene can be a near zero cost operation.
 
 When an application has both many different parents _and_ a need to access children of different parents simultaneously however, `ChildOf` hierarchies can become expensive. There are several factors contributing to that cost:
 
@@ -452,18 +452,20 @@ When an application has both many different parents _and_ a need to access child
 - Each table consumes memory, which scales linearly with the number of components in the table.
 - Cached queries store matching tables. If an application has many tables, the memory footprint of queries will grow as well.
 - Dynamic hierarchies cause table creation & deletion which is expensive relative to the cost of creating & deleting entities. In addition, tables may have to get matched/unmatched with queries, which further increases the cost of dynamic hierarchies.
-- Relationship traversal (a query feature) under certain conditions requires rebuilding the cache (rematching). If a query matches many tables, rematching can be costly and responsible for frame time spikes.
+- Relationship traversal (a query feature) under certain conditions requires rematching, which rebuilds the cache. If a query matches many tables, rematching can be costly and responsible for frame time spikes.
 
 These downsides are most noticeable when an application has many parents where each parent only has a small number of children. In the degenerate case, an application ends up with a single child per table, which can happen if each child of a parent has a different set of components.
 
 When deciding whether `ChildOf` hierarchies are a good fit, consider:
 
 - Is the application only accessing children for a specific parent?
-- Is the number of parents reasonable (hundreds or thousands)?
+- Is the number of parents reasonable (not higher than thousands)?
 - Is the memory overhead acceptable (use the statistics API or explorer dashboard to see detailed memory statistics)
 
+When the answer to one or more is "no", consider using `Parent` hierarchies.
+
 ### Parent storage details
-`Parent` hierarchies are implemented as a `Parent` component with an entity member representing the parent. This means that children for multiple parents can be stored in the same table. Children of a `Parent` hierarchy are stored in a `vector<ecs_entity_t>` on the component index record for `(ChildOf, parent)`. This is the same vector that is used for the `OrderedChildren` storage. This means that removing a child is an O(n) operation, where n = the number of children for that parent.
+`Parent` hierarchies are implemented as a `Parent` component as value the parent. This means that children for multiple parents can be stored in the same table. Children in a `Parent` hierarchy are stored in a `vector<ecs_entity_t>` on the component index record for `(ChildOf, parent)`. This is the same vector that is used for the `OrderedChildren` storage.
 
 When a `Parent` component is set, a `(ParentDepth, depth)` pair is automatically added to the child. When inspecting the type of a child, this will show up as:
 
@@ -471,44 +473,159 @@ When a `Parent` component is set, a `(ParentDepth, depth)` pair is automatically
 Parent, Position, Velocity, (ParentDepth, @3)
 ```
 
-This means that the child is stored 3 levels deep in the hierarchy. Hierarchy depth is used by queries to efficiently implement the `cascade`/`group_by` features for `Parent` hierarchies. The `@` indicates that this is a value pair, as opposed to 3 specifying an entity id.
+This means that the child is stored 3 levels deep in the hierarchy. Hierarchy depth is used by queries to efficiently implement the `cascade`/`group_by` features for `Parent` hierarchies. The `@` indicates that this is a value pair, as opposed to 3 specifying an entity id. User defined queries can also take advantage of `ParentDepth`. For example, the following query iterates entities breadth-first:
 
-The main benefit of `Parent` hierarchies is that they do not significantly change the memory layout of components in the ECS storage. A query that does not interact with the hierarchy will perform the same whether entities are organized in a hierarchy or not. This can be a significant benefit over `ChildOf` hierarchies, especially if the application contains many small (prefab) hierarchies, where both performance improvement and memory footprint reduction can be over an order of magnitude.
-
-Instantiating prefabs with `Parent` hierarchies is more efficient due to several reasons:
-
-- Prefab hierarchy instantiation does not cause table creation, which can be especially significant when an application has many queries/systems.
-- Prefabs that use `Parent` hierarchies build a "TreeSpawner", which is a cache that significantly speeds up prefab instantiation.
-- Instance children can inherit components from prefab children, which reduces memory footprint and copy overhead.
-
-The trade-off of `Parent` hierarchies is query performance. While just iterating the children for a single parent is _faster_ when using `Parent` hierarchies, all other queries will perform worse. This is largely due to children of multiple parents being stored in the same table, which means there is no zero-cost method for eliminating them from query results.
-
-This is noticeable in queries such as these:
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
 
 ```c
-Position, (ChildOf, some_parent)
+ecs_query_t *q = ecs_query(world, {
+    .terms = {
+        { ecs_id(Position) }
+    },
+    .group_by = EcsParentDepth
+});
 ```
 
-A naive query implementation would use an approach like this to find the matching entities (pseudocode):
+</li>
+<li><b class="tab-title">C++</b>
 
-- Find all tables with `Position`
-- Iterate each entity in the table, check if it is a child of `some_parent`
+```cpp
+auto q = world.query_builder<Position>()
+    .group_by(flecs::ParentDepth)
+    .build();
+```
 
-To prevent large O(n) performance regressions like these, Flecs implements an optimization where it tracks for each parent which tables contain children for that parent. Without going into details, this means that _as long as tables contain a single child for a parent_ these kinds of queries can be resolved in O(1) time. Once a table contains more than one entity for a parent, the implementation regresses to the naive O(n) approach. When using `Parent` hierarchies with prefabs, tables will automatically only contain a single child per parent, as they will have a `(IsA, prefab_child)` relationship.
+</li>
+<li><b class="tab-title">C#</b>
 
-Additionally, expect queries with relationship traversal features (such as `Position(up)`, `Position(cascade)`) to perform worse for `Parent` hierarchies than for `ChildOf` hierarchies. This is because the result of up traversal cannot be cached for `Parent` hierarchies. If a performance-critical query uses up traversal, it is better to split it up into one query per storage. For example:
+```cs
+// TODO
+```
 
-Replace this query:
+</li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+// TODO
+```
+</li>
+</ul>
+</div>
+
+#### Advantages vs. ChildOf
+The main benefit of `Parent` hierarchies is that they do not significantly change the memory layout of components in the ECS storage. A query that does not interact with the hierarchy will perform the same whether entities are organized in a hierarchy or not. This can be a significant benefit over `ChildOf` hierarchies, especially if the application contains many small (prefab) hierarchies, where both performance improvement and memory footprint reduction can be over an order of magnitude.
+
+In addition to not fragmenting the storage, `Parent` hierarchies have additional performance benefits when used in combination with prefabs. This is due to the following reasons:
+
+- Prefab hierarchy instantiation does not cause table creation, which can be especially significant when an application has many queries/systems.
+- Prefabs that use `Parent` hierarchies build a "TreeSpawner", which caches the structure and tables of the prefab hierarchy.
+- Instance children can inherit components from prefab children, which reduces memory footprint and copy overhead.
+
+#### Disadvantages vs. ChildOf
+In most cases `Parent` hierarchies will outperform `ChildOf` hierarchies, but there are a few exceptions:
+
+- Children in a `Parent` hierarchy are stored in a vector, which means that deleting a child can be an O(n) operation. This can be expensive, especially if a parent has many (think thousands) children. If this is the case, consider using a `ChildOf` hierarchy.
+- Queries with multiple terms where one is a `ChildOf` term may perform worse. This is largely due to children of multiple parents being stored in the same table, which means a query needs to do more work to filter out matching entities.
+
+The O(n) cost of deleting children does not apply when deleting the parent. In that case children are deleted in bulk, which does not require scanning the children vector.
+
+#### Query performance
+How a query will perform with the new hierarchy storage highly depends on the kind of query. This section provides an overview of the different kinds of queries, and how their performance compares to the `ChildOf` hierarchy.
+
+---
+```
+Position, Velocity
+```
+Queries such as these that do not interact with the hierarchy will almost always perform better with `Parent` hierarchies. `ChildOf` hierarchies result in more tables, which decreases query performance. When using `Parent` hierarchies it is much more likely that components are densely packed in memory.
+
+---
+```
+(ChildOf, my_parent)
+```
+Queries in this form will typically perform the same or better when used in combination with the `Parent` storage. The reason for this is that the query returns the children vector directly. This means that it never has to iterate multiple tables, which can occur with the `ChildOf` storage.
+
+---
+```
+(ChildOf, my_parent), Position
+```
+This query will perform _worse_ for `Parent` hierarchies. The reason is that this query cannot be evaluated at the table level. Instead, it has to check for each entity in `my_parent`'s' children vector if the entity has `Position`.
+
+---
+```
+(ChildOf, *), Position
+```
+This is an unfortunate query order that will not perform well in either storage (though at least the results for `ChildOf` hierarchies can be cached). The reason for this is that this query will first find all tables with either a `ChildOf` pair or a `Parent` component, and then check if the resulting table has `Position`. It is better for performance to reverse these terms (see below).
+
+---
+```
+Position, (ChildOf, my_parent)
+```
+This query will perform _worse_ for `Parent` hierarchies. This query will first find all tables with `Position`, and then has to check for each entity in that table whether it is a child of `my_parent`. If the table contains many entities, this can be a very expensive operation.
+
+If the entity only contains a single child for `my_parent`, the query can use a faster path that does not require scanning each entity in the table, but the query will still perform worse than with `ChildOf` hierarchies.
+
+---
+```
+Position, (ChildOf, *)
+```
+This query will perform _worse_ for `Parent` hierarchies. This query will first find all tables with `Position`, and then check if the table has the `Parent` component. If so, the query now knows that each entity in the table matches the query. However, it has to return entities one by one because the matched parent needs to be communicated to the application:
+
+```cpp
+auto q = world.query_builder<Position>()
+    .with(flecs::ChildOf, flecs::Wildcard)
+    .each([](flecs::iter& it, size_t, Position&) {
+        flecs::entity parent = it.pair().second() // value is set by query
+    });
+```
+
+For a more efficient way to do this with `Parent` hierarchies, see the next query:
+
+---
+```
+Position, (ChildOf, _)
+```
+This query will perform the same for `Parent` hierarchies. This query will first find all tables with `Position`, and then check if the table has the `Parent` component. If so, the query now knows that each entity in the table matches the query. Because the any (`_`) wildcard doesn't require communicating the parent to the application, the entire table can be returned.
+
+To also find the entities' parent, an application can add the `flecs::Parent` component to the query:
+
+```cpp
+auto q = world.query_builder<Position, const flecs::Parent>()
+    .with(flecs::ChildOf, flecs::Wildcard)
+    .each([](flecs::iter& it, size_t, Position&, const flecs::Parent& p) {
+        flecs::entity parent = it.world().entity(p.value);
+    });
+```
+
+---
+```
+Position, Position(up)
+```
+This query will perform _worse_ for `Parent` queries. This query will first find all tables with `Position`. If it finds a table with a `Parent` component (as opposed to one with a `ChildOf` pair) the query will have to iterate each entity, and traverse the hierarchy upwards for that entity. The result of this cannot be cached, which further hurts performance.
+
+The reason up traversal is supported for `Parent` hierarchies is mostly to provide an easier migration path from `ChildOf` hierarchies. Performance critical queries should generally not use up traversal in combination with `Parent` hierarchies. See below on how to migrate to alternative queries.
+
+---
+```
+Position(up), Position
+```
+This query will perform _worse_ for `Parent` queries. Though not as bad as the previous query, this query will also perform worse with `Parent` hierarchies than for `ChildOf` hierarchies, because the results that use the `Parent` hierarchy cannot be cached.
+
+#### Optimizing Relationship Traversal
+As outlined in the previous section, queries that use relationship traversal can be slower for entities with `Parent` hierarchies. To get around this, an application can split up a single query that uses relationship traversal into two queries, one for `ChildOf` hierarchies, and one for `Parent` hierarchies. Consider the following query:
+
 ```cpp
 Position, Position(up)
 ```
 
-With these two queries:
+This can be split up into two queries, one for each storage by querying for the `Parent` component:
+
 ```cpp
-// Exclude Parent hierarchies from query
+// Query for ChildOf hierarchies: uses relationship traversal
 Position, Position(up), !Parent
 
-// Dedicated query for parent hierarchies
+// Query for Parent hierarchies: doesn't use relationship traversal
 Position, Parent
 ```
 
