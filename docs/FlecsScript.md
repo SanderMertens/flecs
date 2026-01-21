@@ -97,6 +97,15 @@ String names can be combined with string interpolation (see below) to create nam
 "USS_$name" {}
 ```
 
+By default children are created using the `ChildOf` hierarchy storage. To select the `Parent` hierarchy storage, add the `tree` annotation:
+
+```cpp
+@tree Parent
+my_parent {
+  my_child {}
+}
+```
+
 ### Tags
 A tag can be added to an entity by simply specifying the tag's identifier in an entity scope. Example:
 
@@ -953,9 +962,7 @@ template Forest {
 Forest my_forest
 ```
 
-## Advanced Features
-
-### Module statement
+## Module statement
 The `module` statement puts all contents of a script in a module. Example:
 
 ```cpp
@@ -970,7 +977,7 @@ struct Position {
 
 The `components.transform` entity will be created with the `Module` tag.
 
-### Using statement
+## Using statement
 The `using` keyword imports a namespace into the current namespace. Example:
 
 ```cpp
@@ -1018,7 +1025,7 @@ struct Position {
 }
 ```
 
-### With statement
+## With statement
 When you're building a scene or asset you may find yourself often repeating the same components for multiple entities. To avoid this, a `with` statement can be used. For example:
 
 ```cpp
@@ -1071,7 +1078,7 @@ with Color(38, 25, 13) {
 }
 ```
 
-### Variables
+## Variables
 Scripts can contain variables, which are useful for often repeated values. Variables are created with the `const` keyword. Example:
 
 ```cpp
@@ -1210,7 +1217,7 @@ world.import<math>();
 double pi_2 = math::pi * 2;
 ```
 
-### Component values
+## Component values
 A script can use the value of a component that is looked up on a specific entity. The following example fetches the `width` and `depth` members from the `Level` component, that is fetched from the `Game` entity:
 
 ```cpp
@@ -1231,7 +1238,7 @@ tiles {
 
 The requested component is stored by value, not by reference. Adding or removing components to the entity will not invalidate the component data. If the requested component does not exist on the entity, script execution will fail.
 
-### If statement
+## If statement
 Parts of a script can be conditionally executed with an if statement. Example:
 
 ```cpp
@@ -1264,7 +1271,7 @@ traffic_light {
 }
 ```
 
-### For statement
+## For statement
 Parts of a script can be repeated with a for loop. Example:
 
 ```cpp
@@ -1310,7 +1317,7 @@ for i in 0..10 {
 }
 ```
 
-### Default components
+## Default components
 A scope can have a default component, which means entities in that scope can assign values of that component without having to specify the component name. 
 
 There are different ways to specify a default component. One way is to use a `with` statement. Default component values are assigned with the `=` operator, and don't need a `{}` surrounding the value. Example:
@@ -1382,7 +1389,7 @@ struct Line {
 }
 ```
 
-### Semicolon operator
+## Semicolon operator
 Multiple statements can be combined on a single line when using the semicolon operator. Example:
 
 ```cpp
@@ -1391,7 +1398,7 @@ my_spaceship {
 }
 ```
 
-### Comma operator
+## Comma operator
 The comma operator can be used as a shortcut to create multiple entities in a scope. Example:
 
 ```cpp

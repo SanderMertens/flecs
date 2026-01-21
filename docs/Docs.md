@@ -21,6 +21,7 @@
 - [Query Language Manual](FlecsQueryLanguage.md)
 - [Systems Manual](Systems.md)
 - [Observers Manual](ObserversManual.md)
+- [Hierarchies Manual](Hierarchies.md)
 - [Prefabs Manual](PrefabsManual.md)
 - [Component Traits Manual](ComponentTraits.md)
 - [Relationships Manual](Relationships.md)

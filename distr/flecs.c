@@ -3484,7 +3484,7 @@ flecs_poly_dtor_t* flecs_get_dtor(
 #endif
 
 /**
- * @file spawner.h
+ * @file tree_spawner.h
  * @brief Data structure used to speed up the creation of hierarchies.
  */
 
@@ -20386,7 +20386,7 @@ error:
 }
 
 /**
- * @file spawner.c
+ * @file tree_spawner.c
  * @brief Data structure used to speed up the creation of hierarchies.
  */
 

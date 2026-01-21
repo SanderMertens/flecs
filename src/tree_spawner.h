@@ -1,5 +1,5 @@
 /**
- * @file spawner.h
+ * @file tree_spawner.h
  * @brief Data structure used to speed up the creation of hierarchies.
  */
 
