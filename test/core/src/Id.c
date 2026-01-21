@@ -382,3 +382,243 @@ void Id_invalid_pair(void) {
 
     ecs_fini(world);
 }
+
+void Id_value_pair_is_wildcard(void) {
+    ecs_world_t *world = ecs_mini();
+    ecs_entity_t r = ecs_new(world);
+    test_assert( !ecs_id_is_wildcard(ecs_value_pair(r, 10)) );
+    ecs_fini(world);
+}
+
+void Id_value_pair_w_rel_wildcard_is_wildcard(void) {
+    ecs_world_t *world = ecs_mini();
+    test_assert( ecs_id_is_wildcard(ecs_value_pair(EcsWildcard, 10)) );
+    ecs_fini(world);
+}
+
+void Id_value_pair_w_obj_wildcard_is_wildcard(void) {
+    ecs_world_t *world = ecs_mini();
+    ecs_entity_t r = ecs_new(world);
+    test_assert( !ecs_id_is_wildcard(ecs_value_pair(r, EcsWildcard)) );
+    ecs_fini(world);
+}
+
+void Id_value_pair_w_wildcard_wildcard_is_wildcard(void) {
+    test_assert( ecs_id_is_wildcard(ecs_value_pair(EcsWildcard, EcsWildcard)) );
+}
+
+void Id_value_pair_w_rel_any_is_wildcard(void) {
+    ecs_world_t *world = ecs_mini();
+    test_assert( ecs_id_is_wildcard(ecs_value_pair(EcsAny, 10)) );
+    ecs_fini(world);
+}
+
+void Id_value_pair_w_obj_any_is_wildcard(void) {
+    ecs_world_t *world = ecs_mini();
+    ecs_entity_t r = ecs_new(world);
+    test_assert( !ecs_id_is_wildcard(ecs_value_pair(r, EcsAny)) );
+    ecs_fini(world);
+}
+
+void Id_value_pair_w_any_any_is_wildcard(void) {
+    test_assert( ecs_id_is_wildcard(ecs_value_pair(EcsAny, EcsAny)) );
+}
+
+void Id_value_pair_w_override_is_wildcard(void) {
+    ecs_world_t *world = ecs_mini();
+    ecs_entity_t r = ecs_new(world);
+    test_assert( !ecs_id_is_wildcard(ECS_AUTO_OVERRIDE | ecs_value_pair(r, EcsWildcard)));
+    ecs_fini(world);
+}
+
+void Id_value_pair_w_toggle_is_wildcard(void) {
+    ecs_world_t *world = ecs_mini();
+    ecs_entity_t r = ecs_new(world);
+    test_assert( !ecs_id_is_wildcard(ECS_TOGGLE | ecs_value_pair(r, EcsWildcard)));
+    ecs_fini(world);
+}
+
+void Id_value_pair_id_is_tag(void) {
+    ecs_world_t *world = ecs_mini();
+    ecs_entity_t r = ecs_new(world);
+    test_assert( ecs_id_is_tag(world, ecs_value_pair(r, 10)));
+    ecs_fini(world);
+}
+
+void Id_value_pair_id_w_rel_component_is_tag(void) {
+    ecs_world_t *world = ecs_mini();
+    ECS_COMPONENT(world, Position);
+    test_assert( !ecs_id_is_tag(world, ecs_value_pair(ecs_id(Position), 10)));
+    ecs_fini(world);
+}
+
+void Id_value_pair_id_w_obj_component_is_tag(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t r = ecs_new(world);
+    test_assert( ecs_id_is_tag(world, ecs_value_pair(r, 1)));
+    ecs_fini(world);
+}
+
+void Id_value_pair_id_w_rel_component_obj_wildcard_is_tag(void) {
+    ecs_world_t *world = ecs_mini();
+    ECS_COMPONENT(world, Position);
+    test_assert( !ecs_id_is_tag(world, ecs_value_pair(ecs_id(Position), EcsWildcard)));
+    ecs_fini(world);
+}
+
+void Id_value_pair_id_w_obj_wildcard_is_tag(void) {
+    ecs_world_t *world = ecs_mini();
+    ecs_entity_t r = ecs_new(world);
+    test_assert( ecs_id_is_tag(world, ecs_value_pair(r, EcsWildcard)));
+    ecs_fini(world);
+}
+
+void Id_value_pair_id_w_tag_property_w_obj_component_is_tag(void) {
+    ecs_world_t *world = ecs_mini();
+    ECS_COMPONENT(world, Position);
+    ecs_entity_t r = ecs_new_w_id(world, EcsPairIsTag);
+    test_assert( ecs_id_is_tag(world, ecs_value_pair(r, 10)));
+    ecs_fini(world);
+}
+
+void Id_value_pair_id_w_tag_property_w_obj_wildcard_is_tag(void) {
+    ecs_world_t *world = ecs_mini();
+    ECS_COMPONENT(world, Position);
+    ecs_entity_t r = ecs_new_w_id(world, EcsPairIsTag);
+    test_assert( ecs_id_is_tag(world, ecs_value_pair(r, EcsWildcard)));
+    ecs_fini(world);
+}
+
+void Id_value_pair_w_rel_wildcard_is_tag(void) {
+    ecs_world_t *world = ecs_mini();
+    test_assert( !ecs_id_is_tag(world, ecs_value_pair(EcsWildcard, 10)));
+    ecs_fini(world);
+}
+
+void Id_value_pair_w_wildcard_wildcard_is_tag(void) {
+    ecs_world_t *world = ecs_mini();
+    test_assert( !ecs_id_is_tag(world, ecs_value_pair(EcsWildcard, EcsWildcard)));
+    ecs_fini(world);
+}
+
+void Id_value_pair_w_rel_any_is_tag(void) {
+    ecs_world_t *world = ecs_mini();
+    test_assert( !ecs_id_is_tag(world, ecs_pair(EcsAny, 10)));
+    ecs_fini(world);
+}
+
+void Id_value_pair_w_obj_any_is_tag(void) {
+    ecs_world_t *world = ecs_mini();
+    ecs_entity_t r = ecs_new(world);
+    test_assert( ecs_id_is_tag(world, ecs_value_pair(r, EcsAny)));
+    ecs_fini(world);
+}
+
+void Id_value_pair_w_rel_tag_obj_any_is_tag(void) {
+    ecs_world_t *world = ecs_mini();
+    ecs_entity_t r = ecs_new(world);
+    ecs_add_id(world, r, EcsPairIsTag);
+    test_assert( ecs_id_is_tag(world, ecs_value_pair(r, EcsAny)));
+    ecs_fini(world);
+}
+
+void Id_value_pair_w_any_any_is_tag(void) {
+    ecs_world_t *world = ecs_mini();
+    test_assert( !ecs_id_is_tag(world, ecs_value_pair(EcsAny, EcsAny)));
+    ecs_fini(world);
+}
+
+void Id_value_pair_id_override_is_tag(void) {
+    ecs_world_t *world = ecs_mini();
+    ECS_COMPONENT(world, Position);
+    test_assert( ecs_id_is_tag(world, ECS_AUTO_OVERRIDE | ecs_value_pair(ecs_id(Position), 10)));
+    ecs_fini(world);
+}
+
+void Id_value_pair_id_toggle_is_tag(void) {
+    ecs_world_t *world = ecs_mini();
+    ECS_COMPONENT(world, Position);
+    test_assert( ecs_id_is_tag(world, ECS_TOGGLE | ecs_value_pair(ecs_id(Position), 10)));
+    ecs_fini(world);
+}
+
+void Id_value_pair_from_str(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+
+    ecs_id_t id = ecs_id_from_str(world, "(Rel, @10)");
+    test_assert(id != 0);
+    test_assert(id == ecs_value_pair(Rel, 10));
+
+    ecs_fini(world);
+}
+
+void Id_value_wildcard_pair_from_str(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+
+    ecs_id_t id = ecs_id_from_str(world, "(Rel, @*)");
+    test_assert(id != 0);
+    test_assert(id == ecs_value_pair(Rel, EcsWildcard));
+
+    ecs_fini(world);
+}
+
+void Id_value_any_pair_from_str(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+
+    ecs_id_t id = ecs_id_from_str(world, "(Rel, @_)");
+    test_assert(id != 0);
+    test_assert(id == ecs_value_pair(Rel, EcsAny));
+
+    ecs_fini(world);
+}
+
+void Id_value_pair_match_pair(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Tgt);
+
+    test_assert(!ecs_id_match(ecs_pair(Rel, Tgt), ecs_value_pair(Rel, Tgt)));
+
+    ecs_fini(world);
+}
+
+void Id_value_wildcard_pair_match_pair(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Tgt);
+
+    test_assert(!ecs_id_match(ecs_pair(Rel, Tgt), ecs_value_pair(Rel, EcsWildcard)));
+
+    ecs_fini(world);
+}
+
+void Id_pair_match_value_pair(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Tgt);
+
+    test_assert(!ecs_id_match(ecs_value_pair(Rel, Tgt), ecs_pair(Rel, Tgt)));
+
+    ecs_fini(world);
+}
+
+void Id_wildcard_pair_match_value_pair(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Tgt);
+
+    test_assert(ecs_id_match(ecs_value_pair(Rel, Tgt), ecs_pair(Rel, EcsWildcard)));
+
+    ecs_fini(world);
+}

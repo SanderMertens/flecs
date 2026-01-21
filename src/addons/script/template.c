@@ -178,12 +178,19 @@ void flecs_script_template_instantiate(
 
     v.entity = &instance_node;
 
-    int32_t i, m;
+    int32_t i, m, a;
     for (i = 0; i < count; i ++) {
         v.parent = entities[i];
         ecs_assert(ecs_is_alive(world, v.parent), ECS_INTERNAL_ERROR, NULL);
 
         instance_node.eval = entities[i];
+
+        /* Apply annotations, if any */
+        for (a = 0; a < ecs_vec_count(&template->annot); a ++) {
+            ecs_script_annot_t *annot = ecs_vec_get_t(
+                &template->annot, ecs_script_annot_t*, a)[0];
+            flecs_script_apply_annot(&v, &instance_node, annot);
+        }
 
         /* Create variables to hold template properties */
         ecs_script_vars_t *vars = flecs_script_vars_push(
@@ -497,6 +504,8 @@ ecs_script_template_t* flecs_script_template_init(
     ecs_script_template_t *result = flecs_alloc_t(a, ecs_script_template_t);
     ecs_vec_init_t(NULL, &result->prop_defaults, ecs_script_var_t, 0);
     ecs_vec_init_t(NULL, &result->using_, ecs_entity_t, 0);
+    ecs_vec_init_t(NULL, &result->annot, ecs_script_annot_t*, 0);
+
     result->vars = ecs_script_vars_init(script->pub.world);
     return result;
 }
@@ -522,6 +531,7 @@ void flecs_script_template_fini(
     ecs_vec_fini_t(a, &template->prop_defaults, ecs_script_var_t);
 
     ecs_vec_fini_t(a, &template->using_, ecs_entity_t);
+    ecs_vec_fini_t(a, &template->annot, ecs_script_annot_t*);
     ecs_script_vars_fini(template->vars);
     flecs_free_t(a, ecs_script_template_t, template);
 }
@@ -563,6 +573,17 @@ int flecs_script_eval_template(
      * hooks for it. */
     if (!ecs_has(v->world, template_entity, EcsComponent)) {
         ecs_set(v->world, template_entity, EcsComponent, {1, 1});
+    }
+
+    /* Consume annotations, if any */
+    int32_t i, count = ecs_vec_count(&v->r->annot);
+    if (count) {
+        ecs_script_annot_t **annots = ecs_vec_first(&v->r->annot);
+        for (i = 0; i < count ; i ++) {
+            ecs_vec_append_t(&v->base.script->allocator, 
+                &template->annot, ecs_script_annot_t*)[0] = annots[i];
+        }
+        ecs_vec_clear(&v->r->annot);
     }
 
     template->type_info = ecs_get_type_info(v->world, template_entity);

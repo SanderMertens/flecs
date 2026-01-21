@@ -3520,3 +3520,248 @@ void Template_template_w_prop_and_pair(void) {
 
     ecs_fini(world);
 }
+
+void Template_template_w_name_annotation(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+
+    const char *expr =
+    HEAD "@name Some entity"
+    LINE "template Bar {"
+    LINE "  Foo"
+    LINE "}"
+    LINE ""
+    LINE "Bar e {}"
+    LINE "Bar f {}"
+    LINE "";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t Bar = ecs_lookup(world, "Bar");
+    test_assert(Bar != 0);
+
+    {
+        ecs_entity_t e = ecs_lookup(world, "e");
+        test_assert(e != 0);
+        test_assert(ecs_has(world, e, Foo));
+        test_assert(ecs_has_id(world, e, Bar));
+        test_str(ecs_doc_get_name(world, e), "Some entity");
+    }
+
+    {
+        ecs_entity_t e = ecs_lookup(world, "f");
+        test_assert(e != 0);
+        test_assert(ecs_has(world, e, Foo));
+        test_assert(ecs_has_id(world, e, Bar));
+        test_str(ecs_doc_get_name(world, e), "Some entity");
+    }
+
+    ecs_fini(world);
+}
+
+void Template_template_w_name_annotation_update_script(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+
+    const char *expr =
+    HEAD "@name Some entity"
+    LINE "template Bar {"
+    LINE "  Foo"
+    LINE "}"
+    LINE ""
+    LINE "Bar e {}"
+    LINE "";
+
+    ecs_entity_t script = ecs_script(world, {
+        .code = expr
+    });
+
+    test_assert(script != 0);
+
+    {
+        ecs_entity_t Bar = ecs_lookup(world, "Bar");
+        test_assert(Bar != 0);
+
+        {
+            ecs_entity_t e = ecs_lookup(world, "e");
+            test_assert(e != 0);
+            test_assert(ecs_has(world, e, Foo));
+            test_assert(ecs_has_id(world, e, Bar));
+            test_str(ecs_doc_get_name(world, e), "Some entity");
+        }
+    }
+
+    const char *expr_2 =
+    HEAD "@name Some other entity"
+    LINE "template Bar {"
+    LINE "  Foo"
+    LINE "}"
+    LINE ""
+    LINE "Bar e {}"
+    LINE "";
+
+    ecs_script_update(world, script, 0, expr_2);
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_str(s->error, NULL);
+
+    {
+        ecs_entity_t Bar = ecs_lookup(world, "Bar");
+        test_assert(Bar != 0);
+
+        {
+            ecs_entity_t e = ecs_lookup(world, "e");
+            test_assert(e != 0);
+            test_assert(ecs_has(world, e, Foo));
+            test_assert(ecs_has_id(world, e, Bar));
+            test_str(ecs_doc_get_name(world, e), "Some other entity");
+        }
+    }
+
+    ecs_fini(world);
+}
+
+void Template_template_w_tree_parent(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+
+    const char *expr =
+    HEAD "@tree Parent"
+    LINE "template Bar {"
+    LINE "  child {"
+    LINE "    Foo"
+    LINE "  }"
+    LINE "}"
+    LINE ""
+    LINE "Bar e {}"
+    LINE "Bar f {}"
+    LINE "";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t Bar = ecs_lookup(world, "Bar");
+    test_assert(Bar != 0);
+
+    {
+        ecs_entity_t e = ecs_lookup(world, "e");
+        test_assert(e != 0);
+        test_assert(ecs_has_id(world, e, Bar));
+
+        ecs_entity_t child = ecs_lookup_child(world, e, "child");
+        test_assert(child != 0);
+        test_assert(ecs_has(world, child, Foo));
+
+        {
+            const EcsParent *p = ecs_get(world, child, EcsParent);
+            test_assert(p != NULL);
+            test_uint(p->value, e);
+        }
+    }
+
+    {
+        ecs_entity_t e = ecs_lookup(world, "f");
+        test_assert(e != 0);
+        test_assert(ecs_has_id(world, e, Bar));
+
+        ecs_entity_t child = ecs_lookup_child(world, e, "child");
+        test_assert(child != 0);
+        test_assert(ecs_has(world, child, Foo));
+
+        {
+            const EcsParent *p = ecs_get(world, child, EcsParent);
+            test_assert(p != NULL);
+            test_uint(p->value, e);
+        }
+    }
+
+    ecs_fini(world);
+}
+
+void Template_template_w_tree_parent_change_value(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "@tree Parent"
+    LINE "template Bar {"
+    LINE "  prop v = i32: 0"
+    LINE "  child {"
+    LINE "    Position: {v, v * 2}"
+    LINE "  }"
+    LINE "}"
+    LINE ""
+    LINE "Bar e(10)"
+    LINE "";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t Bar = ecs_lookup(world, "Bar");
+    test_assert(Bar != 0);
+
+    {
+        ecs_entity_t e = ecs_lookup(world, "e");
+        test_assert(e != 0);
+        test_assert(ecs_has_id(world, e, Bar));
+
+        ecs_entity_t child = ecs_lookup_child(world, e, "child");
+        test_assert(child != 0);
+        test_assert(ecs_has(world, child, Position));
+        
+        {
+            const Position *p = ecs_get(world, child, Position);
+            test_assert(p != NULL);
+            test_int(p->x, 10);
+            test_int(p->y, 20);
+        }
+
+        {
+            const EcsParent *p = ecs_get(world, child, EcsParent);
+            test_assert(p != NULL);
+            test_uint(p->value, e);
+        }
+
+        {
+            void *bar = ecs_get_mut_id(world, e, Bar);
+            test_assert(bar != NULL);
+            *(int32_t*)bar = 20;
+            ecs_modified_id(world, e, Bar);
+        }
+    }
+
+    {
+        ecs_entity_t e = ecs_lookup(world, "e");
+        test_assert(e != 0);
+        test_assert(ecs_has_id(world, e, Bar));
+
+        ecs_entity_t child = ecs_lookup_child(world, e, "child");
+        test_assert(child != 0);
+        test_assert(ecs_has(world, child, Position));
+        
+        {
+            const Position *p = ecs_get(world, child, Position);
+            test_assert(p != NULL);
+            test_int(p->x, 20);
+            test_int(p->y, 40);
+        }
+
+        {
+            const EcsParent *p = ecs_get(world, child, EcsParent);
+            test_assert(p != NULL);
+            test_uint(p->value, e);
+        }
+    }
+
+    ecs_fini(world);
+}

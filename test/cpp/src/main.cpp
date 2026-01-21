@@ -379,6 +379,14 @@ void Entity_set_non_copy_assignable(void);
 void Entity_set_non_copy_assignable_w_move_assign(void);
 void Entity_assign_non_copy_assignable(void);
 void Entity_assign_non_copy_assignable_w_move_assign(void);
+void Entity_set_parent(void);
+void Entity_defer_set_parent(void);
+void Entity_set_change_parent(void);
+void Entity_defer_set_change_parent(void);
+void Entity_assign_parent(void);
+void Entity_defer_assign_parent(void);
+void Entity_set_parent_on_stage(void);
+void Entity_assign_parent_on_stage(void);
 
 // Testsuite 'OrderedChildren'
 void OrderedChildren_iter_no_children(void);
@@ -3135,6 +3143,38 @@ bake_test_case Entity_testcases[] = {
     {
         "assign_non_copy_assignable_w_move_assign",
         Entity_assign_non_copy_assignable_w_move_assign
+    },
+    {
+        "set_parent",
+        Entity_set_parent
+    },
+    {
+        "defer_set_parent",
+        Entity_defer_set_parent
+    },
+    {
+        "set_change_parent",
+        Entity_set_change_parent
+    },
+    {
+        "defer_set_change_parent",
+        Entity_defer_set_change_parent
+    },
+    {
+        "assign_parent",
+        Entity_assign_parent
+    },
+    {
+        "defer_assign_parent",
+        Entity_defer_assign_parent
+    },
+    {
+        "set_parent_on_stage",
+        Entity_set_parent_on_stage
+    },
+    {
+        "assign_parent_on_stage",
+        Entity_assign_parent_on_stage
     }
 };
 
@@ -8152,7 +8192,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        366,
+        374,
         Entity_testcases
     },
     {

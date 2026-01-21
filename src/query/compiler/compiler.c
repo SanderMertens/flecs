@@ -634,6 +634,8 @@ void flecs_query_insert_cache_search(
     }
 
     ecs_query_t *q = &query->pub;
+    int32_t childof_term = -1;
+    bool has_childof_trav = false;
 
     if (q->cache_kind == EcsQueryCacheAll) {
         /* If all terms are cacheable, make sure no other terms are compiled */
@@ -653,6 +655,16 @@ void flecs_query_insert_cache_search(
                 continue;
             }
 
+            if (term->flags_ & EcsTermNonFragmentingChildOf) {
+                if (!term->trav) {
+                    childof_term = i;
+                }
+            }
+
+            if (term->trav == EcsChildOf) {
+                has_childof_trav = true;
+            }
+
             *compiled |= (1ull << i);
         }
     }
@@ -669,6 +681,35 @@ void flecs_query_insert_cache_search(
     flecs_query_write(0, &op.written);
     flecs_query_write_ctx(0, ctx, false);
     flecs_query_op_insert(&op, ctx);
+
+    if (childof_term != -1) {
+        flecs_query_compile_term(
+            q->world, query, &q->terms[childof_term], ctx);
+    }
+
+    if (has_childof_trav) {
+        ecs_term_t *terms = q->terms;
+        int32_t i, count = q->term_count;
+
+        for (i = 0; i < count; i ++) {
+            ecs_term_t *term = &terms[i];
+            if (!((*compiled) & (1ull << i))) {
+                continue;
+            }
+
+            if (!(term->flags_ & EcsTermIsCacheable)) {
+                continue;
+            }
+
+            if (term->trav == EcsChildOf && (term->oper == EcsAnd || term->oper == EcsOptional)) {
+                ecs_oper_kind_t oper = q->terms[i].oper;
+                q->terms[i].oper = EcsAnd;
+                flecs_query_compile_term(
+                    q->world, query, &q->terms[i], ctx);
+                q->terms[i].oper = (int16_t)oper;
+            }
+        }
+    }
 }
 
 static
@@ -852,7 +893,9 @@ int flecs_query_compile(
     
     if (query->cache) {
         if (flags & EcsQueryIsCacheable) {
-            needs_plan = false;
+            if (!(flags & EcsQueryCacheWithFilter)) {
+                needs_plan = false;
+            }
         }
     } else {
         ecs_flags32_t trivial_flags = EcsQueryIsTrivial|EcsQueryMatchOnlySelf;
@@ -1001,6 +1044,20 @@ int flecs_query_compile(
             break;
         }
     } while (true);
+
+    /* If this is the last term and it's a Tree instruction, replace it 
+     * with Children. If the queried for parent has the OrderedChildren
+     * trait, the Children instruction will return the array with child
+     * entities vs. returning children one by one. */
+    if (term_count == 1 && ecs_vec_count(ctx.ops)) {
+        ecs_query_op_t *op = ecs_vec_last_t(ctx.ops, ecs_query_op_t);
+        ecs_assert(op != NULL, ECS_INTERNAL_ERROR, NULL);
+        if (op->kind == EcsQueryTree) {
+            op->kind = EcsQueryChildren;
+        } else if (op->kind == EcsQueryTreeWildcard) {
+            op->kind = EcsQueryChildrenWc;
+        }
+    }
 
     ecs_var_id_t this_id = flecs_query_find_var_id(query, "this", EcsVarEntity);
     if (this_id != EcsVarNone) {

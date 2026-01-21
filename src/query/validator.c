@@ -596,7 +596,9 @@ int flecs_term_verify(
             if ((src->id & mask) == (second->id & mask)) {
                 bool is_same = false;
                 if (src->id & EcsIsEntity) {
-                    is_same = src_id == second_id;
+                    if (src_id) {
+                        is_same = src_id == second_id;
+                    }
                 } else if (src->name && second->name) {
                     is_same = !ecs_os_strcmp(src->name, second->name);
                 }
@@ -658,17 +660,20 @@ int flecs_term_finalize(
 
     if (first->name && (first->id & ~EcsTermRefFlags)) {
         flecs_query_validator_error(ctx, 
-            "first.name and first.id have competing values");
+            "first.name (%s) and first.id have competing values",
+                first->name);
         return -1;
     }
     if (src->name && (src->id & ~EcsTermRefFlags)) {
         flecs_query_validator_error(ctx, 
-            "src.name and src.id have competing values");
+            "src.name (%s) and src.id have competing values",
+                src->name);
         return -1;
     }
     if (second->name && (second->id & ~EcsTermRefFlags)) {
         flecs_query_validator_error(ctx, 
-            "second.name and second.id have competing values");
+            "second.name (%s) and second.id have competing values", 
+                second->name);
         return -1;
     }
 
@@ -723,7 +728,11 @@ int flecs_term_finalize(
 
     /* If term queries for !(ChildOf, _), translate it to the builtin 
      * (ChildOf, 0) index which is a cheaper way to find root entities */
-    if (term->oper == EcsNot && term->id == ecs_pair(EcsChildOf, EcsAny)) {
+    if (term->oper == EcsNot && (
+            (term->id == ecs_pair(EcsChildOf, EcsAny)) ||
+            (term->id == ecs_pair(EcsChildOf, EcsWildcard))
+        ))
+    {
         /* Only if the source is not EcsAny */
         if (!(ECS_TERM_REF_ID(&term->src) == EcsAny && (term->src.id & EcsIsVariable))) {
             term->oper = EcsAnd;
@@ -923,6 +932,16 @@ int flecs_term_finalize(
         trivial_term = false;
     }
 
+    if (ECS_IS_PAIR(term->id) && (ECS_PAIR_FIRST(term->id) == EcsChildOf)) {
+        if (term->oper == EcsAnd) {
+            term->flags_ |= EcsTermNonFragmentingChildOf;
+        }
+
+        if (ECS_PAIR_SECOND(term->id)) {
+            trivial_term = false;
+        }
+    }
+
     if (ecs_id_is_wildcard(term->id)) {
         if (ECS_PAIR_FIRST(term->id) == EcsWildcard) {
             cacheable_term = false;
@@ -1118,6 +1137,12 @@ int flecs_query_finalize_terms(
     bool cacheable = true;
     bool match_nothing = true;
 
+    /* If a query has ChildOf terms we need to prevent it from being marked as 
+     * IsCacheable (meaning the query can be evaluated by just iterating the
+     * cache). A ChildOf term must be marked as cacheable, but also needs an
+     * instruction to filter tables that use non-fragmenting relationships. */
+    bool has_childof = false;
+
     for (i = 0; i < term_count; i ++) {
         ecs_term_t *term = &terms[i];
         bool prev_is_or = i && term[-1].oper == EcsOr;
@@ -1127,6 +1152,26 @@ int flecs_query_finalize_terms(
 
         if (flecs_term_finalize(world, term, &ctx)) {
             return -1;
+        }
+
+        if (term->flags_ & EcsTermNonFragmentingChildOf) {
+            if (!i) {
+                /* If the first term is a ChildOf pair, the query result should
+                 * respect the order of parents with the OrderedChildren trait.
+                 * This cannot be cached, so unset the IsCacheable bit. */
+                term->flags_ |= EcsTermOrderedChildren;
+                ECS_BIT_CLEAR16(term->flags_, EcsTermIsCacheable);
+            }
+
+            if (ECS_PAIR_SECOND(term->id) != EcsAny) {
+                has_childof = true;
+            }
+        }
+
+        if (term->trav == EcsChildOf && (term->oper == EcsAnd || term->oper == EcsOptional)) {
+            if (!(term->flags_ & EcsTermIsOr)) {
+                has_childof = true;
+            }
         }
 
         if (term->src.id != EcsIsEntity) {
@@ -1473,6 +1518,13 @@ int flecs_query_finalize_terms(
                     ECS_BIT_CLEAR(q->flags, EcsQueryMatchOnlySelf);
                 }
 
+                if (ECS_TERM_REF_ID(&term->first) == EcsChildOf) {
+                    if (ECS_TERM_REF_ID(&term->second) != 0) {
+                        is_trivial = false;
+                        continue;
+                    }
+                }
+
                 if (!(term->flags_ & EcsTermIsTrivial)) {
                     is_trivial = false;
                     continue;
@@ -1502,7 +1554,10 @@ int flecs_query_finalize_terms(
      * optimized logic as it doesn't have to deal with order_by edge cases */
     ECS_BIT_COND(q->flags, EcsQueryIsCacheable, 
         cacheable && (cacheable_terms == term_count) &&
-            !desc->order_by_callback);
+            !desc->order_by_callback &&
+            !has_childof);
+
+    ECS_BIT_COND(q->flags, EcsQueryCacheWithFilter, has_childof);
 
     /* If none of the terms match a source, the query matches nothing */
     ECS_BIT_COND(q->flags, EcsQueryMatchNothing, match_nothing);
@@ -1739,11 +1794,30 @@ bool flecs_query_finalize_simple(
         }
 
         if (ECS_IS_PAIR(id)) {
+            if (first == EcsChildOf) {
+                if (term->oper == EcsAnd) {
+                    term->flags_ |= EcsTermNonFragmentingChildOf;
+                }
+
+                ecs_entity_t second = ECS_PAIR_SECOND(id);
+                if (second) {
+                    trivial = false;
+                    if (ECS_PAIR_SECOND(id) != EcsAny) {
+                        if (!i) {
+                            /* If first query term is ChildOf, return children
+                             * in order if possible, which can't be cached. */
+                            cacheable = false;
+                        }
+                    }
+                }
+            }
+
             if (ecs_has_id(world, first, EcsTransitive)) {
                 term->flags_ |= EcsTermTransitive;
                 trivial = false;
                 cacheable = false; 
             }
+
             if (ecs_has_id(world, first, EcsReflexive)) {
                 term->flags_ |= EcsTermReflexive;
                 trivial = false;

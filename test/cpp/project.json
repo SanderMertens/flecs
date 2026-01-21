@@ -389,7 +389,15 @@
                 "set_non_copy_assignable",
                 "set_non_copy_assignable_w_move_assign",
                 "assign_non_copy_assignable",
-                "assign_non_copy_assignable_w_move_assign"
+                "assign_non_copy_assignable_w_move_assign",
+                "set_parent",
+                "defer_set_parent",
+                "set_change_parent",
+                "defer_set_change_parent",
+                "assign_parent",
+                "defer_assign_parent",
+                "set_parent_on_stage",
+                "assign_parent_on_stage"
             ]
         }, {
             "id": "OrderedChildren",

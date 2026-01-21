@@ -105,7 +105,10 @@ void* ecs_field_w_size(
         "missing size for field %d", index);
     ecs_check(ecs_field_size(it, index) == size || 
         !ecs_field_size(it, index),
-            ECS_INVALID_PARAMETER, "mismatching size for field %d", index);
+            ECS_INVALID_PARAMETER, 
+            "mismatching size for field %d (expected '%s')", 
+            index,
+            flecs_errstr(ecs_id_str(it->world, it->ids[index])));
     (void)size;
 
     if (it->ptrs && !it->offset) {

@@ -75,6 +75,7 @@ using Component = EcsComponent;
 using Identifier = EcsIdentifier;
 using Poly = EcsPoly;
 using DefaultChildComponent = EcsDefaultChildComponent;
+using Parent = EcsParent;
 
 /* Builtin tags */
 static const flecs::entity_t Query = EcsQuery;
@@ -89,6 +90,7 @@ static const flecs::entity_t System = EcsSystem;
 static const flecs::entity_t Pipeline = ecs_id(EcsPipeline);
 static const flecs::entity_t Phase = EcsPhase;
 static const flecs::entity_t Constant = EcsConstant;
+static const flecs::entity_t ParentDepth = EcsParentDepth;
 
 /* Builtin event tags */
 static const flecs::entity_t OnAdd = EcsOnAdd;

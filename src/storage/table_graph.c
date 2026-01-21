@@ -233,6 +233,9 @@ int flecs_type_new_without(
     ecs_id_t *dst_array = flecs_walloc_n(world, ecs_id_t, dst_count);
     dst->array = dst_array;
 
+    ecs_assert(dst_array != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(src_array != NULL, ECS_INTERNAL_ERROR, NULL);
+
     if (at) {
         ecs_os_memcpy_n(dst_array, src_array, ecs_id_t, at);
     }
@@ -1050,6 +1053,11 @@ ecs_table_t* flecs_find_table_without(
     int res = flecs_type_new_without(world, &dst_type, &node->type, without);
     if (res == -1) {
         return node; /* Current table does not have id */
+    }
+
+    if (without == ecs_id(EcsParent)) {
+        flecs_type_remove(world, &dst_type, 
+            ecs_pair(EcsParentDepth, EcsWildcard));
     }
 
     return flecs_table_ensure(world, &dst_type, true, node);

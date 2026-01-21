@@ -28,8 +28,8 @@ void flecs_ordered_children_clear(
 /* Reparent entities in ordered children storage. */
 void flecs_ordered_children_reparent(
     ecs_world_t *world,
-    const ecs_table_t *src,
     const ecs_table_t *dst,
+    const ecs_table_t *src,
     int32_t row,
     int32_t count);
 
@@ -46,5 +46,17 @@ void flecs_ordered_children_reorder(
     ecs_entity_t parent,
     const ecs_entity_t *children,
     int32_t child_count);
+
+/* Directly add child to ordered children array. */
+void flecs_ordered_entities_append(
+    ecs_world_t *world,
+    ecs_component_record_t *cr,
+    ecs_entity_t e);
+
+/* Directly remove child from ordered children array. */
+void flecs_ordered_entities_remove(
+    ecs_world_t *world,
+    ecs_component_record_t *cr,
+    ecs_entity_t e);
 
 #endif

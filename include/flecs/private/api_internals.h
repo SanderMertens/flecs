@@ -47,6 +47,11 @@ typedef struct ecs_table_diff_t {
     ecs_flags32_t removed_flags;
 } ecs_table_diff_t;
 
+/* Tracks which/how many non-fragmenting children are stored in table for parent. */
+typedef struct ecs_parent_record_t {
+    uint32_t first_entity;
+    int32_t count;
+} ecs_parent_record_t;
 
 /** Find record for entity. 
  * An entity record contains the table and row for the entity.
@@ -222,6 +227,17 @@ FLECS_ALWAYS_INLINE ecs_component_record_t* flecs_components_get(
     const ecs_world_t *world,
     ecs_id_t id);
 
+/* Ensure component record for component id 
+ * 
+ * @param world The world.
+ * @param id The component id.
+ * @return The new or existing component record.
+ */
+FLECS_API
+FLECS_ALWAYS_INLINE ecs_component_record_t* flecs_components_ensure(
+    ecs_world_t *world,
+    ecs_id_t id);
+
 /** Get component id from component record.
  * 
  * @param cr The component record.
@@ -241,6 +257,15 @@ ecs_flags32_t flecs_component_get_flags(
     const ecs_world_t *world,
     ecs_id_t id);
 
+/** Get type info for component record.
+ * 
+ * @param cr The component record.
+ * @return The type info struct, or NULL if component is a tag.
+ */
+FLECS_API
+const ecs_type_info_t* flecs_component_get_type_info(
+    const ecs_component_record_t *cr);
+
 /** Find table record for component record.
  * This operation returns the table record for the table/component record if it
  * exists. If the record exists, it means the table has the component.
@@ -253,6 +278,15 @@ FLECS_API
 FLECS_ALWAYS_INLINE const ecs_table_record_t* flecs_component_get_table(
     const ecs_component_record_t *cr,
     const ecs_table_t *table);
+
+FLECS_API
+FLECS_ALWAYS_INLINE ecs_parent_record_t* flecs_component_get_parent_record(
+    const ecs_component_record_t *cr,
+    const ecs_table_t *table);
+
+FLECS_API
+FLECS_ALWAYS_INLINE int32_t flecs_component_get_childof_depth(
+    const ecs_component_record_t *cr);
 
 /** Create component record iterator.
  * A component record iterator iterates all tables for the specified component

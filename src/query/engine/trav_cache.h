@@ -50,6 +50,7 @@ ecs_trav_up_t* flecs_query_get_up_cache(
     const ecs_query_run_ctx_t *ctx,
     ecs_trav_up_cache_t *cache,
     ecs_table_t *table,
+    int32_t row,
     ecs_id_t with,
     ecs_entity_t trav,
     ecs_component_record_t *cr_with,

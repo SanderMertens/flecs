@@ -949,6 +949,7 @@ INPUT                  = include/flecs.h \
                          docs/BuildingFlecs.md \
                          docs/DesignWithFlecs.md \
                          docs/EntitiesComponents.md \
+                         docs/HierarchiesManual.md \
                          docs/Queries.md \
                          docs/FlecsQueryLanguage.md \
                          docs/Systems.md \

@@ -49,7 +49,7 @@ bool flecs_query_select_w_id(
     }
 
 repeat:
-    if (!redo || !op_ctx->remaining) {
+    if (!redo || (op_ctx->remaining <= 0)) {
         tr = flecs_table_cache_next(&op_ctx->it, ecs_table_record_t);
         if (!tr) {
             return false;
@@ -198,7 +198,6 @@ repeat:
     }
 }
 
-static
 bool flecs_query_and(
     const ecs_query_op_t *op,
     bool redo,
@@ -296,37 +295,6 @@ bool flecs_query_with_id(
     return true;
 }
 
-static
-bool flecs_query_up(
-    const ecs_query_op_t *op,
-    bool redo,
-    const ecs_query_run_ctx_t *ctx)
-{
-    uint64_t written = ctx->written[ctx->op_index];
-    if (flecs_ref_is_written(op, &op->src, EcsQuerySrc, written)) {
-        return flecs_query_up_with(op, redo, ctx);
-    } else {
-        return flecs_query_up_select(op, redo, ctx, 
-            FlecsQueryUpSelectUp, FlecsQueryUpSelectDefault);
-    }
-}
-
-static
-bool flecs_query_self_up(
-    const ecs_query_op_t *op,
-    bool redo,
-    const ecs_query_run_ctx_t *ctx)
-{
-    uint64_t written = ctx->written[ctx->op_index];
-    if (flecs_ref_is_written(op, &op->src, EcsQuerySrc, written)) {
-        return flecs_query_self_up_with(op, redo, ctx, false);
-    } else {
-        return flecs_query_up_select(op, redo, ctx, 
-            FlecsQueryUpSelectSelfUp, FlecsQueryUpSelectDefault);
-    }
-}
-
-static
 bool flecs_query_and_any(
     const ecs_query_op_t *op,
     bool redo,
@@ -683,6 +651,25 @@ bool flecs_query_or_from(
 }
 
 static
+bool flecs_query_ids_check(
+    ecs_component_record_t *cur)
+{
+    if (!cur->cache.tables.count) {
+        if (!(cur->flags & EcsIdOrderedChildren)) {
+            return false;
+        }
+
+        ecs_assert(cur->pair != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        if (!ecs_vec_count(&cur->pair->ordered_children)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+static
 bool flecs_query_ids(
     const ecs_query_op_t *op,
     bool redo,
@@ -697,7 +684,11 @@ bool flecs_query_ids(
 
     {
         cur = flecs_components_get(ctx->world, id);
-        if (!cur || !cur->cache.tables.count) {
+        if (!cur) {
+            return false;
+        }
+
+        if (!flecs_query_ids_check(cur)) {
             return false;
         }
     }
@@ -722,18 +713,22 @@ bool flecs_query_idsright(
 {
     ecs_query_ids_ctx_t *op_ctx = flecs_op_ctx(ctx, ids);
     ecs_component_record_t *cur;
+    ecs_iter_t *it = ctx->it;
 
     if (!redo) {
         ecs_id_t id = flecs_query_op_get_id(op, ctx);
+        cur = op_ctx->cur = flecs_components_get(ctx->world, id);
         if (!ecs_id_is_wildcard(id)) {
             /* If id is not a wildcard, we can directly return it. This can 
              * happen if a variable was constrained by an iterator. */
             op_ctx->cur = NULL;
             flecs_query_set_vars(op, id, ctx);
-            return true;
+            it->ids[op->field_index] = id;
+            it->sources[op->field_index] = EcsWildcard;
+            ECS_TERMSET_SET(it->set_fields, 1u << op->field_index);
+            return flecs_query_ids_check(cur);
         }
 
-        cur = op_ctx->cur = flecs_components_get(ctx->world, id);
         if (!cur) {
             return false;
         }
@@ -746,7 +741,7 @@ bool flecs_query_idsright(
 next:
     do {
         cur = op_ctx->cur = flecs_component_first_next(op_ctx->cur);
-    } while (cur && !cur->cache.tables.count); /* Skip empty ids */
+    } while (cur && !flecs_query_ids_check(cur)); /* Skip empty ids */
 
     if (!cur) {
         return false;
@@ -761,7 +756,6 @@ next:
     flecs_query_set_vars(op, cur->id, ctx);
 
     if (op->field_index != -1) {
-        ecs_iter_t *it = ctx->it;
         ecs_id_t id = flecs_query_op_get_id_w_written(op, op->written, ctx);
         it->ids[op->field_index] = id;
         it->sources[op->field_index] = EcsWildcard;
@@ -1275,8 +1269,17 @@ bool flecs_query_select_or(
             do {
                 ctx->written[prev] = ctx->written[last];
 
+                ecs_query_op_ctx_t *op_ctx_ptr = &ctx->op_ctx[first];
+                ecs_query_op_ctx_t tmp_op_ctx = *op_ctx_ptr;
+
+                ecs_os_zeromem(op_ctx_ptr);
+
                 flecs_query_run_until(false, ctx, ops, flecs_itolbl(first - 1), 
                     prev, cur);
+
+                flecs_query_op_ctx_fini(ctx->it, &ops[first], op_ctx_ptr);
+
+                ecs_os_memcpy_t(op_ctx_ptr, &tmp_op_ctx, ecs_query_op_ctx_t);
 
                 if (ctx->op_index == last) {
                     /* Duplicate match was found, find next result */
@@ -1380,9 +1383,23 @@ bool flecs_query_optional(
     ecs_query_run_ctx_t *ctx)
 {   
     bool result = flecs_query_run_block_w_reset(op, redo, ctx);
+
+    ecs_query_optional_ctx_t *op_ctx = flecs_op_ctx(ctx, optional);
+    
     if (!redo) {
+        op_ctx->range = flecs_query_get_range(op, &op->src, EcsQuerySrc, ctx);
         return true; /* Return at least once */
     } else {
+        if (!result) {
+            ecs_table_range_t range = flecs_query_get_range(
+                op, &op->src, EcsQuerySrc, ctx);
+            if (range.offset != op_ctx->range.offset) {
+                /* Different range is returned, so yield again. */
+                result = true;
+                op_ctx->range = range;
+            }
+        }
+
         return result;
     }
 }
@@ -1503,6 +1520,17 @@ bool flecs_query_dispatch(
     case EcsQuerySparseNot: return flecs_query_sparse_with(op, redo, ctx, true);
     case EcsQuerySparseSelfUp: return flecs_query_sparse_self_up(op, redo, ctx);
     case EcsQuerySparseUp: return flecs_query_sparse_up(op, redo, ctx);
+    case EcsQueryTree: return flecs_query_tree_and(op, redo, ctx);
+    case EcsQueryTreeWildcard: return flecs_query_tree_and_wildcard(op, redo, ctx, false);
+    case EcsQueryTreePre: return flecs_query_tree_pre(op, redo, ctx);
+    case EcsQueryTreePost: return flecs_query_tree_post(op, redo, ctx);
+    case EcsQueryTreeUpPre: return flecs_query_tree_up_pre(op, redo, ctx, false);
+    case EcsQueryTreeSelfUpPre: return flecs_query_tree_up_pre(op, redo, ctx, true);
+    case EcsQueryTreeUpPost: return flecs_query_tree_up_post(op, redo, ctx, false);
+    case EcsQueryTreeSelfUpPost: return flecs_query_tree_up_post(op, redo, ctx, true);
+    case EcsQueryChildrenWc: return flecs_query_tree_and_wildcard(op, redo, ctx, true);
+    case EcsQueryTreeWith: return flecs_query_tree_with(op, redo, ctx);
+    case EcsQueryChildren: return flecs_query_children(op, redo, ctx);
     case EcsQueryLookup: return flecs_query_lookup(op, redo, ctx);
     case EcsQuerySetVars: return flecs_query_setvars(op, redo, ctx);
     case EcsQuerySetThis: return flecs_query_setthis(op, redo, ctx);

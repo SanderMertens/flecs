@@ -10,11 +10,15 @@
 const ecs_id_t ECS_PAIR =                                          (1ull << 63);
 const ecs_id_t ECS_AUTO_OVERRIDE =                                 (1ull << 62);
 const ecs_id_t ECS_TOGGLE =                                        (1ull << 61);
+const ecs_id_t ECS_VALUE_PAIR =                                    ((1ull << 60) | (1ull << 63));
 
 /** Builtin component ids */
 const ecs_entity_t ecs_id(EcsComponent) =                                   1;
 const ecs_entity_t ecs_id(EcsIdentifier) =                                  2;
 const ecs_entity_t ecs_id(EcsPoly) =                                        3;
+const ecs_entity_t ecs_id(EcsParent) =                                      4;
+const ecs_entity_t ecs_id(EcsTreeSpawner) =                                 5;
+const ecs_entity_t EcsParentDepth =                                         6;
 
 /* Poly target components */
 const ecs_entity_t EcsQuery =                       FLECS_HI_COMPONENT_ID + 0;
@@ -63,7 +67,6 @@ const ecs_entity_t EcsCanToggle =                   FLECS_HI_COMPONENT_ID + 34;
 const ecs_entity_t EcsTrait =                       FLECS_HI_COMPONENT_ID + 35;
 const ecs_entity_t EcsRelationship =                FLECS_HI_COMPONENT_ID + 36;
 const ecs_entity_t EcsTarget =                      FLECS_HI_COMPONENT_ID + 37;
-
 
 /* Builtin relationships */
 const ecs_entity_t EcsChildOf =                     FLECS_HI_COMPONENT_ID + 38;
@@ -707,6 +710,8 @@ void flecs_world_allocators_init(
     flecs_ballocator_init_t(&a->table_diff, ecs_table_diff_t);
     flecs_ballocator_init_n(&a->sparse_chunk, int32_t, FLECS_SPARSE_PAGE_SIZE);
     flecs_table_diff_builder_init(world, &world->allocators.diff_builder);
+    ecs_vec_init_t(&world->allocator, 
+        &world->allocators.tree_spawner, ecs_entity_t, 0);
 }
 
 static
@@ -722,6 +727,8 @@ void flecs_world_allocators_fini(
     flecs_ballocator_fini(&a->table_diff);
     flecs_ballocator_fini(&a->sparse_chunk);
     flecs_table_diff_builder_fini(world, &world->allocators.diff_builder);
+    ecs_vec_fini_t(
+        &world->allocator, &world->allocators.tree_spawner, ecs_entity_t);
 
     flecs_allocator_fini(&world->allocator);
 }
@@ -970,6 +977,8 @@ ecs_world_t *ecs_mini(void) {
     ecs_assert(ECS_ALIGNOF(ecs_query_triv_cache_match_t) == 
                ECS_ALIGNOF(ecs_query_cache_match_t), ECS_INTERNAL_ERROR, NULL);
 
+    ecs_assert(EcsQueryNothing < 256, ECS_INTERNAL_ERROR, NULL);
+
     ecs_trace("#[bold]bootstrapping world");
     ecs_log_push();
 
@@ -1023,6 +1032,8 @@ ecs_world_t *ecs_mini(void) {
     if (ecs_os_has_time()) {
         ecs_os_get_time(&world->world_start_time);
     }
+
+    ecs_map_init(&world->prefab_child_indices, a);
 
     ecs_set_stage_count(world, 1);
     ecs_default_lookup_path[0] = EcsFlecsCore;
@@ -1324,6 +1335,7 @@ int ecs_fini(
     flecs_name_index_fini(&world->aliases);
     flecs_name_index_fini(&world->symbols);
     ecs_set_stage_count(world, 0);
+    ecs_map_fini(&world->prefab_child_indices);
     ecs_vec_fini_t(&world->allocator, &world->component_ids, ecs_id_t);
     ecs_log_pop_1();
 
@@ -1730,6 +1742,10 @@ int32_t ecs_delete_empty_tables(
         ecs_table_t *table = flecs_sparse_get_dense_t(&world->store.tables,
             ecs_table_t, i);
 
+        if (table->keep) {
+            continue;
+        }
+
         measure_budget_after --;
 
         if (time_budget && !measure_budget_after) {
@@ -1790,6 +1806,8 @@ bool flecs_component_record_in_use(
 {
     if (cr->flags & EcsIdDontFragment) {
         return flecs_sparse_count(cr->sparse) != 0;
+    } else if (cr->flags & EcsIdOrderedChildren) {
+        return ecs_vec_count(&cr->pair->ordered_children) != 0;
     } else {
         return cr->cache.tables.count != 0;
     }
@@ -1810,7 +1828,7 @@ void ecs_shrink(
         ecs_table_t *table = flecs_sparse_get_dense_t(tables, ecs_table_t, i);
         if (ecs_table_count(table)) {
             flecs_table_shrink(world, table);
-        } else {
+        } else if (!table->keep) {
             flecs_table_fini(world, table);
         }
     }

@@ -151,7 +151,8 @@ void flecs_on_delete(
     ecs_world_t *world,
     ecs_id_t id,
     ecs_entity_t action,
-    bool delete_id);
+    bool delete_id,
+    bool force_delete);
 
 /* Remove non-fragmenting components from entity */
 void flecs_entity_remove_non_fragmenting(

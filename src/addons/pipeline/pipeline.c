@@ -452,8 +452,10 @@ bool flecs_pipeline_build(
 
     pq->match_count = new_match_count;
 
-    ecs_assert(pq->cur_op <= ecs_vec_last_t(&pq->ops, ecs_pipeline_op_t),
-        ECS_INTERNAL_ERROR, NULL);
+    if (ecs_vec_count(&pq->ops)) {
+        ecs_assert((pq->cur_op <= ecs_vec_last_t(&pq->ops, ecs_pipeline_op_t)),
+            ECS_INTERNAL_ERROR, NULL);
+    }
 
     return true;
 }

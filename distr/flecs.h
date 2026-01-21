@@ -340,6 +340,12 @@
 #define FLECS_DAG_DEPTH_MAX 128
 #endif
 
+/** @def FLECS_TREE_SPAWNER_DEPTH_CACHE_SIZE
+ * Size of depth cache in tree spawner component. Higher values speed up prefab
+ * instantiation for deeper hierarchies, at the cost of slightly more memory.
+ */
+#define FLECS_TREE_SPAWNER_DEPTH_CACHE_SIZE (6)
+
 /** @} */
 
 /**
@@ -447,6 +453,7 @@ extern "C" {
     (EcsIdHasOnAdd|EcsIdHasOnRemove|EcsIdHasOnSet|\
         EcsIdHasOnTableCreate|EcsIdHasOnTableDelete|EcsIdSparse|\
         EcsIdOrderedChildren)
+#define EcsIdPrefabChildren            (1u << 26)
 
 #define EcsIdMarkedForDelete           (1u << 30)
 
@@ -494,6 +501,7 @@ extern "C" {
 #define EcsIterFixedInChanged          (1u << 17u) /* Fixed in terms changed */
 #define EcsIterSkip                    (1u << 18u) /* Result was skipped for change detection */
 #define EcsIterCppEach                 (1u << 19u) /* Uses C++ 'each' iterator */
+#define EcsIterImmutableCacheData      (1u << 21u) /* Internally used by engine to indicate immutable arrays from cache */
 
 
 /* Same as event flags */
@@ -532,7 +540,8 @@ extern "C" {
 #define EcsQueryCacheYieldEmptyTables (1u << 27u) /* Does query cache empty tables */
 #define EcsQueryTrivialCache          (1u << 28u) /* Trivial cache (no wildcards, traversal, order_by, group_by, change detection) */
 #define EcsQueryNested                (1u << 29u) /* Query created by a query (for observer, cache) */
-#define EcsQueryValid                 (1u << 30u)
+#define EcsQueryCacheWithFilter       (1u << 30u)
+#define EcsQueryValid                 (1u << 31u)
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Term flags (used by ecs_term_t::flags_)
@@ -544,13 +553,15 @@ extern "C" {
 #define EcsTermReflexive              (1u << 3)
 #define EcsTermIdInherited            (1u << 4)
 #define EcsTermIsTrivial              (1u << 5)
-#define EcsTermIsCacheable            (1u << 7)
-#define EcsTermIsScope                (1u << 8)
-#define EcsTermIsMember               (1u << 9)
-#define EcsTermIsToggle               (1u << 10)
-#define EcsTermIsSparse               (1u << 12)
-#define EcsTermIsOr                   (1u << 13)
-#define EcsTermDontFragment           (1u << 14)
+#define EcsTermIsCacheable            (1u << 6)
+#define EcsTermIsScope                (1u << 7)
+#define EcsTermIsMember               (1u << 8)
+#define EcsTermIsToggle               (1u << 9)
+#define EcsTermIsSparse               (1u << 10)
+#define EcsTermIsOr                   (1u << 11)
+#define EcsTermDontFragment           (1u << 12)
+#define EcsTermNonFragmentingChildOf  (1u << 13)
+#define EcsTermOrderedChildren        (1u << 14)
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -572,11 +583,12 @@ extern "C" {
 //// Table flags (used by ecs_table_t::flags)
 ////////////////////////////////////////////////////////////////////////////////
 
-#define EcsTableHasBuiltins            (1u << 1u)  /* Does table have builtin components */
-#define EcsTableIsPrefab               (1u << 2u)  /* Does the table store prefabs */
-#define EcsTableHasIsA                 (1u << 3u)  /* Does the table have IsA relationship */
-#define EcsTableHasMultiIsA            (1u << 4u)  /* Does table have multiple IsA pairs */
-#define EcsTableHasChildOf             (1u << 5u)  /* Does the table type ChildOf relationship */
+#define EcsTableHasBuiltins            (1u << 0u)  /* Does table have builtin components */
+#define EcsTableIsPrefab               (1u << 1u)  /* Does the table store prefabs */
+#define EcsTableHasIsA                 (1u << 2u)  /* Does the table have IsA relationship */
+#define EcsTableHasMultiIsA            (1u << 3u)  /* Does table have multiple IsA pairs */
+#define EcsTableHasChildOf             (1u << 4u)  /* Does the table type ChildOf relationship */
+#define EcsTableHasParent              (1u << 5u)  /* Does the table type Parent component */
 #define EcsTableHasName                (1u << 6u)  /* Does the table type have (Identifier, Name) */
 #define EcsTableHasPairs               (1u << 7u)  /* Does the table type have pairs */
 #define EcsTableHasModule              (1u << 8u)  /* Does the table have module data */
@@ -1005,7 +1017,8 @@ typedef struct ecs_allocator_t ecs_allocator_t;
 #define ECS_GENERATION_INC(e)         ((e & ~ECS_GENERATION_MASK) | ((0xFFFF & (ECS_GENERATION(e) + 1)) << 32))
 #define ECS_COMPONENT_MASK            (~ECS_ID_FLAGS_MASK)
 #define ECS_HAS_ID_FLAG(e, flag)      ((e) & ECS_##flag)
-#define ECS_IS_PAIR(id)               (((id) & ECS_ID_FLAGS_MASK) == ECS_PAIR)
+#define ECS_IS_VALUE_PAIR(id)         (((id) & ECS_ID_FLAGS_MASK) == ECS_VALUE_PAIR)
+#define ECS_IS_PAIR(id)               ((((id) & ECS_ID_FLAGS_MASK) == ECS_PAIR) || ECS_IS_VALUE_PAIR(id))
 #define ECS_PAIR_FIRST(e)             (ecs_entity_t_hi(e & ECS_COMPONENT_MASK))
 #define ECS_PAIR_SECOND(e)            (ecs_entity_t_lo(e))
 #define ECS_HAS_RELATION(e, rel)      (ECS_HAS_ID_FLAG(e, PAIR) && (ECS_PAIR_FIRST(e) == rel))
@@ -1029,12 +1042,14 @@ typedef struct ecs_allocator_t ecs_allocator_t;
 #define ecs_entity_t_hi(value) ECS_CAST(uint32_t, (value) >> 32)
 #define ecs_entity_t_comb(lo, hi) ((ECS_CAST(uint64_t, hi) << 32) + ECS_CAST(uint32_t, lo))
 
-#define ecs_pair(pred, obj) (ECS_PAIR | ecs_entity_t_comb(obj, pred))
-#define ecs_pair_t(pred, obj) (ECS_PAIR | ecs_entity_t_comb(obj, ecs_id(pred)))
+#define ecs_pair(rel, tgt) (ECS_PAIR | ecs_entity_t_comb(tgt, rel))
+#define ecs_pair_t(rel, tgt) (ECS_PAIR | ecs_entity_t_comb(tgt, ecs_id(rel)))
 #define ecs_pair_first(world, pair) ecs_get_alive(world, ECS_PAIR_FIRST(pair))
 #define ecs_pair_second(world, pair) ecs_get_alive(world, ECS_PAIR_SECOND(pair))
 #define ecs_pair_relation ecs_pair_first
 #define ecs_pair_target ecs_pair_second
+
+#define ecs_value_pair(rel, val) (ECS_VALUE_PAIR | ecs_entity_t_comb(val, rel))
 
 #define flecs_poly_id(tag) ecs_pair(ecs_id(EcsPoly), tag)
 
@@ -4236,6 +4251,11 @@ void flecs_check_exclusive_world_access_read(
 #define flecs_check_exclusive_world_access_read(world)
 #endif
 
+/** End deferred mode (executes commands when stage->deref becomes 0). */
+FLECS_API
+bool flecs_defer_end(
+    ecs_world_t *world,
+    ecs_stage_t *stage);
 
 /** Calculate offset from address */
 #ifdef __cplusplus
@@ -4466,6 +4486,11 @@ typedef struct ecs_table_diff_t {
     ecs_flags32_t removed_flags;
 } ecs_table_diff_t;
 
+/* Tracks which/how many non-fragmenting children are stored in table for parent. */
+typedef struct ecs_parent_record_t {
+    uint32_t first_entity;
+    int32_t count;
+} ecs_parent_record_t;
 
 /** Find record for entity. 
  * An entity record contains the table and row for the entity.
@@ -4641,6 +4666,17 @@ FLECS_ALWAYS_INLINE ecs_component_record_t* flecs_components_get(
     const ecs_world_t *world,
     ecs_id_t id);
 
+/* Ensure component record for component id 
+ * 
+ * @param world The world.
+ * @param id The component id.
+ * @return The new or existing component record.
+ */
+FLECS_API
+FLECS_ALWAYS_INLINE ecs_component_record_t* flecs_components_ensure(
+    ecs_world_t *world,
+    ecs_id_t id);
+
 /** Get component id from component record.
  * 
  * @param cr The component record.
@@ -4660,6 +4696,15 @@ ecs_flags32_t flecs_component_get_flags(
     const ecs_world_t *world,
     ecs_id_t id);
 
+/** Get type info for component record.
+ * 
+ * @param cr The component record.
+ * @return The type info struct, or NULL if component is a tag.
+ */
+FLECS_API
+const ecs_type_info_t* flecs_component_get_type_info(
+    const ecs_component_record_t *cr);
+
 /** Find table record for component record.
  * This operation returns the table record for the table/component record if it
  * exists. If the record exists, it means the table has the component.
@@ -4672,6 +4717,15 @@ FLECS_API
 FLECS_ALWAYS_INLINE const ecs_table_record_t* flecs_component_get_table(
     const ecs_component_record_t *cr,
     const ecs_table_t *table);
+
+FLECS_API
+FLECS_ALWAYS_INLINE ecs_parent_record_t* flecs_component_get_parent_record(
+    const ecs_component_record_t *cr,
+    const ecs_table_t *table);
+
+FLECS_API
+FLECS_ALWAYS_INLINE int32_t flecs_component_get_childof_depth(
+    const ecs_component_record_t *cr);
 
 /** Create component record iterator.
  * A component record iterator iterates all tables for the specified component
@@ -5316,6 +5370,31 @@ typedef struct EcsDefaultChildComponent {
     ecs_id_t component;  /**< Default component id. */
 } EcsDefaultChildComponent;
 
+/* Non-fragmenting ChildOf relationship. */
+typedef struct EcsParent {
+    ecs_entity_t value;
+} EcsParent;
+
+/* Component with data to instantiate a non-fragmenting tree. */
+typedef struct {
+    const char *child_name; /* Name of prefab child */
+    ecs_table_t *table;     /* Table in which child will be stored */
+    int32_t parent_index;   /* Index into children vector */
+} ecs_tree_spawner_child_t;
+
+typedef struct {
+    ecs_vec_t children; /* vector<ecs_tree_spawner_child_t> */
+} ecs_tree_spawner_t;
+
+typedef struct EcsTreeSpawner {
+    /* Tree instantiation cache, indexed by depth. Tables will have a 
+     * (ParentDepth, depth) pair indicating the hierarchy depth. This means that
+     * for different depths, the tables the children are created in will also be
+     * different. Caching tables for different depths therefore speeds up
+     * instantiating trees even when the top level entity is not at the root. */
+    ecs_tree_spawner_t data[FLECS_TREE_SPAWNER_DEPTH_CACHE_SIZE];
+} EcsTreeSpawner;
+
 /** @} */
 /** @} */
 
@@ -5368,6 +5447,9 @@ FLECS_API extern const ecs_id_t ECS_AUTO_OVERRIDE;
 /** Adds bitset to storage which allows component to be enabled/disabled */
 FLECS_API extern const ecs_id_t ECS_TOGGLE;
 
+/** Indicates that the target of a pair is an integer value. */
+FLECS_API extern const ecs_id_t ECS_VALUE_PAIR;
+
 /** @} */
 
 /**
@@ -5386,8 +5468,17 @@ FLECS_API extern const ecs_entity_t ecs_id(EcsIdentifier);
 /** Poly component id. */
 FLECS_API extern const ecs_entity_t ecs_id(EcsPoly);
 
+/** Parent component id. */
+FLECS_API extern const ecs_entity_t ecs_id(EcsParent);
+
+/** Component with data to instantiate a tree. */
+FLECS_API extern const ecs_entity_t ecs_id(EcsTreeSpawner);
+
 /** DefaultChildComponent component id. */
 FLECS_API extern const ecs_entity_t ecs_id(EcsDefaultChildComponent);
+
+/** Relationship storing the entity's depth in a non-fragmenting hierarchy. */
+FLECS_API extern const ecs_entity_t EcsParentDepth;
 
 /** Tag added to queries. */
 FLECS_API extern const ecs_entity_t EcsQuery;
@@ -5699,7 +5790,7 @@ FLECS_API extern const ecs_entity_t EcsConstant;    /**< Tag added to enum/bitma
 
 /** Value used to quickly check if component is builtin. This is used to quickly
  * filter out tables with builtin components (for example for ecs_delete()) */
-#define EcsLastInternalComponentId (ecs_id(EcsPoly))
+#define EcsLastInternalComponentId (ecs_id(EcsTreeSpawner))
 
 /** The first user-defined component starts from this id. Ids up to this number
  * are reserved for builtin components */
@@ -7549,6 +7640,25 @@ ecs_entity_t ecs_get_parent(
     const ecs_world_t *world,
     ecs_entity_t entity);
 
+/** Create child with Parent component.
+ * This creates or returns an existing child for the specified parent. If a new
+ * child is created, the Parent component is used to create the parent 
+ * relationship.
+ * 
+ * If a child entity already exists with the specified name, it will be 
+ * returned.
+ * 
+ * @param world The world.
+ * @param parent The parent for which to create the child.
+ * @param name The name with which to create the entity (may be NULL).
+ * @return A new or existing child entity.
+ */
+FLECS_API
+ecs_entity_t ecs_new_w_parent(
+    ecs_world_t *world,
+    ecs_entity_t parent,
+    const char *name);
+
 /** Get the target of a relationship for a given component.
  * This operation returns the first entity that has the provided component by 
  * following the relationship. If the entity itself has the component then it 
@@ -8191,7 +8301,7 @@ ecs_flags32_t ecs_id_get_flags(
  */
 FLECS_API
 const char* ecs_id_flag_str(
-    ecs_id_t component_flags);
+    uint64_t component_flags);
 
 /** Convert component id to string.
  * This operation converts the provided component id to a string. It can output
@@ -8707,6 +8817,15 @@ FLECS_API
 char* ecs_query_plan_w_profile(
     const ecs_query_t *query,
     const ecs_iter_t *it);
+
+/** Same as ecs_query_plan(), but includes plan for populating cache (if any). 
+ * 
+ * @param query The query.
+ * @return The query plan.
+ */
+FLECS_API
+char* ecs_query_plans(
+    const ecs_query_t *query);
 
 /** Populate variables from key-value string.
  * Convenience function to set query variables from a key-value string separated
@@ -9969,7 +10088,7 @@ int32_t ecs_search_offset(
  * @param component The component to search for.
  * @param rel The relationship to traverse (optional).
  * @param flags Whether to search EcsSelf and/or EcsUp.
- * @param subject_out If provided, it will be set to the matched entity.
+ * @param tgt_out If provided, it will be set to the matched entity.
  * @param component_out If provided, it will be set to the found component (optional).
  * @param tr_out Internal datatype.
  * @return The index of the component in the table type.
@@ -9985,8 +10104,21 @@ int32_t ecs_search_relation(
     ecs_id_t component,
     ecs_entity_t rel,
     ecs_flags64_t flags, /* EcsSelf and/or EcsUp */
-    ecs_entity_t *subject_out,
+    ecs_entity_t *tgt_out,
     ecs_id_t *component_out,
+    struct ecs_table_record_t **tr_out);
+
+/* Up traversal from entity */
+FLECS_API
+int32_t ecs_search_relation_for_entity(
+    const ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t id,
+    ecs_entity_t rel,
+    bool self,
+    ecs_component_record_t *cr,
+    ecs_entity_t *tgt_out,
+    ecs_id_t *id_out,
     struct ecs_table_record_t **tr_out);
 
 /** Remove all entities in a table. Does not deallocate table memory. 
@@ -10901,10 +11033,10 @@ int ecs_value_move_ctor(
 #define ecs_value_ptr(T, ptr) ((ecs_value_t){ecs_id(T), ptr})
 
 /** Convenience macro for creating compound literal pair value */
-#define ecs_value_pair(R, t, ...) ((ecs_value_t){ecs_pair_t(R, t), &(R)__VA_ARGS__})
+#define ecs_pair_value(R, t, ...) ((ecs_value_t){ecs_pair_t(R, t), &(R)__VA_ARGS__})
 
 /** Convenience macro for creating compound literal pair value */
-#define ecs_value_pair_2nd(r, T, ...) ((ecs_value_t){ecs_pair(r, ecs_id(T)), &(T)__VA_ARGS__})
+#define ecs_pair_value_2nd(r, T, ...) ((ecs_value_t){ecs_pair(r, ecs_id(T)), &(T)__VA_ARGS__})
 
 /** Convenience macro for creating heap allocated value */
 #define ecs_value_new_t(world, T) ecs_value_new(world, ecs_id(T))
@@ -13676,6 +13808,7 @@ typedef struct {
     ecs_size_t bytes_table_cache;       /** Bytes used by table cache. */
     ecs_size_t bytes_name_index;        /** Bytes used by name index. */
     ecs_size_t bytes_ordered_children;  /** Bytes used by ordered children vector. */
+    ecs_size_t bytes_children_table_map; /** Bytes used by map for non-fragmenting ChildOf table lookups. */
     ecs_size_t bytes_reachable_cache;   /** Bytes used by reachable cache. */
 } ecs_component_index_memory_t;
 
@@ -13732,6 +13865,7 @@ typedef struct {
     ecs_size_t bytes_rematch_monitor;   /** Memory used by monitor used to track rematches */
     ecs_size_t bytes_component_ids;     /** Memory used for mapping global to world-local component ids. */
     ecs_size_t bytes_reflection;        /** Memory used for component reflection not tracked elsewhere. */
+    ecs_size_t bytes_tree_spawner;      /** Memory used for tree (prefab) spawners. */
     ecs_size_t bytes_stats;             /** Memory used for statistics tracking not tracked elsewhere. */
     ecs_size_t bytes_rest;              /** Memory used by REST HTTP server */
 } ecs_misc_memory_t;
@@ -18132,6 +18266,8 @@ ecs_entity_t ecs_cpp_enum_constant_register(
     size_t value_size);
 
 typedef struct ecs_cpp_get_mut_t {
+    ecs_world_t *world;
+    ecs_stage_t *stage;
     void *ptr;
     bool call_modified;
 } ecs_cpp_get_mut_t;
@@ -18293,6 +18429,7 @@ using Component = EcsComponent;
 using Identifier = EcsIdentifier;
 using Poly = EcsPoly;
 using DefaultChildComponent = EcsDefaultChildComponent;
+using Parent = EcsParent;
 
 /* Builtin tags */
 static const flecs::entity_t Query = EcsQuery;
@@ -18307,6 +18444,7 @@ static const flecs::entity_t System = EcsSystem;
 static const flecs::entity_t Pipeline = ecs_id(EcsPipeline);
 static const flecs::entity_t Phase = EcsPhase;
 static const flecs::entity_t Constant = EcsConstant;
+static const flecs::entity_t ParentDepth = EcsParentDepth;
 
 /* Builtin event tags */
 static const flecs::entity_t OnAdd = EcsOnAdd;
@@ -19601,6 +19739,33 @@ using second_arg_t = typename second_arg<Func>::type;
 
 } // flecs
 
+
+namespace flecs {
+namespace _ {
+
+// Trick to obtain typename from type, as described here
+// https://blog.molecular-matters.com/2015/12/11/getting-the-type-of-a-template-argument-as-string-without-rtti/
+//
+// The code from the link has been modified to work with more types, and across
+// multiple compilers. The resulting string should be the same on all platforms
+// for all compilers.
+//
+
+#if defined(__GNUC__) || defined(_WIN32)
+template <typename T>
+inline const char* type_name() {
+    static const size_t len = ECS_FUNC_TYPE_LEN(const char*, type_name, ECS_FUNC_NAME);
+    static char result[len + 1] = {};
+    static const size_t front_len = ECS_FUNC_NAME_FRONT(const char*, type_name);
+    static const char* cppTypeName = ecs_cpp_get_type_name(result, ECS_FUNC_NAME, len, front_len);
+    return cppTypeName;
+}
+#else
+#error "implicit component registration not supported"
+#endif
+
+}
+}
 
 
 // Mixin forward declarations
@@ -22169,6 +22334,10 @@ inline void set(world_t *world, flecs::entity_t entity, T&& value, flecs::id_t i
         dst = FLECS_MOV(value);
     }
 
+    if (res.stage) {
+        flecs_defer_end(res.world, res.stage);
+    }
+
     if (res.call_modified) {
         ecs_modified_id(world, entity, id);
     }
@@ -22184,6 +22353,10 @@ inline void set(world_t *world, flecs::entity_t entity, const T& value, flecs::i
 
     T& dst = *static_cast<remove_reference_t<T>*>(res.ptr);
     dst = value;
+
+    if (res.stage) {
+        flecs_defer_end(res.world, res.stage);
+    }
 
     if (res.call_modified) {
         ecs_modified_id(world, entity, id);
@@ -22220,6 +22393,10 @@ inline void assign(world_t *world, flecs::entity_t entity, T&& value, flecs::id_
         dst = FLECS_MOV(value);
     }
 
+    if (res.stage) {
+        flecs_defer_end(res.world, res.stage);
+    }
+
     if (res.call_modified) {
         ecs_modified_id(world, entity, id);
     }
@@ -22236,6 +22413,10 @@ inline void assign(world_t *world, flecs::entity_t entity, const T& value, flecs
 
     T& dst = *static_cast<remove_reference_t<T>*>(res.ptr);
     dst = value;
+
+    if (res.stage) {
+        flecs_defer_end(res.world, res.stage);
+    }
 
     if (res.call_modified) {
         ecs_modified_id(world, entity, id);
@@ -25455,7 +25636,8 @@ struct entity_view : public id {
     const T& get() const {
         const T *r = try_get<T>();
         ecs_assert(r != nullptr, ECS_INVALID_OPERATION, 
-            "invalid get: entity does not have component (use try_get)");
+            "invalid get: entity does not have component '%s' (use try_get)",
+                flecs::_::type_name<T>());
         return *r;
     }
 
@@ -25472,7 +25654,8 @@ struct entity_view : public id {
     const A& get() const {
         const A *r = try_get<T>();
         ecs_assert(r != nullptr, ECS_INVALID_OPERATION, 
-            "invalid get: entity does not have component (use try_get)");
+            "invalid get: entity does not have component '%s' (use try_get)",
+            flecs::_::type_name<T>());
         return *r;
     }
     
@@ -29384,27 +29567,6 @@ using delegate = _::each_delegate<typename std::decay<Func>::type, Args...>;
 namespace flecs {
 
 namespace _ {
-
-// Trick to obtain typename from type, as described here
-// https://blog.molecular-matters.com/2015/12/11/getting-the-type-of-a-template-argument-as-string-without-rtti/
-//
-// The code from the link has been modified to work with more types, and across
-// multiple compilers. The resulting string should be the same on all platforms
-// for all compilers.
-//
-
-#if defined(__GNUC__) || defined(_WIN32)
-template <typename T>
-inline const char* type_name() {
-    static const size_t len = ECS_FUNC_TYPE_LEN(const char*, type_name, ECS_FUNC_NAME);
-    static char result[len + 1] = {};
-    static const size_t front_len = ECS_FUNC_NAME_FRONT(const char*, type_name);
-    static const char* cppTypeName = ecs_cpp_get_type_name(result, ECS_FUNC_NAME, len, front_len);
-    return cppTypeName;
-}
-#else
-#error "implicit component registration not supported"
-#endif
 
 // Translate a typename into a language-agnostic identifier. This allows for
 // registration of components/modules across language boundaries.
@@ -35560,6 +35722,7 @@ inline void world::init_builtin_components() {
     this->component<Component>();
     this->component<Identifier>();
     this->component<Poly>();
+    this->component<Parent>();
 
     /* If meta is not defined and we're using enum reflection, make sure that
      * primitive types are registered. This makes sure we can set components of

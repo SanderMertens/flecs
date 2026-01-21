@@ -80,17 +80,19 @@ void flecs_query_iter_constrain(
                 }
             }
         } else if (flags & EcsQueryIsCacheable) {
-            if (!cache->order_by_callback && 
-                (cache->query->flags & EcsQueryTrivialCache && 
-                 !(query->pub.flags & EcsQueryHasChangeDetection))) 
-            {
-                it->flags |= EcsIterTrivialTest|EcsIterTrivialCached|
-                    EcsIterTrivialChangeDetection;
-                it->ids = cache->query->ids;
-                it->sources = cache->sources;
-                it->set_fields = flecs_uto(uint32_t, (1llu << it->field_count) - 1);
-            } else {
-                it->flags |= EcsIterTrivialTest|EcsIterCached;
+            if (!query->ops) {
+                if (!cache->order_by_callback && 
+                    (cache->query->flags & EcsQueryTrivialCache && 
+                    !(query->pub.flags & EcsQueryHasChangeDetection))) 
+                {
+                    it->flags |= EcsIterTrivialTest|EcsIterTrivialCached|
+                        EcsIterTrivialChangeDetection;
+                    it->ids = cache->query->ids;
+                    it->sources = cache->sources;
+                    it->set_fields = flecs_uto(uint32_t, (1llu << it->field_count) - 1);
+                } else {
+                    it->flags |= EcsIterTrivialTest|EcsIterCached;
+                }
             }
         }
     } else {
@@ -103,17 +105,19 @@ void flecs_query_iter_constrain(
                 }
             }
         } else if (flags & EcsQueryIsCacheable) {
-            if (!cache->order_by_callback && 
-                (cache->query->flags & EcsQueryTrivialCache && 
-                 !(query->pub.flags & EcsQueryHasChangeDetection))) 
-            {
-                it->flags |= EcsIterTrivialSearch|EcsIterTrivialCached|
-                    EcsIterTrivialChangeDetection;
-                it->ids = cache->query->ids;
-                it->sources = cache->sources;
-                it->set_fields = flecs_uto(uint32_t, (1llu << it->field_count) - 1);
-            } else {
-                it->flags |= EcsIterTrivialSearch|EcsIterCached;
+            if (!query->ops) {
+                if (!cache->order_by_callback && 
+                    (cache->query->flags & EcsQueryTrivialCache && 
+                    !(query->pub.flags & EcsQueryHasChangeDetection))) 
+                {
+                    it->flags |= EcsIterTrivialSearch|EcsIterTrivialCached|
+                        EcsIterTrivialChangeDetection;
+                    it->ids = cache->query->ids;
+                    it->sources = cache->sources;
+                    it->set_fields = flecs_uto(uint32_t, (1llu << it->field_count) - 1);
+                } else {
+                    it->flags |= EcsIterTrivialSearch|EcsIterCached;
+                }
             }
         }
     }
@@ -310,6 +314,46 @@ bool flecs_query_trivial_cached_next(
     return false;
 }
 
+void flecs_query_op_ctx_fini(
+    ecs_iter_t *it,
+    const ecs_query_op_t *op,
+    ecs_query_op_ctx_t *ctx)
+{
+    switch(op->kind) {
+    case EcsQueryTrav: {
+        ecs_allocator_t *a = flecs_query_get_allocator(it);
+        flecs_query_trav_cache_fini(a, &ctx->is.trav.cache);
+        break;
+    }
+    case EcsQueryUp:
+    case EcsQuerySelfUp:
+    case EcsQueryTreeUp:
+    case EcsQueryTreeSelfUp:
+    case EcsQueryTreeUpPre:
+    case EcsQueryTreeSelfUpPre:
+    case EcsQueryTreeUpPost:
+    case EcsQueryTreeSelfUpPost:
+    case EcsQuerySparseUp:
+    case EcsQuerySparseSelfUp: {
+        ecs_allocator_t *a = flecs_query_get_allocator(it);
+        ecs_query_up_ctx_t *op_ctx = &ctx->is.up;
+        ecs_query_up_impl_t *impl = op_ctx->impl;
+        if (impl) {
+            ecs_trav_up_cache_t *cache = &impl->cache;
+            if (cache->dir == EcsTravDown) {
+                flecs_query_down_cache_fini(a, cache);
+            } else {
+                flecs_query_up_cache_fini(cache);
+            }
+            flecs_free_t(a, ecs_query_up_impl_t, impl);
+        }
+        break;
+    }
+    default:
+        break;
+    }
+}
+
 static
 void flecs_query_iter_fini_ctx(
     ecs_iter_t *it,
@@ -319,34 +363,10 @@ void flecs_query_iter_fini_ctx(
     int32_t i, count = query->op_count;
     ecs_query_op_t *ops = query->ops;
     ecs_query_op_ctx_t *ctx = qit->op_ctx;
-    ecs_allocator_t *a = flecs_query_get_allocator(it);
 
     for (i = 0; i < count; i ++) {
         ecs_query_op_t *op = &ops[i];
-        switch(op->kind) {
-        case EcsQueryTrav:
-            flecs_query_trav_cache_fini(a, &ctx[i].is.trav.cache);
-            break;
-        case EcsQueryUp:
-        case EcsQuerySelfUp:
-        case EcsQuerySparseUp:
-        case EcsQuerySparseSelfUp: {
-            ecs_query_up_ctx_t *op_ctx = &ctx[i].is.up;
-            ecs_query_up_impl_t *impl = op_ctx->impl;
-            if (impl) {
-                ecs_trav_up_cache_t *cache = &impl->cache;
-                if (cache->dir == EcsTravDown) {
-                    flecs_query_down_cache_fini(a, cache);
-                } else {
-                    flecs_query_up_cache_fini(cache);
-                }
-                flecs_free_t(a, ecs_query_up_impl_t, impl);
-            }
-            break;
-        }
-        default:
-            break;
-        }
+        flecs_query_op_ctx_fini(it, op, &ctx[i]);
     }
 }
 
@@ -484,7 +504,8 @@ ecs_iter_t flecs_query_iter(
     it.up_fields = 0;
     flecs_query_apply_iter_flags(&it, q);
 
-    flecs_iter_init(it.world, &it, !impl->cache || !(q->flags & EcsQueryIsCacheable));
+    bool fully_cached = (q->flags & EcsQueryIsCacheable) && !(q->flags & EcsQueryCacheWithFilter);
+    flecs_iter_init(it.world, &it, !impl->cache || !fully_cached);
 
     qit->query_vars = impl->vars;
     qit->ops = impl->ops;

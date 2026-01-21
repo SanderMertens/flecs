@@ -314,8 +314,14 @@ ecs_entity_t flecs_script_create_entity(
     }
 
     ecs_entity_desc_t desc = {0};
-    desc.name = name;
-    desc.parent = v->parent;
+
+    if (v->entity && v->entity->non_fragmenting_parent) {
+        desc.id = ecs_new_w_parent(v->world, v->parent, name);
+    } else {
+        desc.parent = v->parent;
+        desc.name = name;
+    }
+
     desc.set = with;
     return ecs_entity_init(v->world, &desc);
 }
@@ -571,28 +577,119 @@ int flecs_script_eval_scope(
 }
 
 static
+void flecs_script_apply_non_fragmenting_childof(
+    ecs_world_t *world,
+    ecs_script_entity_t *node,
+    bool enabled);
+
+static
+void flecs_script_apply_non_fragmenting_childof_to_scope(
+    ecs_world_t *world,
+    ecs_script_scope_t *scope,
+    bool enabled)
+{
+    if (!scope) {
+        return;
+    }
+
+    int32_t i, count = ecs_vec_count(&scope->stmts);
+    ecs_script_node_t **stmts = ecs_vec_first(&scope->stmts);
+    for (i = 0; i < count; i ++) {
+        ecs_script_node_t *stmt = stmts[i];
+        switch(stmt->kind) {
+        case EcsAstScope:
+            flecs_script_apply_non_fragmenting_childof_to_scope(
+                world, (ecs_script_scope_t*)stmt, enabled);
+            break;
+        case EcsAstEntity:
+            flecs_script_apply_non_fragmenting_childof(
+                world, (ecs_script_entity_t*)stmt, enabled);
+            break;
+        case EcsAstIf:
+            flecs_script_apply_non_fragmenting_childof_to_scope(
+                world, ((ecs_script_if_t*)stmt)->if_false, enabled);
+            flecs_script_apply_non_fragmenting_childof_to_scope(
+                world, ((ecs_script_if_t*)stmt)->if_true, enabled);
+            break;
+        case EcsAstFor:
+            flecs_script_apply_non_fragmenting_childof_to_scope(
+                world, ((ecs_script_for_range_t*)stmt)->scope, enabled);
+            break;
+        case EcsAstWith:
+        case EcsAstWithVar:
+        case EcsAstWithTag:
+        case EcsAstWithComponent:
+            flecs_script_apply_non_fragmenting_childof_to_scope(
+                world, ((ecs_script_with_t*)stmt)->scope, enabled);
+            break;
+        case EcsAstPairScope:
+            flecs_script_apply_non_fragmenting_childof_to_scope(
+                world, ((ecs_script_pair_scope_t*)stmt)->scope, enabled);
+            break;
+        case EcsAstTag:
+        case EcsAstComponent:
+        case EcsAstDefaultComponent:
+        case EcsAstVarComponent:        
+        case EcsAstUsing:
+        case EcsAstModule:
+        case EcsAstAnnotation:
+        case EcsAstTemplate:
+        case EcsAstProp:
+        case EcsAstConst:
+        case EcsAstExportConst:
+            break;
+        }
+    }
+}
+
+static
+void flecs_script_apply_non_fragmenting_childof(
+    ecs_world_t *world,
+    ecs_script_entity_t *node,
+    bool enabled)
+{
+    node->non_fragmenting_parent = enabled;
+
+    flecs_script_apply_non_fragmenting_childof_to_scope(
+        world, node->scope, enabled);
+}
+
 int flecs_script_apply_annot(
     ecs_script_eval_visitor_t *v,
-    ecs_entity_t entity,
-    ecs_script_annot_t *node)
+    ecs_script_entity_t *node,
+    ecs_script_annot_t *annot)
 {
-    if (!ecs_os_strcmp(node->name, "name")) {
-        ecs_doc_set_name(v->world, entity, node->expr);
+    ecs_entity_t e = node->eval;
+
+    if (!ecs_os_strcmp(annot->name, "name")) {
+        ecs_doc_set_name(v->world, e, annot->expr);
     } else
-    if (!ecs_os_strcmp(node->name, "brief")) {
-        ecs_doc_set_brief(v->world, entity, node->expr);
+    if (!ecs_os_strcmp(annot->name, "brief")) {
+        ecs_doc_set_brief(v->world, e, annot->expr);
     } else 
-    if (!ecs_os_strcmp(node->name, "detail")) {
-        ecs_doc_set_detail(v->world, entity, node->expr);
+    if (!ecs_os_strcmp(annot->name, "detail")) {
+        ecs_doc_set_detail(v->world, e, annot->expr);
     } else
-    if (!ecs_os_strcmp(node->name, "link")) {
-        ecs_doc_set_link(v->world, entity, node->expr);
+    if (!ecs_os_strcmp(annot->name, "link")) {
+        ecs_doc_set_link(v->world, e, annot->expr);
     } else
-    if (!ecs_os_strcmp(node->name, "color")) {
-        ecs_doc_set_color(v->world, entity, node->expr);
+    if (!ecs_os_strcmp(annot->name, "color")) {
+        ecs_doc_set_color(v->world, e, annot->expr);
+    } else
+    if (!ecs_os_strcmp(annot->name, "tree")) {
+        if (!ecs_os_strcmp(annot->expr, "Parent")) {
+            flecs_script_apply_non_fragmenting_childof(v->world, node, true);
+        } else if (!ecs_os_strcmp(annot->expr, "ChildOf")) {
+            flecs_script_apply_non_fragmenting_childof(v->world, node, false);
+        } else {
+            flecs_script_eval_error(v, annot, 
+                "invalid value for tree annotation: '%s' (expected 'Parent' or 'ChildOf')",
+                annot->expr);
+            return -1;            
+        }
     } else {
-        flecs_script_eval_error(v, node, "unknown annotation '%s'",
-            node->name);
+        flecs_script_eval_error(v, annot, "unknown annotation '%s'",
+            annot->name);
         return -1;
     }
     
@@ -683,11 +780,10 @@ int flecs_script_eval_entity(
     if (count) {
         ecs_script_annot_t **annots = ecs_vec_first(&v->r->annot);
         for (i = 0; i < count ; i ++) {
-            flecs_script_apply_annot(v, node->eval, annots[i]);
+            flecs_script_apply_annot(v, node, annots[i]);
         }
         ecs_vec_clear(&v->r->annot);
     }
-
 
     bool old_is_with_scope = v->is_with_scope;
     ecs_entity_t old_template_entity = v->template_entity;
@@ -1489,10 +1585,12 @@ int flecs_script_eval_annot(
         return -1;
     }
     
-    if (v->base.next->kind != EcsAstEntity) {
-        if (v->base.next->kind != EcsAstAnnotation) {
+    ecs_script_node_kind_t next_kind = v->base.next->kind;
+    if (next_kind != EcsAstEntity && next_kind != EcsAstTemplate) {
+        if (next_kind != EcsAstAnnotation) {
             flecs_script_eval_error(v, node,
-                "target of @%s annotation must be an entity", node->name);
+                "target of @%s annotation must be an entity or template", 
+                    node->name);
             return -1;
         }
     }

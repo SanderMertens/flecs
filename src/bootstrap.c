@@ -587,11 +587,12 @@ void flecs_register_ordered_children(ecs_iter_t *it) {
             ecs_component_record_t *cr = flecs_components_ensure(
                 it->world, ecs_childof(parent));
             if (!(cr->flags & EcsIdOrderedChildren)) {
+                flecs_ordered_children_init(it->world, cr);
                 flecs_ordered_children_populate(it->world, cr);
                 cr->flags |= EcsIdOrderedChildren;
             }
         }
-    } else {
+    } else if (!(it->real_world->flags & EcsWorldFini)) {
         ecs_assert(it->event == EcsOnRemove, ECS_INTERNAL_ERROR, NULL);
         for (i = 0; i < it->count; i ++) {
             ecs_entity_t parent = it->entities[i];
@@ -649,7 +650,7 @@ void flecs_bootstrap_builtin(
     name_col[index].hash = name_hash;
     name_col[index].index_hash = 0;
 
-    ecs_hashmap_t *name_index = table->_->childof_r->name_index;
+    ecs_hashmap_t *name_index = flecs_table_get_name_index(world, table);
     name_col[index].index = name_index;
     flecs_name_index_ensure(name_index, entity, name, name_length, name_hash);
 
@@ -852,6 +853,8 @@ void flecs_bootstrap(
     flecs_bootstrap_make_alive(world, ecs_id(EcsComponent));
     flecs_bootstrap_make_alive(world, ecs_id(EcsIdentifier));
     flecs_bootstrap_make_alive(world, ecs_id(EcsPoly));
+    flecs_bootstrap_make_alive(world, ecs_id(EcsParent));
+    flecs_bootstrap_make_alive(world, ecs_id(EcsTreeSpawner));
     flecs_bootstrap_make_alive(world, ecs_id(EcsDefaultChildComponent));
     flecs_bootstrap_make_alive(world, EcsFinal);
     flecs_bootstrap_make_alive(world, EcsName);
@@ -902,6 +905,10 @@ void flecs_bootstrap(
         .dtor = ecs_dtor(EcsPoly)
     });
 
+    flecs_type_info_init(world, EcsParent, { 
+        .ctor = flecs_default_ctor
+    });
+
     flecs_type_info_init(world, EcsDefaultChildComponent, { 
         .ctor = flecs_default_ctor,
     });
@@ -919,6 +926,8 @@ void flecs_bootstrap(
     flecs_bootstrap_builtin_t(world, table, EcsIdentifier);
     flecs_bootstrap_builtin_t(world, table, EcsComponent);
     flecs_bootstrap_builtin_t(world, table, EcsPoly);
+    flecs_bootstrap_builtin_t(world, table, EcsParent);
+    flecs_bootstrap_builtin_t(world, table, EcsTreeSpawner);
     flecs_bootstrap_builtin_t(world, table, EcsDefaultChildComponent);
 
     /* Initialize default entity id range */
@@ -943,6 +952,7 @@ void flecs_bootstrap(
     flecs_bootstrap_tag(world, EcsSymbol);
     flecs_bootstrap_tag(world, EcsAlias);
 
+    flecs_bootstrap_tag(world, EcsParentDepth);
     flecs_bootstrap_tag(world, EcsQuery);
     flecs_bootstrap_tag(world, EcsObserver);
 
@@ -1217,6 +1227,7 @@ void flecs_bootstrap(
     ecs_add_id(world, EcsOnDelete, EcsExclusive);
     ecs_add_id(world, EcsOnDeleteTarget, EcsExclusive);
     ecs_add_id(world, EcsOnInstantiate, EcsExclusive);
+    ecs_add_id(world, EcsParentDepth, EcsExclusive);
 
     /* Unqueryable entities */
     ecs_add_id(world, EcsThis, EcsNotQueryable);
@@ -1287,6 +1298,8 @@ void flecs_bootstrap(
     
     /* Run bootstrap functions for other parts of the code */
     flecs_bootstrap_entity_name(world);
+    flecs_bootstrap_parent_component(world);
+    flecs_bootstrap_spawner(world);
 
     /* Register constant tag */
     ecs_component(world, {

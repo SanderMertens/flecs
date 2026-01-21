@@ -235,6 +235,8 @@ void flecs_table_init_flags(
     table->_->parent.id = 0;
 #endif
 
+    table->childof_index = -1;
+
     int32_t i;
     for (i = 0; i < count; i ++) {
         ecs_id_t id = ids[i];
@@ -251,60 +253,109 @@ void flecs_table_init_flags(
             table->flags |= EcsTableIsDisabled;
         } else if (id == EcsNotQueryable) {
             table->flags |= EcsTableNotQueryable;
-        } else {
-            if (ECS_IS_PAIR(id)) {
-                ecs_entity_t r = ECS_PAIR_FIRST(id);
+        } else if (id == ecs_id(EcsParent)) {
+            table->flags |= EcsTableHasParent;
+            table->trait_flags |= EcsIdTraversable;
+        } else if (ECS_PAIR_FIRST(id) == EcsWith) {
+            table->trait_flags |= EcsIdWith;
+        } else if (ECS_PAIR_FIRST(id) == EcsOnDelete) {
+            ecs_entity_t on_delete_kind = ECS_PAIR_SECOND(id);
+            if (on_delete_kind == EcsRemove) {
+                table->trait_flags |= EcsIdOnDeleteRemove;
+            } else if (on_delete_kind == EcsDelete) {
+                table->trait_flags |= EcsIdOnDeleteDelete;
+            } else if (on_delete_kind == EcsPanic) {
+                table->trait_flags |= EcsIdOnDeletePanic;
+            }
+        } else if (ECS_PAIR_FIRST(id) == EcsOnDeleteTarget) {
+            ecs_entity_t on_delete_kind = ECS_PAIR_SECOND(id);
+            if (on_delete_kind == EcsRemove) {
+                table->trait_flags |= EcsIdOnDeleteTargetRemove;
+            } else if (on_delete_kind == EcsDelete) {
+                table->trait_flags |= EcsIdOnDeleteTargetDelete;
+            } else if (on_delete_kind == EcsPanic) {
+                table->trait_flags |= EcsIdOnDeleteTargetPanic;
+            }
+        } else if (ECS_PAIR_FIRST(id) == EcsOnInstantiate) {
+            ecs_entity_t inherit_kind = ECS_PAIR_SECOND(id);
+            if (inherit_kind == EcsInherit) {
+                table->trait_flags |= EcsIdOnInstantiateInherit;
+            } else if (inherit_kind == EcsDontInherit) {
+                table->trait_flags |= EcsIdOnInstantiateDontInherit;
+            } else if (inherit_kind == EcsOverride) {
+                table->trait_flags |= EcsIdOnInstantiateOverride;
+            }
+        } else if (id == EcsCanToggle) {
+            table->trait_flags |= EcsIdCanToggle;
+        } else if (id == EcsInheritable) {
+            table->trait_flags |= EcsIdInheritable;
+        } else if (id == EcsSingleton) {
+            table->trait_flags |= EcsIdSingleton;
+        } else if (id == EcsSparse) {
+            table->trait_flags |= EcsIdSparse;
+        } else if (id == EcsDontFragment) {
+            table->trait_flags |= EcsIdDontFragment;
+        } else if (id ==  EcsExclusive) {
+            table->trait_flags |= EcsIdExclusive;   
+        } else if (id == EcsTraversable) {
+            table->trait_flags |= EcsIdTraversable;
+        } else if (id == EcsPairIsTag) {
+            table->trait_flags |= EcsIdPairIsTag;
+        } else if (id == EcsTransitive) {
+            table->trait_flags |= EcsIdIsTransitive;
+        } else if (ECS_IS_PAIR(id)) {
+            ecs_entity_t r = ECS_PAIR_FIRST(id);
 
-                table->flags |= EcsTableHasPairs;
+            table->flags |= EcsTableHasPairs;
 
-                if (r == EcsIsA) {
-                    table->flags |= EcsTableHasIsA;
-                } else if (r == EcsChildOf) {
-                    table->flags |= EcsTableHasChildOf;
-                    ecs_entity_t tgt = ecs_pair_second(world, id);
-                    ecs_assert(tgt != 0, ECS_INTERNAL_ERROR, NULL);
+            if (r == EcsIsA) {
+                table->flags |= EcsTableHasIsA;
+            } else if (r == EcsChildOf) {
+                table->flags |= EcsTableHasChildOf;
+                table->childof_index = flecs_ito(int16_t, i);
 
-                    /* If table contains entities that are inside one of the 
-                     * builtin modules, it contains builtin entities */
+                ecs_entity_t tgt = ecs_pair_second(world, id);
+                ecs_assert(tgt != 0, ECS_INTERNAL_ERROR, NULL);
 
-                    if (tgt == EcsFlecsCore || tgt == EcsFlecsInternals) {
-                        table->flags |= EcsTableHasBuiltins;
-                        table->flags |= EcsTableHasModule;
-                    }
+                /* If table contains entities that are inside one of the 
+                    * builtin modules, it contains builtin entities */
 
-                    if (ecs_has_id(world, tgt, EcsModule)) {
-                        table->flags |= EcsTableHasModule;
-                    }
+                if (tgt == EcsFlecsCore || tgt == EcsFlecsInternals) {
+                    table->flags |= EcsTableHasBuiltins;
+                }
 
-#ifdef FLECS_DEBUG_INFO
-                    table->_->parent.id = tgt;
-#endif
-                } else if (id == ecs_pair_t(EcsIdentifier, EcsName)) {
-                    table->flags |= EcsTableHasName;
-#ifdef FLECS_DEBUG_INFO
-                    table->_->name_column = flecs_ito(int16_t, i);  
-#endif
-                } else if (r == ecs_id(EcsPoly)) {
+                if (ecs_has_id(world, tgt, EcsModule)) {
                     table->flags |= EcsTableHasModule;
                 }
-#if defined(FLECS_DEBUG_INFO) && defined(FLECS_DOC)
-                else if (id == ecs_pair_t(EcsDocDescription, EcsName)) {
-                    table->_->doc_name_column = flecs_ito(int16_t, i);
-                }
-#endif
-            } else {
-                if (ECS_HAS_ID_FLAG(id, TOGGLE)) {
-                    ecs_table__t *meta = table->_;
-                    table->flags |= EcsTableHasToggle;
 
-                    if (!meta->bs_count) {
-                        meta->bs_offset = flecs_ito(int16_t, i);
-                    }
-                    meta->bs_count ++;
+#ifdef FLECS_DEBUG_INFO
+                table->_->parent.id = tgt;
+#endif
+            } else if (id == ecs_pair_t(EcsIdentifier, EcsName)) {
+                table->flags |= EcsTableHasName;
+#ifdef FLECS_DEBUG_INFO
+                table->_->name_column = flecs_ito(int16_t, i);  
+#endif
+            } else if (r == ecs_id(EcsPoly)) {
+                table->flags |= EcsTableHasModule;
+            }
+#if defined(FLECS_DEBUG_INFO) && defined(FLECS_DOC)
+            else if (id == ecs_pair_t(EcsDocDescription, EcsName)) {
+                table->_->doc_name_column = flecs_ito(int16_t, i);
+            }
+#endif
+        } else {
+            if (ECS_HAS_ID_FLAG(id, TOGGLE)) {
+                ecs_table__t *meta = table->_;
+                table->flags |= EcsTableHasToggle;
+
+                if (!meta->bs_count) {
+                    meta->bs_offset = flecs_ito(int16_t, i);
                 }
-                if (ECS_HAS_ID_FLAG(id, AUTO_OVERRIDE)) {
-                    table->flags |= EcsTableHasOverrides;
-                }
+                meta->bs_count ++;
+            }
+            if (ECS_HAS_ID_FLAG(id, AUTO_OVERRIDE)) {
+                table->flags |= EcsTableHasOverrides;
             }
         }
     }
@@ -626,7 +677,7 @@ void flecs_table_init(
     }
 
     int32_t last_pair = -1;
-    bool has_childof = table->flags & EcsTableHasChildOf;
+    bool has_childof = !!(table->flags & (EcsTableHasChildOf|EcsTableHasParent));
     if (first_pair != -1) {
         /* Add a (Relationship, *) record for each relationship. */
         ecs_entity_t r = 0;
@@ -667,6 +718,11 @@ void flecs_table_init(
          * linear scan to find all occurrences for a target. */
         for (dst_i = first_pair; dst_i < last_pair; dst_i ++) {
             ecs_id_t dst_id = dst_ids[dst_i];
+
+            if (ECS_IS_VALUE_PAIR(dst_id)) {
+                continue;
+            }
+
             ecs_id_t tgt_id = ecs_pair(EcsWildcard, ECS_PAIR_SECOND(dst_id));
 
             flecs_table_append_to_records(
@@ -769,17 +825,13 @@ void flecs_table_init(
     table->version = 1;
     flecs_table_init_data(world, table);
 
-    /* If the table doesn't have an explicit ChildOf pair, it will be in the
-     * root which is registered with the (ChildOf, 0) index. */
-    ecs_assert(childof_cr != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    if (table->flags & EcsTableHasName) {
-        flecs_component_name_index_ensure(world, childof_cr);
-        ecs_assert(childof_cr->pair->name_index != NULL, 
-            ECS_INTERNAL_ERROR, NULL);
+    if (childof_cr) {
+        if (table->flags & EcsTableHasName) {
+            flecs_component_name_index_ensure(world, childof_cr);
+            ecs_assert(childof_cr->pair->name_index != NULL, 
+                ECS_INTERNAL_ERROR, NULL);
+        }
     }
-
-    table->_->childof_r = childof_cr->pair;
 
     /* If table has IsA pairs, create overrides cache */
     if (isa_tr) {
@@ -866,7 +918,7 @@ void flecs_table_notify_on_remove(
         ecs_table_diff_t diff = ECS_TABLE_DIFF_INIT;
         diff.removed = table->type;
         diff.removed_flags = table->flags & EcsTableRemoveEdgeFlags;
-        flecs_notify_on_remove(world, table, NULL, 0, count, &diff);
+        flecs_actions_move_remove(world, table, &world->store.root, 0, count, &diff);
     }
 }
 
@@ -1192,7 +1244,6 @@ const ecs_entity_t* ecs_table_entities(
     return table->data.entities;
 }
 
-/* Cleanup, no OnRemove, retain allocations */
 void ecs_table_clear_entities(
     ecs_world_t* world,
     ecs_table_t* table)
@@ -1200,7 +1251,6 @@ void ecs_table_clear_entities(
     flecs_table_fini_data(world, table, true, false);
 }
 
-/* Cleanup, run OnRemove, free allocations */
 void flecs_table_delete_entities(
     ecs_world_t *world,
     ecs_table_t *table)
@@ -1228,6 +1278,9 @@ void flecs_table_fini(
 
     bool is_root = table == &world->store.root;
     ecs_assert(!table->_->lock, ECS_LOCKED_STORAGE, FLECS_LOCKED_STORAGE_MSG("table deletion"));
+    ecs_assert((world->flags & EcsWorldFini) || !table->keep, ECS_INVALID_OPERATION, 
+        "cannot delete table (still in use): '[%s]'",
+        flecs_errstr(ecs_table_str(world, table)));
     ecs_assert(is_root || table->id != 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(is_root || flecs_sparse_is_alive(&world->store.tables, table->id),
         ECS_INTERNAL_ERROR, NULL);
@@ -1564,8 +1617,9 @@ int32_t flecs_table_grow_data(
     ecs_vec_set_size_t(&world->allocator, &v_entities, ecs_entity_t, size);
 
     ecs_entity_t *e = NULL;
+    
     if (size) {
-        e = ecs_vec_last_t(&v_entities, ecs_entity_t) + 1;
+        e = ECS_ELEM_T(v_entities.array, ecs_entity_t, v_entities.count);
     }
 
     v_entities.count += to_add;
@@ -2585,6 +2639,65 @@ const ecs_ref_t* flecs_table_get_override(
     }
 
     return r;
+}
+
+void flecs_table_keep(
+    ecs_table_t *table)
+{
+    table->keep ++;
+}
+
+void flecs_table_release(
+    ecs_table_t *table)
+{
+    table->keep --;
+    ecs_assert(table->keep >= 0, ECS_INTERNAL_ERROR, NULL);
+}
+
+ecs_component_record_t* flecs_table_get_childof_cr(
+    const ecs_world_t *world,
+    const ecs_table_t *table)
+{
+    if (!table) {
+        return NULL;
+    }
+
+    int16_t index = table->childof_index;
+    if (index == -1) {
+        return world->cr_childof_0;
+    } else {
+        return table->_->records[index].hdr.cr;
+    }
+}
+
+ecs_pair_record_t* flecs_table_get_childof_pr(
+    const ecs_world_t *world,
+    const ecs_table_t *table)
+{
+    if (!table) {
+        return NULL;
+    }
+
+    ecs_component_record_t *cr = flecs_table_get_childof_cr(world, table);
+    if (cr) {
+        return cr->pair;
+    }
+    return NULL;
+}
+
+ecs_hashmap_t* flecs_table_get_name_index(
+    const ecs_world_t *world,
+    const ecs_table_t *table)
+{
+    if (!table) {
+        return NULL;
+    }
+
+    ecs_pair_record_t *pr = flecs_table_get_childof_pr(world, table);
+    if (pr) {
+        return pr->name_index;
+    }
+    return NULL;
 }
 
 

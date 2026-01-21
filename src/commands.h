@@ -85,11 +85,6 @@ bool flecs_defer_begin(
     ecs_world_t *world,
     ecs_stage_t *stage);
 
-/* End deferred mode (executes commands when stage->deref becomes 0). */
-bool flecs_defer_end(
-    ecs_world_t *world,
-    ecs_stage_t *stage);
-
 /* Purge command queue without executing commands. */
 bool flecs_defer_purge(
     ecs_world_t *world,

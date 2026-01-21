@@ -4374,8 +4374,8 @@ void ComponentLifecycle_dtor_after_add_exclusive_component(void) {
         .dtor = ecs_dtor(Position)
     });
 
-    ecs_entity_t e1 = ecs_insert(world, ecs_value_pair(Position, TgtB, {10, 20}));
-    ecs_insert(world, ecs_value_pair(Position, TgtB, {20, 30}));
+    ecs_entity_t e1 = ecs_insert(world, ecs_pair_value(Position, TgtB, {10, 20}));
+    ecs_insert(world, ecs_pair_value(Position, TgtB, {20, 30}));
 
     ecs_set_pair(world, e1, Position, TgtA, {10, 20});
     test_int(dtor_position, 1);

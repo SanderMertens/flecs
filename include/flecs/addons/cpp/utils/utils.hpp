@@ -179,3 +179,30 @@ struct always_false {
 #include "enum.hpp"
 #include "stringstream.hpp"
 #include "function_traits.hpp"
+
+namespace flecs {
+namespace _ {
+
+// Trick to obtain typename from type, as described here
+// https://blog.molecular-matters.com/2015/12/11/getting-the-type-of-a-template-argument-as-string-without-rtti/
+//
+// The code from the link has been modified to work with more types, and across
+// multiple compilers. The resulting string should be the same on all platforms
+// for all compilers.
+//
+
+#if defined(__GNUC__) || defined(_WIN32)
+template <typename T>
+inline const char* type_name() {
+    static const size_t len = ECS_FUNC_TYPE_LEN(const char*, type_name, ECS_FUNC_NAME);
+    static char result[len + 1] = {};
+    static const size_t front_len = ECS_FUNC_NAME_FRONT(const char*, type_name);
+    static const char* cppTypeName = ecs_cpp_get_type_name(result, ECS_FUNC_NAME, len, front_len);
+    return cppTypeName;
+}
+#else
+#error "implicit component registration not supported"
+#endif
+
+}
+}

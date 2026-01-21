@@ -91,6 +91,7 @@ extern "C" {
     (EcsIdHasOnAdd|EcsIdHasOnRemove|EcsIdHasOnSet|\
         EcsIdHasOnTableCreate|EcsIdHasOnTableDelete|EcsIdSparse|\
         EcsIdOrderedChildren)
+#define EcsIdPrefabChildren            (1u << 26)
 
 #define EcsIdMarkedForDelete           (1u << 30)
 
@@ -138,6 +139,7 @@ extern "C" {
 #define EcsIterFixedInChanged          (1u << 17u) /* Fixed in terms changed */
 #define EcsIterSkip                    (1u << 18u) /* Result was skipped for change detection */
 #define EcsIterCppEach                 (1u << 19u) /* Uses C++ 'each' iterator */
+#define EcsIterImmutableCacheData      (1u << 21u) /* Internally used by engine to indicate immutable arrays from cache */
 
 
 /* Same as event flags */
@@ -176,7 +178,8 @@ extern "C" {
 #define EcsQueryCacheYieldEmptyTables (1u << 27u) /* Does query cache empty tables */
 #define EcsQueryTrivialCache          (1u << 28u) /* Trivial cache (no wildcards, traversal, order_by, group_by, change detection) */
 #define EcsQueryNested                (1u << 29u) /* Query created by a query (for observer, cache) */
-#define EcsQueryValid                 (1u << 30u)
+#define EcsQueryCacheWithFilter       (1u << 30u)
+#define EcsQueryValid                 (1u << 31u)
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Term flags (used by ecs_term_t::flags_)
@@ -188,13 +191,15 @@ extern "C" {
 #define EcsTermReflexive              (1u << 3)
 #define EcsTermIdInherited            (1u << 4)
 #define EcsTermIsTrivial              (1u << 5)
-#define EcsTermIsCacheable            (1u << 7)
-#define EcsTermIsScope                (1u << 8)
-#define EcsTermIsMember               (1u << 9)
-#define EcsTermIsToggle               (1u << 10)
-#define EcsTermIsSparse               (1u << 12)
-#define EcsTermIsOr                   (1u << 13)
-#define EcsTermDontFragment           (1u << 14)
+#define EcsTermIsCacheable            (1u << 6)
+#define EcsTermIsScope                (1u << 7)
+#define EcsTermIsMember               (1u << 8)
+#define EcsTermIsToggle               (1u << 9)
+#define EcsTermIsSparse               (1u << 10)
+#define EcsTermIsOr                   (1u << 11)
+#define EcsTermDontFragment           (1u << 12)
+#define EcsTermNonFragmentingChildOf  (1u << 13)
+#define EcsTermOrderedChildren        (1u << 14)
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -216,11 +221,12 @@ extern "C" {
 //// Table flags (used by ecs_table_t::flags)
 ////////////////////////////////////////////////////////////////////////////////
 
-#define EcsTableHasBuiltins            (1u << 1u)  /* Does table have builtin components */
-#define EcsTableIsPrefab               (1u << 2u)  /* Does the table store prefabs */
-#define EcsTableHasIsA                 (1u << 3u)  /* Does the table have IsA relationship */
-#define EcsTableHasMultiIsA            (1u << 4u)  /* Does table have multiple IsA pairs */
-#define EcsTableHasChildOf             (1u << 5u)  /* Does the table type ChildOf relationship */
+#define EcsTableHasBuiltins            (1u << 0u)  /* Does table have builtin components */
+#define EcsTableIsPrefab               (1u << 1u)  /* Does the table store prefabs */
+#define EcsTableHasIsA                 (1u << 2u)  /* Does the table have IsA relationship */
+#define EcsTableHasMultiIsA            (1u << 3u)  /* Does table have multiple IsA pairs */
+#define EcsTableHasChildOf             (1u << 4u)  /* Does the table type ChildOf relationship */
+#define EcsTableHasParent              (1u << 5u)  /* Does the table type Parent component */
 #define EcsTableHasName                (1u << 6u)  /* Does the table type have (Identifier, Name) */
 #define EcsTableHasPairs               (1u << 7u)  /* Does the table type have pairs */
 #define EcsTableHasModule              (1u << 8u)  /* Does the table have module data */

@@ -36,9 +36,20 @@ bool ecs_id_match(
             "first element of pair cannot be 0");
         ecs_check(pattern_second != 0, ECS_INVALID_PARAMETER,
             "second element of pair cannot be 0");
+
+        bool pattern_first_wildcard = pattern_first == EcsWildcard;
+        bool pattern_second_wc = pattern_second == EcsWildcard;
+        if (ECS_IS_VALUE_PAIR(pattern)) {
+            if (!ECS_IS_VALUE_PAIR(id)) {
+                return false;
+            }
+
+            pattern_first_wildcard = false;   
+            pattern_second_wc = false;
+        }
         
-        if (pattern_first == EcsWildcard) {
-            if (pattern_second == EcsWildcard || pattern_second == id_second) {
+        if (pattern_first_wildcard) {
+            if (pattern_second_wc || pattern_second == id_second) {
                 return true;
             }
         } else if (pattern_first == EcsFlag) {
@@ -90,6 +101,10 @@ bool ecs_id_is_wildcard(
     }
 
     ecs_entity_t first = ECS_PAIR_FIRST(id);
+    if (ECS_IS_VALUE_PAIR(id)) {
+        return (first == EcsWildcard) || (first == EcsAny);
+    }
+
     ecs_entity_t second = ECS_PAIR_SECOND(id);
 
     return (first == EcsWildcard) || (second == EcsWildcard) ||
@@ -134,6 +149,10 @@ const char* flecs_id_invalid_reason(
         }
         if (!ECS_PAIR_SECOND(id)) {
             return "invalid pair: second element is 0";
+        }
+    } else if (ECS_HAS_ID_FLAG(id, VALUE_PAIR)) {
+        if (!ECS_PAIR_FIRST(id)) {
+            return "invalid value pair: first element is 0 (is the relationship registered?)";
         }
     } else if (id & ECS_ID_FLAGS_MASK) {
         if (!ecs_is_valid(world, id & ECS_COMPONENT_MASK)) {
@@ -188,8 +207,11 @@ ecs_id_t ecs_id_from_str(
 }
 
 const char* ecs_id_flag_str(
-    ecs_entity_t entity)
+    uint64_t entity)
 {
+    if (ECS_IS_VALUE_PAIR(entity)) {
+        return "VALUE_PAIR";
+    } else
     if (ECS_HAS_ID_FLAG(entity, PAIR)) {
         return "PAIR";
     } else
@@ -224,20 +246,27 @@ void ecs_id_str_buf(
 
     if (ECS_HAS_ID_FLAG(id, PAIR)) {
         ecs_entity_t rel = ECS_PAIR_FIRST(id);
-        ecs_entity_t obj = ECS_PAIR_SECOND(id);
+        ecs_entity_t tgt = ECS_PAIR_SECOND(id);
 
         ecs_entity_t e;
         if ((e = ecs_get_alive(world, rel))) {
             rel = e;
         }
-        if ((e = ecs_get_alive(world, obj))) {
-            obj = e;
-        }
 
         ecs_strbuf_appendch(buf, '(');
         ecs_get_path_w_sep_buf(world, 0, rel, NULL, NULL, buf, false);
         ecs_strbuf_appendch(buf, ',');
-        ecs_get_path_w_sep_buf(world, 0, obj, NULL, NULL, buf, false);
+
+        if (ECS_IS_VALUE_PAIR(id)) {
+            ecs_strbuf_appendlit(buf, "@");
+            ecs_strbuf_appendint(buf, (uint32_t)tgt);
+        } else {
+            if ((e = ecs_get_alive(world, tgt))) {
+                tgt = e;
+            }
+            ecs_get_path_w_sep_buf(world, 0, tgt, NULL, NULL, buf, false);
+        }
+
         ecs_strbuf_appendch(buf, ')');
     } else {
         ecs_entity_t e = id & ECS_COMPONENT_MASK;
@@ -272,9 +301,10 @@ bool ecs_id_is_tag(
 {
     if (ecs_id_is_wildcard(id)) {
         /* If id is a wildcard, we can't tell if it's a tag or not, except
-         * when the relationship part of a pair has the Tag property */
+         * when the relationship part of a pair has the PairIsTag property */
         if (ECS_HAS_ID_FLAG(id, PAIR)) {
-            if (ECS_PAIR_FIRST(id) != EcsWildcard) {
+            ecs_entity_t first = ECS_PAIR_FIRST(id);
+            if (first != EcsWildcard && first != EcsAny) {
                 ecs_entity_t rel = ecs_pair_first(world, id);
                 if (ecs_is_valid(world, rel)) {
                     if (ecs_has_id(world, rel, EcsPairIsTag)) {
@@ -302,7 +332,6 @@ bool ecs_id_is_tag(
 
     return false;
 }
-
 
 ecs_entity_t ecs_get_typeid(
     const ecs_world_t *world,

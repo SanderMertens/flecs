@@ -84,6 +84,19 @@ typedef enum {
     EcsQuerySparseSelfUp,
     EcsQuerySparseUp,
     EcsQuerySparseWith,     /* Evaluate sparse component against fixed or variable source */
+    EcsQueryTree,
+    EcsQueryTreeWildcard,
+    EcsQueryTreeWith,       /* Evaluate (ChildOf, tgt) against fixed or variable source */
+    EcsQueryTreeUp,         /* Return union of up(ChildOf) and tables with Parent */
+    EcsQueryTreeSelfUp,
+    EcsQueryTreePre,        /* Tree instruction that doesn't filter Parent component / returns entire tables. */
+    EcsQueryTreePost,       /* Tree instruction that applies filter to Parent component. */
+    EcsQueryTreeUpPre,      /* Up traversal for ChildOf that doesn't filter Parent component / returns entire tables */
+    EcsQueryTreeSelfUpPre,  /* Up traversal for ChildOf that doesn't filter Parent component / returns entire tables */
+    EcsQueryTreeUpPost,     /* Up traversal for ChildOf that filters cached tables w/Parent component. */
+    EcsQueryTreeSelfUpPost, /* Up traversal for ChildOf that filters cached tables w/Parent component. */
+    EcsQueryChildren,       /* Return children for parent, if possible in order */
+    EcsQueryChildrenWc,     /* Return children for parents, if possible in order */
     EcsQueryLookup,         /* Lookup relative to variable */
     EcsQuerySetVars,        /* Populate it.sources from variables */
     EcsQuerySetThis,        /* Populate This entity variable */
@@ -145,7 +158,7 @@ typedef struct {
 
 /* Sparse context */
 typedef struct {
-    ecs_query_and_ctx_t and_; /* For mixed sparse/non-sparse results */
+    ecs_query_and_ctx_t and_; /* For mixed results */
 
     ecs_sparse_t *sparse;
     ecs_table_range_t range;
@@ -158,9 +171,35 @@ typedef struct {
     int32_t prev_cur;
 } ecs_query_sparse_ctx_t;
 
+typedef enum ecs_query_tree_iter_state_t {
+    EcsQueryTreeIterNext = 1,
+    EcsQueryTreeIterTables = 2,
+    EcsQueryTreeIterEntities = 3
+} ecs_query_tree_iter_state_t;
+
+typedef struct {
+    ecs_query_and_ctx_t and_; /* For mixed results */
+    ecs_component_record_t *cr;
+    ecs_entity_t tgt;
+    ecs_entity_t *entities;
+    const EcsParent *parents;
+    ecs_table_range_t range;
+    int32_t cur;
+    ecs_query_tree_iter_state_t state;
+} ecs_query_tree_ctx_t;
+
+typedef struct {
+    ecs_component_record_t *cr;
+    ecs_table_cache_iter_t it;
+    ecs_entity_t *entities;
+    int32_t count;
+    int32_t cur;
+    ecs_query_tree_iter_state_t state;
+} ecs_query_tree_wildcard_ctx_t;
+
 /* Down traversal cache (for resolving up queries w/unknown source) */
 typedef struct {
-    ecs_table_t *table;
+    ecs_table_range_t range;
     bool leaf; /* Table owns and inherits id (for Up queries without Self) */
 } ecs_trav_down_elem_t;
 
@@ -197,6 +236,14 @@ typedef struct {
     ecs_id_t matched;
     ecs_component_record_t *cr_with;
     ecs_component_record_t *cr_trav;
+
+    /* If queried for component is a ChilOf pair that uses the non-fragmenting
+     * ChildOf storage, iterate ordered children vector instead of tables with
+     * ChildOf pairs as roots for down cache. */
+    ecs_entity_t *entities;
+    int32_t entities_cur;
+    int32_t entities_count;
+
     ecs_trav_down_t *down;
     int32_t cache_elem;
     ecs_trav_up_cache_t cache;
@@ -210,7 +257,20 @@ typedef struct {
 
     /* Indirection because otherwise the ctx struct gets too large */
     ecs_query_up_impl_t *impl;
+
+    /* Data for returning tables with non-fragmenting ChildOf */
+    const EcsParent *parents;
+    ecs_table_range_t range;
+    int32_t cur;
 } ecs_query_up_ctx_t;
+
+typedef struct {
+    union {
+        ecs_query_and_ctx_t and;
+        ecs_query_up_ctx_t up_;
+    } is;
+    ecs_query_tree_iter_state_t state;
+} ecs_query_tree_pre_ctx_t;
 
 /* Cache for storing results of upward/downward "all" traversal. This type of 
  * traversal iterates and caches the entire tree. */
@@ -301,6 +361,11 @@ typedef struct {
     bool has_bitset;
 } ecs_query_toggle_ctx_t;
 
+/* Optional context */
+typedef struct {
+    ecs_table_range_t range;
+} ecs_query_optional_ctx_t;
+
 typedef struct ecs_query_op_ctx_t {
     union {
         ecs_query_all_ctx_t all;
@@ -317,6 +382,10 @@ typedef struct ecs_query_op_ctx_t {
         ecs_query_membereq_ctx_t membereq;
         ecs_query_toggle_ctx_t toggle;
         ecs_query_sparse_ctx_t sparse;
+        ecs_query_tree_ctx_t tree;
+        ecs_query_tree_pre_ctx_t tree_pre;
+        ecs_query_tree_wildcard_ctx_t tree_wildcard;
+        ecs_query_optional_ctx_t optional;
     } is;
 } ecs_query_op_ctx_t;
 

@@ -47,8 +47,35 @@ bool flecs_sparse_on_add_cr(
     bool construct,
     void **ptr_out);
 
-/* Run add actions for components added to entity. */
-void flecs_notify_on_add(
+/* Run actions for creating new entity in table. */
+void flecs_actions_new(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    int32_t row,
+    int32_t count,
+    const ecs_table_diff_t *diff,
+    ecs_flags32_t flags,
+    bool construct,
+    bool sparse);
+
+/* Run actions for deleting an entity. */
+void flecs_actions_delete(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    int32_t row,
+    int32_t count,
+    const ecs_table_diff_t *diff);
+
+/* Same as flecs_actions_delete, but for entities whose parent is also deleted */
+void flecs_actions_delete_tree(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    int32_t row,
+    int32_t count,
+    const ecs_table_diff_t *diff);
+
+/* Run actions for added components in table move */
+void flecs_actions_move_add(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_table_t *other_table,
@@ -59,8 +86,8 @@ void flecs_notify_on_add(
     bool construct,
     bool sparse);
 
-/* Run remove actions for components removed from entity. */
-void flecs_notify_on_remove(
+/* Run actions for removed components in table move */
+void flecs_actions_move_remove(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_table_t *other_table,

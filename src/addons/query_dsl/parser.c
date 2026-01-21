@@ -173,6 +173,23 @@ const char* flecs_term_parse_arg(
         // Position(src
         //          ^
         Parse(
+            case '@': {
+                parser->term->id = ECS_VALUE_PAIR;
+                Parse(
+                    case '*':
+                        ref->id = EcsWildcard;
+                        break;
+                    case EcsTokIdentifier:
+                        ref->name = Token(1);
+                        break;
+                    case EcsTokNumber: {
+                        char *end;
+                        ref->id = strtoul(Token(1), &end, 10);
+                        break;
+                    }
+                );
+                break;
+            }
             case EcsTokTermIdentifier: {
                 ref->name = Token(0);
 

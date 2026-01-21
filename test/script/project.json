@@ -405,7 +405,19 @@
                 "opaque_vector_i32_export_var",
                 "pair_after_const_int",
                 "pair_after_const_string",
-                "pair_after_const_identifier"
+                "pair_after_const_identifier",
+                "tree_parent",
+                "tree_parent_nested",
+                "tree_parent_nested_childof",
+                "tree_childof_nested_parent",
+                "tree_parent_existing_child",
+                "tree_parent_existing_child_2",
+                "tree_prefab_override_child",
+                "tree_parent_nested_w_if_scope",
+                "tree_parent_nested_w_if_else_scope",
+                "tree_parent_nested_w_for_scope",
+                "tree_parent_nested_w_pair_scope",
+                "tree_parent_nested_w_with_scope"
             ]
         }, {
             "id": "Template",
@@ -486,7 +498,11 @@
                 "redefine_nested_template_w_prefab_3",
                 "template_w_script_component",
                 "template_w_script_pair_component",
-                "template_w_prop_and_pair"
+                "template_w_prop_and_pair",
+                "template_w_name_annotation",
+                "template_w_name_annotation_update_script",
+                "template_w_tree_parent",
+                "template_w_tree_parent_change_value"
             ]
         }, {
             "id": "Error",

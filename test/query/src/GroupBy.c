@@ -1293,3 +1293,38 @@ void GroupBy_recreate_after_remove_all(void) {
 
     ecs_fini(world);
 }
+
+void GroupBy_group_by_parent_depth(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t root = ecs_new(world), cur = root;
+
+    ecs_entity_t *entities = ecs_os_malloc_n(ecs_entity_t, FLECS_DAG_DEPTH_MAX);
+
+    for (int i = 0; i < FLECS_DAG_DEPTH_MAX; i ++) {
+        cur = ecs_new_w_parent(world, cur, NULL);
+        entities[i] = cur;
+    }
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ .id = ecs_id(EcsParent) }},
+        .group_by = EcsParentDepth
+    });
+
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+
+    for (int i = 0; i < FLECS_DAG_DEPTH_MAX; i ++) {
+        test_bool(true, ecs_query_next(&it));
+        test_uint(i + 1, ecs_iter_get_group(&it));
+        test_int(1, it.count);
+        test_uint(entities[i], it.entities[0]);
+    }
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_os_free(entities);
+
+    ecs_fini(world);
+}

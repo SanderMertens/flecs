@@ -1045,7 +1045,7 @@ void flecs_cmd_batch_for_entity(
 
         if (r->row & EcsEntityIsTraversable) {
             /* Update monitors since we didn't do this in flecs_commit. Do this
-             * before calling flecs_notify_on_add() since this can trigger 
+             * before calling flecs_actions_move_add() since this can trigger 
              * prefab instantiation logic. When that happens, prefab children
              * can be created for this instance which would mean that the table
              * count of r->cr would always be >0.
@@ -1060,7 +1060,7 @@ void flecs_cmd_batch_for_entity(
         }
 
         flecs_defer_begin(world, world->stages[0]);
-        flecs_notify_on_add(world, r->table, start_table,
+        flecs_actions_move_add(world, r->table, start_table,
             ECS_RECORD_TO_ROW(r->row), 1, &add_diff, 0, true, false);
         flecs_defer_end(world, world->stages[0]);
     }
@@ -1236,7 +1236,7 @@ bool flecs_defer_end(
                     break;
                 case EcsCmdOnDeleteAction:
                     ecs_defer_begin(world);
-                    flecs_on_delete(world, id, e, false);
+                    flecs_on_delete(world, id, e, false, false);
                     ecs_defer_end(world);
                     world->info.cmd.other_count ++;
                     break;

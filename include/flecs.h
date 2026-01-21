@@ -338,6 +338,12 @@
 #define FLECS_DAG_DEPTH_MAX 128
 #endif
 
+/** @def FLECS_TREE_SPAWNER_DEPTH_CACHE_SIZE
+ * Size of depth cache in tree spawner component. Higher values speed up prefab
+ * instantiation for deeper hierarchies, at the cost of slightly more memory.
+ */
+#define FLECS_TREE_SPAWNER_DEPTH_CACHE_SIZE (6)
+
 /** @} */
 
 #include "flecs/private/api_defines.h"
@@ -1553,6 +1559,31 @@ typedef struct EcsDefaultChildComponent {
     ecs_id_t component;  /**< Default component id. */
 } EcsDefaultChildComponent;
 
+/* Non-fragmenting ChildOf relationship. */
+typedef struct EcsParent {
+    ecs_entity_t value;
+} EcsParent;
+
+/* Component with data to instantiate a non-fragmenting tree. */
+typedef struct {
+    const char *child_name; /* Name of prefab child */
+    ecs_table_t *table;     /* Table in which child will be stored */
+    int32_t parent_index;   /* Index into children vector */
+} ecs_tree_spawner_child_t;
+
+typedef struct {
+    ecs_vec_t children; /* vector<ecs_tree_spawner_child_t> */
+} ecs_tree_spawner_t;
+
+typedef struct EcsTreeSpawner {
+    /* Tree instantiation cache, indexed by depth. Tables will have a 
+     * (ParentDepth, depth) pair indicating the hierarchy depth. This means that
+     * for different depths, the tables the children are created in will also be
+     * different. Caching tables for different depths therefore speeds up
+     * instantiating trees even when the top level entity is not at the root. */
+    ecs_tree_spawner_t data[FLECS_TREE_SPAWNER_DEPTH_CACHE_SIZE];
+} EcsTreeSpawner;
+
 /** @} */
 /** @} */
 
@@ -1584,6 +1615,9 @@ FLECS_API extern const ecs_id_t ECS_AUTO_OVERRIDE;
 /** Adds bitset to storage which allows component to be enabled/disabled */
 FLECS_API extern const ecs_id_t ECS_TOGGLE;
 
+/** Indicates that the target of a pair is an integer value. */
+FLECS_API extern const ecs_id_t ECS_VALUE_PAIR;
+
 /** @} */
 
 /**
@@ -1602,8 +1636,17 @@ FLECS_API extern const ecs_entity_t ecs_id(EcsIdentifier);
 /** Poly component id. */
 FLECS_API extern const ecs_entity_t ecs_id(EcsPoly);
 
+/** Parent component id. */
+FLECS_API extern const ecs_entity_t ecs_id(EcsParent);
+
+/** Component with data to instantiate a tree. */
+FLECS_API extern const ecs_entity_t ecs_id(EcsTreeSpawner);
+
 /** DefaultChildComponent component id. */
 FLECS_API extern const ecs_entity_t ecs_id(EcsDefaultChildComponent);
+
+/** Relationship storing the entity's depth in a non-fragmenting hierarchy. */
+FLECS_API extern const ecs_entity_t EcsParentDepth;
 
 /** Tag added to queries. */
 FLECS_API extern const ecs_entity_t EcsQuery;
@@ -1915,7 +1958,7 @@ FLECS_API extern const ecs_entity_t EcsConstant;    /**< Tag added to enum/bitma
 
 /** Value used to quickly check if component is builtin. This is used to quickly
  * filter out tables with builtin components (for example for ecs_delete()) */
-#define EcsLastInternalComponentId (ecs_id(EcsPoly))
+#define EcsLastInternalComponentId (ecs_id(EcsTreeSpawner))
 
 /** The first user-defined component starts from this id. Ids up to this number
  * are reserved for builtin components */
@@ -3765,6 +3808,25 @@ ecs_entity_t ecs_get_parent(
     const ecs_world_t *world,
     ecs_entity_t entity);
 
+/** Create child with Parent component.
+ * This creates or returns an existing child for the specified parent. If a new
+ * child is created, the Parent component is used to create the parent 
+ * relationship.
+ * 
+ * If a child entity already exists with the specified name, it will be 
+ * returned.
+ * 
+ * @param world The world.
+ * @param parent The parent for which to create the child.
+ * @param name The name with which to create the entity (may be NULL).
+ * @return A new or existing child entity.
+ */
+FLECS_API
+ecs_entity_t ecs_new_w_parent(
+    ecs_world_t *world,
+    ecs_entity_t parent,
+    const char *name);
+
 /** Get the target of a relationship for a given component.
  * This operation returns the first entity that has the provided component by 
  * following the relationship. If the entity itself has the component then it 
@@ -4407,7 +4469,7 @@ ecs_flags32_t ecs_id_get_flags(
  */
 FLECS_API
 const char* ecs_id_flag_str(
-    ecs_id_t component_flags);
+    uint64_t component_flags);
 
 /** Convert component id to string.
  * This operation converts the provided component id to a string. It can output
@@ -4923,6 +4985,15 @@ FLECS_API
 char* ecs_query_plan_w_profile(
     const ecs_query_t *query,
     const ecs_iter_t *it);
+
+/** Same as ecs_query_plan(), but includes plan for populating cache (if any). 
+ * 
+ * @param query The query.
+ * @return The query plan.
+ */
+FLECS_API
+char* ecs_query_plans(
+    const ecs_query_t *query);
 
 /** Populate variables from key-value string.
  * Convenience function to set query variables from a key-value string separated
@@ -6185,7 +6256,7 @@ int32_t ecs_search_offset(
  * @param component The component to search for.
  * @param rel The relationship to traverse (optional).
  * @param flags Whether to search EcsSelf and/or EcsUp.
- * @param subject_out If provided, it will be set to the matched entity.
+ * @param tgt_out If provided, it will be set to the matched entity.
  * @param component_out If provided, it will be set to the found component (optional).
  * @param tr_out Internal datatype.
  * @return The index of the component in the table type.
@@ -6201,8 +6272,21 @@ int32_t ecs_search_relation(
     ecs_id_t component,
     ecs_entity_t rel,
     ecs_flags64_t flags, /* EcsSelf and/or EcsUp */
-    ecs_entity_t *subject_out,
+    ecs_entity_t *tgt_out,
     ecs_id_t *component_out,
+    struct ecs_table_record_t **tr_out);
+
+/* Up traversal from entity */
+FLECS_API
+int32_t ecs_search_relation_for_entity(
+    const ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t id,
+    ecs_entity_t rel,
+    bool self,
+    ecs_component_record_t *cr,
+    ecs_entity_t *tgt_out,
+    ecs_id_t *id_out,
     struct ecs_table_record_t **tr_out);
 
 /** Remove all entities in a table. Does not deallocate table memory. 

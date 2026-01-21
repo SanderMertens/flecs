@@ -163,7 +163,11 @@ uint64_t flecs_query_cache_default_group_by(
 
     ecs_id_t match;
     if (ecs_search(world, table, ecs_pair(id, EcsWildcard), &match) != -1) {
-        return ecs_pair_second(world, match);
+        if (ECS_IS_VALUE_PAIR(match)) {
+            return ECS_PAIR_SECOND(match);
+        } else {
+            return ecs_pair_second(world, match);
+        }
     }
     return 0;
 }
@@ -617,13 +621,15 @@ ecs_query_cache_t* flecs_query_cache_init(
         }
 
         if ((t == count) && (q->flags & EcsQueryMatchOnlySelf) &&
-           !(q->flags & EcsQueryMatchWildcards))
+           !(q->flags & EcsQueryMatchWildcards) &&
+           !(q->flags & EcsQueryCacheWithFilter))
         {
             if (!const_desc->order_by && !const_desc->group_by && 
                 !const_desc->order_by_callback && 
                 !const_desc->group_by_callback &&
                 !(const_desc->flags & EcsQueryDetectChanges))
             {
+                
                 q->flags |= EcsQueryTrivialCache;
             }
         }
@@ -632,6 +638,7 @@ ecs_query_cache_t* flecs_query_cache_init(
     if (const_desc->flags & EcsQueryDetectChanges) {
         for (int i = 0; i < q->term_count; i ++) {
             ecs_term_t *term = &q->terms[i];
+
             /* If query has change detection, flag this on the component record. 
              * This allows code to skip calling modified() if there are no OnSet
              * hooks/observers, and the component isn't used in any queries that use
@@ -694,6 +701,7 @@ ecs_query_cache_t* flecs_query_cache_init(
         ecs_os_memcpy_n(observer_desc.query.terms, q->terms, 
             ecs_term_t, q->term_count);
         observer_desc.query.expr = NULL; /* Already parsed */
+        observer_desc.query.flags |= EcsQueryTableOnly;
 
         result->observer = flecs_observer_init(world, entity, &observer_desc);
         if (!result->observer) {

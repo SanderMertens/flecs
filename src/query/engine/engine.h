@@ -17,6 +17,11 @@ ecs_query_op_ctx_t* flecs_op_ctx_(
 
 #define flecs_op_ctx(ctx, op_kind) (&flecs_op_ctx_(ctx)->is.op_kind)
 
+void flecs_query_op_ctx_fini(
+    ecs_iter_t *it,
+    const ecs_query_op_t *op,
+    ecs_query_op_ctx_t *ctx);
+
 void flecs_reset_source_set_flag(
     ecs_iter_t *it,
     int32_t field_index);
@@ -61,11 +66,14 @@ void flecs_query_var_set_range(
     int32_t count,
     const ecs_query_run_ctx_t *ctx);
 
-void flecs_query_var_narrow_range(
-    ecs_var_id_t var_id,
-    ecs_table_t *table,
-    int32_t offset,
-    int32_t count,
+void flecs_query_src_set_single(
+    const ecs_query_op_t *op,
+    int32_t row,
+    const ecs_query_run_ctx_t *ctx);
+
+void flecs_query_src_set_range(
+    const ecs_query_op_t *op,
+    const ecs_table_range_t *range,
     const ecs_query_run_ctx_t *ctx);
 
 void flecs_query_var_set_entity(
@@ -146,6 +154,18 @@ bool flecs_query_run_until(
     int32_t last);
 
 
+/* And evaluation */
+
+bool flecs_query_and(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx);
+
+bool flecs_query_and_any(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx);
+
 /* Select evaluation */
 
 bool flecs_query_select(
@@ -206,6 +226,54 @@ bool flecs_query_sparse_self_up(
     bool redo,
     const ecs_query_run_ctx_t *ctx);
 
+
+/* Hierarchy evaluation */
+
+const EcsParent* flecs_query_tree_get_parents(
+    ecs_table_range_t range);
+
+bool flecs_query_tree_and(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx);
+
+bool flecs_query_tree_and_wildcard(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx,
+    bool bulk_return);
+
+bool flecs_query_tree_pre(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx);
+
+bool flecs_query_tree_post(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx);
+
+bool flecs_query_tree_up_pre(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx,
+    bool self);
+
+bool flecs_query_tree_up_post(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx,
+    bool self);
+
+bool flecs_query_tree_with(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx);
+
+bool flecs_query_children(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx);
 
 /* Toggle evaluation*/
 
@@ -285,6 +353,16 @@ typedef enum ecs_query_up_select_kind_t {
     FlecsQueryUpSelectSparse
 } ecs_query_up_select_kind_t;
 
+bool flecs_query_up(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx);
+
+bool flecs_query_self_up(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx);
+
 bool flecs_query_up_select(
     const ecs_query_op_t *op,
     bool redo,
@@ -300,8 +378,7 @@ bool flecs_query_up_with(
 bool flecs_query_self_up_with(
     const ecs_query_op_t *op,
     bool redo,
-    const ecs_query_run_ctx_t *ctx,
-    bool id_only);
+    const ecs_query_run_ctx_t *ctx);
 
 
 /* Transitive relationship traversal */

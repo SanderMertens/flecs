@@ -35,6 +35,20 @@ typedef struct ecs_pair_record_t {
     /* Vector with ordered children */
     ecs_vec_t ordered_children;
 
+    /* Tables with non-fragmenting children */
+    ecs_map_t children_tables; /* map<table_id, ecs_parent_record_t */
+
+    /* Track how many of the tables in children_tables are disabled. Used by
+     * queries to determine whether logic is needed to skip Disabled entities
+     * when iterating the ordered_children vector. */
+    int32_t disabled_tables;
+
+    /* Same for prefab tables */
+    int32_t prefab_tables;
+
+    /* Hierarchy depth (set for ChildOf pair) */
+    int32_t depth;
+
     /* Lists for all id records that match a pair wildcard. The wildcard id
      * record is at the head of the list. */
     ecs_id_record_elem_t first;   /* (R, *) */
@@ -91,11 +105,6 @@ void flecs_components_init(
 void flecs_components_fini(
     ecs_world_t *world);
 
-/* Ensure component record for id */
-ecs_component_record_t* flecs_components_ensure(
-    ecs_world_t *world,
-    ecs_id_t id);
-
 /* Like flecs_components_ensure, but creates only if world is not in threaded mode */
 ecs_component_record_t* flecs_components_try_ensure(
     ecs_world_t *world,
@@ -112,7 +121,7 @@ int32_t flecs_component_release(
     ecs_component_record_t *cr);
 
 /* Release all empty tables in component record */
-void flecs_component_release_tables(
+bool flecs_component_release_tables(
     ecs_world_t *world,
     ecs_component_record_t *cr);
 
@@ -168,6 +177,21 @@ void flecs_component_record_init_exclusive(
     ecs_component_record_t *cr);
 
 void flecs_component_shrink(
+    ecs_component_record_t *cr);
+
+void flecs_component_update_childof_depth(
+    ecs_world_t *world,
+    ecs_component_record_t *cr,
+    ecs_entity_t tgt,
+    const ecs_record_t *tgt_record);
+
+void flecs_component_update_childof_w_depth(
+    ecs_world_t *world,
+    ecs_component_record_t *cr,
+    int32_t depth);
+
+void flecs_component_ordered_children_init(
+    ecs_world_t *world,
     ecs_component_record_t *cr);
 
 #endif

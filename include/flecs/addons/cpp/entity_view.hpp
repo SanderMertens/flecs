@@ -396,7 +396,8 @@ struct entity_view : public id {
     const T& get() const {
         const T *r = try_get<T>();
         ecs_assert(r != nullptr, ECS_INVALID_OPERATION, 
-            "invalid get: entity does not have component (use try_get)");
+            "invalid get: entity does not have component '%s' (use try_get)",
+                flecs::_::type_name<T>());
         return *r;
     }
 
@@ -413,7 +414,8 @@ struct entity_view : public id {
     const A& get() const {
         const A *r = try_get<T>();
         ecs_assert(r != nullptr, ECS_INVALID_OPERATION, 
-            "invalid get: entity does not have component (use try_get)");
+            "invalid get: entity does not have component '%s' (use try_get)",
+            flecs::_::type_name<T>());
         return *r;
     }
     

@@ -805,7 +805,9 @@
                 "serialize_base_w_invalid_component",
                 "serialize_w_blacklist",
                 "serialize_w_allow_blacklist",
-                "serialize_w_partial_blacklist"
+                "serialize_w_partial_blacklist",
+                "serialize_value_pair",
+                "serialize_parent_component"
             ]
         }, {
             "id": "SerializeIterToJson",

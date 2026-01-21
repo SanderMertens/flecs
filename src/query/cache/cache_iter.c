@@ -30,18 +30,19 @@ void flecs_query_update_node_up_trs(
             }
 
             ecs_entity_t src = node->_sources[f];
-            if (src) {
+            if (src && src != EcsWildcard) {
                 ecs_record_t *r = flecs_entities_get(ctx->world, src);
                 ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
                 ecs_assert(r->table != NULL, ECS_INTERNAL_ERROR, NULL);
                 if (r->table != node->_tables[f]) {
+                    node->_tables[f] = r->table;
+
                     ecs_component_record_t *cr = flecs_components_get(
                         ctx->world, q->ids[f]);
                     const ecs_table_record_t *tr = node->base.trs[f] = 
                         flecs_component_get_table(cr, r->table);
-                    ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL);
-                    ctx->it->trs[field_map ? field_map[f] : f] = tr;
-                    node->_tables[f] = r->table;
+
+                    ctx->it->trs[field_map ? field_map[f] : f] = tr;                    
                 }
             }
         }
@@ -334,12 +335,19 @@ bool flecs_query_is_cache_search(
         return false;
     }
 
+    ctx->vars[0].range.count = node->_count;
+    ctx->vars[0].range.offset = node->_offset;
+
     ecs_iter_t *it = ctx->it;
     it->trs = node->base.trs;
     it->ids = node->_ids;
     it->sources = node->_sources;
     it->set_fields = node->base.set_fields;
     it->up_fields = node->_up_fields;
+
+#ifdef FLECS_DEBUG
+    it->flags |= EcsIterImmutableCacheData;
+#endif
 
     flecs_query_update_node_up_trs(ctx, node);
 
@@ -389,6 +397,10 @@ bool flecs_query_is_cache_test(
     it->ids = node->_ids;
     it->sources = node->_sources;
     it->set_fields = node->base.set_fields;
+
+#ifdef FLECS_DEBUG
+    it->flags |= EcsIterImmutableCacheData;
+#endif
 
     flecs_query_update_node_up_trs(ctx, node);
 
