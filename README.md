@@ -124,6 +124,9 @@ If you have a project you'd like to share, let me know on [Discord](https://disc
 ### Gloam Vault
 [![image](docs/img/projects/gloam_vault.png)](https://store.steampowered.com/app/3460840/Gloamvault/)
 
+### Antimatcher
+[![image](docs/img/projects/antimatcher.png)](https://store.steampowered.com/app/4336520/AntiMatcher/)
+
 ### Extermination Shock
 [![image](docs/img/projects/extermination_shock.png)](https://store.steampowered.com/app/2510820/Extermination_Shock/)
 
