@@ -627,6 +627,15 @@ void flecs_type_info_free(
     }
 }
 
+ecs_size_t flecs_type_size(
+    ecs_world_t *world, 
+    ecs_entity_t type) 
+{
+    const EcsComponent *comp = ecs_get(world, type, EcsComponent);
+    ecs_assert(comp != NULL, ECS_INTERNAL_ERROR, NULL);
+    return comp->size;
+}
+
 const ecs_type_hooks_t* ecs_get_hooks_id(
     const ecs_world_t *world,
     ecs_entity_t id)

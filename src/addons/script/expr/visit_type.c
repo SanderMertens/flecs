@@ -1057,6 +1057,32 @@ error:
 }
 
 static
+bool flecs_expr_is_entity_type(
+    ecs_world_t *world,
+    ecs_entity_t type,
+    bool *is_opaque)
+{
+    *is_opaque = false;
+    if (type == ecs_id(ecs_entity_t) || type == ecs_id(ecs_id_t)) {
+        return true;
+    }
+
+    const EcsPrimitive *p = ecs_get(world, type, EcsPrimitive);
+    if (p) {
+        return p->kind == EcsEntity || p->kind == EcsId;
+    }
+
+    const EcsOpaque *o = ecs_get(world, type, EcsOpaque);
+    if (o) {
+        *is_opaque = true;
+        bool dummy;
+        return flecs_expr_is_entity_type(world, o->as_type, &dummy);
+    }
+
+    return false;
+}
+
+static
 int flecs_expr_identifier_visit_type(
     ecs_script_t *script,
     ecs_expr_identifier_t *node,
@@ -1098,11 +1124,10 @@ int flecs_expr_identifier_visit_type(
                 global = ecs_get(script->world, e, EcsScriptConstVar);
             }
             if (!global) {
+                bool is_opaque = false;
                 if (!type) {
                     type = ecs_id(ecs_entity_t);
-                } else if (type != ecs_id(ecs_id_t) && 
-                           type != ecs_id(ecs_entity_t)) 
-                {
+                } else if (!flecs_expr_is_entity_type(script->world, type, &is_opaque)) {
                     char *type_str = ecs_get_path(script->world, type);
                     flecs_expr_visit_error(script, node,
                         "cannot cast identifier '%s' to %s",
@@ -1113,8 +1138,23 @@ int flecs_expr_identifier_visit_type(
 
                 ecs_expr_value_node_t *result = flecs_expr_value_from(
                     script, (ecs_expr_node_t*)node, type);
-                result->storage.entity = e;
-                result->ptr = &result->storage.entity;
+                
+                if (!is_opaque) {
+                    result->storage.entity = e;
+                    result->ptr = &result->storage.entity;
+                } else {
+                    ecs_size_t size = flecs_type_size(script->world, type);
+                    ecs_assert(size > 0, ECS_INTERNAL_ERROR, NULL);
+                    result->ptr = flecs_walloc(script->world, size);
+
+                    ecs_meta_cursor_t expr_cur = ecs_meta_cursor(
+                        script->world, type, result->ptr);
+                    if (ecs_meta_set_entity(&expr_cur, e)) {
+                        flecs_expr_visit_free(script, (ecs_expr_node_t*)result);
+                        goto error;
+                    }
+                }
+
                 node->expr = (ecs_expr_node_t*)result;
                 node->node.type = type;
             } else {

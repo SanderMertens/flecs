@@ -1104,6 +1104,8 @@ void Deserialize_opaque_struct_w_member(void);
 void Deserialize_opaque_struct_w_member_reverse(void);
 void Deserialize_struct_w_opaque_member(void);
 void Deserialize_opaque_string(void);
+void Deserialize_opaque_entity(void);
+void Deserialize_struct_w_opaque_entity_member(void);
 void Deserialize_opaque_vector_i32_0(void);
 void Deserialize_opaque_vector_i32_2(void);
 void Deserialize_opaque_vector_i32_0_into_2(void);
@@ -5472,6 +5474,14 @@ bake_test_case Deserialize_testcases[] = {
         Deserialize_opaque_string
     },
     {
+        "opaque_entity",
+        Deserialize_opaque_entity
+    },
+    {
+        "struct_w_opaque_entity_member",
+        Deserialize_struct_w_opaque_entity_member
+    },
+    {
         "opaque_vector_i32_0",
         Deserialize_opaque_vector_i32_0
     },
@@ -5645,7 +5655,7 @@ static bake_test_suite suites[] = {
         "Deserialize",
         Deserialize_setup,
         NULL,
-        121,
+        123,
         Deserialize_testcases,
         1,
         Deserialize_params
