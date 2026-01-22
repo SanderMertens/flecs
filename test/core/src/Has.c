@@ -318,3 +318,47 @@ void Has_has_wildcard_pair(void) {
  
     ecs_fini(world);
 }
+
+void Has_has_childof_w_parent(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_entity_t child = ecs_new_w_parent(world, parent, NULL);
+
+    test_assert(ecs_has_pair(world, child, EcsChildOf, parent));
+ 
+    ecs_fini(world);
+}
+
+void Has_has_childof_wildcard_w_parent(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_entity_t child = ecs_new_w_parent(world, parent, NULL);
+
+    test_assert(ecs_has_pair(world, child, EcsChildOf, EcsWildcard));
+ 
+    ecs_fini(world);
+}
+
+void Has_owns_childof_w_parent(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_entity_t child = ecs_new_w_parent(world, parent, NULL);
+
+    test_assert(ecs_owns_pair(world, child, EcsChildOf, parent));
+ 
+    ecs_fini(world);
+}
+
+void Has_owns_childof_wildcard_w_parent(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_entity_t child = ecs_new_w_parent(world, parent, NULL);
+
+    test_assert(ecs_owns_pair(world, child, EcsChildOf, EcsWildcard));
+ 
+    ecs_fini(world);
+}
