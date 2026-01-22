@@ -37,23 +37,19 @@ int main(int, char *[]) {
         .add<Star>()
         .set<Position>({1, 1});
 
-        ecs.entity("Mercury")
-            .child_of(sun) // Shortcut for add(flecs::ChildOf, sun)
+        ecs.entity(sun, "Mercury")
             .add<Planet>()
             .set<Position>({1, 1});
 
-        ecs.entity("Venus")
-            .child_of(sun)
+        ecs.entity(sun, "Venus")
             .add<Planet>()
             .set<Position>({2, 2});
 
-        flecs::entity earth = ecs.entity("Earth")
-            .child_of(sun)
+        flecs::entity earth = ecs.entity(sun, "Earth")
             .add<Planet>()
             .set<Position>({3, 3});
 
-            flecs::entity moon = ecs.entity("Moon")
-                .child_of(earth)
+            flecs::entity moon = ecs.entity(earth, "Moon")
                 .add<Moon>()
                 .set<Position>({0.1, 0.1});
 

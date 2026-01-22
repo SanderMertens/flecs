@@ -387,6 +387,18 @@ void Entity_assign_parent(void);
 void Entity_defer_assign_parent(void);
 void Entity_set_parent_on_stage(void);
 void Entity_assign_parent_on_stage(void);
+void Entity_entity_w_childof(void);
+void Entity_entity_w_childof_w_name(void);
+void Entity_entity_w_childof_w_name_existing_w_name(void);
+void Entity_entity_w_parent(void);
+void Entity_entity_w_parent_w_name(void);
+void Entity_entity_w_parent_w_name_existing_w_name(void);
+void Entity_prefab_w_childof(void);
+void Entity_prefab_w_childof_w_name(void);
+void Entity_prefab_w_childof_w_name_existing_w_name(void);
+void Entity_prefab_w_parent(void);
+void Entity_prefab_w_parent_w_name(void);
+void Entity_prefab_w_parent_w_name_existing_w_name(void);
 
 // Testsuite 'OrderedChildren'
 void OrderedChildren_iter_no_children(void);
@@ -3175,6 +3187,54 @@ bake_test_case Entity_testcases[] = {
     {
         "assign_parent_on_stage",
         Entity_assign_parent_on_stage
+    },
+    {
+        "entity_w_childof",
+        Entity_entity_w_childof
+    },
+    {
+        "entity_w_childof_w_name",
+        Entity_entity_w_childof_w_name
+    },
+    {
+        "entity_w_childof_w_name_existing_w_name",
+        Entity_entity_w_childof_w_name_existing_w_name
+    },
+    {
+        "entity_w_parent",
+        Entity_entity_w_parent
+    },
+    {
+        "entity_w_parent_w_name",
+        Entity_entity_w_parent_w_name
+    },
+    {
+        "entity_w_parent_w_name_existing_w_name",
+        Entity_entity_w_parent_w_name_existing_w_name
+    },
+    {
+        "prefab_w_childof",
+        Entity_prefab_w_childof
+    },
+    {
+        "prefab_w_childof_w_name",
+        Entity_prefab_w_childof_w_name
+    },
+    {
+        "prefab_w_childof_w_name_existing_w_name",
+        Entity_prefab_w_childof_w_name_existing_w_name
+    },
+    {
+        "prefab_w_parent",
+        Entity_prefab_w_parent
+    },
+    {
+        "prefab_w_parent_w_name",
+        Entity_prefab_w_parent_w_name
+    },
+    {
+        "prefab_w_parent_w_name_existing_w_name",
+        Entity_prefab_w_parent_w_name_existing_w_name
     }
 };
 
@@ -8192,7 +8252,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        374,
+        386,
         Entity_testcases
     },
     {

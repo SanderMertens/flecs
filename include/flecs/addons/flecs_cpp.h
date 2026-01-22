@@ -119,6 +119,14 @@ FLECS_ALWAYS_INLINE ecs_cpp_get_mut_t ecs_cpp_assign(
     const void *new_ptr,
     size_t size);
 
+FLECS_API
+FLECS_ALWAYS_INLINE ecs_entity_t ecs_cpp_new(
+    ecs_world_t *world,
+    ecs_entity_t parent,
+    const char *name,
+    const char *sep,
+    const char *root_sep);
+
 #ifdef FLECS_META
 FLECS_API
 const ecs_member_t* ecs_cpp_last_member(
