@@ -148,8 +148,6 @@ jobs:
           - { os: ubuntu-latest, cc: gcc-12, cxx: g++-12 }
           - { os: ubuntu-24.04, cc: gcc-13, cxx: g++-13 }
           - { os: ubuntu-24.04, cc: gcc-14, cxx: g++-14 }
-          - { os: ubuntu-22.04, cc: clang-11, cxx: clang++-11 }
-          - { os: ubuntu-22.04, cc: clang-12, cxx: clang++-12 }
           - { os: ubuntu-latest, cc: clang-14, cxx: clang++-14 }
           - { os: ubuntu-latest, cc: clang-15, cxx: clang++-15 }
           - { os: ubuntu-latest, cc: clang-16, cxx: clang++-16 }
@@ -714,8 +712,6 @@ jobs:
           - { os: ubuntu-latest, cc: gcc-12, cxx: g++-12 }
           - { os: ubuntu-24.04, cc: gcc-13, cxx: g++-13 }
           - { os: ubuntu-24.04, cc: gcc-14, cxx: g++-14 }
-          - { os: ubuntu-22.04, cc: clang-11, cxx: clang++-11 }
-          - { os: ubuntu-22.04, cc: clang-12, cxx: clang++-12 }
           - { os: ubuntu-latest, cc: clang-14, cxx: clang++-14 }
           - { os: ubuntu-latest, cc: clang-15, cxx: clang++-15 }
           - { os: ubuntu-latest, cc: clang-16, cxx: clang++-16 }
