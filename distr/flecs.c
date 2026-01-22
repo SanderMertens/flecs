@@ -71756,11 +71756,11 @@ void ecs_table_memory_get(
         result->bytes_overrides += column_count * ECS_SIZEOF(ecs_ref_t);
     }
     
-    result->bytes_columns += column_count * ECS_SIZEOF(ecs_column_t);
+    result->bytes_type += column_count * ECS_SIZEOF(ecs_column_t);
 
     if (table->_) {
         result->bytes_table += ECS_SIZEOF(ecs_table__t);
-        result->bytes_table_records += 
+        result->bytes_type += 
             table->_->record_count * ECS_SIZEOF(ecs_table_record_t);
     }
 
@@ -72233,6 +72233,9 @@ ecs_misc_memory_t ecs_misc_memory_get(
     #endif
     flecs_tree_spawner_memory_get(world, &result);
 
+    result.bytes_prefab_child_indices = flecs_map_memory_get(
+        &world->prefab_child_indices, 0);
+
     result.bytes_component_ids += 
         ecs_vec_size(&world->component_ids) * ECS_SIZEOF(ecs_entity_t);
     
@@ -72458,8 +72461,6 @@ void flecs_stats_memory_register_reflection(
             { .name = "bytes_type", .type = ecs_id(ecs_i32_t), .unit = unit },
             { .name = "bytes_entities", .type = ecs_id(ecs_i32_t), .unit = unit },
             { .name = "bytes_overrides", .type = ecs_id(ecs_i32_t), .unit = unit },
-            { .name = "bytes_columns", .type = ecs_id(ecs_i32_t), .unit = unit },
-            { .name = "bytes_table_records", .type = ecs_id(ecs_i32_t), .unit = unit },
             { .name = "bytes_column_map", .type = ecs_id(ecs_i32_t), .unit = unit },
             { .name = "bytes_component_map", .type = ecs_id(ecs_i32_t), .unit = unit },
             { .name = "bytes_dirty_state", .type = ecs_id(ecs_i32_t), .unit = unit },
@@ -72490,6 +72491,7 @@ void flecs_stats_memory_register_reflection(
             { .name = "bytes_component_ids", .type = ecs_id(ecs_i32_t), .unit = unit },
             { .name = "bytes_reflection", .type = ecs_id(ecs_i32_t), .unit = unit },
             { .name = "bytes_tree_spawner", .type = ecs_id(ecs_i32_t), .unit = unit },
+            { .name = "bytes_prefab_child_indices", .type = ecs_id(ecs_i32_t), .unit = unit  },
             { .name = "bytes_stats", .type = ecs_id(ecs_i32_t), .unit = unit },
             { .name = "bytes_rest", .type = ecs_id(ecs_i32_t), .unit = unit },
         }
