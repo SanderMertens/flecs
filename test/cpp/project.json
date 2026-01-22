@@ -397,7 +397,19 @@
                 "assign_parent",
                 "defer_assign_parent",
                 "set_parent_on_stage",
-                "assign_parent_on_stage"
+                "assign_parent_on_stage",
+                "entity_w_childof",
+                "entity_w_childof_w_name",
+                "entity_w_childof_w_name_existing_w_name",
+                "entity_w_parent",
+                "entity_w_parent_w_name",
+                "entity_w_parent_w_name_existing_w_name",
+                "prefab_w_childof",
+                "prefab_w_childof_w_name",
+                "prefab_w_childof_w_name_existing_w_name",
+                "prefab_w_parent",
+                "prefab_w_parent_w_name",
+                "prefab_w_parent_w_name_existing_w_name"
             ]
         }, {
             "id": "OrderedChildren",

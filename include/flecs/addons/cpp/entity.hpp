@@ -30,22 +30,6 @@ struct entity : entity_builder<entity>
 {
     entity() : entity_builder<entity>() { }
 
-    /** Create entity.
-     *
-     * @param world The world in which to create the entity.
-     */
-    explicit entity(world_t *world)
-        : entity_builder()
-    {
-        world_ = world;
-        if (!ecs_get_scope(world_) && !ecs_get_with(world_)) {
-            id_ = ecs_new(world);
-        } else {
-            ecs_entity_desc_t desc = {};
-            id_ = ecs_entity_init(world_, &desc);
-        }
-    }
-
     /** Wrap an existing entity id.
      *
      * @param world The world in which the entity is created.
@@ -56,40 +40,29 @@ struct entity : entity_builder<entity>
         id_ = id;
     }
 
-    /** Create a named entity.
-     * Named entities can be looked up with the lookup functions. Entity names
-     * may be scoped, where each element in the name is separated by "::".
-     * For example: "Foo::Bar". If parts of the hierarchy in the scoped name do
-     * not yet exist, they will be automatically created.
+    /** Create a new entity.
      *
      * @param world The world in which to create the entity.
-     * @param name The entity name.
      */
-    explicit entity(world_t *world, const char *name)
+    explicit entity(world_t *world)
         : entity_builder()
     {
         world_ = world;
-
-        ecs_entity_desc_t desc = {};
-        desc.name = name;
-        desc.sep = "::";
-        desc.root_sep = "::";
-        id_ = ecs_entity_init(world, &desc);
+        id_ = ecs_cpp_new(world, 0, nullptr, nullptr, nullptr);
     }
 
     /** Create a named entity.
-     * Named entities can be looked up with the lookup functions. Entity names
-     * may be scoped, where each element in the name is separated by sep.
-     * For example: "Foo.Bar". If parts of the hierarchy in the scoped name do
-     * not yet exist, they will be automatically created.
      *
      * @param world The world in which to create the entity.
      * @param name The entity name.
-     * @param sep The separator to use for the scoped name.
-     * @param root_sep The separator to use for the root of the scoped name.
+     * @param sep String used to indicate scoping (Foo::Bar).
+     * @param root_sep String used to indicate name is fully scoped (::Foo::Bar).
      */
-    explicit entity(world_t *world, const char *name, const char *sep, const char *root_sep)
-        : entity_builder()
+    explicit entity(
+        world_t *world, 
+        const char *name, 
+        const char *sep = "::", 
+        const char *root_sep = "::") : entity_builder()
     {
         world_ = world;
 
@@ -98,6 +71,47 @@ struct entity : entity_builder<entity>
         desc.sep = sep;
         desc.root_sep = root_sep;
         id_ = ecs_entity_init(world, &desc);
+    }
+
+    /** Create a named entity for parent using ChildOf hierarchy storage.
+     * 
+     * @param world The world in which to create the entity.
+     * @param name The entity name.
+     * @param sep String used to indicate scoping (Foo::Bar).
+     * @param root_sep String used to indicate name is fully scoped (::Foo::Bar).
+     */
+    explicit entity(
+        world_t *world, 
+        flecs::entity_t parent, 
+        const char *name, 
+        const char *sep = "::", 
+        const char *root_sep = "::") : entity_builder()
+    {
+        world_ = world;
+
+        ecs_entity_desc_t desc = {};
+        desc.name = name;
+        desc.parent = parent;
+        desc.sep = sep;
+        desc.root_sep = root_sep;
+        id_ = ecs_entity_init(world, &desc);
+    }
+
+    /** Create a named entity for parent using Parent hierarchy storage.
+     * The specified name cannot be a scoped identifier. For example:
+     * - OK: "Foo"
+     * - Not OK: "Foo::Bar"
+     * 
+     * @param world The world in which to create the entity.
+     * @param name The entity name (optional).
+     */
+    explicit entity(
+        world_t *world, 
+        const flecs::Parent& parent,
+        const char *name = nullptr) : entity_builder()
+    {
+        world_ = world;
+        id_ = ecs_new_w_parent(world, parent.value, name);
     }
 
     /** Conversion from flecs::entity_t to flecs::entity.
