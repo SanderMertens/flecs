@@ -48,23 +48,19 @@ int main(int argc, char *argv[]) {
     ecs_add(ecs, sun, Star);
     ecs_set(ecs, sun, Position, {1, 1});
 
-        ecs_entity_t mercury = ecs_entity(ecs, { .name = "Mercury" });
-        ecs_add_pair(ecs, mercury, EcsChildOf, sun);
+        ecs_entity_t mercury = ecs_entity(ecs, { .parent = sun, .name = "Mercury" });
         ecs_add(ecs, mercury, Planet);
         ecs_set(ecs, mercury, Position, {1, 1});
 
-        ecs_entity_t venus = ecs_entity(ecs, { .name = "Venus" });
-        ecs_add_pair(ecs, venus, EcsChildOf, sun);
+        ecs_entity_t venus = ecs_entity(ecs, { .parent = sun, .name = "Venus" });
         ecs_add(ecs, venus, Planet);
         ecs_set(ecs, venus, Position, {2, 2});
 
-        ecs_entity_t earth = ecs_entity(ecs, { .name = "Earth" });
-        ecs_add_pair(ecs, earth, EcsChildOf, sun);
+        ecs_entity_t earth = ecs_entity(ecs, { .parent = sun, .name = "Earth" });
         ecs_add(ecs, earth, Planet);
         ecs_set(ecs, earth, Position, {3, 3});
 
-            ecs_entity_t moon = ecs_entity(ecs, { .name = "Moon" });
-            ecs_add_pair(ecs, moon, EcsChildOf, earth);
+            ecs_entity_t moon = ecs_entity(ecs, { .parent = earth, .name = "Moon" });
             ecs_add(ecs, moon, Moon);
             ecs_set(ecs, moon, Position, {0.1, 0.1});
 

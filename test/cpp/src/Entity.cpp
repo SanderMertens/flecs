@@ -7008,7 +7008,8 @@ void Entity_entity_w_parent_w_name_existing_w_name(void) {
     test_assert(f != e);
     test_assert(!f.has(flecs::ChildOf, flecs::Wildcard));
     test_assert(!f.has<flecs::Parent>());
-    test_assert(!e.has(flecs::ChildOf, flecs::Wildcard));
+    test_assert(e.has(flecs::ChildOf, flecs::Wildcard));
+    test_assert(e.has(flecs::ChildOf, p));
     test_assert(e.has<flecs::Parent>());
     test_assert(e.get<flecs::Parent>().value == p);
     test_str(e.name().c_str(), "Foo");
@@ -7095,7 +7096,8 @@ void Entity_prefab_w_parent_w_name_existing_w_name(void) {
     test_assert(!f.has(flecs::ChildOf, flecs::Wildcard));
     test_assert(!f.has<flecs::Parent>());
     test_assert(e.has(flecs::Prefab));
-    test_assert(!e.has(flecs::ChildOf, flecs::Wildcard));
+    test_assert(e.has(flecs::ChildOf, flecs::Wildcard));
+    test_assert(e.has(flecs::ChildOf, p));
     test_assert(e.has<flecs::Parent>());
     test_assert(e.get<flecs::Parent>().value == p);
     test_str(e.name().c_str(), "Foo");

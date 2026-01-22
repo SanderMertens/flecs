@@ -13013,7 +13013,7 @@ void Eval_tree_parent(void) {
     ecs_entity_t f = ecs_lookup_child(world, e, "f");
     test_assert(f != 0);
 
-    test_assert(!ecs_has_pair(world, f, EcsChildOf, EcsWildcard));
+    test_assert(ecs_has_pair(world, f, EcsChildOf, e));
     test_assert(ecs_has(world, f, EcsParent));
 
     const EcsParent *p = ecs_get(world, f, EcsParent);
@@ -13045,7 +13045,7 @@ void Eval_tree_parent_nested(void) {
     test_assert(g != 0);
 
     {
-        test_assert(!ecs_has_pair(world, f, EcsChildOf, EcsWildcard));
+        test_assert(ecs_has_pair(world, f, EcsChildOf, e));
         test_assert(ecs_has(world, f, EcsParent));
 
         const EcsParent *p = ecs_get(world, f, EcsParent);
@@ -13054,7 +13054,7 @@ void Eval_tree_parent_nested(void) {
     }
 
     {
-        test_assert(!ecs_has_pair(world, g, EcsChildOf, EcsWildcard));
+        test_assert(ecs_has_pair(world, f, EcsChildOf, e));
         test_assert(ecs_has(world, g, EcsParent));
 
         const EcsParent *p = ecs_get(world, g, EcsParent);
@@ -13088,7 +13088,7 @@ void Eval_tree_parent_nested_childof(void) {
     test_assert(g != 0);
 
     {
-        test_assert(!ecs_has_pair(world, f, EcsChildOf, EcsWildcard));
+        test_assert(ecs_has_pair(world, f, EcsChildOf, e));
         test_assert(ecs_has(world, f, EcsParent));
 
         const EcsParent *p = ecs_get(world, f, EcsParent);
@@ -13126,7 +13126,7 @@ void Eval_tree_childof_nested_parent(void) {
     test_assert(ecs_has_pair(world, f, EcsChildOf, e));
 
     {
-        test_assert(!ecs_has_pair(world, g, EcsChildOf, EcsWildcard));
+        test_assert(ecs_has_pair(world, f, EcsChildOf, e));
         test_assert(ecs_has(world, g, EcsParent));
 
         const EcsParent *p = ecs_get(world, g, EcsParent);
@@ -13319,7 +13319,7 @@ void Eval_tree_parent_nested_w_if_scope(void) {
     test_assert(h != 0);
 
     {
-        test_assert(!ecs_has_pair(world, f, EcsChildOf, EcsWildcard));
+        test_assert(ecs_has_pair(world, f, EcsChildOf, e));
         test_assert(ecs_has(world, f, EcsParent));
 
         const EcsParent *p = ecs_get(world, f, EcsParent);
@@ -13328,7 +13328,7 @@ void Eval_tree_parent_nested_w_if_scope(void) {
     }
 
     {
-        test_assert(!ecs_has_pair(world, g, EcsChildOf, EcsWildcard));
+        test_assert(ecs_has_pair(world, g, EcsChildOf, f));
         test_assert(ecs_has(world, g, EcsParent));
 
         const EcsParent *p = ecs_get(world, g, EcsParent);
@@ -13337,7 +13337,7 @@ void Eval_tree_parent_nested_w_if_scope(void) {
     }
 
     {
-        test_assert(!ecs_has_pair(world, h, EcsChildOf, EcsWildcard));
+        test_assert(ecs_has_pair(world, h, EcsChildOf, g));
         test_assert(ecs_has(world, h, EcsParent));
 
         const EcsParent *p = ecs_get(world, h, EcsParent);
@@ -13388,7 +13388,7 @@ void Eval_tree_parent_nested_w_if_else_scope(void) {
     test_assert(h != 0);
 
     {
-        test_assert(!ecs_has_pair(world, f, EcsChildOf, EcsWildcard));
+        test_assert(ecs_has_pair(world, f, EcsChildOf, e));
         test_assert(ecs_has(world, f, EcsParent));
 
         const EcsParent *p = ecs_get(world, f, EcsParent);
@@ -13397,7 +13397,7 @@ void Eval_tree_parent_nested_w_if_else_scope(void) {
     }
 
     {
-        test_assert(!ecs_has_pair(world, g, EcsChildOf, EcsWildcard));
+        test_assert(ecs_has_pair(world, g, EcsChildOf, f));
         test_assert(ecs_has(world, g, EcsParent));
 
         const EcsParent *p = ecs_get(world, g, EcsParent);
@@ -13406,7 +13406,7 @@ void Eval_tree_parent_nested_w_if_else_scope(void) {
     }
 
     {
-        test_assert(!ecs_has_pair(world, h, EcsChildOf, EcsWildcard));
+        test_assert(ecs_has_pair(world, h, EcsChildOf, g));
         test_assert(ecs_has(world, h, EcsParent));
 
         const EcsParent *p = ecs_get(world, h, EcsParent);
@@ -13445,7 +13445,7 @@ void Eval_tree_parent_nested_w_for_scope(void) {
     test_assert(h != 0);
 
     {
-        test_assert(!ecs_has_pair(world, f, EcsChildOf, EcsWildcard));
+        test_assert(ecs_has_pair(world, f, EcsChildOf, e));
         test_assert(ecs_has(world, f, EcsParent));
 
         const EcsParent *p = ecs_get(world, f, EcsParent);
@@ -13454,7 +13454,7 @@ void Eval_tree_parent_nested_w_for_scope(void) {
     }
 
     {
-        test_assert(!ecs_has_pair(world, g, EcsChildOf, EcsWildcard));
+        test_assert(ecs_has_pair(world, g, EcsChildOf, f));
         test_assert(ecs_has(world, g, EcsParent));
 
         const EcsParent *p = ecs_get(world, g, EcsParent);
@@ -13463,7 +13463,7 @@ void Eval_tree_parent_nested_w_for_scope(void) {
     }
 
     {
-        test_assert(!ecs_has_pair(world, h, EcsChildOf, EcsWildcard));
+        test_assert(ecs_has_pair(world, h, EcsChildOf, g));
         test_assert(ecs_has(world, h, EcsParent));
 
         const EcsParent *p = ecs_get(world, h, EcsParent);
@@ -13504,7 +13504,7 @@ void Eval_tree_parent_nested_w_pair_scope(void) {
     test_assert(h != 0);
 
     {
-        test_assert(!ecs_has_pair(world, f, EcsChildOf, EcsWildcard));
+        test_assert(ecs_has_pair(world, f, EcsChildOf, e));
         test_assert(ecs_has(world, f, EcsParent));
 
         const EcsParent *p = ecs_get(world, f, EcsParent);
@@ -13513,7 +13513,7 @@ void Eval_tree_parent_nested_w_pair_scope(void) {
     }
 
     {
-        test_assert(!ecs_has_pair(world, g, EcsChildOf, EcsWildcard));
+        test_assert(ecs_has_pair(world, g, EcsChildOf, f));
         test_assert(ecs_has(world, g, EcsParent));
         test_assert(ecs_has_pair(world, g, Rel, EcsWildcard));
 
@@ -13523,7 +13523,7 @@ void Eval_tree_parent_nested_w_pair_scope(void) {
     }
 
     {
-        test_assert(!ecs_has_pair(world, h, EcsChildOf, EcsWildcard));
+        test_assert(ecs_has_pair(world, h, EcsChildOf, g));
         test_assert(ecs_has(world, h, EcsParent));
         test_assert(ecs_has_pair(world, h, Rel, EcsWildcard));
 
@@ -13565,7 +13565,7 @@ void Eval_tree_parent_nested_w_with_scope(void) {
     test_assert(h != 0);
 
     {
-        test_assert(!ecs_has_pair(world, f, EcsChildOf, EcsWildcard));
+        test_assert(ecs_has_pair(world, f, EcsChildOf, e));
         test_assert(ecs_has(world, f, EcsParent));
 
         const EcsParent *p = ecs_get(world, f, EcsParent);
@@ -13574,7 +13574,7 @@ void Eval_tree_parent_nested_w_with_scope(void) {
     }
 
     {
-        test_assert(!ecs_has_pair(world, g, EcsChildOf, EcsWildcard));
+        test_assert(ecs_has_pair(world, g, EcsChildOf, f));
         test_assert(ecs_has(world, g, EcsParent));
         test_assert(ecs_has(world, g, Foo));
 
@@ -13584,7 +13584,7 @@ void Eval_tree_parent_nested_w_with_scope(void) {
     }
 
     {
-        test_assert(!ecs_has_pair(world, h, EcsChildOf, EcsWildcard));
+        test_assert(ecs_has_pair(world, h, EcsChildOf, g));
         test_assert(ecs_has(world, h, EcsParent));
         test_assert(ecs_has(world, h, Foo));
 

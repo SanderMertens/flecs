@@ -1038,6 +1038,10 @@ void Has_has_entity_owned_0(void);
 void Has_has_entity_owned_0_component(void);
 void Has_has_wildcard(void);
 void Has_has_wildcard_pair(void);
+void Has_has_childof_w_parent(void);
+void Has_has_childof_wildcard_w_parent(void);
+void Has_owns_childof_w_parent(void);
+void Has_owns_childof_wildcard_w_parent(void);
 
 // Testsuite 'Count'
 void Count_count_empty(void);
@@ -7138,6 +7142,22 @@ bake_test_case Has_testcases[] = {
     {
         "has_wildcard_pair",
         Has_has_wildcard_pair
+    },
+    {
+        "has_childof_w_parent",
+        Has_has_childof_w_parent
+    },
+    {
+        "has_childof_wildcard_w_parent",
+        Has_has_childof_wildcard_w_parent
+    },
+    {
+        "owns_childof_w_parent",
+        Has_owns_childof_w_parent
+    },
+    {
+        "owns_childof_wildcard_w_parent",
+        Has_owns_childof_wildcard_w_parent
     }
 };
 
@@ -15326,7 +15346,7 @@ static bake_test_suite suites[] = {
         "Has",
         NULL,
         NULL,
-        18,
+        22,
         Has_testcases
     },
     {
