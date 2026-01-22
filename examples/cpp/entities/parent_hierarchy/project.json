@@ -1,0 +1,11 @@
+{
+    "id": "parent_hierarchy",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "language": "c++",
+        "public": false
+    }
+}
