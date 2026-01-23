@@ -420,13 +420,13 @@ ecs_entity_t ecs_struct_init(
     int i;
     for (i = 0; i < ECS_MEMBER_DESC_CACHE_SIZE; i ++) {
         const ecs_member_t *m_desc = &desc->members[i];
-        if (!m_desc->type) {
+        if (!m_desc->name) {
             break;
         }
 
-        if (!m_desc->name) {
-            ecs_err("member %d of struct '%s' does not have a name", i, 
-                ecs_get_name(world, t));
+        if (!m_desc->type) {
+            ecs_err("member '%s' of struct '%s' does not have a type", 
+                m_desc->name, ecs_get_name(world, t));
             goto error;
         }
 
@@ -440,8 +440,12 @@ ecs_entity_t ecs_struct_init(
 
         EcsMemberRanges ranges = {0};
         ecs_entity_t member_entity = 0;
-        bool create_member_entity = desc->create_member_entities;
         bool ranges_set = false;
+        bool create_member_entity = desc->create_member_entities;
+
+#ifdef FLECS_CREATE_MEMBER_ENTITIES
+        create_member_entity = true;
+#endif
 
         const ecs_member_value_range_t *range = &m_desc->range;
         const ecs_member_value_range_t *error = &m_desc->error_range;

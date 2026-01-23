@@ -1015,6 +1015,7 @@ void MetaUtils_private_members(void);
 void MetaUtils_enum_constant_w_name_prefix(void);
 void MetaUtils_enum_constant_w_type_prefix(void);
 void MetaUtils_enum_constant_w_name_type_prefix(void);
+void MetaUtils_struct_has_member_entities(void);
 
 // Testsuite 'OpaqueTypes'
 void OpaqueTypes_ser_i32_type_to_json(void);
@@ -5074,6 +5075,10 @@ bake_test_case MetaUtils_testcases[] = {
     {
         "enum_constant_w_name_type_prefix",
         MetaUtils_enum_constant_w_name_type_prefix
+    },
+    {
+        "struct_has_member_entities",
+        MetaUtils_struct_has_member_entities
     }
 };
 
@@ -5685,7 +5690,7 @@ static bake_test_suite suites[] = {
         "MetaUtils",
         NULL,
         NULL,
-        22,
+        23,
         MetaUtils_testcases
     },
     {

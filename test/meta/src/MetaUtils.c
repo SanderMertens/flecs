@@ -542,3 +542,14 @@ void MetaUtils_enum_constant_w_name_type_prefix(void) {
 
     ecs_fini(world);
 }
+
+void MetaUtils_struct_has_member_entities(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_META_COMPONENT(world, Struct_2_i32);
+
+    test_assert(ecs_lookup(world, "Struct_2_i32.x") == 0);
+    test_assert(ecs_lookup(world, "Struct_2_i32.y") == 0);
+
+    ecs_fini(world);
+}
