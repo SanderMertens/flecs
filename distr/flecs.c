@@ -5160,7 +5160,7 @@ void flecs_bootstrap(
 
     /* Register observer for trait before adding EcsPairIsTag */
     ecs_observer(world, {
-        .entity = ecs_entity(world, { .parent = EcsFlecsInternals }),
+        .entity = ecs_new_w_pair(world, EcsChildOf, EcsFlecsInternals),
         .query.terms[0] = { .id = EcsPairIsTag },
         .events = {EcsOnAdd, EcsOnRemove},
         .callback = flecs_register_tag,
@@ -6665,8 +6665,8 @@ bool flecs_defer_end(
             ecs_cmd_t *cmds = ecs_vec_first(queue);
             int32_t i, count = ecs_vec_count(queue);
 
-            ecs_table_diff_builder_t diff;
-            flecs_table_diff_builder_init(world, &diff);
+            ecs_table_diff_builder_t diff = {0};
+            bool diff_builder_used = false;
 
             for (i = 0; i < count; i ++) {
                 ecs_cmd_t *cmd = &cmds[i];
@@ -6680,6 +6680,11 @@ bool flecs_defer_end(
 
                     /* Batch commands for entity to limit archetype moves */
                     if (is_alive) {
+                        if (!diff_builder_used) {
+                            flecs_table_diff_builder_init(world, &diff);
+                            diff_builder_used = true;
+                        }
+
                         flecs_cmd_batch_for_entity(world, &diff, e, cmds, i);
                     } else {
                         world->info.cmd.discard_count ++;
@@ -6832,7 +6837,10 @@ bool flecs_defer_end(
 
             flecs_stack_reset(&commands->stack);
             ecs_vec_clear(queue);
-            flecs_table_diff_builder_fini(world, &diff);
+
+            if (diff_builder_used) {
+                flecs_table_diff_builder_fini(world, &diff);
+            }
 
             /* Internal callback for capturing commands, signal queue is done */
             if (world->on_commands_active) {
