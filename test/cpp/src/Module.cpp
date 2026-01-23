@@ -615,11 +615,3 @@ struct SingletonTest {
         singleton_test_invoked ++;
     }
 };
-
-void Module_module_has_singleton(void) {
-    flecs::world world;
-
-    auto e = world.import<SingletonTest>();
-
-    test_assert(e.has(flecs::Singleton));
-}

@@ -3078,7 +3078,7 @@ void World_remove_builtin_from_builtin(void) {
     
     test_expect_abort();
 
-    ecs_remove_id(world, ecs_id(EcsComponent), EcsFinal);
+    ecs_remove_id(world, EcsChildOf, EcsExclusive);
 }
 
 void World_reparent_builtin(void) {
