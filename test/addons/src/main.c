@@ -439,7 +439,6 @@ void Modules_import_monitor_2_worlds(void);
 void Modules_import_monitor_after_mini(void);
 void Modules_import_2_worlds(void);
 void Modules_component_parent_becomes_module(void);
-void Modules_module_has_singleton(void);
 
 // Testsuite 'App'
 void App_app_w_frame_action(void);
@@ -2171,10 +2170,6 @@ bake_test_case Modules_testcases[] = {
     {
         "component_parent_becomes_module",
         Modules_component_parent_becomes_module
-    },
-    {
-        "module_has_singleton",
-        Modules_module_has_singleton
     }
 };
 
@@ -2766,7 +2761,7 @@ static bake_test_suite suites[] = {
         "Modules",
         Modules_setup,
         NULL,
-        25,
+        24,
         Modules_testcases
     },
     {

@@ -695,16 +695,14 @@ ecs_table_t* flecs_bootstrap_component_table(
 
     ecs_id_t ids[] = {
         ecs_id(EcsComponent), 
-        EcsFinal,
         ecs_pair_t(EcsIdentifier, EcsName),
         ecs_pair_t(EcsIdentifier, EcsSymbol),
         ecs_pair(EcsChildOf, EcsFlecsCore),
-        ecs_pair(EcsOnDelete, EcsPanic)
     };
 
     ecs_type_t array = {
         .array = ids,
-        .count = 6
+        .count = 4
     };
 
     ecs_table_t *result = flecs_table_find_or_create(world, &array);

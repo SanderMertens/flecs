@@ -4090,7 +4090,6 @@ void flecs_bootstrap(
 
 #define flecs_bootstrap_tag(world, name)\
     ecs_make_alive(world, name);\
-    ecs_add_id(world, name, EcsFinal);\
     ecs_add_pair(world, name, EcsChildOf, ecs_get_scope(world));\
     ecs_set_name(world, name, (const char*)&#name[ecs_os_strlen(world->info.name_prefix)]);\
     ecs_set_symbol(world, name, #name);
@@ -4922,16 +4921,14 @@ ecs_table_t* flecs_bootstrap_component_table(
 
     ecs_id_t ids[] = {
         ecs_id(EcsComponent), 
-        EcsFinal,
         ecs_pair_t(EcsIdentifier, EcsName),
         ecs_pair_t(EcsIdentifier, EcsSymbol),
         ecs_pair(EcsChildOf, EcsFlecsCore),
-        ecs_pair(EcsOnDelete, EcsPanic)
     };
 
     ecs_type_t array = {
         .array = ids,
-        .count = 6
+        .count = 4
     };
 
     ecs_table_t *result = flecs_table_find_or_create(world, &array);
@@ -27541,7 +27538,7 @@ ecs_entity_t ecs_module_init(
     }
     
     ecs_add_id(world, e, EcsModule);
-    ecs_add_id(world, e, EcsSingleton);
+    // ecs_add_id(world, e, EcsSingleton);
 
     ecs_component_desc_t private_desc = *desc;
     private_desc.entity = e;

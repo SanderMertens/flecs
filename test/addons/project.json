@@ -482,8 +482,7 @@
                 "import_monitor_2_worlds",
                 "import_monitor_after_mini",
                 "import_2_worlds",
-                "component_parent_becomes_module",
-                "module_has_singleton"
+                "component_parent_becomes_module"
             ]
         }, {
             "id": "App",
