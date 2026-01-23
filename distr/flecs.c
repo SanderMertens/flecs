@@ -73019,9 +73019,6 @@ void FlecsStatsImport(
 #ifdef FLECS_META
     ECS_IMPORT(world, FlecsMeta);
 #endif
-#ifdef FLECS_UNITS
-    ECS_IMPORT(world, FlecsUnits);
-#endif
 #ifdef FLECS_DOC
     ECS_IMPORT(world, FlecsDoc);
     ecs_doc_set_brief(world, ecs_id(FlecsStats), 
