@@ -695,28 +695,47 @@ int flecs_meta_utils_parse_struct(
         .desc = ptr
     };
 
-    ecs_entity_t old_scope = ecs_set_scope(world, t);
+    ecs_struct_desc_t struct_desc = {
+        .entity = t
+    };
+
+    int32_t member = 0;
+    int32_t result = 0;
 
     while ((ptr = flecs_meta_utils_parse_member(ptr, &token, &ctx)) && ptr[0]) {
-        ecs_entity_t m = ecs_entity(world, {
-            .name = token.name
-        });
-
         ecs_entity_t type = flecs_meta_utils_lookup(
             world, &token.type, ptr, 0, &ctx);
         if (!type) {
             goto error;
         }
 
-        ecs_set(world, m, EcsMember, {
-            .type = type, 
-            .count = (ecs_size_t)token.count
-        });
+        if (member == (ECS_MEMBER_DESC_CACHE_SIZE - 1)) {
+            ecs_err("too many members (%d) defined for struct "
+                "(increase ECS_MEMBER_DESC_CACHE_SIZE)",
+                    ECS_MEMBER_DESC_CACHE_SIZE);
+            result = -1;
+            goto done;
+        }
+
+        struct_desc.members[member].name = ecs_os_strdup(token.name);
+        struct_desc.members[member].type = type;
+        struct_desc.members[member].count = flecs_ito(int32_t, token.count);
+        member ++;
     }
 
-    ecs_set_scope(world, old_scope);
+    if (!ecs_struct_init(world, &struct_desc)) {
+        goto error;
+    }
 
-    return 0;
+done:
+    for (int i = 0; i < ECS_MEMBER_DESC_CACHE_SIZE; i ++) {
+        if (!struct_desc.members[member].name) {
+            break;
+        }
+        ecs_os_free(ECS_CONST_CAST(char*, struct_desc.members[member].name));
+    }
+
+    return result;
 error:
     return -1;
 }

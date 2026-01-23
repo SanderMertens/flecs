@@ -148,6 +148,20 @@
  */
 // #define FLECS_DEFAULT_TO_UNCACHED_QUERIES
 
+/** @def FLECS_CREATE_MEMBER_ENTITIES 
+ * By default, Flecs does not create entities for component members when they 
+ * are registered with reflection. Define this addon if an application relies
+ * on members being defined as entities. Features that require members to be
+ * defined as entities are:
+ *  - Member queries
+ *  - Metrics
+ *  - Alerts
+ * 
+ * Member entities can also be created on a per-type basis by setting 
+ * ecs_struct_desc_t::create_member_entities to true.
+ */
+// #define FLECS_CREATE_MEMBER_ENTITIES
+
 /** @def FLECS_CPP_NO_AUTO_REGISTRATION
  * When set, the C++ API will require that components are registered before they
  * are used. This is useful in multithreaded applications, where components need

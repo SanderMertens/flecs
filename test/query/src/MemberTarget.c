@@ -37,7 +37,8 @@ static void register_types(
         .entity = ecs_entity(world, { .name = "Movement" }),
         .members = {
             { "value", ecs_id(ecs_entity_t) }
-        }
+        },
+        .create_member_entities = true
     });
 
     ecs_id(TwoMembers) = ecs_struct(world, {
@@ -45,7 +46,8 @@ static void register_types(
         .members = {
             { "a", ecs_id(ecs_entity_t) },
             { "b", ecs_id(ecs_entity_t) }
-        }
+        },
+        .create_member_entities = true
     });
 
     Running = ecs_entity(world, { .name = "Running" });
