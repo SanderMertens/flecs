@@ -1084,7 +1084,7 @@ void SerializeEntityToJson_serialize_from_core(void) {
 
     char *json = ecs_entity_to_json(world, EcsWorld, NULL);
     test_assert(json != NULL);
-    test_json(json, "{\"parent\":\"flecs.core\", \"name\":\"World\", \"components\":{\"(flecs.core.Identifier,flecs.core.Symbol)\":{\"value\":\"flecs.core.World\"}}}");
+    test_json(json, "{\"parent\":\"flecs.core\", \"name\":\"World\"}");
     ecs_os_free(json);
 
     ecs_fini(world);

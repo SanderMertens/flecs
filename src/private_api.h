@@ -65,8 +65,7 @@ void flecs_bootstrap(
 #define flecs_bootstrap_tag(world, name)\
     ecs_make_alive(world, name);\
     ecs_add_pair(world, name, EcsChildOf, ecs_get_scope(world));\
-    ecs_set_name(world, name, (const char*)&#name[ecs_os_strlen(world->info.name_prefix)]);\
-    ecs_set_symbol(world, name, #name);
+    ecs_set_name(world, name, (const char*)&#name[ecs_os_strlen(world->info.name_prefix)]);
 
 #define flecs_bootstrap_trait(world, name)\
     flecs_bootstrap_tag(world, name)\
