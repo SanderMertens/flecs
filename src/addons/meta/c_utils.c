@@ -729,10 +729,10 @@ int flecs_meta_utils_parse_struct(
 
 done:
     for (int i = 0; i < ECS_MEMBER_DESC_CACHE_SIZE; i ++) {
-        if (!struct_desc.members[member].name) {
+        if (!struct_desc.members[i].name) {
             break;
         }
-        ecs_os_free(ECS_CONST_CAST(char*, struct_desc.members[member].name));
+        ecs_os_free(ECS_CONST_CAST(char*, struct_desc.members[i].name));
     }
 
     return result;

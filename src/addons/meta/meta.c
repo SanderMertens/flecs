@@ -165,9 +165,6 @@ void FlecsMetaImport(
     ecs_world_t *world)
 {
     ECS_MODULE(world, FlecsMeta);
-#ifdef FLECS_DOC
-    ECS_IMPORT(world, FlecsDoc);
-#endif
 
     ecs_set_name_prefix(world, "Ecs");
 

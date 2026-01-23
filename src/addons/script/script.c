@@ -390,11 +390,6 @@ void FlecsScriptImport(
 {
     ECS_MODULE(world, FlecsScript);
     ECS_IMPORT(world, FlecsMeta);
-#ifdef FLECS_DOC
-    ECS_IMPORT(world, FlecsDoc);
-    ecs_doc_set_brief(world, ecs_id(FlecsScript), 
-        "Module with components for managing Flecs scripts");
-#endif
 
     ecs_set_name_prefix(world, "Ecs");
     ECS_COMPONENT_DEFINE(world, EcsScript);

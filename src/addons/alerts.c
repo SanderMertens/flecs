@@ -712,9 +712,6 @@ void FlecsAlertsImport(ecs_world_t *world) {
     ECS_IMPORT(world, FlecsPipeline);
     ECS_IMPORT(world, FlecsTimer);
     ECS_IMPORT(world, FlecsMetrics);
-#ifdef FLECS_DOC
-    ECS_IMPORT(world, FlecsDoc);
-#endif
 
     ecs_set_name_prefix(world, "Ecs");
     ECS_COMPONENT_DEFINE(world, EcsAlert);

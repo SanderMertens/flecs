@@ -14,8 +14,6 @@
 /* Retain captured commands for one minute at 60 FPS */
 #define FLECS_REST_COMMAND_RETAIN_COUNT (60 * 60)
 
-static ECS_TAG_DECLARE(EcsRestPlecs);
-
 typedef struct {
     char *cmds;
     ecs_time_t start_time;
@@ -2197,14 +2195,6 @@ void FlecsRestImport(
     ECS_MODULE(world, FlecsRest);
 
     ECS_IMPORT(world, FlecsPipeline);
-#ifdef FLECS_SCRIPT
-    ECS_IMPORT(world, FlecsScript);
-#endif
-#ifdef FLECS_DOC
-    ECS_IMPORT(world, FlecsDoc);
-    ecs_doc_set_brief(world, ecs_id(FlecsRest), 
-        "Module that implements Flecs REST API");
-#endif
 
     ecs_set_name_prefix(world, "Ecs");
 
@@ -2219,7 +2209,7 @@ void FlecsRestImport(
     });
 
     ecs_system(world, {
-        .entity = ecs_entity(world, {.name = "DequeueRest", .add = ecs_ids( ecs_dependson(EcsPostFrame))}),
+        .entity = ecs_entity(world, { .name = "DequeueRest", .add = ecs_ids( ecs_dependson(EcsPostFrame)) }),
         .query.terms = {
             { .id = ecs_id(EcsRest) },
         },
@@ -2228,6 +2218,7 @@ void FlecsRestImport(
     });
 
     ecs_observer(world, {
+        .entity = ecs_entity(world, { .name = "DisableRestObserver" }),
         .query = { 
             .terms = {{ .id = EcsDisabled, .src.id = ecs_id(FlecsRest) }}
         },
@@ -2236,7 +2227,6 @@ void FlecsRestImport(
     });
 
     ecs_set_name_prefix(world, "EcsRest");
-    ECS_TAG_DEFINE(world, EcsRestPlecs);
 
     /* Enable frame time measurements so we're guaranteed to have a delta time
      * value to pass into the HTTP server. */

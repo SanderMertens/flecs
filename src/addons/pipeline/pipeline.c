@@ -887,11 +887,7 @@ void FlecsPipelineImport(
 {
     ECS_MODULE(world, FlecsPipeline);
     ECS_IMPORT(world, FlecsSystem);
-#ifdef FLECS_DOC
-    ECS_IMPORT(world, FlecsDoc);
-    ecs_doc_set_brief(world, ecs_id(FlecsPipeline), 
-        "Module that schedules and runs systems");
-#endif
+
     ecs_set_name_prefix(world, "Ecs");
 
     flecs_bootstrap_component(world, EcsPipeline);
