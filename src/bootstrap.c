@@ -931,7 +931,7 @@ void flecs_bootstrap(
 
     /* Register observer for trait before adding EcsPairIsTag */
     ecs_observer(world, {
-        .entity = ecs_entity(world, { .parent = EcsFlecsInternals }),
+        .entity = ecs_new_w_pair(world, EcsChildOf, EcsFlecsInternals),
         .query.terms[0] = { .id = EcsPairIsTag },
         .events = {EcsOnAdd, EcsOnRemove},
         .callback = flecs_register_tag,
