@@ -552,11 +552,9 @@ typedef struct {
     int32_t empty_count;                /** Number of empty tables. */
     int32_t column_count;               /** Number of table columns. */
     ecs_size_t bytes_table;             /** Bytes used by ecs_table_t struct. */
-    ecs_size_t bytes_type;              /** Bytes used by type vector. */
+    ecs_size_t bytes_type;              /** Bytes used by type, columns and table records. */
     ecs_size_t bytes_entities;          /** Bytes used by entity vectors. */
     ecs_size_t bytes_overrides;         /** Bytes used by table overrides. */
-    ecs_size_t bytes_columns;           /** Bytes used by table columns (excluding component data). */
-    ecs_size_t bytes_table_records;     /** Bytes used by table records. */
     ecs_size_t bytes_column_map;        /** Bytes used by column map. */
     ecs_size_t bytes_component_map;     /** Bytes used by component map. */
     ecs_size_t bytes_dirty_state;       /** Bytes used by dirty state. */
@@ -583,6 +581,7 @@ typedef struct {
     ecs_size_t bytes_component_ids;     /** Memory used for mapping global to world-local component ids. */
     ecs_size_t bytes_reflection;        /** Memory used for component reflection not tracked elsewhere. */
     ecs_size_t bytes_tree_spawner;      /** Memory used for tree (prefab) spawners. */
+    ecs_size_t bytes_prefab_child_indices; /** Memory used by map that stores indices for ordered prefab children */
     ecs_size_t bytes_stats;             /** Memory used for statistics tracking not tracked elsewhere. */
     ecs_size_t bytes_rest;              /** Memory used by REST HTTP server */
 } ecs_misc_memory_t;
