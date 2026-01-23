@@ -394,11 +394,6 @@ void FlecsStatsImport(
 #ifdef FLECS_META
     ECS_IMPORT(world, FlecsMeta);
 #endif
-#ifdef FLECS_DOC
-    ECS_IMPORT(world, FlecsDoc);
-    ecs_doc_set_brief(world, ecs_id(FlecsStats), 
-        "Module that automatically monitors statistics for the world & systems");
-#endif
 
     ecs_set_name_prefix(world, "Ecs");
 

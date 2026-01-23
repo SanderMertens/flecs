@@ -24,8 +24,7 @@ void Rest_get(void) {
     char *reply_str = ecs_strbuf_get(&reply.body);
     test_assert(reply_str != NULL);
     test_str(reply_str,
-            "{\"parent\":\"flecs\", \"name\":\"core\", \"tags\":[\"flecs.core.Module\"], "
-                "\"components\":{\"(flecs.doc.Description,flecs.doc.Brief)\":{\"value\":\"Module with builtin components\"}}}");
+            "{\"parent\":\"flecs\", \"name\":\"core\", \"tags\":[\"flecs.core.Module\"]}");
     ecs_os_free(reply_str);
 
     ecs_rest_server_fini(srv);
@@ -51,8 +50,7 @@ void Rest_get_cached(void) {
         char *reply_str = ecs_strbuf_get(&reply.body);
         test_assert(reply_str != NULL);
         test_str(reply_str,
-            "{\"parent\":\"flecs\", \"name\":\"core\", \"tags\":[\"flecs.core.Module\"], "
-                "\"components\":{\"(flecs.doc.Description,flecs.doc.Brief)\":{\"value\":\"Module with builtin components\"}}}");
+            "{\"parent\":\"flecs\", \"name\":\"core\", \"tags\":[\"flecs.core.Module\"]}");
         ecs_os_free(reply_str);
     }
 
@@ -65,8 +63,7 @@ void Rest_get_cached(void) {
         char *reply_str = ecs_strbuf_get(&reply.body);
         test_assert(reply_str != NULL);
         test_str(reply_str,
-            "{\"parent\":\"flecs\", \"name\":\"core\", \"tags\":[\"flecs.core.Module\"], "
-                "\"components\":{\"(flecs.doc.Description,flecs.doc.Brief)\":{\"value\":\"Module with builtin components\"}}}");
+            "{\"parent\":\"flecs\", \"name\":\"core\", \"tags\":[\"flecs.core.Module\"]}");
         ecs_os_free(reply_str);
     }
 

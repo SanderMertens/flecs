@@ -118,71 +118,47 @@ static
 void flecs_script_register_builtin_doc_functions(
     ecs_world_t *world)
 {
-    {
-        ecs_entity_t m = ecs_method(world, {
-            .name = "doc_name",
-            .parent = ecs_id(ecs_entity_t),
-            .return_type = ecs_id(ecs_string_t),
-            .callback = flecs_meta_entity_doc_name
-        });
+    ecs_method(world, {
+        .name = "doc_name",
+        .parent = ecs_id(ecs_entity_t),
+        .return_type = ecs_id(ecs_string_t),
+        .callback = flecs_meta_entity_doc_name
+    });
 
-        ecs_doc_set_brief(world, m, "Returns entity doc name");
-    }
+    ecs_method(world, {
+        .name = "doc_uuid",
+        .parent = ecs_id(ecs_entity_t),
+        .return_type = ecs_id(ecs_string_t),
+        .callback = flecs_meta_entity_doc_uuid
+    });
 
-    {
-        ecs_entity_t m = ecs_method(world, {
-            .name = "doc_uuid",
-            .parent = ecs_id(ecs_entity_t),
-            .return_type = ecs_id(ecs_string_t),
-            .callback = flecs_meta_entity_doc_uuid
-        });
+    ecs_method(world, {
+        .name = "doc_brief",
+        .parent = ecs_id(ecs_entity_t),
+        .return_type = ecs_id(ecs_string_t),
+        .callback = flecs_meta_entity_doc_brief
+    });
 
-        ecs_doc_set_brief(world, m, "Returns entity doc uuid");
-    }
+    ecs_method(world, {
+        .name = "doc_detail",
+        .parent = ecs_id(ecs_entity_t),
+        .return_type = ecs_id(ecs_string_t),
+        .callback = flecs_meta_entity_doc_detail
+    });
 
-    {
-        ecs_entity_t m = ecs_method(world, {
-            .name = "doc_brief",
-            .parent = ecs_id(ecs_entity_t),
-            .return_type = ecs_id(ecs_string_t),
-            .callback = flecs_meta_entity_doc_brief
-        });
+    ecs_method(world, {
+        .name = "doc_link",
+        .parent = ecs_id(ecs_entity_t),
+        .return_type = ecs_id(ecs_string_t),
+        .callback = flecs_meta_entity_doc_link
+    });
 
-        ecs_doc_set_brief(world, m, "Returns entity doc brief description");
-    }
-
-    {
-        ecs_entity_t m = ecs_method(world, {
-            .name = "doc_detail",
-            .parent = ecs_id(ecs_entity_t),
-            .return_type = ecs_id(ecs_string_t),
-            .callback = flecs_meta_entity_doc_detail
-        });
-
-        ecs_doc_set_brief(world, m, "Returns entity doc detailed description");
-    }
-
-    {
-        ecs_entity_t m = ecs_method(world, {
-            .name = "doc_link",
-            .parent = ecs_id(ecs_entity_t),
-            .return_type = ecs_id(ecs_string_t),
-            .callback = flecs_meta_entity_doc_link
-        });
-
-        ecs_doc_set_brief(world, m, "Returns entity doc link");
-    }
-
-    {
-        ecs_entity_t m = ecs_method(world, {
-            .name = "doc_color",
-            .parent = ecs_id(ecs_entity_t),
-            .return_type = ecs_id(ecs_string_t),
-            .callback = flecs_meta_entity_doc_color
-        });
-
-        ecs_doc_set_brief(world, m, "Returns entity doc color");
-    }
+    ecs_method(world, {
+        .name = "doc_color",
+        .parent = ecs_id(ecs_entity_t),
+        .return_type = ecs_id(ecs_string_t),
+        .callback = flecs_meta_entity_doc_color
+    });
 }
 
 #else
@@ -199,81 +175,57 @@ void flecs_script_register_builtin_doc_functions(
 void flecs_script_register_builtin_functions(
     ecs_world_t *world)
 {
-    {
-        ecs_entity_t m = ecs_method(world, {
-            .name = "name",
-            .parent = ecs_id(ecs_entity_t),
-            .return_type = ecs_id(ecs_string_t),
-            .callback = flecs_meta_entity_name
-        });
+    ecs_method(world, {
+        .name = "name",
+        .parent = ecs_id(ecs_entity_t),
+        .return_type = ecs_id(ecs_string_t),
+        .callback = flecs_meta_entity_name
+    });
 
-        ecs_doc_set_brief(world, m, "Returns entity name");
-    }
+    ecs_method(world, {
+        .name = "path",
+        .parent = ecs_id(ecs_entity_t),
+        .return_type = ecs_id(ecs_string_t),
+        .callback = flecs_meta_entity_path
+    });
 
-    {
-        ecs_entity_t m = ecs_method(world, {
-            .name = "path",
-            .parent = ecs_id(ecs_entity_t),
-            .return_type = ecs_id(ecs_string_t),
-            .callback = flecs_meta_entity_path
-        });
+    ecs_method(world, {
+        .name = "parent",
+        .parent = ecs_id(ecs_entity_t),
+        .return_type = ecs_id(ecs_entity_t),
+        .callback = flecs_meta_entity_parent
+    });
 
-        ecs_doc_set_brief(world, m, "Returns entity path");
-    }
+    ecs_method(world, {
+        .name = "has",
+        .parent = ecs_id(ecs_entity_t),
+        .params = {
+            { .name = "component", .type = ecs_id(ecs_id_t) }
+        },
+        .return_type = ecs_id(ecs_bool_t),
+        .callback = flecs_meta_entity_has
+    });
 
-    {
-        ecs_entity_t m = ecs_method(world, {
-            .name = "parent",
-            .parent = ecs_id(ecs_entity_t),
-            .return_type = ecs_id(ecs_entity_t),
-            .callback = flecs_meta_entity_parent
-        });
+    ecs_method(world, {
+        .name = "lookup",
+        .parent = ecs_id(ecs_entity_t),
+        .params = {
+            { .name = "path", .type = ecs_id(ecs_string_t) }
+        },
+        .return_type = ecs_id(ecs_entity_t),
+        .callback = flecs_meta_entity_lookup
+    });
 
-        ecs_doc_set_brief(world, m, "Returns entity parent");
-    }
-
-    {
-        ecs_entity_t m = ecs_method(world, {
-            .name = "has",
-            .parent = ecs_id(ecs_entity_t),
-            .params = {
-                { .name = "component", .type = ecs_id(ecs_id_t) }
-            },
-            .return_type = ecs_id(ecs_bool_t),
-            .callback = flecs_meta_entity_has
-        });
-
-        ecs_doc_set_brief(world, m, "Returns whether entity has component");
-    }
-
-    {
-        ecs_entity_t m = ecs_method(world, {
-            .name = "lookup",
-            .parent = ecs_id(ecs_entity_t),
-            .params = {
-                { .name = "path", .type = ecs_id(ecs_string_t) }
-            },
-            .return_type = ecs_id(ecs_entity_t),
-            .callback = flecs_meta_entity_lookup
-        });
-
-        ecs_doc_set_brief(world, m, "Lookup child by name");
-    }
-
-    {
-        ecs_entity_t m = ecs_function(world, {
-            .name = "pair",
-            .parent = ecs_entity(world, { .name = "core" }),
-            .params = {
-                { .name = "first", .type = ecs_id(ecs_entity_t) },
-                { .name = "second", .type = ecs_id(ecs_entity_t) }
-            },
-            .return_type = ecs_id(ecs_id_t),
-            .callback = flecs_meta_core_pair
-        });
-
-        ecs_doc_set_brief(world, m, "Returns a pair identifier");
-    }
+    ecs_function(world, {
+        .name = "pair",
+        .parent = ecs_entity(world, { .name = "core" }),
+        .params = {
+            { .name = "first", .type = ecs_id(ecs_entity_t) },
+            { .name = "second", .type = ecs_id(ecs_entity_t) }
+        },
+        .return_type = ecs_id(ecs_id_t),
+        .callback = flecs_meta_core_pair
+    });
 
     flecs_script_register_builtin_doc_functions(world);
 }

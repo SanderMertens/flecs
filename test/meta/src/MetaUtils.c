@@ -372,11 +372,10 @@ void MetaUtils_struct_nospace(void) {
     test_str(ecs_get_name(world, e), "Struct_Nospace");
     test_assert(ecs_has(world, e, EcsStruct));
 
-    ecs_entity_t c_a = ecs_lookup_child(world, e, "x");
-    test_assert(c_a != 0);
-
-    ecs_entity_t c_b = ecs_lookup_child(world, e, "y");
-    test_assert(c_b != 0);
+    const EcsStruct *s = ecs_get(world, e, EcsStruct);
+    test_int(ecs_vec_count(&s->members), 2);
+    test_str(ecs_vec_get_t(&s->members, ecs_member_t, 0)->name, "x");
+    test_str(ecs_vec_get_t(&s->members, ecs_member_t, 1)->name, "y");
 
     ecs_fini(world);
 }
@@ -393,21 +392,24 @@ void MetaUtils_identifier_w_underscore(void) {
     test_assert(ecs_id(Struct_w_underscore_member_type) != 0);
 
     {
-        ecs_entity_t s = ecs_id(_Struct_w_underscore);
-        ecs_entity_t m = ecs_lookup_child(world, s, "value");
-        test_assert(m != 0);
+        ecs_entity_t e = ecs_id(_Struct_w_underscore);
+        const EcsStruct *s = ecs_get(world, e, EcsStruct);
+        test_int(ecs_vec_count(&s->members), 1);
+        test_str(ecs_vec_get_t(&s->members, ecs_member_t, 0)->name, "value");
     }
 
     {
-        ecs_entity_t s = ecs_id(Struct_w_underscore_member_name);
-        ecs_entity_t m = ecs_lookup_child(world, s, "_value");
-        test_assert(m != 0);
+        ecs_entity_t e = ecs_id(Struct_w_underscore_member_name);
+        const EcsStruct *s = ecs_get(world, e, EcsStruct);
+        test_int(ecs_vec_count(&s->members), 1);
+        test_str(ecs_vec_get_t(&s->members, ecs_member_t, 0)->name, "_value");
     }
 
     {
-        ecs_entity_t s = ecs_id(Struct_w_underscore_member_type);
-        ecs_entity_t m = ecs_lookup_child(world, s, "value");
-        test_assert(m != 0);
+        ecs_entity_t e = ecs_id(Struct_w_underscore_member_type);
+        const EcsStruct *s = ecs_get(world, e, EcsStruct);
+        test_int(ecs_vec_count(&s->members), 1);
+        test_str(ecs_vec_get_t(&s->members, ecs_member_t, 0)->name, "value");
     }
 
     ecs_fini(world);
@@ -419,16 +421,12 @@ void MetaUtils_struct_w_ptr(void) {
     ECS_META_COMPONENT(world, Struct_w_ptrs);
 
     test_assert(ecs_id(Struct_w_ptrs) != 0);
-    ecs_entity_t s = ecs_id(Struct_w_ptrs);
+    ecs_entity_t e = ecs_id(Struct_w_ptrs);
 
-    {
-        ecs_entity_t m = ecs_lookup_child(world, s, "ptr_a");
-        test_assert(m != 0);
-    }
-    {
-        ecs_entity_t m = ecs_lookup_child(world, s, "ptr_b");
-        test_assert(m != 0);
-    }
+    const EcsStruct *s = ecs_get(world, e, EcsStruct);
+    test_int(ecs_vec_count(&s->members), 2);
+    test_str(ecs_vec_get_t(&s->members, ecs_member_t, 0)->name, "ptr_a");
+    test_str(ecs_vec_get_t(&s->members, ecs_member_t, 1)->name, "ptr_b");
 
     ecs_fini(world);
 }
@@ -439,20 +437,15 @@ void MetaUtils_private_members(void) {
     ECS_META_COMPONENT(world, Struct_w_private);
 
     test_assert(ecs_id(Struct_w_private) != 0);
-    ecs_entity_t s = ecs_id(Struct_w_private);
+    ecs_entity_t e = ecs_id(Struct_w_private);
 
-    {
-        ecs_entity_t m = ecs_lookup_child(world, s, "x");
-        test_assert(m != 0);
-    }
-    {
-        ecs_entity_t m = ecs_lookup_child(world, s, "y");
-        test_assert(m != 0);
-    }
-    {
-        ecs_entity_t m = ecs_lookup_child(world, s, "z");
-        test_assert(m == 0);
-    }
+    const EcsStruct *s = ecs_get(world, e, EcsStruct);
+    test_int(ecs_vec_count(&s->members), 2);
+    test_str(ecs_vec_get_t(&s->members, ecs_member_t, 0)->name, "x");
+    test_str(ecs_vec_get_t(&s->members, ecs_member_t, 1)->name, "y");
+
+    test_assert(ecs_has(world, e, EcsComponent));
+    test_int(ecs_get(world, e, EcsComponent)->size, 24);
 
     ecs_fini(world);
 }

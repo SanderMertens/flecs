@@ -13,12 +13,6 @@ void FlecsUnitsImport(
     ECS_MODULE(world, FlecsUnits);
     ECS_IMPORT(world, FlecsMeta);
 
-#ifdef FLECS_DOC
-    ECS_IMPORT(world, FlecsDoc);
-    ecs_doc_set_brief(world, ecs_id(FlecsUnits), 
-        "Module with (amongst others) SI units for annotating component members");
-#endif
-
     ecs_set_name_prefix(world, "Ecs");
 
     EcsUnitPrefixes = ecs_entity(world, {
