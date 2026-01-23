@@ -530,9 +530,8 @@ void Lookup_resolve_builtin_symbols(void) {
 
     test_assert(ecs_lookup_symbol(world, "EcsComponent", false, true) == ecs_id(EcsComponent));
     test_assert(ecs_lookup_symbol(world, "EcsIdentifier", false, true) == ecs_id(EcsIdentifier));
-
-    test_assert(ecs_lookup_symbol(world, "EcsName", false, true) == EcsName);
-    test_assert(ecs_lookup_symbol(world, "EcsSymbol", false, true) == EcsSymbol);
+    test_assert(ecs_lookup_symbol(world, "EcsPoly", false, true) == ecs_id(EcsPoly));
+    test_assert(ecs_lookup_symbol(world, "EcsParent", false, true) == ecs_id(EcsParent));
 
     ecs_fini(world);
 }

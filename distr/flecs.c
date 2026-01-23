@@ -4091,8 +4091,7 @@ void flecs_bootstrap(
 #define flecs_bootstrap_tag(world, name)\
     ecs_make_alive(world, name);\
     ecs_add_pair(world, name, EcsChildOf, ecs_get_scope(world));\
-    ecs_set_name(world, name, (const char*)&#name[ecs_os_strlen(world->info.name_prefix)]);\
-    ecs_set_symbol(world, name, #name);
+    ecs_set_name(world, name, (const char*)&#name[ecs_os_strlen(world->info.name_prefix)]);
 
 #define flecs_bootstrap_trait(world, name)\
     flecs_bootstrap_tag(world, name)\
@@ -5004,15 +5003,10 @@ void flecs_bootstrap_entity(
     ecs_entity_t id,
     const char *name,
     ecs_entity_t parent)
-{
-    char symbol[256];
-    ecs_os_strcpy(symbol, "flecs.core.");
-    ecs_os_strcat(symbol, name);
-    
+{    
     flecs_bootstrap_make_alive(world, id);
     ecs_add_pair(world, id, EcsChildOf, parent);
     ecs_set_name(world, id, name);
-    ecs_set_symbol(world, id, symbol);
 
     ecs_assert(ecs_get_name(world, id) != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -5269,6 +5263,9 @@ void flecs_bootstrap(
     flecs_bootstrap_entity(world, EcsOnTableCreate, "OnTableCreate", EcsFlecsCore);
     flecs_bootstrap_entity(world, EcsOnTableDelete, "OnTableDelete", EcsFlecsCore);
 
+    /* Constant tag */
+    flecs_bootstrap_entity(world, EcsConstant, "constant", EcsFlecsCore);
+
     /* Sync properties of ChildOf and Identifier with bootstrapped flags */
     ecs_add_pair(world, EcsChildOf, EcsOnDeleteTarget, EcsDelete);
     ecs_add_id(world, EcsChildOf, EcsTrait);
@@ -5524,14 +5521,6 @@ void flecs_bootstrap(
     flecs_bootstrap_entity_name(world);
     flecs_bootstrap_parent_component(world);
     flecs_bootstrap_spawner(world);
-
-    /* Register constant tag */
-    ecs_component(world, {
-        .entity = ecs_entity(world, { .id = EcsConstant,
-            .name = "constant", .symbol = "EcsConstant",
-            .add = ecs_ids(ecs_pair(EcsOnInstantiate, EcsDontInherit))
-        })
-    });
 
     ecs_set_scope(world, 0);
     ecs_set_name_prefix(world, NULL);
