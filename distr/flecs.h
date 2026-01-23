@@ -17666,6 +17666,7 @@ ecs_entity_t ecs_vector_init(
 typedef struct ecs_struct_desc_t {
     ecs_entity_t entity; /**< Existing entity to use for type (optional). */
     ecs_member_t members[ECS_MEMBER_DESC_CACHE_SIZE]; /**< Struct members. */
+    bool create_member_entities; /**< Create entities for members. */
 } ecs_struct_desc_t;
 
 /** Create a new struct type. 

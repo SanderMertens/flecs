@@ -25,12 +25,13 @@ void _meta_test_member(
     ecs_size_t offset) 
 {
     ecs_entity_t m = ecs_lookup_child(world, t, name);
-    test_assert(m != 0);
-    test_assert(ecs_has(world, m, EcsMember));
+    if (m) {
+        test_assert(ecs_has(world, m, EcsMember));
 
-    const EcsMember *mptr = ecs_get(world, m, EcsMember);
-    test_assert(mptr != NULL);
-    test_assert(mptr->type == type);
+        const EcsMember *mptr = ecs_get(world, m, EcsMember);
+        test_assert(mptr != NULL);
+        test_assert(mptr->type == type);
+    }
 
     const EcsStruct *sptr = ecs_get(world, t, EcsStruct);
     test_assert(sptr != NULL);
@@ -39,8 +40,12 @@ void _meta_test_member(
     int i, count = ecs_vec_count(&sptr->members);
 
     for (i = 0; i < count; i ++) {
-        if (members[i].member == m) {
+        if (m && (members[i].member == m)) {
             break;
+        } else {
+            if (!ecs_os_strcmp(name, members[i].name)) {
+                break;
+            }
         }
     }
 

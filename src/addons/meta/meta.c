@@ -82,6 +82,8 @@ int flecs_init_type(
 
     EcsType *meta_type = ecs_ensure(world, type, EcsType);
     if (meta_type->kind == 0) {
+        meta_type->kind = kind;
+
         /* Determine if this is an existing type or a reflection-defined type 
          * (runtime type) */
         meta_type->existing = ecs_has(world, type, EcsComponent);
@@ -154,7 +156,6 @@ int flecs_init_type(
         meta_type->partial = comp->size != size;
     }
 
-    meta_type->kind = kind;
     ecs_modified(world, type, EcsType);
 
     return 0;

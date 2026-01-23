@@ -443,7 +443,8 @@ void* flecs_defer_set(
     ecs_check(ti != NULL, ECS_INVALID_PARAMETER, 
         "provided component is not a type");
     ecs_assert(size == ti->size, ECS_INVALID_PARAMETER,
-        "mismatching size specified for component in ensure/emplace/set");
+        "mismatching size specified for component in ensure/emplace/set (%u vs %u)",
+            size, ti->size);
 
     /* Handle trivial set command (no hooks, OnSet observers) */
     if (id < FLECS_HI_COMPONENT_ID) {

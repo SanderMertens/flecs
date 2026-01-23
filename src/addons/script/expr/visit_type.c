@@ -1512,10 +1512,6 @@ int flecs_expr_member_visit_type(
     ecs_log_set_level(prev_log);
 
     node->node.type = ecs_meta_get_type(cur);
-#ifdef FLECS_DEBUG
-    const EcsMember *m = ecs_get(world, ecs_meta_get_member_id(cur), EcsMember);
-    ecs_assert(m != NULL, ECS_INTERNAL_ERROR, NULL);
-#endif
     node->offset = (uintptr_t)ecs_meta_get_ptr(cur);
 
     return 0;
