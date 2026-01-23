@@ -5992,7 +5992,8 @@ void* flecs_defer_set(
     ecs_check(ti != NULL, ECS_INVALID_PARAMETER, 
         "provided component is not a type");
     ecs_assert(size == ti->size, ECS_INVALID_PARAMETER,
-        "mismatching size specified for component in ensure/emplace/set");
+        "mismatching size specified for component in ensure/emplace/set (%u vs %u)",
+            size, ti->size);
 
     /* Handle trivial set command (no hooks, OnSet observers) */
     if (id < FLECS_HI_COMPONENT_ID) {
@@ -21808,18 +21809,19 @@ const ecs_entity_t ecs_id(ecs_entity_t) =           FLECS_HI_COMPONENT_ID + 97;
 const ecs_entity_t ecs_id(ecs_id_t) =               FLECS_HI_COMPONENT_ID + 98;
 
 /** Meta module component ids */
-const ecs_entity_t ecs_id(EcsType) =                FLECS_HI_COMPONENT_ID + 99;
-const ecs_entity_t ecs_id(EcsTypeSerializer) =      FLECS_HI_COMPONENT_ID + 100;
-const ecs_entity_t ecs_id(EcsPrimitive) =           FLECS_HI_COMPONENT_ID + 101;
-const ecs_entity_t ecs_id(EcsEnum) =                FLECS_HI_COMPONENT_ID + 102;
-const ecs_entity_t ecs_id(EcsBitmask) =             FLECS_HI_COMPONENT_ID + 103;
-const ecs_entity_t ecs_id(EcsConstants) =           FLECS_HI_COMPONENT_ID + 104;
-const ecs_entity_t ecs_id(EcsMember) =              FLECS_HI_COMPONENT_ID + 105;
-const ecs_entity_t ecs_id(EcsMemberRanges) =        FLECS_HI_COMPONENT_ID + 106;
-const ecs_entity_t ecs_id(EcsStruct) =              FLECS_HI_COMPONENT_ID + 107;
-const ecs_entity_t ecs_id(EcsArray) =               FLECS_HI_COMPONENT_ID + 108;
-const ecs_entity_t ecs_id(EcsVector) =              FLECS_HI_COMPONENT_ID + 109;
-const ecs_entity_t ecs_id(EcsOpaque) =              FLECS_HI_COMPONENT_ID + 110;
+const ecs_entity_t ecs_id(EcsPrimitive) =           FLECS_HI_COMPONENT_ID + 99;
+const ecs_entity_t ecs_id(EcsEnum) =                FLECS_HI_COMPONENT_ID + 100;
+const ecs_entity_t ecs_id(EcsBitmask) =             FLECS_HI_COMPONENT_ID + 101;
+const ecs_entity_t ecs_id(EcsConstants) =           FLECS_HI_COMPONENT_ID + 102;
+const ecs_entity_t ecs_id(EcsMember) =              FLECS_HI_COMPONENT_ID + 103;
+const ecs_entity_t ecs_id(EcsMemberRanges) =        FLECS_HI_COMPONENT_ID + 104;
+const ecs_entity_t ecs_id(EcsStruct) =              FLECS_HI_COMPONENT_ID + 105;
+const ecs_entity_t ecs_id(EcsArray) =               FLECS_HI_COMPONENT_ID + 106;
+const ecs_entity_t ecs_id(EcsVector) =              FLECS_HI_COMPONENT_ID + 107;
+const ecs_entity_t ecs_id(EcsOpaque) =              FLECS_HI_COMPONENT_ID + 108;
+const ecs_entity_t ecs_id(EcsTypeSerializer) =      FLECS_HI_COMPONENT_ID + 109;
+const ecs_entity_t ecs_id(EcsType) =                FLECS_HI_COMPONENT_ID + 110;
+
 const ecs_entity_t ecs_id(EcsUnit) =                FLECS_HI_COMPONENT_ID + 111;
 const ecs_entity_t ecs_id(EcsUnitPrefix) =          FLECS_HI_COMPONENT_ID + 112;
 const ecs_entity_t EcsQuantity =                    FLECS_HI_COMPONENT_ID + 113;
@@ -58015,6 +58017,8 @@ int flecs_init_type(
 
     EcsType *meta_type = ecs_ensure(world, type, EcsType);
     if (meta_type->kind == 0) {
+        meta_type->kind = kind;
+
         /* Determine if this is an existing type or a reflection-defined type 
          * (runtime type) */
         meta_type->existing = ecs_has(world, type, EcsComponent);
@@ -58087,7 +58091,6 @@ int flecs_init_type(
         meta_type->partial = comp->size != size;
     }
 
-    meta_type->kind = kind;
     ecs_modified(world, type, EcsType);
 
     return 0;
@@ -88595,35 +88598,35 @@ void flecs_set_struct_member(
 static
 int flecs_add_member_to_struct(
     ecs_world_t *world,
-    ecs_entity_t type,
-    ecs_entity_t member,
+    ecs_entity_t struct_type,
+    const char *name,
+    ecs_entity_t member_entity,
     EcsMember *m,
     EcsMemberRanges *ranges)
 {
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(type != 0, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(member != 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(struct_type != 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(m != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    const char *name = ecs_get_name(world, member);
     if (!name) {
-        char *path = ecs_get_path(world, type);
+        char *path = ecs_get_path(world, struct_type);
         ecs_err("member for struct '%s' does not have a name", path);
         ecs_os_free(path);
         return -1;
     }
 
     if (!m->type) {
-        char *path = ecs_get_path(world, member);
-        ecs_err("member '%s' does not have a type", path);
+        char *path = ecs_get_path(world, struct_type);
+        ecs_err("member '%s.%s' does not have a type", path, name);
         ecs_os_free(path);
         return -1;
     }
 
     if (ecs_get_typeid(world, m->type) == 0) {
-        char *path = ecs_get_path(world, member);
+        char *path = ecs_get_path(world, struct_type);
         char *ent_path = ecs_get_path(world, m->type);
-        ecs_err("member '%s.type' is '%s' which is not a type", path, ent_path);
+        ecs_err("member '%s.%s.type' is '%s' which is not a type", 
+            path, name, ent_path);
         ecs_os_free(path);
         ecs_os_free(ent_path);
         return -1;
@@ -88654,26 +88657,38 @@ int flecs_add_member_to_struct(
         }
     }
 
-    EcsStruct *s = ecs_ensure(world, type, EcsStruct);
+    EcsStruct *s = ecs_ensure(world, struct_type, EcsStruct);
     ecs_assert(s != NULL, ECS_INTERNAL_ERROR, NULL);
 
     /* First check if member is already added to struct */
     ecs_member_t *members = ecs_vec_first_t(&s->members, ecs_member_t);
     int32_t i, count = ecs_vec_count(&s->members);
+
+    bool has_member = false;
     for (i = 0; i < count; i ++) {
-        if (members[i].member == member) {
-            flecs_set_struct_member(&members[i], member, name, m->type, 
-                m->count, m->offset, unit, ranges);
-            break;
+        if (member_entity && members[i].member) {
+            if (members[i].member == member_entity) {
+                flecs_set_struct_member(&members[i], member_entity, name, 
+                    m->type, m->count, m->offset, unit, ranges);
+                break;
+            }
+        } else {
+            if (!ecs_os_strcmp(name, members[i].name)) {
+                flecs_set_struct_member(&members[i], member_entity, name, 
+                    m->type, m->count, m->offset, unit, ranges);
+                break;
+            }
         }
     }
 
+    has_member = i != count;
+
     /* If member wasn't added yet, add a new element to vector */
-    if (i == count) {
+    if (!has_member) {
         ecs_vec_init_if_t(&s->members, ecs_member_t);
         ecs_member_t *elem = ecs_vec_append_t(NULL, &s->members, ecs_member_t);
         elem->name = NULL;
-        flecs_set_struct_member(elem, member, name, m->type, 
+        flecs_set_struct_member(elem, member_entity, name, m->type, 
             m->count, m->offset, unit, ranges);
 
         /* Reobtain members array in case it was reallocated */
@@ -88719,11 +88734,10 @@ int flecs_add_member_to_struct(
             elem->offset = size;
 
             /* Synchronize offset with Member component */
-            if (elem->member == member) {
-                m->offset = elem->offset;
-            } else {
-                EcsMember *other = ecs_ensure(world, elem->member, EcsMember);
-                other->offset = elem->offset;
+            if (elem->member) {
+                EcsMember *member_data = ecs_ensure(
+                    world, elem->member, EcsMember);
+                member_data->offset = elem->offset;
             }
 
             size += member_size;
@@ -88767,7 +88781,7 @@ int flecs_add_member_to_struct(
         elem->size = member_size;
         size = elem->offset + member_size;
 
-        const EcsComponent* comp = ecs_get(world, type, EcsComponent);
+        const EcsComponent* comp = ecs_get(world, struct_type, EcsComponent);
         if (comp) {
             alignment = comp->alignment;
         } else {
@@ -88776,34 +88790,34 @@ int flecs_add_member_to_struct(
     }
 
     if (size == 0) {
-        ecs_err("struct '%s' has 0 size", ecs_get_name(world, type));
+        ecs_err("struct '%s' has 0 size", ecs_get_name(world, struct_type));
         return -1;
     }
 
     if (alignment == 0) {
-        ecs_err("struct '%s' has 0 alignment", ecs_get_name(world, type));
+        ecs_err("struct '%s' has 0 alignment", ecs_get_name(world, struct_type));
         return -1;
     }
 
     /* Align struct size to struct alignment */
     size = ECS_ALIGN(size, alignment);
 
-    ecs_modified(world, type, EcsStruct);
+    ecs_modified(world, struct_type, EcsStruct);
 
     /* Do this last as it triggers the update of EcsTypeSerializer */
-    if (flecs_init_type(world, type, EcsStructType, size, alignment)) {
+    if (flecs_init_type(world, struct_type, EcsStructType, size, alignment)) {
         return -1;
     }
 
     /* If current struct is also a member, assign to itself */
-    if (ecs_has(world, type, EcsMember)) {
-        EcsMember *type_mbr = ecs_ensure(world, type, EcsMember);
+    if (ecs_has(world, struct_type, EcsMember)) {
+        EcsMember *type_mbr = ecs_ensure(world, struct_type, EcsMember);
         ecs_assert(type_mbr != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        type_mbr->type = type;
+        type_mbr->type = struct_type;
         type_mbr->count = 0;
 
-        ecs_modified(world, type, EcsMember);
+        ecs_modified(world, struct_type, EcsMember);
     }
 
     return 0;
@@ -88819,13 +88833,14 @@ void flecs_set_member(ecs_iter_t *it) {
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = it->entities[i];
-        ecs_entity_t parent = ecs_get_target(world, e, EcsChildOf, 0);
-        if (!parent) {
+        ecs_entity_t struct_type = ecs_get_parent(world, e);
+        if (!struct_type) {
             ecs_err("missing parent for member '%s'", ecs_get_name(world, e));
             continue;
         }
 
-        flecs_add_member_to_struct(world, parent, e, &member[i], 
+        const char *name = ecs_get_name(world, e);
+        flecs_add_member_to_struct(world, struct_type, name, e, &member[i], 
             ranges ? &ranges[i] : NULL);
     }
 }
@@ -88849,7 +88864,8 @@ void flecs_set_member_ranges(ecs_iter_t *it) {
             continue;
         }
 
-        flecs_add_member_to_struct(world, parent, e, &member[i], 
+        const char *name = ecs_get_name(world, e);
+        flecs_add_member_to_struct(world, parent, name, e, &member[i], 
             &ranges[i]);
     }
 }
@@ -88940,94 +88956,99 @@ ecs_entity_t ecs_struct_init(
             goto error;
         }
 
-        ecs_entity_t m = ecs_new_from_path(world, t, m_desc->name);
-
-        ecs_set(world, m, EcsMember, {
+        EcsMember member = {
             .type = m_desc->type, 
             .count = m_desc->count,
             .offset = m_desc->offset,
             .unit = m_desc->unit,
             .use_offset = m_desc->use_offset
-        });
+        };
 
-        EcsMemberRanges *ranges = NULL;
+        EcsMemberRanges ranges = {0};
+        ecs_entity_t member_entity = 0;
+        bool create_member_entity = desc->create_member_entities;
+        bool ranges_set = false;
+
         const ecs_member_value_range_t *range = &m_desc->range;
         const ecs_member_value_range_t *error = &m_desc->error_range;
         const ecs_member_value_range_t *warning = &m_desc->warning_range;
+
         if (ECS_NEQ(range->min, range->max)) {
-            ranges = ecs_ensure(world, m, EcsMemberRanges);
+            ranges_set = true;
             if (range->min > range->max) {
-                char *member_name = ecs_get_path(world, m);
-                ecs_err("member '%s' has an invalid value range [%f..%f]",
-                    member_name, range->min, range->max);
-                ecs_os_free(member_name);
+                ecs_err("member '%s.%s' has an invalid value range [%f..%f]",
+                    flecs_errstr(ecs_get_path(world, t)), m_desc->name, 
+                    range->min, range->max);
                 goto error;
             }
-            ranges->value.min = range->min;
-            ranges->value.max = range->max;
+            ranges.value.min = range->min;
+            ranges.value.max = range->max;
         }
+
         if (ECS_NEQ(error->min, error->max)) {
+            ranges_set = true;
             if (error->min > error->max) {
-                char *member_name = ecs_get_path(world, m);
-                ecs_err("member '%s' has an invalid error range [%f..%f]",
-                    member_name, error->min, error->max);
-                ecs_os_free(member_name);
+                ecs_err("member '%s.%s' has an invalid error range [%f..%f]",
+                    flecs_errstr(ecs_get_path(world, t)), m_desc->name,
+                    error->min, error->max);
                 goto error;
             }
+
             if (flecs_member_range_overlaps(error, range)) {
-                char *member_name = ecs_get_path(world, m);
-                ecs_err("error range of member '%s' overlaps with value range",
-                    member_name);
-                ecs_os_free(member_name);
+                ecs_err("error range of member '%s.%s' overlaps with value range",
+                    flecs_errstr(ecs_get_path(world, t)), m_desc->name);
                 goto error;
             }
-            if (!ranges) {
-                ranges = ecs_ensure(world, m, EcsMemberRanges);
-            }
-            ranges->error.min = error->min;
-            ranges->error.max = error->max;
+
+            ranges.error.min = error->min;
+            ranges.error.max = error->max;
         }
 
         if (ECS_NEQ(warning->min, warning->max)) {
+            ranges_set = true;
             if (warning->min > warning->max) {
-                char *member_name = ecs_get_path(world, m);
-                ecs_err("member '%s' has an invalid warning range [%f..%f]",
-                    member_name, warning->min, warning->max);
-                ecs_os_free(member_name);
-                goto error;
-            }
-            if (flecs_member_range_overlaps(warning, range)) {
-                char *member_name = ecs_get_path(world, m);
-                ecs_err("warning range of member '%s' overlaps with value "
-                    "range", member_name);
-                ecs_os_free(member_name);
-                goto error;
-            }
-            if (flecs_member_range_overlaps(warning, error)) {
-                char *member_name = ecs_get_path(world, m);
-                ecs_err("warning range of member '%s' overlaps with error "
-                    "range", member_name);
-                ecs_os_free(member_name);
+                ecs_err("member '%s.%s' has an invalid warning range [%f..%f]",
+                    flecs_errstr(ecs_get_path(world, t)), m_desc->name,
+                    warning->min, warning->max);
                 goto error;
             }
 
-            if (!ranges) {
-                ranges = ecs_ensure(world, m, EcsMemberRanges);
+            if (flecs_member_range_overlaps(warning, range)) {
+                ecs_err("warning range of member '%s.%s' overlaps with value range",
+                    flecs_errstr(ecs_get_path(world, t)), m_desc->name);
+                goto error;
             }
-            ranges->warning.min = warning->min;
-            ranges->warning.max = warning->max;
+
+            if (flecs_member_range_overlaps(warning, error)) {
+                ecs_err("warning range of member '%s.%s' overlaps with error range",
+                    flecs_errstr(ecs_get_path(world, t)), m_desc->name);
+                goto error;
+            }
+
+            ranges.warning.min = warning->min;
+            ranges.warning.max = warning->max;
         }
 
-        if (ranges && !flecs_type_is_number(world, m_desc->type)) {
-            char *member_name = ecs_get_path(world, m);
-            ecs_err("member '%s' has an value/error/warning range, but is not a "
-                    "number", member_name);
-            ecs_os_free(member_name);
+        if (ranges_set && !flecs_type_is_number(world, m_desc->type)) {
+            ecs_err("member '%s.%s' has an value/error/warning range, but is "
+                "not a number", 
+                    flecs_errstr(ecs_get_path(world, t)), m_desc->name);
             goto error;
         }
 
-        if (ranges) {
-            ecs_modified(world, m, EcsMemberRanges);
+        if (ranges_set) {
+            create_member_entity = true;
+        }
+
+        if (!create_member_entity) {
+            flecs_add_member_to_struct(world, t, m_desc->name, 0, &member, NULL);
+        } else {
+            member_entity = ecs_new_from_path(world, t, m_desc->name);
+            ecs_set_ptr(world, member_entity, EcsMember, &member);
+        }
+
+        if (ranges_set) {
+            ecs_set_ptr(world, member_entity, EcsMemberRanges, &ranges);
         }
     }
 
@@ -95205,10 +95226,6 @@ int flecs_expr_member_visit_type(
     ecs_log_set_level(prev_log);
 
     node->node.type = ecs_meta_get_type(cur);
-#ifdef FLECS_DEBUG
-    const EcsMember *m = ecs_get(world, ecs_meta_get_member_id(cur), EcsMember);
-    ecs_assert(m != NULL, ECS_INTERNAL_ERROR, NULL);
-#endif
     node->offset = (uintptr_t)ecs_meta_get_ptr(cur);
 
     return 0;

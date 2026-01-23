@@ -655,9 +655,9 @@ void DeserializeFromJson_struct_enum(void) {
 }
 
 void DeserializeFromJson_struct_enum_underlying_i8(void) {
-    typedef enum {
+    enum E {
         Red, Blue, Green
-    } E;
+    };
 
     typedef struct {
         int8_t v;
@@ -5901,7 +5901,8 @@ void DeserializeFromJson_ser_deser_struct(void) {
             .members = {
                 {"x", ecs_id(ecs_i32_t)},
                 {"y", ecs_id(ecs_i32_t)},
-            }
+            },
+            .create_member_entities = true
         });
     }
 
@@ -5944,6 +5945,43 @@ void DeserializeFromJson_ser_deser_struct(void) {
             test_int(m->offset, 4);
             test_uint(m->type, ecs_id(ecs_i32_t));
         }
+    }
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_ser_deser_struct_no_member_entities(void) {
+    ecs_world_t *world = ecs_init();
+
+    {
+        ECS_COMPONENT(world, Position);
+        ecs_struct(world, {
+            .entity = ecs_id(Position),
+            .members = {
+                {"x", ecs_id(ecs_i32_t)},
+                {"y", ecs_id(ecs_i32_t)},
+            }
+        });
+    }
+
+    char *json = ecs_world_to_json(world, NULL);
+    test_assert(json != NULL);
+
+    ecs_fini(world);
+    world = ecs_init();
+
+    {
+        const char *r = ecs_world_from_json(world, json, NULL);
+        test_str(r, "");
+        ecs_os_free(json);
+
+        ecs_entity_t t = ecs_lookup(world, "Position");
+        test_assert(t != 0);
+
+        const EcsComponent *c = ecs_get(world, t, EcsComponent);
+        test_assert(c != NULL);
+        test_int(c->size, 8);
+        test_int(c->alignment, 4);
     }
 
     ecs_fini(world);

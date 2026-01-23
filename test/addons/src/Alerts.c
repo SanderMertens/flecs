@@ -1485,7 +1485,8 @@ void Alerts_member_range_warning(void) {
 
     ecs_struct(world, {
         .entity = ecs_id(Mass),
-        .members = {{ "value", ecs_id(ecs_f32_t), .warning_range = { 0, 100 }}}
+        .members = {{ "value", ecs_id(ecs_f32_t), .warning_range = { 0, 100 }}},
+        .create_member_entities = true
     });
 
     ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
@@ -1553,7 +1554,8 @@ void Alerts_member_range_error(void) {
 
     ecs_struct(world, {
         .entity = ecs_id(Mass),
-        .members = {{ "value", ecs_id(ecs_f32_t), .error_range = { 0, 100 }}}
+        .members = {{ "value", ecs_id(ecs_f32_t), .error_range = { 0, 100 }}},
+        .create_member_entities = true
     });
 
     ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
@@ -1621,7 +1623,8 @@ void Alerts_member_range_warning_error(void) {
 
     ecs_struct(world, {
         .entity = ecs_id(Mass),
-        .members = {{ "value", ecs_id(ecs_f32_t), .warning_range = {0, 50}, .error_range = { 0, 100 }}}
+        .members = {{ "value", ecs_id(ecs_f32_t), .warning_range = {0, 50}, .error_range = { 0, 100 }}},
+        .create_member_entities = true
     });
 
     ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
@@ -1717,7 +1720,8 @@ void Alerts_member_range_error_w_warning_severity(void) {
 
     ecs_struct(world, {
         .entity = ecs_id(Mass),
-        .members = {{ "value", ecs_id(ecs_f32_t), .error_range = { 0, 100 }}}
+        .members = {{ "value", ecs_id(ecs_f32_t), .error_range = { 0, 100 }}},
+        .create_member_entities = true
     });
 
     ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
@@ -1787,7 +1791,8 @@ void Alerts_member_range_error_w_severity_filter(void) {
 
     ecs_struct(world, {
         .entity = ecs_id(Mass),
-        .members = {{ "value", ecs_id(ecs_f32_t), .error_range = { 0, 100 }}}
+        .members = {{ "value", ecs_id(ecs_f32_t), .error_range = { 0, 100 }}},
+        .create_member_entities = true
     });
 
     ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
@@ -1882,7 +1887,8 @@ void Alerts_member_range_warning_w_severity_filter(void) {
 
     ecs_struct(world, {
         .entity = ecs_id(Mass),
-        .members = {{ "value", ecs_id(ecs_f32_t), .warning_range = { 0, 100 }}}
+        .members = {{ "value", ecs_id(ecs_f32_t), .warning_range = { 0, 100 }}},
+        .create_member_entities = true
     });
 
     ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
@@ -1977,7 +1983,8 @@ void Alerts_member_range_pair_id(void) {
 
     ecs_struct(world, {
         .entity = ecs_id(Mass),
-        .members = {{ "value", ecs_id(ecs_f32_t), .error_range = { 0, 100 }}}
+        .members = {{ "value", ecs_id(ecs_f32_t), .error_range = { 0, 100 }}},
+        .create_member_entities = true
     });
 
     ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
@@ -2047,7 +2054,8 @@ void Alerts_member_range_invalid_member(void) {
 
     ecs_struct(world, {
         .entity = ecs_id(Mass),
-        .members = {{ "value", ecs_id(ecs_f32_t), .error_range = { 0, 100 }}}
+        .members = {{ "value", ecs_id(ecs_f32_t), .error_range = { 0, 100 }}},
+        .create_member_entities = true
     });
 
     ecs_entity_t member = ecs_lookup(world, "Mass.value");
@@ -2073,7 +2081,8 @@ void Alerts_member_range_invalid_member_child(void) {
 
     ecs_struct(world, {
         .entity = ecs_id(Mass),
-        .members = {{ "value", ecs_id(ecs_f32_t), .error_range = { 0, 100 }}}
+        .members = {{ "value", ecs_id(ecs_f32_t), .error_range = { 0, 100 }}},
+        .create_member_entities = true
     });
 
     ecs_entity_t member = ecs_lookup(world, "Mass.value");
@@ -2102,7 +2111,8 @@ void Alerts_member_range_invalid_type(void) {
 
     ecs_struct(world, {
         .entity = ecs_id(Mass),
-        .members = {{ "value", ecs_id(ecs_f32_t), .error_range = { 0, 100 }}}
+        .members = {{ "value", ecs_id(ecs_f32_t), .error_range = { 0, 100 }}},
+        .create_member_entities = true
     });
 
     ecs_entity_t member = ecs_lookup(world, "Mass.value");
@@ -2129,12 +2139,14 @@ void Alerts_member_range_invalid_member_type(void) {
 
     ecs_struct(world, {
         .entity = ecs_id(Mass),
-        .members = {{ "value", ecs_id(ecs_f32_t) }}
+        .members = {{ "value", ecs_id(ecs_f32_t) }},
+        .create_member_entities = true
     });
 
     ecs_struct(world, {
         .entity = ecs_entity(world, { .name = "Foo" }),
-        .members = {{ "value", ecs_id(Mass) }}
+        .members = {{ "value", ecs_id(Mass) }},
+        .create_member_entities = true
     });
 
     ecs_entity_t member = ecs_lookup(world, "Foo.value");
@@ -2160,7 +2172,8 @@ void Alerts_member_range_no_range(void) {
 
     ecs_struct(world, {
         .entity = ecs_id(Mass),
-        .members = {{ "value", ecs_id(ecs_f32_t) }}
+        .members = {{ "value", ecs_id(ecs_f32_t) }},
+        .create_member_entities = true
     });
 
     ecs_entity_t member = ecs_lookup(world, "Mass.value");
@@ -2186,7 +2199,8 @@ void Alerts_member_range_alert_two_instances(void) {
 
     ecs_struct(world, {
         .entity = ecs_id(Mass),
-        .members = {{ "value", ecs_id(ecs_f32_t), .error_range = { 0, 100 }}}
+        .members = {{ "value", ecs_id(ecs_f32_t), .error_range = { 0, 100 }}},
+        .create_member_entities = true
     });
 
     ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
@@ -2303,7 +2317,8 @@ void Alerts_member_range_from_var(void) {
 
     ecs_struct(world, {
         .entity = ecs_id(Mass),
-        .members = {{ "value", ecs_id(ecs_f32_t), .error_range = { 0, 100 }}}
+        .members = {{ "value", ecs_id(ecs_f32_t), .error_range = { 0, 100 }}},
+        .create_member_entities = true
     });
 
     ecs_entity_t p = ecs_entity(world, { .name = "p" });
@@ -2373,7 +2388,8 @@ void Alerts_member_range_from_var_after_remove(void) {
 
     ecs_struct(world, {
         .entity = ecs_id(Mass),
-        .members = {{ "value", ecs_id(ecs_f32_t), .error_range = { 0, 100 }}}
+        .members = {{ "value", ecs_id(ecs_f32_t), .error_range = { 0, 100 }}},
+        .create_member_entities = true
     });
 
     ecs_entity_t p = ecs_entity(world, { .name = "p" });

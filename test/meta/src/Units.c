@@ -18,7 +18,8 @@ void Units_member_w_unit(void) {
     ecs_entity_t s = ecs_struct_init(world, &(ecs_struct_desc_t){
         .members = {
             { .name = "value", .type = ecs_id(ecs_f32_t), .unit = u }
-        }
+        },
+        .create_member_entities = true
     });
     test_assert(s != 0);
 
@@ -67,7 +68,9 @@ void Units_member_w_unit_type(void) {
     ecs_entity_t s = ecs_struct_init(world, &(ecs_struct_desc_t){
         .members = {
             { .name = "value", .type = u }
-        }
+        },
+        .create_member_entities = true
+        
     });
     test_assert(s != 0);
 
@@ -651,7 +654,8 @@ void Units_set_unit(void) {
     ecs_entity_t s = ecs_struct_init(world, &(ecs_struct_desc_t){
         .members = {
             { .name = "value", .type = ecs_id(ecs_f32_t), .unit = u }
-        }
+        },
+        .create_member_entities = true
     });
     test_assert(s != 0);
 
@@ -708,7 +712,8 @@ void Units_set_unit_w_derived(void) {
     ecs_entity_t s = ecs_struct_init(world, &(ecs_struct_desc_t){
         .members = {
             { .name = "value", .type = ecs_id(ecs_f32_t), .unit = u }
-        }
+        },
+        .create_member_entities = true
     });
     test_assert(s != 0);
 
@@ -773,7 +778,8 @@ void Units_set_unit_w_over(void) {
     ecs_entity_t s = ecs_struct_init(world, &(ecs_struct_desc_t){
         .members = {
             { .name = "value", .type = ecs_id(ecs_f32_t), .unit = u }
-        }
+        },
+        .create_member_entities = true
     });
     test_assert(s != 0);
 
@@ -842,7 +848,8 @@ void Units_set_unit_w_prefix(void) {
     ecs_entity_t s = ecs_struct_init(world, &(ecs_struct_desc_t){
         .members = {
             { .name = "value", .type = ecs_id(ecs_f32_t), .unit = u }
-        }
+        },
+        .create_member_entities = true
     });
     test_assert(s != 0);
 

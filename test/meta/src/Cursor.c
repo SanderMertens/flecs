@@ -5239,7 +5239,8 @@ void Cursor_get_member_id(void) {
         .members = {
             {"x", ecs_id(ecs_i32_t)},
             {"y", ecs_id(ecs_i32_t)}
-        }
+        },
+        .create_member_entities = true
     });
 
     test_assert(t != 0);

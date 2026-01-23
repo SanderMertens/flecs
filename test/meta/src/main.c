@@ -619,6 +619,7 @@ void DeserializeFromJson_ser_deser_long_name_256_chars(void);
 void DeserializeFromJson_ser_deser_w_alerts(void);
 void DeserializeFromJson_ser_deser_w_alerts_w_progress(void);
 void DeserializeFromJson_ser_deser_struct(void);
+void DeserializeFromJson_ser_deser_struct_no_member_entities(void);
 void DeserializeFromJson_ser_deser_anon_w_same_id_as_existing_named(void);
 void DeserializeFromJson_ser_deser_named_to_different_table(void);
 void DeserializeFromJson_ser_deser_named_child_to_different_table(void);
@@ -3526,6 +3527,10 @@ bake_test_case DeserializeFromJson_testcases[] = {
         DeserializeFromJson_ser_deser_struct
     },
     {
+        "ser_deser_struct_no_member_entities",
+        DeserializeFromJson_ser_deser_struct_no_member_entities
+    },
+    {
         "ser_deser_anon_w_same_id_as_existing_named",
         DeserializeFromJson_ser_deser_anon_w_same_id_as_existing_named
     },
@@ -5631,7 +5636,7 @@ static bake_test_suite suites[] = {
         "DeserializeFromJson",
         NULL,
         NULL,
-        144,
+        145,
         DeserializeFromJson_testcases
     },
     {

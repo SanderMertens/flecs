@@ -11,7 +11,8 @@ void Metrics_member_gauge_1_entity(void) {
         .members = {
             { "x", ecs_id(ecs_f32_t) },
             { "y", ecs_id(ecs_f32_t) },
-        }
+        },
+        .create_member_entities = true
     });
 
     ecs_entity_t m = ecs_metric(world, {
@@ -55,7 +56,8 @@ void Metrics_member_gauge_2_entities(void) {
         .members = {
             { "x", ecs_id(ecs_f32_t) },
             { "y", ecs_id(ecs_f32_t) },
-        }
+        },
+        .create_member_entities = true
     });
 
     ecs_entity_t m = ecs_metric(world, {
@@ -110,7 +112,8 @@ void Metrics_member_gauge_2_entities_1_existing(void) {
         .members = {
             { "x", ecs_id(ecs_f32_t) },
             { "y", ecs_id(ecs_f32_t) },
-        }
+        },
+        .create_member_entities = true
     });
 
     ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
@@ -166,7 +169,8 @@ void Metrics_member_gauge_2_entities_update(void) {
         .members = {
             { "x", ecs_id(ecs_f32_t) },
             { "y", ecs_id(ecs_f32_t) },
-        }
+        },
+        .create_member_entities = true
     });
 
     ecs_entity_t m = ecs_metric(world, {
@@ -255,7 +259,8 @@ void Metrics_member_gauge_w_remove(void) {
         .members = {
             { "x", ecs_id(ecs_f32_t) },
             { "y", ecs_id(ecs_f32_t) },
-        }
+        },
+        .create_member_entities = true
     });
 
     ecs_entity_t m = ecs_metric(world, {
@@ -334,7 +339,8 @@ void Metrics_member_gauge_w_clear(void) {
         .members = {
             { "x", ecs_id(ecs_f32_t) },
             { "y", ecs_id(ecs_f32_t) },
-        }
+        },
+        .create_member_entities = true
     });
 
     ecs_entity_t m = ecs_metric(world, {
@@ -413,7 +419,8 @@ void Metrics_member_gauge_w_delete(void) {
         .members = {
             { "x", ecs_id(ecs_f32_t) },
             { "y", ecs_id(ecs_f32_t) },
-        }
+        },
+        .create_member_entities = true
     });
 
     ecs_entity_t m = ecs_metric(world, {
@@ -1350,7 +1357,8 @@ void Metrics_member_counter(void) {
         .members = {
             { "x", ecs_id(ecs_f32_t) },
             { "y", ecs_id(ecs_f32_t) },
-        }
+        },
+        .create_member_entities = true
     });
 
     ecs_entity_t m = ecs_metric(world, {
@@ -1413,7 +1421,8 @@ void Metrics_member_auto_counter(void) {
         .members = {
             { "x", ecs_id(ecs_f32_t) },
             { "y", ecs_id(ecs_f32_t) },
-        }
+        },
+        .create_member_entities = true
     });
 
     ecs_entity_t m = ecs_metric(world, {
@@ -1647,7 +1656,8 @@ void Metrics_metric_description(void) {
         .members = {
             { "x", ecs_id(ecs_f32_t) },
             { "y", ecs_id(ecs_f32_t) },
-        }
+        },
+        .create_member_entities = true
     });
 
     ecs_entity_t m = ecs_metric(world, {
@@ -1787,7 +1797,8 @@ void Metrics_metric_instance_has_doc_name(void) {
         .members = {
             { "x", ecs_id(ecs_f32_t) },
             { "y", ecs_id(ecs_f32_t) },
-        }
+        },
+        .create_member_entities = true
     });
 
     ecs_entity_t m = ecs_metric(world, {
@@ -1844,7 +1855,8 @@ void Metrics_metric_nested_member(void) {
         .members = {
             { "x", ecs_id(ecs_f32_t) },
             { "y", ecs_id(ecs_f32_t) },
-        }
+        },
+        .create_member_entities = true
     });
 
     ecs_struct(world, {
@@ -1852,7 +1864,8 @@ void Metrics_metric_nested_member(void) {
         .members = {
             { "dummy", ecs_id(ecs_f32_t) },
             { "position", ecs_id(Point) },
-        }
+        },
+        .create_member_entities = true
     });
 
     ecs_entity_t m = ecs_metric(world, {
@@ -1911,7 +1924,8 @@ void Metrics_metric_nested_member_counter(void) {
         .members = {
             { "x", ecs_id(ecs_f32_t) },
             { "y", ecs_id(ecs_f32_t) },
-        }
+        },
+        .create_member_entities = true
     });
 
     ecs_struct(world, {
@@ -1919,7 +1933,8 @@ void Metrics_metric_nested_member_counter(void) {
         .members = {
             { "dummy", ecs_id(ecs_f32_t) },
             { "position", ecs_id(Point) },
-        }
+        },
+        .create_member_entities = true
     });
 
     ecs_entity_t m = ecs_metric(world, {
@@ -1978,7 +1993,8 @@ void Metrics_metric_nested_member_counter_increment(void) {
         .members = {
             { "x", ecs_id(ecs_f32_t) },
             { "y", ecs_id(ecs_f32_t) },
-        }
+        },
+        .create_member_entities = true
     });
 
     ecs_struct(world, {
@@ -1986,7 +2002,8 @@ void Metrics_metric_nested_member_counter_increment(void) {
         .members = {
             { "dummy", ecs_id(ecs_f32_t) },
             { "position", ecs_id(Point) },
-        }
+        },
+        .create_member_entities = true
     });
 
     ecs_entity_t m = ecs_metric(world, {
@@ -2059,7 +2076,8 @@ void Metrics_id_w_member_same_type(void) {
         .members = {
             { "x", ecs_id(ecs_f32_t) },
             { "y", ecs_id(ecs_f32_t) },
-        }
+        },
+        .create_member_entities = true
     });
 
     ecs_entity_t m = ecs_metric(world, {
@@ -2105,7 +2123,8 @@ void Metrics_id_w_member_mismatching_type(void) {
         .members = {
             { "x", ecs_id(ecs_f32_t) },
             { "y", ecs_id(ecs_f32_t) },
-        }
+        },
+        .create_member_entities = true
     });
 
     ecs_log_set_level(-4);
@@ -2133,7 +2152,8 @@ void Metrics_pair_member_rel_type(void) {
         .members = {
             { "x", ecs_id(ecs_f32_t) },
             { "y", ecs_id(ecs_f32_t) },
-        }
+        },
+        .create_member_entities = true
     });
 
     ecs_entity_t m = ecs_metric(world, {
@@ -2181,7 +2201,8 @@ void Metrics_pair_member_tgt_type(void) {
         .members = {
             { "x", ecs_id(ecs_f32_t) },
             { "y", ecs_id(ecs_f32_t) },
-        }
+        },
+        .create_member_entities = true
     });
 
     ecs_entity_t m = ecs_metric(world, {
@@ -2240,7 +2261,8 @@ void Metrics_pair_dotmember_rel_type(void) {
         .members = {
             { "x", ecs_id(ecs_f32_t) },
             { "y", ecs_id(ecs_f32_t) },
-        }
+        },
+        .create_member_entities = true
     });
 
     ecs_struct(world, {
@@ -2248,7 +2270,8 @@ void Metrics_pair_dotmember_rel_type(void) {
         .members = {
             { "dummy", ecs_id(ecs_f32_t) },
             { "position", ecs_id(Point) },
-        }
+        },
+        .create_member_entities = true
     });
 
     ecs_entity_t m = ecs_metric(world, {
@@ -2306,7 +2329,8 @@ void Metrics_pair_dotmember_tgt_type(void) {
         .members = {
             { "x", ecs_id(ecs_f32_t) },
             { "y", ecs_id(ecs_f32_t) },
-        }
+        },
+        .create_member_entities = true
     });
 
     ecs_struct(world, {
@@ -2314,7 +2338,8 @@ void Metrics_pair_dotmember_tgt_type(void) {
         .members = {
             { "dummy", ecs_id(ecs_f32_t) },
             { "position", ecs_id(Point) },
-        }
+        },
+        .create_member_entities = true
     });
 
     ecs_entity_t m = ecs_metric(world, {
@@ -2363,7 +2388,8 @@ void Metrics_pair_member_counter_increment(void) {
         .members = {
             { "x", ecs_id(ecs_f32_t) },
             { "y", ecs_id(ecs_f32_t) },
-        }
+        },
+        .create_member_entities = true
     });
 
     ecs_entity_t m = ecs_metric(world, {
