@@ -3173,6 +3173,20 @@ static void Opaque_string_set(void *ptr, const char *value) {
     ((Opaque_string*)ptr)->value = ecs_os_strdup(value);
 }
 
+typedef struct Opaque_entity {
+    ecs_world_t *world;
+    ecs_entity_t value;
+} Opaque_entity;
+
+typedef struct Struct_w_opaque_entity {
+    Opaque_entity entity;
+} Struct_w_opaque_entity;
+
+static void Opaque_entity_set(void *ptr, ecs_world_t *world, ecs_entity_t value) {
+    ((Opaque_entity*)ptr)->world = world;
+    ((Opaque_entity*)ptr)->value = value;
+}
+
 void Deserialize_struct_w_opaque_member(void) {
     ecs_world_t *world = ecs_init();
 
@@ -3225,6 +3239,66 @@ void Deserialize_opaque_string(void) {
 
     test_str(v.value, "foobar");
     ecs_os_free(v.value);
+
+    ecs_fini(world);
+}
+
+void Deserialize_opaque_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Opaque_entity);
+
+    ecs_opaque(world, {
+        .entity = ecs_id(Opaque_entity),
+        .type.as_type = ecs_id(ecs_entity_t),
+        .type.assign_entity = Opaque_entity_set
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "Foo" });
+
+    Opaque_entity v;
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world, 
+        "Foo", &ecs_value_ptr(Opaque_entity, &v), &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');        
+
+    test_assert(v.world == world);
+    test_uint(v.value, e);
+
+    ecs_fini(world);
+}
+
+void Deserialize_struct_w_opaque_entity_member(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Opaque_entity);
+    ECS_COMPONENT(world, Struct_w_opaque_entity);
+
+    ecs_opaque(world, {
+        .entity = ecs_id(Opaque_entity),
+        .type.as_type = ecs_id(ecs_entity_t),
+        .type.assign_entity = Opaque_entity_set
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(Struct_w_opaque_entity),
+        .members = {
+            {"entity", ecs_id(Opaque_entity)},
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "Foo" });
+
+    Struct_w_opaque_entity v;
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world, 
+        "{entity: Foo}", &ecs_value_ptr(Struct_w_opaque_entity, &v), &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_assert(v.entity.world == world);
+    test_uint(v.entity.value, e);
 
     ecs_fini(world);
 }

@@ -161,13 +161,6 @@ ecs_meta_op_kind_t flecs_meta_primitive_to_op_kind(
 }
 
 static
-ecs_size_t flecs_meta_type_size(ecs_world_t *world, ecs_entity_t type) {
-    const EcsComponent *comp = ecs_get(world, type, EcsComponent);
-    ecs_assert(comp != NULL, ECS_INTERNAL_ERROR, NULL);
-    return comp->size;
-}
-
-static
 ecs_meta_op_t* flecs_meta_ops_add(ecs_vec_t *ops, ecs_meta_op_kind_t kind) {
     ecs_meta_op_t *op = ecs_vec_append_t(NULL, ops, ecs_meta_op_t);
     op->kind = kind;
@@ -323,7 +316,7 @@ int flecs_meta_serialize_array_inline(
         ecs_meta_op_t *op = flecs_meta_ops_add(ops, EcsOpPushArray);
         op->type = elem_type;
         op->type_info = NULL;
-        op->elem_size = flecs_meta_type_size(world, elem_type);
+        op->elem_size = flecs_type_size(world, elem_type);
         op->offset = offset;
     }
 
@@ -379,7 +372,7 @@ int flecs_meta_serialize_vector_type(
         op->type = type;
         op->type_info = ecs_get_type_info(world, type);
         ecs_assert(op->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
-        op->elem_size = flecs_meta_type_size(world, ptr->type);
+        op->elem_size = flecs_type_size(world, ptr->type);
     }
 
     if (flecs_meta_serialize_type(world, ptr->type, 0, ops) != 0) {

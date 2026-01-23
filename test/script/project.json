@@ -1128,6 +1128,8 @@
                 "opaque_struct_w_member_reverse",
                 "struct_w_opaque_member",
                 "opaque_string",
+                "opaque_entity",
+                "struct_w_opaque_entity_member",
                 "opaque_vector_i32_0",
                 "opaque_vector_i32_2",
                 "opaque_vector_i32_0_into_2",

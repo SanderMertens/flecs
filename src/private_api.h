@@ -202,6 +202,10 @@ const ecs_type_info_t* flecs_determine_type_info_for_component(
     const ecs_world_t *world,
     ecs_id_t component);
 
+ecs_size_t flecs_type_size(
+    ecs_world_t *world, 
+    ecs_entity_t type);
+
 /* Utility for using allocated strings in assert/error messages */
 const char* flecs_errstr(
     char *str);
