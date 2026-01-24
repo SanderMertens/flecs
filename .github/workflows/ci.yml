@@ -7,1082 +7,1082 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  typos:
-    runs-on: ubuntu-latest
-    name: typos
-    steps:
-      - uses: actions/checkout@v4
-      - uses: crate-ci/typos@master
+  # typos:
+  #   runs-on: ubuntu-latest
+  #   name: typos
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: crate-ci/typos@master
 
-  build-linux:
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: install bake
-        run: |
-          git clone https://github.com/SanderMertens/bake
-          make -C bake/build-$(uname)
-          bake/bake setup
-
-      - name: build flecs
-        run: |
-          bake --strict
-
-  build-macos:
-    runs-on: macos-latest
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: install bake
-        run: |
-          git clone https://github.com/SanderMertens/bake
-          make -C bake/build-$(uname)
-          bake/bake setup
-
-      - name: build flecs
-        run: |
-          bake --strict
-
-  build-windows:
-    runs-on: windows-latest
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ilammy/msvc-dev-cmd@v1
-      - name: install bake
-        run: |
-          git clone https://github.com/SanderMertens/bake
-          cd bake\build-Windows
-          nmake
-          cd ..
-          ./bake setup --local
-
-      - name: build flecs (debug)
-        run: bake/bake --strict --cfg debug
-        
-      - name: build flecs (release)  
-        run: bake/bake --strict --cfg release
-
-      - name: build examples (debug)
-        run: bake/bake examples --strict --cfg debug
-
-      - name: build examples (release)
-        run: bake/bake examples --strict --cfg debug
-
-  build-msys:
-    runs-on: windows-latest
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - { sys: mingw64 }
-          - { sys: mingw32 }
-          - { sys: ucrt64 }
-          - { sys: clang64 }
-
-    defaults:
-      run:
-        shell: msys2 {0}
-
-    steps:
-      - uses: actions/checkout@v4
-      - uses: msys2/setup-msys2@v2
-        with:
-          msystem: ${{matrix.sys}}
-          update: true
-          install: >-
-            curl
-            git
-          pacboy: >-
-            toolchain:p
-            cmake:p
-
-      - name: create cmake build folders
-        run: |
-          mkdir cmake_build
-          mkdir examples/c/cmake_build
-          mkdir examples/cpp/cmake_build
-
-      - name: build flecs
-        working-directory: cmake_build
-        run: |
-          cmake -G "MinGW Makefiles" -DFLECS_STRICT=ON ..
-          cmake --build . -j 4
-
-      - name: build c examples
-        working-directory: examples/c/cmake_build
-        run: |
-          cmake -G "MinGW Makefiles" -DFLECS_STRICT=ON ..
-          cmake --build . -j 4
-
-      - name: build c++ examples
-        working-directory: examples/cpp/cmake_build
-        run: |
-          cmake -G "MinGW Makefiles" -DFLECS_STRICT=ON ..
-          cmake --build . -j 4
-
-  build:
-    needs: build-linux
-    runs-on: ${{ matrix.target.os }}
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      matrix:
-        target:
-          - { os: ubuntu-22.04, cc: gcc-9,  cxx: g++-9 }
-          - { os: ubuntu-22.04, cc: gcc-10, cxx: g++-10 }
-          - { os: ubuntu-latest, cc: gcc-11, cxx: g++-11 }
-          - { os: ubuntu-latest, cc: gcc-12, cxx: g++-12 }
-          - { os: ubuntu-24.04, cc: gcc-13, cxx: g++-13 }
-          - { os: ubuntu-24.04, cc: gcc-14, cxx: g++-14 }
-          - { os: ubuntu-latest, cc: clang-14, cxx: clang++-14 }
-          - { os: ubuntu-latest, cc: clang-15, cxx: clang++-15 }
-          - { os: ubuntu-latest, cc: clang-16, cxx: clang++-16 }
-          - { os: ubuntu-latest, cc: clang-17, cxx: clang++-17 }
-          - { os: ubuntu-latest, cc: clang-18, cxx: clang++-18 }
-
-    env:
-      CC: ${{ matrix.target.cc }}
-      CXX: ${{ matrix.target.cxx }}
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: install compiler
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y ${{ matrix.target.cc }}
-          sudo apt-get install -y ${{ matrix.target.cxx }}
-      
-      - name: install bake
-        run: |
-          git clone https://github.com/SanderMertens/bake
-          make -C bake/build-$(uname)
-          bake/bake setup
-
-      - name: build flecs (debug)
-        run: |
-          bake --strict --cfg debug
-
-      - name: build flecs (release)
-        run: |          
-          bake --strict --cfg release
-
-      - name: build examples (debug)
-        run: |
-          bake examples/c --strict --cfg debug
-          bake examples/cpp --strict --cfg debug
-          bake examples/os_api --strict --cfg debug
-
-      - name: build examples (release)
-        run: |
-          bake examples/c --strict --cfg release
-          bake examples/cpp --strict --cfg release
-          bake examples/os_api --strict --cfg release
-
-  build-cmake:
-    needs: [build-linux, build-macos]
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ ubuntu-latest, macos-14, macos-latest ]
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: create cmake build folders
-        run: |
-          mkdir cmake_build
-          mkdir examples/c/cmake_build
-          mkdir examples/cpp/cmake_build
-
-      - name: build flecs
-        working-directory: cmake_build
-        run: |
-          cmake -DFLECS_STRICT=ON ..
-          cmake --build . -j 4
-
-      - name: build c examples
-        working-directory: examples/c/cmake_build
-        run: |
-          cmake -DFLECS_STRICT=ON ..
-          cmake --build . -j 4
-
-      - name: build c++ examples
-        working-directory: examples/cpp/cmake_build
-        run: |
-          cmake -DFLECS_STRICT=ON ..
-          cmake --build . -j 4
-
-  build-cmake-windows:
-    needs: build-windows
-    runs-on: windows-latest
-    timeout-minutes: 30
-
-    strategy:
-      matrix:
-        toolset: [default, v142, clang-cl]
-        include:
-          - toolset: v142
-            toolset_option: -T"v142"
-          - toolset: clang-cl
-            toolset_option: -T"ClangCl"
-
-    steps:
-      - uses: actions/checkout@v4
-      - name: create cmake build folders
-        run: |
-          mkdir cmake_build
-          mkdir examples/c/cmake_build
-          mkdir examples/cpp/cmake_build
-
-      - name: build flecs
-        working-directory: cmake_build
-        run: |
-          cmake ${{ matrix.toolset_option }} -DFLECS_STRICT=ON ..
-          cmake --build . -j 4
-
-      - name: build c examples
-        working-directory: examples/c/cmake_build
-        run: |
-          cmake ${{ matrix.toolset_option }} -DFLECS_STRICT=ON ..
-          cmake --build . -j 4
-
-      - name: build c++ examples
-        working-directory: examples/cpp/cmake_build
-        run: |
-          cmake ${{ matrix.toolset_option }} -DFLECS_STRICT=ON ..
-          cmake --build . -j 4
-
-  build-meson:
-    needs: build-linux
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: install meson
-        run: |
-          pip3 install meson
-          pip3 install ninja==1.10.2.4
-        
-      - name: create build folder
-        run: meson meson_build
-
-      - name: build flecs
-        working-directory: meson_build
-        run: |
-          meson compile
-
-  # build-bazel-linux:
-  #   needs: build-linux
+  # build-linux:
   #   runs-on: ubuntu-latest
   #   timeout-minutes: 30
+  #   strategy:
+  #     fail-fast: false
 
   #   steps:
   #     - uses: actions/checkout@v4
+      
+  #     - name: install bake
+  #       run: |
+  #         git clone https://github.com/SanderMertens/bake
+  #         make -C bake/build-$(uname)
+  #         bake/bake setup
+
   #     - name: build flecs
-  #       run: bazel build //:flecs
-  #     - name: build examples
-  #       run: bazel build //examples/...
-  #     - name: run tests
-  #       run: bazel test --test_output=all //test/...
-    
-  # build-bazel-windows:
+  #       run: |
+  #         bake --strict
+
+  # build-macos:
+  #   runs-on: macos-latest
+  #   timeout-minutes: 30
+  #   strategy:
+  #     fail-fast: false
+
+  #   steps:
+  #     - uses: actions/checkout@v4
+      
+  #     - name: install bake
+  #       run: |
+  #         git clone https://github.com/SanderMertens/bake
+  #         make -C bake/build-$(uname)
+  #         bake/bake setup
+
+  #     - name: build flecs
+  #       run: |
+  #         bake --strict
+
+  # build-windows:
+  #   runs-on: windows-latest
+  #   timeout-minutes: 30
+  #   strategy:
+  #     fail-fast: false
+
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: ilammy/msvc-dev-cmd@v1
+  #     - name: install bake
+  #       run: |
+  #         git clone https://github.com/SanderMertens/bake
+  #         cd bake\build-Windows
+  #         nmake
+  #         cd ..
+  #         ./bake setup --local
+
+  #     - name: build flecs (debug)
+  #       run: bake/bake --strict --cfg debug
+        
+  #     - name: build flecs (release)  
+  #       run: bake/bake --strict --cfg release
+
+  #     - name: build examples (debug)
+  #       run: bake/bake examples --strict --cfg debug
+
+  #     - name: build examples (release)
+  #       run: bake/bake examples --strict --cfg debug
+
+  # build-msys:
+  #   runs-on: windows-latest
+  #   timeout-minutes: 30
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       include:
+  #         - { sys: mingw64 }
+  #         - { sys: mingw32 }
+  #         - { sys: ucrt64 }
+  #         - { sys: clang64 }
+
+  #   defaults:
+  #     run:
+  #       shell: msys2 {0}
+
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: msys2/setup-msys2@v2
+  #       with:
+  #         msystem: ${{matrix.sys}}
+  #         update: true
+  #         install: >-
+  #           curl
+  #           git
+  #         pacboy: >-
+  #           toolchain:p
+  #           cmake:p
+
+  #     - name: create cmake build folders
+  #       run: |
+  #         mkdir cmake_build
+  #         mkdir examples/c/cmake_build
+  #         mkdir examples/cpp/cmake_build
+
+  #     - name: build flecs
+  #       working-directory: cmake_build
+  #       run: |
+  #         cmake -G "MinGW Makefiles" -DFLECS_STRICT=ON ..
+  #         cmake --build . -j 4
+
+  #     - name: build c examples
+  #       working-directory: examples/c/cmake_build
+  #       run: |
+  #         cmake -G "MinGW Makefiles" -DFLECS_STRICT=ON ..
+  #         cmake --build . -j 4
+
+  #     - name: build c++ examples
+  #       working-directory: examples/cpp/cmake_build
+  #       run: |
+  #         cmake -G "MinGW Makefiles" -DFLECS_STRICT=ON ..
+  #         cmake --build . -j 4
+
+  # build:
+  #   needs: build-linux
+  #   runs-on: ${{ matrix.target.os }}
+  #   timeout-minutes: 30
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       target:
+  #         - { os: ubuntu-22.04, cc: gcc-9,  cxx: g++-9 }
+  #         - { os: ubuntu-22.04, cc: gcc-10, cxx: g++-10 }
+  #         - { os: ubuntu-latest, cc: gcc-11, cxx: g++-11 }
+  #         - { os: ubuntu-latest, cc: gcc-12, cxx: g++-12 }
+  #         - { os: ubuntu-24.04, cc: gcc-13, cxx: g++-13 }
+  #         - { os: ubuntu-24.04, cc: gcc-14, cxx: g++-14 }
+  #         - { os: ubuntu-latest, cc: clang-14, cxx: clang++-14 }
+  #         - { os: ubuntu-latest, cc: clang-15, cxx: clang++-15 }
+  #         - { os: ubuntu-latest, cc: clang-16, cxx: clang++-16 }
+  #         - { os: ubuntu-latest, cc: clang-17, cxx: clang++-17 }
+  #         - { os: ubuntu-latest, cc: clang-18, cxx: clang++-18 }
+
+  #   env:
+  #     CC: ${{ matrix.target.cc }}
+  #     CXX: ${{ matrix.target.cxx }}
+
+  #   steps:
+  #     - uses: actions/checkout@v4
+
+  #     - name: install compiler
+  #       run: |
+  #         sudo apt-get update
+  #         sudo apt-get install -y ${{ matrix.target.cc }}
+  #         sudo apt-get install -y ${{ matrix.target.cxx }}
+      
+  #     - name: install bake
+  #       run: |
+  #         git clone https://github.com/SanderMertens/bake
+  #         make -C bake/build-$(uname)
+  #         bake/bake setup
+
+  #     - name: build flecs (debug)
+  #       run: |
+  #         bake --strict --cfg debug
+
+  #     - name: build flecs (release)
+  #       run: |          
+  #         bake --strict --cfg release
+
+  #     - name: build examples (debug)
+  #       run: |
+  #         bake examples/c --strict --cfg debug
+  #         bake examples/cpp --strict --cfg debug
+  #         bake examples/os_api --strict --cfg debug
+
+  #     - name: build examples (release)
+  #       run: |
+  #         bake examples/c --strict --cfg release
+  #         bake examples/cpp --strict --cfg release
+  #         bake examples/os_api --strict --cfg release
+
+  # build-cmake:
+  #   needs: [build-linux, build-macos]
+  #   runs-on: ${{ matrix.os }}
+  #   timeout-minutes: 30
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       os: [ ubuntu-latest, macos-14, macos-latest ]
+
+  #   steps:
+  #     - uses: actions/checkout@v4
+
+  #     - name: create cmake build folders
+  #       run: |
+  #         mkdir cmake_build
+  #         mkdir examples/c/cmake_build
+  #         mkdir examples/cpp/cmake_build
+
+  #     - name: build flecs
+  #       working-directory: cmake_build
+  #       run: |
+  #         cmake -DFLECS_STRICT=ON ..
+  #         cmake --build . -j 4
+
+  #     - name: build c examples
+  #       working-directory: examples/c/cmake_build
+  #       run: |
+  #         cmake -DFLECS_STRICT=ON ..
+  #         cmake --build . -j 4
+
+  #     - name: build c++ examples
+  #       working-directory: examples/cpp/cmake_build
+  #       run: |
+  #         cmake -DFLECS_STRICT=ON ..
+  #         cmake --build . -j 4
+
+  # build-cmake-windows:
   #   needs: build-windows
   #   runs-on: windows-latest
   #   timeout-minutes: 30
 
+  #   strategy:
+  #     matrix:
+  #       toolset: [default, v142, clang-cl]
+  #       include:
+  #         - toolset: v142
+  #           toolset_option: -T"v142"
+  #         - toolset: clang-cl
+  #           toolset_option: -T"ClangCl"
+
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: create cmake build folders
+  #       run: |
+  #         mkdir cmake_build
+  #         mkdir examples/c/cmake_build
+  #         mkdir examples/cpp/cmake_build
+
+  #     - name: build flecs
+  #       working-directory: cmake_build
+  #       run: |
+  #         cmake ${{ matrix.toolset_option }} -DFLECS_STRICT=ON ..
+  #         cmake --build . -j 4
+
+  #     - name: build c examples
+  #       working-directory: examples/c/cmake_build
+  #       run: |
+  #         cmake ${{ matrix.toolset_option }} -DFLECS_STRICT=ON ..
+  #         cmake --build . -j 4
+
+  #     - name: build c++ examples
+  #       working-directory: examples/cpp/cmake_build
+  #       run: |
+  #         cmake ${{ matrix.toolset_option }} -DFLECS_STRICT=ON ..
+  #         cmake --build . -j 4
+
+  # build-meson:
+  #   needs: build-linux
+  #   runs-on: ubuntu-latest
+  #   timeout-minutes: 30
+  #   strategy:
+  #     fail-fast: false
+
+  #   steps:
+  #     - uses: actions/checkout@v4
+
+  #     - name: install meson
+  #       run: |
+  #         pip3 install meson
+  #         pip3 install ninja==1.10.2.4
+        
+  #     - name: create build folder
+  #       run: meson meson_build
+
+  #     - name: build flecs
+  #       working-directory: meson_build
+  #       run: |
+  #         meson compile
+
+  # # build-bazel-linux:
+  # #   needs: build-linux
+  # #   runs-on: ubuntu-latest
+  # #   timeout-minutes: 30
+
+  # #   steps:
+  # #     - uses: actions/checkout@v4
+  # #     - name: build flecs
+  # #       run: bazel build //:flecs
+  # #     - name: build examples
+  # #       run: bazel build //examples/...
+  # #     - name: run tests
+  # #       run: bazel test --test_output=all //test/...
+    
+  # # build-bazel-windows:
+  # #   needs: build-windows
+  # #   runs-on: windows-latest
+  # #   timeout-minutes: 30
+
+  # #   steps:
+  # #     - uses: actions/checkout@v4
+  # #     - name: build flecs
+  # #       run: bazel build //:flecs
+  # #     - name: build examples
+  # #       run: bazel build //examples/...
+  # #     - name: run tests
+  # #       run: bazel test --test_output=all //test/...
+
+  # build-custom:
+  #   needs: build-linux
+  #   runs-on: ubuntu-latest
+  #   timeout-minutes: 30
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       compiler: [ gcc, clang ]
+
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: Install bake
+  #       run: |
+  #         git clone https://github.com/SanderMertens/bake
+  #         make -C bake/build-$(uname)
+  #         bake/bake setup
+
+  #     - name: FLECS_SOFT_ASSERT flag
+  #       run: |
+  #         bake rebuild --strict -D FLECS_SOFT_ASSERT
+  #         bake rebuild --strict --cfg release -D FLECS_SOFT_ASSERT
+
+  #     - name: FLECS_KEEP_ASSERT flag
+  #       run: |
+  #         bake rebuild --strict -D FLECS_KEEP_ASSERT
+  #         bake rebuild --strict --cfg release -D FLECS_KEEP_ASSERT
+
+  #     - name: no extensions
+  #       run: |
+  #         bake rebuild --strict -D FLECS_CUSTOM_BUILD
+  #         bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD
+
+  #     - name: FLECS_SYSTEM
+  #       run: |
+  #         bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_SYSTEM
+  #         bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_SYSTEM
+
+  #     - name: FLECS_PIPELINE
+  #       run: |
+  #         bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_PIPELINE
+  #         bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_PIPELINE
+
+  #     - name: FLECS_TIMER
+  #       run: |
+  #         bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_TIMER
+  #         bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_TIMER
+
+  #     - name: FLECS_MODULE
+  #       run: |
+  #         bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_MODULE
+  #         bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_MODULE
+
+  #     - name: FLECS_STATS
+  #       run: |
+  #         bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_STATS
+  #         bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_STATS
+
+  #     - name: FLECS_SCRIPT
+  #       run: |
+  #         bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_SCRIPT
+  #         bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_SCRIPT
+
+  #     - name: FLECS_META
+  #       run: |
+  #         bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_META
+  #         bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_META
+
+  #     - name: FLECS_JSON
+  #       run: |
+  #         bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_JSON
+  #         bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_JSON
+
+  #     - name: FLECS_DOC
+  #       run: |
+  #         bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_DOC
+  #         bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_DOC
+
+  #     - name: FLECS_LOG
+  #       run: |
+  #         bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_LOG
+  #         bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_LOG
+
+  #     - name: FLECS_APP
+  #       run: |
+  #         bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_APP
+  #         bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_APP
+
+  #     - name: FLECS_OS_API_IMPL
+  #       run: |
+  #         bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_OS_API_IMPL
+  #         bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_OS_API_IMPL
+
+  #     - name: FLECS_HTTP
+  #       run: |
+  #         bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_HTTP
+  #         bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_HTTP
+
+  #     - name: FLECS_REST
+  #       run: |
+  #         bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_REST
+  #         bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_REST
+
+  #     - name: FLECS_NO_LOG
+  #       run: |
+  #         bake rebuild --strict -D FLECS_NO_LOG
+  #         bake rebuild --strict --cfg release -D FLECS_NO_LOG
+
+  #     - name: FLECS_DEFAULT
+  #       run: |
+  #         bake rebuild --strict
+  #         bake rebuild --strict --cfg release
+
+  #     - name: custom_build tests
+  #       run: |
+  #         bake rebuild test/custom_builds --strict
+  #         bake runall test/custom_builds
+
+  # build-amalgamated:
+  #   needs: build-linux
+  #   runs-on: ubuntu-latest
+  #   timeout-minutes: 30
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       compiler: [ gcc, clang ]
+
   #   steps:
   #     - uses: actions/checkout@v4
   #     - name: build flecs
-  #       run: bazel build //:flecs
-  #     - name: build examples
-  #       run: bazel build //examples/...
+  #       run: ${{ matrix.compiler }} distr/flecs.c --shared -fPIC -pedantic -Wall -Wextra -Wno-unused-parameter -Werror -Wshadow -Wconversion -Wno-missing-field-initializers
+
+  # build-emscripten:
+  #   needs: build-linux
+  #   runs-on: ubuntu-latest
+  #   timeout-minutes: 30
+  #   strategy:
+  #     fail-fast: false
+
+  #   steps:
+  #     - uses: actions/checkout@v4
+      
+  #     - name: Setup Emscripten
+  #       uses: mymindstorm/setup-emsdk@v14
+  #       with:
+  #         version: latest
+  #         actions-cache-folder: 'emsdk-cache'
+
+  #     - name: Build flecs (debug)
+  #       run: |
+  #         emcmake cmake -B build_debug -DCMAKE_BUILD_TYPE=Debug -DFLECS_STRICT=ON
+  #         emmake make -C build_debug -j 4
+
+  #     - name: Build flecs (release)
+  #       run: |
+  #         emcmake cmake -B build_release -DCMAKE_BUILD_TYPE=Release -DFLECS_STRICT=ON
+  #         emmake make -C build_release -j 4
+
+  #     - name: Build C examples
+  #       run: |
+  #         cd examples/c
+  #         emcmake cmake -B build -DFLECS_STRICT=ON
+  #         emmake make -C build -j 4
+
+  #     - name: Build C++ examples
+  #       run: |
+  #         cd examples/cpp
+  #         emcmake cmake -B build -DFLECS_STRICT=ON
+  #         emmake make -C build -j 4
+
+  # test-emscripten:
+  #   needs: build-linux
+  #   runs-on: ubuntu-latest
+  #   timeout-minutes: 30
+  #   strategy:
+  #     fail-fast: false
+
+  #   steps:
+  #     - uses: actions/checkout@v4
+      
+  #     - name: Clone bake repository for test driver
+  #       run: |
+  #         git clone https://github.com/SanderMertens/bake
+  #         make -C bake/build-$(uname) CFLAGS="-fPIC"
+  #         bake/bake setup
+
+  #     - name: Setup Emscripten
+  #       uses: mymindstorm/setup-emsdk@v14
+  #       with:
+  #         version: latest
+  #         actions-cache-folder: 'emsdk-cache'
+
+  #     - name: Build tests
+  #       run: |
+  #         mkdir -p test/build
+  #         mkdir -p test/build/include/sys && \
+  #         echo "#include <stdlib.h>
+  #         __attribute__((weak)) int backtrace(void **buffer, int size) { return 0; }
+  #         __attribute__((weak)) char **backtrace_symbols(void *const *buffer, int size) { return NULL; }
+  #         __attribute__((weak)) void backtrace_symbols_fd(void *const *buffer, int size, int fd) {}" > test/build/include/execinfo.h && \
+  #         echo "#include <unistd.h>
+  #         #define PTRACE_TRACEME 0
+  #         #define PTRACE_ATTACH 1
+  #         #define PTRACE_DETACH 2
+  #         __attribute__((weak)) long ptrace(int request, pid_t pid, void *addr, void *data) { return 0; }" > test/build/include/sys/ptrace.h && \
+  #         export CFLAGS="-isystem $(pwd)/test/build/include -D__linux__ -D__x86_64__ -pthread" && \
+  #         export CXXFLAGS="-isystem $(pwd)/test/build/include -D__linux__ -D__x86_64__ -pthread" && \
+  #         emcmake cmake -B test/build \
+  #           -DCMAKE_BUILD_TYPE=Debug \
+  #           -DFLECS_STATIC=ON \
+  #           -DFLECS_PIC=ON \
+  #           -DFLECS_STRICT=ON \
+  #           -DFLECS_TESTS=ON \
+  #           -DBAKE_DIRECTORY=bake \
+  #           -DNODE_JS_TEST=ON \
+  #           -DCMAKE_EXECUTABLE_SUFFIX=".js" \
+  #           -DCMAKE_EXE_LINKER_FLAGS="-s DISABLE_EXCEPTION_CATCHING=0 -s ASSERTIONS=2"
+  #         cd test/build
+  #         emmake make -j 4
+
+  #     - name: Validate test files
+  #       run: |
+  #         cd test/build
+  #         echo "Validating test files..."
+  #         # Show directory contents for debugging
+  #         echo "Directory contents:"
+  #         ls -la
+  #         echo "-------------------------"
+  #         # First list all JS files
+  #         echo "Found JS files:"
+  #         find . -name "*.js" -type f
+  #         echo "-------------------------"
+  #         # Then check each file individually
+  #         for file in $(find . -name "*.js" -type f); do
+  #           if [ -f "$file" ]; then
+  #             echo ""
+  #             echo "Checking $file..."
+  #             echo "File contents preview (first 10 lines):"
+  #             head -n 10 "$file"
+  #             echo "-------------------------"
+  #             # Validate file is a proper JavaScript/Emscripten output
+  #             if ! grep -q "var Module" "$file"; then
+  #               echo "Error: $file does not appear to be a valid Emscripten JavaScript output file"
+  #               exit 1
+  #             fi
+  #             echo "$file validated successfully"
+  #           fi
+  #         done
+  #         echo "All test files validated successfully"
+
+  #     - name: Setup Node.js
+  #       uses: actions/setup-node@v4
+  #       with:
+  #         node-version: '22.14.0'
+
+  #     - name: Run tests with Node.js
+  #       run: |
+  #         cd test/build
+  #         export BAKE_TEST_INPLACE=1
+  #         export BAKE_VERBOSITY=DEBUG
+  #         echo "Running tests..."
+  #         failed_tests=()
+          
+  #         for test in test/*.js; do
+  #           if [ -f "$test" ]; then
+  #             echo "=== Running $test ==="
+  #             if ! stdbuf -oL -eL node --expose-gc "$test" 2>&1 | grep -v "unsupported syscall" | sed '/^[[:space:]]*$/d' | tee "${test%.js}.log"; then
+  #               failed_tests+=("$test")
+  #               echo "❌ $test failed"
+  #             else
+  #               echo "✅ $test passed"
+  #             fi
+  #             echo "=== End test output ==="
+  #           fi
+  #         done
+          
+  #         echo "=== Test Summary ==="
+  #         total_tests=$(find test -name "*.js" -type f | wc -l)
+  #         passed_tests=$((total_tests - ${#failed_tests[@]}))
+  #         echo "Total tests: $total_tests"
+  #         echo "Passed tests: $passed_tests"
+  #         echo "Failed tests: ${#failed_tests[@]}"
+          
+  #         if [ ${#failed_tests[@]} -ne 0 ]; then
+  #           echo "Failed tests:"
+  #           printf '%s\n' "${failed_tests[@]}"
+  #           exit 1
+  #         fi
+
+  # test-amalgamated:
+  #   needs: build-linux
+  #   runs-on: ubuntu-latest
+  #   timeout-minutes: 30
+  #   strategy:
+  #     fail-fast: false
+
+  #   steps:
+  #     - uses: actions/checkout@v4
+
+  #     - name: install bake
+  #       run: |
+  #         git clone https://github.com/SanderMertens/bake
+  #         make -C bake/build-$(uname)
+  #         bake/bake setup
+
+  #     - name: build flecs
+  #       run: bake rebuild
+
+  #     - name: git diff check
+  #       run: git diff --quiet
+
+  # build-scan-build:
+  #   needs: build-linux
+  #   runs-on: ubuntu-latest
+  #   timeout-minutes: 30
+  #   strategy:
+  #     fail-fast: false
+
+  #   steps:
+  #     - uses: actions/checkout@v4
+
+  #     - name: install clang-build
+  #       run: |
+  #         sudo apt-get install -y clang-tools   
+      
+  #     - name: install bake
+  #       run: |
+  #         git clone https://github.com/SanderMertens/bake
+  #         make -C bake/build-$(uname)
+  #         bake/bake setup
+
+  #     - name: run scan-build
+  #       run: |
+  #         scan-build --status-bugs bake
+
+  # test-c-unix:
+  #   needs: [build-linux, build-macos]
+  #   runs-on: ${{ matrix.os }}
+  #   timeout-minutes: 30
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       os: [ ubuntu-latest, macos-14, macos-latest ]
+
+  #   steps:
+  #     - uses: actions/checkout@v4
+
+  #     - name: compiler version
+  #       run: |
+  #         gcc --version
+  #         clang --version
+
+  #     - name: install bake
+  #       run: |
+  #         git clone https://github.com/SanderMertens/bake
+  #         make -C bake/build-$(uname)
+  #         bake/bake setup
+
+  #     - name: build flecs
+  #       run: bake --strict
+
+  #     - name: test core
+  #       run: bake run test/core -- -j 8
+
+  #     - name: test query
+  #       run: bake run test/query -- -j 8
+
+  #     - name: test addons
+  #       run: bake run test/addons -- -j 8
+
+  #     - name: test meta
+  #       run: bake run test/meta -- -j 8
+
+  #     - name: test script
+  #       run: bake run test/script -- -j 8
+
+  #     - name: test collections
+  #       run: bake run test/collections -- -j 8
+
+  # test-cpp-unix:
+  #   needs: [build-linux]
+  #   runs-on: ${{ matrix.target.os }}
+  #   timeout-minutes: 30
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       target:
+  #         - { os: ubuntu-22.04, cc: gcc-9,  cxx: g++-9 }
+  #         - { os: ubuntu-22.04, cc: gcc-10, cxx: g++-10 }
+  #         - { os: ubuntu-22.04, cc: gcc-11, cxx: g++-11 }
+  #         - { os: ubuntu-latest, cc: gcc-12, cxx: g++-12 }
+  #         - { os: ubuntu-24.04, cc: gcc-13, cxx: g++-13 }
+  #         - { os: ubuntu-24.04, cc: gcc-14, cxx: g++-14 }
+  #         - { os: ubuntu-latest, cc: clang-14, cxx: clang++-14 }
+  #         - { os: ubuntu-latest, cc: clang-15, cxx: clang++-15 }
+  #         - { os: ubuntu-latest, cc: clang-16, cxx: clang++-16 }
+  #         - { os: ubuntu-latest, cc: clang-17, cxx: clang++-17 }
+  #         - { os: ubuntu-latest, cc: clang-18, cxx: clang++-18 }
+
+  #   env:
+  #     CC: ${{ matrix.target.cc }}
+  #     CXX: ${{ matrix.target.cxx }}
+
+  #   steps:
+  #     - uses: actions/checkout@v4
+
+  #     - name: install compiler
+  #       run: |
+  #         sudo apt-get update
+  #         sudo apt-get install -y ${{ matrix.target.cc }}
+  #         sudo apt-get install -y ${{ matrix.target.cxx }}
+
+  #     - name: compiler version
+  #       run: |
+  #         ${{ matrix.target.cc }} --version
+  #         ${{ matrix.target.cxx }} --version
+
+  #     - name: install bake
+  #       run: |
+  #         git clone https://github.com/SanderMertens/bake
+  #         make -C bake/build-$(uname)
+  #         bake/bake setup
+
+  #     - name: build flecs
+  #       run: bake --strict
+
+  #     - name: test c++
+  #       run: bake run test/cpp -- -j 8
+
+  # test-cpp-macos:
+  #   needs: [build-macos]
+  #   runs-on: ${{ matrix.os.version }}
+  #   timeout-minutes: 30
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       os: 
+  #         - { version: macos-14, xcode: '15.4' }
+  #         - { version: macos-15, xcode: '16.0' }
+
+  #   env:
+  #     CC: clang
+  #     CXX: clang++
+
+  #   steps:
+  #     - uses: actions/checkout@v4
+
+  #     - uses: maxim-lobanov/setup-xcode@v1
+  #       with:
+  #         xcode-version: ${{ matrix.os.xcode }}
+
+  #     - name: compiler version
+  #       run: |
+  #         clang --version
+
+  #     - name: install bake
+  #       run: |
+  #         git clone https://github.com/SanderMertens/bake
+  #         make -C bake/build-$(uname)
+  #         bake/bake setup
+
+  #     - name: build flecs
+  #       run: bake --strict
+
+  #     - name: test c++
+  #       run: bake run test/cpp -- -j 8
+
+  # test-windows:
+  #   needs: build-windows
+  #   runs-on: windows-latest
+  #   timeout-minutes: 30
+  #   strategy:
+  #     fail-fast: false
+
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: ilammy/msvc-dev-cmd@v1
+  #     - name: install bake
+  #       run: |
+  #         git clone https://github.com/SanderMertens/bake
+  #         cd bake\build-Windows
+  #         nmake
+  #         cd ..
+  #         ./bake setup --local
+
+  #     - name: build flecs
+  #       run: bake/bake
+
+  #     - name: test core
+  #       run: bake/bake run test\core -- -j 8
+
+  #     - name: test addons
+  #       run: bake/bake run test\addons -- -j 8
+
+  #     - name: test meta
+  #       run: bake/bake run test\meta -- -j 8
+
+  #     - name: test script
+  #       run: bake/bake run test\script -- -j 8
+
+  #     - name: test collections
+  #       run: bake/bake run test\collections -- -j 8
+
+  #     - name: test c++
+  #       run: bake/bake run test\cpp -- -j 8
+
+  # test-msys:
+  #   runs-on: windows-latest
+  #   timeout-minutes: 30
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       include:
+  #         - { sys: mingw64, cc: gcc, cxx: g++ }
+  #         - { sys: mingw32, cc: gcc, cxx: g++ }
+  #         - { sys: ucrt64, cc: gcc, cxx: g++ }
+  #         - { sys: clang64, cc: clang, cxx: clang++ }
+
+  #   defaults:
+  #     run:
+  #       shell: msys2 {0}
+
+  #   env:
+  #     CC: ${{ matrix.cc }}
+  #     CXX: ${{ matrix.cxx }}
+
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: msys2/setup-msys2@v2
+  #       with:
+  #         msystem: ${{matrix.sys}}
+  #         update: true
+  #         install: >-
+  #           curl
+  #           git
+  #         pacboy: >-
+  #           toolchain:p
+  #           cmake:p
+
+  #     - name: install bake
+  #       run: |
+  #         cp `which mingw32-make` /usr/bin/make
+  #         git clone https://github.com/SanderMertens/bake
+  #         make -C bake/build-Mingw
+  #         bake/bake setup
+
+  #     - name: build flecs
+  #       run: bake/bake --strict
+
+  #     - name: test core
+  #       run: bake/bake run test/core -- -j 8
+
+  #     - name: test query
+  #       run: bake/bake run test/query -- -j 8
+
+  #     - name: test addons
+  #       run: bake/bake run test/addons -- -j 8
+
+  #     - name: test meta
+  #       run: bake/bake run test/meta -- -j 8
+
+  #     - name: test script
+  #       run: bake/bake run test/script -- -j 8
+
+  #     - name: test collections
+  #       run: bake/bake run test/collections -- -j 8
+
+  #     - name: test c++
+  #       run: bake/bake run test/cpp -- -j 8
+
+  # test-sanitized-core:
+  #   needs: [ build-linux ]
+  #   runs-on: ${{ matrix.os }}
+  #   timeout-minutes: 30
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       os: [ ubuntu-latest ]
+
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: install bake
+  #       run: |
+  #         git clone https://github.com/SanderMertens/bake
+  #         make -C bake/build-$(uname)
+  #         bake/bake setup
+
+  #     - name: build flecs
+  #       run: bake --strict
+
   #     - name: run tests
-  #       run: bazel test --test_output=all //test/...
-
-  build-custom:
-    needs: build-linux
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      matrix:
-        compiler: [ gcc, clang ]
-
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install bake
-        run: |
-          git clone https://github.com/SanderMertens/bake
-          make -C bake/build-$(uname)
-          bake/bake setup
-
-      - name: FLECS_SOFT_ASSERT flag
-        run: |
-          bake rebuild --strict -D FLECS_SOFT_ASSERT
-          bake rebuild --strict --cfg release -D FLECS_SOFT_ASSERT
-
-      - name: FLECS_KEEP_ASSERT flag
-        run: |
-          bake rebuild --strict -D FLECS_KEEP_ASSERT
-          bake rebuild --strict --cfg release -D FLECS_KEEP_ASSERT
-
-      - name: no extensions
-        run: |
-          bake rebuild --strict -D FLECS_CUSTOM_BUILD
-          bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD
-
-      - name: FLECS_SYSTEM
-        run: |
-          bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_SYSTEM
-          bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_SYSTEM
-
-      - name: FLECS_PIPELINE
-        run: |
-          bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_PIPELINE
-          bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_PIPELINE
-
-      - name: FLECS_TIMER
-        run: |
-          bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_TIMER
-          bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_TIMER
-
-      - name: FLECS_MODULE
-        run: |
-          bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_MODULE
-          bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_MODULE
-
-      - name: FLECS_STATS
-        run: |
-          bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_STATS
-          bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_STATS
-
-      - name: FLECS_SCRIPT
-        run: |
-          bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_SCRIPT
-          bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_SCRIPT
-
-      - name: FLECS_META
-        run: |
-          bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_META
-          bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_META
-
-      - name: FLECS_JSON
-        run: |
-          bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_JSON
-          bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_JSON
-
-      - name: FLECS_DOC
-        run: |
-          bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_DOC
-          bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_DOC
-
-      - name: FLECS_LOG
-        run: |
-          bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_LOG
-          bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_LOG
-
-      - name: FLECS_APP
-        run: |
-          bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_APP
-          bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_APP
-
-      - name: FLECS_OS_API_IMPL
-        run: |
-          bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_OS_API_IMPL
-          bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_OS_API_IMPL
-
-      - name: FLECS_HTTP
-        run: |
-          bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_HTTP
-          bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_HTTP
-
-      - name: FLECS_REST
-        run: |
-          bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_REST
-          bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_REST
-
-      - name: FLECS_NO_LOG
-        run: |
-          bake rebuild --strict -D FLECS_NO_LOG
-          bake rebuild --strict --cfg release -D FLECS_NO_LOG
-
-      - name: FLECS_DEFAULT
-        run: |
-          bake rebuild --strict
-          bake rebuild --strict --cfg release
-
-      - name: custom_build tests
-        run: |
-          bake rebuild test/custom_builds --strict
-          bake runall test/custom_builds
-
-  build-amalgamated:
-    needs: build-linux
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      matrix:
-        compiler: [ gcc, clang ]
-
-    steps:
-      - uses: actions/checkout@v4
-      - name: build flecs
-        run: ${{ matrix.compiler }} distr/flecs.c --shared -fPIC -pedantic -Wall -Wextra -Wno-unused-parameter -Werror -Wshadow -Wconversion -Wno-missing-field-initializers
-
-  build-emscripten:
-    needs: build-linux
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Setup Emscripten
-        uses: mymindstorm/setup-emsdk@v14
-        with:
-          version: latest
-          actions-cache-folder: 'emsdk-cache'
-
-      - name: Build flecs (debug)
-        run: |
-          emcmake cmake -B build_debug -DCMAKE_BUILD_TYPE=Debug -DFLECS_STRICT=ON
-          emmake make -C build_debug -j 4
-
-      - name: Build flecs (release)
-        run: |
-          emcmake cmake -B build_release -DCMAKE_BUILD_TYPE=Release -DFLECS_STRICT=ON
-          emmake make -C build_release -j 4
-
-      - name: Build C examples
-        run: |
-          cd examples/c
-          emcmake cmake -B build -DFLECS_STRICT=ON
-          emmake make -C build -j 4
-
-      - name: Build C++ examples
-        run: |
-          cd examples/cpp
-          emcmake cmake -B build -DFLECS_STRICT=ON
-          emmake make -C build -j 4
-
-  test-emscripten:
-    needs: build-linux
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Clone bake repository for test driver
-        run: |
-          git clone https://github.com/SanderMertens/bake
-          make -C bake/build-$(uname) CFLAGS="-fPIC"
-          bake/bake setup
-
-      - name: Setup Emscripten
-        uses: mymindstorm/setup-emsdk@v14
-        with:
-          version: latest
-          actions-cache-folder: 'emsdk-cache'
-
-      - name: Build tests
-        run: |
-          mkdir -p test/build
-          mkdir -p test/build/include/sys && \
-          echo "#include <stdlib.h>
-          __attribute__((weak)) int backtrace(void **buffer, int size) { return 0; }
-          __attribute__((weak)) char **backtrace_symbols(void *const *buffer, int size) { return NULL; }
-          __attribute__((weak)) void backtrace_symbols_fd(void *const *buffer, int size, int fd) {}" > test/build/include/execinfo.h && \
-          echo "#include <unistd.h>
-          #define PTRACE_TRACEME 0
-          #define PTRACE_ATTACH 1
-          #define PTRACE_DETACH 2
-          __attribute__((weak)) long ptrace(int request, pid_t pid, void *addr, void *data) { return 0; }" > test/build/include/sys/ptrace.h && \
-          export CFLAGS="-isystem $(pwd)/test/build/include -D__linux__ -D__x86_64__ -pthread" && \
-          export CXXFLAGS="-isystem $(pwd)/test/build/include -D__linux__ -D__x86_64__ -pthread" && \
-          emcmake cmake -B test/build \
-            -DCMAKE_BUILD_TYPE=Debug \
-            -DFLECS_STATIC=ON \
-            -DFLECS_PIC=ON \
-            -DFLECS_STRICT=ON \
-            -DFLECS_TESTS=ON \
-            -DBAKE_DIRECTORY=bake \
-            -DNODE_JS_TEST=ON \
-            -DCMAKE_EXECUTABLE_SUFFIX=".js" \
-            -DCMAKE_EXE_LINKER_FLAGS="-s DISABLE_EXCEPTION_CATCHING=0 -s ASSERTIONS=2"
-          cd test/build
-          emmake make -j 4
-
-      - name: Validate test files
-        run: |
-          cd test/build
-          echo "Validating test files..."
-          # Show directory contents for debugging
-          echo "Directory contents:"
-          ls -la
-          echo "-------------------------"
-          # First list all JS files
-          echo "Found JS files:"
-          find . -name "*.js" -type f
-          echo "-------------------------"
-          # Then check each file individually
-          for file in $(find . -name "*.js" -type f); do
-            if [ -f "$file" ]; then
-              echo ""
-              echo "Checking $file..."
-              echo "File contents preview (first 10 lines):"
-              head -n 10 "$file"
-              echo "-------------------------"
-              # Validate file is a proper JavaScript/Emscripten output
-              if ! grep -q "var Module" "$file"; then
-                echo "Error: $file does not appear to be a valid Emscripten JavaScript output file"
-                exit 1
-              fi
-              echo "$file validated successfully"
-            fi
-          done
-          echo "All test files validated successfully"
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22.14.0'
-
-      - name: Run tests with Node.js
-        run: |
-          cd test/build
-          export BAKE_TEST_INPLACE=1
-          export BAKE_VERBOSITY=DEBUG
-          echo "Running tests..."
-          failed_tests=()
-          
-          for test in test/*.js; do
-            if [ -f "$test" ]; then
-              echo "=== Running $test ==="
-              if ! stdbuf -oL -eL node --expose-gc "$test" 2>&1 | grep -v "unsupported syscall" | sed '/^[[:space:]]*$/d' | tee "${test%.js}.log"; then
-                failed_tests+=("$test")
-                echo "❌ $test failed"
-              else
-                echo "✅ $test passed"
-              fi
-              echo "=== End test output ==="
-            fi
-          done
-          
-          echo "=== Test Summary ==="
-          total_tests=$(find test -name "*.js" -type f | wc -l)
-          passed_tests=$((total_tests - ${#failed_tests[@]}))
-          echo "Total tests: $total_tests"
-          echo "Passed tests: $passed_tests"
-          echo "Failed tests: ${#failed_tests[@]}"
-          
-          if [ ${#failed_tests[@]} -ne 0 ]; then
-            echo "Failed tests:"
-            printf '%s\n' "${failed_tests[@]}"
-            exit 1
-          fi
-
-  test-amalgamated:
-    needs: build-linux
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: install bake
-        run: |
-          git clone https://github.com/SanderMertens/bake
-          make -C bake/build-$(uname)
-          bake/bake setup
-
-      - name: build flecs
-        run: bake rebuild
-
-      - name: git diff check
-        run: git diff --quiet
-
-  build-scan-build:
-    needs: build-linux
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: install clang-build
-        run: |
-          sudo apt-get install -y clang-tools   
-      
-      - name: install bake
-        run: |
-          git clone https://github.com/SanderMertens/bake
-          make -C bake/build-$(uname)
-          bake/bake setup
-
-      - name: run scan-build
-        run: |
-          scan-build --status-bugs bake
-
-  test-c-unix:
-    needs: [build-linux, build-macos]
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ ubuntu-latest, macos-14, macos-latest ]
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: compiler version
-        run: |
-          gcc --version
-          clang --version
-
-      - name: install bake
-        run: |
-          git clone https://github.com/SanderMertens/bake
-          make -C bake/build-$(uname)
-          bake/bake setup
-
-      - name: build flecs
-        run: bake --strict
-
-      - name: test core
-        run: bake run test/core -- -j 8
-
-      - name: test query
-        run: bake run test/query -- -j 8
-
-      - name: test addons
-        run: bake run test/addons -- -j 8
-
-      - name: test meta
-        run: bake run test/meta -- -j 8
-
-      - name: test script
-        run: bake run test/script -- -j 8
-
-      - name: test collections
-        run: bake run test/collections -- -j 8
-
-  test-cpp-unix:
-    needs: [build-linux]
-    runs-on: ${{ matrix.target.os }}
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      matrix:
-        target:
-          - { os: ubuntu-22.04, cc: gcc-9,  cxx: g++-9 }
-          - { os: ubuntu-22.04, cc: gcc-10, cxx: g++-10 }
-          - { os: ubuntu-22.04, cc: gcc-11, cxx: g++-11 }
-          - { os: ubuntu-latest, cc: gcc-12, cxx: g++-12 }
-          - { os: ubuntu-24.04, cc: gcc-13, cxx: g++-13 }
-          - { os: ubuntu-24.04, cc: gcc-14, cxx: g++-14 }
-          - { os: ubuntu-latest, cc: clang-14, cxx: clang++-14 }
-          - { os: ubuntu-latest, cc: clang-15, cxx: clang++-15 }
-          - { os: ubuntu-latest, cc: clang-16, cxx: clang++-16 }
-          - { os: ubuntu-latest, cc: clang-17, cxx: clang++-17 }
-          - { os: ubuntu-latest, cc: clang-18, cxx: clang++-18 }
-
-    env:
-      CC: ${{ matrix.target.cc }}
-      CXX: ${{ matrix.target.cxx }}
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: install compiler
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y ${{ matrix.target.cc }}
-          sudo apt-get install -y ${{ matrix.target.cxx }}
-
-      - name: compiler version
-        run: |
-          ${{ matrix.target.cc }} --version
-          ${{ matrix.target.cxx }} --version
-
-      - name: install bake
-        run: |
-          git clone https://github.com/SanderMertens/bake
-          make -C bake/build-$(uname)
-          bake/bake setup
-
-      - name: build flecs
-        run: bake --strict
-
-      - name: test c++
-        run: bake run test/cpp -- -j 8
-
-  test-cpp-macos:
-    needs: [build-macos]
-    runs-on: ${{ matrix.os.version }}
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      matrix:
-        os: 
-          - { version: macos-14, xcode: '15.4' }
-          - { version: macos-15, xcode: '16.0' }
-
-    env:
-      CC: clang
-      CXX: clang++
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: maxim-lobanov/setup-xcode@v1
-        with:
-          xcode-version: ${{ matrix.os.xcode }}
-
-      - name: compiler version
-        run: |
-          clang --version
-
-      - name: install bake
-        run: |
-          git clone https://github.com/SanderMertens/bake
-          make -C bake/build-$(uname)
-          bake/bake setup
-
-      - name: build flecs
-        run: bake --strict
-
-      - name: test c++
-        run: bake run test/cpp -- -j 8
-
-  test-windows:
-    needs: build-windows
-    runs-on: windows-latest
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ilammy/msvc-dev-cmd@v1
-      - name: install bake
-        run: |
-          git clone https://github.com/SanderMertens/bake
-          cd bake\build-Windows
-          nmake
-          cd ..
-          ./bake setup --local
-
-      - name: build flecs
-        run: bake/bake
-
-      - name: test core
-        run: bake/bake run test\core -- -j 8
-
-      - name: test addons
-        run: bake/bake run test\addons -- -j 8
-
-      - name: test meta
-        run: bake/bake run test\meta -- -j 8
-
-      - name: test script
-        run: bake/bake run test\script -- -j 8
-
-      - name: test collections
-        run: bake/bake run test\collections -- -j 8
-
-      - name: test c++
-        run: bake/bake run test\cpp -- -j 8
-
-  test-msys:
-    runs-on: windows-latest
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - { sys: mingw64, cc: gcc, cxx: g++ }
-          - { sys: mingw32, cc: gcc, cxx: g++ }
-          - { sys: ucrt64, cc: gcc, cxx: g++ }
-          - { sys: clang64, cc: clang, cxx: clang++ }
-
-    defaults:
-      run:
-        shell: msys2 {0}
-
-    env:
-      CC: ${{ matrix.cc }}
-      CXX: ${{ matrix.cxx }}
-
-    steps:
-      - uses: actions/checkout@v4
-      - uses: msys2/setup-msys2@v2
-        with:
-          msystem: ${{matrix.sys}}
-          update: true
-          install: >-
-            curl
-            git
-          pacboy: >-
-            toolchain:p
-            cmake:p
-
-      - name: install bake
-        run: |
-          cp `which mingw32-make` /usr/bin/make
-          git clone https://github.com/SanderMertens/bake
-          make -C bake/build-Mingw
-          bake/bake setup
-
-      - name: build flecs
-        run: bake/bake --strict
-
-      - name: test core
-        run: bake/bake run test/core -- -j 8
-
-      - name: test query
-        run: bake/bake run test/query -- -j 8
-
-      - name: test addons
-        run: bake/bake run test/addons -- -j 8
-
-      - name: test meta
-        run: bake/bake run test/meta -- -j 8
-
-      - name: test script
-        run: bake/bake run test/script -- -j 8
-
-      - name: test collections
-        run: bake/bake run test/collections -- -j 8
-
-      - name: test c++
-        run: bake/bake run test/cpp -- -j 8
-
-  test-sanitized-core:
-    needs: [ build-linux ]
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ ubuntu-latest ]
-
-    steps:
-      - uses: actions/checkout@v4
-      - name: install bake
-        run: |
-          git clone https://github.com/SanderMertens/bake
-          make -C bake/build-$(uname)
-          bake/bake setup
-
-      - name: build flecs
-        run: bake --strict
-
-      - name: run tests
-        run: |
-          bake run test/core --cfg sanitize -- -j 8
-
-  test-sanitized-query:
-    needs: [ build-linux ]
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ ubuntu-latest ]
-
-    steps:
-      - uses: actions/checkout@v4
-      - name: install bake
-        run: |
-          git clone https://github.com/SanderMertens/bake
-          make -C bake/build-$(uname)
-          bake/bake setup
-
-      - name: build flecs
-        run: bake --strict
-
-      - name: run tests
-        run: |
-          bake run test/query --cfg sanitize -- -j 8
-
-  test-sanitized-addons:
-    needs: [ build-linux ]
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ ubuntu-latest ]
-
-    steps:
-      - uses: actions/checkout@v4
-      - name: install bake
-        run: |
-          git clone https://github.com/SanderMertens/bake
-          make -C bake/build-$(uname)
-          bake/bake setup
-
-      - name: build flecs
-        run: bake --strict
-
-      - name: run tests
-        run: |
-          bake run test/addons --cfg sanitize -- -j 8
-
-  test-sanitized-meta:
-    needs: [ build-linux ]
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ ubuntu-latest ]
-
-    steps:
-      - uses: actions/checkout@v4
-      - name: install bake
-        run: |
-          git clone https://github.com/SanderMertens/bake
-          make -C bake/build-$(uname)
-          bake/bake setup
-
-      - name: build flecs
-        run: bake --strict
-
-      - name: run tests
-        run: |
-          bake run test/meta --cfg sanitize -- -j 8
-
-  test-sanitized-script:
-    needs: [ build-linux ]
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ ubuntu-latest ]
-
-    steps:
-      - uses: actions/checkout@v4
-      - name: install bake
-        run: |
-          git clone https://github.com/SanderMertens/bake
-          make -C bake/build-$(uname)
-          bake/bake setup
-
-      - name: build flecs
-        run: bake --strict
-
-      - name: run tests
-        run: |
-          bake run test/script --cfg sanitize -- -j 8
-
-  test-sanitized-collections:
-    needs: [ build-linux ]
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ ubuntu-latest ]
-
-    steps:
-      - uses: actions/checkout@v4
-      - name: install bake
-        run: |
-          git clone https://github.com/SanderMertens/bake
-          make -C bake/build-$(uname)
-          bake/bake setup
-
-      - name: build flecs
-        run: bake --strict
-
-      - name: run tests
-        run: |
-          bake run test/collections --cfg sanitize -- -j 8
-
-  test-sanitized-cpp:
-    needs: [ build-linux ]
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ ubuntu-latest ]
-
-    steps:
-      - uses: actions/checkout@v4
-      - name: install bake
-        run: |
-          git clone https://github.com/SanderMertens/bake
-          make -C bake/build-$(uname)
-          bake/bake setup
-
-      - name: build flecs
-        run: bake --strict
-
-      - name: run tests
-        run: |
-          bake run test/cpp --cfg sanitize -- -j 8
-
-  test-os-alloc-core:
-    needs: [ build-linux ]
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ ubuntu-latest ]
-
-    steps:
-      - uses: actions/checkout@v4
-      - name: install bake
-        run: |
-          git clone https://github.com/SanderMertens/bake
-          make -C bake/build-$(uname)
-          bake/bake setup
-
-      - name: build flecs
-        run: bake --cfg sanitize -D FLECS_USE_OS_ALLOC
-
-      - name: run tests
-        run: |
-          bake run test/core --cfg sanitize -- -j 8
+  #       run: |
+  #         bake run test/core --cfg sanitize -- -j 8
+
+  # test-sanitized-query:
+  #   needs: [ build-linux ]
+  #   runs-on: ${{ matrix.os }}
+  #   timeout-minutes: 30
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       os: [ ubuntu-latest ]
+
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: install bake
+  #       run: |
+  #         git clone https://github.com/SanderMertens/bake
+  #         make -C bake/build-$(uname)
+  #         bake/bake setup
+
+  #     - name: build flecs
+  #       run: bake --strict
+
+  #     - name: run tests
+  #       run: |
+  #         bake run test/query --cfg sanitize -- -j 8
+
+  # test-sanitized-addons:
+  #   needs: [ build-linux ]
+  #   runs-on: ${{ matrix.os }}
+  #   timeout-minutes: 30
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       os: [ ubuntu-latest ]
+
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: install bake
+  #       run: |
+  #         git clone https://github.com/SanderMertens/bake
+  #         make -C bake/build-$(uname)
+  #         bake/bake setup
+
+  #     - name: build flecs
+  #       run: bake --strict
+
+  #     - name: run tests
+  #       run: |
+  #         bake run test/addons --cfg sanitize -- -j 8
+
+  # test-sanitized-meta:
+  #   needs: [ build-linux ]
+  #   runs-on: ${{ matrix.os }}
+  #   timeout-minutes: 30
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       os: [ ubuntu-latest ]
+
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: install bake
+  #       run: |
+  #         git clone https://github.com/SanderMertens/bake
+  #         make -C bake/build-$(uname)
+  #         bake/bake setup
+
+  #     - name: build flecs
+  #       run: bake --strict
+
+  #     - name: run tests
+  #       run: |
+  #         bake run test/meta --cfg sanitize -- -j 8
+
+  # test-sanitized-script:
+  #   needs: [ build-linux ]
+  #   runs-on: ${{ matrix.os }}
+  #   timeout-minutes: 30
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       os: [ ubuntu-latest ]
+
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: install bake
+  #       run: |
+  #         git clone https://github.com/SanderMertens/bake
+  #         make -C bake/build-$(uname)
+  #         bake/bake setup
+
+  #     - name: build flecs
+  #       run: bake --strict
+
+  #     - name: run tests
+  #       run: |
+  #         bake run test/script --cfg sanitize -- -j 8
+
+  # test-sanitized-collections:
+  #   needs: [ build-linux ]
+  #   runs-on: ${{ matrix.os }}
+  #   timeout-minutes: 30
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       os: [ ubuntu-latest ]
+
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: install bake
+  #       run: |
+  #         git clone https://github.com/SanderMertens/bake
+  #         make -C bake/build-$(uname)
+  #         bake/bake setup
+
+  #     - name: build flecs
+  #       run: bake --strict
+
+  #     - name: run tests
+  #       run: |
+  #         bake run test/collections --cfg sanitize -- -j 8
+
+  # test-sanitized-cpp:
+  #   needs: [ build-linux ]
+  #   runs-on: ${{ matrix.os }}
+  #   timeout-minutes: 30
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       os: [ ubuntu-latest ]
+
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: install bake
+  #       run: |
+  #         git clone https://github.com/SanderMertens/bake
+  #         make -C bake/build-$(uname)
+  #         bake/bake setup
+
+  #     - name: build flecs
+  #       run: bake --strict
+
+  #     - name: run tests
+  #       run: |
+  #         bake run test/cpp --cfg sanitize -- -j 8
+
+  # test-os-alloc-core:
+  #   needs: [ build-linux ]
+  #   runs-on: ${{ matrix.os }}
+  #   timeout-minutes: 30
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       os: [ ubuntu-latest ]
+
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: install bake
+  #       run: |
+  #         git clone https://github.com/SanderMertens/bake
+  #         make -C bake/build-$(uname)
+  #         bake/bake setup
+
+  #     - name: build flecs
+  #       run: bake --cfg sanitize -D FLECS_USE_OS_ALLOC
+
+  #     - name: run tests
+  #       run: |
+  #         bake run test/core --cfg sanitize -- -j 8
 
   test-low-footprint-core:
-    needs: [ build-linux ]
+    # needs: [ build-linux ]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     strategy:
@@ -1103,29 +1103,30 @@ jobs:
 
       - name: run tests
         run: |
-          bake test/core -D FLECS_LOW_FOOTPRINT
-          bake run test/core -- -j 8
+          bake run test/core -D FLECS_LOW_FOOTPRINT -- -j 8
+          bake run test/addons -D FLECS_LOW_FOOTPRINT -- -j 8
+          bake run test/query -D FLECS_LOW_FOOTPRINT -- -j 8
 
-  test-cmake:
-    needs: [ build-linux, build-macos ]
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ ubuntu-latest, macos-14, macos-latest ]
+  # test-cmake:
+  #   needs: [ build-linux, build-macos ]
+  #   runs-on: ${{ matrix.os }}
+  #   timeout-minutes: 30
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       os: [ ubuntu-latest, macos-14, macos-latest ]
 
-    steps:
-      - uses: actions/checkout@v4
-      - name: clone bake
-        run: |
-          git clone https://github.com/SanderMertens/bake
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: clone bake
+  #       run: |
+  #         git clone https://github.com/SanderMertens/bake
 
-      - name: build flecs & tests
-        run: |
-          cmake -DFLECS_TESTS=ON -DBAKE_DIRECTORY=bake
-          cmake --build . -j 4
+  #     - name: build flecs & tests
+  #       run: |
+  #         cmake -DFLECS_TESTS=ON -DBAKE_DIRECTORY=bake
+  #         cmake --build . -j 4
 
-      - name: run tests
-        run: |
-          ctest -C Debug --verbose
+  #     - name: run tests
+  #       run: |
+  #         ctest -C Debug --verbose
