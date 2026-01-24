@@ -27621,7 +27621,6 @@ struct ecs_pipeline_state_t {
     ecs_vec_t systems;          /* Vector with system ids */
 
     ecs_entity_t last_system;   /* Last system ran by pipeline */
-    ecs_component_record_t *cr_inactive; /* Cached record for quick inactive test */
     int32_t match_count;        /* Used to track of rebuild is necessary */
     int32_t rebuild_count;      /* Number of pipeline rebuilds */
     ecs_iter_t *iters;          /* Iterator for worker(s) */
@@ -61998,7 +61997,6 @@ ecs_entity_t ecs_pipeline_init(
     ecs_pipeline_state_t *pq = ecs_os_calloc_t(ecs_pipeline_state_t);
     pq->query = query;
     pq->match_count = -1;
-    pq->cr_inactive = flecs_components_ensure(world, EcsEmpty);
     ecs_set(world, result, EcsPipeline, { pq });
 
     return result;
@@ -73498,10 +73496,13 @@ bool ecs_pipeline_stats_get(
 
     int32_t sys_count = 0, active_sys_count = 0;
 
+    ecs_component_record_t *cr_empty = flecs_components_get(
+        world, EcsEmpty);
+
     /* Count number of active systems */
     ecs_iter_t it = ecs_query_iter(stage, pq->query);
     while (ecs_query_next(&it)) {
-        if (flecs_component_get_table(pq->cr_inactive, it.table) != NULL) {
+        if (cr_empty && flecs_component_get_table(cr_empty, it.table) != NULL) {
             continue;
         }
         active_sys_count += it.count;
@@ -73535,7 +73536,9 @@ bool ecs_pipeline_stats_get(
             
             int32_t i, i_system = 0, ran_since_merge = 0;
             while (ecs_query_next(&it)) {
-                if (flecs_component_get_table(pq->cr_inactive, it.table) != NULL) {
+                if (cr_empty && 
+                    flecs_component_get_table(cr_empty, it.table) != NULL) 
+                {
                     continue;
                 }
 

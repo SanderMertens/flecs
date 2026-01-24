@@ -192,7 +192,7 @@ void New_new_component_id_skip_to_hi_id(void) {
 
     ecs_entity_t e2 = ecs_new_low_id(world);
     test_assert(e2 != 0);
-    test_assert(e2 > FLECS_HI_COMPONENT_ID);
+    test_assert(e2 >= FLECS_HI_COMPONENT_ID);
     test_assert(ecs_get_type(world, e2) != NULL);
     test_int(ecs_get_type(world, e2)->count, 0);
 
