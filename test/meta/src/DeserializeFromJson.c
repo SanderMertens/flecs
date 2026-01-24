@@ -431,6 +431,67 @@ void DeserializeFromJson_struct_float(void) {
     ecs_fini(world);
 }
 
+void DeserializeFromJson_struct_float_scientific_notation(void) {
+    typedef struct {
+        ecs_f32_t v;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"v", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    test_assert(t != 0);
+
+    T value = {0};
+
+    const char *ptr = ecs_ptr_from_json(world, t, &value, "{\"v\": 1.05e1}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+    test_flt(value.v, 10.5);
+
+    ptr = ecs_ptr_from_json(world, t, &value, "{\"v\": 1.5e0}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+    test_flt(value.v, 1.5);
+
+    ptr = ecs_ptr_from_json(world, t, &value, "{\"v\": 15.0e-1}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+    test_flt(value.v, 1.5);
+
+    ptr = ecs_ptr_from_json(world, t, &value, "{\"v\": 10e-1}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+    test_flt(value.v, 1);
+
+    ptr = ecs_ptr_from_json(world, t, &value, "{\"v\": 1.05E1}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+    test_flt(value.v, 10.5);
+
+    ptr = ecs_ptr_from_json(world, t, &value, "{\"v\": 1.5E0}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+    test_flt(value.v, 1.5);
+
+    ptr = ecs_ptr_from_json(world, t, &value, "{\"v\": 15.0E-1}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+    test_flt(value.v, 1.5);
+
+    ptr = ecs_ptr_from_json(world, t, &value, "{\"v\": 10E-1}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+    test_flt(value.v, 1);
+
+    ecs_fini(world);
+}
+
 void DeserializeFromJson_struct_double(void) {
     typedef struct {
         ecs_f64_t v;
@@ -454,6 +515,67 @@ void DeserializeFromJson_struct_double(void) {
     test_assert(ptr[0] == '\0');
 
     test_flt(value.v, 10.5);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_struct_double_scientific_notation(void) {
+    typedef struct {
+        ecs_f64_t v;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"v", ecs_id(ecs_f64_t)}
+        }
+    });
+
+    test_assert(t != 0);
+
+    T value = {0};
+
+    const char *ptr = ecs_ptr_from_json(world, t, &value, "{\"v\": 1.05e1}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+    test_flt(value.v, 10.5);
+
+    ptr = ecs_ptr_from_json(world, t, &value, "{\"v\": 1.5e0}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+    test_flt(value.v, 1.5);
+
+    ptr = ecs_ptr_from_json(world, t, &value, "{\"v\": 15.0e-1}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+    test_flt(value.v, 1.5);
+
+    ptr = ecs_ptr_from_json(world, t, &value, "{\"v\": 10e-1}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+    test_flt(value.v, 1);
+
+    ptr = ecs_ptr_from_json(world, t, &value, "{\"v\": 1.05E1}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+    test_flt(value.v, 10.5);
+
+    ptr = ecs_ptr_from_json(world, t, &value, "{\"v\": 1.5E0}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+    test_flt(value.v, 1.5);
+
+    ptr = ecs_ptr_from_json(world, t, &value, "{\"v\": 15.0E-1}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+    test_flt(value.v, 1.5);
+
+    ptr = ecs_ptr_from_json(world, t, &value, "{\"v\": 10E-1}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+    test_flt(value.v, 1);
 
     ecs_fini(world);
 }

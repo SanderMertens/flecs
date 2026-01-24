@@ -422,6 +422,13 @@ char* flecs_astresc(
     return out;
 }
 
+static
+bool flecs_parse_is_e(
+    char e)
+{
+    return e == 'e' || e == 'E';
+}
+
 const char* flecs_parse_digit(
     const char *ptr,
     char *token)
@@ -439,8 +446,10 @@ const char* flecs_parse_digit(
     ptr ++;
 
     for (; (ch = *ptr); ptr ++) {
-        if (!isdigit(ch) && (ch != '.') && (ch != 'e')) {
-            break;
+        if (!isdigit(ch) && (ch != '.') && !flecs_parse_is_e(ch)) {
+            if (ch != '-' || !flecs_parse_is_e(ptr[-1])) {
+                break;
+            }
         }
 
         tptr[0] = ch;
