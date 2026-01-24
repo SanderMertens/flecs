@@ -1246,90 +1246,102 @@ ecs_entity_t ecs_observer_init(
         "cannot create observer while world is being deleted");
 
     entity = desc->entity;
-    if (!entity) {
+    if (!entity && !desc->global_observer) {
         entity = ecs_entity(world, {0});
     }
 
-    EcsPoly *poly = flecs_poly_bind(world, entity, ecs_observer_t);
-    if (!poly->poly) {
+    EcsPoly *poly = NULL;
+    if (!entity) {
         ecs_observer_t *o = flecs_observer_init(world, entity, desc);\
         if (!o) {
             goto error;
         }
 
-        ecs_assert(o->entity == entity, ECS_INTERNAL_ERROR, NULL);
-        poly->poly = o;
-
-        if (ecs_get_name(world, entity)) {
-            ecs_trace("#[green]observer#[reset] %s created", 
-                ecs_get_name(world, entity));
-        }
+        ecs_vec_append_t(NULL, &world->observable.global_observers, 
+            ecs_observer_t*)[0] = o;
     } else {
-        flecs_poly_assert(poly->poly, ecs_observer_t);
-        ecs_observer_t *o = (ecs_observer_t*)poly->poly;
+        poly = flecs_poly_bind(world, entity, ecs_observer_t);
 
-        if (o->ctx_free) {
-            if (o->ctx && o->ctx != desc->ctx) {
-                o->ctx_free(o->ctx);
+        if (!poly->poly) {
+            ecs_observer_t *o = flecs_observer_init(world, entity, desc);\
+            if (!o) {
+                goto error;
+            }
+
+            ecs_assert(o->entity == entity, ECS_INTERNAL_ERROR, NULL);
+            poly->poly = o;
+
+            if (ecs_get_name(world, entity)) {
+                ecs_trace("#[green]observer#[reset] %s created", 
+                    ecs_get_name(world, entity));
+            }
+        } else {
+            flecs_poly_assert(poly->poly, ecs_observer_t);
+            ecs_observer_t *o = (ecs_observer_t*)poly->poly;
+
+            if (o->ctx_free) {
+                if (o->ctx && o->ctx != desc->ctx) {
+                    o->ctx_free(o->ctx);
+                }
+            }
+
+            if (o->callback_ctx_free) {
+                if (o->callback_ctx && o->callback_ctx != desc->callback_ctx) {
+                    o->callback_ctx_free(o->callback_ctx);
+                    o->callback_ctx_free = NULL;
+                    o->callback_ctx = NULL;
+                }
+            }
+
+            if (o->run_ctx_free) {
+                if (o->run_ctx && o->run_ctx != desc->run_ctx) {
+                    o->run_ctx_free(o->run_ctx);
+                    o->run_ctx_free = NULL;
+                    o->run_ctx = NULL;
+                }
+            }
+
+            if (desc->run) {
+                o->run = desc->run;
+                if (!desc->callback) {
+                    o->callback = NULL;
+                }
+            }
+
+            if (desc->callback) {
+                o->callback = desc->callback;
+                if (!desc->run) {
+                    o->run = NULL;
+                }
+            }
+
+            if (desc->ctx) {
+                o->ctx = desc->ctx;
+            }
+
+            if (desc->callback_ctx) {
+                o->callback_ctx = desc->callback_ctx;
+            }
+
+            if (desc->run_ctx) {
+                o->run_ctx = desc->run_ctx;
+            }
+
+            if (desc->ctx_free) {
+                o->ctx_free = desc->ctx_free;
+            }
+
+            if (desc->callback_ctx_free) {
+                o->callback_ctx_free = desc->callback_ctx_free;
+            }
+
+            if (desc->run_ctx_free) {
+                o->run_ctx_free = desc->run_ctx_free;
             }
         }
 
-        if (o->callback_ctx_free) {
-            if (o->callback_ctx && o->callback_ctx != desc->callback_ctx) {
-                o->callback_ctx_free(o->callback_ctx);
-                o->callback_ctx_free = NULL;
-                o->callback_ctx = NULL;
-            }
-        }
-
-        if (o->run_ctx_free) {
-            if (o->run_ctx && o->run_ctx != desc->run_ctx) {
-                o->run_ctx_free(o->run_ctx);
-                o->run_ctx_free = NULL;
-                o->run_ctx = NULL;
-            }
-        }
-
-        if (desc->run) {
-            o->run = desc->run;
-            if (!desc->callback) {
-                o->callback = NULL;
-            }
-        }
-
-        if (desc->callback) {
-            o->callback = desc->callback;
-            if (!desc->run) {
-                o->run = NULL;
-            }
-        }
-
-        if (desc->ctx) {
-            o->ctx = desc->ctx;
-        }
-
-        if (desc->callback_ctx) {
-            o->callback_ctx = desc->callback_ctx;
-        }
-
-        if (desc->run_ctx) {
-            o->run_ctx = desc->run_ctx;
-        }
-
-        if (desc->ctx_free) {
-            o->ctx_free = desc->ctx_free;
-        }
-
-        if (desc->callback_ctx_free) {
-            o->callback_ctx_free = desc->callback_ctx_free;
-        }
-
-        if (desc->run_ctx_free) {
-            o->run_ctx_free = desc->run_ctx_free;
-        }
+        flecs_poly_modified(world, entity, ecs_observer_t);
     }
-
-    flecs_poly_modified(world, entity, ecs_observer_t);
 
     return entity;
 error:

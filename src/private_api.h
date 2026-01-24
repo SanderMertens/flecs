@@ -44,9 +44,6 @@
 /* Used in id records to keep track of entities used with id flags */
 extern const ecs_entity_t EcsFlag;
 
-/* Scope for flecs internals, like observers used for builtin features */
-extern const ecs_entity_t EcsFlecsInternals;
-
 ////////////////////////////////////////////////////////////////////////////////
 //// Bootstrap API
 ////////////////////////////////////////////////////////////////////////////////

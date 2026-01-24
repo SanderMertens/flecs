@@ -29,7 +29,6 @@ const ecs_entity_t EcsSystem =                      FLECS_HI_COMPONENT_ID + 2;
 const ecs_entity_t EcsWorld =                       FLECS_HI_COMPONENT_ID + 3;
 const ecs_entity_t EcsFlecs =                       FLECS_HI_COMPONENT_ID + 4;
 const ecs_entity_t EcsFlecsCore =                   FLECS_HI_COMPONENT_ID + 5;
-const ecs_entity_t EcsFlecsInternals =              FLECS_HI_COMPONENT_ID + 6;
 const ecs_entity_t EcsModule =                      FLECS_HI_COMPONENT_ID + 7;
 const ecs_entity_t EcsPrivate =                     FLECS_HI_COMPONENT_ID + 8;
 const ecs_entity_t EcsPrefab =                      FLECS_HI_COMPONENT_ID + 9;
@@ -1325,6 +1324,7 @@ int ecs_fini(
 
     ecs_dbg_1("#[bold]cleanup world data structures");
     ecs_log_push_1();
+    flecs_observable_fini(&world->observable);
     flecs_entities_fini(world);
     flecs_components_fini(world);
     flecs_fini_type_info(world);
@@ -1332,7 +1332,6 @@ int ecs_fini(
     ecs_map_fini(&world->locked_components);
     ecs_map_fini(&world->locked_entities);
 #endif
-    flecs_observable_fini(&world->observable);
     flecs_name_index_fini(&world->aliases);
     flecs_name_index_fini(&world->symbols);
     ecs_set_stage_count(world, 0);

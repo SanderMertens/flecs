@@ -3789,13 +3789,6 @@ void Basic_1_any_src_w_pair_tgt_var_childof(void) {
     test_uint(EcsWildcard, ecs_field_src(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
-    ecs_entity_t internals = ecs_lookup(world, "flecs.core.internals");
-    test_int(0, it.count);
-    test_uint(ecs_pair(EcsChildOf, internals), ecs_field_id(&it, 0));
-    test_uint(internals, ecs_iter_get_var(&it, x_var));
-    test_uint(EcsWildcard, ecs_field_src(&it, 0));
-
-    test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
     test_uint(ecs_pair(EcsChildOf, EcsFlecsCore), ecs_field_id(&it, 0));
     test_uint(EcsFlecsCore, ecs_iter_get_var(&it, x_var));

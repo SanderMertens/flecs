@@ -79,10 +79,10 @@ void flecs_meta_opaque_init(
     });
 
     ecs_observer(world, {
-        .entity = ecs_entity(world, { .parent = EcsFlecsInternals }),
         .query.terms[0] = { .id = ecs_id(EcsOpaque) },
         .events = {EcsOnSet},
-        .callback = flecs_set_opaque_type
+        .callback = flecs_set_opaque_type,
+        .global_observer = true
     });
 
 }

@@ -1359,6 +1359,11 @@ typedef struct ecs_observer_desc_t {
      * #EcsOnAdd `Position` would match all existing instances of `Position`. */
     bool yield_existing;
 
+    /** Global observers are tied to the lifespan of the world. Creating a 
+     * global observer does not create an entity, and therefore 
+     * ecs_observer_init will not return an entity handle. */
+    bool global_observer;
+
     /** Callback to invoke on an event, invoked when the observer matches. */
     ecs_iter_action_t callback;
 

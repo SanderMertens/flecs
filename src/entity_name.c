@@ -322,13 +322,13 @@ void flecs_bootstrap_entity_name(
     ecs_world_t *world) 
 {
     ecs_observer(world, {
-        .entity = ecs_entity(world, { .parent = EcsFlecsInternals }),
         .query.terms[0] = {
             .id = ecs_pair(ecs_id(EcsIdentifier), EcsSymbol)
         },
         .callback = flecs_on_set_symbol,
         .events = {EcsOnSet},
-        .yield_existing = true
+        .yield_existing = true,
+        .global_observer = true
     });
 }
 

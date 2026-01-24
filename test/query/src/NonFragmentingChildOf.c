@@ -1712,21 +1712,12 @@ void NonFragmentingChildOf_any_src_childof_wildcard(void) {
 
     test_assert(q != NULL);
 
-    ecs_entity_t internals = ecs_lookup(world, "flecs.core.internals");
-    test_assert(internals != 0);
-
     {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_int(0, it.count);
         test_uint(EcsWildcard, ecs_field_src(&it, 0));
         test_uint(ecs_childof(EcsFlecs), ecs_field_id(&it, 0));
-        test_bool(true, ecs_field_is_set(&it, 0));
-
-        test_bool(true, ecs_query_next(&it));
-        test_int(0, it.count);
-        test_uint(EcsWildcard, ecs_field_src(&it, 0));
-        test_uint(ecs_childof(internals), ecs_field_id(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 0));
 
         test_bool(true, ecs_query_next(&it));
@@ -1757,12 +1748,6 @@ void NonFragmentingChildOf_any_src_childof_wildcard(void) {
         test_bool(true, ecs_query_next(&it));
         test_int(0, it.count);
         test_uint(EcsWildcard, ecs_field_src(&it, 0));
-        test_uint(ecs_childof(internals), ecs_field_id(&it, 0));
-        test_bool(true, ecs_field_is_set(&it, 0));
-
-        test_bool(true, ecs_query_next(&it));
-        test_int(0, it.count);
-        test_uint(EcsWildcard, ecs_field_src(&it, 0));
         test_uint(ecs_childof(EcsFlecsCore), ecs_field_id(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 0));
 
@@ -1777,12 +1762,6 @@ void NonFragmentingChildOf_any_src_childof_wildcard(void) {
         test_int(0, it.count);
         test_uint(EcsWildcard, ecs_field_src(&it, 0));
         test_uint(ecs_childof(EcsFlecs), ecs_field_id(&it, 0));
-        test_bool(true, ecs_field_is_set(&it, 0));
-
-        test_bool(true, ecs_query_next(&it));
-        test_int(0, it.count);
-        test_uint(EcsWildcard, ecs_field_src(&it, 0));
-        test_uint(ecs_childof(internals), ecs_field_id(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 0));
 
         test_bool(true, ecs_query_next(&it));

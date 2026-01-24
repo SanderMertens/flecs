@@ -4070,9 +4070,6 @@ void flecs_journal_end(void);
 /* Used in id records to keep track of entities used with id flags */
 extern const ecs_entity_t EcsFlag;
 
-/* Scope for flecs internals, like observers used for builtin features */
-extern const ecs_entity_t EcsFlecsInternals;
-
 ////////////////////////////////////////////////////////////////////////////////
 //// Bootstrap API
 ////////////////////////////////////////////////////////////////////////////////
@@ -5081,7 +5078,6 @@ void flecs_bootstrap(
     flecs_bootstrap_make_alive(world, EcsChildOf);
     flecs_bootstrap_make_alive(world, EcsFlecs);
     flecs_bootstrap_make_alive(world, EcsFlecsCore);
-    flecs_bootstrap_make_alive(world, EcsFlecsInternals);
     flecs_bootstrap_make_alive(world, EcsOnAdd);
     flecs_bootstrap_make_alive(world, EcsOnRemove);
     flecs_bootstrap_make_alive(world, EcsOnSet);
@@ -5156,11 +5152,11 @@ void flecs_bootstrap(
 
     /* Register observer for trait before adding EcsPairIsTag */
     ecs_observer(world, {
-        .entity = ecs_new_w_pair(world, EcsChildOf, EcsFlecsInternals),
         .query.terms[0] = { .id = EcsPairIsTag },
         .events = {EcsOnAdd, EcsOnRemove},
         .callback = flecs_register_tag,
-        .yield_existing = true
+        .yield_existing = true,
+        .global_observer = true
     });
 
     /* Populate core module */
@@ -5190,10 +5186,6 @@ void flecs_bootstrap(
     ecs_add_pair(world, EcsFlecsCore, EcsChildOf, EcsFlecs);
     ecs_set_name(world, EcsFlecsCore, "core");
     ecs_add_id(world, EcsFlecsCore, EcsModule);
-
-    ecs_add_pair(world, EcsFlecsInternals, EcsChildOf, EcsFlecsCore);
-    ecs_set_name(world, EcsFlecsInternals, "internals");
-    ecs_add_id(world, EcsFlecsInternals, EcsModule);
 
     /* Self check */
     ecs_record_t *r = flecs_entities_get(world, EcsFlecs);
@@ -5274,9 +5266,6 @@ void flecs_bootstrap(
     ecs_add_pair(world, EcsChildOf, EcsOnInstantiate, EcsDontInherit);
     ecs_add_pair(world, ecs_id(EcsIdentifier), EcsOnInstantiate, EcsDontInherit);
 
-    /* Create triggers in internals scope */
-    ecs_set_scope(world, EcsFlecsInternals);
-
     /* Register observers for components/relationship properties. Most observers
      * set flags on an component record when a trait is added to a component, which
      * allows for quick trait testing in various operations. */
@@ -5284,7 +5273,8 @@ void flecs_bootstrap(
         .query.terms = {{ .id = EcsFinal }},
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd},
-        .callback = flecs_register_final
+        .callback = flecs_register_final,
+        .global_observer = true
     });
 
     static ecs_on_trait_ctx_t inheritable_trait = { EcsIdInheritable, 0 };
@@ -5293,7 +5283,8 @@ void flecs_bootstrap(
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd},
         .callback = flecs_register_trait,
-        .ctx = &inheritable_trait
+        .ctx = &inheritable_trait,
+        .global_observer = true
     });
 
     ecs_observer(world, {
@@ -5302,7 +5293,8 @@ void flecs_bootstrap(
         },
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd, EcsOnRemove},
-        .callback = flecs_register_on_delete
+        .callback = flecs_register_on_delete,
+        .global_observer = true
     });
 
     ecs_observer(world, {
@@ -5311,7 +5303,8 @@ void flecs_bootstrap(
         },
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd, EcsOnRemove},
-        .callback = flecs_register_on_delete_object
+        .callback = flecs_register_on_delete_object,
+        .global_observer = true
     });
 
     ecs_observer(world, {
@@ -5320,21 +5313,24 @@ void flecs_bootstrap(
         },
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd},
-        .callback = flecs_register_on_instantiate
+        .callback = flecs_register_on_instantiate,
+        .global_observer = true
     });
 
     ecs_observer(world, {
         .query.terms = {{ .id = EcsSymmetric }},
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd},
-        .callback = flecs_register_symmetric
+        .callback = flecs_register_symmetric,
+        .global_observer = true
     });
 
     ecs_observer(world, {
         .query.terms = {{ .id = EcsSingleton }},
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd},
-        .callback = flecs_register_singleton
+        .callback = flecs_register_singleton,
+        .global_observer = true
     });
 
     static ecs_on_trait_ctx_t traversable_trait = { EcsIdTraversable, EcsIdTraversable };
@@ -5343,7 +5339,8 @@ void flecs_bootstrap(
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd, EcsOnRemove},
         .callback = flecs_register_trait,
-        .ctx = &traversable_trait
+        .ctx = &traversable_trait,
+        .global_observer = true
     });
 
     static ecs_on_trait_ctx_t exclusive_trait = { EcsIdExclusive, 0 };
@@ -5352,7 +5349,8 @@ void flecs_bootstrap(
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd, EcsOnRemove},
         .callback = flecs_register_trait,
-        .ctx = &exclusive_trait
+        .ctx = &exclusive_trait,
+        .global_observer = true
     });
 
     static ecs_on_trait_ctx_t toggle_trait = { EcsIdCanToggle, 0 };
@@ -5361,7 +5359,8 @@ void flecs_bootstrap(
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd},
         .callback = flecs_register_trait,
-        .ctx = &toggle_trait
+        .ctx = &toggle_trait,
+        .global_observer = true
     });
 
     static ecs_on_trait_ctx_t with_trait = { EcsIdWith, 0 };
@@ -5372,7 +5371,8 @@ void flecs_bootstrap(
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd},
         .callback = flecs_register_trait_pair,
-        .ctx = &with_trait
+        .ctx = &with_trait,
+        .global_observer = true
     });
 
     static ecs_on_trait_ctx_t sparse_trait = { EcsIdSparse, 0 };
@@ -5381,7 +5381,8 @@ void flecs_bootstrap(
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd},
         .callback = flecs_register_trait,
-        .ctx = &sparse_trait
+        .ctx = &sparse_trait,
+        .global_observer = true
     });
 
     static ecs_on_trait_ctx_t dont_fragment_trait = { EcsIdDontFragment, 0 };
@@ -5390,14 +5391,16 @@ void flecs_bootstrap(
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd},
         .callback = flecs_register_trait,
-        .ctx = &dont_fragment_trait
+        .ctx = &dont_fragment_trait,
+        .global_observer = true
     });
 
     ecs_observer(world, {
         .query.terms = {{ .id = EcsOrderedChildren }},
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd,  EcsOnRemove},
-        .callback = flecs_register_ordered_children
+        .callback = flecs_register_ordered_children,
+        .global_observer = true
     });
 
     /* Entities used as slot are marked as exclusive to ensure a slot can always
@@ -5408,7 +5411,8 @@ void flecs_bootstrap(
         },
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd},
-        .callback = flecs_register_slot_of
+        .callback = flecs_register_slot_of,
+        .global_observer = true
     });
 
     /* Define observer to make sure that adding a module to a child entity also
@@ -5417,7 +5421,8 @@ void flecs_bootstrap(
         .query.terms = {{ .id = EcsModule } },
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd},
-        .callback = flecs_ensure_module_tag
+        .callback = flecs_ensure_module_tag,
+        .global_observer = true
     });
 
     /* Observer that tracks whether observers are disabled */
@@ -5427,7 +5432,8 @@ void flecs_bootstrap(
             { .id = EcsDisabled },
         },
         .events = {EcsOnAdd, EcsOnRemove},
-        .callback = flecs_disable_observer
+        .callback = flecs_disable_observer,
+        .global_observer = true
     });
 
     /* Observer that tracks whether modules are disabled */
@@ -5437,11 +5443,9 @@ void flecs_bootstrap(
             { .id = EcsDisabled },
         },
         .events = {EcsOnAdd, EcsOnRemove},
-        .callback = flecs_disable_module
+        .callback = flecs_disable_module,
+        .global_observer = true
     });
-
-    /* Set scope back to flecs core */
-    ecs_set_scope(world, EcsFlecsCore);
 
     /* Exclusive properties */
     ecs_add_id(world, EcsChildOf, EcsExclusive);
@@ -11531,13 +11535,13 @@ void flecs_bootstrap_entity_name(
     ecs_world_t *world) 
 {
     ecs_observer(world, {
-        .entity = ecs_entity(world, { .parent = EcsFlecsInternals }),
         .query.terms[0] = {
             .id = ecs_pair(ecs_id(EcsIdentifier), EcsSymbol)
         },
         .callback = flecs_on_set_symbol,
         .events = {EcsOnSet},
-        .yield_existing = true
+        .yield_existing = true,
+        .global_observer = true
     });
 }
 
@@ -14688,6 +14692,7 @@ void flecs_observable_init(
     ecs_observable_t *observable)
 {
     flecs_sparse_init_t(&observable->events, NULL, NULL, ecs_event_record_t);
+    ecs_vec_init_t(NULL, &observable->global_observers, ecs_observer_t*, 0);
     observable->on_add.event = EcsOnAdd;
     observable->on_remove.event = EcsOnRemove;
     observable->on_set.event = EcsOnSet;
@@ -14696,6 +14701,12 @@ void flecs_observable_init(
 void flecs_observable_fini(
     ecs_observable_t *observable)
 {
+    int32_t i, count = ecs_vec_count(&observable->global_observers);
+    ecs_observer_t **observers = ecs_vec_first(&observable->global_observers);
+    for (i = 0; i < count; i ++) {
+        flecs_observer_fini(observers[i]);
+    }
+
     ecs_assert(!ecs_map_is_init(&observable->on_add.event_ids), 
         ECS_INTERNAL_ERROR, NULL);
     ecs_assert(!ecs_map_is_init(&observable->on_remove.event_ids), 
@@ -14704,7 +14715,7 @@ void flecs_observable_fini(
         ECS_INTERNAL_ERROR, NULL);
 
     ecs_sparse_t *events = &observable->events;
-    int32_t i, count = flecs_sparse_count(events);
+    count = flecs_sparse_count(events);
     for (i = 0; i < count; i ++) {
         ecs_event_record_t *er = 
             flecs_sparse_get_dense_t(events, ecs_event_record_t, i);
@@ -14716,6 +14727,7 @@ void flecs_observable_fini(
             ECS_INTERNAL_ERROR, NULL);
     }
 
+    ecs_vec_fini_t(NULL, &observable->global_observers, ecs_observer_t*);
     flecs_sparse_fini(&observable->events);
 }
 
@@ -17533,90 +17545,102 @@ ecs_entity_t ecs_observer_init(
         "cannot create observer while world is being deleted");
 
     entity = desc->entity;
-    if (!entity) {
+    if (!entity && !desc->global_observer) {
         entity = ecs_entity(world, {0});
     }
 
-    EcsPoly *poly = flecs_poly_bind(world, entity, ecs_observer_t);
-    if (!poly->poly) {
+    EcsPoly *poly = NULL;
+    if (!entity) {
         ecs_observer_t *o = flecs_observer_init(world, entity, desc);\
         if (!o) {
             goto error;
         }
 
-        ecs_assert(o->entity == entity, ECS_INTERNAL_ERROR, NULL);
-        poly->poly = o;
-
-        if (ecs_get_name(world, entity)) {
-            ecs_trace("#[green]observer#[reset] %s created", 
-                ecs_get_name(world, entity));
-        }
+        ecs_vec_append_t(NULL, &world->observable.global_observers, 
+            ecs_observer_t*)[0] = o;
     } else {
-        flecs_poly_assert(poly->poly, ecs_observer_t);
-        ecs_observer_t *o = (ecs_observer_t*)poly->poly;
+        poly = flecs_poly_bind(world, entity, ecs_observer_t);
 
-        if (o->ctx_free) {
-            if (o->ctx && o->ctx != desc->ctx) {
-                o->ctx_free(o->ctx);
+        if (!poly->poly) {
+            ecs_observer_t *o = flecs_observer_init(world, entity, desc);\
+            if (!o) {
+                goto error;
+            }
+
+            ecs_assert(o->entity == entity, ECS_INTERNAL_ERROR, NULL);
+            poly->poly = o;
+
+            if (ecs_get_name(world, entity)) {
+                ecs_trace("#[green]observer#[reset] %s created", 
+                    ecs_get_name(world, entity));
+            }
+        } else {
+            flecs_poly_assert(poly->poly, ecs_observer_t);
+            ecs_observer_t *o = (ecs_observer_t*)poly->poly;
+
+            if (o->ctx_free) {
+                if (o->ctx && o->ctx != desc->ctx) {
+                    o->ctx_free(o->ctx);
+                }
+            }
+
+            if (o->callback_ctx_free) {
+                if (o->callback_ctx && o->callback_ctx != desc->callback_ctx) {
+                    o->callback_ctx_free(o->callback_ctx);
+                    o->callback_ctx_free = NULL;
+                    o->callback_ctx = NULL;
+                }
+            }
+
+            if (o->run_ctx_free) {
+                if (o->run_ctx && o->run_ctx != desc->run_ctx) {
+                    o->run_ctx_free(o->run_ctx);
+                    o->run_ctx_free = NULL;
+                    o->run_ctx = NULL;
+                }
+            }
+
+            if (desc->run) {
+                o->run = desc->run;
+                if (!desc->callback) {
+                    o->callback = NULL;
+                }
+            }
+
+            if (desc->callback) {
+                o->callback = desc->callback;
+                if (!desc->run) {
+                    o->run = NULL;
+                }
+            }
+
+            if (desc->ctx) {
+                o->ctx = desc->ctx;
+            }
+
+            if (desc->callback_ctx) {
+                o->callback_ctx = desc->callback_ctx;
+            }
+
+            if (desc->run_ctx) {
+                o->run_ctx = desc->run_ctx;
+            }
+
+            if (desc->ctx_free) {
+                o->ctx_free = desc->ctx_free;
+            }
+
+            if (desc->callback_ctx_free) {
+                o->callback_ctx_free = desc->callback_ctx_free;
+            }
+
+            if (desc->run_ctx_free) {
+                o->run_ctx_free = desc->run_ctx_free;
             }
         }
 
-        if (o->callback_ctx_free) {
-            if (o->callback_ctx && o->callback_ctx != desc->callback_ctx) {
-                o->callback_ctx_free(o->callback_ctx);
-                o->callback_ctx_free = NULL;
-                o->callback_ctx = NULL;
-            }
-        }
-
-        if (o->run_ctx_free) {
-            if (o->run_ctx && o->run_ctx != desc->run_ctx) {
-                o->run_ctx_free(o->run_ctx);
-                o->run_ctx_free = NULL;
-                o->run_ctx = NULL;
-            }
-        }
-
-        if (desc->run) {
-            o->run = desc->run;
-            if (!desc->callback) {
-                o->callback = NULL;
-            }
-        }
-
-        if (desc->callback) {
-            o->callback = desc->callback;
-            if (!desc->run) {
-                o->run = NULL;
-            }
-        }
-
-        if (desc->ctx) {
-            o->ctx = desc->ctx;
-        }
-
-        if (desc->callback_ctx) {
-            o->callback_ctx = desc->callback_ctx;
-        }
-
-        if (desc->run_ctx) {
-            o->run_ctx = desc->run_ctx;
-        }
-
-        if (desc->ctx_free) {
-            o->ctx_free = desc->ctx_free;
-        }
-
-        if (desc->callback_ctx_free) {
-            o->callback_ctx_free = desc->callback_ctx_free;
-        }
-
-        if (desc->run_ctx_free) {
-            o->run_ctx_free = desc->run_ctx_free;
-        }
+        flecs_poly_modified(world, entity, ecs_observer_t);
     }
-
-    flecs_poly_modified(world, entity, ecs_observer_t);
 
     return entity;
 error:
@@ -21681,7 +21705,6 @@ const ecs_entity_t EcsSystem =                      FLECS_HI_COMPONENT_ID + 2;
 const ecs_entity_t EcsWorld =                       FLECS_HI_COMPONENT_ID + 3;
 const ecs_entity_t EcsFlecs =                       FLECS_HI_COMPONENT_ID + 4;
 const ecs_entity_t EcsFlecsCore =                   FLECS_HI_COMPONENT_ID + 5;
-const ecs_entity_t EcsFlecsInternals =              FLECS_HI_COMPONENT_ID + 6;
 const ecs_entity_t EcsModule =                      FLECS_HI_COMPONENT_ID + 7;
 const ecs_entity_t EcsPrivate =                     FLECS_HI_COMPONENT_ID + 8;
 const ecs_entity_t EcsPrefab =                      FLECS_HI_COMPONENT_ID + 9;
@@ -22977,6 +23000,7 @@ int ecs_fini(
 
     ecs_dbg_1("#[bold]cleanup world data structures");
     ecs_log_push_1();
+    flecs_observable_fini(&world->observable);
     flecs_entities_fini(world);
     flecs_components_fini(world);
     flecs_fini_type_info(world);
@@ -22984,7 +23008,6 @@ int ecs_fini(
     ecs_map_fini(&world->locked_components);
     ecs_map_fini(&world->locked_entities);
 #endif
-    flecs_observable_fini(&world->observable);
     flecs_name_index_fini(&world->aliases);
     flecs_name_index_fini(&world->symbols);
     ecs_set_stage_count(world, 0);
@@ -27535,7 +27558,6 @@ ecs_entity_t ecs_module_init(
     }
     
     ecs_add_id(world, e, EcsModule);
-    // ecs_add_id(world, e, EcsSingleton);
 
     ecs_component_desc_t private_desc = *desc;
     private_desc.entity = e;
@@ -30159,12 +30181,12 @@ void FlecsRestImport(
     });
 
     ecs_observer(world, {
-        .entity = ecs_entity(world, { .name = "DisableRestObserver" }),
         .query = { 
             .terms = {{ .id = EcsDisabled, .src.id = ecs_id(FlecsRest) }}
         },
         .events = {EcsOnAdd, EcsOnRemove},
-        .callback = DisableRest
+        .callback = DisableRest,
+        .global_observer = true
     });
 
     ecs_set_name_prefix(world, "EcsRest");
@@ -41952,7 +41974,7 @@ void flecs_table_init_flags(
                 /* If table contains entities that are inside one of the 
                     * builtin modules, it contains builtin entities */
 
-                if (tgt == EcsFlecsCore || tgt == EcsFlecsInternals) {
+                if (tgt == EcsFlecsCore) {
                     table->flags |= EcsTableHasBuiltins;
                 }
 
@@ -57981,17 +58003,17 @@ void FlecsMetaImport(
     });
 
     ecs_observer(world, {
-        .entity = ecs_entity(world, { .parent = EcsFlecsInternals }),
         .query.terms[0] = { .id = ecs_id(EcsType) },
         .events = {EcsOnSet},
-        .callback = flecs_meta_type_serializer_init
+        .callback = flecs_meta_type_serializer_init,
+        .global_observer = true
     });
 
     ecs_observer(world, {
-        .entity = ecs_entity(world, { .parent = EcsFlecsInternals }),
         .query.terms[0] = { .id = ecs_id(EcsType) },
         .events = {EcsOnSet},
-        .callback = flecs_rtt_init_default_hooks
+        .callback = flecs_rtt_init_default_hooks,
+        .global_observer = true
     });
 
     /* Import type support for different type kinds */
@@ -71694,10 +71716,17 @@ ecs_size_t flecs_observers_memory_get(
 {
     ecs_size_t result = 0;
 
+    int32_t i, count = ecs_vec_count(&world->observable.global_observers);
+    for (i = 0; i < count; i ++) {
+        ecs_observer_t *o = ecs_vec_get_t(
+            &world->observable.global_observers, ecs_observer_t*, i)[0];
+        result += flecs_observer_memory_get(flecs_observer_impl(o));
+    }
+
     ecs_iter_t it = ecs_each_pair_t(world, EcsPoly, EcsObserver);
     while (ecs_each_next(&it)) {
         EcsPoly *p = ecs_field(&it, EcsPoly, 0);
-        int32_t i, count = it.count;
+        count = it.count;
         for (i = 0; i < count; i ++) {
             ecs_observer_impl_t *o = p[i].poly;
             if (!o) {
@@ -74112,12 +74141,10 @@ void FlecsWorldSummaryImport(
     });
 
     ecs_observer(world, {
-        .entity = ecs_entity(world, { 
-            .name = "OnSetWorldSummary"
-        }),
         .events = { EcsOnSet },
         .query.terms = {{ .id = ecs_id(EcsWorldSummary) }},
-        .callback = OnSetWorldSummary
+        .callback = OnSetWorldSummary,
+        .global_observer = true
     });
 
     ecs_set(world, EcsWorld, EcsWorldSummary, {
@@ -86983,17 +87010,17 @@ void flecs_meta_array_init(
     });
 
     ecs_observer(world, {
-        .entity = ecs_entity(world, { .parent = EcsFlecsInternals }),
         .query.terms[0] = { .id = ecs_id(EcsArray) },
         .events = {EcsOnSet},
-        .callback = flecs_set_array
+        .callback = flecs_set_array,
+        .global_observer = true
     });
 
     ecs_observer(world, {
-        .entity = ecs_entity(world, { .parent = EcsFlecsInternals }),
         .query.terms[0] = { .id = ecs_id(EcsVector) },
         .events = {EcsOnSet},
-        .callback = flecs_set_vector
+        .callback = flecs_set_vector,
+        .global_observer = true
     });
 }
 
@@ -87627,31 +87654,31 @@ void flecs_meta_enum_init(
     ecs_add_pair(world, ecs_id(EcsBitmask), EcsWith, ecs_id(EcsConstants));
 
     ecs_observer(world, {
-        .entity = ecs_entity(world, { .parent = EcsFlecsInternals }),
         .query.terms[0] = { .id = ecs_id(EcsEnum) },
         .events = {EcsOnSet},
-        .callback = flecs_add_enum
+        .callback = flecs_add_enum,
+        .global_observer = true
     });
 
     ecs_observer(world, {
-        .entity = ecs_entity(world, { .parent = EcsFlecsInternals }),
         .query.terms[0] = { .id = ecs_id(EcsBitmask) },
         .events = {EcsOnAdd},
-        .callback = flecs_add_bitmask
+        .callback = flecs_add_bitmask,
+        .global_observer = true
     });
 
     ecs_observer(world, {
-        .entity = ecs_entity(world, { .parent = EcsFlecsInternals }),
         .query.terms[0] = { .id = EcsConstant },
         .events = {EcsOnAdd},
-        .callback = flecs_add_constant
+        .callback = flecs_add_constant,
+        .global_observer = true
     });
 
     ecs_observer(world, {
-        .entity = ecs_entity(world, { .parent = EcsFlecsInternals }),
         .query.terms[0] = { .id = ecs_pair(EcsConstant, EcsWildcard) },
         .events = {EcsOnSet},
-        .callback = flecs_add_constant
+        .callback = flecs_add_constant,
+        .global_observer = true
     });
 
     ecs_set(world, ecs_id(EcsEnum),    EcsDefaultChildComponent, {EcsConstant});
@@ -87740,10 +87767,10 @@ void flecs_meta_opaque_init(
     });
 
     ecs_observer(world, {
-        .entity = ecs_entity(world, { .parent = EcsFlecsInternals }),
         .query.terms[0] = { .id = ecs_id(EcsOpaque) },
         .events = {EcsOnSet},
-        .callback = flecs_set_opaque_type
+        .callback = flecs_set_opaque_type,
+        .global_observer = true
     });
 
 }
@@ -88257,10 +88284,10 @@ void flecs_meta_primitives_init(
     });
 
     ecs_observer(world, {
-        .entity = ecs_entity(world, { .parent = EcsFlecsInternals }),
         .query.terms[0] = { .id = ecs_id(EcsPrimitive) },
         .events = {EcsOnSet},
-        .callback = flecs_set_primitive
+        .callback = flecs_set_primitive,
+        .global_observer = true
     });
 
     /* Initialize primitive types */
@@ -88907,17 +88934,17 @@ void flecs_meta_struct_init(
     });
 
     ecs_observer(world, {
-        .entity = ecs_entity(world, { .parent = EcsFlecsInternals }),
         .query.terms[0] = { .id = ecs_id(EcsMember) },
         .events = {EcsOnSet},
-        .callback = flecs_set_member
+        .callback = flecs_set_member,
+        .global_observer = true
     });
 
     ecs_observer(world, {
-        .entity = ecs_entity(world, { .parent = EcsFlecsInternals }),
         .query.terms[0] = { .id = ecs_id(EcsMemberRanges) },
         .events = {EcsOnSet},
-        .callback = flecs_set_member_ranges
+        .callback = flecs_set_member_ranges,
+        .global_observer = true
     });
 
     ecs_set(world, ecs_id(EcsStruct),  EcsDefaultChildComponent, {ecs_id(EcsMember)});
@@ -89282,20 +89309,20 @@ void flecs_meta_units_init(
     ecs_add_id(world, EcsQuantity, EcsPairIsTag);
 
     ecs_observer(world, {
-        .entity = ecs_entity(world, { .parent = EcsFlecsInternals }),
         .query.terms[0] = { .id = ecs_id(EcsUnit) },
         .events = {EcsOnSet},
-        .callback = flecs_set_unit
+        .callback = flecs_set_unit,
+        .global_observer = true
     });
 
     ecs_observer(world, {
-        .entity = ecs_entity(world, { .parent = EcsFlecsInternals }),
         .query.terms = {
             { .id = ecs_id(EcsUnit) },
             { .id = EcsQuantity }
         },
         .events = { EcsMonitor },
-        .callback = flecs_unit_quantity_monitor
+        .callback = flecs_unit_quantity_monitor,
+        .global_observer = true
     });
 
 

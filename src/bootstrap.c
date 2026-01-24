@@ -856,7 +856,6 @@ void flecs_bootstrap(
     flecs_bootstrap_make_alive(world, EcsChildOf);
     flecs_bootstrap_make_alive(world, EcsFlecs);
     flecs_bootstrap_make_alive(world, EcsFlecsCore);
-    flecs_bootstrap_make_alive(world, EcsFlecsInternals);
     flecs_bootstrap_make_alive(world, EcsOnAdd);
     flecs_bootstrap_make_alive(world, EcsOnRemove);
     flecs_bootstrap_make_alive(world, EcsOnSet);
@@ -931,11 +930,11 @@ void flecs_bootstrap(
 
     /* Register observer for trait before adding EcsPairIsTag */
     ecs_observer(world, {
-        .entity = ecs_new_w_pair(world, EcsChildOf, EcsFlecsInternals),
         .query.terms[0] = { .id = EcsPairIsTag },
         .events = {EcsOnAdd, EcsOnRemove},
         .callback = flecs_register_tag,
-        .yield_existing = true
+        .yield_existing = true,
+        .global_observer = true
     });
 
     /* Populate core module */
@@ -965,10 +964,6 @@ void flecs_bootstrap(
     ecs_add_pair(world, EcsFlecsCore, EcsChildOf, EcsFlecs);
     ecs_set_name(world, EcsFlecsCore, "core");
     ecs_add_id(world, EcsFlecsCore, EcsModule);
-
-    ecs_add_pair(world, EcsFlecsInternals, EcsChildOf, EcsFlecsCore);
-    ecs_set_name(world, EcsFlecsInternals, "internals");
-    ecs_add_id(world, EcsFlecsInternals, EcsModule);
 
     /* Self check */
     ecs_record_t *r = flecs_entities_get(world, EcsFlecs);
@@ -1049,9 +1044,6 @@ void flecs_bootstrap(
     ecs_add_pair(world, EcsChildOf, EcsOnInstantiate, EcsDontInherit);
     ecs_add_pair(world, ecs_id(EcsIdentifier), EcsOnInstantiate, EcsDontInherit);
 
-    /* Create triggers in internals scope */
-    ecs_set_scope(world, EcsFlecsInternals);
-
     /* Register observers for components/relationship properties. Most observers
      * set flags on an component record when a trait is added to a component, which
      * allows for quick trait testing in various operations. */
@@ -1059,7 +1051,8 @@ void flecs_bootstrap(
         .query.terms = {{ .id = EcsFinal }},
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd},
-        .callback = flecs_register_final
+        .callback = flecs_register_final,
+        .global_observer = true
     });
 
     static ecs_on_trait_ctx_t inheritable_trait = { EcsIdInheritable, 0 };
@@ -1068,7 +1061,8 @@ void flecs_bootstrap(
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd},
         .callback = flecs_register_trait,
-        .ctx = &inheritable_trait
+        .ctx = &inheritable_trait,
+        .global_observer = true
     });
 
     ecs_observer(world, {
@@ -1077,7 +1071,8 @@ void flecs_bootstrap(
         },
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd, EcsOnRemove},
-        .callback = flecs_register_on_delete
+        .callback = flecs_register_on_delete,
+        .global_observer = true
     });
 
     ecs_observer(world, {
@@ -1086,7 +1081,8 @@ void flecs_bootstrap(
         },
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd, EcsOnRemove},
-        .callback = flecs_register_on_delete_object
+        .callback = flecs_register_on_delete_object,
+        .global_observer = true
     });
 
     ecs_observer(world, {
@@ -1095,21 +1091,24 @@ void flecs_bootstrap(
         },
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd},
-        .callback = flecs_register_on_instantiate
+        .callback = flecs_register_on_instantiate,
+        .global_observer = true
     });
 
     ecs_observer(world, {
         .query.terms = {{ .id = EcsSymmetric }},
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd},
-        .callback = flecs_register_symmetric
+        .callback = flecs_register_symmetric,
+        .global_observer = true
     });
 
     ecs_observer(world, {
         .query.terms = {{ .id = EcsSingleton }},
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd},
-        .callback = flecs_register_singleton
+        .callback = flecs_register_singleton,
+        .global_observer = true
     });
 
     static ecs_on_trait_ctx_t traversable_trait = { EcsIdTraversable, EcsIdTraversable };
@@ -1118,7 +1117,8 @@ void flecs_bootstrap(
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd, EcsOnRemove},
         .callback = flecs_register_trait,
-        .ctx = &traversable_trait
+        .ctx = &traversable_trait,
+        .global_observer = true
     });
 
     static ecs_on_trait_ctx_t exclusive_trait = { EcsIdExclusive, 0 };
@@ -1127,7 +1127,8 @@ void flecs_bootstrap(
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd, EcsOnRemove},
         .callback = flecs_register_trait,
-        .ctx = &exclusive_trait
+        .ctx = &exclusive_trait,
+        .global_observer = true
     });
 
     static ecs_on_trait_ctx_t toggle_trait = { EcsIdCanToggle, 0 };
@@ -1136,7 +1137,8 @@ void flecs_bootstrap(
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd},
         .callback = flecs_register_trait,
-        .ctx = &toggle_trait
+        .ctx = &toggle_trait,
+        .global_observer = true
     });
 
     static ecs_on_trait_ctx_t with_trait = { EcsIdWith, 0 };
@@ -1147,7 +1149,8 @@ void flecs_bootstrap(
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd},
         .callback = flecs_register_trait_pair,
-        .ctx = &with_trait
+        .ctx = &with_trait,
+        .global_observer = true
     });
 
     static ecs_on_trait_ctx_t sparse_trait = { EcsIdSparse, 0 };
@@ -1156,7 +1159,8 @@ void flecs_bootstrap(
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd},
         .callback = flecs_register_trait,
-        .ctx = &sparse_trait
+        .ctx = &sparse_trait,
+        .global_observer = true
     });
 
     static ecs_on_trait_ctx_t dont_fragment_trait = { EcsIdDontFragment, 0 };
@@ -1165,14 +1169,16 @@ void flecs_bootstrap(
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd},
         .callback = flecs_register_trait,
-        .ctx = &dont_fragment_trait
+        .ctx = &dont_fragment_trait,
+        .global_observer = true
     });
 
     ecs_observer(world, {
         .query.terms = {{ .id = EcsOrderedChildren }},
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd,  EcsOnRemove},
-        .callback = flecs_register_ordered_children
+        .callback = flecs_register_ordered_children,
+        .global_observer = true
     });
 
     /* Entities used as slot are marked as exclusive to ensure a slot can always
@@ -1183,7 +1189,8 @@ void flecs_bootstrap(
         },
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd},
-        .callback = flecs_register_slot_of
+        .callback = flecs_register_slot_of,
+        .global_observer = true
     });
 
     /* Define observer to make sure that adding a module to a child entity also
@@ -1192,7 +1199,8 @@ void flecs_bootstrap(
         .query.terms = {{ .id = EcsModule } },
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd},
-        .callback = flecs_ensure_module_tag
+        .callback = flecs_ensure_module_tag,
+        .global_observer = true
     });
 
     /* Observer that tracks whether observers are disabled */
@@ -1202,7 +1210,8 @@ void flecs_bootstrap(
             { .id = EcsDisabled },
         },
         .events = {EcsOnAdd, EcsOnRemove},
-        .callback = flecs_disable_observer
+        .callback = flecs_disable_observer,
+        .global_observer = true
     });
 
     /* Observer that tracks whether modules are disabled */
@@ -1212,11 +1221,9 @@ void flecs_bootstrap(
             { .id = EcsDisabled },
         },
         .events = {EcsOnAdd, EcsOnRemove},
-        .callback = flecs_disable_module
+        .callback = flecs_disable_module,
+        .global_observer = true
     });
-
-    /* Set scope back to flecs core */
-    ecs_set_scope(world, EcsFlecsCore);
 
     /* Exclusive properties */
     ecs_add_id(world, EcsChildOf, EcsExclusive);

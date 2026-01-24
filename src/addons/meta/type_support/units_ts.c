@@ -355,20 +355,20 @@ void flecs_meta_units_init(
     ecs_add_id(world, EcsQuantity, EcsPairIsTag);
 
     ecs_observer(world, {
-        .entity = ecs_entity(world, { .parent = EcsFlecsInternals }),
         .query.terms[0] = { .id = ecs_id(EcsUnit) },
         .events = {EcsOnSet},
-        .callback = flecs_set_unit
+        .callback = flecs_set_unit,
+        .global_observer = true
     });
 
     ecs_observer(world, {
-        .entity = ecs_entity(world, { .parent = EcsFlecsInternals }),
         .query.terms = {
             { .id = ecs_id(EcsUnit) },
             { .id = EcsQuantity }
         },
         .events = { EcsMonitor },
-        .callback = flecs_unit_quantity_monitor
+        .callback = flecs_unit_quantity_monitor,
+        .global_observer = true
     });
 
 

@@ -597,17 +597,17 @@ void flecs_meta_struct_init(
     });
 
     ecs_observer(world, {
-        .entity = ecs_entity(world, { .parent = EcsFlecsInternals }),
         .query.terms[0] = { .id = ecs_id(EcsMember) },
         .events = {EcsOnSet},
-        .callback = flecs_set_member
+        .callback = flecs_set_member,
+        .global_observer = true
     });
 
     ecs_observer(world, {
-        .entity = ecs_entity(world, { .parent = EcsFlecsInternals }),
         .query.terms[0] = { .id = ecs_id(EcsMemberRanges) },
         .events = {EcsOnSet},
-        .callback = flecs_set_member_ranges
+        .callback = flecs_set_member_ranges,
+        .global_observer = true
     });
 
     ecs_set(world, ecs_id(EcsStruct),  EcsDefaultChildComponent, {ecs_id(EcsMember)});

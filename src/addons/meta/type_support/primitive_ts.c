@@ -506,10 +506,10 @@ void flecs_meta_primitives_init(
     });
 
     ecs_observer(world, {
-        .entity = ecs_entity(world, { .parent = EcsFlecsInternals }),
         .query.terms[0] = { .id = ecs_id(EcsPrimitive) },
         .events = {EcsOnSet},
-        .callback = flecs_set_primitive
+        .callback = flecs_set_primitive,
+        .global_observer = true
     });
 
     /* Initialize primitive types */
