@@ -708,14 +708,13 @@ ecs_table_t* flecs_bootstrap_component_table(
     ecs_table_t *result = flecs_table_find_or_create(world, &array);
 
     /* Preallocate enough memory for initial components */
-    ecs_allocator_t *a = &world->allocator;
     ecs_vec_t v_entities = ecs_vec_from_entities(result);
-    ecs_vec_init_t(a, &v_entities, ecs_entity_t, EcsFirstUserComponentId);
+    ecs_vec_init_t(NULL, &v_entities, ecs_entity_t, EcsFirstUserComponentId);
     
     {
         ecs_column_t *column = &result->data.columns[0];
         ecs_vec_t v = ecs_vec_from_column_t(column, result, EcsComponent);
-        ecs_vec_init_t(a, &v, EcsComponent, EcsFirstUserComponentId);
+        ecs_vec_init_t(NULL, &v, EcsComponent, EcsFirstUserComponentId);
         ecs_assert(v.count == v_entities.count, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(v.size == v_entities.size, ECS_INTERNAL_ERROR, NULL);
         column->data = v.array;
@@ -723,7 +722,7 @@ ecs_table_t* flecs_bootstrap_component_table(
     {
         ecs_column_t *column = &result->data.columns[1];
         ecs_vec_t v = ecs_vec_from_column_t(column, result, EcsIdentifier);
-        ecs_vec_init_t(a, &v, EcsIdentifier, EcsFirstUserComponentId);
+        ecs_vec_init_t(NULL, &v, EcsIdentifier, EcsFirstUserComponentId);
         ecs_assert(v.count == v_entities.count, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(v.size == v_entities.size, ECS_INTERNAL_ERROR, NULL);
         column->data = v.array;
@@ -731,7 +730,7 @@ ecs_table_t* flecs_bootstrap_component_table(
     {
         ecs_column_t *column = &result->data.columns[2];
         ecs_vec_t v = ecs_vec_from_column_t(column, result, EcsIdentifier);
-        ecs_vec_init_t(a, &v, EcsIdentifier, EcsFirstUserComponentId);
+        ecs_vec_init_t(NULL, &v, EcsIdentifier, EcsFirstUserComponentId);
         ecs_assert(v.count == v_entities.count, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(v.size == v_entities.size, ECS_INTERNAL_ERROR, NULL);
         column->data = v.array;
@@ -762,8 +761,7 @@ void flecs_bootstrap_make_alive(
         r->row = flecs_ito(uint32_t, root->data.count);
 
         ecs_vec_t v_entities = ecs_vec_from_entities(root);
-        ecs_entity_t *array = ecs_vec_append_t(&world->allocator, 
-            &v_entities, ecs_entity_t);
+        ecs_entity_t *array = ecs_vec_append_t(NULL, &v_entities, ecs_entity_t);
         array[0] = e;
 
         root->data.entities = v_entities.array;
