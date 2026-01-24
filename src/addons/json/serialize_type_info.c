@@ -62,6 +62,8 @@ int flecs_json_typeinfo_ser_primitive(
         return -1;
     }
 
+    ecs_strbuf_list_next(str);
+
     return 0;
 }
 
@@ -324,7 +326,6 @@ int flecs_json_typeinfo_ser_type_slice(
 
             ecs_entity_t unit = m->unit;
             if (unit || error_range || warning_range || value_range) {
-                flecs_json_next(str);
                 flecs_json_next(str);
                 flecs_json_object_push(str);
 

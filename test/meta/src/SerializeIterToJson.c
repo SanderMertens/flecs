@@ -740,6 +740,49 @@ void SerializeIterToJson_serialize_type_info_w_unit_over(void) {
     ecs_fini(world);
 }
 
+void SerializeIterToJson_serialize_type_info_w_unit_array(void) {
+    typedef struct {
+        ecs_i32_t value[2];
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t u = ecs_unit_init(world, &(ecs_unit_desc_t){
+        .entity = ecs_entity(world, {.name = "celsius"}),
+        .symbol = "°"
+    });
+    test_assert(u != 0);
+
+    ecs_entity_t ecs_id(T) = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"value", ecs_id(ecs_i32_t), .unit = u, .count = 2}
+        }
+    });
+    test_assert(ecs_id(T) != 0);
+
+    ecs_entity_t e1 = ecs_entity(world, { .name = "Foo" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "Bar" });
+
+    ecs_set(world, e1, T, {12, 24});
+    ecs_set(world, e2, T, {16, 32});
+
+    ecs_query_t *q = ecs_query(world, { .expr = "T" });
+    ecs_iter_t it = ecs_query_iter(world, q);
+
+    ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
+    desc.serialize_type_info = true;
+    char *json = ecs_iter_to_json(&it, &desc);
+
+    test_json(json, "{\"type_info\":{\"T\":{\"value\":[\"array\", [\"int\"], 2, {\"unit\":\"celsius\", \"symbol\":\"°\"}]}}, \"results\":[{\"name\":\"Foo\", \"fields\":{\"values\":[{\"value\":[12, 24]}]}}, {\"name\":\"Bar\", \"fields\":{\"values\":[{\"value\":[16, 32]}]}}]}");
+
+    ecs_os_free(json);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
 void SerializeIterToJson_serialize_w_entity_label(void) {
     ecs_world_t *world = ecs_init();
 
