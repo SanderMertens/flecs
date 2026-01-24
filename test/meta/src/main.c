@@ -582,6 +582,7 @@ void DeserializeFromJson_ser_deser_new_world_2_entities_w_anon_parent_w_cycle(vo
 void DeserializeFromJson_ser_deser_new_world_2_entities_w_named_parent_w_cycle(void);
 void DeserializeFromJson_ser_deser_new_world_w_prefab(void);
 void DeserializeFromJson_ser_deser_new_world_w_disabled(void);
+void DeserializeFromJson_ser_deser_world_w_anon_recycled(void);
 void DeserializeFromJson_ser_deser_restore_1_entity_to_empty_table(void);
 void DeserializeFromJson_ser_deser_restore_1_entity_to_non_empty_table(void);
 void DeserializeFromJson_ser_deser_restore_1_anon_entity_to_empty_table(void);
@@ -3383,6 +3384,10 @@ bake_test_case DeserializeFromJson_testcases[] = {
         DeserializeFromJson_ser_deser_new_world_w_disabled
     },
     {
+        "ser_deser_world_w_anon_recycled",
+        DeserializeFromJson_ser_deser_world_w_anon_recycled
+    },
+    {
         "ser_deser_restore_1_entity_to_empty_table",
         DeserializeFromJson_ser_deser_restore_1_entity_to_empty_table
     },
@@ -5656,7 +5661,7 @@ static bake_test_suite suites[] = {
         "DeserializeFromJson",
         NULL,
         NULL,
-        147,
+        148,
         DeserializeFromJson_testcases
     },
     {

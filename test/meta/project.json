@@ -609,6 +609,7 @@
                 "ser_deser_new_world_2_entities_w_named_parent_w_cycle",
                 "ser_deser_new_world_w_prefab",
                 "ser_deser_new_world_w_disabled",
+                "ser_deser_world_w_anon_recycled",
                 "ser_deser_restore_1_entity_to_empty_table",
                 "ser_deser_restore_1_entity_to_non_empty_table",
                 "ser_deser_restore_1_anon_entity_to_empty_table",
