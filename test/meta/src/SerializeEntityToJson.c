@@ -1594,7 +1594,7 @@ void SerializeEntityToJson_serialize_id_recycled(void) {
 
     ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
     desc.serialize_entity_id = true;
-    char *expect = flecs_asprintf("{\"name\":\"Foo\", \"id\":%u}",
+    char *expect = flecs_asprintf("{\"name\":\"Foo\", \"id\":%u, \"version\":1}",
         (uint32_t)e);
     char *json = ecs_entity_to_json(world, e, &desc);
     test_assert(json != NULL);

@@ -363,8 +363,13 @@ void flecs_json_serialize_iter_this(
     }
 
     if (desc && desc->serialize_entity_ids) {
+        ecs_entity_t e = this_data->ids[row];
         flecs_json_memberl(buf, "id");
-        flecs_json_u32(buf, (uint32_t)this_data->ids[row]);
+        flecs_json_u32(buf, (uint32_t)e);
+        if (e != (uint32_t)e) {
+            flecs_json_memberl(buf, "version");
+            flecs_json_u32(buf, (uint32_t)(e >> 32));
+        }
     }
 
 #ifdef FLECS_DOC

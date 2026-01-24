@@ -3330,6 +3330,28 @@ void DeserializeFromJson_ser_deser_new_world_w_disabled(void) {
     ecs_fini(world);
 }
 
+void DeserializeFromJson_ser_deser_world_w_anon_recycled(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_delete(world, e);
+    e = ecs_new(world);
+
+    char *json_before = ecs_world_to_json(world, NULL);
+    test_assert(json_before != NULL);
+
+    const char *r = ecs_world_from_json(world, json_before, NULL);
+    test_str(r, "");
+
+    char *json_after = ecs_world_to_json(world, NULL);
+    test_str(json_before, json_after);
+
+    ecs_os_free(json_before);
+    ecs_os_free(json_after);
+
+    ecs_fini(world);
+}
+
 void DeserializeFromJson_ser_deser_restore_1_entity_to_empty_table(void) {
     ecs_world_t *world = ecs_init();
 

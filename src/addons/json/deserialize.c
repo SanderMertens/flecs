@@ -549,13 +549,13 @@ const char* flecs_entity_from_json(
             goto error;
         }
 
-        if (!e) {
-            e = flecs_json_lookup(world, parent, str, desc);
-        } else {
-            ecs_set_name(world, e, str);
-        }
-
         if (str[0] != '#') {
+            if (!e) {
+                e = flecs_json_lookup(world, parent, str, desc);
+            } else {
+                ecs_set_name(world, e, str);
+            }
+
             ecs_vec_append_t(ctx->a, &ctx->table_type, ecs_id_t)[0] =
                 ecs_pair_t(EcsIdentifier, EcsName);
         }
@@ -585,18 +585,45 @@ const char* flecs_entity_from_json(
             goto error;
         }
 
-        if (!e) {
-            char name[32];
-            ecs_os_snprintf(name, 32, "#%u", (uint32_t)id);
-            e = flecs_json_lookup(world, 0, name, desc);
-        } else {
-            /* If we already have an id, ignore explicit id */
-        }
-
         json = flecs_json_parse_next_member(json, token, &token_kind, desc);
         if (!json) {
             goto error;
         }
+
+        if (!ecs_os_strcmp(token, "version")) {
+            json = flecs_json_parse(json, &token_kind, token);
+            if (!json) {
+                goto error;
+            }
+
+            uint64_t version;
+            if (token_kind == JsonNumber || token_kind == JsonLargeInt) {
+                version = flecs_ito(uint64_t, atoll(token));
+            } else {
+                ecs_parser_error(NULL, expr, json - expr, "expected version");
+                goto error;
+            }
+
+            id |= version << 32;
+
+            json = flecs_json_parse_next_member(json, token, &token_kind, desc);
+            if (!json) {
+                goto error;
+            }
+        }
+
+        if (!e) {
+            if (ecs_is_alive(world, id) && !ecs_get_name(world, id)) {
+                e = id;
+            } else {
+                char name[32];
+                ecs_os_snprintf(name, 32, "#%u", (uint32_t)id);
+                e = flecs_json_lookup(world, 0, name, desc);
+            }
+        } else {
+            /* If we already have an id, ignore explicit id */
+        }
+
         if (token_kind == JsonObjectClose) {
             goto end;
         }
