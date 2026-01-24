@@ -505,7 +505,9 @@ void DeserializeFromJson_struct_u32(void);
 void DeserializeFromJson_struct_u64(void);
 void DeserializeFromJson_struct_uptr(void);
 void DeserializeFromJson_struct_float(void);
+void DeserializeFromJson_struct_float_scientific_notation(void);
 void DeserializeFromJson_struct_double(void);
+void DeserializeFromJson_struct_double_scientific_notation(void);
 void DeserializeFromJson_struct_negative_int(void);
 void DeserializeFromJson_struct_negative_float(void);
 void DeserializeFromJson_struct_string(void);
@@ -3072,8 +3074,16 @@ bake_test_case DeserializeFromJson_testcases[] = {
         DeserializeFromJson_struct_float
     },
     {
+        "struct_float_scientific_notation",
+        DeserializeFromJson_struct_float_scientific_notation
+    },
+    {
         "struct_double",
         DeserializeFromJson_struct_double
+    },
+    {
+        "struct_double_scientific_notation",
+        DeserializeFromJson_struct_double_scientific_notation
     },
     {
         "struct_negative_int",
@@ -5641,7 +5651,7 @@ static bake_test_suite suites[] = {
         "DeserializeFromJson",
         NULL,
         NULL,
-        145,
+        147,
         DeserializeFromJson_testcases
     },
     {
