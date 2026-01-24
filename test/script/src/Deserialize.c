@@ -3315,6 +3315,12 @@ typedef struct StringVec {
     char **array;
 } StringVec;
 
+typedef struct StructVec {
+    bool _dummy; // make sure type doesn't accidentally line up with ecs_vec_t 
+    size_t count;
+    Position *array;
+} StructVec;
+
 typedef struct String {
     bool _dummy; // make sure type doesn't line up with char*
     char *value;
@@ -3389,6 +3395,39 @@ void IntVec_resize(void *ptr, size_t size) {
             data->array = NULL;
         } else {
             data->array = ecs_os_realloc_n(data->array, int32_t, size);
+        }
+    }
+}
+
+static 
+size_t StructVec_count(const void *ptr) {
+    const StructVec *data = ptr;
+    return data->count;
+}
+
+static 
+void* StructVec_ensure(void *ptr, size_t index) {
+    StructVec *data = ptr;
+    test_assert(data != NULL);
+    if (data->count <= index) {
+        data->count = index + 1;
+        data->array = ecs_os_realloc_n(data->array, Position, data->count);
+    }
+
+    return &data->array[index];
+}
+
+static 
+void StructVec_resize(void *ptr, size_t size) {
+    StructVec *data = ptr;
+    test_assert(data != NULL);
+    if (data->count != size) {
+        data->count = size;
+        if (!data->count) {
+            ecs_os_free(data->array);
+            data->array = NULL;
+        } else {
+            data->array = ecs_os_realloc_n(data->array, Position, size);
         }
     }
 }
@@ -3882,6 +3921,175 @@ void Deserialize_opaque_vector_opaque_string_1_into_2(void) {
     test_int(value.count, 1);
     test_str(value.array[0].value, "Foo");
     ecs_os_free(value.array[0].value);
+    ecs_os_free(value.array);
+
+    ecs_fini(world);
+}
+
+void Deserialize_opaque_vector_struct_0(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, StructVec);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            { "x", ecs_id(ecs_f32_t) },
+            { "y", ecs_id(ecs_f32_t) },
+        }
+    });
+
+    ecs_entity_t vec = ecs_opaque(world, {
+        .entity = ecs_id(StructVec),
+        .type.as_type = ecs_vector(world, { .type = ecs_id(Position) }),
+        .type.ensure_element = StructVec_ensure,
+        .type.count = StructVec_count,
+        .type.resize = StructVec_resize
+    });
+
+    StructVec value = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world, "[]", &(ecs_value_t){vec, &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(value.count, 0);
+    test_assert(value.array == NULL);
+
+    ecs_fini(world);
+}
+
+void Deserialize_opaque_vector_struct_2(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, StructVec);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            { "x", ecs_id(ecs_f32_t) },
+            { "y", ecs_id(ecs_f32_t) },
+        }
+    });
+
+    ecs_entity_t vec = ecs_opaque(world, {
+        .entity = ecs_id(StructVec),
+        .type.as_type = ecs_vector(world, { .type = ecs_id(Position) }),
+        .type.ensure_element = StructVec_ensure,
+        .type.count = StructVec_count,
+        .type.resize = StructVec_resize
+    });
+
+    StructVec value = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world, "[{10, 20}, {30, 40}]",
+        &(ecs_value_t){vec, &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(value.count, 2);
+    test_int(value.array[0].x, 10);
+    test_int(value.array[0].y, 20);
+    test_int(value.array[1].x, 30);
+    test_int(value.array[1].y, 40);
+
+    ecs_os_free(value.array);
+
+    ecs_fini(world);
+}
+
+void Deserialize_opaque_vector_struct_0_into_2(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, StructVec);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            { "x", ecs_id(ecs_f32_t) },
+            { "y", ecs_id(ecs_f32_t) },
+        }
+    });
+
+    ecs_entity_t vec = ecs_opaque(world, {
+        .entity = ecs_id(StructVec),
+        .type.as_type = ecs_vector(world, { .type = ecs_id(Position) }),
+        .type.ensure_element = StructVec_ensure,
+        .type.count = StructVec_count,
+        .type.resize = StructVec_resize
+    });
+
+    StructVec value = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world, "[{10, 20}, {30, 40}]",
+        &(ecs_value_t){vec, &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(value.count, 2);
+    test_int(value.array[0].x, 10);
+    test_int(value.array[0].y, 20);
+    test_int(value.array[1].x, 30);
+    test_int(value.array[1].y, 40);
+
+    ptr = ecs_expr_run(world, "[]", &(ecs_value_t){vec, &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(value.count, 0);
+
+    ecs_os_free(value.array);
+
+    ecs_fini(world);
+}
+
+void Deserialize_opaque_vector_struct_1_into_2(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, StructVec);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            { "x", ecs_id(ecs_f32_t) },
+            { "y", ecs_id(ecs_f32_t) },
+        }
+    });
+
+    ecs_entity_t vec = ecs_opaque(world, {
+        .entity = ecs_id(StructVec),
+        .type.as_type = ecs_vector(world, { .type = ecs_id(Position) }),
+        .type.ensure_element = StructVec_ensure,
+        .type.count = StructVec_count,
+        .type.resize = StructVec_resize
+    });
+
+    StructVec value = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world, "[{10, 20}, {30, 40}]",
+        &(ecs_value_t){vec, &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(value.count, 2);
+    test_int(value.array[0].x, 10);
+    test_int(value.array[0].y, 20);
+    test_int(value.array[1].x, 30);
+    test_int(value.array[1].y, 40);
+
+    ptr = ecs_expr_run(world, "[{50, 60}]",
+        &(ecs_value_t){vec, &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(value.count, 1);
+    test_int(value.array[0].x, 50);
+    test_int(value.array[0].y, 60);
+
     ecs_os_free(value.array);
 
     ecs_fini(world);
