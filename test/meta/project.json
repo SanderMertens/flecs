@@ -835,6 +835,7 @@
                 "serialize_type_info_w_unit",
                 "serialize_type_info_w_unit_quantity",
                 "serialize_type_info_w_unit_over",
+                "serialize_type_info_w_unit_array",
                 "serialize_w_entity_label",
                 "serialize_w_entity_label_w_str",
                 "serialize_entity_label_w_newline",
