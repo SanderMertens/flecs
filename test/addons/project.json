@@ -530,7 +530,8 @@
                 "request_ending_in_pct",
                 "request_ending_in_2_pct",
                 "request_ending_in_pct_single_digit",
-                "request_ending_in_pct_invalid_code"
+                "request_ending_in_pct_invalid_code",
+                "world_has_build_info"
             ]
         }, {
             "id": "Metrics",

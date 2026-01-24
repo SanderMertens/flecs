@@ -802,3 +802,20 @@ void Rest_request_ending_in_pct_invalid_code(void) {
 
     ecs_fini(world);
 }
+
+void Rest_world_has_build_info(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_IMPORT(world, FlecsRest);
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_entity_t build_info = ecs_lookup(world, "flecs.core.BuildInfo");
+    test_assert(build_info != 0);
+    test_assert(ecs_has_id(world, EcsWorld, build_info));
+
+    ecs_rest_server_fini(srv);
+
+    ecs_fini(world);
+}
