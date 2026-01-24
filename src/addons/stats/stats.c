@@ -511,10 +511,13 @@ bool ecs_pipeline_stats_get(
 
     int32_t sys_count = 0, active_sys_count = 0;
 
+    ecs_component_record_t *cr_empty = flecs_components_get(
+        world, EcsEmpty);
+
     /* Count number of active systems */
     ecs_iter_t it = ecs_query_iter(stage, pq->query);
     while (ecs_query_next(&it)) {
-        if (flecs_component_get_table(pq->cr_inactive, it.table) != NULL) {
+        if (cr_empty && flecs_component_get_table(cr_empty, it.table) != NULL) {
             continue;
         }
         active_sys_count += it.count;
@@ -548,7 +551,9 @@ bool ecs_pipeline_stats_get(
             
             int32_t i, i_system = 0, ran_since_merge = 0;
             while (ecs_query_next(&it)) {
-                if (flecs_component_get_table(pq->cr_inactive, it.table) != NULL) {
+                if (cr_empty && 
+                    flecs_component_get_table(cr_empty, it.table) != NULL) 
+                {
                     continue;
                 }
 
