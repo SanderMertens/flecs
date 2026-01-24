@@ -2218,12 +2218,12 @@ void FlecsRestImport(
     });
 
     ecs_observer(world, {
-        .entity = ecs_entity(world, { .name = "DisableRestObserver" }),
         .query = { 
             .terms = {{ .id = EcsDisabled, .src.id = ecs_id(FlecsRest) }}
         },
         .events = {EcsOnAdd, EcsOnRemove},
-        .callback = DisableRest
+        .callback = DisableRest,
+        .global_observer = true
     });
 
     ecs_set_name_prefix(world, "EcsRest");

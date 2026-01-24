@@ -189,17 +189,17 @@ void FlecsMetaImport(
     });
 
     ecs_observer(world, {
-        .entity = ecs_entity(world, { .parent = EcsFlecsInternals }),
         .query.terms[0] = { .id = ecs_id(EcsType) },
         .events = {EcsOnSet},
-        .callback = flecs_meta_type_serializer_init
+        .callback = flecs_meta_type_serializer_init,
+        .global_observer = true
     });
 
     ecs_observer(world, {
-        .entity = ecs_entity(world, { .parent = EcsFlecsInternals }),
         .query.terms[0] = { .id = ecs_id(EcsType) },
         .events = {EcsOnSet},
-        .callback = flecs_rtt_init_default_hooks
+        .callback = flecs_rtt_init_default_hooks,
+        .global_observer = true
     });
 
     /* Import type support for different type kinds */

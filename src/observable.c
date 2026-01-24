@@ -14,6 +14,7 @@ void flecs_observable_init(
     ecs_observable_t *observable)
 {
     flecs_sparse_init_t(&observable->events, NULL, NULL, ecs_event_record_t);
+    ecs_vec_init_t(NULL, &observable->global_observers, ecs_observer_t*, 0);
     observable->on_add.event = EcsOnAdd;
     observable->on_remove.event = EcsOnRemove;
     observable->on_set.event = EcsOnSet;
@@ -22,6 +23,12 @@ void flecs_observable_init(
 void flecs_observable_fini(
     ecs_observable_t *observable)
 {
+    int32_t i, count = ecs_vec_count(&observable->global_observers);
+    ecs_observer_t **observers = ecs_vec_first(&observable->global_observers);
+    for (i = 0; i < count; i ++) {
+        flecs_observer_fini(observers[i]);
+    }
+
     ecs_assert(!ecs_map_is_init(&observable->on_add.event_ids), 
         ECS_INTERNAL_ERROR, NULL);
     ecs_assert(!ecs_map_is_init(&observable->on_remove.event_ids), 
@@ -30,7 +37,7 @@ void flecs_observable_fini(
         ECS_INTERNAL_ERROR, NULL);
 
     ecs_sparse_t *events = &observable->events;
-    int32_t i, count = flecs_sparse_count(events);
+    count = flecs_sparse_count(events);
     for (i = 0; i < count; i ++) {
         ecs_event_record_t *er = 
             flecs_sparse_get_dense_t(events, ecs_event_record_t, i);
@@ -42,6 +49,7 @@ void flecs_observable_fini(
             ECS_INTERNAL_ERROR, NULL);
     }
 
+    ecs_vec_fini_t(NULL, &observable->global_observers, ecs_observer_t*);
     flecs_sparse_fini(&observable->events);
 }
 

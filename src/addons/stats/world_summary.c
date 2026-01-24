@@ -155,12 +155,10 @@ void FlecsWorldSummaryImport(
     });
 
     ecs_observer(world, {
-        .entity = ecs_entity(world, { 
-            .name = "OnSetWorldSummary"
-        }),
         .events = { EcsOnSet },
         .query.terms = {{ .id = ecs_id(EcsWorldSummary) }},
-        .callback = OnSetWorldSummary
+        .callback = OnSetWorldSummary,
+        .global_observer = true
     });
 
     ecs_set(world, EcsWorld, EcsWorldSummary, {

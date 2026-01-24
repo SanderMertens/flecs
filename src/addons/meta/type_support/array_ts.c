@@ -123,17 +123,17 @@ void flecs_meta_array_init(
     });
 
     ecs_observer(world, {
-        .entity = ecs_entity(world, { .parent = EcsFlecsInternals }),
         .query.terms[0] = { .id = ecs_id(EcsArray) },
         .events = {EcsOnSet},
-        .callback = flecs_set_array
+        .callback = flecs_set_array,
+        .global_observer = true
     });
 
     ecs_observer(world, {
-        .entity = ecs_entity(world, { .parent = EcsFlecsInternals }),
         .query.terms[0] = { .id = ecs_id(EcsVector) },
         .events = {EcsOnSet},
-        .callback = flecs_set_vector
+        .callback = flecs_set_vector,
+        .global_observer = true
     });
 }
 

@@ -3815,6 +3815,7 @@ struct ecs_observable_t {
     ecs_event_record_t on_set;
     ecs_event_record_t on_wildcard;
     ecs_sparse_t events;  /* sparse<event, ecs_event_record_t> */
+    ecs_vec_t global_observers; /* vector<ecs_observable_t> */
     uint64_t last_observer_id;
 };
 
@@ -5194,6 +5195,11 @@ typedef struct ecs_observer_desc_t {
     /** When observer is created, generate events from existing data. For example,
      * #EcsOnAdd `Position` would match all existing instances of `Position`. */
     bool yield_existing;
+
+    /** Global observers are tied to the lifespan of the world. Creating a 
+     * global observer does not create an entity, and therefore 
+     * ecs_observer_init will not return an entity handle. */
+    bool global_observer;
 
     /** Callback to invoke on an event, invoked when the observer matches. */
     ecs_iter_action_t callback;

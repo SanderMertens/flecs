@@ -627,31 +627,31 @@ void flecs_meta_enum_init(
     ecs_add_pair(world, ecs_id(EcsBitmask), EcsWith, ecs_id(EcsConstants));
 
     ecs_observer(world, {
-        .entity = ecs_entity(world, { .parent = EcsFlecsInternals }),
         .query.terms[0] = { .id = ecs_id(EcsEnum) },
         .events = {EcsOnSet},
-        .callback = flecs_add_enum
+        .callback = flecs_add_enum,
+        .global_observer = true
     });
 
     ecs_observer(world, {
-        .entity = ecs_entity(world, { .parent = EcsFlecsInternals }),
         .query.terms[0] = { .id = ecs_id(EcsBitmask) },
         .events = {EcsOnAdd},
-        .callback = flecs_add_bitmask
+        .callback = flecs_add_bitmask,
+        .global_observer = true
     });
 
     ecs_observer(world, {
-        .entity = ecs_entity(world, { .parent = EcsFlecsInternals }),
         .query.terms[0] = { .id = EcsConstant },
         .events = {EcsOnAdd},
-        .callback = flecs_add_constant
+        .callback = flecs_add_constant,
+        .global_observer = true
     });
 
     ecs_observer(world, {
-        .entity = ecs_entity(world, { .parent = EcsFlecsInternals }),
         .query.terms[0] = { .id = ecs_pair(EcsConstant, EcsWildcard) },
         .events = {EcsOnSet},
-        .callback = flecs_add_constant
+        .callback = flecs_add_constant,
+        .global_observer = true
     });
 
     ecs_set(world, ecs_id(EcsEnum),    EcsDefaultChildComponent, {EcsConstant});

@@ -698,10 +698,17 @@ ecs_size_t flecs_observers_memory_get(
 {
     ecs_size_t result = 0;
 
+    int32_t i, count = ecs_vec_count(&world->observable.global_observers);
+    for (i = 0; i < count; i ++) {
+        ecs_observer_t *o = ecs_vec_get_t(
+            &world->observable.global_observers, ecs_observer_t*, i)[0];
+        result += flecs_observer_memory_get(flecs_observer_impl(o));
+    }
+
     ecs_iter_t it = ecs_each_pair_t(world, EcsPoly, EcsObserver);
     while (ecs_each_next(&it)) {
         EcsPoly *p = ecs_field(&it, EcsPoly, 0);
-        int32_t i, count = it.count;
+        count = it.count;
         for (i = 0; i < count; i ++) {
             ecs_observer_impl_t *o = p[i].poly;
             if (!o) {
