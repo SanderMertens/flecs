@@ -55363,12 +55363,15 @@ void* flecs_meta_cursor_get_ptr(
 
         scope->is_empty_scope = false;
 
-        void *opaque_ptr = opaque->ensure_element(scope->ptr, 
-            flecs_itosize(parent->elem));
-        ecs_assert(opaque_ptr != NULL, ECS_INVALID_OPERATION, 
-            "ensure_element() returned NULL");
+        if (scope->ptr) {
+            void *opaque_ptr = opaque->ensure_element(scope->ptr, 
+                flecs_itosize(parent->elem));
+            ecs_assert(opaque_ptr != NULL, ECS_INVALID_OPERATION, 
+                "ensure_element() returned NULL");
+            return opaque_ptr;
+        }
 
-        return opaque_ptr;
+        return NULL;
     } else if (op->name) {
         if (!opaque->ensure_member) {
             char *str = ecs_get_path(world, scope->type);

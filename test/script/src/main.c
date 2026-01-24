@@ -1118,6 +1118,10 @@ void Deserialize_opaque_vector_opaque_string_0(void);
 void Deserialize_opaque_vector_opaque_string_2(void);
 void Deserialize_opaque_vector_opaque_string_0_into_2(void);
 void Deserialize_opaque_vector_opaque_string_1_into_2(void);
+void Deserialize_opaque_vector_struct_0(void);
+void Deserialize_opaque_vector_struct_2(void);
+void Deserialize_opaque_vector_struct_0_into_2(void);
+void Deserialize_opaque_vector_struct_1_into_2(void);
 
 // Testsuite 'Fuzzing'
 void Fuzzing_1(void);
@@ -5528,6 +5532,22 @@ bake_test_case Deserialize_testcases[] = {
     {
         "opaque_vector_opaque_string_1_into_2",
         Deserialize_opaque_vector_opaque_string_1_into_2
+    },
+    {
+        "opaque_vector_struct_0",
+        Deserialize_opaque_vector_struct_0
+    },
+    {
+        "opaque_vector_struct_2",
+        Deserialize_opaque_vector_struct_2
+    },
+    {
+        "opaque_vector_struct_0_into_2",
+        Deserialize_opaque_vector_struct_0_into_2
+    },
+    {
+        "opaque_vector_struct_1_into_2",
+        Deserialize_opaque_vector_struct_1_into_2
     }
 };
 
@@ -5655,7 +5675,7 @@ static bake_test_suite suites[] = {
         "Deserialize",
         Deserialize_setup,
         NULL,
-        123,
+        127,
         Deserialize_testcases,
         1,
         Deserialize_params

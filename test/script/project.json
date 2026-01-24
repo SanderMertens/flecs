@@ -1141,7 +1141,11 @@
                 "opaque_vector_opaque_string_0",
                 "opaque_vector_opaque_string_2",
                 "opaque_vector_opaque_string_0_into_2",
-                "opaque_vector_opaque_string_1_into_2"
+                "opaque_vector_opaque_string_1_into_2",
+                "opaque_vector_struct_0",
+                "opaque_vector_struct_2",
+                "opaque_vector_struct_0_into_2",
+                "opaque_vector_struct_1_into_2"
             ]
         }, {
             "id": "Fuzzing",
