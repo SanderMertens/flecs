@@ -42467,12 +42467,10 @@ void flecs_table_init(
     /* Initialize event flags for any record */
     table->flags |= world->cr_any->flags & EcsIdEventMask;
 
-    table->component_map = flecs_wcalloc_n(
-        world, int16_t, FLECS_HI_COMPONENT_ID);
+    table->component_map = ecs_os_calloc_n(int16_t, FLECS_HI_COMPONENT_ID);
 
     if (column_count) {
-        table->column_map = flecs_walloc_n(world, int16_t, 
-            dst_count + column_count);
+        table->column_map = ecs_os_calloc_n(int16_t, dst_count + column_count);
     }
 
     table->column_count = flecs_ito(int16_t, column_count);
@@ -42973,9 +42971,8 @@ void flecs_table_fini(
 
     flecs_table_fini_overrides(world, table);
     flecs_wfree_n(world, int32_t, table->column_count + 1, table->dirty_state);
-    flecs_wfree_n(world, int16_t, table->column_count + table->type.count, 
-        table->column_map);
-    flecs_wfree_n(world, int16_t, FLECS_HI_COMPONENT_ID, table->component_map);
+    ecs_os_free(table->column_map);
+    ecs_os_free(table->component_map);
     flecs_table_records_unregister(world, table);
 
     /* Update counters */
