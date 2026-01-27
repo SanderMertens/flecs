@@ -33056,23 +33056,23 @@ struct query_base {
         }
     }
 
-    flecs::term term(int32_t index) {
+    flecs::term term(int32_t index) const {
         return flecs::term(query_->world, query_->terms[index]);
     }
 
-    int32_t term_count() {
+    int32_t term_count() const {
         return query_->term_count;
     }
 
-    int32_t field_count() {
+    int32_t field_count() const {
         return query_->field_count;
     }
 
-    int32_t find_var(const char *name) {
+    int32_t find_var(const char *name) const {
         return ecs_query_find_var(query_, name);
     }
 
-    flecs::string str() {
+    flecs::string str() const {
         char *result = ecs_query_str(query_);
         return flecs::string(result);
     }
