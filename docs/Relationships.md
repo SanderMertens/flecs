@@ -1145,7 +1145,7 @@ Bob.add(Eats, Apples);
 Bob.add(Eats, Pears);
 
 // Find all (Eats, *) relationships in Bob's type
-bob.match(world.pair(Eats, flecs::Wildcard), [](flecs::id id) {
+bob.each(Eats, flecs::Wildcard, [](flecs::id id) {
   cout << "Bob eats " << id.second().name() << endl;
 });
 
