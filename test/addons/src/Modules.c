@@ -427,3 +427,28 @@ void Modules_component_parent_becomes_module(void) {
 
     ecs_fini(world);
 }
+
+static int singleton_test_imported = 0;
+
+static
+void SingletonTestImport(ecs_world_t *world) {
+    ECS_MODULE(world, SingletonTest);
+
+    test_assert(ecs_has_id(world, ecs_id(SingletonTest), EcsSingleton));
+
+    singleton_test_imported ++;
+}
+
+void Modules_module_has_singleton(void) {
+    ecs_world_t *world = ecs_init();
+
+    test_int(singleton_test_imported, 0);
+
+    ecs_entity_t ecs_id(SingletonTest) = ECS_IMPORT(world, SingletonTest);
+
+    test_int(singleton_test_imported, 1);
+
+    test_assert(ecs_has_id(world, ecs_id(SingletonTest), EcsSingleton));
+
+    ecs_fini(world);
+}
