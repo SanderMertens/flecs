@@ -2375,8 +2375,6 @@ void SerializeIterToRowJson_serialize_everything_table(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Mass);
 
-    ecs_add_id(world, TagA, EcsPrivate);
-
     ecs_struct(world, {
         .entity = ecs_id(Position),
         .members = {

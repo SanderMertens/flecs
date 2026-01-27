@@ -420,7 +420,6 @@ void FlecsScriptImport(
     });
 
     ecs_add_id(world, ecs_id(EcsScript), EcsPairIsTag);
-    ecs_add_id(world, ecs_id(EcsScript), EcsPrivate);
     ecs_add_pair(world, ecs_id(EcsScript), EcsOnInstantiate, EcsDontInherit);
 
     flecs_script_template_import(world);

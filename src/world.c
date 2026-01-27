@@ -30,7 +30,6 @@ const ecs_entity_t EcsWorld =                       FLECS_HI_COMPONENT_ID + 3;
 const ecs_entity_t EcsFlecs =                       FLECS_HI_COMPONENT_ID + 4;
 const ecs_entity_t EcsFlecsCore =                   FLECS_HI_COMPONENT_ID + 5;
 const ecs_entity_t EcsModule =                      FLECS_HI_COMPONENT_ID + 7;
-const ecs_entity_t EcsPrivate =                     FLECS_HI_COMPONENT_ID + 8;
 const ecs_entity_t EcsPrefab =                      FLECS_HI_COMPONENT_ID + 9;
 const ecs_entity_t EcsDisabled =                    FLECS_HI_COMPONENT_ID + 10;
 const ecs_entity_t EcsNotQueryable =                FLECS_HI_COMPONENT_ID + 11;

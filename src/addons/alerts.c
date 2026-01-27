@@ -729,7 +729,6 @@ void FlecsAlertsImport(ecs_world_t *world) {
 
     ecs_add_id(world, ecs_id(EcsAlert), EcsPairIsTag);
     ecs_add_id(world, ecs_id(EcsAlert), EcsExclusive);
-    ecs_add_id(world, ecs_id(EcsAlertsActive), EcsPrivate);
 
     ecs_struct(world, {
         .entity = ecs_id(EcsAlertInstance),
