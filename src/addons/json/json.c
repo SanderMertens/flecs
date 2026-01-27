@@ -710,4 +710,38 @@ ecs_primitive_kind_t flecs_json_op_to_primitive_kind(
     return kind - EcsOpPrimitive;
 }
 
+bool flecs_json_should_serialize(
+    ecs_entity_t entity,
+    const ecs_iter_t *it,
+    const ecs_json_ser_ctx_t *ser_ctx)
+{
+    if (!ecs_map_is_init(&ser_ctx->serialized)) {
+        return true;
+    }
+
+    if (ecs_map_get(&ser_ctx->serialized, entity) != NULL) {
+        return false;
+    }
+
+    if (it->query) {
+        ecs_iter_t temp_it;
+        bool result = ecs_query_has(it->query, entity, &temp_it);
+        if (result) {
+            ecs_iter_fini(&temp_it);
+        } else {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+void flecs_json_mark_serialized(
+    ecs_entity_t entity,
+    ecs_json_ser_ctx_t *ser_ctx)
+{
+    if (ecs_map_is_init(&ser_ctx->serialized)) {
+        ecs_map_ensure(&ser_ctx->serialized, entity);
+    }
+}
 #endif

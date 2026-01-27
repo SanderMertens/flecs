@@ -8760,7 +8760,7 @@ bool ecs_query_next(
  */
 FLECS_API
 bool ecs_query_has(
-    ecs_query_t *query,
+    const ecs_query_t *query,
     ecs_entity_t entity,
     ecs_iter_t *it);
 
@@ -8784,7 +8784,7 @@ bool ecs_query_has(
  */
 FLECS_API
 bool ecs_query_has_table(
-    ecs_query_t *query,
+    const ecs_query_t *query,
     ecs_table_t *table,
     ecs_iter_t *it);
 
@@ -8816,7 +8816,7 @@ bool ecs_query_has_table(
  */
 FLECS_API
 bool ecs_query_has_range(
-    ecs_query_t *query,
+    const ecs_query_t *query,
     ecs_table_range_t *range,
     ecs_iter_t *it);
 
@@ -14791,7 +14791,7 @@ typedef struct ecs_entity_to_json_desc_t {
  */
 FLECS_API
 char* ecs_entity_to_json(
-    const ecs_world_t *world,
+    ecs_world_t *world,
     ecs_entity_t entity,
     const ecs_entity_to_json_desc_t *desc);
 
@@ -14805,7 +14805,7 @@ char* ecs_entity_to_json(
  */
 FLECS_API
 int ecs_entity_to_json_buf(
-    const ecs_world_t *world,
+    ecs_world_t *world,
     ecs_entity_t entity,
     ecs_strbuf_t *buf_out,
     const ecs_entity_to_json_desc_t *desc);

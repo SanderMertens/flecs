@@ -655,6 +655,8 @@
                 "ser_deser_named_child_to_different_table",
                 "ser_deser_with_child_tgt",
                 "ser_deser_with_child_tgt_no_child",
+                "ser_deser_prefab_instance_w_named_children",
+                "ser_deser_prefab_instance_w_named_children_parent_component",
                 "deser_invalid_entity_name",
                 "deser_unknown_component_w_spaces",
                 "deser_unknown_component_no_spaces",

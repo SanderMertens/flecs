@@ -628,6 +628,8 @@ void DeserializeFromJson_ser_deser_named_to_different_table(void);
 void DeserializeFromJson_ser_deser_named_child_to_different_table(void);
 void DeserializeFromJson_ser_deser_with_child_tgt(void);
 void DeserializeFromJson_ser_deser_with_child_tgt_no_child(void);
+void DeserializeFromJson_ser_deser_prefab_instance_w_named_children(void);
+void DeserializeFromJson_ser_deser_prefab_instance_w_named_children_parent_component(void);
 void DeserializeFromJson_deser_invalid_entity_name(void);
 void DeserializeFromJson_deser_unknown_component_w_spaces(void);
 void DeserializeFromJson_deser_unknown_component_no_spaces(void);
@@ -3568,6 +3570,14 @@ bake_test_case DeserializeFromJson_testcases[] = {
         DeserializeFromJson_ser_deser_with_child_tgt_no_child
     },
     {
+        "ser_deser_prefab_instance_w_named_children",
+        DeserializeFromJson_ser_deser_prefab_instance_w_named_children
+    },
+    {
+        "ser_deser_prefab_instance_w_named_children_parent_component",
+        DeserializeFromJson_ser_deser_prefab_instance_w_named_children_parent_component
+    },
+    {
         "deser_invalid_entity_name",
         DeserializeFromJson_deser_invalid_entity_name
     },
@@ -5661,7 +5671,7 @@ static bake_test_suite suites[] = {
         "DeserializeFromJson",
         NULL,
         NULL,
-        148,
+        150,
         DeserializeFromJson_testcases
     },
     {

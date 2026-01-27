@@ -4902,7 +4902,7 @@ bool ecs_query_next(
  */
 FLECS_API
 bool ecs_query_has(
-    ecs_query_t *query,
+    const ecs_query_t *query,
     ecs_entity_t entity,
     ecs_iter_t *it);
 
@@ -4926,7 +4926,7 @@ bool ecs_query_has(
  */
 FLECS_API
 bool ecs_query_has_table(
-    ecs_query_t *query,
+    const ecs_query_t *query,
     ecs_table_t *table,
     ecs_iter_t *it);
 
@@ -4958,7 +4958,7 @@ bool ecs_query_has_table(
  */
 FLECS_API
 bool ecs_query_has_range(
-    ecs_query_t *query,
+    const ecs_query_t *query,
     ecs_table_range_t *range,
     ecs_iter_t *it);
 
