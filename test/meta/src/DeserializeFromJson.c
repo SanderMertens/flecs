@@ -6621,3 +6621,103 @@ void DeserializeFromJson_ser_deser_alias(void) {
 
     ecs_fini(world);
 }
+
+static ecs_entity_t register_prefab(ecs_world_t *world) {
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t turret = ecs_entity(world, { .name = "Turret" });
+    ecs_add_id(world, turret, EcsPrefab);
+    ecs_add(world, turret, Foo);
+
+    ecs_entity(world, { .name = "Head", .parent = turret });
+    ecs_entity(world, { .name = "Base", .parent = turret });
+    return turret;
+}
+
+void DeserializeFromJson_ser_deser_prefab_instance_w_named_children(void) {
+    char *json;
+
+    {
+        ecs_world_t *world = ecs_init();
+        ECS_TAG(world, Bar);
+        ecs_entity_t turret = register_prefab(world);
+
+        ecs_entity_t instance = ecs_entity(world, { .name = "instance" });
+        ecs_add_pair(world, instance, EcsIsA, turret);
+        ecs_add_id(world, instance, Bar);
+
+        json = ecs_world_to_json(world, NULL);
+
+        ecs_fini(world);
+    }
+
+    {
+        ecs_world_t *world = ecs_init();
+        ECS_TAG(world, Bar);
+        register_prefab(world);
+
+        ecs_world_from_json(world, json, NULL);
+
+        ecs_entity_t instance = ecs_lookup(world, "instance");
+        test_assert(ecs_lookup_child(world, instance, "Head") != 0);
+        test_assert(ecs_lookup_child(world, instance, "Base") != 0);
+        test_assert(ecs_has_id(world, instance, ecs_lookup(world, "Foo")));
+        test_assert(ecs_has_id(world, instance, Bar));
+
+        ecs_fini(world);
+    }
+
+    ecs_os_free(json);
+}
+
+static ecs_entity_t register_parent_prefab(ecs_world_t *world) {
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t turret = ecs_entity(world, { .name = "Turret" });
+    ecs_add_id(world, turret, EcsPrefab);
+    ecs_add(world, turret, Foo);
+
+    ecs_new_w_parent(world, turret, "Head");
+    ecs_new_w_parent(world, turret, "Base");
+
+    return turret;
+}
+
+
+void DeserializeFromJson_ser_deser_prefab_instance_w_named_children_parent_component(void) {
+    test_quarantine("26 Jan 2026");
+
+    char *json;
+
+    {
+        ecs_world_t *world = ecs_init();
+        ECS_TAG(world, Bar);
+        ecs_entity_t turret = register_parent_prefab(world);
+
+        ecs_entity_t instance = ecs_entity(world, { .name = "instance" });
+        ecs_add_pair(world, instance, EcsIsA, turret);
+        ecs_add_id(world, instance, Bar);
+
+        json = ecs_world_to_json(world, NULL);
+
+        ecs_fini(world);
+    }
+
+    {
+        ecs_world_t *world = ecs_init();
+        ECS_TAG(world, Bar);
+        register_parent_prefab(world);
+
+        ecs_world_from_json(world, json, NULL);
+
+        ecs_entity_t instance = ecs_lookup(world, "instance");
+        test_assert(ecs_lookup_child(world, instance, "Head") != 0);
+        test_assert(ecs_lookup_child(world, instance, "Base") != 0);
+        test_assert(ecs_has_id(world, instance, ecs_lookup(world, "Foo")));
+        test_assert(ecs_has_id(world, instance, Bar));
+
+        ecs_fini(world);
+    }
+
+    ecs_os_free(json);
+}

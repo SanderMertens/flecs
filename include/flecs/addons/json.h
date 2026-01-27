@@ -276,7 +276,7 @@ typedef struct ecs_entity_to_json_desc_t {
  */
 FLECS_API
 char* ecs_entity_to_json(
-    const ecs_world_t *world,
+    ecs_world_t *world,
     ecs_entity_t entity,
     const ecs_entity_to_json_desc_t *desc);
 
@@ -290,7 +290,7 @@ char* ecs_entity_to_json(
  */
 FLECS_API
 int ecs_entity_to_json_buf(
-    const ecs_world_t *world,
+    ecs_world_t *world,
     ecs_entity_t entity,
     ecs_strbuf_t *buf_out,
     const ecs_entity_to_json_desc_t *desc);

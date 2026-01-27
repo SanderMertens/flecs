@@ -246,12 +246,15 @@ int flecs_json_serialize_iter_result_query(
 
     int32_t i;
     for (i = 0; i < count; i ++) {
-        flecs_json_next(buf);
-        flecs_json_object_push(buf);
-
         if (has_this) {
-            flecs_json_serialize_iter_this(
-                it, parent_path, this_data, i, buf, desc);
+            if (!flecs_json_serialize_iter_this(
+                it, parent_path, this_data, i, buf, desc, ser_ctx))
+            {
+                continue;
+            }
+        } else {
+            flecs_json_next(buf);
+            flecs_json_object_push(buf);
         }
 
         if (common_data) {
