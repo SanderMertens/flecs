@@ -1875,9 +1875,6 @@ FLECS_API extern const ecs_entity_t EcsOrderedChildren;
 /** Tag added to module entities */
 FLECS_API extern const ecs_entity_t EcsModule;
 
-/** Tag to indicate an entity/component/system is private to a module */
-FLECS_API extern const ecs_entity_t EcsPrivate;
-
 /** Tag added to prefab entities. Any entity with this tag is automatically
  * ignored by queries, unless #EcsPrefab is explicitly queried for. */
 FLECS_API extern const ecs_entity_t EcsPrefab;

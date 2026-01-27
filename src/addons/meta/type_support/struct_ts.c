@@ -611,6 +611,7 @@ void flecs_meta_struct_init(
     });
 
     ecs_set(world, ecs_id(EcsStruct),  EcsDefaultChildComponent, {ecs_id(EcsMember)});
+    ecs_add_pair(world, ecs_id(EcsStruct), EcsWith, ecs_id(EcsComponent));
     ecs_set(world, ecs_id(EcsMember),  EcsDefaultChildComponent, {ecs_id(EcsMember)});
 }
 

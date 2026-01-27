@@ -4704,9 +4704,16 @@ void flecs_on_component(ecs_iter_t *it) {
         (void)component_id;
 
         if (it->event != EcsOnRemove) {
-            ecs_entity_t parent = ecs_get_target(world, e, EcsChildOf, 0);
+            ecs_entity_t parent = ecs_get_parent(world, e);
             if (parent) {
-                ecs_add_id(world, parent, EcsModule);
+                ecs_record_t *parent_record = flecs_entities_get(world, parent);
+                ecs_table_t *parent_table = parent_record->table;
+                if (!ecs_table_has_id(world, parent_table, EcsModule)) {
+                    if (!ecs_table_has_id(world, parent_table, ecs_id(EcsComponent))) {
+                        ecs_add_id(world, parent, EcsModule);
+                    }
+                }
+
             }
         }
 
@@ -5173,7 +5180,6 @@ void flecs_bootstrap(
     flecs_bootstrap_tag(world, EcsObserver);
 
     flecs_bootstrap_tag(world, EcsModule);
-    flecs_bootstrap_tag(world, EcsPrivate);
     flecs_bootstrap_tag(world, EcsPrefab);
     flecs_bootstrap_tag(world, EcsSlotOf);
     flecs_bootstrap_tag(world, EcsDisabled);
@@ -5517,10 +5523,6 @@ void flecs_bootstrap(
     /* Exclusive properties */
     ecs_add_id(world, EcsSlotOf, EcsExclusive);
     ecs_add_id(world, EcsOneOf, EcsExclusive);
-
-    /* Private properties */
-    ecs_add_id(world, ecs_id(EcsPoly), EcsPrivate);
-    ecs_add_id(world, ecs_id(EcsIdentifier), EcsPrivate);
 
     /* Inherited components */
     ecs_add_pair(world, EcsIsA, EcsOnInstantiate, EcsInherit);
@@ -21729,7 +21731,6 @@ const ecs_entity_t EcsWorld =                       FLECS_HI_COMPONENT_ID + 3;
 const ecs_entity_t EcsFlecs =                       FLECS_HI_COMPONENT_ID + 4;
 const ecs_entity_t EcsFlecsCore =                   FLECS_HI_COMPONENT_ID + 5;
 const ecs_entity_t EcsModule =                      FLECS_HI_COMPONENT_ID + 7;
-const ecs_entity_t EcsPrivate =                     FLECS_HI_COMPONENT_ID + 8;
 const ecs_entity_t EcsPrefab =                      FLECS_HI_COMPONENT_ID + 9;
 const ecs_entity_t EcsDisabled =                    FLECS_HI_COMPONENT_ID + 10;
 const ecs_entity_t EcsNotQueryable =                FLECS_HI_COMPONENT_ID + 11;
@@ -24471,7 +24472,6 @@ void FlecsAlertsImport(ecs_world_t *world) {
 
     ecs_add_id(world, ecs_id(EcsAlert), EcsPairIsTag);
     ecs_add_id(world, ecs_id(EcsAlert), EcsExclusive);
-    ecs_add_id(world, ecs_id(EcsAlertsActive), EcsPrivate);
 
     ecs_struct(world, {
         .entity = ecs_id(EcsAlertInstance),
@@ -24889,7 +24889,6 @@ void FlecsDocImport(
 #endif
 
     ecs_add_pair(world, ecs_id(EcsDocDescription), EcsOnInstantiate, EcsDontInherit);
-    ecs_add_id(world, ecs_id(EcsDocDescription), EcsPrivate);
 }
 
 #endif
@@ -27270,10 +27269,6 @@ void FlecsMetricsImport(ecs_world_t *world) {
     ECS_COMPONENT_DEFINE(world, EcsMetricOneOf);
     ECS_COMPONENT_DEFINE(world, EcsMetricCountIds);
     ECS_COMPONENT_DEFINE(world, EcsMetricCountTargets);
-
-    ecs_add_id(world, ecs_id(EcsMetricMemberInstance), EcsPrivate);
-    ecs_add_id(world, ecs_id(EcsMetricIdInstance), EcsPrivate);
-    ecs_add_id(world, ecs_id(EcsMetricOneOfInstance), EcsPrivate);
 
     ecs_struct(world, {
         .entity = ecs_id(EcsMetricValue),
@@ -58069,9 +58064,11 @@ int flecs_init_type(
     if (meta_type->kind == 0) {
         meta_type->kind = kind;
 
+        const EcsComponent *cptr = ecs_get(world, type, EcsComponent);
+
         /* Determine if this is an existing type or a reflection-defined type 
          * (runtime type) */
-        meta_type->existing = ecs_has(world, type, EcsComponent);
+        meta_type->existing = (cptr != NULL) && (cptr->size != 0);
 
         /* For existing types, ensure that component has a default constructor, 
          * to prevent crashing serializers on uninitialized values. For runtime 
@@ -58082,6 +58079,7 @@ int flecs_init_type(
             if(!ti->hooks.ctor) {
                 ti->hooks.ctor = flecs_default_ctor;
             }
+
             if(kind == EcsEnumType) {
                 /* Generate compare/equals hooks for enums, copying
                    the underlying type's hooks, which should be 
@@ -58118,27 +58116,29 @@ int flecs_init_type(
         ecs_modified(world, type, EcsComponent);
     } else {
         const EcsComponent *comp = ecs_get(world, type, EcsComponent);
-        if (comp->size < size) {
-            ecs_err(
-                "computed size (%d) for '%s' is larger than actual type (%d)", 
-                size, ecs_get_name(world, type), comp->size);
-            return -1;
-        }
-        if (comp->alignment < alignment) {
-            ecs_err(
-                "computed alignment (%d) for '%s' is larger than actual type (%d)", 
-                alignment, ecs_get_name(world, type), comp->alignment);
-            return -1;
-        }
-        if (comp->size == size && comp->alignment != alignment) {
-            if (comp->alignment < alignment) {
-                ecs_err("computed size for '%s' matches with actual type but "
-                    "alignment is different (%d vs. %d)", 
-                        ecs_get_name(world, type), alignment, comp->alignment);
+        if (comp->size) {
+            if (comp->size < size) {
+                ecs_err(
+                    "computed size (%d) for '%s' is larger than actual type (%d)", 
+                    size, ecs_get_name(world, type), comp->size);
+                return -1;
             }
-        }
+            if (comp->alignment < alignment) {
+                ecs_err(
+                    "computed alignment (%d) for '%s' is larger than actual type (%d)", 
+                    alignment, ecs_get_name(world, type), comp->alignment);
+                return -1;
+            }
+            if (comp->size == size && comp->alignment != alignment) {
+                if (comp->alignment < alignment) {
+                    ecs_err("computed size for '%s' matches with actual type but "
+                        "alignment is different (%d vs. %d)", 
+                            ecs_get_name(world, type), alignment, comp->alignment);
+                }
+            }
         
-        meta_type->partial = comp->size != size;
+            meta_type->partial = comp->size != size;
+        }
     }
 
     ecs_modified(world, type, EcsType);
@@ -66419,7 +66419,6 @@ void FlecsScriptImport(
     });
 
     ecs_add_id(world, ecs_id(EcsScript), EcsPairIsTag);
-    ecs_add_id(world, ecs_id(EcsScript), EcsPrivate);
     ecs_add_pair(world, ecs_id(EcsScript), EcsOnInstantiate, EcsDontInherit);
 
     flecs_script_template_import(world);
@@ -89118,6 +89117,7 @@ void flecs_meta_struct_init(
     });
 
     ecs_set(world, ecs_id(EcsStruct),  EcsDefaultChildComponent, {ecs_id(EcsMember)});
+    ecs_add_pair(world, ecs_id(EcsStruct), EcsWith, ecs_id(EcsComponent));
     ecs_set(world, ecs_id(EcsMember),  EcsDefaultChildComponent, {ecs_id(EcsMember)});
 }
 

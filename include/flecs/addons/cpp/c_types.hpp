@@ -80,7 +80,6 @@ using Parent = EcsParent;
 /* Builtin tags */
 static const flecs::entity_t Query = EcsQuery;
 static const flecs::entity_t Observer = EcsObserver;
-static const flecs::entity_t Private = EcsPrivate;
 static const flecs::entity_t Module = EcsModule;
 static const flecs::entity_t Prefab = EcsPrefab;
 static const flecs::entity_t Disabled = EcsDisabled;

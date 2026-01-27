@@ -859,10 +859,6 @@ void FlecsMetricsImport(ecs_world_t *world) {
     ECS_COMPONENT_DEFINE(world, EcsMetricCountIds);
     ECS_COMPONENT_DEFINE(world, EcsMetricCountTargets);
 
-    ecs_add_id(world, ecs_id(EcsMetricMemberInstance), EcsPrivate);
-    ecs_add_id(world, ecs_id(EcsMetricIdInstance), EcsPrivate);
-    ecs_add_id(world, ecs_id(EcsMetricOneOfInstance), EcsPrivate);
-
     ecs_struct(world, {
         .entity = ecs_id(EcsMetricValue),
         .members = {
