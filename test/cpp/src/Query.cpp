@@ -3844,7 +3844,7 @@ void Query_iter_targets_field_not_set(void) {
 }
 
 void Query_copy_operators(void) {
-    flecs::world world{};
+    flecs::world world;
 
     flecs::query<> q = world.query_builder()
         .with<Position>()
@@ -3861,4 +3861,77 @@ void Query_copy_operators(void) {
     copyAssign = defaultInit;
 
     test_assert(copyAssign.c_ptr() == defaultInit.c_ptr());
+}
+
+struct TestComponent {
+    TestComponent() { }
+
+    TestComponent(int32_t a_, int32_t b_, int32_t c_, int32_t d_, int32_t e_) 
+        : a(a_), b(b_), c(c_), d(d_), e(e_) {};
+
+    TestComponent(flecs::world& ecs) {
+        a = 10;
+        b = 20;
+        c = 30;
+        d = 40;
+        e = 50;
+    };
+
+    int32_t a;
+    int32_t b;
+    int32_t c;
+    int32_t d;
+    int32_t e;
+};
+
+void Query_optional_singleton(void) {
+    flecs::world world;
+
+    world.component<TestComponent>().add(flecs::Singleton);
+
+    int invoked = 0;
+
+    world.query<TestComponent*>()
+        .each([&](TestComponent *ptr) {
+            test_assert(ptr == nullptr);
+            invoked ++;
+        });
+    
+    test_int(invoked, 1);
+
+    world.set(TestComponent{10, 20, 30, 40, 50});
+
+    world.query<TestComponent*>()
+        .each([&](TestComponent *ptr) {
+            test_assert(ptr != nullptr);
+            test_int(ptr->a, 10);
+            test_int(ptr->b, 20);
+            test_int(ptr->c, 30);
+            test_int(ptr->d, 40);
+            test_int(ptr->e, 50);
+            invoked ++;
+        });
+
+    test_int(invoked, 2);
+}
+
+void Query_optional_module(void) {
+    flecs::world world;
+
+    world.import<TestComponent>();
+
+    int invoked = 0;
+
+    world.query<TestComponent*>()
+        .each([&](TestComponent *ptr) {
+            test_assert(ptr != nullptr);
+            test_int(ptr->a, 10);
+            test_int(ptr->b, 20);
+            test_int(ptr->c, 30);
+            test_int(ptr->d, 40);
+            test_int(ptr->e, 50);
+            invoked ++;
+        });
+    
+    test_int(invoked, 1);
 }

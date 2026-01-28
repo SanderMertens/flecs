@@ -848,7 +848,9 @@
                 "iter_targets_field_out_of_range",
                 "iter_targets_field_not_a_pair",
                 "iter_targets_field_not_set",
-                "copy_operators"
+                "copy_operators",
+                "optional_singleton",
+                "optional_module"
             ]
         }, {
             "id": "QueryBuilder",
