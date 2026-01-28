@@ -1699,10 +1699,6 @@ void ecs_delete(
                 flecs_on_delete(world, ecs_pair(entity, EcsWildcard), 0, true, true);
             }
 
-            if (row_flags & EcsEntityIsTraversable) {
-                flecs_table_traversable_add(r->table, -1);
-            }
-
             /* Merge operations before deleting entity */
             flecs_defer_end(world, stage);
             flecs_defer_begin(world, stage);
@@ -1728,6 +1724,10 @@ void ecs_delete(
                 world, table, &world->store.root, row, 1, &diff);
             flecs_entity_remove_non_fragmenting(world, entity, r);
             flecs_table_delete(world, table, row, true);
+
+            if (row_flags & EcsEntityIsTraversable) {
+                flecs_table_traversable_add(table, -1);
+            }
         }
         
         flecs_entities_remove(world, entity);
