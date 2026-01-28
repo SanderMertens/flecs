@@ -276,8 +276,8 @@ bool flecs_component_mark_non_fragmenting_childof(
 
     flecs_marked_id_push(world, childof_cr, EcsDelete, true);
 
-    int32_t i, count = ecs_vec_count(&childof_cr->pair->ordered_children);
-    ecs_entity_t *children = ecs_vec_first(&childof_cr->pair->ordered_children);
+    int32_t i, count = ecs_vec_count(&pr->ordered_children);
+    ecs_entity_t *children = ecs_vec_first(&pr->ordered_children);
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = children[i];
 
@@ -535,9 +535,9 @@ bool flecs_on_delete_clear_entities(
             if (flecs_component_has_non_fragmenting_childof(cr)) {
                 int32_t c, count = ecs_vec_count(&cr->pair->ordered_children);
                 ecs_entity_t *children = ecs_vec_first(&cr->pair->ordered_children);
-
+                
                 ecs_defer_suspend(world);
-                for (c = 0; c < count; c ++) {
+                for (c = count - 1; c >= 0; c --) {
                     ecs_delete(world, children[c]);
                 }
                 ecs_defer_resume(world);

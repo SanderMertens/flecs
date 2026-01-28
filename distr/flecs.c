@@ -9526,10 +9526,6 @@ void ecs_delete(
                 flecs_on_delete(world, ecs_pair(entity, EcsWildcard), 0, true, true);
             }
 
-            if (row_flags & EcsEntityIsTraversable) {
-                flecs_table_traversable_add(r->table, -1);
-            }
-
             /* Merge operations before deleting entity */
             flecs_defer_end(world, stage);
             flecs_defer_begin(world, stage);
@@ -9555,6 +9551,10 @@ void ecs_delete(
                 world, table, &world->store.root, row, 1, &diff);
             flecs_entity_remove_non_fragmenting(world, entity, r);
             flecs_table_delete(world, table, row, true);
+
+            if (row_flags & EcsEntityIsTraversable) {
+                flecs_table_traversable_add(table, -1);
+            }
         }
         
         flecs_entities_remove(world, entity);
@@ -18033,8 +18033,8 @@ bool flecs_component_mark_non_fragmenting_childof(
 
     flecs_marked_id_push(world, childof_cr, EcsDelete, true);
 
-    int32_t i, count = ecs_vec_count(&childof_cr->pair->ordered_children);
-    ecs_entity_t *children = ecs_vec_first(&childof_cr->pair->ordered_children);
+    int32_t i, count = ecs_vec_count(&pr->ordered_children);
+    ecs_entity_t *children = ecs_vec_first(&pr->ordered_children);
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = children[i];
 
@@ -18292,9 +18292,9 @@ bool flecs_on_delete_clear_entities(
             if (flecs_component_has_non_fragmenting_childof(cr)) {
                 int32_t c, count = ecs_vec_count(&cr->pair->ordered_children);
                 ecs_entity_t *children = ecs_vec_first(&cr->pair->ordered_children);
-
+                
                 ecs_defer_suspend(world);
-                for (c = 0; c < count; c ++) {
+                for (c = count - 1; c >= 0; c --) {
                     ecs_delete(world, children[c]);
                 }
                 ecs_defer_resume(world);
@@ -40068,7 +40068,8 @@ void flecs_component_update_childof_depth(
 
             EcsParent *data = tgt_table->data.columns[column - 1].data;
             ecs_entity_t parent = data[ECS_RECORD_TO_ROW(tgt_r->row)].value;
-            ecs_assert(parent != 0, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(parent != 0, ECS_CYCLE_DETECTED, 
+                "possible cycle detected in Parent hierarchy");
 
             ecs_component_record_t *cr_parent = flecs_components_get(world,
                 ecs_childof(parent));
