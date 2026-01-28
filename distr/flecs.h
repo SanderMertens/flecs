@@ -28881,6 +28881,8 @@ struct each_field<T, if_t< is_pointer<T>::value &&
 // current argument is one.
 template <typename T, typename = int>
 struct each_ref_field : public each_field<T> {
+    using A = remove_pointer_t<actual_type_t<T>>;
+
     each_ref_field(const flecs::iter_t *iter, _::field_ptr& field, size_t row)
         : each_field<T>(iter, field, row) {
 
@@ -28896,7 +28898,7 @@ struct each_ref_field : public each_field<T> {
         }
 
         if (field.is_row) {
-            field.ptr = ecs_field_at_w_size(iter, sizeof(T), field.index, 
+            field.ptr = ecs_field_at_w_size(iter, sizeof(A), field.index, 
                 static_cast<int32_t>(row));
         }
     }

@@ -820,6 +820,8 @@ void Query_iter_targets_field_out_of_range(void);
 void Query_iter_targets_field_not_a_pair(void);
 void Query_iter_targets_field_not_set(void);
 void Query_copy_operators(void);
+void Query_optional_singleton(void);
+void Query_optional_module(void);
 
 // Testsuite 'QueryBuilder'
 void QueryBuilder_setup(void);
@@ -4874,6 +4876,14 @@ bake_test_case Query_testcases[] = {
     {
         "copy_operators",
         Query_copy_operators
+    },
+    {
+        "optional_singleton",
+        Query_optional_singleton
+    },
+    {
+        "optional_module",
+        Query_optional_module
     }
 };
 
@@ -8315,7 +8325,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        136,
+        138,
         Query_testcases
     },
     {
