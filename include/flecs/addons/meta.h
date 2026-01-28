@@ -1128,6 +1128,20 @@ ecs_entity_t ecs_struct_init(
     ecs_world_t *world,
     const ecs_struct_desc_t *desc);
 
+/** Add member to struct.
+ * This operation adds a member to a struct type. If the provided entity is not
+ * a struct type, this operation will add the Struct component.
+ * 
+ * @param world The world.
+ * @param type The struct type.
+ * @param member The member data.
+ */
+FLECS_API
+void ecs_struct_add_member(
+    ecs_world_t *world,
+    ecs_entity_t type,
+    ecs_member_t member);
+
 
 /** Used with ecs_opaque_init(). */
 typedef struct ecs_opaque_desc_t {
