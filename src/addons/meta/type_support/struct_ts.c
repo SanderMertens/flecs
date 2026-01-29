@@ -64,13 +64,14 @@ int flecs_add_member_to_struct(
     ecs_world_t *world,
     ecs_entity_t struct_type,
     ecs_entity_t member_entity,
-    ecs_member_t *m)
+    const ecs_member_t *m_ptr)
 {
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(struct_type != 0, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(m != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(m_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    const char *name = m->name;
+    ecs_member_t m = *m_ptr;
+    const char *name = m.name;
 
     if (!name) {
         char *path = ecs_get_path(world, struct_type);
@@ -79,16 +80,16 @@ int flecs_add_member_to_struct(
         return -1;
     }
 
-    if (!m->type) {
+    if (!m.type) {
         char *path = ecs_get_path(world, struct_type);
         ecs_err("member '%s.%s' does not have a type", path, name);
         ecs_os_free(path);
         return -1;
     }
 
-    if (ecs_get_typeid(world, m->type) == 0) {
+    if (ecs_get_typeid(world, m.type) == 0) {
         char *path = ecs_get_path(world, struct_type);
-        char *ent_path = ecs_get_path(world, m->type);
+        char *ent_path = ecs_get_path(world, m.type);
         ecs_err("member '%s.%s.type' is '%s' which is not a type", 
             path, name, ent_path);
         ecs_os_free(path);
@@ -96,7 +97,7 @@ int flecs_add_member_to_struct(
         return -1;
     }
 
-    ecs_entity_t unit = m->unit;
+    ecs_entity_t unit = m.unit;
     if (unit) {
         if (!ecs_has(world, unit, EcsUnit)) {
             ecs_err("entity '%s' for member '%s' is not a unit",
@@ -104,25 +105,25 @@ int flecs_add_member_to_struct(
             return -1;
         }
 
-        if (ecs_has(world, m->type, EcsUnit) && m->type != unit) {
+        if (ecs_has(world, m.type, EcsUnit) && m.type != unit) {
             ecs_err("unit mismatch for type '%s' and unit '%s' for member '%s'",
-                ecs_get_name(world, m->type), ecs_get_name(world, unit), name);
+                ecs_get_name(world, m.type), ecs_get_name(world, unit), name);
             return -1;
         }
     } else {
-        if (ecs_has(world, m->type, EcsUnit)) {
+        if (ecs_has(world, m.type, EcsUnit)) {
             ecs_entity_t unit_base = ecs_get_target_for(
-                world, m->type, EcsIsA, EcsUnit);
+                world, m.type, EcsIsA, EcsUnit);
             if (unit_base) {
-                unit = m->unit = unit_base;
+                unit = m.unit = unit_base;
             } else {
-                unit = m->unit = m->type;
+                unit = m.unit = m.type;
             }
 
             if (member_entity) {
                 ecs_assert(ecs_owns(world, member_entity, EcsMember), 
                     ECS_INTERNAL_ERROR, NULL);
-                ecs_get_mut(world, member_entity, EcsMember)->unit = m->type;
+                ecs_get_mut(world, member_entity, EcsMember)->unit = m.type;
             }
         }
     }
@@ -138,12 +139,12 @@ int flecs_add_member_to_struct(
     for (i = 0; i < count; i ++) {
         if (member_entity && members[i].member) {
             if (members[i].member == member_entity) {
-                flecs_set_struct_member(&members[i], member_entity, m, unit);
+                flecs_set_struct_member(&members[i], member_entity, &m, unit);
                 break;
             }
         } else {
             if (!ecs_os_strcmp(name, members[i].name)) {
-                flecs_set_struct_member(&members[i], member_entity, m, unit);
+                flecs_set_struct_member(&members[i], member_entity, &m, unit);
                 break;
             }
         }
@@ -156,14 +157,14 @@ int flecs_add_member_to_struct(
         ecs_vec_init_if_t(&s->members, ecs_member_t);
         ecs_member_t *elem = ecs_vec_append_t(NULL, &s->members, ecs_member_t);
         elem->name = NULL;
-        flecs_set_struct_member(elem, member_entity, m, unit);
+        flecs_set_struct_member(elem, member_entity, &m, unit);
 
         /* Reobtain members array in case it was reallocated */
         members = ecs_vec_first_t(&s->members, ecs_member_t);
         count ++;
     }
 
-    bool explicit_offset = m->offset || m->use_offset;
+    bool explicit_offset = m.offset || m.use_offset;
 
     /* Compute member offsets and size & alignment of struct */
     ecs_size_t size = 0;
@@ -414,7 +415,7 @@ static
 int flecs_member_validate_ranges(
     ecs_world_t *world,
     ecs_entity_t type,
-    ecs_member_t *member,
+    const ecs_member_t *member,
     bool *ranges_set_out)
 {
     const ecs_member_value_range_t *range = &member->range;
@@ -491,12 +492,12 @@ ecs_entity_t ecs_struct_init(
     ecs_suspend_readonly_state_t rs;
     world = flecs_suspend_readonly(world, &rs);
 
-    ecs_entity_t t = desc->entity;
-    if (!t) {
-        t = ecs_new_low_id(world);
+    ecs_entity_t type = desc->entity;
+    if (!type) {
+        type = ecs_new_low_id(world);
     }
 
-    ecs_entity_t old_scope = ecs_set_scope(world, t);
+    ecs_entity_t old_scope = ecs_set_scope(world, type);
 
     int i;
     for (i = 0; i < ECS_MEMBER_DESC_CACHE_SIZE; i ++) {
@@ -507,7 +508,7 @@ ecs_entity_t ecs_struct_init(
 
         if (!m_desc->type) {
             ecs_err("member '%s' of struct '%s' does not have a type", 
-                m_desc->name, ecs_get_name(world, t));
+                m_desc->name, ecs_get_name(world, type));
             goto error;
         }
 
@@ -519,14 +520,16 @@ ecs_entity_t ecs_struct_init(
 #ifdef FLECS_CREATE_MEMBER_ENTITIES
         create_member_entity = true;
 #endif
-        if (flecs_member_validate_ranges(world, t, &member, &ranges_set)) {
+        if (flecs_member_validate_ranges(world, type, &member, &ranges_set)) {
             goto error;
         }
 
         if (!create_member_entity) {
-            flecs_add_member_to_struct(world, t, 0, &member);
+            if (flecs_add_member_to_struct(world, type, 0, &member)) {
+                goto error;
+            }
         } else {
-            member_entity = ecs_new_from_path(world, t, m_desc->name);
+            member_entity = ecs_new_from_path(world, type, m_desc->name);
 
             ecs_set(world, member_entity, EcsMember, {
                 .type = member.type,
@@ -549,29 +552,83 @@ ecs_entity_t ecs_struct_init(
     flecs_resume_readonly(world, &rs);
 
     if (i == 0) {
-        ecs_err("struct '%s' has no members", ecs_get_name(world, t));
+        ecs_err("struct '%s' has no members", ecs_get_name(world, type));
         goto error;
     }
 
-    if (!ecs_has(world, t, EcsStruct)) {
+    if (!ecs_has(world, type, EcsStruct)) {
         goto error;
     }
 
-    return t;
+    return type;
 error:
     flecs_resume_readonly(world, &rs);
-    if (t) {
-        ecs_delete(world, t);
+    if (type) {
+        ecs_delete(world, type);
     }
     return 0;
 }
 
-void ecs_struct_add_member(
+int ecs_struct_add_member(
     ecs_world_t *world,
     ecs_entity_t type,
-    ecs_member_t member)
+    const ecs_member_t *member)
 {
+    flecs_stage_from_world(&world);
 
+    bool ranges_set;
+    if (flecs_member_validate_ranges(world, type, member, &ranges_set)) {
+        goto error;
+    }
+
+    if (flecs_add_member_to_struct(world, type, 0, member)) {
+        goto error;
+    }
+
+    return 0;
+error:
+    return -1;
+}
+
+ecs_member_t* ecs_struct_get_member(
+    ecs_world_t *world,
+    ecs_entity_t type,
+    const char *name)
+{
+    const EcsStruct *s = ecs_get(world, type, EcsStruct);
+    if (!s) {
+        return NULL;
+    }
+
+    ecs_member_t *members = ecs_vec_first(&s->members);
+    int32_t i, count = ecs_vec_count(&s->members);
+
+    for (i = 0; i < count; i ++) {
+        if (!ecs_os_strcmp(members[i].name, name)) {
+            return &members[i];
+        }
+    }
+
+    return NULL;
+}
+
+ecs_member_t* ecs_struct_get_nth_member(
+    ecs_world_t *world,
+    ecs_entity_t type,
+    int32_t i)
+{
+    const EcsStruct *s = ecs_get(world, type, EcsStruct);
+    if (!s) {
+        return NULL;
+    }
+
+    ecs_member_t *members = ecs_vec_first(&s->members);
+    int32_t count = ecs_vec_count(&s->members);
+    if (i >= count) {
+        return NULL;
+    }
+
+    return &members[i];
 }
 
 void flecs_meta_struct_init(

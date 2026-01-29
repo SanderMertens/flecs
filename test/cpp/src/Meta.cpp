@@ -116,18 +116,12 @@ void Meta_struct(void) {
         .member<int32_t>("a")
         .member<float>("b");    
     test_assert(c != 0);
-    
-    auto a = c.lookup("a");
-    test_assert(a != 0);
-    test_assert( a.has<flecs::Member>() );
-    const flecs::Member *m = a.try_get<flecs::Member>();
-    test_uint(m->type, flecs::I32);
 
-    auto b = c.lookup("b");
-    test_assert(b != 0);
-    test_assert( b.has<flecs::Member>() );
-    m = b.try_get<flecs::Member>();
-    test_uint(m->type, flecs::F32);
+    test_assert(ecs_struct_get_member(ecs, c, "a") != NULL);
+    test_uint(ecs_struct_get_member(ecs, c, "a")->type, flecs::I32);
+
+    test_assert(ecs_struct_get_member(ecs, c, "b") != NULL);
+    test_uint(ecs_struct_get_member(ecs, c, "b")->type, flecs::F32);
 }
 
 void Meta_nested_struct(void) {
@@ -148,11 +142,8 @@ void Meta_nested_struct(void) {
         .member(t, "a");
     test_assert(n != 0);
     
-    auto a = n.lookup("a");
-    test_assert(a != 0);
-    test_assert( a.has<flecs::Member>() );
-    const flecs::Member *m = a.try_get<flecs::Member>();
-    test_uint(m->type, t);
+    test_assert(ecs_struct_get_member(ecs, n, "a") != NULL);
+    test_uint(ecs_struct_get_member(ecs, n, "a")->type, t);
 }
 
 void Meta_struct_w_portable_type(void) {
@@ -172,29 +163,17 @@ void Meta_struct_w_portable_type(void) {
         .member(flecs::Entity, "d");
     test_assert(t != 0);
 
-    auto a = t.lookup("a");
-    test_assert(a != 0);
-    test_assert( a.has<flecs::Member>() );
-    const flecs::Member *m = a.try_get<flecs::Member>();
-    test_uint(m->type, ecs.component<uintptr_t>());
+    test_assert(ecs_struct_get_member(ecs, t, "a") != nullptr);
+    test_uint(ecs_struct_get_member(ecs, t, "a")->type, ecs.component<uintptr_t>());
 
-    auto b = t.lookup("b");
-    test_assert(b != 0);
-    test_assert( b.has<flecs::Member>() );
-    m = b.try_get<flecs::Member>();
-    test_uint(m->type, flecs::Uptr);
+    test_assert(ecs_struct_get_member(ecs, t, "b") != nullptr);
+    test_uint(ecs_struct_get_member(ecs, t, "b")->type, flecs::Uptr);
 
-    auto c = t.lookup("c");
-    test_assert(c != 0);
-    test_assert( c.has<flecs::Member>() );
-    m = c.try_get<flecs::Member>();
-    test_uint(m->type, flecs::U64);
+    test_assert(ecs_struct_get_member(ecs, t, "c") != nullptr);
+    test_uint(ecs_struct_get_member(ecs, t, "c")->type, flecs::U64);
 
-    auto d = t.lookup("d");
-    test_assert(d != 0);
-    test_assert( d.has<flecs::Member>() );
-    m = d.try_get<flecs::Member>();
-    test_uint(m->type, flecs::Entity);
+    test_assert(ecs_struct_get_member(ecs, t, "d") != nullptr);
+    test_uint(ecs_struct_get_member(ecs, t, "d")->type, flecs::Entity);
 }
 
 void Meta_units(void) {
@@ -220,19 +199,13 @@ void Meta_units(void) {
         .member<int32_t>(custom_unit, "custom_unit");
     test_assert(t != 0);
 
-    flecs::entity m_meters = t.lookup("meters");
-    test_assert(m_meters != 0);
-    const flecs::Member *m = m_meters.try_get<flecs::Member>();
-    test_assert(m != nullptr);
-    test_uint(m->type, flecs::I32);
-    test_uint(m->unit, ecs.id<flecs::units::length::Meters>());
+    test_assert(ecs_struct_get_member(ecs, t, "meters") != nullptr);
+    test_uint(ecs_struct_get_member(ecs, t, "meters")->type, flecs::I32);
+    test_uint(ecs_struct_get_member(ecs, t, "meters")->unit, ecs.id<flecs::units::length::Meters>());
 
-    flecs::entity m_custom_unit = t.lookup("custom_unit");
-    test_assert(m_custom_unit != 0);
-    m = m_custom_unit.try_get<flecs::Member>();
-    test_assert(m != nullptr);
-    test_uint(m->type, flecs::I32);
-    test_uint(m->unit, custom_unit);
+    test_assert(ecs_struct_get_member(ecs, t, "custom_unit") != nullptr);
+    test_uint(ecs_struct_get_member(ecs, t, "custom_unit")->type, flecs::I32);
+    test_uint(ecs_struct_get_member(ecs, t, "custom_unit")->unit, custom_unit);
 }
 
 void Meta_unit_w_quantity(void) {
@@ -257,19 +230,13 @@ void Meta_unit_w_quantity(void) {
         .member<int32_t>(unit_2, "m_2");
     test_assert(t != 0);
 
-    flecs::entity m_1 = t.lookup("m_1");
-    test_assert(m_1 != 0);
-    const flecs::Member *m = m_1.try_get<flecs::Member>();
-    test_assert(m != nullptr);
-    test_uint(m->type, flecs::I32);
-    test_uint(m->unit, unit_1);
+    test_assert(ecs_struct_get_member(ecs, t, "m_1") != nullptr);
+    test_uint(ecs_struct_get_member(ecs, t, "m_1")->type, flecs::I32);
+    test_uint(ecs_struct_get_member(ecs, t, "m_1")->unit, unit_1);
 
-    flecs::entity m_2 = t.lookup("m_2");
-    test_assert(m_2 != 0);
-    m = m_2.try_get<flecs::Member>();
-    test_assert(m != nullptr);
-    test_uint(m->type, flecs::I32);
-    test_uint(m->unit, unit_2);
+    test_assert(ecs_struct_get_member(ecs, t, "m_2") != nullptr);
+    test_uint(ecs_struct_get_member(ecs, t, "m_2")->type, flecs::I32);
+    test_uint(ecs_struct_get_member(ecs, t, "m_2")->unit, unit_2);
 }
 
 void Meta_unit_w_prefix(void) {
@@ -334,12 +301,9 @@ void Meta_partial_struct(void) {
     test_int(ptr->size, 8);
     test_int(ptr->alignment, 4);
     
-    auto xe = c.lookup("x");
-    test_assert(xe != 0);
-    test_assert( xe.has<flecs::Member>() );
-    const flecs::Member *x = xe.try_get<flecs::Member>();
-    test_uint(x->type, flecs::F32);
-    test_uint(x->offset, 0);
+    test_assert(ecs_struct_get_member(ecs, c, "x") != nullptr);
+    test_uint(ecs_struct_get_member(ecs, c, "x")->type, flecs::F32);
+    test_uint(ecs_struct_get_member(ecs, c, "x")->offset, 0);
 }
 
 void Meta_partial_struct_custom_offset(void) {
@@ -353,12 +317,9 @@ void Meta_partial_struct_custom_offset(void) {
     test_int(ptr->size, 8);
     test_int(ptr->alignment, 4);
     
-    auto xe = c.lookup("y");
-    test_assert(xe != 0);
-    test_assert( xe.has<flecs::Member>() );
-    const flecs::Member *x = xe.try_get<flecs::Member>();
-    test_uint(x->type, flecs::F32);
-    test_uint(x->offset, 4);
+    test_assert(ecs_struct_get_member(ecs, c, "y") != nullptr);
+    test_uint(ecs_struct_get_member(ecs, c, "y")->type, flecs::F32);
+    test_uint(ecs_struct_get_member(ecs, c, "y")->offset, 4);
 }
 
 struct Toppings : flecs::bitmask {
@@ -1289,25 +1250,13 @@ void Meta_value_range(void) {
         .member<float>("x").range(-1, 1)
         .member<float>("y").range(-2, 2);
 
-    flecs::entity x = s.lookup("x");
-    test_assert(x != 0);
-    test_assert(x.has<flecs::MemberRanges>());
-    {
-        const flecs::MemberRanges *ranges = x.try_get<flecs::MemberRanges>();
-        test_assert(ranges != nullptr);
-        test_assert(ranges->value.min == -1);
-        test_assert(ranges->value.max == 1);
-    }
+    test_assert(ecs_struct_get_member(ecs, s, "x") != nullptr);
+    test_int(ecs_struct_get_member(ecs, s, "x")->range.min, -1);
+    test_int(ecs_struct_get_member(ecs, s, "x")->range.max, 1);
 
-    flecs::entity y = s.lookup("y");
-    test_assert(y != 0);
-    test_assert(y.has<flecs::MemberRanges>());
-    {
-        const flecs::MemberRanges *ranges = y.try_get<flecs::MemberRanges>();
-        test_assert(ranges != nullptr);
-        test_assert(ranges->value.min == -2);
-        test_assert(ranges->value.max == 2);
-    }
+    test_assert(ecs_struct_get_member(ecs, s, "y") != nullptr);
+    test_int(ecs_struct_get_member(ecs, s, "y")->range.min, -2);
+    test_int(ecs_struct_get_member(ecs, s, "y")->range.max, 2);
 }
 
 void Meta_warning_range(void) {
@@ -1317,25 +1266,13 @@ void Meta_warning_range(void) {
         .member<float>("x").warning_range(-1, 1)
         .member<float>("y").warning_range(-2, 2);
 
-    flecs::entity x = s.lookup("x");
-    test_assert(x != 0);
-    test_assert(x.has<flecs::MemberRanges>());
-    {
-        const flecs::MemberRanges *ranges = x.try_get<flecs::MemberRanges>();
-        test_assert(ranges != nullptr);
-        test_assert(ranges->warning.min == -1);
-        test_assert(ranges->warning.max == 1);
-    }
+    test_assert(ecs_struct_get_member(ecs, s, "x") != nullptr);
+    test_int(ecs_struct_get_member(ecs, s, "x")->warning_range.min, -1);
+    test_int(ecs_struct_get_member(ecs, s, "x")->warning_range.max, 1);
 
-    flecs::entity y = s.lookup("y");
-    test_assert(y != 0);
-    test_assert(y.has<flecs::MemberRanges>());
-    {
-        const flecs::MemberRanges *ranges = y.try_get<flecs::MemberRanges>();
-        test_assert(ranges != nullptr);
-        test_assert(ranges->warning.min == -2);
-        test_assert(ranges->warning.max == 2);
-    }
+    test_assert(ecs_struct_get_member(ecs, s, "y") != nullptr);
+    test_int(ecs_struct_get_member(ecs, s, "y")->warning_range.min, -2);
+    test_int(ecs_struct_get_member(ecs, s, "y")->warning_range.max, 2);
 }
 
 void Meta_error_range(void) {
@@ -1345,25 +1282,13 @@ void Meta_error_range(void) {
         .member<float>("x").error_range(-1, 1)
         .member<float>("y").error_range(-2, 2);
 
-    flecs::entity x = s.lookup("x");
-    test_assert(x != 0);
-    test_assert(x.has<flecs::MemberRanges>());
-    {
-        const flecs::MemberRanges *ranges = x.try_get<flecs::MemberRanges>();
-        test_assert(ranges != nullptr);
-        test_assert(ranges->error.min == -1);
-        test_assert(ranges->error.max == 1);
-    }
+    test_assert(ecs_struct_get_member(ecs, s, "x") != nullptr);
+    test_int(ecs_struct_get_member(ecs, s, "x")->error_range.min, -1);
+    test_int(ecs_struct_get_member(ecs, s, "x")->error_range.max, 1);
 
-    flecs::entity y = s.lookup("y");
-    test_assert(y != 0);
-    test_assert(y.has<flecs::MemberRanges>());
-    {
-        const flecs::MemberRanges *ranges = y.try_get<flecs::MemberRanges>();
-        test_assert(ranges != nullptr);
-        test_assert(ranges->error.min == -2);
-        test_assert(ranges->error.max == 2);
-    }
+    test_assert(ecs_struct_get_member(ecs, s, "y") != nullptr);
+    test_int(ecs_struct_get_member(ecs, s, "y")->error_range.min, -2);
+    test_int(ecs_struct_get_member(ecs, s, "y")->error_range.max, 2);
 }
 
 void Meta_struct_member_ptr(void) {
@@ -1383,53 +1308,39 @@ void Meta_struct_member_ptr(void) {
 
     auto t = ecs.component<Test>()
         .member("x", &Test::x);
+    test_assert(t != 0);
 
     auto t2 = ecs.component<Test2>()
         .member("y", &Test2::y);
+    test_assert(t2 != 0);
 
     auto n = ecs.component<Nested>()
         .member("a", &Nested::a)
         .member("b", &Nested::b);
+    test_assert(n != 0);
 
     { // Validate Test
-        test_assert(t != 0);
-
-        auto x = t.lookup("x");
-        test_assert(x != 0);
-        test_assert(x.has<flecs::Member>());
-        const flecs::Member *xm = x.try_get<flecs::Member>();
-        test_uint(xm->type, flecs::I32);
-        test_uint(xm->offset, offsetof(Test, x));
+        test_assert(ecs_struct_get_member(ecs, t, "x") != nullptr);
+        test_int(ecs_struct_get_member(ecs, t, "x")->type, flecs::I32);
+        test_int(ecs_struct_get_member(ecs, t, "x")->offset, offsetof(Test, x));
     }
     { // Validate Test2
-        test_assert(t2 != 0);
-
-        auto y = t2.lookup("y");
-        test_assert(y != 0);
-        test_assert(y.has<flecs::Member>());
-        const flecs::Member *ym = y.try_get<flecs::Member>();
-        test_uint(ym->type, flecs::F64);
-        test_uint(ym->offset, offsetof(Test2, y));
+        test_assert(ecs_struct_get_member(ecs, t2, "y") != nullptr);
+        test_int(ecs_struct_get_member(ecs, t2, "y")->type, flecs::F64);
+        test_int(ecs_struct_get_member(ecs, t2, "y")->offset, offsetof(Test2, y));
     }
 
     // Validate Nested
-    test_assert(n != 0);
     {
-        auto a = n.lookup("a");
-        test_assert(a != 0);
-        test_assert(a.has<flecs::Member>());
-        const flecs::Member *am = a.try_get<flecs::Member>();
-        test_uint(am->type, t);
-        test_uint(am->offset, offsetof(Nested, a));
+        test_assert(ecs_struct_get_member(ecs, n, "a") != nullptr);
+        test_int(ecs_struct_get_member(ecs, n, "a")->type, t);
+        test_int(ecs_struct_get_member(ecs, n, "a")->offset, offsetof(Nested, a));
     }
     {
-        auto b = n.lookup("b");
-        test_assert(b != 0);
-        test_assert(b.has<flecs::Member>());
-        const flecs::Member *bm = b.try_get<flecs::Member>();
-        test_uint(bm->type, t2);
-        test_uint(bm->offset, offsetof(Nested, b));
-        test_uint(bm->count, 2);
+        test_assert(ecs_struct_get_member(ecs, n, "b") != nullptr);
+        test_int(ecs_struct_get_member(ecs, n, "b")->type, t2);
+        test_int(ecs_struct_get_member(ecs, n, "b")->offset, offsetof(Nested, b));
+        test_int(ecs_struct_get_member(ecs, n, "b")->count, 2);
     }
 }
 
@@ -1464,28 +1375,19 @@ void Meta_struct_member_ptr_packed_struct(void) {
     test_assert(s != 0);
 
     {
-        auto a = s.lookup("a");
-        test_assert(a != 0);
-        test_assert(a.has<flecs::Member>());
-        const flecs::Member *am = a.try_get<flecs::Member>();
-        test_uint(am->type, flecs::Char);
-        test_uint(am->offset, offsetof(PackedStruct, a));
+        test_assert(ecs_struct_get_member(ecs, s, "a") != nullptr);
+        test_int(ecs_struct_get_member(ecs, s, "a")->type, flecs::Char);
+        test_int(ecs_struct_get_member(ecs, s, "a")->offset, offsetof(PackedStruct, a));
     }
     {
-        auto b = s.lookup("b");
-        test_assert(b != 0);
-        test_assert(b.has<flecs::Member>());
-        const flecs::Member *bm = b.try_get<flecs::Member>();
-        test_uint(bm->type, flecs::I32);
-        test_uint(bm->offset, offsetof(PackedStruct, b));
+        test_assert(ecs_struct_get_member(ecs, s, "b") != nullptr);
+        test_int(ecs_struct_get_member(ecs, s, "b")->type, flecs::I32);
+        test_int(ecs_struct_get_member(ecs, s, "b")->offset, offsetof(PackedStruct, b));
     }
     {
-        auto c = s.lookup("c");
-        test_assert(c != 0);
-        test_assert(c.has<flecs::Member>());
-        const flecs::Member *cm = c.try_get<flecs::Member>();
-        test_uint(cm->type, flecs::F64);
-        test_uint(cm->offset, offsetof(PackedStruct, c));
+        test_assert(ecs_struct_get_member(ecs, s, "c") != nullptr);
+        test_int(ecs_struct_get_member(ecs, s, "c")->type, flecs::F64);
+        test_int(ecs_struct_get_member(ecs, s, "c")->offset, offsetof(PackedStruct, c));
     }
 }
 
@@ -1515,19 +1417,13 @@ void Meta_out_of_order_member_declaration(void) {
     test_int(ptr->size, 8);
     test_int(ptr->alignment, 4);
 
-    auto xe = c.lookup("x");
-    test_assert(xe != 0);
-    test_assert( xe.has<flecs::Member>() );
-    const flecs::Member *x = xe.try_get<flecs::Member>();
-    test_uint(x->type, flecs::F32);
-    test_uint(x->offset, 0);
+    test_assert(ecs_struct_get_member(ecs, c, "x") != nullptr);
+    test_int(ecs_struct_get_member(ecs, c, "x")->type, flecs::F32);
+    test_int(ecs_struct_get_member(ecs, c, "x")->offset, 0);
 
-    auto ye = c.lookup("y");
-    test_assert(ye != 0);
-    test_assert( ye.has<flecs::Member>() );
-    const flecs::Member *y = ye.try_get<flecs::Member>();
-    test_uint(y->type, flecs::F32);
-    test_uint(y->offset, 4);
+    test_assert(ecs_struct_get_member(ecs, c, "y") != nullptr);
+    test_int(ecs_struct_get_member(ecs, c, "y")->type, flecs::F32);
+    test_int(ecs_struct_get_member(ecs, c, "y")->offset, 4);
 
     flecs::entity e2 = ecs.entity("ent2").set<Position>({10, 20});
     const Position *p = e2.try_get<Position>();

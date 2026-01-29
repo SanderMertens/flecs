@@ -129,7 +129,7 @@ FLECS_ALWAYS_INLINE ecs_entity_t ecs_cpp_new(
 
 #ifdef FLECS_META
 FLECS_API
-const ecs_member_t* ecs_cpp_last_member(
+ecs_member_t* ecs_cpp_last_member(
     const ecs_world_t *world, 
     ecs_entity_t type);
 #endif
