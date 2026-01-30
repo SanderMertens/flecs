@@ -245,6 +245,7 @@ void flecs_on_non_fragmenting_child_move_add(
 
         ecs_component_record_t *cr = flecs_components_get(
             world, ecs_childof(p));
+        ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
 
         if (src && (src->flags & EcsTableHasParent)) {
             flecs_remove_non_fragmenting_child_from_table(cr, src);
