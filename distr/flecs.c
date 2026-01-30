@@ -45035,7 +45035,7 @@ int flecs_type_find(
         if (ecs_id_match(cur, id)) {
             return i;
         }
-        if (cur > id) {
+        if (!ECS_IS_PAIR(id) && (cur > id)) {
             return -1;
         }
     }
@@ -45961,6 +45961,19 @@ ecs_table_t* flecs_find_table_with(
             ecs_pair(EcsWith, EcsWildcard));
         /* If id has With property, add targets to type */
         flecs_add_with_property(world, cr_with_wildcard, &dst_type, r, o);
+    }
+
+    if (with == ecs_id(EcsParent)) {
+        if (node->flags & EcsTableHasChildOf) {
+            flecs_type_remove(world, &dst_type, 
+                ecs_pair(EcsChildOf, EcsWildcard));
+        }
+    } else if (ECS_PAIR_FIRST(with) == EcsChildOf) {
+        if (node->flags & EcsTableHasParent) {
+            flecs_type_remove(world, &dst_type, ecs_id(EcsParent));
+            flecs_type_remove(world, &dst_type, 
+                ecs_pair(EcsParentDepth, EcsWildcard));
+        }
     }
 
     return flecs_table_ensure(world, &dst_type, true, node);

@@ -4289,3 +4289,89 @@ void NonFragmentingChildOf_delete_tree_6(void) {
 
     ecs_fini(world);
 }
+
+void NonFragmentingChildOf_add_parent_to_childof_child(void) {
+    ecs_world_t* world = ecs_mini();
+
+    ecs_entity_t parent_a = ecs_new(world);
+    ecs_entity_t parent_b = ecs_new(world);
+    ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent_a);
+
+    test_assert(ecs_has_pair(world, child, EcsChildOf, parent_a));
+    test_assert(!ecs_has_pair(world, child, EcsChildOf, parent_b));
+
+    ecs_set(world, child, EcsParent, { parent_b });
+
+    test_assert(!ecs_has_pair(world, child, EcsChildOf, parent_a));
+    test_assert(ecs_has_pair(world, child, EcsChildOf, parent_b));
+    test_assert(ecs_has_pair(world, child, EcsParentDepth, EcsWildcard));
+
+    const EcsParent *p = ecs_get(world, child, EcsParent);
+    test_assert(p != NULL);
+    test_uint(p->value, parent_b);
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_add_childof_to_parent_child(void) {
+    ecs_world_t* world = ecs_mini();
+
+    ecs_entity_t parent_a = ecs_new(world);
+    ecs_entity_t parent_b = ecs_new(world);
+    ecs_entity_t child = ecs_new_w_parent(world, parent_a, NULL);
+
+    test_assert(ecs_has_pair(world, child, EcsChildOf, parent_a));
+    test_assert(!ecs_has_pair(world, child, EcsChildOf, parent_b));
+
+    ecs_add_pair(world, child, EcsChildOf, parent_b);
+
+    test_assert(!ecs_has_pair(world, child, EcsChildOf, parent_a));
+    test_assert(ecs_has_pair(world, child, EcsChildOf, parent_b));
+    test_assert(!ecs_has_pair(world, child, EcsParentDepth, EcsWildcard));
+
+    const EcsParent *p = ecs_get(world, child, EcsParent);
+    test_assert(p == NULL);
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_add_parent_to_childof_child_same_parent(void) {
+    ecs_world_t* world = ecs_mini();
+
+    ecs_entity_t parent_a = ecs_new(world);
+    ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent_a);
+
+    test_assert(ecs_has_pair(world, child, EcsChildOf, parent_a));
+    test_assert(!ecs_has(world, child, EcsParent));
+
+    ecs_set(world, child, EcsParent, { parent_a });
+
+    test_assert(ecs_has_pair(world, child, EcsChildOf, parent_a));
+    test_assert(ecs_has_pair(world, child, EcsParentDepth, EcsWildcard));
+
+    const EcsParent *p = ecs_get(world, child, EcsParent);
+    test_assert(p != NULL);
+    test_uint(p->value, parent_a);
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_add_childof_to_parent_child_same_parent(void) {
+    ecs_world_t* world = ecs_mini();
+
+    ecs_entity_t parent_a = ecs_new(world);
+    ecs_entity_t child = ecs_new_w_parent(world, parent_a, NULL);
+
+    test_assert(ecs_has_pair(world, child, EcsChildOf, parent_a));
+    test_assert(ecs_has(world, child, EcsParent));
+
+    ecs_add_pair(world, child, EcsChildOf, parent_a);
+
+    test_assert(ecs_has_pair(world, child, EcsChildOf, parent_a));
+    test_assert(!ecs_has_pair(world, child, EcsParentDepth, EcsWildcard));
+
+    const EcsParent *p = ecs_get(world, child, EcsParent);
+    test_assert(p == NULL);
+
+    ecs_fini(world);
+}
