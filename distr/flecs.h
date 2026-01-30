@@ -17728,7 +17728,7 @@ ecs_member_t* ecs_struct_get_member(
  * 
  * @param world The world.
  * @param type The struct type.
- * @param name The member index.
+ * @param i The member index.
  * @return The member if found, or NULL if index is larger than the number of members for the struct.
  */
 FLECS_API

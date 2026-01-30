@@ -1,4 +1,4 @@
-#include <cpp.h>
+#include <cpp_addons.h>
 
 void Doc_set_brief(void) {
     flecs::world ecs;

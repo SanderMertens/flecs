@@ -88992,6 +88992,31 @@ error:
     return -1;
 }
 
+static
+void flecs_struct_create_member_entity(
+    ecs_world_t *world,
+    ecs_entity_t type,
+    const ecs_member_t *member,
+    bool set_ranges)
+{
+    ecs_entity_t member_entity = ecs_new_from_path(world, type, member->name);
+
+    ecs_set(world, member_entity, EcsMember, {
+        .type = member->type,
+        .count = member->count,
+        .offset = member->offset,
+        .unit = member->unit
+    });
+
+    if (set_ranges) {
+        ecs_set(world, member_entity, EcsMemberRanges, {
+            .value = member->range,
+            .error = member->error_range,
+            .warning = member->warning_range
+        });
+    }
+}
+
 ecs_entity_t ecs_struct_init(
     ecs_world_t *world,
     const ecs_struct_desc_t *desc)
@@ -89020,7 +89045,6 @@ ecs_entity_t ecs_struct_init(
         }
 
         ecs_member_t member = *m_desc;
-        ecs_entity_t member_entity = 0;
         bool ranges_set = false;
         bool create_member_entity = desc->create_member_entities;
 
@@ -89036,22 +89060,7 @@ ecs_entity_t ecs_struct_init(
                 goto error;
             }
         } else {
-            member_entity = ecs_new_from_path(world, type, m_desc->name);
-
-            ecs_set(world, member_entity, EcsMember, {
-                .type = member.type,
-                .count = member.count,
-                .offset = member.offset,
-                .unit = member.unit
-            });
-
-            if (ranges_set) {
-                ecs_set(world, member_entity, EcsMemberRanges, {
-                    .value = member.range,
-                    .error = member.error_range,
-                    .warning = member.warning_range
-                });
-            }
+            flecs_struct_create_member_entity(world, type, &member, ranges_set);
         }
     }
 
@@ -89088,9 +89097,13 @@ int ecs_struct_add_member(
         goto error;
     }
 
+#ifdef FLECS_CREATE_MEMBER_ENTITIES
+    flecs_struct_create_member_entity(world, type, member, ranges_set);
+#else
     if (flecs_add_member_to_struct(world, type, 0, member)) {
         goto error;
     }
+#endif
 
     return 0;
 error:
