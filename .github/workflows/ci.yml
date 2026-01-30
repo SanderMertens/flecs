@@ -786,6 +786,46 @@ jobs:
       - name: test c++
         run: bake run test/cpp -- -j 8
 
+  test-cpp_addons:
+    needs: [build-linux]
+    runs-on: ${{ matrix.target.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - { os: ubuntu-latest, cc: clang-18, cxx: clang++-18 }
+
+    env:
+      CC: ${{ matrix.target.cc }}
+      CXX: ${{ matrix.target.cxx }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: install compiler
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ${{ matrix.target.cc }}
+          sudo apt-get install -y ${{ matrix.target.cxx }}
+
+      - name: compiler version
+        run: |
+          ${{ matrix.target.cc }} --version
+          ${{ matrix.target.cxx }} --version
+
+      - name: install bake
+        run: |
+          git clone https://github.com/SanderMertens/bake
+          make -C bake/build-$(uname)
+          bake/bake setup
+
+      - name: build flecs
+        run: bake -D FLECS_CREATE_MEMBER_ENTITIES --strict
+
+      - name: test c++
+        run: bake run test/cpp_addons -- -j 8
+
   test-windows:
     needs: build-windows
     runs-on: windows-latest

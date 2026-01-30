@@ -168,6 +168,9 @@ void StructTypes_struct_w_short_notation(void);
 void StructTypes_value_range(void);
 void StructTypes_error_range(void);
 void StructTypes_warning_range(void);
+void StructTypes_value_range_no_member_entities(void);
+void StructTypes_error_range_no_member_entities(void);
+void StructTypes_warning_range_no_member_entities(void);
 void StructTypes_error_and_warning_range(void);
 void StructTypes_error_range_invalid_type(void);
 void StructTypes_warning_range_invalid_type(void);
@@ -1763,6 +1766,18 @@ bake_test_case StructTypes_testcases[] = {
     {
         "warning_range",
         StructTypes_warning_range
+    },
+    {
+        "value_range_no_member_entities",
+        StructTypes_value_range_no_member_entities
+    },
+    {
+        "error_range_no_member_entities",
+        StructTypes_error_range_no_member_entities
+    },
+    {
+        "warning_range_no_member_entities",
+        StructTypes_warning_range_no_member_entities
     },
     {
         "error_and_warning_range",
@@ -5622,7 +5637,7 @@ static bake_test_suite suites[] = {
         "StructTypes",
         NULL,
         NULL,
-        29,
+        32,
         StructTypes_testcases
     },
     {

@@ -519,7 +519,7 @@ ecs_entity_t ecs_cpp_enum_constant_register(
 }
 
 #ifdef FLECS_META
-const ecs_member_t* ecs_cpp_last_member(
+ecs_member_t* ecs_cpp_last_member(
     const ecs_world_t *world, 
     ecs_entity_t type)
 {

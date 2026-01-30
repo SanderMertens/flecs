@@ -21,21 +21,15 @@ untyped_component& internal_member(
     size_t offset = 0, 
     bool use_offset = false) 
 {
-    ecs_entity_desc_t desc = {};
-    desc.name = name;
-    desc.parent = id_;
-    ecs_entity_t eid = ecs_entity_init(world_, &desc);
-    ecs_assert(eid != 0, ECS_INTERNAL_ERROR, NULL);
-
-    flecs::entity e(world_, eid);
-
-    Member m = {};
+    ecs_member_t m = {};
+    m.name = name;
     m.type = type_id;
     m.unit = unit;
     m.count = count;
     m.offset = static_cast<int32_t>(offset);
     m.use_offset = use_offset;
-    e.set<Member>(m);
+    
+    ecs_struct_add_member(world_, id_, &m);
 
     return *this;
 }
@@ -247,21 +241,25 @@ untyped_component& range(
     double min,
     double max) 
 {
-    const flecs::member_t *m = ecs_cpp_last_member(world_, id_);
+    flecs::member_t *m = ecs_cpp_last_member(world_, id_);
     if (!m) {
         return *this;
     }
 
-    flecs::world w(world_);
-    flecs::entity me = w.entity(m->member);
+    m->range.min = min;
+    m->range.max = max;
 
-    // Don't use C++ ensure because Unreal defines a macro called ensure
-    flecs::MemberRanges *mr = static_cast<flecs::MemberRanges*>(
-        ecs_ensure_id(w, me, w.id<flecs::MemberRanges>(), 
-            sizeof(flecs::MemberRanges)));
-    mr->value.min = min;
-    mr->value.max = max;
-    me.modified<flecs::MemberRanges>();
+    if (m->member) {
+        flecs::world w(world_);
+        flecs::entity me = w.entity(m->member);
+        flecs::MemberRanges *mr = static_cast<flecs::MemberRanges*>(
+            ecs_ensure_id(w, me, w.id<flecs::MemberRanges>(), 
+                sizeof(flecs::MemberRanges)));
+        mr->value.min = min;
+        mr->value.max = max;
+        me.modified<flecs::MemberRanges>();
+    }
+
     return *this;
 }
 
@@ -270,21 +268,25 @@ untyped_component& warning_range(
     double min,
     double max) 
 {
-    const flecs::member_t *m = ecs_cpp_last_member(world_, id_);
+    flecs::member_t *m = ecs_cpp_last_member(world_, id_);
     if (!m) {
         return *this;
     }
 
-    flecs::world w(world_);
-    flecs::entity me = w.entity(m->member);
+    m->warning_range.min = min;
+    m->warning_range.max = max;
 
-    // Don't use C++ ensure because Unreal defines a macro called ensure
-    flecs::MemberRanges *mr = static_cast<flecs::MemberRanges*>(
-        ecs_ensure_id(w, me, w.id<flecs::MemberRanges>(), 
-            sizeof(flecs::MemberRanges)));
-    mr->warning.min = min;
-    mr->warning.max = max;
-    me.modified<flecs::MemberRanges>();
+    if (m->member) {
+        flecs::world w(world_);
+        flecs::entity me = w.entity(m->member);
+        flecs::MemberRanges *mr = static_cast<flecs::MemberRanges*>(
+            ecs_ensure_id(w, me, w.id<flecs::MemberRanges>(), 
+                sizeof(flecs::MemberRanges)));
+        mr->warning.min = min;
+        mr->warning.max = max;
+        me.modified<flecs::MemberRanges>();
+    }
+
     return *this;
 }
 
@@ -293,20 +295,25 @@ untyped_component& error_range(
     double min,
     double max) 
 {
-    const flecs::member_t *m = ecs_cpp_last_member(world_, id_);
+    flecs::member_t *m = ecs_cpp_last_member(world_, id_);
     if (!m) {
         return *this;
     }
 
-    flecs::world w(world_);
-    flecs::entity me = w.entity(m->member);
+    m->error_range.min = min;
+    m->error_range.max = max;
 
-    // Don't use C++ ensure because Unreal defines a macro called ensure
-    flecs::MemberRanges *mr = static_cast<flecs::MemberRanges*>(ecs_ensure_id(
-        w, me, w.id<flecs::MemberRanges>(), sizeof(flecs::MemberRanges)));
-    mr->error.min = min;
-    mr->error.max = max;
-    me.modified<flecs::MemberRanges>();
+    if (m->member) {
+        flecs::world w(world_);
+        flecs::entity me = w.entity(m->member);
+        flecs::MemberRanges *mr = static_cast<flecs::MemberRanges*>(
+            ecs_ensure_id(w, me, w.id<flecs::MemberRanges>(), 
+                sizeof(flecs::MemberRanges)));
+        mr->error.min = min;
+        mr->error.max = max;
+        me.modified<flecs::MemberRanges>();
+    }
+
     return *this;
 }
 

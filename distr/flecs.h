@@ -17697,6 +17697,45 @@ ecs_entity_t ecs_struct_init(
     ecs_world_t *world,
     const ecs_struct_desc_t *desc);
 
+/** Add member to struct.
+ * This operation adds a member to a struct type. If the provided entity is not
+ * a struct type, this operation will add the Struct component.
+ * 
+ * @param world The world.
+ * @param type The struct type.
+ * @param member The member data.
+ */
+FLECS_API
+int ecs_struct_add_member(
+    ecs_world_t *world,
+    ecs_entity_t type,
+    const ecs_member_t *member);
+
+/** Get member by name from struct.
+ * 
+ * @param world The world.
+ * @param type The struct type.
+ * @param name The member name.
+ * @return The member if found, or NULL if no member with the provided name exists.
+ */
+FLECS_API
+ecs_member_t* ecs_struct_get_member(
+    ecs_world_t *world,
+    ecs_entity_t type,
+    const char *name);
+
+/** Get member by index from struct.
+ * 
+ * @param world The world.
+ * @param type The struct type.
+ * @param i The member index.
+ * @return The member if found, or NULL if index is larger than the number of members for the struct.
+ */
+FLECS_API
+ecs_member_t* ecs_struct_get_nth_member(
+    ecs_world_t *world,
+    ecs_entity_t type,
+    int32_t i);
 
 /** Used with ecs_opaque_init(). */
 typedef struct ecs_opaque_desc_t {
@@ -18340,7 +18379,7 @@ FLECS_ALWAYS_INLINE ecs_entity_t ecs_cpp_new(
 
 #ifdef FLECS_META
 FLECS_API
-const ecs_member_t* ecs_cpp_last_member(
+ecs_member_t* ecs_cpp_last_member(
     const ecs_world_t *world, 
     ecs_entity_t type);
 #endif
@@ -29980,21 +30019,15 @@ untyped_component& internal_member(
     size_t offset = 0, 
     bool use_offset = false) 
 {
-    ecs_entity_desc_t desc = {};
-    desc.name = name;
-    desc.parent = id_;
-    ecs_entity_t eid = ecs_entity_init(world_, &desc);
-    ecs_assert(eid != 0, ECS_INTERNAL_ERROR, NULL);
-
-    flecs::entity e(world_, eid);
-
-    Member m = {};
+    ecs_member_t m = {};
+    m.name = name;
     m.type = type_id;
     m.unit = unit;
     m.count = count;
     m.offset = static_cast<int32_t>(offset);
     m.use_offset = use_offset;
-    e.set<Member>(m);
+    
+    ecs_struct_add_member(world_, id_, &m);
 
     return *this;
 }
@@ -30206,21 +30239,25 @@ untyped_component& range(
     double min,
     double max) 
 {
-    const flecs::member_t *m = ecs_cpp_last_member(world_, id_);
+    flecs::member_t *m = ecs_cpp_last_member(world_, id_);
     if (!m) {
         return *this;
     }
 
-    flecs::world w(world_);
-    flecs::entity me = w.entity(m->member);
+    m->range.min = min;
+    m->range.max = max;
 
-    // Don't use C++ ensure because Unreal defines a macro called ensure
-    flecs::MemberRanges *mr = static_cast<flecs::MemberRanges*>(
-        ecs_ensure_id(w, me, w.id<flecs::MemberRanges>(), 
-            sizeof(flecs::MemberRanges)));
-    mr->value.min = min;
-    mr->value.max = max;
-    me.modified<flecs::MemberRanges>();
+    if (m->member) {
+        flecs::world w(world_);
+        flecs::entity me = w.entity(m->member);
+        flecs::MemberRanges *mr = static_cast<flecs::MemberRanges*>(
+            ecs_ensure_id(w, me, w.id<flecs::MemberRanges>(), 
+                sizeof(flecs::MemberRanges)));
+        mr->value.min = min;
+        mr->value.max = max;
+        me.modified<flecs::MemberRanges>();
+    }
+
     return *this;
 }
 
@@ -30229,21 +30266,25 @@ untyped_component& warning_range(
     double min,
     double max) 
 {
-    const flecs::member_t *m = ecs_cpp_last_member(world_, id_);
+    flecs::member_t *m = ecs_cpp_last_member(world_, id_);
     if (!m) {
         return *this;
     }
 
-    flecs::world w(world_);
-    flecs::entity me = w.entity(m->member);
+    m->warning_range.min = min;
+    m->warning_range.max = max;
 
-    // Don't use C++ ensure because Unreal defines a macro called ensure
-    flecs::MemberRanges *mr = static_cast<flecs::MemberRanges*>(
-        ecs_ensure_id(w, me, w.id<flecs::MemberRanges>(), 
-            sizeof(flecs::MemberRanges)));
-    mr->warning.min = min;
-    mr->warning.max = max;
-    me.modified<flecs::MemberRanges>();
+    if (m->member) {
+        flecs::world w(world_);
+        flecs::entity me = w.entity(m->member);
+        flecs::MemberRanges *mr = static_cast<flecs::MemberRanges*>(
+            ecs_ensure_id(w, me, w.id<flecs::MemberRanges>(), 
+                sizeof(flecs::MemberRanges)));
+        mr->warning.min = min;
+        mr->warning.max = max;
+        me.modified<flecs::MemberRanges>();
+    }
+
     return *this;
 }
 
@@ -30252,20 +30293,25 @@ untyped_component& error_range(
     double min,
     double max) 
 {
-    const flecs::member_t *m = ecs_cpp_last_member(world_, id_);
+    flecs::member_t *m = ecs_cpp_last_member(world_, id_);
     if (!m) {
         return *this;
     }
 
-    flecs::world w(world_);
-    flecs::entity me = w.entity(m->member);
+    m->error_range.min = min;
+    m->error_range.max = max;
 
-    // Don't use C++ ensure because Unreal defines a macro called ensure
-    flecs::MemberRanges *mr = static_cast<flecs::MemberRanges*>(ecs_ensure_id(
-        w, me, w.id<flecs::MemberRanges>(), sizeof(flecs::MemberRanges)));
-    mr->error.min = min;
-    mr->error.max = max;
-    me.modified<flecs::MemberRanges>();
+    if (m->member) {
+        flecs::world w(world_);
+        flecs::entity me = w.entity(m->member);
+        flecs::MemberRanges *mr = static_cast<flecs::MemberRanges*>(
+            ecs_ensure_id(w, me, w.id<flecs::MemberRanges>(), 
+                sizeof(flecs::MemberRanges)));
+        mr->error.min = min;
+        mr->error.max = max;
+        me.modified<flecs::MemberRanges>();
+    }
+
     return *this;
 }
 
