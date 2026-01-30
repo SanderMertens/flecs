@@ -599,7 +599,7 @@ void flecs_register_ordered_children(ecs_iter_t *it) {
                 cr->flags |= EcsIdOrderedChildren;
             }
         }
-    } else if (!(it->real_world->flags & EcsWorldFini)) {
+    } else if (!(it->real_world->flags & EcsWorldFini) && it->other_table) {
         ecs_assert(it->event == EcsOnRemove, ECS_INTERNAL_ERROR, NULL);
         for (i = 0; i < it->count; i ++) {
             ecs_entity_t parent = it->entities[i];

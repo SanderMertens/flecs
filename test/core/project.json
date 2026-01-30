@@ -893,7 +893,9 @@
                 "delete_tree_1",
                 "delete_tree_2",
                 "delete_tree_3",
-                "delete_tree_4"
+                "delete_tree_4",
+                "delete_tree_5",
+                "delete_tree_6"
             ]
         }, {
             "id": "Hierarchies",

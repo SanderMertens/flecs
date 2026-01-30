@@ -4249,3 +4249,43 @@ void NonFragmentingChildOf_delete_tree_4(void) {
     test_expect_abort(); // cycle
     ecs_set(world, a, EcsParent, {e});
 }
+
+void NonFragmentingChildOf_delete_tree_5(void) {
+    ecs_world_t* world = ecs_mini();
+
+    ecs_entity_t a = ecs_new(world);
+    ecs_entity_t b = ecs_new_w_parent(world, a, NULL);
+    ecs_entity_t c = ecs_new_w_parent(world, b, NULL);
+
+    ecs_add_id(world, b, EcsOrderedChildren);
+
+    ecs_delete(world, a);
+
+    test_assert(!ecs_is_alive(world, a));
+    test_assert(!ecs_is_alive(world, b));
+    test_assert(!ecs_is_alive(world, c));
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_delete_tree_6(void) {
+    ecs_world_t* world = ecs_mini();
+    
+    ECS_TAG(world, Rel);
+
+    ecs_entity_t a = ecs_new(world);
+    ecs_entity_t b = ecs_new_w_parent(world, a, NULL);
+    ecs_add_pair(world, a, Rel, b);
+
+    ecs_entity_t c = ecs_new_w_parent(world, b, NULL);
+
+    ecs_add_id(world, b, EcsOrderedChildren);
+
+    ecs_delete(world, a);
+
+    test_assert(!ecs_is_alive(world, a));
+    test_assert(!ecs_is_alive(world, b));
+    test_assert(!ecs_is_alive(world, c));
+
+    ecs_fini(world);
+}
