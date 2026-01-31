@@ -168,4 +168,11 @@ ecs_table_range_t flecs_range_from_entity(
     const ecs_world_t *world,
     ecs_entity_t e);
 
+ecs_entity_t flecs_set_identifier(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_entity_t entity,
+    ecs_entity_t tag,
+    const char *name);
+
 #endif
