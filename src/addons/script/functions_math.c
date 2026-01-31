@@ -137,6 +137,26 @@ void flecs_script_rng_get_uint(
     }
 }
 
+double flecs_lerp(
+    double a, 
+    double b,
+    double t) 
+{
+    return a + t * (b - a);
+}
+
+void flecs_script_lerp(
+    const ecs_function_ctx_t *ctx,
+    int32_t argc,
+    const ecs_value_t *argv,
+    ecs_value_t *result)
+{
+    double a = *(double*)argv[0].ptr;
+    double b = *(double*)argv[1].ptr;
+    double t = *(double*)argv[2].ptr;
+    *(double*)result->ptr = flecs_lerp(a, b, t);
+}
+
 #define FLECS_MATH_FUNC_F64(name, ...)\
     static\
     void flecs_math_##name(\
@@ -361,6 +381,20 @@ void FlecsScriptMathImport(
         },
         .callback = flecs_script_rng_get_uint
     });
+
+    ecs_function(world, {
+        .name = "lerp",
+        .parent = ecs_id(FlecsScriptMath),
+        .return_type = ecs_id(ecs_f64_t),
+        .params = {
+            { .name = "a", .type = ecs_id(ecs_f64_t) },
+            { .name = "b", .type = ecs_id(ecs_f64_t) },
+            { .name = "t", .type = ecs_id(ecs_f64_t) }
+        },
+        .callback = flecs_script_lerp
+    });
+
+    FlecsScriptMathPerlinImport(world);
 }
 
 #endif
