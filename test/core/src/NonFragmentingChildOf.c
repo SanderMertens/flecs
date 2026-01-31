@@ -4375,3 +4375,117 @@ void NonFragmentingChildOf_add_childof_to_parent_child_same_parent(void) {
 
     ecs_fini(world);
 }
+
+void NonFragmentingChildOf_defer_new_w_parent(void) {
+    ecs_world_t* world = ecs_mini();
+
+    ecs_entity_t parent = ecs_new(world);
+
+    ecs_defer_begin(world);
+    ecs_entity_t child = ecs_new_w_parent(world, parent, NULL);
+    test_assert(child != 0);
+    ecs_defer_end(world);
+
+    test_assert(ecs_has(world, child, EcsParent));
+    
+    const EcsParent *p = ecs_get(world, child, EcsParent);
+    test_assert(p != NULL);
+    test_uint(p->value, parent);
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_defer_new_w_parent_w_name(void) {
+    ecs_world_t* world = ecs_mini();
+
+    ecs_entity_t parent = ecs_new(world);
+
+    ecs_defer_begin(world);
+    ecs_entity_t child = ecs_new_w_parent(world, parent, "foo");
+    test_assert(child != 0);
+    ecs_defer_end(world);
+
+    test_assert(ecs_has(world, child, EcsParent));
+    test_str(ecs_get_name(world, child), "foo");
+    
+    const EcsParent *p = ecs_get(world, child, EcsParent);
+    test_assert(p != NULL);
+    test_uint(p->value, parent);
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_defer_new_w_parent_w_same_name_twice(void) {
+    ecs_world_t* world = ecs_mini();
+
+    ecs_entity_t parent = ecs_new(world);
+
+    ecs_defer_begin(world);
+    ecs_entity_t child = ecs_new_w_parent(world, parent, "foo");
+    test_assert(child != 0);
+    test_assert(child == ecs_new_w_parent(world, parent, "foo"));
+    ecs_defer_end(world);
+
+    test_assert(ecs_has(world, child, EcsParent));
+    test_str(ecs_get_name(world, child), "foo");
+    
+    const EcsParent *p = ecs_get(world, child, EcsParent);
+    test_assert(p != NULL);
+    test_uint(p->value, parent);
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_new_w_parent_w_same_name_twice(void) {
+    ecs_world_t* world = ecs_mini();
+
+    ecs_entity_t parent = ecs_new(world);
+
+    ecs_entity_t child = ecs_new_w_parent(world, parent, "foo");
+    test_assert(child != 0);
+    test_assert(child == ecs_new_w_parent(world, parent, "foo"));
+    
+    test_str(ecs_get_name(world, child), "foo");
+    const EcsParent *p = ecs_get(world, child, EcsParent);
+    test_assert(p != NULL);
+    test_uint(p->value, parent);
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_new_w_parent_from_stage(void) {
+    ecs_world_t* world = ecs_mini();
+
+    ecs_entity_t parent = ecs_new(world);
+
+    ecs_world_t *s = ecs_get_stage(world, 0);
+    test_assert(s != NULL);
+    test_assert(s != world);
+
+    ecs_entity_t child = ecs_new_w_parent(s, parent, NULL);
+
+    const EcsParent *p = ecs_get(world, child, EcsParent);
+    test_assert(p != NULL);
+    test_uint(p->value, parent);
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_new_w_parent_w_name_from_stage(void) {
+    ecs_world_t* world = ecs_mini();
+
+    ecs_entity_t parent = ecs_new(world);
+
+    ecs_world_t *s = ecs_get_stage(world, 0);
+    test_assert(s != NULL);
+    test_assert(s != world);
+
+    ecs_entity_t child = ecs_new_w_parent(s, parent, "foo");
+
+    test_str(ecs_get_name(world, child), "foo");
+    const EcsParent *p = ecs_get(world, child, EcsParent);
+    test_assert(p != NULL);
+    test_uint(p->value, parent);
+
+    ecs_fini(world);
+}

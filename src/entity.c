@@ -2889,6 +2889,10 @@ ecs_entity_t ecs_new_w_parent(
     ecs_entity_t parent,
     const char *name)
 {
+    ecs_stage_t *stage = flecs_stage_from_world(&world);
+    ecs_assert(!(world->flags & EcsWorldMultiThreaded), ECS_INVALID_OPERATION,
+        "cannot create new entity while world is multithreaded");
+
     ecs_component_record_t *cr = flecs_components_ensure(
         world, ecs_childof(parent));
     ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -2935,7 +2939,10 @@ ecs_entity_t ecs_new_w_parent(
     parent_ptr->value = parent;
 
     if (name) {
-        ecs_set_name(world, entity, name);
+        bool is_deferred = ecs_is_deferred(world);
+        if (is_deferred) ecs_defer_suspend(world);
+        flecs_set_identifier(world, stage, entity, EcsName, name);
+        if (is_deferred) ecs_defer_resume(world);
     }
 
     flecs_add_non_fragmenting_child_w_records(world, parent, entity, cr, r);
