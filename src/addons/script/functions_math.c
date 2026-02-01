@@ -145,16 +145,113 @@ double flecs_lerp(
     return a + t * (b - a);
 }
 
+static
+double flecs_min(
+    double a, 
+    double b) 
+{
+    return (a < b) ? a : b;
+}
+
+static
+double flecs_max(
+    double a, 
+    double b) 
+{
+    return (a > b) ? a : b;
+}
+
+static
+double flecs_clamp(
+    double v,
+    double min,
+    double max)
+{
+    if (v < min) {
+        return min;
+    } else if (v > max) {
+        return max;
+    } else {
+        return v;
+    }
+}
+
+static
+double flecs_smoothstep(
+    double a,
+    double b,
+    double t)
+{
+    double x = flecs_clamp((t - a) / (b - a), 0, 1);
+    return x * x * (3 - 2 * x);
+}
+
+void flecs_script_min(
+    const ecs_function_ctx_t *ctx,
+    int32_t argc,
+    const ecs_value_t *argv,
+    ecs_value_t *result)
+{
+    (void)ctx;
+    (void)argc;
+    double a = *(double*)argv[0].ptr;
+    double b = *(double*)argv[1].ptr;
+    *(double*)result->ptr = flecs_min(a, b);
+}
+
+void flecs_script_max(
+    const ecs_function_ctx_t *ctx,
+    int32_t argc,
+    const ecs_value_t *argv,
+    ecs_value_t *result)
+{
+    (void)ctx;
+    (void)argc;
+    double a = *(double*)argv[0].ptr;
+    double b = *(double*)argv[1].ptr;
+    *(double*)result->ptr = flecs_max(a, b);
+}
+
 void flecs_script_lerp(
     const ecs_function_ctx_t *ctx,
     int32_t argc,
     const ecs_value_t *argv,
     ecs_value_t *result)
 {
+    (void)ctx;
+    (void)argc;
     double a = *(double*)argv[0].ptr;
     double b = *(double*)argv[1].ptr;
     double t = *(double*)argv[2].ptr;
     *(double*)result->ptr = flecs_lerp(a, b, t);
+}
+
+void flecs_script_clamp(
+    const ecs_function_ctx_t *ctx,
+    int32_t argc,
+    const ecs_value_t *argv,
+    ecs_value_t *result)
+{
+    (void)ctx;
+    (void)argc;
+    double v = *(double*)argv[0].ptr;
+    double min = *(double*)argv[1].ptr;
+    double max = *(double*)argv[2].ptr;
+    *(double*)result->ptr = flecs_clamp(v, min, max);
+}
+
+void flecs_script_smoothstep(
+    const ecs_function_ctx_t *ctx,
+    int32_t argc,
+    const ecs_value_t *argv,
+    ecs_value_t *result)
+{
+    (void)ctx;
+    (void)argc;
+    double a = *(double*)argv[0].ptr;
+    double b = *(double*)argv[1].ptr;
+    double t = *(double*)argv[2].ptr;
+    *(double*)result->ptr = flecs_smoothstep(a, b, t);
 }
 
 #define FLECS_MATH_FUNC_F64(name, ...)\
@@ -283,6 +380,7 @@ FLECS_MATH_FUNC_F64(round, round(x))
 
 FLECS_MATH_FUNC_F64(abs, fabs(x))
 
+
 void FlecsScriptMathImport(
     ecs_world_t *world)
 {
@@ -383,6 +481,28 @@ void FlecsScriptMathImport(
     });
 
     ecs_function(world, {
+        .name = "min",
+        .parent = ecs_id(FlecsScriptMath),
+        .return_type = ecs_id(ecs_f64_t),
+        .params = {
+            { .name = "a", .type = ecs_id(ecs_f64_t) },
+            { .name = "b", .type = ecs_id(ecs_f64_t) }
+        },
+        .callback = flecs_script_min
+    });
+
+    ecs_function(world, {
+        .name = "max",
+        .parent = ecs_id(FlecsScriptMath),
+        .return_type = ecs_id(ecs_f64_t),
+        .params = {
+            { .name = "a", .type = ecs_id(ecs_f64_t) },
+            { .name = "b", .type = ecs_id(ecs_f64_t) }
+        },
+        .callback = flecs_script_max
+    });
+    
+    ecs_function(world, {
         .name = "lerp",
         .parent = ecs_id(FlecsScriptMath),
         .return_type = ecs_id(ecs_f64_t),
@@ -392,6 +512,30 @@ void FlecsScriptMathImport(
             { .name = "t", .type = ecs_id(ecs_f64_t) }
         },
         .callback = flecs_script_lerp
+    });
+
+    ecs_function(world, {
+        .name = "clamp",
+        .parent = ecs_id(FlecsScriptMath),
+        .return_type = ecs_id(ecs_f64_t),
+        .params = {
+            { .name = "v", .type = ecs_id(ecs_f64_t) },
+            { .name = "min", .type = ecs_id(ecs_f64_t) },
+            { .name = "max", .type = ecs_id(ecs_f64_t) }
+        },
+        .callback = flecs_script_clamp
+    });
+
+    ecs_function(world, {
+        .name = "smoothstep",
+        .parent = ecs_id(FlecsScriptMath),
+        .return_type = ecs_id(ecs_f64_t),
+        .params = {
+            { .name = "a", .type = ecs_id(ecs_f64_t) },
+            { .name = "b", .type = ecs_id(ecs_f64_t) },
+            { .name = "t", .type = ecs_id(ecs_f64_t) }
+        },
+        .callback = flecs_script_smoothstep
     });
 
     FlecsScriptMathPerlinImport(world);

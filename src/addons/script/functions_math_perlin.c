@@ -113,6 +113,7 @@ void flecs_script_perlin2(
     ecs_value_t *result) 
 {
     (void)argc;
+    (void)ctx;
     double x = *(double*)argv[0].ptr;
     double y = *(double*)argv[1].ptr;
     *(double*)result->ptr = flecs_perlin2(x, y);
