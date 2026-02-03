@@ -318,11 +318,7 @@ ecs_entity_t spaceship = ecs_new(world);
 // Create child with ChildOf storage
 ecs_entity_t cockpit = ecs_new_w_pair(world, EcsChildOf, spaceship);
 
-// Create child with Parent storage (#1)
-ecs_entity_t cockpit = ecs_new(world);
-ecs_set(world, cockpit, EcsParent, {spaceship});
-
-// Create child with Parent storage (#2)
+// Create child with Parent storage
 ecs_entity_t cockpit = ecs_new_w_parent(world, spaceship, NULL /* optional name */);
 ```
 
@@ -333,10 +329,10 @@ ecs_entity_t cockpit = ecs_new_w_parent(world, spaceship, NULL /* optional name 
 flecs::entity spaceship = world.entity();
 
 // Create child with ChildOf storage
-flecs::entity cockpit = world.entity().child_of(spaceship);
+flecs::entity cockpit = world.entity(spaceship, nullptr /* optional name */);
 
 // Create child with Parent storage
-flecs::entity cockpit = world.entity().set(flecs::Parent{spaceship});
+flecs::entity cockpit = world.entity(flecs::Parent{spaceship}, nullptr /* optional name */);
 ```
 
 </li>
@@ -381,12 +377,12 @@ ecs_add_pair(world, engineering, EcsChildOf, spoaceship);
 flecs::entity spaceship = world.entity();
 
 // OK: single parent with children using mixed storages
-flecs::entity cockpit = world.entity().child_of(spaceship);
-flecs::entity engine = world.entity().set(flecs::Parent{spaceship});
+flecs::entity cockpit = world.entity(spaceship, nullptr);
+flecs::entity engine = world.entity(flecs::Parent{spaceship}, nullptr);
 
 // Not OK: single entity with both storages
-flecs::entity engineering = world.entity().set(flecs::Parent{spaceship});
-engineering.child_of(spaceship);
+flecs::entity engineering = world.entity(flecs::Parent{spaceship}, nullptr);
+engineering.child_of(spaceship); // will remove Parent component
 ```
 
 </li>
