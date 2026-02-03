@@ -130,15 +130,89 @@ error:
     return (ecs_value_t){0};
 }
 
+#ifdef FLECS_DEBUG
+static
+bool flecs_script_function_has_vector_args(
+    const ecs_function_desc_t *desc)
+{
+    int32_t i;
+    for (i = 0; i < FLECS_SCRIPT_FUNCTION_ARGS_MAX; i ++) {
+        if (!desc->params[i].name) {
+            break;
+        }
+
+        if (desc->params[i].type == EcsScriptVectorType) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+static
+int flecs_script_function_validate_desc(
+    const ecs_function_desc_t *desc)
+{
+    ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc->name != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc->return_type != 0, ECS_INVALID_PARAMETER, NULL);
+
+    if (!flecs_script_function_has_vector_args(desc)) {
+        ecs_check(desc->callback != NULL, ECS_INVALID_PARAMETER, desc->name);
+        ecs_check(desc->return_type != EcsScriptVectorType, ECS_INVALID_PARAMETER,
+            "function '%s' cannot have flecs.script.vector return type unless "
+            "at least one argument is of type flecs.script.vector",
+                desc->name);
+    } else {
+        int32_t i;
+        for (i = 0; i < EcsPrimitiveKindLast; i ++) {
+            if (desc->vector_callbacks[i]) {
+                break;
+            }
+        }
+
+        if (i == EcsPrimitiveKindLast) {
+            ecs_throw(ECS_INVALID_PARAMETER, "function '%s' has vector "
+                "arguments, must implement at least one element of "
+                ".vector_callbacks", desc->name);
+        }
+    }
+
+    return 0;
+error:
+    return -1;
+}
+#endif
+
+static
+void flecs_script_function_parse_args(
+    const ecs_function_desc_t *desc,
+    ecs_vec_t *params)
+{
+    int32_t i;
+    for (i = 0; i < FLECS_SCRIPT_FUNCTION_ARGS_MAX; i ++) {
+        if (!desc->params[i].name) {
+            break;
+        }
+
+        if (!i) {
+            ecs_vec_init_t(NULL, params, ecs_script_parameter_t, 0);
+        }
+
+        ecs_script_parameter_t *p = ecs_vec_append_t(
+            NULL, params, ecs_script_parameter_t);
+        p->type = desc->params[i].type;
+        p->name = ecs_os_strdup(desc->params[i].name);
+    }
+}
+
 ecs_entity_t ecs_function_init(
     ecs_world_t *world,
     const ecs_function_desc_t *desc)
 {
     flecs_poly_assert(world, ecs_world_t);
-    ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(desc->name != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(desc->callback != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(desc->return_type != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_dbg_assert(!flecs_script_function_validate_desc(desc), 
+        ECS_INVALID_PARAMETER, NULL);
 
     ecs_entity_t result = ecs_entity(world, { 
         .name = desc->name,
@@ -152,23 +226,11 @@ ecs_entity_t ecs_function_init(
     EcsScriptFunction *f = ecs_ensure(world, result, EcsScriptFunction);
     f->return_type = desc->return_type;
     f->callback = desc->callback;
+    ecs_os_memcpy_n(f->vector_callbacks, desc->vector_callbacks, 
+        ecs_vector_function_callback_t, FLECS_SCRIPT_VECTOR_FUNCTION_COUNT);
     f->ctx = desc->ctx;
 
-    int32_t i;
-    for (i = 0; i < FLECS_SCRIPT_FUNCTION_ARGS_MAX; i ++) {
-        if (!desc->params[i].name) {
-            break;
-        }
-
-        if (!i) {
-            ecs_vec_init_t(NULL, &f->params, ecs_script_parameter_t, 0);
-        }
-
-        ecs_script_parameter_t *p = ecs_vec_append_t(
-            NULL, &f->params, ecs_script_parameter_t);
-        p->type = desc->params[i].type;
-        p->name = ecs_os_strdup(desc->params[i].name);
-    }
+    flecs_script_function_parse_args(desc, &f->params);
 
     ecs_modified(world, result, EcsScriptFunction);
 
@@ -182,11 +244,9 @@ ecs_entity_t ecs_method_init(
     const ecs_function_desc_t *desc)
 {
     flecs_poly_assert(world, ecs_world_t);
-    ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(desc->name != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(desc->callback != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_dbg_assert(!flecs_script_function_validate_desc(desc), 
+        ECS_INVALID_PARAMETER, NULL);
     ecs_check(desc->parent != 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(desc->return_type != 0, ECS_INVALID_PARAMETER, NULL);
 
     ecs_entity_t result = ecs_entity(world, { 
         .name = desc->name,
@@ -200,23 +260,11 @@ ecs_entity_t ecs_method_init(
     EcsScriptMethod *f = ecs_ensure(world, result, EcsScriptMethod);
     f->return_type = desc->return_type;
     f->callback = desc->callback;
+    ecs_os_memcpy_n(f->vector_callbacks, desc->vector_callbacks, 
+        ecs_vector_function_callback_t, FLECS_SCRIPT_VECTOR_FUNCTION_COUNT);
     f->ctx = desc->ctx;
-
-    int32_t i;
-    for (i = 0; i < FLECS_SCRIPT_FUNCTION_ARGS_MAX; i ++) {
-        if (!desc->params[i].name) {
-            break;
-        }
-
-        if (!i) {
-            ecs_vec_init_t(NULL, &f->params, ecs_script_parameter_t, 0);
-        }
-
-        ecs_script_parameter_t *p = ecs_vec_append_t(
-            NULL, &f->params, ecs_script_parameter_t);
-        p->type = desc->params[i].type;
-        p->name = ecs_os_strdup(desc->params[i].name);
-    }
+    
+    flecs_script_function_parse_args(desc, &f->params);
 
     ecs_modified(world, result, EcsScriptMethod);
 

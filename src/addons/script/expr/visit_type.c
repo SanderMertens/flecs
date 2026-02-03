@@ -6,6 +6,7 @@
 #include "flecs.h"
 
 #ifdef FLECS_SCRIPT
+#include "../../meta/meta.h"
 #include "../script.h"
 
 static
@@ -1295,40 +1296,189 @@ int flecs_expr_arguments_visit_type(
     ecs_script_t *script,
     ecs_expr_initializer_t *node,
     const ecs_expr_eval_desc_t *desc,
-    const ecs_vec_t *param_vec)
+    const ecs_vec_t *param_vec,
+    ecs_entity_t *vector_type_out)
 {
+    ecs_script_parameter_t *params = ecs_vec_first(param_vec);
     ecs_expr_initializer_element_t *elems = ecs_vec_first(&node->elements);
     int32_t i, count = ecs_vec_count(&node->elements);
-
-    if (count != ecs_vec_count(param_vec)) {
-        flecs_expr_visit_error(script, node, "expected %d arguments, got %d",
-            ecs_vec_count(param_vec), count);
-        goto error;
-    }
-
-    ecs_script_parameter_t *params = ecs_vec_first(param_vec);
+    ecs_entity_t vector_type = 0;
 
     for (i = 0; i < count; i ++) {
         ecs_expr_initializer_element_t *elem = &elems[i];
 
-        ecs_meta_cursor_t cur = ecs_meta_cursor(
-            script->world, params[i].type, NULL);
+        ecs_entity_t argtype = params[i].type;
 
-        if (flecs_expr_visit_type_priv(script, elem->value, &cur, desc)){
-            goto error;
+        if (argtype != EcsScriptVectorType) {
+            ecs_meta_cursor_t cur = ecs_meta_cursor(
+                script->world, argtype, NULL);
+
+            if (flecs_expr_visit_type_priv(script, elem->value, &cur, desc)){
+                goto error;
+            }
+        } else {
+            ecs_meta_cursor_t cur;
+            ecs_os_zeromem(&cur);
+
+            if (flecs_expr_visit_type_priv(script, elem->value, &cur, desc)){
+                goto error;
+            }
+
+            if (!vector_type) {
+                vector_type = elem->value->type;
+            }
+
+            argtype = vector_type;
         }
 
-        if (elem->value->type != params[i].type) {
+        if (elem->value->type != argtype) {
             elem->value = (ecs_expr_node_t*)flecs_expr_cast(
-                script, elem->value, params[i].type);
+                script, elem->value, argtype);
             if (!elem->value) {
                 goto error;
             }
         }
     }
 
+    *vector_type_out = vector_type;
+
     return 0;
 error:
+    return -1;
+}
+
+static
+int flecs_expr_populate_primitive_vector_calldata(
+    ecs_script_t *script,
+    ecs_expr_function_t *node,
+    const struct ecs_script_function_t *func_data,
+    ecs_entity_t vector_type,
+    ecs_entity_t elem_type,
+    int32_t count)
+{
+    ecs_world_t *world = script->world;
+    const EcsPrimitive *ptype = ecs_get(world, elem_type, EcsPrimitive);
+    if (!ptype) {
+        flecs_expr_visit_error(script, node, 
+            "type '%s' cannot be passed to vector argument of "
+            "function '%s': (member) type '%s' is not a primitive type",
+            flecs_errstr(ecs_get_path(world, vector_type)),
+            node->function_name,
+            flecs_errstr(ecs_get_path(world, elem_type)));
+        goto error;
+    }
+
+    ecs_vector_function_callback_t cb = func_data->vector_callbacks[ptype->kind];
+    if (!cb) {
+        flecs_expr_visit_error(script, node, "function '%s' does not implement "
+            "vector operation for primitive kind '%s'",
+            node->function_name,
+            flecs_primitive_type_kind_str(ptype->kind));
+        goto error;
+    }
+
+    node->calldata.is.vector_callback = cb;
+    node->calldata.vector_elem_count = count;
+
+    return 0;
+error:
+    return -1;
+}
+
+static
+int flecs_expr_populate_struct_vector_calldata(
+    ecs_script_t *script,
+    ecs_expr_function_t *node,
+    const struct ecs_script_function_t *func_data,
+    ecs_entity_t vector_type)
+{
+    ecs_world_t *world = script->world;
+    const EcsStruct *type = ecs_get(world, vector_type, EcsStruct);
+    ecs_assert(type != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_entity_t elem_type = 0;
+    ecs_member_t *members = ecs_vec_first(&type->members);
+    int32_t i, count = ecs_vec_count(&type->members);
+    for (i = 0; i < count; i ++) {
+        ecs_member_t *m = &members[i];
+        if (!i) {
+            elem_type = m->type;
+        } else {
+            if (m->type != elem_type) {
+                flecs_expr_visit_error(script, node, 
+                    "type '%s' cannot be passed to vector argument of "
+                    "function '%s': all its members must be of the same type",
+                    flecs_errstr(ecs_get_path(world, vector_type)),
+                    node->function_name);
+                goto error;
+            }
+        }
+    }
+
+    return flecs_expr_populate_primitive_vector_calldata(
+        script, node, func_data, vector_type, elem_type, count);
+error:
+    return -1;
+}
+
+static
+int flecs_expr_populate_array_vector_calldata(
+    ecs_script_t *script,
+    ecs_expr_function_t *node,
+    const struct ecs_script_function_t *func_data,
+    ecs_entity_t vector_type)
+{
+    const EcsArray *type = ecs_get(script->world, vector_type, EcsArray);
+    ecs_assert(type != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    return flecs_expr_populate_primitive_vector_calldata(
+        script, node, func_data, vector_type, type->type, type->count);
+}
+
+static
+int flecs_expr_populate_vector_vector_calldata(
+    ecs_script_t *script,
+    ecs_expr_function_t *node,
+    const struct ecs_script_function_t *func_data,
+    ecs_entity_t vector_type)
+{
+    const EcsVector *type = ecs_get(script->world, vector_type, EcsVector);
+    ecs_assert(type != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    return flecs_expr_populate_primitive_vector_calldata(
+        script, node, func_data, vector_type, type->type, -1);
+}
+
+static
+int flecs_expr_populate_vector_calldata(
+    ecs_script_t *script,
+    ecs_expr_function_t *node,
+    const struct ecs_script_function_t *func_data,
+    ecs_entity_t vector_type)
+{
+    ecs_world_t *world = script->world;
+    const EcsType *type = ecs_get(world, vector_type, EcsType);
+    ecs_assert(type != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    if (type->kind == EcsPrimitiveType) {
+        return flecs_expr_populate_primitive_vector_calldata(
+            script, node, func_data, vector_type, vector_type, 1);
+    } else if (type->kind == EcsStructType) {
+        return flecs_expr_populate_struct_vector_calldata(
+            script, node, func_data, vector_type);
+    } else if (type->kind == EcsArrayType) {
+        return flecs_expr_populate_array_vector_calldata(
+            script, node, func_data, vector_type);
+    } else if (type->kind == EcsVectorType) {
+        return flecs_expr_populate_vector_vector_calldata(
+            script, node, func_data, vector_type);
+    }
+
+    flecs_expr_visit_error(script, node, 
+        "type '%s' cannot be passed to vector argument of function '%s'",
+        flecs_errstr(ecs_get_path(world, vector_type)),
+        node->function_name);
+
     return -1;
 }
 
@@ -1386,6 +1536,7 @@ int flecs_expr_function_visit_type(
 
     ecs_world_t *world = script->world;
     const ecs_vec_t *params = NULL;
+    const struct ecs_script_function_t *func_data = NULL;
 
     /* If this is a method, lookup function entity in scope of type */
     if (is_method) {
@@ -1408,8 +1559,7 @@ int flecs_expr_function_visit_type(
             goto error;
         }
 
-        const EcsScriptMethod *func_data = ecs_get(
-            world, func, EcsScriptMethod);
+        func_data = ecs_get(world, func, EcsScriptMethod);
         if (!func_data) {
             char *path = ecs_get_path(world, func);
             flecs_expr_visit_error(script, node, 
@@ -1421,7 +1571,7 @@ int flecs_expr_function_visit_type(
         node->node.kind = EcsExprMethod;
         node->node.type = func_data->return_type;
         node->calldata.function = func;
-        node->calldata.callback = func_data->callback;
+        node->calldata.is.callback = func_data->callback;
         node->calldata.ctx = func_data->ctx;
         params = &func_data->params;
     }
@@ -1437,8 +1587,7 @@ try_function:
             goto error;
         }
 
-        const EcsScriptFunction *func_data = ecs_get(
-            world, func, EcsScriptFunction);
+        func_data = ecs_get(world, func, EcsScriptFunction);
         if (!func_data) {
             char *path = ecs_get_path(world, func);
             flecs_expr_visit_error(script, node, 
@@ -1449,13 +1598,39 @@ try_function:
 
         node->node.type = func_data->return_type;
         node->calldata.function = func;
-        node->calldata.callback = func_data->callback;
+        node->calldata.is.callback = func_data->callback;
         node->calldata.ctx = func_data->ctx;
+        node->calldata.vector_elem_count = 0;
         params = &func_data->params;
     }
 
-    if (flecs_expr_arguments_visit_type(script, node->args, desc, params)) {
+    int32_t count = ecs_vec_count(&node->args->elements);
+    if (count != ecs_vec_count(params)) {
+        flecs_expr_visit_error(script, node, "expected %d arguments, got %d",
+            ecs_vec_count(params), count);
         goto error;
+    }
+
+    ecs_entity_t vector_type = 0;
+    if (flecs_expr_arguments_visit_type(
+        script, node->args, desc, params, &vector_type)) 
+    {
+        goto error;
+    }
+
+    if (vector_type) {
+        if (node->node.type == EcsScriptVectorType) {
+            node->node.type = vector_type;
+        }
+
+        if (flecs_expr_populate_vector_calldata(
+            script, node, func_data, vector_type))
+        {
+            goto error;
+        }
+    } else {
+        ecs_assert(node->node.type != EcsScriptVectorType, 
+            ECS_INTERNAL_ERROR, NULL);
     }
 
     return 0;

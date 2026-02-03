@@ -613,10 +613,12 @@ int flecs_expr_function_visit_eval(
 {
     flecs_expr_stack_push(ctx->stack);
 
+    const ecs_function_calldata_t *calldata = &node->calldata;
+
     ecs_function_ctx_t call_ctx = {
         .world = ctx->world,
-        .function = node->calldata.function,
-        .ctx = node->calldata.ctx
+        .function = calldata->function,
+        .ctx = calldata->ctx
     };
 
     ecs_assert(out->value.ptr != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -630,7 +632,14 @@ int flecs_expr_function_visit_eval(
         }
     }
 
-    node->calldata.callback(&call_ctx, argc, argv, &out->value);
+    int32_t elem_count = calldata->vector_elem_count;
+    if (elem_count) {
+        node->calldata.is.vector_callback(
+            &call_ctx, argc, argv, &out->value, elem_count);
+    } else {
+        node->calldata.is.callback(&call_ctx, argc, argv, &out->value);
+    }
+
     out->owned = true;
 
     flecs_expr_stack_pop(ctx->stack);
@@ -654,10 +663,12 @@ int flecs_expr_method_visit_eval(
             goto error;
         }
 
+        const ecs_function_calldata_t *calldata = &node->calldata;
+
         ecs_function_ctx_t call_ctx = {
             .world = ctx->world,
-            .function = node->calldata.function,
-            .ctx = node->calldata.ctx
+            .function = calldata->function,
+            .ctx = calldata->ctx
         };
 
         ecs_assert(expr->value.ptr != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -675,7 +686,14 @@ int flecs_expr_method_visit_eval(
             }
         }
 
-        node->calldata.callback(&call_ctx, argc, argv, &out->value);
+        int32_t elem_count = calldata->vector_elem_count;
+        if (elem_count) {
+            node->calldata.is.vector_callback(
+                &call_ctx, argc, argv, &out->value, elem_count);
+        } else {
+            node->calldata.is.callback(&call_ctx, argc, argv, &out->value);
+        }
+
         out->owned = true;
     }
 
