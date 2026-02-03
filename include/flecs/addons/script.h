@@ -36,6 +36,9 @@ extern "C" {
 
 #define FLECS_SCRIPT_FUNCTION_ARGS_MAX (16)
 
+/* Must be the same as EcsPrimitiveKindLast */
+#define FLECS_SCRIPT_VECTOR_FUNCTION_COUNT (18)
+
 FLECS_API
 extern ECS_COMPONENT_DECLARE(EcsScript);
 
@@ -50,6 +53,9 @@ extern ECS_COMPONENT_DECLARE(EcsScriptFunction);
 
 FLECS_API
 extern ECS_COMPONENT_DECLARE(EcsScriptMethod);
+
+FLECS_API
+extern ECS_DECLARE(EcsScriptVectorType);
 
 /* Script template. */
 typedef struct ecs_script_template_t ecs_script_template_t;
@@ -112,6 +118,14 @@ typedef void(*ecs_function_callback_t)(
     const ecs_value_t *argv,
     ecs_value_t *result);
 
+/** Script vector function callback. */
+typedef void(*ecs_vector_function_callback_t)(
+    const ecs_function_ctx_t *ctx,
+    int32_t argc,
+    const ecs_value_t *argv,
+    ecs_value_t *result,
+    int32_t elem_count);
+
 /** Function argument type. */
 typedef struct ecs_script_parameter_t {
     const char *name;
@@ -126,27 +140,25 @@ typedef struct EcsScriptConstVar {
     const ecs_type_info_t *type_info;
 } EcsScriptConstVar;
 
-/** Function component.
- * This component describes a function that can be called from a script.
- */
-typedef struct EcsScriptFunction {
+struct ecs_script_function_t {
     ecs_entity_t return_type;
     ecs_vec_t params; /* vec<ecs_script_parameter_t> */
     ecs_function_callback_t callback;
+    ecs_vector_function_callback_t vector_callbacks[FLECS_SCRIPT_VECTOR_FUNCTION_COUNT];
     void *ctx;
-} EcsScriptFunction;
+};
+
+/** Function component.
+ * This component describes a function that can be called from a script.
+ */
+typedef struct ecs_script_function_t EcsScriptFunction;
 
 /** Method component. 
  * This component describes a method that can be called from a script. Methods
  * are functions that can be called on instances of a type. A method entity is
  * stored in the scope of the type it belongs to.
  */
-typedef struct EcsScriptMethod {
-    ecs_entity_t return_type;
-    ecs_vec_t params; /* vec<ecs_script_parameter_t> */
-    ecs_function_callback_t callback;
-    void *ctx;
-} EcsScriptMethod;
+typedef struct ecs_script_function_t EcsScriptMethod;
 
 /* Parsing & running scripts */
 
@@ -709,6 +721,11 @@ ecs_value_t ecs_const_var_get(
 
 /* Functions */
 
+typedef struct ecs_vector_fn_callbacks_t {
+    ecs_vector_function_callback_t i8;
+    ecs_vector_function_callback_t i32;
+} ecs_vector_fn_callbacks_t;
+
 /** Used with ecs_function_init and ecs_method_init */
 typedef struct ecs_function_desc_t {
     /** Function name. */
@@ -726,6 +743,55 @@ typedef struct ecs_function_desc_t {
 
     /** Function implementation. */
     ecs_function_callback_t callback;
+
+    /** Vector function implementations.
+     * Set these callbacks if a function has one or more arguments of type
+     * flecs.script vector, and optionally a return type of flecs.script.vector.
+     * 
+     * The flecs.script.vector type allows a function to be called with types
+     * that meet the following constraints:
+     * - The same type is provided for all arguments of type flecs.script.vector
+     * - The provided type has one or members of the same type
+     * - The member type must be a primitive type
+     * - The vector_callbacks array has an implementation for the primitive type.
+     * 
+     * This allows for statements like:
+     * @code
+     * const a = Rgb: {100, 150, 250}
+     * const b = Rgb: {10, 10, 10}
+     * const r = lerp(a, b, 0.1)
+     * @endcode
+     * 
+     * which would otherwise have to be written out as:
+     * 
+     * @code
+     * const r = Rgb: {
+     *   lerp(a.r, b.r, 0.1),
+     *   lerp(a.g, b.g, 0.1),
+     *   lerp(a.b, b.b, 0.1)
+     * }
+     * @endcode
+     * 
+     * To register vector functions, do:
+     * 
+     * @code
+     * ecs_function(world, {
+     *     .name = "lerp",
+     *     .return_type = EcsScriptVectorType,
+     *     .params = {
+     *         { .name = "a", .type = EcsScriptVectorType },
+     *         { .name = "b", .type = EcsScriptVectorType },
+     *         { .name = "t", .type = ecs_id(ecs_f64_t) }
+     *     },
+     *     .vector_callbacks = {
+     *       [EcsF32] = flecs_lerp32,
+     *       [EcsF64] = flecs_lerp64
+     *     }
+     * });
+     * @endcode
+     * 
+     */
+    ecs_vector_function_callback_t vector_callbacks[FLECS_SCRIPT_VECTOR_FUNCTION_COUNT];
 
     /** Context passed to function implementation. */
     void *ctx;

@@ -37,6 +37,12 @@ int flecs_expr_ser_primitive(
 void flecs_rtt_init_default_hooks(
     ecs_iter_t *it);
 
+const char* flecs_type_kind_str(
+    ecs_type_kind_t kind);
+
+const char* flecs_primitive_type_kind_str(
+    ecs_primitive_kind_t kind);
+
 const char* flecs_meta_op_kind_str(
     ecs_meta_op_kind_t kind);
 

@@ -29,7 +29,11 @@ struct ecs_script_impl_t {
 
 typedef struct ecs_function_calldata_t {
     ecs_entity_t function;
-    ecs_function_callback_t callback;
+    struct {
+        ecs_function_callback_t callback;
+        ecs_vector_function_callback_t vector_callback;
+    } is;
+    int32_t vector_elem_count;
     void *ctx;
 } ecs_function_calldata_t;
 
