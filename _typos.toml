@@ -16,3 +16,6 @@ Fo = "Fo"           # used in test cases/examples
 UE4 = "UE4"
 PNGs = "PNGs"
 Collet = "Collet"
+ECS_BIT_CLEARN = "ECS_BIT_CLEARN"
+arg_cpy = "arg_cpy"
+this_data_cpy = "this_data_cpy"

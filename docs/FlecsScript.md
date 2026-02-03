@@ -842,6 +842,13 @@ The following table lists math functions in the `flecs.script.math` namespace:
 | `floor`           | Round down value                         | `f64`           | `(f64)`             |
 | `round`           | Round to nearest                         | `f64`           | `(f64)`             |
 | `abs`             | Compute absolute value                   | `f64`           | `(f64)`             |
+| `min`             | Return smallest of two values            | `f64`           | `(f64, f64)`        |
+| `max`             | Return largest of two values             | `f64`           | `(f64, f64)`        |
+| `clamp`           | Clamp value between minimum/maximum      | `f64`           | `(f64 v, f64 min, f64 max)` |
+| `lerp`            | Interpolate between two values           | `f64`           | `(f64 a, f64 b, f64 t)` |
+| `smoothstep`      | Smooth interpolation between two values  | `f64`           | `(f64 a, f64 b, f64 t)` |
+| `perlin2`         | 2D perlin noise function                 | `f64`           | `(f64 x, f64 y)` |
+
 
 The following table lists the constants in the `flecs.script.math` namespace:
 

@@ -99,5 +99,14 @@ int flecs_script_apply_annot(
     ecs_script_entity_t *node,
     ecs_script_annot_t *annot);
 
+/* Script functions */
+double flecs_lerp(
+    double a, 
+    double b,
+    double t);
+
+void FlecsScriptMathPerlinImport(
+    ecs_world_t *world);
+
 #endif // FLECS_SCRIPT
 #endif // FLECS_SCRIPT_PRIVATE_H
