@@ -759,6 +759,21 @@ ecs_function(world, {
 });
 ```
 
+Function implementations looks like this:
+
+```cpp
+void sum(
+    const ecs_function_ctx_t *ctx,
+    int32_t argc,
+    const ecs_value_t *argv,
+    ecs_value_t *result)
+{
+    int64_t *a = argv[0].ptr;
+    int64_t *b = argv[1].ptr;
+    *(int64_t*)result->ptr = *a + *b;
+}
+```
+
 ### Methods
 Methods are functions that are called on instances of the method's type. The first argument of a method is the instance on which the method is called. The following snippet shows examples of method calls:
 
@@ -782,6 +797,95 @@ ecs_method(world, {
     .callback = sum
 });
 ```
+
+### Vector functions
+Vector functions are functions that accept arguments of a builtin `ScriptVectorType` type. This allows these functions to accept any type that meet the following criteria:
+
+- The type must be a primitive or struct type.
+- If the type is a struct type:
+  - All members must be of the same type.
+  - The member type must be primitive.
+
+For example:
+
+```cpp
+// Valid vector type: all members are of the same primitive type
+struct Position {
+  float x;
+  float y;
+  float z;
+};
+
+// Not a valid vector type: members are not of a primitive type
+struct Line {
+  Position start;
+  Position stop;
+};
+
+// Not a valid vector type: not all members are of the same type
+struct Rgba {
+  int8_t r;
+  int8_t g;
+  int8_t b;
+  float a;
+};
+```
+
+Here is a usage example of a vector function:
+
+```cpp
+const red = Rgb: {255, 0, 0}
+const blue = Rgb: {0, 0, 255}
+const purple: lerp(red, blue, 0.5)
+```
+
+When a vector function is called, all of the arguments provided to parameters of `ScriptVectorType` must be of the same type. The following code is therefore not valid:
+
+```cpp
+const red = Rgb: {255, 0, 0}
+const p = Position: {10, 20, 30}
+const red_p: lerp(red, p, 0.5) // Illegal: red and p are of different types
+```
+
+Vector functions are registered like normal functions, but instead of specifying a `callback`, the application sets `vector_callbacks`. An example:
+
+```cpp
+ecs_function(world, {
+    .name = "lerp",
+    .return_type = EcsScriptVectorType,
+    .params = {
+        { "a", EcsScriptVectorType },
+        { "b", EcsScriptVectorType },
+        { "t", ecs_id(ecs_f64_t) },
+    },
+    .vector_callbacks = {
+        [EcsF32] = lerp_f32,
+        [EcsF64] = lerp_f64
+    }
+});
+```
+
+The signature for vector functions accepts an additional argument for the number of elements in the vector type:
+
+```cpp
+void lerp_f32(
+    const ecs_function_ctx_t *ctx,
+    int32_t argc,
+    const ecs_value_t *argv,
+    ecs_value_t *result,
+    int32_t elem_count)
+{
+    float *a = argv[0].ptr;
+    float *b = argv[1].ptr;
+    double t = *(double*)argv[2].ptr;
+    float *r = result->ptr;
+    for (int i = 0; i < elem_count; i ++) {
+        r[i] = a[i] + t * (b[i] - a[i]);
+    }
+}
+```
+
+In the function documentation below the type of vector parameters is written as `[]`.
 
 ### Builtin functions and constants
 The following table lists builtin core functions in the `flecs.script.core` namespace:
@@ -844,11 +948,10 @@ The following table lists math functions in the `flecs.script.math` namespace:
 | `abs`             | Compute absolute value                   | `f64`           | `(f64)`             |
 | `min`             | Return smallest of two values            | `f64`           | `(f64, f64)`        |
 | `max`             | Return largest of two values             | `f64`           | `(f64, f64)`        |
-| `clamp`           | Clamp value between minimum/maximum      | `f64`           | `(f64 v, f64 min, f64 max)` |
-| `lerp`            | Interpolate between two values           | `f64`           | `(f64 a, f64 b, f64 t)` |
-| `smoothstep`      | Smooth interpolation between two values  | `f64`           | `(f64 a, f64 b, f64 t)` |
+| `clamp`           | Clamp value between minimum/maximum      | `[]`            | `([] v, [] min, f64 max)` |
+| `lerp`            | Interpolate between two values           | `[]`            | `([] a, [] b, f64 t)` |
+| `smoothstep`      | Smooth interpolation between two values  | `[]`            | `([] a, [] b, f64 t)` |
 | `perlin2`         | 2D perlin noise function                 | `f64`           | `(f64 x, f64 y)` |
-
 
 The following table lists the constants in the `flecs.script.math` namespace:
 

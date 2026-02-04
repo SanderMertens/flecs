@@ -90,6 +90,10 @@ typedef struct ecs_expr_binary_t {
     ecs_expr_node_t *left;
     ecs_expr_node_t *right;
     ecs_token_kind_t operator;
+
+    /* For vector operations */
+    ecs_entity_t vector_type;
+    int32_t vector_count;
 } ecs_expr_binary_t;
 
 typedef struct ecs_expr_member_t {

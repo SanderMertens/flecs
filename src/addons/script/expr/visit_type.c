@@ -106,6 +106,37 @@ ecs_size_t flecs_expr_storage_score(
     else return false;
 }
 
+/** Returns the storage size for primitive type */
+ecs_size_t flecs_expr_storage_size(
+    ecs_entity_t type)
+{
+    if      (type == ecs_id(ecs_bool_t))   return ECS_SIZEOF(ecs_bool_t);
+    else if (type == ecs_id(ecs_char_t))   return ECS_SIZEOF(ecs_char_t);
+
+    /* Unsigned integers have a larger storage size than signed integers, since
+     * the unsigned range of a signed integer is smaller. */
+    else if (type == ecs_id(ecs_u8_t))     return ECS_SIZEOF(ecs_u8_t);
+    else if (type == ecs_id(ecs_u16_t))    return ECS_SIZEOF(ecs_u16_t);
+    else if (type == ecs_id(ecs_u32_t))    return ECS_SIZEOF(ecs_u32_t);
+    else if (type == ecs_id(ecs_uptr_t))   return ECS_SIZEOF(ecs_uptr_t);
+    else if (type == ecs_id(ecs_u64_t))    return ECS_SIZEOF(ecs_u64_t);
+
+    else if (type == ecs_id(ecs_i8_t))     return ECS_SIZEOF(ecs_i8_t);
+    else if (type == ecs_id(ecs_i16_t))    return ECS_SIZEOF(ecs_i16_t);
+    else if (type == ecs_id(ecs_i32_t))    return ECS_SIZEOF(ecs_i32_t);
+    else if (type == ecs_id(ecs_iptr_t))   return ECS_SIZEOF(ecs_iptr_t);
+    else if (type == ecs_id(ecs_i64_t))    return ECS_SIZEOF(ecs_i64_t);
+
+    /* Floating points have a smaller storage score, since the largest integer 
+     * that can be represented exactly is lower than the actual storage size. */
+    else if (type == ecs_id(ecs_f32_t))    return ECS_SIZEOF(ecs_f32_t);
+    else if (type == ecs_id(ecs_f64_t))    return ECS_SIZEOF(ecs_f64_t);
+
+    else if (type == ecs_id(ecs_string_t)) return ECS_SIZEOF(ecs_string_t);
+    else if (type == ecs_id(ecs_entity_t)) return ECS_SIZEOF(ecs_entity_t);
+    else return false;
+}
+
 /* This function returns true if an type can be casted without changing the 
  * precision of the value. It is used to determine a type for operands in a 
  * binary expression in case they are of different types. */
@@ -288,6 +319,40 @@ bool flecs_expr_oper_valid_for_type(
 }
 
 static
+int32_t flecs_script_get_vector_type_data(
+    ecs_world_t *world,
+    ecs_entity_t type,
+    ecs_entity_t *vector_type_out)
+{
+    const EcsStruct *stype = ecs_get(world, type, EcsStruct);
+    if (!stype) {
+        return 0;
+    }
+
+    ecs_entity_t vector_type = 0;
+    ecs_member_t *members = ecs_vec_first(&stype->members);
+    int32_t i, count = ecs_vec_count(&stype->members);
+    for (i = 0; i < count; i ++) {
+        ecs_member_t *member = &members[i];
+        if (!i) {
+            if (!ecs_owns(world, member->type, EcsPrimitive)) {
+                /* Only primitive types can be used in vector ops */
+                return 0;
+            }
+
+            vector_type = member->type;
+        } else if (member->type != vector_type) {
+            /* Only structs with members of the same type can be used as vector */
+            return 0;
+        }
+    }
+
+    *vector_type_out = vector_type;
+
+    return count;
+}
+
+static
 int flecs_expr_type_for_operator(
     ecs_script_t *script,
     ecs_expr_node_t *node, /* Only used for error reporting */
@@ -296,7 +361,8 @@ int flecs_expr_type_for_operator(
     ecs_expr_node_t *right,
     ecs_token_kind_t operator,
     ecs_entity_t *operand_type,
-    ecs_entity_t *result_type)
+    ecs_entity_t *result_type,
+    int32_t *vector_elem_count)
 {
     ecs_world_t *world = script->world;
 
@@ -407,10 +473,11 @@ int flecs_expr_type_for_operator(
         goto done;
     }
 
-    const EcsPrimitive *ltype_ptr = ecs_get(world, left->type, EcsPrimitive);
+    ecs_entity_t left_type = left->type;
+    const EcsPrimitive *ltype_ptr = ecs_get(world, left_type, EcsPrimitive);
     const EcsPrimitive *rtype_ptr = ecs_get(world, right->type, EcsPrimitive);
     if (!ltype_ptr || !rtype_ptr) {
-        if (ecs_get(world, left->type, EcsBitmask) != NULL) {
+        if (ecs_get(world, left_type, EcsBitmask) != NULL) {
             *operand_type = ecs_id(ecs_u32_t);
             goto done;
         }
@@ -421,7 +488,7 @@ int flecs_expr_type_for_operator(
         }
 
         {
-            const EcsEnum *ptr = ecs_get(script->world, left->type, EcsEnum);
+            const EcsEnum *ptr = ecs_get(script->world, left_type, EcsEnum);
             if (ptr) {
                 *operand_type = ptr->underlying_type;
                 goto done;
@@ -432,6 +499,29 @@ int flecs_expr_type_for_operator(
             const EcsEnum *ptr = ecs_get(script->world, right->type, EcsEnum);
             if (ptr) {
                 *operand_type = ptr->underlying_type;
+                goto done;
+            }
+        }
+
+        if (!ltype_ptr && rtype_ptr) {
+            ecs_entity_t vector_type = 0;
+            int32_t elem_count = flecs_script_get_vector_type_data(
+                world, left_type, &vector_type);
+            if (elem_count) {
+                *result_type = left_type;
+                *operand_type = vector_type;
+                if (vector_elem_count) {
+                    *vector_elem_count = elem_count;
+                } else {
+                    char *lname = ecs_get_path(world, left->type);
+                    char *rname = ecs_get_path(world, right->type);
+                    flecs_expr_visit_error(script, node, 
+                        "binary vector operation is not allowed here (%s, %s)", 
+                        lname, rname);
+                    ecs_os_free(lname);
+                    ecs_os_free(rname);
+                    goto error;
+                }
                 goto done;
             }
         }
@@ -447,14 +537,20 @@ int flecs_expr_type_for_operator(
     }
 
     /* If left and right type are the same, do nothing */
-    if (left->type == right->type) {
+    if (left_type == right->type) {
         *operand_type = left->type;
         goto done;
     }
 
     /* If types are not the same, find the smallest type for literals that can
      * represent the value without losing precision. */
-    ecs_entity_t ltype = flecs_expr_narrow_type(node_type, left);
+    ecs_entity_t ltype;
+    if (left_type == left->type) { /* If this is not a vector type */
+        ltype = flecs_expr_narrow_type(node_type, left);
+    } else {
+        ltype = left_type;
+    }
+
     ecs_entity_t rtype = flecs_expr_narrow_type(node_type, right);
 
     /* If types are not the same, try to implicitly cast to expression type */
@@ -568,11 +664,12 @@ int flecs_expr_type_for_binary_expr(
     ecs_script_t *script,
     ecs_expr_binary_t *node,
     ecs_entity_t *operand_type,
-    ecs_entity_t *result_type)
+    ecs_entity_t *result_type,
+    int32_t *vector_elem_count)
 {
     return flecs_expr_type_for_operator(script, (ecs_expr_node_t*)node, 
         node->node.type, node->left, node->right, node->operator, 
-        operand_type, result_type);
+        operand_type, result_type, vector_elem_count);
 }
 
 static
@@ -974,6 +1071,9 @@ int flecs_expr_binary_visit_type(
     /* Resulting type of binary expression */
     ecs_entity_t result_type = 0;
 
+    /* Number of elements in vector, if vector operation */
+    int32_t vector_elem_count = 0;
+
     if (cur->valid) {
         /* Provides a hint to the type visitor. The lvalue type will be used to
          * reduce the number of casts where possible. */
@@ -996,27 +1096,35 @@ int flecs_expr_binary_visit_type(
     }
 
     if (flecs_expr_type_for_binary_expr(
-        script, node, &operand_type, &result_type)) 
+        script, node, &operand_type, &result_type, &vector_elem_count)) 
     {
         goto error;
     }
 
-    if (!flecs_expr_oper_valid_for_type(
-        script->world, result_type, node->operator)) 
-    {
-        char *type_str = ecs_get_path(script->world, result_type);
-        flecs_expr_visit_error(script, node, "invalid operator %s for type '%s'",
-            flecs_token_str(node->operator), type_str);
-        ecs_os_free(type_str);
-        goto error;
-    }
-
-    if (operand_type != node->left->type) {
-        node->left = (ecs_expr_node_t*)flecs_expr_cast(
-            script, node->left, operand_type);
-        if (!node->left) {
+    if (!vector_elem_count) {
+        if (!flecs_expr_oper_valid_for_type(
+            script->world, result_type, node->operator)) 
+        {
+            char *type_str = ecs_get_path(script->world, result_type);
+            flecs_expr_visit_error(script, node, "invalid operator %s for type '%s'",
+                flecs_token_str(node->operator), type_str);
+            ecs_os_free(type_str);
             goto error;
         }
+        
+        if (operand_type != node->left->type) {
+            node->left = (ecs_expr_node_t*)flecs_expr_cast(
+                script, node->left, operand_type);
+            if (!node->left) {
+                goto error;
+            }
+        }
+
+        node->vector_type = 0;
+        node->vector_count = 0;
+    } else {
+        node->vector_type = operand_type;
+        node->vector_count = vector_elem_count;
     }
 
     if (operand_type != node->right->type) {
@@ -1296,10 +1404,10 @@ int flecs_expr_arguments_visit_type(
     ecs_script_t *script,
     ecs_expr_initializer_t *node,
     const ecs_expr_eval_desc_t *desc,
-    const ecs_vec_t *param_vec,
+    const struct ecs_script_function_t *func_data,
     ecs_entity_t *vector_type_out)
 {
-    ecs_script_parameter_t *params = ecs_vec_first(param_vec);
+    ecs_script_parameter_t *params = ecs_vec_first(&func_data->params);
     ecs_expr_initializer_element_t *elems = ecs_vec_first(&node->elements);
     int32_t i, count = ecs_vec_count(&node->elements);
     ecs_entity_t vector_type = 0;
@@ -1329,6 +1437,26 @@ int flecs_expr_arguments_visit_type(
             }
 
             argtype = vector_type;
+
+            /* Check if function provides implementation for type if argument
+             * is of a primitive type. If it doesn't, try to cast. */
+            const EcsPrimitive *p = ecs_get(
+                script->world, argtype, EcsPrimitive);
+            if (p) {
+                if (!func_data->vector_callbacks[p->kind]) {
+                    /* Fallback to types with max expressiveness */
+                    if (func_data->vector_callbacks[EcsF64]) {
+                        vector_type = argtype = ecs_id(ecs_f64_t);
+                    } else if (func_data->vector_callbacks[EcsI64]) {
+                        vector_type = argtype = ecs_id(ecs_i64_t);
+                    } else if (func_data->vector_callbacks[EcsU64]) {
+                        vector_type = argtype = ecs_id(ecs_u64_t);
+                    } else {
+                        /* No matching implementation. Error will be caught 
+                         * later in the code. */
+                    }
+                }
+            }
         }
 
         if (elem->value->type != argtype) {
@@ -1371,9 +1499,9 @@ int flecs_expr_populate_primitive_vector_calldata(
     ecs_vector_function_callback_t cb = func_data->vector_callbacks[ptype->kind];
     if (!cb) {
         flecs_expr_visit_error(script, node, "function '%s' does not implement "
-            "vector operation for primitive kind '%s'",
+            "matching vector operation for type '%s'",
             node->function_name,
-            flecs_primitive_type_kind_str(ptype->kind));
+            flecs_errstr(ecs_get_path(script->world, elem_type)));
         goto error;
     }
 
@@ -1613,7 +1741,7 @@ try_function:
 
     ecs_entity_t vector_type = 0;
     if (flecs_expr_arguments_visit_type(
-        script, node->args, desc, params, &vector_type)) 
+        script, node->args, desc, func_data, &vector_type)) 
     {
         goto error;
     }
@@ -1853,7 +1981,7 @@ int flecs_expr_match_visit_type(
             if (flecs_expr_type_for_operator(script, (ecs_expr_node_t*)node, 0, 
                 (ecs_expr_node_t*)node, elem->expr, 
                 EcsTokAdd, /* Use operator that doesn't change types */
-                &operand_type, &result_type))
+                &operand_type, &result_type, NULL))
             {
                 goto error;
             }
