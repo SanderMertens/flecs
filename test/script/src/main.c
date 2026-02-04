@@ -780,6 +780,9 @@ void Expr_vector_func_sum_w_int_literal(void);
 void Expr_vector_func_sum_w_float_literal(void);
 void Expr_vector_func_sum_w_i32(void);
 void Expr_vector_func_sum_w_i64(void);
+void Expr_vector_func_sum_w_int_literal_no_int_callback(void);
+void Expr_vector_func_sum_w_i32_no_int_callback(void);
+void Expr_vector_func_sum_w_i64_no_int_callback(void);
 void Expr_vector_func_sum_w_struct(void);
 void Expr_vector_func_sum_w_array(void);
 void Expr_vector_func_sum_w_vector(void);
@@ -791,6 +794,12 @@ void Expr_vector_func_add_w_i32_w_literal(void);
 void Expr_vector_func_add_w_i64_w_literal(void);
 void Expr_vector_func_add_w_f32_w_literal(void);
 void Expr_vector_func_add_w_f64_w_literal(void);
+void Expr_vector_add_struct_int_literal(void);
+void Expr_vector_add_struct_float_literal(void);
+void Expr_vector_add_struct_i32(void);
+void Expr_vector_add_struct_i64(void);
+void Expr_vector_add_struct_f32(void);
+void Expr_vector_add_struct_f64(void);
 void Expr_vector_func_add_w_struct(void);
 void Expr_interpolate_string_w_i32_var(void);
 void Expr_interpolate_string_w_string_var(void);
@@ -4222,6 +4231,18 @@ bake_test_case Expr_testcases[] = {
         Expr_vector_func_sum_w_i64
     },
     {
+        "vector_func_sum_w_int_literal_no_int_callback",
+        Expr_vector_func_sum_w_int_literal_no_int_callback
+    },
+    {
+        "vector_func_sum_w_i32_no_int_callback",
+        Expr_vector_func_sum_w_i32_no_int_callback
+    },
+    {
+        "vector_func_sum_w_i64_no_int_callback",
+        Expr_vector_func_sum_w_i64_no_int_callback
+    },
+    {
         "vector_func_sum_w_struct",
         Expr_vector_func_sum_w_struct
     },
@@ -4264,6 +4285,30 @@ bake_test_case Expr_testcases[] = {
     {
         "vector_func_add_w_f64_w_literal",
         Expr_vector_func_add_w_f64_w_literal
+    },
+    {
+        "vector_add_struct_int_literal",
+        Expr_vector_add_struct_int_literal
+    },
+    {
+        "vector_add_struct_float_literal",
+        Expr_vector_add_struct_float_literal
+    },
+    {
+        "vector_add_struct_i32",
+        Expr_vector_add_struct_i32
+    },
+    {
+        "vector_add_struct_i64",
+        Expr_vector_add_struct_i64
+    },
+    {
+        "vector_add_struct_f32",
+        Expr_vector_add_struct_f32
+    },
+    {
+        "vector_add_struct_f64",
+        Expr_vector_add_struct_f64
     },
     {
         "vector_func_add_w_struct",
@@ -5725,7 +5770,7 @@ static bake_test_suite suites[] = {
         "Expr",
         Expr_setup,
         NULL,
-        314,
+        323,
         Expr_testcases,
         1,
         Expr_params

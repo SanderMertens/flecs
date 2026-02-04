@@ -145,22 +145,6 @@ double flecs_lerp(
     return a + t * (b - a);
 }
 
-static
-double flecs_min(
-    double a, 
-    double b) 
-{
-    return (a < b) ? a : b;
-}
-
-static
-double flecs_max(
-    double a, 
-    double b) 
-{
-    return (a > b) ? a : b;
-}
-
 void flecs_script_min(
     const ecs_function_ctx_t *ctx,
     int32_t argc,
@@ -171,7 +155,7 @@ void flecs_script_min(
     (void)argc;
     double a = *(double*)argv[0].ptr;
     double b = *(double*)argv[1].ptr;
-    *(double*)result->ptr = flecs_min(a, b);
+    *(double*)result->ptr = (a < b) ? a : b;
 }
 
 void flecs_script_max(
@@ -184,7 +168,7 @@ void flecs_script_max(
     (void)argc;
     double a = *(double*)argv[0].ptr;
     double b = *(double*)argv[1].ptr;
-    *(double*)result->ptr = flecs_max(a, b);
+    *(double*)result->ptr = (a > b) ? a : b;
 }
 
 #define FLECS_SCRIPT_LERP(type)\
@@ -490,6 +474,28 @@ void FlecsScriptMathImport(
             { .name = "max", .type = ecs_id(ecs_u64_t) }
         },
         .callback = flecs_script_rng_get_uint
+    });
+
+    ecs_function(world, {
+        .name = "min",
+        .parent = ecs_id(FlecsScriptMath),
+        .return_type = ecs_id(ecs_f64_t),
+        .params = {
+            { .name = "a", .type = ecs_id(ecs_f64_t) },
+            { .name = "b", .type = ecs_id(ecs_f64_t) },
+        },
+        .callback = flecs_script_min
+    });
+
+    ecs_function(world, {
+        .name = "max",
+        .parent = ecs_id(FlecsScriptMath),
+        .return_type = ecs_id(ecs_f64_t),
+        .params = {
+            { .name = "a", .type = ecs_id(ecs_f64_t) },
+            { .name = "b", .type = ecs_id(ecs_f64_t) },
+        },
+        .callback = flecs_script_max
     });
 
     ecs_function(world, {
