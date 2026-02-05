@@ -25411,6 +25411,134 @@ struct ref : public untyped_ref {
 #pragma once
 
 /**
+ * @file addons/cpp/entity_component_tuple.hpp
+ * @brief Utilities to fetch component as tuples from entities.
+ */
+
+#pragma once
+
+/**
+ * @ingroup cpp_entities
+ * @{
+ */
+
+namespace flecs
+{
+
+    template<std::size_t size, typename... Args>
+    struct tuple_builder {};
+
+    // Size 2
+
+    template<typename T, typename U>
+    struct tuple_2 {
+        T val1; U val2;
+    };
+
+    template<typename... Args>
+    struct tuple_builder<2, Args...> {
+        using type = tuple_2<Args&...>;
+        using type_ptr = tuple_2<Args*...>;
+        using type_const = tuple_2<const Args&...>;
+        using type_const_ptr = tuple_2<const Args*...>;
+    };
+
+    // Size 3
+
+    template<typename T, typename U, typename V>
+    struct tuple_3 {
+        T val1; U val2; V val3;
+    };
+
+    template<typename... Args>
+    struct tuple_builder<3, Args...> {
+        using type = tuple_3<Args&...>;
+        using type_ptr = tuple_3<Args*...>;
+        using type_const = tuple_3<const Args&...>;
+        using type_const_ptr = tuple_3<const Args*...>;
+    };
+
+    // Size 4
+
+    template<typename T, typename U, typename V, typename W>
+    struct tuple_4 {
+        T val1; U val2; V val3; W val4;
+    };
+
+    template<typename... Args>
+    struct tuple_builder<4, Args...> {
+        using type = tuple_4<Args&...>;
+        using type_ptr = tuple_4<Args*...>;
+        using type_const = tuple_4<const Args&...>;
+        using type_const_ptr = tuple_4<const Args*...>;
+    };
+
+    // Size 5
+
+    template<typename T, typename U, typename V, typename W, typename X>
+    struct tuple_5 {
+        T val1; U val2; V val3; W val4; X val5;
+    };
+
+    template<typename... Args>
+    struct tuple_builder<5, Args...> {
+        using type = tuple_5<Args&...>;
+        using type_ptr = tuple_5<Args*...>;
+        using type_const = tuple_5<const Args&...>;
+        using type_const_ptr = tuple_5<const Args*...>;
+    };
+
+    // Size 6
+
+    template<typename T, typename U, typename V, typename W, typename X, typename Y>
+    struct tuple_6 {
+        T val1; U val2; V val3; W val4; X val5; Y val6;
+    };
+
+    template<typename... Args>
+    struct tuple_builder<6, Args...> {
+        using type = tuple_6<Args&...>;
+        using type_ptr = tuple_6<Args*...>;
+        using type_const = tuple_6<const Args&...>;
+        using type_const_ptr = tuple_6<const Args*...>;
+    };
+
+    // Size 7
+
+    template<typename T, typename U, typename V, typename W, typename X, typename Y, typename Z>
+    struct tuple_7 {
+        T val1; U val2; V val3; W val4; X val5; Y val6; Z val7;
+    };
+
+    template<typename... Args>
+    struct tuple_builder<7, Args...> {
+        using type = tuple_7<Args&...>;
+        using type_ptr = tuple_7<Args*...>;
+        using type_const = tuple_7<const Args&...>;
+        using type_const_ptr = tuple_7<const Args*...>;
+    };
+
+    // Size 8
+
+    template<typename T, typename U, typename V, typename W, typename X, typename Y, typename Z, typename A>
+    struct tuple_8 {
+        T val1; U val2; V val3; W val4; X val5; Y val6; Z val7; A val8;
+    };
+
+    template<typename... Args>
+    struct tuple_builder<8, Args...> {
+        using type = tuple_8<Args&...>;
+        using type_ptr = tuple_8<Args*...>;
+        using type_const = tuple_8<const Args&...>;
+        using type_const_ptr = tuple_8<const Args*...>;
+    };
+
+}
+
+/** @} */
+
+
+/**
  * @ingroup cpp_entities
  * @{
  */
@@ -25749,6 +25877,13 @@ struct entity_view : public id {
         return ecs_get_id(world_, id_, ecs_pair(first, second));
     }
 
+    template<typename... Ts>
+    auto try_get_all() const {
+        flecs_static_assert(sizeof...(Ts) > 1, "try_get_all requires at least two components");
+        flecs_static_assert(sizeof...(Ts) < 9, "try_get_all cannot fetch more than eight components");
+        return typename tuple_builder<sizeof...(Ts), Ts...>::type_const_ptr {try_get<Ts>()...};
+    }
+
     /** Get the second part for a pair.
      * This operation gets the value for a pair from the entity. The first
      * part of the pair should not be a component.
@@ -25929,6 +26064,13 @@ struct entity_view : public id {
     template <typename Func, if_t< is_callable<Func>::value > = 0>
     bool get(const Func& func) const;
 
+    template<typename... Ts>
+    auto get_all() const {
+        flecs_static_assert(sizeof...(Ts) > 1, "get_all requires at least two components");
+        flecs_static_assert(sizeof...(Ts) < 9, "get_all cannot fetch more than eight components");
+        return typename tuple_builder<sizeof...(Ts), Ts...>::type_const {get<Ts>()...};
+    }
+
     /** Get the second part for a pair.
      * This operation gets the value for a pair from the entity. The first
      * part of the pair should not be a component.
@@ -26053,6 +26195,13 @@ struct entity_view : public id {
      */
     void* try_get_mut(flecs::entity_t first, flecs::entity_t second) const {
         return ecs_get_mut_id(world_, id_, ecs_pair(first, second));
+    }
+
+    template<typename... Ts>
+    auto try_get_mut_all() const {
+        flecs_static_assert(sizeof...(Ts) > 1, "try_get_mut_all requires at least two components");
+        flecs_static_assert(sizeof...(Ts) < 9, "try_get_mut_all cannot fetch more than eight components");
+        return typename tuple_builder<sizeof...(Ts), Ts...>::type_ptr {try_get_mut<Ts>()...};
     }
 
     /** Get the second part for a pair.
@@ -26189,6 +26338,13 @@ struct entity_view : public id {
         ecs_assert(r != nullptr, ECS_INVALID_OPERATION, 
             "invalid get_mut: entity does not have component (use try_get_mut)");
         return r;
+    }
+
+    template<typename... Ts>
+    auto get_mut_all() const {
+        flecs_static_assert(sizeof...(Ts) > 1, "get_mut_all requires at least two components");
+        flecs_static_assert(sizeof...(Ts) < 9, "get_mut_all cannot fetch more than eight components");
+        return typename tuple_builder<sizeof...(Ts), Ts...>::type {get_mut<Ts>()...};
     }
 
     /** Get the second part for a pair.

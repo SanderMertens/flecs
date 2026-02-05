@@ -1,7 +1,6 @@
 /**
  * @file addons/cpp/entity_component_tuple.hpp
  * @brief Utilities to fetch component as tuples from entities.
- * 
  */
 
 #pragma once
