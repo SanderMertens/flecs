@@ -6371,3 +6371,15 @@ void Prefab_delete_with(void) {
 
     ecs_fini(world);
 }
+
+void Prefab_prefab_children_after_adding_prefab(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
+
+    ecs_add_id(world, parent, EcsPrefab);
+    test_assert(ecs_has_id(world, child, EcsPrefab));
+
+    ecs_fini(world);
+}

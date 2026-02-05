@@ -2538,7 +2538,8 @@
                 "create_instances_w_override_and_on_add",
                 "create_instances_w_override_and_on_set",
                 "remove_all",
-                "delete_with"
+                "delete_with",
+                "prefab_children_after_adding_prefab"
             ]
         }, {
             "id": "World",
