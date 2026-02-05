@@ -5717,6 +5717,88 @@ void Expr_vector_add_struct_f64(void) {
     ecs_fini(world);
 }
 
+void Expr_vector_add_struct_struct(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            { "x", ecs_id(ecs_f32_t) },
+            { "y", ecs_id(ecs_f32_t) }
+        }
+    });
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *foo = ecs_script_vars_define(
+        vars, "foo", Position);
+    test_assert(foo != NULL);
+    ((Position*)foo->value.ptr)->x = 10;
+    ((Position*)foo->value.ptr)->y = 20;
+
+    ecs_script_var_t *bar = ecs_script_vars_define(
+        vars, "bar", Position);
+    test_assert(bar != NULL);
+    ((Position*)bar->value.ptr)->x = 30;
+    ((Position*)bar->value.ptr)->y = 40;
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding, .vars = vars };
+    test_assert(ecs_expr_run(world, "foo + bar", &v, &desc) != NULL);
+    test_uint(v.type, ecs_id(Position));
+    test_int(((Position*)v.ptr)->x, 40);
+    test_int(((Position*)v.ptr)->y, 60);
+
+    ecs_value_free(world, v.type, v.ptr);
+
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_vector_add_struct_incompatible_struct(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            { "x", ecs_id(ecs_f32_t) },
+            { "y", ecs_id(ecs_f32_t) }
+        }
+    });
+
+    ecs_entity_t ecs_id(Velocity) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Velocity" }),
+        .members = {
+            { "x", ecs_id(ecs_f32_t) },
+            { "y", ecs_id(ecs_f32_t) }
+        }
+    });
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *foo = ecs_script_vars_define(
+        vars, "foo", Position);
+    test_assert(foo != NULL);
+    ((Position*)foo->value.ptr)->x = 10;
+    ((Position*)foo->value.ptr)->y = 20;
+
+    ecs_script_var_t *bar = ecs_script_vars_define(
+        vars, "bar", Velocity);
+    test_assert(bar != NULL);
+    ((Velocity*)bar->value.ptr)->x = 30;
+    ((Velocity*)bar->value.ptr)->y = 40;
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding, .vars = vars };
+    ecs_log_set_level(-4);
+    test_assert(ecs_expr_run(world, "foo + bar", &v, &desc) == NULL);
+
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
 void Expr_interpolate_string_w_i32_var(void) {
     ecs_world_t *world = ecs_init();
 

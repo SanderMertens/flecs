@@ -261,7 +261,7 @@ FLECS_SCRIPT_CLAMP(double)
         type *b = argv[1].ptr;\
         double *r = result->ptr;\
         for (int i = 0; i < elem_count; i ++) {\
-            double x = a[i], y = b[i];\
+            double x = (double)a[i], y = (double)b[i];\
             *r += x * y;\
         }\
     }
@@ -351,7 +351,7 @@ FLECS_SCRIPT_LENGTH_SQ(double)
             double x = (double)v[i];\
             sum_sq += x * x;\
         }\
-        if (sum_sq == 0.0) {\
+        if (ECS_EQZERO(sum_sq)) {\
             for (int i = 0; i < elem_count; i++) r[i] = (type)0;\
             return;\
         }\

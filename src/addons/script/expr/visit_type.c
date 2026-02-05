@@ -503,36 +503,41 @@ int flecs_expr_type_for_operator(
             }
         }
 
-        if (!ltype_ptr && rtype_ptr) {
+        if (!ltype_ptr) {
             ecs_entity_t vector_type = 0;
             int32_t elem_count = flecs_script_get_vector_type_data(
                 world, left_type, &vector_type);
             if (elem_count) {
-                *result_type = left_type;
-                *operand_type = vector_type;
-                if (vector_elem_count) {
-                    *vector_elem_count = elem_count;
-                } else {
-                    char *lname = ecs_get_path(world, left->type);
-                    char *rname = ecs_get_path(world, right->type);
+                /* For vector operations the right operand type must be either a 
+                 * primitive type or the same type as the left operand. */
+                if (!rtype_ptr && (left_type != right->type)) {
                     flecs_expr_visit_error(script, node, 
-                        "binary vector operation is not allowed here (%s, %s)", 
-                        lname, rname);
-                    ecs_os_free(lname);
-                    ecs_os_free(rname);
+                        "invalid types for binary expression (%s, %s)", 
+                        flecs_errstr(ecs_get_path(world, left->type)),
+                        flecs_errstr_1(ecs_get_path(world, right->type)));
                     goto error;
                 }
+
+                /* This is a binary vector operation, check if it's allowed */
+                if (!vector_elem_count) {
+                    flecs_expr_visit_error(script, node, 
+                        "binary vector operation is not allowed here (%s, %s)", 
+                        flecs_errstr(ecs_get_path(world, left->type)),
+                        flecs_errstr_1(ecs_get_path(world, right->type)));
+                    goto error;
+                }
+
+                *result_type = left_type;
+                *operand_type = vector_type;
+                *vector_elem_count = elem_count;
                 goto done;
             }
         }
 
-        char *lname = ecs_get_path(world, left->type);
-        char *rname = ecs_get_path(world, right->type);
         flecs_expr_visit_error(script, node, 
-            "invalid non-primitive type in expression (%s, %s)", 
-            lname, rname);
-        ecs_os_free(lname);
-        ecs_os_free(rname);
+            "invalid types for binary expression (%s, %s)", 
+            flecs_errstr(ecs_get_path(world, left->type)),
+            flecs_errstr_1(ecs_get_path(world, right->type)))
         goto error;
     }
 
@@ -1128,10 +1133,14 @@ int flecs_expr_binary_visit_type(
     }
 
     if (operand_type != node->right->type) {
-        node->right = (ecs_expr_node_t*)flecs_expr_cast(
-            script, node->right, operand_type);
-        if (!node->right) {
-            goto error;
+        if (!vector_elem_count || (node->right->type != node->left->type)) {
+            /* If this is a vector operation between the same types, don't try
+             * to cast the right hand to the vector type. */
+            node->right = (ecs_expr_node_t*)flecs_expr_cast(
+                script, node->right, operand_type);
+            if (!node->right) {
+                goto error;
+            }
         }
     }
 

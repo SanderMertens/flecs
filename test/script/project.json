@@ -815,6 +815,7 @@
                 "vector_add_struct_f32",
                 "vector_add_struct_f64",
                 "vector_add_struct_struct",
+                "vector_add_struct_incompatible_struct",
                 "interpolate_string_w_i32_var",
                 "interpolate_string_w_string_var",
                 "interpolate_string_w_entity_var",
