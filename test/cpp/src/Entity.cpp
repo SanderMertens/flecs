@@ -829,8 +829,8 @@ void Entity_try_get_all_T(void) {
 
         test_int(p->x, 10);
         test_int(p->y, 20);
-        test_int(v->x, 10);
-        test_int(v->y, 20);
+        test_int(v->x, 1);
+        test_int(v->y, 2);
     }
 }
 
