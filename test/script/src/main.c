@@ -794,13 +794,15 @@ void Expr_vector_func_add_w_i32_w_literal(void);
 void Expr_vector_func_add_w_i64_w_literal(void);
 void Expr_vector_func_add_w_f32_w_literal(void);
 void Expr_vector_func_add_w_f64_w_literal(void);
+void Expr_vector_func_add_w_struct(void);
 void Expr_vector_add_struct_int_literal(void);
 void Expr_vector_add_struct_float_literal(void);
 void Expr_vector_add_struct_i32(void);
 void Expr_vector_add_struct_i64(void);
 void Expr_vector_add_struct_f32(void);
 void Expr_vector_add_struct_f64(void);
-void Expr_vector_func_add_w_struct(void);
+void Expr_vector_add_struct_struct(void);
+void Expr_vector_add_struct_incompatible_struct(void);
 void Expr_interpolate_string_w_i32_var(void);
 void Expr_interpolate_string_w_string_var(void);
 void Expr_interpolate_string_w_entity_var(void);
@@ -4287,6 +4289,10 @@ bake_test_case Expr_testcases[] = {
         Expr_vector_func_add_w_f64_w_literal
     },
     {
+        "vector_func_add_w_struct",
+        Expr_vector_func_add_w_struct
+    },
+    {
         "vector_add_struct_int_literal",
         Expr_vector_add_struct_int_literal
     },
@@ -4311,8 +4317,12 @@ bake_test_case Expr_testcases[] = {
         Expr_vector_add_struct_f64
     },
     {
-        "vector_func_add_w_struct",
-        Expr_vector_func_add_w_struct
+        "vector_add_struct_struct",
+        Expr_vector_add_struct_struct
+    },
+    {
+        "vector_add_struct_incompatible_struct",
+        Expr_vector_add_struct_incompatible_struct
     },
     {
         "interpolate_string_w_i32_var",
@@ -5770,7 +5780,7 @@ static bake_test_suite suites[] = {
         "Expr",
         Expr_setup,
         NULL,
-        323,
+        325,
         Expr_testcases,
         1,
         Expr_params

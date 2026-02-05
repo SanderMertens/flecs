@@ -898,29 +898,29 @@ In the function documentation below the type of vector parameters is written as 
 ### Builtin functions and constants
 The following table lists builtin core functions in the `flecs.script.core` namespace:
 
-| **Function Name** | **Description**             | **Return Type** | **Arguments**               |
-|-------------------|-----------------------------|-----------------|-----------------------------|
-| `pair`            | Returns a pair identifier   | `id`            | (`entity`, `entity`)        |
+| **Function Name** | **Description**                          | **Return Type**  | **Arguments**        |
+|-------------------|------------------------------------------|------------------|----------------------|
+| `pair`            | Returns a pair identifier                | `id`             | (`entity`, `entity`) |
 
 The following table lists builtin methods on the `flecs.meta.entity` type:
 
-| **Method Name**   | **Description**                        | **Return Type** | **Arguments**        |
-|-------------------|----------------------------------------|-----------------|----------------------|
-| `name`            | Returns entity name                    | `string`        | `()`                 |
-| `path`            | Returns entity path                    | `string`        | `()`                 |
-| `parent`          | Returns entity parent                  | `entity`        | `()`                 |
-| `has`             | Returns whether entity has component   | `bool`          | `(id)`               |
+| **Method Name**   | **Description**                          | **Return Type**  | **Arguments**     |
+|-------------------|------------------------------------------|------------------|-------------------|
+| `name`            | Returns entity name                      | `string`         | `()`              |
+| `path`            | Returns entity path                      | `string`         | `()`              |
+| `parent`          | Returns entity parent                    | `entity`         | `()`              |
+| `has`             | Returns whether entity has component     | `bool`           | `(id)`            |
 
 The following table lists doc methods on the `flecs.meta.entity` type:
 
-| **Method Name**  | **Description**                           | **Return Type**  | **Arguments**        |
-|-------------------|------------------------------------------|------------------|----------------------|
-| `doc_name`        | Returns entity doc name                  | `string`         | `()`                 |
-| `doc_uuid`        | Returns entity doc uuid                  | `string`         | `()`                 |
-| `doc_brief`       | Returns entity doc brief description     | `string`         | `()`                 |
-| `doc_detail`      | Returns entity doc detailed description  | `string`         | `()`                 |
-| `doc_link`        | Returns entity doc link                  | `string`         | `()`                 |
-| `doc_color`       | Returns entity doc color                 | `string`         | `()`                 |
+| **Method Name**  | **Description**                           | **Return Type**  | **Arguments**     |
+|-------------------|------------------------------------------|------------------|-------------------|
+| `doc_name`        | Returns entity doc name                  | `string`         | `()`              |
+| `doc_uuid`        | Returns entity doc uuid                  | `string`         | `()`              |
+| `doc_brief`       | Returns entity doc brief description     | `string`         | `()`              |
+| `doc_detail`      | Returns entity doc detailed description  | `string`         | `()`              |
+| `doc_link`        | Returns entity doc link                  | `string`         | `()`              |
+| `doc_color`       | Returns entity doc color                 | `string`         | `()`              |
 
 To use the doc functions, make sure to use a Flecs build compiled with `FLECS_DOC` (enabled by default).
 
@@ -959,18 +959,18 @@ The following table lists math functions in the `flecs.script.math` namespace:
 | `clamp`           | Clamp value between minimum/maximum      | `[]`            | `([] v, [] min, f64 max)` |
 | `lerp`            | Interpolate between two values           | `[]`            | `([] a, [] b, f64 t)` |
 | `smoothstep`      | Smooth interpolation between two values  | `[]`            | `([] a, [] b, f64 t)` |
-| `dot`             | Return dot product for two vectors       | `f64`           | `([] a, [] b)` |
-| `length`          | Return length of vector                  | `f64`           | `([] v)` |
-| `length_sq`       | Return squared length of vector          | `f64`           | `([] v)` |
-| `normalize`       | Normalize vector                         | `[]`            | `([] v)` |
-| `perlin2`         | 2D perlin noise function                 | `f64`           | `(f64 x, f64 y)` |
+| `dot`             | Return dot product for two vectors       | `f64`           | `([] a, [] b)`      |
+| `length`          | Return length of vector                  | `f64`           | `([] v)`            |
+| `length_sq`       | Return squared length of vector          | `f64`           | `([] v)`            |
+| `normalize`       | Normalize vector                         | `[]`            | `([] v)`            |
+| `perlin2`         | 2D perlin noise function                 | `f64`           | `(f64 x, f64 y)`    |
 
 The following table lists the constants in the `flecs.script.math` namespace:
 
-| **Function Name** | **Description**                           | **Type** | **Value**            |
-|-------------------|-------------------------------------------|----------|----------------------|
-| `E`               | Euler's number                            | `f64`    | `2.71828182845904523536028747135266250` |
-| `PI`              | Ratio of circle circumference to diameter | `f64`    | `3.14159265358979323846264338327950288` |
+| **Function Name** | **Description**                           | **Type**       | **Value**            |
+|-------------------|-------------------------------------------|----------------|----------------------|
+| `E`               | Euler's number                            | `f64`          | `2.71828182845904523536028747135266250` |
+| `PI`              | Ratio of circle circumference to diameter | `f64`          | `3.14159265358979323846264338327950288` |
 
 The following table lists methods of the `flecs.script.math.Rng` type:
 

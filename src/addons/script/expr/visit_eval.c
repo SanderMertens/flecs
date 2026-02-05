@@ -325,17 +325,24 @@ int flecs_expr_binary_visit_eval(
     } else {
         ecs_entity_t vector_type = node->vector_type;
         ecs_value_t left_value = { .ptr = left->value.ptr, .type = vector_type };
+        ecs_value_t right_value = { .ptr = right->value.ptr, .type = vector_type };
         ecs_value_t out_value = { .ptr = out->value.ptr, .type = vector_type };
         ecs_size_t size = flecs_expr_storage_size(vector_type);
+        ecs_size_t right_offset = 0;
+
+        if (left->value.type == right->value.type) {
+            right_offset = size;
+        }
 
         for (i = 0; i < vector_count; i ++) {
-            if (flecs_value_binary(
-                ctx->script, &left_value, &right->value, &out_value, node->operator)) 
+            if (flecs_value_binary(ctx->script, &left_value, &right_value, 
+                &out_value, node->operator)) 
             {
                 goto error;
             }
 
             left_value.ptr = ECS_OFFSET(left_value.ptr, size);
+            right_value.ptr = ECS_OFFSET(right_value.ptr, right_offset);
             out_value.ptr = ECS_OFFSET(out_value.ptr, size);
         }
     }
