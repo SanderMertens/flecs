@@ -332,7 +332,9 @@ int ecs_iter_to_json_buf(
         /* Keep track of serialized entities. This allows entities to be 
          * serialized depth first, which avoids weird side effects from children
          * being created before parents. */
-        ecs_map_init(&ser_ctx.serialized, &world->allocator);
+        if (desc && desc->serialize_parents_before_children) {
+            ecs_map_init(&ser_ctx.serialized, &world->allocator);
+        }
 
         ecs_iter_next_action_t next = it->next;
         while (next(it)) {
@@ -345,7 +347,9 @@ int ecs_iter_to_json_buf(
             }
         }
 
-        ecs_map_fini(&ser_ctx.serialized);
+        if (desc && desc->serialize_parents_before_children) {
+            ecs_map_fini(&ser_ctx.serialized);
+        }
 
         flecs_json_array_pop(buf);
     } else {

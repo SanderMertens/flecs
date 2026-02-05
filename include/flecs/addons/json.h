@@ -314,6 +314,8 @@ typedef struct ecs_iter_to_json_desc_t {
     bool serialize_alerts;          /**< Serialize active alerts for entity */
     ecs_entity_t serialize_refs;    /**< Serialize references (incoming edges) for relationship */
     bool serialize_matches;         /**< Serialize which queries entity matches with */
+    bool serialize_parents_before_children; /** If query matches both children and parent, serialize parent before children */
+    
     /** Callback for if the component should be serialized */
     bool (*component_filter)
         (const ecs_world_t *, ecs_entity_t);
@@ -340,6 +342,7 @@ typedef struct ecs_iter_to_json_desc_t {
     .serialize_alerts =          false, \
     .serialize_refs =            false, \
     .serialize_matches =         false, \
+    .serialize_parents_before_children = false,\
     .component_filter =          NULL, \
     .query =                     NULL \
 }
@@ -351,6 +354,7 @@ typedef struct ecs_iter_to_json_desc_t {
     false, \
     true, \
     true, \
+    false, \
     false, \
     false, \
     false, \

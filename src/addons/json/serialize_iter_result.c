@@ -494,7 +494,7 @@ int flecs_json_serialize_iter_result(
                  * of the table before its children. Don't do this if query 
                  * isn't set, as that means that we're serializing a single
                  * entity. */
-                if (it->query) {
+                if (ecs_map_is_init(&ser_ctx->serialized)) {
                     if (flecs_json_should_serialize(parent, it, ser_ctx)) {
                         if (flecs_entity_to_json_buf(
                             world, parent, buf, desc, ser_ctx)) 

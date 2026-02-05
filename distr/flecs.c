@@ -51851,7 +51851,9 @@ int ecs_iter_to_json_buf(
         /* Keep track of serialized entities. This allows entities to be 
          * serialized depth first, which avoids weird side effects from children
          * being created before parents. */
-        ecs_map_init(&ser_ctx.serialized, &world->allocator);
+        if (desc && desc->serialize_parents_before_children) {
+            ecs_map_init(&ser_ctx.serialized, &world->allocator);
+        }
 
         ecs_iter_next_action_t next = it->next;
         while (next(it)) {
@@ -51864,7 +51866,9 @@ int ecs_iter_to_json_buf(
             }
         }
 
-        ecs_map_fini(&ser_ctx.serialized);
+        if (desc && desc->serialize_parents_before_children) {
+            ecs_map_fini(&ser_ctx.serialized);
+        }
 
         flecs_json_array_pop(buf);
     } else {
@@ -52389,7 +52393,7 @@ int flecs_json_serialize_iter_result(
                  * of the table before its children. Don't do this if query 
                  * isn't set, as that means that we're serializing a single
                  * entity. */
-                if (it->query) {
+                if (ecs_map_is_init(&ser_ctx->serialized)) {
                     if (flecs_json_should_serialize(parent, it, ser_ctx)) {
                         if (flecs_entity_to_json_buf(
                             world, parent, buf, desc, ser_ctx)) 
@@ -54490,7 +54494,8 @@ int ecs_world_to_json_buf(
         .serialize_table = true,
         .serialize_full_paths = true,
         .serialize_entity_ids = true,
-        .serialize_values = true
+        .serialize_values = true,
+        .serialize_parents_before_children = true
     };
 
     int ret = ecs_iter_to_json_buf(&it, buf_out, &json_desc);
