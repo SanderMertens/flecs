@@ -341,6 +341,9 @@ bool flecs_json_serialize_iter_this(
 {
     ecs_assert(row < it->count, ECS_INTERNAL_ERROR, NULL);
     ecs_world_t *world = it->real_world;
+
+    ecs_assert(this_data != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(this_data->ids != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_entity_t e = this_data->ids[row];
 
     /* Skip entity if it already has been serialized */
@@ -377,12 +380,25 @@ bool flecs_json_serialize_iter_this(
 
     flecs_json_memberl(buf, "name");
     if (this_data->names) {
-        flecs_json_string(buf, this_data->names[row].value);
+        if (this_data->table) {
+            flecs_json_string(buf, this_data->names[row].value);
+        }
     } else {
-        ecs_strbuf_appendlit(buf, "\"#");
-        ecs_strbuf_appendint(buf, flecs_uto(int64_t, 
-            (uint32_t)it->entities[row]));
-        ecs_strbuf_appendlit(buf, "\"");
+        bool name_set = false;
+        if (!this_data->table) {
+            const char *name = ecs_get_name(world, e);
+            if (name) {
+                flecs_json_string(buf, name);
+                name_set = true;
+            }
+        }
+
+        if (!name_set) {
+            ecs_strbuf_appendlit(buf, "\"#");
+            ecs_strbuf_appendint(buf, flecs_uto(int64_t, 
+                (uint32_t)it->entities[row]));
+            ecs_strbuf_appendlit(buf, "\"");
+        }
     }
 
     if (desc && desc->serialize_entity_ids) {
@@ -453,7 +469,7 @@ int flecs_json_serialize_iter_result(
     ecs_json_ser_ctx_t *ser_ctx)
 {
     char *parent_path = NULL;
-    ecs_json_this_data_t this_data = {0};
+    ecs_json_this_data_t this_data = { .table = it->table };
 
     int32_t count = it->count;
     bool has_this = true;
@@ -528,8 +544,7 @@ int flecs_json_serialize_iter_result(
         }
 #endif
         } else {
-            /* Very rare case, but could happen if someone's using an iterator
-             * to return empty entities. */
+            this_data.ids = it->entities;
         }
     }
 
