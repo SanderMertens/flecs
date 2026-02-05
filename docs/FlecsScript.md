@@ -11,8 +11,6 @@ Some of the features of Flecs Script are:
 - Conditionals and loops (`if var > 10`, `for i in [0..10]`)
 - Native integration with templates (procedural assets)
 
-To learn Flecs Script, check out the [Tutorial](FlecsScriptTutorial.md)!
-
 ## Example
 
 ```cpp
@@ -709,6 +707,46 @@ bool implicit_cast_allowed(from, to) {
 
 If either the expressiveness or storage scores are negative, the operand types are not implicitly castable.
 
+#### Vector operations
+If the left operand of a binary expression is of a vector type, the operation will be executed for each of its operands. A vector type is a type that meets the following criteria: 
+
+- The type must be a primitive or struct type.
+- If the type is a struct type:
+  - All members must be of the same type.
+  - The member type must be primitive.
+
+For example:
+
+```cpp
+// Valid vector type: all members are of the same primitive type
+struct Position {
+  float x;
+  float y;
+  float z;
+};
+
+// Not a valid vector type: members are not of a primitive type
+struct Line {
+  Position start;
+  Position stop;
+};
+
+// Not a valid vector type: not all members are of the same type
+struct Rgba {
+  int8_t r;
+  int8_t g;
+  int8_t b;
+  float a;
+};
+```
+
+An example of a vector operation:
+
+```cpp
+const p0 = Position: {10, 20, 30}
+const p1 = p0 + 1 // {11, 21, 31}
+```
+
 #### Lvalues
 Lvalues are the left side of assignments. There are two kinds of assignments possible in Flecs script:
 - Variable initialization
@@ -799,37 +837,7 @@ ecs_method(world, {
 ```
 
 ### Vector functions
-Vector functions are functions that accept arguments of a builtin `ScriptVectorType` type. This allows these functions to accept any type that meet the following criteria:
-
-- The type must be a primitive or struct type.
-- If the type is a struct type:
-  - All members must be of the same type.
-  - The member type must be primitive.
-
-For example:
-
-```cpp
-// Valid vector type: all members are of the same primitive type
-struct Position {
-  float x;
-  float y;
-  float z;
-};
-
-// Not a valid vector type: members are not of a primitive type
-struct Line {
-  Position start;
-  Position stop;
-};
-
-// Not a valid vector type: not all members are of the same type
-struct Rgba {
-  int8_t r;
-  int8_t g;
-  int8_t b;
-  float a;
-};
-```
+Vector functions are functions that accept arguments of a builtin `ScriptVectorType` type. This allows these functions to accept any type that is a valid vector type (see Vector operations).
 
 Here is a usage example of a vector function:
 
@@ -919,7 +927,7 @@ To use the doc functions, make sure to use a Flecs build compiled with `FLECS_DO
 The following table lists math functions in the `flecs.script.math` namespace:
 
 | **Function Name** | **Description**                          | **Return Type** | **Arguments**       |
-|--------------------|-----------------------------------------|-----------------|---------------------|
+|-------------------|------------------------------------------|-----------------|---------------------|
 | `cos`             | Compute cosine                           | `f64`           | `(f64)`             |
 | `sin`             | Compute sine                             | `f64`           | `(f64)`             |
 | `tan`             | Compute tangent                          | `f64`           | `(f64)`             |
@@ -951,6 +959,10 @@ The following table lists math functions in the `flecs.script.math` namespace:
 | `clamp`           | Clamp value between minimum/maximum      | `[]`            | `([] v, [] min, f64 max)` |
 | `lerp`            | Interpolate between two values           | `[]`            | `([] a, [] b, f64 t)` |
 | `smoothstep`      | Smooth interpolation between two values  | `[]`            | `([] a, [] b, f64 t)` |
+| `dot`             | Return dot product for two vectors       | `f64`           | `([] a, [] b)` |
+| `length`          | Return length of vector                  | `f64`           | `([] v)` |
+| `length_sq`       | Return squared length of vector          | `f64`           | `([] v)` |
+| `normalize`       | Normalize vector                         | `[]`            | `([] v)` |
 | `perlin2`         | 2D perlin noise function                 | `f64`           | `(f64 x, f64 y)` |
 
 The following table lists the constants in the `flecs.script.math` namespace:

@@ -11,14 +11,14 @@ Flecs is a fast and lightweight Entity Component System that lets you build game
 - Fast and [portable](#language-bindings) zero dependency [C99 API](https://www.flecs.dev/flecs/group__c.html)
 - Modern type-safe [C++17 API](https://www.flecs.dev/flecs/group__cpp.html) that doesn't use STL containers
 - First open source ECS with full support for [Entity Relationships](https://www.flecs.dev/flecs/md_docs_2Relationships.html)!
-- Fast native support for [hierarchies](https://www.flecs.dev/flecs/md_docs_2Relationships.html#the-childof-relationship) and [prefabs](https://www.flecs.dev/flecs/md_docs_2Relationships.html#the-isa-relationship)
+- Fast native support for [hierarchies](https://www.flecs.dev/flecs/md_docs_2HierarchiesManual.html) and [prefabs](https://www.flecs.dev/flecs/md_docs_2PrefabsManual.html)
 - Code base that builds in less than 5 seconds
 - Runs [in the browser](https://flecs.dev/city) without modifications with emscripten
 - Cache friendly [archetype/SoA storage](https://ajmmertens.medium.com/building-an-ecs-2-archetypes-and-vectorization-fe21690805f9) that can process millions of entities every frame
 - Automatic component registration that works out of the box across shared libraries/DLLs
 - Write free functions with [queries](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/queries/basics) or run code automatically in [systems](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/systems/pipeline)
 - Run games on multiple CPU cores with a fast lockless scheduler
-- Verified on all major compilers and platforms with [CI](https://github.com/SanderMertens/flecs/actions) running more than 10000 tests
+- Verified on all major compilers and platforms with [CI](https://github.com/SanderMertens/flecs/actions) running more than 12000 tests
 - Integrated [reflection framework](https://www.flecs.dev/flecs/group__c__addons__meta.html) with [JSON serializer](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/reflection/basics_json) and support for [runtime components](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/reflection/runtime_component)
 - [Unit annotations](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/reflection/units) for components
 - Powerful [query language](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/queries) with support for [joins](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/queries/setting_variables) and [inheritance](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/queries/component_inheritance)
