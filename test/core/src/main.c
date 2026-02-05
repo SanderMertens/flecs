@@ -874,6 +874,9 @@ void NonFragmentingChildOf_defer_new_w_parent_w_name(void);
 void NonFragmentingChildOf_defer_new_w_parent_w_same_name_twice(void);
 void NonFragmentingChildOf_new_w_parent_from_stage(void);
 void NonFragmentingChildOf_new_w_parent_w_name_from_stage(void);
+void NonFragmentingChildOf_prefab_instance_w_dont_fragment_tag(void);
+void NonFragmentingChildOf_prefab_instance_w_dont_fragment_component(void);
+void NonFragmentingChildOf_prefab_instance_w_inherit_dont_fragment_component(void);
 
 // Testsuite 'Hierarchies'
 void Hierarchies_setup(void);
@@ -6521,6 +6524,18 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "new_w_parent_w_name_from_stage",
         NonFragmentingChildOf_new_w_parent_w_name_from_stage
+    },
+    {
+        "prefab_instance_w_dont_fragment_tag",
+        NonFragmentingChildOf_prefab_instance_w_dont_fragment_tag
+    },
+    {
+        "prefab_instance_w_dont_fragment_component",
+        NonFragmentingChildOf_prefab_instance_w_dont_fragment_component
+    },
+    {
+        "prefab_instance_w_inherit_dont_fragment_component",
+        NonFragmentingChildOf_prefab_instance_w_inherit_dont_fragment_component
     }
 };
 
@@ -15405,7 +15420,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NULL,
         NULL,
-        173,
+        176,
         NonFragmentingChildOf_testcases
     },
     {

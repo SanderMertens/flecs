@@ -905,7 +905,10 @@
                 "defer_new_w_parent_w_name",
                 "defer_new_w_parent_w_same_name_twice",
                 "new_w_parent_from_stage",
-                "new_w_parent_w_name_from_stage"
+                "new_w_parent_w_name_from_stage",
+                "prefab_instance_w_dont_fragment_tag",
+                "prefab_instance_w_dont_fragment_component",
+                "prefab_instance_w_inherit_dont_fragment_component"
             ]
         }, {
             "id": "Hierarchies",

@@ -330,7 +330,6 @@ error:
     return;    
 }
 
-static
 void flecs_instantiate_dont_fragment(
     ecs_world_t *world,
     ecs_entity_t base,

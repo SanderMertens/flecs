@@ -11,11 +11,15 @@ typedef struct ecs_instantiate_ctx_t {
     ecs_entity_t root_instance;
 } ecs_instantiate_ctx_t;
 
-/* Instantiate prefab for entity. Called when adding (IsA, prefab). */
 void flecs_instantiate(
     ecs_world_t *world,
     ecs_entity_t base,
     ecs_entity_t instance,
     const ecs_instantiate_ctx_t *ctx);
+
+void flecs_instantiate_dont_fragment(
+    ecs_world_t *world,
+    ecs_entity_t base,
+    ecs_entity_t instance);
 
 #endif
