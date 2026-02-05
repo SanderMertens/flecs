@@ -2460,6 +2460,7 @@ void Prefab_create_instances_w_override_and_on_add(void);
 void Prefab_create_instances_w_override_and_on_set(void);
 void Prefab_remove_all(void);
 void Prefab_delete_with(void);
+void Prefab_prefab_children_after_adding_prefab(void);
 
 // Testsuite 'World'
 void World_setup(void);
@@ -12721,6 +12722,10 @@ bake_test_case Prefab_testcases[] = {
     {
         "delete_with",
         Prefab_delete_with
+    },
+    {
+        "prefab_children_after_adding_prefab",
+        Prefab_prefab_children_after_adding_prefab
     }
 };
 
@@ -15581,7 +15586,7 @@ static bake_test_suite suites[] = {
         "Prefab",
         Prefab_setup,
         NULL,
-        195,
+        196,
         Prefab_testcases
     },
     {
