@@ -898,7 +898,11 @@
                 "serialize_16_fields",
                 "serialize_31_fields",
                 "serialize_32_fields",
-                "serialize_field_w_escaped_sep"
+                "serialize_field_w_escaped_sep",
+                "serialize_children_w_parent_component",
+                "serialize_children_w_parent_component_table",
+                "serialize_children_w_tag_w_parent_component",
+                "serialize_children_w_tag_w_parent_component_table"
             ]
         }, {
             "id": "SerializeIterToRowJson",

@@ -866,6 +866,10 @@ void SerializeIterToJson_serialize_16_fields(void);
 void SerializeIterToJson_serialize_31_fields(void);
 void SerializeIterToJson_serialize_32_fields(void);
 void SerializeIterToJson_serialize_field_w_escaped_sep(void);
+void SerializeIterToJson_serialize_children_w_parent_component(void);
+void SerializeIterToJson_serialize_children_w_parent_component_table(void);
+void SerializeIterToJson_serialize_children_w_tag_w_parent_component(void);
+void SerializeIterToJson_serialize_children_w_tag_w_parent_component_table(void);
 
 // Testsuite 'SerializeIterToRowJson'
 void SerializeIterToRowJson_serialize_this_w_1_tag(void);
@@ -4508,6 +4512,22 @@ bake_test_case SerializeIterToJson_testcases[] = {
     {
         "serialize_field_w_escaped_sep",
         SerializeIterToJson_serialize_field_w_escaped_sep
+    },
+    {
+        "serialize_children_w_parent_component",
+        SerializeIterToJson_serialize_children_w_parent_component
+    },
+    {
+        "serialize_children_w_parent_component_table",
+        SerializeIterToJson_serialize_children_w_parent_component_table
+    },
+    {
+        "serialize_children_w_tag_w_parent_component",
+        SerializeIterToJson_serialize_children_w_tag_w_parent_component
+    },
+    {
+        "serialize_children_w_tag_w_parent_component_table",
+        SerializeIterToJson_serialize_children_w_tag_w_parent_component_table
     }
 };
 
@@ -5707,7 +5727,7 @@ static bake_test_suite suites[] = {
         "SerializeIterToJson",
         NULL,
         NULL,
-        78,
+        82,
         SerializeIterToJson_testcases
     },
     {

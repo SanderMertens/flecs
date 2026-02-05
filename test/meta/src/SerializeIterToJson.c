@@ -2801,3 +2801,38 @@ void SerializeIterToJson_serialize_field_w_escaped_sep(void) {
 
     ecs_fini(world);
 }
+
+void SerializeIterToJson_serialize_children_w_parent_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
+    ecs_new_w_parent(world, parent, "child_a");
+    ecs_new_w_parent(world, parent, "child_b");
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_pair(EcsChildOf, parent) }}
+    });
+
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    char *json = ecs_iter_to_json(&it, NULL);
+    test_json(json, "{\"results\":[{\"name\":\"child_a\", \"fields\":{}}, {\"name\":\"child_b\", \"fields\":{}}]}");
+    ecs_os_free(json);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void SerializeIterToJson_serialize_children_w_parent_component_table(void) {
+    // Implement testcase
+}
+
+void SerializeIterToJson_serialize_children_w_tag_w_parent_component(void) {
+    // Implement testcase
+}
+
+void SerializeIterToJson_serialize_children_w_tag_w_parent_component_table(void) {
+    // Implement testcase
+}
