@@ -102,7 +102,8 @@ struct type_impl {
     static void init(
         bool allow_tag = true)
     {
-        s_index = flecs_component_ids_index_get();
+        index(); // Make sure global component index is initialized
+
         s_allow_tag = allow_tag;
         s_size = sizeof(T);
         s_alignment = alignof(T);
@@ -118,7 +119,7 @@ struct type_impl {
         bool allow_tag = true)
     {
         init(allow_tag);
-        flecs_component_ids_set(world, s_index, id);
+        flecs_component_ids_set(world, index(), id);
     }
 
     // Register component id.
@@ -130,18 +131,13 @@ struct type_impl {
         bool explicit_registration = false, // Entered from world.component<T>()?
         flecs::id_t id = 0)                 // User provided component id
     {
-        if (!s_index) {
-            // This is the first time (in this binary image) that this type is
-            // being used. Generate a static index that will identify the type
-            // across worlds.
-            init(allow_tag);
-            ecs_assert(s_index != 0, ECS_INTERNAL_ERROR, NULL);
-        }
+        init(allow_tag);
+        ecs_assert(index() != 0, ECS_INTERNAL_ERROR, NULL);
 
         bool registered = false, existing = false;
 
         flecs::entity_t c = ecs_cpp_component_register(
-            world, id, s_index, name, type_name<T>(), 
+            world, id, index(), name, type_name<T>(), 
             symbol_name<T>(), size(), alignment(),
             is_component, explicit_registration, &registered, &existing);
 
@@ -176,13 +172,13 @@ struct type_impl {
             "component '%s' must be registered before use",
             type_name<T>());
 
-        flecs::entity_t c = flecs_component_ids_get(world, s_index);
+        flecs::entity_t c = flecs_component_ids_get(world, index());
         ecs_assert(c != 0, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(ecs_is_alive(world, c), ECS_INVALID_OPERATION,
             "component '%s' was deleted, reregister before using",
             type_name<T>());
 #else
-        flecs::entity_t c = flecs_component_ids_get_alive(world, s_index);
+        flecs::entity_t c = flecs_component_ids_get_alive(world, index());
         if (!c) {
             c = register_id(world);
         }
@@ -192,13 +188,11 @@ struct type_impl {
 
     // Return the size of a component.
     static size_t size() {
-        ecs_assert(s_index != 0, ECS_INTERNAL_ERROR, NULL);
         return s_size;
     }
 
     // Return the alignment of a component.
     static size_t alignment() {
-        ecs_assert(s_index != 0, ECS_INTERNAL_ERROR, NULL);
         return s_alignment;
     }
 
@@ -206,11 +200,7 @@ struct type_impl {
     static bool registered(flecs::world_t *world) {
         ecs_assert(world != nullptr, ECS_INVALID_PARAMETER, NULL);
 
-        if (s_index == 0) {
-            return false;
-        }
-
-        if (!flecs_component_ids_get(world, s_index)) {
+        if (!flecs_component_ids_get(world, index())) {
             return false;
         }
 
@@ -220,20 +210,22 @@ struct type_impl {
     // This function is only used to test cross-translation unit features. No
     // code other than test cases should invoke this function.
     static void reset() {
-        s_index = 0;
         s_size = 0;
         s_alignment = 0;
         s_allow_tag = true;
     }
 
-    static int32_t s_index;
+    static int32_t index() {
+        static int32_t index_ = flecs_component_ids_index_get();
+        return index_;
+    }
+
     static size_t s_size;
     static size_t s_alignment;
     static bool s_allow_tag;
 };
 
 // Global templated variables that hold component identifier and other info
-template <typename T> inline int32_t  type_impl<T>::s_index;
 template <typename T> inline size_t   type_impl<T>::s_size;
 template <typename T> inline size_t   type_impl<T>::s_alignment;
 template <typename T> inline bool     type_impl<T>::s_allow_tag( true );

@@ -1319,7 +1319,6 @@ void World_reregister_after_reset_w_namespace(void);
 void World_reregister_namespace(void);
 void World_reregister_after_delete(void);
 void World_implicit_reregister_after_reset(void);
-void World_reregister_after_reset_different_name(void);
 void World_register_short_template(void);
 void World_reimport(void);
 void World_reimport_module_after_reset(void);
@@ -1335,7 +1334,6 @@ void World_register_builtin_after_reset(void);
 void World_register_meta_after_reset(void);
 void World_reregister_after_reset_w_hooks_and_in_use(void);
 void World_reregister_after_reset_w_hooks_and_in_use_implicit(void);
-void World_register_component_w_reset_in_multithreaded(void);
 void World_register_component_w_core_name(void);
 void World_register_nested_component_in_module(void);
 void World_count(void);
@@ -6744,10 +6742,6 @@ bake_test_case World_testcases[] = {
         World_implicit_reregister_after_reset
     },
     {
-        "reregister_after_reset_different_name",
-        World_reregister_after_reset_different_name
-    },
-    {
         "register_short_template",
         World_register_short_template
     },
@@ -6806,10 +6800,6 @@ bake_test_case World_testcases[] = {
     {
         "reregister_after_reset_w_hooks_and_in_use_implicit",
         World_reregister_after_reset_w_hooks_and_in_use_implicit
-    },
-    {
-        "register_component_w_reset_in_multithreaded",
-        World_register_component_w_reset_in_multithreaded
     },
     {
         "register_component_w_core_name",
@@ -7999,7 +7989,7 @@ static bake_test_suite suites[] = {
         "World",
         NULL,
         NULL,
-        130,
+        128,
         World_testcases
     },
     {
