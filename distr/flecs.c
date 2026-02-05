@@ -3190,12 +3190,16 @@ typedef struct ecs_instantiate_ctx_t {
     ecs_entity_t root_instance;
 } ecs_instantiate_ctx_t;
 
-/* Instantiate prefab for entity. Called when adding (IsA, prefab). */
 void flecs_instantiate(
     ecs_world_t *world,
     ecs_entity_t base,
     ecs_entity_t instance,
     const ecs_instantiate_ctx_t *ctx);
+
+void flecs_instantiate_dont_fragment(
+    ecs_world_t *world,
+    ecs_entity_t base,
+    ecs_entity_t instance);
 
 #endif
 
@@ -13023,7 +13027,6 @@ error:
     return;    
 }
 
-static
 void flecs_instantiate_dont_fragment(
     ecs_world_t *world,
     ecs_entity_t base,
@@ -20582,6 +20585,7 @@ void flecs_prefab_spawner_build_from_cr(
             NULL, spawner, ecs_tree_spawner_child_t);
         elem->parent_index = parent_index;
         elem->child_name = NULL;
+        elem->child = (uint32_t)child;
 
         if (table->flags & EcsTableHasName) {
             elem->child_name = ecs_get_name(world, child);
@@ -20631,6 +20635,7 @@ void flecs_spawner_transpose_depth(
 
         dst_elem->child_name = src_elem->child_name;
         dst_elem->parent_index = src_elem->parent_index;
+        dst_elem->child = src_elem->child;
         
         /* Get depth for source element at depth 0 */
         int32_t src_depth = flecs_relation_depth(
@@ -20758,6 +20763,14 @@ void flecs_spawner_instantiate(
         }
 
         flecs_add_non_fragmenting_child_w_records(world, parent, entity, cr, r);
+
+        ecs_record_t *spawn_r = flecs_entities_get_any(
+            world, spawn_child->child);
+        ecs_assert(spawn_r != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        if (spawn_r->row & EcsEntityHasDontFragment) {
+            flecs_instantiate_dont_fragment(world, spawn_child->child, entity);
+        }
     }
 
     if (vec == &tmp_vec) {

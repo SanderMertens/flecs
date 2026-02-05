@@ -4489,3 +4489,72 @@ void NonFragmentingChildOf_new_w_parent_w_name_from_stage(void) {
 
     ecs_fini(world);
 }
+
+void NonFragmentingChildOf_prefab_instance_w_dont_fragment_tag(void) {
+    ecs_world_t* world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ecs_add_id(world, Foo, EcsDontFragment);
+
+    ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t base_child = ecs_new_w_parent(world, base, NULL);
+    ecs_add(world, base_child, Foo);
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_entities_t entities = ecs_get_ordered_children(world, i);
+    test_int(entities.count, 1);
+
+    test_assert(ecs_has(world, entities.ids[0], Foo));
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_prefab_instance_w_dont_fragment_component(void) {
+    ecs_world_t* world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+
+    ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t base_child = ecs_new_w_parent(world, base, NULL);
+    ecs_set(world, base_child, Position, {10, 20});
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_entities_t entities = ecs_get_ordered_children(world, i);
+    test_int(entities.count, 1);
+
+    test_assert(ecs_owns(world, entities.ids[0], Position));
+
+    const Position *p = ecs_get(world, entities.ids[0], Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_prefab_instance_w_inherit_dont_fragment_component(void) {
+    ecs_world_t* world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+
+    ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t base_child = ecs_new_w_parent(world, base, NULL);
+    ecs_set(world, base_child, Position, {10, 20});
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_entities_t entities = ecs_get_ordered_children(world, i);
+    test_int(entities.count, 1);
+
+    test_assert(!ecs_owns(world, entities.ids[0], Position));
+    test_assert(ecs_has(world, entities.ids[0], Position));
+
+    const Position *p = ecs_get(world, entities.ids[0], Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
