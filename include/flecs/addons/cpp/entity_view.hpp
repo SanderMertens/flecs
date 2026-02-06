@@ -12,6 +12,8 @@
 
 #pragma once
 
+#include "entity_component_tuple.hpp"
+
 /**
  * @ingroup cpp_entities
  * @{
@@ -351,6 +353,13 @@ struct entity_view : public id {
         return ecs_get_id(world_, id_, ecs_pair(first, second));
     }
 
+    template<typename... Ts>
+    auto try_get_n() const {
+        flecs_static_assert(sizeof...(Ts) > 1, "try_get_n requires at least two components");
+        flecs_static_assert(sizeof...(Ts) < 9, "try_get_n cannot fetch more than eight components");
+        return typename tuple_builder<sizeof...(Ts), Ts...>::type_const_ptr {try_get<Ts>()...};
+    }
+
     /** Get the second part for a pair.
      * This operation gets the value for a pair from the entity. The first
      * part of the pair should not be a component.
@@ -531,6 +540,13 @@ struct entity_view : public id {
     template <typename Func, if_t< is_callable<Func>::value > = 0>
     bool get(const Func& func) const;
 
+    template<typename... Ts>
+    auto get_n() const {
+        flecs_static_assert(sizeof...(Ts) > 1, "get_n requires at least two components");
+        flecs_static_assert(sizeof...(Ts) < 9, "get_n cannot fetch more than eight components");
+        return typename tuple_builder<sizeof...(Ts), Ts...>::type_const {get<Ts>()...};
+    }
+
     /** Get the second part for a pair.
      * This operation gets the value for a pair from the entity. The first
      * part of the pair should not be a component.
@@ -655,6 +671,13 @@ struct entity_view : public id {
      */
     void* try_get_mut(flecs::entity_t first, flecs::entity_t second) const {
         return ecs_get_mut_id(world_, id_, ecs_pair(first, second));
+    }
+
+    template<typename... Ts>
+    auto try_get_mut_n() const {
+        flecs_static_assert(sizeof...(Ts) > 1, "try_get_mut_n requires at least two components");
+        flecs_static_assert(sizeof...(Ts) < 9, "try_get_mut_n cannot fetch more than eight components");
+        return typename tuple_builder<sizeof...(Ts), Ts...>::type_ptr {try_get_mut<Ts>()...};
     }
 
     /** Get the second part for a pair.
@@ -791,6 +814,13 @@ struct entity_view : public id {
         ecs_assert(r != nullptr, ECS_INVALID_OPERATION, 
             "invalid get_mut: entity does not have component (use try_get_mut)");
         return r;
+    }
+
+    template<typename... Ts>
+    auto get_mut_n() const {
+        flecs_static_assert(sizeof...(Ts) > 1, "get_mut_n requires at least two components");
+        flecs_static_assert(sizeof...(Ts) < 9, "get_mut_n cannot fetch more than eight components");
+        return typename tuple_builder<sizeof...(Ts), Ts...>::type {get_mut<Ts>()...};
     }
 
     /** Get the second part for a pair.

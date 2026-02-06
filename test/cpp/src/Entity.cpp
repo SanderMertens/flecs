@@ -637,6 +637,20 @@ void Entity_get_T(void) {
     test_int(p.y, 20);
 }
 
+void Entity_get_n_T(void) {
+    flecs::world world;
+
+    flecs::entity e = world.entity();
+    e.set<Position>({10, 20});
+    e.set<Velocity>({1, 2});
+
+    const auto [p, v] = e.get_n<Position, Velocity>();
+    test_int(p.x, 10);
+    test_int(p.y, 20);
+    test_int(v.x, 1);
+    test_int(v.y, 2);
+}
+
 void Entity_get_r_t(void) {
     flecs::world world;
 
@@ -794,6 +808,32 @@ void Entity_try_get_T(void) {
     test_int(p->y, 20);
 }
 
+void Entity_try_get_n_T(void) {
+    flecs::world world;
+
+    flecs::entity e = world.entity();
+
+    {
+        const auto [p, v] = e.try_get_n<Position, Velocity>();
+        test_assert(p == nullptr);
+        test_assert(v == nullptr);
+    }
+
+    e.set<Position>({10, 20});
+    e.set<Velocity>({1, 2});
+
+    {
+        const auto [p, v] = e.try_get_n<Position, Velocity>();
+        test_assert(p != nullptr);
+        test_assert(v != nullptr);
+
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+        test_int(v->x, 1);
+        test_int(v->y, 2);
+    }
+}
+
 void Entity_try_get_r_t(void) {
     flecs::world world;
 
@@ -889,6 +929,22 @@ void Entity_get_mut_T(void) {
     Position& p = e.get_mut<Position>();
     test_int(p.x, 10);
     test_int(p.y, 20);
+}
+
+void Entity_get_mut_n_T(void) {
+    flecs::world world;
+
+    flecs::entity e = world.entity();
+    e.set<Position>({10, 20});
+    e.set<Velocity>({1, 2});
+
+    auto [p, v] = e.get_mut_n<Position, Velocity>();
+    p.x += 15;
+    v.y += 2;
+    test_int(e.get<Position>().x, 25);
+    test_int(e.get<Position>().y, 20);
+    test_int(e.get<Velocity>().x, 1);
+    test_int(e.get<Velocity>().y, 4);
 }
 
 void Entity_get_mut_r_t(void) {
@@ -1047,6 +1103,35 @@ void Entity_try_get_mut_T(void) {
 
     test_int(p->x, 10);
     test_int(p->y, 20);
+}
+
+void Entity_try_get_mut_n_T(void) {
+    flecs::world world;
+
+    flecs::entity e = world.entity();
+
+    {
+        auto [p, v] = e.try_get_mut_n<Position, Velocity>();
+        test_assert(p == nullptr);
+        test_assert(v == nullptr);
+    }
+
+    e.set<Position>({10, 20});
+    e.set<Velocity>({1, 2});
+
+    {
+        auto [p, v] = e.try_get_mut_n<Position, Velocity>();
+        test_assert(p != nullptr);
+        test_assert(v != nullptr);
+
+        p->x += 15;
+        v->y += 2;
+
+        test_int(e.get<Position>().x, 25);
+        test_int(e.get<Position>().y, 20);
+        test_int(e.get<Velocity>().x, 1);
+        test_int(e.get<Velocity>().y, 4);
+    }
 }
 
 void Entity_try_get_mut_r_t(void) {
