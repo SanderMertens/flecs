@@ -20691,6 +20691,7 @@ EcsTreeSpawner* flecs_prefab_spawner_build(
     ecs_vec_init_t(NULL, &spawner, ecs_tree_spawner_child_t, 0);
     flecs_prefab_spawner_build_from_cr(world, cr, &spawner, 0, 1);
 
+    base = flecs_entities_get_alive(world, base);
     EcsTreeSpawner *ts = ecs_ensure(world, base, EcsTreeSpawner);
     ts->data[0].children = spawner;
 
