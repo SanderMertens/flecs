@@ -26199,7 +26199,7 @@ struct entity_view : public id {
     }
 
     template<typename... Ts>
-    auto try_gefdsfdst_mut_n() const {
+    auto try_get_mut_n() const {
         flecs_static_assert(sizeof...(Ts) > 1, "try_get_mut_n requires at least two components");
         flecs_static_assert(sizeof...(Ts) < 9, "try_get_mut_n cannot fetch more than eight components");
         return typename tuple_builder<sizeof...(Ts), Ts...>::type_ptr {try_get_mut<Ts>()...};
