@@ -54,6 +54,11 @@ ECS_PRIVATE
     double z;
 });
 
+ECS_STRUCT(Struct_w_only_private, {
+ECS_PRIVATE
+    double z;
+});
+
 ECS_ENUM(Enum_Default, {
     Red, Green, Blue
 });
@@ -446,6 +451,23 @@ void MetaUtils_private_members(void) {
 
     test_assert(ecs_has(world, e, EcsComponent));
     test_int(ecs_get(world, e, EcsComponent)->size, 24);
+
+    ecs_fini(world);
+}
+
+void MetaUtils_only_private_members(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_META_COMPONENT(world, Struct_w_only_private);
+
+    test_assert(ecs_id(Struct_w_only_private) != 0);
+    ecs_entity_t e = ecs_id(Struct_w_only_private);
+
+    const EcsStruct *s = ecs_get(world, e, EcsStruct);
+    test_int(ecs_vec_count(&s->members), 0);
+
+    test_assert(ecs_has(world, e, EcsComponent));
+    test_int(ecs_get(world, e, EcsComponent)->size, 8);
 
     ecs_fini(world);
 }
