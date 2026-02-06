@@ -1,4 +1,4 @@
-#include <get_all.h>
+#include <get_n.h>
 #include <iostream>
 
 /* This code shows how to get multiple components in a single command */
@@ -27,7 +27,7 @@ int main(int, char *[]) {
         });
 
     {
-        auto [pos, mass] = e.get_mut_all<Position, Mass>();
+        auto [pos, mass] = e.get_mut_n<Position, Mass>();
         pos.x += 5;
         mass.value += 3;
         std::cout << "Position: {" << pos.x << ", " << pos.y << "}\n";
@@ -38,7 +38,7 @@ int main(int, char *[]) {
     }
     std::cout << "\n";
     {
-        const auto [pos, mass] = e.get_all<Position, Mass>();
+        const auto [pos, mass] = e.get_n<Position, Mass>();
         // pos.x += 5; // Will not compile here!
         // mass.value += 3; // Will not compile here!
         std::cout << "Position: {" << pos.x << ", " << pos.y << "}\n";
@@ -48,9 +48,9 @@ int main(int, char *[]) {
         //  Mass: {100}
     }
     std::cout << "\n";
-    // It's possible to try_get_all with absent component that will return null
+    // It's possible to try_get_n with absent component that will return null
     {
-        const auto [pos, velocity, mass] = e.try_get_all<Position, Velocity, Mass>();
+        const auto [pos, velocity, mass] = e.try_get_n<Position, Velocity, Mass>();
 
         std::cout << "Position: {" << pos->x << ", " << pos->y << "}\n";
         if (velocity) {

@@ -1,5 +1,5 @@
 {
-    "id": "get_all",
+    "id": "get_n",
     "type": "application",
     "value": {
         "use": [
