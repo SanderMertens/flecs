@@ -4558,3 +4558,29 @@ void NonFragmentingChildOf_prefab_instance_w_inherit_dont_fragment_component(voi
 
     ecs_fini(world);
 }
+
+void NonFragmentingChildOf_instantiate_recycled_prefab(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_delete(world, e);
+
+    ecs_entity_t prefab2 = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t prefab21 = ecs_new_w_id(world, EcsPrefab);
+    ecs_set(world, prefab21, EcsParent, { prefab2 });
+    ecs_add(world, prefab21, Foo);
+    ecs_entity_t prefab22 = ecs_new_w_id(world, EcsPrefab);
+    ecs_set(world, prefab22, EcsParent, { prefab2 });
+    ecs_add(world, prefab22, Bar);
+
+    ecs_entity_t instance = ecs_new_w_pair(world, EcsIsA, prefab2);
+    ecs_entities_t entities = ecs_get_ordered_children(world, instance);
+    test_int(entities.count, 2);
+    test_assert(ecs_has(world, entities.ids[0], Foo));
+    test_assert(ecs_has(world, entities.ids[1], Bar));
+
+    ecs_fini(world);
+}
