@@ -51,7 +51,7 @@ void Entity_ensure_generic_w_id(void);
 void Entity_ensure_generic_w_id_t(void);
 void Entity_get_w_id(void);
 void Entity_get_T(void);
-void Entity_get_all_T(void);
+void Entity_get_n_T(void);
 void Entity_get_r_t(void);
 void Entity_get_R_t(void);
 void Entity_get_R_T(void);
@@ -64,14 +64,14 @@ void Entity_get_R_T_not_found(void);
 void Entity_get_r_T_not_found(void);
 void Entity_try_get_w_id(void);
 void Entity_try_get_T(void);
-void Entity_try_get_all_T(void);
+void Entity_try_get_n_T(void);
 void Entity_try_get_r_t(void);
 void Entity_try_get_R_t(void);
 void Entity_try_get_R_T(void);
 void Entity_try_get_r_T(void);
 void Entity_get_mut_w_id(void);
 void Entity_get_mut_T(void);
-void Entity_get_mut_all_T(void);
+void Entity_get_mut_n_T(void);
 void Entity_get_mut_r_t(void);
 void Entity_get_mut_R_t(void);
 void Entity_get_mut_R_T(void);
@@ -84,7 +84,7 @@ void Entity_get_mut_R_T_not_found(void);
 void Entity_get_mut_r_T_not_found(void);
 void Entity_try_get_mut_w_id(void);
 void Entity_try_get_mut_T(void);
-void Entity_try_get_mut_all_T(void);
+void Entity_try_get_mut_n_T(void);
 void Entity_try_get_mut_r_t(void);
 void Entity_try_get_mut_R_t(void);
 void Entity_try_get_mut_R_T(void);
@@ -1768,8 +1768,8 @@ bake_test_case Entity_testcases[] = {
         Entity_get_T
     },
     {
-        "get_all_T",
-        Entity_get_all_T
+        "get_n_T",
+        Entity_get_n_T
     },
     {
         "get_r_t",
@@ -1820,8 +1820,8 @@ bake_test_case Entity_testcases[] = {
         Entity_try_get_T
     },
     {
-        "try_get_all_T",
-        Entity_try_get_all_T
+        "try_get_n_T",
+        Entity_try_get_n_T
     },
     {
         "try_get_r_t",
@@ -1848,8 +1848,8 @@ bake_test_case Entity_testcases[] = {
         Entity_get_mut_T
     },
     {
-        "get_mut_all_T",
-        Entity_get_mut_all_T
+        "get_mut_n_T",
+        Entity_get_mut_n_T
     },
     {
         "get_mut_r_t",
@@ -1900,8 +1900,8 @@ bake_test_case Entity_testcases[] = {
         Entity_try_get_mut_T
     },
     {
-        "try_get_mut_all_T",
-        Entity_try_get_mut_all_T
+        "try_get_mut_n_T",
+        Entity_try_get_mut_n_T
     },
     {
         "try_get_mut_r_t",
@@ -7881,7 +7881,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        386,
+        390,
         Entity_testcases
     },
     {

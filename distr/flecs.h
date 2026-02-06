@@ -25879,9 +25879,9 @@ struct entity_view : public id {
     }
 
     template<typename... Ts>
-    auto try_get_all() const {
-        flecs_static_assert(sizeof...(Ts) > 1, "try_get_all requires at least two components");
-        flecs_static_assert(sizeof...(Ts) < 9, "try_get_all cannot fetch more than eight components");
+    auto try_get_n() const {
+        flecs_static_assert(sizeof...(Ts) > 1, "try_get_n requires at least two components");
+        flecs_static_assert(sizeof...(Ts) < 9, "try_get_n cannot fetch more than eight components");
         return typename tuple_builder<sizeof...(Ts), Ts...>::type_const_ptr {try_get<Ts>()...};
     }
 
@@ -26066,9 +26066,9 @@ struct entity_view : public id {
     bool get(const Func& func) const;
 
     template<typename... Ts>
-    auto get_all() const {
-        flecs_static_assert(sizeof...(Ts) > 1, "get_all requires at least two components");
-        flecs_static_assert(sizeof...(Ts) < 9, "get_all cannot fetch more than eight components");
+    auto get_n() const {
+        flecs_static_assert(sizeof...(Ts) > 1, "get_n requires at least two components");
+        flecs_static_assert(sizeof...(Ts) < 9, "get_n cannot fetch more than eight components");
         return typename tuple_builder<sizeof...(Ts), Ts...>::type_const {get<Ts>()...};
     }
 
@@ -26199,9 +26199,9 @@ struct entity_view : public id {
     }
 
     template<typename... Ts>
-    auto try_get_mut_all() const {
-        flecs_static_assert(sizeof...(Ts) > 1, "try_get_mut_all requires at least two components");
-        flecs_static_assert(sizeof...(Ts) < 9, "try_get_mut_all cannot fetch more than eight components");
+    auto try_gefdsfdst_mut_n() const {
+        flecs_static_assert(sizeof...(Ts) > 1, "try_get_mut_n requires at least two components");
+        flecs_static_assert(sizeof...(Ts) < 9, "try_get_mut_n cannot fetch more than eight components");
         return typename tuple_builder<sizeof...(Ts), Ts...>::type_ptr {try_get_mut<Ts>()...};
     }
 
@@ -26342,9 +26342,9 @@ struct entity_view : public id {
     }
 
     template<typename... Ts>
-    auto get_mut_all() const {
-        flecs_static_assert(sizeof...(Ts) > 1, "get_mut_all requires at least two components");
-        flecs_static_assert(sizeof...(Ts) < 9, "get_mut_all cannot fetch more than eight components");
+    auto get_mut_n() const {
+        flecs_static_assert(sizeof...(Ts) > 1, "get_mut_n requires at least two components");
+        flecs_static_assert(sizeof...(Ts) < 9, "get_mut_n cannot fetch more than eight components");
         return typename tuple_builder<sizeof...(Ts), Ts...>::type {get_mut<Ts>()...};
     }
 
