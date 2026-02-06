@@ -874,6 +874,9 @@ void NonFragmentingChildOf_defer_new_w_parent_w_name(void);
 void NonFragmentingChildOf_defer_new_w_parent_w_same_name_twice(void);
 void NonFragmentingChildOf_new_w_parent_from_stage(void);
 void NonFragmentingChildOf_new_w_parent_w_name_from_stage(void);
+void NonFragmentingChildOf_prefab_instance_w_dont_fragment_tag(void);
+void NonFragmentingChildOf_prefab_instance_w_dont_fragment_component(void);
+void NonFragmentingChildOf_prefab_instance_w_inherit_dont_fragment_component(void);
 
 // Testsuite 'Hierarchies'
 void Hierarchies_setup(void);
@@ -2457,6 +2460,7 @@ void Prefab_create_instances_w_override_and_on_add(void);
 void Prefab_create_instances_w_override_and_on_set(void);
 void Prefab_remove_all(void);
 void Prefab_delete_with(void);
+void Prefab_prefab_children_after_adding_prefab(void);
 
 // Testsuite 'World'
 void World_setup(void);
@@ -6521,6 +6525,18 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "new_w_parent_w_name_from_stage",
         NonFragmentingChildOf_new_w_parent_w_name_from_stage
+    },
+    {
+        "prefab_instance_w_dont_fragment_tag",
+        NonFragmentingChildOf_prefab_instance_w_dont_fragment_tag
+    },
+    {
+        "prefab_instance_w_dont_fragment_component",
+        NonFragmentingChildOf_prefab_instance_w_dont_fragment_component
+    },
+    {
+        "prefab_instance_w_inherit_dont_fragment_component",
+        NonFragmentingChildOf_prefab_instance_w_inherit_dont_fragment_component
     }
 };
 
@@ -12706,6 +12722,10 @@ bake_test_case Prefab_testcases[] = {
     {
         "delete_with",
         Prefab_delete_with
+    },
+    {
+        "prefab_children_after_adding_prefab",
+        Prefab_prefab_children_after_adding_prefab
     }
 };
 
@@ -15405,7 +15425,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NULL,
         NULL,
-        173,
+        176,
         NonFragmentingChildOf_testcases
     },
     {
@@ -15566,7 +15586,7 @@ static bake_test_suite suites[] = {
         "Prefab",
         Prefab_setup,
         NULL,
-        195,
+        196,
         Prefab_testcases
     },
     {
