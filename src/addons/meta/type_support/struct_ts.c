@@ -561,11 +561,11 @@ ecs_entity_t ecs_struct_init(
     flecs_resume_readonly(world, &rs);
 
     if (i == 0) {
-        ecs_err("struct '%s' has no members", ecs_get_name(world, type));
-        goto error;
-    }
-
-    if (!ecs_has(world, type, EcsStruct)) {
+        EcsStruct *s = ecs_ensure(world, type, EcsStruct);
+        ecs_assert(s != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_vec_init_t(NULL, &s->members, ecs_member_t, 0);
+        ecs_modified(world, type, EcsStruct);
+    } else if (!ecs_has(world, type, EcsStruct)) {
         goto error;
     }
 

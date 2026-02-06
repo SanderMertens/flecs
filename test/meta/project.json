@@ -1066,6 +1066,7 @@
                 "identifier_w_underscore",
                 "struct_w_ptr",
                 "private_members",
+                "only_private_members",
                 "enum_constant_w_name_prefix",
                 "enum_constant_w_type_prefix",
                 "enum_constant_w_name_type_prefix",
