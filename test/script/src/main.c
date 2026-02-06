@@ -24,6 +24,7 @@ void Eval_three_empty_crlfs(void);
 void Eval_crlf_trailing_space(void);
 void Eval_crlf_trailing_spaces(void);
 void Eval_multiple_trailing_crlfs(void);
+void Eval_trailing_crlfs_around_struct(void);
 void Eval_entity(void);
 void Eval_entity_newline(void);
 void Eval_entity_crlf(void);
