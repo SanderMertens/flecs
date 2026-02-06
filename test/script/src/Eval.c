@@ -117,6 +117,14 @@ void Eval_crlf_trailing_spaces(void) {
     ecs_fini(world);
 }
 
+void Eval_trailing_crlfs_around_struct(void) {
+    ecs_world_t* world = ecs_init();
+
+    test_assert(ecs_script_run(world, NULL, "using flecs.meta\r\n \r\nstruct MaxSpeed {\r\n  value = f32\r\n}", NULL) == 0);
+
+    ecs_fini(world);
+}
+
 void Eval_multiple_trailing_crlfs(void) {
     ecs_world_t *world = ecs_init();
 
