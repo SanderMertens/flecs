@@ -1839,3 +1839,12 @@ void SystemMisc_run_w_query_next(void) {
 
     ecs_fini(world);
 }
+
+void SystemMisc_missing_callback(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_init();
+
+    test_expect_abort();
+    ecs_system_init(world, &(ecs_system_desc_t){0});
+}

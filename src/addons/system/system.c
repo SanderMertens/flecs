@@ -272,6 +272,13 @@ ecs_entity_t ecs_system_init(
 
     EcsPoly *poly = flecs_poly_bind(world, entity, ecs_system_t);
     if (!poly->poly) {
+        ecs_check(desc->callback != NULL || desc->run != NULL, 
+            ECS_INVALID_PARAMETER,
+            "missing implementation for system %s (set .callback or .run)",
+                desc->entity 
+                    ? flecs_errstr(ecs_get_path(world, desc->entity)) 
+                    : "<unknown>");
+
         ecs_system_t *system = flecs_poly_new(ecs_system_t);
         ecs_assert(system != NULL, ECS_INTERNAL_ERROR, NULL);
         

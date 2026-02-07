@@ -189,7 +189,8 @@
                 "register_run_after_callback",
                 "register_callback_after_run_ctx",
                 "register_run_after_callback_ctx",
-                "run_w_query_next"
+                "run_w_query_next",
+                "missing_callback"
             ]
         }, {
             "id": "SystemPeriodic",
