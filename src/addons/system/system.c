@@ -290,6 +290,11 @@ ecs_entity_t ecs_system_init(
         /* Prevent the system from moving while we're initializing */
         flecs_defer_begin(world, world->stages[0]);
 
+        if (desc->phase) {
+            ecs_add_id(world, entity, desc->phase);
+            ecs_add_pair(world, entity, EcsDependsOn, desc->phase);
+        }
+
         system->query = query;
 
         system->run = desc->run;
