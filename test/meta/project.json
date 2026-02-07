@@ -1070,7 +1070,8 @@
                 "enum_constant_w_name_prefix",
                 "enum_constant_w_type_prefix",
                 "enum_constant_w_name_type_prefix",
-                "struct_has_member_entities"
+                "struct_has_member_entities",
+                "fwd_decl"
             ]
         }, {
             "id": "OpaqueTypes",
