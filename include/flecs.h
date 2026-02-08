@@ -5120,6 +5120,35 @@ void ecs_iter_set_group(
     ecs_iter_t *it,
     uint64_t group_id);
 
+/** Return map with query groups.
+ * This map can be used to iterate the active group identifiers of a query. The
+ * payload of the map is opaque. The map can be used as follows:
+ * 
+ * @code
+ * const ecs_map_t *keys = ecs_query_get_groups(q);
+ * ecs_map_iter_t kit = ecs_map_iter(keys);
+ * while (ecs_map_next(&kit)) {
+ *   uint64_t group_id = ecs_map_key(&kit);
+ * 
+ *   // Iterate query for group
+ *   ecs_iter_t it = ecs_query_iter(world, q);
+ *   ecs_iter_set_group(&it, group_id);
+ *   while (ecs_query_next(&it)) {
+ *     // Iterate as usual
+ *   }
+ * }
+ * @endcode
+ * 
+ * This operation is not valid for queries that do not use group_by. The 
+ * returned map pointer will remain valid for as long as the query exists.
+ *
+ * @param query The query.
+ * @return The map with query groups.
+ */
+FLECS_API
+const ecs_map_t* ecs_query_get_groups(
+    const ecs_query_t *query);
+
 /** Get context of query group.
  * This operation returns the context of a query group as returned by the
  * on_group_create callback.
