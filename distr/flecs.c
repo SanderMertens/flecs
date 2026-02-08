@@ -1819,7 +1819,7 @@ typedef struct ecs_query_triv_cache_match_t {
 
 struct ecs_query_cache_match_t {
     ecs_query_triv_cache_match_t base;
-    int32_t _offset;                  /* Starting point in table . */
+    int32_t _offset;                  /* Starting point in table. */
     int32_t _count;                   /* Number of entities to iterate in table. */
     ecs_id_t *_ids;                   /* Resolved (component) ids for current table. */
     ecs_entity_t *_sources;           /* Subjects (sources) of ids. */
@@ -36143,6 +36143,23 @@ void* ecs_query_get_group_ctx(
     } else {
         return info->ctx;
     }
+}
+
+const ecs_map_t* ecs_query_get_groups(
+    const ecs_query_t *query)
+{
+    flecs_poly_assert(query, ecs_query_t);
+    ecs_query_impl_t *q = flecs_query_impl(query);
+    ecs_check(q->cache != NULL, ECS_INVALID_PARAMETER, 
+        "ecs_query_get_groups is not valid for queries that don't use group_by");
+
+    ecs_query_cache_t *cache = q->cache;
+    ecs_check(cache->group_by != 0, ECS_INVALID_PARAMETER,
+        "ecs_query_get_groups is not valid for queries that don't use group_by");
+
+    return &cache->groups;
+error:
+    return NULL;
 }
 
 /**

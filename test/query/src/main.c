@@ -1924,6 +1924,7 @@ void GroupBy_group_by_childof(void);
 void GroupBy_remove_all(void);
 void GroupBy_recreate_after_remove_all(void);
 void GroupBy_group_by_parent_depth(void);
+void GroupBy_get_groups(void);
 
 // Testsuite 'MemberTarget'
 void MemberTarget_setup(void);
@@ -10322,6 +10323,10 @@ bake_test_case GroupBy_testcases[] = {
     {
         "group_by_parent_depth",
         GroupBy_group_by_parent_depth
+    },
+    {
+        "get_groups",
+        GroupBy_get_groups
     }
 };
 
@@ -13895,7 +13900,7 @@ static bake_test_suite suites[] = {
         "GroupBy",
         NULL,
         NULL,
-        21,
+        22,
         GroupBy_testcases
     },
     {

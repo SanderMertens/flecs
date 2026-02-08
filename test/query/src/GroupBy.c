@@ -1328,3 +1328,53 @@ void GroupBy_group_by_parent_depth(void) {
 
     ecs_fini(world);
 }
+
+void GroupBy_get_groups(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_pair(Rel, EcsWildcard) }},
+        .group_by = Rel
+    });
+
+    test_assert(q != NULL);
+
+    const ecs_map_t *keys = ecs_query_get_groups(q);
+    test_assert(keys != NULL);
+    test_int(ecs_map_count(keys), 0);
+
+    ecs_entity_t e1 = ecs_new_w_pair(world, Rel, TgtA);
+    test_int(ecs_map_count(keys), 1);
+
+    ecs_entity_t e2 = ecs_new_w_pair(world, Rel, TgtB);
+    test_int(ecs_map_count(keys), 2);
+
+    {
+        int32_t found = 0;
+        ecs_map_iter_t kit = ecs_map_iter(keys);
+        while (ecs_map_next(&kit)) {
+            uint64_t group_id = ecs_map_key(&kit);
+            if (group_id == TgtA) {
+                found ++;
+            }
+            if (group_id == TgtB) {
+                found ++;
+            }
+        }
+        test_int(found, 2);
+    }
+
+    ecs_delete(world, e1);
+    ecs_shrink(world);
+    test_int(ecs_map_count(keys), 1);
+
+    ecs_delete(world, e2);
+    ecs_shrink(world);
+    test_int(ecs_map_count(keys), 0);
+
+    ecs_fini(world);
+}

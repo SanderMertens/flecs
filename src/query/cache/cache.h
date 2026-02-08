@@ -20,7 +20,7 @@ typedef struct ecs_query_triv_cache_match_t {
 
 struct ecs_query_cache_match_t {
     ecs_query_triv_cache_match_t base;
-    int32_t _offset;                  /* Starting point in table . */
+    int32_t _offset;                  /* Starting point in table. */
     int32_t _count;                   /* Number of entities to iterate in table. */
     ecs_id_t *_ids;                   /* Resolved (component) ids for current table. */
     ecs_entity_t *_sources;           /* Subjects (sources) of ids. */

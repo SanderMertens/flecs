@@ -1991,7 +1991,8 @@
                 "group_by_childof",
                 "remove_all",
                 "recreate_after_remove_all",
-                "group_by_parent_depth"
+                "group_by_parent_depth",
+                "get_groups"
             ]
         }, {
             "id": "MemberTarget",
