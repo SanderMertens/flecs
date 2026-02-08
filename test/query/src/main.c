@@ -1925,6 +1925,8 @@ void GroupBy_remove_all(void);
 void GroupBy_recreate_after_remove_all(void);
 void GroupBy_group_by_parent_depth(void);
 void GroupBy_get_groups(void);
+void GroupBy_get_groups_default_group(void);
+void GroupBy_on_group_create_delete_default_group(void);
 
 // Testsuite 'MemberTarget'
 void MemberTarget_setup(void);
@@ -10327,6 +10329,14 @@ bake_test_case GroupBy_testcases[] = {
     {
         "get_groups",
         GroupBy_get_groups
+    },
+    {
+        "get_groups_default_group",
+        GroupBy_get_groups_default_group
+    },
+    {
+        "on_group_create_delete_default_group",
+        GroupBy_on_group_create_delete_default_group
     }
 };
 
@@ -13900,7 +13910,7 @@ static bake_test_suite suites[] = {
         "GroupBy",
         NULL,
         NULL,
-        22,
+        24,
         GroupBy_testcases
     },
     {

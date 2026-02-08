@@ -77462,7 +77462,21 @@ ecs_query_cache_group_t* flecs_query_cache_ensure_group(
     uint64_t group_id)
 {
     if (!group_id) {
-        return &cache->default_group;
+        ecs_query_cache_group_t *group = &cache->default_group;
+        if (!group->info.table_count) {
+            if (ecs_map_is_init(&cache->groups)) {
+                ecs_query_cache_group_t **group_ptr = ecs_map_ensure_ref(
+                    &cache->groups, ecs_query_cache_group_t, 0);
+                *group_ptr = group;
+            }
+        }
+
+        if (cache->on_group_create) {
+            group->info.ctx = cache->on_group_create(
+                cache->query->world, 0, cache->group_by_ctx);
+        }
+
+        return group;
     }
 
     ecs_query_cache_group_t *group = ecs_map_get_deref(&cache->groups, 
@@ -77483,6 +77497,7 @@ ecs_query_cache_group_t* flecs_query_cache_ensure_group(
         group->info.id = group_id;
 
         flecs_query_cache_group_insert(cache, group);
+
 
         if (cache->on_group_create) {
             group->info.ctx = cache->on_group_create(
@@ -77511,6 +77526,10 @@ void flecs_query_cache_group_fini(
 
     if (group != &cache->default_group) {
         ecs_map_remove_free(&cache->groups, group->info.id);
+    } else {
+        if (ecs_map_is_init(&cache->groups)) {
+            ecs_map_remove(&cache->groups, 0);
+        }
     }
 }
 
