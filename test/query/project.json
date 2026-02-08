@@ -1992,7 +1992,9 @@
                 "remove_all",
                 "recreate_after_remove_all",
                 "group_by_parent_depth",
-                "get_groups"
+                "get_groups",
+                "get_groups_default_group",
+                "on_group_create_delete_default_group"
             ]
         }, {
             "id": "MemberTarget",
