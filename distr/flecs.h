@@ -18059,7 +18059,7 @@ int ecs_meta_from_desc(
 
 /* ECS_STRUCT implementation */
 #define ECS_STRUCT_TYPE(name, ...)\
-    typedef struct __VA_ARGS__ name
+    typedef struct name __VA_ARGS__ name
 
 #define ECS_STRUCT_ECS_META_IMPL ECS_STRUCT_IMPL
 
@@ -18079,7 +18079,7 @@ int ecs_meta_from_desc(
 
 /* ECS_ENUM implementation */
 #define ECS_ENUM_TYPE(name, ...)\
-    typedef enum __VA_ARGS__ name
+    typedef enum name __VA_ARGS__ name
 
 #define ECS_ENUM_ECS_META_IMPL ECS_ENUM_IMPL
 
@@ -18099,7 +18099,7 @@ int ecs_meta_from_desc(
 
 /* ECS_BITMASK implementation */
 #define ECS_BITMASK_TYPE(name, ...)\
-    typedef enum __VA_ARGS__ name
+    typedef enum name __VA_ARGS__ name
 
 #define ECS_BITMASK_ECS_META_IMPL ECS_BITMASK_IMPL
 

@@ -59,6 +59,13 @@ ECS_PRIVATE
     double z;
 });
 
+struct Struct_w_fwd_decl;
+
+ECS_STRUCT(Struct_w_fwd_decl, {
+ECS_PRIVATE
+    struct Struct_w_fwd_decl *ptr;
+});
+
 ECS_ENUM(Enum_Default, {
     Red, Green, Blue
 });
@@ -565,6 +572,20 @@ void MetaUtils_struct_has_member_entities(void) {
 
     test_assert(ecs_lookup(world, "Struct_2_i32.x") == 0);
     test_assert(ecs_lookup(world, "Struct_2_i32.y") == 0);
+
+    ecs_fini(world);
+}
+
+void MetaUtils_fwd_decl(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_META_COMPONENT(world, Struct_w_fwd_decl);
+    
+    Struct_w_fwd_decl v1 = {NULL};
+    Struct_w_fwd_decl v2 = {&v1}; /* Ensure fwd decl can be used without warnings */
+    (void)v2;
+
+    test_assert(true);
 
     ecs_fini(world);
 }
