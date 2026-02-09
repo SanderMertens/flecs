@@ -614,6 +614,8 @@
                 "on_set_observer_set",
                 "on_set_observer_modified",
                 "on_set_observer_insert",
+                "on_set_observer_w_override",
+                "on_set_observer_w_child_override",
                 "on_remove_observer_remove",
                 "on_remove_observer_clear",
                 "on_remove_observer_delete",
