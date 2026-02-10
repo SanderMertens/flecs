@@ -3380,7 +3380,7 @@ void Sparse_on_set_observer_w_child_override(void) {
     ecs_observer(world, {
         .query.terms = {{ .id = ecs_id(Position) }},
         .events = {EcsOnSet},
-        .callback = Position_set_observer,
+        .callback = probe_iter,
         .ctx = &ctx
     });
 
@@ -3403,6 +3403,56 @@ void Sparse_on_set_observer_w_child_override(void) {
     test_bool(false, ecs_children_next(&it));
 
     test_int(ctx.invoked, 1);
+
+    ecs_fini(world);
+}
+
+void Sparse_on_set_observer_w_n_children_override(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+    if (!fragment) ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+
+    Probe ctx = {0};
+
+    ecs_observer(world, {
+        .query.terms = {{ .id = ecs_id(Position) }},
+        .events = {EcsOnSet},
+        .callback = probe_iter,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t pc1 = ecs_new_w_pair(world, EcsChildOf, p);
+    ecs_set(world, pc1, Position, {10, 20});
+    ecs_entity_t pc2 = ecs_new_w_pair(world, EcsChildOf, p);
+    ecs_set(world, pc2, Position, {30, 40});
+
+    test_int(ctx.invoked, 0);
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    ecs_iter_t it = ecs_children(world, i);
+    test_bool(true, ecs_children_next(&it));
+    test_int(2, it.count);
+
+    {
+        const Position *ptr = ecs_get(world, it.entities[0], Position);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 10);
+        test_int(ptr->y, 20);
+    }
+    {
+        const Position *ptr = ecs_get(world, it.entities[1], Position);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 30);
+        test_int(ptr->y, 40);
+    }
+
+    test_bool(false, ecs_children_next(&it));
+
+    test_int(ctx.invoked, 2);
 
     ecs_fini(world);
 }
