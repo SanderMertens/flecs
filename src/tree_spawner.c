@@ -307,7 +307,8 @@ void flecs_spawner_instantiate(
         ecs_assert(spawn_r != NULL, ECS_INTERNAL_ERROR, NULL);
 
         if (spawn_r->row & EcsEntityHasDontFragment) {
-            flecs_instantiate_dont_fragment(world, spawn_child->child, entity);
+            flecs_instantiate_dont_fragment(
+                world, spawn_child->child, entity);
         }
     }
 

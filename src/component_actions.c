@@ -597,6 +597,7 @@ void flecs_notify_on_set(
 
     ecs_component_record_t *cr = flecs_components_get(world, id);
     ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(cr->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
     bool dont_fragment = (cr->flags & EcsIdDontFragment) != 0;
 
     if (invoke_hook) {        

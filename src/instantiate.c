@@ -138,30 +138,33 @@ void flecs_instantiate_children_copy_sparse(
     const ecs_entity_t *instance_children,
     int32_t row_offset)
 {
-    /* Copy sparse component data for children from prefab to instances.
-     * Sparse components are not stored in regular table columns and therefore
-     * can't be copied through bulk_new component_data. */
+    ecs_table_t *base_child_table = base_child_range->table;
+    if (!(base_child_table->flags & (EcsTableHasDontFragment|EcsTableHasSparse))) {
+        return;
+    }
+
     for (int32_t i = 0; i < sparse_count; i ++) {
         ecs_id_t id = sparse_components[i];
         ecs_component_record_t *cr = flecs_components_get(world, id);
         ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        const ecs_type_info_t *ti = cr->type_info;
-        if (!ti) {
-            continue;
-        }
-
         for (int32_t j = 0; j < base_child_range->count; j ++) {
             ecs_entity_t child = base_children[j + base_child_range->offset];
+            ecs_entity_t instance_child = instance_children[j];
+
+            const ecs_type_info_t *ti = cr->type_info;
+            if (!ti) {
+                continue;
+            }
 
             void *src_ptr = flecs_component_sparse_get(
-                world, cr, base_child_range->table, child);
+                world, cr, base_child_table, child);
             if (!src_ptr) {
                 continue;
             }
 
             void *dst_ptr = flecs_component_sparse_get(
-                world, cr, instance_table, instance_children[j]);
+                world, cr, instance_table, instance_child);
             ecs_assert(dst_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
 
             if (ti->hooks.copy) {
@@ -421,6 +424,12 @@ void flecs_instantiate_dont_fragment(
                     } else {
                         ecs_os_memcpy(ptr, base_ptr, ti->size);
                     }
+                }
+
+                if (ti) {
+                    flecs_notify_on_set(
+                        world, r->table, ECS_RECORD_TO_ROW(r->row), 
+                        cur->id, true);
                 }
             }
         }

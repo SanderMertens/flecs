@@ -617,6 +617,8 @@
                 "on_set_observer_w_override",
                 "on_set_observer_w_child_override",
                 "on_set_observer_w_n_children_override",
+                "on_set_observer_w_child_override_parent_hierarchy",
+                "on_set_observer_w_n_children_override_parent_hierarchy",
                 "on_remove_observer_remove",
                 "on_remove_observer_clear",
                 "on_remove_observer_delete",
