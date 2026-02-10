@@ -3201,6 +3201,14 @@ void flecs_instantiate_dont_fragment(
     ecs_entity_t base,
     ecs_entity_t instance);
 
+void flecs_instantiate_sparse(
+    ecs_world_t *world,
+    const ecs_table_range_t *base_child_range,
+    const ecs_entity_t *base_children,
+    ecs_table_t *instance_table,
+    const ecs_entity_t *instance_children,
+    int32_t row_offset);
+
 #endif
 
 /**
@@ -7599,6 +7607,7 @@ void flecs_notify_on_set(
 
     ecs_component_record_t *cr = flecs_components_get(world, id);
     ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(cr->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
     bool dont_fragment = (cr->flags & EcsIdDontFragment) != 0;
 
     if (invoke_hook) {        
@@ -12850,6 +12859,58 @@ int32_t flecs_child_type_insert(
     return i;
 }
 
+void flecs_instantiate_sparse(
+    ecs_world_t *world,
+    const ecs_table_range_t *base_child_range,
+    const ecs_entity_t *base_children,
+    ecs_table_t *instance_table,
+    const ecs_entity_t *instance_children,
+    int32_t row_offset)
+{
+    ecs_table_t *base_child_table = base_child_range->table;
+    if (!(base_child_table->flags & EcsTableHasSparse)) {
+        return;
+    }
+
+    ecs_table_record_t *trs = base_child_table->_->records;
+    int32_t i, count = base_child_table->type.count;
+    for (i = 0; i < count; i ++) {
+        ecs_table_record_t *tr = &trs[i];
+        ecs_component_record_t *cr = tr->hdr.cr;
+
+        if (!(cr->flags & EcsIdSparse)) {
+            continue;
+        }
+
+        const ecs_type_info_t *ti = cr->type_info;
+        if (!ti) {
+            continue;
+        }
+
+        ecs_id_t id = base_child_table->type.array[i];
+
+        for (int32_t j = 0; j < base_child_range->count; j ++) {
+            ecs_entity_t child = base_children[j + base_child_range->offset];
+            ecs_entity_t instance_child = instance_children[j];
+
+            void *src_ptr = flecs_sparse_get(cr->sparse, ti->size, child);
+            ecs_assert(src_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+            void *dst_ptr = flecs_sparse_get(cr->sparse, ti->size, instance_child);
+            ecs_assert(dst_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+            if (ti->hooks.copy) {
+                ti->hooks.copy(dst_ptr, src_ptr, 1, ti);
+            } else {
+                ecs_os_memcpy(dst_ptr, src_ptr, ti->size);
+            }
+
+            flecs_notify_on_set(
+                world, instance_table, row_offset + j, id, true);
+        }
+    }
+}
+
 static
 void flecs_instantiate_children(
     ecs_world_t *world,
@@ -13032,6 +13093,9 @@ void flecs_instantiate_children(
     const ecs_entity_t *i_children = flecs_bulk_new(world, i_table, child_ids,
         &diff.added, child_range.count, component_data, false, &child_row, &diff);
 
+    flecs_instantiate_sparse(
+        world, &child_range, children, i_table, i_children, child_row);
+
     /* If children are slots, add slot relationships to parent */
     if (slot_of) {
         for (j = 0; j < child_range.count; j ++) {
@@ -13083,6 +13147,12 @@ void flecs_instantiate_dont_fragment(
                     } else {
                         ecs_os_memcpy(ptr, base_ptr, ti->size);
                     }
+                }
+
+                if (ti) {
+                    flecs_notify_on_set(
+                        world, r->table, ECS_RECORD_TO_ROW(r->row), 
+                        cur->id, true);
                 }
             }
         }
@@ -13156,6 +13226,9 @@ void flecs_instantiate(
                 if (ts) {
                     flecs_spawner_instantiate(world, ts, instance);
                 }
+
+                ecs_os_perf_trace_pop("flecs.instantiate");
+                return;
             }
 
             ecs_vec_t *children_vec = &cr->pair->ordered_children;
@@ -20791,12 +20864,21 @@ void flecs_spawner_instantiate(
 
         flecs_add_non_fragmenting_child_w_records(world, parent, entity, cr, r);
 
+        ecs_entity_t base_child = spawn_child->child;
         ecs_record_t *spawn_r = flecs_entities_get_any(
             world, spawn_child->child);
         ecs_assert(spawn_r != NULL, ECS_INTERNAL_ERROR, NULL);
 
+        ecs_table_range_t base_range = {
+            .table = spawn_r->table,
+            .offset = 0,
+            .count = 1 };
+        flecs_instantiate_sparse(world, &base_range, &base_child, 
+            r->table, &entity, ECS_RECORD_TO_ROW(r->row));
+
         if (spawn_r->row & EcsEntityHasDontFragment) {
-            flecs_instantiate_dont_fragment(world, spawn_child->child, entity);
+            flecs_instantiate_dont_fragment(
+                world, spawn_child->child, entity);
         }
     }
 
