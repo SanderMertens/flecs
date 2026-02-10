@@ -980,8 +980,13 @@ void flecs_cmd_batch_for_entity(
                     void *ptr = cmd->is._1.value;
                     const ecs_type_info_t *ti = dst.ti;
                     if (ti->hooks.on_replace) {
-                        flecs_invoke_replace_hook(world, r->table, entity, 
+                        ecs_table_t *prev_table = r->table;
+                        flecs_invoke_replace_hook(world, prev_table, entity, 
                             cmd->id, dst.ptr, ptr, ti);
+                        if (prev_table != r->table) {
+                            dst = flecs_get_mut(
+                                world, entity, cmd->id, r, cmd->is._1.size);
+                        }
                     }
 
                     ecs_move_t move = ti->hooks.move;

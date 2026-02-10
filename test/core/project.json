@@ -914,7 +914,9 @@
                 "prefab_instance_w_dont_fragment_tag",
                 "prefab_instance_w_dont_fragment_component",
                 "prefab_instance_w_inherit_dont_fragment_component",
-                "instantiate_recycled_prefab"
+                "instantiate_recycled_prefab",
+                "defer_set_parent_batched",
+                "defer_new_w_parent_batched"
             ]
         }, {
             "id": "Hierarchies",
