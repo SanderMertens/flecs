@@ -4584,3 +4584,45 @@ void NonFragmentingChildOf_instantiate_recycled_prefab(void) {
 
     ecs_fini(world);
 }
+
+void NonFragmentingChildOf_defer_set_parent_batched(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_entity_t e3 = ecs_new(world);
+
+    ecs_defer_begin(world);
+    ecs_add(world, e2, Foo);
+    ecs_set(world, e2, EcsParent, {e1});
+    ecs_set(world, e3, EcsParent, {e2});
+    ecs_defer_end(world);
+
+    test_assert(ecs_get_parent(world, e2) == e1);
+    test_assert(ecs_get_parent(world, e3) == e2);
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_defer_new_w_parent_batched(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e3 = ecs_new(world);
+
+    ecs_defer_begin(world);
+    ecs_entity_t e2 = ecs_new_w_parent(world, e1, NULL);
+    ecs_add(world, e2, Foo);
+    ecs_set(world, e2, EcsParent, {e1});
+    ecs_set(world, e3, EcsParent, {e2});
+    ecs_defer_end(world);
+
+    test_assert(ecs_get_parent(world, e2) == e1);
+    test_assert(ecs_get_parent(world, e3) == e2);
+
+    ecs_fini(world);
+}

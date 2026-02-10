@@ -883,6 +883,8 @@ void NonFragmentingChildOf_prefab_instance_w_dont_fragment_tag(void);
 void NonFragmentingChildOf_prefab_instance_w_dont_fragment_component(void);
 void NonFragmentingChildOf_prefab_instance_w_inherit_dont_fragment_component(void);
 void NonFragmentingChildOf_instantiate_recycled_prefab(void);
+void NonFragmentingChildOf_defer_set_parent_batched(void);
+void NonFragmentingChildOf_defer_new_w_parent_batched(void);
 
 // Testsuite 'Hierarchies'
 void Hierarchies_setup(void);
@@ -6567,6 +6569,14 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "instantiate_recycled_prefab",
         NonFragmentingChildOf_instantiate_recycled_prefab
+    },
+    {
+        "defer_set_parent_batched",
+        NonFragmentingChildOf_defer_set_parent_batched
+    },
+    {
+        "defer_new_w_parent_batched",
+        NonFragmentingChildOf_defer_new_w_parent_batched
     }
 };
 
@@ -15455,7 +15465,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NULL,
         NULL,
-        177,
+        179,
         NonFragmentingChildOf_testcases
     },
     {
