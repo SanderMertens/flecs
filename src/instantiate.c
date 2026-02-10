@@ -127,11 +127,8 @@ int32_t flecs_child_type_insert(
     return i;
 }
 
-static
-void flecs_instantiate_children_copy_sparse(
+void flecs_instantiate_sparse(
     ecs_world_t *world,
-    const ecs_id_t *sparse_components,
-    int32_t sparse_count,
     const ecs_table_range_t *base_child_range,
     const ecs_entity_t *base_children,
     ecs_table_t *instance_table,
@@ -139,32 +136,35 @@ void flecs_instantiate_children_copy_sparse(
     int32_t row_offset)
 {
     ecs_table_t *base_child_table = base_child_range->table;
-    if (!(base_child_table->flags & (EcsTableHasDontFragment|EcsTableHasSparse))) {
+    if (!(base_child_table->flags & EcsTableHasSparse)) {
         return;
     }
 
-    for (int32_t i = 0; i < sparse_count; i ++) {
-        ecs_id_t id = sparse_components[i];
-        ecs_component_record_t *cr = flecs_components_get(world, id);
-        ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_table_record_t *trs = base_child_table->_->records;
+    int32_t i, count = base_child_table->type.count;
+    for (i = 0; i < count; i ++) {
+        ecs_table_record_t *tr = &trs[i];
+        ecs_component_record_t *cr = tr->hdr.cr;
+
+        if (!(cr->flags & EcsIdSparse)) {
+            continue;
+        }
+
+        const ecs_type_info_t *ti = cr->type_info;
+        if (!ti) {
+            continue;
+        }
+
+        ecs_id_t id = base_child_table->type.array[i];
 
         for (int32_t j = 0; j < base_child_range->count; j ++) {
             ecs_entity_t child = base_children[j + base_child_range->offset];
             ecs_entity_t instance_child = instance_children[j];
 
-            const ecs_type_info_t *ti = cr->type_info;
-            if (!ti) {
-                continue;
-            }
+            void *src_ptr = flecs_sparse_get(cr->sparse, ti->size, child);
+            ecs_assert(src_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
 
-            void *src_ptr = flecs_component_sparse_get(
-                world, cr, base_child_table, child);
-            if (!src_ptr) {
-                continue;
-            }
-
-            void *dst_ptr = flecs_component_sparse_get(
-                world, cr, instance_table, instance_child);
+            void *dst_ptr = flecs_sparse_get(cr->sparse, ti->size, instance_child);
             ecs_assert(dst_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
 
             if (ti->hooks.copy) {
@@ -209,8 +209,6 @@ void flecs_instantiate_children(
     ecs_table_diff_t diff = { .added = {0}};
     diff.added.array = ecs_os_alloca_n(ecs_entity_t, type_count + 1);
     void **component_data = ecs_os_alloca_n(void*, type_count + 1);
-    ecs_id_t *sparse_data_ids = ecs_os_alloca_n(ecs_id_t, type_count + 1);
-    int32_t sparse_data_count = 0;
 
     /* Copy in component identifiers. Find the base index in the component
      * array, since we'll need this to replace the base with the instance id */
@@ -266,12 +264,6 @@ void flecs_instantiate_children(
             component_data[diff.added.count] = ecs_table_get_column(
                 child_table, column, child_range.offset);
         } else {
-            ecs_table_record_t *tr = &child_table->_->records[i];
-            ecs_component_record_t *cr = tr->hdr.cr;
-            if (cr && (cr->flags & EcsIdSparse) && cr->type_info) {
-                sparse_data_ids[sparse_data_count] = id;
-                sparse_data_count ++;
-            }
             component_data[diff.added.count] = NULL;
         }
 
@@ -369,9 +361,8 @@ void flecs_instantiate_children(
     const ecs_entity_t *i_children = flecs_bulk_new(world, i_table, child_ids,
         &diff.added, child_range.count, component_data, false, &child_row, &diff);
 
-    flecs_instantiate_children_copy_sparse(world, sparse_data_ids, 
-        sparse_data_count, &child_range, children, i_table, i_children, 
-        child_row);
+    flecs_instantiate_sparse(
+        world, &child_range, children, i_table, i_children, child_row);
 
     /* If children are slots, add slot relationships to parent */
     if (slot_of) {
@@ -503,6 +494,9 @@ void flecs_instantiate(
                 if (ts) {
                     flecs_spawner_instantiate(world, ts, instance);
                 }
+
+                ecs_os_perf_trace_pop("flecs.instantiate");
+                return;
             }
 
             ecs_vec_t *children_vec = &cr->pair->ordered_children;

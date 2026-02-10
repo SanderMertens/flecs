@@ -302,9 +302,17 @@ void flecs_spawner_instantiate(
 
         flecs_add_non_fragmenting_child_w_records(world, parent, entity, cr, r);
 
+        ecs_entity_t base_child = spawn_child->child;
         ecs_record_t *spawn_r = flecs_entities_get_any(
             world, spawn_child->child);
         ecs_assert(spawn_r != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        ecs_table_range_t base_range = {
+            .table = spawn_r->table,
+            .offset = 0,
+            .count = 1 };
+        flecs_instantiate_sparse(world, &base_range, &base_child, 
+            r->table, &entity, ECS_RECORD_TO_ROW(r->row));
 
         if (spawn_r->row & EcsEntityHasDontFragment) {
             flecs_instantiate_dont_fragment(
