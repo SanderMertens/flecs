@@ -33261,7 +33261,7 @@ struct query_base {
         return *this; 
     }
 
-    flecs::entity entity() {
+    flecs::entity entity() const {
         return flecs::entity(query_->world, query_->entity);
     }
 
