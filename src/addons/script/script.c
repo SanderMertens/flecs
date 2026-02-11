@@ -383,6 +383,25 @@ int EcsScript_serialize(
         ser->member(ser, "ast");
         ser->value(ser, ecs_id(ecs_string_t), &nullString);
     }
+
+    ser->member(ser, "changed");
+
+    if (!data->filename) {
+        bool changed = false;
+        ser->value(ser, ecs_id(ecs_bool_t), &changed);
+    } else {
+        bool changed;
+        char *file_code = flecs_load_from_file(data->filename);
+        if (!file_code) {
+            changed = data->code[0] != '\0';
+        } else {
+            changed = ecs_os_strcmp(data->code, file_code) != 0;
+            ecs_os_free(file_code);
+        }
+
+        ser->value(ser, ecs_id(ecs_bool_t), &changed);
+    }
+
     return 0;
 }
 
@@ -414,7 +433,8 @@ void FlecsScriptImport(
             { .name = "filename", .type = ecs_id(ecs_string_t) },
             { .name = "code", .type = ecs_id(ecs_string_t) },
             { .name = "error", .type = ecs_id(ecs_string_t) },
-            { .name = "ast", .type = ecs_id(ecs_string_t) }
+            { .name = "ast", .type = ecs_id(ecs_string_t) },
+            { .name = "changed", .type = ecs_id(ecs_bool_t) }
         }
     });
 

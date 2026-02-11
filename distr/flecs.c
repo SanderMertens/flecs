@@ -28660,10 +28660,6 @@ bool flecs_rest_script(
         script = ecs_entity(world, { .name = path });
     }
 
-    /* If true, check if file changed */
-    bool check_file = false;
-    flecs_rest_bool_param(req, "check_file", &check_file);
-
     /* If true, save code to file */
     bool save_file = false;
     flecs_rest_bool_param(req, "save_file", &save_file);
@@ -28680,8 +28676,6 @@ bool flecs_rest_script(
         code = "";
     }
 
-    ecs_strbuf_appendlit(&reply->body, "{");
-
     const EcsScript *s = ecs_get(world, script, EcsScript);
 
     if (s && s->filename && save_file) {
@@ -28689,24 +28683,6 @@ bool flecs_rest_script(
         ecs_os_fopen(&f, s->filename, "w");
         fwrite(code, strlen(code), 1, f);
         fclose(f);
-    }
-
-    if (s && check_file) {
-        ecs_strbuf_appendlit(&reply->body, "\"changed\": ");
-        if (s->filename) {
-            bool file_is_same;
-            char *file_code = flecs_load_from_file(s->filename);
-            if (!file_code) {
-                file_is_same = code[0] == '\0';
-            } else {
-                file_is_same = !ecs_os_strcmp(code, file_code);
-                ecs_os_free(file_code);
-            }
-
-            ecs_strbuf_appendstr(&reply->body, file_is_same ? "false" : "true");
-        } else {
-            ecs_strbuf_appendstr(&reply->body, "false");
-        }
     }
 
     /* Update script code */
@@ -28718,22 +28694,17 @@ bool flecs_rest_script(
     /* Refetch in case it moved around */
     s = ecs_get(world, script, EcsScript);
 
+    if (s) {
+        ecs_ptr_to_json_buf(world, ecs_id(EcsScript), s, &reply->body);
+    } else {
+        ecs_strbuf_appendlit(&reply->body, "{}");
+    }
+
     if (!s || s->error) {
-        if (check_file) {
-            ecs_strbuf_appendlit(&reply->body, ", ");
-        }
-
-        char *escaped_err = flecs_astresc('"', s->error);
-        ecs_strbuf_append(&reply->body, 
-            "\"error\": \"%s\"", escaped_err);
-        ecs_os_free(escaped_err);
-
         if (!try) {
             reply->code = 400;
         }
     }
-
-    ecs_strbuf_appendlit(&reply->body, "}");
 
     return true;
 #else
@@ -67194,6 +67165,25 @@ int EcsScript_serialize(
         ser->member(ser, "ast");
         ser->value(ser, ecs_id(ecs_string_t), &nullString);
     }
+
+    ser->member(ser, "changed");
+
+    if (!data->filename) {
+        bool changed = false;
+        ser->value(ser, ecs_id(ecs_bool_t), &changed);
+    } else {
+        bool changed;
+        char *file_code = flecs_load_from_file(data->filename);
+        if (!file_code) {
+            changed = data->code[0] != '\0';
+        } else {
+            changed = ecs_os_strcmp(data->code, file_code) != 0;
+            ecs_os_free(file_code);
+        }
+
+        ser->value(ser, ecs_id(ecs_bool_t), &changed);
+    }
+
     return 0;
 }
 
@@ -67225,7 +67215,8 @@ void FlecsScriptImport(
             { .name = "filename", .type = ecs_id(ecs_string_t) },
             { .name = "code", .type = ecs_id(ecs_string_t) },
             { .name = "error", .type = ecs_id(ecs_string_t) },
-            { .name = "ast", .type = ecs_id(ecs_string_t) }
+            { .name = "ast", .type = ecs_id(ecs_string_t) },
+            { .name = "changed", .type = ecs_id(ecs_bool_t) }
         }
     });
 
