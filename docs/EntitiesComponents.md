@@ -1174,7 +1174,7 @@ e.add::<flecs::Disabled>();
 </div>
 
 ## Components
-A component is something that is added to an entity. Components can simply tag an entity (this entity is an `Npc`), attach data to an entity (this entity is at `Position` `{10, 20}`) and create relationships between entities (bob `Likes` alice) that may also contain data (bob `Eats` `{10}` apples).
+A component is something that is added to an entity. Components can simply tag an entity ("this entity is an Npc"), attach data to an entity ("this entity is at Position {10, 20}") and create relationships between entities ("bob Likes alice") that may also contain data ("bob Eats {10} apples").
 
 To disambiguate between the different kinds of components in Flecs, they are named separately in Flecs:
 
