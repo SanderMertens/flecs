@@ -701,7 +701,7 @@ printf("%s\n", name); // Child
 
 // Returns path, result must be freed
 char *path = ecs_get_path(world, e);
-printf("%s\n", path) // Parent.Child
+printf("%s\n", path); // Parent.Child
 ecs_os_free(path);
 ```
 
@@ -1174,7 +1174,7 @@ e.add::<flecs::Disabled>();
 </div>
 
 ## Components
-A component is something that is added to an entity. Components can simply tag an entity ("this entity is an `Npc`"), attach data to an entity ("this entity is at `Position` `{10, 20}`") and create relationships between entities ("bob `Likes` alice") that may also contain data ("bob `Eats` `{10}` apples").
+A component is something that is added to an entity. Components can simply tag an entity ("this entity is an Npc"), attach data to an entity ("this entity is at Position {10, 20}") and create relationships between entities ("bob Likes alice") that may also contain data ("bob Eats {10} apples").
 
 To disambiguate between the different kinds of components in Flecs, they are named separately in Flecs:
 
@@ -1202,7 +1202,7 @@ The following table provides the base set of operations that Flecs offers for co
 | `emplace`   | Returns a mutable reference to the component. If the entity doesn't have the component, `emplace` returns a reference to unconstructed memory. This enables adding components that are not default constructible. |
 | `modified`  | Emits a modified event for a component. This ensures that `OnSet` observers and `on_set` hooks are invoked, and updates change detection administration. |
 | `set`       | Sets the value of a component. `set` behaves as a combination of `ensure` and `modified`. `set` does not take ownership of the provided value. |
-| `assign`    | Sets the value of an existing component. `assign` behaves as a combination of `get_mut` and `modified`. `set` does not take ownership of the provided value. |
+| `assign`    | Sets the value of an existing component. `assign` behaves as a combination of `get_mut` and `modified`. `assign` does not take ownership of the provided value. |
 
 The following component lifecycle diagram shows how the different operations mutate the storage and cause hooks and observers to be invoked:
 
@@ -1966,7 +1966,7 @@ ECS_COMPONENT(world, TimeOfDay);
 // Set singleton
 ecs_singleton_set(world, TimeOfDay, { 0.5 });
 
-// Unregister the component
+// Get singleton
 const TimeOfDay *t = ecs_singleton_get(world, TimeOfDay);
 ```
 
