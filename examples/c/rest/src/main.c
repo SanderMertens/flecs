@@ -132,11 +132,11 @@ bool custom_rest_get_sources(
     const ecs_http_request_t* req,
     ecs_http_reply_t *reply)
 {
+    (void)world;
+    /*
     char *path = &req->path[7];
     ecs_dbg_2("rest: request entity '%s'", path);
 
-    (void)world;
-    /*
     ecs_entity_t e = ecs_lookup_path_w_sep(
         world, 0, path, "/", NULL, false);
     if (!e) {
