@@ -30111,7 +30111,6 @@ bool flecs_rest_get_commands_request(
     return true;
 }
 
-static
 bool flecs_rest_reply(
     const ecs_http_request_t* req,
     ecs_http_reply_t *reply,
@@ -30213,7 +30212,9 @@ ecs_http_server_t* ecs_rest_server_init(
     if (desc) {
         private_desc = *desc;
     }
-    private_desc.callback = flecs_rest_reply;
+    if ( !private_desc.callback) {
+        private_desc.callback = flecs_rest_reply;
+    }
     private_desc.ctx = srv_ctx;
 
     ecs_http_server_t *srv = ecs_http_server_init(&private_desc);
