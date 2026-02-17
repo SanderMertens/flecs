@@ -192,6 +192,10 @@ void flecs_on_replace_parent(ecs_iter_t *it) {
         ecs_entity_t e = it->entities[i];
         ecs_entity_t old_parent = old[i].value;
         ecs_entity_t new_parent = new[i].value;
+
+        flecs_journal_begin(world, EcsJournalSetParent, e, &(ecs_type_t){
+            .count = 1, .array = &new_parent
+        }, NULL);
         
         flecs_remove_non_fragmenting_child(world, old_parent, e);
 
@@ -225,6 +229,8 @@ void flecs_on_replace_parent(ecs_iter_t *it) {
                 &(ecs_type_t){ .count = 1, .array = &added },
                 &(ecs_type_t) { .count = 1, .array = &removed });
         }
+
+        flecs_journal_end();
     }
 }
 
