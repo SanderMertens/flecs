@@ -916,7 +916,8 @@
                 "prefab_instance_w_inherit_dont_fragment_component",
                 "instantiate_recycled_prefab",
                 "defer_set_parent_batched",
-                "defer_new_w_parent_batched"
+                "defer_new_w_parent_batched",
+                "defer_set_after_remove_instance"
             ]
         }, {
             "id": "Hierarchies",
@@ -3037,7 +3038,11 @@
                 "on_replace_w_set_batched",
                 "on_replace_w_set_batched_twice",
                 "on_replace_w_set_batched_existing",
-                "on_replace_w_set_batched_existing_twice"
+                "on_replace_w_set_batched_existing_twice",
+                "set_existing_after_remove",
+                "set_existing_after_remove_move_table",
+                "set_existing_after_remove_w_is_a",
+                "set_existing_after_remove_w_is_a_move_table"
             ]
         }, {
             "id": "SingleThreadStaging",
