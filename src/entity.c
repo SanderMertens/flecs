@@ -2872,7 +2872,9 @@ ecs_entity_t ecs_get_parent(
         EcsParent *p = ecs_table_get_column(
             table, column - 1, ECS_RECORD_TO_ROW(r->row));
         ecs_assert(ecs_is_valid(world, p->value), ECS_INTERNAL_ERROR, 
-            "Parent component points to invalid parent");
+            "Parent component points to invalid parent %s for child %s",
+                flecs_errstr(ecs_id_str(world, p->value)), 
+                flecs_errstr_2(ecs_get_path(world, entity)));
         return p->value;
     }
 
