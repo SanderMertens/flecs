@@ -10724,7 +10724,13 @@ ecs_entity_t ecs_get_target(
         goto look_in_base;
     }
 
-    return ecs_pair_second(world, table->type.array[tr->index + index]);
+    ecs_id_t pair_id = table->type.array[tr->index + index];
+    if (!ECS_IS_VALUE_PAIR(pair_id)) {
+        return flecs_entities_get_alive(world, pair_id);
+    } else {
+        return ECS_PAIR_SECOND(pair_id);
+    }
+
 look_in_base:
     if (table->flags & EcsTableHasIsA) {
         const ecs_table_record_t *tr_isa = flecs_component_get_table(

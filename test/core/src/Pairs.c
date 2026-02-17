@@ -3410,3 +3410,18 @@ void Pairs_has_value_pair_any(void) {
 
     ecs_fini(world);
 }
+
+void Pairs_target_w_value_pair(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Number);
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_add_id(world, e, ecs_value_pair(Number, 10));
+
+    uint64_t v = ecs_get_target(world, e, Number, 0);
+    test_int(v, 10);
+
+    ecs_fini(world);
+}
