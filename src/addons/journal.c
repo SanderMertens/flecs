@@ -32,7 +32,14 @@ char* flecs_journal_idstr(
     ecs_world_t *world,
     ecs_id_t id)
 {
-    if (ECS_IS_PAIR(id)) {
+    if (ECS_IS_VALUE_PAIR(id)) {
+        char *first_path = flecs_journal_entitystr(world, 
+            ecs_pair_first(world, id));
+        char *result = flecs_asprintf("#[cyan]ecs_value_pair#[normal](%s, %u)",
+            first_path, ECS_PAIR_SECOND(id));
+        ecs_os_free(first_path);
+        return result;
+    } else if (ECS_IS_PAIR(id)) {
         char *first_path = flecs_journal_entitystr(world, 
             ecs_pair_first(world, id));
         char *second_path = flecs_journal_entitystr(world, 
@@ -81,44 +88,55 @@ void flecs_journal_begin(
         ecs_print(4, "#[magenta]#define #[normal]_var_%s", var_id);
         ecs_print(4, "#[green]ecs_entity_t %s;", var_id);
         ecs_print(4, "#[magenta]#endif");
-        ecs_print(4, "%s = #[cyan]ecs_new_id#[reset](world); "
+        ecs_print(4, "%s = #[cyan]ecs_new#[reset](world); "
             "#[grey] // %s = new()", var_id, path);
     }
-    if (add) {
-        for (int i = 0; i < add->count; i ++) {
-            char *jidstr = flecs_journal_idstr(world, add->array[i]);
-            char *idstr = ecs_id_str(world, add->array[i]);
-            ecs_print(4, "#[cyan]ecs_add_id#[reset](world, %s, %s); "
-                "#[grey] // add(%s, %s)", var_id, jidstr, 
-                    path, idstr);
-            ecs_os_free(idstr);
-            ecs_os_free(jidstr);
+    if (kind == EcsJournalSetParent) {
+        ecs_entity_t parent = add->array[0];
+        char *parentstr = flecs_journal_entitystr(world, parent);
+        ecs_print(4, "#[cyan]ecs_set#[reset](world, %s, EcsParent, {%s}); "
+            "#[grey] // set(%s, EcsParent, %s)", var_id, parentstr, 
+                path, parentstr);
+        ecs_os_free(parentstr);
+    } else {
+        if (add) {
+            for (int i = 0; i < add->count; i ++) {
+                char *jidstr = flecs_journal_idstr(world, add->array[i]);
+                char *idstr = ecs_id_str(world, add->array[i]);
+                ecs_print(4, "#[cyan]ecs_add_id#[reset](world, %s, %s); "
+                    "#[grey] // add(%s, %s)", var_id, jidstr, 
+                        path, idstr);
+                ecs_os_free(idstr);
+                ecs_os_free(jidstr);
+            }
+        }
+        if (remove) {
+            for (int i = 0; i < remove->count; i ++) {
+                char *jidstr = flecs_journal_idstr(world, remove->array[i]);
+                char *idstr = ecs_id_str(world, remove->array[i]);
+                ecs_print(4, "#[cyan]ecs_remove_id#[reset](world, %s, %s); "
+                    "#[grey] // remove(%s, %s)", var_id, jidstr, 
+                        path, idstr);
+                ecs_os_free(idstr);
+                ecs_os_free(jidstr);
+            }
+        }
+
+        if (kind == EcsJournalClear) {
+            ecs_print(4, "#[cyan]ecs_clear#[reset](world, %s); "
+                "#[grey] // clear(%s)", var_id, path);
+        } else if (kind == EcsJournalDelete) {
+            ecs_print(4, "#[cyan]ecs_delete#[reset](world, %s); "
+                "#[grey] // delete(%s)", var_id, path);
+        } else if (kind == EcsJournalDeleteWith) {
+            ecs_print(4, "#[cyan]ecs_delete_with#[reset](world, %s); "
+                "#[grey] // delete_with(%s)", var_id, path);
+        } else if (kind == EcsJournalRemoveAll) {
+            ecs_print(4, "#[cyan]ecs_remove_all#[reset](world, %s); "
+                "#[grey] // remove_all(%s)", var_id, path);
         }
     }
-    if (remove) {
-        for (int i = 0; i < remove->count; i ++) {
-            char *jidstr = flecs_journal_idstr(world, remove->array[i]);
-            char *idstr = ecs_id_str(world, remove->array[i]);
-            ecs_print(4, "#[cyan]ecs_remove_id#[reset](world, %s, %s); "
-                "#[grey] // remove(%s, %s)", var_id, jidstr, 
-                    path, idstr);
-            ecs_os_free(idstr);
-            ecs_os_free(jidstr);
-        }
-    }
-    if (kind == EcsJournalClear) {
-        ecs_print(4, "#[cyan]ecs_clear#[reset](world, %s); "
-            "#[grey] // clear(%s)", var_id, path);
-    } else if (kind == EcsJournalDelete) {
-        ecs_print(4, "#[cyan]ecs_delete#[reset](world, %s); "
-            "#[grey] // delete(%s)", var_id, path);
-    } else if (kind == EcsJournalDeleteWith) {
-        ecs_print(4, "#[cyan]ecs_delete_with#[reset](world, %s); "
-            "#[grey] // delete_with(%s)", var_id, path);
-    } else if (kind == EcsJournalRemoveAll) {
-        ecs_print(4, "#[cyan]ecs_remove_all#[reset](world, %s); "
-            "#[grey] // remove_all(%s)", var_id, path);
-    }
+
     ecs_os_free(var_id);
     ecs_os_free(path);
     ecs_log_push();
