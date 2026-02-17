@@ -4626,3 +4626,27 @@ void NonFragmentingChildOf_defer_new_w_parent_batched(void) {
 
     ecs_fini(world);
 }
+
+void NonFragmentingChildOf_defer_set_after_remove_instance(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+
+    ecs_entity_t a = ecs_new(world);
+    ecs_entity_t b = ecs_new(world);
+
+    ecs_add_pair(world, b, EcsIsA, p);
+
+    ecs_set(world, b, EcsParent, {a});
+    test_assert(ecs_get_parent(world, b) == a);
+
+    ecs_defer_begin(world);
+        ecs_remove(world, b, EcsParent);
+        ecs_set(world, b, EcsParent, {a});
+    ecs_defer_end(world);
+
+    test_assert(ecs_has_pair(world, b, EcsIsA, p));
+    test_assert(ecs_get_parent(world, b) == a);
+
+    ecs_fini(world);
+}

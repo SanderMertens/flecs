@@ -885,6 +885,7 @@ void NonFragmentingChildOf_prefab_instance_w_inherit_dont_fragment_component(voi
 void NonFragmentingChildOf_instantiate_recycled_prefab(void);
 void NonFragmentingChildOf_defer_set_parent_batched(void);
 void NonFragmentingChildOf_defer_new_w_parent_batched(void);
+void NonFragmentingChildOf_defer_set_after_remove_instance(void);
 
 // Testsuite 'Hierarchies'
 void Hierarchies_setup(void);
@@ -2949,6 +2950,10 @@ void Commands_on_replace_w_set_batched(void);
 void Commands_on_replace_w_set_batched_twice(void);
 void Commands_on_replace_w_set_batched_existing(void);
 void Commands_on_replace_w_set_batched_existing_twice(void);
+void Commands_set_existing_after_remove(void);
+void Commands_set_existing_after_remove_move_table(void);
+void Commands_set_existing_after_remove_w_is_a(void);
+void Commands_set_existing_after_remove_w_is_a_move_table(void);
 
 // Testsuite 'SingleThreadStaging'
 void SingleThreadStaging_setup(void);
@@ -6577,6 +6582,10 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "defer_new_w_parent_batched",
         NonFragmentingChildOf_defer_new_w_parent_batched
+    },
+    {
+        "defer_set_after_remove_instance",
+        NonFragmentingChildOf_defer_set_after_remove_instance
     }
 };
 
@@ -14653,6 +14662,22 @@ bake_test_case Commands_testcases[] = {
     {
         "on_replace_w_set_batched_existing_twice",
         Commands_on_replace_w_set_batched_existing_twice
+    },
+    {
+        "set_existing_after_remove",
+        Commands_set_existing_after_remove
+    },
+    {
+        "set_existing_after_remove_move_table",
+        Commands_set_existing_after_remove_move_table
+    },
+    {
+        "set_existing_after_remove_w_is_a",
+        Commands_set_existing_after_remove_w_is_a
+    },
+    {
+        "set_existing_after_remove_w_is_a_move_table",
+        Commands_set_existing_after_remove_w_is_a_move_table
     }
 };
 
@@ -15465,7 +15490,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NULL,
         NULL,
-        179,
+        180,
         NonFragmentingChildOf_testcases
     },
     {
@@ -15661,7 +15686,7 @@ static bake_test_suite suites[] = {
         "Commands",
         NULL,
         NULL,
-        170,
+        174,
         Commands_testcases
     },
     {

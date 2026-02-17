@@ -5239,3 +5239,97 @@ void Commands_on_replace_w_set_batched_existing_twice(void) {
 
     ecs_fini(world);
 }
+
+void Commands_set_existing_after_remove(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set(world, e, Position, {10, 20});
+
+    ecs_defer_begin(world);
+        ecs_remove(world, e, EcsParent);
+        ecs_set(world, e, Position, {30, 40});
+    ecs_defer_end(world);
+
+    const Position *ptr = ecs_get(world, e, Position);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 30);
+    test_int(ptr->y, 40);
+
+    ecs_fini(world);
+}
+
+void Commands_set_existing_after_remove_move_table(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set(world, e, Position, {10, 20});
+
+    ecs_defer_begin(world);
+        ecs_add(world, e, Foo);
+        ecs_remove(world, e, Position);
+        ecs_set(world, e, Position, {30, 40});
+    ecs_defer_end(world);
+
+    const Position *ptr = ecs_get(world, e, Position);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 30);
+    test_int(ptr->y, 40);
+
+    ecs_fini(world);
+}
+
+void Commands_set_existing_after_remove_w_is_a(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_add_pair(world, e, EcsIsA, p);
+    ecs_set(world, e, Position, {10, 20});
+
+    ecs_defer_begin(world);
+        ecs_remove(world, e, EcsParent);
+        ecs_set(world, e, Position, {30, 40});
+    ecs_defer_end(world);
+
+    const Position *ptr = ecs_get(world, e, Position);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 30);
+    test_int(ptr->y, 40);
+
+    ecs_fini(world);
+}
+
+void Commands_set_existing_after_remove_w_is_a_move_table(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_add_pair(world, e, EcsIsA, p);
+    ecs_set(world, e, Position, {10, 20});
+
+    ecs_defer_begin(world);
+        ecs_add(world, e, Foo);
+        ecs_remove(world, e, Position);
+        ecs_set(world, e, Position, {30, 40});
+    ecs_defer_end(world);
+
+    const Position *ptr = ecs_get(world, e, Position);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 30);
+    test_int(ptr->y, 40);
+
+    ecs_fini(world);
+}
