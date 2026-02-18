@@ -15773,11 +15773,11 @@ char* ecs_script_ast_to_str(
 
 /* Managed scripts (script associated with entity that outlives the function) */
 
-/** Used with ecs_script_init() */
+/** Used with ecs_script_init(). */
 typedef struct ecs_script_desc_t {
-    ecs_entity_t entity;   /* Set to customize entity handle associated with script */
-    const char *filename;  /* Set to load script from file */
-    const char *code;      /* Set to parse script from string */
+    ecs_entity_t entity;   /**< Set to customize entity handle associated with script */
+    const char *filename;  /**< Set to load script from file */
+    const char *code;      /**< Set to parse script from string */
 } ecs_script_desc_t;
 
 /** Load managed script.

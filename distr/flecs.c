@@ -50011,6 +50011,11 @@ ecs_expr_variable_t* flecs_expr_variable_from(
     ecs_expr_node_t *node,
     const char *name);
 
+ecs_expr_member_t* flecs_expr_member_from(
+    ecs_script_t *script,
+    ecs_expr_node_t *node,
+    const char *name);
+
 ecs_expr_value_node_t* flecs_expr_bool(
     ecs_parser_t *parser,
     bool value);
@@ -61021,6 +61026,11 @@ const char* flecs_tokenizer_identifier(
 
     do {
         char c = pos[0];
+
+        if ((c == '.') && (pos[1] == '.')) {
+            break;
+        }
+
         bool is_ident = flecs_script_is_identifier(c) || isdigit(c);
 
         if (!is_var) {
@@ -67096,6 +67106,7 @@ int ecs_script_update(
     s->script = ecs_script_parse(world, name, code, NULL, &eval_result);
     if (s->script == NULL) {
         s->error = eval_result.error;
+        ecs_log_(-3, NULL, 0, "%s: %s", name ? name : "script", s->error);
         return -1;
     }
 
@@ -90560,6 +90571,20 @@ ecs_expr_variable_t* flecs_expr_variable_from(
     return result;
 }
 
+ecs_expr_member_t* flecs_expr_member_from(
+    ecs_script_t *script,
+    ecs_expr_node_t *node,
+    const char *name)
+{
+    ecs_expr_member_t *result = flecs_calloc_t(
+        &flecs_script_impl(script)->allocator, ecs_expr_member_t);
+    result->node.kind = EcsExprMember;
+    result->node.pos = node->pos;
+    result->left = node;
+    result->member_name =name;
+    return result;
+}
+
 ecs_expr_value_node_t* flecs_expr_bool(
     ecs_parser_t *parser,
     bool value)
@@ -95988,6 +96013,52 @@ bool flecs_expr_is_entity_type(
 }
 
 static
+int flecs_expr_identifier_variable_member_visit_type(
+    ecs_script_t *script,
+    ecs_expr_identifier_t *node,
+    const ecs_expr_eval_desc_t *desc)
+{
+    char *member_sep = strchr(node->value, '.');
+    while (member_sep) {
+        if (member_sep != node->value && member_sep[-1] == '\\') {
+            member_sep = strchr(member_sep + 1, '.');
+            continue;
+        }
+        break;
+    }
+
+    if (!member_sep) {
+        return 1;
+    }
+
+    member_sep[0] = '\0';
+
+    if (!flecs_script_find_var(desc->vars, node->value, NULL)) {
+        member_sep[0] = '.';
+        return 1;
+    }
+
+    ecs_expr_variable_t *var_node = flecs_expr_variable_from(
+        script, (ecs_expr_node_t*)node, node->value);
+    ecs_expr_member_t *member_node = flecs_expr_member_from(
+        script, (ecs_expr_node_t*)var_node, &member_sep[1]);
+
+    node->expr = (ecs_expr_node_t*)member_node;
+
+    ecs_meta_cursor_t tmp_cur; ecs_os_zeromem(&tmp_cur);
+    if (flecs_expr_visit_type_priv(script, node->expr, &tmp_cur, desc)) {
+        goto error;
+    }
+
+    node->node.type = node->expr->type;
+    return 0;
+error:
+    flecs_expr_visit_free(script, node->expr);
+    node->expr = NULL;
+    return -1;
+}
+
+static
 int flecs_expr_identifier_visit_type(
     ecs_script_t *script,
     ecs_expr_identifier_t *node,
@@ -96097,6 +96168,14 @@ int flecs_expr_identifier_visit_type(
             }
 
             return 0;
+        }
+
+        int var_member_result = flecs_expr_identifier_variable_member_visit_type(
+            script, node, desc);
+        if (var_member_result == 0) {
+            return 0;
+        } else if (var_member_result == -1) {
+            goto error;
         }
 
         /* If unresolved identifiers aren't allowed here, throw error */

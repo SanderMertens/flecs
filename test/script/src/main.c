@@ -310,6 +310,7 @@ void Eval_entity_w_string_name_w_kind_value_scope(void);
 void Eval_entity_w_interpolated_name_w_var_in_scope(void);
 void Eval_for_range(void);
 void Eval_for_range_vars(void);
+void Eval_for_range_vars_no_dollar(void);
 void Eval_for_range_1_4(void);
 void Eval_for_range_min_1_2(void);
 void Eval_variable_assign_self(void);
@@ -904,6 +905,9 @@ void Expr_match_w_any_first(void);
 void Expr_match_w_any_mismatching_type(void);
 void Expr_match_i_w_any_f(void);
 void Expr_identifier_as_var(void);
+void Expr_member_w_identifier_as_var(void);
+void Expr_member_w_identifier_as_var_and_entity(void);
+void Expr_nested_member_w_identifier_as_var_and_entity(void);
 void Expr_identifier_as_const_var(void);
 void Expr_expr_w_identifier_as_var(void);
 void Expr_initializer_w_identifier_as_var(void);
@@ -2370,6 +2374,10 @@ bake_test_case Eval_testcases[] = {
     {
         "for_range_vars",
         Eval_for_range_vars
+    },
+    {
+        "for_range_vars_no_dollar",
+        Eval_for_range_vars_no_dollar
     },
     {
         "for_range_1_4",
@@ -4729,6 +4737,18 @@ bake_test_case Expr_testcases[] = {
         Expr_identifier_as_var
     },
     {
+        "member_w_identifier_as_var",
+        Expr_member_w_identifier_as_var
+    },
+    {
+        "member_w_identifier_as_var_and_entity",
+        Expr_member_w_identifier_as_var_and_entity
+    },
+    {
+        "nested_member_w_identifier_as_var_and_entity",
+        Expr_nested_member_w_identifier_as_var_and_entity
+    },
+    {
         "identifier_as_const_var",
         Expr_identifier_as_const_var
     },
@@ -5759,7 +5779,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        405,
+        406,
         Eval_testcases
     },
     {
@@ -5780,7 +5800,7 @@ static bake_test_suite suites[] = {
         "Expr",
         Expr_setup,
         NULL,
-        325,
+        328,
         Expr_testcases,
         1,
         Expr_params

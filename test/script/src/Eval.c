@@ -9851,6 +9851,62 @@ void Eval_for_range_vars(void) {
     ecs_fini(world);
 }
 
+void Eval_for_range_vars_no_dollar(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "const x: 0"
+    LINE "const y: 3"
+    LINE "for i in x..y {"
+    LINE "  \"e_{$i}\" {"
+    LINE "    Position: {$i, $i * 2}"
+    LINE "  }"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e_0 = ecs_lookup(world, "e_0");
+    ecs_entity_t e_1 = ecs_lookup(world, "e_1");
+    ecs_entity_t e_2 = ecs_lookup(world, "e_2");
+    ecs_entity_t e_3 = ecs_lookup(world, "e_3");
+
+    test_assert(e_0 != 0);
+    test_assert(e_1 != 0);
+    test_assert(e_2 != 0);
+    test_assert(e_3 == 0);
+
+    {
+        const Position *p = ecs_get(world, e_0, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 0);
+        test_int(p->y, 0);
+    }
+
+    {
+        const Position *p = ecs_get(world, e_1, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 1);
+        test_int(p->y, 2);
+    }
+
+    {
+        const Position *p = ecs_get(world, e_2, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 2);
+        test_int(p->y, 4);
+    }
+
+    ecs_fini(world);
+}
+
 void Eval_for_range_1_4(void) {
     ecs_world_t *world = ecs_init();
 
