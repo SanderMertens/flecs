@@ -1008,6 +1008,10 @@ void flecs_cmd_batch_for_entity(
                         flecs_invoke_replace_hook(world, prev_table, entity, 
                             cmd->id, dst.ptr, ptr, ti);
                         if (prev_table != r->table) {
+                            if (!r->table) {
+                                /* Entity was deleted */
+                                goto done;
+                            }
                             dst = flecs_get_mut(
                                 world, entity, cmd->id, r, cmd->is._1.size);
                         }
@@ -1095,9 +1099,9 @@ void flecs_cmd_batch_for_entity(
         flecs_defer_end(world, world->stages[0]);
     }
 
+done:
     diff->added.array = added.array;
     diff->added.count = added.count;
-
     flecs_table_diff_builder_clear(diff);
 }
 

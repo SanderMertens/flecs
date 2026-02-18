@@ -403,6 +403,12 @@ void Entity_prefab_w_childof_w_name_existing_w_name(void);
 void Entity_prefab_w_parent(void);
 void Entity_prefab_w_parent_w_name(void);
 void Entity_prefab_w_parent_w_name_existing_w_name(void);
+void Entity_defer_set_parent_to_deleted(void);
+void Entity_defer_set_parent_to_deleted_batched(void);
+void Entity_defer_set_existing_parent_to_deleted(void);
+void Entity_defer_set_existing_parent_to_deleted_batched(void);
+void Entity_defer_assign_parent_to_deleted(void);
+void Entity_defer_assign_parent_to_deleted_batched(void);
 
 // Testsuite 'OrderedChildren'
 void OrderedChildren_iter_no_children(void);
@@ -3174,6 +3180,30 @@ bake_test_case Entity_testcases[] = {
     {
         "prefab_w_parent_w_name_existing_w_name",
         Entity_prefab_w_parent_w_name_existing_w_name
+    },
+    {
+        "defer_set_parent_to_deleted",
+        Entity_defer_set_parent_to_deleted
+    },
+    {
+        "defer_set_parent_to_deleted_batched",
+        Entity_defer_set_parent_to_deleted_batched
+    },
+    {
+        "defer_set_existing_parent_to_deleted",
+        Entity_defer_set_existing_parent_to_deleted
+    },
+    {
+        "defer_set_existing_parent_to_deleted_batched",
+        Entity_defer_set_existing_parent_to_deleted_batched
+    },
+    {
+        "defer_assign_parent_to_deleted",
+        Entity_defer_assign_parent_to_deleted
+    },
+    {
+        "defer_assign_parent_to_deleted_batched",
+        Entity_defer_assign_parent_to_deleted_batched
     }
 };
 
@@ -7881,7 +7911,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        390,
+        396,
         Entity_testcases
     },
     {

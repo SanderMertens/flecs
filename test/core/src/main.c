@@ -921,6 +921,10 @@ void NonFragmentingChildOf_prefab_ordered_children_recycled_children_recycled_of
 void NonFragmentingChildOf_prefab_ordered_children_1_child_offset_id_occupied(void);
 void NonFragmentingChildOf_prefab_ordered_children_1_child_offset_id_recycled_occupied(void);
 void NonFragmentingChildOf_prefab_ordered_children_child_offset_w_smaller_child_id(void);
+void NonFragmentingChildOf_defer_set_parent_to_deleted(void);
+void NonFragmentingChildOf_defer_set_parent_to_deleted_batched(void);
+void NonFragmentingChildOf_defer_set_existing_parent_to_deleted(void);
+void NonFragmentingChildOf_defer_set_existing_parent_to_deleted_batched(void);
 
 // Testsuite 'Hierarchies'
 void Hierarchies_setup(void);
@@ -6762,6 +6766,22 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "prefab_ordered_children_child_offset_w_smaller_child_id",
         NonFragmentingChildOf_prefab_ordered_children_child_offset_w_smaller_child_id
+    },
+    {
+        "defer_set_parent_to_deleted",
+        NonFragmentingChildOf_defer_set_parent_to_deleted
+    },
+    {
+        "defer_set_parent_to_deleted_batched",
+        NonFragmentingChildOf_defer_set_parent_to_deleted_batched
+    },
+    {
+        "defer_set_existing_parent_to_deleted",
+        NonFragmentingChildOf_defer_set_existing_parent_to_deleted
+    },
+    {
+        "defer_set_existing_parent_to_deleted_batched",
+        NonFragmentingChildOf_defer_set_existing_parent_to_deleted_batched
     }
 };
 
@@ -15670,7 +15690,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NULL,
         NULL,
-        215,
+        219,
         NonFragmentingChildOf_testcases
     },
     {
