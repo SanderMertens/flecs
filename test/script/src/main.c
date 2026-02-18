@@ -310,6 +310,7 @@ void Eval_entity_w_string_name_w_kind_value_scope(void);
 void Eval_entity_w_interpolated_name_w_var_in_scope(void);
 void Eval_for_range(void);
 void Eval_for_range_vars(void);
+void Eval_for_range_vars_no_dollar(void);
 void Eval_for_range_1_4(void);
 void Eval_for_range_min_1_2(void);
 void Eval_variable_assign_self(void);
@@ -2373,6 +2374,10 @@ bake_test_case Eval_testcases[] = {
     {
         "for_range_vars",
         Eval_for_range_vars
+    },
+    {
+        "for_range_vars_no_dollar",
+        Eval_for_range_vars_no_dollar
     },
     {
         "for_range_1_4",
@@ -5774,7 +5779,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        405,
+        406,
         Eval_testcases
     },
     {

@@ -314,6 +314,7 @@
                 "entity_w_interpolated_name_w_var_in_scope",
                 "for_range",
                 "for_range_vars",
+                "for_range_vars_no_dollar",
                 "for_range_1_4",
                 "for_range_min_1_2",
                 "variable_assign_self",

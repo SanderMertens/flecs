@@ -61026,6 +61026,11 @@ const char* flecs_tokenizer_identifier(
 
     do {
         char c = pos[0];
+
+        if ((c == '.') && (pos[1] == '.')) {
+            break;
+        }
+
         bool is_ident = flecs_script_is_identifier(c) || isdigit(c);
 
         if (!is_var) {
