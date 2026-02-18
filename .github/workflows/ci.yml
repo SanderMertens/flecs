@@ -79,7 +79,7 @@ jobs:
         run: bake/bake examples --strict --cfg debug
 
       - name: build examples (release)
-        run: bake/bake examples --strict --cfg debug
+        run: bake/bake examples --strict --cfg release
 
   build-msys:
     runs-on: windows-latest
@@ -327,10 +327,21 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        compiler: [ gcc, clang ]
+        include:
+          - { compiler: gcc, cc: gcc, cxx: g++ }
+          - { compiler: clang, cc: clang, cxx: clang++ }
+
+    env:
+      CC: ${{ matrix.cc }}
+      CXX: ${{ matrix.cxx }}
 
     steps:
       - uses: actions/checkout@v4
+      - name: compiler version
+        run: |
+          ${{ matrix.cc }} --version
+          ${{ matrix.cxx }} --version
+
       - name: Install bake
         run: |
           git clone https://github.com/SanderMertens/bake
