@@ -4669,3 +4669,795 @@ void NonFragmentingChildOf_delete_parent_w_n_children_after_delete_1_child(void)
 
     ecs_fini(world);
 }
+
+void NonFragmentingChildOf_prefab_1_child_offset_id(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t c = ecs_new_w_parent(world, p, NULL);
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    ecs_entity_t ic = ecs_get_target(world, i, c, 0);
+    test_assert(ic != 0);
+
+    test_assert((c - p) == (ic - i));
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_prefab_2_children_offset_id(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t c1 = ecs_new_w_parent(world, p, NULL);
+    ecs_entity_t c2 = ecs_new_w_parent(world, p, NULL);
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    ecs_entity_t ic1 = ecs_get_target(world, i, c1, 0);
+    test_assert(ic1 != 0);
+    test_assert((c1 - p) == (ic1 - i));
+
+    ecs_entity_t ic2 = ecs_get_target(world, i, c2, 0);
+    test_assert(ic2 != 0);
+    test_assert((c2 - p) == (ic2 - i));
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_prefab_3_children_offset_id(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t c1 = ecs_new_w_parent(world, p, NULL);
+    ecs_entity_t c2 = ecs_new_w_parent(world, p, NULL);
+    ecs_entity_t c3 = ecs_new_w_parent(world, p, NULL);
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    ecs_entity_t ic1 = ecs_get_target(world, i, c1, 0);
+    test_assert(ic1 != 0);
+    test_assert((c1 - p) == (ic1 - i));
+
+    ecs_entity_t ic2 = ecs_get_target(world, i, c2, 0);
+    test_assert(ic2 != 0);
+    test_assert((c2 - p) == (ic2 - i));
+
+    ecs_entity_t ic3 = ecs_get_target(world, i, c3, 0);
+    test_assert(ic3 != 0);
+    test_assert((c3 - p) == (ic3 - i));
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_prefab_2_children_2_types_offset_id(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t c1 = ecs_new_w_parent(world, p, NULL);
+    ecs_entity_t c2 = ecs_new_w_parent(world, p, NULL);
+
+    ecs_add(world, c1, Foo);
+    ecs_add(world, c2, Bar);
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    ecs_entity_t ic1 = ecs_get_target(world, i, c1, 0);
+    test_assert(ic1 != 0);
+    test_assert((c1 - p) == (ic1 - i));
+
+    ecs_entity_t ic2 = ecs_get_target(world, i, c2, 0);
+    test_assert(ic2 != 0);
+    test_assert((c2 - p) == (ic2 - i));
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_prefab_3_children_3_types_offset_id(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+    ECS_TAG(world, Zoo);
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t c1 = ecs_new_w_parent(world, p, NULL);
+    ecs_entity_t c2 = ecs_new_w_parent(world, p, NULL);
+    ecs_entity_t c3 = ecs_new_w_parent(world, p, NULL);
+
+    ecs_add(world, c1, Foo);
+    ecs_add(world, c2, Bar);
+    ecs_add(world, c3, Zoo);
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    ecs_entity_t ic1 = ecs_get_target(world, i, c1, 0);
+    test_assert(ic1 != 0);
+    test_assert((c1 - p) == (ic1 - i));
+
+    ecs_entity_t ic2 = ecs_get_target(world, i, c2, 0);
+    test_assert(ic2 != 0);
+    test_assert((c2 - p) == (ic2 - i));
+
+    ecs_entity_t ic3 = ecs_get_target(world, i, c3, 0);
+    test_assert(ic3 != 0);
+    test_assert((c3 - p) == (ic3 - i));
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_prefab_2_children_2_types_reverse_offset_id(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t c1 = ecs_new_w_parent(world, p, NULL);
+    ecs_entity_t c2 = ecs_new_w_parent(world, p, NULL);
+
+    ecs_add(world, c2, Bar);
+    ecs_add(world, c1, Foo);
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    ecs_entity_t ic1 = ecs_get_target(world, i, c1, 0);
+    test_assert(ic1 != 0);
+    test_assert((c1 - p) == (ic1 - i));
+
+    ecs_entity_t ic2 = ecs_get_target(world, i, c2, 0);
+    test_assert(ic2 != 0);
+    test_assert((c2 - p) == (ic2 - i));
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_prefab_3_children_3_types_reverse_offset_id(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+    ECS_TAG(world, Zoo);
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t c1 = ecs_new_w_parent(world, p, NULL);
+    ecs_entity_t c2 = ecs_new_w_parent(world, p, NULL);
+    ecs_entity_t c3 = ecs_new_w_parent(world, p, NULL);
+
+    ecs_add(world, c3, Zoo);
+    ecs_add(world, c1, Foo);
+    ecs_add(world, c2, Bar);
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    ecs_entity_t ic1 = ecs_get_target(world, i, c1, 0);
+    test_assert(ic1 != 0);
+    test_assert((c1 - p) == (ic1 - i));
+
+    ecs_entity_t ic2 = ecs_get_target(world, i, c2, 0);
+    test_assert(ic2 != 0);
+    test_assert((c2 - p) == (ic2 - i));
+
+    ecs_entity_t ic3 = ecs_get_target(world, i, c3, 0);
+    test_assert(ic3 != 0);
+    test_assert((c3 - p) == (ic3 - i));
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_prefab_2_lvl_nested_children_offset_id(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t c1 = ecs_new_w_parent(world, p, NULL);
+    ecs_entity_t c2 = ecs_new_w_parent(world, c1, NULL);
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    ecs_entity_t ic1 = ecs_get_target(world, i, c1, 0);
+    test_assert(ic1 != 0);
+    test_assert((c1 - p) == (ic1 - i));
+
+    ecs_entity_t ic2 = ecs_get_target(world, ic1, c2, 0);
+    test_assert(ic2 != 0);
+    test_assert((c2 - p) == (ic2 - i));
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_prefab_3_lvl_nested_children_offset_id(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t c1 = ecs_new_w_parent(world, p, NULL);
+    ecs_entity_t c2 = ecs_new_w_parent(world, c1, NULL);
+    ecs_entity_t c3 = ecs_new_w_parent(world, c2, NULL);
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    ecs_entity_t ic1 = ecs_get_target(world, i, c1, 0);
+    test_assert(ic1 != 0);
+    test_assert((c1 - p) == (ic1 - i));
+
+    ecs_entity_t ic2 = ecs_get_target(world, ic1, c2, 0);
+    test_assert(ic2 != 0);
+    test_assert((c2 - p) == (ic2 - i));
+
+    ecs_entity_t ic3 = ecs_get_target(world, ic2, c3, 0);
+    test_assert(ic3 != 0);
+    test_assert((c3 - p) == (ic3 - i));
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_prefab_recycled_children_offset_id(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_delete(world, ecs_new(world));
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    test_assert(p != (uint32_t)p);
+    ecs_entity_t c = ecs_new_w_parent(world, p, NULL);
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    ecs_entity_t ic = ecs_get_target(world, i, c, 0);
+    test_assert(ic != 0);
+
+    test_assert((c - (uint32_t)p) == (ic - i));
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_prefab_recycled_instance_offset_id(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t c = ecs_new_w_parent(world, p, NULL);
+
+    ecs_delete(world, ecs_new(world));
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    test_assert(i != (uint32_t)i);
+    ecs_entity_t ic = ecs_get_target(world, i, c, 0);
+    test_assert(ic != 0);
+
+    test_assert((c - p) == ((uint32_t)ic - (uint32_t)i));
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_prefab_children_recycled_offset_id(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_delete(world, ecs_new(world));
+    ecs_entity_t c = ecs_new_w_parent(world, p, NULL);
+    test_assert(c != (uint32_t)c);
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    ecs_entity_t ic = ecs_get_target(world, i, c, 0);
+    test_assert(ic != 0);
+
+    test_assert(((uint32_t)c - p) == (ic - i));
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_prefab_recycled_children_recycled_offset_id(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_delete(world, ecs_new(world));
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    test_assert(p != (uint32_t)p);
+
+    ecs_delete(world, ecs_new(world));
+
+    ecs_entity_t c = ecs_new_w_parent(world, p, NULL);
+    test_assert(c != (uint32_t)c);
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    ecs_entity_t ic = ecs_get_target(world, i, c, 0);
+    test_assert(ic != 0);
+
+    test_assert(((uint32_t)c - (uint32_t)p) == (ic - i));
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_prefab_recycled_children_recycled_offset_id_different_generation(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_delete(world, ecs_new(world));
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    test_assert(p != (uint32_t)p);
+
+    ecs_delete(world, ecs_new(world));
+    ecs_delete(world, ecs_new(world));
+
+    ecs_entity_t c = ecs_new_w_parent(world, p, NULL);
+    test_assert(c != (uint32_t)c);
+    test_assert((c >> 32) != (p >> 32));
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    ecs_entity_t ic = ecs_get_target(world, i, c, 0);
+    test_assert(ic != 0);
+
+    test_assert(((uint32_t)c - (uint32_t)p) == (ic - i));
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_prefab_1_child_offset_id_occupied(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t c = ecs_new_w_parent(world, p, NULL);
+
+    ecs_entity_t i = ecs_new(world);
+    ecs_entity_t x = ecs_new(world); // Occupy instance child id
+
+    test_assert((c - p) == (x - i));
+
+    ecs_add_pair(world, i, EcsIsA, p);
+    ecs_entity_t ic = ecs_get_target(world, i, c, 0);
+    test_assert(ic != 0);
+    test_assert(ic != x);
+
+    test_assert((c - p) != (ic - i));
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_prefab_1_child_offset_id_recycled_occupied(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t c = ecs_new_w_parent(world, p, NULL);
+
+    ecs_entity_t i = ecs_new(world);
+    ecs_delete(world, ecs_new(world));
+    ecs_entity_t x = ecs_new(world); // Occupy instance child id
+
+    test_assert((c - p) == ((uint32_t)x - i));
+
+    ecs_add_pair(world, i, EcsIsA, p);
+    ecs_entity_t ic = ecs_get_target(world, i, c, 0);
+    test_assert(ic != 0);
+    test_assert(ic != x);
+    test_assert((uint32_t)ic != (uint32_t)x);
+
+    test_assert((c - p) != (ic - i));
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_prefab_child_offset_w_smaller_child_id(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t a = ecs_new(world);
+    ecs_entity_t b = ecs_new(world);
+    ecs_delete(world, a);
+    ecs_delete(world, b);
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t c = ecs_new_w_parent(world, p, NULL);
+    test_assert(c < p);
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    ecs_entity_t ic = ecs_get_target(world, i, c, 0);
+    test_assert(ic != 0);
+
+    test_assert((c - p) != (ic - i));
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_prefab_ordered_children_1_child_offset_id(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_add_id(world, p, EcsOrderedChildren);
+
+    ecs_entity_t c = ecs_new_w_parent(world, p, NULL);
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    ecs_entity_t ic = ecs_get_target(world, i, c, 0);
+    test_assert(ic != 0);
+
+    test_assert((c - p) == (ic - i));
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_prefab_ordered_children_2_children_offset_id(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_add_id(world, p, EcsOrderedChildren);
+
+    ecs_entity_t c1 = ecs_new_w_parent(world, p, NULL);
+    ecs_entity_t c2 = ecs_new_w_parent(world, p, NULL);
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    ecs_entity_t ic1 = ecs_get_target(world, i, c1, 0);
+    test_assert(ic1 != 0);
+    test_assert((c1 - p) == (ic1 - i));
+
+    ecs_entity_t ic2 = ecs_get_target(world, i, c2, 0);
+    test_assert(ic2 != 0);
+    test_assert((c2 - p) == (ic2 - i));
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_prefab_ordered_children_3_children_offset_id(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_add_id(world, p, EcsOrderedChildren);
+
+    ecs_entity_t c1 = ecs_new_w_parent(world, p, NULL);
+    ecs_entity_t c2 = ecs_new_w_parent(world, p, NULL);
+    ecs_entity_t c3 = ecs_new_w_parent(world, p, NULL);
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    ecs_entity_t ic1 = ecs_get_target(world, i, c1, 0);
+    test_assert(ic1 != 0);
+    test_assert((c1 - p) == (ic1 - i));
+
+    ecs_entity_t ic2 = ecs_get_target(world, i, c2, 0);
+    test_assert(ic2 != 0);
+    test_assert((c2 - p) == (ic2 - i));
+
+    ecs_entity_t ic3 = ecs_get_target(world, i, c3, 0);
+    test_assert(ic3 != 0);
+    test_assert((c3 - p) == (ic3 - i));
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_prefab_ordered_children_2_children_2_types_offset_id(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_add_id(world, p, EcsOrderedChildren);
+
+    ecs_entity_t c1 = ecs_new_w_parent(world, p, NULL);
+    ecs_entity_t c2 = ecs_new_w_parent(world, p, NULL);
+
+    ecs_add(world, c1, Foo);
+    ecs_add(world, c2, Bar);
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    ecs_entity_t ic1 = ecs_get_target(world, i, c1, 0);
+    test_assert(ic1 != 0);
+    test_assert((c1 - p) == (ic1 - i));
+
+    ecs_entity_t ic2 = ecs_get_target(world, i, c2, 0);
+    test_assert(ic2 != 0);
+    test_assert((c2 - p) == (ic2 - i));
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_prefab_ordered_children_3_children_3_types_offset_id(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+    ECS_TAG(world, Zoo);
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_add_id(world, p, EcsOrderedChildren);
+
+    ecs_entity_t c1 = ecs_new_w_parent(world, p, NULL);
+    ecs_entity_t c2 = ecs_new_w_parent(world, p, NULL);
+    ecs_entity_t c3 = ecs_new_w_parent(world, p, NULL);
+
+    ecs_add(world, c1, Foo);
+    ecs_add(world, c2, Bar);
+    ecs_add(world, c3, Zoo);
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    ecs_entity_t ic1 = ecs_get_target(world, i, c1, 0);
+    test_assert(ic1 != 0);
+    test_assert((c1 - p) == (ic1 - i));
+
+    ecs_entity_t ic2 = ecs_get_target(world, i, c2, 0);
+    test_assert(ic2 != 0);
+    test_assert((c2 - p) == (ic2 - i));
+
+    ecs_entity_t ic3 = ecs_get_target(world, i, c3, 0);
+    test_assert(ic3 != 0);
+    test_assert((c3 - p) == (ic3 - i));
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_prefab_ordered_children_2_children_2_types_reverse_offset_id(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_add_id(world, p, EcsOrderedChildren);
+
+    ecs_entity_t c1 = ecs_new_w_parent(world, p, NULL);
+    ecs_entity_t c2 = ecs_new_w_parent(world, p, NULL);
+
+    ecs_add(world, c2, Bar);
+    ecs_add(world, c1, Foo);
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    ecs_entity_t ic1 = ecs_get_target(world, i, c1, 0);
+    test_assert(ic1 != 0);
+    test_assert((c1 - p) == (ic1 - i));
+
+    ecs_entity_t ic2 = ecs_get_target(world, i, c2, 0);
+    test_assert(ic2 != 0);
+    test_assert((c2 - p) == (ic2 - i));
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_prefab_ordered_children_3_children_3_types_reverse_offset_id(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+    ECS_TAG(world, Zoo);
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_add_id(world, p, EcsOrderedChildren);
+
+    ecs_entity_t c1 = ecs_new_w_parent(world, p, NULL);
+    ecs_entity_t c2 = ecs_new_w_parent(world, p, NULL);
+    ecs_entity_t c3 = ecs_new_w_parent(world, p, NULL);
+
+    ecs_add(world, c3, Zoo);
+    ecs_add(world, c1, Foo);
+    ecs_add(world, c2, Bar);
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    ecs_entity_t ic1 = ecs_get_target(world, i, c1, 0);
+    test_assert(ic1 != 0);
+    test_assert((c1 - p) == (ic1 - i));
+
+    ecs_entity_t ic2 = ecs_get_target(world, i, c2, 0);
+    test_assert(ic2 != 0);
+    test_assert((c2 - p) == (ic2 - i));
+
+    ecs_entity_t ic3 = ecs_get_target(world, i, c3, 0);
+    test_assert(ic3 != 0);
+    test_assert((c3 - p) == (ic3 - i));
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_prefab_ordered_children_2_lvl_nested_children_offset_id(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_add_id(world, p, EcsOrderedChildren);
+
+    ecs_entity_t c1 = ecs_new_w_parent(world, p, NULL);
+    ecs_entity_t c2 = ecs_new_w_parent(world, c1, NULL);
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    ecs_entity_t ic1 = ecs_get_target(world, i, c1, 0);
+    test_assert(ic1 != 0);
+    test_assert((c1 - p) == (ic1 - i));
+
+    ecs_entity_t ic2 = ecs_get_target(world, ic1, c2, 0);
+    test_assert(ic2 != 0);
+    test_assert((c2 - p) == (ic2 - i));
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_prefab_ordered_children_3_lvl_nested_children_offset_id(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_add_id(world, p, EcsOrderedChildren);
+
+    ecs_entity_t c1 = ecs_new_w_parent(world, p, NULL);
+    ecs_entity_t c2 = ecs_new_w_parent(world, c1, NULL);
+    ecs_entity_t c3 = ecs_new_w_parent(world, c2, NULL);
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    ecs_entity_t ic1 = ecs_get_target(world, i, c1, 0);
+    test_assert(ic1 != 0);
+    test_assert((c1 - p) == (ic1 - i));
+
+    ecs_entity_t ic2 = ecs_get_target(world, ic1, c2, 0);
+    test_assert(ic2 != 0);
+    test_assert((c2 - p) == (ic2 - i));
+
+    ecs_entity_t ic3 = ecs_get_target(world, ic2, c3, 0);
+    test_assert(ic3 != 0);
+    test_assert((c3 - p) == (ic3 - i));
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_prefab_ordered_children_recycled_children_offset_id(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_delete(world, ecs_new(world));
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_add_id(world, p, EcsOrderedChildren);
+
+    test_assert(p != (uint32_t)p);
+    ecs_entity_t c = ecs_new_w_parent(world, p, NULL);
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    ecs_entity_t ic = ecs_get_target(world, i, c, 0);
+    test_assert(ic != 0);
+
+    test_assert((c - (uint32_t)p) == (ic - i));
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_prefab_ordered_children_recycled_instance_offset_id(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_add_id(world, p, EcsOrderedChildren);
+
+    ecs_entity_t c = ecs_new_w_parent(world, p, NULL);
+
+    ecs_delete(world, ecs_new(world));
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    test_assert(i != (uint32_t)i);
+    ecs_entity_t ic = ecs_get_target(world, i, c, 0);
+    test_assert(ic != 0);
+
+    test_assert((c - p) == ((uint32_t)ic - (uint32_t)i));
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_prefab_ordered_children_children_recycled_offset_id(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_add_id(world, p, EcsOrderedChildren);
+
+    ecs_delete(world, ecs_new(world));
+    ecs_entity_t c = ecs_new_w_parent(world, p, NULL);
+    test_assert(c != (uint32_t)c);
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    ecs_entity_t ic = ecs_get_target(world, i, c, 0);
+    test_assert(ic != 0);
+
+    test_assert(((uint32_t)c - p) == (ic - i));
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_prefab_ordered_children_recycled_children_recycled_offset_id(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_delete(world, ecs_new(world));
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_add_id(world, p, EcsOrderedChildren);
+
+    test_assert(p != (uint32_t)p);
+
+    ecs_delete(world, ecs_new(world));
+
+    ecs_entity_t c = ecs_new_w_parent(world, p, NULL);
+    test_assert(c != (uint32_t)c);
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    ecs_entity_t ic = ecs_get_target(world, i, c, 0);
+    test_assert(ic != 0);
+
+    test_assert(((uint32_t)c - (uint32_t)p) == (ic - i));
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_prefab_ordered_children_recycled_children_recycled_offset_id_different_generation(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_delete(world, ecs_new(world));
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_add_id(world, p, EcsOrderedChildren);
+
+    test_assert(p != (uint32_t)p);
+
+    ecs_delete(world, ecs_new(world));
+    ecs_delete(world, ecs_new(world));
+
+    ecs_entity_t c = ecs_new_w_parent(world, p, NULL);
+    test_assert(c != (uint32_t)c);
+    test_assert((c >> 32) != (p >> 32));
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    ecs_entity_t ic = ecs_get_target(world, i, c, 0);
+    test_assert(ic != 0);
+
+    test_assert(((uint32_t)c - (uint32_t)p) == (ic - i));
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_prefab_ordered_children_1_child_offset_id_occupied(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_add_id(world, p, EcsOrderedChildren);
+
+    ecs_entity_t c = ecs_new_w_parent(world, p, NULL);
+
+    ecs_entity_t i = ecs_new(world);
+    ecs_entity_t x = ecs_new(world); // Occupy instance child id
+
+    test_assert((c - p) == (x - i));
+
+    ecs_add_pair(world, i, EcsIsA, p);
+    ecs_entity_t ic = ecs_get_target(world, i, c, 0);
+    test_assert(ic != 0);
+    test_assert(ic != x);
+
+    test_assert((c - p) != (ic - i));
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_prefab_ordered_children_1_child_offset_id_recycled_occupied(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_add_id(world, p, EcsOrderedChildren);
+
+    ecs_entity_t c = ecs_new_w_parent(world, p, NULL);
+
+    ecs_entity_t i = ecs_new(world);
+    ecs_delete(world, ecs_new(world));
+    ecs_entity_t x = ecs_new(world); // Occupy instance child id
+
+    test_assert((c - p) == ((uint32_t)x - i));
+
+    ecs_add_pair(world, i, EcsIsA, p);
+    ecs_entity_t ic = ecs_get_target(world, i, c, 0);
+    test_assert(ic != 0);
+    test_assert(ic != x);
+    test_assert((uint32_t)ic != (uint32_t)x);
+
+    test_assert((c - p) != (ic - i));
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_prefab_ordered_children_child_offset_w_smaller_child_id(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t a = ecs_new(world);
+    ecs_entity_t b = ecs_new(world);
+    ecs_delete(world, a);
+    ecs_delete(world, b);
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_add_id(world, p, EcsOrderedChildren);
+
+    ecs_entity_t c = ecs_new_w_parent(world, p, NULL);
+    test_assert(c < p);
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    ecs_entity_t ic = ecs_get_target(world, i, c, 0);
+    test_assert(ic != 0);
+
+    test_assert((c - p) != (ic - i));
+
+    ecs_fini(world);
+}
