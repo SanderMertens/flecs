@@ -917,6 +917,7 @@
                 "match_w_any_mismatching_type",
                 "match_i_w_any_f",
                 "identifier_as_var",
+                "member_w_identifier_as_var",
                 "identifier_as_const_var",
                 "expr_w_identifier_as_var",
                 "initializer_w_identifier_as_var",

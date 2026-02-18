@@ -9326,6 +9326,35 @@ void Expr_identifier_as_var(void) {
     ecs_fini(world);
 }
 
+void Expr_member_w_identifier_as_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(PositionI) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "PositionI"}),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+    ecs_script_var_t *var = ecs_script_vars_define(vars, "foo", PositionI);
+    *(PositionI*)var->value.ptr = (PositionI){10, 20};
+
+    int32_t v = 0;
+    ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
+
+    const char *ptr = ecs_expr_run(
+        world, "foo.x", &ecs_value_ptr(ecs_i32_t, &v), &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == 0);
+    test_int(v, 10);
+
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
 void Expr_expr_w_identifier_as_var(void) {
     ecs_world_t *world = ecs_init();
 
