@@ -40729,9 +40729,8 @@ void flecs_add_non_fragmenting_child_to_table(
     /* Encode id of first entity in table + the total number of entities in the
      * table for this parent in a single uint64 so everything fits in a map
      * element without having to allocate. */
-    if (!elem->entity) {
+    if (!elem->count) {
         elem->entity = (uint32_t)entity;
-        elem->count = 1;
 
         if (table->flags & EcsTableIsDisabled) {
             cr->pair->disabled_tables ++;
@@ -40740,9 +40739,10 @@ void flecs_add_non_fragmenting_child_to_table(
             cr->pair->prefab_tables ++;
         }
     } else {
-        elem->count ++;
         elem->entity = 0;
     }
+
+    elem->count ++;
 }
 
 static

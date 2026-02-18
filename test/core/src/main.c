@@ -886,6 +886,7 @@ void NonFragmentingChildOf_instantiate_recycled_prefab(void);
 void NonFragmentingChildOf_defer_set_parent_batched(void);
 void NonFragmentingChildOf_defer_new_w_parent_batched(void);
 void NonFragmentingChildOf_defer_set_after_remove_instance(void);
+void NonFragmentingChildOf_delete_parent_w_n_children_after_delete_1_child(void);
 
 // Testsuite 'Hierarchies'
 void Hierarchies_setup(void);
@@ -6587,6 +6588,10 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "defer_set_after_remove_instance",
         NonFragmentingChildOf_defer_set_after_remove_instance
+    },
+    {
+        "delete_parent_w_n_children_after_delete_1_child",
+        NonFragmentingChildOf_delete_parent_w_n_children_after_delete_1_child
     }
 };
 
@@ -15495,7 +15500,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NULL,
         NULL,
-        180,
+        181,
         NonFragmentingChildOf_testcases
     },
     {

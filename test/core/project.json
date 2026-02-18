@@ -917,7 +917,8 @@
                 "instantiate_recycled_prefab",
                 "defer_set_parent_batched",
                 "defer_new_w_parent_batched",
-                "defer_set_after_remove_instance"
+                "defer_set_after_remove_instance",
+                "delete_parent_w_n_children_after_delete_1_child"
             ]
         }, {
             "id": "Hierarchies",
