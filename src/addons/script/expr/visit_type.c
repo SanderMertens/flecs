@@ -1201,51 +1201,35 @@ bool flecs_expr_is_entity_type(
 }
 
 static
-char* flecs_expr_identifier_member_sep(
-    const char *value)
-{
-    char *sep = strchr(value, '.');
-    while (sep) {
-        if (sep != value && sep[-1] == '\\') {
-            sep = strchr(sep + 1, '.');
-            continue;
-        }
-
-        return sep;
-    }
-
-    return NULL;
-}
-
-static
 int flecs_expr_identifier_variable_member_visit_type(
     ecs_script_t *script,
     ecs_expr_identifier_t *node,
     const ecs_expr_eval_desc_t *desc)
 {
-    char *member_sep = flecs_expr_identifier_member_sep(node->value);
+    char *member_sep = strchr(node->value, '.');
+    while (member_sep) {
+        if (member_sep != node->value && member_sep[-1] == '\\') {
+            member_sep = strchr(member_sep + 1, '.');
+            continue;
+        }
+        break;
+    }
+
     if (!member_sep) {
         return 1;
     }
 
     member_sep[0] = '\0';
 
-    int32_t var_sp = -1;
-    ecs_script_var_t *var = flecs_script_find_var(
-        desc->vars, node->value, &var_sp);
-    if (!var) {
+    if (!flecs_script_find_var(desc->vars, node->value, NULL)) {
         member_sep[0] = '.';
         return 1;
     }
 
     ecs_expr_variable_t *var_node = flecs_expr_variable_from(
         script, (ecs_expr_node_t*)node, node->value);
-    ecs_expr_member_t *member_node = flecs_calloc_t(
-        &flecs_script_impl(script)->allocator, ecs_expr_member_t);
-    member_node->node.kind = EcsExprMember;
-    member_node->node.pos = node->node.pos;
-    member_node->left = (ecs_expr_node_t*)var_node;
-    member_node->member_name = &member_sep[1];
+    ecs_expr_member_t *member_node = flecs_expr_member_from(
+        script, (ecs_expr_node_t*)var_node, &member_sep[1]);
 
     node->expr = (ecs_expr_node_t*)member_node;
 
