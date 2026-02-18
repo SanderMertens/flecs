@@ -9355,6 +9355,114 @@ void Expr_member_w_identifier_as_var(void) {
     ecs_fini(world);
 }
 
+void Expr_member_w_identifier_as_var_and_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(PositionI) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "PositionI"}),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t foo = ecs_entity(world, { .name = "foo" });
+    test_assert(foo != 0);
+    ecs_entity_t foo_x = ecs_entity(world, { .name = "foo.x" });
+    test_assert(foo_x != 0);
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+    ecs_script_var_t *var = ecs_script_vars_define(vars, "foo", PositionI);
+    *(PositionI*)var->value.ptr = (PositionI){10, 20};
+
+    ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
+
+    {
+        ecs_value_t v = {0};
+        test_assert(ecs_expr_run(world, "foo.x", &v, &desc) != NULL);
+        test_assert(v.type == ecs_id(ecs_entity_t));
+        test_assert(v.ptr != NULL);
+        test_uint(*(ecs_entity_t*)v.ptr, foo_x);
+        ecs_value_free(world, v.type, v.ptr);
+    }
+
+    {
+        int32_t v = 0;
+        const char *ptr = ecs_expr_run(
+            world, "$foo.x", &ecs_value_ptr(ecs_i32_t, &v), &desc);
+        test_assert(ptr != NULL);
+        test_assert(ptr[0] == 0);
+        test_int(v, 10);
+    }
+
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_nested_member_w_identifier_as_var_and_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        int32_t x;
+        int32_t y;
+    } Point;
+
+    typedef struct {
+        Point start;
+        Point stop;
+    } Line;
+
+    ecs_entity_t ecs_id(Point) = ecs_struct(world, {
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t ecs_id(Line) = ecs_struct(world, {
+        .members = {
+            {"start", ecs_id(Point)},
+            {"stop", ecs_id(Point)}
+        }
+    });
+
+    ecs_entity_t foo = ecs_entity(world, { .name = "foo" });
+    test_assert(foo != 0);
+    ecs_entity_t foo_start = ecs_entity(world, { .name = "foo.start" });
+    test_assert(foo_start != 0);
+    ecs_entity_t foo_start_x = ecs_entity(world, { .name = "foo.start.x" });
+    test_assert(foo_start_x != 0);
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+    ecs_script_var_t *var = ecs_script_vars_define(vars, "foo", Line);
+    *(Line*)var->value.ptr = (Line){{10, 20}, {30, 40}};
+
+    ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
+
+    {
+        ecs_value_t v = {0};
+        test_assert(ecs_expr_run(world, "foo.start.x", &v, &desc) != NULL);
+        test_assert(v.type == ecs_id(ecs_entity_t));
+        test_assert(v.ptr != NULL);
+        test_uint(*(ecs_entity_t*)v.ptr, foo_start_x);
+        ecs_value_free(world, v.type, v.ptr);
+    }
+
+    {
+        int32_t v = 0;
+        const char *ptr = ecs_expr_run(
+            world, "$foo.start.x", &ecs_value_ptr(ecs_i32_t, &v), &desc);
+        test_assert(ptr != NULL);
+        test_assert(ptr[0] == 0);
+        test_int(v, 10);
+    }
+
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
 void Expr_expr_w_identifier_as_var(void) {
     ecs_world_t *world = ecs_init();
 

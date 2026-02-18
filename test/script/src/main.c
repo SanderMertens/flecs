@@ -905,6 +905,8 @@ void Expr_match_w_any_mismatching_type(void);
 void Expr_match_i_w_any_f(void);
 void Expr_identifier_as_var(void);
 void Expr_member_w_identifier_as_var(void);
+void Expr_member_w_identifier_as_var_and_entity(void);
+void Expr_nested_member_w_identifier_as_var_and_entity(void);
 void Expr_identifier_as_const_var(void);
 void Expr_expr_w_identifier_as_var(void);
 void Expr_initializer_w_identifier_as_var(void);
@@ -4734,6 +4736,14 @@ bake_test_case Expr_testcases[] = {
         Expr_member_w_identifier_as_var
     },
     {
+        "member_w_identifier_as_var_and_entity",
+        Expr_member_w_identifier_as_var_and_entity
+    },
+    {
+        "nested_member_w_identifier_as_var_and_entity",
+        Expr_nested_member_w_identifier_as_var_and_entity
+    },
+    {
         "identifier_as_const_var",
         Expr_identifier_as_const_var
     },
@@ -5785,7 +5795,7 @@ static bake_test_suite suites[] = {
         "Expr",
         Expr_setup,
         NULL,
-        326,
+        328,
         Expr_testcases,
         1,
         Expr_params

@@ -918,6 +918,8 @@
                 "match_i_w_any_f",
                 "identifier_as_var",
                 "member_w_identifier_as_var",
+                "member_w_identifier_as_var_and_entity",
+                "nested_member_w_identifier_as_var_and_entity",
                 "identifier_as_const_var",
                 "expr_w_identifier_as_var",
                 "initializer_w_identifier_as_var",
