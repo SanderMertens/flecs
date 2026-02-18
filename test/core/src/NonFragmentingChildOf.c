@@ -4650,3 +4650,22 @@ void NonFragmentingChildOf_defer_set_after_remove_instance(void) {
 
     ecs_fini(world);
 }
+
+void NonFragmentingChildOf_delete_parent_w_n_children_after_delete_1_child(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_entity_t child_a = ecs_new_w_parent(world, parent, NULL);
+    ecs_entity_t child_b = ecs_new_w_parent(world, parent, NULL);
+    ecs_entity_t child_c = ecs_new_w_parent(world, parent, NULL);
+
+    ecs_delete(world, child_a);
+    ecs_delete(world, parent);
+
+    test_assert(!ecs_is_alive(world, parent));
+    test_assert(!ecs_is_alive(world, child_a));
+    test_assert(!ecs_is_alive(world, child_b));
+    test_assert(!ecs_is_alive(world, child_c));
+
+    ecs_fini(world);
+}
