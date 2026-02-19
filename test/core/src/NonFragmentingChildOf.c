@@ -5690,7 +5690,7 @@ void NonFragmentingChildOf_defer_reparent_to_deleted_parent(void) {
 
     ecs_observer(world, {
         .query.terms = {{ ecs_id(EcsParent) }},
-        .events = { EcsOnRemove, EcsOnSet },
+        .events = { EcsOnRemove },
         .callback = DummyObserver
     });
 

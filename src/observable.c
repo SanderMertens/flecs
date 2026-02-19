@@ -1364,7 +1364,9 @@ repeat_event:
         }
 
         /* Forward events for Parent component as ChildOf pairs. */
-        if (id == ecs_id(EcsParent) && !table_event) {
+        if (id == ecs_id(EcsParent) && !table_event && 
+            (table->flags & EcsTableHasParent)) 
+        {
             ecs_event_desc_t pdesc = *desc;
 
             pdesc.event = event;
