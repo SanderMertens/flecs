@@ -923,6 +923,8 @@ void NonFragmentingChildOf_prefab_ordered_children_1_child_offset_id_recycled_oc
 void NonFragmentingChildOf_prefab_ordered_children_child_offset_w_smaller_child_id(void);
 void NonFragmentingChildOf_defer_set_parent_to_deleted(void);
 void NonFragmentingChildOf_defer_set_parent_to_deleted_batched(void);
+void NonFragmentingChildOf_defer_set_parent_to_deleted_w_on_remove(void);
+void NonFragmentingChildOf_defer_set_parent_to_deleted_batched_w_on_remove(void);
 void NonFragmentingChildOf_defer_set_existing_parent_to_deleted(void);
 void NonFragmentingChildOf_defer_set_existing_parent_to_deleted_batched(void);
 
@@ -6774,6 +6776,14 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "defer_set_parent_to_deleted_batched",
         NonFragmentingChildOf_defer_set_parent_to_deleted_batched
+    },
+    {
+        "defer_set_parent_to_deleted_w_on_remove",
+        NonFragmentingChildOf_defer_set_parent_to_deleted_w_on_remove
+    },
+    {
+        "defer_set_parent_to_deleted_batched_w_on_remove",
+        NonFragmentingChildOf_defer_set_parent_to_deleted_batched_w_on_remove
     },
     {
         "defer_set_existing_parent_to_deleted",
@@ -15690,7 +15700,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NULL,
         NULL,
-        219,
+        221,
         NonFragmentingChildOf_testcases
     },
     {

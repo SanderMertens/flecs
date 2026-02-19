@@ -1382,12 +1382,12 @@ repeat_event:
             for (p = 0; p < parent_count; p ++) {
                 ecs_entity_t parent = parents[p].value;
                 ecs_assert(parent != 0, ECS_INTERNAL_ERROR, NULL);
-                ecs_assert(ecs_is_alive(world, parent), ECS_INTERNAL_ERROR, NULL);
-
-                ecs_id_t pair = ecs_childof(parent);
-                ecs_type_t type = { .count = 1, .array = &pair };
-                pdesc.ids = &type;
-                flecs_emit(world, stage, &pdesc);
+                if (flecs_entities_is_alive(world, parent)) {
+                    ecs_id_t pair = ecs_childof(parent);
+                    ecs_type_t type = { .count = 1, .array = &pair };
+                    pdesc.ids = &type;
+                    flecs_emit(world, stage, &pdesc);
+                }
             }
         }
 

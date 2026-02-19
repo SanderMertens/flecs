@@ -5501,6 +5501,58 @@ void NonFragmentingChildOf_defer_set_parent_to_deleted_batched(void) {
     ecs_fini(world);
 }
 
+void NonFragmentingChildOf_defer_set_parent_to_deleted_w_on_remove(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_observer(world, {
+        .query.terms = {{ Foo }},
+        .events = { EcsOnRemove },
+        .callback = DummyObserver
+    });
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_entity_t child = ecs_new(world);
+    ecs_add(world, child, Foo);
+
+    ecs_defer_begin(world);
+    ecs_delete(world, parent);
+    ecs_set(world, child, EcsParent, {parent});
+    ecs_defer_end(world);
+
+    test_assert(!ecs_is_alive(world, parent));
+    test_assert(!ecs_is_alive(world, child));
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_defer_set_parent_to_deleted_batched_w_on_remove(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_observer(world, {
+        .query.terms = {{ Foo }},
+        .events = { EcsOnRemove },
+        .callback = DummyObserver
+    });
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_entity_t child = ecs_new(world);
+
+    ecs_defer_begin(world);
+    ecs_delete(world, parent);
+    ecs_add(world, child, Foo);
+    ecs_set(world, child, EcsParent, {parent});
+    ecs_defer_end(world);
+
+    test_assert(!ecs_is_alive(world, parent));
+    test_assert(!ecs_is_alive(world, child));
+
+    ecs_fini(world);
+}
+
 void NonFragmentingChildOf_defer_set_existing_parent_to_deleted(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -5542,27 +5594,4 @@ void NonFragmentingChildOf_defer_set_existing_parent_to_deleted_batched(void) {
     test_assert(!ecs_is_alive(world, child));
 
     ecs_fini(world);
-}
-
-void NonFragmentingChildOf_defer_assign_parent_to_deleted(void) {
-    // ecs_world_t *world = ecs_mini();
-
-    // ecs_entity_t parent_a = ecs_new(world);
-    // ecs_entity_t parent_b = ecs_new(world); 
-    // ecs_entity_t child = ecs_new_w_parent(world, parent_a, NULL);
-
-    // ecs_defer_begin(world);
-    // ecs_delete(world, parent_b);
-    // ecs_assign(world, child, EcsParent, {parent_b});
-    // ecs_defer_end(world);
-
-    // test_assert(ecs_is_alive(world, parent_a));
-    // test_assert(!ecs_is_alive(world, parent_b));
-    // test_assert(!ecs_is_alive(world, child));
-
-    // ecs_fini(world);
-}
-
-void NonFragmentingChildOf_defer_assign_parent_to_deleted_batched(void) {
-    // Implement testcase
 }
