@@ -955,6 +955,8 @@
                 "prefab_ordered_children_child_offset_w_smaller_child_id",
                 "defer_set_parent_to_deleted",
                 "defer_set_parent_to_deleted_batched",
+                "defer_set_parent_to_deleted_w_on_remove",
+                "defer_set_parent_to_deleted_batched_w_on_remove",
                 "defer_set_existing_parent_to_deleted",
                 "defer_set_existing_parent_to_deleted_batched"
             ]
