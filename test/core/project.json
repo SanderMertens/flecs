@@ -952,7 +952,11 @@
                 "prefab_ordered_children_recycled_children_recycled_offset_id_different_generation",
                 "prefab_ordered_children_1_child_offset_id_occupied",
                 "prefab_ordered_children_1_child_offset_id_recycled_occupied",
-                "prefab_ordered_children_child_offset_w_smaller_child_id"
+                "prefab_ordered_children_child_offset_w_smaller_child_id",
+                "defer_set_parent_to_deleted",
+                "defer_set_parent_to_deleted_batched",
+                "defer_set_existing_parent_to_deleted",
+                "defer_set_existing_parent_to_deleted_batched"
             ]
         }, {
             "id": "Hierarchies",

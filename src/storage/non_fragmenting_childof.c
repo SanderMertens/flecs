@@ -193,6 +193,15 @@ void flecs_on_replace_parent(ecs_iter_t *it) {
         ecs_entity_t old_parent = old[i].value;
         ecs_entity_t new_parent = new[i].value;
 
+        /* This can happen when a child is parented to a parent that is deleted
+         * in the same command queue. */
+        if (!flecs_entities_is_alive(world, new_parent)) {
+            /* So cleanup code can see this is child of deleted parent */
+            old[i].value = new_parent;
+            ecs_delete(world, e);
+            continue;
+        }
+
         flecs_journal_begin(world, EcsJournalSetParent, e, &(ecs_type_t){
             .count = 1, .array = &new_parent
         }, NULL);

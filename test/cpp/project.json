@@ -413,7 +413,13 @@
                 "prefab_w_childof_w_name_existing_w_name",
                 "prefab_w_parent",
                 "prefab_w_parent_w_name",
-                "prefab_w_parent_w_name_existing_w_name"
+                "prefab_w_parent_w_name_existing_w_name",
+                "defer_set_parent_to_deleted",
+                "defer_set_parent_to_deleted_batched",
+                "defer_set_existing_parent_to_deleted",
+                "defer_set_existing_parent_to_deleted_batched",
+                "defer_assign_parent_to_deleted",
+                "defer_assign_parent_to_deleted_batched"
             ]
         }, {
             "id": "OrderedChildren",

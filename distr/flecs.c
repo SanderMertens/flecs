@@ -6600,6 +6600,10 @@ void flecs_cmd_batch_for_entity(
                         flecs_invoke_replace_hook(world, prev_table, entity, 
                             cmd->id, dst.ptr, ptr, ti);
                         if (prev_table != r->table) {
+                            if (!r->table) {
+                                /* Entity was deleted */
+                                goto done;
+                            }
                             dst = flecs_get_mut(
                                 world, entity, cmd->id, r, cmd->is._1.size);
                         }
@@ -6687,9 +6691,9 @@ void flecs_cmd_batch_for_entity(
         flecs_defer_end(world, world->stages[0]);
     }
 
+done:
     diff->added.array = added.array;
     diff->added.count = added.count;
-
     flecs_table_diff_builder_clear(diff);
 }
 
@@ -40906,6 +40910,15 @@ void flecs_on_replace_parent(ecs_iter_t *it) {
         ecs_entity_t e = it->entities[i];
         ecs_entity_t old_parent = old[i].value;
         ecs_entity_t new_parent = new[i].value;
+
+        /* This can happen when a child is parented to a parent that is deleted
+         * in the same command queue. */
+        if (!flecs_entities_is_alive(world, new_parent)) {
+            /* So cleanup code can see this is child of deleted parent */
+            old[i].value = new_parent;
+            ecs_delete(world, e);
+            continue;
+        }
 
         flecs_journal_begin(world, EcsJournalSetParent, e, &(ecs_type_t){
             .count = 1, .array = &new_parent
