@@ -5595,3 +5595,119 @@ void NonFragmentingChildOf_defer_set_existing_parent_to_deleted_batched(void) {
 
     ecs_fini(world);
 }
+
+void NonFragmentingChildOf_defer_remove_set_parent_different_stages(void) {
+    ecs_world_t *world = ecs_mini();
+    ecs_set_stage_count(world, 2);
+
+    ecs_world_t *stage_a = ecs_get_stage(world, 0);
+    ecs_world_t *stage_b = ecs_get_stage(world, 1);
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_entity_t child = ecs_new(world);
+    ecs_set(world, child, EcsParent, {parent});
+
+    ecs_readonly_begin(world, true);
+    ecs_remove(stage_a, child, EcsParent);
+    ecs_set(stage_b, child, EcsParent, {parent});
+    ecs_readonly_end(world);
+
+    test_assert(ecs_is_alive(world, parent));
+    test_assert(ecs_is_alive(world, child));
+
+    const EcsParent *p = ecs_get(world, child, EcsParent);
+    test_assert(p != NULL);
+    test_uint(p->value, parent);
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_defer_remove_set_parent_different_stages_batched(void) {
+    ecs_world_t *world = ecs_mini();
+    ecs_set_stage_count(world, 2);
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_world_t *stage_a = ecs_get_stage(world, 0);
+    ecs_world_t *stage_b = ecs_get_stage(world, 1);
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_entity_t child = ecs_new(world);
+    ecs_set(world, child, EcsParent, {parent});
+
+    ecs_readonly_begin(world, false);
+    ecs_add(stage_a, child, Foo);
+    ecs_remove(stage_a, child, EcsParent);
+    ecs_add(stage_b, child, Bar);
+    ecs_set(stage_b, child, EcsParent, {parent});
+    ecs_readonly_end(world);
+
+    test_assert(ecs_is_alive(world, parent));
+    test_assert(ecs_is_alive(world, child));
+
+    const EcsParent *p = ecs_get(world, child, EcsParent);
+    test_assert(p != NULL);
+    test_uint(p->value, parent);
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_defer_remove_set_parent_different_stages_w_observer(void) {
+    ecs_world_t *world = ecs_mini();
+    ecs_set_stage_count(world, 2);
+
+    ecs_world_t *stage_a = ecs_get_stage(world, 0);
+    ecs_world_t *stage_b = ecs_get_stage(world, 1);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(EcsParent) }},
+        .events = { EcsOnSet },
+        .callback = DummyObserver
+    });
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_entity_t child = ecs_new(world);
+    ecs_set(world, child, EcsParent, {parent});
+
+    ecs_readonly_begin(world, false);
+    ecs_remove(stage_a, child, EcsParent);
+    ecs_set(stage_b, child, EcsParent, {parent});
+    ecs_readonly_end(world);
+
+    test_assert(ecs_is_alive(world, parent));
+    test_assert(ecs_is_alive(world, child));
+
+    const EcsParent *p = ecs_get(world, child, EcsParent);
+    test_assert(p != NULL);
+    test_uint(p->value, parent);
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_defer_reparent_to_deleted_parent(void) {
+    ecs_world_t* world = ecs_mini();
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(EcsParent) }},
+        .events = { EcsOnRemove, EcsOnSet },
+        .callback = DummyObserver
+    });
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_entity_t parent2 = ecs_new(world);
+    ecs_entity_t child = ecs_new(world);
+
+    ecs_defer_begin(world);
+    ecs_set(world, child, EcsParent, {parent2});
+    ecs_remove(world, child, EcsParent);
+    ecs_delete(world, parent);
+    ecs_set(world, child, EcsParent, {parent});
+    ecs_defer_end(world);
+
+    test_assert(!ecs_is_alive(world, parent));
+    test_assert(ecs_is_alive(world, parent2));
+    test_assert(!ecs_is_alive(world, child));
+
+    ecs_fini(world);
+}

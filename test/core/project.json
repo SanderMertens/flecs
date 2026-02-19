@@ -958,7 +958,11 @@
                 "defer_set_parent_to_deleted_w_on_remove",
                 "defer_set_parent_to_deleted_batched_w_on_remove",
                 "defer_set_existing_parent_to_deleted",
-                "defer_set_existing_parent_to_deleted_batched"
+                "defer_set_existing_parent_to_deleted_batched",
+                "defer_remove_set_parent_different_stages",
+                "defer_remove_set_parent_different_stages_batched",
+                "defer_remove_set_parent_different_stages_w_observer",
+                "defer_reparent_to_deleted_parent"
             ]
         }, {
             "id": "Hierarchies",
@@ -3084,7 +3088,8 @@
                 "set_existing_after_remove",
                 "set_existing_after_remove_move_table",
                 "set_existing_after_remove_w_is_a",
-                "set_existing_after_remove_w_is_a_move_table"
+                "set_existing_after_remove_w_is_a_move_table",
+                "set_existing_after_remove_2_stages"
             ]
         }, {
             "id": "SingleThreadStaging",

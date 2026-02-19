@@ -927,6 +927,10 @@ void NonFragmentingChildOf_defer_set_parent_to_deleted_w_on_remove(void);
 void NonFragmentingChildOf_defer_set_parent_to_deleted_batched_w_on_remove(void);
 void NonFragmentingChildOf_defer_set_existing_parent_to_deleted(void);
 void NonFragmentingChildOf_defer_set_existing_parent_to_deleted_batched(void);
+void NonFragmentingChildOf_defer_remove_set_parent_different_stages(void);
+void NonFragmentingChildOf_defer_remove_set_parent_different_stages_batched(void);
+void NonFragmentingChildOf_defer_remove_set_parent_different_stages_w_observer(void);
+void NonFragmentingChildOf_defer_reparent_to_deleted_parent(void);
 
 // Testsuite 'Hierarchies'
 void Hierarchies_setup(void);
@@ -2996,6 +3000,7 @@ void Commands_set_existing_after_remove(void);
 void Commands_set_existing_after_remove_move_table(void);
 void Commands_set_existing_after_remove_w_is_a(void);
 void Commands_set_existing_after_remove_w_is_a_move_table(void);
+void Commands_set_existing_after_remove_2_stages(void);
 
 // Testsuite 'SingleThreadStaging'
 void SingleThreadStaging_setup(void);
@@ -6792,6 +6797,22 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "defer_set_existing_parent_to_deleted_batched",
         NonFragmentingChildOf_defer_set_existing_parent_to_deleted_batched
+    },
+    {
+        "defer_remove_set_parent_different_stages",
+        NonFragmentingChildOf_defer_remove_set_parent_different_stages
+    },
+    {
+        "defer_remove_set_parent_different_stages_batched",
+        NonFragmentingChildOf_defer_remove_set_parent_different_stages_batched
+    },
+    {
+        "defer_remove_set_parent_different_stages_w_observer",
+        NonFragmentingChildOf_defer_remove_set_parent_different_stages_w_observer
+    },
+    {
+        "defer_reparent_to_deleted_parent",
+        NonFragmentingChildOf_defer_reparent_to_deleted_parent
     }
 };
 
@@ -14888,6 +14909,10 @@ bake_test_case Commands_testcases[] = {
     {
         "set_existing_after_remove_w_is_a_move_table",
         Commands_set_existing_after_remove_w_is_a_move_table
+    },
+    {
+        "set_existing_after_remove_2_stages",
+        Commands_set_existing_after_remove_2_stages
     }
 };
 
@@ -15700,7 +15725,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NULL,
         NULL,
-        221,
+        225,
         NonFragmentingChildOf_testcases
     },
     {
@@ -15896,7 +15921,7 @@ static bake_test_suite suites[] = {
         "Commands",
         NULL,
         NULL,
-        174,
+        175,
         Commands_testcases
     },
     {
