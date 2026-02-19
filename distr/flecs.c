@@ -6070,6 +6070,13 @@ void* flecs_defer_set(
     flecs_component_ptr_t ptr = flecs_defer_get_existing(
         world, entity, r, id, size);
 
+    if (world->stage_count != 1) {
+        /* If world has multiple stages we need to insert a set command
+         * with temporary storage, as the value could be lost otherwise
+         * by a command in another stage. */
+        ptr.ptr = NULL;
+    }
+
     const ecs_type_info_t *ti = ptr.ti;
     ecs_check(ti != NULL, ECS_INVALID_PARAMETER, 
         "provided component is not a type");
@@ -6090,8 +6097,8 @@ void* flecs_defer_set(
                 cmd->is._1.value = ptr.ptr;
             } else {
                 /* No OnSet observers, so only thing we need to do is make sure
-                 * that a preceding remove command doesn't cause the entity to
-                 * end up without the component. */
+                * that a preceding remove command doesn't cause the entity to
+                * end up without the component. */
                 cmd->kind = EcsCmdAdd;
             }
 
