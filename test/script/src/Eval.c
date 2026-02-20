@@ -13651,3 +13651,82 @@ void Eval_tree_parent_nested_w_with_scope(void) {
 
     ecs_fini(world);
 }
+
+void Eval_update_after_add_remove_tree_parent(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr_1 = 
+        "@tree Parent\n"
+        "template Tree {  \n"
+        "  {\n"
+        "    Position: {}\n"
+        "  }\n"
+        "}\n"
+        "\n"
+        "@tree Parent\n"
+        "template Pavement {\n"
+        "  Tree() {}\n"
+        "  Tree() {}\n"
+        "}\n"
+        "\n"
+        "Pavement p()\n";
+
+    const char *expr_2 = 
+        "template Tree {  \n"
+        "  {\n"
+        "    Position: {}\n"
+        "  }\n"
+        "}\n"
+        "\n"
+        "@tree Parent\n"
+        "template Pavement {\n"
+        "  Tree() {}\n"
+        "  Tree() {}\n"
+        "}\n"
+        "\n"
+        "Pavement p()\n";
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = expr_1
+    });
+
+    test_assert(s != 0);
+
+    ecs_script_update(world, s, 0, expr_2);
+    ecs_script_update(world, s, 0, expr_1);
+
+    ecs_script_update(world, s, 0, expr_1);
+    ecs_script_update(world, s, 0, expr_1);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_id(EcsParent) }}
+    });
+
+    test_assert(q != NULL);
+    
+    int32_t found = 0;
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        EcsParent *p = ecs_field(&it, EcsParent, 0);
+        for (int i = 0; i < it.count; i ++) {
+            test_assert(p[i].value != 0);
+            test_assert(ecs_is_alive(world, p[i].value));
+            found ++;
+        }
+    }
+
+    test_int(found, 4);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}

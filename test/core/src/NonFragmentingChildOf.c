@@ -5711,3 +5711,22 @@ void NonFragmentingChildOf_defer_reparent_to_deleted_parent(void) {
 
     ecs_fini(world);
 }
+
+void NonFragmentingChildOf_defer_set_remove_set_parent_cycle(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_entity_t child = ecs_new(world);
+
+    ecs_set(world, child, EcsParent, {parent});
+
+    ecs_defer_begin(world);
+    ecs_set(world, parent, EcsParent, {child});
+    ecs_remove(world, parent, EcsParent);
+    ecs_set(world, parent, EcsParent, {child});
+
+    test_expect_abort();
+    ecs_defer_end(world);
+}

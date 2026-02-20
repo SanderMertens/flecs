@@ -415,6 +415,7 @@ void Eval_tree_parent_nested_w_if_else_scope(void);
 void Eval_tree_parent_nested_w_for_scope(void);
 void Eval_tree_parent_nested_w_pair_scope(void);
 void Eval_tree_parent_nested_w_with_scope(void);
+void Eval_update_after_add_remove_tree_parent(void);
 
 // Testsuite 'Template'
 void Template_template_no_scope(void);
@@ -2794,6 +2795,10 @@ bake_test_case Eval_testcases[] = {
     {
         "tree_parent_nested_w_with_scope",
         Eval_tree_parent_nested_w_with_scope
+    },
+    {
+        "update_after_add_remove_tree_parent",
+        Eval_update_after_add_remove_tree_parent
     }
 };
 
@@ -5779,7 +5784,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        406,
+        407,
         Eval_testcases
     },
     {
