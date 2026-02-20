@@ -418,7 +418,8 @@
                 "tree_parent_nested_w_if_else_scope",
                 "tree_parent_nested_w_for_scope",
                 "tree_parent_nested_w_pair_scope",
-                "tree_parent_nested_w_with_scope"
+                "tree_parent_nested_w_with_scope",
+                "update_after_add_remove_tree_parent"
             ]
         }, {
             "id": "Template",
