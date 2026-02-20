@@ -2898,6 +2898,7 @@ ecs_entity_t ecs_new_w_parent(
     const char *name)
 {
     ecs_stage_t *stage = flecs_stage_from_world(&world);
+    flecs_poly_assert(world, ecs_world_t);
     ecs_assert(!(world->flags & EcsWorldMultiThreaded), ECS_INVALID_OPERATION,
         "cannot create new entity while world is multithreaded");
 
