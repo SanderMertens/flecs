@@ -13673,8 +13673,8 @@ void Eval_update_after_add_remove_tree_parent(void) {
         "\n"
         "@tree Parent\n"
         "template Pavement {\n"
-        "  Tree() {}\n"
-        "  Tree() {}\n"
+        "  Tree t1() {}\n"
+        "  Tree t2() {}\n"
         "}\n"
         "\n"
         "Pavement p()\n";
@@ -13688,8 +13688,8 @@ void Eval_update_after_add_remove_tree_parent(void) {
         "\n"
         "@tree Parent\n"
         "template Pavement {\n"
-        "  Tree() {}\n"
-        "  Tree() {}\n"
+        "  Tree t1() {}\n"
+        "  Tree t2() {}\n"
         "}\n"
         "\n"
         "Pavement p()\n";
@@ -13700,10 +13700,16 @@ void Eval_update_after_add_remove_tree_parent(void) {
 
     test_assert(s != 0);
 
+    ecs_log_set_level(1);
+
+    printf("\n");
     ecs_script_update(world, s, 0, expr_2);
+    printf("\n");
     ecs_script_update(world, s, 0, expr_1);
 
+    printf("\n");
     ecs_script_update(world, s, 0, expr_1);
+    printf("\n");
     ecs_script_update(world, s, 0, expr_1);
 
     ecs_query_t *q = ecs_query(world, {
@@ -13727,6 +13733,21 @@ void Eval_update_after_add_remove_tree_parent(void) {
     test_int(found, 4);
 
     ecs_query_fini(q);
+    
+    {
+        ecs_entities_t entities = ecs_get_entities(world);
+        for (int i = 0; i < entities.count; i ++) {
+            ecs_entity_t p = entities.ids[i];
+            if (p != EcsWildcard && p != EcsAny && p != EcsVariable) {
+                ecs_iter_t it = ecs_children(world, p);
+                while (ecs_children_next(&it)) {
+                    for (int c = 0; c < it.count; c ++) {
+                        test_assert(ecs_is_alive(world, it.entities[c]));
+                    }
+                }
+            }
+        }
+    }
 
     ecs_fini(world);
 }

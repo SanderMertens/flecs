@@ -85,6 +85,7 @@ void ecs_script_clear(
     if (!instance) {
         ecs_delete_with(world, ecs_pair_t(EcsScript, script));
     } else {
+        ecs_assert(ecs_is_alive(world, instance), ECS_INTERNAL_ERROR, NULL);
         ecs_vec_t to_delete = {0};
         ecs_vec_init_t(&world->allocator, &to_delete, ecs_entity_t, 0);
 
@@ -236,6 +237,13 @@ int ecs_script_update(
     }
 
     ecs_script_clear(world, e, instance);
+
+#ifdef FLECS_DEBUG
+    {
+        ecs_iter_t it = ecs_each_pair_t(world, EcsScript, e);
+        ecs_assert(!ecs_iter_is_true(&it), ECS_INTERNAL_ERROR, NULL);
+    }
+#endif
 
     ecs_entity_t prev = ecs_set_with(world, flecs_script_tag(e, instance));
 

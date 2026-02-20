@@ -210,7 +210,6 @@ void flecs_component_delete_non_fragmenting_childof(
 
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = children[i];
-
         ecs_record_t *r = flecs_entities_get_any(world, e);
         if ((r->row & EcsEntityIsTarget)) {
             ecs_component_record_t *child_cr = flecs_components_get(
