@@ -12413,6 +12413,18 @@ typedef struct {
     double last_time;
 } ecs_rest_ctx_t;
 
+/**
+ * Default REST routes callback, implements the FLECS REST API.
+ * You can add routes by implementing a ecs_http_reply_action_t function that match and reply for your custom needs then call flecs_rest_reply() as default route to keep all original API routes available.
+ * You can provide your custom callback via ecs_http_server_desc_t argument of ecs_rest_server_init() or ecs_http_server_init().
+ */
+FLECS_API
+bool flecs_rest_reply(
+    const ecs_http_request_t* req,
+    ecs_http_reply_t *reply,
+    void *ctx);
+
+
 /** Component that creates a REST API server when instantiated. */
 typedef struct {
     uint16_t port;      /**< Port of server (optional, default = 27750) */
