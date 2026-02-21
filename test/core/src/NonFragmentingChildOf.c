@@ -5770,3 +5770,24 @@ void NonFragmentingChildOf_delete_mixed_tree_2(void) {
 
     ecs_fini(world);
 }
+
+void NonFragmentingChildOf_delete_mixed_tree_3(void) {
+    ecs_world_t *world = ecs_init(); // using ecs_init vs. ecs_mini causes a crash
+
+    ecs_entity_t root = ecs_new(world);
+    ecs_entity_t prefab = ecs_new_w_id(world, EcsPrefab);
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_set(world, parent, EcsParent, {root});
+    ecs_add_pair(world, parent, EcsIsA, prefab);
+
+    ecs_entity_t child_a = ecs_new(world);
+    ecs_add_pair(world, child_a, EcsChildOf, parent);
+    
+    ecs_entity_t child_b = ecs_new(world);
+    ecs_set(world, child_b, EcsParent, {parent});
+
+    ecs_delete(world, root);
+
+    ecs_fini(world);
+}
