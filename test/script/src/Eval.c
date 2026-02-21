@@ -13700,16 +13700,10 @@ void Eval_update_after_add_remove_tree_parent(void) {
 
     test_assert(s != 0);
 
-    ecs_log_set_level(1);
-
-    printf("\n");
     ecs_script_update(world, s, 0, expr_2);
-    printf("\n");
     ecs_script_update(world, s, 0, expr_1);
 
-    printf("\n");
     ecs_script_update(world, s, 0, expr_1);
-    printf("\n");
     ecs_script_update(world, s, 0, expr_1);
 
     ecs_query_t *q = ecs_query(world, {

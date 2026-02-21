@@ -10812,6 +10812,7 @@ ecs_entity_t ecs_new_w_parent(
     const char *name)
 {
     ecs_stage_t *stage = flecs_stage_from_world(&world);
+    flecs_poly_assert(world, ecs_world_t);
     ecs_assert(!(world->flags & EcsWorldMultiThreaded), ECS_INVALID_OPERATION,
         "cannot create new entity while world is multithreaded");
 
@@ -18135,12 +18136,11 @@ void flecs_component_delete_non_fragmenting_childof(
 
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = children[i];
-
         ecs_record_t *r = flecs_entities_get_any(world, e);
         if ((r->row & EcsEntityIsTarget)) {
             ecs_component_record_t *child_cr = flecs_components_get(
                 world, ecs_childof(e));
-            if (child_cr) {
+            if (child_cr && flecs_component_has_non_fragmenting_childof(child_cr)) {
                 if (!flecs_is_childof_tgt_only(child_cr)) {
                     /* Entity is used as target with other relationships, go
                      * through regular cleanup path. */
@@ -18149,8 +18149,8 @@ void flecs_component_delete_non_fragmenting_childof(
                     flecs_component_delete_non_fragmenting_childof(world, child_cr);
                 }
             } else {
-                /* Entity is a target but is not a ChildOf target. Go through
-                 * regular cleanup path. */
+                /* Entity is a target but is not a (non-fragmenting) ChildOf 
+                 * target. Go through regular cleanup path. */
                 flecs_target_mark_for_delete(world, e);
             }
         }
@@ -66992,6 +66992,7 @@ void ecs_script_clear(
     if (!instance) {
         ecs_delete_with(world, ecs_pair_t(EcsScript, script));
     } else {
+        ecs_assert(ecs_is_alive(world, instance), ECS_INTERNAL_ERROR, NULL);
         ecs_vec_t to_delete = {0};
         ecs_vec_init_t(&world->allocator, &to_delete, ecs_entity_t, 0);
 
@@ -67143,6 +67144,13 @@ int ecs_script_update(
     }
 
     ecs_script_clear(world, e, instance);
+
+#ifdef FLECS_DEBUG
+    {
+        ecs_iter_t it = ecs_each_pair_t(world, EcsScript, e);
+        ecs_assert(!ecs_iter_is_true(&it), ECS_INTERNAL_ERROR, NULL);
+    }
+#endif
 
     ecs_entity_t prev = ecs_set_with(world, flecs_script_tag(e, instance));
 
@@ -69844,6 +69852,10 @@ ecs_entity_t flecs_script_create_entity(
 
     if (v->entity && v->entity->non_fragmenting_parent) {
         desc.id = ecs_new_w_parent(v->world, v->parent, name);
+        ecs_id_t world_with = ecs_get_with(v->world);
+        if (world_with) {
+            ecs_add_id(v->world, desc.id, world_with);
+        }
     } else {
         desc.parent = v->parent;
         desc.name = name;
