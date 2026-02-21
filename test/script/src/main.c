@@ -416,6 +416,8 @@ void Eval_tree_parent_nested_w_for_scope(void);
 void Eval_tree_parent_nested_w_pair_scope(void);
 void Eval_tree_parent_nested_w_with_scope(void);
 void Eval_update_after_add_remove_tree_parent(void);
+void Eval_assign_eq_enum_to_component(void);
+void Eval_assign_eq_enum_to_const(void);
 
 // Testsuite 'Template'
 void Template_template_no_scope(void);
@@ -691,11 +693,13 @@ void Expr_int_cond_or_bool(void);
 void Expr_cond_eq_bool(void);
 void Expr_cond_eq_int(void);
 void Expr_cond_eq_enum(void);
+void Expr_cond_eq_enum_literal(void);
 void Expr_cond_eq_string(void);
 void Expr_cond_eq_entity(void);
 void Expr_cond_neq_bool(void);
 void Expr_cond_neq_int(void);
 void Expr_cond_neq_enum(void);
+void Expr_cond_neq_enum_literal(void);
 void Expr_cond_neq_string(void);
 void Expr_cond_neq_entity(void);
 void Expr_cond_eq_bool_int(void);
@@ -705,15 +709,23 @@ void Expr_cond_eq_cond_or(void);
 void Expr_cond_gt_bool(void);
 void Expr_cond_gt_int(void);
 void Expr_cond_gt_flt(void);
+void Expr_cond_gt_enum(void);
+void Expr_cond_gt_enum_literal(void);
 void Expr_cond_gteq_bool(void);
 void Expr_cond_gteq_int(void);
 void Expr_cond_gteq_flt(void);
+void Expr_cond_gteq_enum(void);
+void Expr_cond_gteq_enum_literal(void);
 void Expr_cond_lt_bool(void);
 void Expr_cond_lt_int(void);
 void Expr_cond_lt_flt(void);
+void Expr_cond_lt_enum(void);
+void Expr_cond_lt_enum_literal(void);
 void Expr_cond_lteq_bool(void);
 void Expr_cond_lteq_int(void);
 void Expr_cond_lteq_flt(void);
+void Expr_cond_lteq_enum(void);
+void Expr_cond_lteq_enum_literal(void);
 void Expr_min_lparen_int_rparen(void);
 void Expr_min_lparen_int_add_int_rparen(void);
 void Expr_min_number_hex(void);
@@ -2799,6 +2811,14 @@ bake_test_case Eval_testcases[] = {
     {
         "update_after_add_remove_tree_parent",
         Eval_update_after_add_remove_tree_parent
+    },
+    {
+        "assign_eq_enum_to_component",
+        Eval_assign_eq_enum_to_component
+    },
+    {
+        "assign_eq_enum_to_const",
+        Eval_assign_eq_enum_to_const
     }
 };
 
@@ -3882,6 +3902,10 @@ bake_test_case Expr_testcases[] = {
         Expr_cond_eq_enum
     },
     {
+        "cond_eq_enum_literal",
+        Expr_cond_eq_enum_literal
+    },
+    {
         "cond_eq_string",
         Expr_cond_eq_string
     },
@@ -3900,6 +3924,10 @@ bake_test_case Expr_testcases[] = {
     {
         "cond_neq_enum",
         Expr_cond_neq_enum
+    },
+    {
+        "cond_neq_enum_literal",
+        Expr_cond_neq_enum_literal
     },
     {
         "cond_neq_string",
@@ -3938,6 +3966,14 @@ bake_test_case Expr_testcases[] = {
         Expr_cond_gt_flt
     },
     {
+        "cond_gt_enum",
+        Expr_cond_gt_enum
+    },
+    {
+        "cond_gt_enum_literal",
+        Expr_cond_gt_enum_literal
+    },
+    {
         "cond_gteq_bool",
         Expr_cond_gteq_bool
     },
@@ -3948,6 +3984,14 @@ bake_test_case Expr_testcases[] = {
     {
         "cond_gteq_flt",
         Expr_cond_gteq_flt
+    },
+    {
+        "cond_gteq_enum",
+        Expr_cond_gteq_enum
+    },
+    {
+        "cond_gteq_enum_literal",
+        Expr_cond_gteq_enum_literal
     },
     {
         "cond_lt_bool",
@@ -3962,6 +4006,14 @@ bake_test_case Expr_testcases[] = {
         Expr_cond_lt_flt
     },
     {
+        "cond_lt_enum",
+        Expr_cond_lt_enum
+    },
+    {
+        "cond_lt_enum_literal",
+        Expr_cond_lt_enum_literal
+    },
+    {
         "cond_lteq_bool",
         Expr_cond_lteq_bool
     },
@@ -3972,6 +4024,14 @@ bake_test_case Expr_testcases[] = {
     {
         "cond_lteq_flt",
         Expr_cond_lteq_flt
+    },
+    {
+        "cond_lteq_enum",
+        Expr_cond_lteq_enum
+    },
+    {
+        "cond_lteq_enum_literal",
+        Expr_cond_lteq_enum_literal
     },
     {
         "min_lparen_int_rparen",
@@ -5784,7 +5844,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        407,
+        409,
         Eval_testcases
     },
     {
@@ -5805,7 +5865,7 @@ static bake_test_suite suites[] = {
         "Expr",
         Expr_setup,
         NULL,
-        328,
+        338,
         Expr_testcases,
         1,
         Expr_params

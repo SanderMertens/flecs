@@ -1096,7 +1096,16 @@ int flecs_expr_binary_visit_type(
         goto error;
     }
 
-    if (flecs_expr_visit_type_priv(script, node->right, cur, desc)) {
+    ecs_meta_cursor_t right_cur = *cur;
+    if (node->right->kind == EcsExprIdentifier) {
+        if (ecs_get(script->world, node->left->type, EcsEnum) != NULL) {
+            /* If the left hand side is an enum, interpret untyped identifiers
+             * on the right hand side as enum constants of the same type. */
+            right_cur = ecs_meta_cursor(script->world, node->left->type, NULL);
+        }
+    }
+
+    if (flecs_expr_visit_type_priv(script, node->right, &right_cur, desc)) {
         goto error;
     }
 
