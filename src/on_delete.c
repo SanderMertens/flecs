@@ -204,6 +204,8 @@ void flecs_component_delete_non_fragmenting_childof(
     ecs_world_t *world,
     ecs_component_record_t *cr)
 {
+    cr->flags |= EcsIdMarkedForDelete;
+
     ecs_pair_record_t *pr = cr->pair;
     int32_t i, count = ecs_vec_count(&pr->ordered_children);
     ecs_entity_t *children = ecs_vec_first(&pr->ordered_children);

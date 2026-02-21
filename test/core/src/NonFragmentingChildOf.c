@@ -5772,9 +5772,18 @@ void NonFragmentingChildOf_delete_mixed_tree_2(void) {
 }
 
 void NonFragmentingChildOf_delete_mixed_tree_3(void) {
-    ecs_world_t *world = ecs_init(); // using ecs_init vs. ecs_mini causes a crash
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_observer(world, {
+        .query.terms = {{ Foo, .src.id = EcsUp }},
+        .events = { EcsOnRemove },
+        .callback = DummyObserver
+    });
 
     ecs_entity_t root = ecs_new(world);
+    ecs_add(world, root, Foo);
     ecs_entity_t prefab = ecs_new_w_id(world, EcsPrefab);
 
     ecs_entity_t parent = ecs_new(world);
@@ -5788,6 +5797,11 @@ void NonFragmentingChildOf_delete_mixed_tree_3(void) {
     ecs_set(world, child_b, EcsParent, {parent});
 
     ecs_delete(world, root);
+
+    test_assert(!ecs_is_alive(world, root));
+    test_assert(!ecs_is_alive(world, parent));
+    test_assert(!ecs_is_alive(world, child_a));
+    test_assert(!ecs_is_alive(world, child_b));
 
     ecs_fini(world);
 }
