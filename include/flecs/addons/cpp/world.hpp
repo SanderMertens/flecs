@@ -267,6 +267,7 @@ struct world {
             "reset would invalidate other handles");
         ecs_fini(world_);
         world_ = ecs_init();
+        init_builtin_components();
     }
 
     /** Obtain pointer to C world object.
