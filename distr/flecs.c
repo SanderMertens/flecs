@@ -62190,6 +62190,10 @@ void ecs_run_pipeline(
         pipeline = world->pipeline;
     }
 
+    if (ecs_has_id(world, pipeline, EcsDisabled)) {
+        return;
+    }
+
     /* create any worker task threads request */
     if (ecs_using_task_threads(world)) {
         flecs_create_worker_threads(world);
@@ -62197,8 +62201,11 @@ void ecs_run_pipeline(
 
     EcsPipeline *p = 
         ECS_CONST_CAST(EcsPipeline*, ecs_get(world, pipeline, EcsPipeline));
+    ecs_check(p != NULL, ECS_INVALID_OPERATION,
+        "pipeline entity is missing flecs.pipeline.Pipeline component");
     flecs_workers_progress(world, p->state, delta_time);
 
+error:
     if (ecs_using_task_threads(world)) {
         /* task threads were temporary and may now be joined */
         flecs_join_worker_threads(world);
@@ -62418,29 +62425,14 @@ bool ecs_progress(
         flecs_run_startup_systems(world);
     }
 
-    /* create any worker task threads request */
-    if (ecs_using_task_threads(world)) {
-        flecs_create_worker_threads(world);
-    }
-
     ecs_dbg_3("#[bold]progress#[reset](dt = %.2f)", (double)delta_time);
     ecs_log_push_3();
-    const EcsPipeline *p = ecs_get(world, world->pipeline, EcsPipeline);
-    ecs_check(p != NULL, ECS_INVALID_OPERATION,
-        "pipeline entity is missing flecs.pipeline.Pipeline component");
-    flecs_workers_progress(world, p->state, delta_time);
+    ecs_run_pipeline(world, world->pipeline, delta_time);
     ecs_log_pop_3();
 
     ecs_frame_end(world);
 
-    if (ecs_using_task_threads(world)) {
-        /* task threads were temporary and may now be joined */
-        flecs_join_worker_threads(world);
-    }
-
     return !ECS_BIT_IS_SET(world->flags, EcsWorldQuit);
-error:
-    return false;
 }
 
 void ecs_set_time_scale(
