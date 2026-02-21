@@ -13745,3 +13745,107 @@ void Eval_update_after_add_remove_tree_parent(void) {
 
     ecs_fini(world);
 }
+
+void Eval_assign_eq_enum_to_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        bool value;
+    } SomeType;
+
+    ecs_entity_t ecs_id(SomeType) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "SomeType" }),
+        .members = {{ "value", ecs_id(ecs_bool_t) }}
+    });
+
+    const char *expr =
+    HEAD "enum Color {"
+    LINE "  Red, Green, Blue"
+    LINE "}"
+    LINE ""
+    LINE "const c = Color: Red"
+    LINE ""
+    LINE "e1 {"
+    LINE "  SomeType: {value: c == Red}"
+    LINE "}"
+    LINE "e2 {"
+    LINE "  SomeType: {value: c == Green}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    
+    {
+        ecs_entity_t e = ecs_lookup(world, "e1");
+        test_assert(e != 0);
+        test_assert(ecs_has(world, e, SomeType));
+
+        const SomeType *ptr = ecs_get(world, e, SomeType);
+        test_assert(ptr != NULL);
+        test_int(ptr->value, true);
+    }
+
+    {
+        ecs_entity_t e = ecs_lookup(world, "e2");
+        test_assert(e != 0);
+        test_assert(ecs_has(world, e, SomeType));
+
+        const SomeType *ptr = ecs_get(world, e, SomeType);
+        test_assert(ptr != NULL);
+        test_int(ptr->value, false);
+    }
+
+    ecs_fini(world);
+}
+
+void Eval_assign_eq_enum_to_const(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        bool value;
+    } SomeType;
+
+    ecs_entity_t ecs_id(SomeType) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "SomeType" }),
+        .members = {{ "value", ecs_id(ecs_bool_t) }}
+    });
+
+    const char *expr =
+    HEAD "enum Color {"
+    LINE "  Red, Green, Blue"
+    LINE "}"
+    LINE ""
+    LINE "const c = Color: Red"
+    LINE "const r1: c == Red"
+    LINE "const r2: c == Green"
+    LINE ""
+    LINE "e1 {"
+    LINE "  SomeType: {value: r1}"
+    LINE "}"
+    LINE "e2 {"
+    LINE "  SomeType: {value: r2}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    
+    {
+        ecs_entity_t e = ecs_lookup(world, "e1");
+        test_assert(e != 0);
+        test_assert(ecs_has(world, e, SomeType));
+
+        const SomeType *ptr = ecs_get(world, e, SomeType);
+        test_assert(ptr != NULL);
+        test_int(ptr->value, true);
+    }
+
+    {
+        ecs_entity_t e = ecs_lookup(world, "e2");
+        test_assert(e != 0);
+        test_assert(ecs_has(world, e, SomeType));
+
+        const SomeType *ptr = ecs_get(world, e, SomeType);
+        test_assert(ptr != NULL);
+        test_int(ptr->value, false);
+    }
+
+    ecs_fini(world);
+}
