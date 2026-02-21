@@ -97,6 +97,57 @@ void Pipeline_system_order_same_phase(void) {
     ecs_fini(world);
 }
 
+void Pipeline_disabled_pipeline(void) {
+    ecs_world_t *world = ecs_init();
+
+    sys_a_invoked = 0;
+
+    ECS_SYSTEM(world, SysA, EcsOnUpdate, 0);
+
+    ecs_progress(world, 0);
+    test_int(sys_a_invoked, 1);
+
+    ecs_entity_t pipeline = ecs_get_pipeline(world);
+    ecs_enable(world, pipeline, false);
+
+    ecs_progress(world, 0);
+    test_int(sys_a_invoked, 1);
+
+    ecs_enable(world, pipeline, true);
+
+    ecs_progress(world, 0);
+    test_int(sys_a_invoked, 2);
+
+    ecs_fini(world);
+}
+
+void Pipeline_disabled_custom_pipeline(void) {
+    ecs_world_t *world = ecs_init();
+
+    sys_a_invoked = 0;
+
+    ECS_TAG(world, Tag);
+    ECS_SYSTEM(world, SysA, Tag, 0);
+
+    ECS_PIPELINE(world, P, flecs.system.System, Tag);
+    ecs_set_pipeline(world, P);
+
+    ecs_progress(world, 0);
+    test_int(sys_a_invoked, 1);
+
+    ecs_enable(world, P, false);
+
+    ecs_progress(world, 0);
+    test_int(sys_a_invoked, 1);
+
+    ecs_enable(world, P, true);
+
+    ecs_progress(world, 0);
+    test_int(sys_a_invoked, 2);
+
+    ecs_fini(world);
+}
+
 void Pipeline_system_order_same_phase_after_disable(void) {
     ecs_world_t *world = ecs_init();
 
