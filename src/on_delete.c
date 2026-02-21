@@ -214,7 +214,7 @@ void flecs_component_delete_non_fragmenting_childof(
         if ((r->row & EcsEntityIsTarget)) {
             ecs_component_record_t *child_cr = flecs_components_get(
                 world, ecs_childof(e));
-            if (child_cr) {
+            if (child_cr && flecs_component_has_non_fragmenting_childof(child_cr)) {
                 if (!flecs_is_childof_tgt_only(child_cr)) {
                     /* Entity is used as target with other relationships, go
                      * through regular cleanup path. */
@@ -223,8 +223,8 @@ void flecs_component_delete_non_fragmenting_childof(
                     flecs_component_delete_non_fragmenting_childof(world, child_cr);
                 }
             } else {
-                /* Entity is a target but is not a ChildOf target. Go through
-                 * regular cleanup path. */
+                /* Entity is a target but is not a (non-fragmenting) ChildOf 
+                 * target. Go through regular cleanup path. */
                 flecs_target_mark_for_delete(world, e);
             }
         }
