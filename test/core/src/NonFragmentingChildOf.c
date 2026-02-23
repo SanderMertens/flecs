@@ -5805,3 +5805,31 @@ void NonFragmentingChildOf_delete_mixed_tree_3(void) {
 
     ecs_fini(world);
 }
+
+void NonFragmentingChildOf_delete_mixed_tree_4(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t a = ecs_new(world);
+    ecs_entity_t b = ecs_new(world);
+    ecs_set(world, b, EcsParent, {a});
+
+    ecs_entity_t c = ecs_new(world);
+    ecs_add_pair(world, c, EcsIsA, b);
+    test_assert(!ecs_has(world, c, EcsParent));
+
+    ecs_entity_t d = ecs_new(world);
+    ecs_add_pair(world, d, EcsChildOf, c);
+
+    ecs_delete(world, a);
+    test_assert(!ecs_is_alive(world, a));
+    test_assert(!ecs_is_alive(world, b));
+    test_assert(!ecs_has_pair(world, c, EcsIsA, EcsWildcard));
+
+    test_assert(ecs_is_alive(world, c));
+    test_assert(ecs_is_alive(world, d));
+    ecs_add(world, d, Foo);
+
+    ecs_fini(world);
+}

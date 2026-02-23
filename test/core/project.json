@@ -965,7 +965,8 @@
                 "defer_reparent_to_deleted_parent",
                 "delete_mixed_tree_1",
                 "delete_mixed_tree_2",
-                "delete_mixed_tree_3"
+                "delete_mixed_tree_3",
+                "delete_mixed_tree_4"
             ]
         }, {
             "id": "Hierarchies",
