@@ -15696,6 +15696,7 @@ void flecs_emit_forward_table_up(
                 const EcsParent *parent = ecs_get(world, tgt, EcsParent);
                 ecs_assert(parent != NULL, ECS_INTERNAL_ERROR, NULL);
                 ecs_assert(parent->value != 0, ECS_INTERNAL_ERROR, NULL);
+
                 cr = flecs_components_get(world, ecs_childof(parent->value));
                 ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
             }
@@ -16242,8 +16243,7 @@ repeat_event:
 
             for (p = 0; p < parent_count; p ++) {
                 ecs_entity_t parent = parents[p].value;
-                ecs_assert(parent != 0, ECS_INTERNAL_ERROR, NULL);
-                if (flecs_entities_is_alive(world, parent)) {
+                if (parent && flecs_entities_is_alive(world, parent)) {
                     ecs_id_t pair = ecs_childof(parent);
                     ecs_type_t type = { .count = 1, .array = &pair };
                     pdesc.ids = &type;
@@ -20669,6 +20669,8 @@ ecs_type_t flecs_prefab_spawner_build_type(
     ecs_type_t dst = {0};
     ecs_type_t *src = &table->type;
 
+    flecs_type_add(world, &dst, ecs_id(EcsParent));
+
     int32_t i, count = src->count;
     for (i = 0; i < count; i ++) {
         ecs_id_t id = src->array[i];
@@ -20909,6 +20911,7 @@ void flecs_spawner_instantiate(
         ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
 
         int32_t parent_column = table->component_map[ecs_id(EcsParent)];
+        ecs_assert(parent_column != 0, ECS_INTERNAL_ERROR, NULL);
         EcsParent *parent_ptr = table->data.columns[parent_column - 1].data;
         parent_ptr = &parent_ptr[row];
         parent_ptr->value = parent;
@@ -41161,6 +41164,8 @@ void flecs_bootstrap_parent_component(
         .ctor = flecs_default_ctor,
         .on_replace = flecs_on_replace_parent
     });
+
+    ecs_add_pair(world, ecs_id(EcsParent), EcsOnInstantiate, EcsDontInherit);
 }
 
 

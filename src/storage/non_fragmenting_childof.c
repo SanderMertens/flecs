@@ -432,4 +432,6 @@ void flecs_bootstrap_parent_component(
         .ctor = flecs_default_ctor,
         .on_replace = flecs_on_replace_parent
     });
+
+    ecs_add_pair(world, ecs_id(EcsParent), EcsOnInstantiate, EcsDontInherit);
 }

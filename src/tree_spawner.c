@@ -52,6 +52,8 @@ ecs_type_t flecs_prefab_spawner_build_type(
     ecs_type_t dst = {0};
     ecs_type_t *src = &table->type;
 
+    flecs_type_add(world, &dst, ecs_id(EcsParent));
+
     int32_t i, count = src->count;
     for (i = 0; i < count; i ++) {
         ecs_id_t id = src->array[i];
@@ -292,6 +294,7 @@ void flecs_spawner_instantiate(
         ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
 
         int32_t parent_column = table->component_map[ecs_id(EcsParent)];
+        ecs_assert(parent_column != 0, ECS_INTERNAL_ERROR, NULL);
         EcsParent *parent_ptr = table->data.columns[parent_column - 1].data;
         parent_ptr = &parent_ptr[row];
         parent_ptr->value = parent;
