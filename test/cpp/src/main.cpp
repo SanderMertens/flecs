@@ -7122,7 +7122,7 @@ bake_test_case World_testcases[] = {
     },
     {
         "reset_rest_after_reset",
-        World_reset_rest_after_reset
+        World_reset_set_rest_after_reset
     },
     {
         "id_from_pair_type",
