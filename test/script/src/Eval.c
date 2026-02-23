@@ -374,6 +374,261 @@ void Eval_line_comment_after_newline_before_newline_scope_open(void) {
     ecs_fini(world);
 }
 
+void Eval_line_comment_multiple_before_newline_scope_open(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Parent"
+    LINE "// Comment A"
+    LINE "// Comment B"
+    LINE "{"
+    LINE " Child{}"
+    LINE "}"
+    LINE "Foo{}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t parent = ecs_lookup(world, "Parent");
+    ecs_entity_t child = ecs_lookup(world, "Parent.Child");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+
+    test_assert(parent != 0);
+    test_assert(child != 0);
+    test_assert(foo != 0);
+    test_assert(ecs_has_pair(world, child, EcsChildOf, parent));
+    test_assert(!ecs_has_pair(world, foo, EcsChildOf, parent));
+
+    ecs_fini(world);
+}
+
+void Eval_line_comment_after_newline_before_whitespace_newline_scope_open(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Parent"
+    LINE "// Some Comment()"
+    LINE "   "
+    LINE "{"
+    LINE " Child{}"
+    LINE "}"
+    LINE "Foo{}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t parent = ecs_lookup(world, "Parent");
+    ecs_entity_t child = ecs_lookup(world, "Parent.Child");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+
+    test_assert(parent != 0);
+    test_assert(child != 0);
+    test_assert(foo != 0);
+    test_assert(ecs_has_pair(world, child, EcsChildOf, parent));
+    test_assert(!ecs_has_pair(world, foo, EcsChildOf, parent));
+
+    ecs_fini(world);
+}
+
+void Eval_line_comment_after_newline_before_newline_scope_open_crlf(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+        "Parent\r\n"
+        "// Some Comment()\r\n"
+        "\r\n"
+        "{\r\n"
+        " Child{}\r\n"
+        "}\r\n"
+        "Foo{}\r\n";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t parent = ecs_lookup(world, "Parent");
+    ecs_entity_t child = ecs_lookup(world, "Parent.Child");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+
+    test_assert(parent != 0);
+    test_assert(child != 0);
+    test_assert(foo != 0);
+    test_assert(ecs_has_pair(world, child, EcsChildOf, parent));
+    test_assert(!ecs_has_pair(world, foo, EcsChildOf, parent));
+
+    ecs_fini(world);
+}
+
+void Eval_line_comment_before_multi_line_comment_before_scope_open(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Parent"
+    LINE "// Some line comment"
+    LINE "/* Some multi line comment */"
+    LINE "{"
+    LINE " Child{}"
+    LINE "}"
+    LINE "Foo{}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t parent = ecs_lookup(world, "Parent");
+    ecs_entity_t child = ecs_lookup(world, "Parent.Child");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+
+    test_assert(parent != 0);
+    test_assert(child != 0);
+    test_assert(foo != 0);
+    test_assert(ecs_has_pair(world, child, EcsChildOf, parent));
+    test_assert(!ecs_has_pair(world, foo, EcsChildOf, parent));
+
+    ecs_fini(world);
+}
+
+void Eval_line_comment_after_newline_before_3_newline_scope_open(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Parent"
+    LINE "// Some Comment()"
+    LINE ""
+    LINE ""
+    LINE ""
+    LINE "{"
+    LINE " Child{}"
+    LINE "}"
+    LINE "Foo{}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t parent = ecs_lookup(world, "Parent");
+    ecs_entity_t child = ecs_lookup(world, "Parent.Child");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+
+    test_assert(parent != 0);
+    test_assert(child != 0);
+    test_assert(foo != 0);
+    test_assert(ecs_has_pair(world, child, EcsChildOf, parent));
+    test_assert(!ecs_has_pair(world, foo, EcsChildOf, parent));
+
+    ecs_fini(world);
+}
+
+void Eval_line_comment_after_newline_before_mixed_comment_newline_scope_open(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Parent"
+    LINE "// Comment A"
+    LINE ""
+    LINE "/* Comment B */"
+    LINE ""
+    LINE "// Comment C"
+    LINE ""
+    LINE "{"
+    LINE " Child{}"
+    LINE "}"
+    LINE "Foo{}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t parent = ecs_lookup(world, "Parent");
+    ecs_entity_t child = ecs_lookup(world, "Parent.Child");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+
+    test_assert(parent != 0);
+    test_assert(child != 0);
+    test_assert(foo != 0);
+    test_assert(ecs_has_pair(world, child, EcsChildOf, parent));
+    test_assert(!ecs_has_pair(world, foo, EcsChildOf, parent));
+
+    ecs_fini(world);
+}
+
+void Eval_multi_line_comment_after_newline_before_mixed_comment_newline_scope_open(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Parent"
+    LINE "/* Comment A */"
+    LINE "// Comment B"
+    LINE ""
+    LINE "{"
+    LINE " Child{}"
+    LINE "}"
+    LINE "Foo{}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t parent = ecs_lookup(world, "Parent");
+    ecs_entity_t child = ecs_lookup(world, "Parent.Child");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+
+    test_assert(parent != 0);
+    test_assert(child != 0);
+    test_assert(foo != 0);
+    test_assert(ecs_has_pair(world, child, EcsChildOf, parent));
+    test_assert(!ecs_has_pair(world, foo, EcsChildOf, parent));
+
+    ecs_fini(world);
+}
+
+void Eval_line_comment_after_newline_before_mixed_line_endings_scope_open(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+        "Parent\n"
+        "// Comment A\r\n"
+        "\r\n"
+        "/* Comment B */\n"
+        "\n"
+        "{\r\n"
+        " Child{}\n"
+        "}\r\n"
+        "Foo{}\n";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t parent = ecs_lookup(world, "Parent");
+    ecs_entity_t child = ecs_lookup(world, "Parent.Child");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+
+    test_assert(parent != 0);
+    test_assert(child != 0);
+    test_assert(foo != 0);
+    test_assert(ecs_has_pair(world, child, EcsChildOf, parent));
+    test_assert(!ecs_has_pair(world, foo, EcsChildOf, parent));
+
+    ecs_fini(world);
+}
+
+void Eval_line_comment_after_newline_before_multiple_multi_line_comments_scope_open(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Parent"
+    LINE "// Comment A"
+    LINE "/* Comment B */"
+    LINE ""
+    LINE "/* Comment C */"
+    LINE ""
+    LINE "{"
+    LINE " Child{}"
+    LINE "}"
+    LINE "Foo{}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t parent = ecs_lookup(world, "Parent");
+    ecs_entity_t child = ecs_lookup(world, "Parent.Child");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+
+    test_assert(parent != 0);
+    test_assert(child != 0);
+    test_assert(foo != 0);
+    test_assert(ecs_has_pair(world, child, EcsChildOf, parent));
+    test_assert(!ecs_has_pair(world, foo, EcsChildOf, parent));
+
+    ecs_fini(world);
+}
+
 void Eval_multi_line_comment(void) {
     ecs_world_t *world = ecs_init();
 
@@ -2506,6 +2761,32 @@ void Eval_using_scope(void) {
     test_assert(ecs_has_pair(world, bar, EcsChildOf, foo));
     test_assert(ecs_has_id(world, hello, bar));
     test_assert(ecs_has_id(world, _world, bar));
+
+    ecs_fini(world);
+}
+
+void Eval_using_tab_after_keyword(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t bar = ecs_entity(world, {
+        .parent = ecs_entity(world, {
+            .name = "Foo"
+        }),
+        .name = "Bar"
+    });
+
+    const char *expr =
+    HEAD "using\tFoo"
+    LINE
+    LINE "e {"
+    LINE "  Bar"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    ecs_entity_t e = ecs_lookup(world, "e");
+
+    test_assert(e != 0);
+    test_assert(ecs_has_id(world, e, bar));
 
     ecs_fini(world);
 }
@@ -7122,6 +7403,24 @@ void Eval_if_else_if(void) {
     ecs_fini(world);
 }
 
+void Eval_if_tab_after_keyword(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const v: 1"
+    LINE "if\t$v == 1 {"
+    LINE "  a{}"
+    LINE "} else {"
+    LINE "  b{}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_lookup(world, "a") != 0);
+    test_assert(ecs_lookup(world, "b") == 0);
+
+    ecs_fini(world);
+}
+
 void Eval_if_else_if_else(void) {
     ecs_world_t *world = ecs_init();
 
@@ -7194,6 +7493,145 @@ void Eval_if_else_space_newline_if(void) {
     LINE "  a{}"
     LINE "} else "
     LINE "if $v == 0 {"
+    LINE "  b{}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_lookup(world, "a") != 0);
+    test_assert(ecs_lookup(world, "b") == 0);
+
+    ecs_fini(world);
+}
+
+void Eval_if_else_comment_newline_if(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const v: 1"
+    LINE "if $v == 1 {"
+    LINE "  a{}"
+    LINE "} else // comment on else"
+    LINE "// second comment"
+    LINE "if $v == 0 {"
+    LINE "  b{}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_lookup(world, "a") != 0);
+    test_assert(ecs_lookup(world, "b") == 0);
+
+    ecs_fini(world);
+}
+
+void Eval_if_else_comment_no_space_newline_if(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const v: 1"
+    LINE "if $v == 1 {"
+    LINE "  a{}"
+    LINE "} else// comment on else"
+    LINE "if $v == 0 {"
+    LINE "  b{}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_lookup(world, "a") != 0);
+    test_assert(ecs_lookup(world, "b") == 0);
+
+    ecs_fini(world);
+}
+
+void Eval_if_else_comment_newline_newline_if(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const v: 1"
+    LINE "if $v == 1 {"
+    LINE "  a{}"
+    LINE "} else // comment on else"
+    LINE ""
+    LINE "if $v == 0 {"
+    LINE "  b{}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_lookup(world, "a") != 0);
+    test_assert(ecs_lookup(world, "b") == 0);
+
+    ecs_fini(world);
+}
+
+void Eval_if_else_comment_mixed_comment_newline_if(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const v: 1"
+    LINE "if $v == 1 {"
+    LINE "  a{}"
+    LINE "} else // comment on else"
+    LINE "/* comment in between */"
+    LINE ""
+    LINE "if $v == 0 {"
+    LINE "  b{}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_lookup(world, "a") != 0);
+    test_assert(ecs_lookup(world, "b") == 0);
+
+    ecs_fini(world);
+}
+
+void Eval_if_else_comment_newline_scope_open(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const v: 1"
+    LINE "if $v == 1 {"
+    LINE "  a{}"
+    LINE "} else // comment on else"
+    LINE ""
+    LINE "{"
+    LINE "  b{}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_lookup(world, "a") != 0);
+    test_assert(ecs_lookup(world, "b") == 0);
+
+    ecs_fini(world);
+}
+
+void Eval_if_else_comment_mixed_comment_newline_scope_open(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const v: 1"
+    LINE "if $v == 1 {"
+    LINE "  a{}"
+    LINE "} else // comment on else"
+    LINE "/* comment in between */"
+    LINE ""
+    LINE "{"
+    LINE "  b{}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_lookup(world, "a") != 0);
+    test_assert(ecs_lookup(world, "b") == 0);
+
+    ecs_fini(world);
+}
+
+void Eval_if_else_comment_no_space_scope_open(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const v: 1"
+    LINE "if $v == 1 {"
+    LINE "  a{}"
+    LINE "} else/* comment on else */{"
     LINE "  b{}"
     LINE "}";
 
@@ -13846,6 +14284,299 @@ void Eval_assign_eq_enum_to_const(void) {
         test_assert(ptr != NULL);
         test_int(ptr->value, false);
     }
+
+    ecs_fini(world);
+}
+
+void Eval_using_w_comment(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t bar = ecs_entity(world, {
+        .parent = ecs_entity(world, {
+            .name = "Foo"
+        }),
+        .name = "Bar"
+    });
+
+    const char *expr =
+    HEAD "using Foo // import Foo"
+    LINE
+    LINE "e {"
+    LINE "  Bar"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    ecs_entity_t e = ecs_lookup(world, "e");
+
+    test_assert(e != 0);
+
+    test_assert(ecs_has_id(world, e, bar));
+
+    ecs_fini(world);
+}
+
+void Eval_using_comment_no_space_after_keyword(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t bar = ecs_entity(world, {
+        .parent = ecs_entity(world, {
+            .name = "Foo"
+        }),
+        .name = "Bar"
+    });
+
+    const char *expr =
+    HEAD "using/* import Foo */Foo"
+    LINE
+    LINE "e {"
+    LINE "  Bar"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    ecs_entity_t e = ecs_lookup(world, "e");
+
+    test_assert(e != 0);
+    test_assert(ecs_has_id(world, e, bar));
+
+    ecs_fini(world);
+}
+
+void Eval_2_using_w_comment(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t bar = ecs_entity(world, {
+        .parent = ecs_entity(world, {
+            .name = "Foo"
+        }),
+        .name = "Bar"
+    });
+
+    const char *expr =
+    HEAD "using Foo // import Foo"
+    LINE "using Foo.Bar"
+    LINE
+    LINE "e {"
+    LINE "  Bar"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    ecs_entity_t e = ecs_lookup(world, "e");
+
+    test_assert(e != 0);
+
+    test_assert(ecs_has_id(world, e, bar));
+
+    ecs_fini(world);
+}
+
+void Eval_using_wildcard_w_comment(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t bar = ecs_entity(world, {
+        .parent = ecs_entity(world, {
+            .name = "Foo",
+            .parent = ecs_entity(world, {
+                .name = "Hello"
+            })
+        }),
+        .name = "Bar"
+    });
+
+    const char *expr =
+    HEAD "using Hello.* // import Hello"
+    LINE
+    LINE "e {"
+    LINE "  Bar"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    ecs_entity_t e = ecs_lookup(world, "e");
+
+    test_assert(e != 0);
+
+    test_assert(ecs_has_id(world, e, bar));
+
+    ecs_fini(world);
+}
+
+void Eval_module_stmt_w_comment(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "module hello // set module"
+    LINE "Foo {}"
+    LINE "e { Foo }";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t hello = ecs_lookup(world, "hello");
+    test_assert(hello != 0);
+    test_assert(ecs_has_id(world, hello, EcsModule));
+
+    ecs_entity_t foo = ecs_lookup(world, "hello.Foo");
+    test_assert(foo != 0);
+
+    ecs_entity_t e = ecs_lookup(world, "hello.e");
+    test_assert(e != 0);
+    test_assert(ecs_has_id(world, e, foo));
+
+    ecs_fini(world);
+}
+
+void Eval_template_stmt_w_comment(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "template Tree // define Tree"
+    LINE "template Bush"
+    LINE "e {}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    test_assert(ecs_lookup(world, "Tree") != 0);
+    test_assert(ecs_lookup(world, "Bush") != 0);
+    test_assert(ecs_lookup(world, "e") != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_const_var_expr_w_comment(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "const x: 10 // x coordinate"
+    LINE "const y: 20"
+    LINE "e { Position: {$x, $y} }";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    test_assert(ecs_has(world, e, Position));
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Eval_const_var_initializer_w_comment(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "const pos = Position: {10, 20} // reusable position"
+    LINE "e { $pos }";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    test_assert(ecs_has(world, e, Position));
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Eval_export_const_var_w_comment(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "export const x: 10 // exported x"
+    LINE "const y: 20"
+    LINE "e { Position: {$x, $y} }";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    test_assert(ecs_has(world, e, Position));
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Eval_auto_override_tag_w_comment(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    const char *expr =
+    HEAD "Prefab Foo {"
+    LINE "  auto_override | TagA // override TagA"
+    LINE "  TagB"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    test_assert(foo != 0);
+    test_assert(ecs_has_id(world, foo, ECS_AUTO_OVERRIDE | TagA));
+    test_assert(!ecs_has(world, foo, TagA));
+    test_assert(ecs_has(world, foo, TagB));
+
+    ecs_fini(world);
+}
+
+void Eval_pair_tag_w_comment(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Tgt);
+    ECS_TAG(world, Tag);
+
+    const char *expr =
+    HEAD "e {"
+    LINE "  (Rel, Tgt) // add pair tag"
+    LINE "  Tag"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    test_assert(ecs_has_pair(world, e, Rel, Tgt));
+    test_assert(ecs_has(world, e, Tag));
 
     ecs_fini(world);
 }

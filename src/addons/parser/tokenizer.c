@@ -9,12 +9,47 @@
 
 #include "parser.h"
 
+static
+bool flecs_is_comment(
+    const char *pos)
+{
+    return pos[0] == '/' && (pos[1] == '/' || pos[1] == '*');
+}
+
+static
+bool flecs_keyword_boundary(
+    const char *pos)
+{
+    if (!pos[0]) {
+        return true;
+    }
+
+    if (isspace(pos[0])) {
+        return true;
+    }
+
+    if (flecs_is_comment(pos)) {
+        return true;
+    }
+
+    return false;
+}
+
+static
+bool flecs_keyword_match(
+    const char *pos,
+    const char *keyword)
+{
+    ecs_size_t len = ecs_os_strlen(keyword);
+    if (ecs_os_strncmp(pos, keyword, len)) {
+        return false;
+    }
+
+    return flecs_keyword_boundary(pos + len);
+}
+
 #define Keyword(keyword, _kind)\
-    } else if (!ecs_os_strncmp(pos, keyword " ", ecs_os_strlen(keyword) + 1)) {\
-        out->value = keyword;\
-        out->kind = _kind;\
-        return pos + ecs_os_strlen(keyword);\
-    } else if (!ecs_os_strncmp(pos, keyword "\n", ecs_os_strlen(keyword) + 1)) {\
+    } else if (flecs_keyword_match(pos, keyword)) {\
         out->value = keyword;\
         out->kind = _kind;\
         return pos + ecs_os_strlen(keyword);
@@ -192,6 +227,101 @@ const char* flecs_scan_whitespace(
 }
 
 static
+const char* flecs_scan_line_comment(
+    const char *pos)
+{
+    ecs_assert(pos[0] == '/' && pos[1] == '/', ECS_INTERNAL_ERROR, NULL);
+
+    for (pos = pos + 2; pos[0] && pos[0] != '\n'; pos ++) { }
+    return pos;
+}
+
+static
+bool flecs_newline_followed_by_comment(
+    ecs_parser_t *parser,
+    const char *newline)
+{
+    ecs_assert(newline[0] == '\n', ECS_INTERNAL_ERROR, NULL);
+    const char *next = flecs_scan_whitespace(parser, newline + 1);
+    return flecs_is_comment(next);
+}
+
+static
+const char* flecs_scan_multiline_comment(
+    ecs_parser_t *parser,
+    const char *pos)
+{
+    ecs_assert(pos[0] == '/' && pos[1] == '*', ECS_INTERNAL_ERROR, NULL);
+
+    for (pos = &pos[2]; pos[0] != 0; pos ++) {
+        if (pos[0] == '*' && pos[1] == '/') {
+            return pos + 2;
+        }
+    }
+
+    ecs_parser_error(parser->name, parser->code,
+        pos - parser->code, "missing */ for multiline comment");
+    return NULL;
+}
+
+static
+const char* flecs_scan_significant_line_comment_newline_run(
+    ecs_parser_t *parser,
+    const char *comment_newline)
+{
+    ecs_assert(comment_newline[0] == '\n', ECS_INTERNAL_ERROR, NULL);
+
+    const char *next = comment_newline + 1;
+    const char *last_newline = comment_newline;
+    bool collapse = false;
+
+    while (next[0]) {
+        next = flecs_scan_whitespace(parser, next);
+
+        if (next[0] == '\n') {
+            collapse = true;
+            last_newline = next;
+            next ++;
+            continue;
+        }
+
+        if (next[0] == '/' && next[1] == '/') {
+            collapse = true;
+            next = flecs_scan_line_comment(next);
+            if (next[0] == '\n') {
+                last_newline = next;
+                next ++;
+            }
+            continue;
+        }
+
+        if (next[0] == '/' && next[1] == '*') {
+            collapse = true;
+            const char *ml_end = &next[2];
+            while (ml_end[0]) {
+                if (ml_end[0] == '*' && ml_end[1] == '/') {
+                    next = ml_end + 2;
+                    break;
+                }
+                ml_end ++;
+            }
+
+            if (!ml_end[0]) {
+                /* Unterminated multiline comments are reported by the regular
+                 * tokenizer path. Keep this pass non-fatal as it is only used
+                 * to decide whether newlines can be collapsed. */
+                break;
+            }
+            continue;
+        }
+
+        break;
+    }
+
+    return collapse ? last_newline : comment_newline;
+}
+
+static
 const char* flecs_scan_whitespace_and_comment(
     ecs_parser_t *parser,
     const char *pos) 
@@ -200,22 +330,37 @@ repeat_skip_whitespace_comment:
     pos = flecs_scan_whitespace(parser, pos);
     if (pos[0] == '/') {
         if (pos[1] == '/') {
-            for (pos = pos + 2; pos[0] && pos[0] != '\n'; pos ++) { }
+            pos = flecs_scan_line_comment(pos);
             if (pos[0] == '\n') {
+                if (parser->significant_newline) {
+                    pos = flecs_scan_significant_line_comment_newline_run(
+                        parser, pos);
+                    if (!pos) {
+                        return NULL;
+                    }
+                    return pos;
+                }
                 pos ++;
                 goto repeat_skip_whitespace_comment;
             }
         } else if (pos[1] == '*') {
-            for (pos = &pos[2]; pos[0] != 0; pos ++) {
-                if (pos[0] == '*' && pos[1] == '/') {
-                    pos += 2;
-                    goto repeat_skip_whitespace_comment;
-                }
+            pos = flecs_scan_multiline_comment(parser, pos);
+            if (!pos) {
+                return NULL;
             }
 
-            ecs_parser_error(parser->name, parser->code, 
-                pos - parser->code, "missing */ for multiline comment");
-            return NULL;
+            if (parser->significant_newline && pos[0] == '\n' &&
+                flecs_newline_followed_by_comment(parser, pos))
+            {
+                pos = flecs_scan_significant_line_comment_newline_run(
+                    parser, pos);
+                if (!pos) {
+                    return NULL;
+                }
+                return pos;
+            }
+
+            goto repeat_skip_whitespace_comment;
         }
     }
 
@@ -616,12 +761,13 @@ const char* flecs_token(
         return pos;
     } else if (pos[0] == '\n') {
         out->kind = EcsTokNewline;
-        
+
         // Parse multiple newlines/whitespaces as a single token
         pos = flecs_scan_whitespace_and_comment(parser, pos + 1);
         if (pos[0] == '\n') {
             pos ++;
         }
+
         return pos;
 
     } else if (flecs_script_is_number(pos)) {

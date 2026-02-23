@@ -40,6 +40,15 @@ void Eval_line_comment_after_stmt_same_line(void);
 void Eval_line_comment_before_scope_open(void);
 void Eval_line_comment_after_newline_before_scope_open(void);
 void Eval_line_comment_after_newline_before_newline_scope_open(void);
+void Eval_line_comment_multiple_before_newline_scope_open(void);
+void Eval_line_comment_after_newline_before_whitespace_newline_scope_open(void);
+void Eval_line_comment_after_newline_before_newline_scope_open_crlf(void);
+void Eval_line_comment_before_multi_line_comment_before_scope_open(void);
+void Eval_line_comment_after_newline_before_3_newline_scope_open(void);
+void Eval_line_comment_after_newline_before_mixed_comment_newline_scope_open(void);
+void Eval_multi_line_comment_after_newline_before_mixed_comment_newline_scope_open(void);
+void Eval_line_comment_after_newline_before_mixed_line_endings_scope_open(void);
+void Eval_line_comment_after_newline_before_multiple_multi_line_comments_scope_open(void);
 void Eval_multi_line_comment(void);
 void Eval_multi_line_comment_before_stmt(void);
 void Eval_multi_line_comment_after_stmt(void);
@@ -109,6 +118,7 @@ void Eval_create_subject_in_root_scope_w_resolvable_id(void);
 void Eval_create_subject_in_scope_w_resolvable_id(void);
 void Eval_create_subject_in_scope_w_resolvable_id_using(void);
 void Eval_using_scope(void);
+void Eval_using_tab_after_keyword(void);
 void Eval_using_nested_scope(void);
 void Eval_using_nested_in_scope(void);
 void Eval_using_with_scope(void);
@@ -236,11 +246,19 @@ void Eval_if_true_in_scope(void);
 void Eval_if_false_in_scope(void);
 void Eval_if_lt(void);
 void Eval_if_lt_const(void);
+void Eval_if_tab_after_keyword(void);
 void Eval_if_else_if(void);
 void Eval_if_else_if_else(void);
 void Eval_if_else_if_else_if(void);
 void Eval_if_else_newline_if(void);
 void Eval_if_else_space_newline_if(void);
+void Eval_if_else_comment_newline_if(void);
+void Eval_if_else_comment_no_space_newline_if(void);
+void Eval_if_else_comment_newline_newline_if(void);
+void Eval_if_else_comment_mixed_comment_newline_if(void);
+void Eval_if_else_comment_newline_scope_open(void);
+void Eval_if_else_comment_mixed_comment_newline_scope_open(void);
+void Eval_if_else_comment_no_space_scope_open(void);
 void Eval_isa_in_module(void);
 void Eval_isa_hierarchy(void);
 void Eval_isa_hierarchy_in_module(void);
@@ -418,6 +436,17 @@ void Eval_tree_parent_nested_w_with_scope(void);
 void Eval_update_after_add_remove_tree_parent(void);
 void Eval_assign_eq_enum_to_component(void);
 void Eval_assign_eq_enum_to_const(void);
+void Eval_using_w_comment(void);
+void Eval_using_comment_no_space_after_keyword(void);
+void Eval_2_using_w_comment(void);
+void Eval_using_wildcard_w_comment(void);
+void Eval_module_stmt_w_comment(void);
+void Eval_template_stmt_w_comment(void);
+void Eval_const_var_expr_w_comment(void);
+void Eval_const_var_initializer_w_comment(void);
+void Eval_export_const_var_w_comment(void);
+void Eval_auto_override_tag_w_comment(void);
+void Eval_pair_tag_w_comment(void);
 
 // Testsuite 'Template'
 void Template_template_no_scope(void);
@@ -504,6 +533,7 @@ void Template_template_w_tree_parent_change_value(void);
 
 // Testsuite 'Error'
 void Error_multi_line_comment_after_newline_before_newline_scope_open(void);
+void Error_unterminated_multi_line_comment_after_line_comment(void);
 void Error_missing_end_of_scope(void);
 void Error_with_n_tags_2_levels_invalid_tag(void);
 void Error_assignment_to_non_component(void);
@@ -1309,6 +1339,42 @@ bake_test_case Eval_testcases[] = {
         Eval_line_comment_after_newline_before_newline_scope_open
     },
     {
+        "line_comment_multiple_before_newline_scope_open",
+        Eval_line_comment_multiple_before_newline_scope_open
+    },
+    {
+        "line_comment_after_newline_before_whitespace_newline_scope_open",
+        Eval_line_comment_after_newline_before_whitespace_newline_scope_open
+    },
+    {
+        "line_comment_after_newline_before_newline_scope_open_crlf",
+        Eval_line_comment_after_newline_before_newline_scope_open_crlf
+    },
+    {
+        "line_comment_before_multi_line_comment_before_scope_open",
+        Eval_line_comment_before_multi_line_comment_before_scope_open
+    },
+    {
+        "line_comment_after_newline_before_3_newline_scope_open",
+        Eval_line_comment_after_newline_before_3_newline_scope_open
+    },
+    {
+        "line_comment_after_newline_before_mixed_comment_newline_scope_open",
+        Eval_line_comment_after_newline_before_mixed_comment_newline_scope_open
+    },
+    {
+        "multi_line_comment_after_newline_before_mixed_comment_newline_scope_open",
+        Eval_multi_line_comment_after_newline_before_mixed_comment_newline_scope_open
+    },
+    {
+        "line_comment_after_newline_before_mixed_line_endings_scope_open",
+        Eval_line_comment_after_newline_before_mixed_line_endings_scope_open
+    },
+    {
+        "line_comment_after_newline_before_multiple_multi_line_comments_scope_open",
+        Eval_line_comment_after_newline_before_multiple_multi_line_comments_scope_open
+    },
+    {
         "multi_line_comment",
         Eval_multi_line_comment
     },
@@ -1583,6 +1649,10 @@ bake_test_case Eval_testcases[] = {
     {
         "using_scope",
         Eval_using_scope
+    },
+    {
+        "using_tab_after_keyword",
+        Eval_using_tab_after_keyword
     },
     {
         "using_nested_scope",
@@ -2093,6 +2163,10 @@ bake_test_case Eval_testcases[] = {
         Eval_if_lt_const
     },
     {
+        "if_tab_after_keyword",
+        Eval_if_tab_after_keyword
+    },
+    {
         "if_else_if",
         Eval_if_else_if
     },
@@ -2111,6 +2185,34 @@ bake_test_case Eval_testcases[] = {
     {
         "if_else_space_newline_if",
         Eval_if_else_space_newline_if
+    },
+    {
+        "if_else_comment_newline_if",
+        Eval_if_else_comment_newline_if
+    },
+    {
+        "if_else_comment_no_space_newline_if",
+        Eval_if_else_comment_no_space_newline_if
+    },
+    {
+        "if_else_comment_newline_newline_if",
+        Eval_if_else_comment_newline_newline_if
+    },
+    {
+        "if_else_comment_mixed_comment_newline_if",
+        Eval_if_else_comment_mixed_comment_newline_if
+    },
+    {
+        "if_else_comment_newline_scope_open",
+        Eval_if_else_comment_newline_scope_open
+    },
+    {
+        "if_else_comment_mixed_comment_newline_scope_open",
+        Eval_if_else_comment_mixed_comment_newline_scope_open
+    },
+    {
+        "if_else_comment_no_space_scope_open",
+        Eval_if_else_comment_no_space_scope_open
     },
     {
         "isa_in_module",
@@ -2819,6 +2921,50 @@ bake_test_case Eval_testcases[] = {
     {
         "assign_eq_enum_to_const",
         Eval_assign_eq_enum_to_const
+    },
+    {
+        "using_w_comment",
+        Eval_using_w_comment
+    },
+    {
+        "using_comment_no_space_after_keyword",
+        Eval_using_comment_no_space_after_keyword
+    },
+    {
+        "2_using_w_comment",
+        Eval_2_using_w_comment
+    },
+    {
+        "using_wildcard_w_comment",
+        Eval_using_wildcard_w_comment
+    },
+    {
+        "module_stmt_w_comment",
+        Eval_module_stmt_w_comment
+    },
+    {
+        "template_stmt_w_comment",
+        Eval_template_stmt_w_comment
+    },
+    {
+        "const_var_expr_w_comment",
+        Eval_const_var_expr_w_comment
+    },
+    {
+        "const_var_initializer_w_comment",
+        Eval_const_var_initializer_w_comment
+    },
+    {
+        "export_const_var_w_comment",
+        Eval_export_const_var_w_comment
+    },
+    {
+        "auto_override_tag_w_comment",
+        Eval_auto_override_tag_w_comment
+    },
+    {
+        "pair_tag_w_comment",
+        Eval_pair_tag_w_comment
     }
 };
 
@@ -3153,6 +3299,10 @@ bake_test_case Error_testcases[] = {
     {
         "multi_line_comment_after_newline_before_newline_scope_open",
         Error_multi_line_comment_after_newline_before_newline_scope_open
+    },
+    {
+        "unterminated_multi_line_comment_after_line_comment",
+        Error_unterminated_multi_line_comment_after_line_comment
     },
     {
         "missing_end_of_scope",
@@ -5844,7 +5994,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        409,
+        438,
         Eval_testcases
     },
     {
@@ -5858,7 +6008,7 @@ static bake_test_suite suites[] = {
         "Error",
         NULL,
         NULL,
-        92,
+        93,
         Error_testcases
     },
     {
