@@ -1736,6 +1736,17 @@ void World_reset_world(void) {
     test_assert(!ecs.exists(e));
 }
 
+void World_reset_set_rest_after_reset(void) {
+    flecs::world ecs;
+
+    /* Ensure calling set after reset does not assert */
+    ecs.reset();
+    ecs.set<flecs::Rest>({});
+
+    const flecs::Rest *r = ecs.try_get<flecs::Rest>();
+    test_assert(r != NULL);
+}
+
 void World_id_from_pair_type(void) {
     flecs::world ecs;
 
