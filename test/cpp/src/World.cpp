@@ -1738,8 +1738,8 @@ void World_reset_world(void) {
 
 void World_reset_set_rest_after_reset(void) {
     flecs::world ecs;
-
-    /* Ensure calling set after reset does not assert */
+    // Ensure calling set after reset does not assert. This tests whether
+    // the built-in components are properly re-initialized after a world reset.
     ecs.reset();
     ecs.set<flecs::Rest>({});
 
