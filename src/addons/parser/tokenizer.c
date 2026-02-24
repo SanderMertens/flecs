@@ -211,7 +211,7 @@ const char* flecs_scan_whitespace(
     ecs_parser_t *parser,
     const char *pos) 
 {
-    (void)parser;
+    ecs_assert(pos != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (parser->significant_newline) {
         while (pos[0] && isspace(pos[0]) && pos[0] != '\n') {
@@ -326,19 +326,20 @@ const char* flecs_scan_whitespace_and_comment(
     ecs_parser_t *parser,
     const char *pos) 
 {
+    if (!pos) {
+        return NULL;
+    }
+
 repeat_skip_whitespace_comment:
     pos = flecs_scan_whitespace(parser, pos);
+
     if (pos[0] == '/') {
         if (pos[1] == '/') {
             pos = flecs_scan_line_comment(pos);
             if (pos[0] == '\n') {
                 if (parser->significant_newline) {
-                    pos = flecs_scan_significant_line_comment_newline_run(
+                    return flecs_scan_significant_line_comment_newline_run(
                         parser, pos);
-                    if (!pos) {
-                        return NULL;
-                    }
-                    return pos;
                 }
                 pos ++;
                 goto repeat_skip_whitespace_comment;
@@ -352,12 +353,8 @@ repeat_skip_whitespace_comment:
             if (parser->significant_newline && pos[0] == '\n' &&
                 flecs_newline_followed_by_comment(parser, pos))
             {
-                pos = flecs_scan_significant_line_comment_newline_run(
+                return flecs_scan_significant_line_comment_newline_run(
                     parser, pos);
-                if (!pos) {
-                    return NULL;
-                }
-                return pos;
             }
 
             goto repeat_skip_whitespace_comment;
@@ -367,7 +364,6 @@ repeat_skip_whitespace_comment:
     return pos;
 }
 
-// Identifier token
 static
 bool flecs_script_is_identifier(
     char c)
@@ -495,7 +491,6 @@ done:
     return pos;
 }
 
-// Number token static
 static
 bool flecs_script_is_number(
     const char *c)
@@ -750,10 +745,11 @@ const char* flecs_tokenizer_until(
 
     int32_t len = flecs_ito(int32_t, pos - start);
     ecs_os_memcpy(parser->token_cur, start, len);
+    char *token_start = parser->token_cur;
     out->value = parser->token_cur;
     parser->token_cur += len;
 
-    while (isspace(parser->token_cur[-1])) {
+    while (parser->token_cur != token_start && isspace(parser->token_cur[-1])) {
         parser->token_cur --;
     }
 
@@ -769,9 +765,16 @@ const char* flecs_token(
     ecs_token_t *out,
     bool is_lookahead)
 {
+    if (!pos) {
+        if (!is_lookahead) {
+            ecs_parser_error(parser->name, parser->code, 0,
+                "unexpected end of parser state");
+        }
+        return NULL;
+    }
+
     parser->pos = pos;
 
-    // Skip whitespace and comments
     pos = flecs_scan_whitespace_and_comment(parser, pos);
     if (!pos) {
         return NULL;
@@ -786,7 +789,6 @@ const char* flecs_token(
     } else if (pos[0] == '\n') {
         out->kind = EcsTokNewline;
 
-        // Parse multiple newlines/whitespaces as a single token
         pos = flecs_scan_whitespace_and_comment(parser, pos + 1);
         if (pos[0] == '\n') {
             pos ++;
