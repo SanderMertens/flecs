@@ -86,13 +86,40 @@ int flecs_expr_initializer_eval(
     ecs_script_eval_ctx_t *ctx,
     ecs_expr_initializer_t *node,
     void *value,
-    ecs_meta_cursor_t *cur);
+    ecs_meta_cursor_t *cur,
+    ecs_size_t value_size);
+
+int flecs_expr_initializer_validate_assign(
+    const ecs_script_t *script,
+    ecs_expr_initializer_t *node,
+    ecs_expr_initializer_element_t *elem,
+    ecs_entity_t type,
+    ecs_size_t value_size)
+{
+    const ecs_type_info_t *ti = ecs_get_type_info(script->world, type);
+    ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    uintptr_t offset = elem->offset;
+    uintptr_t type_size = flecs_uto(uintptr_t, ti->size);
+    uintptr_t dst_size = flecs_uto(uintptr_t, value_size);
+    if (offset > dst_size || type_size > (dst_size - offset)) {
+        flecs_expr_visit_error(script, node,
+            "initializer of type '%s' writes past end of target value",
+            flecs_errstr(ecs_get_path(script->world, type)));
+        goto error;
+    }
+
+    return 0;
+error:
+    return -1;
+}
 
 static
 int flecs_expr_initializer_eval_static(
     ecs_script_eval_ctx_t *ctx,
     ecs_expr_initializer_t *node,
-    void *value)
+    void *value,
+    ecs_size_t value_size)
 {
     flecs_expr_stack_push(ctx->stack);
 
@@ -100,10 +127,11 @@ int flecs_expr_initializer_eval_static(
     int32_t i, count = ecs_vec_count(&node->elements);
     for (i = 0; i < count; i ++) {
         ecs_expr_initializer_element_t *elem = &elems[i];
+        ecs_assert(elem->value != NULL, ECS_INTERNAL_ERROR, NULL);
 
         if (elem->value->kind == EcsExprInitializer) {
             if (flecs_expr_initializer_eval(ctx, 
-                (ecs_expr_initializer_t*)elem->value, value, NULL)) 
+                (ecs_expr_initializer_t*)elem->value, value, NULL, value_size)) 
             {
                 goto error;
             }
@@ -118,6 +146,11 @@ int flecs_expr_initializer_eval_static(
         /* Type is guaranteed to be correct, since type visitor will insert
          * a cast to the type of the initializer element. */
         ecs_entity_t type = elem->value->type;
+        if (flecs_expr_initializer_validate_assign(
+            ctx->script, node, elem, type, value_size))
+        {
+            goto error;
+        }
 
         if (!elem->operator) {
             if (expr->owned) {
@@ -159,8 +192,11 @@ int flecs_expr_initializer_eval_dynamic(
     ecs_script_eval_ctx_t *ctx,
     ecs_expr_initializer_t *node,
     void *value,
-    ecs_meta_cursor_t *cur)
+    ecs_meta_cursor_t *cur,
+    ecs_size_t value_size)
 {
+    (void)value_size;
+
     flecs_expr_stack_push(ctx->stack);
 
     ecs_meta_cursor_t local_cur;
@@ -178,6 +214,7 @@ int flecs_expr_initializer_eval_dynamic(
     ecs_expr_initializer_element_t *elems = ecs_vec_first(&node->elements);
     for (i = 0; i < count; i ++) {
         ecs_expr_initializer_element_t *elem = &elems[i];
+        ecs_assert(elem->value != NULL, ECS_INTERNAL_ERROR, NULL);
 
         if (i) {
             ecs_meta_next(cur);
@@ -185,7 +222,7 @@ int flecs_expr_initializer_eval_dynamic(
 
         if (elem->value->kind == EcsExprInitializer) {
             if (flecs_expr_initializer_eval(ctx, 
-                (ecs_expr_initializer_t*)elem->value, value, cur)) 
+                (ecs_expr_initializer_t*)elem->value, value, cur, value_size)) 
             {
                 goto error;
             }
@@ -227,12 +264,14 @@ int flecs_expr_initializer_eval(
     ecs_script_eval_ctx_t *ctx,
     ecs_expr_initializer_t *node,
     void *value,
-    ecs_meta_cursor_t *cur)
+    ecs_meta_cursor_t *cur,
+    ecs_size_t value_size)
 {
     if (node->is_dynamic) {
-        return flecs_expr_initializer_eval_dynamic(ctx, node, value, cur);
+        return flecs_expr_initializer_eval_dynamic(
+            ctx, node, value, cur, value_size);
     } else {
-        return flecs_expr_initializer_eval_static(ctx, node, value);
+        return flecs_expr_initializer_eval_static(ctx, node, value, value_size);
     }
 }
 
@@ -243,7 +282,13 @@ int flecs_expr_initializer_visit_eval(
     ecs_expr_value_t *out)
 {
     out->owned = true;
-    return flecs_expr_initializer_eval(ctx, node, out->value.ptr, NULL);
+
+    const ecs_type_info_t *ti = ecs_get_type_info(
+        ctx->world, node->node.type);
+    ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    return flecs_expr_initializer_eval(
+        ctx, node, out->value.ptr, NULL, ti->size);
 }
 
 static

@@ -69,4 +69,11 @@ bool flecs_expr_is_type_number(
 ecs_size_t flecs_expr_storage_size(
     ecs_entity_t type);
 
+int flecs_expr_initializer_validate_assign(
+    const ecs_script_t *script,
+    ecs_expr_initializer_t *node,
+    ecs_expr_initializer_element_t *elem,
+    ecs_entity_t type,
+    ecs_size_t value_size);
+
 #endif

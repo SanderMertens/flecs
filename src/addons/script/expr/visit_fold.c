@@ -249,6 +249,7 @@ int flecs_expr_initializer_pre_fold(
     int32_t i, count = ecs_vec_count(&node->elements);
     for (i = 0; i < count; i ++) {
         ecs_expr_initializer_element_t *elem = &elems[i];
+        ecs_assert(elem->value != NULL, ECS_INTERNAL_ERROR, NULL);
 
         /* If this is a nested initializer, don't fold it but instead fold its
          * values. Because nested initializers are flattened, this ensures that
@@ -289,20 +290,28 @@ static
 int flecs_expr_initializer_post_fold(
     ecs_script_t *script,
     ecs_expr_initializer_t *node,
-    void *value)
+    void *value,
+    ecs_size_t value_size)
 {
     ecs_expr_initializer_element_t *elems = ecs_vec_first(&node->elements);
     int32_t i, count = ecs_vec_count(&node->elements);
     for (i = 0; i < count; i ++) {
         ecs_expr_initializer_element_t *elem = &elems[i];
+        ecs_assert(elem->value != NULL, ECS_INTERNAL_ERROR, NULL);
 
         if (elem->value->kind == EcsExprInitializer) {
             if (flecs_expr_initializer_post_fold(
-                script, (ecs_expr_initializer_t*)elem->value, value)) 
+                script, (ecs_expr_initializer_t*)elem->value, value, value_size)) 
             {
                 goto error;
             }
             continue;
+        }
+
+        if (elem->value->kind != EcsExprValue) {
+            flecs_expr_visit_error(script, node, 
+                "expected value for initializer element");
+            goto error;
         }
 
         ecs_expr_value_node_t *elem_value = (ecs_expr_value_node_t*)elem->value;
@@ -310,6 +319,11 @@ int flecs_expr_initializer_post_fold(
         /* Type is guaranteed to be correct, since type visitor will insert
          * a cast to the type of the initializer element. */
         ecs_entity_t type = elem_value->node.type;
+        if (flecs_expr_initializer_validate_assign(
+            script, node, elem, type, value_size))
+        {
+            goto error;
+        }
 
         if (ecs_value_copy(script->world, type, 
             ECS_OFFSET(value, elem->offset), elem_value->ptr)) 
@@ -330,6 +344,7 @@ int flecs_expr_initializer_visit_fold(
     const ecs_expr_eval_desc_t *desc)
 {
     bool can_fold = true;
+    void *value = NULL;
 
     ecs_expr_initializer_t *node = (ecs_expr_initializer_t*)*node_ptr;
 
@@ -340,21 +355,30 @@ int flecs_expr_initializer_visit_fold(
     /* If all elements of initializer fold to literals, initializer itself can
      * be folded into a literal. */
     if (can_fold) {
-        void *value = ecs_value_new(script->world, node->node.type);
+        value = ecs_value_new(script->world, node->node.type);
+        const ecs_type_info_t *type_info = ecs_get_type_info(
+            script->world, node->node.type);
+        ecs_assert(type_info != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        if (flecs_expr_initializer_post_fold(script, node, value)) {
+        if (flecs_expr_initializer_post_fold(
+            script, node, value, type_info->size))
+        {
             goto error;
         }
 
         ecs_expr_value_node_t *result = flecs_expr_value_from(
             script, (ecs_expr_node_t*)node, node->node.type);
         result->ptr = value;
+        value = NULL;
 
         flecs_visit_fold_replace(script, node_ptr, (ecs_expr_node_t*)result);
     }
 
     return 0;
 error:
+    if (value) {
+        ecs_value_free(script->world, node->node.type, value);
+    }
     return -1;
 }
 

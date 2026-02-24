@@ -963,6 +963,12 @@ int flecs_expr_initializer_visit_type(
         }
 
         ecs_expr_initializer_element_t *elem = &elems[i];
+        if (!elem->value) {
+            flecs_expr_visit_error(script, node, 
+                "missing value for initializer element");
+            goto error;
+        }
+
         if (elem->member) {
             if (ecs_meta_dotmember(cur, elem->member)) { /* x: */
                 flecs_expr_visit_error(script, node, "cannot resolve member");
@@ -1486,6 +1492,11 @@ int flecs_expr_arguments_visit_type(
 
     for (i = 0; i < count; i ++) {
         ecs_expr_initializer_element_t *elem = &elems[i];
+        if (!elem->value) {
+            flecs_expr_visit_error(script, node, 
+                "missing value for function argument");
+            goto error;
+        }
 
         ecs_entity_t argtype = params[i].type;
 
