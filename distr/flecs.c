@@ -50216,6 +50216,13 @@ bool flecs_expr_is_type_number(
 ecs_size_t flecs_expr_storage_size(
     ecs_entity_t type);
 
+int flecs_expr_initializer_validate_assign(
+    const ecs_script_t *script,
+    ecs_expr_initializer_t *node,
+    ecs_expr_initializer_element_t *elem,
+    ecs_entity_t type,
+    ecs_size_t value_size);
+
 #endif
 
 /**
@@ -59545,7 +59552,37 @@ int flecs_meta_serialize_type(
     ecs_world_t *world,
     ecs_entity_t type,
     ecs_size_t offset,
-    ecs_vec_t *ops);
+    ecs_vec_t *ops,
+    ecs_vec_t *stack);
+
+static
+int flecs_meta_serialize_push_type(
+    ecs_world_t *world,
+    ecs_entity_t type,
+    ecs_vec_t *stack)
+{
+    ecs_entity_t *types = ecs_vec_first(stack);
+    int32_t i, count = ecs_vec_count(stack);
+    for (i = 0; i < count; i ++) {
+        if (types[i] == type) {
+            char *path = ecs_get_path(world, type);
+            ecs_err("recursive type definition for '%s'", path);
+            ecs_os_free(path);
+            return -1;
+        }
+    }
+
+    ecs_vec_append_t(NULL, stack, ecs_entity_t)[0] = type;
+    return 0;
+}
+
+static
+void flecs_meta_serialize_pop_type(
+    ecs_vec_t *stack)
+{
+    ecs_assert(ecs_vec_count(stack) > 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_vec_remove_last(stack);
+}
 
 /* Serialize a primitive value */
 int flecs_expr_ser_primitive(
@@ -59841,7 +59878,8 @@ int flecs_meta_serialize_array_inline(
     ecs_entity_t elem_type,
     int32_t count,
     ecs_size_t offset,
-    ecs_vec_t *ops)
+    ecs_vec_t *ops,
+    ecs_vec_t *stack)
 {
     int32_t first = ecs_vec_count(ops);
 
@@ -59853,7 +59891,7 @@ int flecs_meta_serialize_array_inline(
         op->offset = offset;
     }
 
-    if (flecs_meta_serialize_type(world, elem_type, 0, ops) != 0) {
+    if (flecs_meta_serialize_type(world, elem_type, 0, ops, stack) != 0) {
         return -1;
     }
 
@@ -59875,7 +59913,8 @@ static
 int flecs_meta_serialize_array_type(
     ecs_world_t *world,
     ecs_entity_t type,
-    ecs_vec_t *ops)
+    ecs_vec_t *ops,
+    ecs_vec_t *stack)
 {
     const EcsArray *ptr = ecs_get(world, type, EcsArray);
     if (!ptr) {
@@ -59883,14 +59922,15 @@ int flecs_meta_serialize_array_type(
     }
 
     return flecs_meta_serialize_array_inline(
-        world, ptr->type, ptr->count, 0, ops);
+        world, ptr->type, ptr->count, 0, ops, stack);
 }
 
 static
 int flecs_meta_serialize_vector_type(
     ecs_world_t *world,
     ecs_entity_t type,
-    ecs_vec_t *ops)
+    ecs_vec_t *ops,
+    ecs_vec_t *stack)
 {
     const EcsVector *ptr = ecs_get(world, type, EcsVector);
     if (!ptr) {
@@ -59908,7 +59948,7 @@ int flecs_meta_serialize_vector_type(
         op->elem_size = flecs_type_size(world, ptr->type);
     }
 
-    if (flecs_meta_serialize_type(world, ptr->type, 0, ops) != 0) {
+    if (flecs_meta_serialize_type(world, ptr->type, 0, ops, stack) != 0) {
         return -1;
     }
 
@@ -59953,7 +59993,7 @@ int flecs_meta_serialize_opaque_type(
     const EcsOpaque *o = ecs_get(world, type, EcsOpaque);
     ecs_assert(o != NULL, ECS_INTERNAL_ERROR, NULL);
     const EcsType *t = ecs_get(world, o->as_type, EcsType);
-    ecs_assert(o != NULL, ECS_INTERNAL_ERROR, 
+    ecs_assert(t != NULL, ECS_INTERNAL_ERROR, 
         "missing reflection for Opaque::as_type");
 
     ecs_meta_op_kind_t kind = EcsOpOpaqueValue;
@@ -59979,7 +60019,8 @@ int flecs_meta_serialize_struct(
     ecs_world_t *world,
     ecs_entity_t type,
     ecs_size_t offset,
-    ecs_vec_t *ops)
+    ecs_vec_t *ops,
+    ecs_vec_t *stack)
 {
     const EcsStruct *ptr = ecs_get(world, type, EcsStruct);
     ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -60006,7 +60047,7 @@ int flecs_meta_serialize_struct(
 
         if (member->count >= 1) {
             if (flecs_meta_serialize_array_inline(
-                world, member->type, member->count, member->offset, ops))
+                world, member->type, member->count, member->offset, ops, stack))
             {
                 continue;
             }
@@ -60014,7 +60055,7 @@ int flecs_meta_serialize_struct(
             op = flecs_meta_ops_get(ops, cur);
         } else {
             if (flecs_meta_serialize_type(
-                world, member->type, member->offset, ops)) 
+                world, member->type, member->offset, ops, stack)) 
             {
                 continue;
             }
@@ -60049,7 +60090,8 @@ int flecs_meta_serialize_type(
     ecs_world_t *world,
     ecs_entity_t type,
     ecs_size_t offset,
-    ecs_vec_t *ops)
+    ecs_vec_t *ops,
+    ecs_vec_t *stack)
 {
     const EcsType *ptr = ecs_get(world, type, EcsType);
     if (!ptr) {
@@ -60059,17 +60101,38 @@ int flecs_meta_serialize_type(
         return -1;
     }
 
-    switch(ptr->kind) {
-    case EcsPrimitiveType: return flecs_meta_serialize_primitive(world, type, offset, ops);
-    case EcsEnumType: return flecs_meta_serialize_enum(world, type, offset, ops);
-    case EcsBitmaskType: return flecs_meta_serialize_bitmask(world, type, offset, ops);
-    case EcsStructType: return flecs_meta_serialize_struct(world, type, offset, ops);
-    case EcsArrayType: return flecs_meta_serialize_forward(world, type, offset, ops);
-    case EcsVectorType: return flecs_meta_serialize_forward(world, type, offset, ops);
-    case EcsOpaqueType: return flecs_meta_serialize_opaque_type(world, type, offset, ops);
+    if (flecs_meta_serialize_push_type(world, type, stack)) {
+        return -1;
     }
 
-    return 0;
+    int ret = 0;
+    switch(ptr->kind) {
+    case EcsPrimitiveType:
+        ret = flecs_meta_serialize_primitive(world, type, offset, ops);
+        break;
+    case EcsEnumType:
+        ret = flecs_meta_serialize_enum(world, type, offset, ops);
+        break;
+    case EcsBitmaskType:
+        ret = flecs_meta_serialize_bitmask(world, type, offset, ops);
+        break;
+    case EcsStructType:
+        ret = flecs_meta_serialize_struct(world, type, offset, ops, stack);
+        break;
+    case EcsArrayType:
+        ret = flecs_meta_serialize_forward(world, type, offset, ops);
+        break;
+    case EcsVectorType:
+        ret = flecs_meta_serialize_forward(world, type, offset, ops);
+        break;
+    case EcsOpaqueType:
+        ret = flecs_meta_serialize_opaque_type(world, type, offset, ops);
+        break;
+    }
+
+    flecs_meta_serialize_pop_type(stack);
+
+    return ret;
 }
 
 void flecs_meta_type_serializer_init(
@@ -60082,21 +60145,31 @@ void flecs_meta_type_serializer_init(
         ecs_entity_t type = it->entities[i];
         ecs_vec_t ops;
         ecs_vec_init_t(NULL, &ops, ecs_meta_op_t, 0);
+        ecs_vec_t stack;
+        ecs_vec_init_t(NULL, &stack, ecs_entity_t, 0);
 
         const EcsType *type_ptr = ecs_get(world, type, EcsType);
         if (!type_ptr) {
             char *path = ecs_get_path(world, type);
             ecs_err("missing reflection data for type '%s'", path);
             ecs_os_free(path);
+            ecs_vec_fini_t(NULL, &stack, ecs_entity_t);
             continue;
         }
 
+        int ret;
         if (type_ptr->kind == EcsArrayType) {
-            flecs_meta_serialize_array_type(world, type, &ops);
+            ret = flecs_meta_serialize_array_type(world, type, &ops, &stack);
         } else if (type_ptr->kind == EcsVectorType) {
-            flecs_meta_serialize_vector_type(world, type, &ops);
+            ret = flecs_meta_serialize_vector_type(world, type, &ops, &stack);
         } else {
-            flecs_meta_serialize_type(world, type, 0, &ops);
+            ret = flecs_meta_serialize_type(world, type, 0, &ops, &stack);
+        }
+
+        if (ret != 0) {
+            ecs_vec_fini_t(NULL, &ops, ecs_meta_op_t);
+            ecs_vec_fini_t(NULL, &stack, ecs_entity_t);
+            continue;
         }
 
         EcsTypeSerializer *ptr = ecs_ensure(world, type, EcsTypeSerializer);
@@ -60106,6 +60179,7 @@ void flecs_meta_type_serializer_init(
 
         ptr->kind = type_ptr->kind;
         ptr->ops = ops;
+        ecs_vec_fini_t(NULL, &stack, ecs_entity_t);
     }
 }
 
@@ -61004,7 +61078,7 @@ const char* flecs_scan_whitespace(
     ecs_parser_t *parser,
     const char *pos) 
 {
-    (void)parser;
+    ecs_assert(pos != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (parser->significant_newline) {
         while (pos[0] && isspace(pos[0]) && pos[0] != '\n') {
@@ -61119,19 +61193,20 @@ const char* flecs_scan_whitespace_and_comment(
     ecs_parser_t *parser,
     const char *pos) 
 {
+    if (!pos) {
+        return NULL;
+    }
+
 repeat_skip_whitespace_comment:
     pos = flecs_scan_whitespace(parser, pos);
+
     if (pos[0] == '/') {
         if (pos[1] == '/') {
             pos = flecs_scan_line_comment(pos);
             if (pos[0] == '\n') {
                 if (parser->significant_newline) {
-                    pos = flecs_scan_significant_line_comment_newline_run(
+                    return flecs_scan_significant_line_comment_newline_run(
                         parser, pos);
-                    if (!pos) {
-                        return NULL;
-                    }
-                    return pos;
                 }
                 pos ++;
                 goto repeat_skip_whitespace_comment;
@@ -61145,12 +61220,8 @@ repeat_skip_whitespace_comment:
             if (parser->significant_newline && pos[0] == '\n' &&
                 flecs_newline_followed_by_comment(parser, pos))
             {
-                pos = flecs_scan_significant_line_comment_newline_run(
+                return flecs_scan_significant_line_comment_newline_run(
                     parser, pos);
-                if (!pos) {
-                    return NULL;
-                }
-                return pos;
             }
 
             goto repeat_skip_whitespace_comment;
@@ -61160,7 +61231,6 @@ repeat_skip_whitespace_comment:
     return pos;
 }
 
-// Identifier token
 static
 bool flecs_script_is_identifier(
     char c)
@@ -61288,7 +61358,6 @@ done:
     return pos;
 }
 
-// Number token static
 static
 bool flecs_script_is_number(
     const char *c)
@@ -61543,10 +61612,11 @@ const char* flecs_tokenizer_until(
 
     int32_t len = flecs_ito(int32_t, pos - start);
     ecs_os_memcpy(parser->token_cur, start, len);
+    char *token_start = parser->token_cur;
     out->value = parser->token_cur;
     parser->token_cur += len;
 
-    while (isspace(parser->token_cur[-1])) {
+    while (parser->token_cur != token_start && isspace(parser->token_cur[-1])) {
         parser->token_cur --;
     }
 
@@ -61562,9 +61632,16 @@ const char* flecs_token(
     ecs_token_t *out,
     bool is_lookahead)
 {
+    if (!pos) {
+        if (!is_lookahead) {
+            ecs_parser_error(parser->name, parser->code, 0,
+                "unexpected end of parser state");
+        }
+        return NULL;
+    }
+
     parser->pos = pos;
 
-    // Skip whitespace and comments
     pos = flecs_scan_whitespace_and_comment(parser, pos);
     if (!pos) {
         return NULL;
@@ -61579,7 +61656,6 @@ const char* flecs_token(
     } else if (pos[0] == '\n') {
         out->kind = EcsTokNewline;
 
-        // Parse multiple newlines/whitespaces as a single token
         pos = flecs_scan_whitespace_and_comment(parser, pos + 1);
         if (pos[0] == '\n') {
             pos ++;
@@ -90862,6 +90938,8 @@ ecs_expr_value_node_t* flecs_expr_char(
         char ch = 0;
         const char *ptr = flecs_chrparse(value, &ch);
         if(!ptr) {
+            flecs_free_t(
+                &parser->script->allocator, ecs_expr_value_node_t, result);
             return NULL;
         }
         result->storage.char_ = ch;
@@ -90919,6 +90997,7 @@ ecs_expr_value_node_t* flecs_expr_string(
     result->node.type = ecs_id(ecs_string_t);
 
     if (!flecs_string_escape(str)) {
+        flecs_free_t(&parser->script->allocator, ecs_expr_value_node_t, result);
         return NULL;
     }
 
@@ -91445,6 +91524,10 @@ const char* flecs_script_parse_function(
 
     return pos;
 error:
+    if (result->args) {
+        flecs_script_parser_expr_free(parser, (ecs_expr_node_t*)result->args);
+    }
+    flecs_free_t(&parser->script->allocator, ecs_expr_function_t, result);
     return NULL;
 }
 
@@ -91802,13 +91885,13 @@ const char* flecs_script_parse_lhs(
                 goto error;
             }
 
+            *out = (ecs_expr_node_t*)node;
+
             Parse_1('}', {
                 break;
             })
 
             can_have_rhs = false;
-
-            *out = (ecs_expr_node_t*)node;
             break;
         }
 
@@ -91821,14 +91904,13 @@ const char* flecs_script_parse_lhs(
             }
 
             node->is_collection = true;
+            *out = (ecs_expr_node_t*)node;
 
             Parse_1(']', {
                 break;
             })
 
             can_have_rhs = false;
-
-            *out = (ecs_expr_node_t*)node;
             break;
         }
     )
@@ -91853,15 +91935,24 @@ const char* flecs_script_parse_expr(
     ecs_token_kind_t left_oper,
     ecs_expr_node_t **out)
 {
-    ParserBegin;
+    ecs_tokenizer_t _tokenizer;
+    ecs_os_zeromem(&_tokenizer);
+    _tokenizer.tokens = _tokenizer.stack.tokens;
+    ecs_tokenizer_t *tokenizer = &_tokenizer;
 
     bool old_function_token = parser->function_token;
     parser->function_token = true;
     pos = flecs_script_parse_lhs(parser, pos, tokenizer, left_oper, out);
     parser->function_token = old_function_token;
-    EndOfRule;
+    if (!pos) {
+        if (out && *out) {
+            flecs_script_parser_expr_free(parser, *out);
+            *out = NULL;
+        }
+        return NULL;
+    }
 
-    ParserEnd;
+    return pos;
 }
 
 ecs_script_t* ecs_expr_parse(
@@ -92669,13 +92760,40 @@ int flecs_expr_initializer_eval(
     ecs_script_eval_ctx_t *ctx,
     ecs_expr_initializer_t *node,
     void *value,
-    ecs_meta_cursor_t *cur);
+    ecs_meta_cursor_t *cur,
+    ecs_size_t value_size);
+
+int flecs_expr_initializer_validate_assign(
+    const ecs_script_t *script,
+    ecs_expr_initializer_t *node,
+    ecs_expr_initializer_element_t *elem,
+    ecs_entity_t type,
+    ecs_size_t value_size)
+{
+    const ecs_type_info_t *ti = ecs_get_type_info(script->world, type);
+    ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    uintptr_t offset = elem->offset;
+    uintptr_t type_size = flecs_uto(uintptr_t, ti->size);
+    uintptr_t dst_size = flecs_uto(uintptr_t, value_size);
+    if (offset > dst_size || type_size > (dst_size - offset)) {
+        flecs_expr_visit_error(script, node,
+            "initializer of type '%s' writes past end of target value",
+            flecs_errstr(ecs_get_path(script->world, type)));
+        goto error;
+    }
+
+    return 0;
+error:
+    return -1;
+}
 
 static
 int flecs_expr_initializer_eval_static(
     ecs_script_eval_ctx_t *ctx,
     ecs_expr_initializer_t *node,
-    void *value)
+    void *value,
+    ecs_size_t value_size)
 {
     flecs_expr_stack_push(ctx->stack);
 
@@ -92683,10 +92801,11 @@ int flecs_expr_initializer_eval_static(
     int32_t i, count = ecs_vec_count(&node->elements);
     for (i = 0; i < count; i ++) {
         ecs_expr_initializer_element_t *elem = &elems[i];
+        ecs_assert(elem->value != NULL, ECS_INTERNAL_ERROR, NULL);
 
         if (elem->value->kind == EcsExprInitializer) {
             if (flecs_expr_initializer_eval(ctx, 
-                (ecs_expr_initializer_t*)elem->value, value, NULL)) 
+                (ecs_expr_initializer_t*)elem->value, value, NULL, value_size)) 
             {
                 goto error;
             }
@@ -92701,6 +92820,11 @@ int flecs_expr_initializer_eval_static(
         /* Type is guaranteed to be correct, since type visitor will insert
          * a cast to the type of the initializer element. */
         ecs_entity_t type = elem->value->type;
+        if (flecs_expr_initializer_validate_assign(
+            ctx->script, node, elem, type, value_size))
+        {
+            goto error;
+        }
 
         if (!elem->operator) {
             if (expr->owned) {
@@ -92742,8 +92866,11 @@ int flecs_expr_initializer_eval_dynamic(
     ecs_script_eval_ctx_t *ctx,
     ecs_expr_initializer_t *node,
     void *value,
-    ecs_meta_cursor_t *cur)
+    ecs_meta_cursor_t *cur,
+    ecs_size_t value_size)
 {
+    (void)value_size;
+
     flecs_expr_stack_push(ctx->stack);
 
     ecs_meta_cursor_t local_cur;
@@ -92761,6 +92888,7 @@ int flecs_expr_initializer_eval_dynamic(
     ecs_expr_initializer_element_t *elems = ecs_vec_first(&node->elements);
     for (i = 0; i < count; i ++) {
         ecs_expr_initializer_element_t *elem = &elems[i];
+        ecs_assert(elem->value != NULL, ECS_INTERNAL_ERROR, NULL);
 
         if (i) {
             ecs_meta_next(cur);
@@ -92768,7 +92896,7 @@ int flecs_expr_initializer_eval_dynamic(
 
         if (elem->value->kind == EcsExprInitializer) {
             if (flecs_expr_initializer_eval(ctx, 
-                (ecs_expr_initializer_t*)elem->value, value, cur)) 
+                (ecs_expr_initializer_t*)elem->value, value, cur, value_size)) 
             {
                 goto error;
             }
@@ -92810,12 +92938,14 @@ int flecs_expr_initializer_eval(
     ecs_script_eval_ctx_t *ctx,
     ecs_expr_initializer_t *node,
     void *value,
-    ecs_meta_cursor_t *cur)
+    ecs_meta_cursor_t *cur,
+    ecs_size_t value_size)
 {
     if (node->is_dynamic) {
-        return flecs_expr_initializer_eval_dynamic(ctx, node, value, cur);
+        return flecs_expr_initializer_eval_dynamic(
+            ctx, node, value, cur, value_size);
     } else {
-        return flecs_expr_initializer_eval_static(ctx, node, value);
+        return flecs_expr_initializer_eval_static(ctx, node, value, value_size);
     }
 }
 
@@ -92826,7 +92956,13 @@ int flecs_expr_initializer_visit_eval(
     ecs_expr_value_t *out)
 {
     out->owned = true;
-    return flecs_expr_initializer_eval(ctx, node, out->value.ptr, NULL);
+
+    const ecs_type_info_t *ti = ecs_get_type_info(
+        ctx->world, node->node.type);
+    ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    return flecs_expr_initializer_eval(
+        ctx, node, out->value.ptr, NULL, ti->size);
 }
 
 static
@@ -93996,6 +94132,7 @@ int flecs_expr_initializer_pre_fold(
     int32_t i, count = ecs_vec_count(&node->elements);
     for (i = 0; i < count; i ++) {
         ecs_expr_initializer_element_t *elem = &elems[i];
+        ecs_assert(elem->value != NULL, ECS_INTERNAL_ERROR, NULL);
 
         /* If this is a nested initializer, don't fold it but instead fold its
          * values. Because nested initializers are flattened, this ensures that
@@ -94036,20 +94173,28 @@ static
 int flecs_expr_initializer_post_fold(
     ecs_script_t *script,
     ecs_expr_initializer_t *node,
-    void *value)
+    void *value,
+    ecs_size_t value_size)
 {
     ecs_expr_initializer_element_t *elems = ecs_vec_first(&node->elements);
     int32_t i, count = ecs_vec_count(&node->elements);
     for (i = 0; i < count; i ++) {
         ecs_expr_initializer_element_t *elem = &elems[i];
+        ecs_assert(elem->value != NULL, ECS_INTERNAL_ERROR, NULL);
 
         if (elem->value->kind == EcsExprInitializer) {
             if (flecs_expr_initializer_post_fold(
-                script, (ecs_expr_initializer_t*)elem->value, value)) 
+                script, (ecs_expr_initializer_t*)elem->value, value, value_size)) 
             {
                 goto error;
             }
             continue;
+        }
+
+        if (elem->value->kind != EcsExprValue) {
+            flecs_expr_visit_error(script, node, 
+                "expected value for initializer element");
+            goto error;
         }
 
         ecs_expr_value_node_t *elem_value = (ecs_expr_value_node_t*)elem->value;
@@ -94057,6 +94202,11 @@ int flecs_expr_initializer_post_fold(
         /* Type is guaranteed to be correct, since type visitor will insert
          * a cast to the type of the initializer element. */
         ecs_entity_t type = elem_value->node.type;
+        if (flecs_expr_initializer_validate_assign(
+            script, node, elem, type, value_size))
+        {
+            goto error;
+        }
 
         if (ecs_value_copy(script->world, type, 
             ECS_OFFSET(value, elem->offset), elem_value->ptr)) 
@@ -94077,6 +94227,7 @@ int flecs_expr_initializer_visit_fold(
     const ecs_expr_eval_desc_t *desc)
 {
     bool can_fold = true;
+    void *value = NULL;
 
     ecs_expr_initializer_t *node = (ecs_expr_initializer_t*)*node_ptr;
 
@@ -94087,21 +94238,30 @@ int flecs_expr_initializer_visit_fold(
     /* If all elements of initializer fold to literals, initializer itself can
      * be folded into a literal. */
     if (can_fold) {
-        void *value = ecs_value_new(script->world, node->node.type);
+        value = ecs_value_new(script->world, node->node.type);
+        const ecs_type_info_t *type_info = ecs_get_type_info(
+            script->world, node->node.type);
+        ecs_assert(type_info != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        if (flecs_expr_initializer_post_fold(script, node, value)) {
+        if (flecs_expr_initializer_post_fold(
+            script, node, value, type_info->size))
+        {
             goto error;
         }
 
         ecs_expr_value_node_t *result = flecs_expr_value_from(
             script, (ecs_expr_node_t*)node, node->node.type);
         result->ptr = value;
+        value = NULL;
 
         flecs_visit_fold_replace(script, node_ptr, (ecs_expr_node_t*)result);
     }
 
     return 0;
 error:
+    if (value) {
+        ecs_value_free(script->world, node->node.type, value);
+    }
     return -1;
 }
 
@@ -96047,6 +96207,12 @@ int flecs_expr_initializer_visit_type(
         }
 
         ecs_expr_initializer_element_t *elem = &elems[i];
+        if (!elem->value) {
+            flecs_expr_visit_error(script, node, 
+                "missing value for initializer element");
+            goto error;
+        }
+
         if (elem->member) {
             if (ecs_meta_dotmember(cur, elem->member)) { /* x: */
                 flecs_expr_visit_error(script, node, "cannot resolve member");
@@ -96570,6 +96736,11 @@ int flecs_expr_arguments_visit_type(
 
     for (i = 0; i < count; i ++) {
         ecs_expr_initializer_element_t *elem = &elems[i];
+        if (!elem->value) {
+            flecs_expr_visit_error(script, node, 
+                "missing value for function argument");
+            goto error;
+        }
 
         ecs_entity_t argtype = params[i].type;
 
