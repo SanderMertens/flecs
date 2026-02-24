@@ -304,6 +304,10 @@ const char* flecs_script_parse_function(
 
     return pos;
 error:
+    if (result->args) {
+        flecs_script_parser_expr_free(parser, (ecs_expr_node_t*)result->args);
+    }
+    flecs_free_t(&parser->script->allocator, ecs_expr_function_t, result);
     return NULL;
 }
 
@@ -661,13 +665,13 @@ const char* flecs_script_parse_lhs(
                 goto error;
             }
 
+            *out = (ecs_expr_node_t*)node;
+
             Parse_1('}', {
                 break;
             })
 
             can_have_rhs = false;
-
-            *out = (ecs_expr_node_t*)node;
             break;
         }
 
@@ -680,14 +684,13 @@ const char* flecs_script_parse_lhs(
             }
 
             node->is_collection = true;
+            *out = (ecs_expr_node_t*)node;
 
             Parse_1(']', {
                 break;
             })
 
             can_have_rhs = false;
-
-            *out = (ecs_expr_node_t*)node;
             break;
         }
     )
@@ -712,15 +715,24 @@ const char* flecs_script_parse_expr(
     ecs_token_kind_t left_oper,
     ecs_expr_node_t **out)
 {
-    ParserBegin;
+    ecs_tokenizer_t _tokenizer;
+    ecs_os_zeromem(&_tokenizer);
+    _tokenizer.tokens = _tokenizer.stack.tokens;
+    ecs_tokenizer_t *tokenizer = &_tokenizer;
 
     bool old_function_token = parser->function_token;
     parser->function_token = true;
     pos = flecs_script_parse_lhs(parser, pos, tokenizer, left_oper, out);
     parser->function_token = old_function_token;
-    EndOfRule;
+    if (!pos) {
+        if (out && *out) {
+            flecs_script_parser_expr_free(parser, *out);
+            *out = NULL;
+        }
+        return NULL;
+    }
 
-    ParserEnd;
+    return pos;
 }
 
 ecs_script_t* ecs_expr_parse(
