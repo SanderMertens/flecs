@@ -93,6 +93,8 @@ ecs_expr_value_node_t* flecs_expr_char(
         char ch = 0;
         const char *ptr = flecs_chrparse(value, &ch);
         if(!ptr) {
+            flecs_free_t(
+                &parser->script->allocator, ecs_expr_value_node_t, result);
             return NULL;
         }
         result->storage.char_ = ch;
@@ -150,6 +152,7 @@ ecs_expr_value_node_t* flecs_expr_string(
     result->node.type = ecs_id(ecs_string_t);
 
     if (!flecs_string_escape(str)) {
+        flecs_free_t(&parser->script->allocator, ecs_expr_value_node_t, result);
         return NULL;
     }
 
