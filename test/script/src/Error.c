@@ -1993,3 +1993,73 @@ void Error_invalid_char_literal_two_chars(void) {
 
     ecs_fini(world);
 }
+
+void Error_match_operator_without_equals_capture_error(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "B~";
+
+    ecs_script_eval_result_t result = {0};
+    ecs_script_t *script = ecs_script_parse(world, "foo", expr, NULL, &result);
+
+    test_assert(script == NULL);
+    test_assert(result.error != NULL);
+    if (result.error) {
+        ecs_os_free(result.error);
+    }
+
+    ecs_fini(world);
+}
+
+void Error_eval_root_var_component_capture_error(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "$x";
+
+    ecs_script_eval_result_t parse_result = {0};
+    ecs_script_t *script = ecs_script_parse(
+        world, "foo", expr, NULL, &parse_result);
+
+    test_assert(script != NULL);
+    test_assert(parse_result.error == NULL);
+
+    ecs_script_eval_result_t eval_result = {0};
+    int rc = ecs_script_eval(script, NULL, &eval_result);
+    test_assert(rc != 0);
+    test_assert(eval_result.error != NULL);
+
+    if (eval_result.error) {
+        ecs_os_free(eval_result.error);
+    }
+    ecs_script_free(script);
+
+    ecs_fini(world);
+}
+
+void Error_string_tag_with_gt_capture_error(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "\">\"";
+
+    ecs_script_eval_result_t parse_result = {0};
+    ecs_script_t *script = ecs_script_parse(
+        world, "foo", expr, NULL, &parse_result);
+
+    test_assert(script != NULL);
+    test_assert(parse_result.error == NULL);
+
+    ecs_script_eval_result_t eval_result = {0};
+    int rc = ecs_script_eval(script, NULL, &eval_result);
+    test_assert(rc != 0);
+    test_assert(eval_result.error != NULL);
+
+    if (eval_result.error) {
+        ecs_os_free(eval_result.error);
+    }
+    ecs_script_free(script);
+
+    ecs_fini(world);
+}

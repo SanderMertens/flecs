@@ -8,6 +8,26 @@
 #ifdef FLECS_SCRIPT
 #include "script.h"
 
+static
+bool flecs_script_valid_lookup_path(
+    const char *path)
+{
+    int32_t template_nesting = 0;
+    char ch;
+    for (; (ch = path[0]); path ++) {
+        if (ch == '<') {
+            template_nesting ++;
+        } else if (ch == '>') {
+            template_nesting --;
+            if (template_nesting < 0) {
+                return false;
+            }
+        }
+    }
+
+    return template_nesting == 0;
+}
+
 void flecs_script_eval_error_(
     ecs_script_eval_visitor_t *v,
     ecs_script_node_t *node,
@@ -219,17 +239,19 @@ int flecs_script_find_entity(
     ecs_entity_t result = 0;
 
     if (path[0] != '$') {
+        bool valid_path = flecs_script_valid_lookup_path(path);
+
         if (name_expr && *name_expr) {
             result = flecs_script_eval_name_expr(v, NULL, name_expr, true);
             if (!result) {
                 return -1;
             }
-        } else if (from) {
+        } else if (from && valid_path) {
             result = ecs_lookup_path_w_sep(
                 v->world, from, path, NULL, NULL, false);
         } else {
             int32_t i, using_count = ecs_vec_count(&v->r->using);
-            if (using_count) {
+            if (using_count && valid_path) {
                 ecs_entity_t *using = ecs_vec_first(&v->r->using);
                 for (i = using_count - 1; i >= 0; i --) {
                     ecs_entity_t e = ecs_lookup_path_w_sep(
@@ -240,7 +262,7 @@ int flecs_script_find_entity(
                 }
             }
 
-            if (!result) {
+            if (!result && valid_path) {
                 result = ecs_lookup_path_w_sep(
                     v->world, v->parent, path, NULL, NULL, true);
             }
@@ -1000,6 +1022,8 @@ int flecs_script_eval_var_component(
         if (flecs_script_find_entity(
             v, 0, node->name, NULL, NULL, &var_entity, NULL)) 
         {
+            flecs_script_eval_error(v, node, 
+                "unresolved variable '%s'", node->name);
             return -1;
         }
 

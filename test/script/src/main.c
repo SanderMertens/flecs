@@ -621,6 +621,9 @@ void Error_invalid_hex_number_prefix(void);
 void Error_invalid_binary_number_prefix(void);
 void Error_unterminated_multiline_string_capture_error(void);
 void Error_invalid_char_literal_two_chars(void);
+void Error_match_operator_without_equals_capture_error(void);
+void Error_eval_root_var_component_capture_error(void);
+void Error_string_tag_with_gt_capture_error(void);
 void Error_unresolved_component_error_w_script_run(void);
 void Error_unresolved_component_error_w_script_init(void);
 void Error_unresolved_component_error_w_script_init_existing(void);
@@ -3660,6 +3663,18 @@ bake_test_case Error_testcases[] = {
         Error_invalid_char_literal_two_chars
     },
     {
+        "match_operator_without_equals_capture_error",
+        Error_match_operator_without_equals_capture_error
+    },
+    {
+        "eval_root_var_component_capture_error",
+        Error_eval_root_var_component_capture_error
+    },
+    {
+        "string_tag_with_gt_capture_error",
+        Error_string_tag_with_gt_capture_error
+    },
+    {
         "unresolved_component_error_w_script_run",
         Error_unresolved_component_error_w_script_run
     },
@@ -6043,7 +6058,7 @@ static bake_test_suite suites[] = {
         "Error",
         NULL,
         NULL,
-        97,
+        100,
         Error_testcases
     },
     {
