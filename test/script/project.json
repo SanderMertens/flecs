@@ -450,7 +450,10 @@
                 "const_var_initializer_w_comment",
                 "export_const_var_w_comment",
                 "auto_override_tag_w_comment",
-                "pair_tag_w_comment"
+                "pair_tag_w_comment",
+                "negative_hex_and_binary_literals",
+                "scientific_notation_negative_exponent",
+                "scientific_notation_positive_exponent_sign"
             ]
         }, {
             "id": "Template",
@@ -622,6 +625,10 @@
                 "initializer_w_int_to_struct",
                 "script_initializer_w_int_to_struct",
                 "capture_error",
+                "invalid_hex_number_prefix",
+                "invalid_binary_number_prefix",
+                "unterminated_multiline_string_capture_error",
+                "invalid_char_literal_two_chars",
                 "unresolved_component_error_w_script_run",
                 "unresolved_component_error_w_script_init",
                 "unresolved_component_error_w_script_init_existing",

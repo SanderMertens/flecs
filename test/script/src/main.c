@@ -447,6 +447,9 @@ void Eval_const_var_initializer_w_comment(void);
 void Eval_export_const_var_w_comment(void);
 void Eval_auto_override_tag_w_comment(void);
 void Eval_pair_tag_w_comment(void);
+void Eval_negative_hex_and_binary_literals(void);
+void Eval_scientific_notation_negative_exponent(void);
+void Eval_scientific_notation_positive_exponent_sign(void);
 
 // Testsuite 'Template'
 void Template_template_no_scope(void);
@@ -614,6 +617,10 @@ void Error_reload_script_w_component_w_error_again(void);
 void Error_initializer_w_int_to_struct(void);
 void Error_script_initializer_w_int_to_struct(void);
 void Error_capture_error(void);
+void Error_invalid_hex_number_prefix(void);
+void Error_invalid_binary_number_prefix(void);
+void Error_unterminated_multiline_string_capture_error(void);
+void Error_invalid_char_literal_two_chars(void);
 void Error_unresolved_component_error_w_script_run(void);
 void Error_unresolved_component_error_w_script_init(void);
 void Error_unresolved_component_error_w_script_init_existing(void);
@@ -2965,6 +2972,18 @@ bake_test_case Eval_testcases[] = {
     {
         "pair_tag_w_comment",
         Eval_pair_tag_w_comment
+    },
+    {
+        "negative_hex_and_binary_literals",
+        Eval_negative_hex_and_binary_literals
+    },
+    {
+        "scientific_notation_negative_exponent",
+        Eval_scientific_notation_negative_exponent
+    },
+    {
+        "scientific_notation_positive_exponent_sign",
+        Eval_scientific_notation_positive_exponent_sign
     }
 };
 
@@ -3623,6 +3642,22 @@ bake_test_case Error_testcases[] = {
     {
         "capture_error",
         Error_capture_error
+    },
+    {
+        "invalid_hex_number_prefix",
+        Error_invalid_hex_number_prefix
+    },
+    {
+        "invalid_binary_number_prefix",
+        Error_invalid_binary_number_prefix
+    },
+    {
+        "unterminated_multiline_string_capture_error",
+        Error_unterminated_multiline_string_capture_error
+    },
+    {
+        "invalid_char_literal_two_chars",
+        Error_invalid_char_literal_two_chars
     },
     {
         "unresolved_component_error_w_script_run",
@@ -5994,7 +6029,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        438,
+        441,
         Eval_testcases
     },
     {
@@ -6008,7 +6043,7 @@ static bake_test_suite suites[] = {
         "Error",
         NULL,
         NULL,
-        93,
+        97,
         Error_testcases
     },
     {
