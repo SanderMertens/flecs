@@ -2497,3 +2497,49 @@ void Fuzzing_53(void) {
 
     fuzz(expr);
 }
+
+/* crash=out/fuzzer02/crashes/id:000000,sig:11,src:000013,time:9379,execs:2468,op:havoc,rep:1, sha1=a480a69251313d8d9dca0f7bc73a45c3c4f955ae
+ * asan_stack:
+ *     #0 0x000104d110a8 in __asan_region_is_poisoned (/opt/homebrew/Cellar/llvm/20.1.8/lib/clang/20/lib/darwin/libclang_rt.asan_osx_dynamic.dylib:arm64+0x550a8)
+ *     #1 0x0001042c81c8 in ecs_id_str /Users/sandermertens/GitHub/SanderMertens/flecs_fuzzer/flecs/src/id.c:284:18
+ *     #2 0x0001042bd18c in ecs_get_parent /Users/sandermertens/GitHub/SanderMertens/flecs_fuzzer/flecs/src/entity.c:2874:9
+ *     #3 0x0001042b98b0 in ecs_get_target /Users/sandermertens/GitHub/SanderMertens/flecs_fuzzer/flecs/src/entity.c:2774:16
+ *     #4 0x0001042c3ba4 in flecs_path_append /Users/sandermertens/GitHub/SanderMertens/flecs_fuzzer/flecs/src/entity_name.c:34:19
+ *     #5 0x0001042c43d4 in ecs_get_path_w_sep /Users/sandermertens/GitHub/SanderMertens/flecs_fuzzer/flecs/src/entity_name.c:596:5
+ *     #6 0x0001042bd1b0 in ecs_get_parent /Users/sandermertens/GitHub/SanderMertens/flecs_fuzzer/flecs/src/entity.c:2874:9
+ *     #7 0x0001042b98b0 in ecs_get_target /Users/sandermertens/GitHub/SanderMertens/flecs_fuzzer/flecs/src/entity.c:2774:16
+ *     #8 0x0001042c3ba4 in flecs_path_append /Users/sandermertens/GitHub/SanderMertens/flecs_fuzzer/flecs/src/entity_name.c:34:19
+ *     #9 0x0001042c43d4 in ecs_get_path_w_sep /Users/sandermertens/GitHub/SanderMertens/flecs_fuzzer/flecs/src/entity_name.c:596:5
+ *     #10 0x0001042bd1b0 in ecs_get_parent /Users/sandermertens/GitHub/SanderMertens/flecs_fuzzer/flecs/src/entity.c:2874:9
+ *     #11 0x0001042b98b0 in ecs_get_target /Users/sandermertens/GitHub/SanderMertens/flecs_fuzzer/flecs/src/entity.c:2774:16
+ */
+void Fuzzing_54(void) {
+    const char *expr =
+    HEAD "@tree Parent"
+    LINE ""
+    LINE "root {"
+    LINE "  parent_a {"
+    LINE "    @tree ChildOf"
+    LINE "childof_branch {   level_2 { @tree Parent"
+    LINE "    parent_branch {"
+    LINE "  final_a {}"
+    LINE "  final_b {}"
+    LINE "}"
+    LINE "  }"
+    LINE "    }"
+    LINE "  }"
+    LINE ""
+    LINE "  @tree ChildOf"
+    LINE "  childof_sibling {"
+    LINE "    child_a {Parent"
+    LINE "      parent_nested {"
+    LINE "    leaf {}"
+    LINE "      }"
+    LINE "    }"
+    LINE "  }"
+    LINE "}"
+    LINE ""
+        ;
+
+    fuzz(expr);
+}

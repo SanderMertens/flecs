@@ -1261,6 +1261,7 @@ void Fuzzing_50(void);
 void Fuzzing_51(void);
 void Fuzzing_52(void);
 void Fuzzing_53(void);
+void Fuzzing_54(void);
 
 bake_test_case Eval_testcases[] = {
     {
@@ -6222,6 +6223,10 @@ bake_test_case Fuzzing_testcases[] = {
     {
         "53",
         Fuzzing_53
+    },
+    {
+        "54",
+        Fuzzing_54
     }
 };
 
@@ -6299,7 +6304,7 @@ static bake_test_suite suites[] = {
         "Fuzzing",
         NULL,
         NULL,
-        53,
+        54,
         Fuzzing_testcases
     }
 };

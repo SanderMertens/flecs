@@ -10785,10 +10785,9 @@ ecs_entity_t ecs_get_parent(
         ecs_assert(column > 0, ECS_INTERNAL_ERROR, NULL);
         EcsParent *p = ecs_table_get_column(
             table, column - 1, ECS_RECORD_TO_ROW(r->row));
-        ecs_assert(ecs_is_valid(world, p->value), ECS_INTERNAL_ERROR, 
-            "Parent component points to invalid parent %s for child %s",
-                flecs_errstr(ecs_id_str(world, p->value)), 
-                flecs_errstr_2(ecs_get_path(world, entity)));
+        ecs_assert(ecs_is_valid(world, p->value), ECS_INVALID_OPERATION, 
+            "Parent component points to invalid parent %u",
+                p->value, entity);
         return p->value;
     }
 
@@ -70682,6 +70681,13 @@ int flecs_script_eval_tag(
     bool resolved = node->id.eval != 0;
 
     if (flecs_script_eval_id(v, node, &node->id)) {
+        return -1;
+    }
+
+    if (node->id.eval == ecs_id(EcsParent)) {
+        flecs_script_eval_error(v, node, 
+            "Parent component cannot be added as tag (set to valid parent)",
+            node->id.first, node->id.second);
         return -1;
     }
 

@@ -879,6 +879,13 @@ int flecs_script_eval_tag(
         return -1;
     }
 
+    if (node->id.eval == ecs_id(EcsParent)) {
+        flecs_script_eval_error(v, node, 
+            "Parent component cannot be added as tag (set to valid parent)",
+            node->id.first, node->id.second);
+        return -1;
+    }
+
     if (!resolved) {
         if (!flecs_script_can_default_ctor(v->world, node->id.eval)) {
             if (node->id.second) {
