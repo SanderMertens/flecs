@@ -64727,26 +64727,41 @@ ecs_script_for_range_t* flecs_script_insert_for_range(
 
 static
 void ecs_script_params_free(ecs_vec_t *params) {
-    ecs_script_parameter_t *array = ecs_vec_first(params);
     int32_t i, count = ecs_vec_count(params);
-    for (i = 0; i < count; i ++) {
-        /* Safe, component owns string */
-        ecs_os_free(ECS_CONST_CAST(char*, array[i].name));
+    if (count) {
+        ecs_script_parameter_t *array = ecs_vec_first(params);
+        for (i = 0; i < count; i ++) {
+            /* Safe, component owns string */
+            ecs_os_free(ECS_CONST_CAST(char*, array[i].name));
+        }
     }
+
     ecs_vec_fini_t(NULL, params, ecs_script_parameter_t);
+    ecs_os_zeromem(params);
+}
+
+static
+void ecs_script_const_var_fini(
+    EcsScriptConstVar *ptr)
+{
+    if (!ptr->value.ptr) {
+        return;
+    }
+
+    ecs_assert(ptr->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
+    if (ptr->type_info->hooks.dtor) {
+        ptr->type_info->hooks.dtor(ptr->value.ptr, 1, ptr->type_info);
+    }
+
+    ecs_os_free(ptr->value.ptr);
+    ptr->value.ptr = NULL;
+    ptr->value.type = 0;
+    ptr->type_info = NULL;
 }
 
 static
 ECS_MOVE(EcsScriptConstVar, dst, src, {
-    if (dst->value.ptr) {
-        ecs_assert(dst->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
-
-        if (dst->type_info->hooks.dtor) {
-            dst->type_info->hooks.dtor(dst->value.ptr, 1, dst->type_info);
-        }
-
-        ecs_os_free(dst->value.ptr);
-    }
+    ecs_script_const_var_fini(dst);
     
     *dst = *src;
 
@@ -64757,13 +64772,7 @@ ECS_MOVE(EcsScriptConstVar, dst, src, {
 
 static
 ECS_DTOR(EcsScriptConstVar, ptr, {
-    if (ptr->value.ptr) {
-        ecs_assert(ptr->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
-        if (ptr->type_info->hooks.dtor) {
-            ptr->type_info->hooks.dtor(ptr->value.ptr, 1, ptr->type_info);
-        }
-    }
-    ecs_os_free(ptr->value.ptr);
+    ecs_script_const_var_fini(ptr);
 })
 
 static
@@ -70947,6 +70956,11 @@ int flecs_script_eval_var_component(
 
     if (v->is_with_scope) {
         flecs_script_eval_error(v, node, "invalid component in with scope"); 
+        return -1;
+    }
+
+    if (!v->entity) {
+        flecs_script_eval_error(v, node, "missing entity for variable component");
         return -1;
     }
 

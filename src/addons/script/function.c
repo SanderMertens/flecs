@@ -24,16 +24,27 @@ void ecs_script_params_free(ecs_vec_t *params) {
 }
 
 static
-ECS_MOVE(EcsScriptConstVar, dst, src, {
-    if (dst->value.ptr) {
-        ecs_assert(dst->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
-
-        if (dst->type_info->hooks.dtor) {
-            dst->type_info->hooks.dtor(dst->value.ptr, 1, dst->type_info);
-        }
-
-        ecs_os_free(dst->value.ptr);
+void ecs_script_const_var_fini(
+    EcsScriptConstVar *ptr)
+{
+    if (!ptr->value.ptr) {
+        return;
     }
+
+    ecs_assert(ptr->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
+    if (ptr->type_info->hooks.dtor) {
+        ptr->type_info->hooks.dtor(ptr->value.ptr, 1, ptr->type_info);
+    }
+
+    ecs_os_free(ptr->value.ptr);
+    ptr->value.ptr = NULL;
+    ptr->value.type = 0;
+    ptr->type_info = NULL;
+}
+
+static
+ECS_MOVE(EcsScriptConstVar, dst, src, {
+    ecs_script_const_var_fini(dst);
     
     *dst = *src;
 
@@ -44,13 +55,7 @@ ECS_MOVE(EcsScriptConstVar, dst, src, {
 
 static
 ECS_DTOR(EcsScriptConstVar, ptr, {
-    if (ptr->value.ptr) {
-        ecs_assert(ptr->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
-        if (ptr->type_info->hooks.dtor) {
-            ptr->type_info->hooks.dtor(ptr->value.ptr, 1, ptr->type_info);
-        }
-    }
-    ecs_os_free(ptr->value.ptr);
+    ecs_script_const_var_fini(ptr);
 })
 
 static
