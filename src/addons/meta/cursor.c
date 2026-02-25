@@ -1239,6 +1239,10 @@ int ecs_meta_set_value(
     ecs_check(value != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_entity_t type = value->type;
     ecs_check(type != 0, ECS_INVALID_PARAMETER, NULL);
+    if (!value->ptr) {
+        ecs_err("value pointer is null");
+        return -1;
+    }
     const EcsType *mt = ecs_get(cursor->world, type, EcsType);
     if (!mt) {
         ecs_err("type of value does not have reflection data");
@@ -1264,7 +1268,13 @@ int ecs_meta_set_value(
         case EcsF64:  return ecs_meta_set_float(cursor, *(double*)value->ptr);
         case EcsUPtr: return ecs_meta_set_uint(cursor, *(uintptr_t*)value->ptr);
         case EcsIPtr: return ecs_meta_set_int(cursor, *(intptr_t*)value->ptr);
-        case EcsString: return ecs_meta_set_string(cursor, *(char**)value->ptr);
+        case EcsString: {
+            char *str = *(char**)value->ptr;
+            if (!str) {
+                return ecs_meta_set_null(cursor);
+            }
+            return ecs_meta_set_string(cursor, str);
+        }
         case EcsEntity: return ecs_meta_set_entity(cursor, *(ecs_entity_t*)value->ptr);
         case EcsId: return ecs_meta_set_id(cursor, *(ecs_id_t*)value->ptr);
         default:
@@ -1391,9 +1401,17 @@ int ecs_meta_set_string(
     ecs_meta_cursor_t *cursor,
     const char *value)
 {
+    if (!value) {
+        return ecs_meta_set_null(cursor);
+    }
+
     ecs_meta_scope_t *scope = flecs_cursor_get_scope(cursor);
     ecs_meta_op_t *op = flecs_cursor_get_op(scope);
     void *ptr = flecs_meta_cursor_get_ptr(cursor->world, cursor, scope);
+    if (!ptr) {
+        ecs_err("no object to assign");
+        goto error;
+    }
 
     switch(op->kind) {
     case EcsOpI8:
@@ -1482,7 +1500,9 @@ int ecs_meta_set_string(
         set_T(ecs_f64_t, ptr, atof(value));
         break;
     case EcsOpString: {
-        ecs_assert(*(ecs_string_t*)ptr != value, ECS_INVALID_PARAMETER, NULL);
+        if (*(ecs_string_t*)ptr == value) {
+            break;
+        }
         ecs_os_free(*(ecs_string_t*)ptr);
         char *result = ecs_os_strdup(value);
         set_T(ecs_string_t, ptr, result);
@@ -1815,6 +1835,10 @@ int ecs_meta_set_null(
     ecs_meta_scope_t *scope = flecs_cursor_get_scope(cursor);
     ecs_meta_op_t *op = flecs_cursor_get_op(scope);
     void *ptr = flecs_meta_cursor_get_ptr(cursor->world, cursor, scope);
+    if (!ptr) {
+        ecs_err("no object to assign");
+        goto error;
+    }
     switch (op->kind) {
     case EcsOpString:
         ecs_os_free(*(char**)ptr);
