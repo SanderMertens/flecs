@@ -12108,12 +12108,16 @@ void flecs_add_path(
         ecs_assert(real_world != NULL, ECS_INTERNAL_ERROR, NULL);
     }
 
+    if (name[0] == '#') {
+        if (defer_suspend) {
+            flecs_resume_readonly(real_world, &srs);
+        }
+        return;
+    }
+
     if (parent) {
         ecs_add_pair(world, entity, EcsChildOf, parent);
     }
-
-    ecs_assert(name[0] != '#', ECS_INVALID_PARAMETER, 
-        "path should not contain identifier with #");
 
     ecs_set_name(world, entity, name);
 
@@ -12148,7 +12152,7 @@ ecs_entity_t ecs_add_path_w_sep(
         }
 
         if (parent) {
-            ecs_add_pair(world, entity, EcsChildOf, entity);
+            ecs_add_pair(world, entity, EcsChildOf, parent);
         }
 
         return entity;
@@ -15611,6 +15615,12 @@ void flecs_emit_forward_table_up(
         }
 
         if (cr == tgt_cr) {
+            if (trav == EcsChildOf) {
+                /* Malformed scripts can create temporary self-referencing
+                 * ChildOf relations. Skip forwarding this branch to avoid
+                 * aborting while preserving cycle checks for other relations. */
+                continue;
+            }
             char *idstr = ecs_id_str(world, cr->id);
             ecs_assert(cr != tgt_cr, ECS_CYCLE_DETECTED, "%s", idstr);
             ecs_os_free(idstr);
@@ -39161,6 +39171,10 @@ error:
  */
 
 
+/* Internal flag used to prevent recursive child depth propagation from
+ * re-entering the same id record when malformed hierarchies contain cycles. */
+#define EcsIdUpdatingChildDepth (1u << 27)
+
 static
 ecs_id_record_elem_t* flecs_component_elem(
     ecs_component_record_t *head,
@@ -40327,10 +40341,16 @@ void flecs_component_update_childof_w_depth(
         return;
     }
 
+    if (cr->flags & EcsIdUpdatingChildDepth) {
+        return;
+    }
+
     /* If depth changed, propagate downwards */
     if (depth != pair->depth) {
         pair->depth = depth;
+        cr->flags |= EcsIdUpdatingChildDepth;
         flecs_entities_update_childof_depth(world, cr);
+        cr->flags &= ~EcsIdUpdatingChildDepth;
     }
 }
 
@@ -58979,6 +58999,9 @@ void flecs_rtt_init_default_hooks_struct(
     for (i = 0; i < member_count; i++) {
         ecs_member_t *m = &members[i];
         const ecs_type_info_t *member_ti = ecs_get_type_info(world, m->type);
+        if (!member_ti || member_ti == ti) {
+            continue;
+        }
         ctor_hook_required |= member_ti->hooks.ctor &&
                               member_ti->hooks.ctor != flecs_default_ctor;
         dtor_hook_required |= member_ti->hooks.dtor != NULL;
@@ -59014,6 +59037,9 @@ void flecs_rtt_init_default_hooks_struct(
     for (i = 0; i < member_count; i++) {
         ecs_member_t *m = &members[i];
         const ecs_type_info_t *member_ti = ecs_get_type_info(world, m->type);
+        if (!member_ti || member_ti == ti) {
+            continue;
+        }
         if (ctor_hook_required) {
             ecs_rtt_call_data_t *ctor_data =
                 ecs_vec_append_t(NULL, &rtt_ctx->vctor, ecs_rtt_call_data_t);
@@ -61370,6 +61396,9 @@ const char* flecs_tokenizer_identifier(
         if (!is_ident) {
             if (c == '\\') {
                 pos ++;
+                if (!pos[0]) {
+                    goto done;
+                }
             } else if (c == '<') {
                 int32_t indent = 0;
                 do {
@@ -96593,6 +96622,11 @@ int flecs_expr_binary_visit_type(
     }
 
     if (flecs_expr_visit_type_priv(script, node->left, cur, desc)) {
+        goto error;
+    }
+
+    if (!node->left || !node->right) {
+        flecs_expr_visit_error(script, node, "invalid binary expression");
         goto error;
     }
 
