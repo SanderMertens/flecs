@@ -6947,3 +6947,406 @@ void Fuzzing_114(void) {
 
     fuzz(expr);
 }
+
+/* crash=out/fuzzer01/crashes/id:000000,sig:11,src:001492+000229,time:2622238,execs:591383,op:splice,rep:1, sha1=9f044908b698434efd11c7d8af957b50e3a67c4e, grouped_crashes=1
+ */
+void Fuzzing_115(void) {
+    const char *expr =
+    HEAD "usinam: {Blug flecs new "
+        ;
+
+    fuzz(expr);
+}
+
+/* crash=out/fuzzer03/crashes/id:000000,sig:11,src:002055,time:1717558,execs:417138,op:havoc,rep:1, sha1=5bd58b73d1ed2e975329e5d1db12bff2ddf9d7c1, grouped_crashes=1
+ * asan_stack:
+ *     #0 0x00010297aff8 in ecs_string_t_dtor flecs/src/addons/meta/type_support/primitive_ts.c:23:8
+ *     #1 0x00010296d23c in flecs_rtt_struct_xtor flecs/src/addons/meta/rtt_lifecycle.c:92:13
+ *     #2 0x00010296d23c in flecs_rtt_struct_dtor flecs/src/addons/meta/rtt_lifecycle.c:125:5
+ *     #3 0x00010296d23c in flecs_rtt_struct_xtor flecs/src/addons/meta/rtt_lifecycle.c:92:13
+ *     #4 0x00010296d23c in flecs_rtt_struct_dtor flecs/src/addons/meta/rtt_lifecycle.c:125:5
+ *     #5 0x000102b541d4 in ecs_value_fini_w_type_info flecs/src/value.c:87:9
+ *     #6 0x000102b541d4 in ecs_value_free flecs/src/value.c:117:9
+ *     #7 0x0001029f7090 in flecs_expr_value_visit_free flecs/src/addons/script/expr/visit_free.c:17:9
+ *     #8 0x0001029f7090 in flecs_expr_visit_free flecs/src/addons/script/expr/visit_free.c:164:9
+ *     #9 0x000102a30a20 in flecs_script_component_free flecs/src/addons/script/visit_free.c:105:5
+ *     #10 0x000102a30a20 in flecs_script_stmt_free flecs/src/addons/script/visit_free.c:165:9
+ *     #11 0x000102a26604 in ecs_script_visit_scope_ flecs/src/addons/script/visit.c:129:13
+ */
+void Fuzzing_116(void) {
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE ""
+    LINE "Planet {}"
+    LINE "Station {}"
+    LINE "Faction {}"
+    LINE "Rel {}"
+    LINE "Tgt {}"
+    LINE ""
+    LINE "struct Nameplate {"
+    LINE "  value = string"
+    LINE "}"
+    LINE ""
+    LINE "struct Orbit {"
+    LINE "  radius = f64"
+    LINE "  phase = f64"
+    LINE "}"
+    LINE ""
+    LINE "struct Shader {"
+    LINE "  filename = string"
+    LINE "  code = string"
+    LINE "}"
+    LINE ""
+    LINE "enum Team {"
+    LINE "  Red,"
+    LINE "  Blue"
+    LINE "}"
+    LINE ""
+    LINE "const orbit_radius: 32.5"
+    LINE ""
+    LINE "Earth { Planet }"
+    LINE "Mars { Planet }"
+    LINE ""
+    LINE "template Outpost {"
+    LINE "  prop phase = flecs.meta.f64: 0.25"
+    LINE ""
+    LINE "  station {"
+    LINE "    Nameplate: {\"ion\"}"
+    LINE "    Orbit: {radius: $orbit_radius, phase: $phase}"
+    LINE "Team: {Blue}"
+    LINE "  }"
+    LINE "}"
+    LINE ""
+    LINE "@tree Pameta"
+    LINE ""
+    LINE "Planet {}"
+    LINE "Station {}"
+    LINE "Faction {}"
+    LINE "Rel {}"
+    LINE "Tgt {}"
+    LINE ""
+    LINE "struct Nameplate {"
+    LINE "  value =Parent"
+    LINE "parent_root {"
+    LINE "  Nameplateus = f64"
+    LINE "  phase = f64"
+    LINE "}"
+    LINE ""
+    LINE "structhader {"
+    LINE "  filename = string"
+    LINE "  code = string"
+    LINE "}"
+    LINE " pib, p"
+    LINE "enum:Team {ed,"
+    LINE "  Blue"
+    LINE "}"
+    LINE ""
+    LINE "const orbit_radius: 32.5"
+    LINE ""
+    LINE "Earth { Planet }"
+    LINE "Mars { Planet }"
+    LINE ""
+    LINE "template Outpost {"
+    LINE "  prop phase = flecs.meta.f64: 0.25"
+    LINE ""
+    LINE "  station {"
+    LINE "    Nameplate: {\"outpost station\"} Orbit: {radius: $orbit_radius, phase: $phase}"
+    LINE "    Team: {Blue}"
+    LINE "  }"
+    LINE "}"
+    LINE ""
+    LINE "@tree  string"
+    LINE "}"
+    LINE ""
+    LINE "struct Orbit {"
+    LINE "  radi: {\"parent storage root\"}"
+    LINE ""
+    LINE "  fleet_alpha {"
+    LINE "(Faction, Earth)"
+    LINE "    Team: {Red} Outpost: {phase: 0.5}"
+    LINE "  }"
+    LINE ""
+    LINE "  fleet_beta {"
+    LINE "    (Faction, Mars)"
+    LINE "    Outpost: {phase: 1.0}  {"
+    LINE "  Nameplate: {\"anon{mous maintenance bay\"}"
+    LINE "    }"
+    LINE "  }"
+    LINE "}"
+    LINE ""
+    LINE "@tree ChildOf"
+    LINE "childo"
+        ;
+
+    fuzz(expr);
+}
+
+/* crash=out/fuzzer04/crashes/id:000000,sig:11,src:000009,time:519664,execs:129879,op:havoc,rep:1, sha1=cff8a81cbf594cbbd06dbe6bb2f43edbe61148bb, grouped_crashes=3
+ * asan_stack:
+ *     #0 0x0001005e32b4 in flecs_script_parse_lhs flecs/src/addons/script/expr/parser.c:453:5
+ *     #1 0x0001005e1ec8 in flecs_script_parse_expr flecs/src/addons/script/expr/parser.c:733:11
+ *     #2 0x0001005e1730 in flecs_script_parse_initializer flecs/src/addons/script/expr/parser.c:196:15
+ *     #3 0x0001005e2bac in flecs_script_parse_lhs flecs/src/addons/script/expr/parser.c:453:5
+ *     #4 0x0001005e1ec8 in flecs_script_parse_expr flecs/src/addons/script/expr/parser.c:733:11
+ *     #5 0x000100648644 in flecs_script_stmt flecs/src/addons/script/parser.c:981:5
+ *     #6 0x00010064cfc0 in flecs_script_scope flecs/src/addons/script/parser.c:41:5
+ *     #7 0x000100647734 in flecs_script_stmt flecs/src/addons/script/parser.c:464:5
+ *     #8 0x00010064cfc0 in flecs_script_scope flecs/src/addons/script/parser.c:41:5
+ *     #9 0x000100647734 in flecs_script_stmt flecs/src/addons/script/parser.c:464:5
+ *     #10 0x00010064eb54 in ecs_script_parse flecs/src/addons/script/parser.c:1063:15
+ *     #11 0x000100650998 in ecs_script_run flecs/src/addons/script/script.c:130:28
+ */
+void Fuzzing_117(void) {
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE ""
+    LINE "struct Position {"
+    LINE "  x = f32"
+    LINE "  y = f32"
+    LINE "}"
+    LINE ""
+    LINE "struct Color {"
+    LINE "  r = f32"
+    LINE "  g = f32"
+    LINE "  b = f32"
+    LINE "}"
+    LINE ""
+    LINE "struct TrafficLight {"
+    LINE "  red = entity"
+    LINE "  orange = entity"
+    LINE "  green = entity"
+    LINE "}"
+    LINE ""
+    LINE "struct EntityRef {"
+    LINE "  value = entity"
+    LINE "}"
+    LINE ""
+    LINE "const red_light: new signal_red {"
+    LINE "  Color: {r: 1, g: 0, b: 0}"
+    LINE "}"
+    LINE ""
+    LINE "const orange_light: new signal_orange {"
+    LINE "  Color: {r: 1, g: 0.5, b: 0}"
+    LINE "}"
+    LINE ""
+    LINE "intersection {"
+    LINE "  with Position(10, 20) {"
+    LINE "const green_light: new {   Color: {r: 0, g: 1, b: 0} }"
+    LINE ""
+    LINE "controller {   TrafficLight: {"
+    LINE "        red: $red_light"
+    LINE "        orange: $orange_light"
+    LINE "        green: $green_light"
+    LINE "      }"
+    LINE "    }"
+    LINE "  }"
+    LINE ""
+    LINE "  holder {"
+    LINE "    EntityRef: {"
+    LINE "      value: new"
+    LINE "\004aypoint {"
+    LINE "        Position: {x: 30, y: 40}  child {"
+    LINE "          Position: {x: 31, y: 41}"
+    LINE "        }"
+    LINE "      }"
+    LINE "    }"
+    LINE "  }"
+    LINE "}"
+    LINE ""
+        ;
+
+    fuzz(expr);
+}
+
+/* crash=out/fuzzer05/crashes/id:000000,sig:11,src:002494+002607,time:2175174,execs:493444,op:splice,rep:1, sha1=33c57048787bf36087accb28b204d01491866b64, grouped_crashes=1
+ * asan_stack:
+ *     #0 0x0001004532b4 in flecs_script_parse_lhs flecs/src/addons/script/expr/parser.c:453:5
+ *     #1 0x000100451ec8 in flecs_script_parse_expr flecs/src/addons/script/expr/parser.c:733:11
+ *     #2 0x000100451730 in flecs_script_parse_initializer flecs/src/addons/script/expr/parser.c:196:15
+ *     #3 0x000100452bac in flecs_script_parse_lhs flecs/src/addons/script/expr/parser.c:453:5
+ *     #4 0x000100451ec8 in flecs_script_parse_expr flecs/src/addons/script/expr/parser.c:733:11
+ *     #5 0x0001004b8644 in flecs_script_stmt flecs/src/addons/script/parser.c:981:5
+ *     #6 0x0001004bcfc0 in flecs_script_scope flecs/src/addons/script/parser.c:41:5
+ *     #7 0x0001004b7734 in flecs_script_stmt flecs/src/addons/script/parser.c:464:5
+ *     #8 0x0001004bcfc0 in flecs_script_scope flecs/src/addons/script/parser.c:41:5
+ *     #9 0x0001004b7734 in flecs_script_stmt flecs/src/addons/script/parser.c:464:5
+ *     #10 0x0001004bcfc0 in flecs_script_scope flecs/src/addons/script/parser.c:41:5
+ *     #11 0x0001004b9b24 in flecs_script_stmt flecs/src/addons/script/parser.c:918:5
+ */
+void Fuzzing_118(void) {
+    const char *expr =
+    HEAD ""
+    LINE "using flecs.meta"
+    LINE ""
+    LINE "Planet {}"
+    LINE "Station {}"
+    LINE "Faction {}"
+    LINE "Rel {}"
+    LINE "Tgt {}"
+    LINE ""
+    LINE "struct Nameplate {\t  vaase = f64"
+    LINE "}"
+    LINE ""
+    LINE "struct Shader {"
+    LINE "using flecs.meta"
+    LINE ""
+    LINE "struct Position {"
+    LINE "  x = f32"
+    LINE "  y = f32"
+    LINE "}"
+    LINE ""
+    LINE "struct Color {"
+    LINE "  r = f32"
+    LINE "  g =10, 20"
+    LINE "nt_b = 20, 3 f32"
+    LINE "  b = f32"
+    LINE "}"
+    LINE ""
+    LINE "struct TrafficLight {"
+    LINE "  red = entity"
+    LINE "  orange = entity"
+    LINE "  green = entity"
+    LINE "}"
+    LINE ""
+    LINE "struct EntityRef {"
+    LINE "  value = entity"
+    LINE "}"
+    LINE ""
+    LINE "const red_light: new signal_red {"
+    LINE "  Color: {r: 1, g: 0, b: 0}"
+    LINE "}"
+    LINE ""
+    LINE "const orange_light: new signal_orange {"
+    LINE "  Color: {r: 1, g: 0.5, b: 0}"
+    LINE "}"
+    LINE ""
+    LINE "intersection {"
+    LINE "  with Position(10, 20) {"
+    LINE "const green_light: new {   Color: {r: 0, g: 1, b: 0} }"
+    LINE ""
+    LINE "controller {   TrafficLight: {"
+    LINE "        red: $red_light"
+    LINE "        orange: $orange_light"
+    LINE "        green: $green_light"
+    LINE "      }"
+    LINE "    }"
+    LINE "  }"
+    LINE ""
+    LINE "  holder {"
+    LINE "    EntityRef: {"
+    LINE "      value: new "
+        ;
+
+    fuzz(expr);
+}
+
+/* crash=out/fuzzer05/crashes/id:000001,sig:11,src:002494+002607,time:2175205,execs:493450,op:splice,rep:1, sha1=bc9b1e55909dff7aceb737b4690220cca67c221d, grouped_crashes=1
+ * asan_stack:
+ *     #0 0x000104db32b4 in flecs_script_parse_lhs flecs/src/addons/script/expr/parser.c:453:5
+ *     #1 0x000104db1ec8 in flecs_script_parse_expr flecs/src/addons/script/expr/parser.c:733:11
+ *     #2 0x000104db1730 in flecs_script_parse_initializer flecs/src/addons/script/expr/parser.c:196:15
+ *     #3 0x000104db2bac in flecs_script_parse_lhs flecs/src/addons/script/expr/parser.c:453:5
+ *     #4 0x000104db1ec8 in flecs_script_parse_expr flecs/src/addons/script/expr/parser.c:733:11
+ *     #5 0x000104e18644 in flecs_script_stmt flecs/src/addons/script/parser.c:981:5
+ *     #6 0x000104e1cfc0 in flecs_script_scope flecs/src/addons/script/parser.c:41:5
+ *     #7 0x000104e17734 in flecs_script_stmt flecs/src/addons/script/parser.c:464:5
+ *     #8 0x000104e1cfc0 in flecs_script_scope flecs/src/addons/script/parser.c:41:5
+ *     #9 0x000104e15764 in flecs_script_with flecs/src/addons/script/parser.c:195:9
+ *     #10 0x000104e15764 in flecs_script_stmt flecs/src/addons/script/parser.c:559:11
+ *     #11 0x000104e1cfc0 in flecs_script_scope flecs/src/addons/script/parser.c:41:5
+ */
+void Fuzzing_119(void) {
+    const char *expr =
+    HEAD ""
+    LINE "using flecs.meta"
+    LINE ""
+    LINE "Planet {}"
+    LINE "Station {}"
+    LINE "Faction {}"
+    LINE "Rel {}"
+    LINE "Tgt {}"
+    LINE ""
+    LINE "struct Nameplate {"
+    LINE "  vaase = f64"
+    LINE "}"
+    LINE ""
+    LINE "struct Shader {"
+    LINE "using flecs.meta"
+    LINE ""
+    LINE "struct Position {"
+    LINE "  x = f32"
+    LINE "  y = f32"
+    LINE "}"
+    LINE ""
+    LINE "struct Color {"
+    LINE "  r = f32"
+    LINE "  g =10, 20"
+    LINE "nt_b = 20, 3 f32"
+    LINE "  b = f32"
+    LINE "}"
+    LINE ""
+    LINE "struct TrafficLight {"
+    LINE "  red = entity"
+    LINE "  orange = entity"
+    LINE "  green = entity"
+    LINE "}"
+    LINE ""
+    LINE "struct EntityRef {"
+    LINE "  value = entity"
+    LINE "}"
+    LINE ""
+    LINE "const red_light: new signal_red {"
+    LINE "  Color: {r: 1, g: 0, b: 0}"
+    LINE "}"
+    LINE ""
+    LINE "const orange_light: new signal_orange {"
+    LINE "  Color: {r: 1, g: 0.5, b: 0}"
+    LINE "}"
+    LINE ""
+    LINE "intersection {"
+    LINE "  with Position(10, 20) {"
+    LINE "const green_light: new {   Color: {r: 0, g: 1, b: 0} }"
+    LINE ""
+    LINE "controller {   TrafficLight: {"
+    LINE "      ested_parent_a {t"
+    LINE "        orange: $orange_light"
+    LINE "        green: $green_light"
+    LINE "      }"
+    LINE "    }"
+    LINE "  }"
+    LINE ""
+    LINE "  holder {"
+    LINE "    EntityRef: {"
+    LINE "      value: new "
+        ;
+
+    fuzz(expr);
+}
+
+/* crash=out/fuzzer05/crashes/id:000002,sig:11,src:002348+001441,time:2376369,execs:543010,op:splice,rep:2, sha1=a5ace3ec5858ce277ee0b4d76ec59095a9bd84e3, grouped_crashes=1
+ * asan_stack:
+ *     #0 0x000104d332b4 in flecs_script_parse_lhs flecs/src/addons/script/expr/parser.c:453:5
+ *     #1 0x000104d31ec8 in flecs_script_parse_expr flecs/src/addons/script/expr/parser.c:733:11
+ *     #2 0x000104d3271c in flecs_script_parse_collection_initializer flecs/src/addons/script/expr/parser.c:260:15
+ *     #3 0x000104d3271c in flecs_script_parse_lhs flecs/src/addons/script/expr/parser.c:453:5
+ *     #4 0x000104d31ec8 in flecs_script_parse_expr flecs/src/addons/script/expr/parser.c:733:11
+ *     #5 0x000104d99858 in flecs_script_stmt flecs/src/addons/script/parser.c:992:5
+ *     #6 0x000104d9eb54 in ecs_script_parse flecs/src/addons/script/parser.c:1063:15
+ *     #7 0x000104da0998 in ecs_script_run flecs/src/addons/script/script.c:130:28
+ *     #8 0x000104cb4a48 in fuzz_one fuzz/flecs_script_harness.c:107:11
+ *     #9 0x000104cb4a48 in main fuzz/flecs_script_harness.c:132:9
+ *     #10 0x00018302eb94  (<unknown module>)
+ */
+void Fuzzing_120(void) {
+    const char *expr =
+    HEAD "foector: [\"alpha\", \"beta\"o {} new"
+    LINE ""
+    LINE ""
+    LINE "\001x =xh new"
+    LINE ""
+    LINE ""
+    LINE "\001   f"
+        ;
+
+    fuzz(expr);
+}
