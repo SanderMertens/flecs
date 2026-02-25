@@ -10,13 +10,17 @@
 
 static
 void ecs_script_params_free(ecs_vec_t *params) {
-    ecs_script_parameter_t *array = ecs_vec_first(params);
     int32_t i, count = ecs_vec_count(params);
-    for (i = 0; i < count; i ++) {
-        /* Safe, component owns string */
-        ecs_os_free(ECS_CONST_CAST(char*, array[i].name));
+    if (count) {
+        ecs_script_parameter_t *array = ecs_vec_first(params);
+        for (i = 0; i < count; i ++) {
+            /* Safe, component owns string */
+            ecs_os_free(ECS_CONST_CAST(char*, array[i].name));
+        }
     }
+
     ecs_vec_fini_t(NULL, params, ecs_script_parameter_t);
+    ecs_os_zeromem(params);
 }
 
 static
