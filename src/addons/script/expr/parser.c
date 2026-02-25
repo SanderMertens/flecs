@@ -715,6 +715,14 @@ const char* flecs_script_parse_expr(
     ecs_token_kind_t left_oper,
     ecs_expr_node_t **out)
 {
+    if (parser->expr_depth >= ECS_PARSER_MAX_RECURSION_DEPTH) {
+        ecs_parser_error(parser->name, parser->code, pos - parser->code,
+            "maximum expression nesting depth exceeded");
+        return NULL;
+    }
+
+    parser->expr_depth ++;
+
     ecs_tokenizer_t _tokenizer;
     ecs_os_zeromem(&_tokenizer);
     _tokenizer.tokens = _tokenizer.stack.tokens;
@@ -725,6 +733,7 @@ const char* flecs_script_parse_expr(
     pos = flecs_script_parse_lhs(parser, pos, tokenizer, left_oper, out);
     parser->function_token = old_function_token;
     if (!pos) {
+        parser->expr_depth --;
         if (out && *out) {
             flecs_script_parser_expr_free(parser, *out);
             *out = NULL;
@@ -732,6 +741,7 @@ const char* flecs_script_parse_expr(
         return NULL;
     }
 
+    parser->expr_depth --;
     return pos;
 }
 
