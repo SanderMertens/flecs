@@ -935,6 +935,7 @@ void NonFragmentingChildOf_delete_mixed_tree_1(void);
 void NonFragmentingChildOf_delete_mixed_tree_2(void);
 void NonFragmentingChildOf_delete_mixed_tree_3(void);
 void NonFragmentingChildOf_delete_mixed_tree_4(void);
+void NonFragmentingChildOf_delete_mixed_tree_5(void);
 
 // Testsuite 'Hierarchies'
 void Hierarchies_setup(void);
@@ -6833,6 +6834,10 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "delete_mixed_tree_4",
         NonFragmentingChildOf_delete_mixed_tree_4
+    },
+    {
+        "delete_mixed_tree_5",
+        NonFragmentingChildOf_delete_mixed_tree_5
     }
 };
 
@@ -15745,7 +15750,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NULL,
         NULL,
-        229,
+        230,
         NonFragmentingChildOf_testcases
     },
     {
