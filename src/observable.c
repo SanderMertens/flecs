@@ -820,7 +820,7 @@ void flecs_emit_forward_table_up(
 
         if (cr == tgt_cr) {
             char *idstr = ecs_id_str(world, cr->id);
-            ecs_assert(cr != tgt_cr, ECS_CYCLE_DETECTED, idstr);
+            ecs_assert(cr != tgt_cr, ECS_CYCLE_DETECTED, "%s", idstr);
             ecs_os_free(idstr);
             return;
         }
@@ -948,7 +948,7 @@ void flecs_emit_forward_up(
 {
     if (depth >= FLECS_DAG_DEPTH_MAX) {
         char *idstr = ecs_id_str(world, cr->id);
-        ecs_assert(depth < FLECS_DAG_DEPTH_MAX, ECS_CYCLE_DETECTED, idstr);
+        ecs_assert(depth < FLECS_DAG_DEPTH_MAX, ECS_CYCLE_DETECTED, "%s", idstr);
         ecs_os_free(idstr);
         return;
     }

@@ -233,7 +233,7 @@ int flecs_script_function_validate_desc(
     ecs_check(desc->return_type != 0, ECS_INVALID_PARAMETER, NULL);
 
     if (!flecs_script_function_has_vector_args(desc)) {
-        ecs_check(desc->callback != NULL, ECS_INVALID_PARAMETER, desc->name);
+        ecs_check(desc->callback != NULL, ECS_INVALID_PARAMETER, "%s", desc->name);
         ecs_check(desc->return_type != EcsScriptVectorType, ECS_INVALID_PARAMETER,
             "function '%s' cannot have flecs.script.vector return type unless "
             "at least one argument is of type flecs.script.vector",

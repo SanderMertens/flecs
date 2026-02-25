@@ -35,7 +35,7 @@ ecs_entity_t do_import(world& world, const char *symbol) {
 
     // It should now be possible to lookup the module
     ecs_entity_t m = ecs_lookup_symbol(world, symbol, false, false);
-    ecs_assert(m != 0, ECS_MODULE_UNDEFINED, symbol);
+    ecs_assert(m != 0, ECS_MODULE_UNDEFINED, "%s", symbol);
     ecs_assert(m == c_, ECS_INTERNAL_ERROR, NULL);
 
     ecs_log_pop();

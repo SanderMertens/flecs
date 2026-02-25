@@ -646,7 +646,7 @@ const char* flecs_term_parse(
     ecs_term_t *term)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(expr != NULL, ECS_INVALID_PARAMETER, name);
+    ecs_assert(expr != NULL, ECS_INVALID_PARAMETER, "%s", name);
     ecs_assert(term != NULL, ECS_INVALID_PARAMETER, NULL);
 
     ecs_parser_t parser = {
@@ -675,7 +675,7 @@ const char* flecs_id_parse(
     ecs_id_t *id)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(expr != NULL, ECS_INVALID_PARAMETER, name);
+    ecs_assert(expr != NULL, ECS_INVALID_PARAMETER, "%s", name);
     ecs_assert(id != NULL, ECS_INVALID_PARAMETER, NULL);
 
     char token_buffer[256];

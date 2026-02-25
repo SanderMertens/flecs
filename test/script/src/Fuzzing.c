@@ -8,7 +8,7 @@ void fuzz(const char *expr) {
     ECS_IMPORT(world, FlecsScriptMath);
 #endif
 
-    // ecs_log_set_level(-5);
+    ecs_log_set_level(-5);
     ecs_script_run(world, "test", expr, NULL);
     test_assert(true);
     ecs_fini(world);
@@ -7364,5 +7364,7 @@ void Fuzzing_121(void) {
     LINE "\377  \025f888Z88888888\27088g!-1-8888((((((>((8%88S88lecs.8,\" "
         ;
 
+    install_test_abort();
+    test_expect_abort();
     fuzz(expr);
 }

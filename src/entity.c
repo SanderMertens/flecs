@@ -1538,12 +1538,12 @@ void flecs_check_component(
 {
     if (ptr->size != size) {
         char *path = ecs_get_path(world, result);
-        ecs_abort(ECS_INVALID_COMPONENT_SIZE, path);
+        ecs_abort(ECS_INVALID_COMPONENT_SIZE, "%s", path);
         ecs_os_free(path);
     }
     if (ptr->alignment != alignment) {
         char *path = ecs_get_path(world, result);
-        ecs_abort(ECS_INVALID_COMPONENT_ALIGNMENT, path);
+        ecs_abort(ECS_INVALID_COMPONENT_ALIGNMENT, "%s", path);
         ecs_os_free(path);
     }
 }

@@ -171,21 +171,21 @@ struct iter_iterable final : iterable<Components...> {
 
     iter_iterable<Components...>& set_var(const char *name, flecs::entity_t value) {
         int var_id = ecs_query_find_var(it_.query, name);
-        ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, name);
+        ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, "%s", name);
         ecs_iter_set_var(&it_, var_id, value);
         return *this;
     }
 
     iter_iterable<Components...>& set_var(const char *name, flecs::table_t *value) {
         int var_id = ecs_query_find_var(it_.query, name);
-        ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, name);
+        ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, "%s", name);
         ecs_iter_set_var_as_table(&it_, var_id, value);
         return *this;
     }
 
     iter_iterable<Components...>& set_var(const char *name, ecs_table_range_t value) {
         int var_id = ecs_query_find_var(it_.query, name);
-        ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, name);
+        ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, "%s", name);
         ecs_iter_set_var_as_range(&it_, var_id, &value);
         return *this;
     }

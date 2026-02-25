@@ -151,7 +151,7 @@ char* ecs_cpp_get_constant_name(
         func_name, f_len, fb_len, ':'));
     start = flecs_cpp_func_max(start, flecs_cpp_func_rchr(
         func_name, f_len, fb_len, ','));
-    ecs_assert(start != NULL, ECS_INVALID_PARAMETER, func_name);
+    ecs_assert(start != NULL, ECS_INVALID_PARAMETER, "%s", func_name);
     start ++;
     
     ecs_size_t len = flecs_uto(ecs_size_t, 
@@ -347,7 +347,7 @@ ecs_entity_t ecs_cpp_component_register(
     } else if (!implicit_name) {
         c = ecs_lookup_symbol(world, cpp_symbol, false, false);
         ecs_assert(c == 0 || (c == id), 
-            ECS_INCONSISTENT_COMPONENT_ID, cpp_symbol);
+            ECS_INCONSISTENT_COMPONENT_ID, "%s", cpp_symbol);
     }
 
     const char *symbol = NULL;
@@ -490,7 +490,7 @@ ecs_entity_t ecs_cpp_enum_constant_register(
         .id = id,
         .name = name
     });
-    ecs_assert(id != 0, ECS_INVALID_OPERATION, name);
+    ecs_assert(id != 0, ECS_INVALID_OPERATION, "%s", name);
     ecs_set_scope(world, prev);
 
 #ifdef FLECS_DEBUG

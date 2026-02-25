@@ -3486,7 +3486,7 @@ ecs_poly_t* flecs_poly_get_(
         ecs_assert(object != NULL, ECS_INVALID_PARAMETER, NULL);\
         const ecs_header_t *hdr = (const ecs_header_t *)object;\
         const char *type_name = hdr->mixins->type_name;\
-        ecs_assert(hdr->type == ty##_magic, ECS_INVALID_PARAMETER, type_name);\
+        ecs_assert(hdr->type == ty##_magic, ECS_INVALID_PARAMETER, "%s", type_name);\
     } while (0)
 #else
 #define flecs_poly_assert(object, ty)
@@ -9452,12 +9452,12 @@ void flecs_check_component(
 {
     if (ptr->size != size) {
         char *path = ecs_get_path(world, result);
-        ecs_abort(ECS_INVALID_COMPONENT_SIZE, path);
+        ecs_abort(ECS_INVALID_COMPONENT_SIZE, "%s", path);
         ecs_os_free(path);
     }
     if (ptr->alignment != alignment) {
         char *path = ecs_get_path(world, result);
-        ecs_abort(ECS_INVALID_COMPONENT_ALIGNMENT, path);
+        ecs_abort(ECS_INVALID_COMPONENT_ALIGNMENT, "%s", path);
         ecs_os_free(path);
     }
 }
@@ -14361,11 +14361,11 @@ uint64_t flecs_ito_(
     v.u = u;
 
     if (is_signed) {
-        ecs_assert(v.s >= flecs_s_min[size], ECS_INVALID_CONVERSION, err);
-        ecs_assert(v.s <= flecs_s_max[size], ECS_INVALID_CONVERSION, err);
+        ecs_assert(v.s >= flecs_s_min[size], ECS_INVALID_CONVERSION, "%s", err);
+        ecs_assert(v.s <= flecs_s_max[size], ECS_INVALID_CONVERSION, "%s", err);
     } else {
-        ecs_assert(lt_zero == false, ECS_INVALID_CONVERSION, err);
-        ecs_assert(u <= flecs_u_max[size], ECS_INVALID_CONVERSION, err);
+        ecs_assert(lt_zero == false, ECS_INVALID_CONVERSION, "%s", err);
+        ecs_assert(u <= flecs_u_max[size], ECS_INVALID_CONVERSION, "%s", err);
     }
 
     return u;
@@ -15678,7 +15678,7 @@ void flecs_emit_forward_table_up(
 
         if (cr == tgt_cr) {
             char *idstr = ecs_id_str(world, cr->id);
-            ecs_assert(cr != tgt_cr, ECS_CYCLE_DETECTED, idstr);
+            ecs_assert(cr != tgt_cr, ECS_CYCLE_DETECTED, "%s", idstr);
             ecs_os_free(idstr);
             return;
         }
@@ -15806,7 +15806,7 @@ void flecs_emit_forward_up(
 {
     if (depth >= FLECS_DAG_DEPTH_MAX) {
         char *idstr = ecs_id_str(world, cr->id);
-        ecs_assert(depth < FLECS_DAG_DEPTH_MAX, ECS_CYCLE_DETECTED, idstr);
+        ecs_assert(depth < FLECS_DAG_DEPTH_MAX, ECS_CYCLE_DETECTED, "%s", idstr);
         ecs_os_free(idstr);
         return;
     }
@@ -22837,7 +22837,7 @@ void flecs_log_build_info(void) {
 
     const char **addon = bi->addons;
     do {
-        ecs_trace(addon[0]);
+        ecs_trace("%s", addon[0]);
     } while ((++ addon)[0]);
     ecs_log_pop();
 
@@ -25244,7 +25244,7 @@ char* ecs_cpp_get_constant_name(
         func_name, f_len, fb_len, ':'));
     start = flecs_cpp_func_max(start, flecs_cpp_func_rchr(
         func_name, f_len, fb_len, ','));
-    ecs_assert(start != NULL, ECS_INVALID_PARAMETER, func_name);
+    ecs_assert(start != NULL, ECS_INVALID_PARAMETER, "%s", func_name);
     start ++;
     
     ecs_size_t len = flecs_uto(ecs_size_t, 
@@ -25440,7 +25440,7 @@ ecs_entity_t ecs_cpp_component_register(
     } else if (!implicit_name) {
         c = ecs_lookup_symbol(world, cpp_symbol, false, false);
         ecs_assert(c == 0 || (c == id), 
-            ECS_INCONSISTENT_COMPONENT_ID, cpp_symbol);
+            ECS_INCONSISTENT_COMPONENT_ID, "%s", cpp_symbol);
     }
 
     const char *symbol = NULL;
@@ -25583,7 +25583,7 @@ ecs_entity_t ecs_cpp_enum_constant_register(
         .id = id,
         .name = name
     });
-    ecs_assert(id != 0, ECS_INVALID_OPERATION, name);
+    ecs_assert(id != 0, ECS_INVALID_OPERATION, "%s", name);
     ecs_set_scope(world, prev);
 
 #ifdef FLECS_DEBUG
@@ -27640,7 +27640,7 @@ ecs_entity_t ecs_import(
 
         /* Lookup module entity (must be registered by module) */
         e = ecs_lookup(world, module_name);
-        ecs_check(e != 0, ECS_MODULE_UNDEFINED, module_name);
+        ecs_check(e != 0, ECS_MODULE_UNDEFINED, "%s", module_name);
 
         ecs_log_pop();
     }
@@ -64166,7 +64166,7 @@ const char* flecs_term_parse(
     ecs_term_t *term)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(expr != NULL, ECS_INVALID_PARAMETER, name);
+    ecs_assert(expr != NULL, ECS_INVALID_PARAMETER, "%s", name);
     ecs_assert(term != NULL, ECS_INVALID_PARAMETER, NULL);
 
     ecs_parser_t parser = {
@@ -64195,7 +64195,7 @@ const char* flecs_id_parse(
     ecs_id_t *id)
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(expr != NULL, ECS_INVALID_PARAMETER, name);
+    ecs_assert(expr != NULL, ECS_INVALID_PARAMETER, "%s", name);
     ecs_assert(id != NULL, ECS_INVALID_PARAMETER, NULL);
 
     char token_buffer[256];
@@ -64957,7 +64957,7 @@ int flecs_script_function_validate_desc(
     ecs_check(desc->return_type != 0, ECS_INVALID_PARAMETER, NULL);
 
     if (!flecs_script_function_has_vector_args(desc)) {
-        ecs_check(desc->callback != NULL, ECS_INVALID_PARAMETER, desc->name);
+        ecs_check(desc->callback != NULL, ECS_INVALID_PARAMETER, "%s", desc->name);
         ecs_check(desc->return_type != EcsScriptVectorType, ECS_INVALID_PARAMETER,
             "function '%s' cannot have flecs.script.vector return type unless "
             "at least one argument is of type flecs.script.vector",

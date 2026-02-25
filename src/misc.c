@@ -31,11 +31,11 @@ uint64_t flecs_ito_(
     v.u = u;
 
     if (is_signed) {
-        ecs_assert(v.s >= flecs_s_min[size], ECS_INVALID_CONVERSION, err);
-        ecs_assert(v.s <= flecs_s_max[size], ECS_INVALID_CONVERSION, err);
+        ecs_assert(v.s >= flecs_s_min[size], ECS_INVALID_CONVERSION, "%s", err);
+        ecs_assert(v.s <= flecs_s_max[size], ECS_INVALID_CONVERSION, "%s", err);
     } else {
-        ecs_assert(lt_zero == false, ECS_INVALID_CONVERSION, err);
-        ecs_assert(u <= flecs_u_max[size], ECS_INVALID_CONVERSION, err);
+        ecs_assert(lt_zero == false, ECS_INVALID_CONVERSION, "%s", err);
+        ecs_assert(u <= flecs_u_max[size], ECS_INVALID_CONVERSION, "%s", err);
     }
 
     return u;

@@ -55,7 +55,7 @@ ecs_entity_t ecs_import(
 
         /* Lookup module entity (must be registered by module) */
         e = ecs_lookup(world, module_name);
-        ecs_check(e != 0, ECS_MODULE_UNDEFINED, module_name);
+        ecs_check(e != 0, ECS_MODULE_UNDEFINED, "%s", module_name);
 
         ecs_log_pop();
     }
