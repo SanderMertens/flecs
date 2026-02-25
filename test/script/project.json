@@ -453,7 +453,9 @@
                 "pair_tag_w_comment",
                 "negative_hex_and_binary_literals",
                 "scientific_notation_negative_exponent",
-                "scientific_notation_positive_exponent_sign"
+                "scientific_notation_positive_exponent_sign",
+                "const_var_w_new_expr_two_tags",
+                "const_var_w_new_expr_tag_component"
             ]
         }, {
             "id": "Template",

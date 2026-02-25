@@ -450,6 +450,8 @@ void Eval_pair_tag_w_comment(void);
 void Eval_negative_hex_and_binary_literals(void);
 void Eval_scientific_notation_negative_exponent(void);
 void Eval_scientific_notation_positive_exponent_sign(void);
+void Eval_const_var_w_new_expr_two_tags(void);
+void Eval_const_var_w_new_expr_tag_component(void);
 
 // Testsuite 'Template'
 void Template_template_no_scope(void);
@@ -3027,6 +3029,14 @@ bake_test_case Eval_testcases[] = {
     {
         "scientific_notation_positive_exponent_sign",
         Eval_scientific_notation_positive_exponent_sign
+    },
+    {
+        "const_var_w_new_expr_two_tags",
+        Eval_const_var_w_new_expr_two_tags
+    },
+    {
+        "const_var_w_new_expr_tag_component",
+        Eval_const_var_w_new_expr_tag_component
     }
 };
 
@@ -6244,7 +6254,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        441,
+        443,
         Eval_testcases
     },
     {

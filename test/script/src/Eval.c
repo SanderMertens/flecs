@@ -14672,3 +14672,58 @@ void Eval_scientific_notation_positive_exponent_sign(void) {
 
     ecs_fini(world);
 }
+
+void Eval_const_var_w_new_expr_two_tags(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "foo {}"
+    LINE ""
+    LINE "const x: new {"
+    LINE "    foo"
+    LINE "    flecs"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+
+    ecs_iter_t it = ecs_each_id(world, foo);
+    test_bool(true, ecs_each_next(&it));
+    test_int(1, it.count);
+    test_assert(ecs_has_id(world, it.entities[0], EcsFlecs));
+    test_bool(false, ecs_each_next(&it));
+
+    ecs_fini(world);
+}
+
+void Eval_const_var_w_new_expr_tag_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "foo {}"
+    LINE ""
+    LINE "const x: new {"
+    LINE "    foo"
+    LINE "    flecs.meta.i32: {10}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+
+    ecs_iter_t it = ecs_each_id(world, foo);
+    test_bool(true, ecs_each_next(&it));
+    test_int(1, it.count);
+    test_assert(ecs_has_id(world, it.entities[0], ecs_id(ecs_i32_t)));
+    {
+        const int32_t *ptr = ecs_get(world, it.entities[0], ecs_i32_t);
+        test_assert(ptr != NULL);
+        test_int(*ptr, 10);
+    }
+    test_bool(false, ecs_each_next(&it));
+
+    ecs_fini(world);
+}
