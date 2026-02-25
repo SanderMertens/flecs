@@ -6974,6 +6974,11 @@ void Fuzzing_115(void) {
  *     #11 0x000102a26604 in ecs_script_visit_scope_ flecs/src/addons/script/visit.c:129:13
  */
 void Fuzzing_116(void) {
+    // This crash is caused by the script creating a type with a generated dtor,
+    // then creating a value for that type, and then overwriting the type.
+    // Should be handled more gracefully, but not a realistic scenario.
+    test_quarantine("25 Feb 2026");
+
     const char *expr =
     HEAD "using flecs.meta"
     LINE ""

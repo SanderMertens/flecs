@@ -623,7 +623,7 @@ const char* flecs_script_parse_lhs(
 
             pos = flecs_parse_ws_eol(pos);
 
-            if ((stmt_count - ecs_vec_count(&parser->scope->stmts)) > 1) {
+            if ((ecs_vec_count(&parser->scope->stmts) - stmt_count) != 1) {
                 Error("expected entity statement after new");
             }
 
