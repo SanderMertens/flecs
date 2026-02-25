@@ -12,7 +12,7 @@ typedef struct ecs_script_impl_t ecs_script_impl_t;
 typedef struct ecs_script_scope_t ecs_script_scope_t;
 
 #ifndef ECS_PARSER_MAX_RECURSION_DEPTH
-#define ECS_PARSER_MAX_RECURSION_DEPTH (256)
+#define ECS_PARSER_MAX_RECURSION_DEPTH (64)
 #endif
 
 typedef struct ecs_parser_t {
