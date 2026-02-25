@@ -28,7 +28,22 @@ void flecs_set_array(ecs_iter_t *it) {
             continue;
         }
 
+        if (!ecs_is_alive(world, elem_type)) {
+            ecs_err("array '%s' has invalid element type", ecs_get_name(world, e));
+            continue;
+        }
+
         const EcsComponent *elem_ptr = ecs_get(world, elem_type, EcsComponent);
+        if (!elem_ptr) {
+            ecs_err("array '%s' has invalid element type", ecs_get_name(world, e));
+            continue;
+        }
+
+        if (!ecs_get_type_info(world, elem_type)) {
+            ecs_err("array '%s' element type has no type info", ecs_get_name(world, e));
+            continue;
+        }
+
         if (flecs_init_type(world, e, EcsArrayType, 
             elem_ptr->size * elem_count, elem_ptr->alignment)) 
         {
@@ -49,6 +64,21 @@ void flecs_set_vector(ecs_iter_t *it) {
 
         if (!elem_type) {
             ecs_err("vector '%s' has no element type", ecs_get_name(world, e));
+            continue;
+        }
+
+        if (!ecs_is_alive(world, elem_type)) {
+            ecs_err("vector '%s' has invalid element type", ecs_get_name(world, e));
+            continue;
+        }
+
+        if (!ecs_get(world, elem_type, EcsComponent)) {
+            ecs_err("vector '%s' has invalid element type", ecs_get_name(world, e));
+            continue;
+        }
+
+        if (!ecs_get_type_info(world, elem_type)) {
+            ecs_err("vector '%s' element type has no type info", ecs_get_name(world, e));
             continue;
         }
 

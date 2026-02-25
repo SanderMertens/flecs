@@ -885,8 +885,18 @@ void flecs_rtt_init_default_hooks_vector(
 {
     const EcsVector *vector_info = ecs_get(world, component, EcsVector);
     ecs_assert(vector_info != NULL, ECS_INTERNAL_ERROR, NULL);
+    if (!ecs_is_alive(world, vector_info->type)) {
+        ecs_err("vector '%s' has invalid element type", ecs_get_name(world, component));
+        return;
+    }
+
     const ecs_type_info_t *element_ti =
         ecs_get_type_info(world, vector_info->type);
+    if (!element_ti) {
+        ecs_err("vector '%s' has invalid element type", ecs_get_name(world, component));
+        return;
+    }
+
     ecs_rtt_vector_ctx_t *rtt_ctx = ecs_os_malloc_t(ecs_rtt_vector_ctx_t);
     rtt_ctx->type_info = element_ti;
     ecs_flags32_t flags = element_ti->hooks.flags;
