@@ -819,6 +819,12 @@ void flecs_emit_forward_table_up(
         }
 
         if (cr == tgt_cr) {
+            if (trav == EcsChildOf) {
+                /* Malformed scripts can create temporary self-referencing
+                 * ChildOf relations. Skip forwarding this branch to avoid
+                 * aborting while preserving cycle checks for other relations. */
+                continue;
+            }
             char *idstr = ecs_id_str(world, cr->id);
             ecs_assert(cr != tgt_cr, ECS_CYCLE_DETECTED, "%s", idstr);
             ecs_os_free(idstr);

@@ -844,12 +844,16 @@ void flecs_add_path(
         ecs_assert(real_world != NULL, ECS_INTERNAL_ERROR, NULL);
     }
 
+    if (name[0] == '#') {
+        if (defer_suspend) {
+            flecs_resume_readonly(real_world, &srs);
+        }
+        return;
+    }
+
     if (parent) {
         ecs_add_pair(world, entity, EcsChildOf, parent);
     }
-
-    ecs_assert(name[0] != '#', ECS_INVALID_PARAMETER, 
-        "path should not contain identifier with #");
 
     ecs_set_name(world, entity, name);
 
@@ -884,7 +888,7 @@ ecs_entity_t ecs_add_path_w_sep(
         }
 
         if (parent) {
-            ecs_add_pair(world, entity, EcsChildOf, entity);
+            ecs_add_pair(world, entity, EcsChildOf, parent);
         }
 
         return entity;

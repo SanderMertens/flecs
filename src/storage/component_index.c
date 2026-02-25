@@ -16,6 +16,10 @@
 
 #include "../private_api.h"
 
+/* Internal flag used to prevent recursive child depth propagation from
+ * re-entering the same id record when malformed hierarchies contain cycles. */
+#define EcsIdUpdatingChildDepth (1u << 27)
+
 static
 ecs_id_record_elem_t* flecs_component_elem(
     ecs_component_record_t *head,
@@ -1182,10 +1186,16 @@ void flecs_component_update_childof_w_depth(
         return;
     }
 
+    if (cr->flags & EcsIdUpdatingChildDepth) {
+        return;
+    }
+
     /* If depth changed, propagate downwards */
     if (depth != pair->depth) {
         pair->depth = depth;
+        cr->flags |= EcsIdUpdatingChildDepth;
         flecs_entities_update_childof_depth(world, cr);
+        cr->flags &= ~EcsIdUpdatingChildDepth;
     }
 }
 
