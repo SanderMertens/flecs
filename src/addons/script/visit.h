@@ -12,10 +12,12 @@ typedef int (*ecs_visit_action_t)(
     ecs_script_visit_t *visitor, 
     ecs_script_node_t *node);
 
+#define ECS_SCRIPT_VISIT_MAX_DEPTH (256)
+
 struct ecs_script_visit_t {
     ecs_script_impl_t *script;
     ecs_visit_action_t visit;
-    ecs_script_node_t* nodes[256];
+    ecs_script_node_t* nodes[ECS_SCRIPT_VISIT_MAX_DEPTH];
     ecs_script_node_t *prev, *next;
     int32_t depth;
 };
