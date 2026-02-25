@@ -8,7 +8,7 @@ void fuzz(const char *expr) {
     ECS_IMPORT(world, FlecsScriptMath);
 #endif
 
-    ecs_log_set_level(-5);
+    // ecs_log_set_level(-5);
     ecs_script_run(world, "test", expr, NULL);
     test_assert(true);
     ecs_fini(world);
@@ -7351,6 +7351,17 @@ void Fuzzing_120(void) {
     LINE ""
     LINE ""
     LINE "\001   f"
+        ;
+
+    fuzz(expr);
+}
+
+/* crash=out/fuzzer01/crashes/id:000000,sig:11,src:001259,time:1225467,execs:207848,op:havoc,rep:1, sha1=f3e0045119b57f6c50dc69171207500ac41d148e, grouped_crashes=1
+ */
+void Fuzzing_121(void) {
+    const char *expr =
+    HEAD "\"\"\""
+    LINE "\377  \025f888Z88888888\27088g!-1-8888((((((>((8%88S88lecs.8,\" "
         ;
 
     fuzz(expr);
