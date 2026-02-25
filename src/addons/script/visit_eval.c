@@ -1052,6 +1052,11 @@ int flecs_script_eval_var_component(
         return -1;
     }
 
+    if (!v->entity) {
+        flecs_script_eval_error(v, node, "missing entity for variable component");
+        return -1;
+    }
+
     ecs_id_t var_id = var_value.type;
 
     if (var_value.ptr) {
