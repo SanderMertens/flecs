@@ -53,10 +53,12 @@ void flecs_script_template_ctor(
 {
     ecs_world_t *world = ti->hooks.ctx;
     ecs_entity_t template_entity = ti->component;
+
+    /* Initialize object so copy hooks can safely overwrite members with dtors. */
+    flecs_default_ctor(ptr, count, ti);
     
     const EcsStruct *st = ecs_get(world, template_entity, EcsStruct);
     if (!st) {
-        ecs_os_memset(ptr, 0, count * ti->size);
         return;
     }
 
