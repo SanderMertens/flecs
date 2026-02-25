@@ -1102,6 +1102,11 @@ int flecs_expr_binary_visit_type(
         goto error;
     }
 
+    if (!node->left || !node->right) {
+        flecs_expr_visit_error(script, node, "invalid binary expression");
+        goto error;
+    }
+
     ecs_meta_cursor_t right_cur = *cur;
     if (node->right->kind == EcsExprIdentifier) {
         if (ecs_get(script->world, node->left->type, EcsEnum) != NULL) {
