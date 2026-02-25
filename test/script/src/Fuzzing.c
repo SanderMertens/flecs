@@ -6508,3 +6508,437 @@ void Fuzzing_108(void) {
 
     fuzz(expr);
 }
+
+/* crash=out/fuzzer01/crashes/id:000000,sig:11,src:003001,time:2328738,execs:569781,op:havoc,rep:1, sha1=9052187fb2925ee67b316584ac68fb9a4e37b3cc, grouped_crashes=5
+ * asan_stack:
+ *     #0 0x000104406468 in ecs_script_params_free flecs/src/addons/script/function.c:17:9
+ *     #1 0x000104406468 in EcsScriptFunction_dtor flecs/src/addons/script/function.c:60:1
+ *     #2 0x000104535110 in flecs_table_dtor_all flecs/src/storage/table.c:1138:13
+ *     #3 0x000104535110 in flecs_table_fini_data flecs/src/storage/table.c:1187:5
+ *     #4 0x000104536200 in flecs_table_fini flecs/src/storage/table.c:1305:5
+ *     #5 0x000104557704 in flecs_clean_tables flecs/src/world.c:567:9
+ *     #6 0x000104557704 in flecs_fini_store flecs/src/world.c:680:5
+ *     #7 0x000104557704 in ecs_fini flecs/src/world.c:1303:5
+ *     #8 0x000104330a50 in fuzz_one fuzz/flecs_script_harness.c:108:5
+ *     #9 0x000104330a50 in main fuzz/flecs_script_harness.c:132:9
+ *     #10 0x00018302eb94  (<unknown module>)
+ */
+void Fuzzing_109(void) {
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE "using flecs.script.math"
+    LINE ""
+    LINE "Planet {}"
+    LINE "Station {}"
+    LINE "Faction {}"
+    LINE "Engine {ink_a {}"
+    LINE "Tgt {}"
+    LINE ""
+    LINE "struct Position {"
+    LINE "  x = f32"
+    LINE "  y = f32"
+    LINE "}"
+    LINE ""
+    LINE "struct Velocity {"
+    LINE "  x = f32"
+    LINE "  y = f32"
+    LINE "}"
+    LINE ""
+    LINE "struct Nameplate {"
+    LINE "  value = string"
+    LINE "}"
+    LINE ""
+    LINE "struct Orbit {"
+    LINE "  radius = f64"
+    LINE "  phase = f64"
+    LINE "}"
+    LINE ""
+    LINE "struct Combat {"
+    LINE "  attack = f32"
+    LINE "  defense = f32"
+    LINE "}"
+    LINE ""
+    LINE "struct Flags {"
+    LINE "  fast = bool"
+    LINE "}"
+    LINE ""
+    LINE "struct Vec2 {"
+    LINE "  x = f32"
+    LINE "  y = f32"
+    LINE "}"
+    LINE ""
+    LINE "struct Vec3 {"
+    LINE "  x = f64"
+    LINE "  y = f64"
+    LINE "  z = f64"
+    LINE "}"
+    LINE ""
+    LINE "struct PID {"
+    LINE "  p = f64"
+    LINE "  i = f64"
+    LINE "  d = f64"
+    LINE "}"
+    LINE ""
+    LINE "struct Con: length($axis)"
+    LINE ""
+    LINE "Earth { Planet }"
+    LINE "Matroller {"
+    LINE "  gains = PID"
+    LINE "  direction = Vec2"
+    LINE "  setpoint = f64"
+    LINE "}"
+    LINE ""
+    LINE "struct EngineProfile {"
+    LINE "  thrust = f64"
+    LINE "  efficiency = f64"
+    LINE "  axis = Vec3"
+    LINE "}"
+    LINE ""
+    LINE "struct Shader {"
+    LINE "  filename = string"
+    LINE "  code = string"
+    LINE "}"
+    LINE ""
+    LINE "enum Team {"
+    LINE "  Red,"
+    LINE "  Blue"
+    LINE "}"
+    LINE ""
+    LINE "const base_speed: 3.2e1"
+    LINE "const shift_factor: (3 << 3) + (64 >> 4)"
+    LINE "const orbit_radius: sqrt(9.0e2) + 2.5"
+    LINE "const trig_mix: sin(PI / 6.0) + cos(PI / 3.0) + tan(PI / 4.0)"
+    LINE "const damping: (exp2(3.0) - log10(1.0e3)) / 10.0"
+    LINE "const cruise_speed: (($base_speed + ($shift_factor % 7)) * (1.0 + $damping))"
+    LINE "const gate_fast: (($cruise_speed > 30.0) && ($orbit_radius < 40.0)) || false"
+    LINE ""
+    LINE "const axis = Vec3: {3.0, 4.0, 0.0}"
+    LINE "const unit_axis: normalize($axis)"
+    LINE "const probe = Vec3: {1.0e1, -2.5, 3.5}"
+    LINE "const mixed_axis: lerp($probe, $unit_axis, 0.35)"
+    LINE "const axis_len: length($axis)"
+    LINE ""
+    LINE "Earth { Planet }"
+    LINE "Mars { Planet }"
+    LINE ""
+    LINE "template EnginePack {"
+    LINE "  prop thrust = flecs.meta.f64: 120.0"
+    LINE "  prop efficiency = flecs.meta.f64: 0.82"
+    LINE "  prop orbit_phase = flecs.meta.f64: 0.0"
+    LINE ""
+    LINE "  engine {"
+    LINE "    Engine"
+    LINE "    EngineProfile: {"
+    LINE "      thrust: $thrust + ($cruise_speed / 2.0)"
+    LINE "      efficiency: $efficiency"
+    LINE "      axis: $mixed_axis"
+    LINE "    }"
+    LINE "    Orbit: {"
+    LINE "      radius: $orbit_radius + ($thrust / 100.0)"
+    LINE "      phase: $orbit_phase + ($trig_mix / 10.0)"
+    LINE "    }"
+    LINE "    Velocity: {"
+    LINE "      x: $cruise_speed * 0.1"
+    LINE "      y: ($cruise_speed / 5.0) - 1.0"
+    LINE "    }"
+    LINE "  }"
+    LINE "}"
+    LINE ""
+    LINE "template PatrolGroup {"
+    LINE "  prop count = flecs.meta.i32: 3"
+    LINE "  prop spacing = flecs.meta.f32: 2"
+    LINE "  prop attack = flecs.meta.f32: 5"
+    LINE "  prop defense = flecs.meta.f32: 3"
+    LINE ""
+    LINE "  for i in 0..$count {"
+    LINE "    \"unit_{$i}\" {"
+    LINE "      Position: {"
+    LINE "        x: ($i * $spacing) + ($shift_factor % 5)"
+    LINE "        y: ($i * 0.5) - 1"
+    LINE "      }"
+    LINE "      Combat: { attack: $attack + ($i * 0.75)"
+    LINE " $defense + ($i * 0.25)"
+    LINE "      }"
+    LINE "      Team: {Red}"
+    LINE "    }"
+    LINE "  }"
+    LINE "}"
+    LINE ""
+    LINE "template SensorNode {"
+    LINE "  prop idx = flecs.meta.i32: 0"
+    LINE "  prop px = flecs.meta.f32: 0"
+    LINE "  prop py = flecs.meta.f32: 0"
+    LINE ""
+    LINE "  \"sensor_{$idx}\" {"
+    LINE "    Position: {$px + ($idx * 1.5), $py - ($idx * 0.5)}"
+    LINE "    Nameplate: {\"sensor node\"}"
+    LINE "    Team: {Blue}"
+    LINE "  }"
+    LINE "}"
+    LINE ""
+    LINE "@tree Parente: {\"mix"
+    LINE "pot {"
+    LINE "  Nameplate: {\"parent storage root\"}"
+    LINE "  Position: {x: 0, y: 0}"
+    LINE "  Orbit: {radius: $orbit_radius, phase: $trig_mix}"
+    LINE ""
+    LINE " lpha {"
+    LINE "    (Faction, Earth)"
+    LINE "    Team: {Red}"
+    LINE "    EnginePack: {thrust: 180, efficiency: 0.91, orbit_phase: 0.25}"
+    LINE "    PatrolGroup: {count: 4, spacing: 2.5, attack: 7, defense: 4}"
+    LINE "  }"
+    LINE ""
+    LINE "  fleet_beta {"
+    LINE "    (Faction, Mars)"
+    LINE "    Team: {Blue}"
+    LINE "    EnginePack: {thrust: 140, efficiency: 0.88, orbit_phase: 0.75}"
+    LINE ""
+    LINE "    {"
+    LINE "      Nameplate: {\"anonymous maintenance bay\"}"
+    LINE "      SensorNode: {idx: 2, px: -4, py: 2}"
+    LINE "    }"
+    LINE "  }"
+    LINE "}"
+    LINE ""
+    LINE "@tree ChildOf"
+    LINE "childof_root {"
+    LINE "  Nameplate: {\"childof storage root\"}"
+    LINE "  Position: {x: -10, y: 5}"
+    LINE ""
+    LINE "  dock_a {"
+    LINE "    EnginePack: {thrust: 110, efficiency: 0.8, orbit_phase: 1.5}"
+    LINE "    SensorNode: {idx: 0, px: 1, py: 1}"
+    LINE "  }"
+    LINE ""
+    LINE "  dock_b {"
+    LINE "    PatrolGroup: {count: 2, spacing: 3.0, attack: 6, defense: 5}"
+    LINE ""
+    LINE "    @tree Parent"
+    LINE "    parent_section {"
+    LINE "      nested_parent_a {"
+    LINE "        Position: {x: 4, y: 8}"
+    LINE "      }"
+    LINE "      nested_parent_b {"
+    LINE "        Position: {x: 5, y: 9}"
+    LINE "      }"
+    LINE "    }"
+    LINE "  }"
+    LINE "}"
+    LINE ""
+    LINE "mixed_root {"
+    LINE "  Nameplate: {\"mixed/default hierarchy root\"}"
+    LINE "  Orbit: {radius: $orbit_radius + $axis_len, phase: $trig_mix + $damping}"
+    LINE "  Combat: {"
+    LINE "    attack: ($cruise_speed / 3.0) + 1"
+    LINE "    defense: (abs(-4.0) + 2.0)"
+    LINE "  }"
+    LINE ""
+    LINE "  controller_node {"
+    LINE "    Controller: {"
+    LINE "      gains: {p: 1.0 / 1.0e2, i: 2.5 / 1.0e3, d: 5.0 / 1.0e4}"
+    LINE "      direction: {x: 1, y: 0}"
+    LINE "      setpoint: ($orbit_radius * 2.0) + ($axis_len / 2.0)"
+    LINE "    }"
+    LINE "  }"
+    LINE ""
+    LINE "  shader_bank {"
+    LINE "    (Shader, Station): {"
+    LINE "      filename: \"station.glsl\","
+    LINE "      code: `"
+    LINE " oid main() \\{"
+    LINE "  ion = vec4(0.0);"
+    LINE "        }`"
+    LINE "      }"
+    LINE "  }"
+    LINE ""
+    LINE "  @tree Parent"
+    LINE "  parent_zone {"
+    LINE "    (Rel, Tgt) {"
+    LINE "      relay {"
+    LINE "        @tree ChildOf"
+    LINE "        links {"
+    LINE "          l}"
+    LINE "Rel {}"
+    LINE "          link_b {}"
+    LINE "        }"
+    LINE "      }"
+    LINE "    }"
+    LINE "  }"
+    LINE ""
+    LINE "  gate_marker {"
+    LINE "    Nameplate: {\"fast gate marker\"}"
+    LINE "    Flags: {fast: $gate_fast}"
+    LINE "  }"
+    LINE "}"
+    LINE ""
+        ;
+
+    fuzz(expr);
+}
+
+/* crash=out/fuzzer01/crashes/id:000001,sig:11,src:003042,time:2424645,execs:593728,op:havoc,rep:3, sha1=7629448a6cb886d7c28b12dec0fbb233a382542c, grouped_crashes=3
+ * asan_stack:
+ *     #0 0x000104ae9364 in flecs_path_elem flecs/src/entity_name.c
+ *     #1 0x000104ae8950 in ecs_lookup_path_w_sep flecs/src/entity_name.c:734:19
+ *     #2 0x000104ac9bec in ecs_entity_init flecs/src/entity.c:1334:22
+ *     #3 0x000104a6cce8 in flecs_script_create_entity flecs/src/addons/script/visit_eval.c:352:12
+ *     #4 0x000104a70cf0 in flecs_script_eval_entity flecs/src/addons/script/visit_eval.c:762:22
+ *     #5 0x000104a70cf0 in flecs_script_eval_node flecs/src/addons/script/visit_eval.c:1696:16
+ *     #6 0x000104a69b1c in ecs_script_visit_scope_ flecs/src/addons/script/visit.c:129:13
+ *     #7 0x000104a6e410 in flecs_script_eval_scope flecs/src/addons/script/visit_eval.c:596:18
+ *     #8 0x000104a6fb38 in flecs_script_eval_node flecs/src/addons/script/visit_eval.c:1649:16
+ *     #9 0x000104a6a200 in ecs_script_visit_node_ flecs/src/addons/script/visit.c:151:9
+ *     #10 0x000104a6a200 in ecs_script_visit_from_ flecs/src/addons/script/visit.c:175:18
+ *     #11 0x000104a6a200 in ecs_script_visit_ flecs/src/addons/script/visit.c:197:12
+ */
+void Fuzzing_110(void) {
+    const char *expr =
+    HEAD ""
+    LINE "\"\"\"**\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\:\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\*/\""
+    LINE "@"
+        ;
+
+    fuzz(expr);
+}
+
+/* crash=out/fuzzer01/crashes/id:000002,sig:11,src:003072,time:2466677,execs:604623,op:havoc,rep:1, sha1=98eca0e7b193c28081f316ffe9de7f03a2c7e94f, grouped_crashes=1
+ * asan_stack:
+ *     #0 0x000104ca8460 in ecs_meta_set_string flecs/src/addons/meta/cursor.c:1485:9
+ *     #1 0x000104d37408 in flecs_expr_initializer_eval_dynamic flecs/src/addons/script/expr/visit_eval.c:246:13
+ *     #2 0x000104d37408 in flecs_expr_initializer_eval flecs/src/addons/script/expr/visit_eval.c:271:16
+ *     #3 0x000104d33a60 in flecs_expr_initializer_visit_eval flecs/src/addons/script/expr/visit_eval.c:290:12
+ *     #4 0x000104d33a60 in flecs_expr_visit_eval_priv flecs/src/addons/script/expr/visit_eval.c:1011:13
+ *     #5 0x000104d33088 in flecs_expr_visit_eval flecs/src/addons/script/expr/visit_eval.c:1165:9
+ *     #6 0x000104d6e024 in flecs_script_eval_expr flecs/src/addons/script/visit_eval.c:554:9
+ *     #7 0x000104d71d5c in flecs_script_eval_component flecs/src/addons/script/visit_eval.c:1006:13
+ *     #8 0x000104d71d5c in flecs_script_eval_node flecs/src/addons/script/visit_eval.c:1655:16
+ *     #9 0x000104d69b1c in ecs_script_visit_scope_ flecs/src/addons/script/visit.c:129:13
+ *     #10 0x000104d6e410 in flecs_script_eval_scope flecs/src/addons/script/visit_eval.c:596:18
+ *     #11 0x000104d6fb38 in flecs_script_eval_node flecs/src/addons/script/visit_eval.c:1649:16
+ */
+void Fuzzing_111(void) {
+    const char *expr =
+    HEAD "#8 (64 >> 3)"
+    LINE "constri"
+        ;
+
+    fuzz(expr);
+}
+
+/* crash=out/fuzzer01/crashes/id:000005,sig:11,src:003236,time:2793738,execs:692536,op:havoc,rep:4, sha1=3e28483a9de5870b724ae322484227458fb1a422, grouped_crashes=2
+ * asan_stack:
+ *     #0 0x000102d89364 in flecs_path_elem flecs/src/entity_name.c
+ *     #1 0x000102d89cac in ecs_add_path_w_sep flecs/src/entity_name.c:918:23
+ *     #2 0x000102d6b03c in flecs_traverse_add flecs/src/entity.c:1027:14
+ *     #3 0x000102d6b03c in ecs_entity_init flecs/src/entity.c:1404:13
+ *     #4 0x000102d0cce8 in flecs_script_create_entity flecs/src/addons/script/visit_eval.c:352:12
+ *     #5 0x000102d10cf0 in flecs_script_eval_entity flecs/src/addons/script/visit_eval.c:762:22
+ *     #6 0x000102d10cf0 in flecs_script_eval_node flecs/src/addons/script/visit_eval.c:1696:16
+ *     #7 0x000102d09b1c in ecs_script_visit_scope_ flecs/src/addons/script/visit.c:129:13
+ *     #8 0x000102d0e410 in flecs_script_eval_scope flecs/src/addons/script/visit_eval.c:596:18
+ *     #9 0x000102d0fb38 in flecs_script_eval_node flecs/src/addons/script/visit_eval.c:1649:16
+ *     #10 0x000102d0a200 in ecs_script_visit_node_ flecs/src/addons/script/visit.c:151:9
+ *     #11 0x000102d0a200 in ecs_script_visit_from_ flecs/src/addons/script/visit.c:175:18
+ */
+void Fuzzing_112(void) {
+    const char *expr =
+    HEAD ""
+    LINE "\"\"\"**"
+    LINE ""
+    LINE "cosst axyk = Vec3: x3.0u\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\Y\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\004\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\, 4.0, */\""
+    LINE "@"
+        ;
+
+    fuzz(expr);
+}
+
+/* crash=out/fuzzer01/crashes/id:000007,sig:11,src:003236,time:2815039,execs:697547,op:havoc,rep:6, sha1=faffc5533d637cf09a0d6c86ed04a1dd398d4294, grouped_crashes=1
+ * asan_stack:
+ *     #0 0x00010293d364 in flecs_path_elem flecs/src/entity_name.c
+ *     #1 0x00010293dcac in ecs_add_path_w_sep flecs/src/entity_name.c:918:23
+ *     #2 0x00010291f03c in flecs_traverse_add flecs/src/entity.c:1027:14
+ *     #3 0x00010291f03c in ecs_entity_init flecs/src/entity.c:1404:13
+ *     #4 0x0001028c0ce8 in flecs_script_create_entity flecs/src/addons/script/visit_eval.c:352:12
+ *     #5 0x0001028c09b4 in flecs_script_eval_name_expr flecs/src/addons/script/visit_eval.c:214:18
+ *     #6 0x0001028c4cb4 in flecs_script_eval_entity flecs/src/addons/script/visit_eval.c:756:22
+ *     #7 0x0001028c4cb4 in flecs_script_eval_node flecs/src/addons/script/visit_eval.c:1696:16
+ *     #8 0x0001028bdb1c in ecs_script_visit_scope_ flecs/src/addons/script/visit.c:129:13
+ *     #9 0x0001028c2410 in flecs_script_eval_scope flecs/src/addons/script/visit_eval.c:596:18
+ *     #10 0x0001028c3b38 in flecs_script_eval_node flecs/src/addons/script/visit_eval.c:1649:16
+ *     #11 0x0001028be200 in ecs_script_visit_node_ flecs/src/addons/script/visit.c:151:9
+ */
+void Fuzzing_113(void) {
+    const char *expr =
+    HEAD ""
+    LINE "\"\"\"**"
+    LINE ""
+    LINE "cosst\316\316 axik = Vec3: x3.0u\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\034\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\B** {0}\\, 4.0, *%\""
+    LINE "@"
+        ;
+
+    fuzz(expr);
+}
+
+/* crash=out/fuzzer06/crashes/id:000000,sig:11,src:000008,time:354295,execs:87887,op:havoc,rep:1, sha1=1af6f9c26b52efdb436ac5f52d843da0bdeadd6e, grouped_crashes=1
+ * asan_stack:
+ *     #0 0x0001050898fc in flecs_script_eval_var_component flecs/src/addons/script/visit_eval.c:1065:55
+ *     #1 0x0001050898fc in flecs_script_eval_node flecs/src/addons/script/visit_eval.c:1658:16
+ *     #2 0x000105081b1c in ecs_script_visit_scope_ flecs/src/addons/script/visit.c:129:13
+ *     #3 0x000105086410 in flecs_script_eval_scope flecs/src/addons/script/visit_eval.c:596:18
+ *     #4 0x000105087b38 in flecs_script_eval_node flecs/src/addons/script/visit_eval.c:1649:16
+ *     #5 0x000105082200 in ecs_script_visit_node_ flecs/src/addons/script/visit.c:151:9
+ *     #6 0x000105082200 in ecs_script_visit_from_ flecs/src/addons/script/visit.c:175:18
+ *     #7 0x000105082200 in ecs_script_visit_ flecs/src/addons/script/visit.c:197:12
+ *     #8 0x00010508b450 in ecs_script_eval flecs/src/addons/script/visit_eval.c:1784:13
+ *     #9 0x000105077e94 in ecs_script_run flecs/src/addons/script/script.c:137:9
+ *     #10 0x000104f8ca48 in fuzz_one fuzz/flecs_script_harness.c:107:11
+ *     #11 0x000104f8ca48 in main fuzz/flecs_script_harness.c:132:9
+ */
+void Fuzzing_114(void) {
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE "using flecs.script.math"
+    LINE ""
+    LINE "struct Vec3 {"
+    LINE "  x = f64"
+    LINE "  y = f64"
+    LINE "  z = f64"
+    LINE "}"
+    LINE ""
+    LINE "struct MathSample {"
+    LINE "  trig = f64"
+    LINE "  power = f64"
+    LINE "  root = f64"
+    LINE "  dot_value = f64"
+    LINE "  len_value = f64"
+    LINE "  mixed = Vec3"
+    LINE "  unit = Vec3"
+    LINE "}"
+    LINE ""
+    LINE "const a = Vec3: {1.0e1, -2.5e1, 3.1}"
+    LINE "const b = Vec3: {2.0, 4.0, -6.0}"
+    LINE "const axis = Vec3: {3.0, 4.0, 0.0}"
+    LINE ""
+    LINE "const trig: sin(PI / 6.0) + cos(PI / 3.0) + tan(PI / 4.0)"
+    LINE "const power: pow(1.0e2, 0.5) + exp2(3.0) - log10(1.0e3)"
+    LINE "const root: sqrt(1.6e1) + abs(-2.5)"
+    LINE "const mixg: $trig"
+    LINE "   $power"
+    LINE "   "
+    LINE "const unit: normalize($axis)"
+    LINE "const dot_value: dot($a, $b)"
+    LINE "const len_value: length($axis)"
+    LINE ""
+    LINE "mentity {"
+    LINE "  MathSample: { tried: lerp($a, $b, 0.25) root: $root"
+    LINE "    dot_value: $dot_value len_value: $len_value"
+    LINE "    mixed: $mixed"
+    LINE "    unit: $unit"
+    LINE "  }"
+    LINE "}"
+    LINE ""
+        ;
+
+    fuzz(expr);
+}
