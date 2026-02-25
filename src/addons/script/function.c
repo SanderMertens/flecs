@@ -24,6 +24,32 @@ void ecs_script_params_free(ecs_vec_t *params) {
 }
 
 static
+void ecs_script_params_copy(
+    ecs_vec_t *dst,
+    const ecs_vec_t *src)
+{
+    int32_t i, count = ecs_vec_count(src);
+    if (!count) {
+        ecs_os_zeromem(dst);
+        return;
+    }
+
+    const ecs_script_parameter_t *src_array = ecs_vec_first(src);
+    if (!src_array) {
+        ecs_os_zeromem(dst);
+        return;
+    }
+
+    ecs_vec_init_t(NULL, dst, ecs_script_parameter_t, count);
+    for (i = 0; i < count; i ++) {
+        ecs_script_parameter_t *p = ecs_vec_append_t(
+            NULL, dst, ecs_script_parameter_t);
+        p->type = src_array[i].type;
+        p->name = src_array[i].name ? ecs_os_strdup(src_array[i].name) : NULL;
+    }
+}
+
+static
 void ecs_script_const_var_fini(
     EcsScriptConstVar *ptr)
 {
@@ -43,6 +69,24 @@ void ecs_script_const_var_fini(
 }
 
 static
+ECS_COPY(EcsScriptConstVar, dst, src, {
+    ecs_script_const_var_fini(dst);
+    dst->value.type = src->value.type;
+    dst->type_info = src->type_info;
+
+    if (src->value.ptr) {
+        ecs_assert(src->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
+        dst->value.ptr = ecs_os_malloc(src->type_info->size);
+        if (src->type_info->hooks.copy) {
+            src->type_info->hooks.copy(
+                dst->value.ptr, src->value.ptr, 1, src->type_info);
+        } else {
+            ecs_os_memcpy(dst->value.ptr, src->value.ptr, src->type_info->size);
+        }
+    }
+})
+
+static
 ECS_MOVE(EcsScriptConstVar, dst, src, {
     ecs_script_const_var_fini(dst);
     
@@ -59,6 +103,17 @@ ECS_DTOR(EcsScriptConstVar, ptr, {
 })
 
 static
+ECS_COPY(EcsScriptFunction, dst, src, {
+    ecs_script_params_free(&dst->params);
+    dst->return_type = src->return_type;
+    dst->callback = src->callback;
+    ecs_os_memcpy_n(dst->vector_callbacks, src->vector_callbacks,
+        ecs_vector_function_callback_t, FLECS_SCRIPT_VECTOR_FUNCTION_COUNT);
+    dst->ctx = src->ctx;
+    ecs_script_params_copy(&dst->params, &src->params);
+})
+
+static
 ECS_MOVE(EcsScriptFunction, dst, src, {
     ecs_script_params_free(&dst->params);
     *dst = *src;
@@ -68,6 +123,17 @@ ECS_MOVE(EcsScriptFunction, dst, src, {
 static
 ECS_DTOR(EcsScriptFunction, ptr, {
     ecs_script_params_free(&ptr->params);
+})
+
+static
+ECS_COPY(EcsScriptMethod, dst, src, {
+    ecs_script_params_free(&dst->params);
+    dst->return_type = src->return_type;
+    dst->callback = src->callback;
+    ecs_os_memcpy_n(dst->vector_callbacks, src->vector_callbacks,
+        ecs_vector_function_callback_t, FLECS_SCRIPT_VECTOR_FUNCTION_COUNT);
+    dst->ctx = src->ctx;
+    ecs_script_params_copy(&dst->params, &src->params);
 })
 
 static
@@ -307,22 +373,22 @@ void flecs_function_import(
     ecs_set_hooks(world, EcsScriptConstVar, {
         .ctor = flecs_default_ctor,
         .dtor = ecs_dtor(EcsScriptConstVar),
+        .copy = ecs_copy(EcsScriptConstVar),
         .move = ecs_move(EcsScriptConstVar),
-        .flags = ECS_TYPE_HOOK_COPY_ILLEGAL
     });
 
     ecs_set_hooks(world, EcsScriptFunction, {
         .ctor = flecs_default_ctor,
         .dtor = ecs_dtor(EcsScriptFunction),
+        .copy = ecs_copy(EcsScriptFunction),
         .move = ecs_move(EcsScriptFunction),
-        .flags = ECS_TYPE_HOOK_COPY_ILLEGAL
     });
 
     ecs_set_hooks(world, EcsScriptMethod, {
         .ctor = flecs_default_ctor,
         .dtor = ecs_dtor(EcsScriptMethod),
+        .copy = ecs_copy(EcsScriptMethod),
         .move = ecs_move(EcsScriptMethod),
-        .flags = ECS_TYPE_HOOK_COPY_ILLEGAL
     });
 
     flecs_script_register_builtin_functions(world);
