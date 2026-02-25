@@ -212,17 +212,25 @@ void flecs_component_delete_non_fragmenting_childof(
 
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = children[i];
+        ecs_assert(ecs_is_alive(world, e), ECS_INTERNAL_ERROR, NULL);
+
         ecs_record_t *r = flecs_entities_get_any(world, e);
+        ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+
         if ((r->row & EcsEntityIsTarget)) {
             ecs_component_record_t *child_cr = flecs_components_get(
                 world, ecs_childof(e));
-            if (child_cr && flecs_component_has_non_fragmenting_childof(child_cr)) {
+            if (child_cr &&
+                !(child_cr->flags & EcsIdMarkedForDelete) &&
+                flecs_component_has_non_fragmenting_childof(child_cr))
+            {
                 if (!flecs_is_childof_tgt_only(child_cr)) {
                     /* Entity is used as target with other relationships, go
                      * through regular cleanup path. */
                     flecs_target_mark_for_delete(world, e);
                 } else {
-                    flecs_component_delete_non_fragmenting_childof(world, child_cr);
+                    flecs_component_delete_non_fragmenting_childof(
+                        world, child_cr);
                 }
             } else {
                 /* Entity is a target but is not a (non-fragmenting) ChildOf 
@@ -236,7 +244,6 @@ void flecs_component_delete_non_fragmenting_childof(
 
     ecs_component_record_t *tgt_wc = pr->second.prev;
     ecs_assert(ECS_PAIR_FIRST(tgt_wc->id) == EcsWildcard, ECS_INTERNAL_ERROR, NULL);
-
     flecs_component_release(world, tgt_wc);
 }
 
