@@ -61656,6 +61656,10 @@ const char* flecs_token(
         out->kind = EcsTokNewline;
 
         pos = flecs_scan_whitespace_and_comment(parser, pos + 1);
+        if (!pos) {
+            return NULL;
+        }
+
         if (pos[0] == '\n') {
             pos ++;
         }
