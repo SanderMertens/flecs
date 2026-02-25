@@ -433,6 +433,10 @@ const char* flecs_meta_parse_member(
     }
 
     int32_t len = flecs_ito(int32_t, ptr - start);
+    if (len >= ECS_MAX_TOKEN_SIZE) {
+        len = ECS_MAX_TOKEN_SIZE - 1;
+    }
+
     ecs_os_memcpy(token_out, start, len);
     token_out[len] = '\0';
     if (ch == '.') {
