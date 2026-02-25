@@ -367,6 +367,9 @@ void flecs_rtt_init_default_hooks_struct(
     for (i = 0; i < member_count; i++) {
         ecs_member_t *m = &members[i];
         const ecs_type_info_t *member_ti = ecs_get_type_info(world, m->type);
+        if (!member_ti || member_ti == ti) {
+            continue;
+        }
         ctor_hook_required |= member_ti->hooks.ctor &&
                               member_ti->hooks.ctor != flecs_default_ctor;
         dtor_hook_required |= member_ti->hooks.dtor != NULL;
@@ -402,6 +405,9 @@ void flecs_rtt_init_default_hooks_struct(
     for (i = 0; i < member_count; i++) {
         ecs_member_t *m = &members[i];
         const ecs_type_info_t *member_ti = ecs_get_type_info(world, m->type);
+        if (!member_ti || member_ti == ti) {
+            continue;
+        }
         if (ctor_hook_required) {
             ecs_rtt_call_data_t *ctor_data =
                 ecs_vec_append_t(NULL, &rtt_ctx->vctor, ecs_rtt_call_data_t);
