@@ -68545,7 +68545,7 @@ void flecs_script_template_instantiate(
     ecs_vec_t prev_with_type_info = desc.runtime->with_type_info;
     ecs_vec_t inst_using = {0};
     int32_t using_count = ecs_vec_count(&template->using_);
-    ecs_vec_init_t(NULL, &inst_using, ecs_entity_t, using_count);
+    ecs_vec_init_t(&v.r->allocator, &inst_using, ecs_entity_t, using_count);
     int32_t i;
     for (i = 0; i < using_count; i ++) {
         ecs_vec_append_t(&v.r->allocator, &inst_using, ecs_entity_t)[0] =
