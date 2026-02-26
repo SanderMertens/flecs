@@ -1338,6 +1338,33 @@ void Fuzzing_118(void);
 void Fuzzing_119(void);
 void Fuzzing_120(void);
 void Fuzzing_121(void);
+void Fuzzing_122(void);
+void Fuzzing_123(void);
+void Fuzzing_124(void);
+void Fuzzing_125(void);
+void Fuzzing_126(void);
+void Fuzzing_127(void);
+void Fuzzing_128(void);
+void Fuzzing_129(void);
+void Fuzzing_130(void);
+void Fuzzing_131(void);
+void Fuzzing_132(void);
+void Fuzzing_133(void);
+void Fuzzing_134(void);
+void Fuzzing_135(void);
+void Fuzzing_136(void);
+void Fuzzing_137(void);
+void Fuzzing_138(void);
+void Fuzzing_139(void);
+void Fuzzing_140(void);
+void Fuzzing_141(void);
+void Fuzzing_142(void);
+void Fuzzing_143(void);
+void Fuzzing_144(void);
+void Fuzzing_145(void);
+void Fuzzing_146(void);
+void Fuzzing_147(void);
+void Fuzzing_148(void);
 
 bake_test_case Eval_testcases[] = {
     {
@@ -6607,6 +6634,114 @@ bake_test_case Fuzzing_testcases[] = {
     {
         "121",
         Fuzzing_121
+    },
+    {
+        "122",
+        Fuzzing_122
+    },
+    {
+        "123",
+        Fuzzing_123
+    },
+    {
+        "124",
+        Fuzzing_124
+    },
+    {
+        "125",
+        Fuzzing_125
+    },
+    {
+        "126",
+        Fuzzing_126
+    },
+    {
+        "127",
+        Fuzzing_127
+    },
+    {
+        "128",
+        Fuzzing_128
+    },
+    {
+        "129",
+        Fuzzing_129
+    },
+    {
+        "130",
+        Fuzzing_130
+    },
+    {
+        "131",
+        Fuzzing_131
+    },
+    {
+        "132",
+        Fuzzing_132
+    },
+    {
+        "133",
+        Fuzzing_133
+    },
+    {
+        "134",
+        Fuzzing_134
+    },
+    {
+        "135",
+        Fuzzing_135
+    },
+    {
+        "136",
+        Fuzzing_136
+    },
+    {
+        "137",
+        Fuzzing_137
+    },
+    {
+        "138",
+        Fuzzing_138
+    },
+    {
+        "139",
+        Fuzzing_139
+    },
+    {
+        "140",
+        Fuzzing_140
+    },
+    {
+        "141",
+        Fuzzing_141
+    },
+    {
+        "142",
+        Fuzzing_142
+    },
+    {
+        "143",
+        Fuzzing_143
+    },
+    {
+        "144",
+        Fuzzing_144
+    },
+    {
+        "145",
+        Fuzzing_145
+    },
+    {
+        "146",
+        Fuzzing_146
+    },
+    {
+        "147",
+        Fuzzing_147
+    },
+    {
+        "148",
+        Fuzzing_148
     }
 };
 
@@ -6684,7 +6819,7 @@ static bake_test_suite suites[] = {
         "Fuzzing",
         NULL,
         NULL,
-        121,
+        148,
         Fuzzing_testcases
     }
 };
