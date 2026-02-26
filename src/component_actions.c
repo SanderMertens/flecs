@@ -212,11 +212,11 @@ void flecs_sparse_on_remove(
     const ecs_type_t *removed)
 {
     int32_t i, j;
-    for (i = 0; i < removed->count; i ++) {
+    for (i = removed->count - 1; i >= 0; --i) {
         ecs_id_t id = removed->array[i];
         ecs_component_record_t *cr = flecs_components_get(world, id);
         if (cr && cr->flags & EcsIdSparse) {
-            for (j = 0; j < count; j ++) {
+            for (j = count - 1; j >= 0; --j) {
                 flecs_component_sparse_remove(world, cr, table, row + j);
             }
         }
