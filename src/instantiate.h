@@ -15,7 +15,8 @@ void flecs_instantiate(
     ecs_world_t *world,
     ecs_entity_t base,
     ecs_entity_t instance,
-    const ecs_instantiate_ctx_t *ctx);
+    const ecs_instantiate_ctx_t *ctx,
+    int32_t depth);
 
 void flecs_instantiate_dont_fragment(
     ecs_world_t *world,
