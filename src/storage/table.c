@@ -1698,7 +1698,7 @@ void flecs_table_fast_append(
 }
 
 /* Append entity to table */
-int32_t flecs_table_append(
+void flecs_table_append(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_entity_t entity,
@@ -1735,7 +1735,7 @@ int32_t flecs_table_append(
         flecs_table_fast_append(table);
         table->data.count = v_entities.count;
         table->data.size = v_entities.size;
-        return count;
+        return;
     }
 
     flecs_table_update_overrides(world, table);
@@ -1785,8 +1785,6 @@ int32_t flecs_table_append(
     }
 
     flecs_table_check_sanity(table);
-
-    return count;
 }
 
 /* Delete operation for tables that don't have any complex logic */

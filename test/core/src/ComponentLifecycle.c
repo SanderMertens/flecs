@@ -4410,3 +4410,106 @@ void ComponentLifecycle_dtor_after_add_exclusive_component_last(void) {
 
     ecs_fini(world);
 }
+
+static int has_hook_invoked = 0;
+
+static void HasHook(ecs_iter_t *it) {
+    ecs_world_t *world = it->world;
+
+    for (int i = 0; i < it->count; i ++) {
+        ecs_entity_t e = it->entities[i];
+        test_assert(ecs_has(world, e, Position));
+        has_hook_invoked ++;
+    }
+}
+
+static int get_hook_invoked = 0;
+
+static void GetHook(ecs_iter_t *it) {
+    ecs_world_t *world = it->world;
+    Position *p = ecs_field(it, Position, 0);
+
+    for (int i = 0; i < it->count; i ++) {
+        ecs_entity_t e = it->entities[i];
+        test_assert(ecs_has(world, e, Position));
+        test_assert(ecs_get(world, e, Position) == &p[i]);
+        get_hook_invoked ++;
+    }
+}
+
+
+void ComponentLifecycle_has_in_on_add_hook_new(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .on_add = HasHook
+    });
+
+    ecs_new_w(world, Position);
+
+    test_int(has_hook_invoked, 1);
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_has_in_on_add_hook_move(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .on_add = HasHook
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    test_int(has_hook_invoked, 0);
+ 
+    ecs_add(world, e, Position);
+    test_int(has_hook_invoked, 1);
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_get_in_on_add_hook_new(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .on_add = GetHook
+    });
+
+    ecs_new_w(world, Position);
+    test_int(get_hook_invoked, 1);
+
+    ecs_new_w(world, Position);
+    test_int(get_hook_invoked, 2);
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_get_in_on_add_hook_move(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .on_add = GetHook
+    });
+
+    ecs_entity_t e1 = ecs_new(world);
+    test_int(get_hook_invoked, 0);
+ 
+    ecs_add(world, e1, Position);
+    test_int(get_hook_invoked, 1);
+
+    ecs_entity_t e2 = ecs_new(world);
+    test_int(get_hook_invoked, 1);
+ 
+    ecs_add(world, e2, Position);
+    test_int(get_hook_invoked, 2);
+
+    ecs_fini(world);
+}

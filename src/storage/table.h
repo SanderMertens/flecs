@@ -190,7 +190,7 @@ void flecs_table_reset(
     ecs_table_t *table);
 
 /* Add a new entry to the table for the specified entity */
-int32_t flecs_table_append(
+void flecs_table_append(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_entity_t entity,

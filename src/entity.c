@@ -166,22 +166,23 @@ static
 ecs_record_t* flecs_new_entity(
     ecs_world_t *world,
     ecs_entity_t entity,
-    ecs_record_t *record,
+    ecs_record_t *r,
     ecs_table_t *table,
     ecs_table_diff_t *diff,
     bool ctor,
     ecs_flags32_t evt_flags)
 {
-    ecs_assert(record != NULL, ECS_INTERNAL_ERROR, NULL);
-    int32_t row = flecs_table_append(world, table, entity, ctor, true);
-    record->table = table;
-    record->row = ECS_ROW_TO_RECORD(row, record->row & ECS_ROW_FLAGS_MASK);
+    ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+    int32_t row = ecs_table_count(table);
+    r->table = table;
+    r->row = ECS_ROW_TO_RECORD(row, r->row & ECS_ROW_FLAGS_MASK);
+    flecs_table_append(world, table, entity, ctor, true);
 
     ecs_assert(ecs_table_count(table) > row, ECS_INTERNAL_ERROR, NULL);
     flecs_actions_new(world, table, row, 1, diff, evt_flags, ctor, true);
-    ecs_assert(table == record->table, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(table == r->table, ECS_INTERNAL_ERROR, NULL);
 
-    return record;
+    return r;
 }
 
 static
@@ -208,20 +209,19 @@ void flecs_move_entity(
     ecs_assert(record->table == src_table, ECS_INTERNAL_ERROR, NULL);
 
     /* Append new row to destination table */
-    int32_t dst_row = flecs_table_append(world, dst_table, entity, 
-        false, false);
+    int32_t dst_row = ecs_table_count(dst_table);
+    flecs_table_append(world, dst_table, entity, false, false);
 
     /* Invoke remove actions for removed components */
     flecs_actions_move_remove(world, src_table, dst_table, src_row, 1, diff);
 
+    record->table = dst_table;
+    record->row = ECS_ROW_TO_RECORD(dst_row, record->row & ECS_ROW_FLAGS_MASK);
+
     /* Copy entity & components from src_table to dst_table */
     flecs_table_move(world, entity, entity, dst_table, dst_row, 
         src_table, src_row, ctor);
-    ecs_assert(record->table == src_table, ECS_INTERNAL_ERROR, NULL);
-
-    /* Update entity index & delete old data after running remove actions */
-    record->table = dst_table;
-    record->row = ECS_ROW_TO_RECORD(dst_row, record->row & ECS_ROW_FLAGS_MASK);
+    ecs_assert(record->table == dst_table, ECS_INTERNAL_ERROR, NULL);
     
     flecs_table_delete(world, src_table, src_row, false);
 
@@ -674,7 +674,8 @@ void flecs_add_to_root_table(
     ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(r->table == NULL, ECS_INTERNAL_ERROR, NULL);
 
-    int32_t row = flecs_table_append(world, &world->store.root, e, false, false);
+    int32_t row = ecs_table_count(&world->store.root);
+    flecs_table_append(world, &world->store.root, e, false, false);
     r->table = &world->store.root;
     r->row = ECS_ROW_TO_RECORD(row, r->row & ECS_ROW_FLAGS_MASK);
 
@@ -2936,7 +2937,8 @@ ecs_entity_t ecs_new_w_parent(
         .added_flags = flags
     };
 
-    int32_t row = flecs_table_append(world, table, entity, false, false);
+    int32_t row = ecs_table_count(table);
+    flecs_table_append(world, table, entity, false, false);
     r->table = table;
     r->row = (uint32_t)row;
 
@@ -3177,8 +3179,8 @@ void ecs_make_alive(
     ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(r->table == NULL, ECS_INTERNAL_ERROR, NULL);
 
-    int32_t row = flecs_table_append(
-        world, &world->store.root, entity, false, false);
+    int32_t row = ecs_table_count(&world->store.root);
+    flecs_table_append(world, &world->store.root, entity, false, false);
     r->table = &world->store.root;
     r->row = ECS_ROW_TO_RECORD(row, r->row & ECS_ROW_FLAGS_MASK);
 error:

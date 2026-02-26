@@ -967,7 +967,8 @@
                 "delete_mixed_tree_2",
                 "delete_mixed_tree_3",
                 "delete_mixed_tree_4",
-                "delete_mixed_tree_5"
+                "delete_mixed_tree_5",
+                "instantiate_parent_w_has_in_hook"
             ]
         }, {
             "id": "Hierarchies",
@@ -1682,7 +1683,11 @@
                 "copy_ctor_w_override_w_ensure",
                 "shrink",
                 "dtor_after_add_exclusive_component",
-                "dtor_after_add_exclusive_component_last"
+                "dtor_after_add_exclusive_component_last",
+                "has_in_on_add_hook_new",
+                "has_in_on_add_hook_move",
+                "get_in_on_add_hook_new",
+                "get_in_on_add_hook_move"
             ]
         }, {
             "id": "Pairs",

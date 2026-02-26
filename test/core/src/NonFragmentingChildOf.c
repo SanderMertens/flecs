@@ -1,5 +1,7 @@
 #include <core.h>
 
+static ECS_COMPONENT_DECLARE(Position);
+
 void NonFragmentingChildOf_set_parent_no_ordered_children(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -5861,6 +5863,43 @@ void NonFragmentingChildOf_delete_mixed_tree_5(void) {
     test_assert(!ecs_is_alive(world, a));
     test_assert(!ecs_is_alive(world, b));
     test_assert(!ecs_is_alive(world, c));
+
+    ecs_fini(world);
+}
+
+static int dummy_hook_invoked = 0;
+
+static void DummyHook(ecs_iter_t *it) {
+    ecs_world_t *world = it->world;
+    Position *p = ecs_field(it, Position, 0);
+
+    for (int i = 0; i < it->count; i ++) {
+        ecs_entity_t e = it->entities[i];
+        test_assert(ecs_has(world, e, Position));
+        test_assert(ecs_get(world, e, Position) == &p[i]);
+        dummy_hook_invoked ++;
+    }
+}
+
+void NonFragmentingChildOf_instantiate_parent_w_has_in_hook(void) {
+    ecs_world_t* world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .on_add = DummyHook
+    });
+
+    ecs_entity_t prefab = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t prefab_child = ecs_new_w_parent(world, prefab, NULL);
+    ecs_set(world, prefab_child, Position, {10, 20});
+    test_int(dummy_hook_invoked, 1);
+
+    ecs_new_w_pair(world, EcsIsA, prefab);
+    test_int(dummy_hook_invoked, 2);
+
+    ecs_new_w_pair(world, EcsIsA, prefab);
+    test_int(dummy_hook_invoked, 3);
 
     ecs_fini(world);
 }

@@ -655,12 +655,13 @@ void flecs_bootstrap_builtin(
         world, &world->store.root, ECS_RECORD_TO_ROW(record->row), false);
     record->table = table;
 
-    int32_t index = flecs_table_append(world, table, entity, false, false);
-    record->row = ECS_ROW_TO_RECORD(index, 0);
+    int32_t row = ecs_table_count(table);
+    flecs_table_append(world, table, entity, false, false);
+    record->row = ECS_ROW_TO_RECORD(row, 0);
 
     EcsComponent *component = columns[0].data;
-    component[index].size = size;
-    component[index].alignment = alignment;
+    component[row].size = size;
+    component[row].alignment = alignment;
 
     const char *name = &symbol[3]; /* Strip 'Ecs' */
     ecs_size_t symbol_length = ecs_os_strlen(symbol);
@@ -668,21 +669,21 @@ void flecs_bootstrap_builtin(
 
     EcsIdentifier *name_col = columns[1].data;
     uint64_t name_hash = flecs_hash(name, name_length);
-    name_col[index].value = ecs_os_strdup(name);
-    name_col[index].length = name_length;
-    name_col[index].hash = name_hash;
-    name_col[index].index_hash = 0;
+    name_col[row].value = ecs_os_strdup(name);
+    name_col[row].length = name_length;
+    name_col[row].hash = name_hash;
+    name_col[row].index_hash = 0;
 
     ecs_hashmap_t *name_index = flecs_table_get_name_index(world, table);
-    name_col[index].index = name_index;
+    name_col[row].index = name_index;
     flecs_name_index_ensure(name_index, entity, name, name_length, name_hash);
 
     EcsIdentifier *symbol_col = columns[2].data;
-    symbol_col[index].value = ecs_os_strdup(symbol);
-    symbol_col[index].length = symbol_length;
-    symbol_col[index].hash = flecs_hash(symbol, symbol_length);    
-    symbol_col[index].index_hash = 0;
-    symbol_col[index].index = NULL;
+    symbol_col[row].value = ecs_os_strdup(symbol);
+    symbol_col[row].length = symbol_length;
+    symbol_col[row].hash = flecs_hash(symbol, symbol_length);    
+    symbol_col[row].index_hash = 0;
+    symbol_col[row].index = NULL;
 }
 
 /** Initialize component table. This table is manually constructed to bootstrap

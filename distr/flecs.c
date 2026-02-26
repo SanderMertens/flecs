@@ -937,7 +937,7 @@ void flecs_table_reset(
     ecs_table_t *table);
 
 /* Add a new entry to the table for the specified entity */
-int32_t flecs_table_append(
+void flecs_table_append(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_entity_t entity,
@@ -4901,12 +4901,13 @@ void flecs_bootstrap_builtin(
         world, &world->store.root, ECS_RECORD_TO_ROW(record->row), false);
     record->table = table;
 
-    int32_t index = flecs_table_append(world, table, entity, false, false);
-    record->row = ECS_ROW_TO_RECORD(index, 0);
+    int32_t row = ecs_table_count(table);
+    flecs_table_append(world, table, entity, false, false);
+    record->row = ECS_ROW_TO_RECORD(row, 0);
 
     EcsComponent *component = columns[0].data;
-    component[index].size = size;
-    component[index].alignment = alignment;
+    component[row].size = size;
+    component[row].alignment = alignment;
 
     const char *name = &symbol[3]; /* Strip 'Ecs' */
     ecs_size_t symbol_length = ecs_os_strlen(symbol);
@@ -4914,21 +4915,21 @@ void flecs_bootstrap_builtin(
 
     EcsIdentifier *name_col = columns[1].data;
     uint64_t name_hash = flecs_hash(name, name_length);
-    name_col[index].value = ecs_os_strdup(name);
-    name_col[index].length = name_length;
-    name_col[index].hash = name_hash;
-    name_col[index].index_hash = 0;
+    name_col[row].value = ecs_os_strdup(name);
+    name_col[row].length = name_length;
+    name_col[row].hash = name_hash;
+    name_col[row].index_hash = 0;
 
     ecs_hashmap_t *name_index = flecs_table_get_name_index(world, table);
-    name_col[index].index = name_index;
+    name_col[row].index = name_index;
     flecs_name_index_ensure(name_index, entity, name, name_length, name_hash);
 
     EcsIdentifier *symbol_col = columns[2].data;
-    symbol_col[index].value = ecs_os_strdup(symbol);
-    symbol_col[index].length = symbol_length;
-    symbol_col[index].hash = flecs_hash(symbol, symbol_length);    
-    symbol_col[index].index_hash = 0;
-    symbol_col[index].index = NULL;
+    symbol_col[row].value = ecs_os_strdup(symbol);
+    symbol_col[row].length = symbol_length;
+    symbol_col[row].hash = flecs_hash(symbol, symbol_length);    
+    symbol_col[row].index_hash = 0;
+    symbol_col[row].index = NULL;
 }
 
 /** Initialize component table. This table is manually constructed to bootstrap
@@ -8080,22 +8081,23 @@ static
 ecs_record_t* flecs_new_entity(
     ecs_world_t *world,
     ecs_entity_t entity,
-    ecs_record_t *record,
+    ecs_record_t *r,
     ecs_table_t *table,
     ecs_table_diff_t *diff,
     bool ctor,
     ecs_flags32_t evt_flags)
 {
-    ecs_assert(record != NULL, ECS_INTERNAL_ERROR, NULL);
-    int32_t row = flecs_table_append(world, table, entity, ctor, true);
-    record->table = table;
-    record->row = ECS_ROW_TO_RECORD(row, record->row & ECS_ROW_FLAGS_MASK);
+    ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+    int32_t row = ecs_table_count(table);
+    r->table = table;
+    r->row = ECS_ROW_TO_RECORD(row, r->row & ECS_ROW_FLAGS_MASK);
+    flecs_table_append(world, table, entity, ctor, true);
 
     ecs_assert(ecs_table_count(table) > row, ECS_INTERNAL_ERROR, NULL);
     flecs_actions_new(world, table, row, 1, diff, evt_flags, ctor, true);
-    ecs_assert(table == record->table, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(table == r->table, ECS_INTERNAL_ERROR, NULL);
 
-    return record;
+    return r;
 }
 
 static
@@ -8122,20 +8124,19 @@ void flecs_move_entity(
     ecs_assert(record->table == src_table, ECS_INTERNAL_ERROR, NULL);
 
     /* Append new row to destination table */
-    int32_t dst_row = flecs_table_append(world, dst_table, entity, 
-        false, false);
+    int32_t dst_row = ecs_table_count(dst_table);
+    flecs_table_append(world, dst_table, entity, false, false);
 
     /* Invoke remove actions for removed components */
     flecs_actions_move_remove(world, src_table, dst_table, src_row, 1, diff);
 
+    record->table = dst_table;
+    record->row = ECS_ROW_TO_RECORD(dst_row, record->row & ECS_ROW_FLAGS_MASK);
+
     /* Copy entity & components from src_table to dst_table */
     flecs_table_move(world, entity, entity, dst_table, dst_row, 
         src_table, src_row, ctor);
-    ecs_assert(record->table == src_table, ECS_INTERNAL_ERROR, NULL);
-
-    /* Update entity index & delete old data after running remove actions */
-    record->table = dst_table;
-    record->row = ECS_ROW_TO_RECORD(dst_row, record->row & ECS_ROW_FLAGS_MASK);
+    ecs_assert(record->table == dst_table, ECS_INTERNAL_ERROR, NULL);
     
     flecs_table_delete(world, src_table, src_row, false);
 
@@ -8588,7 +8589,8 @@ void flecs_add_to_root_table(
     ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(r->table == NULL, ECS_INTERNAL_ERROR, NULL);
 
-    int32_t row = flecs_table_append(world, &world->store.root, e, false, false);
+    int32_t row = ecs_table_count(&world->store.root);
+    flecs_table_append(world, &world->store.root, e, false, false);
     r->table = &world->store.root;
     r->row = ECS_ROW_TO_RECORD(row, r->row & ECS_ROW_FLAGS_MASK);
 
@@ -10850,7 +10852,8 @@ ecs_entity_t ecs_new_w_parent(
         .added_flags = flags
     };
 
-    int32_t row = flecs_table_append(world, table, entity, false, false);
+    int32_t row = ecs_table_count(table);
+    flecs_table_append(world, table, entity, false, false);
     r->table = table;
     r->row = (uint32_t)row;
 
@@ -11091,8 +11094,8 @@ void ecs_make_alive(
     ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(r->table == NULL, ECS_INTERNAL_ERROR, NULL);
 
-    int32_t row = flecs_table_append(
-        world, &world->store.root, entity, false, false);
+    int32_t row = ecs_table_count(&world->store.root);
+    flecs_table_append(world, &world->store.root, entity, false, false);
     r->table = &world->store.root;
     r->row = ECS_ROW_TO_RECORD(row, r->row & ECS_ROW_FLAGS_MASK);
 error:
@@ -20902,10 +20905,10 @@ void flecs_spawner_instantiate(
             .added_flags = flags
         };
 
-        int32_t row = flecs_table_append(world, table, entity, true, true);
+        int32_t row = ecs_table_count(table);
         r->table = table;
         r->row = (uint32_t)row;
-
+        flecs_table_append(world, table, entity, true, true);
         flecs_actions_new(world, table, row, 1, &table_diff, 0, false, true);
 
         ecs_entity_t parent = parents[spawn_child->parent_index];
@@ -43650,7 +43653,7 @@ void flecs_table_fast_append(
 }
 
 /* Append entity to table */
-int32_t flecs_table_append(
+void flecs_table_append(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_entity_t entity,
@@ -43687,7 +43690,7 @@ int32_t flecs_table_append(
         flecs_table_fast_append(table);
         table->data.count = v_entities.count;
         table->data.size = v_entities.size;
-        return count;
+        return;
     }
 
     flecs_table_update_overrides(world, table);
@@ -43737,8 +43740,6 @@ int32_t flecs_table_append(
     }
 
     flecs_table_check_sanity(table);
-
-    return count;
 }
 
 /* Delete operation for tables that don't have any complex logic */

@@ -279,10 +279,10 @@ void flecs_spawner_instantiate(
             .added_flags = flags
         };
 
-        int32_t row = flecs_table_append(world, table, entity, true, true);
+        int32_t row = ecs_table_count(table);
         r->table = table;
         r->row = (uint32_t)row;
-
+        flecs_table_append(world, table, entity, true, true);
         flecs_actions_new(world, table, row, 1, &table_diff, 0, false, true);
 
         ecs_entity_t parent = parents[spawn_child->parent_index];
