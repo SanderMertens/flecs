@@ -162,7 +162,16 @@ void flecs_script_template_instantiate(
     ecs_vec_t prev_using = v.r->using;
     ecs_vec_t prev_with = desc.runtime->with;
     ecs_vec_t prev_with_type_info = desc.runtime->with_type_info;
-    v.r->using = template->using_;
+    ecs_vec_t inst_using = {0};
+    int32_t using_count = ecs_vec_count(&template->using_);
+    ecs_vec_init_t(NULL, &inst_using, ecs_entity_t, using_count);
+    int32_t i;
+    for (i = 0; i < using_count; i ++) {
+        ecs_vec_append_t(&v.r->allocator, &inst_using, ecs_entity_t)[0] =
+            ecs_vec_get_t(&template->using_, ecs_entity_t, i)[0];
+    }
+
+    v.r->using = inst_using;
     v.template_entity = template_entity;
     ecs_vec_init_t(NULL, &desc.runtime->with, ecs_value_t, 0);
     ecs_vec_init_t(NULL, &desc.runtime->with_type_info, ecs_type_info_t*, 0);
@@ -180,7 +189,7 @@ void flecs_script_template_instantiate(
 
     v.entity = &instance_node;
 
-    int32_t i, m, a;
+    int32_t m, a;
     for (i = 0; i < count; i ++) {
         v.parent = entities[i];
         ecs_assert(ecs_is_alive(world, v.parent), ECS_INTERNAL_ERROR, NULL);
@@ -242,6 +251,8 @@ void flecs_script_template_instantiate(
         &desc.runtime->with, ecs_value_t);
     ecs_vec_fini_t(&desc.runtime->allocator, 
         &desc.runtime->with_type_info, ecs_type_info_t*);
+    ecs_vec_fini_t(&desc.runtime->allocator,
+        &v.r->using, ecs_entity_t);
 
     v.r->with = prev_with;
     v.r->with_type_info = prev_with_type_info;
