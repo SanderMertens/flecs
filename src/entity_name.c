@@ -187,6 +187,7 @@ const char* flecs_path_elem(
     ecs_size_t size = size_out ? *size_out : 0;
 
     for (ptr = path; (ch = *ptr); ptr ++) {
+        bool escaped = false;
         if (ch == '<') {
             template_nesting ++;
         } else if (ch == '>') {
@@ -197,11 +198,12 @@ const char* flecs_path_elem(
             if (!ch) {
                 break;
             }
+            escaped = true;
         }
 
         ecs_check(template_nesting >= 0, ECS_INVALID_PARAMETER, "%s", path);
 
-        if (!template_nesting && flecs_is_sep(&ptr, sep)) {
+        if (!escaped && !template_nesting && flecs_is_sep(&ptr, sep)) {
             break;
         }
 
