@@ -21,6 +21,7 @@ typedef struct ecs_parser_t {
 
     const char *pos;
     char *token_cur;
+    char *token_end;
     char *token_keep;
     bool significant_newline;
     bool merge_variable_members;
