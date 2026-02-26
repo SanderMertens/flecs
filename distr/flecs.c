@@ -3194,7 +3194,8 @@ void flecs_instantiate(
     ecs_world_t *world,
     ecs_entity_t base,
     ecs_entity_t instance,
-    const ecs_instantiate_ctx_t *ctx);
+    const ecs_instantiate_ctx_t *ctx,
+    int32_t depth);
 
 void flecs_instantiate_dont_fragment(
     ecs_world_t *world,
@@ -11457,11 +11458,10 @@ const char* flecs_path_elem(
             template_nesting --;
         } else if (ch == '\\') {
             ptr ++;
-            if (buffer) {
-                buffer[pos] = ptr[0];
+            ch = ptr[0];
+            if (!ch) {
+                break;
             }
-            pos ++;
-            continue;
         }
 
         ecs_check(template_nesting >= 0, ECS_INVALID_PARAMETER, "%s", path);
@@ -11471,6 +11471,7 @@ const char* flecs_path_elem(
         }
 
         if (buffer) {
+            ecs_check(size > 0, ECS_INTERNAL_ERROR, NULL);
             if (pos >= (size - 1)) {
                 if (size == ECS_NAME_BUFFER_LENGTH) { /* stack buffer */
                     char *new_buffer = ecs_os_malloc(size * 2 + 1);
@@ -12908,7 +12909,8 @@ void flecs_instantiate_children(
     ecs_entity_t base,
     ecs_entity_t instance,
     ecs_table_range_t child_range,
-    const ecs_instantiate_ctx_t *ctx)
+    const ecs_instantiate_ctx_t *ctx,
+    int32_t depth)
 {
     if (!child_range.count) {
         return;
@@ -13100,7 +13102,7 @@ void flecs_instantiate_children(
     /* If prefab child table has children itself, recursively instantiate */
     for (j = 0; j < child_range.count; j ++) {
         ecs_entity_t child = children[j + child_range.offset];
-        flecs_instantiate(world, child, i_children[j], &ctx_cur);
+        flecs_instantiate(world, child, i_children[j], &ctx_cur, depth + 1);
     }
 
     flecs_wfree_n(world, ecs_entity_t, child_range.count, child_ids);
@@ -13176,11 +13178,15 @@ void flecs_instantiate(
     ecs_world_t *world,
     ecs_entity_t base,
     ecs_entity_t instance,
-    const ecs_instantiate_ctx_t *ctx)
+    const ecs_instantiate_ctx_t *ctx,
+    int32_t depth)
 {
     ecs_record_t *record = flecs_entities_get_any(world, base);
     ecs_table_t *base_table = record->table;
     ecs_assert(base_table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_check(depth < FLECS_DAG_DEPTH_MAX, ECS_CYCLE_DETECTED, 
+        "likely cycle detected during instantiation of base %s",
+        flecs_errstr(ecs_get_path(world, base)));
 
     if (base_table->flags & EcsTableOverrideDontFragment) {
         flecs_instantiate_override_dont_fragment(
@@ -13230,7 +13236,7 @@ void flecs_instantiate(
                 }
 
                 flecs_instantiate_children(
-                    world, base, instance, range, ctx);
+                    world, base, instance, range, ctx, depth);
             }
         } else {
             ecs_table_cache_iter_t it;
@@ -13244,13 +13250,15 @@ void flecs_instantiate(
                     };
 
                     flecs_instantiate_children(
-                        world, base, instance, range, ctx);
+                        world, base, instance, range, ctx, depth);
                 }
             }
         }
 
         ecs_os_perf_trace_pop("flecs.instantiate");
     }
+error:
+    return;
 }
 
 /**
@@ -16223,7 +16231,7 @@ repeat_event:
 
                         for (e = 0; e < count; e ++) {
                             flecs_instantiate(
-                                world, tgt, instances[offset + e], NULL);
+                                world, tgt, instances[offset + e], NULL, 0);
                         }
 
                         world->stages[0]->base = 0;
@@ -49438,6 +49446,7 @@ typedef struct ecs_parser_t {
 
     const char *pos;
     char *token_cur;
+    char *token_end;
     char *token_keep;
     bool significant_newline;
     bool merge_variable_members;
@@ -61033,6 +61042,28 @@ bool flecs_keyword_match(
         out->kind = _kind;\
         return pos + 1;
 
+static
+bool flecs_tokenizer_ensure_space(
+    ecs_parser_t *parser,
+    char *dst,
+    ecs_size_t bytes,
+    const char *what)
+{
+    if (!parser || !parser->token_end) {
+        return true;
+    }
+
+    if (dst > parser->token_end ||
+        ((ecs_size_t)(parser->token_end - dst) < bytes))
+    {
+        ecs_parser_error(parser->name, parser->code, 0,
+            "out of parser token storage while parsing %s", what);
+        return false;
+    }
+
+    return true;
+}
+
 const char* flecs_token_kind_str(
     ecs_token_kind_t kind)
 {
@@ -61415,6 +61446,11 @@ const char* flecs_tokenizer_identifier(
                     }
 
                     if (outpos) {
+                        if (!flecs_tokenizer_ensure_space(parser, outpos, 1,
+                            "identifier"))
+                        {
+                            return NULL;
+                        }
                         *outpos = c;
                         outpos ++;
                     }
@@ -61436,6 +61472,11 @@ const char* flecs_tokenizer_identifier(
         }
 
         if (outpos) {
+            if (!flecs_tokenizer_ensure_space(parser, outpos, 1,
+                "identifier"))
+            {
+                return NULL;
+            }
             *outpos = *pos;
             outpos ++;
         }
@@ -61445,6 +61486,11 @@ const char* flecs_tokenizer_identifier(
 
 done:
     if (outpos) {
+        if (!flecs_tokenizer_ensure_space(parser, outpos, 1,
+            "identifier"))
+        {
+            return NULL;
+        }
         *outpos = '\0';
         if (parser) {
             parser->token_cur = outpos + 1;
@@ -61486,6 +61532,9 @@ const char* flecs_script_number(
     char *outpos = parser->token_cur;
 
     if (pos[0] == '-') {
+        if (!flecs_tokenizer_ensure_space(parser, outpos, 1, "number")) {
+            return NULL;
+        }
         outpos[0] = pos[0];
         pos ++;
         outpos ++;
@@ -61493,12 +61542,18 @@ const char* flecs_script_number(
 
     if (pos[0] == '0' && (pos[1] == 'x' || pos[1] == 'X')) {
         base = 16;
+        if (!flecs_tokenizer_ensure_space(parser, outpos, 2, "number")) {
+            return NULL;
+        }
         outpos[0] = pos[0];
         outpos[1] = pos[1];
         outpos += 2;
         pos += 2;
     } else if (pos[0] == '0' && (pos[1] == 'b' || pos[1] == 'B')) {
         base = 2;
+        if (!flecs_tokenizer_ensure_space(parser, outpos, 2, "number")) {
+            return NULL;
+        }
         outpos[0] = pos[0];
         outpos[1] = pos[1];
         outpos += 2;
@@ -61527,6 +61582,11 @@ const char* flecs_script_number(
                     valid_number = true;
                     handled_char = true;
 
+                    if (!flecs_tokenizer_ensure_space(parser, outpos, 2,
+                        "number"))
+                    {
+                        return NULL;
+                    }
                     outpos[0] = c;
                     outpos[1] = pos[1];
                     outpos += 2;
@@ -61551,12 +61611,22 @@ const char* flecs_script_number(
                 return NULL;
             }
 
+            if (!flecs_tokenizer_ensure_space(parser, outpos, 1,
+                "number"))
+            {
+                return NULL;
+            }
             *outpos = '\0';
             parser->token_cur = outpos + 1;
             break;
         }
 
         if (!handled_char) {
+            if (!flecs_tokenizer_ensure_space(parser, outpos, 1,
+                "number"))
+            {
+                return NULL;
+            }
             outpos[0] = pos[0];
             outpos ++;
             pos ++;
@@ -61613,6 +61683,11 @@ const char* flecs_script_char(
         return NULL;
     }
 
+    if (!flecs_tokenizer_ensure_space(parser, parser->token_cur, len + 1,
+        "char"))
+    {
+        return NULL;
+    }
     ecs_os_memcpy(parser->token_cur, pos + 1, len);
     parser->token_cur[len] = '\0';
 
@@ -61637,6 +61712,11 @@ const char* flecs_script_string(
     end --;
 
     int32_t len = flecs_ito(int32_t, end - pos);
+    if (!flecs_tokenizer_ensure_space(parser, parser->token_cur, len + 1,
+        "string"))
+    {
+        return NULL;
+    }
     ecs_os_memcpy(parser->token_cur, pos + 1, len);
     parser->token_cur[len] = '\0';
 
@@ -61670,6 +61750,11 @@ const char* flecs_script_multiline_string(
     end --;
 
     int32_t len = flecs_ito(int32_t, end - pos);
+    if (!flecs_tokenizer_ensure_space(parser, parser->token_cur, len + 1,
+        "multiline string"))
+    {
+        return NULL;
+    }
     ecs_os_memcpy(parser->token_cur, pos + 1, len);
     parser->token_cur[len] = '\0';
 
@@ -61714,6 +61799,11 @@ const char* flecs_tokenizer_until(
     }
 
     int32_t len = flecs_ito(int32_t, pos - start);
+    if (!flecs_tokenizer_ensure_space(parser, parser->token_cur, len + 1,
+        "token"))
+    {
+        return NULL;
+    }
     ecs_os_memcpy(parser->token_cur, start, len);
     char *token_start = parser->token_cur;
     out->value = parser->token_cur;
@@ -63321,7 +63411,8 @@ bool ecs_using_task_threads(
         .name = script_name,\
         .code = expr,\
         .pos = expr,\
-        .token_cur = tokens\
+        .token_cur = tokens,\
+        .token_end = &(tokens)[tokens_len]\
     }
 
 /* Definitions for parser functions */
@@ -67332,6 +67423,7 @@ ecs_script_t* ecs_script_parse(
     impl->token_buffer = flecs_alloc_w_dbg_info(
         &impl->allocator, impl->token_buffer_size, "token buffer");
     parser.token_cur = impl->token_buffer;
+    parser.token_end = &impl->token_buffer[impl->token_buffer_size];
 
     /* Start parsing code */
     const char *pos = script->code;
@@ -68449,7 +68541,16 @@ void flecs_script_template_instantiate(
     ecs_vec_t prev_using = v.r->using;
     ecs_vec_t prev_with = desc.runtime->with;
     ecs_vec_t prev_with_type_info = desc.runtime->with_type_info;
-    v.r->using = template->using_;
+    ecs_vec_t inst_using = {0};
+    int32_t using_count = ecs_vec_count(&template->using_);
+    ecs_vec_init_t(NULL, &inst_using, ecs_entity_t, using_count);
+    int32_t i;
+    for (i = 0; i < using_count; i ++) {
+        ecs_vec_append_t(&v.r->allocator, &inst_using, ecs_entity_t)[0] =
+            ecs_vec_get_t(&template->using_, ecs_entity_t, i)[0];
+    }
+
+    v.r->using = inst_using;
     v.template_entity = template_entity;
     ecs_vec_init_t(NULL, &desc.runtime->with, ecs_value_t, 0);
     ecs_vec_init_t(NULL, &desc.runtime->with_type_info, ecs_type_info_t*, 0);
@@ -68467,7 +68568,7 @@ void flecs_script_template_instantiate(
 
     v.entity = &instance_node;
 
-    int32_t i, m, a;
+    int32_t m, a;
     for (i = 0; i < count; i ++) {
         v.parent = entities[i];
         ecs_assert(ecs_is_alive(world, v.parent), ECS_INTERNAL_ERROR, NULL);
@@ -68529,6 +68630,8 @@ void flecs_script_template_instantiate(
         &desc.runtime->with, ecs_value_t);
     ecs_vec_fini_t(&desc.runtime->allocator, 
         &desc.runtime->with_type_info, ecs_type_info_t*);
+    ecs_vec_fini_t(&desc.runtime->allocator,
+        &v.r->using, ecs_entity_t);
 
     v.r->with = prev_with;
     v.r->with_type_info = prev_with_type_info;
@@ -70804,6 +70907,23 @@ int flecs_script_eval_entity(
     v->entity = node;
 
     if (node->eval_kind) {
+        if (ECS_IS_PAIR(node->eval_kind)) {
+            ecs_entity_t relationship = ECS_PAIR_FIRST(node->eval_kind);
+            if (ecs_has_id(v->world, relationship, EcsSingleton) &&
+                relationship != node->eval)
+            {
+                flecs_script_eval_error(v, node,
+                    "singleton pair kind cannot be added to entity");
+                return -1;
+            }
+        } else if (ecs_has_id(v->world, node->eval_kind, EcsSingleton) &&
+            node->eval_kind != node->eval)
+        {
+            flecs_script_eval_error(v, node,
+                "singleton kind cannot be added to entity");
+            return -1;
+        }
+
         ecs_add_id(v->world, node->eval, node->eval_kind);
 
         default_comp = 
@@ -92266,6 +92386,7 @@ ecs_script_t* ecs_expr_parse(
     impl->token_buffer = flecs_alloc_w_dbg_info(
         &impl->allocator, impl->token_buffer_size, "token buffer");
     parser.token_cur = impl->token_buffer;
+    parser.token_end = &impl->token_buffer[impl->token_buffer_size];
 
     const char *ptr = flecs_script_parse_expr(&parser, expr, 0, &impl->expr);
     if (!ptr) {
@@ -96256,10 +96377,13 @@ int flecs_expr_interpolated_string_visit_type(
                 ecs_script_impl_t *impl = flecs_script_impl(script);
 
                 ecs_parser_t parser = {
+                    .name = script->name,
+                    .code = script->code,
                     .script = impl,
                     .scope = impl->root,
                     .significant_newline = false,
-                    .token_cur = impl->token_remaining
+                    .token_cur = impl->token_remaining,
+                    .token_end = &impl->token_buffer[impl->token_buffer_size]
                 };
 
                 ptr = ECS_CONST_CAST(char*, flecs_script_parse_expr(
