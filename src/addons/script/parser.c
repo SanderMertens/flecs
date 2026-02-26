@@ -1055,6 +1055,7 @@ ecs_script_t* ecs_script_parse(
     impl->token_buffer = flecs_alloc_w_dbg_info(
         &impl->allocator, impl->token_buffer_size, "token buffer");
     parser.token_cur = impl->token_buffer;
+    parser.token_end = &impl->token_buffer[impl->token_buffer_size];
 
     /* Start parsing code */
     const char *pos = script->code;
