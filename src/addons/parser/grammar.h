@@ -36,7 +36,8 @@
         .name = script_name,\
         .code = expr,\
         .pos = expr,\
-        .token_cur = tokens\
+        .token_cur = tokens,\
+        .token_end = &(tokens)[tokens_len]\
     }
 
 /* Definitions for parser functions */
