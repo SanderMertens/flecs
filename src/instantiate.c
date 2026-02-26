@@ -181,7 +181,8 @@ void flecs_instantiate_children(
     ecs_entity_t base,
     ecs_entity_t instance,
     ecs_table_range_t child_range,
-    const ecs_instantiate_ctx_t *ctx)
+    const ecs_instantiate_ctx_t *ctx,
+    int32_t depth)
 {
     if (!child_range.count) {
         return;
@@ -373,7 +374,7 @@ void flecs_instantiate_children(
     /* If prefab child table has children itself, recursively instantiate */
     for (j = 0; j < child_range.count; j ++) {
         ecs_entity_t child = children[j + child_range.offset];
-        flecs_instantiate(world, child, i_children[j], &ctx_cur);
+        flecs_instantiate(world, child, i_children[j], &ctx_cur, depth + 1);
     }
 
     flecs_wfree_n(world, ecs_entity_t, child_range.count, child_ids);
@@ -449,11 +450,15 @@ void flecs_instantiate(
     ecs_world_t *world,
     ecs_entity_t base,
     ecs_entity_t instance,
-    const ecs_instantiate_ctx_t *ctx)
+    const ecs_instantiate_ctx_t *ctx,
+    int32_t depth)
 {
     ecs_record_t *record = flecs_entities_get_any(world, base);
     ecs_table_t *base_table = record->table;
     ecs_assert(base_table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_check(depth < FLECS_DAG_DEPTH_MAX, ECS_CYCLE_DETECTED, 
+        "likely cycle detected during instantiation of base %s",
+        flecs_errstr(ecs_get_path(world, base)));
 
     if (base_table->flags & EcsTableOverrideDontFragment) {
         flecs_instantiate_override_dont_fragment(
@@ -503,7 +508,7 @@ void flecs_instantiate(
                 }
 
                 flecs_instantiate_children(
-                    world, base, instance, range, ctx);
+                    world, base, instance, range, ctx, depth);
             }
         } else {
             ecs_table_cache_iter_t it;
@@ -517,11 +522,13 @@ void flecs_instantiate(
                     };
 
                     flecs_instantiate_children(
-                        world, base, instance, range, ctx);
+                        world, base, instance, range, ctx, depth);
                 }
             }
         }
 
         ecs_os_perf_trace_pop("flecs.instantiate");
     }
+error:
+    return;
 }

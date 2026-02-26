@@ -8827,6 +8827,10 @@ void Fuzzing_146(void) {
     LINE ""
         ;
 
+    install_test_abort();
+
+    test_expect_abort();
+
     fuzz(expr);
 }
 

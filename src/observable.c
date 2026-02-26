@@ -1429,7 +1429,7 @@ repeat_event:
 
                         for (e = 0; e < count; e ++) {
                             flecs_instantiate(
-                                world, tgt, instances[offset + e], NULL);
+                                world, tgt, instances[offset + e], NULL, 0);
                         }
 
                         world->stages[0]->base = 0;
