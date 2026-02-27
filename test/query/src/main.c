@@ -1754,6 +1754,7 @@ void Cached_rematch_empty_table_w_superset(void);
 void Cached_2_self_up_terms_new_tables(void);
 void Cached_this_self_up_childof_pair_new_tables(void);
 void Cached_up_w_delete_table_and_move_parent(void);
+void Cached_cascade_default_group_reinsert_after_empty_table_delete(void);
 void Cached_it_ptrs(void);
 void Cached_it_ptrs_after_column_resize(void);
 void Cached_it_ptrs_after_column_merge(void);
@@ -9657,6 +9658,10 @@ bake_test_case Cached_testcases[] = {
         Cached_up_w_delete_table_and_move_parent
     },
     {
+        "cascade_default_group_reinsert_after_empty_table_delete",
+        Cached_cascade_default_group_reinsert_after_empty_table_delete
+    },
+    {
         "it_ptrs",
         Cached_it_ptrs
     },
@@ -13896,7 +13901,7 @@ static bake_test_suite suites[] = {
         "Cached",
         NULL,
         NULL,
-        161,
+        162,
         Cached_testcases
     },
     {

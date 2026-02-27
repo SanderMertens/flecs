@@ -1818,6 +1818,7 @@
                 "2_self_up_terms_new_tables",
                 "this_self_up_childof_pair_new_tables",
                 "up_w_delete_table_and_move_parent",
+                "cascade_default_group_reinsert_after_empty_table_delete",
                 "it_ptrs",
                 "it_ptrs_after_column_resize",
                 "it_ptrs_after_column_merge",
