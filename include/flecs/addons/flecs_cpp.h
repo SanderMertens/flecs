@@ -49,8 +49,11 @@ char* ecs_cpp_get_type_name(
 
 FLECS_API
 char* ecs_cpp_get_symbol_name(
+    /* If symbol_name is NULL, function allocates a buffer with ecs_os_malloc.
+     * Callers must free the returned pointer with ecs_os_free. */
     char *symbol_name,
     const char *type_name,
+    /* If len is 0, function derives it from type_name. */
     size_t len);
 
 FLECS_API
