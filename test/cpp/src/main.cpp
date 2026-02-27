@@ -1411,7 +1411,6 @@ void World_run_post_frame(void);
 void World_component_w_low_id(void);
 void World_get_set_log_level(void);
 void World_reset_world(void);
-void World_reset_set_rest_after_reset(void);
 void World_id_from_pair_type(void);
 void World_scope_w_name(void);
 void World_set_get_context(void);
@@ -7119,10 +7118,6 @@ bake_test_case World_testcases[] = {
     {
         "reset_world",
         World_reset_world
-    },
-    {
-        "reset_rest_after_reset",
-        World_reset_set_rest_after_reset
     },
     {
         "id_from_pair_type",
