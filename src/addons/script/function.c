@@ -58,9 +58,7 @@ void ecs_script_const_var_fini(
     }
 
     ecs_assert(ptr->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
-    if (ptr->type_info->hooks.dtor) {
-        ptr->type_info->hooks.dtor(ptr->value.ptr, 1, ptr->type_info);
-    }
+    flecs_type_info_dtor(ptr->value.ptr, 1, ptr->type_info);
 
     ecs_os_free(ptr->value.ptr);
     ptr->value.ptr = NULL;
@@ -77,12 +75,8 @@ ECS_COPY(EcsScriptConstVar, dst, src, {
     if (src->value.ptr) {
         ecs_assert(src->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
         dst->value.ptr = ecs_os_malloc(src->type_info->size);
-        if (src->type_info->hooks.copy) {
-            src->type_info->hooks.copy(
-                dst->value.ptr, src->value.ptr, 1, src->type_info);
-        } else {
-            ecs_os_memcpy(dst->value.ptr, src->value.ptr, src->type_info->size);
-        }
+        flecs_type_info_copy(
+            dst->value.ptr, src->value.ptr, 1, src->type_info);
     }
 })
 

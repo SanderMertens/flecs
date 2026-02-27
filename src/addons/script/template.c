@@ -376,9 +376,7 @@ int flecs_script_template_eval_prop(
         type = var->value.type = value.type;
         var->type_info = ti;
 
-        if (ti->hooks.ctor) {
-            ti->hooks.ctor(var->value.ptr, 1, ti);
-        }
+        flecs_type_info_ctor(var->value.ptr, 1, ti);
 
         ecs_value_copy_w_type_info(v->world, ti, var->value.ptr, value.ptr);
         ecs_value_fini_w_type_info(v->world, ti, value.ptr);
@@ -525,7 +523,7 @@ void flecs_script_template_fini(
         ecs_script_var_t *value = &values[i];
         const ecs_type_info_t *ti = value->type_info;
         if (ti->hooks.dtor) {
-            ti->hooks.dtor(value->value.ptr, 1, ti);
+            flecs_type_info_dtor(value->value.ptr, 1, ti);
         }
         flecs_free(a, ti->size, value->value.ptr);
     }

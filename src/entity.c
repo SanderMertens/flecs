@@ -372,14 +372,10 @@ const ecs_entity_t* flecs_bulk_new(
                     ptr = flecs_component_sparse_get(
                         world, cr, table, entities[e]);
 
-                    ecs_copy_t copy;
-                    ecs_move_t move;
-                    if (is_move && (move = ti->hooks.move)) {
-                        move(ptr, src_ptr, 1, ti);
-                    } else if (!is_move && (copy = ti->hooks.copy)) {
-                        copy(ptr, src_ptr, 1, ti);
+                    if (is_move) {
+                        flecs_type_info_move(ptr, src_ptr, 1, ti);
                     } else {
-                        ecs_os_memcpy(ptr, src_ptr, size);
+                        flecs_type_info_copy(ptr, src_ptr, 1, ti);
                     }
 
                     flecs_notify_on_set(world, table, row + e, id, true);
@@ -405,14 +401,10 @@ const ecs_entity_t* flecs_bulk_new(
                 ecs_assert(size != 0, ECS_INTERNAL_ERROR, NULL);
                 ptr = ECS_ELEM(column->data, size, row);
 
-                ecs_copy_t copy;
-                ecs_move_t move;
-                if (is_move && (move = ti->hooks.move)) {
-                    move(ptr, src_ptr, count, ti);
-                } else if (!is_move && (copy = ti->hooks.copy)) {
-                    copy(ptr, src_ptr, count, ti);
+                if (is_move) {
+                    flecs_type_info_move(ptr, src_ptr, count, ti);
                 } else {
-                    ecs_os_memcpy(ptr, src_ptr, size * count);
+                    flecs_type_info_copy(ptr, src_ptr, count, ti);
                 }
             }
         };
@@ -886,18 +878,14 @@ void flecs_copy_id(
 {
     ecs_assert(dst_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(src_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+    (void)size;
 
     if (ti->hooks.on_replace) {
         flecs_invoke_replace_hook(
             world, r->table, entity, component, dst_ptr, src_ptr, ti);
     }
 
-    ecs_copy_t copy = ti->hooks.copy;
-    if (copy) {
-        copy(dst_ptr, src_ptr, 1, ti);
-    } else {
-        ecs_os_memcpy(dst_ptr, src_ptr, flecs_utosize(size));
-    }
+    flecs_type_info_copy(dst_ptr, src_ptr, 1, ti);
 
     flecs_table_mark_dirty(world, r->table, component);
 
@@ -1846,11 +1834,7 @@ ecs_entity_t ecs_clone(
 
             const void *src_ptr = ecs_get_id(world, src, component);
             const ecs_type_info_t *ti = src_table->data.columns[i].ti;
-            if (ti->hooks.copy) {
-                ti->hooks.copy(dst_ptr, src_ptr, 1, ti);
-            } else {
-                ecs_os_memcpy(dst_ptr, src_ptr, ti->size);
-            }
+            flecs_type_info_copy(dst_ptr, src_ptr, 1, ti);
 
             flecs_notify_on_set(world, dst_table, row, component, true);
         }
@@ -2339,17 +2323,11 @@ void flecs_set_id_move(
             world, r->table, entity, component, dst.ptr, ptr, ti);
     }
 
-    ecs_move_t move;
     if (cmd_kind != EcsCmdEmplace) {
         /* ctor will have happened by ensure */
-        move = ti->hooks.move_dtor;
+        flecs_type_info_move_dtor(dst.ptr, ptr, 1, ti);
     } else {
-        move = ti->hooks.ctor_move_dtor;
-    }
-    if (move) {
-        move(dst.ptr, ptr, 1, ti);
-    } else {
-        ecs_os_memcpy(dst.ptr, ptr, flecs_utosize(size));
+        flecs_type_info_ctor_move_dtor(dst.ptr, ptr, 1, ti);
     }
 
     flecs_table_mark_dirty(world, r->table, component);

@@ -101,7 +101,7 @@ ecs_script_vars_t* ecs_script_vars_pop(
                 continue;
             }
 
-            var->type_info->hooks.dtor(var->value.ptr, 1, var->type_info);
+            flecs_type_info_dtor(var->value.ptr, 1, var->type_info);
         }
 
         flecs_name_index_fini(&vars->var_index);
@@ -175,9 +175,7 @@ ecs_script_var_t* ecs_script_vars_define_id(
     result->value.ptr = flecs_stack_alloc(vars->stack, ti->size, ti->alignment);
     result->type_info = ti;
 
-    if (ti->hooks.ctor) {
-        ti->hooks.ctor(result->value.ptr, 1, ti);
-    }
+    flecs_type_info_ctor(result->value.ptr, 1, ti);
 
     return result;
 error:

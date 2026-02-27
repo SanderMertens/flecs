@@ -330,9 +330,7 @@ void ecs_vec_set_count_w_type_info(
         return;
     }
 
-    ecs_xtor_t ctor, dtor;
-    ecs_move_t move = ti->hooks.ctor_move_dtor;
-    if (!move) {
+    if (!ti->hooks.ctor_move_dtor) {
         /* Trivial type, use regular set_count */
         ecs_vec_set_count(allocator, v, size, elem_count);
         return;
@@ -341,17 +339,13 @@ void ecs_vec_set_count_w_type_info(
     /* If array is large enough, we don't need to realloc. */
     if (v->size > elem_count) {
         if (elem_count > v->count) {
-            if ((ctor = ti->hooks.ctor)) {
-                void *ptr = ECS_ELEM(v->array, size, v->count);
-                ctor(ptr, elem_count - v->count, ti);
-            }
+            void *ptr = ECS_ELEM(v->array, size, v->count);
+            flecs_type_info_ctor(ptr, elem_count - v->count, ti);
         }
 
         if (elem_count < v->count) {
-            if ((dtor = ti->hooks.dtor)) {
-                void *ptr = ECS_ELEM(v->array, size, elem_count);
-                dtor(ptr, v->count - elem_count, ti);
-            }
+            void *ptr = ECS_ELEM(v->array, size, elem_count);
+            flecs_type_info_dtor(ptr, v->count - elem_count, ti);
         }
 
         v->count = elem_count;
@@ -377,22 +371,18 @@ void ecs_vec_set_count_w_type_info(
     }
 
     /* Move elements over to new array */
-    move(array, v->array, move_count, ti);
+    flecs_type_info_ctor_move_dtor(array, v->array, move_count, ti);
 
     /* Destruct remaining elements in old array, if any */
     if (move_count < v->count) {
-        if ((dtor = ti->hooks.dtor)) {
-            void *ptr = ECS_ELEM(v->array, size, move_count);
-            dtor(ptr, v->count - move_count, ti);
-        }
+        void *ptr = ECS_ELEM(v->array, size, move_count);
+        flecs_type_info_dtor(ptr, v->count - move_count, ti);
     }
 
     /* Construct new elements, if any */
     if (move_count < elem_count) {
-        if ((ctor = ti->hooks.ctor)) {
-            void *ptr = ECS_ELEM(array, size, move_count);
-            ctor(ptr, elem_count - move_count, ti);
-        }
+        void *ptr = ECS_ELEM(array, size, move_count);
+        flecs_type_info_ctor(ptr, elem_count - move_count, ti);
     }
 
     flecs_vec_free(allocator, size, v->size, v->array);

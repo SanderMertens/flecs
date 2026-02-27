@@ -494,11 +494,10 @@ void flecs_rtt_array_ctor(
     const ecs_type_info_t *type_info)
 {
     ecs_rtt_array_ctx_t *rtt_ctx = type_info->hooks.lifecycle_ctx;
-    ecs_xtor_t ctor = rtt_ctx->type_info->hooks.ctor;
     int i;
     for (i = 0; i < count; i++) {
         void *arr = ECS_ELEM(ptr, type_info->size, i);
-        ctor(arr, rtt_ctx->elem_count, rtt_ctx->type_info);
+        flecs_type_info_ctor(arr, rtt_ctx->elem_count, rtt_ctx->type_info);
     }
 }
 
@@ -512,11 +511,10 @@ void flecs_rtt_array_dtor(
     const ecs_type_info_t *type_info)
 {
     ecs_rtt_array_ctx_t *rtt_ctx = type_info->hooks.lifecycle_ctx;
-    ecs_xtor_t dtor = rtt_ctx->type_info->hooks.dtor;
     int i;
     for (i = 0; i < count; i++) {
         void *arr = ECS_ELEM(ptr, type_info->size, i);
-        dtor(arr, rtt_ctx->elem_count, rtt_ctx->type_info);
+        flecs_type_info_dtor(arr, rtt_ctx->elem_count, rtt_ctx->type_info);
     }
 }
 
@@ -531,12 +529,12 @@ void flecs_rtt_array_move(
     const ecs_type_info_t *type_info)
 {
     ecs_rtt_array_ctx_t *rtt_ctx = type_info->hooks.lifecycle_ctx;
-    ecs_move_t move = rtt_ctx->type_info->hooks.move;
     int i;
     for (i = 0; i < count; i++) {
         void *src_arr = ECS_ELEM(src_ptr, type_info->size, i);
         void *dst_arr = ECS_ELEM(dst_ptr, type_info->size, i);
-        move(dst_arr, src_arr, rtt_ctx->elem_count, rtt_ctx->type_info);
+        flecs_type_info_move(
+            dst_arr, src_arr, rtt_ctx->elem_count, rtt_ctx->type_info);
     }
 }
 
@@ -551,12 +549,12 @@ void flecs_rtt_array_copy(
     const ecs_type_info_t *type_info)
 {
     ecs_rtt_array_ctx_t *rtt_ctx = type_info->hooks.lifecycle_ctx;
-    ecs_copy_t copy = rtt_ctx->type_info->hooks.copy;
     int i;
     for (i = 0; i < count; i++) {
         const void *src_arr = ECS_ELEM(src_ptr, type_info->size, i);
         void *dst_arr = ECS_ELEM(dst_ptr, type_info->size, i);
-        copy(dst_arr, src_arr, rtt_ctx->elem_count, rtt_ctx->type_info);
+        flecs_type_info_copy(
+            dst_arr, src_arr, rtt_ctx->elem_count, rtt_ctx->type_info);
     }
 }
 
@@ -573,14 +571,12 @@ int flecs_rtt_array_cmp(
     }
 
     ecs_rtt_array_ctx_t *rtt_ctx = type_info->hooks.lifecycle_ctx;
-    ecs_cmp_t cmp = rtt_ctx->type_info->hooks.cmp;
-    ecs_assert(cmp,  ECS_INVALID_PARAMETER, NULL);
     ecs_size_t element_size = rtt_ctx->type_info->size;
     int i;
     for (i = 0; i < rtt_ctx->elem_count; i++) {
         const void *a_element = ECS_ELEM(a_ptr, element_size, i);
         const void *b_element = ECS_ELEM(b_ptr, element_size, i);
-        int c = cmp(a_element, b_element, rtt_ctx->type_info);
+        int c = flecs_type_info_cmp(a_element, b_element, rtt_ctx->type_info);
         if(c != 0) {
             return c;
         }
@@ -601,14 +597,13 @@ bool flecs_rtt_array_equals(
     }
 
     ecs_rtt_array_ctx_t *rtt_ctx = type_info->hooks.lifecycle_ctx;
-    ecs_equals_t equals = rtt_ctx->type_info->hooks.equals;
-    ecs_assert(equals,  ECS_INVALID_PARAMETER, NULL);
     ecs_size_t element_size = rtt_ctx->type_info->size;
     int i;
     for (i = 0; i < rtt_ctx->elem_count; i++) {
         const void *a_element = ECS_ELEM(a_ptr, element_size, i);
         const void *b_element = ECS_ELEM(b_ptr, element_size, i);
-        bool eq = equals(a_element, b_element, rtt_ctx->type_info);
+        bool eq = flecs_type_info_equals(
+            a_element, b_element, rtt_ctx->type_info);
         if(!eq) {
             return false;
         }
@@ -720,13 +715,13 @@ void flecs_rtt_vector_dtor(
     const ecs_type_info_t *type_info)
 {
     ecs_rtt_vector_ctx_t *rtt_ctx = type_info->hooks.lifecycle_ctx;
-    ecs_xtor_t dtor = rtt_ctx->type_info->hooks.dtor;
     int i;
     for (i = 0; i < count; i++) {
         ecs_vec_t *vec = ECS_ELEM(ptr, type_info->size, i);
         int32_t num_elements = ecs_vec_count(vec);
-        if (dtor && num_elements) {
-            dtor(ecs_vec_first(vec), num_elements, rtt_ctx->type_info);
+        if (rtt_ctx->type_info->hooks.dtor && num_elements) {
+            flecs_type_info_dtor(
+                ecs_vec_first(vec), num_elements, rtt_ctx->type_info);
         }
         ecs_vec_fini(NULL, vec, rtt_ctx->type_info->size);
     }
@@ -761,13 +756,9 @@ void flecs_rtt_vector_copy(
 {
     ecs_rtt_vector_ctx_t *rtt_ctx = type_info->hooks.lifecycle_ctx;
     flecs_rtt_vector_dtor(dst_ptr, count, type_info);
-    ecs_copy_t copy = rtt_ctx->type_info->hooks.copy
-                          ? rtt_ctx->type_info->hooks.copy
-                          : flecs_rtt_default_copy;
-    ecs_xtor_t ctor = rtt_ctx->type_info->hooks.ctor
-                          ? rtt_ctx->type_info->hooks.ctor
-                          : flecs_default_ctor;
-    ecs_xtor_t dtor = rtt_ctx->type_info->hooks.dtor;
+    bool has_copy = rtt_ctx->type_info->hooks.copy != NULL;
+    bool has_ctor = rtt_ctx->type_info->hooks.ctor != NULL;
+    bool has_dtor = rtt_ctx->type_info->hooks.dtor != NULL;
     int i;
     for (i = 0; i < count; i++) {
         const ecs_vec_t *src_vec = ECS_ELEM(src_ptr, type_info->size, i);
@@ -775,16 +766,31 @@ void flecs_rtt_vector_copy(
         ecs_vec_init_if(dst_vec, rtt_ctx->type_info->size);
         int32_t src_count = ecs_vec_count(src_vec);
         int32_t dst_count = ecs_vec_count(dst_vec);
-        if (dtor && dst_count) {
-            dtor(ecs_vec_first(dst_vec), dst_count, rtt_ctx->type_info);
+        if (has_dtor && dst_count) {
+            flecs_type_info_dtor(
+                ecs_vec_first(dst_vec), dst_count, rtt_ctx->type_info);
         }
         ecs_vec_set_count(NULL, dst_vec, rtt_ctx->type_info->size, src_count);
-        ctor(ecs_vec_first(dst_vec), src_count, rtt_ctx->type_info);
-        copy(
-            ecs_vec_first(dst_vec),
-            ecs_vec_first(src_vec),
-            src_count,
-            rtt_ctx->type_info);
+        if (has_ctor) {
+            flecs_type_info_ctor(
+                ecs_vec_first(dst_vec), src_count, rtt_ctx->type_info);
+        } else {
+            flecs_default_ctor(
+                ecs_vec_first(dst_vec), src_count, rtt_ctx->type_info);
+        }
+        if (has_copy) {
+            flecs_type_info_copy(
+                ecs_vec_first(dst_vec),
+                ecs_vec_first(src_vec),
+                src_count,
+                rtt_ctx->type_info);
+        } else {
+            flecs_rtt_default_copy(
+                ecs_vec_first(dst_vec),
+                ecs_vec_first(src_vec),
+                src_count,
+                rtt_ctx->type_info);
+        }
     }
 }
 
@@ -812,8 +818,6 @@ int flecs_rtt_vector_cmp(
     }
 
     ecs_rtt_vector_ctx_t *rtt_ctx = type_info->hooks.lifecycle_ctx;
-    ecs_cmp_t cmp = rtt_ctx->type_info->hooks.cmp;
-    ecs_assert(cmp,  ECS_INVALID_PARAMETER, NULL);
 
     ecs_size_t element_size = rtt_ctx->type_info->size;
     const void *a = ecs_vec_first(vec_a);
@@ -823,7 +827,7 @@ int flecs_rtt_vector_cmp(
     for (i = 0; i < count_a; i++) {
         const void *a_element = ECS_ELEM(a, element_size, i);
         const void *b_element = ECS_ELEM(b, element_size, i);
-        int c = cmp(a_element, b_element, rtt_ctx->type_info);
+        int c = flecs_type_info_cmp(a_element, b_element, rtt_ctx->type_info);
         if(c != 0) {
             return c;
         }
@@ -855,8 +859,6 @@ bool flecs_rtt_vector_equals(
     }
 
     ecs_rtt_vector_ctx_t *rtt_ctx = type_info->hooks.lifecycle_ctx;
-    ecs_equals_t equals = rtt_ctx->type_info->hooks.equals;
-    ecs_assert(equals,  ECS_INVALID_PARAMETER, NULL);
 
     ecs_size_t element_size = rtt_ctx->type_info->size;
     const void *a = ecs_vec_first(vec_a);
@@ -866,7 +868,8 @@ bool flecs_rtt_vector_equals(
     for (i = 0; i < count_a; i++) {
         const void *a_element = ECS_ELEM(a, element_size, i);
         const void *b_element = ECS_ELEM(b, element_size, i);
-        int eq = equals(a_element, b_element, rtt_ctx->type_info);
+        bool eq = flecs_type_info_equals(
+            a_element, b_element, rtt_ctx->type_info);
         if(!eq) {
             return false;
         }

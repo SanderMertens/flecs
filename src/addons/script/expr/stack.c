@@ -21,9 +21,7 @@ void flecs_expr_value_alloc(
     v->value.type = ti->component;
     v->value.ptr = flecs_stack_alloc(&stack->stack, ti->size, ti->alignment);
 
-    if (ti->hooks.ctor) {
-        ti->hooks.ctor(v->value.ptr, 1, ti);
-    }
+    flecs_type_info_ctor(v->value.ptr, 1, ti);
 }
 
 static
@@ -41,7 +39,7 @@ void flecs_expr_value_free(
 
     if (ti && ti->hooks.dtor) {
         ecs_assert(v->value.ptr != NULL, ECS_INTERNAL_ERROR, NULL);
-        ti->hooks.dtor(v->value.ptr, 1, ti);
+        flecs_type_info_dtor(v->value.ptr, 1, ti);
         flecs_stack_free(v->value.ptr, ti->size);
     }
 

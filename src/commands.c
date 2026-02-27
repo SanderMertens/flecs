@@ -300,12 +300,7 @@ bool flecs_defer_remove(
                             ti->size * ECS_RECORD_TO_ROW(r->row));
                         const void *src = ecs_ref_get_id(
                             world, &o->refs[tr->column], id);
-                        ecs_copy_t copy = ti->hooks.copy;
-                        if (copy) {
-                            copy(dst, src, 1, ti);
-                        } else {
-                            ecs_os_memcpy(dst, src, ti->size);
-                        }
+                        flecs_type_info_copy(dst, src, 1, ti);
                     }
                 }
             }
@@ -436,18 +431,10 @@ void* flecs_defer_ensure(
 
         if (!base) {
             /* Normal ctor */
-            ecs_xtor_t ctor = ti->hooks.ctor;
-            if (ctor) {
-                ctor(ptr.ptr, 1, ti);
-            }
+            flecs_type_info_ctor(ptr.ptr, 1, ti);
         } else {
             /* Override */
-            ecs_copy_t copy = ti->hooks.copy_ctor;
-            if (copy) {
-                copy(ptr.ptr, base, 1, ti);
-            } else {
-                ecs_os_memcpy(ptr.ptr, base, size);
-            }
+            flecs_type_info_copy_ctor(ptr.ptr, base, 1, ti);
         }
     } else {
         cmd->kind = EcsCmdAdd;
@@ -515,13 +502,12 @@ void* flecs_defer_set(
         }
     }
 
-    ecs_copy_t copy;
     if (!ptr.ptr) {
         cmd->kind = EcsCmdSet;
         cmd->is._1.size = size;
         ptr.ptr = cmd->is._1.value =
             flecs_stack_alloc(&stage->cmd->stack, size, ti->alignment);
-        copy = ti->hooks.copy_ctor;
+        flecs_type_info_copy_ctor(ptr.ptr, value, 1, ti);
     } else {
         cmd->kind = EcsCmdAddModified;
 
@@ -531,13 +517,7 @@ void* flecs_defer_set(
                 world, r->table, entity, id, ptr.ptr, value, ti);
         }
 
-        copy = ti->hooks.copy;
-    }
-
-    if (copy) {
-        copy(ptr.ptr, value, 1, ti);
-    } else {
-        ecs_os_memcpy(ptr.ptr, value, size);
+        flecs_type_info_copy(ptr.ptr, value, 1, ti);
     }
 
     return ptr.ptr;
@@ -601,10 +581,7 @@ void* flecs_defer_cpp_set(
         ptr.ptr = cmd->is._1.value =
             flecs_stack_alloc(&stage->cmd->stack, size, ti->alignment);
 
-        ecs_xtor_t ctor = ti->hooks.ctor;
-        if (ctor) {
-            ctor(ptr.ptr, 1, ti);
-        }
+        flecs_type_info_ctor(ptr.ptr, 1, ti);
     } else {
         cmd->kind = EcsCmdAddModified;
 
@@ -694,17 +671,9 @@ void flecs_enqueue(
         void *param_cmd = flecs_stack_alloc(stack, ti->size, ti->alignment);
         ecs_assert(param_cmd != NULL, ECS_INTERNAL_ERROR, NULL);
         if (desc->param) {
-            if (ti->hooks.move_ctor) {
-                ti->hooks.move_ctor(param_cmd, desc->param, 1, ti);
-            } else {
-                ecs_os_memcpy(param_cmd, desc->param, ti->size);
-            }
+            flecs_type_info_move_ctor(param_cmd, desc->param, 1, ti);
         } else {
-            if (ti->hooks.copy_ctor) {
-                ti->hooks.copy_ctor(param_cmd, desc->const_param, 1, ti);
-            } else {
-                ecs_os_memcpy(param_cmd, desc->const_param, ti->size);
-            }
+            flecs_type_info_copy_ctor(param_cmd, desc->const_param, 1, ti);
         }
 
         desc_cmd->param = param_cmd;
@@ -741,10 +710,7 @@ void flecs_dtor_value(
 {
     const ecs_type_info_t *ti = ecs_get_type_info(world, id);
     ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_xtor_t dtor = ti->hooks.dtor;
-    if (dtor) {
-        dtor(value, 1, ti);
-    }
+    flecs_type_info_dtor(value, 1, ti);
 }
 
 static
@@ -1024,15 +990,10 @@ void flecs_cmd_batch_for_entity(
                         }
                     }
 
-                    ecs_move_t move = ti->hooks.move;
-                    if (move) {
-                        move(dst.ptr, ptr, 1, ti);
-                        ecs_xtor_t dtor = ti->hooks.dtor;
-                        if (dtor) {
-                            dtor(ptr, 1, ti);
-                        }
-                    } else {
-                        ecs_os_memcpy(dst.ptr, ptr, ti->size);
+                    bool move_hook = ti->hooks.move != NULL;
+                    flecs_type_info_move(dst.ptr, ptr, 1, ti);
+                    if (move_hook) {
+                        flecs_type_info_dtor(ptr, 1, ti);
                     }
 
                     flecs_stack_free(ptr, cmd->is._1.size);

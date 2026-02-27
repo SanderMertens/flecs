@@ -148,10 +148,7 @@ ecs_entity_t flecs_component_sparse_remove_intern(
             &entity, cr->id, ti, EcsOnRemove, on_remove);
     }
 
-    ecs_xtor_t dtor = ti->hooks.dtor;
-    if (dtor) {
-        dtor(ptr, 1, ti);
-    }
+    flecs_type_info_dtor(ptr, 1, ti);
 
     flecs_sparse_remove(cr->sparse, 0, entity);
 
@@ -289,7 +286,7 @@ void flecs_component_sparse_remove_all_id(
     const ecs_type_info_t *ti = cr->type_info;
     if (ti) {
         ecs_iter_action_t on_remove = ti->hooks.on_remove;
-        ecs_xtor_t dtor = ti->hooks.dtor;
+        bool dtor = ti->hooks.dtor != NULL;
 
         if (on_remove) {
             for (i = 0; i < count; i ++) {
@@ -304,7 +301,7 @@ void flecs_component_sparse_remove_all_id(
         if (dtor) {
             for (i = 0; i < count; i ++) {
                 void *ptr = flecs_sparse_get_dense(sparse, 0, i);
-                dtor(ptr, 1, ti);
+                flecs_type_info_dtor(ptr, 1, ti);
             }
         }
     }
@@ -450,19 +447,13 @@ void flecs_component_sparse_override(
         }
     }
 
-    ecs_xtor_t ctor = ti->hooks.ctor;
     if (!override_ptr) {
-        if (ctor) {
-            ctor(ptr, 1, ti);
-        }
+        flecs_type_info_ctor(ptr, 1, ti);
     } else {
-        ecs_copy_t copy = ti->hooks.copy_ctor;
-        if (copy) {
-            copy(ptr, override_ptr, 1, ti);
+        if (ti->hooks.copy_ctor) {
+            flecs_type_info_copy_ctor(ptr, override_ptr, 1, ti);
         } else {
-            if (ctor) {
-                ctor(ptr, 1, ti);
-            }
+            flecs_type_info_ctor(ptr, 1, ti);
             ecs_os_memcpy(ptr, override_ptr, ti->size);
         }
     }

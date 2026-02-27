@@ -5893,12 +5893,7 @@ bool flecs_defer_remove(
                             ti->size * ECS_RECORD_TO_ROW(r->row));
                         const void *src = ecs_ref_get_id(
                             world, &o->refs[tr->column], id);
-                        ecs_copy_t copy = ti->hooks.copy;
-                        if (copy) {
-                            copy(dst, src, 1, ti);
-                        } else {
-                            ecs_os_memcpy(dst, src, ti->size);
-                        }
+                        flecs_type_info_copy(dst, src, 1, ti);
                     }
                 }
             }
@@ -6029,18 +6024,10 @@ void* flecs_defer_ensure(
 
         if (!base) {
             /* Normal ctor */
-            ecs_xtor_t ctor = ti->hooks.ctor;
-            if (ctor) {
-                ctor(ptr.ptr, 1, ti);
-            }
+            flecs_type_info_ctor(ptr.ptr, 1, ti);
         } else {
             /* Override */
-            ecs_copy_t copy = ti->hooks.copy_ctor;
-            if (copy) {
-                copy(ptr.ptr, base, 1, ti);
-            } else {
-                ecs_os_memcpy(ptr.ptr, base, size);
-            }
+            flecs_type_info_copy_ctor(ptr.ptr, base, 1, ti);
         }
     } else {
         cmd->kind = EcsCmdAdd;
@@ -6108,13 +6095,12 @@ void* flecs_defer_set(
         }
     }
 
-    ecs_copy_t copy;
     if (!ptr.ptr) {
         cmd->kind = EcsCmdSet;
         cmd->is._1.size = size;
         ptr.ptr = cmd->is._1.value =
             flecs_stack_alloc(&stage->cmd->stack, size, ti->alignment);
-        copy = ti->hooks.copy_ctor;
+        flecs_type_info_copy_ctor(ptr.ptr, value, 1, ti);
     } else {
         cmd->kind = EcsCmdAddModified;
 
@@ -6124,13 +6110,7 @@ void* flecs_defer_set(
                 world, r->table, entity, id, ptr.ptr, value, ti);
         }
 
-        copy = ti->hooks.copy;
-    }
-
-    if (copy) {
-        copy(ptr.ptr, value, 1, ti);
-    } else {
-        ecs_os_memcpy(ptr.ptr, value, size);
+        flecs_type_info_copy(ptr.ptr, value, 1, ti);
     }
 
     return ptr.ptr;
@@ -6194,10 +6174,7 @@ void* flecs_defer_cpp_set(
         ptr.ptr = cmd->is._1.value =
             flecs_stack_alloc(&stage->cmd->stack, size, ti->alignment);
 
-        ecs_xtor_t ctor = ti->hooks.ctor;
-        if (ctor) {
-            ctor(ptr.ptr, 1, ti);
-        }
+        flecs_type_info_ctor(ptr.ptr, 1, ti);
     } else {
         cmd->kind = EcsCmdAddModified;
 
@@ -6287,17 +6264,9 @@ void flecs_enqueue(
         void *param_cmd = flecs_stack_alloc(stack, ti->size, ti->alignment);
         ecs_assert(param_cmd != NULL, ECS_INTERNAL_ERROR, NULL);
         if (desc->param) {
-            if (ti->hooks.move_ctor) {
-                ti->hooks.move_ctor(param_cmd, desc->param, 1, ti);
-            } else {
-                ecs_os_memcpy(param_cmd, desc->param, ti->size);
-            }
+            flecs_type_info_move_ctor(param_cmd, desc->param, 1, ti);
         } else {
-            if (ti->hooks.copy_ctor) {
-                ti->hooks.copy_ctor(param_cmd, desc->const_param, 1, ti);
-            } else {
-                ecs_os_memcpy(param_cmd, desc->const_param, ti->size);
-            }
+            flecs_type_info_copy_ctor(param_cmd, desc->const_param, 1, ti);
         }
 
         desc_cmd->param = param_cmd;
@@ -6334,10 +6303,7 @@ void flecs_dtor_value(
 {
     const ecs_type_info_t *ti = ecs_get_type_info(world, id);
     ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_xtor_t dtor = ti->hooks.dtor;
-    if (dtor) {
-        dtor(value, 1, ti);
-    }
+    flecs_type_info_dtor(value, 1, ti);
 }
 
 static
@@ -6617,15 +6583,10 @@ void flecs_cmd_batch_for_entity(
                         }
                     }
 
-                    ecs_move_t move = ti->hooks.move;
-                    if (move) {
-                        move(dst.ptr, ptr, 1, ti);
-                        ecs_xtor_t dtor = ti->hooks.dtor;
-                        if (dtor) {
-                            dtor(ptr, 1, ti);
-                        }
-                    } else {
-                        ecs_os_memcpy(dst.ptr, ptr, ti->size);
+                    bool move_hook = ti->hooks.move != NULL;
+                    flecs_type_info_move(dst.ptr, ptr, 1, ti);
+                    if (move_hook) {
+                        flecs_type_info_dtor(ptr, 1, ti);
                     }
 
                     flecs_stack_free(ptr, cmd->is._1.size);
@@ -8287,14 +8248,10 @@ const ecs_entity_t* flecs_bulk_new(
                     ptr = flecs_component_sparse_get(
                         world, cr, table, entities[e]);
 
-                    ecs_copy_t copy;
-                    ecs_move_t move;
-                    if (is_move && (move = ti->hooks.move)) {
-                        move(ptr, src_ptr, 1, ti);
-                    } else if (!is_move && (copy = ti->hooks.copy)) {
-                        copy(ptr, src_ptr, 1, ti);
+                    if (is_move) {
+                        flecs_type_info_move(ptr, src_ptr, 1, ti);
                     } else {
-                        ecs_os_memcpy(ptr, src_ptr, size);
+                        flecs_type_info_copy(ptr, src_ptr, 1, ti);
                     }
 
                     flecs_notify_on_set(world, table, row + e, id, true);
@@ -8320,14 +8277,10 @@ const ecs_entity_t* flecs_bulk_new(
                 ecs_assert(size != 0, ECS_INTERNAL_ERROR, NULL);
                 ptr = ECS_ELEM(column->data, size, row);
 
-                ecs_copy_t copy;
-                ecs_move_t move;
-                if (is_move && (move = ti->hooks.move)) {
-                    move(ptr, src_ptr, count, ti);
-                } else if (!is_move && (copy = ti->hooks.copy)) {
-                    copy(ptr, src_ptr, count, ti);
+                if (is_move) {
+                    flecs_type_info_move(ptr, src_ptr, count, ti);
                 } else {
-                    ecs_os_memcpy(ptr, src_ptr, size * count);
+                    flecs_type_info_copy(ptr, src_ptr, count, ti);
                 }
             }
         };
@@ -8801,18 +8754,14 @@ void flecs_copy_id(
 {
     ecs_assert(dst_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(src_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+    (void)size;
 
     if (ti->hooks.on_replace) {
         flecs_invoke_replace_hook(
             world, r->table, entity, component, dst_ptr, src_ptr, ti);
     }
 
-    ecs_copy_t copy = ti->hooks.copy;
-    if (copy) {
-        copy(dst_ptr, src_ptr, 1, ti);
-    } else {
-        ecs_os_memcpy(dst_ptr, src_ptr, flecs_utosize(size));
-    }
+    flecs_type_info_copy(dst_ptr, src_ptr, 1, ti);
 
     flecs_table_mark_dirty(world, r->table, component);
 
@@ -9761,11 +9710,7 @@ ecs_entity_t ecs_clone(
 
             const void *src_ptr = ecs_get_id(world, src, component);
             const ecs_type_info_t *ti = src_table->data.columns[i].ti;
-            if (ti->hooks.copy) {
-                ti->hooks.copy(dst_ptr, src_ptr, 1, ti);
-            } else {
-                ecs_os_memcpy(dst_ptr, src_ptr, ti->size);
-            }
+            flecs_type_info_copy(dst_ptr, src_ptr, 1, ti);
 
             flecs_notify_on_set(world, dst_table, row, component, true);
         }
@@ -10254,17 +10199,11 @@ void flecs_set_id_move(
             world, r->table, entity, component, dst.ptr, ptr, ti);
     }
 
-    ecs_move_t move;
     if (cmd_kind != EcsCmdEmplace) {
         /* ctor will have happened by ensure */
-        move = ti->hooks.move_dtor;
+        flecs_type_info_move_dtor(dst.ptr, ptr, 1, ti);
     } else {
-        move = ti->hooks.ctor_move_dtor;
-    }
-    if (move) {
-        move(dst.ptr, ptr, 1, ti);
-    } else {
-        ecs_os_memcpy(dst.ptr, ptr, flecs_utosize(size));
+        flecs_type_info_ctor_move_dtor(dst.ptr, ptr, 1, ti);
     }
 
     flecs_table_mark_dirty(world, r->table, component);
@@ -12951,11 +12890,7 @@ void flecs_instantiate_sparse(
             void *dst_ptr = flecs_sparse_get(cr->sparse, ti->size, instance_child);
             ecs_assert(dst_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
 
-            if (ti->hooks.copy) {
-                ti->hooks.copy(dst_ptr, src_ptr, 1, ti);
-            } else {
-                ecs_os_memcpy(dst_ptr, src_ptr, ti->size);
-            }
+            flecs_type_info_copy(dst_ptr, src_ptr, 1, ti);
 
             flecs_notify_on_set(
                 world, instance_table, row_offset + j, id, true);
@@ -13194,11 +13129,7 @@ void flecs_instantiate_dont_fragment(
 
                 if (ti) {
                     ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
-                    if (ti->hooks.copy) {
-                        ti->hooks.copy(ptr, base_ptr, 1, ti);
-                    } else {
-                        ecs_os_memcpy(ptr, base_ptr, ti->size);
-                    }
+                    flecs_type_info_copy(ptr, base_ptr, 1, ti);
                 }
 
                 if (ti) {
@@ -20982,6 +20913,136 @@ void flecs_default_ctor(
     ecs_os_memset(ptr, 0, ti->size * count);
 }
 
+bool flecs_type_info_ctor(
+    void *ptr,
+    int32_t count,
+    const ecs_type_info_t *ti)
+{
+    ecs_xtor_t ctor = ti->hooks.ctor;
+    if (ctor) {
+        ctor(ptr, count, ti);
+        return true;
+    }
+    return false;
+}
+
+bool flecs_type_info_dtor(
+    void *ptr,
+    int32_t count,
+    const ecs_type_info_t *ti)
+{
+    ecs_xtor_t dtor = ti->hooks.dtor;
+    if (dtor) {
+        dtor(ptr, count, ti);
+        return true;
+    }
+    return false;
+}
+
+void flecs_type_info_copy(
+    void *dst_ptr,
+    const void *src_ptr,
+    int32_t count,
+    const ecs_type_info_t *ti)
+{
+    ecs_copy_t copy = ti->hooks.copy;
+    if (copy) {
+        copy(dst_ptr, src_ptr, count, ti);
+    } else {
+        ecs_os_memcpy(dst_ptr, src_ptr, flecs_uto(ecs_size_t, ti->size) * count);
+    }
+}
+
+void flecs_type_info_move(
+    void *dst_ptr,
+    void *src_ptr,
+    int32_t count,
+    const ecs_type_info_t *ti)
+{
+    ecs_move_t move = ti->hooks.move;
+    if (move) {
+        move(dst_ptr, src_ptr, count, ti);
+    } else {
+        ecs_os_memcpy(dst_ptr, src_ptr, flecs_uto(ecs_size_t, ti->size) * count);
+    }
+}
+
+void flecs_type_info_copy_ctor(
+    void *dst_ptr,
+    const void *src_ptr,
+    int32_t count,
+    const ecs_type_info_t *ti)
+{
+    ecs_copy_t copy = ti->hooks.copy_ctor;
+    if (copy) {
+        copy(dst_ptr, src_ptr, count, ti);
+    } else {
+        ecs_os_memcpy(dst_ptr, src_ptr, flecs_uto(ecs_size_t, ti->size) * count);
+    }
+}
+
+void flecs_type_info_move_ctor(
+    void *dst_ptr,
+    void *src_ptr,
+    int32_t count,
+    const ecs_type_info_t *ti)
+{
+    ecs_move_t move = ti->hooks.move_ctor;
+    if (move) {
+        move(dst_ptr, src_ptr, count, ti);
+    } else {
+        ecs_os_memcpy(dst_ptr, src_ptr, flecs_uto(ecs_size_t, ti->size) * count);
+    }
+}
+
+void flecs_type_info_ctor_move_dtor(
+    void *dst_ptr,
+    void *src_ptr,
+    int32_t count,
+    const ecs_type_info_t *ti)
+{
+    ecs_move_t move = ti->hooks.ctor_move_dtor;
+    if (move) {
+        move(dst_ptr, src_ptr, count, ti);
+    } else {
+        ecs_os_memcpy(dst_ptr, src_ptr, flecs_uto(ecs_size_t, ti->size) * count);
+    }
+}
+
+void flecs_type_info_move_dtor(
+    void *dst_ptr,
+    void *src_ptr,
+    int32_t count,
+    const ecs_type_info_t *ti)
+{
+    ecs_move_t move = ti->hooks.move_dtor;
+    if (move) {
+        move(dst_ptr, src_ptr, count, ti);
+    } else {
+        ecs_os_memcpy(dst_ptr, src_ptr, flecs_uto(ecs_size_t, ti->size) * count);
+    }
+}
+
+int flecs_type_info_cmp(
+    const void *a_ptr,
+    const void *b_ptr,
+    const ecs_type_info_t *ti)
+{
+    ecs_cmp_t cmp = ti->hooks.cmp;
+    ecs_assert(cmp != NULL, ECS_INTERNAL_ERROR, NULL);
+    return cmp(a_ptr, b_ptr, ti);
+}
+
+bool flecs_type_info_equals(
+    const void *a_ptr,
+    const void *b_ptr,
+    const ecs_type_info_t *ti)
+{
+    ecs_equals_t equals = ti->hooks.equals;
+    ecs_assert(equals != NULL, ECS_INTERNAL_ERROR, NULL);
+    return equals(a_ptr, b_ptr, ti);
+}
+
 static
 void flecs_default_copy_ctor(void *dst_ptr, const void *src_ptr,
     int32_t count, const ecs_type_info_t *ti)
@@ -21683,10 +21744,7 @@ int ecs_value_init_w_type_info(
     ecs_check(ti != NULL, ECS_INVALID_PARAMETER, NULL);
     (void)world;
 
-    ecs_xtor_t ctor;
-    if ((ctor = ti->hooks.ctor)) {
-        ctor(ptr, 1, ti);
-    } else {
+    if (!flecs_type_info_ctor(ptr, 1, ti)) {
         ecs_os_memset(ptr, 0, ti->size);
     }
 
@@ -21751,10 +21809,7 @@ int ecs_value_fini_w_type_info(
     ecs_check(ti != NULL, ECS_INVALID_PARAMETER, NULL);
     (void)world;
 
-    ecs_xtor_t dtor;
-    if ((dtor = ti->hooks.dtor)) {
-        dtor(ptr, 1, ti);
-    }
+    flecs_type_info_dtor(ptr, 1, ti);
 
     return 0;
 error:
@@ -21804,12 +21859,7 @@ int ecs_value_copy_w_type_info(
     ecs_check(ti != NULL, ECS_INVALID_PARAMETER, NULL);
     (void)world;
 
-    ecs_copy_t copy;
-    if ((copy = ti->hooks.copy)) {
-        copy(dst, src, 1, ti);
-    } else {
-        ecs_os_memcpy(dst, src, ti->size);
-    }
+    flecs_type_info_copy(dst, src, 1, ti);
 
     return 0;
 error:
@@ -21840,12 +21890,7 @@ int ecs_value_move_w_type_info(
     ecs_check(ti != NULL, ECS_INVALID_PARAMETER, NULL);
     (void)world;
 
-    ecs_move_t move;
-    if ((move = ti->hooks.move)) {
-        move(dst, src, 1, ti);
-    } else {
-        ecs_os_memcpy(dst, src, ti->size);
-    }
+    flecs_type_info_move(dst, src, 1, ti);
 
     return 0;
 error:
@@ -21876,12 +21921,7 @@ int ecs_value_move_ctor_w_type_info(
     ecs_check(ti != NULL, ECS_INVALID_PARAMETER, NULL);
     (void)world;
 
-    ecs_move_t move;
-    if ((move = ti->hooks.move_ctor)) {
-        move(dst, src, 1, ti);
-    } else {
-        ecs_os_memcpy(dst, src, ti->size);
-    }
+    flecs_type_info_move_ctor(dst, src, 1, ti);
 
     return 0;
 error:
@@ -35463,9 +35503,7 @@ void ecs_vec_set_count_w_type_info(
         return;
     }
 
-    ecs_xtor_t ctor, dtor;
-    ecs_move_t move = ti->hooks.ctor_move_dtor;
-    if (!move) {
+    if (!ti->hooks.ctor_move_dtor) {
         /* Trivial type, use regular set_count */
         ecs_vec_set_count(allocator, v, size, elem_count);
         return;
@@ -35474,17 +35512,13 @@ void ecs_vec_set_count_w_type_info(
     /* If array is large enough, we don't need to realloc. */
     if (v->size > elem_count) {
         if (elem_count > v->count) {
-            if ((ctor = ti->hooks.ctor)) {
-                void *ptr = ECS_ELEM(v->array, size, v->count);
-                ctor(ptr, elem_count - v->count, ti);
-            }
+            void *ptr = ECS_ELEM(v->array, size, v->count);
+            flecs_type_info_ctor(ptr, elem_count - v->count, ti);
         }
 
         if (elem_count < v->count) {
-            if ((dtor = ti->hooks.dtor)) {
-                void *ptr = ECS_ELEM(v->array, size, elem_count);
-                dtor(ptr, v->count - elem_count, ti);
-            }
+            void *ptr = ECS_ELEM(v->array, size, elem_count);
+            flecs_type_info_dtor(ptr, v->count - elem_count, ti);
         }
 
         v->count = elem_count;
@@ -35510,22 +35544,18 @@ void ecs_vec_set_count_w_type_info(
     }
 
     /* Move elements over to new array */
-    move(array, v->array, move_count, ti);
+    flecs_type_info_ctor_move_dtor(array, v->array, move_count, ti);
 
     /* Destruct remaining elements in old array, if any */
     if (move_count < v->count) {
-        if ((dtor = ti->hooks.dtor)) {
-            void *ptr = ECS_ELEM(v->array, size, move_count);
-            dtor(ptr, v->count - move_count, ti);
-        }
+        void *ptr = ECS_ELEM(v->array, size, move_count);
+        flecs_type_info_dtor(ptr, v->count - move_count, ti);
     }
 
     /* Construct new elements, if any */
     if (move_count < elem_count) {
-        if ((ctor = ti->hooks.ctor)) {
-            void *ptr = ECS_ELEM(array, size, move_count);
-            ctor(ptr, elem_count - move_count, ti);
-        }
+        void *ptr = ECS_ELEM(array, size, move_count);
+        flecs_type_info_ctor(ptr, elem_count - move_count, ti);
     }
 
     flecs_vec_free(allocator, size, v->size, v->array);
@@ -41543,10 +41573,7 @@ ecs_entity_t flecs_component_sparse_remove_intern(
             &entity, cr->id, ti, EcsOnRemove, on_remove);
     }
 
-    ecs_xtor_t dtor = ti->hooks.dtor;
-    if (dtor) {
-        dtor(ptr, 1, ti);
-    }
+    flecs_type_info_dtor(ptr, 1, ti);
 
     flecs_sparse_remove(cr->sparse, 0, entity);
 
@@ -41684,7 +41711,7 @@ void flecs_component_sparse_remove_all_id(
     const ecs_type_info_t *ti = cr->type_info;
     if (ti) {
         ecs_iter_action_t on_remove = ti->hooks.on_remove;
-        ecs_xtor_t dtor = ti->hooks.dtor;
+        bool dtor = ti->hooks.dtor != NULL;
 
         if (on_remove) {
             for (i = 0; i < count; i ++) {
@@ -41699,7 +41726,7 @@ void flecs_component_sparse_remove_all_id(
         if (dtor) {
             for (i = 0; i < count; i ++) {
                 void *ptr = flecs_sparse_get_dense(sparse, 0, i);
-                dtor(ptr, 1, ti);
+                flecs_type_info_dtor(ptr, 1, ti);
             }
         }
     }
@@ -41845,19 +41872,13 @@ void flecs_component_sparse_override(
         }
     }
 
-    ecs_xtor_t ctor = ti->hooks.ctor;
     if (!override_ptr) {
-        if (ctor) {
-            ctor(ptr, 1, ti);
-        }
+        flecs_type_info_ctor(ptr, 1, ti);
     } else {
-        ecs_copy_t copy = ti->hooks.copy_ctor;
-        if (copy) {
-            copy(ptr, override_ptr, 1, ti);
+        if (ti->hooks.copy_ctor) {
+            flecs_type_info_copy_ctor(ptr, override_ptr, 1, ti);
         } else {
-            if (ctor) {
-                ctor(ptr, 1, ti);
-            }
+            flecs_type_info_ctor(ptr, 1, ti);
             ecs_os_memcpy(ptr, override_ptr, ti->size);
         }
     }
@@ -42918,17 +42939,12 @@ void flecs_table_invoke_ctor_for_array(
                 void *base_ptr = ecs_ref_get_id(world, r, r->id);
                 ecs_assert(base_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
 
-                ecs_copy_t copy = ti->hooks.copy_ctor;
                 ecs_iter_action_t on_set = ti->hooks.on_set;
                 ecs_size_t size = ti->size;
 
                 int32_t i;
                 for (i = 0; i < count; i ++) {
-                    if (copy) {
-                        copy(ptr, base_ptr, 1, ti);
-                    } else {
-                        ecs_os_memcpy(ptr, base_ptr, size);
-                    }
+                    flecs_type_info_copy_ctor(ptr, base_ptr, 1, ti);
 
                     ptr = ECS_OFFSET(ptr, size);
                 }
@@ -42948,10 +42964,7 @@ void flecs_table_invoke_ctor_for_array(
         }
     }
 
-    ecs_xtor_t ctor = ti->hooks.ctor;
-    if (ctor) {
-        ctor(ptr, count, ti);
-    }
+    flecs_type_info_ctor(ptr, count, ti);
 }
 
 static
@@ -42982,11 +42995,8 @@ void flecs_table_invoke_dtor(
     ecs_assert(column->data != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_type_info_t *ti = column->ti;
     ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_xtor_t dtor = ti->hooks.dtor;
-    if (dtor) {
-        void *ptr = ECS_ELEM(column->data, ti->size, row);
-        dtor(ptr, count, ti);
-    }
+    void *ptr = ECS_ELEM(column->data, ti->size, row);
+    flecs_type_info_dtor(ptr, count, ti);
 }
 
 /* Run hooks that get invoked when component is added to entity */
@@ -43504,10 +43514,8 @@ void flecs_table_grow_column(
 
     /* If the array could possibly realloc and the component has a move action 
      * defined, move old elements manually */
-    ecs_move_t move_ctor;
-    if (count && can_realloc && (move_ctor = ti->hooks.ctor_move_dtor)) {
+    if (count && can_realloc && ti->hooks.ctor_move_dtor) {
         ecs_assert(ti->hooks.ctor != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_assert(move_ctor != NULL, ECS_INTERNAL_ERROR, NULL);
 
         /* Create  vector */
         ecs_vec_t dst;
@@ -43518,7 +43526,7 @@ void flecs_table_grow_column(
         void *dst_buffer = dst.array;
 
         /* Move (and construct) existing elements to new vector */
-        move_ctor(dst_buffer, src_buffer, count, ti);
+        flecs_type_info_ctor_move_dtor(dst_buffer, src_buffer, count, ti);
 
         if (construct) {
             /* Construct new element(s) */
@@ -43843,21 +43851,14 @@ void flecs_table_delete(
                         EcsOnRemove, column, &entity_to_delete, row, 1);
                 }
 
-                ecs_move_t move_dtor = ti->hooks.move_dtor;
-                
                 /* If neither move nor move_ctor are set, this indicates that 
                  * non-destructive move semantics are not supported for this 
-                 * type. In such cases, we set the move_dtor as ctor_move_dtor, 
-                 * which indicates a destructive move operation. This adjustment 
-                 * ensures compatibility with different language bindings. */
+                 * type. In such cases, use ctor_move_dtor for destructive move
+                 * semantics to ensure compatibility with language bindings. */
                 if (!ti->hooks.move_ctor && ti->hooks.ctor_move_dtor) {
-                  move_dtor = ti->hooks.ctor_move_dtor;
-                }
-
-                if (move_dtor) {
-                    move_dtor(dst, src, 1, ti);
+                    flecs_type_info_ctor_move_dtor(dst, src, 1, ti);
                 } else {
-                    ecs_os_memcpy(dst, src, size);
+                    flecs_type_info_move_dtor(dst, src, 1, ti);
                 }
             }
         } else {
@@ -43970,18 +43971,14 @@ void flecs_table_move(
             void *dst = ECS_ELEM(dst_column->data, size, dst_index);
             void *src = ECS_ELEM(src_column->data, size, src_index);
 
-            ecs_move_t move = ti->hooks.move_ctor;
-            if (use_move_dtor || !move) {
+            bool use_ctor_move_dtor = use_move_dtor || !ti->hooks.move_ctor;
+            if (use_ctor_move_dtor) {
                 /* Also use move_dtor if component doesn't have a move_ctor
                  * registered, to ensure that the dtor gets called to 
                  * cleanup resources. */
-                move = ti->hooks.ctor_move_dtor;
-            }
-
-            if (move) {
-                move(dst, src, 1, ti);
+                flecs_type_info_ctor_move_dtor(dst, src, 1, ti);
             } else {
-                ecs_os_memcpy(dst, src, size);
+                flecs_type_info_move_ctor(dst, src, 1, ti);
             }
         } else {
             if (dst_id < src_id) {
@@ -44074,18 +44071,11 @@ bool flecs_table_shrink(
     for (i = 0; i < column_count; i ++) {
         const ecs_type_info_t *ti = columns[i].ti;
         ecs_size_t component_size = ti->size;
-        ecs_move_t move = ti->hooks.ctor_move_dtor;
         void *data = columns[i].data;
 
         if (count) {
             columns[i].data = ecs_os_malloc(component_size * count);
-
-            if (move) {
-                move(columns[i].data, data, count, ti);
-            } else {
-                ecs_assert(columns[i].data != NULL, ECS_INTERNAL_ERROR, NULL);
-                ecs_os_memcpy(columns[i].data, data, component_size * count);   
-            }
+            flecs_type_info_ctor_move_dtor(columns[i].data, data, count, ti);
         } else {
             columns[i].data = NULL;
         }
@@ -44195,19 +44185,17 @@ void flecs_table_swap(
         void *el_1 = ECS_ELEM(ptr, size, row_1);
         void *el_2 = ECS_ELEM(ptr, size, row_2);
 
-        ecs_move_t move = ti->hooks.move;
-        if (!move) {
+        bool move_hook = ti->hooks.move != NULL;
+        if (!move_hook) {
             ecs_os_memcpy(tmp, el_1, size);
             ecs_os_memcpy(el_1, el_2, size);
             ecs_os_memcpy(el_2, tmp, size);
         } else {
-            ecs_move_t move_ctor = ti->hooks.move_ctor;
-            ecs_move_t move_dtor = ti->hooks.move_dtor;
-            ecs_assert(move_ctor != NULL, ECS_INTERNAL_ERROR, NULL);
-            ecs_assert(move_dtor != NULL, ECS_INTERNAL_ERROR, NULL);
-            move_ctor(tmp, el_1, 1, ti);
-            move(el_1, el_2, 1, ti);
-            move_dtor(el_2, tmp, 1, ti);
+            ecs_assert(ti->hooks.move_ctor != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(ti->hooks.move_dtor != NULL, ECS_INTERNAL_ERROR, NULL);
+            flecs_type_info_move_ctor(tmp, el_1, 1, ti);
+            flecs_type_info_move(el_1, el_2, 1, ti);
+            flecs_type_info_move_dtor(el_2, tmp, 1, ti);
         }
     }
 
@@ -44275,12 +44263,7 @@ void flecs_table_merge_column(
 
         /* Move values into column */
         ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_move_t move = ti->hooks.ctor_move_dtor;
-        if (move) {
-            move(dst_ptr, src_ptr, src_count, ti);
-        } else {
-            ecs_os_memcpy(dst_ptr, src_ptr, elem_size * src_count);
-        }
+        flecs_type_info_ctor_move_dtor(dst_ptr, src_ptr, src_count, ti);
 
         ecs_vec_fini(NULL, src_vec, elem_size);
     }
@@ -59091,11 +59074,10 @@ void flecs_rtt_array_ctor(
     const ecs_type_info_t *type_info)
 {
     ecs_rtt_array_ctx_t *rtt_ctx = type_info->hooks.lifecycle_ctx;
-    ecs_xtor_t ctor = rtt_ctx->type_info->hooks.ctor;
     int i;
     for (i = 0; i < count; i++) {
         void *arr = ECS_ELEM(ptr, type_info->size, i);
-        ctor(arr, rtt_ctx->elem_count, rtt_ctx->type_info);
+        flecs_type_info_ctor(arr, rtt_ctx->elem_count, rtt_ctx->type_info);
     }
 }
 
@@ -59109,11 +59091,10 @@ void flecs_rtt_array_dtor(
     const ecs_type_info_t *type_info)
 {
     ecs_rtt_array_ctx_t *rtt_ctx = type_info->hooks.lifecycle_ctx;
-    ecs_xtor_t dtor = rtt_ctx->type_info->hooks.dtor;
     int i;
     for (i = 0; i < count; i++) {
         void *arr = ECS_ELEM(ptr, type_info->size, i);
-        dtor(arr, rtt_ctx->elem_count, rtt_ctx->type_info);
+        flecs_type_info_dtor(arr, rtt_ctx->elem_count, rtt_ctx->type_info);
     }
 }
 
@@ -59128,12 +59109,12 @@ void flecs_rtt_array_move(
     const ecs_type_info_t *type_info)
 {
     ecs_rtt_array_ctx_t *rtt_ctx = type_info->hooks.lifecycle_ctx;
-    ecs_move_t move = rtt_ctx->type_info->hooks.move;
     int i;
     for (i = 0; i < count; i++) {
         void *src_arr = ECS_ELEM(src_ptr, type_info->size, i);
         void *dst_arr = ECS_ELEM(dst_ptr, type_info->size, i);
-        move(dst_arr, src_arr, rtt_ctx->elem_count, rtt_ctx->type_info);
+        flecs_type_info_move(
+            dst_arr, src_arr, rtt_ctx->elem_count, rtt_ctx->type_info);
     }
 }
 
@@ -59148,12 +59129,12 @@ void flecs_rtt_array_copy(
     const ecs_type_info_t *type_info)
 {
     ecs_rtt_array_ctx_t *rtt_ctx = type_info->hooks.lifecycle_ctx;
-    ecs_copy_t copy = rtt_ctx->type_info->hooks.copy;
     int i;
     for (i = 0; i < count; i++) {
         const void *src_arr = ECS_ELEM(src_ptr, type_info->size, i);
         void *dst_arr = ECS_ELEM(dst_ptr, type_info->size, i);
-        copy(dst_arr, src_arr, rtt_ctx->elem_count, rtt_ctx->type_info);
+        flecs_type_info_copy(
+            dst_arr, src_arr, rtt_ctx->elem_count, rtt_ctx->type_info);
     }
 }
 
@@ -59170,14 +59151,12 @@ int flecs_rtt_array_cmp(
     }
 
     ecs_rtt_array_ctx_t *rtt_ctx = type_info->hooks.lifecycle_ctx;
-    ecs_cmp_t cmp = rtt_ctx->type_info->hooks.cmp;
-    ecs_assert(cmp,  ECS_INVALID_PARAMETER, NULL);
     ecs_size_t element_size = rtt_ctx->type_info->size;
     int i;
     for (i = 0; i < rtt_ctx->elem_count; i++) {
         const void *a_element = ECS_ELEM(a_ptr, element_size, i);
         const void *b_element = ECS_ELEM(b_ptr, element_size, i);
-        int c = cmp(a_element, b_element, rtt_ctx->type_info);
+        int c = flecs_type_info_cmp(a_element, b_element, rtt_ctx->type_info);
         if(c != 0) {
             return c;
         }
@@ -59198,14 +59177,13 @@ bool flecs_rtt_array_equals(
     }
 
     ecs_rtt_array_ctx_t *rtt_ctx = type_info->hooks.lifecycle_ctx;
-    ecs_equals_t equals = rtt_ctx->type_info->hooks.equals;
-    ecs_assert(equals,  ECS_INVALID_PARAMETER, NULL);
     ecs_size_t element_size = rtt_ctx->type_info->size;
     int i;
     for (i = 0; i < rtt_ctx->elem_count; i++) {
         const void *a_element = ECS_ELEM(a_ptr, element_size, i);
         const void *b_element = ECS_ELEM(b_ptr, element_size, i);
-        bool eq = equals(a_element, b_element, rtt_ctx->type_info);
+        bool eq = flecs_type_info_equals(
+            a_element, b_element, rtt_ctx->type_info);
         if(!eq) {
             return false;
         }
@@ -59317,13 +59295,13 @@ void flecs_rtt_vector_dtor(
     const ecs_type_info_t *type_info)
 {
     ecs_rtt_vector_ctx_t *rtt_ctx = type_info->hooks.lifecycle_ctx;
-    ecs_xtor_t dtor = rtt_ctx->type_info->hooks.dtor;
     int i;
     for (i = 0; i < count; i++) {
         ecs_vec_t *vec = ECS_ELEM(ptr, type_info->size, i);
         int32_t num_elements = ecs_vec_count(vec);
-        if (dtor && num_elements) {
-            dtor(ecs_vec_first(vec), num_elements, rtt_ctx->type_info);
+        if (rtt_ctx->type_info->hooks.dtor && num_elements) {
+            flecs_type_info_dtor(
+                ecs_vec_first(vec), num_elements, rtt_ctx->type_info);
         }
         ecs_vec_fini(NULL, vec, rtt_ctx->type_info->size);
     }
@@ -59358,13 +59336,9 @@ void flecs_rtt_vector_copy(
 {
     ecs_rtt_vector_ctx_t *rtt_ctx = type_info->hooks.lifecycle_ctx;
     flecs_rtt_vector_dtor(dst_ptr, count, type_info);
-    ecs_copy_t copy = rtt_ctx->type_info->hooks.copy
-                          ? rtt_ctx->type_info->hooks.copy
-                          : flecs_rtt_default_copy;
-    ecs_xtor_t ctor = rtt_ctx->type_info->hooks.ctor
-                          ? rtt_ctx->type_info->hooks.ctor
-                          : flecs_default_ctor;
-    ecs_xtor_t dtor = rtt_ctx->type_info->hooks.dtor;
+    bool has_copy = rtt_ctx->type_info->hooks.copy != NULL;
+    bool has_ctor = rtt_ctx->type_info->hooks.ctor != NULL;
+    bool has_dtor = rtt_ctx->type_info->hooks.dtor != NULL;
     int i;
     for (i = 0; i < count; i++) {
         const ecs_vec_t *src_vec = ECS_ELEM(src_ptr, type_info->size, i);
@@ -59372,16 +59346,31 @@ void flecs_rtt_vector_copy(
         ecs_vec_init_if(dst_vec, rtt_ctx->type_info->size);
         int32_t src_count = ecs_vec_count(src_vec);
         int32_t dst_count = ecs_vec_count(dst_vec);
-        if (dtor && dst_count) {
-            dtor(ecs_vec_first(dst_vec), dst_count, rtt_ctx->type_info);
+        if (has_dtor && dst_count) {
+            flecs_type_info_dtor(
+                ecs_vec_first(dst_vec), dst_count, rtt_ctx->type_info);
         }
         ecs_vec_set_count(NULL, dst_vec, rtt_ctx->type_info->size, src_count);
-        ctor(ecs_vec_first(dst_vec), src_count, rtt_ctx->type_info);
-        copy(
-            ecs_vec_first(dst_vec),
-            ecs_vec_first(src_vec),
-            src_count,
-            rtt_ctx->type_info);
+        if (has_ctor) {
+            flecs_type_info_ctor(
+                ecs_vec_first(dst_vec), src_count, rtt_ctx->type_info);
+        } else {
+            flecs_default_ctor(
+                ecs_vec_first(dst_vec), src_count, rtt_ctx->type_info);
+        }
+        if (has_copy) {
+            flecs_type_info_copy(
+                ecs_vec_first(dst_vec),
+                ecs_vec_first(src_vec),
+                src_count,
+                rtt_ctx->type_info);
+        } else {
+            flecs_rtt_default_copy(
+                ecs_vec_first(dst_vec),
+                ecs_vec_first(src_vec),
+                src_count,
+                rtt_ctx->type_info);
+        }
     }
 }
 
@@ -59409,8 +59398,6 @@ int flecs_rtt_vector_cmp(
     }
 
     ecs_rtt_vector_ctx_t *rtt_ctx = type_info->hooks.lifecycle_ctx;
-    ecs_cmp_t cmp = rtt_ctx->type_info->hooks.cmp;
-    ecs_assert(cmp,  ECS_INVALID_PARAMETER, NULL);
 
     ecs_size_t element_size = rtt_ctx->type_info->size;
     const void *a = ecs_vec_first(vec_a);
@@ -59420,7 +59407,7 @@ int flecs_rtt_vector_cmp(
     for (i = 0; i < count_a; i++) {
         const void *a_element = ECS_ELEM(a, element_size, i);
         const void *b_element = ECS_ELEM(b, element_size, i);
-        int c = cmp(a_element, b_element, rtt_ctx->type_info);
+        int c = flecs_type_info_cmp(a_element, b_element, rtt_ctx->type_info);
         if(c != 0) {
             return c;
         }
@@ -59452,8 +59439,6 @@ bool flecs_rtt_vector_equals(
     }
 
     ecs_rtt_vector_ctx_t *rtt_ctx = type_info->hooks.lifecycle_ctx;
-    ecs_equals_t equals = rtt_ctx->type_info->hooks.equals;
-    ecs_assert(equals,  ECS_INVALID_PARAMETER, NULL);
 
     ecs_size_t element_size = rtt_ctx->type_info->size;
     const void *a = ecs_vec_first(vec_a);
@@ -59463,7 +59448,8 @@ bool flecs_rtt_vector_equals(
     for (i = 0; i < count_a; i++) {
         const void *a_element = ECS_ELEM(a, element_size, i);
         const void *b_element = ECS_ELEM(b, element_size, i);
-        int eq = equals(a_element, b_element, rtt_ctx->type_info);
+        bool eq = flecs_type_info_equals(
+            a_element, b_element, rtt_ctx->type_info);
         if(!eq) {
             return false;
         }
@@ -64783,9 +64769,7 @@ void ecs_script_const_var_fini(
     }
 
     ecs_assert(ptr->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
-    if (ptr->type_info->hooks.dtor) {
-        ptr->type_info->hooks.dtor(ptr->value.ptr, 1, ptr->type_info);
-    }
+    flecs_type_info_dtor(ptr->value.ptr, 1, ptr->type_info);
 
     ecs_os_free(ptr->value.ptr);
     ptr->value.ptr = NULL;
@@ -64802,12 +64786,8 @@ ECS_COPY(EcsScriptConstVar, dst, src, {
     if (src->value.ptr) {
         ecs_assert(src->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
         dst->value.ptr = ecs_os_malloc(src->type_info->size);
-        if (src->type_info->hooks.copy) {
-            src->type_info->hooks.copy(
-                dst->value.ptr, src->value.ptr, 1, src->type_info);
-        } else {
-            ecs_os_memcpy(dst->value.ptr, src->value.ptr, src->type_info->size);
-        }
+        flecs_type_info_copy(
+            dst->value.ptr, src->value.ptr, 1, src->type_info);
     }
 })
 
@@ -68622,9 +68602,7 @@ int flecs_script_template_eval_prop(
         type = var->value.type = value.type;
         var->type_info = ti;
 
-        if (ti->hooks.ctor) {
-            ti->hooks.ctor(var->value.ptr, 1, ti);
-        }
+        flecs_type_info_ctor(var->value.ptr, 1, ti);
 
         ecs_value_copy_w_type_info(v->world, ti, var->value.ptr, value.ptr);
         ecs_value_fini_w_type_info(v->world, ti, value.ptr);
@@ -68771,7 +68749,7 @@ void flecs_script_template_fini(
         ecs_script_var_t *value = &values[i];
         const ecs_type_info_t *ti = value->type_info;
         if (ti->hooks.dtor) {
-            ti->hooks.dtor(value->value.ptr, 1, ti);
+            flecs_type_info_dtor(value->value.ptr, 1, ti);
         }
         flecs_free(a, ti->size, value->value.ptr);
     }
@@ -68992,7 +68970,7 @@ ecs_script_vars_t* ecs_script_vars_pop(
                 continue;
             }
 
-            var->type_info->hooks.dtor(var->value.ptr, 1, var->type_info);
+            flecs_type_info_dtor(var->value.ptr, 1, var->type_info);
         }
 
         flecs_name_index_fini(&vars->var_index);
@@ -69066,9 +69044,7 @@ ecs_script_var_t* ecs_script_vars_define_id(
     result->value.ptr = flecs_stack_alloc(vars->stack, ti->size, ti->alignment);
     result->type_info = ti;
 
-    if (ti->hooks.ctor) {
-        ti->hooks.ctor(result->value.ptr, 1, ti);
-    }
+    flecs_type_info_ctor(result->value.ptr, 1, ti);
 
     return result;
 error:
@@ -70065,7 +70041,7 @@ void flecs_script_with_set_count(
             &v->r->with_type_info, ecs_type_info_t*, i)[0];
         if (ti) {
             if (ti->hooks.dtor) {
-                ti->hooks.dtor(val->ptr, 1, ti);
+                flecs_type_info_dtor(val->ptr, 1, ti);
             }
             flecs_stack_free(val->ptr, ti->size);
         }
@@ -70976,11 +70952,11 @@ int flecs_script_eval_component(
         if (r->table != table) {
             if (!ti->hooks.ctor) {
                 ecs_os_memset(value.ptr, 0, ti->size);
-            } else if (ti->hooks.ctor) {
+            } else {
                 if (ti->hooks.dtor) {
-                    ti->hooks.dtor(value.ptr, 1, ti);
+                    flecs_type_info_dtor(value.ptr, 1, ti);
                 }
-                ti->hooks.ctor(value.ptr, 1, ti);
+                flecs_type_info_ctor(value.ptr, 1, ti);
             }
         }
 
@@ -71181,9 +71157,7 @@ int flecs_script_eval_with_component(
         value->ptr = flecs_stack_alloc(&v->r->stack, ti->size, ti->alignment);
         value->type = ti->component; // Expression parser needs actual type
 
-        if (ti->hooks.ctor) {
-            ti->hooks.ctor(value->ptr, 1, ti);
-        }
+        flecs_type_info_ctor(value->ptr, 1, ti);
 
         if (flecs_script_eval_expr(v, &node->expr, value)) {
             return -1;
@@ -71380,9 +71354,7 @@ int flecs_script_eval_const(
 
         result.ptr = flecs_stack_calloc(&v->r->stack, ti->size, ti->alignment);
 
-        if (ti->hooks.ctor) {
-            ti->hooks.ctor(result.ptr, 1, ti);
-        }
+        flecs_type_info_ctor(result.ptr, 1, ti);
 
         if (flecs_script_eval_expr(v, &node->expr, &result)) {
             flecs_script_eval_error(v, node,
@@ -71409,9 +71381,7 @@ int flecs_script_eval_const(
             &v->r->stack, ti->size, ti->alignment);
         result.type = value.type;
 
-        if (ti->hooks.ctor) {
-            ti->hooks.ctor(result.ptr, 1, ti);
-        }
+        flecs_type_info_ctor(result.ptr, 1, ti);
 
         ecs_value_copy_w_type_info(v->world, ti, result.ptr, value.ptr);
         ecs_value_fini_w_type_info(v->world, ti, value.ptr);
@@ -71436,7 +71406,7 @@ int flecs_script_eval_const(
 
         /* Clean up value since it'll have been copied into the const var. */
         if (ti->hooks.dtor) {
-            ti->hooks.dtor(result.ptr, 1, ti);
+            flecs_type_info_dtor(result.ptr, 1, ti);
         }
 
         flecs_stack_free(result.ptr, ti->size);
@@ -92362,9 +92332,7 @@ void flecs_expr_value_alloc(
     v->value.type = ti->component;
     v->value.ptr = flecs_stack_alloc(&stack->stack, ti->size, ti->alignment);
 
-    if (ti->hooks.ctor) {
-        ti->hooks.ctor(v->value.ptr, 1, ti);
-    }
+    flecs_type_info_ctor(v->value.ptr, 1, ti);
 }
 
 static
@@ -92382,7 +92350,7 @@ void flecs_expr_value_free(
 
     if (ti && ti->hooks.dtor) {
         ecs_assert(v->value.ptr != NULL, ECS_INTERNAL_ERROR, NULL);
-        ti->hooks.dtor(v->value.ptr, 1, ti);
+        flecs_type_info_dtor(v->value.ptr, 1, ti);
         flecs_stack_free(v->value.ptr, ti->size);
     }
 

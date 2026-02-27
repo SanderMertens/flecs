@@ -14,10 +14,7 @@ int ecs_value_init_w_type_info(
     ecs_check(ti != NULL, ECS_INVALID_PARAMETER, NULL);
     (void)world;
 
-    ecs_xtor_t ctor;
-    if ((ctor = ti->hooks.ctor)) {
-        ctor(ptr, 1, ti);
-    } else {
+    if (!flecs_type_info_ctor(ptr, 1, ti)) {
         ecs_os_memset(ptr, 0, ti->size);
     }
 
@@ -82,10 +79,7 @@ int ecs_value_fini_w_type_info(
     ecs_check(ti != NULL, ECS_INVALID_PARAMETER, NULL);
     (void)world;
 
-    ecs_xtor_t dtor;
-    if ((dtor = ti->hooks.dtor)) {
-        dtor(ptr, 1, ti);
-    }
+    flecs_type_info_dtor(ptr, 1, ti);
 
     return 0;
 error:
@@ -135,12 +129,7 @@ int ecs_value_copy_w_type_info(
     ecs_check(ti != NULL, ECS_INVALID_PARAMETER, NULL);
     (void)world;
 
-    ecs_copy_t copy;
-    if ((copy = ti->hooks.copy)) {
-        copy(dst, src, 1, ti);
-    } else {
-        ecs_os_memcpy(dst, src, ti->size);
-    }
+    flecs_type_info_copy(dst, src, 1, ti);
 
     return 0;
 error:
@@ -171,12 +160,7 @@ int ecs_value_move_w_type_info(
     ecs_check(ti != NULL, ECS_INVALID_PARAMETER, NULL);
     (void)world;
 
-    ecs_move_t move;
-    if ((move = ti->hooks.move)) {
-        move(dst, src, 1, ti);
-    } else {
-        ecs_os_memcpy(dst, src, ti->size);
-    }
+    flecs_type_info_move(dst, src, 1, ti);
 
     return 0;
 error:
@@ -207,12 +191,7 @@ int ecs_value_move_ctor_w_type_info(
     ecs_check(ti != NULL, ECS_INVALID_PARAMETER, NULL);
     (void)world;
 
-    ecs_move_t move;
-    if ((move = ti->hooks.move_ctor)) {
-        move(dst, src, 1, ti);
-    } else {
-        ecs_os_memcpy(dst, src, ti->size);
-    }
+    flecs_type_info_move_ctor(dst, src, 1, ti);
 
     return 0;
 error:

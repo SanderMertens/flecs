@@ -167,11 +167,7 @@ void flecs_instantiate_sparse(
             void *dst_ptr = flecs_sparse_get(cr->sparse, ti->size, instance_child);
             ecs_assert(dst_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
 
-            if (ti->hooks.copy) {
-                ti->hooks.copy(dst_ptr, src_ptr, 1, ti);
-            } else {
-                ecs_os_memcpy(dst_ptr, src_ptr, ti->size);
-            }
+            flecs_type_info_copy(dst_ptr, src_ptr, 1, ti);
 
             flecs_notify_on_set(
                 world, instance_table, row_offset + j, id, true);
@@ -410,11 +406,7 @@ void flecs_instantiate_dont_fragment(
 
                 if (ti) {
                     ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
-                    if (ti->hooks.copy) {
-                        ti->hooks.copy(ptr, base_ptr, 1, ti);
-                    } else {
-                        ecs_os_memcpy(ptr, base_ptr, ti->size);
-                    }
+                    flecs_type_info_copy(ptr, base_ptr, 1, ti);
                 }
 
                 if (ti) {

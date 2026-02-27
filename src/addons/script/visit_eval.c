@@ -84,7 +84,7 @@ void flecs_script_with_set_count(
             &v->r->with_type_info, ecs_type_info_t*, i)[0];
         if (ti) {
             if (ti->hooks.dtor) {
-                ti->hooks.dtor(val->ptr, 1, ti);
+                flecs_type_info_dtor(val->ptr, 1, ti);
             }
             flecs_stack_free(val->ptr, ti->size);
         }
@@ -995,11 +995,11 @@ int flecs_script_eval_component(
         if (r->table != table) {
             if (!ti->hooks.ctor) {
                 ecs_os_memset(value.ptr, 0, ti->size);
-            } else if (ti->hooks.ctor) {
+            } else {
                 if (ti->hooks.dtor) {
-                    ti->hooks.dtor(value.ptr, 1, ti);
+                    flecs_type_info_dtor(value.ptr, 1, ti);
                 }
-                ti->hooks.ctor(value.ptr, 1, ti);
+                flecs_type_info_ctor(value.ptr, 1, ti);
             }
         }
 
@@ -1200,9 +1200,7 @@ int flecs_script_eval_with_component(
         value->ptr = flecs_stack_alloc(&v->r->stack, ti->size, ti->alignment);
         value->type = ti->component; // Expression parser needs actual type
 
-        if (ti->hooks.ctor) {
-            ti->hooks.ctor(value->ptr, 1, ti);
-        }
+        flecs_type_info_ctor(value->ptr, 1, ti);
 
         if (flecs_script_eval_expr(v, &node->expr, value)) {
             return -1;
@@ -1399,9 +1397,7 @@ int flecs_script_eval_const(
 
         result.ptr = flecs_stack_calloc(&v->r->stack, ti->size, ti->alignment);
 
-        if (ti->hooks.ctor) {
-            ti->hooks.ctor(result.ptr, 1, ti);
-        }
+        flecs_type_info_ctor(result.ptr, 1, ti);
 
         if (flecs_script_eval_expr(v, &node->expr, &result)) {
             flecs_script_eval_error(v, node,
@@ -1428,9 +1424,7 @@ int flecs_script_eval_const(
             &v->r->stack, ti->size, ti->alignment);
         result.type = value.type;
 
-        if (ti->hooks.ctor) {
-            ti->hooks.ctor(result.ptr, 1, ti);
-        }
+        flecs_type_info_ctor(result.ptr, 1, ti);
 
         ecs_value_copy_w_type_info(v->world, ti, result.ptr, value.ptr);
         ecs_value_fini_w_type_info(v->world, ti, value.ptr);
@@ -1455,7 +1449,7 @@ int flecs_script_eval_const(
 
         /* Clean up value since it'll have been copied into the const var. */
         if (ti->hooks.dtor) {
-            ti->hooks.dtor(result.ptr, 1, ti);
+            flecs_type_info_dtor(result.ptr, 1, ti);
         }
 
         flecs_stack_free(result.ptr, ti->size);

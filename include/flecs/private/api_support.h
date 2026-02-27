@@ -52,6 +52,73 @@ void flecs_default_ctor(
     int32_t count, 
     const ecs_type_info_t *type_info);
 
+/* Wrapper functions for invoking type hooks with fallback behavior. */
+FLECS_API
+bool flecs_type_info_ctor(
+    void *ptr,
+    int32_t count,
+    const ecs_type_info_t *type_info);
+
+FLECS_API
+bool flecs_type_info_dtor(
+    void *ptr,
+    int32_t count,
+    const ecs_type_info_t *type_info);
+
+FLECS_API
+void flecs_type_info_copy(
+    void *dst,
+    const void *src,
+    int32_t count,
+    const ecs_type_info_t *type_info);
+
+FLECS_API
+void flecs_type_info_move(
+    void *dst,
+    void *src,
+    int32_t count,
+    const ecs_type_info_t *type_info);
+
+FLECS_API
+void flecs_type_info_copy_ctor(
+    void *dst,
+    const void *src,
+    int32_t count,
+    const ecs_type_info_t *type_info);
+
+FLECS_API
+void flecs_type_info_move_ctor(
+    void *dst,
+    void *src,
+    int32_t count,
+    const ecs_type_info_t *type_info);
+
+FLECS_API
+void flecs_type_info_ctor_move_dtor(
+    void *dst,
+    void *src,
+    int32_t count,
+    const ecs_type_info_t *type_info);
+
+FLECS_API
+void flecs_type_info_move_dtor(
+    void *dst,
+    void *src,
+    int32_t count,
+    const ecs_type_info_t *type_info);
+
+FLECS_API
+int flecs_type_info_cmp(
+    const void *a,
+    const void *b,
+    const ecs_type_info_t *type_info);
+
+FLECS_API
+bool flecs_type_info_equals(
+    const void *a,
+    const void *b,
+    const ecs_type_info_t *type_info);
+
 /** Create allocated string from format. 
  * 
  * @param fmt The format string.
