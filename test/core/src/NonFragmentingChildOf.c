@@ -5903,3 +5903,157 @@ void NonFragmentingChildOf_instantiate_parent_w_has_in_hook(void) {
 
     ecs_fini(world);
 }
+
+void NonFragmentingChildOf_add_prefab_tag_after_hierarchy_creation(void) {
+    ecs_world_t* world = ecs_mini();
+
+    ecs_entity_t mom = ecs_new(world);
+    ecs_entity_t daughter = ecs_new(world);
+    ecs_entity_t granddaughter = ecs_new(world);
+
+    ecs_add_id(world, mom, EcsOrderedChildren);
+    ecs_add_id(world, daughter, EcsOrderedChildren);
+
+    ecs_set(world, daughter, EcsParent, {mom});
+    ecs_set(world, granddaughter, EcsParent, {daughter});
+
+    ecs_add_id(world, mom, EcsPrefab);
+
+    ecs_entity_t a = ecs_new(world);
+    ecs_add_pair(world, a, EcsIsA, mom);
+
+    {
+        ecs_entities_t children = ecs_get_ordered_children(world, a);
+        test_int(children.count, 1);
+        ecs_entity_t a_child = children.ids[0];
+        test_assert(ecs_has_pair(world, a_child, EcsIsA, daughter));
+        test_int(ecs_get_target(world, a_child, EcsParentDepth, 0), 1);
+
+        ecs_entities_t gchildren = ecs_get_ordered_children(world, a_child);
+        test_int(gchildren.count, 1);
+        ecs_entity_t a_gchild = gchildren.ids[0];
+        test_assert(ecs_has_pair(world, a_gchild, EcsIsA, granddaughter));
+        test_int(ecs_get_target(world, a_gchild, EcsParentDepth, 0), 2);
+    }
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_defer_add_prefab_tag_after_hierarchy_creation(void) {
+    ecs_world_t* world = ecs_mini();
+
+    ecs_entity_t mom = ecs_new(world);
+    ecs_entity_t daughter = ecs_new(world);
+    ecs_entity_t granddaughter = ecs_new(world);
+
+    ecs_add_id(world, mom, EcsOrderedChildren);
+    ecs_add_id(world, daughter, EcsOrderedChildren);
+
+    ecs_set(world, daughter, EcsParent, {mom});
+    ecs_set(world, granddaughter, EcsParent, {daughter});
+
+    ecs_add_id(world, mom, EcsPrefab);
+
+    ecs_defer_begin(world);
+    ecs_entity_t a = ecs_new(world);
+    ecs_add_pair(world, a, EcsIsA, mom);
+    ecs_defer_end(world);
+
+    {
+        ecs_entities_t children = ecs_get_ordered_children(world, a);
+        test_int(children.count, 1);
+        ecs_entity_t a_child = children.ids[0];
+        test_assert(ecs_has_pair(world, a_child, EcsIsA, daughter));
+        test_int(ecs_get_target(world, a_child, EcsParentDepth, 0), 1);
+
+        ecs_entities_t gchildren = ecs_get_ordered_children(world, a_child);
+        test_int(gchildren.count, 1);
+        ecs_entity_t a_gchild = gchildren.ids[0];
+        test_assert(ecs_has_pair(world, a_gchild, EcsIsA, granddaughter));
+        test_int(ecs_get_target(world, a_gchild, EcsParentDepth, 0), 2);
+    }
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_add_prefab_tag_after_hierarchy_creation_2(void) {
+    ecs_world_t* world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_entity_t mom = ecs_new(world);
+    ecs_entity_t daughter = ecs_new_w(world, Foo);
+    ecs_entity_t granddaughter = ecs_new_w(world, Bar);
+
+    ecs_add_id(world, mom, EcsOrderedChildren);
+    ecs_add_id(world, daughter, EcsOrderedChildren);
+
+    ecs_set(world, daughter, EcsParent, {mom});
+    ecs_set(world, granddaughter, EcsParent, {daughter});
+
+    ecs_add_id(world, mom, EcsPrefab);
+
+    ecs_entity_t a = ecs_new(world);
+    ecs_add_pair(world, a, EcsIsA, mom);
+
+    {
+        ecs_entities_t children = ecs_get_ordered_children(world, a);
+        test_int(children.count, 1);
+        ecs_entity_t a_child = children.ids[0];
+        test_assert(ecs_has_pair(world, a_child, EcsIsA, daughter));
+        test_assert(ecs_has(world, a_child, Foo));
+        test_int(ecs_get_target(world, a_child, EcsParentDepth, 0), 1);
+
+        ecs_entities_t gchildren = ecs_get_ordered_children(world, a_child);
+        test_int(gchildren.count, 1);
+        ecs_entity_t a_gchild = gchildren.ids[0];
+        test_assert(ecs_has_pair(world, a_gchild, EcsIsA, granddaughter));
+        test_assert(ecs_has(world, a_gchild, Bar));
+        test_int(ecs_get_target(world, a_gchild, EcsParentDepth, 0), 2);
+    }
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_defer_add_prefab_tag_after_hierarchy_creation_2(void) {
+    ecs_world_t* world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_entity_t mom = ecs_new(world);
+    ecs_entity_t daughter = ecs_new_w(world, Foo);
+    ecs_entity_t granddaughter = ecs_new_w(world, Bar);
+
+    ecs_add_id(world, mom, EcsOrderedChildren);
+    ecs_add_id(world, daughter, EcsOrderedChildren);
+
+    ecs_set(world, daughter, EcsParent, {mom});
+    ecs_set(world, granddaughter, EcsParent, {daughter});
+
+    ecs_add_id(world, mom, EcsPrefab);
+
+    ecs_defer_begin(world);
+    ecs_entity_t a = ecs_new(world);
+    ecs_add_pair(world, a, EcsIsA, mom);
+    ecs_defer_end(world);
+
+    {
+        ecs_entities_t children = ecs_get_ordered_children(world, a);
+        test_int(children.count, 1);
+        ecs_entity_t a_child = children.ids[0];
+        test_assert(ecs_has_pair(world, a_child, EcsIsA, daughter));
+        test_assert(ecs_has(world, a_child, Foo));
+        test_int(ecs_get_target(world, a_child, EcsParentDepth, 0), 1);
+
+        ecs_entities_t gchildren = ecs_get_ordered_children(world, a_child);
+        test_int(gchildren.count, 1);
+        ecs_entity_t a_gchild = gchildren.ids[0];
+        test_assert(ecs_has_pair(world, a_gchild, EcsIsA, granddaughter));
+        test_assert(ecs_has(world, a_gchild, Bar));
+        test_int(ecs_get_target(world, a_gchild, EcsParentDepth, 0), 2);
+    }
+
+    ecs_fini(world);
+}

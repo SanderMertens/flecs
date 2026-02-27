@@ -937,6 +937,10 @@ void NonFragmentingChildOf_delete_mixed_tree_3(void);
 void NonFragmentingChildOf_delete_mixed_tree_4(void);
 void NonFragmentingChildOf_delete_mixed_tree_5(void);
 void NonFragmentingChildOf_instantiate_parent_w_has_in_hook(void);
+void NonFragmentingChildOf_add_prefab_tag_after_hierarchy_creation(void);
+void NonFragmentingChildOf_defer_add_prefab_tag_after_hierarchy_creation(void);
+void NonFragmentingChildOf_add_prefab_tag_after_hierarchy_creation_2(void);
+void NonFragmentingChildOf_defer_add_prefab_tag_after_hierarchy_creation_2(void);
 
 // Testsuite 'Hierarchies'
 void Hierarchies_setup(void);
@@ -6847,6 +6851,22 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "instantiate_parent_w_has_in_hook",
         NonFragmentingChildOf_instantiate_parent_w_has_in_hook
+    },
+    {
+        "add_prefab_tag_after_hierarchy_creation",
+        NonFragmentingChildOf_add_prefab_tag_after_hierarchy_creation
+    },
+    {
+        "defer_add_prefab_tag_after_hierarchy_creation",
+        NonFragmentingChildOf_defer_add_prefab_tag_after_hierarchy_creation
+    },
+    {
+        "add_prefab_tag_after_hierarchy_creation_2",
+        NonFragmentingChildOf_add_prefab_tag_after_hierarchy_creation_2
+    },
+    {
+        "defer_add_prefab_tag_after_hierarchy_creation_2",
+        NonFragmentingChildOf_defer_add_prefab_tag_after_hierarchy_creation_2
     }
 };
 
@@ -15775,7 +15795,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NULL,
         NULL,
-        231,
+        235,
         NonFragmentingChildOf_testcases
     },
     {

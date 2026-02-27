@@ -968,7 +968,11 @@
                 "delete_mixed_tree_3",
                 "delete_mixed_tree_4",
                 "delete_mixed_tree_5",
-                "instantiate_parent_w_has_in_hook"
+                "instantiate_parent_w_has_in_hook",
+                "add_prefab_tag_after_hierarchy_creation",
+                "defer_add_prefab_tag_after_hierarchy_creation",
+                "add_prefab_tag_after_hierarchy_creation_2",
+                "defer_add_prefab_tag_after_hierarchy_creation_2"
             ]
         }, {
             "id": "Hierarchies",
