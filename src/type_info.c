@@ -18,6 +18,8 @@ bool flecs_type_info_ctor(
     int32_t count,
     const ecs_type_info_t *ti)
 {
+    ecs_assert(!(ti->hooks.flags & ECS_TYPE_HOOK_CTOR_ILLEGAL),
+        ECS_INVALID_OPERATION, "%s", ti->name);
     ecs_xtor_t ctor = ti->hooks.ctor;
     if (ctor) {
         ctor(ptr, count, ti);
@@ -31,6 +33,8 @@ bool flecs_type_info_dtor(
     int32_t count,
     const ecs_type_info_t *ti)
 {
+    ecs_assert(!(ti->hooks.flags & ECS_TYPE_HOOK_DTOR_ILLEGAL),
+        ECS_INVALID_OPERATION, "%s", ti->name);
     ecs_xtor_t dtor = ti->hooks.dtor;
     if (dtor) {
         dtor(ptr, count, ti);
@@ -45,6 +49,8 @@ void flecs_type_info_copy(
     int32_t count,
     const ecs_type_info_t *ti)
 {
+    ecs_assert(!(ti->hooks.flags & ECS_TYPE_HOOK_COPY_ILLEGAL),
+        ECS_INVALID_OPERATION, "%s", ti->name);
     ecs_copy_t copy = ti->hooks.copy;
     if (copy) {
         copy(dst_ptr, src_ptr, count, ti);
@@ -59,6 +65,8 @@ void flecs_type_info_move(
     int32_t count,
     const ecs_type_info_t *ti)
 {
+    ecs_assert(!(ti->hooks.flags & ECS_TYPE_HOOK_MOVE_ILLEGAL),
+        ECS_INVALID_OPERATION, "%s", ti->name);
     ecs_move_t move = ti->hooks.move;
     if (move) {
         move(dst_ptr, src_ptr, count, ti);
@@ -73,6 +81,8 @@ void flecs_type_info_copy_ctor(
     int32_t count,
     const ecs_type_info_t *ti)
 {
+    ecs_assert(!(ti->hooks.flags & ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL),
+        ECS_INVALID_OPERATION, "%s", ti->name);
     ecs_copy_t copy = ti->hooks.copy_ctor;
     if (copy) {
         copy(dst_ptr, src_ptr, count, ti);
@@ -87,6 +97,8 @@ void flecs_type_info_move_ctor(
     int32_t count,
     const ecs_type_info_t *ti)
 {
+    ecs_assert(!(ti->hooks.flags & ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL),
+        ECS_INVALID_OPERATION, "%s", ti->name);
     ecs_move_t move = ti->hooks.move_ctor;
     if (move) {
         move(dst_ptr, src_ptr, count, ti);
@@ -101,6 +113,8 @@ void flecs_type_info_ctor_move_dtor(
     int32_t count,
     const ecs_type_info_t *ti)
 {
+    ecs_assert(!(ti->hooks.flags & ECS_TYPE_HOOK_CTOR_MOVE_DTOR_ILLEGAL),
+        ECS_INVALID_OPERATION, "%s", ti->name);
     ecs_move_t move = ti->hooks.ctor_move_dtor;
     if (move) {
         move(dst_ptr, src_ptr, count, ti);
@@ -115,6 +129,8 @@ void flecs_type_info_move_dtor(
     int32_t count,
     const ecs_type_info_t *ti)
 {
+    ecs_assert(!(ti->hooks.flags & ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL),
+        ECS_INVALID_OPERATION, "%s", ti->name);
     ecs_move_t move = ti->hooks.move_dtor;
     if (move) {
         move(dst_ptr, src_ptr, count, ti);
@@ -128,6 +144,8 @@ int flecs_type_info_cmp(
     const void *b_ptr,
     const ecs_type_info_t *ti)
 {
+    ecs_assert(!(ti->hooks.flags & ECS_TYPE_HOOK_CMP_ILLEGAL),
+        ECS_INVALID_OPERATION, "%s", ti->name);
     ecs_cmp_t cmp = ti->hooks.cmp;
     ecs_assert(cmp != NULL, ECS_INTERNAL_ERROR, NULL);
     return cmp(a_ptr, b_ptr, ti);
@@ -138,6 +156,8 @@ bool flecs_type_info_equals(
     const void *b_ptr,
     const ecs_type_info_t *ti)
 {
+    ecs_assert(!(ti->hooks.flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL),
+        ECS_INVALID_OPERATION, "%s", ti->name);
     ecs_equals_t equals = ti->hooks.equals;
     ecs_assert(equals != NULL, ECS_INTERNAL_ERROR, NULL);
     return equals(a_ptr, b_ptr, ti);
