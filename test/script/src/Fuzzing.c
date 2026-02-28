@@ -8829,3 +8829,107 @@ void Fuzzing_148(void) {
 
     fuzz(expr);
 }
+
+/* crash=out/fuzzer01/crashes/id:000000,sig:07,src:004563,time:11309477,execs:680016,op:havoc,rep:2, sha1=36ddae5ede5747df9862a5579c6b4f72988c8c4b, grouped_crashes=3
+ * asan_stack:
+ *     #0 0x000102916114 in ecs_get_typeid flecs/src/id.c:343:9
+ *     #1 0x00010289a8c0 in flecs_script_can_default_ctor flecs/src/addons/script/visit_eval.c:877:25
+ *     #2 0x00010289a8c0 in flecs_script_eval_component flecs/src/addons/script/visit_eval.c:959:14
+ *     #3 0x00010289a8c0 in flecs_script_eval_node flecs/src/addons/script/visit_eval.c:1677:16
+ *     #4 0x000102893574 in ecs_script_visit_scope_ flecs/src/addons/script/visit.c:129:13
+ *     #5 0x000102897e5c in flecs_script_eval_scope flecs/src/addons/script/visit_eval.c:596:18
+ *     #6 0x000102899584 in flecs_script_eval_node flecs/src/addons/script/visit_eval.c:1671:16
+ *     #7 0x00010289391c in ecs_script_visit_node_ flecs/src/addons/script/visit.c:151:9
+ *     #8 0x00010289b140 in flecs_script_eval_entity flecs/src/addons/script/visit_eval.c:835:9
+ *     #9 0x00010289b140 in flecs_script_eval_node flecs/src/addons/script/visit_eval.c:1718:16
+ *     #10 0x000102893574 in ecs_script_visit_scope_ flecs/src/addons/script/visit.c:129:13
+ *     #11 0x000102897e5c in flecs_script_eval_scope flecs/src/addons/script/visit_eval.c:596:18
+ */
+void Fuzzing_149(void) {
+    const char *expr =
+    HEAD ""
+    LINE "@tree Parent"
+    LINE "e {"
+    LINE "  \013@t\202ee COfusing flecs.meta"
+    LINE ""
+    LINE "struct Attack {"
+    LINE "  value = f32"
+    LINE "}"
+    LINE ""
+    LINE "struct Defense {"
+    LINE "///PosDefense:ck: {20}"
+    LINE "  /////"
+    LINE "  Attack: {10}"
+    LINE "  Defense: {5}"
+    LINE "}"
+    LINE ""
+    LINE "prefab Tank : Ship {"
+    LINE "  Atta}"
+    LINE "  /////////  value = f32"
+    LINE "}"
+    LINE ""
+    LINE "prefab Ship {///////PosDefense: {25}"
+    LINE "}"
+    LINE ""
+    LINE "with Ship {"
+    LINE " ut_a {}"
+    LINE " #scout_b {}"
+    LINE "}"
+    LINE ""
+    LINE ""
+        ;
+
+    fuzz(expr);
+}
+
+/* crash=out/fuzzer01/crashes/id:000003,sig:11,src:004632,time:11453873,execs:703838,op:havoc,rep:1, sha1=338d7a6bb81a601d3638769744cf0891ab5e6aeb, grouped_crashes=1
+ * asan_stack:
+ *     #0 0x0001005131d4 in flecs_type_info_flags flecs/src/storage/table.c:104:19
+ *     #1 0x0001005131d4 in flecs_table_init_columns flecs/src/storage/table.c:174:25
+ *     #2 0x0001005131d4 in flecs_table_init_data flecs/src/storage/table.c:206:5
+ *     #3 0x0001005157c4 in flecs_table_init flecs/src/storage/table.c:824:5
+ *     #4 0x00010052eae0 in flecs_init_table flecs/src/storage/table_graph.c:548:5
+ *     #5 0x00010052eae0 in flecs_table_new flecs/src/storage/table_graph.c:605:5
+ *     #6 0x00010052a320 in flecs_table_ensure flecs/src/storage/table_graph.c
+ *     #7 0x000100529960 in flecs_find_table_with flecs/src/storage/table_graph.c:1034:12
+ *     #8 0x000100529960 in flecs_create_edge_for_add flecs/src/storage/table_graph.c:1174:23
+ *     #9 0x00010052bfac in flecs_table_traverse_add flecs/src/storage/table_graph.c:1236:14
+ *     #10 0x00010052bfac in flecs_find_table_add flecs/src/storage/table_graph.c:1447:13
+ *     #11 0x000100468d28 in flecs_traverse_add flecs/src/entity.c:1058:21
+ */
+void Fuzzing_150(void) {
+    const char *expr =
+    HEAD ""
+    LINE "@tree Parent"
+    LINE "e {"
+    LINE "  \013@tree COfusing flecs.meta"
+    LINE ""
+    LINE "struct Attack {"
+    LINE "  value = f32"
+    LINE "}"
+    LINE ""
+    LINE "struct Defense {"
+    LINE "  value = f32"
+    LINE "{"
+    LINE ""
+    LINE "prefab Ship {"
+    LINE "  Attack: {10}"
+    LINE "  Defense:{25}"
+    LINE "}"
+    LINE ""
+    LINE "with Ship {"
+    LINE " ut_a {}"
+    LINE " #scoa}"
+    LINE "  ////////////PosDefense:ck: {20}"
+    LINE "  ////////////PosDefense:  {5}"
+    LINE "}"
+    LINE ""
+    LINE "prefab Tank : Ship {"
+    LINE "  Attut_b }}"
+    LINE "}"
+    LINE ""
+    LINE ""
+        ;
+
+    fuzz(expr);
+}
