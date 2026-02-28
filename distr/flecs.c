@@ -20836,13 +20836,8 @@ void flecs_spawner_instantiate(
             .added_flags = flags
         };
 
-        int32_t row = ecs_table_count(table);
-        r->table = table;
-        r->row = (uint32_t)row;
-        flecs_table_append(world, table, entity, true, true);
-        flecs_actions_new(world, table, row, 1, &table_diff, 0, false, true);
-
         ecs_entity_t parent = parents[spawn_child->parent_index];
+        ecs_assert(parent != 0, ECS_INTERNAL_ERROR, NULL);
         if (parent != old_parent) {
             cr = flecs_components_ensure(world, ecs_childof(parent));
             old_parent = parent;
@@ -20850,11 +20845,18 @@ void flecs_spawner_instantiate(
 
         ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
 
+        int32_t row = ecs_table_count(table);
+        r->table = table;
+        r->row = (uint32_t)row;
+        flecs_table_append(world, table, entity, true, true);
+
         int32_t parent_column = table->component_map[ecs_id(EcsParent)];
         ecs_assert(parent_column != 0, ECS_INTERNAL_ERROR, NULL);
         EcsParent *parent_ptr = table->data.columns[parent_column - 1].data;
         parent_ptr = &parent_ptr[row];
         parent_ptr->value = parent;
+
+        flecs_actions_new(world, table, row, 1, &table_diff, 0, false, true);
 
         if (is_prefab && spawn_child->child_name) {
             ecs_set_name(world, entity, spawn_child->child_name);

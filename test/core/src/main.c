@@ -831,6 +831,7 @@ void NonFragmentingChildOf_prefab_variant_w_nested_children(void);
 void NonFragmentingChildOf_instantiate_tree_1_child(void);
 void NonFragmentingChildOf_instantiate_tree_2_children(void);
 void NonFragmentingChildOf_instantiate_tree_3_children(void);
+void NonFragmentingChildOf_instantiate_tree_w_on_set_up_childof_observer_crash(void);
 void NonFragmentingChildOf_instantiate_w_dont_inherit(void);
 void NonFragmentingChildOf_instantiate_w_inherit(void);
 void NonFragmentingChildOf_instantiate_w_auto_override(void);
@@ -6427,6 +6428,10 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "instantiate_tree_3_children",
         NonFragmentingChildOf_instantiate_tree_3_children
+    },
+    {
+        "instantiate_tree_w_on_set_up_childof_observer_crash",
+        NonFragmentingChildOf_instantiate_tree_w_on_set_up_childof_observer_crash
     },
     {
         "instantiate_w_dont_inherit",
@@ -15795,7 +15800,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NULL,
         NULL,
-        235,
+        236,
         NonFragmentingChildOf_testcases
     },
     {

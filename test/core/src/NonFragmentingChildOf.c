@@ -2,6 +2,32 @@
 
 static ECS_COMPONENT_DECLARE(Position);
 
+typedef struct ReproObserverCtx {
+    int32_t invoked;
+    ecs_entity_t entity;
+    ecs_entity_t source;
+    Position child_position;
+    Position parent_position;
+} ReproObserverCtx;
+
+static ReproObserverCtx repro_observer_ctx;
+
+static
+void ReproDummyObserver(ecs_iter_t *it) {
+    test_int(it->count, 1);
+
+    Position *child_position = ecs_field(it, Position, 0);
+    Position *parent_position = ecs_field(it, Position, 1);
+    test_assert(child_position != NULL);
+    test_assert(parent_position != NULL);
+
+    repro_observer_ctx.invoked ++;
+    repro_observer_ctx.entity = it->entities[0];
+    repro_observer_ctx.source = it->sources[1];
+    repro_observer_ctx.child_position = child_position[0];
+    repro_observer_ctx.parent_position = parent_position[0];
+}
+
 void NonFragmentingChildOf_set_parent_no_ordered_children(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -3143,6 +3169,49 @@ void NonFragmentingChildOf_instantiate_tree_3_children(void) {
         test_int(p->x, 13);
         test_int(p->y, 23);
     }
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_instantiate_tree_w_on_set_up_childof_observer_crash(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t prefab = ecs_new_w_id(world, EcsPrefab);
+    ecs_set(world, prefab, Position, {10, 20});
+
+    ecs_entity_t prefab_child = ecs_new_w_parent(world, prefab, "Child");
+    ecs_set(world, prefab_child, Position, {11, 21});
+
+    ecs_os_zeromem(&repro_observer_ctx);
+
+    ecs_observer(world, {
+        .query.expr = "Position, Position(up ChildOf)",
+        .events = { EcsOnSet },
+        .callback = ReproDummyObserver
+    });
+
+    ecs_entity_t instance = ecs_new_w_pair(world, EcsIsA, prefab);
+    test_assert(instance != 0);
+
+    ecs_entities_t children = ecs_get_ordered_children(world, instance);
+    test_int(children.count, 1);
+    ecs_entity_t instance_child = children.ids[0];
+    test_assert(instance_child != 0);
+
+    const Position *p = ecs_get(world, instance_child, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 11);
+    test_int(p->y, 21);
+
+    test_int(repro_observer_ctx.invoked, 1);
+    test_uint(repro_observer_ctx.entity, instance_child);
+    test_uint(repro_observer_ctx.source, instance);
+    test_int(repro_observer_ctx.child_position.x, 11);
+    test_int(repro_observer_ctx.child_position.y, 21);
+    test_int(repro_observer_ctx.parent_position.x, 10);
+    test_int(repro_observer_ctx.parent_position.y, 20);
 
     ecs_fini(world);
 }

@@ -863,6 +863,7 @@
                 "instantiate_tree_1_child",
                 "instantiate_tree_2_children",
                 "instantiate_tree_3_children",
+                "instantiate_tree_w_on_set_up_childof_observer_crash",
                 "instantiate_w_dont_inherit",
                 "instantiate_w_inherit",
                 "instantiate_w_auto_override",
