@@ -6165,3 +6165,119 @@ void Toggle_toggle_0_src(void) {
 
     ecs_fini(world);
 }
+
+static
+int32_t toggle_or_match_count(
+    ecs_world_t *world,
+    ecs_query_t *q)
+{
+    int32_t count = 0;
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        count += it.count;
+    }
+    return count;
+}
+
+void Toggle_or_chain_3_toggleable_tags(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+
+    ecs_add_id(world, TagA, EcsCanToggle);
+    ecs_add_id(world, TagB, EcsCanToggle);
+    ecs_add_id(world, TagC, EcsCanToggle);
+
+    ecs_entity_t e = ecs_new_w_id(world, TagA);
+    ecs_add(world, e, TagB);
+    ecs_add(world, e, TagC);
+
+    ecs_enable_id(world, e, TagA, false);
+    ecs_enable_id(world, e, TagB, false);
+    ecs_enable_id(world, e, TagC, false);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { .id = TagA, .oper = EcsOr },
+            { .id = TagB, .oper = EcsOr },
+            { .id = TagC }
+        },
+        .cache_kind = cache_kind
+    });
+    test_assert(q != NULL);
+
+    test_int(toggle_or_match_count(world, q), 0);
+
+    ecs_enable_id(world, e, TagA, true);
+    test_int(toggle_or_match_count(world, q), 1);
+
+    ecs_enable_id(world, e, TagA, false);
+    ecs_enable_id(world, e, TagB, true);
+    test_int(toggle_or_match_count(world, q), 1);
+
+    ecs_enable_id(world, e, TagB, false);
+    ecs_enable_id(world, e, TagC, true);
+    test_int(toggle_or_match_count(world, q), 1);
+
+    ecs_enable_id(world, e, TagA, true);
+    ecs_enable_id(world, e, TagB, true);
+    test_int(toggle_or_match_count(world, q), 1);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Toggle_or_chain_3_toggleable_components(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+
+    ecs_add_id(world, ecs_id(Position), EcsCanToggle);
+    ecs_add_id(world, ecs_id(Velocity), EcsCanToggle);
+    ecs_add_id(world, ecs_id(Mass), EcsCanToggle);
+
+    ecs_entity_t e = ecs_new_w(world, Position);
+    ecs_set(world, e, Position, {10, 20});
+    ecs_set(world, e, Velocity, {1, 2});
+    ecs_set(world, e, Mass, {100});
+
+    ecs_enable_component(world, e, Position, false);
+    ecs_enable_component(world, e, Velocity, false);
+    ecs_enable_component(world, e, Mass, false);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { .id = ecs_id(Position), .oper = EcsOr },
+            { .id = ecs_id(Velocity), .oper = EcsOr },
+            { .id = ecs_id(Mass) }
+        },
+        .cache_kind = cache_kind
+    });
+    test_assert(q != NULL);
+
+    test_int(toggle_or_match_count(world, q), 0);
+
+    ecs_enable_component(world, e, Position, true);
+    test_int(toggle_or_match_count(world, q), 1);
+
+    ecs_enable_component(world, e, Position, false);
+    ecs_enable_component(world, e, Velocity, true);
+    test_int(toggle_or_match_count(world, q), 1);
+
+    ecs_enable_component(world, e, Velocity, false);
+    ecs_enable_component(world, e, Mass, true);
+    test_int(toggle_or_match_count(world, q), 1);
+
+    ecs_enable_component(world, e, Position, true);
+    ecs_enable_component(world, e, Velocity, true);
+    test_int(toggle_or_match_count(world, q), 1);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
