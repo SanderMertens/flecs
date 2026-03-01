@@ -2082,6 +2082,8 @@
                 "fixed_2_src_w_toggle",
                 "this_w_fixed_src_w_toggle",
                 "fixed_src_w_this_w_toggle",
+                "or_chain_3_toggleable_tags",
+                "or_chain_3_toggleable_components",
                 "this_from_nothing",
                 "this",
                 "this_skip_initial",
