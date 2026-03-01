@@ -94,7 +94,7 @@ flecs_query_row_mask_t flecs_query_get_row_mask(
                     ecs_assert((64 * block_index) < bs->size, ECS_INTERNAL_ERROR, NULL);
                     block |= bs->data[block_index];
                     chain_has_bitset = true;
-                } else if (ecs_table_has_id(it->world, table, id)) {
+                } else if (ecs_table_has_id(q->world, table, id)) {
                     block = UINT64_MAX;
                     break;
                 }
