@@ -2004,6 +2004,8 @@ void Toggle_fixed_src_2_component_toggle(void);
 void Toggle_fixed_2_src_w_toggle(void);
 void Toggle_this_w_fixed_src_w_toggle(void);
 void Toggle_fixed_src_w_this_w_toggle(void);
+void Toggle_or_chain_3_toggleable_tags(void);
+void Toggle_or_chain_3_toggleable_components(void);
 void Toggle_this_from_nothing(void);
 void Toggle_this(void);
 void Toggle_this_skip_initial(void);
@@ -10630,6 +10632,14 @@ bake_test_case Toggle_testcases[] = {
         Toggle_fixed_src_w_this_w_toggle
     },
     {
+        "or_chain_3_toggleable_tags",
+        Toggle_or_chain_3_toggleable_tags
+    },
+    {
+        "or_chain_3_toggleable_components",
+        Toggle_or_chain_3_toggleable_components
+    },
+    {
         "this_from_nothing",
         Toggle_this_from_nothing
     },
@@ -13931,7 +13941,7 @@ static bake_test_suite suites[] = {
         "Toggle",
         Toggle_setup,
         NULL,
-        163,
+        165,
         Toggle_testcases,
         1,
         Toggle_params

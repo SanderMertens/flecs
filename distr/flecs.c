@@ -79960,13 +79960,15 @@ int flecs_query_insert_toggle(
                     continue;
                 }
 
+                ecs_flags64_t field_bit = 1llu << term->field_index;
+
                 /* Source matches, set flag */
                 if (term->oper == EcsNot) {
-                    not_toggles |= (1llu << j);
+                    not_toggles |= field_bit;
                 } else if (term->oper == EcsOptional) {
-                    optional_toggles |= (1llu << j);
+                    optional_toggles |= field_bit;
                 } else {
-                    and_toggles |= (1llu << j);
+                    and_toggles |= field_bit;
                 }
 
                 fields_done |= (1llu << j);
@@ -79999,9 +80001,13 @@ int flecs_query_insert_toggle(
              * set, separate instructions let the query engine backtrack to get 
              * the right results. */
             if (optional_toggles) {
+                ecs_flags64_t optional_done = 0;
                 for (j = i; j < term_count; j ++) {
-                    uint64_t field_bit = 1ull << j;
+                    uint64_t field_bit = 1ull << terms[j].field_index;
                     if (!(optional_toggles & field_bit)) {
+                        continue;
+                    }
+                    if (optional_done & field_bit) {
                         continue;
                     }
 
@@ -80011,6 +80017,8 @@ int flecs_query_insert_toggle(
                     op.first.entity = field_bit;
                     op.flags = cur.flags;
                     flecs_query_op_insert(&op, ctx);
+
+                    optional_done |= field_bit;
                 }
             }
         }
@@ -85194,6 +85202,7 @@ static inline int32_t flecs_ctz64(uint64_t v) {
 static
 flecs_query_row_mask_t flecs_query_get_row_mask(
     ecs_iter_t *it,
+    const ecs_query_t *q,
     ecs_table_t *table,
     int32_t block_index,
     ecs_flags64_t and_fields,
@@ -85217,6 +85226,57 @@ flecs_query_row_mask_t flecs_query_get_row_mask(
             ecs_assert(it->set_fields & field_bit, ECS_INTERNAL_ERROR, NULL);
         } else {
             ecs_abort(ECS_INTERNAL_ERROR, NULL);
+        }
+
+        ecs_term_t *field_term = NULL;
+        int32_t ti;
+        for (ti = 0; ti < q->term_count; ti ++) {
+            if (q->terms[ti].field_index == i) {
+                field_term = &q->terms[ti];
+                break;
+            }
+        }
+
+        bool is_or = false;
+        if (field_term) {
+            is_or = field_term->oper == EcsOr ||
+                ((field_term != q->terms) && (field_term[-1].oper == EcsOr));
+        }
+
+        if (is_or) {
+            int32_t start = flecs_itoi32(field_term - q->terms);
+            int32_t end = start;
+
+            while (start && q->terms[start - 1].oper == EcsOr) {
+                start --;
+            }
+            while (end < (q->term_count - 1) && q->terms[end].oper == EcsOr) {
+                end ++;
+            }
+
+            ecs_flags64_t block = 0;
+            bool chain_has_bitset = false;
+
+            int32_t j;
+            for (j = start; j <= end; j ++) {
+                ecs_id_t id = q->terms[j].id;
+                ecs_bitset_t *bs = flecs_table_get_toggle(table, id);
+                if (bs) {
+                    ecs_assert((64 * block_index) < bs->size, ECS_INTERNAL_ERROR, NULL);
+                    block |= bs->data[block_index];
+                    chain_has_bitset = true;
+                } else if (ecs_table_has_id(it->world, table, id)) {
+                    block = UINT64_MAX;
+                    break;
+                }
+            }
+
+            if (chain_has_bitset || block == UINT64_MAX) {
+                mask &= block;
+                has_bitset = has_bitset || chain_has_bitset;
+            }
+
+            continue;
         }
 
         ecs_id_t id = it->ids[i];
@@ -85368,7 +85428,8 @@ compute_block:
         block_index = op_ctx->block_index = new_block_index;
 
         flecs_query_row_mask_t row_mask = flecs_query_get_row_mask(
-            it, table, block_index, and_fields, not_fields, op_ctx);
+            it, &ctx->query->pub, table, block_index,
+            and_fields, not_fields, op_ctx);
 
         /* If table doesn't have bitset columns, all columns match */
         if (!(op_ctx->has_bitset = row_mask.has_bitset)) {
