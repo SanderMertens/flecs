@@ -770,7 +770,7 @@ int flecs_query_insert_toggle(
                     continue;
                 }
 
-                ecs_flags64_t field_bit = 1llu << term->field_index;
+                const ecs_flags64_t field_bit = 1llu << term->field_index;
 
                 /* Source matches, set flag */
                 if (term->oper == EcsNot) {
@@ -813,7 +813,7 @@ int flecs_query_insert_toggle(
             if (optional_toggles) {
                 ecs_flags64_t optional_fields_processed = 0;
                 for (j = i; j < term_count; j ++) {
-                    uint64_t field_bit = 1ull << terms[j].field_index;
+                    const uint64_t field_bit = 1ull << terms[j].field_index;
                     if (!(optional_toggles & field_bit)) {
                         continue;
                     }
