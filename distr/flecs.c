@@ -80001,13 +80001,13 @@ int flecs_query_insert_toggle(
              * set, separate instructions let the query engine backtrack to get 
              * the right results. */
             if (optional_toggles) {
-                ecs_flags64_t optional_done = 0;
+                ecs_flags64_t optional_fields_processed = 0;
                 for (j = i; j < term_count; j ++) {
                     uint64_t field_bit = 1ull << terms[j].field_index;
                     if (!(optional_toggles & field_bit)) {
                         continue;
                     }
-                    if (optional_done & field_bit) {
+                    if (optional_fields_processed & field_bit) {
                         continue;
                     }
 
@@ -80018,7 +80018,7 @@ int flecs_query_insert_toggle(
                     op.flags = cur.flags;
                     flecs_query_op_insert(&op, ctx);
 
-                    optional_done |= field_bit;
+                    optional_fields_processed |= field_bit;
                 }
             }
         }
@@ -85202,7 +85202,7 @@ static inline int32_t flecs_ctz64(uint64_t v) {
 static
 flecs_query_row_mask_t flecs_query_get_row_mask(
     ecs_iter_t *it,
-    const ecs_query_t *q,
+    const ecs_query_t *query,
     ecs_table_t *table,
     int32_t block_index,
     ecs_flags64_t and_fields,
@@ -85229,10 +85229,10 @@ flecs_query_row_mask_t flecs_query_get_row_mask(
         }
 
         ecs_term_t *field_term = NULL;
-        int32_t ti;
-        for (ti = 0; ti < q->term_count; ti ++) {
-            if (q->terms[ti].field_index == i) {
-                field_term = &q->terms[ti];
+        int32_t term_idx;
+        for (term_idx = 0; term_idx < query->term_count; term_idx ++) {
+            if (query->terms[term_idx].field_index == i) {
+                field_term = &query->terms[term_idx];
                 break;
             }
         }
@@ -85240,32 +85240,39 @@ flecs_query_row_mask_t flecs_query_get_row_mask(
         bool is_or = false;
         if (field_term) {
             is_or = field_term->oper == EcsOr ||
-                ((field_term != q->terms) && (field_term[-1].oper == EcsOr));
+                ((field_term != query->terms) && (field_term[-1].oper == EcsOr));
         }
 
         if (is_or) {
-            int32_t start = flecs_itoi32(field_term - q->terms);
+            int32_t start = flecs_itoi32(field_term - query->terms);
             int32_t end = start;
 
-            while (start && q->terms[start - 1].oper == EcsOr) {
+            /* Find start and end of OR chain. The oper field is stored on the 
+             * term preceding the operand, so:
+             * - start loop checks if previous term connects via OR
+             * - end loop checks if current term connects to next via OR */
+            while (start && query->terms[start - 1].oper == EcsOr) {
                 start --;
             }
-            while (end < (q->term_count - 1) && q->terms[end].oper == EcsOr) {
+            while (end < (query->term_count - 1) && query->terms[end].oper == EcsOr) {
                 end ++;
             }
 
             ecs_flags64_t block = 0;
             bool chain_has_bitset = false;
 
-            int32_t j;
-            for (j = start; j <= end; j ++) {
-                ecs_id_t id = q->terms[j].id;
+            int32_t or_chain_term_idx;
+            for (or_chain_term_idx = start; or_chain_term_idx <= end; or_chain_term_idx ++) {
+                ecs_id_t id = query->terms[or_chain_term_idx].id;
                 ecs_bitset_t *bs = flecs_table_get_toggle(table, id);
                 if (bs) {
                     ecs_assert((64 * block_index) < bs->size, ECS_INTERNAL_ERROR, NULL);
                     block |= bs->data[block_index];
                     chain_has_bitset = true;
-                } else if (ecs_table_has_id(q->world, table, id)) {
+                } else if (ecs_table_has_id(query->world, table, id)) {
+                    /* If a non-toggle component is present, it is always enabled 
+                     * for all entities in the table. Since this is an OR chain,
+                     * the entire expression becomes true for this block. */
                     block = UINT64_MAX;
                     break;
                 }
@@ -85565,7 +85572,6 @@ repeat: {}
 
     return result;
 }
-
 
 /**
  * @file query/engine/eval_trav.c
