@@ -1,3 +1,4 @@
+
 /* A friendly warning from bake.test
  * ----------------------------------------------------------------------------
  * This file is generated. To add/remove testcases modify the 'project.json' of
@@ -5,8 +6,9 @@
  * ----------------------------------------------------------------------------
  */
 
-#include <bake_test.h>
+#include <core.h>
 
+// Testsuite 'Id'
 void Id_0_is_wildcard(void);
 void Id_wildcard_is_wildcard(void);
 void Id_any_is_wildcard(void);
@@ -86,6 +88,7 @@ void Id_value_wildcard_pair_match_pair(void);
 void Id_pair_match_value_pair(void);
 void Id_wildcard_pair_match_value_pair(void);
 
+// Testsuite 'Entity'
 void Entity_init_id(void);
 void Entity_init_id_exceed_32_bits(void);
 void Entity_init_id_name(void);
@@ -239,6 +242,7 @@ void Entity_entity_w_large_id_name(void);
 void Entity_toggle_component(void);
 void Entity_toggle_component_before_add(void);
 
+// Testsuite 'Each'
 void Each_each_tag(void);
 void Each_each_component(void);
 void Each_each_pair(void);
@@ -247,6 +251,7 @@ void Each_each_pair_tgt_wildcard(void);
 void Each_each_root_entities(void);
 void Each_each_empty_root_entities(void);
 
+// Testsuite 'Iter'
 void Iter_page_iter_0_0(void);
 void Iter_page_iter_1_0(void);
 void Iter_page_iter_0_1(void);
@@ -306,6 +311,7 @@ void Iter_rule_worker_iter_w_fini(void);
 void Iter_to_str_before_next(void);
 void Iter_to_str(void);
 
+// Testsuite 'Search'
 void Search_search(void);
 void Search_search_wildcard(void);
 void Search_search_wildcard_w_offset(void);
@@ -327,6 +333,7 @@ void Search_search_relation_dont_inherit(void);
 void Search_search_relation_dont_inherit_from_parent(void);
 void Search_search_relation_exclusive(void);
 
+// Testsuite 'Event'
 void Event_table_1_id_w_trigger(void);
 void Event_table_2_ids_w_trigger(void);
 void Event_table_1_id_w_observer(void);
@@ -364,6 +371,7 @@ void Event_enqueue_custom_implicit_any(void);
 void Event_enqueue_custom_after_large_cmd(void);
 void Event_enqueue_on_readonly_world(void);
 
+// Testsuite 'New'
 void New_setup(void);
 void New_empty(void);
 void New_component(void);
@@ -395,6 +403,7 @@ void New_new_w_table_component(void);
 void New_new_w_table_sparse_component(void);
 void New_new_w_table_override(void);
 
+// Testsuite 'New_w_Count'
 void New_w_Count_empty(void);
 void New_w_Count_component(void);
 void New_w_Count_tag(void);
@@ -421,6 +430,7 @@ void New_w_Count_bulk_init_w_alive_entity(void);
 void New_w_Count_bulk_init_w_cmd_in_on_add_hook(void);
 void New_w_Count_bulk_init_w_cmd_in_on_add_observer(void);
 
+// Testsuite 'Add'
 void Add_zero(void);
 void Add_component(void);
 void Add_component_again(void);
@@ -450,6 +460,7 @@ void Add_add_random_id(void);
 void Add_table_of_added_not_alive_id(void);
 void Add_table_of_added_not_alive_pair(void);
 
+// Testsuite 'Remove'
 void Remove_zero(void);
 void Remove_1_of_1(void);
 void Remove_1_of_2(void);
@@ -465,6 +476,7 @@ void Remove_remove_some_wildcard_pair(void);
 void Remove_remove_all_tgt_wildcard_pair(void);
 void Remove_remove_all_rel_wildcard_pair(void);
 
+// Testsuite 'GlobalComponentIds'
 void GlobalComponentIds_declare(void);
 void GlobalComponentIds_declare_w_entity(void);
 void GlobalComponentIds_declare_2_world(void);
@@ -473,6 +485,7 @@ void GlobalComponentIds_declare_tag_w_entity(void);
 void GlobalComponentIds_declare_entity(void);
 void GlobalComponentIds_reuse_300_component_ids(void);
 
+// Testsuite 'Sparse'
 void Sparse_setup(void);
 void Sparse_has(void);
 void Sparse_has_pair(void);
@@ -693,6 +706,7 @@ void Sparse_check_regular_exclusive_target_in_sparse_observer(void);
 void Sparse_child_of_component_w_sparse(void);
 void Sparse_child_of_component_w_sparse_exclusive(void);
 
+// Testsuite 'NonFragmentingChildOf'
 void NonFragmentingChildOf_set_parent_no_ordered_children(void);
 void NonFragmentingChildOf_add_ordered_children_before_set_parent(void);
 void NonFragmentingChildOf_add_ordered_children_after_set_parent(void);
@@ -932,6 +946,7 @@ void NonFragmentingChildOf_defer_add_prefab_tag_after_hierarchy_creation(void);
 void NonFragmentingChildOf_add_prefab_tag_after_hierarchy_creation_2(void);
 void NonFragmentingChildOf_defer_add_prefab_tag_after_hierarchy_creation_2(void);
 
+// Testsuite 'Hierarchies'
 void Hierarchies_setup(void);
 void Hierarchies_empty_scope(void);
 void Hierarchies_get_parent(void);
@@ -1042,6 +1057,7 @@ void Hierarchies_lookup_after_delete_from_parent(void);
 void Hierarchies_defer_batch_remove_name_w_add_childof(void);
 void Hierarchies_defer_batch_remove_childof_w_add_name(void);
 
+// Testsuite 'OrderedChildren'
 void OrderedChildren_iter_no_children(void);
 void OrderedChildren_children_1_table(void);
 void OrderedChildren_children_2_tables(void);
@@ -1090,6 +1106,7 @@ void OrderedChildren_bulk_create_ordered_children(void);
 void OrderedChildren_get_ordered_children_from_prefab_instance_nested_children(void);
 void OrderedChildren_ordered_children_parent_is_traversable(void);
 
+// Testsuite 'Has'
 void Has_zero(void);
 void Has_1_of_0(void);
 void Has_1_of_1(void);
@@ -1113,12 +1130,14 @@ void Has_has_childof_wildcard_w_parent(void);
 void Has_owns_childof_w_parent(void);
 void Has_owns_childof_wildcard_w_parent(void);
 
+// Testsuite 'Count'
 void Count_count_empty(void);
 void Count_count_w_entity_0(void);
 void Count_count_1_component(void);
 void Count_count_disabled(void);
 void Count_count_prefab(void);
 
+// Testsuite 'Get_component'
 void Get_component_setup(void);
 void Get_component_get_empty(void);
 void Get_component_get_1_from_1(void);
@@ -1135,6 +1154,7 @@ void Get_component_get_tag(void);
 void Get_component_get_pair_tag(void);
 void Get_component_get_wildcard(void);
 
+// Testsuite 'Reference'
 void Reference_setup(void);
 void Reference_get_ref(void);
 void Reference_get_ref_after_add(void);
@@ -1162,6 +1182,7 @@ void Reference_ref_after_shrink(void);
 void Reference_ref_after_shrink_2(void);
 void Reference_ref_after_shrink_w_freed_pages(void);
 
+// Testsuite 'Delete'
 void Delete_setup(void);
 void Delete_delete_1(void);
 void Delete_delete_1_again(void);
@@ -1196,6 +1217,7 @@ void Delete_move_w_dtor_no_move(void);
 void Delete_move_w_no_dtor_move(void);
 void Delete_wrap_generation_count(void);
 
+// Testsuite 'OnDelete'
 void OnDelete_flags(void);
 void OnDelete_id_default(void);
 void OnDelete_id_remove(void);
@@ -1324,6 +1346,7 @@ void OnDelete_delete_with_2(void);
 void OnDelete_delete_with_3(void);
 void OnDelete_empty_after_remove(void);
 
+// Testsuite 'Set'
 void Set_set_empty(void);
 void Set_set_nonempty(void);
 void Set_set_non_empty_override(void);
@@ -1363,6 +1386,7 @@ void Set_emplace_w_observer_w_add(void);
 void Set_emplace_existing_w_check(void);
 void Set_emplace_pair(void);
 
+// Testsuite 'ReadWrite'
 void ReadWrite_read(void);
 void ReadWrite_nested_read(void);
 void ReadWrite_write(void);
@@ -1372,6 +1396,7 @@ void ReadWrite_add_while_write(void);
 void ReadWrite_read_from_stage(void);
 void ReadWrite_write_from_stage(void);
 
+// Testsuite 'Lookup'
 void Lookup_setup(void);
 void Lookup_lookup(void);
 void Lookup_lookup_component(void);
@@ -1437,6 +1462,7 @@ void Lookup_lookup_path_63_chars(void);
 void Lookup_lookup_path_64_chars(void);
 void Lookup_lookup_path_65_chars(void);
 
+// Testsuite 'Singleton'
 void Singleton_add_singleton(void);
 void Singleton_remove_singleton(void);
 void Singleton_set_get_singleton(void);
@@ -1451,6 +1477,7 @@ void Singleton_trait_add_singleton_pair_to_other(void);
 void Singleton_add_trait_after_in_use(void);
 void Singleton_add_trait_after_pair_in_use(void);
 
+// Testsuite 'Clone'
 void Clone_empty(void);
 void Clone_empty_w_value(void);
 void Clone_null(void);
@@ -1468,6 +1495,7 @@ void Clone_1_tag_1_component(void);
 void Clone_1_tag_1_component_w_value(void);
 void Clone_clone_w_name(void);
 
+// Testsuite 'ComponentLifecycle'
 void ComponentLifecycle_setup(void);
 void ComponentLifecycle_ctor_on_add(void);
 void ComponentLifecycle_ctor_on_new(void);
@@ -1608,6 +1636,7 @@ void ComponentLifecycle_has_in_on_add_hook_move(void);
 void ComponentLifecycle_get_in_on_add_hook_new(void);
 void ComponentLifecycle_get_in_on_add_hook_move(void);
 
+// Testsuite 'Pairs'
 void Pairs_type_w_one_pair(void);
 void Pairs_type_w_two_pairs(void);
 void Pairs_add_pair(void);
@@ -1743,6 +1772,7 @@ void Pairs_has_value_pair_wildcard(void);
 void Pairs_has_value_pair_any(void);
 void Pairs_target_w_value_pair(void);
 
+// Testsuite 'Trigger'
 void Trigger_on_add_trigger_before_table(void);
 void Trigger_on_add_trigger_after_table(void);
 void Trigger_on_remove_trigger_before_table(void);
@@ -1864,6 +1894,7 @@ void Trigger_on_set_superset_after_filter_observer_w_on_add(void);
 void Trigger_on_set_superset_after_filter_observer_w_on_add_isa_after_set(void);
 void Trigger_on_set_superset_after_filter_observer_w_on_add_2(void);
 
+// Testsuite 'Observer'
 void Observer_on_add_before_edge(void);
 void Observer_on_add_after_edge(void);
 void Observer_on_add_wildcard_before_edge(void);
@@ -2192,6 +2223,7 @@ void Observer_cache_test_14(void);
 void Observer_cache_test_15(void);
 void Observer_cache_test_16(void);
 
+// Testsuite 'ObserverOnSet'
 void ObserverOnSet_set_1_of_1(void);
 void ObserverOnSet_set_1_of_2(void);
 void ObserverOnSet_set_1_of_3(void);
@@ -2220,6 +2252,7 @@ void ObserverOnSet_set_from_nothing(void);
 void ObserverOnSet_add_0_entity_in_on_set(void);
 void ObserverOnSet_on_set_prefab(void);
 
+// Testsuite 'TriggerOnAdd'
 void TriggerOnAdd_setup(void);
 void TriggerOnAdd_new_match_1_of_1(void);
 void TriggerOnAdd_new_match_1_of_2(void);
@@ -2252,6 +2285,7 @@ void TriggerOnAdd_emplace(void);
 void TriggerOnAdd_add_after_delete_trigger(void);
 void TriggerOnAdd_add_after_delete_wildcard_id_trigger(void);
 
+// Testsuite 'TriggerOnRemove'
 void TriggerOnRemove_remove(void);
 void TriggerOnRemove_remove_no_match(void);
 void TriggerOnRemove_delete(void);
@@ -2265,6 +2299,7 @@ void TriggerOnRemove_remove_after_delete_wildcard_id_trigger(void);
 void TriggerOnRemove_has_removed_tag_trigger_1_tag(void);
 void TriggerOnRemove_has_removed_tag_trigger_2_tags(void);
 
+// Testsuite 'TriggerOnSet'
 void TriggerOnSet_set(void);
 void TriggerOnSet_set_new(void);
 void TriggerOnSet_set_again(void);
@@ -2281,6 +2316,7 @@ void TriggerOnSet_un_set_tag_w_remove(void);
 void TriggerOnSet_un_set_tag_w_clear(void);
 void TriggerOnSet_un_set_tag_w_delete(void);
 
+// Testsuite 'Monitor'
 void Monitor_1_comp(void);
 void Monitor_2_comps(void);
 void Monitor_1_comp_1_not(void);
@@ -2300,6 +2336,7 @@ void Monitor_monitor_other_table(void);
 void Monitor_monitor_component(void);
 void Monitor_yield_existing(void);
 
+// Testsuite 'Prefab'
 void Prefab_setup(void);
 void Prefab_new_w_prefab(void);
 void Prefab_new_w_count_prefab(void);
@@ -2498,6 +2535,7 @@ void Prefab_remove_all(void);
 void Prefab_delete_with(void);
 void Prefab_prefab_children_after_adding_prefab(void);
 
+// Testsuite 'World'
 void World_setup(void);
 void World_progress_w_0(void);
 void World_progress_w_t(void);
@@ -2654,6 +2692,7 @@ void World_add_can_toggle_after_pair_query(void);
 void World_add_traversable_after_pair_query(void);
 void World_set_component_after_in_use(void);
 
+// Testsuite 'ExclusiveAccess'
 void ExclusiveAccess_self(void);
 void ExclusiveAccess_self_world_fini(void);
 void ExclusiveAccess_begin_twice(void);
@@ -2770,6 +2809,7 @@ void ExclusiveAccess_locked_get_path(void);
 void ExclusiveAccess_other_w_name_read(void);
 void ExclusiveAccess_other_w_name_write(void);
 
+// Testsuite 'WorldInfo'
 void WorldInfo_get_tick(void);
 void WorldInfo_table_count(void);
 void WorldInfo_table_create_count(void);
@@ -2777,6 +2817,7 @@ void WorldInfo_table_delete_count(void);
 void WorldInfo_id_tag_component_count(void);
 void WorldInfo_id_pair_count(void);
 
+// Testsuite 'Type'
 void Type_setup(void);
 void Type_type_of_1_tostr(void);
 void Type_type_of_2_tostr(void);
@@ -2802,6 +2843,7 @@ void Type_role_disabled_str(void);
 void Type_large_type_expr(void);
 void Type_large_type_expr_limit(void);
 
+// Testsuite 'Commands'
 void Commands_is_deferred(void);
 void Commands_is_defer_suspended(void);
 void Commands_defer_new(void);
@@ -2978,6 +3020,7 @@ void Commands_set_existing_after_remove_w_is_a(void);
 void Commands_set_existing_after_remove_w_is_a_move_table(void);
 void Commands_set_existing_after_remove_2_stages(void);
 
+// Testsuite 'SingleThreadStaging'
 void SingleThreadStaging_setup(void);
 void SingleThreadStaging_new_empty(void);
 void SingleThreadStaging_new_w_component(void);
@@ -3047,6 +3090,7 @@ void SingleThreadStaging_lookup_after_stage_count_change(void);
 void SingleThreadStaging_lookup_w_scope_after_stage_count_change(void);
 void SingleThreadStaging_with_after_stage_count_change(void);
 
+// Testsuite 'Stresstests'
 void Stresstests_setup(void);
 void Stresstests_create_1m_set_two_components(void);
 void Stresstests_create_delete_entity_random_components(void);
@@ -3063,6 +3107,7 @@ void Stresstests_create_2m_entities_1_comp(void);
 void Stresstests_create_2m_entities_bulk_1_comp(void);
 void Stresstests_add_1k_tags(void);
 
+// Testsuite 'Table'
 void Table_get_index(void);
 void Table_get_index_after_tag(void);
 void Table_get_index_not_in_table(void);
@@ -3095,10 +3140,12 @@ void Table_clear_table_on_remove_hooks(void);
 void Table_clear_table_on_remove_observer(void);
 void Table_65_records_w_tgt(void);
 
+// Testsuite 'Poly'
 void Poly_on_set_poly_observer(void);
 void Poly_on_set_poly_query(void);
 void Poly_on_set_poly_system(void);
 
+// Testsuite 'Internals'
 void Internals_setup(void);
 void Internals_deactivate_table(void);
 void Internals_activate_table(void);
@@ -3145,6 +3192,7 @@ void Internals_non_fragmenting_component_record_depth_nested_after_parent_add(vo
 void Internals_component_record_for_value_pair(void);
 void Internals_create_65k_tables(void);
 
+// Testsuite 'Error'
 void Error_setup(void);
 void Error_abort(void);
 void Error_abort_w_param(void);
@@ -3159,6 +3207,7 @@ void Error_log_warning(void);
 void Error_log_error(void);
 void Error_set_log_level_return(void);
 
+// Testsuite 'StackAlloc'
 void StackAlloc_init_fini(void);
 void StackAlloc_multiple_overlapping_cursors(void);
 
@@ -3474,7 +3523,7 @@ bake_test_case Id_testcases[] = {
     {
         "wildcard_pair_match_value_pair",
         Id_wildcard_pair_match_value_pair
-    },
+    }
 };
 
 bake_test_case Entity_testcases[] = {
@@ -4085,7 +4134,7 @@ bake_test_case Entity_testcases[] = {
     {
         "toggle_component_before_add",
         Entity_toggle_component_before_add
-    },
+    }
 };
 
 bake_test_case Each_testcases[] = {
@@ -4116,7 +4165,7 @@ bake_test_case Each_testcases[] = {
     {
         "each_empty_root_entities",
         Each_each_empty_root_entities
-    },
+    }
 };
 
 bake_test_case Iter_testcases[] = {
@@ -4351,7 +4400,7 @@ bake_test_case Iter_testcases[] = {
     {
         "to_str",
         Iter_to_str
-    },
+    }
 };
 
 bake_test_case Search_testcases[] = {
@@ -4434,7 +4483,7 @@ bake_test_case Search_testcases[] = {
     {
         "search_relation_exclusive",
         Search_search_relation_exclusive
-    },
+    }
 };
 
 bake_test_case Event_testcases[] = {
@@ -4581,7 +4630,7 @@ bake_test_case Event_testcases[] = {
     {
         "enqueue_on_readonly_world",
         Event_enqueue_on_readonly_world
-    },
+    }
 };
 
 bake_test_case New_testcases[] = {
@@ -4700,7 +4749,7 @@ bake_test_case New_testcases[] = {
     {
         "new_w_table_override",
         New_new_w_table_override
-    },
+    }
 };
 
 bake_test_case New_w_Count_testcases[] = {
@@ -4803,7 +4852,7 @@ bake_test_case New_w_Count_testcases[] = {
     {
         "bulk_init_w_cmd_in_on_add_observer",
         New_w_Count_bulk_init_w_cmd_in_on_add_observer
-    },
+    }
 };
 
 bake_test_case Add_testcases[] = {
@@ -4918,7 +4967,7 @@ bake_test_case Add_testcases[] = {
     {
         "table_of_added_not_alive_pair",
         Add_table_of_added_not_alive_pair
-    },
+    }
 };
 
 bake_test_case Remove_testcases[] = {
@@ -4977,7 +5026,7 @@ bake_test_case Remove_testcases[] = {
     {
         "remove_all_rel_wildcard_pair",
         Remove_remove_all_rel_wildcard_pair
-    },
+    }
 };
 
 bake_test_case GlobalComponentIds_testcases[] = {
@@ -5008,7 +5057,7 @@ bake_test_case GlobalComponentIds_testcases[] = {
     {
         "reuse_300_component_ids",
         GlobalComponentIds_reuse_300_component_ids
-    },
+    }
 };
 
 bake_test_case Sparse_testcases[] = {
@@ -5883,12 +5932,7 @@ bake_test_case Sparse_testcases[] = {
     {
         "child_of_component_w_sparse_exclusive",
         Sparse_child_of_component_w_sparse_exclusive
-    },
-};
-
-const char* Sparse_fragment_param[] = {"yes", "no"};
-bake_test_param Sparse_params[] = {
-    {"fragment", (char**)Sparse_fragment_param, 2},
+    }
 };
 
 bake_test_case NonFragmentingChildOf_testcases[] = {
@@ -6843,7 +6887,7 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "defer_add_prefab_tag_after_hierarchy_creation_2",
         NonFragmentingChildOf_defer_add_prefab_tag_after_hierarchy_creation_2
-    },
+    }
 };
 
 bake_test_case Hierarchies_testcases[] = {
@@ -7278,7 +7322,7 @@ bake_test_case Hierarchies_testcases[] = {
     {
         "defer_batch_remove_childof_w_add_name",
         Hierarchies_defer_batch_remove_childof_w_add_name
-    },
+    }
 };
 
 bake_test_case OrderedChildren_testcases[] = {
@@ -7469,7 +7513,7 @@ bake_test_case OrderedChildren_testcases[] = {
     {
         "ordered_children_parent_is_traversable",
         OrderedChildren_ordered_children_parent_is_traversable
-    },
+    }
 };
 
 bake_test_case Has_testcases[] = {
@@ -7560,7 +7604,7 @@ bake_test_case Has_testcases[] = {
     {
         "owns_childof_wildcard_w_parent",
         Has_owns_childof_wildcard_w_parent
-    },
+    }
 };
 
 bake_test_case Count_testcases[] = {
@@ -7583,7 +7627,7 @@ bake_test_case Count_testcases[] = {
     {
         "count_prefab",
         Count_count_prefab
-    },
+    }
 };
 
 bake_test_case Get_component_testcases[] = {
@@ -7642,7 +7686,7 @@ bake_test_case Get_component_testcases[] = {
     {
         "get_wildcard",
         Get_component_get_wildcard
-    },
+    }
 };
 
 bake_test_case Reference_testcases[] = {
@@ -7745,7 +7789,7 @@ bake_test_case Reference_testcases[] = {
     {
         "ref_after_shrink_w_freed_pages",
         Reference_ref_after_shrink_w_freed_pages
-    },
+    }
 };
 
 bake_test_case Delete_testcases[] = {
@@ -7876,7 +7920,7 @@ bake_test_case Delete_testcases[] = {
     {
         "wrap_generation_count",
         Delete_wrap_generation_count
-    },
+    }
 };
 
 bake_test_case OnDelete_testcases[] = {
@@ -8387,7 +8431,7 @@ bake_test_case OnDelete_testcases[] = {
     {
         "empty_after_remove",
         OnDelete_empty_after_remove
-    },
+    }
 };
 
 bake_test_case Set_testcases[] = {
@@ -8542,7 +8586,7 @@ bake_test_case Set_testcases[] = {
     {
         "emplace_pair",
         Set_emplace_pair
-    },
+    }
 };
 
 bake_test_case ReadWrite_testcases[] = {
@@ -8577,7 +8621,7 @@ bake_test_case ReadWrite_testcases[] = {
     {
         "write_from_stage",
         ReadWrite_write_from_stage
-    },
+    }
 };
 
 bake_test_case Lookup_testcases[] = {
@@ -8832,7 +8876,7 @@ bake_test_case Lookup_testcases[] = {
     {
         "lookup_path_65_chars",
         Lookup_lookup_path_65_chars
-    },
+    }
 };
 
 bake_test_case Singleton_testcases[] = {
@@ -8887,7 +8931,7 @@ bake_test_case Singleton_testcases[] = {
     {
         "add_trait_after_pair_in_use",
         Singleton_add_trait_after_pair_in_use
-    },
+    }
 };
 
 bake_test_case Clone_testcases[] = {
@@ -8954,7 +8998,7 @@ bake_test_case Clone_testcases[] = {
     {
         "clone_w_name",
         Clone_clone_w_name
-    },
+    }
 };
 
 bake_test_case ComponentLifecycle_testcases[] = {
@@ -9509,7 +9553,7 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "get_in_on_add_hook_move",
         ComponentLifecycle_get_in_on_add_hook_move
-    },
+    }
 };
 
 bake_test_case Pairs_testcases[] = {
@@ -10048,7 +10092,7 @@ bake_test_case Pairs_testcases[] = {
     {
         "target_w_value_pair",
         Pairs_target_w_value_pair
-    },
+    }
 };
 
 bake_test_case Trigger_testcases[] = {
@@ -10531,7 +10575,7 @@ bake_test_case Trigger_testcases[] = {
     {
         "on_set_superset_after_filter_observer_w_on_add_2",
         Trigger_on_set_superset_after_filter_observer_w_on_add_2
-    },
+    }
 };
 
 bake_test_case Observer_testcases[] = {
@@ -11842,7 +11886,7 @@ bake_test_case Observer_testcases[] = {
     {
         "cache_test_16",
         Observer_cache_test_16
-    },
+    }
 };
 
 bake_test_case ObserverOnSet_testcases[] = {
@@ -11953,7 +11997,7 @@ bake_test_case ObserverOnSet_testcases[] = {
     {
         "on_set_prefab",
         ObserverOnSet_on_set_prefab
-    },
+    }
 };
 
 bake_test_case TriggerOnAdd_testcases[] = {
@@ -12076,7 +12120,7 @@ bake_test_case TriggerOnAdd_testcases[] = {
     {
         "add_after_delete_wildcard_id_trigger",
         TriggerOnAdd_add_after_delete_wildcard_id_trigger
-    },
+    }
 };
 
 bake_test_case TriggerOnRemove_testcases[] = {
@@ -12127,7 +12171,7 @@ bake_test_case TriggerOnRemove_testcases[] = {
     {
         "has_removed_tag_trigger_2_tags",
         TriggerOnRemove_has_removed_tag_trigger_2_tags
-    },
+    }
 };
 
 bake_test_case TriggerOnSet_testcases[] = {
@@ -12190,7 +12234,7 @@ bake_test_case TriggerOnSet_testcases[] = {
     {
         "un_set_tag_w_delete",
         TriggerOnSet_un_set_tag_w_delete
-    },
+    }
 };
 
 bake_test_case Monitor_testcases[] = {
@@ -12265,7 +12309,7 @@ bake_test_case Monitor_testcases[] = {
     {
         "yield_existing",
         Monitor_yield_existing
-    },
+    }
 };
 
 bake_test_case Prefab_testcases[] = {
@@ -13052,7 +13096,7 @@ bake_test_case Prefab_testcases[] = {
     {
         "prefab_children_after_adding_prefab",
         Prefab_prefab_children_after_adding_prefab
-    },
+    }
 };
 
 bake_test_case World_testcases[] = {
@@ -13671,7 +13715,7 @@ bake_test_case World_testcases[] = {
     {
         "set_component_after_in_use",
         World_set_component_after_in_use
-    },
+    }
 };
 
 bake_test_case ExclusiveAccess_testcases[] = {
@@ -14134,7 +14178,7 @@ bake_test_case ExclusiveAccess_testcases[] = {
     {
         "other_w_name_write",
         ExclusiveAccess_other_w_name_write
-    },
+    }
 };
 
 bake_test_case WorldInfo_testcases[] = {
@@ -14161,7 +14205,7 @@ bake_test_case WorldInfo_testcases[] = {
     {
         "id_pair_count",
         WorldInfo_id_pair_count
-    },
+    }
 };
 
 bake_test_case Type_testcases[] = {
@@ -14256,7 +14300,7 @@ bake_test_case Type_testcases[] = {
     {
         "large_type_expr_limit",
         Type_large_type_expr_limit
-    },
+    }
 };
 
 bake_test_case Commands_testcases[] = {
@@ -14959,7 +15003,7 @@ bake_test_case Commands_testcases[] = {
     {
         "set_existing_after_remove_2_stages",
         Commands_set_existing_after_remove_2_stages
-    },
+    }
 };
 
 bake_test_case SingleThreadStaging_testcases[] = {
@@ -15230,7 +15274,7 @@ bake_test_case SingleThreadStaging_testcases[] = {
     {
         "with_after_stage_count_change",
         SingleThreadStaging_with_after_stage_count_change
-    },
+    }
 };
 
 bake_test_case Stresstests_testcases[] = {
@@ -15289,7 +15333,7 @@ bake_test_case Stresstests_testcases[] = {
     {
         "add_1k_tags",
         Stresstests_add_1k_tags
-    },
+    }
 };
 
 bake_test_case Table_testcases[] = {
@@ -15416,7 +15460,7 @@ bake_test_case Table_testcases[] = {
     {
         "65_records_w_tgt",
         Table_65_records_w_tgt
-    },
+    }
 };
 
 bake_test_case Poly_testcases[] = {
@@ -15431,7 +15475,7 @@ bake_test_case Poly_testcases[] = {
     {
         "on_set_poly_system",
         Poly_on_set_poly_system
-    },
+    }
 };
 
 bake_test_case Internals_testcases[] = {
@@ -15610,7 +15654,7 @@ bake_test_case Internals_testcases[] = {
     {
         "create_65k_tables",
         Internals_create_65k_tables
-    },
+    }
 };
 
 bake_test_case Error_testcases[] = {
@@ -15661,7 +15705,7 @@ bake_test_case Error_testcases[] = {
     {
         "set_log_level_return",
         Error_set_log_level_return
-    },
+    }
 };
 
 bake_test_case StackAlloc_testcases[] = {
@@ -15672,91 +15716,96 @@ bake_test_case StackAlloc_testcases[] = {
     {
         "multiple_overlapping_cursors",
         StackAlloc_multiple_overlapping_cursors
-    },
+    }
+};
+
+const char* Sparse_fragment_param[] = {"yes", "no"};
+bake_test_param Sparse_params[] = {
+    {"fragment", (char**)Sparse_fragment_param, 2}
 };
 
 static bake_test_suite suites[] = {
     {
         "Id",
-        0,
-        0,
+        NULL,
+        NULL,
         78,
         Id_testcases
     },
     {
         "Entity",
-        0,
-        0,
+        NULL,
+        NULL,
         152,
         Entity_testcases
     },
     {
         "Each",
-        0,
-        0,
+        NULL,
+        NULL,
         7,
         Each_testcases
     },
     {
         "Iter",
-        0,
-        0,
+        NULL,
+        NULL,
         58,
         Iter_testcases
     },
     {
         "Search",
-        0,
-        0,
+        NULL,
+        NULL,
         20,
         Search_testcases
     },
     {
         "Event",
-        0,
-        0,
+        NULL,
+        NULL,
         36,
         Event_testcases
     },
     {
         "New",
         New_setup,
-        0,
+        NULL,
         29,
         New_testcases
     },
     {
         "New_w_Count",
-        0,
-        0,
+        NULL,
+        NULL,
         25,
         New_w_Count_testcases
     },
     {
         "Add",
-        0,
-        0,
+        NULL,
+        NULL,
         28,
         Add_testcases
     },
     {
         "Remove",
-        0,
-        0,
+        NULL,
+        NULL,
         14,
         Remove_testcases
     },
     {
         "GlobalComponentIds",
-        0,
-        0,
+        NULL,
+        NULL,
         7,
         GlobalComponentIds_testcases
     },
     {
         "Sparse",
         Sparse_setup,
-        0,
+        NULL,
         218,
         Sparse_testcases,
         1,
@@ -15764,256 +15813,256 @@ static bake_test_suite suites[] = {
     },
     {
         "NonFragmentingChildOf",
-        0,
-        0,
+        NULL,
+        NULL,
         238,
         NonFragmentingChildOf_testcases
     },
     {
         "Hierarchies",
         Hierarchies_setup,
-        0,
+        NULL,
         108,
         Hierarchies_testcases
     },
     {
         "OrderedChildren",
-        0,
-        0,
+        NULL,
+        NULL,
         47,
         OrderedChildren_testcases
     },
     {
         "Has",
-        0,
-        0,
+        NULL,
+        NULL,
         22,
         Has_testcases
     },
     {
         "Count",
-        0,
-        0,
+        NULL,
+        NULL,
         5,
         Count_testcases
     },
     {
         "Get_component",
         Get_component_setup,
-        0,
+        NULL,
         14,
         Get_component_testcases
     },
     {
         "Reference",
         Reference_setup,
-        0,
+        NULL,
         25,
         Reference_testcases
     },
     {
         "Delete",
         Delete_setup,
-        0,
+        NULL,
         32,
         Delete_testcases
     },
     {
         "OnDelete",
-        0,
-        0,
+        NULL,
+        NULL,
         127,
         OnDelete_testcases
     },
     {
         "Set",
-        0,
-        0,
+        NULL,
+        NULL,
         38,
         Set_testcases
     },
     {
         "ReadWrite",
-        0,
-        0,
+        NULL,
+        NULL,
         8,
         ReadWrite_testcases
     },
     {
         "Lookup",
         Lookup_setup,
-        0,
+        NULL,
         63,
         Lookup_testcases
     },
     {
         "Singleton",
-        0,
-        0,
+        NULL,
+        NULL,
         13,
         Singleton_testcases
     },
     {
         "Clone",
-        0,
-        0,
+        NULL,
+        NULL,
         16,
         Clone_testcases
     },
     {
         "ComponentLifecycle",
         ComponentLifecycle_setup,
-        0,
+        NULL,
         138,
         ComponentLifecycle_testcases
     },
     {
         "Pairs",
-        0,
-        0,
+        NULL,
+        NULL,
         134,
         Pairs_testcases
     },
     {
         "Trigger",
-        0,
-        0,
+        NULL,
+        NULL,
         120,
         Trigger_testcases
     },
     {
         "Observer",
-        0,
-        0,
+        NULL,
+        NULL,
         327,
         Observer_testcases
     },
     {
         "ObserverOnSet",
-        0,
-        0,
+        NULL,
+        NULL,
         27,
         ObserverOnSet_testcases
     },
     {
         "TriggerOnAdd",
         TriggerOnAdd_setup,
-        0,
+        NULL,
         30,
         TriggerOnAdd_testcases
     },
     {
         "TriggerOnRemove",
-        0,
-        0,
+        NULL,
+        NULL,
         12,
         TriggerOnRemove_testcases
     },
     {
         "TriggerOnSet",
-        0,
-        0,
+        NULL,
+        NULL,
         15,
         TriggerOnSet_testcases
     },
     {
         "Monitor",
-        0,
-        0,
+        NULL,
+        NULL,
         18,
         Monitor_testcases
     },
     {
         "Prefab",
         Prefab_setup,
-        0,
+        NULL,
         196,
         Prefab_testcases
     },
     {
         "World",
         World_setup,
-        0,
+        NULL,
         154,
         World_testcases
     },
     {
         "ExclusiveAccess",
-        0,
-        0,
+        NULL,
+        NULL,
         115,
         ExclusiveAccess_testcases
     },
     {
         "WorldInfo",
-        0,
-        0,
+        NULL,
+        NULL,
         6,
         WorldInfo_testcases
     },
     {
         "Type",
         Type_setup,
-        0,
+        NULL,
         23,
         Type_testcases
     },
     {
         "Commands",
-        0,
-        0,
+        NULL,
+        NULL,
         175,
         Commands_testcases
     },
     {
         "SingleThreadStaging",
         SingleThreadStaging_setup,
-        0,
+        NULL,
         67,
         SingleThreadStaging_testcases
     },
     {
         "Stresstests",
         Stresstests_setup,
-        0,
+        NULL,
         14,
         Stresstests_testcases
     },
     {
         "Table",
-        0,
-        0,
+        NULL,
+        NULL,
         31,
         Table_testcases
     },
     {
         "Poly",
-        0,
-        0,
+        NULL,
+        NULL,
         3,
         Poly_testcases
     },
     {
         "Internals",
         Internals_setup,
-        0,
+        NULL,
         44,
         Internals_testcases
     },
     {
         "Error",
         Error_setup,
-        0,
+        NULL,
         12,
         Error_testcases
     },
     {
         "StackAlloc",
-        0,
-        0,
+        NULL,
+        NULL,
         2,
         StackAlloc_testcases
-    },
+    }
 };
 
 int main(int argc, char *argv[]) {
