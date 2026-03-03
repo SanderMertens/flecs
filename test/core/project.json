@@ -689,6 +689,7 @@
                 "on_delete_sparse_panic",
                 "on_delete_target_sparse_remove",
                 "on_delete_target_sparse_delete",
+                "component_delete_sparse_multiple_entities",
                 "on_delete_target_sparse_panic",
                 "delete_relationship",
                 "delete_parent_of_relationship",
