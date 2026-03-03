@@ -20927,6 +20927,18 @@ void flecs_bootstrap_spawner(
  */
 
 
+#ifdef FLECS_DEBUG
+static
+void flecs_type_info_mark_in_use(
+    const ecs_type_info_t *ti)
+{
+    ecs_type_info_t *ti_mut = ECS_CONST_CAST(ecs_type_info_t*, ti);
+    ti_mut->hooks.flags |= ECS_TYPE_HOOK_IN_USE;
+}
+#else
+#define flecs_type_info_mark_in_use(ti) ((void)ti)
+#endif
+
 void flecs_default_ctor(
     void *ptr, 
     int32_t count, 
@@ -20942,6 +20954,7 @@ bool flecs_type_info_ctor(
 {
     ecs_assert(!(ti->hooks.flags & ECS_TYPE_HOOK_CTOR_ILLEGAL),
         ECS_INVALID_OPERATION, "%s", ti->name);
+    flecs_type_info_mark_in_use(ti);
     ecs_xtor_t ctor = ti->hooks.ctor;
     if (ctor) {
         ctor(ptr, count, ti);
@@ -20957,6 +20970,7 @@ bool flecs_type_info_dtor(
 {
     ecs_assert(!(ti->hooks.flags & ECS_TYPE_HOOK_DTOR_ILLEGAL),
         ECS_INVALID_OPERATION, "%s", ti->name);
+    flecs_type_info_mark_in_use(ti);
     ecs_xtor_t dtor = ti->hooks.dtor;
     if (dtor) {
         dtor(ptr, count, ti);
@@ -20973,6 +20987,7 @@ void flecs_type_info_copy(
 {
     ecs_assert(!(ti->hooks.flags & ECS_TYPE_HOOK_COPY_ILLEGAL),
         ECS_INVALID_OPERATION, "%s", ti->name);
+    flecs_type_info_mark_in_use(ti);
     ecs_copy_t copy = ti->hooks.copy;
     if (copy) {
         copy(dst_ptr, src_ptr, count, ti);
@@ -20989,6 +21004,7 @@ void flecs_type_info_move(
 {
     ecs_assert(!(ti->hooks.flags & ECS_TYPE_HOOK_MOVE_ILLEGAL),
         ECS_INVALID_OPERATION, "%s", ti->name);
+    flecs_type_info_mark_in_use(ti);
     ecs_move_t move = ti->hooks.move;
     if (move) {
         move(dst_ptr, src_ptr, count, ti);
@@ -21005,6 +21021,7 @@ void flecs_type_info_copy_ctor(
 {
     ecs_assert(!(ti->hooks.flags & ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL),
         ECS_INVALID_OPERATION, "%s", ti->name);
+    flecs_type_info_mark_in_use(ti);
     ecs_copy_t copy = ti->hooks.copy_ctor;
     if (copy) {
         copy(dst_ptr, src_ptr, count, ti);
@@ -21021,6 +21038,7 @@ void flecs_type_info_move_ctor(
 {
     ecs_assert(!(ti->hooks.flags & ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL),
         ECS_INVALID_OPERATION, "%s", ti->name);
+    flecs_type_info_mark_in_use(ti);
     ecs_move_t move = ti->hooks.move_ctor;
     if (move) {
         move(dst_ptr, src_ptr, count, ti);
@@ -21037,6 +21055,7 @@ void flecs_type_info_ctor_move_dtor(
 {
     ecs_assert(!(ti->hooks.flags & ECS_TYPE_HOOK_CTOR_MOVE_DTOR_ILLEGAL),
         ECS_INVALID_OPERATION, "%s", ti->name);
+    flecs_type_info_mark_in_use(ti);
     ecs_move_t move = ti->hooks.ctor_move_dtor;
     if (move) {
         move(dst_ptr, src_ptr, count, ti);
@@ -21053,6 +21072,7 @@ void flecs_type_info_move_dtor(
 {
     ecs_assert(!(ti->hooks.flags & ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL),
         ECS_INVALID_OPERATION, "%s", ti->name);
+    flecs_type_info_mark_in_use(ti);
     ecs_move_t move = ti->hooks.move_dtor;
     if (move) {
         move(dst_ptr, src_ptr, count, ti);
@@ -21068,6 +21088,7 @@ int flecs_type_info_cmp(
 {
     ecs_assert(!(ti->hooks.flags & ECS_TYPE_HOOK_CMP_ILLEGAL),
         ECS_INVALID_OPERATION, "%s", ti->name);
+    flecs_type_info_mark_in_use(ti);
     ecs_cmp_t cmp = ti->hooks.cmp;
     ecs_assert(cmp != NULL, ECS_INTERNAL_ERROR, NULL);
     return cmp(a_ptr, b_ptr, ti);
@@ -21080,6 +21101,7 @@ bool flecs_type_info_equals(
 {
     ecs_assert(!(ti->hooks.flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL),
         ECS_INVALID_OPERATION, "%s", ti->name);
+    flecs_type_info_mark_in_use(ti);
     ecs_equals_t equals = ti->hooks.equals;
     ecs_assert(equals != NULL, ECS_INTERNAL_ERROR, NULL);
     return equals(a_ptr, b_ptr, ti);
@@ -58404,6 +58426,16 @@ void flecs_meta_import_definitions(
 
 #ifdef FLECS_META
 
+#ifdef FLECS_DEBUG
+static
+bool flecs_meta_is_builtin_type(
+    ecs_entity_t type)
+{
+    return type < EcsFirstUserComponentId ||
+        (type > FLECS_HI_COMPONENT_ID && type < EcsFirstUserEntityId);
+}
+#endif
+
 void flecs_type_serializer_dtor(
     EcsTypeSerializer *ptr) 
 {
@@ -58501,6 +58533,18 @@ int flecs_init_type(
 {
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(type != 0, ECS_INTERNAL_ERROR, NULL);
+
+#ifdef FLECS_DEBUG
+    if (!flecs_meta_is_builtin_type(type)) {
+        const ecs_type_info_t *ti = ecs_get_type_info(world, type);
+        if (ti) {
+            ecs_assert(!(ti->hooks.flags & ECS_TYPE_HOOK_IN_USE),
+                ECS_INVALID_OPERATION,
+                "cannot modify type '%s' after it is in use",
+                ecs_get_name(world, type));
+        }
+    }
+#endif
 
     EcsType *meta_type = ecs_ensure(world, type, EcsType);
     if (meta_type->kind == 0) {

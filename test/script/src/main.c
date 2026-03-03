@@ -1,4 +1,3 @@
-
 /* A friendly warning from bake.test
  * ----------------------------------------------------------------------------
  * This file is generated. To add/remove testcases modify the 'project.json' of
@@ -6,9 +5,8 @@
  * ----------------------------------------------------------------------------
  */
 
-#include <script.h>
+#include <bake_test.h>
 
-// Testsuite 'Eval'
 void Eval_null(void);
 void Eval_empty(void);
 void Eval_space(void);
@@ -453,7 +451,6 @@ void Eval_scientific_notation_positive_exponent_sign(void);
 void Eval_const_var_w_new_expr_two_tags(void);
 void Eval_const_var_w_new_expr_tag_component(void);
 
-// Testsuite 'Template'
 void Template_template_no_scope(void);
 void Template_template_no_props(void);
 void Template_template_prop(void);
@@ -536,7 +533,6 @@ void Template_template_w_name_annotation_update_script(void);
 void Template_template_w_tree_parent(void);
 void Template_template_w_tree_parent_change_value(void);
 
-// Testsuite 'Error'
 void Error_multi_line_comment_after_newline_before_newline_scope_open(void);
 void Error_unterminated_multi_line_comment_after_line_comment(void);
 void Error_missing_end_of_scope(void);
@@ -638,7 +634,6 @@ void Error_annotation_to_unresolved_identifier_managed_parse_twice(void);
 void Error_annotation_to_unresolved_identifier_managed_parse_twice_2(void);
 void Error_annotation_to_tag(void);
 
-// Testsuite 'Expr'
 void Expr_setup(void);
 void Expr_add_2_int_literals(void);
 void Expr_add_2_int_literals_twice(void);
@@ -979,7 +974,6 @@ void Expr_new_name_expr_entity_w_component(void);
 void Expr_new_name_expr_entity_w_kind(void);
 void Expr_new_entity_w_unterminated_scope(void);
 
-// Testsuite 'ExprAst'
 void ExprAst_binary_f32_var_add_f32_var(void);
 void ExprAst_binary_f32_var_add_int(void);
 void ExprAst_binary_f32_var_div_int(void);
@@ -990,7 +984,6 @@ void ExprAst_interpolated_string_curly_brackets(void);
 void ExprAst_interpolated_string_curly_brackets_w_var(void);
 void ExprAst_template_w_foldable_const(void);
 
-// Testsuite 'Vars'
 void Vars_declare_1_var(void);
 void Vars_declare_2_vars(void);
 void Vars_declare_vars_nested_scope(void);
@@ -1006,7 +999,6 @@ void Vars_nested_struct_expr_w_struct_var(void);
 void Vars_redeclare_in_scope(void);
 void Vars_init_fini_vars(void);
 
-// Testsuite 'Serialize'
 void Serialize_bool(void);
 void Serialize_byte(void);
 void Serialize_char(void);
@@ -1079,7 +1071,6 @@ void Serialize_opaque_array(void);
 void Serialize_opaque_vector(void);
 void Serialize_opaque_string_vector(void);
 
-// Testsuite 'Deserialize'
 void Deserialize_setup(void);
 void Deserialize_bool(void);
 void Deserialize_byte(void);
@@ -1209,7 +1200,6 @@ void Deserialize_opaque_vector_struct_2(void);
 void Deserialize_opaque_vector_struct_0_into_2(void);
 void Deserialize_opaque_vector_struct_1_into_2(void);
 
-// Testsuite 'Fuzzing'
 void Fuzzing_1(void);
 void Fuzzing_2(void);
 void Fuzzing_3(void);
@@ -3133,7 +3123,7 @@ bake_test_case Eval_testcases[] = {
     {
         "const_var_w_new_expr_tag_component",
         Eval_const_var_w_new_expr_tag_component
-    }
+    },
 };
 
 bake_test_case Template_testcases[] = {
@@ -3460,7 +3450,7 @@ bake_test_case Template_testcases[] = {
     {
         "template_w_tree_parent_change_value",
         Template_template_w_tree_parent_change_value
-    }
+    },
 };
 
 bake_test_case Error_testcases[] = {
@@ -3863,7 +3853,7 @@ bake_test_case Error_testcases[] = {
     {
         "annotation_to_tag",
         Error_annotation_to_tag
-    }
+    },
 };
 
 bake_test_case Expr_testcases[] = {
@@ -5218,7 +5208,12 @@ bake_test_case Expr_testcases[] = {
     {
         "new_entity_w_unterminated_scope",
         Expr_new_entity_w_unterminated_scope
-    }
+    },
+};
+
+const char* Expr_folding_param[] = {"enabled", "disabled"};
+bake_test_param Expr_params[] = {
+    {"folding", (char**)Expr_folding_param, 2},
 };
 
 bake_test_case ExprAst_testcases[] = {
@@ -5257,7 +5252,7 @@ bake_test_case ExprAst_testcases[] = {
     {
         "template_w_foldable_const",
         ExprAst_template_w_foldable_const
-    }
+    },
 };
 
 bake_test_case Vars_testcases[] = {
@@ -5316,7 +5311,7 @@ bake_test_case Vars_testcases[] = {
     {
         "init_fini_vars",
         Vars_init_fini_vars
-    }
+    },
 };
 
 bake_test_case Serialize_testcases[] = {
@@ -5603,7 +5598,7 @@ bake_test_case Serialize_testcases[] = {
     {
         "opaque_string_vector",
         Serialize_opaque_string_vector
-    }
+    },
 };
 
 bake_test_case Deserialize_testcases[] = {
@@ -6114,7 +6109,12 @@ bake_test_case Deserialize_testcases[] = {
     {
         "opaque_vector_struct_1_into_2",
         Deserialize_opaque_vector_struct_1_into_2
-    }
+    },
+};
+
+const char* Deserialize_folding_param[] = {"enabled", "disabled"};
+bake_test_param Deserialize_params[] = {
+    {"folding", (char**)Deserialize_folding_param, 2},
 };
 
 bake_test_case Fuzzing_testcases[] = {
@@ -6717,44 +6717,35 @@ bake_test_case Fuzzing_testcases[] = {
     {
         "150",
         Fuzzing_150
-    }
-};
-
-const char* Expr_folding_param[] = {"enabled", "disabled"};
-bake_test_param Expr_params[] = {
-    {"folding", (char**)Expr_folding_param, 2}
-};
-const char* Deserialize_folding_param[] = {"enabled", "disabled"};
-bake_test_param Deserialize_params[] = {
-    {"folding", (char**)Deserialize_folding_param, 2}
+    },
 };
 
 static bake_test_suite suites[] = {
     {
         "Eval",
-        NULL,
-        NULL,
+        0,
+        0,
         443,
         Eval_testcases
     },
     {
         "Template",
-        NULL,
-        NULL,
+        0,
+        0,
         81,
         Template_testcases
     },
     {
         "Error",
-        NULL,
-        NULL,
+        0,
+        0,
         100,
         Error_testcases
     },
     {
         "Expr",
         Expr_setup,
-        NULL,
+        0,
         338,
         Expr_testcases,
         1,
@@ -6762,29 +6753,29 @@ static bake_test_suite suites[] = {
     },
     {
         "ExprAst",
-        NULL,
-        NULL,
+        0,
+        0,
         9,
         ExprAst_testcases
     },
     {
         "Vars",
-        NULL,
-        NULL,
+        0,
+        0,
         14,
         Vars_testcases
     },
     {
         "Serialize",
-        NULL,
-        NULL,
+        0,
+        0,
         71,
         Serialize_testcases
     },
     {
         "Deserialize",
         Deserialize_setup,
-        NULL,
+        0,
         127,
         Deserialize_testcases,
         1,
@@ -6792,11 +6783,11 @@ static bake_test_suite suites[] = {
     },
     {
         "Fuzzing",
-        NULL,
-        NULL,
+        0,
+        0,
         150,
         Fuzzing_testcases
-    }
+    },
 };
 
 int main(int argc, char *argv[]) {
