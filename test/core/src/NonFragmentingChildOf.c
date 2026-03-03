@@ -4361,6 +4361,55 @@ void NonFragmentingChildOf_delete_tree_6(void) {
     ecs_fini(world);
 }
 
+static ECS_TAG_DECLARE(Foo);
+static ECS_TAG_DECLARE(Bar);
+
+static void observer_on_remove_position_up(ecs_iter_t *it) {
+    if (it->sources[0] != 0) {
+        ecs_entity_t src = it->sources[0];
+        if (ecs_is_alive(it->world, src) && !ecs_has(it->world, src, Foo)) {
+            ecs_add(it->world, src, Bar);
+        }
+    }
+}
+
+void NonFragmentingChildOf_delete_tree_7(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_TAG_DEFINE(world, Foo);
+    ECS_TAG_DEFINE(world, Bar);
+
+    ecs_observer(world, {
+        .query.terms = {{
+            .id = ecs_id(Position),
+            .src.id = EcsUp,
+            .trav = EcsChildOf
+        }},
+        .events = { EcsOnRemove },
+        .callback = observer_on_remove_position_up
+    });
+
+    ecs_entity_t G = ecs_new_w(world, Position);
+    ecs_entity_t Q = ecs_new_w_parent(world, G, NULL);
+    ecs_entity_t P = ecs_new_w_parent(world, G, NULL);
+
+    ecs_add(world, P, Position);
+
+    ecs_entity_t C1 = ecs_new(world);
+    ecs_add_pair(world, C1, EcsChildOf, P);
+    ecs_add(world, C1, Bar);
+
+    ecs_delete(world, G);
+
+    test_assert(!ecs_is_alive(world, G));
+    test_assert(!ecs_is_alive(world, Q));
+    test_assert(!ecs_is_alive(world, P));
+    test_assert(!ecs_is_alive(world, C1));
+
+    ecs_fini(world);
+}
+
 void NonFragmentingChildOf_add_parent_to_childof_child(void) {
     ecs_world_t* world = ecs_mini();
 

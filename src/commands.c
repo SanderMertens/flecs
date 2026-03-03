@@ -1055,8 +1055,7 @@ void flecs_cmd_batch_for_entity(
              * monitors since queries will have correctly matched them. */
             ecs_component_record_t *cr = flecs_components_get(
                 world, ecs_pair(EcsWildcard, entity));
-            ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
-            if (ecs_map_count(&cr->cache.index)) {
+            if (cr && ecs_map_count(&cr->cache.index)) {
                 flecs_update_component_monitors(world, &added, NULL);
             }
         }
