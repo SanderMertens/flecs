@@ -8,6 +8,16 @@
 
 #ifdef FLECS_META
 
+#ifdef FLECS_DEBUG
+static
+bool flecs_meta_is_builtin_type(
+    ecs_entity_t type)
+{
+    return type < EcsFirstUserComponentId ||
+        (type > FLECS_HI_COMPONENT_ID && type < EcsFirstUserEntityId);
+}
+#endif
+
 void flecs_type_serializer_dtor(
     EcsTypeSerializer *ptr) 
 {
@@ -105,6 +115,18 @@ int flecs_init_type(
 {
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(type != 0, ECS_INTERNAL_ERROR, NULL);
+
+#ifdef FLECS_DEBUG
+    if (!flecs_meta_is_builtin_type(type)) {
+        const ecs_type_info_t *ti = ecs_get_type_info(world, type);
+        if (ti) {
+            ecs_assert(!(ti->hooks.flags & ECS_TYPE_HOOK_IN_USE),
+                ECS_INVALID_OPERATION,
+                "cannot modify type '%s' after it is in use",
+                ecs_get_name(world, type));
+        }
+    }
+#endif
 
     EcsType *meta_type = ecs_ensure(world, type, EcsType);
     if (meta_type->kind == 0) {

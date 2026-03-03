@@ -3675,6 +3675,9 @@ struct ecs_observer_t {
 #define ECS_TYPE_HOOK_CMP_ILLEGAL            ECS_CAST(ecs_flags32_t, 1 << 19)
 #define ECS_TYPE_HOOK_EQUALS_ILLEGAL         ECS_CAST(ecs_flags32_t, 1 << 20)
 
+/* Internal debug flag that indicates type hooks have been invoked */
+#define ECS_TYPE_HOOK_IN_USE                 ECS_CAST(ecs_flags32_t, 1 << 21)
+
 
 /* All valid hook flags */
 #define ECS_TYPE_HOOKS (ECS_TYPE_HOOK_CTOR|ECS_TYPE_HOOK_DTOR|\
