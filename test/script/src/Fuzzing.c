@@ -7522,10 +7522,12 @@ void Fuzzing_122(void) {
  *     #11 0x000100775248 in flecs_entities_update_childof_depth flecs/src/storage/component_index.c:1167:13
  */
 void Fuzzing_123(void) {
+    install_test_abort();
     const char *expr =
     HEAD "dd,#1111110,#1111111d,#111111#1111111mpkat5 OJ"
         ;
 
+    test_expect_abort();
     fuzz(expr);
 }
 
@@ -7541,10 +7543,12 @@ void Fuzzing_123(void) {
  *     #7 0x00018302eb94  (<unknown module>)
  */
 void Fuzzing_124(void) {
+    install_test_abort();
     const char *expr =
     HEAD "dd,#1111110,#1111111d,#111111#1111111mpkat5 O\\"
         ;
 
+    test_expect_abort();
     fuzz(expr);
 }
 
@@ -7559,10 +7563,12 @@ void Fuzzing_124(void) {
  *     #6 0x00018302eb94  (<unknown module>)
  */
 void Fuzzing_125(void) {
+    install_test_abort();
     const char *expr =
     HEAD "dd,#1111111,#1111112d,#111111#1111111m#1111112d,#111111#1111111mpkat5 pkat5 O\\"
         ;
 
+    test_expect_abort();
     fuzz(expr);
 }
 
@@ -8575,6 +8581,9 @@ void Fuzzing_144(void) {
     LINE "}"
     LINE ""
         ;
+
+    install_test_abort();
+    test_expect_abort();
 
     fuzz(expr);
 }
