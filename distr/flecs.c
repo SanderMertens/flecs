@@ -41158,7 +41158,7 @@ void flecs_non_fragmenting_childof_reparent(
 
     const ecs_entity_t *entities = ecs_table_entities(dst);
     int32_t i = row, end = i + count;
-    for (i = 0; i < end; i ++) {
+    for (; i < end; i ++) {
         ecs_entity_t e = entities[i];
         ecs_component_record_t *cr = flecs_components_get(
             world, ecs_childof(e));
@@ -41203,7 +41203,7 @@ void flecs_non_fragmenting_childof_unparent(
 
     const ecs_entity_t *entities = ecs_table_entities(src);
     int32_t i = row, end = i + count;
-    for (i = 0; i < end; i ++) {
+    for (; i < end; i ++) {
         ecs_entity_t e = entities[i];
         ecs_component_record_t *cr = flecs_components_get(
             world, ecs_childof(e));

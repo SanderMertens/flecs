@@ -791,6 +791,7 @@
                 "depth_after_parent_remove",
                 "depth_after_parent_set_parent",
                 "depth_after_parent_remove_parent",
+                "depth_after_parent_remove_other_sibling_parent",
                 "depth_after_parent_reparent",
                 "depth_after_parent_reparent_different_depth",
                 "depth_after_parent_set_parent_nested",
