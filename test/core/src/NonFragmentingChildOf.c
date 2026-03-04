@@ -1582,6 +1582,76 @@ void NonFragmentingChildOf_depth_after_parent_remove_parent(void) {
     ecs_fini(world);
 }
 
+void NonFragmentingChildOf_depth_after_parent_remove_other_sibling_parent(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
+    ecs_insert(world, ecs_value(EcsParent, {base}));
+
+    ecs_entity_t p = ecs_new(world);
+
+    ecs_entity_t c1 = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_add_pair(world, c1, EcsChildOf, p);
+    ecs_entities_t c1_children = ecs_get_ordered_children(world, c1);
+    test_int(c1_children.count, 1);
+    ecs_entity_t gc1 = c1_children.ids[0];
+
+    ecs_entity_t c2 = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_add_pair(world, c2, EcsChildOf, p);
+    ecs_entities_t c2_children = ecs_get_ordered_children(world, c2);
+    test_int(c2_children.count, 1);
+    ecs_entity_t gc2 = c2_children.ids[0];
+
+    test_assert(ecs_has_id(world, gc1, ecs_value_pair(EcsParentDepth, 2)));
+    test_assert(ecs_has_id(world, gc2, ecs_value_pair(EcsParentDepth, 2)));
+
+    ecs_remove_pair(world, c2, EcsChildOf, EcsWildcard);
+
+    test_assert(ecs_has_id(world, gc1, ecs_value_pair(EcsParentDepth, 2)));
+    test_assert(!ecs_has_id(world, gc1, ecs_value_pair(EcsParentDepth, 1)));
+
+    test_assert(ecs_has_id(world, gc2, ecs_value_pair(EcsParentDepth, 1)));
+    test_assert(!ecs_has_id(world, gc2, ecs_value_pair(EcsParentDepth, 2)));
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_depth_after_parent_set_parent_sibling_traversable_no_children(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t root = ecs_new(world);
+    ecs_entity_t p = ecs_new(world);
+    ecs_entity_t c1 = ecs_insert(world, ecs_value(EcsParent, {p}));
+    ecs_entity_t c2 = ecs_insert(world, ecs_value(EcsParent, {p}));
+    ecs_add_id(world, c2, EcsOrderedChildren);
+    ecs_entity_t gc2 = ecs_insert(world, ecs_value(EcsParent, {c2}));
+
+    /* Make first sibling traversable without creating ChildOf record for it. */
+    ecs_new_w_pair(world, EcsIsA, c1);
+
+    ecs_entities_t children = ecs_get_ordered_children(world, p);
+    test_int(children.count, 2);
+    test_uint(children.ids[0], c1);
+    test_uint(children.ids[1], c2);
+
+    test_assert(ecs_has_id(world, c1, ecs_value_pair(EcsParentDepth, 1)));
+    test_assert(ecs_has_id(world, c2, ecs_value_pair(EcsParentDepth, 1)));
+    test_assert(ecs_has_id(world, gc2, ecs_value_pair(EcsParentDepth, 2)));
+
+    ecs_set(world, p, EcsParent, {root});
+
+    test_assert(ecs_has_id(world, c1, ecs_value_pair(EcsParentDepth, 2)));
+    test_assert(!ecs_has_id(world, c1, ecs_value_pair(EcsParentDepth, 1)));
+
+    test_assert(ecs_has_id(world, c2, ecs_value_pair(EcsParentDepth, 2)));
+    test_assert(!ecs_has_id(world, c2, ecs_value_pair(EcsParentDepth, 1)));
+
+    test_assert(ecs_has_id(world, gc2, ecs_value_pair(EcsParentDepth, 3)));
+    test_assert(!ecs_has_id(world, gc2, ecs_value_pair(EcsParentDepth, 2)));
+
+    ecs_fini(world);
+}
+
 void NonFragmentingChildOf_depth_after_parent_reparent(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -4357,6 +4427,55 @@ void NonFragmentingChildOf_delete_tree_6(void) {
     test_assert(!ecs_is_alive(world, a));
     test_assert(!ecs_is_alive(world, b));
     test_assert(!ecs_is_alive(world, c));
+
+    ecs_fini(world);
+}
+
+static ECS_TAG_DECLARE(Foo);
+static ECS_TAG_DECLARE(Bar);
+
+static void observer_on_remove_position_up(ecs_iter_t *it) {
+    if (it->sources[0] != 0) {
+        ecs_entity_t src = it->sources[0];
+        if (ecs_is_alive(it->world, src) && !ecs_has(it->world, src, Foo)) {
+            ecs_add(it->world, src, Bar);
+        }
+    }
+}
+
+void NonFragmentingChildOf_delete_tree_7(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_TAG_DEFINE(world, Foo);
+    ECS_TAG_DEFINE(world, Bar);
+
+    ecs_observer(world, {
+        .query.terms = {{
+            .id = ecs_id(Position),
+            .src.id = EcsUp,
+            .trav = EcsChildOf
+        }},
+        .events = { EcsOnRemove },
+        .callback = observer_on_remove_position_up
+    });
+
+    ecs_entity_t G = ecs_new_w(world, Position);
+    ecs_entity_t Q = ecs_new_w_parent(world, G, NULL);
+    ecs_entity_t P = ecs_new_w_parent(world, G, NULL);
+
+    ecs_add(world, P, Position);
+
+    ecs_entity_t C1 = ecs_new(world);
+    ecs_add_pair(world, C1, EcsChildOf, P);
+    ecs_add(world, C1, Bar);
+
+    ecs_delete(world, G);
+
+    test_assert(!ecs_is_alive(world, G));
+    test_assert(!ecs_is_alive(world, Q));
+    test_assert(!ecs_is_alive(world, P));
+    test_assert(!ecs_is_alive(world, C1));
 
     ecs_fini(world);
 }

@@ -659,6 +659,7 @@ void Sparse_on_delete_sparse_delete(void);
 void Sparse_on_delete_sparse_panic(void);
 void Sparse_on_delete_target_sparse_remove(void);
 void Sparse_on_delete_target_sparse_delete(void);
+void Sparse_component_delete_sparse_multiple_entities(void);
 void Sparse_on_delete_target_sparse_panic(void);
 void Sparse_delete_relationship(void);
 void Sparse_delete_parent_of_relationship(void);
@@ -759,6 +760,8 @@ void NonFragmentingChildOf_depth_after_parent_replace_different_depth(void);
 void NonFragmentingChildOf_depth_after_parent_remove(void);
 void NonFragmentingChildOf_depth_after_parent_set_parent(void);
 void NonFragmentingChildOf_depth_after_parent_remove_parent(void);
+void NonFragmentingChildOf_depth_after_parent_remove_other_sibling_parent(void);
+void NonFragmentingChildOf_depth_after_parent_set_parent_sibling_traversable_no_children(void);
 void NonFragmentingChildOf_depth_after_parent_reparent(void);
 void NonFragmentingChildOf_depth_after_parent_reparent_different_depth(void);
 void NonFragmentingChildOf_depth_after_parent_set_parent_nested(void);
@@ -870,6 +873,7 @@ void NonFragmentingChildOf_delete_tree_3(void);
 void NonFragmentingChildOf_delete_tree_4(void);
 void NonFragmentingChildOf_delete_tree_5(void);
 void NonFragmentingChildOf_delete_tree_6(void);
+void NonFragmentingChildOf_delete_tree_7(void);
 void NonFragmentingChildOf_add_parent_to_childof_child(void);
 void NonFragmentingChildOf_add_childof_to_parent_child(void);
 void NonFragmentingChildOf_add_parent_to_childof_child_same_parent(void);
@@ -5747,6 +5751,10 @@ bake_test_case Sparse_testcases[] = {
         Sparse_on_delete_target_sparse_delete
     },
     {
+        "component_delete_sparse_multiple_entities",
+        Sparse_component_delete_sparse_multiple_entities
+    },
+    {
         "on_delete_target_sparse_panic",
         Sparse_on_delete_target_sparse_panic
     },
@@ -6140,6 +6148,14 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "depth_after_parent_remove_parent",
         NonFragmentingChildOf_depth_after_parent_remove_parent
+    },
+    {
+        "depth_after_parent_remove_other_sibling_parent",
+        NonFragmentingChildOf_depth_after_parent_remove_other_sibling_parent
+    },
+    {
+        "depth_after_parent_set_parent_sibling_traversable_no_children",
+        NonFragmentingChildOf_depth_after_parent_set_parent_sibling_traversable_no_children
     },
     {
         "depth_after_parent_reparent",
@@ -6584,6 +6600,10 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "delete_tree_6",
         NonFragmentingChildOf_delete_tree_6
+    },
+    {
+        "delete_tree_7",
+        NonFragmentingChildOf_delete_tree_7
     },
     {
         "add_parent_to_childof_child",
@@ -15791,7 +15811,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         Sparse_setup,
         NULL,
-        217,
+        218,
         Sparse_testcases,
         1,
         Sparse_params
@@ -15800,7 +15820,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NULL,
         NULL,
-        236,
+        239,
         NonFragmentingChildOf_testcases
     },
     {

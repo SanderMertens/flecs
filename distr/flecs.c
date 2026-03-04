@@ -6648,8 +6648,7 @@ void flecs_cmd_batch_for_entity(
              * monitors since queries will have correctly matched them. */
             ecs_component_record_t *cr = flecs_components_get(
                 world, ecs_pair(EcsWildcard, entity));
-            ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
-            if (ecs_map_count(&cr->cache.index)) {
+            if (cr && ecs_map_count(&cr->cache.index)) {
                 flecs_update_component_monitors(world, &added, NULL);
             }
         }
@@ -40180,10 +40179,19 @@ void flecs_component_delete_sparse(
     ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(cr->flags & EcsIdSparse, ECS_INTERNAL_ERROR, NULL);
     int32_t i, count = flecs_sparse_count(cr->sparse);
-    const uint64_t *entities = flecs_sparse_ids(cr->sparse);
-    for (i = 0; i < count; i ++) {
-        ecs_delete(world, entities[i]);
+    if (!count) {
+        return;
     }
+
+    const uint64_t *entities = flecs_sparse_ids(cr->sparse);
+    ecs_entity_t *to_delete = ecs_os_malloc_n(ecs_entity_t, count);
+    ecs_os_memcpy_n(to_delete, entities, ecs_entity_t, count);
+
+    for (i = 0; i < count; i ++) {
+        ecs_delete(world, to_delete[i]);
+    }
+
+    ecs_os_free(to_delete);
 }
 
 ecs_component_record_t* flecs_component_first_next(
@@ -40281,7 +40289,7 @@ void flecs_entities_update_childof_depth(
             ecs_component_record_t *tgt_cr = flecs_components_get(
                 world, ecs_childof(tgt));
             if (!tgt_cr) {
-                return;
+                continue;
             }
 
             flecs_component_update_childof_depth(world, tgt_cr, tgt, r);
@@ -40305,7 +40313,7 @@ void flecs_entities_update_childof_depth(
             ecs_component_record_t *tgt_cr = flecs_components_get(
                 world, ecs_childof(tgt));
             if (!tgt_cr) {
-                return;
+                continue;
             }
 
             ecs_record_t *r = flecs_entities_get(world, tgt);
@@ -41159,7 +41167,7 @@ void flecs_non_fragmenting_childof_reparent(
 
     const ecs_entity_t *entities = ecs_table_entities(dst);
     int32_t i = row, end = i + count;
-    for (i = 0; i < end; i ++) {
+    for (; i < end; i ++) {
         ecs_entity_t e = entities[i];
         ecs_component_record_t *cr = flecs_components_get(
             world, ecs_childof(e));
@@ -41204,7 +41212,7 @@ void flecs_non_fragmenting_childof_unparent(
 
     const ecs_entity_t *entities = ecs_table_entities(src);
     int32_t i = row, end = i + count;
-    for (i = 0; i < end; i ++) {
+    for (; i < end; i ++) {
         ecs_entity_t e = entities[i];
         ecs_component_record_t *cr = flecs_components_get(
             world, ecs_childof(e));
