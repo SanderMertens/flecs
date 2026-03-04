@@ -1145,7 +1145,7 @@ void flecs_entities_update_childof_depth(
             ecs_component_record_t *tgt_cr = flecs_components_get(
                 world, ecs_childof(tgt));
             if (!tgt_cr) {
-                return;
+                continue;
             }
 
             flecs_component_update_childof_depth(world, tgt_cr, tgt, r);
@@ -1169,7 +1169,7 @@ void flecs_entities_update_childof_depth(
             ecs_component_record_t *tgt_cr = flecs_components_get(
                 world, ecs_childof(tgt));
             if (!tgt_cr) {
-                return;
+                continue;
             }
 
             ecs_record_t *r = flecs_entities_get(world, tgt);

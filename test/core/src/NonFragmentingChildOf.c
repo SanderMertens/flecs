@@ -1616,6 +1616,42 @@ void NonFragmentingChildOf_depth_after_parent_remove_other_sibling_parent(void) 
     ecs_fini(world);
 }
 
+void NonFragmentingChildOf_depth_after_parent_set_parent_sibling_traversable_no_children(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t root = ecs_new(world);
+    ecs_entity_t p = ecs_new(world);
+    ecs_entity_t c1 = ecs_insert(world, ecs_value(EcsParent, {p}));
+    ecs_entity_t c2 = ecs_insert(world, ecs_value(EcsParent, {p}));
+    ecs_add_id(world, c2, EcsOrderedChildren);
+    ecs_entity_t gc2 = ecs_insert(world, ecs_value(EcsParent, {c2}));
+
+    /* Make first sibling traversable without creating ChildOf record for it. */
+    ecs_new_w_pair(world, EcsIsA, c1);
+
+    ecs_entities_t children = ecs_get_ordered_children(world, p);
+    test_int(children.count, 2);
+    test_uint(children.ids[0], c1);
+    test_uint(children.ids[1], c2);
+
+    test_assert(ecs_has_id(world, c1, ecs_value_pair(EcsParentDepth, 1)));
+    test_assert(ecs_has_id(world, c2, ecs_value_pair(EcsParentDepth, 1)));
+    test_assert(ecs_has_id(world, gc2, ecs_value_pair(EcsParentDepth, 2)));
+
+    ecs_set(world, p, EcsParent, {root});
+
+    test_assert(ecs_has_id(world, c1, ecs_value_pair(EcsParentDepth, 2)));
+    test_assert(!ecs_has_id(world, c1, ecs_value_pair(EcsParentDepth, 1)));
+
+    test_assert(ecs_has_id(world, c2, ecs_value_pair(EcsParentDepth, 2)));
+    test_assert(!ecs_has_id(world, c2, ecs_value_pair(EcsParentDepth, 1)));
+
+    test_assert(ecs_has_id(world, gc2, ecs_value_pair(EcsParentDepth, 3)));
+    test_assert(!ecs_has_id(world, gc2, ecs_value_pair(EcsParentDepth, 2)));
+
+    ecs_fini(world);
+}
+
 void NonFragmentingChildOf_depth_after_parent_reparent(void) {
     ecs_world_t *world = ecs_mini();
 
