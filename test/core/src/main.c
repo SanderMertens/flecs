@@ -761,6 +761,7 @@ void NonFragmentingChildOf_depth_after_parent_remove(void);
 void NonFragmentingChildOf_depth_after_parent_set_parent(void);
 void NonFragmentingChildOf_depth_after_parent_remove_parent(void);
 void NonFragmentingChildOf_depth_after_parent_remove_other_sibling_parent(void);
+void NonFragmentingChildOf_depth_after_parent_set_parent_sibling_traversable_no_children(void);
 void NonFragmentingChildOf_depth_after_parent_reparent(void);
 void NonFragmentingChildOf_depth_after_parent_reparent_different_depth(void);
 void NonFragmentingChildOf_depth_after_parent_set_parent_nested(void);
@@ -6151,6 +6152,10 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "depth_after_parent_remove_other_sibling_parent",
         NonFragmentingChildOf_depth_after_parent_remove_other_sibling_parent
+    },
+    {
+        "depth_after_parent_set_parent_sibling_traversable_no_children",
+        NonFragmentingChildOf_depth_after_parent_set_parent_sibling_traversable_no_children
     },
     {
         "depth_after_parent_reparent",
@@ -15815,7 +15820,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NULL,
         NULL,
-        238,
+        239,
         NonFragmentingChildOf_testcases
     },
     {
