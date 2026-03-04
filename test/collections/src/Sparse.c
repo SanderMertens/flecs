@@ -1,5 +1,7 @@
 #include <collections.h>
+#include <flecs/datastructures/bitset.h>
 #include <flecs/datastructures/sparse.h>
+#include <flecs/datastructures/vec.h>
 
 void Sparse_setup(void) {
     ecs_os_set_api_defaults();
@@ -423,4 +425,28 @@ void Sparse_create_low_page_after_high(void) {
     populate(sp, 1000);
 
     flecs_sparse_free(sp);
+}
+
+void Sparse_bitset_negative_index(void) {
+    install_test_abort();
+
+    ecs_bitset_t bs = {0};
+    flecs_bitset_init(&bs);
+    flecs_bitset_addn(&bs, 1);
+
+    test_expect_abort();
+    flecs_bitset_get(&bs, -1);
+
+    flecs_bitset_fini(&bs);
+}
+
+void Sparse_vec_set_min_size_w_type_info(void) {
+    ecs_vec_t vec = {0};
+
+    ecs_vec_set_min_size_w_type_info(NULL, &vec, ECS_SIZEOF(int32_t), 8, NULL);
+
+    test_assert(vec.array != NULL);
+    test_assert(vec.size >= 8);
+
+    ecs_vec_fini(NULL, &vec, ECS_SIZEOF(int32_t));
 }

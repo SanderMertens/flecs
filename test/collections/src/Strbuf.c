@@ -1,5 +1,6 @@
 #include <collections.h>
 #include <math.h>
+#include <stdint.h>
 
 void Strbuf_setup(void) {
     ecs_os_set_api_defaults();
@@ -528,4 +529,14 @@ void Strbuf_append_inf_delim(void) {
         test_str(str, "\"Inf\"");
         ecs_os_free(str);
     }
+}
+
+void Strbuf_append_int64_min(void) {
+    ecs_strbuf_t b = ECS_STRBUF_INIT;
+    ecs_strbuf_appendint(&b, INT64_MIN);
+
+    char *str = ecs_strbuf_get(&b);
+    test_assert(str != NULL);
+    test_str(str, "-9223372036854775808");
+    ecs_os_free(str);
 }

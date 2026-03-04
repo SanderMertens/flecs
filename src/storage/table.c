@@ -2878,7 +2878,7 @@ ecs_entity_t ecs_table_get_target(
         return 0;
     }
 
-    if (index > tr->count) {
+    if ((index < 0) || (index >= tr->count)) {
         return 0;
     }
 

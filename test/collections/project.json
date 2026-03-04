@@ -71,7 +71,9 @@
                 "is_alive_low_after_ensure_high",
                 "remove_low_after_ensure_high",
                 "recreate_pages_after_shrink",
-                "create_low_page_after_high"
+                "create_low_page_after_high",
+                "bitset_negative_index",
+                "vec_set_min_size_w_type_info"
             ]
         }, {
             "id": "Strbuf",
@@ -111,7 +113,8 @@
                 "append_nan",
                 "append_inf",
                 "append_nan_delim",
-                "append_inf_delim"
+                "append_inf_delim",
+                "append_int64_min"
             ]
         }, {
             "id": "Allocator",

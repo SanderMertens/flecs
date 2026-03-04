@@ -1605,6 +1605,26 @@ void OrderedChildren_prefab_w_slots(void) {
     ecs_fini(world);
 }
 
+void OrderedChildren_prefab_get_target_after_reorder(void) {
+    install_test_abort();
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_add_id(world, p, EcsOrderedChildren);
+
+    ecs_entity_t pc1 = ecs_new_w_pair(world, EcsChildOf, p);
+    ecs_entity_t pc2 = ecs_new_w_pair(world, EcsChildOf, p);
+    ecs_entity_t pc3 = ecs_new_w_pair(world, EcsChildOf, p);
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+
+    ecs_entity_t children[] = {pc3, pc1, pc2};
+    ecs_set_child_order(world, p, children, 3);
+
+    test_expect_abort();
+    ecs_get_target(world, i, pc1, 0);
+}
+
 void OrderedChildren_recreate_named_child(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -1717,6 +1737,55 @@ void OrderedChildren_bulk_create_ordered_children(void) {
     }
 
     ecs_fini(world);
+}
+
+static
+double delete_children_elapsed(
+    int32_t child_count)
+{
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_add_id(world, parent, EcsOrderedChildren);
+
+    for (int32_t i = 0; i < child_count; i ++) {
+        ecs_new_w_pair(world, EcsChildOf, parent);
+    }
+
+    ecs_time_t t;
+    ecs_os_get_time(&t);
+
+    ecs_delete(world, parent);
+
+    double result = ecs_time_measure(&t);
+
+    ecs_fini(world);
+
+    return result;
+}
+
+static
+double delete_children_elapsed_best_of(
+    int32_t child_count,
+    int32_t attempts)
+{
+    double result = 0;
+
+    for (int32_t i = 0; i < attempts; i ++) {
+        double elapsed = delete_children_elapsed(child_count);
+        if (!i || (elapsed < result)) {
+            result = elapsed;
+        }
+    }
+
+    return result;
+}
+
+void OrderedChildren_delete_many_children_perf(void) {
+    double t_small = delete_children_elapsed_best_of(10000, 3);
+    double t_large = delete_children_elapsed_best_of(20000, 3);
+
+    test_assert(t_large < (t_small * 4.5));
 }
 
 void OrderedChildren_ordered_children_parent_is_traversable(void) {
