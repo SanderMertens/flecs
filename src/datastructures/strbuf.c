@@ -54,23 +54,26 @@ char* flecs_strbuf_itoa(
     char *ptr = buf;
     char * p1;
 	char c;
+    uint64_t uv;
 
-	if (!v) {
+    if (v < 0) {
+        ptr[0] = '-';
+        ptr ++;
+        uv = (uint64_t)0 - (uint64_t)v;
+    } else {
+        uv = (uint64_t)v;
+    }
+
+	if (!uv) {
 		*ptr++ = '0';
     } else {
-        if (v < 0) {
-            ptr[0] = '-';
-            ptr ++;
-            v *= -1;
-        }
-
 		char *p = ptr;
-		while (v) {
-            int64_t vdiv = v / 10;
-            int64_t vmod = v - (vdiv * 10);
-			p[0] = (char)('0' + vmod);
+		while (uv) {
+            uint64_t vdiv = uv / 10;
+            uint64_t vmod = uv - (vdiv * 10);
+			p[0] = (char)('0' + (char)vmod);
             p ++;
-			v = vdiv;
+			uv = vdiv;
 		}
 
 		p1 = p;

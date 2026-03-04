@@ -10620,6 +10620,9 @@ ecs_entity_t ecs_get_target(
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     flecs_assert_entity_valid(world, entity, "get_target");
     ecs_check(rel != 0, ECS_INVALID_PARAMETER, NULL);
+    if (index < 0) {
+        return 0;
+    }
 
     if (rel == EcsChildOf) {
         if (index > 0) {
@@ -32126,6 +32129,7 @@ void flecs_bitset_set(
     int32_t elem,
     bool value)
 {
+    ecs_check(elem >= 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(elem < bs->count, ECS_INVALID_PARAMETER, NULL);
     uint32_t hi = ((uint32_t)elem) >> 6;
     uint32_t lo = ((uint32_t)elem) & 0x3F;
@@ -32139,6 +32143,7 @@ bool flecs_bitset_get(
     const ecs_bitset_t *bs,
     int32_t elem)
 {
+    ecs_check(elem >= 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(elem < bs->count, ECS_INVALID_PARAMETER, NULL);
     return !!(bs->data[elem >> 6] & ((uint64_t)1 << ((uint64_t)elem & 0x3F)));
 error:
@@ -32155,6 +32160,7 @@ void flecs_bitset_remove(
     ecs_bitset_t *bs,
     int32_t elem)
 {
+    ecs_check(elem >= 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(elem < bs->count, ECS_INVALID_PARAMETER, NULL);
     int32_t last = bs->count - 1;
     bool last_value = flecs_bitset_get(bs, last);
@@ -32170,6 +32176,8 @@ void flecs_bitset_swap(
     int32_t elem_a,
     int32_t elem_b)
 {
+    ecs_check(elem_a >= 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(elem_b >= 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(elem_a < bs->count, ECS_INVALID_PARAMETER, NULL);
     ecs_check(elem_b < bs->count, ECS_INVALID_PARAMETER, NULL);
 
@@ -34651,23 +34659,26 @@ char* flecs_strbuf_itoa(
     char *ptr = buf;
     char * p1;
 	char c;
+    uint64_t uv;
 
-	if (!v) {
+    if (v < 0) {
+        ptr[0] = '-';
+        ptr ++;
+        uv = (uint64_t)0 - (uint64_t)v;
+    } else {
+        uv = (uint64_t)v;
+    }
+
+	if (!uv) {
 		*ptr++ = '0';
     } else {
-        if (v < 0) {
-            ptr[0] = '-';
-            ptr ++;
-            v *= -1;
-        }
-
 		char *p = ptr;
-		while (v) {
-            int64_t vdiv = v / 10;
-            int64_t vmod = v - (vdiv * 10);
-			p[0] = (char)('0' + vmod);
+		while (uv) {
+            uint64_t vdiv = uv / 10;
+            uint64_t vmod = uv - (vdiv * 10);
+			p[0] = (char)('0' + (char)vmod);
             p ++;
-			v = vdiv;
+			uv = vdiv;
 		}
 
 		p1 = p;
@@ -35444,8 +35455,18 @@ void ecs_vec_set_min_size_w_type_info(
     int32_t elem_count,
     const ecs_type_info_t *ti)
 {
+    ecs_assert(size != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_vec_init_if(vec, size);
+#ifdef FLECS_SANITIZE
+    if (!vec->type_name) {
+        vec->type_name = ti ? ti->name : NULL;
+    }
+#else
+    (void)ti;
+#endif
+
     if (elem_count > vec->size) {
-        ecs_vec_set_min_size_w_type_info(allocator, vec, size, elem_count, ti);
+        ecs_vec_set_size(allocator, vec, size, elem_count);
     }
 }
 
@@ -44894,7 +44915,7 @@ ecs_entity_t ecs_table_get_target(
         return 0;
     }
 
-    if (index > tr->count) {
+    if ((index < 0) || (index >= tr->count)) {
         return 0;
     }
 

@@ -250,8 +250,18 @@ void ecs_vec_set_min_size_w_type_info(
     int32_t elem_count,
     const ecs_type_info_t *ti)
 {
+    ecs_assert(size != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_vec_init_if(vec, size);
+#ifdef FLECS_SANITIZE
+    if (!vec->type_name) {
+        vec->type_name = ti ? ti->name : NULL;
+    }
+#else
+    (void)ti;
+#endif
+
     if (elem_count > vec->size) {
-        ecs_vec_set_min_size_w_type_info(allocator, vec, size, elem_count, ti);
+        ecs_vec_set_size(allocator, vec, size, elem_count);
     }
 }
 

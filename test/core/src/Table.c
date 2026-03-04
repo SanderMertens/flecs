@@ -618,6 +618,31 @@ void Table_has_any_pair(void) {
     ecs_fini(world);
 }
 
+void Table_get_target_out_of_range(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel0);
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Rel2);
+    ECS_TAG(world, Tgt0);
+    ECS_TAG(world, Tgt1);
+    ECS_TAG(world, Tgt2);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add_pair(world, e, Rel0, Tgt0);
+    ecs_add_pair(world, e, Rel, Tgt1);
+    ecs_add_pair(world, e, Rel2, Tgt2);
+
+    ecs_table_t *table = ecs_get_table(world, e);
+    test_assert(table != NULL);
+
+    test_uint(ecs_table_get_target(world, table, Rel, 0), Tgt1);
+    test_uint(ecs_table_get_target(world, table, Rel, -1), 0);
+    test_uint(ecs_table_get_target(world, table, Rel, 1), 0);
+
+    ecs_fini(world);
+}
+
 void Table_clear_table_kills_entities(void) {
     ecs_world_t *world = ecs_mini();
 
