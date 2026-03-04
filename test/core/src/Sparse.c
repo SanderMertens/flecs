@@ -5690,6 +5690,32 @@ void Sparse_on_delete_sparse_delete(void) {
     ecs_fini(world);
 }
 
+void Sparse_component_delete_sparse_multiple_entities(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+    ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+    ecs_add_pair(world, ecs_id(Position), EcsOnDelete, EcsDelete);
+
+    ecs_entity_t e1 = ecs_new_w(world, Position);
+    ecs_entity_t e2 = ecs_new_w(world, Position);
+    test_assert(ecs_has(world, e1, Position));
+    test_assert(ecs_has(world, e2, Position));
+
+    ecs_defer_begin(world);
+    ecs_defer_suspend(world);
+    ecs_delete_with(world, ecs_id(Position));
+    ecs_defer_resume(world);
+    ecs_defer_end(world);
+
+    test_assert(!ecs_is_alive(world, e1));
+    test_assert(!ecs_is_alive(world, e2));
+
+    ecs_fini(world);
+}
+
 void Sparse_on_delete_sparse_panic(void) {
     install_test_abort();
 

@@ -659,6 +659,7 @@ void Sparse_on_delete_sparse_delete(void);
 void Sparse_on_delete_sparse_panic(void);
 void Sparse_on_delete_target_sparse_remove(void);
 void Sparse_on_delete_target_sparse_delete(void);
+void Sparse_component_delete_sparse_multiple_entities(void);
 void Sparse_on_delete_target_sparse_panic(void);
 void Sparse_delete_relationship(void);
 void Sparse_delete_parent_of_relationship(void);
@@ -5747,6 +5748,10 @@ bake_test_case Sparse_testcases[] = {
     {
         "on_delete_target_sparse_delete",
         Sparse_on_delete_target_sparse_delete
+    },
+    {
+        "component_delete_sparse_multiple_entities",
+        Sparse_component_delete_sparse_multiple_entities
     },
     {
         "on_delete_target_sparse_panic",
@@ -15801,7 +15806,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         Sparse_setup,
         NULL,
-        217,
+        218,
         Sparse_testcases,
         1,
         Sparse_params
