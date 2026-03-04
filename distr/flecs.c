@@ -1320,6 +1320,7 @@ typedef enum {
     EcsQueryIfVar,          /* Conditional execution on whether variable is set */
     EcsQueryIfSet,          /* Conditional execution on whether term is set */
     EcsQueryNot,            /* Sets iterator state after term was not matched */
+    EcsQueryNotRange,       /* Invert range-producing operation results */
     EcsQueryEnd,            /* End of control flow block */
     EcsQueryPredEq,         /* Test if variable is equal to, or assign to if not set */
     EcsQueryPredNeq,        /* Test if variable is not equal to */
@@ -1328,11 +1329,9 @@ typedef enum {
     EcsQueryPredEqMatch,    /* Same as EcsQueryPredEq but with fuzzy matching by name */
     EcsQueryPredNeqMatch,   /* Same as EcsQueryPredNeq but with fuzzy matching by name */
     EcsQueryMemberEq,       /* Compare member value */
-    EcsQueryMemberNeq,      /* Compare member value */
     EcsQueryToggle,         /* Evaluate toggle bitset, if present */
     EcsQueryToggleOption,   /* Toggle for optional terms */
     EcsQuerySparse,         /* Evaluate sparse component */
-    EcsQuerySparseNot,      /* Evaluate sparse component with not operator */
     EcsQuerySparseSelfUp,
     EcsQuerySparseUp,
     EcsQuerySparseWith,     /* Evaluate sparse component against fixed or variable source */
@@ -1579,6 +1578,22 @@ typedef struct {
     bool is_set;
 } ecs_query_ctrl_ctx_t;
 
+/* Range inversion context */
+typedef struct {
+    ecs_query_ctrl_ctx_t ctrl;
+    ecs_table_range_t src_range;
+    int32_t cur;
+    int32_t end;
+    ecs_termset_t set_fields;
+    ecs_id_t field_id;
+    const ecs_table_record_t *field_tr;
+    ecs_entity_t field_source;
+    int8_t field;
+    bool field_valid;
+    bool block_redo;
+    bool done;
+} ecs_query_not_range_ctx_t;
+
 /* Trivial iterator context */
 typedef struct {
     ecs_table_cache_iter_t it;
@@ -1630,6 +1645,7 @@ typedef struct ecs_query_op_ctx_t {
         ecs_query_each_ctx_t each;
         ecs_query_setthis_ctx_t setthis;
         ecs_query_ctrl_ctx_t ctrl;
+        ecs_query_not_range_ctx_t not_range;
         ecs_query_trivial_ctx_t trivial;
         ecs_query_membereq_ctx_t membereq;
         ecs_query_toggle_ctx_t toggle;
@@ -2455,11 +2471,6 @@ bool flecs_query_member_eq(
     bool redo,
     ecs_query_run_ctx_t *ctx);
 
-bool flecs_query_member_neq(
-    const ecs_query_op_t *op,
-    bool redo,
-    ecs_query_run_ctx_t *ctx);
-
 
 /* Up traversal */
 
@@ -2508,7 +2519,6 @@ bool flecs_query_trav(
     const ecs_query_op_t *op,
     bool redo,
     const ecs_query_run_ctx_t *ctx);
-
 
 /**
  * @file query/util.h
@@ -36422,6 +36432,7 @@ const char* flecs_query_op_str(
     case EcsQueryIfSet:          return "ifset       ";
     case EcsQueryEnd:            return "end         ";
     case EcsQueryNot:            return "not         ";
+    case EcsQueryNotRange:       return "not_range   ";
     case EcsQueryPredEq:         return "eq          ";
     case EcsQueryPredNeq:        return "neq         ";
     case EcsQueryPredEqName:     return "eq_nm       ";
@@ -36429,12 +36440,10 @@ const char* flecs_query_op_str(
     case EcsQueryPredEqMatch:    return "eq_m        ";
     case EcsQueryPredNeqMatch:   return "neq_m       ";
     case EcsQueryMemberEq:       return "membereq    ";
-    case EcsQueryMemberNeq:      return "memberneq   ";
     case EcsQueryToggle:         return "toggle      ";
     case EcsQueryToggleOption:   return "togglopt    ";
     case EcsQuerySparse:         return "sparse      ";
     case EcsQuerySparseWith:     return "sparse_w    ";
-    case EcsQuerySparseNot:      return "sparse_not  ";
     case EcsQuerySparseSelfUp:   return "sparse_sup  ";
     case EcsQuerySparseUp:       return "sparse_up   ";
     case EcsQueryTree:           return "tree        ";
@@ -36742,6 +36751,7 @@ void flecs_query_plan_w_profile(
         hidden_chars = flecs_query_op_ref_str(impl, &op->src, src_flags, buf);
 
         if (op->kind == EcsQueryNot || 
+            op->kind == EcsQueryNotRange ||
             op->kind == EcsQueryOr || 
             op->kind == EcsQueryOptional || 
             op->kind == EcsQueryIfVar ||
@@ -36787,7 +36797,7 @@ void flecs_query_plan_w_profile(
         }
 
         ecs_strbuf_appendstr(buf, "(");
-        if (op->kind == EcsQueryMemberEq || op->kind == EcsQueryMemberNeq) {
+        if (op->kind == EcsQueryMemberEq) {
             uint32_t offset = (uint32_t)op->first.entity;
             uint32_t size = (uint32_t)(op->first.entity >> 32);
             ecs_strbuf_append(buf, "#[yellow]elem#[reset]([%d], 0x%x, 0x%x)", 
@@ -79980,7 +79990,7 @@ int flecs_query_insert_toggle(
                 fields_done |= (1llu << j);
             }
 
-            if (and_toggles || not_toggles) {
+            if (and_toggles) {
                 ecs_query_op_t op = {0};
                 op.kind = EcsQueryToggle;
                 op.src = cur.src;
@@ -79995,8 +80005,41 @@ int flecs_query_insert_toggle(
                  * - second.entity is the fields that match disabled bits
                  */
                 op.first.entity = and_toggles;
-                op.second.entity = not_toggles;
+                op.second.entity = 0;
                 flecs_query_op_insert(&op, ctx);
+            }
+
+            if (not_toggles) {
+                for (j = i; j < term_count; j ++) {
+                    uint64_t field_bit = 1ull << j;
+                    if (!(not_toggles & field_bit)) {
+                        continue;
+                    }
+
+                    ecs_query_op_t *not_op = flecs_query_begin_block(
+                        EcsQueryNotRange, ctx);
+                    not_op->flags = cur.flags & (ecs_flags8_t)
+                        ((EcsQueryIsEntity|EcsQueryIsVar) << EcsQuerySrc);
+                    not_op->src = cur.src;
+
+                    ecs_query_op_t op = {0};
+                    op.kind = EcsQueryToggle;
+                    op.src = cur.src;
+                    op.flags = cur.flags;
+                    op.field_index = flecs_ito(int8_t, j);
+                    op.term_index = flecs_ito(int8_t, j);
+
+                    if (op.flags & (EcsQueryIsVar << EcsQuerySrc)) {
+                        flecs_query_write(op.src.var, &op.written);
+                    }
+
+                    op.first.entity = field_bit;
+                    op.second.entity = 0;
+                    flecs_query_op_insert(&op, ctx);
+
+                    ctx->cur->lbl_query = flecs_itolbl(ecs_vec_count(ctx->ops) - 1);
+                    flecs_query_end_block(ctx, true);
+                }
             }
 
             /* Insert separate instructions for optional terms. To make sure
@@ -81332,6 +81375,7 @@ int flecs_query_compile_end_member_term(
 
     /* If this is a term with a Not operator, conditionally evaluate member on
      * whether term was set by previous operation (see begin_member_term). */
+    ecs_query_lbl_t if_set_label = -1;
     if (ctx->oper == EcsNot || ctx->oper == EcsOptional) {
         if (second_wildcard && ctx->oper == EcsNot) {
             /* A !(T.value, *) term doesn't need special operations */
@@ -81348,9 +81392,9 @@ int flecs_query_compile_end_member_term(
 
         ecs_query_op_t *if_op = flecs_query_begin_block(EcsQueryIfSet, ctx);
         if_op->other = term->field_index;
-
+        if_set_label = ctx->cur->lbl_begin;
         if (ctx->oper == EcsNot) {
-            mbr_op.kind = EcsQueryMemberNeq;
+            flecs_query_begin_block(EcsQueryNotRange, ctx);
         }
     }
 
@@ -81389,6 +81433,14 @@ int flecs_query_compile_end_member_term(
     }
 
     flecs_query_op_insert(&mbr_op, ctx);
+
+    if (ctx->oper == EcsNot) {
+        ctx->cur->lbl_query = flecs_itolbl(ecs_vec_count(ctx->ops) - 1);
+        flecs_query_end_block(ctx, true);
+
+        /* Restore surrounding IfSet block context. */
+        ctx->cur->lbl_begin = if_set_label;
+    }
 
     if (ctx->oper == EcsNot || ctx->oper == EcsOptional) {
         flecs_query_end_block(ctx, false);
@@ -81444,6 +81496,12 @@ void flecs_query_set_op_kind(
     bool src_is_var)
 {
     (void)query;
+    bool non_fragmenting_childof = 
+        (term->flags_ & EcsTermNonFragmentingChildOf) ||
+        ((term->oper == EcsNot) &&
+            !term->trav &&
+            ECS_IS_PAIR(term->id) &&
+            ECS_PAIR_FIRST(term->id) == EcsChildOf);
 
     /* Default instruction for And operators. If the source is fixed (like for
      * singletons or terms with an entity source), use With, which like And but
@@ -81471,9 +81529,6 @@ void flecs_query_set_op_kind(
     } else if (term->flags_ & EcsTermDontFragment) {
         if (op->kind == EcsQueryAnd) {
             op->kind = EcsQuerySparse;
-            if (term->oper == EcsNot) {
-                op->kind = EcsQuerySparseNot;
-            }
         } else {
             op->kind = EcsQuerySparseWith;
         }
@@ -81516,7 +81571,7 @@ void flecs_query_set_op_kind(
 
         /* ChildOf terms need to take into account both ChildOf pairs and the 
          * Parent component for non-fragmenting hierarchies. */
-        if (term->flags_ & EcsTermNonFragmentingChildOf && !term->trav) {
+        if (non_fragmenting_childof && !term->trav) {
             if (query->pub.flags & EcsQueryNested) {
                 /* If this is a nested query (used to populate a cache), insert
                  * instruction that matches tables with ChildOf pairs and Parent
@@ -81551,6 +81606,24 @@ void flecs_query_set_op_kind(
             }
         }
     }
+}
+
+static
+bool flecs_query_not_is_range_op_kind(
+    ecs_query_op_kind_t kind)
+{
+    return kind == EcsQuerySparse ||
+        kind == EcsQuerySparseWith ||
+        kind == EcsQuerySparseUp ||
+        kind == EcsQuerySparseSelfUp ||
+        kind == EcsQueryTree ||
+        kind == EcsQueryTreeWildcard ||
+        kind == EcsQueryTreeWith ||
+        kind == EcsQueryTreePre ||
+        kind == EcsQueryTreePost ||
+        kind == EcsQueryChildren ||
+        kind == EcsQueryChildrenWc ||
+        kind == EcsQueryMemberEq;
 }
 
 int flecs_query_compile_term(
@@ -81652,8 +81725,11 @@ int flecs_query_compile_term(
     flecs_query_set_op_kind(query, &op, term, src_is_var);
 
     bool is_not = (term->oper == EcsNot) && !builtin_pred;
-    if (op.kind == EcsQuerySparseNot) {
-        is_not = false;
+    ecs_query_op_kind_t not_kind = EcsQueryNot;
+    if (is_not && flecs_query_not_is_range_op_kind(
+        (ecs_query_op_kind_t)op.kind))
+    {
+        not_kind = EcsQueryNotRange;
     }
 
     /* Save write state at start of term so we can use it to reliably track
@@ -81784,7 +81860,12 @@ int flecs_query_compile_term(
 
     /* Handle Not, Optional, Or operators */
     if (is_not) {
-        flecs_query_begin_block(EcsQueryNot, ctx);
+        ecs_query_op_t *not_op = flecs_query_begin_block(not_kind, ctx);
+        if (not_kind == EcsQueryNotRange) {
+            not_op->flags = op.flags & (ecs_flags8_t)
+                ((EcsQueryIsEntity|EcsQueryIsVar) << EcsQuerySrc);
+            not_op->src = op.src;
+        }
     } else if (is_optional) {
         flecs_query_begin_block(EcsQueryOptional, ctx);
     } else if (first_or) {
@@ -81907,15 +81988,13 @@ int flecs_query_compile_term(
     }
 
     /* Ensure that term id is set after evaluating Not */
-    if (term->flags_ & EcsTermIdInherited) {
-        if (is_not) {
-            ecs_query_op_t set_id = {0};
-            set_id.kind = EcsQuerySetId;
-            set_id.first.entity = term->id;
-            set_id.flags = (EcsQueryIsEntity << EcsQueryFirst);
-            set_id.field_index = flecs_ito(int8_t, term->field_index);
-            flecs_query_op_insert(&set_id, ctx);
-        }
+    if (term->flags_ & EcsTermIdInherited && is_not) {
+        ecs_query_op_t set_id = {0};
+        set_id.kind = EcsQuerySetId;
+        set_id.first.entity = term->id;
+        set_id.flags = (EcsQueryIsEntity << EcsQueryFirst);
+        set_id.field_index = flecs_ito(int8_t, term->field_index);
+        flecs_query_op_insert(&set_id, ctx);
     }
 
     return 0;
@@ -83301,6 +83380,188 @@ bool flecs_query_not(
 }
 
 static
+void flecs_query_not_range_set_source(
+    const ecs_query_op_t *op,
+    const ecs_table_range_t *range,
+    const ecs_query_run_ctx_t *ctx)
+{
+    if (!(op->flags & (EcsQueryIsVar << EcsQuerySrc))) {
+        return;
+    }
+
+    ecs_var_id_t src_var = op->src.var;
+    ecs_var_t *var = &ctx->vars[src_var];
+    var->range = *range;
+    if (ctx->query_vars[src_var].kind != EcsVarTable) {
+        ecs_assert(range->count == 1, ECS_INTERNAL_ERROR, NULL);
+        var->entity = ecs_table_entities(range->table)[range->offset];
+    } else {
+        var->entity = 0;
+    }
+}
+
+static
+void flecs_query_not_range_restore_iter(
+    const ecs_query_not_range_ctx_t *op_ctx,
+    ecs_query_run_ctx_t *ctx)
+{
+    ecs_iter_t *it = ctx->it;
+    it->set_fields = op_ctx->set_fields;
+
+    if (op_ctx->field_valid) {
+        int8_t field = op_ctx->field;
+        it->ids[field] = op_ctx->field_id;
+        it->trs[field] = op_ctx->field_tr;
+        it->sources[field] = op_ctx->field_source;
+    }
+}
+
+static
+void flecs_query_not_range_set_member_id(
+    const ecs_query_op_t *term_op,
+    const ecs_table_range_t *range,
+    ecs_query_run_ctx_t *ctx)
+{
+    int8_t field = term_op->field_index;
+    if (field == -1) {
+        return;
+    }
+
+    ecs_table_t *table = range->table;
+    if (!table) {
+        return;
+    }
+
+    const ecs_table_record_t *tr = ctx->it->trs[field];
+    if (!tr) {
+        return;
+    }
+
+    int32_t row = range->offset;
+    if (row < 0 || row >= ecs_table_count(table)) {
+        return;
+    }
+
+    int32_t offset = (int32_t)term_op->first.entity;
+    int32_t size = (int32_t)(term_op->first.entity >> 32);
+    void *data = ecs_table_get_column(table, tr->column, 0);
+    if (!data) {
+        return;
+    }
+
+    ecs_entity_t *val = ECS_OFFSET(ECS_ELEM(data, size, row), offset);
+    ecs_entity_t mbr = ECS_PAIR_FIRST(ctx->query->pub.terms[term_op->term_index].id);
+    ctx->it->ids[field] = ecs_pair(mbr, val[0]);
+}
+
+static
+bool flecs_query_not_range(
+    const ecs_query_op_t *op,
+    bool redo,
+    ecs_query_run_ctx_t *ctx)
+{
+    ecs_query_not_range_ctx_t *op_ctx = flecs_op_ctx(ctx, not_range);
+    const ecs_query_op_t *term_op = op + 1;
+    const ecs_query_op_t *src_op = op;
+    const ecs_query_ref_t *src_ref = &op->src;
+    ecs_query_lbl_t start_op_index = ctx->op_index;
+
+    if (!flecs_query_ref_flags(op->flags, EcsQuerySrc)) {
+        src_op = term_op;
+        src_ref = &src_op->src;
+    }
+
+    if (!redo) {
+        ecs_table_range_t src_range = flecs_query_get_range(
+            src_op, src_ref, EcsQuerySrc, ctx);
+        if (!src_range.table) {
+            op_ctx->done = true;
+            return false;
+        }
+
+        int32_t table_count = ecs_table_count(src_range.table);
+        int32_t start = src_range.offset;
+        int32_t end = src_range.count ? (start + src_range.count) : table_count;
+
+        if (start < 0) {
+            start = 0;
+        }
+        if (start > table_count) {
+            start = table_count;
+        }
+        if (end < start) {
+            end = start;
+        }
+        if (end > table_count) {
+            end = table_count;
+        }
+
+        src_range.offset = start;
+        src_range.count = end - start;
+
+        ecs_iter_t *it = ctx->it;
+        op_ctx->ctrl = (ecs_query_ctrl_ctx_t){0};
+        op_ctx->src_range = src_range;
+        op_ctx->cur = start;
+        op_ctx->end = end;
+        op_ctx->set_fields = it->set_fields;
+        op_ctx->field = term_op->field_index;
+        op_ctx->field_valid = op_ctx->field != -1;
+        if (op_ctx->field_valid) {
+            int8_t field = op_ctx->field;
+            op_ctx->field_id = it->ids[field];
+            op_ctx->field_tr = it->trs[field];
+            op_ctx->field_source = it->sources[field];
+        }
+        op_ctx->block_redo = false;
+        op_ctx->done = false;
+    } else if (op_ctx->done) {
+        flecs_query_not_range_restore_iter(op_ctx, ctx);
+        flecs_query_not_range_set_source(src_op, &op_ctx->src_range, ctx);
+        return false;
+    }
+
+    while (op_ctx->cur < op_ctx->end) {
+        ecs_table_range_t row_range = {
+            .table = op_ctx->src_range.table,
+            .offset = op_ctx->cur,
+            .count = 1
+        };
+
+        flecs_query_not_range_set_source(src_op, &row_range, ctx);
+        flecs_query_not_range_restore_iter(op_ctx, ctx);
+
+        ctx->op_index = start_op_index;
+        op_ctx->ctrl = (ecs_query_ctrl_ctx_t){0};
+        op_ctx->block_redo = false;
+        bool block_result = flecs_query_run_block(false, ctx, &op_ctx->ctrl);
+
+        ecs_query_ctrl_ctx_t reset_ctx = {0};
+        flecs_query_reset_after_block(op, ctx, &reset_ctx, false);
+
+        op_ctx->cur ++;
+
+        if (!block_result) {
+            if (term_op->kind == EcsQueryMemberEq) {
+                flecs_query_not_range_restore_iter(op_ctx, ctx);
+                if (op_ctx->field_valid) {
+                    ECS_TERMSET_SET(ctx->it->set_fields, 1u << op_ctx->field);
+                }
+                flecs_query_not_range_set_member_id(term_op, &row_range, ctx);
+            }
+
+            flecs_query_not_range_set_source(src_op, &row_range, ctx);
+            return true;
+        }
+    }
+
+    flecs_query_not_range_restore_iter(op_ctx, ctx);
+    flecs_query_not_range_set_source(src_op, &op_ctx->src_range, ctx);
+    op_ctx->done = true;
+    return false;
+}
+
+static
 bool flecs_query_optional(
     const ecs_query_op_t *op,
     bool redo,
@@ -83429,6 +83690,7 @@ bool flecs_query_dispatch(
     case EcsQueryIfSet: return flecs_query_if_set(op, redo, ctx);
     case EcsQueryEnd: return flecs_query_end(op, redo, ctx);
     case EcsQueryNot: return flecs_query_not(op, redo, ctx);
+    case EcsQueryNotRange: return flecs_query_not_range(op, redo, ctx);
     case EcsQueryPredEq: return flecs_query_pred_eq(op, redo, ctx);
     case EcsQueryPredNeq: return flecs_query_pred_neq(op, redo, ctx);
     case EcsQueryPredEqName: return flecs_query_pred_eq_name(op, redo, ctx);
@@ -83436,12 +83698,10 @@ bool flecs_query_dispatch(
     case EcsQueryPredEqMatch: return flecs_query_pred_eq_match(op, redo, ctx);
     case EcsQueryPredNeqMatch: return flecs_query_pred_neq_match(op, redo, ctx);
     case EcsQueryMemberEq: return flecs_query_member_eq(op, redo, ctx);
-    case EcsQueryMemberNeq: return flecs_query_member_neq(op, redo, ctx);
     case EcsQueryToggle: return flecs_query_toggle(op, redo, ctx);
     case EcsQueryToggleOption: return flecs_query_toggle_option(op, redo, ctx);
     case EcsQuerySparse: return flecs_query_sparse(op, redo, ctx);
     case EcsQuerySparseWith: return flecs_query_sparse_with(op, redo, ctx, false);
-    case EcsQuerySparseNot: return flecs_query_sparse_with(op, redo, ctx, true);
     case EcsQuerySparseSelfUp: return flecs_query_sparse_self_up(op, redo, ctx);
     case EcsQuerySparseUp: return flecs_query_sparse_up(op, redo, ctx);
     case EcsQueryTree: return flecs_query_tree_and(op, redo, ctx);
@@ -84105,8 +84365,7 @@ static
 bool flecs_query_member_cmp(
     const ecs_query_op_t *op,
     bool redo,
-    ecs_query_run_ctx_t *ctx,
-    bool neq)
+    ecs_query_run_ctx_t *ctx)
 {
     ecs_table_range_t range;
     if (op->other) {
@@ -84185,13 +84444,7 @@ bool flecs_query_member_cmp(
 
             val = ECS_OFFSET(ECS_ELEM(data, size, row), offset);
             if (val[0] == second || second == EcsWildcard) {
-                if (!neq) {
-                    goto match;
-                }
-            } else {
-                if (neq) {
-                    goto match;
-                }
+                goto match;
             }
 
             row ++;
@@ -84223,15 +84476,7 @@ bool flecs_query_member_eq(
     bool redo,
     ecs_query_run_ctx_t *ctx)
 {
-    return flecs_query_member_cmp(op, redo, ctx, false);
-}
-
-bool flecs_query_member_neq(
-    const ecs_query_op_t *op,
-    bool redo,
-    ecs_query_run_ctx_t *ctx)
-{
-    return flecs_query_member_cmp(op, redo, ctx, true);
+    return flecs_query_member_cmp(op, redo, ctx);
 }
 
 /**
@@ -85471,7 +85716,9 @@ bool flecs_query_toggle(
     }
 
     ecs_flags64_t and_fields = op->first.entity;
-    ecs_flags64_t not_fields = op->second.entity & op_ctx->prev_set_fields;
+    /* Negated toggle terms are compiled as NotRange(Toggle), so regular
+     * Toggle no longer consumes disabled-bit masks from second.entity. */
+    ecs_flags64_t not_fields = 0;
 
     return flecs_query_toggle_cmp(
         op, redo, ctx, and_fields, not_fields);
@@ -85512,7 +85759,6 @@ repeat: {}
 
     return result;
 }
-
 
 /**
  * @file query/engine/eval_trav.c

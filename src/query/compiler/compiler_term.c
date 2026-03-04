@@ -958,6 +958,7 @@ int flecs_query_compile_end_member_term(
 
     /* If this is a term with a Not operator, conditionally evaluate member on
      * whether term was set by previous operation (see begin_member_term). */
+    ecs_query_lbl_t if_set_label = -1;
     if (ctx->oper == EcsNot || ctx->oper == EcsOptional) {
         if (second_wildcard && ctx->oper == EcsNot) {
             /* A !(T.value, *) term doesn't need special operations */
@@ -974,9 +975,9 @@ int flecs_query_compile_end_member_term(
 
         ecs_query_op_t *if_op = flecs_query_begin_block(EcsQueryIfSet, ctx);
         if_op->other = term->field_index;
-
+        if_set_label = ctx->cur->lbl_begin;
         if (ctx->oper == EcsNot) {
-            mbr_op.kind = EcsQueryMemberNeq;
+            flecs_query_begin_block(EcsQueryNotRange, ctx);
         }
     }
 
@@ -1015,6 +1016,14 @@ int flecs_query_compile_end_member_term(
     }
 
     flecs_query_op_insert(&mbr_op, ctx);
+
+    if (ctx->oper == EcsNot) {
+        ctx->cur->lbl_query = flecs_itolbl(ecs_vec_count(ctx->ops) - 1);
+        flecs_query_end_block(ctx, true);
+
+        /* Restore surrounding IfSet block context. */
+        ctx->cur->lbl_begin = if_set_label;
+    }
 
     if (ctx->oper == EcsNot || ctx->oper == EcsOptional) {
         flecs_query_end_block(ctx, false);
@@ -1070,6 +1079,12 @@ void flecs_query_set_op_kind(
     bool src_is_var)
 {
     (void)query;
+    bool non_fragmenting_childof = 
+        (term->flags_ & EcsTermNonFragmentingChildOf) ||
+        ((term->oper == EcsNot) &&
+            !term->trav &&
+            ECS_IS_PAIR(term->id) &&
+            ECS_PAIR_FIRST(term->id) == EcsChildOf);
 
     /* Default instruction for And operators. If the source is fixed (like for
      * singletons or terms with an entity source), use With, which like And but
@@ -1097,9 +1112,6 @@ void flecs_query_set_op_kind(
     } else if (term->flags_ & EcsTermDontFragment) {
         if (op->kind == EcsQueryAnd) {
             op->kind = EcsQuerySparse;
-            if (term->oper == EcsNot) {
-                op->kind = EcsQuerySparseNot;
-            }
         } else {
             op->kind = EcsQuerySparseWith;
         }
@@ -1142,7 +1154,7 @@ void flecs_query_set_op_kind(
 
         /* ChildOf terms need to take into account both ChildOf pairs and the 
          * Parent component for non-fragmenting hierarchies. */
-        if (term->flags_ & EcsTermNonFragmentingChildOf && !term->trav) {
+        if (non_fragmenting_childof && !term->trav) {
             if (query->pub.flags & EcsQueryNested) {
                 /* If this is a nested query (used to populate a cache), insert
                  * instruction that matches tables with ChildOf pairs and Parent
@@ -1177,6 +1189,24 @@ void flecs_query_set_op_kind(
             }
         }
     }
+}
+
+static
+bool flecs_query_not_is_range_op_kind(
+    ecs_query_op_kind_t kind)
+{
+    return kind == EcsQuerySparse ||
+        kind == EcsQuerySparseWith ||
+        kind == EcsQuerySparseUp ||
+        kind == EcsQuerySparseSelfUp ||
+        kind == EcsQueryTree ||
+        kind == EcsQueryTreeWildcard ||
+        kind == EcsQueryTreeWith ||
+        kind == EcsQueryTreePre ||
+        kind == EcsQueryTreePost ||
+        kind == EcsQueryChildren ||
+        kind == EcsQueryChildrenWc ||
+        kind == EcsQueryMemberEq;
 }
 
 int flecs_query_compile_term(
@@ -1278,8 +1308,11 @@ int flecs_query_compile_term(
     flecs_query_set_op_kind(query, &op, term, src_is_var);
 
     bool is_not = (term->oper == EcsNot) && !builtin_pred;
-    if (op.kind == EcsQuerySparseNot) {
-        is_not = false;
+    ecs_query_op_kind_t not_kind = EcsQueryNot;
+    if (is_not && flecs_query_not_is_range_op_kind(
+        (ecs_query_op_kind_t)op.kind))
+    {
+        not_kind = EcsQueryNotRange;
     }
 
     /* Save write state at start of term so we can use it to reliably track
@@ -1410,7 +1443,12 @@ int flecs_query_compile_term(
 
     /* Handle Not, Optional, Or operators */
     if (is_not) {
-        flecs_query_begin_block(EcsQueryNot, ctx);
+        ecs_query_op_t *not_op = flecs_query_begin_block(not_kind, ctx);
+        if (not_kind == EcsQueryNotRange) {
+            not_op->flags = op.flags & (ecs_flags8_t)
+                ((EcsQueryIsEntity|EcsQueryIsVar) << EcsQuerySrc);
+            not_op->src = op.src;
+        }
     } else if (is_optional) {
         flecs_query_begin_block(EcsQueryOptional, ctx);
     } else if (first_or) {
@@ -1533,15 +1571,13 @@ int flecs_query_compile_term(
     }
 
     /* Ensure that term id is set after evaluating Not */
-    if (term->flags_ & EcsTermIdInherited) {
-        if (is_not) {
-            ecs_query_op_t set_id = {0};
-            set_id.kind = EcsQuerySetId;
-            set_id.first.entity = term->id;
-            set_id.flags = (EcsQueryIsEntity << EcsQueryFirst);
-            set_id.field_index = flecs_ito(int8_t, term->field_index);
-            flecs_query_op_insert(&set_id, ctx);
-        }
+    if (term->flags_ & EcsTermIdInherited && is_not) {
+        ecs_query_op_t set_id = {0};
+        set_id.kind = EcsQuerySetId;
+        set_id.first.entity = term->id;
+        set_id.flags = (EcsQueryIsEntity << EcsQueryFirst);
+        set_id.field_index = flecs_ito(int8_t, term->field_index);
+        flecs_query_op_insert(&set_id, ctx);
     }
 
     return 0;

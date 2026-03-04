@@ -334,11 +334,6 @@ bool flecs_query_member_eq(
     bool redo,
     ecs_query_run_ctx_t *ctx);
 
-bool flecs_query_member_neq(
-    const ecs_query_op_t *op,
-    bool redo,
-    ecs_query_run_ctx_t *ctx);
-
 
 /* Up traversal */
 
@@ -387,4 +382,3 @@ bool flecs_query_trav(
     const ecs_query_op_t *op,
     bool redo,
     const ecs_query_run_ctx_t *ctx);
-

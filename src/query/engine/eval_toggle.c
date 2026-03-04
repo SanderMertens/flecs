@@ -300,7 +300,9 @@ bool flecs_query_toggle(
     }
 
     ecs_flags64_t and_fields = op->first.entity;
-    ecs_flags64_t not_fields = op->second.entity & op_ctx->prev_set_fields;
+    /* Negated toggle terms are compiled as NotRange(Toggle), so regular
+     * Toggle no longer consumes disabled-bit masks from second.entity. */
+    ecs_flags64_t not_fields = 0;
 
     return flecs_query_toggle_cmp(
         op, redo, ctx, and_fields, not_fields);
@@ -341,4 +343,3 @@ repeat: {}
 
     return result;
 }
-

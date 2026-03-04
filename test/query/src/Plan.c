@@ -1,4 +1,5 @@
 #include <query.h>
+#include <string.h>
 
 void Plan_reordered_plan_1(void) {
     ecs_world_t *world = ecs_mini();
@@ -3577,5 +3578,91 @@ void Plan_self_up_w_custom_rel_cached(void) {
 
     ecs_query_fini(q);
 
+    ecs_fini(world);
+}
+
+void Plan_not_range_sparse_not(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_id(Position), .oper = EcsNot }}
+    });
+    test_assert(q != NULL);
+
+    char *plan = ecs_query_plan(q);
+    test_assert(strstr(plan, "not_range") != NULL);
+    test_assert(strstr(plan, "sparse") != NULL);
+    ecs_os_free(plan);
+
+    ecs_query_fini(q);
+    ecs_fini(world);
+}
+
+void Plan_not_range_member_not(void) {
+    ecs_world_t *world = ecs_mini();
+    ECS_IMPORT(world, FlecsMeta);
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Movement" }),
+        .members = {
+            { "value", ecs_id(ecs_entity_t) }
+        },
+        .create_member_entities = true
+    });
+    ecs_entity(world, { .name = "Running" });
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "!(Movement.value, Running)"
+    });
+    test_assert(q != NULL);
+
+    char *plan = ecs_query_plan(q);
+    test_assert(strstr(plan, "not_range") != NULL);
+    test_assert(strstr(plan, "membereq") != NULL);
+    ecs_os_free(plan);
+
+    ecs_query_fini(q);
+    ecs_fini(world);
+}
+
+void Plan_not_range_toggle_not(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ecs_add_id(world, ecs_id(Position), EcsCanToggle);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_id(Position), .oper = EcsNot }}
+    });
+    test_assert(q != NULL);
+
+    char *plan = ecs_query_plan(q);
+    test_assert(strstr(plan, "not_range") != NULL);
+    test_assert(strstr(plan, "toggle") != NULL);
+    ecs_os_free(plan);
+
+    ecs_query_fini(q);
+    ecs_fini(world);
+}
+
+void Plan_not_range_non_fragmenting_childof_not(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "Parent" });
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_childof(parent), .oper = EcsNot }}
+    });
+    test_assert(q != NULL);
+
+    char *plan = ecs_query_plan(q);
+    test_assert(strstr(plan, "not_range") != NULL);
+    test_assert(strstr(plan, "tree") != NULL || strstr(plan, "children") != NULL);
+    ecs_os_free(plan);
+
+    ecs_query_fini(q);
     ecs_fini(world);
 }

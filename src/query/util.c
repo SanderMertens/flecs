@@ -36,6 +36,7 @@ const char* flecs_query_op_str(
     case EcsQueryIfSet:          return "ifset       ";
     case EcsQueryEnd:            return "end         ";
     case EcsQueryNot:            return "not         ";
+    case EcsQueryNotRange:       return "not_range   ";
     case EcsQueryPredEq:         return "eq          ";
     case EcsQueryPredNeq:        return "neq         ";
     case EcsQueryPredEqName:     return "eq_nm       ";
@@ -43,12 +44,10 @@ const char* flecs_query_op_str(
     case EcsQueryPredEqMatch:    return "eq_m        ";
     case EcsQueryPredNeqMatch:   return "neq_m       ";
     case EcsQueryMemberEq:       return "membereq    ";
-    case EcsQueryMemberNeq:      return "memberneq   ";
     case EcsQueryToggle:         return "toggle      ";
     case EcsQueryToggleOption:   return "togglopt    ";
     case EcsQuerySparse:         return "sparse      ";
     case EcsQuerySparseWith:     return "sparse_w    ";
-    case EcsQuerySparseNot:      return "sparse_not  ";
     case EcsQuerySparseSelfUp:   return "sparse_sup  ";
     case EcsQuerySparseUp:       return "sparse_up   ";
     case EcsQueryTree:           return "tree        ";
@@ -356,6 +355,7 @@ void flecs_query_plan_w_profile(
         hidden_chars = flecs_query_op_ref_str(impl, &op->src, src_flags, buf);
 
         if (op->kind == EcsQueryNot || 
+            op->kind == EcsQueryNotRange ||
             op->kind == EcsQueryOr || 
             op->kind == EcsQueryOptional || 
             op->kind == EcsQueryIfVar ||
@@ -401,7 +401,7 @@ void flecs_query_plan_w_profile(
         }
 
         ecs_strbuf_appendstr(buf, "(");
-        if (op->kind == EcsQueryMemberEq || op->kind == EcsQueryMemberNeq) {
+        if (op->kind == EcsQueryMemberEq) {
             uint32_t offset = (uint32_t)op->first.entity;
             uint32_t size = (uint32_t)(op->first.entity >> 32);
             ecs_strbuf_append(buf, "#[yellow]elem#[reset]([%d], 0x%x, 0x%x)", 

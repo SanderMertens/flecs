@@ -782,7 +782,7 @@ int flecs_query_insert_toggle(
                 fields_done |= (1llu << j);
             }
 
-            if (and_toggles || not_toggles) {
+            if (and_toggles) {
                 ecs_query_op_t op = {0};
                 op.kind = EcsQueryToggle;
                 op.src = cur.src;
@@ -797,8 +797,41 @@ int flecs_query_insert_toggle(
                  * - second.entity is the fields that match disabled bits
                  */
                 op.first.entity = and_toggles;
-                op.second.entity = not_toggles;
+                op.second.entity = 0;
                 flecs_query_op_insert(&op, ctx);
+            }
+
+            if (not_toggles) {
+                for (j = i; j < term_count; j ++) {
+                    uint64_t field_bit = 1ull << j;
+                    if (!(not_toggles & field_bit)) {
+                        continue;
+                    }
+
+                    ecs_query_op_t *not_op = flecs_query_begin_block(
+                        EcsQueryNotRange, ctx);
+                    not_op->flags = cur.flags & (ecs_flags8_t)
+                        ((EcsQueryIsEntity|EcsQueryIsVar) << EcsQuerySrc);
+                    not_op->src = cur.src;
+
+                    ecs_query_op_t op = {0};
+                    op.kind = EcsQueryToggle;
+                    op.src = cur.src;
+                    op.flags = cur.flags;
+                    op.field_index = flecs_ito(int8_t, j);
+                    op.term_index = flecs_ito(int8_t, j);
+
+                    if (op.flags & (EcsQueryIsVar << EcsQuerySrc)) {
+                        flecs_query_write(op.src.var, &op.written);
+                    }
+
+                    op.first.entity = field_bit;
+                    op.second.entity = 0;
+                    flecs_query_op_insert(&op, ctx);
+
+                    ctx->cur->lbl_query = flecs_itolbl(ecs_vec_count(ctx->ops) - 1);
+                    flecs_query_end_block(ctx, true);
+                }
             }
 
             /* Insert separate instructions for optional terms. To make sure

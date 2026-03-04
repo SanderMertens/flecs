@@ -1,4 +1,3 @@
-
 /* A friendly warning from bake.test
  * ----------------------------------------------------------------------------
  * This file is generated. To add/remove testcases modify the 'project.json' of
@@ -6,9 +5,8 @@
  * ----------------------------------------------------------------------------
  */
 
-#include <query.h>
+#include <bake_test.h>
 
-// Testsuite 'Validator'
 void Validator_validate_1_term(void);
 void Validator_validate_1_term_component(void);
 void Validator_validate_2_terms(void);
@@ -171,7 +169,6 @@ void Validator_validator_2_var_src_terms_match_this(void);
 void Validator_validator_2_terms_1_var_src_match_this(void);
 void Validator_validator_1_tag_term_this_src_match_this(void);
 
-// Testsuite 'Parser'
 void Parser_resolve_this(void);
 void Parser_resolve_wildcard(void);
 void Parser_resolve_any(void);
@@ -479,7 +476,6 @@ void Parser_singleton_trait(void);
 void Parser_singleton_trait_w_explicit_this_var(void);
 void Parser_singleton_trait_w_explicit_src(void);
 
-// Testsuite 'Fuzzing'
 void Fuzzing_setup(void);
 void Fuzzing_1(void);
 void Fuzzing_2(void);
@@ -488,7 +484,6 @@ void Fuzzing_4(void);
 void Fuzzing_5(void);
 void Fuzzing_6(void);
 
-// Testsuite 'Basic'
 void Basic_setup(void);
 void Basic_0_query(void);
 void Basic_1_fact_w_tag(void);
@@ -729,7 +724,6 @@ void Basic_get_query_not_a_query(void);
 void Basic_mixed_uncacheable_w_shared(void);
 void Basic_query_has_and_optional_and(void);
 
-// Testsuite 'Combinations'
 void Combinations_setup(void);
 void Combinations_singleton_and_self_and_self(void);
 void Combinations_self_and_singleton_and_self(void);
@@ -741,7 +735,6 @@ void Combinations_self_and_trav_and_singleton(void);
 void Combinations_singleton_and_self_and_trav(void);
 void Combinations_trav_and_self_and_singleton(void);
 
-// Testsuite 'Plan'
 void Plan_reordered_plan_1(void);
 void Plan_reordered_plan_2(void);
 void Plan_reordered_plan_1_childof(void);
@@ -848,8 +841,11 @@ void Plan_up_w_custom_rel(void);
 void Plan_up_w_custom_rel_cached(void);
 void Plan_self_up_w_custom_rel(void);
 void Plan_self_up_w_custom_rel_cached(void);
+void Plan_not_range_sparse_not(void);
+void Plan_not_range_member_not(void);
+void Plan_not_range_toggle_not(void);
+void Plan_not_range_non_fragmenting_childof_not(void);
 
-// Testsuite 'Variables'
 void Variables_setup(void);
 void Variables_1_ent_src_w_var(void);
 void Variables_1_ent_src_w_pair_rel_var(void);
@@ -1048,7 +1044,6 @@ void Variables_get_vars_from_chained_iter(void);
 void Variables_set_var_from_chained_iter(void);
 void Variables_set_var_range_from_chained_iter(void);
 
-// Testsuite 'Operators'
 void Operators_setup(void);
 void Operators_2_and_not(void);
 void Operators_2_and_not_component(void);
@@ -1214,7 +1209,6 @@ void Operators_not_transitive_rel_wildcard(void);
 void Operators_not_reflexive_rel_wildcard(void);
 void Operators_and_optional_and(void);
 
-// Testsuite 'Transitive'
 void Transitive_1_fact_0_lvl_true(void);
 void Transitive_1_fact_1_lvl_true(void);
 void Transitive_1_fact_2_lvl_true(void);
@@ -1288,7 +1282,6 @@ void Transitive_isa_prefab_match_prefab_term(void);
 void Transitive_isa_disabled_match_disabled_flag(void);
 void Transitive_isa_disabled_match_disabled_term(void);
 
-// Testsuite 'ComponentInheritance'
 void ComponentInheritance_1_ent_0_lvl(void);
 void ComponentInheritance_1_ent_1_lvl(void);
 void ComponentInheritance_1_ent_2_lvl(void);
@@ -1326,7 +1319,6 @@ void ComponentInheritance_query_before_isa_relationship_2nd_term(void);
 void ComponentInheritance_query_before_isa_relationship_subtype(void);
 void ComponentInheritance_query_before_isa_relationship_0_src(void);
 
-// Testsuite 'Recycled'
 void Recycled_setup(void);
 void Recycled_recycled_vars(void);
 void Recycled_recycled_pair_vars(void);
@@ -1335,7 +1327,6 @@ void Recycled_has_recycled_id_from_pair(void);
 void Recycled_recycled_pair(void);
 void Recycled_recycled_component_id(void);
 
-// Testsuite 'BuiltinPredicates'
 void BuiltinPredicates_setup(void);
 void BuiltinPredicates_this_eq_id(void);
 void BuiltinPredicates_this_eq_name(void);
@@ -1428,7 +1419,6 @@ void BuiltinPredicates_match_variable(void);
 void BuiltinPredicates_match_wildcard(void);
 void BuiltinPredicates_match_any(void);
 
-// Testsuite 'Scopes'
 void Scopes_setup(void);
 void Scopes_term_w_not_scope_1_term(void);
 void Scopes_term_w_not_scope_2_terms(void);
@@ -1442,7 +1432,6 @@ void Scopes_term_w_not_scope_2_terms_w_or(void);
 void Scopes_term_w_not_scope_3_terms_w_or(void);
 void Scopes_term_w_not_scope_2_terms_w_before_after(void);
 
-// Testsuite 'Traversal'
 void Traversal_setup(void);
 void Traversal_this_self_up_childof(void);
 void Traversal_this_up_childof(void);
@@ -1628,7 +1617,6 @@ void Traversal_this_or_w_self_up_childof_2(void);
 void Traversal_this_or_w_self_up_childof_w_tag(void);
 void Traversal_this_written_or_w_self_up_childof(void);
 
-// Testsuite 'Cascade'
 void Cascade_parent_cascade(void);
 void Cascade_existing_custom_rel_cascade(void);
 void Cascade_new_custom_rel_cascade(void);
@@ -1664,7 +1652,6 @@ void Cascade_parent_component_after_query(void);
 void Cascade_parent_component_n_children_after_query(void);
 void Cascade_parent_component_n_parents_for_depth_after_query(void);
 
-// Testsuite 'Cached'
 void Cached_simple_query_existing_table(void);
 void Cached_simple_query_2_existing_tables(void);
 void Cached_simple_query_new_table(void);
@@ -1828,7 +1815,6 @@ void Cached_this_self_up_w_3_levels_ppp_after_query(void);
 void Cached_rematch_after_reparent_parent(void);
 void Cached_no_rematch_after_reparent_child(void);
 
-// Testsuite 'ChangeDetection'
 void ChangeDetection_query_changed_after_new(void);
 void ChangeDetection_query_changed_after_delete(void);
 void ChangeDetection_query_changed_after_add(void);
@@ -1903,7 +1889,6 @@ void ChangeDetection_detect_w_cascade(void);
 void ChangeDetection_detect_w_cascade_desc(void);
 void ChangeDetection_detect_partially_cached(void);
 
-// Testsuite 'GroupBy'
 void GroupBy_group_by(void);
 void GroupBy_group_by_w_ctx(void);
 void GroupBy_group_by_w_sort_reverse_group_creation(void);
@@ -1929,7 +1914,6 @@ void GroupBy_get_groups(void);
 void GroupBy_get_groups_default_group(void);
 void GroupBy_on_group_create_delete_default_group(void);
 
-// Testsuite 'MemberTarget'
 void MemberTarget_setup(void);
 void MemberTarget_this_member_eq_1(void);
 void MemberTarget_this_member_eq_2(void);
@@ -1995,7 +1979,6 @@ void MemberTarget_var_written_member_neq(void);
 void MemberTarget_var_written_member_neq_no_matches(void);
 void MemberTarget_var_written_member_neq_all_matches(void);
 
-// Testsuite 'Toggle'
 void Toggle_setup(void);
 void Toggle_fixed_src_1_tag_toggle(void);
 void Toggle_fixed_src_1_component_toggle(void);
@@ -2161,7 +2144,6 @@ void Toggle_this_table_move_2_from_3(void);
 void Toggle_toggle_0_src_only_term(void);
 void Toggle_toggle_0_src(void);
 
-// Testsuite 'Sparse'
 void Sparse_setup(void);
 void Sparse_1_fixed_sparse(void);
 void Sparse_1_fixed_sparse_none(void);
@@ -2195,7 +2177,6 @@ void Sparse_sparse_pair_second(void);
 void Sparse_sparse_pair_first_after_query(void);
 void Sparse_sparse_pair_second_after_query(void);
 
-// Testsuite 'DontFragment'
 void DontFragment_setup(void);
 void DontFragment_1_fixed_sparse(void);
 void DontFragment_1_fixed_sparse_none(void);
@@ -2325,7 +2306,6 @@ void DontFragment_this_written_sparse_pair_recycled(void);
 void DontFragment_this_written_sparse_wildcard_pair_recycled(void);
 void DontFragment_this_written_sparse_any_pair_recycled(void);
 
-// Testsuite 'NonFragmentingChildOf'
 void NonFragmentingChildOf_setup(void);
 void NonFragmentingChildOf_0_src_childof_parent(void);
 void NonFragmentingChildOf_0_src_childof_0(void);
@@ -2642,7 +2622,6 @@ void NonFragmentingChildOf_this_childof_w_prefab_match_prefab(void);
 void NonFragmentingChildOf_this_set_childof_w_prefab(void);
 void NonFragmentingChildOf_this_set_childof_w_prefab_match_prefab(void);
 
-// Testsuite 'OrderBy'
 void OrderBy_sort_by_component(void);
 void OrderBy_sort_by_component_2_tables(void);
 void OrderBy_sort_by_component_3_tables(void);
@@ -2689,7 +2668,6 @@ void OrderBy_order_empty_table(void);
 void OrderBy_order_empty_table_only(void);
 void OrderBy_order_empty_table_only_2_tables(void);
 
-// Testsuite 'OrderByEntireTable'
 void OrderByEntireTable_sort_by_component(void);
 void OrderByEntireTable_sort_by_component_2_tables(void);
 void OrderByEntireTable_sort_by_component_3_tables(void);
@@ -2728,7 +2706,6 @@ void OrderByEntireTable_sort_not_term(void);
 void OrderByEntireTable_sort_or_term(void);
 void OrderByEntireTable_sort_optional_term(void);
 
-// Testsuite 'TrivialIter'
 void TrivialIter_uncached_trivial_search(void);
 void TrivialIter_uncached_trivial_test(void);
 void TrivialIter_cached_trivial_search(void);
@@ -2750,7 +2727,6 @@ void TrivialIter_cached_trivial_test_w_optional_wildcard_operator(void);
 void TrivialIter_cached_trivial_search_w_wildcard(void);
 void TrivialIter_cached_trivial_test_w_wildcard(void);
 
-// Testsuite 'QueryStr'
 void QueryStr_one_term(void);
 void QueryStr_one_term_w_inout(void);
 void QueryStr_two_terms(void);
@@ -3431,7 +3407,7 @@ bake_test_case Validator_testcases[] = {
     {
         "validator_1_tag_term_this_src_match_this",
         Validator_validator_1_tag_term_this_src_match_this
-    }
+    },
 };
 
 bake_test_case Parser_testcases[] = {
@@ -4658,7 +4634,7 @@ bake_test_case Parser_testcases[] = {
     {
         "singleton_trait_w_explicit_src",
         Parser_singleton_trait_w_explicit_src
-    }
+    },
 };
 
 bake_test_case Fuzzing_testcases[] = {
@@ -4685,7 +4661,12 @@ bake_test_case Fuzzing_testcases[] = {
     {
         "6",
         Fuzzing_6
-    }
+    },
+};
+
+const char* Fuzzing_cache_kind_param[] = {"default", "auto"};
+bake_test_param Fuzzing_params[] = {
+    {"cache_kind", (char**)Fuzzing_cache_kind_param, 2},
 };
 
 bake_test_case Basic_testcases[] = {
@@ -5640,7 +5621,12 @@ bake_test_case Basic_testcases[] = {
     {
         "query_has_and_optional_and",
         Basic_query_has_and_optional_and
-    }
+    },
+};
+
+const char* Basic_cache_kind_param[] = {"default", "auto"};
+bake_test_param Basic_params[] = {
+    {"cache_kind", (char**)Basic_cache_kind_param, 2},
 };
 
 bake_test_case Combinations_testcases[] = {
@@ -5679,7 +5665,14 @@ bake_test_case Combinations_testcases[] = {
     {
         "trav_and_self_and_singleton",
         Combinations_trav_and_self_and_singleton
-    }
+    },
+};
+
+const char* Combinations_cache_kind_param[] = {"default", "auto"};
+const char* Combinations_on_instantiate_param[] = {"override", "inherit", "dont_inherit"};
+bake_test_param Combinations_params[] = {
+    {"cache_kind", (char**)Combinations_cache_kind_param, 2},
+    {"on_instantiate", (char**)Combinations_on_instantiate_param, 3},
 };
 
 bake_test_case Plan_testcases[] = {
@@ -6106,7 +6099,23 @@ bake_test_case Plan_testcases[] = {
     {
         "self_up_w_custom_rel_cached",
         Plan_self_up_w_custom_rel_cached
-    }
+    },
+    {
+        "not_range_sparse_not",
+        Plan_not_range_sparse_not
+    },
+    {
+        "not_range_member_not",
+        Plan_not_range_member_not
+    },
+    {
+        "not_range_toggle_not",
+        Plan_not_range_toggle_not
+    },
+    {
+        "not_range_non_fragmenting_childof_not",
+        Plan_not_range_non_fragmenting_childof_not
+    },
 };
 
 bake_test_case Variables_testcases[] = {
@@ -6893,7 +6902,12 @@ bake_test_case Variables_testcases[] = {
     {
         "set_var_range_from_chained_iter",
         Variables_set_var_range_from_chained_iter
-    }
+    },
+};
+
+const char* Variables_cache_kind_param[] = {"default", "auto"};
+bake_test_param Variables_params[] = {
+    {"cache_kind", (char**)Variables_cache_kind_param, 2},
 };
 
 bake_test_case Operators_testcases[] = {
@@ -7548,7 +7562,12 @@ bake_test_case Operators_testcases[] = {
     {
         "and_optional_and",
         Operators_and_optional_and
-    }
+    },
+};
+
+const char* Operators_cache_kind_param[] = {"default", "auto"};
+bake_test_param Operators_params[] = {
+    {"cache_kind", (char**)Operators_cache_kind_param, 2},
 };
 
 bake_test_case Transitive_testcases[] = {
@@ -7839,7 +7858,7 @@ bake_test_case Transitive_testcases[] = {
     {
         "isa_disabled_match_disabled_term",
         Transitive_isa_disabled_match_disabled_term
-    }
+    },
 };
 
 bake_test_case ComponentInheritance_testcases[] = {
@@ -7986,7 +8005,7 @@ bake_test_case ComponentInheritance_testcases[] = {
     {
         "query_before_isa_relationship_0_src",
         ComponentInheritance_query_before_isa_relationship_0_src
-    }
+    },
 };
 
 bake_test_case Recycled_testcases[] = {
@@ -8013,7 +8032,12 @@ bake_test_case Recycled_testcases[] = {
     {
         "recycled_component_id",
         Recycled_recycled_component_id
-    }
+    },
+};
+
+const char* Recycled_cache_kind_param[] = {"default", "auto"};
+bake_test_param Recycled_params[] = {
+    {"cache_kind", (char**)Recycled_cache_kind_param, 2},
 };
 
 bake_test_case BuiltinPredicates_testcases[] = {
@@ -8376,7 +8400,12 @@ bake_test_case BuiltinPredicates_testcases[] = {
     {
         "match_any",
         BuiltinPredicates_match_any
-    }
+    },
+};
+
+const char* BuiltinPredicates_cache_kind_param[] = {"default", "auto"};
+bake_test_param BuiltinPredicates_params[] = {
+    {"cache_kind", (char**)BuiltinPredicates_cache_kind_param, 2},
 };
 
 bake_test_case Scopes_testcases[] = {
@@ -8423,7 +8452,14 @@ bake_test_case Scopes_testcases[] = {
     {
         "term_w_not_scope_2_terms_w_before_after",
         Scopes_term_w_not_scope_2_terms_w_before_after
-    }
+    },
+};
+
+const char* Scopes_cache_kind_param[] = {"default", "auto"};
+const char* Scopes_on_instantiate_param[] = {"override", "inherit"};
+bake_test_param Scopes_params[] = {
+    {"cache_kind", (char**)Scopes_cache_kind_param, 2},
+    {"on_instantiate", (char**)Scopes_on_instantiate_param, 2},
 };
 
 bake_test_case Traversal_testcases[] = {
@@ -9158,7 +9194,12 @@ bake_test_case Traversal_testcases[] = {
     {
         "this_written_or_w_self_up_childof",
         Traversal_this_written_or_w_self_up_childof
-    }
+    },
+};
+
+const char* Traversal_cache_kind_param[] = {"default", "auto"};
+bake_test_param Traversal_params[] = {
+    {"cache_kind", (char**)Traversal_cache_kind_param, 2},
 };
 
 bake_test_case Cascade_testcases[] = {
@@ -9297,7 +9338,7 @@ bake_test_case Cascade_testcases[] = {
     {
         "parent_component_n_parents_for_depth_after_query",
         Cascade_parent_component_n_parents_for_depth_after_query
-    }
+    },
 };
 
 bake_test_case Cached_testcases[] = {
@@ -9948,7 +9989,7 @@ bake_test_case Cached_testcases[] = {
     {
         "no_rematch_after_reparent_child",
         Cached_no_rematch_after_reparent_child
-    }
+    },
 };
 
 bake_test_case ChangeDetection_testcases[] = {
@@ -10243,7 +10284,7 @@ bake_test_case ChangeDetection_testcases[] = {
     {
         "detect_partially_cached",
         ChangeDetection_detect_partially_cached
-    }
+    },
 };
 
 bake_test_case GroupBy_testcases[] = {
@@ -10342,7 +10383,7 @@ bake_test_case GroupBy_testcases[] = {
     {
         "on_group_create_delete_default_group",
         GroupBy_on_group_create_delete_default_group
-    }
+    },
 };
 
 bake_test_case MemberTarget_testcases[] = {
@@ -10597,7 +10638,12 @@ bake_test_case MemberTarget_testcases[] = {
     {
         "var_written_member_neq_all_matches",
         MemberTarget_var_written_member_neq_all_matches
-    }
+    },
+};
+
+const char* MemberTarget_cache_kind_param[] = {"default", "auto"};
+bake_test_param MemberTarget_params[] = {
+    {"cache_kind", (char**)MemberTarget_cache_kind_param, 2},
 };
 
 bake_test_case Toggle_testcases[] = {
@@ -11252,7 +11298,12 @@ bake_test_case Toggle_testcases[] = {
     {
         "toggle_0_src",
         Toggle_toggle_0_src
-    }
+    },
+};
+
+const char* Toggle_cache_kind_param[] = {"default", "auto"};
+bake_test_param Toggle_params[] = {
+    {"cache_kind", (char**)Toggle_cache_kind_param, 2},
 };
 
 bake_test_case Sparse_testcases[] = {
@@ -11379,7 +11430,12 @@ bake_test_case Sparse_testcases[] = {
     {
         "sparse_pair_second_after_query",
         Sparse_sparse_pair_second_after_query
-    }
+    },
+};
+
+const char* Sparse_cache_kind_param[] = {"default", "auto"};
+bake_test_param Sparse_params[] = {
+    {"cache_kind", (char**)Sparse_cache_kind_param, 2},
 };
 
 bake_test_case DontFragment_testcases[] = {
@@ -11890,7 +11946,12 @@ bake_test_case DontFragment_testcases[] = {
     {
         "this_written_sparse_any_pair_recycled",
         DontFragment_this_written_sparse_any_pair_recycled
-    }
+    },
+};
+
+const char* DontFragment_cache_kind_param[] = {"default", "auto"};
+bake_test_param DontFragment_params[] = {
+    {"cache_kind", (char**)DontFragment_cache_kind_param, 2},
 };
 
 bake_test_case NonFragmentingChildOf_testcases[] = {
@@ -13149,7 +13210,12 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "this_set_childof_w_prefab_match_prefab",
         NonFragmentingChildOf_this_set_childof_w_prefab_match_prefab
-    }
+    },
+};
+
+const char* NonFragmentingChildOf_cache_kind_param[] = {"default", "auto"};
+bake_test_param NonFragmentingChildOf_params[] = {
+    {"cache_kind", (char**)NonFragmentingChildOf_cache_kind_param, 2},
 };
 
 bake_test_case OrderBy_testcases[] = {
@@ -13332,7 +13398,7 @@ bake_test_case OrderBy_testcases[] = {
     {
         "order_empty_table_only_2_tables",
         OrderBy_order_empty_table_only_2_tables
-    }
+    },
 };
 
 bake_test_case OrderByEntireTable_testcases[] = {
@@ -13483,7 +13549,7 @@ bake_test_case OrderByEntireTable_testcases[] = {
     {
         "sort_optional_term",
         OrderByEntireTable_sort_optional_term
-    }
+    },
 };
 
 bake_test_case TrivialIter_testcases[] = {
@@ -13566,7 +13632,7 @@ bake_test_case TrivialIter_testcases[] = {
     {
         "cached_trivial_test_w_wildcard",
         TrivialIter_cached_trivial_test_w_wildcard
-    }
+    },
 };
 
 bake_test_case QueryStr_testcases[] = {
@@ -13709,89 +13775,28 @@ bake_test_case QueryStr_testcases[] = {
     {
         "childof_0",
         QueryStr_childof_0
-    }
-};
-
-const char* Fuzzing_cache_kind_param[] = {"default", "auto"};
-bake_test_param Fuzzing_params[] = {
-    {"cache_kind", (char**)Fuzzing_cache_kind_param, 2}
-};
-const char* Basic_cache_kind_param[] = {"default", "auto"};
-bake_test_param Basic_params[] = {
-    {"cache_kind", (char**)Basic_cache_kind_param, 2}
-};
-const char* Combinations_cache_kind_param[] = {"default", "auto"};
-const char* Combinations_on_instantiate_param[] = {"override", "inherit", "dont_inherit"};
-bake_test_param Combinations_params[] = {
-    {"cache_kind", (char**)Combinations_cache_kind_param, 2},
-    {"on_instantiate", (char**)Combinations_on_instantiate_param, 3}
-};
-const char* Variables_cache_kind_param[] = {"default", "auto"};
-bake_test_param Variables_params[] = {
-    {"cache_kind", (char**)Variables_cache_kind_param, 2}
-};
-const char* Operators_cache_kind_param[] = {"default", "auto"};
-bake_test_param Operators_params[] = {
-    {"cache_kind", (char**)Operators_cache_kind_param, 2}
-};
-const char* Recycled_cache_kind_param[] = {"default", "auto"};
-bake_test_param Recycled_params[] = {
-    {"cache_kind", (char**)Recycled_cache_kind_param, 2}
-};
-const char* BuiltinPredicates_cache_kind_param[] = {"default", "auto"};
-bake_test_param BuiltinPredicates_params[] = {
-    {"cache_kind", (char**)BuiltinPredicates_cache_kind_param, 2}
-};
-const char* Scopes_cache_kind_param[] = {"default", "auto"};
-const char* Scopes_on_instantiate_param[] = {"override", "inherit"};
-bake_test_param Scopes_params[] = {
-    {"cache_kind", (char**)Scopes_cache_kind_param, 2},
-    {"on_instantiate", (char**)Scopes_on_instantiate_param, 2}
-};
-const char* Traversal_cache_kind_param[] = {"default", "auto"};
-bake_test_param Traversal_params[] = {
-    {"cache_kind", (char**)Traversal_cache_kind_param, 2}
-};
-const char* MemberTarget_cache_kind_param[] = {"default", "auto"};
-bake_test_param MemberTarget_params[] = {
-    {"cache_kind", (char**)MemberTarget_cache_kind_param, 2}
-};
-const char* Toggle_cache_kind_param[] = {"default", "auto"};
-bake_test_param Toggle_params[] = {
-    {"cache_kind", (char**)Toggle_cache_kind_param, 2}
-};
-const char* Sparse_cache_kind_param[] = {"default", "auto"};
-bake_test_param Sparse_params[] = {
-    {"cache_kind", (char**)Sparse_cache_kind_param, 2}
-};
-const char* DontFragment_cache_kind_param[] = {"default", "auto"};
-bake_test_param DontFragment_params[] = {
-    {"cache_kind", (char**)DontFragment_cache_kind_param, 2}
-};
-const char* NonFragmentingChildOf_cache_kind_param[] = {"default", "auto"};
-bake_test_param NonFragmentingChildOf_params[] = {
-    {"cache_kind", (char**)NonFragmentingChildOf_cache_kind_param, 2}
+    },
 };
 
 static bake_test_suite suites[] = {
     {
         "Validator",
-        NULL,
-        NULL,
+        0,
+        0,
         161,
         Validator_testcases
     },
     {
         "Parser",
-        NULL,
-        NULL,
+        0,
+        0,
         306,
         Parser_testcases
     },
     {
         "Fuzzing",
         Fuzzing_setup,
-        NULL,
+        0,
         6,
         Fuzzing_testcases,
         1,
@@ -13800,7 +13805,7 @@ static bake_test_suite suites[] = {
     {
         "Basic",
         Basic_setup,
-        NULL,
+        0,
         238,
         Basic_testcases,
         1,
@@ -13809,7 +13814,7 @@ static bake_test_suite suites[] = {
     {
         "Combinations",
         Combinations_setup,
-        NULL,
+        0,
         9,
         Combinations_testcases,
         2,
@@ -13817,15 +13822,15 @@ static bake_test_suite suites[] = {
     },
     {
         "Plan",
-        NULL,
-        NULL,
-        106,
+        0,
+        0,
+        110,
         Plan_testcases
     },
     {
         "Variables",
         Variables_setup,
-        NULL,
+        0,
         196,
         Variables_testcases,
         1,
@@ -13834,7 +13839,7 @@ static bake_test_suite suites[] = {
     {
         "Operators",
         Operators_setup,
-        NULL,
+        0,
         163,
         Operators_testcases,
         1,
@@ -13842,22 +13847,22 @@ static bake_test_suite suites[] = {
     },
     {
         "Transitive",
-        NULL,
-        NULL,
+        0,
+        0,
         72,
         Transitive_testcases
     },
     {
         "ComponentInheritance",
-        NULL,
-        NULL,
+        0,
+        0,
         36,
         ComponentInheritance_testcases
     },
     {
         "Recycled",
         Recycled_setup,
-        NULL,
+        0,
         6,
         Recycled_testcases,
         1,
@@ -13866,7 +13871,7 @@ static bake_test_suite suites[] = {
     {
         "BuiltinPredicates",
         BuiltinPredicates_setup,
-        NULL,
+        0,
         90,
         BuiltinPredicates_testcases,
         1,
@@ -13875,7 +13880,7 @@ static bake_test_suite suites[] = {
     {
         "Scopes",
         Scopes_setup,
-        NULL,
+        0,
         11,
         Scopes_testcases,
         2,
@@ -13884,7 +13889,7 @@ static bake_test_suite suites[] = {
     {
         "Traversal",
         Traversal_setup,
-        NULL,
+        0,
         183,
         Traversal_testcases,
         1,
@@ -13892,36 +13897,36 @@ static bake_test_suite suites[] = {
     },
     {
         "Cascade",
-        NULL,
-        NULL,
+        0,
+        0,
         34,
         Cascade_testcases
     },
     {
         "Cached",
-        NULL,
-        NULL,
+        0,
+        0,
         162,
         Cached_testcases
     },
     {
         "ChangeDetection",
-        NULL,
-        NULL,
+        0,
+        0,
         73,
         ChangeDetection_testcases
     },
     {
         "GroupBy",
-        NULL,
-        NULL,
+        0,
+        0,
         24,
         GroupBy_testcases
     },
     {
         "MemberTarget",
         MemberTarget_setup,
-        NULL,
+        0,
         63,
         MemberTarget_testcases,
         1,
@@ -13930,7 +13935,7 @@ static bake_test_suite suites[] = {
     {
         "Toggle",
         Toggle_setup,
-        NULL,
+        0,
         163,
         Toggle_testcases,
         1,
@@ -13939,7 +13944,7 @@ static bake_test_suite suites[] = {
     {
         "Sparse",
         Sparse_setup,
-        NULL,
+        0,
         31,
         Sparse_testcases,
         1,
@@ -13948,7 +13953,7 @@ static bake_test_suite suites[] = {
     {
         "DontFragment",
         DontFragment_setup,
-        NULL,
+        0,
         127,
         DontFragment_testcases,
         1,
@@ -13957,7 +13962,7 @@ static bake_test_suite suites[] = {
     {
         "NonFragmentingChildOf",
         NonFragmentingChildOf_setup,
-        NULL,
+        0,
         314,
         NonFragmentingChildOf_testcases,
         1,
@@ -13965,32 +13970,32 @@ static bake_test_suite suites[] = {
     },
     {
         "OrderBy",
-        NULL,
-        NULL,
+        0,
+        0,
         45,
         OrderBy_testcases
     },
     {
         "OrderByEntireTable",
-        NULL,
-        NULL,
+        0,
+        0,
         37,
         OrderByEntireTable_testcases
     },
     {
         "TrivialIter",
-        NULL,
-        NULL,
+        0,
+        0,
         20,
         TrivialIter_testcases
     },
     {
         "QueryStr",
-        NULL,
-        NULL,
+        0,
+        0,
         35,
         QueryStr_testcases
-    }
+    },
 };
 
 int main(int argc, char *argv[]) {

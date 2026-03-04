@@ -68,6 +68,7 @@ typedef enum {
     EcsQueryIfVar,          /* Conditional execution on whether variable is set */
     EcsQueryIfSet,          /* Conditional execution on whether term is set */
     EcsQueryNot,            /* Sets iterator state after term was not matched */
+    EcsQueryNotRange,       /* Invert range-producing operation results */
     EcsQueryEnd,            /* End of control flow block */
     EcsQueryPredEq,         /* Test if variable is equal to, or assign to if not set */
     EcsQueryPredNeq,        /* Test if variable is not equal to */
@@ -76,11 +77,9 @@ typedef enum {
     EcsQueryPredEqMatch,    /* Same as EcsQueryPredEq but with fuzzy matching by name */
     EcsQueryPredNeqMatch,   /* Same as EcsQueryPredNeq but with fuzzy matching by name */
     EcsQueryMemberEq,       /* Compare member value */
-    EcsQueryMemberNeq,      /* Compare member value */
     EcsQueryToggle,         /* Evaluate toggle bitset, if present */
     EcsQueryToggleOption,   /* Toggle for optional terms */
     EcsQuerySparse,         /* Evaluate sparse component */
-    EcsQuerySparseNot,      /* Evaluate sparse component with not operator */
     EcsQuerySparseSelfUp,
     EcsQuerySparseUp,
     EcsQuerySparseWith,     /* Evaluate sparse component against fixed or variable source */
@@ -327,6 +326,22 @@ typedef struct {
     bool is_set;
 } ecs_query_ctrl_ctx_t;
 
+/* Range inversion context */
+typedef struct {
+    ecs_query_ctrl_ctx_t ctrl;
+    ecs_table_range_t src_range;
+    int32_t cur;
+    int32_t end;
+    ecs_termset_t set_fields;
+    ecs_id_t field_id;
+    const ecs_table_record_t *field_tr;
+    ecs_entity_t field_source;
+    int8_t field;
+    bool field_valid;
+    bool block_redo;
+    bool done;
+} ecs_query_not_range_ctx_t;
+
 /* Trivial iterator context */
 typedef struct {
     ecs_table_cache_iter_t it;
@@ -378,6 +393,7 @@ typedef struct ecs_query_op_ctx_t {
         ecs_query_each_ctx_t each;
         ecs_query_setthis_ctx_t setthis;
         ecs_query_ctrl_ctx_t ctrl;
+        ecs_query_not_range_ctx_t not_range;
         ecs_query_trivial_ctx_t trivial;
         ecs_query_membereq_ctx_t membereq;
         ecs_query_toggle_ctx_t toggle;

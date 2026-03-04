@@ -1377,6 +1377,188 @@ bool flecs_query_not(
 }
 
 static
+void flecs_query_not_range_set_source(
+    const ecs_query_op_t *op,
+    const ecs_table_range_t *range,
+    const ecs_query_run_ctx_t *ctx)
+{
+    if (!(op->flags & (EcsQueryIsVar << EcsQuerySrc))) {
+        return;
+    }
+
+    ecs_var_id_t src_var = op->src.var;
+    ecs_var_t *var = &ctx->vars[src_var];
+    var->range = *range;
+    if (ctx->query_vars[src_var].kind != EcsVarTable) {
+        ecs_assert(range->count == 1, ECS_INTERNAL_ERROR, NULL);
+        var->entity = ecs_table_entities(range->table)[range->offset];
+    } else {
+        var->entity = 0;
+    }
+}
+
+static
+void flecs_query_not_range_restore_iter(
+    const ecs_query_not_range_ctx_t *op_ctx,
+    ecs_query_run_ctx_t *ctx)
+{
+    ecs_iter_t *it = ctx->it;
+    it->set_fields = op_ctx->set_fields;
+
+    if (op_ctx->field_valid) {
+        int8_t field = op_ctx->field;
+        it->ids[field] = op_ctx->field_id;
+        it->trs[field] = op_ctx->field_tr;
+        it->sources[field] = op_ctx->field_source;
+    }
+}
+
+static
+void flecs_query_not_range_set_member_id(
+    const ecs_query_op_t *term_op,
+    const ecs_table_range_t *range,
+    ecs_query_run_ctx_t *ctx)
+{
+    int8_t field = term_op->field_index;
+    if (field == -1) {
+        return;
+    }
+
+    ecs_table_t *table = range->table;
+    if (!table) {
+        return;
+    }
+
+    const ecs_table_record_t *tr = ctx->it->trs[field];
+    if (!tr) {
+        return;
+    }
+
+    int32_t row = range->offset;
+    if (row < 0 || row >= ecs_table_count(table)) {
+        return;
+    }
+
+    int32_t offset = (int32_t)term_op->first.entity;
+    int32_t size = (int32_t)(term_op->first.entity >> 32);
+    void *data = ecs_table_get_column(table, tr->column, 0);
+    if (!data) {
+        return;
+    }
+
+    ecs_entity_t *val = ECS_OFFSET(ECS_ELEM(data, size, row), offset);
+    ecs_entity_t mbr = ECS_PAIR_FIRST(ctx->query->pub.terms[term_op->term_index].id);
+    ctx->it->ids[field] = ecs_pair(mbr, val[0]);
+}
+
+static
+bool flecs_query_not_range(
+    const ecs_query_op_t *op,
+    bool redo,
+    ecs_query_run_ctx_t *ctx)
+{
+    ecs_query_not_range_ctx_t *op_ctx = flecs_op_ctx(ctx, not_range);
+    const ecs_query_op_t *term_op = op + 1;
+    const ecs_query_op_t *src_op = op;
+    const ecs_query_ref_t *src_ref = &op->src;
+    ecs_query_lbl_t start_op_index = ctx->op_index;
+
+    if (!flecs_query_ref_flags(op->flags, EcsQuerySrc)) {
+        src_op = term_op;
+        src_ref = &src_op->src;
+    }
+
+    if (!redo) {
+        ecs_table_range_t src_range = flecs_query_get_range(
+            src_op, src_ref, EcsQuerySrc, ctx);
+        if (!src_range.table) {
+            op_ctx->done = true;
+            return false;
+        }
+
+        int32_t table_count = ecs_table_count(src_range.table);
+        int32_t start = src_range.offset;
+        int32_t end = src_range.count ? (start + src_range.count) : table_count;
+
+        if (start < 0) {
+            start = 0;
+        }
+        if (start > table_count) {
+            start = table_count;
+        }
+        if (end < start) {
+            end = start;
+        }
+        if (end > table_count) {
+            end = table_count;
+        }
+
+        src_range.offset = start;
+        src_range.count = end - start;
+
+        ecs_iter_t *it = ctx->it;
+        op_ctx->ctrl = (ecs_query_ctrl_ctx_t){0};
+        op_ctx->src_range = src_range;
+        op_ctx->cur = start;
+        op_ctx->end = end;
+        op_ctx->set_fields = it->set_fields;
+        op_ctx->field = term_op->field_index;
+        op_ctx->field_valid = op_ctx->field != -1;
+        if (op_ctx->field_valid) {
+            int8_t field = op_ctx->field;
+            op_ctx->field_id = it->ids[field];
+            op_ctx->field_tr = it->trs[field];
+            op_ctx->field_source = it->sources[field];
+        }
+        op_ctx->block_redo = false;
+        op_ctx->done = false;
+    } else if (op_ctx->done) {
+        flecs_query_not_range_restore_iter(op_ctx, ctx);
+        flecs_query_not_range_set_source(src_op, &op_ctx->src_range, ctx);
+        return false;
+    }
+
+    while (op_ctx->cur < op_ctx->end) {
+        ecs_table_range_t row_range = {
+            .table = op_ctx->src_range.table,
+            .offset = op_ctx->cur,
+            .count = 1
+        };
+
+        flecs_query_not_range_set_source(src_op, &row_range, ctx);
+        flecs_query_not_range_restore_iter(op_ctx, ctx);
+
+        ctx->op_index = start_op_index;
+        op_ctx->ctrl = (ecs_query_ctrl_ctx_t){0};
+        op_ctx->block_redo = false;
+        bool block_result = flecs_query_run_block(false, ctx, &op_ctx->ctrl);
+
+        ecs_query_ctrl_ctx_t reset_ctx = {0};
+        flecs_query_reset_after_block(op, ctx, &reset_ctx, false);
+
+        op_ctx->cur ++;
+
+        if (!block_result) {
+            if (term_op->kind == EcsQueryMemberEq) {
+                flecs_query_not_range_restore_iter(op_ctx, ctx);
+                if (op_ctx->field_valid) {
+                    ECS_TERMSET_SET(ctx->it->set_fields, 1u << op_ctx->field);
+                }
+                flecs_query_not_range_set_member_id(term_op, &row_range, ctx);
+            }
+
+            flecs_query_not_range_set_source(src_op, &row_range, ctx);
+            return true;
+        }
+    }
+
+    flecs_query_not_range_restore_iter(op_ctx, ctx);
+    flecs_query_not_range_set_source(src_op, &op_ctx->src_range, ctx);
+    op_ctx->done = true;
+    return false;
+}
+
+static
 bool flecs_query_optional(
     const ecs_query_op_t *op,
     bool redo,
@@ -1505,6 +1687,7 @@ bool flecs_query_dispatch(
     case EcsQueryIfSet: return flecs_query_if_set(op, redo, ctx);
     case EcsQueryEnd: return flecs_query_end(op, redo, ctx);
     case EcsQueryNot: return flecs_query_not(op, redo, ctx);
+    case EcsQueryNotRange: return flecs_query_not_range(op, redo, ctx);
     case EcsQueryPredEq: return flecs_query_pred_eq(op, redo, ctx);
     case EcsQueryPredNeq: return flecs_query_pred_neq(op, redo, ctx);
     case EcsQueryPredEqName: return flecs_query_pred_eq_name(op, redo, ctx);
@@ -1512,12 +1695,10 @@ bool flecs_query_dispatch(
     case EcsQueryPredEqMatch: return flecs_query_pred_eq_match(op, redo, ctx);
     case EcsQueryPredNeqMatch: return flecs_query_pred_neq_match(op, redo, ctx);
     case EcsQueryMemberEq: return flecs_query_member_eq(op, redo, ctx);
-    case EcsQueryMemberNeq: return flecs_query_member_neq(op, redo, ctx);
     case EcsQueryToggle: return flecs_query_toggle(op, redo, ctx);
     case EcsQueryToggleOption: return flecs_query_toggle_option(op, redo, ctx);
     case EcsQuerySparse: return flecs_query_sparse(op, redo, ctx);
     case EcsQuerySparseWith: return flecs_query_sparse_with(op, redo, ctx, false);
-    case EcsQuerySparseNot: return flecs_query_sparse_with(op, redo, ctx, true);
     case EcsQuerySparseSelfUp: return flecs_query_sparse_self_up(op, redo, ctx);
     case EcsQuerySparseUp: return flecs_query_sparse_up(op, redo, ctx);
     case EcsQueryTree: return flecs_query_tree_and(op, redo, ctx);

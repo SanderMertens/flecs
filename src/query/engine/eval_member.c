@@ -9,8 +9,7 @@ static
 bool flecs_query_member_cmp(
     const ecs_query_op_t *op,
     bool redo,
-    ecs_query_run_ctx_t *ctx,
-    bool neq)
+    ecs_query_run_ctx_t *ctx)
 {
     ecs_table_range_t range;
     if (op->other) {
@@ -89,13 +88,7 @@ bool flecs_query_member_cmp(
 
             val = ECS_OFFSET(ECS_ELEM(data, size, row), offset);
             if (val[0] == second || second == EcsWildcard) {
-                if (!neq) {
-                    goto match;
-                }
-            } else {
-                if (neq) {
-                    goto match;
-                }
+                goto match;
             }
 
             row ++;
@@ -127,13 +120,5 @@ bool flecs_query_member_eq(
     bool redo,
     ecs_query_run_ctx_t *ctx)
 {
-    return flecs_query_member_cmp(op, redo, ctx, false);
-}
-
-bool flecs_query_member_neq(
-    const ecs_query_op_t *op,
-    bool redo,
-    ecs_query_run_ctx_t *ctx)
-{
-    return flecs_query_member_cmp(op, redo, ctx, true);
+    return flecs_query_member_cmp(op, redo, ctx);
 }
