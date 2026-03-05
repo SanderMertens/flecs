@@ -1,6 +1,39 @@
 #include "../private_api.h"
 
 static
+void flecs_propagate_parent_hierarchy_children(
+    ecs_world_t *world,
+    ecs_component_record_t *cr)
+{
+    ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ECS_PAIR_FIRST(cr->id) == EcsChildOf, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(cr->pair != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    while (cr) {
+        ecs_pair_record_t *pair = cr->pair;
+        ecs_assert(pair != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        if (pair->has_parent_hierarchy_children) {
+            break;
+        }
+
+        pair->has_parent_hierarchy_children = true;
+
+        ecs_entity_t parent = ECS_PAIR_SECOND(cr->id);
+        if (!parent) {
+            break;
+        }
+
+        parent = ecs_get_parent(world, parent);
+        if (!parent) {
+            break;
+        }
+
+        cr = flecs_components_get(world, ecs_childof(parent));
+    }
+}
+
+static
 void flecs_add_non_fragmenting_child_to_table(
     ecs_world_t *world,
     ecs_component_record_t *cr,
@@ -84,6 +117,7 @@ int flecs_add_non_fragmenting_child_w_records(
     flecs_ordered_entities_append(world, cr, entity);
 
     flecs_add_non_fragmenting_child_to_table(world, cr, entity, r->table);
+    flecs_propagate_parent_hierarchy_children(world, cr);
 
     ecs_record_t *r_parent = flecs_entities_get(world, parent);
     if (r_parent->table->flags & EcsTableIsPrefab) {
@@ -370,6 +404,10 @@ void flecs_non_fragmenting_childof_reparent(
         ecs_component_record_t *cr = flecs_components_get(
             world, ecs_childof(e));
         if (!cr) {
+            continue;
+        }
+
+        if (!cr->pair->has_parent_hierarchy_children) {
             continue;
         }
 

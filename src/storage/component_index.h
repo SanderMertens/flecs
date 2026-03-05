@@ -49,6 +49,10 @@ typedef struct ecs_pair_record_t {
     /* Hierarchy depth (set for ChildOf pair) */
     int32_t depth;
 
+    /* Tracks whether this parent (recursively) has children in Parent
+     * hierarchies. Sticky optimization bit: once true it is never reset. */
+    bool has_parent_hierarchy_children;
+
     /* Lists for all id records that match a pair wildcard. The wildcard id
      * record is at the head of the list. */
     ecs_id_record_elem_t first;   /* (R, *) */
