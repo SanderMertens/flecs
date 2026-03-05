@@ -466,6 +466,10 @@ void Rest_query(void);
 void Rest_named_query(void);
 void Rest_tables(void);
 void Rest_components(void);
+void Rest_type_info_non_existing_entity(void);
+void Rest_type_info_not_component(void);
+void Rest_type_info_component_without_reflection(void);
+void Rest_type_info_component_with_reflection(void);
 void Rest_request_commands(void);
 void Rest_request_commands_2_syncs(void);
 void Rest_request_commands_no_frames(void);
@@ -2268,6 +2272,22 @@ bake_test_case Rest_testcases[] = {
         Rest_components
     },
     {
+        "type_info_non_existing_entity",
+        Rest_type_info_non_existing_entity
+    },
+    {
+        "type_info_not_component",
+        Rest_type_info_not_component
+    },
+    {
+        "type_info_component_without_reflection",
+        Rest_type_info_component_without_reflection
+    },
+    {
+        "type_info_component_with_reflection",
+        Rest_type_info_component_with_reflection
+    },
+    {
         "request_commands",
         Rest_request_commands
     },
@@ -2797,7 +2817,7 @@ static bake_test_suite suites[] = {
         "Rest",
         NULL,
         NULL,
-        27,
+        31,
         Rest_testcases
     },
     {
