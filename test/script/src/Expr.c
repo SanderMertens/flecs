@@ -9969,6 +9969,53 @@ void Expr_new_entity(void) {
     ecs_fini(world);
 }
 
+static int expr_on_replace_position_invoked = 0;
+
+static void expr_on_replace_position(ecs_iter_t *it) {
+    expr_on_replace_position_invoked ++;
+    test_int(it->count, 1);
+}
+
+void Expr_new_entity_w_component_w_on_replace(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        int32_t x;
+        int32_t y;
+    } Position;
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_set_hooks(world, Position, {
+        .on_replace = expr_on_replace_position
+    });
+
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+
+    expr_on_replace_position_invoked = 0;
+
+    ecs_entity_t e = 0;
+    ecs_value_t v = { .type = ecs_id(ecs_entity_t), .ptr = &e };
+    test_assert(ecs_expr_run(world, "new { Position: {10, 20} }", &v, &desc) != NULL);
+    test_assert(e != 0);
+    test_assert(ecs_is_alive(world, e));
+    test_int(ecs_get_type(world, e)->count, 1);
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+    test_int(expr_on_replace_position_invoked, 1);
+
+    ecs_fini(world);
+}
+
 void Expr_new_entity_w_component(void) {
     ecs_world_t *world = ecs_init();
 
