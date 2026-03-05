@@ -149,7 +149,10 @@ void flecs_query_cache_group_fini(
     ecs_query_cache_t *cache,
     ecs_query_cache_group_t *group)
 {
-    if (cache->on_group_delete) {
+    /* Group callbacks are only meaningful for groups that have matched at
+     * least one table. The default group can exist as list head without ever
+     * being materialized through on_group_create (group id 0). */
+    if (cache->on_group_delete && group->info.table_count) {
         cache->on_group_delete(cache->query->world, group->info.id,
             group->info.ctx, cache->group_by_ctx);
     }
