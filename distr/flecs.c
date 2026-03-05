@@ -39541,7 +39541,17 @@ void flecs_component_record_check_constraints(
     (void)tgt;
 
 #ifdef FLECS_DEBUG
+    if (ECS_HAS_ID_FLAG(cr->id, PAIR) && !ECS_IS_PAIR(cr->id)) {
+        return;
+    }
+
     if (ECS_IS_PAIR(cr->id)) {
+        /* Internal role records use (EcsFlag, X). These should not be
+         * validated as regular relationship/target pairs. */
+        if (rel == EcsFlag) {
+            return;
+        }
+
         if (tgt) {
             ecs_assert(tgt != 0, ECS_INTERNAL_ERROR, NULL);
 
