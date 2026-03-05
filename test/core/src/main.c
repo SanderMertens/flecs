@@ -1765,6 +1765,7 @@ void Pairs_force_relationship_on_relationship(void);
 void Pairs_force_target_on_component(void);
 void Pairs_force_target_on_relationship(void);
 void Pairs_force_target_on_target(void);
+void Pairs_disable_w_toggle_pair_rel_target_traits(void);
 void Pairs_relationship_with_exclusive(void);
 void Pairs_add_value_pair(void);
 void Pairs_add_value_pairs(void);
@@ -10074,6 +10075,10 @@ bake_test_case Pairs_testcases[] = {
         Pairs_force_target_on_target
     },
     {
+        "disable_w_toggle_pair_rel_target_traits",
+        Pairs_disable_w_toggle_pair_rel_target_traits
+    },
+    {
         "relationship_with_exclusive",
         Pairs_relationship_with_exclusive
     },
@@ -15940,7 +15945,7 @@ static bake_test_suite suites[] = {
         "Pairs",
         NULL,
         NULL,
-        134,
+        135,
         Pairs_testcases
     },
     {

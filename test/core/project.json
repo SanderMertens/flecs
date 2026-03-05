@@ -1828,6 +1828,7 @@
                 "force_target_on_component",
                 "force_target_on_relationship",
                 "force_target_on_target",
+                "disable_w_toggle_pair_rel_target_traits",
                 "relationship_with_exclusive",
                 "add_value_pair",
                 "add_value_pairs",
