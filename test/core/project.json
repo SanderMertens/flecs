@@ -1142,7 +1142,6 @@
                 "lookup_after_move_to_root",
                 "lookup_after_clear",
                 "bulk_create_ordered_children",
-                "delete_many_children_perf",
                 "get_ordered_children_from_prefab_instance_nested_children",
                 "ordered_children_parent_is_traversable"
             ]

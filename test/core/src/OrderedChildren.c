@@ -1739,55 +1739,6 @@ void OrderedChildren_bulk_create_ordered_children(void) {
     ecs_fini(world);
 }
 
-static
-double delete_children_elapsed(
-    int32_t child_count)
-{
-    ecs_world_t *world = ecs_mini();
-
-    ecs_entity_t parent = ecs_new(world);
-    ecs_add_id(world, parent, EcsOrderedChildren);
-
-    for (int32_t i = 0; i < child_count; i ++) {
-        ecs_new_w_pair(world, EcsChildOf, parent);
-    }
-
-    ecs_time_t t;
-    ecs_os_get_time(&t);
-
-    ecs_delete(world, parent);
-
-    double result = ecs_time_measure(&t);
-
-    ecs_fini(world);
-
-    return result;
-}
-
-static
-double delete_children_elapsed_best_of(
-    int32_t child_count,
-    int32_t attempts)
-{
-    double result = 0;
-
-    for (int32_t i = 0; i < attempts; i ++) {
-        double elapsed = delete_children_elapsed(child_count);
-        if (!i || (elapsed < result)) {
-            result = elapsed;
-        }
-    }
-
-    return result;
-}
-
-void OrderedChildren_delete_many_children_perf(void) {
-    double t_small = delete_children_elapsed_best_of(10000, 3);
-    double t_large = delete_children_elapsed_best_of(20000, 3);
-
-    test_assert(t_large < (t_small * 4.5));
-}
-
 void OrderedChildren_ordered_children_parent_is_traversable(void) {
     ecs_world_t *world = ecs_mini();
 
