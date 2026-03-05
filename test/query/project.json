@@ -1995,7 +1995,8 @@
                 "group_by_parent_depth",
                 "get_groups",
                 "get_groups_default_group",
-                "on_group_create_delete_default_group"
+                "on_group_create_delete_default_group",
+                "on_group_delete_not_called_for_uncreated_default_group"
             ]
         }, {
             "id": "MemberTarget",
