@@ -14773,3 +14773,44 @@ void Eval_const_var_w_new_expr_tag_component(void) {
 
     ecs_fini(world);
 }
+
+typedef struct {
+    const char* name;
+    int32_t value;
+} TrivialWithString;
+
+void Eval_prefab_w_string(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, TrivialWithString);
+
+    ecs_struct(world, {
+        .entity = ecs_id(TrivialWithString),
+        .members = {
+            { .name = "name", .type = ecs_id(ecs_string_t) },
+            { .name = "value", .type = ecs_id(ecs_i32_t) },
+        }
+    });
+
+    const char *expr =
+    HEAD "prefab TestPrefab {"
+    LINE "    TrivialWithString: {"
+    LINE "        name: \"hello from script\""
+    LINE "        value: 42"
+    LINE "    }"
+    LINE "}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t prefab = ecs_lookup(world, "TestPrefab");
+    test_assert(prefab != 0);
+
+    const TrivialWithString *ptr = ecs_get(world, prefab, TrivialWithString);
+    test_assert(ptr != NULL);
+
+    test_str(ptr->name, "hello from script");
+    test_int(ptr->value, 42);
+
+    ecs_fini(world);
+}

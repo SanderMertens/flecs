@@ -453,6 +453,7 @@ void Eval_scientific_notation_negative_exponent(void);
 void Eval_scientific_notation_positive_exponent_sign(void);
 void Eval_const_var_w_new_expr_two_tags(void);
 void Eval_const_var_w_new_expr_tag_component(void);
+void Eval_prefab_w_string(void);
 
 // Testsuite 'Template'
 void Template_template_no_scope(void);
@@ -3110,6 +3111,10 @@ bake_test_case Eval_testcases[] = {
     {
         "const_var_w_new_expr_tag_component",
         Eval_const_var_w_new_expr_tag_component
+    },
+    {
+        "prefab_w_string",
+        Eval_prefab_w_string
     }
 };
 
@@ -6599,7 +6604,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        444,
+        445,
         Eval_testcases
     },
     {
