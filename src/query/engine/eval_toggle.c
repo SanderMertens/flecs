@@ -31,6 +31,7 @@ static inline int32_t flecs_ctz64(uint64_t v) {
 static
 flecs_query_row_mask_t flecs_query_get_row_mask(
     ecs_iter_t *it,
+    const ecs_query_t *query,
     ecs_table_t *table,
     int32_t block_index,
     ecs_flags64_t and_fields,
@@ -54,6 +55,64 @@ flecs_query_row_mask_t flecs_query_get_row_mask(
             ecs_assert(it->set_fields & field_bit, ECS_INTERNAL_ERROR, NULL);
         } else {
             ecs_abort(ECS_INTERNAL_ERROR, NULL);
+        }
+
+        ecs_term_t *field_term = NULL;
+        int32_t term_idx;
+        for (term_idx = 0; term_idx < query->term_count; term_idx ++) {
+            if (query->terms[term_idx].field_index == i) {
+                field_term = &query->terms[term_idx];
+                break;
+            }
+        }
+
+        bool is_or = false;
+        if (field_term) {
+            is_or = field_term->oper == EcsOr ||
+                ((field_term != query->terms) && (field_term[-1].oper == EcsOr));
+        }
+
+        if (is_or) {
+            int32_t start = flecs_itoi32(field_term - query->terms);
+            int32_t end = start;
+
+            /* Find start and end of OR chain. The oper field is stored on the 
+             * term preceding the operand, so:
+             * - start loop checks if previous term connects via OR
+             * - end loop checks if current term connects to next via OR */
+            while (start && query->terms[start - 1].oper == EcsOr) {
+                start --;
+            }
+            while (end < (query->term_count - 1) && query->terms[end].oper == EcsOr) {
+                end ++;
+            }
+
+            ecs_flags64_t block = 0;
+            bool chain_has_bitset = false;
+
+            int32_t or_chain_term_idx;
+            for (or_chain_term_idx = start; or_chain_term_idx <= end; or_chain_term_idx ++) {
+                ecs_id_t id = query->terms[or_chain_term_idx].id;
+                ecs_bitset_t *bs = flecs_table_get_toggle(table, id);
+                if (bs) {
+                    ecs_assert((64 * block_index) < bs->size, ECS_INTERNAL_ERROR, NULL);
+                    block |= bs->data[block_index];
+                    chain_has_bitset = true;
+                } else if (ecs_table_has_id(query->world, table, id)) {
+                    /* If a non-toggle component is present, it is always enabled 
+                     * for all entities in the table. Since this is an OR chain,
+                     * the entire expression becomes true for this block. */
+                    block = UINT64_MAX;
+                    break;
+                }
+            }
+
+            if (chain_has_bitset || block == UINT64_MAX) {
+                mask &= block;
+                has_bitset = has_bitset || chain_has_bitset;
+            }
+
+            continue;
         }
 
         ecs_id_t id = it->ids[i];
@@ -205,7 +264,8 @@ compute_block:
         block_index = op_ctx->block_index = new_block_index;
 
         flecs_query_row_mask_t row_mask = flecs_query_get_row_mask(
-            it, table, block_index, and_fields, not_fields, op_ctx);
+            it, &ctx->query->pub, table, block_index,
+            and_fields, not_fields, op_ctx);
 
         /* If table doesn't have bitset columns, all columns match */
         if (!(op_ctx->has_bitset = row_mask.has_bitset)) {
@@ -341,4 +401,3 @@ repeat: {}
 
     return result;
 }
-
