@@ -415,9 +415,13 @@ int flecs_script_eval_id(
         return 0;
     }
 
-    if (!id->first) {
-        flecs_script_eval_error(v, node, 
-            "invalid component/tag identifier");
+    if (!id->first || !id->first[0]) {
+        flecs_script_eval_error(v, node, "invalid component identifier");
+        return -1;
+    }
+
+    if (id->second && !id->second[0]) {
+        flecs_script_eval_error(v, node, "invalid pair identifier");
         return -1;
     }
 
@@ -786,23 +790,6 @@ int flecs_script_eval_entity(
     v->entity = node;
 
     if (node->eval_kind) {
-        if (ECS_IS_PAIR(node->eval_kind)) {
-            ecs_entity_t relationship = ECS_PAIR_FIRST(node->eval_kind);
-            if (ecs_has_id(v->world, relationship, EcsSingleton) &&
-                relationship != node->eval)
-            {
-                flecs_script_eval_error(v, node,
-                    "singleton pair kind cannot be added to entity");
-                return -1;
-            }
-        } else if (ecs_has_id(v->world, node->eval_kind, EcsSingleton) &&
-            node->eval_kind != node->eval)
-        {
-            flecs_script_eval_error(v, node,
-                "singleton kind cannot be added to entity");
-            return -1;
-        }
-
         ecs_add_id(v->world, node->eval, node->eval_kind);
 
         default_comp = 
@@ -1804,11 +1791,11 @@ int ecs_script_eval(
         ecs_log_start_capture(true);
     }
 
+    // printf("%s\n", ecs_script_ast_to_str(script, true));
+
     flecs_script_eval_visit_init(impl, &v, &priv_desc);
     int r = ecs_script_visit(impl, &v, flecs_script_eval_node);
     flecs_script_eval_visit_fini(&v, &priv_desc);
-
-    // printf("%s\n", ecs_script_ast_to_str(script, true));
 
     if (result) {
         result->error = ecs_log_stop_capture();

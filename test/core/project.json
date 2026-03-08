@@ -1521,7 +1521,8 @@
                 "lookup_name_65_chars",
                 "lookup_path_63_chars",
                 "lookup_path_64_chars",
-                "lookup_path_65_chars"
+                "lookup_path_65_chars",
+                "lookup_malformed"
             ]
         }, {
             "id": "Singleton",

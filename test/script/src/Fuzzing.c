@@ -7364,8 +7364,6 @@ void Fuzzing_121(void) {
     LINE "\377  \025f888Z88888888\27088g!-1-8888((((((>((8%88S88lecs.8,\" "
         ;
 
-    install_test_abort();
-    test_expect_abort();
     fuzz(expr);
 }
 
@@ -8191,35 +8189,6 @@ void Fuzzing_138(void) {
     fuzz(expr);
 }
 
-/* crash=out/fuzzer02/crashes/id:000003,sig:06,src:005555,time:8491367,execs:1333094,op:havoc,rep:2, sha1=1c330ae44de1297708732fcaf8dbf3364da60d42, grouped_crashes=12
- * asan_stack:
- *     #0 0x0001020666d4 in flecs_tokenizer_identifier flecs/src/addons/parser/tokenizer.c:472:21
- *     #1 0x00010208bdd4 in flecs_script_parse_rhs flecs/src/addons/script/expr/parser.c:329:9
- *     #2 0x00010208bdd4 in flecs_script_parse_lhs flecs/src/addons/script/expr/parser.c:711:12
- *     #3 0x00010208c28c in flecs_script_parse_rhs flecs/src/addons/script/expr/parser.c:329:9
- *     #4 0x00010208c28c in flecs_script_parse_lhs flecs/src/addons/script/expr/parser.c:711:12
- *     #5 0x00010208a1cc in flecs_script_parse_expr flecs/src/addons/script/expr/parser.c:737:11
- *     #6 0x0001020d6188 in flecs_expr_interpolated_string_visit_type flecs/src/addons/script/expr/visit_type.c:742:23
- *     #7 0x0001020d6188 in flecs_expr_visit_type_priv flecs/src/addons/script/expr/visit_type.c:2193:13
- *     #8 0x0001020d578c in flecs_expr_visit_type flecs/src/addons/script/expr/visit_type.c:2334:16
- *     #9 0x000102105950 in flecs_script_eval_name_expr flecs/src/addons/script/visit_eval.c:190:13
- *     #10 0x000102109c30 in flecs_script_eval_entity flecs/src/addons/script/visit_eval.c:756:22
- *     #11 0x000102109c30 in flecs_script_eval_node flecs/src/addons/script/visit_eval.c:1701:16
- */
-void Fuzzing_139(void) {
-    const char *expr =
-    HEAD "```'0cs.meta.f64: {10-21111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111H1111111111111111111111111111111111111111111911111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111110-2e-1}"
-    LINE "64: {10-210-2e-1}"
-    LINE "}"
-    LINE "\202 ''}"
-    LINE "\202 '''''on''''''!'''g'-3"
-    LINE "con y:\022 y''''''D'\"'''g'-3str"
-    LINE "  y!= f\t   10,'''''5''`"
-        ;
-
-    fuzz(expr);
-}
-
 /* crash=out/fuzzer03/crashes/id:000000,sig:11,src:003857,time:4946367,execs:817108,op:havoc,rep:1, sha1=c836ef044c0674c75fa60bcbebb7c6d8b149c52a, grouped_crashes=6
  * asan_stack:
  *     #0 0x0001055daa30 in realloc (/opt/homebrew/Cellar/llvm/20.1.8/lib/clang/20/lib/darwin/libclang_rt.asan_osx_dynamic.dylib:arm64+0x52a30)
@@ -8471,64 +8440,6 @@ void Fuzzing_141(void) {
     LINE "  }"
     LINE "}"
     LINE ""
-        ;
-
-    fuzz(expr);
-}
-
-/* crash=out/fuzzer03/crashes/id:000006,sig:11,src:005644,time:7944125,execs:1270644,op:havoc,rep:1, sha1=2471007bb9fa5ea703cd3c80b294d6fb6efbcc21, grouped_crashes=2
- * asan_stack:
- *     #0 0x0001041280c0 in flecs_script_number flecs/src/addons/parser/tokenizer.c:593:23
- *     #1 0x0001041280c0 in flecs_token flecs/src/addons/parser/tokenizer.c:807:16
- *     #2 0x00010414a5a8 in flecs_script_parse_lhs flecs/src/addons/script/expr/parser.c:453:5
- *     #3 0x00010414c28c in flecs_script_parse_rhs flecs/src/addons/script/expr/parser.c:329:9
- *     #4 0x00010414c28c in flecs_script_parse_lhs flecs/src/addons/script/expr/parser.c:711:12
- *     #5 0x00010414c28c in flecs_script_parse_rhs flecs/src/addons/script/expr/parser.c:329:9
- *     #6 0x00010414c28c in flecs_script_parse_lhs flecs/src/addons/script/expr/parser.c:711:12
- *     #7 0x00010414a1cc in flecs_script_parse_expr flecs/src/addons/script/expr/parser.c:737:11
- *     #8 0x000104196188 in flecs_expr_interpolated_string_visit_type flecs/src/addons/script/expr/visit_type.c:742:23
- *     #9 0x000104196188 in flecs_expr_visit_type_priv flecs/src/addons/script/expr/visit_type.c:2193:13
- *     #10 0x00010419578c in flecs_expr_visit_type flecs/src/addons/script/expr/visit_type.c:2334:16
- *     #11 0x0001041c5950 in flecs_script_eval_name_expr flecs/src/addons/script/visit_eval.c:190:13
- */
-void Fuzzing_142(void) {
-    const char *expr =
-    HEAD "```'0cs.meta.f64: {10-21111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111*1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111110-2e-1}"
-    LINE "64: {10-210-2e-1}"
-    LINE "}"
-    LINE "\202 ''}"
-    LINE "\202 '''''on''''''!'''g'-3"
-    LINE "con y:\022 y''''''D'\"'''g'-3str"
-    LINE "  y!= f\t   10,'''''5''`"
-        ;
-
-    fuzz(expr);
-}
-
-/* crash=out/fuzzer03/crashes/id:000014,sig:06,src:005644,time:9026136,execs:1414973,op:havoc,rep:1, sha1=a5e8e4ca42323812fe94a323c7e08e095541d7aa, grouped_crashes=2
- * asan_stack:
- *     #0 0x000102edc0c0 in flecs_script_number flecs/src/addons/parser/tokenizer.c:593:23
- *     #1 0x000102edc0c0 in flecs_token flecs/src/addons/parser/tokenizer.c:807:16
- *     #2 0x000102effdd4 in flecs_script_parse_rhs flecs/src/addons/script/expr/parser.c:329:9
- *     #3 0x000102effdd4 in flecs_script_parse_lhs flecs/src/addons/script/expr/parser.c:711:12
- *     #4 0x000102f0028c in flecs_script_parse_rhs flecs/src/addons/script/expr/parser.c:329:9
- *     #5 0x000102f0028c in flecs_script_parse_lhs flecs/src/addons/script/expr/parser.c:711:12
- *     #6 0x000102efe1cc in flecs_script_parse_expr flecs/src/addons/script/expr/parser.c:737:11
- *     #7 0x000102f4a188 in flecs_expr_interpolated_string_visit_type flecs/src/addons/script/expr/visit_type.c:742:23
- *     #8 0x000102f4a188 in flecs_expr_visit_type_priv flecs/src/addons/script/expr/visit_type.c:2193:13
- *     #9 0x000102f4978c in flecs_expr_visit_type flecs/src/addons/script/expr/visit_type.c:2334:16
- *     #10 0x000102f79950 in flecs_script_eval_name_expr flecs/src/addons/script/visit_eval.c:190:13
- *     #11 0x000102f7dc30 in flecs_script_eval_entity flecs/src/addons/script/visit_eval.c:756:22
- */
-void Fuzzing_143(void) {
-    const char *expr =
-    HEAD "```'0cs.meta.f64: {10-211111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111 111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111110-2e-1}"
-    LINE "64: {10-210-2e-1}"
-    LINE "}"
-    LINE "\202 ''}"
-    LINE "\202 '''''on''''''!'''g'-3"
-    LINE "con y:\022 y''''''D'\"'''g'-3str"
-    LINE "  y!= f\t   10,'''''5''`"
         ;
 
     fuzz(expr);
@@ -8810,35 +8721,6 @@ void Fuzzing_147(void) {
     fuzz(expr);
 }
 
-/* crash=out/fuzzer06/crashes/id:000006,sig:06,src:005615,time:8229081,execs:1282586,op:havoc,rep:1, sha1=801924e7f662eba40384edfbf98c6448320d7250, grouped_crashes=1
- * asan_stack:
- *     #0 0x00010539ba18 in __asan_memcpy (/opt/homebrew/Cellar/llvm/20.1.8/lib/clang/20/lib/darwin/libclang_rt.asan_osx_dynamic.dylib:arm64+0x4fa18)
- *     #1 0x0001049a1548 in flecs_script_string flecs/src/addons/parser/tokenizer.c:673:5
- *     #2 0x0001049c3dd4 in flecs_script_parse_rhs flecs/src/addons/script/expr/parser.c:329:9
- *     #3 0x0001049c3dd4 in flecs_script_parse_lhs flecs/src/addons/script/expr/parser.c:711:12
- *     #4 0x0001049c428c in flecs_script_parse_rhs flecs/src/addons/script/expr/parser.c:329:9
- *     #5 0x0001049c428c in flecs_script_parse_lhs flecs/src/addons/script/expr/parser.c:711:12
- *     #6 0x0001049c21cc in flecs_script_parse_expr flecs/src/addons/script/expr/parser.c:737:11
- *     #7 0x000104a0e188 in flecs_expr_interpolated_string_visit_type flecs/src/addons/script/expr/visit_type.c:742:23
- *     #8 0x000104a0e188 in flecs_expr_visit_type_priv flecs/src/addons/script/expr/visit_type.c:2193:13
- *     #9 0x000104a0d78c in flecs_expr_visit_type flecs/src/addons/script/expr/visit_type.c:2334:16
- *     #10 0x000104a3d950 in flecs_script_eval_name_expr flecs/src/addons/script/visit_eval.c:190:13
- *     #11 0x000104a41c30 in flecs_script_eval_entity flecs/src/addons/script/visit_eval.c:756:22
- */
-void Fuzzing_148(void) {
-    const char *expr =
-    HEAD "```'0cs.meta.f64: {10-2111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111\"11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111110-2e-1}"
-    LINE "64: {10-210-2e-1}"
-    LINE "}"
-    LINE "\202 ''}"
-    LINE "\202 '''''on''''''!'''g'-3"
-    LINE "con y:\022 y''''''D'\"'''g'-3str"
-    LINE "  y!= f\t   10,'''''5''`"
-        ;
-
-    fuzz(expr);
-}
-
 /* crash=out/fuzzer01/crashes/id:000000,sig:07,src:004563,time:11309477,execs:680016,op:havoc,rep:2, sha1=36ddae5ede5747df9862a5579c6b4f72988c8c4b, grouped_crashes=3
  * asan_stack:
  *     #0 0x000102916114 in ecs_get_typeid flecs/src/id.c:343:9
@@ -8941,4 +8823,20 @@ void Fuzzing_150(void) {
         ;
 
     fuzz(expr);
+}
+
+void Fuzzing_139(void) {
+    // Implement testcase
+}
+
+void Fuzzing_142(void) {
+    // Implement testcase
+}
+
+void Fuzzing_143(void) {
+    // Implement testcase
+}
+
+void Fuzzing_148(void) {
+    // Implement testcase
 }

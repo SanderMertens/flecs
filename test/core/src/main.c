@@ -1467,6 +1467,7 @@ void Lookup_lookup_name_65_chars(void);
 void Lookup_lookup_path_63_chars(void);
 void Lookup_lookup_path_64_chars(void);
 void Lookup_lookup_path_65_chars(void);
+void Lookup_lookup_malformed(void);
 
 // Testsuite 'Singleton'
 void Singleton_add_singleton(void);
@@ -8911,6 +8912,10 @@ bake_test_case Lookup_testcases[] = {
     {
         "lookup_path_65_chars",
         Lookup_lookup_path_65_chars
+    },
+    {
+        "lookup_malformed",
+        Lookup_lookup_malformed
     }
 };
 
@@ -15947,7 +15952,7 @@ static bake_test_suite suites[] = {
         "Lookup",
         Lookup_setup,
         NULL,
-        63,
+        64,
         Lookup_testcases
     },
     {
