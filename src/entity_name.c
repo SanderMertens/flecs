@@ -208,7 +208,7 @@ const char* flecs_path_elem(
         }
 
         if (buffer) {
-            ecs_check(size > 0, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(size > 0, ECS_INTERNAL_ERROR, NULL);
             if (pos >= (size - 1)) {
                 if (size == ECS_NAME_BUFFER_LENGTH) { /* stack buffer */
                     char *new_buffer = ecs_os_malloc(size * 2 + 1);
@@ -846,13 +846,6 @@ void flecs_add_path(
         ecs_assert(real_world != NULL, ECS_INTERNAL_ERROR, NULL);
     }
 
-    if (name[0] == '#') {
-        if (defer_suspend) {
-            flecs_resume_readonly(real_world, &srs);
-        }
-        return;
-    }
-
     if (parent) {
         ecs_add_pair(world, entity, EcsChildOf, parent);
     }
@@ -890,7 +883,7 @@ ecs_entity_t ecs_add_path_w_sep(
         }
 
         if (parent) {
-            ecs_add_pair(world, entity, EcsChildOf, parent);
+            ecs_add_pair(world, entity, EcsChildOf, entity);
         }
 
         return entity;

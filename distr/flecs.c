@@ -11475,7 +11475,7 @@ const char* flecs_path_elem(
         }
 
         if (buffer) {
-            ecs_check(size > 0, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(size > 0, ECS_INTERNAL_ERROR, NULL);
             if (pos >= (size - 1)) {
                 if (size == ECS_NAME_BUFFER_LENGTH) { /* stack buffer */
                     char *new_buffer = ecs_os_malloc(size * 2 + 1);
@@ -12113,13 +12113,6 @@ void flecs_add_path(
         ecs_assert(real_world != NULL, ECS_INTERNAL_ERROR, NULL);
     }
 
-    if (name[0] == '#') {
-        if (defer_suspend) {
-            flecs_resume_readonly(real_world, &srs);
-        }
-        return;
-    }
-
     if (parent) {
         ecs_add_pair(world, entity, EcsChildOf, parent);
     }
@@ -12157,7 +12150,7 @@ ecs_entity_t ecs_add_path_w_sep(
         }
 
         if (parent) {
-            ecs_add_pair(world, entity, EcsChildOf, parent);
+            ecs_add_pair(world, entity, EcsChildOf, entity);
         }
 
         return entity;
@@ -39280,10 +39273,6 @@ error:
  */
 
 
-/* Internal flag used to prevent recursive child depth propagation from
- * re-entering the same id record when malformed hierarchies contain cycles. */
-#define EcsIdUpdatingChildDepth (1u << 27)
-
 static
 ecs_id_record_elem_t* flecs_component_elem(
     ecs_component_record_t *head,
@@ -40464,21 +40453,17 @@ void flecs_component_update_childof_w_depth(
     ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_pair_record_t *pair = cr->pair;
     ecs_assert(pair != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(depth < (FLECS_DAG_DEPTH_MAX + 1), ECS_INVALID_OPERATION, 
+        "possible cycle detected in ChildOf/Parent hierarchy");
 
     if (cr->flags & EcsIdMarkedForDelete) {
-        return;
-    }
-
-    if (cr->flags & EcsIdUpdatingChildDepth) {
         return;
     }
 
     /* If depth changed, propagate downwards */
     if (depth != pair->depth) {
         pair->depth = depth;
-        cr->flags |= EcsIdUpdatingChildDepth;
         flecs_entities_update_childof_depth(world, cr);
-        cr->flags &= ~EcsIdUpdatingChildDepth;
     }
 }
 
@@ -61183,25 +61168,20 @@ bool flecs_keyword_match(
         return pos + 1;
 
 static
-bool flecs_tokenizer_ensure_space(
+char* flecs_tokenizer_write(
     ecs_parser_t *parser,
     char *dst,
-    ecs_size_t bytes,
-    const char *what)
+    char ch)
 {
-    if (!parser || !parser->token_end) {
-        return true;
+    ecs_assert(dst != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    if (parser && parser->token_end) {
+        ecs_assert(dst < parser->token_end, ECS_INVALID_OPERATION,
+            "out of parser token storage");
     }
 
-    if (dst > parser->token_end ||
-        ((ecs_size_t)(parser->token_end - dst) < bytes))
-    {
-        ecs_parser_error(parser->name, parser->code, 0,
-            "out of parser token storage while parsing %s", what);
-        return false;
-    }
-
-    return true;
+    dst[0] = ch;
+    return dst + 1;
 }
 
 const char* flecs_token_kind_str(
@@ -61591,13 +61571,7 @@ const char* flecs_tokenizer_identifier(
                     }
 
                     if (outpos) {
-                        if (!flecs_tokenizer_ensure_space(parser, outpos, 1,
-                            "identifier"))
-                        {
-                            return NULL;
-                        }
-                        *outpos = c;
-                        outpos ++;
+                        outpos = flecs_tokenizer_write(parser, outpos, c);
                     }
                     pos ++;
 
@@ -61617,13 +61591,7 @@ const char* flecs_tokenizer_identifier(
         }
 
         if (outpos) {
-            if (!flecs_tokenizer_ensure_space(parser, outpos, 1,
-                "identifier"))
-            {
-                return NULL;
-            }
-            *outpos = *pos;
-            outpos ++;
+            outpos = flecs_tokenizer_write(parser, outpos, *pos);
         }
 
         pos ++;
@@ -61631,14 +61599,9 @@ const char* flecs_tokenizer_identifier(
 
 done:
     if (outpos) {
-        if (!flecs_tokenizer_ensure_space(parser, outpos, 1,
-            "identifier"))
-        {
-            return NULL;
-        }
-        *outpos = '\0';
+        outpos = flecs_tokenizer_write(parser, outpos, '\0');
         if (parser) {
-            parser->token_cur = outpos + 1;
+            parser->token_cur = outpos;
         }
     }
 
@@ -61677,31 +61640,19 @@ const char* flecs_script_number(
     char *outpos = parser->token_cur;
 
     if (pos[0] == '-') {
-        if (!flecs_tokenizer_ensure_space(parser, outpos, 1, "number")) {
-            return NULL;
-        }
-        outpos[0] = pos[0];
+        outpos = flecs_tokenizer_write(parser, outpos, pos[0]);
         pos ++;
-        outpos ++;
     }
 
     if (pos[0] == '0' && (pos[1] == 'x' || pos[1] == 'X')) {
         base = 16;
-        if (!flecs_tokenizer_ensure_space(parser, outpos, 2, "number")) {
-            return NULL;
-        }
-        outpos[0] = pos[0];
-        outpos[1] = pos[1];
-        outpos += 2;
+        outpos = flecs_tokenizer_write(parser, outpos, pos[0]);
+        outpos = flecs_tokenizer_write(parser, outpos, pos[1]);
         pos += 2;
     } else if (pos[0] == '0' && (pos[1] == 'b' || pos[1] == 'B')) {
         base = 2;
-        if (!flecs_tokenizer_ensure_space(parser, outpos, 2, "number")) {
-            return NULL;
-        }
-        outpos[0] = pos[0];
-        outpos[1] = pos[1];
-        outpos += 2;
+        outpos = flecs_tokenizer_write(parser, outpos, pos[0]);
+        outpos = flecs_tokenizer_write(parser, outpos, pos[1]);
         pos += 2;
     }
 
@@ -61727,14 +61678,8 @@ const char* flecs_script_number(
                     valid_number = true;
                     handled_char = true;
 
-                    if (!flecs_tokenizer_ensure_space(parser, outpos, 2,
-                        "number"))
-                    {
-                        return NULL;
-                    }
-                    outpos[0] = c;
-                    outpos[1] = pos[1];
-                    outpos += 2;
+                    outpos = flecs_tokenizer_write(parser, outpos, c);
+                    outpos = flecs_tokenizer_write(parser, outpos, pos[1]);
                     pos += 2;
                 }
             }
@@ -61756,24 +61701,13 @@ const char* flecs_script_number(
                 return NULL;
             }
 
-            if (!flecs_tokenizer_ensure_space(parser, outpos, 1,
-                "number"))
-            {
-                return NULL;
-            }
-            *outpos = '\0';
-            parser->token_cur = outpos + 1;
+            outpos = flecs_tokenizer_write(parser, outpos, '\0');
+            parser->token_cur = outpos;
             break;
         }
 
         if (!handled_char) {
-            if (!flecs_tokenizer_ensure_space(parser, outpos, 1,
-                "number"))
-            {
-                return NULL;
-            }
-            outpos[0] = pos[0];
-            outpos ++;
+            outpos = flecs_tokenizer_write(parser, outpos, pos[0]);
             pos ++;
         }
     } while (true);
@@ -61828,17 +61762,16 @@ const char* flecs_script_char(
         return NULL;
     }
 
-    if (!flecs_tokenizer_ensure_space(parser, parser->token_cur, len + 1,
-        "char"))
-    {
-        return NULL;
+    char *outpos = parser->token_cur;
+    int32_t i;
+    for (i = 0; i < len; i ++) {
+        outpos = flecs_tokenizer_write(parser, outpos, pos[i + 1]);
     }
-    ecs_os_memcpy(parser->token_cur, pos + 1, len);
-    parser->token_cur[len] = '\0';
+    outpos = flecs_tokenizer_write(parser, outpos, '\0');
 
     out->kind = EcsTokChar;
     out->value = parser->token_cur;
-    parser->token_cur += len + 1;
+    parser->token_cur = outpos;
     return end + 2;
 }
 
@@ -61857,17 +61790,16 @@ const char* flecs_script_string(
     end --;
 
     int32_t len = flecs_ito(int32_t, end - pos);
-    if (!flecs_tokenizer_ensure_space(parser, parser->token_cur, len + 1,
-        "string"))
-    {
-        return NULL;
+    char *outpos = parser->token_cur;
+    int32_t i;
+    for (i = 0; i < len; i ++) {
+        outpos = flecs_tokenizer_write(parser, outpos, pos[i + 1]);
     }
-    ecs_os_memcpy(parser->token_cur, pos + 1, len);
-    parser->token_cur[len] = '\0';
+    outpos = flecs_tokenizer_write(parser, outpos, '\0');
 
     out->kind = EcsTokString;
     out->value = parser->token_cur;
-    parser->token_cur += len + 1;
+    parser->token_cur = outpos;
     return end + 2;
 }
 
@@ -61895,17 +61827,16 @@ const char* flecs_script_multiline_string(
     end --;
 
     int32_t len = flecs_ito(int32_t, end - pos);
-    if (!flecs_tokenizer_ensure_space(parser, parser->token_cur, len + 1,
-        "multiline string"))
-    {
-        return NULL;
+    char *outpos = parser->token_cur;
+    int32_t i;
+    for (i = 0; i < len; i ++) {
+        outpos = flecs_tokenizer_write(parser, outpos, pos[i + 1]);
     }
-    ecs_os_memcpy(parser->token_cur, pos + 1, len);
-    parser->token_cur[len] = '\0';
+    outpos = flecs_tokenizer_write(parser, outpos, '\0');
 
     out->kind = EcsTokString;
     out->value = parser->token_cur;
-    parser->token_cur += len + 1;
+    parser->token_cur = outpos;
     return end + 2;
 }
 
@@ -61944,22 +61875,20 @@ const char* flecs_tokenizer_until(
     }
 
     int32_t len = flecs_ito(int32_t, pos - start);
-    if (!flecs_tokenizer_ensure_space(parser, parser->token_cur, len + 1,
-        "token"))
-    {
-        return NULL;
-    }
-    ecs_os_memcpy(parser->token_cur, start, len);
     char *token_start = parser->token_cur;
+    char *outpos = token_start;
+    int32_t i;
+    for (i = 0; i < len; i ++) {
+        outpos = flecs_tokenizer_write(parser, outpos, start[i]);
+    }
     out->value = parser->token_cur;
-    parser->token_cur += len;
+    parser->token_cur = outpos;
 
     while (parser->token_cur != token_start && isspace(parser->token_cur[-1])) {
         parser->token_cur --;
     }
 
-    parser->token_cur[0] = '\0';
-    parser->token_cur ++;
+    parser->token_cur = flecs_tokenizer_write(parser, parser->token_cur, '\0');
 
     return pos;
 }
@@ -68686,16 +68615,8 @@ void flecs_script_template_instantiate(
     ecs_vec_t prev_using = v.r->using;
     ecs_vec_t prev_with = desc.runtime->with;
     ecs_vec_t prev_with_type_info = desc.runtime->with_type_info;
-    ecs_vec_t inst_using = {0};
-    int32_t using_count = ecs_vec_count(&template->using_);
-    ecs_vec_init_t(&v.r->allocator, &inst_using, ecs_entity_t, using_count);
-    int32_t i;
-    for (i = 0; i < using_count; i ++) {
-        ecs_vec_append_t(&v.r->allocator, &inst_using, ecs_entity_t)[0] =
-            ecs_vec_get_t(&template->using_, ecs_entity_t, i)[0];
-    }
 
-    v.r->using = inst_using;
+    v.r->using = template->using_;
     v.template_entity = template_entity;
     ecs_vec_init_t(NULL, &desc.runtime->with, ecs_value_t, 0);
     ecs_vec_init_t(NULL, &desc.runtime->with_type_info, ecs_type_info_t*, 0);
@@ -68713,7 +68634,7 @@ void flecs_script_template_instantiate(
 
     v.entity = &instance_node;
 
-    int32_t m, a;
+    int32_t i, m, a;
     for (i = 0; i < count; i ++) {
         v.parent = entities[i];
         ecs_assert(ecs_is_alive(world, v.parent), ECS_INTERNAL_ERROR, NULL);
@@ -68775,8 +68696,6 @@ void flecs_script_template_instantiate(
         &desc.runtime->with, ecs_value_t);
     ecs_vec_fini_t(&desc.runtime->allocator, 
         &desc.runtime->with_type_info, ecs_type_info_t*);
-    ecs_vec_fini_t(&desc.runtime->allocator,
-        &v.r->using, ecs_entity_t);
 
     v.r->with = prev_with;
     v.r->with_type_info = prev_with_type_info;
@@ -70059,7 +69978,8 @@ int flecs_script_check_using(
     ecs_script_eval_visitor_t *v,
     ecs_script_using_t *node)
 {
-    return flecs_script_eval_using(v, node);
+    flecs_script_eval_error(v, node, "using in template is not allowed");
+    return -1;
 }
 
 static
@@ -70681,9 +70601,13 @@ int flecs_script_eval_id(
         return 0;
     }
 
-    if (!id->first) {
-        flecs_script_eval_error(v, node, 
-            "invalid component/tag identifier");
+    if (!id->first || !id->first[0]) {
+        flecs_script_eval_error(v, node, "invalid component identifier");
+        return -1;
+    }
+
+    if (id->second && !id->second[0]) {
+        flecs_script_eval_error(v, node, "invalid pair identifier");
         return -1;
     }
 
@@ -71052,23 +70976,6 @@ int flecs_script_eval_entity(
     v->entity = node;
 
     if (node->eval_kind) {
-        if (ECS_IS_PAIR(node->eval_kind)) {
-            ecs_entity_t relationship = ECS_PAIR_FIRST(node->eval_kind);
-            if (ecs_has_id(v->world, relationship, EcsSingleton) &&
-                relationship != node->eval)
-            {
-                flecs_script_eval_error(v, node,
-                    "singleton pair kind cannot be added to entity");
-                return -1;
-            }
-        } else if (ecs_has_id(v->world, node->eval_kind, EcsSingleton) &&
-            node->eval_kind != node->eval)
-        {
-            flecs_script_eval_error(v, node,
-                "singleton kind cannot be added to entity");
-            return -1;
-        }
-
         ecs_add_id(v->world, node->eval, node->eval_kind);
 
         default_comp = 
@@ -72070,11 +71977,11 @@ int ecs_script_eval(
         ecs_log_start_capture(true);
     }
 
+    // printf("%s\n", ecs_script_ast_to_str(script, true));
+
     flecs_script_eval_visit_init(impl, &v, &priv_desc);
     int r = ecs_script_visit(impl, &v, flecs_script_eval_node);
     flecs_script_eval_visit_fini(&v, &priv_desc);
-
-    // printf("%s\n", ecs_script_ast_to_str(script, true));
 
     if (result) {
         result->error = ecs_log_stop_capture();

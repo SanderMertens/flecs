@@ -14874,3 +14874,15 @@ void Eval_const_var_w_new_expr_tag_component(void) {
 
     ecs_fini(world);
 }
+
+void Eval_empty_entity_kind(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "\"\" foo {}";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+
+    ecs_fini(world);
+}

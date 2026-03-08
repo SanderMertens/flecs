@@ -460,7 +460,8 @@
                 "scientific_notation_negative_exponent",
                 "scientific_notation_positive_exponent_sign",
                 "const_var_w_new_expr_two_tags",
-                "const_var_w_new_expr_tag_component"                
+                "const_var_w_new_expr_tag_component",
+                "empty_entity_kind"
             ]
         }, {
             "id": "Template",
@@ -1381,16 +1382,12 @@
                 "136",
                 "137",
                 "138",
-                "139",
                 "140",
                 "141",
-                "142",
-                "143",
                 "144",
                 "145",
                 "146",
                 "147",
-                "148",
                 "149",
                 "150"
             ]
