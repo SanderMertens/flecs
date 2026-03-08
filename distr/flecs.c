@@ -25257,10 +25257,21 @@ char* ecs_cpp_get_symbol_name(
     const char *type_name,
     size_t len)
 {
+    ecs_assert(type_name != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    if (!len) {
+        len = flecs_itosize(ecs_os_strlen(type_name));
+    }
+
+    if (!symbol_name) {
+        symbol_name = ecs_os_malloc_n(char, flecs_uto(int32_t, len + 1));
+        ecs_assert(symbol_name != NULL, ECS_OUT_OF_MEMORY, NULL);
+    }
+
     const char *ptr;
     size_t i;
     for (i = 0, ptr = type_name; i < len && *ptr; i ++, ptr ++) {
-        if (*ptr == ':') {
+        if (*ptr == ':' && ptr[1] == ':') {
             symbol_name[i] = '.';
             ptr ++;
         } else {
@@ -25386,6 +25397,15 @@ ecs_entity_t ecs_cpp_component_register(
     if (!c || !ecs_is_alive(world, c)) {
     } else {
         return c;
+    }
+
+    ecs_assert(cpp_name != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    if (!cpp_symbol) {
+        ecs_size_t len = ecs_os_strlen(cpp_name);
+        char *symbol_name = ecs_os_alloca_n(char, len + 1);
+        cpp_symbol = ecs_cpp_get_symbol_name(
+            symbol_name, cpp_name, flecs_itosize(len));
     }
 
     const char *user_name = NULL;
