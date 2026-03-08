@@ -10620,6 +10620,9 @@ ecs_entity_t ecs_get_target(
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     flecs_assert_entity_valid(world, entity, "get_target");
     ecs_check(rel != 0, ECS_INVALID_PARAMETER, NULL);
+    if (index < 0) {
+        return 0;
+    }
 
     if (rel == EcsChildOf) {
         if (index > 0) {
@@ -28595,6 +28598,32 @@ ecs_entity_t flecs_rest_entity_from_path(
 }
 
 static
+bool flecs_rest_get_type_info(
+    ecs_world_t *world,
+    ecs_http_reply_t *reply,
+    const char *path)
+{
+    ecs_dbg_2("rest: request type info '%s'", path);
+
+    ecs_entity_t e;
+    if (!(e = flecs_rest_entity_from_path(world, reply, path))) {
+        return true;
+    }
+
+    char *json = ecs_type_info_to_json(world, e);
+    if (!json) {
+        flecs_reply_error(reply, "failed to serialize type info for '%s'", path);
+        reply->code = 500;
+        return true;
+    }
+
+    ecs_strbuf_appendstr(&reply->body, json);
+    ecs_os_free(json);
+
+    return true;
+}
+
+static
 bool flecs_rest_get_component(
     ecs_world_t *world,
     const ecs_http_request_t* req,
@@ -30282,6 +30311,10 @@ bool flecs_rest_reply(
         /* Component GET endpoint */
         } else if (!ecs_os_strncmp(req->path, "component/", 10)) {
             return flecs_rest_get_component(world, req, reply, &req->path[10]);
+
+        /* Type info endpoint */
+        } else if (!ecs_os_strncmp(req->path, "type_info/", 10)) {
+            return flecs_rest_get_type_info(world, reply, &req->path[10]);
 
         /* Query endpoint */
         } else if (!ecs_os_strcmp(req->path, "query")) {
@@ -32126,6 +32159,7 @@ void flecs_bitset_set(
     int32_t elem,
     bool value)
 {
+    ecs_check(elem >= 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(elem < bs->count, ECS_INVALID_PARAMETER, NULL);
     uint32_t hi = ((uint32_t)elem) >> 6;
     uint32_t lo = ((uint32_t)elem) & 0x3F;
@@ -32139,6 +32173,7 @@ bool flecs_bitset_get(
     const ecs_bitset_t *bs,
     int32_t elem)
 {
+    ecs_check(elem >= 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(elem < bs->count, ECS_INVALID_PARAMETER, NULL);
     return !!(bs->data[elem >> 6] & ((uint64_t)1 << ((uint64_t)elem & 0x3F)));
 error:
@@ -32155,6 +32190,7 @@ void flecs_bitset_remove(
     ecs_bitset_t *bs,
     int32_t elem)
 {
+    ecs_check(elem >= 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(elem < bs->count, ECS_INVALID_PARAMETER, NULL);
     int32_t last = bs->count - 1;
     bool last_value = flecs_bitset_get(bs, last);
@@ -32170,6 +32206,8 @@ void flecs_bitset_swap(
     int32_t elem_a,
     int32_t elem_b)
 {
+    ecs_check(elem_a >= 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(elem_b >= 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(elem_a < bs->count, ECS_INVALID_PARAMETER, NULL);
     ecs_check(elem_b < bs->count, ECS_INVALID_PARAMETER, NULL);
 
@@ -34651,23 +34689,26 @@ char* flecs_strbuf_itoa(
     char *ptr = buf;
     char * p1;
 	char c;
+    uint64_t uv;
 
-	if (!v) {
+    if (v < 0) {
+        ptr[0] = '-';
+        ptr ++;
+        uv = (uint64_t)0 - (uint64_t)v;
+    } else {
+        uv = (uint64_t)v;
+    }
+
+	if (!uv) {
 		*ptr++ = '0';
     } else {
-        if (v < 0) {
-            ptr[0] = '-';
-            ptr ++;
-            v *= -1;
-        }
-
 		char *p = ptr;
-		while (v) {
-            int64_t vdiv = v / 10;
-            int64_t vmod = v - (vdiv * 10);
-			p[0] = (char)('0' + vmod);
+		while (uv) {
+            uint64_t vdiv = uv / 10;
+            uint64_t vmod = uv - (vdiv * 10);
+			p[0] = (char)('0' + (char)vmod);
             p ++;
-			v = vdiv;
+			uv = vdiv;
 		}
 
 		p1 = p;
@@ -35444,8 +35485,18 @@ void ecs_vec_set_min_size_w_type_info(
     int32_t elem_count,
     const ecs_type_info_t *ti)
 {
+    ecs_assert(size != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_vec_init_if(vec, size);
+#ifdef FLECS_SANITIZE
+    if (!vec->type_name) {
+        vec->type_name = ti ? ti->name : NULL;
+    }
+#else
+    (void)ti;
+#endif
+
     if (elem_count > vec->size) {
-        ecs_vec_set_min_size_w_type_info(allocator, vec, size, elem_count, ti);
+        ecs_vec_set_size(allocator, vec, size, elem_count);
     }
 }
 
@@ -39520,7 +39571,17 @@ void flecs_component_record_check_constraints(
     (void)tgt;
 
 #ifdef FLECS_DEBUG
+    if (ECS_HAS_ID_FLAG(cr->id, PAIR) && !ECS_IS_PAIR(cr->id)) {
+        return;
+    }
+
     if (ECS_IS_PAIR(cr->id)) {
+        /* Internal role records use (EcsFlag, X). These should not be
+         * validated as regular relationship/target pairs. */
+        if (rel == EcsFlag) {
+            return;
+        }
+
         if (tgt) {
             ecs_assert(tgt != 0, ECS_INTERNAL_ERROR, NULL);
 
@@ -44894,7 +44955,7 @@ ecs_entity_t ecs_table_get_target(
         return 0;
     }
 
-    if (index > tr->count) {
+    if ((index < 0) || (index >= tr->count)) {
         return 0;
     }
 
@@ -70977,23 +71038,26 @@ int flecs_script_eval_component(
             return -1;
         }
 
+        bool needs_set = ti->hooks.on_replace != NULL;
         ecs_record_t *r = flecs_entities_get(v->world, src);
         ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_table_t *table = r->table;
  
         ecs_value_t value = {
-            .ptr = ecs_ensure_id(v->world, src, node->id.eval, 
-                flecs_ito(size_t, ti->size)),
+            .ptr = needs_set 
+                ? ecs_os_alloca(ti->size) 
+                : ecs_ensure_id(v->world, src, node->id.eval, 
+                    flecs_ito(size_t, ti->size)),
             .type = ti->component
         };
 
         /* Assign entire value, including members not set by expression. This 
          * prevents uninitialized or unexpected values. */
-        if (r->table != table) {
+        if (needs_set || (r->table != table)) {
             if (!ti->hooks.ctor) {
                 ecs_os_memset(value.ptr, 0, ti->size);
             } else {
-                if (ti->hooks.dtor) {
+                if (!needs_set && ti->hooks.dtor) {
                     flecs_type_info_dtor(value.ptr, 1, ti);
                 }
                 flecs_type_info_ctor(value.ptr, 1, ti);
@@ -71004,7 +71068,12 @@ int flecs_script_eval_component(
             return -1;
         }
 
-        ecs_modified_id(v->world, src, node->id.eval);
+        if (needs_set) {
+            ecs_set_id(v->world, src, node->id.eval, 
+                flecs_itosize(ti->size), value.ptr);
+        } else {
+            ecs_modified_id(v->world, src, node->id.eval);
+        }
     } else {
         ecs_add_id(v->world, src, node->id.eval);
     }
@@ -78218,7 +78287,10 @@ void flecs_query_cache_group_fini(
     ecs_query_cache_t *cache,
     ecs_query_cache_group_t *group)
 {
-    if (cache->on_group_delete) {
+    /* Group callbacks are only meaningful for groups that have matched at
+     * least one table. The default group can exist as list head without ever
+     * being materialized through on_group_create (group id 0). */
+    if (cache->on_group_delete && group->info.table_count) {
         cache->on_group_delete(cache->query->world, group->info.id,
             group->info.ctx, cache->group_by_ctx);
     }

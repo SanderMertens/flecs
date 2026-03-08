@@ -6917,6 +6917,15 @@ static void on_set_position(ecs_iter_t *it) {
     test_assert(p != NULL);
 }
 
+static int on_replace_position_invoked = 0;
+
+static void on_replace_position(ecs_iter_t *it) {
+    on_replace_position_invoked ++;
+
+    Position *p = ecs_field(it, Position, 0);
+    test_assert(p != NULL);
+}
+
 void Eval_on_set_w_kind_paren_no_reflection(void) {
     ecs_world_t *world = ecs_init();
 
@@ -7132,6 +7141,43 @@ void Eval_on_set_w_single_assign_scoped_no_value(void) {
     const Position *p = ecs_get(world, e, Position);
     test_int(p->x, 100);
     test_int(p->y, 200);
+
+    ecs_fini(world);
+}
+
+void Eval_on_replace_w_single_assign_scoped_w_value(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .on_replace = on_replace_position
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "e { Position: {10, 20} }";
+
+    on_replace_position_invoked = 0;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    test_int(on_replace_position_invoked, 1);
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
 
     ecs_fini(world);
 }

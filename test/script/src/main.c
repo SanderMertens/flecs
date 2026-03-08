@@ -235,6 +235,7 @@ void Eval_on_set_w_kind_no_paren(void);
 void Eval_on_set_w_single_assign(void);
 void Eval_on_set_w_single_assign_scoped_w_value(void);
 void Eval_on_set_w_single_assign_scoped_no_value(void);
+void Eval_on_replace_w_single_assign_scoped_w_value(void);
 void Eval_if_true(void);
 void Eval_if_true_no_else(void);
 void Eval_if_false(void);
@@ -967,6 +968,7 @@ void Expr_identifier_as_const_var(void);
 void Expr_expr_w_identifier_as_var(void);
 void Expr_initializer_w_identifier_as_var(void);
 void Expr_new_entity(void);
+void Expr_new_entity_w_component_w_on_replace(void);
 void Expr_new_entity_w_component(void);
 void Expr_new_entity_w_component_w_newline(void);
 void Expr_new_entity_w_kind(void);
@@ -2236,6 +2238,10 @@ bake_test_case Eval_testcases[] = {
     {
         "on_set_w_single_assign_scoped_no_value",
         Eval_on_set_w_single_assign_scoped_no_value
+    },
+    {
+        "on_replace_w_single_assign_scoped_w_value",
+        Eval_on_replace_w_single_assign_scoped_w_value
     },
     {
         "if_true",
@@ -5147,6 +5153,10 @@ bake_test_case Expr_testcases[] = {
         Expr_new_entity
     },
     {
+        "new_entity_w_component_w_on_replace",
+        Expr_new_entity_w_component_w_on_replace
+    },
+    {
         "new_entity_w_component",
         Expr_new_entity_w_component
     },
@@ -6589,7 +6599,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        443,
+        444,
         Eval_testcases
     },
     {
@@ -6610,7 +6620,7 @@ static bake_test_suite suites[] = {
         "Expr",
         Expr_setup,
         NULL,
-        338,
+        339,
         Expr_testcases,
         1,
         Expr_params

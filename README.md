@@ -127,6 +127,9 @@ If you have a project you'd like to share, let me know on [Discord](https://disc
 ### Antimatcher
 [![image](docs/img/projects/antimatcher.png)](https://store.steampowered.com/app/4336520/AntiMatcher/)
 
+### Writ of Battle
+[![image](docs/img/projects/writ_of_battle.jpg)](https://store.steampowered.com/app/4445990/Writ_of_Battle/)
+
 ### Extermination Shock
 [![image](docs/img/projects/extermination_shock.png)](https://store.steampowered.com/app/2510820/Extermination_Shock/)
 
@@ -136,27 +139,14 @@ If you have a project you'd like to share, let me know on [Discord](https://disc
 ### ECS survivors
 [![image](docs/img/projects/ecs_survivors.png)](https://laurent-voisard.itch.io/ecs-survivors/)
 
-### Ascendant
-[![image](docs/img/projects/ascendant.jpg)](https://vkguide.dev/docs/ascendant/)
-
 ### Tome Tumble Tournament
 [![image](docs/img/projects/tome_tumble.png)](https://terzalo.itch.io/tome-tumble-tournament)
 
 ### Sol Survivor
 [![image](docs/img/projects/sol_survivor.png)](https://nicok.itch.io/sol-survivor-demo)
 
-### Equilibrium Engine
-[![image](docs/img/projects/equilibrium_engine.png)](https://github.com/clibequilibrium/EquilibriumEngine)
-
 ### After Sun
 [![image](docs/img/projects/after_sun.png)](https://github.com/foxnne/aftersun)
-
-### Flecs Demo's
-https://github.com/SanderMertens/tower_defense
-[![Tower Defense](docs/img/projects/tower_defense.png)](https://www.flecs.dev/tower_defense/etc)
-
-https://github.com/flecs-hub/city
-[![City](docs/img/projects/city.png)](https://www.flecs.dev/city)
 
 ## Flecs Hub
 [Flecs Hub](https://github.com/flecs-hub) is a collection of repositories that show how Flecs can be used to build game systems like input handling, hierarchical transforms and rendering.

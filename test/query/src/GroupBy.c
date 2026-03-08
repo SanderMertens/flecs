@@ -1471,3 +1471,44 @@ void GroupBy_on_group_create_delete_default_group(void) {
 
     ecs_fini(world);
 }
+
+void GroupBy_on_group_delete_not_called_for_uncreated_default_group(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, TgtA);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { ecs_pair(Rel, EcsWildcard) },
+            { Foo, .src.id = EcsUp }
+        },
+        .group_by = Rel,
+        .on_group_create = on_group_create,
+        .on_group_delete = on_group_delete,
+        .group_by_ctx = &group_by_ctx
+    });
+
+    test_assert(q != NULL);
+
+    test_int(on_group_create_invoked, 0);
+    test_int(on_group_delete_invoked, 0);
+
+    ecs_entity_t p = ecs_new_w(world, Foo);
+    ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, p);
+    ecs_add_pair(world, e, Rel, TgtA);
+
+    ecs_run_aperiodic(world, 0);
+
+    test_int(on_group_create_invoked, 1);
+    test_int(on_group_delete_invoked, 0);
+
+    ecs_remove(world, p, Foo);
+    ecs_run_aperiodic(world, 0);
+
+    test_int(on_group_create_invoked, 1);
+    test_int(on_group_delete_invoked, 1);
+
+    ecs_fini(world);
+}

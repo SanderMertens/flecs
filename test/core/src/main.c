@@ -953,6 +953,7 @@ void Hierarchies_empty_scope(void);
 void Hierarchies_get_parent(void);
 void Hierarchies_get_parent_from_nested(void);
 void Hierarchies_get_parent_from_nested_2(void);
+void Hierarchies_get_target_negative_index(void);
 void Hierarchies_get_object_from_0(void);
 void Hierarchies_tree_iter_empty(void);
 void Hierarchies_tree_iter_1_table(void);
@@ -1100,6 +1101,7 @@ void OrderedChildren_get_ordered_children_from_prefab_instance_nested_children(v
 void OrderedChildren_prefab_w_nested_ordered_children(void);
 void OrderedChildren_prefab_w_nested_ordered_children_2(void);
 void OrderedChildren_prefab_w_slots(void);
+void OrderedChildren_prefab_get_target_after_reorder(void);
 void OrderedChildren_recreate_named_child(void);
 void OrderedChildren_lookup_after_move_to_root(void);
 void OrderedChildren_lookup_after_clear(void);
@@ -1763,6 +1765,7 @@ void Pairs_force_relationship_on_relationship(void);
 void Pairs_force_target_on_component(void);
 void Pairs_force_target_on_relationship(void);
 void Pairs_force_target_on_target(void);
+void Pairs_disable_w_toggle_pair_rel_target_traits(void);
 void Pairs_relationship_with_exclusive(void);
 void Pairs_add_value_pair(void);
 void Pairs_add_value_pairs(void);
@@ -3133,6 +3136,7 @@ void Table_has_id(void);
 void Table_has_pair(void);
 void Table_has_wildcard_pair(void);
 void Table_has_any_pair(void);
+void Table_get_target_out_of_range(void);
 void Table_clear_table_kills_entities(void);
 void Table_clear_table_add_new(void);
 void Table_clear_table_check_size(void);
@@ -6913,6 +6917,10 @@ bake_test_case Hierarchies_testcases[] = {
         Hierarchies_get_parent_from_nested_2
     },
     {
+        "get_target_negative_index",
+        Hierarchies_get_target_negative_index
+    },
+    {
         "get_object_from_0",
         Hierarchies_get_object_from_0
     },
@@ -7494,6 +7502,10 @@ bake_test_case OrderedChildren_testcases[] = {
     {
         "prefab_w_slots",
         OrderedChildren_prefab_w_slots
+    },
+    {
+        "prefab_get_target_after_reorder",
+        OrderedChildren_prefab_get_target_after_reorder
     },
     {
         "recreate_named_child",
@@ -10061,6 +10073,10 @@ bake_test_case Pairs_testcases[] = {
     {
         "force_target_on_target",
         Pairs_force_target_on_target
+    },
+    {
+        "disable_w_toggle_pair_rel_target_traits",
+        Pairs_disable_w_toggle_pair_rel_target_traits
     },
     {
         "relationship_with_exclusive",
@@ -15439,6 +15455,10 @@ bake_test_case Table_testcases[] = {
         Table_has_any_pair
     },
     {
+        "get_target_out_of_range",
+        Table_get_target_out_of_range
+    },
+    {
         "clear_table_kills_entities",
         Table_clear_table_kills_entities
     },
@@ -15827,14 +15847,14 @@ static bake_test_suite suites[] = {
         "Hierarchies",
         Hierarchies_setup,
         NULL,
-        108,
+        109,
         Hierarchies_testcases
     },
     {
         "OrderedChildren",
         NULL,
         NULL,
-        47,
+        48,
         OrderedChildren_testcases
     },
     {
@@ -15925,7 +15945,7 @@ static bake_test_suite suites[] = {
         "Pairs",
         NULL,
         NULL,
-        134,
+        135,
         Pairs_testcases
     },
     {
@@ -16037,7 +16057,7 @@ static bake_test_suite suites[] = {
         "Table",
         NULL,
         NULL,
-        31,
+        32,
         Table_testcases
     },
     {

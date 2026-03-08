@@ -49,6 +49,31 @@ void Hierarchies_get_parent_from_nested_2(void) {
     ecs_fini(world);
 }
 
+void Hierarchies_get_target_negative_index(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
+    test_uint(ecs_get_target(world, child, EcsChildOf, -1), 0);
+
+    ECS_TAG(world, Rel0);
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Rel2);
+    ECS_TAG(world, Tgt0);
+    ECS_TAG(world, Tgt1);
+    ECS_TAG(world, Tgt2);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add_pair(world, e, Rel0, Tgt0);
+    ecs_add_pair(world, e, Rel, Tgt1);
+    ecs_add_pair(world, e, Rel2, Tgt2);
+
+    test_uint(ecs_get_target(world, e, Rel, 0), Tgt1);
+    test_uint(ecs_get_target(world, e, Rel, -1), 0);
+
+    ecs_fini(world);
+}
+
 void Hierarchies_get_object_from_0(void) {
     install_test_abort();
     ecs_world_t *world = ecs_mini();

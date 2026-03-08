@@ -1605,6 +1605,26 @@ void OrderedChildren_prefab_w_slots(void) {
     ecs_fini(world);
 }
 
+void OrderedChildren_prefab_get_target_after_reorder(void) {
+    install_test_abort();
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_add_id(world, p, EcsOrderedChildren);
+
+    ecs_entity_t pc1 = ecs_new_w_pair(world, EcsChildOf, p);
+    ecs_entity_t pc2 = ecs_new_w_pair(world, EcsChildOf, p);
+    ecs_entity_t pc3 = ecs_new_w_pair(world, EcsChildOf, p);
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+
+    ecs_entity_t children[] = {pc3, pc1, pc2};
+    ecs_set_child_order(world, p, children, 3);
+
+    test_expect_abort();
+    ecs_get_target(world, i, pc1, 0);
+}
+
 void OrderedChildren_recreate_named_child(void) {
     ecs_world_t *world = ecs_mini();
 

@@ -2745,6 +2745,9 @@ ecs_entity_t ecs_get_target(
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     flecs_assert_entity_valid(world, entity, "get_target");
     ecs_check(rel != 0, ECS_INVALID_PARAMETER, NULL);
+    if (index < 0) {
+        return 0;
+    }
 
     if (rel == EcsChildOf) {
         if (index > 0) {
