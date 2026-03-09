@@ -13049,3 +13049,113 @@ void Observer_self_up_propagate_w_parent_component_on_set(void) {
 
     ecs_fini(world);
 }
+
+static
+void Observer_parent_fixed(ecs_iter_t *it) {
+    probe_iter(it);
+
+    Position *dir = ecs_field(it, Position, 0);
+    Velocity *fixed = ecs_field(it, Velocity, 1);
+
+    if (it->event == EcsOnSet) {
+        if (ecs_field_is_set(it, 0)) {
+            test_assert(dir != NULL);
+            test_assert(dir[0].x >= 0);
+        }
+
+        test_assert(fixed != NULL);
+        test_assert(fixed[0].x >= 0);
+    }
+}
+
+static
+void Observer_parent_fill(ecs_iter_t *it) {
+    probe_iter(it);
+
+    Position *dir = ecs_field(it, Position, 0);
+    Mass *fill = ecs_field(it, Mass, 1);
+
+    if (it->event == EcsOnSet) {
+        if (ecs_field_is_set(it, 0)) {
+            test_assert(dir != NULL);
+            test_assert(dir[0].x >= 0);
+        }
+
+        test_assert(fill != NULL);
+        test_assert(fill[0] >= 0);
+    }
+}
+
+void Observer_parent_on_set_w_exclusive_pair(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+    ECS_TAG(world, Sizing);
+
+    ecs_add_id(world, Sizing, EcsExclusive);
+
+    Probe ctx_1 = {0};
+    Probe ctx_2 = {0};
+
+    ecs_observer(world, {
+        .query.terms = {
+            { ecs_id(Position), .src.id = EcsUp, .oper = EcsOptional },
+            { ecs_pair(Sizing, ecs_id(Velocity)) }
+        },
+        .events = { EcsOnSet, EcsOnAdd },
+        .callback = Observer_parent_fixed,
+        .ctx = &ctx_1
+    });
+
+    ecs_observer(world, {
+        .query.terms = {
+            { ecs_id(Position), .src.id = EcsUp, .oper = EcsOptional },
+            { ecs_pair(Sizing, ecs_id(Mass)) }
+        },
+        .events = { EcsOnSet, EcsOnAdd },
+        .callback = Observer_parent_fill,
+        .ctx = &ctx_2
+    });
+
+    ecs_entity_t root = ecs_entity(world, { .name = "Root" });
+    ecs_set(world, root, Position, {1});
+    test_int(ctx_1.invoked, 0);
+    test_int(ctx_2.invoked, 0);
+
+    ecs_set_pair_second(world, root, Sizing, Velocity, {100});
+    test_int(ctx_1.invoked, 2);
+    test_int(ctx_2.invoked, 0);
+
+    ecs_entity_t child = ecs_entity(world, { .name = "Child" });
+    ecs_add(world, child, Position);
+    ecs_set_pair_second(world, child, Sizing, Velocity, {50});
+
+    test_int(ctx_1.invoked, 4);
+    test_int(ctx_2.invoked, 0);
+
+    ecs_add_pair(world, child, EcsChildOf, root);
+
+    test_int(ctx_1.invoked, 5);
+    test_int(ctx_2.invoked, 0);
+
+    ecs_entity_t grandchild = ecs_entity(world, { .name = "Grandchild" });
+    ecs_add(world, grandchild, Position);
+    ecs_set_pair_second(world, grandchild, Sizing, Mass, {0});
+
+    test_int(ctx_1.invoked, 5);
+    test_int(ctx_2.invoked, 2);
+
+    ecs_add_pair(world, grandchild, EcsChildOf, child);
+
+    test_int(ctx_1.invoked, 5);
+    test_int(ctx_2.invoked, 3);
+
+    ecs_set(world, root, Position, {2});
+
+    test_int(ctx_1.invoked, 6);
+    test_int(ctx_2.invoked, 4);
+
+    ecs_fini(world);
+}
