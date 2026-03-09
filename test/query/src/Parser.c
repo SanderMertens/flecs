@@ -3248,18 +3248,24 @@ void Parser_expr_w_symbol(void) {
 
     ECS_TAG(world, Pred);
 
-    ecs_component_init(world, &(ecs_component_desc_t){
+    ecs_entity_t foo = ecs_component_init(world, &(ecs_component_desc_t){
         .entity = ecs_entity(world, {
             .name = "Foo",
             .symbol = "FooBar"
         })
     });
 
-    ecs_log_set_level(-4);
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
         .expr = "FooBar"
     });
-    test_assert(q == NULL);
+    test_assert(q != NULL);
+
+    test_int(term_count(q), 1);
+
+    ecs_term_t *terms = query_terms(q);
+    test_first(terms[0], foo, EcsSelf|EcsIsEntity);
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }
@@ -7188,6 +7194,78 @@ void Parser_singleton_trait_w_explicit_src(void) {
     ecs_term_t *terms = query_terms(q);
     test_first(terms[0], ecs_id(Position), EcsSelf|EcsIsEntity);
     test_src(terms[0], e, EcsSelf|EcsIsEntity);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Parser_lookup_component_by_symbol_1(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
+    ecs_set_scope(world, parent);
+    ECS_COMPONENT(world, Position);
+    ecs_set_scope(world, 0);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Position"
+    });
+
+    test_assert(q != NULL);
+
+    test_int(term_count(q), 1);
+
+    ecs_term_t *terms = query_terms(q);
+    test_first(terms[0], ecs_id(Position), EcsSelf|EcsIsEntity);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Parser_lookup_component_by_symbol_2(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t position = ecs_entity(world, {
+        .name = "Position",
+        .symbol = "EcsPosition" 
+    });
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "EcsPosition"
+    });
+
+    test_assert(q != NULL);
+
+    test_int(term_count(q), 1);
+
+    ecs_term_t *terms = query_terms(q);
+    test_first(terms[0], position, EcsSelf|EcsIsEntity);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Parser_lookup_component_by_symbol_3(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t position = ecs_entity(world, {
+        .name = "parent.Position",
+        .symbol = "EcsPosition" 
+    });
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "EcsPosition"
+    });
+
+    test_assert(q != NULL);
+
+    test_int(term_count(q), 1);
+
+    ecs_term_t *terms = query_terms(q);
+    test_first(terms[0], position, EcsSelf|EcsIsEntity);
 
     ecs_query_fini(q);
 

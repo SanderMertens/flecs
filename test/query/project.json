@@ -484,7 +484,10 @@
                 "eq_this_not_a_var_w_wildcard",
                 "singleton_trait",
                 "singleton_trait_w_explicit_this_var",
-                "singleton_trait_w_explicit_src"
+                "singleton_trait_w_explicit_src",
+                "lookup_component_by_symbol_1",
+                "lookup_component_by_symbol_2",
+                "lookup_component_by_symbol_3"
             ]
         }, {
             "id": "Fuzzing",

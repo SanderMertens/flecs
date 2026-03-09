@@ -169,6 +169,10 @@ int flecs_term_ref_lookup(
     }
 
     if (!e) {
+        e = ecs_lookup_symbol(world, name, false, false);
+    }
+
+    if (!e) {
         if (ctx->query && (ctx->query->flags & EcsQueryAllowUnresolvedByName)) {
             ref->id |= EcsIsName;
             ref->id &= ~EcsIsEntity;
