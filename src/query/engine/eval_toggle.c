@@ -37,7 +37,7 @@ bool flecs_query_apply_or_mask(
     ecs_flags64_t *mask,
     bool *has_bitset)
 {
-    /* Find first term for field index. Terms in an OR chain share the
+    /* Find first term for field index. Terms in an OR chain share the 
      * same field index, so this finds the start of the chain. */
     int32_t i = field_index, term_count = query->term_count;
     ecs_term_t *terms = query->terms;
@@ -52,15 +52,10 @@ bool flecs_query_apply_or_mask(
         return false;
     }
 
-    int32_t end = i + 1;
-    while (end < (term_count - 1) && terms[end].oper == EcsOr) {
-        end ++;
-    }
-
     ecs_flags64_t block = 0;
     bool chain_has_bitset = false;
 
-    for (; i <= end; i ++) {
+    do {
         ecs_id_t id = terms[i].id;
         ecs_bitset_t *bs = flecs_table_get_toggle(table, id);
         if (bs) {
@@ -68,16 +63,16 @@ bool flecs_query_apply_or_mask(
             block |= bs->data[block_index];
             chain_has_bitset = true;
         } else if (ecs_table_has_id(query->world, table, id)) {
-            /* If a non-toggle component is present, it is always enabled
+            /* If a non-toggle component is present, it is always enabled 
              * for all entities in the table. */
             block = UINT64_MAX;
             break;
         }
-    }
+    } while (terms[i++].oper == EcsOr);
 
     if (chain_has_bitset || block == UINT64_MAX) {
         *mask &= block;
-        *has_bitset = *has_bitset || chain_has_bitset;
+        *has_bitset |= chain_has_bitset;
     }
 
     return true;
