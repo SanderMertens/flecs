@@ -9027,6 +9027,55 @@ void Expr_match_i32_1_collection_case(void) {
     ecs_fini(world);
 }
 
+void Expr_match_i32_1_collection_case_crlf(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef int32_t Ints[2];
+
+    ecs_entity_t ecs_id(Ints) = ecs_array(world, {
+        .type = ecs_id(ecs_i32_t),
+        .count = 2
+    });
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+    ecs_script_var_t *var = ecs_script_vars_define(vars, "i", ecs_i32_t);
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars, .disable_folding = disable_folding,
+        .type = ecs_id(Ints) };
+
+    const char *expr =
+        "match $i {\r\n"
+        "  1: [10, 20]\r\n"
+        "}\r\n";
+
+    ecs_script_t *s = ecs_expr_parse(world, expr, &desc);
+    test_assert(s != NULL);
+
+    {
+        *(int32_t*)var->value.ptr = 0;
+        Ints p = {0};
+        ecs_value_t result = { .type = ecs_id(Ints), .ptr = &p };
+        ecs_log_set_level(-4);
+        test_assert(0 != ecs_expr_eval(s, &result, &desc));
+        ecs_log_set_level(-1);
+    }
+
+    {
+        *(int32_t*)var->value.ptr = 1;
+        Ints p = {0};
+        ecs_value_t result = { .type = ecs_id(Ints), .ptr = &p };
+        test_assert(0 == ecs_expr_eval(s, &result, &desc));
+        test_assert(result.type == ecs_id(Ints));
+        test_int(p[0], 10);
+        test_int(p[1], 20);
+    }
+
+    ecs_script_vars_fini(vars);
+    ecs_script_free(s);
+
+    ecs_fini(world);
+}
+
 void Expr_match_i32_2_collection_cases(void) {
     ecs_world_t *world = ecs_init();
 

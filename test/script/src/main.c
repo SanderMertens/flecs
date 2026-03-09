@@ -47,6 +47,7 @@ void Eval_line_comment_before_multi_line_comment_before_scope_open(void);
 void Eval_line_comment_after_newline_before_3_newline_scope_open(void);
 void Eval_line_comment_after_newline_before_mixed_comment_newline_scope_open(void);
 void Eval_multi_line_comment_after_newline_before_mixed_comment_newline_scope_open(void);
+void Eval_multi_line_comment_after_newline_before_mixed_comment_newline_scope_open_crlf(void);
 void Eval_line_comment_after_newline_before_mixed_line_endings_scope_open(void);
 void Eval_line_comment_after_newline_before_multiple_multi_line_comments_scope_open(void);
 void Eval_multi_line_comment(void);
@@ -169,6 +170,7 @@ void Eval_set_entity_names(void);
 void Eval_oneof(void);
 void Eval_brief_annotation(void);
 void Eval_name_annotation(void);
+void Eval_name_annotation_crlf(void);
 void Eval_link_annotation(void);
 void Eval_color_annotation(void);
 void Eval_multiple_annotations(void);
@@ -259,6 +261,7 @@ void Eval_if_else_comment_newline_newline_if(void);
 void Eval_if_else_comment_mixed_comment_newline_if(void);
 void Eval_if_else_comment_newline_scope_open(void);
 void Eval_if_else_comment_mixed_comment_newline_scope_open(void);
+void Eval_if_else_comment_mixed_comment_newline_scope_open_crlf(void);
 void Eval_if_else_comment_no_space_scope_open(void);
 void Eval_isa_in_module(void);
 void Eval_isa_hierarchy(void);
@@ -442,6 +445,7 @@ void Eval_using_comment_no_space_after_keyword(void);
 void Eval_2_using_w_comment(void);
 void Eval_using_wildcard_w_comment(void);
 void Eval_module_stmt_w_comment(void);
+void Eval_module_stmt_w_comment_crlf(void);
 void Eval_template_stmt_w_comment(void);
 void Eval_const_var_expr_w_comment(void);
 void Eval_const_var_initializer_w_comment(void);
@@ -946,6 +950,7 @@ void Expr_match_i32_3_struct_cases(void);
 void Expr_match_i32_empty_struct_cases(void);
 void Expr_match_i32_struct_cases_unknown_type(void);
 void Expr_match_i32_1_collection_case(void);
+void Expr_match_i32_1_collection_case_crlf(void);
 void Expr_match_i32_2_collection_cases(void);
 void Expr_match_i32_3_collection_cases(void);
 void Expr_match_i32_empty_collection_case(void);
@@ -1488,6 +1493,10 @@ bake_test_case Eval_testcases[] = {
         Eval_multi_line_comment_after_newline_before_mixed_comment_newline_scope_open
     },
     {
+        "multi_line_comment_after_newline_before_mixed_comment_newline_scope_open_crlf",
+        Eval_multi_line_comment_after_newline_before_mixed_comment_newline_scope_open_crlf
+    },
+    {
         "line_comment_after_newline_before_mixed_line_endings_scope_open",
         Eval_line_comment_after_newline_before_mixed_line_endings_scope_open
     },
@@ -1976,6 +1985,10 @@ bake_test_case Eval_testcases[] = {
         Eval_name_annotation
     },
     {
+        "name_annotation_crlf",
+        Eval_name_annotation_crlf
+    },
+    {
         "link_annotation",
         Eval_link_annotation
     },
@@ -2334,6 +2347,10 @@ bake_test_case Eval_testcases[] = {
     {
         "if_else_comment_mixed_comment_newline_scope_open",
         Eval_if_else_comment_mixed_comment_newline_scope_open
+    },
+    {
+        "if_else_comment_mixed_comment_newline_scope_open_crlf",
+        Eval_if_else_comment_mixed_comment_newline_scope_open_crlf
     },
     {
         "if_else_comment_no_space_scope_open",
@@ -3066,6 +3083,10 @@ bake_test_case Eval_testcases[] = {
     {
         "module_stmt_w_comment",
         Eval_module_stmt_w_comment
+    },
+    {
+        "module_stmt_w_comment_crlf",
+        Eval_module_stmt_w_comment_crlf
     },
     {
         "template_stmt_w_comment",
@@ -5065,6 +5086,10 @@ bake_test_case Expr_testcases[] = {
         Expr_match_i32_1_collection_case
     },
     {
+        "match_i32_1_collection_case_crlf",
+        Expr_match_i32_1_collection_case_crlf
+    },
+    {
         "match_i32_2_collection_cases",
         Expr_match_i32_2_collection_cases
     },
@@ -6599,7 +6624,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        444,
+        448,
         Eval_testcases
     },
     {
@@ -6620,7 +6645,7 @@ static bake_test_suite suites[] = {
         "Expr",
         Expr_setup,
         NULL,
-        339,
+        340,
         Expr_testcases,
         1,
         Expr_params
