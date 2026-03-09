@@ -1038,6 +1038,12 @@ void SystemBuilder_10_terms(void);
 void SystemBuilder_16_terms(void);
 void SystemBuilder_name_arg(void);
 void SystemBuilder_create_w_no_template_args(void);
+void SystemBuilder_deduce_terms_from_each_callback(void);
+void SystemBuilder_deduce_optional_terms_from_each_callback(void);
+void SystemBuilder_deduce_pair_term_from_each_callback(void);
+void SystemBuilder_deduce_singleton_term_from_each_callback(void);
+void SystemBuilder_deduce_singleton_and_component_terms_from_each_callback(void);
+void SystemBuilder_with_terms_after_deduced_terms(void);
 void SystemBuilder_write_annotation(void);
 void SystemBuilder_name_from_root(void);
 
@@ -5664,6 +5670,30 @@ bake_test_case SystemBuilder_testcases[] = {
         SystemBuilder_create_w_no_template_args
     },
     {
+        "deduce_terms_from_each_callback",
+        SystemBuilder_deduce_terms_from_each_callback
+    },
+    {
+        "deduce_optional_terms_from_each_callback",
+        SystemBuilder_deduce_optional_terms_from_each_callback
+    },
+    {
+        "deduce_pair_term_from_each_callback",
+        SystemBuilder_deduce_pair_term_from_each_callback
+    },
+    {
+        "deduce_singleton_term_from_each_callback",
+        SystemBuilder_deduce_singleton_term_from_each_callback
+    },
+    {
+        "deduce_singleton_and_component_terms_from_each_callback",
+        SystemBuilder_deduce_singleton_and_component_terms_from_each_callback
+    },
+    {
+        "with_terms_after_deduced_terms",
+        SystemBuilder_with_terms_after_deduced_terms
+    },
+    {
         "write_annotation",
         SystemBuilder_write_annotation
     },
@@ -7995,7 +8025,7 @@ static bake_test_suite suites[] = {
         "SystemBuilder",
         NULL,
         NULL,
-        22,
+        28,
         SystemBuilder_testcases
     },
     {
