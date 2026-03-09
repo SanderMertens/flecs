@@ -96,20 +96,26 @@ void flecs_dump_backtrace(
     SYMBOL_INFO *symbol;
     HANDLE hProcess = GetCurrentProcess();
 
-    SymInitialize(hProcess, NULL, TRUE);
+    if (!SymInitialize(hProcess, NULL, TRUE)) {
+        return;
+    }
 
     frames = CaptureStackBackTrace(0, ECS_BT_BUF_SIZE, stack, NULL);
-    symbol = (SYMBOL_INFO*)ecs_os_malloc(
+    symbol = (SYMBOL_INFO*)ecs_os_calloc(
         sizeof(SYMBOL_INFO) + 256 * sizeof(char));
     symbol->MaxNameLen = 255;
     symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
 
     for (int i = 0; i < frames; i++) {
-        SymFromAddr(hProcess, (DWORD)(uintptr_t)stack[i], NULL, symbol);
-        fprintf(stream, "%s\n", symbol->Name);
+        if (SymFromAddr(hProcess, (DWORD64)(uintptr_t)stack[i], NULL, symbol)) {
+            fprintf(stream, "%s\n", symbol->Name);
+        } else {
+            fprintf(stream, "%p\n", stack[i]);
+        }
     }
 
     ecs_os_free(symbol);
+    SymCleanup(hProcess);
 }
 
 #elif HAVE_EXECINFO

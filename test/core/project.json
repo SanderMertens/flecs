@@ -3312,7 +3312,8 @@
                 "log_log",
                 "log_warning",
                 "log_error",
-                "set_log_level_return"
+                "set_log_level_return",
+                "print_backtrace"
             ]
         }, {
             "id": "StackAlloc",
