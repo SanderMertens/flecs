@@ -458,6 +458,33 @@ void Event_emit_for_entity(void) {
     ecs_fini(world);
 }
 
+void Event_emit_for_unused_observed_id(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t evt = ecs_new(world);
+    ecs_entity_t e = ecs_new(world);
+
+    test_assert(flecs_components_get(world, Tag) == NULL);
+
+    ecs_observer(world, {
+        .query.terms = {{ Tag }},
+        .events = {evt},
+        .callback = system_callback
+    });
+
+    test_assert(flecs_components_get(world, Tag) == NULL);
+
+    ecs_emit(world, &(ecs_event_desc_t){
+        .event = evt,
+        .ids = &(ecs_type_t){.count = 1, .array = (ecs_id_t[]){ Tag }},
+        .entity = e
+    });
+
+    ecs_fini(world);
+}
+
 static int ObserverA_invoked = false;
 static void ObserverA(ecs_iter_t *it) {
     ObserverA_invoked ++;
@@ -894,6 +921,52 @@ void Event_enqueue_event_2_ids(void) {
 
     ecs_os_free(ctx_a);
     ecs_os_free(ctx_b);
+
+    ecs_fini(world);
+}
+
+void Event_enqueue_event_for_id_removed_before_merge(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t evt = ecs_new(world);
+    ecs_entity_t e = ecs_new_w(world, Tag);
+
+    test_assert(flecs_components_get(world, Tag) != NULL);
+
+    ecs_defer_begin(world);
+    ecs_remove(world, e, Tag);
+    ecs_enqueue(world, &(ecs_event_desc_t){
+        .event = evt,
+        .ids = &(ecs_type_t){.count = 1, .array = (ecs_id_t[]){ Tag }},
+        .entity = e
+    });
+
+    ecs_defer_end(world);
+
+    ecs_fini(world);
+}
+
+void Event_enqueue_event_for_deleted_id_before_merge(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t evt = ecs_new(world);
+    ecs_entity_t e = ecs_new_w(world, Tag);
+
+    test_assert(flecs_components_get(world, Tag) != NULL);
+
+    ecs_defer_begin(world);
+    ecs_delete(world, Tag);
+    ecs_enqueue(world, &(ecs_event_desc_t){
+        .event = evt,
+        .ids = &(ecs_type_t){.count = 1, .array = (ecs_id_t[]){ Tag }},
+        .entity = e
+    });
+
+    ecs_defer_end(world);
 
     ecs_fini(world);
 }
