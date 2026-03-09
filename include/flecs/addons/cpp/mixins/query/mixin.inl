@@ -34,6 +34,12 @@ flecs::query_builder<Comps...> query_builder(Args &&... args) const;
  * The function parameter must match the following signature:
  *
  * @code
+ * void(*)(flecs::entity)
+ * @endcode
+ *
+ * or:
+ *
+ * @code
  * void(*)(T&, U&, ...)
  * @endcode
  *
