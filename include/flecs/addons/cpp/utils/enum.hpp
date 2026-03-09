@@ -146,13 +146,41 @@ constexpr bool enum_constant_is_valid() {
         enum_type_len<E>() + 8 /* ', E C = ' */] != '(');
 }
 #else
+template <size_t N>
+constexpr size_t enum_template_arg_separator(
+    const char (&func_name)[N],
+    size_t pos,
+    size_t end,
+    size_t depth = 0)
+{
+    return pos >= end
+        ? end
+        : func_name[pos] == '<'
+            ? enum_template_arg_separator(func_name, pos + 1, end, depth + 1)
+            : func_name[pos] == '>'
+                ? enum_template_arg_separator(
+                    func_name, pos + 1, end, depth ? depth - 1 : 0)
+                : (func_name[pos] == ',' && !depth)
+                    ? pos
+                    : enum_template_arg_separator(
+                        func_name, pos + 1, end, depth);
+}
+
 /* Use different trick on MSVC, since it uses hexadecimal representation for
  * invalid enum constants. We can leverage that msvc inserts a C-style cast
- * into the name, and the location of its first character ('(') is known. */
+ * into the name. Find the template argument separator structurally instead of
+ * relying on the exact spelling of __FUNCSIG__ for the enum type. */
 template <typename E, E C>
 constexpr bool enum_constant_is_valid() {
-    return ECS_FUNC_NAME[ECS_FUNC_NAME_FRONT(bool, enum_constant_is_valid) +
-        enum_type_len<E>() + 1] != '(';
+    return enum_template_arg_separator(
+        ECS_FUNC_NAME,
+        ECS_FUNC_NAME_FRONT(bool, enum_constant_is_valid),
+        sizeof(ECS_FUNC_NAME) - ECS_FUNC_NAME_BACK - 1u) <
+            (sizeof(ECS_FUNC_NAME) - ECS_FUNC_NAME_BACK - 1u) &&
+        ECS_FUNC_NAME[enum_template_arg_separator(
+            ECS_FUNC_NAME,
+            ECS_FUNC_NAME_FRONT(bool, enum_constant_is_valid),
+            sizeof(ECS_FUNC_NAME) - ECS_FUNC_NAME_BACK - 1u) + 1u] != '(';
 }
 #endif
 

@@ -865,7 +865,7 @@ jobs:
       - name: test c++
         run: bake/bake run test\cpp -- -j 8
 
-  test-windows-msvc-x86-compat:
+  test-windows-msvc-x86:
     runs-on: windows-2022
     timeout-minutes: 45
 
