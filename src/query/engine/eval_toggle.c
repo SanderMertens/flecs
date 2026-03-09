@@ -33,22 +33,14 @@ bool flecs_query_apply_or_mask(
     const ecs_query_t *query,
     ecs_table_t *table,
     int32_t block_index,
-    int32_t field_index,
+    int32_t term_index,
     ecs_flags64_t *mask,
     bool *has_bitset)
 {
-    /* Find first term for field index. Terms in an OR chain share the 
-     * same field index, so this finds the start of the chain. */
-    int32_t i = field_index, term_count = query->term_count;
     ecs_term_t *terms = query->terms;
+    int32_t i = term_index;
 
-    for (; i < term_count; i ++) {
-        if (terms[i].field_index == field_index) {
-            break;
-        }
-    }
-
-    if (i == term_count || terms[i].oper != EcsOr) {
+    if (terms[i].oper != EcsOr) {
         return false;
     }
 
@@ -89,12 +81,24 @@ flecs_query_row_mask_t flecs_query_get_row_mask(
     ecs_query_toggle_ctx_t *op_ctx)
 {
     ecs_flags64_t mask = UINT64_MAX;
-    int32_t i, field_count = it->field_count;
-    ecs_flags64_t fields = and_fields | not_fields;
+    int32_t i;
+    const ecs_flags64_t fields = and_fields | not_fields;
+    int32_t term_index = 0;
+    const int32_t term_count = query->term_count;
+    const ecs_term_t *terms = query->terms;
     bool has_bitset = false;
 
-    for (i = 0; i < field_count; i ++) {
-        uint64_t field_bit = 1llu << i;
+    for (i = 0; i < it->field_count; i ++) {
+        const uint64_t field_bit = 1llu << i;
+
+        ecs_assert(term_index < term_count, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(terms[term_index].field_index == i, ECS_INTERNAL_ERROR, NULL);
+
+        const int32_t field_term_index = term_index;
+        do {
+            term_index ++;
+        } while ((term_index < term_count) && (terms[term_index].field_index == i));
+
         if (!(fields & field_bit)) {
             continue;
         }
@@ -107,7 +111,9 @@ flecs_query_row_mask_t flecs_query_get_row_mask(
             ecs_abort(ECS_INTERNAL_ERROR, NULL);
         }
 
-        if (flecs_query_apply_or_mask(query, table, block_index, i, &mask, &has_bitset)) {
+        if (flecs_query_apply_or_mask(query, table, block_index,
+            field_term_index, &mask, &has_bitset))
+        {
             continue;
         }
 
@@ -146,7 +152,7 @@ bool flecs_query_toggle_for_up(
     ecs_flags64_t fields = (and_fields | not_fields) & it->up_fields;
 
     for (i = 0; i < field_count; i ++) {
-        uint64_t field_bit = 1llu << i;
+        const uint64_t field_bit = 1llu << i;
         if (!(fields & field_bit)) {
             continue;
         }
