@@ -2277,6 +2277,7 @@
                 "self_up_forward_w_parent_component_reparent",
                 "up_propagate_w_parent_component_on_set",
                 "self_up_propagate_w_parent_component_on_set",
+                "parent_on_set_w_exclusive_pair",
                 "cache_test_1",
                 "cache_test_2",
                 "cache_test_3",

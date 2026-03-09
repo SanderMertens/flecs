@@ -2210,6 +2210,7 @@ void Observer_up_forward_w_parent_component_reparent(void);
 void Observer_self_up_forward_w_parent_component_reparent(void);
 void Observer_up_propagate_w_parent_component_on_set(void);
 void Observer_self_up_propagate_w_parent_component_on_set(void);
+void Observer_parent_on_set_w_exclusive_pair(void);
 void Observer_cache_test_1(void);
 void Observer_cache_test_2(void);
 void Observer_cache_test_3(void);
@@ -11846,6 +11847,10 @@ bake_test_case Observer_testcases[] = {
         Observer_self_up_propagate_w_parent_component_on_set
     },
     {
+        "parent_on_set_w_exclusive_pair",
+        Observer_parent_on_set_w_exclusive_pair
+    },
+    {
         "cache_test_1",
         Observer_cache_test_1
     },
@@ -15964,7 +15969,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        327,
+        328,
         Observer_testcases
     },
     {
