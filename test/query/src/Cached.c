@@ -4152,7 +4152,7 @@ void Cached_it_ptrs_w_wildcard(void) {
             test_assert(p == ecs_get_pair(world, e1, Position, TgtA));
             test_assert(&p[1] == ecs_get_pair(world, e2, Position, TgtA));
             test_assert(&p[2] == ecs_get_pair(world, e3, Position, TgtA));
-            test_assert(p != ptr_a); // verify realloc happened
+            // test_assert(p != ptr_a); Test is flaky because behavior is OS dependent
             test_int(p[0].x, 10); test_int(p[0].y, 20);
             test_int(p[1].x, 30); test_int(p[1].y, 40);
             test_int(p[2].x, 50); test_int(p[2].y, 60);
@@ -4166,7 +4166,7 @@ void Cached_it_ptrs_w_wildcard(void) {
             test_assert(p == ecs_get_pair(world, e1, Position, TgtB));
             test_assert(&p[1] == ecs_get_pair(world, e2, Position, TgtB));
             test_assert(&p[2] == ecs_get_pair(world, e3, Position, TgtB));
-            test_assert(p != ptr_b); // verify realloc happened
+            // test_assert(p != ptr_b); Test is flaky because behavior is OS dependent
             test_int(p[0].x, 11); test_int(p[0].y, 21);
             test_int(p[1].x, 31); test_int(p[1].y, 41);
             test_int(p[2].x, 51); test_int(p[2].y, 61);
