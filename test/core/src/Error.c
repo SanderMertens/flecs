@@ -112,3 +112,8 @@ void Error_set_log_level_return(void) {
     int prev = ecs_log_set_level(-1);
     test_int(prev, 1);
 }
+
+void Error_print_backtrace(void) {
+    flecs_dump_backtrace(stderr);
+    test_assert(true);
+}
