@@ -84943,18 +84943,29 @@ bool flecs_query_sparse_with_id(
     if (!redo) {
         ecs_component_record_t *cr = flecs_components_get(ctx->world, id);
         if (!cr) {
-            return false;
+            goto no_sparse;
         }
 
-        op_ctx->sparse = cr->sparse;
-        if (!op_ctx->sparse) {
-            return false;
+        ecs_sparse_t *sparse = cr->sparse;
+        if (!sparse || !flecs_sparse_count(sparse)) {
+            goto no_sparse;
         }
 
+        op_ctx->sparse = sparse;
         flecs_query_sparse_init_range(op, ctx, op_ctx);
+    } else {
+        if (!op_ctx->range.table) {
+            return false;
+        }
     }
 
     return flecs_query_sparse_next_entity(op, ctx, op_ctx, not, ptr_out);
+no_sparse:
+    op_ctx->sparse = NULL;
+    op_ctx->range.table = NULL;
+    op_ctx->range.offset = 0;
+    op_ctx->range.count = 0;
+    return not;
 }
 
 static

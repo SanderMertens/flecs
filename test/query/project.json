@@ -2350,6 +2350,7 @@
                 "1_var_sparse_pair_exclusive_wildcard_not",
                 "1_var_sparse_pair_any_not",
                 "1_var_sparse_pair_exclusive_any_not",
+                "2_this_sparse_with_component_and_not",
                 "1_sparse_component_unused",
                 "1_sparse_tag_unused",
                 "1_sparse_pair_wildcard_unused",
