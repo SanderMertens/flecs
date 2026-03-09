@@ -1073,6 +1073,12 @@
                 "16_terms",
                 "name_arg",
                 "create_w_no_template_args",
+                "deduce_terms_from_each_callback",
+                "deduce_optional_terms_from_each_callback",
+                "deduce_pair_term_from_each_callback",
+                "deduce_singleton_term_from_each_callback",
+                "deduce_singleton_and_component_terms_from_each_callback",
+                "with_terms_after_deduced_terms",
                 "write_annotation",
                 "name_from_root"
             ]

@@ -19894,6 +19894,8 @@ private:
  * Code from: https://stackoverflow.com/questions/27024238/c-template-mechanism-to-get-the-number-of-function-arguments-which-would-work
  */
 
+#pragma once
+
 namespace flecs {
 namespace _ {
 
@@ -34342,6 +34344,13 @@ struct system_builder final : _::system_builder_base<Components...> {
 
     template <typename Func>
     system each(Func&& func);
+
+private:
+    template <typename ... CallbackComponents, typename Func>
+    system each_callback(_::arg_list<CallbackComponents...>, Func&& func);
+
+    template <typename ... CallbackComponents>
+    void prepend_each_callback_signature();
 };
 
 }
@@ -34521,6 +34530,31 @@ inline system_builder<Comps...> world::system(Args &&... args) const {
 
 namespace _ {
 
+template <typename ArgList>
+struct system_each_normalize_args;
+
+template <typename ... Args>
+struct system_each_normalize_args<arg_list<Args...>> {
+    using type = arg_list<remove_reference_t<Args>...>;
+};
+
+template <typename ArgList, typename = int>
+struct system_each_callback_args {
+    using type = typename system_each_normalize_args<ArgList>::type;
+};
+
+template <typename First, typename ... Args>
+struct system_each_callback_args<arg_list<First, Args...>,
+    if_t<is_same<decay_t<First>, flecs::entity>::value>> {
+    using type = typename system_each_normalize_args<arg_list<Args...>>::type;
+};
+
+template <typename First, typename Second, typename ... Args>
+struct system_each_callback_args<arg_list<First, Second, Args...>,
+    if_t<is_same<decay_t<First>, flecs::iter>::value>> {
+    using type = typename system_each_normalize_args<arg_list<Args...>>::type;
+};
+
 inline void system_init(flecs::world& world) {
     world.component<TickSource>("flecs::system::TickSource");
 }
@@ -34530,8 +34564,60 @@ inline void system_init(flecs::world& world) {
 template <typename ... Components>
 template <typename Func>
 inline system system_builder<Components...>::each(Func&& func) {
-    // Faster version of each() that iterates the query on the C++ side.
-    return this->run_each(FLECS_FWD(func));
+    if constexpr (sizeof...(Components) == 0) {
+        using CallbackComponents =
+            typename _::system_each_callback_args<arg_list_t<Func>>::type;
+        return this->each_callback(CallbackComponents{}, FLECS_FWD(func));
+    } else {
+        // Faster version of each() that iterates the query on the C++ side.
+        return this->run_each(FLECS_FWD(func));
+    }
+}
+
+template <typename ... Components>
+template <typename ... CallbackComponents, typename Func>
+inline system system_builder<Components...>::each_callback(
+    _::arg_list<CallbackComponents...>,
+    Func&& func)
+{
+    this->template prepend_each_callback_signature<CallbackComponents...>();
+
+    using Delegate = typename _::each_delegate<
+        typename std::decay<Func>::type, CallbackComponents...>;
+
+    auto ctx = FLECS_NEW(Delegate)(FLECS_FWD(func));
+    this->desc_.run = Delegate::run_each;
+    this->desc_.run_ctx = ctx;
+    this->desc_.run_ctx_free = _::free_obj<Delegate>;
+    return system(this->world_, &this->desc_);
+}
+
+template <typename ... Components>
+template <typename ... CallbackComponents>
+inline void system_builder<Components...>::prepend_each_callback_signature() {
+    if constexpr (sizeof...(Components) == 0 && sizeof...(CallbackComponents) != 0) {
+        constexpr int32_t callback_term_count =
+            static_cast<int32_t>(sizeof...(CallbackComponents));
+
+        ecs_assert(this->term_index_ + callback_term_count <= FLECS_TERM_COUNT_MAX,
+            ECS_INVALID_PARAMETER, "maximum number of terms exceeded");
+
+        const int32_t existing_term_count = this->term_index_;
+        this->set_term(nullptr);
+
+        for (int32_t i = existing_term_count - 1; i >= 0; i --) {
+            this->desc_.query.terms[i + callback_term_count] =
+                this->desc_.query.terms[i];
+        }
+
+        for (int32_t i = 0; i < callback_term_count; i ++) {
+            this->desc_.query.terms[i] = ecs_term_t{};
+        }
+
+        this->term_index_ = 0;
+        _::sig<CallbackComponents...>(this->world_).populate(this);
+        this->term_index_ = existing_term_count + callback_term_count;
+    }
 }
 
 } // namespace flecs

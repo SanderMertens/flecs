@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include "../../utils/function_traits.hpp"
 #include "../../utils/node_builder.hpp"
 #include "builder_i.hpp"
 
@@ -35,6 +36,13 @@ struct system_builder final : _::system_builder_base<Components...> {
 
     template <typename Func>
     system each(Func&& func);
+
+private:
+    template <typename ... CallbackComponents, typename Func>
+    system each_callback(_::arg_list<CallbackComponents...>, Func&& func);
+
+    template <typename ... CallbackComponents>
+    void prepend_each_callback_signature();
 };
 
 }

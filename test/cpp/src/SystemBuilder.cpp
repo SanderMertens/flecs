@@ -481,6 +481,349 @@ void SystemBuilder_create_w_no_template_args(void) {
     test_int(count, 1);
 }
 
+void SystemBuilder_deduce_terms_from_each_callback(void) {
+    flecs::world ecs;
+
+    auto e = ecs.entity()
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    ecs.entity()
+        .set<Position>({20, 30});
+
+    int32_t term_count = 0;
+    int32_t count = 0;
+
+    auto s = ecs.system()
+        .each([&](Position& p, const Velocity& v) {
+            test_int(p.x, 10);
+            test_int(p.y, 20);
+            test_int(v.x, 1);
+            test_int(v.y, 2);
+            p.x += v.x;
+            p.y += v.y;
+            count ++;
+        });
+
+    s.query().each_term([&](flecs::term& t) {
+        if (term_count == 0) {
+            test_int(t.id(), ecs.id<Position>());
+            test_int(t.inout(), flecs::InOutDefault);
+        } else if (term_count == 1) {
+            test_int(t.id(), ecs.id<Velocity>());
+            test_int(t.inout(), flecs::In);
+        } else {
+            test_assert(false);
+        }
+
+        test_int(t.oper(), flecs::And);
+        term_count ++;
+    });
+
+    test_int(term_count, 2);
+
+    s.run();
+
+    test_int(count, 1);
+
+    const Position *p = e.try_get<Position>();
+    test_assert(p != nullptr);
+    test_int(p->x, 11);
+    test_int(p->y, 22);
+}
+
+void SystemBuilder_deduce_optional_terms_from_each_callback(void) {
+    flecs::world ecs;
+
+    auto e1 = ecs.entity()
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2})
+        .set<Mass>({1});
+
+    auto e2 = ecs.entity()
+        .set<Position>({30, 40})
+        .set<Velocity>({3, 4});
+
+    auto e3 = ecs.entity()
+        .set<Position>({50, 60});
+
+    int32_t term_count = 0;
+    int32_t count = 0;
+
+    auto s = ecs.system()
+        .each([&](Position& p, Velocity* v, Mass* m) {
+            if (v && m) {
+                p.x += v->x * m->value;
+                p.y += v->y * m->value;
+            } else if (v) {
+                p.x += v->x;
+                p.y += v->y;
+            } else {
+                p.x ++;
+                p.y ++;
+            }
+
+            count ++;
+        });
+
+    s.query().each_term([&](flecs::term& t) {
+        if (term_count == 0) {
+            test_int(t.id(), ecs.id<Position>());
+            test_int(t.inout(), flecs::InOutDefault);
+            test_int(t.oper(), flecs::And);
+        } else if (term_count == 1) {
+            test_int(t.id(), ecs.id<Velocity>());
+            test_int(t.inout(), flecs::InOutDefault);
+            test_int(t.oper(), flecs::Optional);
+        } else if (term_count == 2) {
+            test_int(t.id(), ecs.id<Mass>());
+            test_int(t.inout(), flecs::InOutDefault);
+            test_int(t.oper(), flecs::Optional);
+        } else {
+            test_assert(false);
+        }
+
+        term_count ++;
+    });
+
+    test_int(term_count, 3);
+
+    s.run();
+
+    test_int(count, 3);
+
+    const Position *p = e1.try_get<Position>();
+    test_assert(p != nullptr);
+    test_int(p->x, 11);
+    test_int(p->y, 22);
+
+    p = e2.try_get<Position>();
+    test_assert(p != nullptr);
+    test_int(p->x, 33);
+    test_int(p->y, 44);
+
+    p = e3.try_get<Position>();
+    test_assert(p != nullptr);
+    test_int(p->x, 51);
+    test_int(p->y, 61);
+}
+
+void SystemBuilder_deduce_pair_term_from_each_callback(void) {
+    flecs::world ecs;
+
+    ecs.entity()
+        .add<Tag0>()
+        .emplace<Position, Tag>(1.0f, 2.0f);
+
+    ecs.entity()
+        .add<Tag0>();
+
+    int32_t term_count = 0;
+    int32_t count = 0;
+    auto pair_id = ecs.id<flecs::pair<Position, Tag>>();
+
+    auto s = ecs.system()
+        .with<Tag0>()
+        .each([&](flecs::entity e, flecs::pair<Position, Tag> p) {
+            test_assert(e.has<Tag0>());
+            test_flt(1.0f, p->x);
+            test_flt(2.0f, p->y);
+            p->x += 1.0f;
+            p->y += 1.0f;
+            count ++;
+        });
+
+    s.query().each_term([&](flecs::term& t) {
+        if (term_count == 0) {
+            test_int(t.id(), pair_id);
+            test_int(t.inout(), flecs::InOutDefault);
+        } else if (term_count == 1) {
+            test_int(t.id(), ecs.id<Tag0>());
+            test_int(t.inout(), flecs::InOutDefault);
+        } else {
+            test_assert(false);
+        }
+
+        test_int(t.oper(), flecs::And);
+        term_count ++;
+    });
+
+    test_int(term_count, 2);
+
+    s.run();
+
+    test_int(count, 1);
+
+    int32_t with_pair = 0;
+    int32_t without_pair = 0;
+
+    ecs.each([&](flecs::entity e, Tag0) {
+        const Position *p = e.try_get<Position, Tag>();
+        if (p) {
+            with_pair ++;
+            test_flt(2.0f, p->x);
+            test_flt(3.0f, p->y);
+        } else {
+            without_pair ++;
+        }
+    });
+
+    test_int(with_pair, 1);
+    test_int(without_pair, 1);
+}
+
+void SystemBuilder_deduce_singleton_term_from_each_callback(void) {
+    flecs::world ecs;
+
+    struct Singleton {
+        int32_t value;
+    };
+
+    ecs.component<Singleton>().add(flecs::Singleton);
+    ecs.set<Singleton>({10});
+
+    int32_t term_count = 0;
+    int32_t count = 0;
+
+    auto s = ecs.system()
+        .each([&](Singleton& singleton) {
+            test_int(singleton.value, 10);
+            singleton.value += 5;
+            count ++;
+        });
+
+    s.query().each_term([&](flecs::term& t) {
+        test_int(t.id(), ecs.id<Singleton>());
+        test_int(t.inout(), flecs::InOutDefault);
+        test_int(t.oper(), flecs::And);
+        term_count ++;
+    });
+
+    test_int(term_count, 1);
+
+    s.run();
+
+    test_int(count, 1);
+
+    const Singleton *singleton = ecs.try_get<Singleton>();
+    test_assert(singleton != nullptr);
+    test_int(singleton->value, 15);
+}
+
+void SystemBuilder_deduce_singleton_and_component_terms_from_each_callback(void) {
+    flecs::world ecs;
+
+    ecs.component<Velocity>().add(flecs::Singleton);
+    ecs.set<Velocity>({1, 2});
+
+    auto e1 = ecs.entity()
+        .set<Position>({10, 20});
+
+    auto e2 = ecs.entity()
+        .set<Position>({20, 30});
+
+    int32_t term_count = 0;
+    int32_t count = 0;
+
+    auto s = ecs.system()
+        .each([&](Position& p, const Velocity& v) {
+            p.x += v.x;
+            p.y += v.y;
+            count ++;
+        });
+
+    s.query().each_term([&](flecs::term& t) {
+        if (term_count == 0) {
+            test_int(t.id(), ecs.id<Position>());
+            test_int(t.inout(), flecs::InOutDefault);
+        } else if (term_count == 1) {
+            test_int(t.id(), ecs.id<Velocity>());
+            test_int(t.inout(), flecs::In);
+        } else {
+            test_assert(false);
+        }
+
+        test_int(t.oper(), flecs::And);
+        term_count ++;
+    });
+
+    test_int(term_count, 2);
+
+    s.run();
+
+    test_int(count, 2);
+
+    const Position *p = e1.try_get<Position>();
+    test_assert(p != nullptr);
+    test_int(p->x, 11);
+    test_int(p->y, 22);
+
+    p = e2.try_get<Position>();
+    test_assert(p != nullptr);
+    test_int(p->x, 21);
+    test_int(p->y, 32);
+}
+
+void SystemBuilder_with_terms_after_deduced_terms(void) {
+    flecs::world ecs;
+
+    auto Likes = ecs.entity();
+    auto Bob = ecs.entity();
+
+    auto e = ecs.entity()
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2})
+        .add<Mass>()
+        .add(Likes, Bob);
+
+    ecs.entity()
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2})
+        .add<Mass>();
+
+    int32_t term_count = 0;
+    int32_t count = 0;
+
+    auto s = ecs.system()
+        .with<Mass>()
+        .with(Likes, Bob)
+        .each([&](flecs::entity entity, Position& p, const Velocity& v) {
+            test_assert(entity == e);
+            test_int(p.x, 10);
+            test_int(p.y, 20);
+            test_int(v.x, 1);
+            test_int(v.y, 2);
+            count ++;
+        });
+
+    s.query().each_term([&](flecs::term& t) {
+        if (term_count == 0) {
+            test_int(t.id(), ecs.id<Position>());
+            test_int(t.inout(), flecs::InOutDefault);
+        } else if (term_count == 1) {
+            test_int(t.id(), ecs.id<Velocity>());
+            test_int(t.inout(), flecs::In);
+        } else if (term_count == 2) {
+            test_int(t.id(), ecs.id<Mass>());
+            test_int(t.inout(), flecs::InOutDefault);
+        } else if (term_count == 3) {
+            test_int(t.id(), ecs.pair(Likes, Bob));
+            test_int(t.inout(), flecs::InOutDefault);
+        } else {
+            test_assert(false);
+        }
+
+        test_int(t.oper(), flecs::And);
+        term_count ++;
+    });
+
+    test_int(term_count, 4);
+
+    s.run();
+
+    test_int(count, 1);
+}
+
 void SystemBuilder_write_annotation(void) {
     flecs::world ecs;
 

@@ -5,6 +5,8 @@
  * Code from: https://stackoverflow.com/questions/27024238/c-template-mechanism-to-get-the-number-of-function-arguments-which-would-work
  */
 
+#pragma once
+
 namespace flecs {
 namespace _ {
 
