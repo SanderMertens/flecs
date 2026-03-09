@@ -4652,8 +4652,8 @@ void Prefab_override_exclusive(void) {
 
     ecs_add_pair(ecs, e, EcsIsA, p);
 
-    test_assert(ecs_has_pair(ecs, e, Rel, t2));
-    test_assert(!ecs_has_pair(ecs, e, Rel, t1));
+    test_assert(!ecs_has_pair(ecs, e, Rel, t2));
+    test_assert(ecs_has_pair(ecs, e, Rel, t1));
 
     ecs_fini(ecs);
 }
@@ -4677,10 +4677,12 @@ void Prefab_override_exclusive_2_lvls(void) {
     ecs_auto_override_pair(ecs, p2, Rel, t3);
     ecs_add_pair(ecs, p2, EcsIsA, p);
 
+    // test_assert(ecs_has_pair(ecs, p2, Rel, t3));
+
     ecs_add_pair(ecs, e, EcsIsA, p2);
 
-    test_assert(ecs_has_pair(ecs, e, Rel, t2));
-    test_assert(!ecs_has_pair(ecs, e, Rel, t1));
+    test_assert(ecs_has_pair(ecs, e, Rel, t1));
+    test_assert(!ecs_has_pair(ecs, e, Rel, t2));
     test_assert(!ecs_has_pair(ecs, e, Rel, t3));
 
     ecs_fini(ecs);
@@ -6380,6 +6382,24 @@ void Prefab_prefab_children_after_adding_prefab(void) {
 
     ecs_add_id(world, parent, EcsPrefab);
     test_assert(ecs_has_id(world, child, EcsPrefab));
+
+    ecs_fini(world);
+}
+
+void Prefab_add_base_w_exclusive_override(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Rel, Exclusive);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+
+    ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
+    ecs_add_pair(world, base, Rel, TgtA);
+
+    ecs_entity_t i = ecs_new_w_pair(world, Rel, TgtB);
+    ecs_add_pair(world, i, EcsIsA, base);
+
+    test_assert(ecs_has_pair(world, i, Rel, TgtB));
 
     ecs_fini(world);
 }
