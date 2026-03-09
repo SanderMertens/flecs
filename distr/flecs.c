@@ -61387,11 +61387,16 @@ repeat_skip_whitespace_comment:
                 return NULL;
             }
 
-            if (parser->significant_newline && pos[0] == '\n' &&
-                flecs_newline_followed_by_comment(parser, pos))
+            const char *newline = pos;
+            if (newline[0] == '\r' && newline[1] == '\n') {
+                newline ++;
+            }
+
+            if (parser->significant_newline && newline[0] == '\n' &&
+                flecs_newline_followed_by_comment(parser, newline))
             {
                 return flecs_scan_significant_line_comment_newline_run(
-                    parser, pos);
+                    parser, newline);
             }
 
             goto repeat_skip_whitespace_comment;

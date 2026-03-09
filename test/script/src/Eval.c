@@ -570,6 +570,34 @@ void Eval_multi_line_comment_after_newline_before_mixed_comment_newline_scope_op
     ecs_fini(world);
 }
 
+void Eval_multi_line_comment_after_newline_before_mixed_comment_newline_scope_open_crlf(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+        "Parent\r\n"
+        "/* Comment A */\r\n"
+        "// Comment B\r\n"
+        "\r\n"
+        "{\r\n"
+        " Child{}\r\n"
+        "}\r\n"
+        "Foo{}\r\n";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t parent = ecs_lookup(world, "Parent");
+    ecs_entity_t child = ecs_lookup(world, "Parent.Child");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+
+    test_assert(parent != 0);
+    test_assert(child != 0);
+    test_assert(foo != 0);
+    test_assert(ecs_has_pair(world, child, EcsChildOf, parent));
+    test_assert(!ecs_has_pair(world, foo, EcsChildOf, parent));
+
+    ecs_fini(world);
+}
+
 void Eval_line_comment_after_newline_before_mixed_line_endings_scope_open(void) {
     ecs_world_t *world = ecs_init();
 
@@ -4756,6 +4784,34 @@ void Eval_name_annotation(void) {
     ecs_fini(world);
 }
 
+void Eval_name_annotation_crlf(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+        "@name A name\r\n"
+        "Foo {}\r\n"
+        "Bar {}\r\n"
+        "\r\n"
+        "@name Another name\r\n"
+        "Baz {}\r\n";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    ecs_entity_t baz = ecs_lookup(world, "Baz");
+
+    test_assert(foo != 0);
+    test_assert(bar != 0);
+    test_assert(baz != 0);
+
+    test_str(ecs_doc_get_name(world, foo), "A name");
+    test_str(ecs_doc_get_name(world, bar), "Bar");
+    test_str(ecs_doc_get_name(world, baz), "Another name");
+
+    ecs_fini(world);
+}
+
 void Eval_link_annotation(void) {
     ecs_world_t *world = ecs_init();
 
@@ -7662,6 +7718,27 @@ void Eval_if_else_comment_mixed_comment_newline_scope_open(void) {
     LINE "{"
     LINE "  b{}"
     LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_lookup(world, "a") != 0);
+    test_assert(ecs_lookup(world, "b") == 0);
+
+    ecs_fini(world);
+}
+
+void Eval_if_else_comment_mixed_comment_newline_scope_open_crlf(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+        "const v: 1\r\n"
+        "if $v == 1 {\r\n"
+        "  a{}\r\n"
+        "} else // comment on else\r\n"
+        "/* comment in between */\r\n"
+        "\r\n"
+        "{\r\n"
+        "  b{}\r\n"
+        "}\r\n";
 
     test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
     test_assert(ecs_lookup(world, "a") != 0);
@@ -14452,6 +14529,30 @@ void Eval_module_stmt_w_comment(void) {
     HEAD "module hello // set module"
     LINE "Foo {}"
     LINE "e { Foo }";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t hello = ecs_lookup(world, "hello");
+    test_assert(hello != 0);
+    test_assert(ecs_has_id(world, hello, EcsModule));
+
+    ecs_entity_t foo = ecs_lookup(world, "hello.Foo");
+    test_assert(foo != 0);
+
+    ecs_entity_t e = ecs_lookup(world, "hello.e");
+    test_assert(e != 0);
+    test_assert(ecs_has_id(world, e, foo));
+
+    ecs_fini(world);
+}
+
+void Eval_module_stmt_w_comment_crlf(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+        "module hello // set module\r\n"
+        "Foo {}\r\n"
+        "e { Foo }\r\n";
 
     test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
