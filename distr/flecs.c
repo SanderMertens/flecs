@@ -46219,8 +46219,6 @@ void flecs_add_overrides_for_base(
                     int32_t column = flecs_type_find(dst_type, wc);
                     if (column == -1) {
                         flecs_type_add(world, dst_type, to_add);
-                    } else {
-                        dst_type->array[column] = to_add;
                     }
                 }
             }

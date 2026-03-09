@@ -6721,3 +6721,110 @@ void DeserializeFromJson_ser_deser_prefab_instance_w_named_children_parent_compo
 
     ecs_os_free(json);
 }
+
+static
+void register_color_prefab(
+    ecs_world_t *world,
+    bool low_id,
+    ecs_entity_t *color_out,
+    ecs_entity_t *blue_out,
+    ecs_entity_t *prefab_out)
+{
+    ecs_entity_t color = ecs_enum(world, {
+        .entity = ecs_entity(world, { .name = "Color", .use_low_id = low_id }),
+        .constants = {
+            {"Red", 10}, {"Blue", 20}, {"Green", 30}
+        }
+    });
+    test_assert(color != 0);
+
+    ecs_entity_t prefab = ecs_entity(world, {
+        .name = "ColoredEntity"
+    });
+    ecs_add_id(world, prefab, EcsPrefab);
+
+    color_out[0] = color;
+    blue_out[0] = ecs_lookup(world, "Color.Blue");
+    if (prefab_out) {
+        prefab_out[0] = prefab;
+    }
+
+    ecs_add_pair(world, prefab, color, ecs_lookup(world, "Color.Red"));
+}
+
+void DeserializeFromJson_ser_deser_prefab_w_enum_constant_override(void) {
+    char *json;
+
+    {
+        ecs_world_t *world = ecs_init();
+        ecs_entity_t color, blue, prefab;
+        register_color_prefab(world, true, &color, &blue, &prefab);
+
+        ecs_entity_t blue_entity = ecs_entity(world, { .name = "BlueEntity" });
+        ecs_add_pair(world, blue_entity, EcsIsA, prefab);
+        ecs_add_pair(world, blue_entity, color, blue);
+
+        test_assert(ecs_get_target(world, blue_entity, color, 0) == blue);
+
+        json = ecs_world_to_json(world, NULL);
+        test_assert(json != NULL);
+
+        ecs_fini(world);
+    }
+
+    {
+        ecs_world_t *world = ecs_init();
+        ecs_entity_t color, blue;
+        register_color_prefab(world, true, &color, &blue, NULL);
+
+        const char *r = ecs_world_from_json(world, json, NULL);
+        test_str(r, "");
+
+        ecs_entity_t blue_entity = ecs_lookup(world, "BlueEntity");
+        test_assert(blue_entity != 0);
+        test_assert(ecs_get_target(world, blue_entity, color, 0) == blue);
+
+        ecs_fini(world);
+    }
+
+    ecs_os_free(json);
+}
+
+void DeserializeFromJson_ser_deser_prefab_w_enum_constant_override_2(void) {
+    char *json;
+
+    {
+        ecs_world_t *world = ecs_init();
+        ecs_entity_t color, blue, prefab;
+        register_color_prefab(world, false, &color, &blue, &prefab);
+
+        ecs_entity_t blue_entity = ecs_entity(world, { .name = "BlueEntity" });
+        ecs_add_pair(world, blue_entity, EcsIsA, prefab);
+        ecs_add_pair(world, blue_entity, color, blue);
+
+        test_assert(ecs_get_target(world, blue_entity, color, 0) == blue);
+
+        json = ecs_world_to_json(world, NULL);
+        test_assert(json != NULL);
+
+        ecs_fini(world);
+    }
+
+    {
+        ecs_world_t *world = ecs_init();
+        ecs_entity_t color, blue;
+        register_color_prefab(world, false, &color, &blue, NULL);
+
+        const char *r = ecs_world_from_json(world, json, NULL);
+        test_str(r, "");
+
+        ecs_entity_t blue_entity = ecs_lookup(world, "BlueEntity");
+        test_assert(blue_entity != 0);
+        test_assert(ecs_get_target(world, blue_entity, color, 0) == blue);
+
+        ecs_fini(world);
+    }
+
+    ecs_os_free(json);
+}
+

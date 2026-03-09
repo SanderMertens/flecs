@@ -633,6 +633,8 @@ void DeserializeFromJson_ser_deser_with_child_tgt(void);
 void DeserializeFromJson_ser_deser_with_child_tgt_no_child(void);
 void DeserializeFromJson_ser_deser_prefab_instance_w_named_children(void);
 void DeserializeFromJson_ser_deser_prefab_instance_w_named_children_parent_component(void);
+void DeserializeFromJson_ser_deser_prefab_w_enum_constant_override(void);
+void DeserializeFromJson_ser_deser_prefab_w_enum_constant_override_2(void);
 void DeserializeFromJson_deser_invalid_entity_name(void);
 void DeserializeFromJson_deser_unknown_component_w_spaces(void);
 void DeserializeFromJson_deser_unknown_component_no_spaces(void);
@@ -3599,6 +3601,14 @@ bake_test_case DeserializeFromJson_testcases[] = {
         DeserializeFromJson_ser_deser_prefab_instance_w_named_children_parent_component
     },
     {
+        "ser_deser_prefab_w_enum_constant_override",
+        DeserializeFromJson_ser_deser_prefab_w_enum_constant_override
+    },
+    {
+        "ser_deser_prefab_w_enum_constant_override_2",
+        DeserializeFromJson_ser_deser_prefab_w_enum_constant_override_2
+    },
+    {
         "deser_invalid_entity_name",
         DeserializeFromJson_deser_invalid_entity_name
     },
@@ -5716,7 +5726,7 @@ static bake_test_suite suites[] = {
         "DeserializeFromJson",
         NULL,
         NULL,
-        150,
+        152,
         DeserializeFromJson_testcases
     },
     {
