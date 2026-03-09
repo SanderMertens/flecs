@@ -1806,6 +1806,91 @@ static void Run_w_query_next(ecs_iter_t *it) {
     run_invoked ++;
 }
 
+static
+uint64_t SystemMisc_group_by_rel(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_id_t id,
+    void *ctx)
+{
+    (void)ctx;
+
+    ecs_id_t match;
+    if (ecs_search(world, table, ecs_pair(id, EcsWildcard), &match) != -1) {
+        return ECS_PAIR_SECOND(match);
+    }
+
+    return 0;
+}
+
+static
+uint64_t system_misc_expected_group;
+
+static
+void SystemMisc_grouped_dummy(ecs_iter_t *it) {
+    test_uint(ecs_iter_get_group(it), system_misc_expected_group);
+    probe_iter(it);
+}
+
+static
+void SystemMisc_reset_probe(Probe *ctx) {
+    ecs_os_zeromem(ctx);
+}
+
+void SystemMisc_set_group(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t Rel = ecs_entity(world, {0});
+    ecs_entity_t TgtA = ecs_entity(world, {0});
+    ecs_entity_t TgtB = ecs_entity(world, {0});
+    ecs_entity_t TgtC = ecs_entity(world, {0});
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e1 = ecs_new_w_pair(world, Rel, TgtA);
+    ecs_entity_t e2 = ecs_new_w_pair(world, Rel, TgtB);
+    ecs_new_w_pair(world, Rel, TgtC);
+    ecs_entity_t e4 = ecs_new_w_pair(world, Rel, TgtA);
+    ecs_entity_t e5 = ecs_new_w_pair(world, Rel, TgtB);
+    ecs_entity_t e6 = ecs_new_w_pair(world, Rel, TgtC);
+
+    ecs_add(world, e4, Tag);
+    ecs_add(world, e5, Tag);
+    ecs_add(world, e6, Tag);
+
+    Probe ctx = {0};
+    ecs_set_ctx(world, &ctx, NULL);
+
+    ecs_entity_t system = ecs_system_init(world, &(ecs_system_desc_t){
+        .query.terms = {{ .id = ecs_pair(Rel, EcsWildcard) }},
+        .query.group_by = Rel,
+        .query.group_by_callback = SystemMisc_group_by_rel,
+        .callback = SystemMisc_grouped_dummy
+    });
+    test_assert(system != 0);
+
+    system_misc_expected_group = TgtB;
+    ecs_system_set_group(world, system, TgtB);
+    ecs_run(world, system, 0, NULL);
+
+    test_int(ctx.invoked, 2);
+    test_int(ctx.count, 2);
+    probe_has_entity(&ctx, e2);
+    probe_has_entity(&ctx, e5);
+
+    SystemMisc_reset_probe(&ctx);
+
+    system_misc_expected_group = TgtA;
+    ecs_system_set_group(world, system, TgtA);
+    ecs_run(world, system, 0, NULL);
+
+    test_int(ctx.invoked, 2);
+    test_int(ctx.count, 2);
+    probe_has_entity(&ctx, e1);
+    probe_has_entity(&ctx, e4);
+
+    ecs_fini(world);
+}
+
 void SystemMisc_run_w_query_next(void) {
     ecs_world_t *world = ecs_init();
 

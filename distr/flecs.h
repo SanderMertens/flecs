@@ -13231,6 +13231,12 @@ typedef struct ecs_system_t {
     /** System query */
     ecs_query_t *query;
 
+    /** Query group to iterate */
+    uint64_t group_id;
+
+    /** True if a query group is configured */
+    bool group_id_set;
+
     /** Tick source associated with system */
     ecs_entity_t tick_source;
 
@@ -13286,6 +13292,21 @@ FLECS_API
 const ecs_system_t* ecs_system_get(
     const ecs_world_t *world,
     ecs_entity_t system);
+
+/** Set query group for system.
+ * This operation configures a system created with a grouped query to only
+ * iterate results for the specified group id. The group filter is applied to
+ * both manual runs and pipeline execution.
+ *
+ * @param world The world.
+ * @param system The system.
+ * @param group_id The query group id to iterate.
+ */
+FLECS_API
+void ecs_system_set_group(
+    ecs_world_t *world,
+    ecs_entity_t system,
+    uint64_t group_id);
 
 #ifndef FLECS_LEGACY
 
@@ -34475,6 +34496,17 @@ struct system final : entity
 
     flecs::query<> query() const {
         return flecs::query<>(ecs_system_get(world_, id_)->query);
+    }
+
+    system& set_group(uint64_t group_id) {
+        ecs_system_set_group(world_, id_, group_id);
+        return *this;
+    }
+
+    template <typename Group>
+    system& set_group() {
+        ecs_system_set_group(world_, id_, _::type<Group>().id(world_));
+        return *this;
     }
 
     system_runner_fluent run(ecs_ftime_t delta_time = 0.0f, void *param = nullptr) const {

@@ -93,6 +93,10 @@ ecs_entity_t flecs_run_system(
     qit.callback_ctx = system_data->callback_ctx;
     qit.run_ctx = system_data->run_ctx;
 
+    if (system_data->group_id_set) {
+        ecs_iter_set_group(&qit, system_data->group_id);
+    }
+
     if (stage_count > 1 && system_data->multi_threaded) {
         wit = ecs_worker_iter(it, stage_index, stage_count);
         it = &wit;
@@ -423,6 +427,23 @@ const ecs_system_t* ecs_system_get(
     ecs_entity_t entity)
 {
     return flecs_poly_get(world, entity, ecs_system_t);
+}
+
+void ecs_system_set_group(
+    ecs_world_t *world,
+    ecs_entity_t system,
+    uint64_t group_id)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(system != 0, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_system_t *system_data = flecs_poly_get(world, system, ecs_system_t);
+    ecs_check(system_data != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    system_data->group_id = group_id;
+    system_data->group_id_set = true;
+error:
+    return;
 }
 
 void FlecsSystemImport(

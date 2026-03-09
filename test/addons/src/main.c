@@ -181,6 +181,7 @@ void SystemMisc_register_callback_after_run(void);
 void SystemMisc_register_run_after_callback(void);
 void SystemMisc_register_callback_after_run_ctx(void);
 void SystemMisc_register_run_after_callback_ctx(void);
+void SystemMisc_set_group(void);
 void SystemMisc_run_w_query_next(void);
 void SystemMisc_missing_callback(void);
 
@@ -1244,6 +1245,10 @@ bake_test_case SystemMisc_testcases[] = {
     {
         "register_run_after_callback_ctx",
         SystemMisc_register_run_after_callback_ctx
+    },
+    {
+        "set_group",
+        SystemMisc_set_group
     },
     {
         "run_w_query_next",
@@ -2663,6 +2668,7 @@ const char* MultiThread_worker_kind_param[] = {"thread", "task"};
 bake_test_param MultiThread_params[] = {
     {"worker_kind", (char**)MultiThread_worker_kind_param, 2}
 };
+
 const char* MultiThreadStaging_worker_kind_param[] = {"thread", "task"};
 bake_test_param MultiThreadStaging_params[] = {
     {"worker_kind", (char**)MultiThreadStaging_worker_kind_param, 2}
@@ -2687,7 +2693,7 @@ static bake_test_suite suites[] = {
         "SystemMisc",
         NULL,
         NULL,
-        71,
+        72,
         SystemMisc_testcases
     },
     {
