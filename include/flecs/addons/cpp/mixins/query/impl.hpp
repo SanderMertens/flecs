@@ -261,6 +261,18 @@ namespace _ {
 template<typename Func, typename ... Args>
 struct query_delegate_w_ent;
 
+template<typename Func, typename E>
+struct query_delegate_w_ent<Func, arg_list<E> >
+{
+    query_delegate_w_ent(const flecs::world& world, Func&& func) {
+        ecs_entities_t entities = ecs_get_entities(ecs_get_world(world));
+
+        for (int32_t i = 0; i < entities.alive_count; i ++) {
+            func(flecs::entity(world, entities.ids[i]));
+        }
+    }
+};
+
 template<typename Func, typename E, typename ... Args>
 struct query_delegate_w_ent<Func, arg_list<E, Args ...> >
 {

@@ -3327,6 +3327,38 @@ void QueryBuilder_world_each_query_2_components(void) {
     test_int(count, 3);
 }
 
+void QueryBuilder_world_each_entity(void) {
+    flecs::world ecs;
+
+    auto e1 = ecs.entity();
+    auto e2 = ecs.entity().add<Tag>();
+    auto e3 = ecs.entity().set<Position>({10, 20});
+
+    ecs_entities_t entities = ecs_get_entities(ecs.c_ptr());
+
+    bool e1_found = false;
+    bool e2_found = false;
+    bool e3_found = false;
+    int32_t count = 0;
+
+    ecs.each([&](flecs::entity e) {
+        if (e == e1) {
+            e1_found = true;
+        } else if (e == e2) {
+            e2_found = true;
+        } else if (e == e3) {
+            e3_found = true;
+        }
+
+        count ++;
+    });
+
+    test_bool(true, e1_found);
+    test_bool(true, e2_found);
+    test_bool(true, e3_found);
+    test_int(entities.alive_count, count);
+}
+
 void QueryBuilder_world_each_query_1_component_no_entity(void) {
     flecs::world ecs;
 
