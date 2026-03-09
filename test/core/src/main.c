@@ -345,6 +345,7 @@ void Event_emit_staged_from_stage(void);
 void Event_emit_staged_from_world_observer(void);
 void Event_emit_staged_from_stage_observer(void);
 void Event_emit_for_entity(void);
+void Event_emit_for_unused_observed_id(void);
 void Event_emit_custom_for_any(void);
 void Event_emit_custom_implicit_any(void);
 void Event_emit_custom_empty_type(void);
@@ -355,6 +356,8 @@ void Event_emit_nested(void);
 void Event_emit_for_empty_entity(void);
 void Event_enqueue_event_1_id(void);
 void Event_enqueue_event_2_ids(void);
+void Event_enqueue_event_for_id_removed_before_merge(void);
+void Event_enqueue_event_for_deleted_id_before_merge(void);
 void Event_enqueue_event_w_data(void);
 void Event_enqueue_event_w_data_move(void);
 void Event_enqueue_event_w_data_copy(void);
@@ -4533,6 +4536,10 @@ bake_test_case Event_testcases[] = {
         Event_emit_for_entity
     },
     {
+        "emit_for_unused_observed_id",
+        Event_emit_for_unused_observed_id
+    },
+    {
         "emit_custom_for_any",
         Event_emit_custom_for_any
     },
@@ -4571,6 +4578,14 @@ bake_test_case Event_testcases[] = {
     {
         "enqueue_event_2_ids",
         Event_enqueue_event_2_ids
+    },
+    {
+        "enqueue_event_for_id_removed_before_merge",
+        Event_enqueue_event_for_id_removed_before_merge
+    },
+    {
+        "enqueue_event_for_deleted_id_before_merge",
+        Event_enqueue_event_for_deleted_id_before_merge
     },
     {
         "enqueue_event_w_data",
@@ -15769,7 +15784,7 @@ static bake_test_suite suites[] = {
         "Event",
         NULL,
         NULL,
-        36,
+        39,
         Event_testcases
     },
     {

@@ -16196,7 +16196,9 @@ repeat_event:
 
         int32_t ider_i, ider_count = 0;
         ecs_component_record_t *cr = flecs_components_get(world, id);
-        ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
+        if (!cr) {
+            continue;
+        }
         ecs_flags32_t cr_flags = cr->flags;
 
         /* Check if this id is a pair of an traversable relationship. If so, we 
@@ -16330,7 +16332,9 @@ repeat_event:
 
             if (non_trivial_set) {
                 ecs_component_record_t *cr = flecs_components_get(world, id);
-                ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
+                if (!cr) {
+                    continue;
+                }
                 const ecs_type_info_t *ti = cr->type_info;;
                 ecs_flags32_t cr_flags = cr->flags;
 
