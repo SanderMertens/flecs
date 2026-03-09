@@ -24859,7 +24859,7 @@ static ecs_app_frame_action_t frame_action = flecs_default_frame_action;
 static ecs_app_desc_t ecs_app_desc;
 
 /* Serve REST API from wasm image when running in emscripten */
-#ifdef ECS_TARGET_EM
+#if defined(ECS_TARGET_EM) && defined(FLECS_REST)
 #include <emscripten.h>
 
 ecs_http_server_t *flecs_wasm_rest_server = NULL;
