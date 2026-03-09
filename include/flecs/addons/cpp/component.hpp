@@ -89,6 +89,25 @@ void register_lifecycle_actions(
 }
 
 template <typename T>
+inline ecs_cpp_type_action_t lifecycle_action() {
+    if constexpr (std::is_trivial<T>::value) {
+        return nullptr;
+    } else {
+        return &register_lifecycle_actions<T>;
+    }
+}
+
+template <typename T>
+inline ecs_cpp_type_action_t enum_action() {
+#if FLECS_CPP_ENUM_REFLECTION_SUPPORT
+    if constexpr (is_enum_v<T>) {
+        return &_::init_enum<T>;
+    }
+#endif
+    return nullptr;
+}
+
+template <typename T>
 struct type_impl {
     static_assert(is_pointer<T>::value == false,
         "pointer types are not allowed for components");
@@ -128,30 +147,23 @@ struct type_impl {
         init(allow_tag);
         ecs_assert(index() != 0, ECS_INTERNAL_ERROR, NULL);
 
-        bool registered = false, existing = false;
+        ecs_cpp_component_desc_t desc = {
+            id,
+            index(),
+            name,
+            type_name<T>(),
+            component_symbol_name<T>(),
+            size(),
+            alignment(),
+            lifecycle_action<T>(),
+            enum_action<T>(),
+            is_component,
+            explicit_registration
+        };
 
-        flecs::entity_t c = ecs_cpp_component_register(
-            world, id, index(), name, type_name<T>(), 
-            component_symbol_name<T>(), size(), alignment(),
-            is_component, explicit_registration, &registered, &existing);
+        flecs::entity_t c = ecs_cpp_component_register(world, &desc);
 
         ecs_assert(c != 0, ECS_INTERNAL_ERROR, NULL);
-
-        if (registered) {
-            // Register lifecycle callbacks, but only if the component has a
-            // size. Components that don't have a size are tags, and tags don't
-            // require construction/destruction/copy/move's.
-            if (size() && !existing) {
-                register_lifecycle_actions<T>(world, c);
-            }
-
-            // If component is enum type, register constants. Make sure to do 
-            // this after setting the component id, because the enum code will
-            // be calling type<T>::id().
-            #if FLECS_CPP_ENUM_REFLECTION_SUPPORT
-            _::init_enum<T>(world, c);
-            #endif
-        }
 
         return c;
     }
