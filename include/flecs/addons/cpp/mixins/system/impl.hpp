@@ -90,6 +90,17 @@ struct system final : entity
         return flecs::query<>(ecs_system_get(world_, id_)->query);
     }
 
+    system& set_group(uint64_t group_id) {
+        ecs_system_set_group(world_, id_, group_id);
+        return *this;
+    }
+
+    template <typename Group>
+    system& set_group() {
+        ecs_system_set_group(world_, id_, _::type<Group>().id(world_));
+        return *this;
+    }
+
     system_runner_fluent run(ecs_ftime_t delta_time = 0.0f, void *param = nullptr) const {
         return system_runner_fluent(world_, id_, 0, 0, delta_time, param);
     }
