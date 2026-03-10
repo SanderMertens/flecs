@@ -34531,6 +34531,7 @@ void* flecs_stack_alloc(
 
     ecs_assert(page->data != NULL, ECS_INTERNAL_ERROR, NULL);
 
+    ecs_assert(align != 0, ECS_INTERNAL_ERROR, NULL);
     int16_t sp = flecs_ito(int16_t, ECS_ALIGN(page->sp, align));
     int16_t next_sp = flecs_ito(int16_t, sp + size);
 
@@ -58169,6 +58170,11 @@ int flecs_init_type(
     ecs_size_t size,
     ecs_size_t alignment);
 
+void flecs_meta_detect_cycles(
+    ecs_world_t *world,
+    ecs_entity_t type,
+    ecs_entity_t target);
+
 #define flecs_init_type_t(world, type, kind, T) \
     flecs_init_type(world, type, kind, ECS_SIZEOF(T), ECS_ALIGNOF(T))
 
@@ -58602,6 +58608,81 @@ const char* flecs_primitive_type_kind_str(
     }
 }
 
+#ifdef FLECS_DEBUG
+static
+bool flecs_meta_detect_cycles_w_stack(
+    ecs_world_t *world,
+    ecs_entity_t type,
+    ecs_entity_t target,
+    ecs_vec_t *visited)
+{
+    if (!type) {
+        return false;
+    }
+
+    if (type == target) {
+        return true;
+    }
+
+    ecs_entity_t *visited_types = ecs_vec_first_t(visited, ecs_entity_t);
+    int32_t i, count = ecs_vec_count(visited);
+    for (i = 0; i < count; i ++) {
+        if (visited_types[i] == type) {
+            return false;
+        }
+    }
+
+    ecs_vec_append_t(NULL, visited, ecs_entity_t)[0] = type;
+
+    const EcsStruct *struct_info = ecs_get(world, type, EcsStruct);
+    if (struct_info) {
+        ecs_member_t *members = ecs_vec_first_t(&struct_info->members, ecs_member_t);
+        count = ecs_vec_count(&struct_info->members);
+        for (i = 0; i < count; i ++) {
+            if (flecs_meta_detect_cycles_w_stack(
+                world, members[i].type, target, visited))
+            {
+                return true;
+            }
+        }
+    }
+
+    const EcsArray *array_info = ecs_get(world, type, EcsArray);
+    if (array_info) {
+        if (flecs_meta_detect_cycles_w_stack(
+            world, array_info->type, target, visited))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+#endif
+
+void flecs_meta_detect_cycles(
+    ecs_world_t *world,
+    ecs_entity_t type,
+    ecs_entity_t target)
+{
+    (void)world;
+    (void)type;
+    (void)target;
+#ifdef FLECS_DEBUG
+    ecs_vec_t visited;
+    ecs_vec_init_t(NULL, &visited, ecs_entity_t, 0);
+    bool cycles_detected = flecs_meta_detect_cycles_w_stack(
+        world, type, target, &visited);
+    ecs_vec_fini_t(NULL, &visited, ecs_entity_t);
+
+    ecs_assert(
+        !cycles_detected,
+        ECS_CYCLE_DETECTED,
+        "cyclic type definition: '%s' depends on '%s'",
+        flecs_errstr(ecs_get_path(world, target)),
+        flecs_errstr_1(ecs_get_path(world, type)));
+#endif
+}
 
 int flecs_init_type(
     ecs_world_t *world,
@@ -59786,37 +59867,7 @@ int flecs_meta_serialize_type(
     ecs_world_t *world,
     ecs_entity_t type,
     ecs_size_t offset,
-    ecs_vec_t *ops,
-    ecs_vec_t *stack);
-
-static
-int flecs_meta_serialize_push_type(
-    ecs_world_t *world,
-    ecs_entity_t type,
-    ecs_vec_t *stack)
-{
-    ecs_entity_t *types = ecs_vec_first(stack);
-    int32_t i, count = ecs_vec_count(stack);
-    for (i = 0; i < count; i ++) {
-        if (types[i] == type) {
-            char *path = ecs_get_path(world, type);
-            ecs_err("recursive type definition for '%s'", path);
-            ecs_os_free(path);
-            return -1;
-        }
-    }
-
-    ecs_vec_append_t(NULL, stack, ecs_entity_t)[0] = type;
-    return 0;
-}
-
-static
-void flecs_meta_serialize_pop_type(
-    ecs_vec_t *stack)
-{
-    ecs_assert(ecs_vec_count(stack) > 0, ECS_INTERNAL_ERROR, NULL);
-    ecs_vec_remove_last(stack);
-}
+    ecs_vec_t *ops);
 
 /* Serialize a primitive value */
 int flecs_expr_ser_primitive(
@@ -60112,8 +60163,7 @@ int flecs_meta_serialize_array_inline(
     ecs_entity_t elem_type,
     int32_t count,
     ecs_size_t offset,
-    ecs_vec_t *ops,
-    ecs_vec_t *stack)
+    ecs_vec_t *ops)
 {
     int32_t first = ecs_vec_count(ops);
 
@@ -60125,7 +60175,7 @@ int flecs_meta_serialize_array_inline(
         op->offset = offset;
     }
 
-    if (flecs_meta_serialize_type(world, elem_type, 0, ops, stack) != 0) {
+    if (flecs_meta_serialize_type(world, elem_type, 0, ops) != 0) {
         return -1;
     }
 
@@ -60147,8 +60197,7 @@ static
 int flecs_meta_serialize_array_type(
     ecs_world_t *world,
     ecs_entity_t type,
-    ecs_vec_t *ops,
-    ecs_vec_t *stack)
+    ecs_vec_t *ops)
 {
     const EcsArray *ptr = ecs_get(world, type, EcsArray);
     if (!ptr) {
@@ -60156,15 +60205,14 @@ int flecs_meta_serialize_array_type(
     }
 
     return flecs_meta_serialize_array_inline(
-        world, ptr->type, ptr->count, 0, ops, stack);
+        world, ptr->type, ptr->count, 0, ops);
 }
 
 static
 int flecs_meta_serialize_vector_type(
     ecs_world_t *world,
     ecs_entity_t type,
-    ecs_vec_t *ops,
-    ecs_vec_t *stack)
+    ecs_vec_t *ops)
 {
     const EcsVector *ptr = ecs_get(world, type, EcsVector);
     if (!ptr) {
@@ -60182,7 +60230,7 @@ int flecs_meta_serialize_vector_type(
         op->elem_size = flecs_type_size(world, ptr->type);
     }
 
-    if (flecs_meta_serialize_type(world, ptr->type, 0, ops, stack) != 0) {
+    if (flecs_meta_serialize_type(world, ptr->type, 0, ops) != 0) {
         return -1;
     }
 
@@ -60253,8 +60301,7 @@ int flecs_meta_serialize_struct(
     ecs_world_t *world,
     ecs_entity_t type,
     ecs_size_t offset,
-    ecs_vec_t *ops,
-    ecs_vec_t *stack)
+    ecs_vec_t *ops)
 {
     const EcsStruct *ptr = ecs_get(world, type, EcsStruct);
     ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -60281,7 +60328,7 @@ int flecs_meta_serialize_struct(
 
         if (member->count >= 1) {
             if (flecs_meta_serialize_array_inline(
-                world, member->type, member->count, member->offset, ops, stack))
+                world, member->type, member->count, member->offset, ops))
             {
                 continue;
             }
@@ -60289,7 +60336,7 @@ int flecs_meta_serialize_struct(
             op = flecs_meta_ops_get(ops, cur);
         } else {
             if (flecs_meta_serialize_type(
-                world, member->type, member->offset, ops, stack)) 
+                world, member->type, member->offset, ops))
             {
                 continue;
             }
@@ -60324,18 +60371,13 @@ int flecs_meta_serialize_type(
     ecs_world_t *world,
     ecs_entity_t type,
     ecs_size_t offset,
-    ecs_vec_t *ops,
-    ecs_vec_t *stack)
+    ecs_vec_t *ops)
 {
     const EcsType *ptr = ecs_get(world, type, EcsType);
     if (!ptr) {
         char *path = ecs_get_path(world, type);
         ecs_err("missing reflection data for type '%s'", path);
         ecs_os_free(path);
-        return -1;
-    }
-
-    if (flecs_meta_serialize_push_type(world, type, stack)) {
         return -1;
     }
 
@@ -60351,7 +60393,7 @@ int flecs_meta_serialize_type(
         ret = flecs_meta_serialize_bitmask(world, type, offset, ops);
         break;
     case EcsStructType:
-        ret = flecs_meta_serialize_struct(world, type, offset, ops, stack);
+        ret = flecs_meta_serialize_struct(world, type, offset, ops);
         break;
     case EcsArrayType:
         ret = flecs_meta_serialize_forward(world, type, offset, ops);
@@ -60363,8 +60405,6 @@ int flecs_meta_serialize_type(
         ret = flecs_meta_serialize_opaque_type(world, type, offset, ops);
         break;
     }
-
-    flecs_meta_serialize_pop_type(stack);
 
     return ret;
 }
@@ -60379,30 +60419,26 @@ void flecs_meta_type_serializer_init(
         ecs_entity_t type = it->entities[i];
         ecs_vec_t ops;
         ecs_vec_init_t(NULL, &ops, ecs_meta_op_t, 0);
-        ecs_vec_t stack;
-        ecs_vec_init_t(NULL, &stack, ecs_entity_t, 0);
 
         const EcsType *type_ptr = ecs_get(world, type, EcsType);
         if (!type_ptr) {
             char *path = ecs_get_path(world, type);
             ecs_err("missing reflection data for type '%s'", path);
             ecs_os_free(path);
-            ecs_vec_fini_t(NULL, &stack, ecs_entity_t);
             continue;
         }
 
         int ret;
         if (type_ptr->kind == EcsArrayType) {
-            ret = flecs_meta_serialize_array_type(world, type, &ops, &stack);
+            ret = flecs_meta_serialize_array_type(world, type, &ops);
         } else if (type_ptr->kind == EcsVectorType) {
-            ret = flecs_meta_serialize_vector_type(world, type, &ops, &stack);
+            ret = flecs_meta_serialize_vector_type(world, type, &ops);
         } else {
-            ret = flecs_meta_serialize_type(world, type, 0, &ops, &stack);
+            ret = flecs_meta_serialize_type(world, type, 0, &ops);
         }
 
         if (ret != 0) {
             ecs_vec_fini_t(NULL, &ops, ecs_meta_op_t);
-            ecs_vec_fini_t(NULL, &stack, ecs_entity_t);
             continue;
         }
 
@@ -60413,7 +60449,6 @@ void flecs_meta_type_serializer_init(
 
         ptr->kind = type_ptr->kind;
         ptr->ops = ops;
-        ecs_vec_fini_t(NULL, &stack, ecs_entity_t);
     }
 }
 
@@ -71976,8 +72011,6 @@ int ecs_script_eval(
     if (result) {
         ecs_log_start_capture(true);
     }
-
-    // printf("%s\n", ecs_script_ast_to_str(script, true));
 
     flecs_script_eval_visit_init(impl, &v, &priv_desc);
     int r = ecs_script_visit(impl, &v, flecs_script_eval_node);
@@ -88793,6 +88826,8 @@ void flecs_set_array(ecs_iter_t *it) {
             continue;
         }
 
+        flecs_meta_detect_cycles(world, elem_type, e);
+
         const EcsComponent *elem_ptr = ecs_get(world, elem_type, EcsComponent);
         if (!elem_ptr) {
             ecs_err("array '%s' has invalid element type", ecs_get_name(world, e));
@@ -90326,6 +90361,8 @@ int flecs_add_member_to_struct(
         ecs_os_free(path);
         return -1;
     }
+
+    flecs_meta_detect_cycles(world, m.type, struct_type);
 
     if (ecs_get_typeid(world, m.type) == 0) {
         char *path = ecs_get_path(world, struct_type);

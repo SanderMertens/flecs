@@ -48,6 +48,7 @@ void* flecs_stack_alloc(
 
     ecs_assert(page->data != NULL, ECS_INTERNAL_ERROR, NULL);
 
+    ecs_assert(align != 0, ECS_INTERNAL_ERROR, NULL);
     int16_t sp = flecs_ito(int16_t, ECS_ALIGN(page->sp, align));
     int16_t next_sp = flecs_ito(int16_t, sp + size);
 

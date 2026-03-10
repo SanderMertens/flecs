@@ -619,3 +619,55 @@ void ArrayTypes_array_w_short_notation(void) {
 
     ecs_fini(world);
 }
+
+void ArrayTypes_direct_cycle(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t a = ecs_component(world, {
+        .entity = ecs_entity(world, {.name = "A"}),
+        .type.size = ECS_SIZEOF(ecs_i32_t),
+        .type.alignment = ECS_ALIGNOF(ecs_i32_t)
+    });
+
+    test_expect_abort();
+
+    ecs_array_init(world, &(ecs_array_desc_t){
+        .entity = a,
+        .type = a,
+        .count = 1
+    });
+}
+
+void ArrayTypes_indirect_cycle(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t a = ecs_component(world, {
+        .entity = ecs_entity(world, {.name = "A"}),
+        .type.size = ECS_SIZEOF(ecs_i32_t),
+        .type.alignment = ECS_ALIGNOF(ecs_i32_t)
+    });
+
+    ecs_entity_t b = ecs_component(world, {
+        .entity = ecs_entity(world, {.name = "B"}),
+        .type.size = ECS_SIZEOF(ecs_i32_t),
+        .type.alignment = ECS_ALIGNOF(ecs_i32_t)
+    });
+
+    ecs_array_init(world, &(ecs_array_desc_t){
+        .entity = a,
+        .type = b,
+        .count = 1
+    });
+
+    test_expect_abort();
+
+    ecs_array_init(world, &(ecs_array_desc_t){
+        .entity = b,
+        .type = a,
+        .count = 1
+    });
+}

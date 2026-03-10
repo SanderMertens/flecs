@@ -87,6 +87,8 @@ int flecs_add_member_to_struct(
         return -1;
     }
 
+    flecs_meta_detect_cycles(world, m.type, struct_type);
+
     if (ecs_get_typeid(world, m.type) == 0) {
         char *path = ecs_get_path(world, struct_type);
         char *ent_path = ecs_get_path(world, m.type);

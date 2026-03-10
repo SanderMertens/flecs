@@ -194,7 +194,9 @@
                 "overlapping_value_error_range",
                 "overlapping_value_warning_range",
                 "struct_w_16_alignment",
-                "struct_w_use_offset"
+                "struct_w_use_offset",
+                "direct_cycle",
+                "indirect_cycle"
             ]
         }, {
             "id": "NestedStructTypes",
@@ -246,7 +248,9 @@
                 "array_of_standaline_array_bool_1",
                 "array_of_standaline_array_bool_2",
                 "array_of_standaline_array_bool_3",
-                "array_w_short_notation"
+                "array_w_short_notation",
+                "direct_cycle",
+                "indirect_cycle"
             ]
         }, {
             "id": "VectorTypes",
