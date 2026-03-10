@@ -680,6 +680,12 @@ void flecs_type_remove(
     ecs_type_t *type,
     ecs_id_t remove);
 
+/* Remove from existing type, matching entity ids by raw id only. */
+void flecs_type_remove_ignoring_generation(
+    ecs_world_t *world,
+    ecs_type_t *type,
+    ecs_id_t remove);
+
 /** Copy type. */
 ecs_type_t flecs_type_copy(
     ecs_world_t *world,
@@ -41701,18 +41707,6 @@ void flecs_component_sparse_dont_fragment_pair_remove(
         return;
     }
 
-    ecs_entity_t tgt = ecs_pair_second(world, cr->id);
-    if (!tgt) {
-        /* It's possible that the target entity is cleaned up as part of the 
-         * same entity that holds the relationship. If that's the case, the
-         * relationship will get cleaned up later anyway so we can exit here. */
-        if (!(world->flags & EcsWorldFini)) {
-            ecs_assert(cr->flags & EcsIdMarkedForDelete, 
-                ECS_INTERNAL_ERROR, NULL);
-        }
-        return;
-    }
-
     ecs_type_t *type = flecs_sparse_get_t(
         parent->sparse, ecs_type_t, entity);
     if (!type) {
@@ -41722,7 +41716,7 @@ void flecs_component_sparse_dont_fragment_pair_remove(
     ecs_assert(type->count > 0, ECS_INTERNAL_ERROR, NULL);
 
     int32_t old_type_count = type->count;
-    flecs_type_remove(world, type, tgt);
+    flecs_type_remove_ignoring_generation(world, type, ECS_PAIR_SECOND(cr->id));
     ecs_assert(type->count != old_type_count, ECS_INTERNAL_ERROR, NULL);
     (void)old_type_count;
 
@@ -45383,6 +45377,23 @@ int flecs_type_find(
     return -1;
 }
 
+static
+int flecs_type_find_ignoring_generation(
+    const ecs_type_t *type,
+    ecs_id_t id)
+{
+    ecs_id_t *array = type->array;
+    int32_t i, count = type->count;
+
+    for (i = 0; i < count; i ++) {
+        if ((uint32_t)array[i] == (uint32_t)id) {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
 /* Count number of matching ids */
 static
 int flecs_type_count_matches(
@@ -45534,6 +45545,51 @@ int flecs_type_new_without(
     return 0;
 }
 
+/* Create type from source type without entity id, ignoring generation */
+static
+int flecs_type_new_without_ignoring_generation(
+    ecs_world_t *world,
+    ecs_type_t *dst,
+    const ecs_type_t *src,
+    ecs_id_t without)
+{
+    ecs_assert(!ecs_id_is_wildcard(without), ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(!ECS_IS_PAIR(without), ECS_INVALID_PARAMETER, NULL);
+
+    ecs_id_t *src_array = src->array;
+    int32_t at = flecs_type_find_ignoring_generation(src, without);
+    if (at == -1) {
+        return -1;
+    }
+
+    int32_t src_count = src->count;
+    if (src_count == 1) {
+        dst->array = NULL;
+        dst->count = 0;
+        return 0;
+    }
+
+    int32_t dst_count = src_count - 1;
+    ecs_id_t *dst_array = flecs_walloc_n(world, ecs_id_t, dst_count);
+    dst->array = dst_array;
+    dst->count = dst_count;
+
+    ecs_assert(dst_array != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(src_array != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    if (at) {
+        ecs_os_memcpy_n(dst_array, src_array, ecs_id_t, at);
+    }
+
+    int32_t remain = dst_count - at;
+    if (remain) {
+        ecs_os_memcpy_n(
+            &dst_array[at], &src_array[at + 1], ecs_id_t, remain);
+    }
+
+    return 0;
+}
+
 /* Copy type */
 ecs_type_t flecs_type_copy(
     ecs_world_t *world,
@@ -45586,6 +45642,22 @@ void flecs_type_remove(
 {
     ecs_type_t new_type;
     int res = flecs_type_new_without(world, &new_type, type, remove);
+    if (res != -1) {
+        flecs_type_free(world, type);
+        type->array = new_type.array;
+        type->count = new_type.count;
+    }
+}
+
+/* Remove from type while ignoring entity id generation */
+void flecs_type_remove_ignoring_generation(
+    ecs_world_t *world,
+    ecs_type_t *type,
+    ecs_id_t remove)
+{
+    ecs_type_t new_type;
+    int res = flecs_type_new_without_ignoring_generation(
+        world, &new_type, type, remove);
     if (res != -1) {
         flecs_type_free(world, type);
         type->array = new_type.array;
