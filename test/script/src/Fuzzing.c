@@ -488,6 +488,8 @@ void Fuzzing_17(void) {
     LINE ""
         ;
 
+    install_test_abort();
+    test_expect_abort();
     fuzz(expr);
 }
 
@@ -650,6 +652,8 @@ void Fuzzing_20(void) {
     LINE ""
         ;
 
+    install_test_abort();
+    test_expect_abort();
     fuzz(expr);
 }
 
@@ -2139,6 +2143,8 @@ void Fuzzing_47(void) {
     LINE ""
         ;
 
+    install_test_abort();
+    test_expect_abort();
     fuzz(expr);
 }
 
@@ -7792,6 +7798,8 @@ void Fuzzing_128(void) {
     LINE ""
         ;
 
+    install_test_abort();
+    test_expect_abort();
     fuzz(expr);
 }
 
@@ -8717,6 +8725,8 @@ void Fuzzing_147(void) {
     LINE "const subgv: $to. o.5\\"
         ;
 
+    install_test_abort();
+    test_expect_abort();
     fuzz(expr);
 }
 

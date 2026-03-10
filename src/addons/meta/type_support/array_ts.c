@@ -33,6 +33,8 @@ void flecs_set_array(ecs_iter_t *it) {
             continue;
         }
 
+        flecs_meta_detect_cycles(world, elem_type, e);
+
         const EcsComponent *elem_ptr = ecs_get(world, elem_type, EcsComponent);
         if (!elem_ptr) {
             ecs_err("array '%s' has invalid element type", ecs_get_name(world, e));

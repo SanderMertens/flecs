@@ -985,3 +985,58 @@ void StructTypes_struct_w_use_offset(void) {
 
     ecs_fini(world);
 }
+
+void StructTypes_direct_cycle(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t a = ecs_component(world, {
+        .entity = ecs_entity(world, {.name = "A"}),
+        .type.size = ECS_SIZEOF(ecs_i32_t),
+        .type.alignment = ECS_ALIGNOF(ecs_i32_t)
+    });
+
+    test_expect_abort();
+
+    ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = a,
+        .members = {
+            {"value", a}
+        }
+    });
+}
+
+void StructTypes_indirect_cycle(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t a = ecs_component(world, {
+        .entity = ecs_entity(world, {.name = "A"}),
+        .type.size = ECS_SIZEOF(ecs_i32_t),
+        .type.alignment = ECS_ALIGNOF(ecs_i32_t)
+    });
+
+    ecs_entity_t b = ecs_component(world, {
+        .entity = ecs_entity(world, {.name = "B"}),
+        .type.size = ECS_SIZEOF(ecs_i32_t),
+        .type.alignment = ECS_ALIGNOF(ecs_i32_t)
+    });
+
+    ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = a,
+        .members = {
+            {"value", b}
+        }
+    });
+
+    test_expect_abort();
+
+    ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = b,
+        .members = {
+            {"value", a}
+        }
+    });
+}
