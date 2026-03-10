@@ -708,6 +708,7 @@ void Sparse_check_regular_target_in_sparse_observer(void);
 void Sparse_check_regular_exclusive_target_in_sparse_observer(void);
 void Sparse_child_of_component_w_sparse(void);
 void Sparse_child_of_component_w_sparse_exclusive(void);
+void Sparse_create_entity_in_on_remove(void);
 
 // Testsuite 'NonFragmentingChildOf'
 void NonFragmentingChildOf_set_parent_no_ordered_children(void);
@@ -5956,6 +5957,10 @@ bake_test_case Sparse_testcases[] = {
     {
         "child_of_component_w_sparse_exclusive",
         Sparse_child_of_component_w_sparse_exclusive
+    },
+    {
+        "create_entity_in_on_remove",
+        Sparse_create_entity_in_on_remove
     }
 };
 
@@ -15866,7 +15871,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         Sparse_setup,
         NULL,
-        218,
+        219,
         Sparse_testcases,
         1,
         Sparse_params

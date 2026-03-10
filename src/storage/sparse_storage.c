@@ -168,18 +168,6 @@ void flecs_component_sparse_dont_fragment_pair_remove(
         return;
     }
 
-    ecs_entity_t tgt = ecs_pair_second(world, cr->id);
-    if (!tgt) {
-        /* It's possible that the target entity is cleaned up as part of the 
-         * same entity that holds the relationship. If that's the case, the
-         * relationship will get cleaned up later anyway so we can exit here. */
-        if (!(world->flags & EcsWorldFini)) {
-            ecs_assert(cr->flags & EcsIdMarkedForDelete, 
-                ECS_INTERNAL_ERROR, NULL);
-        }
-        return;
-    }
-
     ecs_type_t *type = flecs_sparse_get_t(
         parent->sparse, ecs_type_t, entity);
     if (!type) {
@@ -189,7 +177,7 @@ void flecs_component_sparse_dont_fragment_pair_remove(
     ecs_assert(type->count > 0, ECS_INTERNAL_ERROR, NULL);
 
     int32_t old_type_count = type->count;
-    flecs_type_remove(world, type, tgt);
+    flecs_type_remove_ignoring_generation(world, type, ECS_PAIR_SECOND(cr->id));
     ecs_assert(type->count != old_type_count, ECS_INTERNAL_ERROR, NULL);
     (void)old_type_count;
 

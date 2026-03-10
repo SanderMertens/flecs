@@ -62,6 +62,12 @@ void flecs_type_remove(
     ecs_type_t *type,
     ecs_id_t remove);
 
+/* Remove from existing type, matching entity ids by raw id only. */
+void flecs_type_remove_ignoring_generation(
+    ecs_world_t *world,
+    ecs_type_t *type,
+    ecs_id_t remove);
+
 /** Copy type. */
 ecs_type_t flecs_type_copy(
     ecs_world_t *world,

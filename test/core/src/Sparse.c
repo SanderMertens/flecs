@@ -7192,3 +7192,38 @@ void Sparse_child_of_component_w_sparse_exclusive(void) {
 
     ecs_fini(world);
 }
+
+static void OnRemoveCreateEntity(ecs_iter_t *it)
+{
+    ecs_entity_t recycled = ecs_new(it->world);
+    (void)recycled;
+}
+
+void Sparse_create_entity_in_on_remove(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t R = ecs_entity(world, { .name = "R" });
+    if (!fragment) ecs_add_id(world, R, EcsDontFragment);
+
+    ecs_observer(world, {
+        .query.terms = {{ .id = ecs_pair(R, EcsWildcard) }},
+        .events = { EcsOnRemove },
+        .callback = OnRemoveCreateEntity
+    });
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_entity_t target = ecs_new(world);
+    ecs_add_pair(world, target, EcsChildOf, parent);
+
+    ecs_entity_t subject = ecs_new(world);
+    ecs_add_pair(world, subject, EcsChildOf, parent);
+    ecs_add_pair(world, subject, R, target);
+
+    ecs_delete(world, parent);
+
+    test_assert(!ecs_is_alive(world, parent));
+    test_assert(!ecs_is_alive(world, subject));
+    test_assert(!ecs_is_alive(world, target));
+
+    ecs_fini(world);
+}
