@@ -57,7 +57,7 @@ struct table {
     /** Find type index for (component) id.
      *
      * @param id The (component) id.
-     * @return The index of the id in the table type, -1 if not found/
+     * @return The index of the id in the table type, -1 if not found.
      */
     int32_t type_index(flecs::id_t id) const {
         return ecs_table_get_type_index(world_, table_, id);
@@ -66,7 +66,7 @@ struct table {
     /** Find type index for type.
      *
      * @tparam T The type.
-     * @return True if the table has the type, false if not.
+     * @return The index of the id in the table type, -1 if not found.
      */
     template <typename T>
     int32_t type_index() const {
@@ -76,7 +76,7 @@ struct table {
     /** Find type index for pair.
      * @param first First element of pair.
      * @param second Second element of pair.
-     * @return True if the table has the pair, false if not.
+     * @return The index of the id in the table type, -1 if not found.
      */
     int32_t type_index(flecs::entity_t first, flecs::entity_t second) const {
         return type_index(ecs_pair(first, second));
@@ -85,7 +85,7 @@ struct table {
     /** Find type index for pair.
      * @tparam First First element of pair.
      * @param second Second element of pair.
-     * @return True if the table has the pair, false if not.
+     * @return The index of the id in the table type, -1 if not found.
      */
     template <typename First>
     int32_t type_index(flecs::entity_t second) const {
@@ -95,7 +95,7 @@ struct table {
     /** Find type index for pair.
      * @tparam First First element of pair.
      * @tparam Second Second element of pair.
-     * @return True if the table has the pair, false if not.
+     * @return The index of the id in the table type, -1 if not found.
      */
     template <typename First, typename Second>
     int32_t type_index() const {
@@ -114,7 +114,7 @@ struct table {
     /** Find column index for type.
      *
      * @tparam T The type.
-     * @return True if the table has the type, false if not.
+     * @return The column index of the id in the table type, -1 if not found.
      */
     template <typename T>
     int32_t column_index() const {
@@ -124,7 +124,7 @@ struct table {
     /** Find column index for pair.
      * @param first First element of pair.
      * @param second Second element of pair.
-     * @return True if the table has the pair, false if not.
+     * @return The column index of the id in the table type, -1 if not found.
      */
     int32_t column_index(flecs::entity_t first, flecs::entity_t second) const {
         return column_index(ecs_pair(first, second));
@@ -133,7 +133,7 @@ struct table {
     /** Find column index for pair.
      * @tparam First First element of pair.
      * @param second Second element of pair.
-     * @return True if the table has the pair, false if not.
+     * @return The column index of the id in the table type, -1 if not found.
      */
     template <typename First>
     int32_t column_index(flecs::entity_t second) const {
@@ -143,7 +143,7 @@ struct table {
     /** Find column index for pair.
      * @tparam First First element of pair.
      * @tparam Second Second element of pair.
-     * @return True if the table has the pair, false if not.
+     * @return The column index of the id in the table type, -1 if not found.
      */
     template <typename First, typename Second>
     int32_t column_index() const {
