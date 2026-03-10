@@ -738,7 +738,9 @@
                 "check_regular_exclusive_target_in_sparse_observer",
                 "child_of_component_w_sparse",
                 "child_of_component_w_sparse_exclusive",
-                "create_entity_in_on_remove"
+                "create_entity_in_on_remove",
+                "defer_add_two_sparse_w_observer",
+                "defer_remove_two_sparse_w_observer"
             ]
         }, {
             "id": "NonFragmentingChildOf",

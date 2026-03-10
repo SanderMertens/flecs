@@ -7227,3 +7227,100 @@ void Sparse_create_entity_in_on_remove(void) {
 
     ecs_fini(world);
 }
+
+static int OnAddTagA_invoked = 0;
+static int OnAddTagB_invoked = 0;
+static int OnRemoveTagA_invoked = 0;
+static int OnRemoveTagB_invoked = 0;
+
+static void OnAddTagA(ecs_iter_t *it) {
+    OnAddTagA_invoked += it->count;
+}
+
+static void OnAddTagB(ecs_iter_t *it) {
+    OnAddTagB_invoked += it->count;
+}
+
+static void OnRemoveTagA(ecs_iter_t *it) {
+    OnRemoveTagA_invoked += it->count;
+}
+
+static void OnRemoveTagB(ecs_iter_t *it) {
+    OnRemoveTagB_invoked += it->count;
+}
+
+void Sparse_defer_add_two_sparse_w_observer(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t DontFragA = ecs_entity(world, { .name = "DontFragA" });
+    if (!fragment) ecs_add_id(world, DontFragA, EcsDontFragment);
+
+    ecs_entity_t DontFragB = ecs_entity(world, { .name = "DontFragB" });
+    if (!fragment) ecs_add_id(world, DontFragB, EcsDontFragment);
+
+    ecs_observer(world, {
+        .query.terms = {{ .id = DontFragA }},
+        .events = { EcsOnAdd },
+        .callback = OnAddTagA
+    });
+
+    ecs_observer(world, {
+        .query.terms = {{ .id = DontFragB }},
+        .events = { EcsOnAdd },
+        .callback = OnAddTagB
+    });
+
+    OnAddTagA_invoked = 0;
+    OnAddTagB_invoked = 0;
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_defer_begin(world);
+    ecs_add_id(world, e, DontFragA);
+    ecs_add_id(world, e, DontFragB);
+    ecs_defer_end(world);
+
+    test_int(OnAddTagA_invoked, 1);
+    test_int(OnAddTagB_invoked, 1);
+
+    ecs_fini(world);
+}
+
+void Sparse_defer_remove_two_sparse_w_observer(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t DontFragA = ecs_entity(world, { .name = "DontFragA" });
+    if (!fragment) ecs_add_id(world, DontFragA, EcsDontFragment);
+
+    ecs_entity_t DontFragB = ecs_entity(world, { .name = "DontFragB" });
+    if (!fragment) ecs_add_id(world, DontFragB, EcsDontFragment);
+
+    ecs_observer(world, {
+        .query.terms = {{ .id = DontFragA }},
+        .events = { EcsOnRemove },
+        .callback = OnRemoveTagA
+    });
+
+    ecs_observer(world, {
+        .query.terms = {{ .id = DontFragB }},
+        .events = { EcsOnRemove },
+        .callback = OnRemoveTagB
+    });
+
+    OnRemoveTagA_invoked = 0;
+    OnRemoveTagB_invoked = 0;
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add_id(world, e, DontFragA);
+    ecs_add_id(world, e, DontFragB);
+
+    ecs_defer_begin(world);
+    ecs_remove_id(world, e, DontFragA);
+    ecs_remove_id(world, e, DontFragB);
+    ecs_defer_end(world);
+
+    test_int(OnRemoveTagA_invoked, 1);
+    test_int(OnRemoveTagB_invoked, 1);
+
+    ecs_fini(world);
+}
