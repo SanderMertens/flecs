@@ -14,9 +14,6 @@ void flecs_query_cache_match_elem_fini(
     flecs_bfree(&cache->allocators.pointers, 
         ECS_CONST_CAST(void*, qm->base.trs));
 
-    flecs_bfree(&cache->allocators.pointers, 
-        ECS_CONST_CAST(void*, qm->base.ptrs));
-
     if (!flecs_query_cache_is_trivial(cache)) {
         if (qm->_ids != cache->query->ids) {
             flecs_bfree(&cache->allocators.ids, qm->_ids);
@@ -73,10 +70,6 @@ void flecs_query_cache_match_set(
     qm->base.table = it->table;
     qm->base.set_fields = it->set_fields;
 
-    if (!qm->base.ptrs) {
-        qm->base.ptrs = flecs_balloc(&cache->allocators.pointers);
-    }
-
     if (!qm->base.trs) {
         qm->base.trs = flecs_balloc(&cache->allocators.pointers);
     }
@@ -84,12 +77,6 @@ void flecs_query_cache_match_set(
     /* Reset resources in case this is an existing record */
     ecs_os_memcpy_n(ECS_CONST_CAST(ecs_table_record_t**, qm->base.trs), 
         it->trs, ecs_table_record_t*, field_count);
-    
-    /* Initialize pointers*/
-    ecs_os_memset_n(qm->base.ptrs, 0, void*, field_count);
-
-    /* Set table version to sentinel that'll force reevaluation */
-    qm->base.table_version = UINT32_MAX;
 
     /* Find out whether to store result-specific ids array or fixed array */
     ecs_id_t *ids = cache->query->ids;
