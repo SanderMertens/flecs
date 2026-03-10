@@ -1791,8 +1791,6 @@ int ecs_script_eval(
         ecs_log_start_capture(true);
     }
 
-    // printf("%s\n", ecs_script_ast_to_str(script, true));
-
     flecs_script_eval_visit_init(impl, &v, &priv_desc);
     int r = ecs_script_visit(impl, &v, flecs_script_eval_node);
     flecs_script_eval_visit_fini(&v, &priv_desc);

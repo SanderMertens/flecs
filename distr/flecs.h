@@ -929,12 +929,21 @@ typedef struct ecs_allocator_t ecs_allocator_t;
 #define ECS_ALIGNOF(T) static_cast<int64_t>(alignof(T))
 #elif defined(ECS_TARGET_MSVC)
 #define ECS_ALIGNOF(T) (int64_t)__alignof(T)
-#elif defined(ECS_TARGET_GNU)
-#define ECS_ALIGNOF(T) (int64_t)__alignof__(T)
-#elif defined(ECS_TARGET_CLANG)
-#define ECS_ALIGNOF(T) (int64_t)__alignof__(T)
 #else
-#define ECS_ALIGNOF(T) ((int64_t)&((struct { char c; T d; } *)0)->d)
+/* Use struct trick since on 32 bit platforms __alignof__ can return different
+ * results than C++'s alignof. This is illustrated when doing:
+ *
+ * __alignof__(uint64_t) == 8 on 32 bit platforms
+ * alignof(uint64_t) == 4 on 32 bit platforms
+ * 
+ * typedef struct {
+ *   uint64_t value;
+ * } Foo;
+ * 
+ * __alignof__(Foo) == 4 on 32 bit platforms
+ * alignof(Foo) == 4 on 32 bit platforms
+ */
+#define ECS_ALIGNOF(T) ((int64_t)(size_t)&((struct { char c; T d; } *)0)->d)
 #endif
 
 #ifndef FLECS_NO_ALWAYS_INLINE
