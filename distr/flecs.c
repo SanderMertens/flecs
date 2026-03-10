@@ -883,7 +883,6 @@ struct ecs_data_t {
     int32_t size;
 };
 
-
 /** A table is the Flecs equivalent of an archetype. Tables store all entities
  * with a specific set of components. Tables are automatically created when an
  * entity has a set of components not previously observed before. When a new
@@ -1812,8 +1811,6 @@ void flecs_query_end_block(
 typedef struct ecs_query_triv_cache_match_t {
     ecs_table_t *table;              /* The current table. */
     const ecs_table_record_t **trs;  /* Information about where to find field in table. */
-    void **ptrs;                     /* Cached column pointers for match. */
-    uint32_t table_version;          /* Used to check if pointers need to be revalidated. */
     ecs_termset_t set_fields;        /* Fields that are set (used by fields with Optional/Not). */
 } ecs_query_triv_cache_match_t;
 
@@ -3747,10 +3744,6 @@ struct ecs_world_t {
      * cached pointer is still valid. */
     uint32_t table_version[ECS_TABLE_VERSION_ARRAY_SIZE];
 
-    /* Same as table_version, but only increases after the column pointers of
-     * a table change. */
-    uint32_t table_column_version[ECS_TABLE_VERSION_ARRAY_SIZE];
-
     /* Array for checking if components can be looked up trivially */
     ecs_flags8_t non_trivial_lookup[FLECS_HI_COMPONENT_ID];
 
@@ -3904,18 +3897,8 @@ void flecs_increment_table_version(
     ecs_world_t *world,
     ecs_table_t *table);
 
-/* Same as flecs_increment_table_version, but for column version. */
-void flecs_increment_table_column_version(
-    ecs_world_t *world,
-    ecs_table_t *table);
-
 /* Get table version. */
 uint32_t flecs_get_table_version_fast(
-    const ecs_world_t *world,
-    const uint64_t table_id);
-
-/* Get table version for column pointer validation. */
-uint32_t flecs_get_table_column_version(
     const ecs_world_t *world,
     const uint64_t table_id);
 
@@ -13370,26 +13353,8 @@ void* ecs_field_w_size(
             flecs_errstr(ecs_id_str(it->world, it->ids[index])));
     (void)size;
 
-    if (it->ptrs && !it->offset) {
-        void *ptr = it->ptrs[index];
-        if (ptr) {
-#ifdef FLECS_DEBUG
-            if (it->trs[index]) {
-                /* Make sure that address in ptrs array is the same as what this 
-                * function would have returned if no ptrs array was set. */
-                void **temp_ptrs = it->ptrs;
-                ECS_CONST_CAST(ecs_iter_t*, it)->ptrs = NULL;
-                ecs_assert(ptr == ecs_field_w_size(it, size, index), 
-                    ECS_INTERNAL_ERROR, NULL);
-                ECS_CONST_CAST(ecs_iter_t*, it)->ptrs = temp_ptrs;
-            } else {
-                /* We're just passing in a pointer to a value that may not be
-                 * a component on the entity (such as a pointer to a new value
-                 * in an on_replace hook). */
-            }
-#endif
-            return ptr;
-        }
+    if (it->ptrs) {
+        return it->ptrs[index];
     }
 
     const ecs_table_record_t *tr = it->trs[index];
@@ -23526,29 +23491,6 @@ uint32_t flecs_get_table_version_fast(
 {
     flecs_poly_assert(world, ecs_world_t);
     return world->table_version[table_id & ECS_TABLE_VERSION_ARRAY_BITMASK];
-}
-
-void flecs_increment_table_column_version(
-    ecs_world_t *world,
-    ecs_table_t *table)
-{
-    flecs_poly_assert(world, ecs_world_t);
-    ecs_assert(table != NULL, ECS_INVALID_PARAMETER, NULL);
-
-    int32_t index = table->id & ECS_TABLE_VERSION_ARRAY_BITMASK;
-    world->table_column_version[index] ++;
-    if (world->table_column_version[index] == UINT32_MAX) {
-        /* Skip sentinel value */
-        world->table_column_version[index] = 0;
-    }
-}
-
-uint32_t flecs_get_table_column_version(
-    const ecs_world_t *world,
-    const uint64_t table_id)
-{
-    flecs_poly_assert(world, ecs_world_t);
-    return world->table_column_version[table_id & ECS_TABLE_VERSION_ARRAY_BITMASK];
 }
 
 static int32_t flecs_component_ids_last_index = 0;
@@ -43802,9 +43744,6 @@ int32_t flecs_table_grow_data(
     /* If the table is monitored indicate that there has been a change */
     flecs_table_mark_table_dirty(world, table, 0);
 
-    /* Mark columns as potentially reallocated */
-    flecs_increment_table_column_version(world, table);
-
     /* Return index of first added entity */
     return count;
 }
@@ -43856,7 +43795,6 @@ void flecs_table_append(
  
     /* If the table is monitored indicate that there has been a change */
     flecs_table_mark_table_dirty(world, table, 0);
-    flecs_increment_table_column_version(world, table);
     ecs_assert(count >= 0, ECS_INTERNAL_ERROR, NULL);
 
     /* Fast path: no switch columns, no lifecycle actions */
@@ -44251,8 +44189,6 @@ bool flecs_table_shrink(
 
     table->data.size = count;
 
-    flecs_increment_table_column_version(world, table);
-
     flecs_table_mark_table_dirty(world, table, 0);
 
     flecs_table_check_sanity(table);
@@ -44528,9 +44464,6 @@ void flecs_table_merge_data(
 
     /* Mark entity column as dirty */
     flecs_table_mark_table_dirty(world, dst_table, 0);
-
-    /* Mark columns as potentially reallocated */
-    flecs_increment_table_column_version(world, dst_table);
 
     dst_table->data.entities = dst_entities.array;
     dst_table->data.count = dst_entities.count;
@@ -77372,53 +77305,6 @@ ecs_query_cache_match_t* flecs_query_cache_next(
     }
 }
 
-/* Update cached pointers. Cached queries store the column pointers of a matched
- * table which improves cache locality of fetching component pointers while
- * iterating a cache as it avoids having to go through a table record.
- * Component pointers only need to be updated when a table column got 
- * reallocated, in which case the table_column_version will have increased. */
-static
-void flecs_query_cache_update_ptrs(
-    ecs_iter_t *it,
-    ecs_query_triv_cache_match_t *qm,
-    ecs_table_t *table)
-{
-    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    it->ptrs = qm->ptrs;
-
-    uint32_t version = flecs_get_table_column_version(
-        it->real_world, table->id);
-    if (qm->table_version == version) {
-        /* This is the most common case, as table columns pointers only change
-         * when the table grows in size. */
-        return;
-    }
-
-    qm->table_version = version;
-
-    /* Update the pointers. This can be done safely from multiple threads since
-     * all the read data is immutable, and thus each thread will arrive at the
-     * same result. */
-    int32_t i, field_count = it->field_count;
-    for (i = 0; i < field_count; i ++) {
-        qm->ptrs[i] = NULL;
-
-        const ecs_table_record_t *tr = qm->trs[i];
-        if (!tr || tr->column == -1) {
-            /* Field is not set or is not a component. */
-            continue;
-        }
-
-        if (it->sources[i]) {
-            /* Field is not matched on table */
-            continue;
-        }
-
-        qm->ptrs[i] = table->data.columns[tr->column].data;
-    }
-}
-
 /* Find next match in trivial cache. A trivial cache doesn't have to handle
  * wildcards, multiple groups or fields matched through up traversal. */
 static
@@ -77445,8 +77331,6 @@ ecs_query_cache_match_t* flecs_query_trivial_cache_next(
                 goto repeat;
             }
         }
-
-        flecs_query_cache_update_ptrs(it, qm, table);
 
         it->entities = ecs_table_entities(table);
         it->trs = qm->trs;
@@ -77567,8 +77451,6 @@ bool flecs_query_is_cache_search(
 #endif
 
     flecs_query_update_node_up_trs(ctx, node);
-
-    flecs_query_cache_update_ptrs(it, &node->base, node->base.table);
 
     return true;
 }
@@ -78786,9 +78668,6 @@ void flecs_query_cache_match_elem_fini(
     flecs_bfree(&cache->allocators.pointers, 
         ECS_CONST_CAST(void*, qm->base.trs));
 
-    flecs_bfree(&cache->allocators.pointers, 
-        ECS_CONST_CAST(void*, qm->base.ptrs));
-
     if (!flecs_query_cache_is_trivial(cache)) {
         if (qm->_ids != cache->query->ids) {
             flecs_bfree(&cache->allocators.ids, qm->_ids);
@@ -78845,10 +78724,6 @@ void flecs_query_cache_match_set(
     qm->base.table = it->table;
     qm->base.set_fields = it->set_fields;
 
-    if (!qm->base.ptrs) {
-        qm->base.ptrs = flecs_balloc(&cache->allocators.pointers);
-    }
-
     if (!qm->base.trs) {
         qm->base.trs = flecs_balloc(&cache->allocators.pointers);
     }
@@ -78856,12 +78731,6 @@ void flecs_query_cache_match_set(
     /* Reset resources in case this is an existing record */
     ecs_os_memcpy_n(ECS_CONST_CAST(ecs_table_record_t**, qm->base.trs), 
         it->trs, ecs_table_record_t*, field_count);
-    
-    /* Initialize pointers*/
-    ecs_os_memset_n(qm->base.ptrs, 0, void*, field_count);
-
-    /* Set table version to sentinel that'll force reevaluation */
-    qm->base.table_version = UINT32_MAX;
 
     /* Find out whether to store result-specific ids array or fixed array */
     ecs_id_t *ids = cache->query->ids;

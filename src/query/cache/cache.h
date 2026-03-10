@@ -13,8 +13,6 @@
 typedef struct ecs_query_triv_cache_match_t {
     ecs_table_t *table;              /* The current table. */
     const ecs_table_record_t **trs;  /* Information about where to find field in table. */
-    void **ptrs;                     /* Cached column pointers for match. */
-    uint32_t table_version;          /* Used to check if pointers need to be revalidated. */
     ecs_termset_t set_fields;        /* Fields that are set (used by fields with Optional/Not). */
 } ecs_query_triv_cache_match_t;
 

@@ -1758,16 +1758,6 @@ void Cached_2_self_up_terms_new_tables(void);
 void Cached_this_self_up_childof_pair_new_tables(void);
 void Cached_up_w_delete_table_and_move_parent(void);
 void Cached_cascade_default_group_reinsert_after_empty_table_delete(void);
-void Cached_it_ptrs(void);
-void Cached_it_ptrs_after_column_resize(void);
-void Cached_it_ptrs_after_column_merge(void);
-void Cached_it_ptrs_after_column_shrink(void);
-void Cached_it_ptrs_w_wildcard(void);
-void Cached_it_ptrs_w_up(void);
-void Cached_it_ptrs_w_up_childof(void);
-void Cached_test_it_ptrs(void);
-void Cached_test_it_ptrs_w_wildcard(void);
-void Cached_test_it_ptrs_w_up(void);
 void Cached_match_count_after_rematch(void);
 void Cached_no_rematch_after_parent_delete(void);
 void Cached_no_rematch_after_parent_create(void);
@@ -9679,46 +9669,6 @@ bake_test_case Cached_testcases[] = {
         Cached_cascade_default_group_reinsert_after_empty_table_delete
     },
     {
-        "it_ptrs",
-        Cached_it_ptrs
-    },
-    {
-        "it_ptrs_after_column_resize",
-        Cached_it_ptrs_after_column_resize
-    },
-    {
-        "it_ptrs_after_column_merge",
-        Cached_it_ptrs_after_column_merge
-    },
-    {
-        "it_ptrs_after_column_shrink",
-        Cached_it_ptrs_after_column_shrink
-    },
-    {
-        "it_ptrs_w_wildcard",
-        Cached_it_ptrs_w_wildcard
-    },
-    {
-        "it_ptrs_w_up",
-        Cached_it_ptrs_w_up
-    },
-    {
-        "it_ptrs_w_up_childof",
-        Cached_it_ptrs_w_up_childof
-    },
-    {
-        "test_it_ptrs",
-        Cached_test_it_ptrs
-    },
-    {
-        "test_it_ptrs_w_wildcard",
-        Cached_test_it_ptrs_w_wildcard
-    },
-    {
-        "test_it_ptrs_w_up",
-        Cached_test_it_ptrs_w_up
-    },
-    {
         "match_count_after_rematch",
         Cached_match_count_after_rematch
     },
@@ -13741,58 +13691,71 @@ const char* Fuzzing_cache_kind_param[] = {"default", "auto"};
 bake_test_param Fuzzing_params[] = {
     {"cache_kind", (char**)Fuzzing_cache_kind_param, 2}
 };
+
 const char* Basic_cache_kind_param[] = {"default", "auto"};
 bake_test_param Basic_params[] = {
     {"cache_kind", (char**)Basic_cache_kind_param, 2}
 };
+
 const char* Combinations_cache_kind_param[] = {"default", "auto"};
 const char* Combinations_on_instantiate_param[] = {"override", "inherit", "dont_inherit"};
 bake_test_param Combinations_params[] = {
     {"cache_kind", (char**)Combinations_cache_kind_param, 2},
     {"on_instantiate", (char**)Combinations_on_instantiate_param, 3}
 };
+
 const char* Variables_cache_kind_param[] = {"default", "auto"};
 bake_test_param Variables_params[] = {
     {"cache_kind", (char**)Variables_cache_kind_param, 2}
 };
+
 const char* Operators_cache_kind_param[] = {"default", "auto"};
 bake_test_param Operators_params[] = {
     {"cache_kind", (char**)Operators_cache_kind_param, 2}
 };
+
 const char* Recycled_cache_kind_param[] = {"default", "auto"};
 bake_test_param Recycled_params[] = {
     {"cache_kind", (char**)Recycled_cache_kind_param, 2}
 };
+
 const char* BuiltinPredicates_cache_kind_param[] = {"default", "auto"};
 bake_test_param BuiltinPredicates_params[] = {
     {"cache_kind", (char**)BuiltinPredicates_cache_kind_param, 2}
 };
+
 const char* Scopes_cache_kind_param[] = {"default", "auto"};
 const char* Scopes_on_instantiate_param[] = {"override", "inherit"};
 bake_test_param Scopes_params[] = {
     {"cache_kind", (char**)Scopes_cache_kind_param, 2},
     {"on_instantiate", (char**)Scopes_on_instantiate_param, 2}
 };
+
 const char* Traversal_cache_kind_param[] = {"default", "auto"};
 bake_test_param Traversal_params[] = {
     {"cache_kind", (char**)Traversal_cache_kind_param, 2}
 };
+
 const char* MemberTarget_cache_kind_param[] = {"default", "auto"};
 bake_test_param MemberTarget_params[] = {
     {"cache_kind", (char**)MemberTarget_cache_kind_param, 2}
 };
+
 const char* Toggle_cache_kind_param[] = {"default", "auto"};
 bake_test_param Toggle_params[] = {
     {"cache_kind", (char**)Toggle_cache_kind_param, 2}
 };
+
 const char* Sparse_cache_kind_param[] = {"default", "auto"};
 bake_test_param Sparse_params[] = {
     {"cache_kind", (char**)Sparse_cache_kind_param, 2}
 };
+
 const char* DontFragment_cache_kind_param[] = {"default", "auto"};
 bake_test_param DontFragment_params[] = {
     {"cache_kind", (char**)DontFragment_cache_kind_param, 2}
 };
+
 const char* NonFragmentingChildOf_cache_kind_param[] = {"default", "auto"};
 bake_test_param NonFragmentingChildOf_params[] = {
     {"cache_kind", (char**)NonFragmentingChildOf_cache_kind_param, 2}
@@ -13926,7 +13889,7 @@ static bake_test_suite suites[] = {
         "Cached",
         NULL,
         NULL,
-        162,
+        152,
         Cached_testcases
     },
     {
