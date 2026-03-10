@@ -1562,7 +1562,11 @@
                 "tag_w_value",
                 "1_tag_1_component",
                 "1_tag_1_component_w_value",
-                "clone_w_name"
+                "clone_w_name",
+                "clone_component",
+                "clone_component_w_value",
+                "clone_component_w_entity",
+                "clone_component_w_entity_w_value"
             ]
         }, {
             "id": "ComponentLifecycle",
