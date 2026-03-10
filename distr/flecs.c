@@ -85288,7 +85288,7 @@ bool flecs_query_apply_or_mask(
     ecs_flags64_t *mask,
     bool *has_bitset)
 {
-    ecs_term_t *terms = query->terms;
+    const ecs_term_t *terms = query->terms;
     int32_t i = term_index;
 
     if (terms[i].oper != EcsOr) {
