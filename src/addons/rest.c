@@ -1718,6 +1718,7 @@ const char* flecs_rest_cmd_kind_to_str(
     case EcsCmdBulkNew: return "BulkNew";
     case EcsCmdAdd: return "Add";
     case EcsCmdRemove: return "Remove";
+    case EcsCmdSetDontFragment:
     case EcsCmdSet: return "Set";
     case EcsCmdEmplace: return "Emplace";
     case EcsCmdEnsure: return "Ensure";
@@ -1751,6 +1752,7 @@ bool flecs_rest_cmd_has_id(
     case EcsCmdAdd:
     case EcsCmdRemove:
     case EcsCmdSet:
+    case EcsCmdSetDontFragment:
     case EcsCmdEmplace:
     case EcsCmdEnsure:
     case EcsCmdModified:
