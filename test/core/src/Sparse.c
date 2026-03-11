@@ -7425,3 +7425,36 @@ void Sparse_defer_set_w_sparse_w_observer(void) {
 
     ecs_fini(world);
 }
+
+void Sparse_defer_ensure_modified_w_sparse_w_observer(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+    ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+
+    ecs_observer(world, {
+        .query.terms = {{ .id = ecs_id(Position) }},
+        .events = { EcsOnSet },
+        .callback = DataOnSet
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set(world, e, Position, { 42 });
+
+    test_int(DataOnSet_invoked, 1);
+
+    DataOnSet_invoked = 0;
+
+    ecs_defer_begin(world);
+    Position *ptr = ecs_ensure(world, e, Position);
+    ptr->x = 77;
+    ecs_modified(world, e, Position);
+    ecs_defer_end(world);
+
+    test_int(DataOnSet_invoked, 1);
+    test_int(DataOnSet_value, 77);
+
+    ecs_fini(world);
+}
+

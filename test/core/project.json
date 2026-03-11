@@ -742,7 +742,8 @@
                 "defer_add_two_sparse_w_observer",
                 "defer_remove_two_sparse_w_observer",
                 "defer_set_batch_two_sparse_w_observer",
-                "defer_set_w_sparse_w_observer"
+                "defer_set_w_sparse_w_observer",
+                "defer_ensure_modified_w_sparse_w_observer"
             ]
         }, {
             "id": "NonFragmentingChildOf",
