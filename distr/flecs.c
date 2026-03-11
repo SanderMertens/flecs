@@ -10121,13 +10121,13 @@ void flecs_modified_id_if(
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_component_record_t *cr = flecs_components_get(world, component);
-    if (!cr || !flecs_component_get_table(cr, table)) {
+    int32_t row = ECS_RECORD_TO_ROW(r->row);
+    if (!cr || !flecs_get_component(world, table, row, cr)) {
         flecs_defer_end(world, stage);
         return;
     }
 
-    flecs_notify_on_set(
-        world, table, ECS_RECORD_TO_ROW(r->row), component, invoke_hook);
+    flecs_notify_on_set(world, table, row, component, invoke_hook);
 
     flecs_table_mark_dirty(world, table, component);
     flecs_defer_end(world, stage);
