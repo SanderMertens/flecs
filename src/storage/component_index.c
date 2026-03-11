@@ -393,7 +393,7 @@ void flecs_component_record_check_constraints(
             /* Can't use relationship as target */
             if (ecs_has_id(world, tgt, EcsRelationship)) {
                 if (!ecs_id_is_wildcard(rel) && 
-                    !ecs_has_id(world, rel, EcsTrait)) 
+                    !ecs_has_id(world, rel, EcsTrait))
                 {
                     ecs_throw(ECS_CONSTRAINT_VIOLATED, "cannot use '%s' as target"
                         " in pair '%s': '%s' has the Relationship trait",

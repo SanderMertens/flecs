@@ -1848,7 +1848,8 @@
                 "value_pair_to_str",
                 "has_value_pair_wildcard",
                 "has_value_pair_any",
-                "target_w_value_pair"
+                "target_w_value_pair",
+                "inherit_relationship_trait"
             ]
         }, {
            "id": "Trigger",

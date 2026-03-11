@@ -3449,3 +3449,16 @@ void Pairs_target_w_value_pair(void) {
 
     ecs_fini(world);
 }
+
+void Pairs_inherit_relationship_trait(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t base = ecs_new(world);
+    ecs_add_id(world, base, EcsRelationship);
+
+    ecs_entity_t derived = ecs_new_w_pair(world, EcsIsA, base);
+    test_assert(ecs_has_id(world, derived, EcsRelationship));
+
+    ecs_fini(world);
+}
+

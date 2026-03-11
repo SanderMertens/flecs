@@ -5296,6 +5296,7 @@ void flecs_bootstrap(
     /* Sync properties of ChildOf and Identifier with bootstrapped flags */
     ecs_add_pair(world, EcsChildOf, EcsOnDeleteTarget, EcsDelete);
     ecs_add_id(world, EcsChildOf, EcsTrait);
+    ecs_add_id(world, EcsIsA, EcsTrait);
     ecs_add_id(world, EcsChildOf, EcsAcyclic);
     ecs_add_id(world, EcsChildOf, EcsTraversable);
     ecs_add_pair(world, EcsChildOf, EcsOnInstantiate, EcsDontInherit);
@@ -39604,7 +39605,7 @@ void flecs_component_record_check_constraints(
             /* Can't use relationship as target */
             if (ecs_has_id(world, tgt, EcsRelationship)) {
                 if (!ecs_id_is_wildcard(rel) && 
-                    !ecs_has_id(world, rel, EcsTrait)) 
+                    !ecs_has_id(world, rel, EcsTrait))
                 {
                     ecs_throw(ECS_CONSTRAINT_VIOLATED, "cannot use '%s' as target"
                         " in pair '%s': '%s' has the Relationship trait",
