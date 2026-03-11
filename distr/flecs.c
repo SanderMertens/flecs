@@ -2813,6 +2813,7 @@ typedef enum ecs_cmd_kind_t {
     EcsCmdAdd,
     EcsCmdRemove,   
     EcsCmdSet,
+    EcsCmdSetDontFragment,
     EcsCmdEmplace,
     EcsCmdEnsure,
     EcsCmdModified,
@@ -6087,7 +6088,9 @@ void* flecs_defer_set(
     }
 
     if (!ptr.ptr) {
-        cmd->kind = EcsCmdSet;
+        bool is_dont_fragment = 
+            flecs_component_get_flags(world, id) & EcsIdDontFragment;
+        cmd->kind = is_dont_fragment ? EcsCmdSetDontFragment : EcsCmdSet;
         cmd->is._1.size = size;
         ptr.ptr = cmd->is._1.value =
             flecs_stack_alloc(&stage->cmd->stack, size, ti->alignment);
@@ -6160,7 +6163,9 @@ void* flecs_defer_cpp_set(
     }
     
     if (!ptr.ptr) {
-        cmd->kind = EcsCmdSet;
+        bool is_dont_fragment = 
+            flecs_component_get_flags(world, id) & EcsIdDontFragment;
+        cmd->kind = is_dont_fragment ? EcsCmdSetDontFragment : EcsCmdSet;
         cmd->is._1.size = size;
         ptr.ptr = cmd->is._1.value =
             flecs_stack_alloc(&stage->cmd->stack, size, ti->alignment);
@@ -6432,6 +6437,9 @@ void flecs_cmd_batch_for_entity(
                     
             if (cr && cr->flags & EcsIdDontFragment) {
                 /* Nothing to batch for non-fragmenting components */
+                if (cmd->kind == EcsCmdSet) {
+                    cmd->kind = EcsCmdSetDontFragment;
+                }
                 continue;
             }
 
@@ -6505,6 +6513,7 @@ void flecs_cmd_batch_for_entity(
         case EcsCmdSkip:
         case EcsCmdModifiedNoHook:
         case EcsCmdModified:
+        case EcsCmdSetDontFragment:
             break;
         }
     } while ((cur = next_for_entity));
@@ -6612,6 +6621,7 @@ void flecs_cmd_batch_for_entity(
             case EcsCmdModified:
             case EcsCmdModifiedNoHook:
             case EcsCmdAddModified:
+            case EcsCmdSetDontFragment:
             case EcsCmdPath:
             case EcsCmdDelete:
             case EcsCmdClear:
@@ -6780,6 +6790,7 @@ bool flecs_defer_end(
                     world->info.cmd.other_count ++;
                     break;
                 case EcsCmdSet:
+                case EcsCmdSetDontFragment:
                     flecs_set_id_move(world, dst_stage, e, 
                         cmd->id, flecs_itosize(cmd->is._1.size), 
                         cmd->is._1.value, kind);
@@ -10210,6 +10221,9 @@ void flecs_set_id_move(
             flecs_notify_on_set_ids(
                 world, table, ECS_RECORD_TO_ROW(r->row), 1, &ids);
         }
+    } else if (cmd_kind == EcsCmdSetDontFragment) {
+        flecs_notify_on_set(
+            world, r->table, ECS_RECORD_TO_ROW(r->row), component, true);
     }
 
     flecs_defer_end(world, stage);
@@ -30020,6 +30034,7 @@ const char* flecs_rest_cmd_kind_to_str(
     case EcsCmdBulkNew: return "BulkNew";
     case EcsCmdAdd: return "Add";
     case EcsCmdRemove: return "Remove";
+    case EcsCmdSetDontFragment:
     case EcsCmdSet: return "Set";
     case EcsCmdEmplace: return "Emplace";
     case EcsCmdEnsure: return "Ensure";
@@ -30053,6 +30068,7 @@ bool flecs_rest_cmd_has_id(
     case EcsCmdAdd:
     case EcsCmdRemove:
     case EcsCmdSet:
+    case EcsCmdSetDontFragment:
     case EcsCmdEmplace:
     case EcsCmdEnsure:
     case EcsCmdModified:

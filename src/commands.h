@@ -13,6 +13,7 @@ typedef enum ecs_cmd_kind_t {
     EcsCmdAdd,
     EcsCmdRemove,   
     EcsCmdSet,
+    EcsCmdSetDontFragment,
     EcsCmdEmplace,
     EcsCmdEnsure,
     EcsCmdModified,

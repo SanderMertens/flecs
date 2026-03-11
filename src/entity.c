@@ -2341,6 +2341,9 @@ void flecs_set_id_move(
             flecs_notify_on_set_ids(
                 world, table, ECS_RECORD_TO_ROW(r->row), 1, &ids);
         }
+    } else if (cmd_kind == EcsCmdSetDontFragment) {
+        flecs_notify_on_set(
+            world, r->table, ECS_RECORD_TO_ROW(r->row), component, true);
     }
 
     flecs_defer_end(world, stage);
