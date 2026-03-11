@@ -856,6 +856,9 @@ void SerializeIterToJson_serialize_table(void);
 void SerializeIterToJson_serialize_table_w_id_labels(void);
 void SerializeIterToJson_serialize_table_w_var_labels(void);
 void SerializeIterToJson_serialize_world(void);
+void SerializeIterToJson_serialize_world_w_root_singleton(void);
+void SerializeIterToJson_serialize_world_w_non_module_singleton_parent(void);
+void SerializeIterToJson_serialize_world_w_module_singleton_parent(void);
 void SerializeIterToJson_serialize_vars_for_query(void);
 void SerializeIterToJson_serialize_var_labels_for_query(void);
 void SerializeIterToJson_serialize_null_doc_name(void);
@@ -4482,6 +4485,18 @@ bake_test_case SerializeIterToJson_testcases[] = {
         SerializeIterToJson_serialize_world
     },
     {
+        "serialize_world_w_root_singleton",
+        SerializeIterToJson_serialize_world_w_root_singleton
+    },
+    {
+        "serialize_world_w_non_module_singleton_parent",
+        SerializeIterToJson_serialize_world_w_non_module_singleton_parent
+    },
+    {
+        "serialize_world_w_module_singleton_parent",
+        SerializeIterToJson_serialize_world_w_module_singleton_parent
+    },
+    {
         "serialize_vars_for_query",
         SerializeIterToJson_serialize_vars_for_query
     },
@@ -5766,7 +5781,7 @@ static bake_test_suite suites[] = {
         "SerializeIterToJson",
         NULL,
         NULL,
-        82,
+        85,
         SerializeIterToJson_testcases
     },
     {

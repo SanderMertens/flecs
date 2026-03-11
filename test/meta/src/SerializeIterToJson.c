@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <limits.h>
 #include <math.h>
+#include <string.h>
 
 void SerializeIterToJson_serialize_1_comps_empty(void) {
     ecs_world_t *world = ecs_init();
@@ -2156,6 +2157,96 @@ void SerializeIterToJson_serialize_world(void) {
 
     ecs_os_free(json_1);
     ecs_os_free(json_2);
+
+    ecs_fini(world);
+}
+
+void SerializeIterToJson_serialize_world_w_root_singleton(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t singleton = ecs_entity(world, { .name = "RootSingleton" });
+    ecs_add_id(world, singleton, EcsSingleton);
+
+    char *json_without_singletons = ecs_world_to_json(world, NULL);
+    test_assert(json_without_singletons != NULL);
+
+    ecs_world_to_json_desc_t desc = {0};
+    desc.serialize_singletons = true;
+
+    char *json = ecs_world_to_json(world, &desc);
+    test_assert(json != NULL);
+    test_json(json_without_singletons, json);
+
+    char *singleton_name = strstr(json, "\"name\":\"RootSingleton\"");
+    test_assert(singleton_name != NULL);
+    test_assert(strstr(singleton_name + 1, "\"name\":\"RootSingleton\"") == NULL);
+
+    ecs_os_free(json_without_singletons);
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+void SerializeIterToJson_serialize_world_w_non_module_singleton_parent(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
+    ecs_entity_t singleton = ecs_entity(world, {
+        .name = "ChildSingleton",
+        .parent = parent
+    });
+    ecs_add_id(world, singleton, EcsSingleton);
+
+    char *json_without_singletons = ecs_world_to_json(world, NULL);
+    test_assert(json_without_singletons != NULL);
+
+    ecs_world_to_json_desc_t desc = {0};
+    desc.serialize_singletons = true;
+
+    char *json = ecs_world_to_json(world, &desc);
+    test_assert(json != NULL);
+    test_json(json_without_singletons, json);
+
+    char *singleton_name = strstr(json, "\"name\":\"ChildSingleton\"");
+    test_assert(singleton_name != NULL);
+    test_assert(strstr(singleton_name + 1, "\"name\":\"ChildSingleton\"") == NULL);
+    test_assert(strstr(json, "\"parent\":\"parent\"") != NULL);
+
+    ecs_os_free(json_without_singletons);
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+void SerializeIterToJson_serialize_world_w_module_singleton_parent(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t module = ecs_entity(world, { .name = "module" });
+    ecs_add_id(world, module, EcsModule);
+
+    ecs_entity_t singleton = ecs_entity(world, {
+        .name = "ModuleSingleton",
+        .parent = module
+    });
+    ecs_add_id(world, singleton, EcsSingleton);
+
+    char *json_without_singletons = ecs_world_to_json(world, NULL);
+    test_assert(json_without_singletons != NULL);
+    test_json(json_without_singletons, "{\"results\":[]}");
+    ecs_os_free(json_without_singletons);
+
+    ecs_world_to_json_desc_t desc = {0};
+    desc.serialize_singletons = true;
+
+    char *json = ecs_world_to_json(world, &desc);
+    test_assert(json != NULL);
+
+    char *singleton_name = strstr(json, "\"name\":\"ModuleSingleton\"");
+    test_assert(singleton_name != NULL);
+    test_assert(strstr(singleton_name + 1, "\"name\":\"ModuleSingleton\"") == NULL);
+    test_assert(strstr(json, "\"parent\":\"module\"") != NULL);
+
+    ecs_os_free(json);
 
     ecs_fini(world);
 }

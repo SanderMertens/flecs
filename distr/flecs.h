@@ -15052,8 +15052,9 @@ int ecs_iter_to_json_buf(
 
 /** Used with ecs_iter_to_json(). */
 typedef struct ecs_world_to_json_desc_t {
-    bool serialize_builtin;    /**< Exclude flecs modules & contents */
-    bool serialize_modules;    /**< Exclude modules & contents */
+    bool serialize_builtin;    /**< Serialize builtin data */
+    bool serialize_modules;    /**< Serialize modules & contents */
+    bool serialize_singletons; /**< Serialize singleton entities */
 } ecs_world_to_json_desc_t;
 
 /** Serialize world into JSON string.
