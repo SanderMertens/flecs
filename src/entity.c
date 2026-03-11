@@ -1806,6 +1806,8 @@ ecs_entity_t ecs_clone(
     if (src_table->flags & EcsTableHasName) {
         dst_table = ecs_table_remove_id(world, src_table, 
             ecs_pair_t(EcsIdentifier, EcsName));
+        dst_table = ecs_table_remove_id(world, dst_table, 
+            ecs_pair_t(EcsIdentifier, EcsSymbol));
     }
 
     ecs_type_t dst_type = dst_table->type;
@@ -1822,10 +1824,10 @@ ecs_entity_t ecs_clone(
 
     if (copy_value) {
         int32_t row = ECS_RECORD_TO_ROW(dst_r->row);
-        int32_t i, count = src_table->column_count;
+        int32_t i, count = dst_table->column_count;
         for (i = 0; i < count; i ++) {
-            int32_t type_id = ecs_table_column_to_type_index(src_table, i);
-            ecs_id_t component = src_table->type.array[type_id];
+            int32_t index = ecs_table_column_to_type_index(dst_table, i);
+            ecs_id_t component = dst_table->type.array[index];
 
             void *dst_ptr = ecs_get_mut_id(world, dst, component);
             if (!dst_ptr) {
