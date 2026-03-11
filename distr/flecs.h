@@ -32657,12 +32657,12 @@ struct term_builder_i : term_ref_builder_i<Base> {
         return this->oper(flecs::Or);
     }
 
-    /* Short for oper(flecs::Or) */
+    /* Short for oper(flecs::Not) */
     Base& not_() {
         return this->oper(flecs::Not);
     }
 
-    /* Short for oper(flecs::Or) */
+    /* Short for oper(flecs::Optional) */
     Base& optional() {
         return this->oper(flecs::Optional);
     }
