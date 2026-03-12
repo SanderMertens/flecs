@@ -543,6 +543,41 @@ void SerializeIterToJson_serialize_type_info_1_component_1_struct(void) {
     ecs_fini(world);
 }
 
+void SerializeIterToJson_serialize_type_info_1_component_1_pair_tag(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Obj);
+
+    ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "Foo" });
+    ecs_set(world, e, Position, {10, 20});
+    ecs_add_pair(world, e, Rel, Obj);
+
+    ecs_query_t *q = ecs_query(world, { .expr = "Position, (Rel, Obj)" });
+    ecs_iter_t it = ecs_query_iter(world, q);
+
+    ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
+    desc.serialize_type_info = true;
+    char *json = ecs_iter_to_json(&it, &desc);
+
+    test_json(json, "{\"type_info\":{\"Position\":{\"x\":[\"int\"], \"y\":[\"int\"]}, \"(Rel,Obj)\":0}, \"results\":[{\"name\":\"Foo\", \"fields\":{\"values\":[{\"x\":10, \"y\":20}, 0]}}]}");
+
+    ecs_os_free(json);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
 void SerializeIterToJson_serialize_type_info_2_structs(void) {
     ecs_world_t *world = ecs_init();
 

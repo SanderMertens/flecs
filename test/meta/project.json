@@ -843,6 +843,7 @@
                 "serialize_type_info_2_components",
                 "serialize_type_info_1_struct",
                 "serialize_type_info_1_component_1_struct",
+                "serialize_type_info_1_component_1_pair_tag",
                 "serialize_type_info_2_structs",
                 "serialize_type_info_w_unit",
                 "serialize_type_info_w_unit_quantity",
