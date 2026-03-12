@@ -35843,7 +35843,7 @@ public:
         flecs::entity_t id = _::type<T>::id(world_v());
         flecs::entity_t mid = ecs_lookup_path_w_sep(
             world_v(), id, m, "::", "::", false);
-        ecs_assert(m != 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(mid != 0, ECS_INVALID_PARAMETER, NULL);
         desc_->var = v;
         return this->member(mid);
     }
