@@ -11254,6 +11254,30 @@ void Variables_check_vars_this_as_tgt(void) {
     ecs_fini(world);
 }
 
+void Variables_check_vars_this_as_tgt_before_src(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "ChildOf($x, $this), Foo($this)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+    test_int(3, q->var_count);
+    test_assert(q->flags & EcsQueryMatchThis);
+    test_assert(!(q->flags & EcsQueryHasTableThisVar));
+    test_str("this", ecs_query_var_name(q, 0));
+    test_str("x", ecs_query_var_name(q, 1));
+    test_str("this", ecs_query_var_name(q, 2));
+    test_bool(ecs_query_var_is_entity(q, 2), true);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
 void Variables_check_vars_this_w_lookup_var(void) {
     ecs_world_t *world = ecs_mini();
 

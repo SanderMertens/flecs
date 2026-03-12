@@ -1027,6 +1027,7 @@ void Variables_check_vars_wildcard(void);
 void Variables_check_vars_any(void);
 void Variables_check_vars_var_as_tgt(void);
 void Variables_check_vars_this_as_tgt(void);
+void Variables_check_vars_this_as_tgt_before_src(void);
 void Variables_check_vars_anonymous_var_as_tgt(void);
 void Variables_check_vars_wildcard_as_tgt(void);
 void Variables_check_vars_any_as_tgt(void);
@@ -6808,6 +6809,10 @@ bake_test_case Variables_testcases[] = {
     {
         "check_vars_this_as_tgt",
         Variables_check_vars_this_as_tgt
+    },
+    {
+        "check_vars_this_as_tgt_before_src",
+        Variables_check_vars_this_as_tgt_before_src
     },
     {
         "check_vars_anonymous_var_as_tgt",
@@ -13814,7 +13819,7 @@ static bake_test_suite suites[] = {
         "Variables",
         Variables_setup,
         NULL,
-        196,
+        197,
         Variables_testcases,
         1,
         Variables_params
