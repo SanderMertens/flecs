@@ -224,7 +224,7 @@ const char* flecs_json_deser_tags(
     } while (true);
 
     if (token_kind != JsonArrayClose) {
-        ecs_parser_error(NULL, expr, json - expr, "expected }");
+        ecs_parser_error(NULL, expr, json - expr, "expected ]");
         goto error;
     }
 

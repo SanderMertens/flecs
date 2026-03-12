@@ -810,6 +810,7 @@ void SerializeIterToJson_serialize_type_info_1_component(void);
 void SerializeIterToJson_serialize_type_info_2_components(void);
 void SerializeIterToJson_serialize_type_info_1_struct(void);
 void SerializeIterToJson_serialize_type_info_1_component_1_struct(void);
+void SerializeIterToJson_serialize_type_info_1_component_1_pair_tag(void);
 void SerializeIterToJson_serialize_type_info_2_structs(void);
 void SerializeIterToJson_serialize_type_info_w_unit(void);
 void SerializeIterToJson_serialize_type_info_w_unit_quantity(void);
@@ -4298,6 +4299,10 @@ bake_test_case SerializeIterToJson_testcases[] = {
         SerializeIterToJson_serialize_type_info_1_component_1_struct
     },
     {
+        "serialize_type_info_1_component_1_pair_tag",
+        SerializeIterToJson_serialize_type_info_1_component_1_pair_tag
+    },
+    {
         "serialize_type_info_2_structs",
         SerializeIterToJson_serialize_type_info_2_structs
     },
@@ -5766,7 +5771,7 @@ static bake_test_suite suites[] = {
         "SerializeIterToJson",
         NULL,
         NULL,
-        82,
+        83,
         SerializeIterToJson_testcases
     },
     {

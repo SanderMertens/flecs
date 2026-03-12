@@ -17,7 +17,7 @@ void flecs_json_serialize_id_str(
     ecs_strbuf_appendch(buf, '"');
     if (ECS_IS_PAIR(id)) {
         ecs_entity_t first = ecs_pair_first(world, id);
-        ecs_entity_t second = ecs_pair_first(world, id);
+        ecs_entity_t second = ecs_pair_second(world, id);
         ecs_strbuf_appendch(buf, '(');
         ecs_get_path_w_sep_buf(world, 0, first, ".", "", buf, true);
         ecs_strbuf_appendch(buf, ',');
