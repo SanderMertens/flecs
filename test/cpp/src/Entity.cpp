@@ -999,6 +999,22 @@ void Entity_get_mut_r_T(void) {
     test_int(p.y, 20);
 }
 
+void Entity_get_mut_pair_second_type(void) {
+    flecs::world world;
+
+    flecs::entity e = world.entity();
+    e.set_second<Tag, Position>({10, 20});
+
+    Position& p = e.get_mut_second<Tag, Position>();
+    p.x += 5;
+    p.y += 7;
+
+    const Position *ptr = e.try_get_second<Tag, Position>();
+    test_assert(ptr != nullptr);
+    test_int(ptr->x, 15);
+    test_int(ptr->y, 27);
+}
+
 
 void Entity_get_mut_w_id_not_found(void) {
     install_test_abort();
@@ -1189,6 +1205,28 @@ void Entity_try_get_mut_R_T(void) {
     test_int(p->y, 20);
 }
 
+void Entity_try_get_mut_enum_constant(void) {
+    flecs::world world;
+
+    flecs::entity e = world.entity();
+
+    Position *p = e.try_get_mut<Position>(One);
+    test_assert(p == nullptr);
+
+    e.set<Position>(One, {10, 20});
+
+    p = e.try_get_mut<Position>(One);
+    test_assert(p != nullptr);
+
+    p->x += 1;
+    p->y += 2;
+
+    const Position *ptr = e.try_get<Position>(One);
+    test_assert(ptr != nullptr);
+    test_int(ptr->x, 11);
+    test_int(ptr->y, 22);
+}
+
 void Entity_try_get_mut_r_T(void) {
     flecs::world world;
 
@@ -1205,6 +1243,28 @@ void Entity_try_get_mut_r_T(void) {
 
     test_int(p->x, 10);
     test_int(p->y, 20);
+}
+
+void Entity_try_get_mut_pair_second_type(void) {
+    flecs::world world;
+
+    flecs::entity e = world.entity();
+
+    Position *p = e.try_get_mut_second<Tag, Position>();
+    test_assert(p == nullptr);
+
+    e.set_second<Tag, Position>({10, 20});
+
+    p = e.try_get_mut_second<Tag, Position>();
+    test_assert(p != nullptr);
+
+    p->x += 1;
+    p->y += 2;
+
+    const Position *ptr = e.try_get_second<Tag, Position>();
+    test_assert(ptr != nullptr);
+    test_int(ptr->x, 11);
+    test_int(ptr->y, 22);
 }
 
 void Entity_set_generic(void) {

@@ -26362,7 +26362,7 @@ struct entity_view : public id {
     First* try_get_mut(Second constant) const {
         const auto& et = enum_type<Second>(this->world_);
         flecs::entity_t target = et.entity(constant);
-        return get_mut<First>(target);
+        return try_get_mut<First>(target);
     }
 
     /** Get mutable component value (untyped).
@@ -26423,7 +26423,7 @@ struct entity_view : public id {
      */
     template<typename First, typename Second>
     Second* try_get_mut_second() const {
-        return get_mut<pair_object<First, Second>>();
+        return try_get_mut<pair_object<First, Second>>();
     }
 
 
@@ -26560,7 +26560,7 @@ struct entity_view : public id {
      * @tparam Second the second element of a pair.
      */
     template<typename First, typename Second>
-    Second* get_mut_second() const {
+    Second& get_mut_second() const {
         Second *r = try_get_mut_second<First, Second>();
         ecs_assert(r != nullptr, ECS_INVALID_OPERATION, 
             "invalid get_mut: entity does not have component (use try_get_mut)");

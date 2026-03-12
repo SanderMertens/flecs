@@ -76,6 +76,7 @@ void Entity_get_mut_r_t(void);
 void Entity_get_mut_R_t(void);
 void Entity_get_mut_R_T(void);
 void Entity_get_mut_r_T(void);
+void Entity_get_mut_pair_second_type(void);
 void Entity_get_mut_w_id_not_found(void);
 void Entity_get_mut_T_not_found(void);
 void Entity_get_mut_r_t_not_found(void);
@@ -88,7 +89,9 @@ void Entity_try_get_mut_n_T(void);
 void Entity_try_get_mut_r_t(void);
 void Entity_try_get_mut_R_t(void);
 void Entity_try_get_mut_R_T(void);
+void Entity_try_get_mut_enum_constant(void);
 void Entity_try_get_mut_r_T(void);
+void Entity_try_get_mut_pair_second_type(void);
 void Entity_set_generic(void);
 void Entity_set_generic_w_id(void);
 void Entity_set_generic_w_id_t(void);
@@ -1882,6 +1885,10 @@ bake_test_case Entity_testcases[] = {
         Entity_get_mut_r_T
     },
     {
+        "get_mut_pair_second_type",
+        Entity_get_mut_pair_second_type
+    },
+    {
         "get_mut_w_id_not_found",
         Entity_get_mut_w_id_not_found
     },
@@ -1930,8 +1937,16 @@ bake_test_case Entity_testcases[] = {
         Entity_try_get_mut_R_T
     },
     {
+        "try_get_mut_enum_constant",
+        Entity_try_get_mut_enum_constant
+    },
+    {
         "try_get_mut_r_T",
         Entity_try_get_mut_r_T
+    },
+    {
+        "try_get_mut_pair_second_type",
+        Entity_try_get_mut_pair_second_type
     },
     {
         "set_generic",
@@ -7951,7 +7966,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        396,
+        399,
         Entity_testcases
     },
     {
