@@ -11,6 +11,7 @@
 ECS_COMPONENT_DECLARE(EcsScriptTemplateSetEvent);
 ECS_DECLARE(EcsScriptTemplate);
 
+/* Free heap-allocated storage from a template set event. */
 static
 void flecs_template_set_event_free(EcsScriptTemplateSetEvent *ptr) {
     if (ptr->entities != &ptr->entity_storage) {
@@ -44,7 +45,7 @@ ECS_DTOR(EcsScriptTemplateSetEvent, ptr, {
     flecs_template_set_event_free(ptr);
 })
 
-/* Template ctor to initialize with default property values */
+/* Template constructor: zero-inits, then copies default property values. */
 static
 void flecs_script_template_ctor(
     void *ptr,
@@ -54,7 +55,7 @@ void flecs_script_template_ctor(
     ecs_world_t *world = ti->hooks.ctx;
     ecs_entity_t template_entity = ti->component;
 
-    /* Initialize object so copy hooks can safely overwrite members with dtors. */
+    /* Zero-init so copy hooks can safely overwrite members that have dtors */
     flecs_default_ctor(ptr, count, ti);
     
     const EcsStruct *st = ecs_get(world, template_entity, EcsStruct);
@@ -94,7 +95,7 @@ void flecs_script_template_ctor(
     }
 }
 
-/* Defer template instantiation if we're in deferred mode. */
+/* Defer template instantiation by enqueuing an event. */
 static
 void flecs_script_template_defer_on_set(
     ecs_iter_t *it,
@@ -105,7 +106,7 @@ void flecs_script_template_defer_on_set(
     EcsScriptTemplateSetEvent evt;
 
     if ((it->count == 1) && ti->size <= ECS_TEMPLATE_SMALL_SIZE && !ti->hooks.dtor) {
-        /* This should be true for the vast majority of templates */
+        /* Fast path: use inline storage for small trivial templates */
         evt.entities = &evt.entity_storage;
         evt.data = evt.data_storage;
         evt.entity_storage = it->entities[0];
@@ -125,6 +126,7 @@ void flecs_script_template_defer_on_set(
     });
 }
 
+/* Instantiate a template for one or more entities. */
 static
 void flecs_script_template_instantiate(
     ecs_world_t *world,
@@ -170,7 +172,7 @@ void flecs_script_template_instantiate(
 
     ecs_script_scope_t *scope = template->node->scope;
 
-    /* Dummy entity node for instance */
+    /* Synthetic entity node representing the template instance */
     ecs_script_entity_t instance_node = {
         .node = {
             .kind = EcsAstEntity,
@@ -195,32 +197,28 @@ void flecs_script_template_instantiate(
             flecs_script_apply_annot(&v, &instance_node, annot);
         }
 
-        /* Create variables to hold template properties */
+        /* Create variable scope for template properties */
         ecs_script_vars_t *vars = flecs_script_vars_push(
             NULL, &v.r->stack, &v.r->allocator);
-        vars->parent = template->vars; /* Include hoisted variables */
+        vars->parent = template->vars;
         vars->sp = ecs_vec_count(&template->vars->vars);
 
-        /* Allocate enough space for variables */
         ecs_script_vars_set_size(vars, (st ? st->members.count : 0) + 1);
 
-        /* Populate $this variable with instance entity */
+        /* Populate $this with the instance entity */
         ecs_entity_t instance = entities[i];
-        ecs_script_var_t *this_var = ecs_script_vars_declare(
-            vars, NULL /* $this */);
+        ecs_script_var_t *this_var = ecs_script_vars_declare(vars, NULL);
         this_var->value.type = ecs_id(ecs_entity_t);
         this_var->value.ptr = &instance;
 
-        /* Populate properties from template members */
+        /* Bind property variables to instance member values */
         if (st) {
             const ecs_member_t *members = st->members.array;
             for (m = 0; m < st->members.count; m ++) {
                 const ecs_member_t *member = &members[m];
 
-                /* Assign template property from template instance. Don't 
-                 * set name as variables will be resolved by frame offset. */
-                ecs_script_var_t *var = ecs_script_vars_declare(
-                    vars, NULL /* member->name */);
+                /* Property variable; name omitted since resolution is by stack offset */
+                ecs_script_var_t *var = ecs_script_vars_declare(vars, NULL);
                 var->value.type = member->type;
                 var->value.ptr = ECS_OFFSET(data, member->offset);
             }
@@ -228,12 +226,8 @@ void flecs_script_template_instantiate(
 
         ecs_script_clear(world, template_entity, instance);
 
-        /* Run template code */
         v.vars = vars;
-
         flecs_script_eval_scope(&v, scope);
-
-        /* Pop variable scope */
         ecs_script_vars_pop(vars);
 
         data = ECS_OFFSET(data, ti->size);
@@ -250,6 +244,8 @@ void flecs_script_template_instantiate(
     flecs_script_eval_visit_fini(&v, &desc);
 }
 
+/* Observer callback: handle deferred template set events by suspending
+ * deferring and performing synchronous instantiation. */
 static
 void flecs_on_template_set_event(
     ecs_iter_t *it)
@@ -268,14 +264,14 @@ void flecs_on_template_set_event(
     ecs_defer_resume(world);
 }
 
-/* Template on_set handler to update contents for new property values */
+/* Template on_set hook: instantiates or re-instantiates the template.
+ * Defers instantiation if the world is in deferred mode. */
 static
 void flecs_script_template_on_set(
     ecs_iter_t *it)
 {
     if (it->table->flags & EcsTableIsPrefab) {
-        /* Don't instantiate templates for prefabs */
-        return;
+        return; /* Skip template instantiation for prefabs */
     }
 
     ecs_world_t *world = it->world;
@@ -308,6 +304,7 @@ void flecs_script_template_on_set(
     return;
 }
 
+/* Evaluate a template prop declaration and register it as a member. */
 static
 int flecs_script_template_eval_prop(
     ecs_script_visit_t *_v,
@@ -358,8 +355,7 @@ int flecs_script_template_eval_prop(
             return -1;
         }
     } else {
-        /* We don't know the type yet, so we can't create a storage for it yet.
-         * Run the expression first to deduce the type. */
+        /* Type unknown; evaluate expression first to deduce it */
         ecs_value_t value = {0};
         if (flecs_script_eval_expr(v, &node->expr, &value)) {
             flecs_script_eval_error(v, node,
@@ -403,6 +399,7 @@ int flecs_script_template_eval_prop(
     return 0;
 }
 
+/* Evaluate a template scope node during preprocessing. */
 static
 int flecs_script_template_eval(
     ecs_script_visit_t *v,
@@ -420,6 +417,8 @@ int flecs_script_template_eval(
     return flecs_script_check_node(v, node);
 }
 
+/* Preprocess a template scope: evaluate props, type-check expressions, and
+ * resolve identifiers using the check visitor. */
 static
 int flecs_script_template_preprocess(
     ecs_script_eval_visitor_t *v,
@@ -428,7 +427,7 @@ int flecs_script_template_preprocess(
     ecs_visit_action_t prev_visit = v->base.visit;
     v->template = template;
 
-    /* Dummy entity node for instance */
+    /* Placeholder entity node for template preprocessing scope */
     ecs_script_entity_t instance_node = {
         .node = {
             .kind = EcsAstEntity,
@@ -451,6 +450,7 @@ int flecs_script_template_preprocess(
     return result;
 }
 
+/* Hoist using statements from the current scope into a template. */
 static
 int flecs_script_template_hoist_using(
     ecs_script_eval_visitor_t *v,
@@ -470,6 +470,8 @@ int flecs_script_template_hoist_using(
     return 0;
 }
 
+/* Copy variable values from enclosing scopes into the template's own
+ * variable storage, recursing through parent scopes. */
 static
 int flecs_script_template_hoist_vars(
     ecs_script_eval_visitor_t *v,
@@ -481,8 +483,7 @@ int flecs_script_template_hoist_vars(
     for (i = 0; i < count; i ++) {
         ecs_script_var_t *src = &src_vars[i];
         if (ecs_script_vars_lookup(template->vars, src->name)) {
-            /* If variable is masked, don't declare it twice */
-            continue;
+            continue; /* Already declared in inner scope */
         }
         ecs_script_var_t *dst = ecs_script_vars_define_id(
             template->vars, src->name, src->value.type);
@@ -498,6 +499,7 @@ int flecs_script_template_hoist_vars(
     return 0;
 }
 
+/* Allocate and initialize a new template structure. */
 ecs_script_template_t* flecs_script_template_init(
     ecs_script_impl_t *script)
 {
@@ -511,6 +513,7 @@ ecs_script_template_t* flecs_script_template_init(
     return result;
 }
 
+/* Finalize and free a template structure and its resources. */
 void flecs_script_template_fini(
     ecs_script_impl_t *script,
     ecs_script_template_t *template)
@@ -537,7 +540,7 @@ void flecs_script_template_fini(
     flecs_free_t(a, ecs_script_template_t, template);
 }
 
-/* Create new template */
+/* Evaluate a template node and register it as a component type. */
 int flecs_script_eval_template(
     ecs_script_eval_visitor_t *v,
     ecs_script_template_node_t *node)
@@ -551,8 +554,7 @@ int flecs_script_eval_template(
     template->entity = template_entity;
     template->node = node;
 
-    /* Variables are always presented to a template in a well defined order, so
-     * we don't need dynamic variable binding. */
+    /* Template variables have a fixed order, so dynamic binding is unnecessary */
     bool old_dynamic_variable_binding = v->dynamic_variable_binding;
     v->dynamic_variable_binding = false;
 
@@ -570,13 +572,12 @@ int flecs_script_eval_template(
 
     v->dynamic_variable_binding = old_dynamic_variable_binding;
 
-    /* If template has no props, give template dummy size so we can register
-     * hooks for it. */
+    /* Propless templates need a non-zero component size for hooks to work */
     if (!ecs_has(v->world, template_entity, EcsComponent)) {
         ecs_set(v->world, template_entity, EcsComponent, {1, 1});
     }
 
-    /* Consume annotations, if any */
+    /* Attach pending annotations to template */
     int32_t i, count = ecs_vec_count(&v->r->annot);
     if (count) {
         ecs_script_annot_t **annots = ecs_vec_first(&v->r->annot);
@@ -610,7 +611,7 @@ int flecs_script_eval_template(
         .ctx = v->world
     });
 
-    /* Keep script alive for as long as template is alive */
+    /* Keep script alive as long as template exists */
     v->base.script->refcount ++;
 
     return 0;
@@ -619,6 +620,7 @@ error:
     return -1;
 }
 
+/* Import template-related components and observers. */
 void flecs_script_template_import(
     ecs_world_t *world)
 {

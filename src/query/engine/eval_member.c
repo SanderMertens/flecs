@@ -1,10 +1,11 @@
 /**
  * @file query/engine/eval_member.c
- * @brief Component member evaluation.
+ * @brief Component member-level comparison (e.g., filter by struct field value).
  */
 
 #include "../../private_api.h"
 
+/* Compare component member value against expected value. */
 static
 bool flecs_query_member_cmp(
     const ecs_query_op_t *op,
@@ -47,9 +48,7 @@ bool flecs_query_member_cmp(
         /* Get data ptr starting from offset 0 so we can use row to index */
         range.offset = 0;
 
-        /* Populate data field so we have the array we can compare the member
-         * value against. */
-        data = op_ctx->data = 
+        data = op_ctx->data =
             ecs_table_get_column(range.table, it->trs[field_index]->column, 0);
 
         it->ids[field_index] = ctx->query->pub.terms[op->term_index].id;
@@ -62,6 +61,8 @@ bool flecs_query_member_cmp(
         data = op_ctx->data;
     }
 
+    /* Member offset and component size are packed into op->first.entity:
+     * low 32 bits = byte offset of member, high 32 bits = component size. */
     int32_t offset = (int32_t)op->first.entity;
     int32_t size = (int32_t)(op->first.entity >> 32);
     const ecs_entity_t *entities = ecs_table_entities(table);
@@ -122,6 +123,7 @@ match:
     return true;
 }
 
+/* Evaluate member equality comparison. */
 bool flecs_query_member_eq(
     const ecs_query_op_t *op,
     bool redo,
@@ -130,6 +132,7 @@ bool flecs_query_member_eq(
     return flecs_query_member_cmp(op, redo, ctx, false);
 }
 
+/* Evaluate member inequality comparison. */
 bool flecs_query_member_neq(
     const ecs_query_op_t *op,
     bool redo,

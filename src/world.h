@@ -1,6 +1,6 @@
 /**
  * @file world.h
- * @brief World functions.
+ * @brief World struct definition and internal world-level function declarations.
  */
 
 #ifndef FLECS_WORLD_H
@@ -67,13 +67,11 @@ typedef struct ecs_store_t {
     /* Stack of ids being deleted during cleanup action. */
     ecs_vec_t marked_ids;            /* vector<ecs_marked_id_t> */
 
-    /* Components deleted during cleanup action. Used to delay cleaning up of
-     * type info so it's guaranteed that this data is available while the 
-     * storage is cleaning up tables. */
+    /* Components deleted during cleanup; type info cleanup is deferred */
     ecs_vec_t deleted_components;    /* vector<ecs_entity_t> */
 } ecs_store_t;
 
-/* fini actions */
+/* Fini action callback and context */
 typedef struct ecs_action_elem_t {
     ecs_fini_action_t action;
     void *ctx;
@@ -81,27 +79,24 @@ typedef struct ecs_action_elem_t {
 
 typedef struct ecs_pipeline_state_t ecs_pipeline_state_t;
 
-/** The world stores and manages all ECS data. An application can have more than
- * one world, but data is not shared between worlds. */
+/* The world stores and manages all ECS data. Multiple worlds are independent. */
 struct ecs_world_t {
     ecs_header_t hdr;
 
-    /* --  Type metadata -- */
+    /* -- Type metadata -- */
     ecs_component_record_t **id_index_lo;
     ecs_map_t id_index_hi;           /* map<id, ecs_component_record_t*> */
     ecs_map_t type_info;             /* map<type_id, type_info_t> */
 
 #ifdef FLECS_DEBUG
-    /* Locked components. When a component is queried for, it is no longer 
-     * possible to change traits and/or to delete the component. */
+    /* Components locked for trait changes/deletion while queried */
     ecs_map_t locked_components;     /* map<id_t, int64_t> */
 
-    /* Locked entities. This is used for queried for pair targets. It is 
-     * possible to add traits, but entities cannot be deleted. */
+    /* Pair targets locked for deletion while queried */
     ecs_map_t locked_entities;     /* map<id_t, int64_t> */
 #endif
 
-    /* -- Cached handle to id records -- */
+    /* -- Cached handle to component records -- */
     ecs_component_record_t *cr_wildcard;
     ecs_component_record_t *cr_wildcard_wildcard;
     ecs_component_record_t *cr_any;
@@ -120,8 +115,7 @@ struct ecs_world_t {
     /* Unique id per generated event used to prevent duplicate notifications */
     int32_t event_id;
 
-    /* Array of table versions used with component refs to determine if the 
-     * cached pointer is still valid. */
+    /* Table versions for invalidating cached component ref pointers */
     uint32_t table_version[ECS_TABLE_VERSION_ARRAY_SIZE];
 
     /* Array for checking if components can be looked up trivially */
@@ -130,7 +124,7 @@ struct ecs_world_t {
     /* Array for checking if components can be set trivially */
     ecs_flags8_t non_trivial_set[FLECS_HI_COMPONENT_ID];
 
-    /* --  Data storage -- */
+    /* -- Data storage -- */
     ecs_store_t store;
 
     /* Used to track when cache needs to be updated */
@@ -156,10 +150,7 @@ struct ecs_world_t {
     /* Is entity range checking enabled? */
     bool range_check_enabled;
 
-    /* Internal callback for command inspection. Only one callback can be set at
-     * a time. After assignment the action will become active at the start of 
-     * the next frame, set by ecs_frame_begin, and will be reset by 
-     * ecs_frame_end. */
+    /* Command inspection callback. Activates at next frame start, resets at end. */
     ecs_on_commands_action_t on_commands;
     ecs_on_commands_action_t on_commands_active;
     void *on_commands_ctx;
@@ -174,7 +165,7 @@ struct ecs_world_t {
     ecs_pipeline_state_t* pq;        /* Pointer to the pipeline for the workers to execute */
     bool workers_use_task_api;       /* Workers are short-lived tasks, not long-running threads */
 
-    /* -- Exclusive access */
+    /* -- Exclusive access -- */
     ecs_os_thread_id_t exclusive_access; /* If set, world can only be mutated by thread */
     const char *exclusive_thread_name;   /* Name of thread with exclusive access (used for debugging) */
 
@@ -202,31 +193,26 @@ struct ecs_world_t {
     void *ctx;                       /* Application context */
     void *binding_ctx;               /* Binding-specific context */
 
-    ecs_ctx_free_t ctx_free;         /**< Callback to free ctx */
-    ecs_ctx_free_t binding_ctx_free; /**< Callback to free binding_ctx */
+    ecs_ctx_free_t ctx_free;         /* Callback to free ctx */
+    ecs_ctx_free_t binding_ctx_free; /* Callback to free binding_ctx */
 
     ecs_vec_t fini_actions;          /* Callbacks to execute when world exits */
 };
 
-/* Get current stage. */
 ecs_stage_t* flecs_stage_from_world(
     ecs_world_t **world_ptr);
 
-/* Get current thread-specific stage from readonly world. */
 ecs_stage_t* flecs_stage_from_readonly_world(
     const ecs_world_t *world);
 
-/* Get component callbacks. */
 const ecs_type_info_t *flecs_type_info_get(
     const ecs_world_t *world,
     ecs_entity_t component);
 
-/* Get or create component callbacks. */
 ecs_type_info_t* flecs_type_info_ensure(
     ecs_world_t *world,
     ecs_entity_t component);
 
-/* Initialize type info for builtin components. */
 bool flecs_type_info_init_id(
     ecs_world_t *world,
     ecs_entity_t component,
@@ -238,41 +224,33 @@ bool flecs_type_info_init_id(
     flecs_type_info_init_id(world, ecs_id(T), ECS_SIZEOF(T), ECS_ALIGNOF(T),\
         &(ecs_type_hooks_t)__VA_ARGS__)
 
-/* Free type info for component id. */
 void flecs_type_info_free(
     ecs_world_t *world,
     ecs_entity_t component);
 
-/* Check component monitors (triggers query cache revalidation, not related to
- * EcsMonitor). */
 void flecs_eval_component_monitors(
     ecs_world_t *world);
 
-/* Register component monitor. */
 void flecs_monitor_register(
     ecs_world_t *world,
     ecs_entity_t id,
     ecs_query_t *query);
 
-/* Unregister component monitor. */
 void flecs_monitor_unregister(
     ecs_world_t *world,
     ecs_entity_t id,
     ecs_query_t *query);
 
-/* Update component monitors for added/removed components. */
 void flecs_update_component_monitors(
     ecs_world_t *world,
     ecs_type_t *added,
     ecs_type_t *removed);
 
-/* Notify tables with component of event (or all tables if id is 0). */
 void flecs_notify_tables(
     ecs_world_t *world,
     ecs_id_t id,
     ecs_table_event_t *event);
 
-/* Increase table version (used for invalidating ecs_ref_t's). */
 void flecs_increment_table_version(
     ecs_world_t *world,
     ecs_table_t *table);
@@ -311,7 +289,7 @@ bool flecs_component_is_delete_locked(
 #define flecs_component_is_delete_locked(world, component) (false)
 #endif
 
-/* Convenience macro's for world allocator */
+/* Convenience macros for world allocator */
 #define flecs_walloc(world, size)\
     flecs_alloc(&world->allocator, size)
 #define flecs_walloc_t(world, T)\

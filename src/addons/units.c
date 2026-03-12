@@ -7,6 +7,7 @@
 
 #ifdef FLECS_UNITS
 
+/* Import the units module, registering all unit prefixes, quantities, and units. */
 void FlecsUnitsImport(
     ecs_world_t *world)
 {
@@ -20,7 +21,7 @@ void FlecsUnitsImport(
         .add = ecs_ids( EcsModule )
     });
 
-    /* Initialize unit prefixes */
+    /* -- Initialize unit prefixes -- */
 
     ecs_entity_t prev_scope = ecs_set_scope(world, EcsUnitPrefixes);
 
@@ -168,7 +169,7 @@ void FlecsUnitsImport(
 
     ecs_set_scope(world, prev_scope);
 
-    /* Duration units */
+    /* -- Duration units -- */
 
     EcsDuration = ecs_quantity_init(world, &(ecs_entity_desc_t){ 
         .name = "Duration" });
@@ -257,7 +258,7 @@ void FlecsUnitsImport(
         });
     ecs_set_scope(world, prev_scope);
 
-    /* Time units */
+    /* -- Time units -- */
 
     EcsTime = ecs_quantity_init(world, &(ecs_entity_desc_t){ 
         .name = "Time" });
@@ -272,7 +273,7 @@ void FlecsUnitsImport(
         });
     ecs_set_scope(world, prev_scope);
 
-    /* Mass units */
+    /* -- Mass units -- */
 
     EcsMass = ecs_quantity_init(world, &(ecs_entity_desc_t){ 
         .name = "Mass" });
@@ -296,7 +297,7 @@ void FlecsUnitsImport(
         });
     ecs_set_scope(world, prev_scope);
 
-    /* Electric current units */
+    /* -- Electric current units -- */
 
     EcsElectricCurrent = ecs_quantity_init(world, &(ecs_entity_desc_t){ 
         .name = "ElectricCurrent" });
@@ -311,7 +312,7 @@ void FlecsUnitsImport(
         });
     ecs_set_scope(world, prev_scope);
 
-    /* Amount of substance units */
+    /* -- Amount of substance units -- */
 
     EcsAmount = ecs_quantity_init(world, &(ecs_entity_desc_t){ 
         .name = "Amount" });
@@ -326,7 +327,7 @@ void FlecsUnitsImport(
         });
     ecs_set_scope(world, prev_scope);
 
-    /* Luminous intensity units */
+    /* -- Luminous intensity units -- */
 
     EcsLuminousIntensity = ecs_quantity_init(world, &(ecs_entity_desc_t){ 
         .name = "LuminousIntensity" });
@@ -341,7 +342,7 @@ void FlecsUnitsImport(
         });
     ecs_set_scope(world, prev_scope);
 
-    /* Force units */
+    /* -- Force units -- */
 
     EcsForce = ecs_quantity_init(world, &(ecs_entity_desc_t){ 
         .name = "Force" });
@@ -356,7 +357,7 @@ void FlecsUnitsImport(
         });
     ecs_set_scope(world, prev_scope);
 
-    /* Length units */
+    /* -- Length units -- */
 
     EcsLength = ecs_quantity_init(world, &(ecs_entity_desc_t){ 
         .name = "Length" });
@@ -451,7 +452,7 @@ void FlecsUnitsImport(
         });
     ecs_set_scope(world, prev_scope);
 
-    /* Pressure units */
+    /* -- Pressure units -- */
 
     EcsPressure = ecs_quantity_init(world, &(ecs_entity_desc_t){ 
         .name = "Pressure" });
@@ -474,7 +475,7 @@ void FlecsUnitsImport(
         });
     ecs_set_scope(world, prev_scope);
 
-    /* Speed units */
+    /* -- Speed units -- */
 
     EcsSpeed = ecs_quantity_init(world, &(ecs_entity_desc_t){ 
         .name = "Speed" });
@@ -517,7 +518,7 @@ void FlecsUnitsImport(
         });
     ecs_set_scope(world, prev_scope);
     
-    /* Acceleration */
+    /* -- Acceleration -- */
 
     EcsAcceleration = ecs_unit_init(world, &(ecs_unit_desc_t){ 
         .entity = ecs_entity(world, { .name = "Acceleration" }),
@@ -531,7 +532,7 @@ void FlecsUnitsImport(
         .kind = EcsF32
     });
 
-    /* Temperature units */
+    /* -- Temperature units -- */
 
     EcsTemperature = ecs_quantity_init(world, &(ecs_entity_desc_t){ 
         .name = "Temperature" });
@@ -562,7 +563,7 @@ void FlecsUnitsImport(
         });
     ecs_set_scope(world, prev_scope);
 
-    /* Data units */
+    /* -- Data units -- */
 
     EcsData = ecs_quantity_init(world, &(ecs_entity_desc_t){ 
         .name = "Data" });
@@ -680,7 +681,7 @@ void FlecsUnitsImport(
 
     ecs_set_scope(world, prev_scope);
 
-    /* DataRate units */
+    /* -- DataRate units -- */
 
     EcsDataRate = ecs_quantity_init(world, &(ecs_entity_desc_t){ 
         .name = "DataRate" });
@@ -774,7 +775,7 @@ void FlecsUnitsImport(
 
         ecs_set_scope(world, prev_scope);
 
-    /* Percentage */
+    /* -- Percentage -- */
 
     EcsPercentage = ecs_quantity_init(world, &(ecs_entity_desc_t){ 
         .name = "Percentage" });
@@ -787,7 +788,7 @@ void FlecsUnitsImport(
         .kind = EcsF32
     });
 
-    /* Angles */
+    /* -- Angles -- */
 
     EcsAngle = ecs_quantity_init(world, &(ecs_entity_desc_t){ 
         .name = "Angle" });
@@ -811,7 +812,7 @@ void FlecsUnitsImport(
         });
     ecs_set_scope(world, prev_scope);
 
-    /* Color */
+    /* -- Color -- */
 
     EcsColor = ecs_quantity_init(world, &(ecs_entity_desc_t){ 
         .name = "Color" });
@@ -834,7 +835,7 @@ void FlecsUnitsImport(
 
     ecs_set_scope(world, prev_scope);
 
-    /* DeciBel */
+    /* -- DeciBel -- */
 
     EcsBel = ecs_unit_init(world, &(ecs_unit_desc_t){ 
         .entity = ecs_entity(world, { .name = "Bel" }),
@@ -852,7 +853,7 @@ void FlecsUnitsImport(
         .kind = EcsF32
     });
 
-    /* Frequency */
+    /* -- Frequency -- */
 
     EcsFrequency = ecs_quantity_init(world, &(ecs_entity_desc_t){ 
         .name = "Frequency" });
@@ -924,7 +925,7 @@ void FlecsUnitsImport(
         });
     ecs_set_scope(world, prev_scope);
 
-    /* Documentation */
+    /* -- Documentation -- */
 #ifdef FLECS_DOC
     ECS_IMPORT(world, FlecsDoc);
 

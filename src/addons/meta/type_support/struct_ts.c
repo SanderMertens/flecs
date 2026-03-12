@@ -7,8 +7,9 @@
 
 #ifdef FLECS_META
 
+/* Free member name strings and the members vector. */
 static void flecs_struct_dtor(
-    EcsStruct *ptr) 
+    EcsStruct *ptr)
 {
     ecs_member_t *members = ecs_vec_first_t(&ptr->members, ecs_member_t);
     int32_t i, count = ecs_vec_count(&ptr->members);
@@ -39,6 +40,7 @@ static ECS_MOVE(EcsStruct, dst, src, {
 
 static ECS_DTOR(EcsStruct, ptr, { flecs_struct_dtor(ptr); })
 
+/* Populate a struct member entry from source data. */
 static
 void flecs_set_struct_member(
     ecs_member_t *member,
@@ -59,6 +61,7 @@ void flecs_set_struct_member(
     member->warning_range = m->warning_range;
 }
 
+/* Add or update a member in a struct type, recomputing layout. */
 static
 int flecs_add_member_to_struct(
     ecs_world_t *world,
@@ -133,7 +136,7 @@ int flecs_add_member_to_struct(
     EcsStruct *s = ecs_ensure(world, struct_type, EcsStruct);
     ecs_assert(s != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    /* First check if member is already added to struct */
+    /* Check if member already exists (update in place if so) */
     ecs_member_t *members = ecs_vec_first_t(&s->members, ecs_member_t);
     int32_t i, count = ecs_vec_count(&s->members);
 
@@ -154,21 +157,21 @@ int flecs_add_member_to_struct(
 
     has_member = i != count;
 
-    /* If member wasn't added yet, add a new element to vector */
+    /* New member: append to members vector */
     if (!has_member) {
         ecs_vec_init_if_t(&s->members, ecs_member_t);
         ecs_member_t *elem = ecs_vec_append_t(NULL, &s->members, ecs_member_t);
         elem->name = NULL;
         flecs_set_struct_member(elem, member_entity, &m, unit);
 
-        /* Reobtain members array in case it was reallocated */
+        /* Re-fetch pointer; vec_append may have reallocated */
         members = ecs_vec_first_t(&s->members, ecs_member_t);
         count ++;
     }
 
     bool explicit_offset = m.offset || m.use_offset;
 
-    /* Compute member offsets and size & alignment of struct */
+    /* Compute member offsets and overall struct size/alignment */
     ecs_size_t size = 0;
     ecs_size_t alignment = 0;
 
@@ -179,7 +182,6 @@ int flecs_add_member_to_struct(
             ecs_assert(elem->name != NULL, ECS_INTERNAL_ERROR, NULL);
             ecs_assert(elem->type != 0, ECS_INTERNAL_ERROR, NULL);
 
-            /* Get component of member type to get its size & alignment */
             const EcsComponent *mbr_comp = ecs_get(world, elem->type, EcsComponent);
             if (!mbr_comp) {
                 char *path = ecs_get_path(world, elem->type);
@@ -203,7 +205,7 @@ int flecs_add_member_to_struct(
             elem->size = member_size;
             elem->offset = size;
 
-            /* Synchronize offset with Member component */
+            /* Keep EcsMember component offset in sync */
             if (elem->member) {
                 EcsMember *member_data = ecs_ensure(
                     world, elem->member, EcsMember);
@@ -217,18 +219,13 @@ int flecs_add_member_to_struct(
             }
         }
     } else {
-        /* If members have explicit offsets, we can't rely on computed 
-         * size/alignment values. Calculate size as if this is the last member
-         * instead, since this will validate if the member fits in the struct.
-         * It doesn't matter if the size is smaller than the actual struct size
-         * because flecs_init_type function compares computed size with actual
-         * (component) size to determine if the type is partial. */
+        /* With explicit offsets, size is computed from just this member and
+         * may be smaller than the real struct (partial type definition). */
         ecs_member_t *elem = &members[i];
 
         ecs_assert(elem->name != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(elem->type != 0, ECS_INTERNAL_ERROR, NULL);
 
-        /* Get component of member type to get its size & alignment */
         const EcsComponent *mbr_comp = ecs_get(world, elem->type, EcsComponent);
         if (!mbr_comp) {
             char *path = ecs_get_path(world, elem->type);
@@ -269,12 +266,11 @@ int flecs_add_member_to_struct(
         return -1;
     }
 
-    /* Align struct size to struct alignment */
     size = ECS_ALIGN(size, alignment);
 
     ecs_modified(world, struct_type, EcsStruct);
 
-    /* Do this last as it triggers the update of EcsTypeSerializer */
+    /* Must be last: triggers EcsTypeSerializer rebuild */
     if (flecs_init_type(world, struct_type, EcsStructType, size, alignment)) {
         return -1;
     }
@@ -293,6 +289,7 @@ int flecs_add_member_to_struct(
     return 0;
 }
 
+/* Set a struct member from its EcsMember component data. */
 static
 void flecs_set_member_from_component(
     ecs_world_t *world,
@@ -323,6 +320,7 @@ void flecs_set_member_from_component(
     flecs_add_member_to_struct(world, struct_type, e, &m);
 }
 
+/* Observer callback to update struct when EcsMember is set. */
 static
 void flecs_set_member(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
@@ -337,6 +335,7 @@ void flecs_set_member(ecs_iter_t *it) {
     }
 }
 
+/* Observer callback to update struct when EcsMemberRanges is set. */
 static
 void flecs_set_member_ranges(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
@@ -354,6 +353,7 @@ void flecs_set_member_ranges(ecs_iter_t *it) {
     }
 }
 
+/* Check if two member value ranges overlap. */
 static
 bool flecs_member_range_overlaps(
     const ecs_member_value_range_t *range,
@@ -376,6 +376,7 @@ bool flecs_member_range_overlaps(
     return false;
 }
 
+/* Check if a type is a numeric primitive type. */
 static
 bool flecs_type_is_number(
     ecs_world_t *world,
@@ -413,6 +414,7 @@ bool flecs_type_is_number(
     }
 }
 
+/* Validate member value, error and warning ranges for consistency. */
 static
 int flecs_member_validate_ranges(
     ecs_world_t *world,
@@ -474,7 +476,7 @@ int flecs_member_validate_ranges(
     }
 
     if (ranges_set && !flecs_type_is_number(world, member->type)) {
-        ecs_err("member '%s.%s' has an value/error/warning range, but is "
+        ecs_err("member '%s.%s' has a value/error/warning range, but is "
             "not a number", 
                 flecs_errstr(ecs_get_path(world, type)), member->name);
         goto error;
@@ -487,6 +489,7 @@ error:
     return -1;
 }
 
+/* Create an entity for a struct member with EcsMember and optional ranges. */
 static
 void flecs_struct_create_member_entity(
     ecs_world_t *world,
@@ -646,6 +649,7 @@ ecs_member_t* ecs_struct_get_nth_member(
     return &members[i];
 }
 
+/* Register struct-related components, hooks and observers. */
 void flecs_meta_struct_init(
     ecs_world_t *world)
 {

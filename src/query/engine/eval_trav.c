@@ -1,10 +1,14 @@
 /**
  * @file query/engine/eval_trav.c
- * @brief Transitive/reflexive relationship traversal.
+ * @brief Transitive/reflexive relationship traversal (EcsQueryTrav instruction).
+ *
+ * Reflexive: entity matches if it equals the target. Transitive: walks the
+ * relationship graph to find indirect matches.
  */
 
 #include "../../private_api.h"
 
+/* Check reflexive relationship match for a fixed source entity. */
 static
 bool flecs_query_trav_fixed_src_reflexive(
     const ecs_query_op_t *op,
@@ -24,19 +28,15 @@ bool flecs_query_trav_fixed_src_reflexive(
     int32_t i = range->offset, end = i + count;
     for (; i < end; i ++) {
         if (entities[i] == second) {
-            /* Even though table doesn't have the specific relationship 
-             * pair, the relationship is reflexive and the target entity
-             * is stored in the table. */
+            /* Reflexive match: target entity found in table */
             break;
         }
     }
     if (i == end) {
-        /* Table didn't contain target entity */
         return false;
     }
     if (count > 1) {
-        /* If the range contains more than one entity, set the range to
-         * return only the entity matched by the reflexive property. */
+        /* Narrow range to the single entity matched by reflexive property */
         ecs_assert(flecs_query_ref_flags(op->flags, EcsQuerySrc) & EcsQueryIsVar, 
             ECS_INTERNAL_ERROR, NULL);
         ecs_var_t *var = &ctx->vars[op->src.var];
@@ -50,6 +50,7 @@ bool flecs_query_trav_fixed_src_reflexive(
     return true;
 }
 
+/* Check reflexive relationship match for an unknown source entity. */
 static
 bool flecs_query_trav_unknown_src_reflexive(
     const ecs_query_op_t *op,
@@ -76,6 +77,7 @@ bool flecs_query_trav_unknown_src_reflexive(
     return true;
 }
 
+/* Traverse upward from a fixed source to match a fixed second entity. */
 static
 bool flecs_query_trav_fixed_src_up_fixed_second(
     const ecs_query_op_t *op,
@@ -94,7 +96,6 @@ bool flecs_query_trav_fixed_src_up_fixed_second(
     ecs_table_range_t range = flecs_get_ref_range(&op->src, f_src, ctx);
     ecs_table_t *table = range.table;
 
-    /* Check if table has transitive relationship by traversing upwards */
     ecs_table_record_t *tr = NULL;
     ecs_search_relation(ctx->world, table, 0, 
         ecs_pair(trav, second), trav, EcsSelf|EcsUp, NULL, NULL, &tr);
@@ -112,6 +113,8 @@ bool flecs_query_trav_fixed_src_up_fixed_second(
     return true;
 }
 
+/* Find sources that transitively reach a fixed second entity. Builds a
+ * down-cache from the target, then selects tables with each intermediate pair. */
 static
 bool flecs_query_trav_unknown_src_up_fixed_second(
     const ecs_query_op_t *op,
@@ -131,28 +134,23 @@ bool flecs_query_trav_unknown_src_up_fixed_second(
         if (!traversable && !reflexive) {
             trav_ctx->cache.id = 0;
 
-            /* If there's no record for the entity, it can't have a subtree so
-             * forward operation to a regular select. */
+            /* Non-traversable entity: fall back to regular select */
             return flecs_query_select(op, redo, ctx);
         }
 
-        /* Entity is traversable, which means it could have a subtree */
         flecs_query_get_trav_down_cache(ctx, &trav_ctx->cache, trav, second);
         trav_ctx->index = 0;
 
         if (op->match_flags & EcsTermReflexive) {
-            trav_ctx->index = -1;
+            trav_ctx->index = -1; /* Sentinel: reflexive result pending */
             if(flecs_query_trav_unknown_src_reflexive(
                 op, ctx, trav, second))
             {
-                /* It's possible that we couldn't return the entity required for
-                 * reflexive matching, like when it's a prefab or disabled. */
                 return true;
             }
         }
     } else {
         if (!trav_ctx->cache.id) {
-            /* No traversal cache, which means this is a regular select */
             return flecs_query_select(op, redo, ctx);
         }
     }
@@ -162,7 +160,6 @@ bool flecs_query_trav_unknown_src_up_fixed_second(
         trav_ctx->index = 0;
     }
 
-    /* Forward to select */
     int32_t count = ecs_vec_count(&trav_ctx->cache.entities);
     ecs_trav_elem_t *elems = ecs_vec_first(&trav_ctx->cache.entities);
     for (; trav_ctx->index < count; trav_ctx->index ++) {
@@ -180,6 +177,7 @@ bool flecs_query_trav_unknown_src_up_fixed_second(
     return false;
 }
 
+/* Yield the next reflexive source entity from a range during traversal. */
 static
 bool flecs_query_trav_yield_reflexive_src(
     const ecs_query_op_t *op,
@@ -193,7 +191,6 @@ bool flecs_query_trav_yield_reflexive_src(
     bool src_is_var = op->flags & (EcsQueryIsVar << EcsQuerySrc);
 
     if (trav_ctx->index >= (offset + count)) {
-        /* Restore previous offset, count */
         if (src_is_var) {
             ecs_var_id_t src_var = op->src.var;
             vars[src_var].range.offset = offset;
@@ -220,6 +217,8 @@ bool flecs_query_trav_yield_reflexive_src(
     return true;
 }
 
+/* Walk up the relationship graph from a fixed source to discover all
+ * transitively reachable target entities. Yields reflexive matches first. */
 static
 bool flecs_query_trav_fixed_src_up_unknown_second(
     const ecs_query_op_t *op,
@@ -264,6 +263,7 @@ bool flecs_query_trav_fixed_src_up_unknown_second(
     return true;
 }
 
+/* Evaluate a transitive/reflexive traversal operation. */
 bool flecs_query_trav(
     const ecs_query_op_t *op,
     bool redo,
@@ -273,8 +273,7 @@ bool flecs_query_trav(
 
     if (!flecs_ref_is_written(op, &op->src, EcsQuerySrc, written)) {
         if (!flecs_ref_is_written(op, &op->second, EcsQuerySecond, written)) {
-            /* This can't happen, src or second should have been resolved */
-            ecs_abort(ECS_INTERNAL_ERROR, 
+            ecs_abort(ECS_INTERNAL_ERROR,
                 "invalid instruction sequence: unconstrained traversal");
         } else {
             return flecs_query_trav_unknown_src_up_fixed_second(op, redo, ctx);

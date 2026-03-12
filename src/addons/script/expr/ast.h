@@ -1,5 +1,5 @@
 /**
- * @file addons/script/expr_ast.h
+ * @file addons/script/expr/ast.h
  * @brief Script expression AST.
  */
 
@@ -69,8 +69,8 @@ typedef struct ecs_expr_initializer_t {
 typedef struct ecs_expr_variable_t {
     ecs_expr_node_t node;
     const char *name;
-    ecs_value_t global_value; /* Only set for global variables */
-    int32_t sp; /* For fast variable lookups */
+    ecs_value_t global_value;   /* Set only for global variables */
+    int32_t sp;                 /* Cached stack pointer for fast lookup */
 } ecs_expr_variable_t;
 
 typedef struct ecs_expr_identifier_t {
@@ -91,7 +91,7 @@ typedef struct ecs_expr_binary_t {
     ecs_expr_node_t *right;
     ecs_token_kind_t operator;
 
-    /* For vector operations */
+    /* Set for element-wise vector operations */
     ecs_entity_t vector_type;
     int32_t vector_count;
 } ecs_expr_binary_t;

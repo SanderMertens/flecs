@@ -13,6 +13,8 @@ static ecs_os_api_log_t flecs_log_prev_fatal_log = NULL;
 static bool flecs_log_prev_color = false;
 static int flecs_log_prev_level = 0;
 
+/* Store previous log callback. When try=true, suppress non-fatal log output
+ * while keeping fatal logging via flecs_log_prev_fatal_log. */
 static
 void flecs_set_prev_log(
     ecs_os_api_log_t prev_log,
@@ -22,11 +24,12 @@ void flecs_set_prev_log(
     flecs_log_prev_fatal_log = prev_log;
 }
 
-static 
+/* Capture log messages during log capture mode. */
+static
 void flecs_log_capture_log(
-    int32_t level, 
+    int32_t level,
     const char *file,
-    int32_t line, 
+    int32_t line,
     const char *msg)
 {
     (void)file; (void)line;
@@ -60,6 +63,7 @@ void flecs_log_capture_log(
     }
 }
 
+/* Retrieve and clear the last captured error log message. */
 static
 char* flecs_log_get_captured_log(void) {
     char *result = flecs_log_last_err;
@@ -83,11 +87,16 @@ char* ecs_log_stop_capture(void) {
     return flecs_log_get_captured_log();
 }
 
+/* Colorize a log message by parsing color tags and applying ANSI codes. */
 void flecs_colorize_buf(
     char *msg,
     bool enable_colors,
     ecs_strbuf_t *buf)
 {
+    if (!msg) {
+        return;
+    }
+
     ecs_assert(msg != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(buf != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -221,8 +230,7 @@ void ecs_printv_(
 
     ecs_strbuf_t msg_buf = ECS_STRBUF_INIT;
 
-    /* Apply color. Even if we don't want color, we still need to call the
-     * colorize function to get rid of the color tags (e.g. #[green]) */
+    /* Colorize strips #[color] tags even when colors are disabled */
     char *msg_nocolor = flecs_vasprintf(fmt, args);
     flecs_colorize_buf(msg_nocolor, 
         ecs_os_api.flags_ & EcsOsApiLogWithColors, &msg_buf);
@@ -284,7 +292,7 @@ void ecs_log_(
 
 
 void ecs_log_push_(
-    int32_t level) 
+    int32_t level)
 {
     if (level <= ecs_os_api.log_level_) {
         ecs_os_api.log_indent_ ++;
@@ -300,18 +308,18 @@ void ecs_log_pop_(
     }
 }
 
+/* Format and emit a parser error or warning with source location context. */
 static
 void flecs_parser_errorv(
     const char *name,
-    const char *expr, 
+    const char *expr,
     int64_t column_arg,
     const char *fmt,
     va_list args,
     bool is_warning)
 {
     if (column_arg > 65536) {
-        /* Limit column size, which prevents the code from throwing up when the
-         * function is called with (expr - ptr), and expr is NULL. */
+        /* Guard against garbage column when expr is NULL */
         column_arg = 0;
     }
     
@@ -337,8 +345,7 @@ void flecs_parser_errorv(
         if (expr) {
             ecs_strbuf_appendch(&msg_buf, '\n');
 
-            /* Find start of line by taking column and looking for the
-             * last occurring newline */
+            /* Find start of the line containing the error column */
             if (column != -1) {
                 const char *ptr = &expr[column];
                 if (ptr[0] == '\n') {
@@ -354,18 +361,17 @@ void flecs_parser_errorv(
                 }
 
                 if (ptr == expr) {
-                    /* ptr is already at start of line */
+                    /* Already at start of expression */
                 } else {
                     column -= (int32_t)(ptr - expr);
                     expr = ptr;
                 }
             }
 
-            /* Strip newlines from current statement, if any */            
+            /* Only show the current line (up to next newline) */
             char *newline_ptr = strchr(expr, '\n');
             if (newline_ptr) {
-                /* Strip newline from expr */
-                ecs_strbuf_appendstrn(&msg_buf, expr, 
+                ecs_strbuf_appendstrn(&msg_buf, expr,
                     (int32_t)(newline_ptr - expr));
             } else {
                 ecs_strbuf_appendstr(&msg_buf, expr);
@@ -394,7 +400,7 @@ void flecs_parser_errorv(
 
 void ecs_parser_errorv_(
     const char *name,
-    const char *expr, 
+    const char *expr,
     int64_t column_arg,
     const char *fmt,
     va_list args)
@@ -404,7 +410,7 @@ void ecs_parser_errorv_(
 
 void ecs_parser_warningv_(
     const char *name,
-    const char *expr, 
+    const char *expr,
     int64_t column_arg,
     const char *fmt,
     va_list args)
@@ -414,7 +420,7 @@ void ecs_parser_warningv_(
 
 void ecs_parser_error_(
     const char *name,
-    const char *expr, 
+    const char *expr,
     int64_t column,
     const char *fmt,
     ...)
@@ -429,7 +435,7 @@ void ecs_parser_error_(
 
 void ecs_parser_warning_(
     const char *name,
-    const char *expr, 
+    const char *expr,
     int64_t column,
     const char *fmt,
     ...)

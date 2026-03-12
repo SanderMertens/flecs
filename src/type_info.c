@@ -1,6 +1,6 @@
 /**
  * @file type_info.c
- * @brief Component metadata and lifecycle hooks.
+ * @brief Component type metadata, lifecycle hooks, and hook composition.
  */
 
 #include "private_api.h"
@@ -17,14 +17,16 @@ void flecs_type_info_mark_in_use(
 #define flecs_type_info_mark_in_use(ti) ((void)ti)
 #endif
 
+/* Zero-initialize component data using the default constructor. */
 void flecs_default_ctor(
-    void *ptr, 
-    int32_t count, 
+    void *ptr,
+    int32_t count,
     const ecs_type_info_t *ti)
 {
     ecs_os_memset(ptr, 0, ti->size * count);
 }
 
+/* Invoke the constructor hook for a type, if registered. */
 bool flecs_type_info_ctor(
     void *ptr,
     int32_t count,
@@ -41,6 +43,7 @@ bool flecs_type_info_ctor(
     return false;
 }
 
+/* Invoke the destructor hook for a type, if registered. */
 bool flecs_type_info_dtor(
     void *ptr,
     int32_t count,
@@ -57,6 +60,7 @@ bool flecs_type_info_dtor(
     return false;
 }
 
+/* Copy component data using the copy hook, or memcpy as fallback. */
 void flecs_type_info_copy(
     void *dst_ptr,
     const void *src_ptr,
@@ -74,6 +78,7 @@ void flecs_type_info_copy(
     }
 }
 
+/* Move component data using the move hook, or memcpy as fallback. */
 void flecs_type_info_move(
     void *dst_ptr,
     void *src_ptr,
@@ -91,6 +96,7 @@ void flecs_type_info_move(
     }
 }
 
+/* Copy-construct component data using the copy_ctor hook, or memcpy as fallback. */
 void flecs_type_info_copy_ctor(
     void *dst_ptr,
     const void *src_ptr,
@@ -108,6 +114,7 @@ void flecs_type_info_copy_ctor(
     }
 }
 
+/* Move-construct component data using the move_ctor hook, or memcpy as fallback. */
 void flecs_type_info_move_ctor(
     void *dst_ptr,
     void *src_ptr,
@@ -125,6 +132,7 @@ void flecs_type_info_move_ctor(
     }
 }
 
+/* Construct destination, move from source, then destruct source. Falls back to memcpy. */
 void flecs_type_info_ctor_move_dtor(
     void *dst_ptr,
     void *src_ptr,
@@ -142,6 +150,7 @@ void flecs_type_info_ctor_move_dtor(
     }
 }
 
+/* Move data to destination and destruct source. Falls back to memcpy. */
 void flecs_type_info_move_dtor(
     void *dst_ptr,
     void *src_ptr,
@@ -159,6 +168,7 @@ void flecs_type_info_move_dtor(
     }
 }
 
+/* Compare two component values using the registered compare hook. */
 int flecs_type_info_cmp(
     const void *a_ptr,
     const void *b_ptr,
@@ -172,6 +182,7 @@ int flecs_type_info_cmp(
     return cmp(a_ptr, b_ptr, ti);
 }
 
+/* Test two component values for equality using the registered equals hook. */
 bool flecs_type_info_equals(
     const void *a_ptr,
     const void *b_ptr,
@@ -185,6 +196,7 @@ bool flecs_type_info_equals(
     return equals(a_ptr, b_ptr, ti);
 }
 
+/* Default copy-construct by invoking ctor then copy. */
 static
 void flecs_default_copy_ctor(void *dst_ptr, const void *src_ptr,
     int32_t count, const ecs_type_info_t *ti)
@@ -194,6 +206,7 @@ void flecs_default_copy_ctor(void *dst_ptr, const void *src_ptr,
     cl->copy(dst_ptr, src_ptr, count, ti);
 }
 
+/* Default move-construct by invoking ctor then move. */
 static
 void flecs_default_move_ctor(void *dst_ptr, void *src_ptr,
     int32_t count, const ecs_type_info_t *ti)
@@ -203,6 +216,7 @@ void flecs_default_move_ctor(void *dst_ptr, void *src_ptr,
     cl->move(dst_ptr, src_ptr, count, ti);
 }
 
+/* Default construct-move-destruct by invoking ctor, move, then dtor on source. */
 static
 void flecs_default_ctor_w_move_w_dtor(void *dst_ptr, void *src_ptr,
     int32_t count, const ecs_type_info_t *ti)
@@ -213,6 +227,7 @@ void flecs_default_ctor_w_move_w_dtor(void *dst_ptr, void *src_ptr,
     cl->dtor(src_ptr, count, ti);
 }
 
+/* Default move-construct then destruct source. */
 static
 void flecs_default_move_ctor_w_dtor(void *dst_ptr, void *src_ptr,
     int32_t count, const ecs_type_info_t *ti)
@@ -222,6 +237,7 @@ void flecs_default_move_ctor_w_dtor(void *dst_ptr, void *src_ptr,
     cl->dtor(src_ptr, count, ti);
 }
 
+/* Default move-dtor that only performs the move (no destructor needed). */
 static
 void flecs_default_move(void *dst_ptr, void *src_ptr,
     int32_t count, const ecs_type_info_t *ti)
@@ -230,30 +246,27 @@ void flecs_default_move(void *dst_ptr, void *src_ptr,
     cl->move(dst_ptr, src_ptr, count, ti);
 }
 
+/* Default move-dtor: destructs destination, then overwrites it with a memcpy from source. */
 static
 void flecs_default_dtor(void *dst_ptr, void *src_ptr,
     int32_t count, const ecs_type_info_t *ti)
 {
-    /* When there is no move, destruct the destination component & memcpy the
-     * component to dst. The src component does not have to be destructed when
-     * a component has a trivial move. */
     const ecs_type_hooks_t *cl = &ti->hooks;
     cl->dtor(dst_ptr, count, ti);
     ecs_os_memcpy(dst_ptr, src_ptr, flecs_uto(ecs_size_t, ti->size) * count);
 }
 
+/* Default move-dtor that moves data then destructs source (non-trivial move). */
 static
 void flecs_default_move_w_dtor(void *dst_ptr, void *src_ptr,
     int32_t count, const ecs_type_info_t *ti)
 {
-    /* If a component has a move, the move will take care of memcpying the data
-     * and destroying any data in dst. Because this is not a trivial move, the
-     * src component must also be destructed. */
     const ecs_type_hooks_t *cl = &ti->hooks;
     cl->move(dst_ptr, src_ptr, count, ti);
     cl->dtor(src_ptr, count, ti);
 }
 
+/* Default equals implementation that delegates to the compare hook. */
 static
 bool flecs_default_equals(const void *a_ptr, const void *b_ptr, const ecs_type_info_t* ti) {
     return ti->hooks.cmp(a_ptr, b_ptr, ti) == 0;
@@ -264,7 +277,7 @@ void flecs_ctor_illegal(
     void * dst,
     int32_t count,
     const ecs_type_info_t *ti) {
-    (void)dst; /* silence unused warning */
+    (void)dst;
     (void)count;
     ecs_abort(ECS_INVALID_OPERATION, "invalid constructor for %s", ti->name);
 }
@@ -274,7 +287,7 @@ void flecs_dtor_illegal(
     void *dst,
     int32_t count,
     const ecs_type_info_t *ti) {
-    (void)dst; /* silence unused warning */
+    (void)dst;
     (void)count;
     ecs_abort(ECS_INVALID_OPERATION, "invalid destructor for %s", ti->name);
 }
@@ -286,7 +299,7 @@ void flecs_copy_illegal(
     int32_t count,
     const ecs_type_info_t *ti)
 {
-    (void)dst; /* silence unused warning */
+    (void)dst;
     (void)src; 
     (void)count;
     ecs_abort(ECS_INVALID_OPERATION, "invalid copy assignment for %s", ti->name);
@@ -298,7 +311,7 @@ void flecs_move_illegal(
     void * src,
     int32_t count,
     const ecs_type_info_t *ti) {
-    (void)dst; /* silence unused warning */
+    (void)dst;
     (void)src;
     (void)count;
     ecs_abort(ECS_INVALID_OPERATION, "invalid move assignment for %s", ti->name);
@@ -311,7 +324,7 @@ void flecs_copy_ctor_illegal(
     int32_t count,
     const ecs_type_info_t *ti)
 {
-    (void)dst; /* silence unused warning */
+    (void)dst;
     (void)src;
     (void)count;
     ecs_abort(ECS_INVALID_OPERATION, "invalid copy construct for %s", ti->name);
@@ -324,7 +337,7 @@ void flecs_move_ctor_illegal(
     int32_t count,
     const ecs_type_info_t *ti)
 {
-    (void)dst; /* silence unused warning */
+    (void)dst;
     (void)src;
     (void)count;
     ecs_abort(ECS_INVALID_OPERATION, "invalid move construct for %s", ti->name);
@@ -336,7 +349,7 @@ int flecs_comp_illegal(
     const void *src,
     const ecs_type_info_t *ti)
 {
-    (void)dst; /* silence unused warning */
+    (void)dst;
     (void)src;
     ecs_abort(ECS_INVALID_OPERATION, "invalid compare hook for %s", ti->name);
 }
@@ -347,7 +360,7 @@ bool flecs_equals_illegal(
     const void *src,
     const ecs_type_info_t *ti)
 {
-    (void)dst; /* silence unused warning */
+    (void)dst;
     (void)src;
     ecs_abort(ECS_INVALID_OPERATION, "invalid equals hook for %s", ti->name);
 }
@@ -437,7 +450,7 @@ void ecs_set_hooks_id(
 
     flecs_stage_from_world(&world);
 
-    /* Ensure that no tables have yet been created for the component */
+    /* Hooks can only be set before the component is used in tables */
     ecs_check( ecs_id_in_use(world, component) == false,
         ECS_ALREADY_IN_USE, ecs_get_name(world, component));
     ecs_check( ecs_id_in_use(world, ecs_pair(component, EcsWildcard)) == false,
@@ -453,13 +466,13 @@ void ecs_set_hooks_id(
         const EcsComponent *component_ptr = ecs_get(
             world, component, EcsComponent);
 
-        /* Cannot register lifecycle actions for things that aren't a component */
+        /* Hooks require a non-zero-sized component */
         ecs_check(component_ptr != NULL, ECS_INVALID_PARAMETER, 
             "illegal call to set_hooks() for '%s': component cannot be a tag/zero sized",
                 flecs_errstr(ecs_get_path(world, component)));
         ecs_check(component_ptr->size != 0, ECS_INVALID_PARAMETER,
-            "illegal call to set_hooks() for '%s': cannot register "
-            " component cannot be a tag/zero sized",
+            "illegal call to set_hooks() for '%s': "
+            "component cannot be a tag/zero sized",
                 flecs_errstr(ecs_get_path(world, component)));
 
         ti->size = component_ptr->size;
@@ -489,15 +502,12 @@ void ecs_set_hooks_id(
     if (h->binding_ctx_free) ti->hooks.binding_ctx_free = h->binding_ctx_free;
     if (h->lifecycle_ctx_free) ti->hooks.lifecycle_ctx_free = h->lifecycle_ctx_free;
 
-    /* If no constructor is set, invoking any of the other lifecycle actions
-     * is not safe as they will potentially access uninitialized memory. For
-     * ease of use, if no constructor is specified, set a default one that
-     * initializes the component to 0. */
+    /* Default to zero-init ctor if other hooks exist but no ctor is set */
     if (!h->ctor && (h->dtor || h->copy || h->move)) {
         ti->hooks.ctor = flecs_default_ctor;   
     }
 
-    /* Set default copy ctor, move ctor and merge */
+    /* Compose default copy_ctor, move_ctor, ctor_move_dtor, move_dtor */
     if (!h->copy_ctor && !(flags & ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL)) {
         if (h->copy) {
             ti->hooks.copy_ctor = flecs_default_copy_ctor;
@@ -518,23 +528,20 @@ void ecs_set_hooks_id(
                 illegal_check |= ECS_TYPE_HOOK_DTOR_ILLEGAL;
                 if (h->move_ctor) {
                     illegal_check |= ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL;
-                    /* If an explicit move ctor has been set, use callback
-                     * that uses the move ctor vs. using a ctor+move */
+                    /* Use move_ctor + dtor instead of ctor + move + dtor */
                     ti->hooks.ctor_move_dtor = flecs_default_move_ctor_w_dtor;
                 } else {
                     illegal_check |= ECS_TYPE_HOOK_CTOR_ILLEGAL;
-                    /* If no explicit move_ctor has been set, use
-                     * combination of ctor + move + dtor */
+                    /* No explicit move_ctor: fall back to ctor + move + dtor */
                     ti->hooks.ctor_move_dtor = flecs_default_ctor_w_move_w_dtor;
                 }
             } else {
                 illegal_check |= ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL;
-                /* If no dtor has been set, this is just a move ctor */
+                /* No dtor: ctor_move_dtor reduces to move_ctor */
                 ti->hooks.ctor_move_dtor = ti->hooks.move_ctor;
             }
         } else {
-            /* If move is not set but move_ctor and dtor is, we can still set
-             * ctor_move_dtor. */
+            /* No move, but move_ctor + dtor can still compose ctor_move_dtor */
             if (h->move_ctor) {
                 illegal_check |= ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL;
                 if (h->dtor) {
@@ -630,6 +637,7 @@ error:
     return;
 }
 
+/* Finalize type info by freeing associated context and name resources. */
 static
 void flecs_type_info_fini(
     ecs_type_info_t *ti)
@@ -644,7 +652,7 @@ void flecs_type_info_fini(
         ti->hooks.lifecycle_ctx_free(ti->hooks.lifecycle_ctx);
     }
     if (ti->name) {
-        /* Safe to cast away const, world has ownership over string */
+        /* World owns the name string */
         ecs_os_free(ECS_CONST_CAST(char*, ti->name));
         ti->name = NULL;
     }
@@ -653,6 +661,7 @@ void flecs_type_info_fini(
     ti->alignment = 0;
 }
 
+/* Finalize and free all type info entries in the world. */
 void flecs_fini_type_info(
     ecs_world_t *world)
 {
@@ -665,6 +674,7 @@ void flecs_fini_type_info(
     ecs_map_fini(&world->type_info);
 }
 
+/* Look up type info for a component entity, returning NULL if not found. */
 const ecs_type_info_t* flecs_type_info_get(
     const ecs_world_t *world,
     ecs_entity_t component)
@@ -677,6 +687,7 @@ const ecs_type_info_t* flecs_type_info_get(
     return ecs_map_get_deref(&world->type_info, ecs_type_info_t, component);
 }
 
+/* Get or create a mutable type info entry for a component entity. */
 ecs_type_info_t* flecs_type_info_ensure(
     ecs_world_t *world,
     ecs_entity_t component)
@@ -710,6 +721,7 @@ ecs_type_info_t* flecs_type_info_ensure(
     return ti_mut;
 }
 
+/* Initialize type info for a component and propagate it to related id records. */
 bool flecs_type_info_init_id(
     ecs_world_t *world,
     ecs_entity_t component,
@@ -763,7 +775,7 @@ bool flecs_type_info_init_id(
         } 
     }
 
-    /* All non-tag id records with component as object inherit type info,
+    /* All non-tag id records with component as target inherit type info,
      * if relationship doesn't have type info */
     cr = flecs_components_get(world, ecs_pair(EcsWildcard, component));
     if (cr) {
@@ -777,6 +789,7 @@ bool flecs_type_info_init_id(
     return changed;
 }
 
+/* Free type info for a component, skipping cleanup during world teardown. */
 void flecs_type_info_free(
     ecs_world_t *world,
     ecs_entity_t component)
@@ -784,10 +797,7 @@ void flecs_type_info_free(
     flecs_poly_assert(world, ecs_world_t);
 
     if (world->flags & EcsWorldQuit) {
-        /* If world is in the final teardown stages, cleanup policies are no
-         * longer applied and it can't be guaranteed that a component is not
-         * deleted before entities that use it. The remaining type info elements
-         * will be deleted after the store is finalized. */
+        /* Cleanup order not guaranteed during teardown; freed after store fini. */
         return;
     }
 
@@ -799,9 +809,10 @@ void flecs_type_info_free(
     }
 }
 
+/* Return the size of a component type from its EcsComponent data. */
 ecs_size_t flecs_type_size(
-    ecs_world_t *world, 
-    ecs_entity_t type) 
+    ecs_world_t *world,
+    ecs_entity_t type)
 {
     const EcsComponent *comp = ecs_get(world, type, EcsComponent);
     ecs_assert(comp != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -819,6 +830,7 @@ const ecs_type_hooks_t* ecs_get_hooks_id(
     return NULL;
 }
 
+/* Determine the type info for an id, resolving pairs to relationship or target type. */
 const ecs_type_info_t* flecs_determine_type_info_for_component(
     const ecs_world_t *world,
     ecs_id_t id)

@@ -28,14 +28,11 @@
  * @{
  */
 
-/* Trace when log level is at or higher than level */
 #define FLECS_JOURNAL_LOG_LEVEL (0)
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-/* Journaling API, meant to be used by internals. */
 
 typedef enum ecs_journal_kind_t {
     EcsJournalNew,

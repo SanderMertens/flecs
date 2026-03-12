@@ -1,6 +1,6 @@
 /**
- * @file addons/script/expr_ast.c
- * @brief Script expression AST implementation.
+ * @file addons/script/expr/visit_type.c
+ * @brief Script expression type visitor.
  */
 
 #include "flecs.h"
@@ -41,9 +41,8 @@ bool flecs_expr_is_type_number(
     else return false;
 }
 
-/* Returns how expressive a type is. This is used to determine whether an 
- * implicit cast is allowed, where only casts from less to more expressive types
- * are valid. */
+/* Higher score = more expressive type. Used to pick the target type for
+ * implicit casts in binary expressions. */
 static
 int32_t flecs_expr_expressiveness_score(
     ecs_entity_t type)
@@ -71,10 +70,8 @@ int32_t flecs_expr_expressiveness_score(
     else return false;
 }
 
-/* Returns a score based on the storage size of a type. This is used in 
- * combination with expressiveness to determine whether a type can be implicitly
- * casted. An implicit cast is only valid if the destination type is both more
- * expressive and has a larger storage size. */
+/* Score representing the value range a type can hold.
+ * Used alongside expressiveness score to decide if implicit casts are safe. */
 static
 ecs_size_t flecs_expr_storage_score(
     ecs_entity_t type)
@@ -106,7 +103,6 @@ ecs_size_t flecs_expr_storage_score(
     else return false;
 }
 
-/** Returns the storage size for primitive type */
 ecs_size_t flecs_expr_storage_size(
     ecs_entity_t type)
 {
@@ -127,8 +123,6 @@ ecs_size_t flecs_expr_storage_size(
     else if (type == ecs_id(ecs_iptr_t))   return ECS_SIZEOF(ecs_iptr_t);
     else if (type == ecs_id(ecs_i64_t))    return ECS_SIZEOF(ecs_i64_t);
 
-    /* Floating points have a smaller storage score, since the largest integer 
-     * that can be represented exactly is lower than the actual storage size. */
     else if (type == ecs_id(ecs_f32_t))    return ECS_SIZEOF(ecs_f32_t);
     else if (type == ecs_id(ecs_f64_t))    return ECS_SIZEOF(ecs_f64_t);
 
@@ -137,9 +131,8 @@ ecs_size_t flecs_expr_storage_size(
     else return false;
 }
 
-/* This function returns true if an type can be casted without changing the 
- * precision of the value. It is used to determine a type for operands in a 
- * binary expression in case they are of different types. */
+/* An implicit cast is allowed only when the target type is at least as
+ * expressive and can represent at least the same value range as the source. */
 static
 bool flecs_expr_implicit_cast_allowed(
     ecs_entity_t from,
@@ -170,6 +163,8 @@ ecs_entity_t flecs_expr_cast_to_lvalue(
     return operand;
 }
 
+/* Narrow a literal to the smallest type that holds its value, enabling
+ * implicit casts that would otherwise be rejected on the wider parse type. */
 static
 ecs_entity_t flecs_expr_narrow_type(
     ecs_entity_t lvalue,
@@ -318,6 +313,7 @@ bool flecs_expr_oper_valid_for_type(
     }
 }
 
+/* Returns element count if all struct members share the same primitive type. */
 static
 int32_t flecs_script_get_vector_type_data(
     ecs_world_t *world,
@@ -352,6 +348,7 @@ int32_t flecs_script_get_vector_type_data(
     return count;
 }
 
+/* Determine operand type (for coercion) and result type for a binary op. */
 static
 int flecs_expr_type_for_operator(
     ecs_script_t *script,
@@ -391,10 +388,7 @@ int flecs_expr_type_for_operator(
 
         return 0;
     case EcsTokMod:
-        /* Mod only accepts integer operands, and results in an integer. We 
-         * could disallow doing mod on floating point types, but in practice
-         * that would likely just result in code having to do a manual 
-         * conversion to an integer. */
+        /* Mod coerces operands to i64 */
         *operand_type = ecs_id(ecs_i64_t);
         *result_type = ecs_id(ecs_i64_t);
         return 0;
@@ -547,8 +541,7 @@ int flecs_expr_type_for_operator(
         goto done;
     }
 
-    /* If types are not the same, find the smallest type for literals that can
-     * represent the value without losing precision. */
+    /* Narrow literals to the smallest type that preserves precision. */
     ecs_entity_t ltype;
     if (left_type == left->type) { /* If this is not a vector type */
         ltype = flecs_expr_narrow_type(node_type, left);
@@ -879,8 +872,7 @@ error:
     return -1;
 }
 
-/* Dynamic initializers use the cursor API to assign values, and are used for 
- * any type where a simple list of offsets into fields doesn't work. */
+/* Opaque and vector types require dynamic evaluation via cursor API. */
 static
 bool flecs_expr_initializer_is_dynamic(
     ecs_world_t *world,
@@ -1174,6 +1166,7 @@ error:
     return -1;
 }
 
+/* Resolve an enum or bitmask constant name to its underlying value. */
 static
 int flecs_expr_constant_identifier_visit_type(
     ecs_script_t *script,
@@ -1197,6 +1190,7 @@ error:
     return -1;
 }
 
+/* Returns true for ecs_entity_t and ecs_id_t. */
 static
 bool flecs_expr_is_entity_type(
     ecs_world_t *world,
@@ -1223,6 +1217,7 @@ bool flecs_expr_is_entity_type(
     return false;
 }
 
+/* Try to resolve "var.member" syntax as a variable plus member access. */
 static
 int flecs_expr_identifier_variable_member_visit_type(
     ecs_script_t *script,
@@ -1269,6 +1264,7 @@ error:
     return -1;
 }
 
+/* Resolve an identifier to a constant, entity, or variable member access. */
 static
 int flecs_expr_identifier_visit_type(
     ecs_script_t *script,
@@ -1405,6 +1401,7 @@ error:
     return -1;
 }
 
+/* Look up a global variable entity and cache its value pointer. */
 static
 int flecs_expr_global_variable_resolve(
     ecs_script_t *script,
@@ -1438,6 +1435,7 @@ error:
     return -1;
 }
 
+/* Resolve a local variable and cache its stack pointer for fast eval. */
 static
 int flecs_expr_variable_visit_type(
     ecs_script_t *script,
@@ -1467,6 +1465,7 @@ error:
     return -1;
 }
 
+/* Resolve a global variable expression. */
 static
 int flecs_expr_global_variable_visit_type(
     ecs_script_t *script,
@@ -1485,6 +1484,7 @@ error:
     return -1;
 }
 
+/* Type-check function arguments, inserting casts to match parameter types. */
 static
 int flecs_expr_arguments_visit_type(
     ecs_script_t *script,
@@ -1566,6 +1566,7 @@ error:
     return -1;
 }
 
+/* Populate vector call data for primitive element types. */
 static
 int flecs_expr_populate_primitive_vector_calldata(
     ecs_script_t *script,
@@ -1604,6 +1605,7 @@ error:
     return -1;
 }
 
+/* Populate vector call data for struct types (e.g. vec3). */
 static
 int flecs_expr_populate_struct_vector_calldata(
     ecs_script_t *script,
@@ -1640,6 +1642,7 @@ error:
     return -1;
 }
 
+/* Populate vector call data for fixed-size array types. */
 static
 int flecs_expr_populate_array_vector_calldata(
     ecs_script_t *script,
@@ -1654,6 +1657,7 @@ int flecs_expr_populate_array_vector_calldata(
         script, node, func_data, vector_type, type->type, type->count);
 }
 
+/* Populate vector call data for dynamic vector collection types. */
 static
 int flecs_expr_populate_vector_vector_calldata(
     ecs_script_t *script,
@@ -1668,6 +1672,7 @@ int flecs_expr_populate_vector_vector_calldata(
         script, node, func_data, vector_type, type->type, -1);
 }
 
+/* Dispatch vector call data population by type kind. */
 static
 int flecs_expr_populate_vector_calldata(
     ecs_script_t *script,
@@ -1701,6 +1706,7 @@ int flecs_expr_populate_vector_calldata(
     return -1;
 }
 
+/* Resolve function/method call: validates args, resolves overloads, binds. */
 static
 int flecs_expr_function_visit_type(
     ecs_script_t *script,
@@ -1857,6 +1863,7 @@ error:
     return -1;
 }
 
+/* Resolve member access, looking up offset from the type's member list. */
 static
 int flecs_expr_member_visit_type(
     ecs_script_t *script,
@@ -1913,6 +1920,7 @@ error:
     return -1;
 }
 
+/* Resolve element/component access (array indexing or entity[Component]). */
 static
 int flecs_expr_element_visit_type(
     ecs_script_t *script,
@@ -2009,6 +2017,7 @@ error:
     return -1;
 }
 
+/* Check for the wildcard '_' token used as a match-all case. */
 static
 bool flecs_expr_identifier_is_any(
     ecs_expr_node_t *node)
@@ -2022,6 +2031,7 @@ bool flecs_expr_identifier_is_any(
     return false;
 }
 
+/* Type-check a match expression: validates case types match the scrutinee. */
 static
 int flecs_expr_match_visit_type(
     ecs_script_t *script,
@@ -2166,6 +2176,7 @@ error:
     return -1;
 }
 
+/* Type for a new-entity expression is always ecs_entity_t. */
 static
 int flecs_expr_new_visit_type(
     ecs_script_t *script,
@@ -2180,6 +2191,7 @@ int flecs_expr_new_visit_type(
     return 0;
 }
 
+/* Dispatch type resolution based on node kind. */
 static
 int flecs_expr_visit_type_priv(
     ecs_script_t *script,
@@ -2301,17 +2313,12 @@ error:
     return -1;
 }
 
+/* Entry point: resolve types for an expression AST. */
 int flecs_expr_visit_type(
     ecs_script_t *script,
     ecs_expr_node_t *node,
     const ecs_expr_eval_desc_t *desc)
 {
-    // ecs_strbuf_t buf = ECS_STRBUF_INIT;
-    // flecs_expr_to_str_buf(script, node, &buf, true);
-    // char *str = ecs_strbuf_get(&buf);
-    // printf("%s\n", str);
-    // ecs_os_free(str);
-
     if (node->kind == EcsExprEmptyInitializer) {
         node->type = desc->type;
         

@@ -1,38 +1,37 @@
-// This is free and unencumbered software released into the public domain under The Unlicense (http://unlicense.org/)
-// main repo: https://github.com/wangyi-fudan/wyhash
-// author: 王一 Wang Yi
-// contributors: Reini Urban, Dietrich Epp, Joshua Haberman, Tommy Ettinger, 
-//               Daniel Lemire, Otmar Ertl, cocowalla, leo-yuriev, 
-//               Diego Barrios Romero, paulie-g, dumblob, Yann Collet, ivte-ms, 
-//               hyb, James Z.M. Gao, easyaspi314 (Devin), TheOneric
+/**
+ * @file datastructures/hash.c
+ * @brief 64-bit hash function based on wyhash.
+ */
 
-/* quick example:
-   string s="fjsakfdsjkf";
-   uint64_t hash=wyhash(s.c_str(), s.size(), 0, wyp_);
-*/
+/* This is free and unencumbered software released into the public domain under
+ * The Unlicense (http://unlicense.org/)
+ * Main repo: https://github.com/wangyi-fudan/wyhash
+ * Author: Wang Yi
+ * Contributors: Reini Urban, Dietrich Epp, Joshua Haberman, Tommy Ettinger,
+ *               Daniel Lemire, Otmar Ertl, cocowalla, leo-yuriev,
+ *               Diego Barrios Romero, paulie-g, dumblob, Yann Collet, ivte-ms,
+ *               hyb, James Z.M. Gao, easyaspi314 (Devin), TheOneric */
+
+/* Usage: uint64_t hash = wyhash(data, len, 0, wyp_); */
 
 #include "../private_api.h"
 
 #ifndef WYHASH_CONDOM
-//protections that produce different results:
-//1: normal valid behavior
-//2: extra protection against entropy loss (probability=2^-63), aka. "blind multiplication"
+/* 1: normal, 2: extra entropy loss protection (blind multiplication) */
 #define WYHASH_CONDOM 1
 #endif
 
 #ifndef WYHASH_32BIT_MUM
-//0: normal version, slow on 32 bit systems
-//1: faster on 32 bit systems but produces different results, incompatible with wy2u0k function
-#define WYHASH_32BIT_MUM 0  
+/* 0: normal (slow on 32-bit), 1: faster on 32-bit but different results */
+#define WYHASH_32BIT_MUM 0
 #endif
 
-//includes
 #if defined(_MSC_VER) && defined(_M_X64)
   #include <intrin.h>
   #pragma intrinsic(_umul128)
 #endif
 
-//likely and unlikely macros
+/* Branch prediction hints */
 #if defined(__GNUC__) || defined(__INTEL_COMPILER) || defined(__clang__)
   #define likely_(x)  __builtin_expect(x,1)
   #define unlikely_(x)  __builtin_expect(x,0)
@@ -41,7 +40,7 @@
   #define unlikely_(x) (x)
 #endif
 
-//128bit multiply function
+/* 128-bit multiply: stores high and low halves in *A and *B */
 static inline void wymum_(uint64_t *A, uint64_t *B){
 #if(WYHASH_32BIT_MUM)
   uint64_t hh=(*A>>32)*(*B>>32), hl=(*A>>32)*(uint32_t)*B, lh=(uint32_t)*A*(*B>>32), ll=(uint64_t)(uint32_t)*A*(uint32_t)*B;
@@ -77,10 +76,10 @@ static inline void wymum_(uint64_t *A, uint64_t *B){
 #endif
 }
 
-//multiply and xor mix function, aka MUM
+/* Multiply-and-xor mix function (MUM) */
 static inline uint64_t wymix_(uint64_t A, uint64_t B){ wymum_(&A,&B); return A^B; }
 
-//endian macros
+/* Endianness detection */
 #ifndef WYHASH_LITTLE_ENDIAN
   #if defined(_WIN32) || defined(__LITTLE_ENDIAN__) || (defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
     #define WYHASH_LITTLE_ENDIAN 1
@@ -92,7 +91,7 @@ static inline uint64_t wymix_(uint64_t A, uint64_t B){ wymum_(&A,&B); return A^B
   #endif
 #endif
 
-//read functions
+/* Endian-aware read functions for 8, 4, and 3 bytes */
 #if (WYHASH_LITTLE_ENDIAN)
 static inline uint64_t wyr8_(const uint8_t *p) { uint64_t v; memcpy(&v, p, 8); return v;}
 static inline uint64_t wyr4_(const uint8_t *p) { uint32_t v; memcpy(&v, p, 4); return v;}
@@ -114,7 +113,7 @@ static inline uint64_t wyr4_(const uint8_t *p) {
 #endif
 static inline uint64_t wyr3_(const uint8_t *p, size_t k) { return (((uint64_t)p[0])<<16)|(((uint64_t)p[k>>1])<<8)|p[k-1];}
 
-//wyhash main function
+/* wyhash: processes <=16 bytes inline, >48 bytes with 3-way parallel mixing */
 static inline uint64_t wyhash(const void *key, size_t len, uint64_t seed, const uint64_t *secret){
   const uint8_t *p=(const uint8_t *)key; seed^=wymix_(seed^secret[0],secret[1]);	uint64_t	a,	b;
   if(likely_(len<=16)){
@@ -141,9 +140,10 @@ static inline uint64_t wyhash(const void *key, size_t len, uint64_t seed, const 
   return  wymix_(a^secret[0]^len,b^secret[1]);
 }
 
-//the default secret parameters
+/* Default secret parameters for wyhash */
 static const uint64_t wyp_[4] = {0xa0761d6478bd642full, 0xe7037ed1a0b428dbull, 0x8ebc6af09c88c6e3ull, 0x589965cc75374cc3ull};
 
+/* Compute a 64-bit hash of the given data using wyhash. */
 uint64_t flecs_hash(
     const void *data,
     ecs_size_t length)

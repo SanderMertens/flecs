@@ -15,14 +15,12 @@
 
 extern ecs_mixins_t ecs_system_t_mixins;
 
-/* Invoked when system becomes active / inactive */
 void ecs_system_activate(
     ecs_world_t *world,
     ecs_entity_t system,
     bool activate,
     const ecs_system_t *system_data);
 
-/* Internal function to run a system */
 ecs_entity_t flecs_run_system(
     ecs_world_t *world,
     ecs_stage_t *stage,

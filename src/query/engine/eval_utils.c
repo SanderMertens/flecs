@@ -1,10 +1,11 @@
 /**
  * @file query/engine/eval_utils.c
- * @brief Query engine evaluation utilities.
+ * @brief Variable read/write, id construction, and match recording helpers.
  */
 
 #include "../../private_api.h"
 
+/* Populate iterator fields from the $this variable's range. */
 void flecs_query_set_iter_this(
     ecs_iter_t *it,
     const ecs_query_run_ctx_t *ctx)
@@ -30,6 +31,7 @@ void flecs_query_set_iter_this(
     }
 }
 
+/* Return the operation context for the current operation index. */
 ecs_query_op_ctx_t* flecs_op_ctx_(
     const ecs_query_run_ctx_t *ctx)
 {
@@ -38,6 +40,7 @@ ecs_query_op_ctx_t* flecs_op_ctx_(
 
 #define flecs_op_ctx(ctx, op_kind) (&flecs_op_ctx_(ctx)->is.op_kind)
 
+/* Clear the up-traversal source flag for a field. */
 void flecs_reset_source_set_flag(
     ecs_iter_t *it,
     int32_t field_index)
@@ -46,6 +49,7 @@ void flecs_reset_source_set_flag(
     ECS_TERMSET_CLEAR(it->up_fields, 1u << field_index);
 }
 
+/* Set the up-traversal source flag for a field. */
 void flecs_set_source_set_flag(
     ecs_iter_t *it,
     int32_t field_index)
@@ -54,6 +58,7 @@ void flecs_set_source_set_flag(
     ECS_TERMSET_SET(it->up_fields, 1u << field_index);
 }
 
+/* Get the table range for a query variable, resolving from entity if needed. */
 ecs_table_range_t flecs_query_var_get_range(
     int32_t var_id,
     const ecs_query_run_ctx_t *ctx)
@@ -74,6 +79,7 @@ ecs_table_range_t flecs_query_var_get_range(
     return (ecs_table_range_t){ 0 };
 }
 
+/* Get the table for a query variable, resolving from entity if needed. */
 ecs_table_t* flecs_query_var_get_table(
     int32_t var_id,
     const ecs_query_run_ctx_t *ctx)
@@ -93,6 +99,7 @@ ecs_table_t* flecs_query_var_get_table(
     return NULL;
 }
 
+/* Get the table for an operation reference, handling both entity and variable refs. */
 ecs_table_t* flecs_query_get_table(
     const ecs_query_op_t *op,
     const ecs_query_ref_t *ref,
@@ -107,6 +114,7 @@ ecs_table_t* flecs_query_get_table(
     }
 }
 
+/* Get the table range for an operation reference, handling both entity and variable refs. */
 ecs_table_range_t flecs_query_get_range(
     const ecs_query_op_t *op,
     const ecs_query_ref_t *ref,
@@ -128,6 +136,7 @@ ecs_table_range_t flecs_query_get_range(
     return (ecs_table_range_t){0};
 }
 
+/* Get the entity for a query variable, resolving from table range if needed. */
 ecs_entity_t flecs_query_var_get_entity(
     ecs_var_id_t var_id,
     const ecs_query_run_ctx_t *ctx)
@@ -147,6 +156,7 @@ ecs_entity_t flecs_query_var_get_entity(
     return var->entity;
 }
 
+/* Reset a query variable to wildcard state. */
 void flecs_query_var_reset(
     ecs_var_id_t var_id,
     const ecs_query_run_ctx_t *ctx)
@@ -155,6 +165,7 @@ void flecs_query_var_reset(
     ctx->vars[var_id].range.table = NULL;
 }
 
+/* Set a query variable to a table range. */
 void flecs_query_var_set_range(
     const ecs_query_op_t *op,
     ecs_var_id_t var_id,
@@ -177,6 +188,7 @@ void flecs_query_var_set_range(
     };
 }
 
+/* Constrain the source variable to a single row in its table. */
 void flecs_query_src_set_single(
     const ecs_query_op_t *op,
     int32_t row,
@@ -196,6 +208,7 @@ void flecs_query_src_set_single(
     var->entity = ecs_table_entities(var->range.table)[row];
 }
 
+/* Restore the source variable to a given table range. */
 void flecs_query_src_set_range(
     const ecs_query_op_t *op,
     const ecs_table_range_t *range,
@@ -218,6 +231,7 @@ void flecs_query_src_set_range(
     }
 }
 
+/* Set a query variable to a specific entity. */
 void flecs_query_var_set_entity(
     const ecs_query_op_t *op,
     ecs_var_id_t var_id,
@@ -234,6 +248,8 @@ void flecs_query_var_set_entity(
     var->entity = entity;
 }
 
+/* Set first/second variables from matched id, extracting pair elements if needed.
+ * Only writes variables marked as written by this op. */
 void flecs_query_set_vars(
     const ecs_query_op_t *op,
     ecs_id_t id,
@@ -263,6 +279,7 @@ void flecs_query_set_vars(
     }
 }
 
+/* Resolve a query reference to a table range. */
 ecs_table_range_t flecs_get_ref_range(
     const ecs_query_ref_t *ref,
     ecs_flags16_t flag,
@@ -276,6 +293,7 @@ ecs_table_range_t flecs_get_ref_range(
     return (ecs_table_range_t){0};
 }
 
+/* Resolve a query reference to an entity. */
 ecs_entity_t flecs_get_ref_entity(
     const ecs_query_ref_t *ref,
     ecs_flags16_t flag,
@@ -289,6 +307,7 @@ ecs_entity_t flecs_get_ref_entity(
     return 0;
 }
 
+/* Build the search id, substituting EcsWildcard for unwritten variables. */
 ecs_id_t flecs_query_op_get_id_w_written(
     const ecs_query_op_t *op,
     uint64_t written,
@@ -320,6 +339,7 @@ ecs_id_t flecs_query_op_get_id_w_written(
     }
 }
 
+/* Get the component id for an operation using the current written state. */
 ecs_id_t flecs_query_op_get_id(
     const ecs_query_op_t *op,
     const ecs_query_run_ctx_t *ctx)
@@ -328,6 +348,8 @@ ecs_id_t flecs_query_op_get_id(
     return flecs_query_op_get_id_w_written(op, written, ctx);
 }
 
+/* Advance to the next column matching the id. For (*, T) wildcard pairs,
+ * performs a search; for all other ids, simply increments the column. */
 int16_t flecs_query_next_column(
     ecs_table_t *table,
     ecs_id_t id,
@@ -343,6 +365,7 @@ int16_t flecs_query_next_column(
     return flecs_ito(int16_t, column);
 }
 
+/* Set the table record for a field in the iterator. */
 void flecs_query_it_set_tr(
     ecs_iter_t *it,
     int32_t field_index,
@@ -352,6 +375,7 @@ void flecs_query_it_set_tr(
     it->trs[field_index] = tr;
 }
 
+/* Set the matched id for a field from a table column. */
 ecs_id_t flecs_query_it_set_id(
     ecs_iter_t *it,
     ecs_table_t *table,
@@ -364,6 +388,7 @@ ecs_id_t flecs_query_it_set_id(
     return it->ids[field_index] = table->type.array[column];
 }
 
+/* Store the matched table record and id for an operation's field. */
 void flecs_query_set_match(
     const ecs_query_op_t *op,
     ecs_table_t *table,
@@ -384,6 +409,8 @@ void flecs_query_set_match(
     flecs_query_set_vars(op, matched, ctx);
 }
 
+/* Store a traversal match: sets the field id to pair(trav, second) and the
+ * table record, then writes any first/second variables from the matched id. */
 void flecs_query_set_trav_match(
     const ecs_query_op_t *op,
     const ecs_table_record_t *tr,
@@ -403,6 +430,7 @@ void flecs_query_set_trav_match(
     flecs_query_set_vars(op, matched, ctx);
 }
 
+/* Check if a table should be filtered out based on its flags and a filter mask. */
 bool flecs_query_table_filter(
     ecs_table_t *table,
     ecs_query_lbl_t other,

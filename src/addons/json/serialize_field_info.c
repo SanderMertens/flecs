@@ -7,6 +7,7 @@
 
 #ifdef FLECS_JSON
 
+/* Initialize the serialization context for a specific query field. */
 static
 bool flecs_json_serialize_get_field_ctx(
     const ecs_world_t *world,
@@ -27,7 +28,7 @@ bool flecs_json_serialize_get_field_ctx(
     }
 }
 
-
+/* Serialize field metadata including id, type, schema, and term flags. */
 void flecs_json_serialize_field(
     const ecs_world_t *world,
     const ecs_iter_t *it,

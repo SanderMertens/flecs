@@ -1,12 +1,12 @@
 /**
  * @file datastructures/name_index.h
- * @brief Data structure for resolving 64bit keys by string (name).
+ * @brief Data structure for resolving 64-bit keys by string (name).
  */
 
 #ifndef FLECS_NAME_INDEX_H
 #define FLECS_NAME_INDEX_H
 
-/** Type used for internal string hashmap */
+/* Type used for internal string hashmap. */
 typedef struct ecs_hashed_string_t {
     char *value;
     ecs_size_t length;

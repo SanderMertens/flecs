@@ -9,8 +9,9 @@
 #ifdef FLECS_PIPELINE
 #include "pipeline.h"
 
+/* Free pipeline state and associated resources. */
 static void flecs_pipeline_free(
-    ecs_pipeline_state_t *p) 
+    ecs_pipeline_state_t *p)
 {
     if (p) {
         ecs_world_t *world = p->query->world;
@@ -44,6 +45,7 @@ typedef struct ecs_write_state_t {
     ecs_map_t wildcard_ids;
 } ecs_write_state_t;
 
+/* Determine whether a component id has been written to a stage. */
 static
 ecs_write_kind_t flecs_pipeline_get_write_state(
     ecs_write_state_t *write_state,
@@ -52,13 +54,12 @@ ecs_write_kind_t flecs_pipeline_get_write_state(
     ecs_write_kind_t result = WriteStateNone;
 
     if (write_state->write_barrier) {
-        /* Any component could have been written */
-        return WriteStateToStage;
+        return WriteStateToStage; /* Global write barrier active */
     }
 
     if (id == EcsWildcard) {
-        /* Using a wildcard for id indicates read barrier. Return true if any
-         * components could have been staged */
+        /* Wildcard id acts as a read barrier; return true if any
+         * components have been staged */
         if (ecs_map_count(&write_state->ids) || 
             ecs_map_count(&write_state->wildcard_ids)) 
         {
@@ -91,13 +92,14 @@ ecs_write_kind_t flecs_pipeline_get_write_state(
     return result;
 }
 
+/* Mark a component id as written to a stage. */
 static
 void flecs_pipeline_set_write_state(
     ecs_write_state_t *write_state,
     ecs_id_t id)
 {
     if (id == EcsWildcard) {
-        /* If writing to wildcard, flag all components as written */
+        /* Wildcard write sets a global barrier flag */
         write_state->write_barrier = true;
         return;
     }
@@ -112,6 +114,7 @@ void flecs_pipeline_set_write_state(
     ecs_map_ensure(ids, id)[0] = true;
 }
 
+/* Clear all write state flags after a merge point. */
 static
 void flecs_pipeline_reset_write_state(
     ecs_write_state_t *write_state)
@@ -121,12 +124,14 @@ void flecs_pipeline_reset_write_state(
     write_state->write_barrier = false;
 }
 
+/* Check whether a query term's read/write pattern conflicts with prior
+ * staged writes, requiring a merge point before this system can run. */
 static
 bool flecs_pipeline_check_term(
     ecs_world_t *world,
     ecs_term_t *term,
     bool is_active,
-    ecs_write_state_t *write_state)    
+    ecs_write_state_t *write_state)
 {
     (void)world;
 
@@ -145,30 +150,27 @@ bool flecs_pipeline_check_term(
     ecs_write_kind_t ws = flecs_pipeline_get_write_state(write_state, id);
 
     if (from_this && ws >= WriteStateToStage) {
-        /* A staged write could have happened for an id that's matched on the
-         * main storage. Even if the id isn't read, still insert a merge so that
-         * a write to the main storage after the staged write doesn't get 
-         * overwritten. */
+        /* A prior staged write to this id requires merging to prevent
+         * stale reads or overwrites of staged changes. */
         return true;
     }
 
     if (inout == EcsInOutDefault) {
         if (from_any) {
-            /* If no inout kind is specified for terms without a source, this is
-             * not interpreted as a read/write annotation but just a (component)
-             * id that's passed to a system. */
+            /* Sourceless terms with default inout are just id references,
+             * not read/write annotations. */
             return false;
         } else if (is_shared) {
             inout = EcsIn;
         } else {
-            /* Default for owned terms is InOut */
+            /* Owned terms default to InOut */
             inout = EcsInOut;
         }
     }
 
     if (oper == EcsNot && inout == EcsOut) {
-        /* If a Not term is combined with Out, it signals that the system 
-         * intends to add a component that the entity doesn't yet have */
+        /* Not + Out means the system intends to add a component the entity
+         * doesn't yet have; treat as a sourceless write. */
         from_any = true;
     }
 
@@ -177,7 +179,7 @@ bool flecs_pipeline_check_term(
         case EcsOut:
         case EcsInOut:
             if (is_active) {
-                /* Only flag component as written if system is active */
+                /* Only mark as written if system is active */
                 flecs_pipeline_set_write_state(write_state, id);
             }
             break;
@@ -192,8 +194,7 @@ bool flecs_pipeline_check_term(
         case EcsIn:
         case EcsInOut:
             if (ws == WriteStateToStage) {
-                /* If a system does a get/ensure, the component is fetched from
-                 * the main store so it must be merged first */
+                /* get/ensure fetches from main store, so merge first */
                 return true;
             }
             /* fall through */
@@ -208,6 +209,7 @@ bool flecs_pipeline_check_term(
     return false;
 }
 
+/* Check all terms of a system query for merge requirements. */
 static
 bool flecs_pipeline_check_terms(
     ecs_world_t *world,
@@ -219,8 +221,8 @@ bool flecs_pipeline_check_terms(
     ecs_term_t *terms = query->terms;
     int32_t t, term_count = query->term_count;
 
-    /* Check This terms first. This way if a term indicating writing to a stage
-     * was added before the term, it won't cause merging. */
+    /* Check This terms first so that a staged write term preceding a This
+     * read term doesn't cause a spurious merge. */
     for (t = 0; t < term_count; t ++) {
         ecs_term_t *term = &terms[t];
         if (ecs_term_match_this(term)) {
@@ -228,7 +230,7 @@ bool flecs_pipeline_check_terms(
         }
     }
 
-    /* Now check staged terms */
+    /* Then check non-This terms (which write to stages, not main storage) */
     for (t = 0; t < term_count; t ++) {
         ecs_term_t *term = &terms[t];
         if (!ecs_term_match_this(term)) {
@@ -239,6 +241,7 @@ bool flecs_pipeline_check_terms(
     return needs_merge;
 }
 
+/* Get the system poly component from a pipeline query iterator. */
 static
 EcsPoly* flecs_pipeline_term_system(
     ecs_iter_t *it)
@@ -251,6 +254,7 @@ EcsPoly* flecs_pipeline_term_system(
     return poly;
 }
 
+/* Build the pipeline schedule from matched systems. */
 static
 bool flecs_pipeline_build(
     ecs_world_t *world,
@@ -260,9 +264,8 @@ bool flecs_pipeline_build(
 
     int32_t new_match_count = ecs_query_match_count(pq->query);
     if (pq->match_count == new_match_count) {
-        /* No need to rebuild the pipeline */
         ecs_iter_fini(&it);
-        return false;
+        return false; /* No query changes since last build */
     }
 
     world->info.pipeline_build_count_total ++;
@@ -281,7 +284,7 @@ bool flecs_pipeline_build(
     bool immediate = false;
     bool first = true;
 
-    /* Iterate systems in pipeline, add ops for running / merging */
+    /* Build ops: each op is a batch of systems between merge points */
     while (ecs_query_next(&it)) {
         EcsPoly *poly = flecs_pipeline_term_system(&it);
         bool is_active = ecs_table_get_type_index(
@@ -319,29 +322,24 @@ bool flecs_pipeline_build(
             }
 
             if (needs_merge) {
-                /* After merge all components will be merged, so reset state */
+                /* Reset write state after merge point */
                 flecs_pipeline_reset_write_state(&ws);
 
-                /* An inactive system can insert a merge if one of its 
-                 * components got written, which could make the system 
-                 * active. If this is the only system in the pipeline operation,
-                 * it results in an empty operation when we get here. If that's
-                 * the case, reuse the empty operation for the next op. */
+                /* Reuse the current op if it has no systems (e.g. because
+                 * an inactive system triggered a merge as the only entry). */
                 if (op && op->count) {
                     op = NULL;
                 }
 
-                /* Re-evaluate columns to set write flags if system is active.
-                 * If system is inactive, it can't write anything and so it
-                 * should not insert unnecessary merges.  */
+                /* Re-evaluate terms to set write flags; inactive systems
+                 * can't write, so skip them to avoid unnecessary merges. */
                 needs_merge = false;
                 if (is_active) {
                     needs_merge = flecs_pipeline_check_terms(
                         world, q, true, &ws);
                 }
 
-                /* The component states were just reset, so if we conclude that
-                 * another merge is needed something is wrong. */
+                /* States just reset -- another merge here means a bug */
                 ecs_assert(needs_merge == false, ECS_INTERNAL_ERROR, NULL);        
             }
 
@@ -355,8 +353,8 @@ bool flecs_pipeline_build(
                 op->commands_enqueued = 0;
             }
 
-            /* Don't increase count for inactive systems, as they are ignored by
-             * the query used to run the pipeline. */
+            /* Inactive systems participate in merge analysis but are not
+             * added to the schedule. */
             if (is_active) {
                 ecs_vec_append_t(a, &pq->systems, ecs_system_t*)[0] = sys;
                 if (!op->count) {
@@ -381,7 +379,6 @@ bool flecs_pipeline_build(
         ecs_dbg("#[green]pipeline#[reset] is empty");
         return true;
     } else {
-        /* Add schedule to debug tracing */
         ecs_dbg("#[bold]pipeline rebuild");
         ecs_log_push_1();
 
@@ -460,6 +457,7 @@ bool flecs_pipeline_build(
     return true;
 }
 
+/* Advance the pipeline cursor to the next system. */
 static
 void flecs_pipeline_next_system(
     ecs_pipeline_state_t *pq)
@@ -477,6 +475,7 @@ void flecs_pipeline_next_system(
     }    
 }
 
+/* Update the pipeline schedule, rebuilding if necessary. */
 bool flecs_pipeline_update(
     ecs_world_t *world,
     ecs_pipeline_state_t *pq,
@@ -486,9 +485,8 @@ bool flecs_pipeline_update(
     ecs_assert(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION, 
         "cannot update pipeline while world is in readonly mode");
 
-    /* If any entity mutations happened that could have affected query matching
-     * notify appropriate queries so caches are up to date. This includes the
-     * pipeline query. */
+    /* Flush deferred operations so query caches are up to date before
+     * checking whether the pipeline schedule needs rebuilding. */
     if (start_of_frame) {
         ecs_run_aperiodic(world, 0);
     }
@@ -498,7 +496,7 @@ bool flecs_pipeline_update(
 
     bool rebuilt = flecs_pipeline_build(world, pq);
     if (start_of_frame) {
-        /* Initialize iterators */
+        /* Create per-stage iterators for this frame */
         int32_t i, count = pq->iter_count;
         for (i = 0; i < count; i ++) {
             ecs_world_t *stage = ecs_get_stage(world, i);
@@ -522,7 +520,7 @@ void ecs_run_pipeline(
         pipeline = world->pipeline;
     }
 
-    /* create any worker task threads request */
+    /* Create temporary worker threads if using task API */
     if (ecs_using_task_threads(world)) {
         flecs_create_worker_threads(world);
     }
@@ -532,11 +530,12 @@ void ecs_run_pipeline(
     flecs_workers_progress(world, p->state, delta_time);
 
     if (ecs_using_task_threads(world)) {
-        /* task threads were temporary and may now be joined */
+        /* Task threads are ephemeral; join them now */
         flecs_join_worker_threads(world);
     }
 }
 
+/* Run pipeline operations for a single stage until the next merge point. */
 int32_t flecs_run_pipeline_ops(
     ecs_world_t* world,
     ecs_stage_t* stage,
@@ -557,17 +556,15 @@ int32_t flecs_run_pipeline_ops(
     for (; i < count; i++) {
         ecs_system_t* sys = systems[i];
 
-        /* Keep track of the last frame for which the system has ran, so we
-         * know from where to resume the schedule in case the schedule
-         * changes during a merge. */
+        /* Track last-run frame so the schedule can resume correctly
+         * after a mid-frame pipeline rebuild. */
         if (stage_index == 0) {
             sys->last_frame = world->info.frame_count_total + 1;
         }
 
         ecs_stage_t* s = NULL;
         if (!op->immediate) {
-            /* If system is immediate it operates on the actual world, not
-             * the stage. Only pass stage to system if it's readonly. */
+            /* Non-immediate systems write to a deferred stage */
             s = stage;
         }
 
@@ -578,14 +575,14 @@ int32_t flecs_run_pipeline_ops(
         ran_since_merge++;
 
         if (ran_since_merge == op->count) {
-            /* Merge */
-            break;
+            break; /* Reached merge point */
         }
     }
 
     return i;
 }
 
+/* Run the full pipeline, coordinating workers and merge points. */
 void flecs_run_pipeline(
     ecs_world_t *world,
     ecs_pipeline_state_t *pq,
@@ -604,14 +601,14 @@ void flecs_run_pipeline(
     ecs_assert(!stage_index, ECS_INVALID_OPERATION, 
         "cannot run pipeline on stage");
 
-    // Update the pipeline the workers will execute
+    /* Publish pipeline state so worker threads can access it */
     world->pq = pq;
 
-    // Update the pipeline before waking the workers.
+    /* Build/rebuild the schedule before waking workers */
     flecs_pipeline_update(world, pq, true);
 
-    // If there are no operations to execute in the pipeline bail early,
-    // no need to wake the workers since they have nothing to do.
+    /* Main loop: each iteration runs one op batch then merges. The loop
+     * exits when there are no more ops (cur_op == NULL). */
     while (pq->cur_op != NULL) {
         if (pq->cur_i == ecs_vec_count(&pq->systems)) {
             flecs_pipeline_update(world, pq, false);
@@ -646,7 +643,7 @@ void flecs_run_pipeline(
             world, stage, stage_index, stage_count, delta_time);
 
         if (measure_time) {
-            /* Don't include merge time in system time */
+            /* Exclude merge time from system time measurement */
             world->info.system_time_total += (ecs_ftime_t)ecs_time_measure(&st);
         }
 
@@ -674,14 +671,14 @@ void flecs_run_pipeline(
             flecs_defer_end(world, stage);
         }
 
-        /* Store the current state of the schedule after we synchronized the
-         * threads, to avoid race conditions. */
+        /* Update schedule cursor after sync to avoid races with workers */
         pq->cur_i = i;
 
         flecs_pipeline_update(world, pq, false);
     }
 }
 
+/* Create and run a temporary pipeline for startup systems. */
 static
 void flecs_run_startup_systems(
     ecs_world_t *world)
@@ -689,18 +686,16 @@ void flecs_run_startup_systems(
     ecs_component_record_t *cr = flecs_components_get(world, 
         ecs_dependson(EcsOnStart));
     if (!cr || !flecs_table_cache_count(&cr->cache)) {
-        /* Don't bother creating startup pipeline if no systems exist */
-        return;
+        return; /* No startup systems registered */
     }
 
     ecs_dbg_2("#[bold]startup#[reset]");
     ecs_log_push_2();
     int32_t stage_count = world->stage_count;
-    world->stage_count = 1; /* Prevents running startup systems on workers */
+    world->stage_count = 1; /* Run startup systems single-threaded */
 
-    /* Creating a pipeline is relatively expensive, but this only happens 
-     * for the first frame. The startup pipeline is deleted afterwards, which
-     * eliminates the overhead of keeping its query cache in sync. */
+    /* Startup pipeline is created, run, then deleted to avoid ongoing
+     * query cache maintenance for systems that only run once. */
     ecs_dbg_2("#[bold]create startup pipeline#[reset]");
     ecs_log_push_2();
     ecs_entity_t start_pip = ecs_pipeline_init(world, &(ecs_pipeline_desc_t){
@@ -717,7 +712,6 @@ void flecs_run_startup_systems(
     });
     ecs_log_pop_2();
 
-    /* Run & delete pipeline */
     ecs_dbg_2("#[bold]run startup systems#[reset]");
     ecs_log_push_2();
     ecs_assert(start_pip != 0, ECS_INTERNAL_ERROR, NULL);
@@ -745,12 +739,12 @@ bool ecs_progress(
 {
     ecs_ftime_t delta_time = ecs_frame_begin(world, user_delta_time);
     
-    /* If this is the first frame, run startup systems */
+    /* Run startup systems on the first frame only */
     if (world->info.frame_count_total == 0) {
         flecs_run_startup_systems(world);
     }
 
-    /* create any worker task threads request */
+    /* Create temporary worker threads if using task API */
     if (ecs_using_task_threads(world)) {
         flecs_create_worker_threads(world);
     }
@@ -766,7 +760,7 @@ bool ecs_progress(
     ecs_frame_end(world);
 
     if (ecs_using_task_threads(world)) {
-        /* task threads were temporary and may now be joined */
+        /* Task threads are ephemeral; join them now */
         flecs_join_worker_threads(world);
     }
 
@@ -851,8 +845,7 @@ error:
     return 0;
 }
 
-/* -- Module implementation -- */
-
+/* Clean up pipeline threads when the world is destroyed. */
 static
 void FlecsPipelineFini(
     ecs_world_t *world,
@@ -869,6 +862,7 @@ void FlecsPipelineFini(
 #define flecs_bootstrap_phase(world, phase, depends_on)\
     flecs_bootstrap_tag(world, phase);\
     flecs_bootstrap_phase_(world, phase, depends_on)
+/* Register a phase entity with an optional dependency. */
 static
 void flecs_bootstrap_phase_(
     ecs_world_t *world,
@@ -881,6 +875,7 @@ void flecs_bootstrap_phase_(
     }
 }
 
+/* Import the pipeline module and register builtin phases. */
 void FlecsPipelineImport(
     ecs_world_t *world)
 {
@@ -892,10 +887,10 @@ void FlecsPipelineImport(
     flecs_bootstrap_component(world, EcsPipeline);
     flecs_bootstrap_tag(world, EcsPhase);
 
-    /* Create anonymous phases to which the builtin phases will have DependsOn 
-     * relationships. This ensures that, for example, EcsOnUpdate doesn't have a
-     * direct DependsOn relationship on EcsPreUpdate, which ensures that when
-     * the EcsPreUpdate phase is disabled, EcsOnUpdate still runs. */
+    /* Create anonymous intermediate phases between each builtin phase.
+     * Builtin phases depend on these instead of on each other directly,
+     * so disabling e.g. EcsPreUpdate does not prevent EcsOnUpdate from
+     * running. */
     ecs_entity_t phase_0 = ecs_entity(world, {0});
     ecs_entity_t phase_1 = ecs_entity(world, { .add = ecs_ids(ecs_dependson(phase_0)) });
     ecs_entity_t phase_2 = ecs_entity(world, { .add = ecs_ids(ecs_dependson(phase_1)) });
@@ -938,7 +933,7 @@ void FlecsPipelineImport(
         }
     });
 
-    /* Cleanup thread administration when world is destroyed */
+    /* Clean up worker threads on world destruction */
     ecs_atfini(world, FlecsPipelineFini, NULL);
 }
 

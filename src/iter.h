@@ -6,18 +6,15 @@
 #ifndef FLECS_ITER_H
 #define FLECS_ITER_H
 
-/* Initialize iterator. */
 void flecs_iter_init(
     const ecs_world_t *world,
     ecs_iter_t *it,
     bool alloc_resources);
 
-/* Deinitialize iterator. */
 void flecs_iter_free(
     void *ptr,
     ecs_size_t size);
 
-/* Allocate zero initialized memory from iterator allocator. */
 void* flecs_iter_calloc(
     ecs_iter_t *it,
     ecs_size_t size,

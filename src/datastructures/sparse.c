@@ -1,13 +1,20 @@
 /**
  * @file datastructures/sparse.c
  * @brief Sparse set data structure.
+ *
+ * The dense array is partitioned into three regions:
+ *   [0]           sentinel (always 0, so sparse value 0 = "unpaired")
+ *   [1..count-1]  alive elements
+ *   [count..end]  dead/recyclable elements (generation bumped by remove_w_gen)
+ * Removal swaps an alive element to the dead region; recycling reverses this.
  */
 
 #include "../private_api.h"
 
-/* Utility to get a pointer to the payload */
+/* Get pointer to element at 'offset' within a page's data array. */
 #define DATA(array, size, offset) (ECS_OFFSET(array, size * offset))
 
+/* Allocate and initialize a new sparse page. */
 static
 ecs_sparse_page_t* flecs_sparse_page_new(
     ecs_sparse_t *sparse,
@@ -32,16 +39,11 @@ ecs_sparse_page_t* flecs_sparse_page_new(
     ecs_assert(result->sparse == NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(result->data == NULL, ECS_INTERNAL_ERROR, NULL);
 
-    /* Initialize sparse array with zero's, as zero is used to indicate that the
-     * sparse element has not been paired with a dense element. Use zero
-     * as this means we can take advantage of calloc having a possibly better 
-     * performance than malloc + memset. */
+    /* Zero-init sparse array; zero indicates an unpaired sparse element */
     result->sparse = ca ? flecs_bcalloc(ca)
                         : ecs_os_calloc_n(int32_t, FLECS_SPARSE_PAGE_SIZE);
 
-    /* Initialize the data array with zero's to guarantee that data is 
-     * always initialized. When an entry is removed, data is reset back to
-     * zero. Initialize now, as this can take advantage of calloc. */
+    /* Zero-init data array; data is reset to zero on removal */
     if (sparse->size) {
         result->data = a ? flecs_calloc(a, sparse->size * FLECS_SPARSE_PAGE_SIZE)
                         : ecs_os_calloc(sparse->size * FLECS_SPARSE_PAGE_SIZE);
@@ -55,6 +57,7 @@ ecs_sparse_page_t* flecs_sparse_page_new(
     return result;
 }
 
+/* Free sparse page arrays and reset page pointers to NULL. */
 static
 void flecs_sparse_page_free(
     ecs_sparse_t *sparse,
@@ -78,6 +81,7 @@ void flecs_sparse_page_free(
     page->data = NULL;
 }
 
+/* Get existing page by index, or return NULL if out of range. */
 static
 ecs_sparse_page_t* flecs_sparse_get_page(
     const ecs_sparse_t *sparse,
@@ -90,6 +94,7 @@ ecs_sparse_page_t* flecs_sparse_get_page(
     return ecs_vec_get_t(&sparse->pages, ecs_sparse_page_t, page_index);
 }
 
+/* Get existing page or create a new one if it does not exist. */
 static
 ecs_sparse_page_t* flecs_sparse_get_or_create_page(
     ecs_sparse_t *sparse,
@@ -105,6 +110,7 @@ ecs_sparse_page_t* flecs_sparse_get_or_create_page(
     return flecs_sparse_page_new(sparse, page_index);
 }
 
+/* Grow the dense array by one element. */
 static
 void flecs_sparse_grow_dense(
     ecs_sparse_t *sparse)
@@ -112,15 +118,14 @@ void flecs_sparse_grow_dense(
     ecs_vec_append_t(sparse->allocator, &sparse->dense, uint64_t);
 }
 
+/* Write the bidirectional sparse<->dense mapping for an id. */
 static
 void flecs_sparse_assign_index(
-    ecs_sparse_page_t * page, 
-    uint64_t * dense_array, 
-    uint64_t id, 
+    ecs_sparse_page_t * page,
+    uint64_t * dense_array,
+    uint64_t id,
     int32_t dense)
 {
-    /* Initialize sparse-dense pair. This assigns the dense index to the sparse
-     * array, and the sparse index to the dense array .*/
     page->sparse[FLECS_SPARSE_OFFSET(id)] = dense;
     dense_array[dense] = id;
 }
@@ -129,9 +134,6 @@ static
 uint64_t flecs_sparse_inc_id(
     ecs_sparse_t *sparse)
 {
-    /* Generate a new id. The last issued id could be stored in an external
-     * variable, such as is the case with the last issued entity id, which is
-     * stored on the world. */
     return ++ sparse->max_id;
 }
 
@@ -148,13 +150,10 @@ void flecs_sparse_set_id(
     ecs_sparse_t *sparse,
     uint64_t value)
 {
-    /* Sometimes the max id needs to be assigned directly, which typically 
-     * happens when the API calls get_or_create for an id that hasn't been 
-     * issued before. */
     sparse->max_id = value;
 }
 
-/* Pair dense id with new sparse id */
+/* Pair dense id with new sparse id. */
 static
 uint64_t flecs_sparse_create_id(
     ecs_sparse_t *sparse,
@@ -174,7 +173,8 @@ uint64_t flecs_sparse_create_id(
     return id;
 }
 
-/* Create new id */
+/* Create new id: recycles a dead element from the dead region of the
+ * dense array when available, otherwise allocates a fresh id. */
 static
 uint64_t flecs_sparse_new_index(
     ecs_sparse_t *sparse)
@@ -184,7 +184,7 @@ uint64_t flecs_sparse_new_index(
 
     ecs_assert(count <= dense_count, ECS_INTERNAL_ERROR, NULL);
     if (count < dense_count) {
-        /* If there are unused elements in the dense array, return first */
+        /* Recycle: promote first dead element back into the alive region */
         uint64_t *dense_array = ecs_vec_first_t(&sparse->dense, uint64_t);
         return dense_array[count];
     } else {
@@ -192,8 +192,7 @@ uint64_t flecs_sparse_new_index(
     }
 }
 
-/* Get value from sparse set when it is guaranteed that the value exists. This
- * function is used when values are obtained using a dense index */
+/* Get value from sparse set by id, validating against the expected dense index. */
 static
 void* flecs_sparse_get_sparse(
     const ecs_sparse_t *sparse,
@@ -215,8 +214,7 @@ void* flecs_sparse_get_sparse(
     return DATA(page->data, sparse->size, offset);
 }
 
-/* Swap dense elements. A swap occurs when an element is removed, or when a
- * removed element is recycled. */
+/* Swap two dense elements, used during removal and recycling. */
 static
 void flecs_sparse_swap_dense(
     ecs_sparse_t * sparse,
@@ -234,6 +232,7 @@ void flecs_sparse_swap_dense(
     flecs_sparse_assign_index(page_b, dense_array, id_b, a);
 }
 
+/* Initialize sparse set with allocator and element size. */
 void flecs_sparse_init(
     ecs_sparse_t *result,
     struct ecs_allocator_t *allocator,
@@ -250,13 +249,13 @@ void flecs_sparse_init(
     ecs_vec_init_t(allocator, &result->dense, uint64_t, 1);
     result->dense.count = 1;
 
-    /* Consume first value in dense array as 0 is used in the sparse array to
-     * indicate that a sparse element hasn't been paired yet. */
+    /* Reserve dense index 0 as sentinel (0 = unpaired in sparse array) */
     ecs_vec_first_t(&result->dense, uint64_t)[0] = 0;
 
     result->count = 1;
 }
 
+/* Clear all elements from sparse set, resetting indices to zero. */
 void flecs_sparse_clear(
     ecs_sparse_t *sparse)
 {
@@ -277,6 +276,7 @@ void flecs_sparse_clear(
     sparse->max_id = 0;
 }
 
+/* Finalize sparse set and free all pages. */
 void flecs_sparse_fini(
     ecs_sparse_t *sparse)
 {
@@ -292,6 +292,7 @@ void flecs_sparse_fini(
     ecs_vec_fini_t(sparse->allocator, &sparse->dense, uint64_t);
 }
 
+/* Generate a new id in the sparse set. */
 uint64_t flecs_sparse_new_id(
     ecs_sparse_t *sparse)
 {
@@ -299,6 +300,7 @@ uint64_t flecs_sparse_new_id(
     return flecs_sparse_new_index(sparse);
 }
 
+/* Add a new element to the sparse set and return a pointer to its data. */
 void* flecs_sparse_add(
     ecs_sparse_t *sparse,
     ecs_size_t size)
@@ -312,6 +314,7 @@ void* flecs_sparse_add(
     return DATA(page->data, size, FLECS_SPARSE_OFFSET(id));
 }
 
+/* Return the id of the last alive element. */
 uint64_t flecs_sparse_last_id(
     const ecs_sparse_t *sparse)
 {
@@ -320,6 +323,7 @@ uint64_t flecs_sparse_last_id(
     return dense_array[sparse->count - 1];
 }
 
+/* Insert element at specific id, returning NULL if it already exists. */
 void* flecs_sparse_insert(
     ecs_sparse_t *sparse,
     ecs_size_t size,
@@ -333,6 +337,7 @@ void* flecs_sparse_insert(
     return result;
 }
 
+/* Get or create element at specific id, reporting whether a new entry was created. */
 void* flecs_sparse_ensure(
     ecs_sparse_t *sparse,
     ecs_size_t size,
@@ -342,7 +347,7 @@ void* flecs_sparse_ensure(
     ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(!size || size == sparse->size, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(ecs_vec_count(&sparse->dense) > 0, ECS_INTERNAL_ERROR, NULL);
-    /* Make sure is_new is initialized to true */
+    /* Caller must initialize *is_new to true */
     ecs_assert(!is_new || *is_new, ECS_INVALID_PARAMETER, NULL);
     (void)size;
 
@@ -353,38 +358,32 @@ void* flecs_sparse_ensure(
     int32_t dense = page->sparse[offset];
 
     if (dense) {
-        /* Check if element is alive. If element is not alive, update indices so
-         * that the first unused dense element points to the sparse element. */
         int32_t count = sparse->count;
         if (dense >= count) {
-            /* If dense is not alive, swap it with the first unused element. */
+            /* Element is in the dead region; swap it to the alive boundary */
             flecs_sparse_swap_dense(sparse, page, dense, count);
             dense = count;
-
-            /* First unused element is now last used element */
             sparse->count ++;
 
-            /* Set dense element to new generation */
+            /* Stamp the caller's generation onto the dense entry */
             ecs_vec_first_t(&sparse->dense, uint64_t)[dense] = id;
         } else {
             if (is_new) *is_new = false;
         }
     } else {
-        /* Element is not paired yet. Must add a new element to dense array */
+        /* Sparse slot is empty; create a new dense entry for this id */
         flecs_sparse_grow_dense(sparse);
 
-        uint64_t *dense_array = ecs_vec_first_t(&sparse->dense, uint64_t);    
+        uint64_t *dense_array = ecs_vec_first_t(&sparse->dense, uint64_t);
         int32_t dense_count = ecs_vec_count(&sparse->dense) - 1;
         int32_t count = sparse->count ++;
 
-        /* If index is larger than max id, update max id */
         if (index >= flecs_sparse_get_id(sparse)) {
             flecs_sparse_set_id(sparse, index);
         }
 
         if (count < dense_count) {
-            /* If there are unused elements in the list, move the first unused
-             * element to the end of the list */
+            /* Displace existing dead element to make room at alive boundary */
             uint64_t unused = dense_array[count];
             ecs_sparse_page_t *unused_page = flecs_sparse_get_or_create_page(
                 sparse, FLECS_SPARSE_PAGE(unused));
@@ -398,6 +397,7 @@ void* flecs_sparse_ensure(
     return DATA(page->data, sparse->size, offset);
 }
 
+/* Get or create element at specific id, bypassing alive/dead partitioning. */
 void* flecs_sparse_ensure_fast(
     ecs_sparse_t *sparse,
     ecs_size_t size,
@@ -416,7 +416,7 @@ void* flecs_sparse_ensure_fast(
     int32_t count = sparse->count;
 
     if (!dense) {
-        /* Element is not paired yet. Must add a new element to dense array */
+        /* Sparse slot is empty; create a new dense entry */
         sparse->count = count + 1;
         if (count == ecs_vec_count(&sparse->dense)) {
             flecs_sparse_grow_dense(sparse);
@@ -429,6 +429,7 @@ void* flecs_sparse_ensure_fast(
     return DATA(page->data, sparse->size, offset);
 }
 
+/* Remove element by id from sparse set and zero its data. */
 bool flecs_sparse_remove(
     ecs_sparse_t *sparse,
     ecs_size_t size,
@@ -451,37 +452,34 @@ bool flecs_sparse_remove(
     if (dense) {
         int32_t count = sparse->count;
         if (dense == (count - 1)) {
-            /* If dense is the last used element, simply decrease count */
             sparse->count --;
         } else if (dense < count) {
-            /* If element is alive, move it to unused elements */
+            /* Swap element to the dead region of the dense array */
             flecs_sparse_swap_dense(sparse, page, dense, count - 1);
             sparse->count --;
         }
 
-        /* Reset memory to zero on remove */
         if (sparse->size) {
             void *ptr = DATA(page->data, sparse->size, offset);
             ecs_os_memset(ptr, 0, size);
         }
 
-        /* Reset memory to zero on remove */
         return true;
     } else {
-        /* Element is not paired and thus not alive, nothing to be done */
         return false;
     }
 }
 
+/* Bump the generation bits of an id so stale handles to the old
+ * occupant of this slot are detected as invalid after recycling. */
 static
 uint64_t flecs_sparse_inc_gen(
     uint64_t index)
 {
-    /* When an index is deleted, its generation is increased so that we can do
-     * liveliness checking while recycling ids */
     return ECS_GENERATION_INC(index);
 }
 
+/* Remove element by id and increment its generation for recycling. */
 bool flecs_sparse_remove_w_gen(
     ecs_sparse_t *sparse,
     ecs_size_t size,
@@ -502,24 +500,21 @@ bool flecs_sparse_remove_w_gen(
     int32_t dense = page->sparse[offset];
 
     if (dense) {
-        /* Increase generation */
+        /* Bump generation so the old id becomes stale, then move to dead region */
         uint64_t *dense_array = ecs_vec_first_t(&sparse->dense, uint64_t);
         ecs_assert(dense_array[dense] == id, ECS_INVALID_PARAMETER, NULL);
         dense_array[dense] = flecs_sparse_inc_gen(id);
 
         int32_t count = sparse->count;
         if (dense == (count - 1)) {
-            /* If dense is the last used element, simply decrease count */
             sparse->count --;
         } else if (dense < count) {
-            /* If element is alive, move it to unused elements */
             flecs_sparse_swap_dense(sparse, page, dense, count - 1);
             sparse->count --;
         } else {
             return false;
         }
 
-        /* Reset memory to zero on remove */
         if (sparse->size) {
             void *ptr = DATA(page->data, sparse->size, offset);
             ecs_os_memset(ptr, 0, size);
@@ -527,11 +522,11 @@ bool flecs_sparse_remove_w_gen(
 
         return true;
     } else {
-        /* Element is not paired and thus not alive, nothing to be done */
         return false;
     }
 }
 
+/* Get element data by dense index. */
 void* flecs_sparse_get_dense(
     const ecs_sparse_t *sparse,
     ecs_size_t size,
@@ -542,13 +537,14 @@ void* flecs_sparse_get_dense(
     ecs_assert(dense_index < sparse->count, ECS_INVALID_PARAMETER, NULL);
     (void)size;
 
-    dense_index ++;
+    dense_index ++; /* Skip sentinel at dense index 0 */
 
     uint64_t *dense_array = ecs_vec_first_t(&sparse->dense, uint64_t);
     return flecs_sparse_get_sparse(
         sparse, dense_index, dense_array[dense_index]);
 }
 
+/* Check if element with given id is alive in the sparse set. */
 bool flecs_sparse_is_alive(
     const ecs_sparse_t *sparse,
     uint64_t id)
@@ -569,6 +565,7 @@ bool flecs_sparse_is_alive(
     return true;
 }
 
+/* Get element data by sparse id, or return NULL if not alive. */
 void* flecs_sparse_get(
     const ecs_sparse_t *sparse,
     ecs_size_t size,
@@ -596,6 +593,7 @@ void* flecs_sparse_get(
     return DATA(page->data, sparse->size, offset);
 }
 
+/* Check if element with given id exists and is alive. */
 bool flecs_sparse_has(
     const ecs_sparse_t *sparse,
     uint64_t id)
@@ -614,6 +612,7 @@ bool flecs_sparse_has(
     return dense && (dense < sparse->count);
 }
 
+/* Return the number of alive elements (excludes sentinel at index 0). */
 int32_t flecs_sparse_count(
     const ecs_sparse_t *sparse)
 {
@@ -624,6 +623,7 @@ int32_t flecs_sparse_count(
     return sparse->count - 1;
 }
 
+/* Return pointer to the array of alive dense ids (skips sentinel at index 0). */
 const uint64_t* flecs_sparse_ids(
     const ecs_sparse_t *sparse)
 {
@@ -635,6 +635,7 @@ const uint64_t* flecs_sparse_ids(
     }
 }
 
+/* Shrink sparse set by freeing pages with no alive elements. */
 void flecs_sparse_shrink(
     ecs_sparse_t *sparse)
 {
@@ -675,6 +676,8 @@ void flecs_sparse_shrink(
         sparse->allocator, &sparse->dense, uint64_t, sparse->count);
     ecs_vec_reclaim_t(sparse->allocator, &sparse->dense, uint64_t);
 }
+
+/* -- Public API wrappers (no custom allocator) -- */
 
 void ecs_sparse_init(
     ecs_sparse_t *sparse,

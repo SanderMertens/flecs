@@ -1,5 +1,5 @@
 /**
- * @file addons/stats.c
+ * @file addons/stats/stats.c
  * @brief Stats addon.
  */
 
@@ -22,6 +22,7 @@
 #define ECS_METRIC_LAST(stats)\
     ECS_CAST(ecs_metric_t*, ECS_OFFSET(&stats->last_, -ECS_SIZEOF(ecs_metric_t)))
 
+/* Advance time index to next slot in circular buffer. */
 static
 int32_t t_next(
     int32_t t)
@@ -29,6 +30,7 @@ int32_t t_next(
     return (t + 1) % ECS_STAT_WINDOW;
 }
 
+/* Retreat time index to previous slot in circular buffer. */
 static
 int32_t t_prev(
     int32_t t)
@@ -36,6 +38,7 @@ int32_t t_prev(
     return (t - 1 + ECS_STAT_WINDOW) % ECS_STAT_WINDOW;
 }
 
+/* Record a gauge value for the specified time slot. */
 static
 void flecs_gauge_record(
     ecs_metric_t *m,
@@ -47,6 +50,7 @@ void flecs_gauge_record(
     m->gauge.max[t] = value;
 }
 
+/* Record a monotonically increasing counter value and compute gauge delta. */
 static
 double flecs_counter_record(
     ecs_metric_t *m,
@@ -64,6 +68,7 @@ double flecs_counter_record(
     return gauge_value;
 }
 
+/* Print a single metric value with aligned formatting. */
 static
 void flecs_metric_print(
     const char *name,
@@ -73,6 +78,7 @@ void flecs_metric_print(
     ecs_trace("%s: %*s %.2f", name, 32 - len, "", (double)value);
 }
 
+/* Print a gauge metric's average value at the specified time slot. */
 static
 void flecs_gauge_print(
     const char *name,
@@ -82,6 +88,7 @@ void flecs_gauge_print(
     flecs_metric_print(name, m->gauge.avg[t]);
 }
 
+/* Print a counter metric's rate value at the specified time slot. */
 static
 void flecs_counter_print(
     const char *name,
@@ -174,6 +181,7 @@ error:
     return;
 }
 
+/* Reduce a range of source metrics into destination time slots. */
 static
 void flecs_stats_reduce(
     ecs_metric_t *dst_cur,
@@ -187,6 +195,7 @@ void flecs_stats_reduce(
     }
 }
 
+/* Incrementally reduce the latest sample for a range of metrics. */
 static
 void flecs_stats_reduce_last(
     ecs_metric_t *dst_cur,
@@ -209,6 +218,7 @@ void flecs_stats_reduce_last(
     }
 }
 
+/* Copy previous time slot values forward for a range of metrics. */
 static
 void flecs_stats_repeat_last(
     ecs_metric_t *cur,
@@ -221,6 +231,7 @@ void flecs_stats_repeat_last(
     }
 }
 
+/* Copy the latest time slot values from source to destination metrics. */
 static
 void flecs_stats_copy_last(
     ecs_metric_t *dst_cur,

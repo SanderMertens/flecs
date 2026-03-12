@@ -1,15 +1,15 @@
 /**
  * @file observable.c
- * @brief Observable implementation.
- * 
- * The observable implementation contains functions that find the set of 
- * observers to invoke for an event. The code also contains the implementation
- * of a reachable id cache, which is used to speedup event propagation when
- * relationships are added/removed to/from entities.
+ * @brief Event emission and observer dispatch.
+ *
+ * Finds and invokes the set of observers matching an emitted event.
+ * Includes a reachable id cache that speeds up event propagation when
+ * traversable relationships (e.g., IsA, ChildOf) are added or removed.
  */
 
 #include "private_api.h"
 
+/* Initialize observable with sparse event storage and builtin event records. */
 void flecs_observable_init(
     ecs_observable_t *observable)
 {
@@ -20,6 +20,7 @@ void flecs_observable_init(
     observable->on_set.event = EcsOnSet;
 }
 
+/* Free observable and all associated resources. */
 void flecs_observable_fini(
     ecs_observable_t *observable)
 {
@@ -53,22 +54,24 @@ void flecs_observable_fini(
     flecs_sparse_fini(&observable->events);
 }
 
+/* Get event record for an event, returning NULL if not found. */
 ecs_event_record_t* flecs_event_record_get(
     const ecs_observable_t *o,
     ecs_entity_t event)
 {
     ecs_assert(o != NULL, ECS_INTERNAL_ERROR, NULL);
     
-    /* Builtin events*/
+    /* Builtin events (OnAdd, OnRemove, OnSet, Wildcard) are stored inline */
     if      (event == EcsOnAdd)    return ECS_CONST_CAST(ecs_event_record_t*, &o->on_add);
     else if (event == EcsOnRemove) return ECS_CONST_CAST(ecs_event_record_t*, &o->on_remove);
     else if (event == EcsOnSet)    return ECS_CONST_CAST(ecs_event_record_t*, &o->on_set);
     else if (event == EcsWildcard) return ECS_CONST_CAST(ecs_event_record_t*, &o->on_wildcard);
 
-    /* User events */
+    /* Custom events are stored in a sparse set */
     return flecs_sparse_get_t(&o->events, ecs_event_record_t, event);
 }
 
+/* Get or create event record for an event. */
 ecs_event_record_t* flecs_event_record_ensure(
     ecs_observable_t *o,
     ecs_entity_t event)
@@ -87,6 +90,7 @@ ecs_event_record_t* flecs_event_record_ensure(
     return er;
 }
 
+/* Get event record only if it has active observers. */
 static
 const ecs_event_record_t* flecs_event_record_get_if(
     const ecs_observable_t *o,
@@ -113,6 +117,7 @@ const ecs_event_record_t* flecs_event_record_get_if(
     return NULL;
 }
 
+/* Get event id record for a component id, returning NULL if not found. */
 ecs_event_id_record_t* flecs_event_id_record_get(
     const ecs_event_record_t *er,
     ecs_id_t id)
@@ -132,6 +137,7 @@ ecs_event_id_record_t* flecs_event_id_record_get(
     }
 }
 
+/* Get event id record only if it has active observers. */
 static
 ecs_event_id_record_t* flecs_event_id_record_get_if(
     const ecs_event_record_t *er,
@@ -149,6 +155,7 @@ ecs_event_id_record_t* flecs_event_id_record_get_if(
     return NULL;
 }
 
+/* Get or create event id record for a component id. */
 ecs_event_id_record_t* flecs_event_id_record_ensure(
     ecs_world_t *world,
     ecs_event_record_t *er,
@@ -174,6 +181,7 @@ ecs_event_id_record_t* flecs_event_id_record_ensure(
     return ider;
 }
 
+/* Remove event id record for a component id. */
 void flecs_event_id_record_remove(
     ecs_event_record_t *er,
     ecs_id_t id)
@@ -192,6 +200,8 @@ void flecs_event_id_record_remove(
     }
 }
 
+/* Collect all event id records matching an id (including wildcard variants).
+ * Returns the number of matching records written to the iders array. */
 static
 int32_t flecs_event_observers_get(
     const ecs_event_record_t *er,
@@ -202,7 +212,6 @@ int32_t flecs_event_observers_get(
         return 0;
     }
 
-    /* Populate array with observer sets matching the id */
     int32_t count = 0;
 
     if (id != EcsAny) {
@@ -239,6 +248,7 @@ int32_t flecs_event_observers_get(
     return count;
 }
 
+/* Check if any observers exist for a given event and component id. */
 bool flecs_observers_exist(
     const ecs_observable_t *observable,
     ecs_id_t id,
@@ -252,6 +262,7 @@ bool flecs_observers_exist(
     return flecs_event_id_record_get_if(er, id) != NULL;
 }
 
+/* Propagate events to entities reachable through traversable relationships. */
 static
 void flecs_emit_propagate(
     ecs_world_t *world,
@@ -262,6 +273,7 @@ void flecs_emit_propagate(
     ecs_event_id_record_t **iders,
     int32_t ider_count);
 
+/* Invoke observers for a specific table range during event propagation. */
 static
 void flecs_emit_propagate_id_for_range(
     ecs_world_t *world,
@@ -294,7 +306,8 @@ void flecs_emit_propagate_id_for_range(
         flecs_observers_invoke(world, &ider->up, it, table, trav);
 
         if (!owned) {
-            /* Owned takes precedence */
+            /* Invoke self_up only if table does not own the component,
+             * since owned components take precedence over inherited. */
             flecs_observers_invoke(world, &ider->self_up, it, table, trav);
         }
     }
@@ -316,6 +329,7 @@ void flecs_emit_propagate_id_for_range(
     }
 }
 
+/* Propagate event for a component record to all matching tables. */
 static
 void flecs_emit_propagate_id(
     ecs_world_t *world,
@@ -375,6 +389,7 @@ void flecs_emit_propagate_id(
     it->up_fields = 0;
 }
 
+/* Walk traversable relationships from tgt_cr and propagate events downward. */
 static
 void flecs_emit_propagate(
     ecs_world_t *world,
@@ -395,12 +410,11 @@ void flecs_emit_propagate(
 
     ecs_log_push_3();
 
-    /* Propagate to records of traversable relationships */
+    /* Iterate all traversable relationship records for this target */
     ecs_component_record_t *cur = tgt_cr;
     while ((cur = flecs_component_trav_next(cur))) {
-        cur->pair->reachable.generation ++; /* Invalidate cache */
+        cur->pair->reachable.generation ++; /* Invalidate reachable cache */
 
-        /* Get traversed relationship */
         ecs_entity_t trav = ECS_PAIR_FIRST(cur->id);
         if (propagate_trav && propagate_trav != trav) {
             if (propagate_trav != EcsIsA) {
@@ -415,6 +429,7 @@ void flecs_emit_propagate(
     ecs_log_pop_3();
 }
 
+/* Recursively invalidate reachable caches for traversable relationships. */
 static
 void flecs_emit_propagate_invalidate_tables(
     ecs_world_t *world,
@@ -428,7 +443,7 @@ void flecs_emit_propagate_invalidate_tables(
         ecs_os_free(idstr);
     }
 
-    /* Invalidate records of traversable relationships */
+    /* Iterate traversable relationship records and invalidate their caches */
     ecs_component_record_t *cur = tgt_cr;
     while ((cur = flecs_component_trav_next(cur))) {
         ecs_reachable_cache_t *rc = &cur->pair->reachable;
@@ -478,6 +493,7 @@ void flecs_emit_propagate_invalidate_tables(
     }
 }
 
+/* Invalidate reachable caches for entities used as traversal targets. */
 void flecs_emit_propagate_invalidate(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -490,12 +506,13 @@ void flecs_emit_propagate_invalidate(
         ecs_component_record_t *cr_t = flecs_components_get(
             world, ecs_pair(EcsWildcard, entities[i]));
         if (cr_t) {
-            /* Event is used as target in traversable relationship, propagate */
+            /* Entity is used as target in traversable relationship, propagate */
             flecs_emit_propagate_invalidate_tables(world, cr_t);
         }
     }
 }
 
+/* Propagate events downward for entities that are targets of traversable relationships. */
 static
 void flecs_propagate_entities(
     ecs_world_t *world,
@@ -539,6 +556,7 @@ void flecs_propagate_entities(
     it->sources[0] = old_src;
 }
 
+/* Traverse upward through a relationship to forward events. */
 static
 void flecs_emit_forward_up(
     ecs_world_t *world,
@@ -552,6 +570,8 @@ void flecs_emit_forward_up(
     ecs_vec_t *reachable_ids,
     int32_t depth);
 
+/* Forward event for a single reachable component id. Invokes Up and Self|Up
+ * observers, and emits OnSet for inherited components with storage. */
 static
 void flecs_emit_forward_id(
     ecs_world_t *world,
@@ -590,7 +610,7 @@ void flecs_emit_forward_id(
     it->ids[0] = id;
     it->sources[0] = tgt;
     it->event_id = id;
-    ECS_CONST_CAST(int32_t*, it->sizes)[0] = 0; /* safe, owned by observer */
+    ECS_CONST_CAST(int32_t*, it->sizes)[0] = 0;
     it->up_fields = 1;
 
     int32_t storage_i = ecs_table_type_to_column_index(tgt_table, column);
@@ -598,7 +618,7 @@ void flecs_emit_forward_id(
     if (storage_i != -1) {
         ecs_column_t *c = &tgt_table->data.columns[storage_i];
         ecs_assert(cr->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
-        ECS_CONST_CAST(int32_t*, it->sizes)[0] = c->ti->size; /* safe, see above */
+        ECS_CONST_CAST(int32_t*, it->sizes)[0] = c->ti->size;
     }
 
     const ecs_table_record_t *tr = flecs_component_get_table(cr, table);
@@ -608,7 +628,7 @@ void flecs_emit_forward_id(
         ecs_event_id_record_t *ider = iders[ider_i];
         flecs_observers_invoke(world, &ider->up, it, table, trav);
 
-        /* Owned takes precedence */
+        /* Invoke self_up only when entity does not own the component */
         if (!owned) {
             flecs_observers_invoke(world, &ider->self_up, it, table, trav);
         }
@@ -623,7 +643,7 @@ void flecs_emit_forward_id(
                 ecs_event_id_record_t *ider = iders_onset[ider_onset_i];
                 flecs_observers_invoke(world, &ider->up, it, table, trav);
 
-                /* Owned takes precedence */
+                /* Invoke self_up only when entity does not own the component */
                 if (!owned) {
                     flecs_observers_invoke(
                         world, &ider->self_up, it, table, trav);
@@ -638,6 +658,7 @@ void flecs_emit_forward_id(
     it->up_fields = 0;
 }
 
+/* Forward event for a reachable id and cache it for future lookups. */
 static
 void flecs_emit_forward_and_cache_id(
     ecs_world_t *world,
@@ -671,6 +692,9 @@ void flecs_emit_forward_and_cache_id(
         tgt, tgt_table, column, trav);
 }
 
+/* Find the lowest position in the traversal stack where a table contains
+ * the given component. Returns stack_count if not found. Used to detect
+ * overrides: a component at a lower stack position masks one higher up. */
 static
 int32_t flecs_emit_stack_at(
     ecs_vec_t *stack,
@@ -689,6 +713,7 @@ int32_t flecs_emit_stack_at(
     return sp;
 }
 
+/* Check if any table in the traversal stack contains the given component. */
 static
 bool flecs_emit_stack_has(
     ecs_vec_t *stack,
@@ -697,6 +722,7 @@ bool flecs_emit_stack_has(
     return flecs_emit_stack_at(stack, cr) != ecs_vec_count(stack);
 }
 
+/* Forward events using cached reachable ids. */
 static
 void flecs_emit_forward_cached_ids(
     ecs_world_t *world,
@@ -738,6 +764,7 @@ void flecs_emit_forward_cached_ids(
     }
 }
 
+/* Dump reachable cache contents for debugging. */
 static
 void flecs_emit_dump_cache(
     ecs_world_t *world,
@@ -766,6 +793,7 @@ void flecs_emit_dump_cache(
     }
 }
 
+/* Forward events from a target table upward through a relationship. */
 static
 void flecs_emit_forward_table_up(
     ecs_world_t *world,
@@ -788,8 +816,8 @@ void flecs_emit_forward_table_up(
     int32_t rc_child_offset = ecs_vec_count(reachable_ids);
     int32_t stack_count = ecs_vec_count(stack);
 
-    /* If tgt_cr is out of sync but is not the current component record being updated,
-     * keep track so that we can update two records for the cost of one. */
+    /* Opportunistically revalidate tgt_cr's cache if it is stale and we
+     * are already rebuilding a different cache. */
     ecs_assert(tgt_cr->pair != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_reachable_cache_t *rc = &tgt_cr->pair->reachable;
     bool parent_revalidate = (reachable_ids != &rc->ids) && 
@@ -805,8 +833,7 @@ void flecs_emit_forward_table_up(
     }
     ecs_log_push_3();
 
-    /* Function may have to copy values from overridden components if an IsA
-     * relationship was added together with other components. */
+    /* IsA traversal: inherited components may be forwarded. */
     ecs_entity_t trav = ECS_PAIR_FIRST(tgt_cr->id);
     bool inherit = trav == EcsIsA;
 
@@ -845,9 +872,8 @@ void flecs_emit_forward_table_up(
             ecs_assert(cr->pair != NULL, ECS_INTERNAL_ERROR, NULL);
             ecs_reachable_cache_t *cr_rc = &cr->pair->reachable;
             if (cr_rc->current == cr_rc->generation) {
-                /* Cache hit, use cached ids to prevent traversing the same
-                 * hierarchy multiple times. This especially speeds up code 
-                 * where (deep) hierarchies are created. */
+                /* Cache hit: avoids redundant hierarchy traversal, which is
+                 * especially important for deep hierarchy creation. */
                 if (ecs_should_log_3()) {
                     char *idstr = ecs_id_str(world, id);
                     ecs_dbg_3("forward cached for %s", idstr);
@@ -902,15 +928,12 @@ void flecs_emit_forward_table_up(
     }
 
     if (parent_revalidate) {
-        /* If this is not the current cache being updated, but it's marked
-         * as out of date, use intermediate results to populate cache. */
+        /* Revalidate parent cache using reachable ids gathered above. */
         int32_t rc_parent_offset = ecs_vec_count(&rc->ids);
 
-        /* Only add ids that were added for this table */
-        int32_t count = ecs_vec_count(reachable_ids);
-        count -= rc_child_offset;
+        int32_t count = ecs_vec_count(reachable_ids) - rc_child_offset;
 
-        /* Append ids to any ids that already were added /*/
+        /* Append new reachable ids to parent cache */
         if (count) {
             ecs_vec_grow_t(a, &rc->ids, ecs_reachable_elem_t, count);
             ecs_reachable_elem_t *dst = ecs_vec_get_t(&rc->ids, 
@@ -933,6 +956,7 @@ void flecs_emit_forward_table_up(
     ecs_log_pop_3();
 }
 
+/* Traverse upward through a relationship to forward events. */
 static
 void flecs_emit_forward_up(
     ecs_world_t *world,
@@ -970,6 +994,8 @@ void flecs_emit_forward_up(
         tgt, tgt_table, tgt_record, cr, stack, reachable_ids, depth + 1);
 }
 
+/* Forward events for components reachable through a traversable relationship.
+ * Uses a reachable cache to avoid redundant tree walks. */
 static
 void flecs_emit_forward(
     ecs_world_t *world,
@@ -1001,11 +1027,8 @@ void flecs_emit_forward(
         ecs_vec_fini_t(&world->allocator, &stack, ecs_table_t*);
 
         if (it->event == EcsOnAdd || it->event == EcsOnRemove) {
-            /* Only OnAdd/OnRemove events can validate top-level cache, which
-             * is for the id for which the event is emitted. 
-             * The reason for this is that we don't want to validate the cache
-             * while the administration for the mutated entity isn't up to 
-             * date yet. */
+            /* Only validate cache on Add/Remove; other events may fire
+             * before entity administration is fully up to date. */
             rc->current = rc->generation;
         }
 
@@ -1092,6 +1115,8 @@ void flecs_emit_forward(
     }
 }
 
+/* Emit OnSet event for a newly inherited component when an IsA relationship
+ * is added or when an override makes a base component newly reachable. */
 static
 void flecs_emit_on_set_for_override_on_add(
     ecs_world_t *world,
@@ -1111,16 +1136,13 @@ void flecs_emit_on_set_for_override_on_add(
         return;
     }
 
-    /* Table has override for component. If this overrides a
-     * component that was already reachable for the table we 
-     * don't need to emit since the value didn't change. */
+    /* Skip if the component was already reachable (value unchanged). */
     ecs_entity_t base = o->entity;
 
     ecs_table_t *other = it->other_table;
     if (other) {
         if (ecs_table_has_id(world, other, ecs_pair(EcsIsA, base))) {
-            /* If previous table already had (IsA, base), entity already 
-             * inherited the component, so no new value needs to be emitted. */
+            /* Previous table already had (IsA, base), value unchanged */
             return;
         }
     }
@@ -1138,7 +1160,7 @@ void flecs_emit_on_set_for_override_on_add(
     it->trs[0] = flecs_component_get_table(cr, table);
     it->sources[0] = 0;
 
-    /* Only valid for components, so type info must exist */
+    /* Components always have type info */
     ecs_assert(cr && cr->type_info, ECS_INTERNAL_ERROR, NULL);
     ECS_CONST_CAST(ecs_size_t*, it->sizes)[0] = cr->type_info->size;
 
@@ -1152,6 +1174,8 @@ void flecs_emit_on_set_for_override_on_add(
     }
 }
 
+/* Emit OnSet for the now-visible base component when an override is removed.
+ * The entity loses its local copy, re-exposing the inherited value. */
 static
 void flecs_emit_on_set_for_override_on_remove(
     ecs_world_t *world,
@@ -1178,7 +1202,7 @@ void flecs_emit_on_set_for_override_on_remove(
         return;
     }
 
-    /* We're removing, so emit an OnSet for the base component. */
+    /* Override removed: emit OnSet for the now-visible base component. */
     ecs_entity_t base = o->entity;
     ecs_assert(base != 0, ECS_INTERNAL_ERROR,  NULL);
     ecs_record_t *base_r = flecs_entities_get(world, base);
@@ -1191,11 +1215,11 @@ void flecs_emit_on_set_for_override_on_remove(
     it->trs[0] = base_tr;
     it->up_fields = 1;
 
-    /* Only valid for components, so type info must exist */
+    /* Components always have type info */
     ecs_assert(cr && cr->type_info, ECS_INTERNAL_ERROR, NULL);
     ECS_CONST_CAST(ecs_size_t*, it->sizes)[0] = cr->type_info->size;
 
-    /* Invoke OnSet observers for previous inherited component value. */
+    /* Invoke OnSet observers for the now-visible inherited component value. */
     for (ider_set_i = 0; ider_set_i < ider_set_count; ider_set_i ++) {
         ecs_event_id_record_t *ider = iders_set[ider_set_i];
         flecs_observers_invoke(world, &ider->self_up, it, table, EcsIsA);
@@ -1205,11 +1229,8 @@ void flecs_emit_on_set_for_override_on_remove(
     }
 }
 
-/* The emit function is responsible for finding and invoking the observers 
- * matching the emitted event. The function is also capable of forwarding events
- * for newly reachable ids (after adding a relationship) and propagating events
- * downwards. Both capabilities are not just useful in application logic, but
- * are also an important building block for keeping query caches in sync. */
+/* Core event emission: find and invoke matching observers, forward through
+ * traversable relationships, and handle component overrides. */
 void flecs_emit(
     ecs_world_t *world,
     ecs_world_t *stage,
@@ -1239,25 +1260,21 @@ void flecs_emit(
     int32_t i, count = desc->count;
     ecs_flags32_t table_flags = table->flags;
 
-    /* Deferring cannot be suspended for observers */
+    /* Unsuspend defer (negative -> positive) so observers can enqueue
+     * commands. Original value is restored at the end of this function. */
     int32_t defer = world->stages[0]->defer;
     if (defer < 0) {
         world->stages[0]->defer *= -1;
     }
 
-    /* Table events are emitted for internal table operations only, and do not
-     * provide component data and/or entity ids. */
+    /* Table events don't operate on entity ranges (count stays 0). */
     bool table_event = desc->flags & EcsEventTableOnly;
     if (!count && !table_event) {
-        /* If no count is provided, forward event for all entities in table */
         count = ecs_table_count(table) - offset;
     }
 
-    /* The world event id is used to determine if an observer has already been
-     * triggered for an event. Observers for multiple components are split up
-     * into multiple observers for a single component, and this counter is used
-     * to make sure a multi observer only triggers once, even if multiple of its
-     * single-component observers trigger. */
+    /* Monotonic event counter for multi-observer deduplication. Each child
+     * observer checks this to ensure the parent fires at most once per batch. */
     int32_t evtx = ++world->event_id;
 
     ecs_id_t ids_cache = 0;
@@ -1286,13 +1303,7 @@ void flecs_emit(
     ecs_observable_t *observable = flecs_get_observable(desc->observable);
     ecs_check(observable != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    /* Event records contain all observers for a specific event. In addition to
-     * the emitted event, also request data for the Wildcard event (for 
-     * observers subscribing to the wildcard event), OnSet events. The
-     * latter to are used for automatically emitting OnSet events for 
-     * inherited components, for example when an IsA relationship is added to an
-     * entity. This doesn't add much overhead, as fetching records is cheap for
-     * builtin event types. */
+    /* Fetch event records. Builtin events (OnAdd/Remove/Set) are stored inline. */
     const ecs_event_record_t *er = flecs_event_record_get_if(observable, event);
     const ecs_event_record_t *wcer = flecs_event_record_get_if(observable, EcsWildcard);
     const ecs_event_record_t *er_onset = flecs_event_record_get_if(observable, EcsOnSet);
@@ -1305,66 +1316,46 @@ void flecs_emit(
     ecs_id_t *id_array = ids->array;
     bool do_on_set = !(desc->flags & EcsEventNoOnSet);
 
-    /* When we add an (IsA, b) pair we need to emit OnSet events for any new 
-     * component values that are reachable through the instance, either 
-     * inherited or overridden. OnSet events for inherited components are 
-     * emitted by the event forwarding logic. For overriding, we only need to 
-     * emit an OnSet if both the IsA pair and the component were added in the
-     * same event. If a new override is added for an existing base component,
-     * it changes the ownership of the component, but not the value, so no OnSet
-     * is needed. */
+    /* Adding an IsA pair makes base components reachable, which requires
+     * OnSet events for any newly inherited component values. */
     bool can_override_on_add = count && 
         do_on_set &&
         (event == EcsOnAdd) &&
         (table_flags & EcsTableHasIsA);
 
-    /* If we remove an override, this reexposes the component from the base. 
-     * Since the override could have a different value from the base, this 
-     * effectively changes the value of the component for the entity, so an
-     * OnSet event must be emitted. */
+    /* Removing an override re-exposes the base component value, which may
+     * differ from the override. This requires an OnSet event. */
     bool can_override_on_remove = count &&
         do_on_set &&
         (event == EcsOnRemove) &&
         (it.other_table) &&
         (it.other_table->flags & EcsTableHasIsA);
 
-    /* When a new (traversable) relationship is added (emitting an OnAdd/OnRemove
-     * event) this will cause the components of the target entity to be 
-     * propagated to the source entity. This makes it possible for observers to
-     * get notified of any new reachable components though the relationship. */
+    /* Adding a traversable relationship forwards the target's components
+     * to the source entity, notifying Up observers. */
     bool can_forward = true;
 
-    /* Does table has observed entities */
+    /* Does table have observed entities */
     bool has_observed = table_flags & EcsTableHasTraversable;
 
     ecs_event_id_record_t *iders[5] = {0};
     ecs_table_record_t dummy_tr;
 
 repeat_event:
-    /* This is the core event logic, which is executed for each event. By 
-     * default this is just the event kind from the ecs_event_desc_t struct, but
-     * can also include the Wildcard and UnSet events. The latter is emitted as
-     * counterpart to OnSet, for any removed ids associated with data. */
+    /* Core event loop. Runs once for the requested event, then repeats for
+     * the Wildcard event (if wildcard observers exist). */
     for (i = 0; i < id_count; i ++) {
-        /* Emit event for each id passed to the function. In most cases this 
-         * will just be one id, like a component that was added, removed or set.
-         * In some cases events are emitted for multiple ids.
-         * 
-         * One example is when an id was added with a "With" property, or 
-         * inheriting from a prefab with overrides. In these cases an entity is 
-         * moved directly to the archetype with the additional components. */
+        /* Usually one id. Multiple ids occur when "With" properties or prefab
+         * overrides cause an entity to gain several components at once. */
         ecs_id_t id = id_array[i];
 
-        /* If id is wildcard this could be a remove(Rel, *) call for a 
-         * DontFragment component (for regular components this gets handled by
-         * the table graph which returns a vector with removed ids).
-         * This will be handled at a higher level than flecs_emit, so we can 
-         * ignore the wildcard */
+        /* Wildcard ids (e.g., remove(Rel, *) for DontFragment components)
+         * are handled at a higher level; skip them here. */
         if (id != EcsAny && ecs_id_is_wildcard(id)) {
             continue;
         }
 
-        /* Forward events for Parent component as ChildOf pairs. */
+        /* Non-fragmenting Parent: translate to per-entity ChildOf pair events. */
         if (id == ecs_id(EcsParent) && !table_event && 
             (table->flags & EcsTableHasParent)) 
         {
@@ -1400,7 +1391,7 @@ repeat_event:
         }
         ecs_flags32_t cr_flags = cr->flags;
 
-        /* Check if this id is a pair of an traversable relationship. If so, we 
+        /* Check if this id is a pair of a traversable relationship. If so, we
          * may have to forward ids from the pair's target. */
         if (can_forward && ECS_IS_PAIR(id) && (cr_flags & EcsIdTraversable)) {
             const ecs_event_record_t *er_fwd = NULL;
@@ -1442,10 +1433,9 @@ repeat_event:
         }
 
         if (er) {
-            /* Get observer sets for id. There can be multiple sets of matching
-             * observers, in case an observer matches for wildcard ids. For
-             * example, both observers for (ChildOf, p) and (ChildOf, *) would
-             * match an event for (ChildOf, p). */
+            /* Collect matching observer sets. Multiple sets can match when
+             * wildcard observers exist (e.g., both (ChildOf, p) and
+             * (ChildOf, *) match an event for (ChildOf, p)). */
             ider_count = flecs_event_observers_get(er, id, iders);
         }
 
@@ -1483,13 +1473,12 @@ repeat_event:
 
         const ecs_type_info_t *ti = cr->type_info;
         if (ti) {
-             /* safe, owned by observer */
             ECS_CONST_CAST(int32_t*, it.sizes)[0] = ti->size;
         } else {
             ECS_CONST_CAST(int32_t*, it.sizes)[0] = 0;
         }
 
-        /* Actually invoke observers for this event/id */
+        /* Invoke matching Self and Self|Up observers */
         for (ider_i = 0; ider_i < ider_count; ider_i ++) {
             ecs_event_id_record_t *ider = iders[ider_i];
             flecs_observers_invoke(world, &ider->self, &it, table, 0);
@@ -1502,15 +1491,13 @@ repeat_event:
             continue;
         }
 
-        /* The table->traversable_count value indicates if the table contains any
-         * entities that are used as targets of traversable relationships. If the
-         * entity/entities for which the event was generated is used as such a
-         * target, events must be propagated downwards. */
+        /* If the table contains entities used as traversable relationship
+         * targets, propagate events downward to their children. */
         flecs_propagate_entities(
             world, &it, cr, it.entities, count, 0, iders, ider_count);
     }
 
-    can_forward = false; /* Don't forward twice */
+    can_forward = false; /* Forward only on first pass, not Wildcard repeat */
 
     if (wcer && er != wcer) {
         /* Repeat event loop for Wildcard event */
@@ -1567,6 +1554,7 @@ error:
     return;
 }
 
+/* Public API: emit an event, resolving entity to table and wrapping in defer. */
 void ecs_emit(
     ecs_world_t *stage,
     ecs_event_desc_t *desc)

@@ -1,10 +1,11 @@
 /**
  * @file query/engine/eval_tree.c
- * @brief Hierarchy evaluation (ChildOf pairs/Parent components).
+ * @brief ChildOf hierarchy traversal using Parent components and ordered children.
  */
 
 #include "../../private_api.h"
 
+/* Retrieve parent component data for a given table range. */
 const EcsParent* flecs_query_tree_get_parents(
     ecs_table_range_t range)
 {
@@ -13,6 +14,7 @@ const EcsParent* flecs_query_tree_get_parents(
     return ecs_table_get_column(range.table, parent_column - 1, range.offset);
 }
 
+/* Select the next ordered child entity as the source variable. */
 static
 bool flecs_query_tree_select_tgt(
     const ecs_query_op_t *op,
@@ -38,6 +40,7 @@ bool flecs_query_tree_select_tgt(
     return true;
 }
 
+/* Match the next entity in a range against its parent using the Parent component. */
 static
 bool flecs_query_tree_with_parent(
     const ecs_query_op_t *op,
@@ -78,6 +81,7 @@ repeat:
     return true;
 }
 
+/* Select children of a specific parent using ordered children or table iteration. */
 static
 bool flecs_query_tree_select(
     const ecs_query_op_t *op,
@@ -120,6 +124,7 @@ bool flecs_query_tree_select(
     return flecs_query_tree_select_tgt(op, redo, ctx);
 }
 
+/* Select any ChildOf match by iterating entities with Parent then tables with ChildOf pairs. */
 static
 bool flecs_query_tree_select_any(
     const ecs_query_op_t *op,
@@ -168,6 +173,7 @@ next:
     }
 }
 
+/* Select children across all parents using wildcard ChildOf iteration. */
 static
 bool flecs_query_tree_select_wildcard(
     const ecs_query_op_t *op,
@@ -287,6 +293,7 @@ done:
     return true;
 }
 
+/* Test if a known source matches a ChildOf term using tree-based evaluation. */
 bool flecs_query_tree_with(
     const ecs_query_op_t *op,
     bool redo,
@@ -427,6 +434,7 @@ bool flecs_query_tree_with(
     return true;
 }
 
+/* Pre-evaluate a ChildOf with-test to determine if source has any parent. */
 static
 bool flecs_query_tree_with_pre(
     const ecs_query_op_t *op,
@@ -458,6 +466,7 @@ bool flecs_query_tree_with_pre(
     return false;
 }
 
+/* Select children of a parent, returning ordered children in bulk or individually. */
 static
 bool flecs_query_children_select(
     const ecs_query_op_t *op,
@@ -504,8 +513,7 @@ bool flecs_query_children_select(
             it->count = ecs_vec_count(v_children);
             return true;
         } else {
-           /* Flags that we're going to iterate each entity separately because we
-            * need to filter out disabled entities. */
+           /* Iterate per-entity to filter disabled/prefab entities. */
            op_ctx->state = EcsQueryTreeIterEntities;
            op_ctx->entities = ecs_vec_first_t(v_children, ecs_entity_t);
            op_ctx->cur = -1;
@@ -547,6 +555,7 @@ next:
     }
 }
 
+/* Test if a known source matches a ChildOf term for the children operation. */
 static
 bool flecs_query_children_with(
     const ecs_query_op_t *op,
@@ -578,17 +587,14 @@ bool flecs_query_children_with(
         return true;
     }
 
-    /* TODO: if a ChildOf query is constrained to a table with Parent component,
-     * only some entities in the table may match the query. TBD on what the 
-     * behavior should be in this case. For now the query engine only supports
-     * constraining the query to a single entity or an entire table. */
+    /* TODO: partial table matches for ChildOf with Parent component. Currently
+     * only single-entity or whole-table constraints are supported. */
     ecs_assert(range.count < 2, ECS_UNSUPPORTED, 
         "can only use set_var() to a single entity for ChildOf($this, parent) terms");
 
     if (range.count == 0) {
-        /* If matching the entire table, return true. Even though not all 
-         * entities in the table may match, this lets us add tables with the
-         * Parent component to query caches. */
+        /* Return true for whole-table match even if not all entities match,
+         * so tables with Parent component can be added to query caches. */
         return true;
     }
 
@@ -606,6 +612,7 @@ bool flecs_query_children_with(
     return false;
 }
 
+/* Evaluate a children operation, dispatching to select or with based on source writtenness. */
 bool flecs_query_children(
     const ecs_query_op_t *op,
     bool redo,
@@ -619,6 +626,7 @@ bool flecs_query_children(
     }
 }
 
+/* Evaluate a tree-and operation for ChildOf terms with a known parent. */
 bool flecs_query_tree_and(
     const ecs_query_op_t *op,
     bool redo,
@@ -632,6 +640,7 @@ bool flecs_query_tree_and(
     }
 }
 
+/* Evaluate a tree-and operation for wildcard ChildOf terms. */
 bool flecs_query_tree_and_wildcard(
     const ecs_query_op_t *op,
     bool redo,
@@ -651,6 +660,7 @@ bool flecs_query_tree_and_wildcard(
     }
 }
 
+/* Evaluate a tree pre-evaluation operation for cache population. */
 bool flecs_query_tree_pre(
     const ecs_query_op_t *op,
     bool redo,
@@ -665,6 +675,7 @@ bool flecs_query_tree_pre(
     }
 }
 
+/* Evaluate a tree post-processing operation after cache evaluation. */
 bool flecs_query_tree_post(
     const ecs_query_op_t *op,
     bool redo,
@@ -689,6 +700,7 @@ bool flecs_query_tree_post(
     return flecs_query_tree_with(op, redo, ctx);
 }
 
+/* Pre-evaluate a tree upward traversal, yielding non-Parent tables then Parent tables. */
 bool flecs_query_tree_up_pre(
     const ecs_query_op_t *op,
     bool redo,
@@ -746,6 +758,7 @@ retry:
     }
 }
 
+/* Post-process a tree upward traversal for tables with the Parent component. */
 bool flecs_query_tree_up_post(
     const ecs_query_op_t *op,
     bool redo,

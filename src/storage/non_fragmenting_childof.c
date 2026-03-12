@@ -1,5 +1,11 @@
+/**
+ * @file storage/non_fragmenting_childof.c
+ * @brief Non-fragmenting storage for hierarchies.
+ */
+
 #include "../private_api.h"
 
+/* Add a non-fragmenting child entity to a parent's children table map. */
 static
 void flecs_add_non_fragmenting_child_to_table(
     ecs_world_t *world,
@@ -12,9 +18,7 @@ void flecs_add_non_fragmenting_child_to_table(
         ecs_map_ensure(&cr->pair->children_tables, table->id);
     ecs_assert(elem != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    /* Encode id of first entity in table + the total number of entities in the
-     * table for this parent in a single uint64 so everything fits in a map
-     * element without having to allocate. */
+    /* Track first entity and count per table. Struct fits in a map element. */
     if (!elem->count) {
         elem->entity = (uint32_t)entity;
 
@@ -31,6 +35,7 @@ void flecs_add_non_fragmenting_child_to_table(
     elem->count ++;
 }
 
+/* Remove a non-fragmenting child entity from a parent's children table map. */
 static
 void flecs_remove_non_fragmenting_child_from_table(
     ecs_component_record_t *cr,
@@ -58,6 +63,7 @@ void flecs_remove_non_fragmenting_child_from_table(
     }
 }
 
+/* Add a non-fragmenting child with pre-resolved component record and entity record. */
 int flecs_add_non_fragmenting_child_w_records(
     ecs_world_t *world,
     ecs_entity_t parent,
@@ -95,6 +101,7 @@ error:
     return -1;
 }
 
+/* Add a non-fragmenting child entity to a parent, returning the component record. */
 static
 ecs_component_record_t* flecs_add_non_fragmenting_child(
     ecs_world_t *world,
@@ -112,6 +119,7 @@ ecs_component_record_t* flecs_add_non_fragmenting_child(
     return cr;
 }
 
+/* Remove a non-fragmenting child entity from its parent. */
 static
 void flecs_remove_non_fragmenting_child(
     ecs_world_t *world,
@@ -138,6 +146,7 @@ void flecs_remove_non_fragmenting_child(
     flecs_remove_non_fragmenting_child_from_table(cr, table);
 }
 
+/* Update name index entries when an entity is reparented. */
 static
 void flecs_on_reparent_update_name(
     ecs_world_t *world,
@@ -171,6 +180,7 @@ void flecs_on_reparent_update_name(
     }
 }
 
+/* Handle Parent component replacement by reparenting non-fragmenting children. */
 static
 void flecs_on_replace_parent(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
@@ -193,10 +203,9 @@ void flecs_on_replace_parent(ecs_iter_t *it) {
         ecs_entity_t old_parent = old[i].value;
         ecs_entity_t new_parent = new[i].value;
 
-        /* This can happen when a child is parented to a parent that is deleted
-         * in the same command queue. */
+        /* Parent was deleted in the same command queue batch */
         if (!flecs_entities_is_alive(world, new_parent)) {
-            /* So cleanup code can see this is child of deleted parent */
+            /* Store deleted parent so cleanup code can identify orphaned child */
             old[i].value = new_parent;
             ecs_delete(world, e);
             continue;
@@ -252,6 +261,7 @@ void flecs_on_replace_parent(ecs_iter_t *it) {
     }
 }
 
+/* Update parent records when non-fragmenting children move to a new table with Parent. */
 void flecs_on_non_fragmenting_child_move_add(
     ecs_world_t *world,
     const ecs_table_t *dst,
@@ -279,6 +289,7 @@ void flecs_on_non_fragmenting_child_move_add(
     }
 }
 
+/* Update parent records when non-fragmenting children move away from a table with Parent. */
 void flecs_on_non_fragmenting_child_move_remove(
     ecs_world_t *world,
     const ecs_table_t *dst,
@@ -328,6 +339,7 @@ void flecs_on_non_fragmenting_child_move_remove(
     }
 }
 
+/* Update cached hierarchy depths when entities are reparented via ChildOf. */
 void flecs_non_fragmenting_childof_reparent(
     ecs_world_t *world,
     const ecs_table_t *dst,
@@ -352,14 +364,10 @@ void flecs_non_fragmenting_childof_reparent(
     }
 
     if (dst_depth == src_depth) {
-        /* If src depth is dst depth, no need to update cached depth values */
         return;
     }
 
     if (!ecs_table_has_traversable(src)) {
-        /* If table doesn't contain any traversable entities (meaning there 
-         * can't be any parents in the table) there can't be any cached depth
-         * values to update. */
         return;
     }
 
@@ -378,6 +386,7 @@ void flecs_non_fragmenting_childof_reparent(
     }
 }
 
+/* Update cached hierarchy depths when entities lose their ChildOf parent. */
 void flecs_non_fragmenting_childof_unparent(
     ecs_world_t *world,
     const ecs_table_t *dst,
@@ -395,16 +404,12 @@ void flecs_non_fragmenting_childof_unparent(
     int32_t dst_depth = dst_pair ? dst_pair->depth : 0;
     int32_t src_depth = src_pair->depth;
 
-    /* If unparent is called there has to be a difference in depth, since the
-     * parent is removed from an entity. */
+    /* Removing a parent always changes depth */
     ecs_assert(src_depth != dst_depth, ECS_INTERNAL_ERROR, NULL);
     (void)src_depth;
     (void)dst_depth;
 
     if (!ecs_table_has_traversable(src)) {
-        /* If table doesn't contain any traversable entities (meaning there 
-         * aren't any parents in the table) there can't be any cached depth
-         * values to update. */
         return;
     }
 
@@ -416,15 +421,14 @@ void flecs_non_fragmenting_childof_unparent(
             world, ecs_childof(e));
         if (!cr || (cr->flags & EcsIdMarkedForDelete)) {
             continue;
-        } else {
-            /* Entity is a parent */
         }
 
-        /* Update depth to 1 if parent is removed */
+        /* Reset to depth 1 (root level) since parent was removed */
         flecs_component_update_childof_w_depth(world, cr, 1);
     }
 }
 
+/* Return whether a component record has non-fragmenting children in any table. */
 bool flecs_component_has_non_fragmenting_childof(
     ecs_component_record_t *cr)
 {
@@ -434,6 +438,7 @@ bool flecs_component_has_non_fragmenting_childof(
     return false;
 }
 
+/* Bootstrap the Parent component type info and configure its traits. */
 void flecs_bootstrap_parent_component(
     ecs_world_t *world)
 {

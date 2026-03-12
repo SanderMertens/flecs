@@ -7,8 +7,7 @@
 
 #ifdef FLECS_META
 
-/* EcsConstants lifecycle */
-
+/* Destruct the constants map and free constant names. */
 static void flecs_constants_dtor(
     ecs_map_t *constants) 
 {
@@ -21,10 +20,10 @@ static void flecs_constants_dtor(
     ecs_map_fini(constants);
 }
 
+/* Finalize the ordered constants vector (names are owned by the map). */
 static void flecs_ordered_constants_dtor(
     ecs_vec_t *ordered_constants)
 {
-    /* shallow fini of is ok since map deallocs name c-string member */
     ecs_vec_fini_t(NULL, ordered_constants, ecs_enum_constant_t);
 }
 
@@ -56,6 +55,7 @@ static ECS_DTOR(EcsConstants, ptr, {
     flecs_ordered_constants_dtor(&ptr->ordered_constants);
 })
 
+/* Add a constant entity to an enum type. */
 static
 int flecs_add_constant_to_enum(
     ecs_world_t *world, 
@@ -67,9 +67,7 @@ int flecs_add_constant_to_enum(
     EcsConstants *ptr = ecs_ensure(world, type, EcsConstants);
     ecs_entity_t ut = eptr->underlying_type;
 
-    /* It's possible that a constant is added to an entity that didn't have an
-     * Enum component yet. In that case derive the underlying type from the
-     * first constant. */
+    /* If no underlying type set yet, derive it from the first constant */
     if (!ut) {
         if (ecs_id_is_pair(constant_id)) {
             ut = eptr->underlying_type = ecs_pair_second(world, constant_id);
@@ -101,7 +99,7 @@ int flecs_add_constant_to_enum(
         ecs_map_init(ptr->constants, NULL);
     }
 
-    /* Remove constant from map and vector if it was already added */
+    /* Remove existing entry for this constant (if re-adding) */
     ecs_map_iter_t it = ecs_map_iter(ptr->constants);
     while (ecs_map_next(&it)) {
         ecs_enum_constant_t *c = ecs_map_ptr(&it);
@@ -126,7 +124,7 @@ int flecs_add_constant_to_enum(
         }
     }
 
-    /* Check if constant sets explicit value */
+    /* Resolve constant value: explicit or auto-incremented */
     int64_t value = 0;
     uint64_t value_unsigned = 0;
     bool value_set = false;
@@ -164,7 +162,7 @@ int flecs_add_constant_to_enum(
         value_set = true;
     }
 
-    /* Make sure constant value doesn't conflict if set / find the next value */
+    /* Detect conflicting values or auto-assign next available value */
     it = ecs_map_iter(ptr->constants);
     while (ecs_map_next(&it)) {
         ecs_enum_constant_t *c = ecs_map_ptr(&it);
@@ -256,6 +254,7 @@ int flecs_add_constant_to_enum(
     return 0;
 }
 
+/* Add a constant entity to a bitmask type. */
 static
 int flecs_add_constant_to_bitmask(
     ecs_world_t *world, 
@@ -266,7 +265,7 @@ int flecs_add_constant_to_bitmask(
     ecs_add(world, type, EcsBitmask);
     EcsConstants *ptr = ecs_ensure(world, type, EcsConstants);
     
-    /* Remove constant from map and vector if it was already added */
+    /* Remove existing entry for this constant (if re-adding) */
     ecs_map_iter_t it = ecs_map_iter(ptr->constants);
     while (ecs_map_next(&it)) {
         ecs_bitmask_constant_t *c = ecs_map_ptr(&it);
@@ -291,7 +290,7 @@ int flecs_add_constant_to_bitmask(
         }
     }
 
-    /* Check if constant sets explicit value */
+    /* Resolve constant value: explicit or auto-incremented */
     uint32_t value = 1;
     if (ecs_id_is_pair(constant_id)) {
         if (ecs_pair_second(world, constant_id) != ecs_id(ecs_u32_t)) {
@@ -314,7 +313,7 @@ int flecs_add_constant_to_bitmask(
         ecs_map_init(ptr->constants, NULL);
     }
 
-    /* Make sure constant value doesn't conflict */
+    /* Validate no duplicate constant value */
     it = ecs_map_iter(ptr->constants);
     while  (ecs_map_next(&it)) {
         ecs_bitmask_constant_t *c = ecs_map_ptr(&it);
@@ -353,6 +352,7 @@ int flecs_add_constant_to_bitmask(
     return 0;
 }
 
+/* Observer callback to initialize enum types when EcsEnum is set. */
 static
 void flecs_add_enum(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
@@ -386,6 +386,7 @@ void flecs_add_enum(ecs_iter_t *it) {
     }
 }
 
+/* Observer callback to initialize bitmask types when EcsBitmask is added. */
 static
 void flecs_add_bitmask(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
@@ -400,6 +401,7 @@ void flecs_add_bitmask(ecs_iter_t *it) {
     }
 }
 
+/* Observer callback to register a constant with its parent enum or bitmask. */
 static
 void flecs_add_constant(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
@@ -488,7 +490,7 @@ ecs_entity_t ecs_enum_init(
             if (m_desc->value) {
                 if (ut_is_unsigned) {
                     char *path = ecs_get_path(world, c);
-                    ecs_err("use desc::value_unsigned for constant '%s' which"
+                    ecs_err("use desc::value_unsigned for constant '%s' which "
                         "has an unsigned underlying type", path);
                     ecs_os_free(path);
                     return 0;
@@ -497,7 +499,7 @@ ecs_entity_t ecs_enum_init(
             } else {
                 if (!ut_is_unsigned) {
                     char *path = ecs_get_path(world, c);
-                    ecs_err("use desc::value for constant '%s' which"
+                    ecs_err("use desc::value for constant '%s' which "
                         "has a signed underlying type", path);
                     ecs_os_free(path);
                     return 0;
@@ -578,6 +580,7 @@ ecs_entity_t ecs_bitmask_init(
     return t;
 }
 
+/* Register enum and bitmask components and observers. */
 void flecs_meta_enum_init(
     ecs_world_t *world)
 {

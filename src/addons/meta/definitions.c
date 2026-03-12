@@ -9,7 +9,7 @@
 
 #ifdef FLECS_META
 
-/* Opaque type serializatior addon vector */
+/* Serialize an opaque addon vector to the serializer. */
 static
 int flecs_addon_vec_serialize(const ecs_serializer_t *ser, const void *ptr) {
     char ***data = ECS_CONST_CAST(char***, ptr);
@@ -20,6 +20,7 @@ int flecs_addon_vec_serialize(const ecs_serializer_t *ser, const void *ptr) {
     return 0;
 }
 
+/* Return the element count of an opaque addon vector. */
 static
 size_t flecs_addon_vec_count(const void *ptr) {
     int32_t count = 0;
@@ -31,6 +32,7 @@ size_t flecs_addon_vec_count(const void *ptr) {
     return flecs_ito(size_t, count);
 }
 
+/* Serialize a const string to the serializer. */
 static
 int flecs_const_str_serialize(const ecs_serializer_t *ser, const void *ptr) {
     char **data = ECS_CONST_CAST(char**, ptr);
@@ -38,7 +40,7 @@ int flecs_const_str_serialize(const ecs_serializer_t *ser, const void *ptr) {
     return 0;
 }
 
-/* Initialize reflection data for core components */
+/* Initialize reflection data for core components. */
 static
 void flecs_meta_import_core_definitions(
     ecs_world_t *world)
@@ -76,12 +78,8 @@ void flecs_meta_import_core_definitions(
         }
     });
 
-    /* Define const string as an opaque type that maps to string
-       This enables reflection for strings that are in .rodata,
-       (read-only) so that the meta add-on does not try to free them.
-       This opaque type defines how to serialize (read) the string,
-       but won't let users assign a new value.
-    */
+    /* Opaque type for read-only strings (e.g. .rodata pointers). Supports
+     * serialization but does not free or reassign the pointer. */
     ecs_entity_t const_string = ecs_opaque(world, {
         .entity = ecs_component(world, {
               .entity = ecs_entity(world, {
@@ -149,7 +147,7 @@ void flecs_meta_import_core_definitions(
     });
 }
 
-/* Initialize reflection data for meta components */
+/* Initialize reflection data for meta components. */
 static
 void flecs_meta_import_meta_definitions(
     ecs_world_t *world)
@@ -290,6 +288,7 @@ void flecs_meta_import_meta_definitions(
     });
 }
 
+/* Import reflection definitions for all builtin types. */
 void flecs_meta_import_definitions(
     ecs_world_t *world)
 {

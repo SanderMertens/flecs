@@ -40,8 +40,7 @@ struct ecs_script_scope_t {
     ecs_script_scope_t *parent;
     ecs_id_t default_component_eval;
 
-    /* Array with component ids that are added in scope. Used to limit
-     * archetype moves. */
+    /* Component ids gathered in this scope to batch archetype moves */
     ecs_vec_t components; /* vec<ecs_id_t> */
 };
 
@@ -51,18 +50,16 @@ typedef struct ecs_script_id_t {
     ecs_id_t flag;
     ecs_id_t eval;
 
-    /* If first or second refer to a variable, these are the cached variable 
-     * stack pointers so we don't have to lookup variables by name. */
-    int32_t first_sp; 
+    /* Cached variable stack pointers for first/second (avoids name lookup) */
+    int32_t first_sp;
     int32_t second_sp;
 
-    /* In case first/second are specified as interpolated strings. */
+    /* Expression nodes when first/second are interpolated strings */
     ecs_expr_node_t *first_expr;
     ecs_expr_node_t *second_expr;
 
-    /* If true, the lookup result for this id cannot be cached. This is the case
-     * for entities that are defined inside of templates, which have different
-     * values for each instantiation. */
+    /* True if id must be re-resolved each evaluation (e.g. variable or
+     * interpolated identifiers, or entities inside templates) */
     bool dynamic;
 } ecs_script_id_t;
 
@@ -88,7 +85,7 @@ typedef struct ecs_script_default_component_t {
 typedef struct ecs_script_var_component_t {
     ecs_script_node_t node;
     const char *name;
-    int32_t sp;
+    int32_t sp;              /* Cached variable stack pointer (avoids name lookup) */
 } ecs_script_var_component_t;
 
 struct ecs_script_entity_t {

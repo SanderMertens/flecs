@@ -1,6 +1,6 @@
 /**
- * @file addons/script/tokenizer.c
- * @brief Script tokenizer.
+ * @file addons/parser/tokenizer.c
+ * @brief Parser tokenizer.
  */
 
 #include "flecs.h"
@@ -9,6 +9,7 @@
 
 #include "parser.h"
 
+/* Check whether the current position starts a comment sequence. */
 static
 bool flecs_is_comment(
     const char *pos)
@@ -16,6 +17,7 @@ bool flecs_is_comment(
     return pos[0] == '/' && (pos[1] == '/' || pos[1] == '*');
 }
 
+/* Check whether the current position is a keyword boundary. */
 static
 bool flecs_keyword_boundary(
     const char *pos)
@@ -35,6 +37,7 @@ bool flecs_keyword_boundary(
     return false;
 }
 
+/* Match a keyword at the current position and verify it ends at a boundary. */
 static
 bool flecs_keyword_match(
     const char *pos,
@@ -83,6 +86,7 @@ char* flecs_tokenizer_write(
     return dst + 1;
 }
 
+/* Return a human-readable prefix string for the given token kind. */
 const char* flecs_token_kind_str(
     ecs_token_kind_t kind)
 {
@@ -159,6 +163,7 @@ const char* flecs_token_kind_str(
     }
 }
 
+/* Return the string representation of the given token kind. */
 const char* flecs_token_str(
     ecs_token_kind_t kind)
 {
@@ -224,9 +229,10 @@ const char* flecs_token_str(
     }
 }
 
+/* Advance past whitespace, optionally stopping at newlines if significant. */
 const char* flecs_scan_whitespace(
     ecs_parser_t *parser,
-    const char *pos) 
+    const char *pos)
 {
     ecs_assert(pos != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -243,6 +249,7 @@ const char* flecs_scan_whitespace(
     return pos;
 }
 
+/* Skip past a line comment starting at the current position. */
 static
 const char* flecs_scan_line_comment(
     const char *pos)
@@ -253,6 +260,7 @@ const char* flecs_scan_line_comment(
     return pos;
 }
 
+/* Check whether a newline is immediately followed by a comment. */
 static
 bool flecs_newline_followed_by_comment(
     ecs_parser_t *parser,
@@ -263,6 +271,7 @@ bool flecs_newline_followed_by_comment(
     return flecs_is_comment(next);
 }
 
+/* Skip past a multiline comment starting at the current position. */
 static
 const char* flecs_scan_multiline_comment(
     ecs_parser_t *parser,
@@ -281,6 +290,7 @@ const char* flecs_scan_multiline_comment(
     return NULL;
 }
 
+/* Collapse a run of newlines and comments into a single significant newline. */
 static
 const char* flecs_scan_significant_line_comment_newline_run(
     ecs_parser_t *parser,
@@ -324,9 +334,7 @@ const char* flecs_scan_significant_line_comment_newline_run(
             }
 
             if (!ml_end[0]) {
-                /* Unterminated multiline comments are reported by the regular
-                 * tokenizer path. Keep this pass non-fatal as it is only used
-                 * to decide whether newlines can be collapsed. */
+                /* Unterminated comment; main tokenizer will report error */
                 break;
             }
             continue;
@@ -338,10 +346,11 @@ const char* flecs_scan_significant_line_comment_newline_run(
     return collapse ? last_newline : comment_newline;
 }
 
+/* Skip whitespace and comments, handling significant newlines. */
 static
 const char* flecs_scan_whitespace_and_comment(
     ecs_parser_t *parser,
-    const char *pos) 
+    const char *pos)
 {
     if (!pos) {
         return NULL;
@@ -386,6 +395,7 @@ repeat_skip_whitespace_comment:
     return pos;
 }
 
+/* Check whether a character is valid as the start of an identifier. */
 static
 bool flecs_script_is_identifier(
     char c)
@@ -393,10 +403,11 @@ bool flecs_script_is_identifier(
     return isalpha(c) || (c == '_') || (c == '$') || (c == '#');
 }
 
+/* Parse an identifier token including nested template arguments. */
 const char* flecs_tokenizer_identifier(
     ecs_parser_t *parser,
     const char *pos,
-    ecs_token_t *out) 
+    ecs_token_t *out)
 {
     if (out) {
         out->kind = EcsTokIdentifier;
@@ -436,12 +447,12 @@ const char* flecs_tokenizer_identifier(
             is_ident = is_ident || (c == '.');
         }
 
-        /* Retain \. for name lookup operation */
+        /* Allow escaped dot (\.) for literal dot in name lookups */
         if (!is_ident && c == '\\' && pos[1] == '.') {
             is_ident = true;
         }
 
-        /* Retain .* for using wildcard expressions */
+        /* Allow .* wildcard suffix in identifiers */
         if (!is_ident && c == '*') {
             if (pos != start && pos[-1] == '.') {
                 is_ident = true;
@@ -514,6 +525,7 @@ done:
     return pos;
 }
 
+/* Check whether the current position starts a number literal. */
 static
 bool flecs_script_is_number(
     const char *c)
@@ -521,11 +533,12 @@ bool flecs_script_is_number(
     return isdigit(c[0]) || ((c[0] == '-') && isdigit(c[1]));
 }
 
+/* Parse a number literal in decimal, hexadecimal, or binary format. */
 static
 const char* flecs_script_number(
     ecs_parser_t *parser,
     const char *pos,
-    ecs_token_t *out) 
+    ecs_token_t *out)
 {
     out->kind = EcsTokNumber;
     out->value = parser->token_cur;
@@ -614,10 +627,11 @@ const char* flecs_script_number(
     return pos;
 }
 
+/* Skip past a string literal up to the given delimiter. */
 static
 const char* flecs_script_skip_string(
     ecs_parser_t *parser,
-    const char *pos, 
+    const char *pos,
     char delim)
 {
     char ch;
@@ -636,6 +650,7 @@ const char* flecs_script_skip_string(
     return pos;
 }
 
+/* Parse a single character literal enclosed in single quotes. */
 static
 const char* flecs_script_char(
     ecs_parser_t *parser,
@@ -674,11 +689,12 @@ const char* flecs_script_char(
     return end + 2;
 }
 
+/* Parse a double-quoted string literal. */
 static
 const char* flecs_script_string(
     ecs_parser_t *parser,
     const char *pos,
-    ecs_token_t *out) 
+    ecs_token_t *out)
 {
     const char *end = flecs_script_skip_string(parser, pos + 1, '"');
     if (!end) {
@@ -702,11 +718,12 @@ const char* flecs_script_string(
     return end + 2;
 }
 
+/* Parse a backtick-delimited multiline string literal. */
 static
 const char* flecs_script_multiline_string(
     ecs_parser_t *parser,
     const char *pos,
-    ecs_token_t *out) 
+    ecs_token_t *out)
 {
     char ch;
     const char *end = pos + 1;
@@ -739,6 +756,7 @@ const char* flecs_script_multiline_string(
     return end + 2;
 }
 
+/* Tokenize input until the specified delimiter character is found. */
 const char* flecs_tokenizer_until(
     ecs_parser_t *parser,
     const char *pos,
@@ -792,6 +810,7 @@ const char* flecs_tokenizer_until(
     return pos;
 }
 
+/* Parse the next token from the input stream. */
 const char* flecs_token(
     ecs_parser_t *parser,
     const char *pos,

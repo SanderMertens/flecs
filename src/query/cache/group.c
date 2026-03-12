@@ -1,6 +1,9 @@
 /**
  * @file query/cache/group.c
- * @brief Adding/removing tables to query groups.
+ * @brief Query group management: add/remove/move tables between groups.
+ *
+ * Groups are stored in a linked list ordered by group id. The default group
+ * (id 0) always exists. Custom groups are created via group_by callbacks.
  */
 
 #include "../../private_api.h"
@@ -22,7 +25,7 @@ bool flecs_query_cache_group_is_linked(
     return false;
 }
 
-/* Get group id for table. */
+/* Compute group id for a table using the group_by callback. */
 static
 uint64_t flecs_query_cache_get_group_id(
     const ecs_query_cache_t *cache,
@@ -36,7 +39,7 @@ uint64_t flecs_query_cache_get_group_id(
     }
 }
 
-/* Get group for group id. */
+/* Look up a cache group by group id. */
 ecs_query_cache_group_t* flecs_query_cache_get_group(
     const ecs_query_cache_t *cache,
     uint64_t group_id)
@@ -49,7 +52,7 @@ ecs_query_cache_group_t* flecs_query_cache_get_group(
         &cache->groups, ecs_query_cache_group_t, group_id);
 }
 
-/* Insert group in list that's ordered by group id */
+/* Insert group into the ordered linked list by group id. */
 static
 void flecs_query_cache_group_insert(
     ecs_query_cache_t *cache,
@@ -86,7 +89,7 @@ void flecs_query_cache_group_insert(
     ecs_assert(group->next == NULL, ECS_INTERNAL_ERROR, NULL);
 }
 
-/* Make sure a group exists for the provided group id. */
+/* Ensure a group exists for the provided group id, creating if needed. */
 static
 ecs_query_cache_group_t* flecs_query_cache_ensure_group(
     ecs_query_cache_t *cache,
@@ -143,15 +146,14 @@ ecs_query_cache_group_t* flecs_query_cache_ensure_group(
     return group;
 }
 
-/* Free group resources. */
+/* Free group resources and invoke the on_group_delete callback. */
 static
 void flecs_query_cache_group_fini(
     ecs_query_cache_t *cache,
     ecs_query_cache_group_t *group)
 {
-    /* Group callbacks are only meaningful for groups that have matched at
-     * least one table. The default group can exist as list head without ever
-     * being materialized through on_group_create (group id 0). */
+    /* Only invoke callback for groups that actually matched tables. The
+     * default group can exist as list head without on_group_create. */
     if (cache->on_group_delete && group->info.table_count) {
         cache->on_group_delete(cache->query->world, group->info.id,
             group->info.ctx, cache->group_by_ctx);
@@ -174,7 +176,7 @@ void flecs_query_cache_group_fini(
     }
 }
 
-/* Remove group from cache. */
+/* Unlink and remove a group from the cache. */
 static
 void flecs_query_cache_remove_group(
     ecs_query_cache_t *cache,
@@ -195,11 +197,9 @@ void flecs_query_cache_remove_group(
         prev = cur;
     } while ((cur = cur->next));
     
-    /* If this is the default_group, make sure next is set to NULL since we 
-     * never delete the default group. */
+    /* The default group is never freed, so reset its next pointer. */
     group->next = NULL;
 
-    /* ensure group was found */
     ecs_assert(cur != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (!cache->first_group) {
@@ -209,7 +209,7 @@ void flecs_query_cache_remove_group(
     flecs_query_cache_group_fini(cache, group);
 }
 
-/* Get cache entry for table. */
+/* Look up cache entry for a table. */
 ecs_query_cache_table_t* flecs_query_cache_get_table(
     const ecs_query_cache_t *cache,
     ecs_table_t *table)
@@ -217,7 +217,7 @@ ecs_query_cache_table_t* flecs_query_cache_get_table(
     return ecs_map_get_ptr(&cache->tables, table->id);
 }
 
-/* Get match for table cache entry. */
+/* Get match data from a table cache entry. */
 ecs_query_cache_match_t* flecs_query_cache_match_from_table(
     const ecs_query_cache_t *cache,
     const ecs_query_cache_table_t *qt)
@@ -226,7 +226,7 @@ ecs_query_cache_match_t* flecs_query_cache_match_from_table(
     return ecs_vec_get(&qt->group->tables, elem_size, qt->index);
 }
 
-/* Add table to query group. */
+/* Append a table to a query group's table array. */
 static
 ecs_query_cache_match_t* flecs_query_cache_add_table_to_group(
     ecs_query_cache_t *cache,
@@ -252,7 +252,7 @@ ecs_query_cache_match_t* flecs_query_cache_add_table_to_group(
     return result;
 }
 
-/* Remove table from query group. */
+/* Remove a table from a query group by index. */
 static
 void flecs_query_cache_remove_table_from_group(
     ecs_query_cache_t *cache,
@@ -271,8 +271,7 @@ void flecs_query_cache_remove_table_from_group(
     }
 
     if (index != count) {
-        /* The element now points to the previously last table in the group. 
-         * Update the entry of that table to the new index. */
+        /* Swap-removed: fix index of the element that was moved here */
         ecs_query_cache_match_t *match = ecs_vec_get(
             &group->tables, elem_size, index);
         ecs_query_cache_table_t *qt_other = flecs_query_cache_get_table(
@@ -287,7 +286,7 @@ void flecs_query_cache_remove_table_from_group(
     group->info.match_count ++;
 }
 
-/* Add matched table to cache. */
+/* Add a matched table to the cache, creating its group if needed. */
 ecs_query_cache_match_t* flecs_query_cache_add_table(
     ecs_query_cache_t *cache,
     ecs_table_t *table)
@@ -315,8 +314,7 @@ ecs_query_cache_match_t* flecs_query_cache_add_table(
     return flecs_query_cache_add_table_to_group(cache, group, qt, table);
 }
 
-/* Move table to a different group. This can happen if the value returned by 
- * group_by_callback changed for a table. Typically called during rematch. */
+/* Move a table to a different group when its group_by result changes. */
 static
 void flecs_query_cache_move_table_to_group(
     ecs_query_cache_t *cache,
@@ -326,14 +324,13 @@ void flecs_query_cache_move_table_to_group(
     ecs_query_cache_match_t *src_match = 
         flecs_query_cache_match_from_table(cache, qt);
 
-    /* Cache values of previous group since add_table_to_group will modify qt */
+    /* Save before add_table_to_group modifies qt */
     ecs_query_cache_group_t *src_group = qt->group;
     int32_t src_index = qt->index;
 
     ecs_table_t *table = src_match->base.table;
 
-    /* Add table to new group */
-    ecs_query_cache_match_t *dst_match = 
+    ecs_query_cache_match_t *dst_match =
         flecs_query_cache_add_table_to_group(cache, group, qt, table);
     ecs_size_t elem_size = flecs_query_cache_elem_size(cache);
     ecs_os_memcpy(dst_match, src_match, elem_size);
@@ -341,18 +338,17 @@ void flecs_query_cache_move_table_to_group(
     ecs_assert(flecs_query_cache_match_from_table(cache, qt) == dst_match, 
         ECS_INTERNAL_ERROR, NULL);
     
-    /* Remove table from old group */
     flecs_query_cache_remove_table_from_group(cache, src_group, src_index);
 }
 
-/* Make sure a cache entry exists for table. */
+/* Ensure a cache entry exists for a table, moving groups if needed. */
 ecs_query_cache_match_t* flecs_query_cache_ensure_table(
     ecs_query_cache_t *cache,
     ecs_table_t *table)
 {
     ecs_query_cache_table_t *qt = flecs_query_cache_get_table(cache, table);
     if (qt) {
-        /* Ensure existing table is in the right group */
+        /* Move to correct group if group_by result changed */
         if (cache->group_by_callback) {
             uint64_t group_id = flecs_query_cache_get_group_id(cache, table);
             ecs_query_cache_group_t *group = flecs_query_cache_ensure_group(
@@ -370,7 +366,7 @@ ecs_query_cache_match_t* flecs_query_cache_ensure_table(
     return flecs_query_cache_add_table(cache, table);
 }
 
-/* Remove matched table from cache. */
+/* Remove a matched table from the cache. */
 void flecs_query_cache_remove_table(
     ecs_query_cache_t *cache,
     ecs_table_t *table)
@@ -400,7 +396,7 @@ void flecs_query_cache_remove_table(
     ecs_map_remove(&cache->tables, table->id);
 }
 
-/* Remove all groups from the cache. Typically called during query cleanup. */
+/* Remove all groups from the cache during cleanup. */
 static
 void flecs_query_cache_remove_all_groups(
     ecs_query_cache_t *cache)
@@ -416,7 +412,7 @@ void flecs_query_cache_remove_all_groups(
     cache->default_group.next = NULL;
 }
 
-/* Remove all tables from the cache. Typically called during query cleanup. */
+/* Remove all tables and groups from the cache during cleanup. */
 void flecs_query_cache_remove_all_tables(
     ecs_query_cache_t *cache)
 {

@@ -10,13 +10,13 @@ typedef struct ecs_script_eval_visitor_t {
     ecs_script_visit_t base;
     ecs_world_t *world;
     ecs_script_runtime_t *r;
-    ecs_script_template_t *template; /* Set when creating template */
-    ecs_entity_t template_entity; /* Set when creating template instance */
+    ecs_script_template_t *template;   /* Non-NULL during template preprocessing */
+    ecs_entity_t template_entity;      /* Non-zero during template instantiation */
     ecs_entity_t module;
     ecs_entity_t parent;
     ecs_script_entity_t *entity;
     ecs_entity_t with_relationship;
-    int32_t with_relationship_sp;
+    int32_t with_relationship_sp;      /* Index of current relationship on with stack */
     bool is_with_scope;
     bool dynamic_variable_binding;
     ecs_script_vars_t *vars;
@@ -80,7 +80,7 @@ int flecs_script_check_scope(
     ecs_script_eval_visitor_t *v,
     ecs_script_scope_t *node);
 
-/* Functions shared between check and eval visitor */
+/* Functions shared between check and eval visitors */
 
 int flecs_script_eval_scope(
     ecs_script_eval_visitor_t *v,

@@ -1,6 +1,6 @@
 /**
  * @file misc.c
- * @brief Miscellaneous functions.
+ * @brief Miscellaneous utility functions (time, parsing, string escaping).
  */
  
 #include <time.h>
@@ -16,6 +16,7 @@ static int64_t flecs_s_max[] = {
 static uint64_t flecs_u_max[] = { 
     [1] = UINT8_MAX, [2] = UINT16_MAX, [4] = UINT32_MAX, [8] = UINT64_MAX };
 
+/* Validate and perform a checked integer type conversion with range assertions. */
 uint64_t flecs_ito_(
     size_t size,
     bool is_signed,
@@ -42,6 +43,7 @@ uint64_t flecs_ito_(
 }
 #endif
 
+/* Round up an integer to the next power of two. */
 int32_t flecs_next_pow_of_2(
     int32_t n)
 {
@@ -56,7 +58,6 @@ int32_t flecs_next_pow_of_2(
     return n;
 }
 
-/** Convert time to double */
 double ecs_time_to_double(
     ecs_time_t t)
 {
@@ -104,8 +105,8 @@ double ecs_time_measure(
 }
 
 void* ecs_os_memdup(
-    const void *src, 
-    ecs_size_t size) 
+    const void *src,
+    ecs_size_t size)
 {
     if (!src) {
         return NULL;
@@ -117,23 +118,26 @@ void* ecs_os_memdup(
     return dst;  
 }
 
+/* Compare two entities for ordering. */
 int flecs_entity_compare(
-    ecs_entity_t e1, 
-    const void *ptr1, 
-    ecs_entity_t e2, 
-    const void *ptr2) 
+    ecs_entity_t e1,
+    const void *ptr1,
+    ecs_entity_t e2,
+    const void *ptr2)
 {
     (void)ptr1;
     (void)ptr2;
     return (e1 > e2) - (e1 < e2);
 }
 
+/* Compare two ids for use with qsort. */
 int flecs_id_qsort_cmp(const void *a, const void *b) {
     ecs_id_t id_a = *(const ecs_id_t*)a;
     ecs_id_t id_b = *(const ecs_id_t*)b;
     return (id_a > id_b) - (id_a < id_b);
 }
 
+/* Format a string using a va_list and return a newly allocated result. */
 char* flecs_vasprintf(
     const char *fmt,
     va_list args)
@@ -163,6 +167,7 @@ char* flecs_vasprintf(
     return result;
 }
 
+/* Format a string using variadic arguments and return a newly allocated result. */
 char* flecs_asprintf(
     const char *fmt,
     ...)
@@ -174,6 +179,7 @@ char* flecs_asprintf(
     return result;
 }
 
+/* Convert a CamelCase string to snake_case and return a newly allocated result. */
 char* flecs_to_snake_case(const char *str) {
     int32_t upper_count = 0, len = 1;
     const char *ptr = str;
@@ -206,6 +212,7 @@ char* flecs_to_snake_case(const char *str) {
     return out;
 }
 
+/* Load the entire contents of a file into a newly allocated string. */
 char* flecs_load_from_file(
     const char *filename)
 {
@@ -214,14 +221,12 @@ char* flecs_load_from_file(
     int32_t bytes;
     size_t size;
 
-    /* Open file for reading */
     ecs_os_fopen(&file, filename, "r");
     if (!file) {
         ecs_err("%s (%s)", ecs_os_strerror(errno), filename);
         goto error;
     }
 
-    /* Determine file size */
     fseek(file, 0, SEEK_END);
     bytes = (int32_t)ftell(file);
     if (bytes == -1) {
@@ -229,7 +234,6 @@ char* flecs_load_from_file(
     }
     fseek(file, 0, SEEK_SET);
 
-    /* Load contents in memory */
     content = ecs_os_malloc(bytes + 1);
     size = (size_t)bytes;
     if (!(size = fread(content, 1, size, file)) && bytes) {
@@ -252,10 +256,11 @@ error:
     return NULL;
 }
 
+/* Write the escape sequence for a character into a buffer. */
 char* flecs_chresc(
-    char *out, 
-    char in, 
-    char delimiter) 
+    char *out,
+    char in,
+    char delimiter)
 {
     char *bptr = out;
     switch(in) {
@@ -309,9 +314,10 @@ char* flecs_chresc(
     return bptr;
 }
 
+/* Parse an escape sequence from a string and write the decoded character. */
 const char* flecs_chrparse(
-    const char *in, 
-    char *out) 
+    const char *in,
+    char *out)
 {
     const char *result = in + 1;
     char ch;
@@ -372,11 +378,12 @@ error:
     return NULL;
 }
 
+/* Escape special characters in a string, writing at most n bytes to out. */
 ecs_size_t flecs_stresc(
-    char *out, 
-    ecs_size_t n, 
-    char delimiter, 
-    const char *in) 
+    char *out,
+    ecs_size_t n,
+    char delimiter,
+    const char *in)
 {
     const char *ptr = in;
     char ch, *bptr = out, buff[3];
@@ -407,8 +414,9 @@ error:
     return 0;
 }
 
+/* Escape special characters in a string and return a newly allocated result. */
 char* flecs_astresc(
-    char delimiter, 
+    char delimiter,
     const char *in)
 {
     if (!in) {
@@ -422,6 +430,7 @@ char* flecs_astresc(
     return out;
 }
 
+/* Test if a character is an exponent indicator ('e' or 'E'). */
 static
 bool flecs_parse_is_e(
     char e)
@@ -429,6 +438,7 @@ bool flecs_parse_is_e(
     return e == 'e' || e == 'E';
 }
 
+/* Parse a numeric literal from a string into a token buffer. */
 const char* flecs_parse_digit(
     const char *ptr,
     char *token)
@@ -461,6 +471,7 @@ const char* flecs_parse_digit(
     return ptr;
 }
 
+/* Skip whitespace and end-of-line characters in a string. */
 const char* flecs_parse_ws_eol(
     const char *ptr)
 {
@@ -471,6 +482,8 @@ const char* flecs_parse_ws_eol(
     return ptr;
 }
 
+/* Multiple static buffers so error messages with several dynamic parts
+ * (e.g., component name + entity path) don't overwrite each other. */
 #define FLECS_ERRSTR_MAX (256)
 static char flecs_errstr_buf[FLECS_ERRSTR_MAX];
 static char flecs_errstr_buf_1[FLECS_ERRSTR_MAX];
@@ -479,6 +492,7 @@ static char flecs_errstr_buf_3[FLECS_ERRSTR_MAX];
 static char flecs_errstr_buf_4[FLECS_ERRSTR_MAX];
 static char flecs_errstr_buf_5[FLECS_ERRSTR_MAX];
 
+/* Copy a string into a static error buffer and free the original. */
 const char* flecs_errstr(
     char *str)
 {

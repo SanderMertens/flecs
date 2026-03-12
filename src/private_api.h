@@ -1,6 +1,6 @@
 /**
  * @file private_api.h
- * @brief Private functions.
+ * @brief Internal declarations shared across Flecs source files.
  */
 
 #ifndef FLECS_PRIVATE_H
@@ -41,14 +41,12 @@
 #include "world.h"
 #include "addons/journal.h"
 
-/* Used in id records to keep track of entities used with id flags */
+/* Sentinel entity stored in component records when ids carry flag bits
+ * (e.g., PAIR, AUTO_OVERRIDE, TOGGLE). Not a real component. */
 extern const ecs_entity_t EcsFlag;
 
-////////////////////////////////////////////////////////////////////////////////
-//// Bootstrap API
-////////////////////////////////////////////////////////////////////////////////
+/* -- Bootstrap -- */
 
-/* Bootstrap world */
 void flecs_bootstrap(
     ecs_world_t *world);
 
@@ -69,9 +67,7 @@ void flecs_bootstrap(
     ecs_add_id(world, name, EcsTrait)
 
 
-////////////////////////////////////////////////////////////////////////////////
-//// Safe(r) integer casting
-////////////////////////////////////////////////////////////////////////////////
+/* -- Safe Integer Casting -- */
 
 #define FLECS_CONVERSION_ERR(T, value)\
     "illegal conversion from value " #value " to type " #T
@@ -94,6 +90,7 @@ void flecs_bootstrap(
 #define flecs_signed_ecs_size_t__ true
 #define flecs_signed_ecs_entity_t__ false
 
+/* Range-checked integer conversion. Use via flecs_ito/flecs_uto macros. */
 uint64_t flecs_ito_(
     size_t dst_size,
     bool dst_signed,
@@ -128,71 +125,63 @@ uint64_t flecs_ito_(
 #define flecs_itoi32(value) flecs_ito(int32_t, (value))
 
 
-////////////////////////////////////////////////////////////////////////////////
-//// Utilities
-////////////////////////////////////////////////////////////////////////////////
+/* -- Utility Functions -- */
 
-/* Check if component is valid, return reason if it's not */
+/* Return human-readable reason why an id is invalid, or NULL if valid */
 const char* flecs_id_invalid_reason(
     const ecs_world_t *world,
     ecs_id_t id);
 
-/* Generate 64bit hash from buffer. */
 uint64_t flecs_hash(
     const void *data,
     ecs_size_t length);
 
-/* Get next power of 2 */
 int32_t flecs_next_pow_of_2(
     int32_t n);
 
-/* Compare function for entity ids used for order_by */
 int flecs_entity_compare(
     ecs_entity_t e1, 
     const void *ptr1, 
     ecs_entity_t e2, 
     const void *ptr2); 
 
-/* Compare function for component ids used for qsort */
 int flecs_id_qsort_cmp(
     const void *a, 
     const void *b);
 
-/* Load file contents into string */
 char* flecs_load_from_file(
     const char *filename);
 
-/* Test whether entity name is an entity id (starts with a #). */
+/* Check if name is a numeric entity id (e.g., "#123") */
 bool flecs_name_is_id(
     const char *name);
 
-/* Convert entity name to entity id. */
+/* Parse a numeric entity id string to an ecs_entity_t */
 ecs_entity_t flecs_name_to_id(
     const char *name);
 
-/* Convert floating point to string */
 char * ecs_ftoa(
     double f, 
     char * buf, 
     int precision);
 
-/* Replace #[color] tokens with terminal color symbols. */
+/* Parse color markup (e.g., "#[red]") in msg and emit ANSI codes to buf */
 void flecs_colorize_buf(
     char *msg,
     bool enable_colors,
     ecs_strbuf_t *buf);
 
-/* Check whether id can be inherited. */
+/* Check if a table can inherit the given id via IsA traversal */
 bool flecs_type_can_inherit_id(
     const ecs_world_t *world,
     const ecs_table_t *table,
     const ecs_component_record_t *cr,
     ecs_id_t id);
 
-/* Cleanup type info data. */
 void flecs_fini_type_info(
     ecs_world_t *world);
 
+/* Resolve type info for an id, following pair relationship/target. */
 const ecs_type_info_t* flecs_determine_type_info_for_component(
     const ecs_world_t *world,
     ecs_id_t component);
@@ -201,7 +190,8 @@ ecs_size_t flecs_type_size(
     ecs_world_t *world, 
     ecs_entity_t type);
 
-/* Utility for using allocated strings in assert/error messages */
+/* Copy str into a static buffer and free it. Numbered variants allow multiple
+ * dynamic strings in a single error message without overwriting each other. */
 const char* flecs_errstr(
     char *str);
 const char* flecs_errstr_1(

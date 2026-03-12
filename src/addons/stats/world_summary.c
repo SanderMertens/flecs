@@ -1,6 +1,6 @@
 /**
- * @file addons/world_summary.c
- * @brief Monitor addon.
+ * @file addons/stats/world_summary.c
+ * @brief World summary stats addon.
  */
 
 #include "flecs.h"
@@ -10,7 +10,8 @@
 
 ECS_COMPONENT_DECLARE(EcsWorldSummary);
 
-static 
+/* Copy current world info into a summary component, computing per-frame deltas. */
+static
 void flecs_copy_world_summary(
     ecs_world_t *world,
     EcsWorldSummary *dst)
@@ -70,6 +71,7 @@ void flecs_copy_world_summary(
     dst->build_info = *ecs_get_build_info();
 }
 
+/* System callback that updates world summary components each frame. */
 static
 void UpdateWorldSummary(ecs_iter_t *it) {
     EcsWorldSummary *summary = ecs_field(it, EcsWorldSummary, 0);
@@ -80,6 +82,7 @@ void UpdateWorldSummary(ecs_iter_t *it) {
     }
 }
 
+/* Observer callback that applies world summary changes to world settings. */
 static
 void OnSetWorldSummary(ecs_iter_t *it) {
     EcsWorldSummary *summary = ecs_field(it, EcsWorldSummary, 0);
@@ -91,8 +94,9 @@ void OnSetWorldSummary(ecs_iter_t *it) {
     }
 }
 
+/* Import the world summary subsystem with reflection and update systems. */
 void FlecsWorldSummaryImport(
-    ecs_world_t *world) 
+    ecs_world_t *world)
 {
     ECS_COMPONENT_DEFINE(world, EcsWorldSummary);
 

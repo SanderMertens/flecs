@@ -1,12 +1,10 @@
 /**
  * @file query/engine/engine.h
- * @brief Query engine functions.
+ * @brief Query VM engine: variable management, matching, and instruction evaluation.
  */
 
 #include "trav_cache.h"
 #include "trivial_iter.h"
-
-/* Query evaluation utilities */
 
 void flecs_query_set_iter_this(
     ecs_iter_t *it,
@@ -154,8 +152,6 @@ bool flecs_query_run_until(
     int32_t last);
 
 
-/* And evaluation */
-
 bool flecs_query_and(
     const ecs_query_op_t *op,
     bool redo,
@@ -165,8 +161,6 @@ bool flecs_query_and_any(
     const ecs_query_op_t *op,
     bool redo,
     const ecs_query_run_ctx_t *ctx);
-
-/* Select evaluation */
 
 bool flecs_query_select(
     const ecs_query_op_t *op,
@@ -197,8 +191,6 @@ bool flecs_query_select_w_id(
     ecs_flags32_t filter_mask);
 
 
-/* Sparse evaluation */
-
 bool flecs_query_sparse(
     const ecs_query_op_t *op,
     bool redo,
@@ -226,8 +218,6 @@ bool flecs_query_sparse_self_up(
     bool redo,
     const ecs_query_run_ctx_t *ctx);
 
-
-/* Hierarchy evaluation */
 
 const EcsParent* flecs_query_tree_get_parents(
     ecs_table_range_t range);
@@ -275,8 +265,6 @@ bool flecs_query_children(
     bool redo,
     const ecs_query_run_ctx_t *ctx);
 
-/* Toggle evaluation*/
-
 bool flecs_query_toggle(
     const ecs_query_op_t *op,
     bool redo,
@@ -287,8 +275,6 @@ bool flecs_query_toggle_option(
     bool redo,
     ecs_query_run_ctx_t *ctx);
 
-
-/* Equality predicate evaluation */
 
 bool flecs_query_pred_eq_match(
     const ecs_query_op_t *op,
@@ -327,8 +313,6 @@ bool flecs_query_pred_neq_name(
     ecs_query_run_ctx_t *ctx);
 
 
-/* Component member evaluation */
-
 bool flecs_query_member_eq(
     const ecs_query_op_t *op,
     bool redo,
@@ -339,8 +323,6 @@ bool flecs_query_member_neq(
     bool redo,
     ecs_query_run_ctx_t *ctx);
 
-
-/* Up traversal */
 
 typedef enum ecs_query_up_select_trav_kind_t {
     FlecsQueryUpSelectUp,
@@ -380,8 +362,6 @@ bool flecs_query_self_up_with(
     bool redo,
     const ecs_query_run_ctx_t *ctx);
 
-
-/* Transitive relationship traversal */
 
 bool flecs_query_trav(
     const ecs_query_op_t *op,

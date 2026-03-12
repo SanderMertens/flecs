@@ -1,5 +1,5 @@
 /**
- * @file addons/monitor.c
+ * @file addons/stats/monitor.c
  * @brief Stats addon module.
  */
 
@@ -33,6 +33,7 @@ typedef struct {
     int32_t interval;
 } ecs_aggregate_stats_ctx_t;
 
+/* Collect per-frame statistics and reduce into the current time slot. */
 static
 void MonitorStats(ecs_iter_t *it) {
     ecs_world_t *world = it->real_world;
@@ -127,6 +128,7 @@ void MonitorStats(ecs_iter_t *it) {
     }
 }
 
+/* Reduce higher-frequency statistics into a lower-frequency time slot. */
 static
 void ReduceStats(ecs_iter_t *it) {
     ecs_reduce_stats_ctx_t *ctx = it->ctx;
@@ -154,6 +156,7 @@ void ReduceStats(ecs_iter_t *it) {
     }
 }
 
+/* Aggregate statistics over a configurable interval with incremental reduction. */
 static
 void AggregateStats(ecs_iter_t *it) {
     ecs_aggregate_stats_ctx_t *ctx = it->ctx;
@@ -227,6 +230,7 @@ void AggregateStats(ecs_iter_t *it) {
     }
 }
 
+/* Free monitor statistics context and its query. */
 static
 void flecs_monitor_ctx_free(
     void *ptr)
@@ -238,6 +242,7 @@ void flecs_monitor_ctx_free(
     ecs_os_free(ctx);
 }
 
+/* Free reduce statistics context. */
 static
 void flecs_reduce_ctx_free(
     void *ptr)
@@ -245,6 +250,7 @@ void flecs_reduce_ctx_free(
     ecs_os_free(ptr);
 }
 
+/* Free aggregate statistics context. */
 static
 void flecs_aggregate_ctx_free(
     void *ptr)
@@ -252,6 +258,7 @@ void flecs_aggregate_ctx_free(
     ecs_os_free(ptr);
 }
 
+/* Register monitor, reduce, and aggregate systems for a statistics type. */
 void flecs_stats_api_import(
     ecs_world_t *world,
     ecs_stats_api_t *api)
@@ -268,7 +275,7 @@ void flecs_stats_api_import(
         });
     }
 
-    // Called each frame, collects 60 measurements per second
+    /* Called each frame, collects 60 measurements per second */
     {
         ecs_monitor_stats_ctx_t *ctx = ecs_os_calloc_t(ecs_monitor_stats_ctx_t);
         ctx->api = *api;
@@ -286,7 +293,7 @@ void flecs_stats_api_import(
         });
     }
 
-    // Called each second, reduces into 60 measurements per minute
+    /* Called each second, reduces into 60 measurements per minute */
     ecs_entity_t mw1m;
     {
         ecs_reduce_stats_ctx_t *ctx = ecs_os_calloc_t(ecs_reduce_stats_ctx_t);
@@ -308,7 +315,7 @@ void flecs_stats_api_import(
         });
     }
 
-    // Called each minute, reduces into 60 measurements per hour
+    /* Called each minute, reduces into 60 measurements per hour */
     {
         ecs_reduce_stats_ctx_t *ctx = ecs_os_calloc_t(ecs_reduce_stats_ctx_t);
         ctx->api = *api;
@@ -330,7 +337,7 @@ void flecs_stats_api_import(
         });
     }
 
-    // Called each minute, reduces into 60 measurements per day
+    /* Called each minute, reduces into 60 measurements per day */
     {
         ecs_aggregate_stats_ctx_t *ctx = ecs_os_calloc_t(ecs_aggregate_stats_ctx_t);
         ctx->api = *api;
@@ -353,7 +360,7 @@ void flecs_stats_api_import(
         });
     }
 
-    // Called each hour, reduces into 60 measurements per week
+    /* Called each hour, reduces into 60 measurements per week */
     {
         ecs_aggregate_stats_ctx_t *ctx = ecs_os_calloc_t(ecs_aggregate_stats_ctx_t);
         ctx->api = *api;
@@ -385,6 +392,7 @@ void flecs_stats_api_import(
     ecs_add_pair(world, EcsWorld, kind, EcsPeriod1w);
 }
 
+/* Import the stats module and register all monitoring subsystems. */
 void FlecsStatsImport(
     ecs_world_t *world)
 {

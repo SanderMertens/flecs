@@ -10,11 +10,7 @@
 
 #include "private_api.h"
 
-/* Utility macros to enforce consistency when initializing iterator fields */
-
-/* If term count is smaller than cache size, initialize with inline array,
- * otherwise allocate. */
-
+/* Allocate zero-initialized memory from the iterator stack allocator. */
 void* flecs_iter_calloc(
     ecs_iter_t *it,
     ecs_size_t size,
@@ -26,6 +22,7 @@ void* flecs_iter_calloc(
     return flecs_stack_calloc(stack, size, align); 
 }
 
+/* Free memory previously allocated from the iterator stack. */
 void flecs_iter_free(
     void *ptr,
     ecs_size_t size)
@@ -33,6 +30,7 @@ void flecs_iter_free(
     flecs_stack_free(ptr, size);
 }
 
+/* Initialize iterator fields and allocate per-field resources. */
 void flecs_iter_init(
     const ecs_world_t *world,
     ecs_iter_t *it,
@@ -74,8 +72,7 @@ void ecs_iter_fini(
         return;
     }
 
-    /* Make sure arrays are below stack page size, which means they don't have
-     * to get freed explicitly. */
+    /* Arrays must fit in a single stack page; restoring the cursor frees them. */
     ecs_assert(ECS_SIZEOF(ecs_id_t) * it->field_count < FLECS_STACK_PAGE_SIZE,
         ECS_UNSUPPORTED, NULL);
     ecs_assert(ECS_SIZEOF(ecs_entity_t) * it->field_count < FLECS_STACK_PAGE_SIZE,
@@ -88,7 +85,7 @@ void ecs_iter_fini(
         it->priv_.stack_cursor);
 }
 
-/* --- Public API --- */
+/* -- Public Field Access API -- */
 
 void* ecs_field_w_size(
     const ecs_iter_t *it,
@@ -542,15 +539,15 @@ ecs_table_t* ecs_iter_get_var_as_table(
     }
 
     if (!table) {
-        /* If table is not set, try to get table from entity */
+        /* No table on variable; try to resolve from entity */
         ecs_entity_t e = var->entity;
         if (e) {
             ecs_record_t *r = flecs_entities_get(it->real_world, e);
             if (r) {
                 table = r->table;
                 if (ecs_table_count(table) != 1) {
-                    /* If table contains more than the entity, make sure not to
-                     * return a partial table. */
+                    /* Table has multiple entities; can't return it as a
+                     * single-entity variable result. */
                     return NULL;
                 }
             }
@@ -797,6 +794,7 @@ error:
     return 0;
 }
 
+/* Finalize a chained iterator and its parent chain iterator. */
 static
 void ecs_chained_iter_fini(
     ecs_iter_t *it)
@@ -850,11 +848,11 @@ bool ecs_page_next(
 
         ecs_page_iter_t *iter = &it->priv_.iter.page;
         
-        /* Copy everything up to the private iterator data */
+        /* Copy public fields from chain iterator; private state is preserved */
         ecs_os_memcpy(it, chain_it, offsetof(ecs_iter_t, priv_));
 
         if (!chain_it->table) {
-            goto yield; /* Task query */
+            goto yield; /* Task query (no table) */
         }
 
         int32_t offset = iter->offset;
@@ -872,7 +870,7 @@ bool ecs_page_next(
 
         if (offset) {
             if (offset > count) {
-                /* No entities to iterate in current table */
+                /* Offset exceeds table count; skip to next table */
                 iter->offset -= count;
                 it->count = 0;
                 continue;
@@ -918,8 +916,8 @@ ecs_iter_t ecs_worker_iter(
     ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(it->next != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(count > 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(index >= 0, ECS_INVALID_PARAMETER, 
-        "invalid field index %d", index);
+    ecs_check(index >= 0, ECS_INVALID_PARAMETER,
+        "invalid worker index %d", index);
     ecs_check(index < count, ECS_INVALID_PARAMETER, NULL);
 
     ecs_iter_t result = *it;
@@ -976,8 +974,8 @@ bool ecs_worker_next(
             if (res_index == 0) {
                 return true;
             } else {
-                // chained iterator was not yet cleaned up
-                // since it returned true from ecs_iter_next, so clean it up here.
+                /* Chained iterator returned true but this worker has no rows;
+                 * clean up the chained iterator. */
                 ecs_iter_fini(chain_it);
                 return false;
             }

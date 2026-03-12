@@ -9,6 +9,7 @@
 
 #include "../private_api.h"
 
+/* Convert a C module name to a dot-separated path. */
 char* flecs_module_path_from_c(
     const char *c_name)
 {
@@ -60,7 +61,6 @@ ecs_entity_t ecs_import(
         ecs_log_pop();
     }
 
-    /* Restore to previous state */
     ecs_set_scope(world, old_scope);
     world->info.name_prefix = old_name_prefix;
 
@@ -97,8 +97,7 @@ ecs_entity_t ecs_import_from_library(
         return 0;
     }
 
-    /* If no module name is specified, try default naming convention for loading
-     * the main module from the library */
+    /* Derive import function name from library name using CamelCase convention */
     if (!import_func) {
         import_func = ecs_os_malloc(ecs_os_strlen(library_name) + ECS_SIZEOF("Import"));
         ecs_assert(import_func != NULL, ECS_OUT_OF_MEMORY, NULL);
@@ -171,7 +170,6 @@ ecs_entity_t ecs_import_from_library(
             import_func, library_name, module);
     }
 
-    /* Do not free id, as it will be stored as the component identifier */
     ecs_entity_t result = ecs_import(world, action, module);
 
     if (import_func != module_name) {

@@ -1,12 +1,16 @@
 /**
  * @file query/compiler/compiler_term.c
- * @brief Compile query term.
+ * @brief Per-term compilation: translates individual terms into VM instructions.
+ *
+ * Handles variable resolution, operator blocks (Or, Not, Optional), scope
+ * management, and instruction selection based on term properties.
  */
 
 #include "../../private_api.h"
 
-#define FlecsRuleOrMarker ((int16_t)-2) /* Marks instruction in OR chain */
+#define FlecsQueryOrMarker ((int16_t)-2) /* Marks instruction in OR chain */
 
+/* Find variable by name and kind. */
 ecs_var_id_t flecs_query_find_var_id(
     const ecs_query_impl_t *query,
     const char *name,
@@ -59,6 +63,7 @@ ecs_var_id_t flecs_query_find_var_id(
     return flecs_query_find_var_id(query, name, EcsVarTable);
 }
 
+/* Find the most specific variable for the given name and write state. */
 static
 ecs_var_id_t flecs_query_most_specific_var(
     ecs_query_impl_t *query,
@@ -93,6 +98,7 @@ ecs_var_id_t flecs_query_most_specific_var(
     }
 }
 
+/* Add operation to query plan. */
 ecs_query_lbl_t flecs_query_op_insert(
     ecs_query_op_t *op,
     ecs_query_compile_ctx_t *ctx)
@@ -102,8 +108,10 @@ ecs_query_lbl_t flecs_query_op_insert(
     *elem = *op;
     if (count > 1) {
         if (ctx->cur->lbl_begin == -1) {
-            /* Variables written by previous instruction can't be written by
-             * this instruction, except when this is part of an OR chain. */
+            /* Outside control flow blocks (Or/Not/Optional), strip variables
+             * already written by the previous instruction from this op's write
+             * mask, since they are already constrained. Inside control flow
+             * blocks, skip this so each branch can independently write vars. */
             elem->written &= ~elem[-1].written;
         }
     }
@@ -113,6 +121,7 @@ ecs_query_lbl_t flecs_query_op_insert(
     return flecs_itolbl(count - 1);
 }
 
+/* Begin a new instruction block of the specified kind. */
 ecs_query_op_t* flecs_query_begin_block(
     ecs_query_op_kind_t kind,
     ecs_query_compile_ctx_t *ctx)
@@ -123,6 +132,7 @@ ecs_query_op_t* flecs_query_begin_block(
     return ecs_vec_get_t(ctx->ops, ecs_query_op_t, ctx->cur->lbl_begin);
 }
 
+/* End the current instruction block and link begin/end operations. */
 void flecs_query_end_block(
     ecs_query_compile_ctx_t *ctx,
     bool reset)
@@ -151,6 +161,7 @@ void flecs_query_end_block(
     ctx->cur->lbl_begin = -1;
 }
 
+/* Begin conditional evaluation block for conditionally written variables. */
 static
 void flecs_query_begin_block_cond_eval(
     ecs_query_op_t *op,
@@ -176,10 +187,8 @@ void flecs_query_begin_block_cond_eval(
         cond_mask |= (1ull << src_var);
     }
 
-    /* Variables set in an OR chain are marked as conditional writes. However, 
-     * writes from previous terms in the current OR chain shouldn't be treated
-     * as variables that are conditionally set, so instead use the write mask 
-     * from before the chain started. */
+    /* In OR chains, use the write mask from before the chain started so
+     * that writes from earlier OR terms aren't treated as conditional. */
     if (ctx->ctrlflow->in_or) {
         cond_write_state = ctx->ctrlflow->cond_written_or;
     }
@@ -211,6 +220,7 @@ void flecs_query_begin_block_cond_eval(
     }
 }
 
+/* End conditional evaluation block. */
 static
 void flecs_query_end_block_cond_eval(
     ecs_query_compile_ctx_t *ctx)
@@ -237,6 +247,7 @@ void flecs_query_end_block_cond_eval(
     end_op_ptr->field_index = query_op->field_index;
 }
 
+/* Begin an OR expression block. */
 static
 void flecs_query_begin_block_or(
     ecs_query_op_t *op,
@@ -247,15 +258,10 @@ void flecs_query_begin_block_or(
     or_op->kind = EcsQueryOr;
     or_op->field_index = term->field_index;
 
-    /* Set the source of the evaluate terms as source of the Or instruction. 
-     * This lets the engine determine whether the variable has already been
-     * written. When the source is not yet written, an OR operation needs to
-     * take the union of all the terms in the OR chain. When the variable is
-     * known, it will return after the first matching term.
-     * 
-     * In case a term in the OR expression is an equality predicate which 
-     * compares the left hand side with a variable, the variable acts as an 
-     * alias, so we can always assume that it's written. */
+    /* Propagate source to Or instruction. At runtime, unbound sources
+     * enumerate results across all branches (select-or); bound sources
+     * run branches until the first match (with-or). For equality predicates
+     * with a variable RHS, skip propagating source so it remains unbound. */
     bool add_src = true;
     if (ECS_TERM_REF_ID(&term->first) == EcsPredEq && term->second.id & EcsIsVariable) {
         if (!(flecs_query_is_written(op->src.var, ctx->written))) {
@@ -275,6 +281,7 @@ void flecs_query_begin_block_or(
     }
 }
 
+/* End an OR expression block and insert reset instructions. */
 static
 void flecs_query_end_block_or(
     ecs_query_impl_t *impl,
@@ -287,7 +294,7 @@ void flecs_query_end_block_or(
     ecs_query_op_t *ops = ecs_vec_first_t(ctx->ops, ecs_query_op_t);
     int32_t i, prev_or = ctx->cur->lbl_begin + 1;
     for (i = ctx->cur->lbl_begin + 1; i < end; i ++) {
-        if (ops[i].next == FlecsRuleOrMarker) {
+        if (ops[i].next == FlecsQueryOrMarker) {
             if (i == (end - 1)) {
                 ops[prev_or].prev = ctx->cur->lbl_begin;
             } else {
@@ -332,11 +339,9 @@ void flecs_query_end_block_or(
     }
     ctx->written |= ctx->cond_written;
 
-    /* Scan which variables were conditionally written in the OR chain and 
-     * reset instructions after the OR chain. If a variable is set in part one
-     * of a chain but not part two, there would be nothing writing to the
-     * variable in part two, leaving it to the previous value. To address this
-     * a reset is inserted that resets the variable value on redo. */
+    /* Insert Reset for variables that became conditionally written during the
+     * OR chain but were not conditional before it, preventing stale values
+     * from leaking between OR branches on backtrack. */
     for (i = 1; i < (8 * ECS_SIZEOF(ecs_write_flags_t)); i ++) {
         ecs_write_flags_t prev = 1 & (ctx->ctrlflow->cond_written_or >> i);
         ecs_write_flags_t cur = 1 & (ctx->cond_written >> i);
@@ -356,6 +361,7 @@ void flecs_query_end_block_or(
     }
 }
 
+/* Insert each instruction to iterate entities from a table variable. */
 void flecs_query_insert_each(
     ecs_var_id_t tvar,
     ecs_var_id_t evar,
@@ -373,6 +379,7 @@ void flecs_query_insert_each(
     flecs_query_op_insert(&each, ctx);
 }
 
+/* Insert lookup instruction for by-name variable resolution. */
 static
 void flecs_query_insert_lookup(
     ecs_var_id_t base_var,
@@ -391,6 +398,7 @@ void flecs_query_insert_lookup(
     flecs_query_op_insert(&lookup, ctx);
 }
 
+/* Insert instructions for unconstrained transitive traversal. */
 static
 void flecs_query_insert_unconstrained_transitive(
     ecs_query_impl_t *query,
@@ -398,13 +406,13 @@ void flecs_query_insert_unconstrained_transitive(
     ecs_query_compile_ctx_t *ctx,
     bool cond_write)
 {
-    /* Create anonymous variable to store the target ids. This will return the
-     * list of targets without constraining the variable of the term, which
-     * needs to stay variable to find all transitive relationships for a src. */
+    /* Anonymous variable to store target ids without constraining the
+     * term's variable, allowing all transitive paths to be explored. */
     ecs_var_id_t tgt = flecs_query_add_var(query, NULL, NULL, EcsVarEntity);
     flecs_set_var_label(&query->vars[tgt], query->vars[op->second.var].name);
 
-    /* First, find ids to start traversal from. This fixes op.second. */
+    /* First, discover all (R, *) target ids and write them to the anonymous
+     * variable. This enumerates the targets to traverse from. */
     ecs_query_op_t find_ids = {0};
     find_ids.kind = EcsQueryIdsRight;
     find_ids.field_index = -1;
@@ -417,7 +425,8 @@ void flecs_query_insert_unconstrained_transitive(
     flecs_query_write(tgt, &find_ids.written);
     flecs_query_op_insert(&find_ids, ctx);
 
-    /* Next, iterate all tables for the ids. This fixes op.src */
+    /* Then, for each discovered target, select tables with (R, target).
+     * This writes the source variable. */
     ecs_query_op_t and_op = {0};
     and_op.kind = EcsQueryAnd;
     and_op.field_index = op->field_index;
@@ -431,6 +440,7 @@ void flecs_query_insert_unconstrained_transitive(
     flecs_query_op_insert(&and_op, ctx);
 }
 
+/* Insert instructions for component inheritance traversal. */
 static
 void flecs_query_insert_inheritance(
     ecs_query_impl_t *query,
@@ -471,6 +481,7 @@ void flecs_query_insert_inheritance(
     op->flags |= (EcsQueryIsVar << EcsQueryFirst);
 }
 
+/* Compile a term reference (first, second, or src) into an operation. */
 void flecs_query_compile_term_ref(
     ecs_world_t *world,
     ecs_query_impl_t *query,
@@ -515,6 +526,7 @@ void flecs_query_compile_term_ref(
     }
 }
 
+/* Ensure variables referenced by an operation are resolved. */
 static
 int flecs_query_compile_ensure_vars(
     ecs_query_impl_t *query,
@@ -581,12 +593,13 @@ int flecs_query_compile_ensure_vars(
     return 0;
 }
 
+/* Insert lookup instruction if variable requires by-name resolution. */
 static
 bool flecs_query_compile_lookup(
     ecs_query_impl_t *query,
     ecs_var_id_t var_id,
     ecs_query_compile_ctx_t *ctx,
-    bool cond_write) 
+    bool cond_write)
 {
     ecs_query_var_t *var = &query->vars[var_id];
     if (var->lookup) {
@@ -597,6 +610,7 @@ bool flecs_query_compile_lookup(
     }
 }
 
+/* Insert contain instruction for self-referencing src and first/second vars. */
 static
 void flecs_query_insert_contains(
     ecs_query_impl_t *query,
@@ -615,6 +629,7 @@ void flecs_query_insert_contains(
     }
 }
 
+/* Insert pair equality check instruction. */
 static
 void flecs_query_insert_pair_eq(
     int32_t field_index,
@@ -626,6 +641,7 @@ void flecs_query_insert_pair_eq(
     flecs_query_op_insert(&contains, ctx);
 }
 
+/* Compile builtin predicate (equality/match) operations. */
 static
 int flecs_query_compile_builtin_pred(
     ecs_query_t *q,
@@ -677,6 +693,7 @@ int flecs_query_compile_builtin_pred(
     return 0;
 }
 
+/* Ensure scope variable is resolved from table to entity if needed. */
 static
 int flecs_query_ensure_scope_var(
     ecs_query_impl_t *query,
@@ -707,6 +724,7 @@ error:
     return -1;
 }
 
+/* Ensure all scope variables are resolved before entering a scope. */
 static
 int flecs_query_ensure_scope_vars(
     ecs_world_t *world,
@@ -718,7 +736,7 @@ int flecs_query_ensure_scope_vars(
      * table, resolve them as entities before entering the scope. */
     ecs_term_t *cur = term;
     while(ECS_TERM_REF_ID(&cur->first) != EcsScopeClose) {
-        /* Dummy operation to obtain variable information for term */
+        /* Temporary operation to obtain variable information for term */
         ecs_query_op_t op = {0};
         flecs_query_compile_term_ref(world, query, &op, &cur->first, 
             &op.first, EcsQueryFirst, EcsVarEntity, ctx, false);
@@ -749,15 +767,16 @@ error:
     return -1;
 }
 
+/* Push a new scope level in the compile context. */
 static
 void flecs_query_compile_push(
     ecs_query_compile_ctx_t *ctx)
 {
     ctx->cur = &ctx->ctrlflow[++ ctx->scope];
     ctx->cur->lbl_begin = -1;
-    ctx->cur->lbl_begin = -1;
 }
 
+/* Pop the current scope level in the compile context. */
 static
 void flecs_query_compile_pop(
     ecs_query_compile_ctx_t *ctx)
@@ -767,6 +786,7 @@ void flecs_query_compile_pop(
     ctx->cur = &ctx->ctrlflow[-- ctx->scope];
 }
 
+/* Compile term with zero source (scope open/close). */
 static
 int flecs_query_compile_0_src(
     ecs_world_t *world,
@@ -800,6 +820,7 @@ error:
     return -1;
 }
 
+/* Convert query flags to table exclusion flags for disabled/prefab filtering. */
 static
 ecs_flags32_t flecs_query_to_table_flags(
     const ecs_query_t *q)
@@ -822,6 +843,7 @@ ecs_flags32_t flecs_query_to_table_flags(
     return EcsTableNotQueryable;
 }
 
+/* Insert select-all instruction for unwritten optional/not sources. */
 static
 bool flecs_query_select_all(
     const ecs_query_t *q,
@@ -863,6 +885,7 @@ bool flecs_query_select_all(
 }
 
 #ifdef FLECS_META
+/* Begin compilation of a member term by replacing it with its parent component. */
 static
 int flecs_query_compile_begin_member_term(
     ecs_world_t *world,
@@ -901,15 +924,15 @@ int flecs_query_compile_begin_member_term(
 
     ctx->oper = (ecs_oper_kind_t)term->oper;
     if (term->oper == EcsNot && !second_wildcard) {
-        /* When matching a member term with not operator, we need to cover both
-         * the case where an entity doesn't have the component, and where it 
-         * does have the component, but doesn't match the member. */
+        /* Must handle both "entity lacks component" and "component exists
+         * but member doesn't match", so use Optional. */
         term->oper = EcsOptional;
     }
 
     return 0;
 }
 
+/* Finish compilation of a member term by inserting member equality check. */
 static
 int flecs_query_compile_end_member_term(
     ecs_world_t *world,
@@ -981,10 +1004,8 @@ int flecs_query_compile_end_member_term(
     }
 
     if (var->kind == EcsVarTable) {
-        /* If MemberEq is called on table variable, store it on .other member.
-         * This causes MemberEq to do double duty as 'each' instruction,
-         * which is faster than having to go back & forth between instructions
-         * while finding matching values. */
+        /* On table variables, MemberEq doubles as an 'each' instruction
+         * via .other, avoiding extra instruction round-trips. */
         mbr_op.other = flecs_itolbl(op->src.var + 1);
 
         /* Mark entity variable as written */
@@ -1025,6 +1046,7 @@ error:
     return -1;
 }
 #else
+/* Stub for begin member term compilation when FLECS_META is disabled. */
 static
 int flecs_query_compile_begin_member_term(
     ecs_world_t *world,
@@ -1036,6 +1058,7 @@ int flecs_query_compile_begin_member_term(
     return 0;
 }
 
+/* Stub for end member term compilation when FLECS_META is disabled. */
 static
 int flecs_query_compile_end_member_term(
     ecs_world_t *world,
@@ -1054,14 +1077,16 @@ int flecs_query_compile_end_member_term(
 }
 #endif
 
+/* Mark the last operation in an OR chain with the OR marker. */
 static
 void flecs_query_mark_last_or_op(
     ecs_query_compile_ctx_t *ctx)
 {
     ecs_query_op_t *op_ptr = ecs_vec_last_t(ctx->ops, ecs_query_op_t);
-    op_ptr->next = FlecsRuleOrMarker;
+    op_ptr->next = FlecsQueryOrMarker;
 }
 
+/* Determine and set the operation kind based on term properties. */
 static
 void flecs_query_set_op_kind(
     ecs_query_impl_t *query,
@@ -1071,9 +1096,8 @@ void flecs_query_set_op_kind(
 {
     (void)query;
 
-    /* Default instruction for And operators. If the source is fixed (like for
-     * singletons or terms with an entity source), use With, which like And but
-     * just matches against a source (vs. finding a source). */
+    /* And dispatches to select (unbound src) or with (bound src) at runtime.
+     * With is used directly for fixed entity sources (singletons, etc). */
     op->kind = src_is_var ? EcsQueryAnd : EcsQueryWith;
 
     /* Ignore cascade flag */
@@ -1140,14 +1164,11 @@ void flecs_query_set_op_kind(
             }
         }
 
-        /* ChildOf terms need to take into account both ChildOf pairs and the 
-         * Parent component for non-fragmenting hierarchies. */
+        /* ChildOf terms must handle both ChildOf pairs and Parent components. */
         if (term->flags_ & EcsTermNonFragmentingChildOf && !term->trav) {
             if (query->pub.flags & EcsQueryNested) {
-                /* If this is a nested query (used to populate a cache), insert
-                 * instruction that matches tables with ChildOf pairs and Parent
-                 * component, without filtering the non-fragmenting parents as
-                 * this cannot be cached. */
+                /* Nested query (for cache): match ChildOf pairs and Parent
+                 * component without filtering non-fragmenting parents. */
                 op->kind = EcsQueryTreePre;
             } else {
                 if (!src_is_var) {
@@ -1179,6 +1200,7 @@ void flecs_query_set_op_kind(
     }
 }
 
+/* Compile a single query term into operations. */
 int flecs_query_compile_term(
     ecs_world_t *world,
     ecs_query_impl_t *query,
@@ -1328,12 +1350,9 @@ int flecs_query_compile_term(
         src_written = flecs_query_select_all(q, term, &op, op.src.var, ctx);
     }
 
-    /* A bit of special logic for OR expressions and equality predicates. If the
-     * left-hand of an equality operator is a table, and there are multiple
-     * operators in an Or expression, the Or chain should match all entities in
-     * the table that match the right hand sides of the operator expressions. 
-     * For this to work, the src variable needs to be resolved as entity, as an
-     * Or chain would otherwise only yield the first match from a table. */
+    /* For OR chains with equality/member predicates on a table source, resolve
+     * src as entity so the chain yields per-entity matches, not just the
+     * first table match. */
     if (src_is_var && src_written && (builtin_pred || member_term) && term->oper == EcsOr) {
         if (query->vars[op.src.var].kind == EcsVarTable) {
             flecs_query_compile_term_ref(world, query, &op, &term->src, 
@@ -1371,10 +1390,8 @@ int flecs_query_compile_term(
             op.flags &= (ecs_flags8_t)~(EcsQueryIsEntity << EcsQuerySrc);
         }
 
-    /* If source variable is not written and we're querying just for Any, insert
-     * a dedicated instruction that uses the Any record in the id index. Any 
-     * queries that are evaluated against written sources can use Wildcard 
-     * records, which is what the AndAny instruction does. */
+    /* For unwritten sources querying Any, use the dedicated Any record.
+     * Written sources use Wildcard records via AndAny. */
     } else if (!src_written && term->id == EcsAny && op.kind == EcsQueryAndAny) {
         /* Lookup variables ($var.child_name) are always written */
         if (!src_is_lookup) {
@@ -1382,10 +1399,8 @@ int flecs_query_compile_term(
         }
     }
 
-    /* If this is a transitive term and both the target and source are unknown,
-     * find the targets for the relationship first. This clusters together 
-     * tables for the same target, which allows for more efficient usage of the
-     * traversal caches. */
+    /* For transitive terms with unknown src and target, find targets first
+     * to cluster tables and improve traversal cache efficiency. */
     if (term->flags_ & EcsTermTransitive && src_is_var && second_is_var) {
         if (!src_written && !second_written) {
             flecs_query_insert_unconstrained_transitive(
@@ -1438,17 +1453,17 @@ int flecs_query_compile_term(
     /* Insert instructions for lookup variables */
     if (first_is_var) {
         if (flecs_query_compile_lookup(query, op.first.var, ctx, cond_write)) {
-            write_state |= (1ull << op.first.var); // lookups are resolved inline
+            write_state |= (1ull << op.first.var); /* Lookups resolved inline */
         }
     }
     if (src_is_var) {
         if (flecs_query_compile_lookup(query, op.src.var, ctx, cond_write)) {
-            write_state |= (1ull << op.src.var); // lookups are resolved inline
+            write_state |= (1ull << op.src.var); /* Lookups resolved inline */
         }
     }
     if (second_is_var) {
         if (flecs_query_compile_lookup(query, op.second.var, ctx, cond_write)) {
-            write_state |= (1ull << op.second.var); // lookups are resolved inline
+            write_state |= (1ull << op.second.var); /* Lookups resolved inline */
         }
     }
 
@@ -1458,11 +1473,8 @@ int flecs_query_compile_term(
         }
     }
 
-    /* If we're writing the $this variable, filter out disabled/prefab entities
-     * unless the query explicitly matches them.
-     * This could've been done with regular With instructions, but since 
-     * filtering out disabled/prefab entities is the default and this check is
-     * cheap to perform on table flags, it's worth special casing. */
+    /* Filter disabled/prefab entities when writing $this. Uses table flag
+     * check instead of With instructions for performance. */
     if (!src_written && op.src.var == 0) {
         op.other = flecs_itolbl(flecs_query_to_table_flags(q));
     }
@@ -1532,7 +1544,8 @@ int flecs_query_compile_term(
         }
     }
 
-    /* Ensure that term id is set after evaluating Not */
+    /* For inherited-id Not terms, explicitly set the field id. The Not block
+     * may not match (meaning the component is absent), leaving the id unset. */
     if (term->flags_ & EcsTermIdInherited) {
         if (is_not) {
             ecs_query_op_t set_id = {0};

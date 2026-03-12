@@ -6,7 +6,7 @@
 #ifndef FLECS_STAGE_H
 #define FLECS_STAGE_H
 
-/* Stage level allocators are for operations that can be multithreaded */
+/* Per-stage allocators for thread-safe operations */
 typedef struct ecs_stage_allocators_t {
     ecs_stack_t iter_stack;
     ecs_block_allocator_t cmd_entry_chunk;
@@ -14,16 +14,8 @@ typedef struct ecs_stage_allocators_t {
     ecs_block_allocator_t query_cache;
 } ecs_stage_allocators_t;
 
-/** A stage is a context that allows for safely using the API from multiple 
- * threads. Stage pointers can be passed to the world argument of API 
- * operations, which causes the operation to be ran on the stage instead of the
- * world. The features provided by a stage are:
- * 
- *  - A command queue for deferred ECS operations and events
- *  - Thread specific allocators
- *  - Thread specific world state (like current scope, with, current system)
- *  - Thread specific buffers for preventing allocations
- */
+/* Per-thread context for deferred ECS operations. Stage pointers substitute for
+ * world pointers, causing mutations to be queued rather than applied immediately. */
 struct ecs_stage_t {
     ecs_header_t hdr;
 
@@ -69,25 +61,20 @@ struct ecs_stage_t {
 #endif
 };
 
-/* Post-frame merge actions. */
 void flecs_stage_merge_post_frame(
     ecs_world_t *world,
     ecs_stage_t *stage);  
 
-/* Set system id for debugging which system inserted which commands. */
 ecs_entity_t flecs_stage_set_system(
     ecs_stage_t *stage,
     ecs_entity_t system);
 
-/* Get allocator from stage/world. */
 ecs_allocator_t* flecs_stage_get_allocator(
     ecs_world_t *world);
 
-/* Get stack allocator from stage/world. */
 ecs_stack_t* flecs_stage_get_stack_allocator(
     ecs_world_t *world);
 
-/* Shrink memory for stage data structures. */
 void ecs_stage_shrink(
     ecs_stage_t *stage);
 

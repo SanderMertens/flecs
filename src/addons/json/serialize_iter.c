@@ -1,6 +1,6 @@
 /**
  * @file addons/json/serialize_iter.c
- * @brief Serialize iterator to JSON.
+ * @brief Serialize an iterator to JSON.
  */
 
 #include "json.h"
@@ -8,6 +8,7 @@
 
 #ifdef FLECS_JSON
 
+/* Serialize a component or pair id as a quoted path string. */
 static
 void flecs_json_serialize_id_str(
     const ecs_world_t *world,
@@ -30,11 +31,12 @@ void flecs_json_serialize_id_str(
     ecs_strbuf_appendch(buf, '"');
 }
 
+/* Serialize type info for all iterator fields to JSON. */
 static
 void flecs_json_serialize_type_info(
     const ecs_world_t *world,
-    const ecs_iter_t *it, 
-    ecs_strbuf_t *buf) 
+    const ecs_iter_t *it,
+    ecs_strbuf_t *buf)
 {
     flecs_json_memberl(buf, "type_info");
     flecs_json_object_push(buf);
@@ -68,10 +70,11 @@ done:
     flecs_json_object_pop(buf);
 }
 
+/* Serialize field info for all iterator query fields to JSON. */
 static
 void flecs_json_serialize_field_info(
     const ecs_world_t *world,
-    const ecs_iter_t *it, 
+    const ecs_iter_t *it,
     ecs_strbuf_t *buf,
     ecs_json_ser_ctx_t *ctx)
 {
@@ -94,10 +97,11 @@ void flecs_json_serialize_field_info(
     flecs_json_array_pop(buf);
 }
 
+/* Serialize query term and variable info to JSON. */
 static
 void flecs_json_serialize_query_info(
     const ecs_world_t *world,
-    const ecs_iter_t *it, 
+    const ecs_iter_t *it,
     ecs_strbuf_t *buf)
 {
     if (!it->query) {
@@ -109,6 +113,7 @@ void flecs_json_serialize_query_info(
     flecs_json_serialize_query(world, q, buf);
 }
 
+/* Serialize the query execution plan to JSON. */
 static
 void flecs_json_serialize_query_plan(
     const ecs_world_t *world,
@@ -171,6 +176,7 @@ void flecs_json_serialize_query_plan(
     ecs_log_enable_colors(prev_color);
 }
 
+/* Profile query evaluation and serialize timing statistics to JSON. */
 static
 void flecs_json_serialize_query_profile(
     const ecs_world_t *world,
@@ -226,7 +232,7 @@ void flecs_json_serialize_query_profile(
 
         eval_time += time_measure;
 
-        /* Don't profile for too long */
+        /* Cap profiling at 1ms to avoid stalling */
         if (eval_time > 0.001) {
             i ++;
             break;
@@ -238,7 +244,7 @@ void flecs_json_serialize_query_profile(
     flecs_json_memberl(buf, "query_profile");
     flecs_json_object_push(buf);
     if (it->query) {
-        /* Correct for profiler */
+        /* Undo eval_count inflation caused by profiling iterations */
         ECS_CONST_CAST(ecs_query_t*, it->query)->eval_count -= i;
         flecs_json_memberl(buf, "eval_count");
         flecs_json_number(buf, it->query->eval_count);
@@ -263,6 +269,7 @@ void flecs_json_serialize_query_profile(
     flecs_json_object_pop(buf);
 }
 
+/* Free id label strings allocated in the serialization context. */
 static
 void flecs_iter_free_ser_ctx(
     ecs_iter_t *it,
@@ -281,57 +288,48 @@ int ecs_iter_to_json_buf(
 {
     ecs_world_t *world = it->real_world;
 
-    /* Cache component record for flecs.doc ids */
+    /* Cache doc component records for label/color lookups */
     ecs_json_ser_ctx_t ser_ctx;
     ecs_os_zeromem(&ser_ctx);
 #ifdef FLECS_DOC
-    ser_ctx.cr_doc_name = flecs_components_get(world, 
+    ser_ctx.cr_doc_name = flecs_components_get(world,
         ecs_pair_t(EcsDocDescription, EcsName));
-    ser_ctx.cr_doc_color = flecs_components_get(world, 
+    ser_ctx.cr_doc_color = flecs_components_get(world,
         ecs_pair_t(EcsDocDescription, EcsDocColor));
 #endif
 
     flecs_json_object_push(buf);
 
-    /* Serialize type info if enabled */
     if (desc && desc->serialize_type_info) {
         flecs_json_serialize_type_info(world, it, buf);
     }
 
-    /* Serialize field info if enabled */
     if (desc && desc->serialize_field_info) {
         flecs_json_serialize_field_info(world, it, buf, &ser_ctx);
     }
 
-    /* Serialize query info if enabled */
     if (desc && desc->serialize_query_info) {
         flecs_json_serialize_query_info(world, it, buf);
     }
 
-    /* Serialize query plan if enabled */
     if (desc && desc->serialize_query_plan) {
         flecs_json_serialize_query_plan(world, buf, desc);
     }
 
-    /* Profile query */
     if (desc && desc->serialize_query_profile) {
         flecs_json_serialize_query_profile(world, buf, it, desc);
     }
 
-    /* Serialize results */
     if (!desc || !desc->dont_serialize_results) {
         flecs_json_memberl(buf, "results");
         flecs_json_array_push(buf);
 
-        /* If serializing entire table, don't bother letting the iterator populate
-         * data fields as we'll be iterating all columns. */
+        /* Table mode reads columns directly; skip iterator field data */
         if (desc && desc->serialize_table) {
             ECS_BIT_SET(it->flags, EcsIterNoData);
         }
 
-        /* Keep track of serialized entities. This allows entities to be 
-         * serialized depth first, which avoids weird side effects from children
-         * being created before parents. */
+        /* Track serialized entities for depth-first parent-before-child ordering */
         if (desc && desc->serialize_parents_before_children) {
             ecs_map_init(&ser_ctx.serialized, &world->allocator);
         }

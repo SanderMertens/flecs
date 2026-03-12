@@ -1,10 +1,11 @@
 /**
  * @file datastructures/name_index.c
- * @brief Data structure for resolving 64bit keys by string (name).
+ * @brief Data structure for resolving 64-bit keys by string (name).
  */
 
 #include "../private_api.h"
 
+/* Compute hash for a hashed string entry. */
 static
 uint64_t flecs_name_index_hash(
     const void *ptr)
@@ -14,9 +15,10 @@ uint64_t flecs_name_index_hash(
     return str->hash;
 }
 
+/* Compare two hashed string entries by length and content. */
 static
 int flecs_name_index_compare(
-    const void *ptr1, 
+    const void *ptr1,
     const void *ptr2)
 {
     const ecs_hashed_string_t *str1 = ptr1;
@@ -30,9 +32,10 @@ int flecs_name_index_compare(
     return ecs_os_memcmp(str1->value, str2->value, len1);
 }
 
+/* Initialize a name index hashmap with the name hashing and comparison functions. */
 void flecs_name_index_init(
     ecs_hashmap_t *hm,
-    ecs_allocator_t *allocator) 
+    ecs_allocator_t *allocator)
 {
     flecs_hashmap_init_(hm, 
         ECS_SIZEOF(ecs_hashed_string_t), ECS_SIZEOF(uint64_t), 
@@ -41,35 +44,40 @@ void flecs_name_index_init(
         allocator);
 }
 
+/* Initialize a name index only if it has not been initialized yet. */
 void flecs_name_index_init_if(
     ecs_hashmap_t *hm,
-    ecs_allocator_t *allocator) 
+    ecs_allocator_t *allocator)
 {
     if (!hm->compare) {
         flecs_name_index_init(hm, allocator);
     }
 }
 
+/* Return whether the name index has been initialized. */
 bool flecs_name_index_is_init(
     const ecs_hashmap_t *hm)
 {
     return hm->compare != NULL;
 }
 
+/* Allocate and initialize a new name index. */
 ecs_hashmap_t* flecs_name_index_new(
-    ecs_allocator_t *allocator) 
+    ecs_allocator_t *allocator)
 {
     ecs_hashmap_t *result = flecs_alloc_t(allocator, ecs_hashmap_t);
     flecs_name_index_init(result, allocator);
     return result;
 }
 
+/* Finalize a name index, releasing internal resources. */
 void flecs_name_index_fini(
     ecs_hashmap_t *map)
 {
     flecs_hashmap_fini(map);
 }
 
+/* Finalize and free a heap-allocated name index. */
 void flecs_name_index_free(
     ecs_hashmap_t *map)
 {
@@ -80,6 +88,7 @@ void flecs_name_index_free(
     }
 }
 
+/* Create a deep copy of a name index. */
 ecs_hashmap_t* flecs_name_index_copy(
     ecs_hashmap_t *map)
 {
@@ -88,6 +97,7 @@ ecs_hashmap_t* flecs_name_index_copy(
     return result;
 }
 
+/* Construct a hashed string, computing length and hash if not provided. */
 ecs_hashed_string_t flecs_get_hashed_string(
     const char *name,
     ecs_size_t length,
@@ -112,6 +122,7 @@ ecs_hashed_string_t flecs_get_hashed_string(
     };
 }
 
+/* Find the entity id pointer for a name in the index, or return NULL. */
 const uint64_t* flecs_name_index_find_ptr(
     const ecs_hashmap_t *map,
     const char *name,
@@ -145,6 +156,7 @@ const uint64_t* flecs_name_index_find_ptr(
     return NULL;
 }
 
+/* Find the entity id for a name in the index, or return 0. */
 uint64_t flecs_name_index_find(
     const ecs_hashmap_t *map,
     const char *name,
@@ -158,6 +170,7 @@ uint64_t flecs_name_index_find(
     return 0;
 }
 
+/* Remove an entity from the name index by id and hash. */
 void flecs_name_index_remove(
     ecs_hashmap_t *map,
     uint64_t e,
@@ -178,6 +191,7 @@ void flecs_name_index_remove(
     }
 }
 
+/* Update the name pointer for an existing entry in the name index. */
 void flecs_name_index_update_name(
     ecs_hashmap_t *map,
     uint64_t e,
@@ -208,6 +222,7 @@ void flecs_name_index_update_name(
     ecs_abort(ECS_INTERNAL_ERROR, NULL);
 }
 
+/* Insert or verify an entity-name mapping in the index. */
 void flecs_name_index_ensure(
     ecs_hashmap_t *map,
     uint64_t id,

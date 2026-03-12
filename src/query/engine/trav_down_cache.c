@@ -1,10 +1,14 @@
 /**
  * @file query/engine/trav_down_cache.c
- * @brief Compile query term.
+ * @brief Down-cache: maps traversable entities to the tables that inherit from them.
+ *
+ * Used by up-traversal queries to find which tables can reach a component
+ * through a relationship (e.g., IsA or ChildOf).
  */
 
 #include "../../private_api.h"
 
+/* Traverse IsA hierarchy downwards to find inherited component sources. */
 static
 void flecs_trav_entity_down_isa(
     ecs_world_t *world,
@@ -17,6 +21,7 @@ void flecs_trav_entity_down_isa(
     bool self,
     bool empty);
 
+/* Traverse an entity downwards and collect reachable tables. */
 static
 void flecs_trav_entity_down(
     ecs_world_t *world,
@@ -29,6 +34,7 @@ void flecs_trav_entity_down(
     bool self,
     bool empty);
 
+/* Ensure a down-traversal cache entry exists for an entity. */
 static
 ecs_trav_down_t* flecs_trav_down_ensure(
     const ecs_query_run_ctx_t *ctx,
@@ -45,6 +51,7 @@ ecs_trav_down_t* flecs_trav_down_ensure(
     return trav[0];
 }
 
+/* Traverse downwards through traversable entities in a table range. */
 static
 ecs_trav_down_t* flecs_trav_table_down(
     ecs_world_t *world,
@@ -91,6 +98,7 @@ ecs_trav_down_t* flecs_trav_table_down(
     return dst;
 }
 
+/* Traverse IsA hierarchy downwards to find inherited component sources. */
 static
 void flecs_trav_entity_down_isa(
     ecs_world_t *world,
@@ -153,6 +161,7 @@ void flecs_trav_entity_down_isa(
     }
 }
 
+/* Iterate ordered children of an entity to build down-cache elements. */
 static
 void flecs_trav_entity_down_iter_children(
     ecs_world_t *world,
@@ -178,19 +187,15 @@ void flecs_trav_entity_down_iter_children(
         ecs_record_t *r = flecs_entities_get(world, e);
         bool leaf = false;
 
-        /* Check if table has the component*/
         if (flecs_component_get_table(cr_with, r->table) != NULL) {
             if (self) {
-                /* If matching self and the table has the component, entity
-                 * shouldn't be matched through traversal and will instead
-                 * be matched directly.*/
+                /* Entity has the component directly; skip traversal match */
                 continue;
             }
 
             leaf = true;
         }
 
-        /* Add element to the cache for a single child */
         ecs_trav_down_elem_t *elem = ecs_vec_append_t(
             a, &dst->elems, ecs_trav_down_elem_t);
         elem->range.table = r->table;
@@ -200,6 +205,7 @@ void flecs_trav_entity_down_iter_children(
     }
 }
 
+/* Iterate tables referencing an entity to build down-cache elements. */
 static
 void flecs_trav_entity_down_iter_tables(
     ecs_world_t *world,
@@ -236,8 +242,7 @@ void flecs_trav_entity_down_iter_tables(
                 leaf = true;
             }
 
-            /* If record is not the first instance of (trav, *), don't add it
-             * to the cache. */
+            /* Skip duplicate (trav, *) records; only cache the first. */
             int32_t index = tr->index;
             if (index) {
                 ecs_id_t id = table->type.array[index - 1];
@@ -247,8 +252,6 @@ void flecs_trav_entity_down_iter_tables(
                     ecs_assert(col >= 0, ECS_INTERNAL_ERROR, NULL);
 
                     if (col != index) {
-                        /* First relationship through which the id is 
-                         * reachable is not the current one, so skip. */
                         continue;
                     }
                 }
@@ -264,6 +267,7 @@ void flecs_trav_entity_down_iter_tables(
     }
 }
 
+/* Traverse an entity downwards and collect reachable tables. */
 static
 void flecs_trav_entity_down(
     ecs_world_t *world,
@@ -302,6 +306,7 @@ void flecs_trav_entity_down(
     }
 }
 
+/* Get or build the down-traversal cache for an entity and relationship. */
 ecs_trav_down_t* flecs_query_get_down_cache(
     const ecs_query_run_ctx_t *ctx,
     ecs_trav_up_cache_t *cache,
@@ -338,8 +343,7 @@ ecs_trav_down_t* flecs_query_get_down_cache(
 
     ecs_vec_init_t(a, &result->elems, ecs_trav_down_elem_t, 0);
 
-    /* Cover IsA -> trav paths. If a parent inherits a component, then children
-     * of that parent should find the component through up traversal. */
+    /* Cover IsA -> trav paths for inherited components */
     if (cr_with->flags & EcsIdOnInstantiateInherit) {
         flecs_trav_entity_down_isa(
             world, a, cache, result, trav, e, cr_with, self, empty);
@@ -352,6 +356,7 @@ ecs_trav_down_t* flecs_query_get_down_cache(
     return result;
 }
 
+/* Free down-traversal cache and all its entries. */
 void flecs_query_down_cache_fini(
     ecs_allocator_t *a,
     ecs_trav_up_cache_t *cache)

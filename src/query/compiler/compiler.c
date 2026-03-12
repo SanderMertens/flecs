@@ -1,10 +1,14 @@
 /**
- * @file query/compiler/compile.c
- * @brief Compile query program from query.
+ * @file query/compiler/compiler.c
+ * @brief Compiles query terms into a VM instruction program (query plan).
+ *
+ * The compiler discovers variables, reorders terms for efficiency, and emits
+ * instructions that the query engine evaluates via backtracking search.
  */
 
 #include "../../private_api.h"
 
+/* Check if variable is anonymous. */
 static
 bool flecs_query_var_is_anonymous(
     const ecs_query_impl_t *query,
@@ -14,6 +18,7 @@ bool flecs_query_var_is_anonymous(
     return var->anonymous;
 }
 
+/* Add discovered variable to query. */
 ecs_var_id_t flecs_query_add_var(
     ecs_query_impl_t *query,
     const char *name,
@@ -97,6 +102,7 @@ ecs_var_id_t flecs_query_add_var(
     return result;
 }
 
+/* Add variable for a term reference if it names a variable. */
 static
 ecs_var_id_t flecs_query_add_var_for_term_id(
     ecs_query_impl_t *query,
@@ -112,25 +118,16 @@ ecs_var_id_t flecs_query_add_var_for_term_id(
     return flecs_query_add_var(query, name, vars, kind);
 }
 
-/* This function walks over terms to discover which variables are used in the
- * query. It needs to provide the following functionality:
- * - create table vars for all variables used as source
- * - create entity vars for all variables not used as source
- * - create entity vars for all non-$this vars
- * - create anonymous vars to store the content of wildcards
- * - create anonymous vars to store result of lookups (for $var.child_name)
- * - create anonymous vars for resolving component inheritance
- * - create array that stores the source variable for each field
- * - ensure table vars for non-$this variables are anonymous
- * - ensure variables created inside scopes are anonymous
- * - place anonymous variables after public variables in vars array
- */
+/* Discover and register all variables used in the query.
+ * Scans all terms to find named and anonymous variables. Anonymous variables
+ * are created for wildcards, component inheritance, and transitive traversal.
+ * Variables first used inside a scope are marked anonymous (undefined outside). */
 static
 int flecs_query_discover_vars(
     ecs_stage_t *stage,
     ecs_query_impl_t *query)
 {
-    ecs_vec_t *vars = &stage->variables; /* Buffer to reduce allocs */
+    ecs_vec_t *vars = &stage->variables; /* Reusable buffer to reduce allocs */
     ecs_vec_reset_t(NULL, vars, ecs_query_var_t);
 
     ecs_term_t *terms = query->pub.terms;
@@ -138,8 +135,8 @@ int flecs_query_discover_vars(
     int32_t anonymous_table_count = 0, scope = 0, scoped_var_index = 0;
     bool table_this = false, entity_before_table_this = false;
 
-    /* For This table lookups during discovery. This will be overwritten after
-     * discovery with whether the query actually has a This table variable. */
+    /* Temporarily set for This table lookups during discovery; overwritten
+     * after discovery based on actual variable usage. */
     query->pub.flags |= EcsQueryHasTableThisVar;
 
     for (i = 0; i < count; i ++) {
@@ -149,10 +146,8 @@ int flecs_query_discover_vars(
         ecs_term_ref_t *src = &term->src;
 
         if (ECS_TERM_REF_ID(first) == EcsScopeOpen) {
-            /* Keep track of which variables are first used in scope, so that we
-             * can mark them as anonymous. Terms inside a scope are collapsed 
-             * into a single result, which means that outside of the scope the
-             * value of those variables is undefined. */
+            /* Track variables first used in scope -- mark them anonymous since
+             * their values are undefined outside the scope. */
             if (!scope) {
                 scoped_var_index = ecs_vec_count(vars);
             }
@@ -196,9 +191,8 @@ int flecs_query_discover_vars(
                 }
 
                 if (var_id != EcsVarNone) {
-                    /* Mark variable as one for which we need to create a table
-                     * variable. Don't create table variable now, so that we can
-                     * store it in the non-public part of the variable array. */
+                    /* Mark for deferred table variable creation (stored in
+                     * non-public part of the variable array). */
                     ecs_query_var_t *var = ecs_vec_get_t(
                         vars, ecs_query_var_t, (int32_t)var_id - 1);
                     ecs_assert(var != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -208,11 +202,8 @@ int flecs_query_discover_vars(
                     }
 
                     if (((1llu << term->field_index) & query->pub.data_fields)) {
-                        /* Can't have an anonymous variable as source of a term
-                         * that returns a component. We need to return each
-                         * instance of the component, whereas anonymous 
-                         * variables are not guaranteed to be resolved to 
-                         * individual entities. */
+                        /* Anonymous variables may not resolve to individual
+                         * entities, so they can't source data terms. */
                         if (var->anonymous) {
                             ecs_err(
                                 "can't use anonymous variable '%s' as source of "
@@ -268,9 +259,9 @@ int flecs_query_discover_vars(
             table_this = true;
         }
 
-        bool first_is_this = 
+        bool first_is_this =
             (ECS_TERM_REF_ID(first) == EcsThis) && (first->id & EcsIsVariable);
-        bool second_is_this = 
+        bool second_is_this =
             (ECS_TERM_REF_ID(second) == EcsThis) && (second->id & EcsIsVariable);
 
         if (first_is_this || second_is_this) {
@@ -296,11 +287,8 @@ int flecs_query_discover_vars(
             if (base_table_id != EcsVarNone) {
                 var->table_id = base_table_id;
             } else if (anonymous_table_count) {
-                /* Scan for implicit anonymous table variables that haven't been
-                 * inserted yet (happens after this step). Doing this here vs.
-                 * ensures that anonymous variables are appended at the end of
-                 * the variable array, while also ensuring that variable ids are
-                 * stable (no swapping of table var ids that are in use). */
+                /* Scan for implicit anonymous table variables not yet inserted.
+                 * Use placeholder to keep variable ids stable. */
                 for (a = 0; a < var_count; a ++) {
                     ecs_query_var_t *avar = ecs_vec_get_t(
                         vars, ecs_query_var_t, a);
@@ -448,6 +436,7 @@ error:
     return -1;
 }
 
+/* Check if variable is unknown (not yet written). */
 static
 bool flecs_query_var_is_unknown(
     ecs_query_impl_t *query,
@@ -466,8 +455,8 @@ bool flecs_query_var_is_unknown(
     return true;
 }
 
-/* Returns whether term is unknown. A term is unknown when it has variable
- * elements (first, second, src) that are all unknown. */
+/* Return whether all variable references in the term are unwritten. Terms
+ * with no variables are never considered unknown. */
 static
 bool flecs_query_term_is_unknown(
     ecs_query_impl_t *query, 
@@ -476,14 +465,14 @@ bool flecs_query_term_is_unknown(
 {
     ecs_query_op_t dummy = {0};
 
-    flecs_query_compile_term_ref(NULL, query, &dummy, &term->first, 
+    flecs_query_compile_term_ref(NULL, query, &dummy, &term->first,
         &dummy.first, EcsQueryFirst, EcsVarEntity, ctx, false);
-    flecs_query_compile_term_ref(NULL, query, &dummy, &term->second, 
+    flecs_query_compile_term_ref(NULL, query, &dummy, &term->second,
         &dummy.second, EcsQuerySecond, EcsVarEntity, ctx, false);
-    flecs_query_compile_term_ref(NULL, query, &dummy, &term->src, 
+    flecs_query_compile_term_ref(NULL, query, &dummy, &term->src,
         &dummy.src, EcsQuerySrc, EcsVarAny, ctx, false);
 
-    bool has_vars = dummy.flags & 
+    bool has_vars = dummy.flags &
         ((EcsQueryIsVar << EcsQueryFirst) |
          (EcsQueryIsVar << EcsQuerySecond) |
          (EcsQueryIsVar << EcsQuerySrc));
@@ -512,9 +501,7 @@ bool flecs_query_term_is_unknown(
     return true;
 }
 
-/* Find the next known term from specified offset. This function is used to find
- * a term that can be evaluated before a term that is unknown. Evaluating known
- * before unknown terms can significantly decrease the search space. */
+/* Find the next known term from specified offset to reduce search space. */
 static
 int32_t flecs_query_term_next_known(
     ecs_query_impl_t *query, 
@@ -552,8 +539,7 @@ int32_t flecs_query_term_next_known(
     return -1;
 }
 
-/* If the first part of a query contains more than one trivial term, insert a
- * special instruction which batch-evaluates multiple terms. */
+/* Insert batch instruction for multiple trivial terms. */
 static
 void flecs_query_insert_trivial_search(
     ecs_query_impl_t *query,
@@ -585,7 +571,7 @@ void flecs_query_insert_trivial_search(
             continue;
         }
 
-        /* We can only add trivial terms to plan if they no up traversal */
+        /* We can only add trivial terms to plan if they have no up traversal */
         if ((term->src.id & EcsTraverseFlags) != EcsSelf) {
             continue;
         }
@@ -623,6 +609,7 @@ void flecs_query_insert_trivial_search(
     }
 }
 
+/* Insert cache search operation for cacheable query terms. */
 static
 void flecs_query_insert_cache_search(
     ecs_query_impl_t *query,
@@ -712,6 +699,7 @@ void flecs_query_insert_cache_search(
     }
 }
 
+/* Check if term reference can match multiple entities. */
 static
 bool flecs_term_ref_match_multiple(
     ecs_term_ref_t *ref)
@@ -719,6 +707,7 @@ bool flecs_term_ref_match_multiple(
     return (ref->id & EcsIsVariable) && (ECS_TERM_REF_ID(ref) != EcsAny);
 }
 
+/* Check if term has first or second that can match multiple entities. */
 static
 bool flecs_term_match_multiple(
     ecs_term_t *term)
@@ -727,6 +716,7 @@ bool flecs_term_match_multiple(
         flecs_term_ref_match_multiple(&term->second);
 }
 
+/* Insert toggle instructions for toggleable component terms. */
 static
 int flecs_query_insert_toggle(
     ecs_query_impl_t *impl,
@@ -792,22 +782,15 @@ int flecs_query_insert_toggle(
                     flecs_query_write(op.src.var, &op.written);
                 }
 
-                /* Encode fields:
-                 * - first.entity is the fields that match enabled bits
-                 * - second.entity is the fields that match disabled bits
-                 */
+                /* first.entity = enabled-bit fields, second.entity = disabled-bit fields */
                 op.first.entity = and_toggles;
                 op.second.entity = not_toggles;
                 flecs_query_op_insert(&op, ctx);
             }
 
-            /* Insert separate instructions for optional terms. To make sure
-             * entities are returned in batches where fields are never partially 
-             * set or unset, the result must be split up into batches that have 
-             * the exact same toggle masks. Instead of complicating the toggle 
-             * instruction with code to scan for blocks that have the same bits 
-             * set, separate instructions let the query engine backtrack to get 
-             * the right results. */
+            /* Optional toggles need separate instructions per field so the
+             * engine can backtrack to produce batches with consistent set/unset
+             * masks across all entities in each result. */
             if (optional_toggles) {
                 for (j = i; j < term_count; j ++) {
                     uint64_t field_bit = 1ull << j;
@@ -829,6 +812,7 @@ int flecs_query_insert_toggle(
     return 0;
 }
 
+/* Compile terms with fixed (entity) sources before other terms. */
 static
 int flecs_query_insert_fixed_src_terms(
     ecs_world_t *world,
@@ -844,21 +828,8 @@ int flecs_query_insert_fixed_src_terms(
         ecs_term_t *term = &terms[i];
 
         if (term->oper ==  EcsNot) {
-            /* If term has not operator and variables for first/second, we can't
-             * put the term first as this could prevent us from getting back
-             * valid results. For example:
-             *   !$var(e), Tag($var)
-             * 
-             * Here, the first term would evaluate to false (and cause the 
-             * entire query not to match) if 'e' has any components.
-             * 
-             * However, when reordering we get results:
-             *   Tag($var), !$var(e)
-             * 
-             * Now the query returns all entities with Tag, that 'e' does not
-             * have as component. For this reason, queries should never use
-             * unwritten variables in not terms- and we should also not reorder
-             * terms in a way that results in doing this. */
+            /* Don't reorder Not terms with multi-valued variables -- the variable
+             * must be constrained first. */
             if (flecs_term_match_multiple(term)) {
                 continue;
             }
@@ -881,13 +852,14 @@ int flecs_query_insert_fixed_src_terms(
     return 0;
 }
 
+/* Compile query terms into a VM instruction program.
+ * Trivial queries (simple And-only, no wildcards, no traversal) skip compilation
+ * and use specialized fast-path iterators instead. */
 int flecs_query_compile(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_query_impl_t *query)
 {
-    /* Compile query to operations. Only necessary for non-trivial queries, as
-     * trivial queries use trivial iterators that don't use query ops. */
     bool needs_plan = true;
     ecs_flags32_t flags = query->pub.flags;
     
@@ -944,10 +916,8 @@ int flecs_query_compile(
         }
     }
 
-    /* If the query contains terms with fixed ids (no wildcards, variables), 
-     * insert instruction that initializes ecs_iter_t::ids. This allows for the
-     * insertion of simpler instructions later on. 
-     * If the query is entirely cacheable, ids are populated by the cache. */
+    /* Insert SetIds instruction for fixed-id terms (not needed if fully
+     * cacheable, since the cache populates ids). */
     if (q->cache_kind != EcsQueryCacheAll) {
         for (i = 0; i < term_count; i ++) {
             ecs_term_t *term = &terms[i];
@@ -975,12 +945,8 @@ int flecs_query_compile(
     /* Insert trivial term search if query allows for it */
     flecs_query_insert_trivial_search(query, &compiled, &ctx);
 
-    /* If a query starts with one or more optional terms, first compile the non
-     * optional terms. This prevents having to insert an instruction that 
-     * matches the query against every entity in the storage. 
-     * Only skip optional terms at the start of the query so that any 
-     * short-circuiting behavior isn't affected (a non-optional term can become
-     * optional if it uses a variable set in an optional term). */
+    /* Skip leading optional terms on the first pass to avoid matching against
+     * every entity. Only skip at the start to preserve short-circuit semantics. */
     int32_t start_term = 0;
     for (; start_term < term_count; start_term ++) {
         if (terms[start_term].oper != EcsOptional) {
@@ -989,22 +955,19 @@ int flecs_query_compile(
     }
 
     do {
-        /* Compile remaining query terms to instructions */
+        /* Compile remaining terms. Terms with unknown variables are deferred
+         * in favor of terms with known variables to reduce search space. */
         for (i = start_term; i < term_count; i ++) {
             ecs_term_t *term = &terms[i];
             int32_t compile = i;
 
             if (compiled & (1ull << i)) {
-                continue; /* Already compiled */
+                continue;
             }
 
             if (term->oper == EcsOptional && start_term) {
-                /* Don't reorder past the first optional term that's not in the
-                 * initial list of optional terms. This protects short
-                 * circuiting branching in the query. 
-                 * A future algorithm could look at which variables are 
-                 * accessed by optional terms, and continue reordering terms 
-                 * that don't access those variables. */
+                /* Don't reorder past optional terms to preserve short-circuit
+                 * branching semantics. */
                 break;
             }
 
@@ -1013,11 +976,8 @@ int flecs_query_compile(
                 can_reorder = false;
             }
 
-            /* If variables have been written, but this term has no known variables,
-             * first try to resolve terms that have known variables. This can 
-             * significantly reduce the search space. 
-             * Only perform this optimization after at least one variable has been
-             * written to, as all terms are unknown otherwise. */
+            /* Defer terms with all-unknown variables: prefer terms that
+             * reference already-written variables to narrow the search space. */
             if (can_reorder && ctx.written && 
                 flecs_query_term_is_unknown(query, term, &ctx)) 
             {
@@ -1044,10 +1004,8 @@ int flecs_query_compile(
         }
     } while (true);
 
-    /* If this is the last term and it's a Tree instruction, replace it 
-     * with Children. If the queried for parent has the OrderedChildren
-     * trait, the Children instruction will return the array with child
-     * entities vs. returning children one by one. */
+    /* For single-term queries, replace Tree with Children to enable
+     * bulk return of ordered children arrays. */
     if (term_count == 1 && ecs_vec_count(ctx.ops)) {
         ecs_query_op_t *op = ecs_vec_last_t(ctx.ops, ecs_query_op_t);
         ecs_assert(op != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -1103,12 +1061,8 @@ int flecs_query_compile(
                 only_anonymous = false;
                 break;
             } else {
-                /* Don't fetch component data for anonymous variables. Because
-                 * not all metadata (such as it.sources) is initialized for
-                 * anonymous variables, and because they may only be available
-                 * as table variables (each is not guaranteed to be inserted for
-                 * anonymous variables) the iterator may not have sufficient
-                 * information to resolve component data. */
+                /* Anonymous variables lack full metadata and may not have
+                 * entity resolution, so disable component data fetch. */
                 for (int32_t t = 0; t < q->term_count; t ++) {
                     ecs_term_t *term = &q->terms[t];
                     if (term->field_index == i) {

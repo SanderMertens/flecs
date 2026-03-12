@@ -1,6 +1,6 @@
 /**
- * @file addons/script/builtin_functions.c
- * @brief Flecs functions for flecs script.
+ * @file addons/script/functions_builtin.c
+ * @brief Flecs builtin functions for flecs script.
  */
 
 #include "flecs.h"
@@ -8,6 +8,7 @@
 #ifdef FLECS_SCRIPT
 #include "script.h"
 
+/* Return the name of an entity. */
 static
 void flecs_meta_entity_name(
     const ecs_function_ctx_t *ctx,
@@ -20,6 +21,7 @@ void flecs_meta_entity_name(
     *(char**)result->ptr = ecs_os_strdup(ecs_get_name(ctx->world, entity));
 }
 
+/* Return the full path of an entity. */
 static
 void flecs_meta_entity_path(
     const ecs_function_ctx_t *ctx,
@@ -32,6 +34,7 @@ void flecs_meta_entity_path(
     *(char**)result->ptr = ecs_get_path(ctx->world, entity);
 }
 
+/* Return the parent entity of an entity. */
 static
 void flecs_meta_entity_parent(
     const ecs_function_ctx_t *ctx,
@@ -44,6 +47,7 @@ void flecs_meta_entity_parent(
     *(ecs_entity_t*)result->ptr = ecs_get_parent(ctx->world, entity);
 }
 
+/* Check whether an entity has a given component or tag. */
 static
 void flecs_meta_entity_has(
     const ecs_function_ctx_t *ctx,
@@ -57,6 +61,7 @@ void flecs_meta_entity_has(
     *(ecs_bool_t*)result->ptr = ecs_has_id(ctx->world, entity, id);
 }
 
+/* Look up a child entity by path. */
 static
 void flecs_meta_entity_lookup(
     const ecs_function_ctx_t *ctx,
@@ -75,6 +80,7 @@ void flecs_meta_entity_lookup(
     }
 }
 
+/* Construct a pair id from two entity ids. */
 static
 void flecs_meta_core_pair(
     const ecs_function_ctx_t *ctx,
@@ -114,6 +120,7 @@ FLECS_DOC_FUNC(color)
 
 #undef FLECS_DOC_FUNC
 
+/* Register doc accessor methods for entities. */
 static
 void flecs_script_register_builtin_doc_functions(
     ecs_world_t *world)
@@ -163,6 +170,7 @@ void flecs_script_register_builtin_doc_functions(
 
 #else
 
+/* Stub for doc functions when FLECS_DOC is not enabled. */
 static
 void flecs_script_register_builtin_doc_functions(
     ecs_world_t *world)
@@ -172,6 +180,7 @@ void flecs_script_register_builtin_doc_functions(
 
 #endif
 
+/* Register all builtin script functions and methods. */
 void flecs_script_register_builtin_functions(
     ecs_world_t *world)
 {

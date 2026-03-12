@@ -1,6 +1,6 @@
 /**
  * @file query/cache/match.h
- * @brief Match table one or more times with query.
+ * @brief Cache match lifecycle: finalize and advance through iterator results.
  */
 
 void flecs_query_cache_match_fini(

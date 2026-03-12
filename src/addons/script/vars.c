@@ -8,6 +8,7 @@
 #ifdef FLECS_SCRIPT
 #include "script.h"
 
+/* Push a new variable scope onto the stack. */
 ecs_script_vars_t* flecs_script_vars_push(
     ecs_script_vars_t *parent,
     ecs_stack_t *stack,
@@ -64,7 +65,7 @@ void ecs_script_vars_fini(
     ecs_script_vars_t *vars)
 {
     ecs_check(vars->parent == NULL, ECS_INVALID_PARAMETER,
-        "ecs_script_vars_fini can only be called on the roots cope");
+        "ecs_script_vars_fini can only be called on the root scope");
     ecs_script_vars_pop(vars);
 error:
     return;
@@ -249,7 +250,7 @@ void ecs_script_vars_print(
     }
 }
 
-/* Static names for iterator fields */
+/* Numeric field names used as variable names ($0, $1, ..., $15) */
 static const char* flecs_script_iter_field_names[] = {
     "0", "1",  "2",  "3",  "4",  "5",  "6",  "7",
     "8", "9", "10", "11", "12", "13", "14", "15"
@@ -264,7 +265,7 @@ void ecs_script_vars_from_iter(
     ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(!offset || offset < it->count, ECS_INVALID_PARAMETER, NULL);
 
-    /* Set variable for $this */
+    /* Bind $this variable to the current entity */
     if (it->count) {
         ecs_script_var_t *var = ecs_script_vars_lookup(vars, "this");
         if (!var) {
@@ -272,11 +273,11 @@ void ecs_script_vars_from_iter(
             var->value.type = ecs_id(ecs_entity_t);
         }
 
-        /* Safe, variable value will never be written */
+        /* Safe: variable is read-only */
         var->value.ptr = ECS_CONST_CAST(ecs_entity_t*, &it->entities[offset]);
     }
 
-    /* Set variables for fields */
+    /* Bind field variables ($0, $1, ...) to matched component data */
     {
         int8_t i, field_count = it->field_count;
         for (i = 0; i < field_count; i ++) {
@@ -307,7 +308,7 @@ void ecs_script_vars_from_iter(
         }
     }
 
-    /* Set variables for query variables */
+    /* Bind named query variables to their matched entities */
     {
         if (it->query) {
             char **variable_names = it->query->vars;
@@ -339,7 +340,7 @@ void ecs_script_vars_from_iter(
                         ECS_INVALID_PARAMETER, NULL);
                 }
 
-                /* Safe, variable value will never be written */
+                /* Safe: variable is read-only */
                 var->value.ptr = ECS_CONST_CAST(ecs_entity_t*, e_ptr);
             }
         }

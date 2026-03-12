@@ -5,6 +5,8 @@
 
 #include "private_api.h"
 
+/* Resolve a slot relationship: find the ancestor that inherits from slot_of
+ * and add the (slot, child) pair to it. */
 static
 void flecs_instantiate_slot(
     ecs_world_t *world,
@@ -26,8 +28,7 @@ void flecs_instantiate_slot(
         flecs_sparse_on_add_cr(world, 
             r->table, ECS_RECORD_TO_ROW(r->row), cr, true, NULL);
     } else {
-        /* Slot is registered for other prefab, travel hierarchy
-         * upwards to find instance that inherits from slot_of */
+        /* Walk hierarchy upward to find instance that inherits from slot_of */
         ecs_entity_t parent = instance;
         int32_t depth = 0;
         do {
@@ -41,17 +42,12 @@ void flecs_instantiate_slot(
                     return;
                 }
 
-                /* The 'slot' variable is currently pointing to a child (or 
-                 * grandchild) of the current base. Find the original slot by
-                 * looking it up under the prefab it was registered. */
+                /* Resolve the original slot entity under slot_of. */
                 if (depth == 0) {
-                    /* If the current instance is an instance of slot_of, just
-                     * lookup the slot by name, which is faster than having to
-                     * create a relative path. */
+                    /* Direct child: simple name lookup */
                     slot = ecs_lookup_child(world, slot_of, name);
                 } else {
-                    /* If the slot is more than one level away from the slot_of
-                     * parent, use a relative path to find the slot */
+                    /* Deeper nesting: use relative path */
                     char *path = ecs_get_path_w_sep(world, parent, child, ".",
                         NULL);
                     slot = ecs_lookup_path_w_sep(world, slot_of, path, ".", 
@@ -91,6 +87,7 @@ error:
     return;
 }
 
+/* Insert an id into a type array in sorted order, shifting existing elements. */
 static
 int32_t flecs_child_type_insert(
     ecs_type_t *type,
@@ -106,7 +103,7 @@ int32_t flecs_child_type_insert(
         }
 
         if (cur > id) {
-            /* A larger id was found so id can't be part of the type. */
+            /* Array is sorted; id goes at this position */
             break;
         }
     }
@@ -127,6 +124,7 @@ int32_t flecs_child_type_insert(
     return i;
 }
 
+/* Copy sparse component data from base children to instance children. */
 void flecs_instantiate_sparse(
     ecs_world_t *world,
     const ecs_table_range_t *base_child_range,
@@ -175,6 +173,7 @@ void flecs_instantiate_sparse(
     }
 }
 
+/* Create instance children by cloning a range of prefab children. */
 static
 void flecs_instantiate_children(
     ecs_world_t *world,
@@ -200,23 +199,19 @@ void flecs_instantiate_children(
     ecs_table_t *table = r->table;
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    /* Instantiate child table for each instance */
-
-    /* Create component array for creating the table */
+    /* Build the component type for the instance child table */
     ecs_table_diff_t diff = { .added = {0}};
     diff.added.array = ecs_os_alloca_n(ecs_entity_t, type_count + 1);
     void **component_data = ecs_os_alloca_n(void*, type_count + 1);
 
-    /* Copy in component identifiers. Find the base index in the component
-     * array, since we'll need this to replace the base with the instance id */
+    /* Copy component ids, tracking ChildOf(base) position so we can
+     * replace it with ChildOf(instance) below. */
     int j, i, childof_base_index = -1;
     for (i = 0; i < type_count; i ++) {
         ecs_id_t id = ids[i];
 
-        /* If id has DontInherit flag don't inherit it, except for the name
-         * and ChildOf pairs. The name is preserved so applications can lookup
-         * the instantiated children by name. The ChildOf pair is replaced later
-         * with the instance parent. */
+        /* Skip DontInherit ids, except name (preserved for child lookup)
+         * and ChildOf (replaced with instance parent below). */
         if ((id != ecs_pair(ecs_id(EcsIdentifier), EcsName)) &&
             ECS_PAIR_FIRST(id) != EcsChildOf) 
         {
@@ -227,9 +222,8 @@ void flecs_instantiate_children(
             }
         }
 
-        /* If child is a slot, keep track of which parent to add it to, but
-         * don't add slot relationship to child of instance. If this is a child
-         * of a prefab, keep the SlotOf relationship intact. */
+        /* Track SlotOf target but don't add it to instance children.
+         * Exception: keep SlotOf intact if the instance is itself a prefab. */
         if (!(table->flags & EcsTableIsPrefab)) {
             if (ECS_IS_PAIR(id) && ECS_PAIR_FIRST(id) == EcsSlotOf) {
                 ecs_assert(slot_of == 0, ECS_INTERNAL_ERROR, NULL);
@@ -238,18 +232,15 @@ void flecs_instantiate_children(
             }
         }
 
-        /* Keep track of the element that creates the ChildOf relationship with
-         * the prefab parent. We need to replace this element to make sure the
-         * created children point to the instance and not the prefab */ 
+        /* Record the ChildOf(base) position; will be replaced with
+         * ChildOf(instance) to reparent children under the instance. */
         if (ECS_HAS_RELATION(id, EcsChildOf) && 
            (ECS_PAIR_SECOND(id) == (uint32_t)base)) {
             childof_base_index = diff.added.count;
         }
 
-        /* If this is a pure override, make sure we have a concrete version of the
-         * component. This relies on the fact that overrides always come after
-         * concrete components in the table type so we can check the components
-         * that have already been added to the child table type. */
+        /* AUTO_OVERRIDE: insert the concrete id. Overrides appear after
+         * concrete components in the type, so duplicates are handled. */
         if (ECS_HAS_ID_FLAG(id, AUTO_OVERRIDE)) {
             ecs_id_t concreteId = id & ~ECS_AUTO_OVERRIDE;
             flecs_child_type_insert(&diff.added, component_data, concreteId);
@@ -269,7 +260,7 @@ void flecs_instantiate_children(
         diff.added_flags |= flecs_id_flags_get(world, id);
     }
 
-    /* Table must contain children of base */
+    /* The child table must have a ChildOf(base) pair */
     ecs_assert(childof_base_index != -1, ECS_INTERNAL_ERROR, NULL);
 
     /* If children are added to a prefab, make sure they are prefabs too */
@@ -296,9 +287,7 @@ void flecs_instantiate_children(
     ecs_assert(i_table->type.count == diff.added.count,
         ECS_INTERNAL_ERROR, NULL);
 
-    /* The instance is trying to instantiate from a base that is also
-     * its parent. This would cause the hierarchy to instantiate itself
-     * which would cause infinite recursion. */
+    /* Debug check: detect cycles where a prefab child is the same as the instance. */
     const ecs_entity_t *children = ecs_table_entities(child_table);
 
 #ifdef FLECS_DEBUG
@@ -308,14 +297,13 @@ void flecs_instantiate_children(
             "cycle detected in IsA relationship");
     }
 #else
-    /* Bit of boilerplate to ensure that we don't get warnings about the
-     * error label not being used. */
+    /* Suppress unused-label warning for error: label */
     ecs_check(true, ECS_INVALID_OPERATION, NULL);
 #endif
 
-    /* Attempt to reserve ids for children that have the same offset from
-     * the instance as from the base prefab. This ensures stable ids for
-     * instance children, even across networked applications. */
+    /* Assign deterministic entity ids to instance children by mirroring
+     * each child's offset from root_prefab onto root_instance. This gives
+     * stable ids across networked applications. */
     ecs_instantiate_ctx_t ctx_cur = {base, instance};
     if (ctx) {
         ctx_cur = *ctx;
@@ -343,7 +331,9 @@ void flecs_instantiate_children(
             continue;
         }
 
-        /* Id is not in use. Make it alive & match the generation of the instance. */
+        /* Id is not in use. Make it alive, preserving the generation from
+         * root_instance (since prefab_offset is uint32_t, generation is
+         * inherited from root_instance via addition). */
         instance_child = ctx_cur.root_instance + prefab_offset;
         flecs_entities_make_alive(world, instance_child);
         flecs_entities_ensure(world, instance_child);
@@ -382,6 +372,7 @@ error:
     return;    
 }
 
+/* Copy all non-fragmenting (sparse/DontFragment) components from base to instance. */
 void flecs_instantiate_dont_fragment(
     ecs_world_t *world,
     ecs_entity_t base,
@@ -422,6 +413,7 @@ void flecs_instantiate_dont_fragment(
     }
 }
 
+/* Add overridden non-fragmenting components from base table to instance. */
 static
 void flecs_instantiate_override_dont_fragment(
     ecs_world_t *world,
@@ -446,6 +438,7 @@ void flecs_instantiate_override_dont_fragment(
     }
 }
 
+/* Recursively instantiate a prefab's children (and their children) for an instance. */
 void flecs_instantiate(
     ecs_world_t *world,
     ecs_entity_t base,
@@ -465,7 +458,7 @@ void flecs_instantiate(
             world, base_table, instance);
     }
 
-    /* If base has non-fragmenting components, add to instance */
+    /* Copy non-fragmenting (sparse) components from base to instance */
     if (record->row & EcsEntityHasDontFragment) {
         flecs_instantiate_dont_fragment(world, base, instance);
     }

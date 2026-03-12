@@ -11,12 +11,12 @@ ECS_COMPONENT_DECLARE(FlecsAlerts);
 
 typedef struct EcsAlert {
     char *message;
-    ecs_map_t instances;        /* Active instances for metric */
+    ecs_map_t instances;        /* Active instances for alert */
     ecs_ftime_t retain_period;  /* How long to retain the alert */
     ecs_vec_t severity_filters; /* Severity filters */
     
     /* Member range monitoring */
-    ecs_id_t id;                /* (Component) id that contains to monitor member */
+    ecs_id_t id;                /* (Component) id that contains the member to monitor */
     ecs_entity_t member;        /* Member to monitor */
     int32_t offset;             /* Offset of member in component */
     int32_t size;               /* Size of component */
@@ -111,6 +111,7 @@ ECS_COPY(EcsAlertInstance, dst, src, {
     dst->message = ecs_os_strdup(src->message);
 })
 
+/* Add alert instance to source entity's active alerts. */
 static
 void flecs_alerts_add_alert_to_src(
     ecs_world_t *world,
@@ -137,6 +138,7 @@ void flecs_alerts_add_alert_to_src(
     ecs_modified(world, source, EcsAlertsActive);
 }
 
+/* Remove alert from source entity's active alerts. */
 static
 void flecs_alerts_remove_alert_from_src(
     ecs_world_t *world,
@@ -164,6 +166,7 @@ void flecs_alerts_remove_alert_from_src(
     }
 }
 
+/* Determine alert severity based on severity filters. */
 static
 ecs_entity_t flecs_alert_get_severity(
     ecs_world_t *world,
@@ -192,6 +195,7 @@ ecs_entity_t flecs_alert_get_severity(
     return 0;
 }
 
+/* Check if member value is outside warning or error ranges. */
 static
 ecs_entity_t flecs_alert_out_of_range_kind(
     EcsAlert *alert,
@@ -237,6 +241,7 @@ ecs_entity_t flecs_alert_out_of_range_kind(
     }
 }
 
+/* Evaluate alert queries and create or update alert instances. */
 static
 void MonitorAlerts(ecs_iter_t *it) {
     ecs_world_t *world = it->real_world;
@@ -306,7 +311,7 @@ void MonitorAlerts(ecs_iter_t *it) {
                         continue;
                     }
                     if (range_severity < src_severity) {
-                        /* Range severity should not exceed alert severity */
+                        /* Cap: range severity should not exceed alert severity */
                         src_severity = range_severity;
                     }
                 }
@@ -347,6 +352,7 @@ void MonitorAlerts(ecs_iter_t *it) {
     }
 }
 
+/* Update alert instance state, expire inactive instances, and generate messages. */
 static
 void MonitorAlertInstances(ecs_iter_t *it) {
     ecs_world_t *world = it->real_world;
@@ -391,8 +397,7 @@ void MonitorAlertInstances(ecs_iter_t *it) {
         ecs_entity_t ai = it->entities[i];
         ecs_entity_t e = source[i].entity;
 
-        /* If source of alert is no longer alive, delete alert instance even if
-         * the alert has a retain period. */
+        /* Always delete instance if source entity was deleted, ignoring retain */
         if (!ecs_is_alive(world, e)) {
             ecs_delete(world, ai);
             continue;
@@ -434,9 +439,8 @@ void MonitorAlertInstances(ecs_iter_t *it) {
                 bool generate_message = alert->message;
                 if (generate_message) {
                     if (alert_instance[i].message) {
-                        /* If a message was already generated, only regenerate if
-                        * query has multiple variables. Variable values could have 
-                        * changed, this ensures the message remains up to date. */
+                        /* Only regenerate if query has multiple variables whose
+                         * values may have changed since last evaluation. */
                         generate_message = ecs_iter_get_var_count(&rit) > 1;
                     }
                 }
@@ -478,8 +482,7 @@ void MonitorAlertInstances(ecs_iter_t *it) {
             ecs_ftime_t t = timeout[i].inactive_time;
             timeout[i].inactive_time += it->delta_system_time;
             if (t < timeout[i].expire_time) {
-                /* Alert instance no longer matches query, but is still
-                    * within the timeout period. Keep it alive. */
+                /* Still within retain period, keep alive */
                 continue;
             }
         }
@@ -514,17 +517,17 @@ ecs_entity_t ecs_alert_init(
 
     ecs_query_t *q = ecs_query_init(world, &private_desc);
     if (!q) {
-        ecs_err("failed to create alert filter");
+        ecs_err("failed to create alert query");
         return 0;
     }
 
     if (!(q->flags & EcsQueryMatchThis)) {
-        ecs_err("alert filter must have at least one '$this' term");
+        ecs_err("alert query must have at least one '$this' term");
         ecs_query_fini(q);
         return 0;
     }
 
-    /* Initialize Alert component which identifiers entity as alert */
+    /* Initialize Alert component which identifies entity as alert */
     EcsAlert *alert = ecs_ensure(world, result, EcsAlert);
     ecs_assert(alert != NULL, ECS_INTERNAL_ERROR, NULL);
     alert->message = ecs_os_strdup(desc->message);
@@ -706,6 +709,7 @@ error:
     return 0;
 }
 
+/* Import and register the alerts module components, tags, and systems. */
 void FlecsAlertsImport(ecs_world_t *world) {
     ECS_MODULE_DEFINE(world, FlecsAlerts);
 

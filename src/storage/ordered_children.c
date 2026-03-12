@@ -1,5 +1,11 @@
+/**
+ * @file storage/ordered_children.c
+ * @brief Storage for ordered list of entity (child) ids.
+ */
+
 #include "../private_api.h"
 
+/* Initialize ordered children storage for a component record. */
 void flecs_ordered_children_init(
     ecs_world_t *world,
     ecs_component_record_t *cr)
@@ -8,6 +14,7 @@ void flecs_ordered_children_init(
         &world->allocator, &cr->pair->ordered_children, ecs_entity_t, 0);
 }
 
+/* Free ordered children storage and the children tables map. */
 void flecs_ordered_children_fini(
     ecs_world_t *world,
     ecs_component_record_t *cr)
@@ -17,6 +24,7 @@ void flecs_ordered_children_fini(
     ecs_map_fini(&cr->pair->children_tables);
 }
 
+/* Populate ordered children storage with all existing children of a ChildOf pair. */
 void flecs_ordered_children_populate(
     ecs_world_t *world,
     ecs_component_record_t *cr)
@@ -36,6 +44,7 @@ void flecs_ordered_children_populate(
     }
 }
 
+/* Clear the ordered children vector, asserting no non-fragmenting children remain. */
 void flecs_ordered_children_clear(
     ecs_component_record_t *cr)
 {    
@@ -54,6 +63,7 @@ void flecs_ordered_children_clear(
     }
 }
 
+/* Append a child entity to the ordered children array. */
 void flecs_ordered_entities_append(
     ecs_world_t *world,
     ecs_component_record_t *cr,
@@ -67,9 +77,8 @@ void flecs_ordered_entities_append(
         &world->allocator, &pr->ordered_children, ecs_entity_t)[0] = e;
 
     if (cr->flags & EcsIdPrefabChildren) {
-        /* Register index of prefab child so that it can be used to lookup 
-         * corresponding instance child. */
-        ecs_map_ensure(&world->prefab_child_indices, e)[0] = 
+        /* Map prefab child to its index for instance child lookup */
+        ecs_map_ensure(&world->prefab_child_indices, e)[0] =
             flecs_ito(uint64_t, ecs_vec_count(&pr->ordered_children) - 1);
     } else {
         ecs_assert(
@@ -78,6 +87,7 @@ void flecs_ordered_entities_append(
     }
 }
 
+/* Remove a child entity from the ordered children array. */
 void flecs_ordered_entities_remove(
     ecs_world_t *world,
     ecs_component_record_t *cr,
@@ -100,6 +110,7 @@ void flecs_ordered_entities_remove(
     }
 }
 
+/* Remove entities from the ordered children array of their parent's ChildOf record. */
 static
 void flecs_ordered_entities_unparent_internal(
     ecs_world_t *world,
@@ -119,6 +130,7 @@ void flecs_ordered_entities_unparent_internal(
     }
 }
 
+/* Reparent entities in ordered children storage from source to destination table. */
 void flecs_ordered_children_reparent(
     ecs_world_t *world,
     const ecs_table_t *dst,
@@ -139,6 +151,7 @@ void flecs_ordered_children_reparent(
     }
 }
 
+/* Remove entities from ordered children storage when they lose their parent. */
 void flecs_ordered_children_unparent(
     ecs_world_t *world,
     const ecs_table_t *src,
@@ -149,6 +162,7 @@ void flecs_ordered_children_unparent(
     flecs_ordered_entities_unparent_internal(world, src, src, row, count);
 }
 
+/* Reorder the children of a parent entity to match a provided order. */
 void flecs_ordered_children_reorder(
     ecs_world_t *world,
     ecs_entity_t parent,
@@ -181,14 +195,14 @@ void flecs_ordered_children_reorder(
     (void)parent_child_count;
 
     if (parent_children == children) {
-        return; /* Application is passing the existing children array. */
+        return; /* Already the same array, nothing to do */
     }
 
     ecs_check(children != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(parent_children != NULL, ECS_INTERNAL_ERROR, NULL);
 
     #ifdef FLECS_DEBUG
-    /* Make sure that the provided child ids equal the existing children */
+    /* Verify provided children match existing children (order may differ) */
     int i, j;
     for (i = 0; i < child_count; i ++) {
         ecs_entity_t child = parent_children[i];
@@ -210,7 +224,6 @@ void flecs_ordered_children_reorder(
     }
     #endif
 
-    /* The actual operation. */
     ecs_os_memcpy_n(parent_children, children, ecs_entity_t, child_count);
 error:
     return;

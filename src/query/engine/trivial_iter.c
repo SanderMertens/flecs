@@ -1,10 +1,14 @@
 /**
  * @file query/engine/trivial_iter.c
- * @brief Iterator for trivial queries.
+ * @brief Fast-path iterator for trivial queries (And-only, no wildcards, Self only).
+ *
+ * Bypasses the VM entirely. Uses one term as the driving table iterator and
+ * validates remaining terms with simple table lookups.
  */
 
 #include "../../private_api.h"
 
+/* Initialize the table cache iterator for a trivial query search. */
 static
 bool flecs_query_trivial_search_init(
     const ecs_query_run_ctx_t *ctx,
@@ -14,7 +18,6 @@ bool flecs_query_trivial_search_init(
     ecs_flags64_t term_set)
 {
     if (!redo) {
-        /* Find first trivial term*/
         int32_t t = 0;
         if (term_set) {
             for (; t < query->term_count; t ++) {
@@ -42,8 +45,6 @@ bool flecs_query_trivial_search_init(
             }
         }
 
-        /* Find next term to evaluate once */
-        
         for (t = t + 1; t < query->term_count; t ++) {
             if (term_set & (1llu << t)) {
                 break;
@@ -56,6 +57,7 @@ bool flecs_query_trivial_search_init(
     return true;
 }
 
+/* Search for the next matching table in a trivial query with a term set. */
 bool flecs_query_trivial_search(
     const ecs_query_run_ctx_t *ctx,
     ecs_query_trivial_ctx_t *op_ctx,
@@ -122,6 +124,7 @@ bool flecs_query_trivial_search(
     return true;
 }
 
+/* Search for the next matching table in a trivial query using id array. */
 bool flecs_query_is_trivial_search(
     const ecs_query_run_ctx_t *ctx,
     ecs_query_trivial_ctx_t *op_ctx,
@@ -180,6 +183,7 @@ next:
     return true;
 }
 
+/* Test whether the iterator's current table matches a trivial query. */
 bool flecs_query_trivial_test(
     const ecs_query_run_ctx_t *ctx,
     bool redo,

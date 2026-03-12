@@ -1,12 +1,11 @@
 /**
  * @file ref.c
- * @brief Ref API.
- * 
- * Refs provide faster access to components than get.
+ * @brief Ref API: cached component pointers for faster repeated access.
  */
 
 #include "private_api.h"
 
+/* Create a ref that caches an entity's component pointer and table version. */
 ecs_ref_t ecs_ref_init_id(
     const ecs_world_t *world,
     ecs_entity_t entity,
@@ -44,6 +43,8 @@ error:
     return (ecs_ref_t){0};
 }
 
+/* Refresh the cached pointer if the entity's table has changed. Uses a
+ * two-level version check: fast version (global) then per-table version. */
 void ecs_ref_update(
     const ecs_world_t *world,
     ecs_ref_t *ref)
@@ -66,7 +67,7 @@ void ecs_ref_update(
 
     ecs_record_t *r = ref->record;
     ecs_table_t *table = r->table;
-    if (!table) { /* Table can be NULL, entity could have been deleted */
+    if (!table) { /* Entity was deleted or has no components */
         ref->table_id = 0;
         ref->table_version_fast = 0;
         ref->table_version = 0;
@@ -97,6 +98,7 @@ error:
     return;
 }
 
+/* Get the cached component pointer, refreshing if stale. */
 void* ecs_ref_get_id(
     const ecs_world_t *world,
     ecs_ref_t *ref,
