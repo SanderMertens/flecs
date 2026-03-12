@@ -1222,6 +1222,7 @@
                 "get_ref_after_delete_other",
                 "get_ref_after_delete_child",
                 "get_ref_after_clear",
+                "get_ref_after_clear_table",
                 "get_ref_after_clear_other",
                 "get_ref_after_realloc",
                 "get_ref_after_realloc_w_lifecycle",

@@ -1222,6 +1222,8 @@ void flecs_table_fini_data(
     table->data.count = 0;
     table->_->traversable_count = 0;
     table->flags &= ~EcsTableHasTraversable;
+
+    flecs_increment_table_version(world, table);
 }
 
 const ecs_entity_t* ecs_table_entities(

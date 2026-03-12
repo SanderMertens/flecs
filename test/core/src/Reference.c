@@ -260,6 +260,30 @@ void Reference_get_ref_after_clear(void) {
     ecs_fini(world);
 }
 
+void Reference_get_ref_after_clear_table(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
+
+    ecs_ref_t ref = ecs_ref_init(world, e, Position);
+    const Position *p = ecs_ref_get(world, &ref, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_table_t *table = ecs_get_table(world, e);
+    test_assert(table != NULL);
+
+    ecs_table_clear_entities(world, table);
+
+    test_assert(!ecs_is_alive(world, e));
+    test_assert(ecs_ref_get(world, &ref, Position) == NULL);
+
+    ecs_fini(world);
+}
+
 void Reference_get_ref_after_clear_other(void) {
     ecs_world_t *world = ecs_mini();
 
