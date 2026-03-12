@@ -10,15 +10,18 @@ namespace flecs {
 /**
  * @defgroup cpp_addons_systems Systems
  * @ingroup cpp_addons
- * Systems are a query + function that can be ran manually or by a pipeline.
+ * Systems are a query and a function that can be run manually or by a pipeline.
  *
  * @{
  */
 
+/** Tick source component. */
 using TickSource = EcsTickSource;
 
+/** Forward declaration for system. */
 struct system;
 
+/** Forward declaration for system builder. */
 template<typename ... Components>
 struct system_builder;
 

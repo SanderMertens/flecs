@@ -71,19 +71,19 @@ inline flecs::entity entity_view::parent() const {
 
 inline flecs::entity entity_view::mut(const flecs::world& stage) const {
     ecs_assert(!stage.is_readonly(), ECS_INVALID_PARAMETER, 
-        "cannot use readonly world/stage to create mutable handle");
+        "cannot use read-only world/stage to create mutable handle");
     return flecs::entity(id_).set_stage(stage.c_ptr());
 }
 
 inline flecs::entity entity_view::mut(const flecs::iter& it) const {
     ecs_assert(!it.world().is_readonly(), ECS_INVALID_PARAMETER, 
-        "cannot use iterator created for readonly world/stage to create mutable handle");
+        "cannot use iterator created for read-only world/stage to create mutable handle");
     return flecs::entity(id_).set_stage(it.world().c_ptr());
 }
 
 inline flecs::entity entity_view::mut(const flecs::entity_view& e) const {
     ecs_assert(!e.world().is_readonly(), ECS_INVALID_PARAMETER, 
-        "cannot use entity created for readonly world/stage to create mutable handle");
+        "cannot use entity created for read-only world/stage to create mutable handle");
     return flecs::entity(id_).set_stage(e.world_);
 }
 

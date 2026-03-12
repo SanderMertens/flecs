@@ -3,7 +3,7 @@
  * @brief Alerts entity mixin.
  */
 
-/** Return number of alerts for entity.
+/** Return the number of alerts for an entity.
  * 
  * @memberof flecs::entity_view
  * @ingroup cpp_addons_alerts

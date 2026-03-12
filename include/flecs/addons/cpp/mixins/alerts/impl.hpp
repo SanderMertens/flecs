@@ -28,7 +28,7 @@ struct alert final : entity
 inline alerts::alerts(flecs::world& world) {
     world.import<metrics>();
 
-    /* Import C module  */
+    // Import C module.
     FlecsAlertsImport(world);
 
     world.component<AlertsActive>();

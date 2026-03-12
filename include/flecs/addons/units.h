@@ -2,7 +2,7 @@
  * @file addons/units.h
  * @brief Units module.
  *
- * Builtin standard units. The units addon is not imported by default, even if
+ * Built-in standard units. The units addon is not imported by default, even if
  * the addon is included in the build. To import the module, do:
  *
  * In C:
@@ -50,7 +50,7 @@ extern "C" {
 /**
  * @defgroup c_addons_units_prefixes Prefixes
  * @ingroup c_addons_units
- * Prefixes to indicate unit count (e.g. Kilo, Mega)
+ * Prefixes to indicate unit count (e.g., Kilo, Mega).
  *
  * @{
  */
@@ -272,7 +272,7 @@ FLECS_API extern     ecs_entity_t EcsGigaBytesPerSecond; /**< GigaBytesPerSecond
 /** @} */
 
 /**
- * @defgroup c_addons_units_duration Duration
+ * @defgroup c_addons_units_angle Angle
  * @ingroup c_addons_units
  * @{
  */
@@ -284,7 +284,7 @@ FLECS_API extern     ecs_entity_t EcsDegrees;      /**< Degrees unit. */
 /** @} */
 
 /**
- * @defgroup c_addons_units_angle Angle
+ * @defgroup c_addons_units_frequency Frequency
  * @ingroup c_addons_units
  * @{
  */

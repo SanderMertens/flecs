@@ -4,12 +4,12 @@
  *
  * Minimalistic HTTP server that can receive and reply to simple HTTP requests.
  * The main goal of this addon is to enable remotely connecting to a running
- * Flecs application (for example, with a web-based UI) and request/visualize
+ * Flecs application (for example, with a web-based UI) and request and visualize
  * data from the ECS world.
  *
  * Each server instance creates a single thread used for receiving requests.
- * Receiving requests are enqueued and handled when the application calls
- * ecs_http_server_dequeue(). This increases latency of request handling vs.
+ * Received requests are enqueued and handled when the application calls
+ * ecs_http_server_dequeue(). This increases the latency of request handling vs.
  * responding directly in the receive thread, but is better suited for
  * retrieving data from ECS applications, as requests can be processed by an ECS
  * system without having to lock the world.
@@ -22,7 +22,7 @@
 /**
  * @defgroup c_addons_http Http
  * @ingroup c_addons
- * Simple HTTP server used for serving up REST API.
+ * Simple HTTP server used for serving up the REST API.
  *
  * @{
  */
@@ -34,10 +34,10 @@
 #ifndef FLECS_HTTP_H
 #define FLECS_HTTP_H
 
-/** Maximum number of headers in request. */
+/** Maximum number of headers in a request. */
 #define ECS_HTTP_HEADER_COUNT_MAX (32)
 
-/** Maximum number of query parameters in request. */
+/** Maximum number of query parameters in a request. */
 #define ECS_HTTP_QUERY_PARAM_COUNT_MAX (32)
 
 #ifdef __cplusplus
@@ -49,17 +49,17 @@ typedef struct ecs_http_server_t ecs_http_server_t;
 
 /** A connection manages communication with the remote host. */
 typedef struct {
-    uint64_t id;
-    ecs_http_server_t *server;
+    uint64_t id;                   /**< Connection ID. */
+    ecs_http_server_t *server;     /**< Server. */
 
-    char host[128];
-    char port[16];
+    char host[128];                /**< Remote host. */
+    char port[16];                 /**< Remote port. */
 } ecs_http_connection_t;
 
-/** Helper type used for headers & URL query parameters. */
+/** Helper type used for headers and URL query parameters. */
 typedef struct {
-    const char *key;
-    const char *value;
+    const char *key;               /**< Key. */
+    const char *value;             /**< Value. */
 } ecs_http_key_value_t;
 
 /** Supported request methods. */
@@ -74,32 +74,33 @@ typedef enum {
 
 /** An HTTP request. */
 typedef struct {
-    uint64_t id;
+    uint64_t id;                   /**< Request ID. */
 
-    ecs_http_method_t method;
-    char *path;
-    char *body;
-    ecs_http_key_value_t headers[ECS_HTTP_HEADER_COUNT_MAX];
-    ecs_http_key_value_t params[ECS_HTTP_HEADER_COUNT_MAX];
-    int32_t header_count;
-    int32_t param_count;
+    ecs_http_method_t method;      /**< Request method. */
+    char *path;                    /**< Request path. */
+    char *body;                    /**< Request body. */
+    ecs_http_key_value_t headers[ECS_HTTP_HEADER_COUNT_MAX]; /**< Request headers. */
+    ecs_http_key_value_t params[ECS_HTTP_QUERY_PARAM_COUNT_MAX];  /**< Request query parameters. */
+    int32_t header_count;          /**< Number of headers. */
+    int32_t param_count;           /**< Number of query parameters. */
 
-    ecs_http_connection_t *conn;
+    ecs_http_connection_t *conn;   /**< Connection. */
 } ecs_http_request_t;
 
 /** An HTTP reply. */
 typedef struct {
-    int code;                   /**< default = 200 */
-    ecs_strbuf_t body;          /**< default = "" */
-    const char* status;         /**< default = OK */
-    const char* content_type;   /**< default = application/json */
-    ecs_strbuf_t headers;       /**< default = "" */
+    int code;                   /**< default = 200. */
+    ecs_strbuf_t body;          /**< default = "". */
+    const char* status;         /**< default = OK. */
+    const char* content_type;   /**< default = application/json. */
+    ecs_strbuf_t headers;       /**< default = "". */
 } ecs_http_reply_t;
 
+/** Default initializer for ecs_http_reply_t. */
 #define ECS_HTTP_REPLY_INIT \
     (ecs_http_reply_t){200, ECS_STRBUF_INIT, "OK", "application/json", ECS_STRBUF_INIT}
 
-/* Global HTTP statistics. */
+/** Global HTTP statistics. */
 extern int64_t ecs_http_request_received_count;       /**< Total number of HTTP requests received. */
 extern int64_t ecs_http_request_invalid_count;        /**< Total number of invalid HTTP requests. */
 extern int64_t ecs_http_request_handled_ok_count;     /**< Total number of successful HTTP requests. */
@@ -121,16 +122,16 @@ typedef bool (*ecs_http_reply_action_t)(
 
 /** Used with ecs_http_server_init(). */
 typedef struct {
-    ecs_http_reply_action_t callback; /**< Function called for each request  */
-    void *ctx;                        /**< Passed to callback (optional) */
-    uint16_t port;                    /**< HTTP port */
-    const char *ipaddr;               /**< Interface to listen on (optional) */
-    int32_t send_queue_wait_ms;       /**< Send queue wait time when empty */
-    double cache_timeout;             /**< Cache invalidation timeout (0 disables caching) */
-    double cache_purge_timeout;       /**< Cache purge timeout (for purging cache entries) */
+    ecs_http_reply_action_t callback; /**< Function called for each request. */
+    void *ctx;                        /**< Passed to callback (optional). */
+    uint16_t port;                    /**< HTTP port. */
+    const char *ipaddr;               /**< Interface to listen on (optional). */
+    int32_t send_queue_wait_ms;       /**< Send queue wait time when empty. */
+    double cache_timeout;             /**< Cache invalidation timeout (0 disables caching). */
+    double cache_purge_timeout;       /**< Cache purge timeout (for purging cache entries). */
 } ecs_http_server_desc_t;
 
-/** Create server.
+/** Create a server.
  * Use ecs_http_server_start() to start receiving requests.
  *
  * @param desc Server configuration parameters.
@@ -140,7 +141,7 @@ FLECS_API
 ecs_http_server_t* ecs_http_server_init(
     const ecs_http_server_desc_t *desc);
 
-/** Destroy server.
+/** Destroy a server.
  * This operation will stop the server if it was still running.
  *
  * @param server The server to destroy.
@@ -149,8 +150,8 @@ FLECS_API
 void ecs_http_server_fini(
     ecs_http_server_t* server);
 
-/** Start server.
- * After this operation the server will be able to accept requests.
+/** Start a server.
+ * After this operation, the server will be able to accept requests.
  *
  * @param server The server to start.
  * @return Zero if successful, non-zero if failed.
@@ -164,14 +165,15 @@ int ecs_http_server_start(
  * requests will be enqueued while processing requests.
  *
  * @param server The server for which to process requests.
+ * @param delta_time The time passed since the last call to dequeue.
  */
 FLECS_API
 void ecs_http_server_dequeue(
     ecs_http_server_t* server,
     ecs_ftime_t delta_time);
 
-/** Stop server.
- * After this operation no new requests can be received.
+/** Stop a server.
+ * After this operation, no new requests can be received.
  *
  * @param server The server.
  */
@@ -187,7 +189,8 @@ void ecs_http_server_stop(
  * @param srv The server.
  * @param req The request.
  * @param len The length of the request (optional).
- * @return The reply.
+ * @param reply_out The reply (out parameter).
+ * @return Zero if success, non-zero if failed.
  */
 FLECS_API
 int ecs_http_server_http_request(
@@ -196,7 +199,15 @@ int ecs_http_server_http_request(
     ecs_size_t len,
     ecs_http_reply_t *reply_out);
 
-/** Convenience wrapper around ecs_http_server_http_request(). */
+/** Convenience wrapper around ecs_http_server_http_request().
+ *
+ * @param srv The server.
+ * @param method The HTTP method (e.g., "GET").
+ * @param req The request path.
+ * @param body The request body (optional).
+ * @param reply_out The reply (out parameter).
+ * @return Zero if success, non-zero if failed.
+ */
 FLECS_API
 int ecs_http_server_request(
     ecs_http_server_t* srv,
@@ -205,15 +216,19 @@ int ecs_http_server_request(
     const char *body,
     ecs_http_reply_t *reply_out);
 
-/** Get context provided in ecs_http_server_desc_t */
+/** Get context provided in ecs_http_server_desc_t.
+ *
+ * @param srv The server.
+ * @return The context.
+ */
 FLECS_API
 void* ecs_http_server_ctx(
     ecs_http_server_t* srv);
 
-/** Find header in request.
+/** Find a header in a request.
  *
  * @param req The request.
- * @param name name of the header to find
+ * @param name Name of the header to find.
  * @return The header value, or NULL if not found.
 */
 FLECS_API
@@ -221,7 +236,7 @@ const char* ecs_http_get_header(
     const ecs_http_request_t* req,
     const char* name);
 
-/** Find query parameter in request.
+/** Find a query parameter in a request.
  *
  * @param req The request.
  * @param name The parameter name.

@@ -16,12 +16,14 @@ namespace flecs {
 template<typename Base, typename ... Components>
 struct observer_builder_i : query_builder_i<Base, Components ...> {
     using BaseClass = query_builder_i<Base, Components ...>;
+    /** Default constructor. */
     observer_builder_i()
         : BaseClass(nullptr)
         , desc_(nullptr)
         , event_count_(0) { }
 
-    observer_builder_i(ecs_observer_desc_t *desc) 
+    /** Construct from an observer descriptor. */
+    observer_builder_i(ecs_observer_desc_t *desc)
         : BaseClass(&desc->query)
         , desc_(desc)
         , event_count_(0) { }
@@ -43,25 +45,25 @@ struct observer_builder_i : query_builder_i<Base, Components ...> {
         return *this;
     }
 
-    /** Invoke observer for anything that matches its query on creation */
+    /** Invoke the observer for anything that matches its query on creation. */
     Base& yield_existing(bool value = true) {
         desc_->yield_existing = value;
         return *this;
     }
 
-    /** Set observer flags */
+    /** Set the observer flags. */
     Base& observer_flags(ecs_flags32_t flags) {
         desc_->flags_ |= flags;
         return *this;
     }
 
-    /** Set observer context */
+    /** Set the observer context. */
     Base& ctx(void *ptr) {
         desc_->ctx = ptr;
         return *this;
     }
 
-    /** Set observer run callback */
+    /** Set the observer run callback. */
     Base& run(ecs_iter_action_t action) {
         desc_->run = action;
         return *this;

@@ -28,19 +28,20 @@
 extern "C" {
 #endif
 
+/** Maximum number of severity filters per alert. */
 #define ECS_ALERT_MAX_SEVERITY_FILTERS (4)
 
-/** Module id. */
+/** Module ID. */
 FLECS_API extern ECS_COMPONENT_DECLARE(FlecsAlerts);
 
-/* Module components */
+/** Module components. */
 
-FLECS_API extern ECS_COMPONENT_DECLARE(EcsAlert);          /**< Component added to alert, and used as first element of alert severity pair. */
+FLECS_API extern ECS_COMPONENT_DECLARE(EcsAlert);          /**< Component added to alert, and used as the first element of the alert severity pair. */
 FLECS_API extern ECS_COMPONENT_DECLARE(EcsAlertInstance);  /**< Component added to alert instance. */
-FLECS_API extern ECS_COMPONENT_DECLARE(EcsAlertsActive);   /**< Component added to alert source which tracks how many active alerts there are. */
-FLECS_API extern ECS_COMPONENT_DECLARE(EcsAlertTimeout);   /**< Component added to alert which tracks how long an alert has been inactive. */
+FLECS_API extern ECS_COMPONENT_DECLARE(EcsAlertsActive);   /**< Component added to alert source, which tracks how many active alerts there are. */
+FLECS_API extern ECS_COMPONENT_DECLARE(EcsAlertTimeout);   /**< Component added to alert, which tracks how long an alert has been inactive. */
 
-/* Alert severity tags */
+/** Alert severity tags. */
 FLECS_API extern ECS_TAG_DECLARE(EcsAlertInfo);            /**< Info alert severity. */
 FLECS_API extern ECS_TAG_DECLARE(EcsAlertWarning);         /**< Warning alert severity. */
 FLECS_API extern ECS_TAG_DECLARE(EcsAlertError);           /**< Error alert severity. */
@@ -48,15 +49,15 @@ FLECS_API extern ECS_TAG_DECLARE(EcsAlertCritical);        /**< Critical alert s
 
 /** Component added to alert instance. */
 typedef struct EcsAlertInstance {
-    char *message; /**< Generated alert message */
+    char *message; /**< Generated alert message. */
 } EcsAlertInstance;
 
 /** Map with active alerts for entity. */
 typedef struct EcsAlertsActive {
-    int32_t info_count;    /**< Number of alerts for source with info severity */
-    int32_t warning_count; /**< Number of alerts for source with warning severity */
-    int32_t error_count;   /**< Number of alerts for source with error severity */
-    ecs_map_t alerts;
+    int32_t info_count;    /**< Number of alerts for source with info severity. */
+    int32_t warning_count; /**< Number of alerts for source with warning severity. */
+    int32_t error_count;   /**< Number of alerts for source with error severity. */
+    ecs_map_t alerts;      /**< Map of active alerts for entity. */
 } EcsAlertsActive;
 
 /** Alert severity filter. 
@@ -66,18 +67,18 @@ typedef struct EcsAlertsActive {
  * severity of an alert from Warning to Error.
  */
 typedef struct ecs_alert_severity_filter_t {
-    ecs_entity_t severity; /* Severity kind */
-    ecs_id_t with;         /* Component to match */
-    const char *var;       /* Variable to match component on. Do not include the
-                            * '$' character. Leave to NULL for $this. */
-    int32_t _var_index;    /* Index of variable in filter (do not set) */
+    ecs_entity_t severity; /**< Severity kind. */
+    ecs_id_t with;         /**< Component to match. */
+    const char *var;       /**< Variable to match component on. Do not include the
+                            * '$' character. Leave as NULL for $this. */
+    int32_t _var_index;    /**< Index of variable in query (do not set). */
 } ecs_alert_severity_filter_t;
 
 /** Alert descriptor, used with ecs_alert_init(). */
 typedef struct ecs_alert_desc_t {
-    int32_t _canary;
+    int32_t _canary;       /**< Used for validity testing. Do not set. */
 
-    /** Entity associated with alert */
+    /** Entity associated with alert. */
     ecs_entity_t entity;
 
     /** Alert query. An alert will be created for each entity that matches the
@@ -96,13 +97,13 @@ typedef struct ecs_alert_desc_t {
      */
     const char *message;
 
-    /** User friendly name. Will only be set if FLECS_DOC addon is enabled. */
+    /** User-friendly name. Will only be set if FLECS_DOC addon is enabled. */
     const char *doc_name;
 
-    /** Description of alert. Will only be set if FLECS_DOC addon is enabled */
+    /** Description of alert. Will only be set if FLECS_DOC addon is enabled. */
     const char *brief;
 
-    /** Metric kind. Must be EcsAlertInfo, EcsAlertWarning, EcsAlertError or
+    /** Alert severity. Must be EcsAlertInfo, EcsAlertWarning, EcsAlertError, or
      * EcsAlertCritical. Defaults to EcsAlertError. */
     ecs_entity_t severity;
 
@@ -114,20 +115,20 @@ typedef struct ecs_alert_desc_t {
 
     /** The retain period specifies how long an alert must be inactive before it
      * is cleared. This makes it easier to track noisy alerts. While an alert is
-     * inactive its duration won't increase.
+     * inactive, its duration won't increase.
      * When the retain period is 0, the alert will clear immediately after it no
      * longer matches the alert query. */
     ecs_ftime_t retain_period;
 
-    /** Alert when member value is out of range. Uses the warning/error ranges
+    /** Alert when member value is out of range. Uses the warning and error ranges
      * assigned to the member in the MemberRanges component (optional). */
     ecs_entity_t member;
 
-    /** (Component) id of member to monitor. If left to 0 this will be set to
+    /** (Component) ID of member to monitor. If left to 0, this will be set to
      * the parent entity of the member (optional). */
     ecs_id_t id;
 
-    /** Variable from which to fetch the member (optional). When left to NULL
+    /** Variable from which to fetch the member (optional). When left to NULL,
      * 'id' will be obtained from $this. */
     const char *var;
 } ecs_alert_desc_t;

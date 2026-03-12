@@ -42,6 +42,10 @@ public:
         return *this;
     }
 
+    /** Specify in which phase the system should run, using an enum constant.
+     *
+     * @param phase The enum phase value.
+     */
     template <typename E, if_t<is_enum<E>::value> = 0>
     Base& kind(E phase)
     {
@@ -59,26 +63,26 @@ public:
         return this->kind(_::type<Phase>::id(world_v()));
     }
 
-    /** Specify whether system can run on multiple threads.
+    /** Specify whether the system can run on multiple threads.
      *
-     * @param value If false system will always run on a single thread.
+     * @param value If false, the system will always run on a single thread.
      */
     Base& multi_threaded(bool value = true) {
         desc_->multi_threaded = value;
         return *this;
     }
 
-    /** Specify whether system should be ran in staged context.
+    /** Specify whether the system should be run in an immediate (non-staged) context.
      *
-     * @param value If false system will always run staged.
+     * @param value If false, the system will always run staged.
      */
     Base& immediate(bool value = true) {
         desc_->immediate = value;
         return *this;
     }
 
-    /** Set system interval.
-     * This operation will cause the system to be ran at the specified interval.
+    /** Set the system interval.
+     * This operation will cause the system to be run at the specified interval.
      *
      * The timer is synchronous, and is incremented each frame by delta_time.
      *
@@ -89,8 +93,8 @@ public:
         return *this;
     }
 
-    /** Set system rate.
-     * This operation will cause the system to be ran at a multiple of the 
+    /** Set the system rate.
+     * This operation will cause the system to be run at a multiple of the
      * provided tick source. The tick source may be any entity, including
      * another system.
      *
@@ -103,8 +107,8 @@ public:
         return *this;
     }
 
-    /** Set system rate.
-     * This operation will cause the system to be ran at a multiple of the 
+    /** Set the system rate.
+     * This operation will cause the system to be run at a multiple of the
      * frame tick frequency. If a tick source was provided, this just updates
      * the rate of the system.
      *
@@ -115,7 +119,7 @@ public:
         return *this;
     }
 
-    /** Set tick source.
+    /** Set the tick source.
      * This operation sets a shared tick source for the system.
      *
      * @tparam T The type associated with the singleton tick source to use for the system.
@@ -126,7 +130,7 @@ public:
         return *this;
     }
 
-    /** Set tick source.
+    /** Set the tick source.
      * This operation sets a shared tick source for the system.
      *
      * @param tick_source The tick source to use for the system.
@@ -136,13 +140,13 @@ public:
         return *this;
     }
 
-    /** Set system context */
+    /** Set the system context. */
     Base& ctx(void *ptr) {
         desc_->ctx = ptr;
         return *this;
     }
 
-    /** Set system run callback */
+    /** Set the system run callback. */
     Base& run(ecs_iter_action_t action) {
         desc_->run = action;
         return *this;

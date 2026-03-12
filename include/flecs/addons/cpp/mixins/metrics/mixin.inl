@@ -1,6 +1,10 @@
+/**
+ * @file addons/cpp/mixins/metrics/mixin.inl
+ * @brief Metrics world mixin.
+ */
 
-/** Create metric.
- * 
+/** Create a metric.
+ *
  * @ingroup cpp_addons_metrics
  * @memberof flecs::world
  */

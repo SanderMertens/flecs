@@ -3,7 +3,7 @@
  * @brief JSON iterable mixin.
  */
 
-/** Serialize iterator result to JSON.
+/** Serialize an iterator result to JSON.
  * 
  * @memberof flecs::iter
  * @ingroup cpp_addons_json

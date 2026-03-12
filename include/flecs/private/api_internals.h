@@ -16,44 +16,44 @@ extern "C" {
 
 /** Record for entity index. */
 struct ecs_record_t {
-    ecs_table_t *table;                        /**< Identifies a type (and table) in world */
-    uint32_t row;                              /**< Table row of the entity */
-    int32_t dense;                             /**< Index in dense array of entity index */    
+    ecs_table_t *table;                        /**< Identifies a type (and table) in the world. */
+    uint32_t row;                              /**< Table row of the entity. */
+    int32_t dense;                             /**< Index in dense array of entity index. */
 };
 
 /** Header for table cache elements. */
 typedef struct ecs_table_cache_hdr_t {
     struct ecs_component_record_t *cr;         /**< Component record for component. */
     ecs_table_t *table;                        /**< Table associated with element. */
-    struct ecs_table_cache_hdr_t *prev, *next; /**< Next/previous elements for id in table cache. */
+    struct ecs_table_cache_hdr_t *prev, *next; /**< Previous and next elements for ID in table cache. */
 } ecs_table_cache_hdr_t;
 
-/** Record that stores location of a component in a table. 
+/** Record that stores the location of a component in a table.
  * Table records are registered with component records, which allows for quickly
  * finding all tables for a specific component. */
 struct ecs_table_record_t {
-    ecs_table_cache_hdr_t hdr;                 /**< Table cache header */
-    int16_t index;                             /**< First type index where id occurs in table */
-    int16_t count;                             /**< Number of times id occurs in table */
-    int16_t column;                            /**< First column index where id occurs */
+    ecs_table_cache_hdr_t hdr;                 /**< Table cache header. */
+    int16_t index;                             /**< First type index where ID occurs in table. */
+    int16_t count;                             /**< Number of times ID occurs in table. */
+    int16_t column;                            /**< First column index where ID occurs. */
 };
 
-/** Type that contains information about which components got added/removed on
+/** Type that contains information about which components got added or removed on
  * a table edge. */
 typedef struct ecs_table_diff_t {
-    ecs_type_t added;                /* Components added between tables */
-    ecs_type_t removed;              /* Components removed between tables */
+    ecs_type_t added;                /* Components added between tables. */
+    ecs_type_t removed;              /* Components removed between tables. */
     ecs_flags32_t added_flags;
     ecs_flags32_t removed_flags;
 } ecs_table_diff_t;
 
-/* Tracks which/how many non-fragmenting children are stored in table for parent. */
+/* Tracks which and how many non-fragmenting children are stored in a table for a parent. */
 typedef struct ecs_parent_record_t {
-    uint32_t entity;                /* If table only contains a single entity for parent, this will contain the entity id (without generation). */
-    int32_t count;                  /* The number of children for a parent in the table. */         
+    uint32_t entity;                /* If the table only contains a single entity for the parent, this will contain the entity ID (without generation). */
+    int32_t count;                  /* The number of children for a parent in the table. */
 } ecs_parent_record_t;
 
-/** Find record for entity. 
+/** Find the record for an entity.
  * An entity record contains the table and row for the entity.
  * 
  * To use ecs_record_t::row as the record in the table, use:
@@ -70,27 +70,27 @@ ecs_record_t* ecs_record_find(
     const ecs_world_t *world,
     ecs_entity_t entity);
 
-/** Get entity corresponding with record.
+/** Get the entity corresponding to a record.
  * This operation only works for entities that are not empty.
  *
- * @param record The record for which to obtain the entity id.
- * @return The entity id for the record.
+ * @param record The record for which to obtain the entity ID.
+ * @return The entity ID for the record.
  */
 FLECS_API
 ecs_entity_t ecs_record_get_entity(
     const ecs_record_t *record);
 
-/** Begin exclusive write access to entity.
+/** Begin exclusive write access to an entity.
  * This operation provides safe exclusive access to the components of an entity
  * without the overhead of deferring operations.
  *
  * When this operation is called simultaneously for the same entity more than
- * once it will throw an assert. Note that for this to happen, asserts must be
+ * once, it will throw an assert. Note that for this to happen, asserts must be
  * enabled. It is up to the application to ensure that access is exclusive, for
- * example by using a read-write mutex.
+ * example, by using a read-write mutex.
  *
  * Exclusive access is enforced at the table level, so only one entity can be
- * exclusively accessed per table. The exclusive access check is thread safe.
+ * exclusively accessed per table. The exclusive access check is thread-safe.
  *
  * This operation must be followed up with ecs_write_end().
  *
@@ -103,7 +103,7 @@ ecs_record_t* ecs_write_begin(
     ecs_world_t *world,
     ecs_entity_t entity);
 
-/** End exclusive write access to entity.
+/** End exclusive write access to an entity.
  * This operation ends exclusive access, and must be called after
  * ecs_write_begin().
  *
@@ -113,18 +113,18 @@ FLECS_API
 void ecs_write_end(
     ecs_record_t *record);
 
-/** Begin read access to entity.
+/** Begin read access to an entity.
  * This operation provides safe read access to the components of an entity.
  * Multiple simultaneous reads are allowed per entity.
  *
  * This operation ensures that code attempting to mutate the entity's table will
  * throw an assert. Note that for this to happen, asserts must be enabled. It is
- * up to the application to ensure that this does not happen, for example by
+ * up to the application to ensure that this does not happen, for example, by
  * using a read-write mutex.
  *
  * This operation does *not* provide the same guarantees as a read-write mutex,
  * as it is possible to call ecs_read_begin() after calling ecs_write_begin(). It is
- * up to application has to ensure that this does not happen.
+ * up to the application to ensure that this does not happen.
  *
  * This operation must be followed up with ecs_read_end().
  *
@@ -137,7 +137,7 @@ const ecs_record_t* ecs_read_begin(
     ecs_world_t *world,
     ecs_entity_t entity);
 
-/** End read access to entity.
+/** End read access to an entity.
  * This operation ends read access, and must be called after ecs_read_begin().
  *
  * @param record Record to the entity.
@@ -146,7 +146,7 @@ FLECS_API
 void ecs_read_end(
     const ecs_record_t *record);
 
-/** Get component from entity record.
+/** Get a component from an entity record.
  * This operation returns a pointer to a component for the entity
  * associated with the provided record. For safe access to the component, obtain
  * the record with ecs_read_begin() or ecs_write_begin().
@@ -156,7 +156,7 @@ void ecs_read_end(
  *
  * @param world The world.
  * @param record Record to the entity.
- * @param id The (component) id.
+ * @param id The (component) ID.
  * @return Pointer to component, or NULL if entity does not have the component.
  *
  * @see ecs_record_ensure_id()
@@ -172,7 +172,7 @@ const void* ecs_record_get_id(
  *
  * @param world The world.
  * @param record Record to the entity.
- * @param id The (component) id.
+ * @param id The (component) ID.
  * @return Pointer to component, or NULL if entity does not have the component.
  */
 FLECS_API
@@ -181,11 +181,11 @@ void* ecs_record_ensure_id(
     ecs_record_t *record,
     ecs_id_t id);
 
-/** Test if entity for record has a (component) id.
+/** Test if the entity for a record has a (component) ID.
  *
  * @param world The world.
  * @param record Record to the entity.
- * @param id The (component) id.
+ * @param id The (component) ID.
  * @return Whether the entity has the component.
  */
 FLECS_API
@@ -194,7 +194,7 @@ bool ecs_record_has_id(
     const ecs_record_t *record,
     ecs_id_t id);
 
-/** Get component pointer from column/record. 
+/** Get a component pointer from a column and record.
  * This returns a pointer to the component using a table column index. The
  * table's column index can be found with ecs_table_get_column_index().
  * 
@@ -216,10 +216,10 @@ void* ecs_record_get_by_column(
     int32_t column,
     size_t size);
 
-/** Get component record for component id.
- * 
+/** Get the component record for a component ID.
+ *
  * @param world The world.
- * @param id The component id.
+ * @param id The component ID.
  * @return The component record, or NULL if it doesn't exist.
  */
 FLECS_API
@@ -227,10 +227,10 @@ FLECS_ALWAYS_INLINE ecs_component_record_t* flecs_components_get(
     const ecs_world_t *world,
     ecs_id_t id);
 
-/* Ensure component record for component id 
- * 
+/** Ensure a component record for a component ID.
+ *
  * @param world The world.
- * @param id The component id.
+ * @param id The component ID.
  * @return The new or existing component record.
  */
 FLECS_API
@@ -238,36 +238,37 @@ FLECS_ALWAYS_INLINE ecs_component_record_t* flecs_components_ensure(
     ecs_world_t *world,
     ecs_id_t id);
 
-/** Get component id from component record.
- * 
+/** Get the component ID from a component record.
+ *
  * @param cr The component record.
- * @return The component id.
+ * @return The component ID.
  */
 FLECS_API
 ecs_id_t flecs_component_get_id(
     const ecs_component_record_t *cr);
 
-/** Get component flags for component.
- * 
- * @param id The component id.
- * @return The flags for the component id.
+/** Get the component flags for a component.
+ *
+ * @param world The world.
+ * @param id The component ID.
+ * @return The flags for the component ID.
  */
 FLECS_API
 ecs_flags32_t flecs_component_get_flags(
     const ecs_world_t *world,
     ecs_id_t id);
 
-/** Get type info for component record.
+/** Get the type info for a component record.
  * 
  * @param cr The component record.
- * @return The type info struct, or NULL if component is a tag.
+ * @return The type info struct, or NULL if the component is a tag.
  */
 FLECS_API
 const ecs_type_info_t* flecs_component_get_type_info(
     const ecs_component_record_t *cr);
 
-/** Find table record for component record.
- * This operation returns the table record for the table/component record if it
+/** Find the table record for a component record.
+ * This operation returns the table record for the table and component record if it
  * exists. If the record exists, it means the table has the component.
  * 
  * @param cr The component record.
@@ -279,14 +280,14 @@ FLECS_ALWAYS_INLINE const ecs_table_record_t* flecs_component_get_table(
     const ecs_component_record_t *cr,
     const ecs_table_t *table);
 
-/** Ger parent record for component/table. 
+/** Get the parent record for a component and table.
  * A parent record stores how many children for a parent are stored in the 
  * specified table. If the table only stores a single child, the parent record
- * will also store the entity id of that child.
+ * will also store the entity ID of that child.
  * 
  * This information is used by queries to determine whether an O(n) search 
  * through the table is required to find all children for the parent. If the 
- * table only contains a single child the query can use 
+ * table only contains a single child, the query can use
  * ecs_parent_record_t::entity directly, otherwise it has to do a scan.
  * 
  * The component record specified to this function must be a ChildOf pair. Only
@@ -302,7 +303,7 @@ FLECS_ALWAYS_INLINE ecs_parent_record_t* flecs_component_get_parent_record(
     const ecs_component_record_t *cr,
     const ecs_table_t *table);
 
-/** Return hierarchy depth for component record.
+/** Return the hierarchy depth for a component record.
  * The specified component record must be a ChildOf pair. This function does not
  * compute the depth, it just returns the precomputed depth that is updated 
  * automatically when hierarchy changes happen.
@@ -314,7 +315,7 @@ FLECS_API
 FLECS_ALWAYS_INLINE int32_t flecs_component_get_childof_depth(
     const ecs_component_record_t *cr);
 
-/** Create component record iterator.
+/** Create a component record iterator.
  * A component record iterator iterates all tables for the specified component
  * record.
  * 
@@ -340,8 +341,8 @@ bool flecs_component_iter(
     const ecs_component_record_t *cr,
     ecs_table_cache_iter_t *iter_out);
 
-/** Get next table record for iterator.
- * Returns next table record for iterator.
+/** Get the next table record for the iterator.
+ * Returns the next table record, or NULL if there are no more results.
  * 
  * @param iter The iterator.
  * @return The next table record, or NULL if there are no more results.
@@ -356,7 +357,7 @@ typedef struct ecs_table_records_t {
     int32_t count;
 } ecs_table_records_t;
 
-/** Get table records. 
+/** Get the table records.
  * This operation returns an array with all records for the specified table.
  * 
  * @param table The table.
@@ -366,7 +367,7 @@ FLECS_API
 ecs_table_records_t flecs_table_records(
     ecs_table_t* table);
 
-/** Get component record from table record.
+/** Get the component record from a table record.
  * 
  * @param tr The table record.
  * @return The component record.
@@ -375,24 +376,24 @@ FLECS_API
 ecs_component_record_t* flecs_table_record_get_component(
     const ecs_table_record_t *tr);
 
-/** Get table id. 
+/** Get the table ID.
  * This operation returns a unique numerical identifier for a table.
- * 
+ *
  * @param table The table.
- * @return The table records for the table.
+ * @return The unique identifier for the table.
  */
 FLECS_API
 uint64_t flecs_table_id(
     ecs_table_t* table);
 
-/** Find table by adding id to current table. 
- * Same as ecs_table_add_id, but with additional diff parameter that contains
+/** Find a table by adding an ID to the current table.
+ * Same as ecs_table_add_id(), but with an additional diff parameter that contains
  * information about the traversed edge.
- * 
+ *
  * @param world The world.
  * @param table The table.
- * @param id_ptr Pointer to component id to add.
- * @param diff Information about traversed edge (out parameter).
+ * @param id_ptr Pointer to the component ID to add.
+ * @param diff Information about the traversed edge (out parameter).
  * @return The table that was traversed to.
  */
 FLECS_API

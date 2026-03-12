@@ -1,6 +1,6 @@
 /**
  * @file addons/cpp/mixins/id/impl.hpp
- * @brief Id class implementation.
+ * @brief ID class implementation.
  */
 
 #pragma once
@@ -64,7 +64,7 @@ inline flecs::entity id::type_id() const {
 }
 
 
-// Id mixin implementation
+// ID mixin implementation
 
 template <typename T>
 inline flecs::id world::id() const {

@@ -11,48 +11,48 @@
  */
 
 /** Set interval.
- * @see ecs_set_interval
+ * @see ecs_set_interval()
  */
 void interval(ecs_ftime_t interval);
 
 /** Get interval.
- * @see ecs_get_interval.
+ * @see ecs_get_interval()
  */
 ecs_ftime_t interval();
 
 /** Set timeout.
- * @see ecs_set_timeout
+ * @see ecs_set_timeout()
  */
 void timeout(ecs_ftime_t timeout);
 
 /** Get timeout.
- * @see ecs_get_timeout
+ * @see ecs_get_timeout()
  */
 ecs_ftime_t timeout();
 
 /** Set system rate (system is its own tick source).
- * @see ecs_set_rate
+ * @see ecs_set_rate()
  */
 void rate(int32_t rate);
 
 /** Start timer.
- * @see ecs_start_timer
+ * @see ecs_start_timer()
  */
 void start();
 
 /** Stop timer.
- * @see ecs_start_timer
+ * @see ecs_stop_timer()
  */
 void stop();
 
 /** Set external tick source.
- * @see ecs_set_tick_source
+ * @see ecs_set_tick_source()
  */
 template<typename T>
 void set_tick_source();
 
 /** Set external tick source.
- * @see ecs_set_tick_source
+ * @see ecs_set_tick_source()
  */
 void set_tick_source(flecs::entity e);
 

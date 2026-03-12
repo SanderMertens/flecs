@@ -27,16 +27,16 @@ public:
         : BaseClass(&desc->query, term_index)
         , desc_(desc) { }
 
-    /** Alert message.
+    /** Set the alert message.
      *
      * @see ecs_alert_desc_t::message
-     */      
+     */
     Base& message(const char *message) {
         desc_->message = message;
         return *this;
     }
 
-    /** Set brief description for alert.
+    /** Set the brief description for an alert.
      * 
      * @see ecs_alert_desc_t::brief
      */
@@ -45,7 +45,7 @@ public:
         return *this;
     }
 
-    /** Set doc name for alert.
+    /** Set the doc name for an alert.
      * 
      * @see ecs_alert_desc_t::doc_name
      */
@@ -54,8 +54,8 @@ public:
         return *this;
     }
 
-    /** Set severity of alert (default is Error) 
-     * 
+    /** Set the severity of an alert (default is Error).
+     *
      * @see ecs_alert_desc_t::severity
      */
     Base& severity(flecs::entity_t kind) {
@@ -63,8 +63,8 @@ public:
         return *this;
     }
 
-    /* Set retain period of alert. 
-     * 
+    /** Set the retain period of an alert.
+     *
      * @see ecs_alert_desc_t::retain_period
      */
     Base& retain_period(ecs_ftime_t period) {
@@ -72,8 +72,9 @@ public:
         return *this;
     }
 
-    /** Set severity of alert (default is Error) 
-     * 
+    /** Set the severity of an alert (default is Error).
+     *
+     * @tparam Severity The severity type.
      * @see ecs_alert_desc_t::severity
      */
     template <typename Severity>
@@ -81,7 +82,12 @@ public:
         return severity(_::type<Severity>::id(world_v()));
     }
 
-    /** Add severity filter */
+    /** Add a severity filter.
+     *
+     * @param kind The severity entity.
+     * @param with The ID to match for this severity.
+     * @param var The variable to use for the ID (optional).
+     */
     Base& severity_filter(flecs::entity_t kind, flecs::id_t with, const char *var = nullptr) {
         ecs_assert(severity_filter_count < ECS_ALERT_MAX_SEVERITY_FILTERS, 
             ECS_INVALID_PARAMETER, "Maximum number of severity filters reached");
@@ -95,20 +101,36 @@ public:
         return *this;
     }
 
-    /** Add severity filter */
+    /** Add a severity filter.
+     *
+     * @tparam Severity The severity type.
+     * @param with The ID to match for this severity.
+     * @param var The variable to use for the ID (optional).
+     */
     template <typename Severity>
     Base& severity_filter(flecs::id_t with, const char *var = nullptr) {
         return severity_filter(_::type<Severity>::id(world_v()), with, var);
     }
 
-    /** Add severity filter */
+    /** Add a severity filter.
+     *
+     * @tparam Severity The severity type.
+     * @tparam T The component type to match for this severity.
+     * @param var The variable to use for the ID (optional).
+     */
     template <typename Severity, typename T, if_not_t< is_enum<T>::value > = 0>
     Base& severity_filter(const char *var = nullptr) {
         return severity_filter(_::type<Severity>::id(world_v()), 
             _::type<T>::id(world_v()), var);
     }
 
-    /** Add severity filter */
+    /** Add a severity filter.
+     *
+     * @tparam Severity The severity type.
+     * @tparam T The enum type to match for this severity.
+     * @param with The enum constant to match.
+     * @param var The variable to use for the ID (optional).
+     */
     template <typename Severity, typename T, if_t< is_enum<T>::value > = 0 >
     Base& severity_filter(T with, const char *var = nullptr) {
         flecs::world w(world_v());
@@ -117,20 +139,20 @@ public:
             w.pair<T>(constant), var);
     }
 
-    /** Set member to create an alert for out of range values */
+    /** Set the member to create an alert for out-of-range values. */
     Base& member(flecs::entity_t m) {
         desc_->member = m;
         return *this;
     }
 
-    /** Set (component) id for member (optional). If .member() is set and id
-     * is not set, the id will default to the member parent. */
+    /** Set the (component) ID for the member (optional). If .member() is set
+     * and the ID is not set, the ID will default to the member parent. */
     Base& id(flecs::id_t id) {
         desc_->id = id;
         return *this;
     }
 
-    /** Set member to create an alert for out of range values */
+    /** Set the member to create an alert for out-of-range values. */
     template <typename T>
     Base& member(const char *m, const char *v = nullptr) {
         flecs::entity_t id = _::type<T>::id(world_v());
@@ -141,7 +163,7 @@ public:
         return this->member(mid);
     }
 
-    /** Set source variable for member (optional, defaults to $this) */
+    /** Set the source variable for member (optional, defaults to $this). */
     Base& var(const char *v) {
         desc_->var = v;
         return *this;

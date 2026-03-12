@@ -4,7 +4,7 @@
  *
  * The module addon allows for creating and importing modules. Flecs modules
  * enable applications to organize components and systems into reusable units of
- * code that can easily be across projects.
+ * code that can easily be used across projects.
  */
 
 #ifdef FLECS_MODULE
@@ -12,7 +12,7 @@
 /**
  * @defgroup c_addons_module Module
  * @ingroup c_addons
- * Modules organize components, systems and more in reusable units of code.
+ * Modules organize components, systems, and more in reusable units of code.
  *
  * @{
  */
@@ -25,16 +25,15 @@ extern "C" {
 #endif
 
 /** Import a module.
- * This operation will load a modules and store the public module handles in the
- * handles_out out parameter. The module name will be used to verify if the
- * module was already loaded, in which case it won't be reimported. The name
- * will be translated from PascalCase to an entity path (pascal.case) before the
- * lookup occurs.
+ * This operation will load a module. The module name will be used to verify
+ * whether the module was already loaded, in which case it won't be reimported.
+ * The name will be translated from PascalCase to an entity path (pascal.case)
+ * before the lookup occurs.
  *
  * Module contents will be stored as children of the module entity. This
  * prevents modules from accidentally defining conflicting identifiers. This is
  * enforced by setting the scope before and after loading the module to the
- * module entity id.
+ * module entity ID.
  *
  * A more convenient way to import a module is by using the ECS_IMPORT macro.
  *
@@ -73,13 +72,14 @@ ecs_entity_t ecs_import_c(
  *
  * The library will be looked up using a canonical name, which is in the same
  * form as a module, like `flecs.components.transform`. To transform this
- * identifier to a platform specific library name, the operation relies on the
- * module_to_dl callback of the os_api which the application has to override if
+ * identifier to a platform-specific library name, the operation relies on the
+ * module_to_dl callback of the os_api, which the application has to override if
  * the default does not yield the correct library name.
  *
  * @param world The world.
  * @param library_name The name of the library to load.
  * @param module_name The name of the module to load.
+ * @return The module entity.
  */
 FLECS_API
 ecs_entity_t ecs_import_from_library(
@@ -87,7 +87,13 @@ ecs_entity_t ecs_import_from_library(
     const char *library_name,
     const char *module_name);
 
-/** Register a new module. */
+/** Register a new module.
+ *
+ * @param world The world.
+ * @param c_name The name of the module.
+ * @param desc The component descriptor for the module component.
+ * @return The module entity.
+ */
 FLECS_API
 ecs_entity_t ecs_module_init(
     ecs_world_t *world,

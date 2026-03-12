@@ -3,7 +3,7 @@
  * @brief Enum entity view mixin.
  */
 
-/** Convert entity to enum constant.
+/** Convert an entity to an enum constant.
  * 
  * @memberof flecs::entity_view
  * @ingroup cpp_entities

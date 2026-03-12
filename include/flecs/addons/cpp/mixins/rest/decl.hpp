@@ -15,6 +15,7 @@ namespace flecs {
  * @{
  */
 
+/** REST API component. */
 using Rest = EcsRest;
 
 namespace rest {

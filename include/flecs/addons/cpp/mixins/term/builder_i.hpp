@@ -13,36 +13,38 @@ namespace flecs
 
 /** Term identifier builder.
  * A term identifier describes a single identifier in a term. Identifier
- * descriptions can reference entities by id, name or by variable, which means
+ * descriptions can reference entities by ID, name, or by variable, which means
  * the entity will be resolved when the term is evaluated.
  * 
  * @ingroup cpp_core_queries
  */
 template<typename Base>
 struct term_ref_builder_i {
+    /** Default constructor. */
     term_ref_builder_i() : term_ref_(nullptr) { }
 
+    /** Destructor. */
     virtual ~term_ref_builder_i() { }
 
-    /* The self flag indicates the term identifier itself is used */
+    /** The self flag indicates that the term identifier itself is used. */
     Base& self() {
         this->assert_term_ref();
         term_ref_->id |= flecs::Self;
         return *this;
     }
 
-    /* Specify value of identifier by id */
+    /** Specify the value of the identifier by ID. */
     Base& id(flecs::entity_t id) {
         this->assert_term_ref();
         term_ref_->id = id;
         return *this;
     }
 
-    /* Specify value of identifier by id. Almost the same as id(entity), but this
-     * operation explicitly sets the flecs::IsEntity flag. This forces the id to 
-     * be interpreted as entity, whereas not setting the flag would implicitly
-     * convert ids for builtin variables such as flecs::This to a variable.
-     * 
+    /** Specify the value of the identifier by ID. Almost the same as id(entity_t), but this
+     * operation explicitly sets the flecs::IsEntity flag. This forces the ID to
+     * be interpreted as an entity, whereas not setting the flag would implicitly
+     * convert IDs for built-in variables such as flecs::This to a variable.
+     *
      * This function can also be used to disambiguate id(0), which would match
      * both id(entity_t) and id(const char*).
      */
@@ -52,7 +54,7 @@ struct term_ref_builder_i {
         return *this;
     }
 
-    /* Specify value of identifier by name */
+    /** Specify the value of the identifier by name. */
     Base& name(const char *name) {
         this->assert_term_ref();
         term_ref_->id |= flecs::IsEntity;
@@ -60,7 +62,7 @@ struct term_ref_builder_i {
         return *this;
     }
 
-    /* Specify identifier is a variable (resolved at query evaluation time) */
+    /** Specify that the identifier is a variable (resolved at query evaluation time). */
     Base& var(const char *var_name) {
         this->assert_term_ref();
         term_ref_->id |= flecs::IsVariable;
@@ -68,13 +70,14 @@ struct term_ref_builder_i {
         return *this;
     }
 
-    /* Override term id flags */
+    /** Override the term ID flags. */
     Base& flags(flecs::flags64_t flags) {
         this->assert_term_ref();
         term_ref_->id = flags;
         return *this;
     }
 
+    /** Pointer to the current term reference. */
     ecs_term_ref_t *term_ref_;
 
 protected:
@@ -98,25 +101,28 @@ private:
  */
 template<typename Base>
 struct term_builder_i : term_ref_builder_i<Base> {
+    /** Default constructor. */
     term_builder_i() : term_(nullptr) { }
 
-    term_builder_i(ecs_term_t *term_ptr) { 
+    /** Construct from a term pointer. */
+    term_builder_i(ecs_term_t *term_ptr) {
         set_term(term_ptr);
     }
 
+    /** Set the term ID. */
     Base& term(id_t id) {
         return this->id(id);
     }
 
-    /* Call prior to setting values for src identifier */
+    /** Call prior to setting values for the src identifier. */
     Base& src() {
         this->assert_term();
         this->term_ref_ = &term_->src;
         return *this;
     }
 
-    /* Call prior to setting values for first identifier. This is either the
-     * component identifier, or first element of a pair (in case second is
+    /** Call prior to setting values for the first identifier. This is either the
+     * component identifier, or the first element of a pair (in case the second is
      * populated as well). */
     Base& first() {
         this->assert_term();
@@ -124,7 +130,7 @@ struct term_builder_i : term_ref_builder_i<Base> {
         return *this;
     }
 
-    /* Call prior to setting values for second identifier. This is the second 
+    /** Call prior to setting values for the second identifier. This is the second
      * element of a pair. Requires that first() is populated as well. */
     Base& second() {
         this->assert_term();
@@ -132,21 +138,21 @@ struct term_builder_i : term_ref_builder_i<Base> {
         return *this;
     }
 
-    /* Select src identifier, initialize it with entity id */
+    /** Select the src identifier, initialize it with an entity ID. */
     Base& src(flecs::entity_t id) {
         this->src();
         this->id(id);
         return *this;
     }
 
-    /* Select src identifier, initialize it with id associated with type */
+    /** Select the src identifier, initialize it with the ID associated with the type. */
     template<typename T>
     Base& src() {
         this->src(_::type<T>::id(this->world_v()));
         return *this;
     }
 
-    /* Select src identifier, initialize it with name. If name starts with a $
+    /** Select the src identifier, initialize it with a name. If the name starts with a $,
      * the name is interpreted as a variable. */
     Base& src(const char *name) {
         ecs_assert(name != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -159,21 +165,21 @@ struct term_builder_i : term_ref_builder_i<Base> {
         return *this;
     }
 
-    /* Select first identifier, initialize it with entity id */
+    /** Select the first identifier, initialize it with an entity ID. */
     Base& first(flecs::entity_t id) {
         this->first();
         this->id(id);
         return *this;
     }
 
-    /* Select first identifier, initialize it with id associated with type */
+    /** Select the first identifier, initialize it with the ID associated with the type. */
     template<typename T>
     Base& first() {
         this->first(_::type<T>::id(this->world_v()));
         return *this;
     }
 
-    /* Select first identifier, initialize it with name. If name starts with a $
+    /** Select the first identifier, initialize it with a name. If the name starts with a $,
      * the name is interpreted as a variable. */
     Base& first(const char *name) {
         ecs_assert(name != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -186,21 +192,21 @@ struct term_builder_i : term_ref_builder_i<Base> {
         return *this;
     }
 
-    /* Select second identifier, initialize it with entity id */
+    /** Select the second identifier, initialize it with an entity ID. */
     Base& second(flecs::entity_t id) {
         this->second();
         this->id(id);
         return *this;
     }
 
-    /* Select second identifier, initialize it with id associated with type */
+    /** Select the second identifier, initialize it with the ID associated with the type. */
     template<typename T>
     Base& second() {
         this->second(_::type<T>::id(this->world_v()));
         return *this;
     }
 
-    /* Select second identifier, initialize it with name. If name starts with a $
+    /** Select the second identifier, initialize it with a name. If the name starts with a $,
      * the name is interpreted as a variable. */
     Base& second(const char *name) {
         ecs_assert(name != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -213,8 +219,8 @@ struct term_builder_i : term_ref_builder_i<Base> {
         return *this;
     }
 
-    /* The up flag indicates that the term identifier may be substituted by
-     * traversing a relationship upwards. For example: substitute the identifier
+    /** The up flag indicates that the term identifier may be substituted by
+     * traversing a relationship upwards. For example, substitute the identifier
      * with its parent by traversing the ChildOf relationship. */
     Base& up(flecs::entity_t trav = 0) {
         this->assert_term_ref();
@@ -230,13 +236,14 @@ struct term_builder_i : term_ref_builder_i<Base> {
         return *this;
     }
 
+    /** Traverse upwards using the specified relationship type. */
     template <typename Trav>
     Base& up() {
         return this->up(_::type<Trav>::id(this->world_v()));
     }
 
-    /* The cascade flag is like up, but returns results in breadth-first order.
-     * Only supported for flecs::query */
+    /** The cascade flag is like up(), but returns results in breadth-first order.
+     * Only supported for flecs::query. */
     Base& cascade(flecs::entity_t trav = 0) {
         this->assert_term_ref();
         this->up();
@@ -247,24 +254,25 @@ struct term_builder_i : term_ref_builder_i<Base> {
         return *this;
     }
 
+    /** Cascade using the specified relationship type. */
     template <typename Trav>
     Base& cascade() {
         return this->cascade(_::type<Trav>::id(this->world_v()));
     }
 
-    /* Use with cascade to iterate results in descending (bottom -> top) order */
+    /** Use with cascade() to iterate results in descending (bottom-to-top) order. */
     Base& desc() {
         this->assert_term_ref();
         this->term_ref_->id |= flecs::Desc;
         return *this;
     }
 
-    /* Same as up(), exists for backwards compatibility */
+    /** Same as up(). Exists for backwards compatibility. */
     Base& parent() {
         return this->up();
     }
 
-    /* Specify relationship to traverse, and flags to indicate direction */
+    /** Specify the relationship to traverse, and flags to indicate direction. */
     Base& trav(flecs::entity_t trav, flecs::flags32_t flags = 0) {
         this->assert_term_ref();
         term_->trav = trav;
@@ -272,21 +280,21 @@ struct term_builder_i : term_ref_builder_i<Base> {
         return *this;
     }
 
-    /** Set id flags for term. */
+    /** Set ID flags for the term. */
     Base& id_flags(id_t flags) {
         this->assert_term();
         term_->id |= flags;
         return *this;
     }
 
-    /** Set read/write access of term. */
+    /** Set read/write access of the term. */
     Base& inout(flecs::inout_kind_t inout) {
         this->assert_term();
         term_->inout = static_cast<int16_t>(inout);
         return *this;
     }
 
-    /** Set read/write access for stage. Use this when a system reads or writes
+    /** Set read/write access for a stage. Use this when a system reads or writes
      * components other than the ones provided by the query. This information 
      * can be used by schedulers to insert sync/merge points between systems
      * where deferred operations are flushed.
@@ -303,104 +311,107 @@ struct term_builder_i : term_ref_builder_i<Base> {
         return *this;
     }
 
-    /** Short for inout_stage(flecs::Out). 
-     *   Use when system uses add, remove or set. 
+    /** Short for inout_stage(flecs::Out).
+     * Use when the system uses add(), remove(), or set().
      */
     Base& write() {
         return this->inout_stage(flecs::Out);
     }
 
     /** Short for inout_stage(flecs::In).
-     *   Use when system uses get.
+     * Use when the system uses get().
      */
     Base& read() {
         return this->inout_stage(flecs::In);
     }
 
     /** Short for inout_stage(flecs::InOut).
-     *   Use when system uses ensure.
+     * Use when the system uses ensure().
      */
     Base& read_write() {
         return this->inout_stage(flecs::InOut);
     }
 
-    /** Short for inout(flecs::In) */
+    /** Short for inout(flecs::In). */
     Base& in() {
         return this->inout(flecs::In);
     }
 
-    /** Short for inout(flecs::Out) */
+    /** Short for inout(flecs::Out). */
     Base& out() {
         return this->inout(flecs::Out);
     }
 
-    /** Short for inout(flecs::InOut) */
+    /** Short for inout(flecs::InOut). */
     Base& inout() {
         return this->inout(flecs::InOut);
     }
 
-    /** Short for inout(flecs::In) */
+    /** Short for inout(flecs::InOutNone). */
     Base& inout_none() {
         return this->inout(flecs::InOutNone);
     }
 
-    /** Set operator of term. */
+    /** Set the operator of the term. */
     Base& oper(flecs::oper_kind_t oper) {
         this->assert_term();
         term_->oper = static_cast<int16_t>(oper);
         return *this;
     }
 
-    /* Short for oper(flecs::And) */
+    /** Short for oper(flecs::And). */
     Base& and_() {
         return this->oper(flecs::And);
     }
 
-    /* Short for oper(flecs::Or) */
+    /** Short for oper(flecs::Or). */
     Base& or_() {
         return this->oper(flecs::Or);
     }
 
-    /* Short for oper(flecs::Not) */
+    /** Short for oper(flecs::Not). */
     Base& not_() {
         return this->oper(flecs::Not);
     }
 
-    /* Short for oper(flecs::Optional) */
+    /** Short for oper(flecs::Optional). */
     Base& optional() {
         return this->oper(flecs::Optional);
     }
 
-    /* Short for oper(flecs::AndFrom) */
+    /** Short for oper(flecs::AndFrom). */
     Base& and_from() {
         return this->oper(flecs::AndFrom);
     }
 
-    /* Short for oper(flecs::OrFrom) */
+    /** Short for oper(flecs::OrFrom). */
     Base& or_from() {
         return this->oper(flecs::OrFrom);
     }
 
-    /* Short for oper(flecs::NotFrom) */
+    /** Short for oper(flecs::NotFrom). */
     Base& not_from() {
         return this->oper(flecs::NotFrom);
     }
 
-    /* Query terms are not triggered on by observers */
+    /** Mark the term as a filter. Query terms marked as a filter are not triggered
+     * by observers. */
     Base& filter() {
         term_->inout = EcsInOutFilter;
         return *this;
     }
 
+    /** Pointer to the current term. */
     ecs_term_t *term_;
 
 protected:
     virtual flecs::world_t* world_v() override = 0;
 
+    /** Set the current term pointer. */
     void set_term(ecs_term_t *term) {
         term_ = term;
         if (term) {
-            this->term_ref_ = &term_->src; // default to subject
+            this->term_ref_ = &term_->src; // default to source
         } else {
             this->term_ref_ = nullptr;
         }

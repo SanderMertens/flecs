@@ -8,16 +8,16 @@
 namespace flecs {
 
 inline units::units(flecs::world& world) {
-    /* Import C module  */
+    // Import C module.
     FlecsUnitsImport(world);
 
-    /* Bridge between C++ types and flecs.units entities */
+    // Bridge between C++ types and flecs.units entities.
     world.module<units>();
 
-    // Initialize world.entity(prefixes) scope
+    // Initialize world.entity(prefixes) scope.
     world.entity<Prefixes>("::flecs::units::prefixes");
 
-    // Initialize prefixes
+    // Initialize prefixes.
     world.entity<Yocto>("::flecs::units::prefixes::Yocto");
     world.entity<Zepto>("::flecs::units::prefixes::Zepto");
     world.entity<Atto>("::flecs::units::prefixes::Atto");
@@ -47,7 +47,7 @@ inline units::units(flecs::world& world) {
     world.entity<Zebi>("::flecs::units::prefixes::Zebi");
     world.entity<Yobi>("::flecs::units::prefixes::Yobi");
 
-    // Initialize quantities
+    // Initialize quantities.
     world.entity<Duration>("::flecs::units::Duration");
     world.entity<Time>("::flecs::units::Time");
     world.entity<Mass>("::flecs::units::Mass");
@@ -66,7 +66,7 @@ inline units::units(flecs::world& world) {
     world.entity<Uri>("::flecs::units::Uri");
     world.entity<Color>("::flecs::units::Color");
 
-    // Initialize duration units
+    // Initialize duration units.
     world.entity<duration::PicoSeconds>(
         "::flecs::units::Duration::PicoSeconds");
     world.entity<duration::NanoSeconds>(
@@ -84,28 +84,28 @@ inline units::units(flecs::world& world) {
     world.entity<duration::Days>(
         "::flecs::units::Duration::Days");
 
-    // Initialize time units
+    // Initialize time units.
     world.entity<time::Date>("::flecs::units::Time::Date");
 
-    // Initialize mass units
+    // Initialize mass units.
     world.entity<mass::Grams>("::flecs::units::Mass::Grams");
     world.entity<mass::KiloGrams>("::flecs::units::Mass::KiloGrams");
 
-    // Initialize current units
+    // Initialize current units.
     world.entity<electric_current::Ampere>
     ("::flecs::units::ElectricCurrent::Ampere");  
 
-    // Initialize amount units
+    // Initialize amount units.
     world.entity<amount::Mole>("::flecs::units::Amount::Mole");
 
-    // Initialize luminous intensity units
+    // Initialize luminous intensity units.
     world.entity<luminous_intensity::Candela>(
         "::flecs::units::LuminousIntensity::Candela");
 
-    // Initialize force units
+    // Initialize force units.
     world.entity<force::Newton>("::flecs::units::Force::Newton");
 
-    // Initialize length units
+    // Initialize length units.
     world.entity<length::Meters>("::flecs::units::Length::Meters");
     world.entity<length::PicoMeters>("::flecs::units::Length::PicoMeters");
     world.entity<length::NanoMeters>("::flecs::units::Length::NanoMeters");
@@ -116,11 +116,11 @@ inline units::units(flecs::world& world) {
     world.entity<length::Miles>("::flecs::units::Length::Miles");
     world.entity<length::Pixels>("::flecs::units::Length::Pixels");
 
-    // Initialize pressure units
+    // Initialize pressure units.
     world.entity<pressure::Pascal>("::flecs::units::Pressure::Pascal");
     world.entity<pressure::Bar>("::flecs::units::Pressure::Bar");
 
-    // Initialize speed units
+    // Initialize speed units.
     world.entity<speed::MetersPerSecond>(
         "::flecs::units::Speed::MetersPerSecond");
     world.entity<speed::KiloMetersPerSecond>(
@@ -130,7 +130,7 @@ inline units::units(flecs::world& world) {
     world.entity<speed::MilesPerHour>(
         "::flecs::units::Speed::MilesPerHour");
 
-    // Initialize temperature units
+    // Initialize temperature units.
     world.entity<temperature::Kelvin>(
         "::flecs::units::Temperature::Kelvin");
     world.entity<temperature::Celsius>(
@@ -138,7 +138,7 @@ inline units::units(flecs::world& world) {
     world.entity<temperature::Fahrenheit>(
         "::flecs::units::Temperature::Fahrenheit");
 
-    // Initialize data units
+    // Initialize data units.
     world.entity<data::Bits>(
         "::flecs::units::Data::Bits");
     world.entity<data::KiloBits>(
@@ -162,7 +162,7 @@ inline units::units(flecs::world& world) {
     world.entity<data::GibiBytes>(
         "::flecs::units::Data::GibiBytes");
 
-    // Initialize datarate units
+    // Initialize datarate units.
     world.entity<datarate::BitsPerSecond>(
         "::flecs::units::DataRate::BitsPerSecond");
     world.entity<datarate::KiloBitsPerSecond>(
@@ -180,7 +180,7 @@ inline units::units(flecs::world& world) {
     world.entity<datarate::GigaBytesPerSecond>(
         "::flecs::units::DataRate::GigaBytesPerSecond");
 
-    // Initialize hertz units
+    // Initialize hertz units.
     world.entity<frequency::Hertz>(
         "::flecs::units::Frequency::Hertz");
     world.entity<frequency::KiloHertz>(
@@ -190,7 +190,7 @@ inline units::units(flecs::world& world) {
     world.entity<frequency::GigaHertz>(
         "::flecs::units::Frequency::GigaHertz");
 
-    // Initialize uri units
+    // Initialize URI units.
     world.entity<uri::Hyperlink>(
         "::flecs::units::Uri::Hyperlink");
     world.entity<uri::Image>(
@@ -198,21 +198,21 @@ inline units::units(flecs::world& world) {
     world.entity<uri::File>(
         "::flecs::units::Uri::File");
 
-    // Initialize angles
+    // Initialize angle units.
     world.entity<angle::Radians>(
         "::flecs::units::Angle::Radians");
     world.entity<angle::Degrees>(
         "::flecs::units::Angle::Degrees");
 
-    // Initialize color
+    // Initialize color units.
     world.entity<color::Rgb>("::flecs::units::Color::Rgb");
     world.entity<color::Hsl>("::flecs::units::Color::Hsl");
     world.entity<color::Css>("::flecs::units::Color::Css");
 
-    // Initialize percentage
+    // Initialize percentage.
     world.entity<Percentage>("::flecs::units::Percentage");
 
-    // Initialize Bel
+    // Initialize Bel.
     world.entity<Bel>("::flecs::units::Bel");
     world.entity<DeciBel>("::flecs::units::DeciBel");
 }

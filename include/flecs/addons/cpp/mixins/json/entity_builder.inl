@@ -3,13 +3,13 @@
  * @brief JSON entity mixin.
  */
 
-/** Set component from JSON.
- * 
+/** Set a component from JSON.
+ *
  * @memberof flecs::entity_builder
  * @ingroup cpp_addons_json
  */
 const Self& set_json(
-    flecs::id_t e, 
+    flecs::id_t e,
     const char *json, 
     flecs::from_json_desc_t *desc = nullptr) const
 {
@@ -29,13 +29,13 @@ const Self& set_json(
     return to_base();
 }
 
-/** Set pair from JSON.
- * 
+/** Set a pair from JSON.
+ *
  * @memberof flecs::entity_builder
  * @ingroup cpp_addons_json
  */
 const Self& set_json(
-    flecs::entity_t r, 
+    flecs::entity_t r,
     flecs::entity_t t,
     const char *json, 
     flecs::from_json_desc_t *desc = nullptr) const
@@ -43,21 +43,21 @@ const Self& set_json(
     return set_json(ecs_pair(r, t), json, desc);
 }
 
-/** Set component from JSON.
- * 
+/** Set a component from JSON.
+ *
  * @memberof flecs::entity_builder
  * @ingroup cpp_addons_json
  */
 template <typename T>
 const Self& set_json(
-    const char *json, 
+    const char *json,
     flecs::from_json_desc_t *desc = nullptr) const
 {
     return set_json(_::type<T>::id(world_), json, desc);
 }
 
-/** Set pair from JSON.
- * 
+/** Set a pair from JSON.
+ *
  * @memberof flecs::entity_builder
  * @ingroup cpp_addons_json
  */
@@ -72,8 +72,8 @@ const Self& set_json(
         json, desc);
 }
 
-/** Set pair from JSON.
- * 
+/** Set a pair from JSON.
+ *
  * @memberof flecs::entity_builder
  * @ingroup cpp_addons_json
  */
@@ -88,8 +88,8 @@ const Self& set_json(
         json, desc);
 }
 
-/** Set pair from JSON.
- * 
+/** Set a pair from JSON.
+ *
  * @memberof flecs::entity_builder
  * @ingroup cpp_addons_json
  */

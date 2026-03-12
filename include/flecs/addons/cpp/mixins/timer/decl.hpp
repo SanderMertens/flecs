@@ -15,9 +15,12 @@ namespace flecs {
  * @{
  */
 
+/** Timer component. */
 using Timer = EcsTimer;
+/** Rate filter component. */
 using RateFilter = EcsRateFilter;
 
+/** Forward declaration for timer. */
 struct timer;
 
 /** @} */

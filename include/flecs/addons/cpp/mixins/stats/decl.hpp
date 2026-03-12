@@ -15,16 +15,18 @@ namespace flecs {
  * @{
  */
 
-/** Component that stores world statistics */
+/** Component that stores world statistics. */
 using WorldStats = EcsWorldStats;
 
-/** Component that stores system/pipeline statistics */
+/** Component that stores system/pipeline statistics. */
 using PipelineStats = EcsPipelineStats;
 
-/** Component with world summary stats */
+/** Component with world summary stats. */
 using WorldSummary = EcsWorldSummary;
 
+/** Stats module. */
 struct stats {
+    /** Construct the stats module. */
     stats(flecs::world& world);
 };
 

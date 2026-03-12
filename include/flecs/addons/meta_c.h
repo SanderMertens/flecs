@@ -24,11 +24,11 @@ extern "C" {
  * macro is not defined, it defaults to IMPL. */
 
 /* Define variables used by reflection utilities. This should only be defined
- * by the module itself, not by the code importing the module */
+ * by the module itself, not by the code importing the module. */
 /* #define ECS_META_IMPL IMPL */
 
-/* Don't define variables used by reflection utilities but still declare the
- * variable for the component id. This enables the reflection utilities to be
+/* Don't define variables used by reflection utilities, but still declare the
+ * variable for the component ID. This enables the reflection utilities to be
  * used for global component variables, even if no reflection is used. */
 /* #define ECS_META_IMPL DECLARE */
 
@@ -144,7 +144,7 @@ int ecs_meta_from_desc(
 }
 #endif
 
-#endif // FLECS_META_H
+#endif // FLECS_META_C_H
 
 /** @} */
 

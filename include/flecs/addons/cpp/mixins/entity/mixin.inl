@@ -11,7 +11,7 @@
 template <typename... Args>
 flecs::entity entity(Args &&... args) const;
 
-/** Convert enum constant to entity.
+/** Convert an enum constant to an entity.
  * 
  * @memberof flecs::world
  * @ingroup cpp_entities
@@ -19,7 +19,7 @@ flecs::entity entity(Args &&... args) const;
 template <typename E, if_t< is_enum<E>::value > = 0>
 flecs::id id(E value) const;
 
-/** Convert enum constant to entity.
+/** Convert an enum constant to an entity.
  * 
  * @memberof flecs::world
  * @ingroup cpp_entities

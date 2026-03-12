@@ -20,7 +20,7 @@ inline const char* get_uuid(const flecs::entity_view& e) {
     return ecs_doc_get_uuid(e.world(), e);
 }
 
-/** Get human readable name for an entity.
+/** Get human-readable name for an entity.
  *
  * @see ecs_doc_get_name()
  * @see flecs::doc::set_name()
@@ -92,7 +92,7 @@ inline void set_uuid(flecs::entity& e, const char *uuid) {
     ecs_doc_set_uuid(e.world(), e, uuid);
 }
 
-/** Set human readable name for an entity.
+/** Set human-readable name for an entity.
  *
  * @see ecs_doc_set_name()
  * @see flecs::doc::get_name()

@@ -15,7 +15,7 @@
  *
  * @memberof flecs::world
  *
- * @param evt The event id.
+ * @param evt The event ID.
  * @return Event builder.
  */
 flecs::event_builder event(flecs::entity_t evt) const;

@@ -3,7 +3,7 @@
  * @brief Event entity mixin.
  */
 
-/** Emit event for entity.
+/** Emit an event for an entity.
  * 
  * @memberof flecs::entity_view
  * 
@@ -16,7 +16,7 @@ void emit(flecs::entity_t evt) const {
         .emit();
 }
 
-/** Emit event for entity.
+/** Emit an event for an entity.
  * 
  * @memberof flecs::entity_view
  * 
@@ -24,7 +24,7 @@ void emit(flecs::entity_t evt) const {
  */
 void emit(flecs::entity evt) const;
 
-/** Emit event for entity.
+/** Emit an event for an entity.
  * 
  * @memberof flecs::entity_view
  * 
@@ -35,7 +35,7 @@ void emit() const {
     this->emit(_::type<Evt>::id(world_));
 }
 
-/** Emit event with payload for entity.
+/** Emit an event with payload for an entity.
  * 
  * @memberof flecs::entity_view
  * 
@@ -51,7 +51,7 @@ void emit(const Evt& payload) const {
 }
 
 
-/** Enqueue event for entity.
+/** Enqueue an event for an entity.
  * 
  * @memberof flecs::entity_view
  * 
@@ -64,7 +64,7 @@ void enqueue(flecs::entity_t evt) const {
         .enqueue();
 }
 
-/** Enqueue event for entity.
+/** Enqueue an event for an entity.
  * 
  * @memberof flecs::entity_view
  * 
@@ -72,7 +72,7 @@ void enqueue(flecs::entity_t evt) const {
  */
 void enqueue(flecs::entity evt) const;
 
-/** Enqueue event for entity.
+/** Enqueue an event for an entity.
  * 
  * @memberof flecs::entity_view
  * 
@@ -83,7 +83,7 @@ void enqueue() const {
     this->enqueue(_::type<Evt>::id(world_));
 }
 
-/** Enqueue event with payload for entity.
+/** Enqueue an event with payload for an entity.
  * 
  * @memberof flecs::entity_view
  * 

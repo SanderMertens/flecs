@@ -3,7 +3,7 @@
  * @brief JSON parser addon.
  *
  * Parse expression strings into component values. Entity identifiers,
- * enumerations and bitmasks are encoded as strings.
+ * enumerations, and bitmasks are encoded as strings.
  *
  * See docs/FlecsRemoteApi.md for a description of the JSON format.
  */
@@ -19,7 +19,7 @@
 #endif
 
 #ifndef FLECS_QUERY_DSL
-#define FLECS_QUERY_DSL /* For parsing component id expressions */
+#define FLECS_QUERY_DSL /* For parsing component ID expressions */
 #endif
 
 #ifndef FLECS_JSON_H
@@ -28,7 +28,7 @@
 /**
  * @defgroup c_addons_json Json
  * @ingroup c_addons
- * Functions for serializing to/from JSON.
+ * Functions for serializing to and from JSON.
  *
  * @{
  */
@@ -39,16 +39,16 @@ extern "C" {
 
 /** Used with ecs_ptr_from_json(), ecs_entity_from_json(). */
 typedef struct ecs_from_json_desc_t {
-    const char *name; /**< Name of expression (used for logging) */
-    const char *expr; /**< Full expression (used for logging) */
+    const char *name; /**< Name of the expression (used for logging). */
+    const char *expr; /**< Full expression (used for logging). */
 
     /** Callback that allows for specifying a custom lookup function. The
-     * default behavior uses ecs_lookup() */
+     * default behavior uses ecs_lookup(). */
     ecs_entity_t (*lookup_action)(
         ecs_world_t*,
         const char *value,
         void *ctx);
-    void *lookup_ctx;
+    void *lookup_ctx;              /**< Context for lookup_action. */
 
     /** Require components to be registered with reflection data. When not
      * in strict mode, values for components without reflection are ignored. */
@@ -63,7 +63,7 @@ typedef struct ecs_from_json_desc_t {
  * @param type The type of the expression to parse.
  * @param ptr Pointer to the memory to write to.
  * @param json The JSON expression to parse.
- * @param desc Configuration parameters for deserializer.
+ * @param desc Configuration parameters for the deserializer.
  * @return Pointer to the character after the last one read, or NULL if failed.
  */
 FLECS_API
@@ -74,14 +74,14 @@ const char* ecs_ptr_from_json(
     const char *json,
     const ecs_from_json_desc_t *desc);
 
-/** Parse JSON object with multiple component values into entity. The format
- * is the same as the one outputted by ecs_entity_to_json(), but at the moment
- * only supports the "ids" and "values" member.
+/** Parse JSON object with multiple component values into an entity. The format
+ * is the same as the one output by ecs_entity_to_json(), but at the moment
+ * only supports the "ids" and "values" members.
  *
  * @param world The world.
- * @param entity The entity to serialize to.
+ * @param entity The entity to deserialize into.
  * @param json The JSON expression to parse (see entity in JSON format manual).
- * @param desc Configuration parameters for deserializer.
+ * @param desc Configuration parameters for the deserializer.
  * @return Pointer to the character after the last one read, or NULL if failed.
  */
 FLECS_API
@@ -92,7 +92,7 @@ const char* ecs_entity_from_json(
     const ecs_from_json_desc_t *desc);
 
 /** Parse JSON object with multiple entities into the world. The format is the
- * same as the one outputted by ecs_world_to_json().
+ * same as the one output by ecs_world_to_json().
  *
  * @param world The world.
  * @param json The JSON expression to parse (see iterator in JSON format manual).
@@ -105,7 +105,7 @@ const char* ecs_world_from_json(
     const char *json,
     const ecs_from_json_desc_t *desc);
 
-/** Same as ecs_world_from_json(), but loads JSON from file.
+/** Same as ecs_world_from_json(), but loads JSON from a file.
  *
  * @param world The world.
  * @param filename The file from which to load the JSON.
@@ -123,7 +123,7 @@ const char* ecs_world_from_json_file(
  * memory pointed to must be large enough to contain a value of the used type.
  *
  * If count is 0, the function will serialize a single value, not wrapped in
- * array brackets. If count is >= 1, the operation will serialize values to a
+ * array brackets. If count is >= 1, the operation will serialize values to
  * a comma-separated list inside of array brackets.
  *
  * @param world The world.
@@ -188,7 +188,7 @@ int ecs_ptr_to_json_buf(
     ecs_strbuf_t *buf_out);
 
 /** Serialize type info to JSON.
- * This serializes type information to JSON, and can be used to store/transmit
+ * This serializes type information to JSON, and can be used to store or transmit
  * the structure of a (component) value.
  *
  * If the provided type does not have reflection data, "0" will be returned.
@@ -216,19 +216,19 @@ int ecs_type_info_to_json_buf(
     ecs_entity_t type,
     ecs_strbuf_t *buf_out);
 
-/** Used with ecs_iter_to_json(). */
+/** Used with ecs_entity_to_json(). */
 typedef struct ecs_entity_to_json_desc_t {
-    bool serialize_entity_id;  /**< Serialize entity id */
-    bool serialize_doc;        /**< Serialize doc attributes */
-    bool serialize_full_paths; /**< Serialize full paths for tags, components and pairs */
-    bool serialize_inherited;  /**< Serialize base components */
-    bool serialize_values;     /**< Serialize component values */
-    bool serialize_builtin;    /**< Serialize builtin data as components (e.g. "name", "parent") */
-    bool serialize_type_info;  /**< Serialize type info (requires serialize_values) */
-    bool serialize_alerts;     /**< Serialize active alerts for entity */
-    ecs_entity_t serialize_refs; /**< Serialize references (incoming edges) for relationship */
-    bool serialize_matches;    /**< Serialize which queries entity matches with */
-    /** Callback for if the component should be serialized */
+    bool serialize_entity_id;  /**< Serialize entity ID. */
+    bool serialize_doc;        /**< Serialize doc attributes. */
+    bool serialize_full_paths; /**< Serialize full paths for tags, components, and pairs. */
+    bool serialize_inherited;  /**< Serialize base components. */
+    bool serialize_values;     /**< Serialize component values. */
+    bool serialize_builtin;    /**< Serialize built-in data as components (e.g., "name", "parent"). */
+    bool serialize_type_info;  /**< Serialize type info (requires serialize_values). */
+    bool serialize_alerts;     /**< Serialize active alerts for the entity. */
+    ecs_entity_t serialize_refs; /**< Serialize references (incoming edges) for a relationship. */
+    bool serialize_matches;    /**< Serialize which queries the entity matches with. */
+    /** Callback to determine if a component should be serialized. */
     bool (*component_filter)
         (const ecs_world_t *, ecs_entity_t);
 } ecs_entity_to_json_desc_t;
@@ -272,6 +272,7 @@ typedef struct ecs_entity_to_json_desc_t {
  *
  * @param world The world.
  * @param entity The entity to serialize to JSON.
+ * @param desc Serialization parameters.
  * @return A JSON string with the serialized entity data, or NULL if failed.
  */
 FLECS_API
@@ -286,6 +287,7 @@ char* ecs_entity_to_json(
  * @param world The world.
  * @param entity The entity to serialize.
  * @param buf_out The strbuf to append the string to.
+ * @param desc Serialization parameters.
  * @return Zero if success, non-zero if failed.
  */
 FLECS_API
@@ -297,26 +299,26 @@ int ecs_entity_to_json_buf(
 
 /** Used with ecs_iter_to_json(). */
 typedef struct ecs_iter_to_json_desc_t {
-    bool serialize_entity_ids;      /**< Serialize entity ids */
-    bool serialize_values;          /**< Serialize component values */
-    bool serialize_builtin;         /**< Serialize builtin data as components (e.g. "name", "parent") */
-    bool serialize_doc;             /**< Serialize doc attributes */
-    bool serialize_full_paths;      /**< Serialize full paths for tags, components and pairs */
-    bool serialize_fields;          /**< Serialize field data */
-    bool serialize_inherited;       /**< Serialize inherited components */
-    bool serialize_table;           /**< Serialize entire table vs. matched components */
-    bool serialize_type_info;       /**< Serialize type information */
-    bool serialize_field_info;      /**< Serialize metadata for fields returned by query */
-    bool serialize_query_info;      /**< Serialize query terms */
-    bool serialize_query_plan;      /**< Serialize query plan */
-    bool serialize_query_profile;   /**< Profile query performance */
-    bool dont_serialize_results;    /**< If true, query won't be evaluated */
-    bool serialize_alerts;          /**< Serialize active alerts for entity */
-    ecs_entity_t serialize_refs;    /**< Serialize references (incoming edges) for relationship */
-    bool serialize_matches;         /**< Serialize which queries entity matches with */
-    bool serialize_parents_before_children; /** If query matches both children and parent, serialize parent before children */
+    bool serialize_entity_ids;      /**< Serialize entity IDs. */
+    bool serialize_values;          /**< Serialize component values. */
+    bool serialize_builtin;         /**< Serialize built-in data as components (e.g., "name", "parent"). */
+    bool serialize_doc;             /**< Serialize doc attributes. */
+    bool serialize_full_paths;      /**< Serialize full paths for tags, components, and pairs. */
+    bool serialize_fields;          /**< Serialize field data. */
+    bool serialize_inherited;       /**< Serialize inherited components. */
+    bool serialize_table;           /**< Serialize entire table vs. matched components. */
+    bool serialize_type_info;       /**< Serialize type information. */
+    bool serialize_field_info;      /**< Serialize metadata for fields returned by the query. */
+    bool serialize_query_info;      /**< Serialize query terms. */
+    bool serialize_query_plan;      /**< Serialize query plan. */
+    bool serialize_query_profile;   /**< Profile query performance. */
+    bool dont_serialize_results;    /**< If true, the query will not be evaluated. */
+    bool serialize_alerts;          /**< Serialize active alerts for the entity. */
+    ecs_entity_t serialize_refs;    /**< Serialize references (incoming edges) for a relationship. */
+    bool serialize_matches;         /**< Serialize which queries the entity matches with. */
+    bool serialize_parents_before_children; /**< If the query matches both children and parent, serialize the parent before children. */
     
-    /** Callback for if the component should be serialized */
+    /** Callback to determine if a component should be serialized. */
     bool (*component_filter)
         (const ecs_world_t *, ecs_entity_t);
     ecs_poly_t *query;            /**< Query object (required for serialize_query_[plan|profile]). */
@@ -376,6 +378,7 @@ typedef struct ecs_iter_to_json_desc_t {
  * to JSON. The function accepts iterators from any source.
  *
  * @param iter The iterator to serialize to JSON.
+ * @param desc Serialization parameters.
  * @return A JSON string with the serialized iterator data, or NULL if failed.
  */
 FLECS_API
@@ -388,6 +391,7 @@ char* ecs_iter_to_json(
  *
  * @param iter The iterator to serialize.
  * @param buf_out The strbuf to append the string to.
+ * @param desc Serialization parameters.
  * @return Zero if success, non-zero if failed.
  */
 FLECS_API
@@ -396,27 +400,28 @@ int ecs_iter_to_json_buf(
     ecs_strbuf_t *buf_out,
     const ecs_iter_to_json_desc_t *desc);
 
-/** Used with ecs_iter_to_json(). */
+/** Used with ecs_world_to_json(). */
 typedef struct ecs_world_to_json_desc_t {
-    bool serialize_builtin;    /**< Exclude flecs modules & contents */
-    bool serialize_modules;    /**< Exclude modules & contents */
+    bool serialize_builtin;    /**< Serialize Flecs built-in modules and contents. */
+    bool serialize_modules;    /**< Serialize modules and contents. */
 } ecs_world_to_json_desc_t;
 
 /** Serialize world into JSON string.
- * This operation iterates the contents of the world to JSON. The operation is
+ * This operation serializes the contents of the world to JSON. The operation is
  * equivalent to the following code:
  *
  * @code
- * ecs_query_t *f = ecs_query(world, {
+ * ecs_query_t *q = ecs_query(world, {
  *   .terms = {{ .id = EcsAny }}
  * });
  *
- * ecs_iter_t it = ecs_query_init(world, &f);
+ * ecs_iter_t it = ecs_query_iter(world, q);
  * ecs_iter_to_json_desc_t desc = { .serialize_table = true };
- * ecs_iter_to_json(iter, &desc);
+ * ecs_iter_to_json(&it, &desc);
  * @endcode
  *
  * @param world The world to serialize.
+ * @param desc Serialization parameters.
  * @return A JSON string with the serialized iterator data, or NULL if failed.
  */
 FLECS_API
@@ -429,6 +434,7 @@ char* ecs_world_to_json(
  *
  * @param world The world to serialize.
  * @param buf_out The strbuf to append the string to.
+ * @param desc Serialization parameters.
  * @return Zero if success, non-zero if failed.
  */
 FLECS_API

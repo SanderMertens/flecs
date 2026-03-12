@@ -13,7 +13,7 @@ namespace flecs
 namespace _ 
 {
 
-// Binding ctx for component hooks
+// Binding ctx for component hooks.
 struct component_binding_ctx {
     void *on_add = nullptr;
     void *on_remove = nullptr;
@@ -40,7 +40,7 @@ struct component_binding_ctx {
     }
 };
 
-// Utility to convert template argument pack to array of term ptrs
+// Utility to convert a template argument pack to an array of term pointers.
 struct field_ptr {
     void *ptr = nullptr;
     int8_t index = 0;
@@ -108,11 +108,11 @@ private:
 struct delegate { };
 
 // Template that figures out from the template parameters of a query/system
-// how to pass the value to the each callback
+// how to pass the value to the each callback.
 template <typename T, typename = int>
 struct each_field { };
 
-// Base class
+// Base class.
 struct each_column_base {
     each_column_base(const _::field_ptr& field, size_t row) 
         : field_(field), row_(row) {
@@ -123,9 +123,9 @@ protected:
     size_t row_;    
 };
 
-// If type is not a pointer, return a reference to the type (default case)
+// If the type is not a pointer, return a reference to the type (default case).
 template <typename T>
-struct each_field<T, if_t< !is_pointer<T>::value && 
+struct each_field<T, if_t< !is_pointer<T>::value &&
         !is_empty<actual_type_t<T>>::value && is_actual<T>::value > > 
     : each_column_base 
 {
@@ -137,7 +137,7 @@ struct each_field<T, if_t< !is_pointer<T>::value &&
     }  
 };
 
-// If argument type is not the same as actual component type, return by value.
+// If the argument type is not the same as the actual component type, return by value.
 // This requires that the actual type can be converted to the type.
 // A typical scenario where this happens is when using flecs::pair types.
 template <typename T>
@@ -153,7 +153,7 @@ struct each_field<T, if_t< !is_pointer<T>::value &&
     }  
 };
 
-// If type is empty (indicating a tag) the query will pass a nullptr. To avoid
+// If the type is empty (indicating a tag), the query will pass a nullptr. To avoid
 // returning nullptr to reference arguments, return a temporary value.
 template <typename T>
 struct each_field<T, if_t< is_empty<actual_type_t<T>>::value && 
@@ -168,7 +168,7 @@ struct each_field<T, if_t< is_empty<actual_type_t<T>>::value &&
     }
 };
 
-// If type is a pointer (indicating an optional value) don't index with row if
+// If the type is a pointer (indicating an optional value), don't index with row if
 // the field is not set.
 template <typename T>
 struct each_field<T, if_t< is_pointer<T>::value && 
@@ -182,7 +182,7 @@ struct each_field<T, if_t< is_pointer<T>::value &&
         if (this->field_.ptr) {
             return &static_cast<actual_type_t<T>>(this->field_.ptr)[this->row_];
         } else {
-            // optional argument doesn't have a value
+            // Optional argument doesn't have a value.
             return nullptr;
         }
     }
@@ -198,9 +198,9 @@ struct each_ref_field : public each_field<T> {
         : each_field<T>(iter, field, row) {
 
         if (field.is_ref) {
-            // If this is a reference, set the row to 0 as a ref always is a
+            // If this is a reference, set the row to 0 as a ref is always a
             // single value, not an array. This prevents the application from
-            // having to do an if-check on whether the column is owned.
+            // having to do an if-check on whether the field is owned.
             //
             // This check only happens when the current table being iterated
             // over caused the query to match a reference. The check is
@@ -215,7 +215,7 @@ struct each_ref_field : public each_field<T> {
     }
 };
 
-// Type that handles passing components to each callbacks
+// Type that handles passing components to each callbacks.
 template <typename Func, typename ... Components>
 struct each_delegate : public delegate {
     using Terms = typename field_ptrs<Components ...>::array;
@@ -244,14 +244,14 @@ struct each_delegate : public delegate {
         }
     }
 
-    // Static function that can be used as callback for systems/triggers
+    // Static function that can be used as callback for systems/observers.
     static void run(ecs_iter_t *iter) {
         auto self = static_cast<const each_delegate*>(iter->callback_ctx);
         ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, NULL);
         self->invoke(iter);
     }
 
-    // Static function that can be used as callback for systems/triggers. 
+    // Static function that can be used as callback for systems/observers.
     // Different from run() in that it loops the iterator.
     static void run_each(ecs_iter_t *iter) {
         auto self = static_cast<const each_delegate*>(iter->run_ctx);
@@ -261,17 +261,17 @@ struct each_delegate : public delegate {
         }
     }
 
-    // Create instance of delegate
+    // Create instance of delegate.
     static each_delegate* make(const Func& func) {
         return FLECS_NEW(each_delegate)(func);
     }
 
-    // Function that can be used as callback to free delegate
+    // Function that can be used as callback to free delegate.
     static void destruct(void *obj) {
         _::free_obj<each_delegate>(obj);
     }
 
-    // Static function to call for component on_add hook
+    // Static function to call for component on_add hook.
     static void run_add(ecs_iter_t *iter) {
         component_binding_ctx *ctx = reinterpret_cast<component_binding_ctx*>(
             iter->callback_ctx);
@@ -279,7 +279,7 @@ struct each_delegate : public delegate {
         run(iter);
     }
 
-    // Static function to call for component on_remove hook
+    // Static function to call for component on_remove hook.
     static void run_remove(ecs_iter_t *iter) {
         component_binding_ctx *ctx = reinterpret_cast<component_binding_ctx*>(
             iter->callback_ctx);
@@ -287,7 +287,7 @@ struct each_delegate : public delegate {
         run(iter);
     }
 
-    // Static function to call for component on_set hook
+    // Static function to call for component on_set hook.
     static void run_set(ecs_iter_t *iter) {
         component_binding_ctx *ctx = reinterpret_cast<component_binding_ctx*>(
             iter->callback_ctx);
@@ -295,7 +295,7 @@ struct each_delegate : public delegate {
         run(iter);
     }
 
-    // Static function to call for component on_replace hook
+    // Static function to call for component on_replace hook.
     static void run_replace(ecs_iter_t *iter) {
         component_binding_ctx *ctx = reinterpret_cast<component_binding_ctx*>(
             iter->callback_ctx);
@@ -360,8 +360,8 @@ private:
 
         size_t count = static_cast<size_t>(iter->count);
         if (count == 0 && !iter->table) {
-            // If query has no This terms, count can be 0. Since each does not
-            // have an entity parameter, just pass through components
+            // If the query has no This terms, count can be 0. Since each does not
+            // have an entity parameter, just pass through components.
             count = 1;
         }
 
@@ -414,7 +414,7 @@ struct find_delegate : public delegate {
     }
 
 private:
-    // Number of function arguments is one more than number of components, pass
+    // The number of function arguments is one more than the number of components, pass
     // entity as argument.
     template <template<typename X, typename = int> class ColumnType,
         typename... Args,
@@ -447,7 +447,7 @@ private:
         return result;
     }
 
-    // Number of function arguments is two more than number of components, pass
+    // The number of function arguments is two more than the number of components, pass
     // iter + index as argument.
     template <template<typename X, typename = int> class ColumnType,
         typename... Args,
@@ -462,8 +462,8 @@ private:
     {
         size_t count = static_cast<size_t>(iter->count);
         if (count == 0) {
-            // If query has no This terms, count can be 0. Since each does not
-            // have an entity parameter, just pass through components
+            // If the query has no This terms, count can be 0. Since each does not
+            // have an entity parameter, just pass through components.
             count = 1;
         }
 
@@ -487,7 +487,7 @@ private:
         return result;
     }
 
-    // Number of function arguments is equal to number of components, no entity
+    // The number of function arguments is equal to the number of components, no entity.
     template <template<typename X, typename = int> class ColumnType,
         typename... Args,
         typename Fn = Func,
@@ -499,8 +499,8 @@ private:
     {
         size_t count = static_cast<size_t>(iter->count);
         if (count == 0) {
-            // If query has no This terms, count can be 0. Since each does not
-            // have an entity parameter, just pass through components
+            // If the query has no This terms, count can be 0. Since each does not
+            // have an entity parameter, just pass through components.
             count = 1;
         }
 
@@ -558,7 +558,7 @@ struct run_delegate : delegate {
         func_(it);
     }
 
-    // Static function that can be used as callback for systems/triggers
+    // Static function that can be used as callback for systems/observers.
     static void run(ecs_iter_t *iter) {
         auto self = static_cast<const run_delegate*>(iter->run_ctx);
         ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, NULL);
@@ -578,7 +578,7 @@ struct entity_observer_delegate : delegate {
     explicit entity_observer_delegate(Func&& func) noexcept 
         : func_(FLECS_MOV(func)) { }
 
-    // Static function that can be used as callback for systems/triggers
+    // Static function that can be used as callback for systems/observers.
     static void run(ecs_iter_t *iter) {
         invoke<Func>(iter);
     }
@@ -608,7 +608,7 @@ struct entity_payload_observer_delegate : delegate {
     explicit entity_payload_observer_delegate(Func&& func) noexcept 
         : func_(FLECS_MOV(func)) { }
 
-    // Static function that can be used as callback for systems/triggers
+    // Static function that can be used as callback for systems/observers.
     static void run(ecs_iter_t *iter) {
         invoke<Func>(iter);
     }
@@ -671,24 +671,24 @@ struct entity_with_delegate_impl<arg_list<Args ...>> {
     {
         ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        /* table_index_of needs real world */
+        /* table_index_of needs the real world. */
         const flecs::world_t *real_world = ecs_get_world(world);
 
         IdArray ids ({
             _::type<Args>().id(world)...
         });
 
-        /* Get column indices for components */
+        /* Get column indices for components. */
         ColumnArray columns ({
-            ecs_table_get_column_index(real_world, table, 
+            ecs_table_get_column_index(real_world, table,
                 _::type<Args>().id(world))...
         });
 
-        /* Get pointers for columns for entity */
+        /* Get pointers for columns for the entity. */
         size_t i = 0;
         for (int32_t column : columns) {
             if (column == -1) {
-                /* Component could be sparse */
+                /* Component could be sparse. */
                 void *ptr = ecs_get_mut_id(world, e, ids[i]);
                 if (!ptr) {
                     return false;
@@ -705,7 +705,7 @@ struct entity_with_delegate_impl<arg_list<Args ...>> {
     }
 
     static bool ensure_ptrs(world_t *world, ecs_entity_t e, ArrayType& ptrs) {
-        /* Get pointers w/ensure */
+        /* Get pointers w/ensure. */
         size_t i = 0;
         DummyArray dummy ({
             (ptrs[i ++] = ecs_ensure_id(world, e, 
@@ -770,11 +770,11 @@ struct entity_with_delegate_impl<arg_list<Args ...>> {
         }
     }
 
-    // Utility for storing id in array in pack expansion
+    // Utility for storing an ID in an array in pack expansion.
     static size_t store_added(IdArray& added, size_t elem, ecs_table_t *prev, 
         ecs_table_t *next, id_t id) 
     {
-        // Array should only contain ids for components that are actually added,
+        // Array should only contain IDs for components that are actually added,
         // so check if the prev and next tables are different.
         if (prev != next) {
             added[elem] = id;
@@ -827,9 +827,9 @@ struct entity_with_delegate_impl<arg_list<Args ...>> {
         ArrayType ptrs;
         ecs_table_t *table = NULL;
 
-        // When not deferred take the fast path.
+        // When not deferred, take the fast path.
         if (!w.is_deferred()) {
-            // Bit of low level code so we only do at most one table move & one
+            // A bit of low-level code so we only do at most one table move and one
             // entity lookup for the entire operation.
 
             // Make sure the object is not a stage. Operations on a stage are
@@ -837,13 +837,13 @@ struct entity_with_delegate_impl<arg_list<Args ...>> {
             // the world is in readonly mode.
             ecs_assert(!w.is_stage(), ECS_INVALID_PARAMETER, NULL);
 
-            // Find table for entity
+            // Find the table for the entity.
             ecs_record_t *r = ecs_record_find(world, id);
             if (r) {
                 table = r->table;
             }
 
-            // Iterate components, only store added component ids in added array
+            // Iterate components, only store added component IDs in the added array.
             InvokeCtx ctx(table);
             DummyArray dummy_before ({ (
                 invoke_add(w, id, w.id<Args>(), ctx)
@@ -851,7 +851,7 @@ struct entity_with_delegate_impl<arg_list<Args ...>> {
 
             (void)dummy_before;
 
-            // If table is different, move entity straight to it
+            // If the table is different, move the entity straight to it.
             if (table != ctx.table) {
                 ecs_type_t ids;
                 ids.array = ctx.added.ptr();
@@ -866,7 +866,7 @@ struct entity_with_delegate_impl<arg_list<Args ...>> {
 
             ECS_TABLE_LOCK(world, table);
 
-        // When deferred, obtain pointers with regular ensure
+        // When deferred, obtain pointers with regular ensure.
         } else {
             ensure_ptrs(world, id, ptrs);
         }
@@ -877,7 +877,7 @@ struct entity_with_delegate_impl<arg_list<Args ...>> {
             ECS_TABLE_UNLOCK(world, table);
         }
 
-        // Call modified on each component
+        // Call modified on each component.
         DummyArray dummy_after ({
             ( ecs_modified_id(world, id, w.id<Args>()), 0)...
         });
@@ -919,7 +919,12 @@ struct entity_with_delegate<Func, if_t< is_callable<Func>::value > >
 
 } // namespace _
 
-// Experimental: allows using the each delegate for use cases outside of flecs
+/** Delegate type for each callbacks.
+ * Experimental: allows using the each delegate for use cases outside of Flecs.
+ *
+ * @tparam Func The callback function type.
+ * @tparam Args The component argument types.
+ */
 template <typename Func, typename ... Args>
 using delegate = _::each_delegate<typename std::decay<Func>::type, Args...>;
 

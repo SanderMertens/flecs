@@ -3,7 +3,7 @@
  * @brief Doc entity view mixin.
  */
 
-/** Get human readable name.
+/** Get human-readable name.
  *
  * @see ecs_doc_get_name()
  * @see flecs::doc::get_name()

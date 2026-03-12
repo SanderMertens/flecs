@@ -15,7 +15,7 @@ namespace flecs {
  * @{
  */
 
-/** Module */
+/** Module. */
 struct alerts {
     using AlertsActive = EcsAlertsActive;
     using Instance = EcsAlertInstance;

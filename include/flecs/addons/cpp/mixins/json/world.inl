@@ -3,7 +3,7 @@
  * @brief JSON world mixin.
  */
 
-/** Serialize untyped value to JSON.
+/** Serialize an untyped value to JSON.
  * 
  * @memberof flecs::world
  * @ingroup cpp_addons_json
@@ -13,7 +13,7 @@ flecs::string to_json(flecs::entity_t tid, const void* value) const {
     return flecs::string(json);
 }
 
-/** Serialize value to JSON.
+/** Serialize a value to JSON.
  * 
  * @memberof flecs::world
  * @ingroup cpp_addons_json
@@ -24,7 +24,7 @@ flecs::string to_json(const T* value) const {
     return to_json(tid, value);
 }
 
-/** Serialize world to JSON.
+/** Serialize the world to JSON.
  * 
  * @memberof flecs::world
  * @ingroup cpp_addons_json
@@ -33,8 +33,8 @@ flecs::string to_json() const {
     return flecs::string( ecs_world_to_json(world_, nullptr) );
 }
 
-/** Deserialize value from JSON.
- * 
+/** Deserialize a value from JSON.
+ *
  * @memberof flecs::world
  * @ingroup cpp_addons_json
  */
@@ -42,8 +42,8 @@ const char* from_json(flecs::entity_t tid, void* value, const char *json, flecs:
     return ecs_ptr_from_json(world_, tid, value, json, desc);
 }
 
-/** Deserialize value from JSON.
- * 
+/** Deserialize a value from JSON.
+ *
  * @memberof flecs::world
  * @ingroup cpp_addons_json
  */
@@ -53,7 +53,7 @@ const char* from_json(T* value, const char *json, flecs::from_json_desc_t *desc 
         value, json, desc);
 }
 
-/** Deserialize JSON into world.
+/** Deserialize JSON into the world.
  * 
  * @memberof flecs::world
  * @ingroup cpp_addons_json
@@ -62,7 +62,7 @@ const char* from_json(const char *json, flecs::from_json_desc_t *desc = nullptr)
     return ecs_world_from_json(world_, json, desc);
 }
 
-/** Deserialize JSON file into world.
+/** Deserialize a JSON file into the world.
  * 
  * @memberof flecs::world
  * @ingroup cpp_addons_json

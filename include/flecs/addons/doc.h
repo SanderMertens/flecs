@@ -24,12 +24,12 @@ extern "C" {
 /**
  * @defgroup c_addons_doc Doc
  * @ingroup c_addons
- * Utilities for documenting entities, components and systems.
+ * Utilities for documenting entities, components, and systems.
  *
  * @{
  */
 
-FLECS_API extern const ecs_entity_t ecs_id(EcsDocDescription); /**< Component id for EcsDocDescription. */
+FLECS_API extern const ecs_entity_t ecs_id(EcsDocDescription); /**< Component ID for EcsDocDescription. */
 
 /** Tag for adding a UUID to entities. 
  * Added to an entity as (EcsDocDescription, EcsUuid) by ecs_doc_set_uuid().
@@ -51,8 +51,8 @@ FLECS_API extern const ecs_entity_t EcsDocDetail;
  */
 FLECS_API extern const ecs_entity_t EcsDocLink;
 
-/** Tag for adding a color to entities. 
- * Added to an entity as (EcsDocDescription, EcsDocColor) by ecs_doc_set_link().
+/** Tag for adding a color to entities.
+ * Added to an entity as (EcsDocDescription, EcsDocColor) by ecs_doc_set_color().
  */
 FLECS_API extern const ecs_entity_t EcsDocColor;
 
@@ -65,7 +65,7 @@ FLECS_API extern const ecs_entity_t EcsDocColor;
  * - EcsDocColor
  */
 typedef struct EcsDocDescription {
-    char *value;
+    char *value;           /**< Description value. */
 } EcsDocDescription;
 
 /** Add UUID to entity.
@@ -86,7 +86,7 @@ void ecs_doc_set_uuid(
     const char *uuid);
 
 /** Add human-readable name to entity.
- * Contrary to entity names, human readable names do not have to be unique and
+ * Contrary to entity names, human-readable names do not have to be unique and
  * can contain special characters used in the query language like '*'.
  *
  * @param world The world.
@@ -152,10 +152,10 @@ void ecs_doc_set_link(
     const char *link);
 
 /** Add color to entity.
- * UIs can use color as hint to improve visualizing entities.
+ * UIs can use color as a hint to improve visualizing entities.
  *
  * @param world The world.
- * @param entity The entity to which to add the link.
+ * @param entity The entity to which to add the color.
  * @param color The color to add.
  *
  * @see ecs_doc_get_color()
@@ -182,11 +182,11 @@ const char* ecs_doc_get_uuid(
     const ecs_world_t *world,
     ecs_entity_t entity);
 
-/** Get human readable name from entity.
- * If entity does not have an explicit human readable name, this operation will
+/** Get human-readable name from entity.
+ * If the entity does not have an explicit human-readable name, this operation will
  * return the entity name.
  *
- * To test if an entity has a human readable name, use:
+ * To test if an entity has a human-readable name, use:
  *
  * @code
  * ecs_has_pair(world, e, ecs_id(EcsDocDescription), EcsName);

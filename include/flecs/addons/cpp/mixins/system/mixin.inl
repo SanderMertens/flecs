@@ -3,14 +3,14 @@
  * @brief System module world mixin.
  */
 
-/** 
+/**
  * @memberof flecs::world
  * @ingroup cpp_addons_systems
  *
  * @{
-*/
+ */
 
-/** Upcast entity to a system.
+/** Upcast an entity to a system.
  * The provided entity must be a system.
  * 
  * @param e The entity.
@@ -22,7 +22,7 @@ flecs::system system(flecs::entity e) const;
  * 
  * @tparam Components The components to match on.
  * @tparam Args Arguments passed to the constructor of flecs::system_builder.
- * @return System builder.
+ * @return A system builder.
  */
 template <typename... Components, typename... Args>
 flecs::system_builder<Components...> system(Args &&... args) const;

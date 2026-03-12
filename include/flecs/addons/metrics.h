@@ -38,19 +38,19 @@ extern "C" {
 /** Flecs metrics module. */
 FLECS_API extern ECS_COMPONENT_DECLARE(FlecsMetrics);
 
-/** Tag added to metrics, and used as first element of metric kind pair. */
+/** Tag added to metrics, and used as the first element of the metric kind pair. */
 FLECS_API extern ECS_TAG_DECLARE(EcsMetric);
 
-/** Metric that has monotonically increasing value. */
+/** Metric that has a monotonically increasing value. */
 FLECS_API extern ECS_TAG_DECLARE(EcsCounter);
 
-/** Counter metric that is auto-incremented by source value. */
+/** Counter metric that is auto-incremented by the source value. */
 FLECS_API extern ECS_TAG_DECLARE(EcsCounterIncrement);
 
-/** Counter metric that counts the number of entities with an id. */
+/** Counter metric that counts the number of entities with an ID. */
 FLECS_API extern ECS_TAG_DECLARE(EcsCounterId);
 
-/** Metric that represents current value. */
+/** Metric that represents the current value. */
 FLECS_API extern ECS_TAG_DECLARE(EcsGauge);
 
 /** Tag added to metric instances. */
@@ -72,36 +72,36 @@ typedef struct EcsMetricSource {
     ecs_entity_t entity;
 } EcsMetricSource;
 
-/** Used with ecs_metric_init to create metric. */
+/** Used with ecs_metric_init() to create metric. */
 typedef struct ecs_metric_desc_t {
-    int32_t _canary;
+    int32_t _canary;       /**< Used for validity testing. Do not set. */
 
-    /** Entity associated with metric */
+    /** Entity associated with metric. */
     ecs_entity_t entity;
 
     /** Entity associated with member that stores metric value. Must not be set
      * at the same time as id. Cannot be combined with EcsCounterId. */
     ecs_entity_t member;
 
-    /* Member dot expression. Can be used instead of member and supports nested
+    /** Member dot expression. Can be used instead of member and supports nested
      * members. Must be set together with id and should not be set at the same
      * time as member. */
     const char *dotmember;
 
-    /** Tracks whether entities have the specified component id. Must not be set
+    /** Tracks whether entities have the specified component ID. Must not be set
      * at the same time as member. */
     ecs_id_t id;
 
     /** If id is a (R, *) wildcard and relationship R has the OneOf property,
      * setting this value to true will track individual targets.
-     * If the kind is EcsCountId and the id is a (R, *) wildcard, this value
+     * If the kind is EcsCounterId and the id is a (R, *) wildcard, this value
      * will create a metric per target. */
     bool targets;
 
-    /** Must be EcsGauge, EcsCounter, EcsCounterIncrement or EcsCounterId */
+    /** Must be EcsGauge, EcsCounter, EcsCounterIncrement, or EcsCounterId. */
     ecs_entity_t kind;
 
-    /** Description of metric. Will only be set if FLECS_DOC addon is enabled */
+    /** Description of metric. Will only be set if FLECS_DOC addon is enabled. */
     const char *brief;
 } ecs_metric_desc_t;
 
@@ -122,12 +122,12 @@ typedef struct ecs_metric_desc_t {
  * example "velocity". A counter metric represents a value that is monotonically
  * increasing, for example "miles driven".
  *
- * There are three different kinds of counter metric kinds:
+ * There are three different counter metric kinds:
  * - EcsCounter
  *   When combined with a member, this will store the actual value of the member
  *   in the metric. This is useful for values that are already counters, such as
  *   a MilesDriven component.
- *   This kind creates a metric per entity that has the member/id.
+ *   This kind creates a metric per entity that has the member or ID.
  *
  * - EcsCounterIncrement
  *   When combined with a member, this will increment the value of the metric by
@@ -137,8 +137,8 @@ typedef struct ecs_metric_desc_t {
  *
  * - EcsCounterId
  *   This metric kind will count the number of entities with a specific
- *   (component) id. This kind creates a single metric instance for regular ids,
- *   and a metric instance per target for wildcard ids when targets is set.
+ *   (component) ID. This kind creates a single metric instance for regular IDs,
+ *   and a metric instance per target for wildcard IDs when targets is set.
  *
  * @param world The world.
  * @param desc Metric description.

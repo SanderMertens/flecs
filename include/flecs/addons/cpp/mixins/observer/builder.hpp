@@ -22,6 +22,7 @@ namespace _ {
  */
 template <typename ... Components>
 struct observer_builder final : _::observer_builder_base<Components...> {
+    /** Construct an observer builder. */
     observer_builder(flecs::world_t* world, const char *name = nullptr)
         : _::observer_builder_base<Components...>(world, name)
     {

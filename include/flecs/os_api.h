@@ -3,10 +3,10 @@
  * @brief Operating system abstraction API.
  *
  * This file contains the operating system abstraction API. The flecs core
- * library avoids OS/runtime specific API calls as much as possible. Instead it
+ * library avoids OS/runtime-specific API calls as much as possible. Instead, it
  * provides an interface that can be implemented by applications.
  *
- * Examples for how to implement this interface can be found in the
+ * Examples of how to implement this interface can be found in the
  * examples/os_api folder.
  */
 
@@ -16,7 +16,7 @@
 /**
  * @defgroup c_os_api OS API
  * @ingroup c
- * Interface for providing OS specific functionality.
+ * Interface for providing OS-specific functionality.
  *
  * @{
  */
@@ -39,7 +39,7 @@ typedef struct ecs_time_t {
     uint32_t nanosec;                             /**< Nanosecond part. */
 } ecs_time_t;
 
-/* Allocation counters */
+/** Allocation counters. */
 extern int64_t ecs_os_api_malloc_count;            /**< malloc count. */
 extern int64_t ecs_os_api_realloc_count;           /**< realloc count. */
 extern int64_t ecs_os_api_calloc_count;            /**< calloc count. */
@@ -47,20 +47,20 @@ extern int64_t ecs_os_api_free_count;              /**< free count. */
 
 /* Enabling this flag will add a header to each allocation that allows the code
  * to track exactly how much memory has been allocated. Increases memory 
- * utilization by 16 bytes per allocation, and is not thread safe. */
+ * utilization by 16 bytes per allocation, and is not thread-safe. */
 // #define FLECS_TRACK_OS_ALLOC
 #ifdef FLECS_TRACK_OS_ALLOC
 FLECS_API extern ecs_size_t ecs_os_allocated_bytes;
 #endif
 
-/* Use handle types that _at least_ can store pointers */
+/** Use handle types that _at least_ can store pointers. */
 typedef uintptr_t ecs_os_thread_t;                 /**< OS thread. */
 typedef uintptr_t ecs_os_cond_t;                   /**< OS cond. */
 typedef uintptr_t ecs_os_mutex_t;                  /**< OS mutex. */
 typedef uintptr_t ecs_os_dl_t;                     /**< OS dynamic library. */
 typedef uintptr_t ecs_os_sock_t;                   /**< OS socket. */
 
-/** 64 bit thread id. */
+/** 64-bit thread ID. */
 typedef uint64_t ecs_os_thread_id_t;
 
 /** Generic function pointer type. */
@@ -131,7 +131,7 @@ typedef
 void* (*ecs_os_api_task_join_t)(
     ecs_os_thread_t thread);
 
-/* Atomic increment / decrement */
+/** Atomic increment and decrement. */
 /** OS API ainc function type. */
 typedef
 int32_t (*ecs_os_api_ainc_t)(
@@ -142,7 +142,7 @@ typedef
 int64_t (*ecs_os_api_lainc_t)(
     int64_t *value);
 
-/* Mutex */
+/** Mutex. */
 /** OS API mutex_new function type. */
 typedef
 ecs_os_mutex_t (*ecs_os_api_mutex_new_t)(
@@ -163,7 +163,7 @@ typedef
 void (*ecs_os_api_mutex_free_t)(
     ecs_os_mutex_t mutex);
 
-/* Condition variable */
+/** Condition variable. */
 /** OS API cond_new function type. */
 typedef
 ecs_os_cond_t (*ecs_os_api_cond_new_t)(
@@ -210,12 +210,18 @@ void (*ecs_os_api_get_time_t)(
 typedef
 uint64_t (*ecs_os_api_now_t)(void);
 
-/** OS API log function type. */
+/** OS API log function type.
+ *
+ * @param level The logging level.
+ * @param file The file where the message was logged.
+ * @param line The line where it was logged.
+ * @param msg The log message.
+ */
 typedef
 void (*ecs_os_api_log_t)(
-    int32_t level,     /* Logging level */
-    const char *file,  /* File where message was logged */
-    int32_t line,      /* Line it was logged */
+    int32_t level,
+    const char *file,
+    int32_t line,
     const char *msg);
 
 /** OS API abort function type. */
@@ -244,18 +250,23 @@ typedef
 char* (*ecs_os_api_module_to_path_t)(
     const char *module_id);
 
-/* Performance tracing */
+/** OS API performance tracing function type.
+ *
+ * @param filename The source file name.
+ * @param line The source line number.
+ * @param name The name of the trace region.
+ */
 typedef void (*ecs_os_api_perf_trace_t)(
     const char *filename,
     size_t line,
     const char *name);
 
-/* Prefix members of struct with 'ecs_' as some system headers may define
- * macros for functions like "strdup", "log" or "_free" */
+/* Prefix members of the struct with 'ecs_' as some system headers may define
+ * macros for functions like "strdup", "log", or "_free". */
 
 /** OS API interface. */
 typedef struct ecs_os_api_t {
-    /* API init / deinit */
+    /* API init and deinit */
     ecs_os_api_init_t init_;                       /**< init callback. */
     ecs_os_api_fini_t fini_;                       /**< fini callback. */
 
@@ -277,7 +288,7 @@ typedef struct ecs_os_api_t {
     ecs_os_api_thread_new_t task_new_;             /**< task_new callback. */
     ecs_os_api_thread_join_t task_join_;           /**< task_join callback. */
 
-    /* Atomic increment / decrement */
+    /* Atomic increment and decrement */
     ecs_os_api_ainc_t ainc_;                       /**< ainc callback. */
     ecs_os_api_ainc_t adec_;                       /**< adec callback. */
     ecs_os_api_lainc_t lainc_;                     /**< lainc callback. */
@@ -305,10 +316,10 @@ typedef struct ecs_os_api_t {
     ecs_os_api_log_t log_; /**< log callback.
                             * The level should be interpreted as:
                             * >0: Debug tracing. Only enabled in debug builds.
-                            *  0: Tracing. Enabled in debug/release builds.
-                            * -2: Warning. An issue occurred, but operation was successful.
-                            * -3: Error. An issue occurred, and operation was unsuccessful.
-                            * -4: Fatal. An issue occurred, and application must quit. */
+                            *  0: Tracing. Enabled in debug and release builds.
+                            * -2: Warning. An issue occurred, but the operation was successful.
+                            * -3: Error. An issue occurred, and the operation was unsuccessful.
+                            * -4: Fatal. An issue occurred, and the application must quit. */
 
     /* Application termination */
     ecs_os_api_abort_t abort_;                     /**< abort callback. */
@@ -318,36 +329,34 @@ typedef struct ecs_os_api_t {
     ecs_os_api_dlproc_t dlproc_;                   /**< dlproc callback. */
     ecs_os_api_dlclose_t dlclose_;                 /**< dlclose callback. */
 
-    /* Overridable function that translates from a logical module id to a
-     * shared library filename */
+    /* Overridable function that translates from a logical module ID to a
+     * shared library filename. */
     ecs_os_api_module_to_path_t module_to_dl_;     /**< module_to_dl callback. */
 
-    /* Overridable function that translates from a logical module id to a
-     * path that contains module-specif resources or assets */
+    /* Overridable function that translates from a logical module ID to a
+     * path that contains module-specific resources or assets. */
     ecs_os_api_module_to_path_t module_to_etc_;    /**< module_to_etc callback. */
 
     /* Performance tracing */
-    ecs_os_api_perf_trace_t perf_trace_push_;
-
-    /* Performance tracing */
-    ecs_os_api_perf_trace_t perf_trace_pop_;
+    ecs_os_api_perf_trace_t perf_trace_push_; /**< perf_trace_push callback. */
+    ecs_os_api_perf_trace_t perf_trace_pop_;  /**< perf_trace_pop callback. */
 
     int32_t log_level_;                            /**< Tracing level. */
     int32_t log_indent_;                           /**< Tracing indentation level. */
     int32_t log_last_error_;                       /**< Last logged error code. */
     int64_t log_last_timestamp_;                   /**< Last logged timestamp. */
 
-    ecs_flags32_t flags_;                          /**< OS API flags */
+    ecs_flags32_t flags_;                          /**< OS API flags. */
 
     void *log_out_;                                /**< File used for logging output (type is FILE*)
-                                                    * (hint, log_ decides where to write) */
+                                                    * (hint: log_ decides where to write). */
 } ecs_os_api_t;
 
 /** Static OS API variable with configured callbacks. */
 FLECS_API
 extern ecs_os_api_t ecs_os_api;
 
-/** Initialize OS API. 
+/** Initialize the OS API.
  * This operation is not usually called by an application. To override callbacks
  * of the OS API, use the following pattern:
  * 
@@ -361,31 +370,31 @@ extern ecs_os_api_t ecs_os_api;
 FLECS_API
 void ecs_os_init(void);
 
-/** Deinitialize OS API. 
+/** Deinitialize the OS API.
  * This operation is not usually called by an application.
  */
 FLECS_API
 void ecs_os_fini(void);
 
-/** Override OS API.
+/** Override the OS API.
  * This overrides the OS API struct with new values for callbacks. See 
- * ecs_os_init() on how to use the function.
+ * ecs_os_init() for how to use the function.
  * 
- * @param os_api Pointer to struct with values to set.
+ * @param os_api Pointer to a struct with values to set.
  */
 FLECS_API
 void ecs_os_set_api(
     ecs_os_api_t *os_api);
 
-/** Get OS API. 
+/** Get the OS API.
  * 
- * @return A value with the current OS API callbacks 
+ * @return A value with the current OS API callbacks.
  * @see ecs_os_init()
  */
 FLECS_API
 ecs_os_api_t ecs_os_get_api(void);
 
-/** Set default values for OS API.
+/** Set default values for the OS API.
  * This initializes the OS API struct with default values for callbacks like
  * malloc and free.
  * 
@@ -454,7 +463,6 @@ void ecs_os_set_api_defaults(void);
 
 #define ecs_os_memmove_t(ptr1, ptr2, T) ecs_os_memmove(ptr1, ptr2, ECS_SIZEOF(T))
 #define ecs_os_memmove_n(ptr1, ptr2, T, count) ecs_os_memmove(ptr1, ptr2, ECS_SIZEOF(T) * (size_t)count)
-#define ecs_os_memmove_t(ptr1, ptr2, T) ecs_os_memmove(ptr1, ptr2, ECS_SIZEOF(T))
 
 #define ecs_os_strcmp(str1, str2) strcmp(str1, str2)
 #define ecs_os_memset_t(ptr, value, T) ecs_os_memset(ptr, value, ECS_SIZEOF(T))
@@ -497,7 +505,7 @@ void ecs_os_set_api_defaults(void);
 #define ecs_os_task_new(callback, param) ecs_os_api.task_new_(callback, param)
 #define ecs_os_task_join(thread) ecs_os_api.task_join_(thread)
 
-/* Atomic increment / decrement */
+/* Atomic increment and decrement */
 #define ecs_os_ainc(value) ecs_os_api.ainc_(value)
 #define ecs_os_adec(value) ecs_os_api.adec_(value)
 #define ecs_os_lainc(value) ecs_os_api.lainc_(value)
@@ -542,8 +550,8 @@ void ecs_os_set_api_defaults(void);
 
 
 #ifdef ECS_TARGET_MINGW
-/* mingw bug: without this a conversion error is thrown, but isnan/isinf should
- * accept float, double and long double. */
+/* mingw bug: without this, a conversion error is thrown, but isnan/isinf should
+ * accept float, double, and long double. */
 #define ecs_os_isnan(val) (isnan((float)val))
 #define ecs_os_isinf(val) (isinf((float)val))
 #else
@@ -559,7 +567,7 @@ void ecs_os_set_api_defaults(void);
 #define ecs_os_dlproc(lib, procname) ecs_os_api.dlproc_(lib, procname)
 #define ecs_os_dlclose(lib) ecs_os_api.dlclose_(lib)
 
-/* Module id translation */
+/* Module ID translation */
 #define ecs_os_module_to_dl(lib) ecs_os_api.module_to_dl_(lib)
 #define ecs_os_module_to_etc(lib) ecs_os_api.module_to_etc_(lib)
 
@@ -572,8 +580,8 @@ void ecs_os_set_api_defaults(void);
 
 /** Log at debug level.
  * 
- * @param file The file to log.
- * @param line The line to log.
+ * @param file The source file.
+ * @param line The source line.
  * @param msg The message to log.
 */
 FLECS_API
@@ -584,8 +592,8 @@ void ecs_os_dbg(
 
 /** Log at trace level.
  * 
- * @param file The file to log.
- * @param line The line to log.
+ * @param file The source file.
+ * @param line The source line.
  * @param msg The message to log.
 */
 FLECS_API
@@ -596,8 +604,8 @@ void ecs_os_trace(
 
 /** Log at warning level.
  * 
- * @param file The file to log.
- * @param line The line to log.
+ * @param file The source file.
+ * @param line The source line.
  * @param msg The message to log.
 */
 FLECS_API
@@ -608,8 +616,8 @@ void ecs_os_warn(
 
 /** Log at error level.
  * 
- * @param file The file to log.
- * @param line The line to log.
+ * @param file The source file.
+ * @param line The source line.
  * @param msg The message to log.
 */
 FLECS_API
@@ -620,8 +628,8 @@ void ecs_os_err(
 
 /** Log at fatal level.
  * 
- * @param file The file to log.
- * @param line The line to log.
+ * @param file The source file.
+ * @param line The source line.
  * @param msg The message to log.
 */
 FLECS_API
@@ -630,7 +638,7 @@ void ecs_os_fatal(
     int32_t line, 
     const char *msg);
 
-/** Convert errno to string.
+/** Convert errno to a string.
  * 
  * @param err The error number.
  * @return A string describing the error.
@@ -639,7 +647,7 @@ FLECS_API
 const char* ecs_os_strerror(
     int err);
 
-/** Utility for assigning strings. 
+/** A utility for assigning strings.
  * This operation frees an existing string and duplicates the input string.
  * 
  * @param str Pointer to a string value.
@@ -659,17 +667,29 @@ void ecs_os_strset(
 #define ecs_os_perf_trace_pop(name)
 #endif
 
+/** Push a performance trace region.
+ *
+ * @param file The source file name.
+ * @param line The source line number.
+ * @param name The name of the trace region.
+ */
 void ecs_os_perf_trace_push_(
     const char *file,
     size_t line,
     const char *name);
 
+/** Pop a performance trace region.
+ *
+ * @param file The source file name.
+ * @param line The source line number.
+ * @param name The name of the trace region.
+ */
 void ecs_os_perf_trace_pop_(
     const char *file,
     size_t line,
     const char *name);
 
-/** Sleep with floating point time. 
+/** Sleep with floating-point time. 
  * 
  * @param t The time in seconds.
  */
@@ -677,9 +697,9 @@ FLECS_API
 void ecs_sleepf(
     double t);
 
-/** Measure time since provided timestamp. 
+/** Measure time since the provided timestamp. 
  * Use with a time value initialized to 0 to obtain the number of seconds since
- * the epoch. The operation will write the current timestamp in start.
+ * the epoch. The operation will write the current timestamp into start.
  * 
  * Usage:
  * @code
@@ -696,10 +716,10 @@ FLECS_API
 double ecs_time_measure(
     ecs_time_t *start);
 
-/** Calculate difference between two timestamps. 
+/** Calculate the difference between two timestamps. 
  * 
  * @param t1 The first timestamp.
- * @param t2 The first timestamp.
+ * @param t2 The second timestamp.
  * @return The difference between timestamps.
  */
 FLECS_API
@@ -707,7 +727,7 @@ ecs_time_t ecs_time_sub(
     ecs_time_t t1,
     ecs_time_t t2);
 
-/** Convert time value to a double. 
+/** Convert a time value to a double. 
  * 
  * @param t The timestamp.
  * @return The timestamp converted to a double.

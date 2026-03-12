@@ -15,26 +15,26 @@ namespace flecs {
  * @{
  */
 
-/** Serializer object, used for serializing opaque types */
+/** Serializer object, used for serializing opaque types. */
 using serializer = ecs_serializer_t;
 
-/** Serializer function, used to serialize opaque types */
+/** Serializer function, used to serialize opaque types. */
 using serialize_t = ecs_meta_serialize_t;
 
-/** Type safe variant of serializer function */
+/** Type-safe variant of the serializer function. */
 template <typename T>
 using serialize = int(*)(const serializer *, const T*);
 
-/** Type safe variant of serialize_member function */
+/** Type-safe variant of the serialize_member() function. */
 template <typename T>
 using serialize_member = int(*)(const serializer *, const T*, const char* name);
 
-/** Type safe variant of serialize_element function */
+/** Type-safe variant of the serialize_element() function. */
 template <typename T>
 using serialize_element = int(*)(const serializer *, const T*, size_t element);
 
 
-/** Type safe interface for opaque types */
+/** Type-safe interface for opaque types. */
 template <typename T, typename ElemType = void>
 struct opaque {
     opaque(flecs::world_t *w = nullptr) : world(w) {
@@ -43,13 +43,13 @@ struct opaque {
         }
     }
 
-    /** Type that describes the type kind/structure of the opaque type */
+    /** Set the type that describes the kind/structure of the opaque type. */
     opaque& as_type(flecs::id_t func) {
         this->desc.type.as_type = func;
         return *this;
     }
 
-    /** Serialize function */
+    /** Set the serialize function. */
     opaque& serialize(flecs::serialize<T> func) {
         this->desc.type.serialize =
             reinterpret_cast<decltype(
@@ -57,7 +57,7 @@ struct opaque {
         return *this;
     }
 
-    /** Serialize member function */
+    /** Set the serialize member function. */
     opaque& serialize_member(flecs::serialize_member<T> func) {
         this->desc.type.serialize_member =
             reinterpret_cast<decltype(
@@ -65,7 +65,7 @@ struct opaque {
         return *this;
     }
 
-    /** Serialize element function */
+    /** Set the serialize element function. */
     opaque& serialize_element(flecs::serialize_element<T> func) {
         this->desc.type.serialize_element =
             reinterpret_cast<decltype(
@@ -73,7 +73,7 @@ struct opaque {
         return *this;
     }
 
-    /** Assign bool value */
+    /** Assign bool value. */
     opaque& assign_bool(void (*func)(T *dst, bool value)) {
         this->desc.type.assign_bool =
             reinterpret_cast<decltype(
@@ -81,7 +81,7 @@ struct opaque {
         return *this;
     }
 
-    /** Assign char value */
+    /** Assign char value. */
     opaque& assign_char(void (*func)(T *dst, char value)) {
         this->desc.type.assign_char =
             reinterpret_cast<decltype(
@@ -89,7 +89,7 @@ struct opaque {
         return *this;
     }
 
-    /** Assign int value */
+    /** Assign int value. */
     opaque& assign_int(void (*func)(T *dst, int64_t value)) {
         this->desc.type.assign_int =
             reinterpret_cast<decltype(
@@ -97,7 +97,7 @@ struct opaque {
         return *this;
     }
 
-    /** Assign unsigned int value */
+    /** Assign unsigned int value. */
     opaque& assign_uint(void (*func)(T *dst, uint64_t value)) {
         this->desc.type.assign_uint =
             reinterpret_cast<decltype(
@@ -105,7 +105,7 @@ struct opaque {
         return *this;
     }
 
-    /** Assign float value */
+    /** Assign float value. */
     opaque& assign_float(void (*func)(T *dst, double value)) {
         this->desc.type.assign_float =
             reinterpret_cast<decltype(
@@ -113,7 +113,7 @@ struct opaque {
         return *this;
     }
 
-    /** Assign string value */
+    /** Assign string value. */
     opaque& assign_string(void (*func)(T *dst, const char *value)) {
         this->desc.type.assign_string =
             reinterpret_cast<decltype(
@@ -121,7 +121,7 @@ struct opaque {
         return *this;
     }
 
-    /** Assign entity value */
+    /** Assign entity value. */
     opaque& assign_entity(
         void (*func)(T *dst, ecs_world_t *world, ecs_entity_t entity))
     {
@@ -131,7 +131,7 @@ struct opaque {
         return *this;
     }
 
-    /** Assign (component) id value */
+    /** Assign (component) ID value. */
     opaque& assign_id(
         void (*func)(T *dst, ecs_world_t *world, ecs_id_t id))
     {
@@ -141,7 +141,7 @@ struct opaque {
         return *this;
     }
 
-    /** Assign null value */
+    /** Assign null value. */
     opaque& assign_null(void (*func)(T *dst)) {
         this->desc.type.assign_null =
             reinterpret_cast<decltype(
@@ -149,7 +149,7 @@ struct opaque {
         return *this;
     }
 
-    /** Clear collection elements */
+    /** Clear collection elements. */
     opaque& clear(void (*func)(T *dst)) {
         this->desc.type.clear =
             reinterpret_cast<decltype(
@@ -157,7 +157,7 @@ struct opaque {
         return *this;
     }
 
-    /** Ensure & get collection element */
+    /** Ensure and get a collection element. */
     opaque& ensure_element(ElemType* (*func)(T *dst, size_t elem)) {
         this->desc.type.ensure_element =
             reinterpret_cast<decltype(
@@ -165,7 +165,7 @@ struct opaque {
         return *this;
     }
 
-    /** Ensure & get element */
+    /** Ensure and get a member. */
     opaque& ensure_member(void* (*func)(T *dst, const char *member)) {
         this->desc.type.ensure_member =
             reinterpret_cast<decltype(
@@ -173,7 +173,7 @@ struct opaque {
         return *this;
     }
 
-    /** Return number of elements */
+    /** Return the number of elements. */
     opaque& count(size_t (*func)(const T *dst)) {
         this->desc.type.count =
             reinterpret_cast<decltype(
@@ -181,7 +181,7 @@ struct opaque {
         return *this;
     }
 
-    /** Resize to number of elements */
+    /** Resize to the given number of elements. */
     opaque& resize(void (*func)(T *dst, size_t count)) {
         this->desc.type.resize =
             reinterpret_cast<decltype(
@@ -195,7 +195,7 @@ struct opaque {
         }
     }
 
-    /** Opaque type descriptor */
+    /** Opaque type descriptor. */
     flecs::world_t *world = nullptr;
     ecs_opaque_desc_t desc = {};
 };
