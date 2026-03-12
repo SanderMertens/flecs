@@ -8,13 +8,14 @@
 #ifdef FLECS_SCRIPT
 #include "script.h"
 
+/* Free parameter names and the parameter vector. */
 static
 void ecs_script_params_free(ecs_vec_t *params) {
     int32_t i, count = ecs_vec_count(params);
     if (count) {
         ecs_script_parameter_t *array = ecs_vec_first(params);
         for (i = 0; i < count; i ++) {
-            /* Safe, component owns string */
+            /* Safe: name was strdup'd during parameter parsing */
             ecs_os_free(ECS_CONST_CAST(char*, array[i].name));
         }
     }
@@ -23,6 +24,7 @@ void ecs_script_params_free(ecs_vec_t *params) {
     ecs_os_zeromem(params);
 }
 
+/* Deep copy a parameter vector including name strings. */
 static
 void ecs_script_params_copy(
     ecs_vec_t *dst,
@@ -49,6 +51,7 @@ void ecs_script_params_copy(
     }
 }
 
+/* Destroy a const variable value and release its memory. */
 static
 void ecs_script_const_var_fini(
     EcsScriptConstVar *ptr)
@@ -200,6 +203,7 @@ error:
 }
 
 #ifdef FLECS_DEBUG
+/* Check whether a function descriptor has any vector-typed arguments. */
 static
 bool flecs_script_function_has_vector_args(
     const ecs_function_desc_t *desc)
@@ -218,6 +222,7 @@ bool flecs_script_function_has_vector_args(
     return false;
 }
 
+/* Validate a function descriptor for required fields and consistency. */
 static
 int flecs_script_function_validate_desc(
     const ecs_function_desc_t *desc)
@@ -253,6 +258,7 @@ error:
 }
 #endif
 
+/* Parse function arguments from a descriptor into a parameter vector. */
 static
 void flecs_script_function_parse_args(
     const ecs_function_desc_t *desc,
@@ -342,6 +348,7 @@ error:
     return 0;
 }
 
+/* Import function-related components and register builtin functions. */
 void flecs_function_import(
     ecs_world_t *world)
 {

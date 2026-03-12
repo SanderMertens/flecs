@@ -21,13 +21,11 @@ typedef enum ecs_mixin_kind_t {
     EcsMixinMax
 } ecs_mixin_kind_t;
 
-/* The mixin array contains pointers to mixin members for different kinds of
- * flecs objects. This allows the API to retrieve data from an object regardless
- * of its type. Each mixin array is only stored once per type */
+/* Maps mixin kinds to byte offsets within a poly type. One instance per type;
+ * enables generic access to mixins regardless of concrete object type. */
 struct ecs_mixins_t {
-    const char *type_name; /* Include name of mixin type so debug code doesn't
-                            * need to know about every object */
-    ecs_size_t elems[EcsMixinMax];                        
+    const char *type_name; /* Type name for debug/error messages */
+    ecs_size_t elems[EcsMixinMax];
 };
 
 /* Mixin tables */
@@ -39,7 +37,6 @@ extern ecs_mixins_t ecs_observer_t_mixins;
 /* Types that have no mixins */
 #define ecs_table_t_mixins (&(ecs_mixins_t){ NULL })
 
-/* Initialize poly */
 void* flecs_poly_init_(
     ecs_poly_t *object,
     int32_t kind,
@@ -49,7 +46,6 @@ void* flecs_poly_init_(
 #define flecs_poly_init(object, type)\
     flecs_poly_init_(object, type##_magic, sizeof(type), &type##_mixins)
 
-/* Deinitialize object for specified type */
 void flecs_poly_fini_(
     ecs_poly_t *object,
     int32_t kind);
@@ -57,7 +53,6 @@ void flecs_poly_fini_(
 #define flecs_poly_fini(object, type)\
     flecs_poly_fini_(object, type##_magic)
 
-/* Utility functions for creating an object on the heap */
 #define flecs_poly_new(type)\
     (type*)flecs_poly_init(ecs_os_calloc_t(type), type)
 
@@ -65,7 +60,6 @@ void flecs_poly_fini_(
     flecs_poly_fini(obj, type);\
     ecs_os_free(obj)
 
-/* Get or create poly component for an entity */
 EcsPoly* flecs_poly_bind_(
     ecs_world_t *world,
     ecs_entity_t entity,
@@ -74,7 +68,6 @@ EcsPoly* flecs_poly_bind_(
 #define flecs_poly_bind(world, entity, T) \
     flecs_poly_bind_(world, entity, T##_tag)
 
-/* Send modified event for (Poly, Tag) pair. */
 void flecs_poly_modified_(
     ecs_world_t *world,
     ecs_entity_t entity,
@@ -83,7 +76,6 @@ void flecs_poly_modified_(
 #define flecs_poly_modified(world, entity, T) \
     flecs_poly_modified_(world, entity, T##_tag)
 
-/* Get poly component for an entity */
 const EcsPoly* flecs_poly_bind_get_(
     const ecs_world_t *world,
     ecs_entity_t entity,
@@ -92,7 +84,6 @@ const EcsPoly* flecs_poly_bind_get_(
 #define flecs_poly_bind_get(world, entity, T) \
     flecs_poly_bind_get_(world, entity, T##_tag)
 
-/* Get (Poly, Tag) poly object from entity. */
 ecs_poly_t* flecs_poly_get_(
     const ecs_world_t *world,
     ecs_entity_t entity,
@@ -101,7 +92,6 @@ ecs_poly_t* flecs_poly_get_(
 #define flecs_poly_get(world, entity, T) \
     ((T*)flecs_poly_get_(world, entity, T##_tag))
 
-/* Utilities for testing/asserting an object type */
 #ifndef FLECS_NDEBUG
 #define flecs_poly_assert(object, ty)\
     do {\
@@ -114,11 +104,9 @@ ecs_poly_t* flecs_poly_get_(
 #define flecs_poly_assert(object, ty)
 #endif
 
-/* Get observable mixin from poly object. */
 ecs_observable_t* flecs_get_observable(
     const ecs_poly_t *object);
 
-/* Get dtor mixin from poly object. */
 flecs_poly_dtor_t* flecs_get_dtor(
     const ecs_poly_t *poly);
 

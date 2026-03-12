@@ -11,6 +11,7 @@
 #include "../query_dsl/query_dsl.h"
 #endif
 
+/* Return string representation of a meta operation kind. */
 const char* flecs_meta_op_kind_str(
     ecs_meta_op_kind_t kind)
 {
@@ -71,7 +72,7 @@ error:
     return 0;
 }
 
-/* Get current scope */
+/* Get the active scope from the cursor's scope stack. */
 static
 ecs_meta_scope_t* flecs_cursor_get_scope(
     const ecs_meta_cursor_t *cursor)
@@ -82,7 +83,8 @@ error:
     return NULL;
 }
 
-/* Restore scope, if dotmember was used */
+/* Restore cursor depth after a dotmember traversal pushed intermediate
+ * scopes. Returns the scope at the restored depth. */
 static
 ecs_meta_scope_t* flecs_cursor_restore_scope(
     ecs_meta_cursor_t *cursor,
@@ -97,7 +99,7 @@ error:
     return (ecs_meta_scope_t*)&cursor->scope[cursor->depth];
 }
 
-/* Get current operation for scope */
+/* Get the current serializer instruction for this scope. */
 static
 ecs_meta_op_t* flecs_cursor_get_op(
     ecs_meta_scope_t *scope)
@@ -107,40 +109,32 @@ ecs_meta_op_t* flecs_cursor_get_op(
     return &scope->ops[scope->ops_cur];
 }
 
+/* Get PushArray or PushVector op that opened this collection scope.
+ * The op is at index -1 relative to scope->ops because push sets
+ * ops to &push_op[1] (one past the push instruction). */
 static
 ecs_meta_op_kind_t flecs_cursor_get_collection_kind(
     ecs_meta_scope_t *scope)
 {
-    /* Can only get collection kind for collection scope */
     ecs_assert(scope->is_collection, ECS_INTERNAL_ERROR, NULL);
-
-    /* If this is a collection scope, the operation preceding the 
-     * current one must be PushArray or PushVector. 
-     * We can't get this from parent->ops, because if the collection was
-     * pushed from a struct/other collection scope, it will have done so
-     * with a Forward instruction. */
     ecs_meta_op_t *push = &scope->ops[-1];
     ecs_assert(push->kind == EcsOpPushArray || 
         push->kind == EcsOpPushVector, ECS_INTERNAL_ERROR, NULL);
     return push->kind;
 }
 
+/* Get element size from the first op in a collection scope (either the
+ * primitive type's size or the Push op for a composite element type). */
 static
 ecs_size_t flecs_cursor_get_elem_size(
     ecs_meta_scope_t *scope)
 {
-    /* Can only get collection kind for collection scope */
     ecs_assert(scope->is_collection, ECS_INTERNAL_ERROR, NULL);
-
-    /* The first operation in a collection scope always has the element size.
-     * The reason is that if this is a primitive scope it only contains a single
-     * operation with the type and size, and if it's a composite type the first
-     * operation is a Push for the element type. */
     ecs_assert(scope->ops[0].type_info != NULL, ECS_INTERNAL_ERROR, NULL);
     return scope->ops[0].type_info->size;
 }
 
-/* Get pointer to current field/element */
+/* Get pointer to current field or element. */
 static
 void* flecs_meta_cursor_get_ptr(
     const ecs_world_t *world,
@@ -153,8 +147,7 @@ void* flecs_meta_cursor_get_ptr(
     if (!opaque) {
         if (scope->is_collection) {
             ecs_assert(cursor->scope != scope, ECS_INTERNAL_ERROR, NULL);
-            /* Parent scope contains the index to the current element and total
-             * number of elements in collection. */
+            /* Parent scope tracks current element index and count */
             ecs_meta_scope_t *parent = &scope[-1];
             ecs_size_t elem_size = flecs_cursor_get_elem_size(scope);
             ecs_assert(elem_size != 0, ECS_INTERNAL_ERROR, NULL);
@@ -186,8 +179,7 @@ void* flecs_meta_cursor_get_ptr(
         }
     }
 
-    /* Opaque type */
-
+    /* Opaque type path */
     if (scope->is_collection) {
         ecs_assert(scope != cursor->scope, ECS_INTERNAL_ERROR, NULL);
         ecs_meta_scope_t *parent = &scope[-1];
@@ -226,6 +218,7 @@ void* flecs_meta_cursor_get_ptr(
     }
 }
 
+/* Push a new scope for a type, loading its serializer instructions. */
 static
 int flecs_meta_cursor_push_type(
     const ecs_world_t *world,
@@ -280,6 +273,7 @@ void* ecs_meta_get_ptr(
         flecs_cursor_get_scope(cursor));
 }
 
+/* Check if the current element is within collection bounds. */
 static
 int flecs_meta_array_bounds_check(
     ecs_meta_cursor_t *cursor,
@@ -330,7 +324,7 @@ int ecs_meta_next(
 
     if (scope->ops_cur >= scope->ops_count) {
         char *str = ecs_get_path(cursor->world, scope->type);
-        ecs_err("too many elements for scope for type %s", str);
+        ecs_err("too many elements in scope for type %s", str);
         ecs_os_free(str);
         return -1;
     }
@@ -362,6 +356,7 @@ int ecs_meta_elem(
     return 0;
 }
 
+/* Move cursor to a named member, optionally in try mode. */
 static
 int flecs_meta_member(
     ecs_meta_cursor_t *cursor,
@@ -419,6 +414,7 @@ int ecs_meta_try_member(
     return flecs_meta_member(cursor, name, true);
 }
 
+/* Parse a single member token from a dot-separated member path. */
 static
 const char* flecs_meta_parse_member(
     const char *start,
@@ -446,6 +442,8 @@ const char* flecs_meta_parse_member(
     return ptr;
 }
 
+/* Navigate cursor through a dot-separated member path (e.g. "a.b.c"),
+ * pushing intermediate struct scopes as needed. */
 static
 int flecs_meta_dotmember(
     ecs_meta_cursor_t *cursor,
@@ -507,8 +505,8 @@ int ecs_meta_push(
     ecs_meta_op_t *op = flecs_cursor_get_op(scope);
     const ecs_world_t *world = cursor->world;
 
-    /* Allow push for primitive scope if it's the root. Useful for scenarios 
-     * where a value always has to be surrounded by { }. */
+    /* Allow push on a primitive root scope to support `{ value }` syntax
+     * for single-value types (e.g. `Amount: {10}`). */
     if (cursor->depth == 0) {
         if (!cursor->is_primitive_scope && (op->kind > EcsOpScope)) {
             cursor->is_primitive_scope = true;
@@ -524,7 +522,8 @@ int ecs_meta_push(
     ecs_meta_scope_t *next_scope = flecs_cursor_get_scope(cursor);
     *next_scope = (ecs_meta_scope_t) {0};
 
-    /* Check if we need to forward to serializer of other type. */
+    /* Forward ops redirect to another type's serializer (used for arrays
+     * and vectors that are referenced by value rather than inlined). */
     if (op->kind == EcsOpForward) {
         const EcsTypeSerializer *ts = ecs_get(
             world, op->type, EcsTypeSerializer);
@@ -621,8 +620,7 @@ int ecs_meta_pop(
         next_scope->ops_cur += flecs_ito(int16_t, op->op_count - 1);
 
         if (op->kind == EcsOpPushVector) {
-            /* If scope got moved around in this is a partially assigned vector
-             * so don't shrink it. */
+            /* Partially assigned (moved) vectors should not be shrunk */
             if (!scope->is_moved_scope) {
                 ecs_assert(cursor->scope != scope, ECS_INTERNAL_ERROR, NULL);
                 ecs_meta_scope_t *parent = &scope[-1];
@@ -645,7 +643,7 @@ int ecs_meta_pop(
             }
         }
 
-        /* push + op_count should point to the operation after pop */
+        /* Advance cursor to the Pop op (push offset + op_count - 1) */
         op = flecs_cursor_get_op(next_scope);
         ecs_assert(op->kind == EcsOpPop, ECS_INTERNAL_ERROR, NULL);
     } else if (op->kind == EcsOpForward || op->kind == EcsOpOpaqueStruct || 
@@ -655,10 +653,7 @@ int ecs_meta_pop(
     } else if (op->kind == EcsOpOpaqueVector) {
         const EcsOpaque *opaque = scope->opaque;
 
-        /* When popping an opaque collection type, call resize to make
-         * sure the vector isn't larger than the number of elements we
-         * deserialized. If the opaque type represents an array, don't call 
-         * resize. */
+        /* Resize opaque vector to match the deserialized element count */
         ecs_assert(opaque != NULL, ECS_INTERNAL_ERROR, NULL);
 
         if (!opaque->resize) {
@@ -670,19 +665,14 @@ int ecs_meta_pop(
 
         if (scope->ptr) {
             if (scope->is_empty_scope) {
-                /* If no values were serialized for scope, resize 
-                * collection to 0 elements. */
                 opaque->resize(scope->ptr, 0);
             } else {
-                /* Otherwise resize collection to the index of the last
-                * deserialized element + 1 */
                 opaque->resize(scope->ptr, 
                     flecs_ito(size_t, next_scope->elem + 1));
             }
         }
     } else {
-        /* should not have been able to push if the previous scope was not
-         * a complex or collection type */
+        /* Pop without a matching complex/collection push is a bug */
         ecs_assert(false, ECS_INTERNAL_ERROR, "invalid operation for pop: %s",
             flecs_meta_op_kind_str(op->kind));
     }
@@ -751,7 +741,7 @@ ecs_entity_t ecs_meta_get_member_id(
     return m->member;
 }
 
-/* Utilities for type conversions and bounds checking */
+/* Bounds tables for range-checked type conversions */
 static struct {
     int64_t min, max;
 } ecs_meta_bounds_signed[EcsMetaTypeOpKindLast + 1] = {
@@ -907,6 +897,7 @@ case EcsOpBool:\
     set_T(ecs_bool_t, dst, value != 0);\
     break
 
+/* Report a type conversion error for the cursor. */
 static
 void flecs_meta_conversion_error(
     ecs_meta_cursor_t *cursor,
@@ -1302,6 +1293,7 @@ error:
     return -1;
 }
 
+/* Add a single bitmask constant value to the output. */
 static
 int flecs_meta_add_bitmask_constant(
     ecs_meta_cursor_t *cursor,
@@ -1327,7 +1319,7 @@ int flecs_meta_add_bitmask_constant(
         cursor->world, c, EcsConstant, ecs_u32_t);
     if (v == NULL) {
         char *path = ecs_get_path(cursor->world, op->type);
-        ecs_err("'%s' is not an bitmask constant for type '%s'", value, path);
+        ecs_err("'%s' is not a bitmask constant for type '%s'", value, path);
         ecs_os_free(path);
         return -1;
     }
@@ -1337,6 +1329,7 @@ int flecs_meta_add_bitmask_constant(
     return 0;
 }
 
+/* Parse a pipe-delimited bitmask string into a bitmask value. */
 static
 int flecs_meta_parse_bitmask(
     ecs_meta_cursor_t *cursor,
@@ -1368,6 +1361,7 @@ int flecs_meta_parse_bitmask(
     return 0;
 }
 
+/* Look up an entity by name using the cursor's lookup action. */
 static
 int flecs_meta_cursor_lookup(
     ecs_meta_cursor_t *cursor,
@@ -1390,6 +1384,7 @@ int flecs_meta_cursor_lookup(
     return 0;
 }
 
+/* Check whether a string starts with a valid numeric digit. */
 static
 bool flecs_meta_valid_digit(
     const char *str)
@@ -1531,7 +1526,7 @@ int ecs_meta_set_string(
             cursor->world, c, ecs_pair(EcsConstant, underlying));
         if (!cptr) {
             char *path = ecs_get_path(cursor->world, op->type);
-            ecs_err("constant '%s' enum '%s' is of an invalid underlying type", 
+            ecs_err("constant '%s' of enum '%s' has an invalid underlying type",
                 value, path);
             ecs_os_free(path);
             goto error;
@@ -2091,6 +2086,7 @@ error:
     return 0;
 }
 
+/* Convert a value at the given pointer to a double based on its op kind. */
 static
 double flecs_meta_to_float(
     ecs_meta_op_kind_t kind,
@@ -2153,7 +2149,6 @@ double ecs_meta_get_float(
     return flecs_meta_to_float(op->kind, ptr);
 }
 
-/* Handler to get string from opaque (see ecs_meta_get_string below) */
 static int ecs_meta_get_string_value_from_opaque(
     const struct ecs_serializer_t *ser, ecs_entity_t type, const void *value)
 {
@@ -2166,12 +2161,11 @@ static int ecs_meta_get_string_value_from_opaque(
     return 0;
 }
 
-/* Handler to get string from opaque (see ecs_meta_get_string below) */
 static int ecs_meta_get_string_member_from_opaque(
     const struct ecs_serializer_t* ser, const char* name)
 {
-    (void)ser;  // silence unused warning
-    (void)name; // silence unused warning
+    (void)ser;  /* silence unused warning */
+    (void)name; /* silence unused warning */
     ecs_err("Unexpected member call when serializing string from opaque");
     return -1;
 }
@@ -2185,8 +2179,8 @@ const char* ecs_meta_get_string(
     switch(op->kind) {
     case EcsOpString: return *(const char**)ptr;
     case EcsOpOpaqueValue: {
-        /* If opaque type happens to map to a string, retrieve it. 
-         Otherwise, fallback to default case (error). */
+        /* If opaque type maps to a string, serialize it out.
+         * Otherwise, fall through to error. */
         const EcsOpaque *opaque = ecs_get(cursor->world, op->type, EcsOpaque);
         if(opaque && opaque->as_type == ecs_id(ecs_string_t) && opaque->serialize) {
             char** str = NULL;
@@ -2199,9 +2193,7 @@ const char* ecs_meta_get_string(
             opaque->serialize(&ser, ptr);
             if(str && *str)
                 return *str;
-            /* invalid string, so fall through */
         }
-        /* Not a compatible opaque type, so fall through */
     }
     /* fall through */
     case EcsOpPushStruct:

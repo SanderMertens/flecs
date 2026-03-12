@@ -1,12 +1,13 @@
 /**
- * @file query/cache/cache_order_by.c
- * @brief Query sorting (order_by) implenentation.
+ * @file query/cache/order_by.c
+ * @brief Query result sorting: sorts entities within tables, then merges into ordered slices.
  */
 
 #include "../../private_api.h"
 
 ECS_SORT_TABLE_WITH_COMPARE(_, flecs_query_cache_sort_table_generic, order_by, static)
 
+/* Sort entities within a single table by the order_by component. */
 static
 void flecs_query_cache_sort_table(
     ecs_world_t *world,
@@ -17,7 +18,6 @@ void flecs_query_cache_sort_table(
 {
     int32_t count = ecs_table_count(table);
     if (!count) {
-        /* Nothing to sort */
         return;
     }
     
@@ -43,7 +43,7 @@ void flecs_query_cache_sort_table(
     }
 }
 
-/* Helper struct for building sorted table ranges */
+/* Helper struct for building sorted table ranges. */
 typedef struct sort_helper_t {
     ecs_query_cache_match_t *match;
     ecs_entity_t *entities;
@@ -54,6 +54,7 @@ typedef struct sort_helper_t {
     bool shared;
 } sort_helper_t;
 
+/* Get component data pointer for the current row of a sort helper. */
 static
 const void* ptr_from_helper(
     sort_helper_t *helper)
@@ -68,6 +69,7 @@ const void* ptr_from_helper(
     }
 }
 
+/* Get entity for the current row of a sort helper. */
 static
 ecs_entity_t e_from_helper(
     sort_helper_t *helper)
@@ -79,6 +81,7 @@ ecs_entity_t e_from_helper(
     }
 }
 
+/* Build sorted table slices for a single group by merging sorted tables. */
 static
 void flecs_query_cache_build_sorted_table_range(
     ecs_query_cache_t *cache,
@@ -213,18 +216,19 @@ done:
     flecs_free_n(&world->allocator, sort_helper_t, table_count, helper);
 }
 
+/* Build sorted table slices across all groups. */
 void flecs_query_cache_build_sorted_tables(
     ecs_query_cache_t *cache)
 {
     ecs_vec_clear(&cache->table_slices);
 
-    /* Sort tables in group order */
     ecs_query_cache_group_t *cur = &cache->default_group;
     do {
         flecs_query_cache_build_sorted_table_range(cache, cur);
     } while ((cur = cur->next));
 }
 
+/* Sort matched tables and rebuild sorted table slices if needed. */
 void flecs_query_cache_sort_tables(
     ecs_world_t *world,
     ecs_query_impl_t *impl)
@@ -239,9 +243,6 @@ void flecs_query_cache_sort_tables(
     ecs_entity_t order_by = cache->order_by;
     int32_t order_by_term = cache->order_by_term;
     ecs_component_record_t *cr = flecs_components_get(world, order_by);
-
-    /* Iterate over non-empty tables. Don't bother with empty tables as they
-     * have nothing to sort */
 
     bool tables_sorted = false;
 
@@ -259,8 +260,7 @@ void flecs_query_cache_sort_tables(
                 dirty = true;
 
                 if (!ecs_table_count(table)) {
-                    /* If table is empty, there's a chance the query won't 
-                     * iterate it so update the match monitor here. */
+                    /* Sync monitor for empty tables that may not be iterated */
                     flecs_query_sync_match_monitor(impl, qm);
 
                     ecs_vec_t *matches = qm->wildcard_matches;
@@ -302,8 +302,6 @@ void flecs_query_cache_sort_tables(
                 continue;
             }
 
-            /* Something has changed, sort the table. Prefers using 
-            * flecs_query_cache_sort_table when available */
             flecs_query_cache_sort_table(world, table, column, compare, sort);
             tables_sorted = true;
         }

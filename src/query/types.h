@@ -1,6 +1,6 @@
  /**
  * @file query/types.h
- * @brief Internal types and functions for queries.
+ * @brief Internal types for query variables, instructions, and execution contexts.
  */
 
 #ifndef FLECS_QUERY_TYPES
@@ -16,11 +16,11 @@ typedef ecs_flags64_t ecs_write_flags_t;
 #define EcsVarNone              ((ecs_var_id_t)-1)
 #define EcsThisName             "this"
 
-/* -- Variable types -- */
+/* Variable storage kinds */
 typedef enum {
-    EcsVarEntity,          /* Variable that stores an entity id */
-    EcsVarTable,           /* Variable that stores a table */
-    EcsVarAny              /* Used when requesting either entity or table var */
+    EcsVarEntity,          /* Stores a single entity id */
+    EcsVarTable,           /* Stores a table (set of entities with same archetype) */
+    EcsVarAny              /* Resolved to entity or table depending on context */
 } ecs_var_kind_t;
 
 typedef struct ecs_query_var_t {
@@ -40,20 +40,20 @@ typedef struct ecs_query_var_t {
 extern ecs_query_var_t flecs_this_array;
 extern char *flecs_this_name_array;
 
-/* -- Instruction kinds -- */
+/* Query VM instruction kinds (see eval.c for dispatch) */
 typedef enum {
     EcsQueryAll,            /* Yield all tables */
-    EcsQueryAnd,            /* And operator: find or match id against variable source */
-    EcsQueryAndAny,         /* And operator with support for matching Any src/id */
-    EcsQueryAndWcTgt,       /* And operator for (*, T) queries */
-    EcsQueryTriv,           /* Trivial search (batches multiple terms) */
-    EcsQueryCache,          /* Cached search */
-    EcsQueryIsCache,        /* Cached search for queries that are entirely cached */
-    EcsQueryUp,             /* Up traversal */
-    EcsQuerySelfUp,         /* Self|up traversal */
-    EcsQueryWith,           /* Match id against fixed or variable source */
-    EcsQueryWithWcTgt,      /* Match (*, T) id against fixed or variable source */
-    EcsQueryTrav,           /* Support for transitive/reflexive queries */
+    EcsQueryAnd,            /* Find or match id against variable source */
+    EcsQueryAndAny,         /* And with support for matching Any src/id */
+    EcsQueryAndWcTgt,       /* And for (*, T) wildcard-first queries */
+    EcsQueryTriv,           /* Batched search for multiple trivial And terms */
+    EcsQueryCache,          /* Search partially cached query */
+    EcsQueryIsCache,        /* Search fully cached query */
+    EcsQueryUp,             /* Traverse relationship upward to find component */
+    EcsQuerySelfUp,         /* Match self first, then traverse up */
+    EcsQueryWith,           /* Match id against already-resolved source */
+    EcsQueryWithWcTgt,      /* Match (*, T) against already-resolved source */
+    EcsQueryTrav,           /* Transitive/reflexive relationship traversal */
     EcsQueryAndFrom,        /* AndFrom operator */
     EcsQueryOrFrom,         /* OrFrom operator */
     EcsQueryNotFrom,        /* NotFrom operator */
@@ -69,32 +69,32 @@ typedef enum {
     EcsQueryIfSet,          /* Conditional execution on whether term is set */
     EcsQueryNot,            /* Sets iterator state after term was not matched */
     EcsQueryEnd,            /* End of control flow block */
-    EcsQueryPredEq,         /* Test if variable is equal to, or assign to if not set */
-    EcsQueryPredNeq,        /* Test if variable is not equal to */
-    EcsQueryPredEqName,     /* Same as EcsQueryPredEq but with matching by name */
-    EcsQueryPredNeqName,    /* Same as EcsQueryPredNeq but with matching by name */
-    EcsQueryPredEqMatch,    /* Same as EcsQueryPredEq but with fuzzy matching by name */
-    EcsQueryPredNeqMatch,   /* Same as EcsQueryPredNeq but with fuzzy matching by name */
+    EcsQueryPredEq,         /* Test equality, or assign if variable is unset */
+    EcsQueryPredNeq,        /* Test inequality */
+    EcsQueryPredEqName,     /* Equality test by entity name */
+    EcsQueryPredNeqName,    /* Inequality test by entity name */
+    EcsQueryPredEqMatch,    /* Equality test by fuzzy name matching */
+    EcsQueryPredNeqMatch,   /* Inequality test by fuzzy name matching */
     EcsQueryMemberEq,       /* Compare member value */
     EcsQueryMemberNeq,      /* Compare member value */
     EcsQueryToggle,         /* Evaluate toggle bitset, if present */
     EcsQueryToggleOption,   /* Toggle for optional terms */
     EcsQuerySparse,         /* Evaluate sparse component */
     EcsQuerySparseNot,      /* Evaluate sparse component with not operator */
-    EcsQuerySparseSelfUp,
-    EcsQuerySparseUp,
-    EcsQuerySparseWith,     /* Evaluate sparse component against fixed or variable source */
-    EcsQueryTree,
-    EcsQueryTreeWildcard,
-    EcsQueryTreeWith,       /* Evaluate (ChildOf, tgt) against fixed or variable source */
-    EcsQueryTreeUp,         /* Return union of up(ChildOf) and tables with Parent */
-    EcsQueryTreeSelfUp,
-    EcsQueryTreePre,        /* Tree instruction that doesn't filter Parent component / returns entire tables. */
-    EcsQueryTreePost,       /* Tree instruction that applies filter to Parent component. */
-    EcsQueryTreeUpPre,      /* Up traversal for ChildOf that doesn't filter Parent component / returns entire tables */
-    EcsQueryTreeSelfUpPre,  /* Up traversal for ChildOf that doesn't filter Parent component / returns entire tables */
-    EcsQueryTreeUpPost,     /* Up traversal for ChildOf that filters cached tables w/Parent component. */
-    EcsQueryTreeSelfUpPost, /* Up traversal for ChildOf that filters cached tables w/Parent component. */
+    EcsQuerySparseSelfUp,   /* Sparse: match self, then traverse up */
+    EcsQuerySparseUp,       /* Sparse: traverse up only */
+    EcsQuerySparseWith,     /* Sparse: match against already-resolved source */
+    EcsQueryTree,           /* ChildOf hierarchy: iterate children of target */
+    EcsQueryTreeWildcard,   /* ChildOf hierarchy: iterate children of wildcard target */
+    EcsQueryTreeWith,       /* ChildOf hierarchy: match against resolved source */
+    EcsQueryTreeUp,         /* ChildOf up: union of up(ChildOf) and Parent tables */
+    EcsQueryTreeSelfUp,     /* ChildOf self|up traversal */
+    EcsQueryTreePre,        /* ChildOf: return entire tables without Parent filter */
+    EcsQueryTreePost,       /* ChildOf: filter results by Parent component */
+    EcsQueryTreeUpPre,      /* ChildOf up: return entire tables without Parent filter */
+    EcsQueryTreeSelfUpPre,  /* ChildOf self|up: return entire tables without Parent filter */
+    EcsQueryTreeUpPost,     /* ChildOf up: filter cached tables with Parent */
+    EcsQueryTreeSelfUpPost, /* ChildOf self|up: filter cached tables with Parent */
     EcsQueryChildren,       /* Return children for parent, if possible in order */
     EcsQueryChildrenWc,     /* Return children for parents, if possible in order */
     EcsQueryLookup,         /* Lookup relative to variable */
@@ -109,56 +109,56 @@ typedef enum {
     EcsQueryNothing         /* Must be last */
 } ecs_query_op_kind_t;
 
-/* Op flags to indicate if ecs_query_ref_t is entity or variable */
+/* Per-reference flags: whether a ref slot holds an entity or variable */
 #define EcsQueryIsEntity  (1 << 0)
 #define EcsQueryIsVar     (1 << 1)
 #define EcsQueryIsSelf    (1 << 6)
 
-/* Op flags used to shift EcsQueryIsEntity and EcsQueryIsVar */
+/* Bit offsets for shifting EcsQueryIsEntity/EcsQueryIsVar per ref slot */
 #define EcsQuerySrc     0
 #define EcsQueryFirst   2
 #define EcsQuerySecond  4
 
-/* References to variable or entity */
+/* A reference to either a variable or a fixed entity */
 typedef union {
     ecs_var_id_t var;
     ecs_entity_t entity;
 } ecs_query_ref_t;
 
-/* Query instruction */
+/* Single instruction in the query VM program */
 typedef struct ecs_query_op_t {
-    uint8_t kind;              /* Instruction kind */
-    ecs_flags8_t flags;        /* Flags storing whether 1st/2nd are variables */
-    int8_t field_index;        /* Query field corresponding with operation */
-    int8_t term_index;         /* Query term corresponding with operation */
-    ecs_query_lbl_t prev;      /* Backtracking label (no data) */
-    ecs_query_lbl_t next;      /* Forwarding label. Must come after prev */
-    ecs_query_lbl_t other;     /* Misc register used for control flow */
+    uint8_t kind;              /* Instruction kind (ecs_query_op_kind_t) */
+    ecs_flags8_t flags;        /* Packed IsEntity/IsVar flags for src/first/second */
+    int8_t field_index;        /* Iterator field this op populates (-1 = none) */
+    int8_t term_index;         /* Original query term index */
+    ecs_query_lbl_t prev;      /* Backtracking label (jump on redo failure) */
+    ecs_query_lbl_t next;      /* Forward label (jump on success) */
+    ecs_query_lbl_t other;     /* Auxiliary label for control flow (e.g., filter mask) */
     ecs_flags16_t match_flags; /* Flags that modify matching behavior */
     ecs_query_ref_t src;
     ecs_query_ref_t first;
     ecs_query_ref_t second;
-    ecs_flags64_t written;     /* Bitset with variables written by op */
+    ecs_flags64_t written;     /* Bitmask of variables written by this op */
 } ecs_query_op_t;
 
-/* All context */
+/* Per-op context for EcsQueryAll */
 typedef struct {
     int32_t cur;
     ecs_table_record_t dummy_tr;
 } ecs_query_all_ctx_t;
 
-/* And context */
+/* Per-op context for EcsQueryAnd and similar table-iterating ops */
 typedef struct {
     ecs_component_record_t *cr;
     ecs_table_cache_iter_t it;
     int16_t column;
-    int16_t remaining;
+    int16_t remaining;        /* Remaining wildcard matches in current table */
     bool non_fragmenting;
 } ecs_query_and_ctx_t;
 
-/* Sparse context */
+/* Per-op context for sparse component iteration */
 typedef struct {
-    ecs_query_and_ctx_t and_; /* For mixed results */
+    ecs_query_and_ctx_t and_; /* Fallback for mixed sparse/regular results */
 
     ecs_sparse_t *sparse;
     ecs_table_range_t range;
@@ -197,10 +197,10 @@ typedef struct {
     ecs_query_tree_iter_state_t state;
 } ecs_query_tree_wildcard_ctx_t;
 
-/* Down traversal cache (for resolving up queries w/unknown source) */
+/* Element in the down-traversal cache: a table reachable through a relationship */
 typedef struct {
     ecs_table_range_t range;
-    bool leaf; /* Table owns and inherits id (for Up queries without Self) */
+    bool leaf; /* Table both owns and inherits the id (for Up-only queries) */
 } ecs_trav_down_elem_t;
 
 typedef struct {
@@ -226,20 +226,19 @@ typedef struct {
     ecs_trav_direction_t dir;
 } ecs_trav_up_cache_t;
 
-/* And up context */
+/* Up-traversal context: walks traversable entities to find component sources */
 typedef struct {
     ecs_table_t *table;
     int32_t row;
     int32_t end;
-    ecs_entity_t trav;
-    ecs_id_t with;
-    ecs_id_t matched;
+    ecs_entity_t trav;           /* Relationship used for traversal */
+    ecs_id_t with;               /* Component id being searched for */
+    ecs_id_t matched;            /* Actual id that was matched */
     ecs_component_record_t *cr_with;
     ecs_component_record_t *cr_trav;
 
-    /* If queried for component is a ChilOf pair that uses the non-fragmenting
-     * ChildOf storage, iterate ordered children vector instead of tables with
-     * ChildOf pairs as roots for down cache. */
+    /* For non-fragmenting ChildOf: iterate ordered children vector directly
+     * instead of using tables with ChildOf pairs as down-cache roots */
     ecs_entity_t *entities;
     int32_t entities_cur;
     int32_t entities_count;
@@ -272,8 +271,7 @@ typedef struct {
     ecs_query_tree_iter_state_t state;
 } ecs_query_tree_pre_ctx_t;
 
-/* Cache for storing results of upward/downward "all" traversal. This type of 
- * traversal iterates and caches the entire tree. */
+/* Element in the full-tree traversal cache (walks and caches the entire tree) */
 typedef struct {
     ecs_entity_t entity;
     ecs_component_record_t *cr;
@@ -287,7 +285,7 @@ typedef struct {
     bool up;
 } ecs_trav_cache_t;
 
-/* Trav context */
+/* Per-op context for transitive/reflexive relationship traversal */
 typedef struct {
     ecs_query_and_ctx_t and;
     int32_t index;
@@ -297,7 +295,7 @@ typedef struct {
     bool yield_reflexive;
 } ecs_query_trav_ctx_t;
 
- /* Eq context */
+/* Per-op context for equality predicates */
 typedef struct {
     ecs_table_range_t range;
     int32_t index;
@@ -305,37 +303,37 @@ typedef struct {
     bool redo;
 } ecs_query_eq_ctx_t;
 
- /* Each context */
+/* Per-op context for EcsQueryEach (row-by-row entity iteration) */
 typedef struct {
     int32_t row;
 } ecs_query_each_ctx_t;
 
- /* Setthis context */
+/* Per-op context for EcsQuerySetThis */
 typedef struct {
     ecs_table_range_t range;
 } ecs_query_setthis_ctx_t;
 
-/* Ids context */
+/* Per-op context for wildcard id discovery */
 typedef struct {
     ecs_component_record_t *cur;
 } ecs_query_ids_ctx_t;
 
-/* Control flow context */
+/* Per-op context for control flow (Or, Not, Optional, IfVar, IfSet) */
 typedef struct {
     ecs_query_lbl_t op_index;
     ecs_id_t field_id;
     bool is_set;
 } ecs_query_ctrl_ctx_t;
 
-/* Trivial iterator context */
+/* Per-op context for trivial (batched) term evaluation */
 typedef struct {
     ecs_table_cache_iter_t it;
     const ecs_table_record_t *tr;
-    int32_t start_from;
-    int32_t first_to_eval;
+    int32_t start_from;       /* Index of first trivial term */
+    int32_t first_to_eval;    /* Index of second trivial term (first is the driver) */
 } ecs_query_trivial_ctx_t;
 
-/* *From operator iterator context */
+/* Per-op context for *From operators (AndFrom, OrFrom, NotFrom) */
 typedef struct {
     ecs_query_and_ctx_t and;
     ecs_entity_t type_id;
@@ -344,24 +342,24 @@ typedef struct {
     int32_t cur_id_index;
 } ecs_query_xfrom_ctx_t;
 
-/* Member equality context */
+/* Per-op context for component member comparison */
 typedef struct {
     ecs_query_each_ctx_t each;
     void *data;
 } ecs_query_membereq_ctx_t;
 
-/* Toggle context */
+/* Per-op context for toggle bitset evaluation */
 typedef struct {
     ecs_table_range_t range;
-    int32_t cur;
-    int32_t block_index;
-    ecs_flags64_t block;
+    int32_t cur;               /* Current entity offset */
+    int32_t block_index;       /* Current 64-bit block in the bitset */
+    ecs_flags64_t block;       /* Current block value (masked by toggle fields) */
     ecs_termset_t prev_set_fields;
     bool optional_not;
     bool has_bitset;
 } ecs_query_toggle_ctx_t;
 
-/* Optional context */
+/* Per-op context for optional terms */
 typedef struct {
     ecs_table_range_t range;
 } ecs_query_optional_ctx_t;
@@ -389,44 +387,44 @@ typedef struct ecs_query_op_ctx_t {
     } is;
 } ecs_query_op_ctx_t;
 
+/* Per-scope control flow state during compilation */
 typedef struct {
-    /* Labels used for control flow */
-    ecs_query_lbl_t lbl_query; /* Used to find the op that does the actual searching */
-    ecs_query_lbl_t lbl_begin;
-    ecs_query_lbl_t lbl_cond_eval;
-    ecs_write_flags_t written_or; /* Cond written flags at start of or chain */
-    ecs_write_flags_t cond_written_or; /* Cond written flags at start of or chain */
-    ecs_query_ref_t src_or;  /* Source for terms in current or chain */
-    bool src_written_or; /* Was src populated before OR chain */
-    bool in_or; /* Whether we're in an or chain */
+    ecs_query_lbl_t lbl_query;       /* Op index that performs the actual search */
+    ecs_query_lbl_t lbl_begin;       /* Start of current control flow block */
+    ecs_query_lbl_t lbl_cond_eval;   /* Start of conditional evaluation block */
+    ecs_write_flags_t written_or;      /* Written vars snapshot before OR chain */
+    ecs_write_flags_t cond_written_or; /* Conditional writes snapshot before OR chain */
+    ecs_query_ref_t src_or;  /* Source variable for current OR chain */
+    bool src_written_or;     /* Whether src was written before OR chain */
+    bool in_or;              /* Currently inside an OR chain */
 } ecs_query_compile_ctrlflow_t;
 
-/* Query compiler state */
+/* Compiler state: tracks written variables, scopes, and emitted ops */
 typedef struct {
     ecs_vec_t *ops;
-    ecs_write_flags_t written; /* Bitmask to check which variables have been written */
-    ecs_write_flags_t cond_written; /* Track conditional writes (optional operators) */
+    ecs_write_flags_t written;      /* Bitmask of variables written so far */
+    ecs_write_flags_t cond_written; /* Variables conditionally written (e.g., optional) */
 
-    /* Maintain control flow per scope */
+    /* Control flow state per nesting level */
     ecs_query_compile_ctrlflow_t ctrlflow[FLECS_QUERY_SCOPE_NESTING_MAX];
-    ecs_query_compile_ctrlflow_t *cur; /* Current scope */
+    ecs_query_compile_ctrlflow_t *cur; /* Active scope */
 
-    int32_t scope; /* Nesting level of query scopes */
-    ecs_flags32_t scope_is_not; /* Whether scope is prefixed with not */
-    ecs_oper_kind_t oper; /* Temp storage to track current operator for term */
-    int32_t skipped; /* Term skipped during compilation */
-} ecs_query_compile_ctx_t;    
+    int32_t scope;           /* Current nesting depth */
+    ecs_flags32_t scope_is_not; /* Whether current scope is negated */
+    ecs_oper_kind_t oper;    /* Current term operator (temporary) */
+    int32_t skipped;         /* Number of terms skipped during compilation */
+} ecs_query_compile_ctx_t;
 
-/* Query run state */
+/* Runtime execution state for the query VM */
 typedef struct {
-    uint64_t *written;                 /* Bitset to check which variables have been written */
-    ecs_query_lbl_t op_index;          /* Currently evaluated operation */
-    ecs_var_t *vars;                   /* Variable storage */
-    ecs_iter_t *it;                    /* Iterator */
-    ecs_query_op_ctx_t *op_ctx;        /* Operation context (stack) */
-    ecs_world_t *world;                /* Reference to world */
-    const ecs_query_impl_t *query;     /* Reference to query */
-    const ecs_query_var_t *query_vars; /* Reference to query variable array */
+    uint64_t *written;                 /* Per-op bitmask of written variables */
+    ecs_query_lbl_t op_index;          /* Index of currently executing op */
+    ecs_var_t *vars;                   /* Variable value storage */
+    ecs_iter_t *it;                    /* Output iterator */
+    ecs_query_op_ctx_t *op_ctx;        /* Per-op context stack */
+    ecs_world_t *world;
+    const ecs_query_impl_t *query;
+    const ecs_query_var_t *query_vars; /* Variable metadata array */
     ecs_query_iter_t *qit;
 } ecs_query_run_ctx_t;
 
@@ -435,35 +433,35 @@ struct ecs_query_impl_t {
 
     ecs_stage_t *stage;           /* Stage used for allocations */
 
-    /* Variables */
-    ecs_query_var_t *vars;        /* Variables */
-    int32_t var_count;            /* Number of variables */
-    int32_t var_size;             /* Size of variable array */
-    ecs_hashmap_t tvar_index;     /* Name index for table variables */
-    ecs_hashmap_t evar_index;     /* Name index for entity variables */
-    ecs_var_id_t *src_vars;       /* Array with ids to source variables for fields */
+    /* Variables (index 0 = $this, rest = user/anonymous variables) */
+    ecs_query_var_t *vars;        /* Variable metadata array */
+    int32_t var_count;            /* Total variables (including anonymous) */
+    int32_t var_size;             /* Allocated capacity of vars array */
+    ecs_hashmap_t tvar_index;     /* Name -> id index for table variables */
+    ecs_hashmap_t evar_index;     /* Name -> id index for entity variables */
+    ecs_var_id_t *src_vars;       /* Maps field index -> source variable id */
 
-    /* Query plan */
-    ecs_query_op_t *ops;          /* Operations */
-    int32_t op_count;             /* Number of operations */
+    /* Compiled query plan (VM program) */
+    ecs_query_op_t *ops;          /* Instruction array */
+    int32_t op_count;             /* Number of instructions */
 
-    /* Misc */
+    /* String storage */
     int16_t tokens_len;           /* Length of tokens buffer */
-    char *tokens;                 /* Buffer with string tokens used by terms */
-    int32_t *monitor;             /* Change monitor for fields with fixed src */
+    char *tokens;                 /* Interned string tokens referenced by terms */
+    int32_t *monitor;             /* Change monitor for fixed-source fields */
 
 #ifdef FLECS_DEBUG
-    ecs_termset_t final_terms;    /* Terms that don't use component inheritance */
+    ecs_termset_t final_terms;    /* Terms using Final trait (no component inheritance) */
 #endif
 
-    /* Query cache */
-    struct ecs_query_cache_t *cache; /* Cache, if query contains cached terms */
+    /* Query cache (NULL if uncached) */
+    struct ecs_query_cache_t *cache;
 
-    /* User context */
-    ecs_ctx_free_t ctx_free;         /* Callback to free ctx */
-    ecs_ctx_free_t binding_ctx_free; /* Callback to free binding_ctx */
+    /* User context cleanup */
+    ecs_ctx_free_t ctx_free;
+    ecs_ctx_free_t binding_ctx_free;
 
-    /* Mixins */
+    /* Polymorphic destructor */
     flecs_poly_dtor_t dtor;
 };
 

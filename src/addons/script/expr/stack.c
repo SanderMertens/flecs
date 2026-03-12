@@ -29,12 +29,10 @@ void flecs_expr_value_free(
     ecs_expr_value_t *v)
 {
     const ecs_type_info_t *ti = v->type_info;
-    // printf("stack free %p (%s) owned = %d\n", v->value.ptr,
-    //     v->type_info->name, v->owned);
     v->type_info = NULL;
 
     if (!v->owned) {
-        return; /* Runtime doesn't own value, don't destruct */
+        return;
     }
 
     if (ti && ti->hooks.dtor) {
@@ -101,6 +99,7 @@ void flecs_expr_stack_push(
     }
 }
 
+/* Pop the current frame, destructing owned values in reverse order. */
 void flecs_expr_stack_pop(
     ecs_expr_stack_t *stack)
 {

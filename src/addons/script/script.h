@@ -19,10 +19,10 @@ struct ecs_script_impl_t {
     ecs_script_t pub;
     ecs_allocator_t allocator;
     ecs_script_scope_t *root;
-    ecs_expr_node_t *expr; /* Only set if script is just an expression */
+    ecs_expr_node_t *expr;        /* Set only when script is a single expression */
     char *token_buffer;
-    char *token_remaining; /* Remaining space in token buffer */
-    const char *next_token; /* First character after expression */
+    char *token_remaining;        /* Pointer to unused portion of token buffer */
+    const char *next_token;       /* Position in source after last parsed expression */
     int32_t token_buffer_size;
     int32_t refcount;
 };
@@ -103,7 +103,6 @@ int flecs_script_apply_annot(
     ecs_script_entity_t *node,
     ecs_script_annot_t *annot);
 
-/* Script functions */
 double flecs_lerp(
     double a, 
     double b,

@@ -1,6 +1,14 @@
+/**
+ * @file storage/entity_index.c
+ * @brief Entity index data structure.
+ *
+ * The entity index stores the table and row for an entity id.
+ */
+
 #include "../private_api.h"
 #include <inttypes.h>
 
+/* Ensure an entity index page exists for the given entity id, allocating if needed. */
 static
 ecs_entity_index_page_t* flecs_entity_index_ensure_page(
     ecs_entity_index_t *index,
@@ -23,6 +31,7 @@ ecs_entity_index_page_t* flecs_entity_index_ensure_page(
     return page;
 }
 
+/* Initialize an entity index with a dense array and page vector. */
 void flecs_entity_index_init(
     ecs_allocator_t *allocator,
     ecs_entity_index_t *index)
@@ -34,6 +43,7 @@ void flecs_entity_index_init(
     ecs_vec_init_t(allocator, &index->pages, ecs_entity_index_page_t*, 0);
 }
 
+/* Deinitialize an entity index, freeing all pages and the dense array. */
 void flecs_entity_index_fini(
     ecs_entity_index_t *index)
 {
@@ -46,6 +56,7 @@ void flecs_entity_index_fini(
     ecs_vec_fini_t(index->allocator, &index->pages, ecs_entity_index_page_t*);
 }
 
+/* Get entity record; entity must exist but may not be alive. */
 ecs_record_t* flecs_entity_index_get_any(
     const ecs_entity_index_t *index,
     uint64_t entity)
@@ -60,6 +71,7 @@ ecs_record_t* flecs_entity_index_get_any(
     return r;
 }
 
+/* Get entity record; entity must exist and must be alive. */
 ecs_record_t* flecs_entity_index_get(
     const ecs_entity_index_t *index,
     uint64_t entity)
@@ -68,10 +80,11 @@ ecs_record_t* flecs_entity_index_get(
     ecs_assert(r->dense < index->alive_count, ECS_INVALID_PARAMETER, 
             "entity is not alive");
     ecs_assert(ecs_vec_get_t(&index->dense, uint64_t, r->dense)[0] == entity,
-        ECS_INVALID_PARAMETER, "mismatching liveliness generation for entity");
+        ECS_INVALID_PARAMETER, "mismatching liveness generation for entity");
     return r;
 }
 
+/* Try to get entity record; return NULL if entity does not exist. */
 ecs_record_t* flecs_entity_index_try_get_any(
     const ecs_entity_index_t *index,
     uint64_t entity)
@@ -96,6 +109,7 @@ ecs_record_t* flecs_entity_index_try_get_any(
     return r;
 }
 
+/* Try to get entity record; return NULL if entity does not exist or is not alive. */
 ecs_record_t* flecs_entity_index_try_get(
     const ecs_entity_index_t *index,
     uint64_t entity)
@@ -112,6 +126,7 @@ ecs_record_t* flecs_entity_index_try_get(
     return r;
 }
 
+/* Ensure an entity exists and is alive, creating or recycling as needed. */
 ecs_record_t* flecs_entity_index_ensure(
     ecs_entity_index_t *index,
     uint64_t entity)
@@ -157,6 +172,7 @@ ecs_record_t* flecs_entity_index_ensure(
     return r;
 }
 
+/* Remove an entity from the alive set and increment its generation. */
 void flecs_entity_index_remove(
     ecs_entity_index_t *index,
     uint64_t entity)
@@ -184,6 +200,7 @@ void flecs_entity_index_remove(
         ECS_INTERNAL_ERROR, NULL);
 }
 
+/* Set the generation of an entity in the dense array to match the given value. */
 void flecs_entity_index_make_alive(
     ecs_entity_index_t *index,
     uint64_t entity)
@@ -194,6 +211,7 @@ void flecs_entity_index_make_alive(
     }
 }
 
+/* Return the current alive generation of an entity, or 0 if not alive. */
 uint64_t flecs_entity_index_get_alive(
     const ecs_entity_index_t *index,
     uint64_t entity)
@@ -207,6 +225,7 @@ uint64_t flecs_entity_index_get_alive(
     return 0;
 }
 
+/* Return whether an entity is alive in the index. */
 bool flecs_entity_index_is_alive(
     const ecs_entity_index_t *index,
     uint64_t entity)
@@ -214,6 +233,7 @@ bool flecs_entity_index_is_alive(
     return flecs_entity_index_try_get(index, entity) != NULL;
 }
 
+/* Return whether an entity id is valid (does not exist yet, or is alive). */
 bool flecs_entity_index_is_valid(
     const ecs_entity_index_t *index,
     uint64_t entity)
@@ -229,6 +249,7 @@ bool flecs_entity_index_is_valid(
     return r->dense < index->alive_count;
 }
 
+/* Return whether an entity exists in the index, regardless of liveness. */
 bool flecs_entity_index_exists(
     const ecs_entity_index_t *index,
     uint64_t entity)
@@ -236,6 +257,7 @@ bool flecs_entity_index_exists(
     return flecs_entity_index_try_get_any(index, entity) != NULL;
 }
 
+/* Create or recycle a single entity id. */
 uint64_t flecs_entity_index_new_id(
     ecs_entity_index_t *index)
 {
@@ -254,7 +276,7 @@ uint64_t flecs_entity_index_new_id(
 
     /* Make sure id hasn't been issued before */
     ecs_assert(!flecs_entity_index_exists(index, id), ECS_INVALID_OPERATION,
-        "new entity %u id already in use (likely due to overlapping ranges)", 
+        "new entity id %u already in use (likely due to overlapping ranges)",
             (uint32_t)id);
 
     ecs_vec_append_t(index->allocator, &index->dense, uint64_t)[0] = id;
@@ -269,6 +291,7 @@ uint64_t flecs_entity_index_new_id(
     return id;
 }
 
+/* Bulk create or recycle multiple entity ids. */
 uint64_t* flecs_entity_index_new_ids(
     ecs_entity_index_t *index,
     int32_t count)
@@ -291,12 +314,12 @@ uint64_t* flecs_entity_index_new_ids(
 
     ecs_assert(index->max_id <= UINT32_MAX, ECS_INVALID_OPERATION,
         "entity id overflow after creating new entity "
-            "(value is %" PRIu64 ", cannot exceed %u)", 
+            "(value is %" PRIu64 ", cannot exceed %u)",
                 index->max_id, UINT32_MAX);
 
         /* Make sure id hasn't been issued before */
         ecs_assert(!flecs_entity_index_exists(index, id), ECS_INVALID_OPERATION,
-            "new entity %u id already in use (likely due to overlapping ranges)", 
+            "new entity id %u already in use (likely due to overlapping ranges)",
                 (uint32_t)id);
 
         int32_t dense = dense_count + i;
@@ -311,6 +334,7 @@ uint64_t* flecs_entity_index_new_ids(
     return ecs_vec_get_t(&index->dense, uint64_t, alive_count);
 }
 
+/* Set the allocated size of the dense array. */
 void flecs_entity_index_set_size(
     ecs_entity_index_t *index,
     int32_t size)
@@ -318,24 +342,28 @@ void flecs_entity_index_set_size(
     ecs_vec_set_size_t(index->allocator, &index->dense, uint64_t, size);
 }
 
+/* Return the number of alive entities in the index. */
 int32_t flecs_entity_index_count(
     const ecs_entity_index_t *index)
 {
     return index->alive_count - 1;
 }
 
+/* Return the total number of allocated entity slots in the index. */
 int32_t flecs_entity_index_size(
     const ecs_entity_index_t *index)
 {
     return ecs_vec_count(&index->dense) - 1;
 }
 
+/* Return the number of not-alive (recyclable) entities in the index. */
 int32_t flecs_entity_index_not_alive_count(
     const ecs_entity_index_t *index)
 {
     return ecs_vec_count(&index->dense) - index->alive_count;
 }
 
+/* Clear all entities from the index, zeroing all pages. */
 void flecs_entity_index_clear(
     ecs_entity_index_t *index)
 {
@@ -355,6 +383,7 @@ void flecs_entity_index_clear(
     index->max_id = 0;
 }
 
+/* Shrink the entity index by removing dead entries and reclaiming memory. */
 void flecs_entity_index_shrink(
     ecs_entity_index_t *index)
 {
@@ -403,6 +432,7 @@ void flecs_entity_index_shrink(
     ecs_vec_reclaim_t(index->allocator, &index->pages, ecs_entity_index_page_t*);
 }
 
+/* Return a pointer to the dense array of alive entity ids. */
 const uint64_t* flecs_entity_index_ids(
     const ecs_entity_index_t *index)
 {

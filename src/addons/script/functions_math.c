@@ -10,10 +10,10 @@
 #include <math.h>
 
 typedef struct ecs_script_rng_t {
-    uint64_t x; /* Current state (initialize with seed) */
-    uint64_t w; /* Weyl sequence increment */
-    uint64_t s; /* Constant for Weyl sequence */
-    int32_t refcount; /* Necessary as flecs script doesn't have ref types */
+    uint64_t x;          /* Current state */
+    uint64_t w;          /* Weyl sequence increment */
+    uint64_t s;          /* Weyl sequence constant */
+    int32_t refcount;    /* Reference-counted since script lacks ref types */
     bool initialized;
 } ecs_script_rng_t;
 
@@ -22,7 +22,7 @@ ecs_script_rng_t* flecs_script_rng_new(void) {
     ecs_script_rng_t *result = ecs_os_calloc_t(ecs_script_rng_t);
     result->x = 0;
     result->w = 0;
-    result->s = 0xb5ad4eceda1ce2a9; /* Constant for the Weyl sequence */
+    result->s = 0xb5ad4eceda1ce2a9;
     result->refcount = 1;
     result->initialized = false;
     return result;
@@ -47,6 +47,7 @@ void flecs_script_rng_free(ecs_script_rng_t *rng) {
     }
 }
 
+/* Middle-square Weyl sequence PRNG. */
 static
 uint64_t flecs_script_rng_next(ecs_script_rng_t *rng) {
     rng->x *= rng->x;
@@ -138,9 +139,9 @@ void flecs_script_rng_get_uint(
 }
 
 double flecs_lerp(
-    double a, 
+    double a,
     double b,
-    double t) 
+    double t)
 {
     return a + t * (b - a);
 }
@@ -450,7 +451,7 @@ FLECS_SCRIPT_NORMALIZE(double)
         ecs_doc_set_brief(world, f, brief);\
     }
 
-/* Trigonometric functions */
+/* -- Trigonometric functions -- */
 FLECS_MATH_FUNC_F64(cos, cos(x))
 FLECS_MATH_FUNC_F64(sin, sin(x))
 FLECS_MATH_FUNC_F64(tan, tan(x))
@@ -459,7 +460,7 @@ FLECS_MATH_FUNC_F64(asin, asin(x))
 FLECS_MATH_FUNC_F64(atan, atan(x))
 FLECS_MATH_FUNC_F64_F64(atan2, atan2(x, y))
 
-/* Hyperbolic functions */
+/* -- Hyperbolic functions -- */
 FLECS_MATH_FUNC_F64(cosh, cosh(x))
 FLECS_MATH_FUNC_F64(sinh, sinh(x))
 FLECS_MATH_FUNC_F64(tanh, tanh(x))
@@ -467,7 +468,7 @@ FLECS_MATH_FUNC_F64(acosh, acosh(x))
 FLECS_MATH_FUNC_F64(asinh, asinh(x))
 FLECS_MATH_FUNC_F64(atanh, atanh(x))
 
-/* Exponential and logarithmic functions */
+/* -- Exponential and logarithmic functions -- */
 FLECS_MATH_FUNC_F64(exp, exp(x))
 FLECS_MATH_FUNC_F64_I32(ldexp, ldexp(x, y))
 FLECS_MATH_FUNC_F64(log, log(x))
@@ -475,12 +476,12 @@ FLECS_MATH_FUNC_F64(log10, log10(x))
 FLECS_MATH_FUNC_F64(exp2, exp2(x))
 FLECS_MATH_FUNC_F64(log2, log2(x))
 
-/* Power functions */
+/* -- Power functions -- */
 FLECS_MATH_FUNC_F64_F64(pow, pow(x, y))
 FLECS_MATH_FUNC_F64(sqrt, sqrt(x))
 FLECS_MATH_FUNC_F64(sqr, x * x)
 
-/* Rounding functions */
+/* -- Rounding functions -- */
 FLECS_MATH_FUNC_F64(ceil, ceil(x))
 FLECS_MATH_FUNC_F64(floor, floor(x))
 FLECS_MATH_FUNC_F64(round, round(x))
@@ -494,7 +495,7 @@ void FlecsScriptMathImport(
 
     ECS_IMPORT(world, FlecsScript);
 
-    /* Constants */
+    /* -- Constants -- */
     double E = 2.71828182845904523536028747135266250;
     ecs_const_var(world, {
         .name = "E",
@@ -511,7 +512,7 @@ void FlecsScriptMathImport(
         .value = &PI
     });
 
-    /* Trigonometric functions */
+    /* -- Trigonometric functions -- */
     FLECS_MATH_FUNC_DEF_F64(cos, "Compute cosine");
     FLECS_MATH_FUNC_DEF_F64(sin, "Compute sine");
     FLECS_MATH_FUNC_DEF_F64(tan, "Compute tangent");
@@ -520,7 +521,7 @@ void FlecsScriptMathImport(
     FLECS_MATH_FUNC_DEF_F64(atan, "Compute arc tangent");
     FLECS_MATH_FUNC_DEF_F64_F64(atan2, "Compute arc tangent with two parameters");
 
-    /* Hyperbolic functions */
+    /* -- Hyperbolic functions -- */
     FLECS_MATH_FUNC_DEF_F64(cosh, "Compute hyperbolic cosine");
     FLECS_MATH_FUNC_DEF_F64(sinh, "Compute hyperbolic sine");
     FLECS_MATH_FUNC_DEF_F64(tanh, "Compute hyperbolic tangent");
@@ -528,20 +529,20 @@ void FlecsScriptMathImport(
     FLECS_MATH_FUNC_DEF_F64(asinh, "Compute area hyperbolic sine");
     FLECS_MATH_FUNC_DEF_F64(atanh, "Compute area hyperbolic tangent");
 
-    /* Exponential and logarithmic functions */
+    /* -- Exponential and logarithmic functions -- */
     FLECS_MATH_FUNC_DEF_F64(exp, "Compute exponential function");
-    FLECS_MATH_FUNC_DEF_F64_F32(ldexp, "Generate value from significant and exponent");
+    FLECS_MATH_FUNC_DEF_F64_F32(ldexp, "Generate value from significand and exponent");
     FLECS_MATH_FUNC_DEF_F64(log, "Compute natural logarithm");
     FLECS_MATH_FUNC_DEF_F64(log10, "Compute common logarithm");
     FLECS_MATH_FUNC_DEF_F64(exp2, "Compute binary exponential function");
     FLECS_MATH_FUNC_DEF_F64(log2, "Compute binary logarithm");
 
-    /* Power functions */
+    /* -- Power functions -- */
     FLECS_MATH_FUNC_DEF_F64_F64(pow, "Raise to power");
     FLECS_MATH_FUNC_DEF_F64(sqrt, "Compute square root");
     FLECS_MATH_FUNC_DEF_F64(sqr, "Compute square");
 
-    /* Rounding functions */
+    /* -- Rounding functions -- */
     FLECS_MATH_FUNC_DEF_F64(ceil, "Round up value");
     FLECS_MATH_FUNC_DEF_F64(floor, "Round down value");
     FLECS_MATH_FUNC_DEF_F64(round, "Round to nearest");

@@ -1,11 +1,15 @@
 /**
- * @file query/engine/eval.c
- * @brief Query engine implementation.
+ * @file query/engine/eval_up.c
+ * @brief Up-traversal evaluation: finds components inherited through relationships.
+ *
+ * Walks traversable entities (those with the relationship) downward via the
+ * down-cache to find tables that inherit a component from an ancestor.
  */
 
 #include "../../private_api.h"
 
-/* Find tables with requested component that has traversable entities. */
+/* Find tables that have the target component and contain traversable entities.
+ * For self|up queries, tables without traversable entities are also yielded. */
 static
 bool flecs_query_up_select_table(
     const ecs_query_op_t *op,
@@ -41,7 +45,6 @@ bool flecs_query_up_select_table(
         }
 
         if (!result) {
-            /* No remaining tables with component found. */
             return false;
         }
 
@@ -119,8 +122,7 @@ ecs_trav_down_t* flecs_query_up_find_next_traversable(
     return impl->down;
 }
 
-/* Select all tables that can reach the target component through the traversal
- * relationship. */
+/* Select all tables that can reach the target component through the traversal relationship. */
 bool flecs_query_up_select(
     const ecs_query_op_t *op,
     bool redo,
@@ -144,14 +146,13 @@ bool flecs_query_up_select(
 
     impl->trav = q->terms[op->term_index].trav;
 
-    /* Reuse component record from previous iteration if possible*/
+    /* Reuse component record from previous iteration if possible */
     if (!impl->cr_trav) {
         impl->cr_trav = flecs_components_get(ctx->world, 
             ecs_pair(impl->trav, EcsWildcard));
     }
 
-    /* If component record is not found, or if it doesn't have any tables, revert to
-     * iterating owned components (no traversal) */
+    /* No traversable tables found -- fall back to owned component matching */
     if (!impl->cr_trav || 
         !flecs_table_cache_count(&impl->cr_trav->cache))
     {
@@ -186,10 +187,8 @@ bool flecs_query_up_select(
         impl->cache_elem = 0;
     }
 
-    /* Get last used entry from down traversal cache. Cache entries in the down
-     * traversal cache contain a list of tables that can reach the requested 
-     * component through the traversal relationship, for a traversable entity
-     * which acts as the key for the cache. */
+    /* Down-cache entries map traversable entities to the list of tables
+     * that can reach the requested component through the relationship. */
     ecs_trav_down_t *down = impl->down;
 
 next_down_entry:
@@ -197,10 +196,8 @@ next_down_entry:
     while (!down) {
         ecs_table_t *table = impl->table;
 
-        /* Get (next) table with traversable entities that have the 
-         * requested component. We'll traverse downwards from the 
-         * traversable entities in the table to find all entities that can
-         * reach the component through the traversal relationship. */
+        /* Get next table with traversable entities that have the component.
+         * We traverse down from those entities to find all reachable tables. */
         if (!table) {
             /* Reset source, in case we have to return a component matched
              * by the entity in the found table. */
@@ -214,9 +211,8 @@ next_down_entry:
 
             table = impl->table;
 
-            /* If 'self' is true, we're evaluating a term with self|up. This
-             * means that before traversing downwards, we should also return 
-             * the current table as result. */
+            /* For self|up terms, return the current table before traversing
+             * downward. */
             if (self) {
                 if (!flecs_query_table_filter(table, op->other, 
                     (EcsTableNotQueryable|EcsTableIsPrefab|EcsTableIsDisabled)))
@@ -267,8 +263,7 @@ next_down_elem:
     return true;
 }
 
-/* Check if a table can reach the target component through the traversal
- * relationship. */
+/* Check if a table can reach the target component through the traversal relationship. */
 bool flecs_query_up_with(
     const ecs_query_op_t *op,
     bool redo,
@@ -308,9 +303,7 @@ bool flecs_query_up_with(
             return false;
         }
 
-        /* Get the range (table) that is currently being evaluated. In most 
-         * cases the range will cover the entire table, but in some cases it
-         * can only cover a subset of the entities in the table. */
+        /* Get the range being evaluated (may be a subset of the table). */
         ecs_table_range_t range = flecs_query_get_range(
             op, &op->src, EcsQuerySrc, ctx);
         if (!range.table) {
@@ -328,15 +321,9 @@ bool flecs_query_up_with(
         if (impl->trav == EcsChildOf) {
             if (range.table->flags & EcsTableHasParent) {
                 if (q->flags & EcsQueryNested) {
-                    /* If this is a nested query (used to populate a cache), 
-                     * don't store entries for individual entities in the cache.
-                     * Instead, match the entire table, and figure out from 
-                     * which parent the entity gets the component in an uncached
-                     * operation. */
-
-                    /* Signal that the uncached instruction needs to search. 
-                     * This helps distinguish between tables with a Parent 
-                     * component that own the component vs. those that don't. */
+                    /* Nested query (cache population): match the whole table
+                     * and defer per-entity parent resolution to uncached ops.
+                     * EcsWildcard signals that search is still needed. */
                     it->sources[op->field_index] = EcsWildcard;
                     return true;
                 }
@@ -364,9 +351,7 @@ next_row:
         flecs_query_src_set_single(op, op_ctx->range.offset + op_ctx->cur, ctx);
     }
 
-    /* Get entry from up traversal cache. The up traversal cache contains 
-     * the entity on which the component was found, with additional metadata
-     * on where it is stored. */
+    /* Up-cache entry: the entity where the component was found. */
     ecs_trav_up_t *up = flecs_query_get_up_cache(ctx, &impl->cache, 
         op_ctx->range.table, op_ctx->range.offset + op_ctx->cur, impl->with, 
         impl->trav, impl->cr_with, impl->cr_trav);
@@ -390,8 +375,7 @@ next_row:
     return true;
 }
 
-/* Check if a table can reach the target component through the traversal
- * relationship, or if the table has the target component itself. */
+/* Check if a table has the target component or can reach it through traversal. */
 bool flecs_query_self_up_with(
     const ecs_query_op_t *op,
     bool redo,
@@ -441,6 +425,7 @@ bool flecs_query_self_up_with(
     return flecs_query_up_with(op, redo, ctx);
 }
 
+/* Evaluate an upward traversal operation, dispatching to select or with. */
 bool flecs_query_up(
     const ecs_query_op_t *op,
     bool redo,
@@ -455,6 +440,7 @@ bool flecs_query_up(
     }
 }
 
+/* Evaluate a self-or-upward traversal operation, dispatching to select or with. */
 bool flecs_query_self_up(
     const ecs_query_op_t *op,
     bool redo,

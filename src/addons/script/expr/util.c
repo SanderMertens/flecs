@@ -1,5 +1,6 @@
 /**
- * @file addons/script/expr/parser.c * brief Scriptexpoutsion parser.
+ * @file addons/script/expr/util.c
+ * @brief Script expression utilities.
  */
 
 #include "flecs.h"
@@ -7,6 +8,7 @@
 #ifdef FLECS_SCRIPT
 #include "../script.h"
 
+/* Copy a value to the destination, using the meta cursor for type coercion. */
 int flecs_value_copy_to(
     ecs_world_t *world,
     ecs_value_t *dst,
@@ -33,6 +35,7 @@ error:
     return -1;
 }
 
+/* Move a value to the destination, using the meta cursor for type coercion. */
 int flecs_value_move_to(
     ecs_world_t *world,
     ecs_value_t *dst,
@@ -64,7 +67,6 @@ error:
     return -1;
 }
 
-
 int flecs_value_unary(
     const ecs_script_t *script,
     const ecs_value_t *expr,
@@ -78,7 +80,7 @@ int flecs_value_unary(
         ecs_assert(out->type == ecs_id(ecs_bool_t), ECS_INTERNAL_ERROR, NULL);
         *(bool*)out->ptr = !*(bool*)expr->ptr;
     } else {
-        ecs_abort(ECS_INTERNAL_ERROR, "invalid operator for binary expression");
+        ecs_abort(ECS_INTERNAL_ERROR, "invalid operator for unary expression");
     }
 
     return 0;
@@ -122,7 +124,7 @@ int flecs_value_unary(
 #define ECS_BOP_ASSIGN(left, right, result, op, R, T)\
     ECS_VALUE_GET(result, R) op (R)(ECS_VALUE_GET(right, T))
 
-/* Unsigned operations */
+/* -- Unsigned operations -- */
 #define ECS_BINARY_UINT_OPS(left, right, result, op, OP)\
     if ((right)->type == ecs_id(ecs_u64_t)) { \
         OP(left, right, result, op, ecs_u64_t, ecs_u64_t);\
@@ -134,7 +136,7 @@ int flecs_value_unary(
         OP(left, right, result, op, ecs_u8_t, ecs_u8_t);\
     }
 
-/* Unsigned + signed operations */
+/* -- Unsigned + signed operations -- */
 #define ECS_BINARY_INT_OPS(left, right, result, op, OP)\
     ECS_BINARY_UINT_OPS(left, right, result, op, OP)\
      else if ((right)->type == ecs_id(ecs_i64_t)) { \
@@ -147,7 +149,7 @@ int flecs_value_unary(
         OP(left, right, result, op, ecs_i8_t, ecs_i8_t);\
     }
 
-/* Unsigned + signed + floating point operations */
+/* -- Unsigned + signed + floating point operations -- */
 #define ECS_BINARY_NUMBER_OPS(left, right, result, op, OP)\
     ECS_BINARY_INT_OPS(left, right, result, op, OP)\
       else if ((right)->type == ecs_id(ecs_f64_t)) { \
@@ -156,8 +158,7 @@ int flecs_value_unary(
         OP(left, right, result, op, ecs_f32_t, ecs_f32_t);\
     }
 
-
-/* Combinations + error checking */
+/* -- Combinations + error checking -- */
 
 #define ECS_BINARY_INT_OP(left, right, result, op)\
     ECS_BINARY_INT_OPS(left, right, result, op, ECS_BOP) else {\
@@ -337,6 +338,7 @@ int flecs_value_binary(
     return 0;
 }
 
+/* Check for unescaped $ or { characters that indicate interpolation. */
 bool flecs_string_is_interpolated(
     const char *value)
 {
@@ -371,6 +373,7 @@ bool flecs_string_is_interpolated(
     return false;
 }
 
+/* Process escape sequences in a string in-place. Returns end pointer. */
 char* flecs_string_escape(
     char *str)
 {

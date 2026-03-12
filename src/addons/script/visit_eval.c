@@ -8,6 +8,7 @@
 #ifdef FLECS_SCRIPT
 #include "script.h"
 
+/* Check whether a lookup path has balanced angle brackets. */
 static
 bool flecs_script_valid_lookup_path(
     const char *path)
@@ -28,6 +29,7 @@ bool flecs_script_valid_lookup_path(
     return template_nesting == 0;
 }
 
+/* Report a script evaluation error with line number context. */
 void flecs_script_eval_error_(
     ecs_script_eval_visitor_t *v,
     ecs_script_node_t *node,
@@ -49,6 +51,7 @@ void flecs_script_eval_error_(
     ecs_os_free(msg);
 }
 
+/* Append a new value to the with-component stack (zero-sentinel terminated). */
 static
 ecs_value_t* flecs_script_with_append(
     ecs_allocator_t *a,
@@ -71,6 +74,7 @@ ecs_value_t* flecs_script_with_append(
     return ecs_vec_get_t(&v->r->with, ecs_value_t, ecs_vec_count(&v->r->with) - 2);
 }
 
+/* Restore the with-component stack to a previous count. */
 static
 void flecs_script_with_set_count(
     ecs_allocator_t *a,
@@ -101,6 +105,7 @@ void flecs_script_with_set_count(
     ecs_vec_set_count_t(a, &v->r->with_type_info, ecs_type_info_t*, count);
 }
 
+/* Get the last value on the with-component stack. */
 static
 ecs_value_t* flecs_script_with_last(
     ecs_script_eval_visitor_t *v)
@@ -112,6 +117,7 @@ ecs_value_t* flecs_script_with_last(
     return NULL;
 }
 
+/* Return the number of values on the with-component stack. */
 static
 int32_t flecs_script_with_count(
     ecs_script_eval_visitor_t *v)
@@ -126,6 +132,7 @@ int32_t flecs_script_with_count(
     return 0;
 }
 
+/* Get type info for an id, reporting an error if not a component. */
 const ecs_type_info_t* flecs_script_get_type_info(
     ecs_script_eval_visitor_t *v,
     void *node,
@@ -151,6 +158,7 @@ error:
     return NULL;
 }
 
+/* Find a variable by name or cached stack pointer. */
 ecs_script_var_t* flecs_script_find_var(
     const ecs_script_vars_t *vars,
     const char *name,
@@ -167,6 +175,7 @@ ecs_script_var_t* flecs_script_find_var(
     }
 }
 
+/* Evaluate a name expression to resolve or create an entity. */
 static
 ecs_entity_t flecs_script_eval_name_expr(
     ecs_script_eval_visitor_t *v,
@@ -223,6 +232,7 @@ ecs_entity_t flecs_script_eval_name_expr(
     return result;
 }
 
+/* Find an entity by path, using statement, or variable reference. */
 int flecs_script_find_entity(
     ecs_script_eval_visitor_t *v,
     ecs_entity_t from,
@@ -326,6 +336,7 @@ error:
     return -1;
 }
 
+/* Create a new entity with the current with-components applied. */
 ecs_entity_t flecs_script_create_entity(
     ecs_script_eval_visitor_t *v,
     const char *name)
@@ -352,6 +363,7 @@ ecs_entity_t flecs_script_create_entity(
     return ecs_entity_init(v->world, &desc);
 }
 
+/* Callback action to find an entity during expression evaluation. */
 ecs_entity_t flecs_script_find_entity_action(
     const ecs_world_t *world,
     const char *path,
@@ -366,6 +378,7 @@ ecs_entity_t flecs_script_find_entity_action(
     return 0;
 }
 
+/* Search a template scope for an entity declaration with a given name. */
 static
 int flecs_script_find_template_entity(
     ecs_script_eval_visitor_t *v,
@@ -374,7 +387,6 @@ int flecs_script_find_template_entity(
 {
     ecs_assert(name != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    /* Loop template scope to see if it declares an entity with requested name */
     ecs_script_template_t *t = v->template;
     ecs_assert(t != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(t->node != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -403,6 +415,7 @@ int flecs_script_find_template_entity(
     return -1;
 }
 
+/* Resolve a script identifier to an ECS id. */
 int flecs_script_eval_id(
     ecs_script_eval_visitor_t *v,
     void *node,
@@ -411,8 +424,7 @@ int flecs_script_eval_id(
     ecs_entity_t second_from = 0;
 
     if (id->eval && !id->dynamic) {
-        /* Already resolved */
-        return 0;
+        return 0; /* Cached from previous evaluation */
     }
 
     if (!id->first || !id->first[0]) {
@@ -426,7 +438,8 @@ int flecs_script_eval_id(
     }
 
     if (v->template) {
-        /* Can't resolve variables while preprocessing template scope */
+        /* During template preprocessing, validate variables exist but
+         * defer entity resolution to instantiation time */
         if (id->first[0] == '$') {
             if (flecs_script_find_var(v->vars, &id->first[1], 
                 v->dynamic_variable_binding ? NULL : &id->first_sp)) 
@@ -525,6 +538,7 @@ int flecs_script_eval_id(
     return 0;
 }
 
+/* Evaluate a script expression and store the result in a value. */
 int flecs_script_eval_expr(
     ecs_script_eval_visitor_t *v,
     ecs_expr_node_t **expr_ptr,
@@ -564,6 +578,7 @@ error:
     return -1;
 }
 
+/* Evaluate all statements in a scope. */
 int flecs_script_eval_scope(
     ecs_script_eval_visitor_t *v,
     ecs_script_scope_t *node)
@@ -572,6 +587,7 @@ int flecs_script_eval_scope(
     ecs_entity_t prev_eval_parent = v->parent;
     int32_t prev_using_count = ecs_vec_count(&v->r->using);
 
+    /* Link to nearest enclosing scope node in the visitor stack */
     for (int i = v->base.depth - 2; i >= 0; i --) {
         if (v->base.nodes[i]->kind == EcsAstScope) {
             node->parent = (ecs_script_scope_t*)v->base.nodes[i];
@@ -588,6 +604,7 @@ int flecs_script_eval_scope(
         }
     }
 
+    /* Batch-add component ids gathered during the check pass (single archetype move) */
     if (v->entity) {
         ecs_entity_t src = v->entity->eval;
         int32_t count = ecs_vec_count(&node->components);
@@ -606,12 +623,14 @@ int flecs_script_eval_scope(
     return result;
 }
 
+/* Set the non_fragmenting_parent flag on an entity and all nested entities. */
 static
 void flecs_script_apply_non_fragmenting_childof(
     ecs_world_t *world,
     ecs_script_entity_t *node,
     bool enabled);
 
+/* Recursively apply non-fragmenting parent setting to all entities in a scope. */
 static
 void flecs_script_apply_non_fragmenting_childof_to_scope(
     ecs_world_t *world,
@@ -684,6 +703,7 @@ void flecs_script_apply_non_fragmenting_childof(
         world, node->scope, enabled);
 }
 
+/* Apply a script annotation to an entity. */
 int flecs_script_apply_annot(
     ecs_script_eval_visitor_t *v,
     ecs_script_entity_t *node,
@@ -726,6 +746,7 @@ int flecs_script_apply_annot(
     return 0;
 }
 
+/* Evaluate an entity node, creating the entity and processing its scope. */
 static
 int flecs_script_eval_entity(
     ecs_script_eval_visitor_t *v,
@@ -748,7 +769,7 @@ int flecs_script_eval_entity(
 
         node->eval_kind = id.eval;
     } else {
-        /* Inherit kind from parent kind's DefaultChildComponent, if it exists */
+        /* Inherit kind from the enclosing scope's default component, if set */
         ecs_script_scope_t *scope = ecs_script_current_scope(v);
         if (scope && scope->default_component_eval) {
             node->eval_kind = scope->default_component_eval;
@@ -838,6 +859,9 @@ int flecs_script_eval_entity(
     return 0;
 }
 
+/* Determine the source entity for a component or tag assignment.
+ * For EcsVariable, the id's first element (or component) is used
+ * as the entity to set the component on. */
 static
 ecs_entity_t flecs_script_get_src(
     ecs_script_eval_visitor_t *v,
@@ -854,13 +878,12 @@ ecs_entity_t flecs_script_get_src(
     return entity;
 }
 
+/* Check whether a component can be default-constructed. */
 static
 bool flecs_script_can_default_ctor(
     ecs_world_t *world,
     ecs_id_t component)
 {
-    /* Check if tag is a component, and if so, if it can be default 
-     * constructed. */
     ecs_entity_t type = ecs_get_typeid(world, component);
     if (type) {
         const ecs_type_info_t *ti = ecs_get_type_info(world, type);
@@ -872,6 +895,7 @@ bool flecs_script_can_default_ctor(
     return true;
 }
 
+/* Evaluate a tag node and add it to the current entity. */
 static
 int flecs_script_eval_tag(
     ecs_script_eval_visitor_t *v,
@@ -931,6 +955,7 @@ int flecs_script_eval_tag(
     return 0;
 }
 
+/* Evaluate a component node, assign its value, and add it to the entity. */
 static
 int flecs_script_eval_component(
     ecs_script_eval_visitor_t *v,
@@ -984,6 +1009,7 @@ int flecs_script_eval_component(
             return -1;
         }
 
+        /* Use ecs_set_id path if on_replace hook exists (requires old/new diff) */
         bool needs_set = ti->hooks.on_replace != NULL;
         ecs_record_t *r = flecs_entities_get(v->world, src);
         ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -997,8 +1023,7 @@ int flecs_script_eval_component(
             .type = ti->component
         };
 
-        /* Assign entire value, including members not set by expression. This 
-         * prevents uninitialized or unexpected values. */
+        /* Re-initialize entire value to prevent stale member data */
         if (needs_set || (r->table != table)) {
             if (!ti->hooks.ctor) {
                 ecs_os_memset(value.ptr, 0, ti->size);
@@ -1027,6 +1052,7 @@ int flecs_script_eval_component(
     return 0;
 }
 
+/* Evaluate a variable component and assign its value to the entity. */
 static
 int flecs_script_eval_var_component(
     ecs_script_eval_visitor_t *v,
@@ -1036,7 +1062,7 @@ int flecs_script_eval_var_component(
         v->vars, node->name, v->dynamic_variable_binding ? NULL : &node->sp);
     ecs_value_t var_value = {0};
     if (!var) {
-        /* If we cannot find local variable, try find as const var */
+        /* Fall back to const variable entity lookup */
         ecs_entity_t var_entity = 0;
         if (flecs_script_find_entity(
             v, 0, node->name, NULL, NULL, &var_entity, NULL)) 
@@ -1094,6 +1120,7 @@ int flecs_script_eval_var_component(
     return 0;
 }
 
+/* Evaluate a default component assignment using the scope's default type. */
 static
 int flecs_script_eval_default_component(
     ecs_script_eval_visitor_t *v,
@@ -1150,6 +1177,7 @@ int flecs_script_eval_default_component(
     return 0;
 }
 
+/* Evaluate a with-variable and push its value onto the with stack. */
 static
 int flecs_script_eval_with_var(
     ecs_script_eval_visitor_t *v,
@@ -1164,12 +1192,14 @@ int flecs_script_eval_with_var(
     }
 
     ecs_allocator_t *a = &v->r->allocator;
-    ecs_value_t *value = flecs_script_with_append(a, v, NULL); // TODO: vars of non trivial types
+    /* NULL type_info: value is borrowed from the variable, not stack-allocated */
+    ecs_value_t *value = flecs_script_with_append(a, v, NULL);
     *value = var->value;
 
     return 0;
 }
 
+/* Evaluate a with-tag and push it onto the with stack. */
 static
 int flecs_script_eval_with_tag(
     ecs_script_eval_visitor_t *v,
@@ -1187,6 +1217,7 @@ int flecs_script_eval_with_tag(
     return 0;
 }
 
+/* Evaluate a with-component and push its value onto the with stack. */
 static
 int flecs_script_eval_with_component(
     ecs_script_eval_visitor_t *v,
@@ -1210,7 +1241,7 @@ int flecs_script_eval_with_component(
         }
 
         value->ptr = flecs_stack_alloc(&v->r->stack, ti->size, ti->alignment);
-        value->type = ti->component; // Expression parser needs actual type
+        value->type = ti->component; /* Expression parser needs the base type */
 
         flecs_type_info_ctor(value->ptr, 1, ti);
 
@@ -1218,12 +1249,13 @@ int flecs_script_eval_with_component(
             return -1;
         }
 
-        value->type = node->id.eval; // Restore so we're adding actual id
+        value->type = node->id.eval; /* Restore to actual id for add operation */
     }
 
     return 0;
 }
 
+/* Evaluate a with statement by processing its expressions and scope. */
 static
 int flecs_script_eval_with(
     ecs_script_eval_visitor_t *v,
@@ -1262,6 +1294,7 @@ error:
     return result;
 }
 
+/* Evaluate a using statement and add the namespace to the using stack. */
 int flecs_script_eval_using(
     ecs_script_eval_visitor_t *v,
     ecs_script_using_t *node)
@@ -1281,7 +1314,7 @@ int flecs_script_eval_using(
             return -1;
         }
 
-        /* Add each child of the scope to using stack */
+        /* Wildcard using: add all children of the namespace */
         ecs_iter_t it = ecs_children(v->world, from);
         while (ecs_children_next(&it)) {
             int32_t i, count = it.count;
@@ -1312,15 +1345,15 @@ int flecs_script_eval_using(
     return 0;
 }
 
+/* Evaluate a module statement and set the current module scope. */
 static
 int flecs_script_eval_module(
     ecs_script_eval_visitor_t *v,
     ecs_script_module_t *node)
 {
-    /* Always create modules in root */
+    /* Modules are always created in the root scope */
     ecs_entity_t old_scope = ecs_set_scope(v->world, 0);
     v->parent = 0;
-
 
     ecs_entity_t m = flecs_script_create_entity(v, node->name);
     if (!m) {
@@ -1337,14 +1370,13 @@ int flecs_script_eval_module(
     return 0;
 }
 
+/* Evaluate a const variable declaration and optionally export it. */
 int flecs_script_eval_const(
     ecs_script_eval_visitor_t *v,
     ecs_script_var_node_t *node,
     bool export)
 {
-    /* Declare variable. If this variable is declared while instantiating a
-     * template, the variable sp has already been resolved in all expressions
-     * that used it, so we don't need to create the variable with a name. */
+    /* During template instantiation, names resolve by stack pointer (NULL skips name registration) */
     ecs_script_var_t *var = NULL;
     if (!export) {
         ecs_entity_t e = ecs_lookup_child(v->world, v->parent, node->name);
@@ -1418,8 +1450,7 @@ int flecs_script_eval_const(
             return -1;
         }
     } else {
-        /* We don't know the type yet, so we can't create a storage for it yet.
-         * Run the expression first to deduce the type. */
+        /* Type unknown; evaluate the expression first to deduce it */
         ecs_value_t value = {0};
         if (flecs_script_eval_expr(v, &node->expr, &value)) {
             flecs_script_eval_error(v, node,
@@ -1443,8 +1474,7 @@ int flecs_script_eval_const(
         flecs_free(&v->world->allocator, ti->size, value.ptr);
     }
 
-    /* If variable resolves to a constant expression, mark it as const so that
-     * its value can be folded. */
+    /* Mark as const if expression is a literal, enabling constant folding */
     if (!export) {
         if (node->expr->kind == EcsExprValue) {
             var->is_const = true;
@@ -1459,7 +1489,7 @@ int flecs_script_eval_const(
             .value = result.ptr
         });
 
-        /* Clean up value since it'll have been copied into the const var. */
+        /* Value was copied into the const var entity; clean up local copy */
         if (ti->hooks.dtor) {
             flecs_type_info_dtor(result.ptr, 1, ti);
         }
@@ -1477,6 +1507,8 @@ int flecs_script_eval_const(
     return 0;
 }
 
+/* Evaluate a pair scope: push the pair onto the with stack and evaluate
+ * the scope so entities created inside inherit this pair. */
 static
 int flecs_script_eval_pair_scope(
     ecs_script_eval_visitor_t *v,
@@ -1519,13 +1551,13 @@ int flecs_script_eval_pair_scope(
     v->with_relationship = first;
 
     if (prev_first != first) {
-        /* Append new element to with stack */
+        /* New relationship: push onto with stack */
         ecs_value_t *value = flecs_script_with_append(a, v, NULL);
         value->type = ecs_pair(first, second);
         value->ptr = NULL;
         v->with_relationship_sp = flecs_script_with_count(v) - 1;
     } else {
-        /* Get existing with element for current relationhip stack */
+        /* Same relationship: update the existing with stack entry */
         ecs_value_t *value = ecs_vec_get_t(
             &v->r->with, ecs_value_t, v->with_relationship_sp);
         ecs_assert(ECS_PAIR_FIRST(value->type) == (uint32_t)first, 
@@ -1553,6 +1585,7 @@ int flecs_script_eval_pair_scope(
     return 0;
 }
 
+/* Evaluate an if statement: evaluate condition and execute the matching branch. */
 static
 int flecs_script_eval_if(
     ecs_script_eval_visitor_t *v,
@@ -1581,6 +1614,7 @@ int flecs_script_eval_if(
     return 0;
 }
 
+/* Evaluate a for-range loop over the specified integer range. */
 static
 int flecs_script_eval_for_range(
     ecs_script_eval_visitor_t *v,
@@ -1620,6 +1654,8 @@ int flecs_script_eval_for_range(
     return 0;
 }
 
+/* Validate and push an annotation onto the annotation stack for the next
+ * entity or template to consume. */
 static
 int flecs_script_eval_annot(
     ecs_script_eval_visitor_t *v,
@@ -1647,6 +1683,7 @@ int flecs_script_eval_annot(
     return 0;
 }
 
+/* Dispatch evaluation to the appropriate handler based on node kind. */
 int flecs_script_eval_node(
     ecs_script_visit_t *_v,
     ecs_script_node_t *node)
@@ -1720,6 +1757,7 @@ int flecs_script_eval_node(
     ecs_abort(ECS_INTERNAL_ERROR, "corrupt AST node kind");
 }
 
+/* Initialize the evaluation visitor with runtime and variables. */
 void flecs_script_eval_visit_init(
     const ecs_script_impl_t *script,
     ecs_script_eval_visitor_t *v,
@@ -1744,9 +1782,7 @@ void flecs_script_eval_visit_init(
         v->vars->parent = desc->vars;
         v->vars->sp = ecs_vec_count(&desc->vars->vars);
 
-        /* When variables are provided to script, don't use cached variable
-         * stack pointers, as the order in which the application provides 
-         * variables may not be the same across evaluations. */
+        /* External variables may change between evaluations; use name-based lookup */
         v->dynamic_variable_binding = true;
     }
 
@@ -1755,6 +1791,8 @@ void flecs_script_eval_visit_init(
         ecs_lookup(v->world, "flecs.meta");
 }
 
+/* Finalize the evaluation visitor: pop external variables and free
+ * runtime if it was not provided by the caller. */
 void flecs_script_eval_visit_fini(
     ecs_script_eval_visitor_t *v,
     const ecs_script_eval_desc_t *desc)
@@ -1775,7 +1813,7 @@ int ecs_script_eval(
 {
     ecs_script_eval_visitor_t v;
     ecs_script_impl_t *impl = flecs_script_impl(
-        /* Safe, script will only be used for reading by visitor */
+        /* Safe: eval modifies the world, not the script itself */
         ECS_CONST_CAST(ecs_script_t*, script));
 
     ecs_script_eval_desc_t priv_desc = {0};

@@ -1,21 +1,14 @@
 /**
  * @file storage/table_cache.c
  * @brief Data structure for fast table iteration/lookups.
- * 
- * A table cache is a data structure that provides constant time operations for
- * insertion and removal of tables, and to testing whether a table is registered
- * with the cache. A table cache also provides functions to iterate the tables
- * in a cache.
- * 
- * The world stores a table cache per (component) id inside the component record 
- * administration. Cached queries store a table cache with matched tables.
- * 
- * A table cache has separate lists for non-empty tables and empty tables. This
- * improves performance as applications don't waste time iterating empty tables.
+ *
+ * Provides O(1) insert, remove, and lookup of tables. Each component record
+ * and cached query stores a table cache. Iterators can filter empty tables.
  */
 
 #include "../private_api.h"
 
+/* Remove element from the table cache linked list. */
 static
 void flecs_table_cache_list_remove(
     ecs_table_cache_t *cache,
@@ -46,6 +39,7 @@ void flecs_table_cache_list_remove(
         ECS_INTERNAL_ERROR, NULL);
 }
 
+/* Insert element at the end of the table cache linked list. */
 static
 void flecs_table_cache_list_insert(
     ecs_table_cache_t *cache,
@@ -166,6 +160,7 @@ void* ecs_table_cache_remove(
     return elem;
 }
 
+/* Initialize an iterator over non-empty tables in the cache. */
 bool flecs_table_cache_iter(
     const ecs_table_cache_t *cache,
     ecs_table_cache_iter_t *out)
@@ -179,6 +174,7 @@ bool flecs_table_cache_iter(
     return out->next != NULL;
 }
 
+/* Initialize an iterator over empty tables in the cache. */
 bool flecs_table_cache_empty_iter(
     const ecs_table_cache_t *cache,
     ecs_table_cache_iter_t *out)
@@ -192,6 +188,7 @@ bool flecs_table_cache_empty_iter(
     return out->next != NULL;
 }
 
+/* Initialize an iterator over all tables (both empty and non-empty) in the cache. */
 bool flecs_table_cache_all_iter(
     const ecs_table_cache_t *cache,
     ecs_table_cache_iter_t *out)
@@ -205,6 +202,7 @@ bool flecs_table_cache_all_iter(
     return out->next != NULL;
 }
 
+/* Advance the table cache iterator and return the next matching element. */
 const ecs_table_cache_hdr_t* flecs_table_cache_next_(
     ecs_table_cache_iter_t *it)
 {

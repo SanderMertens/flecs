@@ -1,5 +1,5 @@
 /**
- * @file addons/script/visit_validate.c
+ * @file addons/script/visit_check.c
  * @brief Script AST validation.
  */
 
@@ -8,6 +8,7 @@
 #ifdef FLECS_SCRIPT
 #include "script.h"
 
+/* Type-check and fold a script expression. */
 static
 int flecs_script_check_expr(
     ecs_script_eval_visitor_t *v,
@@ -47,6 +48,7 @@ error:
     return -1;
 }
 
+/* Check a scope and gather resolved component ids. */
 int flecs_script_check_scope(
     ecs_script_eval_visitor_t *v,
     ecs_script_scope_t *node)
@@ -56,8 +58,7 @@ int flecs_script_check_scope(
         return -1;
     }
 
-    /* Gather all resolved components in scope so we can add them in one bulk
-     * operation to entities. */
+    /* Gather resolved component ids for bulk entity archetype operations */
     ecs_allocator_t *a = &v->base.script->allocator;
     int32_t i, count = ecs_vec_count(&node->stmts);
     ecs_script_node_t **stmts = ecs_vec_first(&node->stmts);
@@ -80,6 +81,7 @@ int flecs_script_check_scope(
     return 0;
 }
 
+/* Validate an entity node and its child scope. */
 static
 int flecs_script_check_entity(
     ecs_script_eval_visitor_t *v,
@@ -99,7 +101,7 @@ int flecs_script_check_entity(
 
         node->eval_kind = id.eval;
     } else {
-        /* Inherit kind from parent kind's DefaultChildComponent, if it exists */
+        /* Inherit kind from the enclosing scope's default component, if set */
         ecs_script_scope_t *scope = ecs_script_current_scope(v);
         if (scope && scope->default_component_eval) {
             node->eval_kind = scope->default_component_eval;
@@ -122,6 +124,7 @@ int flecs_script_check_entity(
     return 0;
 }
 
+/* Validate a tag node and ensure it has an entity context. */
 static
 int flecs_script_check_tag(
     ecs_script_eval_visitor_t *v,
@@ -151,6 +154,7 @@ int flecs_script_check_tag(
     return 0;
 }
 
+/* Validate a component node and type-check its expression. */
 static
 int flecs_script_check_component(
     ecs_script_eval_visitor_t *v,
@@ -224,6 +228,7 @@ int flecs_script_check_component(
     return 0;
 }
 
+/* Validate a variable component reference and cache its stack pointer. */
 static
 int flecs_script_check_var_component(
     ecs_script_eval_visitor_t *v,
@@ -241,6 +246,7 @@ int flecs_script_check_var_component(
     return 0;
 }
 
+/* Validate that a default component has an entity context. */
 static
 int flecs_script_check_default_component(
     ecs_script_eval_visitor_t *v,
@@ -255,6 +261,7 @@ int flecs_script_check_default_component(
     return 0;
 }
 
+/* Validate a with-variable reference. */
 static
 int flecs_script_check_with_var(
     ecs_script_eval_visitor_t *v,
@@ -272,6 +279,7 @@ int flecs_script_check_with_var(
     return 0;
 }
 
+/* Validate a with-tag reference. */
 static
 int flecs_script_check_with_tag(
     ecs_script_eval_visitor_t *v,
@@ -284,6 +292,7 @@ int flecs_script_check_with_tag(
     return 0;
 }
 
+/* Validate a with-component and type-check its expression. */
 static
 int flecs_script_check_with_component(
     ecs_script_eval_visitor_t *v,
@@ -304,6 +313,7 @@ int flecs_script_check_with_component(
     return 0;
 }
 
+/* Validate a with statement and its expressions and scope. */
 static
 int flecs_script_check_with(
     ecs_script_eval_visitor_t *v,
@@ -325,6 +335,7 @@ int flecs_script_check_with(
     return 0;
 }
 
+/* Reject using statements inside templates (they must be hoisted). */
 static
 int flecs_script_check_using(
     ecs_script_eval_visitor_t *v,
@@ -334,6 +345,7 @@ int flecs_script_check_using(
     return -1;
 }
 
+/* Validate a const variable declaration. */
 static
 int flecs_script_check_const(
     ecs_script_eval_visitor_t *v,
@@ -342,6 +354,7 @@ int flecs_script_check_const(
     return flecs_script_eval_const(v, node, false);
 }
 
+/* Validate a pair scope and resolve its identifiers. */
 static
 int flecs_script_check_pair_scope(
     ecs_script_eval_visitor_t *v,
@@ -368,6 +381,7 @@ int flecs_script_check_pair_scope(
     return 0;
 }
 
+/* Validate an if statement and its condition and branches. */
 static
 int flecs_script_check_if(
     ecs_script_eval_visitor_t *v,
@@ -388,6 +402,7 @@ int flecs_script_check_if(
     return 0;
 }
 
+/* Validate a for-range loop and its bounds and scope. */
 static
 int flecs_script_check_for_range(
     ecs_script_eval_visitor_t *v,
@@ -423,6 +438,7 @@ int flecs_script_check_for_range(
     return 0;
 }
 
+/* Validate that an annotation is followed by an entity or another annotation. */
 static
 int flecs_script_check_annot(
     ecs_script_eval_visitor_t *v,
@@ -444,6 +460,7 @@ int flecs_script_check_annot(
     return 0;
 }
 
+/* Dispatch validation to the appropriate handler based on node kind. */
 int flecs_script_check_node(
     ecs_script_visit_t *_v,
     ecs_script_node_t *node)
@@ -511,13 +528,14 @@ int flecs_script_check_node(
     ecs_abort(ECS_INTERNAL_ERROR, "corrupt AST node kind");
 }
 
+/* Validate a script AST by running the check visitor. */
 int flecs_script_check(
     const ecs_script_t *script,
     const ecs_script_eval_desc_t *desc)
 {
     ecs_script_eval_visitor_t v;
     ecs_script_impl_t *impl = flecs_script_impl(
-        /* Safe, script will only be used for reading by visitor */
+        /* Safe: check visitor does not modify the script */
         ECS_CONST_CAST(ecs_script_t*, script));
 
     ecs_script_eval_desc_t priv_desc = {0};

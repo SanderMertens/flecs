@@ -11,20 +11,20 @@
 #include "parser.h"
 
 #if defined(ECS_TARGET_CLANG)
-/* Ignore unused enum constants in switch as it would blow up the parser code */
+/* Suppress warnings that would be impractical to address in macro-heavy parser */
 #pragma clang diagnostic ignored "-Wswitch-enum"
-/* To allow for nested Parse statements */
+/* Nested Parse macros intentionally shadow variables */
 #pragma clang diagnostic ignored "-Wshadow"
 #elif defined(__GNUC__)
 #pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
 #pragma GCC diagnostic ignored "-Wswitch-enum"
 #pragma GCC diagnostic ignored "-Wshadow"
 #elif defined(ECS_TARGET_MSVC)
-/* Allow for variable shadowing */
+/* Nested Parse macros intentionally shadow variables */
 #pragma warning(disable : 4456)
 #endif
 
-/* Create script & parser structs with static token buffer */
+/* Initialize script and parser with a caller-provided token buffer */
 #define EcsParserFixedBuffer(w, script_name, expr, tokens, tokens_len)\
     ecs_script_impl_t script = {\
         .pub.world = ECS_CONST_CAST(ecs_world_t*, w),\
@@ -40,7 +40,7 @@
         .token_end = &(tokens)[tokens_len]\
     }
 
-/* Definitions for parser functions */
+/* Begin a parser function: initializes the tokenizer */
 #define ParserBegin\
     ecs_tokenizer_t _tokenizer;\
     ecs_os_zeromem(&_tokenizer);\
@@ -52,28 +52,28 @@
     error:\
         return NULL
 
-/* Get token */
+/* Access value of the nth parsed token */
 #define Token(n) (tokenizer->tokens[n].value)
 
-/* Push/pop token frame (allows token stack reuse in recursive functions) */
+/* Save/restore token stack position for recursive parser functions */
 #define TokenFramePush() \
     tokenizer->tokens = &tokenizer->stack.tokens[tokenizer->stack.count];
 
 #define TokenFramePop() \
     tokenizer->tokens = tokenizer->stack.tokens;
 
-/* Error */
+/* Report parser error and jump to error label */
 #define Error(...)\
     ecs_parser_error(parser->name, parser->code,\
         (pos - parser->code) - 1, __VA_ARGS__);\
     goto error
 
-/* Warning */
+/* Report parser warning (non-fatal) */
 #define Warning(...)\
     ecs_parser_warning(parser->name, parser->code,\
         (pos - parser->code) - 1, __VA_ARGS__);\
 
-/* Parse expression */
+/* Parse a script expression, stopping at the delimiter character */
 #define Expr(until, ...)\
     {\
         ecs_expr_node_t *EXPR = NULL;\
@@ -93,7 +93,7 @@
         __VA_ARGS__\
     }
 
-/* Parse initializer */
+/* Parse an initializer list, stopping at the delimiter character */
 #define Initializer(until, ...)\
     {\
         ecs_expr_node_t *INITIALIZER = NULL;\
@@ -122,7 +122,7 @@
         __VA_ARGS__\
     }
 
-/* Parse token until character */
+/* Parse raw text until the specified delimiter character */
 #define Until(until, ...)\
     {\
         ecs_assert(tokenizer->stack.count < 256, ECS_INTERNAL_ERROR, NULL);\
@@ -133,7 +133,7 @@
     }\
     Parse_1(until, __VA_ARGS__)
 
-/* Parse next token */
+/* Parse next token and switch on its kind */
 #define Parse(...)\
     {\
         ecs_assert(tokenizer->stack.count < 256, ECS_INTERNAL_ERROR, NULL);\
@@ -154,7 +154,7 @@
         }\
     }
 
-/* Parse N consecutive tokens */
+/* Parse N consecutive tokens with expected kinds */
 #define Parse_1(tok, ...)\
     Parse(\
         case tok: {\
@@ -202,7 +202,7 @@
     pos = lookahead;\
     parser->token_keep = parser->token_cur
 
-/* Same as Parse, but doesn't error out if token is not in handled cases */
+/* Peek at next token without consuming it; falls through if unhandled */
 #define LookAhead(...)\
     const char *lookahead;\
     ecs_token_t lookahead_token;\
@@ -234,7 +234,7 @@
         goto error;\
     }
 
-/* Lookahead N consecutive tokens */
+/* Peek at N consecutive tokens without consuming them */
 #define LookAhead_1(tok, ...)\
     LookAhead(\
         case tok: {\
@@ -270,7 +270,7 @@
         }\
     )
 
-/* Open scope */
+/* Execute body with a temporary parser scope, then restore */
 #define Scope(s, ...) {\
         ecs_script_scope_t *old_scope = parser->scope;\
         parser->scope = s;\
@@ -278,7 +278,7 @@
         parser->scope = old_scope;\
     }
 
-/* Parser loop */
+/* Repeatedly parse tokens, resetting token stack between iterations */
 #define Loop(...)\
     int32_t token_stack_count = tokenizer->stack.count;\
     do {\

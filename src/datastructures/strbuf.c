@@ -1,26 +1,13 @@
 /**
  * @file datastructures/strbuf.c
- * @brief Utility for constructing strings.
- *
- * A buffer builds up a list of elements which individually can be up to N bytes
- * large. While appending, data is added to these elements. More elements are
- * added on the fly when needed. When an application calls ecs_strbuf_get, all
- * elements are combined in one string and the element administration is freed.
- *
- * This approach prevents reallocs of large blocks of memory, and therefore
- * copying large blocks of memory when appending to a large buffer. A buffer
- * preallocates some memory for the element overhead so that for small strings
- * there is hardly any overhead, while for large strings the overhead is offset
- * by the reduced time spent on copying memory.
- * 
- * The functionality provided by strbuf is similar to std::stringstream.
+ * @brief Growable string buffer with small-string optimization.
  */
 
 #include "../private_api.h"
 
-#include <math.h> // isnan, isinf
+#include <math.h> /* isnan, isinf */
 
-/**
+/*
  *  stm32tpl --  STM32 C++ Template Peripheral Library
  *  Visit https://github.com/antongus/stm32tpl for new versions
  *
@@ -33,19 +20,20 @@
 
 static const double rounders[MAX_PRECISION + 1] =
 {
-	0.5,				// 0
-	0.05,				// 1
-	0.005,				// 2
-	0.0005,				// 3
-	0.00005,			// 4
-	0.000005,			// 5
-	0.0000005,			// 6
-	0.00000005,			// 7
-	0.000000005,		// 8
-	0.0000000005,		// 9
-	0.00000000005		// 10
+	0.5,				/* 0 */
+	0.05,				/* 1 */
+	0.005,				/* 2 */
+	0.0005,				/* 3 */
+	0.00005,			/* 4 */
+	0.000005,			/* 5 */
+	0.0000005,			/* 6 */
+	0.00000005,			/* 7 */
+	0.000000005,		/* 8 */
+	0.0000000005,		/* 9 */
+	0.00000000005		/* 10 */
 };
 
+/* Convert integer to string representation. */
 static
 char* flecs_strbuf_itoa(
     char *buf,
@@ -88,10 +76,11 @@ char* flecs_strbuf_itoa(
     return ptr;
 }
 
+/* Convert floating point number to string with optional exponent notation. */
 static
 void flecs_strbuf_ftoa(
-    ecs_strbuf_t *out, 
-    double f, 
+    ecs_strbuf_t *out,
+    double f,
     int precision,
     char nan_delim)
 {
@@ -147,7 +136,7 @@ void flecs_strbuf_ftoa(
 		f += rounders[precision];
     }
 
-    /* Make sure that number can be represented as 64bit int, increase exp */
+    /* Scale down to fit in int64_t, tracking exponent */
     while (f > INT64_MAX_F) {
         f /= 1000 * 1000 * 1000;
         exp += 9;
@@ -179,8 +168,7 @@ void flecs_strbuf_ftoa(
         ptr --;
     }
 
-    /* If 0s before . exceed threshold, convert to exponent to save space 
-     * without losing precision. */
+    /* Switch to exponent notation if trailing zeros exceed threshold */
     char *cur = ptr;
     while ((&cur[-1] != buf) && (cur[-1] == '0')) {
         cur --;
@@ -200,7 +188,7 @@ void flecs_strbuf_ftoa(
             p1 ++;
         }
 
-        /* Make sure that exp starts after first character */
+        /* Insert decimal point after first significant digit */
         c = p1[0];
 
         if (c) {
@@ -235,7 +223,7 @@ void flecs_strbuf_ftoa(
     ecs_strbuf_appendstrn(out, buf, (int32_t)(ptr - buf));
 }
 
-/* Add an extra element to the buffer */
+/* Grow the buffer capacity when more space is needed. */
 static
 void flecs_strbuf_grow(
     ecs_strbuf_t *b)
@@ -254,6 +242,7 @@ void flecs_strbuf_grow(
     }
 }
 
+/* Get pointer to current write position in the buffer. */
 static
 char* flecs_strbuf_ptr(
     ecs_strbuf_t *b)
@@ -262,7 +251,7 @@ char* flecs_strbuf_ptr(
     return &b->content[b->length];
 }
 
-/* Append a format string to a buffer */
+/* Append a format string to the buffer using a va_list. */
 static
 void flecs_strbuf_vappend(
     ecs_strbuf_t *b,
@@ -275,9 +264,7 @@ void flecs_strbuf_vappend(
         return;
     }
 
-    /* Compute the memory required to add the string to the buffer. If user
-     * provided buffer, use space left in buffer, otherwise use space left in
-     * current element. */
+    /* Try to write into remaining space, or measure required length */
     int32_t mem_left = b->size - b->length;
     int32_t mem_required;
 
@@ -308,6 +295,7 @@ void flecs_strbuf_vappend(
     va_end(arg_cpy);
 }
 
+/* Append n bytes from a string to the buffer. */
 static
 void flecs_strbuf_appendstr(
     ecs_strbuf_t *b,
@@ -324,6 +312,7 @@ void flecs_strbuf_appendstr(
     b->length += n;
 }
 
+/* Append a single character to the buffer. */
 static
 void flecs_strbuf_appendch(
     ecs_strbuf_t *b,
@@ -336,6 +325,8 @@ void flecs_strbuf_appendch(
     flecs_strbuf_ptr(b)[0] = ch;
     b->length ++;
 }
+
+/* -- Public API -- */
 
 void ecs_strbuf_vappend(
     ecs_strbuf_t *b,
@@ -375,7 +366,7 @@ void ecs_strbuf_appendch(
     ecs_strbuf_t *b,
     char ch)
 {
-    ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL); 
+    ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
     flecs_strbuf_appendch(b, ch);
 }
 
@@ -429,8 +420,9 @@ void ecs_strbuf_mergebuff(
     ecs_strbuf_reset(src);
 }
 
+/* Finalize and return the string. Caller takes ownership of the result. */
 char* ecs_strbuf_get(
-    ecs_strbuf_t *b) 
+    ecs_strbuf_t *b)
 {
     ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
     char *result = b->content;
@@ -457,6 +449,7 @@ char* ecs_strbuf_get(
     return result;
 }
 
+/* Return the inline small string buffer directly (no heap copy). */
 char* ecs_strbuf_get_small(
     ecs_strbuf_t *b)
 {
@@ -469,8 +462,9 @@ char* ecs_strbuf_get_small(
     return result;
 }
 
+/* Discard buffer contents and free heap memory. */
 void ecs_strbuf_reset(
-    ecs_strbuf_t *b) 
+    ecs_strbuf_t *b)
 {
     ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
     if (b->content && b->content != b->small_string) {
@@ -479,6 +473,7 @@ void ecs_strbuf_reset(
     *b = ECS_STRBUF_INIT;
 }
 
+/* Push a new list context with an opening delimiter and separator. */
 void ecs_strbuf_list_push(
     ecs_strbuf_t *b,
     const char *list_open,
@@ -506,6 +501,7 @@ void ecs_strbuf_list_push(
     }
 }
 
+/* Pop the current list context and append the closing delimiter. */
 void ecs_strbuf_list_pop(
     ecs_strbuf_t *b,
     const char *list_close)
@@ -527,6 +523,7 @@ void ecs_strbuf_list_pop(
     }
 }
 
+/* Insert the separator before the next list element (skipped for the first). */
 void ecs_strbuf_list_next(
     ecs_strbuf_t *b)
 {

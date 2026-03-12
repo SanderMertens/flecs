@@ -16,7 +16,7 @@ static uint8_t flecs_perlin_perm[512];
 
 static
 uint32_t flecs_perlin_xs32(
-    uint32_t *state) 
+    uint32_t *state)
 {
     uint32_t x = *state;
     x ^= x << 13;
@@ -26,8 +26,9 @@ uint32_t flecs_perlin_xs32(
     return x;
 }
 
+/* Fisher-Yates shuffle a [0..255] permutation table, then mirror it. */
 void flecs_perlin_seed(
-    uint32_t seed) 
+    uint32_t seed)
 {
     uint8_t p[256];
     for (int i = 0; i < 256; i++) p[i] = (uint8_t)i;
@@ -48,18 +49,20 @@ void flecs_perlin_seed(
     }
 }
 
-static 
+/* Perlin fade curve: 6t^5 - 15t^4 + 10t^3 */
+static
 double flecs_perlin_fade(
-    double t) 
+    double t)
 {
     return t * t * t * (t * (t * 6.0 - 15.0) + 10.0);
 }
 
-static 
+/* Dot product with one of 8 gradient vectors selected by hash. */
+static
 double flecs_perlin_grad2(
-    int hash, 
-    double x, 
-    double y) 
+    int hash,
+    double x,
+    double y)
 {
     switch (hash & 7) {
         case 0: return  x + y;
@@ -75,8 +78,8 @@ double flecs_perlin_grad2(
 
 static
 double flecs_perlin2(
-    double x, 
-    double y) 
+    double x,
+    double y)
 {
     int X = (int)floor(x) & 255;
     int Y = (int)floor(y) & 255;
@@ -110,7 +113,7 @@ void flecs_script_perlin2(
     const ecs_function_ctx_t *ctx,
     int32_t argc,
     const ecs_value_t *argv,
-    ecs_value_t *result) 
+    ecs_value_t *result)
 {
     (void)argc;
     (void)ctx;

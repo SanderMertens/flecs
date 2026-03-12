@@ -1,13 +1,11 @@
 /**
  * @file datastructures/bitset.c
- * @brief Bitset data structure.
- * 
- * Simple bitset implementation. The bitset allows for storage of arbitrary
- * numbers of bits.
+ * @brief Bitset data structure for arbitrary-length boolean storage.
  */
 
 #include "../private_api.h"
 
+/* Grow the backing storage to accommodate the requested number of bits. */
 static
 void flecs_bitset_ensure_size(
     ecs_bitset_t *bs,
@@ -26,6 +24,7 @@ void flecs_bitset_ensure_size(
     }
 }
 
+/* Initialize a bitset to an empty state. */
 void flecs_bitset_init(
     ecs_bitset_t* bs)
 {
@@ -34,6 +33,7 @@ void flecs_bitset_init(
     bs->data = NULL;
 }
 
+/* Ensure the bitset can store at least the specified number of bits. */
 void flecs_bitset_ensure(
     ecs_bitset_t *bs,
     int32_t count)
@@ -44,6 +44,7 @@ void flecs_bitset_ensure(
     }
 }
 
+/* Finalize the bitset and free its backing storage. */
 void flecs_bitset_fini(
     ecs_bitset_t *bs)
 {
@@ -52,6 +53,7 @@ void flecs_bitset_fini(
     bs->count = 0;
 }
 
+/* Add the specified number of bits to the bitset. */
 void flecs_bitset_addn(
     ecs_bitset_t *bs,
     int32_t count)
@@ -60,6 +62,7 @@ void flecs_bitset_addn(
     flecs_bitset_ensure_size(bs, elem);
 }
 
+/* Set the bit at the specified index to the given value. */
 void flecs_bitset_set(
     ecs_bitset_t *bs,
     int32_t elem,
@@ -75,6 +78,7 @@ error:
     return;
 }
 
+/* Get the value of the bit at the specified index. */
 bool flecs_bitset_get(
     const ecs_bitset_t *bs,
     int32_t elem)
@@ -86,12 +90,14 @@ error:
     return false;
 }
 
+/* Return the number of bits in the bitset. */
 int32_t flecs_bitset_count(
     const ecs_bitset_t *bs)
 {
     return bs->count;
 }
 
+/* Remove a bit by swapping with the last element and shrinking. */
 void flecs_bitset_remove(
     ecs_bitset_t *bs,
     int32_t elem)
@@ -107,6 +113,7 @@ error:
     return;
 }
 
+/* Swap the values of two bits in the bitset. */
 void flecs_bitset_swap(
     ecs_bitset_t *bs,
     int32_t elem_a,

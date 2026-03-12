@@ -10,7 +10,6 @@
 
 #ifdef FLECS_JSON
 
-/* Deserialize from JSON */
 typedef enum ecs_json_token_t {
     JsonObjectOpen,
     JsonObjectClose,
@@ -36,7 +35,7 @@ typedef struct ecs_json_value_ser_ctx_t {
     bool initialized;
 } ecs_json_value_ser_ctx_t;
 
-/* Cached data for serializer */
+/* Cached state for JSON serialization of iterator results */
 typedef struct ecs_json_ser_ctx_t {
     ecs_component_record_t *cr_doc_name;
     ecs_component_record_t *cr_doc_color;
@@ -110,7 +109,6 @@ const char* flecs_json_skip_array(
     char *token,
     const ecs_from_json_desc_t *desc);
 
-/* Serialize to JSON */
 void flecs_json_next(
     ecs_strbuf_t *buf);
 

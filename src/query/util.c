@@ -1,10 +1,11 @@
 /**
  * @file query/util.c
- * @brief Query utilities.
+ * @brief Query utility functions: op stringification, term introspection, variable state.
  */
 
 #include "../private_api.h"
 
+/* Convert query instruction kind to string representation. */
 const char* flecs_query_op_str(
     uint16_t kind)
 {
@@ -90,6 +91,7 @@ ecs_var_id_t flecs_utovar(uint64_t val) {
     return flecs_uto(uint8_t, val);
 }
 
+/* Check if term uses a builtin predicate (eq, match, lookup). */
 bool flecs_term_is_builtin_pred(
     ecs_term_t *term)
 {
@@ -102,6 +104,7 @@ bool flecs_term_is_builtin_pred(
     return false;
 }
 
+/* Get variable name for a term reference. */
 const char* flecs_term_ref_var_name(
     ecs_term_ref_t *ref)
 {
@@ -116,6 +119,7 @@ const char* flecs_term_ref_var_name(
     return ref->name;
 }
 
+/* Check if term reference is a wildcard variable. */
 bool flecs_term_ref_is_wildcard(
     ecs_term_ref_t *ref)
 {
@@ -127,6 +131,7 @@ bool flecs_term_ref_is_wildcard(
     return false;
 }
 
+/* Check if term has a fixed (non-variable, non-wildcard) id. */
 bool flecs_term_is_fixed_id(
     ecs_query_t *q,
     ecs_term_t *term)
@@ -164,6 +169,7 @@ bool flecs_term_is_fixed_id(
     return true;
 }
 
+/* Check if term is part of an OR chain. */
 bool flecs_term_is_or(
     const ecs_query_t *q,
     const ecs_term_t *term)
@@ -172,6 +178,7 @@ bool flecs_term_is_or(
     return (term->oper == EcsOr) || (!first_term && term[-1].oper == EcsOr);
 }
 
+/* Extract IsEntity or IsVar flags for a specific reference kind (src, first, second). */
 ecs_flags16_t flecs_query_ref_flags(
     ecs_flags16_t flags,
     ecs_flags16_t kind)
@@ -179,6 +186,7 @@ ecs_flags16_t flecs_query_ref_flags(
     return (flags >> kind) & (EcsQueryIsVar | EcsQueryIsEntity);
 }
 
+/* Check if a variable has been written in the current query plan. */
 bool flecs_query_is_written(
     ecs_var_id_t var_id,
     uint64_t written)
@@ -191,6 +199,7 @@ bool flecs_query_is_written(
     return (written & (1ull << var_id)) != 0;
 }
 
+/* Mark a variable as written in the bitset. */
 void flecs_query_write(
     ecs_var_id_t var_id,
     uint64_t *written)
@@ -199,6 +208,7 @@ void flecs_query_write(
     *written |= (1ull << var_id);
 }
 
+/* Mark a variable as written in the compile context, tracking conditional writes. */
 void flecs_query_write_ctx(
     ecs_var_id_t var_id,
     ecs_query_compile_ctx_t *ctx,
@@ -213,6 +223,7 @@ void flecs_query_write_ctx(
     }
 }
 
+/* Check if a reference (src, first, or second) has been written. */
 bool flecs_ref_is_written(
     const ecs_query_op_t *op,
     const ecs_query_ref_t *ref,
@@ -231,6 +242,7 @@ bool flecs_ref_is_written(
     return false;
 }
 
+/* Get the allocator from an iterator's world or stage. */
 ecs_allocator_t* flecs_query_get_allocator(
     const ecs_iter_t *it)
 {
@@ -243,6 +255,7 @@ ecs_allocator_t* flecs_query_get_allocator(
     }
 }
 
+/* Append a query operation reference (variable or entity) to a string buffer. */
 static
 int32_t flecs_query_op_ref_str(
     const ecs_query_impl_t *query,
@@ -290,6 +303,7 @@ int32_t flecs_query_op_ref_str(
     return color_chars;
 }
 
+/* Append a bitset as a comma-separated list of set bit indices to a string buffer. */
 static
 void flecs_query_str_append_bitset(
     ecs_strbuf_t *buf,
@@ -305,6 +319,7 @@ void flecs_query_str_append_bitset(
     ecs_strbuf_list_pop(buf, "}");
 }
 
+/* Build query plan string with optional per-operation profile counters. */
 static
 void flecs_query_plan_w_profile(
     const ecs_query_t *q,
@@ -315,8 +330,7 @@ void flecs_query_plan_w_profile(
     ecs_query_op_t *ops = impl->ops;
     int32_t i, count = impl->op_count, indent = 0;
     if (!count) {
-        ecs_strbuf_append(buf, "");
-        return; /* No plan */
+        return;
     }
 
     for (i = 0; i < count; i ++) {
@@ -490,6 +504,7 @@ char* ecs_query_plans(
     return ecs_strbuf_get(&buf);
 }
 
+/* Append a term reference id with traversal flags to a string buffer. */
 static
 void flecs_query_str_add_id(
     const ecs_world_t *world,
@@ -555,6 +570,7 @@ void flecs_query_str_add_id(
     }
 }
 
+/* Convert a query term to its string representation in a buffer. */
 void flecs_term_to_buf(
     const ecs_world_t *world,
     const ecs_term_t *term,
@@ -721,6 +737,7 @@ error:
     return NULL;
 }
 
+/* Apply query flags to iterator flags. */
 void flecs_query_apply_iter_flags(
     ecs_iter_t *it,
     const ecs_query_t *query)
@@ -730,6 +747,7 @@ void flecs_query_apply_iter_flags(
     ECS_BIT_COND(it->flags, EcsIterNoData, query->data_fields == 0);
 }
 
+/* Reclaim unused memory from query cache maps. */
 void flecs_query_reclaim(
     ecs_query_t *query)
 {
@@ -742,6 +760,7 @@ void flecs_query_reclaim(
     }
 }
 
+/* Set the component id for a specific iterator field. */
 ecs_id_t flecs_query_iter_set_id(
     ecs_iter_t *it,
     int8_t field,

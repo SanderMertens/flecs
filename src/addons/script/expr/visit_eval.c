@@ -1,6 +1,6 @@
 /**
- * @file addons/script/expr_ast.c
- * @brief Script expression AST implementation.
+ * @file addons/script/expr/visit_eval.c
+ * @brief Script expression evaluation visitor.
  */
 
 #include "flecs.h"
@@ -114,6 +114,7 @@ error:
     return -1;
 }
 
+/* Evaluate initializer elements using precomputed member offsets (non-opaque types). */
 static
 int flecs_expr_initializer_eval_static(
     ecs_script_eval_ctx_t *ctx,
@@ -187,6 +188,7 @@ error:
     return -1;
 }
 
+/* Evaluate initializer elements using the meta cursor API (opaque and vector types). */
 static
 int flecs_expr_initializer_eval_dynamic(
     ecs_script_eval_ctx_t *ctx,
@@ -349,7 +351,6 @@ int flecs_expr_binary_visit_eval(
 {
     flecs_expr_stack_push(ctx->stack);
 
-    /* Evaluate left & right expressions */
     ecs_expr_value_t *left = flecs_expr_stack_result(ctx->stack, node->left);
     if (flecs_expr_visit_eval_priv(ctx, node->left, left)) {
         goto error;
@@ -477,6 +478,7 @@ int flecs_expr_global_variable_visit_eval(
     return 0;
 }
 
+/* General cast via value copy (handles non-numeric conversions). */
 static
 int flecs_expr_cast_visit_eval(
     ecs_script_eval_ctx_t *ctx,
@@ -485,7 +487,6 @@ int flecs_expr_cast_visit_eval(
 {
     flecs_expr_stack_push(ctx->stack);
 
-    /* Evaluate expression to cast */
     ecs_expr_value_t *expr = flecs_expr_stack_result(ctx->stack, node->expr);
     if (flecs_expr_visit_eval_priv(ctx, node->expr, expr)) {
         goto error;
@@ -619,6 +620,7 @@ void flecs_expr_set_float(
     FLECS_EXPR_NUMBER_CAST
 }
 
+/* Fast path for numeric casts: avoids meta cursor overhead. */
 static
 int flecs_expr_cast_number_visit_eval(
     ecs_script_eval_ctx_t *ctx,
@@ -627,7 +629,6 @@ int flecs_expr_cast_number_visit_eval(
 {
     flecs_expr_stack_push(ctx->stack);
 
-    /* Evaluate expression to cast */
     ecs_expr_value_t *expr = flecs_expr_stack_result(ctx->stack, node->expr);
     if (flecs_expr_visit_eval_priv(ctx, node->expr, expr)) {
         goto error;
@@ -720,6 +721,7 @@ error:
     return -1;
 }
 
+/* Methods pass the left-hand value as argv[0], followed by explicit args. */
 static
 int flecs_expr_method_visit_eval(
     ecs_script_eval_ctx_t *ctx,
@@ -1155,12 +1157,6 @@ int flecs_expr_visit_eval(
         .stack = stack,
         .desc = desc
     };
-
-    // ecs_strbuf_t buf = ECS_STRBUF_INIT;
-    // flecs_expr_to_str_buf(script, node, &buf, true);
-    // char *str = ecs_strbuf_get(&buf);
-    // printf("%s\n", str);
-    // ecs_os_free(str);
 
     if (flecs_expr_visit_eval_priv(&ctx, node, val)) {
         goto error;

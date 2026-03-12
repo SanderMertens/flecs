@@ -1,5 +1,5 @@
 /**
- * @file addons/script/expr_ast.c
+ * @file addons/script/expr/ast.c
  * @brief Script expression AST implementation.
  */
 
@@ -14,7 +14,7 @@
 static
 void* flecs_expr_ast_new_(
     ecs_parser_t *parser,
-    ecs_size_t size, 
+    ecs_size_t size,
     ecs_expr_node_kind_t kind)
 {
     ecs_assert(parser->script != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -65,7 +65,7 @@ ecs_expr_member_t* flecs_expr_member_from(
     result->node.kind = EcsExprMember;
     result->node.pos = node->pos;
     result->left = node;
-    result->member_name =name;
+    result->member_name = name;
     return result;
 }
 
@@ -116,6 +116,7 @@ ecs_expr_value_node_t* flecs_expr_int(
     return result;
 }
 
+/* Type is set to i64 during parsing; the type visitor narrows it later. */
 ecs_expr_value_node_t* flecs_expr_uint(
     ecs_parser_t *parser,
     uint64_t value)
@@ -290,7 +291,7 @@ bool flecs_expr_explicit_cast_allowed(
     ecs_assert(from_type != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(to_type != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    /* Treat opaque types asthe types that they're pretending to be*/
+    /* Resolve opaque types to their underlying types for cast validation */
     if (from_type->kind == EcsOpaqueType) {
         const EcsOpaque *o = ecs_get(world, from, EcsOpaque);
         ecs_assert(o != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -329,12 +330,12 @@ bool flecs_expr_explicit_cast_allowed(
         return false;
     }
 
-    /* Anything can be casted to a number */
+    /* Any primitive can be cast to a number */
     if (flecs_expr_is_type_number(to)) {
         return true;
     }
 
-    /* Anything can be casted to a number */
+    /* Any primitive can be cast to a string */
     if (to == ecs_id(ecs_string_t)) {
         return true;
     }
@@ -342,6 +343,7 @@ bool flecs_expr_explicit_cast_allowed(
     return true;
 }
 
+/* Wraps an expression in a cast node. Uses CastNumber for numeric-only casts. */
 ecs_expr_cast_t* flecs_expr_cast(
     ecs_script_t *script,
     ecs_expr_node_t *expr,

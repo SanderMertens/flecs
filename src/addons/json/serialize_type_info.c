@@ -7,12 +7,14 @@
 
 #ifdef FLECS_JSON
 
+/* Serialize type info for a type entity to JSON. */
 static
 int flecs_json_typeinfo_ser_type(
     const ecs_world_t *world,
     ecs_entity_t type,
     ecs_strbuf_t *buf);
 
+/* Serialize a slice of type meta ops to JSON. */
 static
 int flecs_json_typeinfo_ser_type_slice(
     const ecs_world_t *world,
@@ -20,10 +22,11 @@ int flecs_json_typeinfo_ser_type_slice(
     int32_t op_count,
     ecs_strbuf_t *str);
 
+/* Serialize a primitive type kind as a JSON type info string. */
 static
 int flecs_json_typeinfo_ser_primitive(
     ecs_primitive_kind_t kind,
-    ecs_strbuf_t *str) 
+    ecs_strbuf_t *str)
 {
     switch(kind) {
     case EcsBool:
@@ -67,6 +70,7 @@ int flecs_json_typeinfo_ser_primitive(
     return 0;
 }
 
+/* Serialize enum or bitmask constant names as a JSON array. */
 static
 void flecs_json_typeinfo_ser_constants(
     const ecs_world_t *world,
@@ -83,6 +87,7 @@ void flecs_json_typeinfo_ser_constants(
     }
 }
 
+/* Serialize enum type info with constant names to JSON. */
 static
 void flecs_json_typeinfo_ser_enum(
     const ecs_world_t *world,
@@ -93,6 +98,7 @@ void flecs_json_typeinfo_ser_enum(
     flecs_json_typeinfo_ser_constants(world, type, str);
 }
 
+/* Serialize bitmask type info with flag names to JSON. */
 static
 void flecs_json_typeinfo_ser_bitmask(
     const ecs_world_t *world,
@@ -103,7 +109,7 @@ void flecs_json_typeinfo_ser_bitmask(
     flecs_json_typeinfo_ser_constants(world, type, str);
 }
 
-/* Serialize unit information */
+/* Serialize unit information including symbol and quantity to JSON. */
 static
 int flecs_json_typeinfo_ser_unit(
     const ecs_world_t *world,
@@ -129,6 +135,7 @@ int flecs_json_typeinfo_ser_unit(
     return 0;
 }
 
+/* Serialize a member value range as a JSON array of min and max. */
 static
 void flecs_json_typeinfo_ser_range(
     ecs_strbuf_t *str,
@@ -144,6 +151,7 @@ void flecs_json_typeinfo_ser_range(
     flecs_json_array_pop(str);
 }
 
+/* Serialize the inner scope of a struct or collection type op to JSON. */
 static
 int flecs_json_typeinfo_ser_scope(
     const ecs_world_t *world,
@@ -169,6 +177,7 @@ int flecs_json_typeinfo_ser_scope(
     return 0;
 }
 
+/* Serialize array type info with element type and count to JSON. */
 static
 int flecs_json_typeinfo_ser_array(
     const ecs_world_t *world,
@@ -189,6 +198,7 @@ error:
     return -1;
 }
 
+/* Serialize vector type info with element type to JSON. */
 static
 int flecs_json_typeinfo_ser_vector(
     const ecs_world_t *world,
@@ -207,13 +217,13 @@ error:
     return -1;
 }
 
-/* Iterate over a slice of the type ops array */
+/* Iterate over a slice of the type ops array and serialize to JSON. */
 static
 int flecs_json_typeinfo_ser_type_slice(
     const ecs_world_t *world,
     const ecs_meta_op_t *ops,
     int32_t op_count,
-    ecs_strbuf_t *str) 
+    ecs_strbuf_t *str)
 {
     const EcsStruct *st = NULL;
     if (ops[0].name) { /* If a member, previous operation is PushStruct */
@@ -356,6 +366,7 @@ error:
     return -1;
 }
 
+/* Serialize type info for a type entity to JSON using its serializer ops. */
 static
 int flecs_json_typeinfo_ser_type(
     const ecs_world_t *world,

@@ -1,12 +1,13 @@
 /**
  * @file addons/json/serialize_query_info.c
- * @brief Serialize (component) values to JSON strings.
+ * @brief Serialize query information to JSON.
  */
 
 #include "json.h"
 
 #ifdef FLECS_JSON
 
+/* Return the string name for a term inout kind. */
 static
 const char* flecs_json_inout_str(
     int16_t kind)
@@ -22,6 +23,7 @@ const char* flecs_json_inout_str(
     }
 }
 
+/* Return the string name for a term operator kind. */
 static
 const char* flecs_json_oper_str(
     int16_t kind)
@@ -38,6 +40,7 @@ const char* flecs_json_oper_str(
     }
 }
 
+/* Serialize a term entity reference with path, symbol, and type info. */
 static
 void flecs_json_serialize_term_entity(
     const ecs_world_t *world,
@@ -61,6 +64,7 @@ void flecs_json_serialize_term_entity(
     }
 }
 
+/* Serialize a term reference as entity, variable, or name to JSON. */
 static
 void flecs_json_serialize_term_ref(
     const ecs_world_t *world,
@@ -88,6 +92,7 @@ void flecs_json_serialize_term_ref(
     flecs_json_object_pop(buf);
 }
 
+/* Serialize term traversal configuration and flags to JSON. */
 static
 void flecs_json_serialize_term_trav(
     const ecs_world_t *world,
@@ -118,6 +123,7 @@ void flecs_json_serialize_term_trav(
     flecs_json_array_pop(buf);
 }
 
+/* Serialize a single query term with all its properties to JSON. */
 static
 void flecs_json_serialize_term(
     const ecs_world_t *world,
@@ -161,6 +167,7 @@ void flecs_json_serialize_term(
     flecs_json_object_pop(buf);
 }
 
+/* Serialize a complete query descriptor with variables and terms to JSON. */
 void flecs_json_serialize_query(
     const ecs_world_t *world,
     const ecs_query_t *q,
@@ -196,7 +203,6 @@ void flecs_json_serialize_query(
         flecs_json_serialize_term(world, q, t, buf);
     }
     flecs_json_array_pop(buf);
-
 
     flecs_json_object_pop(buf);
 }

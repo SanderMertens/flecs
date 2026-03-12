@@ -8,33 +8,33 @@
 
 #include "../../private_api.h"
 
-/** Instruction data for pipeline.
+/* Instruction data for pipeline.
  * This type is the element type in the "ops" vector of a pipeline. */
 typedef struct ecs_pipeline_op_t {
     int32_t offset;             /* Offset in systems vector */
     int32_t count;              /* Number of systems to run before next op */
     double time_spent;          /* Time spent merging commands for sync point */
     int64_t commands_enqueued;  /* Number of commands enqueued for sync point */
-    bool multi_threaded;        /* Whether systems can be ran multi threaded */
-    bool immediate;           /* Whether systems are staged or not */
+    bool multi_threaded;        /* Whether systems can be run multi-threaded */
+    bool immediate;             /* Whether systems run with immediate access */
 } ecs_pipeline_op_t;
 
 struct ecs_pipeline_state_t {
     ecs_query_t *query;         /* Pipeline query */
     ecs_vec_t ops;              /* Pipeline schedule */
-    ecs_vec_t systems;          /* Vector with system ids */
+    ecs_vec_t systems;          /* Vector with system pointers */
 
     ecs_entity_t last_system;   /* Last system ran by pipeline */
-    int32_t match_count;        /* Used to track of rebuild is necessary */
+    int32_t match_count;        /* Used to track if rebuild is necessary */
     int32_t rebuild_count;      /* Number of pipeline rebuilds */
     ecs_iter_t *iters;          /* Iterator for worker(s) */
     int32_t iter_count;
 
     /* Members for continuing pipeline iteration after pipeline rebuild */
     ecs_pipeline_op_t *cur_op;  /* Current pipeline op */
-    int32_t cur_i;              /* Index in current result */
-    int32_t ran_since_merge;    /* Index in current op */
-    bool immediate;           /* Is pipeline in readonly mode */
+    int32_t cur_i;              /* Current index in systems vector */
+    int32_t ran_since_merge;    /* Number of systems run since last merge */
+    bool immediate;             /* Is pipeline in immediate (non-readonly) mode */
 };
 
 typedef struct EcsPipeline {
@@ -42,9 +42,7 @@ typedef struct EcsPipeline {
     ecs_pipeline_state_t *state;
 } EcsPipeline;
 
-////////////////////////////////////////////////////////////////////////////////
-//// Pipeline API
-////////////////////////////////////////////////////////////////////////////////
+/* -- Pipeline API -- */
 
 bool flecs_pipeline_update(
     ecs_world_t *world,
@@ -63,9 +61,7 @@ int32_t flecs_run_pipeline_ops(
     int32_t stage_count,
     ecs_ftime_t delta_time);
 
-////////////////////////////////////////////////////////////////////////////////
-//// Worker API
-////////////////////////////////////////////////////////////////////////////////
+/* -- Worker API -- */
 
 void flecs_workers_progress(
     ecs_world_t *world,

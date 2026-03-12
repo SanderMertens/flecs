@@ -15,10 +15,11 @@
 #define flecs_ast_append(parser, vec, T, node) \
     ecs_vec_append_t(&parser->script->allocator, &vec, T*)[0] = node
 
+/* Allocate and initialize a new AST node. */
 static
 void* flecs_ast_new_(
     ecs_parser_t *parser,
-    ecs_size_t size, 
+    ecs_size_t size,
     ecs_script_node_kind_t kind)
 {
     ecs_assert(parser->script != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -30,6 +31,7 @@ void* flecs_ast_new_(
     return result;
 }
 
+/* Create a new script scope node. */
 ecs_script_scope_t* flecs_script_scope_new(
     ecs_parser_t *parser)
 {
@@ -40,12 +42,14 @@ ecs_script_scope_t* flecs_script_scope_new(
     return result;
 }
 
+/* Check whether a scope contains no statements. */
 bool flecs_scope_is_empty(
     ecs_script_scope_t *scope)
 {
     return ecs_vec_count(&scope->stmts) == 0;
 }
 
+/* Insert a new scope into the current scope. */
 ecs_script_scope_t* flecs_script_insert_scope(
     ecs_parser_t *parser)
 {
@@ -57,6 +61,8 @@ ecs_script_scope_t* flecs_script_insert_scope(
     return result;
 }
 
+/* If name is an interpolated string, parse it into an expression node.
+ * Returns 0 on success (or if name is not interpolated), -1 on parse error. */
 static
 int flecs_script_name_to_expr(
     ecs_parser_t *parser,
@@ -82,6 +88,7 @@ int flecs_script_name_to_expr(
     return 0;
 }
 
+/* Insert an entity node into the current scope. */
 ecs_script_entity_t* flecs_script_insert_entity(
     ecs_parser_t *parser,
     const char *name)
@@ -112,6 +119,8 @@ error:
     return NULL;
 }
 
+/* Initialize a script identifier (first, optional second), parsing any
+ * interpolated strings into expression nodes and marking the id as dynamic. */
 static
 int flecs_script_set_id(
     ecs_parser_t *parser,
@@ -140,6 +149,7 @@ int flecs_script_set_id(
     return 0;
 }
 
+/* Insert a pair scope node into the current scope. */
 ecs_script_pair_scope_t* flecs_script_insert_pair_scope(
     ecs_parser_t *parser,
     const char *first,
@@ -159,6 +169,7 @@ ecs_script_pair_scope_t* flecs_script_insert_pair_scope(
     return result;
 }
 
+/* Insert a pair tag node into the current scope. */
 ecs_script_tag_t* flecs_script_insert_pair_tag(
     ecs_parser_t *parser,
     const char *first,
@@ -179,6 +190,7 @@ ecs_script_tag_t* flecs_script_insert_pair_tag(
     return result;
 }
 
+/* Insert a tag node into the current scope. */
 ecs_script_tag_t* flecs_script_insert_tag(
     ecs_parser_t *parser,
     const char *name)
@@ -186,6 +198,7 @@ ecs_script_tag_t* flecs_script_insert_tag(
     return flecs_script_insert_pair_tag(parser, name, NULL);
 }
 
+/* Insert a pair component node into the current scope. */
 ecs_script_component_t* flecs_script_insert_pair_component(
     ecs_parser_t *parser,
     const char *first,
@@ -206,6 +219,7 @@ ecs_script_component_t* flecs_script_insert_pair_component(
     return result;
 }
 
+/* Insert a component node into the current scope. */
 ecs_script_component_t* flecs_script_insert_component(
     ecs_parser_t *parser,
     const char *name)
@@ -213,6 +227,7 @@ ecs_script_component_t* flecs_script_insert_component(
     return flecs_script_insert_pair_component(parser, name, NULL);
 }
 
+/* Insert a default component node into the current scope. */
 ecs_script_default_component_t* flecs_script_insert_default_component(
     ecs_parser_t *parser)
 {
@@ -228,6 +243,7 @@ ecs_script_default_component_t* flecs_script_insert_default_component(
     return result;
 }
 
+/* Insert a variable component node into the current scope. */
 ecs_script_var_component_t* flecs_script_insert_var_component(
     ecs_parser_t *parser,
     const char *var_name)
@@ -246,6 +262,7 @@ ecs_script_var_component_t* flecs_script_insert_var_component(
     return result;
 }
 
+/* Insert a with node into the current scope. */
 ecs_script_with_t* flecs_script_insert_with(
     ecs_parser_t *parser)
 {
@@ -262,6 +279,7 @@ ecs_script_with_t* flecs_script_insert_with(
     return result;
 }
 
+/* Insert a using node into the current scope. */
 ecs_script_using_t* flecs_script_insert_using(
     ecs_parser_t *parser,
     const char *name)
@@ -278,6 +296,7 @@ ecs_script_using_t* flecs_script_insert_using(
     return result;
 }
 
+/* Insert a module node into the current scope. */
 ecs_script_module_t* flecs_script_insert_module(
     ecs_parser_t *parser,
     const char *name)
@@ -294,6 +313,7 @@ ecs_script_module_t* flecs_script_insert_module(
     return result;
 }
 
+/* Insert an annotation node into the current scope. */
 ecs_script_annot_t* flecs_script_insert_annot(
     ecs_parser_t *parser,
     const char *name,
@@ -312,6 +332,7 @@ ecs_script_annot_t* flecs_script_insert_annot(
     return result;
 }
 
+/* Insert a template node into the current scope. */
 ecs_script_template_node_t* flecs_script_insert_template(
     ecs_parser_t *parser,
     const char *name)
@@ -328,6 +349,7 @@ ecs_script_template_node_t* flecs_script_insert_template(
     return result;
 }
 
+/* Insert a variable node into the current scope. */
 ecs_script_var_node_t* flecs_script_insert_var(
     ecs_parser_t *parser,
     const char *name)
@@ -343,6 +365,7 @@ ecs_script_var_node_t* flecs_script_insert_var(
     return result;
 }
 
+/* Insert an if-statement node into the current scope. */
 ecs_script_if_t* flecs_script_insert_if(
     ecs_parser_t *parser)
 {
@@ -358,6 +381,7 @@ ecs_script_if_t* flecs_script_insert_if(
     return result;
 }
 
+/* Insert a for-range loop node into the current scope. */
 ecs_script_for_range_t* flecs_script_insert_for_range(
     ecs_parser_t *parser)
 {

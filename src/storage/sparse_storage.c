@@ -1,5 +1,11 @@
+/**
+ * @file storage/sparse_storage.c
+ * @brief Sparse component storage.
+ */
+
 #include "../private_api.h"
 
+/* Check whether an entity has a sparse component, handling wildcard ids. */
 bool flecs_component_sparse_has(
     ecs_component_record_t *cr,
     ecs_entity_t entity)
@@ -51,6 +57,7 @@ bool flecs_component_sparse_has(
     }
 }
 
+/* Get a pointer to an entity's sparse component data, resolving wildcards. */
 void* flecs_component_sparse_get(
     const ecs_world_t *world,
     ecs_component_record_t *cr,
@@ -65,18 +72,18 @@ void* flecs_component_sparse_get(
         return flecs_sparse_get(cr->sparse, 0, entity);
     }
 
-    /* Table should always be provided from context where wildcard is allowed */
+    /* Table is required for wildcard resolution */
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (!(cr->flags & EcsIdDontFragment)) {
         const ecs_table_record_t *tr = flecs_component_get_table(cr, table);
         ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        /* Get the non-wildcard record */
+        /* Resolve wildcard via table record to concrete component record */
         const ecs_table_record_t *ttr = &table->_->records[tr->index];
         cr = ttr->hdr.cr;
     } else {
-        /* Find the target entity to replace the wildcard with */
+        /* Non-fragmenting: resolve wildcard via sparse storage */
         ecs_entity_t tgt = 0;
         if (cr->flags & EcsIdExclusive) {
             ecs_entity_t *tgt_ptr = 
@@ -96,13 +103,11 @@ void* flecs_component_sparse_get(
             tgt = type->array[0];
         }
 
-        /* Find component record for the non-wildcard component */
         if (ECS_PAIR_FIRST(cr->id) == EcsWildcard) {
-            cr = flecs_components_get(world, 
+            cr = flecs_components_get(world,
                 ecs_pair(tgt, ECS_PAIR_SECOND(cr->id)));
         } else {
-            /* Component record for (*, *) doesn't exist. */
-            ecs_assert(ECS_PAIR_SECOND(cr->id) == EcsWildcard, 
+            ecs_assert(ECS_PAIR_SECOND(cr->id) == EcsWildcard,
                 ECS_INTERNAL_ERROR, NULL);
             cr = flecs_components_get(world, 
                 ecs_pair(ECS_PAIR_FIRST(cr->id), tgt));
@@ -112,6 +117,7 @@ void* flecs_component_sparse_get(
     return flecs_sparse_get(cr->sparse, 0, entity);
 }
 
+/* Remove a sparse component from an entity, invoking hooks and destructors. */
 static
 ecs_entity_t flecs_component_sparse_remove_intern(
     ecs_world_t *world,
@@ -155,6 +161,7 @@ ecs_entity_t flecs_component_sparse_remove_intern(
     return entity;
 }
 
+/* Remove an entity from the parent's non-fragmenting pair type list. */
 static
 void flecs_component_sparse_dont_fragment_pair_remove(
     ecs_world_t *world,
@@ -164,7 +171,7 @@ void flecs_component_sparse_dont_fragment_pair_remove(
     ecs_component_record_t *parent = cr->pair->parent;
     ecs_assert(parent != NULL, ECS_INTERNAL_ERROR, NULL);
     if (!parent->sparse) {
-        /* It's not the relationship that's non-fragmenting, but the target */
+        /* Target is non-fragmenting, not the relationship */
         return;
     }
 
@@ -186,6 +193,7 @@ void flecs_component_sparse_dont_fragment_pair_remove(
     }
 }
 
+/* Remove an entity from the parent's non-fragmenting exclusive relationship storage. */
 static
 void flecs_component_sparse_dont_fragment_exclusive_remove(
     ecs_component_record_t *cr,
@@ -199,6 +207,7 @@ void flecs_component_sparse_dont_fragment_exclusive_remove(
         parent->sparse, ECS_SIZEOF(ecs_entity_t), entity);
 }
 
+/* Remove a sparse component from an entity, handling wildcards and non-fragmenting pairs. */
 void flecs_component_sparse_remove(
     ecs_world_t *world,
     ecs_component_record_t *cr,
@@ -209,9 +218,8 @@ void flecs_component_sparse_remove(
     ecs_flags32_t flags = cr->flags;
     bool dont_fragment = flags & EcsIdDontFragment;
 
-    /* If id is a wildcard, remove entity from all matching ids. */
     if (dont_fragment && ecs_id_is_wildcard(cr->id)) {
-        /* A wildcard by itself can't be marked sparse so must be a pair. */
+        /* Only pairs can be wildcard + sparse */
         ecs_assert(ECS_IS_PAIR(id), ECS_INTERNAL_ERROR, NULL);
         ecs_assert(ECS_PAIR_SECOND(id) == EcsWildcard, 
             ECS_UNSUPPORTED,
@@ -260,6 +268,7 @@ void flecs_component_sparse_remove(
     }
 }
 
+/* Remove all entities from a specific sparse component, invoking hooks and destructors. */
 static
 void flecs_component_sparse_remove_all_id(
     ecs_world_t *world,
@@ -309,6 +318,7 @@ void flecs_component_sparse_remove_all_id(
     }
 }
 
+/* Remove all entries from a wildcard sparse component, freeing type lists. */
 static
 void flecs_component_sparse_remove_all_wildcard(
     ecs_world_t *world,
@@ -332,6 +342,7 @@ void flecs_component_sparse_remove_all_wildcard(
     }
 }
 
+/* Remove all entities from a non-fragmenting sparse component's storage. */
 void flecs_component_sparse_remove_all(
     ecs_world_t *world,
     ecs_component_record_t *cr)
@@ -347,6 +358,7 @@ void flecs_component_sparse_remove_all(
     }
 }
 
+/* Insert an entity into the parent's non-fragmenting pair type list. */
 static
 void flecs_component_sparse_dont_fragment_pair_insert(
     ecs_world_t *world,
@@ -357,7 +369,7 @@ void flecs_component_sparse_dont_fragment_pair_insert(
     
     ecs_assert(parent != NULL, ECS_INTERNAL_ERROR, NULL);
     if (!parent->sparse) {
-        /* It's not the relationship that's non-fragmenting, but the target */
+        /* Target is non-fragmenting, not the relationship */
         return;
     }
 
@@ -366,6 +378,7 @@ void flecs_component_sparse_dont_fragment_pair_insert(
     flecs_type_add(world, type, ecs_pair_second(world, cr->id));
 }
 
+/* Insert into parent's non-fragmenting exclusive storage, replacing any prior target. */
 static
 void flecs_component_sparse_dont_fragment_exclusive_insert(
     ecs_world_t *world,
@@ -416,6 +429,7 @@ void flecs_component_sparse_dont_fragment_exclusive_insert(
     *tgt_ptr = flecs_entities_get_alive(world, ECS_PAIR_SECOND(component_id));
 }
 
+/* Initialize sparse component data from an IsA base override or default constructor. */
 static
 void flecs_component_sparse_override(
     ecs_world_t *world,
@@ -447,6 +461,7 @@ void flecs_component_sparse_override(
     }
 }
 
+/* Insert a sparse component for an entity, constructing and invoking on_add hooks. */
 void* flecs_component_sparse_insert(
     ecs_world_t *world,
     ecs_component_record_t *cr,
@@ -502,6 +517,7 @@ void* flecs_component_sparse_insert(
     return ptr;
 }
 
+/* Emplace a sparse component for an entity without construction, invoking on_add hooks. */
 void* flecs_component_sparse_emplace(
     ecs_world_t *world,
     ecs_component_record_t *cr,

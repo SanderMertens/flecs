@@ -1,13 +1,6 @@
 /**
  * @file entity.c
- * @brief Entity API.
- * 
- * This file contains the implementation for the entity API, which includes 
- * creating/deleting entities, adding/removing/setting components, instantiating
- * prefabs, and several other APIs for retrieving entity data.
- * 
- * The file also contains the implementation of the command buffer, which is 
- * located here so it can call functions private to the compilation unit.
+ * @brief Entity lifecycle, component access, and table commit operations.
  */
 
 #include "private_api.h"
@@ -16,6 +9,7 @@
 #include "addons/query_dsl/query_dsl.h"
 #endif
 
+/* Get component pointer and type info from a table column by index. */
 static
 flecs_component_ptr_t flecs_table_get_component(
     ecs_table_t *table,
@@ -30,6 +24,7 @@ flecs_component_ptr_t flecs_table_get_component(
     };
 }
 
+/* Get component pointer, dispatching between sparse and columnar storage. */
 flecs_component_ptr_t flecs_get_component_ptr(
     const ecs_world_t *world,
     ecs_table_t *table,
@@ -58,6 +53,7 @@ flecs_component_ptr_t flecs_get_component_ptr(
     return flecs_table_get_component(table, tr->column, row);
 }
 
+/* Get raw component pointer from a table row (convenience wrapper). */
 void* flecs_get_component(
     const ecs_world_t *world,
     ecs_table_t *table,
@@ -67,6 +63,7 @@ void* flecs_get_component(
     return flecs_get_component_ptr(world, table, row, cr).ptr;
 }
 
+/* Walk the IsA hierarchy to find a component inherited from a base entity. */
 void* flecs_get_base_component(
     const ecs_world_t *world,
     ecs_table_t *table,
@@ -77,7 +74,6 @@ void* flecs_get_base_component(
     ecs_check(recur_depth < ECS_MAX_RECURSION, ECS_INVALID_OPERATION,
         "cycle detected in IsA relationship");
 
-    /* Table (and thus entity) does not have component, look for base */
     if (!(table->flags & EcsTableHasIsA)) {
         return NULL;
     }
@@ -86,13 +82,12 @@ void* flecs_get_base_component(
         return NULL;
     }
 
-    /* Exclude Name */
+    /* Names are never inherited */
     if (component == ecs_pair(ecs_id(EcsIdentifier), EcsName)) {
         return NULL;
     }
 
-    /* Table should always be in the table index for (IsA, *), otherwise the
-     * HasBase flag should not have been set */
+    /* Table must be in the (IsA, *) index if EcsTableHasIsA is set */
     const ecs_table_record_t *tr_isa = flecs_component_get_table(
         world->cr_isa_wildcard, table);
     ecs_check(tr_isa != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -137,6 +132,7 @@ error:
     return NULL;
 }
 
+/* Allocate a new entity id. Not safe in multithreaded mode. */
 ecs_entity_t flecs_new_id(
     const ecs_world_t *world)
 {
@@ -144,10 +140,7 @@ ecs_entity_t flecs_new_id(
 
     flecs_check_exclusive_world_access_write(world);
 
-    /* It is possible that the world passed to this function is a stage, so
-     * make sure we have the actual world. Cast away const since this is one of
-     * the few functions that may modify the world while it is in readonly mode,
-     * since it is thread safe (uses atomic inc when in threading mode) */
+    /* Safe: entity id allocation mutates the world even from a stage. */
     ecs_world_t *unsafe_world = ECS_CONST_CAST(ecs_world_t*, world);
 
     ecs_assert(!(unsafe_world->flags & EcsWorldMultiThreaded),
@@ -162,6 +155,7 @@ ecs_entity_t flecs_new_id(
     return entity;
 }
 
+/* Create a new entity and insert it into the specified table. */
 static
 ecs_record_t* flecs_new_entity(
     ecs_world_t *world,
@@ -185,6 +179,7 @@ ecs_record_t* flecs_new_entity(
     return r;
 }
 
+/* Move an entity from its current table to a destination table. */
 static
 void flecs_move_entity(
     ecs_world_t *world,
@@ -208,18 +203,17 @@ void flecs_move_entity(
         ECS_INTERNAL_ERROR, NULL);
     ecs_assert(record->table == src_table, ECS_INTERNAL_ERROR, NULL);
 
-    /* Append new row to destination table */
+    /* Append to destination before removing from source */
     int32_t dst_row = ecs_table_count(dst_table);
     flecs_table_append(world, dst_table, entity, false, false);
 
-    /* Invoke remove actions for removed components */
+    /* Fire remove actions before the data moves */
     flecs_actions_move_remove(world, src_table, dst_table, src_row, 1, diff);
 
     record->table = dst_table;
     record->row = ECS_ROW_TO_RECORD(dst_row, record->row & ECS_ROW_FLAGS_MASK);
 
-    /* Copy entity & components from src_table to dst_table */
-    flecs_table_move(world, entity, entity, dst_table, dst_row, 
+    flecs_table_move(world, entity, entity, dst_table, dst_row,
         src_table, src_row, ctor);
     ecs_assert(record->table == dst_table, ECS_INTERNAL_ERROR, NULL);
     
@@ -231,11 +225,12 @@ void flecs_move_entity(
     ecs_assert(record->table == dst_table, ECS_INTERNAL_ERROR, NULL);
 }
 
+/* Commit an entity to a new table, moving data and updating monitors. */
 void flecs_commit(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_record_t *record,
-    ecs_table_t *dst_table,   
+    ecs_table_t *dst_table,
     ecs_table_diff_t *diff,
     bool construct,
     ecs_flags32_t evt_flags)
@@ -251,9 +246,7 @@ void flecs_commit(
     ecs_assert(src_table != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (src_table == dst_table) {
-        /* If source and destination table are the same no action is needed *
-         * However, if a component was added in the process of traversing a
-         * table, this suggests that a union relationship could have changed. */
+        /* Same table: only act if non-fragmenting (union/sparse) flags changed */
         ecs_flags32_t non_fragment_flags = 
             src_table->flags & EcsTableHasDontFragment;
         if (non_fragment_flags) {
@@ -281,11 +274,7 @@ void flecs_commit(
 
     flecs_table_traversable_add(src_table, -is_trav);
 
-    /* If the entity is being watched, it is being monitored for changes and
-     * requires rematching systems when components are added or removed. This
-     * ensures that systems that rely on components from containers or prefabs
-     * update the matched tables when the application adds or removes a 
-     * component from, for example, a container. */
+    /* Rematch queries that depend on components inherited from this entity. */
     if (is_trav) {
         flecs_update_component_monitors(world, &diff->added, &diff->removed);
     }
@@ -304,6 +293,7 @@ error:
     return;
 }
 
+/* Create entities in bulk and optionally initialize component data. */
 const ecs_entity_t* flecs_bulk_new(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -351,14 +341,14 @@ const ecs_entity_t* flecs_bulk_new(
                 continue;
             }
 
-            /* Find component in storage type */
+            /* Look up storage for this component */
             ecs_entity_t id = component_ids->array[c_i];
             ecs_component_record_t *cr = flecs_components_get(world, id);
             ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
             const ecs_type_info_t *ti = cr->type_info;
             if (!ti) {
-                ecs_assert(ti != NULL, ECS_INVALID_PARAMETER, 
-                    "component '%s' passed to to bulk_new() at index %d is a "
+                ecs_assert(ti != NULL, ECS_INVALID_PARAMETER,
+                    "component '%s' passed to bulk_new() at index %d is a "
                         "tag/zero sized",
                             flecs_errstr(ecs_id_str(world, id)), c_i);
             }
@@ -435,6 +425,7 @@ const ecs_entity_t* flecs_bulk_new(
     }
 }
 
+/* Add a component to an entity using a pre-fetched record. */
 static
 void flecs_add_id_w_record(
     ecs_world_t *world,
@@ -449,11 +440,12 @@ void flecs_add_id_w_record(
     ecs_table_diff_t diff = ECS_TABLE_DIFF_INIT;
     ecs_table_t *dst_table = flecs_table_traverse_add(
         world, src_table, &component, &diff);
-    flecs_commit(world, entity, record, dst_table, &diff, construct, 
-        EcsEventNoOnSet); /* No OnSet, this function is only called from
-                           * functions that are about to set the component. */
+    /* Suppress OnSet: callers set the component value after this returns */
+    flecs_commit(world, entity, record, dst_table, &diff, construct,
+        EcsEventNoOnSet);
 }
 
+/* Add a single component id to an entity. */
 void flecs_add_id(
     ecs_world_t *world,
     ecs_entity_t entity,
@@ -477,6 +469,7 @@ void flecs_add_id(
     flecs_defer_end(world, stage);
 }
 
+/* Remove a single component id from an entity. */
 void flecs_remove_id(
     ecs_world_t *world,
     ecs_entity_t entity,
@@ -499,6 +492,7 @@ void flecs_remove_id(
     flecs_defer_end(world, stage);
 }
 
+/* Add multiple component ids to an entity in a single table traversal. */
 void flecs_add_ids(
     ecs_world_t *world,
     ecs_entity_t entity,
@@ -522,6 +516,7 @@ void flecs_add_ids(
     flecs_table_diff_builder_fini(world, &diff);
 }
 
+/* Ensure a component exists on an entity, adding it if absent. Returns pointer. */
 flecs_component_ptr_t flecs_ensure(
     ecs_world_t *world,
     ecs_entity_t entity,
@@ -568,10 +563,10 @@ flecs_component_ptr_t flecs_ensure(
         }
     }
 
-    /* If entity didn't have component yet, add it */
+    /* Component not found on entity; add it */
     flecs_add_id_w_record(world, entity, r, component, true);
 
-    /* Flush commands so the pointer we're fetching is stable */
+    /* Flush commands so the returned pointer is stable */
     flecs_defer_end(world, world->stages[0]);
     flecs_defer_begin(world, world->stages[0]);
 
@@ -585,6 +580,7 @@ flecs_component_ptr_t flecs_ensure(
         world, r->table, ECS_RECORD_TO_ROW(r->row), cr);
 }
 
+/* Get a mutable pointer to a component. Fast path for low component ids. */
 flecs_component_ptr_t flecs_get_mut(
     const ecs_world_t *world,
     ecs_entity_t entity,
@@ -629,6 +625,7 @@ error:
     return (flecs_component_ptr_t){0};
 }
 
+/* Add a flag to an entity record, updating traversable count if needed. */
 void flecs_record_add_flag(
     ecs_record_t *record,
     uint32_t flag)
@@ -643,6 +640,7 @@ void flecs_record_add_flag(
     record->row |= flag;
 }
 
+/* Add a flag to an entity (e.g., EcsEntityIsTraversable). */
 void flecs_add_flag(
     ecs_world_t *world,
     ecs_entity_t entity,
@@ -653,6 +651,7 @@ void flecs_add_flag(
     flecs_record_add_flag(record, flag);
 }
 
+/* Insert a new entity into the root table (empty archetype). */
 void flecs_add_to_root_table(
     ecs_world_t *world,
     ecs_entity_t e)
@@ -674,6 +673,7 @@ void flecs_add_to_root_table(
     flecs_journal(world, EcsJournalNew, e, 0, 0);
 }
 
+/* Return a human-readable reason why an entity id is invalid, or NULL if valid. */
 const char* flecs_entity_invalid_reason(
     const ecs_world_t *world,
     ecs_entity_t entity)
@@ -690,7 +690,7 @@ const char* flecs_entity_invalid_reason(
         return "entity id contains flag bits (TOGGLE or AUTO_OVERRIDE)";
     }
 
-    /* Entities should not contain data in dead zone bits */
+    /* Bits 48-55 are reserved (dead zone between id and generation fields) */
     if (entity & ~0xFF00FFFFFFFFFFFF) {
         return "entity id is not a valid bit pattern for an entity";
     }
@@ -718,7 +718,7 @@ const char* flecs_entity_invalid_reason(
             flecs_id_invalid_reason(world, component))
 
 
-/* -- Public functions -- */
+/* -- Public API -- */
 
 bool ecs_commit(
     ecs_world_t *world,
@@ -793,7 +793,7 @@ ecs_entity_t ecs_new_low_id(
     }
 
     if (!e || e >= FLECS_HI_COMPONENT_ID) {
-        /* If the low component ids are depleted, return a regular entity id */
+        /* Low component ids exhausted; fall back to regular entity id */
         e = ecs_new(world);
     } else {
         flecs_entities_ensure(world, e);
@@ -865,6 +865,7 @@ error:
     return 0;
 }
 
+/* Copy component data to an entity, firing replace hooks and on_set events. */
 static
 void flecs_copy_id(
     ecs_world_t *world,
@@ -896,8 +897,7 @@ void flecs_copy_id(
         world, table, ECS_RECORD_TO_ROW(r->row), component, true);
 }
 
-/* Traverse table graph by either adding or removing identifiers parsed from the
- * passed in expression. */
+/* Parse component ids from an expression string into a vector. */
 static
 int flecs_traverse_from_expr(
     ecs_world_t *world,
@@ -942,8 +942,7 @@ error:
     return -1;
 }
 
-/* Add/remove components based on the parsed expression. This operation is 
- * slower than flecs_traverse_from_expr, but safe to use from a deferred context. */
+/* Add components from a parsed expression in deferred mode. */
 static
 void flecs_defer_from_expr(
     ecs_world_t *world,
@@ -971,9 +970,8 @@ void flecs_defer_from_expr(
 #endif
 }
 
-/* If operation is not deferred, add components by finding the target
- * table and moving the entity towards it. */
-static 
+/* Compute the target table from desc and move the entity to it (non-deferred). */
+static
 int flecs_traverse_add(
     ecs_world_t *world,
     ecs_entity_t result,
@@ -990,8 +988,7 @@ int flecs_traverse_add(
     flecs_table_diff_builder_init(world, &diff);
     ecs_vec_t ids;
 
-    /* Add components from the 'add_expr' expression. Look up before naming 
-     * entity, so that expression can't resolve to self. */
+    /* Parse add_expr before naming the entity to prevent self-resolution */
     ecs_vec_init_t(&world->allocator, &ids, ecs_id_t, 0);
     if (desc->add_expr && ecs_os_strcmp(desc->add_expr, "0")) {
         if (flecs_traverse_from_expr(world, name, desc->add_expr, &ids)) {
@@ -999,7 +996,6 @@ int flecs_traverse_add(
         }
     }
 
-    /* Set symbol */
     if (desc->symbol && desc->symbol[0]) {
         const char *sym = ecs_get_symbol(world, result);
         if (sym) {
@@ -1011,11 +1007,11 @@ int flecs_traverse_add(
         }
     }
 
-    /* If a name is provided but not yet assigned, add the Name component */
+    /* Assign name path if not already named */
     if (name && !name_assigned) {
         if (!ecs_add_path_w_sep(world, result, scope, name, sep, root_sep)) {
             if (name[0] == '#') {
-                /* Numerical ids should always return, unless it's invalid */
+                /* Numeric id path must resolve or it is invalid */
                 goto error;
             }
         }
@@ -1023,12 +1019,12 @@ int flecs_traverse_add(
         ecs_add_pair(world, result, EcsChildOf, scope);
     }
 
-    /* Find existing table */
+    /* Start from the entity's current table */
     ecs_table_t *src_table = NULL, *table = NULL;
     ecs_record_t *r = flecs_entities_get(world, result);
     table = r->table;
 
-    /* Add components from the 'add' array */
+    /* Traverse table graph for each id in desc->add */
     if (desc->add) {
         int32_t i = 0;
         ecs_id_t component;
@@ -1038,7 +1034,7 @@ int flecs_traverse_add(
         }
     }
 
-    /* Add components from the 'set' array */
+    /* Traverse table graph for each id in desc->set */
     if (desc->set) {
         int32_t i = 0;
         ecs_id_t component;
@@ -1048,7 +1044,7 @@ int flecs_traverse_add(
         }
     }
 
-    /* Add ids from .expr */
+    /* Traverse table graph for ids parsed from add_expr */
     {
         int32_t i, count = ecs_vec_count(&ids);
         ecs_id_t *expr_ids = ecs_vec_first(&ids);
@@ -1057,9 +1053,7 @@ int flecs_traverse_add(
         }
     }
 
-    /* Find destination table */
-    /* If this is a new entity without a name, add the scope. If a name is
-     * provided, the scope will be added by the add_path_w_sep function */
+    /* For new unnamed entities, add scope and with ids to the target table */
     if (new_entity) {
         if (new_entity && scope && !name && !name_assigned) {
             table = flecs_find_table_add(
@@ -1070,7 +1064,7 @@ int flecs_traverse_add(
         }
     }
 
-    /* Commit entity to destination table */
+    /* Commit to the computed destination table */
     if (src_table != table) {
         flecs_defer_begin(world, world->stages[0]);
         ecs_table_diff_t table_diff;
@@ -1080,7 +1074,7 @@ int flecs_traverse_add(
         flecs_defer_end(world, world->stages[0]);
     }
 
-    /* Set component values */
+    /* Copy component values from desc->set into the entity's storage */
     if (desc->set) {
         table = r->table;
         ecs_assert(r->table != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -1120,9 +1114,8 @@ error:
     return -1;
 }
 
-/* When in deferred mode, we need to add/remove components one by one using
- * the regular operations. */
-static 
+/* Add components, set values, and assign names in deferred mode. */
+static
 void flecs_deferred_add_remove(
     ecs_world_t *world,
     ecs_entity_t entity,
@@ -1136,8 +1129,7 @@ void flecs_deferred_add_remove(
     const char *sep = desc->sep;
     const char *root_sep = desc->root_sep;
 
-    /* If this is a new entity without a name, add the scope. If a name is
-     * provided, the scope will be added by the add_path_w_sep function */
+    /* For new unnamed entities, add scope and with ids */
     if (new_entity) {
         if (new_entity && scope && !name && !name_assigned) {
             ecs_add_id(world, entity, ecs_pair(EcsChildOf, scope));
@@ -1148,7 +1140,7 @@ void flecs_deferred_add_remove(
         }
     }
 
-    /* Add components from the 'add' id array */
+    /* Add ids from desc->add array */
     if (desc->add) {
         int32_t i = 0;
         ecs_id_t component;
@@ -1160,8 +1152,7 @@ void flecs_deferred_add_remove(
             {
                 scope = ECS_PAIR_SECOND(component);
                 if (name && (!desc->id || !name_assigned)) {
-                    /* New named entities are created by temporarily going out of
-                     * readonly mode to ensure no duplicates are created. */
+                    /* Exit readonly to prevent duplicate named entities */
                     defer = false;
                 }
             }
@@ -1171,7 +1162,6 @@ void flecs_deferred_add_remove(
         }
     }
 
-    /* Set component values */
     if (desc->set) {
         int32_t i = 0;
         const ecs_value_t *v;
@@ -1192,18 +1182,17 @@ void flecs_deferred_add_remove(
         }
     }
 
-    /* Add components from the 'add_expr' expression */
+    /* Parse and add ids from desc->add_expr */
     if (desc->add_expr) {
         flecs_defer_from_expr(world, entity, name, desc->add_expr);
     }
 
     int32_t thread_count = ecs_get_stage_count(world);
 
-    /* Set symbol */
     if (desc->symbol) {
         const char *sym = ecs_get_symbol(world, entity);
         if (!sym || ecs_os_strcmp(sym, desc->symbol)) {
-            if (thread_count <= 1) { /* See above */
+            if (thread_count <= 1) {
                 ecs_suspend_readonly_state_t state;
                 ecs_world_t *real_world = flecs_suspend_readonly(world, &state);
                 ecs_set_symbol(world, entity, desc->symbol);
@@ -1214,7 +1203,6 @@ void flecs_deferred_add_remove(
         }
     }
 
-    /* Set name */
     if (name && !name_assigned) {
         ecs_add_path_w_sep(world, entity, scope, name, sep, root_sep);
     }
@@ -1288,13 +1276,8 @@ ecs_entity_t ecs_entity_init(
     bool new_entity = false;
     bool name_assigned = false;
 
-    /* Remove optional prefix from name. Entity names can be derived from 
-     * language identifiers, such as components (typenames) and systems
-     * function names). Because C does not have namespaces, such identifiers
-     * often encode the namespace as a prefix.
-     * To ensure interoperability between C and C++ (and potentially other 
-     * languages with namespacing) the entity must be stored without this prefix
-     * and with the proper namespace, which is what the name_prefix is for */
+    /* Strip language-specific name prefix (e.g., C namespace encoding) so
+     * entities are stored with a clean name and proper ECS namespace. */
     const char *prefix = world->info.name_prefix;
     if (name && prefix) {
         ecs_size_t len = ecs_os_strlen(prefix);
@@ -1309,17 +1292,16 @@ ecs_entity_t ecs_entity_init(
         }
     }
 
-    /* Parent field takes precedence over scope */
+    /* desc->parent overrides scope */
     if (desc->parent) {
         scope = desc->parent;
         ecs_check(ecs_is_valid(world, desc->parent), ECS_INVALID_PARAMETER, 
             "the entity provided in ecs_entity_desc_t::parent is not valid");
     }
 
-    /* Find or create entity */
     if (!result) {
         if (name) {
-            /* If add array contains a ChildOf pair, use it as scope instead */
+            /* Try to find an existing entity with this name in the scope */
             result = ecs_lookup_path_w_sep(
                 world, scope, name, sep, root_sep, false);
             if (result) {
@@ -1340,34 +1322,29 @@ ecs_entity_t ecs_entity_init(
                 ECS_INTERNAL_ERROR, NULL);
         }
     } else {
-        /* Make sure provided id is either alive or revivable */
+        /* Explicit id provided: ensure it is alive or revivable */
         ecs_make_alive(world, result);
 
         name_assigned = ecs_has_pair(
             world, result, ecs_id(EcsIdentifier), EcsName);
         if (name && name_assigned) {
-            /* If entity has name, verify that name matches. The name provided
-             * to the function could either have been relative to the current
-             * scope, or fully qualified. */
+            /* Verify the existing name matches (relative or fully qualified) */
             char *path;
             ecs_size_t root_sep_len = root_sep ? ecs_os_strlen(root_sep) : 0;
             if (root_sep && !ecs_os_strncmp(name, root_sep, root_sep_len)) {
-                /* Fully qualified name was provided, so make sure to
-                 * compare with fully qualified name */
+                /* Fully qualified: compare against full path */
                 path = ecs_get_path_w_sep(world, 0, result, sep, root_sep);
             } else {
-                /* Relative name was provided, so make sure to compare with
-                 * relative name */
+                /* Relative: compare against scope-relative path */
                 if (!sep || sep[0]) {
                     path = ecs_get_path_w_sep(world, scope, result, sep, "");
                 } else {
-                    /* Safe, only freed when sep is valid */
+                    /* No separator: just use the leaf name (not heap-allocated) */
                     path = ECS_CONST_CAST(char*, ecs_get_name(world, result));
                 }
             }
             if (path) {
                 if (ecs_os_strcmp(path, name)) {
-                    /* Mismatching name */
                     ecs_err("existing entity '%s' is initialized with "
                         "conflicting name '%s'", path, name);
                     if (!sep || sep[0]) {
@@ -1477,7 +1454,7 @@ const ecs_entity_t* ecs_bulk_init(
     if (!sparse_count) {
         return entities;
     } else {
-        /* Refetch entity ids, in case the underlying array was reallocated */
+        /* Refetch in case the entity array was reallocated */
         entities = flecs_entities_ids(world);
         return &entities[sparse_count];
     }
@@ -1517,6 +1494,7 @@ error:
     return NULL;
 }
 
+/* Validate that a component's size and alignment match expected values. */
 static
 void flecs_check_component(
     ecs_world_t *world,
@@ -1546,10 +1524,8 @@ ecs_entity_t ecs_component_init(
     ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER,
         "ecs_component_desc_t is uninitialized, set to {0} before using");
 
-    /* If existing entity is provided, check if it is already registered as a
-     * component and matches the size/alignment. This can prevent having to
-     * suspend readonly mode, and increases the number of scenarios in which
-     * this function can be called in multithreaded mode. */
+    /* Fast path: if already registered with matching size/alignment, skip
+     * readonly suspension (enables use from multithreaded contexts). */
     ecs_entity_t result = desc->entity;
     if (result && ecs_is_alive(world, result)) {
         const EcsComponent *const_ptr = ecs_get(world, result, EcsComponent);
@@ -1688,12 +1664,12 @@ void ecs_delete(
                 flecs_on_delete(world, ecs_pair(entity, EcsWildcard), 0, true, true);
             }
 
-            /* Merge operations before deleting entity */
+            /* Flush deferred ops before deleting the entity itself */
             flecs_defer_end(world, stage);
             flecs_defer_begin(world, stage);
         }
 
-        /* Entity is still in use by a query */
+        /* Guard: entity must not be locked by an active query */
         ecs_assert((world->flags & EcsWorldQuit) || 
                 !flecs_component_is_delete_locked(world, entity), 
             ECS_INVALID_OPERATION, 
@@ -1702,7 +1678,7 @@ void ecs_delete(
 
         table = r->table;
 
-        if (table) { /* NULL if entity got cleaned up as result of cycle */
+        if (table) { /* May be NULL if cleaned up due to relationship cycle */
             ecs_table_diff_t diff = {
                 .removed = table->type,
                 .removed_flags = table->flags & EcsTableRemoveEdgeFlags
@@ -1751,8 +1727,7 @@ void ecs_remove_id(
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     flecs_assert_entity_valid(world, entity, "remove");
 
-    /* Component validity check is slightly different for remove() because it is
-     * allowed to remove wildcards, but not allowed to add wildcards. */
+    /* remove() accepts wildcards (unlike add()) */
     ecs_check(ecs_id_is_valid(world, component) || 
         ecs_id_is_wildcard(component), ECS_INVALID_PARAMETER, 
             "invalid component '%s' passed to remove() for entity '%s': %s",
@@ -1944,6 +1919,7 @@ error:
 }
 
 #ifdef FLECS_DEBUG
+/* Check whether a component has an on_replace hook registered. */
 static
 bool flecs_component_has_on_replace(
     const ecs_world_t *world,
@@ -2102,6 +2078,7 @@ error:
     return NULL;
 }
 
+/* Acquire thread-safe access to an entity's table (read or write). */
 static
 ecs_record_t* flecs_access_begin(
     ecs_world_t *stage,
@@ -2130,6 +2107,7 @@ error:
     return NULL;
 }
 
+/* Release thread-safe access to an entity's table. */
 static
 void flecs_access_end(
     const ecs_record_t *r,
@@ -2220,6 +2198,7 @@ void* ecs_record_ensure_id(
         world, r->table, ECS_RECORD_TO_ROW(r->row), cr);
 }
 
+/* Fire on_set if entity has the component; no-op otherwise. */
 void flecs_modified_id_if(
     ecs_world_t *world,
     ecs_entity_t entity,
@@ -2276,10 +2255,7 @@ void ecs_modified_id(
         return;
     }
 
-    /* If the entity does not have the component, calling ecs_modified is 
-     * invalid. The assert needs to happen after the defer statement, as the
-     * entity may not have the component when this function is called while
-     * operations are being deferred. */
+    /* Validate after defer check: entity may lack the component while deferred */
     ecs_check(ecs_has_id(world, entity, component), ECS_INVALID_PARAMETER, 
         "invalid call to modified(), entity '%s' does not have component '%s'",
             flecs_errstr(ecs_get_path(world, entity)),
@@ -2296,6 +2272,7 @@ error:
     return;
 }
 
+/* Set a component value using move semantics. Used by deferred command replay. */
 void flecs_set_id_move(
     ecs_world_t *world,
     ecs_stage_t *stage,
@@ -2326,7 +2303,7 @@ void flecs_set_id_move(
     }
 
     if (cmd_kind != EcsCmdEmplace) {
-        /* ctor will have happened by ensure */
+        /* Constructor already ran via ensure; use move+dtor */
         flecs_type_info_move_dtor(dst.ptr, ptr, 1, ti);
     } else {
         flecs_type_info_ctor_move_dtor(dst.ptr, ptr, 1, ti);
@@ -2396,6 +2373,7 @@ error:
 }
 
 #if defined(FLECS_DEBUG) || defined(FLECS_KEEP_ASSERT)
+/* Check if a component has the CanToggle trait. */
 static
 bool flecs_can_toggle(
     ecs_world_t *world,
@@ -2441,7 +2419,7 @@ void ecs_enable_id(
     index -= table->_->bs_offset;
     ecs_assert(index >= 0, ECS_INTERNAL_ERROR, NULL);
 
-    /* Data cannot be NULL, since entity is stored in the table */
+    /* bs_columns must exist since the entity is in this table */
     ecs_bitset_t *bs = &table->_->bs_columns[index];
     ecs_assert(bs != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -2461,7 +2439,6 @@ bool ecs_is_enabled_id(
     flecs_assert_entity_valid(world, entity, "is_enabled");
     flecs_assert_component_valid(world, entity, component, "is_enabled");
 
-    /* Make sure we're not working with a stage */
     world = ecs_get_world(world);
 
     ecs_record_t *r = flecs_entities_get(world, entity);
@@ -2472,8 +2449,7 @@ bool ecs_is_enabled_id(
     ecs_entity_t bs_id = component | ECS_TOGGLE;
     int32_t index = ecs_table_get_type_index(world, table, bs_id);
     if (index == -1) {
-        /* If table does not have TOGGLE column for component, component is
-         * always enabled, if the entity has it */
+        /* No toggle column: component is always enabled if present */
         return ecs_has_id(world, entity, component);
     }
 
@@ -2502,7 +2478,7 @@ void ecs_set_child_order(
         "children array passed to set_child_order() cannot be not-NULL if "
         "child_count is 0");
     ecs_check(!(world->flags & EcsWorldMultiThreaded), ECS_INVALID_OPERATION, 
-        "cannot call set_child_oderder() while in multithreaded mode");
+        "cannot call set_child_order() while in multithreaded mode");
 
     flecs_stage_from_world(&world);
 
@@ -2555,7 +2531,6 @@ bool ecs_has_id(
     ecs_check(component != 0, ECS_INVALID_PARAMETER, 
         "invalid component passed to has(): component cannot be 0");
 
-    /* Make sure we're not working with a stage */
     world = ecs_get_world(world);
 
     ecs_record_t *r = flecs_entities_get_any(world, entity);
@@ -2630,10 +2605,9 @@ bool ecs_owns_id(
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     flecs_assert_entity_valid(world, entity, "owns");
-    ecs_check(component != 0, ECS_INVALID_PARAMETER, 
-        "invalid component passed to has(): component cannot be 0");
+    ecs_check(component != 0, ECS_INVALID_PARAMETER,
+        "invalid component passed to owns(): component cannot be 0");
 
-    /* Make sure we're not working with a stage */
     world = ecs_get_world(world);
 
     ecs_record_t *r = flecs_entities_get_any(world, entity);
@@ -2676,6 +2650,7 @@ error:
     return false;
 }
 
+/* Map a prefab child entity to its corresponding instance child. */
 static
 ecs_entity_t flecs_get_prefab_instance_child(
     const ecs_world_t *world,
@@ -2858,9 +2833,9 @@ ecs_entity_t ecs_get_parent(
         ecs_assert(column > 0, ECS_INTERNAL_ERROR, NULL);
         EcsParent *p = ecs_table_get_column(
             table, column - 1, ECS_RECORD_TO_ROW(r->row));
-        ecs_assert(ecs_is_valid(world, p->value), ECS_INVALID_OPERATION, 
-            "Parent component points to invalid parent %u",
-                p->value, entity);
+        ecs_assert(ecs_is_valid(world, p->value), ECS_INVALID_OPERATION,
+            "Parent component on entity %u points to invalid parent %u",
+                (uint32_t)entity, (uint32_t)p->value);
         return p->value;
     }
 
@@ -2983,7 +2958,7 @@ ecs_entity_t ecs_get_target_for_id(
             for (i = 0; i < count; i ++) {
                 ecs_id_t ent = ids[i];
                 if (ent & ECS_ID_FLAGS_MASK) {
-                    /* Skip ids with pairs, roles since 0 was provided for rel */
+                    /* Stop at ids with flags (pairs, etc.) since rel is 0 */
                     break;
                 }
 
@@ -3033,22 +3008,20 @@ bool ecs_is_valid(
     flecs_check_exclusive_world_access_read(world);
     #endif
 
-    /* 0 is not a valid entity id */
     if (!entity) {
         return false;
     }
     
-    /* Entity identifiers should not contain flag bits */
     if (entity & ECS_ID_FLAGS_MASK) {
         return false;
     }
 
-    /* Entities should not contain data in dead zone bits */
+    /* Bits 48-55 are reserved (dead zone between id and generation fields) */
     if (entity & ~0xFF00FFFFFFFFFFFF) {
         return false;
     }
 
-    /* If id exists, it must be alive (the generation count must match) */
+    /* Generation count must match for alive entities */
     return ecs_is_alive(world, entity);
 error:
     return false;
@@ -3057,7 +3030,7 @@ error:
 ecs_id_t ecs_strip_generation(
     ecs_entity_t e)
 {
-    /* If this is not a pair, erase the generation bits */
+    /* Only strip generation from non-pair ids */
     if (!(e & ECS_ID_FLAGS_MASK)) {
         e &= ~ECS_GENERATION_MASK;
     }
@@ -3091,7 +3064,6 @@ ecs_entity_t ecs_get_alive(
         return 0;
     }
 
-    /* Make sure we're not working with a stage */
     world = ecs_get_world(world);
 
     flecs_check_exclusive_world_access_read(world);
@@ -3100,8 +3072,7 @@ ecs_entity_t ecs_get_alive(
         return entity;
     }
 
-    /* Make sure id does not have generation. This guards against accidentally
-     * "upcasting" a not alive identifier to an alive one. */
+    /* Reject ids with a generation: prevents reviving a dead entity by accident */
     if ((uint32_t)entity != entity) {
         return 0;
     }
@@ -3123,25 +3094,23 @@ void ecs_make_alive(
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_check(entity != 0, ECS_INVALID_PARAMETER, NULL);
 
-    /* Const cast is safe, function checks for threading */
+    /* Safe: threading is checked below */
     world = ECS_CONST_CAST(ecs_world_t*, ecs_get_world(world));
 
     flecs_check_exclusive_world_access_write(world);
 
-    /* The entity index can be mutated while in staged/readonly mode, as long as
-     * the world is not multithreaded. */
+    /* Entity index can be mutated in readonly mode if single-threaded */
     ecs_assert(!(world->flags & EcsWorldMultiThreaded), 
         ECS_INVALID_OPERATION, 
             "cannot call make_alive() while world is in multithreaded mode");
 
-    /* Check if a version of the provided id is alive */
+    /* Check if any version of this entity id is currently alive */
     ecs_entity_t current = ecs_get_alive(world, (uint32_t)entity);
     if (current == entity) {
-        /* If alive and equal to the argument, there's nothing left to do */
         return;
     }
 
-    /* If the id is currently alive but did not match the argument, fail */
+    /* Alive with different generation: conflict */
     ecs_check(!current, ECS_INVALID_OPERATION, 
         "invalid call to make_alive(): entity %u is alive with different "
         "generation (%u vs %u)",
@@ -3149,18 +3118,10 @@ void ecs_make_alive(
             (uint32_t)(current >> 32),
             (uint32_t)(entity >> 32));
 
-    /* Set generation if not alive. The sparse set checks if the provided
-     * id matches its own generation which is necessary for alive ids. This
-     * check would cause ecs_ensure to fail if the generation of the 'entity'
-     * argument doesn't match with its generation.
-     * 
-     * While this could've been addressed in the sparse set, this is a rare
-     * scenario that can only be triggered by ecs_ensure. Implementing it here
-     * allows the sparse set to not do this check, which is more efficient. */
+    /* Force-set generation so the sparse set accepts this entity version. */
     flecs_entities_make_alive(world, entity);
 
-    /* Ensure id exists. The underlying data structure will verify that the
-     * generation count matches the provided one. */
+    /* Create the entity record and insert into the root table */
     ecs_record_t *r = flecs_entities_ensure(world, entity);
     ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(r->table == NULL, ECS_INTERNAL_ERROR, NULL);
@@ -3298,7 +3259,7 @@ void ecs_enable(
     flecs_assert_entity_valid(world, entity, "enable");
 
     if (ecs_has_id(world, entity, EcsPrefab)) {
-        /* If entity is a type, enable/disable all entities in the type */
+        /* Prefab: recursively enable/disable each inheritable component */
         const ecs_type_t *type = ecs_get_type(world, entity);
         ecs_assert(type != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_id_t *ids = type->array;
@@ -3321,6 +3282,7 @@ error:
     return;
 }
 
+/* Append a type's component ids as a comma-separated string to a buffer. */
 static
 void ecs_type_str_buf(
     const ecs_world_t *world,
@@ -3380,6 +3342,7 @@ error:
     return NULL;
 }
 
+/* Create a table range covering a single entity. */
 ecs_table_range_t flecs_range_from_entity(
     const ecs_world_t *world,
     ecs_entity_t e)

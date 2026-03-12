@@ -1,18 +1,12 @@
 /**
  * @file component_actions.c
- * @brief Logic executed after adding/removing a component.
- * 
- * After a component is added to an entity there can be additional things that
- * need to be done, such as:
- * 
- * - Invoking hooks
- * - Notifying observers
- * - Updating sparse storage
- * - Update name lookup index
+ * @brief Post-add/remove actions: hooks, observers, sparse storage, name index.
  */
 
 #include "private_api.h"
 
+/* Invoke a component lifecycle hook (on_add, on_set, on_remove).
+ * Temporarily unsuspends deferring so hooks can enqueue commands. */
 void flecs_invoke_hook(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -26,6 +20,8 @@ void flecs_invoke_hook(
     ecs_entity_t event,
     ecs_iter_action_t hook)
 {
+    /* Unsuspend defer (negative -> positive) so the hook can enqueue
+     * commands. Original defer depth is restored after the hook returns. */
     int32_t defer = world->stages[0]->defer;
     if (defer < 0) {
         world->stages[0]->defer *= -1;
@@ -68,6 +64,8 @@ void flecs_invoke_hook(
     world->stages[0]->defer = defer;
 }
 
+/* Invoke on_replace hook with both old and new component values.
+ * Uses field_count=2: field[0]=old, field[1]=new. */
 void flecs_invoke_replace_hook(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -77,6 +75,7 @@ void flecs_invoke_replace_hook(
     const void *new_ptr,
     const ecs_type_info_t *ti)
 {
+    /* Unsuspend defer for the hook, same as flecs_invoke_hook */
     int32_t defer = world->stages[0]->defer;
     if (defer < 0) {
         world->stages[0]->defer *= -1;
@@ -106,7 +105,7 @@ void flecs_invoke_replace_hook(
     it.ctx = ti->hooks.ctx;
     it.callback_ctx = ti->hooks.binding_ctx;
     it.count = 1;
-    it.offset = 0; /* Don't set row because we don't want to offset ptrs */
+    it.offset = 0; /* ptrs are already resolved; no row offset needed */
     it.flags = EcsIterIsValid;
 
     ti->hooks.on_replace(&it);
@@ -114,6 +113,7 @@ void flecs_invoke_replace_hook(
     world->stages[0]->defer = defer;
 }
 
+/* Handle reparenting: update name index, ordered children, non-fragmenting. */
 static
 void flecs_on_reparent(
     ecs_world_t *world,
@@ -127,6 +127,7 @@ void flecs_on_reparent(
     flecs_non_fragmenting_childof_reparent(world, table, other_table, row, count);
 }
 
+/* Handle unparenting: clean up name index, ordered children, non-fragmenting. */
 static
 void flecs_on_unparent(
     ecs_world_t *world,
@@ -142,6 +143,7 @@ void flecs_on_unparent(
     flecs_non_fragmenting_childof_unparent(world, other_table, table, row, count);
 }
 
+/* Initialize sparse storage for a single component on add. */
 bool flecs_sparse_on_add_cr(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -181,6 +183,7 @@ bool flecs_sparse_on_add_cr(
     return is_new;
 }
 
+/* Initialize sparse storage for all added sparse components. */
 bool flecs_sparse_on_add(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -205,6 +208,7 @@ bool flecs_sparse_on_add(
     return is_new;
 }
 
+/* Remove sparse storage entries for removed sparse components. */
 static
 void flecs_sparse_on_remove(
     ecs_world_t *world,
@@ -225,6 +229,7 @@ void flecs_sparse_on_remove(
     }
 }
 
+/* Check if any removed ids have non-fragmenting sparse data on these entities. */
 static
 bool flecs_dont_fragment_on_remove(
     ecs_world_t *world,
@@ -251,6 +256,7 @@ bool flecs_dont_fragment_on_remove(
     return false;
 }
 
+/* Remove all non-fragmenting sparse components from an entity. */
 void flecs_entity_remove_non_fragmenting(
     ecs_world_t *world,
     ecs_entity_t e,
@@ -292,6 +298,7 @@ void flecs_entity_remove_non_fragmenting(
     r->row &= ~EcsEntityHasDontFragment;
 }
 
+/* Run on-add actions: reparenting, sparse storage init, event emission. */
 static
 void flecs_actions_on_add_intern(
     ecs_world_t *world,
@@ -335,6 +342,7 @@ void flecs_actions_on_add_intern(
     }
 }
 
+/* Run on-remove actions: event emission and sparse storage cleanup. */
 static
 void flecs_actions_on_remove_intern(
     ecs_world_t *world,
@@ -374,6 +382,7 @@ void flecs_actions_on_remove_intern(
     }
 }
 
+/* Run on-remove actions, including unparenting when entity loses its parent. */
 static
 void flecs_actions_on_remove_intern_w_reparent(
     ecs_world_t *world,
@@ -407,6 +416,7 @@ error:
     return;
 }
 
+/* Run actions for a newly created entity in a table. */
 void flecs_actions_new(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -421,6 +431,7 @@ void flecs_actions_new(
         world, table, NULL, row, count, diff, flags, construct, sparse);
 }
 
+/* Run remove actions when deleting an entity. */
 void flecs_actions_delete(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -434,6 +445,7 @@ void flecs_actions_delete(
     }
 }
 
+/* Run remove actions during recursive tree deletion (skips unparenting). */
 void flecs_actions_delete_tree(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -452,6 +464,7 @@ void flecs_actions_delete_tree(
     }
 }
 
+/* Run on-add actions after an entity moves to a new table with added components. */
 void flecs_actions_move_add(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -483,6 +496,7 @@ void flecs_actions_move_add(
     }
 }
 
+/* Run on-remove actions when an entity moves to a table with fewer components. */
 void flecs_actions_move_remove(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -515,6 +529,7 @@ void flecs_actions_move_remove(
     }
 }
 
+/* Run on-set hooks and emit OnSet events for multiple component ids. */
 void flecs_notify_on_set_ids(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -570,7 +585,7 @@ void flecs_notify_on_set_ids(
         }
     }
 
-    /* Run OnSet notifications */
+    /* Emit OnSet event for observers */
     if ((dont_fragment || table->flags & EcsTableHasOnSet) && ids->count) {
         flecs_emit(world, world, &(ecs_event_desc_t) {
             .event = EcsOnSet,
@@ -583,6 +598,7 @@ void flecs_notify_on_set_ids(
     }
 }
 
+/* Run on-set hook and emit OnSet event for a single component id. */
 void flecs_notify_on_set(
     ecs_world_t *world,
     ecs_table_t *table,

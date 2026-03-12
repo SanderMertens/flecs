@@ -14,7 +14,7 @@ int flecs_meta_serialize_type(
     ecs_size_t offset,
     ecs_vec_t *ops);
 
-/* Serialize a primitive value */
+/* Serialize a primitive value to a string buffer. */
 int flecs_expr_ser_primitive(
     const ecs_world_t *world,
     ecs_primitive_kind_t kind,
@@ -134,8 +134,9 @@ int flecs_expr_ser_primitive(
     return 0;
 }
 
+/* Convert a primitive kind to the corresponding meta operation kind. */
 ecs_meta_op_kind_t flecs_meta_primitive_to_op_kind(
-    ecs_primitive_kind_t kind) 
+    ecs_primitive_kind_t kind)
 {
     switch(kind) {
     case EcsBool: return EcsOpBool;
@@ -160,6 +161,7 @@ ecs_meta_op_kind_t flecs_meta_primitive_to_op_kind(
     }
 }
 
+/* Append a zeroed operation with the given kind to the ops vector. */
 static
 ecs_meta_op_t* flecs_meta_ops_add(ecs_vec_t *ops, ecs_meta_op_kind_t kind) {
     ecs_meta_op_t *op = ecs_vec_append_t(NULL, ops, ecs_meta_op_t);
@@ -174,6 +176,7 @@ ecs_meta_op_t* flecs_meta_ops_add(ecs_vec_t *ops, ecs_meta_op_kind_t kind) {
     return op;
 }
 
+/* Get an operation by index, with bounds assertion. */
 static
 ecs_meta_op_t* flecs_meta_ops_get(ecs_vec_t *ops, int32_t index) {
     ecs_meta_op_t* op = ecs_vec_get_t(ops, ecs_meta_op_t, index);
@@ -181,6 +184,7 @@ ecs_meta_op_t* flecs_meta_ops_get(ecs_vec_t *ops, int32_t index) {
     return op;
 }
 
+/* Serialize a primitive type into the operation list. */
 static
 int flecs_meta_serialize_primitive(
     ecs_world_t *world,
@@ -205,6 +209,7 @@ int flecs_meta_serialize_primitive(
     return 0;
 }
 
+/* Serialize an enum type into the operation list. */
 static
 int flecs_meta_serialize_enum(
     ecs_world_t *world,
@@ -279,6 +284,7 @@ int flecs_meta_serialize_enum(
     return 0;
 }
 
+/* Serialize a bitmask type into the operation list. */
 static
 int flecs_meta_serialize_bitmask(
     ecs_world_t *world,
@@ -302,6 +308,7 @@ int flecs_meta_serialize_bitmask(
     return 0;
 }
 
+/* Serialize an inline (member) array into the operation list. */
 static
 int flecs_meta_serialize_array_inline(
     ecs_world_t *world,
@@ -338,6 +345,7 @@ int flecs_meta_serialize_array_inline(
     return 0;
 }
 
+/* Serialize a named array type into the operation list. */
 static
 int flecs_meta_serialize_array_type(
     ecs_world_t *world,
@@ -353,6 +361,7 @@ int flecs_meta_serialize_array_type(
         world, ptr->type, ptr->count, 0, ops);
 }
 
+/* Serialize a vector type into the operation list. */
 static
 int flecs_meta_serialize_vector_type(
     ecs_world_t *world,
@@ -393,6 +402,8 @@ int flecs_meta_serialize_vector_type(
     return 0;
 }
 
+/* Emit a forward reference op that defers to another type's serializer
+ * at runtime (used for array/vector types referenced as members). */
 static
 int flecs_meta_serialize_forward(
     ecs_world_t *world,
@@ -409,6 +420,7 @@ int flecs_meta_serialize_forward(
     return 0;
 }
 
+/* Serialize an opaque type into the operation list. */
 static
 int flecs_meta_serialize_opaque_type(
     ecs_world_t *world,
@@ -441,6 +453,7 @@ int flecs_meta_serialize_opaque_type(
     return 0;
 }
 
+/* Serialize a struct type and its members into the operation list. */
 static
 int flecs_meta_serialize_struct(
     ecs_world_t *world,
@@ -511,6 +524,7 @@ int flecs_meta_serialize_struct(
     return 0;
 }
 
+/* Dispatch type serialization by kind (primitive, enum, struct, etc.). */
 static
 int flecs_meta_serialize_type(
     ecs_world_t *world,
@@ -554,6 +568,8 @@ int flecs_meta_serialize_type(
     return ret;
 }
 
+/* Observer callback: build/rebuild the serializer instruction list when
+ * a type's EcsType component is set or updated. */
 void flecs_meta_type_serializer_init(
     ecs_iter_t *it)
 {

@@ -1,5 +1,5 @@
 /**
- * @file addons/script/expr_fold.c
+ * @file addons/script/expr/visit_fold.c
  * @brief Script expression constant folding.
  */
 
@@ -44,8 +44,9 @@ int flecs_expr_unary_visit_fold(
 
     if (node->expr->type != ecs_id(ecs_bool_t)) {
         char *type_str = ecs_get_path(script->world, node->node.type);
-        flecs_expr_visit_error(script, node, 
-            "! operator cannot be applied to value of type '%s' (must be bool)");
+        flecs_expr_visit_error(script, node,
+            "! operator cannot be applied to value of type '%s' (must be bool)",
+                type_str);
         ecs_os_free(type_str);
         goto error;
     }
@@ -440,8 +441,6 @@ int flecs_expr_global_variable_visit_fold(
 
     ecs_expr_variable_t *node = (ecs_expr_variable_t*)*node_ptr;
     ecs_entity_t type = node->node.type;
-
-    /* Global const variables are always const, so we can always fold */
 
     ecs_expr_value_node_t *result = flecs_expr_value_from(
         script, (ecs_expr_node_t*)node, type);

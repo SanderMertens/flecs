@@ -1,6 +1,6 @@
 /**
  * @file addons/json/serialize_entity.c
- * @brief Serialize single entity.
+ * @brief Serialize a single entity.
  */
 
 #include "json.h"
@@ -8,6 +8,7 @@
 
 #ifdef FLECS_JSON
 
+/* Serialize an entity to a JSON buffer using iterator-based serialization. */
 int flecs_entity_to_json_buf(
     const ecs_world_t *world,
     ecs_entity_t entity,
@@ -27,7 +28,7 @@ int flecs_entity_to_json_buf(
         return 0;
     }
 
-    /* Create iterator that's populated just with entity */
+    /* Create a single-entity iterator for the serializer */
     int32_t row = ECS_RECORD_TO_ROW(r->row);
     ecs_iter_t it = {
         .world = ECS_CONST_CAST(ecs_world_t*, world),
@@ -60,17 +61,16 @@ int ecs_entity_to_json_buf(
         return -1;
     }
 
-    /* Cache component record for flecs.doc ids */
+    /* Cache doc component records for label/color lookups */
     ecs_json_ser_ctx_t ser_ctx;
     ecs_os_zeromem(&ser_ctx);
 #ifdef FLECS_DOC
-    ser_ctx.cr_doc_name = flecs_components_get(world, 
+    ser_ctx.cr_doc_name = flecs_components_get(world,
         ecs_pair_t(EcsDocDescription, EcsName));
-    ser_ctx.cr_doc_color = flecs_components_get(world, 
+    ser_ctx.cr_doc_color = flecs_components_get(world,
         ecs_pair_t(EcsDocDescription, EcsDocColor));
 #endif
 
-    /* Initialize iterator parameters */
     ecs_iter_to_json_desc_t iter_desc = {
         .serialize_table = true,
         .serialize_entity_ids =   desc ? desc->serialize_entity_id : false,

@@ -42,7 +42,7 @@ const char* ecs_ptr_from_json(
 
     while ((json = flecs_json_parse(json, &token_kind, token))) {
         if (skip) {
-            /* Skip over tokens in case an unknown member was encountered */
+            /* Skip tokens until we exit the scope of an unknown member */
             if (token_kind == JsonObjectOpen || token_kind == JsonArrayOpen) {
                 skip_depth ++;
             } else
@@ -125,7 +125,7 @@ const char* ecs_ptr_from_json(
             const char *lah = flecs_json_parse(
                 json, &token_kind, t_lah);
             if (token_kind == JsonColon) {
-                /* Member assignment */
+                /* String followed by colon = member assignment */
                 json = lah;
                 if (strict) {
                     if (ecs_meta_dotmember(&cur, token) != 0) {

@@ -9,7 +9,7 @@
 #ifdef FLECS_PIPELINE
 #include "pipeline.h"
 
-/* Synchronize workers */
+/* Synchronize a worker thread with the main thread. */
 static
 void flecs_sync_worker(
     ecs_world_t* world)
@@ -31,7 +31,7 @@ void flecs_sync_worker(
     ecs_os_mutex_unlock(world->sync_mutex);
 }
 
-/* Worker thread */
+/* Worker thread entry point that runs pipeline operations. */
 static
 void* flecs_worker(void *arg) {
     ecs_stage_t *stage = arg;
@@ -42,8 +42,7 @@ void* flecs_worker(void *arg) {
 
     ecs_dbg_2("worker %d: start", stage->id);
 
-    /* Start worker, increase counter so main thread knows how many
-     * workers are ready */
+    /* Increment running counter; main thread spins until all workers report */
     ecs_os_mutex_lock(world->sync_mutex);
     world->workers_running ++;
 
@@ -76,7 +75,7 @@ void* flecs_worker(void *arg) {
     return NULL;
 }
 
-/* Start threads */
+/* Create worker threads or tasks for each stage. */
 void flecs_create_worker_threads(
     ecs_world_t *world)
 {
@@ -90,11 +89,8 @@ void flecs_create_worker_threads(
 
         ecs_assert(stage->thread == 0, ECS_INTERNAL_ERROR, NULL);
         if (ecs_using_task_threads(world)) {
-            /* workers are using tasks in an external task manager provided to 
-             * the OS API */
             stage->thread = ecs_os_task_new(flecs_worker, stage);
         } else {
-            /* workers are using long-running os threads */
             stage->thread = ecs_os_thread_new(flecs_worker, stage);
         }
         ecs_assert(stage->thread != 0, ECS_OPERATION_FAILED,
@@ -102,6 +98,7 @@ void flecs_create_worker_threads(
     }
 }
 
+/* Set stage count and start worker threads. */
 static
 void flecs_start_workers(
     ecs_world_t *world,
@@ -116,7 +113,7 @@ void flecs_start_workers(
     }
 }
 
-/* Wait until all workers are running */
+/* Wait until all worker threads are running. */
 static
 void flecs_wait_for_workers(
     ecs_world_t *world)
@@ -138,7 +135,7 @@ void flecs_wait_for_workers(
     } while (wait);
 }
 
-/* Wait until all threads are waiting on sync point */
+/* Wait until all worker threads reach the sync point. */
 void flecs_wait_for_sync(
     ecs_world_t *world)
 {
@@ -154,7 +151,7 @@ void flecs_wait_for_sync(
         ecs_os_cond_wait(world->sync_cond, world->sync_mutex);
     }
 
-    /* We shouldn't have been signalled unless all workers are waiting on sync */
+    /* All workers must be waiting when we receive the sync signal */
     ecs_assert(world->workers_waiting == (stage_count - 1), 
         ECS_INTERNAL_ERROR, NULL);
 
@@ -164,7 +161,7 @@ void flecs_wait_for_sync(
     ecs_dbg_3("#[bold]pipeline: workers synced");
 }
 
-/* Signal workers that they can start/resume work */
+/* Signal worker threads to start or resume work. */
 void flecs_signal_workers(
     ecs_world_t *world)
 {
@@ -179,14 +176,15 @@ void flecs_signal_workers(
     ecs_os_mutex_unlock(world->sync_mutex);
 }
 
+/* Signal workers to quit and join all worker threads. */
 void flecs_join_worker_threads(
     ecs_world_t *world)
 {
     flecs_poly_assert(world, ecs_world_t);
     bool threads_active = false;
 
-    /* Test if threads are created. Cannot use workers_running, since this is
-     * a potential race if threads haven't spun up yet. */
+    /* Check thread handles directly; workers_running counter is unreliable
+     * before all workers have completed startup. */
     int i, count = world->stage_count;
     for (i = 1; i < count; i ++) {
         ecs_stage_t *stage = world->stages[i];
@@ -196,19 +194,17 @@ void flecs_join_worker_threads(
         }
     };
 
-    /* If no threads are active, just return */
     if (!threads_active) {
         return;
     }
 
-    /* Make sure all threads are running, to ensure they catch the signal */
+    /* Ensure all workers are running before signaling quit */
     flecs_wait_for_workers(world);
 
-    /* Signal threads should quit */
     world->flags |= EcsWorldQuitWorkers;
     flecs_signal_workers(world);
 
-    /* Join all threads with main */
+    /* Join all worker threads */
     for (i = 1; i < count; i ++) {
         ecs_stage_t *stage = world->stages[i];
         if (ecs_using_task_threads(world)) {
@@ -223,7 +219,7 @@ void flecs_join_worker_threads(
     ecs_assert(world->workers_running == 0, ECS_INTERNAL_ERROR, NULL);
 }
 
-/* -- Private functions -- */
+/* Entry point for pipeline progress: waits for workers, runs on stage 0. */
 void flecs_workers_progress(
     ecs_world_t *world,
     ecs_pipeline_state_t *pq,
@@ -233,16 +229,16 @@ void flecs_workers_progress(
     ecs_assert(!ecs_is_deferred(world), ECS_INVALID_OPERATION, 
         "cannot call progress while world is deferred");
 
-    /* Make sure workers are running and ready */
     flecs_wait_for_workers(world);
 
-    /* Run pipeline on main thread */
+    /* Run pipeline on main thread (stage 0) */
     ecs_world_t *stage = ecs_get_stage(world, 0);
     ecs_entity_t old_scope = ecs_set_scope((ecs_world_t*)stage, 0);
     flecs_run_pipeline(stage, pq, delta_time);
     ecs_set_scope((ecs_world_t*)stage, old_scope);
 }
 
+/* Configure the number of worker threads or tasks. */
 static
 void flecs_set_threads_internal(
     ecs_world_t *world,
@@ -258,7 +254,6 @@ void flecs_set_threads_internal(
     bool worker_method_changed = (use_task_api != world->workers_use_task_api);
 
     if ((stage_count != threads) || worker_method_changed) {
-        /* Stop existing threads */
         if (stage_count > 1) {
             flecs_join_worker_threads(world);
             ecs_set_stage_count(world, 1);
@@ -276,7 +271,6 @@ void flecs_set_threads_internal(
 
         world->workers_use_task_api = use_task_api;
 
-        /* Start threads if number of threads > 1 */
         if (threads > 1) {
             world->worker_cond = ecs_os_cond_new();
             world->sync_cond = ecs_os_cond_new();
@@ -285,8 +279,6 @@ void flecs_set_threads_internal(
         }
     }
 }
-
-/* -- Public functions -- */
 
 void ecs_set_threads(
     ecs_world_t *world,

@@ -5,12 +5,11 @@
 
 #include "../private_api.h"
 
-/* Utilities for C++ API */
+/* C++ type name normalization utilities */
 
 #ifdef FLECS_CPP
 
-/* Convert compiler-specific typenames extracted from __PRETTY_FUNCTION__ to
- * a uniform identifier */
+/* Prefix strings stripped from compiler-generated type names */
 
 #define ECS_CONST_PREFIX "const "
 #define ECS_STRUCT_PREFIX "struct "
@@ -22,6 +21,7 @@
 #define ECS_CLASS_LEN (-1 + (ecs_size_t)sizeof(ECS_CLASS_PREFIX))
 #define ECS_ENUM_LEN (-1 + (ecs_size_t)sizeof(ECS_ENUM_PREFIX))
 
+/* Strip a prefix string from the beginning of a type name. */
 static
 ecs_size_t ecs_cpp_strip_prefix(
     char *typeName,
@@ -37,9 +37,10 @@ ecs_size_t ecs_cpp_strip_prefix(
     return len;
 }
 
-static 
+/* Remove compiler-specific qualifiers and decorations from a type name. */
+static
 void ecs_cpp_trim_type_name(
-    char *typeName) 
+    char *typeName)
 {
     ecs_size_t len = ecs_os_strlen(typeName);
 
@@ -81,7 +82,7 @@ void ecs_cpp_trim_type_name(
 }
 
 char* ecs_cpp_get_type_name(
-    char *type_name, 
+    char *type_name,
     const char *func_name,
     size_t len,
     size_t front_len)
@@ -124,6 +125,7 @@ char* ecs_cpp_get_symbol_name(
     return symbol_name;
 }
 
+/* Find the last occurrence of a character within the relevant portion of a function name. */
 static
 const char* flecs_cpp_func_rchr(
     const char *func_name,
@@ -138,6 +140,7 @@ const char* flecs_cpp_func_rchr(
     return r;
 }
 
+/* Return the pointer that points further into the string. */
 static
 const char* flecs_cpp_func_max(
     const char *a,
@@ -172,12 +175,9 @@ char* ecs_cpp_get_constant_name(
     return constant_name;
 }
 
-// Names returned from the name_helper class do not start with ::
-// but are relative to the root. If the namespace of the type
-// overlaps with the namespace of the current module, strip it from
-// the implicit identifier.
-// This allows for registration of component types that are not in the 
-// module namespace to still be registered under the module scope.
+/* Strip the current module namespace prefix from a type name.
+ * If the type's namespace overlaps with the current module, strip the
+ * module prefix so out-of-module types register under the module scope. */
 const char* ecs_cpp_trim_module(
     ecs_world_t *world,
     const char *type_name)
@@ -191,7 +191,7 @@ const char* ecs_cpp_trim_module(
     if (path) {
         ecs_size_t len = ecs_os_strlen(path);
         if (!ecs_os_strncmp(path, type_name, len) && type_name[len] == ':') {
-            // Type is a child of current parent, trim name of parent
+            /* Type is a child of current parent, trim name of parent */
             type_name += len;
             ecs_assert(type_name[0], ECS_INVALID_PARAMETER, 
                 "invalid C++ type name");
@@ -201,7 +201,7 @@ const char* ecs_cpp_trim_module(
                 "invalid C++ type name");
             type_name += 2;
         } else {
-            // Type is not a child of current parent, trim entire path
+            /* Type is not a child of current parent, trim entire path */
             char *ptr = strrchr(type_name, ':');
             if (ptr) {
                 type_name = ptr + 1;
@@ -251,12 +251,8 @@ ecs_entity_t ecs_cpp_component_register(
         if (!user_name) {
             user_name = desc->cpp_name;
         
-            /* Keep track of whether name was explicitly set. If not, and 
-             * the component was already registered, just use the registered 
-             * name. The registered name may differ from the typename as the 
-             * registered name includes the flecs scope. This can in theory 
-             * be different from the C++ namespace though it is good 
-             * practice to keep them the same */
+            /* No explicit name: reuse the registered name if already
+             * registered (it may include the flecs scope). */
             implicit_name = true;
         }
 
@@ -286,15 +282,8 @@ ecs_entity_t ecs_cpp_component_register(
         }
     }
 
-    /* At this point it is possible that the type was already registered
-     * with the world, just not for this binary. The registration code
-     * uses the type symbol to check if it was already registered. Note
-     * that the symbol is separate from the typename, as an application
-     * can override a component name when registering a type. */
-
-    /* If the component is not yet registered, ensure no other component
-     * or entity has been registered with this name. Ensure component is 
-     * looked up from root. */
+    /* Type may already be registered in the world from another binary.
+     * Look up by symbol (separate from typename) from root scope. */
     ecs_entity_t prev_scope = ecs_set_scope(world, 0);
     if (desc->id) {
         c = desc->id;
@@ -311,25 +300,9 @@ ecs_entity_t ecs_cpp_component_register(
         if (component != NULL) {
             const char *sym = ecs_get_symbol(world, c);
             if (sym && ecs_os_strcmp(sym, cpp_symbol)) {
-                /* Application is trying to register a type with an entity
-                 * that was already associated with another type. In most 
-                 * cases this is an error, with the exception of a scenario
-                 * where the application is wrapping a C type with a C++ 
-                 * type.
-                 * 
-                 * In this case the C++ type typically inherits from the C 
-                 * type, and adds convenience methods to the derived class 
-                 * without changing anything that would change the size or 
-                 * layout.
-                 * 
-                 * To meet this condition, the new type must have the same 
-                 * size and alignment as the existing type, and the name of 
-                 * the type type must be equal to the registered name.
-                 * 
-                 * The latter ensures that it was the intent of the 
-                 * application to alias the type, vs. accidentally 
-                 * registering an unrelated type with the same 
-                 * size/alignment. */
+                /* Symbol mismatch: allow only if the C++ type is a
+                 * same-layout wrapper of the C type (name must match
+                 * and size/alignment must be identical). */
                 char *type_path = ecs_get_path(world, c);
                 if (ecs_os_strcmp(type_path, cpp_symbol)) {
                     ecs_err(
@@ -344,7 +317,7 @@ ecs_entity_t ecs_cpp_component_register(
                 {
                     ecs_err(
                         "component with name '%s' is already registered with"\
-                        " mismatching size/alignment)", name);
+                        " mismatching size/alignment", name);
                     ecs_abort(ECS_INVALID_COMPONENT_SIZE, NULL);
                 }
 
@@ -538,7 +511,7 @@ ecs_entity_t ecs_cpp_enum_constant_register(
 
 #ifdef FLECS_META
 ecs_member_t* ecs_cpp_last_member(
-    const ecs_world_t *world, 
+    const ecs_world_t *world,
     ecs_entity_t type)
 {
     const EcsStruct *st = ecs_get(world, type, EcsStruct);

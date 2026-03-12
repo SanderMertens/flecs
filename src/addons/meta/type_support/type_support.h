@@ -1,5 +1,5 @@
 /**
- * @file addons/meta/meta.h
+ * @file addons/meta/type_support/type_support.h
  * @brief Type support for meta addon.
  */
 

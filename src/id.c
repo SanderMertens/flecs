@@ -1,6 +1,6 @@
 /**
  * @file id.c
- * @brief Id utilities.
+ * @brief Id matching, validation, stringification, and flag utilities.
  */
 
 #include "private_api.h"
@@ -53,8 +53,7 @@ bool ecs_id_match(
                 return true;
             }
         } else if (pattern_first == EcsFlag) {
-            /* Used for internals, helps to keep track of which ids are used in
-             * pairs that have additional flags (like OVERRIDE and TOGGLE) */
+            /* Matches ids with extra flags (OVERRIDE, TOGGLE) by their components */
             if (ECS_HAS_ID_FLAG(id, PAIR) && !ECS_IS_PAIR(id)) {
                 if (ECS_PAIR_FIRST(id) == pattern_second) {
                     return true;
@@ -129,6 +128,7 @@ bool ecs_id_is_any(
     return (first == EcsAny) || (second == EcsAny);
 }
 
+/* Return a human-readable reason why an id is invalid, or NULL if valid. */
 const char* flecs_id_invalid_reason(
     const ecs_world_t *world,
     ecs_id_t id)
@@ -189,10 +189,9 @@ ecs_id_t ecs_id_from_str(
 #ifdef FLECS_QUERY_DSL
     ecs_id_t result;
 
-    /* Temporarily disable parser logging */
+    /* Suppress parser error logging during parse attempt */
     int prev_level = ecs_log_set_level(-3);
     if (!flecs_id_parse(world, NULL, expr, &result)) {
-        /* Invalid expression */
         ecs_log_set_level(prev_level);
         return 0;
     }
@@ -300,8 +299,7 @@ bool ecs_id_is_tag(
     ecs_id_t id)
 {
     if (ecs_id_is_wildcard(id)) {
-        /* If id is a wildcard, we can't tell if it's a tag or not, except
-         * when the relationship part of a pair has the PairIsTag property */
+        /* Only known to be a tag if the relationship has PairIsTag. */
         if (ECS_HAS_ID_FLAG(id, PAIR)) {
             ecs_entity_t first = ECS_PAIR_FIRST(id);
             if (first != EcsWildcard && first != EcsAny) {
@@ -311,17 +309,13 @@ bool ecs_id_is_tag(
                         return true;
                     }
                 } else {
-                    /* During bootstrap it's possible that not all ids are valid
-                     * yet. Using ecs_get_typeid will ensure correct values are
-                     * returned for only those components initialized during
-                     * bootstrap, while still asserting if another invalid id
-                     * is provided. */
+                    /* During bootstrap, fall back to ecs_get_typeid. */
                     if (ecs_get_typeid(world, id) == 0) {
                         return true;
                     }
                 }
             } else {
-                /* If relationship is wildcard id is not guaranteed to be a tag */
+                /* Wildcard relationship: cannot determine tag status */
             }
         }
     } else {

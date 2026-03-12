@@ -6,13 +6,13 @@
 #include "private_api.h"
 #include <inttypes.h>
 
-/* Id flags */
+/* -- Id Flags -- */
 const ecs_id_t ECS_PAIR =                                          (1ull << 63);
 const ecs_id_t ECS_AUTO_OVERRIDE =                                 (1ull << 62);
 const ecs_id_t ECS_TOGGLE =                                        (1ull << 61);
 const ecs_id_t ECS_VALUE_PAIR =                                    ((1ull << 60) | (1ull << 63));
 
-/** Builtin component ids */
+/* -- Builtin Component Ids -- */
 const ecs_entity_t ecs_id(EcsComponent) =                                   1;
 const ecs_entity_t ecs_id(EcsIdentifier) =                                  2;
 const ecs_entity_t ecs_id(EcsPoly) =                                        3;
@@ -20,12 +20,12 @@ const ecs_entity_t ecs_id(EcsParent) =                                      4;
 const ecs_entity_t ecs_id(EcsTreeSpawner) =                                 5;
 const ecs_entity_t EcsParentDepth =                                         6;
 
-/* Poly target components */
+/* -- Poly Target Components -- */
 const ecs_entity_t EcsQuery =                       FLECS_HI_COMPONENT_ID + 0;
 const ecs_entity_t EcsObserver =                    FLECS_HI_COMPONENT_ID + 1;
 const ecs_entity_t EcsSystem =                      FLECS_HI_COMPONENT_ID + 2;
 
-/* Core scopes & entities */
+/* -- Core Scopes and Entities -- */
 const ecs_entity_t EcsWorld =                       FLECS_HI_COMPONENT_ID + 3;
 const ecs_entity_t EcsFlecs =                       FLECS_HI_COMPONENT_ID + 4;
 const ecs_entity_t EcsFlecsCore =                   FLECS_HI_COMPONENT_ID + 5;
@@ -37,13 +37,13 @@ const ecs_entity_t EcsNotQueryable =                FLECS_HI_COMPONENT_ID + 11;
 const ecs_entity_t EcsSlotOf =                      FLECS_HI_COMPONENT_ID + 12;
 const ecs_entity_t EcsFlag =                        FLECS_HI_COMPONENT_ID + 13;
 
-/* Marker entities for query encoding */
+/* -- Marker Entities for Query Encoding -- */
 const ecs_entity_t EcsWildcard =                    FLECS_HI_COMPONENT_ID + 14;
 const ecs_entity_t EcsAny =                         FLECS_HI_COMPONENT_ID + 15;
 const ecs_entity_t EcsThis =                        FLECS_HI_COMPONENT_ID + 16;
 const ecs_entity_t EcsVariable =                    FLECS_HI_COMPONENT_ID + 17;
 
-/* Traits */
+/* -- Traits -- */
 const ecs_entity_t EcsTransitive =                  FLECS_HI_COMPONENT_ID + 18;
 const ecs_entity_t EcsReflexive =                   FLECS_HI_COMPONENT_ID + 19;
 const ecs_entity_t EcsSymmetric =                   FLECS_HI_COMPONENT_ID + 20;
@@ -66,17 +66,17 @@ const ecs_entity_t EcsTrait =                       FLECS_HI_COMPONENT_ID + 35;
 const ecs_entity_t EcsRelationship =                FLECS_HI_COMPONENT_ID + 36;
 const ecs_entity_t EcsTarget =                      FLECS_HI_COMPONENT_ID + 37;
 
-/* Builtin relationships */
+/* -- Builtin Relationships -- */
 const ecs_entity_t EcsChildOf =                     FLECS_HI_COMPONENT_ID + 38;
 const ecs_entity_t EcsIsA =                         FLECS_HI_COMPONENT_ID + 39;
 const ecs_entity_t EcsDependsOn =                   FLECS_HI_COMPONENT_ID + 40;
 
-/* Identifier tags */
+/* -- Identifier Tags -- */
 const ecs_entity_t EcsName =                        FLECS_HI_COMPONENT_ID + 41;
 const ecs_entity_t EcsSymbol =                      FLECS_HI_COMPONENT_ID + 42;
 const ecs_entity_t EcsAlias =                       FLECS_HI_COMPONENT_ID + 43;
 
-/* Events */
+/* -- Events -- */
 const ecs_entity_t EcsOnAdd =                       FLECS_HI_COMPONENT_ID + 44;
 const ecs_entity_t EcsOnRemove =                    FLECS_HI_COMPONENT_ID + 45;
 const ecs_entity_t EcsOnSet =                       FLECS_HI_COMPONENT_ID + 46;
@@ -85,32 +85,32 @@ const ecs_entity_t EcsOnDeleteTarget =              FLECS_HI_COMPONENT_ID + 48;
 const ecs_entity_t EcsOnTableCreate =               FLECS_HI_COMPONENT_ID + 49;
 const ecs_entity_t EcsOnTableDelete =               FLECS_HI_COMPONENT_ID + 50;
 
-/* Timers */
+/* -- Timers -- */
 const ecs_entity_t ecs_id(EcsTickSource) =          FLECS_HI_COMPONENT_ID + 51;
 const ecs_entity_t ecs_id(EcsTimer) =               FLECS_HI_COMPONENT_ID + 52;
 const ecs_entity_t ecs_id(EcsRateFilter) =          FLECS_HI_COMPONENT_ID + 53;
 
-/* Actions */
+/* -- Actions -- */
 const ecs_entity_t EcsRemove =                      FLECS_HI_COMPONENT_ID + 54;
 const ecs_entity_t EcsDelete =                      FLECS_HI_COMPONENT_ID + 55;
 const ecs_entity_t EcsPanic =                       FLECS_HI_COMPONENT_ID + 56;
 
-/* Storage */
+/* -- Storage -- */
 const ecs_entity_t EcsSparse =                      FLECS_HI_COMPONENT_ID + 57;
 const ecs_entity_t EcsDontFragment =                FLECS_HI_COMPONENT_ID + 58;
 
-/* Misc */
+/* -- Misc -- */
 const ecs_entity_t ecs_id(EcsDefaultChildComponent) = FLECS_HI_COMPONENT_ID + 59;
 const ecs_entity_t EcsOrderedChildren =               FLECS_HI_COMPONENT_ID + 60;
 
-/* Builtin predicate ids (used by query engine) */
+/* -- Builtin Predicate Ids (used by query engine) -- */
 const ecs_entity_t EcsPredEq =                      FLECS_HI_COMPONENT_ID + 61;
 const ecs_entity_t EcsPredMatch =                   FLECS_HI_COMPONENT_ID + 62;
 const ecs_entity_t EcsPredLookup =                  FLECS_HI_COMPONENT_ID + 63;
 const ecs_entity_t EcsScopeOpen =                   FLECS_HI_COMPONENT_ID + 64;
 const ecs_entity_t EcsScopeClose =                  FLECS_HI_COMPONENT_ID + 65;
 
-/* Systems */
+/* -- Systems -- */
 const ecs_entity_t EcsMonitor =                     FLECS_HI_COMPONENT_ID + 66;
 const ecs_entity_t EcsEmpty =                       FLECS_HI_COMPONENT_ID + 67;
 const ecs_entity_t ecs_id(EcsPipeline) =            FLECS_HI_COMPONENT_ID + 68;
@@ -127,7 +127,7 @@ const ecs_entity_t EcsOnStore =                     FLECS_HI_COMPONENT_ID + 78;
 const ecs_entity_t EcsPostFrame =                   FLECS_HI_COMPONENT_ID + 79;
 const ecs_entity_t EcsPhase =                       FLECS_HI_COMPONENT_ID + 80;
 
-/* Meta primitive components (don't use low ids to save id space) */
+/* -- Meta Primitive Components (don't use low ids to save id space) -- */
 #ifdef FLECS_META
 const ecs_entity_t ecs_id(ecs_bool_t) =             FLECS_HI_COMPONENT_ID + 81;
 const ecs_entity_t ecs_id(ecs_char_t) =             FLECS_HI_COMPONENT_ID + 82;
@@ -148,7 +148,7 @@ const ecs_entity_t ecs_id(ecs_string_t) =           FLECS_HI_COMPONENT_ID + 96;
 const ecs_entity_t ecs_id(ecs_entity_t) =           FLECS_HI_COMPONENT_ID + 97;
 const ecs_entity_t ecs_id(ecs_id_t) =               FLECS_HI_COMPONENT_ID + 98;
 
-/** Meta module component ids */
+/* -- Meta Module Component Ids -- */
 const ecs_entity_t ecs_id(EcsPrimitive) =           FLECS_HI_COMPONENT_ID + 99;
 const ecs_entity_t ecs_id(EcsEnum) =                FLECS_HI_COMPONENT_ID + 100;
 const ecs_entity_t ecs_id(EcsBitmask) =             FLECS_HI_COMPONENT_ID + 101;
@@ -169,7 +169,7 @@ const ecs_entity_t EcsQuantity =                    FLECS_HI_COMPONENT_ID + 113;
 
 const ecs_entity_t EcsConstant =                    FLECS_HI_COMPONENT_ID + 114;
 
-/* Doc module components */
+/* -- Doc Module Components -- */
 #ifdef FLECS_DOC
 const ecs_entity_t ecs_id(EcsDocDescription) =      FLECS_HI_COMPONENT_ID + 115;
 const ecs_entity_t EcsDocBrief =                    FLECS_HI_COMPONENT_ID + 116;
@@ -179,7 +179,7 @@ const ecs_entity_t EcsDocColor =                    FLECS_HI_COMPONENT_ID + 119;
 const ecs_entity_t EcsDocUuid =                     FLECS_HI_COMPONENT_ID + 120;
 #endif
 
-/* REST module components */
+/* -- REST Module Components -- */
 #ifdef FLECS_REST
 const ecs_entity_t ecs_id(EcsRest) =                FLECS_HI_COMPONENT_ID + 121;
 #endif
@@ -187,11 +187,10 @@ const ecs_entity_t ecs_id(EcsRest) =                FLECS_HI_COMPONENT_ID + 121;
 /* Max static id:
  * #define EcsFirstUserEntityId (FLECS_HI_COMPONENT_ID + 128) */
 
-/* Default lookup path */
+/* -- Default Lookup Path -- */
 static ecs_entity_t ecs_default_lookup_path[2] = { 0, 0 };
 
-/* Declarations for addons. Located in world.c to avoid issues during linking of
- * static library */
+/* -- Addon Declarations (placed here to avoid static linking issues) -- */
 
 #ifdef FLECS_ALERTS
 ECS_COMPONENT_DECLARE(EcsAlert);
@@ -341,6 +340,7 @@ ecs_entity_t EcsUri;
     ecs_entity_t EcsUriFile;
 #endif
 
+/* Get current thread-specific stage from a readonly world. */
 ecs_stage_t* flecs_stage_from_readonly_world(
     const ecs_world_t *world)
 {
@@ -358,6 +358,7 @@ ecs_stage_t* flecs_stage_from_readonly_world(
     return NULL;
 }
 
+/* Get current stage, resolving world pointer to underlying world if needed. */
 ecs_stage_t* flecs_stage_from_world(
     ecs_world_t **world_ptr)
 {
@@ -376,10 +377,7 @@ ecs_stage_t* flecs_stage_from_world(
     return ECS_CONST_CAST(ecs_stage_t*, world);
 }
 
-/* Evaluate component monitor. If a monitored entity changed it will have set a
- * flag in one of the world's component monitors. Queries can register
- * themselves with component monitors to determine whether they need to rematch
- * with tables. */
+/* Evaluate component monitor and rematch dirty queries. */
 static
 void flecs_eval_component_monitor(
     ecs_world_t *world)
@@ -417,6 +415,7 @@ void flecs_eval_component_monitor(
     ecs_os_perf_trace_pop("flecs.component_monitor.eval");
 }
 
+/* Mark a component monitor as dirty for the specified id. */
 static
 void flecs_monitor_mark_dirty(
     ecs_world_t *world,
@@ -424,8 +423,7 @@ void flecs_monitor_mark_dirty(
 {
     ecs_map_t *monitors = &world->monitors.monitors;
 
-    /* Only flag if there are actually monitors registered, so that we
-     * don't waste cycles evaluating monitors if there's no interest */
+    /* Skip if no monitors are registered */
     if (ecs_map_is_init(monitors)) {
         ecs_monitor_t *m = ecs_map_get_deref(monitors, ecs_monitor_t, id);
         if (m) {
@@ -438,6 +436,7 @@ void flecs_monitor_mark_dirty(
     }
 }
 
+/* Register a query with a component monitor for the given id. */
 void flecs_monitor_register(
     ecs_world_t *world,
     ecs_entity_t id,
@@ -457,6 +456,7 @@ void flecs_monitor_register(
     *q = query;
 }
 
+/* Unregister a query from a component monitor for the given id. */
 void flecs_monitor_unregister(
     ecs_world_t *world,
     ecs_entity_t id,
@@ -497,12 +497,7 @@ void flecs_monitor_unregister(
     }
 }
 
-/* Updating component monitors is a relatively expensive operation that only
- * happens for entities that are monitored. The approach balances the amount of
- * processing between the operation on the entity vs the amount of work that
- * needs to be done to rematch queries, as a simple brute force approach does
- * not scale when there are many tables / queries. Therefore we need to do a bit
- * of bookkeeping that is more intelligent than simply flipping a flag */
+/* Mark component monitors dirty for each id in the given type array. */
 static
 void flecs_update_component_monitor_w_array(
     ecs_world_t *world,
@@ -525,6 +520,7 @@ void flecs_update_component_monitor_w_array(
     }
 }
 
+/* Update component monitors for added and removed component arrays. */
 void flecs_update_component_monitors(
     ecs_world_t *world,
     ecs_type_t *added,
@@ -534,6 +530,7 @@ void flecs_update_component_monitors(
     flecs_update_component_monitor_w_array(world, removed);
 }
 
+/* Initialize the world data store including entity index and table storage. */
 static
 void flecs_init_store(
     ecs_world_t *world)
@@ -545,17 +542,15 @@ void flecs_init_store(
     ecs_vec_init_t(a, &world->store.marked_ids, ecs_marked_id_t, 0);
     ecs_vec_init_t(a, &world->store.deleted_components, ecs_entity_t, 0);
 
-    /* Initialize entity index */
     flecs_entities_init(world);
 
-    /* Initialize table sparse set */
-    flecs_sparse_init_t(&world->store.tables, 
+    flecs_sparse_init_t(&world->store.tables,
         a, &world->allocators.sparse_chunk, ecs_table_t);
 
-    /* Initialize table map */
     flecs_table_hashmap_init(world, &world->store.table_map);
 }
 
+/* Finalize and free all tables in the world store. */
 static
 void flecs_clean_tables(
     ecs_world_t *world)
@@ -567,8 +562,7 @@ void flecs_clean_tables(
         flecs_table_fini(world, t);
     }
 
-    /* Free table types separately so that if application destructors rely on
-     * a type it's still valid. */
+    /* Free table types after fini so destructors can still access type data */
     for (i = 1; i < count; i ++) {
         ecs_table_t *t = flecs_sparse_get_dense_t(&world->store.tables,
             ecs_table_t, i);
@@ -581,6 +575,7 @@ void flecs_clean_tables(
     }
 }
 
+/* Delete root-level entities from tables, optionally prioritizing pair targets. */
 static
 void flecs_fini_root_tables(
     ecs_world_t *world,
@@ -604,15 +599,14 @@ void flecs_fini_root_tables(
             ecs_table_t *table = tr->hdr.table;
 
             if (table->flags & (EcsTableHasBuiltins|EcsTableHasModule)) {
-                continue; /* Query out modules */
+                continue; /* Skip builtin/module tables */
             }
 
             int32_t i, count = ecs_table_count(table);
             const ecs_entity_t *entities = ecs_table_entities(table);
 
             if (fini_targets) {
-                /* Only delete entities that are used as pair target. Iterate
-                 * backwards to minimize moving entities around in table. */
+                /* Delete pair targets first (iterate backwards to reduce moves) */
                 for (i = count - 1; i >= 0; i --) {
                     ecs_record_t *r = flecs_entities_get(world, entities[i]);
                     ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -628,9 +622,7 @@ void flecs_fini_root_tables(
                     }
                 }
             } else {
-                /* Delete remaining entities that are not in use (added to another
-                 * entity). This limits table moves during cleanup and delays
-                 * cleanup of tags. */
+                /* Delete entities not referenced by other entities */
                 for (i = count - 1; i >= 0; i --) {
                     ecs_record_t *r = flecs_entities_get(world, entities[i]);
                     ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -656,16 +648,14 @@ void flecs_fini_root_tables(
     }
 }
 
+/* Delete all root entities (except builtins and modules) during world cleanup. */
 static
 void flecs_fini_roots(
     ecs_world_t *world)
 {
     ecs_component_record_t *cr = flecs_components_get(world, ecs_pair(EcsChildOf, 0));
 
-    /* Delete root entities that are not modules. This prioritizes deleting
-     * regular entities first, which reduces the chance of components getting
-     * destructed in random order because it got deleted before entities,
-     * thereby bypassing the OnDeleteTarget policy. */
+    /* Delete regular entities first to respect OnDeleteTarget cleanup policies */
     flecs_defer_begin(world, world->stages[0]);
     flecs_fini_root_tables(world, cr, true);
     flecs_defer_end(world, world->stages[0]);
@@ -675,6 +665,7 @@ void flecs_fini_roots(
     flecs_defer_end(world, world->stages[0]);
 }
 
+/* Finalize and release the world data store. */
 static
 void flecs_fini_store(ecs_world_t *world) {
     flecs_clean_tables(world);
@@ -694,7 +685,8 @@ void flecs_fini_store(ecs_world_t *world) {
     ecs_vec_fini_t(a, &world->store.deleted_components, ecs_entity_t);
 }
 
-static 
+/* Initialize all world-level block and dynamic allocators. */
+static
 void flecs_world_allocators_init(
     ecs_world_t *world)
 {
@@ -713,6 +705,7 @@ void flecs_world_allocators_init(
         &world->allocators.tree_spawner, ecs_entity_t, 0);
 }
 
+/* Finalize all world-level block and dynamic allocators. */
 static
 void flecs_world_allocators_fini(
     ecs_world_t *world)
@@ -925,6 +918,7 @@ static const ecs_build_info_t flecs_build_info = {
     .version_patch = FLECS_VERSION_PATCH
 };
 
+/* Log build information including version, addons, and compiler details. */
 static
 void flecs_log_build_info(void) {
     const ecs_build_info_t *bi = ecs_get_build_info();
@@ -954,7 +948,7 @@ void flecs_log_build_info(void) {
     ecs_trace("compiled with %s", bi->compiler);
 }
 
-/* -- Public functions -- */
+/* -- Public API -- */
 
 const ecs_build_info_t* ecs_get_build_info(void) {
     return &flecs_build_info;
@@ -967,6 +961,7 @@ const ecs_world_info_t* ecs_get_world_info(
     return &world->info;
 }
 
+/* Create a minimal world without importing addon modules. */
 ecs_world_t *ecs_mini(void) {
 #ifdef FLECS_OS_API_IMPL
     ecs_set_os_api_impl();
@@ -1053,6 +1048,7 @@ ecs_world_t *ecs_mini(void) {
     return world;
 }
 
+/* Create a new world and import all enabled addon modules. */
 ecs_world_t *ecs_init(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -1139,6 +1135,7 @@ error:
     return true;
 }
 
+/* Notify tables with the specified component of an event. */
 void flecs_notify_tables(
     ecs_world_t *world,
     ecs_id_t id,
@@ -1146,17 +1143,16 @@ void flecs_notify_tables(
 {
     flecs_poly_assert(world, ecs_world_t);
 
-    /* If no id is specified, broadcast to all tables */
     if (!id || id == EcsAny) {
+        /* Broadcast to all tables */
         ecs_sparse_t *tables = &world->store.tables;
         int32_t i, count = flecs_sparse_count(tables);
         for (i = 0; i < count; i ++) {
             ecs_table_t *table = flecs_sparse_get_dense_t(tables, ecs_table_t, i);
             flecs_table_notify(world, table, id, event);
         }
-
-    /* If id is specified, only broadcast to tables with id */
     } else {
+        /* Notify only tables containing this id */
         ecs_component_record_t *cr = flecs_components_get(world, id);
         if (!cr) {
             return;
@@ -1212,7 +1208,7 @@ error:
     return;
 }
 
-/* Unset data in tables */
+/* Remove actions from all tables during world cleanup. */
 static
 void flecs_fini_unset_tables(
     ecs_world_t *world)
@@ -1226,7 +1222,7 @@ void flecs_fini_unset_tables(
     }
 }
 
-/* Invoke fini actions */
+/* Invoke all registered fini action callbacks. */
 static
 void flecs_fini_actions(
     ecs_world_t *world)
@@ -1240,6 +1236,7 @@ void flecs_fini_actions(
     ecs_vec_fini_t(NULL, &world->fini_actions, ecs_action_elem_t);
 }
 
+/* Get the OneOf target entity for an entity, if it exists. */
 ecs_entity_t flecs_get_oneof(
     const ecs_world_t *world,
     ecs_entity_t e)
@@ -1255,7 +1252,6 @@ ecs_entity_t flecs_get_oneof(
     }
 }
 
-/* The destroyer of worlds */
 int ecs_fini(
     ecs_world_t *world)
 {
@@ -1272,8 +1268,7 @@ int ecs_fini(
 
     world->flags |= EcsWorldQuit;
 
-    /* Delete root entities first using regular APIs. This ensures that cleanup
-     * policies get a chance to execute. */
+    /* Delete root entities via regular APIs so cleanup policies execute */
     ecs_dbg_1("#[bold]cleanup root entities");
     ecs_log_push_1();
     flecs_fini_roots(world);
@@ -1281,8 +1276,7 @@ int ecs_fini(
 
     world->flags |= EcsWorldFini;
 
-    /* Run fini actions (simple callbacks ran when world is deleted) before
-     * destroying the storage */
+    /* Run fini actions before destroying storage */
     ecs_dbg_1("#[bold]run fini actions");
     ecs_log_push_1();
     flecs_fini_actions(world);
@@ -1291,27 +1285,24 @@ int ecs_fini(
     ecs_dbg_1("#[bold]cleanup remaining entities");
     ecs_log_push_1();
 
-    /* Operations invoked during OnRemove/destructors are deferred and
-     * will be discarded after world cleanup */
+    /* Defer operations during OnRemove/destructors (discarded after cleanup) */
     flecs_defer_begin(world, world->stages[0]);
 
-    /* Run OnRemove actions for components while the store is still
-     * unmodified by cleanup. */
+    /* Run OnRemove actions while store is still intact */
     flecs_fini_unset_tables(world);
 
-    /* This will destroy all entities and components. */
+    /* Destroy all entities and components */
     flecs_fini_store(world);
 
-    /* Purge deferred operations from the queue. This discards operations but
-     * makes sure that any resources in the queue are freed */
+    /* Purge deferred operations (discards ops but frees resources) */
     flecs_defer_purge(world, world->stages[0]);
     ecs_log_pop_1();
 
-    /* All queries are cleaned up, so monitors should've been cleaned up too */
+    /* All queries cleaned up, so monitors should be empty */
     ecs_assert(!ecs_map_is_init(&world->monitors.monitors),
         ECS_INTERNAL_ERROR, NULL);
 
-    /* Cleanup world ctx and binding_ctx */
+    /* Free world contexts */
     if (world->ctx_free) {
         world->ctx_free(world->ctx);
     }
@@ -1366,6 +1357,7 @@ void ecs_dim(
     flecs_entities_set_size(world, entity_count + FLECS_HI_COMPONENT_ID);
 }
 
+/* Check component monitors and trigger query rematching if dirty. */
 void flecs_eval_component_monitors(
     ecs_world_t *world)
 {
@@ -1502,6 +1494,7 @@ error:
     return 0;
 }
 
+/* Increment the table version for invalidating cached references. */
 void flecs_increment_table_version(
     ecs_world_t *world,
     ecs_table_t *table)
@@ -1513,6 +1506,7 @@ void flecs_increment_table_version(
     table->version ++;
 }
 
+/* Get the table version for the given table id. */
 uint32_t flecs_get_table_version_fast(
     const ecs_world_t *world,
     const uint64_t table_id)
@@ -1523,6 +1517,7 @@ uint32_t flecs_get_table_version_fast(
 
 static int32_t flecs_component_ids_last_index = 0;
 
+/* Atomically allocate a new component id index slot. */
 int32_t flecs_component_ids_index_get(void) {
     if (ecs_os_api.ainc_) {
         return ecs_os_ainc(&flecs_component_ids_last_index);
@@ -1531,8 +1526,9 @@ int32_t flecs_component_ids_index_get(void) {
     }
 }
 
+/* Get the component entity for the given component id index. */
 ecs_entity_t flecs_component_ids_get(
-    const ecs_world_t *stage_world, 
+    const ecs_world_t *stage_world,
     int32_t index)
 {
     ecs_world_t *world =
@@ -1547,8 +1543,9 @@ ecs_entity_t flecs_component_ids_get(
         &world->component_ids, ecs_entity_t, index)[0];
 }
 
+/* Get the component entity for the given index, only if it is alive. */
 ecs_entity_t flecs_component_ids_get_alive(
-    const ecs_world_t *stage_world, 
+    const ecs_world_t *stage_world,
     int32_t index)
 {
     ecs_world_t *world =
@@ -1568,8 +1565,9 @@ ecs_entity_t flecs_component_ids_get_alive(
     return result;
 }
 
+/* Set the component entity for the given component id index. */
 void flecs_component_ids_set(
-    ecs_world_t *stage_world, 
+    ecs_world_t *stage_world,
     int32_t index,
     ecs_entity_t component)
 {
@@ -1584,6 +1582,7 @@ void flecs_component_ids_set(
 
 #ifdef FLECS_DEBUG
 
+/* Assert that the current thread has exclusive write access to the world. */
 void flecs_check_exclusive_world_access_write(
     const ecs_world_t *world)
 {
@@ -1619,6 +1618,7 @@ error:
     return;
 }
 
+/* Assert that the current thread has exclusive read access to the world. */
 void flecs_check_exclusive_world_access_read(
     const ecs_world_t *world)
 {
@@ -1653,14 +1653,14 @@ void flecs_check_exclusive_world_access_read(
 
 #endif
 
+/* Tag queries with no matching tables as empty. */
 static
 void flecs_process_empty_queries(
     ecs_world_t *world)
 {
     flecs_poly_assert(world, ecs_world_t); 
 
-    /* Make sure that we defer adding the inactive tags until after iterating
-     * the query */
+    /* Defer EcsEmpty additions until after query iteration */
     flecs_defer_begin(world, world->stages[0]);
 
     FLECS_EACH_QUERY(query, {
@@ -1776,6 +1776,7 @@ ecs_flags32_t ecs_world_get_flags(
     }
 }
 
+/* Check whether a component record has any active entities or tables. */
 static
 bool flecs_component_record_in_use(
     const ecs_component_record_t *cr)
@@ -1792,10 +1793,8 @@ bool flecs_component_record_in_use(
 void ecs_shrink(
     ecs_world_t *world)
 {
-    /* This can invalidate ecs_record_t pointers for entities that are no longer
-     * alive. If you're sure an application doesn't store any ecs_record_t ptrs
-     * or ecs_ref_t's for not-alive entities, you can uncomment this line. */
-    // flecs_entity_index_shrink(&world->store.entity_index);
+    /* Uncommenting this could invalidate stale ecs_record_t/ecs_ref_t pointers */
+    /* flecs_entity_index_shrink(&world->store.entity_index); */
 
     ecs_sparse_t *tables = &world->store.tables;
     int32_t i, count = flecs_sparse_count(tables);
@@ -1859,7 +1858,7 @@ void ecs_exclusive_access_begin(
 {
     flecs_poly_assert(world, ecs_world_t);
 
-    /* If world was locked, one thread can get exclusive access */
+    /* Unlock the world so one thread can gain exclusive access */
     if (world->exclusive_access == UINT64_MAX) {
         world->exclusive_access = 0;
     }
@@ -1882,8 +1881,7 @@ void ecs_exclusive_access_end(
 {
     flecs_poly_assert(world, ecs_world_t);
 
-    /* If the world is locked (not exclusively accessed by a specific thread)
-     * this allows for unlocking the world without first calling access_begin */
+    /* Allow unlocking without a prior access_begin call */
     if (world->exclusive_access == UINT64_MAX) {
         world->exclusive_access = 0;
         return;
@@ -1901,7 +1899,7 @@ void ecs_exclusive_access_end(
     if (!lock_world) {
         world->exclusive_access = 0;
     } else {
-        /* Prevent any mutations on the world */
+        /* Lock world: UINT64_MAX signals no thread has write access */
         world->exclusive_access = UINT64_MAX;
         world->exclusive_thread_name = "locked world";
     }
@@ -1931,6 +1929,7 @@ error:
 }
 
 #ifdef FLECS_DEBUG
+/* Increment the lock reference count for a component id. */
 static
 void flecs_component_lock_inc(
     ecs_map_t *locked_map,
@@ -1948,6 +1947,7 @@ void flecs_component_lock_inc(
     }
 }
 
+/* Decrement the lock reference count for a component id. */
 static
 void flecs_component_lock_dec(
     ecs_world_t *world,
@@ -1979,6 +1979,7 @@ void flecs_component_lock_dec(
     }
 }
 
+/* Lock a component to prevent trait changes and deletion while queried. */
 void flecs_component_lock(
     ecs_world_t *world,
     ecs_id_t component)
@@ -1990,6 +1991,7 @@ void flecs_component_lock(
     }
 }
 
+/* Unlock a component to allow trait changes and deletion. */
 void flecs_component_unlock(
     ecs_world_t *world,
     ecs_id_t component)
@@ -2001,6 +2003,7 @@ void flecs_component_unlock(
     }
 }
 
+/* Check whether a component is locked for trait changes. */
 bool flecs_component_is_trait_locked(
     ecs_world_t *world,
     ecs_id_t component)
@@ -2008,6 +2011,7 @@ bool flecs_component_is_trait_locked(
     return ecs_map_get(&world->locked_components, component) != NULL;
 }
 
+/* Check whether a component or its entity target is locked for deletion. */
 bool flecs_component_is_delete_locked(
     ecs_world_t *world,
     ecs_id_t component)

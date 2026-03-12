@@ -1,10 +1,7 @@
 /**
  * @file search.c
- * @brief Search functions to find (component) ids in table types.
- * 
- * Search functions are used to find the column index of a (component) id in a
- * table. Additionally, search functions implement the logic for finding a
- * component id by following a relationship upwards.
+ * @brief Search for component ids in table types, with optional upward
+ * traversal through relationships (e.g., IsA, ChildOf).
  */
 
 #include "private_api.h"
@@ -24,6 +21,7 @@ int32_t flecs_table_search_relation(
     ecs_id_t *id_out,
     ecs_table_record_t **tr_out);
 
+/* Search for an id in a table via the component record's table cache. */
 static
 int32_t flecs_table_search(
     const ecs_table_t *table,
@@ -44,6 +42,7 @@ int32_t flecs_table_search(
     return -1;
 }
 
+/* Search for an id in a table's type array starting from an offset. */
 static
 int32_t flecs_table_offset_search(
     const ecs_table_t *table,
@@ -68,6 +67,7 @@ int32_t flecs_table_offset_search(
     return -1;
 }
 
+/* Check if an id can be inherited via traversal (respects DontInherit and Exclusive). */
 bool flecs_type_can_inherit_id(
     const ecs_world_t *world,
     const ecs_table_t *table,
@@ -93,6 +93,7 @@ bool flecs_type_can_inherit_id(
     return true;
 }
 
+/* Search for an id by looking in a specific relationship target's table. */
 static
 int32_t flecs_table_search_relation_for_tgt(
     const ecs_world_t *world,
@@ -115,7 +116,7 @@ int32_t flecs_table_search_relation_for_tgt(
 
     if (cr->flags & EcsIdDontFragment) {
         if (flecs_sparse_get(cr->sparse, 0, tgt) != NULL) {
-            result = -2;
+            result = -2; /* Found in sparse storage; no column index */
             goto found;
         }
     } else {
@@ -135,6 +136,8 @@ found:
     return result;
 }
 
+/* Search for an id by iterating all relationship pairs (rel, *) in a table
+ * and recursively searching in each target. */
 static
 int32_t flecs_table_search_relation_pairs(
     const ecs_world_t *world,
@@ -178,6 +181,8 @@ int32_t flecs_table_search_relation_pairs(
     return -1;
 }
 
+/* Search for an id in a table, optionally walking upward through traversable
+ * relationships (IsA, ChildOf, custom) if not found locally. */
 static
 int32_t flecs_table_search_relation(
     const ecs_world_t *world,
@@ -233,7 +238,7 @@ int32_t flecs_table_search_relation(
         cr_r = world->cr_childof_wildcard;
 
         if (table->flags & EcsTableHasParent) {
-            /* Can't resolve parent on */
+            /* Parent component stores parent per-entity, not per-table */
             ecs_assert(record != NULL, ECS_INVALID_PARAMETER,
                 "cannot traverse ChildOf on table with Parent component, "
                 "search on entity instead");
@@ -356,6 +361,7 @@ int32_t ecs_search_offset(
     return flecs_table_offset_search(table, offset, id, id_out);
 }
 
+/* Recursively walk a relationship to compute its depth from a table. */
 static
 int32_t flecs_relation_depth_walk(
     const ecs_world_t *world,
@@ -374,11 +380,8 @@ int32_t flecs_relation_depth_walk(
     for (; i != end; i ++) {
         ecs_entity_t o = ecs_pair_second(world, table->type.array[i]);
         if (!o) {
-            /* Rare, but can happen during cleanup when an intermediate table is
-             * created that contains a pair that is about to be removed but 
-             * hasn't yet, where the target is not alive. 
-             * Would be better if this intermediate table wouldn't get created,
-             * but that requires a refactor of the cleanup logic. */
+            /* Can happen during cleanup: intermediate table has a pair whose
+             * target is no longer alive. */
             return 0;
         }
 
@@ -397,6 +400,8 @@ int32_t flecs_relation_depth_walk(
     return result + 1;
 }
 
+/* Compute how deep a table is in a relationship hierarchy (e.g., ChildOf depth).
+ * For ChildOf, uses a cached depth value when available. */
 int32_t flecs_relation_depth(
     const ecs_world_t *world,
     ecs_entity_t r,

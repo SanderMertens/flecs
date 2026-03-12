@@ -5,6 +5,7 @@
 
 #include "private_api.h"
 
+/* Find the table that results from removing an id from the given table. */
 static
 ecs_table_t* flecs_find_table_remove(
     ecs_world_t *world,
@@ -21,6 +22,7 @@ error:
     return NULL;
 }
 
+/* Allocate a new command in the stage queue and initialize its fields. */
 static
 ecs_cmd_t* flecs_cmd_new(
     ecs_stage_t *stage)
@@ -35,9 +37,11 @@ ecs_cmd_t* flecs_cmd_new(
     return cmd;
 }
 
+/* Allocate a command and link it into the per-entity batch chain.
+ * Commands for the same entity form a linked list via next_for_entity. */
 static
 ecs_cmd_t* flecs_cmd_new_batched(
-    ecs_stage_t *stage, 
+    ecs_stage_t *stage,
     ecs_entity_t e)
 {
     ecs_vec_t *cmds = &stage->cmd->queue;
@@ -49,7 +53,7 @@ ecs_cmd_t* flecs_cmd_new_batched(
     bool is_new = false;
     if (entry) {
         if (entry->first == -1) {
-            /* Existing but invalidated entry */
+            /* Reuse invalidated entry */
             entry->first = cur;
             cmd->entry = entry;
         } else {
@@ -59,13 +63,13 @@ ecs_cmd_t* flecs_cmd_new_batched(
                 ecs_cmd_t *last_op = &arr[last];
                 last_op->next_for_entity = cur;
                 if (last == entry->first) {
-                    /* Flip sign bit so flush logic can tell which command
-                    * is the first for an entity */
+                    /* Sign-flip marks the head of a per-entity batch chain.
+                     * flecs_cmd_batch_for_entity uses the negative sign to
+                     * identify the first command for each entity. */
                     last_op->next_for_entity *= -1;
                 }
             } else {
-                /* Entity with different version was in the same queue. Discard
-                 * the old entry and create a new one. */
+                /* Recycled entity id; discard stale entry */
                 is_new = true;
             }
         }
@@ -84,6 +88,8 @@ ecs_cmd_t* flecs_cmd_new_batched(
     return cmd;
 }
 
+/* Increment defer depth. Returns true when transitioning from depth 0 to 1.
+ * Returns false without incrementing if deferred mode is suspended (defer < 0). */
 bool flecs_defer_begin(
     ecs_world_t *world,
     ecs_stage_t *stage)
@@ -96,6 +102,9 @@ bool flecs_defer_begin(
     return (++ stage->defer) == 1;
 }
 
+/* If actively deferred (defer > 0), return true (command should be queued).
+ * If suspended (defer < 0), return false without incrementing.
+ * If not deferred (defer == 0), increment and return false (apply directly). */
 bool flecs_defer_cmd(
     ecs_stage_t *stage)
 {
@@ -107,6 +116,7 @@ bool flecs_defer_cmd(
     return false;
 }
 
+/* Enqueue a Modified command (triggers OnSet observers on flush). */
 bool flecs_defer_modified(
     ecs_stage_t *stage,
     ecs_entity_t entity,
@@ -124,12 +134,13 @@ bool flecs_defer_modified(
     return false;
 }
 
+/* Enqueue a clone command (copies entity archetype and optionally values). */
 bool flecs_defer_clone(
     ecs_stage_t *stage,
     ecs_entity_t entity,
     ecs_entity_t src,
     bool clone_value)
-{   
+{
     if (flecs_defer_cmd(stage)) {
         ecs_cmd_t *cmd = flecs_cmd_new(stage);
         cmd->kind = EcsCmdClone;
@@ -141,6 +152,7 @@ bool flecs_defer_clone(
     return false;   
 }
 
+/* Enqueue a path command to set entity name under a parent. */
 bool flecs_defer_path(
     ecs_stage_t *stage,
     ecs_entity_t parent,
@@ -158,6 +170,7 @@ bool flecs_defer_path(
     return false;
 }
 
+/* Enqueue a delete command. */
 bool flecs_defer_delete(
     ecs_stage_t *stage,
     ecs_entity_t entity)
@@ -171,6 +184,7 @@ bool flecs_defer_delete(
     return false;
 }
 
+/* Enqueue a clear command (removes all components from entity). */
 bool flecs_defer_clear(
     ecs_stage_t *stage,
     ecs_entity_t entity)
@@ -184,6 +198,7 @@ bool flecs_defer_clear(
     return false;
 }
 
+/* Enqueue a delete_with or remove_all command. */
 bool flecs_defer_on_delete_action(
     ecs_stage_t *stage,
     ecs_id_t id,
@@ -199,6 +214,7 @@ bool flecs_defer_on_delete_action(
     return false;
 }
 
+/* Enqueue an enable/disable command for component toggling. */
 bool flecs_defer_enable(
     ecs_stage_t *stage,
     ecs_entity_t entity,
@@ -215,6 +231,7 @@ bool flecs_defer_enable(
     return false;
 }
 
+/* Enqueue a bulk_new command. Allocates entity ids immediately (thread-safe). */
 bool flecs_defer_bulk_new(
     ecs_world_t *world,
     ecs_stage_t *stage,
@@ -225,7 +242,6 @@ bool flecs_defer_bulk_new(
     if (flecs_defer_cmd(stage)) {
         ecs_entity_t *ids = ecs_os_malloc(count * ECS_SIZEOF(ecs_entity_t));
 
-        /* Use ecs_new_id as this is thread safe */
         int i;
         for (i = 0; i < count; i ++) {
             ids[i] = ecs_new(world);
@@ -233,7 +249,6 @@ bool flecs_defer_bulk_new(
 
         *ids_out = ids;
 
-        /* Store data in op */
         ecs_cmd_t *cmd = flecs_cmd_new(stage);
         cmd->kind = EcsCmdBulkNew;
         cmd->id = id;
@@ -245,6 +260,7 @@ bool flecs_defer_bulk_new(
     return false;
 }
 
+/* Enqueue an add component command. */
 bool flecs_defer_add(
     ecs_stage_t *stage,
     ecs_entity_t entity,
@@ -261,6 +277,8 @@ bool flecs_defer_add(
     return false;
 }
 
+/* Enqueue a remove component command. If the component is an override,
+ * immediately restores the inherited base value so reads stay consistent. */
 bool flecs_defer_remove(
     ecs_stage_t *stage,
     ecs_entity_t entity,
@@ -273,14 +291,6 @@ bool flecs_defer_remove(
         cmd->id = id;
         cmd->entity = entity;
 
-        /* If an override is removed, restore to the component to the value of 
-         * the overridden component. This serves to purposes:
-         *
-         * - the application immediately sees the correct component value
-         * - if a remove command is followed up by an add command, the override
-         *   will still be applied vs. getting cancelled out because of
-         *   command batching.
-         */
         ecs_world_t *world = stage->world;
         ecs_record_t *r = flecs_entities_get(world, entity);
         ecs_table_t *table = r->table;
@@ -311,7 +321,9 @@ bool flecs_defer_remove(
     return false;
 }
 
-/* Return existing component pointer & type info */
+/* Get component pointer and type info for a deferred operation. If the entity
+ * already has the component, returns a direct pointer; otherwise ptr is NULL
+ * but type_info is still populated for sizing/construction. */
 static
 flecs_component_ptr_t flecs_defer_get_existing(
     ecs_world_t *world,
@@ -322,24 +334,16 @@ flecs_component_ptr_t flecs_defer_get_existing(
 {
     flecs_component_ptr_t ptr = flecs_get_mut(world, entity, id, r, size);
 
-    /* Make sure we return type info, even if entity doesn't have component */
     if (!ptr.ti) {
         ecs_component_record_t *cr = flecs_components_get(world, id);
         if (!cr) {
-            /* If cr doesn't exist yet, create it but only if the 
-            * application is not multithreaded. */
             if (world->flags & EcsWorldMultiThreaded) {
+                /* Cannot safely create component record from another thread */
                 ptr.ti = ecs_get_type_info(world, id);
             } else {
-                /* When not in multi threaded mode, it's safe to find or 
-                * create the component record. */
+                /* Create component record so subsequent lookups are fast */
                 cr = flecs_components_ensure(world, id);
                 ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
-                
-                /* Get type_info from component record. We could have called 
-                * ecs_get_type_info directly, but since this function can be
-                * expensive for pairs, creating the component record ensures we 
-                * can find the type_info quickly for subsequent operations. */
                 ptr.ti = cr->type_info;
             }
         } else {
@@ -349,6 +353,8 @@ flecs_component_ptr_t flecs_defer_get_existing(
     return ptr;
 }
 
+/* Enqueue emplace command. If the entity lacks the component, returns a pointer
+ * to uninitialized storage; otherwise returns the existing component pointer. */
 void* flecs_defer_emplace(
     ecs_world_t *world,
     ecs_stage_t *stage,
@@ -391,6 +397,8 @@ error:
     return NULL;
 }
 
+/* Enqueue ensure command. If the entity lacks the component, allocates and
+ * constructs storage; otherwise returns the existing component pointer. */
 void* flecs_defer_ensure(
     ecs_world_t *world,
     ecs_stage_t *stage,
@@ -422,7 +430,7 @@ void* flecs_defer_ensure(
         cmd->is._1.value = ptr.ptr = 
             flecs_stack_alloc(stack, size, ti->alignment);
 
-        /* Check if entity inherits component */
+        /* Copy-construct from IsA base if inherited; otherwise default-construct. */
         void *base = NULL;
         if (table && (table->flags & EcsTableHasIsA)) {
             ecs_component_record_t *cr = flecs_components_get(world, id);
@@ -430,10 +438,8 @@ void* flecs_defer_ensure(
         }
 
         if (!base) {
-            /* Normal ctor */
             flecs_type_info_ctor(ptr.ptr, 1, ti);
         } else {
-            /* Override */
             flecs_type_info_copy_ctor(ptr.ptr, base, 1, ti);
         }
     } else {
@@ -445,6 +451,7 @@ error:
     return NULL;
 }
 
+/* Enqueue set component command. */
 void* flecs_defer_set(
     ecs_world_t *world,
     ecs_stage_t *stage,
@@ -466,9 +473,8 @@ void* flecs_defer_set(
         world, entity, r, id, size);
 
     if (world->stage_count != 1) {
-        /* If world has multiple stages we need to insert a set command
-         * with temporary storage, as the value could be lost otherwise
-         * by a command in another stage. */
+        /* With multiple stages, force temporary storage; another stage
+         * could overwrite the component before this command is flushed. */
         ptr.ptr = NULL;
     }
 
@@ -479,21 +485,19 @@ void* flecs_defer_set(
         "mismatching size specified for component in ensure/emplace/set (%u vs %u)",
             size, ti->size);
 
-    /* Handle trivial set command (no hooks, OnSet observers) */
+    /* Fast path for trivial components (no hooks or OnSet observers) */
     if (id < FLECS_HI_COMPONENT_ID) {
         if (!world->non_trivial_set[id]) {
             if (!ptr.ptr) {
                 ptr.ptr = flecs_stack_alloc(
                     &stage->cmd->stack, size, ti->alignment);
                 
-                /* No OnSet observers, so ensure is enough */
+                /* No observers; ensure is sufficient */
                 cmd->kind = EcsCmdEnsure;
                 cmd->is._1.size = size;
                 cmd->is._1.value = ptr.ptr;
             } else {
-                /* No OnSet observers, so only thing we need to do is make sure
-                * that a preceding remove command doesn't cause the entity to
-                * end up without the component. */
+                /* Keep component alive in case a prior remove was batched */
                 cmd->kind = EcsCmdAdd;
             }
 
@@ -513,7 +517,7 @@ void* flecs_defer_set(
     } else {
         cmd->kind = EcsCmdAddModified;
 
-        /* Call on_replace hook before copying the new value. */
+        /* Invoke on_replace hook before overwriting */
         if (ti->hooks.on_replace) {
             flecs_invoke_replace_hook(
                 world, r->table, entity, id, ptr.ptr, value, ti);
@@ -527,7 +531,9 @@ error:
     return NULL;
 }
 
-/* Same as flecs_defer_set, but doesn't copy value into storage. */
+/* Enqueue set command for C++. For trivial components, copies value directly.
+ * For non-trivial components, constructs storage and returns pointer for
+ * the caller to move-assign into (unlike flecs_defer_set which copy-constructs). */
 void* flecs_defer_cpp_set(
     ecs_world_t *world,
     ecs_stage_t *stage,
@@ -554,21 +560,19 @@ void* flecs_defer_cpp_set(
     ecs_assert(size == ti->size, ECS_INVALID_PARAMETER,
         "mismatching size specified for component in ensure/emplace/set");
 
-    /* Handle trivial set command (no hooks, OnSet observers) */
+    /* Fast path for trivial components (no hooks or OnSet observers) */
     if (id < FLECS_HI_COMPONENT_ID) {
         if (!world->non_trivial_set[id]) {
             if (!ptr.ptr) {
                 ptr.ptr = flecs_stack_alloc(
                     &stage->cmd->stack, size, ti->alignment);
                 
-                /* No OnSet observers, so ensure is enough */
+                /* No observers; ensure is sufficient */
                 cmd->kind = EcsCmdEnsure;
                 cmd->is._1.size = size;
                 cmd->is._1.value = ptr.ptr;
             } else {
-                /* No OnSet observers, so only thing we need to do is make sure
-                 * that a preceding remove command doesn't cause the entity to
-                 * end up without the component. */
+                /* Keep component alive in case a prior remove was batched */
                 cmd->kind = EcsCmdAdd;
             }
 
@@ -589,7 +593,7 @@ void* flecs_defer_cpp_set(
     } else {
         cmd->kind = EcsCmdAddModified;
 
-        /* Call on_replace hook before copying the new value. */
+        /* Invoke on_replace hook before overwriting */
         if (ti->hooks.on_replace) {
             flecs_invoke_replace_hook(
                 world, r->table, entity, id, ptr.ptr, value, ti);
@@ -601,6 +605,8 @@ error:
     return NULL;
 }
 
+/* C++ assign for an entity that already has the component. Invokes on_replace
+ * hook if registered, then enqueues a modified command. */
 void* flecs_defer_cpp_assign(
     ecs_world_t *world,
     ecs_stage_t *stage,
@@ -622,7 +628,6 @@ void* flecs_defer_cpp_assign(
         }
     }
 
-    /* Call on_replace hook before copying the new value. */
     ecs_iter_action_t on_replace = ptr.ti->hooks.on_replace;
     if (on_replace) {
         flecs_invoke_replace_hook(
@@ -637,6 +642,7 @@ void* flecs_defer_cpp_assign(
     return ptr.ptr;
 }
 
+/* Enqueue an event command. Deep-copies the event descriptor and its data. */
 void flecs_enqueue(
     ecs_world_t *world,
     ecs_stage_t *stage,
@@ -685,6 +691,7 @@ void flecs_enqueue(
     }
 }
 
+/* Flush a bulk_new command: ensure entities exist in root table, then add id. */
 static
 void flecs_flush_bulk_new(
     ecs_world_t *world,
@@ -706,6 +713,7 @@ void flecs_flush_bulk_new(
     ecs_os_free(entities);
 }
 
+/* Destruct a component value using its type info. */
 static
 void flecs_dtor_value(
     ecs_world_t *world,
@@ -717,6 +725,7 @@ void flecs_dtor_value(
     flecs_type_info_dtor(value, 1, ti);
 }
 
+/* Free resources owned by a command event descriptor. */
 static
 void flecs_free_cmd_event(
     ecs_world_t *world,
@@ -726,17 +735,16 @@ void flecs_free_cmd_event(
         flecs_stack_free_n(desc->ids->array, ecs_id_t, desc->ids->count);
     }
 
-    /* Safe const cast, command makes a copy of type object */
-    flecs_stack_free_t(ECS_CONST_CAST(ecs_type_t*, desc->ids), 
+    flecs_stack_free_t(ECS_CONST_CAST(ecs_type_t*, desc->ids),
         ecs_type_t);
 
     if (desc->param) {
-        flecs_dtor_value(world, desc->event, 
-            /* Safe const cast, command makes copy of value */
+        flecs_dtor_value(world, desc->event,
             ECS_CONST_CAST(void*, desc->param));
     }
 }
 
+/* Discard a command without executing it; frees owned resources. */
 static
 void flecs_discard_cmd(
     ecs_world_t *world,
@@ -756,6 +764,8 @@ void flecs_discard_cmd(
     }
 }
 
+/* Check if an id is still valid. For pairs with deleted targets, applies the
+ * relationship's OnDeleteTarget policy. Returns false if entity should be deleted. */
 static
 bool flecs_remove_invalid(
     ecs_world_t *world,
@@ -765,25 +775,20 @@ bool flecs_remove_invalid(
     if (ECS_HAS_ID_FLAG(id, PAIR)) {
         ecs_entity_t rel = ECS_PAIR_FIRST(id);
         if (!flecs_entities_is_valid(world, rel)) {
-            /* After relationship is deleted we can no longer see what its
-             * delete action was, so pretend this never happened */
+            /* Relationship deleted; discard the command */
             *id_out = 0;
             return true;
         } else {
             ecs_entity_t tgt = ECS_PAIR_SECOND(id);
             if (!flecs_entities_is_valid(world, tgt)) {
-                /* Check the relationship's policy for deleted objects */
+                /* Apply relationship's OnDeleteTarget policy */
                 ecs_component_record_t *cr = flecs_components_get(world, 
                     ecs_pair(rel, EcsWildcard));
                 if (cr) {
                     ecs_entity_t action = ECS_ID_ON_DELETE_TARGET(cr->flags);
                     if (action == EcsDelete) {
-                        /* Entity should be deleted, don't bother checking
-                         * other ids */
                         return false;
                     } else if (action == EcsPanic) {
-                        /* If policy is throw this object should not have
-                         * been deleted */
                         flecs_throw_invalid_delete(world, id);
                     } else {
                         *id_out = 0;
@@ -798,8 +803,7 @@ bool flecs_remove_invalid(
     } else {
         id &= ECS_COMPONENT_MASK;
         if (!flecs_entities_is_valid(world, id)) {
-            /* After relationship is deleted we can no longer see what its
-             * delete action was, so pretend this never happened */
+            /* Entity deleted; discard the command */
             *id_out = 0;
             return true;
         }
@@ -808,6 +812,9 @@ bool flecs_remove_invalid(
     return true;
 }
 
+/* Batch all queued commands for an entity into a single table move. Walks the
+ * per-entity command chain (sign-flipped linked list), computes the final
+ * destination table, commits once, then copies set values. */
 static
 void flecs_cmd_batch_for_entity(
     ecs_world_t *world,
@@ -825,7 +832,7 @@ void flecs_cmd_batch_for_entity(
 
     bool has_set = false;
     ecs_table_t *start_table = table;
-    ecs_table_diff_t table_diff; /* Keep track of diff for observers/hooks */
+    ecs_table_diff_t table_diff;
     int32_t cur = start;
     int32_t next_for_entity;
 
@@ -834,12 +841,10 @@ void flecs_cmd_batch_for_entity(
         ecs_id_t id = cmd->id;
         next_for_entity = cmd->next_for_entity;
         if (next_for_entity < 0) {
-            /* First command for an entity has a negative index, flip sign */
-            next_for_entity *= -1;
+            next_for_entity *= -1; /* Undo sign-flip to get real index */
         }
 
-        /* Check if added id is still valid (like is the parent of a ChildOf 
-         * pair still alive), if not run cleanup actions for entity */
+        /* Validate the id; run cleanup if a referenced entity was deleted */
         if (id) {
             ecs_component_record_t *cr = NULL;
             if ((id < FLECS_HI_COMPONENT_ID)) {
@@ -851,7 +856,7 @@ void flecs_cmd_batch_for_entity(
             }
                     
             if (cr && cr->flags & EcsIdDontFragment) {
-                /* Nothing to batch for non-fragmenting components */
+                /* Non-fragmenting components use sparse storage, skip batching */
                 if (cmd->kind == EcsCmdSet) {
                     cmd->kind = EcsCmdSetDontFragment;
                 }
@@ -860,13 +865,11 @@ void flecs_cmd_batch_for_entity(
 
             if (flecs_remove_invalid(world, id, &id)) {
                 if (!id) {
-                    /* Entity should remain alive but id should not be added */
                     cmd->kind = EcsCmdSkip;
                     continue;
                 }
-                /* Entity should remain alive and id is still valid */
             } else {
-                /* Id was no longer valid and had a Delete policy */
+                /* Target had a Delete policy; delete the entity */
                 cmd->kind = EcsCmdSkip;
                 ecs_delete(world, entity);
                 flecs_table_diff_builder_clear(diff);
@@ -877,7 +880,7 @@ void flecs_cmd_batch_for_entity(
         ecs_cmd_kind_t kind = cmd->kind;
         switch(kind) {
         case EcsCmdAddModified:
-            /* Add is batched, but keep Modified */
+            /* Batch the add; keep Modified for OnSet notification */
             cmd->kind = EcsCmdModified;
             table = flecs_find_table_add(world, table, id, diff);
             world->info.cmd.batched_command_count ++;
@@ -895,8 +898,7 @@ void flecs_cmd_batch_for_entity(
             break;
         }
         case EcsCmdEmplace:
-            /* Don't add for emplace, as this requires a special call to ensure
-             * the constructor is not invoked for the component */
+            /* Emplace skips batching so the constructor is not invoked */
             break;
         case EcsCmdRemove: {
             table = flecs_find_table_remove(world, table, id, diff);
@@ -935,21 +937,19 @@ void flecs_cmd_batch_for_entity(
 
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    /* Invoke OnAdd handlers after commit. This ensures that observers with 
-     * mixed OnAdd/OnSet events won't get called with uninitialized values for
-     * an OnSet field. */
+    /* Defer OnAdd until after commit so OnAdd observers see component
+     * values that were initialized by Set commands in the same batch. */
     ecs_type_t added = { diff->added.array, diff->added.count };
     diff->added.array = NULL;
     diff->added.count = 0;
 
-    /* Move entity to destination table in single operation */
+    /* Commit entity to destination table in a single move */
     flecs_table_diff_build_noalloc(diff, &table_diff);
     flecs_defer_begin(world, world->stages[0]);
     flecs_commit(world, entity, r, table, &table_diff, true, 0);
     flecs_defer_end(world, world->stages[0]);
 
-    /* If destination table has new sparse components, make sure they're created
-     * for the entity. */
+    /* Initialize sparse storage for newly added sparse components */
     if ((table_diff.added_flags & (EcsTableHasSparse|EcsTableHasDontFragment)) && added.count) {
         if (flecs_sparse_on_add(
             world, table, ECS_RECORD_TO_ROW(r->row), 1, &added, true))
@@ -958,14 +958,8 @@ void flecs_cmd_batch_for_entity(
         }
     }
 
-    /* If the batch contains set commands, copy the component value from the 
-     * temporary command storage to the actual component storage before OnSet
-     * observers are invoked. This ensures that for multi-component OnSet 
-     * observers all components are assigned a valid value before the observer
-     * is invoked. 
-     * This only happens for entities that didn't have the assigned component
-     * yet, as for entities that did have the component already the value will
-     * have been assigned directly to the component storage. */
+    /* Copy set command values from temporary storage to actual component
+     * storage before OnSet observers fire, so all values are valid. */
     if (has_set) {
         cur = start;
         do {
@@ -981,9 +975,7 @@ void flecs_cmd_batch_for_entity(
                 flecs_component_ptr_t dst = flecs_get_mut(
                     world, entity, cmd->id, r, cmd->is._1.size);
 
-                /* It's possible that even though the component was set, the
-                 * command queue also contained a remove command, so before we
-                 * do anything ensure the entity actually has the component. */
+                /* A later remove may have dropped the component */
                 if (dst.ptr) {
                     void *ptr = cmd->is._1.value;
                     const ecs_type_info_t *ti = dst.ti;
@@ -993,7 +985,6 @@ void flecs_cmd_batch_for_entity(
                             cmd->id, dst.ptr, ptr, ti);
                         if (prev_table != r->table) {
                             if (!r->table) {
-                                /* Entity was deleted */
                                 goto done;
                             }
                             dst = flecs_get_mut(
@@ -1011,19 +1002,13 @@ void flecs_cmd_batch_for_entity(
                     cmd->is._1.value = NULL;
 
                     if (cmd->kind == EcsCmdSet) {
-                        /* A set operation is add + copy + modified. We just did
-                         * the add and copy, so the only thing that's left is a 
-                         * modified command, which will call the OnSet 
-                         * observers. */
+                        /* Set = add + copy + modified; only modified remains */
                         cmd->kind = EcsCmdModified;
                     } else {
-                        /* If this was an ensure, nothing's left to be done */
+                        /* Ensure: value is written, nothing left to do */
                         cmd->kind = EcsCmdSkip;
                     }
                 } else {
-                    /* The entity no longer has the component which means that
-                     * there was a remove command for the component in the
-                     * command queue. In that case skip the command. */
                     cmd->kind = EcsCmdSkip;
                 }
                 break;
@@ -1058,13 +1043,8 @@ void flecs_cmd_batch_for_entity(
         add_diff.added_flags = table_diff.added_flags;
 
         if (r->row & EcsEntityIsTraversable) {
-            /* Update monitors since we didn't do this in flecs_commit. Do this
-             * before calling flecs_actions_move_add() since this can trigger 
-             * prefab instantiation logic. When that happens, prefab children
-             * can be created for this instance which would mean that the table
-             * count of r->cr would always be >0.
-             * Since those tables are new, we don't have to invoke component 
-             * monitors since queries will have correctly matched them. */
+            /* Update component monitors before OnAdd, since OnAdd can trigger
+             * prefab instantiation which creates new tables. */
             ecs_component_record_t *cr = flecs_components_get(
                 world, ecs_pair(EcsWildcard, entity));
             if (cr && ecs_map_count(&cr->cache.index)) {
@@ -1084,7 +1064,8 @@ done:
     flecs_table_diff_builder_clear(diff);
 }
 
-/* Leave safe section. Run all deferred commands. */
+/* Decrement defer depth. When reaching zero, flush all queued commands.
+ * Returns false without decrementing if deferred mode is suspended (defer < 0). */
 bool flecs_defer_end(
     ecs_world_t *world,
     ecs_stage_t *stage)
@@ -1095,8 +1076,7 @@ bool flecs_defer_end(
     flecs_check_exclusive_world_access_write(world);
 
     if (stage->defer < 0) {
-        /* Defer suspending makes it possible to do operations on the storage
-         * without flushing the commands in the queue */
+        /* Stage is suspended; do not flush */
         return false;
     }
 
@@ -1105,8 +1085,7 @@ bool flecs_defer_end(
     if (!--stage->defer && !stage->cmd_flushing) {
         ecs_os_perf_trace_push("flecs.commands.merge");
 
-        /* Test whether we're flushing to another queue or whether we're 
-         * flushing to the storage */
+        /* If the world's stage-0 defer depth is 0, apply directly to storage */
         bool merge_to_world = false;
         if (flecs_poly_is(world, ecs_world_t)) {
             merge_to_world = world->stages[0]->defer == 0;
@@ -1129,7 +1108,7 @@ bool flecs_defer_end(
 
             stage->cmd_flushing = true;
 
-            /* Internal callback for capturing commands */
+            /* Notify command capture callback */
             if (world->on_commands_active) {
                 world->on_commands_active(stage, queue, 
                     world->on_commands_ctx_active);
@@ -1146,12 +1125,12 @@ bool flecs_defer_end(
                 ecs_entity_t e = cmd->entity;
                 bool is_alive = flecs_entities_is_alive(world, e);
 
-                /* A negative index indicates the first command for an entity */
+                /* Sign-flipped next_for_entity marks the batch head */
                 if (merge_to_world && (cmd->next_for_entity < 0)) {
                     diff.added_flags = 0;
                     diff.removed_flags = 0;
 
-                    /* Batch commands for entity to limit archetype moves */
+                    /* Batch to minimize archetype moves */
                     if (is_alive) {
                         if (!diff_builder_used) {
                             flecs_table_diff_builder_init(world, &diff);
@@ -1164,14 +1143,12 @@ bool flecs_defer_end(
                     }
                 }
 
-                /* Invalidate entry */
+                /* Mark entry as processed */
                 if (cmd->entry) {
                     cmd->entry->first = -1;
                 }
 
-                /* If entity is no longer alive, this could be because the queue
-                 * contained both a delete and a subsequent add/remove/set which
-                 * should be ignored. */
+                /* Skip commands for dead entities (e.g., deleted earlier in queue) */
                 ecs_cmd_kind_t kind = cmd->kind;
                 if ((kind != EcsCmdPath) && ((kind == EcsCmdSkip) || (e && !is_alive))) {
                     world->info.cmd.discard_count ++;
@@ -1316,7 +1293,7 @@ bool flecs_defer_end(
                 flecs_table_diff_builder_fini(world, &diff);
             }
 
-            /* Internal callback for capturing commands, signal queue is done */
+            /* Notify capture callback that flush is complete (NULL queue) */
             if (world->on_commands_active) {
                 world->on_commands_active(stage, NULL, 
                     world->on_commands_ctx_active);
@@ -1331,7 +1308,7 @@ bool flecs_defer_end(
     return false;
 }
 
-/* Delete operations from queue without executing them. */
+/* Discard all queued commands without executing them. */
 bool flecs_defer_purge(
     ecs_world_t *world,
     ecs_stage_t *stage)
@@ -1363,6 +1340,7 @@ error:
     return false;
 }
 
+/* Initialize command queue for a stage. */
 void flecs_commands_init(
     ecs_stage_t *stage,
     ecs_commands_t *cmd)
@@ -1373,11 +1351,12 @@ void flecs_commands_init(
         &stage->allocators.cmd_entry_chunk, ecs_cmd_entry_t);
 }
 
+/* Free command queue for a stage. */
 void flecs_commands_fini(
     ecs_stage_t *stage,
     ecs_commands_t *cmd)
 {
-    /* Make sure stage has no unmerged data */
+    /* Stage must be fully flushed before freeing */
     ecs_assert(ecs_vec_count(&cmd->queue) == 0, ECS_INTERNAL_ERROR, NULL);
 
     flecs_stack_fini(&cmd->stack);

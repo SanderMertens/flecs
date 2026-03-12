@@ -1,14 +1,12 @@
 /**
  * @file datastructures/map.c
- * @brief Map data structure.
- * 
- * Map data structure for 64bit keys and dynamic payload size.
+ * @brief Hash map with 64-bit keys and 64-bit values.
  */
 
 #include "../private_api.h"
 
-/* The ratio used to determine whether the map should flecs_map_rehash. If
- * (element_count * ECS_LOAD_FACTOR) > bucket_count, bucket count is increased. */
+/* Rehash when element_count * LOAD_FACTOR * 0.1 exceeds bucket_count.
+ * With LOAD_FACTOR=12, this triggers at ~0.83 elements per bucket. */
 #define ECS_LOAD_FACTOR (12)
 #define ECS_BUCKET_END(b, c) ECS_ELEM_T(b, ecs_bucket_t, c)
 #define ECS_MAP_ALLOC(a, T) a ? flecs_alloc_t(a, T) : ecs_os_malloc_t(T)
@@ -16,6 +14,9 @@
 #define ECS_MAP_FREE(a, T, ptr) a ? flecs_free_t(a, T, ptr) : ecs_os_free(ptr)
 #define ECS_MAP_FREE_N(a, T, n, ptr) a ? flecs_free_n(a, T, n, ptr) : ecs_os_free(ptr)
 
+/* Compute floor(log2(v)) using De Bruijn multiplication.
+ * Rounds v up to the next power-of-2 minus one, then uses a magic
+ * constant to map the top 5 bits to the correct log2 value. */
 static
 uint8_t flecs_log2(uint32_t v) {
     static const uint8_t log2table[32] = 
@@ -30,7 +31,6 @@ uint8_t flecs_log2(uint32_t v) {
     return log2table[(uint32_t)(v * 0x07C4ACDDU) >> 27];
 }
 
-/* Get bucket count for number of elements */
 static
 int32_t flecs_map_get_bucket_count(
     int32_t count)
@@ -38,7 +38,6 @@ int32_t flecs_map_get_bucket_count(
     return flecs_next_pow_of_2((int32_t)(count * ECS_LOAD_FACTOR * 0.1));
 }
 
-/* Get bucket shift amount for a given bucket count */
 static
 uint8_t flecs_map_get_bucket_shift(
     int32_t bucket_count)
@@ -46,17 +45,17 @@ uint8_t flecs_map_get_bucket_shift(
     return (uint8_t)(64u - flecs_log2((uint32_t)bucket_count));
 }
 
-/* Get bucket index for provided map key */
+/* Get bucket index for key using Fibonacci hashing. */
 static
 int32_t flecs_map_get_bucket_index(
     uint16_t bucket_shift,
-    ecs_map_key_t key) 
+    ecs_map_key_t key)
 {
     ecs_assert(bucket_shift != 0, ECS_INTERNAL_ERROR, NULL);
+    /* 11400714819323198485 = 2^64 / golden ratio (Fibonacci hashing constant) */
     return (int32_t)((11400714819323198485ull * key) >> bucket_shift);
 }
 
-/* Get bucket for key */
 static
 ecs_bucket_t* flecs_map_get_bucket(
     const ecs_map_t *map,
@@ -68,7 +67,6 @@ ecs_bucket_t* flecs_map_get_bucket(
     return &map->buckets[bucket_id];
 }
 
-/* Add element to bucket */
 static
 ecs_map_val_t* flecs_map_bucket_add(
     ecs_allocator_t *a,
@@ -82,7 +80,6 @@ ecs_map_val_t* flecs_map_bucket_add(
     return &new_entry->value;
 }
 
-/* Remove element from bucket */
 static
 ecs_map_val_t flecs_map_bucket_remove(
     ecs_map_t *map,
@@ -107,7 +104,6 @@ ecs_map_val_t flecs_map_bucket_remove(
     return 0;
 }
 
-/* Free contents of bucket */
 static
 void flecs_map_bucket_clear(
     ecs_allocator_t *allocator,
@@ -121,7 +117,6 @@ void flecs_map_bucket_clear(
     }
 }
 
-/* Get payload pointer for key from bucket */
 static
 ecs_map_val_t* flecs_map_bucket_get(
     ecs_bucket_t *bucket,
@@ -136,7 +131,6 @@ ecs_map_val_t* flecs_map_bucket_get(
     return NULL;
 }
 
-/* Grow number of buckets */
 static
 void flecs_map_rehash(
     ecs_map_t *map,
@@ -154,7 +148,7 @@ void flecs_map_rehash(
     map->bucket_count = count;
     map->bucket_shift = flecs_map_get_bucket_shift(count) & 0x3fu;
 
-    /* Remap old bucket entries to new buckets */
+    /* Redistribute entries into new bucket array */
     for (b = buckets; b < end; b++) {
         ecs_bucket_entry_t* entry;
         for (entry = b->first; entry;) {
@@ -171,6 +165,7 @@ void flecs_map_rehash(
     ECS_MAP_FREE_N(map->allocator, ecs_bucket_t, old_count, buckets);
 }
 
+/* Initialize a map with an initial bucket allocation. */
 void ecs_map_init(
     ecs_map_t *result,
     ecs_allocator_t *allocator)
@@ -182,6 +177,7 @@ void ecs_map_init(
     flecs_map_rehash(result, 0);
 }
 
+/* Initialize a map only if it has not been initialized yet. */
 void ecs_map_init_if(
     ecs_map_t *result,
     ecs_allocator_t *allocator)
@@ -191,6 +187,7 @@ void ecs_map_init_if(
     }   
 }
 
+/* Finalize a map and free all bucket memory. */
 void ecs_map_fini(
     ecs_map_t *map)
 {
@@ -210,6 +207,7 @@ void ecs_map_fini(
     ECS_MAP_FREE_N(a, ecs_bucket_t, map->bucket_count, map->buckets);
 }
 
+/* Get value pointer for key, or NULL if not found. */
 ecs_map_val_t* ecs_map_get(
     const ecs_map_t *map,
     ecs_map_key_t key)
@@ -217,6 +215,7 @@ ecs_map_val_t* ecs_map_get(
     return flecs_map_bucket_get(flecs_map_get_bucket(map, key), key);
 }
 
+/* Get dereferenced pointer value for key, or NULL if not found. */
 void* ecs_map_get_deref_(
     const ecs_map_t *map,
     ecs_map_key_t key)
@@ -229,6 +228,7 @@ void* ecs_map_get_deref_(
     return NULL;
 }
 
+/* Insert a new key-value pair. Asserts the key does not already exist. */
 void ecs_map_insert(
     ecs_map_t *map,
     ecs_map_key_t key,
@@ -250,6 +250,7 @@ void ecs_map_insert(
 #endif
 }
 
+/* Insert a key with a newly heap-allocated value. */
 void* ecs_map_insert_alloc(
     ecs_map_t *map,
     ecs_size_t elem_size,
@@ -260,6 +261,7 @@ void* ecs_map_insert_alloc(
     return elem;
 }
 
+/* Get or insert a zero-initialized value for the given key. */
 ecs_map_val_t* ecs_map_ensure(
     ecs_map_t *map,
     ecs_map_key_t key)
@@ -288,6 +290,7 @@ ecs_map_val_t* ecs_map_ensure(
     return v;
 }
 
+/* Get or insert a heap-allocated value for the given key. */
 void* ecs_map_ensure_alloc(
     ecs_map_t *map,
     ecs_size_t elem_size,
@@ -303,6 +306,7 @@ void* ecs_map_ensure_alloc(
     }
 }
 
+/* Remove a key and return its value (0 if not found). */
 ecs_map_val_t ecs_map_remove(
     ecs_map_t *map,
     ecs_map_key_t key)
@@ -315,6 +319,7 @@ ecs_map_val_t ecs_map_remove(
     return flecs_map_bucket_remove(map, flecs_map_get_bucket(map, key), key);
 }
 
+/* Shrink bucket array to match current element count. */
 void ecs_map_reclaim(
     ecs_map_t *map)
 {
@@ -324,6 +329,7 @@ void ecs_map_reclaim(
     }
 }
 
+/* Remove a key and free its pointer value if non-NULL. */
 void ecs_map_remove_free(
     ecs_map_t *map,
     ecs_map_key_t key)
@@ -334,6 +340,7 @@ void ecs_map_remove_free(
     }
 }
 
+/* Remove all elements from the map and rehash. */
 void ecs_map_clear(
     ecs_map_t *map)
 {
@@ -353,6 +360,7 @@ void ecs_map_clear(
 #endif
 }
 
+/* Create an iterator positioned before the first element. */
 ecs_map_iter_t ecs_map_iter(
     const ecs_map_t *map)
 {
@@ -370,6 +378,7 @@ ecs_map_iter_t ecs_map_iter(
     }
 }
 
+/* Return whether the iterator is still valid (no modifications during iteration). */
 bool ecs_map_iter_valid(
     ecs_map_iter_t *iter)
 {
@@ -387,6 +396,7 @@ bool ecs_map_iter_valid(
     return true;
 }
 
+/* Advance iterator to next element. Returns false when done. */
 bool ecs_map_next(
     ecs_map_iter_t *iter)
 {
@@ -432,14 +442,14 @@ bool ecs_map_next(
     iter->res = &entry->key;
 
 #ifdef FLECS_DEBUG
-    /* Safe, only used for detecting if an element got removed that's not the
-     * currently iterated element. */
+    /* Track current key to detect removal of non-current elements */
     ECS_CONST_CAST(ecs_map_t*, map)->last_iterated = entry->key;
 #endif
 
     return true;
 }
 
+/* Copy all entries from src to dst. dst must be empty or uninitialized. */
 void ecs_map_copy(
     ecs_map_t *dst,
     const ecs_map_t *src)

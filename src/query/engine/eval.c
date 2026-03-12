@@ -1,11 +1,15 @@
 /**
  * @file query/engine/eval.c
- * @brief Query engine implementation.
+ * @brief Query VM engine: dispatches instructions and drives backtracking search.
+ *
+ * Each instruction returns true (match found) or false (backtrack). The engine
+ * alternates between forward evaluation (redo=false) and backtracking
+ * (redo=true) to enumerate all valid variable bindings.
  */
 
 #include "../../private_api.h"
 
-// #define FLECS_QUERY_TRACE
+/* #define FLECS_QUERY_TRACE */
 
 #ifdef FLECS_QUERY_TRACE
 static int flecs_query_trace_indent = 0;
@@ -17,6 +21,7 @@ bool flecs_query_dispatch(
     bool redo,
     ecs_query_run_ctx_t *ctx);
 
+/* Select tables matching a specific id with filter mask. */
 bool flecs_query_select_w_id(
     const ecs_query_op_t *op,
     bool redo,
@@ -75,6 +80,7 @@ repeat:
     return true;
 }
 
+/* Select tables matching the operation's id. */
 bool flecs_query_select(
     const ecs_query_op_t *op,
     bool redo,
@@ -88,6 +94,7 @@ bool flecs_query_select(
         (EcsTableNotQueryable|EcsTableIsPrefab|EcsTableIsDisabled));
 }
 
+/* Test whether the source table has the operation's id. */
 bool flecs_query_with(
     const ecs_query_op_t *op,
     bool redo,
@@ -135,6 +142,7 @@ bool flecs_query_with(
     return true;
 }
 
+/* Iterate all tables in the world. */
 static
 bool flecs_query_all(
     const ecs_query_op_t *op,
@@ -198,6 +206,7 @@ repeat:
     }
 }
 
+/* And instruction: dispatches to select (unbound src) or with (bound src). */
 bool flecs_query_and(
     const ecs_query_op_t *op,
     bool redo,
@@ -211,6 +220,7 @@ bool flecs_query_and(
     }
 }
 
+/* Select tables matching an id from the iterator fields. */
 bool flecs_query_select_id(
     const ecs_query_op_t *op,
     bool redo,
@@ -260,6 +270,7 @@ repeat: {}
     return true;
 }
 
+/* Test whether the source table has the id from the iterator fields. */
 bool flecs_query_with_id(
     const ecs_query_op_t *op,
     bool redo,
@@ -295,6 +306,7 @@ bool flecs_query_with_id(
     return true;
 }
 
+/* Evaluate and-any operation, matching any id variant from the source. */
 bool flecs_query_and_any(
     const ecs_query_op_t *op,
     bool redo,
@@ -333,6 +345,9 @@ bool flecs_query_and_any(
     return result;
 }
 
+/* And operation for (*, T) wildcard-first queries. Falls back to
+ * non-fragmenting (sparse) iteration if the component record has the
+ * DontFragment flag. */
 static
 bool flecs_query_and_wctgt(
     const ecs_query_op_t *op,
@@ -371,6 +386,9 @@ bool flecs_query_and_wctgt(
     return flecs_query_sparse(op, sparse_redo, ctx);
 }
 
+/* With operation for (*, T) wildcard-first queries against a known source.
+ * Falls back to non-fragmenting iteration if the component record has the
+ * DontFragment flag. */
 static
 bool flecs_query_with_wctgt(
     const ecs_query_op_t *op,
@@ -405,6 +423,7 @@ bool flecs_query_with_wctgt(
     return flecs_query_sparse_with(op, sparse_redo, ctx, false);
 }
 
+/* Evaluate trivial query operation using fast path. */
 static
 bool flecs_query_triv(
     const ecs_query_op_t *op,
@@ -423,6 +442,7 @@ bool flecs_query_triv(
     }
 }
 
+/* Evaluate query operation using the query cache. */
 static
 bool flecs_query_cache(
     const ecs_query_op_t *op,
@@ -441,6 +461,7 @@ bool flecs_query_cache(
     }
 }
 
+/* Evaluate fully cached query operation (all terms are cacheable). */
 static
 bool flecs_query_is_cache(
     const ecs_query_op_t *op,
@@ -458,6 +479,7 @@ bool flecs_query_is_cache(
     }
 }
 
+/* Find next inheritable id in type, skipping DontInherit ids. */
 static
 int32_t flecs_query_next_inheritable_id(
     ecs_world_t *world,
@@ -474,6 +496,7 @@ int32_t flecs_query_next_inheritable_id(
     return -1;
 }
 
+/* Evaluate and-from, not-from, or or-from operation against entity type. */
 static
 bool flecs_query_x_from(
     const ecs_query_op_t *op,
@@ -513,7 +536,7 @@ bool flecs_query_x_from(
 
     ecs_id_t *ids = type->array;
 
-    /* Check if source is variable, and if it's already written */
+    /* Check if source variable is already written */
     bool src_written = true;
     if (op->flags & (EcsQueryIsVar << EcsQuerySrc)) {
         uint64_t written = ctx->written[ctx->op_index];
@@ -623,6 +646,7 @@ match:
     return true;
 }
 
+/* Evaluate and-from operation requiring all ids from type. */
 static
 bool flecs_query_and_from(
     const ecs_query_op_t *op,
@@ -632,6 +656,7 @@ bool flecs_query_and_from(
     return flecs_query_x_from(op, redo, ctx, EcsAndFrom);
 }
 
+/* Evaluate not-from operation requiring none of the ids from type. */
 static
 bool flecs_query_not_from(
     const ecs_query_op_t *op,
@@ -641,6 +666,7 @@ bool flecs_query_not_from(
     return flecs_query_x_from(op, redo, ctx, EcsNotFrom);
 }
 
+/* Evaluate or-from operation requiring any id from type. */
 static
 bool flecs_query_or_from(
     const ecs_query_op_t *op,
@@ -650,6 +676,7 @@ bool flecs_query_or_from(
     return flecs_query_x_from(op, redo, ctx, EcsOrFrom);
 }
 
+/* Check if a component record has any matching tables or ordered children. */
 static
 bool flecs_query_ids_check(
     ecs_component_record_t *cur)
@@ -669,6 +696,7 @@ bool flecs_query_ids_check(
     return true;
 }
 
+/* Test if a specific id exists in the world. */
 static
 bool flecs_query_ids(
     const ecs_query_op_t *op,
@@ -705,6 +733,7 @@ bool flecs_query_ids(
     return true;
 }
 
+/* Iterate matching ids by traversing the component record's first-next chain. */
 static
 bool flecs_query_idsright(
     const ecs_query_op_t *op,
@@ -765,6 +794,7 @@ next:
     return true;
 }
 
+/* Iterate matching ids by traversing the component record's second-next chain. */
 static
 bool flecs_query_idsleft(
     const ecs_query_op_t *op,
@@ -815,6 +845,7 @@ bool flecs_query_idsleft(
     return true;
 }
 
+/* Iterate individual entities in a table range. */
 static
 bool flecs_query_each(
     const ecs_query_op_t *op,
@@ -853,6 +884,7 @@ bool flecs_query_each(
     return true;
 }
 
+/* Store a fixed entity value in a variable. */
 static
 bool flecs_query_store(
     const ecs_query_op_t *op,
@@ -867,6 +899,7 @@ bool flecs_query_store(
     }
 }
 
+/* Passes through on first call; resets variable to wildcard on backtrack. */
 static
 bool flecs_query_reset(
     const ecs_query_op_t *op,
@@ -881,6 +914,7 @@ bool flecs_query_reset(
     }
 }
 
+/* Look up an entity by name relative to a parent entity. */
 static
 bool flecs_query_lookup(
     const ecs_query_op_t *op,
@@ -907,6 +941,7 @@ bool flecs_query_lookup(
     return true;
 }
 
+/* Populate iterator source fields from resolved variables. */
 static
 bool flecs_query_setvars(
     const ecs_query_op_t *op,
@@ -942,6 +977,7 @@ bool flecs_query_setvars(
     return true;
 }
 
+/* Constrain the this variable to a single entity and restore on redo. */
 static
 bool flecs_query_setthis(
     const ecs_query_op_t *op,
@@ -969,6 +1005,7 @@ bool flecs_query_setthis(
     }
 }
 
+/* Set source fields for terms with fixed entity sources. */
 static
 bool flecs_query_setfixed(
     const ecs_query_op_t *op,
@@ -996,6 +1033,7 @@ bool flecs_query_setfixed(
     return true;
 }
 
+/* Set iterator id fields from query term ids. */
 bool flecs_query_setids(
     const ecs_query_op_t *op,
     bool redo,
@@ -1019,6 +1057,7 @@ bool flecs_query_setids(
     return true;
 }
 
+/* Set a single iterator id field from the operation's entity. */
 static
 bool flecs_query_setid(
     const ecs_query_op_t *op,
@@ -1034,7 +1073,7 @@ bool flecs_query_setid(
     return true;
 }
 
-/* Check if entity is stored in table */
+/* Check if entity is stored in table. */
 static
 bool flecs_query_contain(
     const ecs_query_op_t *op,
@@ -1054,7 +1093,7 @@ bool flecs_query_contain(
     return table == ecs_get_table(ctx->world, e);
 }
 
-/* Check if first and second id of pair from last operation are the same */
+/* Check if first and second id of pair from last operation are the same. */
 static
 bool flecs_query_pair_eq(
     const ecs_query_op_t *op,
@@ -1070,6 +1109,8 @@ bool flecs_query_pair_eq(
     return ECS_PAIR_FIRST(id) == ECS_PAIR_SECOND(id);
 }
 
+/* After evaluating a control flow block, update set_fields and reset
+ * variables/ids that were written by the block if it did not match. */
 static
 void flecs_query_reset_after_block(
     const ecs_query_op_t *start_op,
@@ -1097,7 +1138,8 @@ void flecs_query_reset_after_block(
     ctx->op_index = op_index;
     ECS_TERMSET_CLEAR(it->set_fields, 1u << field);
 
-    /* Ignore variables written by Not operation */
+    /* Get written state from before the block's query op to determine which
+     * variables were written inside the block and need to be reset. */
     uint64_t *written = ctx->written;
     uint64_t written_cur = written[op->prev + 1];
     ecs_flags16_t flags_1st = flecs_query_ref_flags(op->flags, EcsQueryFirst);
@@ -1132,6 +1174,7 @@ done:
     op_ctx->op_index = op_index;
 }
 
+/* Run a nested block of query operations until completion. */
 static
 bool flecs_query_run_block(
     bool redo,
@@ -1157,6 +1200,7 @@ bool flecs_query_run_block(
     return result;
 }
 
+/* Find the last operation index for the current or-condition branch. */
 static
 ecs_query_lbl_t flecs_query_last_op_for_or_cond(
     const ecs_query_op_t *ops,
@@ -1173,6 +1217,7 @@ ecs_query_lbl_t flecs_query_last_op_for_or_cond(
     return cur;
 }
 
+/* Run query operations for a single or-condition branch during select. */
 static
 bool flecs_query_run_until_for_select_or(
     bool redo,
@@ -1198,6 +1243,7 @@ bool flecs_query_run_until_for_select_or(
     return ctx->op_index == last;
 }
 
+/* Evaluate or operation when source is not yet written (select mode). */
 static
 bool flecs_query_select_or(
     const ecs_query_op_t *op,
@@ -1233,21 +1279,14 @@ bool flecs_query_select_or(
                 break;
             }
 
-            /* If a previous operation in the OR chain returned a result for the
-             * same matched source, skip it so we don't yield for each matching
-             * element in the chain. */
-
-            /* Copy written status so that the variables we just wrote will show
-             * up as written for the test. This ensures that the instructions
-             * match against the result we already found, vs. starting a new
-             * search (the difference between select & with). */
+            /* Check previous OR branches for duplicate matches on the same
+             * source. Copy written status so instructions test against the
+             * found result rather than starting a new search. */
             ecs_query_lbl_t prev = first;
             bool dup_found = false;
 
-            /* While terms of an OR chain always operate on the same source, it
-             * is possible that a table variable is resolved to an entity 
-             * variable. When checking for duplicates, copy the entity variable
-             * to the table, to ensure we're only testing the found entity. */
+            /* If table var was resolved to entity var, copy it back to table
+             * var for accurate duplicate testing. */
             const ecs_query_op_t *prev_op = &ops[cur - 1];
             ecs_var_t old_table_var;
             ecs_os_memset_t(&old_table_var, 0, ecs_var_t);
@@ -1317,6 +1356,7 @@ bool flecs_query_select_or(
     return result;
 }
 
+/* Evaluate or operation when source is already written (with mode). */
 static
 bool flecs_query_with_or(
     const ecs_query_op_t *op,
@@ -1334,6 +1374,7 @@ bool flecs_query_with_or(
     return result;
 }
 
+/* Evaluate or operation, dispatching to select-or or with-or. */
 static
 bool flecs_query_or(
     const ecs_query_op_t *op,
@@ -1350,6 +1391,7 @@ bool flecs_query_or(
     return flecs_query_with_or(op, redo, ctx);
 }
 
+/* Run a nested block and reset iterator state afterward. */
 static
 bool flecs_query_run_block_w_reset(
     const ecs_query_op_t *op,
@@ -1363,6 +1405,7 @@ bool flecs_query_run_block_w_reset(
     return result;
 }
 
+/* Evaluate not operation by negating the result of a block. */
 static
 bool flecs_query_not(
     const ecs_query_op_t *op,
@@ -1376,6 +1419,7 @@ bool flecs_query_not(
     return !flecs_query_run_block_w_reset(op, redo, ctx);
 }
 
+/* Evaluate optional operation, yielding at least once regardless of match. */
 static
 bool flecs_query_optional(
     const ecs_query_op_t *op,
@@ -1404,6 +1448,7 @@ bool flecs_query_optional(
     }
 }
 
+/* Evaluate an if-condition by checking whether a variable is constrained. */
 static
 bool flecs_query_eval_if(
     const ecs_query_op_t *op,
@@ -1421,6 +1466,7 @@ bool flecs_query_eval_if(
     return true;
 }
 
+/* Evaluate if-var operation, skipping block when variables are unconstrained. */
 static
 bool flecs_query_if_var(
     const ecs_query_op_t *op,
@@ -1440,6 +1486,7 @@ bool flecs_query_if_var(
     return flecs_query_run_block(redo, ctx, op_ctx);
 }
 
+/* Evaluate if-set operation, skipping block when field is not set. */
 static
 bool flecs_query_if_set(
     const ecs_query_op_t *op,
@@ -1461,6 +1508,7 @@ bool flecs_query_if_set(
     return flecs_query_run_block(redo, ctx, op_ctx);
 }
 
+/* Evaluate end-of-block marker operation. */
 static
 bool flecs_query_end(
     const ecs_query_op_t *op,
@@ -1471,6 +1519,7 @@ bool flecs_query_end(
     return !redo;
 }
 
+/* Dispatch a query operation to the appropriate handler based on kind. */
 static
 bool flecs_query_dispatch(
     const ecs_query_op_t *op,
@@ -1545,6 +1594,7 @@ bool flecs_query_dispatch(
     return false;
 }
 
+/* Run query VM dispatch loop until a yield or failure is reached. */
 bool flecs_query_run_until(
     bool redo,
     ecs_query_run_ctx_t *ctx,
@@ -1578,10 +1628,14 @@ bool flecs_query_run_until(
 #endif
 
         bool result = flecs_query_dispatch(op, redo, ctx);
+
+        /* prev and next are adjacent fields: [0]=prev, [1]=next. Indexing by
+         * result picks prev (backtrack) on false, next (advance) on true. */
         cur = (&op->prev)[result];
         redo = cur < ctx->op_index;
 
         if (!redo) {
+            /* On forward progress, propagate written variables to the next op */
             ctx->written[cur] |= ctx->written[ctx->op_index] | op->written;
         }
 

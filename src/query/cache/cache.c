@@ -1,144 +1,27 @@
 /**
  * @file query/cache/cache.c
  * @brief Cached query implementation.
- * 
- * Implements a cache that stores a list of tables that matches the query. 
- * Cached queries outperform uncached queries in many scenarios since they don't
- * have to search for tables that match a query, but just iterate a list.
- * 
- * A cache has a "cache query" which is derived from the actual query the 
- * application provides. This cache query differs in two significant ways from 
- * the application-provided query:
- * - It does not contain terms that aren't cacheable
- * - It always matches empty tables
- * 
- * If the number of terms in the actual query differs from the cache query, the
- * query will create a field_map array that maps from cached field indices to
- * actual query indices.
- * 
- * Cached queries use an observer to get notified of new/deleted tables. In most
- * cases this is sufficient to keep the cache up to date, but for queries that
- * match components outside of a table (for example, from a parent entity) the
- * cache will have to be revalidated after a parent changes a matched component.
- * This is called rematching, the implementation can be found in match.c.
- * 
- * A cache can be trivial or non-trivial. A trivial cache is a cache for a query
- * that meets the following criteria:
- * - The query doesn't have any wildcards
- * - The query doesn't use relationship traversal
- * - The query doesn't use operators other than And, Not or Optional
- * - The cached query and actual query have the same terms
- * 
- * A trivial cache has to store much less data for each cached element, and uses
- * an iterator implementation that is much faster. Because of this difference 
- * the code often needs to lookup the size of cache elements before doing work.
- * 
- * The following types are important for the cache:
- * - ecs_query_cache_match_t: Stores a single match for a table.
- * - ecs_query_cache_table_t: Element in the cache->tables map, which allows for
- *                            looking up a match by table id.
- * - ecs_query_cache_group_t: Stores an array of matched tables. A query has a
- *                            single group by default, but can have more (see 
- *                            group_by).
- * 
- * There are three cache features that significantly alter the way how elements
- * are stored in the cache, which are group_by, order_by and wildcards.
- * 
- * Group_by
- * ========
- * Group_by assigns a group id (unsigned 64bit integer) to each table. This 
- * number is computed by a group_by function that can be provided by the 
- * application. A group can only be computed from which components are stored in
- * a table (the table type).
- * 
- * By default a query only has a single group which contains all matched tables
- * stored in an array. When a query uses group_by, the matched tables are split
- * up across multiple groups depending on the computed group id of the table.
- * When a group becomes empty (there are no more tables with the group id) it is
- * deleted from the cache.
- * 
- * The query cache contains a "groups" map and a "tables" map. The groups map
- * allows for group id -> group lookups. The tables map allows for table id ->
- * table element lookups. Because tables are stored in arrays that can be 
- * reallocated, rather than a pointer to the table element, the tables map 
- * stores a pointer to the group the table is part of, and an index into the
- * group's table array.
- * 
- * Queries can use group_by for two main reasons:
- * - It allows for quickly iterating subsets of the matched query results
- * - Groups are iterated in order based on group id
- * 
- * An application can iterate a single group by calling ecs_iter_set_group on an
- * iterator created from a query that uses group_by. This will cause the 
- * iterator to only iterate the table array for that specific group. To find the
- * group's table array, the ecs_iter_set_group function uses the groups map.
- * 
- * Groups are stored in a linked list that's ordered by the group id. This can
- * be in ascending or descending order, depending on the query. Because of this
- * ordering, group insertion and group removal is an O(N) operation where N is
- * the number of groups in the query. The head of the list is stored in the
- * first_group member of the query.
- * 
- * The cascade query feature is built on top of group_by. It provides a callback
- * that computes a hierarchy depth for the table with a specified relationship.
- * Because groups are stored in ascending or descending order, this effectively
- * means that tables will be iterated in a breadth-first order, which can be
- * useful for hierarchy traversal code or transform systems.
- * 
- * Order_by
- * ========
- * Order_by will cause the query to return results in an order that is defined
- * by either a component or entity id. To accomplish this, the query has to find
- * the order across different tables. The code will first sort the elements in
- * each matched table, and then build a list of (offset, count) slices across 
- * the matched tables that represents the correct iteration order. The algorithm
- * used for sorting is qsort.
- * 
- * Resorting is a very expensive operation. Queries use change detection, which
- * at a table level can detect if any changes occurred to the entities or ordered
- * by component. Only if a change has been detected will resorting occur. Even
- * then, this remains an expensive feature and should only be used for data that
- * doesn't change often. Flecs uses the query sorting feature to ensure that
- * pipeline queries return systems in a well defined order.
- * 
- * The sorted list of slices is stored in the table_slices member of the cache,
- * and is only populated for sorted queries.
- * 
- * When group_by and order_by are combined in a single query, the group order
- * takes precedence over order_by.
- * 
- * It is currently not possible to iterate a single group when order_by is used
- * together with group_by. This is a TODO that has to be addressed by adding a
- * table_slices array to each group instead of as a member of the cache object.
- * 
- * Wildcards
- * =========
- * Wildcards are a query feature that can cause a single table to be matched
- * multiple times. A typical example would be a (Likes, *) query. If an entity
- * has both (Likes, Bob) and (Likes, Alice), it (and all entities in the same 
- * table) will get matched twice by the query.
- * 
- * When a table matches multiple times (through one or more wildcard terms), any
- * match after the first is stored in a separate wildcard_matches member on the
- * cache element. This separate array ensures that tables can be removed from
- * groups without leaving arbitrarily sized holes in the group->tables array.
- * 
- * When iterating a wildcard query, the iterator will alternate between 
- * iterating the group->tables array and the wildcard_matches array on each
- * matched table, in a way that all matches for the same table are iterated
- * together.
+ *
+ * Pre-computes matched tables so iteration avoids searching. Uses a derived
+ * "cache query" with only cacheable terms. An observer syncs the cache on
+ * table create/delete; up-traversal queries rematch when ancestors change.
+ *
+ * Trivial caches (no wildcards/traversal, And/Not/Optional only) use smaller
+ * storage and a faster iterator. group_by partitions tables by user callback
+ * (cascade uses hierarchy depth). order_by sorts entities across tables.
+ * Wildcard matches are stored in wildcard_matches on the first cache element.
  */
 
 #include "../../private_api.h"
 
-/* Is cache trivial? */
+/* Check if cache is trivial. */
 bool flecs_query_cache_is_trivial(
     const ecs_query_cache_t *cache)
 {
     return (cache->query->flags & EcsQueryTrivialCache) != 0;
 }
 
-/* Trivial caches have a significantly smaller cache element size */
+/* Return cache element size based on whether cache is trivial. */
 ecs_size_t flecs_query_cache_elem_size(
     const ecs_query_cache_t *cache) 
 {
@@ -148,10 +31,7 @@ ecs_size_t flecs_query_cache_elem_size(
         ;
 }
 
-/* The default group_by function. When an application specifies a relationship
- * for the ecs_query_desc_t::group_by field but does not provide a 
- * group_by_callback, this function will be automatically used. It will cause
- * the query cache to be grouped by relationship target. */
+/* Group tables by relationship target using the default group_by logic. */
 static
 uint64_t flecs_query_cache_default_group_by(
     ecs_world_t *world, 
@@ -172,8 +52,7 @@ uint64_t flecs_query_cache_default_group_by(
     return 0;
 }
 
-/* The group_by function that's used for the cascade feature. Groups tables by
- * hierarchy depth, resulting in breadth-first iteration. */
+/* Group tables by hierarchy depth for cascade-based breadth-first iteration. */
 static
 uint64_t flecs_query_cache_group_by_cascade(
     ecs_world_t *world,
@@ -188,7 +67,7 @@ uint64_t flecs_query_cache_group_by_cascade(
     return flecs_ito(uint64_t, depth);
 }
 
-/* Initialize cache with matching tables. */
+/* Initialize cache by matching all existing tables. */
 static
 void flecs_query_cache_match_tables(
     ecs_world_t *world,
@@ -205,7 +84,7 @@ void flecs_query_cache_match_tables(
     while (flecs_query_cache_match_next(cache, &it)) { }
 }
 
-/* Match new table with cache. */
+/* Match a single table against the cache query. */
 static
 bool flecs_query_cache_match_table(
     ecs_world_t *world,
@@ -253,9 +132,7 @@ bool flecs_query_cache_match_table(
     return true;
 }
 
-/* Iterate component monitors for cache. Each field that could potentially cause
- * up traversal will create a monitor. Component monitors are registered with 
- * the world and are used to determine whether a rematch is necessary. */
+/* Iterate component monitors for fields that use relationship traversal. */
 static
 void flecs_query_cache_for_each_component_monitor(
     ecs_world_t *world,
@@ -288,7 +165,7 @@ void flecs_query_cache_for_each_component_monitor(
     }
 }
 
-/* Iterate over terms in query to initialize necessary bookkeeping. */
+/* Process query terms to initialize cascade and ref bookkeeping. */
 static
 int flecs_query_cache_process_query(
     ecs_world_t *world,
@@ -326,7 +203,7 @@ int flecs_query_cache_process_query(
 
 /* -- Private API -- */
 
-/* Do bookkeeping after enabling order_by */
+/* Configure order_by sorting for the query cache. */
 static
 int flecs_query_cache_order_by(
     ecs_world_t *world,
@@ -382,7 +259,7 @@ error:
     return -1;
 }
 
-/* Do bookkeeping after enabling group_by */
+/* Configure group_by grouping for the query cache. */
 static
 void flecs_query_cache_group_by(
     ecs_query_cache_t *cache,
@@ -407,14 +284,12 @@ error:
     return;
 }
 
-/* Callback for the observer that is subscribed for table events. This function
- * is the entry point for matching/unmatching new tables with the query. */
+/* Observer callback: syncs cache on table create/delete events. */
 static
 void flecs_query_cache_on_event(
     ecs_iter_t *it)
 {
-    /* Because this is the observer::run callback, checking if this is event is
-     * already handled is not done for us. */
+    /* Deduplicate: run callbacks don't get automatic dedup from the framework */
     ecs_world_t *world = it->world;
     ecs_observer_t *o = it->ctx;
     ecs_observer_impl_t *o_impl = flecs_observer_impl(o);
@@ -448,8 +323,7 @@ void flecs_query_cache_on_event(
 
     ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    /* The observer isn't doing the matching because the query can do it more
-     * efficiently by checking the table with the query cache. */
+    /* Skip tables not in the cache (observer fires broadly, cache checks cheaply) */
     if (ecs_map_get(&cache->tables, table->id) == NULL) {
         return;
     }
@@ -469,9 +343,7 @@ void flecs_query_cache_on_event(
     }
 }
 
-/* Create query-specific allocators. The reason these allocators are 
- * specific to the query is because they depend on the number of terms the
- * query has. */
+/* Initialize query-specific block allocators sized by field count. */
 static
 void flecs_query_cache_allocators_init(
     ecs_query_cache_t *cache)
@@ -487,7 +359,7 @@ void flecs_query_cache_allocators_init(
     }
 }
 
-/* Free query-specific allocators. */
+/* Free query-specific block allocators. */
 static
 void flecs_query_cache_allocators_fini(
     ecs_query_cache_t *cache)
@@ -500,7 +372,7 @@ void flecs_query_cache_allocators_fini(
     }
 }
 
-/* Free cache. */
+/* Free query cache and all associated resources. */
 void flecs_query_cache_fini(
     ecs_query_impl_t *impl)
 {
@@ -554,7 +426,7 @@ void flecs_query_cache_fini(
     flecs_bfree(&stage->allocators.query_cache, cache);
 }
 
-/* Create new cache. */
+/* Create and initialize a new query cache. */
 ecs_query_cache_t* flecs_query_cache_init(
     ecs_query_impl_t *impl,
     const ecs_query_desc_t *const_desc)
@@ -610,9 +482,8 @@ ecs_query_cache_t* flecs_query_cache_init(
         goto error;
     }
 
-    /* Set flag for trivial caches which allows for faster iteration */
+    /* Check if this is a trivial cache (enables faster iteration path) */
     if (impl->pub.flags & EcsQueryIsCacheable) {
-        /* Trivial caches may only contain And/Not operators. */
         int32_t t, count = q->term_count;
         for (t = 0; t < count; t ++) {
             if (q->terms[t].oper != EcsAnd && q->terms[t].oper != EcsNot && q->terms[t].oper != EcsOptional) {
@@ -639,10 +510,8 @@ ecs_query_cache_t* flecs_query_cache_init(
         for (int i = 0; i < q->term_count; i ++) {
             ecs_term_t *term = &q->terms[i];
 
-            /* If query has change detection, flag this on the component record. 
-             * This allows code to skip calling modified() if there are no OnSet
-             * hooks/observers, and the component isn't used in any queries that use
-             * change detection. */
+            /* Flag component record so modified() calls aren't skipped for
+             * components used in change-detection queries. */
             
             ecs_component_record_t *cr = 
                 flecs_components_ensure(world, term->id);
@@ -671,18 +540,15 @@ ecs_query_cache_t* flecs_query_cache_init(
         elem_size, 0);
     result->first_group = &result->default_group;
 
-    /* The uncached query used to populate the cache always matches empty 
-     * tables. This flag determines whether the empty tables are stored 
-     * separately in the cache or are treated as regular tables. This is only
-     * enabled if the user requested that the query matches empty tables. */
+    /* The cache query always matches empty tables. This flag controls whether
+     * empty tables are exposed to the user during iteration. */
     ECS_BIT_COND(q->flags, EcsQueryCacheYieldEmptyTables, 
         !!(query_flags & EcsQueryMatchEmptyTables));
 
     flecs_query_cache_allocators_init(result);
 
-    /* Zero'd out sources array that's used for results that only match $this. 
-     * This reduces the amount of memory used by the cache, and improves CPU
-     * cache locality during iteration when doing source checks. */
+    /* Shared zero-initialized sources array for $this-only matches.
+     * Saves memory and improves cache locality during iteration. */
     if (result->query->term_count) {
         result->sources = flecs_bcalloc(&result->allocators.ids);
     }

@@ -1,6 +1,6 @@
 /**
  * @file query/engine/eval_toggle.c
- * @brief Bitset toggle evaluation.
+ * @brief Toggle bitset evaluation: filters entities by enabled/disabled component state.
  */
 
 #include "../../private_api.h"
@@ -28,6 +28,7 @@ static inline int32_t flecs_ctz64(uint64_t v) {
 #endif
 }
 
+/* Compute combined bitset mask for toggle fields at the given block index. */
 static
 flecs_query_row_mask_t flecs_query_get_row_mask(
     ecs_iter_t *it,
@@ -81,6 +82,7 @@ flecs_query_row_mask_t flecs_query_get_row_mask(
     return (flecs_query_row_mask_t){ mask, has_bitset };
 }
 
+/* Evaluate toggle state for fields matched through upward traversal. */
 static
 bool flecs_query_toggle_for_up(
     ecs_iter_t *it,
@@ -115,6 +117,7 @@ bool flecs_query_toggle_for_up(
     return true;
 }
 
+/* Evaluate toggle bitsets to find contiguous runs of enabled entities. */
 static
 bool flecs_query_toggle_cmp(
     const ecs_query_op_t *op,
@@ -138,8 +141,7 @@ bool flecs_query_toggle_cmp(
     ecs_flags32_t up_fields = it->up_fields;
     if (!redo) {
         if (up_fields & (and_fields|not_fields)) {
-            /* If there are toggle fields that were matched with query 
-             * traversal, evaluate those separately. */
+            /* Evaluate toggle state for up-traversed fields separately */
             if (!flecs_query_toggle_for_up(it, and_fields, not_fields)) {
                 return false;
             }
@@ -148,18 +150,15 @@ bool flecs_query_toggle_cmp(
         }
     }
 
-    /* Shared fields are evaluated, can be ignored from now on */
-    // and_fields &= ~up_fields;
+    /* Exclude already-evaluated up-traversal fields */
     not_fields &= flecs_uto(uint64_t, ~up_fields);
 
     if (!(table->flags & EcsTableHasToggle)) {
         if (not_fields) {
-            /* If any of the toggle fields with a not operator are for fields
-             * that are set, without a bitset those fields can't match. */
+            /* Not-fields that are set can't match without a bitset */
             return false;
         } else {
-            /* If table doesn't have toggles but query matched toggleable 
-             * components, all entities match. */
+            /* No bitset columns: all entities match the toggle check */
             if (!redo) {            
                 return true;
             } else {
@@ -234,7 +233,7 @@ next_block:
         op_ctx->block = block;
     }
 
-    /* Find first enabled bit using bit operations */
+    /* Find contiguous run of enabled entities within the 64-bit block */
     int32_t first_bit = cur - (block_index * 64);
     int32_t last_bit = ECS_MIN(64, last - (block_index * 64));
     ecs_assert(first_bit >= 0, ECS_INTERNAL_ERROR, NULL);
@@ -281,13 +280,13 @@ next_block:
     return true;
 
 done:
-    /* Restore range & set fields */
     flecs_query_src_set_range(op, &op_ctx->range, ctx);
     it->set_fields = op_ctx->prev_set_fields;
 
     return false;
 }
 
+/* Evaluate toggle query operation for required and negated fields. */
 bool flecs_query_toggle(
     const ecs_query_op_t *op,
     bool redo,
@@ -306,6 +305,7 @@ bool flecs_query_toggle(
         op, redo, ctx, and_fields, not_fields);
 }
 
+/* Evaluate toggle query operation for optional fields with both branches. */
 bool flecs_query_toggle_option(
     const ecs_query_op_t *op,
     bool redo,

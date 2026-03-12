@@ -1,6 +1,6 @@
 /**
  * @file addons/json/deserialize.c
- * @brief Deserialize JSON strings into (component) values.
+ * @brief Deserialize JSON strings into entities and worlds.
  */
 
 #include "../../private_api.h"
@@ -18,6 +18,7 @@ typedef struct {
     const char *expr;
 } ecs_from_json_ctx_t;
 
+/* Initialize deserialization context with allocator and empty collections. */
 static
 void flecs_from_json_ctx_init(
     ecs_allocator_t *a,
@@ -30,6 +31,7 @@ void flecs_from_json_ctx_init(
     ecs_map_init(&ctx->missing_reflection, a);
 }
 
+/* Clean up deserialization context resources. */
 static
 void flecs_from_json_ctx_fini(
     ecs_from_json_ctx_t *ctx)
@@ -40,12 +42,13 @@ void flecs_from_json_ctx_fini(
     ecs_map_fini(&ctx->missing_reflection);
 }
 
+/* Create a new entity id, respecting low-id requirements. */
 static
 ecs_entity_t flecs_json_new_id(
     ecs_world_t *world,
     ecs_entity_t ser_id)
 {
-    /* Try to honor low id requirements */
+    /* Preserve low-id range for component ids */
     if (ser_id < FLECS_HI_COMPONENT_ID) {
         return ecs_new_low_id(world);
     } else {
@@ -53,6 +56,7 @@ ecs_entity_t flecs_json_new_id(
     }
 }
 
+/* Report a missing reflection error for a component id during deserialization. */
 static
 void flecs_json_missing_reflection(
     ecs_world_t *world,
@@ -65,7 +69,7 @@ void flecs_json_missing_reflection(
         return;
     }
 
-    /* Don't spam log when multiple values of a type can't be deserialized */
+    /* Deduplicate: log each missing type only once */
     ecs_map_ensure(&ctx->missing_reflection, id);
 
     char *id_str = ecs_id_str(world, id);
@@ -74,6 +78,7 @@ void flecs_json_missing_reflection(
     ecs_os_free(id_str);
 }
 
+/* Look up an entity by name within an optional parent scope. */
 static
 ecs_entity_t flecs_json_lookup(
     ecs_world_t *world,
@@ -94,6 +99,7 @@ ecs_entity_t flecs_json_lookup(
     return result;
 }
 
+/* Mark an entity id as reserved in the anonymous id map. */
 static
 void flecs_json_mark_reserved(
     ecs_map_t *anonymous_ids,
@@ -104,6 +110,7 @@ void flecs_json_mark_reserved(
     reserved[0] = 0;
 }
 
+/* Find or create an entity by name, mapping anonymous ids as needed. */
 static
 ecs_entity_t flecs_json_ensure_entity(
     ecs_world_t *world,
@@ -119,33 +126,25 @@ ecs_entity_t flecs_json_ensure_entity(
         ecs_entity_t *deser_id = ecs_map_get(anonymous_ids, ser_id);
         if (deser_id) {
             if (!deser_id[0]) {
-                /* Id is already issued by deserializer, create new id */
+                /* Slot reserved but no id assigned yet, create one */
                 deser_id[0] = flecs_json_new_id(world, ser_id);
-
-                /* Mark new id as reserved */
                 flecs_json_mark_reserved(anonymous_ids, deser_id[0]);
             } else {
-                /* Id mapping exists */
+                /* Mapping already established */
             }
         } else {
-            /* Id has not yet been issued by deserializer, which means it's safe
-             * to use. This allows the deserializer to bind to existing 
-             * anonymous ids, as they will never be reissued. */
+            /* Id not yet seen by deserializer -- safe to reuse the original id
+             * if it doesn't conflict with a live named entity. */
             deser_id = ecs_map_ensure(anonymous_ids, ser_id);
-            if (!ecs_exists(world, ser_id) || 
-               (ecs_is_alive(world, ser_id) && !ecs_get_name(world, ser_id))) 
+            if (!ecs_exists(world, ser_id) ||
+               (ecs_is_alive(world, ser_id) && !ecs_get_name(world, ser_id)))
             {
-                /* Only use existing id if it's alive or doesn't exist yet. The 
-                 * id could have been recycled for another entity 
-                 * Also don't use existing id if the existing entity is not
-                 * anonymous. */
+                /* Reuse original id: either unused or alive-and-anonymous */
                 deser_id[0] = ser_id;
                 ecs_make_alive(world, ser_id);
             } else {
-                /* If id exists and is not alive, create a new id */
+                /* Conflict: id recycled for another entity, allocate new */
                 deser_id[0] = flecs_json_new_id(world, ser_id);
-
-                /* Mark new id as reserved */
                 flecs_json_mark_reserved(anonymous_ids, deser_id[0]);
             }
         }
@@ -162,6 +161,7 @@ ecs_entity_t flecs_json_ensure_entity(
     return e;
 }
 
+/* Determine whether an id should be included in the deserialized type. */
 static
 bool flecs_json_add_id_to_type(
     ecs_id_t id)
@@ -175,6 +175,7 @@ bool flecs_json_add_id_to_type(
     return true;
 }
 
+/* Deserialize a JSON array of tags and add them to an entity. */
 static
 const char* flecs_json_deser_tags(
     ecs_world_t *world,
@@ -228,13 +229,13 @@ const char* flecs_json_deser_tags(
         goto error;
     }
 
-
 end:
     return json;
 error:
     return NULL;
 }
 
+/* Deserialize a JSON object of relationship pairs and add them to an entity. */
 static
 const char* flecs_json_deser_pairs(
     ecs_world_t *world,
@@ -340,6 +341,7 @@ error:
     return NULL;
 }
 
+/* Deserialize a JSON object of component values and apply them to an entity. */
 static
 const char* flecs_json_deser_components(
     ecs_world_t *world,
@@ -456,7 +458,7 @@ const char* flecs_json_deser_components(
             json = lah;
         }
 
-        /* Don't add ids that have their own fields in serialized data. */
+        /* Track id for table reconciliation at end of entity deserialization */
         if (flecs_json_add_id_to_type(id)) {
             ecs_vec_append_t(ctx->a, &ctx->table_type, ecs_id_t)[0] = id;
         }
@@ -478,6 +480,7 @@ error:
     return NULL;
 }
 
+/* Deserialize a single entity from a JSON object. */
 static
 const char* flecs_entity_from_json(
     ecs_world_t *world,
@@ -621,7 +624,7 @@ const char* flecs_entity_from_json(
                 e = flecs_json_lookup(world, 0, name, desc);
             }
         } else {
-            /* If we already have an id, ignore explicit id */
+            /* Entity already resolved by name/parent, ignore explicit id */
         }
 
         if (token_kind == JsonObjectClose) {
@@ -714,7 +717,7 @@ const char* flecs_entity_from_json(
             dst_table = NULL;
         }
 
-        /* Entity had existing components that weren't in the serialized data */
+        /* Remove components that existed before but weren't in the JSON */
         if (table != dst_table) {
             ecs_assert(ecs_get_target(world, e, EcsChildOf, 0) != EcsFlecsCore,
                 ECS_INVALID_OPERATION, "%s\n[%s] => \n[%s]",

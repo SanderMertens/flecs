@@ -1,15 +1,10 @@
 /**
  * @file poly.c
- * @brief Functions for managing poly objects.
- * 
- * The poly framework makes it possible to generalize common functionality for
- * different kinds of API objects, as well as improved type safety checks. Poly
- * objects have a header that identifiers what kind of object it is. This can
- * then be used to discover a set of "mixins" implemented by the type.
- * 
- * Mixins are like a vtable, but for members. Each type populates the table with
- * offsets to the members that correspond with the mixin. If an entry in the
- * mixin table is not set, the type does not support the mixin.
+ * @brief Polymorphic object framework.
+ *
+ * Poly objects have a header identifying their type, which maps to a mixin
+ * table of member offsets. This enables type-safe generic access to fields
+ * like world, entity, observable, and dtor across different object types.
  */
 
 #include "private_api.h"
@@ -46,6 +41,7 @@ ecs_mixins_t ecs_observer_t_mixins = {
     }
 };
 
+/* Assert that a poly object supports the given mixin and return its address. */
 static
 void* assert_mixin(
     const ecs_poly_t *poly,
@@ -68,10 +64,10 @@ void* assert_mixin(
             mixin_kind_str[kind], mixins ? mixins->type_name : "unknown");
     (void)mixin_kind_str;
 
-    /* Object has mixin, return its address */
     return ECS_OFFSET(hdr, offset);
 }
 
+/* Initialize a poly object with type, size, and mixin table. */
 void* flecs_poly_init_(
     ecs_poly_t *poly,
     int32_t type,
@@ -90,6 +86,7 @@ void* flecs_poly_init_(
     return poly;
 }
 
+/* Deinitialize a poly object for the specified type. */
 void flecs_poly_fini_(
     ecs_poly_t *poly,
     int32_t type)
@@ -99,12 +96,12 @@ void flecs_poly_fini_(
 
     ecs_header_t *hdr = poly;
 
-    /* Don't deinit poly that wasn't initialized */
     ecs_assert(hdr->type == type, ECS_INVALID_PARAMETER,
         "incorrect function called to free flecs object");
     hdr->type = 0;
 }
 
+/* Increment the reference count of a poly object. */
 int32_t flecs_poly_claim_(
     ecs_poly_t *poly)
 {
@@ -119,6 +116,7 @@ int32_t flecs_poly_claim_(
     }
 }
 
+/* Decrement the reference count of a poly object. */
 int32_t flecs_poly_release_(
     ecs_poly_t *poly)
 {
@@ -133,6 +131,7 @@ int32_t flecs_poly_release_(
     }
 }
 
+/* Return the current reference count of a poly object. */
 int32_t flecs_poly_refcount(
     ecs_poly_t *poly)
 {
@@ -143,26 +142,23 @@ int32_t flecs_poly_refcount(
     return hdr->refcount;
 }
 
+/* Get or create poly component for an entity. */
 EcsPoly* flecs_poly_bind_(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t tag)
 {
-    /* Add tag to the entity for easy querying. This will make it possible to
-     * query for `Query` instead of `(Poly, Query) */
     if (!ecs_has_id(world, entity, tag)) {
         ecs_add_id(world, entity, tag);
     }
 
-    /* Never defer creation of a poly object */
+    /* Poly creation must not be deferred */
     bool deferred = false;
     if (ecs_is_deferred(world)) {
         deferred = true;
         ecs_defer_suspend(world);
     }
 
-    /* If this is a new poly, leave the actual creation up to the caller so they
-     * call tell the difference between a create or an update */
     EcsPoly *result = ecs_ensure_pair(world, entity, EcsPoly, tag);
 
     if (deferred) {
@@ -172,6 +168,7 @@ EcsPoly* flecs_poly_bind_(
     return result;
 }
 
+/* Send modified event for (Poly, Tag) pair. */
 void flecs_poly_modified_(
     ecs_world_t *world,
     ecs_entity_t entity,
@@ -180,6 +177,7 @@ void flecs_poly_modified_(
     ecs_modified_pair(world, entity, ecs_id(EcsPoly), tag);
 }
 
+/* Get poly component for an entity. */
 const EcsPoly* flecs_poly_bind_get_(
     const ecs_world_t *world,
     ecs_entity_t entity,
@@ -188,6 +186,7 @@ const EcsPoly* flecs_poly_bind_get_(
     return ecs_get_pair(world, entity, EcsPoly, tag);
 }
 
+/* Get poly object from (Poly, Tag) pair on entity. */
 ecs_poly_t* flecs_poly_get_(
     const ecs_world_t *world,
     ecs_entity_t entity,
@@ -200,6 +199,7 @@ ecs_poly_t* flecs_poly_get_(
     return NULL;
 }
 
+/* Check if a poly object is of the specified type. */
 bool flecs_poly_is_(
     const ecs_poly_t *poly,
     int32_t type)
@@ -212,6 +212,7 @@ bool flecs_poly_is_(
     return hdr->type == type;    
 }
 
+/* Get observable mixin from poly object. */
 ecs_observable_t* flecs_get_observable(
     const ecs_poly_t *poly)
 {
@@ -233,6 +234,7 @@ ecs_entity_t ecs_get_entity(
     return *(ecs_entity_t*)assert_mixin(poly, EcsMixinEntity);
 }
 
+/* Get dtor mixin from poly object. */
 flecs_poly_dtor_t* flecs_get_dtor(
     const ecs_poly_t *poly)
 {

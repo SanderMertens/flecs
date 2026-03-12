@@ -1,10 +1,14 @@
 /**
  * @file query/engine/trav_cache.c
- * @brief Cache that stores the result of graph traversal.
+ * @brief Full-tree traversal cache: recursively walks and caches relationship graphs.
+ *
+ * Used by transitive queries (EcsQueryTrav) to enumerate all entities reachable
+ * through a relationship, both upward and downward.
  */
 
 #include "../../private_api.h"
 
+/* Recursively build down-traversal cache for an entity. */
 static
 void flecs_query_build_down_cache(
     ecs_world_t *world,
@@ -47,6 +51,7 @@ void flecs_query_build_down_cache(
     }
 }
 
+/* Recursively build up-traversal cache from a table's relationship pairs. */
 static
 void flecs_query_build_up_cache(
     ecs_world_t *world,
@@ -88,6 +93,7 @@ void flecs_query_build_up_cache(
     }
 }
 
+/* Free traversal cache resources. */
 void flecs_query_trav_cache_fini(
     ecs_allocator_t *a,
     ecs_trav_cache_t *cache)
@@ -95,6 +101,7 @@ void flecs_query_trav_cache_fini(
     ecs_vec_fini_t(a, &cache->entities, ecs_trav_elem_t);
 }
 
+/* Populate the down-traversal cache for a given entity and relationship. */
 void flecs_query_get_trav_down_cache(
     const ecs_query_run_ctx_t *ctx,
     ecs_trav_cache_t *cache,
@@ -111,6 +118,7 @@ void flecs_query_get_trav_down_cache(
     }
 }
 
+/* Populate the up-traversal cache for a given table and relationship. */
 void flecs_query_get_trav_up_cache(
     const ecs_query_run_ctx_t *ctx,
     ecs_trav_cache_t *cache,

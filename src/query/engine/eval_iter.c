@@ -1,10 +1,14 @@
 /**
  * @file query/engine/eval_iter.c
- * @brief Query iterator.
+ * @brief Query iterator lifecycle: creation, next(), and finalization.
+ *
+ * Selects specialized fast-path iterators (trivial, cached) when possible,
+ * otherwise falls through to the general VM dispatch loop.
  */
 
 #include "../../private_api.h"
 
+/* Initialize run context from iterator state. */
 static
 void flecs_query_iter_run_ctx_init(
     ecs_iter_t *it,
@@ -22,6 +26,7 @@ void flecs_query_iter_run_ctx_init(
     ctx->qit = qit;
 }
 
+/* Constrain iterator and select specialized iteration mode. */
 void flecs_query_iter_constrain(
     ecs_iter_t *it)
 {
@@ -60,8 +65,7 @@ void flecs_query_iter_constrain(
     it->flags &= ~(EcsIterTrivialTest|EcsIterTrivialCached|
         EcsIterTrivialSearch);
 
-    /* Figure out whether this query can utilize specialized iterator modes for
-     * improved performance. */
+    /* Select specialized iterator mode if eligible. */
     ecs_flags32_t flags = q->flags;
     ecs_flags32_t trivial_flags = EcsQueryIsTrivial|EcsQueryMatchOnlySelf;
     ecs_query_cache_t *cache = query->cache;
@@ -123,26 +127,25 @@ void flecs_query_iter_constrain(
     }
 }
 
+/* Mark dirty fields and synchronize change detection monitors. */
 static
 void flecs_query_change_detection(
     ecs_iter_t *it,
     ecs_query_iter_t *qit,
     ecs_query_impl_t *impl)
 {
-    /* Change detection */
     if (!(it->flags & EcsIterSkip)) {
-        /* Mark table columns that are written to dirty */
         flecs_query_mark_fields_dirty(impl, it);
         if (qit->elem) {
             if (impl->pub.flags & EcsQueryHasChangeDetection) {
-                /* If this query uses change detection, synchronize the
-                 * monitor for the iterated table with the query */
+                /* Sync table monitor with query change detection */
                 flecs_query_sync_match_monitor(impl, qit->elem);
             }
         }
     }
 }
 
+/* Perform change detection only when the table has dirty state. */
 static
 void flecs_query_self_change_detection(
     ecs_iter_t *it,
@@ -186,13 +189,8 @@ bool ecs_query_next(
     it->flags |= EcsIterIsValid;
     it->frame_offset += it->count;
 
-    /* Specialized iterator modes. When a query doesn't use any advanced 
-     * features, it can call specialized iterator functions directly instead of
-     * going through the dispatcher of the query engine. 
-     * The iterator mode is set during iterator initialization. Besides being
-     * determined by the query, there are different modes for searching and 
-     * testing, where searching returns all matches for a query, whereas testing
-     * tests a single table or table range against the query. */
+    /* Fast-path dispatch: simple queries bypass the VM. Mode (search vs test,
+     * cached vs uncached) was set in iter_constrain(). */
 
     if (it->flags & EcsIterTrivialCached) {
         /* Trivial cache iterator. Only supported for search */
@@ -276,6 +274,7 @@ yield:
     return true;
 }
 
+/* Advance trivial cached query iterator to the next result. */
 bool flecs_query_trivial_cached_next(
     ecs_iter_t *it)
 {
@@ -314,6 +313,7 @@ bool flecs_query_trivial_cached_next(
     return false;
 }
 
+/* Finalize operation context and free associated resources. */
 void flecs_query_op_ctx_fini(
     ecs_iter_t *it,
     const ecs_query_op_t *op,
@@ -354,6 +354,7 @@ void flecs_query_op_ctx_fini(
     }
 }
 
+/* Finalize all operation contexts for a query iterator. */
 static
 void flecs_query_iter_fini_ctx(
     ecs_iter_t *it,
@@ -370,6 +371,7 @@ void flecs_query_iter_fini_ctx(
     }
 }
 
+/* Clean up query iterator resources and free allocations. */
 static
 void flecs_query_iter_fini(
     ecs_iter_t *it)
@@ -406,6 +408,7 @@ void flecs_query_iter_fini(
     it->query = NULL;
 }
 
+/* Validate that final-tagged fields have no unexpected IsA relationships. */
 static
 void flecs_query_validate_final_fields(
     const ecs_query_t *q)
@@ -456,6 +459,7 @@ void flecs_query_validate_final_fields(
 #endif
 }
 
+/* Create and initialize a query iterator (internal). */
 ecs_iter_t flecs_query_iter(
     const ecs_world_t *world,
     const ecs_query_t *q)

@@ -1,10 +1,11 @@
 /**
  * @file query/engine/eval_sparse.c
- * @brief Sparse component evaluation.
+ * @brief Sparse (non-fragmenting) component evaluation: stored per-entity, not in tables.
  */
 
 #include "../../private_api.h"
 
+/* Initialize sparse storage context from a component record. */
 static
 bool flecs_query_sparse_init_sparse(
     ecs_query_sparse_ctx_t *op_ctx,
@@ -31,6 +32,7 @@ bool flecs_query_sparse_init_sparse(
     return true;
 }
 
+/* Initialize table range for sparse entity iteration. */
 static
 void flecs_query_sparse_init_range(
     const ecs_query_op_t *op,
@@ -44,9 +46,10 @@ void flecs_query_sparse_init_range(
     }
 
     op_ctx->range = range;
-    op_ctx->cur = range.offset - 1; 
+    op_ctx->cur = range.offset - 1; /* Pre-decremented; next_entity increments before use */
 }
 
+/* Advance to the next entity in the range that has the sparse component. */
 static
 bool flecs_query_sparse_next_entity(
     const ecs_query_op_t *op,
@@ -89,6 +92,7 @@ next:
     return true;
 }
 
+/* Select entities with a specific sparse component id. */
 static
 bool flecs_query_sparse_select_id(
     const ecs_query_op_t *op,
@@ -132,6 +136,7 @@ next:
     return true;
 }
 
+/* Select entities matching a wildcard sparse component id. */
 static
 bool flecs_query_sparse_select_wildcard(
     const ecs_query_op_t *op,
@@ -199,6 +204,7 @@ next_component: {
     goto next;
 }
 
+/* Advance to the next non-wildcard pair in the non-fragmenting list. */
 static
 bool flecs_query_sparse_next_wildcard_pair(
     ecs_query_sparse_ctx_t *op_ctx)
@@ -221,6 +227,7 @@ bool flecs_query_sparse_next_wildcard_pair(
     return true;
 }
 
+/* Select entities across all sparse wildcard pair components. */
 static
 bool flecs_query_sparse_select_all_wildcard_pairs(
     const ecs_query_op_t *op,
@@ -265,6 +272,7 @@ next_component:
     goto next;
 }
 
+/* Dispatch sparse select operation based on id type. */
 bool flecs_query_sparse_select(
     const ecs_query_op_t *op,
     bool redo,
@@ -285,6 +293,7 @@ bool flecs_query_sparse_select(
     }
 }
 
+/* Test entities in a range for presence of a specific sparse component. */
 static
 bool flecs_query_sparse_with_id(
     const ecs_query_op_t *op,
@@ -324,6 +333,7 @@ no_sparse:
     return not;
 }
 
+/* Test entities for an exclusive sparse relationship. */
 static
 bool flecs_query_sparse_with_exclusive(
     const ecs_query_op_t *op,
@@ -360,6 +370,7 @@ bool flecs_query_sparse_with_exclusive(
     return false;
 }
 
+/* Test entities for a wildcard sparse component match. */
 static
 bool flecs_query_sparse_with_wildcard(
     const ecs_query_op_t *op,
@@ -453,6 +464,7 @@ next_component: {
     goto next;
 }
 
+/* Test entities against all sparse wildcard pair components. */
 static
 bool flecs_query_sparse_with_all_wildcard_pairs(
     const ecs_query_op_t *op,
@@ -501,6 +513,7 @@ next_component:
     goto next;
 }
 
+/* Dispatch sparse with operation based on id type. */
 bool flecs_query_sparse_with(
     const ecs_query_op_t *op,
     bool redo,
@@ -519,6 +532,7 @@ bool flecs_query_sparse_with(
     }
 }
 
+/* Evaluate sparse component with upward hierarchy traversal. */
 bool flecs_query_sparse_up(
     const ecs_query_op_t *op,
     bool redo,
@@ -527,8 +541,7 @@ bool flecs_query_sparse_up(
     uint64_t written = ctx->written[ctx->op_index];
     if (flecs_ref_is_written(op, &op->src, EcsQuerySrc, written)) {
         if (!redo) {
-            /* Can use regular up traversal since sparse components are resolved
-             * by the traversal cache */
+            /* Sparse components are resolved by the traversal cache */
             if (!flecs_query_up_with(op, redo, ctx)) {
                 return false;
             }
@@ -543,6 +556,7 @@ bool flecs_query_sparse_up(
     }
 }
 
+/* Evaluate sparse component on self first, then traverse upward. */
 bool flecs_query_sparse_self_up(
     const ecs_query_op_t *op,
     bool redo,
@@ -624,6 +638,7 @@ next_table: {
     }
 }
 
+/* Evaluate sparse component query operation. */
 bool flecs_query_sparse(
     const ecs_query_op_t *op,
     bool redo,

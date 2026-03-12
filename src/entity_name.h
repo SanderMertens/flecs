@@ -5,11 +5,9 @@
 
 #include "private_api.h"
 
-/* Called during bootstrap to register entity name entities with world. */
 void flecs_bootstrap_entity_name(
     ecs_world_t *world);
 
-/* Update lookup index for entity names. */
 void flecs_reparent_name_index(
     ecs_world_t *world,
     ecs_table_t *dst,
@@ -24,6 +22,5 @@ void flecs_unparent_name_index(
     int32_t offset,
     int32_t count);
 
-/* Hook (on_set/on_remove) for updating lookup index for entity names. */
 void ecs_on_set(EcsIdentifier)(
     ecs_iter_t *it);

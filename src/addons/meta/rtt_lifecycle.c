@@ -1,6 +1,6 @@
-/*
+/**
  * @file addons/meta/rtt_lifecycle.c
- * @brief Runtime components lifecycle management
+ * @brief Runtime component lifecycle management.
  */
 
 #include "flecs.h"
@@ -8,8 +8,9 @@
 
 #ifdef FLECS_META
 
-/* Stores all the information necessary to forward a hook call to a
- * struct's member type */
+/* Per-member hook forwarding data. RTT (runtime type) hooks work by
+ * iterating over each member and invoking the member type's hook at
+ * the member's offset within the struct. */
 typedef struct ecs_rtt_call_data_t {
     union {
         ecs_xtor_t xtor;
@@ -23,7 +24,7 @@ typedef struct ecs_rtt_call_data_t {
     int32_t count;
 } ecs_rtt_call_data_t;
 
-/* Lifecycle context for runtime structs */
+/* Lifecycle context for runtime struct types */
 typedef struct ecs_rtt_struct_ctx_t {
     ecs_vec_t vctor;   /* vector<ecs_rtt_call_data_t> */
     ecs_vec_t vdtor;   /* vector<ecs_rtt_call_data_t> */
@@ -45,7 +46,7 @@ typedef struct ecs_rtt_vector_ctx_t {
     const ecs_type_info_t *type_info;
 } ecs_rtt_vector_ctx_t;
 
-/* Generic copy assign hook */
+/* Fallback copy hook: plain memcpy for members without a copy hook. */
 static
 void flecs_rtt_default_copy(
     void *dst_ptr,
@@ -56,7 +57,7 @@ void flecs_rtt_default_copy(
     ecs_os_memcpy(dst_ptr, src_ptr, count * type_info->size);
 }
 
-/* Generic move assign hook */
+/* Fallback move hook: plain memcpy for members without a move hook. */
 static
 void flecs_rtt_default_move(
     void *dst_ptr,
@@ -67,14 +68,9 @@ void flecs_rtt_default_move(
     flecs_rtt_default_copy(dst_ptr, src_ptr, count, type_info);
 }
 
-/*
- *
- * RTT struct support
- *
- */
+/* -- RTT struct support -- */
 
-/* Invokes struct member type's constructor/destructor using saved information
- * in the lifecycle context */
+/* Invoke per-member ctor/dtor hooks using the lifecycle context's call data. */
 static
 void flecs_rtt_struct_xtor(
     ecs_vec_t *xtor_data_vec,
@@ -97,9 +93,7 @@ void flecs_rtt_struct_xtor(
     }
 }
 
-/* Generic struct constructor. It will read hook information call data from
- * the structs's lifecycle context and call the constructors configured when
- * the type was created. */
+/* RTT struct constructor: forwards to each member's ctor. */
 static
 void flecs_rtt_struct_ctor(
     void *ptr,
@@ -111,9 +105,7 @@ void flecs_rtt_struct_ctor(
     flecs_rtt_struct_xtor(&rtt_ctx->vctor, ptr, count, type_info);
 }
 
-/* Generic struct destructor. It will read hook information call data from
- * the structs's lifecycle context and call the constructors configured when
- * the type was created. */
+/* RTT struct destructor: forwards to each member's dtor. */
 static
 void flecs_rtt_struct_dtor(
     void *ptr,
@@ -125,9 +117,7 @@ void flecs_rtt_struct_dtor(
     flecs_rtt_struct_xtor(&rtt_ctx->vdtor, ptr, count, type_info);
 }
 
-/* Generic move hook. It will read hook information call data from the
- * structs's lifecycle context and call the move hooks configured when
- * the type was created. */
+/* RTT struct move: forwards to each member's move hook. */
 static
 void flecs_rtt_struct_move(
     void *dst_ptr,
@@ -156,9 +146,7 @@ void flecs_rtt_struct_move(
     }
 }
 
-/* Generic copy hook. It will read hook information call data from the
- * structs's lifecycle context and call the copy hooks configured when
- * the type was created. */
+/* RTT struct copy: forwards to each member's copy hook. */
 static
 void flecs_rtt_struct_copy(
     void *dst_ptr,
@@ -187,9 +175,7 @@ void flecs_rtt_struct_copy(
     }
 }
 
-/* Generic compare hook. It will read hook information call data from the
- * structs's lifecycle context and call the compare hooks configured when
- * the type was created. */
+/* RTT struct compare: forwards to each member's cmp hook. */
 static
 int flecs_rtt_struct_cmp(
     const void *a_ptr,
@@ -219,9 +205,7 @@ int flecs_rtt_struct_cmp(
     return 0;
 }
 
-/* Generic equals hook. It will read hook information call data from the
- * structs's lifecycle context and call the equals hooks configured when
- * the type was created. */
+/* RTT struct equals: forwards to each member's equals hook. */
 static
 bool flecs_rtt_struct_equals(
     const void *a_ptr,
@@ -251,6 +235,7 @@ bool flecs_rtt_struct_equals(
     return true;
 }
 
+/* No-op lifecycle context free; used when hooks exist but no ctx was allocated. */
 static
 void flecs_rtt_free_lifecycle_nop(
     void *ctx)
@@ -258,6 +243,7 @@ void flecs_rtt_free_lifecycle_nop(
     (void)ctx;
 }
 
+/* Free the lifecycle context for a runtime struct type. */
 static
 void flecs_rtt_free_lifecycle_struct_ctx(
     void *ctx)
@@ -278,6 +264,8 @@ void flecs_rtt_free_lifecycle_struct_ctx(
     ecs_os_free(ctx);
 }
 
+/* Configure generic forwarding hooks for a runtime struct type. Allocates
+ * and returns a lifecycle context that will hold per-member call data. */
 static
 ecs_rtt_struct_ctx_t * flecs_rtt_configure_struct_hooks(
     ecs_world_t *world,
@@ -337,21 +325,19 @@ ecs_rtt_struct_ctx_t * flecs_rtt_configure_struct_hooks(
     return rtt_ctx;
 }
 
-/* Checks if a struct member's types have hooks installed. If so, it generates
- * and installs required hooks for the struct type itself. These hooks will
- * invoke the member hooks when necessary  */
+/* Scan struct members to determine which hooks are needed, then configure
+ * generic forwarding hooks and build per-member call data vectors. */
 static
 void flecs_rtt_init_default_hooks_struct(
     ecs_world_t *world,
     ecs_entity_t component,
     const ecs_type_info_t *ti)
 {
-    /* Obtain struct information to figure out what members it contains: */
+    /* Inspect struct members to determine which hooks are needed */
     const EcsStruct *struct_info = ecs_get(world, component, EcsStruct);
     ecs_assert(struct_info != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    /* These flags will be set to true if we determine we need to generate a
-     * hook of a particular type: */
+    /* Determine per-hook whether any member requires forwarding */
     bool ctor_hook_required = false;
     bool dtor_hook_required = false;
     bool move_hook_required = false;
@@ -359,8 +345,7 @@ void flecs_rtt_init_default_hooks_struct(
     bool valid_cmp = true;
     bool valid_equals = true;
 
-    /* Iterate all struct members and see if any member type has hooks. If so,
-     * the struct itself will need to have that hook: */
+    /* Check each member type for hooks; the struct needs a hook if any member does */
     int i, member_count = ecs_vec_count(&struct_info->members);
     ecs_member_t *members = ecs_vec_first(&struct_info->members);
     ecs_flags32_t flags = 0;
@@ -375,14 +360,13 @@ void flecs_rtt_init_default_hooks_struct(
         dtor_hook_required |= member_ti->hooks.dtor != NULL;
         move_hook_required |= member_ti->hooks.move != NULL;
         copy_hook_required |= member_ti->hooks.copy != NULL;
-        /* A struct has a valid cmp/equals hook if all its members have it: */
+        /* Struct cmp/equals is only valid if all members support it */
         valid_cmp &= member_ti->hooks.cmp != NULL;
         valid_equals  &= member_ti->hooks.equals != NULL;
         flags |= member_ti->hooks.flags;
     }
 
-    /* If any hook is required, then create a lifecycle context and configure a
-     * generic hook that will interpret that context: */
+    /* Create lifecycle context and configure generic forwarding hooks */
     ecs_rtt_struct_ctx_t *rtt_ctx = flecs_rtt_configure_struct_hooks(
         world,
         ti,
@@ -399,9 +383,7 @@ void flecs_rtt_init_default_hooks_struct(
         return; /* no hook forwarding required */
     }
 
-    /* At least a hook was configured, therefore examine each struct member to
-     * build the vector of calls that will then be executed by the generic hook
-     * handler: */
+    /* Build per-member call data vectors for each configured hook */
     for (i = 0; i < member_count; i++) {
         ecs_member_t *m = &members[i];
         const ecs_type_info_t *member_ti = ecs_get_type_info(world, m->type);
@@ -473,12 +455,9 @@ void flecs_rtt_init_default_hooks_struct(
     }
 }
 
-/*
- *
- * RTT array support
- *
- */
+/* -- RTT array support -- */
 
+/* Free the lifecycle context for a runtime array type. */
 static
 void flecs_rtt_free_lifecycle_array_ctx(
     void *ctx)
@@ -490,13 +469,11 @@ void flecs_rtt_free_lifecycle_array_ctx(
     ecs_os_free(ctx);
 }
 
-/* Generic array constructor. It will invoke the constructor of the underlying
- * type for all the elements */
+/* RTT array constructor. count = number of array instances, not elements. */
 static
 void flecs_rtt_array_ctor(
     void *ptr,
-    int32_t count, /* note: "count" is how many arrays to initialize, not how
-                      many elements are in the array */
+    int32_t count,
     const ecs_type_info_t *type_info)
 {
     ecs_rtt_array_ctx_t *rtt_ctx = type_info->hooks.lifecycle_ctx;
@@ -507,13 +484,11 @@ void flecs_rtt_array_ctor(
     }
 }
 
-/* Generic array constructor. It will invoke the destructor of the underlying
- * type for all the elements */
+/* RTT array destructor. count = number of array instances, not elements. */
 static
 void flecs_rtt_array_dtor(
     void *ptr,
-    int32_t count, /* note: "count" is how many arrays to destroy, not how
-                      many elements are in the array */
+    int32_t count,
     const ecs_type_info_t *type_info)
 {
     ecs_rtt_array_ctx_t *rtt_ctx = type_info->hooks.lifecycle_ctx;
@@ -524,14 +499,12 @@ void flecs_rtt_array_dtor(
     }
 }
 
-/* Generic array move hook. It will invoke the move hook of the underlying
- * type for all the elements */
+/* RTT array move. count = number of array instances, not elements. */
 static
 void flecs_rtt_array_move(
     void *dst_ptr,
     void *src_ptr,
-    int32_t count, /* note: "count" is how many arrays to move, not how
-                      many elements are in the array */
+    int32_t count,
     const ecs_type_info_t *type_info)
 {
     ecs_rtt_array_ctx_t *rtt_ctx = type_info->hooks.lifecycle_ctx;
@@ -544,14 +517,12 @@ void flecs_rtt_array_move(
     }
 }
 
-/* Generic array copy hook. It will invoke the copy hook of the underlying
- * type for all the elements */
+/* RTT array copy. count = number of array instances, not elements. */
 static
 void flecs_rtt_array_copy(
     void *dst_ptr,
     const void *src_ptr,
-    int32_t count, /* note: "count" is how many arrays to copy, not how
-                      many elements are in the array */
+    int32_t count,
     const ecs_type_info_t *type_info)
 {
     ecs_rtt_array_ctx_t *rtt_ctx = type_info->hooks.lifecycle_ctx;
@@ -564,8 +535,7 @@ void flecs_rtt_array_copy(
     }
 }
 
-/* Generic array compare hook. It will invoke the compare hook of the underlying
- * type for each element */
+/* RTT array compare: lexicographic comparison of all elements. */
 static
 int flecs_rtt_array_cmp(
     const void *a_ptr,
@@ -590,8 +560,7 @@ int flecs_rtt_array_cmp(
     return 0;
 }
 
-/* Generic array equals hook. It will invoke the equals hook of the underlying
- * type for each element */
+/* RTT array equals: element-wise equality check. */
 static
 bool flecs_rtt_array_equals(
     const void *a_ptr,
@@ -617,9 +586,7 @@ bool flecs_rtt_array_equals(
     return true;
 }
 
-/* Checks if an array's underlying type has hooks installed. If so, it generates
- * and installs required hooks for the array type itself. These hooks will
- * invoke the underlying type's hook for each element in the array. */
+/* Configure RTT array hooks based on element type capabilities. */
 static
 void flecs_rtt_init_default_hooks_array(
     ecs_world_t *world, 
@@ -679,12 +646,9 @@ void flecs_rtt_init_default_hooks_array(
     ecs_set_hooks_id(world, component, &hooks);
 }
 
-/*
- *
- * RTT vector support
- *
- */
+/* -- RTT vector support -- */
 
+/* Free the lifecycle context for a runtime vector type. */
 static
 void flecs_rtt_free_lifecycle_vector_ctx(
     void *ctx)
@@ -696,8 +660,7 @@ void flecs_rtt_free_lifecycle_vector_ctx(
     ecs_os_free(ctx);
 }
 
-/* Generic vector constructor. Makes sure the vector structure is initialized to
- * 0 elements */
+/* RTT vector constructor: initializes each ecs_vec_t to empty. */
 static
 void flecs_rtt_vector_ctor(
     void *ptr,
@@ -712,8 +675,7 @@ void flecs_rtt_vector_ctor(
     }
 }
 
-/* Generic vector destructor. It will invoke the destructor for each element of
- * the vector and finalize resources associated to the vector itself. */
+/* RTT vector destructor: destroys elements then frees the ecs_vec_t. */
 static
 void flecs_rtt_vector_dtor(
     void *ptr,
@@ -733,7 +695,7 @@ void flecs_rtt_vector_dtor(
     }
 }
 
-/* Generic vector move hook. */
+/* RTT vector move: destroys dst, then steals src's array pointer. */
 static
 void flecs_rtt_vector_move(
     void *dst_ptr,
@@ -752,7 +714,7 @@ void flecs_rtt_vector_move(
     }
 }
 
-/* Generic vector copy hook. It makes a deep copy of vector contents */
+/* RTT vector copy: deep-copies vector contents via element hooks. */
 static
 void flecs_rtt_vector_copy(
     void *dst_ptr,
@@ -800,7 +762,7 @@ void flecs_rtt_vector_copy(
     }
 }
 
-/* Generic vector compare hook. */
+/* RTT vector compare: length-first, then element-wise comparison. */
 static
 int flecs_rtt_vector_cmp(
     const void *a_ptr,
@@ -841,7 +803,7 @@ int flecs_rtt_vector_cmp(
     return 0;
 }
 
-/* Generic vector equals hook. */
+/* RTT vector equals: length check then element-wise equality. */
 static
 bool flecs_rtt_vector_equals(
     const void *a_ptr,
@@ -883,10 +845,8 @@ bool flecs_rtt_vector_equals(
     return true;
 }
 
-/* Generates and installs required hooks for managing the vector and underlying
- * type lifecycle. Vectors always have hooks because at the very least the
- * vector structure itself must be initialized/destroyed/copied/moved, even if
- * empty. */
+/* Configure RTT vector hooks. Vectors always need ctor/dtor/move/copy
+ * for ecs_vec_t lifecycle; cmp/equals depend on element type. */
 static
 void flecs_rtt_init_default_hooks_vector(
     ecs_world_t *world,
@@ -935,14 +895,15 @@ void flecs_rtt_init_default_hooks_vector(
         hooks.equals = NULL;
     }
 
-
-    /* propagate only the compare/equals hook illegal flag, if set */
+    /* Propagate compare/equals illegal flags from element type */
     hooks.flags |= flags & (ECS_TYPE_HOOK_CMP_ILLEGAL|ECS_TYPE_HOOK_EQUALS_ILLEGAL);
     
     hooks.flags &= ECS_TYPE_HOOKS_ILLEGAL;
     ecs_set_hooks_id(world, component, &hooks);
 }
 
+/* Observer callback: initialize RTT hooks when EcsType is set on a
+ * non-existing (runtime-defined) component. */
 void flecs_rtt_init_default_hooks(
     ecs_iter_t *it)
 {
@@ -956,17 +917,9 @@ void flecs_rtt_init_default_hooks(
             continue; /* non-rtt type. Ignore. */
         }
 
-        /* If a component is defined from reflection data, configure appropriate
-         * default hooks.
-         * - For trivial types, at least set a default constructor so memory is
-         * zero-initialized
-         * - For struct types, configure a hook that in turn calls hooks of
-         * member types, if those member types have hooks defined themselves.
-         * - For array types, configure a hook that in turn calls hooks for the
-         * underlying type, for each element in the array.
-         *  - For vector types, configure hooks to manage the vector structure
-         * itself, move the vector and deep-copy vector elements
-         * */
+        /* RTT types need auto-generated hooks: structs forward to member
+         * hooks, arrays forward to element hooks, vectors manage the
+         * ecs_vec_t lifecycle. Trivial types get a zero-init ctor. */
 
         ecs_entity_t component = it->entities[i];
 
@@ -989,10 +942,8 @@ void flecs_rtt_init_default_hooks(
         }
 
         ecs_type_hooks_t hooks = ti->hooks;
-        /* Make sure there is at least a default constructor. This ensures that
-         * a new component value does not contain uninitialized memory, which
-         * could cause serializers to crash when for example inspecting string
-         * fields. */
+        /* Ensure at least a zero-init ctor to prevent reading
+         * uninitialized memory (e.g. dangling string pointers). */
         if(!ti->hooks.ctor && !(ti->hooks.flags & ECS_TYPE_HOOK_CTOR_ILLEGAL)) {
             hooks.ctor = flecs_default_ctor;
         }

@@ -1,6 +1,6 @@
 /**
  * @file addons/stats/system_monitor.c
- * @brief Stats addon system monitor
+ * @brief Stats addon system monitor.
  */
 
 #include "flecs.h"
@@ -11,6 +11,7 @@
 
 ECS_COMPONENT_DECLARE(EcsSystemStats);
 
+/* Destroy system stats map entries and free associated resources. */
 static
 void flecs_system_monitor_dtor(EcsSystemStats *ptr) {
     ecs_map_iter_t it = ecs_map_iter(&ptr->stats);
@@ -42,7 +43,8 @@ static ECS_DTOR(EcsSystemStats, ptr, {
     flecs_system_monitor_dtor(ptr);
 })
 
-static 
+/* Set the current time index on a system statistics object. */
+static
 void flecs_system_stats_set_t(
     void *stats, int32_t t)
 {
@@ -51,47 +53,53 @@ void flecs_system_stats_set_t(
     ((ecs_system_stats_t*)stats)->query.t = t;
 }
 
+/* Forward copy-last operation to the system stats API. */
 static
 void flecs_system_stats_copy_last(
-    void *stats, 
-    void *src) 
+    void *stats,
+    void *src)
 {
     ecs_system_stats_copy_last(stats, src);
 }
 
+/* Forward get operation to the system stats API. */
 static
 void flecs_system_stats_get(
-    ecs_world_t *world, 
-    ecs_entity_t res, 
-    void *stats) 
+    ecs_world_t *world,
+    ecs_entity_t res,
+    void *stats)
 {
     ecs_system_stats_get(world, res, stats);
 }
 
+/* Forward reduce operation to the system stats API. */
 static
 void flecs_system_stats_reduce(
-    void *stats, 
-    void *src) 
+    void *stats,
+    void *src)
 {
     ecs_system_stats_reduce(stats, src);
 }
 
+/* Forward reduce-last operation to the system stats API. */
 static
 void flecs_system_stats_reduce_last(
-    void *stats, 
-    void *last, 
-    int32_t reduce_count) 
+    void *stats,
+    void *last,
+    int32_t reduce_count)
 {
     ecs_system_stats_reduce_last(stats, last, reduce_count);
 }
 
+/* Forward repeat-last operation to the system stats API. */
 static
 void flecs_system_stats_repeat_last(
-    void* stats) 
+    void* stats)
 {
     ecs_system_stats_repeat_last(stats);
 }
 
+/* Import the system monitor subsystem and register its stats API. */
 void FlecsSystemMonitorImport(
     ecs_world_t *world)
 {

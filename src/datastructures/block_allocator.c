@@ -1,30 +1,22 @@
 /**
  * @file datastructures/block_allocator.c
- * @brief Block allocator.
- * 
- * A block allocator is an allocator for a fixed size that allocates blocks of
- * memory with N elements of the requested size.
+ * @brief Fixed-size block allocator with free-list recycling.
  */
 
 #include "../private_api.h"
-
-// #ifdef FLECS_SANITIZE
-// #define FLECS_MEMSET_UNINITIALIZED
-// #endif
 
 int64_t ecs_block_allocator_alloc_count = 0;
 int64_t ecs_block_allocator_free_count = 0;
 
 #ifndef FLECS_USE_OS_ALLOC
 
-/* Bypass block allocator if chunks per block is lower than the configured 
- * value. This prevents holding on to large memory chunks when they're freed,
- * which can add up especially in scenarios where an array is reallocated 
- * several times to a large size. 
- * A value of 1 seems to yield the best results. Higher values only impact lower
- * allocation sizes, which are more likely to be reused. */
+/* When a block would contain this many chunks or fewer, fall back to OS
+ * allocator to avoid retaining oversized blocks unlikely to be reused. */
 #define FLECS_MIN_CHUNKS_PER_BLOCK 1
 
+/* Allocate a new block and thread its chunks into a free list.
+ * Each chunk's header contains a 'next' pointer; free chunks form a
+ * singly-linked list so alloc/free are O(1) pop/push operations. */
 static
 ecs_block_allocator_chunk_header_t* flecs_balloc_block(
     ecs_block_allocator_t *allocator)
@@ -33,10 +25,10 @@ ecs_block_allocator_chunk_header_t* flecs_balloc_block(
         return NULL;
     }
 
-    ecs_block_allocator_block_t *block = 
+    ecs_block_allocator_block_t *block =
         ecs_os_malloc(ECS_SIZEOF(ecs_block_allocator_block_t) +
             allocator->block_size);
-    ecs_block_allocator_chunk_header_t *first_chunk = ECS_OFFSET(block, 
+    ecs_block_allocator_chunk_header_t *first_chunk = ECS_OFFSET(block,
         ECS_SIZEOF(ecs_block_allocator_block_t));
 
     block->memory = first_chunk;
@@ -48,6 +40,7 @@ ecs_block_allocator_chunk_header_t* flecs_balloc_block(
 
     allocator->block_head = block;
 
+    /* Thread consecutive chunks into a singly-linked free list */
     ecs_block_allocator_chunk_header_t *chunk = first_chunk;
     int32_t i, end;
     for (i = 0, end = allocator->chunks_per_block - 1; i < end; ++i) {
@@ -63,6 +56,7 @@ ecs_block_allocator_chunk_header_t* flecs_balloc_block(
 
 #endif
 
+/* Initialize a block allocator for the given element size. */
 void flecs_ballocator_init(
     ecs_block_allocator_t *ba,
     ecs_size_t size)
@@ -73,11 +67,11 @@ void flecs_ballocator_init(
 #ifndef FLECS_USE_OS_ALLOC
 #ifdef FLECS_SANITIZE
     ba->alloc_count = 0;
-    if (size != 24) { /* Prevent stack overflow as map uses block allocator */
+    if (size != 24) { /* ecs_map_t is 24 bytes; skip its allocator to avoid infinite recursion */
         ba->outstanding = ecs_os_malloc_t(ecs_map_t);
         ecs_map_init(ba->outstanding, NULL);
     }
-    size += ECS_SIZEOF(int64_t) * 2; /* 16 byte aligned */
+    size += ECS_SIZEOF(int64_t) * 2; /* 16-byte sanitizer prefix for allocator validation */
 #endif
     ba->chunk_size = ECS_ALIGN(size, 16);
     ba->chunks_per_block = ECS_MAX(4096 / ba->chunk_size, 1);
@@ -87,6 +81,7 @@ void flecs_ballocator_init(
 #endif
 }
 
+/* Allocate and initialize a new block allocator for the given element size. */
 ecs_block_allocator_t* flecs_ballocator_new(
     ecs_size_t size)
 {
@@ -95,6 +90,7 @@ ecs_block_allocator_t* flecs_ballocator_new(
     return result;
 }
 
+/* Finalize a block allocator and free all owned memory blocks. */
 void flecs_ballocator_fini(
     ecs_block_allocator_t *ba)
 {
@@ -138,6 +134,7 @@ void flecs_ballocator_fini(
 #endif
 }
 
+/* Finalize and free a heap-allocated block allocator. */
 void flecs_ballocator_free(
     ecs_block_allocator_t *ba)
 {
@@ -145,12 +142,14 @@ void flecs_ballocator_free(
     ecs_os_free(ba);
 }
 
+/* Allocate a chunk from the block allocator. */
 void* flecs_balloc(
     ecs_block_allocator_t *ba)
 {
     return flecs_balloc_w_dbg_info(ba, NULL);
 }
 
+/* Allocate a chunk from the block allocator with optional debug type info. */
 void* flecs_balloc_w_dbg_info(
     ecs_block_allocator_t *ba,
     const char *type_name)
@@ -173,6 +172,7 @@ void* flecs_balloc_w_dbg_info(
         ecs_assert(ba->head != NULL, ECS_INTERNAL_ERROR, NULL);
     }
 
+    /* Pop the first chunk from the free list */
     result = ba->head;
     ba->head = ba->head->next;
 
@@ -195,12 +195,14 @@ void* flecs_balloc_w_dbg_info(
     return result;
 }
 
+/* Allocate a zero-initialized chunk from the block allocator. */
 void* flecs_bcalloc(
-    ecs_block_allocator_t *ba) 
+    ecs_block_allocator_t *ba)
 {
     return flecs_bcalloc_w_dbg_info(ba, NULL);
 }
 
+/* Allocate a zero-initialized chunk with optional debug type info. */
 void* flecs_bcalloc_w_dbg_info(
     ecs_block_allocator_t *ba,
     const char *type_name)
@@ -218,15 +220,17 @@ void* flecs_bcalloc_w_dbg_info(
 #endif
 }
 
+/* Return a chunk to the block allocator. */
 void flecs_bfree(
-    ecs_block_allocator_t *ba, 
+    ecs_block_allocator_t *ba,
     void *memory)
 {
     flecs_bfree_w_dbg_info(ba, memory, NULL);
 }
 
+/* Return a chunk to the block allocator with optional debug type info. */
 void flecs_bfree_w_dbg_info(
-    ecs_block_allocator_t *ba, 
+    ecs_block_allocator_t *ba,
     void *memory,
     const char *type_name)
 {
@@ -263,7 +267,7 @@ void flecs_bfree_w_dbg_info(
         } else {
             ecs_err("chunk %p returned to wrong allocator "
                 "(chunk = %ub, allocator = %ub)",
-                    memory, actual->data_size, ba->chunk_size);
+                    memory, actual->data_size, ba->data_size);
         }
         ecs_abort(ECS_INTERNAL_ERROR, NULL);
     }
@@ -277,23 +281,26 @@ void flecs_bfree_w_dbg_info(
         "corrupted allocator (size = %d)", ba->chunk_size);
 #endif
 
+    /* Push chunk back onto the free list */
     ecs_block_allocator_chunk_header_t *chunk = memory;
     chunk->next = ba->head;
     ba->head = chunk;
 #endif
 }
 
+/* Reallocate a chunk by moving data between two block allocators. */
 void* flecs_brealloc(
-    ecs_block_allocator_t *dst, 
-    ecs_block_allocator_t *src, 
+    ecs_block_allocator_t *dst,
+    ecs_block_allocator_t *src,
     void *memory)
 {
     return flecs_brealloc_w_dbg_info(dst, src, memory, NULL);
 }
 
+/* Reallocate a chunk between two block allocators with optional debug type info. */
 void* flecs_brealloc_w_dbg_info(
-    ecs_block_allocator_t *dst, 
-    ecs_block_allocator_t *src, 
+    ecs_block_allocator_t *dst,
+    ecs_block_allocator_t *src,
     void *memory,
     const char *type_name)
 {
@@ -330,6 +337,7 @@ void* flecs_brealloc_w_dbg_info(
     return result;
 }
 
+/* Duplicate a chunk by allocating new memory and copying the contents. */
 void* flecs_bdup(
     ecs_block_allocator_t *ba,
     void *memory)

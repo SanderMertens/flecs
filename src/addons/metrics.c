@@ -7,7 +7,7 @@
 
 #ifdef FLECS_METRICS
 
-/* Public components */
+/* -- Public components -- */
 ECS_COMPONENT_DECLARE(FlecsMetrics);
 ECS_TAG_DECLARE(EcsMetricInstance);
 ECS_COMPONENT_DECLARE(EcsMetricValue);
@@ -18,7 +18,7 @@ ECS_TAG_DECLARE(EcsCounterIncrement);
 ECS_TAG_DECLARE(EcsCounterId);
 ECS_TAG_DECLARE(EcsGauge);
 
-/* Internal components */
+/* -- Internal components -- */
 static ECS_COMPONENT_DECLARE(EcsMetricMember);
 static ECS_COMPONENT_DECLARE(EcsMetricId);
 static ECS_COMPONENT_DECLARE(EcsMetricOneOf);
@@ -28,26 +28,26 @@ static ECS_COMPONENT_DECLARE(EcsMetricMemberInstance);
 static ECS_COMPONENT_DECLARE(EcsMetricIdInstance);
 static ECS_COMPONENT_DECLARE(EcsMetricOneOfInstance);
 
-/** Context for metric */
+/* Context for metric */
 typedef struct {
     ecs_entity_t metric;              /**< Metric entity */
     ecs_entity_t kind;                /**< Metric kind (gauge, counter) */
 } ecs_metric_ctx_t;
 
-/** Context for metric that monitors member */
+/* Context for metric that monitors member */
 typedef struct {
     ecs_metric_ctx_t metric;
     ecs_primitive_kind_t type_kind;  /**< Primitive type kind of member */
     uint16_t offset;                 /**< Offset of member in component */
 } ecs_member_metric_ctx_t;
 
-/** Context for metric that monitors whether entity has id */
+/* Context for metric that monitors whether entity has id */
 typedef struct {
     ecs_metric_ctx_t metric;
     ecs_component_record_t *cr;            /**< component record for monitored component */
 } ecs_id_metric_ctx_t;
 
-/** Context for metric that monitors whether entity has pair target */
+/* Context for metric that monitors whether entity has pair target */
 typedef struct {
     ecs_metric_ctx_t metric;
     ecs_component_record_t *cr;            /**< component record for monitored component */
@@ -55,57 +55,57 @@ typedef struct {
     ecs_map_t target_offset;         /**< Pair target to metric type offset */
 } ecs_oneof_metric_ctx_t;
 
-/** Context for metric that monitors how many entities have a pair target */
+/* Context for metric that monitors how many entities have a pair target */
 typedef struct {
     ecs_metric_ctx_t metric;
     ecs_component_record_t *cr;            /**< component record for monitored component */
     ecs_map_t targets;               /**< Map of counters for each target */
 } ecs_count_targets_metric_ctx_t;
 
-/** Stores context shared for all instances of member metric */
+/* Stores context shared for all instances of member metric */
 typedef struct {
     ecs_member_metric_ctx_t *ctx;
 } EcsMetricMember;
 
-/** Stores context shared for all instances of id metric */
+/* Stores context shared for all instances of id metric */
 typedef struct {
     ecs_id_metric_ctx_t *ctx;
 } EcsMetricId;
 
-/** Stores context shared for all instances of oneof metric */
+/* Stores context shared for all instances of oneof metric */
 typedef struct {
     ecs_oneof_metric_ctx_t *ctx;
 } EcsMetricOneOf;
 
-/** Stores context shared for all instances of id counter metric */
+/* Stores context shared for all instances of id counter metric */
 typedef struct {
     ecs_id_t id;
 } EcsMetricCountIds;
 
-/** Stores context shared for all instances of target counter metric */
+/* Stores context shared for all instances of target counter metric */
 typedef struct {
     ecs_count_targets_metric_ctx_t *ctx;
 } EcsMetricCountTargets;
 
-/** Instance of member metric */
+/* Instance of member metric */
 typedef struct {
     ecs_ref_t ref;
     ecs_member_metric_ctx_t *ctx;
 } EcsMetricMemberInstance;
 
-/** Instance of id metric */
+/* Instance of id metric */
 typedef struct {
     ecs_record_t *r;
     ecs_id_metric_ctx_t *ctx;
 } EcsMetricIdInstance;
 
-/** Instance of oneof metric */
+/* Instance of oneof metric */
 typedef struct {
     ecs_record_t *r;
     ecs_oneof_metric_ctx_t *ctx;
 } EcsMetricOneOfInstance;
 
-/** Component lifecycle */
+/* -- Component lifecycle -- */
 
 static ECS_DTOR(EcsMetricMember, ptr, {
     ecs_os_free(ptr->ctx);
@@ -149,7 +149,7 @@ static ECS_MOVE(EcsMetricCountTargets, dst, src, {
     src->ctx = NULL;
 })
 
-/** Observer used for creating new instances of member metric */
+/* Observer used for creating new instances of member metric */
 static void flecs_metrics_on_member_metric(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
     ecs_member_metric_ctx_t *ctx = it->ctx;
@@ -172,7 +172,7 @@ static void flecs_metrics_on_member_metric(ecs_iter_t *it) {
     }
 }
 
-/** Observer used for creating new instances of id metric */
+/* Observer used for creating new instances of id metric */
 static void flecs_metrics_on_id_metric(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
     ecs_id_metric_ctx_t *ctx = it->ctx;
@@ -194,7 +194,7 @@ static void flecs_metrics_on_id_metric(ecs_iter_t *it) {
     }
 }
 
-/** Observer used for creating new instances of oneof metric */
+/* Observer used for creating new instances of oneof metric */
 static void flecs_metrics_on_oneof_metric(ecs_iter_t *it) {
     if (it->event == EcsOnRemove) {
         return;
@@ -220,7 +220,7 @@ static void flecs_metrics_on_oneof_metric(ecs_iter_t *it) {
     }
 }
 
-/** Set doc name of metric instance to name of source entity */
+/* Set doc name of metric instance to name of source entity */
 #ifdef FLECS_DOC
 static void SetMetricDocName(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
@@ -237,7 +237,7 @@ static void SetMetricDocName(ecs_iter_t *it) {
 }
 #endif
 
-/** Delete metric instances for entities that are no longer alive */
+/* Delete metric instances for entities that are no longer alive */
 static void ClearMetricInstance(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
     EcsMetricSource *src = ecs_field(it, EcsMetricSource, 0);
@@ -251,7 +251,7 @@ static void ClearMetricInstance(ecs_iter_t *it) {
     }
 }
 
-/** Update member metric */
+/* Update member metric */
 static void UpdateMemberInstance(ecs_iter_t *it, bool counter) {
     ecs_world_t *world = it->real_world;
     EcsMetricValue *m = ecs_field(it, EcsMetricValue, 0);
@@ -281,19 +281,22 @@ static void UpdateMemberInstance(ecs_iter_t *it, bool counter) {
     }
 }
 
+/* Update gauge member metric instances. */
 static void UpdateGaugeMemberInstance(ecs_iter_t *it) {
     UpdateMemberInstance(it, false);
 }
 
+/* Update counter member metric instances (non-incremental). */
 static void UpdateCounterMemberInstance(ecs_iter_t *it) {
     UpdateMemberInstance(it, false);
 }
 
+/* Update counter-increment member metric instances. */
 static void UpdateCounterIncrementMemberInstance(ecs_iter_t *it) {
     UpdateMemberInstance(it, true);
 }
 
-/** Update id metric */
+/* Update id metric */
 static void UpdateIdInstance(ecs_iter_t *it, bool counter) {
     ecs_world_t *world = it->real_world;
     EcsMetricValue *m = ecs_field(it, EcsMetricValue, 0);
@@ -327,15 +330,17 @@ static void UpdateIdInstance(ecs_iter_t *it, bool counter) {
     }
 }
 
+/* Update gauge id metric instances. */
 static void UpdateGaugeIdInstance(ecs_iter_t *it) {
     UpdateIdInstance(it, false);
 }
 
+/* Update counter id metric instances. */
 static void UpdateCounterIdInstance(ecs_iter_t *it) {
     UpdateIdInstance(it, true);
 }
 
-/** Update oneof metric */
+/* Update oneof metric */
 static void UpdateOneOfInstance(ecs_iter_t *it, bool counter) {
     ecs_world_t *world = it->real_world;
     ecs_table_t *table = it->table;
@@ -387,14 +392,17 @@ static void UpdateOneOfInstance(ecs_iter_t *it, bool counter) {
     }
 }
 
+/* Update gauge oneof metric instances. */
 static void UpdateGaugeOneOfInstance(ecs_iter_t *it) {
     UpdateOneOfInstance(it, false);
 }
 
+/* Update counter oneof metric instances. */
 static void UpdateCounterOneOfInstance(ecs_iter_t *it) {
     UpdateOneOfInstance(it, true);
 }
 
+/* Update count-targets metrics by counting entities for each pair target. */
 static void UpdateCountTargets(ecs_iter_t *it) {
     ecs_world_t *world = it->real_world;
     EcsMetricCountTargets *m = ecs_field(it, EcsMetricCountTargets, 0);
@@ -426,6 +434,7 @@ static void UpdateCountTargets(ecs_iter_t *it) {
     }
 }
 
+/* Update count-ids metrics by counting entities with a specific id. */
 static void UpdateCountIds(ecs_iter_t *it) {
     ecs_world_t *world = it->real_world;
     EcsMetricCountIds *m = ecs_field(it, EcsMetricCountIds, 0);
@@ -438,7 +447,7 @@ static void UpdateCountIds(ecs_iter_t *it) {
     }
 }
 
-/** Initialize member metric */
+/* Initialize member metric */
 static
 int flecs_member_metric_init(
     ecs_world_t *world,
@@ -451,7 +460,7 @@ int flecs_member_metric_init(
     if (desc->dotmember) {
         if (!desc->id) {
             char *metric_name = ecs_get_path(world, metric);
-            ecs_err("missing id for metric '%s' with member '%s",
+            ecs_err("missing id for metric '%s' with member '%s'",
                 metric_name, desc->dotmember);
             ecs_os_free(metric_name);
             goto error;
@@ -586,7 +595,7 @@ error:
     return -1;
 }
 
-/** Update id metric */
+/* Initialize id metric */
 static
 int flecs_id_metric_init(
     ecs_world_t *world,
@@ -617,7 +626,7 @@ error:
     return -1;
 }
 
-/** Update oneof metric */
+/* Initialize oneof metric */
 static
 int flecs_oneof_metric_init(
     ecs_world_t *world,
@@ -632,8 +641,7 @@ int flecs_oneof_metric_init(
     ecs_check(ctx->cr != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_map_init(&ctx->target_offset, NULL);
 
-    /* Add member for each child of oneof to metric, so it can be used as metric
-     * instance type that holds values for all targets */
+    /* Create a member per target so the metric type can store per-target values */
     ecs_iter_t it = ecs_children(world, scope);
     uint64_t offset = 0;
     while (ecs_children_next(&it)) {
@@ -660,8 +668,7 @@ int flecs_oneof_metric_init(
                 .unit = EcsSeconds
             });
 
-            /* Truncate upper 32 bits of target so we can lookup the offset
-             * with the id we get from the pair */
+            /* Use low 32 bits of target as key to match pair id lookups */
             ecs_map_ensure(&ctx->target_offset, (uint32_t)tgt)[0] = offset;
 
             offset += sizeof(double);
@@ -688,6 +695,7 @@ error:
     return -1;
 }
 
+/* Initialize a metric that counts entities per pair target. */
 static
 int flecs_count_id_targets_metric_init(
     ecs_world_t *world,
@@ -710,6 +718,7 @@ error:
     return -1;
 }
 
+/* Initialize a metric that counts entities with a specific id. */
 static
 int flecs_count_ids_metric_init(
     ecs_world_t *world,
@@ -830,6 +839,7 @@ error:
     return 0;
 }
 
+/* Import the metrics module, registering metric components and systems. */
 void FlecsMetricsImport(ecs_world_t *world) {
     ECS_MODULE_DEFINE(world, FlecsMetrics);
 

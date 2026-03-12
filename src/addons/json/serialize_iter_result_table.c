@@ -1,6 +1,6 @@
 /**
  * @file addons/json/serialize_iter_result_table.c
- * @brief Serialize all components of matched entity.
+ * @brief Serialize all components of a matched entity.
  */
 
 #include "json.h"
@@ -9,6 +9,7 @@
 
 #define FLECS_JSON_MAX_TABLE_COMPONENTS (256)
 
+/* Check whether an id is a builtin that should be skipped during serialization. */
 bool flecs_json_is_builtin(
     ecs_id_t id)
 {
@@ -23,13 +24,14 @@ bool flecs_json_is_builtin(
     return false;
 }
 
+/* Serialize type info for all components in a table to JSON. */
 static
 bool flecs_json_serialize_table_type_info(
     const ecs_world_t *world,
     ecs_table_t *table,
     ecs_strbuf_t *buf,
     const ecs_iter_to_json_desc_t *desc)
-{    
+{
     flecs_json_memberl(buf, "type_info");
     flecs_json_object_push(buf);
 
@@ -68,6 +70,7 @@ bool flecs_json_serialize_table_type_info(
     return true;
 }
 
+/* Serialize non-pair, non-component tags in a table to JSON. */
 static
 bool flecs_json_serialize_table_tags(
     const ecs_world_t *world,
@@ -95,7 +98,7 @@ bool flecs_json_serialize_table_tags(
         }
 
         if (column_map && column_map[f] != -1) {
-            continue; /* Ignore components */
+            continue; /* Has data column, not a tag */
         }
 
         const ecs_table_record_t *tr = &trs[f];
@@ -132,6 +135,7 @@ bool flecs_json_serialize_table_tags(
     return tag_count != 0;
 }
 
+/* Serialize non-component relationship pairs in a table to JSON. */
 static
 bool flecs_json_serialize_table_pairs(
     const ecs_world_t *world,
@@ -164,7 +168,7 @@ bool flecs_json_serialize_table_pairs(
         }
 
         if (column_map && column_map[f] != -1) {
-            continue; /* Ignore components */
+            continue; /* Has data column, not a tag-like pair */
         }
 
         const ecs_table_record_t *tr = &trs[f];
@@ -192,19 +196,19 @@ bool flecs_json_serialize_table_pairs(
             (ECS_PAIR_FIRST(ids[f + 1]) == ECS_PAIR_FIRST(id));
 
         if (same_first && f && ECS_PAIR_FIRST(ids[f - 1]) != ECS_PAIR_FIRST(id)) {
-            /* New pair has different first elem, so close array */
+            /* Relationship changed, close multi-target array */
             flecs_json_array_pop(buf);
             same_first = false;
         }
 
         if (!same_first) {
-            /* Only append pair label if we're not appending to array */
+            /* Start a new relationship key */
             flecs_json_next(buf);
             flecs_json_path_or_label(buf, world, first, 
                 desc ? desc->serialize_full_paths : true);
             ecs_strbuf_appendlit(buf, ":");
 
-            /* Open array scope if this is a pair with multiple targets */
+            /* Multiple targets for same relationship, wrap in array */
             if (is_same) {
                 flecs_json_array_push(buf);
                 same_first = true;
@@ -241,6 +245,7 @@ bool flecs_json_serialize_table_pairs(
     return pair_count != 0;
 }
 
+/* Serialize component values for a single table row to JSON. */
 static
 int flecs_json_serialize_table_components(
     const ecs_world_t *world,
@@ -348,6 +353,7 @@ error:
     return -1;
 }
 
+/* Recursively serialize inherited type data from base entities to JSON. */
 static
 int flecs_json_serialize_table_inherited_type(
     const ecs_world_t *world,
@@ -411,6 +417,7 @@ int flecs_json_serialize_table_inherited_type(
     return 0;
 }
 
+/* Serialize inherited components from IsA base entities to JSON. */
 static
 int flecs_json_serialize_table_inherited(
     const ecs_world_t *world,
@@ -434,6 +441,7 @@ int flecs_json_serialize_table_inherited(
     return 0;
 }
 
+/* Serialize tags, pairs, variables, and inherited data for a table. */
 static
 int flecs_json_serialize_table_tags_pairs_vars(
     const ecs_world_t *world,
@@ -459,8 +467,7 @@ int flecs_json_serialize_table_tags_pairs_vars(
     }
 
     if (desc->serialize_type_info) {
-        /* If we're serializing tables and are requesting type info, it must be
-         * added to each result. */
+        /* Table mode: type info must be included per result */
          *result_out |= flecs_json_serialize_table_type_info(world, table, buf, desc);
     }
 
@@ -472,9 +479,10 @@ int flecs_json_serialize_table_tags_pairs_vars(
     return 0;
 }
 
+/* Serialize table-mode iterator result with all entity components to JSON. */
 int flecs_json_serialize_iter_result_table(
-    const ecs_world_t *world, 
-    const ecs_iter_t *it, 
+    const ecs_world_t *world,
+    const ecs_iter_t *it,
     ecs_strbuf_t *buf,
     const ecs_iter_to_json_desc_t *desc,
     ecs_json_ser_ctx_t *ser_ctx,
@@ -488,7 +496,7 @@ int flecs_json_serialize_iter_result_table(
         return 0;
     }
 
-    /* Serialize tags, pairs, vars once, since they're the same for each row */
+    /* Pre-serialize per-table data (tags, pairs, vars) shared across rows */
     ecs_strbuf_t tags_pairs_vars_buf = ECS_STRBUF_INIT;
     int32_t tags_pairs_vars_len = 0;
     char *tags_pairs_vars = NULL;
@@ -505,7 +513,7 @@ int flecs_json_serialize_iter_result_table(
         tags_pairs_vars = ecs_strbuf_get(&tags_pairs_vars_buf);
     }
 
-    /* If one entity has more than 256 components (oof), bad luck */
+    /* Cap at 256 components per entity for the serialization context cache */
     ecs_json_value_ser_ctx_t values_ctx[FLECS_JSON_MAX_TABLE_COMPONENTS] = {{0}};
     int32_t component_count = 0;
 

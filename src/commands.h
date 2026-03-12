@@ -6,7 +6,7 @@
 #ifndef FLECS_COMMANDS_H
 #define FLECS_COMMANDS_H
 
-/** Types for deferred operations */
+/* Deferred command types */
 typedef enum ecs_cmd_kind_t {
     EcsCmdClone,
     EcsCmdBulkNew,
@@ -29,10 +29,10 @@ typedef enum ecs_cmd_kind_t {
     EcsCmdSkip
 } ecs_cmd_kind_t;
 
-/* Entity specific metadata for command in queue */
+/* Per-entity metadata linking commands in a batch chain */
 typedef struct ecs_cmd_entry_t {
-    int32_t first;
-    int32_t last;                    /* If -1, a delete command was inserted */
+    int32_t first;                   /* If -1, entry has been invalidated */
+    int32_t last;
 } ecs_cmd_entry_t;
 
 typedef struct ecs_cmd_1_t {
@@ -61,50 +61,42 @@ typedef struct ecs_cmd_t {
     ecs_entity_t system;             /* System that enqueued the command */
 } ecs_cmd_t;
 
-/** Callback used to capture commands of a frame */
+/* Callback invoked when commands are flushed, used for diagnostics/replay */
 typedef void (*ecs_on_commands_action_t)(
     const ecs_stage_t *stage,
     const ecs_vec_t *commands,
     void *ctx);
 
-/* Initialize command queue data structure for stage. */
-void flecs_commands_init(    
+void flecs_commands_init(
     ecs_stage_t *stage,
     ecs_commands_t *cmd);
 
-/* Free command queue data structure for stage. */
 void flecs_commands_fini(
     ecs_stage_t *stage,
     ecs_commands_t *cmd);
 
-/* Begin deferring, or return whether already deferred. */
 bool flecs_defer_cmd(
     ecs_stage_t *stage);
 
-/* Begin deferred mode. */
 bool flecs_defer_begin(
     ecs_world_t *world,
     ecs_stage_t *stage);
 
-/* Purge command queue without executing commands. */
 bool flecs_defer_purge(
     ecs_world_t *world,
     ecs_stage_t *stage);
 
-/* Insert modified command. */
 bool flecs_defer_modified(
     ecs_stage_t *stage,
     ecs_entity_t entity,
     ecs_entity_t component);
 
-/* Insert clone command. */
 bool flecs_defer_clone(
     ecs_stage_t *stage,
     ecs_entity_t entity,
     ecs_entity_t src,
     bool clone_value);
 
-/* Insert bulk_new command. */
 bool flecs_defer_bulk_new(
     ecs_world_t *world,
     ecs_stage_t *stage,
@@ -112,43 +104,36 @@ bool flecs_defer_bulk_new(
     ecs_id_t id,
     const ecs_entity_t **ids_out);
 
-/* Insert path command (sets entity path name). */
 bool flecs_defer_path(
     ecs_stage_t *stage,
     ecs_entity_t parent,
     ecs_entity_t entity,
     const char *name);
 
-/* Insert delete command. */
 bool flecs_defer_delete(
     ecs_stage_t *stage,
     ecs_entity_t entity);
 
-/* Insert clear command. */
 bool flecs_defer_clear(
     ecs_stage_t *stage,
     ecs_entity_t entity);
 
-/* Insert delete_with/remove_all command*/
 bool flecs_defer_on_delete_action(
     ecs_stage_t *stage,
     ecs_id_t id,
     ecs_entity_t action);
 
-/* Insert enable command (component toggling). */
 bool flecs_defer_enable(
     ecs_stage_t *stage,
     ecs_entity_t entity,
     ecs_entity_t component,
     bool enable);    
 
-/* Insert add component command. */
 bool flecs_defer_add(
     ecs_stage_t *stage,
     ecs_entity_t entity,
     ecs_id_t id);
 
-/* Insert remove component command. */
 bool flecs_defer_remove(
     ecs_stage_t *stage,
     ecs_entity_t entity,
@@ -169,7 +154,6 @@ void* flecs_defer_ensure(
     ecs_id_t id,
     ecs_size_t size);
 
-/* Insert set component command. */
 void* flecs_defer_set(
     ecs_world_t *world,
     ecs_stage_t *stage,
@@ -194,7 +178,6 @@ void* flecs_defer_cpp_assign(
     ecs_size_t size,
     const void *value);
 
-/* Insert event command. */
 void flecs_enqueue(
     ecs_world_t *world,
     ecs_stage_t *stage,

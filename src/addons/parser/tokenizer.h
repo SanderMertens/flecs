@@ -6,7 +6,6 @@
 #ifndef FLECS_PARSER_TOKENIZER_H
 #define FLECS_PARSER_TOKENIZER_H
 
-/* Tokenizer */
 typedef enum ecs_token_kind_t {
     EcsTokEnd = '\0',
     EcsTokUnknown,

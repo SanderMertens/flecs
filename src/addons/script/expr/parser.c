@@ -9,8 +9,7 @@
 #include "../script.h"
 #include "../../parser/grammar.h"
 
-/* From https://en.cppreference.com/w/c/language/operator_precedence */
-
+/* Operator precedence table (lower value = higher precedence) */
 static int flecs_expr_precedence[] = {
     [EcsTokParenOpen] = 1,
     [EcsTokMember] = 1,
@@ -51,6 +50,8 @@ void flecs_script_parser_expr_free(
     flecs_expr_visit_free(&parser->script->pub, node);
 }
 
+/* Lower numeric value = higher precedence.
+ * Returns true if first has equal or higher precedence than second. */
 static
 bool flecs_has_precedence(
     ecs_token_kind_t first,
@@ -199,7 +200,7 @@ const char* flecs_script_parse_initializer(
         }
 
         {
-            /* Parse next element or end of initializer*/
+            /* Parse next element or end of initializer */
             LookAhead(
                 case ',': {
                     pos = lookahead;
@@ -208,7 +209,7 @@ const char* flecs_script_parse_initializer(
 
                 case ')':
                 case '}': 
-                    /* Return last character of initializer */
+                    /* Back up to last char so caller sees the closing delimiter */
                     pos = lookahead - 1;
 
                 case '\n': {
@@ -283,7 +284,7 @@ static
 const char* flecs_script_parse_function(
     ecs_parser_t *parser,
     const char *pos,
-    ecs_expr_node_t **out) 
+    ecs_expr_node_t **out)
 {
     ecs_expr_function_t *result = flecs_expr_function(parser);
     result->left = *out;
@@ -311,6 +312,7 @@ error:
     return NULL;
 }
 
+/* Parse right-hand side: binary operators, member access, element access. */
 static
 const char* flecs_script_parse_rhs(
     ecs_parser_t *parser,
@@ -356,12 +358,11 @@ const char* flecs_script_parse_rhs(
             {
                 ecs_token_kind_t oper = lookahead_token.kind;
 
-                /* Only consume more tokens if operator has precedence */
+                /* Stop if left operator binds tighter */
                 if (flecs_has_precedence(left_oper, oper)) {
                     break;
                 }
 
-                /* Consume lookahead token */
                 pos = lookahead;
 
                 switch(oper) {
@@ -424,7 +425,7 @@ const char* flecs_script_parse_rhs(
                 }
                 };
 
-                /* Ensures lookahead tokens in token buffer don't get overwritten */
+                /* Preserve lookahead tokens in the token buffer */
                 parser->token_keep = parser->token_cur;
                 break;
             }
@@ -438,6 +439,7 @@ error:
     return NULL;
 }
 
+/* Parse left-hand side: literals, variables, unary ops, subexpressions. */
 static
 const char* flecs_script_parse_lhs(
     ecs_parser_t *parser,
@@ -523,14 +525,13 @@ const char* flecs_script_parse_lhs(
             } else {
                 char *last_elem = strrchr(expr, '.');
                 if (last_elem && last_elem[1] == '$') {
-                    /* Scoped global variable */
+                    /* Scoped global variable (e.g. "scope.$var") */
                     ecs_expr_variable_t *v = flecs_expr_variable(parser, expr);
                     ecs_os_memmove(&last_elem[1], &last_elem[2],
                         ecs_os_strlen(&last_elem[2]) + 1);
                     v->node.kind = EcsExprGlobalVariable;
                     *out = (ecs_expr_node_t*)v;
                 } else {
-                    /* Entity identifier */
                     *out = (ecs_expr_node_t*)flecs_expr_identifier(parser, expr);
                 }
             }
@@ -559,9 +560,10 @@ const char* flecs_script_parse_lhs(
         }
 
         case EcsTokSub: {
+            /* Unary minus is desugared into (-1 * expr) */
             ecs_expr_binary_t *node = flecs_expr_binary(parser);
-            
-            /* Use EcsTokNot as it has the same precedence as a unary - */
+
+            /* EcsTokNot shares precedence with unary minus */
             pos = flecs_script_parse_expr(parser, pos, EcsTokNot, &node->right);
             if (!pos) {
                 flecs_script_parser_expr_free(parser, (ecs_expr_node_t*)node);
@@ -701,13 +703,11 @@ const char* flecs_script_parse_lhs(
 
     TokenFramePop();
 
-    /* Return if this was end of expression, or if the parsed expression cannot
-     * have a right hand side. */
     if (!pos[0] || !can_have_rhs) {
         return pos;
     }
 
-    /* Parse right-hand side of expression if there is one */
+    /* Parse operators and right-hand operands */
     return flecs_script_parse_rhs(parser, pos, tokenizer, left_oper, out);
 error:
     return NULL;
@@ -793,15 +793,11 @@ ecs_script_t* ecs_expr_parse(
         goto error;
     }
 
-    // printf("%s\n", ecs_script_ast_to_str(script, true));
-
     if (!desc || !desc->disable_folding) {
         if (flecs_expr_visit_fold(script, &impl->expr, &priv_desc)) {
             goto error;
         }
     }
-
-    // printf("%s\n", ecs_script_ast_to_str(script, true));
 
     return script;
 error:
@@ -816,7 +812,7 @@ int ecs_expr_eval(
 {
     ecs_assert(script != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_script_impl_t *impl = flecs_script_impl(
-        /* Safe, won't be writing to script */
+        /* Safe: eval does not modify the script */
         ECS_CONST_CAST(ecs_script_t*, script));
     ecs_assert(impl->expr != NULL, ECS_INTERNAL_ERROR, NULL);
 

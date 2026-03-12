@@ -5,6 +5,7 @@
 
 #include "../private_api.h"
 
+/* Initialize a vector with the given element size and initial capacity. */
 void ecs_vec_init(
     ecs_allocator_t *allocator,
     ecs_vec_t *v,
@@ -14,6 +15,7 @@ void ecs_vec_init(
     ecs_vec_init_w_dbg_info(allocator, v, size, elem_count, NULL);
 }
 
+/* Allocate memory for vector storage. */
 static
 void* flecs_vec_alloc(
     struct ecs_allocator_t *allocator,
@@ -33,6 +35,7 @@ void* flecs_vec_alloc(
     return NULL;
 }
 
+/* Free vector storage memory. */
 static
 void flecs_vec_free(
     struct ecs_allocator_t *allocator,
@@ -47,6 +50,7 @@ void flecs_vec_free(
     }
 }
 
+/* Initialize a vector with debug type name tracking. */
 void ecs_vec_init_w_dbg_info(
     struct ecs_allocator_t *allocator,
     ecs_vec_t *v,
@@ -65,6 +69,7 @@ void ecs_vec_init_w_dbg_info(
 #endif
 }
 
+/* Set element size if the vector is not yet initialized. */
 void ecs_vec_init_if(
     ecs_vec_t *vec,
     ecs_size_t size)
@@ -83,6 +88,7 @@ void ecs_vec_init_if(
 #endif
 }
 
+/* Finalize vector and free its backing array. */
 void ecs_vec_fini(
     ecs_allocator_t *allocator,
     ecs_vec_t *v,
@@ -101,6 +107,7 @@ void ecs_vec_fini(
     }
 }
 
+/* Reset vector count to zero, initializing if needed. */
 ecs_vec_t* ecs_vec_reset(
     ecs_allocator_t *allocator,
     ecs_vec_t *v,
@@ -121,6 +128,7 @@ void ecs_vec_clear(
     vec->count = 0;
 }
 
+/* Create a deep copy of a vector. */
 ecs_vec_t ecs_vec_copy(
     ecs_allocator_t *allocator,
     const ecs_vec_t *v,
@@ -143,6 +151,7 @@ ecs_vec_t ecs_vec_copy(
     };
 }
 
+/* Create a deep copy with capacity shrunk to match count. */
 ecs_vec_t ecs_vec_copy_shrink(
     ecs_allocator_t *allocator,
     const ecs_vec_t *v,
@@ -168,6 +177,7 @@ ecs_vec_t ecs_vec_copy_shrink(
     };
 }
 
+/* Shrink allocation to fit current count. Uses alloc+copy, not realloc. */
 void ecs_vec_reclaim(
     ecs_allocator_t *allocator,
     ecs_vec_t *v,
@@ -177,9 +187,6 @@ void ecs_vec_reclaim(
     int32_t count = v->count;
     if (count < v->size) {
         if (count) {
-            /* Don't use realloc as it can return the same size buffer when the
-             * new size is smaller than the existing size, which defeats the
-             * purpose of reclaim. */
             if (allocator) {
                 void *new_array = flecs_alloc(allocator, count * size);
                 ecs_os_memcpy(new_array, v->array, size * count);
@@ -198,6 +205,7 @@ void ecs_vec_reclaim(
     }
 }
 
+/* Set capacity, rounding up to the next power of 2 (minimum 2). */
 void ecs_vec_set_size(
     ecs_allocator_t *allocator,
     ecs_vec_t *v,
@@ -232,6 +240,7 @@ void ecs_vec_set_size(
     }
 }
 
+/* Grow capacity to at least elem_count if currently smaller. */
 void ecs_vec_set_min_size(
     struct ecs_allocator_t *allocator,
     ecs_vec_t *vec,
@@ -243,6 +252,7 @@ void ecs_vec_set_min_size(
     }
 }
 
+/* Grow capacity to at least elem_count, recording type info for sanitizer. */
 void ecs_vec_set_min_size_w_type_info(
     struct ecs_allocator_t *allocator,
     ecs_vec_t *vec,
@@ -265,6 +275,7 @@ void ecs_vec_set_min_size_w_type_info(
     }
 }
 
+/* Ensure both capacity and count are at least elem_count. */
 void ecs_vec_set_min_count(
     struct ecs_allocator_t *allocator,
     ecs_vec_t *vec,
@@ -277,6 +288,7 @@ void ecs_vec_set_min_count(
     }
 }
 
+/* Ensure count is at least elem_count, zero-initializing new elements. */
 void ecs_vec_set_min_count_zeromem(
     struct ecs_allocator_t *allocator,
     ecs_vec_t *vec,
@@ -291,6 +303,7 @@ void ecs_vec_set_min_count_zeromem(
     }
 }
 
+/* Ensure count is at least elem_count, calling lifecycle hooks as needed. */
 void ecs_vec_set_min_count_w_type_info(
     struct ecs_allocator_t *allocator,
     ecs_vec_t *vec,
@@ -304,6 +317,7 @@ void ecs_vec_set_min_count_w_type_info(
     }
 }
 
+/* Set the element count, growing capacity if needed. */
 void ecs_vec_set_count(
     ecs_allocator_t *allocator,
     ecs_vec_t *v,
@@ -323,6 +337,7 @@ void ecs_vec_set_count(
     }
 }
 
+/* Set element count with lifecycle hooks (ctor/dtor/move). */
 void ecs_vec_set_count_w_type_info(
     struct ecs_allocator_t *allocator,
     ecs_vec_t *v,
@@ -341,12 +356,11 @@ void ecs_vec_set_count_w_type_info(
     }
 
     if (!ti->hooks.ctor_move_dtor) {
-        /* Trivial type, use regular set_count */
         ecs_vec_set_count(allocator, v, size, elem_count);
         return;
     }
 
-    /* If array is large enough, we don't need to realloc. */
+    /* Array large enough -- just construct/destruct as needed */
     if (v->size > elem_count) {
         if (elem_count > v->count) {
             void *ptr = ECS_ELEM(v->array, size, v->count);
@@ -362,10 +376,7 @@ void ecs_vec_set_count_w_type_info(
         return;
     }
 
-    /* Resize array. We can't use realloc because we need to call the move hook
-     * from the old to the new memory. */
-
-    /* Round up to next power of 2 so we don't allocate for each new element */
+    /* Resize: must use alloc+move (not realloc) to invoke lifecycle hooks */
     ecs_size_t new_size = flecs_next_pow_of_2(elem_count);
 
     void *array = NULL;
@@ -380,16 +391,15 @@ void ecs_vec_set_count_w_type_info(
         move_count = v->count;
     }
 
-    /* Move elements over to new array */
     flecs_type_info_ctor_move_dtor(array, v->array, move_count, ti);
 
-    /* Destruct remaining elements in old array, if any */
+    /* Destruct remaining old elements */
     if (move_count < v->count) {
         void *ptr = ECS_ELEM(v->array, size, move_count);
         flecs_type_info_dtor(ptr, v->count - move_count, ti);
     }
 
-    /* Construct new elements, if any */
+    /* Construct new elements */
     if (move_count < elem_count) {
         void *ptr = ECS_ELEM(array, size, move_count);
         flecs_type_info_ctor(ptr, elem_count - move_count, ti);
@@ -402,6 +412,7 @@ void ecs_vec_set_count_w_type_info(
     v->count = elem_count;
 }
 
+/* Grow the vector by elem_count elements and return pointer to the first new one. */
 void* ecs_vec_grow(
     ecs_allocator_t *allocator,
     ecs_vec_t *v,
@@ -415,6 +426,7 @@ void* ecs_vec_grow(
     return ECS_ELEM(v->array, size, count);
 }
 
+/* Append one element and return a pointer to it. */
 void* ecs_vec_append(
     ecs_allocator_t *allocator,
     ecs_vec_t *v,
@@ -429,6 +441,7 @@ void* ecs_vec_append(
     return ECS_ELEM(v->array, size, count);
 }
 
+/* Remove element by swapping with last (O(1), unordered). */
 void ecs_vec_remove(
     ecs_vec_t *v,
     ecs_size_t size,
@@ -452,6 +465,7 @@ void ecs_vec_remove_last(
     v->count --;
 }
 
+/* Remove element while preserving order (O(n), uses memmove). */
 void ecs_vec_remove_ordered(
     ecs_vec_t *v,
     ecs_size_t size,

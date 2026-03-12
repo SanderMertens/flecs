@@ -61,18 +61,14 @@ typedef enum ecs_table_eventkind_t {
 typedef struct ecs_table_event_t {
     ecs_table_eventkind_t kind;
 
-    /* Component info event */
+    /* Id for which the event applies */
     ecs_entity_t component;
 
     /* Event match */
     ecs_entity_t event;
 
-    /* If the number of fields gets out of hand, this can be turned into a union
-     * but since events are very temporary objects, this works for now and makes
-     * initializing an event a bit simpler. */
+    /* Could be a union if more fields are added; kept flat for simplicity. */
 } ecs_table_event_t;
-
-/** Overrides (set if table overrides components) */
 
 /* Override type used for tables with a single IsA pair */
 typedef struct ecs_table_1_override_t {
@@ -94,7 +90,7 @@ typedef struct ecs_table_overrides_t {
     ecs_ref_t *refs;                 /* Refs to base components (one for each column) */
 } ecs_table_overrides_t;
 
-/** Infrequently accessed data not stored inline in ecs_table_t */
+/* Infrequently accessed data not stored inline in ecs_table_t */
 typedef struct ecs_table__t {
     uint64_t hash;                   /* Type hash */
     int32_t lock;                    /* Prevents modifications */
@@ -103,8 +99,8 @@ typedef struct ecs_table__t {
     uint16_t generation;             /* Used for table cleanup */
     int16_t record_count;            /* Table record count including wildcards */
 
-    int16_t bs_count;
-    int16_t bs_offset;
+    int16_t bs_count;                /* Number of toggle (bitset) columns */
+    int16_t bs_offset;               /* Type index of first toggle id */
     ecs_bitset_t *bs_columns;        /* Bitset columns */
 
     struct ecs_table_record_t *records; /* Array with table records */
@@ -114,20 +110,19 @@ typedef struct ecs_table__t {
     struct {
         ecs_world_t *world;
         ecs_entity_t id;
-    } parent;                        /* Parent. Include world so it can be cast
-                                      * to a flecs::entity. */
+    } parent;                        /* Parent entity (world included for C++ flecs::entity cast) */
     int16_t name_column;             /* Column with entity name */
     int16_t doc_name_column;         /* Column with entity doc name */
 #endif
 } ecs_table__t;
 
-/** Table column */
+/* Table column */
 typedef struct ecs_column_t {
     void *data;                      /* Array with component data */
     ecs_type_info_t *ti;             /* Component type info */
 } ecs_column_t;
 
-/** Table data */
+/* Table data */
 struct ecs_data_t {
     ecs_entity_t *entities;            /* Entity ids */
     ecs_column_t *columns;             /* Component data */
@@ -136,10 +131,8 @@ struct ecs_data_t {
     int32_t size;
 };
 
-/** A table is the Flecs equivalent of an archetype. Tables store all entities
- * with a specific set of components. Tables are automatically created when an
- * entity has a set of components not previously observed before. When a new
- * table is created, it is automatically matched with existing queries */
+/* A table (archetype) stores all entities with a specific set of components.
+ * Created on demand and automatically matched with existing queries. */
 struct ecs_table_t {
     uint64_t id;                     /* Table id in sparse set */
     ecs_flags32_t flags;             /* Flags for testing table properties */
@@ -157,38 +150,30 @@ struct ecs_table_t {
     ecs_data_t data;                 /* Component storage */
     ecs_graph_node_t node;           /* Graph node */
 
-    int16_t *component_map;          /* Get column for component id */
-    int32_t *dirty_state;            /* Keep track of changes in columns */
-    int16_t *column_map;             /* Map type index <-> column
-                                      *  - 0..count(T):        type index -> column
-                                      *  - count(T)..count(C): column -> type index
-                                      */
+    int16_t *component_map;          /* O(1) id->column: >0 = column+1, <0 = -(type_index+1) for tags/sparse, 0 = absent */
+    int32_t *dirty_state;            /* Per-column change counters; [0] is entity column */
+    int16_t *column_map;             /* [0..type_count): type->column, [type_count..): column->type */
 
     ecs_table__t *_;                 /* Infrequently accessed table metadata */
 };
 
-/* Init table */
 void flecs_table_init(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_table_t *from);
 
-/** Find or create table for a set of components */
 ecs_table_t* flecs_table_find_or_create(
     ecs_world_t *world,
     ecs_type_t *type);
 
-/* Initialize columns for data */
 void flecs_table_init_data(
     ecs_world_t *world,
     ecs_table_t *table); 
 
-/* Reset a table to its initial state */
 void flecs_table_reset(
     ecs_world_t *world,
     ecs_table_t *table);
 
-/* Add a new entry to the table for the specified entity */
 void flecs_table_append(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -196,14 +181,12 @@ void flecs_table_append(
     bool construct,
     bool on_add);
 
-/* Delete an entity from the table. */
 void flecs_table_delete(
     ecs_world_t *world,
     ecs_table_t *table,
     int32_t index,
     bool destruct);
 
-/* Move a row from one table to another */
 void flecs_table_move(
     ecs_world_t *world,
     ecs_entity_t dst_entity,
@@ -214,44 +197,35 @@ void flecs_table_move(
     int32_t old_index,
     bool construct);
 
-/* Grow table with specified number of records. Populate table with entities,
- * starting from specified entity id. */
 int32_t flecs_table_appendn(
     ecs_world_t *world,
     ecs_table_t *table,
     int32_t count,
     const ecs_entity_t *ids);
 
-/* Shrink table to contents */
 bool flecs_table_shrink(
     ecs_world_t *world,
     ecs_table_t *table);
 
-/* Get dirty state for table columns */
 int32_t* flecs_table_get_dirty_state(
     ecs_world_t *world,
     ecs_table_t *table);
 
-/* Initialize root table */
 void flecs_init_root_table(
     ecs_world_t *world);
 
-/* Unset components in table */
 void flecs_table_remove_actions(
     ecs_world_t *world,
     ecs_table_t *table);
 
-/* Free table */
 void flecs_table_fini(
     ecs_world_t *world,
     ecs_table_t *table); 
 
-/* Free table */
 void flecs_table_free_type(
     ecs_world_t *world,
     ecs_table_t *table);     
 
-/* Merge data of one table into another table */
 void flecs_table_merge(
     ecs_world_t *world,
     ecs_table_t *new_table,
@@ -278,7 +252,6 @@ void flecs_table_delete_entities(
     ecs_world_t *world,
     ecs_table_t *table);
 
-/* Increase observer count of table */
 void flecs_table_traversable_add(
     ecs_table_t *table,
     int32_t value);

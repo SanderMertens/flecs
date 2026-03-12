@@ -1,6 +1,9 @@
 /**
  * @file query/cache/change_detection.c
- * @brief Query change detection implementation.
+ * @brief Tracks component modifications via per-column dirty counters.
+ *
+ * Each cache match stores a snapshot of table dirty_state counters. Comparing
+ * stored vs current counters reveals whether matched components changed.
  */
 
 #include "../../private_api.h"
@@ -10,7 +13,7 @@ typedef struct {
     int32_t column;
 } flecs_table_column_t;
 
-/* Get table column index for query field. */
+/* Get table and column index for a query field. */
 static
 void flecs_query_get_column_for_field(
     const ecs_query_t *q,
@@ -30,8 +33,7 @@ void flecs_query_get_column_for_field(
     out->column = column;
 }
 
-/* Get match monitor. Monitors are used to keep track of whether components 
- * matched by the query in a table have changed. */
+/* Get or initialize the change monitor for a cache match. */
 static
 bool flecs_query_get_match_monitor(
     ecs_query_impl_t *impl,
@@ -52,8 +54,7 @@ bool flecs_query_get_match_monitor(
     int32_t *monitor = flecs_balloc(&cache->allocators.monitors);
     monitor[0] = 0;
 
-    /* Mark terms that don't need to be monitored. This saves time when reading
-     * and/or updating the monitor. */
+    /* Fields that aren't read or aren't set get -1 (skip) */
     const ecs_query_t *q = cache->query;
     int32_t i, field = -1, term_count = q->term_count;
     flecs_table_column_t tc;
@@ -68,14 +69,12 @@ bool flecs_query_get_match_monitor(
         field = q->terms[i].field_index;
         monitor[field + 1] = -1;
 
-        /* If term isn't read, don't monitor */
-        if (q->terms[i].inout != EcsIn && 
+        if (q->terms[i].inout != EcsIn &&
             q->terms[i].inout != EcsInOut &&
             q->terms[i].inout != EcsInOutDefault) {
             continue;
         }
 
-        /* Don't track fields that aren't set */
         if (!is_trivial) {
             if (!(match->base.set_fields & (1llu << field))) {
                 continue;
@@ -84,7 +83,7 @@ bool flecs_query_get_match_monitor(
 
         flecs_query_get_column_for_field(q, match, field, &tc);
         if (tc.column == -1) {
-            continue; /* Don't track terms that aren't stored */
+            continue;
         }
 
         monitor[field + 1] = 0;
@@ -97,8 +96,7 @@ bool flecs_query_get_match_monitor(
     return true;
 }
 
-/* Get monitor for fixed query terms. Fixed terms are handled separately as they
- * don't require a query cache, and fixed terms aren't stored in the cache. */
+/* Get or initialize the change monitor for fixed-source query terms. */
 static
 bool flecs_query_get_fixed_monitor(
     ecs_query_impl_t *impl,
@@ -120,11 +118,11 @@ bool flecs_query_get_fixed_monitor(
         int16_t field_index = term->field_index;
 
         if (!(q->read_fields & flecs_ito(uint32_t, 1 << field_index))) {
-            continue; /* If term doesn't read data there's nothing to track */
+            continue;
         }
 
         if (!(term->src.id & EcsIsEntity)) {
-            continue; /* Not a term with a fixed source */
+            continue;
         }
 
         ecs_entity_t src = ECS_TERM_REF_ID(&term->src);
@@ -132,20 +130,19 @@ bool flecs_query_get_fixed_monitor(
 
         ecs_record_t *r = flecs_entities_get(world, src);
         if (!r || !r->table) {
-            continue; /* Entity is empty, nothing to track */
+            continue;
         }
 
         ecs_component_record_t *cr = flecs_components_get(world, term->id);
         if (!cr) {
-            continue; /* If id doesn't exist, entity can't have it */
+            continue;
         }
 
         const ecs_table_record_t *tr = flecs_component_get_table(cr, r->table);
         if (!tr) {
-            continue; /* Entity doesn't have the component */
+            continue;
         }
 
-        /* Copy/check column dirty state from table */
         int32_t *dirty_state = flecs_table_get_dirty_state(world, r->table);
         ecs_assert(dirty_state != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -161,21 +158,21 @@ bool flecs_query_get_fixed_monitor(
     return !check;
 }
 
-/* Synchronize fixed source monitor */
+/* Synchronize fixed-source monitor with current dirty state. */
 bool flecs_query_update_fixed_monitor(
     ecs_query_impl_t *impl)
 {
     return flecs_query_get_fixed_monitor(impl, false);
 }
 
-/* Compare fixed source monitor */
+/* Check if any fixed-source field has changed. */
 bool flecs_query_check_fixed_monitor(
     ecs_query_impl_t *impl)
 {
     return flecs_query_get_fixed_monitor(impl, true);
 }
 
-/* Check if single match term has changed */
+/* Check if a single field in a match monitor has changed. */
 static
 bool flecs_query_check_match_monitor_term(
     ecs_query_impl_t *impl,
@@ -220,7 +217,7 @@ bool flecs_query_check_match_monitor_term(
         cache->query->world, cur.table)[cur.column + 1];
 }
 
-/* Check if any tables in the cache changed. */
+/* Check if any table in the cache has changed. */
 static
 bool flecs_query_check_cache_monitor(
     ecs_query_impl_t *impl)
@@ -228,8 +225,7 @@ bool flecs_query_check_cache_monitor(
     ecs_query_cache_t *cache = impl->cache;
     ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    /* If the match count changed, tables got matched/unmatched for the
-     * cache, so return that the query has changed. */
+    /* Match count change means tables were matched/unmatched */
     if (cache->match_count != cache->prev_match_count) {
         return true;
     }
@@ -260,12 +256,11 @@ bool flecs_query_check_cache_monitor(
     return false;
 }
 
-/* Initialize monitors for the elements in the query cache. */
+/* Initialize change monitors for all elements in the query cache. */
 static
 void flecs_query_init_query_monitors(
     ecs_query_impl_t *impl)
 {
-    /* Change monitor for cache */
     ecs_query_cache_t *cache = impl->cache;
     if (cache) {
         const ecs_query_cache_group_t *cur = cache->first_group;
@@ -289,7 +284,7 @@ void flecs_query_init_query_monitors(
     }
 }
 
-/* Check if a specific match (table) has changed. */
+/* Check if a specific cache match has changed. */
 static
 bool flecs_query_check_match_monitor(
     ecs_query_impl_t *impl,
@@ -406,7 +401,7 @@ bool flecs_query_check_table_monitor_match(
     return false;
 }
 
-/* Compare cache monitor with table dirty state to detect changes */
+/* Check if a table match and its wildcard matches have changed. */
 bool flecs_query_check_table_monitor(
     ecs_query_impl_t *impl,
     ecs_query_cache_match_t *qm,
@@ -429,15 +424,14 @@ bool flecs_query_check_table_monitor(
     return false;
 }
 
-/* Mark iterated out fields dirty */
+/* Mark writable non-fixed fields as dirty after iteration. */
 void flecs_query_mark_fields_dirty(
     ecs_query_impl_t *impl,
     ecs_iter_t *it)
 {
     ecs_query_t *q = &impl->pub;
 
-    /* Evaluate all writeable non-fixed fields, set fields */
-    ecs_termset_t write_fields = 
+    ecs_termset_t write_fields =
         (ecs_termset_t)(q->write_fields & ~q->fixed_fields & it->set_fields);
     if (!write_fields || (it->flags & EcsIterNoData)) {
         return;
@@ -448,7 +442,7 @@ void flecs_query_mark_fields_dirty(
     for (i = 0; i < field_count; i ++) {
         ecs_termset_t field_bit = (ecs_termset_t)(1u << i);
         if (!(write_fields & field_bit)) {
-            continue; /* If term doesn't write data there's nothing to track */
+            continue;
         }
 
         ecs_entity_t src = it->sources[i];
@@ -462,8 +456,7 @@ void flecs_query_mark_fields_dirty(
             }
 
             if (q->shared_readonly_fields & flecs_ito(uint32_t, 1 << i)) {
-                /* Shared fields that aren't marked explicitly as out/inout 
-                 * default to readonly */
+                /* Shared fields default to readonly unless explicitly out/inout */
                 continue;
             }
         }
@@ -488,12 +481,11 @@ void flecs_query_mark_fields_dirty(
     }
 }
 
-/* Mark out fields with fixed source dirty */
+/* Mark writable fixed-source fields as dirty. */
 void flecs_query_mark_fixed_fields_dirty(
     ecs_query_impl_t *impl,
     ecs_iter_t *it)
 {
-    /* This function marks fields dirty for terms with fixed sources. */
     ecs_query_t *q = &impl->pub;
     ecs_termset_t fixed_write_fields = q->write_fields & q->fixed_fields;
     if (!fixed_write_fields) {
@@ -504,7 +496,7 @@ void flecs_query_mark_fixed_fields_dirty(
     int32_t i, field_count = q->field_count;
     for (i = 0; i < field_count; i ++) {
         if (!(fixed_write_fields & flecs_ito(uint32_t, 1 << i))) {
-            continue; /* If term doesn't write data there's nothing to track */
+            continue;
         }
 
         ecs_entity_t src = it->sources[i];
@@ -527,7 +519,7 @@ void flecs_query_mark_fixed_fields_dirty(
     }
 }
 
-/* Synchronize cache monitor with table dirty state */
+/* Synchronize match monitor with current table dirty state. */
 void flecs_query_sync_match_monitor(
     ecs_query_impl_t *impl,
     ecs_query_cache_match_t *match)
@@ -553,7 +545,7 @@ void flecs_query_sync_match_monitor(
         int32_t *dirty_state = flecs_table_get_dirty_state(
             cache->query->world, table);
         ecs_assert(dirty_state != NULL, ECS_INTERNAL_ERROR, NULL);
-        monitor[0] = dirty_state[0]; /* Did table gain/lose entities */
+        monitor[0] = dirty_state[0]; /* Index 0 = entity add/remove counter */
     }
 
     ecs_query_t *q = cache->query;
@@ -579,7 +571,6 @@ void flecs_query_sync_match_monitor(
     cache->prev_match_count = cache->match_count;
 }
 
-/* Public API call to check if any matches in the query have changed. */
 bool ecs_query_changed(
     ecs_query_t *q)
 {
@@ -591,35 +582,29 @@ bool ecs_query_changed(
 
     if (q->read_fields & q->fixed_fields) {
         if (!impl->monitor) {
-            /* Create change monitor for fixed fields */
             flecs_query_get_fixed_monitor(impl, false);
         }
     }
 
-    /* If query reads terms with fixed sources, check those first as that's 
-     * cheaper than checking entries in the cache. */
+    /* Fixed-source checks are cheaper than scanning cache entries */
     if (impl->monitor) {
         if (flecs_query_check_fixed_monitor(impl)) {
             return true;
         }
     }
 
-    /* Check cache for changes. We can't detect changes for terms that are not
-     * cached/cacheable and don't have a fixed source, since that requires 
-     * storing state per result, which doesn't happen for uncached queries. */
+    /* Check cache entries. Non-cached/non-fixed terms cannot be tracked. */
     if (impl->cache) {
         if (!(impl->pub.flags & EcsQueryHasChangeDetection)) {
             flecs_query_init_query_monitors(impl);
         }
 
-        /* Check cache entries for changes */
         return flecs_query_check_cache_monitor(impl);
     }
 
     return false;
 }
 
-/* Public API call to check if the currently iterated result has changed. */
 bool ecs_iter_changed(
     ecs_iter_t *it)
 {
@@ -631,10 +616,9 @@ bool ecs_iter_changed(
     ecs_query_impl_t *impl = flecs_query_impl(it->query);
     ecs_query_t *q = &impl->pub;
 
-    /* First check for changes for terms with fixed sources, if query has any */
+    /* Check fixed-source fields first (cheap: no per-result state needed) */
     if (q->read_fields & q->fixed_fields) {
-        /* Detecting changes for uncached terms is costly, so only do it once 
-         * per iteration. */
+        /* Only compute once per iteration (cached in flags) */
         if (!(it->flags & EcsIterFixedInChangeComputed)) {
             it->flags |= EcsIterFixedInChangeComputed;
             ECS_BIT_COND(it->flags, EcsIterFixedInChanged, 
@@ -658,7 +642,6 @@ error:
     return false;
 }
 
-/* Public API call for skipping change detection (don't mark fields dirty) */
 void ecs_iter_skip(
     ecs_iter_t *it)
 {

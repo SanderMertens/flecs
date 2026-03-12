@@ -53,6 +53,9 @@ ECS_DTOR(EcsScript, ptr, {
     ecs_os_free(ptr->error);
 })
 
+/* Return the pair id used to tag entities created by a script.
+ * Without an instance, tags with (EcsScript, script). With an instance,
+ * uses (ChildOf, instance) so entities become children of the instance. */
 static
 ecs_id_t flecs_script_tag(
     ecs_entity_t script,
@@ -65,8 +68,9 @@ ecs_id_t flecs_script_tag(
     }
 }
 
+/* Create a new empty script object. */
 ecs_script_t* flecs_script_new(
-    ecs_world_t *world) 
+    ecs_world_t *world)
 {
     ecs_script_impl_t *result = ecs_os_calloc_t(ecs_script_impl_t);
     flecs_allocator_init(&result->allocator);
@@ -150,7 +154,7 @@ error:
 
 int ecs_script_run_file(
     ecs_world_t *world,
-    const char *filename) 
+    const char *filename)
 {
     char *script = flecs_load_from_file(filename);
     if (!script) {
@@ -174,8 +178,8 @@ void ecs_script_free(
         flecs_free(&impl->allocator, 
             impl->token_buffer_size, impl->token_buffer);
         flecs_allocator_fini(&impl->allocator);
-        ecs_os_free(ECS_CONST_CAST(char*, impl->pub.name)); /* safe, owned value */
-        ecs_os_free(ECS_CONST_CAST(char*, impl->pub.code)); /* safe, owned value */
+        ecs_os_free(ECS_CONST_CAST(char*, impl->pub.name));
+        ecs_os_free(ECS_CONST_CAST(char*, impl->pub.code));
         ecs_os_free(impl);
     }
 error:
@@ -298,7 +302,6 @@ ecs_entity_t ecs_script_init(
     }
 
     if (script != desc->code) {
-        /* Safe cast, only happens when script is loaded from file */
         ecs_os_free(ECS_CONST_CAST(char*, script));
     }
 
@@ -306,7 +309,6 @@ code_error:
     return e;
 error:
     if (script != desc->code) {
-        /* Safe cast, only happens when script is loaded from file */
         ecs_os_free(ECS_CONST_CAST(char*, script));
     }
     if (!desc->entity) {
@@ -315,7 +317,7 @@ error:
     return 0;
 }
 
-ecs_script_runtime_t* ecs_script_runtime_new(void) 
+ecs_script_runtime_t* ecs_script_runtime_new(void)
 {
     ecs_script_runtime_t *r = ecs_os_calloc_t(ecs_script_runtime_t);
     flecs_expr_stack_init(&r->expr_stack);
@@ -350,6 +352,7 @@ void ecs_script_runtime_clear(
     ecs_vec_clear(&r->using);
 }
 
+/* Get or create the script runtime for the current stage. */
 ecs_script_runtime_t* flecs_script_runtime_get(
     ecs_world_t *world)
 {
@@ -369,10 +372,11 @@ ecs_script_runtime_t* flecs_script_runtime_get(
     return stage->runtime;
 }
 
+/* Serialize an EcsScript component as an opaque type (filename, code, error, ast). */
 static
 int EcsScript_serialize(
-    const ecs_serializer_t *ser, 
-    const void *ptr) 
+    const ecs_serializer_t *ser,
+    const void *ptr)
 {
     const EcsScript *data = ptr;
     ser->member(ser, "filename");
@@ -395,6 +399,7 @@ int EcsScript_serialize(
     return 0;
 }
 
+/* Import the FlecsScript module and register its components. */
 void FlecsScriptImport(
     ecs_world_t *world)
 {

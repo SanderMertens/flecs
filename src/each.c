@@ -1,10 +1,11 @@
 /**
- * @file query/each.c
+ * @file each.c
  * @brief Simple iterator for a single component id.
  */
 
 #include "private_api.h"
 
+/* Set up a lightweight iterator that walks all tables containing a given id. */
 static
 bool flecs_each_component_record(
     ecs_iter_t *it,
@@ -78,7 +79,7 @@ bool ecs_each_next(
         if (next->index != -1) {
             it->ids = &table->type.array[next->index];
         } else {
-            it->ids = NULL;
+            it->ids = NULL; /* Sparse: not stored in type array */
         }
         it->trs = &each_iter->trs;
         it->sources = &each_iter->sources;
@@ -91,6 +92,8 @@ bool ecs_each_next(
     }
 }
 
+/* One-shot next callback for ordered/sparse children. Delegates to
+ * ecs_children_next, which returns all entities on the first call. */
 static
 bool flecs_children_next_ordered(
     ecs_iter_t *it)
@@ -159,7 +162,7 @@ bool ecs_children_next(
             return false;
         }
 
-        it->next = NULL; /* Only return once with ordered children vector */
+        it->next = NULL; /* One-shot: subsequent calls return false */
 
         return true;
     }

@@ -1,10 +1,9 @@
 /**
  * @file os_api.c
  * @brief Operating system abstraction API.
- * 
- * The OS API implements an overridable interface for implementing functions 
- * that are operating system specific, in addition to a number of hooks which
- * allow for customization by the user, like logging.
+ *
+ * Overridable interface for OS-specific functions (memory, threading, time)
+ * and user-customizable hooks (logging, performance tracing).
  */
 
 #include "private_api.h"
@@ -60,8 +59,7 @@ void ecs_os_fini(void) {
     }
 }
 
-/* Assume every non-glibc Linux target has no execinfo.
-   This mainly fixes musl support, as musl doesn't define any preprocessor macro specifying its presence. */ 
+/* Non-glibc Linux targets (e.g., musl) lack execinfo */
 #if (defined(ECS_TARGET_LINUX) && !defined(__GLIBC__)) || defined(__COSMOCC__)
 #define HAVE_EXECINFO 0
 #elif !defined(ECS_TARGET_WINDOWS) && !defined(ECS_TARGET_EM) && !defined(ECS_TARGET_ANDROID)
@@ -88,8 +86,9 @@ void ecs_os_fini(void) {
 #pragma comment(lib, "DbgHelp.lib")
 #endif
 
+/* Dump a backtrace to the given stream using Windows debug symbols. */
 void flecs_dump_backtrace(
-    void *stream) 
+    void *stream)
 {
     void* stack[ECS_BT_BUF_SIZE];
     unsigned short frames;
@@ -121,8 +120,9 @@ void flecs_dump_backtrace(
 #elif HAVE_EXECINFO
 #include <execinfo.h>
 
+/* Dump a backtrace to the given stream using execinfo. */
 void flecs_dump_backtrace(
-    void *stream) 
+    void *stream)
 {
     int nptrs;
     void *buffer[ECS_BT_BUF_SIZE];
@@ -142,19 +142,21 @@ void flecs_dump_backtrace(
     free(strings);
 }
 #else
+/* Dump a backtrace (no-op on unsupported platforms). */
 void flecs_dump_backtrace(
     void *stream)
-{ 
+{
     (void)stream;
 }
 #endif
 #undef HAVE_EXECINFO_H
 
+/* Format and write a log message to the configured output stream. */
 static
 void flecs_log_msg(
     int32_t level,
-    const char *file, 
-    int32_t line,  
+    const char *file,
+    int32_t line,
     const char *msg)
 {
     FILE *stream = ecs_os_api.log_out_;
@@ -279,7 +281,7 @@ void flecs_log_msg(
 
 void ecs_os_dbg(
     const char *file,
-    int32_t line, 
+    int32_t line,
     const char *msg)
 {
     if (ecs_os_api.log_) {
@@ -288,9 +290,9 @@ void ecs_os_dbg(
 }
 
 void ecs_os_trace(
-    const char *file, 
-    int32_t line, 
-    const char *msg) 
+    const char *file,
+    int32_t line,
+    const char *msg)
 {
     if (ecs_os_api.log_) {
         ecs_os_api.log_(0, file, line, msg);
@@ -298,9 +300,9 @@ void ecs_os_trace(
 }
 
 void ecs_os_warn(
-    const char *file, 
-    int32_t line, 
-    const char *msg) 
+    const char *file,
+    int32_t line,
+    const char *msg)
 {
     if (ecs_os_api.log_) {
         ecs_os_api.log_(-2, file, line, msg);
@@ -308,9 +310,9 @@ void ecs_os_warn(
 }
 
 void ecs_os_err(
-    const char *file, 
-    int32_t line, 
-    const char *msg) 
+    const char *file,
+    int32_t line,
+    const char *msg)
 {
     if (ecs_os_api.log_) {
         ecs_os_api.log_(-3, file, line, msg);
@@ -318,15 +320,16 @@ void ecs_os_err(
 }
 
 void ecs_os_fatal(
-    const char *file, 
-    int32_t line, 
-    const char *msg) 
+    const char *file,
+    int32_t line,
+    const char *msg)
 {
     if (ecs_os_api.log_) {
         ecs_os_api.log_(-4, file, line, msg);
     }
 }
 
+/* Get the current time as seconds and nanoseconds. */
 static
 void ecs_os_gettime(ecs_time_t *time) {
     ecs_assert(ecs_os_has_time() == true, ECS_MISSING_OS_API, NULL);
@@ -343,6 +346,7 @@ void ecs_os_gettime(ecs_time_t *time) {
 
 #ifdef FLECS_TRACK_OS_ALLOC
 ecs_size_t ecs_os_allocated_bytes = 0;
+/* Allocate memory and track allocated byte count. */
 static
 void* ecs_os_api_malloc(ecs_size_t size) {
     ecs_os_linc(&ecs_os_api_malloc_count);
@@ -353,6 +357,7 @@ void* ecs_os_api_malloc(ecs_size_t size) {
     return ECS_OFFSET(result, 16);
 }
 
+/* Allocate zero-initialized memory and track allocated byte count. */
 static
 void* ecs_os_api_calloc(ecs_size_t size) {
     ecs_os_linc(&ecs_os_api_calloc_count);
@@ -363,6 +368,7 @@ void* ecs_os_api_calloc(ecs_size_t size) {
     return ECS_OFFSET(result, 16);
 }
 
+/* Reallocate memory and track allocated byte count. */
 static
 void* ecs_os_api_realloc(void *ptr, ecs_size_t size) {
     ecs_assert(size > 0, ECS_INVALID_PARAMETER, NULL);
@@ -386,6 +392,7 @@ void* ecs_os_api_realloc(void *ptr, ecs_size_t size) {
     return ECS_OFFSET(ptr, 16);
 }
 
+/* Free memory and track allocated byte count. */
 static
 void ecs_os_api_free(void *ptr) {
     if (ptr) {
@@ -473,7 +480,7 @@ void ecs_os_perf_trace_pop_(
     }
 }
 
-/* Replace dots with underscores */
+/* Replace dots in a module name with the given separator character. */
 static
 char *module_file_base(const char *module, char sep) {
     char *base = ecs_os_strdup(module);
@@ -487,11 +494,12 @@ char *module_file_base(const char *module, char sep) {
     return base;
 }
 
+/* Convert a module name to a platform-specific dynamic library path. */
 static
 char* ecs_os_api_module_to_dl(const char *module) {
     ecs_strbuf_t lib = ECS_STRBUF_INIT;
 
-    /* Best guess, use module name with underscores + OS library extension */
+    /* Convert dots to underscores and append platform-specific extension */
     char *file_base = module_file_base(module, '_');
 
 #   if defined(ECS_TARGET_LINUX) || defined(ECS_TARGET_FREEBSD)
@@ -512,11 +520,12 @@ char* ecs_os_api_module_to_dl(const char *module) {
     return ecs_strbuf_get(&lib);
 }
 
+/* Convert a module name to an etc directory path. */
 static
 char* ecs_os_api_module_to_etc(const char *module) {
     ecs_strbuf_t lib = ECS_STRBUF_INIT;
 
-    /* Best guess, use module name with dashes + /etc */
+    /* Convert dots to dashes and append /etc */
     char *file_base = module_file_base(module, '-');
 
     ecs_strbuf_appendstr(&lib, file_base);
@@ -567,8 +576,7 @@ void ecs_os_set_api_defaults(void)
     ecs_os_api.abort_ = abort;
 
 #   ifdef FLECS_OS_API_IMPL
-    /* Initialize defaults to OS API IMPL addon, but still allow for overriding
-     * by the application */
+    /* Seed defaults from OS API IMPL addon; application can still override */
     ecs_set_os_api_impl();
     ecs_os_api_initialized = false;
 #   endif
