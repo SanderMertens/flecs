@@ -8,9 +8,16 @@
 namespace flecs
 {
 
-/* Static helper functions to assign a component value */
+/** Static helper functions to assign a component value. */
 
-// set(T&&)
+/** Set a component value using move semantics.
+ *
+ * @tparam T The component type.
+ * @param world The world.
+ * @param entity The entity.
+ * @param value The value to set (rvalue reference).
+ * @param id The component id.
+ */
 template <typename T>
 inline void set(world_t *world, flecs::entity_t entity, T&& value, flecs::id_t id) {
     ecs_assert(_::type<T>::size() != 0, ECS_INVALID_PARAMETER,
@@ -34,7 +41,14 @@ inline void set(world_t *world, flecs::entity_t entity, T&& value, flecs::id_t i
     }
 }
 
-// set(const T&)
+/** Set a component value using copy semantics.
+ *
+ * @tparam T The component type.
+ * @param world The world.
+ * @param entity The entity.
+ * @param value The value to set (const reference).
+ * @param id The component id.
+ */
 template <typename T>
 inline void set(world_t *world, flecs::entity_t entity, const T& value, flecs::id_t id) {
     ecs_assert(_::type<T>::size() != 0, ECS_INVALID_PARAMETER,
@@ -54,21 +68,43 @@ inline void set(world_t *world, flecs::entity_t entity, const T& value, flecs::i
     }
 }
 
-// set(T&&)
+/** Set a component value using move semantics, with automatic id lookup.
+ *
+ * @tparam T The component type.
+ * @tparam A The actual value type.
+ * @param world The world.
+ * @param entity The entity.
+ * @param value The value to set (rvalue reference).
+ */
 template <typename T, typename A>
 inline void set(world_t *world, entity_t entity, A&& value) {
     id_t id = _::type<T>::id(world);
     flecs::set(world, entity, FLECS_FWD(value), id);
 }
 
-// set(const T&)
+/** Set a component value using copy semantics, with automatic id lookup.
+ *
+ * @tparam T The component type.
+ * @tparam A The actual value type.
+ * @param world The world.
+ * @param entity The entity.
+ * @param value The value to set (const reference).
+ */
 template <typename T, typename A>
 inline void set(world_t *world, entity_t entity, const A& value) {
     id_t id = _::type<T>::id(world);
     flecs::set(world, entity, value, id);
 }
 
-// assign(T&&)
+/** Assign a component value using move semantics.
+ * Similar to set, but uses ecs_cpp_assign instead of ecs_cpp_set.
+ *
+ * @tparam T The component type.
+ * @param world The world.
+ * @param entity The entity.
+ * @param value The value to assign (rvalue reference).
+ * @param id The component id.
+ */
 template <typename T>
 inline void assign(world_t *world, flecs::entity_t entity, T&& value, flecs::id_t id) {
     ecs_assert(_::type<remove_reference_t<T>>::size() != 0, 
@@ -93,7 +129,15 @@ inline void assign(world_t *world, flecs::entity_t entity, T&& value, flecs::id_
     }
 }
 
-// assign(const T&)
+/** Assign a component value using copy semantics.
+ * Similar to set, but uses ecs_cpp_assign instead of ecs_cpp_set.
+ *
+ * @tparam T The component type.
+ * @param world The world.
+ * @param entity The entity.
+ * @param value The value to assign (const reference).
+ * @param id The component id.
+ */
 template <typename T>
 inline void assign(world_t *world, flecs::entity_t entity, const T& value, flecs::id_t id) {
     ecs_assert(_::type<remove_reference_t<T>>::size() != 0, 
@@ -114,14 +158,28 @@ inline void assign(world_t *world, flecs::entity_t entity, const T& value, flecs
     }
 }
 
-// set(T&&)
+/** Assign a component value using move semantics, with automatic id lookup.
+ *
+ * @tparam T The component type.
+ * @tparam A The actual value type.
+ * @param world The world.
+ * @param entity The entity.
+ * @param value The value to assign (rvalue reference).
+ */
 template <typename T, typename A>
 inline void assign(world_t *world, entity_t entity, A&& value) {
     id_t id = _::type<T>::id(world);
     flecs::assign(world, entity, FLECS_FWD(value), id);
 }
 
-// set(const T&)
+/** Assign a component value using copy semantics, with automatic id lookup.
+ *
+ * @tparam T The component type.
+ * @tparam A The actual value type.
+ * @param world The world.
+ * @param entity The entity.
+ * @param value The value to assign (const reference).
+ */
 template <typename T, typename A>
 inline void assign(world_t *world, entity_t entity, const A& value) {
     id_t id = _::type<T>::id(world);
@@ -129,7 +187,15 @@ inline void assign(world_t *world, entity_t entity, const A& value) {
 }
 
 
-// emplace for T(Args...)
+/** Emplace a component value, constructing it in place.
+ *
+ * @tparam T The component type.
+ * @tparam Args Constructor argument types.
+ * @param world The world.
+ * @param entity The entity.
+ * @param id The component id.
+ * @param args Constructor arguments.
+ */
 template <typename T, typename ... Args, if_t<
     std::is_constructible<actual_type_t<T>, Args...>::value ||
     std::is_default_constructible<actual_type_t<T>>::value > = 0>
@@ -145,6 +211,9 @@ inline void emplace(world_t *world, flecs::entity_t entity, flecs::id_t id, Args
 
 /** Return id without generation.
  *
+ * @param e The entity id.
+ * @return The entity id without generation.
+ *
  * @see ecs_strip_generation()
  */
 inline flecs::id_t strip_generation(flecs::entity_t e) {
@@ -152,6 +221,9 @@ inline flecs::id_t strip_generation(flecs::entity_t e) {
 }
 
 /** Return entity generation.
+ *
+ * @param e The entity id.
+ * @return The generation of the entity.
  */
 inline uint32_t get_generation(flecs::entity_t e) {
     return ECS_GENERATION(e);
@@ -197,13 +269,14 @@ struct world {
             }
         }
 
-    /** Not allowed to copy a world. May only take a reference.
+    /** Copy constructor. Increases reference count on the world.
      */
     world(const world& obj) {
         this->world_ = obj.world_;
         flecs_poly_claim(this->world_);
     }
 
+    /** Copy assignment operator. Increases reference count on the world. */
     world& operator=(const world& obj) noexcept {
         release();
         this->world_ = obj.world_;
@@ -211,11 +284,13 @@ struct world {
         return *this;
     }
 
+    /** Move constructor. Transfers world ownership. */
     world(world&& obj) noexcept {
         world_ = obj.world_;
         obj.world_ = nullptr;
     }
 
+    /** Move assignment operator. Transfers world ownership. */
     world& operator=(world&& obj) noexcept {
         release();
         world_ = obj.world_;
@@ -223,8 +298,9 @@ struct world {
         return *this;
     }
 
-    /* Releases the underlying world object. If this is the last handle, the world
-       will be finalized. */
+    /** Release the underlying world object.
+     * If this is the last handle, the world will be finalized.
+     */
     void release() {
         if (world_) {
             if (!flecs_poly_release(world_)) {
@@ -242,15 +318,16 @@ struct world {
         }        
     }
 
+    /** Destructor. Releases the world reference. */
     ~world() {
         release();
     }
 
-    /* Implicit conversion to world_t* */
+    /** Implicit conversion to world_t*. */
     operator world_t*() const { return world_; }
 
     /** Make current world object owner of the world. This may only be called on
-     * one flecs::world object, an may only be called  once. Failing to do so
+     * one flecs::world object, and may only be called once. Failing to do so
      * will result in undefined behavior.
      * 
      * This operation allows a custom (C) world to be wrapped by a C++ object,
@@ -1452,15 +1529,21 @@ struct world {
 #   endif
 
 public:
+    /** Initialize builtin components. */
     void init_builtin_components();
 
-    world_t *world_;
+    world_t *world_; /**< Pointer to the underlying C world. */
 };
 
 /** Scoped world.
  * Utility class used by the world::scope method to create entities in a scope.
  */
 struct scoped_world : world {
+    /** Create a scoped world.
+     *
+     * @param w The world.
+     * @param s The scope entity.
+     */
     scoped_world(
         flecs::world_t *w,
         flecs::entity_t s) : world(w)
@@ -1468,17 +1551,19 @@ struct scoped_world : world {
         prev_scope_ = ecs_set_scope(w, s);
     }
 
+    /** Destructor. Restores the previous scope. */
     ~scoped_world() {
         ecs_set_scope(world_, prev_scope_);
     }
 
+    /** Copy constructor. */
     scoped_world(const scoped_world& obj) : world(nullptr) {
         prev_scope_ = obj.prev_scope_;
         world_ = obj.world_;
         flecs_poly_claim(world_);
     }
 
-    flecs::entity_t prev_scope_;
+    flecs::entity_t prev_scope_; /**< The previous scope entity. */
 };
 
 /** @} */

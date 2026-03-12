@@ -8,10 +8,10 @@
 namespace flecs {
 
 inline units::units(flecs::world& world) {
-    /* Import C module  */
+    // Import C module
     FlecsUnitsImport(world);
 
-    /* Bridge between C++ types and flecs.units entities */
+    // Bridge between C++ types and flecs.units entities
     world.module<units>();
 
     // Initialize world.entity(prefixes) scope

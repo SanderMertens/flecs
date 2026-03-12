@@ -12,7 +12,7 @@ namespace flecs {
 namespace meta {
 namespace _ {
 
-/* Type support for entity wrappers */
+/** Type support for entity wrappers. */
 template <typename EntityType>
 inline flecs::opaque<EntityType> flecs_entity_support(flecs::world&) {
     return flecs::opaque<EntityType>()
@@ -78,7 +78,7 @@ inline void init(flecs::world& world) {
         ecs_remove_pair(world, flecs::Uptr, ecs_id(EcsIdentifier), EcsSymbol);
     }
 
-    // Register opaque type support for C++ entity wrappers
+    // Register opaque type support for C++ entity wrappers.
     world.entity("::flecs::cpp").add(flecs::Module).scope([&]{
         world.component<flecs::entity_view>()
             .opaque(flecs_entity_support<flecs::entity_view>);

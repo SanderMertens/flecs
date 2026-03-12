@@ -24,7 +24,7 @@ namespace _ {
 
 /** Iterate over an integer range (used to iterate over entity range).
  *
- * @tparam T of the iterator
+ * @tparam T The value type of the iterator.
  */
 template <typename T>
 struct range_iterator
@@ -77,26 +77,37 @@ public:
      */
     iter(ecs_iter_t *it) : iter_(it) { }
 
+    /** Get iterator to the beginning of the entity range. */
     row_iterator begin() const {
         return row_iterator(0);
     }
 
+    /** Get iterator to the end of the entity range. */
     row_iterator end() const {
         return row_iterator(static_cast<size_t>(iter_->count));
     }
 
+    /** Get system entity associated with the iterator. */
     flecs::entity system() const;
 
+    /** Get event entity associated with the iterator. */
     flecs::entity event() const;
 
+    /** Get event id associated with the iterator. */
     flecs::id event_id() const;
 
+    /** Get world associated with the iterator. */
     flecs::world world() const;
 
+    /** Get pointer to the underlying C iterator object. */
     const flecs::iter_t* c_ptr() const {
         return iter_;
     }
 
+    /** Get number of entities to iterate over.
+     *
+     * @return The number of entities in the current result.
+     */
     size_t count() const {
         ecs_check(iter_->flags & EcsIterIsValid, ECS_INVALID_PARAMETER,
             "operation invalid before calling next()");
@@ -105,20 +116,35 @@ public:
         return 0;
     }
 
+    /** Get time elapsed since last frame.
+     *
+     * @return The delta time.
+     */
     ecs_ftime_t delta_time() const {
         return iter_->delta_time;
     }
 
+    /** Get time elapsed since last system invocation.
+     *
+     * @return The delta system time.
+     */
     ecs_ftime_t delta_system_time() const {
         return iter_->delta_system_time;
     }
 
+    /** Get the type of the iterated table. */
     flecs::type type() const;
 
+    /** Get the table for the current iterator result. */
     flecs::table table() const;
 
+    /** Get the other table for the current iterator result.
+     * This is used for move operations where data is moved from one table
+     * to another.
+     */
     flecs::table other_table() const;
 
+    /** Get the table range for the current iterator result. */
     flecs::table_range range() const;
 
     /** Access ctx.
@@ -183,6 +209,8 @@ public:
     }
 
     /** Number of fields in iterator.
+     *
+     * @return The number of fields.
      */
     int32_t field_count() const {
         return iter_->field_count;
@@ -190,7 +218,8 @@ public:
 
     /** Size of field data type.
      *
-     * @param index The field id.
+     * @param index The field index.
+     * @return The size of the field data type.
      */
     size_t size(int8_t index) const {
         return ecs_field_size(iter_, index);
@@ -223,13 +252,17 @@ public:
         return ecs_field_column(iter_, index);
     }
 
-    /** Obtain term that triggered an observer
+    /** Obtain term that triggered an observer.
+     *
+     * @return The index of the term that triggered the observer.
      */
     int8_t term_index() const {
         return iter_->term_index;
     }
 
     /** Convert current iterator result to string.
+     *
+     * @return String representation of the current iterator result.
      */
     flecs::string str() const {
         char *s = ecs_iter_str(iter_);
@@ -283,8 +316,12 @@ public:
         return get_unchecked_field(index);
     }
 
-    /** Get pointer to field at row. 
+    /** Get pointer to field at row.
      * This function may be used to access shared fields when row is set to 0.
+     *
+     * @param index The field index.
+     * @param row The row index.
+     * @return Pointer to the field value at the specified row.
      */
     void* field_at(int8_t index, size_t row) const {
         if (iter_->row_fields & (1llu << index)) {
@@ -294,8 +331,13 @@ public:
         }
     }
 
-    /** Get reference to field at row. 
+    /** Get const reference to field at row.
      * This function may be used to access shared fields when row is set to 0.
+     *
+     * @tparam T Type of the field (must be const-qualified).
+     * @param index The field index.
+     * @param row The row index.
+     * @return Const reference to the field value at the specified row.
      */
     template <typename T, typename A = actual_type_t<T>, if_t< is_const_v<T> > = 0>
     const A& field_at(int8_t index, size_t row) const {
@@ -306,8 +348,13 @@ public:
         }
     }
 
-    /** Get reference to field at row. 
+    /** Get mutable reference to field at row.
      * This function may be used to access shared fields when row is set to 0.
+     *
+     * @tparam T Type of the field (must not be const-qualified).
+     * @param index The field index.
+     * @param row The row index.
+     * @return Mutable reference to the field value at the specified row.
      */
     template <typename T, typename A = actual_type_t<T>, if_not_t< is_const_v<T> > = 0>
     A& field_at(int8_t index, size_t row) const {
@@ -330,7 +377,10 @@ public:
     }
 
     /** Check if the current table has changed since the last iteration.
-     * Can only be used when iterating queries and/or systems. */
+     * Can only be used when iterating queries and/or systems.
+     *
+     * @return True if the table has changed.
+     */
     bool changed() {
         return ecs_iter_changed(iter_);
     }
@@ -346,7 +396,10 @@ public:
         ecs_iter_skip(iter_);
     }
 
-    /* Return group id for current table (grouped queries only) */
+    /** Return group id for current table (grouped queries only).
+     *
+     * @return The group id.
+     */
     uint64_t group_id() const {
         return ecs_iter_get_group(iter_);
     }
@@ -366,6 +419,8 @@ public:
      * not being progressed automatically. An example of a valid context is
      * inside of a run() callback. An example of an invalid context is inside of
      * an each() callback.
+     *
+     * @return True if there is more data to iterate, false if not.
      */
     bool next() {
         if (iter_->flags & EcsIterIsValid && iter_->table) {

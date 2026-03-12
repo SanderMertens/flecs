@@ -49,17 +49,17 @@ typedef struct ecs_http_server_t ecs_http_server_t;
 
 /** A connection manages communication with the remote host. */
 typedef struct {
-    uint64_t id;
-    ecs_http_server_t *server;
+    uint64_t id;                   /**< Connection id */
+    ecs_http_server_t *server;     /**< Server */
 
-    char host[128];
-    char port[16];
+    char host[128];                /**< Remote host */
+    char port[16];                 /**< Remote port */
 } ecs_http_connection_t;
 
 /** Helper type used for headers & URL query parameters. */
 typedef struct {
-    const char *key;
-    const char *value;
+    const char *key;               /**< Key */
+    const char *value;             /**< Value */
 } ecs_http_key_value_t;
 
 /** Supported request methods. */
@@ -74,17 +74,17 @@ typedef enum {
 
 /** An HTTP request. */
 typedef struct {
-    uint64_t id;
+    uint64_t id;                   /**< Request id */
 
-    ecs_http_method_t method;
-    char *path;
-    char *body;
-    ecs_http_key_value_t headers[ECS_HTTP_HEADER_COUNT_MAX];
-    ecs_http_key_value_t params[ECS_HTTP_HEADER_COUNT_MAX];
-    int32_t header_count;
-    int32_t param_count;
+    ecs_http_method_t method;      /**< Request method */
+    char *path;                    /**< Request path */
+    char *body;                    /**< Request body */
+    ecs_http_key_value_t headers[ECS_HTTP_HEADER_COUNT_MAX]; /**< Request headers */
+    ecs_http_key_value_t params[ECS_HTTP_HEADER_COUNT_MAX];  /**< Request query parameters */
+    int32_t header_count;          /**< Number of headers */
+    int32_t param_count;           /**< Number of query parameters */
 
-    ecs_http_connection_t *conn;
+    ecs_http_connection_t *conn;   /**< Connection */
 } ecs_http_request_t;
 
 /** An HTTP reply. */
@@ -96,10 +96,11 @@ typedef struct {
     ecs_strbuf_t headers;       /**< default = "" */
 } ecs_http_reply_t;
 
+/** Default initializer for ecs_http_reply_t. */
 #define ECS_HTTP_REPLY_INIT \
     (ecs_http_reply_t){200, ECS_STRBUF_INIT, "OK", "application/json", ECS_STRBUF_INIT}
 
-/* Global HTTP statistics. */
+/** Global HTTP statistics. */
 extern int64_t ecs_http_request_received_count;       /**< Total number of HTTP requests received. */
 extern int64_t ecs_http_request_invalid_count;        /**< Total number of invalid HTTP requests. */
 extern int64_t ecs_http_request_handled_ok_count;     /**< Total number of successful HTTP requests. */
@@ -196,7 +197,15 @@ int ecs_http_server_http_request(
     ecs_size_t len,
     ecs_http_reply_t *reply_out);
 
-/** Convenience wrapper around ecs_http_server_http_request(). */
+/** Convenience wrapper around ecs_http_server_http_request().
+ *
+ * @param srv The server.
+ * @param method The HTTP method (e.g. "GET").
+ * @param req The request path.
+ * @param body The request body (optional).
+ * @param reply_out The reply (out parameter).
+ * @return Zero if success, non-zero if failed.
+ */
 FLECS_API
 int ecs_http_server_request(
     ecs_http_server_t* srv,
@@ -205,7 +214,11 @@ int ecs_http_server_request(
     const char *body,
     ecs_http_reply_t *reply_out);
 
-/** Get context provided in ecs_http_server_desc_t */
+/** Get context provided in ecs_http_server_desc_t.
+ *
+ * @param srv The server.
+ * @return The context.
+ */
 FLECS_API
 void* ecs_http_server_ctx(
     ecs_http_server_t* srv);

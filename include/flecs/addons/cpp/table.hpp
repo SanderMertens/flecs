@@ -15,13 +15,25 @@ namespace flecs {
  * @{
  */
 
+/** Table.
+ * A table stores entities with the same set of components.
+ *
+ * @ingroup cpp_tables
+ */
 struct table {
+    /** Default constructor. */
     table() : world_(nullptr), table_(nullptr) { }
 
+    /** Construct table from world and C table pointer.
+     *
+     * @param world The world.
+     * @param t Pointer to the C table.
+     */
     table(world_t *world, table_t *t)
         : world_(world)
         , table_(t) { }
 
+    /** Destructor. */
     virtual ~table() { }
 
     /** Convert table type to string. */
@@ -74,6 +86,7 @@ struct table {
     }
 
     /** Find type index for pair.
+     *
      * @param first First element of pair.
      * @param second Second element of pair.
      * @return The index of the id in the table type, -1 if not found.
@@ -83,6 +96,7 @@ struct table {
     }
 
     /** Find type index for pair.
+     *
      * @tparam First First element of pair.
      * @param second Second element of pair.
      * @return The index of the id in the table type, -1 if not found.
@@ -93,6 +107,7 @@ struct table {
     }
 
     /** Find type index for pair.
+     *
      * @tparam First First element of pair.
      * @tparam Second Second element of pair.
      * @return The index of the id in the table type, -1 if not found.
@@ -105,7 +120,7 @@ struct table {
     /** Find column index for (component) id.
      *
      * @param id The (component) id.
-     * @return The index of the id in the table type, -1 if not found/
+     * @return The column index of the id in the table, -1 if not found.
      */
     int32_t column_index(flecs::id_t id) const {
         return ecs_table_get_column_index(world_, table_, id);
@@ -122,6 +137,7 @@ struct table {
     }
 
     /** Find column index for pair.
+     *
      * @param first First element of pair.
      * @param second Second element of pair.
      * @return The column index of the id in the table type, -1 if not found.
@@ -131,6 +147,7 @@ struct table {
     }
 
     /** Find column index for pair.
+     *
      * @tparam First First element of pair.
      * @param second Second element of pair.
      * @return The column index of the id in the table type, -1 if not found.
@@ -141,6 +158,7 @@ struct table {
     }
 
     /** Find column index for pair.
+     *
      * @tparam First First element of pair.
      * @tparam Second Second element of pair.
      * @return The column index of the id in the table type, -1 if not found.
@@ -342,7 +360,11 @@ struct table {
         return static_cast<A*>(get<First>(_::type<Second>::id(world_)));
     }
 
-    /** Get column size. */
+    /** Get column size.
+     *
+     * @param index The column index.
+     * @return The size of the column's component type.
+     */
     size_t column_size(int32_t index) const {
         return ecs_table_get_column_size(table_, index);
     }
@@ -366,12 +388,18 @@ struct table {
         return depth(_::type<Rel>::id(world_));
     }
 
-    /** Get table records array */
+    /** Get table records array.
+     *
+     * @return The table records.
+     */
     ecs_table_records_t records() const {
         return flecs_table_records(table_);
     }
 
-    /** Get table id. */
+    /** Get table id.
+     *
+     * @return The table id.
+     */
     uint64_t id() const {
         return flecs_table_id(table_);
     }
@@ -386,7 +414,11 @@ struct table {
         ecs_table_unlock(world_, table_);
     }
 
-    /** Check if table has flags. */
+    /** Check if table has flags.
+     *
+     * @param flags The flags to check for.
+     * @return True if the table has the specified flags.
+     */
     bool has_flags(ecs_flags32_t flags) const {
         return ecs_table_has_flags(table_, flags);
     }
@@ -399,7 +431,7 @@ struct table {
         return table_;
     }
 
-    /* Implicit conversion to table_t */
+    /** Implicit conversion to table_t*. */
     operator table_t*() const {
         return table_;
     }
@@ -409,21 +441,36 @@ protected:
     table_t *table_;
 };
 
+/** Table range.
+ * A table range represents a contiguous range of entities in a table.
+ *
+ * @ingroup cpp_tables
+ */
 struct table_range : table {
+    /** Default constructor. */
     table_range()
         : table()
         , offset_(0)
         , count_(0) { }
 
+    /** Construct table range from world, table, offset, and count.
+     *
+     * @param world The world.
+     * @param t Pointer to the C table.
+     * @param offset The starting row offset.
+     * @param count The number of rows in the range.
+     */
     table_range(world_t *world, table_t *t, int32_t offset, int32_t count)
         : table(world, t)
         , offset_(offset)
         , count_(count) { }
 
+    /** Get the offset of the range. */
     int32_t offset() const {
         return offset_;
     }
 
+    /** Get the number of entities in the range. */
     int32_t count() const {
         return count_;
     }

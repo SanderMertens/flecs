@@ -4,7 +4,7 @@
  */
 
 /**
- * @memberof flecs::entity_view
+ * @memberof flecs::entity_builder
  * @ingroup cpp_addons_meta
  * 
  * @{
@@ -74,7 +74,7 @@ const Self& quantity(flecs::entity_t quantity) const {
     return to_base();
 }
 
-/** Make entity a unity prefix */
+/** Make entity a unit prefix. */
 template <typename Quantity>
 const Self& quantity() const {
     return this->quantity(_::type<Quantity>::id(this->world()));

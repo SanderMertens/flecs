@@ -15,10 +15,13 @@ namespace flecs {
  * @{
  */
 
+/** Tick source component. */
 using TickSource = EcsTickSource;
 
+/** Forward declaration for system. */
 struct system;
 
+/** Forward declaration for system builder. */
 template<typename ... Components>
 struct system_builder;
 

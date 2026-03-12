@@ -10,17 +10,24 @@
 namespace flecs 
 {
 
+/** Observer.
+ *
+ * @ingroup cpp_observers
+ */
 struct observer final : entity
 {
     using entity::entity;
 
+    /** Default constructor. */
     explicit observer() : entity() { }
 
+    /** Construct from a world and observer descriptor. */
     observer(flecs::world_t *world, ecs_observer_desc_t *desc) {
         world_ = world;
         id_ = ecs_observer_init(world, desc);
     }
 
+    /** Set the observer context. */
     void ctx(void *ctx) {
         ecs_observer_desc_t desc = {};
         desc.entity = id_;
@@ -28,16 +35,18 @@ struct observer final : entity
         ecs_observer_init(world_, &desc);
     }
 
+    /** Get the observer context. */
     void* ctx() const {
         return ecs_observer_get(world_, id_)->ctx;
     }
 
+    /** Get the query for this observer. */
     flecs::query<> query() const {
         return flecs::query<>(ecs_observer_get(world_, id_)->query);
     }
 };
 
-// Mixin implementation
+/** Mixin implementation. */
 inline observer world::observer(flecs::entity e) const {
     return flecs::observer(world_, e);
 }

@@ -16,30 +16,36 @@ namespace flecs
  */
 template<typename Base, typename ... Components>
 struct query_builder_i : term_builder_i<Base> {
-    query_builder_i(ecs_query_desc_t *desc, int32_t term_index = 0) 
+    /** Construct from a query descriptor. */
+    query_builder_i(ecs_query_desc_t *desc, int32_t term_index = 0)
         : term_index_(term_index)
         , expr_count_(0)
         , desc_(desc) { }
 
+    /** Set query flags. */
     Base& query_flags(ecs_flags32_t flags) {
         desc_->flags |= flags;
         return *this;
     }
 
+    /** Set the cache kind for the query. */
     Base& cache_kind(query_cache_kind_t kind) {
         desc_->cache_kind = static_cast<ecs_query_cache_kind_t>(kind);
         return *this;
     }
 
+    /** Enable auto-caching for the query. */
     Base& cached() {
         return cache_kind(flecs::QueryCacheAuto);
     }
 
+    /** Enable change detection for the query. */
     Base& detect_changes() {
         desc_->flags |= EcsQueryDetectChanges;
         return *this;
     }
 
+    /** Set the query expression string. */
     Base& expr(const char *expr) {
         ecs_check(expr_count_ == 0, ECS_INVALID_OPERATION,
             "query_builder::expr() called more than once");
@@ -50,8 +56,11 @@ struct query_builder_i : term_builder_i<Base> {
         return *this;
     }
 
-    /* With methods */
+    /** @name With methods
+     * @{
+     */
 
+    /** Add a term for the specified type. */
     template<typename T>
     Base& with() {
         this->term();
@@ -61,57 +70,67 @@ struct query_builder_i : term_builder_i<Base> {
         return *this;
     }
 
+    /** Add a term for the specified component id. */
     Base& with(id_t component_id) {
         this->term();
         *this->term_ = flecs::term(component_id);
         return *this;
     }
 
+    /** Add a term for the specified component name. */
     Base& with(const char *component_name) {
         this->term();
         *this->term_ = flecs::term().first(component_name);
         return *this;
     }
 
+    /** Add a term for a pair specified by name. */
     Base& with(const char *first, const char *second) {
         this->term();
         *this->term_ = flecs::term().first(first).second(second);
         return *this;
     }
 
+    /** Add a term for a pair specified by entity ids. */
     Base& with(entity_t first, entity_t second) {
         this->term();
         *this->term_ = flecs::term(first, second);
         return *this;
     }
 
+    /** Add a term for a pair with entity id first and name second. */
     Base& with(entity_t first, const char *second) {
         this->term();
         *this->term_ = flecs::term(first).second(second);
         return *this;
     }
 
+    /** Add a term for a pair with name first and entity id second. */
     Base& with(const char *first, entity_t second) {
         this->term();
         *this->term_ = flecs::term().first(first).second(second);
         return *this;
     }
 
+    /** Add a term for a pair with type First and entity id second. */
     template<typename First>
     Base& with(entity_t second) {
         return this->with(_::type<First>::id(this->world_v()), second);
     }
 
+    /** Add a term for a pair with type First and name second. */
     template<typename First>
     Base& with(const char *second) {
         return this->with(_::type<First>::id(this->world_v())).second(second);
     }
 
+    /** Add a term for a pair with types First and Second. */
     template<typename First, typename Second>
     Base& with() {
         return this->with<First>(_::type<Second>::id(this->world_v()));
     }
 
+    /** Add a term for an enum value. */
     template <typename E, if_t< is_enum<E>::value > = 0>
     Base& with(E value) {
         flecs::entity_t r = _::type<E>::id(this->world_v());
@@ -119,90 +138,110 @@ struct query_builder_i : term_builder_i<Base> {
         return this->with(r, o);
     }
 
+    /** Add a term from an existing term reference. */
     Base& with(flecs::term& term) {
         this->term();
         *this->term_ = term;
         return *this;
     }
 
+    /** Add a term from an existing term (move). */
     Base& with(flecs::term&& term) {
         this->term();
         *this->term_ = term;
         return *this;
     }
 
-    /* Without methods, shorthand for .with(...).not_(). */
+    /** @}
+     * @name Without methods
+     * Shorthand for .with(...).not_().
+     * @{
+     */
 
+    /** Add a negated term. */
     template <typename ... Args>
     Base& without(Args&&... args) {
         return this->with(FLECS_FWD(args)...).not_();
     }
 
+    /** Add a negated term for the specified type. */
     template <typename T, typename ... Args>
     Base& without(Args&&... args) {
         return this->with<T>(FLECS_FWD(args)...).not_();
     }
 
+    /** Add a negated term for a pair of types. */
     template <typename First, typename Second>
     Base& without() {
         return this->with<First, Second>().not_();
     }
 
-    /* Write/read methods */
+    /** @}
+     * @name Write/read methods
+     * @{
+     */
 
+    /** Short for inout_stage(flecs::Out). */
     Base& write() {
         term_builder_i<Base>::write();
         return *this;
     }
 
+    /** Add a write term with the specified arguments. */
     template <typename ... Args>
     Base& write(Args&&... args) {
         return this->with(FLECS_FWD(args)...).write();
     }
 
+    /** Add a write term for the specified type. */
     template <typename T, typename ... Args>
     Base& write(Args&&... args) {
         return this->with<T>(FLECS_FWD(args)...).write();
     }
 
+    /** Add a write term for a pair of types. */
     template <typename First, typename Second>
     Base& write() {
         return this->with<First, Second>().write();
     }
 
+    /** Short for inout_stage(flecs::In). */
     Base& read() {
         term_builder_i<Base>::read();
         return *this;
     }
 
+    /** Add a read term with the specified arguments. */
     template <typename ... Args>
     Base& read(Args&&... args) {
         return this->with(FLECS_FWD(args)...).read();
     }
 
+    /** Add a read term for the specified type. */
     template <typename T, typename ... Args>
     Base& read(Args&&... args) {
         return this->with<T>(FLECS_FWD(args)...).read();
     }
 
+    /** Add a read term for a pair of types. */
     template <typename First, typename Second>
     Base& read() {
         return this->with<First, Second>().read();
     }
 
-    /* Scope_open/scope_close shorthand notation. */
+    /** @} */
+
+    /** Open a query scope. */
     Base& scope_open() {
         return this->with(flecs::ScopeOpen).entity(0);
     }
 
+    /** Close a query scope. */
     Base& scope_close() {
         return this->with(flecs::ScopeClose).entity(0);
     }
 
-    /* Term notation for more complex query features */
-
-    /** Sets the current term to next one in term list.
-     */
+    /** Sets the current term to next one in term list. */
     Base& term() {
         if (this->term_) {
             ecs_check(ecs_term_is_initialized(this->term_), 
@@ -243,8 +282,7 @@ struct query_builder_i : term_builder_i<Base> {
         return *this;
     }
 
-    /** Sets the current term to the one at the provided index.
-     */
+    /** Sets the current term to the one at the provided index. */
     Base& term_at(int32_t term_index) {
         ecs_assert(term_index >= 0, ECS_INVALID_PARAMETER, NULL);
         int32_t prev_index = term_index_;
@@ -256,8 +294,8 @@ struct query_builder_i : term_builder_i<Base> {
         return *this;
     }
 
-    /** Sets the current term to the one at the provided index and asserts that the type matches.
-     */
+    /** Sets the current term to the one at the provided index and asserts
+     * that the type matches. */
     template <typename T>
     Base& term_at(int32_t term_index) {
         this->term_at(term_index);
@@ -375,15 +413,13 @@ struct query_builder_i : term_builder_i<Base> {
         return *this;
     }
 
-    /** Specify on_group_create action.
-     */
+    /** Specify on_group_create action. */
     Base& on_group_create(ecs_group_create_action_t action) {
         desc_->on_group_create = action;
         return *this;
     }
 
-    /** Specify on_group_delete action.
-     */
+    /** Specify on_group_delete action. */
     Base& on_group_delete(ecs_group_delete_action_t action) {
         desc_->on_group_delete = action;
         return *this;

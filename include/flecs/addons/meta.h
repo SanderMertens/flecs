@@ -283,7 +283,7 @@ typedef struct ecs_enum_constant_t {
 
 /** Component added to enum type entities */
 typedef struct EcsEnum {
-    ecs_entity_t underlying_type;
+    ecs_entity_t underlying_type;  /**< Underlying type for enum */
 } EcsEnum;
 
 /** Type that describes an bitmask constant */
@@ -303,7 +303,7 @@ typedef struct ecs_bitmask_constant_t {
 
 /** Component added to bitmask type entities */
 typedef struct EcsBitmask {
-    int32_t dummy_;
+    int32_t dummy_;                /**< Unused. */
 } EcsBitmask;
 
 /** Component with datastructures for looking up enum/bitmask constants. */
@@ -333,13 +333,13 @@ typedef struct EcsVector {
 
 /** Serializer interface */
 typedef struct ecs_serializer_t {
-    /* Serialize value */
+    /** Serialize value */
     int (*value)(
         const struct ecs_serializer_t *ser, /**< Serializer */
         ecs_entity_t type,                  /**< Type of the value to serialize */
         const void *value);                 /**< Pointer to the value to serialize */
 
-    /* Serialize member */
+    /** Serialize member */
     int (*member)(
         const struct ecs_serializer_t *ser, /**< Serializer */
         const char *member);                /**< Member name */
@@ -626,7 +626,12 @@ typedef struct ecs_meta_cursor_t {
     void *lookup_ctx;                              /**< Context for lookup_action */
 } ecs_meta_cursor_t;
 
-/** Convert serializer to string. */
+/** Convert serializer to string.
+ *
+ * @param world The world.
+ * @param type The type to convert.
+ * @return The serializer string, or NULL if failed.
+ */
 FLECS_API
 char* ecs_meta_serializer_to_str(
     ecs_world_t *world,
@@ -1040,7 +1045,7 @@ ecs_entity_t ecs_primitive_init(
 typedef struct ecs_enum_desc_t {
     ecs_entity_t entity;       /**< Existing entity to use for type (optional). */
     ecs_enum_constant_t constants[ECS_MEMBER_DESC_CACHE_SIZE]; /**< Enum constants. */
-    ecs_entity_t underlying_type;
+    ecs_entity_t underlying_type; /**< Underlying type for enum */
 } ecs_enum_desc_t;
 
 /** Create a new enum type. 

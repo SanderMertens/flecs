@@ -15,7 +15,7 @@ namespace flecs {
  * @{
  */
 
-/* Primitive type aliases */
+/** Primitive type aliases. */
 using bool_t = ecs_bool_t;
 using char_t = ecs_char_t;
 using u8_t = ecs_u8_t;
@@ -31,12 +31,12 @@ using iptr_t = ecs_iptr_t;
 using f32_t = ecs_f32_t;
 using f64_t = ecs_f64_t;
 
-/* Embedded type aliases */
+/** Embedded type aliases. */
 using member_t = ecs_member_t;
 using enum_constant_t = ecs_enum_constant_t;
 using bitmask_constant_t = ecs_bitmask_constant_t;
 
-/* Components */
+/** Components. */
 using Type = EcsType;
 using TypeSerializer = EcsTypeSerializer;
 using Primitive = EcsPrimitive;
@@ -54,7 +54,7 @@ struct bitmask {
     uint32_t value;
 };
 
-/* Handles to builtin reflection types */
+/** Handles to builtin reflection types. */
 static const flecs::entity_t Bool = ecs_id(ecs_bool_t);
 static const flecs::entity_t Char = ecs_id(ecs_char_t);
 static const flecs::entity_t Byte = ecs_id(ecs_byte_t);
@@ -76,7 +76,7 @@ static const flecs::entity_t Quantity = EcsQuantity;
 
 namespace meta {
 
-/* Type kinds supported by reflection system */
+/** Type kinds supported by reflection system. */
 using type_kind_t = ecs_type_kind_t;
 static const type_kind_t PrimitiveType = EcsPrimitiveType;
 static const type_kind_t BitmaskType = EcsBitmaskType;
@@ -87,7 +87,7 @@ static const type_kind_t VectorType = EcsVectorType;
 static const type_kind_t CustomType = EcsOpaqueType;
 static const type_kind_t TypeKindLast = EcsTypeKindLast;
 
-/* Primitive type kinds supported by reflection system */
+/** Primitive type kinds supported by reflection system. */
 using primitive_kind_t = ecs_primitive_kind_t;
 static const primitive_kind_t Bool = EcsBool;
 static const primitive_kind_t Char = EcsChar;

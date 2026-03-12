@@ -20,6 +20,10 @@
 extern "C" {
 #endif
 
+/** Set default OS API implementation.
+ * This initializes the OS API with a default implementation for the current
+ * platform.
+ */
 FLECS_API
 void ecs_set_os_api_impl(void);
 

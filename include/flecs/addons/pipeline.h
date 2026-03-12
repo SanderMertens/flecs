@@ -254,10 +254,10 @@ void ecs_set_task_threads(
     ecs_world_t *world,
     int32_t task_threads);
 
-/** Returns true if task thread use have been requested. 
- * 
+/** Returns true if task thread use have been requested.
+ *
  * @param world The world.
- * @result Whether the world is using task threads.
+ * @return Whether the world is using task threads.
  */
 FLECS_API
 bool ecs_using_task_threads(

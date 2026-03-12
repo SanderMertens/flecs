@@ -14,6 +14,10 @@ namespace flecs {
 
 /** Script builder interface */
 struct script_builder {
+    /** Construct a script builder.
+     * @param world The world.
+     * @param name Optional name for the script entity.
+     */
     script_builder(flecs::world_t *world, const char *name = nullptr)
         : world_(world)
         , desc_{}
@@ -27,16 +31,19 @@ struct script_builder {
         }
     }
 
+    /** Set the script code. */
     script_builder& code(const char *str) {
         desc_.code = str;
         return *this;
     }
 
+    /** Set the script filename. */
     script_builder& filename(const char *str) {
         desc_.filename = str;
         return *this;
     }
 
+    /** Run the script and return the script entity. */
     flecs::entity run() const;
 
 protected:

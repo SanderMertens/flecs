@@ -74,7 +74,7 @@ typedef struct EcsMetricSource {
 
 /** Used with ecs_metric_init to create metric. */
 typedef struct ecs_metric_desc_t {
-    int32_t _canary;
+    int32_t _canary;       /**< Used for validity testing. Do not set. */
 
     /** Entity associated with metric */
     ecs_entity_t entity;
@@ -83,7 +83,7 @@ typedef struct ecs_metric_desc_t {
      * at the same time as id. Cannot be combined with EcsCounterId. */
     ecs_entity_t member;
 
-    /* Member dot expression. Can be used instead of member and supports nested
+    /** Member dot expression. Can be used instead of member and supports nested
      * members. Must be set together with id and should not be set at the same
      * time as member. */
     const char *dotmember;
@@ -101,7 +101,7 @@ typedef struct ecs_metric_desc_t {
     /** Must be EcsGauge, EcsCounter, EcsCounterIncrement or EcsCounterId */
     ecs_entity_t kind;
 
-    /** Description of metric. Will only be set if FLECS_DOC addon is enabled */
+    /** Description of metric. Will only be set if FLECS_DOC addon is enabled. */
     const char *brief;
 } ecs_metric_desc_t;
 

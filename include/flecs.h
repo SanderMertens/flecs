@@ -513,16 +513,17 @@ typedef struct ecs_component_record_t ecs_component_record_t;
  */
 typedef void ecs_poly_t;
 
-/** Type that stores poly mixins */
+/** Type that stores poly mixins. */
 typedef struct ecs_mixins_t ecs_mixins_t;
 
 /** Header for ecs_poly_t objects. */
 typedef struct ecs_header_t {
-    int32_t type;               /**< Magic number indicating which type of flecs object */
-    int32_t refcount;           /**< Refcount, to enable RAII handles */
-    ecs_mixins_t *mixins;       /**< Table with offsets to (optional) mixins */
+    int32_t type;               /**< Magic number indicating which type of flecs object. */
+    int32_t refcount;           /**< Refcount, to enable RAII handles. */
+    ecs_mixins_t *mixins;       /**< Table with offsets to (optional) mixins. */
 } ecs_header_t;
 
+/** Opaque type for table record. */
 typedef struct ecs_table_record_t ecs_table_record_t;
 
 /** @} */
@@ -594,14 +595,14 @@ typedef bool (*ecs_iter_next_action_t)(
 typedef void (*ecs_iter_fini_action_t)(
     ecs_iter_t *it);
 
-/** Callback used for comparing components */
+/** Callback used for comparing components. */
 typedef int (*ecs_order_by_action_t)(
     ecs_entity_t e1,
     const void *ptr1,
     ecs_entity_t e2,
     const void *ptr2);
 
-/** Callback used for sorting the entire table of components */
+/** Callback used for sorting the entire table of components. */
 typedef void (*ecs_sort_table_action_t)(
     ecs_world_t* world,
     ecs_table_t* table,
@@ -612,7 +613,7 @@ typedef void (*ecs_sort_table_action_t)(
     int32_t hi,
     ecs_order_by_action_t order_by);
 
-/** Callback used for grouping tables in a query */
+/** Callback used for grouping tables in a query. */
 typedef uint64_t (*ecs_group_by_action_t)(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -632,29 +633,29 @@ typedef void (*ecs_group_delete_action_t)(
     void *group_ctx,     /* return value from ecs_group_create_action_t */
     void *group_by_ctx); /* from ecs_query_desc_t */
 
-/** Initialization action for modules */
+/** Initialization action for modules. */
 typedef void (*ecs_module_action_t)(
     ecs_world_t *world);
 
-/** Action callback on world exit */
+/** Action callback on world exit. */
 typedef void (*ecs_fini_action_t)(
     ecs_world_t *world,
     void *ctx);
 
-/** Function to cleanup context data */
+/** Function to cleanup context data. */
 typedef void (*ecs_ctx_free_t)(
     void *ctx);
 
-/** Callback used for sorting values */
+/** Callback used for sorting values. */
 typedef int (*ecs_compare_action_t)(
     const void *ptr1,
     const void *ptr2);
 
-/** Callback used for hashing values */
+/** Callback used for hashing values. */
 typedef uint64_t (*ecs_hash_value_action_t)(
     const void *ptr);
 
-/** Constructor/destructor callback */
+/** Constructor/destructor callback. */
 typedef void (*ecs_xtor_t)(
     void *ptr,
     int32_t count,
@@ -674,13 +675,13 @@ typedef void (*ecs_move_t)(
     int32_t count,
     const ecs_type_info_t *type_info);
 
-/** Compare hook to compare component instances */
+/** Compare hook to compare component instances. */
 typedef int (*ecs_cmp_t)(
     const void *a_ptr,
     const void *b_ptr,
     const ecs_type_info_t *type_info);
 
-/** Equals operator hook */
+/** Equals operator hook. */
 typedef bool (*ecs_equals_t)(
     const void *a_ptr,
     const void *b_ptr,
@@ -699,36 +700,36 @@ typedef void (*flecs_poly_dtor_t)(
  * @{
  */
 
-/** Specify read/write access for term */
+/** Specify read/write access for term. */
 typedef enum ecs_inout_kind_t {
-    EcsInOutDefault,  /**< InOut for regular terms, In for shared terms */
-    EcsInOutNone,     /**< Term is neither read nor written */
-    EcsInOutFilter,   /**< Same as InOutNone + prevents term from triggering observers */
-    EcsInOut,         /**< Term is both read and written */
-    EcsIn,            /**< Term is only read */
-    EcsOut,           /**< Term is only written */
+    EcsInOutDefault,  /**< InOut for regular terms, In for shared terms. */
+    EcsInOutNone,     /**< Term is neither read nor written. */
+    EcsInOutFilter,   /**< Same as InOutNone + prevents term from triggering observers. */
+    EcsInOut,         /**< Term is both read and written. */
+    EcsIn,            /**< Term is only read. */
+    EcsOut,           /**< Term is only written. */
 } ecs_inout_kind_t;
 
-/** Specify operator for term */
+/** Specify operator for term. */
 typedef enum ecs_oper_kind_t {
-    EcsAnd,           /**< The term must match */
-    EcsOr,            /**< One of the terms in an or chain must match */
-    EcsNot,           /**< The term must not match */
-    EcsOptional,      /**< The term may match */
-    EcsAndFrom,       /**< Term must match all components from term id */
-    EcsOrFrom,        /**< Term must match at least one component from term id */
-    EcsNotFrom,       /**< Term must match none of the components from term id */
+    EcsAnd,           /**< The term must match. */
+    EcsOr,            /**< One of the terms in an or chain must match. */
+    EcsNot,           /**< The term must not match. */
+    EcsOptional,      /**< The term may match. */
+    EcsAndFrom,       /**< Term must match all components from term id. */
+    EcsOrFrom,        /**< Term must match at least one component from term id. */
+    EcsNotFrom,       /**< Term must match none of the components from term id. */
 } ecs_oper_kind_t;
 
-/** Specify cache policy for query */
+/** Specify cache policy for query. */
 typedef enum ecs_query_cache_kind_t {
-    EcsQueryCacheDefault,   /**< Behavior determined by query creation context */
-    EcsQueryCacheAuto,      /**< Cache query terms that are cacheable */
-    EcsQueryCacheAll,       /**< Require that all query terms can be cached */
-    EcsQueryCacheNone,      /**< No caching */
+    EcsQueryCacheDefault,   /**< Behavior determined by query creation context. */
+    EcsQueryCacheAuto,      /**< Cache query terms that are cacheable. */
+    EcsQueryCacheAll,       /**< Require that all query terms can be cached. */
+    EcsQueryCacheNone,      /**< No caching. */
 } ecs_query_cache_kind_t;
 
-/* Term id flags  */
+/** Term id flags. */
 
 /** Match on self.
  * Can be combined with other term flags on the ecs_term_t::flags_ field.
@@ -812,18 +813,18 @@ struct ecs_term_t {
                                  * first/second members, which provide more
                                  * flexibility. */
 
-    ecs_term_ref_t src;          /**< Source of term */
-    ecs_term_ref_t first;        /**< Component or first element of pair */
-    ecs_term_ref_t second;       /**< Second element of pair */
+    ecs_term_ref_t src;          /**< Source of term. */
+    ecs_term_ref_t first;        /**< Component or first element of pair. */
+    ecs_term_ref_t second;       /**< Second element of pair. */
 
     ecs_entity_t trav;          /**< Relationship to traverse when looking for the
                                  * component. The relationship must have
                                  * the `Traversable` property. Default is `IsA`. */
 
-    int16_t inout;              /**< Access to contents matched by term */
-    int16_t oper;               /**< Operator of term */
+    int16_t inout;              /**< Access to contents matched by term. */
+    int16_t oper;               /**< Operator of term. */
 
-    int8_t field_index;         /**< Index of field for term in iterator */
+    int8_t field_index;         /**< Index of field for term in iterator. */
     ecs_flags16_t flags_;       /**< Flags that help eval, set by ecs_query_init() */
 };
 
@@ -831,70 +832,70 @@ struct ecs_term_t {
  * Created with ecs_query_init().
  */
 struct ecs_query_t {
-    ecs_header_t hdr;           /**< Object header */
+    ecs_header_t hdr;           /**< Object header. */
 
-    ecs_term_t *terms;          /**< Query terms */
-    int32_t *sizes;             /**< Component sizes. Indexed by field */
-    ecs_id_t *ids;              /**< Component ids. Indexed by field */
+    ecs_term_t *terms;          /**< Query terms. */
+    int32_t *sizes;             /**< Component sizes. Indexed by field. */
+    ecs_id_t *ids;              /**< Component ids. Indexed by field. */
 
-    uint64_t bloom_filter;      /**< Bitmask used to quickly discard tables */
-    ecs_flags32_t flags;        /**< Query flags */
-    int8_t var_count;           /**< Number of query variables */
-    int8_t term_count;          /**< Number of query terms */
-    int8_t field_count;         /**< Number of fields returned by query */
+    uint64_t bloom_filter;      /**< Bitmask used to quickly discard tables. */
+    ecs_flags32_t flags;        /**< Query flags. */
+    int8_t var_count;           /**< Number of query variables. */
+    int8_t term_count;          /**< Number of query terms. */
+    int8_t field_count;         /**< Number of fields returned by query. */
 
-    /* Bitmasks for quick field information lookups */
-    ecs_termset_t fixed_fields; /**< Fields with a fixed source */
-    ecs_termset_t var_fields;   /**< Fields with non-$this variable source */
-    ecs_termset_t static_id_fields; /**< Fields with a static (component) id */
-    ecs_termset_t data_fields;  /**< Fields that have data */
-    ecs_termset_t write_fields; /**< Fields that write data */
-    ecs_termset_t read_fields;  /**< Fields that read data */
-    ecs_termset_t row_fields;   /**< Fields that must be acquired with field_at */
-    ecs_termset_t shared_readonly_fields; /**< Fields that don't write shared data */
-    ecs_termset_t set_fields;   /**< Fields that will be set */
+    /** Bitmasks for quick field information lookups. */
+    ecs_termset_t fixed_fields; /**< Fields with a fixed source. */
+    ecs_termset_t var_fields;   /**< Fields with non-$this variable source. */
+    ecs_termset_t static_id_fields; /**< Fields with a static (component) id. */
+    ecs_termset_t data_fields;  /**< Fields that have data. */
+    ecs_termset_t write_fields; /**< Fields that write data. */
+    ecs_termset_t read_fields;  /**< Fields that read data. */
+    ecs_termset_t row_fields;   /**< Fields that must be acquired with field_at. */
+    ecs_termset_t shared_readonly_fields; /**< Fields that don't write shared data. */
+    ecs_termset_t set_fields;   /**< Fields that will be set. */
 
-    ecs_query_cache_kind_t cache_kind;  /**< Caching policy of query */
-    
-    char **vars;                /**< Array with variable names for iterator */
+    ecs_query_cache_kind_t cache_kind;  /**< Caching policy of query. */
 
-    void *ctx;                  /**< User context to pass to callback */
-    void *binding_ctx;          /**< Context to be used for language bindings */
+    char **vars;                /**< Array with variable names for iterator. */
 
-    ecs_entity_t entity;        /**< Entity associated with query (optional) */
+    void *ctx;                  /**< User context to pass to callback. */
+    void *binding_ctx;          /**< Context to be used for language bindings. */
+
+    ecs_entity_t entity;        /**< Entity associated with query (optional). */
     ecs_world_t *real_world;    /**< Actual world. */
     ecs_world_t *world;         /**< World or stage query was created with. */
 
-    int32_t eval_count;         /**< Number of times query is evaluated */
+    int32_t eval_count;         /**< Number of times query is evaluated. */
 };
 
 /** An observer reacts to events matching a query.
  * Created with ecs_observer_init().
  */
 struct ecs_observer_t {
-    ecs_header_t hdr;           /**< Object header */
-    
-    ecs_query_t *query;         /**< Observer query */
+    ecs_header_t hdr;           /**< Object header. */
 
-    /** Observer events */
+    ecs_query_t *query;         /**< Observer query. */
+
+    /** Observer events. */
     ecs_entity_t events[FLECS_EVENT_DESC_MAX];
-    int32_t event_count;        /**< Number of events */
+    int32_t event_count;        /**< Number of events. */
 
-    ecs_iter_action_t callback; /**< See ecs_observer_desc_t::callback */
-    ecs_run_action_t run;       /**< See ecs_observer_desc_t::run */
+    ecs_iter_action_t callback; /**< See ecs_observer_desc_t::callback. */
+    ecs_run_action_t run;       /**< See ecs_observer_desc_t::run. */
 
-    void *ctx;                  /**< Observer context */
-    void *callback_ctx;         /**< Callback language binding context */
-    void *run_ctx;              /**< Run language binding context */
+    void *ctx;                  /**< Observer context. */
+    void *callback_ctx;         /**< Callback language binding context. */
+    void *run_ctx;              /**< Run language binding context. */
 
-    ecs_ctx_free_t ctx_free;    /**< Callback to free ctx */
-    ecs_ctx_free_t callback_ctx_free; /**< Callback to free callback_ctx */
-    ecs_ctx_free_t run_ctx_free; /**< Callback to free run_ctx */
+    ecs_ctx_free_t ctx_free;    /**< Callback to free ctx. */
+    ecs_ctx_free_t callback_ctx_free; /**< Callback to free callback_ctx. */
+    ecs_ctx_free_t run_ctx_free; /**< Callback to free run_ctx. */
 
-    ecs_observable_t *observable; /**< Observable for observer */
+    ecs_observable_t *observable; /**< Observable for observer. */
 
-    ecs_world_t *world;         /**< The world */
-    ecs_entity_t entity;        /**< Entity associated with observer */
+    ecs_world_t *world;         /**< The world. */
+    ecs_entity_t entity;        /**< Entity associated with observer. */
 };
 
 /** @} */
@@ -970,10 +971,10 @@ struct ecs_type_hooks_t {
      * not set explicitly it will be derived from other callbacks. */
     ecs_move_t move_dtor;
 
-    /** Compare hook */
+    /** Compare hook. */
     ecs_cmp_t cmp;
 
-    /** Equals hook */
+    /** Equals hook. */
     ecs_equals_t equals;
 
     /** Hook flags.
@@ -1398,8 +1399,8 @@ typedef struct ecs_observer_desc_t {
 
     /** Used for internal purposes. Do not set. */
     int32_t *last_event_id;
-    int8_t term_index_;
-    ecs_flags32_t flags_;
+    int8_t term_index_;    /**< Used for internal purposes. Do not set. */
+    ecs_flags32_t flags_;  /**< Used for internal purposes. Do not set. */
 } ecs_observer_desc_t;
 
 /** Used with ecs_emit().
@@ -1537,7 +1538,7 @@ typedef struct ecs_world_info_t {
 
 /** Type that contains information about a query group. */
 typedef struct ecs_query_group_info_t {
-    uint64_t id;
+    uint64_t id;          /**< Group id */
     int32_t match_count;  /**< How often tables have been matched/unmatched */
     int32_t table_count;  /**< Number of tables in group */
     void *ctx;            /**< Group context, returned by on_group_create */
@@ -1581,30 +1582,33 @@ typedef struct EcsDefaultChildComponent {
     ecs_id_t component;  /**< Default component id. */
 } EcsDefaultChildComponent;
 
-/* Non-fragmenting ChildOf relationship. */
+/** Non-fragmenting ChildOf relationship. */
 typedef struct EcsParent {
-    ecs_entity_t value;
+    ecs_entity_t value;     /**< Parent entity */
 } EcsParent;
 
-/* Component with data to instantiate a non-fragmenting tree. */
+/** Component with data to instantiate a non-fragmenting tree. */
 typedef struct {
-    const char *child_name; /* Name of prefab child */
-    ecs_table_t *table;     /* Table in which child will be stored */
-    uint32_t child;         /* Prefab child entity (without generation) */
-    int32_t parent_index;   /* Index into children vector */
+    const char *child_name; /**< Name of prefab child */
+    ecs_table_t *table;     /**< Table in which child will be stored */
+    uint32_t child;         /**< Prefab child entity (without generation) */
+    int32_t parent_index;   /**< Index into children vector */
 } ecs_tree_spawner_child_t;
 
+/** Tree spawner data for a single hierarchy depth. */
 typedef struct {
-    ecs_vec_t children; /* vector<ecs_tree_spawner_child_t> */
+    ecs_vec_t children;     /**< vector<ecs_tree_spawner_child_t> */
 } ecs_tree_spawner_t;
 
+/** Tree instantiation cache component.
+ * Tree instantiation cache, indexed by depth. Tables will have a
+ * (ParentDepth, depth) pair indicating the hierarchy depth. This means that
+ * for different depths, the tables the children are created in will also be
+ * different. Caching tables for different depths therefore speeds up
+ * instantiating trees even when the top level entity is not at the root.
+ */
 typedef struct EcsTreeSpawner {
-    /* Tree instantiation cache, indexed by depth. Tables will have a 
-     * (ParentDepth, depth) pair indicating the hierarchy depth. This means that
-     * for different depths, the tables the children are created in will also be
-     * different. Caching tables for different depths therefore speeds up
-     * instantiating trees even when the top level entity is not at the root. */
-    ecs_tree_spawner_t data[FLECS_TREE_SPAWNER_DEPTH_CACHE_SIZE];
+    ecs_tree_spawner_t data[FLECS_TREE_SPAWNER_DEPTH_CACHE_SIZE]; /**< Cache data indexed by depth */
 } EcsTreeSpawner;
 
 /** @} */
@@ -3371,6 +3375,7 @@ FLECS_ALWAYS_INLINE void* ecs_get_mut_id(
  * @param world The world.
  * @param entity The entity.
  * @param component The component to get/add.
+ * @param size The size of the component.
  * @return The component pointer.
  *
  * @see ecs_emplace_id()
@@ -4128,6 +4133,7 @@ char* ecs_get_path_w_sep(
  * @param sep The separator to use between path elements.
  * @param prefix The initial character to use for root elements.
  * @param buf The buffer to write to.
+ * @param escape Whether to escape separator characters in names.
  *
  * @see ecs_get_path_w_sep()
  */
@@ -5727,6 +5733,7 @@ void* ecs_field_w_size(
  * @param it the iterator.
  * @param size The size of the field type.
  * @param index The index of the field.
+ * @param row The row to get data for.
  * @return A pointer to the data of the field.
  */
 FLECS_API
@@ -6191,6 +6198,8 @@ void ecs_table_swap_rows(
  * @param entity The entity to commit.
  * @param record The entity's record (optional, providing it saves a lookup).
  * @param table The table to commit the entity to.
+ * @param added Components added to the entity.
+ * @param removed Components removed from the entity.
  * @return True if the entity got moved, false otherwise.
  */
 FLECS_API
@@ -6325,7 +6334,21 @@ int32_t ecs_search_relation(
     ecs_id_t *component_out,
     struct ecs_table_record_t **tr_out);
 
-/* Up traversal from entity */
+/** Search for component id by following a relationship, starting from entity.
+ * This operation is the same as ecs_search_relation(), but starts the search
+ * from an entity rather than a table.
+ *
+ * @param world The world.
+ * @param entity The entity from which to begin the search.
+ * @param id The component id to search for.
+ * @param rel The relationship to follow.
+ * @param self If true, also search the entity itself.
+ * @param cr Optional component record for the id.
+ * @param tgt_out Out parameter for the target entity.
+ * @param id_out Out parameter for the found id.
+ * @param tr_out Out parameter for the table record.
+ * @return The index of the id in the entity's type, or -1 if not found.
+ */
 FLECS_API
 int32_t ecs_search_relation_for_entity(
     const ecs_world_t *world,

@@ -1,7 +1,7 @@
 /**
  * @file addons/cpp/utils/utils.hpp
  * @brief Flecs STL (FTL?)
- * 
+ *
  * Flecs STL (FTL?)
  * Minimalistic utilities that allow for STL like functionality without having
  * to depend on the actual STL.
@@ -36,20 +36,23 @@
 #define FLECS_FWD(...) \
   static_cast<decltype(__VA_ARGS__)&&>(__VA_ARGS__)
 
-namespace flecs 
+namespace flecs
 {
 
 namespace _
 {
 
-// Dummy Placement new tag to disambiguate from any other operator new overrides
+/** @private Placement new tag to disambiguate from other operator new overrides. */
 struct placement_new_tag_t{};
+/** @private Placement new tag instance. */
 constexpr placement_new_tag_t placement_new_tag{};
+/** @private Destruct an object without freeing memory. */
 template<class Ty> inline void destruct_obj(Ty* _ptr) { _ptr->~Ty(); }
-template<class Ty> inline void free_obj(void* _ptr) { 
+/** @private Destruct and free an object. */
+template<class Ty> inline void free_obj(void* _ptr) {
     if (_ptr) {
-        destruct_obj(static_cast<Ty*>(_ptr)); 
-        ecs_os_free(_ptr); 
+        destruct_obj(static_cast<Ty*>(_ptr));
+        ecs_os_free(_ptr);
     }
 }
 
@@ -68,14 +71,18 @@ inline void  operator delete(void*, flecs::_::placement_new_tag_t, void*)      n
 namespace flecs
 {
 
-// faster (compile time) alternative to std::conditional
+/** Compile-time conditional type selector (faster alternative to std::conditional). */
 template <bool> struct condition;
 
+/** Specialization of condition for false. */
 template <> struct condition<false> {
+    /** Select the second type. */
     template <typename T, typename F> using type = F;
 };
 
+/** Specialization of condition for true. */
 template <> struct condition<true> {
+    /** Select the first type. */
     template <typename T, typename F> using type = T;
 };
 
@@ -125,46 +132,50 @@ using std::is_move_assignable_v;
 using std::is_copy_assignable_v;
 using std::is_destructible_v;
 
-// Determine constness even if T is a pointer type
+/** Determine constness even if T is a pointer type. */
 template <typename T>
 using is_const_p = is_const< remove_pointer_t<T> >;
 
-// Apply cv modifiers from source type to destination type
-// (from: https://stackoverflow.com/questions/52559336/add-const-to-type-if-template-arg-is-const)
+/** Apply const from source type to destination type. */
 template<class Src, class Dst>
 using transcribe_const_t = conditional_t<is_const<Src>::value, Dst const, Dst>;
 
+/** Apply volatile from source type to destination type. */
 template<class Src, class Dst>
 using transcribe_volatile_t = conditional_t<is_volatile<Src>::value, Dst volatile, Dst>;
 
+/** Apply const and volatile from source type to destination type. */
 template<class Src, class Dst>
 using transcribe_cv_t = transcribe_const_t< Src, transcribe_volatile_t< Src, Dst> >;
 
+/** Apply pointer from source type to destination type. */
 template<class Src, class Dst>
 using transcribe_pointer_t = conditional_t<is_pointer<Src>::value, Dst*, Dst>;
 
+/** Apply const, volatile, and pointer from source type to destination type. */
 template<class Src, class Dst>
 using transcribe_cvp_t = transcribe_cv_t< Src, transcribe_pointer_t< Src, Dst> >;
 
 
-// More convenience templates. The if_*_t templates use int as default type
-// instead of void. This enables writing code that's a bit less cluttered when
-// the templates are used in a template declaration:
-//
-//     enable_if_t<true>* = nullptr
-// vs:
-//     if_t<true> = 0
-
+/** Convenience enable_if alias using int as default type.
+ * This enables writing code that's a bit less cluttered when
+ * the templates are used in a template declaration:
+ *
+ *     enable_if_t<true>* = nullptr
+ * vs:
+ *     if_t<true> = 0
+ */
 template <bool V>
 using if_t = enable_if_t<V, int>;
 
+/** Convenience enable_if alias for negated conditions. */
 template <bool V>
 using if_not_t = enable_if_t<false == V, int>;
 
 namespace _
 {
 
-// Utility to prevent static assert from immediately triggering
+/** @private Utility to prevent static assert from immediately triggering. */
 template <class... T>
 struct always_false {
     static const bool value = false;
@@ -183,14 +194,7 @@ struct always_false {
 namespace flecs {
 namespace _ {
 
-// Trick to obtain typename from type, as described here
-// https://blog.molecular-matters.com/2015/12/11/getting-the-type-of-a-template-argument-as-string-without-rtti/
-//
-// The code from the link has been modified to work with more types, and across
-// multiple compilers. The resulting string should be the same on all platforms
-// for all compilers.
-//
-
+/** @private Extract typename from type using compiler intrinsics. */
 #if defined(__GNUC__) || defined(_WIN32)
 template <typename T>
 inline const char* type_name() {

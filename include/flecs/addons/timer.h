@@ -145,7 +145,7 @@ void ecs_start_timer(
     ecs_world_t *world,
     ecs_entity_t tick_source);
 
-/** Stop timer
+/** Stop timer.
  * This operation stops a timer from triggering.
  *
  * @param world The world.

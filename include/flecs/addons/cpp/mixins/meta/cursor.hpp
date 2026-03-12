@@ -1,6 +1,6 @@
 /**
- * @file addons/cpp/mixins/meta/opaque.hpp
- * @brief Helpers for opaque type registration.
+ * @file addons/cpp/mixins/meta/cursor.hpp
+ * @brief Cursor for reading/writing dynamic values.
  */
 
 #pragma once

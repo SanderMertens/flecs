@@ -24,7 +24,9 @@ using PipelineStats = EcsPipelineStats;
 /** Component with world summary stats */
 using WorldSummary = EcsWorldSummary;
 
+/** Stats module. */
 struct stats {
+    /** Construct the stats module. */
     stats(flecs::world& world);
 };
 

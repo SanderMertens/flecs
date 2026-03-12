@@ -8,15 +8,25 @@
 namespace flecs
 {
 
+/** Construct field from iterator and field index.
+ *
+ * @param iter The iterator.
+ * @param index The field index.
+ */
 template <typename T>
 inline field<T>::field(iter &iter, int32_t index) {
     *this = iter.field<T>(index);
 }
 
+/** Access element at index in the field.
+ *
+ * @param index The element index.
+ * @return Reference to the element.
+ */
 template <typename T>
 T& field<T>::operator[](size_t index) const {
-    ecs_assert(data_ != nullptr, ECS_INVALID_OPERATION, 
-        "invalid nullptr dereference of component type %s", 
+    ecs_assert(data_ != nullptr, ECS_INVALID_OPERATION,
+        "invalid nullptr dereference of component type %s",
             _::type_name<T>());
     ecs_assert(index < count_, ECS_COLUMN_INDEX_OUT_OF_RANGE,
         "index %d out of range for array of component type %s",
@@ -34,8 +44,8 @@ T& field<T>::operator[](size_t index) const {
  */
 template <typename T>
 T& field<T>::operator*() const {
-    ecs_assert(data_ != nullptr, ECS_INVALID_OPERATION, 
-        "invalid nullptr dereference of component type %s", 
+    ecs_assert(data_ != nullptr, ECS_INVALID_OPERATION,
+        "invalid nullptr dereference of component type %s",
             _::type_name<T>());
     return *data_;
 }
@@ -47,10 +57,10 @@ T& field<T>::operator*() const {
  */
 template <typename T>
 T* field<T>::operator->() const {
-    ecs_assert(data_ != nullptr, ECS_INVALID_OPERATION, 
-        "invalid nullptr dereference of component type %s", 
+    ecs_assert(data_ != nullptr, ECS_INVALID_OPERATION,
+        "invalid nullptr dereference of component type %s",
             _::type_name<T>());
-    ecs_assert(data_ != nullptr, ECS_INVALID_OPERATION, 
+    ecs_assert(data_ != nullptr, ECS_INVALID_OPERATION,
         "-> operator invalid for array with >1 element of "
         "component type %s, use [row] instead",
             _::type_name<T>());

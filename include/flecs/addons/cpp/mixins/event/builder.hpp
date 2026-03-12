@@ -26,7 +26,7 @@ struct event_builder_base {
         desc_.event = event;
     }
 
-    /** Add component to emit for */
+    /** Add component to emit for. */
     template <typename T>
     Base& id() {
         ids_.array = ids_array_;
@@ -35,10 +35,10 @@ struct event_builder_base {
         return *this;
     }
     
-    /** 
-     * Add pair to emit for
+    /** Add pair to emit for.
+     *
      * @tparam First The first element of the pair.
-     * @tparam Second the second element of a pair.
+     * @tparam Second The second element of the pair.
      */
     template <typename First, typename Second>
     Base& id() {
@@ -47,8 +47,8 @@ struct event_builder_base {
                 _::type<Second>::id(this->world_)));
     }
 
-    /** 
-     * Add pair to emit for
+    /** Add pair to emit for.
+     *
      * @tparam First The first element of the pair.
      * @param second The second element of the pair id.
      */
@@ -57,8 +57,8 @@ struct event_builder_base {
         return id(ecs_pair(_::type<First>::id(this->world_), second));
     }
 
-    /** 
-     * Add pair to emit for
+    /** Add pair to emit for.
+     *
      * @param first The first element of the pair type.
      * @param second The second element of the pair id.
      */
@@ -66,6 +66,11 @@ struct event_builder_base {
         return id(ecs_pair(first, second));
     }
 
+    /** Add enum constant to emit for.
+     *
+     * @tparam Enum The enum type.
+     * @param value The enum constant value.
+     */
     template <typename Enum, if_t<is_enum<Enum>::value> = 0>
     Base& id(Enum value) {
         const auto& et = enum_type<Enum>(this->world_);
@@ -73,7 +78,7 @@ struct event_builder_base {
         return id(et.entity(), target);
     }
 
-    /** Add (component) id to emit for */
+    /** Add (component) id to emit for. */
     Base& id(flecs::id_t id) {
         ids_.array = ids_array_;
         ids_.array[ids_.count] = id;
@@ -81,13 +86,13 @@ struct event_builder_base {
         return *this;
     }
 
-    /** Set entity for which to emit event */
+    /** Set entity for which to emit event. */
     Base& entity(flecs::entity_t e) {
         desc_.entity = e;
         return *this;
     }
 
-    /* Set table for which to emit event */
+    /** Set table for which to emit event. */
     Base& table(flecs::table_t *t, int32_t offset = 0, int32_t count = 0) {
         desc_.table = t;
         desc_.offset = offset;
@@ -95,18 +100,19 @@ struct event_builder_base {
         return *this;
     }
 
-    /* Set event data */
+    /** Set event data (const). */
     Base& ctx(const E* ptr) {
         desc_.const_param = ptr;
         return *this;
     }
 
-    /* Set event data */
+    /** Set event data (mutable). */
     Base& ctx(E* ptr) {
         desc_.param = ptr;
         return *this;
     }
 
+    /** Emit the event. */
     void emit() {
         ids_.array = ids_array_;
         desc_.ids = &ids_;
@@ -114,6 +120,7 @@ struct event_builder_base {
         ecs_emit(world_, &desc_);
     }
 
+    /** Enqueue the event. */
     void enqueue() {
         ids_.array = ids_array_;
         desc_.ids = &ids_;
@@ -133,10 +140,12 @@ private:
     }
 };
 
+/** Untyped event builder. */
 struct event_builder : event_builder_base<event_builder, void> {
     using event_builder_base::event_builder_base;
 };
 
+/** Typed event builder. */
 template <typename E>
 struct event_builder_typed : event_builder_base<event_builder_typed<E>, E> {
 private:
@@ -145,13 +154,13 @@ private:
 public:
     using event_builder_base<Class, E>::event_builder_base;
 
-    /* Set event data */
+    /** Set event data (const reference). */
     Class& ctx(const E& ptr) {
         this->desc_.const_param = &ptr;
         return *this;
     }
 
-    /* Set event data */
+    /** Set event data (rvalue reference). */
     Class& ctx(E&& ptr) {
         this->desc_.param = &ptr;
         return *this;

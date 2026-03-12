@@ -1,3 +1,7 @@
+/**
+ * @file addons/cpp/mixins/json/entity.inl
+ * @brief JSON entity mixin.
+ */
 
 /** Deserialize entity to JSON.
  * 

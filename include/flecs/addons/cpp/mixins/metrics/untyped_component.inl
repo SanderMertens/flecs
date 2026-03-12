@@ -1,5 +1,5 @@
 /**
- * @file addons/cpp/mixins/meta/untyped_component.inl
+ * @file addons/cpp/mixins/metrics/untyped_component.inl
  * @brief Metrics component mixin.
  */
 

@@ -1,5 +1,9 @@
+/**
+ * @file addons/cpp/mixins/meta/component.inl
+ * @brief Meta component mixin.
+ */
 
-/** Register opaque type interface */
+/** Register opaque type interface. */
 template <typename Func>
 component& opaque(const Func& type_support) {
     flecs::world world(world_);
@@ -9,19 +13,22 @@ component& opaque(const Func& type_support) {
     return *this;
 }
 
+/** Return opaque type builder for type, serialized as as_type. */
 flecs::opaque<T> opaque(flecs::entity_t as_type) {
     return flecs::opaque<T>(world_).as_type(as_type);
 }
 
+/** Return opaque type builder for type, serialized as as_type. */
 flecs::opaque<T> opaque(flecs::entity as_type) {
     return this->opaque(as_type.id());
 }
 
+/** Return opaque type builder for type, serialized as as_type. */
 flecs::opaque<T> opaque(flecs::untyped_component as_type) {
     return this->opaque(as_type.id());
 }
 
-/** Return opaque type builder for collection type */
+/** Return opaque type builder for collection type. */
 template <typename ElemType>
 flecs::opaque<T, ElemType> opaque(flecs::id_t as_type) {
     return flecs::opaque<T, ElemType>(world_).as_type(as_type);

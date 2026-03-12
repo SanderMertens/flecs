@@ -29,47 +29,56 @@ struct app_builder {
         }
     }
 
+    /** Set target frames per second. */
     app_builder& target_fps(ecs_ftime_t value) {
         desc_.target_fps = value;
         return *this;
     }
 
+    /** Set fixed delta time for each frame. */
     app_builder& delta_time(ecs_ftime_t value) {
         desc_.delta_time = value;
         return *this;
     }
 
+    /** Set the number of threads. */
     app_builder& threads(int32_t value) {
         desc_.threads = value;
         return *this;
     }
 
+    /** Set the number of frames to run. */
     app_builder& frames(int32_t value) {
         desc_.frames = value;
         return *this;
     }
 
+    /** Enable the REST API. */
     app_builder& enable_rest(uint16_t port = 0) {
         desc_.enable_rest = true;
         desc_.port = port;
         return *this;
     }
 
+    /** Enable statistics collection. */
     app_builder& enable_stats(bool value = true) {
         desc_.enable_stats = value;
         return *this;
     }
 
+    /** Set the init callback. */
     app_builder& init(ecs_app_init_action_t value) {
         desc_.init = value;
         return *this;
     }
 
+    /** Set the application context. */
     app_builder& ctx(void *value) {
         desc_.ctx = value;
         return *this;
     }
 
+    /** Run the application. */
     int run() {
         int result = ecs_app_run(world_, &desc_);
         if (ecs_should_quit(world_)) {

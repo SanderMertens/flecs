@@ -50,17 +50,17 @@ flecs::entity import(world& world) {
     ecs_entity_t m = ecs_lookup_symbol(world, symbol, true, false);
 
     if (!_::type<T>::registered(world)) {
-        /* Module is registered with world, initialize static data */
+        // Module is registered with world, initialize static data
         if (m) {
             _::type<T>::init_builtin(world, m, false);
 
-        /* Module is not yet registered, register it now */
+        // Module is not yet registered, register it now
         } else {
             m = _::do_import<T>(world, symbol);
         }
 
-    /* Module has been registered, but could have been for another world. Import
-     * if module hasn't been registered for this world. */
+    // Module has been registered, but could have been for another world.
+    // Import if module hasn't been registered for this world.
     } else if (!m) {
         m = _::do_import<T>(world, symbol);
     }

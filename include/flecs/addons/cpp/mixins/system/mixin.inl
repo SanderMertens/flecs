@@ -3,12 +3,12 @@
  * @brief System module world mixin.
  */
 
-/** 
+/**
  * @memberof flecs::world
  * @ingroup cpp_addons_systems
  *
  * @{
-*/
+ */
 
 /** Upcast entity to a system.
  * The provided entity must be a system.

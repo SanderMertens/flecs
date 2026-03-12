@@ -53,53 +53,53 @@ struct id {
         : world_(first.world_)
         , id_(ecs_pair(first.id_, second.id_)) { }
 
-    /** Test if id is pair (has first, second) */
+    /** Test if id is pair (has first, second). */
     bool is_pair() const {
         return (id_ & ECS_ID_FLAGS_MASK) == flecs::PAIR;
     }
 
-    /** Test if id is a wildcard */
+    /** Test if id is a wildcard. */
     bool is_wildcard() const {
         return ecs_id_is_wildcard(id_);
     }
 
-    /** Test if id is entity */
+    /** Test if id is entity. */
     bool is_entity() const {
         return !(id_ & ECS_ID_FLAGS_MASK);
     }
 
-    /** Return id as entity (only allowed when id is valid entity) */
+    /** Return id as entity (only allowed when id is valid entity). */
     flecs::entity entity() const;
 
-    /** Return id with role added */
+    /** Return id with role added. */
     flecs::entity add_flags(flecs::id_t flags) const;
 
-    /** Return id with role removed */
+    /** Return id with role removed. */
     flecs::entity remove_flags(flecs::id_t flags) const;
 
-    /** Return id without role */
+    /** Return id without role. */
     flecs::entity remove_flags() const;
 
-    /** Return id without role */
+    /** Return id without generation. */
     flecs::entity remove_generation() const;
 
-    /** Return component type of id */
+    /** Return component type of id. */
     flecs::entity type_id() const;
 
-    /** Test if id has specified role */
+    /** Test if id has specified role. */
     bool has_flags(flecs::id_t flags) const {
         return ((id_ & flags) == flags);
     }
 
-    /** Test if id has any role */
+    /** Test if id has any role. */
     bool has_flags() const {
         return (id_ & ECS_ID_FLAGS_MASK) != 0;
     }
 
-    /** Return id flags set on id */
+    /** Return id flags set on id. */
     flecs::entity flags() const;
 
-    /** Test if id has specified first */
+    /** Test if id has specified first. */
     bool has_relation(flecs::id_t first) const {
         if (!is_pair()) {
             return false;
@@ -119,7 +119,7 @@ struct id {
      * generation count. */
     flecs::entity second() const;
 
-    /* Convert id to string */
+    /** Convert id to string. */
     flecs::string str() const {
         return flecs::string(ecs_id_str(world_, id_));
     }
@@ -129,7 +129,7 @@ struct id {
         return flecs::string_view( ecs_id_flag_str(id_ & ECS_ID_FLAGS_MASK));
     }
 
-    /** Return flecs::id_t value */
+    /** Return flecs::id_t value. */
     flecs::id_t raw_id() const {
         return id_;
     }
@@ -138,12 +138,14 @@ struct id {
         return id_;
     }
 
+    /** Get the world. */
     flecs::world world() const;
 
 protected:
-    /* World is optional, but guarantees that entity identifiers extracted from
-     * the id are valid */
+    /** World is optional, but guarantees that entity identifiers extracted from
+     * the id are valid. */
     flecs::world_t *world_;
+    /** The raw id value. */
     flecs::id_t id_;
 };
 

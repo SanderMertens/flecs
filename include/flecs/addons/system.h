@@ -36,7 +36,7 @@ typedef struct EcsTickSource {
 
 /** Use with ecs_system_init() to create or update a system. */
 typedef struct ecs_system_desc_t {
-    int32_t _canary;
+    int32_t _canary;       /**< Used for validity testing. Do not set. */
 
     /** Existing entity to associate with system (optional) */
     ecs_entity_t entity;
@@ -101,15 +101,20 @@ typedef struct ecs_system_desc_t {
     bool immediate;
 } ecs_system_desc_t;
 
-/** Create a system */
+/** Create a system.
+ *
+ * @param world The world.
+ * @param desc The system descriptor.
+ * @return The system entity.
+ */
 FLECS_API
 ecs_entity_t ecs_system_init(
     ecs_world_t *world,
     const ecs_system_desc_t *desc);
 
-/** System type, get with ecs_system_get() */
+/** System type, get with ecs_system_get(). */
 typedef struct ecs_system_t {
-    ecs_header_t hdr;
+    ecs_header_t hdr;              /**< Object header */
 
     /** See ecs_system_desc_t */
     ecs_run_action_t run;
@@ -165,8 +170,8 @@ typedef struct ecs_system_t {
     /** Last frame for which the system was considered */
     int64_t last_frame;
 
-    /* Mixins */
-    flecs_poly_dtor_t dtor;      
+    /** Mixin destructor */
+    flecs_poly_dtor_t dtor;
 } ecs_system_t;
 
 /** Get system object.

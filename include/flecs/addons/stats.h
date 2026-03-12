@@ -37,29 +37,31 @@
 extern "C" {
 #endif
 
+/** Number of samples in the stat window. */
 #define ECS_STAT_WINDOW (60)
 
-/** Simple value that indicates current state */
+/** Simple value that indicates current state. */
 typedef struct ecs_gauge_t {
-    ecs_float_t avg[ECS_STAT_WINDOW];
-    ecs_float_t min[ECS_STAT_WINDOW];
-    ecs_float_t max[ECS_STAT_WINDOW];
+    ecs_float_t avg[ECS_STAT_WINDOW];   /**< Windowed average */
+    ecs_float_t min[ECS_STAT_WINDOW];   /**< Windowed minimum */
+    ecs_float_t max[ECS_STAT_WINDOW];   /**< Windowed maximum */
 } ecs_gauge_t;
 
-/** Monotonically increasing counter */
+/** Monotonically increasing counter. */
 typedef struct ecs_counter_t {
     ecs_gauge_t rate;                     /**< Keep track of deltas too */
-    double value[ECS_STAT_WINDOW];
+    double value[ECS_STAT_WINDOW];        /**< Monotonically increasing values */
 } ecs_counter_t;
 
-/** Make all metrics the same size, so we can iterate over fields */
+/** Make all metrics the same size, so we can iterate over fields. */
 typedef union ecs_metric_t {
-    ecs_gauge_t gauge;
-    ecs_counter_t counter;
+    ecs_gauge_t gauge;                    /**< Gauge metric */
+    ecs_counter_t counter;                /**< Counter metric */
 } ecs_metric_t;
 
+/** Type that contains world statistics. */
 typedef struct ecs_world_stats_t {
-    int64_t first_;
+    int64_t first_;                       /**< Used for field iteration. Do not set. */
 
     /* Entities */
     struct {
@@ -94,17 +96,17 @@ typedef struct ecs_world_stats_t {
 
     /* Commands */
     struct {
-        ecs_metric_t add_count;
-        ecs_metric_t remove_count;
-        ecs_metric_t delete_count;
-        ecs_metric_t clear_count;
-        ecs_metric_t set_count;
-        ecs_metric_t ensure_count;
-        ecs_metric_t modified_count;
-        ecs_metric_t other_count;
-        ecs_metric_t discard_count;
-        ecs_metric_t batched_entity_count;
-        ecs_metric_t batched_count;
+        ecs_metric_t add_count;            /**< Number of add commands */
+        ecs_metric_t remove_count;         /**< Number of remove commands */
+        ecs_metric_t delete_count;         /**< Number of delete commands */
+        ecs_metric_t clear_count;          /**< Number of clear commands */
+        ecs_metric_t set_count;            /**< Number of set commands */
+        ecs_metric_t ensure_count;         /**< Number of ensure commands */
+        ecs_metric_t modified_count;       /**< Number of modified commands */
+        ecs_metric_t other_count;          /**< Number of other commands */
+        ecs_metric_t discard_count;        /**< Number of discarded commands */
+        ecs_metric_t batched_entity_count; /**< Number of entities for which commands were batched */
+        ecs_metric_t batched_count;        /**< Number of commands batched */
     } commands;
 
     /* Frame data */
@@ -149,30 +151,30 @@ typedef struct ecs_world_stats_t {
 
     /* HTTP statistics */
     struct {
-        ecs_metric_t request_received_count;
-        ecs_metric_t request_invalid_count;
-        ecs_metric_t request_handled_ok_count;
-        ecs_metric_t request_handled_error_count;
-        ecs_metric_t request_not_handled_count;
-        ecs_metric_t request_preflight_count;
-        ecs_metric_t send_ok_count;
-        ecs_metric_t send_error_count;
-        ecs_metric_t busy_count;
+        ecs_metric_t request_received_count;       /**< Number of HTTP requests received */
+        ecs_metric_t request_invalid_count;        /**< Number of invalid HTTP requests */
+        ecs_metric_t request_handled_ok_count;     /**< Number of successfully handled HTTP requests */
+        ecs_metric_t request_handled_error_count;  /**< Number of HTTP requests with error response */
+        ecs_metric_t request_not_handled_count;    /**< Number of unhandled HTTP requests */
+        ecs_metric_t request_preflight_count;      /**< Number of preflight HTTP requests */
+        ecs_metric_t send_ok_count;                /**< Number of successful HTTP responses sent */
+        ecs_metric_t send_error_count;             /**< Number of HTTP responses with send error */
+        ecs_metric_t busy_count;                   /**< Number of times server was busy */
     } http;
 
-    int64_t last_;
+    int64_t last_;                                 /**< Used for field iteration. Do not set. */
 
     /** Current position in ring buffer */
     int32_t t;
 } ecs_world_stats_t;
 
-/** Statistics for a single query (use ecs_query_cache_stats_get) */
+/** Statistics for a single query (use ecs_query_cache_stats_get()). */
 typedef struct ecs_query_stats_t {
-    int64_t first_;
+    int64_t first_;                         /**< Used for field iteration. Do not set. */
     ecs_metric_t result_count;              /**< Number of query results */
     ecs_metric_t matched_table_count;       /**< Number of matched tables */
     ecs_metric_t matched_entity_count;      /**< Number of matched entities */
-    int64_t last_;
+    int64_t last_;                          /**< Used for field iteration. Do not set. */
 
     /** Current position in ringbuffer */
     int32_t t; 
@@ -180,31 +182,30 @@ typedef struct ecs_query_stats_t {
 
 /** Statistics for a single system (use ecs_system_stats_get()) */
 typedef struct ecs_system_stats_t {
-    int64_t first_;
+    int64_t first_;                /**< Used for field iteration. Do not set. */
     ecs_metric_t time_spent;       /**< Time spent processing a system */
-    int64_t last_;
+    int64_t last_;                 /**< Used for field iteration. Do not set. */
 
     bool task;                     /**< Is system a task */
 
-    ecs_query_stats_t query;
+    ecs_query_stats_t query;       /**< Query statistics */
 } ecs_system_stats_t;
 
-/** Statistics for sync point */
+/** Statistics for sync point. */
 typedef struct ecs_sync_stats_t {
-    int64_t first_;
-    ecs_metric_t time_spent;
-    ecs_metric_t commands_enqueued;
-    int64_t last_;
+    int64_t first_;                /**< Used for field iteration. Do not set. */
+    ecs_metric_t time_spent;       /**< Time spent in sync point */
+    ecs_metric_t commands_enqueued; /**< Number of commands enqueued */
+    int64_t last_;                 /**< Used for field iteration. Do not set. */
 
-    int32_t system_count;
-    bool multi_threaded;
-    bool immediate;
+    int32_t system_count;          /**< Number of systems in sync point */
+    bool multi_threaded;           /**< Is sync point multi-threaded */
+    bool immediate;                /**< Is sync point immediate */
 } ecs_sync_stats_t;
 
 /** Statistics for all systems in a pipeline. */
 typedef struct ecs_pipeline_stats_t {
-    /* Allow for initializing struct with {0} */
-    int8_t canary_;
+    int8_t canary_;                /**< Allow for initializing struct with {0}. Do not set. */
 
     /** Vector with system ids of all systems in the pipeline. The systems are
      * stored in the order they are executed. Merges are represented by a 0. */
@@ -255,6 +256,11 @@ void ecs_world_stats_copy_last(
     ecs_world_stats_t *dst,
     const ecs_world_stats_t *src);
 
+/** Log world statistics.
+ *
+ * @param world The world.
+ * @param stats The statistics to log.
+ */
 FLECS_API
 void ecs_world_stats_log(
     const ecs_world_t *world,
@@ -432,28 +438,28 @@ FLECS_API extern ecs_entity_t EcsPeriod1h;                 /**< Tag used for met
 FLECS_API extern ecs_entity_t EcsPeriod1d;                 /**< Tag used for metrics collected in last day. */
 FLECS_API extern ecs_entity_t EcsPeriod1w;                 /**< Tag used for metrics collected in last week. */
 
-/** Common data for statistics. */
+/** Common header for statistics types. */
 typedef struct {
-    ecs_ftime_t elapsed;
-    int32_t reduce_count;
+    ecs_ftime_t elapsed;       /**< Elapsed time since last reset */
+    int32_t reduce_count;      /**< Number of times statistics have been reduced */
 } EcsStatsHeader;
 
 /** Component that stores world statistics. */
 typedef struct {
-    EcsStatsHeader hdr;
-    ecs_world_stats_t *stats;
+    EcsStatsHeader hdr;            /**< Statistics header */
+    ecs_world_stats_t *stats;      /**< World statistics data */
 } EcsWorldStats;
 
 /** Component that stores system statistics. */
 typedef struct {
-    EcsStatsHeader hdr;
-    ecs_map_t stats;
+    EcsStatsHeader hdr;            /**< Statistics header */
+    ecs_map_t stats;               /**< Map of system statistics */
 } EcsSystemStats;
 
 /** Component that stores pipeline statistics. */
 typedef struct {
-    EcsStatsHeader hdr;
-    ecs_map_t stats;
+    EcsStatsHeader hdr;            /**< Statistics header */
+    ecs_map_t stats;               /**< Map of pipeline statistics */
 } EcsPipelineStats;
 
 /** Component that stores a summary of world statistics. */
@@ -468,15 +474,15 @@ typedef struct {
     double system_time_total;   /**< Total time spent in systems */
     double merge_time_total;    /**< Total time spent in merges */
 
-    int64_t entity_count;
-    int64_t table_count;
+    int64_t entity_count;       /**< Number of entities */
+    int64_t table_count;        /**< Number of tables */
     int64_t frame_count;        /**< Number of frames processed */
     int64_t command_count;      /**< Number of commands processed */
     int64_t merge_count;        /**< Number of merges executed */
 
-    int64_t systems_ran_total;
-    int64_t observers_ran_total;
-    int64_t queries_ran_total;
+    int64_t systems_ran_total;   /**< Total number of systems ran */
+    int64_t observers_ran_total; /**< Total number of times observers were invoked */
+    int64_t queries_ran_total;   /**< Total number of queries ran */
 
     int32_t tag_count;           /**< Number of tag (no data) ids in the world */
     int32_t component_count;     /**< Number of component (data) ids in the world */
@@ -487,10 +493,10 @@ typedef struct {
     double system_time_frame;   /**< Time spent in systems */
     double merge_time_frame;    /**< Time spent in merges */
 
-    int64_t merge_count_frame;
-    int64_t systems_ran_frame;
-    int64_t observers_ran_frame;
-    int64_t queries_ran_frame;
+    int64_t merge_count_frame;   /**< Number of merges in last frame */
+    int64_t systems_ran_frame;   /**< Number of systems ran in last frame */
+    int64_t observers_ran_frame; /**< Number of times observers were invoked in last frame */
+    int64_t queries_ran_frame;   /**< Number of queries ran in last frame */
     int64_t command_count_frame; /**< Number of commands processed in last frame */
 
     double simulation_time;     /**< Time spent in simulation */
@@ -502,120 +508,119 @@ typedef struct {
 
 /** Entity memory. */
 typedef struct {
-    int32_t alive_count;                 /** Number of alive entities. */
-    int32_t not_alive_count;             /** Number of not alive entities. */
-    ecs_size_t bytes_entity_index;       /** Bytes used by entity index. */
-    ecs_size_t bytes_names;              /** Bytes used by names, symbols, aliases. */
-    ecs_size_t bytes_doc_strings;        /** Bytes used by doc strings. */
+    int32_t alive_count;                 /**< Number of alive entities. */
+    int32_t not_alive_count;             /**< Number of not alive entities. */
+    ecs_size_t bytes_entity_index;       /**< Bytes used by entity index. */
+    ecs_size_t bytes_names;              /**< Bytes used by names, symbols, aliases. */
+    ecs_size_t bytes_doc_strings;        /**< Bytes used by doc strings. */
 } ecs_entities_memory_t;
 
-/* Component memory. */
+/** Component memory. */
 typedef struct {
-    int32_t instances;                  /** Total number of component instances. */
-    ecs_size_t bytes_table_components;  /** Bytes used by table columns. */
-    ecs_size_t bytes_table_components_unused; /** Unused bytes in table columns. */
-    ecs_size_t bytes_toggle_bitsets;    /** Bytes used in bitsets (toggled components). */
-    ecs_size_t bytes_sparse_components; /** Bytes used in component sparse sets. */
+    int32_t instances;                  /**< Total number of component instances. */
+    ecs_size_t bytes_table_components;  /**< Bytes used by table columns. */
+    ecs_size_t bytes_table_components_unused; /**< Unused bytes in table columns. */
+    ecs_size_t bytes_toggle_bitsets;    /**< Bytes used in bitsets (toggled components). */
+    ecs_size_t bytes_sparse_components; /**< Bytes used in component sparse sets. */
 } ecs_component_memory_t;
 
 /** Component index memory. */
 typedef struct {
-    int32_t count;                      /** Number of component records. */
-    ecs_size_t bytes_component_record;  /** Bytes used by ecs_component_record_t struct. */
-    ecs_size_t bytes_table_cache;       /** Bytes used by table cache. */
-    ecs_size_t bytes_name_index;        /** Bytes used by name index. */
-    ecs_size_t bytes_ordered_children;  /** Bytes used by ordered children vector. */
-    ecs_size_t bytes_children_table_map; /** Bytes used by map for non-fragmenting ChildOf table lookups. */
-    ecs_size_t bytes_reachable_cache;   /** Bytes used by reachable cache. */
+    int32_t count;                      /**< Number of component records. */
+    ecs_size_t bytes_component_record;  /**< Bytes used by ecs_component_record_t struct. */
+    ecs_size_t bytes_table_cache;       /**< Bytes used by table cache. */
+    ecs_size_t bytes_name_index;        /**< Bytes used by name index. */
+    ecs_size_t bytes_ordered_children;  /**< Bytes used by ordered children vector. */
+    ecs_size_t bytes_children_table_map; /**< Bytes used by map for non-fragmenting ChildOf table lookups. */
+    ecs_size_t bytes_reachable_cache;   /**< Bytes used by reachable cache. */
 } ecs_component_index_memory_t;
 
 /** Query memory. */
 typedef struct {
-    int32_t count;                      /** Number of queries. */
-    int32_t cached_count;               /** Number of queries with caches. */
-    ecs_size_t bytes_query;             /** Bytes used by ecs_query_impl_t struct. */
-    ecs_size_t bytes_cache;             /** Bytes used by query cache. */
-    ecs_size_t bytes_group_by;          /** Bytes used by query cache groups (excludes cache elements). */
-    ecs_size_t bytes_order_by;          /** Bytes used by table_slices. */
-    ecs_size_t bytes_plan;              /** Bytes used by query plan. */
-    ecs_size_t bytes_terms;             /** Bytes used by terms array. */
-    ecs_size_t bytes_misc;              /** Bytes used by remaining misc arrays. */
+    int32_t count;                      /**< Number of queries. */
+    int32_t cached_count;               /**< Number of queries with caches. */
+    ecs_size_t bytes_query;             /**< Bytes used by ecs_query_impl_t struct. */
+    ecs_size_t bytes_cache;             /**< Bytes used by query cache. */
+    ecs_size_t bytes_group_by;          /**< Bytes used by query cache groups (excludes cache elements). */
+    ecs_size_t bytes_order_by;          /**< Bytes used by table_slices. */
+    ecs_size_t bytes_plan;              /**< Bytes used by query plan. */
+    ecs_size_t bytes_terms;             /**< Bytes used by terms array. */
+    ecs_size_t bytes_misc;              /**< Bytes used by remaining misc arrays. */
 } ecs_query_memory_t;
 
-/** Table memory histogram constants */
+/** Table memory histogram constants. */
 #define ECS_TABLE_MEMORY_HISTOGRAM_BUCKET_COUNT 14
 #define ECS_TABLE_MEMORY_HISTOGRAM_MAX_COUNT (1 << ECS_TABLE_MEMORY_HISTOGRAM_BUCKET_COUNT)
 
-/** Table memory */
+/** Table memory. */
 typedef struct {
-    int32_t count;                      /** Total number of tables. */
-    int32_t empty_count;                /** Number of empty tables. */
-    int32_t column_count;               /** Number of table columns. */
-    ecs_size_t bytes_table;             /** Bytes used by ecs_table_t struct. */
-    ecs_size_t bytes_type;              /** Bytes used by type, columns and table records. */
-    ecs_size_t bytes_entities;          /** Bytes used by entity vectors. */
-    ecs_size_t bytes_overrides;         /** Bytes used by table overrides. */
-    ecs_size_t bytes_column_map;        /** Bytes used by column map. */
-    ecs_size_t bytes_component_map;     /** Bytes used by component map. */
-    ecs_size_t bytes_dirty_state;       /** Bytes used by dirty state. */
-    ecs_size_t bytes_edges;             /** Bytes used by table graph edges. */
+    int32_t count;                      /**< Total number of tables. */
+    int32_t empty_count;                /**< Number of empty tables. */
+    int32_t column_count;               /**< Number of table columns. */
+    ecs_size_t bytes_table;             /**< Bytes used by ecs_table_t struct. */
+    ecs_size_t bytes_type;              /**< Bytes used by type, columns and table records. */
+    ecs_size_t bytes_entities;          /**< Bytes used by entity vectors. */
+    ecs_size_t bytes_overrides;         /**< Bytes used by table overrides. */
+    ecs_size_t bytes_column_map;        /**< Bytes used by column map. */
+    ecs_size_t bytes_component_map;     /**< Bytes used by component map. */
+    ecs_size_t bytes_dirty_state;       /**< Bytes used by dirty state. */
+    ecs_size_t bytes_edges;             /**< Bytes used by table graph edges. */
 } ecs_table_memory_t;
 
-/** Table size histogram */
+/** Table size histogram. */
 typedef struct {
-    int32_t entity_counts[ECS_TABLE_MEMORY_HISTOGRAM_BUCKET_COUNT];
+    int32_t entity_counts[ECS_TABLE_MEMORY_HISTOGRAM_BUCKET_COUNT]; /**< Entity count histogram buckets */
 } ecs_table_histogram_t;
 
-/** Misc memory */
+/** Misc memory. */
 typedef struct {
-    ecs_size_t bytes_world;             /** Memory used by world and stages */
-    ecs_size_t bytes_observers;         /** Memory used by observers. */
-    ecs_size_t bytes_systems;           /** Memory used by systems (excluding system queries). */
-    ecs_size_t bytes_pipelines;         /** Memory used by pipelines (excluding pipeline queries). */
-    ecs_size_t bytes_table_lookup;      /** Bytes used for table lookup data structures. */
-    ecs_size_t bytes_component_record_lookup; /** Bytes used for component record lookup data structures. */
-    ecs_size_t bytes_locked_components; /** Locked component map. */
-    ecs_size_t bytes_type_info;         /** Bytes used for storing type information. */
-    ecs_size_t bytes_commands;          /** Command queue */
-    ecs_size_t bytes_rematch_monitor;   /** Memory used by monitor used to track rematches */
-    ecs_size_t bytes_component_ids;     /** Memory used for mapping global to world-local component ids. */
-    ecs_size_t bytes_reflection;        /** Memory used for component reflection not tracked elsewhere. */
-    ecs_size_t bytes_tree_spawner;      /** Memory used for tree (prefab) spawners. */
-    ecs_size_t bytes_prefab_child_indices; /** Memory used by map that stores indices for ordered prefab children */
-    ecs_size_t bytes_stats;             /** Memory used for statistics tracking not tracked elsewhere. */
-    ecs_size_t bytes_rest;              /** Memory used by REST HTTP server */
+    ecs_size_t bytes_world;             /**< Memory used by world and stages. */
+    ecs_size_t bytes_observers;         /**< Memory used by observers. */
+    ecs_size_t bytes_systems;           /**< Memory used by systems (excluding system queries). */
+    ecs_size_t bytes_pipelines;         /**< Memory used by pipelines (excluding pipeline queries). */
+    ecs_size_t bytes_table_lookup;      /**< Bytes used for table lookup data structures. */
+    ecs_size_t bytes_component_record_lookup; /**< Bytes used for component record lookup data structures. */
+    ecs_size_t bytes_locked_components; /**< Locked component map. */
+    ecs_size_t bytes_type_info;         /**< Bytes used for storing type information. */
+    ecs_size_t bytes_commands;          /**< Command queue. */
+    ecs_size_t bytes_rematch_monitor;   /**< Memory used by monitor used to track rematches. */
+    ecs_size_t bytes_component_ids;     /**< Memory used for mapping global to world-local component ids. */
+    ecs_size_t bytes_reflection;        /**< Memory used for component reflection not tracked elsewhere. */
+    ecs_size_t bytes_tree_spawner;      /**< Memory used for tree (prefab) spawners. */
+    ecs_size_t bytes_prefab_child_indices; /**< Memory used by map that stores indices for ordered prefab children. */
+    ecs_size_t bytes_stats;             /**< Memory used for statistics tracking not tracked elsewhere. */
+    ecs_size_t bytes_rest;              /**< Memory used by REST HTTP server. */
 } ecs_misc_memory_t;
 
 /** Allocator memory.
  * Returns memory that's allocated by allocators but not in use. */
 typedef struct {
-    ecs_size_t bytes_graph_edge;        /** Graph edge allocator. */
-    ecs_size_t bytes_component_record;  /** Component record allocator. */
-    ecs_size_t bytes_pair_record;       /** Pair record allocator. */
-    ecs_size_t bytes_table_diff;        /** Table diff allocator. */
-    ecs_size_t bytes_sparse_chunk;      /** Sparse chunk allocator. */
-    ecs_size_t bytes_allocator;         /** Generic allocator. */
-    ecs_size_t bytes_stack_allocator;   /** Stack allocator. */
-    ecs_size_t bytes_cmd_entry_chunk;   /** Command batching entry chunk allocator. */
-    ecs_size_t bytes_query_impl;        /** Query struct allocator. */
-    ecs_size_t bytes_query_cache;       /** Query cache struct allocator. */
-    ecs_size_t bytes_misc;              /** Miscalleneous allocators */
+    ecs_size_t bytes_graph_edge;        /**< Graph edge allocator. */
+    ecs_size_t bytes_component_record;  /**< Component record allocator. */
+    ecs_size_t bytes_pair_record;       /**< Pair record allocator. */
+    ecs_size_t bytes_table_diff;        /**< Table diff allocator. */
+    ecs_size_t bytes_sparse_chunk;      /**< Sparse chunk allocator. */
+    ecs_size_t bytes_allocator;         /**< Generic allocator. */
+    ecs_size_t bytes_stack_allocator;   /**< Stack allocator. */
+    ecs_size_t bytes_cmd_entry_chunk;   /**< Command batching entry chunk allocator. */
+    ecs_size_t bytes_query_impl;        /**< Query struct allocator. */
+    ecs_size_t bytes_query_cache;       /**< Query cache struct allocator. */
+    ecs_size_t bytes_misc;              /**< Miscellaneous allocators. */
 } ecs_allocator_memory_t;
 
 /** Component with memory statistics. */
 typedef struct {
-    ecs_entities_memory_t entities;
-    ecs_component_memory_t components;
-    ecs_component_index_memory_t component_index;
-    ecs_query_memory_t queries;
-    ecs_table_memory_t tables;
-    ecs_table_histogram_t table_histogram;
-    ecs_misc_memory_t misc;
-    ecs_allocator_memory_t allocators;
-    double collection_time; /** Time spent collecting statistics. */
+    ecs_entities_memory_t entities;                    /**< Entity memory */
+    ecs_component_memory_t components;                  /**< Component memory */
+    ecs_component_index_memory_t component_index;       /**< Component index memory */
+    ecs_query_memory_t queries;                         /**< Query memory */
+    ecs_table_memory_t tables;                          /**< Table memory */
+    ecs_table_histogram_t table_histogram;              /**< Table size histogram */
+    ecs_misc_memory_t misc;                             /**< Miscellaneous memory */
+    ecs_allocator_memory_t allocators;                  /**< Allocator memory */
+    double collection_time; /**< Time spent collecting statistics. */
 } EcsWorldMemory;
 
-/** Memory statistics getters. */
 /** Get memory usage statistics for the entity index.
  * 
  * @param world The world.

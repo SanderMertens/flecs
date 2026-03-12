@@ -65,7 +65,7 @@ FLECS_API extern const ecs_entity_t EcsDocColor;
  * - EcsDocColor
  */
 typedef struct EcsDocDescription {
-    char *value;
+    char *value;           /**< Description value. */
 } EcsDocDescription;
 
 /** Add UUID to entity.

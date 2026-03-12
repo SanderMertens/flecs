@@ -77,7 +77,7 @@ void reset_clock() const;
  */
 void set_threads(int32_t threads) const;
 
-/** Set number of threads.
+/** Get number of threads.
  * @see ecs_get_stage_count
  */
 int32_t get_threads() const;

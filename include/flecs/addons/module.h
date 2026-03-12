@@ -87,7 +87,13 @@ ecs_entity_t ecs_import_from_library(
     const char *library_name,
     const char *module_name);
 
-/** Register a new module. */
+/** Register a new module.
+ *
+ * @param world The world.
+ * @param c_name The name of the module.
+ * @param desc The component descriptor for the module component.
+ * @return The module entity.
+ */
 FLECS_API
 ecs_entity_t ecs_module_init(
     ecs_world_t *world,

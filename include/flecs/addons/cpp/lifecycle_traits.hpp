@@ -148,9 +148,9 @@ void move_dtor_impl(void *dst_ptr, void *src_ptr, int32_t count,
     }
 }
 
-} // _
+} // namespace _
 
-// Trait to test if type is constructible by flecs
+/** Trait to test if type is constructible by flecs. */
 template <typename T>
 struct is_flecs_constructible {
     static constexpr bool value = 
@@ -371,5 +371,5 @@ ecs_equals_t equals() {
     #pragma GCC diagnostic pop
 #endif
 
-} // _
-} // flecs
+} // namespace _
+} // namespace flecs

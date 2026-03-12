@@ -919,7 +919,12 @@ struct entity_with_delegate<Func, if_t< is_callable<Func>::value > >
 
 } // namespace _
 
-// Experimental: allows using the each delegate for use cases outside of flecs
+/** Delegate type for each callbacks.
+ * Experimental: allows using the each delegate for use cases outside of flecs.
+ *
+ * @tparam Func The callback function type.
+ * @tparam Args The component argument types.
+ */
 template <typename Func, typename ... Args>
 using delegate = _::each_delegate<typename std::decay<Func>::type, Args...>;
 

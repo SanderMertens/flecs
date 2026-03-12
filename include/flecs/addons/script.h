@@ -62,53 +62,53 @@ typedef struct ecs_script_template_t ecs_script_template_t;
 
 /** Script variable. */
 typedef struct ecs_script_var_t {
-    const char *name;
-    ecs_value_t value;
-    const ecs_type_info_t *type_info;
-    int32_t sp;
-    bool is_const;
+    const char *name;                    /**< Variable name. */
+    ecs_value_t value;                   /**< Variable value. */
+    const ecs_type_info_t *type_info;    /**< Type information. */
+    int32_t sp;                          /**< Stack pointer. */
+    bool is_const;                       /**< Whether the variable is constant. */
 } ecs_script_var_t;
 
 /** Script variable scope. */
 typedef struct ecs_script_vars_t {
-    struct ecs_script_vars_t *parent;
-    int32_t sp;
+    struct ecs_script_vars_t *parent;    /**< Parent variable scope. */
+    int32_t sp;                          /**< Stack pointer for this scope. */
 
-    ecs_hashmap_t var_index;
-    ecs_vec_t vars;
+    ecs_hashmap_t var_index;             /**< Index for variable name lookups. */
+    ecs_vec_t vars;                      /**< Vector of variables in this scope. */
 
-    const ecs_world_t *world;
-    struct ecs_stack_t *stack;
-    ecs_stack_cursor_t *cursor;
-    ecs_allocator_t *allocator;
+    const ecs_world_t *world;            /**< The world. */
+    struct ecs_stack_t *stack;           /**< Stack allocator for variable storage. */
+    ecs_stack_cursor_t *cursor;          /**< Cursor into the stack allocator. */
+    ecs_allocator_t *allocator;          /**< General purpose allocator. */
 } ecs_script_vars_t;
 
 /** Script object. */
 typedef struct ecs_script_t {
-    ecs_world_t *world;
-    const char *name;
-    const char *code;
+    ecs_world_t *world;    /**< The world. */
+    const char *name;      /**< Script name. */
+    const char *code;      /**< Script source code. */
 } ecs_script_t;
 
-/* Runtime for executing scripts */
+/** Runtime for executing scripts. */
 typedef struct ecs_script_runtime_t ecs_script_runtime_t;
 
 /** Script component. 
  * This component is added to the entities of managed scripts and templates.
  */
 typedef struct EcsScript {
-    char *filename;
-    char *code;
-    char *error; /* Set if script evaluation had errors */
-    ecs_script_t *script;
-    ecs_script_template_t *template_; /* Only set for template scripts */
+    char *filename;                     /**< Script filename. */
+    char *code;                         /**< Script source code. */
+    char *error;                        /**< Set if script evaluation had errors. */
+    ecs_script_t *script;               /**< Parsed script object. */
+    ecs_script_template_t *template_;   /**< Only set for template scripts. */
 } EcsScript;
 
 /** Script function context. */
 typedef struct ecs_function_ctx_t {
-    ecs_world_t *world;
-    ecs_entity_t function;
-    void *ctx;
+    ecs_world_t *world;       /**< The world. */
+    ecs_entity_t function;    /**< The function entity. */
+    void *ctx;                /**< User context. */
 } ecs_function_ctx_t;
 
 /** Script function callback. */
@@ -128,8 +128,8 @@ typedef void(*ecs_vector_function_callback_t)(
 
 /** Function argument type. */
 typedef struct ecs_script_parameter_t {
-    const char *name;
-    ecs_entity_t type;
+    const char *name;       /**< Parameter name. */
+    ecs_entity_t type;      /**< Parameter type. */
 } ecs_script_parameter_t;
 
 /** Const component.
@@ -170,7 +170,7 @@ typedef struct ecs_script_eval_desc_t {
 
 /** Used to capture error output from script evaluation. */
 typedef struct ecs_script_eval_result_t {
-    char *error;
+    char *error;       /**< Error message, or NULL if no error. Must be freed by the application. */
 } ecs_script_eval_result_t;
 
 /** Parse script.
@@ -676,18 +676,18 @@ char* ecs_script_string_interpolate(
 
 /* Global const variables */
 
-/** Used with ecs_const_var_init */
+/** Used with ecs_const_var_init. */
 typedef struct ecs_const_var_desc_t {
-    /* Variable name. */
+    /** Variable name. */
     const char *name;
 
-    /* Variable parent (namespace). */
+    /** Variable parent (namespace). */
     ecs_entity_t parent;
 
-    /* Variable type. */
+    /** Variable type. */
     ecs_entity_t type;
 
-    /* Pointer to value of variable. The value will be copied to an internal
+    /** Pointer to value of variable. The value will be copied to an internal
      * storage and does not need to be kept alive. */
     void *value;
 } ecs_const_var_desc_t;
@@ -721,12 +721,13 @@ ecs_value_t ecs_const_var_get(
 
 /* Functions */
 
+/** Vector function callbacks for different element types. */
 typedef struct ecs_vector_fn_callbacks_t {
-    ecs_vector_function_callback_t i8;
-    ecs_vector_function_callback_t i32;
+    ecs_vector_function_callback_t i8;   /**< Callback for i8 element type. */
+    ecs_vector_function_callback_t i32;  /**< Callback for i32 element type. */
 } ecs_vector_fn_callbacks_t;
 
-/** Used with ecs_function_init and ecs_method_init */
+/** Used with ecs_function_init and ecs_method_init. */
 typedef struct ecs_function_desc_t {
     /** Function name. */
     const char *name;

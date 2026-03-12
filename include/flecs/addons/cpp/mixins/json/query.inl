@@ -1,3 +1,7 @@
+/**
+ * @file addons/cpp/mixins/json/query.inl
+ * @brief JSON query mixin.
+ */
 
 /** Serialize query to JSON.
  * 

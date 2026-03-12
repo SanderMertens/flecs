@@ -48,7 +48,7 @@ typedef struct ecs_from_json_desc_t {
         ecs_world_t*,
         const char *value,
         void *ctx);
-    void *lookup_ctx;
+    void *lookup_ctx;              /**< Context for lookup_action */
 
     /** Require components to be registered with reflection data. When not
      * in strict mode, values for components without reflection are ignored. */
@@ -314,7 +314,7 @@ typedef struct ecs_iter_to_json_desc_t {
     bool serialize_alerts;          /**< Serialize active alerts for entity */
     ecs_entity_t serialize_refs;    /**< Serialize references (incoming edges) for relationship */
     bool serialize_matches;         /**< Serialize which queries entity matches with */
-    bool serialize_parents_before_children; /** If query matches both children and parent, serialize parent before children */
+    bool serialize_parents_before_children; /**< If query matches both children and parent, serialize parent before children */
     
     /** Callback for if the component should be serialized */
     bool (*component_filter)
@@ -398,8 +398,8 @@ int ecs_iter_to_json_buf(
 
 /** Used with ecs_iter_to_json(). */
 typedef struct ecs_world_to_json_desc_t {
-    bool serialize_builtin;    /**< Exclude flecs modules & contents */
-    bool serialize_modules;    /**< Exclude modules & contents */
+    bool serialize_builtin;    /**< Exclude flecs modules & contents. */
+    bool serialize_modules;    /**< Exclude modules & contents. */
 } ecs_world_to_json_desc_t;
 
 /** Serialize world into JSON string.

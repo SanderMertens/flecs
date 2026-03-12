@@ -42,6 +42,10 @@ public:
         return *this;
     }
 
+    /** Specify in which phase the system should run, using an enum constant.
+     *
+     * @param phase The enum phase value.
+     */
     template <typename E, if_t<is_enum<E>::value> = 0>
     Base& kind(E phase)
     {
@@ -136,13 +140,13 @@ public:
         return *this;
     }
 
-    /** Set system context */
+    /** Set system context. */
     Base& ctx(void *ptr) {
         desc_->ctx = ptr;
         return *this;
     }
 
-    /** Set system run callback */
+    /** Set system run callback. */
     Base& run(ecs_iter_action_t action) {
         desc_->run = action;
         return *this;

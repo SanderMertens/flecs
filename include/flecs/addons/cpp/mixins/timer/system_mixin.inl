@@ -16,7 +16,7 @@
 void interval(ecs_ftime_t interval);
 
 /** Get interval.
- * @see ecs_get_interval.
+ * @see ecs_get_interval
  */
 ecs_ftime_t interval();
 
@@ -41,7 +41,7 @@ void rate(int32_t rate);
 void start();
 
 /** Stop timer.
- * @see ecs_start_timer
+ * @see ecs_stop_timer
  */
 void stop();
 

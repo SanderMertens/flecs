@@ -39,7 +39,7 @@ typedef struct ecs_time_t {
     uint32_t nanosec;                             /**< Nanosecond part. */
 } ecs_time_t;
 
-/* Allocation counters */
+/** Allocation counters. */
 extern int64_t ecs_os_api_malloc_count;            /**< malloc count. */
 extern int64_t ecs_os_api_realloc_count;           /**< realloc count. */
 extern int64_t ecs_os_api_calloc_count;            /**< calloc count. */
@@ -53,7 +53,7 @@ extern int64_t ecs_os_api_free_count;              /**< free count. */
 FLECS_API extern ecs_size_t ecs_os_allocated_bytes;
 #endif
 
-/* Use handle types that _at least_ can store pointers */
+/** Use handle types that _at least_ can store pointers. */
 typedef uintptr_t ecs_os_thread_t;                 /**< OS thread. */
 typedef uintptr_t ecs_os_cond_t;                   /**< OS cond. */
 typedef uintptr_t ecs_os_mutex_t;                  /**< OS mutex. */
@@ -131,7 +131,7 @@ typedef
 void* (*ecs_os_api_task_join_t)(
     ecs_os_thread_t thread);
 
-/* Atomic increment / decrement */
+/** Atomic increment / decrement. */
 /** OS API ainc function type. */
 typedef
 int32_t (*ecs_os_api_ainc_t)(
@@ -142,7 +142,7 @@ typedef
 int64_t (*ecs_os_api_lainc_t)(
     int64_t *value);
 
-/* Mutex */
+/** Mutex. */
 /** OS API mutex_new function type. */
 typedef
 ecs_os_mutex_t (*ecs_os_api_mutex_new_t)(
@@ -163,7 +163,7 @@ typedef
 void (*ecs_os_api_mutex_free_t)(
     ecs_os_mutex_t mutex);
 
-/* Condition variable */
+/** Condition variable. */
 /** OS API cond_new function type. */
 typedef
 ecs_os_cond_t (*ecs_os_api_cond_new_t)(
@@ -210,12 +210,18 @@ void (*ecs_os_api_get_time_t)(
 typedef
 uint64_t (*ecs_os_api_now_t)(void);
 
-/** OS API log function type. */
+/** OS API log function type.
+ *
+ * @param level Logging level.
+ * @param file File where message was logged.
+ * @param line Line it was logged.
+ * @param msg The log message.
+ */
 typedef
 void (*ecs_os_api_log_t)(
-    int32_t level,     /* Logging level */
-    const char *file,  /* File where message was logged */
-    int32_t line,      /* Line it was logged */
+    int32_t level,
+    const char *file,
+    int32_t line,
     const char *msg);
 
 /** OS API abort function type. */
@@ -244,7 +250,12 @@ typedef
 char* (*ecs_os_api_module_to_path_t)(
     const char *module_id);
 
-/* Performance tracing */
+/** OS API performance tracing function type.
+ *
+ * @param filename The source file name.
+ * @param line The source line number.
+ * @param name The name of the trace region.
+ */
 typedef void (*ecs_os_api_perf_trace_t)(
     const char *filename,
     size_t line,
@@ -323,21 +334,21 @@ typedef struct ecs_os_api_t {
     ecs_os_api_module_to_path_t module_to_dl_;     /**< module_to_dl callback. */
 
     /* Overridable function that translates from a logical module id to a
-     * path that contains module-specif resources or assets */
+     * path that contains module-specific resources or assets */
     ecs_os_api_module_to_path_t module_to_etc_;    /**< module_to_etc callback. */
 
     /* Performance tracing */
-    ecs_os_api_perf_trace_t perf_trace_push_;
+    ecs_os_api_perf_trace_t perf_trace_push_; /**< perf_trace_push callback. */
 
     /* Performance tracing */
-    ecs_os_api_perf_trace_t perf_trace_pop_;
+    ecs_os_api_perf_trace_t perf_trace_pop_;  /**< perf_trace_pop callback. */
 
     int32_t log_level_;                            /**< Tracing level. */
     int32_t log_indent_;                           /**< Tracing indentation level. */
     int32_t log_last_error_;                       /**< Last logged error code. */
     int64_t log_last_timestamp_;                   /**< Last logged timestamp. */
 
-    ecs_flags32_t flags_;                          /**< OS API flags */
+    ecs_flags32_t flags_;                          /**< OS API flags. */
 
     void *log_out_;                                /**< File used for logging output (type is FILE*)
                                                     * (hint, log_ decides where to write) */
@@ -659,11 +670,23 @@ void ecs_os_strset(
 #define ecs_os_perf_trace_pop(name)
 #endif
 
+/** Push a performance trace region.
+ *
+ * @param file The source file name.
+ * @param line The source line number.
+ * @param name The name of the trace region.
+ */
 void ecs_os_perf_trace_push_(
     const char *file,
     size_t line,
     const char *name);
 
+/** Pop a performance trace region.
+ *
+ * @param file The source file name.
+ * @param line The source line number.
+ * @param name The name of the trace region.
+ */
 void ecs_os_perf_trace_pop_(
     const char *file,
     size_t line,
@@ -699,7 +722,7 @@ double ecs_time_measure(
 /** Calculate difference between two timestamps. 
  * 
  * @param t1 The first timestamp.
- * @param t2 The first timestamp.
+ * @param t2 The second timestamp.
  * @return The difference between timestamps.
  */
 FLECS_API
