@@ -19595,7 +19595,13 @@ void ecs_ref_update(
         return;
     }
 
-    ecs_check(ecs_is_alive(world, ref->entity), ECS_INVALID_PARAMETER, NULL);
+    if (!ecs_is_alive(world, ref->entity)) {
+        ref->table_id = 0;
+        ref->table_version_fast = 0;
+        ref->table_version = 0;
+        ref->ptr = NULL;
+        return;
+    }
 
     if (ref->table_id == table->id && ref->table_version == table->version) {
         ref->table_version_fast = flecs_get_table_version_fast(world, ref->table_id);
@@ -43322,6 +43328,8 @@ void flecs_table_fini_data(
     table->data.count = 0;
     table->_->traversable_count = 0;
     table->flags &= ~EcsTableHasTraversable;
+
+    flecs_increment_table_version(world, table);
 }
 
 const ecs_entity_t* ecs_table_entities(

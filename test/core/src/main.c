@@ -1178,6 +1178,7 @@ void Reference_get_ref_after_delete(void);
 void Reference_get_ref_after_delete_other(void);
 void Reference_get_ref_after_delete_child(void);
 void Reference_get_ref_after_clear(void);
+void Reference_get_ref_after_clear_table(void);
 void Reference_get_ref_after_clear_other(void);
 void Reference_get_ref_after_realloc(void);
 void Reference_get_ref_after_realloc_w_lifecycle(void);
@@ -7800,6 +7801,10 @@ bake_test_case Reference_testcases[] = {
     {
         "get_ref_after_clear",
         Reference_get_ref_after_clear
+    },
+    {
+        "get_ref_after_clear_table",
+        Reference_get_ref_after_clear_table
     },
     {
         "get_ref_after_clear_other",
@@ -15972,7 +15977,7 @@ static bake_test_suite suites[] = {
         "Reference",
         Reference_setup,
         NULL,
-        25,
+        26,
         Reference_testcases
     },
     {
