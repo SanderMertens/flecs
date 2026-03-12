@@ -41,7 +41,7 @@ void FlecsUnitsImport(
     });
     EcsFemto = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t){
         .entity = ecs_entity(world, { .name = "Femto" }),
-        .symbol = "a",
+        .symbol = "f",
         .translation = { .factor = 10, .power = -15 }
     });
     EcsPico = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t){
