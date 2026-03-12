@@ -94423,7 +94423,8 @@ int flecs_expr_unary_visit_fold(
     if (node->expr->type != ecs_id(ecs_bool_t)) {
         char *type_str = ecs_get_path(script->world, node->node.type);
         flecs_expr_visit_error(script, node, 
-            "! operator cannot be applied to value of type '%s' (must be bool)");
+            "! operator cannot be applied to value of type '%s' (must be bool)",
+                type_str);
         ecs_os_free(type_str);
         goto error;
     }
