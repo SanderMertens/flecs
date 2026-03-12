@@ -2283,6 +2283,101 @@ void ComponentLifecycle_set_multiple_hooks(void) {
     test_int(removes, 2); /* two instances of `Pod` removed */
 }
 
+void ComponentLifecycle_on_add_hook_twice(void) {
+    install_test_abort();
+
+    flecs::world ecs;
+    auto position = ecs.component<Position>();
+    position.on_add([](Position&) { });
+
+    test_expect_abort();
+    position.on_add([](Position&) { });
+}
+
+void ComponentLifecycle_on_remove_hook_twice(void) {
+    install_test_abort();
+
+    flecs::world ecs;
+    auto position = ecs.component<Position>();
+    position.on_remove([](Position&) { });
+
+    test_expect_abort();
+    position.on_remove([](Position&) { });
+}
+
+void ComponentLifecycle_on_set_hook_twice(void) {
+    install_test_abort();
+
+    flecs::world ecs;
+    auto position = ecs.component<Position>();
+    position.on_set([](Position&) { });
+
+    test_expect_abort();
+    position.on_set([](Position&) { });
+}
+
+void ComponentLifecycle_on_replace_after_on_set(void) {
+    flecs::world ecs;
+
+    int32_t set_count = 0;
+    int32_t replace_count = 0;
+    Position prev = {0, 0};
+    Position next = {0, 0};
+    Position latest = {0, 0};
+
+    auto position = ecs.component<Position>();
+    position.on_add([&](Position& p) {
+        p.x = 0;
+        p.y = 0;
+    });
+
+    position.on_set([&](Position& p) {
+        set_count ++;
+        latest = p;
+    });
+
+    position.on_replace([&](Position& p_prev, Position& p_next) {
+        replace_count ++;
+        prev = p_prev;
+        next = p_next;
+    });
+
+    auto e = ecs.entity().add<Position>();
+    test_int(set_count, 0);
+    test_int(replace_count, 0);
+
+    e.set<Position>({10, 20});
+    test_int(set_count, 1);
+    test_int(replace_count, 1);
+    test_int(prev.x, 0);
+    test_int(prev.y, 0);
+    test_int(next.x, 10);
+    test_int(next.y, 20);
+    test_int(latest.x, 10);
+    test_int(latest.y, 20);
+
+    e.set<Position>({30, 40});
+    test_int(set_count, 2);
+    test_int(replace_count, 2);
+    test_int(prev.x, 10);
+    test_int(prev.y, 20);
+    test_int(next.x, 30);
+    test_int(next.y, 40);
+    test_int(latest.x, 30);
+    test_int(latest.y, 40);
+}
+
+void ComponentLifecycle_on_replace_hook_twice(void) {
+    install_test_abort();
+
+    flecs::world ecs;
+    auto position = ecs.component<Position>();
+    position.on_replace([](Position&, Position&) { });
+
+    test_expect_abort();
+    position.on_replace([](Position&, Position&) { });
+}
+
 struct WithGreaterThan {
     int value;
     bool operator>(const WithGreaterThan &other) const {

@@ -30846,8 +30846,8 @@ struct component : untyped_component {
         using Delegate = typename _::each_delegate<
             typename std::decay<Func>::type, T, T>;
         flecs::type_hooks_t h = get_hooks();
-        ecs_assert(h.on_set == nullptr, ECS_INVALID_OPERATION,
-            "on_set hook is already set");
+        ecs_assert(h.on_replace == nullptr, ECS_INVALID_OPERATION,
+            "on_replace hook is already set");
         BindingCtx *ctx = get_binding_ctx(h);
         h.on_replace = Delegate::run_replace;
         ctx->on_replace = FLECS_NEW(Delegate)(FLECS_FWD(func));

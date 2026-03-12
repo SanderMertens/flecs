@@ -1204,6 +1204,11 @@ void ComponentLifecycle_sparse_component(void);
 void ComponentLifecycle_count_in_add_hook(void);
 void ComponentLifecycle_count_in_remove_hook(void);
 void ComponentLifecycle_set_multiple_hooks(void);
+void ComponentLifecycle_on_add_hook_twice(void);
+void ComponentLifecycle_on_remove_hook_twice(void);
+void ComponentLifecycle_on_set_hook_twice(void);
+void ComponentLifecycle_on_replace_after_on_set(void);
+void ComponentLifecycle_on_replace_hook_twice(void);
 void ComponentLifecycle_compare_WithGreaterThan(void);
 void ComponentLifecycle_compare_WithLessThan(void);
 void ComponentLifecycle_compare_WithLessAndGreaterThan(void);
@@ -6325,6 +6330,26 @@ bake_test_case ComponentLifecycle_testcases[] = {
         ComponentLifecycle_set_multiple_hooks
     },
     {
+        "on_add_hook_twice",
+        ComponentLifecycle_on_add_hook_twice
+    },
+    {
+        "on_remove_hook_twice",
+        ComponentLifecycle_on_remove_hook_twice
+    },
+    {
+        "on_set_hook_twice",
+        ComponentLifecycle_on_set_hook_twice
+    },
+    {
+        "on_replace_after_on_set",
+        ComponentLifecycle_on_replace_after_on_set
+    },
+    {
+        "on_replace_hook_twice",
+        ComponentLifecycle_on_replace_hook_twice
+    },
+    {
         "compare_WithGreaterThan",
         ComponentLifecycle_compare_WithGreaterThan
     },
@@ -8044,7 +8069,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         NULL,
         NULL,
-        105,
+        110,
         ComponentLifecycle_testcases
     },
     {
