@@ -17,8 +17,7 @@ ecs_mixins_t ecs_system_t_mixins = {
     }
 };
 
-/* -- Public API -- */
-
+/* Run a system with the given parameters, iterating its query. */
 ecs_entity_t flecs_run_system(
     ecs_world_t *world,
     ecs_stage_t *stage,
@@ -33,7 +32,7 @@ ecs_entity_t flecs_run_system(
     ecs_ftime_t time_elapsed = delta_time;
     ecs_entity_t tick_source = system_data->tick_source;
 
-    /* Support legacy behavior */
+    /* Fall back to system context if no param provided */
     if (!param) {
         param = system_data->ctx;
     }
@@ -49,11 +48,8 @@ ecs_entity_t flecs_run_system(
                 return 0;
             }
         } else {
-            /* If a timer has been set but the timer entity does not have the
-             * EcsTimer component, don't run the system. This can be the result
-             * of a single-shot timer that has fired already. Not resetting the
-             * timer field of the system will ensure that the system won't be
-             * ran after the timer has fired. */
+            /* Tick source entity has no EcsTickSource component.
+             * Skip the system. */
             return 0;
         }
     }
@@ -108,9 +104,8 @@ ecs_entity_t flecs_run_system(
 
     ecs_run_action_t run = system_data->run;
     if (run) {
-        /* If system query matches nothing, the system run callback doesn't have
-         * anything to iterate, so the iterator resources don't get cleaned up
-         * automatically, so clean it up here. */
+        /* If query matches nothing, the run callback won't consume the
+         * iterator, so we must finalize it manually. */
         if (system_data->query->flags & EcsQueryMatchNothing) {
             it->next = flecs_default_next_callback; /* Return once */
             run(it);
@@ -156,8 +151,6 @@ ecs_entity_t flecs_run_system(
 }
 
 
-/* -- Public API -- */
-
 ecs_entity_t ecs_run_worker(
     ecs_world_t *world,
     ecs_entity_t system,
@@ -193,7 +186,7 @@ ecs_entity_t ecs_run(
     return result;
 }
 
-/* System deinitialization */
+/* Free system resources including contexts and name. */
 static
 void flecs_system_fini(ecs_system_t *sys) {
     if (sys->ctx_free) {
@@ -208,19 +201,19 @@ void flecs_system_fini(ecs_system_t *sys) {
         sys->run_ctx_free(sys->run_ctx);
     }
 
-    /* Safe cast, type owns name */
-    ecs_os_free(ECS_CONST_CAST(char*, sys->name));
+    ecs_os_free(ECS_CONST_CAST(char*, sys->name)); /* system owns the name */
 
     flecs_poly_free(sys, ecs_system_t);
 }
 
-/* ecs_poly_dtor_t-compatible wrapper */
+/* Poly dtor callback: adapts flecs_system_fini to the poly dtor signature. */
 static
 void flecs_system_poly_fini(void *sys)
 {
     flecs_system_fini(sys);
 }
 
+/* Initialize timer or rate settings for a system. */
 static
 int flecs_system_init_timer(
     ecs_world_t *world,
@@ -298,7 +291,7 @@ ecs_entity_t ecs_system_init(
             return 0;
         }
 
-        /* Prevent the system from moving while we're initializing */
+        /* Defer to prevent the system entity from moving during init */
         flecs_defer_begin(world, world->stages[0]);
 
         if (desc->phase) {
@@ -446,6 +439,7 @@ error:
     return;
 }
 
+/* Import the system module and register system components. */
 void FlecsSystemImport(
     ecs_world_t *world)
 {
@@ -460,9 +454,8 @@ void FlecsSystemImport(
         .ctor = flecs_default_ctor
     });
 
-    /* Make sure to never inherit system component. This makes sure that any
-     * term created for the System component will default to 'self' traversal,
-     * which improves efficiency of the query. */
+    /* Prevent System component inheritance so pipeline queries default
+     * to 'self' traversal, avoiding unnecessary hierarchy walks. */
     ecs_add_pair(world, EcsSystem, EcsOnInstantiate, EcsDontInherit);
 }
 

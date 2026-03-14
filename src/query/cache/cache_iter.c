@@ -1,15 +1,14 @@
 /**
  * @file query/cache/cache_iter.c
- * @brief Cache iterator functions.
+ * @brief Iteration over cached query results: search and test modes.
+ *
+ * Search mode enumerates all cached matches. Test mode checks if a specific
+ * table/entity matches. Both have trivial and non-trivial variants.
  */
 
 #include "../../private_api.h"
 
-/* Update trs for cached query that has up fields. If a component got matched on
- * another entity (typically a parent or prefab), that component could have 
- * moved which would cause the table record in the trs array to become invalid.
- * This function updates the table records array to make sure they're pointing
- * to the right table/column for fields that used up traversal. */
+/* Update table records for fields matched through up traversal. */
 static
 void flecs_query_update_node_up_trs(
     const ecs_query_run_ctx_t *ctx,
@@ -67,7 +66,6 @@ void flecs_query_cache_iter_init(
 
     /* If query uses order_by, iterate the array with ordered table slices. */
     if (cache->order_by_callback) {
-        /* Check if query needs sorting. */
         flecs_query_cache_sort_tables(it->real_world, impl);
         qit->tables = &cache->table_slices;
         qit->all_tables = qit->tables;
@@ -77,8 +75,7 @@ void flecs_query_cache_iter_init(
     cache->prev_match_count = cache->match_count;
 }
 
-/* Find next match in cache. This function is called for non-trivial caches and
- * handles features like wildcards, up traversal and grouping. */
+/* Find next match in a non-trivial cache with wildcard and group support. */
 static
 ecs_query_cache_match_t* flecs_query_cache_next(
     const ecs_query_run_ctx_t *ctx,
@@ -89,21 +86,18 @@ ecs_query_cache_match_t* flecs_query_cache_next(
 
     repeat: {
         if (qit->cur >= ecs_vec_count(qit->tables)) {
-            /* We're iterating the table vector of the group */
-            if (qit->tables == qit->all_tables) {   
-                /* If a group is set, we might have to iterate multiple */
+            /* Exhausted current table vector; advance to next group if any */
+            if (qit->tables == qit->all_tables) {
                 ecs_query_cache_group_t *group = qit->group;
                 if (!group || qit->iter_single_group) {
                     return NULL;
                 }
 
-                /* Check if this was the last group to iterate */
                 qit->group = group->next;
                 if (!qit->group) {
                     return NULL;
                 }
 
-                /* Prepare iterator for the next group */
                 qit->all_tables = qit->tables = &qit->group->tables;
                 qit->cur = 0;
 
@@ -113,7 +107,7 @@ ecs_query_cache_match_t* flecs_query_cache_next(
                     goto repeat;
                 }
 
-            /* We're iterating a wildcard table vector */
+            /* Finished wildcard sub-vector; resume main table vector */
             } else {
                 qit->tables = qit->all_tables;
                 qit->cur = qit->all_cur;
@@ -121,11 +115,10 @@ ecs_query_cache_match_t* flecs_query_cache_next(
             }
         }
 
-        /* Get currently iterated cache element */
-        ecs_query_cache_match_t *qm = 
+        ecs_query_cache_match_t *qm =
             ecs_vec_get_t(qit->tables, ecs_query_cache_match_t, qit->cur);
 
-        /* Check if table is empty and whether we need to skip it */
+        /* Skip empty tables unless the query is configured to match them */
         ecs_table_t *table = qm->base.table;
         if (!ecs_table_count(table)) {
             if (!(always_match_empty || (it->flags & EcsIterMatchEmptyTables))) {
@@ -155,8 +148,7 @@ ecs_query_cache_match_t* flecs_query_cache_next(
     }
 }
 
-/* Find next match in trivial cache. A trivial cache doesn't have to handle
- * wildcards, multiple groups or fields matched through up traversal. */
+/* Trivial cache next: no wildcards, no groups, no up-traversal fields */
 static
 ecs_query_cache_match_t* flecs_query_trivial_cache_next(
     const ecs_query_run_ctx_t *ctx)
@@ -190,6 +182,7 @@ ecs_query_cache_match_t* flecs_query_trivial_cache_next(
     }
 }
 
+/* Test if a constrained table matches the cache. */
 static
 ecs_query_cache_match_t* flecs_query_test(
     const ecs_query_run_ctx_t *ctx,
@@ -225,6 +218,7 @@ ecs_query_cache_match_t* flecs_query_test(
     return qm;
 }
 
+/* Populate iterator fields from cache match using the field map. */
 static
 void flecs_query_cache_init_mapped_fields(
     const ecs_query_run_ctx_t *ctx,
@@ -253,7 +247,7 @@ void flecs_query_cache_init_mapped_fields(
     }
 }
 
-/* Iterate cache for query that's partially cached */
+/* Search cache for next match in a partially cached query. */
 bool flecs_query_cache_search(
     const ecs_query_run_ctx_t *ctx)
 {
@@ -274,7 +268,7 @@ bool flecs_query_cache_search(
     return true;
 }
 
-/* Iterate cache for query that's entirely cached */
+/* Search cache for next match in an entirely cached query. */
 bool flecs_query_is_cache_search(
     const ecs_query_run_ctx_t *ctx)
 {
@@ -305,14 +299,14 @@ bool flecs_query_is_cache_search(
     return true;
 }
 
-/* Iterate cache for query that's entirely cached */
+/* Search trivial cache for next match in an entirely cached query. */
 bool flecs_query_is_trivial_cache_search(
     const ecs_query_run_ctx_t *ctx)
 {
     return flecs_query_trivial_cache_next(ctx) != NULL;
 }
 
-/* Test if query that is entirely cached matches constrained $this */
+/* Test if partially cached query matches constrained $this variable. */
 bool flecs_query_cache_test(
     const ecs_query_run_ctx_t *ctx,
     bool redo)
@@ -328,7 +322,7 @@ bool flecs_query_cache_test(
     return true;
 }
 
-/* Test if query that is entirely cached matches constrained $this */
+/* Test if entirely cached query matches constrained $this variable. */
 bool flecs_query_is_cache_test(
     const ecs_query_run_ctx_t *ctx,
     bool redo)
@@ -356,6 +350,7 @@ bool flecs_query_is_cache_test(
     return true;
 }
 
+/* Test if trivial cached query matches constrained $this variable. */
 bool flecs_query_is_trivial_cache_test(
     const ecs_query_run_ctx_t *ctx,
     bool redo)

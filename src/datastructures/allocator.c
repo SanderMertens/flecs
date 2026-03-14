@@ -1,13 +1,12 @@
 /**
  * @file datastructures/allocator.c
- * @brief Allocator for any size.
- * 
- * Allocators create a block allocator for each requested size.
+ * @brief General-purpose allocator that manages per-size block allocators.
  */
 
 #include "../private_api.h"
 
 #ifndef FLECS_USE_OS_ALLOC
+/* Round up allocation size to 16-byte alignment. */
 static
 ecs_size_t flecs_allocator_size(
     ecs_size_t size)
@@ -15,6 +14,7 @@ ecs_size_t flecs_allocator_size(
     return ECS_ALIGN(size, 16);
 }
 
+/* Compute sparse set index from an aligned allocation size (size / 16). */
 static
 ecs_size_t flecs_allocator_size_hash(
     ecs_size_t size)
@@ -23,6 +23,7 @@ ecs_size_t flecs_allocator_size_hash(
 }
 #endif
 
+/* Initialize allocator with sparse set of block allocators. */
 void flecs_allocator_init(
     ecs_allocator_t *a)
 {
@@ -34,6 +35,7 @@ void flecs_allocator_init(
 #endif
 }
 
+/* Finalize allocator and destroy all owned block allocators. */
 void flecs_allocator_fini(
     ecs_allocator_t *a)
 {
@@ -53,8 +55,9 @@ void flecs_allocator_fini(
 #endif
 }
 
+/* Get or create a block allocator for the given allocation size. */
 ecs_block_allocator_t* flecs_allocator_get(
-    ecs_allocator_t *a, 
+    ecs_allocator_t *a,
     ecs_size_t size)
 {
 #ifndef FLECS_USE_OS_ALLOC
@@ -87,8 +90,9 @@ ecs_block_allocator_t* flecs_allocator_get(
 #endif
 }
 
+/* Duplicate a string using the allocator. */
 char* flecs_strdup(
-    ecs_allocator_t *a, 
+    ecs_allocator_t *a,
     const char* str)
 {
 #ifndef FLECS_USE_OS_ALLOC
@@ -102,8 +106,9 @@ char* flecs_strdup(
 #endif
 }
 
+/* Free a string previously duplicated with flecs_strdup. */
 void flecs_strfree(
-    ecs_allocator_t *a, 
+    ecs_allocator_t *a,
     char* str)
 {
 #ifndef FLECS_USE_OS_ALLOC
@@ -115,6 +120,7 @@ void flecs_strfree(
 #endif
 }
 
+/* Duplicate a memory region of the given size using the allocator. */
 void* flecs_dup(
     ecs_allocator_t *a,
     ecs_size_t size,
@@ -136,27 +142,29 @@ void* flecs_dup(
 
 #ifdef FLECS_USE_OS_ALLOC
 
+/* -- OS allocator fallbacks (bypass block allocator) -- */
+
 void* flecs_alloc(
-    ecs_allocator_t *a, 
-    ecs_size_t size) 
+    ecs_allocator_t *a,
+    ecs_size_t size)
 {
     (void)a;
     return ecs_os_malloc(size);
 }
 
 void* flecs_calloc(
-    ecs_allocator_t *a, 
-    ecs_size_t size) 
+    ecs_allocator_t *a,
+    ecs_size_t size)
 {
     (void)a;
     return ecs_os_calloc(size);
 }
 
 void* flecs_realloc(
-    ecs_allocator_t *a, 
-    ecs_size_t dst_size, 
-    ecs_size_t src_size, 
-    void *ptr) 
+    ecs_allocator_t *a,
+    ecs_size_t dst_size,
+    ecs_size_t src_size,
+    void *ptr)
 {
     (void)a;
     (void)src_size;
@@ -164,9 +172,9 @@ void* flecs_realloc(
 }
 
 void flecs_free(
-    ecs_allocator_t *a, 
+    ecs_allocator_t *a,
     ecs_size_t size,
-    void *ptr) 
+    void *ptr)
 {
     (void)a;
     (void)size;

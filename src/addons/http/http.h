@@ -1,3 +1,7 @@
+/**
+ * @file addons/http/http.h
+ * @brief Internal types and functions for HTTP addon.
+ */
 
 #ifdef ECS_TARGET_MSVC
 #pragma comment(lib, "Ws2_32.lib")
@@ -34,34 +38,16 @@ typedef int ecs_http_socket_t;
 
 #endif
 
-/* Max length of request method */
-#define ECS_HTTP_METHOD_LEN_MAX (8) 
-
-/* Timeout (s) before connection purge */
-#define ECS_HTTP_CONNECTION_PURGE_TIMEOUT (1.0)
-
-/* Number of dequeues before purging */
+#define ECS_HTTP_METHOD_LEN_MAX (8)
+#define ECS_HTTP_CONNECTION_PURGE_TIMEOUT (1.0)         /* seconds */
 #define ECS_HTTP_CONNECTION_PURGE_RETRY_COUNT (5)
-
-/* Number of retries receiving request */
 #define ECS_HTTP_REQUEST_RECV_RETRY (10)
-
-/* Minimum interval between dequeueing requests (ms) */
-#define ECS_HTTP_MIN_DEQUEUE_INTERVAL (50)
-
-/* Minimum interval between printing statistics (ms) */
-#define ECS_HTTP_MIN_STATS_INTERVAL (10 * 1000)
-
-/* Receive buffer size */
-#define ECS_HTTP_SEND_RECV_BUFFER_SIZE (64 * 1024)
-
-/* Max length of request (path + query + headers + body) */
-#define ECS_HTTP_REQUEST_LEN_MAX (10 * 1024 * 1024)
-
-/* Total number of outstanding send requests */
+#define ECS_HTTP_MIN_DEQUEUE_INTERVAL (50)              /* milliseconds */
+#define ECS_HTTP_MIN_STATS_INTERVAL (10 * 1000)         /* milliseconds */
+#define ECS_HTTP_SEND_RECV_BUFFER_SIZE (64 * 1024)      /* bytes */
+#define ECS_HTTP_REQUEST_LEN_MAX (10 * 1024 * 1024)     /* bytes */
 #define ECS_HTTP_SEND_QUEUE_MAX (256)
 
-/* Send request queue */
 typedef struct ecs_http_send_request_t {
     ecs_http_socket_t sock;
     char *headers;
@@ -70,6 +56,7 @@ typedef struct ecs_http_send_request_t {
     int32_t content_length;
 } ecs_http_send_request_t;
 
+/* Ring buffer queue for outgoing HTTP responses (head/tail indices) */
 typedef struct ecs_http_send_queue_t {
     ecs_http_send_request_t requests[ECS_HTTP_SEND_QUEUE_MAX];
     int32_t head;
@@ -90,7 +77,6 @@ typedef struct ecs_http_request_entry_t {
     double time;
 } ecs_http_request_entry_t;
 
-/* HTTP server struct */
 struct ecs_http_server_t {
     bool should_run;
     bool running;
@@ -126,7 +112,7 @@ struct ecs_http_server_t {
     ecs_hashmap_t request_cache;
 };
 
-/** Fragment state, used by HTTP request parser */
+/* State machine states for incremental HTTP request parsing */
 typedef enum  {
     HttpFragStateBegin,
     HttpFragStateMethod,
@@ -143,7 +129,7 @@ typedef enum  {
     HttpFragStateDone
 } HttpFragState;
 
-/** A fragment is a partially received HTTP request */
+/* Accumulates data from a partially received HTTP request */
 typedef struct {
     HttpFragState state;
     ecs_strbuf_t buf;
@@ -163,14 +149,12 @@ typedef struct {
     bool invalid;
 } ecs_http_fragment_t;
 
-/** Extend public connection type with fragment data */
+/* Internal connection type extending the public ecs_http_connection_t */
 typedef struct {
     ecs_http_connection_t pub;
     ecs_http_socket_t sock;
 
-    /* Connection is purged after both timeout expires and connection has
-     * exceeded retry count. This ensures that a connection does not immediately
-     * timeout when a frame takes longer than usual */
+    /* Both timeout and retry threshold must be exceeded before purge */
     double dequeue_timeout;
     int32_t dequeue_retries;    
 } ecs_http_connection_impl_t;

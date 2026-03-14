@@ -1,6 +1,10 @@
 /**
  * @file query/validator.c
- * @brief Validate and finalize queries.
+ * @brief Query validation: resolves references, infers flags, and checks constraints.
+ *
+ * Transforms user-provided query descriptions into a canonical internal form
+ * by resolving entity names, setting default traversal flags, and validating
+ * that term combinations are legal.
  */
 
 #include "../private_api.h"
@@ -9,6 +13,7 @@
 #include "../addons/query_dsl/query_dsl.h"
 #endif
 
+/* Format and report a query validation error with context. */
 static
 void flecs_query_validator_error(
     const ecs_query_validator_ctx_t *ctx,
@@ -65,6 +70,7 @@ void flecs_query_validator_error(
     va_end(args);
 }
 
+/* Finalize IsEntity/IsVariable flags on a term reference. */
 static
 int flecs_term_ref_finalize_flags(
     ecs_term_ref_t *ref,
@@ -113,6 +119,7 @@ int flecs_term_ref_finalize_flags(
     return 0;
 }
 
+/* Check if an identifier string represents the null entity "#0". */
 static
 bool flecs_identifier_is_0(
     const char *id)
@@ -120,6 +127,7 @@ bool flecs_identifier_is_0(
     return id[0] == '#' && id[1] == '0' && !id[2];
 }
 
+/* Resolve a term reference name to an entity id. */
 static
 int flecs_term_ref_lookup(
     const ecs_world_t *world,
@@ -217,6 +225,7 @@ int flecs_term_ref_lookup(
     return 0;
 }
 
+/* Finalize all term references (src, first, second) with defaults and lookups. */
 static
 int flecs_term_refs_finalize(
     const ecs_world_t *world,
@@ -299,6 +308,7 @@ int flecs_term_refs_finalize(
     return 0;
 }
 
+/* Get the entity for a term reference, returning wildcard for variables. */
 static
 ecs_entity_t flecs_term_ref_get_entity(
     const ecs_term_ref_t *ref)
@@ -319,6 +329,7 @@ ecs_entity_t flecs_term_ref_get_entity(
     }
 }
 
+/* Populate the term id from first and second references. */
 static
 int flecs_term_populate_id(
     ecs_term_t *term)
@@ -347,6 +358,7 @@ int flecs_term_populate_id(
     return 0;
 }
 
+/* Populate term first/second references from an existing term id. */
 static
 int flecs_term_populate_from_id(
     const ecs_world_t *world,
@@ -418,6 +430,7 @@ int flecs_term_populate_from_id(
     return 0;
 }
 
+/* Validate a term that uses an equality or match predicate. */
 static
 int flecs_term_verify_eq_pred(
     const ecs_term_t *term,
@@ -478,6 +491,7 @@ error:
     return -1;
 }
 
+/* Validate a finalized term for consistency between id, references, and flags. */
 static
 int flecs_term_verify(
     const ecs_world_t *world,
@@ -492,7 +506,7 @@ int flecs_term_verify(
     ecs_id_t id = term->id;
 
     if ((src->id & EcsIsName) && (second->id & EcsIsName)) {
-        flecs_query_validator_error(ctx, "mismatch between term.cr_flags & term.id");
+        flecs_query_validator_error(ctx, "both src and second cannot have IsName flag set");
         return -1;
     }
 
@@ -649,6 +663,7 @@ int flecs_term_verify(
     return 0;
 }
 
+/* Fill out all term fields, check for consistency, and set derived flags. */
 int flecs_term_finalize(
     const ecs_world_t *world,
     ecs_term_t *term,
@@ -850,9 +865,8 @@ int flecs_term_finalize(
             }
         }
 
-        /* Only enable inheritance for ids which are inherited from at the time
-         * of query creation. To force component inheritance to be evaluated,
-         * an application can explicitly set traversal flags. */
+        /* Enable inheritance only for ids inherited at query creation time.
+         * Explicit traversal flags can force evaluation. */
         if (flecs_components_get(world, ecs_pair(EcsIsA, first->id)) || 
             (cr_flags & EcsIdInheritable) || first_can_isa)
         {
@@ -1066,6 +1080,7 @@ bool ecs_term_match_0(
     return (!ECS_TERM_REF_ID(&term->src) && (term->src.id & EcsIsEntity));
 }
 
+/* Find first term in OR chain with a different type than the current term. */
 static
 ecs_term_t* flecs_query_or_other_type(
     ecs_query_t *q,
@@ -1094,6 +1109,7 @@ ecs_term_t* flecs_query_or_other_type(
     }
 }
 
+/* Strip leading '$' from term reference variable names and resolve "$this". */
 static
 void flecs_normalize_term_name(
     ecs_term_ref_t *ref) 
@@ -1110,6 +1126,7 @@ void flecs_normalize_term_name(
     }
 }
 
+/* Finalize all query terms, compute field indices, and set query-level flags. */
 static
 int flecs_query_finalize_terms(
     ecs_world_t *world,
@@ -1141,10 +1158,8 @@ int flecs_query_finalize_terms(
     bool cacheable = true;
     bool match_nothing = true;
 
-    /* If a query has ChildOf terms we need to prevent it from being marked as 
-     * IsCacheable (meaning the query can be evaluated by just iterating the
-     * cache). A ChildOf term must be marked as cacheable, but also needs an
-     * instruction to filter tables that use non-fragmenting relationships. */
+    /* ChildOf terms need a filter instruction for non-fragmenting relationships,
+     * so prevent the query from being marked fully IsCacheable. */
     bool has_childof = false;
 
     for (i = 0; i < term_count; i ++) {
@@ -1160,9 +1175,8 @@ int flecs_query_finalize_terms(
 
         if (term->flags_ & EcsTermNonFragmentingChildOf) {
             if (!i) {
-                /* If the first term is a ChildOf pair, the query result should
-                 * respect the order of parents with the OrderedChildren trait.
-                 * This cannot be cached, so unset the IsCacheable bit. */
+                /* First-term ChildOf must respect OrderedChildren ordering,
+                 * which is incompatible with caching. */
                 ECS_BIT_CLEAR16(term->flags_, EcsTermIsCacheable);
             }
 
@@ -1189,8 +1203,7 @@ int flecs_query_finalize_terms(
 
         /* If one of the terms in an OR chain isn't cacheable, none are */
         if (term->flags_ & EcsTermIsCacheable) {
-            /* Current term is marked as cacheable. Check if it is part of an OR
-             * chain, and if so, the previous term was also cacheable. */
+            /* In OR chains, all terms must be cacheable or none are. */
             if (prev_is_or) {
                 if (term[-1].flags_ & EcsTermIsCacheable) {
                     cacheable_terms ++;
@@ -1201,14 +1214,13 @@ int flecs_query_finalize_terms(
                 cacheable_terms ++;
             }
 
-            /* Toggle terms may be cacheable for fetching the initial component, 
-             * but require an additional toggle instruction for evaluation. */
+            /* Toggle terms are cacheable per-field but need a toggle
+             * instruction, so the query itself isn't fully cacheable. */
             if (term->flags_ & EcsTermIsToggle) {
                 cacheable = false;
             }
         } else if (prev_is_or) {
-            /* Current term is not cacheable. If it is part of an OR chain, mark
-             * previous terms in the chain as also not cacheable. */
+            /* Propagate non-cacheable status backwards through OR chain. */
             int32_t j;
             for (j = i - 1; j >= 0; j --) {
                 if (terms[j].oper != EcsOr) {
@@ -1249,9 +1261,8 @@ int flecs_query_finalize_terms(
         if ((term->id == EcsWildcard) || (term->id == 
             ecs_pair(EcsWildcard, EcsWildcard))) 
         {
-            /* If term type is unknown beforehand, default the inout type to
-             * none. This prevents accidentally requesting lots of components,
-             * which can put stress on serializer code. */
+            /* Unknown type at query time -- default to InOutNone to avoid
+             * accidentally requesting many component types. */
             if (term->inout == EcsInOutDefault) {
                 term->inout = EcsInOutNone;
             }
@@ -1273,9 +1284,8 @@ int flecs_query_finalize_terms(
             } else if ((ECS_PAIR_SECOND(term->id) == EcsWildcard) ||
                        (ECS_PAIR_SECOND(term->id) == EcsAny)) 
             {
-                /* If the second element of a pair is a wildcard and the first
-                 * element is not a type, we can't know in advance what the
-                 * type of the term is, so it can't provide data. */
+                /* Wildcard second with non-type first: type unknown at query
+                 * time, can't provide data. */
                 if (!ecs_get_type_info(world, ecs_pair_first(world, term->id))) {
                     nodata_term = true;
                 }
@@ -1552,9 +1562,7 @@ int flecs_query_finalize_terms(
     ECS_BIT_COND(q->flags, EcsQueryHasCacheable, 
         cacheable_terms != 0);
 
-    /* Exclude queries with order_by from setting the IsCacheable flag. This 
-     * allows the routine that evaluates entirely cached queries to use more
-     * optimized logic as it doesn't have to deal with order_by edge cases */
+    /* Exclude order_by queries from IsCacheable to simplify cache evaluation. */
     ECS_BIT_COND(q->flags, EcsQueryIsCacheable, 
         cacheable && (cacheable_terms == term_count) &&
             !desc->order_by_callback &&
@@ -1576,6 +1584,7 @@ int flecs_query_finalize_terms(
     return 0;
 }
 
+/* Populate query terms from descriptor array and optional DSL expression. */
 static
 int flecs_query_query_populate_terms(
     ecs_world_t *world,
@@ -1634,6 +1643,7 @@ error:
     return -1;
 }
 
+/* Fast-path finalization for simple queries that skip full validation. */
 bool flecs_query_finalize_simple(
     ecs_world_t *world,
     ecs_query_t *q,
@@ -1880,6 +1890,7 @@ bool flecs_query_finalize_simple(
     return true;
 }
 
+/* Copy a string token into a buffer and return pointer past the end. */
 static
 char* flecs_query_append_token(
     char *dst,
@@ -1890,6 +1901,7 @@ char* flecs_query_append_token(
     return dst + len + 1;
 }
 
+/* Consolidate term string tokens into a single contiguous buffer. */
 static
 void flecs_query_populate_tokens(
     ecs_query_impl_t *impl)
@@ -1949,10 +1961,11 @@ void flecs_query_populate_tokens(
     }
 }
 
+/* Finalize query data, validate terms, and copy arrays to heap. */
 int flecs_query_finalize_query(
     ecs_world_t *world,
     ecs_query_t *q,
-    const ecs_query_desc_t *desc)    
+    const ecs_query_desc_t *desc)
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);

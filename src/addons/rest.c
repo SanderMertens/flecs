@@ -56,6 +56,8 @@ static char *rest_last_err;
 static ecs_os_api_log_t rest_prev_log;
 static ecs_os_api_log_t rest_prev_fatal_log;
 
+/* Store previous log callback. When try=true, suppress non-fatal log output
+ * by nullifying rest_prev_log while keeping fatal logging via rest_prev_fatal_log. */
 static
 void flecs_rest_set_prev_log(
     ecs_os_api_log_t prev_log,
@@ -65,11 +67,12 @@ void flecs_rest_set_prev_log(
     rest_prev_fatal_log = prev_log;
 }
 
-static 
+/* Capture REST log messages, forwarding fatal errors to the previous handler. */
+static
 void flecs_rest_capture_log(
-    int32_t level, 
+    int32_t level,
     const char *file,
-    int32_t line, 
+    int32_t line,
     const char *msg)
 {
     (void)file; (void)line;
@@ -103,6 +106,7 @@ void flecs_rest_capture_log(
     }
 }
 
+/* Retrieve and clear the last captured REST error log message. */
 static
 char* flecs_rest_get_captured_log(void) {
     char *result = rest_last_err;
@@ -110,6 +114,7 @@ char* flecs_rest_get_captured_log(void) {
     return result;
 }
 
+/* Append a JSON error object to the reply body using a va_list. */
 static
 void flecs_reply_verror(
     ecs_http_reply_t *reply,
@@ -121,6 +126,7 @@ void flecs_reply_verror(
     ecs_strbuf_appendlit(&reply->body, "\"}");
 }
 
+/* Append a JSON error object to the reply body using variadic args. */
 static
 void flecs_reply_error(
     ecs_http_reply_t *reply,
@@ -133,6 +139,7 @@ void flecs_reply_error(
     va_end(args);
 }
 
+/* Parse a boolean query parameter from an HTTP request. */
 static
 void flecs_rest_bool_param(
     const ecs_http_request_t *req,
@@ -149,6 +156,7 @@ void flecs_rest_bool_param(
     }
 }
 
+/* Parse an integer query parameter from an HTTP request. */
 static
 void flecs_rest_int_param(
     const ecs_http_request_t *req,
@@ -161,6 +169,7 @@ void flecs_rest_int_param(
     }
 }
 
+/* Parse a string query parameter from an HTTP request. */
 static
 void flecs_rest_string_param(
     const ecs_http_request_t *req,
@@ -173,6 +182,7 @@ void flecs_rest_string_param(
     }
 }
 
+/* Parse entity-to-JSON serialization parameters from an HTTP request. */
 static
 void flecs_rest_parse_json_ser_entity_params(
     ecs_world_t *world,
@@ -196,6 +206,7 @@ void flecs_rest_parse_json_ser_entity_params(
     }
 }
 
+/* Parse iterator-to-JSON serialization parameters from an HTTP request. */
 static
 void flecs_rest_parse_json_ser_iter_params(
     ecs_iter_to_json_desc_t *desc,
@@ -220,6 +231,7 @@ void flecs_rest_parse_json_ser_iter_params(
     desc->dont_serialize_results = !results;
 }
 
+/* Handle GET request for an entity, serializing it to JSON. */
 static
 bool flecs_rest_get_entity(
     ecs_world_t *world,
@@ -249,6 +261,7 @@ bool flecs_rest_get_entity(
     return true;
 }
 
+/* Handle PUT request to create a new entity. */
 static
 bool flecs_rest_put_entity(
     ecs_world_t *world,
@@ -276,6 +289,7 @@ bool flecs_rest_put_entity(
     return true;
 }
 
+/* Handle GET request for world information, serializing it to JSON. */
 static
 bool flecs_rest_get_world(
     ecs_world_t *world,
@@ -292,6 +306,7 @@ bool flecs_rest_get_world(
     return true;
 }
 
+/* Look up an entity by its REST path, returning 404 on failure. */
 static
 ecs_entity_t flecs_rest_entity_from_path(
     ecs_world_t *world,
@@ -307,6 +322,7 @@ ecs_entity_t flecs_rest_entity_from_path(
     return e;
 }
 
+/* Handle GET request for type information, serializing it to JSON. */
 static
 bool flecs_rest_get_type_info(
     ecs_world_t *world,
@@ -333,6 +349,7 @@ bool flecs_rest_get_type_info(
     return true;
 }
 
+/* Handle GET request for a component value, serializing it to JSON. */
 static
 bool flecs_rest_get_component(
     ecs_world_t *world,
@@ -347,7 +364,7 @@ bool flecs_rest_get_component(
 
     const char *component = ecs_http_get_param(req, "component");
     if (!component) {
-        flecs_reply_error(reply, "missing component for remove endpoint");
+        flecs_reply_error(reply, "missing component for get endpoint");
         reply->code = 400;
         return true;
     }
@@ -378,6 +395,7 @@ bool flecs_rest_get_component(
     return true;
 }
 
+/* Handle PUT request to add or update a component on an entity. */
 static
 bool flecs_rest_put_component(
     ecs_world_t *world,
@@ -392,7 +410,7 @@ bool flecs_rest_put_component(
 
     const char *component = ecs_http_get_param(req, "component");
     if (!component) {
-        flecs_reply_error(reply, "missing component for remove endpoint");
+        flecs_reply_error(reply, "missing component for put endpoint");
         reply->code = 400;
         return true;
     }
@@ -436,6 +454,7 @@ bool flecs_rest_put_component(
     return true;
 }
 
+/* Handle DELETE request to remove a component from an entity. */
 static
 bool flecs_rest_delete_component(
     ecs_world_t *world,
@@ -467,6 +486,7 @@ bool flecs_rest_delete_component(
     return true;
 }
 
+/* Handle DELETE request to delete an entity from the world. */
 static
 bool flecs_rest_delete_entity(
     ecs_world_t *world,
@@ -483,6 +503,7 @@ bool flecs_rest_delete_entity(
     return true;
 }
 
+/* Handle PUT request to toggle an entity or component on or off. */
 static
 bool flecs_rest_toggle(
     ecs_world_t *world,
@@ -529,6 +550,7 @@ bool flecs_rest_toggle(
     return true;
 }
 
+/* Handle PUT request to create or update a script entity. */
 static
 bool flecs_rest_script(
     ecs_world_t *world,
@@ -601,7 +623,7 @@ bool flecs_rest_script(
         .code = code
     });
 
-    /* Refetch in case it moved around */
+    /* Refetch: ecs_script() may have moved the component */
     s = ecs_get(world, script, EcsScript);
 
     if (!s || s->error) {
@@ -627,6 +649,7 @@ bool flecs_rest_script(
 #endif
 }
 
+/* Post-frame callback to shrink world memory. */
 static
 void flecs_rest_shrink_memory(
     ecs_world_t *world,
@@ -636,6 +659,7 @@ void flecs_rest_shrink_memory(
     ecs_shrink(world);
 }
 
+/* Handle PUT request to execute a named action. */
 static
 bool flecs_rest_action(
     ecs_world_t *world,
@@ -662,6 +686,7 @@ bool flecs_rest_action(
     return true;
 }
 
+/* Set the reply error body from the last captured log message. */
 static
 void flecs_rest_reply_set_captured_log(
     ecs_http_reply_t *reply)
@@ -677,6 +702,7 @@ void flecs_rest_reply_set_captured_log(
     reply->code = 400;
 }
 
+/* Serialize a query iterator result to the HTTP reply body as JSON. */
 static
 void flecs_rest_iter_to_reply(
     const ecs_http_request_t* req,
@@ -707,6 +733,7 @@ void flecs_rest_iter_to_reply(
     flecs_rest_int_param(req, "offset", &offset);
 }
 
+/* Handle GET request for a named existing query entity. */
 static
 bool flecs_rest_reply_existing_query(
     ecs_world_t *world,
@@ -777,6 +804,7 @@ bool flecs_rest_reply_existing_query(
     return true;
 }
 
+/* Handle GET request for a query, either by name or expression. */
 static
 bool flecs_rest_get_query(
     ecs_world_t *world,
@@ -808,7 +836,7 @@ bool flecs_rest_get_query(
     if (!q) {
         flecs_rest_reply_set_captured_log(reply);
         if (try) {
-            /* If client is trying queries, don't spam console with errors */
+            /* Deduplicate errors when client is testing queries */
             reply->code = 200;
         }
     } else {
@@ -825,6 +853,7 @@ bool flecs_rest_get_query(
 
 #ifdef FLECS_STATS
 
+/* Append a time-windowed array of float values to a JSON reply. */
 static
 void flecs_rest_array_append_(
     ecs_strbuf_t *reply,
@@ -851,6 +880,7 @@ void flecs_rest_array_append_(
 #define flecs_rest_array_append(reply, field, values, t)\
     flecs_rest_array_append_(reply, field, sizeof(field) - 1, values, t)
 
+/* Append a gauge metric (avg, min, max) to a JSON reply. */
 static
 void flecs_rest_gauge_append(
     ecs_strbuf_t *reply,
@@ -879,6 +909,7 @@ void flecs_rest_gauge_append(
     ecs_strbuf_list_pop(reply, "}");
 }
 
+/* Append a counter metric to a JSON reply. */
 static
 void flecs_rest_counter_append(
     ecs_strbuf_t *reply,
@@ -904,6 +935,7 @@ void flecs_rest_counter_append(
 #define ECS_COUNTER_APPEND(reply, s, field, brief)\
     ECS_COUNTER_APPEND_T(reply, s, field, (s)->t, brief)
 
+/* Serialize world statistics to a JSON reply. */
 static
 void flecs_world_stats_to_json(
     ecs_strbuf_t *reply,
@@ -927,7 +959,7 @@ void flecs_world_stats_to_json(
     ECS_COUNTER_APPEND(reply, stats, commands.delete_count, "Delete commands executed");
     ECS_COUNTER_APPEND(reply, stats, commands.clear_count, "Clear commands executed");
     ECS_COUNTER_APPEND(reply, stats, commands.set_count, "Set commands executed");
-    ECS_COUNTER_APPEND(reply, stats, commands.ensure_count, "Get_mut commands executed");
+    ECS_COUNTER_APPEND(reply, stats, commands.ensure_count, "Ensure commands executed");
     ECS_COUNTER_APPEND(reply, stats, commands.modified_count, "Modified commands executed");
     ECS_COUNTER_APPEND(reply, stats, commands.other_count, "Misc commands executed");
     ECS_COUNTER_APPEND(reply, stats, commands.discard_count, "Commands for already deleted entities");
@@ -981,6 +1013,7 @@ void flecs_world_stats_to_json(
     ecs_strbuf_list_pop(reply, "}");
 }
 
+/* Serialize a single system's statistics to a JSON reply. */
 static
 void flecs_system_stats_to_json(
     ecs_world_t *world,
@@ -1006,6 +1039,7 @@ void flecs_system_stats_to_json(
     ecs_strbuf_list_pop(reply, "}");
 }
 
+/* Serialize sync point statistics to a JSON reply. */
 static
 void flecs_sync_stats_to_json(
     ecs_http_reply_t *reply,
@@ -1026,6 +1060,7 @@ void flecs_sync_stats_to_json(
     ecs_strbuf_list_pop(&reply->body, "}");
 }
 
+/* Serialize statistics for all systems to a JSON reply. */
 static
 void flecs_all_systems_stats_to_json(
     ecs_world_t *world,
@@ -1055,6 +1090,7 @@ void flecs_all_systems_stats_to_json(
     ecs_strbuf_list_pop(&reply->body, "]");
 }
 
+/* Serialize pipeline statistics to a JSON reply. */
 static
 void flecs_pipeline_stats_to_json(
     ecs_world_t *world,
@@ -1128,6 +1164,7 @@ noresults:
     ecs_strbuf_appendlit(&reply->body, "[]");
 }
 
+/* Handle GET request for world or pipeline statistics. */
 static
 bool flecs_rest_get_stats(
     ecs_world_t *world,
@@ -1167,6 +1204,7 @@ bool flecs_rest_get_stats(
     }
 }
 #else
+/* Stub for stats endpoint when FLECS_STATS is not enabled. */
 static
 bool flecs_rest_get_stats(
     ecs_world_t *world,
@@ -1180,6 +1218,7 @@ bool flecs_rest_get_stats(
 }
 #endif
 
+/* Append a type lifecycle hook status to a JSON reply. */
 static
 void flecs_rest_append_type_hook(
     ecs_strbuf_t *reply,
@@ -1199,6 +1238,7 @@ void flecs_rest_append_type_hook(
     }
 }
 
+/* Append component memory usage information to a JSON reply. */
 static
 void flecs_rest_append_component_memory(
     ecs_world_t *world,
@@ -1236,6 +1276,7 @@ void flecs_rest_append_component_memory(
 #endif
 }
 
+/* Append component trait flags as a JSON array to a reply. */
 static
 void flecs_rest_append_component_traits(
     ecs_component_record_t *cr,
@@ -1309,6 +1350,7 @@ void flecs_rest_append_component_traits(
     ecs_strbuf_list_pop(reply, "]");
 }
 
+/* Append full component information including tables, types, and memory to a JSON reply. */
 static
 void flecs_rest_append_component(
     ecs_world_t *world,
@@ -1412,6 +1454,7 @@ void flecs_rest_append_component(
     ecs_strbuf_list_pop(reply, "}");
 }
 
+/* Handle GET request for all registered components. */
 static
 bool flecs_rest_get_components(
     ecs_world_t *world,
@@ -1431,6 +1474,7 @@ bool flecs_rest_get_components(
     return true;
 }
 
+/* Append query memory usage information to a JSON reply. */
 static
 void flecs_rest_append_query_memory(
     ecs_world_t *world,
@@ -1456,6 +1500,7 @@ void flecs_rest_append_query_memory(
 #endif
 }
 
+/* Append full query information including plan, stats, and memory to a JSON reply. */
 static
 void flecs_rest_append_query(
     ecs_world_t *world,
@@ -1566,6 +1611,7 @@ void flecs_rest_append_query(
     ecs_strbuf_list_pop(reply, "}");
 }
 
+/* Handle GET request for all registered queries and observers. */
 static
 bool flecs_rest_get_queries(
     ecs_world_t *world,
@@ -1617,6 +1663,7 @@ bool flecs_rest_get_queries(
     return true;
 }
 
+/* Append a table's type (component ids) as a JSON array to a reply. */
 static
 void flecs_rest_reply_table_append_type(
     ecs_world_t *world,
@@ -1635,6 +1682,7 @@ void flecs_rest_reply_table_append_type(
     ecs_strbuf_list_pop(reply, "]");
 }
 
+/* Append table memory usage information to a JSON reply. */
 static
 void flecs_rest_reply_table_append_memory(
     const ecs_world_t *world,
@@ -1668,6 +1716,7 @@ void flecs_rest_reply_table_append_memory(
 #endif
 }
 
+/* Append a single table's information to a JSON reply. */
 static
 void flecs_rest_reply_table_append(
     ecs_world_t *world,
@@ -1689,6 +1738,7 @@ void flecs_rest_reply_table_append(
     ecs_strbuf_list_pop(reply, "}");
 }
 
+/* Handle GET request for all tables in the world. */
 static
 bool flecs_rest_get_tables(
     ecs_world_t *world,
@@ -1709,6 +1759,7 @@ bool flecs_rest_get_tables(
     return true;
 }
 
+/* Convert a command kind enum value to its string representation. */
 static
 const char* flecs_rest_cmd_kind_to_str(
     ecs_cmd_kind_t kind)
@@ -1737,6 +1788,7 @@ const char* flecs_rest_cmd_kind_to_str(
     }
 }
 
+/* Check whether a command kind includes an associated id. */
 static
 bool flecs_rest_cmd_has_id(
     const ecs_cmd_t *cmd)
@@ -1767,6 +1819,7 @@ bool flecs_rest_cmd_has_id(
     }
 }
 
+/* Free all captured command data from the REST server. */
 static
 void flecs_rest_server_garbage_collect_all(
     ecs_rest_ctx_t *impl)
@@ -1788,6 +1841,7 @@ void flecs_rest_server_garbage_collect_all(
     ecs_map_fini(&impl->cmd_captures);
 }
 
+/* Remove command captures that exceed the retention window. */
 static
 void flecs_rest_server_garbage_collect(
     ecs_world_t *world,
@@ -1828,6 +1882,7 @@ void flecs_rest_server_garbage_collect(
     }
 }
 
+/* Serialize a single command to JSON. */
 static
 void flecs_rest_cmd_to_json(
     ecs_world_t *world,
@@ -1857,9 +1912,9 @@ void flecs_rest_cmd_to_json(
     }
 
     if (cmd->kind == EcsCmdBulkNew) {
-        /* Todo */
+        /* BulkNew serialization not yet implemented */
     } else if (cmd->kind == EcsCmdEvent) {
-        /* Todo */
+        /* Event serialization not yet implemented */
     } else {
         if (cmd->entity) {
             ecs_strbuf_list_appendlit(buf, "\"entity\":\"");
@@ -1884,6 +1939,7 @@ void flecs_rest_cmd_to_json(
     ecs_strbuf_list_pop(buf, "}");
 }
 
+/* Callback invoked on command queue sync to capture commands for REST inspection. */
 static
 void flecs_rest_on_commands(
     const ecs_stage_t *stage,
@@ -1928,6 +1984,7 @@ void flecs_rest_on_commands(
     }
 }
 
+/* Handle GET request to start capturing commands for the current frame. */
 static
 bool flecs_rest_get_commands_capture(
     ecs_world_t *world,
@@ -1950,12 +2007,13 @@ bool flecs_rest_get_commands_capture(
     world->on_commands = flecs_rest_on_commands;
     world->on_commands_ctx = capture;
 
-    /* Run garbage collection so that requests don't linger */
+    /* Evict expired command captures */
     flecs_rest_server_garbage_collect(world, impl);
 
     return true;
 }
 
+/* Handle GET request to retrieve captured commands for a specific frame. */
 static
 bool flecs_rest_get_commands_request(
     ecs_world_t *world,
@@ -1999,6 +2057,7 @@ bool flecs_rest_get_commands_request(
     return true;
 }
 
+/* Route incoming HTTP requests to the appropriate REST endpoint handler. */
 static
 bool flecs_rest_reply(
     const ecs_http_request_t* req,
@@ -2044,7 +2103,7 @@ bool flecs_rest_reply(
         } else if (!ecs_os_strncmp(req->path, "components", 10)) {
             return flecs_rest_get_components(world, req, reply);
 
-        /* Tables endpoint */
+        /* Queries endpoint */
         } else if (!ecs_os_strncmp(req->path, "queries", 7)) {
             return flecs_rest_get_queries(world, req, reply);
 
@@ -2062,7 +2121,7 @@ bool flecs_rest_reply(
         }
 
     } else if (req->method == EcsHttpPut) {
-        /* Component PUT endpoint */
+        /* Entity PUT endpoint */
         if (!ecs_os_strncmp(req->path, "entity/", 7)) {
             return flecs_rest_put_entity(world, reply, &req->path[7]);
 
@@ -2070,7 +2129,7 @@ bool flecs_rest_reply(
         } else if (!ecs_os_strncmp(req->path, "component/", 10)) {
             return flecs_rest_put_component(world, req, reply, &req->path[10]);
 
-        /* Enable endpoint */
+        /* Toggle endpoint */
         } else if (!ecs_os_strncmp(req->path, "toggle/", 7)) {
             return flecs_rest_toggle(world, req, reply, &req->path[7]);
 
@@ -2118,7 +2177,7 @@ ecs_http_server_t* ecs_rest_server_init(
     srv_ctx->srv = srv;
     srv_ctx->rc = 1;
 
-    /* Set build info on world so clients know which version they're using */
+    /* Expose build info so REST clients can query the Flecs version */
     ecs_id_t build_info = ecs_lookup(world, "flecs.core.BuildInfo");
     if (build_info) {
         const ecs_build_info_t *bi = ecs_get_build_info();
@@ -2137,6 +2196,7 @@ void ecs_rest_server_fini(
     ecs_http_server_fini(srv);
 }
 
+/* Observer callback to create and start a REST server when EcsRest is set. */
 static
 void flecs_on_set_rest(ecs_iter_t *it) {
     EcsRest *rest = ecs_field(it, EcsRest, 0);
@@ -2167,6 +2227,7 @@ void flecs_on_set_rest(ecs_iter_t *it) {
     }
 }
 
+/* System callback to dequeue pending REST HTTP requests each frame. */
 static
 void DequeueRest(ecs_iter_t *it) {
     EcsRest *rest = ecs_field(it, EcsRest, 0);
@@ -2191,6 +2252,7 @@ void DequeueRest(ecs_iter_t *it) {
     } 
 }
 
+/* Observer callback to stop or start REST servers when the module is toggled. */
 static
 void DisableRest(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
@@ -2220,6 +2282,7 @@ void DisableRest(ecs_iter_t *it) {
     }
 }
 
+/* Import the REST module, registering REST components, systems, and observers. */
 void FlecsRestImport(
     ecs_world_t *world)
 {

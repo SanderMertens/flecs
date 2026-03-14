@@ -1,6 +1,6 @@
 /**
- * @file addons/script/query_parser.c
- * @brief Script grammar parser.
+ * @file addons/query_dsl/parser.c
+ * @brief Query DSL parser.
  */
 
 #include "flecs.h"
@@ -29,12 +29,12 @@
     case '\n':\
     case '\0'
 
-// $this ==
+/* Parse an equality or match predicate expression. */
 static
 const char* flecs_term_parse_equality_pred(
     ecs_parser_t *parser,
     const char *pos,
-    ecs_entity_t pred) 
+    ecs_entity_t pred)
 {
     ParserBegin;
 
@@ -47,24 +47,22 @@ const char* flecs_term_parse_equality_pred(
     parser->term->first.id = pred;
 
     Parse(
-        // $this == foo
-        //          ^
+        /* $this == foo */
+        /*          ^   */
         case EcsTokTermIdentifier: {
             parser->term->second.name = Token(0);
             Parse( case EcsTokEndOfTerm: EndOfRule; )
         }
 
-        // $this == "foo"
-        //          ^
+        /* $this == "foo" */
+        /*          ^     */
         case EcsTokString: {
             parser->term->second.name = Token(0);
             parser->term->second.id = EcsIsName;
 
             if (pred == EcsPredMatch) {
                 if (Token(0)[0] == '!') {
-                    /* If match expression starts with !, set Not operator. The
-                     * reason the ! is embedded in the expression is because 
-                     * there is only a single match (~=) operator. */
+                    /* Leading '!' negates the match */
                     parser->term->second.name ++;
                     parser->term->oper = EcsNot;
                 }
@@ -80,6 +78,7 @@ const char* flecs_term_parse_equality_pred(
     ParserEnd;
 }
 
+/* Parse a traversal flag token and return the corresponding entity flag. */
 static
 ecs_entity_t flecs_query_parse_trav_flags(
     const char *tok)
@@ -91,26 +90,27 @@ ecs_entity_t flecs_query_parse_trav_flags(
     else return 0;
 }
 
+/* Parse traversal flags and optional traversal relationship for a term reference. */
 static
 const char* flecs_term_parse_trav(
     ecs_parser_t *parser,
     ecs_term_ref_t *ref,
-    const char *pos) 
+    const char *pos)
 {
     ParserBegin;
 
     Loop(
-        // self
+        /* self */
         Parse_1(EcsTokIdentifier,
             ref->id |= flecs_query_parse_trav_flags(Token(0));
 
             LookAhead(
-                // self|
+                /* self| */
                 case '|':
                     pos = lookahead;
                     continue;
 
-                // self IsA
+                /* self IsA */
                 case EcsTokIdentifier:
                     pos = lookahead;
                     parser->term->trav = ecs_lookup(
@@ -131,7 +131,7 @@ const char* flecs_term_parse_trav(
     ParserEnd;
 }
 
-// Position(
+/* Parse a term argument at the given argument index. */
 static
 const char* flecs_term_parse_arg(
     ecs_parser_t *parser,
@@ -142,11 +142,11 @@ const char* flecs_term_parse_arg(
 
     ecs_term_ref_t *ref = NULL;
 
-    // Position(src
+    /* Position(src */
     if (arg == 0) {
         ref = &parser->term->src;
 
-    // Position(src, tgt
+    /* Position(src, tgt */
     } else if (arg == 1) {
         ref = &parser->term->second;
     } else {
@@ -163,15 +163,15 @@ const char* flecs_term_parse_arg(
     )
 
     if (is_trav_flag) {
-        // Position(self|up
-        //          ^
+        /* Position(self|up */
+        /*          ^ */
         pos = flecs_term_parse_trav(parser, ref, pos);
         if (!pos) {
             goto error;
         }
     } else {
-        // Position(src
-        //          ^
+        /* Position(src */
+        /*          ^ */
         Parse(
             case '@': {
                 parser->term->id = ECS_VALUE_PAIR;
@@ -193,8 +193,8 @@ const char* flecs_term_parse_arg(
             case EcsTokTermIdentifier: {
                 ref->name = Token(0);
 
-                // Position(src|
-                //          ^
+                /* Position(src| */
+                /*          ^ */
                 {
                     LookAhead_1('|',
                         pos = lookahead;
@@ -203,8 +203,8 @@ const char* flecs_term_parse_arg(
                             goto error;
                         }
 
-                        // Position(src|up IsA
-                        //          ^
+                        /* Position(src|up IsA */
+                        /*          ^ */
                         LookAhead_1(EcsTokIdentifier,
                             pos = lookahead;
                             parser->term->trav = ecs_lookup(
@@ -223,8 +223,8 @@ const char* flecs_term_parse_arg(
     }
 
     Parse(
-        // Position(src,
-        //          ^
+        /* Position(src, */
+        /*          ^ */
         case ',':
             if ((arg > 1) && parser->extra_oper != EcsAnd) {
                 Error("cannot mix operators in extra term arguments");
@@ -232,8 +232,8 @@ const char* flecs_term_parse_arg(
             parser->extra_oper = EcsAnd;
             return flecs_term_parse_arg(parser, pos, arg + 1);
 
-        // Position(src, second ||
-        //          ^
+        /* Position(src, second || */
+        /*          ^ */
         case EcsTokOr:
             if ((arg > 1) && parser->extra_oper != EcsOr) {
                 Error("cannot mix operators in extra term arguments");
@@ -241,8 +241,8 @@ const char* flecs_term_parse_arg(
             parser->extra_oper = EcsOr;
             return flecs_term_parse_arg(parser, pos, arg + 1);
 
-        // Position(src)
-        //          ^
+        /* Position(src) */
+        /*          ^ */
         case ')':
             Parse(
                 case EcsTokEndOfTerm:
@@ -253,11 +253,11 @@ const char* flecs_term_parse_arg(
     ParserEnd;
 }
 
-// Position
+/* Parse the identifier portion of a term after the first token. */
 static
 const char* flecs_term_parse_id(
     ecs_parser_t *parser,
-    const char *pos) 
+    const char *pos)
 {
     ParserBegin;
 
@@ -277,14 +277,14 @@ const char* flecs_term_parse_id(
             return flecs_term_parse_equality_pred(
                 parser, pos, EcsPredMatch);
 
-        // Position|
+        /* Position| */
         case '|': {
             pos = flecs_term_parse_trav(parser, &parser->term->first, pos);
             if (!pos) {
                 goto error;
             }
 
-            // Position|self(
+            /* Position|self( */
             Parse(
                 case '(':
                     return flecs_term_parse_arg(parser, pos, 0);
@@ -293,9 +293,9 @@ const char* flecs_term_parse_id(
             )
         }
 
-        // Position(
+        /* Position( */
         case '(': {
-            // Position()
+            /* Position() */
             LookAhead_1(')',
                 pos = lookahead;
                 parser->term->src.id = EcsIsEntity;
@@ -316,21 +316,21 @@ const char* flecs_term_parse_id(
     ParserEnd;
 }
 
-// (
+/* Parse a pair expression enclosed in parentheses. */
 static const char* flecs_term_parse_pair(
     ecs_parser_t *parser,
     const char *pos)
 {
     ParserBegin;
 
-    // (Position
-    //  ^
+    /* (Position */
+    /*  ^ */
     Parse(
         case EcsTokTermIdentifier: {
             parser->term->first.name = Token(0);
 
             LookAhead_1('|',
-                // (Position|self
+                /* (Position|self */
                 pos = lookahead;
                 pos = flecs_term_parse_trav(
                     parser, &parser->term->first, pos);
@@ -339,7 +339,7 @@ static const char* flecs_term_parse_pair(
                 }
             )
 
-            // (Position,
+            /* (Position, */
             Parse_1(',',
                 return flecs_term_parse_arg(parser, pos, 1);
             )
@@ -349,12 +349,12 @@ static const char* flecs_term_parse_pair(
     ParserEnd;
 }
 
-// AND
+/* Parse term flags such as operator modifiers and auto-override/toggle. */
 static
 const char* flecs_term_parse_flags(
     ecs_parser_t *parser,
     const char *token_0,
-    const char *pos) 
+    const char *pos)
 {
     ecs_assert(token_0 != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -364,25 +364,25 @@ const char* flecs_term_parse_flags(
     int16_t oper = 0;
     ecs_term_t *term = parser->term;
 
-    // AND
+    /* AND */
     if      (!ecs_os_strcmp(token_0, "and"))      oper = EcsAndFrom;
     else if (!ecs_os_strcmp(token_0, "or"))       oper = EcsOrFrom;
     else if (!ecs_os_strcmp(token_0, "not"))      oper = EcsNotFrom;
     else if (!ecs_os_strcmp(token_0, "auto_override")) flag = ECS_AUTO_OVERRIDE;
     else if (!ecs_os_strcmp(token_0, "toggle"))   flag = ECS_TOGGLE;
     else {
-        // Position
+        /* Position */
         term->first.name = token_0;
         return flecs_term_parse_id(parser, pos);
     }
 
     if (oper || flag) {
-        // and |
-        //     ^
+        /* and | */
+        /*     ^ */
         Parse_1('|', 
             Parse(
-                // and | Position
-                //     ^
+                /* and | Position */
+                /*     ^ */
                 case EcsTokTermIdentifier: { 
                     if (oper) {
                         term->oper = oper;
@@ -395,8 +395,8 @@ const char* flecs_term_parse_flags(
                     return flecs_term_parse_id(parser, pos);
                 }
 
-                // and | (
-                //     ^
+                /* and | ( */
+                /*     ^ */
                 case '(': {
                     return flecs_term_parse_pair(parser, pos);
                 }
@@ -407,7 +407,7 @@ const char* flecs_term_parse_flags(
     ParserEnd;
 }
 
-// !
+/* Parse the operand following a unary operator. */
 static
 const char* flecs_term_parse_unary(
     ecs_parser_t *parser,
@@ -416,12 +416,12 @@ const char* flecs_term_parse_unary(
     ParserBegin;
 
     Parse(
-        // !(
+        /* !( */
         case '(': {
             return flecs_term_parse_pair(parser, pos);
         }
 
-        // !{
+        /* !{ */
         case '{': {
             parser->term->first.id = EcsScopeOpen;
             parser->term->src.id = EcsIsEntity;
@@ -429,8 +429,8 @@ const char* flecs_term_parse_unary(
             EndOfRule;
         }
 
-        // !Position
-        //  ^
+        /* !Position */
+        /*  ^ */
         case EcsTokTermIdentifier: {
             parser->term->first.name = Token(0);
             return flecs_term_parse_id(parser, pos);
@@ -440,7 +440,7 @@ const char* flecs_term_parse_unary(
     ParserEnd;
 }
 
-// [
+/* Parse an inout modifier enclosed in square brackets. */
 static
 const char* flecs_term_parse_inout(
     ecs_parser_t *parser,
@@ -450,8 +450,8 @@ const char* flecs_term_parse_inout(
 
     ecs_term_t *term = parser->term;
 
-    // [inout]
-    //  ^
+    /* [inout] */
+    /*  ^ */
     Parse_2(EcsTokIdentifier, ']',
         if      (!ecs_os_strcmp(Token(0), "default")) term->inout = EcsInOutDefault;
         else if (!ecs_os_strcmp(Token(0), "none"))    term->inout = EcsInOutNone;
@@ -461,14 +461,14 @@ const char* flecs_term_parse_inout(
         else if (!ecs_os_strcmp(Token(0), "out"))     term->inout = EcsOut;
 
         Parse(
-            // [inout] Position
-            //  ^
+            /* [inout] Position */
+            /*  ^ */
             case EcsTokTermIdentifier: { 
                 return flecs_term_parse_flags(parser, Token(2), pos);
             }
 
-            // [inout] !Position
-            //  ^
+            /* [inout] !Position */
+            /*  ^ */
             case '!':
                 term->oper = EcsNot;
                 return flecs_term_parse_unary(parser, pos);
@@ -476,8 +476,8 @@ const char* flecs_term_parse_inout(
                 term->oper = EcsOptional;
                 return flecs_term_parse_unary(parser, pos);
 
-            // [inout] (
-            //  ^
+            /* [inout] ( */
+            /*  ^ */
             case '(': {
                 return flecs_term_parse_pair(parser, pos);
             }
@@ -487,10 +487,11 @@ const char* flecs_term_parse_inout(
     ParserEnd;
 }
 
+/* Parse a single query term from the input expression. */
 static
 const char* flecs_query_term_parse(
     ecs_parser_t *parser,
-    const char *pos) 
+    const char *pos)
 {
     ParserBegin;
 
@@ -528,6 +529,7 @@ const char* flecs_query_term_parse(
     ParserEnd;
 }
 
+/* Parse a complete query DSL expression into an array of terms. */
 int flecs_terms_parse(
     ecs_world_t *world,
     const char *name,
@@ -588,10 +590,7 @@ int flecs_terms_parse(
 
         term_count ++;
 
-        /* Unpack terms with more than two args into multiple terms so that:
-         *   Rel(X, Y, Z)
-         *  becomes:
-         *   Rel(X, Y), Rel(Y, Z) */
+        /* Expand multi-arg terms: Rel(X, Y, Z) -> Rel(X, Y), Rel(Y, Z) */
         int32_t arg = 0;
         while (ecs_term_ref_is_set(&extra_args[arg ++])) {
             ecs_assert(arg <= FLECS_TERM_ARG_COUNT_MAX, 
@@ -638,6 +637,7 @@ error:
     return -1;
 }
 
+/* Parse a single term from a query DSL expression string. */
 const char* flecs_term_parse(
     ecs_world_t *world,
     const char *name,
@@ -668,6 +668,7 @@ const char* flecs_term_parse(
     return flecs_query_term_parse(&parser, expr);
 }
 
+/* Parse an identifier expression and resolve it to an entity id. */
 const char* flecs_id_parse(
     const ecs_world_t *world,
     const char *name,
@@ -683,7 +684,7 @@ const char* flecs_id_parse(
     ecs_parser_t parser = {
         .name = name,
         .code = expr,
-        .world = ECS_CONST_CAST(ecs_world_t*, world),  /* Safe, won't modify */
+        .world = ECS_CONST_CAST(ecs_world_t*, world),  /* Read-only usage */
         .token_cur = token_buffer
     };
 
@@ -726,6 +727,7 @@ const char* flecs_id_parse(
     return result;
 }
 
+/* Parse a single query argument of the form "variable:value". */
 static
 const char* flecs_query_arg_parse(
     ecs_parser_t *parser,
@@ -754,6 +756,7 @@ const char* flecs_query_arg_parse(
     ParserEnd;
 }
 
+/* Parse a comma-separated list of query arguments. */
 static
 const char* flecs_query_args_parse(
     ecs_parser_t *parser,

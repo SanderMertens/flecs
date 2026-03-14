@@ -16,7 +16,7 @@ extern "C" {
 typedef struct ecs_bitset_t {
     uint64_t *data;           /**< Array of 64-bit words storing the bits. */
     int32_t count;            /**< Number of bits in the bitset. */
-    ecs_size_t size;          /**< Allocated capacity in 64-bit words. */
+    ecs_size_t size;          /**< Allocated capacity in bits (rounded to 64). */
 } ecs_bitset_t;
 
 /** Initialize a bitset.

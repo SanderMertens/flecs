@@ -19,7 +19,7 @@
 #ifndef FLECS_JOURNAL_H
 #define FLECS_JOURNAL_H
 
-/**
+/*
  * @defgroup c_addons_journal Journal
  * @ingroup c_addons
  * Journaling addon (disabled by default).
@@ -28,14 +28,11 @@
  * @{
  */
 
-/* Trace when log level is at or higher than level */
 #define FLECS_JOURNAL_LOG_LEVEL (0)
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-/* Journaling API, meant to be used by internals. */
 
 typedef enum ecs_journal_kind_t {
     EcsJournalNew,
@@ -66,7 +63,7 @@ void flecs_journal_end(void);
 #ifdef __cplusplus
 }
 #endif // __cplusplus
-/** @} */
+/* @} */
 #endif // FLECS_JOURNAL_H
 #else
 #define flecs_journal_begin(...)

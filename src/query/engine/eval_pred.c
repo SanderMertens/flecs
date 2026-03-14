@@ -1,10 +1,11 @@
 /**
  * @file query/engine/eval_pred.c
- * @brief Equality predicate evaluation.
+ * @brief Equality/match predicate evaluation ($var == value, $var ~= "pattern").
  */
 
 #include "../../private_api.h"
 
+/* Retrieve the name argument from the query term's second operand. */
 static
 const char* flecs_query_name_arg(
     const ecs_query_op_t *op,
@@ -15,6 +16,7 @@ const char* flecs_query_name_arg(
     return term->second.name;
 }
 
+/* Compare two table ranges for overlap. */
 static
 bool flecs_query_compare_range(
     const ecs_table_range_t *l,
@@ -40,6 +42,7 @@ bool flecs_query_compare_range(
     return true;
 }
 
+/* Evaluate equality predicate against a known table range. */
 static
 bool flecs_query_pred_eq_w_range(
     const ecs_query_op_t *op,
@@ -75,6 +78,7 @@ bool flecs_query_pred_eq_w_range(
     }
 }
 
+/* Evaluate equality predicate for query source variable. */
 bool flecs_query_pred_eq(
     const ecs_query_op_t *op,
     bool redo,
@@ -82,7 +86,7 @@ bool flecs_query_pred_eq(
 {
     uint64_t written = ctx->written[ctx->op_index]; (void)written;
     ecs_assert(flecs_ref_is_written(op, &op->second, EcsQuerySecond, written),
-        ECS_INTERNAL_ERROR, 
+        ECS_INTERNAL_ERROR,
             "invalid instruction sequence: uninitialized eq operand");
 
     ecs_table_range_t r = flecs_query_get_range(
@@ -90,6 +94,7 @@ bool flecs_query_pred_eq(
     return flecs_query_pred_eq_w_range(op, redo, ctx, r);
 }
 
+/* Evaluate equality predicate by entity name lookup. */
 bool flecs_query_pred_eq_name(
     const ecs_query_op_t *op,
     bool redo,
@@ -98,7 +103,6 @@ bool flecs_query_pred_eq_name(
     const char *name = flecs_query_name_arg(op, ctx);
     ecs_entity_t e = ecs_lookup(ctx->world, name);
     if (!e) {
-        /* Entity doesn't exist */
         return false;
     }
 
@@ -106,6 +110,7 @@ bool flecs_query_pred_eq_name(
     return flecs_query_pred_eq_w_range(op, redo, ctx, r);
 }
 
+/* Evaluate inequality predicate against a known table range. */
 bool flecs_query_pred_neq_w_range(
     const ecs_query_op_t *op,
     bool redo,
@@ -183,6 +188,7 @@ bool flecs_query_pred_neq_w_range(
     }
 }
 
+/* Match entity names against a substring pattern. */
 static
 bool flecs_query_pred_match(
     const ecs_query_op_t *op,
@@ -223,7 +229,6 @@ bool flecs_query_pred_match(
         ecs_assert(op_ctx->name_col != -1, ECS_INTERNAL_ERROR, NULL);
     } else {
         if (op_ctx->name_col == -1) {
-            /* Table has no name */
             return false;
         }
 
@@ -260,6 +265,7 @@ bool flecs_query_pred_match(
     return true;
 }
 
+/* Evaluate name substring match equality predicate. */
 bool flecs_query_pred_eq_match(
     const ecs_query_op_t *op,
     bool redo,
@@ -268,6 +274,7 @@ bool flecs_query_pred_eq_match(
     return flecs_query_pred_match(op, redo, ctx, false);
 }
 
+/* Evaluate name substring match inequality predicate. */
 bool flecs_query_pred_neq_match(
     const ecs_query_op_t *op,
     bool redo,
@@ -276,6 +283,7 @@ bool flecs_query_pred_neq_match(
     return flecs_query_pred_match(op, redo, ctx, true);
 }
 
+/* Evaluate inequality predicate for query source variable. */
 bool flecs_query_pred_neq(
     const ecs_query_op_t *op,
     bool redo,
@@ -283,7 +291,7 @@ bool flecs_query_pred_neq(
 {
     uint64_t written = ctx->written[ctx->op_index]; (void)written;
     ecs_assert(flecs_ref_is_written(op, &op->second, EcsQuerySecond, written),
-        ECS_INTERNAL_ERROR, 
+        ECS_INTERNAL_ERROR,
             "invalid instruction sequence: uninitialized neq operand");
 
     ecs_table_range_t r = flecs_query_get_range(
@@ -291,6 +299,7 @@ bool flecs_query_pred_neq(
     return flecs_query_pred_neq_w_range(op, redo, ctx, r);
 }
 
+/* Evaluate inequality predicate by entity name lookup. */
 bool flecs_query_pred_neq_name(
     const ecs_query_op_t *op,
     bool redo,
@@ -299,7 +308,6 @@ bool flecs_query_pred_neq_name(
     const char *name = flecs_query_name_arg(op, ctx);
     ecs_entity_t e = ecs_lookup(ctx->world, name);
     if (!e) {
-        /* Entity doesn't exist */
         return true && !redo;
     }
 

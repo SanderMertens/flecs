@@ -1,13 +1,6 @@
 /**
  * @file datastructures/stack_allocator.c
- * @brief Stack allocator.
- * 
- * The stack allocator enables pushing and popping values to a stack, and has
- * a lower overhead when compared to block allocators. A stack allocator is a
- * good fit for small temporary allocations.
- * 
- * The stack allocator allocates memory in pages. If the requested size of an
- * allocation exceeds the page size, a regular allocator is used instead.
+ * @brief Page-based stack allocator for small temporary allocations.
  */
 
 #include "../private_api.h"
@@ -15,6 +8,7 @@
 int64_t ecs_stack_allocator_alloc_count = 0;
 int64_t ecs_stack_allocator_free_count = 0;
 
+/* Allocate a new stack page. */
 static
 ecs_stack_page_t* flecs_stack_page_new(uint32_t page_id) {
     ecs_stack_page_t *result = ecs_os_malloc(
@@ -27,8 +21,9 @@ ecs_stack_page_t* flecs_stack_page_new(uint32_t page_id) {
     return result;
 }
 
+/* Allocate aligned memory from the stack. */
 void* flecs_stack_alloc(
-    ecs_stack_t *stack, 
+    ecs_stack_t *stack,
     ecs_size_t size,
     ecs_size_t align)
 {
@@ -74,8 +69,9 @@ done:
     return result;
 }
 
+/* Allocate zero-initialized aligned memory from the stack. */
 void* flecs_stack_calloc(
-    ecs_stack_t *stack, 
+    ecs_stack_t *stack,
     ecs_size_t size,
     ecs_size_t align)
 {
@@ -84,6 +80,7 @@ void* flecs_stack_calloc(
     return ptr;
 }
 
+/* Free oversized allocation that exceeded page size. */
 void flecs_stack_free(
     void *ptr,
     ecs_size_t size)
@@ -93,6 +90,7 @@ void flecs_stack_free(
     }
 }
 
+/* Get a cursor marking the current stack position for later restore. */
 ecs_stack_cursor_t* flecs_stack_get_cursor(
     ecs_stack_t *stack)
 {
@@ -124,6 +122,7 @@ ecs_stack_cursor_t* flecs_stack_get_cursor(
     "a stack allocator leak is most likely due to an unterminated " \
     "iteration: call ecs_iter_fini to fix"
 
+/* Restore stack to a previously saved cursor position. */
 void flecs_stack_restore_cursor(
     ecs_stack_t *stack,
     ecs_stack_cursor_t *cursor)
@@ -145,12 +144,12 @@ void flecs_stack_restore_cursor(
     -- stack->cursor_count;
 #endif
 
-    /* If cursor is not the last on the stack no memory should be freed */
+    /* Only free memory when the tail cursor is being restored */
     if (cursor != stack->tail_cursor) {
         return;
     }
 
-    /* Iterate freed cursors to know how much memory we can free */
+    /* Walk backwards through freed cursors to find the active boundary */
     do {
         ecs_stack_cursor_t* prev = cursor->prev;
         if (!prev || !prev->is_free) {
@@ -163,13 +162,13 @@ void flecs_stack_restore_cursor(
     stack->tail_page = cursor->page;
     stack->tail_page->sp = cursor->sp;
 
-    /* If the cursor count is zero, stack should be empty
-     * if the cursor count is non-zero, stack should not be empty */
+    /* Invariant: cursor_count==0 iff stack is fully unwound */
     ecs_dbg_assert((stack->cursor_count == 0) == 
         (stack->tail_page == stack->first && stack->tail_page->sp == 0), 
             ECS_LEAK_DETECTED, FLECS_STACK_LEAK_MSG);
 }
 
+/* Reset stack to its initial empty state without freeing pages. */
 void flecs_stack_reset(
     ecs_stack_t *stack)
 {
@@ -182,6 +181,7 @@ void flecs_stack_reset(
     stack->tail_cursor = NULL;
 }
 
+/* Initialize stack allocator. */
 void flecs_stack_init(
     ecs_stack_t *stack)
 {
@@ -190,6 +190,7 @@ void flecs_stack_init(
     stack->tail_page = NULL;
 }
 
+/* Finalize stack allocator and free all pages. */
 void flecs_stack_fini(
     ecs_stack_t *stack)
 {

@@ -7,6 +7,7 @@
 
 #ifdef FLECS_META
 
+/* Observer callback to initialize array types when EcsArray is set. */
 static
 void flecs_set_array(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
@@ -54,6 +55,7 @@ void flecs_set_array(ecs_iter_t *it) {
     }
 }
 
+/* Observer callback to initialize vector types when EcsVector is set. */
 static
 void flecs_set_vector(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
@@ -133,6 +135,7 @@ ecs_entity_t ecs_vector_init(
     return t;
 }
 
+/* Register array and vector components and observers. */
 void flecs_meta_array_init(
     ecs_world_t *world)
 {

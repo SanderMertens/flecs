@@ -1,19 +1,16 @@
 /**
  * @file datastructures/hashmap.c
- * @brief Hashmap data structure.
- * 
- * The hashmap data structure is built on top of the map data structure. Where 
- * the map data structure can only work with 64bit key values, the hashmap can
- * hash keys of any size, and handles collisions between hashes.
+ * @brief Hashmap supporting variable-sized keys, built on top of ecs_map_t.
  */
 
 #include "../private_api.h"
 
+/* Find the index of a key within a bucket's key vector, or return -1. */
 static
 int32_t flecs_hashmap_find_key(
     const ecs_hashmap_t *map,
     ecs_vec_t *keys,
-    ecs_size_t key_size, 
+    ecs_size_t key_size,
     const void *key)
 {
     int32_t i, count = ecs_vec_count(keys);
@@ -27,6 +24,7 @@ int32_t flecs_hashmap_find_key(
     return -1;
 }
 
+/* Allocate a new zero-initialized hashmap bucket. */
 static
 ecs_hm_bucket_t* flecs_hm_bucket_new(
     ecs_hashmap_t *map)
@@ -38,6 +36,7 @@ ecs_hm_bucket_t* flecs_hm_bucket_new(
     }
 }
 
+/* Free a hashmap bucket. */
 static
 void flecs_hm_bucket_free(
     ecs_hashmap_t *map,
@@ -50,6 +49,7 @@ void flecs_hm_bucket_free(
     }
 }
 
+/* Initialize a hashmap with the given key/value sizes and callback functions. */
 void flecs_hashmap_init_(
     ecs_hashmap_t *map,
     ecs_size_t key_size,
@@ -65,6 +65,7 @@ void flecs_hashmap_init_(
     ecs_map_init(&map->impl, allocator);
 }
 
+/* Finalize a hashmap and free all buckets and their contents. */
 void flecs_hashmap_fini(
     ecs_hashmap_t *map)
 {
@@ -81,6 +82,7 @@ void flecs_hashmap_fini(
     ecs_map_fini(&map->impl);
 }
 
+/* Create a deep copy of a hashmap including all buckets. */
 void flecs_hashmap_copy(
     ecs_hashmap_t *dst,
     const ecs_hashmap_t *src)
@@ -103,6 +105,7 @@ void flecs_hashmap_copy(
     }
 }
 
+/* Look up a value by key in the hashmap, or return NULL. */
 void* flecs_hashmap_get_(
     const ecs_hashmap_t *map,
     ecs_size_t key_size,
@@ -127,6 +130,7 @@ void* flecs_hashmap_get_(
     return ecs_vec_get(&bucket->values, value_size, index);
 }
 
+/* Get or insert an entry for the given key, returning key, value, and hash. */
 flecs_hashmap_result_t flecs_hashmap_ensure_(
     ecs_hashmap_t *map,
     ecs_size_t key_size,
@@ -174,6 +178,7 @@ flecs_hashmap_result_t flecs_hashmap_ensure_(
     };
 }
 
+/* Set the value for the given key, inserting a new entry if needed. */
 void flecs_hashmap_set_(
     ecs_hashmap_t *map,
     ecs_size_t key_size,
@@ -186,6 +191,7 @@ void flecs_hashmap_set_(
     ecs_os_memcpy(value_ptr, value, value_size);
 }
 
+/* Get the bucket for the given hash, or return NULL. */
 ecs_hm_bucket_t* flecs_hashmap_get_bucket(
     const ecs_hashmap_t *map,
     uint64_t hash)
@@ -194,6 +200,7 @@ ecs_hm_bucket_t* flecs_hashmap_get_bucket(
     return ecs_map_get_deref(&map->impl, ecs_hm_bucket_t, hash);
 }
 
+/* Remove an entry from a bucket by index, freeing the bucket if empty. */
 void flecs_hm_bucket_remove(
     ecs_hashmap_t *map,
     ecs_hm_bucket_t *bucket,
@@ -213,6 +220,7 @@ void flecs_hm_bucket_remove(
     }
 }
 
+/* Remove an entry by key using a precomputed hash value. */
 void flecs_hashmap_remove_w_hash_(
     ecs_hashmap_t *map,
     ecs_size_t key_size,
@@ -238,6 +246,7 @@ void flecs_hashmap_remove_w_hash_(
     flecs_hm_bucket_remove(map, bucket, hash, index);
 }
 
+/* Remove an entry by key from the hashmap. */
 void flecs_hashmap_remove_(
     ecs_hashmap_t *map,
     ecs_size_t key_size,
@@ -251,6 +260,7 @@ void flecs_hashmap_remove_(
     flecs_hashmap_remove_w_hash_(map, key_size, key, value_size, hash);
 }
 
+/* Create an iterator for traversing all entries in the hashmap. */
 flecs_hashmap_iter_t flecs_hashmap_iter(
     ecs_hashmap_t *map)
 {
@@ -259,6 +269,7 @@ flecs_hashmap_iter_t flecs_hashmap_iter(
     };
 }
 
+/* Advance the iterator and return the next value, or NULL when done. */
 void* flecs_hashmap_next_(
     flecs_hashmap_iter_t *it,
     ecs_size_t key_size,

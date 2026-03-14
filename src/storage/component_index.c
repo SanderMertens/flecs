@@ -1,21 +1,14 @@
 /**
  * @file storage/component_index.c
  * @brief Index for looking up tables by component id.
- * 
- * An component record stores the administration for an in use (component) id, that is
- * an id that has been used in tables.
- * 
- * An component record contains a table cache, which stores the list of tables that
- * have the id. Each entry in the cache (a table record) stores the first 
- * occurrence of the id in the table and the number of occurrences of the id in
- * the table (in the case of wildcard ids).
- * 
- * Id records are used in lots of scenarios, like uncached queries, or for 
- * getting a component array/component for an entity.
+ *
+ * Each in-use component id has a component record containing a table cache that
+ * maps to all tables with that id. Used by queries and entity component access.
  */
 
 #include "../private_api.h"
 
+/* Get the linked list element in 'cr' at the same offset as 'list' is in 'head'. */
 static
 ecs_id_record_elem_t* flecs_component_elem(
     ecs_component_record_t *head,
@@ -25,6 +18,7 @@ ecs_id_record_elem_t* flecs_component_elem(
     return ECS_OFFSET(cr->pair, (uintptr_t)list - (uintptr_t)head->pair);
 }
 
+/* Insert a component record into a linked list after the head element. */
 static
 void flecs_component_elem_insert(
     ecs_component_record_t *head,
@@ -42,6 +36,7 @@ void flecs_component_elem_insert(
     head_elem->next = cr;
 }
 
+/* Remove a component record from a linked list. */
 static
 void flecs_component_elem_remove(
     ecs_component_record_t *cr,
@@ -59,6 +54,7 @@ void flecs_component_elem_remove(
     }
 }
 
+/* Insert a component record into the appropriate wildcard linked list. */
 static
 void flecs_insert_id_elem(
     ecs_world_t *world,
@@ -90,6 +86,7 @@ void flecs_insert_id_elem(
     }
 }
 
+/* Remove a component record from the appropriate wildcard linked list. */
 static
 void flecs_remove_id_elem(
     ecs_component_record_t *cr,
@@ -117,6 +114,7 @@ void flecs_remove_id_elem(
     }
 }
 
+/* Compute hash key for a component id, normalizing EcsAny to EcsWildcard and stripping generation. */
 static
 ecs_id_t flecs_component_hash(
     ecs_id_t id)
@@ -141,6 +139,7 @@ ecs_id_t flecs_component_hash(
     return id;
 }
 
+/* Initialize sparse storage for a component record. */
 void flecs_component_init_sparse(
     ecs_world_t *world,
     ecs_component_record_t *cr)
@@ -179,6 +178,7 @@ void flecs_component_init_sparse(
     }
 }
 
+/* Initialize non-fragmenting storage for a component record. */
 void flecs_component_record_init_dont_fragment(
     ecs_world_t *world,
     ecs_component_record_t *cr)
@@ -199,6 +199,7 @@ void flecs_component_record_init_dont_fragment(
     ecs_vec_init_t(&world->allocator, &cr->dont_fragment_tables, uint64_t, 0);
 }
 
+/* Clean up non-fragmenting storage and clear associated table edges. */
 static
 void flecs_component_record_fini_dont_fragment(
     ecs_world_t *world,
@@ -240,6 +241,7 @@ void flecs_component_record_fini_dont_fragment(
     ecs_vec_fini_t(&world->allocator, &cr->dont_fragment_tables, uint64_t);
 }
 
+/* Initialize exclusive relationship storage for a component record. */
 void flecs_component_record_init_exclusive(
     ecs_world_t *world,
     ecs_component_record_t *cr)
@@ -247,6 +249,8 @@ void flecs_component_record_init_exclusive(
     flecs_component_init_sparse(world, cr);
 }
 
+/* Finalize and free sparse storage for a component record.
+ * For DontFragment records, removes all sparse entries before cleanup. */
 static
 void flecs_component_fini_sparse(
     ecs_world_t *world,
@@ -263,6 +267,7 @@ void flecs_component_fini_sparse(
     }
 }
 
+/* Compute event observer flags for a given component id. */
 static
 ecs_flags32_t flecs_component_event_flags(
     const ecs_world_t *world,
@@ -285,6 +290,7 @@ ecs_flags32_t flecs_component_event_flags(
     return result;
 }
 
+/* Initialize ordered children tracking for a component record. */
 void flecs_component_ordered_children_init(
     ecs_world_t *world,
     ecs_component_record_t *cr)
@@ -293,6 +299,8 @@ void flecs_component_ordered_children_init(
     flecs_ordered_children_init(world, cr);
 }
 
+/* Derive component record flags from the relationship entity's cached trait_flags.
+ * If the target owns the type info, re-derives storage flags from the target. */
 static
 ecs_flags32_t flecs_component_get_flags_intern(
     const ecs_world_t *world,
@@ -317,7 +325,7 @@ ecs_flags32_t flecs_component_get_flags_intern(
 
     if (tgt) {
         if (ti && (ti->component == tgt)) {
-            /* Target determines the type, so unset storage flags */
+            /* Target provides the type info; re-derive Sparse/DontFragment from target */
             result &= ~EcsIdSparse;
             result &= ~EcsIdDontFragment;
 
@@ -330,13 +338,14 @@ ecs_flags32_t flecs_component_get_flags_intern(
             }
         }
     } else {
-        /* Disable flags that only apply to pairs */
+        /* Non-pair id: clear flags that only apply to pair relationships */
         result &= ~(EcsIdExclusive|EcsIdTraversable|EcsIdPairIsTag|EcsIdIsTransitive);
     }
 
     return result;
 }
 
+/* Return flags for a component id, looking up or computing them as needed. */
 ecs_flags32_t flecs_component_get_flags(
     const ecs_world_t *world,
     ecs_id_t id)
@@ -363,6 +372,7 @@ ecs_flags32_t flecs_component_get_flags(
     return flecs_component_get_flags_intern(world, id, rel, tgt, ti);
 }
 
+/* Validate relationship and target constraints for a component record. */
 static
 void flecs_component_record_check_constraints(
     ecs_world_t *world,
@@ -381,8 +391,7 @@ void flecs_component_record_check_constraints(
     }
 
     if (ECS_IS_PAIR(cr->id)) {
-        /* Internal role records use (EcsFlag, X). These should not be
-         * validated as regular relationship/target pairs. */
+        /* Skip validation for internal (EcsFlag, X) records */
         if (rel == EcsFlag) {
             return;
         }
@@ -390,7 +399,7 @@ void flecs_component_record_check_constraints(
         if (tgt) {
             ecs_assert(tgt != 0, ECS_INTERNAL_ERROR, NULL);
 
-            /* Can't use relationship as target */
+            /* Relationship trait cannot be used as target */
             if (ecs_has_id(world, tgt, EcsRelationship)) {
                 if (!ecs_id_is_wildcard(rel) && 
                     !ecs_has_id(world, rel, EcsTrait))
@@ -413,7 +422,7 @@ void flecs_component_record_check_constraints(
         }
 
         if (tgt && !ecs_id_is_wildcard(tgt)) {
-            /* Check if target of relationship satisfies OneOf property */
+            /* Validate OneOf constraint */
             ecs_entity_t oneof = flecs_get_oneof(world, rel);
             if (oneof) {
                 if (!ecs_has_pair(world, tgt, EcsChildOf, oneof)) {
@@ -442,7 +451,7 @@ void flecs_component_record_check_constraints(
                 }
             }
 
-            /* Check if we're not trying to inherit from a final target */
+            /* Prevent inheritance from Final targets */
             if (rel == EcsIsA) {
                 if (ecs_has_id(world, tgt, EcsFinal)) {
                     ecs_throw(ECS_CONSTRAINT_VIOLATED, 
@@ -484,6 +493,7 @@ error:
 #endif
 }
 
+/* Allocate and initialize a new component record for the given id. */
 static
 ecs_component_record_t* flecs_component_new(
     ecs_world_t *world,
@@ -523,7 +533,7 @@ ecs_component_record_t* flecs_component_new(
             tgt = ECS_PAIR_SECOND(id);
         }
 
-        /* Link with (R, *) record so we can easily find all matching pairs. */
+        /* Link to (R, *) parent and insert into wildcard lists */
         if (!is_wildcard && (rel != EcsFlag)) {
             ecs_id_t parent_id = ecs_pair(rel, EcsWildcard);
             ecs_component_record_t *cr_r = flecs_components_ensure(
@@ -531,9 +541,6 @@ ecs_component_record_t* flecs_component_new(
             cr->pair->parent = cr_r;
             cr->flags = cr_r->flags;
 
-            /* If pair is not a wildcard, append it to wildcard lists. These 
-             * allow for quickly enumerating all relationships for an object, 
-             * or all objects for a relationship. */
             flecs_insert_id_elem(world, cr, parent_id, cr_r);
 
             if (tgt) {
@@ -543,8 +550,7 @@ ecs_component_record_t* flecs_component_new(
             }
         }
 
-        /* Relationship object can be 0, as tables without a ChildOf 
-         * relationship are added to the (ChildOf, 0) component record */
+        /* Target can be 0: tables without ChildOf use (ChildOf, 0) */
         if (tgt) {
             ecs_entity_t alive_tgt = flecs_entities_get_alive(world, tgt);
             ecs_assert(alive_tgt != 0, ECS_INVALID_PARAMETER,
@@ -559,23 +565,16 @@ ecs_component_record_t* flecs_component_new(
                 ecs_assert(tgt_r != NULL, ECS_INTERNAL_ERROR, NULL);
                 tgt_table = tgt_r->table;
 
-                /* Enable flag that indicates entity is a target. */
                 flecs_record_add_flag(tgt_r, EcsEntityIsTarget);
 
-                /* ChildOf records can be created often and since we already know
-                 * the traits a ChildOf record will have, set them directly. */
+                /* ChildOf traits are known upfront, set directly */
                 if (rel == EcsChildOf) {
-                    /* Add flag to indicate that children are prefab children. 
-                     * This is used to determine whether to build the lookup map 
-                     * that allows for:
-                     *   instance_child = instance.target(prefab_child);
-                     */
+                    /* Mark prefab children for instance-to-prefab child lookup */
                     if (tgt_table->flags & EcsTableIsPrefab) {
                         cr->flags |= EcsIdPrefabChildren;
                     }
 
-                    /* Check if we should keep a list of ordered children for 
-                     * parent */
+                    /* Init ordered children if parent has OrderedChildren */
                     if (ecs_table_has_id(
                         world, tgt_table, EcsOrderedChildren)) 
                     {
@@ -590,7 +589,6 @@ ecs_component_record_t* flecs_component_new(
                         EcsIdPairIsTag | EcsIdExclusive;
 
                     if (tgt && tgt != EcsWildcard) {
-                        /* (ChildOf, tgt) pairs are always traversable. */
                         ecs_assert(tgt_r != NULL, ECS_INTERNAL_ERROR, NULL);
                         flecs_record_add_flag(tgt_r, EcsEntityIsTraversable);
                     }
@@ -610,44 +608,32 @@ ecs_component_record_t* flecs_component_new(
         cr->flags |= flecs_component_get_flags_intern(
             world, id, rel, tgt, cr->type_info);
 
-        /* Set flag that indicates entity is used as component/relationship. */
         flecs_add_flag(world, rel, EcsEntityIsId);
 
         if (tgt && tgt != EcsWildcard) {
             if (cr->flags & EcsIdTraversable) {
-                /* Flag used to determine if object should be traversed when
-                * propagating events or with super/subset queries */
                 ecs_assert(tgt_r != NULL, ECS_INTERNAL_ERROR, NULL);
                 flecs_record_add_flag(tgt_r, EcsEntityIsTraversable);
             }
         }
 
-        /* Initialize Sparse storage */
         if (cr->flags & EcsIdSparse) {
             flecs_component_init_sparse(world, cr);
         }
 
-        /* Initialize DontFragment storage */
         if (cr->flags & EcsIdDontFragment) {
             flecs_component_record_init_dont_fragment(world, cr);
             
             if (cr_t) {
-                /* Mark (*, tgt) record with HasDontFragment so that queries
-                    * can quickly detect if there are any non-fragmenting 
-                    * records to consider for a (*, tgt) query. */
+                /* Let (*, tgt) queries detect non-fragmenting records */
                 cr_t->flags |= EcsIdMatchDontFragment;
             }
         }
     }
 
-    /* Set flags that indicate whether there are observers for component */
     cr->flags |= flecs_component_event_flags(world, id);
 
     flecs_component_record_check_constraints(world, cr, rel, tgt);
-
-    /* Mark entities that are used as component/pair ids. When a tracked
-     * entity is deleted, cleanup policies are applied so that the store
-     * won't contain any tables with deleted ids. */
 
     if (ecs_should_log_1()) {
         char *id_str = ecs_id_str(world, id);
@@ -659,7 +645,6 @@ ecs_component_record_t* flecs_component_new(
     cr->str = ecs_id_str(world, cr->id);
 #endif
 
-    /* Update counters */
     world->info.id_create_total ++;
     world->info.component_id_count += cr->type_info != NULL;
     world->info.tag_id_count += cr->type_info == NULL;
@@ -668,6 +653,7 @@ ecs_component_record_t* flecs_component_new(
     return cr;
 }
 
+/* Assert that a component record has no tables in its cache. */
 static
 void flecs_component_assert_empty(
     ecs_component_record_t *cr)
@@ -677,6 +663,7 @@ void flecs_component_assert_empty(
         ECS_INTERNAL_ERROR, NULL);
 }
 
+/* Free a component record and all its associated resources. */
 static
 void flecs_component_free(
     ecs_world_t *world,
@@ -693,7 +680,7 @@ void flecs_component_free(
         ecs_entity_t tgt = ECS_PAIR_SECOND(id);
         if (!ecs_id_is_wildcard(id)) {
             if (ECS_PAIR_FIRST(id) != EcsFlag) {
-                /* If id is not a wildcard, remove it from the wildcard lists */
+                /* Remove from wildcard lists */
                 flecs_remove_id_elem(cr, ecs_pair(rel, EcsWildcard));
                 if (!ECS_IS_VALUE_PAIR(id)) {
                     flecs_remove_id_elem(cr, ecs_pair(EcsWildcard, tgt));
@@ -702,8 +689,7 @@ void flecs_component_free(
         } else {
             ecs_log_push_2();
 
-            /* If id is a wildcard, it means that all id records that match the
-             * wildcard are also empty, so release them */
+            /* Wildcard record: release all matching component records */
             if (ECS_PAIR_FIRST(id) == EcsWildcard) {
                 /* Iterate (*, Target) list */
                 ecs_component_record_t *cur, *next = cr->pair->second.next;
@@ -728,20 +714,17 @@ void flecs_component_free(
         }
     }
 
-    /* Cleanup sparse storage */
     flecs_component_fini_sparse(world, cr);
 
     if (cr->flags & EcsIdDontFragment) {
         flecs_component_record_fini_dont_fragment(world, cr);
     }
 
-    /* Update counters */
     world->info.id_delete_total ++;
     world->info.pair_id_count -= ECS_IS_PAIR(id);
     world->info.component_id_count -= cr->type_info != NULL;
     world->info.tag_id_count -= cr->type_info == NULL;
 
-    /* Unregister the component record from the world & free resources */
     ecs_table_cache_fini(&cr->cache);
 
     if (cr->pair) {
@@ -774,6 +757,7 @@ void flecs_component_free(
     }
 }
 
+/* Ensure a component record exists for the given id, creating one if needed. */
 ecs_component_record_t* flecs_components_ensure(
     ecs_world_t *world,
     ecs_id_t id)
@@ -785,6 +769,7 @@ ecs_component_record_t* flecs_components_ensure(
     return cr;
 }
 
+/* Look up a component record by id, returning NULL if not found. */
 ecs_component_record_t* flecs_components_get(
     const ecs_world_t *world,
     ecs_id_t id)
@@ -809,6 +794,7 @@ ecs_component_record_t* flecs_components_get(
     return cr;
 }
 
+/* Ensure a component record exists, but only create if not in threaded mode. */
 ecs_component_record_t* flecs_components_try_ensure(
     ecs_world_t *world,
     ecs_id_t id)
@@ -822,6 +808,7 @@ ecs_component_record_t* flecs_components_try_ensure(
     return cr;
 }
 
+/* Increase refcount of a component record. */
 void flecs_component_claim(
     ecs_world_t *world,
     ecs_component_record_t *cr)
@@ -830,6 +817,7 @@ void flecs_component_claim(
     cr->refcount ++;
 }
 
+/* Decrease refcount of a component record, freeing it when it reaches zero. */
 int32_t flecs_component_release(
     ecs_world_t *world,
     ecs_component_record_t *cr)
@@ -846,6 +834,8 @@ int32_t flecs_component_release(
     return rc;
 }
 
+/* Delete empty, non-kept tables from a component record's cache.
+ * Returns true if any tables remain (non-empty or kept). */
 bool flecs_component_release_tables(
     ecs_world_t *world,
     ecs_component_record_t *cr)
@@ -868,7 +858,6 @@ bool flecs_component_release_tables(
                 continue;
             }
 
-            /* Release current table */
             flecs_table_fini(world, tr->hdr.table);
         }
     }
@@ -876,6 +865,7 @@ bool flecs_component_release_tables(
     return remaining;
 }
 
+/* Set type info for a component record, updating world counters. */
 bool flecs_component_set_type_info(
     ecs_world_t *world,
     ecs_component_record_t *cr,
@@ -902,6 +892,7 @@ bool flecs_component_set_type_info(
     return changed;
 }
 
+/* Return the type info associated with a component record. */
 const ecs_type_info_t* flecs_component_get_type_info(
     const ecs_component_record_t *cr)
 {
@@ -909,6 +900,7 @@ const ecs_type_info_t* flecs_component_get_type_info(
     return cr->type_info;
 }
 
+/* Ensure a name index exists for a component record, creating one if needed. */
 ecs_hashmap_t* flecs_component_name_index_ensure(
     ecs_world_t *world,
     ecs_component_record_t *cr)
@@ -922,6 +914,7 @@ ecs_hashmap_t* flecs_component_name_index_ensure(
     return map;
 }
 
+/* Return the name index for a component record, or NULL if none exists. */
 ecs_hashmap_t* flecs_component_name_index_get(
     const ecs_world_t *world,
     ecs_component_record_t *cr)
@@ -931,6 +924,7 @@ ecs_hashmap_t* flecs_component_name_index_get(
     return cr->pair->name_index;
 }
 
+/* Return the table record for a given table in a component record's cache. */
 const ecs_table_record_t* flecs_component_get_table(
     const ecs_component_record_t *cr,
     const ecs_table_t *table)
@@ -939,10 +933,10 @@ const ecs_table_record_t* flecs_component_get_table(
     return ecs_table_cache_get(&cr->cache, table);
 }
 
+/* Bootstrap cached component records for commonly used ids. */
 void flecs_components_init(
     ecs_world_t *world)
 {
-    /* Cache often used id records on world */
     world->cr_wildcard = flecs_components_ensure(world, EcsWildcard);
     world->cr_wildcard_wildcard = flecs_components_ensure(world, 
         ecs_pair(EcsWildcard, EcsWildcard));
@@ -951,12 +945,11 @@ void flecs_components_init(
         ecs_pair(EcsIsA, EcsWildcard));
 }
 
+/* Clean up all component records in the world. */
 void flecs_components_fini(
     ecs_world_t *world)
 {
-    /* Loop & delete first element until there are no elements left. Id records
-     * can recursively delete each other, this ensures we always have a
-     * valid iterator. */
+    /* Delete one at a time since records can recursively delete each other */
     while (ecs_map_count(&world->id_index_hi) > 0) {
         ecs_map_iter_t it = ecs_map_iter(&world->id_index_hi);
         ecs_map_next(&it);
@@ -978,6 +971,7 @@ void flecs_components_fini(
     ecs_os_free(world->id_index_lo);
 }
 
+/* Get flags for an id, adding synthetic OnAdd/OnRemove flags if inheritable. */
 static
 ecs_flags32_t flecs_id_flags(
     ecs_world_t *world,
@@ -991,6 +985,7 @@ ecs_flags32_t flecs_id_flags(
     return cr_flags|extra_flags;
 }
 
+/* Return combined flags for an id, its wildcard variants, and the Any record. */
 ecs_flags32_t flecs_id_flags_get(
     ecs_world_t *world,
     ecs_id_t id)
@@ -1025,6 +1020,7 @@ ecs_flags32_t flecs_id_flags_get(
     return result;
 }
 
+/* Reclaim unused memory in a component record's table cache and name index. */
 void flecs_component_shrink(
     ecs_component_record_t *cr)
 {
@@ -1038,6 +1034,7 @@ void flecs_component_shrink(
     }
 }
 
+/* Delete all entities that have a sparse component (deletes the entities, not just the component). */
 void flecs_component_delete_sparse(
     ecs_world_t *world,
     ecs_component_record_t *cr)
@@ -1060,6 +1057,7 @@ void flecs_component_delete_sparse(
     ecs_os_free(to_delete);
 }
 
+/* Return the next record in the (R, *) linked list (same relationship). */
 ecs_component_record_t* flecs_component_first_next(
     ecs_component_record_t *cr)
 {
@@ -1067,6 +1065,7 @@ ecs_component_record_t* flecs_component_first_next(
     return cr->pair->first.next;
 }
 
+/* Return the next record in the (*, T) linked list (same target). */
 ecs_component_record_t* flecs_component_second_next(
     ecs_component_record_t *cr)
 {
@@ -1074,6 +1073,7 @@ ecs_component_record_t* flecs_component_second_next(
     return cr->pair->second.next;
 }
 
+/* Return the next record in the traversable (*, T) linked list. */
 ecs_component_record_t* flecs_component_trav_next(
     ecs_component_record_t *cr)
 {
@@ -1081,6 +1081,7 @@ ecs_component_record_t* flecs_component_trav_next(
     return cr->pair->trav.next;
 }
 
+/* Initialize an iterator over all tables in a component record's cache. */
 bool flecs_component_iter(
     const ecs_component_record_t *cr,
     ecs_table_cache_iter_t *iter_out)
@@ -1088,12 +1089,14 @@ bool flecs_component_iter(
     return flecs_table_cache_all_iter(&cr->cache, iter_out);
 }
 
+/* Advance a component record table cache iterator and return the next record. */
 const ecs_table_record_t* flecs_component_next(
     ecs_table_cache_iter_t *iter)
 {
     return flecs_table_cache_next(iter, ecs_table_record_t);
 }
 
+/* Return the id associated with a component record. */
 ecs_id_t flecs_component_get_id(
     const ecs_component_record_t *cr)
 {
@@ -1101,6 +1104,7 @@ ecs_id_t flecs_component_get_id(
     return cr->id;
 }
 
+/* Return the parent record for a given table in a component record. */
 ecs_parent_record_t* flecs_component_get_parent_record(
     const ecs_component_record_t *cr,
     const ecs_table_t *table)
@@ -1121,6 +1125,7 @@ ecs_parent_record_t* flecs_component_get_parent_record(
     return (ecs_parent_record_t*)ecs_map_get(&pair->children_tables, table->id);
 }
 
+/* Return the cached hierarchy depth for a ChildOf component record. */
 int32_t flecs_component_get_childof_depth(
     const ecs_component_record_t *cr)
 {
@@ -1130,6 +1135,7 @@ int32_t flecs_component_get_childof_depth(
     return cr->pair->depth;
 }
 
+/* Recursively propagate updated hierarchy depth to child entities. */
 static
 void flecs_entities_update_childof_depth(
     ecs_world_t *world,
@@ -1163,7 +1169,7 @@ void flecs_entities_update_childof_depth(
         return;
     }
 
-    /* If the component record doesn't have a children vector, iterate tables. */
+    /* Fallback: no ordered children vector, iterate table cache instead */
     ecs_table_cache_iter_t it; flecs_component_iter(cr, &it);
     const ecs_table_record_t *tr;
     while ((tr = flecs_component_next(&it))) {
@@ -1188,6 +1194,7 @@ void flecs_entities_update_childof_depth(
     }
 }
 
+/* Update the ChildOf hierarchy depth for a component record and propagate changes. */
 void flecs_component_update_childof_w_depth(
     ecs_world_t *world,
     ecs_component_record_t *cr,
@@ -1210,6 +1217,7 @@ void flecs_component_update_childof_w_depth(
     }
 }
 
+/* Compute and update the ChildOf hierarchy depth based on the target entity's depth. */
 void flecs_component_update_childof_depth(
     ecs_world_t *world,
     ecs_component_record_t *cr,

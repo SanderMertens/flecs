@@ -8,6 +8,7 @@
 #ifdef FLECS_SCRIPT
 #include "script.h"
 
+/* Free a scope node and its children recursively. */
 static
 void flecs_script_scope_free(
     ecs_script_visit_t *v,
@@ -19,6 +20,7 @@ void flecs_script_scope_free(
     flecs_free_t(&v->script->allocator, ecs_script_scope_t, node);
 }
 
+/* Free expression nodes owned by a script identifier. */
 static
 void flecs_script_id_free(
     ecs_script_visit_t *v,
@@ -32,6 +34,7 @@ void flecs_script_id_free(
     }
 }
 
+/* Free a with node's expression and scope children. */
 static
 void flecs_script_with_free(
     ecs_script_visit_t *v,
@@ -41,6 +44,7 @@ void flecs_script_with_free(
     flecs_script_scope_free(v, node->scope);
 }
 
+/* Free a template node's scope. */
 static
 void flecs_script_template_free(
     ecs_script_visit_t *v,
@@ -49,6 +53,7 @@ void flecs_script_template_free(
     flecs_script_scope_free(v, node->scope);
 }
 
+/* Free an entity node's scope and name expression. */
 static
 void flecs_script_entity_free(
     ecs_script_visit_t *v,
@@ -60,6 +65,7 @@ void flecs_script_entity_free(
     }
 }
 
+/* Free a pair scope node's scope and id expressions. */
 static
 void flecs_script_pair_scope_free(
     ecs_script_visit_t *v,
@@ -69,6 +75,7 @@ void flecs_script_pair_scope_free(
     flecs_script_id_free(v, &node->id);
 }
 
+/* Free an if node's branches and condition expression. */
 static
 void flecs_script_if_free(
     ecs_script_visit_t *v,
@@ -79,6 +86,7 @@ void flecs_script_if_free(
     flecs_expr_visit_free(&v->script->pub, node->expr);
 }
 
+/* Free a for-range node's bound expressions and scope. */
 static
 void flecs_script_for_range_free(
     ecs_script_visit_t *v,
@@ -89,6 +97,7 @@ void flecs_script_for_range_free(
     flecs_script_scope_free(v, node->scope);
 }
 
+/* Free a tag node's id expressions. */
 static
 void flecs_script_tag_free(
     ecs_script_visit_t *v,
@@ -97,6 +106,7 @@ void flecs_script_tag_free(
     flecs_script_id_free(v, &node->id);
 }
 
+/* Free a component node's expression and id. */
 static
 void flecs_script_component_free(
     ecs_script_visit_t *v,
@@ -106,6 +116,7 @@ void flecs_script_component_free(
     flecs_script_id_free(v, &node->id);
 }
 
+/* Free a default component node's expression. */
 static
 void flecs_script_default_component_free(
     ecs_script_visit_t *v,
@@ -114,6 +125,7 @@ void flecs_script_default_component_free(
     flecs_expr_visit_free(&v->script->pub, node->expr);
 }
 
+/* Free a variable node's expression. */
 static
 void flecs_script_var_node_free(
     ecs_script_visit_t *v,
@@ -122,6 +134,7 @@ void flecs_script_var_node_free(
     flecs_expr_visit_free(&v->script->pub, node->expr);
 }
 
+/* Free a statement node and its resources based on its kind. */
 static
 int flecs_script_stmt_free(
     ecs_script_visit_t *v,
@@ -199,6 +212,7 @@ int flecs_script_stmt_free(
     return 0;
 }
 
+/* Free a single AST node and its descendants. */
 int flecs_script_visit_free_node(
     ecs_script_t *script,
     ecs_script_node_t *node)
@@ -221,6 +235,7 @@ error:
     return -1;
 }
 
+/* Free the entire script AST. */
 int flecs_script_visit_free(
     ecs_script_t *script)
 {

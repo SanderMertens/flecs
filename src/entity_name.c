@@ -1,17 +1,18 @@
 /**
  * @file entity_name.c
- * @brief Functions for working with named entities.
+ * @brief Entity naming, path resolution, and name index management.
  */
 
 #include "private_api.h"
 
 #define ECS_NAME_BUFFER_LENGTH (64)
 
+/* Recursively build an entity path from child to root into a string buffer. */
 static
 bool flecs_path_append(
-    const ecs_world_t *world, 
-    ecs_entity_t parent, 
-    ecs_entity_t child, 
+    const ecs_world_t *world,
+    ecs_entity_t parent,
+    ecs_entity_t child,
     const char *sep,
     const char *prefix,
     ecs_strbuf_t *buf,
@@ -60,7 +61,7 @@ bool flecs_path_append(
     }
 
     if (name) {
-        /* Check if we need to escape separator character */
+        /* Escape separator characters embedded in the name */
         const char *sep_in_name = NULL;
         if (!sep[1]) {
             sep_in_name = strchr(name, sep[0]);
@@ -106,12 +107,13 @@ bool flecs_path_append(
     return cur != 0;
 }
 
+/* Check whether a name is a numeric entity id (e.g. "#123"). */
 bool flecs_name_is_id(
     const char *name)
 {
     ecs_assert(name != NULL, ECS_INTERNAL_ERROR, NULL);
     if (name[0] == '#') {
-        /* If name is not just digits it's not an id */
+        /* Must be all digits after the '#' prefix */
         const char *ptr;
         char ch;
         for (ptr = name + 1; (ch = ptr[0]); ptr ++) {
@@ -124,6 +126,7 @@ bool flecs_name_is_id(
     return false;
 }
 
+/* Convert a "#123" name string to an entity id. */
 ecs_entity_t flecs_name_to_id(
     const char *name)
 {
@@ -136,6 +139,7 @@ ecs_entity_t flecs_name_to_id(
     return res;
 }
 
+/* Map builtin entity names ("." = This, "*" = Wildcard, "_" = Any, "$" = Variable). */
 static
 ecs_entity_t flecs_get_builtin(
     const char *name)
@@ -153,6 +157,7 @@ ecs_entity_t flecs_get_builtin(
     return 0;
 }
 
+/* Check if *ptr starts with the separator and advance past it if so. */
 static
 bool flecs_is_sep(
     const char **ptr,
@@ -168,6 +173,7 @@ bool flecs_is_sep(
     }
 }
 
+/* Extract the next path element delimited by sep, handling template nesting. */
 static
 const char* flecs_path_elem(
     const char *path,
@@ -210,11 +216,11 @@ const char* flecs_path_elem(
         if (buffer) {
             ecs_assert(size > 0, ECS_INTERNAL_ERROR, NULL);
             if (pos >= (size - 1)) {
-                if (size == ECS_NAME_BUFFER_LENGTH) { /* stack buffer */
+                if (size == ECS_NAME_BUFFER_LENGTH) { /* Promote stack to heap */
                     char *new_buffer = ecs_os_malloc(size * 2 + 1);
                     ecs_os_memcpy(new_buffer, buffer, size);
                     buffer = new_buffer;
-                } else { /* heap buffer */
+                } else { /* Grow heap buffer */
                     buffer = ecs_os_realloc(buffer, size * 2 + 1);
                 }
                 size *= 2;
@@ -241,6 +247,7 @@ error:
     return NULL;
 }
 
+/* Check if the path starts with the root prefix. */
 static
 bool flecs_is_root_path(
     const char *path,
@@ -253,6 +260,7 @@ bool flecs_is_root_path(
     }
 }
 
+/* Resolve the parent entity from a path prefix and advance *path_ptr past it. */
 static
 ecs_entity_t flecs_get_parent_from_path(
     const ecs_world_t *world,
@@ -283,11 +291,10 @@ ecs_entity_t flecs_get_parent_from_path(
 
         path ++;
         while (path[0] && isdigit(path[0])) {
-            path ++; /* Skip id part of path */
+            path ++;
         }
 
-        /* Skip next separator so that the returned path points to the next
-         * name element. */
+        /* Advance past the separator following the numeric id */
         ecs_size_t sep_len = ecs_os_strlen(sep);
         if (!ecs_os_strncmp(path, sep, ecs_os_strlen(sep))) {
             path += sep_len;
@@ -305,9 +312,10 @@ ecs_entity_t flecs_get_parent_from_path(
     return parent;
 }
 
+/* Observer callback: update the symbol name index when a symbol is set. */
 static
 void flecs_on_set_symbol(
-    ecs_iter_t *it) 
+    ecs_iter_t *it)
 {
     EcsIdentifier *n = ecs_field(it, EcsIdentifier, 0);
     ecs_world_t *world = it->real_world;
@@ -320,8 +328,9 @@ void flecs_on_set_symbol(
     }
 }
 
+/* Register the symbol name observer during bootstrap. */
 void flecs_bootstrap_entity_name(
-    ecs_world_t *world) 
+    ecs_world_t *world)
 {
     ecs_observer(world, {
         .query.terms[0] = {
@@ -335,7 +344,7 @@ void flecs_bootstrap_entity_name(
 }
 
 void ecs_on_set(EcsIdentifier)(
-    ecs_iter_t *it) 
+    ecs_iter_t *it)
 {
     ecs_world_t *world = it->real_world;
     EcsIdentifier *ptr = ecs_field(it, EcsIdentifier, 0);
@@ -344,7 +353,7 @@ void ecs_on_set(EcsIdentifier)(
 
     ecs_entity_t evt = it->event;
     ecs_id_t evt_id = it->event_id;
-    ecs_entity_t kind = ECS_PAIR_SECOND(evt_id); /* Name, Symbol, Alias */
+    ecs_entity_t kind = ECS_PAIR_SECOND(evt_id); /* EcsName, EcsSymbol, or EcsAlias */
     ecs_id_t pair = ecs_childof(0);
     ecs_hashmap_t *index = NULL;
     bool has_parent = false;
@@ -405,8 +414,7 @@ void ecs_on_set(EcsIdentifier)(
         }
 
         if (cur->index && cur->index != index) {
-            /* If index doesn't match up, the value must have been copied from
-             * another entity, so reset index & cached index hash */
+            /* Index mismatch means value was copied from another entity */
             cur->index = NULL;
             cur->index_hash = 0;
         }
@@ -434,21 +442,21 @@ void ecs_on_set(EcsIdentifier)(
                     cur->index = index;
                 }
             } else {
-                /* Name didn't change, but the string could have been 
-                 * reallocated. Make sure name index points to correct string */
+                /* Hash unchanged but string may have been reallocated */
                 flecs_name_index_update_name(index, e, hash, name);
             }
         }
     }
 }
 
+/* Move entity name entries from one name index to another. */
 static
 void flecs_reparent_name_index_intern(
     const ecs_entity_t *entities,
     ecs_hashmap_t *src_index,
     ecs_hashmap_t *dst_index,
     EcsIdentifier *names,
-    int32_t count) 
+    int32_t count)
 {
     int32_t i;
     for (i = 0; i < count; i ++) {
@@ -483,18 +491,17 @@ void flecs_reparent_name_index_intern(
     }
 }
 
+/* Update the name index when entities move to a new parent table. */
 void flecs_reparent_name_index(
     ecs_world_t *world,
     ecs_table_t *dst,
-    ecs_table_t *src, 
+    ecs_table_t *src,
     int32_t offset,
-    int32_t count) 
+    int32_t count)
 {
     ecs_assert(dst != NULL, ECS_INTERNAL_ERROR, NULL);
     if (!(dst->flags & EcsTableHasName)) {
-        /* If destination table doesn't have a name, we don't need to update the
-         * name index. Even if the src table had a name, the on_remove hook for
-         * EcsIdentifier will remove the entity from the index. */
+        /* No name column in dst; the EcsIdentifier on_remove hook handles cleanup. */
         return;
     }
 
@@ -518,21 +525,20 @@ void flecs_reparent_name_index(
 
 }
 
+/* Update the name index when entities are removed from a parent table. */
 void flecs_unparent_name_index(
     ecs_world_t *world,
     ecs_table_t *src,
     ecs_table_t *dst,
     int32_t offset,
-    int32_t count) 
+    int32_t count)
 {
     if (!(src->flags & EcsTableHasName)) {
         return;
     }
 
     if (!dst || !(dst->flags & EcsTableHasName)) {
-        /* If destination table doesn't have a name, we don't need to update the
-         * name index. Even if the src table had a name, the on_remove hook for
-         * EcsIdentifier will remove the entity from the index. */
+        /* No name column in dst; the EcsIdentifier on_remove hook handles cleanup. */
         return;
     }
 
@@ -548,7 +554,7 @@ void flecs_unparent_name_index(
         src_index, dst_index, names, count);
 }
 
-/* Public functions */
+/* -- Public API -- */
 
 void ecs_get_path_w_sep_buf(
     const ecs_world_t *world,
@@ -801,7 +807,7 @@ ecs_entity_t* ecs_set_lookup_path(
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_stage_t *stage = flecs_stage_from_world(&world);
 
-    /* Safe: application owns lookup path */
+    /* Safe: the application owns the lookup path array */
     ecs_entity_t *cur = ECS_CONST_CAST(ecs_entity_t*, stage->lookup_path);
     stage->lookup_path = lookup_path;
 
@@ -831,6 +837,7 @@ const char* ecs_set_name_prefix(
     return old_prefix;
 }
 
+/* Add a parent relationship and name, suspending readonly mode if deferred. */
 static
 void flecs_add_path(
     ecs_world_t *world,
@@ -904,9 +911,7 @@ ecs_entity_t ecs_add_path_w_sep(
     char *elem = buff;
     int32_t size = ECS_NAME_BUFFER_LENGTH;
     
-    /* If we're in deferred/readonly mode suspend it, so that the name index is
-     * immediately updated. Without this, we could create multiple entities for
-     * the same name in a single command queue. */
+    /* Suspend defer to update name index immediately, preventing duplicates. */
     bool suspend_defer = ecs_is_deferred(world) &&
         !(real_world->flags & EcsWorldMultiThreaded);
         
@@ -923,7 +928,7 @@ ecs_entity_t ecs_add_path_w_sep(
 
                 name = ecs_os_strdup(elem);
 
-                /* If this is the last entity in the path, use the provided id */
+                /* Last element in the path uses the caller-provided entity id */
                 bool last_elem = false;
                 if (!flecs_path_elem(ptr, sep, NULL, NULL)) {
                     e = entity;
@@ -982,6 +987,7 @@ ecs_entity_t ecs_new_from_path_w_sep(
     return ecs_add_path_w_sep(world, 0, parent, path, sep, prefix);
 }
 
+/* Get an identifier string (name, symbol, or alias) for an entity. */
 static
 const char* flecs_get_identifier(
     const ecs_world_t *world,
@@ -1022,6 +1028,7 @@ const char* ecs_get_symbol(
     }
 }
 
+/* Set an identifier (name, symbol, or alias) on an entity. */
 ecs_entity_t flecs_set_identifier(
     ecs_world_t *world,
     ecs_stage_t *stage,
@@ -1045,10 +1052,7 @@ ecs_entity_t flecs_set_identifier(
     ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (tag == EcsName) {
-        /* Insert command after ensure, but before the name is potentially 
-         * freed. Even though the name is a const char*, it is possible that the
-         * application passed in the existing name of the entity which could 
-         * still cause it to be freed. */
+        /* Defer before freeing old name; caller may have passed it directly. */
         flecs_defer_path(stage, 0, entity, name);
     }
 
@@ -1057,7 +1061,7 @@ ecs_entity_t flecs_set_identifier(
 
     ecs_modified_pair(world, entity, ecs_id(EcsIdentifier), tag);
 
-    /* Free old name after updating name index in on_set handler. */
+    /* Free old name after on_set updated the name index */
     ecs_os_free(old);
 
     return entity;

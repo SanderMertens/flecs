@@ -7,6 +7,7 @@
 
 #ifdef FLECS_APP
 
+/* Execute the default application run loop. */
 static
 int flecs_default_run_action(
     ecs_world_t *world,
@@ -28,8 +29,7 @@ int flecs_default_run_action(
         while ((result = ecs_app_run_frame(world, desc)) == 0) { }
     }
 
-    /* Ensure quit flag is set on world, which can be used to determine if
-     * world needs to be cleaned up. */
+    /* Ensure quit flag is set so callers know the world needs cleanup */
 #ifndef __EMSCRIPTEN__
     ecs_quit(world);
 #endif
@@ -41,6 +41,7 @@ int flecs_default_run_action(
     }
 }
 
+/* Execute the default per-frame action by progressing the world. */
 static
 int flecs_default_frame_action(
     ecs_world_t *world,
@@ -53,12 +54,13 @@ static ecs_app_run_action_t run_action = flecs_default_run_action;
 static ecs_app_frame_action_t frame_action = flecs_default_frame_action;
 static ecs_app_desc_t ecs_app_desc;
 
-/* Serve REST API from wasm image when running in emscripten */
+/* Emscripten/WASM REST API support */
 #if defined(ECS_TARGET_EM) && defined(FLECS_REST)
 #include <emscripten.h>
 
 ecs_http_server_t *flecs_wasm_rest_server = NULL;
 
+/* Handle an incoming REST request from the Emscripten wasm image. */
 EMSCRIPTEN_KEEPALIVE
 char* flecs_explorer_request(const char *method, char *request, char *body) {
     ecs_assert(flecs_wasm_rest_server != NULL, ECS_INVALID_OPERATION,
@@ -96,7 +98,7 @@ int ecs_app_run(
     }
 #endif
 
-    /* REST server enables connecting to app with explorer */
+    /* REST server enables remote monitoring via the Flecs Explorer */
     if (desc->enable_rest) {
 #ifdef FLECS_REST
 #ifdef ECS_TARGET_EM
@@ -112,12 +114,12 @@ int ecs_app_run(
 #endif
     }
 
-    /* Monitoring periodically collects statistics */
+    /* Stats addon periodically collects performance statistics */
     if (desc->enable_stats) {
 #ifdef FLECS_STATS
         ECS_IMPORT(world, FlecsStats);
 #else
-        ecs_warn("cannot enable monitoring, MONITOR addon not available");
+        ecs_warn("cannot enable monitoring, STATS addon not available");
 #endif
     }
 

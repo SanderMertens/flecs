@@ -1,8 +1,14 @@
+/**
+ * @file addons/pipeline/frame.c
+ * @brief Functions for frame time management in the pipeline.
+ */
+
 #include "../../private_api.h"
 
 #ifdef FLECS_PIPELINE
 #include "pipeline.h"
 
+/* Sleep to maintain the target frame rate. */
 static
 ecs_ftime_t flecs_insert_sleep(
     ecs_world_t *world,
@@ -22,20 +28,17 @@ ecs_ftime_t flecs_insert_sleep(
     ecs_ftime_t target_delta_time =
         ((ecs_ftime_t)1.0 / (ecs_ftime_t)world->info.target_fps);
 
-    /* Calculate the time we need to sleep by taking the measured delta from the
-     * previous frame, and subtracting it from target_delta_time. */
+    /* Sleep duration = target frame time - actual elapsed time */
     ecs_ftime_t sleep = target_delta_time - delta_time;
 
-    /* Pick a sleep interval that is smaller than the time one frame should take
-     * which increases the sleep precision. */
+    /* Use a fractional sleep interval for better precision */
     ecs_ftime_t sleep_time = sleep / (ecs_ftime_t)8.0;
     if (sleep_time < 0) {
         sleep_time = 0;
         delta_time = (ecs_ftime_t)ecs_time_measure(&now);
     } else {
         do {
-            /* Only call sleep when sleep_time is not 0. On some platforms, even
-            * a sleep with a timeout of 0 can cause stutter. */
+            /* Skip zero-duration sleeps; they cause stutter on some platforms */
             if (ECS_NEQZERO(sleep_time)) {
                 ecs_sleepf((double)sleep_time);
             }
@@ -52,6 +55,7 @@ ecs_ftime_t flecs_insert_sleep(
     return delta_time;
 }
 
+/* Measure frame start time and compute delta time. */
 static
 ecs_ftime_t flecs_start_measure_frame(
     ecs_world_t *world,
@@ -73,8 +77,7 @@ ecs_ftime_t flecs_start_measure_frame(
                 if (ECS_NEQZERO(world->info.target_fps)) {
                     delta_time = (ecs_ftime_t)1.0 / world->info.target_fps;
                 } else {
-                    /* Best guess */
-                    delta_time = (ecs_ftime_t)1.0 / (ecs_ftime_t)60.0;
+                    delta_time = (ecs_ftime_t)1.0 / (ecs_ftime_t)60.0; /* ~60fps default */
 
                     if (ECS_EQZERO(delta_time)) {
                         delta_time = user_delta_time;
@@ -88,13 +91,13 @@ ecs_ftime_t flecs_start_measure_frame(
 
         world->frame_start_time = t;
 
-        /* Keep track of total time passed in world */
         world->info.world_time_total_raw += (double)delta_time;
     }
 
     return (ecs_ftime_t)delta_time;
 }
 
+/* Record total frame time measurement. */
 static
 void flecs_stop_measure_frame(
     ecs_world_t* world)
@@ -119,7 +122,6 @@ ecs_ftime_t ecs_frame_begin(
     ecs_check(ECS_NEQZERO(user_delta_time) || ecs_os_has_time(), 
         ECS_MISSING_OS_API, "get_time");
 
-    /* Start measuring total frame time */
     ecs_ftime_t delta_time = flecs_start_measure_frame(world, user_delta_time);
     if (ECS_EQZERO(user_delta_time)) {
         user_delta_time = delta_time;
@@ -128,10 +130,9 @@ ecs_ftime_t ecs_frame_begin(
     world->info.delta_time_raw = user_delta_time;
     world->info.delta_time = user_delta_time * world->info.time_scale;
 
-    /* Keep track of total scaled time passed in world */
     world->info.world_time_total += (double)world->info.delta_time;
 
-    /* Command buffer capturing */
+    /* Activate this frame's command buffer callbacks */
     world->on_commands_active = world->on_commands;
     world->on_commands = NULL;
 
@@ -165,7 +166,7 @@ void ecs_frame_end(
 
     flecs_stop_measure_frame(world);
 
-    /* Reset command handler each frame */
+    /* Deactivate command callbacks for the completed frame */
     world->on_commands_active = NULL;
     world->on_commands_ctx_active = NULL;
 

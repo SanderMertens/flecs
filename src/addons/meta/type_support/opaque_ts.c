@@ -7,6 +7,7 @@
 
 #ifdef FLECS_META
 
+/* Observer callback to initialize opaque types when EcsOpaque is set. */
 static
 void flecs_set_opaque_type(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
@@ -23,9 +24,8 @@ void flecs_set_opaque_type(ecs_iter_t *it) {
             continue;
         }
 
-        /* If the as_type is anonymous and has no parent, parent it under the
-        * opaque type. That way we don't end up with a bunch of anonymous entities
-        * in the root scope. */
+        /* Parent anonymous as_type under the opaque type to avoid
+         * cluttering the root scope. */
         if (!ecs_get_parent(world, as_type) && !ecs_get_name(world, as_type)) {
             ecs_add_pair(world, as_type, EcsChildOf, e);
         }
@@ -66,6 +66,7 @@ ecs_entity_t ecs_opaque_init(
     return t;
 }
 
+/* Register opaque component and observer. */
 void flecs_meta_opaque_init(
     ecs_world_t *world)
 {

@@ -16,11 +16,13 @@ typedef struct ecs_script_str_visitor_t {
     bool colors;
 } ecs_script_str_visitor_t;
 
+/* Forward declaration for recursive scope stringification. */
 static
 int flecs_script_scope_to_str(
     ecs_script_str_visitor_t *v,
     ecs_script_scope_t *scope);
 
+/* Append a color escape code if colors are enabled. */
 static
 void flecs_script_color_to_str(
     ecs_script_str_visitor_t *v,
@@ -29,6 +31,7 @@ void flecs_script_color_to_str(
     if (v->colors) ecs_strbuf_appendstr(v->buf, color);
 }
 
+/* Append formatted text to the string buffer with indentation. */
 static
 void flecs_scriptbuf_append(
     ecs_script_str_visitor_t *v,
@@ -50,6 +53,7 @@ void flecs_scriptbuf_append(
     }
 }
 
+/* Append a string to the buffer with indentation. */
 static
 void flecs_scriptbuf_appendstr(
     ecs_script_str_visitor_t *v,
@@ -67,6 +71,7 @@ void flecs_scriptbuf_appendstr(
     }
 }
 
+/* Serialize a script identifier to the string buffer. */
 static
 void flecs_script_id_to_str(
     ecs_script_str_visitor_t *v,
@@ -88,6 +93,7 @@ void flecs_script_id_to_str(
     }
 }
 
+/* Serialize an expression node to the string buffer. */
 static
 void flecs_expr_to_str(
     ecs_script_str_visitor_t *v,
@@ -101,6 +107,7 @@ void flecs_expr_to_str(
     }
 }
 
+/* Return a human-readable name for a script node kind. */
 static
 const char* flecs_script_node_to_str(
     ecs_script_node_t *node)
@@ -130,6 +137,7 @@ const char* flecs_script_node_to_str(
     return "???";
 }
 
+/* Append a colored node type prefix to the string buffer. */
 static
 void flecs_scriptbuf_node(
     ecs_script_str_visitor_t *v,
@@ -140,6 +148,7 @@ void flecs_scriptbuf_node(
     flecs_script_color_to_str(v, ECS_NORMAL);
 }
 
+/* Serialize a tag node to the string buffer. */
 static
 void flecs_script_tag_to_str(
     ecs_script_str_visitor_t *v,
@@ -150,6 +159,7 @@ void flecs_script_tag_to_str(
     flecs_scriptbuf_appendstr(v, "\n");
 }
 
+/* Serialize a component node to the string buffer. */
 static
 void flecs_script_component_to_str(
     ecs_script_str_visitor_t *v,
@@ -164,6 +174,7 @@ void flecs_script_component_to_str(
     flecs_scriptbuf_appendstr(v, "\n");
 }
 
+/* Serialize a default component node to the string buffer. */
 static
 void flecs_script_default_component_to_str(
     ecs_script_str_visitor_t *v,
@@ -176,6 +187,7 @@ void flecs_script_default_component_to_str(
     flecs_scriptbuf_appendstr(v, "\n");
 }
 
+/* Serialize a variable component or with-variable node to the string buffer. */
 static
 void flecs_script_with_var_to_str(
     ecs_script_str_visitor_t *v,
@@ -186,6 +198,7 @@ void flecs_script_with_var_to_str(
     flecs_scriptbuf_appendstr(v, "\n");
 }
 
+/* Serialize a with statement node to the string buffer. */
 static
 void flecs_script_with_to_str(
     ecs_script_str_visitor_t *v,
@@ -207,6 +220,7 @@ void flecs_script_with_to_str(
     flecs_scriptbuf_appendstr(v, "}\n");
 }
 
+/* Serialize a using statement node to the string buffer. */
 static
 void flecs_script_using_to_str(
     ecs_script_str_visitor_t *v,
@@ -216,6 +230,7 @@ void flecs_script_using_to_str(
     flecs_scriptbuf_append(v, "%s\n", node->name);
 }
 
+/* Serialize a module node to the string buffer. */
 static
 void flecs_script_module_to_str(
     ecs_script_str_visitor_t *v,
@@ -225,6 +240,7 @@ void flecs_script_module_to_str(
     flecs_scriptbuf_append(v, "%s\n", node->name);
 }
 
+/* Serialize an annotation node to the string buffer. */
 static
 void flecs_script_annot_to_str(
     ecs_script_str_visitor_t *v,
@@ -237,6 +253,7 @@ void flecs_script_annot_to_str(
     flecs_scriptbuf_appendstr(v, "\n");
 }
 
+/* Serialize a template node to the string buffer. */
 static
 void flecs_script_template_to_str(
     ecs_script_str_visitor_t *v,
@@ -247,6 +264,7 @@ void flecs_script_template_to_str(
     flecs_script_scope_to_str(v, node->scope);
 }
 
+/* Serialize a variable declaration node to the string buffer. */
 static
 void flecs_script_var_node_to_str(
     ecs_script_str_visitor_t *v,
@@ -265,6 +283,7 @@ void flecs_script_var_node_to_str(
     flecs_scriptbuf_appendstr(v, "\n");
 }
 
+/* Serialize an entity node to the string buffer. */
 static
 void flecs_script_entity_to_str(
     ecs_script_str_visitor_t *v,
@@ -287,6 +306,7 @@ void flecs_script_entity_to_str(
     }
 }
 
+/* Serialize a pair scope node to the string buffer. */
 static
 void flecs_script_pair_scope_to_str(
     ecs_script_str_visitor_t *v,
@@ -298,6 +318,7 @@ void flecs_script_pair_scope_to_str(
     flecs_script_scope_to_str(v, node->scope);
 }
 
+/* Serialize an if statement node to the string buffer. */
 static
 void flecs_script_if_to_str(
     ecs_script_str_visitor_t *v,
@@ -320,6 +341,7 @@ void flecs_script_if_to_str(
     flecs_scriptbuf_appendstr(v, "}\n");
 }
 
+/* Serialize a for-range loop node to the string buffer. */
 static
 void flecs_script_for_range_to_str(
     ecs_script_str_visitor_t *v,
@@ -341,6 +363,7 @@ void flecs_script_for_range_to_str(
     flecs_scriptbuf_appendstr(v, "}\n");
 }
 
+/* Serialize a scope and its children to the string buffer. */
 static
 int flecs_script_scope_to_str(
     ecs_script_str_visitor_t *v,
@@ -368,6 +391,7 @@ int flecs_script_scope_to_str(
     return 0;
 }
 
+/* Dispatch statement-to-string based on node kind. */
 static
 int flecs_script_stmt_to_str(
     ecs_script_visit_t *_v,
@@ -445,9 +469,9 @@ int ecs_script_ast_node_to_buf(
         .buf = buf, .colors = colors, .depth = depth 
     };
 
-    /* Safe, string visitor doesn't modify script */
+    /* Safe: to-string visitor does not modify the script */
     if (ecs_script_visit_from(
-        (ecs_script_impl_t*)ECS_CONST_CAST(ecs_script_t*, script), 
+        (ecs_script_impl_t*)ECS_CONST_CAST(ecs_script_t*, script),
         &v, flecs_script_stmt_to_str, node, depth)) 
     {
         goto error;

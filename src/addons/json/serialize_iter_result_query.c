@@ -1,12 +1,13 @@
 /**
  * @file addons/json/serialize_iter_result_query.c
- * @brief Serialize matched query data of result.
+ * @brief Serialize matched query data of a result.
  */
 
 #include "json.h"
 
 #ifdef FLECS_JSON
 
+/* Serialize the is_set array indicating which fields have data. */
 static
 bool flecs_json_serialize_iter_result_is_set(
     const ecs_iter_t *it,
@@ -34,6 +35,7 @@ bool flecs_json_serialize_iter_result_is_set(
     return true;
 }
 
+/* Serialize the matched ids array for non-static query fields. */
 static
 bool flecs_json_serialize_iter_result_ids(
     const ecs_iter_t *it,
@@ -49,7 +51,7 @@ bool flecs_json_serialize_iter_result_ids(
     uint32_t field_mask = (uint32_t)((1llu << field_count) - 1);
 
     if (q->static_id_fields == field_mask) {
-        /* All matched ids are static, nothing to serialize */
+        /* All field ids are statically known, no per-result ids needed */
         return false;
     }
 
@@ -60,13 +62,13 @@ bool flecs_json_serialize_iter_result_ids(
         ecs_termset_t field_bit = (ecs_termset_t)(1u << f);
 
         if (!(it->set_fields & field_bit)) {
-            /* Don't serialize ids for fields that aren't set */
+            /* Unset field */
             ecs_strbuf_list_appendlit(buf, "0");
             continue;
         }
 
         if (q->static_id_fields & field_bit) {
-            /* Only add non-static ids to save bandwidth/performance */
+            /* Static id, omit to save bandwidth */
             ecs_strbuf_list_appendlit(buf, "0");
             continue;
         }
@@ -80,6 +82,7 @@ bool flecs_json_serialize_iter_result_ids(
     return true;
 }
 
+/* Serialize the source entities array for fields not matched on this. */
 static
 bool flecs_json_serialize_iter_result_sources(
     const ecs_iter_t *it,
@@ -100,7 +103,7 @@ bool flecs_json_serialize_iter_result_sources(
     }
 
     if (f == field_count) {
-        /* All fields are matched on $this */
+        /* All fields matched on $this, no sources to serialize */
         return false;
     }
 
@@ -111,13 +114,13 @@ bool flecs_json_serialize_iter_result_sources(
         ecs_termset_t field_bit = (ecs_termset_t)(1u << f);
 
         if (!(it->set_fields & field_bit)) {
-            /* Don't serialize source for fields that aren't set */
+            /* Unset field */
             ecs_strbuf_list_appendlit(buf, "0");
             continue;
         }
 
         if (!it->sources[f]) {
-            /* Don't serialize source for fields that have $this source */
+            /* Matched on $this */
             ecs_strbuf_list_appendlit(buf, "0");
             continue;
         }
@@ -131,6 +134,7 @@ bool flecs_json_serialize_iter_result_sources(
     return true;
 }
 
+/* Serialize common per-table data: variables, is_set, ids, and sources. */
 static
 bool flecs_json_serialize_common_for_table(
     const ecs_world_t *world,
@@ -154,10 +158,11 @@ bool flecs_json_serialize_common_for_table(
     return result;
 }
 
+/* Serialize field values for a single row in an iterator result. */
 static
 int flecs_json_serialize_iter_result_field_values(
-    const ecs_world_t *world, 
-    const ecs_iter_t *it, 
+    const ecs_world_t *world,
+    const ecs_iter_t *it,
     int32_t i,
     ecs_strbuf_t *buf,
     const ecs_iter_to_json_desc_t *desc,
@@ -221,9 +226,10 @@ int flecs_json_serialize_iter_result_field_values(
     return 0;
 }
 
+/* Serialize query-matched iterator result rows with field data to JSON. */
 int flecs_json_serialize_iter_result_query(
-    const ecs_world_t *world, 
-    const ecs_iter_t *it, 
+    const ecs_world_t *world,
+    const ecs_iter_t *it,
     ecs_strbuf_t *buf,
     ecs_json_ser_ctx_t *ser_ctx,
     const ecs_iter_to_json_desc_t *desc,
@@ -232,7 +238,7 @@ int flecs_json_serialize_iter_result_query(
     const char *parent_path,
     const ecs_json_this_data_t *this_data)
 {
-    /* Serialize tags, pairs, vars once, since they're the same for each row */
+    /* Pre-serialize per-table data (tags, pairs, vars) shared across rows */
     ecs_strbuf_t common_data_buf = ECS_STRBUF_INIT;
     bool common_field_data = flecs_json_serialize_common_for_table(
         world, it, &common_data_buf, desc);
@@ -286,7 +292,7 @@ int flecs_json_serialize_iter_result_query(
                 }
             }
 
-            ecs_strbuf_appendstr(buf, "}"); // "fields": {
+            ecs_strbuf_appendstr(buf, "}"); /* close "fields" object */
         }
 
         flecs_json_object_pop(buf);

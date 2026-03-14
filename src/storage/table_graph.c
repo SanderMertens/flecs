@@ -10,8 +10,7 @@
 
 #include "../private_api.h"
 
-/* Id sequence (type) utilities */
-
+/* Compute hash for a type based on its component id array. */
 static
 uint64_t flecs_type_hash(const void *ptr) {
     const ecs_type_t *type = ptr;
@@ -20,6 +19,7 @@ uint64_t flecs_type_hash(const void *ptr) {
     return flecs_hash(ids, count * ECS_SIZEOF(ecs_id_t));
 }
 
+/* Compare two types lexicographically by their component id arrays. */
 static
 int flecs_type_compare(const void *ptr_1, const void *ptr_2) {
     const ecs_type_t *type_1 = ptr_1;
@@ -46,15 +46,16 @@ int flecs_type_compare(const void *ptr_1, const void *ptr_2) {
     return result;
 }
 
+/* Initialize hashmap for looking up tables by type. */
 void flecs_table_hashmap_init(
-    ecs_world_t *world, 
-    ecs_hashmap_t *hm) 
+    ecs_world_t *world,
+    ecs_hashmap_t *hm)
 {
     flecs_hashmap_init(hm, ecs_type_t, ecs_table_t*, 
         flecs_type_hash, flecs_type_compare, &world->allocator);
 }
 
-/* Find location where to insert id into type */
+/* Find insertion index for an id in a sorted type array. */
 static
 int flecs_type_find_insert(
     const ecs_type_t *type,
@@ -76,7 +77,7 @@ int flecs_type_find_insert(
     return i;
 }
 
-/* Find location of id in type */
+/* Find index of a matching id in a type array. */
 static
 int flecs_type_find(
     const ecs_type_t *type,
@@ -98,6 +99,7 @@ int flecs_type_find(
     return -1;
 }
 
+/* Find index of an id in a type, comparing only lower 32 bits (ignoring generation). */
 static
 int flecs_type_find_ignoring_generation(
     const ecs_type_t *type,
@@ -115,7 +117,7 @@ int flecs_type_find_ignoring_generation(
     return -1;
 }
 
-/* Count number of matching ids */
+/* Count consecutive ids matching a wildcard starting at the given offset. */
 static
 int flecs_type_count_matches(
     const ecs_type_t *type,
@@ -135,7 +137,7 @@ int flecs_type_count_matches(
     return i - offset;
 }
 
-/* Create type from source type with id */
+/* Create a new type by inserting an id into a sorted source type. */
 static
 int flecs_type_new_with(
     ecs_world_t *world,
@@ -168,7 +170,7 @@ int flecs_type_new_with(
     return 0;
 }
 
-/* Create type from source type without ids matching wildcard */
+/* Create a new type by filtering out ids matching a wildcard. */
 static
 int flecs_type_new_filtered(
     ecs_world_t *world,
@@ -208,7 +210,7 @@ int flecs_type_new_filtered(
     return 0;
 }
 
-/* Create type from source type without id */
+/* Create a new type by removing an id from a source type. */
 static
 int flecs_type_new_without(
     ecs_world_t *world,
@@ -266,7 +268,7 @@ int flecs_type_new_without(
     return 0;
 }
 
-/* Create type from source type without entity id, ignoring generation */
+/* Create a new type by removing an id, comparing only lower 32 bits. */
 static
 int flecs_type_new_without_ignoring_generation(
     ecs_world_t *world,
@@ -311,7 +313,7 @@ int flecs_type_new_without_ignoring_generation(
     return 0;
 }
 
-/* Copy type */
+/* Copy a type by duplicating its id array. */
 ecs_type_t flecs_type_copy(
     ecs_world_t *world,
     const ecs_type_t *src)
@@ -329,7 +331,7 @@ ecs_type_t flecs_type_copy(
     };
 }
 
-/* Free type */
+/* Free the id array owned by a type. */
 void flecs_type_free(
     ecs_world_t *world,
     ecs_type_t *type)
@@ -340,7 +342,7 @@ void flecs_type_free(
     }
 }
 
-/* Add to type */
+/* Add an id to an existing type, maintaining sorted order. */
 void flecs_type_add(
     ecs_world_t *world,
     ecs_type_t *type,
@@ -355,7 +357,7 @@ void flecs_type_add(
     }
 }
 
-/* Remove from type */
+/* Remove an id from an existing type. */
 void flecs_type_remove(
     ecs_world_t *world,
     ecs_type_t *type,
@@ -370,7 +372,7 @@ void flecs_type_remove(
     }
 }
 
-/* Remove from type while ignoring entity id generation */
+/* Remove from type while ignoring entity id generation. */
 void flecs_type_remove_ignoring_generation(
     ecs_world_t *world,
     ecs_type_t *type,
@@ -386,8 +388,7 @@ void flecs_type_remove_ignoring_generation(
     }
 }
 
-/* Graph edge utilities */
-
+/* Initialize a table diff builder with preallocated vectors. */
 void flecs_table_diff_builder_init(
     ecs_world_t *world,
     ecs_table_diff_builder_t *builder)
@@ -399,6 +400,7 @@ void flecs_table_diff_builder_init(
     builder->removed_flags = 0;
 }
 
+/* Finalize a table diff builder and free its vectors. */
 void flecs_table_diff_builder_fini(
     ecs_world_t *world,
     ecs_table_diff_builder_t *builder)
@@ -408,6 +410,7 @@ void flecs_table_diff_builder_fini(
     ecs_vec_fini_t(a, &builder->removed, ecs_id_t);
 }
 
+/* Clear the added and removed vectors of a diff builder without freeing. */
 void flecs_table_diff_builder_clear(
     ecs_table_diff_builder_t *builder)
 {
@@ -415,6 +418,7 @@ void flecs_table_diff_builder_clear(
     ecs_vec_clear(&builder->removed);
 }
 
+/* Build a type from a diff builder vector, copying elements from the given offset. */
 static
 void flecs_table_diff_build_type(
     ecs_world_t *world,
@@ -432,6 +436,7 @@ void flecs_table_diff_build_type(
     }
 }
 
+/* Build a table diff from a diff builder, allocating copies of added/removed id arrays. */
 void flecs_table_diff_build(
     ecs_world_t *world,
     ecs_table_diff_builder_t *builder,
@@ -447,6 +452,7 @@ void flecs_table_diff_build(
     diff->removed_flags = builder->removed_flags;
 }
 
+/* Build a table diff without allocating, referencing builder arrays directly. */
 void flecs_table_diff_build_noalloc(
     ecs_table_diff_builder_t *builder,
     ecs_table_diff_t *diff)
@@ -459,6 +465,7 @@ void flecs_table_diff_build_noalloc(
     diff->removed_flags = builder->removed_flags;
 }
 
+/* Append a type's id array to a diff builder vector. */
 static
 void flecs_table_diff_build_add_type_to_vec(
     ecs_world_t *world,
@@ -475,6 +482,7 @@ void flecs_table_diff_build_add_type_to_vec(
         add->array, ecs_id_t, add->count);
 }
 
+/* Append a table diff's added/removed ids to a diff builder. */
 void flecs_table_diff_build_append_table(
     ecs_world_t *world,
     ecs_table_diff_builder_t *dst,
@@ -486,16 +494,18 @@ void flecs_table_diff_build_append_table(
     dst->removed_flags |= src->removed_flags;
 }
 
+/* Free a table diff and its owned id arrays. */
 static
 void flecs_table_diff_free(
     ecs_world_t *world,
-    ecs_table_diff_t *diff) 
+    ecs_table_diff_t *diff)
 {
     flecs_wfree_n(world, ecs_id_t, diff->added.count, diff->added.array);
     flecs_wfree_n(world, ecs_id_t, diff->removed.count, diff->removed.array);
     flecs_bfree(&world->allocators.table_diff, diff);
 }
 
+/* Ensure a graph edge exists in the hi-id map, creating one if needed. */
 static
 ecs_graph_edge_t* flecs_table_ensure_hi_edge(
     ecs_world_t *world,
@@ -523,6 +533,7 @@ ecs_graph_edge_t* flecs_table_ensure_hi_edge(
     return edge;
 }
 
+/* Ensure a graph edge exists, using the lo array for small ids or the hi map otherwise. */
 static
 ecs_graph_edge_t* flecs_table_ensure_edge(
     ecs_world_t *world,
@@ -543,6 +554,7 @@ ecs_graph_edge_t* flecs_table_ensure_edge(
     return edge;
 }
 
+/* Disconnect a graph edge by unlinking it and freeing its diff data. */
 static
 void flecs_table_disconnect_edge(
     ecs_world_t *world,
@@ -553,7 +565,7 @@ void flecs_table_disconnect_edge(
     ecs_assert(edge->id == id, ECS_INTERNAL_ERROR, NULL);
     (void)id;
 
-    /* Remove backref from destination table */
+    /* Unlink from destination table's incoming edge list */
     ecs_graph_edge_hdr_t *next = edge->hdr.next;
     ecs_graph_edge_hdr_t *prev = edge->hdr.prev;
 
@@ -564,13 +576,12 @@ void flecs_table_disconnect_edge(
         prev->next = next;
     }
 
-    /* Remove data associated with edge */
     ecs_table_diff_t *diff = edge->diff;
     if (diff) {
         flecs_table_diff_free(world, diff);
     }
 
-    /* If edge id is low, clear it from fast lookup array */
+    /* Low ids live in the lo array; clear instead of freeing */
     if (id < FLECS_HI_COMPONENT_ID) {
         ecs_os_memset_t(edge, 0, ecs_graph_edge_t);
     } else {
@@ -578,6 +589,7 @@ void flecs_table_disconnect_edge(
     }
 }
 
+/* Remove a graph edge from the hi map and disconnect it. */
 static
 void flecs_table_remove_edge(
     ecs_world_t *world,
@@ -594,6 +606,7 @@ void flecs_table_remove_edge(
     ecs_map_remove(edges->hi, id);
 }
 
+/* Initialize graph edges struct to empty state. */
 static
 void flecs_table_init_edges(
     ecs_graph_edges_t *edges)
@@ -602,6 +615,7 @@ void flecs_table_init_edges(
     edges->hi = NULL;
 }
 
+/* Initialize a graph node's add and remove edges. */
 static
 void flecs_table_init_node(
     ecs_graph_node_t *node)
@@ -610,6 +624,7 @@ void flecs_table_init_node(
     flecs_table_init_edges(&node->remove);
 }
 
+/* Initialize a table's flags, graph node, and component storage. */
 static
 void flecs_init_table(
     ecs_world_t *world,
@@ -626,6 +641,7 @@ void flecs_init_table(
     flecs_table_init(world, table, prev);
 }
 
+/* Allocate and initialize a new table in the world's sparse table set. */
 static
 ecs_table_t *flecs_table_new(
     ecs_world_t *world,
@@ -673,16 +689,13 @@ ecs_table_t *flecs_table_new(
 
     ecs_log_push_2();
 
-    /* Store table in table hashmap */
     *(ecs_table_t**)table_elem.value = result;
-
-    /* Set keyvalue to one that has the same lifecycle as the table */
+    /* Point key to table-owned type so it persists with the table */
     *(ecs_type_t*)table_elem.key = result->type;
     result->_->hash = table_elem.hash;
 
     flecs_init_table(world, result, prev);
 
-    /* Update counters */
     world->info.table_count ++;
     world->info.table_create_total ++;
 
@@ -693,6 +706,7 @@ ecs_table_t *flecs_table_new(
     return result;
 }
 
+/* Find an existing table for a type or create a new one. */
 static
 ecs_table_t* flecs_table_ensure(
     ecs_world_t *world,
@@ -717,11 +731,8 @@ ecs_table_t* flecs_table_ensure(
         return table;
     }
 
-    /* If we get here, table needs to be created which is only allowed when the
-     * application is not currently in progress */
+    /* Table not found; create it (not allowed during readonly/progress) */
     ecs_assert(!(world->flags & EcsWorldReadonly), ECS_INTERNAL_ERROR, NULL);
-
-    /* If we get here, the table has not been found, so create it. */
     if (own_type) {
         return flecs_table_new(world, type, elem, prev);
     }
@@ -730,6 +741,7 @@ ecs_table_t* flecs_table_ensure(
     return flecs_table_new(world, &copy, elem, prev);
 }
 
+/* Append an id to the added list of a diff builder. */
 static
 void flecs_diff_insert_added(
     ecs_world_t *world,
@@ -739,6 +751,7 @@ void flecs_diff_insert_added(
     ecs_vec_append_t(&world->allocator, &diff->added, ecs_id_t)[0] = id;
 }
 
+/* Append an id to the removed list of a diff builder. */
 static
 void flecs_diff_insert_removed(
     ecs_world_t *world,
@@ -749,6 +762,7 @@ void flecs_diff_insert_removed(
     ecs_vec_append_t(a, &diff->removed, ecs_id_t)[0] = id;
 }
 
+/* Check whether all entities referenced by an id are alive. */
 static
 bool flecs_id_is_alive(
     ecs_world_t *world,
@@ -767,6 +781,7 @@ bool flecs_id_is_alive(
     }
 }
 
+/* Compute the component diff between two tables and store it on the edge. */
 static
 void flecs_compute_table_diff(
     ecs_world_t *world,
@@ -831,8 +846,7 @@ void flecs_compute_table_diff(
     ecs_flags32_t added_flags = 0, removed_flags = 0;
     bool trivial_edge = !ECS_HAS_RELATION(id, EcsIsA) && !childof;
 
-    /* First do a scan to see how big the diff is, so we don't have to realloc
-     * or alloc more memory than required. */
+    /* First pass: count added/removed ids to size the diff */
     for (; i_node < node_count && i_next < next_count; ) {
         ecs_id_t id_node = ids_node[i_node];
         ecs_id_t id_next = ids_next[i_next];
@@ -875,8 +889,7 @@ void flecs_compute_table_diff(
         !ecs_id_is_wildcard(id) && !(added_flags|removed_flags);
 
     if (trivial_edge) {
-        /* If edge is trivial there's no need to create a diff element for it */
-        return;
+        return; /* Single add/remove with no side effects needs no diff */
     }
 
     ecs_table_diff_builder_t *builder = &world->allocators.diff_builder;
@@ -924,6 +937,7 @@ void flecs_compute_table_diff(
     ecs_assert(diff->removed.count == removed_count, ECS_INTERNAL_ERROR, NULL);
 }
 
+/* Recursively add override components from a base entity to a destination type. */
 static
 void flecs_add_overrides_for_base(
     ecs_world_t *world,
@@ -951,10 +965,6 @@ void flecs_add_overrides_for_base(
                 ecs_flags32_t cr_flags = flecs_component_get_flags(world, to_add);
                 if (cr_flags & EcsIdDontFragment) {
                     to_add = 0;
-
-                    /* Add flag to base table. Cheaper to do here vs adding an
-                     * observer for OnAdd AUTO_OVERRIDE|* / during table 
-                     * creation. */
                     base_table->flags |= EcsTableOverrideDontFragment;
                 }
             } else {
@@ -996,6 +1006,7 @@ void flecs_add_overrides_for_base(
     }
 }
 
+/* Recursively add ids required by the With relationship property. */
 static
 void flecs_add_with_property(
     ecs_world_t *world,
@@ -1006,8 +1017,7 @@ void flecs_add_with_property(
 {
     r = ecs_get_alive(world, r);
 
-    /* Check if component/relationship has With pairs, which contain ids
-     * that need to be added to the table. */
+    /* Find With pairs on the relationship entity */
     ecs_table_t *table = ecs_get_table(world, r);
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
     
@@ -1032,6 +1042,7 @@ void flecs_add_with_property(
     }
 }
 
+/* Find or create a table that includes the given id. */
 static
 ecs_table_t* flecs_find_table_with(
     ecs_world_t *world,
@@ -1048,11 +1059,9 @@ ecs_table_t* flecs_find_table_with(
         o = ECS_PAIR_SECOND(with);
         cr = flecs_components_ensure(world, ecs_pair(r, EcsWildcard));
         if (cr->flags & EcsIdExclusive) {
-            /* Relationship is exclusive, check if table already has it */
             const ecs_table_record_t *tr = flecs_component_get_table(cr, node);
             if (tr) {
-                /* Table already has an instance of the relationship, create
-                 * a new id sequence with the existing id replaced */
+                /* Exclusive: replace existing target instead of adding */
                 ecs_type_t dst_type = flecs_type_copy(world, &node->type);
                 ecs_assert(dst_type.array != NULL, ECS_INTERNAL_ERROR, NULL);
                 dst_type.array[tr->index] = with;
@@ -1065,12 +1074,11 @@ ecs_table_t* flecs_find_table_with(
     }
 
     if (cr->flags & EcsIdDontFragment) {
-        /* Component doesn't fragment tables */
         node->flags |= EcsTableHasDontFragment;
         return node;
     }
 
-    /* Create sequence with new id */
+    /* Create type with new id inserted */
     ecs_type_t dst_type;
     int res = flecs_type_new_with(world, &dst_type, &node->type, with);
     if (res == -1) {
@@ -1078,7 +1086,6 @@ ecs_table_t* flecs_find_table_with(
     }
 
     if (r == EcsIsA) {
-        /* If adding a prefab, check if prefab has overrides */
         flecs_add_overrides_for_base(world, &dst_type, with);
     } else if (r == EcsChildOf) {
         o = ecs_get_alive(world, o);
@@ -1090,7 +1097,6 @@ ecs_table_t* flecs_find_table_with(
     if (cr->flags & EcsIdWith) {
         ecs_component_record_t *cr_with_wildcard = flecs_components_get(world,
             ecs_pair(EcsWith, EcsWildcard));
-        /* If id has With property, add targets to type */
         flecs_add_with_property(world, cr_with_wildcard, &dst_type, r, o);
     }
 
@@ -1110,6 +1116,7 @@ ecs_table_t* flecs_find_table_with(
     return flecs_table_ensure(world, &dst_type, true, node);
 }
 
+/* Find or create a table that excludes the given id. */
 static
 ecs_table_t* flecs_find_table_without(
     ecs_world_t *world,
@@ -1124,7 +1131,6 @@ ecs_table_t* flecs_find_table_without(
         if (cr) {
             if (cr->flags & EcsIdDontFragment) {
                 node->flags |= EcsTableHasDontFragment;
-                /* Component doesn't fragment tables */
                 return node;
             }
         }
@@ -1137,7 +1143,7 @@ ecs_table_t* flecs_find_table_without(
         }
     }
 
-    /* Create sequence with new id */
+    /* Create type with id removed */
     ecs_type_t dst_type;
     int res = flecs_type_new_without(world, &dst_type, &node->type, without);
     if (res == -1) {
@@ -1152,6 +1158,7 @@ ecs_table_t* flecs_find_table_without(
     return flecs_table_ensure(world, &dst_type, true, node);
 }
 
+/* Initialize a graph edge with source table, destination, and id. */
 static
 void flecs_table_init_edge(
     ecs_table_t *table,
@@ -1170,6 +1177,7 @@ void flecs_table_init_edge(
     edge->id = id;
 }
 
+/* Initialize an add edge, link it to the destination's incoming refs, and compute the diff. */
 static
 void flecs_init_edge_for_add(
     ecs_world_t *world,
@@ -1199,6 +1207,7 @@ void flecs_init_edge_for_add(
     }
 }
 
+/* Initialize a remove edge, link it to the destination's incoming refs, and compute the diff. */
 static
 void flecs_init_edge_for_remove(
     ecs_world_t *world,
@@ -1228,6 +1237,7 @@ void flecs_init_edge_for_remove(
     }
 }
 
+/* Find the destination table for removing an id and create the remove edge. */
 static
 ecs_table_t* flecs_create_edge_for_remove(
     ecs_world_t *world,
@@ -1240,6 +1250,7 @@ ecs_table_t* flecs_create_edge_for_remove(
     return to;   
 }
 
+/* Find the destination table for adding an id and create the add edge. */
 static
 ecs_table_t* flecs_create_edge_for_add(
     ecs_world_t *world,
@@ -1252,6 +1263,7 @@ ecs_table_t* flecs_create_edge_for_add(
     return to;
 }
 
+/* Traverse the table graph along a remove edge to find the destination table. */
 ecs_table_t* flecs_table_traverse_remove(
     ecs_world_t *world,
     ecs_table_t *node,
@@ -1290,6 +1302,7 @@ error:
     return NULL;
 }
 
+/* Traverse the table graph along an add edge to find the destination table. */
 ecs_table_t* flecs_table_traverse_add(
     ecs_world_t *world,
     ecs_table_t *node,
@@ -1329,6 +1342,7 @@ error:
     return NULL;
 }
 
+/* Find or create a table for the given component type. */
 ecs_table_t* flecs_table_find_or_create(
     ecs_world_t *world,
     ecs_type_t *type)
@@ -1337,6 +1351,7 @@ ecs_table_t* flecs_table_find_or_create(
     return flecs_table_ensure(world, type, false, NULL);
 }
 
+/* Initialize the root table (the empty archetype). */
 void flecs_init_root_table(
     ecs_world_t *world)
 {
@@ -1346,12 +1361,13 @@ void flecs_init_root_table(
     world->store.root._ = flecs_calloc_t(&world->allocator, ecs_table__t);
     flecs_init_table(world, &world->store.root, NULL);
 
-    /* Ensure table indices start at 1, as 0 is reserved for the root */
+    /* Reserve index 0 for the root table */
     uint64_t new_id = flecs_sparse_new_id(&world->store.tables);
     ecs_assert(new_id == 0, ECS_INTERNAL_ERROR, NULL);
     (void)new_id;
 }
 
+/* Add observer flags to incoming add edges and outgoing remove edges for an id. */
 void flecs_table_edges_add_flags(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -1400,6 +1416,7 @@ void flecs_table_edges_add_flags(
     }
 }
 
+/* Clean up all incoming and outgoing graph edges for a table. */
 void flecs_table_clear_edges(
     ecs_world_t *world,
     ecs_table_t *table)
@@ -1471,6 +1488,7 @@ void flecs_table_clear_edges(
     ecs_log_pop_1();
 }
 
+/* Clear add and remove graph edges for a specific component id. */
 void flecs_table_clear_edges_for_id(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -1513,6 +1531,7 @@ void flecs_table_clear_edges_for_id(
     }
 }
 
+/* Find a table by adding an id via graph traversal and append the diff. */
 ecs_table_t* flecs_find_table_add(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -1528,7 +1547,6 @@ error:
     return NULL;
 }
 
-/* Public convenience functions for traversing table graph */
 ecs_table_t* ecs_table_add_id(
     ecs_world_t *world,
     ecs_table_t *table,

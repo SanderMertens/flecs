@@ -1,21 +1,22 @@
 /**
  * @file observer.c
- * @brief Observer implementation.
- * 
- * The observer implementation contains functions for creating, deleting and
- * invoking observers. The code is split up into single-term observers and 
- * multi-term observers. Multi-term observers are created from multiple single-
- * term observers.
+ * @brief Observer lifecycle and invocation.
+ *
+ * Single-term observers register directly for an event/id pair.
+ * Multi-term observers create one single-term child observer per query term;
+ * when any child fires, the parent's full query is evaluated before invoking
+ * the user callback.
  */
 
 #include "private_api.h"
 
+/* Get the effective event for an observer term. Not operators invert
+ * Add/Set to Remove and vice versa. */
 static
 ecs_entity_t flecs_get_observer_event(
     ecs_term_t *term,
     ecs_entity_t event)
 {
-    /* If operator is Not, reverse the event */
     if (term && term->oper == EcsNot) {
         if (event == EcsOnAdd || event == EcsOnSet) {
             event = EcsOnRemove;
@@ -27,6 +28,7 @@ ecs_entity_t flecs_get_observer_event(
     return event;
 }
 
+/* Return the component record flag(s) corresponding to an event type. */
 static
 ecs_flags32_t flecs_id_flag_for_event(
     ecs_entity_t e)
@@ -53,6 +55,9 @@ ecs_flags32_t flecs_id_flag_for_event(
     return 0;
 }
 
+/* Adjust observer count for an event/id pair by the given value (+1 or -1).
+ * Transitions to 1 notify tables to start evaluating; transitions to 0
+ * notify tables to stop and clean up the event id record. */
 static
 void flecs_inc_observer_count(
     ecs_world_t *world,
@@ -66,8 +71,7 @@ void flecs_inc_observer_count(
     
     int32_t result = idt->observer_count += value;
     if (result == 1) {
-        /* Notify framework that there are observers for the event/id. This 
-         * allows parts of the code to skip event evaluation early */
+        /* First observer for this event/id: enable event evaluation */
         flecs_notify_tables(world, id, &(ecs_table_event_t){
             .kind = EcsTableTriggersForId,
             .event = event
@@ -80,8 +84,8 @@ void flecs_inc_observer_count(
                 cr->flags |= flags;
             }
 
-            /* Track that we've created an OnSet observer so we know not to take
-             * fast code path when doing a set operation. */
+            /* Mark component as having OnSet observers so set operations
+             * don't skip event emission. */
             if (event == EcsOnSet || event == EcsWildcard) {
                 if (id < FLECS_HI_COMPONENT_ID) {
                     world->non_trivial_set[id] = true;
@@ -94,7 +98,7 @@ void flecs_inc_observer_count(
             }
         }
     } else if (result == 0) {
-        /* Ditto, but the reverse */
+        /* Last observer removed: disable event evaluation */
         flecs_notify_tables(world, id, &(ecs_table_event_t){
             .kind = EcsTableNoTriggersForId,
             .event = event
@@ -126,6 +130,7 @@ void flecs_inc_observer_count(
     }
 }
 
+/* Normalize observer id by replacing Any with Wildcard in pairs. */
 static
 ecs_id_t flecs_observer_id(
     ecs_id_t id)
@@ -142,6 +147,7 @@ ecs_id_t flecs_observer_id(
     return id;
 }
 
+/* Register an observer for a specific event and component id combination. */
 static
 void flecs_register_observer_for_event_and_id(
     ecs_world_t *world,
@@ -155,11 +161,9 @@ void flecs_register_observer_for_event_and_id(
     ecs_observer_impl_t *impl = flecs_observer_impl(o);
     ecs_entity_t trav = term ? term->trav : 0;
 
-    /* Get observers for event */
     ecs_event_record_t *er = flecs_event_record_ensure(observable, event);
     ecs_assert(er != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    /* Get observers for (component) id for event */
     ecs_event_id_record_t *idt = flecs_event_id_record_ensure(
         world, er, term_id);
     ecs_assert(idt != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -175,6 +179,7 @@ void flecs_register_observer_for_event_and_id(
     }
 }
 
+/* Register an observer for a component id across all its events. */
 static
 void flecs_register_observer_for_id(
     ecs_world_t *world,
@@ -205,6 +210,7 @@ void flecs_register_observer_for_id(
     }
 }
 
+/* Register a single-term observer in the Self, Self|Up, or Up observer map. */
 static
 void flecs_uni_observer_register(
     ecs_world_t *world,
@@ -238,6 +244,7 @@ void flecs_uni_observer_register(
     }
 }
 
+/* Unregister an observer for a component id across all its events. */
 static
 void flecs_unregister_observer_for_id(
     ecs_world_t *world,
@@ -264,11 +271,9 @@ void flecs_unregister_observer_for_id(
             continue;
         }
 
-        /* Get observers for event */
         ecs_event_record_t *er = flecs_event_record_get(observable, event);
         ecs_assert(er != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        /* Get observers for (component) id */
         ecs_event_id_record_t *idt = flecs_event_id_record_get(er, term_id);
         ecs_assert(idt != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -286,6 +291,7 @@ void flecs_unregister_observer_for_id(
     }
 }
 
+/* Unregister a single-term observer from the observable. */
 static
 void flecs_unregister_observer(
     ecs_world_t *world,
@@ -323,6 +329,9 @@ void flecs_unregister_observer(
     }
 }
 
+/* Check if an observer should be skipped: already handled this event (dedup),
+ * observer is disabled, or table is a prefab/disabled entity table that the
+ * observer did not opt into matching. */
 static
 bool flecs_ignore_observer(
     ecs_observer_t *o,
@@ -352,6 +361,7 @@ bool flecs_ignore_observer(
     return result;
 }
 
+/* Default run callback for single-term observers; delegates to user callback. */
 static
 void flecs_default_uni_observer_run_callback(ecs_iter_t *it) {
     ecs_observer_t *o = it->ctx;
@@ -360,6 +370,7 @@ void flecs_default_uni_observer_run_callback(ecs_iter_t *it) {
     o->callback(it);
 }
 
+/* Invoke an observer's run or callback function. */
 static
 void flecs_observer_invoke(
     ecs_observer_t *o,
@@ -382,6 +393,7 @@ void flecs_observer_invoke(
     }
 }
 
+/* Invoke a single-term observer for a matched table event. */
 static
 void flecs_uni_observer_invoke(
     ecs_world_t *world,
@@ -440,12 +452,11 @@ void flecs_uni_observer_invoke(
         bool match_this = query->flags & EcsQueryMatchThis;
 
         if (match_this) {
-            /* Invoke observer for $this field */
             flecs_observer_invoke(o, it);
             ecs_os_inc(&query->eval_count);
         } else {
-            /* Not a $this field, translate the iterator data from a $this field to
-             * a field with it->sources set. */
+            /* Non-$this source: translate event data to match the observer's
+             * fixed source entity. */
             ecs_entity_t observer_src = ECS_TERM_REF_ID(&term->src);
             ecs_assert(observer_src != 0, ECS_INTERNAL_ERROR, NULL);
             const ecs_entity_t *entities = it->entities;
@@ -457,27 +468,21 @@ void flecs_uni_observer_invoke(
             it->count = 0;
             it->table = NULL;
 
-            /* Loop all entities for which the event was emitted. Usually this is
-            * just one, but it is possible to emit events for a table range. */
+            /* Check each entity in the event range for the observer's source */
             for (i = 0; i < count; i ++) {
                 ecs_entity_t e = entities[i];
 
-                /* Filter on the source of the observer field */
                 if (observer_src == e) {
                     if (!src) {
-                        /* Only overwrite source if event wasn't forwarded or
-                        * propagated from another entity. */
+                        /* Set source unless event was forwarded/propagated */
                         it->sources[0] = e;
                     }
 
                     flecs_observer_invoke(o, it);
                     ecs_os_inc(&query->eval_count);
-
-                    /* Restore source */
                     it->sources[0] = src;
 
-                    /* Observer can only match one source explicitly, so we don't
-                    * have to check any other entities. */
+                    /* Fixed source matches at most once */
                     break;
                 }
             }
@@ -501,6 +506,7 @@ void flecs_uni_observer_invoke(
     world->info.observers_ran_total ++;
 }
 
+/* Invoke all observers in a map for a given event. */
 void flecs_observers_invoke(
     ecs_world_t *world,
     ecs_map_t *observers,
@@ -526,6 +532,8 @@ void flecs_observers_invoke(
     }
 }
 
+/* Invoke a multi-term observer: evaluate its full query against the event
+ * table, and only fire the callback if all terms match. */
 static
 void flecs_multi_observer_invoke(
     ecs_iter_t *it) 
@@ -546,6 +554,8 @@ void flecs_multi_observer_invoke(
     int8_t pivot_term = it->term_index;
     ecs_term_t *term = &o->query->terms[pivot_term];
 
+    /* For Not terms, swap tables: evaluate the query against the destination
+     * table (other_table), with the current table as previous. */
     bool is_not = term->oper == EcsNot;
     if (is_not) {
         table = it->other_table;
@@ -561,15 +571,13 @@ void flecs_multi_observer_invoke(
     if (is_not) {
         match = ecs_query_has_table(o->query, table, &user_it);
         if (match) {
-            /* The target table matches but the entity hasn't moved to it yet. 
-             * Now match the not_query, which will populate the iterator with
-             * data from the table the entity is still stored in. */
-            user_it.flags |= EcsIterSkip; /* Prevent change detection on fini */
+            /* Target table matches but entity hasn't moved yet. Use
+             * not_query to populate data from the entity's current table. */
+            user_it.flags |= EcsIterSkip;
             ecs_iter_fini(&user_it);
             match = ecs_query_has_table(impl->not_query, prev_table, &user_it);
 
-            /* A not query replaces Not terms with Optional terms, so if the 
-             * regular query matches, the not_query should also match. */
+            /* not_query replaces Not with Optional, so it must also match. */
             ecs_assert(match, ECS_INTERNAL_ERROR, NULL);
         }
     } else {
@@ -583,8 +591,7 @@ void flecs_multi_observer_invoke(
     }
 
     if (match) {
-        /* Monitor observers only invoke when the query matches for the first
-         * time with an entity */
+        /* Monitors only fire on enter transitions, not when already matching. */
         if (impl->flags & EcsObserverIsMonitor) {
             ecs_iter_t table_it;
             if (ecs_query_has_table(o->query, prev_table, &table_it)) {
@@ -599,11 +606,8 @@ void flecs_multi_observer_invoke(
 
         impl->last_event_id[0] = it->event_cur;
 
-        /* Patch data from original iterator. If the observer query has 
-         * wildcards which triggered the original event, the component id that
-         * got matched by ecs_query_has_range may not be the same as the one
-         * that caused the event. We need to make sure to communicate the
-         * component id that actually triggered the observer. */
+        /* Patch the pivot field with the actual event id. The query match may
+         * have resolved wildcards differently than the triggering event. */
         int8_t pivot_field = term->field_index;
         ecs_assert(pivot_field >= 0, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(pivot_field < user_it.field_count, ECS_INTERNAL_ERROR, NULL);
@@ -639,8 +643,7 @@ void flecs_multi_observer_invoke(
         ecs_table_unlock(it->world, table);
         flecs_stage_set_system(world->stages[0], old_system);
     } else {
-        /* While the observer query was strictly speaking evaluated, it's more
-         * useful to measure how often the observer was actually invoked. */
+        /* No match: undo eval_count so metrics reflect actual invocations. */
         o->query->eval_count --;
     }
 
@@ -648,6 +651,7 @@ done:
     return;
 }
 
+/* Invoke a multi-term observer without query evaluation. */
 static
 void flecs_multi_observer_invoke_no_query(
     ecs_iter_t *it) 
@@ -682,20 +686,20 @@ void flecs_multi_observer_invoke_no_query(
     flecs_stage_set_system(world->stages[0], old_system);
 }
 
-/* For convenience, so applications can use a single run callback that uses 
- * ecs_iter_next to iterate results for systems/queries and observers. */
+/* One-shot next callback for observer run functions. Returns true once,
+ * then false on subsequent calls. Uses interrupted_by as the sentinel. */
 bool flecs_default_next_callback(ecs_iter_t *it) {
     if (it->interrupted_by) {
         return false;
     } else {
-        /* Use interrupted_by to signal the next iteration must return false */
         ecs_assert(it->system != 0, ECS_INTERNAL_ERROR, NULL);
         it->interrupted_by = it->system;
         return true;
     }
 }
 
-/* Run action for children of multi observer */
+/* Callback assigned to child observers of a multi-term observer. Delegates
+ * to the user's run callback if set, otherwise evaluates the parent query. */
 static
 void flecs_multi_observer_builtin_run(ecs_iter_t *it) {
     ecs_observer_t *o = it->ctx;
@@ -715,6 +719,7 @@ void flecs_multi_observer_builtin_run(ecs_iter_t *it) {
     flecs_multi_observer_invoke(it);
 }
 
+/* Invoke an observer for all existing entities that match its query. */
 static
 void flecs_observer_yield_existing(
     ecs_world_t *world,
@@ -728,8 +733,7 @@ void flecs_observer_yield_existing(
 
     ecs_defer_begin(world);
 
-    /* If yield existing is enabled, invoke for each thing that matches
-     * the event, if the event is iterable. */
+    /* Iterate existing matches and invoke the observer for each. */
     int i, count = o->event_count;
     for (i = 0; i < count; i ++) {
         ecs_entity_t event = o->events[i];
@@ -773,6 +777,7 @@ void flecs_observer_yield_existing(
     ecs_defer_end(world);
 }
 
+/* Initialize a single-term observer and register it with the observable. */
 static
 int flecs_uni_observer_init(
     ecs_world_t *world,
@@ -815,6 +820,7 @@ int flecs_uni_observer_init(
     return 0;
 }
 
+/* Add a child single-term observer to a multi-term observer. */
 static
 int flecs_observer_add_child(
     ecs_world_t *world,
@@ -837,6 +843,7 @@ int flecs_observer_add_child(
     return 0;
 }
 
+/* Initialize a multi-term observer by creating child observers for each query term. */
 static
 int flecs_multi_observer_init(
     ecs_world_t *world,
@@ -845,17 +852,13 @@ int flecs_multi_observer_init(
 {
     ecs_observer_impl_t *impl = flecs_observer_impl(o);
 
-    /* Create last event id for filtering out the same event that arrives from
-     * more than one term */
+    /* Shared event id deduplicates: when multiple child observers trigger
+     * for the same event, the parent only fires once. */
     impl->last_event_id = ecs_os_calloc_t(int32_t);
-    
-    /* Mark observer as multi observer */
     impl->flags |= EcsObserverIsMulti;
 
-    /* Vector that stores a single-component observer for each query term */
+    /* Each query term gets its own single-term child observer */
     ecs_vec_init_t(&world->allocator, &impl->children, ecs_observer_t*, 2);
-
-    /* Create a child observer for each term in the query */
     ecs_query_t *query = o->query;
     ecs_observer_desc_t child_desc = *desc;
     child_desc.last_event_id = impl->last_event_id;
@@ -894,9 +897,7 @@ int flecs_multi_observer_init(
         }
     }
 
-    /* If an observer is only interested in table events, we only need to
-     * observe a single component, as each table event will be emitted for all
-     * components of the source table. */
+    /* Table events fire for all components at once; one child suffices. */
     bool only_table_events = true;
     for (i = 0; i < o->event_count; i ++) {
         ecs_entity_t e = o->events[i];
@@ -933,9 +934,7 @@ int flecs_multi_observer_init(
         ecs_id_t id = term->id;
 
         if (only_table_events) {
-            /* For table event observers, only observe a single $this|self 
-             * term. Make sure to create observers for non-self terms, as those
-             * require event propagation. */
+            /* Table events: only one $this|self term needed. */
             if (ecs_term_match_this(term) && 
                (term->src.id & EcsTraverseFlags) == EcsSelf) 
             {
@@ -949,7 +948,7 @@ int flecs_multi_observer_init(
             }
         }
 
-        /* AndFrom & OrFrom terms insert multiple observers */
+        /* AndFrom/OrFrom: expand into one child observer per id in the type */
         if (oper == EcsAndFrom || oper == EcsOrFrom) {
             const ecs_type_t *type = ecs_get_type(world, id);
             if (!type) {
@@ -959,8 +958,7 @@ int flecs_multi_observer_init(
             int32_t ti, ti_count = type->count;
             ecs_id_t *ti_ids = type->array;
 
-            /* Correct operator will be applied when an event occurs, and
-             * the observer is evaluated on the observer source */
+            /* Children use And; full semantics applied at query evaluation. */
             term->oper = EcsAnd;
             for (ti = 0; ti < ti_count; ti ++) {
                 ecs_id_t ti_id = ti_ids[ti];
@@ -980,7 +978,7 @@ int flecs_multi_observer_init(
             continue;
         }
 
-        /* Single component observers never use OR */
+        /* Child observers use And; Or semantics are handled by the parent */
         if (oper == EcsOr) {
             term->oper = EcsAnd;
         }
@@ -1007,10 +1005,8 @@ int flecs_multi_observer_init(
         }
     }
 
-    /* If observer has Not terms, we need to create a query that replaces Not
-     * with Optional which we can use to populate the observer data for the 
-     * table that the entity moved away from (or to, if it's an OnRemove 
-     * observer). */
+    /* For Not terms, create a parallel query with Not replaced by Optional
+     * so iterator data can be populated from the entity's pre-move table. */
     if (has_not) {
         ecs_query_desc_t not_desc = desc->query;
         not_desc.expr = NULL;
@@ -1033,11 +1029,13 @@ error:
     return -1;
 }
 
+/* Destructor callback for observer poly type. */
 static
 void flecs_observer_poly_fini(void *ptr) {
     flecs_observer_fini(ptr);
 }
 
+/* Initialize an observer from a descriptor, creating query and child observers as needed. */
 ecs_observer_t* flecs_observer_init(
     ecs_world_t *world,
     ecs_entity_t entity,
@@ -1059,20 +1057,16 @@ ecs_observer_t* flecs_observer_init(
     o->world = world;
     impl->dtor = flecs_observer_poly_fini;
 
-    /* Make writeable copy of query desc so that we can set name. This will
-     * make debugging easier, as any error messages related to creating the
-     * query will have the name of the observer. */
     ecs_query_desc_t query_desc = desc->query;
     query_desc.entity = 0;
     query_desc.cache_kind = EcsQueryCacheNone;
 
     ecs_query_t *query = NULL;
     
-    /* Only do optimization when not in sanitized mode. This ensures that the
-     * behavior is consistent between observers with and without queries, as
-     * both paths will be exercised in unit tests. */
+    /* Skip trivial observer optimization in sanitized mode to exercise
+     * both query and non-query code paths in tests. */
 #ifndef FLECS_SANITIZE
-    /* Temporary arrays for dummy query */
+    /* Temporary arrays for placeholder query */
     ecs_term_t terms[FLECS_TERM_COUNT_MAX] = {0};
     ecs_size_t sizes[FLECS_TERM_COUNT_MAX] = {0};
     ecs_id_t ids[FLECS_TERM_COUNT_MAX] = {0};
@@ -1085,10 +1079,10 @@ ecs_observer_t* flecs_observer_init(
 
     if (desc->events[0] != EcsMonitor) {
         if (flecs_query_finalize_simple(world, &dummy_query, &query_desc)) {
-            /* Flag is set if query increased the keep_alive count of the 
-             * queried for component, which prevents deleting the component
-             * while queries are still alive. */
-            bool trivial_observer = (dummy_query.term_count == 1) && 
+            /* flecs_query_finalize_simple increments component keep_alive
+             * counts. If we take the trivial path below, no real query is
+             * created. Otherwise, the keep_alive must be undone. */
+            bool trivial_observer = (dummy_query.term_count == 1) &&
                 (dummy_query.flags & EcsQueryIsTrivial) &&
                 (dummy_query.flags & EcsQueryMatchOnlySelf) &&
                 !dummy_query.row_fields;
@@ -1098,8 +1092,8 @@ ecs_observer_t* flecs_observer_init(
                     query = &dummy_query;
                 }
             } else {
-                /* We're going to create an actual query, so undo the keep_alive
-                 * increment of the dummy_query. */
+                /* Creating a real query, so undo the keep_alive increment
+                 * from the placeholder query. */
                 int32_t i, count = dummy_query.term_count;
                 for (i = 0; i < count; i ++) {
                     ecs_term_t *term = &terms[i];
@@ -1160,9 +1154,7 @@ ecs_observer_t* flecs_observer_init(
         ECS_INVALID_PARAMETER,
          "cannot set yield_existing and YieldOn* flags at the same time");
 
-    /* Check if observer is monitor. Monitors are created as multi observers
-     * since they require pre/post checking of the filter to test if the
-     * entity is entering/leaving the monitor. */
+    /* Monitors need multi-observer infrastructure for enter/leave detection. */
     for (i = 0; i < FLECS_EVENT_DESC_MAX; i ++) {
         ecs_entity_t event = desc->events[i];
         if (!event) {
@@ -1359,6 +1351,7 @@ const ecs_observer_t* ecs_observer_get(
     return flecs_poly_get(world, observer, ecs_observer_t);
 }
 
+/* Clean up an observer, unregistering it and freeing all resources. */
 void flecs_observer_fini(
     ecs_observer_t *o)
 {
@@ -1415,6 +1408,7 @@ void flecs_observer_fini(
     flecs_free_t(&world->allocator, ecs_observer_impl_t, o);
 }
 
+/* Set or clear a disable bit on an observer and its children. */
 void flecs_observer_set_disable_bit(
     ecs_world_t *world,
     ecs_entity_t e,

@@ -1,15 +1,13 @@
- /**
+/**
  * @file query/cache/cache.h
- * @brief Query cache functions.
+ * @brief Query cache: stores pre-matched tables for fast iteration.
  */
 
 #include "../types.h"
 
-/** Table match data.
- * Each table matched by the query is represented by an ecs_query_cache_match_t
- * instance, which are linked together in a list. A table may match a query
- * multiple times (due to wildcard queries) with different columns being matched
- * by the query. */
+/* Trivial cache match: minimal per-table data for queries without wildcards,
+ * traversal, or non-And operators. A table may match multiple times for
+ * wildcard queries; additional matches are stored in wildcard_matches. */
 typedef struct ecs_query_triv_cache_match_t {
     ecs_table_t *table;              /* The current table. */
     const ecs_table_record_t **trs;  /* Information about where to find field in table. */
@@ -21,7 +19,7 @@ struct ecs_query_cache_match_t {
     int32_t _offset;                  /* Starting point in table. */
     int32_t _count;                   /* Number of entities to iterate in table. */
     ecs_id_t *_ids;                   /* Resolved (component) ids for current table. */
-    ecs_entity_t *_sources;           /* Subjects (sources) of ids. */
+    ecs_entity_t *_sources;           /* Sources of ids. */
     ecs_table_t **_tables;            /* Tables for fields with non-$this source. */
     ecs_termset_t _up_fields;         /* Fields that are matched through traversal. */
     int32_t *_monitor;                /* Used to monitor table for changes. */
@@ -29,14 +27,14 @@ struct ecs_query_cache_match_t {
     ecs_vec_t *wildcard_matches;      /* Additional matches for table for wildcard queries. */
 };
 
-/** Query group */
+/* Group of matched tables. Default: single group. With group_by: one per group id. */
 struct ecs_query_cache_group_t {
     ecs_vec_t tables;                 /* vec<ecs_query_cache_match_t> */
     ecs_query_group_info_t info;      /* Group info available to application. */
     ecs_query_cache_group_t *next;    /* Next group to iterate (only set for queries with group_by). */
 };
 
-/** Table record type for query table cache. A query only has one per table. */
+/* Maps a table to its group and index within that group's table array */
 typedef struct ecs_query_cache_table_t {
     ecs_query_cache_group_t *group;   /* Group the table is added to. */
     int32_t index;                    /* Index into group->tables. */
@@ -49,7 +47,7 @@ typedef struct ecs_query_cache_allocators_t {
     ecs_block_allocator_t monitors;
 } ecs_query_cache_allocators_t;
 
-/** Query that is automatically matched against tables */
+/* Query cache: maintains a list of matched tables, kept in sync via observer */
 typedef struct ecs_query_cache_t {
     /* Uncached query used to populate the cache */
     ecs_query_t *query;

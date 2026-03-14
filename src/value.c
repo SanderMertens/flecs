@@ -1,10 +1,11 @@
 /**
  * @file value.c
- * @brief Utility functions to work with non-trivial pointers of user types.
+ * @brief Type-safe value operations (init, copy, move, free) using type hooks.
  */
 
 #include "private_api.h"
 
+/* Initialize a value using its type info. Falls back to zero-init if no ctor. */
 int ecs_value_init_w_type_info(
     const ecs_world_t *world,
     const ecs_type_info_t *ti,
@@ -23,6 +24,7 @@ error:
     return -1;
 }
 
+/* Initialize a value by looking up type info from entity. */
 int ecs_value_init(
     const ecs_world_t *world,
     ecs_entity_t type,
@@ -37,6 +39,7 @@ error:
     return -1;
 }
 
+/* Allocate and initialize a new value. Caller must free with ecs_value_free. */
 void* ecs_value_new_w_type_info(
     ecs_world_t *world,
     const ecs_type_info_t *ti)
@@ -57,6 +60,7 @@ error:
     return NULL;
 }
 
+/* Allocate and initialize a new value by entity type. */
 void* ecs_value_new(
     ecs_world_t *world,
     ecs_entity_t type)
@@ -70,6 +74,7 @@ error:
     return NULL;
 }
 
+/* Destruct a value without freeing memory. */
 int ecs_value_fini_w_type_info(
     const ecs_world_t *world,
     const ecs_type_info_t *ti,
@@ -86,6 +91,7 @@ error:
     return -1;
 }
 
+/* Destruct a value by entity type without freeing memory. */
 int ecs_value_fini(
     const ecs_world_t *world,
     ecs_entity_t type,
@@ -100,6 +106,7 @@ error:
     return -1;
 }
 
+/* Destruct and free a value allocated with ecs_value_new. */
 int ecs_value_free(
     ecs_world_t *world,
     ecs_entity_t type,
@@ -119,6 +126,7 @@ error:
     return -1;
 }
 
+/* Copy a value using type info hooks. */
 int ecs_value_copy_w_type_info(
     const ecs_world_t *world,
     const ecs_type_info_t *ti,
@@ -136,6 +144,7 @@ error:
     return -1;
 }
 
+/* Copy a value by entity type. */
 int ecs_value_copy(
     const ecs_world_t *world,
     ecs_entity_t type,
@@ -150,6 +159,7 @@ error:
     return -1;
 }
 
+/* Move a value using type info hooks. */
 int ecs_value_move_w_type_info(
     const ecs_world_t *world,
     const ecs_type_info_t *ti,
@@ -167,6 +177,7 @@ error:
     return -1;
 }
 
+/* Move a value by entity type. */
 int ecs_value_move(
     const ecs_world_t *world,
     ecs_entity_t type,
@@ -181,6 +192,7 @@ error:
     return -1;
 }
 
+/* Move-construct a value using type info hooks. */
 int ecs_value_move_ctor_w_type_info(
     const ecs_world_t *world,
     const ecs_type_info_t *ti,
@@ -198,6 +210,7 @@ error:
     return -1;
 }
 
+/* Move a value by entity type (delegates to ecs_value_move_w_type_info). */
 int ecs_value_move_ctor(
     const ecs_world_t *world,
     ecs_entity_t type,

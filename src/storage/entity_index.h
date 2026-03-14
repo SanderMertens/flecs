@@ -1,10 +1,10 @@
 /**
- * @file datastructures/entity_index.h
+ * @file storage/entity_index.h
  * @brief Entity index data structure.
  *
- * The entity index stores the table, row for an entity id.
+ * The entity index stores the table and row for an entity id.
  */
- 
+
 #ifndef FLECS_ENTITY_INDEX_H
 #define FLECS_ENTITY_INDEX_H
 
@@ -15,116 +15,97 @@ typedef struct ecs_entity_index_page_t {
     ecs_record_t records[FLECS_ENTITY_PAGE_SIZE];
 } ecs_entity_index_page_t;
 
+/* Sparse set mapping entity ids to records. Dense array stores entity ids;
+ * indices [1..alive_count) are alive, [alive_count..count) are recyclable. */
 typedef struct ecs_entity_index_t {
-    ecs_vec_t dense;
-    ecs_vec_t pages;
-    int32_t alive_count;
+    ecs_vec_t dense;             /* vec<uint64_t> entity ids */
+    ecs_vec_t pages;             /* vec<ecs_entity_index_page_t*> */
+    int32_t alive_count;         /* Partition index: alive entities before, dead after */
     uint64_t max_id;
     ecs_allocator_t *allocator;
 } ecs_entity_index_t;
 
-/** Initialize entity index. */
 void flecs_entity_index_init(
     ecs_allocator_t *allocator,
     ecs_entity_index_t *index);
 
-/** Deinitialize entity index. */
 void flecs_entity_index_fini(
     ecs_entity_index_t *index);
 
-/* Get entity (must exist/must be alive) */
 ecs_record_t* flecs_entity_index_get(
     const ecs_entity_index_t *index,
     uint64_t entity);
 
-/* Get entity (must exist/may not be alive) */
 ecs_record_t* flecs_entity_index_get_any(
     const ecs_entity_index_t *index,
     uint64_t entity);
 
-/* Get entity (may not exist/must be alive) */
 ecs_record_t* flecs_entity_index_try_get(
     const ecs_entity_index_t *index,
     uint64_t entity);
 
-/* Get entity (may not exist/may not be alive) */
 ecs_record_t* flecs_entity_index_try_get_any(
     const ecs_entity_index_t *index,
     uint64_t entity);
 
-/** Ensure entity exists. */
 ecs_record_t* flecs_entity_index_ensure(
     ecs_entity_index_t *index,
     uint64_t entity);
 
-/* Remove entity */
 void flecs_entity_index_remove(
     ecs_entity_index_t *index,
     uint64_t entity);
 
-/* Set generation of entity */
 void flecs_entity_index_make_alive(
     ecs_entity_index_t *index,
     uint64_t entity);
 
-/* Get current generation of entity */
 uint64_t flecs_entity_index_get_alive(
     const ecs_entity_index_t *index,
     uint64_t entity);
 
-/* Return whether entity is alive */
 bool flecs_entity_index_is_alive(
     const ecs_entity_index_t *index,
     uint64_t entity);
 
-/* Return whether entity is valid */
 bool flecs_entity_index_is_valid(
     const ecs_entity_index_t *index,
     uint64_t entity);
 
-/* Return whether entity exists */
 bool flecs_entity_index_exists(
     const ecs_entity_index_t *index,
     uint64_t entity);
 
-/* Create or recycle entity id */
 uint64_t flecs_entity_index_new_id(
     ecs_entity_index_t *index);
 
-/* Bulk create or recycle new entity ids */
 uint64_t* flecs_entity_index_new_ids(
     ecs_entity_index_t *index,
     int32_t count);
 
-/* Set size of index */
 void flecs_entity_index_set_size(
     ecs_entity_index_t *index,
     int32_t size);
 
-/* Return number of entities in index */
 int32_t flecs_entity_index_count(
     const ecs_entity_index_t *index);
 
-/* Return number of allocated entities in index */
 int32_t flecs_entity_index_size(
     const ecs_entity_index_t *index);
 
-/* Return number of not alive entities in index */
 int32_t flecs_entity_index_not_alive_count(
     const ecs_entity_index_t *index);
 
-/* Clear entity index */
 void flecs_entity_index_clear(
     ecs_entity_index_t *index);
 
-/* Shrink entity index */
 void flecs_entity_index_shrink(
     ecs_entity_index_t *index);
 
-/* Return number of alive entities in index */
 const uint64_t* flecs_entity_index_ids(
     const ecs_entity_index_t *index);
 
+/* Convenience macros that operate on the world's entity index */
 #define ecs_eis(world) (&((world)->store.entity_index))
 #define flecs_entities_init(world) flecs_entity_index_init(&world->allocator, ecs_eis(world))
 #define flecs_entities_fini(world) flecs_entity_index_fini(ecs_eis(world))

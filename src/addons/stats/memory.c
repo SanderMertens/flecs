@@ -1,5 +1,6 @@
 /**
  * @file addons/stats/memory.c
+ * @brief Memory statistics addon.
  */
 
 #include "flecs.h"
@@ -22,6 +23,7 @@ ECS_COMPONENT_DECLARE(ecs_table_histogram_t);
 ECS_COMPONENT_DECLARE(ecs_allocator_memory_t);
 ECS_COMPONENT_DECLARE(EcsWorldMemory);
 
+/* Calculate total memory used by a block allocator's free list. */
 static
 ecs_size_t flecs_ballocator_memory_get(
     const ecs_block_allocator_t *allocator)
@@ -41,6 +43,7 @@ ecs_size_t flecs_ballocator_memory_get(
     return result;
 }
 
+/* Calculate total memory used by a map including buckets and entries. */
 static
 ecs_size_t flecs_map_memory_get(
     const ecs_map_t *map,
@@ -55,6 +58,7 @@ ecs_size_t flecs_map_memory_get(
     return result;
 }
 
+/* Calculate total memory used by a hashmap including key and value buckets. */
 static
 ecs_size_t flecs_hashmap_memory_get(
     const ecs_hashmap_t *name_index)
@@ -75,6 +79,7 @@ ecs_size_t flecs_hashmap_memory_get(
     return result;
 }
 
+/* Calculate total memory used by a sparse set including pages and dense array. */
 static
 ecs_size_t flecs_sparse_memory_get(
     const ecs_sparse_t *sparse,
@@ -106,6 +111,7 @@ ecs_size_t flecs_sparse_memory_get(
     return result;
 }
 
+/* Calculate total memory used by an allocator and its block allocators. */
 static
 ecs_size_t flecs_allocator_memory_get(
     const ecs_allocator_t *allocator)
@@ -129,6 +135,7 @@ ecs_size_t flecs_allocator_memory_get(
     return result;
 }
 
+/* Calculate total memory used by a stack allocator's page chain. */
 static
 ecs_size_t flecs_stack_memory_get(
     const ecs_stack_t *stack)
@@ -143,6 +150,7 @@ ecs_size_t flecs_stack_memory_get(
     return result;
 }
 
+/* Calculate total memory used by identifier strings for a given tag type. */
 static
 ecs_size_t flecs_identifier_memory_get(
     const ecs_world_t *world,
@@ -163,6 +171,7 @@ ecs_size_t flecs_identifier_memory_get(
 }
 
 #ifdef FLECS_DOC
+/* Calculate total memory used by doc description strings for a given tag. */
 static
 ecs_size_t flecs_doc_string_memory_get(
     const ecs_world_t *world,
@@ -385,6 +394,7 @@ void ecs_query_memory_get(
     }
 }
 
+/* Sum all memory categories for a query into a single total. */
 static
 ecs_size_t flecs_query_total_memory_get(
     const ecs_query_t *query)
@@ -418,6 +428,7 @@ error:
     return result;
 }
 
+/* Accumulate sparse component storage memory for a component record. */
 static
 void flecs_component_memory_get_sparse(
     const ecs_component_record_t *cr,
@@ -492,6 +503,7 @@ error:
     return result;
 }
 
+/* Accumulate memory for a single table graph edge and its diff. */
 static
 void flecs_table_graph_edge_memory_get(
     const ecs_graph_edge_t *edge,
@@ -507,6 +519,7 @@ void flecs_table_graph_edge_memory_get(
     }
 }
 
+/* Accumulate memory for all table graph edges in both lo and hi maps. */
 static
 void flecs_table_graph_edges_memory_get(
     const ecs_graph_edges_t *edges,
@@ -650,6 +663,7 @@ ecs_table_histogram_t ecs_table_histogram_get(
     return result;
 }
 
+/* Calculate memory used by an event record and its event id records. */
 static
 ecs_size_t flecs_event_record_memory_get(
     const ecs_event_record_t *er)
@@ -668,6 +682,7 @@ ecs_size_t flecs_event_record_memory_get(
     return result;
 }
 
+/* Calculate memory used by an observer and its children recursively. */
 static
 ecs_size_t flecs_observer_memory_get(
     const ecs_observer_impl_t *o)
@@ -692,6 +707,7 @@ ecs_size_t flecs_observer_memory_get(
     return result;
 }
 
+/* Calculate total memory used by all observers in the world. */
 static
 ecs_size_t flecs_observers_memory_get(
     const ecs_world_t *world)
@@ -722,6 +738,7 @@ ecs_size_t flecs_observers_memory_get(
     return result;
 }
 
+/* Calculate memory used by the observer event index structures. */
 static
 ecs_size_t flecs_observer_index_memory_get(
     const ecs_world_t *world)
@@ -747,6 +764,7 @@ ecs_size_t flecs_observer_index_memory_get(
     return result;
 }
 
+/* Accumulate memory used by all system instances and their names. */
 static
 void flecs_system_memory_get(
     const ecs_world_t *world,
@@ -770,6 +788,7 @@ void flecs_system_memory_get(
     }
 }
 
+/* Accumulate memory used by all pipeline states and their operations. */
 static
 void flecs_pipeline_memory_get(
     const ecs_world_t *world,
@@ -796,6 +815,7 @@ void flecs_pipeline_memory_get(
     }
 }
 
+/* Accumulate memory used by rematch monitor query lists. */
 static
 void flecs_rematch_monitor_memory_get(
     const ecs_world_t *world,
@@ -811,6 +831,7 @@ void flecs_rematch_monitor_memory_get(
 }
 
 #ifdef FLECS_META
+/* Accumulate memory used by reflection metadata including structs and enums. */
 static
 void flecs_reflection_memory_get(
     const ecs_world_t *world,
@@ -886,6 +907,7 @@ void flecs_reflection_memory_get(
 }
 #endif
 
+/* Accumulate memory used by stats components across all time periods. */
 static
 void flecs_stats_memory_get(
     const ecs_world_t *world,
@@ -934,6 +956,7 @@ void flecs_stats_memory_get(
 }
 
 #ifdef FLECS_REST
+/* Accumulate memory used by an HTTP server and its request cache. */
 static
 void flecs_http_memory_get(
     ecs_http_server_t *srv,
@@ -969,6 +992,7 @@ void flecs_http_memory_get(
 #endif
 
 #ifdef FLECS_REST
+/* Accumulate memory used by all REST server instances in the world. */
 static
 void flecs_rest_memory_get(
     const ecs_world_t *world,
@@ -990,6 +1014,7 @@ void flecs_rest_memory_get(
 }
 #endif
 
+/* Accumulate memory used by tree spawner components and their caches. */
 static
 void flecs_tree_spawner_memory_get(
     const ecs_world_t *world,
@@ -1150,9 +1175,10 @@ error:
 }
 
 #ifdef FLECS_META
+/* Serialize world memory statistics on demand via the opaque type system. */
 static
 int flecs_world_memory_serialize(
-    const ecs_serializer_t *s, 
+    const ecs_serializer_t *s,
     const void *ptr)
 {
     (void)ptr; /* Unused, we compute values from world */
@@ -1200,6 +1226,7 @@ int flecs_world_memory_serialize(
 
 #endif
 
+/* Register memory statistics types and reflection metadata. */
 void flecs_stats_memory_register_reflection(
     ecs_world_t *world)
 {
@@ -1348,6 +1375,7 @@ void flecs_stats_memory_register_reflection(
 #endif
 }
 
+/* Sum all bytes_ fields in a memory struct using reflection metadata. */
 static
 ecs_size_t flecs_get_memory_total(
     const ecs_world_t *world,

@@ -9,6 +9,7 @@
 
 #ifdef FLECS_TIMER
 
+/* Advance all active timers and trigger tick sources on timeout. */
 static
 void ProgressTimers(ecs_iter_t *it) {
     EcsTimer *timer = ecs_field(it, EcsTimer, 0);
@@ -48,6 +49,7 @@ void ProgressTimers(ecs_iter_t *it) {
     }
 }
 
+/* Advance rate filters and trigger tick sources at the configured rate. */
 static
 void ProgressRateFilters(ecs_iter_t *it) {
     EcsRateFilter *filter = ecs_field(it, EcsRateFilter, 0);
@@ -87,11 +89,11 @@ void ProgressRateFilters(ecs_iter_t *it) {
     }
 }
 
+/* Tick unconditionally for tick sources with no timer or rate filter. */
 static
 void ProgressTickSource(ecs_iter_t *it) {
     EcsTickSource *tick_src = ecs_field(it, EcsTickSource, 0);
 
-    /* If tick source has no filters, tick unconditionally */
     int i;
     for (i = 0; i < it->count; i ++) {
         tick_src[i].tick = true;
@@ -260,6 +262,7 @@ error:
     return;
 }
 
+/* Randomize the elapsed time for timers to stagger their triggers. */
 static
 void RandomizeTimers(ecs_iter_t *it) {
     EcsTimer *timer = ecs_field(it, EcsTimer, 0);
@@ -284,9 +287,10 @@ void ecs_randomize_timers(
     });
 }
 
+/* Import the timer module, registering timer components and systems. */
 void FlecsTimerImport(
     ecs_world_t *world)
-{    
+{
     ECS_MODULE(world, FlecsTimer);
     ECS_IMPORT(world, FlecsPipeline);
 
@@ -302,7 +306,7 @@ void FlecsTimerImport(
     ecs_add_pair(world, ecs_id(EcsTimer), EcsWith, ecs_id(EcsTickSource));
     ecs_add_pair(world, ecs_id(EcsRateFilter), EcsWith, ecs_id(EcsTickSource));
 
-    /* Timer handling */
+    /* Timer progress system */
     ecs_system(world, {
         .entity = ecs_entity(world, {.name = "ProgressTimers", .add = ecs_ids( ecs_dependson(EcsPreFrame))}),
         .query.terms = {
@@ -312,7 +316,7 @@ void FlecsTimerImport(
         .callback = ProgressTimers
     });
 
-    /* Rate filter handling */
+    /* Rate filter progress system */
     ecs_system(world, {
         .entity = ecs_entity(world, {.name = "ProgressRateFilters", .add = ecs_ids( ecs_dependson(EcsPreFrame))}),
         .query.terms = {
@@ -322,7 +326,7 @@ void FlecsTimerImport(
         .callback = ProgressRateFilters
     });
 
-    /* TickSource without a timer or rate filter just increases each frame */
+    /* Bare tick source (no timer or rate filter) ticks every frame */
     ecs_system(world, {
         .entity = ecs_entity(world, { .name = "ProgressTickSource", .add = ecs_ids( ecs_dependson(EcsPreFrame))}),
         .query.terms = {

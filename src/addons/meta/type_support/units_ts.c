@@ -7,8 +7,7 @@
 
 #ifdef FLECS_META
 
-/* EcsUnit lifecycle */
-
+/* Destruct an EcsUnit by freeing its symbol string. */
 static void flecs_unit_dtor(
     EcsUnit *ptr) 
 {
@@ -42,8 +41,7 @@ static ECS_MOVE(EcsUnit, dst, src, {
 static ECS_DTOR(EcsUnit, ptr, { flecs_unit_dtor(ptr); })
 
 
-/* EcsUnitPrefix lifecycle */
-
+/* Destruct an EcsUnitPrefix by freeing its symbol string. */
 static void flecs_unit_prefix_dtor(
     EcsUnitPrefix *ptr) 
 {
@@ -67,6 +65,7 @@ static ECS_MOVE(EcsUnitPrefix, dst, src, {
 
 static ECS_DTOR(EcsUnitPrefix, ptr, { flecs_unit_prefix_dtor(ptr); })
 
+/* Validate unit configuration including base, over and prefix relationships. */
 bool flecs_unit_validate(
     ecs_world_t *world,
     ecs_entity_t t,
@@ -129,7 +128,7 @@ bool flecs_unit_validate(
     }
 
     if (base) {
-        bool must_match = false; /* Must base symbol match symbol? */
+        bool must_match = false; /* True if derived symbol must match user symbol */
         ecs_strbuf_t sbuf = ECS_STRBUF_INIT;
         if (prefix) {
             const EcsUnitPrefix *ptr = ecs_get(world, prefix, EcsUnitPrefix);
@@ -189,6 +188,7 @@ error:
     return false;
 }
 
+/* Observer callback to validate units when EcsUnit is set. */
 static
 void flecs_set_unit(ecs_iter_t *it) {
     EcsUnit *u = ecs_field(it, EcsUnit, 0);
@@ -202,6 +202,7 @@ void flecs_set_unit(ecs_iter_t *it) {
     }
 }
 
+/* Monitor callback to sync quantity self-pairs on add and remove. */
 static
 void flecs_unit_quantity_monitor(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
@@ -309,6 +310,7 @@ ecs_entity_t ecs_quantity_init(
     return t;
 }
 
+/* Register unit-related components, hooks and observers. */
 void flecs_meta_units_init(
     ecs_world_t *world)
 {

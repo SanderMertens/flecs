@@ -10,29 +10,32 @@
 #ifdef FLECS_SCRIPT
 #include "script.h"
 
+/* Forward declaration for recursive type serialization. */
 static
 int flecs_expr_ser_type(
     const ecs_world_t *world,
-    const ecs_vec_t *ser, 
-    const void *base, 
+    const ecs_vec_t *ser,
+    const void *base,
     ecs_strbuf_t *str,
     bool is_expr);
 
+/* Forward declaration for type ops serialization. */
 static
 int flecs_expr_ser_type_ops(
     const ecs_world_t *world,
     ecs_meta_op_t *ops,
     int32_t op_count,
-    const void *base, 
+    const void *base,
     ecs_strbuf_t *str,
     bool is_expr);
 
+/* Convert a meta op kind to its corresponding primitive kind by offset. */
 static
 ecs_primitive_kind_t flecs_expr_op_to_primitive_kind(ecs_meta_op_kind_t kind) {
     return kind - EcsOpPrimitive;
 }
 
-/* Serialize enumeration */
+/* Serialize an enumeration value to its constant name string. */
 static
 int flecs_expr_ser_enum(
     const ecs_world_t *world,
@@ -57,9 +60,7 @@ int flecs_expr_ser_enum(
         ecs_abort(ECS_INTERNAL_ERROR, "invalid underlying type");
     }
     
-    /* Enumeration constants are stored in a map that is keyed on the
-     * enumeration value. */
-    ecs_enum_constant_t *c = ecs_map_get_deref(op->is.constants, 
+    ecs_enum_constant_t *c = ecs_map_get_deref(op->is.constants,
         ecs_enum_constant_t, value);
     if (!c) {
         char *path = ecs_get_path(world, op->type);
@@ -76,7 +77,7 @@ error:
     return -1;
 }
 
-/* Serialize bitmask */
+/* Serialize a bitmask value to a pipe-separated string of flag names. */
 static
 int flecs_expr_ser_bitmask(
     const ecs_world_t *world,
@@ -88,8 +89,6 @@ int flecs_expr_ser_bitmask(
 
     ecs_strbuf_list_push(str, "", "|");
 
-    /* Multiple flags can be set at a given time. Iterate through all the flags
-     * and append the ones that are set. */
     ecs_map_iter_t it = ecs_map_iter(op->is.constants);
     int count = 0;
     while (ecs_map_next(&it)) {
@@ -103,7 +102,6 @@ int flecs_expr_ser_bitmask(
     }
 
     if (value != 0) {
-        /* All bits must have been matched by a constant */
         char *path = ecs_get_path(world, op->type);
         ecs_err(
             "value for bitmask %s contains bits (%u) that cannot be mapped to constant", 
@@ -123,6 +121,7 @@ error:
     return -1;
 }
 
+/* Serialize a scope of type ops, skipping the push/pop ops. */
 static
 int flecs_expr_ser_scope(
     const ecs_world_t *world,
@@ -139,6 +138,7 @@ int flecs_expr_ser_scope(
     return 0;
 }
 
+/* Serialize an array of elements to a bracketed string. */
 static
 int flecs_expr_ser_array(
     const ecs_world_t *world,
@@ -166,6 +166,7 @@ error:
     return -1;
 }
 
+/* Serialize a struct value to a brace-enclosed string. */
 static
 int flecs_expr_ser_struct(
     const ecs_world_t *world,
@@ -185,6 +186,7 @@ int flecs_expr_ser_struct(
     return 0;
 }
 
+/* Serialize a value by looking up and using its type's serializer ops. */
 static
 int flecs_expr_ser_forward(
     const ecs_world_t *world,
@@ -209,6 +211,7 @@ typedef struct flecs_expr_serializer_ctx_t {
     bool is_collection;
 } flecs_expr_serializer_ctx_t;
 
+/* Serialize an opaque type value element. */
 static
 int flecs_expr_ser_opaque_value(
     const ecs_serializer_t *ser,
@@ -222,6 +225,7 @@ int flecs_expr_ser_opaque_value(
     return ecs_ptr_to_expr_buf(ser->world, type, value, expr_ser->str);
 }
 
+/* Serialize an opaque struct member name prefix. */
 static
 int flecs_expr_ser_opaque_member(
     const ecs_serializer_t *ser,
@@ -233,6 +237,7 @@ int flecs_expr_ser_opaque_member(
     return 0;
 }
 
+/* Serialize an opaque type (struct, vector, or array). */
 static
 int flecs_expr_ser_opaque(
     const ecs_world_t *world,
@@ -275,7 +280,7 @@ int flecs_expr_ser_opaque(
     return 0;
 }
 
-/* Iterate over a slice of the type ops array */
+/* Iterate over a slice of the type ops array and serialize each op. */
 static
 int flecs_expr_ser_type_ops(
     const ecs_world_t *world,
@@ -365,7 +370,6 @@ int flecs_expr_ser_type_ops(
             if (flecs_expr_ser_primitive(world, 
                 flecs_expr_op_to_primitive_kind(op->kind), ptr, str, is_expr))
             {
-                /* Unknown operation */
                 ecs_err("unknown serializer operation kind (%d)", op->kind);
                 goto error;
             }
@@ -377,7 +381,7 @@ int flecs_expr_ser_type_ops(
             ecs_throw(ECS_INVALID_PARAMETER, "invalid operation");
         }
 
-        i += op->op_count - 1; // Skip over already processed instructions
+        i += op->op_count - 1; /* Skip nested ops already handled */
     }
 
     return 0;
@@ -385,7 +389,7 @@ error:
     return -1;
 }
 
-/* Iterate over the type ops of a type */
+/* Iterate over the type ops of a type and serialize to string. */
 static
 int flecs_expr_ser_type(
     const ecs_world_t *world,

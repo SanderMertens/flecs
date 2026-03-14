@@ -1,24 +1,15 @@
 /**
  * @file bootstrap.c
  * @brief Bootstrap entities in the flecs.core namespace.
- * 
- * Before the ECS storage can be used, core entities such first need to be 
- * initialized. For example, components in Flecs are stored as entities in the
- * ECS storage itself with an EcsComponent component, but before this component
- * can be stored, the component itself needs to be initialized.
- * 
- * The bootstrap code uses lower-level APIs to initialize the data structures.
- * After bootstrap is completed, regular ECS operations can be used to create
- * entities and components.
- * 
- * The bootstrap file also includes several lifecycle hooks and observers for
- * builtin features, such as relationship properties and hooks for keeping the
- * entity name administration in sync with the (Identifier, Name) component.
+ *
+ * Uses low-level APIs to initialize core entities (e.g., EcsComponent) before
+ * the ECS storage is ready for normal use. Also registers lifecycle hooks and
+ * observers for builtin traits and relationship properties.
  */
 
 #include "private_api.h"
 
-/* -- Identifier Component -- */
+/* -- Identifier Component Hooks -- */
 static ECS_DTOR(EcsIdentifier, ptr, {
     ecs_os_strset(&ptr->value, NULL);
 })
@@ -47,7 +38,7 @@ static ECS_MOVE(EcsIdentifier, dst, src, {
 })
 
 
-/* -- Poly component -- */
+/* -- Poly Component Hooks -- */
 
 static ECS_COPY(EcsPoly, dst, src, {
     (void)dst;
@@ -75,11 +66,12 @@ static ECS_DTOR(EcsPoly, ptr, {
 })
 
 
-/* -- Builtin triggers -- */
+/* -- Builtin Observers -- */
 
+/* Assert that a relationship is not already in use before changing its traits. */
 static
 void flecs_assert_relation_unused(
-    ecs_world_t *world, 
+    ecs_world_t *world,
     ecs_entity_t rel,
     ecs_entity_t trait)
 {
@@ -92,8 +84,7 @@ void flecs_assert_relation_unused(
     for (i = 0; i < count; i ++) {
         ecs_marked_id_t *mid = ecs_vec_get_t(marked_ids, ecs_marked_id_t, i);
         if (mid->id == ecs_pair(rel, EcsWildcard)) {
-            /* If id is being cleaned up, no need to throw error as tables will
-             * be cleaned up */
+            /* Id is being cleaned up, no error needed */
             return;
         }
     }
@@ -117,10 +108,11 @@ error:
     return;
 }
 
+/* Set an id flag on a component record if not already set. */
 static
 bool flecs_set_id_flag(
     ecs_world_t *world,
-    ecs_component_record_t *cr, 
+    ecs_component_record_t *cr,
     ecs_flags32_t flag,
     ecs_entity_t trait)
 {
@@ -146,9 +138,10 @@ bool flecs_set_id_flag(
     return false;
 }
 
+/* Unset an id flag on a component record unless it is marked for deletion. */
 static
 bool flecs_unset_id_flag(
-    ecs_component_record_t *cr, 
+    ecs_component_record_t *cr,
     ecs_flags32_t flag)
 {
     if (cr->flags & EcsIdMarkedForDelete) {
@@ -167,6 +160,7 @@ typedef struct ecs_on_trait_ctx_t {
     ecs_flags32_t flag, not_flag;
 } ecs_on_trait_ctx_t;
 
+/* Check if a trait can be safely added after queries have been created. */
 static
 bool flecs_trait_can_add_after_query(
     ecs_entity_t trait)
@@ -178,6 +172,7 @@ bool flecs_trait_can_add_after_query(
     return false;
 }
 
+/* Register or unregister component record flags when a trait is added or removed. */
 static
 void flecs_register_flag_for_trait(
     ecs_iter_t *it,
@@ -242,6 +237,7 @@ error:
     return;
 }
 
+/* Handle addition of the Final trait, preventing inheritance from finalized entities. */
 static
 void flecs_register_final(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
@@ -265,6 +261,7 @@ void flecs_register_final(ecs_iter_t *it) {
     }
 }
 
+/* Handle addition of the PairIsTag trait and clear type info for tag relationships. */
 static
 void flecs_register_tag(ecs_iter_t *it) {
     flecs_register_flag_for_trait(it, EcsPairIsTag, EcsIdPairIsTag, EcsIdPairIsTag, 0);
@@ -290,6 +287,7 @@ void flecs_register_tag(ecs_iter_t *it) {
     }
 }
 
+/* Handle addition or removal of the OnDelete cleanup policy. */
 static
 void flecs_register_on_delete(ecs_iter_t *it) {
     ecs_id_t id = ecs_field_id(it, 0);
@@ -299,6 +297,7 @@ void flecs_register_on_delete(ecs_iter_t *it) {
         EcsEntityIsId);
 }
 
+/* Handle addition or removal of the OnDeleteTarget cleanup policy. */
 static
 void flecs_register_on_delete_object(ecs_iter_t *it) {
     ecs_id_t id = ecs_field_id(it, 0);
@@ -308,6 +307,7 @@ void flecs_register_on_delete_object(ecs_iter_t *it) {
         EcsEntityIsId);  
 }
 
+/* Handle addition of the OnInstantiate inheritance policy. */
 static
 void flecs_register_on_instantiate(ecs_iter_t *it) {
     ecs_id_t id = ecs_field_id(it, 0);
@@ -316,6 +316,7 @@ void flecs_register_on_instantiate(ecs_iter_t *it) {
         0, 0);
 }
 
+/* Handle addition or removal of a generic trait using context-provided flags. */
 static
 void flecs_register_trait(ecs_iter_t *it) {
     ecs_on_trait_ctx_t *ctx = it->ctx;
@@ -323,6 +324,7 @@ void flecs_register_trait(ecs_iter_t *it) {
         it, it->ids[0], ctx->flag, ctx->not_flag, 0);
 }
 
+/* Handle addition or removal of a trait that is expressed as a pair relationship. */
 static
 void flecs_register_trait_pair(ecs_iter_t *it) {
     ecs_on_trait_ctx_t *ctx = it->ctx;
@@ -330,6 +332,7 @@ void flecs_register_trait_pair(ecs_iter_t *it) {
         it, ecs_pair_first(it->world, it->ids[0]), ctx->flag, ctx->not_flag, 0);
 }
 
+/* Mark SlotOf entities as exclusive and non-fragmenting. */
 static
 void flecs_register_slot_of(ecs_iter_t *it) {
     int i, count = it->count;
@@ -339,13 +342,13 @@ void flecs_register_slot_of(ecs_iter_t *it) {
     }
 }
 
+/* Add or remove the reverse relationship when a symmetric pair is added or removed. */
 static
 void flecs_on_symmetric_add_remove(ecs_iter_t *it) {
     ecs_entity_t pair = ecs_field_id(it, 0);
 
     if (!ECS_HAS_ID_FLAG(pair, PAIR)) {
-        /* If relationship was not added as a pair, there's nothing to do */
-        return;
+        return; /* Only applies to pair relationships */
     }
 
     ecs_world_t *world = it->world;
@@ -371,6 +374,7 @@ void flecs_on_symmetric_add_remove(ecs_iter_t *it) {
     }
 }
 
+/* Create observer to maintain symmetric relationship invariants. */
 static
 void flecs_register_symmetric(ecs_iter_t *it) {
     ecs_world_t *world = it->real_world;
@@ -380,8 +384,7 @@ void flecs_register_symmetric(ecs_iter_t *it) {
         ecs_entity_t r = it->entities[i];
         flecs_assert_relation_unused(world, r, EcsSymmetric);
 
-        /* Create observer that adds the reverse relationship when R(X, Y) is
-         * added, or remove the reverse relationship when R(X, Y) is removed. */
+        /* Observer to maintain symmetric invariant: if R(X, Y), then R(Y, X) */
         ecs_observer(world, {
             .entity = ecs_entity(world, { .parent = r }),
             .query.terms[0] = { .id = ecs_pair(r, EcsWildcard) },
@@ -392,6 +395,7 @@ void flecs_register_symmetric(ecs_iter_t *it) {
 }
 
 #ifdef FLECS_DEBUG
+/* Validate that singleton components are only added to their own entity. */
 static
 void flecs_on_singleton_add_remove(ecs_iter_t *it) {
     ecs_entity_t component = ecs_field_id(it, 0);
@@ -427,6 +431,7 @@ void flecs_on_singleton_add_remove(ecs_iter_t *it) {
 }
 #endif
 
+/* Register the Singleton trait and create debug observers to enforce constraints. */
 static
 void flecs_register_singleton(ecs_iter_t *it) {
     ecs_world_t *world = it->real_world;
@@ -463,6 +468,7 @@ void flecs_register_singleton(ecs_iter_t *it) {
     }
 }
 
+/* Handle component lifecycle events for registration and unregistration. */
 static
 void flecs_on_component(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
@@ -515,6 +521,7 @@ void flecs_on_component(ecs_iter_t *it) {
     }
 }
 
+/* Ensure parent entities of modules are also tagged as modules. */
 static
 void flecs_ensure_module_tag(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
@@ -529,9 +536,10 @@ void flecs_ensure_module_tag(ecs_iter_t *it) {
     }
 }
 
+/* Toggle the disabled bit on observers when the Disabled tag is added or removed. */
 static
 void flecs_disable_observer(
-    ecs_iter_t *it) 
+    ecs_iter_t *it)
 {
     ecs_world_t *world = it->world;
     ecs_entity_t evt = it->event;
@@ -543,9 +551,10 @@ void flecs_disable_observer(
     }
 }
 
+/* Recursively disable or enable all observers within a module hierarchy. */
 static
 void flecs_disable_module_observers(
-    ecs_world_t *world, 
+    ecs_world_t *world,
     ecs_entity_t module,
     bool should_disable)
 {
@@ -576,6 +585,7 @@ void flecs_disable_module_observers(
     }
 }
 
+/* Handle module disable/enable events by propagating to child observers. */
 static
 void flecs_disable_module(ecs_iter_t *it) {
     int32_t i;
@@ -585,6 +595,7 @@ void flecs_disable_module(ecs_iter_t *it) {
     }
 }
 
+/* Propagate the Prefab tag to all children when an entity becomes a prefab. */
 static
 void flecs_on_add_prefab(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
@@ -601,6 +612,7 @@ void flecs_on_add_prefab(ecs_iter_t *it) {
     }
 }
 
+/* Initialize or clear ordered children tracking when the trait is added or removed. */
 static
 void flecs_register_ordered_children(ecs_iter_t *it) {
     int32_t i;
@@ -635,6 +647,7 @@ void flecs_register_ordered_children(ecs_iter_t *it) {
     flecs_bootstrap_builtin(world, table, ecs_id(name), #name, sizeof(name),\
         ECS_ALIGNOF(name))
 
+/* Register a builtin component entity in the bootstrap component table. */
 static
 void flecs_bootstrap_builtin(
     ecs_world_t *world,
@@ -686,20 +699,12 @@ void flecs_bootstrap_builtin(
     symbol_col[row].index = NULL;
 }
 
-/** Initialize component table. This table is manually constructed to bootstrap
- * flecs. After this function has been called, the builtin components can be
- * created. 
- * The reason this table is constructed manually is because it requires the size
- * and alignment of the EcsComponent and EcsIdentifier components, which haven't
- * been created yet */
+/* Construct the initial component table before type info is registered. */
 static
 ecs_table_t* flecs_bootstrap_component_table(
     ecs_world_t *world)
 {
-    /* Before creating table, manually set flags for ChildOf/Identifier, as this
-     * can no longer be done after they are in use. */
-
-    /* Initialize id records cached on world */
+    /* Set ChildOf/Identifier flags before they are in use */
     world->cr_childof_wildcard = flecs_components_ensure(world, 
         ecs_pair(EcsChildOf, EcsWildcard));
     world->cr_childof_wildcard->flags |= EcsIdOnDeleteTargetDelete | 
@@ -731,7 +736,7 @@ ecs_table_t* flecs_bootstrap_component_table(
 
     ecs_table_t *result = flecs_table_find_or_create(world, &array);
 
-    /* Preallocate enough memory for initial components */
+    /* Preallocate columns for builtin components */
     ecs_vec_t v_entities = ecs_vec_from_entities(result);
     ecs_vec_init_t(NULL, &v_entities, ecs_entity_t, EcsFirstUserComponentId);
     
@@ -767,7 +772,7 @@ ecs_table_t* flecs_bootstrap_component_table(
     return result;
 }
 
-/* Make entities alive before the root table is initialized */
+/* Make entities alive before the root table is initialized. */
 static
 void flecs_bootstrap_make_alive(
     ecs_world_t *world,
@@ -794,6 +799,7 @@ void flecs_bootstrap_make_alive(
     }
 }
 
+/* Create a named bootstrap entity with the given parent. */
 static
 void flecs_bootstrap_entity(
     ecs_world_t *world,
@@ -813,6 +819,7 @@ void flecs_bootstrap_entity(
     }
 }
 
+/* Verify entity-table consistency after bootstrap is complete. */
 static
 void flecs_bootstrap_sanity_check(
     ecs_world_t *world)
@@ -857,6 +864,7 @@ void flecs_bootstrap_sanity_check(
 #endif
 }
 
+/* Bootstrap all core entities, components, traits, and observers for a new world. */
 void flecs_bootstrap(
     ecs_world_t *world)
 {
@@ -930,9 +938,7 @@ void flecs_bootstrap(
     /* Create and cache often used id records on world */
     flecs_components_init(world);
 
-    /* Create table for builtin components. This table temporarily stores the 
-     * entities associated with builtin components, until they get moved to 
-     * other tables once properties are added (see below) */
+    /* Temporary table for builtin components until properties are added below */
     ecs_table_t *table = flecs_bootstrap_component_table(world);
     assert(table != NULL);
 
@@ -1066,9 +1072,7 @@ void flecs_bootstrap(
     ecs_add_pair(world, EcsChildOf, EcsOnInstantiate, EcsDontInherit);
     ecs_add_pair(world, ecs_id(EcsIdentifier), EcsOnInstantiate, EcsDontInherit);
 
-    /* Register observers for components/relationship properties. Most observers
-     * set flags on an component record when a trait is added to a component, which
-     * allows for quick trait testing in various operations. */
+    /* Register observers that set flags on component records when traits change */
     ecs_observer(world, {
         .query.terms = {{ .id = EcsFinal }},
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
@@ -1203,8 +1207,7 @@ void flecs_bootstrap(
         .global_observer = true
     });
 
-    /* Entities used as slot are marked as exclusive to ensure a slot can always
-     * only point to a single entity. */
+    /* SlotOf entities are exclusive (can only point to one entity) */
     ecs_observer(world, {
         .query.terms = {
             { .id = ecs_pair(EcsSlotOf, EcsWildcard) }
@@ -1215,8 +1218,7 @@ void flecs_bootstrap(
         .global_observer = true
     });
 
-    /* Define observer to make sure that adding a module to a child entity also
-     * adds it to the parent. */
+    /* Propagate Module tag to parent entities */
     ecs_observer(world, {
         .query.terms = {{ .id = EcsModule } },
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
@@ -1225,7 +1227,7 @@ void flecs_bootstrap(
         .global_observer = true
     });
 
-    /* Observer that tracks whether observers are disabled */
+    /* Track observer disable state */
     ecs_observer(world, {
         .query.terms = {
             { .id = EcsObserver },
@@ -1236,7 +1238,7 @@ void flecs_bootstrap(
         .global_observer = true
     });
 
-    /* Observer that tracks whether modules are disabled */
+    /* Track module disable state */
     ecs_observer(world, {
         .query.terms = {
             { .id = EcsModule },
@@ -1247,7 +1249,7 @@ void flecs_bootstrap(
         .global_observer = true
     });
 
-    /* Observer that ensures children of a prefab are also prefabs */
+    /* Propagate Prefab tag to children */
     ecs_observer(world, {
         .query.terms = {
             { .id = EcsPrefab },

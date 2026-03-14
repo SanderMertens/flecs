@@ -1,6 +1,6 @@
 /**
  * @file addons/stats/pipeline_monitor.c
- * @brief Stats addon pipeline monitor
+ * @brief Stats addon pipeline monitor.
  */
 
 #include "flecs.h"
@@ -11,6 +11,7 @@
 
 ECS_COMPONENT_DECLARE(EcsPipelineStats);
 
+/* Destroy pipeline stats map entries and free associated resources. */
 static
 void flecs_pipeline_monitor_dtor(EcsPipelineStats *ptr) {
     ecs_map_iter_t it = ecs_map_iter(&ptr->stats);
@@ -43,7 +44,8 @@ static ECS_DTOR(EcsPipelineStats, ptr, {
     flecs_pipeline_monitor_dtor(ptr);
 })
 
-static 
+/* Set the current time index on a pipeline statistics object. */
+static
 void flecs_pipeline_stats_set_t(
     void *stats, int32_t t)
 {
@@ -53,54 +55,61 @@ void flecs_pipeline_stats_set_t(
 }
 
 
+/* Forward copy-last operation to the pipeline stats API. */
 static
 void flecs_pipeline_stats_copy_last(
-    void *stats, 
-    void *src) 
+    void *stats,
+    void *src)
 {
     ecs_pipeline_stats_copy_last(stats, src);
 }
 
+/* Forward get operation to the pipeline stats API. */
 static
 void flecs_pipeline_stats_get(
-    ecs_world_t *world, 
-    ecs_entity_t res, 
-    void *stats) 
+    ecs_world_t *world,
+    ecs_entity_t res,
+    void *stats)
 {
     ecs_pipeline_stats_get(world, res, stats);
 }
 
+/* Forward reduce operation to the pipeline stats API. */
 static
 void flecs_pipeline_stats_reduce(
-    void *stats, 
-    void *src) 
+    void *stats,
+    void *src)
 {
     ecs_pipeline_stats_reduce(stats, src);
 }
 
+/* Forward reduce-last operation to the pipeline stats API. */
 static
 void flecs_pipeline_stats_reduce_last(
-    void *stats, 
-    void *last, 
-    int32_t reduce_count) 
+    void *stats,
+    void *last,
+    int32_t reduce_count)
 {
     ecs_pipeline_stats_reduce_last(stats, last, reduce_count);
 }
 
+/* Forward repeat-last operation to the pipeline stats API. */
 static
 void flecs_pipeline_stats_repeat_last(
-    void* stats) 
+    void* stats)
 {
     ecs_pipeline_stats_repeat_last(stats);
 }
 
+/* Forward finalize operation to the pipeline stats API. */
 static
 void flecs_pipeline_stats_fini(
-    void *stats) 
+    void *stats)
 {
     ecs_pipeline_stats_fini(stats);
 }
 
+/* Import the pipeline monitor subsystem and register its stats API. */
 void FlecsPipelineMonitorImport(
     ecs_world_t *world)
 {

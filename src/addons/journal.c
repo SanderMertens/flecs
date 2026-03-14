@@ -7,6 +7,7 @@
 
 #ifdef FLECS_JOURNAL
 
+/* Format an entity as a journal variable identifier string. */
 static
 char* flecs_journal_entitystr(
     ecs_world_t *world,
@@ -27,6 +28,7 @@ char* flecs_journal_entitystr(
     return path;
 }
 
+/* Format an id as a journal-compatible string, handling pairs and flags. */
 static
 char* flecs_journal_idstr(
     ecs_world_t *world,
@@ -59,6 +61,7 @@ char* flecs_journal_idstr(
 static int flecs_journal_counter = 0;
 static int flecs_journal_sp = 0;
 
+/* Begin a journal entry, logging the operation as reproducible C code. */
 void flecs_journal_begin(
     ecs_world_t *world,
     ecs_journal_kind_t kind,
@@ -144,6 +147,7 @@ void flecs_journal_begin(
     ecs_log_push();
 }
 
+/* End a journal entry and pop the log indentation. */
 void flecs_journal_end(void) {
     flecs_journal_sp --;
     ecs_assert(flecs_journal_sp >= 0, ECS_INTERNAL_ERROR, NULL);

@@ -163,7 +163,7 @@ bool flecs_sparse_remove_w_gen(
 #define flecs_sparse_remove_w_gen_t(sparse, T, id)\
     flecs_sparse_remove_w_gen(sparse, ECS_SIZEOF(T), id)
 
-/** Test if an ID is alive, which requires the generation count to match.
+/** Test if an ID is alive (has a valid dense index within the alive range).
  *
  * @param sparse The sparse set to check.
  * @param id The ID to test for liveness.
@@ -217,12 +217,12 @@ bool flecs_sparse_has(
     const ecs_sparse_t *sparse,
     uint64_t id);
 
-/** Get element by sparse ID, regardless of whether the element is alive or not.
+/** Get element by sparse ID, or NULL if not alive.
  *
  * @param sparse The sparse set to retrieve from.
  * @param elem_size Size of each element in bytes.
  * @param id The sparse ID of the element.
- * @return Pointer to the element, regardless of liveness.
+ * @return Pointer to the element, or NULL if not alive.
  */
 FLECS_DBG_API
 void* flecs_sparse_get(

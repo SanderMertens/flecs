@@ -1,6 +1,6 @@
 /**
  * @file addons/script/expr/stack.h
- * @brief Script expression AST.
+ * @brief Script expression evaluation stack.
  */
 
 #ifndef FLECS_SCRIPT_EXPR_STACK_H
@@ -31,14 +31,14 @@ typedef union ecs_expr_small_value_t {
     ecs_entity_t entity;
     ecs_id_t id;
 
-    /* Avoid allocations for small trivial types */
+    /* Inline storage for small trivial types */
     char small_data[FLECS_EXPR_SMALL_DATA_SIZE];
 } ecs_expr_small_value_t;
 
 typedef struct ecs_expr_value_t {
     ecs_value_t value;
     const ecs_type_info_t *type_info;
-    bool owned; /* Is value owned by the runtime */
+    bool owned; /* If true, runtime destructs the value on pop */
 } ecs_expr_value_t;
 
 typedef struct ecs_expr_stack_frame_t {

@@ -1,10 +1,14 @@
 /**
  * @file tree_spawner.c
- * @brief Data structure used to speed up the creation of hierarchies.
+ * @brief Tree spawner: precomputed structure for fast prefab hierarchy instantiation.
+ *
+ * Caches the table types and parent indices for all children of a prefab,
+ * avoiding repeated type computation during instantiation.
  */
 
 #include "private_api.h"
 
+/* Release tables referenced by tree spawner children. */
 static
 void flecs_tree_spawner_release_tables(
     ecs_vec_t *v)
@@ -17,6 +21,7 @@ void flecs_tree_spawner_release_tables(
     }
 }
 
+/* Free all resources owned by a tree spawner component. */
 static
 void EcsTreeSpawner_free(EcsTreeSpawner *ptr) {
     int32_t i;
@@ -26,22 +31,28 @@ void EcsTreeSpawner_free(EcsTreeSpawner *ptr) {
     }
 }
 
+/* Abort on copy since tree spawner components cannot be copied. */
 static ECS_COPY(EcsTreeSpawner, dst, src, {
     (void)dst;
     (void)src;
     ecs_abort(ECS_INVALID_OPERATION, "TreeSpawner component cannot be copied");
 })
 
+/* Move tree spawner component from source to destination. */
 static ECS_MOVE(EcsTreeSpawner, dst, src, {
     EcsTreeSpawner_free(dst);
     *dst = *src;
     ecs_os_zeromem(src);
 })
 
+/* Destroy tree spawner component and free its resources. */
 static ECS_DTOR(EcsTreeSpawner, ptr, {
     EcsTreeSpawner_free(ptr);
 })
 
+/* Build the table type for a spawned instance child. Adds EcsParent (instead
+ * of ChildOf, which is skipped as DontInherit) and an IsA pair to inherit
+ * from the prefab child. */
 static
 ecs_type_t flecs_prefab_spawner_build_type(
     ecs_world_t *world,
@@ -67,21 +78,15 @@ ecs_type_t flecs_prefab_spawner_build_type(
         }
 
         if (id & ECS_AUTO_OVERRIDE) {
-            /* If AUTO_OVERRIDE flag is set, add component to instances. This 
-             * allows instances to end up with an owned component, even if the
-             * component has the (OnInstantiate, Inherit) trait.
-             * Additionally, this also allows for adding components to instances
-             * that aren't copyable, since a prefab can have a component with
-             * AUTO_OVERRIDE flag, but not have the actual component (which then
-             * isn't copied). */
+            /* AUTO_OVERRIDE forces an owned copy on the instance. Only
+             * reached for ids not already filtered by DontInherit/Inherit. */
             flecs_type_add(world, &dst, id & ~ECS_AUTO_OVERRIDE);
             continue;
         }
 
         ecs_entity_t rel = ECS_PAIR_FIRST(id);
         if (rel == EcsIsA) {
-            /* If prefab child has IsA relationships, they will be inherited 
-             * through the (IsA, prefab_child) relationship (added below). */
+            /* IsA pairs are inherited via the (IsA, prefab_child) added below */
             continue;
         }
 
@@ -98,6 +103,7 @@ ecs_type_t flecs_prefab_spawner_build_type(
     return dst;
 }
 
+/* Recursively build spawner entries from a component record's children. */
 static
 void flecs_prefab_spawner_build_from_cr(
     ecs_world_t *world,
@@ -136,7 +142,7 @@ void flecs_prefab_spawner_build_from_cr(
         ecs_assert(elem->table != NULL, ECS_INTERNAL_ERROR, NULL);
         flecs_type_free(world, &type);
 
-        /* Make sure table doesn't get freed by shrink() */
+        /* Prevent table from being freed by table shrink/cleanup */
         flecs_table_keep(elem->table);
 
         if (!(r->row & EcsEntityIsTraversable)) {
@@ -154,6 +160,8 @@ void flecs_prefab_spawner_build_from_cr(
     }
 }
 
+/* Create a depth-adjusted copy of the spawner data by replacing
+ * ParentDepth values with depth-relative values. */
 static
 void flecs_spawner_transpose_depth(
     ecs_world_t *world,
@@ -191,6 +199,7 @@ void flecs_spawner_transpose_depth(
     }
 }
 
+/* Build a tree spawner for the given prefab base entity. */
 EcsTreeSpawner* flecs_prefab_spawner_build(
     ecs_world_t *world,
     ecs_entity_t base)
@@ -218,6 +227,7 @@ EcsTreeSpawner* flecs_prefab_spawner_build(
     return ts;
 }
 
+/* Instantiate a prefab hierarchy using the tree spawner. */
 void flecs_spawner_instantiate(
     ecs_world_t *world,
     EcsTreeSpawner *spawner,
@@ -229,7 +239,7 @@ void flecs_spawner_instantiate(
 
     bool is_prefab = r_instance->table->flags & EcsTableIsPrefab;
     
-    /* Use cached spawner for depth if available. */
+    /* Use cached depth-adjusted spawner data if within cache bounds. */
     ecs_vec_t *vec, tmp_vec;
     if (depth < FLECS_TREE_SPAWNER_DEPTH_CACHE_SIZE) {
         vec = &spawner->data[depth].children;
@@ -239,7 +249,7 @@ void flecs_spawner_instantiate(
     }
 
     if (depth && ecs_vec_count(vec) != child_count) {
-        /* Vector for depth is not yet initialized, create it. */
+        /* Lazily build depth-adjusted spawner data on first use. */
         flecs_spawner_transpose_depth(world, spawner, vec, depth);
     }
 
@@ -330,6 +340,7 @@ void flecs_spawner_instantiate(
     }
 }
 
+/* Register tree spawner type info and component traits during bootstrap. */
 void flecs_bootstrap_spawner(
     ecs_world_t *world)
 {

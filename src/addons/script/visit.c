@@ -8,6 +8,7 @@
 #ifdef FLECS_SCRIPT
 #include "script.h"
 
+/* Push a node onto the visitor stack with depth checking. */
 static
 int flecs_script_visit_push_checked(
     ecs_script_visit_t *v,

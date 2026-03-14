@@ -9,42 +9,28 @@
 extern ECS_COMPONENT_DECLARE(EcsScriptTemplateSetEvent);
 
 struct ecs_script_template_t {
-    /* Template handle */
     ecs_entity_t entity;
-
-    /* Template AST node */
     ecs_script_template_node_t *node;
-
-    /* Hoisted using statements */
-    ecs_vec_t using_;
-
-    /* Hoisted variables */
-    ecs_script_vars_t *vars;
-
-    /* Default values for props */
-    ecs_vec_t prop_defaults;
-
-    /* Type info for template component */
+    ecs_vec_t using_;            /* Hoisted using statements */
+    ecs_script_vars_t *vars;     /* Hoisted variables from enclosing scopes */
+    ecs_vec_t prop_defaults;     /* Default values for template properties */
     const ecs_type_info_t *type_info;
-
-    /* Annotations to apply to template instance */
-    ecs_vec_t annot;
-
-    /* Use non-fragmenting hierarchy */
+    ecs_vec_t annot;             /* Annotations applied to template instances */
     bool non_fragmenting_parent;
 };
 
 #define ECS_TEMPLATE_SMALL_SIZE (36)
 
-/* Event used for deferring template instantiation */
+/* Deferred template instantiation event */
 typedef struct EcsScriptTemplateSetEvent {
     ecs_entity_t template_entity;
     ecs_entity_t *entities;
     void *data;
     int32_t count;
 
-    /* Storage for small template types */
-    int64_t _align; /* Align data storage to 8 bytes */
+    /* Inline storage for single-entity, small, trivially-destructible templates
+     * (avoids heap allocation). _align forces 8-byte alignment of data_storage. */
+    int64_t _align;
     char data_storage[ECS_TEMPLATE_SMALL_SIZE];
     ecs_entity_t entity_storage;
 } EcsScriptTemplateSetEvent;

@@ -1,11 +1,11 @@
- /**
- * @file queries/api.c
- * @brief User facing API for rules.
+/**
+ * @file query/api.c
+ * @brief Public query API: create, destroy, iterate, and inspect queries.
  */
 
 #include "../private_api.h"
 
-/* Placeholder arrays for queries that only have $this variable */
+/* Shared singleton arrays for queries that only use the $this variable */
 ecs_query_var_t flecs_this_array = {
     .kind = EcsVarTable,
     .table_id = EcsVarNone
@@ -66,6 +66,7 @@ bool ecs_query_var_is_entity(
     return flecs_query_impl(q)->vars[var_id].kind == EcsVarEntity;
 }
 
+/* Determine and set the caching policy for a query based on its terms and descriptor. */
 static
 int flecs_query_set_caching_policy(
     ecs_query_impl_t *impl,
@@ -76,7 +77,7 @@ int flecs_query_set_caching_policy(
             desc->order_by || desc->order_by_callback || 
             (desc->flags & EcsQueryDetectChanges);
 
-    /* If the query has a Cascade term it'll use group_by */
+    /* Cascade terms require group_by */
     int32_t i, term_count = impl->pub.term_count;
     const ecs_term_t *terms = impl->pub.terms;
     for (i = 0; i < term_count; i ++) {
@@ -93,21 +94,12 @@ int flecs_query_set_caching_policy(
     }
 #endif
 
-    /* If caching policy is default, try to pick a policy that does the right
-     * thing in most cases. */
+    /* Default: cache named/system queries and those requiring caching;
+     * skip caching for ad-hoc queries. */
     if (kind == EcsQueryCacheDefault) {
         if (desc->entity || require_caching) {
-            /* If the query is created with an entity handle (typically 
-             * indicating that the query is named or belongs to a system) the
-             * chance is very high that the query will be reused, so enable
-             * caching. 
-             * Additionally, if the query uses features that require a cache
-             * such as group_by/order_by, also enable caching. */
             kind = EcsQueryCacheAuto;
         } else {
-            /* Be conservative in other scenario's, as caching adds significant
-             * overhead to the cost of query creation which doesn't offset the
-             * benefit of faster iteration if it's only used once. */
             kind = EcsQueryCacheNone;
         }
     }
@@ -135,23 +127,18 @@ int flecs_query_set_caching_policy(
         }
     }
 
-    /* Only cache terms that are cacheable */
+    /* Auto: cache what we can. If all terms are cacheable, promote to All. */
     if (kind == EcsQueryCacheAuto) {
         if (impl->pub.flags & EcsQueryIsCacheable) {
-            /* If all terms of the query are cacheable, just set the policy to 
-             * All which simplifies work for the compiler. */
             if (!(impl->pub.flags & EcsQueryCacheWithFilter)) {
                 impl->pub.cache_kind = EcsQueryCacheAll;
             } else {
                 impl->pub.cache_kind = EcsQueryCacheAuto;
             }
         } else if (!(impl->pub.flags & EcsQueryHasCacheable)) {
-            /* Same for when the query has no cacheable terms */
             impl->pub.cache_kind = EcsQueryCacheNone;
         } else {
-            /* Part of the query is cacheable. Make sure to only create a cache
-             * if the cacheable part of the query contains not just not/optional
-             * terms, as this would build a cache that contains all tables. */
+            /* Skip caching if only Not/Optional terms are cacheable (no selectivity) */
             int32_t not_optional_terms = 0, cacheable_terms = 0;
             if (!require_caching) {
                 for (i = 0; i < term_count; i ++) {
@@ -176,6 +163,7 @@ int flecs_query_set_caching_policy(
     return 0;
 }
 
+/* Create query cache based on the determined caching policy. */
 static
 int flecs_query_create_cache(
     ecs_query_impl_t *impl,
@@ -193,18 +181,15 @@ int flecs_query_create_cache(
     }
 
     if ((q->cache_kind != EcsQueryCacheNone) && !q->entity) {
-        /* Cached queries need an entity handle for observer components */
         q->entity = ecs_new(q->world);
         desc->entity = q->entity;
     }
 
     if (q->cache_kind == EcsQueryCacheAll) {
-        /* Create query cache for all terms */
         if (!flecs_query_cache_init(impl, desc)) {
             goto error;
         }
     } else if (q->cache_kind == EcsQueryCacheAuto) {
-        /* Query is partially cached */
         ecs_query_desc_t cache_desc = *desc;
         ecs_os_memset_n(&cache_desc.terms, 0, ecs_term_t, FLECS_TERM_COUNT_MAX);
         cache_desc.expr = NULL;
@@ -243,8 +228,6 @@ int flecs_query_create_cache(
         ecs_assert(q->cache_kind == EcsQueryCacheNone, ECS_INTERNAL_ERROR, NULL);
 
         if (!(q->flags & EcsQueryNested)) {
-            /* If uncached query is not create to populate a cached query, it 
-             * should not have cascade modifiers */
             int32_t i, count = q->term_count;
             ecs_term_t *terms = q->terms;
             for (i = 0; i < count; i ++) {
@@ -266,6 +249,7 @@ error:
     return -1;
 }
 
+/* Copy terms, sizes, and ids arrays from stack to heap. */
 void flecs_query_copy_arrays(
     ecs_query_t *q)
 {
@@ -275,6 +259,7 @@ void flecs_query_copy_arrays(
     q->ids = flecs_dup_n(a, ecs_id_t, q->term_count, q->ids);
 }
 
+/* Free terms, sizes, and ids arrays. */
 void flecs_query_free_arrays(
     ecs_query_t *q)
 {
@@ -284,6 +269,7 @@ void flecs_query_free_arrays(
     flecs_free_n(a, ecs_id_t, q->term_count, q->ids);
 }
 
+/* Clean up and free all resources associated with a query implementation. */
 static
 void flecs_query_fini(
     ecs_query_impl_t *impl)
@@ -340,11 +326,13 @@ void flecs_query_fini(
     flecs_bfree(&stage->allocators.query_impl, impl);
 }
 
+/* Poly destructor callback for query cleanup. */
 static
 void flecs_query_poly_fini(void *ptr) {
     flecs_query_fini(ptr);
 }
 
+/* Add components to the query entity for terms that reference the query itself as source. */
 static
 void flecs_query_add_self_ref(
     ecs_query_t *q)
@@ -368,7 +356,6 @@ void ecs_query_fini(
     flecs_poly_assert(q, ecs_query_t);
 
     if (q->entity) {
-        /* If query is associated with entity, use poly dtor path */
         ecs_delete(q->world, q->entity);
     } else {
         flecs_query_fini(flecs_query_impl(q));
@@ -376,7 +363,7 @@ void ecs_query_fini(
 }
 
 ecs_query_t* ecs_query_init(
-    ecs_world_t *world, 
+    ecs_world_t *world,
     const ecs_query_desc_t *const_desc)
 {
     ecs_os_perf_trace_push("flecs.query_init");
@@ -406,7 +393,6 @@ ecs_query_t* ecs_query_init(
         }
     }
 
-    /* Initialize the query */
     result->pub.entity = entity;
     result->pub.real_world = world;
     result->pub.world = world_arg;
@@ -417,17 +403,12 @@ ecs_query_t* ecs_query_init(
     ecs_assert(flecs_poly_is(result->stage, ecs_stage_t),
         ECS_INTERNAL_ERROR, NULL);
 
-    /* Validate input, translate input to canonical query representation */
     if (flecs_query_finalize_query(world, &result->pub, &desc)) {
         goto error;
     }
 
-    /* If query terms have itself as source, add term ids to self. This makes it
-     * easy to attach components to queries, which is one of the ways
-     * applications can attach data to systems. */
     flecs_query_add_self_ref(&result->pub);
 
-    /* Initialize static context */
     result->pub.ctx = const_desc->ctx;
     result->pub.binding_ctx = const_desc->binding_ctx;
     result->ctx_free = const_desc->ctx_free;
@@ -435,7 +416,6 @@ ecs_query_t* ecs_query_init(
     result->dtor = flecs_query_poly_fini;
     result->cache = NULL;
 
-    /* Initialize query cache if necessary */
     if (flecs_query_create_cache(result, &desc)) {
         goto error;
     }
@@ -444,7 +424,6 @@ ecs_query_t* ecs_query_init(
         goto error;
     }
 
-    /* Entity could've been set by finalize query if query is cached */
     entity = result->pub.entity;
     if (entity) {
         EcsPoly *poly = flecs_poly_bind(world, entity, ecs_query_t);
@@ -628,7 +607,7 @@ void ecs_iter_set_group(
     ecs_query_cache_group_t *group = flecs_query_cache_get_group(
         cache, group_id);
     if (!group) {
-        qit->tables = &empty_table; /* Dummy table to indicate empty result */
+        qit->tables = &empty_table; /* Placeholder to indicate empty result */
         qit->all_tables = &empty_table;
         qit->cur = 0;
         qit->group = NULL;
@@ -640,7 +619,7 @@ void ecs_iter_set_group(
     qit->all_tables = &group->tables;
     qit->cur = 0;
     qit->group = group;
-    qit->iter_single_group = true; /* Prevent iterating next group */
+    qit->iter_single_group = true;
     
 error:
     return;

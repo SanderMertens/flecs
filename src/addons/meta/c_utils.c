@@ -47,9 +47,10 @@ typedef struct flecs_meta_utils_params_t {
     bool is_fixed_size;
 } flecs_meta_utils_params_t;
 
+/* Skip over a parenthesized or angle-bracketed scope in the input. */
 static
 const char* skip_scope(const char *ptr, flecs_meta_utils_parse_ctx_t *ctx) {
-    /* Keep track of which characters were used to open the scope */
+    /* Stack tracks matching open delimiters for nesting validation */
     char stack[256];
     int32_t sp = 0;
     char ch;
@@ -85,6 +86,7 @@ error:
     return NULL;
 }
 
+/* Parse a numeric digit token from the input. */
 static
 const char* parse_c_digit(
     const char *ptr,
@@ -104,12 +106,14 @@ error:
     return NULL;
 }
 
+/* Parse a C identifier, capturing any parenthesized or angle-bracketed
+ * parameters (e.g. template args) into the params buffer. */
 static
 const char* parse_c_identifier(
-    const char *ptr, 
+    const char *ptr,
     char *buff,
     char *params,
-    flecs_meta_utils_parse_ctx_t *ctx) 
+    flecs_meta_utils_parse_ctx_t *ctx)
 {
     ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(buff != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -121,7 +125,6 @@ const char* parse_c_identifier(
         params[0] = '\0';
     }
 
-    /* Ignore whitespaces */
     ptr = flecs_parse_ws_eol(ptr);
     ch = *ptr;
 
@@ -133,7 +136,7 @@ const char* parse_c_identifier(
     while ((ch = *ptr) && !isspace(ch) && ch != ';' && ch != ',' && ch != ')' && 
         ch != '>' && ch != '}' && ch != '*') 
     {
-        /* Type definitions can contain macros or templates */
+        /* Capture parameters in parens or angle brackets */
         if (ch == '(' || ch == '<') {
             if (!params) {
                 ecs_meta_error(ctx, ptr, "unexpected %c", *ptr);
@@ -164,15 +167,14 @@ error:
     return NULL;
 }
 
+/* Open a scope in the type definition, handling braces. */
 static
 const char * flecs_meta_utils_open_scope(
     const char *ptr,
-    flecs_meta_utils_parse_ctx_t *ctx)    
+    flecs_meta_utils_parse_ctx_t *ctx)
 {
-    /* Skip initial whitespaces */
     ptr = flecs_parse_ws_eol(ptr);
 
-    /* Is this the start of the type definition? */
     if (ctx->desc == ptr) {
         if (*ptr != '{') {
             ecs_meta_error(ctx, ptr, "missing '{' in struct definition");
@@ -183,13 +185,11 @@ const char * flecs_meta_utils_open_scope(
         ptr = flecs_parse_ws_eol(ptr);
     }
 
-    /* Is this the end of the type definition? */
     if (!*ptr) {
         ecs_meta_error(ctx, ptr, "missing '}' at end of struct definition");
         goto error;
-    }   
+    }
 
-    /* Is this the end of the type definition? */
     if (*ptr == '}') {
         ptr = flecs_parse_ws_eol(ptr + 1);
         if (*ptr) {
@@ -205,12 +205,13 @@ error:
     return NULL;
 }
 
+/* Parse a single enum or bitmask constant from the definition. */
 static
 const char* flecs_meta_utils_parse_constant(
     const char *ptr,
     flecs_meta_utils_constant_t *token,
     flecs_meta_utils_parse_ctx_t *ctx)
-{    
+{
     ptr = flecs_meta_utils_open_scope(ptr, ctx);
     if (!ptr) {
         return NULL;
@@ -218,7 +219,6 @@ const char* flecs_meta_utils_parse_constant(
 
     token->is_value_set = false;
 
-    /* Parse token, constant identifier */
     ptr = parse_c_identifier(ptr, token->name, NULL, ctx);
     if (!ptr) {
         return NULL;
@@ -229,7 +229,6 @@ const char* flecs_meta_utils_parse_constant(
         return NULL;
     }
 
-    /* Explicit value assignment */
     if (*ptr == '=') {
         int64_t value = 0;
         ptr = parse_c_digit(ptr + 1, &value);
@@ -237,7 +236,6 @@ const char* flecs_meta_utils_parse_constant(
         token->is_value_set = true;
     }
 
-    /* Expect a ',' or '}' */
     if (*ptr != ',' && *ptr != '}') {
         ecs_meta_error(ctx, ptr, "missing , after enum constant");
         goto error;
@@ -252,6 +250,7 @@ error:
     return NULL;
 }
 
+/* Parse a type identifier with optional const and pointer qualifiers. */
 static
 const char* flecs_meta_utils_parse_type(
     const char *ptr,
@@ -263,27 +262,23 @@ const char* flecs_meta_utils_parse_type(
 
     ptr = flecs_parse_ws_eol(ptr);
 
-    /* Parse token, expect type identifier or ECS_PROPERTY */
     ptr = parse_c_identifier(ptr, token->type, token->params, ctx);
     if (!ptr) {
         goto error;
     }
 
     if (!strcmp(token->type, "ECS_PRIVATE")) {
-        /* Members from this point are not stored in metadata */
+        /* ECS_PRIVATE: remaining members are excluded from metadata */
         ptr += ecs_os_strlen(ptr);
         goto done;
     }
 
-    /* If token is const, set const flag and continue parsing type */
     if (!strcmp(token->type, "const")) {
         token->is_const = true;
 
-        /* Parse type after const */
         ptr = parse_c_identifier(ptr + 1, token->type, token->params, ctx);
     }
 
-    /* Check if type is a pointer */
     ptr = flecs_parse_ws_eol(ptr);
     if (*ptr == '*') {
         token->is_ptr = true;
@@ -296,6 +291,7 @@ error:
     return NULL;
 }
 
+/* Parse a struct member declaration including type, name and array count. */
 static
 const char* flecs_meta_utils_parse_member(
     const char *ptr,
@@ -310,7 +306,6 @@ const char* flecs_meta_utils_parse_member(
     token->count = 0;
     token->is_partial = false;
 
-    /* Parse member type */
     ptr = flecs_meta_utils_parse_type(ptr, &token->type, ctx);
     if (!ptr) {
         token->is_partial = true;
@@ -321,28 +316,24 @@ const char* flecs_meta_utils_parse_member(
         return ptr;        
     }
 
-    /* Next token is the identifier */
     ptr = parse_c_identifier(ptr, token->name, NULL, ctx);
     if (!ptr) {
         goto error;
     }
 
-    /* Skip whitespace between member and [ or ; */
     ptr = flecs_parse_ws_eol(ptr);
 
-    /* Check if this is an array */
+    /* Check for array syntax: name[N] or name [N] */
     char *array_start = strchr(token->name, '[');
     if (!array_start) {
-        /* If the [ was separated by a space, it will not be parsed as part of
-         * the name */
+        /* [ may be separated from name by whitespace */
         if (*ptr == '[') {
-            /* safe, will not be modified */
+            /* Safe cast; pointer is not modified */
             array_start = ECS_CONST_CAST(char*, ptr);
         }
     }
 
     if (array_start) {
-        /* Check if the [ matches with a ] */
         char *array_end = strchr(array_start, ']');
         if (!array_end) {
             ecs_meta_error(ctx, ptr, "missing ']'");
@@ -356,15 +347,12 @@ const char* flecs_meta_utils_parse_member(
         token->count = atoi(array_start + 1);
 
         if (array_start == ptr) {
-            /* If [ was found after name, continue parsing after ] */
-            ptr = array_end + 1;
+            ptr = array_end + 1; /* [ after name: advance past ] */
         } else {
-            /* If [ was found in name, replace it with 0 terminator */
-            array_start[0] = '\0';
+            array_start[0] = '\0'; /* [ in name: null-terminate name */
         }
     }
 
-    /* Expect a ; */
     if (*ptr != ';') {
         ecs_meta_error(ctx, ptr, "missing ; after member declaration");
         goto error;
@@ -375,6 +363,7 @@ error:
     return NULL;
 }
 
+/* Parse a collection type descriptor for arrays, vectors or bitmasks. */
 static
 int flecs_meta_utils_parse_desc(
     const char *ptr,
@@ -393,7 +382,6 @@ int flecs_meta_utils_parse_desc(
 
     ptr ++;
 
-    /* Parse type identifier */
     ptr = flecs_meta_utils_parse_type(ptr, &token->type, ctx);
     if (!ptr) {
         goto error;
@@ -401,7 +389,7 @@ int flecs_meta_utils_parse_desc(
 
     ptr = flecs_parse_ws_eol(ptr);
 
-    /* If next token is a ',' the first type was a key type */
+    /* Comma separates key type from element type, or element type from count */
     if (*ptr == ',') {
         ptr = flecs_parse_ws_eol(ptr + 1);
         
@@ -416,8 +404,6 @@ int flecs_meta_utils_parse_desc(
             token->is_fixed_size = true;
         } else {
             token->key_type = token->type;
-
-            /* Parse element type */
             ptr = flecs_meta_utils_parse_type(ptr, &token->type, ctx);
             ptr = flecs_parse_ws_eol(ptr);
 
@@ -444,6 +430,7 @@ ecs_entity_t flecs_meta_utils_lookup(
     int64_t count,
     flecs_meta_utils_parse_ctx_t *ctx);
 
+/* Look up or create an array type from its descriptor. */
 static
 ecs_entity_t flecs_meta_utils_lookup_array(
     ecs_world_t *world,
@@ -490,6 +477,7 @@ error:
     return 0;
 }
 
+/* Look up or create a vector type from its descriptor. */
 static
 ecs_entity_t flecs_meta_utils_lookup_vector(
     ecs_world_t *world,
@@ -527,6 +515,7 @@ error:
     return 0;
 }
 
+/* Look up a bitmask type from its descriptor. */
 static
 ecs_entity_t flecs_meta_utils_lookup_bitmask(
     ecs_world_t *world,
@@ -574,6 +563,7 @@ error:
     return 0;
 }
 
+/* Look up a type entity from a parsed type token. */
 static
 ecs_entity_t flecs_meta_utils_lookup(
     ecs_world_t *world,
@@ -590,7 +580,7 @@ ecs_entity_t flecs_meta_utils_lookup(
     const char *typename = token->type;
     ecs_entity_t type = 0;
 
-    /* Parse vector type */
+    /* Resolve type: check builtin names, then fall back to symbol lookup */
     if (!token->is_ptr) {
         if (!ecs_os_strcmp(typename, "ecs_array")) {
             type = flecs_meta_utils_lookup_array(world, 0, token->params, ctx);
@@ -680,6 +670,7 @@ error:
     return 0;
 }
 
+/* Parse a struct definition from a C descriptor string. */
 static
 int flecs_meta_utils_parse_struct(
     ecs_world_t *world,
@@ -740,6 +731,7 @@ error:
     return -1;
 }
 
+/* Parse enum or bitmask constants from a C descriptor string. */
 static
 int flecs_meta_utils_parse_constants(
     ecs_world_t *world,
@@ -811,6 +803,7 @@ error:
     return -1;
 }
 
+/* Parse an enum definition from a C descriptor string. */
 static
 int flecs_meta_utils_parse_enum(
     ecs_world_t *world,
@@ -821,6 +814,7 @@ int flecs_meta_utils_parse_enum(
     return flecs_meta_utils_parse_constants(world, t, desc, false);
 }
 
+/* Parse a bitmask definition from a C descriptor string. */
 static
 int flecs_meta_utils_parse_bitmask(
     ecs_world_t *world,

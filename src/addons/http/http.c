@@ -1,5 +1,5 @@
 /**
- * @file addons/http.c
+ * @file addons/http/http.c
  * @brief HTTP addon.
  *
  * This is a heavily modified version of the EmbeddableWebServer (see copyright
@@ -41,7 +41,7 @@
 
 #include "http.h"
 
-/* Global statistics */
+/* Global request/response counters (atomic increments via ecs_os_linc) */
 int64_t ecs_http_request_received_count = 0;
 int64_t ecs_http_request_invalid_count = 0;
 int64_t ecs_http_request_handled_ok_count = 0;
@@ -52,11 +52,12 @@ int64_t ecs_http_send_ok_count = 0;
 int64_t ecs_http_send_error_count = 0;
 int64_t ecs_http_busy_count = 0;
 
+/* Send data on a socket. */
 static
 ecs_size_t http_send(
-    ecs_http_socket_t sock, 
-    const void *buf, 
-    ecs_size_t size, 
+    ecs_http_socket_t sock,
+    const void *buf,
+    ecs_size_t size,
     int flags)
 {
     ecs_assert(size >= 0, ECS_INTERNAL_ERROR, NULL);
@@ -70,6 +71,7 @@ ecs_size_t http_send(
 #endif
 }
 
+/* Receive data from a socket. */
 static
 ecs_size_t http_recv(
     ecs_http_socket_t sock,
@@ -94,6 +96,7 @@ ecs_size_t http_recv(
     return ret;
 }
 
+/* Set receive timeout on a socket. */
 static
 void http_sock_set_timeout(
     ecs_http_socket_t sock,
@@ -115,6 +118,7 @@ void http_sock_set_timeout(
     }
 }
 
+/* Enable keep-alive on a socket. */
 static
 void http_sock_keep_alive(
     ecs_http_socket_t sock)
@@ -126,6 +130,7 @@ void http_sock_keep_alive(
     }
 }
 
+/* Enable or disable non-blocking mode on a socket. */
 static
 void http_sock_nonblock(ecs_http_socket_t sock, bool enable) {
     (void)sock;
@@ -151,6 +156,7 @@ void http_sock_nonblock(ecs_http_socket_t sock, bool enable) {
 #endif
 }
 
+/* Resolve address to host and port strings. */
 static
 int http_getnameinfo(
     const struct sockaddr* addr,
@@ -175,6 +181,7 @@ int http_getnameinfo(
 #endif
 }
 
+/* Bind a socket to an address. */
 static
 int http_bind(
     ecs_http_socket_t sock,
@@ -189,6 +196,7 @@ int http_bind(
 #endif
 }
 
+/* Check whether a socket handle is valid. */
 static
 bool http_socket_is_valid(
     ecs_http_socket_t sock)
@@ -206,6 +214,7 @@ bool http_socket_is_valid(
 #define HTTP_SOCKET_INVALID (-1)
 #endif
 
+/* Close and invalidate a socket. */
 static
 void http_close(
     ecs_http_socket_t *sock)
@@ -222,6 +231,7 @@ void http_close(
     *sock = HTTP_SOCKET_INVALID;
 }
 
+/* Accept an incoming connection on a listening socket. */
 static
 ecs_http_socket_t http_accept(
     ecs_http_socket_t sock,
@@ -234,12 +244,14 @@ ecs_http_socket_t http_accept(
     return result;
 }
 
+/* Clean up an HTTP reply. */
 static
 void http_reply_fini(ecs_http_reply_t* reply) {
     ecs_assert(reply != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_os_free(reply->body.content);
 }
 
+/* Clean up an HTTP request and remove it from the server. */
 static
 void http_request_fini(ecs_http_request_impl_t *req) {
     ecs_assert(req != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -251,6 +263,7 @@ void http_request_fini(ecs_http_request_impl_t *req) {
         ecs_http_request_impl_t, req->pub.id);
 }
 
+/* Close socket and free a connection from the server. */
 static
 void http_connection_free(ecs_http_connection_impl_t *conn) {
     ecs_assert(conn != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -265,7 +278,7 @@ void http_connection_free(ecs_http_connection_impl_t *conn) {
         ecs_http_connection_impl_t, conn_id);
 }
 
-// https://stackoverflow.com/questions/10156409/convert-hex-string-char-to-int
+/* Convert two hex characters to an integer value. */
 static
 char http_hex_2_int(char a, char b){
     a = (a <= '9') ? (char)(a - '0') : (char)((a & 0x7) + 9);
@@ -276,9 +289,10 @@ char http_hex_2_int(char a, char b){
     return (char)((a << 4) + b);
 }
 
+/* Decode percent-encoded characters in a URL string in place. */
 static
 void http_decode_url_str(
-    char *str) 
+    char *str)
 {
     char ch, *ptr, *dst = str;
     for (ptr = str; (ch = *ptr); ptr++) {
@@ -294,6 +308,7 @@ void http_decode_url_str(
     dst[0] = '\0';
 }
 
+/* Parse HTTP method string from the request fragment. */
 static
 void http_parse_method(
     ecs_http_fragment_t *frag)
@@ -311,6 +326,7 @@ void http_parse_method(
     ecs_strbuf_reset(&frag->buf);
 }
 
+/* Check whether the fragment has room for another header. */
 static
 bool http_header_writable(
     ecs_http_fragment_t *frag)
@@ -318,6 +334,7 @@ bool http_header_writable(
     return frag->header_count < ECS_HTTP_HEADER_COUNT_MAX;
 }
 
+/* Reset the header scratch buffer. */
 static
 void http_header_buf_reset(
     ecs_http_fragment_t *frag)
@@ -326,6 +343,7 @@ void http_header_buf_reset(
     frag->header_buf_ptr = frag->header_buf;
 }
 
+/* Append a character to the header scratch buffer. */
 static
 void http_header_buf_append(
     ecs_http_fragment_t *frag,
@@ -341,6 +359,7 @@ void http_header_buf_append(
     }
 }
 
+/* Compute hash for an HTTP request cache key. */
 static
 uint64_t http_request_key_hash(const void *ptr) {
     const ecs_http_request_key_t *key = ptr;
@@ -349,6 +368,7 @@ uint64_t http_request_key_hash(const void *ptr) {
     return flecs_hash(array, count * ECS_SIZEOF(char));
 }
 
+/* Compare two HTTP request cache keys. */
 static
 int http_request_key_compare(const void *ptr_1, const void *ptr_2) {
     const ecs_http_request_key_t *type_1 = ptr_1;
@@ -364,6 +384,7 @@ int http_request_key_compare(const void *ptr_1, const void *ptr_2) {
     return ecs_os_memcmp(type_1->array, type_2->array, count_1);
 }
 
+/* Look up a cached response for a request. */
 static
 ecs_http_request_entry_t* http_find_request_entry(
     ecs_http_server_t *srv,
@@ -387,6 +408,7 @@ ecs_http_request_entry_t* http_find_request_entry(
     return NULL;
 }
 
+/* Insert or update a response in the request cache. */
 static
 void http_insert_request_entry(
     ecs_http_server_t *srv,
@@ -422,6 +444,7 @@ void http_insert_request_entry(
             entry->content, entry->content_length);
 }
 
+/* Decode a parsed HTTP fragment into a request structure. */
 static
 char* http_decode_request(
     ecs_http_request_impl_t *req,
@@ -451,7 +474,7 @@ char* http_decode_request(
     for (i = 0; i < count; i ++) {
         req->pub.params[i].key = &res[frag->param_offsets[i]];
         req->pub.params[i].value = &res[frag->param_value_offsets[i]];
-        /* Safe, member is only const so that end-user can't change it */
+        /* Safe: member is const only for the public API */
         http_decode_url_str(ECS_CONST_CAST(char*, req->pub.params[i].value));
     }
 
@@ -466,6 +489,8 @@ char* http_decode_request(
     return res;
 }
 
+/* Enqueue a request for deferred processing, or return cached entry.
+ * When a cached entry is returned (non-NULL), srv->lock is still held. */
 static
 ecs_http_request_entry_t* http_enqueue_request(
     ecs_http_connection_impl_t *conn,
@@ -477,8 +502,8 @@ ecs_http_request_entry_t* http_enqueue_request(
     ecs_os_mutex_lock(srv->lock);
     bool is_alive = conn->pub.id == conn_id;
 
-    if (!is_alive || frag->invalid) { 
-        /* Don't enqueue invalid requests or requests for purged connections */
+    if (!is_alive || frag->invalid) {
+        /* Discard invalid requests or requests for purged connections */
         ecs_strbuf_reset(&frag->buf);
     } else {
         ecs_http_request_impl_t req;
@@ -486,13 +511,11 @@ ecs_http_request_entry_t* http_enqueue_request(
         if (res) {
             req.pub.conn = (ecs_http_connection_t*)conn;
 
-            /* Check cache for GET requests */
+            /* Return cached response for GET requests if available */
             if (frag->method == EcsHttpGet) {
-                ecs_http_request_entry_t *entry = 
+                ecs_http_request_entry_t *entry =
                     http_find_request_entry(srv, res, frag->header_offsets[0]);
                 if (entry) {
-                    /* If an entry is found, don't enqueue a request. Instead
-                     * return the cached response immediately. */
                     ecs_os_free(res);
                     return entry;
                 }
@@ -511,11 +534,12 @@ ecs_http_request_entry_t* http_enqueue_request(
     return NULL;
 }
 
+/* Parse raw HTTP request data into a fragment using a state machine. */
 static
 bool http_parse_request(
     ecs_http_fragment_t *frag,
-    const char* req_frag, 
-    ecs_size_t req_frag_len) 
+    const char* req_frag,
+    ecs_size_t req_frag_len)
 {
     int32_t i;
     for (i = 0; i < req_frag_len; i++) {
@@ -678,29 +702,31 @@ bool http_parse_request(
     }
 }
 
+/* Post a send request to the outgoing queue. */
 static
 ecs_http_send_request_t* http_send_queue_post(
     ecs_http_server_t *srv)
 {
-    /* This function should only be called while the server is locked. Before 
-     * the lock is released, the returned element should be populated. */
+    /* Caller must hold srv->lock. Populate the returned slot before releasing. */
     ecs_http_send_queue_t *sq = &srv->send_queue;
     int32_t next = (sq->head + 1) % ECS_HTTP_SEND_QUEUE_MAX;
     if (next == sq->tail) {
         return NULL;
     }
 
-    /* Don't enqueue new requests if server is shutting down */
+    /* Reject new requests during shutdown */
     if (!srv->should_run) {
         return NULL;
     }
 
-    /* Return element at end of the queue */
+    /* Return next slot at the head of the ring buffer */
     ecs_http_send_request_t *result = &sq->requests[sq->head];
     sq->head = next;
     return result;
 }
 
+/* Dequeue the next send request from the outgoing queue.
+ * Returns with srv->lock held; caller must unlock. */
 static
 ecs_http_send_request_t* http_send_queue_get(
     ecs_http_server_t *srv)
@@ -717,18 +743,18 @@ ecs_http_send_request_t* http_send_queue_get(
     return result;
 }
 
+/* Thread function that processes the outgoing send queue. */
 static
 void* http_server_send_queue(void* arg) {
     ecs_http_server_t *srv = arg;
     int32_t wait_ms = srv->send_queue.wait_ms;
 
-    /* Run for as long as the server is running or there are messages. When the
-     * server is stopping, no new messages will be enqueued */
+    /* Drain queue until server stops and no pending messages remain */
     while (srv->should_run || (srv->send_queue.head != srv->send_queue.tail)) {
         ecs_http_send_request_t* r = http_send_queue_get(srv);
         if (!r) {
             ecs_os_mutex_unlock(srv->lock);
-            /* If the queue is empty, wait so we don't run too fast */
+            /* Avoid busy-spinning when queue is empty */
             if (srv->should_run) {
                 ecs_os_sleep(0, wait_ms * 1000 * 1000);
             }
@@ -745,7 +771,7 @@ void* http_server_send_queue(void* arg) {
 
                 http_sock_nonblock(sock, false);
 
-                /* Write headers */
+                /* Send headers first, then body */
                 ecs_size_t written = http_send(sock, headers, headers_length, 0);
                 if (written != headers_length) {
                     ecs_err("http: failed to write HTTP response headers: %s",
@@ -753,7 +779,6 @@ void* http_server_send_queue(void* arg) {
                     ecs_os_linc(&ecs_http_send_error_count);
                     error = true;
                 } else if (content_length >= 0) {
-                    /* Write content */
                     written = http_send(sock, content, content_length, 0);
                     if (written != content_length) {
                         ecs_err("http: failed to write HTTP response body: %s",
@@ -768,7 +793,7 @@ void* http_server_send_queue(void* arg) {
 
                 http_close(&sock);
             } else {
-                ecs_err("http: invalid socket\n");
+                ecs_err("http: invalid socket");
             }
 
             ecs_os_free(content);
@@ -778,12 +803,13 @@ void* http_server_send_queue(void* arg) {
     return NULL;
 }
 
+/* Build HTTP response headers into a string buffer. */
 static
 void http_append_send_headers(
     ecs_strbuf_t *hdrs,
-    int code, 
-    const char* status, 
-    const char* content_type,  
+    int code,
+    const char* status,
+    const char* content_type,
     ecs_strbuf_t *extra_headers,
     ecs_size_t content_len,
     bool preflight)
@@ -818,18 +844,18 @@ void http_append_send_headers(
     ecs_strbuf_appendlit(hdrs, "\r\n");
 }
 
+/* Send an HTTP reply over a connection. */
 static
 void http_send_reply(
-    ecs_http_connection_impl_t* conn, 
+    ecs_http_connection_impl_t* conn,
     ecs_http_reply_t* reply,
-    bool preflight) 
+    bool preflight)
 {
     ecs_strbuf_t hdrs = ECS_STRBUF_INIT;
     int32_t content_length = reply->body.length;
     char *content = ecs_strbuf_get(&reply->body);
 
-    /* Use asynchronous send queue for outgoing data so send operations won't
-     * hold up main thread */
+    /* Enqueue response for async sending; preflight replies are sent inline */
     ecs_http_send_request_t *req = NULL;
 
     if (!preflight) {
@@ -858,22 +884,23 @@ void http_send_reply(
         return;
     }
 
-    /* Second, enqueue send request for response body */
+    /* Populate the send request with headers and content */
     req->sock = conn->sock;
     req->headers = headers;
     req->header_length = headers_length;
     req->content = content;
     req->content_length = content_length;
 
-    /* Take ownership of values */
+    /* Transfer ownership to the send queue */
     reply->body.content = NULL;
     conn->sock = HTTP_SOCKET_INVALID;
 }
 
+/* Receive and process data from a connection. */
 static
 void http_recv_connection(
     ecs_http_server_t *srv,
-    ecs_http_connection_impl_t *conn, 
+    ecs_http_connection_impl_t *conn,
     uint64_t conn_id,
     ecs_http_socket_t sock)
 {
@@ -919,7 +946,7 @@ void http_recv_connection(
                         http_send_reply(conn, &reply, false);
                         http_connection_free(conn);
 
-                        /* Lock was transferred from enqueue_request */
+                        /* enqueue_request returns with lock held */
                         ecs_os_mutex_unlock(srv->lock);
                     }
                 }
@@ -950,12 +977,13 @@ typedef struct {
     uint64_t id;
 } http_conn_res_t;
 
+/* Initialize a new connection from an accepted socket. */
 static
 http_conn_res_t http_init_connection(
-    ecs_http_server_t *srv, 
+    ecs_http_server_t *srv,
     ecs_http_socket_t sock_conn,
-    struct sockaddr_storage *remote_addr, 
-    ecs_size_t remote_addr_len) 
+    struct sockaddr_storage *remote_addr,
+    ecs_size_t remote_addr_len)
 {
     http_sock_set_timeout(sock_conn, 100);
     http_sock_keep_alive(sock_conn);
@@ -973,7 +1001,7 @@ http_conn_res_t http_init_connection(
     char *remote_host = conn->pub.host;
     char *remote_port = conn->pub.port;
 
-    /* Fetch name & port info */
+    /* Resolve remote host and port for logging */
     if (http_getnameinfo((struct sockaddr*) remote_addr, remote_addr_len,
         remote_host, ECS_SIZEOF(conn->pub.host),
         remote_port, ECS_SIZEOF(conn->pub.port),
@@ -989,20 +1017,21 @@ http_conn_res_t http_init_connection(
     return (http_conn_res_t){ .conn = conn, .id = conn_id };
 }
 
+/* Create listening socket and accept connections in a loop. */
 static
 int http_accept_connections(
-    ecs_http_server_t* srv, 
-    const struct sockaddr* addr, 
-    ecs_size_t addr_len) 
+    ecs_http_server_t* srv,
+    const struct sockaddr* addr,
+    ecs_size_t addr_len)
 {
 #ifdef ECS_TARGET_WINDOWS
-    /* If on Windows, test if winsock needs to be initialized */
+    /* Lazily initialize Winsock if not already done */
     SOCKET testsocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (INVALID_SOCKET == testsocket && WSANOTINITIALISED == WSAGetLastError()){
         WSADATA data = { 0 };
         int result = WSAStartup(MAKEWORD(2, 2), &data);
         if (result) {
-            ecs_warn("http: WSAStartup failed with GetLastError = %d\n", 
+            ecs_warn("http: WSAStartup failed with GetLastError = %d",
                 GetLastError());
             return 0;
         }
@@ -1011,7 +1040,7 @@ int http_accept_connections(
     }
 #endif
 
-    /* Resolve name + port (used for logging) */
+    /* Resolve address for logging */
     char addr_host[256];
     char addr_port[20];
 
@@ -1123,6 +1152,7 @@ done:
     return ret;
 }
 
+/* Main server thread that binds and accepts connections. */
 static
 void* http_server_thread(void* arg) {
     ecs_http_server_t *srv = arg;
@@ -1155,6 +1185,7 @@ retry:
     return NULL;
 }
 
+/* Invoke the server callback for a request. */
 static
 void http_do_request(
     ecs_http_server_t *srv,
@@ -1181,6 +1212,7 @@ error:
     return;
 }
 
+/* Handle a dequeued request: invoke callback, cache, and send reply. */
 static
 void http_handle_request(
     ecs_http_server_t *srv,
@@ -1210,7 +1242,7 @@ void http_handle_request(
         http_send_reply(conn, &reply, false);
         ecs_dbg_2("http: reply sent to '%s:%s'", conn->pub.host, conn->pub.port);
     } else {
-        /* Already taken care of */
+        /* OPTIONS handled during receive, nothing to do */
     }
 
     http_reply_fini(&reply);
@@ -1218,6 +1250,7 @@ void http_handle_request(
     http_connection_free(conn);
 }
 
+/* Remove expired entries from the request cache. */
 static
 void http_purge_request_cache(
     ecs_http_server_t *srv,
@@ -1235,7 +1268,7 @@ void http_purge_request_cache(
             ecs_http_request_entry_t *entry = &entries[i];
             if (fini || ((time - entry->time) > srv->cache_purge_timeout)) {
                 ecs_http_request_key_t *key = &keys[i];
-                /* Safe, code owns the value */
+                /* Safe: we own this allocation */
                 ecs_os_free(ECS_CONST_CAST(char*, key->array));
                 ecs_os_free(entry->content);
                 flecs_hm_bucket_remove(&srv->request_cache, bucket, 
@@ -1249,6 +1282,7 @@ void http_purge_request_cache(
     }
 }
 
+/* Dequeue and handle pending requests, purge stale connections. */
 static
 int32_t http_dequeue_requests(
     ecs_http_server_t *srv,
@@ -1289,7 +1323,7 @@ int32_t http_dequeue_requests(
 
 const char* ecs_http_get_header(
     const ecs_http_request_t* req,
-    const char* name) 
+    const char* name)
 {
     for (ecs_size_t i = 0; i < req->header_count; i++) {
         if (!ecs_os_strcmp(req->headers[i].key, name)) {
@@ -1301,7 +1335,7 @@ const char* ecs_http_get_header(
 
 const char* ecs_http_get_param(
     const ecs_http_request_t* req,
-    const char* name) 
+    const char* name)
 {
     for (ecs_size_t i = 0; i < req->param_count; i++) {
         if (!ecs_os_strcmp(req->params[i].key, name)) {
@@ -1312,7 +1346,7 @@ const char* ecs_http_get_param(
 }
 
 ecs_http_server_t* ecs_http_server_init(
-    const ecs_http_server_desc_t *desc) 
+    const ecs_http_server_desc_t *desc)
 {
     ecs_http_server_t* srv = ecs_os_calloc_t(ecs_http_server_t);
     if (ecs_os_has_threading()) {
@@ -1344,18 +1378,16 @@ ecs_http_server_t* ecs_http_server_init(
     flecs_sparse_init_t(&srv->connections, NULL, NULL, ecs_http_connection_impl_t);
     flecs_sparse_init_t(&srv->requests, NULL, NULL, ecs_http_request_impl_t);
 
-    /* Start at id 1 */
+    /* Reserve id 0 (unused sentinel) */
     flecs_sparse_new_id(&srv->connections);
     flecs_sparse_new_id(&srv->requests);
 
-    /* Initialize request cache */
-    flecs_hashmap_init(&srv->request_cache, 
+    flecs_hashmap_init(&srv->request_cache,
         ecs_http_request_key_t, ecs_http_request_entry_t,
         http_request_key_hash, http_request_key_compare, NULL);
 
 #ifndef ECS_TARGET_WINDOWS
-    /* Ignore pipe signal. SIGPIPE can occur when a message is sent to a client
-     * but te client already disconnected. */
+    /* Ignore SIGPIPE from writes to disconnected clients */
     signal(SIGPIPE, SIG_IGN);
 #endif
 
@@ -1363,7 +1395,7 @@ ecs_http_server_t* ecs_http_server_init(
 }
 
 void ecs_http_server_fini(
-    ecs_http_server_t* srv) 
+    ecs_http_server_t* srv)
 {
     if (srv->should_run) {
         ecs_http_server_stop(srv);
@@ -1407,7 +1439,7 @@ error:
 }
 
 void ecs_http_server_stop(
-    ecs_http_server_t* srv) 
+    ecs_http_server_t* srv)
 {
     ecs_check(srv != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(srv->initialized, ECS_INVALID_OPERATION, 
@@ -1417,7 +1449,6 @@ void ecs_http_server_stop(
     ecs_check(ecs_os_has_threading(), ECS_UNSUPPORTED,
         "missing OS API implementation");
 
-    /* Stop server thread */
     ecs_dbg("http: shutting down server thread");
 
     ecs_os_mutex_lock(srv->lock);
@@ -1431,14 +1462,14 @@ void ecs_http_server_stop(
     ecs_os_thread_join(srv->send_queue.thread);
     ecs_trace("http: server threads shut down");
 
-    /* Cleanup all outstanding requests */
+    /* Finalize all outstanding requests */
     int i, count = flecs_sparse_count(&srv->requests);
     for (i = count - 1; i >= 1; i --) {
         http_request_fini(flecs_sparse_get_dense_t(
             &srv->requests, ecs_http_request_impl_t, i));
     }
 
-    /* Close all connections */
+    /* Free all connections */
     count = flecs_sparse_count(&srv->connections);
     for (i = count - 1; i >= 1; i --) {
         http_connection_free(flecs_sparse_get_dense_t(

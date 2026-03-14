@@ -37,6 +37,7 @@ ECS_DTOR(EcsWorldStats, ptr, {
     ptr->stats = NULL;
 })
 
+/* Forward get operation to the world stats API, ignoring resource entity. */
 static
 void flecs_world_stats_get(
     ecs_world_t *world, ecs_entity_t res, void *stats)
@@ -45,7 +46,8 @@ void flecs_world_stats_get(
     ecs_world_stats_get(world, stats);
 }
 
-static 
+/* Set the current time index on a world statistics object. */
+static
 void flecs_world_stats_set_t(
     void *stats, int32_t t)
 {
@@ -54,40 +56,45 @@ void flecs_world_stats_set_t(
     ((ecs_world_stats_t*)stats)->t = t;
 }
 
+/* Forward copy-last operation to the world stats API. */
 static
 void flecs_world_stats_copy_last(
-    void *stats, 
-    void *src) 
+    void *stats,
+    void *src)
 {
     ecs_world_stats_copy_last(stats, src);
 }
 
+/* Forward reduce operation to the world stats API. */
 static
 void flecs_world_stats_reduce(
-    void *stats, 
-    void *src) 
+    void *stats,
+    void *src)
 {
     ecs_world_stats_reduce(stats, src);
 }
 
+/* Forward reduce-last operation to the world stats API. */
 static
 void flecs_world_stats_reduce_last(
-    void *stats, 
-    void *last, 
-    int32_t reduce_count) 
+    void *stats,
+    void *last,
+    int32_t reduce_count)
 {
     ecs_world_stats_reduce_last(stats, last, reduce_count);
 }
 
+/* Forward repeat-last operation to the world stats API. */
 static
 void flecs_world_stats_repeat_last(
-    void* stats) 
+    void* stats)
 {
     ecs_world_stats_repeat_last(stats);
 }
 
+/* Import the world monitor subsystem and register its stats API. */
 void FlecsWorldMonitorImport(
-    ecs_world_t *world) 
+    ecs_world_t *world)
 {
     ECS_COMPONENT_DEFINE(world, EcsWorldStats);
 

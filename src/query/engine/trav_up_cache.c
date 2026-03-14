@@ -1,10 +1,14 @@
 /**
  * @file query/engine/trav_up_cache.c
- * @brief Compile query term.
+ * @brief Up-cache: maps tables to the ancestor entity that provides a component.
+ *
+ * Given a table and a component id, walks up the relationship hierarchy to
+ * find which ancestor entity has the component, caching the result.
  */
 
 #include "../../private_api.h"
 
+/* Ensure an up-traversal cache entry exists for a target entity. */
 static
 ecs_trav_up_t* flecs_trav_up_ensure(
     const ecs_query_run_ctx_t *ctx,
@@ -20,6 +24,7 @@ ecs_trav_up_t* flecs_trav_up_ensure(
     return trav[0];
 }
 
+/* Search a table's type for a component and populate the up-cache entry. */
 static
 int32_t flecs_trav_type_search(
     ecs_trav_up_t *up,
@@ -37,6 +42,7 @@ int32_t flecs_trav_type_search(
     return -1;
 }
 
+/* Search a table's type starting at an offset for a matching id. */
 static
 int32_t flecs_trav_type_offset_search(
     ecs_trav_up_t *up,
@@ -60,6 +66,7 @@ int32_t flecs_trav_type_offset_search(
     return -1;
 }
 
+/* Recursively traverse upwards from a source entity to find a component. */
 static
 ecs_trav_up_t* flecs_trav_table_up(
     const ecs_query_run_ctx_t *ctx,
@@ -195,6 +202,7 @@ found:
     return up;
 }
 
+/* Get or build the up-traversal cache entry for a table row. */
 ecs_trav_up_t* flecs_query_get_up_cache(
     const ecs_query_run_ctx_t *ctx,
     ecs_trav_up_cache_t *cache,
@@ -245,7 +253,7 @@ ecs_trav_up_t* flecs_query_get_up_cache(
 
     ecs_table_record_t *tr = ecs_table_cache_get(&cr_trav->cache, table);
     if (!tr) {
-        return NULL; /* Table doesn't have the relationship */
+        return NULL;
     }
 
     int32_t i = tr->index, end = i + tr->count;
@@ -263,6 +271,7 @@ ecs_trav_up_t* flecs_query_get_up_cache(
     return NULL;
 }
 
+/* Free up-traversal cache resources. */
 void flecs_query_up_cache_fini(
     ecs_trav_up_cache_t *cache)
 {

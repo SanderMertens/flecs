@@ -1,6 +1,6 @@
 /**
  * @file addons/json/serialize_value.c
- * @brief Serialize value to JSON.
+ * @brief Serialize values to JSON.
  */
 
 #include "json.h"
@@ -8,21 +8,22 @@
 
 #ifdef FLECS_JSON
 
+/* Serialize a slice of meta ops into a JSON string buffer. */
 static
 int flecs_json_ser_type_slice(
     const ecs_world_t *world,
     ecs_meta_op_t *ops,
     int32_t op_count,
-    const void *base, 
+    const void *base,
     ecs_strbuf_t *str);
 
-/* Serialize enumeration */
+/* Serialize an enumeration value as a JSON string. */
 static
 int flecs_json_ser_enum(
     const ecs_world_t *world,
-    ecs_meta_op_t *op, 
-    const void *base, 
-    ecs_strbuf_t *str) 
+    ecs_meta_op_t *op,
+    const void *base,
+    ecs_strbuf_t *str)
 {
     ecs_map_key_t value;
     ecs_meta_op_kind_t kind = op->underlying_kind;
@@ -41,12 +42,11 @@ int flecs_json_ser_enum(
         ecs_abort(ECS_INTERNAL_ERROR, "invalid underlying type");
     }
     
-    /* Enumeration constants are stored in a map that is keyed on the
-     * enumeration value. */
+    /* Look up constant name from the enum value map */
     ecs_enum_constant_t *constant = ecs_map_get_deref(op->is.constants,
         ecs_enum_constant_t, value);
     if (!constant) {
-        /* If the value is not found, it is not a valid enumeration constant */
+        /* Value does not correspond to any defined enum constant */
         char *name = ecs_get_path(world, op->type);
         ecs_err("enumeration value '%d' of type '%s' is not a valid constant", 
             value, name);
@@ -63,13 +63,13 @@ error:
     return -1;
 }
 
-/* Serialize bitmask */
+/* Serialize a bitmask value as a pipe-delimited JSON string. */
 static
 int flecs_json_ser_bitmask(
     const ecs_world_t *world,
-    ecs_meta_op_t *op, 
-    const void *ptr, 
-    ecs_strbuf_t *str) 
+    ecs_meta_op_t *op,
+    const void *ptr,
+    ecs_strbuf_t *str)
 {
     uint32_t value = *(const uint32_t*)ptr;
     if (!value) {
@@ -79,8 +79,7 @@ int flecs_json_ser_bitmask(
 
     ecs_strbuf_list_push(str, "\"", "|");
 
-    /* Multiple flags can be set at a given time. Iterate through all the flags
-     * and append the ones that are set. */
+    /* Iterate all flag constants and emit those whose bits are set */
     ecs_map_iter_t it = ecs_map_iter(op->is.constants);
     while (ecs_map_next(&it)) {
         ecs_bitmask_constant_t *constant = ecs_map_ptr(&it);
@@ -93,7 +92,7 @@ int flecs_json_ser_bitmask(
     }
 
     if (value != 0) {
-        /* All bits must have been matched by a constant */
+        /* Remaining bits don't correspond to any defined constant */
         char *name = ecs_get_path(world, op->type);
         ecs_err("bitmask value '%u' of type '%s' contains invalid/unknown bits", 
             value, name);
@@ -113,6 +112,7 @@ typedef struct json_serializer_ctx_t {
     bool is_collection;
 } json_serializer_ctx_t;
 
+/* Serialize an opaque type value using its custom serializer callback. */
 static
 int flecs_json_ser_opaque_value(
     const ecs_serializer_t *ser,
@@ -126,6 +126,7 @@ int flecs_json_ser_opaque_value(
     return ecs_ptr_to_json_buf(ser->world, type, value, json_ser->str);
 }
 
+/* Serialize a member name for an opaque struct type. */
 static
 int flecs_json_ser_opaque_member(
     const ecs_serializer_t *ser,
@@ -136,11 +137,12 @@ int flecs_json_ser_opaque_member(
     return 0;
 }
 
+/* Serialize an opaque type value to JSON. */
 static
 int flecs_json_ser_opaque(
     const ecs_world_t *world,
-    ecs_meta_op_t *op, 
-    const void *base, 
+    ecs_meta_op_t *op,
+    const void *base,
     ecs_strbuf_t *str,
     ecs_meta_op_kind_t kind)
 {
@@ -178,6 +180,7 @@ int flecs_json_ser_opaque(
     return 0;
 }
 
+/* Serialize inner scope members of a struct or collection to JSON. */
 static
 int flecs_json_ser_scope(
     const ecs_world_t *world,
@@ -192,6 +195,7 @@ int flecs_json_ser_scope(
     return 0;
 }
 
+/* Serialize an array of elements to a JSON array. */
 static
 int flecs_json_ser_array(
     const ecs_world_t *world,
@@ -216,6 +220,7 @@ int flecs_json_ser_array(
     return 0;
 }
 
+/* Serialize a forwarded type by looking up its type serializer. */
 static
 int flecs_json_ser_forward(
     const ecs_world_t *world,
@@ -234,7 +239,7 @@ int flecs_json_ser_forward(
         ecs_vec_count(&ts->ops), base, str);
 }
 
-/* Iterate over a slice of the type ops array */
+/* Iterate over a slice of meta ops and serialize values to JSON. */
 static
 int flecs_json_ser_type_slice(
     const ecs_world_t *world,
@@ -251,6 +256,7 @@ int flecs_json_ser_type_slice(
             flecs_json_member(str, op->name);
         }
 
+        /* Quote large ints (>=2^31) as strings to avoid JS number precision loss */
         bool large_int = false;
         if (op->kind == EcsOpI64) {
             if (*(const int64_t*)ptr >= 2147483648) {
@@ -387,18 +393,19 @@ error:
     return -1;
 }
 
-/* Iterate over the type ops of a type */
+/* Iterate over the type ops of a type and serialize values to JSON. */
 int flecs_json_ser_type(
     const ecs_world_t *world,
     const ecs_vec_t *v_ops,
-    const void *base, 
-    ecs_strbuf_t *str) 
+    const void *base,
+    ecs_strbuf_t *str)
 {
     ecs_meta_op_t *ops = ecs_vec_first_t(v_ops, ecs_meta_op_t);
     int32_t count = ecs_vec_count(v_ops);
     return flecs_json_ser_type_slice(world, ops, count, base, str);
 }
 
+/* Serialize an array of component values to a JSON buffer using type data. */
 static
 int flecs_array_to_json_buf_w_type_data(
     const ecs_world_t *world,
@@ -462,8 +469,8 @@ int ecs_array_to_json_buf(
 }
 
 char* ecs_array_to_json(
-    const ecs_world_t *world, 
-    ecs_entity_t type, 
+    const ecs_world_t *world,
+    ecs_entity_t type,
     const void* ptr,
     int32_t count)
 {
@@ -487,8 +494,8 @@ int ecs_ptr_to_json_buf(
 }
 
 char* ecs_ptr_to_json(
-    const ecs_world_t *world, 
-    ecs_entity_t type, 
+    const ecs_world_t *world,
+    ecs_entity_t type,
     const void* ptr)
 {
     return ecs_array_to_json(world, type, ptr, 0);

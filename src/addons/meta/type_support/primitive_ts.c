@@ -1,13 +1,14 @@
 /**
  * @file addons/meta/type_support/primitive_ts.c
- * @brief Primitives type support.
+ * @brief Primitive type support.
  */
 
 #include "type_support.h"
 
 #ifdef FLECS_META
 
-/* ecs_string_t lifecycle */
+/* Primitive comparers are trivial one-line functions intentionally left
+ * without individual doxygen comments. */
 
 static ECS_COPY(ecs_string_t, dst, src, {
     ecs_os_free(*(ecs_string_t*)dst);
@@ -24,8 +25,6 @@ static ECS_DTOR(ecs_string_t, ptr, {
     ecs_os_free(*(ecs_string_t*)ptr);
     *(ecs_string_t*)ptr = NULL;
 })
-
-/* Primitive comparers */
 
 static
 int flecs_compare_bool(
@@ -311,7 +310,7 @@ bool flecs_equals_f32(
     const void *b_ptr,
     const ecs_type_info_t *ti)
 {
-    /* intentional equal check as if it was an integer */
+    /* Bitwise equality via u32 compare (intentional: avoids NaN issues) */
     return flecs_compare_u32(a_ptr, b_ptr, ti) == 0;
 }
 
@@ -335,7 +334,7 @@ bool flecs_equals_f64(
     const void *b_ptr,
     const ecs_type_info_t *ti)
 {
-    /* intentional equal check as if it was an integer */
+    /* Bitwise equality via u64 compare (intentional: avoids NaN issues) */
     return flecs_compare_u64(a_ptr, b_ptr, ti) == 0;
 }
 
@@ -381,6 +380,7 @@ bool flecs_equals_id(
     return flecs_compare_id(a_ptr, b_ptr, ti) == 0;
 }
 
+/* Compare two string values with null safety. */
 int flecs_compare_string(
     const void *a_ptr,
     const void *b_ptr,
@@ -400,6 +400,7 @@ int flecs_compare_string(
     return ecs_os_strcmp(str_a, str_b);
 }
 
+/* Check two string values for equality. */
 bool flecs_equals_string(
     const void *a_ptr,
     const void *b_ptr,
@@ -408,6 +409,7 @@ bool flecs_equals_string(
     return flecs_compare_string(a_ptr, b_ptr, ti) == 0;
 }
 
+/* Observer callback to initialize primitive types when EcsPrimitive is set. */
 static
 void flecs_set_primitive(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
@@ -493,6 +495,7 @@ ecs_entity_t ecs_primitive_init(
     return t;
 }
 
+/* Register primitive component, observer, and all builtin primitive types. */
 void flecs_meta_primitives_init(
     ecs_world_t *world)
 {

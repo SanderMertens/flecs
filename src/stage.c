@@ -1,22 +1,11 @@
 /**
  * @file stage.c
- * @brief Staging implementation.
- * 
- * A stage is an object that can be used to temporarily store mutations to a
- * world while a world is in readonly mode. ECS operations that are invoked on
- * a stage are stored in a command buffer, which is flushed during sync points,
- * or manually by the user.
- * 
- * Stages contain additional state to enable other API functionality without
- * having to mutate the world, such as setting the current scope, and allocators
- * that are local to a stage.
- * 
- * In a multi threaded application, each thread has its own stage which allows
- * threads to insert mutations without having to lock administration.
+ * @brief Stage lifecycle and merge logic.
  */
 
 #include "private_api.h"
 
+/* Flush all stage command queues into the world. */
 static
 void flecs_stage_merge(
     ecs_world_t *world)
@@ -24,7 +13,7 @@ void flecs_stage_merge(
     bool is_stage = flecs_poly_is(world, ecs_stage_t);
     ecs_stage_t *stage = flecs_stage_from_world(&world);
 
-    bool measure_frame_time = ECS_BIT_IS_SET(ecs_world_get_flags(world), 
+    bool measure_frame_time = ECS_BIT_IS_SET(ecs_world_get_flags(world),
         EcsWorldMeasureFrameTime);
 
     ecs_time_t t_start = {0};
@@ -36,15 +25,12 @@ void flecs_stage_merge(
     ecs_log_push_3();
 
     if (is_stage) {
-        /* Check for consistency if force_merge is enabled. In practice this
-         * function will never get called with force_merge disabled for just
-         * a single stage. */
-        ecs_assert(stage->defer == 1, ECS_INVALID_OPERATION, 
+        /* Called with stage pointer: verify balanced defer_begin/defer_end */
+        ecs_assert(stage->defer == 1, ECS_INVALID_OPERATION,
             "mismatching defer_begin/defer_end detected");
         flecs_defer_end(world, stage);
     } else {
-        /* Merge stages. Only merge if the stage has auto_merging turned on, or 
-         * if this is a forced merge (like when ecs_merge is called) */
+        /* Flush all stages */
         int32_t i, count = ecs_get_stage_count(world);
         for (i = 0; i < count; i ++) {
             ecs_stage_t *s = (ecs_stage_t*)ecs_get_stage(world, i);
@@ -61,7 +47,7 @@ void flecs_stage_merge(
 
     world->info.merge_count_total ++; 
 
-    /* If stage is unmanaged, deferring is always enabled */
+    /* Unmanaged stages (id == -1) keep deferring permanently enabled */
     if (stage->id == -1) {
         flecs_defer_begin(world, stage);
     }
@@ -69,11 +55,11 @@ void flecs_stage_merge(
     ecs_log_pop_3();
 }
 
+/* Execute and clear one-shot post-frame actions. */
 void flecs_stage_merge_post_frame(
     ecs_world_t *world,
     ecs_stage_t *stage)
 {
-    /* Execute post frame actions */
     int32_t i, count = ecs_vec_count(&stage->post_frame_actions);
     ecs_action_elem_t *elems = ecs_vec_first(&stage->post_frame_actions);
     for (i = 0; i < count; i ++) {
@@ -83,6 +69,7 @@ void flecs_stage_merge_post_frame(
     ecs_vec_clear(&stage->post_frame_actions);
 }
 
+/* Set the currently running system on the stage; returns the previous value. */
 ecs_entity_t flecs_stage_set_system(
     ecs_stage_t *stage,
     ecs_entity_t system)
@@ -92,6 +79,7 @@ ecs_entity_t flecs_stage_set_system(
     return old;
 }
 
+/* Allocate and initialize a new stage. */
 static
 ecs_stage_t* flecs_stage_new(
     ecs_world_t *world)
@@ -122,6 +110,7 @@ ecs_stage_t* flecs_stage_new(
     return stage;
 }
 
+/* Free a stage and all its resources. */
 static
 void flecs_stage_free(
     ecs_world_t *world,
@@ -159,6 +148,7 @@ void flecs_stage_free(
     ecs_os_free(stage);
 }
 
+/* Get allocator from stage or world. */
 ecs_allocator_t* flecs_stage_get_allocator(
     ecs_world_t *world)
 {
@@ -167,6 +157,7 @@ ecs_allocator_t* flecs_stage_get_allocator(
     return &stage->allocator;
 }
 
+/* Get stack allocator from stage or world. */
 ecs_stack_t* flecs_stage_get_stack_allocator(
     ecs_world_t *world)
 {
@@ -204,7 +195,7 @@ void ecs_set_stage_count(
 {
     flecs_poly_assert(world, ecs_world_t);
 
-    /* World must have at least one default stage */
+    /* World must have at least one stage (unless shutting down) */
     ecs_assert(stage_count >= 1 || (world->flags & EcsWorldFini), 
         ECS_INTERNAL_ERROR, NULL);
 
@@ -216,9 +207,8 @@ void ecs_set_stage_count(
     int32_t i, count = world->stage_count;
     if (stage_count < count) {
         for (i = stage_count; i < count; i ++) {
-            /* If stage contains a thread handle, ecs_set_threads was used to
-             * create the stages. ecs_set_threads and ecs_set_stage_count should 
-             * not be mixed. */
+            /* Cannot free stages created by ecs_set_threads; the two APIs
+             * must not be mixed. */
             ecs_stage_t *stage = world->stages[i];
             flecs_poly_assert(stage, ecs_stage_t);
             ecs_check(stage->thread == 0, ECS_INVALID_OPERATION, 
@@ -235,20 +225,16 @@ void ecs_set_stage_count(
             ecs_stage_t *stage = world->stages[i] = flecs_stage_new(world);
             stage->id = i;
 
-            /* Set thread_ctx to stage, as this stage might be used in a
-             * multithreaded context */
+            /* Point thread_ctx at the stage itself for multithreaded use */
             stage->thread_ctx = (ecs_world_t*)stage;
             stage->thread = 0;
         }
     } else {
-        /* Set to NULL to prevent double frees */
         ecs_os_free(world->stages);
         world->stages = NULL;
     }
 
-    /* Regardless of whether the stage was just initialized or not, when the
-     * ecs_set_stage_count function is called, all stages inherit the auto_merge
-     * property from the world */
+    /* All stages inherit the lookup path from the world */
     for (i = 0; i < stage_count; i ++) {
         world->stages[i]->lookup_path = lookup_path;
     }
@@ -273,7 +259,6 @@ int32_t ecs_stage_get_id(
     if (flecs_poly_is(world, ecs_stage_t)) {
         ecs_stage_t *stage = ECS_CONST_CAST(ecs_stage_t*, world);
 
-        /* Index 0 is reserved for main stage */
         return stage->id;
     } else if (flecs_poly_is(world, ecs_world_t)) {
         return 0;
@@ -315,8 +300,7 @@ bool ecs_readonly_begin(
 
     bool is_readonly = ECS_BIT_IS_SET(world->flags, EcsWorldReadonly);
 
-    /* From this point on, the world is "locked" for mutations, and it is only 
-     * allowed to enqueue commands from stages */
+    /* Lock world for direct mutations; only stage command enqueueing allowed */
     ECS_BIT_SET(world->flags, EcsWorldReadonly);
     ECS_BIT_COND(world->flags, EcsWorldMultiThreaded, multi_threaded);
 
@@ -330,7 +314,7 @@ void ecs_readonly_end(
     ecs_check(world->flags & EcsWorldReadonly, ECS_INVALID_OPERATION,
         "world is not in readonly mode");
 
-    /* After this it is safe again to mutate the world directly */
+    /* Unlock world for direct mutations */
     ECS_BIT_CLEAR(world->flags, EcsWorldReadonly);
     ECS_BIT_CLEAR(world->flags, EcsWorldMultiThreaded);
 
@@ -341,6 +325,8 @@ error:
     return;
 }
 
+/* Suspend readonly mode so direct world mutations are allowed. Saves the
+ * stage's command state; restored by flecs_resume_readonly. */
 ecs_world_t* flecs_suspend_readonly(
     const ecs_world_t *stage_world,
     ecs_suspend_readonly_state_t *state)
@@ -364,7 +350,7 @@ ecs_world_t* flecs_suspend_readonly(
 
     ecs_dbg_3("suspending readonly mode");
 
-    /* Cannot suspend when running with multiple threads */
+    /* Suspension is not safe in multithreaded readonly mode */
     ecs_assert(!(world->flags & EcsWorldReadonly) ||
         !(world->flags & EcsWorldMultiThreaded), 
             ECS_INVALID_WHILE_READONLY, NULL);
@@ -373,11 +359,10 @@ ecs_world_t* flecs_suspend_readonly(
     state->is_deferred = stage->defer != 0;
     state->cmd_flushing = stage->cmd_flushing;
 
-    /* Silence readonly checks */
+    /* Clear readonly flag and save command queue state */
     world->flags &= ~EcsWorldReadonly;
     stage->cmd_flushing = false;
 
-    /* Hack around safety checks (this ought to look ugly) */
     state->defer_count = stage->defer;
     state->cmd_stack[0] = stage->cmd_stack[0];
     state->cmd_stack[1] = stage->cmd_stack[1];
@@ -394,6 +379,7 @@ ecs_world_t* flecs_suspend_readonly(
     return world;
 }
 
+/* Restore readonly mode and command queue state saved by flecs_suspend_readonly. */
 void flecs_resume_readonly(
     ecs_world_t *world,
     ecs_suspend_readonly_state_t *state)
@@ -409,7 +395,7 @@ void flecs_resume_readonly(
 
         ecs_run_aperiodic(world, 0);
 
-        /* Restore readonly state / defer count */
+        /* Restore saved state */
         ECS_BIT_COND(world->flags, EcsWorldReadonly, state->is_readonly);
         stage->defer = state->defer_count;
         stage->cmd_flushing = state->cmd_flushing;
@@ -441,11 +427,13 @@ bool ecs_stage_is_readonly(
 
     if (flecs_poly_is(stage, ecs_stage_t)) {
         if (((const ecs_stage_t*)stage)->id == -1) {
-            /* Stage is not owned by world, so never readonly */
+            /* Unmanaged stages are never readonly */
             return false;
         }
     }
 
+    /* World is readonly when EcsWorldReadonly is set. A stage is readonly when
+     * the flag is NOT set, since stages can only buffer commands. */
     if (world->flags & EcsWorldReadonly) {
         if (flecs_poly_is(stage, ecs_world_t)) {
             return true;

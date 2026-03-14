@@ -7,6 +7,7 @@
 
 #ifdef FLECS_JSON
 
+/* Return string representation of a JSON token kind. */
 static
 const char* flecs_json_token_str(
     ecs_json_token_t token_kind)
@@ -34,6 +35,7 @@ error:
     return "<<invalid token kind>>";
 }
 
+/* Parse the next JSON token from a string. */
 const char* flecs_json_parse(
     const char *json,
     ecs_json_token_t *token_kind,
@@ -68,8 +70,8 @@ const char* flecs_json_parse(
         json ++;
         for (; (ch = json[0]); ) {
             if (token_ptr - token >= ECS_MAX_TOKEN_SIZE) {
-                /* Token doesn't fit in buffer, signal to app to try again with
-                 * dynamic buffer. */
+                /* String too large for static buffer; caller retries with
+                 * flecs_json_parse_large_string using a dynamic buffer. */
                 token_kind[0] = JsonLargeString;
                 return start;
             }
@@ -94,9 +96,9 @@ const char* flecs_json_parse(
         token_kind[0] = JsonNumber;
         const char *result = flecs_parse_digit(json, token);
         
-        /* Cheap initial check if parsed token could represent large int */
+        /* Integers >15 digits may exceed JS Number.MAX_SAFE_INTEGER */
         if (result - json > 15) {
-            /* Less cheap secondary check to see if number is integer */
+            /* Mark as large int only for integers (no decimal point) */
             if (!strchr(token, '.')) {
                 token_kind[0] = JsonLargeInt;
             }
@@ -129,6 +131,7 @@ const char* flecs_json_parse(
     }
 }
 
+/* Parse a large JSON string into a dynamic string buffer. */
 const char* flecs_json_parse_large_string(
     const char *json,
     ecs_strbuf_t *buf)
@@ -156,6 +159,7 @@ const char* flecs_json_parse_large_string(
     }
 }
 
+/* Parse the next member in a JSON object, expecting comma then key-colon. */
 const char* flecs_json_parse_next_member(
     const char *json,
     char *token,
@@ -169,14 +173,14 @@ const char* flecs_json_parse_next_member(
 
     if (*token_kind != JsonComma) {
         ecs_parser_error(desc->name, desc->expr, json - desc->expr, 
-            "expecteded } or ,");
+            "expected } or ,");
         return NULL;
     }
 
     json = flecs_json_parse(json, token_kind, token);
     if (*token_kind != JsonString) {
         ecs_parser_error(desc->name, desc->expr, json - desc->expr, 
-            "expecteded member name");
+            "expected member name");
         return NULL;
     }
 
@@ -186,20 +190,21 @@ const char* flecs_json_parse_next_member(
     json = flecs_json_parse(json, &temp_token_kind, temp_token);
     if (temp_token_kind != JsonColon) {
         ecs_parser_error(desc->name, desc->expr, json - desc->expr, 
-            "expecteded :");
+            "expected :");
         return NULL;
     }
 
     return json;
 }
 
+/* Parse and validate that the next token matches the expected kind. */
 const char* flecs_json_expect(
     const char *json,
     ecs_json_token_t token_kind,
     char *token,
     const ecs_from_json_desc_t *desc)
 {
-    /* Strings must be handled by flecs_json_expect_string for LargeString */
+    /* Strings must use flecs_json_expect_string to handle LargeString */
     ecs_assert(token_kind != JsonString, ECS_INTERNAL_ERROR, NULL);
 
     ecs_json_token_t kind = 0;
@@ -226,6 +231,7 @@ const char* flecs_json_expect(
     return lah;
 }
 
+/* Parse and expect a JSON string token, handling large strings. */
 const char* flecs_json_expect_string(
     const char *json,
     char *token,
@@ -263,6 +269,7 @@ const char* flecs_json_expect_string(
     return json;
 }
 
+/* Parse and expect a JSON member name followed by a colon. */
 const char* flecs_json_expect_member(
     const char *json,
     char *token,
@@ -285,6 +292,7 @@ const char* flecs_json_expect_member(
     return json;
 }
 
+/* Expect a comma followed by the next member name and colon. */
 const char* flecs_json_expect_next_member(
     const char *json,
     char *token,
@@ -298,6 +306,7 @@ const char* flecs_json_expect_next_member(
     return flecs_json_expect_member(json, token, desc);
 }
 
+/* Expect a specific named member in a JSON object. */
 const char* flecs_json_expect_member_name(
     const char *json,
     char *token,
@@ -316,6 +325,7 @@ const char* flecs_json_expect_member_name(
     return json;
 }
 
+/* Skip over a JSON string value without storing its contents. */
 static
 const char* flecs_json_skip_string(
     const char *json)
@@ -342,6 +352,7 @@ const char* flecs_json_skip_string(
     }
 }
 
+/* Skip over a JSON object and all its nested contents. */
 const char* flecs_json_skip_object(
     const char *json,
     char *token,
@@ -373,6 +384,7 @@ const char* flecs_json_skip_object(
     return NULL;
 }
 
+/* Skip over a JSON array and all its nested contents. */
 const char* flecs_json_skip_array(
     const char *json,
     char *token,
@@ -485,6 +497,7 @@ void flecs_json_string(
     ecs_strbuf_appendch(buf, '"');
 }
 
+/* Serialize a string value to JSON with escape character handling. */
 void flecs_json_string_escape(
     ecs_strbuf_t *buf,
     const char *value)
@@ -527,6 +540,7 @@ void flecs_json_membern(
     ecs_strbuf_appendlit(buf, "\":");
 }
 
+/* Serialize an entity's full path as a quoted JSON string. */
 void flecs_json_path(
     ecs_strbuf_t *buf,
     const ecs_world_t *world,
@@ -537,6 +551,7 @@ void flecs_json_path(
     ecs_strbuf_appendch(buf, '"');
 }
 
+/* Retrieve the display label for an entity, using doc name if available. */
 static
 const char* flecs_json_entity_label(
     const ecs_world_t *world,
@@ -554,6 +569,7 @@ const char* flecs_json_entity_label(
     return lbl;
 }
 
+/* Serialize an entity's label as a quoted JSON string. */
 void flecs_json_label(
     ecs_strbuf_t *buf,
     const ecs_world_t *world,
@@ -570,6 +586,7 @@ void flecs_json_label(
     }
 }
 
+/* Serialize an entity as either its full path or its label. */
 void flecs_json_path_or_label(
     ecs_strbuf_t *buf,
     const ecs_world_t *world,
@@ -583,6 +600,7 @@ void flecs_json_path_or_label(
     }
 }
 
+/* Serialize an entity's doc color as a JSON value (string or 0). */
 void flecs_json_color(
     ecs_strbuf_t *buf,
     const ecs_world_t *world,
@@ -605,6 +623,7 @@ void flecs_json_color(
     }
 }
 
+/* Serialize a component or pair id as a JSON array of path strings. */
 void flecs_json_id(
     ecs_strbuf_t *buf,
     const ecs_world_t *world,
@@ -636,6 +655,7 @@ void flecs_json_id(
     ecs_strbuf_appendch(buf, ']');
 }
 
+/* Serialize an id as an unquoted member key using full entity paths. */
 static
 void flecs_json_id_member_fullpath(
     ecs_strbuf_t *buf,
@@ -655,6 +675,7 @@ void flecs_json_id_member_fullpath(
     }
 }
 
+/* Serialize an id as an unquoted member key with optional full path or label. */
 void flecs_json_id_member(
     ecs_strbuf_t *buf,
     const ecs_world_t *world,
@@ -704,12 +725,14 @@ void flecs_json_id_member(
     }
 }
 
+/* Meta op kinds are offset from EcsOpPrimitive by the primitive kind value */
 ecs_primitive_kind_t flecs_json_op_to_primitive_kind(
-    ecs_meta_op_kind_t kind) 
+    ecs_meta_op_kind_t kind)
 {
     return kind - EcsOpPrimitive;
 }
 
+/* Check whether an entity should be serialized based on deduplication state. */
 bool flecs_json_should_serialize(
     ecs_entity_t entity,
     const ecs_iter_t *it,
@@ -736,6 +759,7 @@ bool flecs_json_should_serialize(
     return true;
 }
 
+/* Mark an entity as already serialized to prevent duplicates. */
 void flecs_json_mark_serialized(
     ecs_entity_t entity,
     ecs_json_ser_ctx_t *ser_ctx)

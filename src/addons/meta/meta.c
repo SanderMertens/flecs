@@ -18,8 +18,9 @@ bool flecs_meta_is_builtin_type(
 }
 #endif
 
+/* Destruct type serializer: free member name indices and the ops vector. */
 void flecs_type_serializer_dtor(
-    EcsTypeSerializer *ptr) 
+    EcsTypeSerializer *ptr)
 {
     int32_t i, count = ecs_vec_count(&ptr->ops);
     ecs_meta_op_t *ops = ecs_vec_first(&ptr->ops);
@@ -64,6 +65,7 @@ static ECS_DTOR(EcsTypeSerializer, ptr, {
     flecs_type_serializer_dtor(ptr);
 })
 
+/* Return string representation of a type kind. */
 const char* flecs_type_kind_str(
     ecs_type_kind_t kind)
 {
@@ -79,6 +81,7 @@ const char* flecs_type_kind_str(
     }
 }
 
+/* Return string representation of a primitive type kind. */
 const char* flecs_primitive_type_kind_str(
     ecs_primitive_kind_t kind)
 {
@@ -181,6 +184,7 @@ void flecs_meta_detect_cycles(
 #endif
 }
 
+/* Initialize a meta type with the given kind, size and alignment. */
 int flecs_init_type(
     ecs_world_t *world,
     ecs_entity_t type,
@@ -209,14 +213,11 @@ int flecs_init_type(
 
         const EcsComponent *cptr = ecs_get(world, type, EcsComponent);
 
-        /* Determine if this is an existing type or a reflection-defined type 
-         * (runtime type) */
+        /* true if pre-registered C type; false if runtime-defined (RTT) */
         meta_type->existing = (cptr != NULL) && (cptr->size != 0);
 
-        /* For existing types, ensure that component has a default constructor, 
-         * to prevent crashing serializers on uninitialized values. For runtime 
-         * types (rtt), the default hooks are set by 
-         * flecs_meta_rtt_init_default_hooks */
+        /* Existing types need a zero-init ctor to prevent reading
+         * uninitialized memory. RTT hooks are set separately. */
         ecs_type_info_t *ti = flecs_type_info_ensure(world, type);
         if (meta_type->existing) {
             if(!ti->hooks.ctor) {
@@ -224,10 +225,7 @@ int flecs_init_type(
             }
 
             if(kind == EcsEnumType) {
-                /* Generate compare/equals hooks for enums, copying
-                   the underlying type's hooks, which should be 
-                   any of the default primitive integral compare hooks,
-                   i.e. ecs_compare_i8, _i16 _32... */
+                /* Copy cmp/equals hooks from the underlying type (e.g. i32). */
                 const EcsEnum* enum_info = ecs_get(world, type, EcsEnum);
                 ecs_assert(enum_info != NULL, ECS_INTERNAL_ERROR, NULL);
                 const ecs_type_hooks_t *enum_hooks = ecs_get_hooks_id(
@@ -289,6 +287,7 @@ int flecs_init_type(
     return 0;
 }
 
+/* Import the meta addon module into the world. */
 void FlecsMetaImport(
     ecs_world_t *world)
 {
@@ -330,7 +329,7 @@ void FlecsMetaImport(
         .global_observer = true
     });
 
-    /* Import type support for different type kinds */
+    /* Register kind-specific components, hooks and observers */
     flecs_meta_primitives_init(world);
     flecs_meta_enum_init(world);
     flecs_meta_struct_init(world);
@@ -338,7 +337,7 @@ void FlecsMetaImport(
     flecs_meta_opaque_init(world);
     flecs_meta_units_init(world);
 
-    /* Import reflection definitions for builtin types */
+    /* Register reflection data for builtin types */
     flecs_meta_import_definitions(world);
 }
 

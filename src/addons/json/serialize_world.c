@@ -1,6 +1,6 @@
 /**
  * @file addons/json/serialize_world.c
- * @brief Serialize world to JSON.
+ * @brief Serialize a world to JSON.
  */
 
 #include "json.h"

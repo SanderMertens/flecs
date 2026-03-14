@@ -1,11 +1,14 @@
 /**
  * @file query/cache/match.c
- * @brief Match table one or more times with query.
+ * @brief Populate and update cache entries from query iterator results.
+ *
+ * Handles both initial matching and rematching (when component inheritance
+ * changes invalidate cached results).
  */
 
 #include "../../private_api.h"
 
-/* Free cache entry element. */
+/* Free allocations for a single cache match element. */
 static
 void flecs_query_cache_match_elem_fini(
     ecs_query_cache_t *cache,
@@ -33,7 +36,7 @@ void flecs_query_cache_match_elem_fini(
     }
 }
 
-/* Free cache entry element and optional wildcard matches. */
+/* Free cache match and its wildcard matches. */
 void flecs_query_cache_match_fini(
     ecs_query_cache_t *cache,
     ecs_query_cache_match_t *qm)
@@ -55,7 +58,7 @@ void flecs_query_cache_match_fini(
     }
 }
 
-/* Initialize cache entry element. */
+/* Populate cache match element from iterator result. */
 static
 void flecs_query_cache_match_set(
     ecs_query_cache_t *cache,
@@ -74,11 +77,10 @@ void flecs_query_cache_match_set(
         qm->base.trs = flecs_balloc(&cache->allocators.pointers);
     }
 
-    /* Reset resources in case this is an existing record */
-    ecs_os_memcpy_n(ECS_CONST_CAST(ecs_table_record_t**, qm->base.trs), 
+    ecs_os_memcpy_n(ECS_CONST_CAST(ecs_table_record_t**, qm->base.trs),
         it->trs, ecs_table_record_t*, field_count);
 
-    /* Find out whether to store result-specific ids array or fixed array */
+    /* Share the query's ids array if all ids match; allocate per-match otherwise */
     ecs_id_t *ids = cache->query->ids;
     for (i = 0; i < field_count; i ++) {
         if (it->ids[i] != ids[i]) {
@@ -100,7 +102,7 @@ void flecs_query_cache_match_set(
         }
     }
 
-    /* Find out whether to store result-specific sources array or fixed array */
+    /* Same optimization for sources: share if all zero, allocate if any set */
     for (i = 0; i < field_count; i ++) {
         if (it->sources[i]) {
             break;
@@ -134,19 +136,12 @@ void flecs_query_cache_match_set(
 
         qm->_up_fields = it->up_fields;
     } else {
-        /* If this is a trivial cache, we shouldn't have any fields with 
-         * non-$this sources */
+        /* Trivial caches only support $this sources */
         ecs_assert(i == field_count, ECS_INTERNAL_ERROR, NULL);
     }
 }
 
-/* Iterate the next match for table. This function accepts an iterator for the 
- * cache query and will keep on iterating until a result for a different table
- * is returned. Typically each table only returns one result, but wildcard 
- * queries can return multiple results for the same table. 
- * 
- * For each iterated result the function will initialize the cache entry for the
- * matched table. */
+/* Consume iterator results for a table and populate cache entries. */
 bool flecs_query_cache_match_next(
     ecs_query_cache_t *cache,
     ecs_iter_t *it)
@@ -183,8 +178,7 @@ bool flecs_query_cache_match_next(
     } while (true);
 }
 
-/* Same as flecs_query_cache_match_next, but for rematching. This function will
- * overwrite existing cache entries with new match data. */
+/* Consume iterator results for rematching, overwriting existing entries. */
 static
 bool flecs_query_cache_rematch_next(
     ecs_query_cache_t *cache,
@@ -204,8 +198,7 @@ bool flecs_query_cache_rematch_next(
 
     bool result = true, has_more = true;
 
-    /* So we can tell which tables in the cache got rematched. All tables for 
-     * which this counter hasn't changed are no longer matched by the query. */
+    /* Tables with stale rematch_count are removed after the pass. */
     first->rematch_count = cache->rematch_count;
 
     do {
@@ -222,9 +215,7 @@ bool flecs_query_cache_rematch_next(
 
         /* Are there more results for this table? */
         if (!has_more) {
-            /* If existing match had more wildcard matches than new match free
-             * the superfluous ones. */
-
+            /* Free excess wildcard matches from previous iteration */
             if (wildcard_matches) {
                 int32_t i, count = ecs_vec_count(wildcard_matches);
                 for (i = wildcard_elem; i < count; i ++) {
@@ -263,20 +254,7 @@ bool flecs_query_cache_rematch_next(
     } while (true);
 }
 
-/* Rematch query cache. This function is called whenever something happened that
- * could have caused a previously matching table to no longer match with the 
- * query. This function is not called for regular table creation or deletion.
- * 
- * An example of when this function is called is when a query matched a 
- * component on a parent, and that component was removed from the parent. This
- * means that tables with (ChildOf, parent) previously matched the query, but
- * after the component got removed, no longer match.
- * 
- * This operation is expensive, since it needs to:
- * - make sure that optional fields matched on parents are updated
- * - groups are up to date for all the matched tables
- * - tables that no longer match are removed from the cache.
- */
+/* Revalidate query cache after component changes that may invalidate matches. */
 void flecs_query_rematch(
     ecs_world_t *world,
     ecs_query_t *q)
@@ -319,7 +297,7 @@ void flecs_query_rematch(
 
     while (flecs_query_cache_rematch_next(cache, &it)) { }
 
-    /* Iterate all tables in cache, remove ones that weren't just matched */
+    /* Collect tables not visited during rematch (can't modify map mid-iteration) */
     ecs_vec_t unmatched; ecs_vec_init_t(a, &unmatched, ecs_table_t*, 0);
     ecs_size_t elem_size = flecs_query_cache_elem_size(cache);
     ecs_query_cache_group_t *cur = &cache->default_group;
@@ -329,14 +307,12 @@ void flecs_query_rematch(
             ecs_query_cache_match_t *qm = 
                 ecs_vec_get(&cur->tables, elem_size, i);
             if (qm->rematch_count != rematch_count) {
-                /* Collect tables, don't modify map while updating it */
-                ecs_vec_append_t(a, &unmatched, ecs_table_t*)[0] = 
+                ecs_vec_append_t(a, &unmatched, ecs_table_t*)[0] =
                     qm->base.table;
             }
         }
     } while ((cur = cur->next));
 
-    /* Actually unmatch tables */
     int32_t i, count = ecs_vec_count(&unmatched);
     ecs_table_t **unmatched_tables = ecs_vec_first(&unmatched);
     for (i = 0; i < count; i ++) {

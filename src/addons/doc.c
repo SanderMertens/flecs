@@ -22,6 +22,7 @@ static ECS_DTOR(EcsDocDescription, ptr, {
     ecs_os_free((char*)ptr->value);
 })
 
+/* Set or remove a doc description of a given kind on an entity. */
 static
 void flecs_doc_set(
     ecs_world_t *world,
@@ -31,7 +32,7 @@ void flecs_doc_set(
 {
     if (value) {
         ecs_set_pair(world, entity, EcsDocDescription, kind, {
-            /* Safe, value gets copied by copy hook */
+            /* Safe: value is copied by the copy hook */
             .value = ECS_CONST_CAST(char*, value)
         });
     } else {
@@ -165,6 +166,7 @@ const char* ecs_doc_get_color(
     }
 }
 
+/* Import and register the doc module components and tags. */
 void FlecsDocImport(
     ecs_world_t *world)
 {    

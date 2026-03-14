@@ -1,6 +1,6 @@
 /**
  * @file query/cache/change_detection.h
- * @brief Query change detection implementation.
+ * @brief Change detection: monitors table dirty state to detect component modifications.
  */
 
 void flecs_query_sync_match_monitor(
