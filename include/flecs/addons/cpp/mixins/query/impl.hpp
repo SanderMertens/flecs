@@ -10,19 +10,27 @@
 namespace flecs 
 {
 
+/** Base class for queries.
+ *
+ * @ingroup cpp_core_queries
+ */
 struct query_base {
+    /** Default constructor. */
     query_base() { }
 
+    /** Construct from a mutable query pointer. */
     query_base(query_t *q)
-        : query_(q) { 
+        : query_(q) {
             flecs_poly_claim(q);
         }
 
+    /** Construct from a const query pointer. */
     query_base(const query_t *q)
-        : query_(ECS_CONST_CAST(query_t*, q)) { 
+        : query_(ECS_CONST_CAST(query_t*, q)) {
             flecs_poly_claim(q);
         }
 
+    /** Construct from a world and a query descriptor. */
     query_base(world_t *world, ecs_query_desc_t *desc) {
         if (desc->entity && desc->terms[0].id == 0) {
             const flecs::Poly *query_poly = ecs_get_pair(
@@ -37,6 +45,7 @@ struct query_base {
         query_ = ecs_query_init(world, desc);
     }
 
+    /** Copy constructor. */
     query_base(const query_base& obj) {
         this->query_ = obj.query_;
         if (this->query_)
@@ -45,6 +54,7 @@ struct query_base {
         }
     }
 
+    /** Copy assignment operator. */
     query_base& operator=(const query_base& obj) {
         this->~query_base();
         this->query_ = obj.query_;
@@ -55,37 +65,43 @@ struct query_base {
         return *this; 
     }
 
+    /** Move constructor. */
     query_base(query_base&& obj) noexcept {
         this->query_ = obj.query_;
         obj.query_ = nullptr;
     }
 
+    /** Move assignment operator. */
     query_base& operator=(query_base&& obj) noexcept {
         this->query_ = obj.query_;
         obj.query_ = nullptr;
         return *this; 
     }
 
+    /** Get the entity associated with the query. */
     flecs::entity entity() const {
         return flecs::entity(query_->world, query_->entity);
     }
 
+    /** Get a pointer to the underlying C query. */
     const flecs::query_t* c_ptr() const {
         return query_;
     }
 
+    /** Convert to a const query pointer. */
     operator const flecs::query_t*() const {
         return query_;
     }
 
+    /** Check if the query is valid. */
     operator bool() const {
         return query_ != nullptr;
     }
 
-    /** Free persistent query.
+    /** Free a persistent query.
      * A persistent query is a query that is associated with an entity, such as
      * system queries and named queries. Persistent queries must be deleted with
-     * destruct(), or will be deleted automatically at world cleanup. 
+     * destruct(), or will be deleted automatically at world cleanup.
      */
     void destruct() {
         ecs_assert(query_->entity != 0, ECS_INVALID_OPERATION, "destruct() "
@@ -94,11 +110,8 @@ struct query_base {
         query_ = nullptr;
     }
 
+    /** Destructor. Only frees the query if it is not associated with an entity. */
     ~query_base() {
-        /* Only free if query is not associated with entity, such as system
-         * queries and named queries. Named queries have to be either explicitly
-         * deleted with the .destruct() method, or will be deleted when the
-         * world is deleted. */
         if (query_ && !query_->entity) {
             if (!flecs_poly_release(query_)) {
                 ecs_query_fini(query_);
@@ -107,7 +120,7 @@ struct query_base {
         }
     }
 
-    /** Returns whether the query data changed since the last iteration.
+    /** Return whether the query data changed since the last iteration.
      * This operation must be invoked before obtaining the iterator, as this will
      * reset the changed state. The operation will return true after:
      * - new entities have been matched with
@@ -120,18 +133,18 @@ struct query_base {
         return ecs_query_changed(query_);
     }
 
-    /** Get info for group. 
-     * 
-     * @param group_id The group id for which to retrieve the info.
+    /** Get info for a group.
+     *
+     * @param group_id The group ID for which to retrieve the info.
      * @return The group info.
      */
     const flecs::query_group_info_t* group_info(uint64_t group_id) const {
         return ecs_query_get_group_info(query_, group_id);
     }
 
-    /** Get context for group. 
-     * 
-     * @param group_id The group id for which to retrieve the context.
+    /** Get context for a group.
+     *
+     * @param group_id The group ID for which to retrieve the context.
      * @return The group context.
      */
     void* group_ctx(uint64_t group_id) const {
@@ -143,6 +156,7 @@ struct query_base {
         }
     }
 
+    /** Iterate each term in the query, invoking a callback for each. */
     template <typename Func>
     void each_term(const Func& func) {
         for (int i = 0; i < query_->term_count; i ++) {
@@ -152,36 +166,42 @@ struct query_base {
         }
     }
 
+    /** Get term at the specified index. */
     flecs::term term(int32_t index) const {
         return flecs::term(query_->world, query_->terms[index]);
     }
 
+    /** Get the number of terms in the query. */
     int32_t term_count() const {
         return query_->term_count;
     }
 
+    /** Get the number of fields in the query. */
     int32_t field_count() const {
         return query_->field_count;
     }
 
+    /** Find a variable by name. */
     int32_t find_var(const char *name) const {
         return ecs_query_find_var(query_, name);
     }
 
+    /** Convert the query to a string expression. */
     flecs::string str() const {
         char *result = ecs_query_str(query_);
         return flecs::string(result);
     }
 
-    /** Returns a string representing the query plan.
-     * This can be used to analyze the behavior & performance of the query.
-     * @see ecs_query_plan
+    /** Return a string representing the query plan.
+     * This can be used to analyze the behavior and performance of the query.
+     * @see ecs_query_plan()
      */
     flecs::string plan() const {
         char *result = ecs_query_plan(query_);
         return flecs::string(result);
     }
 
+    /** Convert to a typed query. */
     operator query<>() const;
 
 #   ifdef FLECS_JSON
@@ -192,6 +212,10 @@ protected:
     query_t *query_ = nullptr;
 };
 
+/** Typed query.
+ *
+ * @ingroup cpp_core_queries
+ */
 template<typename ... Components>
 struct query : query_base, iterable<Components...> {
 private:
@@ -200,22 +224,28 @@ private:
 public:
     using query_base::query_base;
 
-    query() : query_base() { } // necessary not to confuse msvc
+    /** Default constructor. */
+    query() : query_base() { } // necessary not to confuse MSVC
 
+    /** Copy constructor. */
     query(const query& obj) : query_base(obj) { }
 
+    /** Copy assignment operator. */
     query& operator=(const query& obj) {
         query_base::operator=(obj);
         return *this;
     }
 
+    /** Move constructor. */
     query(query&& obj) noexcept : query_base(FLECS_MOV(obj)) { }
 
+    /** Move assignment operator. */
     query& operator=(query&& obj) noexcept {
         query_base::operator=(FLECS_FWD(obj));
         return *this;
     }
 
+    /** Get the cache query, if any. */
     flecs::query<> cache_query() const {
         const flecs::query_t *q = ecs_query_get_cache_query(query_);
         return flecs::query<>(q);
@@ -295,7 +325,7 @@ struct query_delegate_no_ent<Func, arg_list<Args ...> >
     }
 };
 
-// Switch between function with & without entity parameter
+// Switch between function with and without entity parameter
 template<typename Func, typename T = int>
 struct query_delegate;
 

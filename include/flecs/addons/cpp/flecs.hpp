@@ -134,9 +134,6 @@ struct each_delegate;
 #ifdef FLECS_DOC
 #include "mixins/doc/impl.hpp"
 #endif
-#ifdef FLECS_DOC
-#include "mixins/doc/impl.hpp"
-#endif
 #ifdef FLECS_REST
 #include "mixins/rest/impl.hpp"
 #endif
@@ -165,7 +162,7 @@ struct each_delegate;
 
 /**
  * @defgroup cpp_core Core
- * Core ECS functionality (entities, storage, queries)
+ * Core ECS functionality (entities, storage, queries).
  *
  * @{
  * @}

@@ -3,7 +3,7 @@
  * @brief Doc entity builder mixin.
  */
 
-/** Set human readable name.
+/** Set human-readable name.
  * This adds `(flecs.doc.Description, flecs.Name)` to the entity.
  *
  * @see ecs_doc_set_name()

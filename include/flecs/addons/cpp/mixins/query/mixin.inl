@@ -12,25 +12,25 @@
 
 /** Create a query.
  * 
- * @see ecs_query_init
+ * @see ecs_query_init()
  */
 template <typename... Comps, typename... Args>
 flecs::query<Comps...> query(Args &&... args) const;
 
-/** Create a query from entity.
- * 
- * @see ecs_query_init
+/** Create a query from an entity.
+ *
+ * @see ecs_query_init()
  */
 flecs::query<> query(flecs::entity query_entity) const;
 
 /** Create a query builder.
- * 
- * @see ecs_query_init
+ *
+ * @see ecs_query_init()
  */
 template <typename... Comps, typename... Args>
 flecs::query_builder<Comps...> query_builder(Args &&... args) const;
 
-/** Iterate over all entities with components in argument list of function.
+/** Iterate over all entities with components in the argument list of the function.
  * The function parameter must match the following signature:
  *
  * @code
@@ -53,7 +53,7 @@ flecs::query_builder<Comps...> query_builder(Args &&... args) const;
 template <typename Func>
 void each(Func&& func) const;
 
-/** Iterate over all entities with provided component.
+/** Iterate over all entities with the provided component.
  * The function parameter must match the following signature:
  *
  * @code
@@ -70,7 +70,7 @@ void each(Func&& func) const;
 template <typename T, typename Func>
 void each(Func&& func) const;
 
-/** Iterate over all entities with provided (component) id. */
+/** Iterate over all entities with the provided (component) ID. */
 template <typename Func>
 void each(flecs::id_t term_id, Func&& func) const;
 

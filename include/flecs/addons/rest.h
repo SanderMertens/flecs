@@ -5,7 +5,7 @@
  * A small REST API that uses the HTTP server and JSON serializer to provide
  * access to application data for remote applications.
  *
- * A description of the API can be found in docs/FlecsRemoteApi.md
+ * A description of the API can be found in docs/FlecsRemoteApi.md.
  */
 
 #ifdef FLECS_REST
@@ -40,6 +40,7 @@
 extern "C" {
 #endif
 
+/** Default port for the REST API server. */
 #define ECS_REST_DEFAULT_PORT (27750)
 
 /** Component that instantiates the REST API. */
@@ -47,18 +48,18 @@ FLECS_API extern const ecs_entity_t ecs_id(EcsRest);
 
 /** Private REST data. */
 typedef struct {
-    ecs_world_t *world;
-    ecs_http_server_t *srv;
-    int32_t rc;
-    ecs_map_t cmd_captures;
-    double last_time;
+    ecs_world_t *world;            /**< The world. */
+    ecs_http_server_t *srv;        /**< HTTP server instance. */
+    int32_t rc;                    /**< Reference count. */
+    ecs_map_t cmd_captures;        /**< Map of command captures. */
+    double last_time;              /**< Last processing time. */
 } ecs_rest_ctx_t;
 
 /** Component that creates a REST API server when instantiated. */
 typedef struct {
-    uint16_t port;      /**< Port of server (optional, default = 27750) */
-    char *ipaddr;       /**< Interface address (optional, default = 0.0.0.0) */
-    ecs_rest_ctx_t *impl;
+    uint16_t port;      /**< Port of server (optional, default = 27750). */
+    char *ipaddr;       /**< Interface address (optional, default = 0.0.0.0). */
+    ecs_rest_ctx_t *impl; /**< Private implementation data. */
 } EcsRest;
 
 /** Create HTTP server for REST API.
@@ -74,14 +75,16 @@ ecs_http_server_t* ecs_rest_server_init(
     ecs_world_t *world,
     const ecs_http_server_desc_t *desc);
 
-/** Cleanup REST HTTP server.
+/** Clean up REST HTTP server.
  * The server must have been created with ecs_rest_server_init().
+ *
+ * @param srv The server to destroy.
  */
 FLECS_API
 void ecs_rest_server_fini(
     ecs_http_server_t *srv);
 
-/** Rest module import function.
+/** REST module import function.
  * Usage:
  * @code
  * ECS_IMPORT(world, FlecsRest)

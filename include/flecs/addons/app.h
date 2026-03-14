@@ -5,7 +5,7 @@
  * The app addon is a wrapper around the application's main loop. Its main
  * purpose is to provide a hook to modules that need to take control of the
  * main loop, as is for example the case with native applications that use
- * emscripten with webGL.
+ * Emscripten with WebGL.
  */
 
 #ifdef FLECS_APP
@@ -36,17 +36,17 @@ typedef int(*ecs_app_init_action_t)(
 /** Used with ecs_app_run(). */
 typedef struct ecs_app_desc_t {
     ecs_ftime_t target_fps;   /**< Target FPS. */
-    ecs_ftime_t delta_time;   /**< Frame time increment (0 for measured values) */
+    ecs_ftime_t delta_time;   /**< Frame time increment (0 for measured values). */
     int32_t threads;          /**< Number of threads. */
-    int32_t frames;           /**< Number of frames to run (0 for infinite) */
-    bool enable_rest;         /**< Enables ECS access over HTTP, necessary for explorer */
-    bool enable_stats;      /**< Periodically collect statistics */
-    uint16_t port;            /**< HTTP port used by REST API */
+    int32_t frames;           /**< Number of frames to run (0 for infinite). */
+    bool enable_rest;         /**< Enables ECS access over HTTP, necessary for the explorer. */
+    bool enable_stats;      /**< Periodically collects statistics. */
+    uint16_t port;            /**< HTTP port used by REST API. */
 
-    ecs_app_init_action_t init; /**< If set, function is ran before starting the
+    ecs_app_init_action_t init; /**< If set, the function is run before starting the
                                  * main loop. */
 
-    void *ctx;                /**< Reserved for custom run/frame actions */
+    void *ctx;                /**< Reserved for custom run and frame actions. */
 } ecs_app_desc_t;
 
 /** Callback type for run action. */
@@ -61,7 +61,7 @@ typedef int(*ecs_app_frame_action_t)(
 
 /** Run application.
  * This will run the application with the parameters specified in desc. After
- * the application quits (ecs_quit() is called) the world will be cleaned up.
+ * the application quits (ecs_quit() is called), the world will be cleaned up.
  *
  * If a custom run action is set, it will be invoked by this operation. The
  * default run action calls the frame action in a loop until it returns a
@@ -69,6 +69,7 @@ typedef int(*ecs_app_frame_action_t)(
  *
  * @param world The world.
  * @param desc Application parameters.
+ * @return Zero if success, non-zero if failed.
  */
 FLECS_API
 int ecs_app_run(
@@ -76,12 +77,12 @@ int ecs_app_run(
     ecs_app_desc_t *desc);
 
 /** Default frame callback.
- * This operation will run a single frame. By default this operation will invoke
+ * This operation will run a single frame. By default, this operation will invoke
  * ecs_progress() directly, unless a custom frame action is set.
  *
  * @param world The world.
  * @param desc The desc struct passed to ecs_app_run().
- * @return value returned by ecs_progress()
+ * @return Value returned by ecs_progress().
  */
 FLECS_API
 int ecs_app_run_frame(
@@ -92,6 +93,7 @@ int ecs_app_run_frame(
  * See ecs_app_run().
  *
  * @param callback The run action.
+ * @return Zero if success, non-zero if failed.
  */
 FLECS_API
 int ecs_app_set_run_action(
@@ -101,6 +103,7 @@ int ecs_app_set_run_action(
  * See ecs_app_run_frame().
  *
  * @param callback The frame action.
+ * @return Zero if success, non-zero if failed.
  */
 FLECS_API
 int ecs_app_set_frame_action(

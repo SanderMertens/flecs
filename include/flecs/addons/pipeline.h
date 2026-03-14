@@ -4,12 +4,12 @@
  *
  * The pipeline module provides support for running systems automatically and
  * on multiple threads. A pipeline is a collection of tags that can be added to
- * systems. When ran, a pipeline will query for all systems that have the tags
+ * systems. When run, a pipeline will query for all systems that have the tags
  * that belong to a pipeline, and run them.
  *
- * The module defines a number of builtin tags (EcsPreUpdate, EcsOnUpdate,
- * EcsPostUpdate etc.) that are registered with the builtin pipeline. The
- * builtin pipeline is ran by default when calling ecs_progress(). An
+ * The module defines a number of built-in tags (EcsPreUpdate, EcsOnUpdate,
+ * EcsPostUpdate, etc.) that are registered with the built-in pipeline. The
+ * built-in pipeline is run by default when calling ecs_progress(). An
  * application can set a custom pipeline with the ecs_set_pipeline() function.
  */
 
@@ -44,7 +44,7 @@ extern "C" {
 
 #ifndef FLECS_LEGACY
 
-/** Convenience macro to create a predeclared pipeline. 
+/** Convenience macro to create a forward-declared pipeline.
  * Usage:
  * @code
  * ECS_ENTITY_DECLARE(MyPipeline);
@@ -86,7 +86,7 @@ extern "C" {
 
 /** Pipeline descriptor, used with ecs_pipeline_init(). */
 typedef struct ecs_pipeline_desc_t {
-    /** Existing entity to associate with pipeline (optional). */
+    /** Existing entity to associate with the pipeline (optional). */
     ecs_entity_t entity;
 
     /** The pipeline query. 
@@ -98,20 +98,20 @@ typedef struct ecs_pipeline_desc_t {
      * 
      * That however creates a query that matches entities with OnUpdate _and_
      * OnPhysics _and_ OnRender tags, which is likely undesired. Instead, a
-     * query could use the or operator match a system that has one of the
+     * query could use the or operator to match a system that has one of the
      * specified phases:
      *   OnUpdate || OnPhysics || OnRender
      * 
      * This will return the correct set of systems, but they likely won't be in
-     * the correct order. To make sure systems are returned in the correct order
+     * the correct order. To make sure systems are returned in the correct order,
      * two query ordering features can be used:
      * - group_by
      * - order_by
      * 
      * Take a look at the system manual for a more detailed explanation of
-     * how query features can be applied to pipelines, and how the builtin
+     * how query features can be applied to pipelines, and how the built-in
      * pipeline query works.
-    */
+     */
     ecs_query_desc_t query;
 } ecs_pipeline_desc_t;
 
@@ -157,7 +157,7 @@ ecs_entity_t ecs_get_pipeline(
  * invocation.
  *
  * When an application passes 0 to delta_time, ecs_progress() will automatically
- * measure the time passed since the last frame. If an application does not uses
+ * measure the time passed since the last frame. If an application does not use
  * time management, it should pass a non-zero value for delta_time (1.0 is
  * recommended). That way, no time will be wasted measuring the time.
  *
@@ -195,12 +195,12 @@ void ecs_reset_clock(
  * invoked from multiple threads, and only when staging is disabled, as the
  * pipeline manages staging and, if necessary, synchronization between threads.
  *
- * If 0 is provided for the pipeline id, the default pipeline will be ran (this
- * is either the builtin pipeline or the pipeline set with set_pipeline()).
+ * If 0 is provided for the pipeline ID, the default pipeline will be run (this
+ * is either the built-in pipeline or the pipeline set with ecs_set_pipeline()).
  *
- * When using progress() this operation will be invoked automatically for the
- * default pipeline (either the builtin pipeline or the pipeline set with
- * set_pipeline()). An application may run additional pipelines.
+ * When using ecs_progress(), this operation will be invoked automatically for
+ * the default pipeline (either the built-in pipeline or the pipeline set with
+ * ecs_set_pipeline()). An application may run additional pipelines.
  *
  * @param world The world.
  * @param pipeline The pipeline to run.
@@ -218,11 +218,11 @@ void ecs_run_pipeline(
 ////////////////////////////////////////////////////////////////////////////////
 
 /** Set number of worker threads.
- * Setting this value to a value higher than 1 will start as many threads and
+ * Setting this value to a value higher than 1 will start that many threads and
  * will cause systems to evenly distribute matched entities across threads. The
  * operation may be called multiple times to reconfigure the number of threads
- * used, but never while running a system / pipeline.
- * Calling ecs_set_threads() will also end the use of task threads setup with
+ * used, but never while running a system or pipeline.
+ * Calling ecs_set_threads() will also end the use of task threads set up with
  * ecs_set_task_threads() and vice-versa.
  * 
  * @param world The world.
@@ -236,28 +236,28 @@ void ecs_set_threads(
 /** Set number of worker task threads.
  * ecs_set_task_threads() is similar to ecs_set_threads(), except threads are treated
  * as short-lived tasks and will be created and joined around each update of the world.
- * Creation and joining of these tasks will use the os_api_t tasks APIs rather than the
+ * Creation and joining of these tasks will use the os_api_t task APIs rather than
  * the standard thread API functions, although they may be the same if desired.
  * This function is useful for multithreading world updates using an external
- * asynchronous job system rather than long running threads by providing the APIs
+ * asynchronous job system rather than long-running threads by providing the APIs
  * to create tasks for your job system and then wait on their conclusion.
  * The operation may be called multiple times to reconfigure the number of task threads
- * used, but never while running a system / pipeline.
- * Calling ecs_set_task_threads() will also end the use of threads setup with
- * ecs_set_threads() and vice-versa 
- * 
+ * used, but never while running a system or pipeline.
+ * Calling ecs_set_task_threads() will also end the use of threads set up with
+ * ecs_set_threads() and vice-versa.
+ *
  * @param world The world.
- * @param task_threads The number of task threads to create. 
+ * @param task_threads The number of task threads to create.
  */
 FLECS_API
 void ecs_set_task_threads(
     ecs_world_t *world,
     int32_t task_threads);
 
-/** Returns true if task thread use have been requested. 
- * 
+/** Return true if task thread use has been requested.
+ *
  * @param world The world.
- * @result Whether the world is using task threads.
+ * @return Whether the world is using task threads.
  */
 FLECS_API
 bool ecs_using_task_threads(

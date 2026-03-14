@@ -30,7 +30,7 @@ struct untyped_field {
         , count_(count)
         , is_shared_(is_shared) {}
 
-    /** Return element in component array.
+    /** Return an element in the component array.
      * This operator may only be used if the field is not shared.
      *
      * @param index Index of element.
@@ -53,7 +53,7 @@ protected:
 
 /** Wrapper class around a field.
  *
- * @tparam T component type of the field.
+ * @tparam T Component type of the field.
  *
  * @ingroup cpp_iterator
  */
@@ -62,25 +62,25 @@ struct field {
     static_assert(std::is_empty<T>::value == false,
         "invalid type for field, cannot iterate empty type");
 
-    /** Create field from component array.
+    /** Create a field from a component array.
      *
      * @param array Pointer to the component array.
-     * @param count Number of elements in component array.
-     * @param is_shared Is the component shared or not.
+     * @param count Number of elements in the component array.
+     * @param is_shared Whether the component is shared.
      */
     field(T* array, size_t count, bool is_shared = false)
         : data_(array)
         , count_(count)
         , is_shared_(is_shared) {}
 
-    /** Create field from iterator.
+    /** Create a field from an iterator.
      *
      * @param iter Iterator object.
-     * @param field Index of the signature of the query being iterated over.
+     * @param field Index of the field in the query being iterated over.
      */
     field(iter &iter, int field);
 
-    /** Return element in component array.
+    /** Return an element in the component array.
      * This operator may only be used if the field is not shared.
      *
      * @param index Index of element.
@@ -88,14 +88,14 @@ struct field {
      */
     T& operator[](size_t index) const;
 
-    /** Return first element of component array.
+    /** Return the first element of the component array.
      * This operator is typically used when the field is shared.
      *
      * @return Reference to the first element.
      */
     T& operator*() const;
 
-    /** Return first element of component array.
+    /** Return the first element of the component array.
      * This operator is typically used when the field is shared.
      *
      * @return Pointer to the first element.

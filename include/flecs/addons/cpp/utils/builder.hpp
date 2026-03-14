@@ -10,7 +10,7 @@
 namespace flecs {
 namespace _ {
 
-// Macros for template types so we don't go cross-eyed
+// Macros for template types so we don't go cross-eyed.
 #define FLECS_TBUILDER template<typename ... Components> class
 #define FLECS_IBUILDER template<typename IBase, typename ... Components> class
 

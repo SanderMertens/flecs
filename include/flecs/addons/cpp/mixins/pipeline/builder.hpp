@@ -22,6 +22,7 @@ namespace _ {
  */
 template <typename ... Components>
 struct pipeline_builder final : _::pipeline_builder_base<Components...> {
+    /** Construct a pipeline builder. */
     pipeline_builder(flecs::world_t* world, flecs::entity_t id = 0)
         : _::pipeline_builder_base<Components...>(world)
     {

@@ -1,13 +1,13 @@
 /**
  * @file addons/cpp/entity_view.hpp
- * @brief Entity class with only readonly operations.
+ * @brief Entity class with only read-only operations.
  * 
- * This class provides readonly access to entities. Using this class to store 
+ * This class provides read-only access to entities. Using this class to store 
  * entities in components ensures valid handles, as this class will always store
  * the actual world vs. a stage. The constructors of this class will never 
  * create a new entity.
  *
- * To obtain a mutable handle to the entity, use the "mut" function.
+ * To obtain a mutable handle to the entity, use the mut() function.
  */
 
 #pragma once
@@ -29,15 +29,16 @@ namespace flecs
  */
 struct entity_view : public id {
 
+    /** Default constructor. Creates an empty entity view. */
     entity_view() : flecs::id() { }
 
-    /** Wrap an existing entity id.
+    /** Wrap an existing entity ID.
      *
      * @param world The world in which the entity is created.
-     * @param id The entity id.
+     * @param id The entity ID.
      */
     explicit entity_view(flecs::world_t *world, flecs::id_t id)
-        : flecs::id(world 
+        : flecs::id(world
             ? const_cast<flecs::world_t*>(ecs_get_world(world))
             : nullptr
         , id ) { }
@@ -46,8 +47,8 @@ struct entity_view : public id {
     entity_view(entity_t id) 
         : flecs::id( nullptr, id ) { }
 
-    /** Get entity id.
-     * @return The integer entity id.
+    /** Get entity ID.
+     * @return The integer entity ID.
      */
     entity_t id() const {
         return id_;
@@ -55,8 +56,8 @@ struct entity_view : public id {
 
     /** Check if entity is valid.
      * An entity is valid if:
-     * - its id is not 0
-     * - the id contains a valid bit pattern for an entity
+     * - its ID is not 0
+     * - the ID contains a valid bit pattern for an entity
      * - the entity is alive (see is_alive())
      *
      * @return True if the entity is valid, false otherwise.
@@ -66,6 +67,7 @@ struct entity_view : public id {
         return world_ && ecs_is_valid(world_, id_);
     }
   
+    /** Conversion to bool. Returns true if entity is valid. */
     explicit operator bool() const {
         return is_valid();
     }
@@ -97,14 +99,19 @@ struct entity_view : public id {
 
     /** Return the entity path.
      *
+     * @param sep The separator used between path elements.
+     * @param init_sep The initial separator prepended to the path.
      * @return The hierarchical entity path.
      */
     flecs::string path(const char *sep = "::", const char *init_sep = "::") const {
         return path_from(0, sep, init_sep);
-    }   
+    }
 
     /** Return the entity path relative to a parent.
      *
+     * @param parent The parent entity to compute the path relative to.
+     * @param sep The separator used between path elements.
+     * @param init_sep The initial separator prepended to the path.
      * @return The relative hierarchical entity path.
      */
     flecs::string path_from(flecs::entity_t parent, const char *sep = "::", const char *init_sep = "::") const {
@@ -112,8 +119,11 @@ struct entity_view : public id {
         return flecs::string(path);
     }
 
-    /** Return the entity path relative to a parent.
+    /** Return the entity path relative to a typed parent.
      *
+     * @tparam Parent The parent type to compute the path relative to.
+     * @param sep The separator used between path elements.
+     * @param init_sep The initial separator prepended to the path.
      * @return The relative hierarchical entity path.
      */
     template <typename Parent>
@@ -121,6 +131,10 @@ struct entity_view : public id {
         return path_from(_::type<Parent>::id(world_), sep, init_sep);
     }
 
+    /** Check if entity is enabled (does not have the Disabled tag).
+     *
+     * @return True if the entity is enabled, false otherwise.
+     */
     bool enabled() const {
         return !ecs_has_id(world_, id_, flecs::Disabled);
     }
@@ -133,39 +147,41 @@ struct entity_view : public id {
 
     /** Get the entity's table.
      *
-     * @return Returns the entity's table.
+     * @return The entity's table.
      */
     flecs::table table() const;
 
     /** Get table range for the entity.
-     * Returns a range with the entity's row as offset and count set to 1. If
+     * Return a range with the entity's row as offset and count set to 1. If
      * the entity is not stored in a table, the function returns a range with
      * count 0.
      *
-     * @return Returns the entity's table range.
+     * @return The entity's table range.
      */
     flecs::table_range range() const;
 
-    /** Iterate (component) ids of an entity.
+    /** Iterate (component) IDs of an entity.
      * The function parameter must match the following signature:
      *
      * @code
      * void(*)(flecs::id id)
      * @endcode
      *
-     * @param func The function invoked for each id.
+     * @param func The function invoked for each ID.
      */
     template <typename Func>
     void each(const Func& func) const;
 
-    /** Iterate matching pair ids of an entity.
+    /** Iterate matching pair IDs of an entity.
      * The function parameter must match the following signature:
      *
      * @code
      * void(*)(flecs::id id)
      * @endcode
      *
-     * @param func The function invoked for each id.
+     * @param first The first element of the pair to match.
+     * @param second The second element of the pair to match.
+     * @param func The function invoked for each ID.
      */
     template <typename Func>
     void each(flecs::id_t first, flecs::id_t second, const Func& func) const;
@@ -198,7 +214,7 @@ struct entity_view : public id {
         return each(_::type<First>::id(world_), func);
     }
 
-    /** Iterate children for entity.
+    /** Iterate children for an entity.
      * The function parameter must match the following signature:
      *
      * @code
@@ -206,7 +222,7 @@ struct entity_view : public id {
      * @endcode
      *
      * @param rel The relationship to follow.
-     * @param func The function invoked for each child.     
+     * @param func The function invoked for each child.
      */
     template <typename Func>
     void children(flecs::entity_t rel, Func&& func) const {
@@ -214,7 +230,7 @@ struct entity_view : public id {
          * entities with (ChildOf, *) or (ChildOf, _) instead of querying for
          * the children of the wildcard entity. */
         if (id_ == flecs::Wildcard || id_ == flecs::Any) {
-            /* This is correct, wildcard entities don't have children */
+            /* This is correct, wildcard entities don't have children. */
             return;
         }
 
@@ -226,7 +242,7 @@ struct entity_view : public id {
         }
     }
 
-    /** Iterate children for entity.
+    /** Iterate children for an entity.
      * The function parameter must match the following signature:
      *
      * @code
@@ -234,23 +250,23 @@ struct entity_view : public id {
      * @endcode
      *
      * @tparam Rel The relationship to follow.
-     * @param func The function invoked for each child.     
+     * @param func The function invoked for each child.
      */
     template <typename Rel, typename Func>
     void children(Func&& func) const {
         children(_::type<Rel>::id(world_), FLECS_MOV(func));
     }
 
-    /** Iterate children for entity.
+    /** Iterate children for an entity.
      * The function parameter must match the following signature:
      *
      * @code
      * void(*)(flecs::entity target)
      * @endcode
-     * 
+     *
      * This operation follows the ChildOf relationship.
      *
-     * @param func The function invoked for each child.     
+     * @param func The function invoked for each child.
      */
     template <typename Func>
     void children(Func&& func) const {
@@ -295,9 +311,10 @@ struct entity_view : public id {
      * This operation gets the value for a pair from the entity.
      *
      * @tparam First The first element of the pair.
-     * @tparam Second the second element of a pair.
+     * @tparam Second The second element of the pair.
+     * @return Pointer to the pair component value, nullptr if not found.
      */
-    template <typename First, typename Second, typename P = pair<First, Second>, 
+    template <typename First, typename Second, typename P = pair<First, Second>,
         typename A = actual_type_t<P>, if_not_t< flecs::is_pair<First>::value > = 0>
     const A* try_get() const {
         return this->try_get<P>();
@@ -308,6 +325,7 @@ struct entity_view : public id {
      *
      * @tparam First The first element of the pair.
      * @param second The second element of the pair.
+     * @return Pointer to the first element value, nullptr if not found.
      */
     template<typename First, typename Second, if_not_t< is_enum<Second>::value> = 0>
     const First* try_get(Second second) const {
@@ -322,7 +340,8 @@ struct entity_view : public id {
      * This operation gets the value for a pair from the entity. 
      *
      * @tparam First The first element of the pair.
-     * @param constant the enum constant.
+     * @param constant The enum constant.
+     * @return Pointer to the first element value, nullptr if not found.
      */
     template<typename First, typename Second, if_t< is_enum<Second>::value && !std::is_same<First, Second>::value > = 0>
     const First* try_get(Second constant) const {
@@ -343,16 +362,22 @@ struct entity_view : public id {
 
     /** Get a pair (untyped).
      * This operation gets the value for a pair from the entity. If neither the
-     * first nor the second part of the pair are components, the operation 
+     * first nor the second part of the pair is a component, the operation
      * will fail.
      *
      * @param first The first element of the pair.
      * @param second The second element of the pair.
+     * @return Pointer to the pair component value, nullptr if not found.
      */
     const void* try_get(flecs::entity_t first, flecs::entity_t second) const {
         return ecs_get_id(world_, id_, ecs_pair(first, second));
     }
 
+    /** Get multiple component values as a tuple of const pointers.
+     *
+     * @tparam Ts The component types (must be between 2 and 8).
+     * @return A tuple of const pointers to the component values.
+     */
     template<typename... Ts>
     auto try_get_n() const {
         flecs_static_assert(sizeof...(Ts) > 1, "try_get_n requires at least two components");
@@ -364,8 +389,9 @@ struct entity_view : public id {
      * This operation gets the value for a pair from the entity. The first
      * part of the pair should not be a component.
      *
-     * @tparam Second the second element of a pair.
+     * @tparam Second The second element of the pair.
      * @param first The first part of the pair.
+     * @return Pointer to the second element value, nullptr if not found.
      */
     template<typename Second>
     const Second* try_get_second(flecs::entity_t first) const {
@@ -385,7 +411,8 @@ struct entity_view : public id {
      * part of the pair should not be a component.
      *
      * @tparam First The first element of the pair.
-     * @tparam Second the second element of a pair.
+     * @tparam Second The second element of the pair.
+     * @return Pointer to the second element value, nullptr if not found.
      */
     template<typename First, typename Second>
     const Second* try_get_second() const {
@@ -396,9 +423,9 @@ struct entity_view : public id {
     /* get */
 
     /** Get component value.
-     * 
+     *
      * @tparam T The component to get.
-     * @return Ref to the component value, panics if the entity does not
+     * @return Reference to the component value, panics if the entity does not
      *         have the component.
      */
     template <typename T, if_t< is_actual<T>::value > = 0>
@@ -413,12 +440,12 @@ struct entity_view : public id {
     /** Get component value.
      * Overload for when T is not the same as the actual type, which happens
      * when using pair types.
-     * 
+     *
      * @tparam T The component to get.
-     * @return Ref to the component value, panics if the entity does not
+     * @return Reference to the component value, panics if the entity does not
      *         have the component.
      */
-    template <typename T, typename A = actual_type_t<T>, 
+    template <typename T, typename A = actual_type_t<T>,
         if_t< flecs::is_pair<T>::value > = 0>
     const A& get() const {
         const A *r = try_get<T>();
@@ -432,39 +459,39 @@ struct entity_view : public id {
      * This operation gets the value for a pair from the entity.
      *
      * @tparam First The first element of the pair.
-     * @tparam Second the second element of a pair.
-     * @return Ref to the component value, panics if the entity does not
-     *         have the component.
+     * @tparam Second The second element of the pair.
+     * @return Reference to the pair value, panics if the entity does not
+     *         have the pair.
      */
-    template <typename First, typename Second, typename P = pair<First, Second>, 
+    template <typename First, typename Second, typename P = pair<First, Second>,
         typename A = actual_type_t<P>, if_not_t< flecs::is_pair<First>::value > = 0>
     const A& get() const {
         return this->get<P>();
     }
 
     /** Get a pair.
-     * This operation gets the value for a pair from the entity. 
+     * This operation gets the value for a pair from the entity.
      *
      * @tparam First The first element of the pair.
      * @param second The second element of the pair.
-     * @return Ref to the component value, panics if the entity does not
-     *         have the component.
+     * @return Reference to the first element value, panics if the entity does not
+     *         have the pair.
      */
     template<typename First, typename Second, if_not_t< is_enum<Second>::value> = 0>
     const First& get(Second second) const {
         const First *r = try_get<First>(second);
-        ecs_assert(r != nullptr, ECS_INVALID_OPERATION, 
-            "invalid get: entity does not have component (use try_get)");
+        ecs_assert(r != nullptr, ECS_INVALID_OPERATION,
+            "invalid get: entity does not have pair (use try_get)");
         return *r;
     }
 
     /** Get a pair.
-     * This operation gets the value for a pair from the entity. 
+     * This operation gets the value for a pair from the entity.
      *
      * @tparam First The first element of the pair.
-     * @param constant the enum constant.
-     * @return Ref to the component value, panics if the entity does not
-     *         have the component.
+     * @param constant The enum constant.
+     * @return Reference to the first element value, panics if the entity does not
+     *         have the pair.
      */
     template<typename First, typename Second, if_t< is_enum<Second>::value && !std::is_same<First, Second>::value > = 0>
     const First& get(Second constant) const {
@@ -488,18 +515,18 @@ struct entity_view : public id {
 
     /** Get a pair (untyped).
      * This operation gets the value for a pair from the entity. If neither the
-     * first nor the second part of the pair are components, the operation 
+     * first nor the second part of the pair is a component, the operation
      * will fail.
      *
      * @param first The first element of the pair.
      * @param second The second element of the pair.
-     * @return Pointer to the component value, panics if the entity does not
-     *         have the component.
+     * @return Pointer to the pair value, panics if the entity does not
+     *         have the pair.
      */
     const void* get(flecs::entity_t first, flecs::entity_t second) const {
         const void *r = ecs_get_id(world_, id_, ecs_pair(first, second));
-        ecs_assert(r != nullptr, ECS_INVALID_OPERATION, 
-            "invalid get: entity does not have component (use try_get)");
+        ecs_assert(r != nullptr, ECS_INVALID_OPERATION,
+            "invalid get: entity does not have pair (use try_get)");
         return r;
     }
 
@@ -508,19 +535,19 @@ struct entity_view : public id {
      * retrieve. The callback will only be invoked when the entity has all
      * the components.
      *
-     * This operation is faster than individually calling get for each component
+     * This operation is faster than individually calling get() for each component,
      * as it only obtains entity metadata once.
-     * 
-     * While the callback is invoked the table in which the components are
+     *
+     * While the callback is invoked, the table in which the components are
      * stored is locked, which prevents mutations that could cause invalidation
-     * of the component references. Note that this is not an actual lock: 
-     * invalid access causes a runtime panic and so it is still up to the 
+     * of the component references. Note that this is not an actual lock:
+     * invalid access causes a runtime panic and so it is still up to the
      * application to ensure access is protected.
-     * 
+     *
      * The component arguments must be references and can be either const or
      * non-const. When all arguments are const, the function will read-lock the
-     * table (see ecs_read_begin). If one or more arguments are non-const the
-     * function will write-lock the table (see ecs_write_begin).
+     * table (see ecs_read_begin()). If one or more arguments are non-const, the
+     * function will write-lock the table (see ecs_write_begin()).
      * 
      * Example:
      *
@@ -540,6 +567,11 @@ struct entity_view : public id {
     template <typename Func, if_t< is_callable<Func>::value > = 0>
     bool get(const Func& func) const;
 
+    /** Get multiple component values as a tuple of const references.
+     *
+     * @tparam Ts The component types (must be between 2 and 8).
+     * @return A tuple of const references to the component values.
+     */
     template<typename... Ts>
     auto get_n() const {
         flecs_static_assert(sizeof...(Ts) > 1, "get_n requires at least two components");
@@ -551,14 +583,16 @@ struct entity_view : public id {
      * This operation gets the value for a pair from the entity. The first
      * part of the pair should not be a component.
      *
-     * @tparam Second the second element of a pair.
+     * @tparam Second The second element of the pair.
      * @param first The first part of the pair.
+     * @return Reference to the second element value. Panics if the entity does
+     *         not have the pair.
      */
     template<typename Second>
     const Second& get_second(flecs::entity_t first) const {
         const Second *r = try_get_second<Second>(first);
-        ecs_assert(r != nullptr, ECS_INVALID_OPERATION, 
-            "invalid get: entity does not have component (use try_get)");
+        ecs_assert(r != nullptr, ECS_INVALID_OPERATION,
+            "invalid get_second: entity does not have pair (use try_get_second)");
         return *r;
     }
 
@@ -567,13 +601,15 @@ struct entity_view : public id {
      * part of the pair should not be a component.
      *
      * @tparam First The first element of the pair.
-     * @tparam Second the second element of a pair.
+     * @tparam Second The second element of the pair.
+     * @return Reference to the second element value. Panics if the entity does
+     *         not have the pair.
      */
     template<typename First, typename Second>
     const Second& get_second() const {
         const Second *r = try_get<First, Second>();
-        ecs_assert(r != nullptr, ECS_INVALID_OPERATION, 
-            "invalid get: entity does not have component (use try_get)");
+        ecs_assert(r != nullptr, ECS_INVALID_OPERATION,
+            "invalid get_second: entity does not have pair (use try_get_second)");
         return *r;
     }
 
@@ -615,19 +651,21 @@ struct entity_view : public id {
      * This operation gets the value for a pair from the entity.
      *
      * @tparam First The first element of the pair.
-     * @tparam Second the second element of a pair.
+     * @tparam Second The second element of the pair.
+     * @return Pointer to the pair component value, nullptr if not found.
      */
-    template <typename First, typename Second, typename P = pair<First, Second>, 
+    template <typename First, typename Second, typename P = pair<First, Second>,
         typename A = actual_type_t<P>, if_not_t< flecs::is_pair<First>::value > = 0>
     A* try_get_mut() const {
         return this->try_get_mut<P>();
     }
 
     /** Get a mutable pair.
-     * This operation gets the value for a pair from the entity. 
+     * This operation gets the value for a pair from the entity.
      *
      * @tparam First The first element of the pair.
      * @param second The second element of the pair.
+     * @return Pointer to the first element value, nullptr if not found.
      */
     template<typename First, typename Second, if_not_t< is_enum<Second>::value> = 0>
     First* try_get_mut(Second second) const {
@@ -639,10 +677,11 @@ struct entity_view : public id {
     }
 
     /** Get a mutable pair.
-     * This operation gets the value for a pair from the entity. 
+     * This operation gets the value for a pair from the entity.
      *
      * @tparam First The first element of the pair.
-     * @param constant the enum constant.
+     * @param constant The enum constant.
+     * @return Pointer to the first element value, nullptr if not found.
      */
     template<typename First, typename Second, if_t< is_enum<Second>::value && !std::is_same<First, Second>::value > = 0>
     First* try_get_mut(Second constant) const {
@@ -663,16 +702,22 @@ struct entity_view : public id {
 
     /** Get a mutable pair (untyped).
      * This operation gets the value for a pair from the entity. If neither the
-     * first nor the second part of the pair are components, the operation 
+     * first nor the second part of the pair is a component, the operation
      * will fail.
      *
      * @param first The first element of the pair.
      * @param second The second element of the pair.
+     * @return Pointer to the pair component value, nullptr if not found.
      */
     void* try_get_mut(flecs::entity_t first, flecs::entity_t second) const {
         return ecs_get_mut_id(world_, id_, ecs_pair(first, second));
     }
 
+    /** Get multiple mutable component values as a tuple of pointers.
+     *
+     * @tparam Ts The component types (must be between 2 and 8).
+     * @return A tuple of pointers to the mutable component values.
+     */
     template<typename... Ts>
     auto try_get_mut_n() const {
         flecs_static_assert(sizeof...(Ts) > 1, "try_get_mut_n requires at least two components");
@@ -684,8 +729,9 @@ struct entity_view : public id {
      * This operation gets the value for a pair from the entity. The first
      * part of the pair should not be a component.
      *
-     * @tparam Second the second element of a pair.
+     * @tparam Second The second element of the pair.
      * @param first The first part of the pair.
+     * @return Pointer to the second element value, nullptr if not found.
      */
     template<typename Second>
     Second* try_get_mut_second(flecs::entity_t first) const {
@@ -705,7 +751,8 @@ struct entity_view : public id {
      * part of the pair should not be a component.
      *
      * @tparam First The first element of the pair.
-     * @tparam Second the second element of a pair.
+     * @tparam Second The second element of the pair.
+     * @return Pointer to the second element value, nullptr if not found.
      */
     template<typename First, typename Second>
     Second* try_get_mut_second() const {
@@ -716,9 +763,9 @@ struct entity_view : public id {
     /* get_mut */
 
     /** Get mutable component value.
-     * 
+     *
      * @tparam T The component to get.
-     * @return Pointer to the component value, nullptr if the entity does not
+     * @return Reference to the component value. Panics if the entity does not
      *         have the component.
      */
     template <typename T, if_t< is_actual<T>::value > = 0>
@@ -732,12 +779,12 @@ struct entity_view : public id {
     /** Get mutable component value.
      * Overload for when T is not the same as the actual type, which happens
      * when using pair types.
-     * 
+     *
      * @tparam T The component to get.
-     * @return Pointer to the component value, nullptr if the entity does not
+     * @return Reference to the component value. Panics if the entity does not
      *         have the component.
      */
-    template <typename T, typename A = actual_type_t<T>, 
+    template <typename T, typename A = actual_type_t<T>,
         if_t< flecs::is_pair<T>::value > = 0>
     A& get_mut() const {
         A* r = try_get_mut<T>();
@@ -750,36 +797,42 @@ struct entity_view : public id {
      * This operation gets the value for a pair from the entity.
      *
      * @tparam First The first element of the pair.
-     * @tparam Second the second element of a pair.
+     * @tparam Second The second element of the pair.
+     * @return Reference to the pair component value. Panics if the entity does
+     *         not have the pair.
      */
-    template <typename First, typename Second, typename P = pair<First, Second>, 
+    template <typename First, typename Second, typename P = pair<First, Second>,
         typename A = actual_type_t<P>, if_not_t< flecs::is_pair<First>::value > = 0>
     A& get_mut() const {
         A* r = try_get_mut<First, Second>();
-        ecs_assert(r != nullptr, ECS_INVALID_OPERATION, 
-            "invalid get_mut: entity does not have component (use try_get_mut)");
+        ecs_assert(r != nullptr, ECS_INVALID_OPERATION,
+            "invalid get_mut: entity does not have pair (use try_get_mut)");
         return *r;
     }
 
     /** Get a mutable pair.
-     * This operation gets the value for a pair from the entity. 
+     * This operation gets the value for a pair from the entity.
      *
      * @tparam First The first element of the pair.
      * @param second The second element of the pair.
+     * @return Reference to the first element value. Panics if the entity does
+     *         not have the pair.
      */
     template<typename First, typename Second, if_not_t< is_enum<Second>::value> = 0>
     First& get_mut(Second second) const {
         First* r = try_get_mut<First>(second);
-        ecs_assert(r != nullptr, ECS_INVALID_OPERATION, 
-            "invalid get_mut: entity does not have component (use try_get_mut)");
+        ecs_assert(r != nullptr, ECS_INVALID_OPERATION,
+            "invalid get_mut: entity does not have pair (use try_get_mut)");
         return *r;
     }
 
     /** Get a mutable pair.
-     * This operation gets the value for a pair from the entity. 
+     * This operation gets the value for a pair from the entity.
      *
      * @tparam First The first element of the pair.
-     * @param constant the enum constant.
+     * @param constant The enum constant.
+     * @return Reference to the first element value. Panics if the entity does
+     *         not have the pair.
      */
     template<typename First, typename Second, if_t< is_enum<Second>::value && !std::is_same<First, Second>::value > = 0>
     First& get_mut(Second constant) const {
@@ -789,33 +842,40 @@ struct entity_view : public id {
     }
 
     /** Get mutable component value (untyped).
-     * 
+     *
      * @param comp The component to get.
-     * @return Pointer to the component value, nullptr if the entity does not
+     * @return Pointer to the component value. Panics if the entity does not
      *         have the component.
      */
     void* get_mut(flecs::id_t comp) const {
         void *r = ecs_get_mut_id(world_, id_, comp);
-        ecs_assert(r != nullptr, ECS_INVALID_OPERATION, 
+        ecs_assert(r != nullptr, ECS_INVALID_OPERATION,
             "invalid get_mut: entity does not have component (use try_get_mut)");
         return r;
     }
 
     /** Get a mutable pair (untyped).
      * This operation gets the value for a pair from the entity. If neither the
-     * first nor the second part of the pair are components, the operation 
+     * first nor the second part of the pair is a component, the operation
      * will fail.
      *
      * @param first The first element of the pair.
      * @param second The second element of the pair.
+     * @return Pointer to the pair component value. Panics if the entity does
+     *         not have the pair.
      */
     void* get_mut(flecs::entity_t first, flecs::entity_t second) const {
         void *r = ecs_get_mut_id(world_, id_, ecs_pair(first, second));
-        ecs_assert(r != nullptr, ECS_INVALID_OPERATION, 
-            "invalid get_mut: entity does not have component (use try_get_mut)");
+        ecs_assert(r != nullptr, ECS_INVALID_OPERATION,
+            "invalid get_mut: entity does not have pair (use try_get_mut)");
         return r;
     }
 
+    /** Get multiple mutable component values as a tuple of references.
+     *
+     * @tparam Ts The component types (must be between 2 and 8).
+     * @return A tuple of references to the mutable component values.
+     */
     template<typename... Ts>
     auto get_mut_n() const {
         flecs_static_assert(sizeof...(Ts) > 1, "get_mut_n requires at least two components");
@@ -827,14 +887,16 @@ struct entity_view : public id {
      * This operation gets the value for a pair from the entity. The first
      * part of the pair should not be a component.
      *
-     * @tparam Second the second element of a pair.
+     * @tparam Second The second element of the pair.
      * @param first The first part of the pair.
+     * @return Reference to the second element value. Panics if the entity does
+     *         not have the pair.
      */
     template<typename Second>
     Second& get_mut_second(flecs::entity_t first) const {
         Second *r = try_get_mut_second<Second>(first);
-        ecs_assert(r != nullptr, ECS_INVALID_OPERATION, 
-            "invalid get_mut: entity does not have component (use try_get_mut)");
+        ecs_assert(r != nullptr, ECS_INVALID_OPERATION,
+            "invalid get_mut_second: entity does not have pair (use try_get_mut_second)");
         return *r;
     }
 
@@ -843,17 +905,23 @@ struct entity_view : public id {
      * part of the pair should not be a component.
      *
      * @tparam First The first element of the pair.
-     * @tparam Second the second element of a pair.
+     * @tparam Second The second element of the pair.
+     * @return Reference to the second element value. Panics if the entity does
+     *         not have the pair.
      */
     template<typename First, typename Second>
     Second& get_mut_second() const {
         Second *r = try_get_mut_second<First, Second>();
-        ecs_assert(r != nullptr, ECS_INVALID_OPERATION, 
-            "invalid get_mut: entity does not have component (use try_get_mut)");
+        ecs_assert(r != nullptr, ECS_INVALID_OPERATION,
+            "invalid get_mut_second: entity does not have pair (use try_get_mut_second)");
         return *r;
     }
 
-    /** Get enum constant for enum relationship. */
+    /** Get enum constant for enum relationship.
+     *
+     * @tparam Enum The enum type.
+     * @return The enum constant value.
+     */
     template<typename Enum>
     Enum get_constant() const;
     
@@ -864,6 +932,7 @@ struct entity_view : public id {
      *
      * @tparam First The first element of the pair.
      * @param index The index (0 for the first instance of the relationship).
+     * @return The target entity.
      */
     template<typename First>
     flecs::entity target(int32_t index = 0) const;
@@ -875,36 +944,51 @@ struct entity_view : public id {
      *
      * @param first The first element of the pair for which to retrieve the target.
      * @param index The index (0 for the first instance of the relationship).
+     * @return The target entity.
      */
     flecs::entity target(flecs::entity_t first, int32_t index = 0) const;
 
-    /** Get the target of a pair for a given relationship id.
-     * This operation returns the first entity that has the provided id by following
-     * the specified relationship. If the entity itself has the id then entity will
-     * be returned. If the id cannot be found on the entity or by following the
+    /** Get the target of a pair for a given relationship ID.
+     * This operation returns the first entity that has the provided component ID
+     * by following the specified relationship. If the entity itself has the
+     * component ID, then the entity will be returned. If the component ID cannot
+     * be found on the entity or by following the
      * relationship, the operation will return 0.
-     * 
+     *
      * This operation can be used to lookup, for example, which prefab is providing
      * a component by specifying the IsA pair:
-     * 
+     *
      * @code
      * // Is Position provided by the entity or one of its base entities?
      * ecs_get_target_for_id(world, entity, EcsIsA, ecs_id(Position))
      * @endcode
-     * 
+     *
      * @param relationship The relationship to follow.
-     * @param id The id to lookup.
+     * @param id The component ID to lookup.
      * @return The entity for which the target has been found.
      */
     flecs::entity target_for(flecs::entity_t relationship, flecs::id_t id) const;
 
+    /** Get the target of a pair for a given relationship ID.
+     *
+     * @tparam T The component type to lookup.
+     * @param relationship The relationship to follow.
+     * @return The entity for which the target has been found.
+     */
     template <typename T>
     flecs::entity target_for(flecs::entity_t relationship) const;
 
+    /** Get the target of a pair for a given relationship ID.
+     *
+     * @tparam First The first element of the pair to lookup.
+     * @tparam Second The second element of the pair to lookup.
+     * @param relationship The relationship to follow.
+     * @return The entity for which the target has been found.
+     */
     template <typename First, typename Second>
     flecs::entity target_for(flecs::entity_t relationship) const;
 
-    /** Get depth for given relationship.
+    /** Get the depth for a given relationship.
      *
      * @param rel The relationship.
      * @return The depth.
@@ -913,7 +997,7 @@ struct entity_view : public id {
         return ecs_get_depth(world_, id_, rel);
     }
 
-    /** Get depth for given relationship.
+    /** Get the depth for a given relationship.
      *
      * @tparam Rel The relationship.
      * @return The depth.
@@ -989,7 +1073,7 @@ struct entity_view : public id {
      *
      * @tparam First The first element of the pair.
      * @tparam Second The second element of the pair.
-     * @return True if the entity has the provided component, false otherwise.
+     * @return True if the entity has the provided pair, false otherwise.
      */
     template <typename First, typename Second>
     bool has() const {
@@ -1000,7 +1084,7 @@ struct entity_view : public id {
      *
      * @tparam First The first element of the pair.
      * @param second The second element of the pair.
-     * @return True if the entity has the provided component, false otherwise.
+     * @return True if the entity has the provided pair, false otherwise.
      */
     template<typename First, typename Second, if_not_t< is_enum<Second>::value > = 0>
     bool has(Second second) const {
@@ -1012,7 +1096,7 @@ struct entity_view : public id {
      *
      * @tparam Second The second element of the pair.
      * @param first The first element of the pair.
-     * @return True if the entity has the provided component, false otherwise.
+     * @return True if the entity has the provided pair, false otherwise.
      */
     template <typename Second>
     bool has_second(flecs::entity_t first) const {
@@ -1023,7 +1107,7 @@ struct entity_view : public id {
      *
      * @tparam First The first element of the pair.
      * @param value The enum constant.
-     * @return True if the entity has the provided component, false otherwise.
+     * @return True if the entity has the provided pair, false otherwise.
      */
     template<typename First, typename E, if_t< is_enum<E>::value && !std::is_same<First, E>::value > = 0>
     bool has(E value) const {
@@ -1036,7 +1120,7 @@ struct entity_view : public id {
      *
      * @param first The first element of the pair.
      * @param second The second element of the pair.
-     * @return True if the entity has the provided component, false otherwise.
+     * @return True if the entity has the provided pair, false otherwise.
      */
     bool has(flecs::id_t first, flecs::id_t second) const {
         return ecs_has_id(world_, id_, ecs_pair(first, second));
@@ -1056,7 +1140,7 @@ struct entity_view : public id {
      *
      * @tparam First The first element of the pair.
      * @param second The second element of the pair.
-     * @return True if the entity owns the provided component, false otherwise.
+     * @return True if the entity owns the provided pair, false otherwise.
      */
     template <typename First>
     bool owns(flecs::id_t second) const {
@@ -1068,14 +1152,14 @@ struct entity_view : public id {
      *
      * @param first The first element of the pair.
      * @param second The second element of the pair.
-     * @return True if the entity owns the provided component, false otherwise.
+     * @return True if the entity owns the provided pair, false otherwise.
      */
     bool owns(flecs::id_t first, flecs::id_t second) const {
         return owns(ecs_pair(first, second));
     }
 
     /** Check if entity owns the provided component.
-     * An component is owned if it is not shared from a base entity.
+     * A component is owned if it is not shared from a base entity.
      *
      * @tparam T The component to check.
      * @return True if the entity owns the provided component, false otherwise.
@@ -1086,7 +1170,7 @@ struct entity_view : public id {
     }
 
     /** Check if entity owns the provided pair.
-     * An pair is owned if it is not shared from a base entity.
+     * A pair is owned if it is not shared from a base entity.
      *
      * @tparam First The first element of the pair.
      * @tparam Second The second element of the pair.
@@ -1101,18 +1185,18 @@ struct entity_view : public id {
 
     /** Check if entity owns the provided pair.
      *
-     * @param first The first element of the pair.
      * @tparam Second The second element of the pair.
-     * @return True if the entity owns the provided component, false otherwise.
+     * @param first The first element of the pair.
+     * @return True if the entity owns the provided pair, false otherwise.
      */
     template <typename Second>
     bool owns_second(flecs::entity_t first) const {
         return owns(first, _::type<Second>::id(world_));
     }
 
-    /** Test if id is enabled.
+    /** Test if ID is enabled.
      *
-     * @param id The id to test.
+     * @param id The ID to test.
      * @return True if enabled, false if not.
      */
     bool enabled(flecs::id_t id) const {
@@ -1161,11 +1245,18 @@ struct entity_view : public id {
         return this->enabled<First>(_::type<Second>::id(world_));
     }
 
+    /** Clone an entity.
+     * Create a copy of the current entity with all of its components.
+     *
+     * @param clone_value If true, clone component values. If false, only clone the entity's type.
+     * @param dst_id If nonzero, clone to this entity ID instead of creating a new one.
+     * @return The cloned entity.
+     */
     flecs::entity clone(bool clone_value = true, flecs::entity_t dst_id = 0) const;
 
-    /** Return mutable entity handle for current stage 
+    /** Return a mutable entity handle for the current stage.
      * When an entity handle created from the world is used while the world is
-     * in staged mode, it will only allow for readonly operations since 
+     * in staged mode, it will only allow for read-only operations since
      * structural changes are not allowed on the world while in staged mode.
      * 
      * To do mutations on the entity, this operation provides a handle to the
@@ -1184,7 +1275,7 @@ struct entity_view : public id {
      */
     flecs::entity mut(const flecs::world& stage) const;
 
-    /** Same as mut(world), but for iterator.
+    /** Same as mut(world), but for an iterator.
      * This operation allows for the construction of a mutable entity handle
      * from an iterator.
      *
@@ -1193,7 +1284,7 @@ struct entity_view : public id {
      */
     flecs::entity mut(const flecs::iter& it) const;
 
-    /** Same as mut(world), but for entity.
+    /** Same as mut(world), but for an entity.
      * This operation allows for the construction of a mutable entity handle
      * from another entity. This is useful in each() functions, which only 
      * provide a handle to the entity being iterated over.

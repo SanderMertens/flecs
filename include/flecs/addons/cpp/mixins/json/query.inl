@@ -1,5 +1,9 @@
+/**
+ * @file addons/cpp/mixins/json/query.inl
+ * @brief JSON query mixin.
+ */
 
-/** Serialize query to JSON.
+/** Serialize a query to JSON.
  * 
  * @memberof flecs::query_base
  * @ingroup cpp_addons_json

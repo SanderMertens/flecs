@@ -11,41 +11,41 @@
  * @{
  */
 
-/** Run script.
- * @see ecs_script_run
+/** Run a script.
+ * @see ecs_script_run()
  */
 int script_run(const char *name, const char *str) const {
     return ecs_script_run(world_, name, str, nullptr);
 }
 
-/** Run script from file.
- * @see ecs_script_run_file
+/** Run a script from a file.
+ * @see ecs_script_run_file()
  */
 int script_run_file(const char *filename) const {
     return ecs_script_run_file(world_, filename);
 }
 
-/** Build script.
- * @see ecs_script_init
+/** Build a script.
+ * @see ecs_script_init()
  */
 script_builder script(const char *name = nullptr) const {
     return script_builder(world_, name);
 }
 
-/** Convert value to string */
+/** Convert a value to a string. */
 flecs::string to_expr(flecs::entity_t tid, const void* value) {
     char *expr = ecs_ptr_to_expr(world_, tid, value);
     return flecs::string(expr);
 }
 
-/** Convert value to string */
+/** Convert a value to a string. */
 template <typename T>
 flecs::string to_expr(const T* value) {
     flecs::entity_t tid = _::type<T>::id(world_);
     return to_expr(tid, value);
 }
 
-/** Get value of exported script variable.
+/** Get the value of an exported script variable.
  * This operation will panic if no const var with the provided name was found,
  * or if the type of the variable cannot be converted to the provided type.
  * 
@@ -65,7 +65,7 @@ flecs::string to_expr(const T* value) {
 template <typename T>
 T get_const_var(const char *name, const T& default_value = {}) const;
 
-/** Get value of exported script variable.
+/** Get the value of an exported script variable.
  * This operation will panic if no const var with the provided name was found,
  * or if the type of the variable cannot be converted to the provided type.
  * 

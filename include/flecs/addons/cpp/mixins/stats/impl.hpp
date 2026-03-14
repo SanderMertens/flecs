@@ -1,6 +1,6 @@
 /**
  * @file addons/cpp/mixins/stats/impl.hpp
- * @brief Monitor module implementation.
+ * @brief Stats module implementation.
  */
 
 #pragma once
@@ -12,7 +12,7 @@ inline stats::stats(flecs::world& world) {
     world.import<flecs::units>();
 #endif
 
-    /* Import C module  */
+    // Import C module.
     FlecsStatsImport(world);
 
     world.component<WorldSummary>();

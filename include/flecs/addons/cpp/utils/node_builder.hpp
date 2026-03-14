@@ -1,6 +1,6 @@
 /**
  * @file addons/cpp/utils/node_builder.hpp
- * @brief Base builder class for node objects, like systems, observers.
+ * @brief Base builder class for node objects, like systems and observers.
  */
 
 #pragma once
@@ -8,7 +8,7 @@
 namespace flecs {
 namespace _ {
 
-// Macros for template types so we don't go cross-eyed
+// Macros for template types so we don't go cross-eyed.
 #define FLECS_IBUILDER template<typename IBase, typename ... Components> class
 
 template<typename T, typename TDesc, typename Base, FLECS_IBUILDER IBuilder, typename ... Components>

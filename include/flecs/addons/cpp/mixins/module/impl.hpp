@@ -16,12 +16,12 @@ ecs_entity_t do_import(world& world, const char *symbol) {
 
     ecs_entity_t scope = ecs_set_scope(world, 0);
 
-    // Initialize module component type & don't allow it to be registered as a
-    // tag, as this would prevent calling emplace()
+    // Initialize module component type and don't allow it to be registered as a
+    // tag, as this would prevent calling emplace().
     auto c_ = component<T>(world, nullptr, false);
 
     // Make module component sparse so that it'll never move in memory. This
-    // guarantees that a module destructor can be reliably used to cleanup
+    // guarantees that a module destructor can be reliably used to clean up
     // module resources.
     c_.add(flecs::Sparse);
 
@@ -33,7 +33,7 @@ ecs_entity_t do_import(world& world, const char *symbol) {
 
     ecs_add_id(world, c_, EcsModule);
 
-    // It should now be possible to lookup the module
+    // It should now be possible to look up the module.
     ecs_entity_t m = ecs_lookup_symbol(world, symbol, false, false);
     ecs_assert(m != 0, ECS_MODULE_UNDEFINED, "%s", symbol);
     ecs_assert(m == c_, ECS_INTERNAL_ERROR, NULL);
@@ -50,17 +50,17 @@ flecs::entity import(world& world) {
     ecs_entity_t m = ecs_lookup_symbol(world, symbol, true, false);
 
     if (!_::type<T>::registered(world)) {
-        /* Module is registered with world, initialize static data */
+        // Module is registered with world, initialize static data.
         if (m) {
             _::type<T>::init_builtin(world, m, false);
 
-        /* Module is not yet registered, register it now */
+        // Module is not yet registered, register it now.
         } else {
             m = _::do_import<T>(world, symbol);
         }
 
-    /* Module has been registered, but could have been for another world. Import
-     * if module hasn't been registered for this world. */
+    // Module has been registered, but could have been for another world.
+    // Import if module hasn't been registered for this world.
     } else if (!m) {
         m = _::do_import<T>(world, symbol);
     }
@@ -74,7 +74,7 @@ flecs::entity import(world& world) {
 /**
  * @defgroup cpp_addons_modules Modules
  * @ingroup cpp_addons
- * Modules organize components, systems and more in reusable units of code.
+ * Modules organize components, systems, and more in reusable units of code.
  *
  * @{
  */
@@ -89,7 +89,7 @@ inline flecs::entity world::module(const char *name) const {
         ecs_add_path_w_sep(world_, result, 0, name, "::", "::");
         flecs::entity parent = result.parent();
         if (prev_parent != parent) {
-            // Module was reparented, cleanup old parent(s)
+            // Module was reparented, clean up old parent(s).
             flecs::entity cur = prev_parent, next;
             while (cur) {
                 next = cur.parent();

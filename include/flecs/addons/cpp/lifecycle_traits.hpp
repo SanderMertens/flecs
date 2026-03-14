@@ -12,7 +12,7 @@ namespace _
 {
 
 // T()
-// Can't coexist with T(flecs::entity) or T(flecs::world, flecs::entity)
+// Can't coexist with T(flecs::entity) or T(flecs::world, flecs::entity).
 template <typename T>
 void ctor_impl(void *ptr, int32_t count, const ecs_type_info_t *info) {
     (void)info; ecs_assert(info->size == ECS_SIZEOF(T),
@@ -62,9 +62,9 @@ void move_impl(void *dst_ptr, void *src_ptr, int32_t count,
     }
 }
 
-// T(T&)
+// T(const T&)
 template <typename T>
-void copy_ctor_impl(void *dst_ptr, const void *src_ptr, int32_t count, 
+void copy_ctor_impl(void *dst_ptr, const void *src_ptr, int32_t count,
     const ecs_type_info_t *info)
 {
     (void)info; ecs_assert(info->size == ECS_SIZEOF(T), 
@@ -91,12 +91,12 @@ void move_ctor_impl(void *dst_ptr, void *src_ptr, int32_t count,
 }
 
 // T(T&&), ~T()
-// Typically used when moving to a new table, and removing from the old table
+// Typically used when moving to a new table, and removing from the old table.
 template <typename T>
-void ctor_move_dtor_impl(void *dst_ptr, void *src_ptr, int32_t count, 
+void ctor_move_dtor_impl(void *dst_ptr, void *src_ptr, int32_t count,
     const ecs_type_info_t *info)
 {
-    (void)info; ecs_assert(info->size == ECS_SIZEOF(T), 
+    (void)info; ecs_assert(info->size == ECS_SIZEOF(T),
         ECS_INTERNAL_ERROR, NULL);
     T *dst_arr = static_cast<T*>(dst_ptr);
     T *src_arr = static_cast<T*>(src_ptr);
@@ -106,8 +106,8 @@ void ctor_move_dtor_impl(void *dst_ptr, void *src_ptr, int32_t count,
     }
 }
 
-// Move assign + dtor (non-trivial move assignment)
-// Typically used when moving a component to a deleted component
+// Move assign + dtor (non-trivial move assignment).
+// Typically used when moving a component to a deleted component.
 template <typename T, if_not_t<
     std::is_trivially_move_assignable<T>::value > = 0>
 void move_dtor_impl(void *dst_ptr, void *src_ptr, int32_t count, 
@@ -118,16 +118,16 @@ void move_dtor_impl(void *dst_ptr, void *src_ptr, int32_t count,
     T *dst_arr = static_cast<T*>(dst_ptr);
     T *src_arr = static_cast<T*>(src_ptr);
     for (int i = 0; i < count; i ++) {
-        // Move assignment should free dst & assign dst to src
+        // Move assignment should free dst and assign dst to src.
         dst_arr[i] = FLECS_MOV(src_arr[i]);
-        // Destruct src. Move should have left object in a state where it no
+        // Destruct src. Move should have left the object in a state where it no
         // longer holds resources, but it still needs to be destructed.
         src_arr[i].~T();
     }
 }
 
-// Move assign + dtor (trivial move assignment)
-// Typically used when moving a component to a deleted component
+// Move assign + dtor (trivial move assignment).
+// Typically used when moving a component to a deleted component.
 template <typename T, if_t<
     std::is_trivially_move_assignable<T>::value > = 0>
 void move_dtor_impl(void *dst_ptr, void *src_ptr, int32_t count, 
@@ -138,19 +138,19 @@ void move_dtor_impl(void *dst_ptr, void *src_ptr, int32_t count,
     T *dst_arr = static_cast<T*>(dst_ptr);
     T *src_arr = static_cast<T*>(src_ptr);
     for (int i = 0; i < count; i ++) {
-        // Cleanup resources of dst
+        // Clean up resources of dst.
         dst_arr[i].~T();
-        // Copy src to dst
+        // Copy src to dst.
         dst_arr[i] = FLECS_MOV(src_arr[i]);
-        // No need to destruct src. Since this is a trivial move the code
-        // should be agnostic to the address of the component which means we
+        // No need to destruct src. Since this is a trivial move, the code
+        // should be agnostic to the address of the component, which means we
         // can pretend nothing got destructed.
     }
 }
 
-} // _
+} // namespace _
 
-// Trait to test if type is constructible by flecs
+/** Trait to test if a type is constructible by Flecs. */
 template <typename T>
 struct is_flecs_constructible {
     static constexpr bool value = 
@@ -258,12 +258,12 @@ ecs_move_t move_dtor(ecs_flags32_t &flags) {
     }
 }
 
-// Traits to check for operator<, operator>, and operator==
+// Traits to check for operator<, operator>, and operator==.
 using std::void_t;
 
-// These traits causes a "float comparison warning" in some compilers
+// These traits cause a "float comparison warning" in some compilers
 // when `T` is float or double.
-// Disable this warning with the following pragmas:
+// Disable this warning with the following pragmas.
 #if defined(__clang__)
     #pragma clang diagnostic push
     #pragma clang diagnostic ignored "-Wfloat-equal"
@@ -272,34 +272,34 @@ using std::void_t;
     #pragma GCC diagnostic ignored "-Wfloat-equal"
 #endif
 
-// Trait to check for operator<
+// Trait to check for operator<.
 template <typename T, typename = void>
 struct has_operator_less : std::false_type {};
 
-// Only enable if T has an operator< that takes T as the right-hand side (no implicit conversion)
+// Only enable if T has an operator< that takes T as the right-hand side (no implicit conversion).
 template <typename T>
-struct has_operator_less<T, void_t<decltype(std::declval<const T&>() < std::declval<const T&>())>> : 
+struct has_operator_less<T, void_t<decltype(std::declval<const T&>() < std::declval<const T&>())>> :
     std::is_same<decltype(std::declval<const T&>() < std::declval<const T&>()), bool> {};
 
-// Trait to check for operator>
+// Trait to check for operator>.
 template <typename T, typename = void>
 struct has_operator_greater : std::false_type {};
 
-// Only enable if T has an operator> that takes T as the right-hand side (no implicit conversion)
+// Only enable if T has an operator> that takes T as the right-hand side (no implicit conversion).
 template <typename T>
-struct has_operator_greater<T, void_t<decltype(std::declval<const T&>() > std::declval<const T&>())>> : 
+struct has_operator_greater<T, void_t<decltype(std::declval<const T&>() > std::declval<const T&>())>> :
     std::is_same<decltype(std::declval<const T&>() > std::declval<const T&>()), bool> {};
 
-// Trait to check for operator==
+// Trait to check for operator==.
 template <typename T, typename = void>
 struct has_operator_equal : std::false_type {};
 
-// Only enable if T has an operator== that takes T as the right-hand side (no implicit conversion)
+// Only enable if T has an operator== that takes T as the right-hand side (no implicit conversion).
 template <typename T>
 struct has_operator_equal<T, void_t<decltype(std::declval<const T&>() == std::declval<const T&>())>> : 
     std::is_same<decltype(std::declval<const T&>() == std::declval<const T&>()), bool> {};
 
-// Selects the best comparison strategy based on available operators
+// Selects the best comparison strategy based on available operators.
 template <typename T>
 int compare_impl(const void *a, const void *b, const ecs_type_info_t *) {
     const T& lhs = *static_cast<const T*>(a);
@@ -331,13 +331,13 @@ int compare_impl(const void *a, const void *b, const ecs_type_info_t *) {
         if (rhs > lhs) return -1;
         return 0;
     } else {
-        // This branch should never be instantiated due to compare() check
+        // This branch should never be instantiated due to the compare() check.
         return 0;
     }
 }
 
-// In order to have a generated compare hook, at least
-// operator> or operator< must be defined:
+// To have a generated compare hook, at least
+// operator> or operator< must be defined.
 template <typename T>
 ecs_cmp_t compare() {
     if constexpr (has_operator_less<T>::value || has_operator_greater<T>::value) {
@@ -347,7 +347,7 @@ ecs_cmp_t compare() {
     }
 }
 
-// Equals implementation
+// Equals implementation.
 template <typename T>
 bool equals_impl(const void *a, const void *b, const ecs_type_info_t *) {
     const T& lhs = *static_cast<const T*>(a);
@@ -364,12 +364,12 @@ ecs_equals_t equals() {
     }
 }
 
-// re-enable the float comparison warning:
+// Re-enable the float comparison warning.
 #if defined(__clang__)
     #pragma clang diagnostic pop
 #elif defined(__GNUC__) && !defined(__clang__)
     #pragma GCC diagnostic pop
 #endif
 
-} // _
-} // flecs
+} // namespace _
+} // namespace flecs

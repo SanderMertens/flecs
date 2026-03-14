@@ -1,6 +1,6 @@
 /**
  * @file addons/script_math.h
- * @brief Math functions for flecs script.
+ * @brief Math functions for Flecs script.
  */
 
 #ifdef FLECS_SCRIPT_MATH
@@ -12,7 +12,7 @@
 /**
  * @defgroup c_addons_script_math Script Math
  * @ingroup c_addons
- * Math functions for flecs script.
+ * Math functions for Flecs script.
  * @{
  */
 
@@ -26,10 +26,10 @@ extern "C" {
 FLECS_API
 extern ECS_COMPONENT_DECLARE(EcsScriptRng);
 
-/* Randon number generator */
+/** Random number generator. */
 typedef struct {
-    uint64_t seed;
-    void *impl;
+    uint64_t seed;  /**< Random seed value. */
+    void *impl;     /**< Implementation data. */
 } EcsScriptRng;
 
 /** Script math import function.

@@ -3,7 +3,7 @@
  * @brief JSON entity mixin.
  */
 
-/** Serialize entity to JSON.
+/** Serialize an entity to JSON.
  * 
  * @memberof flecs::entity_view
  * @ingroup cpp_addons_json

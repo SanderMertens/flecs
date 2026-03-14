@@ -12,7 +12,7 @@
 
 private:
 
-/** Private method that adds member to component. */
+/** Add a member to a component. */
 untyped_component& internal_member(
     flecs::entity_t type_id, 
     flecs::entity_t unit, 
@@ -36,17 +36,17 @@ untyped_component& internal_member(
 
 public: 
 
-/** Add member with unit. */
+/** Add a member with unit. */
 untyped_component& member(
-    flecs::entity_t type_id, 
-    flecs::entity_t unit, 
-    const char *name, 
+    flecs::entity_t type_id,
+    flecs::entity_t unit,
+    const char *name,
     int32_t count = 0) 
 {
     return internal_member(type_id, unit, name, count, 0, false);
 }
 
-/** Add member with unit, count and offset. */
+/** Add a member with unit, count, and offset. */
 untyped_component& member(
     flecs::entity_t type_id, 
     flecs::entity_t unit, 
@@ -57,16 +57,16 @@ untyped_component& member(
     return internal_member(type_id, unit, name, count, offset, true);
 }
 
-/** Add member. */
+/** Add a member. */
 untyped_component& member(
-    flecs::entity_t type_id, 
+    flecs::entity_t type_id,
     const char* name,
     int32_t count = 0) 
 {
     return member(type_id, 0, name, count);
 }
 
-/** Add member with count and offset. */
+/** Add a member with count and offset. */
 untyped_component& member(
     flecs::entity_t type_id, 
     const char* name, 
@@ -76,7 +76,7 @@ untyped_component& member(
     return member(type_id, 0, name, count, offset);
 }
 
-/** Add member. */
+/** Add a member. */
 template <typename MemberType>
 untyped_component& member(
     const char *name,
@@ -86,41 +86,41 @@ untyped_component& member(
     return member(type_id, name, count);
 }
 
-/** Add member. */
+/** Add a member. */
 template <typename MemberType>
 untyped_component& member(
     const char *name,
-    int32_t count, 
+    int32_t count,
     size_t offset) 
 {
     flecs::entity_t type_id = _::type<MemberType>::id(world_);
     return member(type_id, name, count, offset);
 }
 
-/** Add member with unit. */
+/** Add a member with unit. */
 template <typename MemberType>
 untyped_component& member(
     flecs::entity_t unit,
-    const char *name, 
+    const char *name,
     int32_t count = 0) 
 {
     flecs::entity_t type_id = _::type<MemberType>::id(world_);
     return member(type_id, unit, name, count);
 }
 
-/** Add member with unit. */
+/** Add a member with unit. */
 template <typename MemberType>
 untyped_component& member(
     flecs::entity_t unit,
-    const char *name, 
-    int32_t count, 
+    const char *name,
+    int32_t count,
     size_t offset) 
 {
     flecs::entity_t type_id = _::type<MemberType>::id(world_);
     return member(type_id, unit, name, count, offset);
 }
 
-/** Add member with unit. */
+/** Add a member with unit. */
 template <typename MemberType, typename UnitType>
 untyped_component& member(
     const char *name,
@@ -131,11 +131,11 @@ untyped_component& member(
     return member(type_id, unit_id, name, count);
 }
 
-/** Add member with unit. */
+/** Add a member with unit. */
 template <typename MemberType, typename UnitType>
 untyped_component& member(
-    const char *name, 
-    int32_t count, 
+    const char *name,
+    int32_t count,
     size_t offset) 
 {
     flecs::entity_t type_id = _::type<MemberType>::id(world_);
@@ -143,7 +143,7 @@ untyped_component& member(
     return member(type_id, unit_id, name, count, offset);
 }
 
-/** Add member using pointer-to-member. */
+/** Add a member using pointer-to-member. */
 template <typename MemberType, typename ComponentType, 
     typename RealType = typename std::remove_extent<MemberType>::type>
 untyped_component& member(
@@ -155,7 +155,7 @@ untyped_component& member(
     return member(type_id, name, std::extent<MemberType>::value, offset);
 }
 
-/** Add member with unit using pointer-to-member. */
+/** Add a member with unit using pointer-to-member. */
 template <typename MemberType, typename ComponentType, 
     typename RealType = typename std::remove_extent<MemberType>::type>
 untyped_component& member(
@@ -168,7 +168,7 @@ untyped_component& member(
     return member(type_id, unit, name, std::extent<MemberType>::value, offset);
 }
 
-/** Add member with unit using pointer-to-member. */
+/** Add a member with unit using pointer-to-member. */
 template <typename UnitType, typename MemberType, typename ComponentType, 
     typename RealType = typename std::remove_extent<MemberType>::type>
 untyped_component& member(
@@ -181,7 +181,7 @@ untyped_component& member(
     return member(type_id, unit_id, name, std::extent<MemberType>::value, offset);
 }
 
-/** Add constant. */
+/** Add a constant. */
 template <typename T = int32_t>
 untyped_component& constant(
     const char *name,
@@ -202,7 +202,7 @@ untyped_component& constant(
     return *this;
 }
 
-/** Add bitmask constant. */
+/** Add a bitmask constant. */
 template <typename T = uint32_t>
 untyped_component& bit(
     const char *name, 
@@ -223,7 +223,7 @@ untyped_component& bit(
     return *this;
 }
 
-/** Register array metadata for component */
+/** Register array metadata for a component. */
 template <typename Elem>
 untyped_component& array(
     int32_t elem_count) 
@@ -236,7 +236,7 @@ untyped_component& array(
     return *this;
 }
 
-/** Add member value range */
+/** Add a member value range. */
 untyped_component& range(
     double min,
     double max) 
@@ -263,7 +263,7 @@ untyped_component& range(
     return *this;
 }
 
-/** Add member warning range */
+/** Add a member warning range. */
 untyped_component& warning_range(
     double min,
     double max) 
@@ -290,7 +290,7 @@ untyped_component& warning_range(
     return *this;
 }
 
-/** Add member error range */
+/** Add a member error range. */
 untyped_component& error_range(
     double min,
     double max) 

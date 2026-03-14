@@ -17,6 +17,6 @@ template <typename... Args>
 flecs::timer timer(Args &&... args) const;
 
 /** Enable randomization of initial time values for timers.
- * @see ecs_randomize_timers
+ * @see ecs_randomize_timers()
  */
 void randomize_timers() const;
