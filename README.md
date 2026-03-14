@@ -107,7 +107,7 @@ If you have a project you'd like to share, let me know on [Discord](https://disc
 [![Tempest Rising](docs/img/projects/tempest_rising.png)](https://store.steampowered.com/app/1486920/Tempest_Rising/)
 
 ### Territory Control 2
-[![image](docs/img/projects/territory_control.jpg)](https://store.steampowered.com/app/690290/Territory_Control_2/)
+[![image](docs/img/projects/territory_control.png)](https://store.steampowered.com/app/690290/Territory_Control_2/)
 
 ### Resistance is Brutal
 [![image](docs/img/projects/resistance_is_brutal.jpg)](https://store.steampowered.com/app/3378140/Resistance_Is_Brutal/)
