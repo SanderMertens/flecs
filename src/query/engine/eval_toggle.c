@@ -28,9 +28,52 @@ static inline int32_t flecs_ctz64(uint64_t v) {
 #endif
 }
 
+static inline
+bool flecs_query_apply_or_mask(
+    const ecs_query_t *query,
+    ecs_table_t *table,
+    int32_t block_index,
+    int32_t term_index,
+    ecs_flags64_t *mask,
+    bool *has_bitset)
+{
+    const ecs_term_t *terms = query->terms;
+    int32_t i = term_index;
+
+    if (terms[i].oper != EcsOr) {
+        return false;
+    }
+
+    ecs_flags64_t block = 0;
+    bool chain_has_bitset = false;
+
+    do {
+        ecs_id_t id = terms[i].id;
+        ecs_bitset_t *bs = flecs_table_get_toggle(table, id);
+        if (bs) {
+            ecs_assert((64 * block_index) < bs->size, ECS_INTERNAL_ERROR, NULL);
+            block |= bs->data[block_index];
+            chain_has_bitset = true;
+        } else if (ecs_table_has_id(query->world, table, id)) {
+            /* If a non-toggle component is present, it is always enabled 
+             * for all entities in the table. */
+            block = UINT64_MAX;
+            break;
+        }
+    } while (terms[i++].oper == EcsOr);
+
+    if (chain_has_bitset || block == UINT64_MAX) {
+        *mask &= block;
+        *has_bitset |= chain_has_bitset;
+    }
+
+    return true;
+}
+
 static
 flecs_query_row_mask_t flecs_query_get_row_mask(
     ecs_iter_t *it,
+    const ecs_query_t *query,
     ecs_table_t *table,
     int32_t block_index,
     ecs_flags64_t and_fields,
@@ -38,12 +81,24 @@ flecs_query_row_mask_t flecs_query_get_row_mask(
     ecs_query_toggle_ctx_t *op_ctx)
 {
     ecs_flags64_t mask = UINT64_MAX;
-    int32_t i, field_count = it->field_count;
-    ecs_flags64_t fields = and_fields | not_fields;
+    int32_t i;
+    const ecs_flags64_t fields = and_fields | not_fields;
+    int32_t term_index = 0;
+    const int32_t term_count = query->term_count;
+    const ecs_term_t *terms = query->terms;
     bool has_bitset = false;
 
-    for (i = 0; i < field_count; i ++) {
-        uint64_t field_bit = 1llu << i;
+    for (i = 0; i < it->field_count; i ++) {
+        const uint64_t field_bit = 1llu << i;
+
+        ecs_assert(term_index < term_count, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(terms[term_index].field_index == i, ECS_INTERNAL_ERROR, NULL);
+
+        const int32_t field_term_index = term_index;
+        do {
+            term_index ++;
+        } while ((term_index < term_count) && (terms[term_index].field_index == i));
+
         if (!(fields & field_bit)) {
             continue;
         }
@@ -54,6 +109,12 @@ flecs_query_row_mask_t flecs_query_get_row_mask(
             ecs_assert(it->set_fields & field_bit, ECS_INTERNAL_ERROR, NULL);
         } else {
             ecs_abort(ECS_INTERNAL_ERROR, NULL);
+        }
+
+        if (flecs_query_apply_or_mask(query, table, block_index,
+            field_term_index, &mask, &has_bitset))
+        {
+            continue;
         }
 
         ecs_id_t id = it->ids[i];
@@ -91,7 +152,7 @@ bool flecs_query_toggle_for_up(
     ecs_flags64_t fields = (and_fields | not_fields) & it->up_fields;
 
     for (i = 0; i < field_count; i ++) {
-        uint64_t field_bit = 1llu << i;
+        const uint64_t field_bit = 1llu << i;
         if (!(fields & field_bit)) {
             continue;
         }
@@ -205,7 +266,8 @@ compute_block:
         block_index = op_ctx->block_index = new_block_index;
 
         flecs_query_row_mask_t row_mask = flecs_query_get_row_mask(
-            it, table, block_index, and_fields, not_fields, op_ctx);
+            it, &ctx->query->pub, table, block_index,
+            and_fields, not_fields, op_ctx);
 
         /* If table doesn't have bitset columns, all columns match */
         if (!(op_ctx->has_bitset = row_mask.has_bitset)) {
@@ -341,4 +403,3 @@ repeat: {}
 
     return result;
 }
-
