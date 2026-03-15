@@ -184,6 +184,8 @@ void StructTypes_struct_w_16_alignment(void);
 void StructTypes_struct_w_use_offset(void);
 void StructTypes_direct_cycle(void);
 void StructTypes_indirect_cycle(void);
+void StructTypes_use_before_registering_reflection(void);
+void StructTypes_use_before_registering_reflection_w_hooks(void);
 
 // Testsuite 'NestedStructTypes'
 void NestedStructTypes_1_bool(void);
@@ -1843,6 +1845,14 @@ bake_test_case StructTypes_testcases[] = {
     {
         "indirect_cycle",
         StructTypes_indirect_cycle
+    },
+    {
+        "use_before_registering_reflection",
+        StructTypes_use_before_registering_reflection
+    },
+    {
+        "use_before_registering_reflection_w_hooks",
+        StructTypes_use_before_registering_reflection_w_hooks
     }
 };
 
@@ -5668,6 +5678,7 @@ bake_test_case RttCompare_testcases[] = {
     }
 };
 
+
 static bake_test_suite suites[] = {
     {
         "PrimitiveTypes",
@@ -5701,7 +5712,7 @@ static bake_test_suite suites[] = {
         "StructTypes",
         NULL,
         NULL,
-        34,
+        36,
         StructTypes_testcases
     },
     {

@@ -1040,3 +1040,69 @@ void StructTypes_indirect_cycle(void) {
         }
     });
 }
+
+void StructTypes_use_before_registering_reflection(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set(world, e, Position, {10, 20});
+
+    ecs_entity_t s = ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            { "x", .type = ecs_id(ecs_i32_t) },
+            { "y", .type = ecs_id(ecs_i32_t) }
+        }
+    });
+
+    test_assert(s != 0);
+
+    test_assert(ecs_has(world, e, Position));
+
+    {
+        const Position *p = ecs_get(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+
+    ecs_fini(world);
+}
+
+
+void StructTypes_use_before_registering_reflection_w_hooks(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = flecs_default_ctor
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set(world, e, Position, {10, 20});
+
+    ecs_entity_t s = ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            { "x", .type = ecs_id(ecs_i32_t) },
+            { "y", .type = ecs_id(ecs_i32_t) }
+        }
+    });
+
+    test_assert(s != 0);
+
+    test_assert(ecs_has(world, e, Position));
+
+    {
+        const Position *p = ecs_get(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+
+    ecs_fini(world);
+}
+

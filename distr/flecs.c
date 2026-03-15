@@ -58584,16 +58584,6 @@ void flecs_meta_import_definitions(
 
 #ifdef FLECS_META
 
-#ifdef FLECS_DEBUG
-static
-bool flecs_meta_is_builtin_type(
-    ecs_entity_t type)
-{
-    return type < EcsFirstUserComponentId ||
-        (type > FLECS_HI_COMPONENT_ID && type < EcsFirstUserEntityId);
-}
-#endif
-
 void flecs_type_serializer_dtor(
     EcsTypeSerializer *ptr) 
 {
@@ -58768,13 +58758,14 @@ int flecs_init_type(
     ecs_assert(type != 0, ECS_INTERNAL_ERROR, NULL);
 
 #ifdef FLECS_DEBUG
-    if (!flecs_meta_is_builtin_type(type)) {
+    {
         const ecs_type_info_t *ti = ecs_get_type_info(world, type);
-        if (ti) {
-            ecs_assert(!(ti->hooks.flags & ECS_TYPE_HOOK_IN_USE),
+        if (ti && (ti->hooks.flags & ECS_TYPE_HOOK_IN_USE)) {
+            const EcsType *t = ecs_get(world, type, EcsType);
+            ecs_assert(!t || t->existing,                
                 ECS_INVALID_OPERATION,
-                "cannot modify type '%s' after it is in use",
-                ecs_get_name(world, type));
+                "cannot modify runtime type '%s' after it is in use",
+                flecs_errstr_1(ecs_get_path(world, type)));
         }
     }
 #endif
@@ -90237,17 +90228,22 @@ void flecs_meta_primitives_init(
     });
 
     /* Initialize primitive types */
-    #define ECS_PRIMITIVE(world, type, primitive_kind)\
-        ecs_entity_init(world, &(ecs_entity_desc_t){\
-            .id = ecs_id(ecs_##type##_t),\
-            .name = #type,\
-            .symbol = #type });\
-        ecs_set(world, ecs_id(ecs_##type##_t), EcsPrimitive, {\
+    #define ECS_PRIMITIVE(world, T, primitive_kind)\
+        ecs_component_init(world, &(ecs_component_desc_t){\
+            .entity = ecs_entity(world, {\
+                .id = ecs_id(ecs_##T##_t),\
+                .name = #T,\
+                .symbol = #T \
+            }),\
+            .type.size = ECS_SIZEOF(ecs_##T##_t),\
+            .type.alignment = ECS_ALIGNOF(ecs_##T##_t),\
+        });\
+        ecs_set(world, ecs_id(ecs_##T##_t), EcsPrimitive, {\
             .kind = primitive_kind\
         });\
-        ecs_set_hooks(world, ecs_##type##_t, { \
-            .cmp = flecs_compare_##type, \
-            .equals = flecs_equals_##type \
+        ecs_set_hooks(world, ecs_##T##_t, { \
+            .cmp = flecs_compare_##T, \
+            .equals = flecs_equals_##T \
         })
 
     ECS_PRIMITIVE(world, bool, EcsBool);
