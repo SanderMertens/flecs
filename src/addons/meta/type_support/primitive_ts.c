@@ -513,17 +513,22 @@ void flecs_meta_primitives_init(
     });
 
     /* Initialize primitive types */
-    #define ECS_PRIMITIVE(world, type, primitive_kind)\
-        ecs_entity_init(world, &(ecs_entity_desc_t){\
-            .id = ecs_id(ecs_##type##_t),\
-            .name = #type,\
-            .symbol = #type });\
-        ecs_set(world, ecs_id(ecs_##type##_t), EcsPrimitive, {\
+    #define ECS_PRIMITIVE(world, T, primitive_kind)\
+        ecs_component_init(world, &(ecs_component_desc_t){\
+            .entity = ecs_entity(world, {\
+                .id = ecs_id(ecs_##T##_t),\
+                .name = #T,\
+                .symbol = #T \
+            }),\
+            .type.size = ECS_SIZEOF(ecs_##T##_t),\
+            .type.alignment = ECS_ALIGNOF(ecs_##T##_t),\
+        });\
+        ecs_set(world, ecs_id(ecs_##T##_t), EcsPrimitive, {\
             .kind = primitive_kind\
         });\
-        ecs_set_hooks(world, ecs_##type##_t, { \
-            .cmp = flecs_compare_##type, \
-            .equals = flecs_equals_##type \
+        ecs_set_hooks(world, ecs_##T##_t, { \
+            .cmp = flecs_compare_##T, \
+            .equals = flecs_equals_##T \
         })
 
     ECS_PRIMITIVE(world, bool, EcsBool);

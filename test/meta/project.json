@@ -196,7 +196,9 @@
                 "struct_w_16_alignment",
                 "struct_w_use_offset",
                 "direct_cycle",
-                "indirect_cycle"
+                "indirect_cycle",
+                "use_before_registering_reflection",
+                "use_before_registering_reflection_w_hooks"
             ]
         }, {
             "id": "NestedStructTypes",
