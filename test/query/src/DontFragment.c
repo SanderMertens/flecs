@@ -7035,3 +7035,73 @@ void DontFragment_this_written_sparse_any_pair_recycled(void) {
 
     ecs_fini(world);
 }
+
+void DontFragment_this_written_not_sparse_wildcard_pair(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsDontFragment);
+
+    ecs_entity_t Tag = ecs_entity(world, { .name = "Tag" });
+
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_add_id(world, e1, Tag);
+    ecs_add_id(world, e2, Tag);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { .id = Tag },
+            { .id = ecs_pair(Rel, EcsWildcard), .oper = EcsNot,
+              .inout = EcsInOutNone }
+        }
+    });
+
+    int32_t count = 0;
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        count += it.count;
+    }
+
+    test_int(count, 2);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void DontFragment_this_written_not_sparse_pair(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsDontFragment);
+
+    ecs_entity_t Tgt = ecs_entity(world, { .name = "Tgt" });
+    ecs_entity_t Tag = ecs_entity(world, { .name = "Tag" });
+
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_add_id(world, e1, Tag);
+    ecs_add_id(world, e2, Tag);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { .id = Tag },
+            { .id = ecs_pair(Rel, Tgt), .oper = EcsNot,
+              .inout = EcsInOutNone }
+        }
+    });
+
+    int32_t count = 0;
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        count += it.count;
+    }
+
+    test_int(count, 2);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
