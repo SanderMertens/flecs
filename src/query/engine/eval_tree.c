@@ -225,6 +225,8 @@ next:
             ecs_vec_t *v_children = &cr->pair->ordered_children;
             if (bulk_return) {
                 op_ctx->state = EcsQueryTreeIterNext;
+                it->table = NULL;
+                it->offset = 0;
                 it->entities = ecs_vec_first_t(v_children, ecs_entity_t);
                 it->count = ecs_vec_count(v_children);
                 goto done;
@@ -496,6 +498,8 @@ bool flecs_query_children_select(
         if ((!pr->disabled_tables || !(filter & EcsTableIsDisabled)) &&
             (!pr->prefab_tables || !(filter & EcsTableIsPrefab))) 
         {
+            it->table = NULL;
+            it->offset = 0;
             it->entities = ecs_vec_first_t(v_children, ecs_entity_t);
             it->count = ecs_vec_count(v_children);
             return true;

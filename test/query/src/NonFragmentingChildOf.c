@@ -6087,6 +6087,82 @@ void NonFragmentingChildOf_this_src_childof_wildcard(void) {
     ecs_fini(world);
 }
 
+void NonFragmentingChildOf_this_src_childof_wildcard_count(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
+    ecs_add_id(world, p_2, EcsOrderedChildren);
+
+    ecs_entity_t c1 = ecs_new_w_pair(world, EcsChildOf, p_1);
+    ecs_entity_t c2 = ecs_new_w_pair(world, EcsChildOf, p_2);
+    ecs_entity_t c3 = ecs_new_w_pair(world, EcsChildOf, p_2);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { ecs_childof(EcsWildcard) }
+        },
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+
+    while (ecs_query_next(&it)) {
+        if (it.table) {
+            test_assert(it.count <= ecs_table_count(it.table));
+        }
+        for (int i = 0; i < it.count; i ++) {
+            test_assert(
+                ecs_pair_second(world, ecs_field_id(&it, 0)) == 
+                ecs_get_parent(world, it.entities[i]));
+        }
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_this_src_childof_var_count(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p_1 = ecs_new(world);
+    ecs_entity_t p_2 = ecs_new(world);
+    ecs_add_id(world, p_2, EcsOrderedChildren);
+
+    ecs_entity_t c1 = ecs_new_w_pair(world, EcsChildOf, p_1);
+    ecs_entity_t c2 = ecs_new_w_pair(world, EcsChildOf, p_2);
+    ecs_entity_t c3 = ecs_new_w_pair(world, EcsChildOf, p_2);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { ecs_childof(EcsWildcard) }
+        },
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+
+    while (ecs_query_next(&it)) {
+        if (it.table) {
+            test_assert(it.count <= ecs_table_count(it.table));
+        }
+        for (int i = 0; i < it.count; i ++) {
+            test_assert(
+                ecs_pair_second(world, ecs_field_id(&it, 0)) == 
+                ecs_get_parent(world, it.entities[i]));
+        }
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
 void NonFragmentingChildOf_this_src_childof_wildcard_w_tag(void) {
     ecs_world_t *world = ecs_mini();
 
