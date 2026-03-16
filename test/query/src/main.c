@@ -2320,6 +2320,8 @@ void DontFragment_this_written_sparse_recycled(void);
 void DontFragment_this_written_sparse_pair_recycled(void);
 void DontFragment_this_written_sparse_wildcard_pair_recycled(void);
 void DontFragment_this_written_sparse_any_pair_recycled(void);
+void DontFragment_this_written_not_sparse_wildcard_pair(void);
+void DontFragment_this_written_not_sparse_pair(void);
 
 // Testsuite 'NonFragmentingChildOf'
 void NonFragmentingChildOf_setup(void);
@@ -11872,6 +11874,14 @@ bake_test_case DontFragment_testcases[] = {
     {
         "this_written_sparse_any_pair_recycled",
         DontFragment_this_written_sparse_any_pair_recycled
+    },
+    {
+        "this_written_not_sparse_wildcard_pair",
+        DontFragment_this_written_not_sparse_wildcard_pair
+    },
+    {
+        "this_written_not_sparse_pair",
+        DontFragment_this_written_not_sparse_pair
     }
 };
 
@@ -13952,7 +13962,7 @@ static bake_test_suite suites[] = {
         "DontFragment",
         DontFragment_setup,
         NULL,
-        128,
+        130,
         DontFragment_testcases,
         1,
         DontFragment_params

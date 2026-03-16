@@ -85181,7 +85181,8 @@ bool flecs_query_sparse_with_wildcard(
     if (!redo) {
         ecs_component_record_t *cr = flecs_components_get(ctx->world, id);
         if (!cr) {
-            return false;
+            op_ctx->cr = NULL;
+            return not;
         }
 
         if (cr->flags & EcsIdExclusive) {
@@ -85208,6 +85209,9 @@ bool flecs_query_sparse_with_wildcard(
     } else {
         if (op_ctx->exclusive) {
             return flecs_query_sparse_with_exclusive(op, true, ctx, not, id);
+        }
+        if (!op_ctx->cr) {
+            return false;
         }
         with_redo = true;
         goto next_select;

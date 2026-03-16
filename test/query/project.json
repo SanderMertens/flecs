@@ -2407,7 +2407,9 @@
                 "this_written_sparse_recycled",
                 "this_written_sparse_pair_recycled",
                 "this_written_sparse_wildcard_pair_recycled",
-                "this_written_sparse_any_pair_recycled"
+                "this_written_sparse_any_pair_recycled",
+                "this_written_not_sparse_wildcard_pair",
+                "this_written_not_sparse_pair"
             ]
         }, {
             "id": "NonFragmentingChildOf",
