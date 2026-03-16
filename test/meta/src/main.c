@@ -879,6 +879,8 @@ void SerializeIterToJson_serialize_children_w_parent_component(void);
 void SerializeIterToJson_serialize_children_w_parent_component_table(void);
 void SerializeIterToJson_serialize_children_w_tag_w_parent_component(void);
 void SerializeIterToJson_serialize_children_w_tag_w_parent_component_table(void);
+void SerializeIterToJson_serialize_childof_var_w_parent(void);
+void SerializeIterToJson_serialize_childof_wildcard_w_parent(void);
 
 // Testsuite 'SerializeIterToRowJson'
 void SerializeIterToRowJson_serialize_this_w_1_tag(void);
@@ -4575,6 +4577,14 @@ bake_test_case SerializeIterToJson_testcases[] = {
     {
         "serialize_children_w_tag_w_parent_component_table",
         SerializeIterToJson_serialize_children_w_tag_w_parent_component_table
+    },
+    {
+        "serialize_childof_var_w_parent",
+        SerializeIterToJson_serialize_childof_var_w_parent
+    },
+    {
+        "serialize_childof_wildcard_w_parent",
+        SerializeIterToJson_serialize_childof_wildcard_w_parent
     }
 };
 
@@ -5678,7 +5688,6 @@ bake_test_case RttCompare_testcases[] = {
     }
 };
 
-
 static bake_test_suite suites[] = {
     {
         "PrimitiveTypes",
@@ -5782,7 +5791,7 @@ static bake_test_suite suites[] = {
         "SerializeIterToJson",
         NULL,
         NULL,
-        83,
+        85,
         SerializeIterToJson_testcases
     },
     {

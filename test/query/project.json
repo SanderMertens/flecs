@@ -2517,6 +2517,8 @@
                 "this_src_childof_component_w_parent_single_child",
                 "this_src_childof_component_w_parent_single_child_table",
                 "this_src_childof_wildcard",
+                "this_src_childof_wildcard_count",
+                "this_src_childof_var_count",
                 "this_src_childof_wildcard_w_tag",
                 "this_src_childof_wildcard_w_component",
                 "this_src_childof_any",

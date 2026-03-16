@@ -911,7 +911,9 @@
                 "serialize_children_w_parent_component",
                 "serialize_children_w_parent_component_table",
                 "serialize_children_w_tag_w_parent_component",
-                "serialize_children_w_tag_w_parent_component_table"
+                "serialize_children_w_tag_w_parent_component_table",
+                "serialize_childof_var_w_parent",
+                "serialize_childof_wildcard_w_parent"
             ]
         }, {
             "id": "SerializeIterToRowJson",

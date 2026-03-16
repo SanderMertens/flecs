@@ -345,6 +345,7 @@ bool flecs_json_serialize_iter_this(
     ecs_assert(this_data != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(this_data->ids != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_entity_t e = this_data->ids[row];
+    ecs_assert(e != 0, ECS_INTERNAL_ERROR, NULL);
 
     /* Skip entity if it already has been serialized */
     if (!flecs_json_should_serialize(e, it, ser_ctx)) {
@@ -381,6 +382,8 @@ bool flecs_json_serialize_iter_this(
     flecs_json_memberl(buf, "name");
     if (this_data->names) {
         if (this_data->table) {
+            ecs_assert(this_data->names[row].value != NULL, 
+                ECS_INTERNAL_ERROR, NULL);
             flecs_json_string(buf, this_data->names[row].value);
         }
     } else {
@@ -420,6 +423,8 @@ bool flecs_json_serialize_iter_this(
         } else {
             flecs_json_memberl(buf, "label");
             if (this_data->names) {
+                ecs_assert(this_data->names[row].value != NULL, 
+                    ECS_INTERNAL_ERROR, NULL);
                 flecs_json_string(buf, this_data->names[row].value);
             } else {
                 ecs_strbuf_appendlit(buf, "\"#");
@@ -479,6 +484,8 @@ int flecs_json_serialize_iter_result(
     } else {
         ecs_table_t *table = it->table;
         if (table) {
+            ecs_assert((it->offset + it->count) <= ecs_table_count(table), 
+                ECS_INTERNAL_ERROR, NULL);
             this_data.ids = &ecs_table_entities(table)[it->offset];
 
             /* Get path to parent once for entire table */

@@ -2950,3 +2950,66 @@ void SerializeIterToJson_serialize_children_w_tag_w_parent_component_table(void)
 
     ecs_fini(world);
 }
+
+void SerializeIterToJson_serialize_childof_wildcard_w_parent(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p1 = ecs_entity(world, { .name = "p1" });
+    ecs_entity_t p2 = ecs_entity(world, { .name = "p2" });
+
+    ecs_add_id(world, p2, EcsOrderedChildren);
+
+    ecs_entity_t a = ecs_entity(world, { .name = "a" });
+    ecs_entity_t b = ecs_entity(world, { .name = "b" });
+    ecs_entity_t c = ecs_entity(world, { .name = "c" });
+
+    ecs_add_pair(world, a, EcsChildOf, p1);
+    ecs_add_pair(world, b, EcsChildOf, p2);
+    ecs_add_pair(world, c, EcsChildOf, p2);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "ChildOf(self, *)"
+    });
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        char *json = ecs_iter_to_json(&it, NULL);
+        test_assert(json != NULL);
+        ecs_os_free(json);
+    }
+
+    ecs_query_fini(q);
+    ecs_fini(world);
+}
+
+void SerializeIterToJson_serialize_childof_var_w_parent(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p1 = ecs_entity(world, { .name = "p1" });
+    ecs_entity_t p2 = ecs_entity(world, { .name = "p2" });
+
+    ecs_add_id(world, p2, EcsOrderedChildren);
+
+    ecs_entity_t a = ecs_entity(world, { .name = "a" });
+    ecs_entity_t b = ecs_entity(world, { .name = "b" });
+    ecs_entity_t c = ecs_entity(world, { .name = "c" });
+
+    ecs_add_pair(world, a, EcsChildOf, p1);
+    ecs_add_pair(world, b, EcsChildOf, p2);
+    ecs_add_pair(world, c, EcsChildOf, p2);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "ChildOf(self, $parent)"
+    });
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        char *json = ecs_iter_to_json(&it, NULL);
+        test_assert(json != NULL);
+        ecs_os_free(json);
+    }
+
+    ecs_query_fini(q);
+    ecs_fini(world);
+}
+

@@ -52732,6 +52732,7 @@ bool flecs_json_serialize_iter_this(
     ecs_assert(this_data != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(this_data->ids != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_entity_t e = this_data->ids[row];
+    ecs_assert(e != 0, ECS_INTERNAL_ERROR, NULL);
 
     /* Skip entity if it already has been serialized */
     if (!flecs_json_should_serialize(e, it, ser_ctx)) {
@@ -52768,6 +52769,8 @@ bool flecs_json_serialize_iter_this(
     flecs_json_memberl(buf, "name");
     if (this_data->names) {
         if (this_data->table) {
+            ecs_assert(this_data->names[row].value != NULL, 
+                ECS_INTERNAL_ERROR, NULL);
             flecs_json_string(buf, this_data->names[row].value);
         }
     } else {
@@ -52807,6 +52810,8 @@ bool flecs_json_serialize_iter_this(
         } else {
             flecs_json_memberl(buf, "label");
             if (this_data->names) {
+                ecs_assert(this_data->names[row].value != NULL, 
+                    ECS_INTERNAL_ERROR, NULL);
                 flecs_json_string(buf, this_data->names[row].value);
             } else {
                 ecs_strbuf_appendlit(buf, "\"#");
@@ -52866,6 +52871,8 @@ int flecs_json_serialize_iter_result(
     } else {
         ecs_table_t *table = it->table;
         if (table) {
+            ecs_assert((it->offset + it->count) <= ecs_table_count(table), 
+                ECS_INTERNAL_ERROR, NULL);
             this_data.ids = &ecs_table_entities(table)[it->offset];
 
             /* Get path to parent once for entire table */
@@ -86297,6 +86304,8 @@ next:
             ecs_vec_t *v_children = &cr->pair->ordered_children;
             if (bulk_return) {
                 op_ctx->state = EcsQueryTreeIterNext;
+                it->table = NULL;
+                it->offset = 0;
                 it->entities = ecs_vec_first_t(v_children, ecs_entity_t);
                 it->count = ecs_vec_count(v_children);
                 goto done;
@@ -86568,6 +86577,8 @@ bool flecs_query_children_select(
         if ((!pr->disabled_tables || !(filter & EcsTableIsDisabled)) &&
             (!pr->prefab_tables || !(filter & EcsTableIsPrefab))) 
         {
+            it->table = NULL;
+            it->offset = 0;
             it->entities = ecs_vec_first_t(v_children, ecs_entity_t);
             it->count = ecs_vec_count(v_children);
             return true;
