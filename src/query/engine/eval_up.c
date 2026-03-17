@@ -5,7 +5,7 @@
 
 #include "../../private_api.h"
 
-/* Find tables with requested component that has traversable entities. */
+/* Find tables with requested component that have traversable entities. */
 static
 bool flecs_query_up_select_table(
     const ecs_query_op_t *op,

@@ -175,7 +175,7 @@ bool flecs_query_check_fixed_monitor(
     return flecs_query_get_fixed_monitor(impl, true);
 }
 
-/* Check if single match term has changed */
+/* Check if a single match term has changed */
 static
 bool flecs_query_check_match_monitor_term(
     ecs_query_impl_t *impl,
@@ -436,7 +436,7 @@ void flecs_query_mark_fields_dirty(
 {
     ecs_query_t *q = &impl->pub;
 
-    /* Evaluate all writeable non-fixed fields, set fields */
+    /* Evaluate all writable non-fixed, set fields */
     ecs_termset_t write_fields = 
         (ecs_termset_t)(q->write_fields & ~q->fixed_fields & it->set_fields);
     if (!write_fields || (it->flags & EcsIterNoData)) {

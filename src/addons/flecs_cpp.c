@@ -251,9 +251,9 @@ ecs_entity_t ecs_cpp_component_register(
         if (!user_name) {
             user_name = desc->cpp_name;
         
-            /* Keep track of whether name was explicitly set. If not, and 
-             * the component was already registered, just use the registered 
-             * name. The registered name may differ from the typename as the 
+            /* Keep track of whether the name was explicitly set. If not, and
+             * the component was already registered, just use the registered
+             * name. The registered name may differ from the typename as the
              * registered name includes the flecs scope. This can in theory
              * be different from the C++ namespace, though it is good
              * practice to keep them the same */
@@ -372,9 +372,9 @@ ecs_entity_t ecs_cpp_component_register(
         symbol = cpp_symbol;
     }
 
-    /* When a component is implicitly registered, ensure that it's not
-     * registered in the current scope of the application/that "with"
-     * components get added to the component entity. */
+    /* When a component is implicitly registered, ensure that it is not
+     * registered in the current scope of the application and that "with"
+     * components do not get added to the component entity. */
     prev_scope = ecs_set_scope(world, module);
     ecs_entity_t prev_with = ecs_set_with(world, 0);
     char *existing_name = NULL;
@@ -442,7 +442,7 @@ ecs_entity_t ecs_cpp_component_register(
     ecs_set_with(world, prev_with);
     ecs_set_scope(world, prev_scope);
 
-    /* Set world local component id */
+    /* Set world-local component id */
     flecs_component_ids_set(world, desc->ids_index, c);
 
     if (desc->lifecycle_action && desc->size && !existing) {

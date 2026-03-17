@@ -9,7 +9,7 @@
 #ifdef FLECS_META
 
 /* Stores all the information necessary to forward a hook call to a
- * struct's member type */
+ * struct member's type */
 typedef struct ecs_rtt_call_data_t {
     union {
         ecs_xtor_t xtor;
@@ -73,7 +73,7 @@ void flecs_rtt_default_move(
  *
  */
 
-/* Invokes struct member type's constructor/destructor using saved information
+/* Invokes struct member types' constructor/destructor using saved information
  * in the lifecycle context */
 static
 void flecs_rtt_struct_xtor(
@@ -336,7 +336,7 @@ ecs_rtt_struct_ctx_t * flecs_rtt_configure_struct_hooks(
 }
 
 /* Checks if a struct's member types have hooks installed. If so, it generates
- * and installs required hooks for the struct type itself. These hooks will
+ * and installs the required hooks for the struct type itself. These hooks will
  * invoke the member hooks when necessary. */
 static
 void flecs_rtt_init_default_hooks_struct(
@@ -616,7 +616,7 @@ bool flecs_rtt_array_equals(
 }
 
 /* Checks if an array's underlying type has hooks installed. If so, it generates
- * and installs required hooks for the array type itself. These hooks will
+ * and installs the required hooks for the array type itself. These hooks will
  * invoke the underlying type's hook for each element in the array. */
 static
 void flecs_rtt_init_default_hooks_array(

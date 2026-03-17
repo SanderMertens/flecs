@@ -34,7 +34,7 @@ void flecs_query_copy_arrays(
 void flecs_query_free_arrays(
     ecs_query_t *q);
 
-/* Internal function for creating iterator, doesn't run aperiodic tasks */
+/* Internal function for creating an iterator, doesn't run aperiodic tasks */
 ecs_iter_t flecs_query_iter(
     const ecs_world_t *world,
     const ecs_query_t *q);

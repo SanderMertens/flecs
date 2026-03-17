@@ -3,7 +3,7 @@
  * @brief Functions for managing poly objects.
  * 
  * The poly framework makes it possible to generalize common functionality for
- * different kinds of API objects, as well as improved type safety checks. Poly
+ * different kinds of API objects, as well as improve type safety checks. Poly
  * objects have a header that identifies what kind of object it is. This can
  * then be used to discover a set of "mixins" implemented by the type.
  * 
