@@ -477,6 +477,7 @@ void flecs_pipeline_next_system(
     }    
 }
 
+static
 bool flecs_pipeline_update(
     ecs_world_t *world,
     ecs_pipeline_state_t *pq,

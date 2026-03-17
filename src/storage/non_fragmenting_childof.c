@@ -1,3 +1,8 @@
+/**
+ * @file storage/non_fragmenting_childof.c
+ * @brief Non-fragmenting ChildOf storage.
+ */
+
 #include "../private_api.h"
 
 static

@@ -1,5 +1,5 @@
 /**
- * @file addons.h
+ * @file private/addons.h
  * @brief Include enabled addons.
  *
  * This file should only be included by the main flecs.h header.

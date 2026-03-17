@@ -3,6 +3,9 @@
  * @brief Cache iterator functions.
  */
 
+#ifndef FLECS_QUERY_CACHE_ITER_H
+#define FLECS_QUERY_CACHE_ITER_H
+
 #include "../types.h"
 
 void flecs_query_cache_iter_init(
@@ -34,3 +37,5 @@ bool flecs_query_is_trivial_cache_search(
 bool flecs_query_is_trivial_cache_test(
     const ecs_query_run_ctx_t *ctx,
     bool redo);
+
+#endif

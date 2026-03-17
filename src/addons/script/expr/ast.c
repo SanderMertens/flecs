@@ -176,18 +176,6 @@ ecs_expr_interpolated_string_t* flecs_expr_interpolated_string(
     return result;
 }
 
-ecs_expr_value_node_t* flecs_expr_entity(
-    ecs_parser_t *parser,
-    ecs_entity_t value)
-{
-    ecs_expr_value_node_t *result = flecs_expr_ast_new(
-        parser, ecs_expr_value_node_t, EcsExprValue);
-    result->storage.entity = value;
-    result->ptr = &result->storage.entity;
-    result->node.type = ecs_id(ecs_entity_t);
-    return result;
-}
-
 ecs_expr_initializer_t* flecs_expr_initializer(
     ecs_parser_t *parser)
 {

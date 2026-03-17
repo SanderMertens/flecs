@@ -1,3 +1,8 @@
+/**
+ * @file storage/sparse_storage.c
+ * @brief Sparse component storage.
+ */
+
 #include "../private_api.h"
 
 bool flecs_component_sparse_has(

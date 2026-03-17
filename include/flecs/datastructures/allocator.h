@@ -1,5 +1,5 @@
 /**
- * @file allocator.h
+ * @file datastructures/allocator.h
  * @brief Allocator that returns memory objects of any size.
  */
 

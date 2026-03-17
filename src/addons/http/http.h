@@ -1,3 +1,10 @@
+/**
+ * @file addons/http/http.h
+ * @brief HTTP addon internals.
+ */
+
+#ifndef FLECS_HTTP_IMPL_H
+#define FLECS_HTTP_IMPL_H
 
 #ifdef ECS_TARGET_MSVC
 #pragma comment(lib, "Ws2_32.lib")
@@ -181,3 +188,5 @@ typedef struct {
     char *res;
     int32_t req_len;
 } ecs_http_request_impl_t;
+
+#endif

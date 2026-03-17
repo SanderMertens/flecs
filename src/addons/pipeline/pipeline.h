@@ -46,11 +46,6 @@ typedef struct EcsPipeline {
 //// Pipeline API
 ////////////////////////////////////////////////////////////////////////////////
 
-bool flecs_pipeline_update(
-    ecs_world_t *world,
-    ecs_pipeline_state_t *pq,
-    bool start_of_frame);
-
 void flecs_run_pipeline(
     ecs_world_t *world,
     ecs_pipeline_state_t *pq,

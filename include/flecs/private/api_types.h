@@ -1,5 +1,5 @@
 /**
- * @file api_types.h
+ * @file private/api_types.h
  * @brief Supporting types for the public API.
  *
  * This file contains types that are typically not used by an application but 

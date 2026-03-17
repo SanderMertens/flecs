@@ -1,3 +1,8 @@
+/**
+ * @file storage/entity_index.c
+ * @brief Entity index.
+ */
+
 #include "../private_api.h"
 #include <inttypes.h>
 

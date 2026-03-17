@@ -169,6 +169,7 @@ bool flecs_query_update_fixed_monitor(
 }
 
 /* Compare fixed source monitor */
+static
 bool flecs_query_check_fixed_monitor(
     ecs_query_impl_t *impl)
 {

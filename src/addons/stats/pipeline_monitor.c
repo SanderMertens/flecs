@@ -1,6 +1,6 @@
 /**
  * @file addons/stats/pipeline_monitor.c
- * @brief Stats addon pipeline monitor
+ * @brief Stats addon pipeline monitor.
  */
 
 #include "flecs.h"

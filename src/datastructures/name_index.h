@@ -36,11 +36,6 @@ void flecs_name_index_free(
 ecs_hashmap_t* flecs_name_index_copy(
     ecs_hashmap_t *dst);
 
-ecs_hashed_string_t flecs_get_hashed_string(
-    const char *name,
-    ecs_size_t length,
-    uint64_t hash);
-
 const uint64_t* flecs_name_index_find_ptr(
     const ecs_hashmap_t *map,
     const char *name,

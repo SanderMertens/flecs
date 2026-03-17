@@ -1,5 +1,5 @@
 /**
- * @file sparse.h
+ * @file datastructures/sparse.h
  * @brief Sparse set data structure.
  */
 

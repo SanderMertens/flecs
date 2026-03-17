@@ -363,7 +363,7 @@
 /** @} */
 
 /**
- * @file api_defines.h
+ * @file private/api_defines.h
  * @brief Supporting defines for the public API.
  *
  * This file contains constants / macros that are typically not used by an
@@ -375,7 +375,7 @@
 #define FLECS_API_DEFINES_H
 
 /**
- * @file api_flags.h
+ * @file private/api_flags.h
  * @brief Bitset flags used by internals.
  */
 
@@ -1343,7 +1343,7 @@ typedef struct ecs_table_record_t ecs_table_record_t;
 /** @} */
 
 /**
- * @file vec.h
+ * @file datastructures/vec.h
  * @brief Vector with allocator support.
  */
 
@@ -1892,7 +1892,7 @@ void* ecs_vec_last(
 #endif
 
 /**
- * @file sparse.h
+ * @file datastructures/sparse.h
  * @brief Sparse set data structure.
  */
 
@@ -2334,7 +2334,7 @@ void* ecs_sparse_get(
 #endif
 
 /**
- * @file block_allocator.h
+ * @file datastructures/block_allocator.h
  * @brief Block allocator.
  */
 
@@ -2674,7 +2674,7 @@ void flecs_stack_restore_cursor(
 #endif
 
 /**
- * @file map.h
+ * @file datastructures/map.h
  * @brief Map data structure.
  */
 
@@ -2961,7 +2961,7 @@ void ecs_map_copy(
 #endif
 
 /**
- * @file allocator.h
+ * @file datastructures/allocator.h
  * @brief Allocator that returns memory objects of any size.
  */
 
@@ -3194,7 +3194,7 @@ void flecs_free(
 #endif
 
 /**
- * @file strbuf.h
+ * @file datastructures/strbuf.h
  * @brief Utility for constructing strings.
  */
 
@@ -4727,7 +4727,7 @@ struct ecs_type_info_t {
 };
 
 /**
- * @file api_types.h
+ * @file private/api_types.h
  * @brief Supporting types for the public API.
  *
  * This file contains types that are typically not used by an application but 
@@ -4893,7 +4893,7 @@ typedef struct ecs_commands_t {
 #endif
 
 /**
- * @file api_support.h
+ * @file private/api_support.h
  * @brief Support functions and constants.
  *
  * Supporting types and functions that need to be exposed either in support of 
@@ -5348,7 +5348,7 @@ int flecs_journal_get_counter(void);
 #endif
 
 /**
- * @file hashmap.h
+ * @file datastructures/hashmap.h
  * @brief Hashmap data structure.
  */
 
@@ -5589,7 +5589,7 @@ void* flecs_hashmap_next_(
 #endif
 
 /**
- * @file api_internals.h
+ * @file private/api_internals.h
  * @brief Access to internal data structures.
  * 
  * Operations may change without warning.
@@ -12508,7 +12508,7 @@ int ecs_value_move_ctor(
 #endif
 
 /**
- * @file addons.h
+ * @file private/addons.h
  * @brief Include enabled addons.
  *
  * This file should only be included by the main flecs.h header.

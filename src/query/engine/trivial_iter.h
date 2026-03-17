@@ -3,6 +3,9 @@
  * @brief Trivial iterator functions.
  */
 
+#ifndef FLECS_QUERY_TRIVIAL_ITER_H
+#define FLECS_QUERY_TRIVIAL_ITER_H
+
 #include "../types.h"
 
 /* Iterator for queries with trivial terms. */
@@ -23,3 +26,5 @@ bool flecs_query_trivial_test(
     const ecs_query_run_ctx_t *ctx,
     bool first,
     ecs_flags64_t field_set);
+
+#endif

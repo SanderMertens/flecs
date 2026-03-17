@@ -3,6 +3,9 @@
  * @brief Query engine functions.
  */
 
+#ifndef FLECS_QUERY_ENGINE_H
+#define FLECS_QUERY_ENGINE_H
+
 #include "trav_cache.h"
 #include "trivial_iter.h"
 
@@ -116,12 +119,6 @@ void flecs_query_it_set_tr(
     int32_t field_index,
     const ecs_table_record_t *tr);
 
-ecs_id_t flecs_query_it_set_id(
-    ecs_iter_t *it,
-    ecs_table_t *table,
-    int32_t field_index,
-    int32_t column);
-
 void flecs_query_set_match(
     const ecs_query_op_t *op,
     ecs_table_t *table,
@@ -180,11 +177,6 @@ bool flecs_query_select_id(
     ecs_flags32_t table_filter);
 
 bool flecs_query_with(
-    const ecs_query_op_t *op,
-    bool redo,
-    const ecs_query_run_ctx_t *ctx);
-
-bool flecs_query_with_id(
     const ecs_query_op_t *op,
     bool redo,
     const ecs_query_run_ctx_t *ctx);
@@ -310,12 +302,6 @@ bool flecs_query_pred_eq_name(
     bool redo,
     ecs_query_run_ctx_t *ctx);
 
-bool flecs_query_pred_neq_w_range(
-    const ecs_query_op_t *op,
-    bool redo,
-    ecs_query_run_ctx_t *ctx,
-    ecs_table_range_t r);
-
 bool flecs_query_pred_neq(
     const ecs_query_op_t *op,
     bool redo,
@@ -387,4 +373,6 @@ bool flecs_query_trav(
     const ecs_query_op_t *op,
     bool redo,
     const ecs_query_run_ctx_t *ctx);
+
+#endif
 

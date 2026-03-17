@@ -46,17 +46,6 @@ bool flecs_scope_is_empty(
     return ecs_vec_count(&scope->stmts) == 0;
 }
 
-ecs_script_scope_t* flecs_script_insert_scope(
-    ecs_parser_t *parser)
-{
-    ecs_script_scope_t *scope = parser->scope;
-    ecs_assert(scope != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_script_scope_t *result = flecs_script_scope_new(parser);
-    flecs_ast_append(parser, scope->stmts, ecs_script_scope_t, result);
-    ecs_vec_init_t(NULL, &result->components, ecs_id_t, 0);
-    return result;
-}
-
 static
 int flecs_script_name_to_expr(
     ecs_parser_t *parser,

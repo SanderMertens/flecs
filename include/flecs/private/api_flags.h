@@ -1,5 +1,5 @@
 /**
- * @file api_flags.h
+ * @file private/api_flags.h
  * @brief Bitset flags used by internals.
  */
 

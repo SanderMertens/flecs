@@ -1,5 +1,5 @@
 /**
- * @file bitset.h
+ * @file datastructures/bitset.h
  * @brief Bitset data structure.
  */
 

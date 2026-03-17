@@ -1,5 +1,5 @@
 /**
- * @file api_internals.h
+ * @file private/api_internals.h
  * @brief Access to internal data structures.
  * 
  * Operations may change without warning.

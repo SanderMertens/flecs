@@ -10,6 +10,10 @@
 
 #include "../private_api.h"
 
+ecs_type_t flecs_type_copy(
+    ecs_world_t *world,
+    const ecs_type_t *src);
+
 /* Id sequence (type) utilities */
 
 static
@@ -356,6 +360,7 @@ void flecs_type_add(
 }
 
 /* Remove from type */
+static
 void flecs_type_remove(
     ecs_world_t *world,
     ecs_type_t *type,
@@ -432,6 +437,7 @@ void flecs_table_diff_build_type(
     }
 }
 
+static
 void flecs_table_diff_build(
     ecs_world_t *world,
     ecs_table_diff_builder_t *builder,

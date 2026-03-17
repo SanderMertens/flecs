@@ -192,6 +192,7 @@ void flecs_table_init_columns(
 }
 
 /* Initialize table storage */
+static
 void flecs_table_init_data(
     ecs_world_t *world,
     ecs_table_t *table)
@@ -510,6 +511,7 @@ void flecs_table_update_overrides(
     }
 }
 
+static
 void flecs_table_emit(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -1228,13 +1230,6 @@ void ecs_table_clear_entities(
     ecs_table_t* table)
 {
     flecs_table_fini_data(world, table, true, false);
-}
-
-void flecs_table_delete_entities(
-    ecs_world_t *world,
-    ecs_table_t *table)
-{
-    flecs_table_fini_data(world, table, true, true);
 }
 
 /* Remove all components in table. This function is called before a table is
@@ -2125,6 +2120,7 @@ void flecs_table_swap_bitset_columns(
 }
 
 /* Swap two rows in a table. Used for table sorting. */
+static
 void flecs_table_swap(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -2448,6 +2444,7 @@ void flecs_table_notify(
     }
 }
 
+static
 int32_t flecs_table_get_toggle_column(
     ecs_table_t *table,
     ecs_id_t id)

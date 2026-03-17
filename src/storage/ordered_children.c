@@ -1,3 +1,8 @@
+/**
+ * @file storage/ordered_children.c
+ * @brief Ordered children storage.
+ */
+
 #include "../private_api.h"
 
 void flecs_ordered_children_init(

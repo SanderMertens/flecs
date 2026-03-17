@@ -809,19 +809,6 @@ ecs_component_record_t* flecs_components_get(
     return cr;
 }
 
-ecs_component_record_t* flecs_components_try_ensure(
-    ecs_world_t *world,
-    ecs_id_t id)
-{
-    ecs_component_record_t *cr = flecs_components_get(world, id);
-    if (!cr) {
-        if (!(world->flags & EcsWorldMultiThreaded)) {
-            cr = flecs_component_new(world, id);
-        }
-    }
-    return cr;
-}
-
 void flecs_component_claim(
     ecs_world_t *world,
     ecs_component_record_t *cr)

@@ -3,6 +3,9 @@
  * @brief Query compiler functions.
  */
 
+#ifndef FLECS_QUERY_COMPILER_H
+#define FLECS_QUERY_COMPILER_H
+
 #include "../types.h"
 
 /* Compile query to list of operations */
@@ -53,12 +56,6 @@ void flecs_query_insert_each(
     ecs_query_compile_ctx_t *ctx,
     bool cond_write);
 
-/* Insert instruction that populates field */
-void flecs_query_insert_populate(
-    ecs_query_impl_t *query,
-    ecs_query_compile_ctx_t *ctx,
-    ecs_flags64_t populated);
-
 /* Add discovered variable */
 ecs_var_id_t flecs_query_add_var(
     ecs_query_impl_t *query,
@@ -72,11 +69,4 @@ ecs_var_id_t flecs_query_find_var_id(
     const char *name,
     ecs_var_kind_t kind);
 
-ecs_query_op_t* flecs_query_begin_block(
-    ecs_query_op_kind_t kind,
-    ecs_query_compile_ctx_t *ctx);
-
-void flecs_query_end_block(
-    ecs_query_compile_ctx_t *ctx,
-    bool reset);
-
+#endif

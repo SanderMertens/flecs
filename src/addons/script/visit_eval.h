@@ -91,10 +91,6 @@ int flecs_script_eval_id(
     void *node,
     ecs_script_id_t *id);
 
-int flecs_script_eval_using(
-    ecs_script_eval_visitor_t *v,
-    ecs_script_using_t *node);
-
 int flecs_script_eval_const(
     ecs_script_eval_visitor_t *v,
     ecs_script_var_node_t *node,

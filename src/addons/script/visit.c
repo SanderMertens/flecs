@@ -46,21 +46,6 @@ ecs_script_scope_t* ecs_script_current_scope_(
     return NULL;
 }
 
-ecs_script_node_t* ecs_script_parent_(
-    ecs_script_visit_t *v,
-    ecs_script_node_t *child)
-{
-    int32_t depth;
-    for(depth = v->depth - 1; depth >= 0; depth --) {
-        ecs_script_node_t *node = v->nodes[depth];
-        if (node == child && depth) {
-            return v->nodes[depth - 1];
-        }
-    }
-
-    return NULL;
-}
-
 int32_t ecs_script_node_line_number_(
     ecs_script_impl_t *script,
     ecs_script_node_t *node)

@@ -6,8 +6,6 @@
 #ifndef FLECS_SCRIPT_EXPR_AST_H
 #define FLECS_SCRIPT_EXPR_AST_H
 
-#define FLECS_EXPR_SMALL_DATA_SIZE (24)
-
 typedef enum ecs_expr_node_kind_t {
     EcsExprValue,
     EcsExprInterpolatedString,
@@ -188,10 +186,6 @@ ecs_expr_value_node_t* flecs_expr_string(
 ecs_expr_interpolated_string_t* flecs_expr_interpolated_string(
     ecs_parser_t *parser,
     const char *value);
-
-ecs_expr_value_node_t* flecs_expr_entity(
-    ecs_parser_t *parser,
-    ecs_entity_t value);
 
 ecs_expr_initializer_t* flecs_expr_initializer(
     ecs_parser_t *parser);

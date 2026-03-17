@@ -421,19 +421,6 @@ void flecs_actions_new(
         world, table, NULL, row, count, diff, flags, construct, sparse);
 }
 
-void flecs_actions_delete(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    int32_t row,
-    int32_t count,
-    const ecs_table_diff_t *diff)
-{
-    if (diff->removed.count) {
-        flecs_actions_on_remove_intern_w_reparent(
-            world, table, NULL, row, count, diff);
-    }
-}
-
 void flecs_actions_delete_tree(
     ecs_world_t *world,
     ecs_table_t *table,

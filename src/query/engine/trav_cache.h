@@ -3,6 +3,9 @@
  * @brief Traversal cache functions.
  */
 
+#ifndef FLECS_QUERY_TRAV_CACHE_H
+#define FLECS_QUERY_TRAV_CACHE_H
+
 #include "../types.h"
 
 /* Traversal cache for transitive queries. Finds all reachable entities by
@@ -59,3 +62,5 @@ ecs_trav_up_t* flecs_query_get_up_cache(
 /* Free up traversal cache */
 void flecs_query_up_cache_fini(
     ecs_trav_up_cache_t *cache);
+
+#endif

@@ -34,13 +34,6 @@ flecs_component_ptr_t flecs_get_mut(
     ecs_record_t *r,
     ecs_size_t size);
 
-/* Get component pointer with type info. */
-flecs_component_ptr_t flecs_get_component_ptr(
-    const ecs_world_t *world,
-    ecs_table_t *table,
-    int32_t row,
-    ecs_component_record_t *cr);
-
 /* Get component pointer. */
 void* flecs_get_component(
     const ecs_world_t *world,
@@ -159,10 +152,6 @@ void flecs_entity_remove_non_fragmenting(
     ecs_entity_t e,
     ecs_record_t *r);
 
-const char* flecs_entity_invalid_reason(
-    const ecs_world_t *world,
-    ecs_entity_t entity);
-
 ecs_table_range_t flecs_range_from_entity(
     const ecs_world_t *world,
     ecs_entity_t e);
@@ -173,5 +162,9 @@ ecs_entity_t flecs_set_identifier(
     ecs_entity_t entity,
     ecs_entity_t tag,
     const char *name);
+
+const char* flecs_entity_invalid_reason(
+    const ecs_world_t *world,
+    ecs_entity_t entity);
 
 #endif

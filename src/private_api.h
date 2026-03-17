@@ -170,12 +170,6 @@ bool flecs_name_is_id(
 ecs_entity_t flecs_name_to_id(
     const char *name);
 
-/* Convert floating point to string */
-char * ecs_ftoa(
-    double f, 
-    char * buf, 
-    int precision);
-
 /* Replace #[color] tokens with terminal color symbols. */
 void flecs_colorize_buf(
     char *msg,

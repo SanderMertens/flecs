@@ -1,5 +1,5 @@
 /**
- * @file vec.h
+ * @file datastructures/vec.h
  * @brief Vector with allocator support.
  */
 

@@ -665,6 +665,7 @@ void flecs_fini_type_info(
     ecs_map_fini(&world->type_info);
 }
 
+static
 const ecs_type_info_t* flecs_type_info_get(
     const ecs_world_t *world,
     ecs_entity_t component)

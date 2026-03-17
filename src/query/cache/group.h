@@ -1,7 +1,10 @@
 /**
  * @file query/cache/group.h
- * @brief Adding/removing tables to/from query groups
+ * @brief Adding/removing tables to/from query groups.
  */
+
+#ifndef FLECS_QUERY_GROUP_H
+#define FLECS_QUERY_GROUP_H
 
 ecs_query_cache_group_t* flecs_query_cache_get_group(
     const ecs_query_cache_t *cache,
@@ -29,3 +32,5 @@ ecs_query_cache_table_t* flecs_query_cache_get_table(
 ecs_query_cache_match_t* flecs_query_cache_match_from_table(
     const ecs_query_cache_t *cache,
     const ecs_query_cache_table_t *qt);
+
+#endif

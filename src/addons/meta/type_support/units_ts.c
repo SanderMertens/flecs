@@ -67,6 +67,7 @@ static ECS_MOVE(EcsUnitPrefix, dst, src, {
 
 static ECS_DTOR(EcsUnitPrefix, ptr, { flecs_unit_prefix_dtor(ptr); })
 
+static
 bool flecs_unit_validate(
     ecs_world_t *world,
     ecs_entity_t t,
