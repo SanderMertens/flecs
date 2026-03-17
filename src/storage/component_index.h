@@ -36,7 +36,7 @@ typedef struct ecs_pair_record_t {
     ecs_vec_t ordered_children;
 
     /* Tables with non-fragmenting children */
-    ecs_map_t children_tables; /* map<table_id, ecs_parent_record_t */
+    ecs_map_t children_tables; /* map<table_id, ecs_parent_record_t> */
 
     /* Track how many of the tables in children_tables are disabled. Used by
      * queries to determine whether logic is needed to skip Disabled entities

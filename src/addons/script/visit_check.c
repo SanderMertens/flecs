@@ -1,5 +1,5 @@
 /**
- * @file addons/script/visit_validate.c
+ * @file addons/script/visit_check.c
  * @brief Script AST validation.
  */
 

@@ -2,15 +2,15 @@
  * @file storage/component_index.c
  * @brief Index for looking up tables by component id.
  * 
- * An component record stores the administration for an in use (component) id, that is
+ * A component record stores the administration for an in use (component) id, that is
  * an id that has been used in tables.
- * 
- * An component record contains a table cache, which stores the list of tables that
+ *
+ * A component record contains a table cache, which stores the list of tables that
  * have the id. Each entry in the cache (a table record) stores the first 
  * occurrence of the id in the table and the number of occurrences of the id in
  * the table (in the case of wildcard ids).
  * 
- * Id records are used in lots of scenarios, like uncached queries, or for 
+ * Component records are used in lots of scenarios, like uncached queries, or for
  * getting a component array/component for an entity.
  */
 
@@ -381,7 +381,7 @@ void flecs_component_record_check_constraints(
     }
 
     if (ECS_IS_PAIR(cr->id)) {
-        /* Internal role records use (EcsFlag, X). These should not be
+        /* Internal flag records use (EcsFlag, X). These should not be
          * validated as regular relationship/target pairs. */
         if (rel == EcsFlag) {
             return;
@@ -531,9 +531,9 @@ ecs_component_record_t* flecs_component_new(
             cr->pair->parent = cr_r;
             cr->flags = cr_r->flags;
 
-            /* If pair is not a wildcard, append it to wildcard lists. These 
-             * allow for quickly enumerating all relationships for an object, 
-             * or all objects for a relationship. */
+            /* If pair is not a wildcard, append it to wildcard lists. These
+             * allow for quickly enumerating all relationships for a target,
+             * or all targets for a relationship. */
             flecs_insert_id_elem(world, cr, parent_id, cr_r);
 
             if (tgt) {
@@ -543,7 +543,7 @@ ecs_component_record_t* flecs_component_new(
             }
         }
 
-        /* Relationship object can be 0, as tables without a ChildOf 
+        /* Relationship target can be 0, as tables without a ChildOf
          * relationship are added to the (ChildOf, 0) component record */
         if (tgt) {
             ecs_entity_t alive_tgt = flecs_entities_get_alive(world, tgt);
@@ -615,7 +615,7 @@ ecs_component_record_t* flecs_component_new(
 
         if (tgt && tgt != EcsWildcard) {
             if (cr->flags & EcsIdTraversable) {
-                /* Flag used to determine if object should be traversed when
+                /* Flag used to determine if target should be traversed when
                 * propagating events or with super/subset queries */
                 ecs_assert(tgt_r != NULL, ECS_INTERNAL_ERROR, NULL);
                 flecs_record_add_flag(tgt_r, EcsEntityIsTraversable);

@@ -1,6 +1,6 @@
  /**
- * @file queries/api.c
- * @brief User facing API for rules.
+ * @file query/api.c
+ * @brief User facing API for queries.
  */
 
 #include "../private_api.h"
@@ -105,7 +105,7 @@ int flecs_query_set_caching_policy(
              * such as group_by/order_by, also enable caching. */
             kind = EcsQueryCacheAuto;
         } else {
-            /* Be conservative in other scenario's, as caching adds significant
+            /* Be conservative in other scenarios, as caching adds significant
              * overhead to the cost of query creation which doesn't offset the
              * benefit of faster iteration if it's only used once. */
             kind = EcsQueryCacheNone;
@@ -243,7 +243,7 @@ int flecs_query_create_cache(
         ecs_assert(q->cache_kind == EcsQueryCacheNone, ECS_INTERNAL_ERROR, NULL);
 
         if (!(q->flags & EcsQueryNested)) {
-            /* If uncached query is not create to populate a cached query, it 
+            /* If uncached query is not created to populate a cached query, it
              * should not have cascade modifiers */
             int32_t i, count = q->term_count;
             ecs_term_t *terms = q->terms;

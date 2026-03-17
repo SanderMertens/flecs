@@ -12,7 +12,7 @@ void flecs_iter_init(
     ecs_iter_t *it,
     bool alloc_resources);
 
-/* Deinitialize iterator. */
+/* Free iterator memory block. */
 void flecs_iter_free(
     void *ptr,
     ecs_size_t size);

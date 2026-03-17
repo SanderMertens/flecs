@@ -621,7 +621,7 @@ int ecs_meta_pop(
         next_scope->ops_cur += flecs_ito(int16_t, op->op_count - 1);
 
         if (op->kind == EcsOpPushVector) {
-            /* If scope got moved around in this is a partially assigned vector
+            /* If scope got moved around, this is a partially assigned vector
              * so don't shrink it. */
             if (!scope->is_moved_scope) {
                 ecs_assert(cursor->scope != scope, ECS_INTERNAL_ERROR, NULL);
@@ -1327,7 +1327,7 @@ int flecs_meta_add_bitmask_constant(
         cursor->world, c, EcsConstant, ecs_u32_t);
     if (v == NULL) {
         char *path = ecs_get_path(cursor->world, op->type);
-        ecs_err("'%s' is not an bitmask constant for type '%s'", value, path);
+        ecs_err("'%s' is not a bitmask constant for type '%s'", value, path);
         ecs_os_free(path);
         return -1;
     }

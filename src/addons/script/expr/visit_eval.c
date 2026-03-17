@@ -1,6 +1,6 @@
 /**
- * @file addons/script/expr_ast.c
- * @brief Script expression AST implementation.
+ * @file addons/script/expr/visit_eval.c
+ * @brief Script expression evaluation visitor.
  */
 
 #include "flecs.h"

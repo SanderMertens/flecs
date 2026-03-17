@@ -1,5 +1,5 @@
 /**
- * @file addons/stats.c
+ * @file addons/stats/stats.c
  * @brief Stats addon.
  */
 

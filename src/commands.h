@@ -129,7 +129,7 @@ bool flecs_defer_clear(
     ecs_stage_t *stage,
     ecs_entity_t entity);
 
-/* Insert delete_with/remove_all command*/
+/* Insert delete_with/remove_all command */
 bool flecs_defer_on_delete_action(
     ecs_stage_t *stage,
     ecs_id_t id,

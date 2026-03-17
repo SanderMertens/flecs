@@ -96,7 +96,7 @@ struct ecs_world_t {
      * possible to change traits and/or to delete the component. */
     ecs_map_t locked_components;     /* map<id_t, int64_t> */
 
-    /* Locked entities. This is used for queried for pair targets. It is 
+    /* Locked entities. This is used for queried pair targets. It is
      * possible to add traits, but entities cannot be deleted. */
     ecs_map_t locked_entities;     /* map<id_t, int64_t> */
 #endif
@@ -311,7 +311,7 @@ bool flecs_component_is_delete_locked(
 #define flecs_component_is_delete_locked(world, component) (false)
 #endif
 
-/* Convenience macro's for world allocator */
+/* Convenience macros for world allocator */
 #define flecs_walloc(world, size)\
     flecs_alloc(&world->allocator, size)
 #define flecs_walloc_t(world, T)\

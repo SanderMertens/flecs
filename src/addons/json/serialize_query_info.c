@@ -1,6 +1,6 @@
 /**
  * @file addons/json/serialize_query_info.c
- * @brief Serialize (component) values to JSON strings.
+ * @brief Serialize query information to JSON.
  */
 
 #include "json.h"

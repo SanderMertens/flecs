@@ -1,6 +1,6 @@
 /**
  * @file addons/script/expr/stack.h
- * @brief Script expression AST.
+ * @brief Script expression stack.
  */
 
 #ifndef FLECS_SCRIPT_EXPR_STACK_H

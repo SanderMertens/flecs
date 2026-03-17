@@ -413,7 +413,7 @@ static
 void flecs_query_cache_on_event(
     ecs_iter_t *it)
 {
-    /* Because this is the observer::run callback, checking if this is event is
+    /* Because this is the observer::run callback, checking if this event is
      * already handled is not done for us. */
     ecs_world_t *world = it->world;
     ecs_observer_t *o = it->ctx;

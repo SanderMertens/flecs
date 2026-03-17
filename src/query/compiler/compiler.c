@@ -1,5 +1,5 @@
 /**
- * @file query/compiler/compile.c
+ * @file query/compiler/compiler.c
  * @brief Compile query program from query.
  */
 
@@ -585,7 +585,7 @@ void flecs_query_insert_trivial_search(
             continue;
         }
 
-        /* We can only add trivial terms to plan if they no up traversal */
+        /* We can only add trivial terms to plan if they have no up traversal */
         if ((term->src.id & EcsTraverseFlags) != EcsSelf) {
             continue;
         }

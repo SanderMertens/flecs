@@ -2,7 +2,7 @@
  * @file bootstrap.c
  * @brief Bootstrap entities in the flecs.core namespace.
  * 
- * Before the ECS storage can be used, core entities such first need to be 
+ * Before the ECS storage can be used, core entities first need to be
  * initialized. For example, components in Flecs are stored as entities in the
  * ECS storage itself with an EcsComponent component, but before this component
  * can be stored, the component itself needs to be initialized.
@@ -1067,7 +1067,7 @@ void flecs_bootstrap(
     ecs_add_pair(world, ecs_id(EcsIdentifier), EcsOnInstantiate, EcsDontInherit);
 
     /* Register observers for components/relationship properties. Most observers
-     * set flags on an component record when a trait is added to a component, which
+     * set flags on a component record when a trait is added to a component, which
      * allows for quick trait testing in various operations. */
     ecs_observer(world, {
         .query.terms = {{ .id = EcsFinal }},

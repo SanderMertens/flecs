@@ -918,8 +918,8 @@ ecs_iter_t ecs_worker_iter(
     ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(it->next != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(count > 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(index >= 0, ECS_INVALID_PARAMETER, 
-        "invalid field index %d", index);
+    ecs_check(index >= 0, ECS_INVALID_PARAMETER,
+        "invalid worker index %d", index);
     ecs_check(index < count, ECS_INVALID_PARAMETER, NULL);
 
     ecs_iter_t result = *it;

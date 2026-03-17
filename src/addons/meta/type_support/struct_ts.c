@@ -474,7 +474,7 @@ int flecs_member_validate_ranges(
     }
 
     if (ranges_set && !flecs_type_is_number(world, member->type)) {
-        ecs_err("member '%s.%s' has an value/error/warning range, but is "
+        ecs_err("member '%s.%s' has a value/error/warning range, but is "
             "not a number", 
                 flecs_errstr(ecs_get_path(world, type)), member->name);
         goto error;

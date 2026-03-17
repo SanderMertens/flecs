@@ -3,7 +3,7 @@
  * @brief Data structure for fast table iteration/lookups.
  * 
  * A table cache is a data structure that provides constant time operations for
- * insertion and removal of tables, and to testing whether a table is registered
+ * insertion and removal of tables, and for testing whether a table is registered
  * with the cache. A table cache also provides functions to iterate the tables
  * in a cache.
  * 

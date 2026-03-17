@@ -225,7 +225,7 @@ bool flecs_defer_bulk_new(
     if (flecs_defer_cmd(stage)) {
         ecs_entity_t *ids = ecs_os_malloc(count * ECS_SIZEOF(ecs_entity_t));
 
-        /* Use ecs_new_id as this is thread safe */
+        /* Use ecs_new as this is thread safe */
         int i;
         for (i = 0; i < count; i ++) {
             ids[i] = ecs_new(world);
@@ -273,8 +273,8 @@ bool flecs_defer_remove(
         cmd->id = id;
         cmd->entity = entity;
 
-        /* If an override is removed, restore to the component to the value of 
-         * the overridden component. This serves to purposes:
+        /* If an override is removed, restore the component to the value of
+         * the overridden component. This serves two purposes:
          *
          * - the application immediately sees the correct component value
          * - if a remove command is followed up by an add command, the override

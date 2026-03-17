@@ -1,5 +1,5 @@
 /**
- * @file addons/script/builtin_functions.c
+ * @file addons/script/functions_builtin.c
  * @brief Flecs functions for flecs script.
  */
 

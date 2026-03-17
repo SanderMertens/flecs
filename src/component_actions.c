@@ -8,7 +8,7 @@
  * - Invoking hooks
  * - Notifying observers
  * - Updating sparse storage
- * - Update name lookup index
+ * - Updating name lookup index
  */
 
 #include "private_api.h"

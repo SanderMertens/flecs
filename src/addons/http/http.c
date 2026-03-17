@@ -1355,7 +1355,7 @@ ecs_http_server_t* ecs_http_server_init(
 
 #ifndef ECS_TARGET_WINDOWS
     /* Ignore pipe signal. SIGPIPE can occur when a message is sent to a client
-     * but te client already disconnected. */
+     * but the client already disconnected. */
     signal(SIGPIPE, SIG_IGN);
 #endif
 
