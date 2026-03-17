@@ -361,6 +361,38 @@ void flecs_default_uni_observer_run_callback(ecs_iter_t *it) {
 }
 
 static
+bool flecs_observer_query_has_range(
+    const ecs_query_t *query,
+    ecs_table_range_t *range,
+    const ecs_term_t *term,
+    ecs_id_t event_id,
+    ecs_iter_t *it)
+{
+    bool first_var = (term->first.id & EcsIsVariable) && term->first.name;
+    bool second_var = (term->second.id & EcsIsVariable) && term->second.name;
+    if (!first_var && !second_var) {
+        return ecs_query_has_range(query, range, it);
+    }
+
+    *it = ecs_query_iter(query->world, query);
+    ecs_iter_set_var_as_range(it, 0, range);
+    if (first_var) {
+        ecs_iter_set_var(it, ecs_query_find_var(query, term->first.name),
+            ECS_IS_PAIR(event_id) ? ECS_PAIR_FIRST(event_id) : event_id);
+    }
+    if (second_var) {
+        if (!ECS_IS_PAIR(event_id)) {
+            ecs_iter_fini(it);
+            return false;
+        }
+        ecs_iter_set_var(it, ecs_query_find_var(query, term->second.name),
+            ECS_PAIR_SECOND(event_id));
+    }
+
+    return ecs_query_next(it);
+}
+
+static
 void flecs_observer_invoke(
     ecs_observer_t *o,
     ecs_iter_t *it)
@@ -559,14 +591,18 @@ void flecs_multi_observer_invoke(
 
     bool match;
     if (is_not) {
-        match = ecs_query_has_table(o->query, table, &user_it);
+        ecs_table_range_t range = { .table = table };
+        match = flecs_observer_query_has_range(
+            o->query, &range, term, it->event_id, &user_it);
         if (match) {
             /* The target table matches but the entity hasn't moved to it yet. 
              * Now match the not_query, which will populate the iterator with
              * data from the table the entity is still stored in. */
             user_it.flags |= EcsIterSkip; /* Prevent change detection on fini */
             ecs_iter_fini(&user_it);
-            match = ecs_query_has_table(impl->not_query, prev_table, &user_it);
+            ecs_table_range_t prev_range = { .table = prev_table };
+            match = flecs_observer_query_has_range(
+                impl->not_query, &prev_range, term, it->event_id, &user_it);
 
             /* A not query replaces Not terms with Optional terms, so if the 
              * regular query matches, the not_query should also match. */
@@ -579,7 +615,8 @@ void flecs_multi_observer_invoke(
             .count = it->count
         };
 
-        match = ecs_query_has_range(o->query, &range, &user_it);
+        match = flecs_observer_query_has_range(
+            o->query, &range, term, it->event_id, &user_it);
     }
 
     if (match) {
@@ -587,7 +624,10 @@ void flecs_multi_observer_invoke(
          * time with an entity */
         if (impl->flags & EcsObserverIsMonitor) {
             ecs_iter_t table_it;
-            if (ecs_query_has_table(o->query, prev_table, &table_it)) {
+            ecs_table_range_t prev_range = { .table = prev_table };
+            if (flecs_observer_query_has_range(
+                o->query, &prev_range, term, it->event_id, &table_it)) 
+            {
                 /* Prevent change detection on fini */
                 user_it.flags |= EcsIterSkip;
                 table_it.flags |= EcsIterSkip;

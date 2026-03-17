@@ -1113,6 +1113,10 @@ void Observer_on_set_w_override_after_delete(void);
 void Observer_on_set_w_override_after_clear(void);
 void Observer_trigger_on_set_in_on_add_implicit_registration(void);
 void Observer_trigger_on_set_in_on_add_implicit_registration_namespaced(void);
+void Observer_query_eval_w_component_that_triggered_observer(void);
+void Observer_query_eval_w_pair_first_var_that_triggered_observer(void);
+void Observer_query_eval_w_pair_second_var_that_triggered_observer(void);
+void Observer_query_eval_w_pair_both_vars_that_triggered_observer(void);
 void Observer_fixed_src_w_each(void);
 void Observer_fixed_src_w_run(void);
 void Observer_untyped_field(void);
@@ -5969,6 +5973,22 @@ bake_test_case Observer_testcases[] = {
         Observer_trigger_on_set_in_on_add_implicit_registration_namespaced
     },
     {
+        "query_eval_w_component_that_triggered_observer",
+        Observer_query_eval_w_component_that_triggered_observer
+    },
+    {
+        "query_eval_w_pair_first_var_that_triggered_observer",
+        Observer_query_eval_w_pair_first_var_that_triggered_observer
+    },
+    {
+        "query_eval_w_pair_second_var_that_triggered_observer",
+        Observer_query_eval_w_pair_second_var_that_triggered_observer
+    },
+    {
+        "query_eval_w_pair_both_vars_that_triggered_observer",
+        Observer_query_eval_w_pair_both_vars_that_triggered_observer
+    },
+    {
         "fixed_src_w_each",
         Observer_fixed_src_w_each
     },
@@ -8052,7 +8072,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        64,
+        68,
         Observer_testcases
     },
     {
