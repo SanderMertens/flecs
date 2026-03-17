@@ -183,7 +183,7 @@ void flecs_trav_entity_down_iter_children(
             if (self) {
                 /* If matching self and the table has the component, entity
                  * shouldn't be matched through traversal and will instead
-                 * be matched directly.*/
+                 * be matched directly. */
                 continue;
             }
 

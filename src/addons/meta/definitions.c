@@ -9,7 +9,7 @@
 
 #ifdef FLECS_META
 
-/* Opaque type serializer addon vector */
+/* Opaque type serializer for addon vector */
 static
 int flecs_addon_vec_serialize(const ecs_serializer_t *ser, const void *ptr) {
     char ***data = ECS_CONST_CAST(char***, ptr);
@@ -76,9 +76,9 @@ void flecs_meta_import_core_definitions(
         }
     });
 
-    /* Define const string as an opaque type that maps to string
-       This enables reflection for strings that are in .rodata,
-       (read-only) so that the meta add-on does not try to free them.
+    /* Define const string as an opaque type that maps to string.
+       This enables reflection for strings that are in .rodata
+       (read-only), so that the meta add-on does not try to free them.
        This opaque type defines how to serialize (read) the string,
        but won't let users assign a new value.
     */

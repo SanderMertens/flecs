@@ -33,9 +33,9 @@ ecs_sparse_page_t* flecs_sparse_page_new(
     ecs_assert(result->data == NULL, ECS_INTERNAL_ERROR, NULL);
 
     /* Initialize sparse array with zeros, as zero is used to indicate that the
-     * sparse element has not been paired with a dense element. Use zero
-     * as this means we can take advantage of calloc having a possibly better 
-     * performance than malloc + memset. */
+     * sparse element has not been paired with a dense element. Using zero
+     * as the sentinel means we can take advantage of calloc, which can have
+     * better performance than malloc + memset. */
     result->sparse = ca ? flecs_bcalloc(ca)
                         : ecs_os_calloc_n(int32_t, FLECS_SPARSE_PAGE_SIZE);
 
@@ -184,7 +184,7 @@ uint64_t flecs_sparse_new_index(
 
     ecs_assert(count <= dense_count, ECS_INTERNAL_ERROR, NULL);
     if (count < dense_count) {
-        /* If there are unused elements in the dense array, return first */
+        /* If there are unused elements in the dense array, return the first */
         uint64_t *dense_array = ecs_vec_first_t(&sparse->dense, uint64_t);
         return dense_array[count];
     } else {

@@ -247,7 +247,7 @@ void flecs_query_begin_block_or(
     or_op->kind = EcsQueryOr;
     or_op->field_index = term->field_index;
 
-    /* Set the source of the evaluate terms as source of the Or instruction. 
+    /* Set the source of the evaluated terms as source of the Or instruction. 
      * This lets the engine determine whether the variable has already been
      * written. When the source is not yet written, an OR operation needs to
      * take the union of all the terms in the OR chain. When the variable is
@@ -1072,7 +1072,7 @@ void flecs_query_set_op_kind(
     (void)query;
 
     /* Default instruction for And operators. If the source is fixed (like for
-     * singletons or terms with an entity source), use With, which like And but
+     * singletons or terms with an entity source), use With, which is like And but
      * just matches against a source (vs. finding a source). */
     op->kind = src_is_var ? EcsQueryAnd : EcsQueryWith;
 

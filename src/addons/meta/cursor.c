@@ -129,7 +129,7 @@ static
 ecs_size_t flecs_cursor_get_elem_size(
     ecs_meta_scope_t *scope)
 {
-    /* Can only get collection kind for collection scope */
+    /* Can only get element size for collection scope */
     ecs_assert(scope->is_collection, ECS_INTERNAL_ERROR, NULL);
 
     /* The first operation in a collection scope always has the element size.
@@ -670,12 +670,12 @@ int ecs_meta_pop(
 
         if (scope->ptr) {
             if (scope->is_empty_scope) {
-                /* If no values were serialized for scope, resize 
-                * collection to 0 elements. */
+                /* If no values were serialized for scope, resize
+                 * collection to 0 elements. */
                 opaque->resize(scope->ptr, 0);
             } else {
                 /* Otherwise resize collection to the index of the last
-                * deserialized element + 1 */
+                 * deserialized element + 1. */
                 opaque->resize(scope->ptr, 
                     flecs_ito(size_t, next_scope->elem + 1));
             }
@@ -2153,7 +2153,7 @@ double ecs_meta_get_float(
     return flecs_meta_to_float(op->kind, ptr);
 }
 
-/* Handler to get string from opaque (see ecs_meta_get_string below) */
+/* Value handler to get string from opaque (see ecs_meta_get_string below) */
 static int ecs_meta_get_string_value_from_opaque(
     const struct ecs_serializer_t *ser, ecs_entity_t type, const void *value)
 {
@@ -2166,7 +2166,7 @@ static int ecs_meta_get_string_value_from_opaque(
     return 0;
 }
 
-/* Handler to get string from opaque (see ecs_meta_get_string below) */
+/* Member handler to get string from opaque (see ecs_meta_get_string below) */
 static int ecs_meta_get_string_member_from_opaque(
     const struct ecs_serializer_t* ser, const char* name)
 {
@@ -2185,8 +2185,8 @@ const char* ecs_meta_get_string(
     switch(op->kind) {
     case EcsOpString: return *(const char**)ptr;
     case EcsOpOpaqueValue: {
-        /* If opaque type happens to map to a string, retrieve it. 
-         Otherwise, fallback to default case (error). */
+        /* If opaque type happens to map to a string, retrieve it.
+         * Otherwise, fall back to default case (error). */
         const EcsOpaque *opaque = ecs_get(cursor->world, op->type, EcsOpaque);
         if(opaque && opaque->as_type == ecs_id(ecs_string_t) && opaque->serialize) {
             char** str = NULL;

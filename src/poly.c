@@ -149,7 +149,7 @@ EcsPoly* flecs_poly_bind_(
     ecs_entity_t tag)
 {
     /* Add tag to the entity for easy querying. This will make it possible to
-     * query for `Query` instead of `(Poly, Query) */
+     * query for `Query` instead of `(Poly, Query)` */
     if (!ecs_has_id(world, entity, tag)) {
         ecs_add_id(world, entity, tag);
     }

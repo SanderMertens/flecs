@@ -2,8 +2,8 @@
  * @file storage/component_index.c
  * @brief Index for looking up tables by component id.
  * 
- * A component record stores the administration for an in use (component) id, that is
- * an id that has been used in tables.
+ * A component record stores the administration for an in-use (component) id,
+ * that is an id that has been used in tables.
  *
  * A component record contains a table cache, which stores the list of tables that
  * have the id. Each entry in the cache (a table record) stores the first 
@@ -616,7 +616,7 @@ ecs_component_record_t* flecs_component_new(
         if (tgt && tgt != EcsWildcard) {
             if (cr->flags & EcsIdTraversable) {
                 /* Flag used to determine if target should be traversed when
-                * propagating events or with super/subset queries */
+                 * propagating events or with traversal queries */
                 ecs_assert(tgt_r != NULL, ECS_INTERNAL_ERROR, NULL);
                 flecs_record_add_flag(tgt_r, EcsEntityIsTraversable);
             }
@@ -633,8 +633,8 @@ ecs_component_record_t* flecs_component_new(
             
             if (cr_t) {
                 /* Mark (*, tgt) record with HasDontFragment so that queries
-                    * can quickly detect if there are any non-fragmenting 
-                    * records to consider for a (*, tgt) query. */
+                 * can quickly detect if there are any non-fragmenting
+                 * records to consider for a (*, tgt) query. */
                 cr_t->flags |= EcsIdMatchDontFragment;
             }
         }
@@ -955,7 +955,7 @@ void flecs_components_fini(
     ecs_world_t *world)
 {
     /* Loop & delete first element until there are no elements left. Id records
-     * can recursively delete each other, this ensures we always have a
+     * can recursively delete each other, so this ensures we always have a
      * valid iterator. */
     while (ecs_map_count(&world->id_index_hi) > 0) {
         ecs_map_iter_t it = ecs_map_iter(&world->id_index_hi);

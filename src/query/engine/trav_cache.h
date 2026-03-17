@@ -1,12 +1,12 @@
 /**
  * @file query/engine/trav_cache.h
- * @brief Traversal cache functions
+ * @brief Traversal cache functions.
  */
 
 #include "../types.h"
 
 /* Traversal cache for transitive queries. Finds all reachable entities by
- * following a relationship */
+ * following a relationship. */
 
 /* Find all entities when traversing downwards */
 void flecs_query_get_trav_down_cache(
@@ -28,10 +28,10 @@ void flecs_query_trav_cache_fini(
     ecs_trav_cache_t *cache);
 
 /* Traversal caches for up traversal. Enables searching upwards until an entity
- * with the queried for id has been found. */
+ * with the queried-for id has been found. */
 
-/* Traverse downwards from starting entity to find all tables for which the 
- * specified entity is the source of the queried for id ('with'). */
+/* Traverse downwards from starting entity to find all tables for which the
+ * specified entity is the source of the queried-for id ('with'). */
 ecs_trav_down_t* flecs_query_get_down_cache(
     const ecs_query_run_ctx_t *ctx,
     ecs_trav_up_cache_t *cache,

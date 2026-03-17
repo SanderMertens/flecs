@@ -422,7 +422,7 @@ ecs_query_t* ecs_query_init(
         goto error;
     }
 
-    /* If query terms have itself as source, add term ids to self. This makes it
+    /* If query terms have the query itself as source, add term ids to it. This makes it
      * easy to attach components to queries, which is one of the ways
      * applications can attach data to systems. */
     flecs_query_add_self_ref(&result->pub);

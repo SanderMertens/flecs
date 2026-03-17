@@ -2,7 +2,7 @@
  * @file datastructures/map.c
  * @brief Map data structure.
  * 
- * Map data structure for 64bit keys and dynamic payload size.
+ * Map data structure for 64-bit keys and 64-bit payload.
  */
 
 #include "../private_api.h"

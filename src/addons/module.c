@@ -171,7 +171,6 @@ ecs_entity_t ecs_import_from_library(
             import_func, library_name, module);
     }
 
-    /* Do not free id, as it will be stored as the component identifier */
     ecs_entity_t result = ecs_import(world, action, module);
 
     if (import_func != module_name) {

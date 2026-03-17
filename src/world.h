@@ -12,7 +12,7 @@
 /* The number of table versions to split tables across */
 #define ECS_TABLE_VERSION_ARRAY_SIZE (ECS_TABLE_VERSION_ARRAY_BITMASK + 1)
 
-/* World level allocators are for operations that are not multithreaded */
+/* World-level allocators are for operations that are not multithreaded */
 typedef struct ecs_world_allocators_t {
     ecs_block_allocator_t graph_edge_lo;
     ecs_block_allocator_t graph_edge;
@@ -94,11 +94,11 @@ struct ecs_world_t {
 #ifdef FLECS_DEBUG
     /* Locked components. When a component is queried for, it is no longer 
      * possible to change traits and/or to delete the component. */
-    ecs_map_t locked_components;     /* map<id_t, int64_t> */
+    ecs_map_t locked_components;     /* map<id_t, int32_t> */
 
     /* Locked entities. This is used for queried pair targets. It is
      * possible to add traits, but entities cannot be deleted. */
-    ecs_map_t locked_entities;     /* map<id_t, int64_t> */
+    ecs_map_t locked_entities;     /* map<id_t, int32_t> */
 #endif
 
     /* -- Cached handle to id records -- */
@@ -157,8 +157,8 @@ struct ecs_world_t {
     bool range_check_enabled;
 
     /* Internal callback for command inspection. Only one callback can be set at
-     * a time. After assignment the action will become active at the start of 
-     * the next frame, set by ecs_frame_begin, and will be reset by 
+     * a time. After assignment, the action will become active at the start of
+     * the next frame, set by ecs_frame_begin, and will be reset by
      * ecs_frame_end. */
     ecs_on_commands_action_t on_commands;
     ecs_on_commands_action_t on_commands_active;

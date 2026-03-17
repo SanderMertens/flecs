@@ -40,7 +40,7 @@ const char* flecs_term_ref_var_name(
 bool flecs_term_ref_is_wildcard(
     ecs_term_ref_t *ref);
 
-/* Does term use builtin predicates (eq, neq, ...)*/
+/* Does term use builtin predicates (eq, neq, ...) */
 bool flecs_term_is_builtin_pred(
     ecs_term_t *term);
 

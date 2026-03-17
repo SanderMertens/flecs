@@ -11,7 +11,7 @@
  * having to mutate the world, such as setting the current scope, and allocators
  * that are local to a stage.
  * 
- * In a multi threaded application, each thread has its own stage which allows
+ * In a multithreaded application, each thread has its own stage which allows
  * threads to insert mutations without having to lock administration.
  */
 
@@ -36,15 +36,12 @@ void flecs_stage_merge(
     ecs_log_push_3();
 
     if (is_stage) {
-        /* Check for consistency if force_merge is enabled. In practice this
-         * function will never get called with force_merge disabled for just
-         * a single stage. */
+        /* Check for consistency when merging a single stage. */
         ecs_assert(stage->defer == 1, ECS_INVALID_OPERATION, 
             "mismatching defer_begin/defer_end detected");
         flecs_defer_end(world, stage);
     } else {
-        /* Merge stages. Only merge if the stage has auto_merging turned on, or 
-         * if this is a forced merge (like when ecs_merge is called) */
+        /* Merge all stages */
         int32_t i, count = ecs_get_stage_count(world);
         for (i = 0; i < count; i ++) {
             ecs_stage_t *s = (ecs_stage_t*)ecs_get_stage(world, i);
@@ -247,8 +244,8 @@ void ecs_set_stage_count(
     }
 
     /* Regardless of whether the stage was just initialized or not, when the
-     * ecs_set_stage_count function is called, all stages inherit the auto_merge
-     * property from the world */
+     * ecs_set_stage_count function is called, all stages inherit the
+     * lookup_path from the world */
     for (i = 0; i < stage_count; i ++) {
         world->stages[i]->lookup_path = lookup_path;
     }

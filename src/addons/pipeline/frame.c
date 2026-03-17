@@ -26,7 +26,7 @@ ecs_ftime_t flecs_insert_sleep(
      * previous frame, and subtracting it from target_delta_time. */
     ecs_ftime_t sleep = target_delta_time - delta_time;
 
-    /* Pick a sleep interval that is smaller than the time one frame should take
+    /* Pick a sleep interval that is smaller than the time one frame should take,
      * which increases the sleep precision. */
     ecs_ftime_t sleep_time = sleep / (ecs_ftime_t)8.0;
     if (sleep_time < 0) {

@@ -551,7 +551,7 @@ bool flecs_on_delete_clear_entities(
                 ecs_defer_resume(world);
             }
 
-            /* User code (from triggers) could have enqueued more ids to delete,
+            /* User code (from observers) could have enqueued more ids to delete,
              * reobtain the array in case it got reallocated */
             ids = ecs_vec_first(&world->store.marked_ids);
         }
@@ -645,13 +645,13 @@ bool flecs_on_delete_clear_ids(
                 flecs_component_release(world, cr);
             } else {
                 /* Release the claim taken by flecs_marked_id_push. This may delete the
-                * component record as all other claims may have been released. */
+                 * component record as all other claims may have been released. */
                 int32_t rc = flecs_component_release(world, cr);
                 ecs_assert(rc >= 0, ECS_INTERNAL_ERROR, NULL);
                 (void)rc;
 
                 /* If rc is 0, the id was likely deleted by a nested delete_with call
-                * made by an on_remove handler/OnRemove observer */
+                 * made by an on_remove handler/OnRemove observer */
                 if (rc) {
                     if (delete_id) {
                         /* If id should be deleted, release initial claim. This happens when
@@ -659,8 +659,8 @@ bool flecs_on_delete_clear_ids(
                         flecs_component_release(world, cr);
                     } else {
                         /* If id should not be deleted, unmark component record for deletion. This
-                        * happens when all instances *of* an id are deleted, for example
-                        * when calling ecs_remove_all or ecs_delete_with. */
+                         * happens when all instances *of* an id are deleted, for example
+                         * when calling ecs_remove_all or ecs_delete_with. */
                         cr->flags &= ~EcsIdMarkedForDelete;
                     }
                 }

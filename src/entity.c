@@ -147,7 +147,7 @@ ecs_entity_t flecs_new_id(
     /* It is possible that the world passed to this function is a stage, so
      * make sure we have the actual world. Cast away const since this is one of
      * the few functions that may modify the world while it is in readonly mode,
-     * since it is thread safe (uses atomic inc when in threading mode) */
+     * since it is thread-safe (uses atomic inc when in threading mode). */
     ecs_world_t *unsafe_world = ECS_CONST_CAST(ecs_world_t*, world);
 
     ecs_assert(!(unsafe_world->flags & EcsWorldMultiThreaded),
@@ -253,7 +253,8 @@ void flecs_commit(
     if (src_table == dst_table) {
         /* If source and destination table are the same no action is needed.
          * However, if a component was added in the process of traversing a
-         * table, this suggests that a union relationship could have changed. */
+         * table, this suggests that a non-fragmenting component could have
+         * changed. */
         ecs_flags32_t non_fragment_flags = 
             src_table->flags & EcsTableHasDontFragment;
         if (non_fragment_flags) {
@@ -282,10 +283,10 @@ void flecs_commit(
     flecs_table_traversable_add(src_table, -is_trav);
 
     /* If the entity is being watched, it is being monitored for changes and
-     * requires rematching systems when components are added or removed. This
-     * ensures that systems that rely on components from containers or prefabs
-     * update the matched tables when the application adds or removes a 
-     * component from, for example, a container. */
+     * requires rematching queries when components are added or removed. This
+     * ensures that queries that rely on components from parents or prefabs
+     * update the matched tables when the application adds or removes a
+     * component from, for example, a parent. */
     if (is_trav) {
         flecs_update_component_monitors(world, &diff->added, &diff->removed);
     }
@@ -1292,9 +1293,9 @@ ecs_entity_t ecs_entity_init(
      * language identifiers, such as components (typenames) and system
      * function names. Because C does not have namespaces, such identifiers
      * often encode the namespace as a prefix.
-     * To ensure interoperability between C and C++ (and potentially other 
-     * languages with namespacing) the entity must be stored without this prefix
-     * and with the proper namespace, which is what the name_prefix is for */
+     * To ensure interoperability between C and C++ (and potentially other
+     * languages with namespacing), the entity must be stored without this prefix
+     * and with the proper namespace, which is what the name_prefix is for. */
     const char *prefix = world->info.name_prefix;
     if (name && prefix) {
         ecs_size_t len = ecs_os_strlen(prefix);
@@ -2983,7 +2984,7 @@ ecs_entity_t ecs_get_target_for_id(
             for (i = 0; i < count; i ++) {
                 ecs_id_t ent = ids[i];
                 if (ent & ECS_ID_FLAGS_MASK) {
-                    /* Skip ids with pairs, roles since 0 was provided for rel */
+                    /* Skip ids with pairs or flags since 0 was provided for rel */
                     break;
                 }
 
@@ -3151,12 +3152,13 @@ void ecs_make_alive(
 
     /* Set generation if not alive. The sparse set checks if the provided
      * id matches its own generation which is necessary for alive ids. This
-     * check would cause ecs_ensure to fail if the generation of the 'entity'
-     * argument doesn't match with its generation.
-     * 
+     * check would cause flecs_entities_ensure to fail if the generation of the
+     * 'entity' argument doesn't match with its generation.
+     *
      * While this could've been addressed in the sparse set, this is a rare
-     * scenario that can only be triggered by ecs_ensure. Implementing it here
-     * allows the sparse set to not do this check, which is more efficient. */
+     * scenario that can only be triggered by ecs_make_alive. Implementing it
+     * here allows the sparse set to not do this check, which is more
+     * efficient. */
     flecs_entities_make_alive(world, entity);
 
     /* Ensure id exists. The underlying data structure will verify that the
@@ -3298,7 +3300,7 @@ void ecs_enable(
     flecs_assert_entity_valid(world, entity, "enable");
 
     if (ecs_has_id(world, entity, EcsPrefab)) {
-        /* If entity is a type, enable/disable all entities in the type */
+        /* If entity is a prefab, enable/disable all entities in the type */
         const ecs_type_t *type = ecs_get_type(world, entity);
         ecs_assert(type != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_id_t *ids = type->array;

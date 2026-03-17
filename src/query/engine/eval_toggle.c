@@ -131,7 +131,7 @@ bool flecs_query_toggle_cmp(
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if ((and_fields & op_ctx->prev_set_fields) != and_fields) {
-        /* If not all fields matching and toggles are set, table can't match */
+        /* If not all fields matching 'and' toggles are set, table can't match */
         return false;
     }
 

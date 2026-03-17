@@ -275,7 +275,7 @@ bool flecs_query_children(
     bool redo,
     const ecs_query_run_ctx_t *ctx);
 
-/* Toggle evaluation*/
+/* Toggle evaluation */
 
 bool flecs_query_toggle(
     const ecs_query_op_t *op,

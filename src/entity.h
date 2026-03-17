@@ -70,7 +70,7 @@ void flecs_add_to_root_table(
     ecs_entity_t e);
 
 /* Add a flag to an entity. This is used to trigger automatic rematching
- * when entities used in system expressions change their components. */
+ * when entities used in query expressions change their components. */
 void flecs_add_flag(
     ecs_world_t *world,
     ecs_entity_t entity,

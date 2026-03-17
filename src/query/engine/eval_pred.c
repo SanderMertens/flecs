@@ -173,7 +173,7 @@ bool flecs_query_pred_neq_w_range(
         var->range.offset = r_end;
         var->range.count = l_end - r_end;
 
-        /* Flag so we know we're done the next redo */
+        /* Flag so we know we're done on the next redo */
         op_ctx->redo = true;
         return true;
     } else {

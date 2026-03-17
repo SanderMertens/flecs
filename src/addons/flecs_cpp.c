@@ -254,8 +254,8 @@ ecs_entity_t ecs_cpp_component_register(
             /* Keep track of whether name was explicitly set. If not, and 
              * the component was already registered, just use the registered 
              * name. The registered name may differ from the typename as the 
-             * registered name includes the flecs scope. This can in theory 
-             * be different from the C++ namespace though it is good 
+             * registered name includes the flecs scope. This can in theory
+             * be different from the C++ namespace, though it is good
              * practice to keep them the same */
             implicit_name = true;
         }
