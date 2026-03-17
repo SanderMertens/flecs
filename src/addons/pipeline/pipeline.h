@@ -24,7 +24,7 @@ struct ecs_pipeline_state_t {
     ecs_vec_t ops;              /* Pipeline schedule */
     ecs_vec_t systems;          /* Vector with system ids */
 
-    ecs_entity_t last_system;   /* Last system ran by pipeline */
+    ecs_entity_t last_system;   /* Last system run by pipeline */
     int32_t match_count;        /* Used to track if rebuild is necessary */
     int32_t rebuild_count;      /* Number of pipeline rebuilds */
     ecs_iter_t *iters;          /* Iterator for worker(s) */
@@ -38,7 +38,7 @@ struct ecs_pipeline_state_t {
 };
 
 typedef struct EcsPipeline {
-    /* Stable ptr so threads can safely access while entity/components move */
+    /* Stable ptr so threads can safely access while entities/components move */
     ecs_pipeline_state_t *state;
 } EcsPipeline;
 

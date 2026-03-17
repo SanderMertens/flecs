@@ -5,7 +5,7 @@
 
 #include "../private_api.h"
 
-/* Placeholder arrays for queries that only have $this variable */
+/* Placeholder arrays for queries that only have the $this variable */
 ecs_query_var_t flecs_this_array = {
     .kind = EcsVarTable,
     .table_id = EcsVarNone
@@ -150,8 +150,9 @@ int flecs_query_set_caching_policy(
             impl->pub.cache_kind = EcsQueryCacheNone;
         } else {
             /* Part of the query is cacheable. Make sure to only create a cache
-             * if the cacheable part of the query contains not just not/optional
-             * terms, as this would build a cache that contains all tables. */
+             * if the cacheable part of the query contains more than just
+             * Not/Optional terms, as this would build a cache that contains
+             * all tables. */
             int32_t not_optional_terms = 0, cacheable_terms = 0;
             if (!require_caching) {
                 for (i = 0; i < term_count; i ++) {
@@ -444,7 +445,7 @@ ecs_query_t* ecs_query_init(
         goto error;
     }
 
-    /* Entity could've been set by finalize query if query is cached */
+    /* Entity could've been set during query finalization if query is cached */
     entity = result->pub.entity;
     if (entity) {
         EcsPoly *poly = flecs_poly_bind(world, entity, ecs_query_t);

@@ -132,7 +132,7 @@ int flecs_script_check_tag(
     }
 
     if (v->is_with_scope) {
-        flecs_script_eval_error(v, node, "invalid component in with scope"); 
+        flecs_script_eval_error(v, node, "invalid tag in with scope");
         return -1;
     }
 
@@ -142,7 +142,7 @@ int flecs_script_check_tag(
                 v, node, "missing entity for pair (%s, %s)",
                 node->id.first, node->id.second);
         } else {
-            flecs_script_eval_error(v, node, "missing entity for tag %s", 
+            flecs_script_eval_error(v, node, "missing entity for tag %s",
                 node->id.first);
         }
         return -1;

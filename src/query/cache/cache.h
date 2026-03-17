@@ -7,9 +7,8 @@
 
 /** Table match data.
  * Each table matched by the query is represented by an ecs_query_cache_match_t
- * instance, which are linked together in a list. A table may match a query
- * multiple times (due to wildcard queries) with different columns being matched
- * by the query. */
+ * instance. A table may match a query multiple times (due to wildcard queries)
+ * with different columns being matched by the query. */
 typedef struct ecs_query_triv_cache_match_t {
     ecs_table_t *table;              /* The current table. */
     const ecs_table_record_t **trs;  /* Information about where to find field in table. */

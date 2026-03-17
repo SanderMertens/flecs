@@ -486,7 +486,7 @@ bool flecs_pipeline_update(
     ecs_assert(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION, 
         "cannot update pipeline while world is in readonly mode");
 
-    /* If any entity mutations happened that could have affected query matching
+    /* If any entity mutations happened that could have affected query matching,
      * notify appropriate queries so caches are up to date. This includes the
      * pipeline query. */
     if (start_of_frame) {
@@ -567,7 +567,7 @@ int32_t flecs_run_pipeline_ops(
         ecs_stage_t* s = NULL;
         if (!op->immediate) {
             /* If system is immediate it operates on the actual world, not
-             * the stage. Only pass stage to system if it's readonly. */
+             * the stage. Only pass stage to system if it is not immediate. */
             s = stage;
         }
 

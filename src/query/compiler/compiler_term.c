@@ -1087,7 +1087,7 @@ void flecs_query_set_op_kind(
     } else if (term->oper == EcsNotFrom) {
         op->kind = EcsQueryNotFrom;
 
-    /* If query is transitive, use Trav(ersal) instruction */
+    /* If term is transitive, use Trav(ersal) instruction */
     } else if (term->flags_ & EcsTermTransitive) {
         ecs_assert(ecs_term_ref_is_set(&term->second), 
             ECS_INTERNAL_ERROR, NULL);

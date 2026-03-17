@@ -458,8 +458,8 @@ void ecs_set_hooks_id(
             "illegal call to set_hooks() for '%s': component cannot be a tag/zero sized",
                 flecs_errstr(ecs_get_path(world, component)));
         ecs_check(component_ptr->size != 0, ECS_INVALID_PARAMETER,
-            "illegal call to set_hooks() for '%s': cannot register "
-            " component cannot be a tag/zero sized",
+            "illegal call to set_hooks() for '%s': "
+            "component cannot be a tag/zero sized",
                 flecs_errstr(ecs_get_path(world, component)));
 
         ti->size = component_ptr->size;

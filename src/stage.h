@@ -39,7 +39,7 @@ struct ecs_stage_t {
     bool cmd_flushing;               /* Ensures only one defer_end call flushes */
 
     /* Thread context */
-    ecs_world_t *thread_ctx;         /* Points to stage when a thread stage */
+    ecs_world_t *thread_ctx;         /* Points to stage when used as a thread stage */
     ecs_world_t *world;              /* Reference to world */
     ecs_os_thread_t thread;          /* Thread handle (0 if no threading is used) */
 

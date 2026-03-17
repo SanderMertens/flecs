@@ -216,9 +216,9 @@ int flecs_init_type(
 
             if(kind == EcsEnumType) {
                 /* Generate compare/equals hooks for enums, copying
-                   the underlying type's hooks, which should be 
+                   the underlying type's hooks, which should be
                    any of the default primitive integral compare hooks,
-                   i.e. ecs_compare_i8, _i16 _32... */
+                   i.e. ecs_compare_i8, _i16, _i32... */
                 const EcsEnum* enum_info = ecs_get(world, type, EcsEnum);
                 ecs_assert(enum_info != NULL, ECS_INTERNAL_ERROR, NULL);
                 const ecs_type_hooks_t *enum_hooks = ecs_get_hooks_id(

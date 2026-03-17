@@ -12,7 +12,7 @@
  * that are local to a stage.
  * 
  * In a multithreaded application, each thread has its own stage which allows
- * threads to insert mutations without having to lock administration.
+ * threads to insert mutations without having to lock the administration.
  */
 
 #include "private_api.h"

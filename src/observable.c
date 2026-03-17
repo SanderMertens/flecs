@@ -1112,7 +1112,7 @@ void flecs_emit_on_set_for_override_on_add(
     }
 
     /* Table has override for component. If this overrides a
-     * component that was already reachable for the table we 
+     * component that was already reachable for the table, we
      * don't need to emit since the value didn't change. */
     ecs_entity_t base = o->entity;
 
@@ -1289,7 +1289,7 @@ void flecs_emit(
     /* Event records contain all observers for a specific event. In addition to
      * the emitted event, also request data for the Wildcard event (for 
      * observers subscribing to the wildcard event), and OnSet events. The
-     * latter two are used for automatically emitting OnSet events for
+     * latter is used for automatically emitting OnSet events for
      * inherited components, for example when an IsA relationship is added to an
      * entity. This doesn't add much overhead, as fetching records is cheap for
      * builtin event types. */

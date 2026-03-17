@@ -46,7 +46,7 @@
  * 
  * Group_by
  * ========
- * Group_by assigns a group id (unsigned 64bit integer) to each table. This 
+ * Group_by assigns a group id (unsigned 64-bit integer) to each table. This
  * number is computed by a group_by function that can be provided by the 
  * application. A group can only be computed from which components are stored in
  * a table (the table type).
@@ -75,7 +75,7 @@
  * 
  * Groups are stored in a linked list that's ordered by the group id. This can
  * be in ascending or descending order, depending on the query. Because of this
- * ordering, group insertion and group removal is an O(N) operation where N is
+ * ordering, group insertion and group removal are O(N) operations where N is
  * the number of groups in the query. The head of the list is stored in the
  * first_group member of the query.
  * 
@@ -97,10 +97,9 @@
  * Resorting is a very expensive operation. Queries use change detection, which
  * at a table level can detect if any changes occurred to the entities or the
  * ordered-by component. Only if a change has been detected will resorting
- * occur. Even
- * then, this remains an expensive feature and should only be used for data that
- * doesn't change often. Flecs uses the query sorting feature to ensure that
- * pipeline queries return systems in a well-defined order.
+ * occur. Even then, this remains an expensive feature and should only be used
+ * for data that doesn't change often. Flecs uses the query sorting feature to
+ * ensure that pipeline queries return systems in a well-defined order.
  * 
  * The sorted list of slices is stored in the table_slices member of the cache,
  * and is only populated for sorted queries.

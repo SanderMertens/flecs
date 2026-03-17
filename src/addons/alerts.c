@@ -11,7 +11,7 @@ ECS_COMPONENT_DECLARE(FlecsAlerts);
 
 typedef struct EcsAlert {
     char *message;
-    ecs_map_t instances;        /* Active instances for metric */
+    ecs_map_t instances;        /* Active instances for alert */
     ecs_ftime_t retain_period;  /* How long to retain the alert */
     ecs_vec_t severity_filters; /* Severity filters */
     
@@ -306,7 +306,7 @@ void MonitorAlerts(ecs_iter_t *it) {
                         continue;
                     }
                     if (range_severity < src_severity) {
-                        /* Alert severity should not exceed range severity */
+                        /* Actual severity should not exceed range severity */
                         src_severity = range_severity;
                     }
                 }

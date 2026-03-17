@@ -1,5 +1,5 @@
 /**
- * @file query/each.c
+ * @file each.c
  * @brief Simple iterator for a single component id.
  */
 

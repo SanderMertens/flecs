@@ -1,5 +1,5 @@
 /**
- * @file component_actions.c
+ * @file component_actions.h
  * @brief Logic executed after adding/removing a component.
  */
 
@@ -19,7 +19,7 @@ void flecs_invoke_hook(
     ecs_entity_t event,
     ecs_iter_action_t hook);
 
-/* Invoke replace hook */
+/* Invoke replace hook. */
 void flecs_invoke_replace_hook(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -66,7 +66,7 @@ void flecs_actions_delete(
     int32_t count,
     const ecs_table_diff_t *diff);
 
-/* Same as flecs_actions_delete, but for entities whose parent is also deleted */
+/* Same as flecs_actions_delete, but for entities whose parent is also deleted. */
 void flecs_actions_delete_tree(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -74,7 +74,7 @@ void flecs_actions_delete_tree(
     int32_t count,
     const ecs_table_diff_t *diff);
 
-/* Run actions for added components in table move */
+/* Run actions for added components in table move. */
 void flecs_actions_move_add(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -86,7 +86,7 @@ void flecs_actions_move_add(
     bool construct,
     bool sparse);
 
-/* Run actions for removed components in table move */
+/* Run actions for removed components in table move. */
 void flecs_actions_move_remove(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -95,7 +95,7 @@ void flecs_actions_move_remove(
     int32_t count,
     const ecs_table_diff_t *diff);
 
-/* Run on set actions. */
+/* Run on_set actions. */
 void flecs_notify_on_set(
     ecs_world_t *world,
     ecs_table_t *table,

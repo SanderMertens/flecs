@@ -297,7 +297,7 @@ void flecs_instantiate_children(
         ECS_INTERNAL_ERROR, NULL);
 
     /* The instance is trying to instantiate from a base that is also
-     * its parent. This would cause the hierarchy to instantiate itself
+     * its parent. This would cause the hierarchy to instantiate itself,
      * which would cause infinite recursion. */
     const ecs_entity_t *children = ecs_table_entities(child_table);
 

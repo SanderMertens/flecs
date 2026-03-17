@@ -2,12 +2,9 @@
  * @file entity.c
  * @brief Entity API.
  * 
- * This file contains the implementation for the entity API, which includes 
+ * This file contains the implementation for the entity API, which includes
  * creating/deleting entities, adding/removing/setting components, instantiating
  * prefabs, and several other APIs for retrieving entity data.
- * 
- * The file also contains the implementation of the command buffer, which is 
- * located here so it can call functions private to the compilation unit.
  */
 
 #include "private_api.h"
@@ -282,7 +279,7 @@ void flecs_commit(
 
     flecs_table_traversable_add(src_table, -is_trav);
 
-    /* If the entity is being watched, it is being monitored for changes and
+    /* If the entity is traversable, it is being monitored for changes and
      * requires rematching queries when components are added or removed. This
      * ensures that queries that rely on components from parents or prefabs
      * update the matched tables when the application adds or removes a
@@ -897,7 +894,7 @@ void flecs_copy_id(
         world, table, ECS_RECORD_TO_ROW(r->row), component, true);
 }
 
-/* Traverse table graph by either adding or removing identifiers parsed from the
+/* Traverse table graph by adding identifiers parsed from the
  * passed in expression. */
 static
 int flecs_traverse_from_expr(
@@ -943,7 +940,7 @@ error:
     return -1;
 }
 
-/* Add/remove components based on the parsed expression. This operation is 
+/* Add components based on the parsed expression. This operation is
  * slower than flecs_traverse_from_expr, but safe to use from a deferred context. */
 static
 void flecs_defer_from_expr(
@@ -1320,7 +1317,7 @@ ecs_entity_t ecs_entity_init(
     /* Find or create entity */
     if (!result) {
         if (name) {
-            /* If add array contains a ChildOf pair, use it as scope instead */
+            /* Look up entity by name in scope */
             result = ecs_lookup_path_w_sep(
                 world, scope, name, sep, root_sep, false);
             if (result) {
