@@ -1,6 +1,6 @@
 /**
  * @file addons/meta/type_support/primitive_ts.c
- * @brief Primitives type support.
+ * @brief Primitive type support.
  */
 
 #include "type_support.h"

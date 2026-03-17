@@ -69,8 +69,7 @@ void flecs_add_to_root_table(
     ecs_world_t *world,
     ecs_entity_t e);
 
-/* Add a flag to an entity. This is used to trigger automatic rematching
- * when entities used in query expressions change their components. */
+/* Add a flag to an entity record (e.g. EcsEntityIsTraversable). */
 void flecs_add_flag(
     ecs_world_t *world,
     ecs_entity_t entity,

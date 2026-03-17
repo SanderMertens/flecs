@@ -1,6 +1,6 @@
 /**
  * @file addons/meta/cursor.c
- * @brief API for assigning values of runtime types with reflection.
+ * @brief API for reading and assigning values of runtime types with reflection.
  */
 
 #include "meta.h"

@@ -228,7 +228,7 @@ bool flecs_pipeline_check_terms(
         }
     }
 
-    /* Now check staged terms */
+    /* Now check non-$this terms */
     for (t = 0; t < term_count; t ++) {
         ecs_term_t *term = &terms[t];
         if (!ecs_term_match_this(term)) {

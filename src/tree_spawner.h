@@ -3,8 +3,8 @@
  * @brief Data structure used to speed up the creation of hierarchies.
  */
 
-#ifndef FLECS_SPAWNER_H
-#define FLECS_SPAWNER_H
+#ifndef FLECS_TREE_SPAWNER_H
+#define FLECS_TREE_SPAWNER_H
 
 /* Called during bootstrap to register spawner entities with the world. */
 void flecs_bootstrap_spawner(

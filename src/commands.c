@@ -935,9 +935,10 @@ void flecs_cmd_batch_for_entity(
 
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    /* Invoke OnAdd handlers after commit. This ensures that observers with 
-     * mixed OnAdd/OnSet events won't get called with uninitialized values for
-     * an OnSet field. */
+    /* Save added ids and clear from diff so that they won't be emitted as
+     * part of the commit below. OnAdd events will be emitted separately after
+     * the commit, so that observers with mixed OnAdd/OnSet events won't get
+     * called with uninitialized values for an OnSet field. */
     ecs_type_t added = { diff->added.array, diff->added.count };
     diff->added.array = NULL;
     diff->added.count = 0;

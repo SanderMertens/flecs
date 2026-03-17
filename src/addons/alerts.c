@@ -514,12 +514,12 @@ ecs_entity_t ecs_alert_init(
 
     ecs_query_t *q = ecs_query_init(world, &private_desc);
     if (!q) {
-        ecs_err("failed to create alert filter");
+        ecs_err("failed to create alert query");
         return 0;
     }
 
     if (!(q->flags & EcsQueryMatchThis)) {
-        ecs_err("alert filter must have at least one '$this' term");
+        ecs_err("alert query must have at least one '$this' term");
         ecs_query_fini(q);
         return 0;
     }

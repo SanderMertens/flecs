@@ -204,7 +204,7 @@ void AggregateStats(ecs_iter_t *it) {
             ctx->api.copy_last(last, dst);
         }
 
-        /* Reduce from minutes to the current day */
+        /* Reduce stats into the current aggregation interval */
         ctx->api.reduce(dst, src);
 
         if (dst_hdr->reduce_count != 0) {
@@ -220,7 +220,7 @@ void AggregateStats(ecs_iter_t *it) {
         }
     } while (true);
 
-    /* A day has 24 60-minute intervals */
+    /* Increment reduce count, reset when interval is reached */
     dst_hdr->reduce_count ++;
     if (dst_hdr->reduce_count >= interval) {
         dst_hdr->reduce_count = 0;

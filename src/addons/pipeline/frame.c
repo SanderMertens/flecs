@@ -1,3 +1,8 @@
+/**
+ * @file addons/pipeline/frame.c
+ * @brief Functions for frame begin/end.
+ */
+
 #include "../../private_api.h"
 
 #ifdef FLECS_PIPELINE

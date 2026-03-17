@@ -1,6 +1,6 @@
 /**
  * @file query/cache/change_detection.h
- * @brief Query change detection implementation.
+ * @brief Query change detection functions.
  */
 
 void flecs_query_sync_match_monitor(

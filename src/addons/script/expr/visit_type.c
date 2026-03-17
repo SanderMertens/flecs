@@ -71,10 +71,10 @@ int32_t flecs_expr_expressiveness_score(
     else return false;
 }
 
-/* Returns a score based on the storage size of a type. This is used in 
- * combination with expressiveness to determine whether a type can be implicitly
- * cast. An implicit cast is only valid if the destination type is both more
- * expressive and has a larger storage size. */
+/* Returns a score based on the representable value range of a type. This is
+ * used in combination with expressiveness to determine whether a type can be
+ * implicitly cast. An implicit cast is only valid if the destination type is
+ * both more expressive and has a larger value range. */
 static
 ecs_size_t flecs_expr_storage_score(
     ecs_entity_t type)

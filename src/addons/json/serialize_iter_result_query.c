@@ -286,7 +286,7 @@ int flecs_json_serialize_iter_result_query(
                 }
             }
 
-            ecs_strbuf_appendstr(buf, "}"); // "fields": {
+            ecs_strbuf_appendstr(buf, "}"); /* end "fields" */
         }
 
         flecs_json_object_pop(buf);

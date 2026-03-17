@@ -1,5 +1,5 @@
 /**
- * @file addons/http.c
+ * @file addons/http/http.c
  * @brief HTTP addon.
  *
  * This is a heavily modified version of the EmbeddableWebServer (see copyright
