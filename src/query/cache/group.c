@@ -1,6 +1,6 @@
 /**
  * @file query/cache/group.c
- * @brief Adding/removing tables to query groups.
+ * @brief Adding/removing tables to/from query groups.
  */
 
 #include "../../private_api.h"
@@ -199,7 +199,7 @@ void flecs_query_cache_remove_group(
      * never delete the default group. */
     group->next = NULL;
 
-    /* ensure group was found */
+    /* Ensure group was found */
     ecs_assert(cur != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (!cache->first_group) {

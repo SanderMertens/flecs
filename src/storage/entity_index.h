@@ -2,7 +2,7 @@
  * @file storage/entity_index.h
  * @brief Entity index data structure.
  *
- * The entity index stores the table, row for an entity id.
+ * The entity index stores the table and row for an entity id.
  */
  
 #ifndef FLECS_ENTITY_INDEX_H

@@ -329,12 +329,12 @@ bool flecs_expr_explicit_cast_allowed(
         return false;
     }
 
-    /* Anything can be casted to a number */
+    /* Anything can be cast to a number */
     if (flecs_expr_is_type_number(to)) {
         return true;
     }
 
-    /* Anything can be casted to a string */
+    /* Anything can be cast to a string */
     if (to == ecs_id(ecs_string_t)) {
         return true;
     }

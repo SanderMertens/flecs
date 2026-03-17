@@ -306,7 +306,7 @@ void MonitorAlerts(ecs_iter_t *it) {
                         continue;
                     }
                     if (range_severity < src_severity) {
-                        /* Range severity should not exceed alert severity */
+                        /* Alert severity should not exceed range severity */
                         src_severity = range_severity;
                     }
                 }

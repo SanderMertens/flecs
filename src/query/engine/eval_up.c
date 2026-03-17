@@ -50,8 +50,8 @@ bool flecs_query_up_select_table(
         range = flecs_query_get_range(op, &op->src, EcsQuerySrc, ctx);
         ecs_assert(range.table != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        /* Keep searching until we find a table that has the requested component, 
-        * with traversable entities */
+        /* Keep searching until we find a table that has the requested component,
+         * with traversable entities */
     } while (!self && range.table->_->traversable_count == 0);
 
     if (!range.count) {
@@ -243,7 +243,7 @@ next_down_entry:
 next_down_elem:
     /* Get next element (table) in cache entry */
     if ((++ impl->cache_elem) >= ecs_vec_count(&down->elems)) {
-        /* No more elements in cache entry, find next.*/
+        /* No more elements in cache entry, find next. */
         down = NULL;
         goto next_down_entry;
     }
@@ -350,7 +350,7 @@ bool flecs_query_up_with(
 next_row:
         if (op_ctx->cur == -1) {
             /* The table either can or can't reach the component, nothing to do 
-             * for a second evaluation of this operation.*/
+             * for a second evaluation of this operation. */
             return false;
         }
 
@@ -428,7 +428,7 @@ bool flecs_query_self_up_with(
         }
 
         if (result) {
-            /* Table has component, no need to traverse*/            
+            /* Table has component, no need to traverse */            
             if (flecs_query_ref_flags(op->flags, EcsQuerySrc) & EcsQueryIsVar) {
                 /* Matching self, so set sources to 0 */
                 it->sources[op->field_index] = 0;

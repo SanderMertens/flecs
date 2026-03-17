@@ -381,7 +381,7 @@ void flecs_register_symmetric(ecs_iter_t *it) {
         flecs_assert_relation_unused(world, r, EcsSymmetric);
 
         /* Create observer that adds the reverse relationship when R(X, Y) is
-         * added, or remove the reverse relationship when R(X, Y) is removed. */
+         * added, or removes the reverse relationship when R(X, Y) is removed. */
         ecs_observer(world, {
             .entity = ecs_entity(world, { .parent = r }),
             .query.terms[0] = { .id = ecs_pair(r, EcsWildcard) },
@@ -687,11 +687,11 @@ void flecs_bootstrap_builtin(
 }
 
 /** Initialize component table. This table is manually constructed to bootstrap
- * flecs. After this function has been called, the builtin components can be
- * created. 
+ * Flecs. After this function has been called, the builtin components can be
+ * created.
  * The reason this table is constructed manually is because it requires the size
  * and alignment of the EcsComponent and EcsIdentifier components, which haven't
- * been created yet */
+ * been created yet. */
 static
 ecs_table_t* flecs_bootstrap_component_table(
     ecs_world_t *world)
@@ -1203,7 +1203,7 @@ void flecs_bootstrap(
         .global_observer = true
     });
 
-    /* Entities used as slot are marked as exclusive to ensure a slot can always
+    /* Entities used as slots are marked as exclusive to ensure a slot can always
      * only point to a single entity. */
     ecs_observer(world, {
         .query.terms = {

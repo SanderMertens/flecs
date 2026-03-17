@@ -9,9 +9,6 @@
  * 
  * The world stores a table cache per (component) id inside the component record 
  * administration. Cached queries store a table cache with matched tables.
- * 
- * A table cache has separate lists for non-empty tables and empty tables. This
- * improves performance as applications don't waste time iterating empty tables.
  */
 
 #include "../private_api.h"

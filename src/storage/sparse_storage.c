@@ -211,7 +211,7 @@ void flecs_component_sparse_remove(
 
     /* If id is a wildcard, remove entity from all matching ids. */
     if (dont_fragment && ecs_id_is_wildcard(cr->id)) {
-        /* A wildcard by itself can't be marked sparse so must be a pair. */
+        /* A wildcard by itself can't be marked sparse, so it must be a pair. */
         ecs_assert(ECS_IS_PAIR(id), ECS_INTERNAL_ERROR, NULL);
         ecs_assert(ECS_PAIR_SECOND(id) == EcsWildcard, 
             ECS_UNSUPPORTED,

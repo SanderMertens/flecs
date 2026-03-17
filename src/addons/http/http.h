@@ -168,9 +168,9 @@ typedef struct {
     ecs_http_connection_t pub;
     ecs_http_socket_t sock;
 
-    /* Connection is purged after both timeout expires and connection has
-     * exceeded retry count. This ensures that a connection does not immediately
-     * timeout when a frame takes longer than usual */
+    /* Connection is purged after both the timeout expires and the connection has
+     * exceeded the retry count. This ensures that a connection does not
+     * immediately timeout when a frame takes longer than usual */
     double dequeue_timeout;
     int32_t dequeue_retries;    
 } ecs_http_connection_impl_t;

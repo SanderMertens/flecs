@@ -24,8 +24,8 @@ void flecs_set_opaque_type(ecs_iter_t *it) {
         }
 
         /* If the as_type is anonymous and has no parent, parent it under the
-        * opaque type. That way we don't end up with a bunch of anonymous entities
-        * in the root scope. */
+         * opaque type. That way we don't end up with a bunch of anonymous entities
+         * in the root scope. */
         if (!ecs_get_parent(world, as_type) && !ecs_get_name(world, as_type)) {
             ecs_add_pair(world, as_type, EcsChildOf, e);
         }

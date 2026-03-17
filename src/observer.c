@@ -1099,7 +1099,7 @@ ecs_observer_t* flecs_observer_init(
     o->world = world;
     impl->dtor = flecs_observer_poly_fini;
 
-    /* Make writeable copy of query desc so that we can set name. This will
+    /* Make writable copy of query desc so that we can set name. This will
      * make debugging easier, as any error messages related to creating the
      * query will have the name of the observer. */
     ecs_query_desc_t query_desc = desc->query;

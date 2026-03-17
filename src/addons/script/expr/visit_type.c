@@ -73,7 +73,7 @@ int32_t flecs_expr_expressiveness_score(
 
 /* Returns a score based on the storage size of a type. This is used in 
  * combination with expressiveness to determine whether a type can be implicitly
- * casted. An implicit cast is only valid if the destination type is both more
+ * cast. An implicit cast is only valid if the destination type is both more
  * expressive and has a larger storage size. */
 static
 ecs_size_t flecs_expr_storage_score(
@@ -106,7 +106,7 @@ ecs_size_t flecs_expr_storage_score(
     else return false;
 }
 
-/** Returns the storage size for primitive type */
+/** Returns the storage size for a primitive type */
 ecs_size_t flecs_expr_storage_size(
     ecs_entity_t type)
 {
@@ -135,7 +135,7 @@ ecs_size_t flecs_expr_storage_size(
     else return false;
 }
 
-/* This function returns true if a type can be casted without changing the
+/* This function returns true if a type can be cast without changing the
  * precision of the value. It is used to determine a type for operands in a 
  * binary expression in case they are of different types. */
 static
@@ -409,7 +409,7 @@ int flecs_expr_type_for_operator(
     case EcsTokLt:
     case EcsTokLtEq:
         /* Result type of equality operator is always bool, but operand types
-         * should not be casted to bool */
+         * should not be cast to bool */
         *result_type = ecs_id(ecs_bool_t);
         break;
     case EcsTokShiftLeft:
@@ -1077,7 +1077,7 @@ int flecs_expr_binary_visit_type(
     ecs_meta_cursor_t *cur,
     const ecs_expr_eval_desc_t *desc)
 {    
-    /* Operands must be of this type or casted to it */
+    /* Operands must be of this type or cast to it */
     ecs_entity_t operand_type = 0;
 
     /* Resulting type of binary expression */
@@ -1093,7 +1093,7 @@ int flecs_expr_binary_visit_type(
 
         /* If the result of the binary expression is a boolean it's likely a 
          * conditional expression. We don't want to hint that the operands 
-         * of conditional expressions should be casted to booleans. */
+         * of conditional expressions should be cast to booleans. */
         if (node->node.type == ecs_id(ecs_bool_t)) {
             ecs_os_zeromem(cur);
         }

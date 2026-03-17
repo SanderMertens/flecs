@@ -90,7 +90,7 @@ void flecs_create_worker_threads(
 
         ecs_assert(stage->thread == 0, ECS_INTERNAL_ERROR, NULL);
         if (ecs_using_task_threads(world)) {
-            /* workers are using tasks in an external task manager provided to 
+            /* workers are using tasks in an external task manager provided via
              * the OS API */
             stage->thread = ecs_os_task_new(flecs_worker, stage);
         } else {

@@ -6,7 +6,7 @@
 #ifndef FLECS_STAGE_H
 #define FLECS_STAGE_H
 
-/* Stage level allocators are for operations that can be multithreaded */
+/* Stage-level allocators are for operations that can be multithreaded */
 typedef struct ecs_stage_allocators_t {
     ecs_stack_t iter_stack;
     ecs_block_allocator_t cmd_entry_chunk;
@@ -16,13 +16,13 @@ typedef struct ecs_stage_allocators_t {
 
 /** A stage is a context that allows for safely using the API from multiple 
  * threads. Stage pointers can be passed to the world argument of API 
- * operations, which causes the operation to be ran on the stage instead of the
+ * operations, which causes the operation to be run on the stage instead of the
  * world. The features provided by a stage are:
  * 
  *  - A command queue for deferred ECS operations and events
- *  - Thread specific allocators
- *  - Thread specific world state (like current scope, with, current system)
- *  - Thread specific buffers for preventing allocations
+ *  - Thread-specific allocators
+ *  - Thread-specific world state (like current scope, with, current system)
+ *  - Thread-specific buffers for preventing allocations
  */
 struct ecs_stage_t {
     ecs_header_t hdr;
@@ -55,7 +55,7 @@ struct ecs_stage_t {
     /* Running system */
     ecs_entity_t system;
 
-    /* Thread specific allocators */
+    /* Thread-specific allocators */
     ecs_stage_allocators_t allocators;
     ecs_allocator_t allocator;
 
@@ -64,7 +64,7 @@ struct ecs_stage_t {
     ecs_vec_t operations;
 
 #ifdef FLECS_SCRIPT
-    /* Thread specific runtime for script execution */
+    /* Thread-specific runtime for script execution */
     ecs_script_runtime_t *runtime;
 #endif
 };

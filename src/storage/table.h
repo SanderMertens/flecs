@@ -214,8 +214,8 @@ void flecs_table_move(
     int32_t old_index,
     bool construct);
 
-/* Grow table with specified number of records. Populate table with entities,
- * starting from specified entity id. */
+/* Grow table with specified number of records. Populate table with the
+ * specified entity ids. */
 int32_t flecs_table_appendn(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -236,7 +236,7 @@ int32_t* flecs_table_get_dirty_state(
 void flecs_init_root_table(
     ecs_world_t *world);
 
-/* Unset components in table */
+/* Remove components in table */
 void flecs_table_remove_actions(
     ecs_world_t *world,
     ecs_table_t *table);

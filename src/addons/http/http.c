@@ -858,7 +858,7 @@ void http_send_reply(
         return;
     }
 
-    /* Second, enqueue send request for response body */
+    /* Enqueue send request for response */
     req->sock = conn->sock;
     req->headers = headers;
     req->header_length = headers_length;

@@ -586,7 +586,7 @@ error:
     return -1;
 }
 
-/** Update id metric */
+/** Initialize id metric */
 static
 int flecs_id_metric_init(
     ecs_world_t *world,
@@ -617,7 +617,7 @@ error:
     return -1;
 }
 
-/** Update oneof metric */
+/** Initialize oneof metric */
 static
 int flecs_oneof_metric_init(
     ecs_world_t *world,

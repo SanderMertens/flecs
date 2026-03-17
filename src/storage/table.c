@@ -310,8 +310,8 @@ void flecs_table_init_flags(
                 ecs_entity_t tgt = ecs_pair_second(world, id);
                 ecs_assert(tgt != 0, ECS_INTERNAL_ERROR, NULL);
 
-                /* If table contains entities that are inside one of the 
-                    * builtin modules, it contains builtin entities */
+                /* If table contains entities that are inside one of the
+                 * builtin modules, it contains builtin entities */
 
                 if (tgt == EcsFlecsCore) {
                     table->flags |= EcsTableHasBuiltins;
@@ -860,7 +860,7 @@ void flecs_table_records_unregister(
     flecs_wfree_n(world, ecs_table_record_t, count, table->_->records);
 }
 
-/* Keep track for what kind of builtin events observers are registered that can
+/* Keep track of what kind of builtin event observers are registered that can
  * potentially match the table. This allows code to early out of calling the
  * emit function that notifies observers. */
 static
@@ -1120,9 +1120,6 @@ void flecs_table_dtor_all(
             flecs_table_invoke_dtor(&table->data.columns[c], 0, count);
         }       
 
-        /* Iterate entities first, then components. This ensures that only one
-         * entity is invalidated at a time, which ensures that destructors can
-         * safely access other entities. */
         for (i = 0; i < count; i ++) {
             /* Update entity index after invoking destructors so that entity can
              * be safely used in destructor callbacks. */
@@ -1240,8 +1237,8 @@ void flecs_table_delete_entities(
     flecs_table_fini_data(world, table, true, true);
 }
 
-/* Unset all components in table. This function is called before a table is 
- * deleted, and invokes all OnRemove handlers, if any */
+/* Remove all components in table. This function is called before a table is
+ * deleted, and invokes all OnRemove handlers, if any. */
 void flecs_table_remove_actions(
     ecs_world_t *world,
     ecs_table_t *table)
@@ -1652,7 +1649,7 @@ int32_t flecs_table_grow_data(
         flecs_bitset_addn(bs, to_add);
     }
 
-    /* If the table is monitored indicate that there has been a change */
+    /* If the table is monitored, indicate that there has been a change */
     flecs_table_mark_table_dirty(world, table, 0);
 
     /* Return index of first added entity */
@@ -1704,11 +1701,11 @@ void flecs_table_append(
     ecs_entity_t *entities = table->data.entities = v_entities.array;
     *e = entity;
  
-    /* If the table is monitored indicate that there has been a change */
+    /* If the table is monitored, indicate that there has been a change */
     flecs_table_mark_table_dirty(world, table, 0);
     ecs_assert(count >= 0, ECS_INTERNAL_ERROR, NULL);
 
-    /* Fast path: no switch columns, no lifecycle actions */
+    /* Fast path: no toggle columns, no lifecycle actions */
     if (!(table->flags & (EcsTableIsComplex|EcsTableHasIsA))) {
         flecs_table_fast_append(table);
         table->data.count = v_entities.count;
@@ -1726,9 +1723,9 @@ void flecs_table_append(
     table->data.count = v_entities.count;
     table->data.size = v_entities.size;
 
-    /* Reobtain size to ensure that the columns have the same size as the 
-     * entities and record vectors. This keeps reasoning about when allocations
-     * occur easier. */
+    /* Reobtain size to ensure that the columns have the same size as the
+     * entities vector. This keeps reasoning about when allocations occur
+     * easier. */
     int32_t size = v_entities.size;
 
     /* Grow component arrays with 1 element */
@@ -1818,7 +1815,7 @@ void flecs_table_delete(
         }
     }     
 
-    /* If the table is monitored indicate that there has been a change */
+    /* If the table is monitored, indicate that there has been a change */
     flecs_table_mark_table_dirty(world, table, 0);
 
     /* Destruct component data */
@@ -1827,7 +1824,7 @@ void flecs_table_delete(
     int32_t i;
 
     /* If this is a table without lifecycle callbacks or special columns, take
-     * fast path that just remove an element from the array(s) */
+     * fast path that just removes an element from the array(s) */
     if (!(table->flags & EcsTableIsComplex)) {
         if (row != count) {
             flecs_table_fast_delete(table, row);
@@ -1960,7 +1957,7 @@ void flecs_table_move(
     flecs_table_move_bitset_columns(
         dst_table, dst_index, src_table, src_index, 1, false);
 
-    /* Call move_dtor for moved away from storage only if the entity is at the
+    /* Call move_dtor for the moved-away-from storage only if the entity is at the
      * last index in the source table. If it isn't the last entity, the last 
      * entity in the table will be moved to the src storage, which will take
      * care of cleaning up resources. */
@@ -1988,8 +1985,8 @@ void flecs_table_move(
 
             bool use_ctor_move_dtor = use_move_dtor || !ti->hooks.move_ctor;
             if (use_ctor_move_dtor) {
-                /* Also use move_dtor if component doesn't have a move_ctor
-                 * registered, to ensure that the dtor gets called to 
+                /* Also use ctor_move_dtor if component doesn't have a move_ctor
+                 * registered, to ensure that the dtor gets called to
                  * cleanup resources. */
                 flecs_type_info_ctor_move_dtor(dst, src, 1, ti);
             } else {
@@ -2147,7 +2144,7 @@ void flecs_table_swap(
         return;
     }
 
-    /* If the table is monitored indicate that there has been a change */
+    /* If the table is monitored, indicate that there has been a change */
     flecs_table_mark_table_dirty(world, table, 0);    
 
     ecs_entity_t *entities = table->data.entities;
@@ -2160,7 +2157,7 @@ void flecs_table_swap(
     ecs_assert(record_ptr_1 != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(record_ptr_2 != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    /* Keep track of whether entity is watched */
+    /* Keep track of row flags */
     uint32_t flags_1 = ECS_RECORD_TO_ROW_FLAGS(record_ptr_1->row);
     uint32_t flags_2 = ECS_RECORD_TO_ROW_FLAGS(record_ptr_2->row);
 

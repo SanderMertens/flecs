@@ -91,7 +91,7 @@ ecs_query_cache_match_t* flecs_query_cache_next(
         if (qit->cur >= ecs_vec_count(qit->tables)) {
             /* We're iterating the table vector of the group */
             if (qit->tables == qit->all_tables) {   
-                /* If a group is set, we might have to iterate multiple */
+                /* If a group is set, we might have to iterate multiple groups */
                 ecs_query_cache_group_t *group = qit->group;
                 if (!group || qit->iter_single_group) {
                     return NULL;

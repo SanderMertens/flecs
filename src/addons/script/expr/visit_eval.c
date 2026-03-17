@@ -491,7 +491,7 @@ int flecs_expr_cast_visit_eval(
         goto error;
     }
 
-    /* Copy expression result to storage of casted-to type */
+    /* Copy expression result to storage of cast-to type */
     if (flecs_value_copy_to(ctx->world, &out->value, expr)) {
         flecs_expr_visit_error(ctx->script, node, "failed to cast value");
         goto error;

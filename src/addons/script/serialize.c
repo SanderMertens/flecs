@@ -106,7 +106,7 @@ int flecs_expr_ser_bitmask(
         /* All bits must have been matched by a constant */
         char *path = ecs_get_path(world, op->type);
         ecs_err(
-            "value for bitmask %s contains bits (%u) that cannot be mapped to constant", 
+            "value for bitmask %s contains bits (%u) that cannot be mapped to a constant",
             path, value);
         ecs_os_free(path);
         goto error;

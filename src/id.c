@@ -321,7 +321,7 @@ bool ecs_id_is_tag(
                     }
                 }
             } else {
-                /* If relationship is wildcard id is not guaranteed to be a tag */
+                /* If relationship is wildcard, id is not guaranteed to be a tag */
             }
         }
     } else {

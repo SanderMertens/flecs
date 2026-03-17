@@ -1,6 +1,6 @@
 /**
  * @file query/cache/group.h
- * @brief Adding/removing tables to query groups
+ * @brief Adding/removing tables to/from query groups
  */
 
 ecs_query_cache_group_t* flecs_query_cache_get_group(

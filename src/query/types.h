@@ -69,7 +69,7 @@ typedef enum {
     EcsQueryIfSet,          /* Conditional execution on whether term is set */
     EcsQueryNot,            /* Sets iterator state after term was not matched */
     EcsQueryEnd,            /* End of control flow block */
-    EcsQueryPredEq,         /* Test if variable is equal to, or assign to if not set */
+    EcsQueryPredEq,         /* Test if variable is equal to, or assign if not set */
     EcsQueryPredNeq,        /* Test if variable is not equal to */
     EcsQueryPredEqName,     /* Same as EcsQueryPredEq but with matching by name */
     EcsQueryPredNeqName,    /* Same as EcsQueryPredNeq but with matching by name */
@@ -237,7 +237,7 @@ typedef struct {
     ecs_component_record_t *cr_with;
     ecs_component_record_t *cr_trav;
 
-    /* If queried for component is a ChildOf pair that uses the non-fragmenting
+    /* If the queried-for component is a ChildOf pair that uses the non-fragmenting
      * ChildOf storage, iterate ordered children vector instead of tables with
      * ChildOf pairs as roots for down cache. */
     ecs_entity_t *entities;

@@ -1331,7 +1331,7 @@ void flecs_emit(
     /* When a new (traversable) relationship is added (emitting an OnAdd/OnRemove
      * event) this will cause the components of the target entity to be 
      * propagated to the source entity. This makes it possible for observers to
-     * get notified of any new reachable components though the relationship. */
+     * get notified of any new reachable components through the relationship. */
     bool can_forward = true;
 
     /* Does table have observed entities */
@@ -1341,17 +1341,16 @@ void flecs_emit(
     ecs_table_record_t dummy_tr;
 
 repeat_event:
-    /* This is the core event logic, which is executed for each event. By 
+    /* This is the core event logic, which is executed for each event. By
      * default this is just the event kind from the ecs_event_desc_t struct, but
-     * can also include the Wildcard and UnSet events. The latter is emitted as
-     * counterpart to OnSet, for any removed ids associated with data. */
+     * can also include the Wildcard event. */
     for (i = 0; i < id_count; i ++) {
         /* Emit event for each id passed to the function. In most cases this 
          * will just be one id, like a component that was added, removed or set.
          * In some cases events are emitted for multiple ids.
          * 
-         * One example is when an id was added with a "With" property, or 
-         * inheriting from a prefab with overrides. In these cases an entity is 
+         * One example is when an id was added with a "With" property, or
+         * when inheriting from a prefab with overrides. In these cases an entity is
          * moved directly to the archetype with the additional components. */
         ecs_id_t id = id_array[i];
 
@@ -1400,7 +1399,7 @@ repeat_event:
         }
         ecs_flags32_t cr_flags = cr->flags;
 
-        /* Check if this id is a pair of an traversable relationship. If so, we 
+        /* Check if this id is a pair of a traversable relationship. If so, we
          * may have to forward ids from the pair's target. */
         if (can_forward && ECS_IS_PAIR(id) && (cr_flags & EcsIdTraversable)) {
             const ecs_event_record_t *er_fwd = NULL;
@@ -1467,7 +1466,7 @@ repeat_event:
         bool dont_fragment = cr_flags & EcsIdDontFragment;
         if (!dont_fragment && id != EcsAny && (ECS_PAIR_FIRST(id) != EcsChildOf)) {
             if (tr == NULL) {
-                /* When a single batch contains multiple add's for an exclusive
+                /* When a single batch contains multiple adds for an exclusive
                 * relationship, it's possible that an id was in the added list
                 * that is no longer available for the entity. */
                 continue;
@@ -1504,7 +1503,7 @@ repeat_event:
 
         /* The table->traversable_count value indicates if the table contains any
          * entities that are used as targets of traversable relationships. If the
-         * entity/entities for which the event was generated is used as such a
+         * entity/entities for which the event was generated are used as such a
          * target, events must be propagated downwards. */
         flecs_propagate_entities(
             world, &it, cr, it.entities, count, 0, iders, ider_count);

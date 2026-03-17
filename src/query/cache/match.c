@@ -274,8 +274,8 @@ bool flecs_query_cache_rematch_next(
  * 
  * This operation is expensive, since it needs to:
  * - make sure that optional fields matched on parents are updated
- * - groups are up to date for all the matched tables
- * - tables that no longer match are removed from the cache.
+ * - make sure that groups are up to date for all the matched tables
+ * - remove tables that no longer match from the cache.
  */
 void flecs_query_rematch(
     ecs_world_t *world,

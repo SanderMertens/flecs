@@ -763,7 +763,7 @@ bool flecs_type_info_init_id(
         } 
     }
 
-    /* All non-tag id records with component as object inherit type info,
+    /* All non-tag id records with component as target inherit type info,
      * if relationship doesn't have type info */
     cr = flecs_components_get(world, ecs_pair(EcsWildcard, component));
     if (cr) {

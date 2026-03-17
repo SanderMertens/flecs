@@ -220,7 +220,7 @@ bool flecs_pipeline_check_terms(
     int32_t t, term_count = query->term_count;
 
     /* Check This terms first. This way if a term indicating writing to a stage
-     * was added before the term, it won't cause merging. */
+     * was added before a This term, it won't cause merging. */
     for (t = 0; t < term_count; t ++) {
         ecs_term_t *term = &terms[t];
         if (ecs_term_match_this(term)) {

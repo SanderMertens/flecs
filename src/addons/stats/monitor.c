@@ -330,7 +330,7 @@ void flecs_stats_api_import(
         });
     }
 
-    // Called each minute, reduces into 60 measurements per day
+    // Called each minute, reduces into 24 measurements per day
     {
         ecs_aggregate_stats_ctx_t *ctx = ecs_os_calloc_t(ecs_aggregate_stats_ctx_t);
         ctx->api = *api;
@@ -353,7 +353,7 @@ void flecs_stats_api_import(
         });
     }
 
-    // Called each hour, reduces into 60 measurements per week
+    // Called each hour, reduces into 168 measurements per week
     {
         ecs_aggregate_stats_ctx_t *ctx = ecs_os_calloc_t(ecs_aggregate_stats_ctx_t);
         ctx->api = *api;
