@@ -2056,6 +2056,10 @@ void Observer_propagate_remove_isa_of_parent(void);
 void Observer_propagate_add_childof_of_base(void);
 void Observer_propagate_remove_childof_of_base(void);
 void Observer_emit_for_parent_w_prefab_child_and_instance(void);
+void Observer_query_eval_w_component_that_triggered_observer(void);
+void Observer_query_eval_w_pair_first_var_that_triggered_observer(void);
+void Observer_query_eval_w_pair_second_var_that_triggered_observer(void);
+void Observer_query_eval_w_pair_both_vars_that_triggered_observer(void);
 void Observer_observer_w_2_fixed_src(void);
 void Observer_emit_for_recreated_id_after_remove_all(void);
 void Observer_emit_for_recreated_id_after_remove_all_wildcard(void);
@@ -11248,6 +11252,22 @@ bake_test_case Observer_testcases[] = {
         Observer_emit_for_parent_w_prefab_child_and_instance
     },
     {
+        "query_eval_w_component_that_triggered_observer",
+        Observer_query_eval_w_component_that_triggered_observer
+    },
+    {
+        "query_eval_w_pair_first_var_that_triggered_observer",
+        Observer_query_eval_w_pair_first_var_that_triggered_observer
+    },
+    {
+        "query_eval_w_pair_second_var_that_triggered_observer",
+        Observer_query_eval_w_pair_second_var_that_triggered_observer
+    },
+    {
+        "query_eval_w_pair_both_vars_that_triggered_observer",
+        Observer_query_eval_w_pair_both_vars_that_triggered_observer
+    },
+    {
         "observer_w_2_fixed_src",
         Observer_observer_w_2_fixed_src
     },
@@ -16054,7 +16074,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        328,
+        332,
         Observer_testcases
     },
     {
