@@ -1,5 +1,5 @@
 /**
- * @file addons/script/expr_fold.c
+ * @file addons/script/expr/visit_fold.c
  * @brief Script expression constant folding.
  */
 

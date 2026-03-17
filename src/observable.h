@@ -8,10 +8,10 @@
 
 /** All observers for a specific (component) id */
 typedef struct ecs_event_id_record_t {
-    /* Triggers for Self */
-    ecs_map_t self;                  /* map<trigger_id, trigger_t> */
-    ecs_map_t self_up;               /* map<trigger_id, trigger_t> */
-    ecs_map_t up;                    /* map<trigger_id, trigger_t> */
+    /* Observers for Self */
+    ecs_map_t self;                  /* map<observer_id, observer_t> */
+    ecs_map_t self_up;               /* map<observer_id, observer_t> */
+    ecs_map_t up;                    /* map<observer_id, observer_t> */
 
     /* Number of active observers for (component) id */
     int32_t observer_count;

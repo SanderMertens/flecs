@@ -1,6 +1,6 @@
 /**
- * @file addons/json/serialize_iter_rows.c
- * @brief Serialize (component) values to JSON strings.
+ * @file addons/json/serialize_iter_result.c
+ * @brief Serialize iterator result to JSON.
  */
 
 #include "json.h"

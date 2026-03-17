@@ -1,5 +1,5 @@
 /**
- * @file addons/monitor.c
+ * @file addons/stats/monitor.c
  * @brief Stats addon module.
  */
 
@@ -107,7 +107,7 @@ void MonitorStats(ecs_iter_t *it) {
             /* Still in same interval, combine with last measurement */
             ctx->api.reduce_last(stats, last, hdr->reduce_count);
         } else if (dif > 1) {
-            /* More than 16ms has passed, backfill */
+            /* More than one interval has passed, backfill */
             for (i = 1; i < dif; i ++) {
                 ctx->api.repeat_last(stats);
             }
@@ -220,7 +220,7 @@ void AggregateStats(ecs_iter_t *it) {
         }
     } while (true);
 
-    /* A day has 60 24 minute intervals */
+    /* A day has 24 60-minute intervals */
     dst_hdr->reduce_count ++;
     if (dst_hdr->reduce_count >= interval) {
         dst_hdr->reduce_count = 0;

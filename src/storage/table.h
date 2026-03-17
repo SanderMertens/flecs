@@ -246,7 +246,7 @@ void flecs_table_fini(
     ecs_world_t *world,
     ecs_table_t *table); 
 
-/* Free table */
+/* Free table type */
 void flecs_table_free_type(
     ecs_world_t *world,
     ecs_table_t *table);     
@@ -278,7 +278,7 @@ void flecs_table_delete_entities(
     ecs_world_t *world,
     ecs_table_t *table);
 
-/* Increase observer count of table */
+/* Increase traversable count of table */
 void flecs_table_traversable_add(
     ecs_table_t *table,
     int32_t value);

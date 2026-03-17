@@ -1,6 +1,6 @@
 /**
- * @file addons/script/expr_ast.c
- * @brief Script expression AST implementation.
+ * @file addons/script/expr/visit_type.c
+ * @brief Script expression type visitor.
  */
 
 #include "flecs.h"
@@ -127,8 +127,6 @@ ecs_size_t flecs_expr_storage_size(
     else if (type == ecs_id(ecs_iptr_t))   return ECS_SIZEOF(ecs_iptr_t);
     else if (type == ecs_id(ecs_i64_t))    return ECS_SIZEOF(ecs_i64_t);
 
-    /* Floating points have a smaller storage score, since the largest integer 
-     * that can be represented exactly is lower than the actual storage size. */
     else if (type == ecs_id(ecs_f32_t))    return ECS_SIZEOF(ecs_f32_t);
     else if (type == ecs_id(ecs_f64_t))    return ECS_SIZEOF(ecs_f64_t);
 
@@ -137,7 +135,7 @@ ecs_size_t flecs_expr_storage_size(
     else return false;
 }
 
-/* This function returns true if an type can be casted without changing the 
+/* This function returns true if a type can be casted without changing the
  * precision of the value. It is used to determine a type for operands in a 
  * binary expression in case they are of different types. */
 static

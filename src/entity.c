@@ -251,7 +251,7 @@ void flecs_commit(
     ecs_assert(src_table != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (src_table == dst_table) {
-        /* If source and destination table are the same no action is needed *
+        /* If source and destination table are the same no action is needed.
          * However, if a component was added in the process of traversing a
          * table, this suggests that a union relationship could have changed. */
         ecs_flags32_t non_fragment_flags = 
@@ -358,7 +358,7 @@ const ecs_entity_t* flecs_bulk_new(
             const ecs_type_info_t *ti = cr->type_info;
             if (!ti) {
                 ecs_assert(ti != NULL, ECS_INVALID_PARAMETER, 
-                    "component '%s' passed to to bulk_new() at index %d is a "
+                    "component '%s' passed to bulk_new() at index %d is a "
                         "tag/zero sized",
                             flecs_errstr(ecs_id_str(world, id)), c_i);
             }
@@ -1289,8 +1289,8 @@ ecs_entity_t ecs_entity_init(
     bool name_assigned = false;
 
     /* Remove optional prefix from name. Entity names can be derived from 
-     * language identifiers, such as components (typenames) and systems
-     * function names). Because C does not have namespaces, such identifiers
+     * language identifiers, such as components (typenames) and system
+     * function names. Because C does not have namespaces, such identifiers
      * often encode the namespace as a prefix.
      * To ensure interoperability between C and C++ (and potentially other 
      * languages with namespacing) the entity must be stored without this prefix
@@ -2502,7 +2502,7 @@ void ecs_set_child_order(
         "children array passed to set_child_order() cannot be not-NULL if "
         "child_count is 0");
     ecs_check(!(world->flags & EcsWorldMultiThreaded), ECS_INVALID_OPERATION, 
-        "cannot call set_child_oderder() while in multithreaded mode");
+        "cannot call set_child_order() while in multithreaded mode");
 
     flecs_stage_from_world(&world);
 
@@ -2630,8 +2630,8 @@ bool ecs_owns_id(
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     flecs_assert_entity_valid(world, entity, "owns");
-    ecs_check(component != 0, ECS_INVALID_PARAMETER, 
-        "invalid component passed to has(): component cannot be 0");
+    ecs_check(component != 0, ECS_INVALID_PARAMETER,
+        "invalid component passed to owns(): component cannot be 0");
 
     /* Make sure we're not working with a stage */
     world = ecs_get_world(world);

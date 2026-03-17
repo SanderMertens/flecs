@@ -1201,7 +1201,7 @@ ecs_observer_t* flecs_observer_init(
          "cannot set yield_existing and YieldOn* flags at the same time");
 
     /* Check if observer is monitor. Monitors are created as multi observers
-     * since they require pre/post checking of the filter to test if the
+     * since they require pre/post checking of the query to test if the
      * entity is entering/leaving the monitor. */
     for (i = 0; i < FLECS_EVENT_DESC_MAX; i ++) {
         ecs_entity_t event = desc->events[i];

@@ -169,14 +169,14 @@ const char* flecs_json_parse_next_member(
 
     if (*token_kind != JsonComma) {
         ecs_parser_error(desc->name, desc->expr, json - desc->expr, 
-            "expecteded } or ,");
+            "expected } or ,");
         return NULL;
     }
 
     json = flecs_json_parse(json, token_kind, token);
     if (*token_kind != JsonString) {
         ecs_parser_error(desc->name, desc->expr, json - desc->expr, 
-            "expecteded member name");
+            "expected member name");
         return NULL;
     }
 
@@ -186,7 +186,7 @@ const char* flecs_json_parse_next_member(
     json = flecs_json_parse(json, &temp_token_kind, temp_token);
     if (temp_token_kind != JsonColon) {
         ecs_parser_error(desc->name, desc->expr, json - desc->expr, 
-            "expecteded :");
+            "expected :");
         return NULL;
     }
 

@@ -1,5 +1,5 @@
 /**
- * @file addons/script/expr_to_str.c
+ * @file addons/script/expr/visit_to_str.c
  * @brief Script expression AST to string visitor.
  */
 

@@ -179,7 +179,7 @@ void flecs_strbuf_ftoa(
         ptr --;
     }
 
-    /* If 0s before . exceed threshold, convert to exponent to save space 
+    /* If 0s before the decimal point exceed the threshold, convert to exponent to save space
      * without losing precision. */
     char *cur = ptr;
     while ((&cur[-1] != buf) && (cur[-1] == '0')) {

@@ -575,7 +575,7 @@ using_stmt: {
 
 // module
 module_stmt: {
-    // using flecs.meta\n
+    // module flecs.meta\n
     Parse_2(EcsTokIdentifier, '\n',
         flecs_script_insert_module(parser, Token(1));
         EndOfRule;
@@ -1047,7 +1047,7 @@ ecs_script_t* ecs_script_parse(
 
     /* Allocate a buffer that is able to store all parsed tokens. Multiply the
      * size of the script by two so that there is enough space to add \0
-     * terminators and expression deliminators ('""') 
+     * terminators and expression delimiters ('""')
      * The token buffer will exist for as long as the script object exists, and
      * ensures that AST nodes don't need to do separate allocations for the data
      * they contain. */

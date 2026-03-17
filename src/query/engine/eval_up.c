@@ -1,6 +1,6 @@
 /**
- * @file query/engine/eval.c
- * @brief Query engine implementation.
+ * @file query/engine/eval_up.c
+ * @brief Up traversal evaluation.
  */
 
 #include "../../private_api.h"
@@ -144,7 +144,7 @@ bool flecs_query_up_select(
 
     impl->trav = q->terms[op->term_index].trav;
 
-    /* Reuse component record from previous iteration if possible*/
+    /* Reuse component record from previous iteration if possible */
     if (!impl->cr_trav) {
         impl->cr_trav = flecs_components_get(ctx->world, 
             ecs_pair(impl->trav, EcsWildcard));

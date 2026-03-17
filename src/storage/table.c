@@ -13,15 +13,8 @@
  * 
  * Not all ids in a table have to be components. Tags are ids that have no
  * data type associated with them, and as a result don't need to be explicitly
- * stored beyond an element in the table type. To save space and speed up table
- * creation, each table has a reference to a "storage table", which is a table
- * that only includes component ids (so excluding tags).
- * 
- * Note that the actual data is not stored on the storage table. The storage 
- * table is only used for sharing administration. A column_map member maps
- * between column indices of the table and its storage table. Tables are 
- * refcounted, which ensures that storage tables won't be deleted if other
- * tables have references to it.
+ * stored beyond an element in the table type. A column_map member maps between
+ * type indices and column indices.
  */
 
 #include "../private_api.h"
@@ -1543,7 +1536,7 @@ void flecs_table_grow_column(
     if (count && can_realloc && ti->hooks.ctor_move_dtor) {
         ecs_assert(ti->hooks.ctor != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        /* Create  vector */
+        /* Create vector */
         ecs_vec_t dst;
         ecs_vec_init(NULL, &dst, elem_size, dst_size);
         dst.count = dst_count;

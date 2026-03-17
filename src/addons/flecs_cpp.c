@@ -324,7 +324,7 @@ ecs_entity_t ecs_cpp_component_register(
                  * 
                  * To meet this condition, the new type must have the same 
                  * size and alignment as the existing type, and the name of 
-                 * the type type must be equal to the registered name.
+                 * the type must be equal to the registered name.
                  * 
                  * The latter ensures that it was the intent of the 
                  * application to alias the type, vs. accidentally 

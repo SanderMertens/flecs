@@ -1,6 +1,6 @@
 /**
  * @file query/engine/trav_up_cache.c
- * @brief Compile query term.
+ * @brief Up traversal cache.
  */
 
 #include "../../private_api.h"

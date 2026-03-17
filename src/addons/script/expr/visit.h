@@ -1,5 +1,5 @@
 /**
- * @file addons/script/exor_visit.h
+ * @file addons/script/expr/visit.h
  * @brief Script AST visitor utilities.
  */
 

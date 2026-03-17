@@ -664,7 +664,7 @@ void flecs_fini_roots(
 
     /* Delete root entities that are not modules. This prioritizes deleting
      * regular entities first, which reduces the chance of components getting
-     * destructed in random order because it got deleted before entities,
+     * destructed in random order because they got deleted before entities,
      * thereby bypassing the OnDeleteTarget policy. */
     flecs_defer_begin(world, world->stages[0]);
     flecs_fini_root_tables(world, cr, true);

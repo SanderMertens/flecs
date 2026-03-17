@@ -16,7 +16,7 @@ typedef struct EcsAlert {
     ecs_vec_t severity_filters; /* Severity filters */
     
     /* Member range monitoring */
-    ecs_id_t id;                /* (Component) id that contains to monitor member */
+    ecs_id_t id;                /* (Component) id that contains member to monitor */
     ecs_entity_t member;        /* Member to monitor */
     int32_t offset;             /* Offset of member in component */
     int32_t size;               /* Size of component */
@@ -524,7 +524,7 @@ ecs_entity_t ecs_alert_init(
         return 0;
     }
 
-    /* Initialize Alert component which identifiers entity as alert */
+    /* Initialize Alert component which identifies entity as alert */
     EcsAlert *alert = ecs_ensure(world, result, EcsAlert);
     ecs_assert(alert != NULL, ECS_INTERNAL_ERROR, NULL);
     alert->message = ecs_os_strdup(desc->message);

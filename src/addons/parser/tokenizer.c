@@ -1,6 +1,6 @@
 /**
- * @file addons/script/tokenizer.c
- * @brief Script tokenizer.
+ * @file addons/parser/tokenizer.c
+ * @brief Parser tokenizer.
  */
 
 #include "flecs.h"

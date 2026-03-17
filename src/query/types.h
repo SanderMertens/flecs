@@ -237,7 +237,7 @@ typedef struct {
     ecs_component_record_t *cr_with;
     ecs_component_record_t *cr_trav;
 
-    /* If queried for component is a ChilOf pair that uses the non-fragmenting
+    /* If queried for component is a ChildOf pair that uses the non-fragmenting
      * ChildOf storage, iterate ordered children vector instead of tables with
      * ChildOf pairs as roots for down cache. */
     ecs_entity_t *entities;

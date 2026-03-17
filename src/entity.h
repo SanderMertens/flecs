@@ -69,7 +69,7 @@ void flecs_add_to_root_table(
     ecs_world_t *world,
     ecs_entity_t e);
 
-/* Mark an entity as being watched. This is used to trigger automatic rematching
+/* Add a flag to an entity. This is used to trigger automatic rematching
  * when entities used in system expressions change their components. */
 void flecs_add_flag(
     ecs_world_t *world,

@@ -14,7 +14,7 @@ bool flecs_query_trivial_search_init(
     ecs_flags64_t term_set)
 {
     if (!redo) {
-        /* Find first trivial term*/
+        /* Find first trivial term */
         int32_t t = 0;
         if (term_set) {
             for (; t < query->term_count; t ++) {

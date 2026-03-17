@@ -1,6 +1,6 @@
 /**
- * @file addons/world_summary.c
- * @brief Monitor addon.
+ * @file addons/stats/world_summary.c
+ * @brief World summary addon.
  */
 
 #include "flecs.h"

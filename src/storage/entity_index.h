@@ -1,5 +1,5 @@
 /**
- * @file datastructures/entity_index.h
+ * @file storage/entity_index.h
  * @brief Entity index data structure.
  *
  * The entity index stores the table, row for an entity id.
@@ -121,7 +121,7 @@ void flecs_entity_index_clear(
 void flecs_entity_index_shrink(
     ecs_entity_index_t *index);
 
-/* Return number of alive entities in index */
+/* Return ids of alive entities in index */
 const uint64_t* flecs_entity_index_ids(
     const ecs_entity_index_t *index);
 

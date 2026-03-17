@@ -1,5 +1,5 @@
 /**
- * @file addons/script/expr_ast.h
+ * @file addons/script/expr/ast.h
  * @brief Script expression AST.
  */
 

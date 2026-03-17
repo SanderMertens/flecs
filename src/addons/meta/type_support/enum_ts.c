@@ -488,7 +488,7 @@ ecs_entity_t ecs_enum_init(
             if (m_desc->value) {
                 if (ut_is_unsigned) {
                     char *path = ecs_get_path(world, c);
-                    ecs_err("use desc::value_unsigned for constant '%s' which"
+                    ecs_err("use desc::value_unsigned for constant '%s' which "
                         "has an unsigned underlying type", path);
                     ecs_os_free(path);
                     return 0;
@@ -497,7 +497,7 @@ ecs_entity_t ecs_enum_init(
             } else {
                 if (!ut_is_unsigned) {
                     char *path = ecs_get_path(world, c);
-                    ecs_err("use desc::value for constant '%s' which"
+                    ecs_err("use desc::value for constant '%s' which "
                         "has a signed underlying type", path);
                     ecs_os_free(path);
                     return 0;

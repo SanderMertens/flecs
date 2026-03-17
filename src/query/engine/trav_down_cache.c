@@ -1,6 +1,6 @@
 /**
  * @file query/engine/trav_down_cache.c
- * @brief Compile query term.
+ * @brief Down traversal cache.
  */
 
 #include "../../private_api.h"
@@ -178,7 +178,7 @@ void flecs_trav_entity_down_iter_children(
         ecs_record_t *r = flecs_entities_get(world, e);
         bool leaf = false;
 
-        /* Check if table has the component*/
+        /* Check if table has the component */
         if (flecs_component_get_table(cr_with, r->table) != NULL) {
             if (self) {
                 /* If matching self and the table has the component, entity

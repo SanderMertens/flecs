@@ -1,5 +1,6 @@
 /**
- * @file addons/script/expr/parser.c * brief Scriptexpoutsion parser.
+ * @file addons/script/expr/util.c
+ * @brief Script expression utilities.
  */
 
 #include "flecs.h"
@@ -78,7 +79,7 @@ int flecs_value_unary(
         ecs_assert(out->type == ecs_id(ecs_bool_t), ECS_INTERNAL_ERROR, NULL);
         *(bool*)out->ptr = !*(bool*)expr->ptr;
     } else {
-        ecs_abort(ECS_INTERNAL_ERROR, "invalid operator for binary expression");
+        ecs_abort(ECS_INTERNAL_ERROR, "invalid operator for unary expression");
     }
 
     return 0;

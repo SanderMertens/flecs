@@ -1,6 +1,6 @@
 /**
- * @file addons/script/query_parser.c
- * @brief Script grammar parser.
+ * @file addons/query_dsl/parser.c
+ * @brief Query DSL parser.
  */
 
 #include "flecs.h"

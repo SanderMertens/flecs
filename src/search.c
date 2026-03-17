@@ -233,7 +233,7 @@ int32_t flecs_table_search_relation(
         cr_r = world->cr_childof_wildcard;
 
         if (table->flags & EcsTableHasParent) {
-            /* Can't resolve parent on */
+            /* Can't resolve parent on table */
             ecs_assert(record != NULL, ECS_INVALID_PARAMETER,
                 "cannot traverse ChildOf on table with Parent component, "
                 "search on entity instead");

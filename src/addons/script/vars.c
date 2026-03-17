@@ -64,7 +64,7 @@ void ecs_script_vars_fini(
     ecs_script_vars_t *vars)
 {
     ecs_check(vars->parent == NULL, ECS_INVALID_PARAMETER,
-        "ecs_script_vars_fini can only be called on the roots cope");
+        "ecs_script_vars_fini can only be called on the root scope");
     ecs_script_vars_pop(vars);
 error:
     return;

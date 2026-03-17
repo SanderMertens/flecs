@@ -54,7 +54,7 @@ bool flecs_term_is_or(
     const ecs_query_t *q,
     const ecs_term_t *term);
 
-/* Get ref flags (IsEntity) or IsVar) for ref (Src, First, Second) */
+/* Get ref flags (IsEntity or IsVar) for ref (Src, First, Second) */
 ecs_flags16_t flecs_query_ref_flags(
     ecs_flags16_t flags,
     ecs_flags16_t kind);
@@ -64,7 +64,7 @@ bool flecs_query_is_written(
     ecs_var_id_t var_id,
     uint64_t written);
 
-/* Check if ref is written (calls flecs_query_is_written)*/
+/* Check if ref is written (calls flecs_query_is_written) */
 bool flecs_ref_is_written(
     const ecs_query_op_t *op,
     const ecs_query_ref_t *ref,

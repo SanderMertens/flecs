@@ -53,7 +53,7 @@ ecs_entity_t flecs_run_system(
              * EcsTimer component, don't run the system. This can be the result
              * of a single-shot timer that has fired already. Not resetting the
              * timer field of the system will ensure that the system won't be
-             * ran after the timer has fired. */
+             * run after the timer has fired. */
             return 0;
         }
     }

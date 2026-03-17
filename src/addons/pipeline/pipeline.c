@@ -522,7 +522,7 @@ void ecs_run_pipeline(
         pipeline = world->pipeline;
     }
 
-    /* create any worker task threads request */
+    /* Create any worker task threads requested */
     if (ecs_using_task_threads(world)) {
         flecs_create_worker_threads(world);
     }
@@ -557,7 +557,7 @@ int32_t flecs_run_pipeline_ops(
     for (; i < count; i++) {
         ecs_system_t* sys = systems[i];
 
-        /* Keep track of the last frame for which the system has ran, so we
+        /* Keep track of the last frame for which the system has run, so we
          * know from where to resume the schedule in case the schedule
          * changes during a merge. */
         if (stage_index == 0) {
@@ -750,7 +750,7 @@ bool ecs_progress(
         flecs_run_startup_systems(world);
     }
 
-    /* create any worker task threads request */
+    /* Create any worker task threads requested */
     if (ecs_using_task_threads(world)) {
         flecs_create_worker_threads(world);
     }

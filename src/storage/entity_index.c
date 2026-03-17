@@ -68,7 +68,7 @@ ecs_record_t* flecs_entity_index_get(
     ecs_assert(r->dense < index->alive_count, ECS_INVALID_PARAMETER, 
             "entity is not alive");
     ecs_assert(ecs_vec_get_t(&index->dense, uint64_t, r->dense)[0] == entity,
-        ECS_INVALID_PARAMETER, "mismatching liveliness generation for entity");
+        ECS_INVALID_PARAMETER, "mismatching liveness generation for entity");
     return r;
 }
 

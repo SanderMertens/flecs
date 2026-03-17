@@ -1,5 +1,5 @@
 /**
- * @file addons/script/expr_ast.c
+ * @file addons/script/expr/ast.c
  * @brief Script expression AST implementation.
  */
 
@@ -290,7 +290,7 @@ bool flecs_expr_explicit_cast_allowed(
     ecs_assert(from_type != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(to_type != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    /* Treat opaque types asthe types that they're pretending to be*/
+    /* Treat opaque types as the types that they're pretending to be */
     if (from_type->kind == EcsOpaqueType) {
         const EcsOpaque *o = ecs_get(world, from, EcsOpaque);
         ecs_assert(o != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -334,7 +334,7 @@ bool flecs_expr_explicit_cast_allowed(
         return true;
     }
 
-    /* Anything can be casted to a number */
+    /* Anything can be casted to a string */
     if (to == ecs_id(ecs_string_t)) {
         return true;
     }

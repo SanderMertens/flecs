@@ -4,7 +4,7 @@
  * 
  * The observable implementation contains functions that find the set of 
  * observers to invoke for an event. The code also contains the implementation
- * of a reachable id cache, which is used to speedup event propagation when
+ * of a reachable id cache, which is used to speed up event propagation when
  * relationships are added/removed to/from entities.
  */
 
@@ -59,7 +59,7 @@ ecs_event_record_t* flecs_event_record_get(
 {
     ecs_assert(o != NULL, ECS_INTERNAL_ERROR, NULL);
     
-    /* Builtin events*/
+    /* Builtin events */
     if      (event == EcsOnAdd)    return ECS_CONST_CAST(ecs_event_record_t*, &o->on_add);
     else if (event == EcsOnRemove) return ECS_CONST_CAST(ecs_event_record_t*, &o->on_remove);
     else if (event == EcsOnSet)    return ECS_CONST_CAST(ecs_event_record_t*, &o->on_set);
@@ -490,7 +490,7 @@ void flecs_emit_propagate_invalidate(
         ecs_component_record_t *cr_t = flecs_components_get(
             world, ecs_pair(EcsWildcard, entities[i]));
         if (cr_t) {
-            /* Event is used as target in traversable relationship, propagate */
+            /* Entity is used as target in traversable relationship, propagate */
             flecs_emit_propagate_invalidate_tables(world, cr_t);
         }
     }
@@ -910,7 +910,7 @@ void flecs_emit_forward_table_up(
         int32_t count = ecs_vec_count(reachable_ids);
         count -= rc_child_offset;
 
-        /* Append ids to any ids that already were added /*/
+        /* Append ids to any ids that already were added */
         if (count) {
             ecs_vec_grow_t(a, &rc->ids, ecs_reachable_elem_t, count);
             ecs_reachable_elem_t *dst = ecs_vec_get_t(&rc->ids, 
@@ -1288,8 +1288,8 @@ void flecs_emit(
 
     /* Event records contain all observers for a specific event. In addition to
      * the emitted event, also request data for the Wildcard event (for 
-     * observers subscribing to the wildcard event), OnSet events. The
-     * latter to are used for automatically emitting OnSet events for 
+     * observers subscribing to the wildcard event), and OnSet events. The
+     * latter two are used for automatically emitting OnSet events for
      * inherited components, for example when an IsA relationship is added to an
      * entity. This doesn't add much overhead, as fetching records is cheap for
      * builtin event types. */
@@ -1334,7 +1334,7 @@ void flecs_emit(
      * get notified of any new reachable components though the relationship. */
     bool can_forward = true;
 
-    /* Does table has observed entities */
+    /* Does table have observed entities */
     bool has_observed = table_flags & EcsTableHasTraversable;
 
     ecs_event_id_record_t *iders[5] = {0};

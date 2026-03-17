@@ -7,7 +7,7 @@
 
 #include "../private_api.h"
 
-/* The ratio used to determine whether the map should flecs_map_rehash. If
+/* The ratio used to determine whether the map should rehash. If
  * (element_count * ECS_LOAD_FACTOR) > bucket_count, bucket count is increased. */
 #define ECS_LOAD_FACTOR (12)
 #define ECS_BUCKET_END(b, c) ECS_ELEM_T(b, ecs_bucket_t, c)
