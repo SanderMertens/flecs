@@ -584,6 +584,7 @@ void flecs_multi_observer_invoke(
         prev_table = it->table;
     }
 
+    ecs_table_t *lock_table = table;
     table = table ? table : &world->store.root;
     prev_table = prev_table ? prev_table : &world->store.root;
 
@@ -664,7 +665,7 @@ void flecs_multi_observer_invoke(
 
         ecs_entity_t old_system = flecs_stage_set_system(
             world->stages[0], o->entity);
-        ecs_table_lock(it->world, table);
+        ecs_table_lock(it->world, lock_table);
 
         if (o->run) {
             user_it.next = flecs_default_next_callback;
@@ -676,7 +677,7 @@ void flecs_multi_observer_invoke(
         user_it.flags |= EcsIterSkip; /* Prevent change detection on fini */
         ecs_iter_fini(&user_it);
 
-        ecs_table_unlock(it->world, table);
+        ecs_table_unlock(it->world, lock_table);
         flecs_stage_set_system(world->stages[0], old_system);
     } else {
         /* While the observer query was strictly speaking evaluated, it's more

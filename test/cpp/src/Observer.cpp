@@ -975,6 +975,32 @@ void Observer_on_add_with_pair_singleton(void) {
     test_int(count, 1);
 }
 
+void Observer_on_set_singleton_set_component_named_entity(void) {
+    flecs::world world;
+
+    struct MyComponent {
+        int v = 0;
+    };
+
+    struct MySingletonComponent {
+        int v = 0;
+    };
+
+    world.component<MyComponent>();
+    world.component<MySingletonComponent>().add(flecs::Singleton);
+
+    world.observer<const MySingletonComponent>()
+        .write<MySingletonComponent>()
+        .event(flecs::OnSet)
+        .each([](flecs::iter &it, size_t, const MySingletonComponent &c1) {
+            it.world().entity("A").set<MyComponent>({c1.v});
+        });
+
+    world.set<MySingletonComponent>({1});
+
+    test_int(world.entity("A").get<MyComponent>().v, 1);
+}
+
 void Observer_add_in_yield_existing(void) {
     flecs::world world;
 

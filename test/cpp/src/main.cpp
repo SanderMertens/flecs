@@ -1089,6 +1089,7 @@ void Observer_on_add_singleton(void);
 void Observer_on_add_pair_singleton(void);
 void Observer_on_add_pair_wildcard_singleton(void);
 void Observer_on_add_with_pair_singleton(void);
+void Observer_on_set_singleton_set_component_named_entity(void);
 void Observer_add_in_yield_existing(void);
 void Observer_add_in_yield_existing_multi(void);
 void Observer_name_from_root(void);
@@ -5877,6 +5878,10 @@ bake_test_case Observer_testcases[] = {
         Observer_on_add_with_pair_singleton
     },
     {
+        "on_set_singleton_set_component_named_entity",
+        Observer_on_set_singleton_set_component_named_entity
+    },
+    {
         "add_in_yield_existing",
         Observer_add_in_yield_existing
     },
@@ -8072,7 +8077,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        68,
+        69,
         Observer_testcases
     },
     {

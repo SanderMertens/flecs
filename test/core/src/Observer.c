@@ -2,6 +2,16 @@
 
 static ECS_COMPONENT_DECLARE(Position);
 static ECS_COMPONENT_DECLARE(Velocity);
+static ECS_COMPONENT_DECLARE(ReproMyComponent);
+static ECS_COMPONENT_DECLARE(ReproMySingletonComponent);
+
+typedef struct ReproMyComponent {
+    int v;
+} ReproMyComponent;
+
+typedef struct ReproMySingletonComponent {
+    int v;
+} ReproMySingletonComponent;
 
 static
 void Observer(ecs_iter_t *it) {
@@ -11109,6 +11119,16 @@ static void SingletonObserver_w_value(ecs_iter_t *it) {
     is_singleton_observer_invoked ++;
 }
 
+static void SingletonSetComponentNamedEntityObserver(ecs_iter_t *it) {
+    test_int(it->count, 0);
+
+    ReproMySingletonComponent *c1 = ecs_field(it, ReproMySingletonComponent, 0);
+    test_assert(c1 != NULL);
+
+    ecs_entity_t a = ecs_entity(it->world, { .name = "A" });
+    ecs_set(it->world, a, ReproMyComponent, { c1->v });
+}
+
 void Observer_2_singleton_terms_on_add(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -11190,6 +11210,35 @@ void Observer_2_singleton_terms_on_set(void) {
     ecs_singleton_set(world, Velocity, {1, 2});
 
     test_int(is_singleton_observer_invoked, 1);
+
+    ecs_fini(world);
+}
+
+void Observer_on_set_singleton_set_component_named_entity(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, ReproMyComponent);
+    ECS_COMPONENT_DEFINE(world, ReproMySingletonComponent);
+
+    ecs_add_id(world, ecs_id(ReproMySingletonComponent), EcsSingleton);
+
+    ecs_observer(world, {
+        .query.terms = {
+            { ecs_id(ReproMySingletonComponent) },
+            { ecs_id(ReproMySingletonComponent), .src.id = EcsIsEntity, .inout = EcsOut }
+        },
+        .events = { EcsOnSet },
+        .callback = SingletonSetComponentNamedEntityObserver
+    });
+
+    ecs_singleton_set(world, ReproMySingletonComponent, {1});
+
+    ecs_entity_t a = ecs_lookup(world, "A");
+    test_assert(a != 0);
+
+    const ReproMyComponent *c = ecs_get(world, a, ReproMyComponent);
+    test_assert(c != NULL);
+    test_int(c->v, 1);
 
     ecs_fini(world);
 }
