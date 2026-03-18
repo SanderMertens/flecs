@@ -2172,6 +2172,7 @@ void Observer_2_terms_on_set_yield_existing_is_set(void);
 void Observer_2_singleton_terms_on_add(void);
 void Observer_2_singleton_terms_on_remove(void);
 void Observer_2_singleton_terms_on_set(void);
+void Observer_on_set_singleton_set_component_named_entity(void);
 void Observer_1_term_field_size(void);
 void Observer_2_terms_field_size(void);
 void Observer_1_up_term_field_size(void);
@@ -11716,6 +11717,10 @@ bake_test_case Observer_testcases[] = {
         Observer_2_singleton_terms_on_set
     },
     {
+        "on_set_singleton_set_component_named_entity",
+        Observer_on_set_singleton_set_component_named_entity
+    },
+    {
         "1_term_field_size",
         Observer_1_term_field_size
     },
@@ -16074,7 +16079,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        332,
+        333,
         Observer_testcases
     },
     {
