@@ -1,5 +1,5 @@
 /**
- * @file hashmap.h
+ * @file datastructures/hashmap.h
  * @brief Hashmap data structure.
  */
 

@@ -352,6 +352,7 @@ void flecs_query_it_set_tr(
     it->trs[field_index] = tr;
 }
 
+static
 ecs_id_t flecs_query_it_set_id(
     ecs_iter_t *it,
     ecs_table_t *table,

@@ -3,8 +3,8 @@
  * @brief Non-fragmenting storage for hierarchies.
  */
 
-#ifndef FLECS_NON_FRAGMENTING_CHILDOF
-#define FLECS_NON_FRAGMENTING_CHILDOF
+#ifndef FLECS_NON_FRAGMENTING_CHILDOF_H
+#define FLECS_NON_FRAGMENTING_CHILDOF_H
 
 void flecs_bootstrap_parent_component(
     ecs_world_t *world);

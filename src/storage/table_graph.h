@@ -56,22 +56,11 @@ void flecs_type_add(
     ecs_type_t *type,
     ecs_id_t add);
 
-/* Remove from existing type */
-void flecs_type_remove(
-    ecs_world_t *world,
-    ecs_type_t *type,
-    ecs_id_t remove);
-
 /* Remove from existing type, matching entity ids by raw id only. */
 void flecs_type_remove_ignoring_generation(
     ecs_world_t *world,
     ecs_type_t *type,
     ecs_id_t remove);
-
-/** Copy type. */
-ecs_type_t flecs_type_copy(
-    ecs_world_t *world,
-    const ecs_type_t *src);
 
 /** Free type. */
 void flecs_type_free(
@@ -107,13 +96,6 @@ void flecs_table_diff_build_append_table(
     ecs_world_t *world,
     ecs_table_diff_builder_t *dst,
     ecs_table_diff_t *src);
-
-void flecs_table_diff_build(
-    ecs_world_t *world,
-    ecs_table_diff_builder_t *builder,
-    ecs_table_diff_t *diff,
-    int32_t added_offset,
-    int32_t removed_offset);
 
 void flecs_table_diff_build_noalloc(
     ecs_table_diff_builder_t *builder,

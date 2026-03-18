@@ -9,6 +9,7 @@
 
 #define FLECS_JSON_MAX_TABLE_COMPONENTS (256)
 
+static
 bool flecs_json_is_builtin(
     ecs_id_t id)
 {

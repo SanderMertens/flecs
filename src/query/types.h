@@ -1,10 +1,10 @@
- /**
+/**
  * @file query/types.h
  * @brief Internal types and functions for queries.
  */
 
-#ifndef FLECS_QUERY_TYPES
-#define FLECS_QUERY_TYPES
+#ifndef FLECS_QUERY_TYPES_H
+#define FLECS_QUERY_TYPES_H
 
 typedef struct ecs_query_impl_t ecs_query_impl_t;
 typedef uint8_t ecs_var_id_t;

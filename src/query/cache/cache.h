@@ -1,7 +1,10 @@
- /**
+/**
  * @file query/cache/cache.h
  * @brief Query cache functions.
  */
+
+#ifndef FLECS_QUERY_CACHE_H
+#define FLECS_QUERY_CACHE_H
 
 #include "../types.h"
 
@@ -127,3 +130,5 @@ ecs_size_t flecs_query_cache_elem_size(
 #include "group.h"
 #include "match.h"
 #include "change_detection.h"
+
+#endif

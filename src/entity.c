@@ -27,6 +27,7 @@ flecs_component_ptr_t flecs_table_get_component(
     };
 }
 
+static
 flecs_component_ptr_t flecs_get_component_ptr(
     const ecs_world_t *world,
     ecs_table_t *table,

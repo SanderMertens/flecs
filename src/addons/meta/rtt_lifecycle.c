@@ -1,6 +1,6 @@
 /**
  * @file addons/meta/rtt_lifecycle.c
- * @brief Runtime component lifecycle management
+ * @brief Runtime component lifecycle management.
  */
 
 #include "flecs.h"

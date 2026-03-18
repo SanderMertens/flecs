@@ -1262,6 +1262,7 @@ error:
     return result;
 }
 
+static
 int flecs_script_eval_using(
     ecs_script_eval_visitor_t *v,
     ecs_script_using_t *node)

@@ -511,29 +511,4 @@ int flecs_script_check_node(
     ecs_abort(ECS_INTERNAL_ERROR, "corrupt AST node kind");
 }
 
-int flecs_script_check(
-    const ecs_script_t *script,
-    const ecs_script_eval_desc_t *desc)
-{
-    ecs_script_eval_visitor_t v;
-    ecs_script_impl_t *impl = flecs_script_impl(
-        /* Safe, script will only be used for reading by visitor */
-        ECS_CONST_CAST(ecs_script_t*, script));
-
-    ecs_script_eval_desc_t priv_desc = {0};
-    if (desc) {
-        priv_desc = *desc;
-    }
-
-    if (!priv_desc.runtime) {
-        priv_desc.runtime = flecs_script_runtime_get(script->world);
-    }
-
-    flecs_script_eval_visit_init(impl, &v, &priv_desc);
-    int result = ecs_script_visit(impl, &v, flecs_script_check_node);
-    flecs_script_eval_visit_fini(&v, &priv_desc);
-
-    return result;
-}
-
 #endif

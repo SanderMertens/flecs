@@ -1,5 +1,5 @@
 /**
- * @file block_allocator.h
+ * @file datastructures/block_allocator.h
  * @brief Block allocator.
  */
 

@@ -3,6 +3,9 @@
  * @brief Utilities for looking up entities by name.
  */
 
+#ifndef FLECS_ENTITY_NAME_H
+#define FLECS_ENTITY_NAME_H
+
 #include "private_api.h"
 
 /* Called during bootstrap to register entity name observers with world. */
@@ -27,3 +30,5 @@ void flecs_unparent_name_index(
 /* Hook (on_set/on_remove) for updating lookup index for entity names. */
 void ecs_on_set(EcsIdentifier)(
     ecs_iter_t *it);
+
+#endif

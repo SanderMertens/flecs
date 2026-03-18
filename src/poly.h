@@ -83,15 +83,6 @@ void flecs_poly_modified_(
 #define flecs_poly_modified(world, entity, T) \
     flecs_poly_modified_(world, entity, T##_tag)
 
-/* Get poly component for an entity */
-const EcsPoly* flecs_poly_bind_get_(
-    const ecs_world_t *world,
-    ecs_entity_t entity,
-    ecs_entity_t tag);
-
-#define flecs_poly_bind_get(world, entity, T) \
-    flecs_poly_bind_get_(world, entity, T##_tag)
-
 /* Get (Poly, Tag) poly object from entity. */
 ecs_poly_t* flecs_poly_get_(
     const ecs_world_t *world,

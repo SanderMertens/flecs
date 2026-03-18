@@ -1,5 +1,5 @@
 /**
- * @file api_support.h
+ * @file private/api_support.h
  * @brief Support functions and constants.
  *
  * Supporting types and functions that need to be exposed either in support of 

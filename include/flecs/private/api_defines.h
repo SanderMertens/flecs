@@ -1,5 +1,5 @@
 /**
- * @file api_defines.h
+ * @file private/api_defines.h
  * @brief Supporting defines for the public API.
  *
  * This file contains constants / macros that are typically not used by an

@@ -106,6 +106,7 @@ bool flecs_query_pred_eq_name(
     return flecs_query_pred_eq_w_range(op, redo, ctx, r);
 }
 
+static
 bool flecs_query_pred_neq_w_range(
     const ecs_query_op_t *op,
     bool redo,

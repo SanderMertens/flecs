@@ -174,9 +174,6 @@ typedef struct ecs_script_for_range_t {
 bool flecs_scope_is_empty(
     ecs_script_scope_t *scope);
 
-ecs_script_scope_t* flecs_script_insert_scope(
-    ecs_parser_t *parser);
-
 ecs_script_entity_t* flecs_script_insert_entity(
     ecs_parser_t *parser,
     const char *name);

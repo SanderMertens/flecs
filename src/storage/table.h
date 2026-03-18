@@ -178,11 +178,6 @@ ecs_table_t* flecs_table_find_or_create(
     ecs_world_t *world,
     ecs_type_t *type);
 
-/* Initialize columns for data */
-void flecs_table_init_data(
-    ecs_world_t *world,
-    ecs_table_t *table); 
-
 /* Reset a table to its initial state */
 void flecs_table_reset(
     ecs_world_t *world,
@@ -257,12 +252,6 @@ void flecs_table_merge(
     ecs_table_t *new_table,
     ecs_table_t *old_table);
 
-void flecs_table_swap(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    int32_t row_1,
-    int32_t row_2);
-
 void flecs_table_mark_dirty(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -274,23 +263,10 @@ void flecs_table_notify(
     ecs_id_t id,
     ecs_table_event_t *event);
 
-void flecs_table_delete_entities(
-    ecs_world_t *world,
-    ecs_table_t *table);
-
 /* Increase traversable count of table */
 void flecs_table_traversable_add(
     ecs_table_t *table,
     int32_t value);
-
-void flecs_table_emit(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_entity_t event);
-
-int32_t flecs_table_get_toggle_column(
-    ecs_table_t *table,
-    ecs_id_t id);
 
 ecs_bitset_t* flecs_table_get_toggle(
     ecs_table_t *table,

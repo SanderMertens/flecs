@@ -260,41 +260,6 @@ repeat: {}
     return true;
 }
 
-bool flecs_query_with_id(
-    const ecs_query_op_t *op,
-    bool redo,
-    const ecs_query_run_ctx_t *ctx)
-{
-    if (redo) {
-        return false;
-    }
-
-    ecs_query_and_ctx_t *op_ctx = flecs_op_ctx(ctx, and);
-    ecs_iter_t *it = ctx->it;
-    int8_t field = op->field_index;
-    ecs_assert(field != -1, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_table_t *table = flecs_query_get_table(op, &op->src, EcsQuerySrc, ctx);
-    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_id_t id = it->ids[field];
-    ecs_component_record_t *cr = op_ctx->cr;
-    if (!cr || cr->id != id) {
-        cr = op_ctx->cr = flecs_components_get(ctx->world, id);
-        if (!cr) {
-            return false;
-        }
-    }
-
-    const ecs_table_record_t *tr = flecs_component_get_table(cr, table);
-    if (!tr) {
-        return false;
-    }
-
-    flecs_query_it_set_tr(it, field, tr);
-    return true;
-}
-
 bool flecs_query_and_any(
     const ecs_query_op_t *op,
     bool redo,

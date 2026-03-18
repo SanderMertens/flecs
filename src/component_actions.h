@@ -3,6 +3,9 @@
  * @brief Logic executed after adding/removing a component.
  */
 
+#ifndef FLECS_COMPONENT_ACTIONS_H
+#define FLECS_COMPONENT_ACTIONS_H
+
 #include "private_api.h"
 
 /* Invoke component hook. */
@@ -58,15 +61,7 @@ void flecs_actions_new(
     bool construct,
     bool sparse);
 
-/* Run actions for deleting an entity. */
-void flecs_actions_delete(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    int32_t row,
-    int32_t count,
-    const ecs_table_diff_t *diff);
-
-/* Same as flecs_actions_delete, but for entities whose parent is also deleted. */
+/* Run actions for deleting an entity and its children. */
 void flecs_actions_delete_tree(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -110,3 +105,5 @@ void flecs_notify_on_set_ids(
     int32_t row,
     int32_t count,
     ecs_type_t *ids);
+
+#endif

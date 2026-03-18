@@ -1,7 +1,10 @@
 /**
  * @file query/util.h
- * @brief Utility functions
+ * @brief Utility functions.
  */
+
+#ifndef FLECS_QUERY_UTIL_H
+#define FLECS_QUERY_UTIL_H
 
 #include "types.h"
 
@@ -95,4 +98,6 @@ ecs_id_t flecs_query_iter_set_id(
     ecs_iter_t *it,
     int8_t field,
     ecs_id_t id);
+
+#endif
 

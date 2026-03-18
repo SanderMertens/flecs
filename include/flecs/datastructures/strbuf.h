@@ -1,5 +1,5 @@
 /**
- * @file strbuf.h
+ * @file datastructures/strbuf.h
  * @brief Utility for constructing strings.
  */
 

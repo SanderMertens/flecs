@@ -1,6 +1,6 @@
 /**
  * @file addons/stats/system_monitor.c
- * @brief Stats addon system monitor
+ * @brief Stats addon system monitor.
  */
 
 #include "flecs.h"

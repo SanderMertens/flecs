@@ -8,6 +8,10 @@
 #ifdef FLECS_SCRIPT
 #include "../script.h"
 
+ecs_expr_value_t* flecs_expr_stack_alloc(
+    ecs_expr_stack_t *stack,
+    const ecs_type_info_t *ti);
+
 static
 void flecs_expr_value_alloc(
     ecs_expr_stack_t *stack,

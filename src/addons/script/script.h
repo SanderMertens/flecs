@@ -80,10 +80,6 @@ void flecs_script_register_builtin_functions(
 void flecs_function_import(
     ecs_world_t *world);
 
-int flecs_script_check(
-    const ecs_script_t *script,
-    const ecs_script_eval_desc_t *desc);
-
 const char* flecs_script_stmt(
     ecs_parser_t *parser,
     const char *pos);

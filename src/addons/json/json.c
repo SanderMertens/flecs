@@ -7,6 +7,11 @@
 
 #ifdef FLECS_JSON
 
+const char* flecs_json_skip_array(
+    const char *json,
+    char *token,
+    const ecs_from_json_desc_t *desc);
+
 static
 const char* flecs_json_token_str(
     ecs_json_token_t token_kind)
@@ -283,19 +288,6 @@ const char* flecs_json_expect_member(
         return NULL;
     }
     return json;
-}
-
-const char* flecs_json_expect_next_member(
-    const char *json,
-    char *token,
-    const ecs_from_json_desc_t *desc)
-{
-    json = flecs_json_expect(json, JsonComma, token, desc);
-    if (!json) {
-        return NULL;
-    }
-
-    return flecs_json_expect_member(json, token, desc);
 }
 
 const char* flecs_json_expect_member_name(
@@ -580,28 +572,6 @@ void flecs_json_path_or_label(
         flecs_json_label(buf, world, e);
     } else {
         flecs_json_path(buf, world, e);
-    }
-}
-
-void flecs_json_color(
-    ecs_strbuf_t *buf,
-    const ecs_world_t *world,
-    ecs_entity_t e)
-{
-    (void)world;
-    (void)e;
-
-    const char *color = NULL;
-#ifdef FLECS_DOC
-    color = ecs_doc_get_color(world, e);
-#endif
-
-    if (color) {
-        ecs_strbuf_appendch(buf, '"');
-        ecs_strbuf_appendstr(buf, color);
-        ecs_strbuf_appendch(buf, '"');
-    } else {
-        ecs_strbuf_appendch(buf, '0');
     }
 }
 

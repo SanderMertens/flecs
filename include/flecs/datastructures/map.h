@@ -1,5 +1,5 @@
 /**
- * @file map.h
+ * @file datastructures/map.h
  * @brief Map data structure.
  */
 

@@ -1,4 +1,4 @@
- /**
+/**
  * @file query/api.c
  * @brief User facing API for queries.
  */
@@ -276,6 +276,7 @@ void flecs_query_copy_arrays(
     q->ids = flecs_dup_n(a, ecs_id_t, q->term_count, q->ids);
 }
 
+static
 void flecs_query_free_arrays(
     ecs_query_t *q)
 {
