@@ -281,7 +281,7 @@ void flecs_commit(
 
     /* If the entity is traversable, it is being monitored for changes and
      * requires rematching queries when components are added or removed. This
-     * ensures that queries that rely on components from parents or prefabs
+     * ensures that queries that rely on components from traversable entities
      * update the matched tables when the application adds or removes a
      * component from, for example, a parent. */
     if (is_trav) {

@@ -62,7 +62,7 @@ void flecs_entity_index_remove(
     ecs_entity_index_t *index,
     uint64_t entity);
 
-/* Set generation of entity */
+/* Make entity alive */
 void flecs_entity_index_make_alive(
     ecs_entity_index_t *index,
     uint64_t entity);

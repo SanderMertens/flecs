@@ -709,7 +709,7 @@ int flecs_term_finalize(
 
     ecs_flags64_t ent_var_mask = EcsIsEntity | EcsIsVariable;
 
-    /* If EcsVariable is used by itself, assign to predicate (singleton) */
+    /* If EcsVariable is used by itself, assign to first (singleton) */
     if ((ECS_TERM_REF_ID(src) == EcsVariable) && (src->id & EcsIsVariable)) {
         src->id = first->id | ECS_TERM_REF_FLAGS(src);
         src->id &= ~ent_var_mask;

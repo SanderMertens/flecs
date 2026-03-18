@@ -291,7 +291,7 @@ void flecs_entity_index_remove(
     ecs_entity_index_t *index,
     uint64_t entity);
 
-/* Set generation of entity */
+/* Make entity alive */
 void flecs_entity_index_make_alive(
     ecs_entity_index_t *index,
     uint64_t entity);
@@ -2048,7 +2048,7 @@ bool flecs_query_cache_match_next(
 
 /**
  * @file query/cache/change_detection.h
- * @brief Query change detection implementation.
+ * @brief Query change detection functions.
  */
 
 void flecs_query_sync_match_monitor(
@@ -3110,8 +3110,7 @@ void flecs_add_to_root_table(
     ecs_world_t *world,
     ecs_entity_t e);
 
-/* Add a flag to an entity. This is used to trigger automatic rematching
- * when entities used in query expressions change their components. */
+/* Add a flag to an entity record (e.g. EcsEntityIsTraversable). */
 void flecs_add_flag(
     ecs_world_t *world,
     ecs_entity_t entity,
@@ -3549,8 +3548,8 @@ flecs_poly_dtor_t* flecs_get_dtor(
  * @brief Data structure used to speed up the creation of hierarchies.
  */
 
-#ifndef FLECS_SPAWNER_H
-#define FLECS_SPAWNER_H
+#ifndef FLECS_TREE_SPAWNER_H
+#define FLECS_TREE_SPAWNER_H
 
 /* Called during bootstrap to register spawner entities with the world. */
 void flecs_bootstrap_spawner(
@@ -4349,7 +4348,7 @@ static ECS_DTOR(EcsPoly, ptr, {
 })
 
 
-/* -- Builtin triggers -- */
+/* -- Builtin observers -- */
 
 static
 void flecs_assert_relation_unused(
@@ -6557,9 +6556,10 @@ void flecs_cmd_batch_for_entity(
 
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    /* Invoke OnAdd handlers after commit. This ensures that observers with 
-     * mixed OnAdd/OnSet events won't get called with uninitialized values for
-     * an OnSet field. */
+    /* Save added ids and clear from diff so that they won't be emitted as
+     * part of the commit below. OnAdd events will be emitted separately after
+     * the commit, so that observers with mixed OnAdd/OnSet events won't get
+     * called with uninitialized values for an OnSet field. */
     ecs_type_t added = { diff->added.array, diff->added.count };
     diff->added.array = NULL;
     diff->added.count = 0;
@@ -8198,7 +8198,7 @@ void flecs_commit(
 
     /* If the entity is traversable, it is being monitored for changes and
      * requires rematching queries when components are added or removed. This
-     * ensures that queries that rely on components from parents or prefabs
+     * ensures that queries that rely on components from traversable entities
      * update the matched tables when the application adds or removes a
      * component from, for example, a parent. */
     if (is_trav) {
@@ -24609,12 +24609,12 @@ ecs_entity_t ecs_alert_init(
 
     ecs_query_t *q = ecs_query_init(world, &private_desc);
     if (!q) {
-        ecs_err("failed to create alert filter");
+        ecs_err("failed to create alert query");
         return 0;
     }
 
     if (!(q->flags & EcsQueryMatchThis)) {
-        ecs_err("alert filter must have at least one '$this' term");
+        ecs_err("alert query must have at least one '$this' term");
         ecs_query_fini(q);
         return 0;
     }
@@ -29320,7 +29320,7 @@ void flecs_world_stats_to_json(
     ECS_COUNTER_APPEND(reply, stats, commands.delete_count, "Delete commands executed");
     ECS_COUNTER_APPEND(reply, stats, commands.clear_count, "Clear commands executed");
     ECS_COUNTER_APPEND(reply, stats, commands.set_count, "Set commands executed");
-    ECS_COUNTER_APPEND(reply, stats, commands.ensure_count, "Get_mut commands executed");
+    ECS_COUNTER_APPEND(reply, stats, commands.ensure_count, "Ensure commands executed");
     ECS_COUNTER_APPEND(reply, stats, commands.modified_count, "Modified commands executed");
     ECS_COUNTER_APPEND(reply, stats, commands.other_count, "Misc commands executed");
     ECS_COUNTER_APPEND(reply, stats, commands.discard_count, "Commands for already deleted entities");
@@ -30682,13 +30682,6 @@ void FlecsRestImport(
 #define ecs_system_t_tag       EcsSystem
 
 extern ecs_mixins_t ecs_system_t_mixins;
-
-/* Invoked when system becomes active / inactive */
-void ecs_system_activate(
-    ecs_world_t *world,
-    ecs_entity_t system,
-    bool activate,
-    const ecs_system_t *system_data);
 
 /* Internal function to run a system */
 ecs_entity_t flecs_run_system(
@@ -38000,7 +37993,7 @@ int flecs_term_finalize(
 
     ecs_flags64_t ent_var_mask = EcsIsEntity | EcsIsVariable;
 
-    /* If EcsVariable is used by itself, assign to predicate (singleton) */
+    /* If EcsVariable is used by itself, assign to first (singleton) */
     if ((ECS_TERM_REF_ID(src) == EcsVariable) && (src->id & EcsIsVariable)) {
         src->id = first->id | ECS_TERM_REF_FLAGS(src);
         src->id &= ~ent_var_mask;
@@ -46924,7 +46917,7 @@ ecs_table_t* ecs_table_find(
 }
 
 /**
- * @file addons/http.c
+ * @file addons/http/http.c
  * @brief HTTP addon.
  *
  * This is a heavily modified version of the EmbeddableWebServer (see copyright
@@ -48722,7 +48715,7 @@ void* ecs_http_server_ctx(
 
 /**
  * @file addons/json/deserialize.c
- * @brief Deserialize JSON strings into (component) values.
+ * @brief Deserialize JSON strings into entities and worlds.
  */
 
 
@@ -53267,7 +53260,7 @@ int flecs_json_serialize_iter_result_query(
                 }
             }
 
-            ecs_strbuf_appendstr(buf, "}"); // "fields": {
+            ecs_strbuf_appendstr(buf, "}"); /* end "fields" */
         }
 
         flecs_json_object_pop(buf);
@@ -55902,7 +55895,7 @@ error:
 
 /**
  * @file addons/meta/cursor.c
- * @brief API for assigning values of runtime types with reflection.
+ * @brief API for reading and assigning values of runtime types with reflection.
  */
 
 #include <inttypes.h>
@@ -62133,6 +62126,11 @@ const char* flecs_token(
 
 #endif
 
+/**
+ * @file addons/pipeline/frame.c
+ * @brief Functions for frame begin/end.
+ */
+
 
 #ifdef FLECS_PIPELINE
 
@@ -62537,7 +62535,7 @@ bool flecs_pipeline_check_terms(
         }
     }
 
-    /* Now check staged terms */
+    /* Now check non-$this terms */
     for (t = 0; t < term_count; t ++) {
         ecs_term_t *term = &terms[t];
         if (!ecs_term_match_this(term)) {
@@ -65448,7 +65446,7 @@ void flecs_function_import(
 
 /**
  * @file addons/script/functions_builtin.c
- * @brief Flecs functions for flecs script.
+ * @brief Built-in functions for flecs script.
  */
 
 
@@ -68626,7 +68624,7 @@ void flecs_script_template_ctor(
     ecs_world_t *world = ti->hooks.ctx;
     ecs_entity_t template_entity = ti->component;
 
-    /* Initialize object so copy hooks can safely overwrite members with dtors. */
+    /* Zero-initialize memory so that hooks can safely run destructors. */
     flecs_default_ctor(ptr, count, ti);
     
     const EcsStruct *st = ecs_get(world, template_entity, EcsStruct);
@@ -72867,6 +72865,7 @@ error:
 
 /**
  * @file addons/stats/memory.c
+ * @brief Memory usage statistics.
  */
 
 /**
@@ -74547,7 +74546,7 @@ void AggregateStats(ecs_iter_t *it) {
             ctx->api.copy_last(last, dst);
         }
 
-        /* Reduce from minutes to the current day */
+        /* Reduce stats into the current aggregation interval */
         ctx->api.reduce(dst, src);
 
         if (dst_hdr->reduce_count != 0) {
@@ -74563,7 +74562,7 @@ void AggregateStats(ecs_iter_t *it) {
         }
     } while (true);
 
-    /* A day has 24 60-minute intervals */
+    /* Increment reduce count, reset when interval is reached */
     dst_hdr->reduce_count ++;
     if (dst_hdr->reduce_count >= interval) {
         dst_hdr->reduce_count = 0;
@@ -77606,14 +77605,14 @@ bool flecs_query_is_cache_search(
     return true;
 }
 
-/* Iterate cache for query that's entirely cached */
+/* Iterate trivial cache for query that's entirely cached */
 bool flecs_query_is_trivial_cache_search(
     const ecs_query_run_ctx_t *ctx)
 {
     return flecs_query_trivial_cache_next(ctx) != NULL;
 }
 
-/* Test if query that is entirely cached matches constrained $this */
+/* Test if query that is partially cached matches constrained $this */
 bool flecs_query_cache_test(
     const ecs_query_run_ctx_t *ctx,
     bool redo)
@@ -89744,7 +89743,7 @@ void flecs_meta_opaque_init(
 
 /**
  * @file addons/meta/type_support/primitive_ts.c
- * @brief Primitives type support.
+ * @brief Primitive type support.
  */
 
 
@@ -94492,8 +94491,9 @@ int flecs_expr_unary_visit_fold(
 
     if (node->expr->type != ecs_id(ecs_bool_t)) {
         char *type_str = ecs_get_path(script->world, node->node.type);
-        flecs_expr_visit_error(script, node, 
-            "! operator cannot be applied to value of type '%s' (must be bool)");
+        flecs_expr_visit_error(script, node,
+            "! operator cannot be applied to value of type '%s' (must be bool)",
+            type_str);
         ecs_os_free(type_str);
         goto error;
     }
@@ -95880,10 +95880,10 @@ int32_t flecs_expr_expressiveness_score(
     else return false;
 }
 
-/* Returns a score based on the storage size of a type. This is used in 
- * combination with expressiveness to determine whether a type can be implicitly
- * cast. An implicit cast is only valid if the destination type is both more
- * expressive and has a larger storage size. */
+/* Returns a score based on the representable value range of a type. This is
+ * used in combination with expressiveness to determine whether a type can be
+ * implicitly cast. An implicit cast is only valid if the destination type is
+ * both more expressive and has a larger value range. */
 static
 ecs_size_t flecs_expr_storage_score(
     ecs_entity_t type)

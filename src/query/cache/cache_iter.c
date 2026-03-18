@@ -305,14 +305,14 @@ bool flecs_query_is_cache_search(
     return true;
 }
 
-/* Iterate cache for query that's entirely cached */
+/* Iterate trivial cache for query that's entirely cached */
 bool flecs_query_is_trivial_cache_search(
     const ecs_query_run_ctx_t *ctx)
 {
     return flecs_query_trivial_cache_next(ctx) != NULL;
 }
 
-/* Test if query that is entirely cached matches constrained $this */
+/* Test if query that is partially cached matches constrained $this */
 bool flecs_query_cache_test(
     const ecs_query_run_ctx_t *ctx,
     bool redo)

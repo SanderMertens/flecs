@@ -75,7 +75,7 @@ static ECS_DTOR(EcsPoly, ptr, {
 })
 
 
-/* -- Builtin triggers -- */
+/* -- Builtin observers -- */
 
 static
 void flecs_assert_relation_unused(

@@ -1,5 +1,6 @@
 /**
  * @file addons/stats/memory.c
+ * @brief Memory usage statistics.
  */
 
 #include "flecs.h"

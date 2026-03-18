@@ -1,6 +1,6 @@
 /**
  * @file addons/json/deserialize.c
- * @brief Deserialize JSON strings into (component) values.
+ * @brief Deserialize JSON strings into entities and worlds.
  */
 
 #include "../../private_api.h"
