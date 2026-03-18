@@ -28,13 +28,54 @@ static inline int32_t flecs_ctz64(uint64_t v) {
 #endif
 }
 
+static inline
+void flecs_query_apply_or_mask(
+    const ecs_query_t *query,
+    ecs_table_t *table,
+    int32_t block_index,
+    int32_t field_index,
+    ecs_flags64_t *mask,
+    bool *has_bitset)
+{
+    const ecs_term_t *terms = query->terms;
+    const int32_t term_count = query->term_count;
+    ecs_flags64_t block = 0;
+    bool chain_has_bitset = false;
+
+    for (int32_t i = 0; i < term_count; i ++) {
+        if (terms[i].field_index != field_index) {
+            continue;
+        }
+
+        ecs_id_t id = terms[i].id;
+        ecs_bitset_t *bs = flecs_table_get_toggle(table, id);
+        if (bs) {
+            ecs_assert((64 * block_index) < bs->size, ECS_INTERNAL_ERROR, NULL);
+            block |= bs->data[block_index];
+            chain_has_bitset = true;
+        } else if (ecs_table_has_id(query->world, table, id)) {
+            /* If a non-toggle component is present, it is always enabled 
+             * for all entities in the table. */
+            block = UINT64_MAX;
+            break;
+        }
+    }
+
+    if (chain_has_bitset || block == UINT64_MAX) {
+        *mask &= block;
+        *has_bitset |= chain_has_bitset;
+    }
+}
+
 static
 flecs_query_row_mask_t flecs_query_get_row_mask(
     ecs_iter_t *it,
+    const ecs_query_t *query,
     ecs_table_t *table,
     int32_t block_index,
     ecs_flags64_t and_fields,
     ecs_flags64_t not_fields,
+    ecs_flags64_t or_fields,
     ecs_query_toggle_ctx_t *op_ctx)
 {
     ecs_flags64_t mask = UINT64_MAX;
@@ -54,6 +95,12 @@ flecs_query_row_mask_t flecs_query_get_row_mask(
             ecs_assert(it->set_fields & field_bit, ECS_INTERNAL_ERROR, NULL);
         } else {
             ecs_abort(ECS_INTERNAL_ERROR, NULL);
+        }
+
+        if ((or_fields & field_bit)) {
+            flecs_query_apply_or_mask(query, table, block_index,
+                i, &mask, &has_bitset);
+            continue;
         }
 
         ecs_id_t id = it->ids[i];
@@ -91,7 +138,7 @@ bool flecs_query_toggle_for_up(
     ecs_flags64_t fields = (and_fields | not_fields) & it->up_fields;
 
     for (i = 0; i < field_count; i ++) {
-        uint64_t field_bit = 1llu << i;
+        const uint64_t field_bit = 1llu << i;
         if (!(fields & field_bit)) {
             continue;
         }
@@ -205,7 +252,8 @@ compute_block:
         block_index = op_ctx->block_index = new_block_index;
 
         flecs_query_row_mask_t row_mask = flecs_query_get_row_mask(
-            it, table, block_index, and_fields, not_fields, op_ctx);
+            it, &ctx->query->pub, table, block_index,
+            and_fields, not_fields, op_ctx->or_fields, op_ctx);
 
         /* If table doesn't have bitset columns, all columns match */
         if (!(op_ctx->has_bitset = row_mask.has_bitset)) {
@@ -297,6 +345,18 @@ bool flecs_query_toggle(
     ecs_query_toggle_ctx_t *op_ctx = flecs_op_ctx(ctx, toggle);
     if (!redo) {
         op_ctx->prev_set_fields = it->set_fields;
+
+        /* Precompute which fields have OR toggle terms */
+        const ecs_query_t *q = &ctx->query->pub;
+        ecs_flags64_t or_fields = 0;
+        for (int32_t i = 0; i < q->term_count; i ++) {
+            if (q->terms[i].oper == EcsOr &&
+                (q->terms[i].flags_ & EcsTermIsToggle))
+            {
+                or_fields |= (1llu << q->terms[i].field_index);
+            }
+        }
+        op_ctx->or_fields = or_fields;
     }
 
     ecs_flags64_t and_fields = op->first.entity;
@@ -317,6 +377,7 @@ bool flecs_query_toggle_option(
         op_ctx->prev_set_fields = it->set_fields;
         op_ctx->optional_not = false;
         op_ctx->has_bitset = false;
+        op_ctx->or_fields = 0;
     }
 
 repeat: {}
@@ -341,4 +402,3 @@ repeat: {}
 
     return result;
 }
-
