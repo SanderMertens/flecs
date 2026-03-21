@@ -1248,6 +1248,74 @@ void DeserializeFromJson_struct_w_2_array_type_i32_i32(void) {
     ecs_fini(world);
 }
 
+void DeserializeFromJson_struct_w_array_member_i32(void) {
+    typedef struct {
+        ecs_i32_t foo[3];
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"foo", ecs_id(ecs_i32_t), 3}
+        }
+    });
+
+    T value = {{0}};
+
+    const char *ptr = ecs_ptr_from_json(world, t, &value, "{\"foo[0]\": 10}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(value.foo[0], 10);
+    test_int(value.foo[1], 0);
+    test_int(value.foo[2], 0);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_struct_w_array_member_struct(void) {
+    typedef struct {
+        ecs_i32_t x;
+        ecs_i32_t y;
+    } Elem;
+
+    typedef struct {
+        Elem foo[11];
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t elem = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "Elem"}),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"foo", elem, 11}
+        }
+    });
+
+    T value = {{{0}}};
+
+    const char *ptr = ecs_ptr_from_json(world, t, &value, "{\"foo[10].x\": 10}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(value.foo[0].x, 0);
+    test_int(value.foo[0].y, 0);
+    test_int(value.foo[10].x, 10);
+    test_int(value.foo[10].y, 0);
+
+    ecs_fini(world);
+}
+
 void DeserializeFromJson_struct_w_nested_member_i32(void) {
     ecs_world_t *world = ecs_init();
 
@@ -6827,4 +6895,3 @@ void DeserializeFromJson_ser_deser_prefab_w_enum_constant_override_2(void) {
 
     ecs_os_free(json);
 }
-
