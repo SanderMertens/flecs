@@ -55737,6 +55737,7 @@ error:
  * @brief API for reading and assigning values of runtime types with reflection.
  */
 
+#include <ctype.h>
 #include <inttypes.h>
 
 #ifdef FLECS_META
@@ -56159,7 +56160,7 @@ const char* flecs_meta_parse_member(
     const char *ptr;
     char ch;
     for (ptr = start; (ch = *ptr); ptr ++) {
-        if (ch == '.') {
+        if (ch == '.' || ch == '[') {
             break;
         }
     }
@@ -56171,11 +56172,47 @@ const char* flecs_meta_parse_member(
 
     ecs_os_memcpy(token_out, start, len);
     token_out[len] = '\0';
-    if (ch == '.') {
+
+    return ptr;
+}
+
+static
+const char* flecs_meta_parse_elem(
+    const char *start,
+    int32_t *elem_out)
+{
+    if (start[0] != '[') {
+        ecs_err("expected '[' in member expression");
+        return NULL;
+    }
+
+    start ++;
+    if (!isdigit((unsigned char)start[0])) {
+        ecs_err("expected array index in member expression");
+        return NULL;
+    }
+
+    int32_t elem = 0;
+    const char *ptr = start;
+    char ch;
+    while ((ch = ptr[0]) && ch != ']') {
+        if (!isdigit((unsigned char)ch)) {
+            ecs_err("invalid array index in member expression");
+            return NULL;
+        }
+
+        elem *= 10;
+        elem += ch - '0';
         ptr ++;
     }
 
-    return ptr;
+    if (ptr[0] != ']') {
+        ecs_err("missing ']' in member expression");
+        return NULL;
+    }
+
+    elem_out[0] = elem;
+    return ptr + 1;
 }
 
 static
@@ -56188,33 +56225,68 @@ int flecs_meta_dotmember(
     flecs_cursor_restore_scope(cursor, cur_scope);
 
     int16_t prev_depth = cursor->depth;
-    int dotcount = 0;
+    bool moved = false;
 
     char token[ECS_MAX_TOKEN_SIZE];
     const char *ptr = name;
-    while ((ptr = flecs_meta_parse_member(ptr, token))) {
-        if (dotcount) {
-            ecs_meta_push(cursor);
+    while (ptr[0]) {
+        if (ptr[0] != '[') {
+            ptr = flecs_meta_parse_member(ptr, token);
+            if (!ptr) {
+                goto error;
+            }
+
+            if (moved) {
+                if (ecs_meta_push(cursor) != 0) {
+                    goto error;
+                }
+            }
+
+            if (flecs_meta_member(cursor, token, try)) {
+                goto error;
+            }
+
+            moved = true;
         }
 
-        if (flecs_meta_member(cursor, token, try)) {
+        while (ptr[0] == '[') {
+            int32_t elem;
+
+            if (ecs_meta_push(cursor) != 0) {
+                goto error;
+            }
+
+            ptr = flecs_meta_parse_elem(ptr, &elem);
+            if (!ptr) {
+                goto error;
+            }
+
+            if (ecs_meta_elem(cursor, elem) != 0) {
+                goto error;
+            }
+
+            moved = true;
+        }
+
+        if (ptr[0] == '.') {
+            ptr ++;
+            continue;
+        }
+
+        if (ptr[0] != '\0') {
+            ecs_err("invalid token '%c' in member expression", ptr[0]);
             goto error;
         }
-
-        if (!ptr[0]) {
-            break;   
-        }
-
-        dotcount ++;
     }
 
     cur_scope = flecs_cursor_get_scope(cursor);
-    if (dotcount) {
+    if (moved && (cursor->depth != prev_depth)) {
         cur_scope->prev_depth = prev_depth;
     }
 
     return 0;
 error:
+    cursor->depth = prev_depth;
     return -1;
 }
 
@@ -56426,6 +56498,19 @@ bool ecs_meta_is_collection(
     const ecs_meta_cursor_t *cursor)
 {
     ecs_meta_scope_t *scope = flecs_cursor_get_scope(cursor);
+
+    /* If the scope was reached through dotmember with array indexing, the
+     * current scope can still be the collection that contains the selected
+     * element. In that case, report whether the selected element is a
+     * collection, not whether its parent container is. */
+    if (scope->prev_depth && scope->is_collection) {
+        ecs_meta_op_t *op = flecs_cursor_get_op(scope);
+        return op->kind == EcsOpPushArray ||
+            op->kind == EcsOpPushVector ||
+            op->kind == EcsOpOpaqueArray ||
+            op->kind == EcsOpOpaqueVector;
+    }
+
     return scope->is_collection;
 }
 

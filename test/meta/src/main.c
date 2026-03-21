@@ -534,6 +534,8 @@ void DeserializeFromJson_struct_struct_i32_array_3(void);
 void DeserializeFromJson_struct_struct_i32_i32_array_3(void);
 void DeserializeFromJson_struct_w_array_type_i32_i32(void);
 void DeserializeFromJson_struct_w_2_array_type_i32_i32(void);
+void DeserializeFromJson_struct_w_array_member_i32(void);
+void DeserializeFromJson_struct_w_array_member_struct(void);
 void DeserializeFromJson_struct_w_nested_member_i32(void);
 void DeserializeFromJson_struct_w_2_nested_members_i32(void);
 void DeserializeFromJson_struct_w_nested_members_struct(void);
@@ -3214,6 +3216,14 @@ bake_test_case DeserializeFromJson_testcases[] = {
         DeserializeFromJson_struct_w_2_array_type_i32_i32
     },
     {
+        "struct_w_array_member_i32",
+        DeserializeFromJson_struct_w_array_member_i32
+    },
+    {
+        "struct_w_array_member_struct",
+        DeserializeFromJson_struct_w_array_member_struct
+    },
+    {
         "struct_w_nested_member_i32",
         DeserializeFromJson_struct_w_nested_member_i32
     },
@@ -5770,7 +5780,7 @@ static bake_test_suite suites[] = {
         "DeserializeFromJson",
         NULL,
         NULL,
-        152,
+        154,
         DeserializeFromJson_testcases
     },
     {
