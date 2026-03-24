@@ -31,7 +31,7 @@ struct query_base {
         }
 
     /** Construct from a world and a query descriptor. */
-    query_base(world_t *world, ecs_query_desc_t *desc) {
+    query_base(world_t *world, const ecs_query_desc_t *desc) {
         if (desc->entity && desc->terms[0].id == 0) {
             const flecs::Poly *query_poly = ecs_get_pair(
                 world, desc->entity, EcsPoly, EcsQuery);
