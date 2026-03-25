@@ -96,10 +96,10 @@ bool flecs_query_trav_fixed_src_up_fixed_second(
 
     /* Check if table has transitive relationship by traversing upwards */
     ecs_table_record_t *tr = NULL;
-    const int32_t column = ecs_search_relation(ctx->world, table, 0,
+    const int32_t index = ecs_search_relation(ctx->world, table, 0,
         ecs_pair(trav, second), trav, EcsSelf| EcsUp, NULL, NULL, &tr);
 
-    if (column == -1 || !tr) {
+    if (index == -1 || !tr) {
         if (op->match_flags & EcsTermReflexive) {
             return flecs_query_trav_fixed_src_reflexive(op, ctx,
                 &range, trav, second);
@@ -110,7 +110,7 @@ bool flecs_query_trav_fixed_src_up_fixed_second(
 
     ecs_id_t matched = ecs_pair(trav, second);
     if (trav == EcsIsA) {
-        matched = table->type.array[column];
+        matched = table->type.array[index];
     }
 
     if (op->field_index != -1) {
