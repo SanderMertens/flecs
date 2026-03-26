@@ -140,7 +140,11 @@ const char* flecs_id_invalid_reason(
         return "cannot add wildcards";
     }
 
-    if (ECS_HAS_ID_FLAG(id, PAIR)) {
+    if (ECS_IS_VALUE_PAIR(id)) {
+        if (!ECS_PAIR_FIRST(id)) {
+            return "invalid value pair: first element is 0 (is the relationship registered?)";
+        }
+    } else if (ECS_HAS_ID_FLAG(id, PAIR)) {
         if (!ECS_PAIR_FIRST(id) && !ECS_PAIR_SECOND(id)) {
             return "invalid pair: both elements are 0";
         }
@@ -149,10 +153,6 @@ const char* flecs_id_invalid_reason(
         }
         if (!ECS_PAIR_SECOND(id)) {
             return "invalid pair: second element is 0";
-        }
-    } else if (ECS_HAS_ID_FLAG(id, VALUE_PAIR)) {
-        if (!ECS_PAIR_FIRST(id)) {
-            return "invalid value pair: first element is 0 (is the relationship registered?)";
         }
     } else if (id & ECS_ID_FLAGS_MASK) {
         if (!ecs_is_valid(world, id & ECS_COMPONENT_MASK)) {
