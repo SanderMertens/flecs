@@ -115,7 +115,9 @@
                 "run_w_empty_query",
                 "run_w_0_src_query",
                 "inout_none_after_write",
-                "empty_pipeline_after_disable_phase"
+                "empty_pipeline_after_disable_phase",
+                "set_time_scale_w_stage",
+                "set_time_scale_w_readonly"
             ]
         }, {
             "id": "SystemMisc",

@@ -110,6 +110,8 @@ void Pipeline_run_w_empty_query(void);
 void Pipeline_run_w_0_src_query(void);
 void Pipeline_inout_none_after_write(void);
 void Pipeline_empty_pipeline_after_disable_phase(void);
+void Pipeline_set_time_scale_w_stage(void);
+void Pipeline_set_time_scale_w_readonly(void);
 
 // Testsuite 'SystemMisc'
 void SystemMisc_invalid_not_without_id(void);
@@ -966,6 +968,14 @@ bake_test_case Pipeline_testcases[] = {
     {
         "empty_pipeline_after_disable_phase",
         Pipeline_empty_pipeline_after_disable_phase
+    },
+    {
+        "set_time_scale_w_stage",
+        Pipeline_set_time_scale_w_stage
+    },
+    {
+        "set_time_scale_w_readonly",
+        Pipeline_set_time_scale_w_readonly
     }
 };
 
@@ -2686,7 +2696,7 @@ static bake_test_suite suites[] = {
         "Pipeline",
         NULL,
         NULL,
-        87,
+        89,
         Pipeline_testcases
     },
     {

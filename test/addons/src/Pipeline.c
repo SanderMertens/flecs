@@ -3369,3 +3369,25 @@ void Pipeline_empty_pipeline_after_disable_phase(void) {
 
     ecs_fini(world);
 }
+
+void Pipeline_set_time_scale_w_stage(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+
+    test_expect_abort();
+    ecs_set_time_scale(stage, 2);
+}
+
+void Pipeline_set_time_scale_w_readonly(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_readonly_begin(world, false);
+
+    test_expect_abort();
+    ecs_set_time_scale(world, 2);
+}
