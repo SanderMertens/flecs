@@ -102,9 +102,12 @@ inline ecs_cpp_type_action_t enum_action() {
 #if FLECS_CPP_ENUM_REFLECTION_SUPPORT
     if constexpr (is_enum_v<T>) {
         return &_::init_enum<T>;
+    } else {
+        return nullptr;
     }
-#endif
+#else
     return nullptr;
+#endif
 }
 
 template <typename T>
