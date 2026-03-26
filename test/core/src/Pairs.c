@@ -3450,6 +3450,27 @@ void Pairs_target_w_value_pair(void) {
     ecs_fini(world);
 }
 
+void Pairs_add_value_pair_w_0_target(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Number);
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_add_id(world, e, ecs_value_pair(Number, 0));
+
+    test_bool(true, ecs_has_id(world, e, ecs_value_pair(Number, 0)));
+
+    uint64_t v = ecs_get_target(world, e, Number, 0);
+    test_int(v, 0);
+
+    ecs_remove_id(world, e, ecs_value_pair(Number, 0));
+
+    test_bool(false, ecs_has_id(world, e, ecs_value_pair(Number, 0)));
+
+    ecs_fini(world);
+}
+
 void Pairs_inherit_relationship_trait(void) {
     ecs_world_t *world = ecs_mini();
 

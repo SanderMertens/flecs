@@ -1790,6 +1790,7 @@ void Pairs_value_pair_to_str(void);
 void Pairs_has_value_pair_wildcard(void);
 void Pairs_has_value_pair_any(void);
 void Pairs_target_w_value_pair(void);
+void Pairs_add_value_pair_w_0_target(void);
 void Pairs_inherit_relationship_trait(void);
 
 // Testsuite 'Trigger'
@@ -10199,6 +10200,10 @@ bake_test_case Pairs_testcases[] = {
         Pairs_target_w_value_pair
     },
     {
+        "add_value_pair_w_0_target",
+        Pairs_add_value_pair_w_0_target
+    },
+    {
         "inherit_relationship_trait",
         Pairs_inherit_relationship_trait
     }
@@ -16065,7 +16070,7 @@ static bake_test_suite suites[] = {
         "Pairs",
         NULL,
         NULL,
-        136,
+        137,
         Pairs_testcases
     },
     {
