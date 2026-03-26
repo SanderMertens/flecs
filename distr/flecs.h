@@ -924,18 +924,21 @@ typedef struct ecs_allocator_t ecs_allocator_t;
 
 #define ECS_SIZEOF(T) ECS_CAST(ecs_size_t, sizeof(T))
 
-/* Use alignof in C++, or a trick in C. */
-#ifdef __cplusplus
-#define ECS_ALIGNOF(T) static_cast<int64_t>(alignof(T))
-#elif defined(ECS_TARGET_MSVC)
-#define ECS_ALIGNOF(T) (int64_t)__alignof(T)
-#else
-/* Use the struct trick since on 32-bit platforms __alignof__ can return different
- * results than C++'s alignof. This is illustrated when doing:
- *
+/* Alignment macros:
+ * - Use alignof in C++
+ * - Use _Alignof in C11 and above
+ * - Use __alignof__ on 64 bit platforms on clang/gcc
+ * - Use struct trick on other compilers/32 bit
+ * 
+ * The reason the code doesn't use the struct trick everywhere is because this
+ * can cause ASAN errors (runtime error: member access within null pointer).
+ * 
+ * The reason why the clang/gcc __alignof__ feature is not used on 32 bit, is
+ * because its behavior is different than C++:
+ * 
  * __alignof__(uint64_t) == 8 on 32-bit platforms
  * alignof(uint64_t) == 4 on 32-bit platforms
- * 
+ *
  * typedef struct {
  *   uint64_t value;
  * } Foo;
@@ -943,7 +946,18 @@ typedef struct ecs_allocator_t ecs_allocator_t;
  * __alignof__(Foo) == 4 on 32-bit platforms
  * alignof(Foo) == 4 on 32-bit platforms
  */
+#ifdef __cplusplus
+#define ECS_ALIGNOF(T) static_cast<int64_t>(alignof(T))
+#elif defined(ECS_TARGET_MSVC)
+#define ECS_ALIGNOF(T) (int64_t)__alignof(T)
+#else
 #define ECS_ALIGNOF(T) ((int64_t)(size_t)&((struct { char c; T d; } *)0)->d)
+#if defined(ECS_TARGET_GNU) || defined(ECS_TARGET_CLANG)
+#if __SIZEOF_POINTER__ == 8
+#undef ECS_ALIGNOF
+#define ECS_ALIGNOF(T) (int64_t)__alignof__(T)
+#endif
+#endif
 #endif
 
 #ifndef FLECS_NO_ALWAYS_INLINE
