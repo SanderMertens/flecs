@@ -4418,7 +4418,7 @@ static void HasHook(ecs_iter_t *it) {
 
     for (int i = 0; i < it->count; i ++) {
         ecs_entity_t e = it->entities[i];
-        test_assert(ecs_has(world, e, Position));
+        test_assert(!ecs_has(world, e, Position));
         has_hook_invoked ++;
     }
 }
@@ -4431,12 +4431,11 @@ static void GetHook(ecs_iter_t *it) {
 
     for (int i = 0; i < it->count; i ++) {
         ecs_entity_t e = it->entities[i];
-        test_assert(ecs_has(world, e, Position));
-        test_assert(ecs_get(world, e, Position) == &p[i]);
+        test_assert(!ecs_has(world, e, Position));
+        test_assert(ecs_get(world, e, Position) == NULL);
         get_hook_invoked ++;
     }
 }
-
 
 void ComponentLifecycle_has_in_on_add_hook_new(void) {
     ecs_world_t *world = ecs_mini();
@@ -4510,6 +4509,40 @@ void ComponentLifecycle_get_in_on_add_hook_move(void) {
  
     ecs_add(world, e2, Position);
     test_int(get_hook_invoked, 2);
+
+    ecs_fini(world);
+}
+
+static int get_name_hook_invoked = 0;
+
+static void GetNameHook(ecs_iter_t *it) {
+    ecs_world_t *world = it->world;
+
+    for (int i = 0; i < it->count; i ++) {
+        ecs_entity_t e = it->entities[i];
+        const char *name = ecs_get_name(world, e);
+        test_assert(name != NULL);
+        test_str(name, "TestEntity");
+        get_name_hook_invoked ++;
+    }
+}
+
+void ComponentLifecycle_get_name_in_on_add_hook_move(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .on_add = GetNameHook
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "TestEntity" });
+    test_int(get_name_hook_invoked, 0);
+
+    ecs_add(world, e, Position);
+    test_int(get_name_hook_invoked, 1);
+
+    test_str(ecs_get_name(world, e), "TestEntity");
 
     ecs_fini(world);
 }
