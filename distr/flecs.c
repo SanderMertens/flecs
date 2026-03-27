@@ -23711,13 +23711,14 @@ int32_t ecs_delete_empty_tables(
     ecs_os_perf_trace_push("flecs.delete_empty_tables");
 
     ecs_time_t start = {0}, cur = {0};
-    int32_t delete_count = 0;
     bool time_budget = false;
     int32_t measure_budget_after = 100;
+    int32_t result = 0;
 
     uint16_t clear_generation = desc->clear_generation;
     uint16_t delete_generation = desc->delete_generation;
     double time_budget_seconds = desc->time_budget_seconds;
+    int32_t offset = desc->offset;
 
     if (ECS_NEQZERO(time_budget_seconds) || (ecs_should_log_1() && ecs_os_has_time())) {
         ecs_time_measure(&start);
@@ -23727,13 +23728,34 @@ int32_t ecs_delete_empty_tables(
         time_budget = true;
     }
 
-    int32_t i, count = flecs_sparse_count(&world->store.tables);
+    int32_t count = flecs_sparse_count(&world->store.tables);
+    if (!count) {
+        goto done;
+    }
 
-    for (i = count - 1; i >= 0; i --) {
+    if (offset >= count || offset < 0) {
+        offset = 0;
+    }
+
+    int32_t remaining = count;
+    int32_t i = offset;
+
+    while (remaining > 0) {
+        count = flecs_sparse_count(&world->store.tables);
+        if (!count) {
+            break;
+        }
+
+        if (i >= count) {
+            i = 0;
+        }
+
         ecs_table_t *table = flecs_sparse_get_dense_t(&world->store.tables,
             ecs_table_t, i);
 
         if (table->keep) {
+            i ++;
+            remaining --;
             continue;
         }
 
@@ -23742,6 +23764,11 @@ int32_t ecs_delete_empty_tables(
         if (time_budget && !measure_budget_after) {
             cur = start;
             if (ecs_time_measure(&cur) > time_budget_seconds) {
+                count = flecs_sparse_count(&world->store.tables);
+                result = i + 1;
+                if (result >= count) {
+                    result = 0;
+                }
                 goto done;
             }
 
@@ -23749,24 +23776,30 @@ int32_t ecs_delete_empty_tables(
         }
 
         if (!table->id || ecs_table_count(table) != 0) {
+            i ++;
+            remaining --;
             continue;
         }
 
         uint16_t gen = ++ table->_->generation;
         if (delete_generation && (gen > delete_generation)) {
             flecs_table_fini(world, table);
-            delete_count ++;
             measure_budget_after = 1;
+            remaining --;
+            continue;
         } else if (clear_generation && (gen > clear_generation)) {
             flecs_table_shrink(world, table);
             measure_budget_after = 1;
         }
+
+        i ++;
+        remaining --;
     }
 
 done:
     ecs_os_perf_trace_pop("flecs.delete_empty_tables");
 
-    return delete_count;
+    return result;
 }
 
 ecs_entities_t ecs_get_entities(
