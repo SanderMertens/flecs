@@ -3471,6 +3471,63 @@ void Pairs_add_value_pair_w_0_target(void) {
     ecs_fini(world);
 }
 
+void Pairs_add_value_pair_w_0_target_w_isa(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Number);
+
+    ecs_entity_t base = ecs_new(world);
+    ecs_set(world, base, Position, {10, 20});
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add_pair(world, e, EcsIsA, base);
+
+    ecs_add_id(world, e, ecs_value_pair(Number, 0));
+
+    test_bool(true, ecs_has_id(world, e, ecs_value_pair(Number, 0)));
+    test_bool(true, ecs_has(world, e, Position));
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Pairs_add_to_entity_w_value_pair_0_target_w_isa(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Velocity);
+    ECS_TAG(world, Number);
+
+    ecs_entity_t base = ecs_new(world);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add_pair(world, e, EcsIsA, base);
+    ecs_set(world, e, Velocity, {1, 2});
+
+    /* Adding the value pair triggers a table move. The new table has a
+     * Velocity column and an IsA pair. flecs_table_update_overrides iterates
+     * columns and calls ecs_search_relation for each one. Velocity is not on
+     * the base, so the search continues looking for more IsA pairs by calling
+     * flecs_table_offset_search. The offset search iterates through the table
+     * type and encounters the value pair with 0 target. ecs_id_match treats
+     * it as a regular pair and asserts second element != 0, causing a crash. */
+    ecs_add_id(world, e, ecs_value_pair(Number, 0));
+
+    test_bool(true, ecs_has_id(world, e, ecs_value_pair(Number, 0)));
+    test_bool(true, ecs_has(world, e, Velocity));
+
+    const Velocity *v = ecs_get(world, e, Velocity);
+    test_assert(v != NULL);
+    test_int(v->x, 1);
+    test_int(v->y, 2);
+
+    ecs_fini(world);
+}
+
 void Pairs_inherit_relationship_trait(void) {
     ecs_world_t *world = ecs_mini();
 

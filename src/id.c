@@ -27,14 +27,16 @@ bool ecs_id_match(
         ecs_entity_t pattern_first = ECS_PAIR_FIRST(pattern);
         ecs_entity_t pattern_second = ECS_PAIR_SECOND(pattern);
 
-        ecs_check(id_first != 0, ECS_INVALID_PARAMETER, 
+        ecs_check(id_first != 0, ECS_INVALID_PARAMETER,
             "first element of pair cannot be 0");
-        ecs_check(id_second != 0, ECS_INVALID_PARAMETER, 
+        ecs_check(ECS_IS_VALUE_PAIR(id) || id_second != 0,
+            ECS_INVALID_PARAMETER,
             "second element of pair cannot be 0");
 
         ecs_check(pattern_first != 0, ECS_INVALID_PARAMETER,
             "first element of pair cannot be 0");
-        ecs_check(pattern_second != 0, ECS_INVALID_PARAMETER,
+        ecs_check(ECS_IS_VALUE_PAIR(pattern) || pattern_second != 0,
+            ECS_INVALID_PARAMETER,
             "second element of pair cannot be 0");
 
         bool pattern_first_wildcard = pattern_first == EcsWildcard;

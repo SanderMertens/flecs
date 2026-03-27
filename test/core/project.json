@@ -1854,6 +1854,8 @@
                 "has_value_pair_any",
                 "target_w_value_pair",
                 "add_value_pair_w_0_target",
+                "add_value_pair_w_0_target_w_isa",
+                "add_to_entity_w_value_pair_0_target_w_isa",
                 "inherit_relationship_trait"
             ]
         }, {
