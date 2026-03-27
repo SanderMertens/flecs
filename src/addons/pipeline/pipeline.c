@@ -780,6 +780,9 @@ void ecs_set_time_scale(
     ecs_world_t *world,
     ecs_ftime_t scale)
 {
+    flecs_poly_assert(world, ecs_world_t);
+    ecs_assert(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION,
+        "cannot set time scale while world is in readonly mode");
     world->info.time_scale = scale;
 }
 
