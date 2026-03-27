@@ -982,7 +982,6 @@
                 "delete_mixed_tree_3",
                 "delete_mixed_tree_4",
                 "delete_mixed_tree_5",
-                "instantiate_parent_w_has_in_hook",
                 "add_prefab_tag_after_hierarchy_creation",
                 "defer_add_prefab_tag_after_hierarchy_creation",
                 "add_prefab_tag_after_hierarchy_creation_2",
@@ -1713,7 +1712,8 @@
                 "has_in_on_add_hook_new",
                 "has_in_on_add_hook_move",
                 "get_in_on_add_hook_new",
-                "get_in_on_add_hook_move"
+                "get_in_on_add_hook_move",
+                "get_name_in_on_add_hook_move"
             ]
         }, {
             "id": "Pairs",

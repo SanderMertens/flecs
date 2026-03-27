@@ -950,7 +950,6 @@ void NonFragmentingChildOf_delete_mixed_tree_2(void);
 void NonFragmentingChildOf_delete_mixed_tree_3(void);
 void NonFragmentingChildOf_delete_mixed_tree_4(void);
 void NonFragmentingChildOf_delete_mixed_tree_5(void);
-void NonFragmentingChildOf_instantiate_parent_w_has_in_hook(void);
 void NonFragmentingChildOf_add_prefab_tag_after_hierarchy_creation(void);
 void NonFragmentingChildOf_defer_add_prefab_tag_after_hierarchy_creation(void);
 void NonFragmentingChildOf_add_prefab_tag_after_hierarchy_creation_2(void);
@@ -1653,6 +1652,7 @@ void ComponentLifecycle_has_in_on_add_hook_new(void);
 void ComponentLifecycle_has_in_on_add_hook_move(void);
 void ComponentLifecycle_get_in_on_add_hook_new(void);
 void ComponentLifecycle_get_in_on_add_hook_move(void);
+void ComponentLifecycle_get_name_in_on_add_hook_move(void);
 
 // Testsuite 'Pairs'
 void Pairs_type_w_one_pair(void);
@@ -6939,10 +6939,6 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
         NonFragmentingChildOf_delete_mixed_tree_5
     },
     {
-        "instantiate_parent_w_has_in_hook",
-        NonFragmentingChildOf_instantiate_parent_w_has_in_hook
-    },
-    {
         "add_prefab_tag_after_hierarchy_creation",
         NonFragmentingChildOf_add_prefab_tag_after_hierarchy_creation
     },
@@ -9655,6 +9651,10 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "get_in_on_add_hook_move",
         ComponentLifecycle_get_in_on_add_hook_move
+    },
+    {
+        "get_name_in_on_add_hook_move",
+        ComponentLifecycle_get_name_in_on_add_hook_move
     }
 };
 
@@ -15965,7 +15965,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NULL,
         NULL,
-        239,
+        238,
         NonFragmentingChildOf_testcases
     },
     {
@@ -16063,7 +16063,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         ComponentLifecycle_setup,
         NULL,
-        138,
+        139,
         ComponentLifecycle_testcases
     },
     {
