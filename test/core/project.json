@@ -1853,6 +1853,7 @@
                 "has_value_pair_wildcard",
                 "has_value_pair_any",
                 "target_w_value_pair",
+                "add_value_pair_w_0_target",
                 "inherit_relationship_trait"
             ]
         }, {
