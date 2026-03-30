@@ -39,8 +39,12 @@ public:
         return &desc_;
     }
 
-    T<Components ...> build() {
-        return T<Components...>(world_, *static_cast<Base*>(this));
+    operator const TDesc*() const {
+        return &desc_;
+    }
+
+    T<Components ...> build() const {
+        return T<Components...>(world_, *static_cast<const Base*>(this));
     }
 
 protected:

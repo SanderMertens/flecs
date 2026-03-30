@@ -35404,8 +35404,12 @@ public:
         return &desc_;
     }
 
-    T<Components ...> build() {
-        return T<Components...>(world_, *static_cast<Base*>(this));
+    operator const TDesc*() const {
+        return &desc_;
+    }
+
+    T<Components ...> build() const {
+        return T<Components...>(world_, *static_cast<const Base*>(this));
     }
 
 protected:
@@ -35929,7 +35933,7 @@ struct query_base {
         }
 
     /** Construct from a world and a query descriptor. */
-    query_base(world_t *world, ecs_query_desc_t *desc) {
+    query_base(world_t *world, const ecs_query_desc_t *desc) {
         if (desc->entity && desc->terms[0].id == 0) {
             const flecs::Poly *query_poly = ecs_get_pair(
                 world, desc->entity, EcsPoly, EcsQuery);
@@ -37389,7 +37393,7 @@ namespace flecs {
 
 template <typename ... Components>
 struct pipeline : entity {
-    pipeline(world_t *world, ecs_pipeline_desc_t *desc) 
+    pipeline(world_t *world, const ecs_pipeline_desc_t *desc) 
         : entity(world)
     {
         id_ = ecs_pipeline_init(world, desc);
@@ -38565,7 +38569,7 @@ struct alert final : entity
         world_ = nullptr;
     }
 
-    explicit alert(flecs::world_t *world, ecs_alert_desc_t *desc) {
+    explicit alert(flecs::world_t *world, const ecs_alert_desc_t *desc) {
         world_ = world;
         id_ = ecs_alert_init(world, desc);
     }

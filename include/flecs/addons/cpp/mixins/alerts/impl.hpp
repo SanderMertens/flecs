@@ -19,7 +19,7 @@ struct alert final : entity
         world_ = nullptr;
     }
 
-    explicit alert(flecs::world_t *world, ecs_alert_desc_t *desc) {
+    explicit alert(flecs::world_t *world, const ecs_alert_desc_t *desc) {
         world_ = world;
         id_ = ecs_alert_init(world, desc);
     }
