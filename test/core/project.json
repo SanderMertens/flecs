@@ -985,7 +985,8 @@
                 "add_prefab_tag_after_hierarchy_creation",
                 "defer_add_prefab_tag_after_hierarchy_creation",
                 "add_prefab_tag_after_hierarchy_creation_2",
-                "defer_add_prefab_tag_after_hierarchy_creation_2"
+                "defer_add_prefab_tag_after_hierarchy_creation_2",
+                "defer_set_parent_and_remove_tag"
             ]
         }, {
             "id": "Hierarchies",
