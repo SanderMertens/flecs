@@ -6208,3 +6208,38 @@ void NonFragmentingChildOf_defer_add_prefab_tag_after_hierarchy_creation_2(void)
 
     ecs_fini(world);
 }
+
+void NonFragmentingChildOf_defer_set_parent_and_remove_tag(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t root_pf = ecs_new(world);
+    ecs_add_id(world, root_pf, EcsPrefab);
+    ecs_add_id(world, root_pf, EcsOrderedChildren);
+
+    ecs_entity_t child_pf = ecs_new(world);
+    ecs_add_id(world, child_pf, EcsPrefab);
+    ecs_set(world, child_pf, EcsParent, {root_pf});
+
+    ecs_entity_t grandparent = ecs_new(world);
+    ecs_add_id(world, grandparent, EcsOrderedChildren);
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_set(world, parent, EcsParent, {grandparent});
+    ecs_add_id(world, parent, EcsOrderedChildren);
+
+    ecs_entity_t inst = ecs_new(world);
+    ecs_add_pair(world, inst, EcsIsA, child_pf);
+    ecs_add_id(world, inst, TagA);
+
+    ecs_defer_begin(world);
+        ecs_set(world, inst, EcsParent, {parent});
+        ecs_remove_id(world, inst, TagA);
+    ecs_defer_end(world);
+
+    test_assert(ecs_get_parent(world, inst) == parent);
+    test_assert(!ecs_has_id(world, inst, TagA));
+
+    ecs_fini(world);
+}

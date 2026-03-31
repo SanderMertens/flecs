@@ -954,6 +954,7 @@ void NonFragmentingChildOf_add_prefab_tag_after_hierarchy_creation(void);
 void NonFragmentingChildOf_defer_add_prefab_tag_after_hierarchy_creation(void);
 void NonFragmentingChildOf_add_prefab_tag_after_hierarchy_creation_2(void);
 void NonFragmentingChildOf_defer_add_prefab_tag_after_hierarchy_creation_2(void);
+void NonFragmentingChildOf_defer_set_parent_and_remove_tag(void);
 
 // Testsuite 'Hierarchies'
 void Hierarchies_setup(void);
@@ -6955,6 +6956,10 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "defer_add_prefab_tag_after_hierarchy_creation_2",
         NonFragmentingChildOf_defer_add_prefab_tag_after_hierarchy_creation_2
+    },
+    {
+        "defer_set_parent_and_remove_tag",
+        NonFragmentingChildOf_defer_set_parent_and_remove_tag
     }
 };
 
@@ -15975,7 +15980,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NULL,
         NULL,
-        238,
+        239,
         NonFragmentingChildOf_testcases
     },
     {

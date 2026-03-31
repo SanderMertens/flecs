@@ -233,6 +233,10 @@ void flecs_on_replace_parent(ecs_iter_t *it) {
                 world, e, &names[i], old_parent, cr_parent);
         }
 
+        /* Write new parent value to component storage before ecs_add_id, as
+         * it can trigger a table move that reads the parent value. */
+        old[i].value = new_parent;
+
         int32_t depth = cr_parent->pair->depth;
         ecs_add_id(world, e, ecs_value_pair(EcsParentDepth, depth));
 
