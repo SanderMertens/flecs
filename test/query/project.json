@@ -1080,7 +1080,8 @@
                 "second_invalid_var_name_and_id",
                 "get_vars_from_chained_iter",
                 "set_var_from_chained_iter",
-                "set_var_range_from_chained_iter"
+                "set_var_range_from_chained_iter",
+                "field_w_or_var_src_w_pair"
             ]
         }, {
             "id": "Operators",

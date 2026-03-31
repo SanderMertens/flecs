@@ -1051,6 +1051,7 @@ void Variables_second_invalid_var_name_and_id(void);
 void Variables_get_vars_from_chained_iter(void);
 void Variables_set_var_from_chained_iter(void);
 void Variables_set_var_range_from_chained_iter(void);
+void Variables_field_w_or_var_src_w_pair(void);
 
 // Testsuite 'Operators'
 void Operators_setup(void);
@@ -6909,6 +6910,10 @@ bake_test_case Variables_testcases[] = {
     {
         "set_var_range_from_chained_iter",
         Variables_set_var_range_from_chained_iter
+    },
+    {
+        "field_w_or_var_src_w_pair",
+        Variables_field_w_or_var_src_w_pair
     }
 };
 
@@ -13839,7 +13844,7 @@ static bake_test_suite suites[] = {
         "Variables",
         Variables_setup,
         NULL,
-        197,
+        198,
         Variables_testcases,
         1,
         Variables_params

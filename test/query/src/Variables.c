@@ -11968,6 +11968,70 @@ void Variables_set_var_from_chained_iter(void) {
     ecs_fini(world);
 }
 
+void Variables_field_w_or_var_src_w_pair(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TAG(world, Trait);
+
+    typedef struct { ecs_entity_t value; } CompRef;
+    ecs_entity_t ecs_id(CompRef) = ecs_component(world, {
+        .entity = ecs_entity(world, { .name = "CompRef" }),
+        .type.size = ECS_SIZEOF(CompRef),
+        .type.alignment = ECS_ALIGNOF(CompRef)
+    });
+
+    ecs_entity_t comp_a = ecs_entity(world, { .name = "CompA" });
+    ecs_set(world, comp_a, CompRef, { ecs_id(Position) });
+    ecs_add(world, comp_a, Trait);
+    ecs_set(world, comp_a, Position, {1, 2});
+
+    ecs_entity_t comp_b = ecs_entity(world, { .name = "CompB" });
+    ecs_set(world, comp_b, CompRef, { ecs_id(Velocity) });
+    ecs_add(world, comp_b, Trait);
+    ecs_add_pair(world, comp_b, comp_b, ecs_id(Velocity));
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "CompRef($Component), Trait($Component), "
+                "$Component || ($Component, *) || (*, $Component)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    int match_count = 0;
+
+    while (ecs_query_next(&it)) {
+        CompRef *ref = ecs_field(&it, CompRef, 0);
+        for (int i = 0; i < it.count; i ++) {
+            ecs_id_t matched_id = ecs_field_id(&it, 2);
+            const ecs_type_info_t *ti = ecs_get_type_info(world, matched_id);
+            if (!ti) {
+                continue;
+            }
+
+            if (ti->component != ref[i].value) {
+                continue;
+            }
+
+            void *ptr = ecs_field_w_size(&it, ti->size, 2);
+            if (!ptr) {
+                continue;
+            }
+
+            match_count ++;
+        }
+    }
+
+    test_int(match_count, 1);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
 void Variables_set_var_range_from_chained_iter(void) {
     ecs_world_t *world = ecs_mini();
 
