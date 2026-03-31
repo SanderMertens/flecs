@@ -13160,3 +13160,49 @@ void Traversal_this_written_or_w_self_up_childof(void) {
 
     ecs_fini(world);
 }
+
+void Traversal_this_written_up_isa_trav_id_n_lvl(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+
+    /* Setup: instance --(IsA)--> troll --(IsA)--> enemy
+     * Position is on troll and inherited by instance.
+     * Querying (IsA, enemy) on this should match instance and report
+     * the field ID as (IsA, troll) — the actual pair in the archetype —
+     * not (IsA, enemy) which was incorrectly reconstructed from arguments
+     * before the fix in flecs_query_trav_fixed_src_up_fixed_second. */
+    ecs_entity_t enemy = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t troll = ecs_new_w_id(world, EcsPrefab);
+    ecs_add_pair(world, troll, EcsIsA, enemy);
+    ecs_set(world, troll, Position, {10, 20});
+
+    ecs_entity_t instance = ecs_new_w_pair(world, EcsIsA, troll);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { ecs_id(Position) },             /* constrains 'this' to tables with Position */
+            { .id = ecs_pair(EcsIsA, enemy) } /* transitive IsA check */
+        },
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(instance, it.entities[0]);
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+    test_uint(troll, ecs_field_src(&it, 0));
+    /* The field ID for the (IsA, enemy) term must be the actual pair stored
+     * in the instance's archetype: (IsA, troll), not the query target. */
+    test_uint(ecs_pair(EcsIsA, troll), ecs_field_id(&it, 1));
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
