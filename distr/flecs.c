@@ -80866,6 +80866,11 @@ void flecs_query_end_block_or(
             continue;
         }
 
+        /* Skip variable if it was written before the OR chain */
+        if (ctx->ctrlflow->written_or & (1llu << i)) {
+            continue;
+        }
+
         if (!prev && cur) {
             ecs_query_op_t reset_op = {0};
             reset_op.kind = EcsQueryReset;
@@ -83258,7 +83263,7 @@ bool flecs_query_select_or(
     do {
         ecs_query_lbl_t cur = op_ctx->op_index;
         ctx->op_index = cur;
-        ctx->written[cur] = op->written;
+        ctx->written[cur] = ctx->written[first - 1] | op->written;
 
         result = flecs_query_run_until_for_select_or(
             redo, ctx, ops, flecs_itolbl(first - 1), cur, last);

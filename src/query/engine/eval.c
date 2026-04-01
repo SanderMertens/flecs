@@ -1188,7 +1188,7 @@ bool flecs_query_select_or(
     do {
         ecs_query_lbl_t cur = op_ctx->op_index;
         ctx->op_index = cur;
-        ctx->written[cur] = op->written;
+        ctx->written[cur] = ctx->written[first - 1] | op->written;
 
         result = flecs_query_run_until_for_select_or(
             redo, ctx, ops, flecs_itolbl(first - 1), cur, last);
