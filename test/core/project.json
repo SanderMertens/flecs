@@ -1714,7 +1714,10 @@
                 "has_in_on_add_hook_move",
                 "get_in_on_add_hook_new",
                 "get_in_on_add_hook_move",
-                "get_name_in_on_add_hook_move"
+                "get_name_in_on_add_hook_move",
+                "delete_nonlast_with_destruct_no_move_ctor",
+                "remove_component_nonlast_no_move_ctor_calls_dtor_trailing",
+                "remove_component_nonlast_no_move_ctor_calls_dtor_interleaved"
             ]
         }, {
             "id": "Pairs",
