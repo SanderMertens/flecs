@@ -2722,6 +2722,10 @@ void World_add_dont_fragment_after_pair_query(void);
 void World_add_can_toggle_after_pair_query(void);
 void World_add_traversable_after_pair_query(void);
 void World_set_component_after_in_use(void);
+void World_delete_empty_tables_w_offset(void);
+void World_delete_empty_tables_w_offset_out_of_range(void);
+void World_delete_empty_tables_w_offset_wrap_around(void);
+void World_delete_empty_tables_return_value(void);
 
 // Testsuite 'ExclusiveAccess'
 void ExclusiveAccess_self(void);
@@ -13872,6 +13876,22 @@ bake_test_case World_testcases[] = {
     {
         "set_component_after_in_use",
         World_set_component_after_in_use
+    },
+    {
+        "delete_empty_tables_w_offset",
+        World_delete_empty_tables_w_offset
+    },
+    {
+        "delete_empty_tables_w_offset_out_of_range",
+        World_delete_empty_tables_w_offset_out_of_range
+    },
+    {
+        "delete_empty_tables_w_offset_wrap_around",
+        World_delete_empty_tables_w_offset_wrap_around
+    },
+    {
+        "delete_empty_tables_return_value",
+        World_delete_empty_tables_return_value
     }
 };
 
@@ -16148,7 +16168,7 @@ static bake_test_suite suites[] = {
         "World",
         World_setup,
         NULL,
-        154,
+        158,
         World_testcases
     },
     {

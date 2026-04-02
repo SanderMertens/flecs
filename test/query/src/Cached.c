@@ -3788,13 +3788,12 @@ void Cached_cascade_default_group_reinsert_after_empty_table_delete(void) {
 
     ecs_delete(world, e1);
 
-    int32_t deleted = ecs_delete_empty_tables(world, &(ecs_delete_empty_tables_desc_t) {
+    ecs_delete_empty_tables(world, &(ecs_delete_empty_tables_desc_t) {
         .delete_generation = 1
     });
-    deleted += ecs_delete_empty_tables(world, &(ecs_delete_empty_tables_desc_t) {
+    ecs_delete_empty_tables(world, &(ecs_delete_empty_tables_desc_t) {
         .delete_generation = 1
     });
-    test_assert(deleted > 0);
 
     ecs_entity_t e2 = ecs_new(world);
     ecs_set(world, e2, Position, {3, 4});
@@ -3804,13 +3803,12 @@ void Cached_cascade_default_group_reinsert_after_empty_table_delete(void) {
     /* Reproduces assert in flecs_query_cache_remove_group:
      * ecs_assert(cur != NULL, ECS_INTERNAL_ERROR, NULL);
      */
-    deleted = ecs_delete_empty_tables(world, &(ecs_delete_empty_tables_desc_t) {
+    ecs_delete_empty_tables(world, &(ecs_delete_empty_tables_desc_t) {
         .delete_generation = 1
     });
-    deleted += ecs_delete_empty_tables(world, &(ecs_delete_empty_tables_desc_t) {
+    ecs_delete_empty_tables(world, &(ecs_delete_empty_tables_desc_t) {
         .delete_generation = 1
     });
-    test_assert(deleted > 0);
 
     ecs_fini(world);
 }

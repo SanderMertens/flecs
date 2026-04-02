@@ -1154,21 +1154,20 @@ void World_delete_empty_tables_after_mini(void) {
 
     empty_table_count --; // correct for root table
 
-    int32_t deleted;
-    deleted = ecs_delete_empty_tables(world, 
+    ecs_delete_empty_tables(world,
         &(ecs_delete_empty_tables_desc_t){ .delete_generation = 1}); /* Increase to 1 */
-    test_int(deleted, 0);
 
-    deleted = ecs_delete_empty_tables(world, 
+    ecs_delete_empty_tables(world,
         &(ecs_delete_empty_tables_desc_t){ .delete_generation = 1}); /* Delete */
-    test_assert(deleted == empty_table_count);
-    test_int(info->table_count + deleted, old_table_count);
+    test_int(info->table_count, old_table_count - empty_table_count);
 
     ecs_fini(world);
 }
 
 void World_delete_empty_tables_after_init(void) {
     ecs_world_t *world = ecs_init();
+
+    const ecs_world_info_t *info = ecs_get_world_info(world);
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {{ .id = EcsAny }},
@@ -1187,15 +1186,14 @@ void World_delete_empty_tables_after_init(void) {
     ecs_query_fini(q);
 
     empty_table_count --; // correct for root table
+    int32_t old_table_count = info->table_count;
 
-    int32_t deleted;
-    deleted = ecs_delete_empty_tables(world, 
+    ecs_delete_empty_tables(world,
         &(ecs_delete_empty_tables_desc_t){ .delete_generation = 1 }); /* Increase to 1 */
-    test_int(deleted, 0);
 
-    deleted = ecs_delete_empty_tables(world, 
+    ecs_delete_empty_tables(world,
         &(ecs_delete_empty_tables_desc_t){ .delete_generation = 1 }); /* Delete */
-    test_assert(deleted == empty_table_count);
+    test_int(info->table_count, old_table_count - empty_table_count);
 
     ecs_fini(world);
 }
@@ -1838,15 +1836,11 @@ void World_delete_1000_empty_tables(void) {
 
     ecs_delete(world, e);
 
-    int32_t deleted;
-    deleted = ecs_delete_empty_tables(world, 
+    ecs_delete_empty_tables(world,
         &(ecs_delete_empty_tables_desc_t){ .delete_generation = 1 }); /* Increase to 1 */
-    test_int(deleted, 0);
 
-    deleted = ecs_delete_empty_tables(world, 
+    ecs_delete_empty_tables(world,
         &(ecs_delete_empty_tables_desc_t){ .delete_generation = 1 }); /* Delete */
-    test_assert(deleted != 0);
-    test_assert(deleted >= 1000);
 
     test_assert(info->table_count <= old_table_count);
 
@@ -1864,13 +1858,10 @@ void World_use_after_delete_empty(void) {
     ecs_add(world, e, TagB);
 
     ecs_remove(world, e, TagA);
-    int32_t deleted;
-    deleted = ecs_delete_empty_tables(world, 
+    ecs_delete_empty_tables(world,
         &(ecs_delete_empty_tables_desc_t){ .delete_generation = 1 });
-    test_assert(deleted == 0);
-    deleted = ecs_delete_empty_tables(world, 
+    ecs_delete_empty_tables(world,
         &(ecs_delete_empty_tables_desc_t){ .delete_generation = 1 });
-    test_assert(deleted != 0);
     ecs_add(world, e, TagA);
 
     test_assert( ecs_has(world, e, TagA));
@@ -1890,13 +1881,10 @@ void World_use_after_clear_empty(void) {
     ecs_add(world, e, TagB);
 
     ecs_remove(world, e, TagA);
-    int32_t deleted;
-    deleted = ecs_delete_empty_tables(world, 
+    ecs_delete_empty_tables(world,
         &(ecs_delete_empty_tables_desc_t){ .clear_generation = 1 });
-    test_assert(deleted == 0);
-    deleted = ecs_delete_empty_tables(world, 
+    ecs_delete_empty_tables(world,
         &(ecs_delete_empty_tables_desc_t){ .clear_generation = 1 });
-    test_assert(deleted == 0);
     ecs_add(world, e, TagA);
 
     test_assert( ecs_has(world, e, TagA));
@@ -1921,21 +1909,18 @@ void World_use_after_delete_empty_w_component(void) {
     test_assert( ecs_has(world, e, Position));
     test_assert( !ecs_has(world, e, Velocity));
 
-    int32_t deleted;
-    deleted = ecs_delete_empty_tables(world, 
+    ecs_delete_empty_tables(world,
         &(ecs_delete_empty_tables_desc_t){ .delete_generation = 1 });
-    test_assert(deleted == 0);
     test_bool(true, ecs_is_alive(world, ecs_id(Position)));
     test_bool(true, ecs_is_alive(world, ecs_id(Velocity)));
     test_assert( ecs_has(world, e, Position));
 
-    deleted = ecs_delete_empty_tables(world, 
+    ecs_delete_empty_tables(world,
         &(ecs_delete_empty_tables_desc_t){ .delete_generation = 1 });
-    test_assert(deleted != 0);
     test_bool(true, ecs_is_alive(world, ecs_id(Position)));
     test_bool(true, ecs_is_alive(world, ecs_id(Velocity)));
     test_assert( ecs_has(world, e, Position));
-    
+
     ecs_add(world, e, Velocity);
 
     test_assert( ecs_has(world, e, Position));
@@ -1960,21 +1945,18 @@ void World_use_after_clear_empty_w_component(void) {
     test_assert( ecs_has(world, e, Position));
     test_assert( !ecs_has(world, e, Velocity));
 
-    int32_t deleted;
-    deleted = ecs_delete_empty_tables(world, 
+    ecs_delete_empty_tables(world,
         &(ecs_delete_empty_tables_desc_t){ .clear_generation = 1 });
-    test_assert(deleted == 0);
     test_bool(true, ecs_is_alive(world, ecs_id(Position)));
     test_bool(true, ecs_is_alive(world, ecs_id(Velocity)));
     test_assert( ecs_has(world, e, Position));
 
-    deleted = ecs_delete_empty_tables(world, 
+    ecs_delete_empty_tables(world,
         &(ecs_delete_empty_tables_desc_t){ .clear_generation = 1 });
-    test_assert(deleted == 0);
     test_bool(true, ecs_is_alive(world, ecs_id(Position)));
     test_bool(true, ecs_is_alive(world, ecs_id(Velocity)));
     test_assert( ecs_has(world, e, Position));
-    
+
     ecs_add(world, e, Velocity);
 
     test_assert( ecs_has(world, e, Position));
@@ -2006,21 +1988,18 @@ void World_use_after_clear_empty_w_component_w_lifecycle(void) {
     test_assert( ecs_has(world, e, Position));
     test_assert( !ecs_has(world, e, Velocity));
 
-    int32_t deleted;
-    deleted = ecs_delete_empty_tables(world, 
+    ecs_delete_empty_tables(world,
         &(ecs_delete_empty_tables_desc_t){ .clear_generation = 1 });
-    test_assert(deleted == 0);
     test_bool(true, ecs_is_alive(world, ecs_id(Position)));
     test_bool(true, ecs_is_alive(world, ecs_id(Velocity)));
     test_assert( ecs_has(world, e, Position));
 
-    deleted = ecs_delete_empty_tables(world, 
+    ecs_delete_empty_tables(world,
         &(ecs_delete_empty_tables_desc_t){ .clear_generation = 1 });
-    test_assert(deleted == 0);
     test_bool(true, ecs_is_alive(world, ecs_id(Position)));
     test_bool(true, ecs_is_alive(world, ecs_id(Velocity)));
     test_assert( ecs_has(world, e, Position));
-    
+
     ecs_add(world, e, Velocity);
 
     test_assert( ecs_has(world, e, Position));
@@ -2035,13 +2014,10 @@ void World_use_after_clear_unused(void) {
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
 
-    int32_t deleted;
-    deleted = ecs_delete_empty_tables(world, 
+    ecs_delete_empty_tables(world,
         &(ecs_delete_empty_tables_desc_t){ .clear_generation = 1 });
-    test_assert(deleted == 0);
-    deleted = ecs_delete_empty_tables(world, 
+    ecs_delete_empty_tables(world,
         &(ecs_delete_empty_tables_desc_t){ .clear_generation = 1 });
-    test_assert(deleted == 0);
 
     ecs_entity_t e = ecs_new(world);
     ecs_add(world, e, TagA);
@@ -3842,6 +3818,161 @@ void World_set_component_after_in_use(void) {
 
     test_assert(flecs_component_get_type_info(cr_c_wc) == NULL);
     test_assert(flecs_component_get_type_info(cr_wc_c) == NULL);
+
+    ecs_fini(world);
+}
+
+void World_delete_empty_tables_w_offset(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+    ecs_run_aperiodic(world, 0);
+
+    const ecs_world_info_t *info = ecs_get_world_info(world);
+    int32_t old_table_count = info->table_count;
+
+    ecs_entity_t e = ecs_new_w(world, Tag);
+    for (int i = 0; i < 100; i ++) {
+        ecs_add_id(world, e, ecs_new(world));
+    }
+
+    test_int(info->table_count, old_table_count + 100 + 1);
+
+    ecs_delete(world, e);
+
+    /* First call increases generation to 1 */
+    int32_t result;
+    result = ecs_delete_empty_tables(world, &(ecs_delete_empty_tables_desc_t){
+        .delete_generation = 1,
+        .offset = 5
+    });
+    test_int(result, 0); /* Full scan completed */
+
+    /* Second call deletes the tables */
+    result = ecs_delete_empty_tables(world, &(ecs_delete_empty_tables_desc_t){
+        .delete_generation = 1,
+        .offset = 5
+    });
+    test_int(result, 0); /* Full scan completed */
+
+    test_assert(info->table_count <= old_table_count);
+
+    ecs_fini(world);
+}
+
+void World_delete_empty_tables_w_offset_out_of_range(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, TagA);
+    ecs_add(world, e, TagB);
+    ecs_remove(world, e, TagA);
+
+    const ecs_world_info_t *info = ecs_get_world_info(world);
+    int32_t table_count = info->table_count;
+
+    /* Offset way out of range, should clamp to 0 */
+    ecs_delete_empty_tables(world, &(ecs_delete_empty_tables_desc_t){
+        .delete_generation = 1,
+        .offset = 999999
+    });
+
+    ecs_delete_empty_tables(world, &(ecs_delete_empty_tables_desc_t){
+        .delete_generation = 1,
+        .offset = 999999
+    });
+
+    /* Table should still be deleted despite out of range offset */
+    test_assert(info->table_count < table_count);
+
+    /* Negative offset, should clamp to 0 */
+    ecs_add(world, e, TagA);
+    ecs_remove(world, e, TagA);
+
+    ecs_delete_empty_tables(world, &(ecs_delete_empty_tables_desc_t){
+        .delete_generation = 1,
+        .offset = -1
+    });
+    ecs_delete_empty_tables(world, &(ecs_delete_empty_tables_desc_t){
+        .delete_generation = 1,
+        .offset = -1
+    });
+
+    ecs_fini(world);
+}
+
+void World_delete_empty_tables_w_offset_wrap_around(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+    ecs_run_aperiodic(world, 0);
+
+    const ecs_world_info_t *info = ecs_get_world_info(world);
+    int32_t old_table_count = info->table_count;
+
+    /* Create empty tables by adding unique components and removing them */
+    ecs_entity_t e = ecs_new_w(world, Tag);
+    for (int i = 0; i < 50; i ++) {
+        ecs_add_id(world, e, ecs_new(world));
+    }
+
+    test_int(info->table_count, old_table_count + 50 + 1);
+
+    ecs_delete(world, e);
+
+    /* Use offset in the middle of the table range */
+    int32_t offset = info->table_count / 2;
+
+    /* First call increases generation */
+    int32_t result;
+    result = ecs_delete_empty_tables(world, &(ecs_delete_empty_tables_desc_t){
+        .delete_generation = 1,
+        .offset = offset
+    });
+    test_int(result, 0);
+
+    /* Second call deletes tables */
+    result = ecs_delete_empty_tables(world, &(ecs_delete_empty_tables_desc_t){
+        .delete_generation = 1,
+        .offset = offset
+    });
+    test_int(result, 0);
+
+    /* Verify all empty tables were cleaned up */
+    test_assert(info->table_count <= old_table_count);
+
+    ecs_fini(world);
+}
+
+void World_delete_empty_tables_return_value(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    /* Without time budget, should return 0 (full scan) */
+    int32_t result;
+    result = ecs_delete_empty_tables(world, &(ecs_delete_empty_tables_desc_t){
+        .delete_generation = 1
+    });
+    test_int(result, 0);
+
+    /* With offset, should also return 0 for full scan */
+    result = ecs_delete_empty_tables(world, &(ecs_delete_empty_tables_desc_t){
+        .delete_generation = 1,
+        .offset = 1
+    });
+    test_int(result, 0);
+
+    /* With offset=0, should return 0 */
+    result = ecs_delete_empty_tables(world, &(ecs_delete_empty_tables_desc_t){
+        .delete_generation = 1,
+        .offset = 0
+    });
+    test_int(result, 0);
 
     ecs_fini(world);
 }

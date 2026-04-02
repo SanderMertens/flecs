@@ -2736,6 +2736,10 @@ typedef struct ecs_delete_empty_tables_desc_t {
 
     /** Amount of time operation is allowed to spend. */
     double time_budget_seconds;
+
+    /** Table index to start scanning at. The function loops around until it
+     * reaches this offset again, or until the time budget is exceeded. */
+    int32_t offset;
 } ecs_delete_empty_tables_desc_t;
 
 /** Clean up empty tables.
@@ -2763,9 +2767,15 @@ typedef struct ecs_delete_empty_tables_desc_t {
  *
  * The time budget specifies how long the operation should take at most.
  *
+ * The offset parameter specifies the table index at which to start scanning.
+ * The function loops around until it reaches this offset again, or until the
+ * time budget is exceeded.
+ *
  * @param world The world.
  * @param desc Configuration parameters.
- * @return The number of deleted tables.
+ * @return The index + 1 of the table where the function stopped, or 0 if the
+ *         function scanned all tables. The return value can be used as the
+ *         offset for the next call.
  */
 FLECS_API
 int32_t ecs_delete_empty_tables(
