@@ -68,7 +68,7 @@ typedef struct ecs_store_t {
     ecs_vec_t marked_ids;            /* vector<ecs_marked_id_t> */
 
     /* Components deleted during cleanup action. Used to delay cleaning up of
-     * type info so it's guaranteed that this data is available while the 
+     * type info so it's guaranteed that this data is available while the
      * storage is cleaning up tables. */
     ecs_vec_t deleted_components;    /* vector<ecs_entity_t> */
 } ecs_store_t;
@@ -152,9 +152,6 @@ struct ecs_world_t {
 
     /* Index of prefab children in ordered children vector. Used by ecs_get_target. */
     ecs_map_t prefab_child_indices;
-
-    /* Is entity range checking enabled? */
-    bool range_check_enabled;
 
     /* Internal callback for command inspection. Only one callback can be set at
      * a time. After assignment, the action will become active at the start of

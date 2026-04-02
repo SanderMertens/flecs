@@ -18,8 +18,10 @@ typedef struct ecs_entity_index_page_t {
 typedef struct ecs_entity_index_t {
     ecs_vec_t dense;
     ecs_vec_t pages;
+    ecs_vec_t ranges;                /* vec<ecs_entity_range_t*> - sorted by min */
+    ecs_entity_range_t *active_range;       /* Currently active range (NULL = off) */
     int32_t alive_count;
-    uint64_t max_id;
+    uint32_t max_id;
     ecs_allocator_t *allocator;
 } ecs_entity_index_t;
 
@@ -120,6 +122,17 @@ void flecs_entity_index_clear(
 /* Shrink entity index */
 void flecs_entity_index_shrink(
     ecs_entity_index_t *index);
+
+/* Ensure page for entity id exists */
+ecs_entity_index_page_t* flecs_entity_index_ensure_page(
+    ecs_entity_index_t *index,
+    uint32_t id);
+
+/* Set active entity range. Swaps not-alive entries between the entity index
+ * and the previous/new range's recycled lists. */
+void flecs_entity_index_set_range(
+    ecs_entity_index_t *index,
+    ecs_entity_range_t *range);
 
 /* Return ids of alive entities in index */
 const uint64_t* flecs_entity_index_ids(
