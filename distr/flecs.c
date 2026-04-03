@@ -10769,11 +10769,11 @@ ecs_entity_t ecs_new_w_parent(
     r->table = table;
     r->row = (uint32_t)row;
 
-    flecs_actions_new(world, table, row, 1, &table_diff, 0, false, true);
-
     EcsParent *parent_ptr = table->data.columns[0].data;
     parent_ptr = &parent_ptr[row];
     parent_ptr->value = parent;
+
+    flecs_actions_new(world, table, row, 1, &table_diff, 0, false, true);
 
     if (name) {
         bool is_deferred = ecs_is_deferred(world);
