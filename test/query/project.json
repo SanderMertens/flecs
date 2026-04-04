@@ -1691,7 +1691,8 @@
                 "this_or_w_self_up_childof",
                 "this_or_w_self_up_childof_2",
                 "this_or_w_self_up_childof_w_tag",
-                "this_written_or_w_self_up_childof"
+                "this_written_or_w_self_up_childof",
+                "this_written_up_isa_trav_id_n_lvl"
             ]
         }, {
             "id": "Cascade",
