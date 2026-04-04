@@ -15,7 +15,8 @@ void Entity_init_id_exceed_32_bits(void) {
 	install_test_abort();
     ecs_world_t *world = ecs_mini();
 
-    ecs_set_entity_range(world, UINT32_MAX, 0);
+    const ecs_entity_range_t *range = ecs_entity_range_new(world, UINT32_MAX, 0);
+    ecs_entity_range_set(world, range);
 
     ecs_new(world);
 

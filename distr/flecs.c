@@ -242,8 +242,10 @@ typedef struct ecs_entity_index_page_t {
 typedef struct ecs_entity_index_t {
     ecs_vec_t dense;
     ecs_vec_t pages;
+    ecs_vec_t ranges;                /* vec<ecs_entity_range_t*> - sorted by min */
+    ecs_entity_range_t *active_range;       /* Currently active range (NULL = off) */
     int32_t alive_count;
-    uint64_t max_id;
+    uint32_t max_id;
     ecs_allocator_t *allocator;
 } ecs_entity_index_t;
 
@@ -344,6 +346,17 @@ void flecs_entity_index_clear(
 /* Shrink entity index */
 void flecs_entity_index_shrink(
     ecs_entity_index_t *index);
+
+/* Ensure page for entity id exists */
+ecs_entity_index_page_t* flecs_entity_index_ensure_page(
+    ecs_entity_index_t *index,
+    uint32_t id);
+
+/* Set active entity range. Swaps not-alive entries between the entity index
+ * and the previous/new range's recycled lists. */
+void flecs_entity_index_set_range(
+    ecs_entity_index_t *index,
+    ecs_entity_range_t *range);
 
 /* Return ids of alive entities in index */
 const uint64_t* flecs_entity_index_ids(
@@ -3681,7 +3694,7 @@ typedef struct ecs_store_t {
     ecs_vec_t marked_ids;            /* vector<ecs_marked_id_t> */
 
     /* Components deleted during cleanup action. Used to delay cleaning up of
-     * type info so it's guaranteed that this data is available while the 
+     * type info so it's guaranteed that this data is available while the
      * storage is cleaning up tables. */
     ecs_vec_t deleted_components;    /* vector<ecs_entity_t> */
 } ecs_store_t;
@@ -3765,9 +3778,6 @@ struct ecs_world_t {
 
     /* Index of prefab children in ordered children vector. Used by ecs_get_target. */
     ecs_map_t prefab_child_indices;
-
-    /* Is entity range checking enabled? */
-    bool range_check_enabled;
 
     /* Internal callback for command inspection. Only one callback can be set at
      * a time. After assignment, the action will become active at the start of
@@ -5159,8 +5169,6 @@ void flecs_bootstrap(
     /* Initialize default entity id range */
     world->info.last_component_id = EcsFirstUserComponentId;
     flecs_entities_max_id(world) = EcsFirstUserEntityId;
-    world->info.min_id = 0;
-    world->info.max_id = 0;
 
     /* Register observer for trait before adding EcsPairIsTag */
     ecs_observer(world, {
@@ -7996,8 +8004,9 @@ ecs_entity_t flecs_new_id(
 
     ecs_entity_t entity = flecs_entities_new_id(unsafe_world);
 
-    ecs_assert(!unsafe_world->info.max_id || 
-        ecs_entity_t_lo(entity) <= unsafe_world->info.max_id, 
+    ecs_assert(!ecs_eis(unsafe_world)->active_range ||
+        !ecs_eis(unsafe_world)->active_range->max ||
+        ecs_entity_t_lo(entity) <= ecs_eis(unsafe_world)->active_range->max,
         ECS_OUT_OF_RANGE, NULL);
 
     return entity;
@@ -8131,16 +8140,8 @@ void flecs_commit(
         flecs_update_component_monitors(world, &diff->added, &diff->removed);
     }
 
-    if (!src_table->type.count && world->range_check_enabled) {
-        ecs_check(!world->info.max_id || entity <= world->info.max_id, 
-            ECS_OUT_OF_RANGE, 0);
-        ecs_check(entity >= world->info.min_id, 
-            ECS_OUT_OF_RANGE, 0);
-    }
-
     ecs_os_perf_trace_pop("flecs.commit");
 
-error:
     flecs_journal_end();
     return;
 }
@@ -23474,37 +23475,96 @@ void ecs_set_binding_ctx(
     world->binding_ctx_free = ctx_free;
 }
 
-void ecs_set_entity_range(
+const ecs_entity_range_t* ecs_entity_range_new(
     ecs_world_t *world,
-    ecs_entity_t id_start,
-    ecs_entity_t id_end)
+    uint32_t min,
+    uint32_t max)
 {
     flecs_poly_assert(world, ecs_world_t);
-    ecs_check(!id_end || id_end > id_start, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(min > 0, ECS_INVALID_PARAMETER, "min must be > 0");
+    ecs_check(!max || max >= min, ECS_INVALID_PARAMETER,
+        "max must be >= min or 0");
 
-    if (id_start == 0) {
-      id_start = flecs_entities_max_id(world) + 1;
+    /* Validate no overlap with existing ranges */
+    ecs_entity_index_t *index = ecs_eis(world);
+    int32_t count = ecs_vec_count(&index->ranges);
+    if (count > 0) {
+        ecs_entity_range_t **ranges = ecs_vec_first_t(&index->ranges,
+            ecs_entity_range_t*);
+        int32_t i;
+        for (i = 0; i < count; i ++) {
+            ecs_entity_range_t *existing = ranges[i];
+            /* Two ranges overlap if one starts before the other ends */
+            bool overlap;
+            if (!existing->max && !max) {
+                overlap = true;
+            } else if (!existing->max) {
+                overlap = max >= existing->min;
+            } else if (!max) {
+                overlap = min <= existing->max;
+            } else {
+                overlap = min <= existing->max && max >= existing->min;
+            }
+            ecs_check(!overlap, ECS_INVALID_PARAMETER,
+                "range [%u, %u] overlaps with existing range [%u, %u]",
+                    min, max, existing->min, existing->max);
+            (void)overlap;
+        }
     }
 
-    uint32_t start = (uint32_t)id_start;
-    uint32_t end = (uint32_t)id_end;
+    ecs_allocator_t *a = &world->allocator;
 
-    flecs_entities_max_id(world) = start - 1;
+    ecs_entity_range_t *range = flecs_walloc_t(world, ecs_entity_range_t);
+    range->min = min;
+    range->max = max;
+    range->cur = min - 1;
+    ecs_vec_init_t(a, &range->recycled, uint64_t, 0);
 
-    world->info.min_id = start;
-    world->info.max_id = end;
+    /* Insert into sorted ranges vec (sorted by min) */
+    ecs_vec_append_t(a, &index->ranges, ecs_entity_range_t*)[0] = range;
+
+    if (count > 0) {
+        ecs_entity_range_t **ranges = ecs_vec_first_t(&index->ranges,
+            ecs_entity_range_t*);
+
+        /* Find insertion point and shift elements */
+        int32_t i;
+        for (i = count; i > 0; i --) {
+            if (ranges[i - 1]->min <= min) {
+                break;
+            }
+            ranges[i] = ranges[i - 1];
+        }
+        ranges[i] = range;
+    }
+
+    return range;
+error:
+    return NULL;
+}
+
+void ecs_entity_range_set(
+    ecs_world_t *world,
+    const ecs_entity_range_t *range)
+{
+    flecs_poly_assert(world, ecs_world_t);
+    ecs_check(range != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    flecs_entity_index_set_range(ecs_eis(world),
+        ECS_CONST_CAST(ecs_entity_range_t*, range));
+
 error:
     return;
 }
 
-bool ecs_enable_range_check(
-    ecs_world_t *world,
-    bool enable)
+const ecs_entity_range_t* ecs_entity_range_get(
+    const ecs_world_t *world)
 {
-    flecs_poly_assert(world, ecs_world_t);    
-    bool old_value = world->range_check_enabled;
-    world->range_check_enabled = enable;
-    return old_value;
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    world = ecs_get_world(world);
+    return ecs_eis(world)->active_range;
+error:
+    return NULL;
 }
 
 ecs_entity_t ecs_get_max_id(
@@ -40489,7 +40549,6 @@ void flecs_component_update_childof_depth(
 
 #include <inttypes.h>
 
-static
 ecs_entity_index_page_t* flecs_entity_index_ensure_page(
     ecs_entity_index_t *index,
     uint32_t id)
@@ -40517,9 +40576,11 @@ void flecs_entity_index_init(
 {
     index->allocator = allocator;
     index->alive_count = 1;
+    index->active_range = NULL;
     ecs_vec_init_t(allocator, &index->dense, uint64_t, 1);
     ecs_vec_set_count_t(allocator, &index->dense, uint64_t, 1);
     ecs_vec_init_t(allocator, &index->pages, ecs_entity_index_page_t*, 0);
+    ecs_vec_init_t(allocator, &index->ranges, ecs_entity_range_t*, 0);
 }
 
 void flecs_entity_index_fini(
@@ -40532,6 +40593,17 @@ void flecs_entity_index_fini(
         ecs_os_free(pages[i]);
     }
     ecs_vec_fini_t(index->allocator, &index->pages, ecs_entity_index_page_t*);
+
+    /* Free entity id ranges */
+    {
+        int32_t r, range_count = ecs_vec_count(&index->ranges);
+        ecs_entity_range_t **ranges = ecs_vec_first_t(&index->ranges, ecs_entity_range_t*);
+        for (r = 0; r < range_count; r ++) {
+            ecs_vec_fini_t(index->allocator, &ranges[r]->recycled, uint64_t);
+            flecs_free_t(index->allocator, ecs_entity_range_t, ranges[r]);
+        }
+        ecs_vec_fini_t(index->allocator, &index->ranges, ecs_entity_range_t*);
+    }
 }
 
 ecs_record_t* flecs_entity_index_get_any(
@@ -40645,14 +40717,60 @@ ecs_record_t* flecs_entity_index_ensure(
     return r;
 }
 
-void flecs_entity_index_remove(
+static
+void flecs_entity_index_remove_not_alive(
+    ecs_entity_index_t *index,
+    ecs_record_t *r)
+{
+    int32_t not_alive = index->alive_count;
+    int32_t last = ecs_vec_count(&index->dense) - 1;
+    if (not_alive != last) {
+        uint64_t *ids = ecs_vec_first_t(&index->dense, uint64_t);
+        uint64_t e_last = ids[last];
+        ecs_record_t *r_last = flecs_entity_index_get_any(index, e_last);
+        r_last->dense = not_alive;
+        ids[not_alive] = e_last;
+    }
+    ecs_vec_set_count_t(index->allocator, &index->dense, uint64_t, last);
+    r->dense = 0;
+}
+
+static
+ecs_entity_range_t* flecs_entity_index_find_range(
+    ecs_entity_index_t *index,
+    uint32_t id)
+{
+    int32_t count = ecs_vec_count(&index->ranges);
+    if (!count) {
+        return NULL;
+    }
+
+    ecs_entity_range_t **ranges = ecs_vec_first_t(&index->ranges,
+        ecs_entity_range_t*);
+    int32_t lo = 0, hi = count - 1;
+    while (lo <= hi) {
+        int32_t mid = (lo + hi) / 2;
+        ecs_entity_range_t *r = ranges[mid];
+        if (id < r->min) {
+            hi = mid - 1;
+        } else if (r->max && id > r->max) {
+            lo = mid + 1;
+        } else {
+            return r;
+        }
+    }
+
+    return NULL;
+}
+
+static
+ecs_record_t* flecs_entity_index_remove_intern(
     ecs_entity_index_t *index,
     uint64_t entity)
 {
     ecs_record_t *r = flecs_entity_index_try_get(index, entity);
     if (!r) {
-        /* Entity is not alive or doesn't exist, nothing to be done */
-        return;
+        return NULL;
     }
 
     int32_t dense = r->dense;
@@ -40668,8 +40786,134 @@ void flecs_entity_index_remove(
     r->dense = i_swap;
     ecs_vec_get_t(&index->dense, uint64_t, dense)[0] = e_swap;
     e_swap_ptr[0] = ECS_GENERATION_INC(entity);
+
     ecs_assert(!flecs_entity_index_is_alive(index, entity),
         ECS_INTERNAL_ERROR, NULL);
+
+    return r;
+}
+
+void flecs_entity_index_remove(
+    ecs_entity_index_t *index,
+    uint64_t entity)
+{
+    ecs_record_t *r = flecs_entity_index_remove_intern(index, entity);
+    if (!r) {
+        /* Entity was not alive, nothing else to be done. */
+        return;
+    }
+
+    ecs_entity_range_t *active = index->active_range;
+    if (!active) {
+        /* If no entity range is active, we're done. */
+        return;
+    }
+
+    uint32_t id = (uint32_t)entity;
+    if (id >= active->min && (!active->max || id <= active->max)) {
+        /* Id falls within the active range, also nothing else to be done. */
+        return;
+    }
+
+    /* Entity falls outside of the active range. We now need to remove the 
+     * recycled id from the dense vector, and move it to the recycled id vector
+     * of the correct range. */
+    flecs_entity_index_remove_not_alive(index, r);
+
+    ecs_entity_range_t *range = flecs_entity_index_find_range(index, id);
+    if (range) {
+        ecs_vec_append_t(
+            index->allocator, &range->recycled, uint64_t)[0] = 
+                ECS_GENERATION_INC(entity);
+    }
+}
+
+void flecs_entity_index_set_range(
+    ecs_entity_index_t *index,
+    ecs_entity_range_t *range)
+{
+#ifdef FLECS_DEBUG
+    /* Verify that the range was created by ecs_entity_range_new */
+    {
+        int32_t i, count = ecs_vec_count(&index->ranges);
+        ecs_entity_range_t **ranges = ecs_vec_first_t(&index->ranges,
+            ecs_entity_range_t*);
+        bool found = false;
+        for (i = 0; i < count; i ++) {
+            if (ranges[i] == range) {
+                found = true;
+                break;
+            }
+        }
+        ecs_assert(found, ECS_INVALID_PARAMETER,
+            "range was not created with ecs_entity_range_new");
+        (void)found;
+    }
+#endif
+
+    ecs_allocator_t *a = index->allocator;
+    ecs_entity_range_t *prev = index->active_range;
+    int32_t alive_count = index->alive_count;
+    int32_t dense_count = ecs_vec_count(&index->dense);
+    int32_t not_alive_count = dense_count - alive_count;
+    uint64_t *ids = ecs_vec_first_t(&index->dense, uint64_t);
+
+    /* Save current not-alive entries to previous range (if any) */
+    if (prev) {
+        if (not_alive_count > 0) {
+            ecs_vec_set_count_t(a, &prev->recycled, uint64_t, not_alive_count);
+            uint64_t *dst = ecs_vec_first_t(&prev->recycled, uint64_t);
+            ecs_os_memcpy_n(dst, &ids[alive_count], uint64_t, not_alive_count);
+        } else {
+            ecs_vec_set_count_t(a, &prev->recycled, uint64_t, 0);
+        }
+        prev->cur = index->max_id;
+    }
+
+    /* Clear not-alive entries from entity index */
+    {
+        int32_t i;
+        for (i = alive_count; i < dense_count; i ++) {
+            uint32_t id = (uint32_t)ids[i];
+            int32_t page_index = (int32_t)(id >> FLECS_ENTITY_PAGE_BITS);
+            if (page_index < ecs_vec_count(&index->pages)) {
+                ecs_entity_index_page_t *page = ecs_vec_get_t(&index->pages,
+                    ecs_entity_index_page_t*, page_index)[0];
+                if (page) {
+                    page->records[id & FLECS_ENTITY_PAGE_MASK].dense = 0;
+                }
+            }
+        }
+        ecs_vec_set_count_t(a, &index->dense, uint64_t, alive_count);
+    }
+
+    /* Load new range's recycled entries into entity index not-alive section */
+    {
+        int32_t recycled_count = ecs_vec_count(&range->recycled);
+        if (recycled_count > 0) {
+            int32_t new_dense_count = alive_count + recycled_count;
+            ecs_vec_set_count_t(a, &index->dense, uint64_t, new_dense_count);
+            ids = ecs_vec_first_t(&index->dense, uint64_t);
+
+            uint64_t *src = ecs_vec_first_t(&range->recycled, uint64_t);
+            ecs_os_memcpy_n(&ids[alive_count], src, uint64_t, recycled_count);
+
+            int32_t i;
+            for (i = 0; i < recycled_count; i ++) {
+                uint32_t id = (uint32_t)src[i];
+                ecs_entity_index_page_t *page =
+                    flecs_entity_index_ensure_page(index, id);
+                ecs_record_t *r = &page->records[id & FLECS_ENTITY_PAGE_MASK];
+                r->dense = alive_count + i;
+                ecs_assert(r->table == NULL, ECS_INTERNAL_ERROR, NULL);
+            }
+
+            ecs_vec_set_count_t(a, &range->recycled, uint64_t, 0);
+        }
+    }
+
+    index->max_id = range->cur;
+    index->active_range = range;
 }
 
 void flecs_entity_index_make_alive(

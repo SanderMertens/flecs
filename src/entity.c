@@ -153,8 +153,9 @@ ecs_entity_t flecs_new_id(
 
     ecs_entity_t entity = flecs_entities_new_id(unsafe_world);
 
-    ecs_assert(!unsafe_world->info.max_id || 
-        ecs_entity_t_lo(entity) <= unsafe_world->info.max_id, 
+    ecs_assert(!ecs_eis(unsafe_world)->active_range ||
+        !ecs_eis(unsafe_world)->active_range->max ||
+        ecs_entity_t_lo(entity) <= ecs_eis(unsafe_world)->active_range->max,
         ECS_OUT_OF_RANGE, NULL);
 
     return entity;
@@ -288,16 +289,8 @@ void flecs_commit(
         flecs_update_component_monitors(world, &diff->added, &diff->removed);
     }
 
-    if (!src_table->type.count && world->range_check_enabled) {
-        ecs_check(!world->info.max_id || entity <= world->info.max_id, 
-            ECS_OUT_OF_RANGE, 0);
-        ecs_check(entity >= world->info.min_id, 
-            ECS_OUT_OF_RANGE, 0);
-    }
-
     ecs_os_perf_trace_pop("flecs.commit");
 
-error:
     flecs_journal_end();
     return;
 }

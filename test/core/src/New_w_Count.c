@@ -701,7 +701,8 @@ void New_w_Count_bulk_ids_w_1_exceed_32_bits(void) {
 
     ECS_ENTITY(world, Tag, 0);
 
-    ecs_set_entity_range(world, UINT32_MAX, 0);
+    const ecs_entity_range_t *range = ecs_entity_range_new(world, UINT32_MAX, 0);
+    ecs_entity_range_set(world, range);
     ecs_bulk_new_w_id(world, Tag, 1);
     test_expect_abort();
     ecs_bulk_new_w_id(world, Tag, 1);
@@ -715,7 +716,8 @@ void New_w_Count_bulk_ids_w_2_exceed_32_bits(void) {
 
     ECS_ENTITY(world, Tag, 0);
 
-    ecs_set_entity_range(world, UINT32_MAX, 0);
+    const ecs_entity_range_t *range = ecs_entity_range_new(world, UINT32_MAX, 0);
+    ecs_entity_range_set(world, range);
     test_expect_abort();
     ecs_bulk_new_w_id(world, Tag, 2);
 

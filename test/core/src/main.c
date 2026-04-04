@@ -2571,19 +2571,34 @@ void World_setup(void);
 void World_progress_w_0(void);
 void World_progress_w_t(void);
 void World_get_tick(void);
-void World_entity_range_offset(void);
-void World_entity_range_offset_out_of_range(void);
-void World_entity_range_limit_out_of_range(void);
-void World_entity_range_add_existing_staged(void);
-void World_entity_range_add_in_range_staged(void);
-void World_entity_range_add_out_of_range_staged(void);
-void World_entity_range_out_of_range_check_disabled(void);
-void World_entity_range_check_after_delete(void);
-void World_entity_range_offset_0(void);
-void World_entity_range_set_limit_to_lower(void);
-void World_entity_range_set_limit_to_lower_than_offset(void);
-void World_entity_range_overlapping_new_id(void);
-void World_entity_range_overlapping_new_bulk_id(void);
+void World_range_get(void);
+void World_range_add_existing_staged(void);
+void World_range_add_in_range_staged(void);
+void World_range_recycled_in_range(void);
+void World_range_switch_preserves_recycled(void);
+void World_range_no_cross_recycle(void);
+void World_range_delete_outside_range(void);
+void World_range_multiple_switches(void);
+void World_range_unbounded(void);
+void World_range_delete_outside_all_ranges(void);
+void World_range_set_clears_pre_existing_not_alive(void);
+void World_range_three_ranges_binary_search(void);
+void World_range_set_same_range(void);
+void World_range_bulk_new(void);
+void World_range_delete_w_components(void);
+void World_range_recycle_then_fresh(void);
+void World_range_delete_recycled_same_range(void);
+void World_range_invalid_max_lt_min(void);
+void World_range_set_unknown_range(void);
+void World_range_overlapping_assert(void);
+void World_range_overlapping_at_boundary_assert(void);
+void World_range_adjacent_no_overlap(void);
+void World_range_recycle_last_id_n_times(void);
+void World_range_cascade_delete_across_ranges(void);
+void World_range_deferred_delete_across_ranges(void);
+void World_range_randomized_10_ranges(void);
+void World_range_exhausted(void);
+void World_range_delete_recycled_to_correct_range(void);
 void World_phases(void);
 void World_phases_w_merging(void);
 void World_phases_match_in_create(void);
@@ -13274,56 +13289,116 @@ bake_test_case World_testcases[] = {
         World_get_tick
     },
     {
-        "entity_range_offset",
-        World_entity_range_offset
+        "range_get",
+        World_range_get
     },
     {
-        "entity_range_offset_out_of_range",
-        World_entity_range_offset_out_of_range
+        "range_add_existing_staged",
+        World_range_add_existing_staged
     },
     {
-        "entity_range_limit_out_of_range",
-        World_entity_range_limit_out_of_range
+        "range_add_in_range_staged",
+        World_range_add_in_range_staged
     },
     {
-        "entity_range_add_existing_staged",
-        World_entity_range_add_existing_staged
+        "range_recycled_in_range",
+        World_range_recycled_in_range
     },
     {
-        "entity_range_add_in_range_staged",
-        World_entity_range_add_in_range_staged
+        "range_switch_preserves_recycled",
+        World_range_switch_preserves_recycled
     },
     {
-        "entity_range_add_out_of_range_staged",
-        World_entity_range_add_out_of_range_staged
+        "range_no_cross_recycle",
+        World_range_no_cross_recycle
     },
     {
-        "entity_range_out_of_range_check_disabled",
-        World_entity_range_out_of_range_check_disabled
+        "range_delete_outside_range",
+        World_range_delete_outside_range
     },
     {
-        "entity_range_check_after_delete",
-        World_entity_range_check_after_delete
+        "range_multiple_switches",
+        World_range_multiple_switches
     },
     {
-        "entity_range_offset_0",
-        World_entity_range_offset_0
+        "range_unbounded",
+        World_range_unbounded
     },
     {
-        "entity_range_set_limit_to_lower",
-        World_entity_range_set_limit_to_lower
+        "range_delete_outside_all_ranges",
+        World_range_delete_outside_all_ranges
     },
     {
-        "entity_range_set_limit_to_lower_than_offset",
-        World_entity_range_set_limit_to_lower_than_offset
+        "range_set_clears_pre_existing_not_alive",
+        World_range_set_clears_pre_existing_not_alive
     },
     {
-        "entity_range_overlapping_new_id",
-        World_entity_range_overlapping_new_id
+        "range_three_ranges_binary_search",
+        World_range_three_ranges_binary_search
     },
     {
-        "entity_range_overlapping_new_bulk_id",
-        World_entity_range_overlapping_new_bulk_id
+        "range_set_same_range",
+        World_range_set_same_range
+    },
+    {
+        "range_bulk_new",
+        World_range_bulk_new
+    },
+    {
+        "range_delete_w_components",
+        World_range_delete_w_components
+    },
+    {
+        "range_recycle_then_fresh",
+        World_range_recycle_then_fresh
+    },
+    {
+        "range_delete_recycled_same_range",
+        World_range_delete_recycled_same_range
+    },
+    {
+        "range_invalid_max_lt_min",
+        World_range_invalid_max_lt_min
+    },
+    {
+        "range_set_unknown_range",
+        World_range_set_unknown_range
+    },
+    {
+        "range_overlapping_assert",
+        World_range_overlapping_assert
+    },
+    {
+        "range_overlapping_at_boundary_assert",
+        World_range_overlapping_at_boundary_assert
+    },
+    {
+        "range_adjacent_no_overlap",
+        World_range_adjacent_no_overlap
+    },
+    {
+        "range_recycle_last_id_n_times",
+        World_range_recycle_last_id_n_times
+    },
+    {
+        "range_cascade_delete_across_ranges",
+        World_range_cascade_delete_across_ranges
+    },
+    {
+        "range_deferred_delete_across_ranges",
+        World_range_deferred_delete_across_ranges
+    },
+    {
+        "range_randomized_10_ranges",
+        World_range_randomized_10_ranges
+    },
+    {
+        "range_exhausted",
+        World_range_exhausted
+    },
+    {
+        "range_delete_recycled_to_correct_range",
+        World_range_delete_recycled_to_correct_range
     },
     {
         "phases",
@@ -16168,7 +16243,7 @@ static bake_test_suite suites[] = {
         "World",
         World_setup,
         NULL,
-        158,
+        173,
         World_testcases
     },
     {

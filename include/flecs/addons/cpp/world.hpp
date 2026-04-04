@@ -706,30 +706,25 @@ struct world {
         ecs_dim(world_, entity_count);
     }
 
-    /** Set entity range.
-     * This function limits the range of issued entity IDs between min and max.
-     *
-     * @param min Minimum entity ID issued.
-     * @param max Maximum entity ID issued.
-     *
-     * @see ecs_set_entity_range()
+    /** Create a new entity id range.
+     * @see ecs_entity_range_new()
      */
-    void set_entity_range(entity_t min, entity_t max) const {
-        ecs_set_entity_range(world_, min, max);
+    const ecs_entity_range_t* range_new(uint32_t min, uint32_t max) const {
+        return ecs_entity_range_new(world_, min, max);
     }
 
-    /** Enforce that operations cannot modify entities outside of range.
-     * This function ensures that only entities within the specified range can
-     * be modified. Use this function if specific parts of the code only are
-     * allowed to modify a certain set of entities, as could be the case for
-     * networked applications.
-     *
-     * @param enabled True if range check should be enabled, false if not.
-     *
-     * @see ecs_enable_range_check()
+    /** Set the active entity id range.
+     * @see ecs_entity_range_set()
      */
-    void enable_range_check(bool enabled = true) const {
-        ecs_enable_range_check(world_, enabled);
+    void range_set(const ecs_entity_range_t *range) const {
+        ecs_entity_range_set(world_, range);
+    }
+
+    /** Get the currently active entity id range.
+     * @see ecs_entity_range_get()
+     */
+    const ecs_entity_range_t* range_get() const {
+        return ecs_entity_range_get(world_);
     }
 
     /** Set current scope.

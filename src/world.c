@@ -1459,37 +1459,96 @@ void ecs_set_binding_ctx(
     world->binding_ctx_free = ctx_free;
 }
 
-void ecs_set_entity_range(
+const ecs_entity_range_t* ecs_entity_range_new(
     ecs_world_t *world,
-    ecs_entity_t id_start,
-    ecs_entity_t id_end)
+    uint32_t min,
+    uint32_t max)
 {
     flecs_poly_assert(world, ecs_world_t);
-    ecs_check(!id_end || id_end > id_start, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(min > 0, ECS_INVALID_PARAMETER, "min must be > 0");
+    ecs_check(!max || max >= min, ECS_INVALID_PARAMETER,
+        "max must be >= min or 0");
 
-    if (id_start == 0) {
-      id_start = flecs_entities_max_id(world) + 1;
+    /* Validate no overlap with existing ranges */
+    ecs_entity_index_t *index = ecs_eis(world);
+    int32_t count = ecs_vec_count(&index->ranges);
+    if (count > 0) {
+        ecs_entity_range_t **ranges = ecs_vec_first_t(&index->ranges,
+            ecs_entity_range_t*);
+        int32_t i;
+        for (i = 0; i < count; i ++) {
+            ecs_entity_range_t *existing = ranges[i];
+            /* Two ranges overlap if one starts before the other ends */
+            bool overlap;
+            if (!existing->max && !max) {
+                overlap = true;
+            } else if (!existing->max) {
+                overlap = max >= existing->min;
+            } else if (!max) {
+                overlap = min <= existing->max;
+            } else {
+                overlap = min <= existing->max && max >= existing->min;
+            }
+            ecs_check(!overlap, ECS_INVALID_PARAMETER,
+                "range [%u, %u] overlaps with existing range [%u, %u]",
+                    min, max, existing->min, existing->max);
+            (void)overlap;
+        }
     }
 
-    uint32_t start = (uint32_t)id_start;
-    uint32_t end = (uint32_t)id_end;
+    ecs_allocator_t *a = &world->allocator;
 
-    flecs_entities_max_id(world) = start - 1;
+    ecs_entity_range_t *range = flecs_walloc_t(world, ecs_entity_range_t);
+    range->min = min;
+    range->max = max;
+    range->cur = min - 1;
+    ecs_vec_init_t(a, &range->recycled, uint64_t, 0);
 
-    world->info.min_id = start;
-    world->info.max_id = end;
+    /* Insert into sorted ranges vec (sorted by min) */
+    ecs_vec_append_t(a, &index->ranges, ecs_entity_range_t*)[0] = range;
+
+    if (count > 0) {
+        ecs_entity_range_t **ranges = ecs_vec_first_t(&index->ranges,
+            ecs_entity_range_t*);
+
+        /* Find insertion point and shift elements */
+        int32_t i;
+        for (i = count; i > 0; i --) {
+            if (ranges[i - 1]->min <= min) {
+                break;
+            }
+            ranges[i] = ranges[i - 1];
+        }
+        ranges[i] = range;
+    }
+
+    return range;
+error:
+    return NULL;
+}
+
+void ecs_entity_range_set(
+    ecs_world_t *world,
+    const ecs_entity_range_t *range)
+{
+    flecs_poly_assert(world, ecs_world_t);
+    ecs_check(range != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    flecs_entity_index_set_range(ecs_eis(world),
+        ECS_CONST_CAST(ecs_entity_range_t*, range));
+
 error:
     return;
 }
 
-bool ecs_enable_range_check(
-    ecs_world_t *world,
-    bool enable)
+const ecs_entity_range_t* ecs_entity_range_get(
+    const ecs_world_t *world)
 {
-    flecs_poly_assert(world, ecs_world_t);    
-    bool old_value = world->range_check_enabled;
-    world->range_check_enabled = enable;
-    return old_value;
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    world = ecs_get_world(world);
+    return ecs_eis(world)->active_range;
+error:
+    return NULL;
 }
 
 ecs_entity_t ecs_get_max_id(

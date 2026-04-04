@@ -2815,7 +2815,8 @@ void Pairs_with_for_existing(void) {
 void Pairs_65k_relations(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_set_entity_range(world, 65536, 0);
+    const ecs_entity_range_t *range = ecs_entity_range_new(world, 65536, 0);
+    ecs_entity_range_set(world, range);
 
     ecs_entity_t rel = ecs_new(world);
     ecs_entity_t obj = ecs_new(world);
