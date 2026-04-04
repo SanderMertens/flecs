@@ -1714,7 +1714,15 @@
                 "has_in_on_add_hook_move",
                 "get_in_on_add_hook_new",
                 "get_in_on_add_hook_move",
-                "get_name_in_on_add_hook_move"
+                "get_name_in_on_add_hook_move",
+                "delete_nonlast_with_destruct_no_move_ctor",
+                "remove_component_nonlast_no_move_ctor_calls_dtor_trailing",
+                "remove_component_nonlast_no_move_ctor_calls_dtor_interleaved",
+                "delete_last_no_move_ctor",
+                "delete_nonlast_trivial_move_with_dtor_move_dtor_called",
+                "remove_component_nonlast_trivial_move_with_dtor_dtor_called",
+                "delete_nonlast_nontrivial_move_ctor_move_dtor_not_affected",
+                "remove_component_nonlast_nontrivial_move_ctor_not_affected"
             ]
         }, {
             "id": "Pairs",
