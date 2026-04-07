@@ -83,6 +83,48 @@ assert!(e.enabled::<Position>());
 </ul>
 </div>
 
+Toggling a component does not add the component to the entity. For a toggled component to be matched by a query it also needs to be added to the entity.
+
+Queries can explicitly match entities that have toggle bits for a component by adding the `TOGGLE` flag:
+
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
+
+```c
+ecs_query_t *q = ecs_query(world, {
+    .terms = {{ ECS_TOGGLE | ecs_id(Position) }}
+});
+```
+
+</li>
+<li><b class="tab-title">C++</b>
+
+```cpp
+auto q = world.query_builder()
+  .with<Position>().id_flags(flecs::TOGGLE)
+  .build();
+```
+
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+// TODO
+```
+
+</li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+// TODO
+```
+
+</li>
+</ul>
+</div>
+
+
 ## Cleanup traits
 When entities that are used as tags, components, relationships or relationship targets are deleted, cleanup traits ensure that the store does not contain any dangling references. Any cleanup policy provides this guarantee, so while they are configurable, applications cannot configure traits that allows for dangling references.
 
