@@ -4955,8 +4955,22 @@ char* flecs_module_path_from_c(
  */
 FLECS_API
 void flecs_default_ctor(
-    void *ptr, 
-    int32_t count, 
+    void *ptr,
+    int32_t count,
+    const ecs_type_info_t *type_info);
+
+/** Move that memcpys src to dst and zero-initializes src.
+ *
+ * @param dst_ptr Pointer to the destination value.
+ * @param src_ptr Pointer to the source value.
+ * @param count Number of elements to move.
+ * @param type_info Type info for the component.
+ */
+FLECS_API
+void flecs_default_move(
+    void *dst_ptr,
+    void *src_ptr,
+    int32_t count,
     const ecs_type_info_t *type_info);
 
 /* Wrapper functions for invoking type hooks with fallback behavior. */

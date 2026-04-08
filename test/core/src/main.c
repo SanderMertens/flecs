@@ -1654,6 +1654,12 @@ void ComponentLifecycle_has_in_on_add_hook_move(void);
 void ComponentLifecycle_get_in_on_add_hook_new(void);
 void ComponentLifecycle_get_in_on_add_hook_move(void);
 void ComponentLifecycle_get_name_in_on_add_hook_move(void);
+void ComponentLifecycle_default_move_copies_and_zeros_src(void);
+void ComponentLifecycle_default_move_copies_and_zeros_src_count(void);
+void ComponentLifecycle_set_hooks_ctor_dtor_assigns_default_move(void);
+void ComponentLifecycle_set_hooks_ctor_only_no_default_move(void);
+void ComponentLifecycle_set_hooks_ctor_dtor_with_move_keeps_user_move(void);
+void ComponentLifecycle_set_hooks_ctor_dtor_cascades_move_hooks(void);
 
 // Testsuite 'Pairs'
 void Pairs_type_w_one_pair(void);
@@ -9681,6 +9687,30 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "get_name_in_on_add_hook_move",
         ComponentLifecycle_get_name_in_on_add_hook_move
+    },
+    {
+        "default_move_copies_and_zeros_src",
+        ComponentLifecycle_default_move_copies_and_zeros_src
+    },
+    {
+        "default_move_copies_and_zeros_src_count",
+        ComponentLifecycle_default_move_copies_and_zeros_src_count
+    },
+    {
+        "set_hooks_ctor_dtor_assigns_default_move",
+        ComponentLifecycle_set_hooks_ctor_dtor_assigns_default_move
+    },
+    {
+        "set_hooks_ctor_only_no_default_move",
+        ComponentLifecycle_set_hooks_ctor_only_no_default_move
+    },
+    {
+        "set_hooks_ctor_dtor_with_move_keeps_user_move",
+        ComponentLifecycle_set_hooks_ctor_dtor_with_move_keeps_user_move
+    },
+    {
+        "set_hooks_ctor_dtor_cascades_move_hooks",
+        ComponentLifecycle_set_hooks_ctor_dtor_cascades_move_hooks
     }
 };
 
@@ -16173,7 +16203,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         ComponentLifecycle_setup,
         NULL,
-        139,
+        145,
         ComponentLifecycle_testcases
     },
     {

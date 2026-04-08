@@ -20948,11 +20948,21 @@ void flecs_type_info_mark_in_use(
 #endif
 
 void flecs_default_ctor(
-    void *ptr, 
-    int32_t count, 
+    void *ptr,
+    int32_t count,
     const ecs_type_info_t *ti)
 {
     ecs_os_memset(ptr, 0, ti->size * count);
+}
+
+void flecs_default_move(
+    void *dst_ptr,
+    void *src_ptr,
+    int32_t count,
+    const ecs_type_info_t *ti)
+{
+    ecs_os_memcpy(dst_ptr, src_ptr, ti->size * count);
+    ecs_os_memset(src_ptr, 0, ti->size * count);
 }
 
 bool flecs_type_info_ctor(
@@ -21150,14 +21160,6 @@ void flecs_default_move_ctor_w_dtor(void *dst_ptr, void *src_ptr,
     const ecs_type_hooks_t *cl = &ti->hooks;
     cl->move_ctor(dst_ptr, src_ptr, count, ti);
     cl->dtor(src_ptr, count, ti);
-}
-
-static
-void flecs_default_move(void *dst_ptr, void *src_ptr,
-    int32_t count, const ecs_type_info_t *ti)
-{
-    const ecs_type_hooks_t *cl = &ti->hooks;
-    cl->move(dst_ptr, src_ptr, count, ti);
 }
 
 static
@@ -21424,7 +21426,21 @@ void ecs_set_hooks_id(
      * ease of use, if no constructor is specified, set a default one that
      * initializes the component to 0. */
     if (!h->ctor && (h->dtor || h->copy || h->move)) {
-        ti->hooks.ctor = flecs_default_ctor;   
+        ti->hooks.ctor = flecs_default_ctor;
+    }
+
+    /* If only ctor and dtor are set, default move to flecs_default_move which
+     * memcpys src to dst and zeros src. This avoids invoking the dtor on the
+     * source after a move. Skip when ctor/dtor/move are flagged illegal: in
+     * those cases h->ctor / h->dtor may point to illegal stubs and pairing
+     * them with a move is not meaningful. */
+    if (h->ctor && h->dtor && !h->move && !h->copy && !h->copy_ctor &&
+        !h->move_ctor && !h->move_dtor && !h->ctor_move_dtor &&
+        !(flags & (ECS_TYPE_HOOK_MOVE_ILLEGAL |
+                   ECS_TYPE_HOOK_CTOR_ILLEGAL |
+                   ECS_TYPE_HOOK_DTOR_ILLEGAL)))
+    {
+        ti->hooks.move = flecs_default_move;
     }
 
     /* Set default copy ctor, move ctor and merge */
@@ -21435,14 +21451,14 @@ void ecs_set_hooks_id(
     }
 
     if (!h->move_ctor && !(flags & ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL)) {
-        if (h->move) {
+        if (ti->hooks.move) {
             ti->hooks.move_ctor = flecs_default_move_ctor;
         }
     }
 
     if (!h->ctor_move_dtor) {
         ecs_flags32_t illegal_check = 0;
-        if (h->move) {
+        if (ti->hooks.move) {
             illegal_check |= ECS_TYPE_HOOK_MOVE_ILLEGAL;
             if (h->dtor) {
                 illegal_check |= ECS_TYPE_HOOK_DTOR_ILLEGAL;
@@ -21482,13 +21498,13 @@ void ecs_set_hooks_id(
 
     if (!h->move_dtor) {
         ecs_flags32_t illegal_check = 0;
-        if (h->move) {
+        if (ti->hooks.move) {
             illegal_check |= ECS_TYPE_HOOK_MOVE_ILLEGAL;
             if (h->dtor) {
                 illegal_check |= ECS_TYPE_HOOK_DTOR_ILLEGAL;
                 ti->hooks.move_dtor = flecs_default_move_w_dtor;
             } else {
-                ti->hooks.move_dtor = flecs_default_move;
+                ti->hooks.move_dtor = ti->hooks.move;
             }
         } else {
             if (h->dtor) {

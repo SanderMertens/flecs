@@ -330,8 +330,11 @@ void RuntimeTypes_dtor(void) {
     test_assert(test_struct_ti->hooks.ctor != NULL);
     test_assert(test_struct_ti->hooks.dtor != NULL);
 
-    /* No other hooks should've been set: */
-    test_assert(test_struct_ti->hooks.move == NULL);
+    /* When a member has a (ctor + dtor), set_hooks auto-assigns a default
+     * move on the member type. The struct generator then propagates a move
+     * hook to TestStruct so archetype moves of members with dtors are safe
+     * (move zeros src so subsequent dtor on src is harmless). */
+    test_assert(test_struct_ti->hooks.move != NULL);
     test_assert(test_struct_ti->hooks.copy == NULL);
 
     /* Now instantiate TestStruct to test its destructor. */
@@ -957,9 +960,10 @@ void RuntimeTypes_array_dtor(void) {
     test_assert(hooks->dtor != NULL); /* should be set to call the resource
        handle dtor for each item in the array.
 
-       no other hooks should have been generated, since the depending type,
-       "resource_handle" only has a dtor hook: */
-    test_assert(hooks->move == NULL);
+       set_hooks auto-assigns a default move (memcpy + zero src) on the
+       element type when only ctor + dtor are set, so the array generator
+       propagates a move hook here too: */
+    test_assert(hooks->move != NULL);
     test_assert(hooks->copy == NULL);
 
     /* Test that the set dtor hook is indeed working. */
