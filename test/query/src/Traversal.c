@@ -13160,3 +13160,66 @@ void Traversal_this_written_or_w_self_up_childof(void) {
 
     ecs_fini(world);
 }
+
+void Traversal_up_w_isa_component_recycled(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    /* Need another component with IsA, even if not directly used */
+    ecs_entity_t derived = ecs_new(world);
+    ecs_add_pair(world, derived, EcsIsA, ecs_id(Velocity));
+
+    /* 3 level prefab hierarchy */
+    ecs_entity_t player_prefab = ecs_entity(world,
+        { .name = "PlayerPrefab", .add = ecs_ids(EcsPrefab) });
+    ecs_entity_t spaceship_prefab = ecs_entity(world, {
+        .name = "Spaceship",
+        .parent = player_prefab,
+        .add = ecs_ids(EcsPrefab)
+    });
+    ecs_set(world, spaceship_prefab, Position, {10, 20});
+    ecs_entity_t spaceship_child = ecs_entity(world, {
+        .name = "SpaceshipChild",
+        .parent = spaceship_prefab,
+        .add = ecs_ids(EcsPrefab)
+    });
+    ecs_set(world, spaceship_child, Velocity, {1, 2});
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { .id = ecs_id(Position), .src.id = EcsUp },
+            { .id = ecs_id(Velocity) }
+        },
+        .cache_kind = cache_kind
+    });
+    test_assert(q != NULL);
+
+    ecs_entity_t my_player = ecs_entity(world, { .name = "myPlayer" });
+    ecs_add_pair(world, my_player, EcsIsA, player_prefab);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_delete(world, my_player);
+
+    my_player = ecs_entity(world, { .name = "myPlayer" });
+    ecs_add_pair(world, my_player, EcsIsA, player_prefab);
+
+    /* Asserts here in unfixed code */
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}

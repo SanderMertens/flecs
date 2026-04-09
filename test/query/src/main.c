@@ -731,6 +731,8 @@ void Basic_get_query(void);
 void Basic_get_query_not_a_query(void);
 void Basic_mixed_uncacheable_w_shared(void);
 void Basic_query_has_and_optional_and(void);
+void Basic_recycled_pair(void);
+void Basic_recycled_component_id(void);
 
 // Testsuite 'Combinations'
 void Combinations_setup(void);
@@ -1052,6 +1054,10 @@ void Variables_get_vars_from_chained_iter(void);
 void Variables_set_var_from_chained_iter(void);
 void Variables_set_var_range_from_chained_iter(void);
 void Variables_field_w_or_var_src_w_pair(void);
+void Variables_recycled_vars(void);
+void Variables_recycled_pair_vars(void);
+void Variables_recycled_this_ent_var(void);
+void Variables_has_recycled_id_from_pair(void);
 
 // Testsuite 'Operators'
 void Operators_setup(void);
@@ -1330,15 +1336,6 @@ void ComponentInheritance_query_before_isa_relationship_1st_term(void);
 void ComponentInheritance_query_before_isa_relationship_2nd_term(void);
 void ComponentInheritance_query_before_isa_relationship_subtype(void);
 void ComponentInheritance_query_before_isa_relationship_0_src(void);
-
-// Testsuite 'Recycled'
-void Recycled_setup(void);
-void Recycled_recycled_vars(void);
-void Recycled_recycled_pair_vars(void);
-void Recycled_recycled_this_ent_var(void);
-void Recycled_has_recycled_id_from_pair(void);
-void Recycled_recycled_pair(void);
-void Recycled_recycled_component_id(void);
 
 // Testsuite 'BuiltinPredicates'
 void BuiltinPredicates_setup(void);
@@ -1632,6 +1629,7 @@ void Traversal_this_or_w_self_up_childof(void);
 void Traversal_this_or_w_self_up_childof_2(void);
 void Traversal_this_or_w_self_up_childof_w_tag(void);
 void Traversal_this_written_or_w_self_up_childof(void);
+void Traversal_up_w_isa_component_recycled(void);
 
 // Testsuite 'Cascade'
 void Cascade_parent_cascade(void);
@@ -5654,6 +5652,14 @@ bake_test_case Basic_testcases[] = {
     {
         "query_has_and_optional_and",
         Basic_query_has_and_optional_and
+    },
+    {
+        "recycled_pair",
+        Basic_recycled_pair
+    },
+    {
+        "recycled_component_id",
+        Basic_recycled_component_id
     }
 };
 
@@ -6915,6 +6921,22 @@ bake_test_case Variables_testcases[] = {
     {
         "field_w_or_var_src_w_pair",
         Variables_field_w_or_var_src_w_pair
+    },
+    {
+        "recycled_vars",
+        Variables_recycled_vars
+    },
+    {
+        "recycled_pair_vars",
+        Variables_recycled_pair_vars
+    },
+    {
+        "recycled_this_ent_var",
+        Variables_recycled_this_ent_var
+    },
+    {
+        "has_recycled_id_from_pair",
+        Variables_has_recycled_id_from_pair
     }
 };
 
@@ -8008,33 +8030,6 @@ bake_test_case ComponentInheritance_testcases[] = {
     {
         "query_before_isa_relationship_0_src",
         ComponentInheritance_query_before_isa_relationship_0_src
-    }
-};
-
-bake_test_case Recycled_testcases[] = {
-    {
-        "recycled_vars",
-        Recycled_recycled_vars
-    },
-    {
-        "recycled_pair_vars",
-        Recycled_recycled_pair_vars
-    },
-    {
-        "recycled_this_ent_var",
-        Recycled_recycled_this_ent_var
-    },
-    {
-        "has_recycled_id_from_pair",
-        Recycled_has_recycled_id_from_pair
-    },
-    {
-        "recycled_pair",
-        Recycled_recycled_pair
-    },
-    {
-        "recycled_component_id",
-        Recycled_recycled_component_id
     }
 };
 
@@ -9180,6 +9175,10 @@ bake_test_case Traversal_testcases[] = {
     {
         "this_written_or_w_self_up_childof",
         Traversal_this_written_or_w_self_up_childof
+    },
+    {
+        "up_w_isa_component_recycled",
+        Traversal_up_w_isa_component_recycled
     }
 };
 
@@ -13749,11 +13748,6 @@ bake_test_param Operators_params[] = {
     {"cache_kind", (char**)Operators_cache_kind_param, 2}
 };
 
-const char* Recycled_cache_kind_param[] = {"default", "auto"};
-bake_test_param Recycled_params[] = {
-    {"cache_kind", (char**)Recycled_cache_kind_param, 2}
-};
-
 const char* BuiltinPredicates_cache_kind_param[] = {"default", "auto"};
 bake_test_param BuiltinPredicates_params[] = {
     {"cache_kind", (char**)BuiltinPredicates_cache_kind_param, 2}
@@ -13824,7 +13818,7 @@ static bake_test_suite suites[] = {
         "Basic",
         Basic_setup,
         NULL,
-        238,
+        240,
         Basic_testcases,
         1,
         Basic_params
@@ -13849,7 +13843,7 @@ static bake_test_suite suites[] = {
         "Variables",
         Variables_setup,
         NULL,
-        198,
+        202,
         Variables_testcases,
         1,
         Variables_params
@@ -13878,15 +13872,6 @@ static bake_test_suite suites[] = {
         ComponentInheritance_testcases
     },
     {
-        "Recycled",
-        Recycled_setup,
-        NULL,
-        6,
-        Recycled_testcases,
-        1,
-        Recycled_params
-    },
-    {
         "BuiltinPredicates",
         BuiltinPredicates_setup,
         NULL,
@@ -13908,7 +13893,7 @@ static bake_test_suite suites[] = {
         "Traversal",
         Traversal_setup,
         NULL,
-        183,
+        184,
         Traversal_testcases,
         1,
         Traversal_params
@@ -14017,5 +14002,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("query", argc, argv, suites, 27);
+    return bake_test_run("query", argc, argv, suites, 26);
 }
