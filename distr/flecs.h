@@ -35928,7 +35928,7 @@ struct query_builder final : _::query_builder_base<Components...> {
     }
 
     template <typename Func>
-    void each(Func&& func) {
+    void each(Func&& func) const {
         this->build().each(FLECS_FWD(func));
     }
 };
