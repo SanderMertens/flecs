@@ -112,6 +112,9 @@
 #ifndef FLECS_DEBUG_INFO
 #define FLECS_DEBUG_INFO
 #endif
+#ifndef FLECS_EXCLUSIVE_ACCESS
+#define FLECS_EXCLUSIVE_ACCESS /* Enable exclusive access checks in debug mode */
+#endif
 #endif
 
 /* Tip: if you see weird behavior that you think might be a bug, make sure to
@@ -222,6 +225,7 @@
 // #define FLECS_C           /**< C API convenience macros, always enabled. */
 #define FLECS_CPP            /**< C++ API. */
 #define FLECS_DOC            /**< Document entities and components. */
+// #define FLECS_EXCLUSIVE_ACCESS /**< Enable exclusive world access checks. */
 // #define FLECS_JOURNAL     /**< Journaling addon. */
 #define FLECS_JSON           /**< Parsing JSON to/from component values. */
 #define FLECS_HTTP           /**< Tiny HTTP server for connecting to remote UI. */

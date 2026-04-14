@@ -114,6 +114,9 @@
 #ifndef FLECS_DEBUG_INFO
 #define FLECS_DEBUG_INFO
 #endif
+#ifndef FLECS_EXCLUSIVE_ACCESS
+#define FLECS_EXCLUSIVE_ACCESS /* Enable exclusive access checks in debug mode */
+#endif
 #endif
 
 /* Tip: if you see weird behavior that you think might be a bug, make sure to
@@ -224,6 +227,7 @@
 // #define FLECS_C           /**< C API convenience macros, always enabled. */
 #define FLECS_CPP            /**< C++ API. */
 #define FLECS_DOC            /**< Document entities and components. */
+// #define FLECS_EXCLUSIVE_ACCESS /**< Enable exclusive world access checks. */
 // #define FLECS_JOURNAL     /**< Journaling addon. */
 #define FLECS_JSON           /**< Parsing JSON to/from component values. */
 #define FLECS_HTTP           /**< Tiny HTTP server for connecting to remote UI. */
@@ -5275,27 +5279,27 @@ FLECS_API
 bool flecs_query_trivial_cached_next(
     ecs_iter_t *it);
 
-#ifdef FLECS_DEBUG
+#ifdef FLECS_EXCLUSIVE_ACCESS
 /** Check if the current thread has exclusive access to the world.
  * This operation checks if the current thread is allowed to access the world.
  * The operation is called by internal functions before mutating the world, and
  * will panic if the current thread does not have exclusive access to the world.
- * 
+ *
  * Exclusive access is controlled by the ecs_exclusive_access_begin() and
  * ecs_exclusive_access_end() operations.
- * 
+ *
  * This operation is public so that it shows up in stack traces, but code such
  * as language bindings or wrappers could also use it to verify that the world
  * is accessed from the correct thread.
- * 
+ *
  * @param world The world.
  */
 FLECS_API
 void flecs_check_exclusive_world_access_write(
     const ecs_world_t *world);
 
-/** Same as flecs_check_exclusive_world_access_write(), but for read access. 
- * 
+/** Same as flecs_check_exclusive_world_access_write(), but for read access.
+ *
  * @param world The world.
  */
 FLECS_API
