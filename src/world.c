@@ -1641,7 +1641,7 @@ void flecs_component_ids_set(
     ecs_vec_get_t(&world->component_ids, ecs_entity_t, index)[0] = component;
 }
 
-#ifdef FLECS_DEBUG
+#ifdef FLECS_EXCLUSIVE_ACCESS
 
 void flecs_check_exclusive_world_access_write(
     const ecs_world_t *world)
@@ -1656,26 +1656,24 @@ void flecs_check_exclusive_world_access_write(
     (void)thr_self;
 
     if (world->exclusive_access == UINT64_MAX) {
-        ecs_throw(ECS_ACCESS_VIOLATION,
+        ecs_abort(ECS_ACCESS_VIOLATION,
             "invalid access: world is locked for write operations "
             "(call exclusive_access_begin() first)");
-    } else 
+    } else
     if (world->exclusive_thread_name) {
-        ecs_assert(world->exclusive_access == ecs_os_thread_self(), 
+        ecs_always_assert(world->exclusive_access == ecs_os_thread_self(),
             ECS_ACCESS_VIOLATION,
             "invalid access to world by thread %" PRIu64 ": "
                 "thread %" PRIu64 " (%s) has exclusive access",
                     thr_self, world->exclusive_access,
                     world->exclusive_thread_name);
     } else {
-        ecs_assert(world->exclusive_access == ecs_os_thread_self(), 
+        ecs_always_assert(world->exclusive_access == ecs_os_thread_self(),
             ECS_ACCESS_VIOLATION,
             "invalid access to world by thread %" PRIu64 ": "
                 "thread %" PRIu64 " has exclusive access",
                     thr_self, world->exclusive_access);
     }
-error:
-    return;
 }
 
 void flecs_check_exclusive_world_access_read(
@@ -1695,14 +1693,14 @@ void flecs_check_exclusive_world_access_read(
     (void)thr_self;
 
     if (world->exclusive_thread_name) {
-        ecs_assert(world->exclusive_access == ecs_os_thread_self(), 
+        ecs_always_assert(world->exclusive_access == ecs_os_thread_self(),
             ECS_ACCESS_VIOLATION,
             "invalid access to world by thread %" PRIu64 ": "
                 "(thread %" PRIu64 " (%s) has exclusive access)",
                     thr_self, world->exclusive_access,
                     world->exclusive_thread_name);
     } else {
-        ecs_assert(world->exclusive_access == ecs_os_thread_self(), 
+        ecs_always_assert(world->exclusive_access == ecs_os_thread_self(),
             ECS_ACCESS_VIOLATION,
             "invalid access to world by thread %" PRIu64 ": "
                 "thread %" PRIu64 " has exclusive access",

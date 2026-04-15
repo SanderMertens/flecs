@@ -486,6 +486,16 @@ void ecs_parser_warningv_(
 #define ecs_dbg_assert(condition, error_code, ...)
 #endif
 
+/** Always assert.
+ * Assert that is always active, even in release builds. Always aborts on
+ * failure (does not support FLECS_SOFT_ASSERT). */
+#define ecs_always_assert(condition, error_code, ...)\
+    if (!(condition)) {\
+        ecs_assert_log_(error_code, #condition, __FILE__, __LINE__, __VA_ARGS__);\
+        ecs_os_abort();\
+    }\
+    assert(condition) /* satisfy compiler/static analyzers */
+
 /** Sanitize assert.
  * Assert that is only valid in sanitized mode (ignores FLECS_KEEP_ASSERT). */
 #ifdef FLECS_SANITIZE
