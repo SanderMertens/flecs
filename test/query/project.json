@@ -747,7 +747,9 @@
                 "get_query",
                 "get_query_not_a_query",
                 "mixed_uncacheable_w_shared",
-                "query_has_and_optional_and"
+                "query_has_and_optional_and",
+                "recycled_pair",
+                "recycled_component_id"
             ]
         }, {
             "id": "Combinations",
@@ -1081,7 +1083,11 @@
                 "get_vars_from_chained_iter",
                 "set_var_from_chained_iter",
                 "set_var_range_from_chained_iter",
-                "field_w_or_var_src_w_pair"
+                "field_w_or_var_src_w_pair",
+                "recycled_vars",
+                "recycled_pair_vars",
+                "recycled_this_ent_var",
+                "has_recycled_id_from_pair"
             ]
         }, {
             "id": "Operators",
@@ -1369,20 +1375,6 @@
                 "query_before_isa_relationship_2nd_term",
                 "query_before_isa_relationship_subtype",
                 "query_before_isa_relationship_0_src"
-            ]
-        }, {
-            "id": "Recycled",
-            "setup": true,
-            "params": {
-                "cache_kind": ["default", "auto"]
-            },
-            "testcases": [
-                "recycled_vars",
-                "recycled_pair_vars",
-                "recycled_this_ent_var",
-                "has_recycled_id_from_pair",
-                "recycled_pair",
-                "recycled_component_id"
             ]
         }, {
             "id": "BuiltinPredicates",
@@ -1691,7 +1683,8 @@
                 "this_or_w_self_up_childof",
                 "this_or_w_self_up_childof_2",
                 "this_or_w_self_up_childof_w_tag",
-                "this_written_or_w_self_up_childof"
+                "this_written_or_w_self_up_childof",
+                "up_w_isa_component_recycled"
             ]
         }, {
             "id": "Cascade",

@@ -16627,6 +16627,9 @@ void flecs_uni_observer_register(
         if (o->query->flags & EcsQueryTableOnly) {
             flecs_register_observer_for_id(world, observable, o,
                 offsetof(ecs_event_id_record_t, self), ecs_id(EcsParent));
+            flecs_register_observer_for_id(world, observable, o,
+                offsetof(ecs_event_id_record_t, self),
+                ecs_pair(EcsChildOf, EcsWildcard));
         }
     }
 }
@@ -16712,6 +16715,9 @@ void flecs_unregister_observer(
         if (o->query->flags & EcsQueryTableOnly) {
             flecs_unregister_observer_for_id(world, observable, o,
                 offsetof(ecs_event_id_record_t, self), ecs_id(EcsParent));
+            flecs_unregister_observer_for_id(world, observable, o,
+                offsetof(ecs_event_id_record_t, self),
+                ecs_pair(EcsChildOf, EcsWildcard));
         }
     }
 }

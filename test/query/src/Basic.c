@@ -11720,3 +11720,76 @@ void Basic_query_has_and_optional_and(void) {
 
     ecs_fini(world);
 }
+
+void Basic_recycled_pair(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t rel = ecs_entity(world, { .name = "Rel" });
+    ecs_entity_t tgt = ecs_entity(world, { .name = "Tgt" });
+    ecs_delete(world, rel);
+    ecs_delete(world, tgt);
+    rel = ecs_entity(world, { .name = "Rel" });
+    tgt = ecs_entity(world, { .name = "Tgt" });
+
+    ecs_entity_t e = ecs_new_w_pair(world, rel, tgt);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms[0] = {
+            .first.id = rel,
+            .second.id = tgt
+        },
+        .cache_kind = cache_kind
+    });
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e);
+    test_uint(ecs_field_id(&it, 0), ecs_pair(rel, tgt));
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Basic_recycled_component_id(void) {
+    ecs_world_t* ecs = ecs_mini();
+
+    for (int i = 0; i < FLECS_HI_COMPONENT_ID; i ++) {
+        ecs_new_low_id(ecs);
+    }
+
+    ecs_entity_t e = ecs_new(ecs);
+    ecs_delete(ecs, e);
+
+    ECS_COMPONENT(ecs, Position);
+
+    ecs_query_t *q = ecs_query(ecs, {
+        .terms = {
+            { .id = ecs_id(Position) }
+        },
+        .cache_kind = cache_kind
+    });
+    test_assert(q != NULL);
+
+    ecs_entity_t e1 = ecs_insert(ecs, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(ecs, ecs_value(Position, {20, 30}));
+
+    ecs_iter_t it = ecs_query_iter(ecs, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 2);
+    test_uint(it.entities[0], e1);
+    test_uint(it.entities[1], e2);
+    Position *p = ecs_field(&it, Position, 0);
+    test_int(p[0].x, 10);
+    test_int(p[0].y, 20);
+    test_int(p[1].x, 20);
+    test_int(p[1].y, 30);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(ecs);
+}
