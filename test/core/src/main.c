@@ -1654,6 +1654,14 @@ void ComponentLifecycle_has_in_on_add_hook_move(void);
 void ComponentLifecycle_get_in_on_add_hook_new(void);
 void ComponentLifecycle_get_in_on_add_hook_move(void);
 void ComponentLifecycle_get_name_in_on_add_hook_move(void);
+void ComponentLifecycle_delete_nonlast_with_destruct_no_move_ctor(void);
+void ComponentLifecycle_remove_component_nonlast_no_move_ctor_calls_dtor_trailing(void);
+void ComponentLifecycle_remove_component_nonlast_no_move_ctor_calls_dtor_interleaved(void);
+void ComponentLifecycle_delete_last_no_move_ctor(void);
+void ComponentLifecycle_delete_nonlast_trivial_move_with_dtor_move_dtor_called(void);
+void ComponentLifecycle_remove_component_nonlast_trivial_move_with_dtor_dtor_called(void);
+void ComponentLifecycle_delete_nonlast_nontrivial_move_ctor_move_dtor_not_affected(void);
+void ComponentLifecycle_remove_component_nonlast_nontrivial_move_ctor_not_affected(void);
 
 // Testsuite 'Pairs'
 void Pairs_type_w_one_pair(void);
@@ -9681,6 +9689,38 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "get_name_in_on_add_hook_move",
         ComponentLifecycle_get_name_in_on_add_hook_move
+    },
+    {
+        "delete_nonlast_with_destruct_no_move_ctor",
+        ComponentLifecycle_delete_nonlast_with_destruct_no_move_ctor
+    },
+    {
+        "remove_component_nonlast_no_move_ctor_calls_dtor_trailing",
+        ComponentLifecycle_remove_component_nonlast_no_move_ctor_calls_dtor_trailing
+    },
+    {
+        "remove_component_nonlast_no_move_ctor_calls_dtor_interleaved",
+        ComponentLifecycle_remove_component_nonlast_no_move_ctor_calls_dtor_interleaved
+    },
+    {
+        "delete_last_no_move_ctor",
+        ComponentLifecycle_delete_last_no_move_ctor
+    },
+    {
+        "delete_nonlast_trivial_move_with_dtor_move_dtor_called",
+        ComponentLifecycle_delete_nonlast_trivial_move_with_dtor_move_dtor_called
+    },
+    {
+        "remove_component_nonlast_trivial_move_with_dtor_dtor_called",
+        ComponentLifecycle_remove_component_nonlast_trivial_move_with_dtor_dtor_called
+    },
+    {
+        "delete_nonlast_nontrivial_move_ctor_move_dtor_not_affected",
+        ComponentLifecycle_delete_nonlast_nontrivial_move_ctor_move_dtor_not_affected
+    },
+    {
+        "remove_component_nonlast_nontrivial_move_ctor_not_affected",
+        ComponentLifecycle_remove_component_nonlast_nontrivial_move_ctor_not_affected
     }
 };
 
@@ -16173,7 +16213,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         ComponentLifecycle_setup,
         NULL,
-        139,
+        147,
         ComponentLifecycle_testcases
     },
     {
