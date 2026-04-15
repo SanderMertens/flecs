@@ -4546,3 +4546,161 @@ void ComponentLifecycle_get_name_in_on_add_hook_move(void) {
 
     ecs_fini(world);
 }
+
+void ComponentLifecycle_default_move_copies_and_zeros_src(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    const ecs_type_info_t *ti = ecs_get_type_info(world, ecs_id(Position));
+    test_assert(ti != NULL);
+
+    Position src = {10, 20};
+    Position dst = {0, 0};
+
+    flecs_default_move(&dst, &src, 1, ti);
+
+    test_int(dst.x, 10);
+    test_int(dst.y, 20);
+    test_int(src.x, 0);
+    test_int(src.y, 0);
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_default_move_copies_and_zeros_src_count(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    const ecs_type_info_t *ti = ecs_get_type_info(world, ecs_id(Position));
+    test_assert(ti != NULL);
+
+    Position src[3] = {{1, 2}, {3, 4}, {5, 6}};
+    Position dst[3] = {{0}};
+
+    flecs_default_move(dst, src, 3, ti);
+
+    test_int(dst[0].x, 1); test_int(dst[0].y, 2);
+    test_int(dst[1].x, 3); test_int(dst[1].y, 4);
+    test_int(dst[2].x, 5); test_int(dst[2].y, 6);
+
+    test_int(src[0].x, 0); test_int(src[0].y, 0);
+    test_int(src[1].x, 0); test_int(src[1].y, 0);
+    test_int(src[2].x, 0); test_int(src[2].y, 0);
+
+    ecs_fini(world);
+}
+
+static int default_move_dtor_invoked = 0;
+static
+void default_move_test_dtor(
+    void *ptr,
+    int32_t count,
+    const ecs_type_info_t *info)
+{
+    (void)ptr;
+    (void)info;
+    default_move_dtor_invoked += count;
+}
+
+void ComponentLifecycle_set_hooks_ctor_dtor_assigns_default_move(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = flecs_default_ctor,
+        .dtor = default_move_test_dtor
+    });
+
+    const ecs_type_hooks_t *hooks = ecs_get_hooks_id(world, ecs_id(Position));
+    test_assert(hooks != NULL);
+    test_assert(hooks->ctor == flecs_default_ctor);
+    test_assert(hooks->dtor == default_move_test_dtor);
+    test_assert(hooks->move == flecs_default_move);
+    test_assert(!(hooks->flags & ECS_TYPE_HOOK_MOVE_ILLEGAL));
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_set_hooks_ctor_only_no_default_move(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = flecs_default_ctor
+    });
+
+    const ecs_type_hooks_t *hooks = ecs_get_hooks_id(world, ecs_id(Position));
+    test_assert(hooks != NULL);
+    test_assert(hooks->ctor == flecs_default_ctor);
+    test_assert(hooks->move == NULL);
+
+    ecs_fini(world);
+}
+
+static
+void default_move_test_move(
+    void *dst_ptr,
+    void *src_ptr,
+    int32_t count,
+    const ecs_type_info_t *info)
+{
+    memcpy(dst_ptr, src_ptr, info->size * count);
+}
+
+void ComponentLifecycle_set_hooks_ctor_dtor_with_move_keeps_user_move(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = flecs_default_ctor,
+        .dtor = default_move_test_dtor,
+        .move = default_move_test_move
+    });
+
+    const ecs_type_hooks_t *hooks = ecs_get_hooks_id(world, ecs_id(Position));
+    test_assert(hooks != NULL);
+    test_assert(hooks->move == default_move_test_move);
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_set_hooks_ctor_dtor_cascades_move_hooks(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tag);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = flecs_default_ctor,
+        .dtor = default_move_test_dtor
+    });
+
+    const ecs_type_hooks_t *hooks = ecs_get_hooks_id(world, ecs_id(Position));
+    test_assert(hooks != NULL);
+    test_assert(hooks->move == flecs_default_move);
+    test_assert(hooks->move_ctor != NULL);
+    test_assert(hooks->ctor_move_dtor != NULL);
+    test_assert(hooks->move_dtor != NULL);
+    test_assert(!(hooks->flags & ECS_TYPE_HOOK_MOVE_ILLEGAL));
+    test_assert(!(hooks->flags & ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL));
+    test_assert(!(hooks->flags & ECS_TYPE_HOOK_CTOR_MOVE_DTOR_ILLEGAL));
+    test_assert(!(hooks->flags & ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL));
+
+    ecs_entity_t e = ecs_new_w(world, Position);
+    ecs_set(world, e, Position, {10, 20});
+    ecs_add(world, e, Tag);
+
+    {
+        const Position *p = ecs_get(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+
+    ecs_fini(world);
+}
