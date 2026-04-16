@@ -10015,9 +10015,22 @@ void Observer_2_up_terms_w_batched_add(void) {
 
     ecs_defer_end(world);
 
-    test_int(ctx.invoked, 1);
-    test_int(ctx.count, 1);
+    /* Observer fires twice: once for the Bar propagation through RelA, once
+     * for the Bar propagation through RelB. Both are separate events (separate
+     * event ids) that arrive at the same entity (e2). */
+    test_int(ctx.invoked, 2);
+    test_int(ctx.count, 2);
     test_int(ctx.e[0], e2);
+    test_int(ctx.e[1], e2);
+
+    /* First invocation: Bar propagated through RelA. Both terms resolve to
+     * e1 as source (Bar is on e1, reachable through both RelA and RelB). */
+    test_int(ctx.s[0][0], e1);
+    test_int(ctx.s[0][1], e1);
+
+    /* Second invocation: Bar propagated through RelB. Same sources. */
+    test_int(ctx.s[1][0], e1);
+    test_int(ctx.s[1][1], e1);
 
     ecs_fini(world);
 }
@@ -13371,6 +13384,57 @@ void Observer_parent_on_set_w_exclusive_pair(void) {
 
     test_int(ctx_1.invoked, 6);
     test_int(ctx_2.invoked, 4);
+
+    ecs_fini(world);
+}
+
+void Observer_multi_term_on_set_w_base_and_3_instances_in_different_tables(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TAG(world, TagA);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+
+    Probe ctx = {0};
+    ecs_observer(world, {
+        .query.terms = {
+            { ecs_id(Position) },
+            { ecs_id(Velocity) }
+        },
+        .events = {EcsOnSet},
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t prefab = ecs_new(world);
+    ecs_add_id(world, prefab, EcsPrefab);
+    ecs_set(world, prefab, Position, {10, 20});
+
+    test_int(ctx.invoked, 0);
+
+    /* Entity1: (IsA, prefab), Velocity - table 1 */
+    ecs_entity_t e1 = ecs_new_w_pair(world, EcsIsA, prefab);
+    ecs_set(world, e1, Velocity, {1, 2});
+
+    /* Entity2: (IsA, prefab), (ChildOf, e1), Velocity - table 2 */
+    ecs_entity_t e2 = ecs_new_w_pair(world, EcsIsA, prefab);
+    ecs_add_pair(world, e2, EcsChildOf, e1);
+    ecs_set(world, e2, Velocity, {3, 4});
+
+    /* Entity3: (IsA, prefab), TagA, Velocity - table 3 */
+    ecs_entity_t e3 = ecs_new_w_pair(world, EcsIsA, prefab);
+    ecs_add(world, e3, TagA);
+    ecs_set(world, e3, Velocity, {5, 6});
+
+    /* Reset probe after setup */
+    ecs_os_zeromem(&ctx);
+
+    /* Modifying position on prefab should notify all 3 instances */
+    ecs_set(world, prefab, Position, {30, 40});
+
+    test_int(ctx.count, 3);
 
     ecs_fini(world);
 }

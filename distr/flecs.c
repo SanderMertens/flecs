@@ -15053,6 +15053,8 @@ void flecs_emit_propagate_id_for_range(
         it->entities = &ecs_table_entities(table)[offset];
     }
 
+    it->event_cur = ++world->event_id;
+
     int32_t ider_i;
     for (ider_i = 0; ider_i < ider_count; ider_i ++) {
         ecs_event_id_record_t *ider = iders[ider_i];
@@ -15099,18 +15101,20 @@ void flecs_emit_propagate_id(
         if (!(cur->flags & EcsIdMarkedForDelete)) {
             int32_t i, count = ecs_vec_count(&cur->pair->ordered_children);
             ecs_entity_t *children = ecs_vec_first(&cur->pair->ordered_children);
+            int32_t event_cur = it->event_cur;
             for (i = 0; i < count; i ++) {
                 ecs_record_t *r = flecs_entities_get(world, children[i]);
                 ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
 
                 flecs_emit_propagate_id_for_range(
-                    world, it, cr, trav, iders, ider_count, 
+                    world, it, cr, trav, iders, ider_count,
                         &(ecs_table_range_t){
                             .table = r->table,
                             .offset = ECS_RECORD_TO_ROW(r->row),
                             .count = 1
                         });
             }
+            it->event_cur = event_cur;
         }
 
         return;
@@ -16725,17 +16729,12 @@ void flecs_unregister_observer(
 static
 bool flecs_ignore_observer(
     ecs_observer_t *o,
-    ecs_table_t *table,
-    ecs_iter_t *it)
+    ecs_table_t *table)
 {
     ecs_assert(o != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_observer_impl_t *impl = flecs_observer_impl(o);
-    int32_t *last_event_id = impl->last_event_id;
-    if (last_event_id && last_event_id[0] == it->event_cur) {
-        return true;
-    }
 
     if (impl->flags & (EcsObserverIsDisabled|EcsObserverIsParentDisabled)) {
         return true;
@@ -16821,7 +16820,7 @@ void flecs_uni_observer_invoke(
     ecs_table_t *table,
     ecs_entity_t trav)
 {
-    if (flecs_ignore_observer(o, table, it)) {
+    if (flecs_ignore_observer(o, table)) {
         return;
     }
 
@@ -17221,7 +17220,7 @@ int flecs_uni_observer_init(
     const ecs_observer_desc_t *desc)
 {
     ecs_observer_impl_t *impl = flecs_observer_impl(o);
-    impl->last_event_id = desc->last_event_id;    
+    impl->last_event_id = desc->last_event_id;
     if (!impl->last_event_id) {
         impl->last_event_id = &impl->last_event_id_storage;
     }
@@ -17288,7 +17287,7 @@ int flecs_multi_observer_init(
     /* Create last event id for filtering out the same event that arrives from
      * more than one term */
     impl->last_event_id = ecs_os_calloc_t(int32_t);
-    
+
     /* Mark observer as multi observer */
     impl->flags |= EcsObserverIsMulti;
 
