@@ -288,6 +288,8 @@ void flecs_emit_propagate_id_for_range(
         it->entities = &ecs_table_entities(table)[offset];
     }
 
+    it->event_cur = ++world->event_id;
+
     int32_t ider_i;
     for (ider_i = 0; ider_i < ider_count; ider_i ++) {
         ecs_event_id_record_t *ider = iders[ider_i];
@@ -334,18 +336,20 @@ void flecs_emit_propagate_id(
         if (!(cur->flags & EcsIdMarkedForDelete)) {
             int32_t i, count = ecs_vec_count(&cur->pair->ordered_children);
             ecs_entity_t *children = ecs_vec_first(&cur->pair->ordered_children);
+            int32_t event_cur = it->event_cur;
             for (i = 0; i < count; i ++) {
                 ecs_record_t *r = flecs_entities_get(world, children[i]);
                 ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
 
                 flecs_emit_propagate_id_for_range(
-                    world, it, cr, trav, iders, ider_count, 
+                    world, it, cr, trav, iders, ider_count,
                         &(ecs_table_range_t){
                             .table = r->table,
                             .offset = ECS_RECORD_TO_ROW(r->row),
                             .count = 1
                         });
             }
+            it->event_cur = event_cur;
         }
 
         return;

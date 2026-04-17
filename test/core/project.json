@@ -2318,7 +2318,8 @@
                 "cache_test_13",
                 "cache_test_14",
                 "cache_test_15",
-                "cache_test_16"
+                "cache_test_16",
+                "multi_term_on_set_w_base_and_3_instances_in_different_tables"
             ]
         }, {
             "id": "ObserverOnSet",
