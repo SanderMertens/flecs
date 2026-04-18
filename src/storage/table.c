@@ -1927,7 +1927,7 @@ void flecs_table_move(
     int32_t dst_index,
     ecs_table_t *src_table,
     int32_t src_index,
-    bool construct)
+    ecs_id_t emplace_id)
 {
     ecs_assert(dst_table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(src_table != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -1990,7 +1990,7 @@ void flecs_table_move(
         } else {
             if (dst_id < src_id) {
                 flecs_table_invoke_add_hooks(world, dst_table,
-                    i_new, &dst_entity, dst_index, 1, construct);
+                    i_new, &dst_entity, dst_index, 1, dst_id != emplace_id);
             } else {
                 flecs_table_invoke_remove_hooks(world, src_table,
                     src_column, &src_entity, src_index, 1, use_move_dtor);
@@ -2002,8 +2002,9 @@ void flecs_table_move(
     }
 
     for (; (i_new < dst_column_count); i_new ++) {
-        flecs_table_invoke_add_hooks(world, dst_table, i_new, 
-            &dst_entity, dst_index, 1, construct);
+        flecs_table_invoke_add_hooks(world, dst_table, i_new,
+            &dst_entity, dst_index, 1,
+            flecs_column_id(dst_table, i_new) != emplace_id);
     }
 
     for (; (i_old < src_column_count); i_old ++) {

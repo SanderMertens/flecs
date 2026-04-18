@@ -946,14 +946,14 @@ void flecs_cmd_batch_for_entity(
     /* Move entity to destination table in single operation */
     flecs_table_diff_build_noalloc(diff, &table_diff);
     flecs_defer_begin(world, world->stages[0]);
-    flecs_commit(world, entity, r, table, &table_diff, true, 0);
+    flecs_commit(world, entity, r, table, &table_diff, 0, 0);
     flecs_defer_end(world, world->stages[0]);
 
     /* If destination table has new sparse components, make sure they're created
      * for the entity. */
     if ((table_diff.added_flags & (EcsTableHasSparse|EcsTableHasDontFragment)) && added.count) {
         if (flecs_sparse_on_add(
-            world, table, ECS_RECORD_TO_ROW(r->row), 1, &added, true))
+            world, table, ECS_RECORD_TO_ROW(r->row), 1, &added, 0))
         {
             table_diff.added_flags |= EcsTableHasOnAdd;
         }
@@ -1075,7 +1075,7 @@ void flecs_cmd_batch_for_entity(
 
         flecs_defer_begin(world, world->stages[0]);
         flecs_actions_move_add(world, r->table, start_table,
-            ECS_RECORD_TO_ROW(r->row), 1, &add_diff, 0, true, false);
+            ECS_RECORD_TO_ROW(r->row), 1, &add_diff, 0, false, 0);
         flecs_defer_end(world, world->stages[0]);
     }
 

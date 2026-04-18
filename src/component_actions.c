@@ -187,18 +187,20 @@ bool flecs_sparse_on_add(
     int32_t row,
     int32_t count,
     const ecs_type_t *added,
-    bool construct)
+    ecs_id_t emplace_id)
 {
     bool is_new = false;
+    bool construct_any = (emplace_id != EcsWildcard);
 
     int32_t i, j;
     for (i = 0; i < added->count; i ++) {
         ecs_id_t id = added->array[i];
         ecs_component_record_t *cr = flecs_components_get(world, id);
+        bool id_construct = construct_any && (id != emplace_id);
 
         for (j = 0; j < count; j ++) {
             is_new |= flecs_sparse_on_add_cr(
-                world, table, row + j, cr, construct, NULL);
+                world, table, row + j, cr, id_construct, NULL);
         }
     }
 
@@ -301,8 +303,8 @@ void flecs_actions_on_add_intern(
     int32_t count,
     const ecs_table_diff_t *diff,
     ecs_flags32_t flags,
-    bool construct,
-    bool sparse)
+    bool sparse,
+    ecs_id_t emplace_id)
 {
     ecs_flags32_t diff_flags = diff->added_flags;
     if (!diff_flags) {
@@ -316,7 +318,9 @@ void flecs_actions_on_add_intern(
     }
 
     if (sparse && (diff_flags & EcsTableHasSparse)) {
-        if (flecs_sparse_on_add(world, table, row, count, added, construct)) {
+        if (flecs_sparse_on_add(
+            world, table, row, count, added, emplace_id))
+        {
             diff_flags |= EcsTableHasOnAdd;
         }
     }
@@ -414,11 +418,11 @@ void flecs_actions_new(
     int32_t count,
     const ecs_table_diff_t *diff,
     ecs_flags32_t flags,
-    bool construct,
-    bool sparse)
+    bool sparse,
+    ecs_id_t emplace_id)
 {
-    flecs_actions_on_add_intern(
-        world, table, NULL, row, count, diff, flags, construct, sparse);
+    flecs_actions_on_add_intern(world, table, NULL, row, count, diff, flags,
+        sparse, emplace_id);
 }
 
 void flecs_actions_delete_tree(
@@ -447,8 +451,8 @@ void flecs_actions_move_add(
     int32_t count,
     const ecs_table_diff_t *diff,
     ecs_flags32_t flags,
-    bool construct,
-    bool sparse)
+    bool sparse,
+    ecs_id_t emplace_id)
 {
     ecs_assert(diff != NULL, ECS_INTERNAL_ERROR, NULL);
     const ecs_type_t *added = &diff->added;
@@ -465,8 +469,8 @@ void flecs_actions_move_add(
                 world, table, other_table, row, count);
         }
 
-        flecs_actions_on_add_intern(world, table, other_table, row, count, diff, 
-            flags, construct, sparse);
+        flecs_actions_on_add_intern(world, table, other_table, row, count, diff,
+            flags, sparse, emplace_id);
     }
 }
 

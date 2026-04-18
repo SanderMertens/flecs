@@ -97,9 +97,9 @@ void flecs_commit(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_record_t *record,
-    ecs_table_t *dst_table,   
+    ecs_table_t *dst_table,
     ecs_table_diff_t *diff,
-    bool construct,
+    ecs_id_t emplace_id,
     ecs_flags32_t evt_flags);
 
 /* Add multiple component ids to entity. */

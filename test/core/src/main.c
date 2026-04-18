@@ -1556,6 +1556,16 @@ void ComponentLifecycle_on_add_w_emplace_defer(void);
 void ComponentLifecycle_merge_async_stage_w_emplace(void);
 void ComponentLifecycle_merge_async_stage_w_emplace_to_deferred_world(void);
 void ComponentLifecycle_emplace_grow_w_existing_component(void);
+void ComponentLifecycle_ctor_w_emplace_w_with(void);
+void ComponentLifecycle_ctor_w_emplace_w_with_defer(void);
+void ComponentLifecycle_emplace_2_components_defer(void);
+void ComponentLifecycle_set_and_emplace_defer(void);
+void ComponentLifecycle_emplace_2_components_w_with_defer(void);
+void ComponentLifecycle_set_and_emplace_w_with_defer(void);
+void ComponentLifecycle_ctor_w_emplace_w_with_sparse(void);
+void ComponentLifecycle_ctor_w_emplace_w_with_chain(void);
+void ComponentLifecycle_ctor_w_emplace_w_with_existing_component(void);
+void ComponentLifecycle_ctor_w_emplace_exclusive_pair(void);
 void ComponentLifecycle_dtor_on_fini(void);
 void ComponentLifecycle_valid_type_in_dtor_on_fini(void);
 void ComponentLifecycle_valid_other_type_of_entity_in_dtor_on_fini(void);
@@ -9292,6 +9302,46 @@ bake_test_case ComponentLifecycle_testcases[] = {
         ComponentLifecycle_emplace_grow_w_existing_component
     },
     {
+        "ctor_w_emplace_w_with",
+        ComponentLifecycle_ctor_w_emplace_w_with
+    },
+    {
+        "ctor_w_emplace_w_with_defer",
+        ComponentLifecycle_ctor_w_emplace_w_with_defer
+    },
+    {
+        "emplace_2_components_defer",
+        ComponentLifecycle_emplace_2_components_defer
+    },
+    {
+        "set_and_emplace_defer",
+        ComponentLifecycle_set_and_emplace_defer
+    },
+    {
+        "emplace_2_components_w_with_defer",
+        ComponentLifecycle_emplace_2_components_w_with_defer
+    },
+    {
+        "set_and_emplace_w_with_defer",
+        ComponentLifecycle_set_and_emplace_w_with_defer
+    },
+    {
+        "ctor_w_emplace_w_with_sparse",
+        ComponentLifecycle_ctor_w_emplace_w_with_sparse
+    },
+    {
+        "ctor_w_emplace_w_with_chain",
+        ComponentLifecycle_ctor_w_emplace_w_with_chain
+    },
+    {
+        "ctor_w_emplace_w_with_existing_component",
+        ComponentLifecycle_ctor_w_emplace_w_with_existing_component
+    },
+    {
+        "ctor_w_emplace_exclusive_pair",
+        ComponentLifecycle_ctor_w_emplace_exclusive_pair
+    },
+    {
         "dtor_on_fini",
         ComponentLifecycle_dtor_on_fini
     },
@@ -16178,7 +16228,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         ComponentLifecycle_setup,
         NULL,
-        139,
+        149,
         ComponentLifecycle_testcases
     },
     {

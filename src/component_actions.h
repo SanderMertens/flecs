@@ -39,7 +39,7 @@ bool flecs_sparse_on_add(
     int32_t row,
     int32_t count,
     const ecs_type_t *added,
-    bool construct);
+    ecs_id_t emplace_id);
 
 /* Add action for single sparse component. */
 bool flecs_sparse_on_add_cr(
@@ -58,8 +58,8 @@ void flecs_actions_new(
     int32_t count,
     const ecs_table_diff_t *diff,
     ecs_flags32_t flags,
-    bool construct,
-    bool sparse);
+    bool sparse,
+    ecs_id_t emplace_id);
 
 /* Run actions for deleting an entity and its children. */
 void flecs_actions_delete_tree(
@@ -78,8 +78,8 @@ void flecs_actions_move_add(
     int32_t count,
     const ecs_table_diff_t *diff,
     ecs_flags32_t flags,
-    bool construct,
-    bool sparse);
+    bool sparse,
+    ecs_id_t emplace_id);
 
 /* Run actions for removed components in table move. */
 void flecs_actions_move_remove(
