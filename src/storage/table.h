@@ -207,7 +207,7 @@ void flecs_table_move(
     int32_t new_index,
     ecs_table_t *old_table,
     int32_t old_index,
-    bool construct);
+    ecs_id_t emplace_id);
 
 /* Grow table with specified number of records. Populate table with the
  * specified entity ids. */
