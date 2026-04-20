@@ -506,6 +506,8 @@ int flecs_script_check_node(
     case EcsAstFor:
         return flecs_script_check_for_range(
             v, (ecs_script_for_range_t*)node);
+    case EcsAstInclude:
+        return 0;
     }
 
     ecs_abort(ECS_INTERNAL_ERROR, "corrupt AST node kind");
