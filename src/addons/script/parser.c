@@ -438,6 +438,7 @@ const char* flecs_script_stmt(
         case EcsTokKeywordExport:     goto export_var;
         case EcsTokKeywordIf:         goto if_stmt;
         case EcsTokKeywordFor:        goto for_stmt;
+        case EcsTokKeywordInclude:    goto include_stmt;
         EcsTokEndOfStatement:         EndOfRule;
     );
 
@@ -649,6 +650,31 @@ for_stmt: {
         });
 
     });
+}
+
+// include foo.flecs
+include_stmt: {
+    Until('\n',
+        char *filename = ECS_CONST_CAST(char*, Token(1));
+        if (filename) {
+            char *p = filename;
+            while (p[0]) {
+                if (p[0] == '/' && (p[1] == '/' || p[1] == '*')) {
+                    while (p > filename && isspace((unsigned char)p[-1])) {
+                        p --;
+                    }
+                    p[0] = '\0';
+                    break;
+                }
+                p ++;
+            }
+        }
+        if (!filename || !filename[0]) {
+            Error("expected filename after 'include'");
+        }
+        flecs_script_insert_include(parser, filename);
+        EndOfRule;
+    )
 }
 
 // (

@@ -1217,6 +1217,31 @@ void Deserialize_opaque_vector_struct_2(void);
 void Deserialize_opaque_vector_struct_0_into_2(void);
 void Deserialize_opaque_vector_struct_1_into_2(void);
 
+// Testsuite 'Include'
+void Include_include_simple(void);
+void Include_include_subdir(void);
+void Include_include_missing_file(void);
+void Include_include_parent_dir_not_allowed(void);
+void Include_include_relative_to_current_script(void);
+void Include_include_nested(void);
+void Include_include_managed_creates_script_entity(void);
+void Include_include_managed_skips_existing(void);
+void Include_include_managed_nested(void);
+void Include_include_inline_does_not_create_script_entity(void);
+void Include_include_rejects_absolute_unix_path(void);
+void Include_include_rejects_windows_drive_letter(void);
+void Include_include_with_line_comment(void);
+void Include_include_with_block_comment(void);
+void Include_include_not_allowed_in_template(void);
+void Include_include_not_allowed_in_entity_scope(void);
+void Include_include_not_allowed_in_with_scope(void);
+void Include_include_not_allowed_in_if_scope(void);
+void Include_include_not_allowed_in_for_scope(void);
+void Include_include_auto_appends_extension(void);
+void Include_include_auto_appends_extension_subdir(void);
+void Include_include_keeps_explicit_extension(void);
+void Include_include_auto_appends_extension_managed(void);
+
 // Testsuite 'Fuzzing'
 void Fuzzing_1(void);
 void Fuzzing_2(void);
@@ -6153,6 +6178,101 @@ bake_test_case Deserialize_testcases[] = {
     }
 };
 
+bake_test_case Include_testcases[] = {
+    {
+        "include_simple",
+        Include_include_simple
+    },
+    {
+        "include_subdir",
+        Include_include_subdir
+    },
+    {
+        "include_missing_file",
+        Include_include_missing_file
+    },
+    {
+        "include_parent_dir_not_allowed",
+        Include_include_parent_dir_not_allowed
+    },
+    {
+        "include_relative_to_current_script",
+        Include_include_relative_to_current_script
+    },
+    {
+        "include_nested",
+        Include_include_nested
+    },
+    {
+        "include_managed_creates_script_entity",
+        Include_include_managed_creates_script_entity
+    },
+    {
+        "include_managed_skips_existing",
+        Include_include_managed_skips_existing
+    },
+    {
+        "include_managed_nested",
+        Include_include_managed_nested
+    },
+    {
+        "include_inline_does_not_create_script_entity",
+        Include_include_inline_does_not_create_script_entity
+    },
+    {
+        "include_rejects_absolute_unix_path",
+        Include_include_rejects_absolute_unix_path
+    },
+    {
+        "include_rejects_windows_drive_letter",
+        Include_include_rejects_windows_drive_letter
+    },
+    {
+        "include_with_line_comment",
+        Include_include_with_line_comment
+    },
+    {
+        "include_with_block_comment",
+        Include_include_with_block_comment
+    },
+    {
+        "include_not_allowed_in_template",
+        Include_include_not_allowed_in_template
+    },
+    {
+        "include_not_allowed_in_entity_scope",
+        Include_include_not_allowed_in_entity_scope
+    },
+    {
+        "include_not_allowed_in_with_scope",
+        Include_include_not_allowed_in_with_scope
+    },
+    {
+        "include_not_allowed_in_if_scope",
+        Include_include_not_allowed_in_if_scope
+    },
+    {
+        "include_not_allowed_in_for_scope",
+        Include_include_not_allowed_in_for_scope
+    },
+    {
+        "include_auto_appends_extension",
+        Include_include_auto_appends_extension
+    },
+    {
+        "include_auto_appends_extension_subdir",
+        Include_include_auto_appends_extension_subdir
+    },
+    {
+        "include_keeps_explicit_extension",
+        Include_include_keeps_explicit_extension
+    },
+    {
+        "include_auto_appends_extension_managed",
+        Include_include_auto_appends_extension_managed
+    }
+};
+
 bake_test_case Fuzzing_testcases[] = {
     {
         "1",
@@ -6812,6 +6932,13 @@ static bake_test_suite suites[] = {
         Deserialize_params
     },
     {
+        "Include",
+        NULL,
+        NULL,
+        23,
+        Include_testcases
+    },
+    {
         "Fuzzing",
         NULL,
         NULL,
@@ -6821,5 +6948,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("script", argc, argv, suites, 9);
+    return bake_test_run("script", argc, argv, suites, 10);
 }

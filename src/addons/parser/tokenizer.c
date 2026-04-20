@@ -137,6 +137,7 @@ const char* flecs_token_kind_str(
     case EcsTokKeywordMatch:
     case EcsTokKeywordNew:
     case EcsTokKeywordExport:
+    case EcsTokKeywordInclude:
         return "keyword ";
     case EcsTokIdentifier:
         return "identifier ";
@@ -211,6 +212,7 @@ const char* flecs_token_str(
     case EcsTokKeywordIn: return "in";
     case EcsTokKeywordTemplate: return "template";
     case EcsTokKeywordModule: return "module";
+    case EcsTokKeywordInclude: return "include";
     case EcsTokIdentifier: return "identifier";
     case EcsTokFunction: return "function";
     case EcsTokString: return "string";
@@ -889,6 +891,7 @@ const char* flecs_token(
     Keyword           ("new",      EcsTokKeywordNew)
     Keyword           ("export",   EcsTokKeywordExport)
     Keyword           ("module",   EcsTokKeywordModule)
+    Keyword           ("include",  EcsTokKeywordInclude)
 
     } else if (pos[0] == '\'') {
         return flecs_script_char(parser, pos, out);

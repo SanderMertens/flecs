@@ -1099,6 +1099,22 @@ struct Position {
 
 The `components.transform` entity will be created with the `Module` tag.
 
+## Include statement
+The `include` statement loads another script file. Example:
+
+```cpp
+include components
+include scenes/level_1.flecs
+```
+
+The path is resolved relative to the directory of the current script. Paths containing `..` and absolute paths are not allowed.
+
+If the included path does not end in `.flecs`, the extension is appended automatically.
+
+When `include` is used from a managed script (see [Managed script](#managed-script)), the included script is also loaded as a managed script. If a managed script at that path already exists, it is not loaded again. When used from a non-managed script, the included script is executed in place and no script entity is created.
+
+The `include` statement is only allowed at the root scope of a script, and cannot appear inside a template.
+
 ## Using statement
 The `using` keyword imports a namespace into the current namespace. Example:
 

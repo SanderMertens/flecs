@@ -1242,6 +1242,33 @@
                 "opaque_vector_struct_1_into_2"
             ]
         }, {
+            "id": "Include",
+            "testcases": [
+                "include_simple",
+                "include_subdir",
+                "include_missing_file",
+                "include_parent_dir_not_allowed",
+                "include_relative_to_current_script",
+                "include_nested",
+                "include_managed_creates_script_entity",
+                "include_managed_skips_existing",
+                "include_managed_nested",
+                "include_inline_does_not_create_script_entity",
+                "include_rejects_absolute_unix_path",
+                "include_rejects_windows_drive_letter",
+                "include_with_line_comment",
+                "include_with_block_comment",
+                "include_not_allowed_in_template",
+                "include_not_allowed_in_entity_scope",
+                "include_not_allowed_in_with_scope",
+                "include_not_allowed_in_if_scope",
+                "include_not_allowed_in_for_scope",
+                "include_auto_appends_extension",
+                "include_auto_appends_extension_subdir",
+                "include_keeps_explicit_extension",
+                "include_auto_appends_extension_managed"
+            ]
+        }, {
             "id": "Fuzzing",
             "testcases": [
                 "1",

@@ -194,6 +194,9 @@ int flecs_script_stmt_free(
         flecs_script_var_node_free(v, (ecs_script_var_node_t*)node);
         flecs_free_t(a, ecs_script_var_node_t, node);
         break;
+    case EcsAstInclude:
+        flecs_free_t(a, ecs_script_include_t, node);
+        break;
     }
 
     return 0;
