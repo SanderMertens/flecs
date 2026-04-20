@@ -26,7 +26,8 @@ typedef enum ecs_script_node_kind_t {
     EcsAstEntity,
     EcsAstPairScope,
     EcsAstIf,
-    EcsAstFor
+    EcsAstFor,
+    EcsAstInclude
 } ecs_script_node_kind_t;
 
 typedef struct ecs_script_node_t {
@@ -168,6 +169,11 @@ typedef struct ecs_script_for_range_t {
     ecs_script_scope_t *scope;
 } ecs_script_for_range_t;
 
+typedef struct ecs_script_include_t {
+    ecs_script_node_t node;
+    const char *filename;
+} ecs_script_include_t;
+
 #define ecs_script_node(kind, node)\
     ((ecs_script_##kind##_t*)node)
 
@@ -237,5 +243,9 @@ ecs_script_if_t* flecs_script_insert_if(
 
 ecs_script_for_range_t* flecs_script_insert_for_range(
     ecs_parser_t *parser);
+
+ecs_script_include_t* flecs_script_insert_include(
+    ecs_parser_t *parser,
+    const char *filename);
 
 #endif

@@ -438,6 +438,7 @@ const char* flecs_script_stmt(
         case EcsTokKeywordExport:     goto export_var;
         case EcsTokKeywordIf:         goto if_stmt;
         case EcsTokKeywordFor:        goto for_stmt;
+        case EcsTokKeywordInclude:    goto include_stmt;
         EcsTokEndOfStatement:         EndOfRule;
     );
 
@@ -649,6 +650,17 @@ for_stmt: {
         });
 
     });
+}
+
+// include foo.flecs
+include_stmt: {
+    Until('\n',
+        if (!Token(1) || !Token(1)[0]) {
+            Error("expected filename after 'include'");
+        }
+        flecs_script_insert_include(parser, Token(1));
+        EndOfRule;
+    )
 }
 
 // (

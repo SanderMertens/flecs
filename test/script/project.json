@@ -1242,6 +1242,20 @@
                 "opaque_vector_struct_1_into_2"
             ]
         }, {
+            "id": "Include",
+            "testcases": [
+                "include_simple",
+                "include_subdir",
+                "include_missing_file",
+                "include_parent_dir_not_allowed",
+                "include_relative_to_current_script",
+                "include_nested",
+                "include_managed_creates_script_entity",
+                "include_managed_skips_existing",
+                "include_managed_nested",
+                "include_inline_does_not_create_script_entity"
+            ]
+        }, {
             "id": "Fuzzing",
             "testcases": [
                 "1",

@@ -331,6 +331,7 @@ int flecs_value_binary(
     case EcsTokKeywordExport:
     case EcsTokKeywordProp:
     case EcsTokKeywordConst:
+    case EcsTokKeywordInclude:
     default:
         ecs_abort(ECS_INTERNAL_ERROR, "invalid operator for binary expression");
     }

@@ -49958,6 +49958,7 @@ typedef enum ecs_token_kind_t {
     EcsTokKeywordMatch = 133,
     EcsTokKeywordNew = 134,
     EcsTokKeywordExport = 135,
+    EcsTokKeywordInclude = 138,
     EcsTokAddAssign = 136,
     EcsTokMulAssign = 137,
 } ecs_token_kind_t;
@@ -50066,7 +50067,8 @@ typedef enum ecs_script_node_kind_t {
     EcsAstEntity,
     EcsAstPairScope,
     EcsAstIf,
-    EcsAstFor
+    EcsAstFor,
+    EcsAstInclude
 } ecs_script_node_kind_t;
 
 typedef struct ecs_script_node_t {
@@ -50208,6 +50210,11 @@ typedef struct ecs_script_for_range_t {
     ecs_script_scope_t *scope;
 } ecs_script_for_range_t;
 
+typedef struct ecs_script_include_t {
+    ecs_script_node_t node;
+    const char *filename;
+} ecs_script_include_t;
+
 #define ecs_script_node(kind, node)\
     ((ecs_script_##kind##_t*)node)
 
@@ -50277,6 +50284,10 @@ ecs_script_if_t* flecs_script_insert_if(
 
 ecs_script_for_range_t* flecs_script_insert_for_range(
     ecs_parser_t *parser);
+
+ecs_script_include_t* flecs_script_insert_include(
+    ecs_parser_t *parser,
+    const char *filename);
 
 #endif
 
@@ -61572,6 +61583,7 @@ const char* flecs_token_kind_str(
     case EcsTokKeywordMatch:
     case EcsTokKeywordNew:
     case EcsTokKeywordExport:
+    case EcsTokKeywordInclude:
         return "keyword ";
     case EcsTokIdentifier:
         return "identifier ";
@@ -61646,6 +61658,7 @@ const char* flecs_token_str(
     case EcsTokKeywordIn: return "in";
     case EcsTokKeywordTemplate: return "template";
     case EcsTokKeywordModule: return "module";
+    case EcsTokKeywordInclude: return "include";
     case EcsTokIdentifier: return "identifier";
     case EcsTokFunction: return "function";
     case EcsTokString: return "string";
@@ -62324,6 +62337,7 @@ const char* flecs_token(
     Keyword           ("new",      EcsTokKeywordNew)
     Keyword           ("export",   EcsTokKeywordExport)
     Keyword           ("module",   EcsTokKeywordModule)
+    Keyword           ("include",  EcsTokKeywordInclude)
 
     } else if (pos[0] == '\'') {
         return flecs_script_char(parser, pos, out);
@@ -65267,6 +65281,21 @@ ecs_script_for_range_t* flecs_script_insert_for_range(
     return result;
 }
 
+ecs_script_include_t* flecs_script_insert_include(
+    ecs_parser_t *parser,
+    const char *filename)
+{
+    ecs_script_scope_t *scope = parser->scope;
+    ecs_assert(scope != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_script_include_t *result = flecs_ast_new(
+        parser, ecs_script_include_t, EcsAstInclude);
+    result->filename = filename;
+
+    flecs_ast_append(parser, scope->stmts, ecs_script_include_t, result);
+    return result;
+}
+
 #endif
 
 /**
@@ -67212,6 +67241,7 @@ const char* flecs_script_stmt(
         case EcsTokKeywordExport:     goto export_var;
         case EcsTokKeywordIf:         goto if_stmt;
         case EcsTokKeywordFor:        goto for_stmt;
+        case EcsTokKeywordInclude:    goto include_stmt;
         EcsTokEndOfStatement:         EndOfRule;
     );
 
@@ -67423,6 +67453,17 @@ for_stmt: {
         });
 
     });
+}
+
+// include foo.flecs
+include_stmt: {
+    Until('\n',
+        if (!Token(1) || !Token(1)[0]) {
+            Error("expected filename after 'include'");
+        }
+        flecs_script_insert_include(parser, Token(1));
+        EndOfRule;
+    )
 }
 
 // (
@@ -68112,9 +68153,11 @@ int ecs_script_update(
 
     ecs_entity_t prev = ecs_set_with(world, flecs_script_tag(e, instance));
 
-    if (ecs_script_eval(s->script, NULL, &eval_result)) {
+    ecs_script_t *parsed = s->script;
+    if (ecs_script_eval(parsed, NULL, &eval_result)) {
+        s = ecs_ensure(world, e, EcsScript);
         s->error = eval_result.error;
-        ecs_script_free(s->script);
+        ecs_script_free(parsed);
         s->script = NULL;
         ecs_delete_with(world, ecs_pair_t(EcsScript, e));
         result = -1;
@@ -70472,6 +70515,8 @@ int flecs_script_check_node(
     case EcsAstFor:
         return flecs_script_check_for_range(
             v, (ecs_script_for_range_t*)node);
+    case EcsAstInclude:
+        return 0;
     }
 
     ecs_abort(ECS_INTERNAL_ERROR, "corrupt AST node kind");
@@ -71146,6 +71191,7 @@ void flecs_script_apply_non_fragmenting_childof_to_scope(
         case EcsAstProp:
         case EcsAstConst:
         case EcsAstExportConst:
+        case EcsAstInclude:
             break;
         }
     }
@@ -72101,6 +72147,131 @@ int flecs_script_eval_for_range(
 }
 
 static
+bool flecs_script_include_has_parent_dir(
+    const char *path)
+{
+    const char *p = path;
+    while (p[0]) {
+        if (p[0] == '.' && p[1] == '.') {
+            char before = (p == path) ? '/' : p[-1];
+            char after = p[2];
+            if ((before == '/' || before == '\\') &&
+                (after == '/' || after == '\\' || after == '\0'))
+            {
+                return true;
+            }
+        }
+        p ++;
+    }
+    return false;
+}
+
+static
+char* flecs_script_include_resolve(
+    const char *script_name,
+    const char *include_path)
+{
+    const char *dir_end = NULL;
+    if (script_name) {
+        const char *p = script_name;
+        while (p[0]) {
+            if (p[0] == '/' || p[0] == '\\') {
+                dir_end = p + 1;
+            }
+            p ++;
+        }
+    }
+
+    if (dir_end) {
+        ecs_size_t dir_len = flecs_ito(ecs_size_t, dir_end - script_name);
+        ecs_size_t incl_len = ecs_os_strlen(include_path);
+        char *result = ecs_os_malloc(dir_len + incl_len + 1);
+        ecs_os_memcpy(result, script_name, dir_len);
+        ecs_os_memcpy(result + dir_len, include_path, incl_len + 1);
+        return result;
+    } else {
+        return ecs_os_strdup(include_path);
+    }
+}
+
+static
+int flecs_script_eval_include(
+    ecs_script_eval_visitor_t *v,
+    ecs_script_include_t *node)
+{
+    if (flecs_script_include_has_parent_dir(node->filename)) {
+        flecs_script_eval_error(v, node,
+            "include path '%s' must not contain '..'", node->filename);
+        return -1;
+    }
+
+    ecs_id_t with = ecs_get_with(v->world);
+    bool is_managed = false;
+    ecs_entity_t parent_script_entity = 0;
+    if (with && ECS_HAS_ID_FLAG(with, PAIR)) {
+        if (ECS_PAIR_FIRST(with) == ecs_id(EcsScript)) {
+            is_managed = true;
+            parent_script_entity = ecs_pair_second(v->world, with);
+        }
+    }
+
+    const char *script_name = NULL;
+    if (parent_script_entity) {
+        const EcsScript *sc = ecs_get(v->world, parent_script_entity, EcsScript);
+        if (sc && sc->filename) {
+            script_name = sc->filename;
+        }
+    }
+    if (!script_name) {
+        script_name = v->base.script->pub.name;
+    }
+
+    char *resolved = flecs_script_include_resolve(script_name, node->filename);
+
+    int result = 0;
+
+    if (is_managed) {
+        ecs_entity_t existing = ecs_lookup_path_w_sep(
+            v->world, 0, resolved, "/", NULL, false);
+        if (existing && ecs_has(v->world, existing, EcsScript)) {
+            goto done;
+        }
+
+        ecs_entity_t prev_with = ecs_set_with(v->world, 0);
+        ecs_entity_t prev_scope = ecs_set_scope(v->world, 0);
+        ecs_entity_t e = ecs_script_init(v->world, &(ecs_script_desc_t){
+            .filename = resolved
+        });
+        ecs_set_scope(v->world, prev_scope);
+        ecs_set_with(v->world, prev_with);
+
+        if (!e) {
+            flecs_script_eval_error(v, node,
+                "failed to include managed script '%s'", resolved);
+            result = -1;
+            goto done;
+        }
+    } else {
+        char *code = flecs_load_from_file(resolved);
+        if (!code) {
+            flecs_script_eval_error(v, node,
+                "failed to load include '%s'", resolved);
+            result = -1;
+            goto done;
+        }
+
+        if (ecs_script_run(v->world, resolved, code, NULL)) {
+            result = -1;
+        }
+        ecs_os_free(code);
+    }
+
+done:
+    ecs_os_free(resolved);
+    return result;
+}
+
+static
 int flecs_script_eval_annot(
     ecs_script_eval_visitor_t *v,
     ecs_script_annot_t *node)
@@ -72195,6 +72366,9 @@ int flecs_script_eval_node(
     case EcsAstFor:
         return flecs_script_eval_for_range(
             v, (ecs_script_for_range_t*)node);
+    case EcsAstInclude:
+        return flecs_script_eval_include(
+            v, (ecs_script_include_t*)node);
     }
 
     ecs_abort(ECS_INTERNAL_ERROR, "corrupt AST node kind");
@@ -72482,6 +72656,9 @@ int flecs_script_stmt_free(
         flecs_script_var_node_free(v, (ecs_script_var_node_t*)node);
         flecs_free_t(a, ecs_script_var_node_t, node);
         break;
+    case EcsAstInclude:
+        flecs_free_t(a, ecs_script_include_t, node);
+        break;
     }
 
     return 0;
@@ -72661,6 +72838,7 @@ const char* flecs_script_node_to_str(
     case EcsAstPairScope:          return "pair_scope";
     case EcsAstIf:                 return "if";
     case EcsAstFor:                return "for";
+    case EcsAstInclude:            return "include";
     }
     return "???";
 }
@@ -72856,6 +73034,15 @@ void flecs_script_if_to_str(
 }
 
 static
+void flecs_script_include_to_str(
+    ecs_script_str_visitor_t *v,
+    ecs_script_include_t *node)
+{
+    flecs_scriptbuf_node(v, &node->node);
+    flecs_scriptbuf_append(v, "%s\n", node->filename);
+}
+
+static
 void flecs_script_for_range_to_str(
     ecs_script_str_visitor_t *v,
     ecs_script_for_range_t *node)
@@ -72963,6 +73150,9 @@ int flecs_script_stmt_to_str(
         break;
     case EcsAstFor:
         flecs_script_for_range_to_str(v, (ecs_script_for_range_t*)node);
+        break;
+    case EcsAstInclude:
+        flecs_script_include_to_str(v, (ecs_script_include_t*)node);
         break;
     }
 
@@ -93271,6 +93461,7 @@ int flecs_value_binary(
     case EcsTokKeywordExport:
     case EcsTokKeywordProp:
     case EcsTokKeywordConst:
+    case EcsTokKeywordInclude:
     default:
         ecs_abort(ECS_INTERNAL_ERROR, "invalid operator for binary expression");
     }
@@ -96263,8 +96454,9 @@ bool flecs_expr_oper_valid_for_type(
     case EcsTokKeywordTemplate:
     case EcsTokKeywordProp:
     case EcsTokKeywordConst:
+    case EcsTokKeywordInclude:
     case EcsTokEnd:
-    default: 
+    default:
         ecs_abort(ECS_INTERNAL_ERROR, NULL);
     }
 }
@@ -96411,6 +96603,7 @@ int flecs_expr_type_for_operator(
     case EcsTokKeywordTemplate:
     case EcsTokKeywordProp:
     case EcsTokKeywordConst:
+    case EcsTokKeywordInclude:
     case EcsTokEnd:
     default:
         ecs_throw(ECS_INTERNAL_ERROR, "invalid operator");
