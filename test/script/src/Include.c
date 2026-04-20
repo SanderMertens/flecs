@@ -32,36 +32,15 @@ void test_unlink(const char *path) {
 static const char *g_fopen_remap_from;
 static const char *g_fopen_remap_to;
 
-#define DIAG(...) do { \
-    fprintf(stderr, "[diag] " __VA_ARGS__); \
-    fputc('\n', stderr); \
-    fflush(stderr); \
-} while (0)
-
-static int s_hook_call_count = 0;
+static ecs_os_api_fopen_t s_default_fopen = NULL;
 
 static
 FILE* test_fopen_remap(const char *file, const char *mode) {
-    s_hook_call_count ++;
-    DIAG("hook called: file=%s, mode=%s", file ? file : "(null)", mode ? mode : "(null)");
     const char *actual = file;
-    int matched = g_fopen_remap_from && file && !strcmp(file, g_fopen_remap_from);
-    DIAG("hook: match=%d, from=%s, to=%s", matched,
-        g_fopen_remap_from ? g_fopen_remap_from : "(null)",
-        g_fopen_remap_to ? g_fopen_remap_to : "(null)");
-    if (matched) {
+    if (g_fopen_remap_from && !strcmp(file, g_fopen_remap_from)) {
         actual = g_fopen_remap_to;
     }
-#ifndef ECS_TARGET_POSIX
-    FILE *result = NULL;
-    errno_t err = fopen_s(&result, actual, mode);
-    DIAG("hook: fopen_s('%s','%s') => err=%d, result=%p", actual, mode, (int)err, (void*)result);
-    return result;
-#else
-    FILE *r = fopen(actual, mode);
-    DIAG("hook: fopen('%s','%s') => %p", actual, mode, (void*)r);
-    return r;
-#endif
+    return s_default_fopen(actual, mode);
 }
 
 static
@@ -639,42 +618,26 @@ void Include_include_auto_appends_extension_managed(void) {
 }
 
 void Include_fopen_override_remaps_filename(void) {
-    setvbuf(stderr, NULL, _IONBF, 0);
-    DIAG("test start");
-
-    s_hook_call_count = 0;
     ecs_os_set_api_defaults();
-    DIAG("after set_api_defaults, default fopen_=%p", (void*)ecs_os_api.fopen_);
+    s_default_fopen = ecs_os_api.fopen_;
     ecs_os_api_t api = ecs_os_api;
     api.fopen_ = test_fopen_remap;
     ecs_os_set_api(&api);
-    DIAG("after set_api, fopen_=%p, test_fopen_remap=%p",
-        (void*)ecs_os_api.fopen_, (void*)test_fopen_remap);
 
     ecs_world_t *world = ecs_init();
-    DIAG("after ecs_init, fopen_=%p", (void*)ecs_os_api.fopen_);
 
     const char *dir = test_tmp_dir("fopen_remap");
     char requested[256], actual[256];
     snprintf(requested, sizeof(requested), "%s/requested.flecs", dir);
     snprintf(actual, sizeof(actual), "%s/actual.flecs", dir);
-    DIAG("paths: req=%s act=%s", requested, actual);
 
     test_write_file(actual, "RemappedEntity{}\n");
-    DIAG("wrote actual");
 
     g_fopen_remap_from = requested;
     g_fopen_remap_to = actual;
-    DIAG("globals set, calling run_file");
 
-    int run_rc = ecs_script_run_file(world, requested);
-    DIAG("run_file returned %d, hook_calls=%d", run_rc, s_hook_call_count);
-
-    ecs_entity_t found = ecs_lookup(world, "RemappedEntity");
-    DIAG("lookup=%u", (unsigned)found);
-
-    test_assert(run_rc == 0);
-    test_assert(found != 0);
+    test_assert(ecs_script_run_file(world, requested) == 0);
+    test_assert(ecs_lookup(world, "RemappedEntity") != 0);
 
     g_fopen_remap_from = NULL;
     g_fopen_remap_to = NULL;
@@ -683,5 +646,4 @@ void Include_fopen_override_remaps_filename(void) {
     test_rmdir(dir);
 
     ecs_fini(world);
-    DIAG("test end");
 }
