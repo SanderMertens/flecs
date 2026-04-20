@@ -447,6 +447,22 @@ char* ecs_os_api_strdup(const char *str) {
     }
 }
 
+static
+FILE* ecs_os_api_fopen(const char *file, const char *mode) {
+#ifndef ECS_TARGET_POSIX
+    FILE *result = NULL;
+    fopen_s(&result, file, mode);
+    return result;
+#else
+    return fopen(file, mode);
+#endif
+}
+
+static
+void ecs_os_api_fclose(FILE *file) {
+    fclose(file);
+}
+
 void ecs_os_strset(char **str, const char *value) {
     char *old = str[0];
     str[0] = ecs_os_strdup(value);
@@ -548,6 +564,10 @@ void ecs_os_set_api_defaults(void)
 
     /* Strings */
     ecs_os_api.strdup_ = ecs_os_api_strdup;
+
+    /* File I/O */
+    ecs_os_api.fopen_ = ecs_os_api_fopen;
+    ecs_os_api.fclose_ = ecs_os_api_fclose;
 
     /* Time */
     ecs_os_api.get_time_ = ecs_os_gettime;

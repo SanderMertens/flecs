@@ -29,6 +29,8 @@
 #include <alloca.h>
 #endif
 
+#include <stdio.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -250,6 +252,17 @@ typedef
 char* (*ecs_os_api_module_to_path_t)(
     const char *module_id);
 
+/** OS API fopen function type. */
+typedef
+FILE* (*ecs_os_api_fopen_t)(
+    const char *file,
+    const char *mode);
+
+/** OS API fclose function type. */
+typedef
+void (*ecs_os_api_fclose_t)(
+    FILE *file);
+
 /** OS API performance tracing function type.
  *
  * @param filename The source file name.
@@ -336,6 +349,10 @@ typedef struct ecs_os_api_t {
     /* Overridable function that translates from a logical module ID to a
      * path that contains module-specific resources or assets. */
     ecs_os_api_module_to_path_t module_to_etc_;    /**< module_to_etc callback. */
+
+    /* File I/O */
+    ecs_os_api_fopen_t fopen_;                     /**< fopen callback. */
+    ecs_os_api_fclose_t fclose_;                   /**< fclose callback. */
 
     /* Performance tracing */
     ecs_os_api_perf_trace_t perf_trace_push_; /**< perf_trace_push callback. */
@@ -490,11 +507,8 @@ void ecs_os_set_api_defaults(void);
 #endif
 
 /* Files */
-#ifndef ECS_TARGET_POSIX
-#define ecs_os_fopen(result, file, mode) fopen_s(result, file, mode)
-#else
-#define ecs_os_fopen(result, file, mode) (*(result)) = fopen(file, mode)
-#endif
+#define ecs_os_fopen(file, mode) ecs_os_api.fopen_(file, mode)
+#define ecs_os_fclose(file) ecs_os_api.fclose_(file)
 
 /* Threads */
 #define ecs_os_thread_new(callback, param) ecs_os_api.thread_new_(callback, param)

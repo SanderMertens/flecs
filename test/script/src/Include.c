@@ -29,6 +29,24 @@ void test_unlink(const char *path) {
     remove(path);
 }
 
+static const char *g_fopen_remap_from;
+static const char *g_fopen_remap_to;
+
+static
+FILE* test_fopen_remap(const char *file, const char *mode) {
+    const char *actual = file;
+    if (g_fopen_remap_from && !strcmp(file, g_fopen_remap_from)) {
+        actual = g_fopen_remap_to;
+    }
+#ifndef ECS_TARGET_POSIX
+    FILE *result = NULL;
+    fopen_s(&result, actual, mode);
+    return result;
+#else
+    return fopen(actual, mode);
+#endif
+}
+
 static
 const char* test_tmp_dir(const char *name) {
     static char buf[1024];
@@ -598,6 +616,36 @@ void Include_include_auto_appends_extension_managed(void) {
 
     test_unlink(child_path);
     test_unlink(parent_path);
+    test_rmdir(dir);
+
+    ecs_fini(world);
+}
+
+void Include_fopen_override_remaps_filename(void) {
+    ecs_os_set_api_defaults();
+    ecs_os_api_t api = ecs_os_api;
+    api.fopen_ = test_fopen_remap;
+    ecs_os_set_api(&api);
+
+    ecs_world_t *world = ecs_init();
+
+    const char *dir = test_tmp_dir("fopen_remap");
+    char requested[256], actual[256];
+    snprintf(requested, sizeof(requested), "%s/requested.flecs", dir);
+    snprintf(actual, sizeof(actual), "%s/actual.flecs", dir);
+
+    test_write_file(actual, "RemappedEntity{}\n");
+
+    g_fopen_remap_from = requested;
+    g_fopen_remap_to = actual;
+
+    test_assert(ecs_script_run_file(world, requested) == 0);
+    test_assert(ecs_lookup(world, "RemappedEntity") != 0);
+
+    g_fopen_remap_from = NULL;
+    g_fopen_remap_to = NULL;
+
+    test_unlink(actual);
     test_rmdir(dir);
 
     ecs_fini(world);

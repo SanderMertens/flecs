@@ -215,7 +215,7 @@ char* flecs_load_from_file(
     size_t size;
 
     /* Open file for reading */
-    ecs_os_fopen(&file, filename, "r");
+    file = ecs_os_fopen(filename, "r");
     if (!file) {
         ecs_err("%s (%s)", ecs_os_strerror(errno), filename);
         goto error;
@@ -241,12 +241,12 @@ char* flecs_load_from_file(
         content[size] = '\0';
     }
 
-    fclose(file);
+    ecs_os_fclose(file);
 
     return content;
 error:
     if (file) {
-        fclose(file);
+        ecs_os_fclose(file);
     }
     ecs_os_free(content);
     return NULL;

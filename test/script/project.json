@@ -1266,7 +1266,8 @@
                 "include_auto_appends_extension",
                 "include_auto_appends_extension_subdir",
                 "include_keeps_explicit_extension",
-                "include_auto_appends_extension_managed"
+                "include_auto_appends_extension_managed",
+                "fopen_override_remaps_filename"
             ]
         }, {
             "id": "Fuzzing",

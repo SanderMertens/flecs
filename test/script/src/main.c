@@ -1241,6 +1241,7 @@ void Include_include_auto_appends_extension(void);
 void Include_include_auto_appends_extension_subdir(void);
 void Include_include_keeps_explicit_extension(void);
 void Include_include_auto_appends_extension_managed(void);
+void Include_fopen_override_remaps_filename(void);
 
 // Testsuite 'Fuzzing'
 void Fuzzing_1(void);
@@ -6270,6 +6271,10 @@ bake_test_case Include_testcases[] = {
     {
         "include_auto_appends_extension_managed",
         Include_include_auto_appends_extension_managed
+    },
+    {
+        "fopen_override_remaps_filename",
+        Include_fopen_override_remaps_filename
     }
 };
 
@@ -6935,7 +6940,7 @@ static bake_test_suite suites[] = {
         "Include",
         NULL,
         NULL,
-        23,
+        24,
         Include_testcases
     },
     {
