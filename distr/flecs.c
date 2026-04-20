@@ -5852,23 +5852,47 @@ bool flecs_defer_remove(
         ecs_world_t *world = stage->world;
         ecs_record_t *r = flecs_entities_get(world, entity);
         ecs_table_t *table = r->table;
-        ecs_table_overrides_t *o = table->data.overrides;
-        if (o) {
+        if (table->flags & EcsTableHasIsA) {
             ecs_component_record_t *cr = flecs_components_get(world, id);
             const ecs_type_info_t *ti;
             if (cr && (ti = cr->type_info)) {
-                const ecs_table_record_t *tr = flecs_component_get_table(
-                    cr, table);
-                if (tr) {
-                    ecs_assert(tr->column != -1, ECS_INTERNAL_ERROR, NULL);
-                    ecs_ref_t *ref = &o->refs[tr->column];
-                    if (ref->entity) {
-                        void *dst = ECS_OFFSET(
-                            table->data.columns[tr->column].data, 
-                            ti->size * ECS_RECORD_TO_ROW(r->row));
-                        const void *src = ecs_ref_get_id(
-                            world, &o->refs[tr->column], id);
-                        flecs_type_info_copy(dst, src, 1, ti);
+                if (cr->flags & (EcsIdSparse | EcsIdDontFragment)) {
+                    void *dst = flecs_component_sparse_get(
+                        world, cr, table, entity);
+                    if (dst) {
+                        ecs_entity_t base = 0;
+                        if (ecs_search_relation(world, table, 0, id,
+                            EcsIsA, EcsUp, &base, NULL, NULL) != -1 && base)
+                        {
+                            ecs_record_t *base_r = flecs_entities_get(
+                                world, base);
+                            ecs_table_t *base_table = base_r ?
+                                base_r->table : NULL;
+                            void *src = flecs_component_sparse_get(
+                                world, cr, base_table, base);
+                            if (src) {
+                                flecs_type_info_copy(dst, src, 1, ti);
+                            }
+                        }
+                    }
+                } else {
+                    ecs_table_overrides_t *o = table->data.overrides;
+                    if (o) {
+                        const ecs_table_record_t *tr =
+                            flecs_component_get_table(cr, table);
+                        if (tr) {
+                            ecs_assert(tr->column != -1,
+                                ECS_INTERNAL_ERROR, NULL);
+                            ecs_ref_t *ref = &o->refs[tr->column];
+                            if (ref->entity) {
+                                void *dst = ECS_OFFSET(
+                                    table->data.columns[tr->column].data,
+                                    ti->size * ECS_RECORD_TO_ROW(r->row));
+                                const void *src = ecs_ref_get_id(
+                                    world, &o->refs[tr->column], id);
+                                flecs_type_info_copy(dst, src, 1, ti);
+                            }
+                        }
                     }
                 }
             }

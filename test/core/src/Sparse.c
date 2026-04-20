@@ -7458,3 +7458,82 @@ void Sparse_defer_ensure_modified_w_sparse_w_observer(void) {
     ecs_fini(world);
 }
 
+void Sparse_defer_remove_override(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_add_id(world, ecs_id(Velocity), EcsSparse);
+    if (!fragment) ecs_add_id(world, ecs_id(Velocity), EcsDontFragment);
+
+    ecs_entity_t prefab = ecs_new_w_id(world, EcsPrefab);
+    ecs_set(world, prefab, Velocity, {1, 2});
+    ecs_emplace(world, prefab, Position, NULL);
+
+    ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, prefab);
+    test_assert(ecs_has(world, e, Velocity));
+    ecs_set(world, e, Velocity, {2, 4});
+
+    ecs_defer_begin(world);
+    {
+        const Velocity *v = ecs_get(world, e, Velocity);
+        test_assert(v != NULL);
+        test_int(v->x, 2); test_int(v->y, 4);
+    }
+    ecs_remove(world, e, Velocity);
+    {
+        const Velocity *v = ecs_get(world, e, Velocity);
+        test_assert(v != NULL);
+        test_int(v->x, 1); test_int(v->y, 2);
+    }
+    ecs_defer_end(world);
+
+    test_assert(!ecs_has(world, e, Velocity));
+
+    ecs_fini(world);
+}
+
+void Sparse_defer_remove_add_override(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_add_id(world, ecs_id(Velocity), EcsSparse);
+    if (!fragment) ecs_add_id(world, ecs_id(Velocity), EcsDontFragment);
+
+    ecs_entity_t prefab = ecs_new_w_id(world, EcsPrefab);
+    ecs_set(world, prefab, Velocity, {1, 2});
+    ecs_emplace(world, prefab, Position, NULL);
+
+    ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, prefab);
+    test_assert(ecs_has(world, e, Velocity));
+    ecs_set(world, e, Velocity, {2, 4});
+
+    ecs_defer_begin(world);
+    {
+        const Velocity *v = ecs_get(world, e, Velocity);
+        test_assert(v != NULL);
+        test_int(v->x, 2); test_int(v->y, 4);
+    }
+    ecs_remove(world, e, Velocity);
+    ecs_add(world, e, Velocity);
+    {
+        const Velocity *v = ecs_get(world, e, Velocity);
+        test_assert(v != NULL);
+        test_int(v->x, 1); test_int(v->y, 2);
+    }
+    ecs_defer_end(world);
+
+    test_assert(ecs_has(world, e, Velocity));
+
+    {
+        const Velocity *v = ecs_get(world, e, Velocity);
+        test_assert(v != NULL);
+        test_int(v->x, 1); test_int(v->y, 2);
+    }
+
+    ecs_fini(world);
+}
+
