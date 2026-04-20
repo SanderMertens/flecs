@@ -714,6 +714,8 @@ void Sparse_defer_remove_two_sparse_w_observer(void);
 void Sparse_defer_set_batch_two_sparse_w_observer(void);
 void Sparse_defer_set_w_sparse_w_observer(void);
 void Sparse_defer_ensure_modified_w_sparse_w_observer(void);
+void Sparse_defer_remove_override(void);
+void Sparse_defer_remove_add_override(void);
 
 // Testsuite 'NonFragmentingChildOf'
 void NonFragmentingChildOf_set_parent_no_ordered_children(void);
@@ -6031,6 +6033,14 @@ bake_test_case Sparse_testcases[] = {
     {
         "defer_ensure_modified_w_sparse_w_observer",
         Sparse_defer_ensure_modified_w_sparse_w_observer
+    },
+    {
+        "defer_remove_override",
+        Sparse_defer_remove_override
+    },
+    {
+        "defer_remove_add_override",
+        Sparse_defer_remove_add_override
     }
 };
 
@@ -16121,7 +16131,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         Sparse_setup,
         NULL,
-        224,
+        226,
         Sparse_testcases,
         1,
         Sparse_params
