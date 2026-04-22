@@ -1582,6 +1582,12 @@ void Meta_query_to_json_w_default_desc(void);
 void Meta_script_to_std_vector_int(void);
 void Meta_script_to_std_vector_std_string(void);
 void Meta_ser_deser_alias(void);
+void Meta_ecs_struct_macro(void);
+void Meta_ecs_struct_macro_nested(void);
+void Meta_ecs_struct_macro_idempotent(void);
+void Meta_ecs_enum_macro(void);
+void Meta_ecs_bitmask_macro(void);
+void Meta_ecs_struct_macro_no_reflection_for_plain_struct(void);
 
 // Testsuite 'Table'
 void Table_each(void);
@@ -7808,6 +7814,30 @@ bake_test_case Meta_testcases[] = {
     {
         "ser_deser_alias",
         Meta_ser_deser_alias
+    },
+    {
+        "ecs_struct_macro",
+        Meta_ecs_struct_macro
+    },
+    {
+        "ecs_struct_macro_nested",
+        Meta_ecs_struct_macro_nested
+    },
+    {
+        "ecs_struct_macro_idempotent",
+        Meta_ecs_struct_macro_idempotent
+    },
+    {
+        "ecs_enum_macro",
+        Meta_ecs_enum_macro
+    },
+    {
+        "ecs_bitmask_macro",
+        Meta_ecs_bitmask_macro
+    },
+    {
+        "ecs_struct_macro_no_reflection_for_plain_struct",
+        Meta_ecs_struct_macro_no_reflection_for_plain_struct
     }
 };
 
@@ -8133,7 +8163,7 @@ static bake_test_suite suites[] = {
         "Meta",
         NULL,
         NULL,
-        69,
+        75,
         Meta_testcases
     },
     {

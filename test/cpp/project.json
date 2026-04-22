@@ -1635,7 +1635,13 @@
                 "query_to_json_w_default_desc",
                 "script_to_std_vector_int",
                 "script_to_std_vector_std_string",
-                "ser_deser_alias"
+                "ser_deser_alias",
+                "ecs_struct_macro",
+                "ecs_struct_macro_nested",
+                "ecs_struct_macro_idempotent",
+                "ecs_enum_macro",
+                "ecs_bitmask_macro",
+                "ecs_struct_macro_no_reflection_for_plain_struct"
             ]
         }, {
             "id": "Table",

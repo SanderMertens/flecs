@@ -1,5 +1,27 @@
 #include <cpp.h>
 
+ECS_STRUCT(EcsStructMacroPosition, {
+    float x;
+    float y;
+});
+
+ECS_STRUCT(EcsStructMacroLine, {
+    EcsStructMacroPosition start;
+    EcsStructMacroPosition stop;
+});
+
+ECS_ENUM(EcsEnumMacroColor, {
+    EcsEnumMacroRed,
+    EcsEnumMacroGreen,
+    EcsEnumMacroBlue
+});
+
+ECS_BITMASK(EcsBitmaskMacroFlags, {
+    EcsBitmaskMacroA = 1,
+    EcsBitmaskMacroB = 2,
+    EcsBitmaskMacroC = 4
+});
+
 flecs::opaque<std::string> std_string_support(flecs::world&) {
     flecs::opaque<std::string> ts;
 
@@ -1620,4 +1642,72 @@ void Meta_ser_deser_alias(void) {
     flecs::world world2;
     world2.from_json(str);
     test_assert(world2.lookup("child"));
+}
+
+void Meta_ecs_struct_macro(void) {
+    flecs::world ecs;
+
+    auto c = ecs.component<EcsStructMacroPosition>();
+    test_assert(c != 0);
+
+    test_assert(ecs_struct_get_member(ecs, c, "x") != NULL);
+    test_uint(ecs_struct_get_member(ecs, c, "x")->type, flecs::F32);
+
+    test_assert(ecs_struct_get_member(ecs, c, "y") != NULL);
+    test_uint(ecs_struct_get_member(ecs, c, "y")->type, flecs::F32);
+}
+
+void Meta_ecs_struct_macro_nested(void) {
+    flecs::world ecs;
+
+    auto p = ecs.component<EcsStructMacroPosition>();
+    auto l = ecs.component<EcsStructMacroLine>();
+    test_assert(l != 0);
+
+    test_assert(ecs_struct_get_member(ecs, l, "start") != NULL);
+    test_uint(ecs_struct_get_member(ecs, l, "start")->type, p);
+
+    test_assert(ecs_struct_get_member(ecs, l, "stop") != NULL);
+    test_uint(ecs_struct_get_member(ecs, l, "stop")->type, p);
+}
+
+void Meta_ecs_struct_macro_idempotent(void) {
+    flecs::world ecs;
+
+    auto c1 = ecs.component<EcsStructMacroPosition>();
+    auto c2 = ecs.component<EcsStructMacroPosition>();
+    test_assert(c1 == c2);
+
+    test_assert(ecs_struct_get_member(ecs, c1, "x") != NULL);
+    test_assert(ecs_struct_get_member(ecs, c1, "y") != NULL);
+
+    const EcsStruct *s = ecs.entity(c1).try_get<flecs::Struct>();
+    test_assert(s != NULL);
+    test_int(s->members.count, 2);
+}
+
+void Meta_ecs_enum_macro(void) {
+    flecs::world ecs;
+
+    auto c = ecs.component<EcsEnumMacroColor>();
+    test_assert(c != 0);
+    test_assert(ecs.entity(c).has<flecs::Enum>());
+}
+
+void Meta_ecs_bitmask_macro(void) {
+    flecs::world ecs;
+
+    auto c = ecs.component<EcsBitmaskMacroFlags>();
+    test_assert(c != 0);
+    test_assert(ecs.entity(c).has<flecs::Bitmask>());
+}
+
+void Meta_ecs_struct_macro_no_reflection_for_plain_struct(void) {
+    flecs::world ecs;
+
+    struct Plain { int32_t a; int32_t b; };
+
+    auto c = ecs.component<Plain>();
+    test_assert(c != 0);
+    test_assert(!ecs.entity(c).has<flecs::Struct>());
 }

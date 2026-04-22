@@ -1,0 +1,11 @@
+{
+    "id": "auto_define_enum",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "language": "c++",
+        "public": false
+    }
+}
