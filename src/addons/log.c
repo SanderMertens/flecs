@@ -44,12 +44,10 @@ void flecs_log_capture_log(
     }
 
 #ifdef FLECS_DEBUG
-    /* In debug mode, log unexpected errors to the console */
     if (level < 0) {
-        /* Also log to previous log function in debug mode */
-        if (flecs_log_prev_log) {
+        if (flecs_log_prev_fatal_log) {
             ecs_log_enable_colors(true);
-            flecs_log_prev_log(level, file, line, msg);
+            flecs_log_prev_fatal_log(level, file, line, msg);
             ecs_log_enable_colors(false);
         }
     }

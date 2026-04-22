@@ -26221,12 +26221,13 @@ void flecs_log_capture_log(
     }
 
 #ifdef FLECS_DEBUG
-    /* In debug mode, log unexpected errors to the console */
+    /* In debug mode, always log errors to the console, even when capture was
+     * started with try=true. Use prev_fatal_log which preserves the original
+     * logger regardless of try. */
     if (level < 0) {
-        /* Also log to previous log function in debug mode */
-        if (flecs_log_prev_log) {
+        if (flecs_log_prev_fatal_log) {
             ecs_log_enable_colors(true);
-            flecs_log_prev_log(level, file, line, msg);
+            flecs_log_prev_fatal_log(level, file, line, msg);
             ecs_log_enable_colors(false);
         }
     }
@@ -68190,6 +68191,7 @@ int ecs_script_update(
     if (ecs_script_eval(parsed, NULL, &eval_result)) {
         s = ecs_ensure(world, e, EcsScript);
         s->error = eval_result.error;
+        ecs_log_(-3, NULL, 0, "%s: %s", name ? name : "script", s->error);
         ecs_script_free(parsed);
         s->script = NULL;
         ecs_delete_with(world, ecs_pair_t(EcsScript, e));
