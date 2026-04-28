@@ -730,6 +730,10 @@ ecs_query_cache_t* flecs_query_cache_init(
         flecs_query_cache_group_by(result, result->query->terms[cascade_by - 1].id,
             flecs_query_cache_group_by_cascade);
         result->group_by_ctx = &result->query->terms[cascade_by - 1];
+        result->query->flags |= EcsQueryGroupByOrdered;
+        if (result->query->terms[cascade_by - 1].src.id & EcsDesc) {
+            result->query->flags |= EcsQueryGroupByDesc;
+        }
     }
 
     if (const_desc->group_by_callback || const_desc->group_by) {

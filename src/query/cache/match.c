@@ -322,7 +322,7 @@ void flecs_query_rematch(
     /* Iterate all tables in cache, remove ones that weren't just matched */
     ecs_vec_t unmatched; ecs_vec_init_t(a, &unmatched, ecs_table_t*, 0);
     ecs_size_t elem_size = flecs_query_cache_elem_size(cache);
-    ecs_query_cache_group_t *cur = &cache->default_group;
+    ecs_query_cache_group_t *cur = cache->first_group;
     do {
         int32_t i, count = ecs_vec_count(&cur->tables);
         for (i = 0; i < count; i ++) {

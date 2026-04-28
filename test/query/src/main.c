@@ -1924,6 +1924,16 @@ void GroupBy_get_groups(void);
 void GroupBy_get_groups_default_group(void);
 void GroupBy_on_group_create_delete_default_group(void);
 void GroupBy_on_group_delete_not_called_for_uncreated_default_group(void);
+void GroupBy_group_by_ordered(void);
+void GroupBy_group_by_default_action_ordered(void);
+void GroupBy_group_by_recreate_two_groups_after_rematch_ordered(void);
+void GroupBy_group_by_ordered_desc(void);
+void GroupBy_group_by_default_action_ordered_desc(void);
+void GroupBy_group_by_recreate_two_groups_after_rematch_ordered_desc(void);
+void GroupBy_group_by_recreate_group_after_rematch_ordered(void);
+void GroupBy_group_by_recreate_one_group_after_rematch_ordered(void);
+void GroupBy_recreate_after_remove_all_ordered(void);
+void GroupBy_group_by_parent_depth_ordered(void);
 
 // Testsuite 'MemberTarget'
 void MemberTarget_setup(void);
@@ -10337,6 +10347,46 @@ bake_test_case GroupBy_testcases[] = {
     {
         "on_group_delete_not_called_for_uncreated_default_group",
         GroupBy_on_group_delete_not_called_for_uncreated_default_group
+    },
+    {
+        "group_by_ordered",
+        GroupBy_group_by_ordered
+    },
+    {
+        "group_by_default_action_ordered",
+        GroupBy_group_by_default_action_ordered
+    },
+    {
+        "group_by_recreate_two_groups_after_rematch_ordered",
+        GroupBy_group_by_recreate_two_groups_after_rematch_ordered
+    },
+    {
+        "group_by_ordered_desc",
+        GroupBy_group_by_ordered_desc
+    },
+    {
+        "group_by_default_action_ordered_desc",
+        GroupBy_group_by_default_action_ordered_desc
+    },
+    {
+        "group_by_recreate_two_groups_after_rematch_ordered_desc",
+        GroupBy_group_by_recreate_two_groups_after_rematch_ordered_desc
+    },
+    {
+        "group_by_recreate_group_after_rematch_ordered",
+        GroupBy_group_by_recreate_group_after_rematch_ordered
+    },
+    {
+        "group_by_recreate_one_group_after_rematch_ordered",
+        GroupBy_group_by_recreate_one_group_after_rematch_ordered
+    },
+    {
+        "recreate_after_remove_all_ordered",
+        GroupBy_recreate_after_remove_all_ordered
+    },
+    {
+        "group_by_parent_depth_ordered",
+        GroupBy_group_by_parent_depth_ordered
     }
 };
 
@@ -13933,7 +13983,7 @@ static bake_test_suite suites[] = {
         "GroupBy",
         NULL,
         NULL,
-        25,
+        35,
         GroupBy_testcases
     },
     {

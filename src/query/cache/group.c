@@ -53,13 +53,15 @@ ecs_query_cache_group_t* flecs_query_cache_get_group(
 static
 void flecs_query_cache_group_insert(
     ecs_query_cache_t *cache,
-    ecs_query_cache_group_t *group) 
+    ecs_query_cache_group_t *group)
 {
-    bool desc = false; /* Descending order */
-    if (cache->cascade_by) {
-        desc = (cache->query->terms[
-            cache->cascade_by - 1].src.id & EcsDesc) != 0;
+    if (!(cache->query->flags & EcsQueryGroupByOrdered)) {
+        group->next = cache->first_group;
+        cache->first_group = group;
+        return;
     }
+
+    bool desc = (cache->query->flags & EcsQueryGroupByDesc) != 0;
 
     ecs_query_cache_group_t *cur = cache->first_group, *prev = NULL;
     do {

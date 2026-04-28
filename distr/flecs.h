@@ -6269,6 +6269,27 @@ struct ecs_iter_t {
  */
 #define EcsQueryDetectChanges         (1u << 8u)
 
+/** Enable ordering for query groups.
+ * When this flag is set, groups will be iterated in ascending order, with lower
+ * group ids first and higher group ids afterwards.
+ * 
+ * This flag is enabled automatically when a query contains cascade terms.
+ * 
+ * \ingroup queries
+ */
+#define EcsQueryGroupByOrdered        (1u << 9u)
+
+/** Enable descending ordering for query groups.
+ * When this flag is set in combination with EcsQueryGroupByOrdered, groups will 
+ * be iterated in descending order, with higher group ids first and lower group 
+ * ids afterwards.
+ * 
+ * This flag is enabled automatically when a query contains cascade|desc terms.
+ * 
+ * \ingroup queries
+ */
+#define EcsQueryGroupByDesc           (1u << 10u)
+
 
 /** Used with ecs_query_init().
  * 

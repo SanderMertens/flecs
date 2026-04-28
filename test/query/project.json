@@ -1986,7 +1986,17 @@
                 "get_groups",
                 "get_groups_default_group",
                 "on_group_create_delete_default_group",
-                "on_group_delete_not_called_for_uncreated_default_group"
+                "on_group_delete_not_called_for_uncreated_default_group",
+                "group_by_ordered",
+                "group_by_default_action_ordered",
+                "group_by_recreate_two_groups_after_rematch_ordered",
+                "group_by_ordered_desc",
+                "group_by_default_action_ordered_desc",
+                "group_by_recreate_two_groups_after_rematch_ordered_desc",
+                "group_by_recreate_group_after_rematch_ordered",
+                "group_by_recreate_one_group_after_rematch_ordered",
+                "recreate_after_remove_all_ordered",
+                "group_by_parent_depth_ordered"
             ]
         }, {
             "id": "MemberTarget",
