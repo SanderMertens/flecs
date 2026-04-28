@@ -179,7 +179,7 @@ void flecs_name_index_remove(
     }
 }
 
-void flecs_name_index_update_name(
+bool flecs_name_index_update_name(
     ecs_hashmap_t *map,
     uint64_t e,
     uint64_t hash,
@@ -187,7 +187,7 @@ void flecs_name_index_update_name(
 {
     ecs_hm_bucket_t *b = flecs_hashmap_get_bucket(map, hash);
     if (!b) {
-        return;
+        return false;
     }
 
     uint64_t *ids = ecs_vec_first(&b->values);
@@ -201,12 +201,10 @@ void flecs_name_index_update_name(
                 ECS_INTERNAL_ERROR, NULL);
             ecs_assert(flecs_hash(name, key->length) == key->hash,
                 ECS_INTERNAL_ERROR, NULL);
-            return;
+            return true;
         }
     }
-
-    /* Record must already have been in the index */
-    ecs_abort(ECS_INTERNAL_ERROR, NULL);
+    return false;
 }
 
 void flecs_name_index_ensure(
@@ -219,21 +217,11 @@ void flecs_name_index_ensure(
     ecs_check(name != NULL, ECS_INVALID_PARAMETER, NULL);
 
     ecs_hashed_string_t key = flecs_get_hashed_string(name, length, hash);
-    
-    uint64_t existing = flecs_name_index_find(
-        map, name, key.length, key.hash);
-    if (existing) {
-        if (existing != id) {
-            ecs_abort(ECS_ALREADY_DEFINED, 
-                "conflicting entity registered with name '%s' "
-                "(existing = %u, new = %u)", 
-                name, (uint32_t)existing, (uint32_t)id);
-        }
-    }
 
     flecs_hashmap_result_t hmr = flecs_hashmap_ensure(
         map, &key, uint64_t);
     *((uint64_t*)hmr.value) = id;
+    ((ecs_hashed_string_t*)hmr.key)->value = ECS_CONST_CAST(char*, name);
 error:
     return;
 }

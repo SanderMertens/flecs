@@ -60,7 +60,7 @@ void flecs_name_index_remove(
     uint64_t id,
     uint64_t hash);
 
-void flecs_name_index_update_name(
+bool flecs_name_index_update_name(
     ecs_hashmap_t *map,
     uint64_t e,
     uint64_t hash,

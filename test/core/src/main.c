@@ -1035,6 +1035,12 @@ void Hierarchies_add_path_depth_2(void);
 void Hierarchies_add_path_existing_depth_0(void);
 void Hierarchies_add_path_existing_depth_1(void);
 void Hierarchies_add_path_existing_depth_2(void);
+void Hierarchies_add_path_existing_intermediate(void);
+void Hierarchies_add_path_existing_three_entities(void);
+void Hierarchies_add_path_existing_renames_entity(void);
+void Hierarchies_add_path_existing_in_different_scopes(void);
+void Hierarchies_add_path_existing_returns_user_entity(void);
+void Hierarchies_add_path_existing_via_entity_init(void);
 void Hierarchies_add_path_from_scope(void);
 void Hierarchies_add_path_from_scope_new_entity(void);
 void Hierarchies_add_root_path_to_child(void);
@@ -1477,6 +1483,17 @@ void Lookup_lookup_path_63_chars(void);
 void Lookup_lookup_path_64_chars(void);
 void Lookup_lookup_path_65_chars(void);
 void Lookup_lookup_malformed(void);
+void Lookup_set_duplicate_name(void);
+void Lookup_set_duplicate_name_in_scope(void);
+void Lookup_set_duplicate_name_three_entities(void);
+void Lookup_set_duplicate_name_then_delete_owner(void);
+void Lookup_set_duplicate_name_then_rename_owner(void);
+void Lookup_set_duplicate_name_then_rename_displaced(void);
+void Lookup_set_duplicate_name_then_delete_displaced(void);
+void Lookup_duplicate_names_different_scopes(void);
+void Lookup_set_duplicate_name_via_explicit_id(void);
+void Lookup_set_duplicate_name_then_reparent_owner(void);
+void Lookup_set_duplicate_name_resets_to_self(void);
 
 // Testsuite 'Singleton'
 void Singleton_add_singleton(void);
@@ -7305,6 +7322,30 @@ bake_test_case Hierarchies_testcases[] = {
         Hierarchies_add_path_existing_depth_2
     },
     {
+        "add_path_existing_intermediate",
+        Hierarchies_add_path_existing_intermediate
+    },
+    {
+        "add_path_existing_three_entities",
+        Hierarchies_add_path_existing_three_entities
+    },
+    {
+        "add_path_existing_renames_entity",
+        Hierarchies_add_path_existing_renames_entity
+    },
+    {
+        "add_path_existing_in_different_scopes",
+        Hierarchies_add_path_existing_in_different_scopes
+    },
+    {
+        "add_path_existing_returns_user_entity",
+        Hierarchies_add_path_existing_returns_user_entity
+    },
+    {
+        "add_path_existing_via_entity_init",
+        Hierarchies_add_path_existing_via_entity_init
+    },
+    {
         "add_path_from_scope",
         Hierarchies_add_path_from_scope
     },
@@ -9005,6 +9046,50 @@ bake_test_case Lookup_testcases[] = {
     {
         "lookup_malformed",
         Lookup_lookup_malformed
+    },
+    {
+        "set_duplicate_name",
+        Lookup_set_duplicate_name
+    },
+    {
+        "set_duplicate_name_in_scope",
+        Lookup_set_duplicate_name_in_scope
+    },
+    {
+        "set_duplicate_name_three_entities",
+        Lookup_set_duplicate_name_three_entities
+    },
+    {
+        "set_duplicate_name_then_delete_owner",
+        Lookup_set_duplicate_name_then_delete_owner
+    },
+    {
+        "set_duplicate_name_then_rename_owner",
+        Lookup_set_duplicate_name_then_rename_owner
+    },
+    {
+        "set_duplicate_name_then_rename_displaced",
+        Lookup_set_duplicate_name_then_rename_displaced
+    },
+    {
+        "set_duplicate_name_then_delete_displaced",
+        Lookup_set_duplicate_name_then_delete_displaced
+    },
+    {
+        "duplicate_names_different_scopes",
+        Lookup_duplicate_names_different_scopes
+    },
+    {
+        "set_duplicate_name_via_explicit_id",
+        Lookup_set_duplicate_name_via_explicit_id
+    },
+    {
+        "set_duplicate_name_then_reparent_owner",
+        Lookup_set_duplicate_name_then_reparent_owner
+    },
+    {
+        "set_duplicate_name_resets_to_self",
+        Lookup_set_duplicate_name_resets_to_self
     }
 };
 
@@ -16147,7 +16232,7 @@ static bake_test_suite suites[] = {
         "Hierarchies",
         Hierarchies_setup,
         NULL,
-        109,
+        115,
         Hierarchies_testcases
     },
     {
@@ -16217,7 +16302,7 @@ static bake_test_suite suites[] = {
         "Lookup",
         Lookup_setup,
         NULL,
-        64,
+        75,
         Lookup_testcases
     },
     {

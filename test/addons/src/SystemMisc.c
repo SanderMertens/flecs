@@ -749,8 +749,6 @@ void SystemMisc_redeclare_system_explicit_id_no_name(void) {
 }
 
 void SystemMisc_declare_different_id_same_name(void) {
-    install_test_abort();
-
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t e1 = ecs_new(world);
@@ -758,23 +756,26 @@ void SystemMisc_declare_different_id_same_name(void) {
 
     ecs_entity_t s_1 = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, {.id = e1, .name = "Move", .add = ecs_ids(ecs_dependson(EcsOnUpdate))}),
-        .query.expr = "0", 
+        .query.expr = "0",
         .callback = Dummy
     });
     test_assert(e1 == s_1);
 
-    test_expect_abort();
-
-    ecs_system_init(world, &(ecs_system_desc_t){
+    ecs_entity_t s_2 = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, {.id = e2, .name = "Move", .add = ecs_ids(ecs_dependson(EcsOnUpdate))}),
-        .query.expr = "0", 
+        .query.expr = "0",
         .callback = Dummy
     });
+    test_assert(e2 == s_2);
+
+    test_uint(e2, ecs_lookup(world, "Move"));
+    test_str("Move", ecs_get_name(world, e1));
+    test_str("Move", ecs_get_name(world, e2));
+
+    ecs_fini(world);
 }
 
 void SystemMisc_declare_different_id_same_name_w_scope(void) {
-    install_test_abort();
-    
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t scope = ecs_new(world);
@@ -785,18 +786,23 @@ void SystemMisc_declare_different_id_same_name_w_scope(void) {
 
     ecs_entity_t s_1 = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, {.id = e1, .name = "Move", .add = ecs_ids(ecs_dependson(EcsOnUpdate))}),
-        .query.expr = "0", 
+        .query.expr = "0",
         .callback = Dummy
     });
     test_assert(e1 == s_1);
 
-    test_expect_abort();
-
-    ecs_system_init(world, &(ecs_system_desc_t){
+    ecs_entity_t s_2 = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, {.id = e2, .name = "Move", .add = ecs_ids(ecs_dependson(EcsOnUpdate))}),
-        .query.expr = "0", 
+        .query.expr = "0",
         .callback = Dummy
     });
+    test_assert(e2 == s_2);
+
+    test_uint(e2, ecs_lookup_child(world, scope, "Move"));
+    test_str("Move", ecs_get_name(world, e1));
+    test_str("Move", ecs_get_name(world, e2));
+
+    ecs_fini(world);
 }
 
 void SystemMisc_rw_in_implicit_any(void) {

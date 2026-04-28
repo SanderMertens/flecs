@@ -954,6 +954,210 @@ void Lookup_lookup_malformed(void) {
 
     ecs_entity_t r = ecs_lookup(world, "''<'''. =!f'''!'''g '''\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\'''''''");
     test_assert(r == 0);
-    
+
+    ecs_fini(world);
+}
+
+void Lookup_set_duplicate_name(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t a = ecs_entity(world, { .name = "Foo" });
+    test_assert(a != 0);
+    test_uint(a, ecs_lookup(world, "Foo"));
+
+    ecs_entity_t b = ecs_new(world);
+    ecs_set_name(world, b, "Foo");
+    test_assert(b != 0);
+    test_assert(a != b);
+
+    test_uint(b, ecs_lookup(world, "Foo"));
+    test_str("Foo", ecs_get_name(world, a));
+    test_str("Foo", ecs_get_name(world, b));
+
+    ecs_fini(world);
+}
+
+void Lookup_set_duplicate_name_in_scope(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
+
+    ecs_entity_t a = ecs_entity(world, { .name = "Foo", .parent = parent });
+    test_uint(a, ecs_lookup(world, "parent.Foo"));
+
+    ecs_entity_t b = ecs_new(world);
+    ecs_add_pair(world, b, EcsChildOf, parent);
+    ecs_set_name(world, b, "Foo");
+    test_assert(a != b);
+
+    test_uint(b, ecs_lookup(world, "parent.Foo"));
+    test_uint(b, ecs_lookup_child(world, parent, "Foo"));
+    test_str("Foo", ecs_get_name(world, a));
+    test_str("Foo", ecs_get_name(world, b));
+
+    ecs_fini(world);
+}
+
+void Lookup_set_duplicate_name_three_entities(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t a = ecs_entity(world, { .name = "Foo" });
+    ecs_entity_t b = ecs_new(world);
+    ecs_entity_t c = ecs_new(world);
+
+    ecs_set_name(world, b, "Foo");
+    test_uint(b, ecs_lookup(world, "Foo"));
+
+    ecs_set_name(world, c, "Foo");
+    test_uint(c, ecs_lookup(world, "Foo"));
+
+    test_str("Foo", ecs_get_name(world, a));
+    test_str("Foo", ecs_get_name(world, b));
+    test_str("Foo", ecs_get_name(world, c));
+
+    ecs_fini(world);
+}
+
+void Lookup_set_duplicate_name_then_delete_owner(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t a = ecs_entity(world, { .name = "Foo" });
+    ecs_entity_t b = ecs_new(world);
+    ecs_set_name(world, b, "Foo");
+    test_uint(b, ecs_lookup(world, "Foo"));
+
+    ecs_delete(world, b);
+
+    test_uint(0, ecs_lookup(world, "Foo"));
+    test_assert(ecs_is_alive(world, a));
+    test_str("Foo", ecs_get_name(world, a));
+
+    ecs_fini(world);
+}
+
+void Lookup_set_duplicate_name_then_rename_owner(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t a = ecs_entity(world, { .name = "Foo" });
+    ecs_entity_t b = ecs_new(world);
+    ecs_set_name(world, b, "Foo");
+    test_uint(b, ecs_lookup(world, "Foo"));
+
+    ecs_set_name(world, b, "Bar");
+
+    test_uint(0, ecs_lookup(world, "Foo"));
+    test_uint(b, ecs_lookup(world, "Bar"));
+    test_str("Foo", ecs_get_name(world, a));
+    test_str("Bar", ecs_get_name(world, b));
+
+    ecs_fini(world);
+}
+
+void Lookup_set_duplicate_name_then_rename_displaced(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t a = ecs_entity(world, { .name = "Foo" });
+    ecs_entity_t b = ecs_new(world);
+    ecs_set_name(world, b, "Foo");
+    test_uint(b, ecs_lookup(world, "Foo"));
+
+    ecs_set_name(world, a, "Baz");
+
+    test_uint(b, ecs_lookup(world, "Foo"));
+    test_uint(a, ecs_lookup(world, "Baz"));
+    test_str("Baz", ecs_get_name(world, a));
+    test_str("Foo", ecs_get_name(world, b));
+
+    ecs_fini(world);
+}
+
+void Lookup_set_duplicate_name_then_delete_displaced(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t a = ecs_entity(world, { .name = "Foo" });
+    ecs_entity_t b = ecs_new(world);
+    ecs_set_name(world, b, "Foo");
+    test_uint(b, ecs_lookup(world, "Foo"));
+
+    ecs_delete(world, a);
+
+    test_uint(b, ecs_lookup(world, "Foo"));
+    test_str("Foo", ecs_get_name(world, b));
+
+    ecs_fini(world);
+}
+
+void Lookup_duplicate_names_different_scopes(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p1 = ecs_entity(world, { .name = "p1" });
+    ecs_entity_t p2 = ecs_entity(world, { .name = "p2" });
+
+    ecs_entity_t a = ecs_entity(world, { .name = "Foo", .parent = p1 });
+    ecs_entity_t b = ecs_entity(world, { .name = "Foo", .parent = p2 });
+
+    test_assert(a != b);
+    test_uint(a, ecs_lookup(world, "p1.Foo"));
+    test_uint(b, ecs_lookup(world, "p2.Foo"));
+
+    ecs_fini(world);
+}
+
+void Lookup_set_duplicate_name_via_explicit_id(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t a = ecs_entity(world, { .name = "Foo" });
+    ecs_entity_t b = ecs_new(world);
+
+    ecs_entity_t r = ecs_entity(world, { .id = b, .name = "Foo" });
+    test_uint(r, b);
+
+    test_uint(b, ecs_lookup(world, "Foo"));
+    test_str("Foo", ecs_get_name(world, a));
+    test_str("Foo", ecs_get_name(world, b));
+
+    ecs_fini(world);
+}
+
+void Lookup_set_duplicate_name_then_reparent_owner(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p1 = ecs_entity(world, { .name = "p1" });
+    ecs_entity_t p2 = ecs_entity(world, { .name = "p2" });
+
+    ecs_entity_t a = ecs_entity(world, { .name = "Foo", .parent = p1 });
+    ecs_entity_t b = ecs_new(world);
+    ecs_add_pair(world, b, EcsChildOf, p1);
+    ecs_set_name(world, b, "Foo");
+
+    test_uint(b, ecs_lookup(world, "p1.Foo"));
+
+    ecs_add_pair(world, b, EcsChildOf, p2);
+
+    test_uint(0, ecs_lookup(world, "p1.Foo"));
+    test_uint(b, ecs_lookup(world, "p2.Foo"));
+    test_str("Foo", ecs_get_name(world, a));
+
+    ecs_set_name(world, a, "Foo");
+    test_uint(a, ecs_lookup(world, "p1.Foo"));
+
+    ecs_fini(world);
+}
+
+void Lookup_set_duplicate_name_resets_to_self(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t a = ecs_entity(world, { .name = "Foo" });
+    ecs_entity_t b = ecs_new(world);
+    ecs_set_name(world, b, "Foo");
+
+    test_uint(b, ecs_lookup(world, "Foo"));
+
+    ecs_set_name(world, b, "Foo");
+
+    test_uint(b, ecs_lookup(world, "Foo"));
+    test_str("Foo", ecs_get_name(world, a));
+    test_str("Foo", ecs_get_name(world, b));
+
     ecs_fini(world);
 }

@@ -1085,49 +1085,154 @@ void Hierarchies_add_path_depth_2(void) {
 }
 
 void Hierarchies_add_path_existing_depth_0(void) {
-    install_test_abort();
-
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_new_from_path(world, 0, "foo");
     test_assert(e != 0);
-    test_str(ecs_get_name(world, e), "foo");    
+    test_str(ecs_get_name(world, e), "foo");
 
     ecs_entity_t id = ecs_new(world);
     test_assert(id != 0);
 
-    test_expect_abort();
     ecs_add_path(world, id, 0, "foo");
+    test_str(ecs_get_name(world, id), "foo");
+    test_str(ecs_get_name(world, e), "foo");
+    test_uint(id, ecs_lookup(world, "foo"));
+
+    ecs_fini(world);
 }
 
 void Hierarchies_add_path_existing_depth_1(void) {
-    install_test_abort();
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_new_from_path(world, 0, "foo.bar");
     test_assert(e != 0);
-    test_str(ecs_get_name(world, e), "bar");    
+    test_str(ecs_get_name(world, e), "bar");
 
     ecs_entity_t id = ecs_new(world);
     test_assert(id != 0);
 
-    test_expect_abort();
     ecs_add_path(world, id, 0, "foo.bar");
+    test_str(ecs_get_name(world, id), "bar");
+    test_str(ecs_get_name(world, e), "bar");
+    test_uint(id, ecs_lookup(world, "foo.bar"));
+
+    ecs_fini(world);
 }
 
 void Hierarchies_add_path_existing_depth_2(void) {
-    install_test_abort();
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_new_from_path(world, 0, "foo.bar.hello");
     test_assert(e != 0);
-    test_str(ecs_get_name(world, e), "hello");    
+    test_str(ecs_get_name(world, e), "hello");
 
     ecs_entity_t id = ecs_new(world);
     test_assert(id != 0);
 
-    test_expect_abort();
     ecs_add_path(world, id, 0, "foo.bar.hello");
+    test_str(ecs_get_name(world, id), "hello");
+    test_str(ecs_get_name(world, e), "hello");
+    test_uint(id, ecs_lookup(world, "foo.bar.hello"));
+
+    ecs_fini(world);
+}
+
+void Hierarchies_add_path_existing_intermediate(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_new_from_path(world, 0, "foo.bar");
+    test_assert(parent != 0);
+
+    ecs_entity_t id = ecs_new(world);
+    ecs_entity_t r = ecs_add_path(world, id, 0, "foo.bar.hello");
+    test_assert(r == id);
+    test_str(ecs_get_name(world, id), "hello");
+    test_uint(id, ecs_lookup(world, "foo.bar.hello"));
+    test_uint(parent, ecs_lookup(world, "foo.bar"));
+    test_assert(ecs_has_pair(world, id, EcsChildOf, parent));
+
+    ecs_fini(world);
+}
+
+void Hierarchies_add_path_existing_three_entities(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t a = ecs_new_from_path(world, 0, "foo");
+    ecs_entity_t b = ecs_new(world);
+    ecs_entity_t c = ecs_new(world);
+
+    ecs_add_path(world, b, 0, "foo");
+    test_uint(b, ecs_lookup(world, "foo"));
+
+    ecs_add_path(world, c, 0, "foo");
+    test_uint(c, ecs_lookup(world, "foo"));
+
+    test_str("foo", ecs_get_name(world, a));
+    test_str("foo", ecs_get_name(world, b));
+    test_str("foo", ecs_get_name(world, c));
+
+    ecs_fini(world);
+}
+
+void Hierarchies_add_path_existing_renames_entity(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t a = ecs_new_from_path(world, 0, "foo");
+    ecs_entity_t b = ecs_entity(world, { .name = "Bar" });
+    test_str("Bar", ecs_get_name(world, b));
+
+    ecs_add_path(world, b, 0, "foo");
+    test_str("foo", ecs_get_name(world, b));
+    test_str("foo", ecs_get_name(world, a));
+    test_uint(b, ecs_lookup(world, "foo"));
+    test_uint(0, ecs_lookup(world, "Bar"));
+
+    ecs_fini(world);
+}
+
+void Hierarchies_add_path_existing_in_different_scopes(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p1 = ecs_entity(world, { .name = "p1" });
+    ecs_entity_t p2 = ecs_entity(world, { .name = "p2" });
+
+    ecs_entity_t a = ecs_new_from_path(world, p1, "foo");
+    ecs_entity_t b = ecs_new(world);
+    ecs_add_path(world, b, p2, "foo");
+
+    test_assert(a != b);
+    test_uint(a, ecs_lookup(world, "p1.foo"));
+    test_uint(b, ecs_lookup(world, "p2.foo"));
+
+    ecs_fini(world);
+}
+
+void Hierarchies_add_path_existing_returns_user_entity(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t a = ecs_new_from_path(world, 0, "foo.bar.hello");
+    ecs_entity_t id = ecs_new(world);
+
+    ecs_entity_t r = ecs_add_path(world, id, 0, "foo.bar.hello");
+    test_assert(r == id);
+    test_assert(r != a);
+
+    ecs_fini(world);
+}
+
+void Hierarchies_add_path_existing_via_entity_init(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t a = ecs_entity(world, { .name = "foo" });
+    ecs_entity_t b = ecs_new(world);
+
+    ecs_entity_t r = ecs_entity(world, { .id = b, .name = "foo" });
+    test_assert(r == b);
+    test_uint(b, ecs_lookup(world, "foo"));
+    test_str("foo", ecs_get_name(world, a));
+
+    ecs_fini(world);
 }
 
 void Hierarchies_add_path_from_scope(void) {

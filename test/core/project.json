@@ -1069,6 +1069,12 @@
                 "add_path_existing_depth_0",
                 "add_path_existing_depth_1",
                 "add_path_existing_depth_2",
+                "add_path_existing_intermediate",
+                "add_path_existing_three_entities",
+                "add_path_existing_renames_entity",
+                "add_path_existing_in_different_scopes",
+                "add_path_existing_returns_user_entity",
+                "add_path_existing_via_entity_init",
                 "add_path_from_scope",
                 "add_path_from_scope_new_entity",
                 "add_root_path_to_child",
@@ -1531,7 +1537,18 @@
                 "lookup_path_63_chars",
                 "lookup_path_64_chars",
                 "lookup_path_65_chars",
-                "lookup_malformed"
+                "lookup_malformed",
+                "set_duplicate_name",
+                "set_duplicate_name_in_scope",
+                "set_duplicate_name_three_entities",
+                "set_duplicate_name_then_delete_owner",
+                "set_duplicate_name_then_rename_owner",
+                "set_duplicate_name_then_rename_displaced",
+                "set_duplicate_name_then_delete_displaced",
+                "duplicate_names_different_scopes",
+                "set_duplicate_name_via_explicit_id",
+                "set_duplicate_name_then_reparent_owner",
+                "set_duplicate_name_resets_to_self"
             ]
         }, {
             "id": "Singleton",
