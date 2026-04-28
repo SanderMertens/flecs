@@ -90,6 +90,7 @@
                 "reset",
                 "merge",
                 "merge_empty",
+                "merge_heap_unterminated",
                 "append_char",
                 "append_511_chars",
                 "append_512_chars",

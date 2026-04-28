@@ -714,4 +714,67 @@ void flecs_json_mark_serialized(
         ecs_map_ensure(&ser_ctx->serialized, entity);
     }
 }
+
+void flecs_json_accum_type_info(
+    const ecs_world_t *world,
+    ecs_entity_t typeid,
+    ecs_json_ser_ctx_t *ser_ctx)
+{
+    if (!typeid || !ser_ctx || !ser_ctx->type_info_buf) {
+        return;
+    }
+    if (ecs_map_get(&ser_ctx->type_info_seen, typeid) != NULL) {
+        return;
+    }
+    ecs_map_ensure(&ser_ctx->type_info_seen, typeid);
+
+    ecs_strbuf_t *buf = ser_ctx->type_info_buf;
+    flecs_json_next(buf);
+    ecs_strbuf_appendch(buf, '"');
+    ecs_get_path_w_sep_buf(world, 0, typeid, ".", "", buf, true);
+    ecs_strbuf_appendlit(buf, "\":");
+    if (ecs_type_info_to_json_buf(world, typeid, buf) != 0) {
+        ecs_strbuf_appendlit(buf, "0");
+    }
+}
+
+void flecs_json_type_info_accum_init(
+    ecs_json_ser_ctx_t *ser_ctx,
+    ecs_strbuf_t *type_info_buf,
+    const ecs_world_t *world)
+{
+    ser_ctx->type_info_buf = type_info_buf;
+    ecs_map_init(&ser_ctx->type_info_seen,
+        &ECS_CONST_CAST(ecs_world_t*, world)->allocator);
+    flecs_json_object_push(type_info_buf);
+}
+
+void flecs_json_type_info_accum_fini(
+    ecs_json_ser_ctx_t *ser_ctx,
+    ecs_strbuf_t *type_info_buf)
+{
+    if (ser_ctx->type_info_buf) {
+        flecs_json_object_pop(type_info_buf);
+        ecs_map_fini(&ser_ctx->type_info_seen);
+    }
+}
+
+void flecs_json_assemble_output(
+    ecs_strbuf_t *out,
+    ecs_strbuf_t *type_info_buf,
+    ecs_strbuf_t *body_buf)
+{
+    flecs_json_object_push(out);
+    if (type_info_buf) {
+        flecs_json_memberl(out, "type_info");
+        ecs_strbuf_mergebuff(out, type_info_buf);
+    }
+    int32_t body_len = ecs_strbuf_written(body_buf);
+    if (body_len > 2) {
+        ecs_strbuf_list_next(out);
+        ecs_strbuf_appendstrn(out, body_buf->content + 1, body_len - 2);
+    }
+    flecs_json_object_pop(out);
+    ecs_strbuf_reset(body_buf);
+}
 #endif

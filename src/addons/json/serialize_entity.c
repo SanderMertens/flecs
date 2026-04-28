@@ -4,7 +4,6 @@
  */
 
 #include "json.h"
-#include "../meta/meta.h"
 
 #ifdef FLECS_JSON
 
@@ -64,9 +63,9 @@ int ecs_entity_to_json_buf(
     ecs_json_ser_ctx_t ser_ctx;
     ecs_os_zeromem(&ser_ctx);
 #ifdef FLECS_DOC
-    ser_ctx.cr_doc_name = flecs_components_get(world, 
+    ser_ctx.cr_doc_name = flecs_components_get(world,
         ecs_pair_t(EcsDocDescription, EcsName));
-    ser_ctx.cr_doc_color = flecs_components_get(world, 
+    ser_ctx.cr_doc_color = flecs_components_get(world,
         ecs_pair_t(EcsDocDescription, EcsDocColor));
 #endif
 
@@ -86,10 +85,27 @@ int ecs_entity_to_json_buf(
         .component_filter =       desc ? desc->component_filter : NULL,
     };
 
-    int result = flecs_entity_to_json_buf(
-        world, entity, buf, &iter_desc, &ser_ctx);
+    ecs_strbuf_t type_info_buf = ECS_STRBUF_INIT;
+    if (iter_desc.serialize_type_info) {
+        flecs_json_type_info_accum_init(&ser_ctx, &type_info_buf, world);
+    }
 
-    return result;
+    ecs_strbuf_t entity_buf = ECS_STRBUF_INIT;
+
+    int result = flecs_entity_to_json_buf(
+        world, entity, &entity_buf, &iter_desc, &ser_ctx);
+
+    flecs_json_type_info_accum_fini(&ser_ctx, &type_info_buf);
+
+    if (result) {
+        ecs_strbuf_reset(&entity_buf);
+        ecs_strbuf_reset(&type_info_buf);
+        return result;
+    }
+
+    flecs_json_assemble_output(buf, ser_ctx.type_info_buf, &entity_buf);
+
+    return 0;
 }
 
 char* ecs_entity_to_json(

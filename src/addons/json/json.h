@@ -42,6 +42,8 @@ typedef struct ecs_json_ser_ctx_t {
     ecs_component_record_t *cr_doc_color;
     ecs_json_value_ser_ctx_t value_ctx[64];
     ecs_map_t serialized;
+    ecs_strbuf_t *type_info_buf;
+    ecs_map_t type_info_seen;
 } ecs_json_ser_ctx_t;
 
 typedef struct ecs_json_this_data_t {
@@ -287,6 +289,25 @@ bool flecs_json_should_serialize(
 void flecs_json_mark_serialized(
     ecs_entity_t entity,
     ecs_json_ser_ctx_t *ser_ctx);
+
+void flecs_json_accum_type_info(
+    const ecs_world_t *world,
+    ecs_entity_t typeid,
+    ecs_json_ser_ctx_t *ser_ctx);
+
+void flecs_json_type_info_accum_init(
+    ecs_json_ser_ctx_t *ser_ctx,
+    ecs_strbuf_t *type_info_buf,
+    const ecs_world_t *world);
+
+void flecs_json_type_info_accum_fini(
+    ecs_json_ser_ctx_t *ser_ctx,
+    ecs_strbuf_t *type_info_buf);
+
+void flecs_json_assemble_output(
+    ecs_strbuf_t *out,
+    ecs_strbuf_t *type_info_buf,
+    ecs_strbuf_t *body_buf);
 
 #endif
 

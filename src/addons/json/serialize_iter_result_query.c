@@ -186,9 +186,12 @@ int flecs_json_serialize_iter_result_field_values(
         }
 
         ecs_json_value_ser_ctx_t *value_ctx = &ser_ctx->value_ctx[f];
-        if (!flecs_json_serialize_get_value_ctx(
-            world, it->ids[f], value_ctx, desc)) 
-        {
+        bool has_ser = flecs_json_serialize_get_value_ctx(
+            world, it->ids[f], value_ctx, desc);
+
+        flecs_json_accum_type_info(world, value_ctx->type, ser_ctx);
+
+        if (!has_ser) {
             ecs_strbuf_list_appendlit(buf, "0");
             continue;
         }

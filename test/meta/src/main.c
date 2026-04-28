@@ -719,6 +719,7 @@ void SerializeEntityToJson_serialize_w_name_1_tag(void);
 void SerializeEntityToJson_serialize_w_name_2_tags(void);
 void SerializeEntityToJson_serialize_w_name_1_pair(void);
 void SerializeEntityToJson_serialize_w_base(void);
+void SerializeEntityToJson_serialize_w_base_w_type_info(void);
 void SerializeEntityToJson_serialize_w_base_dont_inherit_tag(void);
 void SerializeEntityToJson_serialize_w_base_dont_inherit_component(void);
 void SerializeEntityToJson_serialize_w_base_dont_inherit_pair(void);
@@ -858,6 +859,7 @@ void SerializeIterToJson_serialize_labels_w_offset(void);
 void SerializeIterToJson_serialize_colors_w_offset(void);
 void SerializeIterToJson_serialize_anonymous_entities_w_offset(void);
 void SerializeIterToJson_serialize_table(void);
+void SerializeIterToJson_serialize_table_w_type_info(void);
 void SerializeIterToJson_serialize_table_w_id_labels(void);
 void SerializeIterToJson_serialize_table_w_var_labels(void);
 void SerializeIterToJson_serialize_world(void);
@@ -3946,6 +3948,10 @@ bake_test_case SerializeEntityToJson_testcases[] = {
         SerializeEntityToJson_serialize_w_base
     },
     {
+        "serialize_w_base_w_type_info",
+        SerializeEntityToJson_serialize_w_base_w_type_info
+    },
+    {
         "serialize_w_base_dont_inherit_tag",
         SerializeEntityToJson_serialize_w_base_dont_inherit_tag
     },
@@ -4495,6 +4501,10 @@ bake_test_case SerializeIterToJson_testcases[] = {
     {
         "serialize_table",
         SerializeIterToJson_serialize_table
+    },
+    {
+        "serialize_table_w_type_info",
+        SerializeIterToJson_serialize_table_w_type_info
     },
     {
         "serialize_table_w_id_labels",
@@ -5794,14 +5804,14 @@ static bake_test_suite suites[] = {
         "SerializeEntityToJson",
         NULL,
         NULL,
-        83,
+        84,
         SerializeEntityToJson_testcases
     },
     {
         "SerializeIterToJson",
         NULL,
         NULL,
-        85,
+        86,
         SerializeIterToJson_testcases
     },
     {

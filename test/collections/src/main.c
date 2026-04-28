@@ -81,6 +81,7 @@ void Strbuf_empty_str(void);
 void Strbuf_reset(void);
 void Strbuf_merge(void);
 void Strbuf_merge_empty(void);
+void Strbuf_merge_heap_unterminated(void);
 void Strbuf_append_char(void);
 void Strbuf_append_511_chars(void);
 void Strbuf_append_512_chars(void);
@@ -379,6 +380,10 @@ bake_test_case Strbuf_testcases[] = {
         Strbuf_merge_empty
     },
     {
+        "merge_heap_unterminated",
+        Strbuf_merge_heap_unterminated
+    },
+    {
         "append_char",
         Strbuf_append_char
     },
@@ -506,7 +511,7 @@ static bake_test_suite suites[] = {
         "Strbuf",
         Strbuf_setup,
         NULL,
-        36,
+        37,
         Strbuf_testcases
     },
     {

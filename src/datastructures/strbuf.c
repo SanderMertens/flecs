@@ -418,8 +418,8 @@ void ecs_strbuf_mergebuff(
     ecs_strbuf_t *b,
     ecs_strbuf_t *src)
 {
-    if (src->content) {
-        ecs_strbuf_appendstr(b, src->content);
+    if (src->content && src->length) {
+        flecs_strbuf_appendstr(b, src->content, src->length);
     }
     ecs_strbuf_reset(src);
 }

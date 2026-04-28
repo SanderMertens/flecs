@@ -150,6 +150,33 @@ void Strbuf_merge_empty(void) {
     test_assert(str == NULL);
 }
 
+void Strbuf_merge_heap_unterminated(void) {
+    ecs_strbuf_t src = ECS_STRBUF_INIT;
+    int32_t n = ECS_STRBUF_SMALL_STRING_SIZE + 100;
+    char *payload = ecs_os_malloc_n(char, n);
+    ecs_os_memset(payload, 'A', n);
+    ecs_strbuf_appendstrn(&src, payload, n);
+    ecs_os_free(payload);
+
+    test_assert(src.size > src.length);
+    src.content[src.length] = 'X';
+    if (src.size > src.length + 1) {
+        src.content[src.length + 1] = '\0';
+    }
+
+    ecs_strbuf_t dst = ECS_STRBUF_INIT;
+    ecs_strbuf_mergebuff(&dst, &src);
+
+    char *str = ecs_strbuf_get(&dst);
+    test_assert(str != NULL);
+    test_int((int32_t)ecs_os_strlen(str), n);
+    int32_t i;
+    for (i = 0; i < n; i ++) {
+        test_assert(str[i] == 'A');
+    }
+    ecs_os_free(str);
+}
+
 void Strbuf_append_char(void) {
     ecs_strbuf_t b = ECS_STRBUF_INIT;
     ecs_strbuf_appendch(&b, 'a');

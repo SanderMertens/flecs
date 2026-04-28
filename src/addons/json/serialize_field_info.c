@@ -85,6 +85,8 @@ void flecs_json_serialize_field(
                     flecs_json_memberl(buf, "schema");
                     ecs_type_info_to_json_buf(world, value_ctx->type, buf);
                 }
+
+                flecs_json_accum_type_info(world, value_ctx->type, ctx);
             }
         } else {
             flecs_json_memberl(buf, "not");
