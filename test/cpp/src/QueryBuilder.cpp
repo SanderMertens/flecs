@@ -5422,10 +5422,10 @@ void QueryBuilder_pred_match(void) {
     flecs::world ecs;
 
     auto q = ecs.query_builder()
-        .with(flecs::PredMatch).second("Fo").flags(flecs::IsName)
+        .with(flecs::PredMatch).second("FooB").flags(flecs::IsName)
         .build();
 
-    flecs::entity Foo = ecs.entity("Foo");
+    flecs::entity Foo = ecs.entity("FooBar");
 
     int32_t count = 0;
     q.each([&](flecs::entity e) {

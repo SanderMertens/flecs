@@ -1395,6 +1395,8 @@ void BuiltinPredicates_this_2_or_name_written(void);
 void BuiltinPredicates_var_2_or_id_written(void);
 void BuiltinPredicates_var_2_or_name_written(void);
 void BuiltinPredicates_this_match_eq(void);
+void BuiltinPredicates_this_match_eq_case_insensitive(void);
+void BuiltinPredicates_this_match_neq_case_insensitive(void);
 void BuiltinPredicates_var_match_eq(void);
 void BuiltinPredicates_this_match_eq_written(void);
 void BuiltinPredicates_this_match_eq_written_self(void);
@@ -8259,6 +8261,14 @@ bake_test_case BuiltinPredicates_testcases[] = {
         BuiltinPredicates_this_match_eq
     },
     {
+        "this_match_eq_case_insensitive",
+        BuiltinPredicates_this_match_eq_case_insensitive
+    },
+    {
+        "this_match_neq_case_insensitive",
+        BuiltinPredicates_this_match_neq_case_insensitive
+    },
+    {
         "var_match_eq",
         BuiltinPredicates_var_match_eq
     },
@@ -13875,7 +13885,7 @@ static bake_test_suite suites[] = {
         "BuiltinPredicates",
         BuiltinPredicates_setup,
         NULL,
-        90,
+        92,
         BuiltinPredicates_testcases,
         1,
         BuiltinPredicates_params

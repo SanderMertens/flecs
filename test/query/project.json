@@ -1439,6 +1439,8 @@
                 "var_2_or_id_written",
                 "var_2_or_name_written",
                 "this_match_eq",
+                "this_match_eq_case_insensitive",
+                "this_match_neq_case_insensitive",
                 "var_match_eq",
                 "this_match_eq_written",
                 "this_match_eq_written_self",

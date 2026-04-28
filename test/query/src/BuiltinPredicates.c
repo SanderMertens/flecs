@@ -2304,6 +2304,75 @@ void BuiltinPredicates_this_match_eq(void) {
     ecs_fini(world);
 }
 
+void BuiltinPredicates_this_match_eq_case_insensitive(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t ent_1 = ecs_entity(world, { .name = "Foo_Bar" });
+    ecs_entity_t ent_2 = ecs_entity(world, { .name = "FOOBAR" });
+    /* ecs_entity_t ent_3 = */ ecs_entity(world, { .name = "baz" });
+    ecs_entity_t ent_4 = ecs_entity(world, { .name = "myFoo" });
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "$this ~= \"foo\"",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_uint(2, it.count);
+        test_uint(ent_1, it.entities[0]);
+        test_uint(ent_2, it.entities[1]);
+
+        test_bool(true, ecs_query_next(&it));
+        test_uint(1, it.count);
+        test_uint(ent_4, it.entities[0]);
+
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void BuiltinPredicates_this_match_neq_case_insensitive(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t ent_1 = ecs_entity(world, { .name = "Foo_Bar" });
+    /* ecs_entity_t ent_2 = */ ecs_entity(world, { .name = "FOOBAR" });
+    ecs_entity_t ent_3 = ecs_entity(world, { .name = "baz" });
+    /* ecs_entity_t ent_4 = */ ecs_entity(world, { .name = "myFoo" });
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "$this ~= \"!foo\"",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+
+        bool saw_baz = false;
+        while (ecs_query_next(&it)) {
+            for (int i = 0; i < it.count; i ++) {
+                test_assert(it.entities[i] != ent_1);
+                if (it.entities[i] == ent_3) {
+                    saw_baz = true;
+                }
+            }
+        }
+        test_bool(true, saw_baz);
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
 void BuiltinPredicates_var_match_eq(void) {
     ecs_world_t *world = ecs_mini();
 
