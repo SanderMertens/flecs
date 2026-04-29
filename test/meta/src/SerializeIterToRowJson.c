@@ -1927,7 +1927,7 @@ void SerializeIterToRowJson_serialize_table(void) {
     char *json = ecs_iter_to_json(&it, &desc);
     test_assert(json != NULL);
 
-    char* expect = "{\"results\":[{\"name\":\"e1\", \"tags\":[\"TagA\", \"TagB\"],\"pairs\":{\"RelA\":\"TgtA\", \"RelB\":\"TgtA\"}, \"components\":{\"Position\":{\"x\":10, \"y\":20}, \"Mass\":{\"value\":1}}}, {\"name\":\"e2\", \"tags\":[\"TagA\", \"TagB\"],\"pairs\":{\"RelA\":\"TgtA\", \"RelB\":\"TgtA\"}, \"components\":{\"Position\":{\"x\":20, \"y\":30}, \"Mass\":{\"value\":2}}}, {\"name\":\"e3\", \"tags\":[\"TagA\", \"TagB\"],\"pairs\":{\"RelA\":\"TgtA\", \"RelB\":\"TgtB\"}, \"components\":{\"Position\":{\"x\":30, \"y\":40}, \"Mass\":{\"value\":3}}}]}";
+    char* expect = "{\"results\":[{\"name\":\"e1\", \"tags\":[\"TagA\", \"TagB\"], \"pairs\":{\"RelA\":\"TgtA\", \"RelB\":\"TgtA\"}, \"components\":{\"Position\":{\"x\":10, \"y\":20}, \"Mass\":{\"value\":1}}}, {\"name\":\"e2\", \"tags\":[\"TagA\", \"TagB\"], \"pairs\":{\"RelA\":\"TgtA\", \"RelB\":\"TgtA\"}, \"components\":{\"Position\":{\"x\":20, \"y\":30}, \"Mass\":{\"value\":2}}}, {\"name\":\"e3\", \"tags\":[\"TagA\", \"TagB\"], \"pairs\":{\"RelA\":\"TgtA\", \"RelB\":\"TgtB\"}, \"components\":{\"Position\":{\"x\":30, \"y\":40}, \"Mass\":{\"value\":3}}}]}";
     test_json(json, expect);
 
     ecs_os_free(json);
@@ -2005,7 +2005,7 @@ void SerializeIterToRowJson_serialize_table_w_eq(void) {
     char *json = ecs_iter_to_json(&it, &desc);
     test_assert(json != NULL);
 
-    char* expect = "{\"results\":[{\"name\":\"e2\", \"tags\":[\"TagA\", \"TagB\"],\"pairs\":{\"RelA\":\"TgtA\", \"RelB\":\"TgtA\"}, \"components\":{\"Position\":{\"x\":20, \"y\":30}, \"Mass\":{\"value\":2}}}]}";
+    char* expect = "{\"results\":[{\"name\":\"e2\", \"tags\":[\"TagA\", \"TagB\"], \"pairs\":{\"RelA\":\"TgtA\", \"RelB\":\"TgtA\"}, \"components\":{\"Position\":{\"x\":20, \"y\":30}, \"Mass\":{\"value\":2}}}]}";
     test_json(json, expect);
     ecs_os_free(json);
 
@@ -2082,7 +2082,7 @@ void SerializeIterToRowJson_serialize_table_w_neq(void) {
     char *json = ecs_iter_to_json(&it, &desc);
     test_assert(json != NULL);
 
-    char* expect = "{\"results\":[{\"name\":\"e1\", \"tags\":[\"TagA\", \"TagB\"],\"pairs\":{\"RelA\":\"TgtA\", \"RelB\":\"TgtA\"}, \"components\":{\"Position\":{\"x\":10, \"y\":20}, \"Mass\":{\"value\":1}}}, {\"name\":\"e3\", \"tags\":[\"TagA\", \"TagB\"],\"pairs\":{\"RelA\":\"TgtA\", \"RelB\":\"TgtB\"}, \"components\":{\"Position\":{\"x\":30, \"y\":40}, \"Mass\":{\"value\":3}}}]}";
+    char* expect = "{\"results\":[{\"name\":\"e1\", \"tags\":[\"TagA\", \"TagB\"], \"pairs\":{\"RelA\":\"TgtA\", \"RelB\":\"TgtA\"}, \"components\":{\"Position\":{\"x\":10, \"y\":20}, \"Mass\":{\"value\":1}}}, {\"name\":\"e3\", \"tags\":[\"TagA\", \"TagB\"], \"pairs\":{\"RelA\":\"TgtA\", \"RelB\":\"TgtB\"}, \"components\":{\"Position\":{\"x\":30, \"y\":40}, \"Mass\":{\"value\":3}}}]}";
     test_json(json, expect);
 
     ecs_os_free(json);
@@ -2126,7 +2126,7 @@ void SerializeIterToRowJson_serialize_table_w_2_pair_targets(void) {
     });
     test_assert(json != NULL);
 
-    char* expect = "{\"results\":[{\"name\":\"e1\", \"tags\":[\"TagA\"],\"pairs\":{\"RelA\":\"TgtA\"}}, {\"name\":\"e2\", \"tags\":[\"TagA\"],\"pairs\":{\"RelA\":\"TgtA\"}}, {\"name\":\"e3\", \"tags\":[\"TagA\"],\"pairs\":{\"RelA\":[\"TgtA\", \"TgtB\"]}}]}";
+    char* expect = "{\"results\":[{\"name\":\"e1\", \"tags\":[\"TagA\"], \"pairs\":{\"RelA\":\"TgtA\"}}, {\"name\":\"e2\", \"tags\":[\"TagA\"], \"pairs\":{\"RelA\":\"TgtA\"}}, {\"name\":\"e3\", \"tags\":[\"TagA\"], \"pairs\":{\"RelA\":[\"TgtA\", \"TgtB\"]}}]}";
     test_json(json, expect);
 
     ecs_os_free(json);
@@ -2174,7 +2174,7 @@ void SerializeIterToRowJson_serialize_table_w_2_pair_targets_2_rel(void) {
     });
     test_assert(json != NULL);
 
-    char* expect = "{\"results\":[{\"name\":\"e1\", \"tags\":[\"TagA\"],\"pairs\":{\"RelA\":\"TgtA\"}}, {\"name\":\"e2\", \"tags\":[\"TagA\"],\"pairs\":{\"RelA\":\"TgtA\"}}, {\"name\":\"e3\", \"tags\":[\"TagA\"],\"pairs\":{\"RelA\":[\"TgtA\", \"TgtB\"], \"RelB\":[\"TgtB\", \"TgtC\"]}}]}";
+    char* expect = "{\"results\":[{\"name\":\"e1\", \"tags\":[\"TagA\"], \"pairs\":{\"RelA\":\"TgtA\"}}, {\"name\":\"e2\", \"tags\":[\"TagA\"], \"pairs\":{\"RelA\":\"TgtA\"}}, {\"name\":\"e3\", \"tags\":[\"TagA\"], \"pairs\":{\"RelA\":[\"TgtA\", \"TgtB\"], \"RelB\":[\"TgtB\", \"TgtC\"]}}]}";
     test_json(json, expect);
 
     ecs_os_free(json);
@@ -2224,7 +2224,7 @@ void SerializeIterToRowJson_serialize_table_w_3_pair_targets(void) {
     });
     test_assert(json != NULL);
 
-    char* expect = "{\"results\":[{\"name\":\"e1\", \"tags\":[\"TagA\"],\"pairs\":{\"RelA\":\"TgtA\"}}, {\"name\":\"e2\", \"tags\":[\"TagA\"],\"pairs\":{\"RelA\":[\"TgtA\", \"TgtB\"]}}, {\"name\":\"e3\", \"tags\":[\"TagA\"],\"pairs\":{\"RelA\":[\"TgtB\", \"TgtC\", \"TgtD\"]}}]}";
+    char* expect = "{\"results\":[{\"name\":\"e1\", \"tags\":[\"TagA\"], \"pairs\":{\"RelA\":\"TgtA\"}}, {\"name\":\"e2\", \"tags\":[\"TagA\"], \"pairs\":{\"RelA\":[\"TgtA\", \"TgtB\"]}}, {\"name\":\"e3\", \"tags\":[\"TagA\"], \"pairs\":{\"RelA\":[\"TgtB\", \"TgtC\", \"TgtD\"]}}]}";
     test_json(json, expect);
 
     ecs_os_free(json);
@@ -2278,7 +2278,7 @@ void SerializeIterToRowJson_serialize_table_w_3_pair_targets_2_rel(void) {
     });
     test_assert(json != NULL);
 
-    char* expect = "{\"results\":[{\"name\":\"e1\", \"tags\":[\"TagA\"],\"pairs\":{\"RelA\":\"TgtA\"}}, {\"name\":\"e2\", \"tags\":[\"TagA\"],\"pairs\":{\"RelA\":[\"TgtA\", \"TgtB\"]}}, {\"name\":\"e3\", \"tags\":[\"TagA\"],\"pairs\":{\"RelA\":[\"TgtA\", \"TgtB\", \"TgtC\"], \"RelB\":[\"TgtB\", \"TgtC\", \"TgtD\"]}}]}";
+    char* expect = "{\"results\":[{\"name\":\"e1\", \"tags\":[\"TagA\"], \"pairs\":{\"RelA\":\"TgtA\"}}, {\"name\":\"e2\", \"tags\":[\"TagA\"], \"pairs\":{\"RelA\":[\"TgtA\", \"TgtB\"]}}, {\"name\":\"e3\", \"tags\":[\"TagA\"], \"pairs\":{\"RelA\":[\"TgtA\", \"TgtB\", \"TgtC\"], \"RelB\":[\"TgtB\", \"TgtC\", \"TgtD\"]}}]}";
     test_json(json, expect);
 
     ecs_os_free(json);

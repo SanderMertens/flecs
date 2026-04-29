@@ -783,6 +783,14 @@ void SerializeEntityToJson_serialize_sparse_inherited_pair(void);
 void SerializeEntityToJson_serialize_sparse_inherited_mixed(void);
 void SerializeEntityToJson_serialize_sparse_w_type_info(void);
 void SerializeEntityToJson_serialize_sparse_tag(void);
+void SerializeEntityToJson_serialize_dont_fragment_tag(void);
+void SerializeEntityToJson_serialize_dont_fragment_pair(void);
+void SerializeEntityToJson_serialize_dont_fragment_pair_multi_target(void);
+void SerializeEntityToJson_serialize_dont_fragment_pair_multi_rel(void);
+void SerializeEntityToJson_serialize_dont_fragment_component(void);
+void SerializeEntityToJson_serialize_dont_fragment_component_pair(void);
+void SerializeEntityToJson_serialize_dont_fragment_component_pair_multi_target(void);
+void SerializeEntityToJson_serialize_dont_fragment_component_w_type_info(void);
 void SerializeEntityToJson_serialize_auto_override_w_inherited(void);
 void SerializeEntityToJson_serialize_auto_override(void);
 void SerializeEntityToJson_serialize_auto_override_pair(void);
@@ -4204,6 +4212,38 @@ bake_test_case SerializeEntityToJson_testcases[] = {
         SerializeEntityToJson_serialize_sparse_tag
     },
     {
+        "serialize_dont_fragment_tag",
+        SerializeEntityToJson_serialize_dont_fragment_tag
+    },
+    {
+        "serialize_dont_fragment_pair",
+        SerializeEntityToJson_serialize_dont_fragment_pair
+    },
+    {
+        "serialize_dont_fragment_pair_multi_target",
+        SerializeEntityToJson_serialize_dont_fragment_pair_multi_target
+    },
+    {
+        "serialize_dont_fragment_pair_multi_rel",
+        SerializeEntityToJson_serialize_dont_fragment_pair_multi_rel
+    },
+    {
+        "serialize_dont_fragment_component",
+        SerializeEntityToJson_serialize_dont_fragment_component
+    },
+    {
+        "serialize_dont_fragment_component_pair",
+        SerializeEntityToJson_serialize_dont_fragment_component_pair
+    },
+    {
+        "serialize_dont_fragment_component_pair_multi_target",
+        SerializeEntityToJson_serialize_dont_fragment_component_pair_multi_target
+    },
+    {
+        "serialize_dont_fragment_component_w_type_info",
+        SerializeEntityToJson_serialize_dont_fragment_component_w_type_info
+    },
+    {
         "serialize_auto_override_w_inherited",
         SerializeEntityToJson_serialize_auto_override_w_inherited
     },
@@ -5804,7 +5844,7 @@ static bake_test_suite suites[] = {
         "SerializeEntityToJson",
         NULL,
         NULL,
-        84,
+        92,
         SerializeEntityToJson_testcases
     },
     {

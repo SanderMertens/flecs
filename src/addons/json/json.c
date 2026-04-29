@@ -7,10 +7,12 @@
 
 #ifdef FLECS_JSON
 
-const char* flecs_json_skip_array(
+static
+const char* flecs_json_skip_scope(
     const char *json,
     char *token,
-    const ecs_from_json_desc_t *desc);
+    const ecs_from_json_desc_t *desc,
+    ecs_json_token_t close_kind);
 
 static
 const char* flecs_json_token_str(
@@ -49,25 +51,16 @@ const char* flecs_json_parse(
 
     char ch = json[0];
 
-    if (ch == '{') {
-        token_kind[0] = JsonObjectOpen;
-        return json + 1;
-    } else if (ch == '}') {
-        token_kind[0] = JsonObjectClose;
-        return json + 1;
-    } else if (ch == '[') {
-        token_kind[0] = JsonArrayOpen;
-        return json + 1;
-    } else if (ch == ']') {
-        token_kind[0] = JsonArrayClose;
-        return json + 1;
-    } else if (ch == ':') {
-        token_kind[0] = JsonColon;
-        return json + 1;
-    } else if (ch == ',') {
-        token_kind[0] = JsonComma;
-        return json + 1;
-    } else if (ch == '"') {
+    switch (ch) {
+    case '{': token_kind[0] = JsonObjectOpen; return json + 1;
+    case '}': token_kind[0] = JsonObjectClose; return json + 1;
+    case '[': token_kind[0] = JsonArrayOpen; return json + 1;
+    case ']': token_kind[0] = JsonArrayClose; return json + 1;
+    case ':': token_kind[0] = JsonColon; return json + 1;
+    case ',': token_kind[0] = JsonComma; return json + 1;
+    }
+
+    if (ch == '"') {
         const char *start = json;
         char *token_ptr = token;
         json ++;
@@ -154,11 +147,7 @@ const char* flecs_json_parse_large_string(
         ecs_strbuf_appendch(buf, ch_out);
     }
 
-    if (!ch) {
-        return NULL;
-    } else {
-        return json;
-    }
+    return ch ? json : NULL;
 }
 
 const char* flecs_json_parse_next_member(
@@ -327,11 +316,43 @@ const char* flecs_json_skip_string(
         json = flecs_chrparse(json, &ch_out);
     }
 
-    if (!ch) {
-        return NULL;
-    } else {
-        return json;
+    return ch ? json : NULL;
+}
+
+static
+const char* flecs_json_skip_scope(
+    const char *json,
+    char *token,
+    const ecs_from_json_desc_t *desc,
+    ecs_json_token_t close_kind)
+{
+    ecs_assert(json != NULL, ECS_INTERNAL_ERROR, NULL);
+    const char *expect = (close_kind == JsonObjectClose) ? "}" : "]";
+    ecs_json_token_t token_kind = 0;
+
+    while ((json = flecs_json_parse(json, &token_kind, token))) {
+        if (token_kind == JsonObjectOpen) {
+            json = flecs_json_skip_scope(json, token, desc, JsonObjectClose);
+        } else if (token_kind == JsonArrayOpen) {
+            json = flecs_json_skip_scope(json, token, desc, JsonArrayClose);
+        } else if (token_kind == JsonLargeString) {
+            json = flecs_json_skip_string(json);
+        } else if (token_kind == close_kind) {
+            return json;
+        } else if (token_kind == JsonObjectClose ||
+                   token_kind == JsonArrayClose)
+        {
+            ecs_parser_error(desc->name, desc->expr, json - desc->expr,
+                "expected %s", expect);
+            return NULL;
+        }
+
+        ecs_assert(json != NULL, ECS_INTERNAL_ERROR, NULL);
     }
+
+    ecs_parser_error(desc->name, desc->expr, json ? json - desc->expr : 0,
+        "expected %s, got end of string", expect);
+    return NULL;
 }
 
 const char* flecs_json_skip_object(
@@ -339,60 +360,7 @@ const char* flecs_json_skip_object(
     char *token,
     const ecs_from_json_desc_t *desc)
 {
-    ecs_assert(json != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_json_token_t token_kind = 0;
-
-    while ((json = flecs_json_parse(json, &token_kind, token))) {
-        if (token_kind == JsonObjectOpen) {
-            json = flecs_json_skip_object(json, token, desc);
-        } else if (token_kind == JsonArrayOpen) {
-            json = flecs_json_skip_array(json, token, desc);
-        } else if (token_kind == JsonLargeString) {
-            json = flecs_json_skip_string(json);
-        } else if (token_kind == JsonObjectClose) {
-            return json;
-        } else if (token_kind == JsonArrayClose) {
-            ecs_parser_error(desc->name, desc->expr, json - desc->expr, 
-                "expected }, got ]");
-            return NULL;
-        }
-
-        ecs_assert(json != NULL, ECS_INTERNAL_ERROR, NULL);
-    }
-
-    ecs_parser_error(desc->name, json, 0, 
-        "expected }, got end of string");
-    return NULL;
-}
-
-const char* flecs_json_skip_array(
-    const char *json,
-    char *token,
-    const ecs_from_json_desc_t *desc)
-{
-    ecs_assert(json != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_json_token_t token_kind = 0;
-
-    while ((json = flecs_json_parse(json, &token_kind, token))) {
-        if (token_kind == JsonObjectOpen) {
-            json = flecs_json_skip_object(json, token, desc);
-        } else if (token_kind == JsonArrayOpen) {
-            json = flecs_json_skip_array(json, token, desc);
-        } else if (token_kind == JsonLargeString) {
-            json = flecs_json_skip_string(json);
-        } else if (token_kind == JsonObjectClose) {
-            ecs_parser_error(desc->name, desc->expr, json - desc->expr, 
-                "expected ]");
-            return NULL;
-        } else if (token_kind == JsonArrayClose) {
-            return json;
-        }
-
-        ecs_assert(json != NULL, ECS_INTERNAL_ERROR, NULL);
-    }
-
-    ecs_parser_error(desc->name, desc->expr, json - desc->expr, "expected ]");
-    return NULL;
+    return flecs_json_skip_scope(json, token, desc, JsonObjectClose);
 }
 
 void flecs_json_next(

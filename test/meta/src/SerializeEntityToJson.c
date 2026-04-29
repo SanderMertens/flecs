@@ -103,7 +103,7 @@ void SerializeEntityToJson_serialize_w_base(void) {
     };
     char *json = ecs_entity_to_json(world, e, &desc);
     test_assert(json != NULL);
-    test_json(json, "{\"name\":\"Foo\", \"tags\":[\"TagB\"],\"pairs\":{\"IsA\":\"Base\"},\"inherited\":{\"Base\":{\"tags\":[\"TagA\"]}}}");
+    test_json(json, "{\"name\":\"Foo\", \"tags\":[\"TagB\"], \"pairs\":{\"IsA\":\"Base\"}, \"inherited\":{\"Base\":{\"tags\":[\"TagA\"]}}}");
 
     ecs_os_free(json);
 
@@ -149,7 +149,7 @@ void SerializeEntityToJson_serialize_w_base_w_type_info(void) {
     char *json = ecs_entity_to_json(world, e, &desc);
     test_assert(json != NULL);
 
-    test_json(json, "{\"type_info\":{\"Position\":{\"x\":[\"int\"], \"y\":[\"int\"]}, \"Velocity\":{\"x\":[\"int\"], \"y\":[\"int\"]}}, \"name\":\"Foo\", \"pairs\":{\"IsA\":\"Base\"},\"inherited\":{\"Base\":{\"components\":{\"Position\":{\"x\":1, \"y\":2}}}}, \"components\":{\"Velocity\":{\"x\":3, \"y\":4}}}");
+    test_json(json, "{\"type_info\":{\"Position\":{\"x\":[\"int\"], \"y\":[\"int\"]}, \"Velocity\":{\"x\":[\"int\"], \"y\":[\"int\"]}}, \"name\":\"Foo\", \"pairs\":{\"IsA\":\"Base\"}, \"inherited\":{\"Base\":{\"components\":{\"Position\":{\"x\":1, \"y\":2}}}}, \"components\":{\"Velocity\":{\"x\":3, \"y\":4}}}");
 
     ecs_os_free(json);
 
@@ -174,7 +174,7 @@ void SerializeEntityToJson_serialize_w_base_dont_inherit_tag(void) {
     };
     char *json = ecs_entity_to_json(world, e, &desc);
     test_assert(json != NULL);
-    test_json(json, "{\"name\":\"Foo\", \"pairs\":{\"IsA\":\"Base\"},\"inherited\":{\"Base\":{\"tags\":[\"TagA\"]}}}");
+    test_json(json, "{\"name\":\"Foo\", \"pairs\":{\"IsA\":\"Base\"}, \"inherited\":{\"Base\":{\"tags\":[\"TagA\"]}}}");
 
     ecs_os_free(json);
 
@@ -202,7 +202,7 @@ void SerializeEntityToJson_serialize_w_base_dont_inherit_component(void) {
     };
     char *json = ecs_entity_to_json(world, e, &desc);
     test_assert(json != NULL);
-    test_json(json, "{\"name\":\"Foo\", \"pairs\":{\"IsA\":\"Base\"},\"inherited\":{\"Base\":{\"components\":{\"Position\":null}}}}");
+    test_json(json, "{\"name\":\"Foo\", \"pairs\":{\"IsA\":\"Base\"}, \"inherited\":{\"Base\":{\"components\":{\"Position\":null}}}}");
 
     ecs_os_free(json);
 
@@ -228,7 +228,7 @@ void SerializeEntityToJson_serialize_w_base_dont_inherit_pair(void) {
     };
     char *json = ecs_entity_to_json(world, e, &desc);
     test_assert(json != NULL);
-    test_json(json, "{\"name\":\"Foo\", \"pairs\":{\"IsA\":\"Base\"},\"inherited\":{\"Base\":{\"pairs\":{\"RelA\":\"Tgt\"}}}}");
+    test_json(json, "{\"name\":\"Foo\", \"pairs\":{\"IsA\":\"Base\"}, \"inherited\":{\"Base\":{\"pairs\":{\"RelA\":\"Tgt\"}}}}");
 
     ecs_os_free(json);
 
@@ -282,7 +282,7 @@ void SerializeEntityToJson_serialize_component_w_base(void) {
     };
     char *json = ecs_entity_to_json(world, e, &desc);
     test_assert(json != NULL);
-    test_json(json, "{\"name\":\"Foo\", \"pairs\":{\"IsA\":\"Base\"},\"inherited\":{\"Base\":{\"components\":{\"Position\":{\"x\":10, \"y\":20}}}}}");
+    test_json(json, "{\"name\":\"Foo\", \"pairs\":{\"IsA\":\"Base\"}, \"inherited\":{\"Base\":{\"components\":{\"Position\":{\"x\":10, \"y\":20}}}}}");
 
     ecs_os_free(json);
 
@@ -307,7 +307,7 @@ void SerializeEntityToJson_serialize_component_w_base_no_reflection_data(void) {
     };
     char *json = ecs_entity_to_json(world, e, &desc);
     test_assert(json != NULL);
-    test_json(json, "{\"name\":\"Foo\", \"pairs\":{\"IsA\":\"Base\"},\"inherited\":{\"Base\":{\"components\":{\"Position\":null}}}}");
+    test_json(json, "{\"name\":\"Foo\", \"pairs\":{\"IsA\":\"Base\"}, \"inherited\":{\"Base\":{\"components\":{\"Position\":null}}}}");
 
     ecs_os_free(json);
 
@@ -348,7 +348,7 @@ void SerializeEntityToJson_serialize_component_w_base_w_owned(void) {
     };
     char *json = ecs_entity_to_json(world, e, &desc);
     test_assert(json != NULL);
-    test_json(json, "{\"name\":\"Foo\", \"pairs\":{\"IsA\":\"Base\"},\"inherited\":{\"Base\":{\"components\":{\"Position\":{\"x\":10, \"y\":20}}}}, \"components\":{\"Velocity\":{\"x\":1, \"y\":2}}}");
+    test_json(json, "{\"name\":\"Foo\", \"pairs\":{\"IsA\":\"Base\"}, \"inherited\":{\"Base\":{\"components\":{\"Position\":{\"x\":10, \"y\":20}}}}, \"components\":{\"Velocity\":{\"x\":1, \"y\":2}}}");
 
     ecs_os_free(json);
 
@@ -375,7 +375,7 @@ void SerializeEntityToJson_serialize_component_w_base_w_owned_no_reflection_data
     };
     char *json = ecs_entity_to_json(world, e, &desc);
     test_assert(json != NULL);
-    test_json(json, "{\"name\":\"Foo\", \"pairs\":{\"IsA\":\"Base\"},\"inherited\":{\"Base\":{\"components\":{\"Position\":null}}}, \"components\":{\"Velocity\":null}}");
+    test_json(json, "{\"name\":\"Foo\", \"pairs\":{\"IsA\":\"Base\"}, \"inherited\":{\"Base\":{\"components\":{\"Position\":null}}}, \"components\":{\"Velocity\":null}}");
 
     ecs_os_free(json);
 
@@ -414,7 +414,7 @@ void SerializeEntityToJson_serialize_component_w_base_w_owned_override(void) {
     };
     char *json = ecs_entity_to_json(world, e, &desc);
     test_assert(json != NULL);
-    test_json(json, "{\"name\":\"Foo\", \"pairs\":{\"IsA\":\"Base\"},\"inherited\":{\"Base\":{}}, \"components\":{\"Position\":{\"x\":10, \"y\":20}, \"Velocity\":{\"x\":1, \"y\":2}}}");
+    test_json(json, "{\"name\":\"Foo\", \"pairs\":{\"IsA\":\"Base\"}, \"inherited\":{\"Base\":{}}, \"components\":{\"Position\":{\"x\":10, \"y\":20}, \"Velocity\":{\"x\":1, \"y\":2}}}");
 
     ecs_os_free(json);
 
@@ -444,7 +444,7 @@ void SerializeEntityToJson_serialize_component_w_base_w_owned_no_reflection_data
     };
     char *json = ecs_entity_to_json(world, e, &desc);
     test_assert(json != NULL);
-    test_json(json, "{\"name\":\"SomeEntity\", \"pairs\":{\"IsA\":\"Base\"},\"inherited\":{\"Base\":{}}, \"components\":{\"Position\":null, \"Velocity\":null}}");
+    test_json(json, "{\"name\":\"SomeEntity\", \"pairs\":{\"IsA\":\"Base\"}, \"inherited\":{\"Base\":{}}, \"components\":{\"Position\":null, \"Velocity\":null}}");
 
     ecs_os_free(json);
 
@@ -494,7 +494,7 @@ void SerializeEntityToJson_serialize_component_tag_pair_w_all_inherit_kinds(void
 
     char *json = ecs_entity_to_json(world, e, &desc);
     test_assert(json != NULL);
-    test_json(json, "{\"name\":\"e\", \"tags\":[\"t_override\"],\"pairs\":{\"IsA\":\"base\", \"t_override\":\"tgt\"},\"inherited\":{\"base\":{\"tags\":[\"t_inherit\"], \"pairs\":{\"t_inherit\":\"tgt\"}, \"components\":{\"c_inherit\":null, \"(c_inherit,tgt)\":null}}}, \"components\":{\"c_override\":null, \"(c_override,tgt)\":null}}");
+    test_json(json, "{\"name\":\"e\", \"tags\":[\"t_override\"], \"pairs\":{\"IsA\":\"base\", \"t_override\":\"tgt\"}, \"inherited\":{\"base\":{\"tags\":[\"t_inherit\"], \"pairs\":{\"t_inherit\":\"tgt\"}, \"components\":{\"c_inherit\":null, \"(c_inherit,tgt)\":null}}}, \"components\":{\"c_override\":null, \"(c_override,tgt)\":null}}");
 
     ecs_os_free(json);
 
@@ -539,7 +539,7 @@ void SerializeEntityToJson_serialize_component_tag_pair_w_manual_override(void) 
 
     char *json = ecs_entity_to_json(world, e, &desc);
     test_assert(json != NULL);
-    test_json(json, "{\"name\":\"e\", \"tags\":[\"t_inherit\"],\"pairs\":{\"IsA\":\"base\", \"t_inherit\":\"tgt\"},\"inherited\":{\"base\":{\"tags\":[\"t_inherit\"], \"pairs\":{\"t_inherit\":\"tgt\"}, \"components\":{\"c_inherit\":null, \"(c_inherit,tgt)\":null}}}, \"components\":{\"c_inherit\":null, \"(c_inherit,tgt)\":null}}");
+    test_json(json, "{\"name\":\"e\", \"tags\":[\"t_inherit\"], \"pairs\":{\"IsA\":\"base\", \"t_inherit\":\"tgt\"}, \"inherited\":{\"base\":{\"tags\":[\"t_inherit\"], \"pairs\":{\"t_inherit\":\"tgt\"}, \"components\":{\"c_inherit\":null, \"(c_inherit,tgt)\":null}}}, \"components\":{\"c_inherit\":null, \"(c_inherit,tgt)\":null}}");
 
     ecs_os_free(json);
 
@@ -1772,7 +1772,7 @@ void SerializeEntityToJson_serialize_named_child_w_builtin(void) {
         desc.serialize_builtin = true;
         char *json = ecs_entity_to_json(world, e, &desc);
         test_assert(json != NULL);
-        test_json(json, "{\"parent\":\"p\", \"name\":\"e\", \"tags\":[\"Foo\"],\"pairs\":{\"flecs.core.ChildOf\":\"p\"}, \"components\":{\"(flecs.core.Identifier,flecs.core.Name)\":{\"value\":\"e\"}}}");
+        test_json(json, "{\"parent\":\"p\", \"name\":\"e\", \"tags\":[\"Foo\"], \"pairs\":{\"flecs.core.ChildOf\":\"p\"}, \"components\":{\"(flecs.core.Identifier,flecs.core.Name)\":{\"value\":\"e\"}}}");
         ecs_os_free(json);
     }
 
@@ -1794,7 +1794,7 @@ void SerializeEntityToJson_serialize_named_child_w_builtin_w_type_info(void) {
         desc.serialize_type_info = true;
         char *json = ecs_entity_to_json(world, e, &desc);
         test_assert(json != NULL);
-        test_json(json, "{\"type_info\":{\"flecs.core.Identifier\":{\"value\":[\"text\"]}}, \"parent\":\"p\", \"name\":\"e\", \"tags\":[\"Foo\"],\"pairs\":{\"flecs.core.ChildOf\":\"p\"}, \"components\":{\"(flecs.core.Identifier,flecs.core.Name)\":{\"value\":\"e\"}}}");
+        test_json(json, "{\"type_info\":{\"flecs.core.Identifier\":{\"value\":[\"text\"]}}, \"parent\":\"p\", \"name\":\"e\", \"tags\":[\"Foo\"], \"pairs\":{\"flecs.core.ChildOf\":\"p\"}, \"components\":{\"(flecs.core.Identifier,flecs.core.Name)\":{\"value\":\"e\"}}}");
         ecs_os_free(json);
     }
 
@@ -1925,7 +1925,7 @@ void SerializeEntityToJson_serialize_sparse_inherited(void) {
     };
     char *json = ecs_entity_to_json(world, e, &desc);
     test_assert(json != NULL);
-    test_json(json, "{\"name\":\"Foo\", \"pairs\":{\"IsA\":\"Base\"},\"inherited\":{\"Base\":{\"components\":{\"Position\":{\"x\":10, \"y\":20}}}}}");
+    test_json(json, "{\"name\":\"Foo\", \"pairs\":{\"IsA\":\"Base\"}, \"inherited\":{\"Base\":{\"components\":{\"Position\":{\"x\":10, \"y\":20}}}}}");
     ecs_os_free(json);
 
     ecs_fini(world);
@@ -1958,7 +1958,7 @@ void SerializeEntityToJson_serialize_sparse_inherited_pair(void) {
     };
     char *json = ecs_entity_to_json(world, e, &desc);
     test_assert(json != NULL);
-    test_json(json, "{\"name\":\"Foo\", \"pairs\":{\"IsA\":\"Base\"},\"inherited\":{\"Base\":{\"components\":{\"(Position,Tgt)\":{\"x\":10, \"y\":20}}}}}");
+    test_json(json, "{\"name\":\"Foo\", \"pairs\":{\"IsA\":\"Base\"}, \"inherited\":{\"Base\":{\"components\":{\"(Position,Tgt)\":{\"x\":10, \"y\":20}}}}}");
     ecs_os_free(json);
 
     ecs_fini(world);
@@ -1998,7 +1998,7 @@ void SerializeEntityToJson_serialize_sparse_inherited_mixed(void) {
     };
     char *json = ecs_entity_to_json(world, e, &desc);
     test_assert(json != NULL);
-    test_json(json, "{\"name\":\"Foo\", \"pairs\":{\"IsA\":\"Base\"},\"inherited\":{\"Base\":{\"components\":{\"Position\":{\"x\":10, \"y\":20}}}}, \"components\":{\"Velocity\":{\"x\":1, \"y\":2}}}");
+    test_json(json, "{\"name\":\"Foo\", \"pairs\":{\"IsA\":\"Base\"}, \"inherited\":{\"Base\":{\"components\":{\"Position\":{\"x\":10, \"y\":20}}}}, \"components\":{\"Velocity\":{\"x\":1, \"y\":2}}}");
     ecs_os_free(json);
 
     ecs_fini(world);
@@ -2025,6 +2025,203 @@ void SerializeEntityToJson_serialize_sparse_w_type_info(void) {
     char *json = ecs_entity_to_json(world, e, &desc);
     test_assert(json != NULL);
     test_json(json, "{\"type_info\":{\"Position\":{\"x\":[\"int\"], \"y\":[\"int\"]}}, \"name\":\"Foo\", \"components\":{\"Position\":{\"x\":10, \"y\":20}}}");
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+void SerializeEntityToJson_serialize_dont_fragment_tag(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+    ecs_add_id(world, Foo, EcsDontFragment);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_add(world, e, Foo);
+
+    char *json = ecs_entity_to_json(world, e, NULL);
+    test_assert(json != NULL);
+    test_str(json, "{\"name\":\"e\", \"tags\":[\"Foo\"]}");
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+void SerializeEntityToJson_serialize_dont_fragment_pair(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, Rel, DontFragment, Exclusive);
+    ECS_TAG(world, TgtA);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_add_pair(world, e, Rel, TgtA);
+
+    char *json = ecs_entity_to_json(world, e, NULL);
+    test_assert(json != NULL);
+    test_str(json, "{\"name\":\"e\", \"pairs\":{\"Rel\":\"TgtA\"}}");
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+void SerializeEntityToJson_serialize_dont_fragment_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, Position, {10, 20});
+
+    ecs_entity_to_json_desc_t desc = {
+        .serialize_values = true
+    };
+    char *json = ecs_entity_to_json(world, e, &desc);
+    test_assert(json != NULL);
+    test_str(json, "{\"name\":\"e\", \"components\":{\"Position\":{\"x\":10, \"y\":20}}}");
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+void SerializeEntityToJson_serialize_dont_fragment_pair_multi_target(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, Rel, DontFragment);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_add_pair(world, e, Rel, TgtA);
+    ecs_add_pair(world, e, Rel, TgtB);
+
+    char *json = ecs_entity_to_json(world, e, NULL);
+    test_assert(json != NULL);
+    test_str(json, "{\"name\":\"e\", \"pairs\":{\"Rel\":[\"TgtB\", \"TgtA\"]}}");
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+void SerializeEntityToJson_serialize_dont_fragment_pair_multi_rel(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, RelA, DontFragment);
+    ECS_ENTITY(world, RelB, DontFragment);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_add_pair(world, e, RelA, TgtA);
+    ecs_add_pair(world, e, RelA, TgtB);
+    ecs_add_pair(world, e, RelB, TgtA);
+
+    char *json = ecs_entity_to_json(world, e, NULL);
+    test_assert(json != NULL);
+    test_str(json, "{\"name\":\"e\", \"pairs\":{\"RelB\":\"TgtA\", \"RelA\":[\"TgtB\", \"TgtA\"]}}");
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+void SerializeEntityToJson_serialize_dont_fragment_component_pair(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+
+    ECS_TAG(world, TgtA);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set_pair(world, e, Position, TgtA, {10, 20});
+
+    ecs_entity_to_json_desc_t desc = {
+        .serialize_values = true
+    };
+    char *json = ecs_entity_to_json(world, e, &desc);
+    test_assert(json != NULL);
+    test_str(json, "{\"name\":\"e\", \"components\":{\"(Position,TgtA)\":{\"x\":10, \"y\":20}}}");
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+void SerializeEntityToJson_serialize_dont_fragment_component_pair_multi_target(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set_pair(world, e, Position, TgtA, {10, 20});
+    ecs_set_pair(world, e, Position, TgtB, {30, 40});
+
+    ecs_entity_to_json_desc_t desc = {
+        .serialize_values = true
+    };
+    char *json = ecs_entity_to_json(world, e, &desc);
+    test_assert(json != NULL);
+    test_str(json, "{\"name\":\"e\", \"components\":{\"(Position,TgtB)\":{\"x\":30, \"y\":40}, \"(Position,TgtA)\":{\"x\":10, \"y\":20}}}");
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+void SerializeEntityToJson_serialize_dont_fragment_component_w_type_info(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, Position, {10, 20});
+
+    ecs_entity_to_json_desc_t desc = {
+        .serialize_values = true,
+        .serialize_type_info = true
+    };
+    char *json = ecs_entity_to_json(world, e, &desc);
+    test_assert(json != NULL);
+    test_str(json, "{\"type_info\":{\"Position\":{\"x\":[\"int\"], \"y\":[\"int\"]}}, \"name\":\"e\", \"components\":{\"Position\":{\"x\":10, \"y\":20}}}");
     ecs_os_free(json);
 
     ecs_fini(world);
@@ -2209,7 +2406,7 @@ void SerializeEntityToJson_serialize_toggle_pair(void) {
 
     char *json = ecs_entity_to_json(world, e, NULL);
     test_assert(json != NULL);
-    test_json(json, "{\"name\":\"e\", \"tags\":[\"toggle|(Rel,Tgt)\"],\"pairs\":{\"Rel\":[\"Tgt\"]}}");
+    test_json(json, "{\"name\":\"e\", \"tags\":[\"toggle|(Rel,Tgt)\"], \"pairs\":{\"Rel\":[\"Tgt\"]}}");
     ecs_os_free(json);
 
     ecs_fini(world);

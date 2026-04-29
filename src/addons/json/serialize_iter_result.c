@@ -11,11 +11,7 @@ static
 bool flecs_json_skip_variable(
     const char *name)
 {
-    if (!name || name[0] == '_' || !ecs_os_strcmp(name, "this")) {
-        return true;
-    } else {
-        return false;
-    }
+    return !name || name[0] == '_' || !ecs_os_strcmp(name, "this");
 }
 
 bool flecs_json_serialize_vars(

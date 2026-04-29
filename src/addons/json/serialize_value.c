@@ -442,18 +442,12 @@ int ecs_array_to_json_buf(
     ecs_assert(type != 0, ECS_INVALID_PARAMETER, NULL);
     
     const EcsComponent *comp = ecs_get(world, type, EcsComponent);
-    if (!comp) {
+    const EcsTypeSerializer *ser = comp ?
+        ecs_get(world, type, EcsTypeSerializer) : NULL;
+    if (!comp || !ser) {
         char *path = ecs_get_path(world, type);
-        ecs_err("cannot serialize to JSON, '%s' is not a component", path);
-        ecs_os_free(path);
-        return -1;
-    }
-
-    const EcsTypeSerializer *ser = ecs_get(
-        world, type, EcsTypeSerializer);
-    if (!ser) {
-        char *path = ecs_get_path(world, type);
-        ecs_err("cannot serialize to JSON, '%s' has no reflection data", path);
+        ecs_err("cannot serialize to JSON, '%s' %s", path,
+            !comp ? "is not a component" : "has no reflection data");
         ecs_os_free(path);
         return -1;
     }

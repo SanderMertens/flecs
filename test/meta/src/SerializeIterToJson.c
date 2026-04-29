@@ -2229,7 +2229,7 @@ void SerializeIterToJson_serialize_table_w_var_labels(void) {
     char *json = ecs_iter_to_json(&it, &desc);
     test_assert(json != NULL);
 
-    test_json(json, "{\"results\":[{\"parent\":\"Parent\", \"name\":\"e1\", \"tags\":[\"Foo\"],\"vars\":{\"p\":\"parent\"}, \"components\":{\"Position\":{\"x\":10, \"y\":20}}}, {\"parent\":\"Parent\", \"name\":\"e2\", \"tags\":[\"Foo\", \"Bar\"],\"vars\":{\"p\":\"parent\"}, \"components\":{\"Position\":{\"x\":20, \"y\":30}, \"Velocity\":{\"x\":1, \"y\":1}}}, {\"parent\":\"Parent\", \"name\":\"e3\", \"vars\":{\"p\":\"parent\"}, \"components\":{\"Position\":{\"x\":30, \"y\":40}, \"Mass\":{\"value\":100}}}]}");
+    test_json(json, "{\"results\":[{\"parent\":\"Parent\", \"name\":\"e1\", \"tags\":[\"Foo\"], \"vars\":{\"p\":\"parent\"}, \"components\":{\"Position\":{\"x\":10, \"y\":20}}}, {\"parent\":\"Parent\", \"name\":\"e2\", \"tags\":[\"Foo\", \"Bar\"], \"vars\":{\"p\":\"parent\"}, \"components\":{\"Position\":{\"x\":20, \"y\":30}, \"Velocity\":{\"x\":1, \"y\":1}}}, {\"parent\":\"Parent\", \"name\":\"e3\", \"vars\":{\"p\":\"parent\"}, \"components\":{\"Position\":{\"x\":30, \"y\":40}, \"Mass\":{\"value\":100}}}]}");
 
     ecs_os_free(json);
 
@@ -3007,7 +3007,7 @@ void SerializeIterToJson_serialize_children_w_tag_w_parent_component_table(void)
 
     ecs_iter_t it = ecs_query_iter(world, q);
     char *json = ecs_iter_to_json(&it, &desc);
-    test_json(json, "{\"results\":[{\"parent\":\"parent\", \"name\":\"child_a\", \"tags\":[\"Foo\"],\"pairs\":{\"ParentDepth\":\"@1\"}, \"components\":{\"Parent\":null}}, {\"parent\":\"parent\", \"name\":\"child_c\", \"tags\":[\"Foo\"],\"pairs\":{\"ParentDepth\":\"@1\"}, \"components\":{\"Parent\":null}}]}");
+    test_json(json, "{\"results\":[{\"parent\":\"parent\", \"name\":\"child_a\", \"tags\":[\"Foo\"], \"pairs\":{\"ParentDepth\":\"@1\"}, \"components\":{\"Parent\":null}}, {\"parent\":\"parent\", \"name\":\"child_c\", \"tags\":[\"Foo\"], \"pairs\":{\"ParentDepth\":\"@1\"}, \"components\":{\"Parent\":null}}]}");
     ecs_os_free(json);
 
     ecs_query_fini(q);

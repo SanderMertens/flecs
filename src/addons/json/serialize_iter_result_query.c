@@ -22,11 +22,7 @@ bool flecs_json_serialize_iter_result_is_set(
     int8_t i, count = it->field_count;
     for (i = 0; i < count; i ++) {
         ecs_strbuf_list_next(buf);
-        if (ecs_field_is_set(it, i)) {
-            flecs_json_true(buf);
-        } else {
-            flecs_json_false(buf);
-        }
+        flecs_json_bool(buf, ecs_field_is_set(it, i));
     }
 
     flecs_json_array_pop(buf);
@@ -58,19 +54,10 @@ bool flecs_json_serialize_iter_result_ids(
 
     for (f = 0; f < field_count; f ++) {
         ecs_termset_t field_bit = (ecs_termset_t)(1u << f);
-
-        if (!(it->set_fields & field_bit)) {
-            /* Don't serialize ids for fields that aren't set */
+        if (!(it->set_fields & field_bit) || (q->static_id_fields & field_bit)) {
             ecs_strbuf_list_appendlit(buf, "0");
             continue;
         }
-
-        if (q->static_id_fields & field_bit) {
-            /* Only add non-static ids to save bandwidth/performance */
-            ecs_strbuf_list_appendlit(buf, "0");
-            continue;
-        }
-
         flecs_json_next(buf);
         flecs_json_id(buf, world, it->ids[f]);
     }
@@ -109,19 +96,10 @@ bool flecs_json_serialize_iter_result_sources(
 
     for (f = 0; f < field_count; f ++) {
         ecs_termset_t field_bit = (ecs_termset_t)(1u << f);
-
-        if (!(it->set_fields & field_bit)) {
-            /* Don't serialize source for fields that aren't set */
+        if (!(it->set_fields & field_bit) || !it->sources[f]) {
             ecs_strbuf_list_appendlit(buf, "0");
             continue;
         }
-
-        if (!it->sources[f]) {
-            /* Don't serialize source for fields that have $this source */
-            ecs_strbuf_list_appendlit(buf, "0");
-            continue;
-        }
-
         flecs_json_next(buf);
         flecs_json_path(buf, world, it->sources[f]);
     }

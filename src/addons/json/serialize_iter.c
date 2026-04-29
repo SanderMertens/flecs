@@ -153,12 +153,9 @@ void flecs_json_serialize_query_profile(
         }
 
         double time_measure = ecs_time_measure(&t);
-        if (!i) {
-            eval_min = time_measure;
-        } else if (time_measure < eval_min) {
+        if (!i || time_measure < eval_min) {
             eval_min = time_measure;
         }
-
         if (time_measure > eval_max) {
             eval_max = time_measure;
         }
