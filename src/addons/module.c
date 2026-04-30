@@ -44,7 +44,6 @@ ecs_entity_t ecs_import(
 
     char *path = flecs_module_path_from_c(module_name);
     ecs_entity_t e = ecs_lookup(world, path);
-    ecs_os_free(path);
     
     if (!e) {
         ecs_trace("#[magenta]import#[reset] %s", module_name);
@@ -54,7 +53,7 @@ ecs_entity_t ecs_import(
         module(world);
 
         /* Lookup module entity (must be registered by module) */
-        e = ecs_lookup(world, module_name);
+        e = ecs_lookup(world, path);
         ecs_check(e != 0, ECS_MODULE_UNDEFINED, "%s", module_name);
 
         ecs_log_pop();
@@ -62,10 +61,12 @@ ecs_entity_t ecs_import(
 
     /* Restore to previous state */
     ecs_set_scope(world, old_scope);
+    ecs_os_free(path);
     world->info.name_prefix = old_name_prefix;
 
     return e;
 error:
+    ecs_os_free(path);
     return 0;
 }
 
