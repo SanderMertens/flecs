@@ -6794,8 +6794,12 @@ bool flecs_defer_end(
                     world->info.cmd.remove_count ++;
                     break;
                 case EcsCmdClone:
-                    ecs_clone(world, e, id, cmd->is._1.clone_value);
-                    world->info.cmd.other_count ++;
+                    if (flecs_entities_is_alive(world, id)) {
+                        ecs_clone(world, e, id, cmd->is._1.clone_value);
+                        world->info.cmd.other_count ++;
+                    } else {
+                        world->info.cmd.discard_count ++;
+                    }
                     break;
                 case EcsCmdSet:
                 case EcsCmdSetDontFragment:

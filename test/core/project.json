@@ -1589,7 +1589,8 @@
                 "clone_component",
                 "clone_component_w_value",
                 "clone_component_w_entity",
-                "clone_component_w_entity_w_value"
+                "clone_component_w_entity_w_value",
+                "clone_after_delete_deferred"
             ]
         }, {
             "id": "ComponentLifecycle",

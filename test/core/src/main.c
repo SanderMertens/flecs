@@ -1531,6 +1531,7 @@ void Clone_clone_component(void);
 void Clone_clone_component_w_value(void);
 void Clone_clone_component_w_entity(void);
 void Clone_clone_component_w_entity_w_value(void);
+void Clone_clone_after_delete_deferred(void);
 
 // Testsuite 'ComponentLifecycle'
 void ComponentLifecycle_setup(void);
@@ -9228,6 +9229,10 @@ bake_test_case Clone_testcases[] = {
     {
         "clone_component_w_entity_w_value",
         Clone_clone_component_w_entity_w_value
+    },
+    {
+        "clone_after_delete_deferred",
+        Clone_clone_after_delete_deferred
     }
 };
 
@@ -16316,7 +16321,7 @@ static bake_test_suite suites[] = {
         "Clone",
         NULL,
         NULL,
-        20,
+        21,
         Clone_testcases
     },
     {

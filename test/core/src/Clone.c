@@ -535,3 +535,24 @@ void Clone_clone_component_w_entity_w_value(void) {
     ecs_fini(world);
 }
 
+void Clone_clone_after_delete_deferred(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t src = ecs_entity(world, { .name = "src" });
+    ecs_set(world, src, Position, {10, 20});
+    ecs_set(world, src, Velocity, {10, 20});
+
+    ecs_defer_begin(world);
+    ecs_delete(world, src);
+    ecs_entity_t dst = ecs_clone(world, 0, src, true);
+    ecs_defer_end(world);
+
+    test_assert(dst != 0);
+    test_assert(ecs_is_alive(world, dst));
+
+    ecs_fini(world);
+}
+
