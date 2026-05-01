@@ -116,7 +116,10 @@ typedef struct ecs_pipeline_desc_t {
 } ecs_pipeline_desc_t;
 
 /** Create a custom pipeline.
- * 
+ * If the descriptor specifies an existing entity, the entity must not already
+ * be associated with a pipeline. To replace an existing pipeline on an
+ * entity, use ecs_pipeline_update().
+ *
  * @param world The world.
  * @param desc The pipeline descriptor.
  * @return The pipeline, 0 if failed.
@@ -124,6 +127,21 @@ typedef struct ecs_pipeline_desc_t {
 FLECS_API
 ecs_entity_t ecs_pipeline_init(
     ecs_world_t *world,
+    const ecs_pipeline_desc_t *desc);
+
+/** Replace the pipeline query on an existing entity.
+ * Removes the pipeline currently attached to the entity and creates a new one
+ * from the descriptor.
+ *
+ * @param world The world.
+ * @param pipeline The pipeline entity to update.
+ * @param desc The pipeline descriptor.
+ * @return The pipeline entity, or 0 if the operation failed.
+ */
+FLECS_API
+ecs_entity_t ecs_pipeline_update(
+    ecs_world_t *world,
+    ecs_entity_t pipeline,
     const ecs_pipeline_desc_t *desc);
 
 /** Set a custom pipeline.

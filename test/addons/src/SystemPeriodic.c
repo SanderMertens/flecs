@@ -1812,8 +1812,7 @@ void SystemPeriodic_sys_context(void) {
 
     ECS_SYSTEM(world, TestContext, EcsOnUpdate, Position);
 
-    ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = TestContext,
+    ecs_system_update(world, TestContext, &(ecs_system_desc_t){
         .ctx = &param
     });
 
@@ -1834,8 +1833,7 @@ void SystemPeriodic_get_sys_context_from_param(void) {
     /* Set world context so system can compare if pointer is correct */
     ecs_set_ctx(world, &param, NULL);
 
-    ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = TestContext,
+    ecs_system_update(world, TestContext, &(ecs_system_desc_t){
         .ctx = &param
     });
 

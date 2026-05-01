@@ -917,6 +917,34 @@ struct entity_with_delegate<Func, if_t< is_callable<Func>::value > >
         "function must have at least one argument");
 };
 
+/** Strip references from each-callback argument types. */
+template <typename ArgList>
+struct each_normalize_args;
+
+template <typename ... Args>
+struct each_normalize_args<arg_list<Args...>> {
+    using type = arg_list<remove_reference_t<Args>...>;
+};
+
+/** Extract the component argument list from an each-callback signature.
+ * Skips a leading flecs::entity or flecs::iter argument when present. */
+template <typename ArgList, typename = int>
+struct each_callback_args {
+    using type = typename each_normalize_args<ArgList>::type;
+};
+
+template <typename First, typename ... Args>
+struct each_callback_args<arg_list<First, Args...>,
+    if_t<is_same<decay_t<First>, flecs::entity>::value>> {
+    using type = typename each_normalize_args<arg_list<Args...>>::type;
+};
+
+template <typename First, typename Second, typename ... Args>
+struct each_callback_args<arg_list<First, Second, Args...>,
+    if_t<is_same<decay_t<First>, flecs::iter>::value>> {
+    using type = typename each_normalize_args<arg_list<Args...>>::type;
+};
+
 } // namespace _
 
 /** Delegate type for each callbacks.

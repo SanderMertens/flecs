@@ -775,14 +775,12 @@ void FlecsAlertsImport(ecs_world_t *world) {
         ?Timeout,
         ?Disabled);
 
-    ecs_system(world, {
-        .entity = ecs_id(MonitorAlerts),
+    ecs_system_update(world, ecs_id(MonitorAlerts), &(ecs_system_desc_t){
         .immediate = true,
         .interval = (ecs_ftime_t)0.5
     });
 
-    ecs_system(world, {
-        .entity = ecs_id(MonitorAlertInstances),
+    ecs_system_update(world, ecs_id(MonitorAlertInstances), &(ecs_system_desc_t){
         .interval = (ecs_ftime_t)0.5
     });
 }

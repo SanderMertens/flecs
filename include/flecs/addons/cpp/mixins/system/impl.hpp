@@ -91,16 +91,47 @@ struct system final : entity
     }
 
     /** Set the system context. */
-    void ctx(void *ctx) {
+    system& ctx(void *ctx) {
         ecs_system_desc_t desc = {};
-        desc.entity = id_;
         desc.ctx = ctx;
-        ecs_system_init(world_, &desc);
+        ecs_system_update(world_, id_, &desc);
+        return *this;
     }
 
     /** Get the system context. */
     void* ctx() const {
         return ecs_system_get(world_, id_)->ctx;
+    }
+
+    /** Replace the system's run callback. */
+    template <typename Func>
+    system& run(Func&& func) {
+        using Delegate = typename _::run_delegate<
+            typename std::decay<Func>::type>;
+        auto ctx = FLECS_NEW(Delegate)(FLECS_FWD(func));
+        ecs_system_desc_t desc = {};
+        desc.run = Delegate::run;
+        desc.run_ctx = ctx;
+        desc.run_ctx_free = _::free_obj<Delegate>;
+        ecs_system_update(world_, id_, &desc);
+        return *this;
+    }
+
+    /** Replace the system's each callback. */
+    template <typename Func>
+    system& each(Func&& func) {
+        using CallbackComponents =
+            typename _::each_callback_args<arg_list_t<Func>>::type;
+        return each_callback(CallbackComponents{}, FLECS_FWD(func));
+    }
+
+    /** Replace the system's run callback and use an each callback for
+     * iteration. */
+    template <typename Func>
+    system& run_each(Func&& func) {
+        using CallbackComponents =
+            typename _::each_callback_args<arg_list_t<Func>>::type;
+        return run_each_callback(CallbackComponents{}, FLECS_FWD(func));
     }
 
     /** Get the query for this system. */
@@ -141,6 +172,32 @@ struct system final : entity
 #   include "../timer/system_mixin.inl"
 #   endif
 
+private:
+    template <typename ... CallbackComponents, typename Func>
+    system& each_callback(_::arg_list<CallbackComponents...>, Func&& func) {
+        using Delegate = typename _::each_delegate<
+            typename std::decay<Func>::type, CallbackComponents...>;
+        auto ctx = FLECS_NEW(Delegate)(FLECS_FWD(func));
+        ecs_system_desc_t desc = {};
+        desc.callback = Delegate::run;
+        desc.callback_ctx = ctx;
+        desc.callback_ctx_free = _::free_obj<Delegate>;
+        ecs_system_update(world_, id_, &desc);
+        return *this;
+    }
+
+    template <typename ... CallbackComponents, typename Func>
+    system& run_each_callback(_::arg_list<CallbackComponents...>, Func&& func) {
+        using Delegate = typename _::each_delegate<
+            typename std::decay<Func>::type, CallbackComponents...>;
+        auto ctx = FLECS_NEW(Delegate)(FLECS_FWD(func));
+        ecs_system_desc_t desc = {};
+        desc.run = Delegate::run_each;
+        desc.run_ctx = ctx;
+        desc.run_ctx_free = _::free_obj<Delegate>;
+        ecs_system_update(world_, id_, &desc);
+        return *this;
+    }
 };
 
 /** Mixin implementation. */
@@ -155,31 +212,6 @@ inline system_builder<Comps...> world::system(Args &&... args) const {
 
 namespace _ {
 
-template <typename ArgList>
-struct system_each_normalize_args;
-
-template <typename ... Args>
-struct system_each_normalize_args<arg_list<Args...>> {
-    using type = arg_list<remove_reference_t<Args>...>;
-};
-
-template <typename ArgList, typename = int>
-struct system_each_callback_args {
-    using type = typename system_each_normalize_args<ArgList>::type;
-};
-
-template <typename First, typename ... Args>
-struct system_each_callback_args<arg_list<First, Args...>,
-    if_t<is_same<decay_t<First>, flecs::entity>::value>> {
-    using type = typename system_each_normalize_args<arg_list<Args...>>::type;
-};
-
-template <typename First, typename Second, typename ... Args>
-struct system_each_callback_args<arg_list<First, Second, Args...>,
-    if_t<is_same<decay_t<First>, flecs::iter>::value>> {
-    using type = typename system_each_normalize_args<arg_list<Args...>>::type;
-};
-
 inline void system_init(flecs::world& world) {
     world.component<TickSource>("flecs::system::TickSource");
 }
@@ -191,7 +223,7 @@ template <typename Func>
 inline system system_builder<Components...>::each(Func&& func) {
     if constexpr (sizeof...(Components) == 0) {
         using CallbackComponents =
-            typename _::system_each_callback_args<arg_list_t<Func>>::type;
+            typename _::each_callback_args<arg_list_t<Func>>::type;
         return this->each_callback(CallbackComponents{}, FLECS_FWD(func));
     } else {
         // Faster version of each() that iterates the query on the C++ side.

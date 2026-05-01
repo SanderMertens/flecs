@@ -3391,3 +3391,58 @@ void Pipeline_set_time_scale_w_readonly(void) {
     test_expect_abort();
     ecs_set_time_scale(world, 2);
 }
+
+void Pipeline_init_failure_preserves_user_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    /* User-provided entity with valuable state. */
+    ecs_entity_t e = ecs_entity(world, { .name = "MyPipeline" });
+    ecs_add_id(world, e, Tag);
+
+    test_assert(ecs_is_alive(world, e));
+    test_str(ecs_get_name(world, e), "MyPipeline");
+
+    ecs_log_set_level(-4);
+
+    /* Provide a query expression that fails to compile, so init fails
+     * without aborting. */
+    ecs_entity_t r = ecs_pipeline_init(world, &(ecs_pipeline_desc_t){
+        .entity = e,
+        .query.expr = "@@@invalid syntax@@@"
+    });
+    test_assert(r == 0);
+
+    ecs_log_set_level(-1);
+
+    /* Entity must still exist with its original state. */
+    test_assert(ecs_is_alive(world, e));
+    test_str(ecs_get_name(world, e), "MyPipeline");
+    test_assert(ecs_has_id(world, e, Tag));
+
+    ecs_fini(world);
+}
+
+void Pipeline_update_pipeline_replaces_existing(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t pe = ecs_entity(world, { .name = "MyPipeline" });
+
+    ecs_entity_t p1 = ecs_pipeline_init(world, &(ecs_pipeline_desc_t){
+        .entity = pe,
+        .query.expr = "flecs.system.System, Tag"
+    });
+    test_assert(p1 == pe);
+
+    /* Replace the pipeline query; pipeline entity must be preserved. */
+    ecs_entity_t p2 = ecs_pipeline_update(world, pe, &(ecs_pipeline_desc_t){
+        .query.expr = "flecs.system.System"
+    });
+    test_assert(p2 == pe);
+    test_str(ecs_get_name(world, pe), "MyPipeline");
+
+    ecs_fini(world);
+}

@@ -2470,8 +2470,7 @@ void Trigger_set_get_context(void) {
 
     test_assert(ecs_observer_get(world, t)->ctx == &ctx_a);
 
-    test_assert(ecs_observer_init(world, &(ecs_observer_desc_t){
-        .entity = t,
+    test_assert(ecs_observer_update(world, t, &(ecs_observer_desc_t){
         .ctx = &ctx_b
     }) == t);
 
@@ -2497,8 +2496,7 @@ void Trigger_set_get_binding_context(void) {
 
     test_assert(ecs_observer_get(world, t)->callback_ctx == &ctx_a);
 
-    test_assert(ecs_observer_init(world, &(ecs_observer_desc_t){
-        .entity = t,
+    test_assert(ecs_observer_update(world, t, &(ecs_observer_desc_t){
         .callback_ctx = &ctx_b
     }) == t);
 

@@ -4811,7 +4811,10 @@ bool ecs_children_next(
  */
 
 /** Create a query.
- * 
+ * If the descriptor specifies an existing entity, the entity must not already
+ * be associated with a query. To replace an existing query on an entity, use
+ * ecs_query_update().
+ *
  * @param world The world.
  * @param desc The descriptor (see ecs_query_desc_t).
  * @return The query.
@@ -4819,6 +4822,22 @@ bool ecs_children_next(
 FLECS_API
 ecs_query_t* ecs_query_init(
     ecs_world_t *world,
+    const ecs_query_desc_t *desc);
+
+/** Replace the query on an existing entity.
+ * Removes the query currently attached to the entity and creates a new one
+ * from the descriptor. Any handles to the previous query become invalid; use
+ * the returned handle for subsequent iteration.
+ *
+ * @param world The world.
+ * @param entity The entity that holds the query to replace.
+ * @param desc The descriptor (see ecs_query_desc_t).
+ * @return The new query, or NULL if the operation failed.
+ */
+FLECS_API
+ecs_query_t* ecs_query_update(
+    ecs_world_t *world,
+    ecs_entity_t entity,
     const ecs_query_desc_t *desc);
 
 /** Delete a query.
@@ -5335,6 +5354,10 @@ void ecs_enqueue(
  * Observers can subscribe for one or more terms. An observer only triggers
  * when the source of the event meets all terms.
  *
+ * If the descriptor specifies an existing entity, the entity must not already
+ * be associated with an observer. To modify an existing observer, use
+ * ecs_observer_update().
+ *
  * See the documentation for ecs_observer_desc_t for more details.
  *
  * @param world The world.
@@ -5344,6 +5367,27 @@ void ecs_enqueue(
 FLECS_API
 ecs_entity_t ecs_observer_init(
     ecs_world_t *world,
+    const ecs_observer_desc_t *desc);
+
+/** Update an existing observer.
+ * Updates the configuration of an observer that was previously created with
+ * ecs_observer_init(). Only fields in desc that are set to a non-default
+ * value will be applied; fields left at their default value preserve the
+ * existing configuration of the observer.
+ *
+ * The query and events fields of the descriptor are not used by this function;
+ * the observer query and event subscriptions cannot be modified after
+ * creation.
+ *
+ * @param world The world.
+ * @param observer The observer to update.
+ * @param desc The observer descriptor.
+ * @return The observer entity, or 0 if the operation failed.
+ */
+FLECS_API
+ecs_entity_t ecs_observer_update(
+    ecs_world_t *world,
+    ecs_entity_t observer,
     const ecs_observer_desc_t *desc);
 
 /** Get the observer object.

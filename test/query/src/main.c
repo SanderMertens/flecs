@@ -733,6 +733,7 @@ void Basic_mixed_uncacheable_w_shared(void);
 void Basic_query_has_and_optional_and(void);
 void Basic_recycled_pair(void);
 void Basic_recycled_component_id(void);
+void Basic_update_query_replaces_existing(void);
 
 // Testsuite 'Combinations'
 void Combinations_setup(void);
@@ -5672,6 +5673,10 @@ bake_test_case Basic_testcases[] = {
     {
         "recycled_component_id",
         Basic_recycled_component_id
+    },
+    {
+        "update_query_replaces_existing",
+        Basic_update_query_replaces_existing
     }
 };
 
@@ -13878,7 +13883,7 @@ static bake_test_suite suites[] = {
         "Basic",
         Basic_setup,
         NULL,
-        240,
+        241,
         Basic_testcases,
         1,
         Basic_params

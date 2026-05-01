@@ -678,6 +678,9 @@
                 "register_twice_w_run",
                 "register_twice_w_run_each",
                 "register_twice_w_each_run",
+                "lookup_and_update_each",
+                "lookup_and_update_run",
+                "lookup_and_update_ctx",
                 "set_group",
                 "run_w_0_src_query"
             ]
@@ -1148,6 +1151,9 @@
                 "register_twice_w_run",
                 "register_twice_w_run_each",
                 "register_twice_w_each_run",
+                "lookup_and_update_each",
+                "lookup_and_update_run",
+                "lookup_and_update_ctx",
                 "other_table",
                 "other_table_w_pair",
                 "other_table_w_pair_wildcard",

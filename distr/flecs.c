@@ -17729,102 +17729,42 @@ ecs_entity_t ecs_observer_init(
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER,
         "ecs_observer_desc_t was not initialized to zero");
-    ecs_check(!(world->flags & EcsWorldFini), ECS_INVALID_OPERATION, 
+    ecs_check(!(world->flags & EcsWorldFini), ECS_INVALID_OPERATION,
         "cannot create observer while world is being deleted");
 
+    bool entity_created = false;
     entity = desc->entity;
     if (!entity && !desc->global_observer) {
         entity = ecs_entity(world, {0});
+        entity_created = true;
     }
 
-    EcsPoly *poly = NULL;
     if (!entity) {
-        ecs_observer_t *o = flecs_observer_init(world, entity, desc);\
+        ecs_observer_t *o = flecs_observer_init(world, entity, desc);
         if (!o) {
             goto error;
         }
 
-        ecs_vec_append_t(NULL, &world->observable.global_observers, 
+        ecs_vec_append_t(NULL, &world->observable.global_observers,
             ecs_observer_t*)[0] = o;
     } else {
-        poly = flecs_poly_bind(world, entity, ecs_observer_t);
+        EcsPoly *poly = flecs_poly_bind(world, entity, ecs_observer_t);
+        ecs_check(poly->poly == NULL, ECS_INVALID_OPERATION,
+            "entity %s already is an observer, use ecs_observer_update() "
+                "to modify",
+                    flecs_errstr(ecs_get_path(world, entity)));
 
-        if (!poly->poly) {
-            ecs_observer_t *o = flecs_observer_init(world, entity, desc);\
-            if (!o) {
-                goto error;
-            }
+        ecs_observer_t *o = flecs_observer_init(world, entity, desc);
+        if (!o) {
+            goto error;
+        }
 
-            ecs_assert(o->entity == entity, ECS_INTERNAL_ERROR, NULL);
-            poly->poly = o;
+        ecs_assert(o->entity == entity, ECS_INTERNAL_ERROR, NULL);
+        poly->poly = o;
 
-            if (ecs_get_name(world, entity)) {
-                ecs_trace("#[green]observer#[reset] %s created", 
-                    ecs_get_name(world, entity));
-            }
-        } else {
-            flecs_poly_assert(poly->poly, ecs_observer_t);
-            ecs_observer_t *o = (ecs_observer_t*)poly->poly;
-
-            if (o->ctx_free) {
-                if (o->ctx && o->ctx != desc->ctx) {
-                    o->ctx_free(o->ctx);
-                }
-            }
-
-            if (o->callback_ctx_free) {
-                if (o->callback_ctx && o->callback_ctx != desc->callback_ctx) {
-                    o->callback_ctx_free(o->callback_ctx);
-                    o->callback_ctx_free = NULL;
-                    o->callback_ctx = NULL;
-                }
-            }
-
-            if (o->run_ctx_free) {
-                if (o->run_ctx && o->run_ctx != desc->run_ctx) {
-                    o->run_ctx_free(o->run_ctx);
-                    o->run_ctx_free = NULL;
-                    o->run_ctx = NULL;
-                }
-            }
-
-            if (desc->run) {
-                o->run = desc->run;
-                if (!desc->callback) {
-                    o->callback = NULL;
-                }
-            }
-
-            if (desc->callback) {
-                o->callback = desc->callback;
-                if (!desc->run) {
-                    o->run = NULL;
-                }
-            }
-
-            if (desc->ctx) {
-                o->ctx = desc->ctx;
-            }
-
-            if (desc->callback_ctx) {
-                o->callback_ctx = desc->callback_ctx;
-            }
-
-            if (desc->run_ctx) {
-                o->run_ctx = desc->run_ctx;
-            }
-
-            if (desc->ctx_free) {
-                o->ctx_free = desc->ctx_free;
-            }
-
-            if (desc->callback_ctx_free) {
-                o->callback_ctx_free = desc->callback_ctx_free;
-            }
-
-            if (desc->run_ctx_free) {
-                o->run_ctx_free = desc->run_ctx_free;
-            }
+        if (ecs_get_name(world, entity)) {
+            ecs_trace("#[green]observer#[reset] %s created",
+                ecs_get_name(world, entity));
         }
 
         flecs_poly_modified(world, entity, ecs_observer_t);
@@ -17832,9 +17772,100 @@ ecs_entity_t ecs_observer_init(
 
     return entity;
 error:
-    if (entity) {
+    /* Only delete the entity if we created it ourselves; entities provided by
+     * the caller must be preserved on failure. */
+    if (entity_created) {
         ecs_delete(world, entity);
     }
+    return 0;
+}
+
+ecs_entity_t ecs_observer_update(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    const ecs_observer_desc_t *desc)
+{
+    flecs_poly_assert(world, ecs_world_t);
+    ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER,
+        "ecs_observer_desc_t was not initialized to zero");
+    ecs_check(entity != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(!desc->entity || desc->entity == entity, ECS_INVALID_PARAMETER,
+        "ecs_observer_desc_t::entity does not match observer entity");
+    ecs_check(!(world->flags & EcsWorldFini), ECS_INVALID_OPERATION,
+        "cannot update observer while world is being deleted");
+
+    ecs_observer_t *o = flecs_poly_get(world, entity, ecs_observer_t);
+    ecs_check(o != NULL, ECS_INVALID_PARAMETER,
+        "entity %s is not an observer, use ecs_observer_init() to create it",
+            flecs_errstr(ecs_get_path(world, entity)));
+
+    /* desc->ctx == NULL means "do not touch ctx", not "set ctx to NULL".
+     * Only free the existing ctx when the caller is explicitly replacing it. */
+    if (desc->ctx && desc->ctx != o->ctx) {
+        if (o->ctx_free && o->ctx) {
+            o->ctx_free(o->ctx);
+        }
+    }
+
+    if (o->callback_ctx_free) {
+        if (o->callback_ctx && o->callback_ctx != desc->callback_ctx) {
+            o->callback_ctx_free(o->callback_ctx);
+            o->callback_ctx_free = NULL;
+            o->callback_ctx = NULL;
+        }
+    }
+
+    if (o->run_ctx_free) {
+        if (o->run_ctx && o->run_ctx != desc->run_ctx) {
+            o->run_ctx_free(o->run_ctx);
+            o->run_ctx_free = NULL;
+            o->run_ctx = NULL;
+        }
+    }
+
+    if (desc->run) {
+        o->run = desc->run;
+        if (!desc->callback) {
+            o->callback = NULL;
+        }
+    }
+
+    if (desc->callback) {
+        o->callback = desc->callback;
+        if (!desc->run) {
+            o->run = NULL;
+        }
+    }
+
+    if (desc->ctx) {
+        o->ctx = desc->ctx;
+    }
+
+    if (desc->callback_ctx) {
+        o->callback_ctx = desc->callback_ctx;
+    }
+
+    if (desc->run_ctx) {
+        o->run_ctx = desc->run_ctx;
+    }
+
+    if (desc->ctx_free) {
+        o->ctx_free = desc->ctx_free;
+    }
+
+    if (desc->callback_ctx_free) {
+        o->callback_ctx_free = desc->callback_ctx_free;
+    }
+
+    if (desc->run_ctx_free) {
+        o->run_ctx_free = desc->run_ctx_free;
+    }
+
+    flecs_poly_modified(world, entity, ecs_observer_t);
+
+    return entity;
+error:
     return 0;
 }
 
@@ -24972,14 +25003,12 @@ void FlecsAlertsImport(ecs_world_t *world) {
         ?Timeout,
         ?Disabled);
 
-    ecs_system(world, {
-        .entity = ecs_id(MonitorAlerts),
+    ecs_system_update(world, ecs_id(MonitorAlerts), &(ecs_system_desc_t){
         .immediate = true,
         .interval = (ecs_ftime_t)0.5
     });
 
-    ecs_system(world, {
-        .entity = ecs_id(MonitorAlertInstances),
+    ecs_system_update(world, ecs_id(MonitorAlertInstances), &(ecs_system_desc_t){
         .interval = (ecs_ftime_t)0.5
     });
 }
@@ -36295,36 +36324,19 @@ void ecs_query_fini(
     }
 }
 
-ecs_query_t* ecs_query_init(
-    ecs_world_t *world, 
+static
+ecs_query_t* flecs_query_init(
+    ecs_world_t *world,
     const ecs_query_desc_t *const_desc)
 {
-    ecs_os_perf_trace_push("flecs.query_init");
-
     ecs_world_t *world_arg = world;
     ecs_stage_t *stage = flecs_stage_from_world(&world);
 
     ecs_query_impl_t *result = flecs_bcalloc(&stage->allocators.query_impl);
     flecs_poly_init(result, ecs_query_t);
-    
+
     ecs_query_desc_t desc = *const_desc;
     ecs_entity_t entity = const_desc->entity;
-
-    if (entity) {
-        flecs_check_exclusive_world_access_write(world);
-
-        /* Remove existing query if entity has one */
-        bool deferred = false;
-        if (ecs_is_deferred(world)) {
-            deferred = true;
-            /* Ensures that remove operation doesn't get applied after bind */
-            ecs_defer_suspend(world);
-        }
-        ecs_remove_pair(world, entity, ecs_id(EcsPoly), EcsQuery);
-        if (deferred) {
-            ecs_defer_resume(world);
-        }
-    }
 
     /* Initialize the query */
     result->pub.entity = entity;
@@ -36342,8 +36354,8 @@ ecs_query_t* ecs_query_init(
         goto error;
     }
 
-    /* If query terms have the query itself as source, add term ids to it. This makes it
-     * easy to attach components to queries, which is one of the ways
+    /* If query terms have the query itself as source, add term ids to it. This
+     * makes it easy to attach components to queries, which is one of the ways
      * applications can attach data to systems. */
     flecs_query_add_self_ref(&result->pub);
 
@@ -36372,16 +36384,70 @@ ecs_query_t* ecs_query_init(
         flecs_poly_modified(world, entity, ecs_query_t);
     }
 
-    ecs_os_perf_trace_pop("flecs.query_init");
-
     return &result->pub;
 error:
     result->pub.entity = 0;
     ecs_query_fini(&result->pub);
-
-    ecs_os_perf_trace_pop("flecs.query_init");
-
     return NULL;
+}
+
+ecs_query_t* ecs_query_init(
+    ecs_world_t *world,
+    const ecs_query_desc_t *const_desc)
+{
+    ecs_os_perf_trace_push("flecs.query_init");
+
+    ecs_query_t *result = NULL;
+    ecs_entity_t entity = const_desc->entity;
+    if (entity) {
+        flecs_check_exclusive_world_access_write(world);
+        ecs_check(!ecs_has_pair(world, entity, ecs_id(EcsPoly), EcsQuery),
+            ECS_INVALID_OPERATION,
+            "entity %s already is a query, use ecs_query_update() to modify",
+                flecs_errstr(ecs_get_path(world, entity)));
+    }
+
+    result = flecs_query_init(world, const_desc);
+
+error:
+    ecs_os_perf_trace_pop("flecs.query_init");
+    return result;
+}
+
+ecs_query_t* ecs_query_update(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    const ecs_query_desc_t *const_desc)
+{
+    ecs_os_perf_trace_push("flecs.query_update");
+
+    ecs_query_t *result = NULL;
+    ecs_check(entity != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(!const_desc->entity || const_desc->entity == entity,
+        ECS_INVALID_PARAMETER,
+        "ecs_query_desc_t::entity does not match query entity");
+
+    flecs_check_exclusive_world_access_write(world);
+
+    /* Remove the existing query if any. */
+    bool deferred = false;
+    if (ecs_is_deferred(world)) {
+        deferred = true;
+        /* Ensures that remove operation doesn't get applied after bind */
+        ecs_defer_suspend(world);
+    }
+    ecs_remove_pair(world, entity, ecs_id(EcsPoly), EcsQuery);
+    if (deferred) {
+        ecs_defer_resume(world);
+    }
+
+    ecs_query_desc_t desc = *const_desc;
+    desc.entity = entity;
+    result = flecs_query_init(world, &desc);
+
+error:
+    ecs_os_perf_trace_pop("flecs.query_update");
+    return result;
 }
 
 bool ecs_query_has(
@@ -62616,17 +62682,28 @@ error:
 
 #ifdef FLECS_PIPELINE
 
-static void flecs_pipeline_free(
-    ecs_pipeline_state_t *p) 
+/* Free state-owned resources without touching the query. Used when the
+ * query is owned by something else (e.g. ecs_query_update has replaced it). */
+static void flecs_pipeline_state_free(
+    ecs_world_t *world,
+    ecs_pipeline_state_t *p)
 {
     if (p) {
-        ecs_world_t *world = p->query->world;
         ecs_allocator_t *a = &world->allocator;
         ecs_vec_fini_t(a, &p->ops, ecs_pipeline_op_t);
         ecs_vec_fini_t(a, &p->systems, ecs_system_t*);
         ecs_os_free(p->iters);
-        ecs_query_fini(p->query);
         ecs_os_free(p);
+    }
+}
+
+static void flecs_pipeline_free(
+    ecs_pipeline_state_t *p)
+{
+    if (p) {
+        ecs_world_t *world = p->query->world;
+        ecs_query_fini(p->query);
+        flecs_pipeline_state_free(world, p);
     }
 }
 
@@ -63423,31 +63500,26 @@ error:
     return 0;
 }
 
-ecs_entity_t ecs_pipeline_init(
+static
+ecs_entity_t flecs_pipeline_init(
     ecs_world_t *world,
-    const ecs_pipeline_desc_t *desc)
+    ecs_entity_t entity,
+    const ecs_pipeline_desc_t *desc,
+    ecs_query_t* (*query_init)(
+        ecs_world_t*, ecs_entity_t, const ecs_query_desc_t*))
 {
-    flecs_poly_assert(world, ecs_world_t);
-    ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
-
-    ecs_entity_t result = desc->entity;
-    if (!result) {
-        result = ecs_new(world);
-    }
-
     ecs_query_desc_t qd = desc->query;
     if (!qd.order_by_callback) {
         qd.order_by_callback = flecs_entity_compare;
     }
-    qd.entity = result;
+    qd.entity = entity;
 
-    ecs_query_t *query = ecs_query_init(world, &qd);
+    ecs_query_t *query = query_init(world, entity, &qd);
     if (!query) {
-        ecs_delete(world, result);
         return 0;
     }
 
-    ecs_check(query->terms != NULL, ECS_INVALID_PARAMETER, 
+    ecs_check(query->terms != NULL, ECS_INVALID_PARAMETER,
         "pipeline query cannot be empty");
     ecs_check(query->terms[0].id == EcsSystem,
         ECS_INVALID_PARAMETER, "pipeline must start with System term");
@@ -63455,9 +63527,83 @@ ecs_entity_t ecs_pipeline_init(
     ecs_pipeline_state_t *pq = ecs_os_calloc_t(ecs_pipeline_state_t);
     pq->query = query;
     pq->match_count = -1;
-    ecs_set(world, result, EcsPipeline, { pq });
+    ecs_set(world, entity, EcsPipeline, { pq });
 
-    return result;
+    return entity;
+error:
+    ecs_query_fini(query);
+    return 0;
+}
+
+/* Trampolines so flecs_pipeline_init can dispatch through a function pointer
+ * without exposing the entity argument to ecs_query_init. */
+static
+ecs_query_t* flecs_pipeline_query_init(
+    ecs_world_t *world, ecs_entity_t entity, const ecs_query_desc_t *desc)
+{
+    (void)entity;
+    return ecs_query_init(world, desc);
+}
+
+static
+ecs_query_t* flecs_pipeline_query_update(
+    ecs_world_t *world, ecs_entity_t entity, const ecs_query_desc_t *desc)
+{
+    return ecs_query_update(world, entity, desc);
+}
+
+ecs_entity_t ecs_pipeline_init(
+    ecs_world_t *world,
+    const ecs_pipeline_desc_t *desc)
+{
+    flecs_poly_assert(world, ecs_world_t);
+    ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    bool entity_created = false;
+    ecs_entity_t result = desc->entity;
+    if (!result) {
+        result = ecs_new(world);
+        entity_created = true;
+    } else {
+        ecs_check(!ecs_has(world, result, EcsPipeline), ECS_INVALID_OPERATION,
+            "entity %s already is a pipeline, use ecs_pipeline_update() "
+                "to modify",
+                    flecs_errstr(ecs_get_path(world, result)));
+    }
+
+    ecs_entity_t r = flecs_pipeline_init(
+        world, result, desc, flecs_pipeline_query_init);
+    if (!r && entity_created) {
+        ecs_delete(world, result);
+    }
+    return r;
+error:
+    return 0;
+}
+
+ecs_entity_t ecs_pipeline_update(
+    ecs_world_t *world,
+    ecs_entity_t pipeline,
+    const ecs_pipeline_desc_t *desc)
+{
+    flecs_poly_assert(world, ecs_world_t);
+    ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(pipeline != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(!desc->entity || desc->entity == pipeline, ECS_INVALID_PARAMETER,
+        "ecs_pipeline_desc_t::entity does not match pipeline entity");
+
+    /* Free the existing state struct. The query it points to is owned by
+     * EcsPoly and will be replaced by ecs_query_update inside the helper;
+     * detach it here so the dtor doesn't double-free. */
+    EcsPipeline *p = ECS_CONST_CAST(EcsPipeline*,
+        ecs_get(world, pipeline, EcsPipeline));
+    if (p && p->state) {
+        flecs_pipeline_state_free(world, p->state);
+        p->state = NULL;
+    }
+
+    return flecs_pipeline_init(
+        world, pipeline, desc, flecs_pipeline_query_update);
 error:
     return 0;
 }
@@ -76816,7 +76962,7 @@ ecs_entity_t ecs_system_init(
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER,
         "ecs_system_desc_t was not initialized to zero");
-    ecs_assert(!(world->flags & EcsWorldReadonly), 
+    ecs_assert(!(world->flags & EcsWorldReadonly),
         ECS_INVALID_WHILE_READONLY, NULL);
 
     ecs_entity_t entity = desc->entity;
@@ -76825,144 +76971,172 @@ ecs_entity_t ecs_system_init(
     }
 
     EcsPoly *poly = flecs_poly_bind(world, entity, ecs_system_t);
-    if (!poly->poly) {
-        ecs_check(desc->callback != NULL || desc->run != NULL, 
-            ECS_INVALID_PARAMETER,
-            "missing implementation for system %s (set .callback or .run)",
-                desc->entity 
-                    ? flecs_errstr(ecs_get_path(world, desc->entity)) 
-                    : "<unknown>");
+    ecs_check(poly->poly == NULL, ECS_INVALID_OPERATION,
+        "entity %s already is a system, use ecs_system_update() to modify",
+            flecs_errstr(ecs_get_path(world, entity)));
 
-        ecs_system_t *system = flecs_poly_new(ecs_system_t);
-        ecs_assert(system != NULL, ECS_INTERNAL_ERROR, NULL);
-        
-        poly->poly = system;
-        system->dtor = flecs_system_poly_fini;
+    ecs_check(desc->callback != NULL || desc->run != NULL,
+        ECS_INVALID_PARAMETER,
+        "missing implementation for system %s (set .callback or .run)",
+            desc->entity
+                ? flecs_errstr(ecs_get_path(world, desc->entity))
+                : "<unknown>");
 
-        ecs_query_desc_t query_desc = desc->query;
-        query_desc.entity = entity;
+    ecs_system_t *system = flecs_poly_new(ecs_system_t);
+    ecs_assert(system != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        ecs_query_t *query = ecs_query_init(world, &query_desc);
-        if (!query) {
-            ecs_delete(world, entity);
-            return 0;
-        }
+    poly->poly = system;
+    system->dtor = flecs_system_poly_fini;
 
-        /* Prevent the system from moving while we're initializing */
-        flecs_defer_begin(world, world->stages[0]);
+    ecs_query_desc_t query_desc = desc->query;
+    query_desc.entity = entity;
 
-        if (desc->phase) {
-            ecs_add_id(world, entity, desc->phase);
-            ecs_add_pair(world, entity, EcsDependsOn, desc->phase);
-        }
+    ecs_query_t *query = ecs_query_init(world, &query_desc);
+    if (!query) {
+        ecs_delete(world, entity);
+        return 0;
+    }
 
-        system->query = query;
+    /* Prevent the system from moving while we're initializing */
+    flecs_defer_begin(world, world->stages[0]);
 
-        system->run = desc->run;
-        system->action = desc->callback;
+    if (desc->phase) {
+        ecs_add_id(world, entity, desc->phase);
+        ecs_add_pair(world, entity, EcsDependsOn, desc->phase);
+    }
 
-        system->ctx = desc->ctx;
-        system->callback_ctx = desc->callback_ctx;
-        system->run_ctx = desc->run_ctx;
+    system->query = query;
 
-        system->ctx_free = desc->ctx_free;
-        system->callback_ctx_free = desc->callback_ctx_free;
-        system->run_ctx_free = desc->run_ctx_free;
+    system->run = desc->run;
+    system->action = desc->callback;
 
-        system->tick_source = desc->tick_source;
+    system->ctx = desc->ctx;
+    system->callback_ctx = desc->callback_ctx;
+    system->run_ctx = desc->run_ctx;
 
-        system->multi_threaded = desc->multi_threaded;
-        system->immediate = desc->immediate;
+    system->ctx_free = desc->ctx_free;
+    system->callback_ctx_free = desc->callback_ctx_free;
+    system->run_ctx_free = desc->run_ctx_free;
 
-        system->name = ecs_get_path(world, entity);
+    system->tick_source = desc->tick_source;
 
-        if (flecs_system_init_timer(world, entity, desc)) {
-            ecs_delete(world, entity);
-            ecs_defer_end(world);
-            goto error;
-        }
+    system->multi_threaded = desc->multi_threaded;
+    system->immediate = desc->immediate;
 
-        if (ecs_get_name(world, entity)) {
-            ecs_trace("#[green]system#[reset] %s created", 
-                ecs_get_name(world, entity));
-        }
+    system->name = ecs_get_path(world, entity);
 
+    if (flecs_system_init_timer(world, entity, desc)) {
+        ecs_delete(world, entity);
         ecs_defer_end(world);
-    } else {
-        flecs_poly_assert(poly->poly, ecs_system_t);
-        ecs_system_t *system = (ecs_system_t*)poly->poly;
+        goto error;
+    }
 
-        if (system->ctx_free) {
-            if (system->ctx && system->ctx != desc->ctx) {
-                system->ctx_free(system->ctx);
-            }
-        }
+    if (ecs_get_name(world, entity)) {
+        ecs_trace("#[green]system#[reset] %s created",
+            ecs_get_name(world, entity));
+    }
 
-        if (system->callback_ctx_free) {
-            if (system->callback_ctx && system->callback_ctx != desc->callback_ctx) {
-                system->callback_ctx_free(system->callback_ctx);
-                system->callback_ctx_free = NULL;
-                system->callback_ctx = NULL;
-            }
-        }
+    ecs_defer_end(world);
 
-        if (system->run_ctx_free) {
-            if (system->run_ctx && system->run_ctx != desc->run_ctx) {
-                system->run_ctx_free(system->run_ctx);
-                system->run_ctx_free = NULL;
-                system->run_ctx = NULL;
-            }
-        }
+    flecs_poly_modified(world, entity, ecs_system_t);
 
-        if (desc->run) {
-            system->run = desc->run;
-            if (!desc->callback) {
-                system->action = NULL;
-            }
-        }
+    return entity;
+error:
+    return 0;
+}
 
-        if (desc->callback) {
-            system->action = desc->callback;
-            if (!desc->run) {
-                system->run = NULL;
-            }
-        }
+ecs_entity_t ecs_system_update(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    const ecs_system_desc_t *desc)
+{
+    flecs_poly_assert(world, ecs_world_t);
+    ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER,
+        "ecs_system_desc_t was not initialized to zero");
+    ecs_check(entity != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(!desc->entity || desc->entity == entity, ECS_INVALID_PARAMETER,
+        "ecs_system_desc_t::entity does not match system entity");
+    ecs_assert(!(world->flags & EcsWorldReadonly),
+        ECS_INVALID_WHILE_READONLY, NULL);
 
-        if (desc->ctx) {
-            system->ctx = desc->ctx;
-        }
+    ecs_system_t *system = flecs_poly_get(world, entity, ecs_system_t);
+    ecs_check(system != NULL, ECS_INVALID_PARAMETER,
+        "entity %s is not a system, use ecs_system_init() to create it",
+            flecs_errstr(ecs_get_path(world, entity)));
 
-        if (desc->callback_ctx) {
-            system->callback_ctx = desc->callback_ctx;
+    /* desc->ctx == NULL means "do not touch ctx", not "set ctx to NULL".
+     * Only free the existing ctx when the caller is explicitly replacing it. */
+    if (desc->ctx && desc->ctx != system->ctx) {
+        if (system->ctx_free && system->ctx) {
+            system->ctx_free(system->ctx);
         }
+    }
 
-        if (desc->run_ctx) {
-            system->run_ctx = desc->run_ctx;
+    if (system->callback_ctx_free) {
+        if (system->callback_ctx && system->callback_ctx != desc->callback_ctx) {
+            system->callback_ctx_free(system->callback_ctx);
+            system->callback_ctx_free = NULL;
+            system->callback_ctx = NULL;
         }
+    }
 
-        if (desc->ctx_free) {
-            system->ctx_free = desc->ctx_free;
+    if (system->run_ctx_free) {
+        if (system->run_ctx && system->run_ctx != desc->run_ctx) {
+            system->run_ctx_free(system->run_ctx);
+            system->run_ctx_free = NULL;
+            system->run_ctx = NULL;
         }
+    }
 
-        if (desc->callback_ctx_free) {
-            system->callback_ctx_free = desc->callback_ctx_free;
+    if (desc->run) {
+        system->run = desc->run;
+        if (!desc->callback) {
+            system->action = NULL;
         }
+    }
 
-        if (desc->run_ctx_free) {
-            system->run_ctx_free = desc->run_ctx_free;
+    if (desc->callback) {
+        system->action = desc->callback;
+        if (!desc->run) {
+            system->run = NULL;
         }
+    }
 
-        if (desc->multi_threaded) {
-            system->multi_threaded = desc->multi_threaded;
-        }
+    if (desc->ctx) {
+        system->ctx = desc->ctx;
+    }
 
-        if (desc->immediate) {
-            system->immediate = desc->immediate;
-        }
+    if (desc->callback_ctx) {
+        system->callback_ctx = desc->callback_ctx;
+    }
 
-        if (flecs_system_init_timer(world, entity, desc)) {
-            return 0;
-        }
+    if (desc->run_ctx) {
+        system->run_ctx = desc->run_ctx;
+    }
+
+    if (desc->ctx_free) {
+        system->ctx_free = desc->ctx_free;
+    }
+
+    if (desc->callback_ctx_free) {
+        system->callback_ctx_free = desc->callback_ctx_free;
+    }
+
+    if (desc->run_ctx_free) {
+        system->run_ctx_free = desc->run_ctx_free;
+    }
+
+    if (desc->multi_threaded) {
+        system->multi_threaded = desc->multi_threaded;
+    }
+
+    if (desc->immediate) {
+        system->immediate = desc->immediate;
+    }
+
+    if (flecs_system_init_timer(world, entity, desc)) {
+        return 0;
     }
 
     flecs_poly_modified(world, entity, ecs_system_t);

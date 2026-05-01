@@ -655,6 +655,9 @@ void System_register_twice_w_each(void);
 void System_register_twice_w_run(void);
 void System_register_twice_w_run_each(void);
 void System_register_twice_w_each_run(void);
+void System_lookup_and_update_each(void);
+void System_lookup_and_update_run(void);
+void System_lookup_and_update_ctx(void);
 void System_set_group(void);
 void System_run_w_0_src_query(void);
 
@@ -1110,6 +1113,9 @@ void Observer_register_twice_w_each(void);
 void Observer_register_twice_w_run(void);
 void Observer_register_twice_w_run_each(void);
 void Observer_register_twice_w_each_run(void);
+void Observer_lookup_and_update_each(void);
+void Observer_lookup_and_update_run(void);
+void Observer_lookup_and_update_ctx(void);
 void Observer_other_table(void);
 void Observer_other_table_w_pair(void);
 void Observer_other_table_w_pair_wildcard(void);
@@ -4190,6 +4196,18 @@ bake_test_case System_testcases[] = {
         System_register_twice_w_each_run
     },
     {
+        "lookup_and_update_each",
+        System_lookup_and_update_each
+    },
+    {
+        "lookup_and_update_run",
+        System_lookup_and_update_run
+    },
+    {
+        "lookup_and_update_ctx",
+        System_lookup_and_update_ctx
+    },
+    {
         "set_group",
         System_set_group
     },
@@ -5974,6 +5992,18 @@ bake_test_case Observer_testcases[] = {
     {
         "register_twice_w_each_run",
         Observer_register_twice_w_each_run
+    },
+    {
+        "lookup_and_update_each",
+        Observer_lookup_and_update_each
+    },
+    {
+        "lookup_and_update_run",
+        Observer_lookup_and_update_run
+    },
+    {
+        "lookup_and_update_ctx",
+        Observer_lookup_and_update_ctx
     },
     {
         "other_table",
@@ -8103,7 +8133,7 @@ static bake_test_suite suites[] = {
         "System",
         NULL,
         NULL,
-        75,
+        78,
         System_testcases
     },
     {
@@ -8147,7 +8177,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        69,
+        72,
         Observer_testcases
     },
     {

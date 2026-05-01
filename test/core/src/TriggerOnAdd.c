@@ -508,8 +508,7 @@ void TriggerOnAdd_override_after_add_in_on_add(void) {
 
     ECS_OBSERVER(world, AddVelocity, EcsOnAdd, Position(self));
 
-    ecs_observer(world, {
-        .entity = ecs_entity(world, {.id = AddVelocity}),
+    ecs_observer_update(world, AddVelocity, &(ecs_observer_desc_t){
         .ctx = &ecs_id(Velocity)
     });
 
@@ -561,8 +560,7 @@ void TriggerOnAdd_set_after_add_in_on_add(void) {
     ECS_OBSERVER(world, AddVelocity, EcsOnAdd, Position);
     ECS_OBSERVER(world, OnSetPosition, EcsOnSet, Position);
 
-    ecs_observer(world, {
-        .entity = ecs_entity(world, {.id = AddVelocity}),
+    ecs_observer_update(world, AddVelocity, &(ecs_observer_desc_t){
         .ctx = &ecs_id(Velocity)
     });
 
@@ -733,8 +731,8 @@ void TriggerOnAdd_sys_context(void) {
 
     ECS_OBSERVER(world, TestContext, EcsOnAdd, Position);
 
-    ecs_observer(world, {
-        .entity = ecs_entity(world, {.id = TestContext}), .ctx = &param
+    ecs_observer_update(world, TestContext, &(ecs_observer_desc_t){
+        .ctx = &param
     });
 
     test_assert(ecs_observer_get(world, TestContext)->ctx == &param);
@@ -750,8 +748,8 @@ void TriggerOnAdd_get_sys_context_from_param(void) {
 
     ECS_OBSERVER(world, TestContext, EcsOnAdd, Position);
 
-    ecs_observer(world, {
-        .entity = ecs_entity(world, {.id = TestContext}), .ctx = &param
+    ecs_observer_update(world, TestContext, &(ecs_observer_desc_t){
+        .ctx = &param
     });
 
     /* Set world context so system can compare if pointer is correct */

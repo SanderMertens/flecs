@@ -1285,102 +1285,42 @@ ecs_entity_t ecs_observer_init(
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER,
         "ecs_observer_desc_t was not initialized to zero");
-    ecs_check(!(world->flags & EcsWorldFini), ECS_INVALID_OPERATION, 
+    ecs_check(!(world->flags & EcsWorldFini), ECS_INVALID_OPERATION,
         "cannot create observer while world is being deleted");
 
+    bool entity_created = false;
     entity = desc->entity;
     if (!entity && !desc->global_observer) {
         entity = ecs_entity(world, {0});
+        entity_created = true;
     }
 
-    EcsPoly *poly = NULL;
     if (!entity) {
-        ecs_observer_t *o = flecs_observer_init(world, entity, desc);\
+        ecs_observer_t *o = flecs_observer_init(world, entity, desc);
         if (!o) {
             goto error;
         }
 
-        ecs_vec_append_t(NULL, &world->observable.global_observers, 
+        ecs_vec_append_t(NULL, &world->observable.global_observers,
             ecs_observer_t*)[0] = o;
     } else {
-        poly = flecs_poly_bind(world, entity, ecs_observer_t);
+        EcsPoly *poly = flecs_poly_bind(world, entity, ecs_observer_t);
+        ecs_check(poly->poly == NULL, ECS_INVALID_OPERATION,
+            "entity %s already is an observer, use ecs_observer_update() "
+                "to modify",
+                    flecs_errstr(ecs_get_path(world, entity)));
 
-        if (!poly->poly) {
-            ecs_observer_t *o = flecs_observer_init(world, entity, desc);\
-            if (!o) {
-                goto error;
-            }
+        ecs_observer_t *o = flecs_observer_init(world, entity, desc);
+        if (!o) {
+            goto error;
+        }
 
-            ecs_assert(o->entity == entity, ECS_INTERNAL_ERROR, NULL);
-            poly->poly = o;
+        ecs_assert(o->entity == entity, ECS_INTERNAL_ERROR, NULL);
+        poly->poly = o;
 
-            if (ecs_get_name(world, entity)) {
-                ecs_trace("#[green]observer#[reset] %s created", 
-                    ecs_get_name(world, entity));
-            }
-        } else {
-            flecs_poly_assert(poly->poly, ecs_observer_t);
-            ecs_observer_t *o = (ecs_observer_t*)poly->poly;
-
-            if (o->ctx_free) {
-                if (o->ctx && o->ctx != desc->ctx) {
-                    o->ctx_free(o->ctx);
-                }
-            }
-
-            if (o->callback_ctx_free) {
-                if (o->callback_ctx && o->callback_ctx != desc->callback_ctx) {
-                    o->callback_ctx_free(o->callback_ctx);
-                    o->callback_ctx_free = NULL;
-                    o->callback_ctx = NULL;
-                }
-            }
-
-            if (o->run_ctx_free) {
-                if (o->run_ctx && o->run_ctx != desc->run_ctx) {
-                    o->run_ctx_free(o->run_ctx);
-                    o->run_ctx_free = NULL;
-                    o->run_ctx = NULL;
-                }
-            }
-
-            if (desc->run) {
-                o->run = desc->run;
-                if (!desc->callback) {
-                    o->callback = NULL;
-                }
-            }
-
-            if (desc->callback) {
-                o->callback = desc->callback;
-                if (!desc->run) {
-                    o->run = NULL;
-                }
-            }
-
-            if (desc->ctx) {
-                o->ctx = desc->ctx;
-            }
-
-            if (desc->callback_ctx) {
-                o->callback_ctx = desc->callback_ctx;
-            }
-
-            if (desc->run_ctx) {
-                o->run_ctx = desc->run_ctx;
-            }
-
-            if (desc->ctx_free) {
-                o->ctx_free = desc->ctx_free;
-            }
-
-            if (desc->callback_ctx_free) {
-                o->callback_ctx_free = desc->callback_ctx_free;
-            }
-
-            if (desc->run_ctx_free) {
-                o->run_ctx_free = desc->run_ctx_free;
-            }
+        if (ecs_get_name(world, entity)) {
+            ecs_trace("#[green]observer#[reset] %s created",
+                ecs_get_name(world, entity));
         }
 
         flecs_poly_modified(world, entity, ecs_observer_t);
@@ -1388,9 +1328,100 @@ ecs_entity_t ecs_observer_init(
 
     return entity;
 error:
-    if (entity) {
+    /* Only delete the entity if we created it ourselves; entities provided by
+     * the caller must be preserved on failure. */
+    if (entity_created) {
         ecs_delete(world, entity);
     }
+    return 0;
+}
+
+ecs_entity_t ecs_observer_update(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    const ecs_observer_desc_t *desc)
+{
+    flecs_poly_assert(world, ecs_world_t);
+    ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER,
+        "ecs_observer_desc_t was not initialized to zero");
+    ecs_check(entity != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(!desc->entity || desc->entity == entity, ECS_INVALID_PARAMETER,
+        "ecs_observer_desc_t::entity does not match observer entity");
+    ecs_check(!(world->flags & EcsWorldFini), ECS_INVALID_OPERATION,
+        "cannot update observer while world is being deleted");
+
+    ecs_observer_t *o = flecs_poly_get(world, entity, ecs_observer_t);
+    ecs_check(o != NULL, ECS_INVALID_PARAMETER,
+        "entity %s is not an observer, use ecs_observer_init() to create it",
+            flecs_errstr(ecs_get_path(world, entity)));
+
+    /* desc->ctx == NULL means "do not touch ctx", not "set ctx to NULL".
+     * Only free the existing ctx when the caller is explicitly replacing it. */
+    if (desc->ctx && desc->ctx != o->ctx) {
+        if (o->ctx_free && o->ctx) {
+            o->ctx_free(o->ctx);
+        }
+    }
+
+    if (o->callback_ctx_free) {
+        if (o->callback_ctx && o->callback_ctx != desc->callback_ctx) {
+            o->callback_ctx_free(o->callback_ctx);
+            o->callback_ctx_free = NULL;
+            o->callback_ctx = NULL;
+        }
+    }
+
+    if (o->run_ctx_free) {
+        if (o->run_ctx && o->run_ctx != desc->run_ctx) {
+            o->run_ctx_free(o->run_ctx);
+            o->run_ctx_free = NULL;
+            o->run_ctx = NULL;
+        }
+    }
+
+    if (desc->run) {
+        o->run = desc->run;
+        if (!desc->callback) {
+            o->callback = NULL;
+        }
+    }
+
+    if (desc->callback) {
+        o->callback = desc->callback;
+        if (!desc->run) {
+            o->run = NULL;
+        }
+    }
+
+    if (desc->ctx) {
+        o->ctx = desc->ctx;
+    }
+
+    if (desc->callback_ctx) {
+        o->callback_ctx = desc->callback_ctx;
+    }
+
+    if (desc->run_ctx) {
+        o->run_ctx = desc->run_ctx;
+    }
+
+    if (desc->ctx_free) {
+        o->ctx_free = desc->ctx_free;
+    }
+
+    if (desc->callback_ctx_free) {
+        o->callback_ctx_free = desc->callback_ctx_free;
+    }
+
+    if (desc->run_ctx_free) {
+        o->run_ctx_free = desc->run_ctx_free;
+    }
+
+    flecs_poly_modified(world, entity, ecs_observer_t);
+
+    return entity;
+error:
     return 0;
 }
 

@@ -2468,8 +2468,7 @@ void Commands_update_observer_while_deferred(void) {
     test_int(system_2_invoked, 0);
 
     ecs_defer_begin(world);
-    ecs_observer_init(world, &(ecs_observer_desc_t){
-        .entity = observer,
+    ecs_observer_update(world, observer, &(ecs_observer_desc_t){
         .callback = System2
     });
     ecs_defer_end(world);

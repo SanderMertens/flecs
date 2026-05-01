@@ -33,8 +33,7 @@ ecs_world_t* init_world(void) {
 
     ECS_SYSTEM(world, Progress, EcsOnUpdate, Position);
 
-    ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = Progress,
+    ecs_system_update(world, Progress, &(ecs_system_desc_t){
         .multi_threaded = true
     });
 
@@ -752,8 +751,7 @@ void test_combs_100_entity(int THREADS) {
     ECS_QUERY_DEFINE(world, qTestSubset, Position);
     ECS_SYSTEM(world, TestAll, EcsOnUpdate, Position);
 
-    ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = TestAll,
+    ecs_system_update(world, TestAll, &(ecs_system_desc_t){
         .multi_threaded = true
     });
 
@@ -847,8 +845,7 @@ void test_combs_100_entity_2_types(int THREADS) {
     ECS_QUERY_DEFINE(world, qTestSubset, Position);
     ECS_SYSTEM(world, TestAll, EcsOnUpdate, Position);
 
-    ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = TestAll,
+    ecs_system_update(world, TestAll, &(ecs_system_desc_t){
         .multi_threaded = true
     });
 
@@ -909,8 +906,7 @@ void MultiThread_change_thread_count(void) {
     ECS_QUERY_DEFINE(world, qTestSubset, Position);
     ECS_SYSTEM(world, TestAll, EcsOnUpdate, Position);
 
-    ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = TestAll,
+    ecs_system_update(world, TestAll, &(ecs_system_desc_t){
         .multi_threaded = true
     });
 
@@ -967,8 +963,7 @@ void MultiThread_multithread_quit(void) {
 
     ECS_SYSTEM(world, QuitSystem, EcsOnUpdate, Position);
 
-    ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = QuitSystem,
+    ecs_system_update(world, QuitSystem, &(ecs_system_desc_t){
         .multi_threaded = true
     });
 
@@ -993,8 +988,7 @@ void MultiThread_schedule_w_tasks(void) {
 
     ECS_SYSTEM(world, MtTask, EcsOnUpdate, 0);
 
-    ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = MtTask,
+    ecs_system_update(world, MtTask, &(ecs_system_desc_t){
         .multi_threaded = true
     });
 
@@ -1029,8 +1023,7 @@ void MultiThread_reactive_system(void) {
     ECS_SYSTEM(world, PeriodicDummySystem, EcsOnUpdate, Position);
     ECS_OBSERVER(world, ReactiveDummySystem, EcsOnSet, Position);
 
-    ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = PeriodicDummySystem,
+    ecs_system_update(world, PeriodicDummySystem, &(ecs_system_desc_t){
         .multi_threaded = true
     });
 
@@ -1074,8 +1067,7 @@ void MultiThread_2_threads_single_threaded_system(void) {
     ECS_COMPONENT_DEFINE(world, Position);        
     ECS_SYSTEM(world, SingleThreadedSystem, EcsOnUpdate, Position);
 
-    ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = SingleThreadedSystem,
+    ecs_system_update(world, SingleThreadedSystem, &(ecs_system_desc_t){
         .multi_threaded = false
     });
 

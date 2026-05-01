@@ -2004,6 +2004,8 @@ void Observer_add_after_delete_observer(void);
 void Observer_remove_after_delete_observer(void);
 void Observer_delete_observer_w_ctx(void);
 void Observer_update_ctx(void);
+void Observer_init_failure_preserves_user_entity(void);
+void Observer_partial_update_preserves_ctx(void);
 void Observer_filter_w_strings(void);
 void Observer_iter_type_set(void);
 void Observer_readonly_term(void);
@@ -11099,6 +11101,14 @@ bake_test_case Observer_testcases[] = {
         Observer_update_ctx
     },
     {
+        "init_failure_preserves_user_entity",
+        Observer_init_failure_preserves_user_entity
+    },
+    {
+        "partial_update_preserves_ctx",
+        Observer_partial_update_preserves_ctx
+    },
+    {
         "filter_w_strings",
         Observer_filter_w_strings
     },
@@ -16349,7 +16359,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        334,
+        336,
         Observer_testcases
     },
     {

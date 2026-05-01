@@ -112,6 +112,8 @@ void Pipeline_inout_none_after_write(void);
 void Pipeline_empty_pipeline_after_disable_phase(void);
 void Pipeline_set_time_scale_w_stage(void);
 void Pipeline_set_time_scale_w_readonly(void);
+void Pipeline_init_failure_preserves_user_entity(void);
+void Pipeline_update_pipeline_replaces_existing(void);
 
 // Testsuite 'SystemMisc'
 void SystemMisc_invalid_not_without_id(void);
@@ -131,6 +133,7 @@ void SystemMisc_invalid_null_string(void);
 void SystemMisc_invalid_empty_string(void);
 void SystemMisc_invalid_empty_string_w_space(void);
 void SystemMisc_redefine_row_system(void);
+void SystemMisc_update_row_system(void);
 void SystemMisc_system_w_or_prefab(void);
 void SystemMisc_system_w_or_disabled(void);
 void SystemMisc_system_w_or_disabled_and_prefab(void);
@@ -149,6 +152,11 @@ void SystemMisc_redefine_0_signature(void);
 void SystemMisc_redeclare_system_explicit_id(void);
 void SystemMisc_redeclare_system_explicit_id_null_expr(void);
 void SystemMisc_redeclare_system_explicit_id_no_name(void);
+void SystemMisc_update_null_signature(void);
+void SystemMisc_update_0_signature(void);
+void SystemMisc_update_system_explicit_id(void);
+void SystemMisc_update_system_explicit_id_null_expr(void);
+void SystemMisc_update_system_explicit_id_no_name(void);
 void SystemMisc_declare_different_id_same_name(void);
 void SystemMisc_declare_different_id_same_name_w_scope(void);
 void SystemMisc_rw_in_implicit_any(void);
@@ -168,6 +176,7 @@ void SystemMisc_delete_system(void);
 void SystemMisc_delete_pipeline_system(void);
 void SystemMisc_delete_system_w_ctx(void);
 void SystemMisc_update_ctx(void);
+void SystemMisc_partial_update_preserves_ctx(void);
 void SystemMisc_run_custom_run_action(void);
 void SystemMisc_pipeline_custom_run_action(void);
 void SystemMisc_change_custom_run_action(void);
@@ -976,6 +985,14 @@ bake_test_case Pipeline_testcases[] = {
     {
         "set_time_scale_w_readonly",
         Pipeline_set_time_scale_w_readonly
+    },
+    {
+        "init_failure_preserves_user_entity",
+        Pipeline_init_failure_preserves_user_entity
+    },
+    {
+        "update_pipeline_replaces_existing",
+        Pipeline_update_pipeline_replaces_existing
     }
 };
 
@@ -1049,6 +1066,10 @@ bake_test_case SystemMisc_testcases[] = {
         SystemMisc_redefine_row_system
     },
     {
+        "update_row_system",
+        SystemMisc_update_row_system
+    },
+    {
         "system_w_or_prefab",
         SystemMisc_system_w_or_prefab
     },
@@ -1119,6 +1140,26 @@ bake_test_case SystemMisc_testcases[] = {
     {
         "redeclare_system_explicit_id_no_name",
         SystemMisc_redeclare_system_explicit_id_no_name
+    },
+    {
+        "update_null_signature",
+        SystemMisc_update_null_signature
+    },
+    {
+        "update_0_signature",
+        SystemMisc_update_0_signature
+    },
+    {
+        "update_system_explicit_id",
+        SystemMisc_update_system_explicit_id
+    },
+    {
+        "update_system_explicit_id_null_expr",
+        SystemMisc_update_system_explicit_id_null_expr
+    },
+    {
+        "update_system_explicit_id_no_name",
+        SystemMisc_update_system_explicit_id_no_name
     },
     {
         "declare_different_id_same_name",
@@ -1195,6 +1236,10 @@ bake_test_case SystemMisc_testcases[] = {
     {
         "update_ctx",
         SystemMisc_update_ctx
+    },
+    {
+        "partial_update_preserves_ctx",
+        SystemMisc_partial_update_preserves_ctx
     },
     {
         "run_custom_run_action",
@@ -2696,14 +2741,14 @@ static bake_test_suite suites[] = {
         "Pipeline",
         NULL,
         NULL,
-        89,
+        91,
         Pipeline_testcases
     },
     {
         "SystemMisc",
         NULL,
         NULL,
-        72,
+        79,
         SystemMisc_testcases
     },
     {

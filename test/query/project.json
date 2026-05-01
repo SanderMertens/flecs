@@ -749,7 +749,8 @@
                 "mixed_uncacheable_w_shared",
                 "query_has_and_optional_and",
                 "recycled_pair",
-                "recycled_component_id"
+                "recycled_component_id",
+                "update_query_replaces_existing"
             ]
         }, {
             "id": "Combinations",

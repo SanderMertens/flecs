@@ -266,7 +266,7 @@ ecs_entity_t ecs_system_init(
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER,
         "ecs_system_desc_t was not initialized to zero");
-    ecs_assert(!(world->flags & EcsWorldReadonly), 
+    ecs_assert(!(world->flags & EcsWorldReadonly),
         ECS_INVALID_WHILE_READONLY, NULL);
 
     ecs_entity_t entity = desc->entity;
@@ -275,144 +275,172 @@ ecs_entity_t ecs_system_init(
     }
 
     EcsPoly *poly = flecs_poly_bind(world, entity, ecs_system_t);
-    if (!poly->poly) {
-        ecs_check(desc->callback != NULL || desc->run != NULL, 
-            ECS_INVALID_PARAMETER,
-            "missing implementation for system %s (set .callback or .run)",
-                desc->entity 
-                    ? flecs_errstr(ecs_get_path(world, desc->entity)) 
-                    : "<unknown>");
+    ecs_check(poly->poly == NULL, ECS_INVALID_OPERATION,
+        "entity %s already is a system, use ecs_system_update() to modify",
+            flecs_errstr(ecs_get_path(world, entity)));
 
-        ecs_system_t *system = flecs_poly_new(ecs_system_t);
-        ecs_assert(system != NULL, ECS_INTERNAL_ERROR, NULL);
-        
-        poly->poly = system;
-        system->dtor = flecs_system_poly_fini;
+    ecs_check(desc->callback != NULL || desc->run != NULL,
+        ECS_INVALID_PARAMETER,
+        "missing implementation for system %s (set .callback or .run)",
+            desc->entity
+                ? flecs_errstr(ecs_get_path(world, desc->entity))
+                : "<unknown>");
 
-        ecs_query_desc_t query_desc = desc->query;
-        query_desc.entity = entity;
+    ecs_system_t *system = flecs_poly_new(ecs_system_t);
+    ecs_assert(system != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        ecs_query_t *query = ecs_query_init(world, &query_desc);
-        if (!query) {
-            ecs_delete(world, entity);
-            return 0;
-        }
+    poly->poly = system;
+    system->dtor = flecs_system_poly_fini;
 
-        /* Prevent the system from moving while we're initializing */
-        flecs_defer_begin(world, world->stages[0]);
+    ecs_query_desc_t query_desc = desc->query;
+    query_desc.entity = entity;
 
-        if (desc->phase) {
-            ecs_add_id(world, entity, desc->phase);
-            ecs_add_pair(world, entity, EcsDependsOn, desc->phase);
-        }
+    ecs_query_t *query = ecs_query_init(world, &query_desc);
+    if (!query) {
+        ecs_delete(world, entity);
+        return 0;
+    }
 
-        system->query = query;
+    /* Prevent the system from moving while we're initializing */
+    flecs_defer_begin(world, world->stages[0]);
 
-        system->run = desc->run;
-        system->action = desc->callback;
+    if (desc->phase) {
+        ecs_add_id(world, entity, desc->phase);
+        ecs_add_pair(world, entity, EcsDependsOn, desc->phase);
+    }
 
-        system->ctx = desc->ctx;
-        system->callback_ctx = desc->callback_ctx;
-        system->run_ctx = desc->run_ctx;
+    system->query = query;
 
-        system->ctx_free = desc->ctx_free;
-        system->callback_ctx_free = desc->callback_ctx_free;
-        system->run_ctx_free = desc->run_ctx_free;
+    system->run = desc->run;
+    system->action = desc->callback;
 
-        system->tick_source = desc->tick_source;
+    system->ctx = desc->ctx;
+    system->callback_ctx = desc->callback_ctx;
+    system->run_ctx = desc->run_ctx;
 
-        system->multi_threaded = desc->multi_threaded;
-        system->immediate = desc->immediate;
+    system->ctx_free = desc->ctx_free;
+    system->callback_ctx_free = desc->callback_ctx_free;
+    system->run_ctx_free = desc->run_ctx_free;
 
-        system->name = ecs_get_path(world, entity);
+    system->tick_source = desc->tick_source;
 
-        if (flecs_system_init_timer(world, entity, desc)) {
-            ecs_delete(world, entity);
-            ecs_defer_end(world);
-            goto error;
-        }
+    system->multi_threaded = desc->multi_threaded;
+    system->immediate = desc->immediate;
 
-        if (ecs_get_name(world, entity)) {
-            ecs_trace("#[green]system#[reset] %s created", 
-                ecs_get_name(world, entity));
-        }
+    system->name = ecs_get_path(world, entity);
 
+    if (flecs_system_init_timer(world, entity, desc)) {
+        ecs_delete(world, entity);
         ecs_defer_end(world);
-    } else {
-        flecs_poly_assert(poly->poly, ecs_system_t);
-        ecs_system_t *system = (ecs_system_t*)poly->poly;
+        goto error;
+    }
 
-        if (system->ctx_free) {
-            if (system->ctx && system->ctx != desc->ctx) {
-                system->ctx_free(system->ctx);
-            }
-        }
+    if (ecs_get_name(world, entity)) {
+        ecs_trace("#[green]system#[reset] %s created",
+            ecs_get_name(world, entity));
+    }
 
-        if (system->callback_ctx_free) {
-            if (system->callback_ctx && system->callback_ctx != desc->callback_ctx) {
-                system->callback_ctx_free(system->callback_ctx);
-                system->callback_ctx_free = NULL;
-                system->callback_ctx = NULL;
-            }
-        }
+    ecs_defer_end(world);
 
-        if (system->run_ctx_free) {
-            if (system->run_ctx && system->run_ctx != desc->run_ctx) {
-                system->run_ctx_free(system->run_ctx);
-                system->run_ctx_free = NULL;
-                system->run_ctx = NULL;
-            }
-        }
+    flecs_poly_modified(world, entity, ecs_system_t);
 
-        if (desc->run) {
-            system->run = desc->run;
-            if (!desc->callback) {
-                system->action = NULL;
-            }
-        }
+    return entity;
+error:
+    return 0;
+}
 
-        if (desc->callback) {
-            system->action = desc->callback;
-            if (!desc->run) {
-                system->run = NULL;
-            }
-        }
+ecs_entity_t ecs_system_update(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    const ecs_system_desc_t *desc)
+{
+    flecs_poly_assert(world, ecs_world_t);
+    ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER,
+        "ecs_system_desc_t was not initialized to zero");
+    ecs_check(entity != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(!desc->entity || desc->entity == entity, ECS_INVALID_PARAMETER,
+        "ecs_system_desc_t::entity does not match system entity");
+    ecs_assert(!(world->flags & EcsWorldReadonly),
+        ECS_INVALID_WHILE_READONLY, NULL);
 
-        if (desc->ctx) {
-            system->ctx = desc->ctx;
-        }
+    ecs_system_t *system = flecs_poly_get(world, entity, ecs_system_t);
+    ecs_check(system != NULL, ECS_INVALID_PARAMETER,
+        "entity %s is not a system, use ecs_system_init() to create it",
+            flecs_errstr(ecs_get_path(world, entity)));
 
-        if (desc->callback_ctx) {
-            system->callback_ctx = desc->callback_ctx;
+    /* desc->ctx == NULL means "do not touch ctx", not "set ctx to NULL".
+     * Only free the existing ctx when the caller is explicitly replacing it. */
+    if (desc->ctx && desc->ctx != system->ctx) {
+        if (system->ctx_free && system->ctx) {
+            system->ctx_free(system->ctx);
         }
+    }
 
-        if (desc->run_ctx) {
-            system->run_ctx = desc->run_ctx;
+    if (system->callback_ctx_free) {
+        if (system->callback_ctx && system->callback_ctx != desc->callback_ctx) {
+            system->callback_ctx_free(system->callback_ctx);
+            system->callback_ctx_free = NULL;
+            system->callback_ctx = NULL;
         }
+    }
 
-        if (desc->ctx_free) {
-            system->ctx_free = desc->ctx_free;
+    if (system->run_ctx_free) {
+        if (system->run_ctx && system->run_ctx != desc->run_ctx) {
+            system->run_ctx_free(system->run_ctx);
+            system->run_ctx_free = NULL;
+            system->run_ctx = NULL;
         }
+    }
 
-        if (desc->callback_ctx_free) {
-            system->callback_ctx_free = desc->callback_ctx_free;
+    if (desc->run) {
+        system->run = desc->run;
+        if (!desc->callback) {
+            system->action = NULL;
         }
+    }
 
-        if (desc->run_ctx_free) {
-            system->run_ctx_free = desc->run_ctx_free;
+    if (desc->callback) {
+        system->action = desc->callback;
+        if (!desc->run) {
+            system->run = NULL;
         }
+    }
 
-        if (desc->multi_threaded) {
-            system->multi_threaded = desc->multi_threaded;
-        }
+    if (desc->ctx) {
+        system->ctx = desc->ctx;
+    }
 
-        if (desc->immediate) {
-            system->immediate = desc->immediate;
-        }
+    if (desc->callback_ctx) {
+        system->callback_ctx = desc->callback_ctx;
+    }
 
-        if (flecs_system_init_timer(world, entity, desc)) {
-            return 0;
-        }
+    if (desc->run_ctx) {
+        system->run_ctx = desc->run_ctx;
+    }
+
+    if (desc->ctx_free) {
+        system->ctx_free = desc->ctx_free;
+    }
+
+    if (desc->callback_ctx_free) {
+        system->callback_ctx_free = desc->callback_ctx_free;
+    }
+
+    if (desc->run_ctx_free) {
+        system->run_ctx_free = desc->run_ctx_free;
+    }
+
+    if (desc->multi_threaded) {
+        system->multi_threaded = desc->multi_threaded;
+    }
+
+    if (desc->immediate) {
+        system->immediate = desc->immediate;
+    }
+
+    if (flecs_system_init_timer(world, entity, desc)) {
+        return 0;
     }
 
     flecs_poly_modified(world, entity, ecs_system_t);

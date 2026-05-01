@@ -34,7 +34,7 @@ typedef struct EcsTickSource {
     ecs_ftime_t time_elapsed;  /**< Time elapsed since the last tick. */
 } EcsTickSource;
 
-/** Use with ecs_system_init() to create or update a system. */
+/** Use with ecs_system_init() and ecs_system_update(). */
 typedef struct ecs_system_desc_t {
     int32_t _canary;       /**< Used for validity testing. Do not set. */
 
@@ -102,6 +102,9 @@ typedef struct ecs_system_desc_t {
 } ecs_system_desc_t;
 
 /** Create a system.
+ * If the descriptor specifies an existing entity, the entity must not already
+ * be associated with a system. To modify an existing system, use
+ * ecs_system_update().
  *
  * @param world The world.
  * @param desc The system descriptor.
@@ -110,6 +113,26 @@ typedef struct ecs_system_desc_t {
 FLECS_API
 ecs_entity_t ecs_system_init(
     ecs_world_t *world,
+    const ecs_system_desc_t *desc);
+
+/** Update an existing system.
+ * Updates the configuration of a system that was previously created with
+ * ecs_system_init(). Only fields in desc that are set to a non-default value
+ * will be applied; fields left at their default value preserve the existing
+ * configuration of the system.
+ *
+ * The query field of the descriptor is not used by this function; the system
+ * query cannot be modified after creation.
+ *
+ * @param world The world.
+ * @param system The system to update.
+ * @param desc The system descriptor.
+ * @return The system entity, or 0 if the operation failed.
+ */
+FLECS_API
+ecs_entity_t ecs_system_update(
+    ecs_world_t *world,
+    ecs_entity_t system,
     const ecs_system_desc_t *desc);
 
 /** System type, get with ecs_system_get(). */

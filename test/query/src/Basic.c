@@ -9586,8 +9586,7 @@ void Basic_create_query_w_existing_entity(void) {
 
     test_assert(q_1 != NULL);
 
-    ecs_query_t *q_2 = ecs_query(world, {
-        .entity = e,
+    ecs_query_t *q_2 = ecs_query_update(world, e, &(ecs_query_desc_t){
         .terms = {
             { .id = Foo },
         },
@@ -9595,7 +9594,7 @@ void Basic_create_query_w_existing_entity(void) {
     });
 
     test_assert(q_2 != NULL);
-    
+
     test_str(ecs_get_name(world, e), "q");
 
     ecs_query_fini(q_2);
@@ -9628,8 +9627,7 @@ void Basic_create_multi_component_query_w_existing_entity(void) {
 
     test_assert(q_1 != NULL);
 
-    ecs_query_t *q_2 = ecs_query(world, {
-        .entity = e,
+    ecs_query_t *q_2 = ecs_query_update(world, e, &(ecs_query_desc_t){
         .terms = {
             { .id = Foo },
             { .id = Bar },
@@ -9638,7 +9636,7 @@ void Basic_create_multi_component_query_w_existing_entity(void) {
     });
 
     test_assert(q_2 != NULL);
-    
+
     test_str(ecs_get_name(world, e), "q");
 
     ecs_query_fini(q_2);
@@ -9671,8 +9669,7 @@ void Basic_create_query_w_existing_entity_different_term_count(void) {
 
     test_assert(q_1 != NULL);
 
-    ecs_query_t *q_2 = ecs_query(world, {
-        .entity = e,
+    ecs_query_t *q_2 = ecs_query_update(world, e, &(ecs_query_desc_t){
         .terms = {
             { .id = Foo },
         },
@@ -9680,7 +9677,7 @@ void Basic_create_query_w_existing_entity_different_term_count(void) {
     });
 
     test_assert(q_2 != NULL);
-    
+
     test_str(ecs_get_name(world, e), "q");
 
     ecs_query_fini(q_2);
@@ -11792,4 +11789,55 @@ void Basic_recycled_component_id(void) {
     ecs_query_fini(q);
 
     ecs_fini(ecs);
+}
+
+void Basic_update_query_replaces_existing(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_entity_t e_a = ecs_new_w(world, TagA);
+    ecs_entity_t e_b = ecs_new_w(world, TagB);
+
+    ecs_entity_t qe = ecs_entity(world, { .name = "MyQuery" });
+
+    ecs_query_t *q1 = ecs_query_init(world, &(ecs_query_desc_t){
+        .entity = qe,
+        .terms = {{ TagA }},
+        .cache_kind = cache_kind
+    });
+    test_assert(q1 != NULL);
+    test_assert(q1->entity == qe);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q1);
+        test_assert(ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_assert(it.entities[0] == e_a);
+        test_assert(!ecs_query_next(&it));
+    }
+
+    /* Replace the query attached to qe with one matching TagB. */
+    ecs_query_t *q2 = ecs_query_update(world, qe, &(ecs_query_desc_t){
+        .terms = {{ TagB }},
+        .cache_kind = cache_kind
+    });
+    test_assert(q2 != NULL);
+    test_assert(q2->entity == qe);
+
+    /* New query must match TagB. */
+    {
+        ecs_iter_t it = ecs_query_iter(world, q2);
+        test_assert(ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_assert(it.entities[0] == e_b);
+        test_assert(!ecs_query_next(&it));
+    }
+
+    /* Querying the entity should return the latest query. */
+    test_assert(ecs_query_get(world, qe) == q2);
+    test_str(ecs_get_name(world, qe), "MyQuery");
+
+    ecs_fini(world);
 }

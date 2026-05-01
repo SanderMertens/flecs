@@ -2480,8 +2480,7 @@ void Observer_update_ctx(void) {
     test_assert(ecs_observer_get(world, system)->callback_ctx 
         == &binding_ctx_value);
 
-    ecs_observer(world, {
-        .entity = system,
+    ecs_observer_update(world, system, &(ecs_observer_desc_t){
         .ctx = &ctx_value,
         .ctx_free = ctx_free,
         .callback_ctx = &binding_ctx_value,
@@ -2493,8 +2492,7 @@ void Observer_update_ctx(void) {
     test_int(ctx_value_2, 0);
     test_int(binding_ctx_value_2, 0);
 
-    ecs_observer(world, {
-        .entity = system,
+    ecs_observer_update(world, system, &(ecs_observer_desc_t){
         .ctx = &ctx_value_2,
         .ctx_free = ctx_free_2,
         .callback_ctx = &binding_ctx_value_2,
@@ -2512,6 +2510,76 @@ void Observer_update_ctx(void) {
     test_int(binding_ctx_value, 1);
     test_int(ctx_value_2, 1);
     test_int(binding_ctx_value_2, 1);
+
+    ecs_fini(world);
+}
+
+void Observer_init_failure_preserves_user_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    /* User-provided entity with valuable state. */
+    ecs_entity_t e = ecs_entity(world, { .name = "MyEntity" });
+    ecs_add_id(world, e, Tag);
+
+    test_assert(ecs_is_alive(world, e));
+    test_str(ecs_get_name(world, e), "MyEntity");
+
+    /* Suppress error log from the expected failure. */
+    ecs_log_set_level(-4);
+
+    /* Try to create an observer with an invalid query expression.
+     * The init must fail, but the user's entity must be preserved
+     * with its name and components. */
+    ecs_entity_t r = ecs_observer_init(world, &(ecs_observer_desc_t){
+        .entity = e,
+        .events = {EcsOnAdd},
+        .query.expr = "@@@invalid syntax@@@",
+        .callback = Dummy
+    });
+    test_assert(r == 0);
+
+    ecs_log_set_level(-1);
+
+    /* Entity must still exist with its original state. */
+    test_assert(ecs_is_alive(world, e));
+    test_str(ecs_get_name(world, e), "MyEntity");
+    test_assert(ecs_has_id(world, e, Tag));
+
+    ecs_fini(world);
+}
+
+void Observer_partial_update_preserves_ctx(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ctx_value = 0;
+
+    ecs_entity_t o = ecs_observer_init(world, &(ecs_observer_desc_t){
+        .query.terms = {{ Tag }},
+        .events = {EcsOnAdd},
+        .callback = Dummy,
+        .ctx = &ctx_value,
+        .ctx_free = ctx_free
+    });
+    test_assert(o != 0);
+    test_int(ctx_value, 0);
+
+    /* Update only the callback. ctx and ctx_free should be preserved
+     * unchanged - desc.ctx == NULL means "don't touch", not "set to NULL". */
+    ecs_observer_update(world, o, &(ecs_observer_desc_t){
+        .callback = Observer
+    });
+
+    /* ctx_free must not have been called yet. */
+    test_int(ctx_value, 0);
+    test_assert(ecs_observer_get(world, o)->ctx == &ctx_value);
+
+    /* ctx_free must run exactly once on observer destruction, not twice. */
+    ecs_delete(world, o);
+    test_int(ctx_value, 1);
 
     ecs_fini(world);
 }
@@ -7964,8 +8032,7 @@ void Observer_register_callback_after_run(void) {
     test_int(callback_callback_invoked, 1);
     test_int(callback_run_invoked, 0);
 
-    ecs_observer(world, {
-        .entity = s,
+    ecs_observer_update(world, s, &(ecs_observer_desc_t){
         .run = callback_run
     });
 
@@ -7993,8 +8060,7 @@ void Observer_register_run_after_callback(void) {
     test_int(callback_run_invoked, 1);
     test_int(callback_callback_invoked, 0);
 
-    ecs_observer(world, {
-        .entity = s,
+    ecs_observer_update(world, s, &(ecs_observer_desc_t){
         .callback = callback_callback
     });
 
@@ -8028,10 +8094,7 @@ void Observer_register_callback_after_run_ctx(void) {
 
     test_int(callback_ctx, 0);
 
-    ecs_observer(world, {
-        .entity = s,
-        .query.terms = {{ .id = ecs_id(Position) }},
-        .events = {EcsOnSet},
+    ecs_observer_update(world, s, &(ecs_observer_desc_t){
         .run = callback_run,
         .run_ctx = &run_ctx,
         .run_ctx_free = ctx_free_3
@@ -8062,10 +8125,7 @@ void Observer_register_run_after_callback_ctx(void) {
 
     test_int(run_ctx, 0);
 
-    ecs_observer(world, {
-        .entity = s,
-        .query.terms = {{ .id = ecs_id(Position) }},
-        .events = {EcsOnSet},
+    ecs_observer_update(world, s, &(ecs_observer_desc_t){
         .callback = callback_callback,
         .callback_ctx = &callback_ctx,
         .callback_ctx_free = ctx_free_3

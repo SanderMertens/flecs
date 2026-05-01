@@ -9830,7 +9830,10 @@ bool ecs_children_next(
  */
 
 /** Create a query.
- * 
+ * If the descriptor specifies an existing entity, the entity must not already
+ * be associated with a query. To replace an existing query on an entity, use
+ * ecs_query_update().
+ *
  * @param world The world.
  * @param desc The descriptor (see ecs_query_desc_t).
  * @return The query.
@@ -9838,6 +9841,22 @@ bool ecs_children_next(
 FLECS_API
 ecs_query_t* ecs_query_init(
     ecs_world_t *world,
+    const ecs_query_desc_t *desc);
+
+/** Replace the query on an existing entity.
+ * Removes the query currently attached to the entity and creates a new one
+ * from the descriptor. Any handles to the previous query become invalid; use
+ * the returned handle for subsequent iteration.
+ *
+ * @param world The world.
+ * @param entity The entity that holds the query to replace.
+ * @param desc The descriptor (see ecs_query_desc_t).
+ * @return The new query, or NULL if the operation failed.
+ */
+FLECS_API
+ecs_query_t* ecs_query_update(
+    ecs_world_t *world,
+    ecs_entity_t entity,
     const ecs_query_desc_t *desc);
 
 /** Delete a query.
@@ -10354,6 +10373,10 @@ void ecs_enqueue(
  * Observers can subscribe for one or more terms. An observer only triggers
  * when the source of the event meets all terms.
  *
+ * If the descriptor specifies an existing entity, the entity must not already
+ * be associated with an observer. To modify an existing observer, use
+ * ecs_observer_update().
+ *
  * See the documentation for ecs_observer_desc_t for more details.
  *
  * @param world The world.
@@ -10363,6 +10386,27 @@ void ecs_enqueue(
 FLECS_API
 ecs_entity_t ecs_observer_init(
     ecs_world_t *world,
+    const ecs_observer_desc_t *desc);
+
+/** Update an existing observer.
+ * Updates the configuration of an observer that was previously created with
+ * ecs_observer_init(). Only fields in desc that are set to a non-default
+ * value will be applied; fields left at their default value preserve the
+ * existing configuration of the observer.
+ *
+ * The query and events fields of the descriptor are not used by this function;
+ * the observer query and event subscriptions cannot be modified after
+ * creation.
+ *
+ * @param world The world.
+ * @param observer The observer to update.
+ * @param desc The observer descriptor.
+ * @return The observer entity, or 0 if the operation failed.
+ */
+FLECS_API
+ecs_entity_t ecs_observer_update(
+    ecs_world_t *world,
+    ecs_entity_t observer,
     const ecs_observer_desc_t *desc);
 
 /** Get the observer object.
@@ -14354,7 +14398,10 @@ typedef struct ecs_pipeline_desc_t {
 } ecs_pipeline_desc_t;
 
 /** Create a custom pipeline.
- * 
+ * If the descriptor specifies an existing entity, the entity must not already
+ * be associated with a pipeline. To replace an existing pipeline on an
+ * entity, use ecs_pipeline_update().
+ *
  * @param world The world.
  * @param desc The pipeline descriptor.
  * @return The pipeline, 0 if failed.
@@ -14362,6 +14409,21 @@ typedef struct ecs_pipeline_desc_t {
 FLECS_API
 ecs_entity_t ecs_pipeline_init(
     ecs_world_t *world,
+    const ecs_pipeline_desc_t *desc);
+
+/** Replace the pipeline query on an existing entity.
+ * Removes the pipeline currently attached to the entity and creates a new one
+ * from the descriptor.
+ *
+ * @param world The world.
+ * @param pipeline The pipeline entity to update.
+ * @param desc The pipeline descriptor.
+ * @return The pipeline entity, or 0 if the operation failed.
+ */
+FLECS_API
+ecs_entity_t ecs_pipeline_update(
+    ecs_world_t *world,
+    ecs_entity_t pipeline,
     const ecs_pipeline_desc_t *desc);
 
 /** Set a custom pipeline.
@@ -14569,7 +14631,7 @@ typedef struct EcsTickSource {
     ecs_ftime_t time_elapsed;  /**< Time elapsed since the last tick. */
 } EcsTickSource;
 
-/** Use with ecs_system_init() to create or update a system. */
+/** Use with ecs_system_init() and ecs_system_update(). */
 typedef struct ecs_system_desc_t {
     int32_t _canary;       /**< Used for validity testing. Do not set. */
 
@@ -14637,6 +14699,9 @@ typedef struct ecs_system_desc_t {
 } ecs_system_desc_t;
 
 /** Create a system.
+ * If the descriptor specifies an existing entity, the entity must not already
+ * be associated with a system. To modify an existing system, use
+ * ecs_system_update().
  *
  * @param world The world.
  * @param desc The system descriptor.
@@ -14645,6 +14710,26 @@ typedef struct ecs_system_desc_t {
 FLECS_API
 ecs_entity_t ecs_system_init(
     ecs_world_t *world,
+    const ecs_system_desc_t *desc);
+
+/** Update an existing system.
+ * Updates the configuration of a system that was previously created with
+ * ecs_system_init(). Only fields in desc that are set to a non-default value
+ * will be applied; fields left at their default value preserve the existing
+ * configuration of the system.
+ *
+ * The query field of the descriptor is not used by this function; the system
+ * query cannot be modified after creation.
+ *
+ * @param world The world.
+ * @param system The system to update.
+ * @param desc The system descriptor.
+ * @return The system entity, or 0 if the operation failed.
+ */
+FLECS_API
+ecs_entity_t ecs_system_update(
+    ecs_world_t *world,
+    ecs_entity_t system,
     const ecs_system_desc_t *desc);
 
 /** System type, get with ecs_system_get(). */
@@ -32447,6 +32532,34 @@ struct entity_with_delegate<Func, if_t< is_callable<Func>::value > >
         "function must have at least one argument");
 };
 
+/** Strip references from each-callback argument types. */
+template <typename ArgList>
+struct each_normalize_args;
+
+template <typename ... Args>
+struct each_normalize_args<arg_list<Args...>> {
+    using type = arg_list<remove_reference_t<Args>...>;
+};
+
+/** Extract the component argument list from an each-callback signature.
+ * Skips a leading flecs::entity or flecs::iter argument when present. */
+template <typename ArgList, typename = int>
+struct each_callback_args {
+    using type = typename each_normalize_args<ArgList>::type;
+};
+
+template <typename First, typename ... Args>
+struct each_callback_args<arg_list<First, Args...>,
+    if_t<is_same<decay_t<First>, flecs::entity>::value>> {
+    using type = typename each_normalize_args<arg_list<Args...>>::type;
+};
+
+template <typename First, typename Second, typename ... Args>
+struct each_callback_args<arg_list<First, Second, Args...>,
+    if_t<is_same<decay_t<First>, flecs::iter>::value>> {
+    using type = typename each_normalize_args<arg_list<Args...>>::type;
+};
+
 } // namespace _
 
 /** Delegate type for each callbacks.
@@ -36700,11 +36813,11 @@ struct observer final : entity
     }
 
     /** Set the observer context. */
-    void ctx(void *ctx) {
+    observer& ctx(void *ctx) {
         ecs_observer_desc_t desc = {};
-        desc.entity = id_;
         desc.ctx = ctx;
-        ecs_observer_init(world_, &desc);
+        ecs_observer_update(world_, id_, &desc);
+        return *this;
     }
 
     /** Get the observer context. */
@@ -36712,9 +36825,67 @@ struct observer final : entity
         return ecs_observer_get(world_, id_)->ctx;
     }
 
+    /** Replace the observer's run callback. */
+    template <typename Func>
+    observer& run(Func&& func) {
+        using Delegate = typename _::run_delegate<
+            typename std::decay<Func>::type>;
+        auto ctx = FLECS_NEW(Delegate)(FLECS_FWD(func));
+        ecs_observer_desc_t desc = {};
+        desc.run = Delegate::run;
+        desc.run_ctx = ctx;
+        desc.run_ctx_free = _::free_obj<Delegate>;
+        ecs_observer_update(world_, id_, &desc);
+        return *this;
+    }
+
+    /** Replace the observer's each callback. */
+    template <typename Func>
+    observer& each(Func&& func) {
+        using CallbackComponents =
+            typename _::each_callback_args<arg_list_t<Func>>::type;
+        return each_callback(CallbackComponents{}, FLECS_FWD(func));
+    }
+
+    /** Replace the observer's run callback and use an each callback for
+     * iteration. */
+    template <typename Func>
+    observer& run_each(Func&& func) {
+        using CallbackComponents =
+            typename _::each_callback_args<arg_list_t<Func>>::type;
+        return run_each_callback(CallbackComponents{}, FLECS_FWD(func));
+    }
+
     /** Get the query for this observer. */
     flecs::query<> query() const {
         return flecs::query<>(ecs_observer_get(world_, id_)->query);
+    }
+
+private:
+    template <typename ... CallbackComponents, typename Func>
+    observer& each_callback(_::arg_list<CallbackComponents...>, Func&& func) {
+        using Delegate = typename _::each_delegate<
+            typename std::decay<Func>::type, CallbackComponents...>;
+        auto ctx = FLECS_NEW(Delegate)(FLECS_FWD(func));
+        ecs_observer_desc_t desc = {};
+        desc.callback = Delegate::run;
+        desc.callback_ctx = ctx;
+        desc.callback_ctx_free = _::free_obj<Delegate>;
+        ecs_observer_update(world_, id_, &desc);
+        return *this;
+    }
+
+    template <typename ... CallbackComponents, typename Func>
+    observer& run_each_callback(_::arg_list<CallbackComponents...>, Func&& func) {
+        using Delegate = typename _::each_delegate<
+            typename std::decay<Func>::type, CallbackComponents...>;
+        auto ctx = FLECS_NEW(Delegate)(FLECS_FWD(func));
+        ecs_observer_desc_t desc = {};
+        desc.run = Delegate::run_each;
+        desc.run_ctx = ctx;
+        desc.run_ctx_free = _::free_obj<Delegate>;
+        ecs_observer_update(world_, id_, &desc);
+        return *this;
     }
 };
 
@@ -37280,16 +37451,47 @@ struct system final : entity
     }
 
     /** Set the system context. */
-    void ctx(void *ctx) {
+    system& ctx(void *ctx) {
         ecs_system_desc_t desc = {};
-        desc.entity = id_;
         desc.ctx = ctx;
-        ecs_system_init(world_, &desc);
+        ecs_system_update(world_, id_, &desc);
+        return *this;
     }
 
     /** Get the system context. */
     void* ctx() const {
         return ecs_system_get(world_, id_)->ctx;
+    }
+
+    /** Replace the system's run callback. */
+    template <typename Func>
+    system& run(Func&& func) {
+        using Delegate = typename _::run_delegate<
+            typename std::decay<Func>::type>;
+        auto ctx = FLECS_NEW(Delegate)(FLECS_FWD(func));
+        ecs_system_desc_t desc = {};
+        desc.run = Delegate::run;
+        desc.run_ctx = ctx;
+        desc.run_ctx_free = _::free_obj<Delegate>;
+        ecs_system_update(world_, id_, &desc);
+        return *this;
+    }
+
+    /** Replace the system's each callback. */
+    template <typename Func>
+    system& each(Func&& func) {
+        using CallbackComponents =
+            typename _::each_callback_args<arg_list_t<Func>>::type;
+        return each_callback(CallbackComponents{}, FLECS_FWD(func));
+    }
+
+    /** Replace the system's run callback and use an each callback for
+     * iteration. */
+    template <typename Func>
+    system& run_each(Func&& func) {
+        using CallbackComponents =
+            typename _::each_callback_args<arg_list_t<Func>>::type;
+        return run_each_callback(CallbackComponents{}, FLECS_FWD(func));
     }
 
     /** Get the query for this system. */
@@ -37389,6 +37591,32 @@ void set_tick_source(flecs::entity e);
 
 #   endif
 
+private:
+    template <typename ... CallbackComponents, typename Func>
+    system& each_callback(_::arg_list<CallbackComponents...>, Func&& func) {
+        using Delegate = typename _::each_delegate<
+            typename std::decay<Func>::type, CallbackComponents...>;
+        auto ctx = FLECS_NEW(Delegate)(FLECS_FWD(func));
+        ecs_system_desc_t desc = {};
+        desc.callback = Delegate::run;
+        desc.callback_ctx = ctx;
+        desc.callback_ctx_free = _::free_obj<Delegate>;
+        ecs_system_update(world_, id_, &desc);
+        return *this;
+    }
+
+    template <typename ... CallbackComponents, typename Func>
+    system& run_each_callback(_::arg_list<CallbackComponents...>, Func&& func) {
+        using Delegate = typename _::each_delegate<
+            typename std::decay<Func>::type, CallbackComponents...>;
+        auto ctx = FLECS_NEW(Delegate)(FLECS_FWD(func));
+        ecs_system_desc_t desc = {};
+        desc.run = Delegate::run_each;
+        desc.run_ctx = ctx;
+        desc.run_ctx_free = _::free_obj<Delegate>;
+        ecs_system_update(world_, id_, &desc);
+        return *this;
+    }
 };
 
 /** Mixin implementation. */
@@ -37403,31 +37631,6 @@ inline system_builder<Comps...> world::system(Args &&... args) const {
 
 namespace _ {
 
-template <typename ArgList>
-struct system_each_normalize_args;
-
-template <typename ... Args>
-struct system_each_normalize_args<arg_list<Args...>> {
-    using type = arg_list<remove_reference_t<Args>...>;
-};
-
-template <typename ArgList, typename = int>
-struct system_each_callback_args {
-    using type = typename system_each_normalize_args<ArgList>::type;
-};
-
-template <typename First, typename ... Args>
-struct system_each_callback_args<arg_list<First, Args...>,
-    if_t<is_same<decay_t<First>, flecs::entity>::value>> {
-    using type = typename system_each_normalize_args<arg_list<Args...>>::type;
-};
-
-template <typename First, typename Second, typename ... Args>
-struct system_each_callback_args<arg_list<First, Second, Args...>,
-    if_t<is_same<decay_t<First>, flecs::iter>::value>> {
-    using type = typename system_each_normalize_args<arg_list<Args...>>::type;
-};
-
 inline void system_init(flecs::world& world) {
     world.component<TickSource>("flecs::system::TickSource");
 }
@@ -37439,7 +37642,7 @@ template <typename Func>
 inline system system_builder<Components...>::each(Func&& func) {
     if constexpr (sizeof...(Components) == 0) {
         using CallbackComponents =
-            typename _::system_each_callback_args<arg_list_t<Func>>::type;
+            typename _::each_callback_args<arg_list_t<Func>>::type;
         return this->each_callback(CallbackComponents{}, FLECS_FWD(func));
     } else {
         // Faster version of each() that iterates the query on the C++ side.

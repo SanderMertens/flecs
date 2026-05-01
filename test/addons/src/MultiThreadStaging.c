@@ -32,8 +32,7 @@ void MultiThreadStaging_2_threads_add_to_current(void) {
 
     ECS_SYSTEM(world, Add_to_current, EcsOnUpdate, Position);
 
-    ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = Add_to_current,
+    ecs_system_update(world, Add_to_current, &(ecs_system_desc_t){
         .multi_threaded = true
     });
 
@@ -76,8 +75,7 @@ void MultiThreadStaging_3_threads_add_to_current(void) {
 
     ECS_SYSTEM(world, Add_to_current, EcsOnUpdate, Position);
 
-    ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = Add_to_current,
+    ecs_system_update(world, Add_to_current, &(ecs_system_desc_t){
         .multi_threaded = true
     });
 
@@ -120,8 +118,7 @@ void MultiThreadStaging_4_threads_add_to_current(void) {
 
     ECS_SYSTEM(world, Add_to_current, EcsOnUpdate, Position);
 
-    ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = Add_to_current,
+    ecs_system_update(world, Add_to_current, &(ecs_system_desc_t){
         .multi_threaded = true
     });
 
@@ -164,8 +161,7 @@ void MultiThreadStaging_5_threads_add_to_current(void) {
 
     ECS_SYSTEM(world, Add_to_current, EcsOnUpdate, Position);
 
-    ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = Add_to_current,
+    ecs_system_update(world, Add_to_current, &(ecs_system_desc_t){
         .multi_threaded = true
     });
 
@@ -208,8 +204,7 @@ void MultiThreadStaging_6_threads_add_to_current(void) {
 
     ECS_SYSTEM(world, Add_to_current, EcsOnUpdate, Position);
 
-    ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = Add_to_current,
+    ecs_system_update(world, Add_to_current, &(ecs_system_desc_t){
         .multi_threaded = true
     });
 
@@ -272,8 +267,7 @@ void MultiThreadStaging_2_threads_on_add(void) {
     ECS_OBSERVER(world, InitVelocity, EcsOnAdd, Velocity);
     ECS_SYSTEM(world, AddVelocity, EcsOnUpdate, Position, Velocity());
 
-    ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = AddVelocity,
+    ecs_system_update(world, AddVelocity, &(ecs_system_desc_t){
         .multi_threaded = true
     });
 

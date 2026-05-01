@@ -377,36 +377,19 @@ void ecs_query_fini(
     }
 }
 
-ecs_query_t* ecs_query_init(
-    ecs_world_t *world, 
+static
+ecs_query_t* flecs_query_init(
+    ecs_world_t *world,
     const ecs_query_desc_t *const_desc)
 {
-    ecs_os_perf_trace_push("flecs.query_init");
-
     ecs_world_t *world_arg = world;
     ecs_stage_t *stage = flecs_stage_from_world(&world);
 
     ecs_query_impl_t *result = flecs_bcalloc(&stage->allocators.query_impl);
     flecs_poly_init(result, ecs_query_t);
-    
+
     ecs_query_desc_t desc = *const_desc;
     ecs_entity_t entity = const_desc->entity;
-
-    if (entity) {
-        flecs_check_exclusive_world_access_write(world);
-
-        /* Remove existing query if entity has one */
-        bool deferred = false;
-        if (ecs_is_deferred(world)) {
-            deferred = true;
-            /* Ensures that remove operation doesn't get applied after bind */
-            ecs_defer_suspend(world);
-        }
-        ecs_remove_pair(world, entity, ecs_id(EcsPoly), EcsQuery);
-        if (deferred) {
-            ecs_defer_resume(world);
-        }
-    }
 
     /* Initialize the query */
     result->pub.entity = entity;
@@ -424,8 +407,8 @@ ecs_query_t* ecs_query_init(
         goto error;
     }
 
-    /* If query terms have the query itself as source, add term ids to it. This makes it
-     * easy to attach components to queries, which is one of the ways
+    /* If query terms have the query itself as source, add term ids to it. This
+     * makes it easy to attach components to queries, which is one of the ways
      * applications can attach data to systems. */
     flecs_query_add_self_ref(&result->pub);
 
@@ -454,16 +437,70 @@ ecs_query_t* ecs_query_init(
         flecs_poly_modified(world, entity, ecs_query_t);
     }
 
-    ecs_os_perf_trace_pop("flecs.query_init");
-
     return &result->pub;
 error:
     result->pub.entity = 0;
     ecs_query_fini(&result->pub);
-
-    ecs_os_perf_trace_pop("flecs.query_init");
-
     return NULL;
+}
+
+ecs_query_t* ecs_query_init(
+    ecs_world_t *world,
+    const ecs_query_desc_t *const_desc)
+{
+    ecs_os_perf_trace_push("flecs.query_init");
+
+    ecs_query_t *result = NULL;
+    ecs_entity_t entity = const_desc->entity;
+    if (entity) {
+        flecs_check_exclusive_world_access_write(world);
+        ecs_check(!ecs_has_pair(world, entity, ecs_id(EcsPoly), EcsQuery),
+            ECS_INVALID_OPERATION,
+            "entity %s already is a query, use ecs_query_update() to modify",
+                flecs_errstr(ecs_get_path(world, entity)));
+    }
+
+    result = flecs_query_init(world, const_desc);
+
+error:
+    ecs_os_perf_trace_pop("flecs.query_init");
+    return result;
+}
+
+ecs_query_t* ecs_query_update(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    const ecs_query_desc_t *const_desc)
+{
+    ecs_os_perf_trace_push("flecs.query_update");
+
+    ecs_query_t *result = NULL;
+    ecs_check(entity != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(!const_desc->entity || const_desc->entity == entity,
+        ECS_INVALID_PARAMETER,
+        "ecs_query_desc_t::entity does not match query entity");
+
+    flecs_check_exclusive_world_access_write(world);
+
+    /* Remove the existing query if any. */
+    bool deferred = false;
+    if (ecs_is_deferred(world)) {
+        deferred = true;
+        /* Ensures that remove operation doesn't get applied after bind */
+        ecs_defer_suspend(world);
+    }
+    ecs_remove_pair(world, entity, ecs_id(EcsPoly), EcsQuery);
+    if (deferred) {
+        ecs_defer_resume(world);
+    }
+
+    ecs_query_desc_t desc = *const_desc;
+    desc.entity = entity;
+    result = flecs_query_init(world, &desc);
+
+error:
+    ecs_os_perf_trace_pop("flecs.query_update");
+    return result;
 }
 
 bool ecs_query_has(

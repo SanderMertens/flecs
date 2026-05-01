@@ -2071,6 +2071,8 @@
                 "remove_after_delete_observer",
                 "delete_observer_w_ctx",
                 "update_ctx",
+                "init_failure_preserves_user_entity",
+                "partial_update_preserves_ctx",
                 "filter_w_strings",
                 "iter_type_set",
                 "readonly_term",

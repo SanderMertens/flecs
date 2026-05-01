@@ -2262,20 +2262,19 @@ void System_register_twice_w_each(void) {
 
     int count1 = 0, count2 = 0;
 
-    flecs::system sys1 = ecs.system("Test")
+    flecs::system sys = ecs.system("Test")
         .each([&](flecs::iter&, size_t) {
             count1 ++;
         });
 
-    sys1.run();
+    sys.run();
     test_int(count1, 1);
 
-    flecs::system sys2 = ecs.system("Test")
-        .each([&](flecs::iter&, size_t) {
-            count2 ++;
-        });
+    sys.each([&](flecs::iter&, size_t) {
+        count2 ++;
+    });
 
-    sys2.run();
+    sys.run();
     test_int(count2, 1);
 }
 
@@ -2284,20 +2283,19 @@ void System_register_twice_w_run(void) {
 
     int count1 = 0, count2 = 0;
 
-    flecs::system sys1 = ecs.system("Test")
+    flecs::system sys = ecs.system("Test")
         .run([&](flecs::iter&) {
             count1 ++;
         });
 
-    sys1.run();
+    sys.run();
     test_int(count1, 1);
 
-    flecs::system sys2 = ecs.system("Test")
-        .run([&](flecs::iter&) {
-            count2 ++;
-        });
+    sys.run([&](flecs::iter&) {
+        count2 ++;
+    });
 
-    sys2.run();
+    sys.run();
     test_int(count2, 1);
 }
 
@@ -2306,20 +2304,19 @@ void System_register_twice_w_run_each(void) {
 
     int count1 = 0, count2 = 0;
 
-    flecs::system sys1 = ecs.system("Test")
+    flecs::system sys = ecs.system("Test")
         .run([&](flecs::iter&) {
             count1 ++;
         });
 
-    sys1.run();
+    sys.run();
     test_int(count1, 1);
 
-    flecs::system sys2 = ecs.system("Test")
-        .each([&](flecs::iter&, size_t) {
-            count2 ++;
-        });
+    sys.each([&](flecs::iter&, size_t) {
+        count2 ++;
+    });
 
-    sys2.run();
+    sys.run();
     test_int(count2, 1);
 }
 
@@ -2328,21 +2325,78 @@ void System_register_twice_w_each_run(void) {
 
     int count1 = 0, count2 = 0;
 
-    flecs::system sys1 = ecs.system("Test")
+    flecs::system sys = ecs.system("Test")
         .each([&](flecs::iter&, size_t) {
             count1 ++;
         });
 
-    sys1.run();
+    sys.run();
     test_int(count1, 1);
 
-    flecs::system sys2 = ecs.system("Test")
-        .run([&](flecs::iter&) {
-            count2 ++;
+    sys.run([&](flecs::iter&) {
+        count2 ++;
+    });
+
+    sys.run();
+    test_int(count2, 1);
+}
+
+void System_lookup_and_update_each(void) {
+    flecs::world ecs;
+
+    int count1 = 0, count2 = 0;
+
+    ecs.system("Test")
+        .each([&](flecs::iter&, size_t) {
+            count1 ++;
         });
 
-    sys2.run();
+    flecs::entity e = ecs.lookup("Test");
+    test_assert(e != 0);
+
+    flecs::system sys = ecs.system(e);
+    sys.each([&](flecs::iter&, size_t) {
+        count2 ++;
+    });
+
+    sys.run();
+    test_int(count1, 0);
     test_int(count2, 1);
+}
+
+void System_lookup_and_update_run(void) {
+    flecs::world ecs;
+
+    int count1 = 0, count2 = 0;
+
+    ecs.system("Test")
+        .each([&](flecs::iter&, size_t) {
+            count1 ++;
+        });
+
+    flecs::system sys = ecs.system(ecs.lookup("Test"));
+    sys.run([&](flecs::iter&) {
+        count2 ++;
+    });
+
+    sys.run();
+    test_int(count1, 0);
+    test_int(count2, 1);
+}
+
+void System_lookup_and_update_ctx(void) {
+    flecs::world ecs;
+
+    int my_ctx = 42;
+
+    ecs.system("Test")
+        .each([](flecs::iter&, size_t) { });
+
+    flecs::system sys = ecs.system(ecs.lookup("Test"));
+    test_assert(sys.ctx() == nullptr);
+
+    sys.ctx(&my_ctx);
+    test_assert(sys.ctx() == &my_ctx);
 }
 
 static

@@ -9,17 +9,28 @@
 #ifdef FLECS_PIPELINE
 #include "pipeline.h"
 
-static void flecs_pipeline_free(
-    ecs_pipeline_state_t *p) 
+/* Free state-owned resources without touching the query. Used when the
+ * query is owned by something else (e.g. ecs_query_update has replaced it). */
+static void flecs_pipeline_state_free(
+    ecs_world_t *world,
+    ecs_pipeline_state_t *p)
 {
     if (p) {
-        ecs_world_t *world = p->query->world;
         ecs_allocator_t *a = &world->allocator;
         ecs_vec_fini_t(a, &p->ops, ecs_pipeline_op_t);
         ecs_vec_fini_t(a, &p->systems, ecs_system_t*);
         ecs_os_free(p->iters);
-        ecs_query_fini(p->query);
         ecs_os_free(p);
+    }
+}
+
+static void flecs_pipeline_free(
+    ecs_pipeline_state_t *p)
+{
+    if (p) {
+        ecs_world_t *world = p->query->world;
+        ecs_query_fini(p->query);
+        flecs_pipeline_state_free(world, p);
     }
 }
 
@@ -816,31 +827,26 @@ error:
     return 0;
 }
 
-ecs_entity_t ecs_pipeline_init(
+static
+ecs_entity_t flecs_pipeline_init(
     ecs_world_t *world,
-    const ecs_pipeline_desc_t *desc)
+    ecs_entity_t entity,
+    const ecs_pipeline_desc_t *desc,
+    ecs_query_t* (*query_init)(
+        ecs_world_t*, ecs_entity_t, const ecs_query_desc_t*))
 {
-    flecs_poly_assert(world, ecs_world_t);
-    ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
-
-    ecs_entity_t result = desc->entity;
-    if (!result) {
-        result = ecs_new(world);
-    }
-
     ecs_query_desc_t qd = desc->query;
     if (!qd.order_by_callback) {
         qd.order_by_callback = flecs_entity_compare;
     }
-    qd.entity = result;
+    qd.entity = entity;
 
-    ecs_query_t *query = ecs_query_init(world, &qd);
+    ecs_query_t *query = query_init(world, entity, &qd);
     if (!query) {
-        ecs_delete(world, result);
         return 0;
     }
 
-    ecs_check(query->terms != NULL, ECS_INVALID_PARAMETER, 
+    ecs_check(query->terms != NULL, ECS_INVALID_PARAMETER,
         "pipeline query cannot be empty");
     ecs_check(query->terms[0].id == EcsSystem,
         ECS_INVALID_PARAMETER, "pipeline must start with System term");
@@ -848,9 +854,83 @@ ecs_entity_t ecs_pipeline_init(
     ecs_pipeline_state_t *pq = ecs_os_calloc_t(ecs_pipeline_state_t);
     pq->query = query;
     pq->match_count = -1;
-    ecs_set(world, result, EcsPipeline, { pq });
+    ecs_set(world, entity, EcsPipeline, { pq });
 
-    return result;
+    return entity;
+error:
+    ecs_query_fini(query);
+    return 0;
+}
+
+/* Trampolines so flecs_pipeline_init can dispatch through a function pointer
+ * without exposing the entity argument to ecs_query_init. */
+static
+ecs_query_t* flecs_pipeline_query_init(
+    ecs_world_t *world, ecs_entity_t entity, const ecs_query_desc_t *desc)
+{
+    (void)entity;
+    return ecs_query_init(world, desc);
+}
+
+static
+ecs_query_t* flecs_pipeline_query_update(
+    ecs_world_t *world, ecs_entity_t entity, const ecs_query_desc_t *desc)
+{
+    return ecs_query_update(world, entity, desc);
+}
+
+ecs_entity_t ecs_pipeline_init(
+    ecs_world_t *world,
+    const ecs_pipeline_desc_t *desc)
+{
+    flecs_poly_assert(world, ecs_world_t);
+    ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    bool entity_created = false;
+    ecs_entity_t result = desc->entity;
+    if (!result) {
+        result = ecs_new(world);
+        entity_created = true;
+    } else {
+        ecs_check(!ecs_has(world, result, EcsPipeline), ECS_INVALID_OPERATION,
+            "entity %s already is a pipeline, use ecs_pipeline_update() "
+                "to modify",
+                    flecs_errstr(ecs_get_path(world, result)));
+    }
+
+    ecs_entity_t r = flecs_pipeline_init(
+        world, result, desc, flecs_pipeline_query_init);
+    if (!r && entity_created) {
+        ecs_delete(world, result);
+    }
+    return r;
+error:
+    return 0;
+}
+
+ecs_entity_t ecs_pipeline_update(
+    ecs_world_t *world,
+    ecs_entity_t pipeline,
+    const ecs_pipeline_desc_t *desc)
+{
+    flecs_poly_assert(world, ecs_world_t);
+    ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(pipeline != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(!desc->entity || desc->entity == pipeline, ECS_INVALID_PARAMETER,
+        "ecs_pipeline_desc_t::entity does not match pipeline entity");
+
+    /* Free the existing state struct. The query it points to is owned by
+     * EcsPoly and will be replaced by ecs_query_update inside the helper;
+     * detach it here so the dtor doesn't double-free. */
+    EcsPipeline *p = ECS_CONST_CAST(EcsPipeline*,
+        ecs_get(world, pipeline, EcsPipeline));
+    if (p && p->state) {
+        flecs_pipeline_state_free(world, p->state);
+        p->state = NULL;
+    }
+
+    return flecs_pipeline_init(
+        world, pipeline, desc, flecs_pipeline_query_update);
 error:
     return 0;
 }
