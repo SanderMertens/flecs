@@ -3932,6 +3932,42 @@ void Query_optional_module(void) {
             test_int(ptr->e, 50);
             invoked ++;
         });
-    
+
     test_int(invoked, 1);
+}
+
+void Query_has_entity(void) {
+    flecs::world ecs;
+
+    auto e1 = ecs.entity().set<Position>({1, 2});
+    auto e2 = ecs.entity().set<Velocity>({3, 4});
+
+    auto q = ecs.query<Position>();
+
+    test_bool(q.has(e1), true);
+    test_bool(q.has(e2), false);
+}
+
+void Query_has_table(void) {
+    flecs::world ecs;
+
+    auto e1 = ecs.entity().set<Position>({1, 2});
+    auto e2 = ecs.entity().set<Velocity>({3, 4});
+
+    auto q = ecs.query<Position>();
+
+    test_bool(q.has(e1.table()), true);
+    test_bool(q.has(e2.table()), false);
+}
+
+void Query_has_range(void) {
+    flecs::world ecs;
+
+    auto e1 = ecs.entity().set<Position>({1, 2});
+    auto e2 = ecs.entity().set<Velocity>({3, 4});
+
+    auto q = ecs.query<Position>();
+
+    test_bool(q.has(e1.range()), true);
+    test_bool(q.has(e2.range()), false);
 }

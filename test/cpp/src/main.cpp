@@ -836,6 +836,9 @@ void Query_iter_targets_field_not_set(void);
 void Query_copy_operators(void);
 void Query_optional_singleton(void);
 void Query_optional_module(void);
+void Query_has_entity(void);
+void Query_has_table(void);
+void Query_has_range(void);
 
 // Testsuite 'QueryBuilder'
 void QueryBuilder_setup(void);
@@ -4894,6 +4897,18 @@ bake_test_case Query_testcases[] = {
     {
         "optional_module",
         Query_optional_module
+    },
+    {
+        "has_entity",
+        Query_has_entity
+    },
+    {
+        "has_table",
+        Query_has_table
+    },
+    {
+        "has_range",
+        Query_has_range
     }
 };
 
@@ -8109,7 +8124,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        138,
+        141,
         Query_testcases
     },
     {

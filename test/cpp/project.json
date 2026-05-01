@@ -864,7 +864,10 @@
                 "iter_targets_field_not_set",
                 "copy_operators",
                 "optional_singleton",
-                "optional_module"
+                "optional_module",
+                "has_entity",
+                "has_table",
+                "has_range"
             ]
         }, {
             "id": "QueryBuilder",

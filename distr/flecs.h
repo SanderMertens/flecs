@@ -36232,6 +36232,38 @@ struct query_base {
         return ecs_query_find_var(query_, name);
     }
 
+    bool has(flecs::entity_t e) const {
+        ecs_iter_t it;
+        bool result = ecs_query_has(query_, e, &it);
+        if (result) {
+            ecs_iter_fini(&it);
+        }
+        return result;
+    }
+
+    bool has(const flecs::table& t) const {
+        ecs_iter_t it;
+        bool result = ecs_query_has_table(query_, t.get_table(), &it);
+        if (result) {
+            ecs_iter_fini(&it);
+        }
+        return result;
+    }
+
+    bool has(const flecs::table_range& range) const {
+        ecs_table_range_t r = {
+            range.get_table(),
+            range.offset(),
+            range.count()
+        };
+        ecs_iter_t it;
+        bool result = ecs_query_has_range(query_, &r, &it);
+        if (result) {
+            ecs_iter_fini(&it);
+        }
+        return result;
+    }
+
     /** Convert the query to a string expression. */
     flecs::string str() const {
         char *result = ecs_query_str(query_);
