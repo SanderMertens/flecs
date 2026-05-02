@@ -470,7 +470,6 @@ GET entity/<path>
 | matches       | bool     | Serialize matched with queries                  |
 | alerts        | bool     | Serialize active alerts for entity & children   |
 | refs          | entity   | Serialize relationship back references          |
-| try           | bool     | Don't throw HTTP error on failure (REST only)   |
 
 #### Examples
 
@@ -546,7 +545,7 @@ This example shows how `type_info` can be used to obtain the component schema's.
 <li><b class="tab-title">HTTP</b>
 
 ```
-GET /entity/Sun/Earth?id=true&type_info=true
+GET /entity/Sun/Earth?entity_id=true&type_info=true
 ```
 
 </li>
@@ -1163,7 +1162,10 @@ GET /query/?expr=<query expression>
 |---------------|----------|-------------------------------------------------|
 | name          | string   | Evaluate existing named query.                  |
 | expr          | string   | Evaluate query expression.                      |
-| entity_id     | bool     | Serialize numeric entity id.                    |
+| vars          | string   | Bind values to query variables (named queries). |
+| offset        | int      | Skip the first N results.                       |
+| limit         | int      | Limit the number of returned results (default 1000). |
+| entity_ids    | bool     | Serialize numeric entity ids.                   |
 | doc           | bool     | Serialize flecs doc components                  |
 | full_paths    | bool     | Serialize full tag/pair/component paths         |
 | inherited     | bool     | Serialize inherited components                  |
@@ -1171,7 +1173,7 @@ GET /query/?expr=<query expression>
 | builtin       | bool     | Serialize builtin components for parent & name  |
 | fields        | bool     | Serialize query fields                          |
 | table         | bool     | Serialize table (all components for match)      |
-| result        | bool     | Serialize results (disable for metadata-only request) |
+| results       | bool     | Serialize results (disable for metadata-only request) |
 | type_info     | bool     | Serialize type info for components              |
 | field_info    | bool     | Serialize field info                            |
 | query_info    | bool     | Serialize query info                            |
@@ -1865,12 +1867,111 @@ The output of this endpoint is equivalent to requesting the following query on t
 
 This excludes modules and builtin entities from the result, effectively just returning entities that are active in a scene.
 
+### GET type_info
+Retrieve the reflection schema for a component type as JSON.
+
+```
+GET /type_info/<path>
+```
+
+The response is the result of `ecs_type_info_to_json` for the component identified by `<path>`. Returns 404 if the entity is not found, or 204 if the entity has no reflection data.
+
+### GET components
+Retrieve a list of components and their reflection metadata, including registered hooks.
+
+```
+GET /components
+```
+
+### GET queries
+Retrieve a list of named queries in the world.
+
+```
+GET /queries
+```
+
+### GET tables
+Retrieve table information for all tables in the world.
+
+```
+GET /tables
+```
+
+### GET stats/world
+Retrieve aggregated world statistics.
+
+```
+GET /stats/world
+```
+
+#### Options
+
+| Option        | Type     | Description                                     |
+|---------------|----------|-------------------------------------------------|
+| period        | string   | Sampling period suffix (e.g. `1s`, `1m`, `1h`, `1d`, `1w`). Defaults to `1s`. Resolved against `Period<value>` children of `flecs.stats`. |
+
+Requires the `FlecsStats` module to be imported.
+
+### GET stats/pipeline
+Retrieve aggregated pipeline and system statistics.
+
+```
+GET /stats/pipeline
+```
+
+#### Options
+
+| Option        | Type     | Description                                     |
+|---------------|----------|-------------------------------------------------|
+| period        | string   | Sampling period suffix (e.g. `1s`, `1m`, `1h`, `1d`, `1w`). Defaults to `1s`. |
+| name          | string   | Pipeline entity name. Use `all` (or omit) to return stats for all systems. |
+
+Requires the `FlecsStats` module to be imported.
+
+### GET commands/capture
+Start capturing deferred commands so they can be retrieved per frame via `GET /commands/frame/<frame>`. Captured frames are retained for ~60 seconds at 60 FPS.
+
+```
+GET /commands/capture
+```
+
+### GET commands/frame
+Retrieve the captured deferred commands for a specific frame.
+
+```
+GET /commands/frame/<frame>
+```
+
+Returns the recorded commands for the given frame number. Requires `GET /commands/capture` to have been called previously.
+
+### PUT action
+Run a server-side action.
+
+```
+PUT /action/<action>
+```
+
+Currently supported actions:
+
+| Action         | Description                                     |
+|----------------|-------------------------------------------------|
+| shrink_memory  | Calls `ecs_shrink` to reduce memory usage.      |
+
 ### PUT script
-Update code for Flecs script.
+Update code for Flecs script. If the `code` parameter is not provided, the request body is used as the script code.
 
 ```
 PUT /script/<path>?code=<code>
 ```
+
+#### Options
+
+| Option        | Type     | Description                                     |
+|---------------|----------|-------------------------------------------------|
+| code          | string   | Script code (if omitted, request body is used). |
+| check_file    | bool     | If true, report whether the code differs from the file on disk. |
+| save_file     | bool     | If true, save the code to the script's file on disk. |
+| try           | bool     | Don't throw HTTP error on parse failure (REST only). |
 
 When the code failed to parse a response is sent back with the error:
 
