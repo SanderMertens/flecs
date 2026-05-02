@@ -1806,6 +1806,13 @@ Retrieve all serializable data in the world.
 GET /world
 ```
 
+#### Options
+
+| Option        | Type     | Description                                     |
+|---------------|----------|-------------------------------------------------|
+| builtin       | bool     | Serialize Flecs built-in modules and contents   |
+| modules       | bool     | Serialize modules and contents                  |
+
 #### Example
 
 <div class="flecs-snippet-tabs">

@@ -491,6 +491,11 @@ void Rest_request_ending_in_2_pct(void);
 void Rest_request_ending_in_pct_single_digit(void);
 void Rest_request_ending_in_pct_invalid_code(void);
 void Rest_world_has_build_info(void);
+void Rest_world_default(void);
+void Rest_world_builtin(void);
+void Rest_world_modules(void);
+void Rest_world_builtin_and_modules(void);
+void Rest_world_explicit_false(void);
 
 // Testsuite 'Metrics'
 void Metrics_member_gauge_1_entity(void);
@@ -2373,6 +2378,26 @@ bake_test_case Rest_testcases[] = {
     {
         "world_has_build_info",
         Rest_world_has_build_info
+    },
+    {
+        "world_default",
+        Rest_world_default
+    },
+    {
+        "world_builtin",
+        Rest_world_builtin
+    },
+    {
+        "world_modules",
+        Rest_world_modules
+    },
+    {
+        "world_builtin_and_modules",
+        Rest_world_builtin_and_modules
+    },
+    {
+        "world_explicit_false",
+        Rest_world_explicit_false
     }
 };
 
@@ -2833,7 +2858,7 @@ static bake_test_suite suites[] = {
         "Rest",
         NULL,
         NULL,
-        31,
+        36,
         Rest_testcases
     },
     {

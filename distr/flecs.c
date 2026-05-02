@@ -28762,13 +28762,23 @@ bool flecs_rest_put_entity(
 }
 
 static
+void flecs_rest_parse_json_ser_world_params(
+    ecs_world_to_json_desc_t *desc,
+    const ecs_http_request_t *req)
+{
+    flecs_rest_bool_param(req, "builtin", &desc->serialize_builtin);
+    flecs_rest_bool_param(req, "modules", &desc->serialize_modules);
+}
+
+static
 bool flecs_rest_get_world(
     ecs_world_t *world,
     const ecs_http_request_t* req,
     ecs_http_reply_t *reply)
 {
-    (void)req;
-    if (ecs_world_to_json_buf(world, &reply->body, NULL) != 0) {
+    ecs_world_to_json_desc_t desc = {0};
+    flecs_rest_parse_json_ser_world_params(&desc, req);
+    if (ecs_world_to_json_buf(world, &reply->body, &desc) != 0) {
         ecs_strbuf_reset(&reply->body);
         reply->code = 500;
         reply->status = "Internal server error";

@@ -929,3 +929,159 @@ void Rest_world_has_build_info(void) {
 
     ecs_fini(world);
 }
+
+void Rest_world_default(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, Position, {10, 20});
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "GET",
+        "/world", NULL, &reply));
+    test_int(reply.code, 200);
+
+    char *reply_str = ecs_strbuf_get(&reply.body);
+    test_assert(reply_str != NULL);
+
+    ecs_strbuf_t buf = ECS_STRBUF_INIT;
+    test_int(0, ecs_world_to_json_buf(world, &buf, NULL));
+    char *expect = ecs_strbuf_get(&buf);
+    test_str(reply_str, expect);
+    ecs_os_free(expect);
+    ecs_os_free(reply_str);
+
+    ecs_rest_server_fini(srv);
+
+    ecs_fini(world);
+}
+
+void Rest_world_builtin(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, Position, {10, 20});
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "GET",
+        "/world?builtin=true", NULL, &reply));
+    test_int(reply.code, 200);
+
+    char *reply_str = ecs_strbuf_get(&reply.body);
+    test_assert(reply_str != NULL);
+
+    ecs_world_to_json_desc_t desc = { .serialize_builtin = true };
+    ecs_strbuf_t buf = ECS_STRBUF_INIT;
+    test_int(0, ecs_world_to_json_buf(world, &buf, &desc));
+    char *expect = ecs_strbuf_get(&buf);
+    test_str(reply_str, expect);
+    ecs_os_free(expect);
+    ecs_os_free(reply_str);
+
+    ecs_rest_server_fini(srv);
+
+    ecs_fini(world);
+}
+
+void Rest_world_modules(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, Position, {10, 20});
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "GET",
+        "/world?modules=true", NULL, &reply));
+    test_int(reply.code, 200);
+
+    char *reply_str = ecs_strbuf_get(&reply.body);
+    test_assert(reply_str != NULL);
+
+    ecs_world_to_json_desc_t desc = { .serialize_modules = true };
+    ecs_strbuf_t buf = ECS_STRBUF_INIT;
+    test_int(0, ecs_world_to_json_buf(world, &buf, &desc));
+    char *expect = ecs_strbuf_get(&buf);
+    test_str(reply_str, expect);
+    ecs_os_free(expect);
+    ecs_os_free(reply_str);
+
+    ecs_rest_server_fini(srv);
+
+    ecs_fini(world);
+}
+
+void Rest_world_builtin_and_modules(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, Position, {10, 20});
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "GET",
+        "/world?builtin=true&modules=true", NULL, &reply));
+    test_int(reply.code, 200);
+
+    char *reply_str = ecs_strbuf_get(&reply.body);
+    test_assert(reply_str != NULL);
+
+    ecs_world_to_json_desc_t desc = {
+        .serialize_builtin = true,
+        .serialize_modules = true
+    };
+    ecs_strbuf_t buf = ECS_STRBUF_INIT;
+    test_int(0, ecs_world_to_json_buf(world, &buf, &desc));
+    char *expect = ecs_strbuf_get(&buf);
+    test_str(reply_str, expect);
+    ecs_os_free(expect);
+    ecs_os_free(reply_str);
+
+    ecs_rest_server_fini(srv);
+
+    ecs_fini(world);
+}
+
+void Rest_world_explicit_false(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, Position, {10, 20});
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "GET",
+        "/world?builtin=false&modules=false", NULL, &reply));
+    test_int(reply.code, 200);
+
+    char *reply_str = ecs_strbuf_get(&reply.body);
+    test_assert(reply_str != NULL);
+
+    ecs_strbuf_t buf = ECS_STRBUF_INIT;
+    test_int(0, ecs_world_to_json_buf(world, &buf, NULL));
+    char *expect = ecs_strbuf_get(&buf);
+    test_str(reply_str, expect);
+    ecs_os_free(expect);
+    ecs_os_free(reply_str);
+
+    ecs_rest_server_fini(srv);
+
+    ecs_fini(world);
+}
