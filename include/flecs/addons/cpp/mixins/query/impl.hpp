@@ -142,6 +142,16 @@ struct query_base {
         return ecs_query_get_group_info(query_, group_id);
     }
 
+    /** Iterate the active groups of a grouped query.
+     * Returns a range over (group_id, value) entries from the query's group
+     * map. The map value type is currently opaque, so V is exposed as void*.
+     *
+     * @return A flecs::map range over the query's active groups.
+     */
+    flecs::map<uint64_t, void*> groups() const {
+        return flecs::map<uint64_t, void*>(ecs_query_get_groups(query_));
+    }
+
     /** Get context for a group.
      *
      * @param group_id The group ID for which to retrieve the context.

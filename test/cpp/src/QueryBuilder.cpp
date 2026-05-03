@@ -3060,6 +3060,88 @@ void QueryBuilder_set_group_type_on_query(void) {
     test_bool(true, e5_found);
 }
 
+void QueryBuilder_iterate_groups(void) {
+    flecs::world ecs;
+
+    auto Rel = ecs.entity();
+    auto TgtA = ecs.entity();
+    auto TgtB = ecs.entity();
+    auto TgtC = ecs.entity();
+
+    ecs.entity().add(Rel, TgtA);
+    ecs.entity().add(Rel, TgtB);
+    ecs.entity().add(Rel, TgtC);
+
+    auto q = ecs.query_builder()
+        .with(Rel, flecs::Wildcard)
+        .group_by(Rel, group_by_rel)
+        .build();
+
+    q.run([](flecs::iter& it) { while (it.next()) {} });
+
+    bool a_found = false, b_found = false, c_found = false;
+    int32_t count = 0;
+    for (auto g : q.groups()) {
+        if (g.first == TgtA) a_found = true;
+        if (g.first == TgtB) b_found = true;
+        if (g.first == TgtC) c_found = true;
+        count ++;
+    }
+
+    test_int(3, count);
+    test_bool(true, a_found);
+    test_bool(true, b_found);
+    test_bool(true, c_found);
+}
+
+void QueryBuilder_iterate_groups_empty(void) {
+    flecs::world ecs;
+
+    auto Rel = ecs.entity();
+
+    auto q = ecs.query_builder()
+        .with(Rel, flecs::Wildcard)
+        .group_by(Rel, group_by_rel)
+        .build();
+
+    int32_t count = 0;
+    for (auto g : q.groups()) {
+        (void)g;
+        count ++;
+    }
+
+    test_int(0, count);
+}
+
+void QueryBuilder_iterate_groups_w_isa(void) {
+    flecs::world ecs;
+
+    auto AssetA = ecs.entity();
+    auto AssetB = ecs.entity();
+
+    ecs.entity().is_a(AssetA).set<Position>({1, 2});
+    ecs.entity().is_a(AssetA).set<Position>({3, 4});
+    ecs.entity().is_a(AssetB).set<Position>({5, 6});
+
+    auto q = ecs.query_builder<Position>()
+        .group_by(flecs::IsA)
+        .build();
+
+    q.run([](flecs::iter& it) { while (it.next()) {} });
+
+    bool a_found = false, b_found = false;
+    int32_t count = 0;
+    for (auto g : q.groups()) {
+        if (g.first == AssetA) a_found = true;
+        if (g.first == AssetB) b_found = true;
+        count ++;
+    }
+
+    test_int(2, count);
+    test_bool(true, a_found);
+    test_bool(true, b_found);
+}
+
 void QueryBuilder_create_w_no_template_args(void) {
     flecs::world ecs;
 

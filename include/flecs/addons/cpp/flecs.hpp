@@ -49,6 +49,7 @@ struct each_delegate;
 
 // C++ utilities
 #include "utils/utils.hpp"
+#include "utils/map.hpp"
 
 // Mixin forward declarations
 #include "mixins/id/decl.hpp"

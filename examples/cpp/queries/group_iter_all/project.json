@@ -1,0 +1,11 @@
+{
+    "id": "group_iter_all",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "language": "c++",
+        "public": false
+    }
+}
