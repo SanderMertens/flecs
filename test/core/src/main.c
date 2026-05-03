@@ -633,6 +633,7 @@ void Sparse_defer_batched_ensure_w_modified(void);
 void Sparse_defer_batched_emplace(void);
 void Sparse_defer_batched_emplace_w_modified(void);
 void Sparse_defer_batched_set(void);
+void Sparse_defer_batched_set_w_fragmenting(void);
 void Sparse_defer_batched_ensure_existing(void);
 void Sparse_defer_batched_ensure_existing_twice(void);
 void Sparse_defer_batched_ensure_w_modified_existing(void);
@@ -5729,6 +5730,10 @@ bake_test_case Sparse_testcases[] = {
     {
         "defer_batched_set",
         Sparse_defer_batched_set
+    },
+    {
+        "defer_batched_set_w_fragmenting",
+        Sparse_defer_batched_set_w_fragmenting
     },
     {
         "defer_batched_ensure_existing",
@@ -16231,7 +16236,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         Sparse_setup,
         NULL,
-        226,
+        227,
         Sparse_testcases,
         1,
         Sparse_params

@@ -192,6 +192,7 @@ void flecs_component_record_init_dont_fragment(
 
     if (cr->id < FLECS_HI_COMPONENT_ID) {
         world->non_trivial_lookup[cr->id] |= EcsNonTrivialIdNonFragmenting;
+        world->non_trivial_set[cr->id] = true;
     }
 
     flecs_component_init_sparse(world, cr);
