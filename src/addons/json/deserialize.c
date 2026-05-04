@@ -13,6 +13,7 @@ typedef struct {
     ecs_allocator_t *a;
     ecs_vec_t table_type;
     ecs_vec_t remove_ids;
+    ecs_vec_t dont_fragment_ids;
     ecs_map_t anonymous_ids;
     ecs_map_t missing_reflection;
     const char *expr;
@@ -26,6 +27,7 @@ void flecs_from_json_ctx_init(
     ctx->a = a;
     ecs_vec_init_t(a, &ctx->table_type, ecs_id_t, 0);
     ecs_vec_init_t(a, &ctx->remove_ids, ecs_id_t, 0);
+    ecs_vec_init_t(a, &ctx->dont_fragment_ids, ecs_id_t, 0);
     ecs_map_init(&ctx->anonymous_ids, a);
     ecs_map_init(&ctx->missing_reflection, a);
 }
@@ -36,6 +38,7 @@ void flecs_from_json_ctx_fini(
 {
     ecs_vec_fini_t(ctx->a, &ctx->table_type, ecs_id_t);
     ecs_vec_fini_t(ctx->a, &ctx->remove_ids, ecs_id_t);
+    ecs_vec_fini_t(ctx->a, &ctx->dont_fragment_ids, ecs_id_t);
     ecs_map_fini(&ctx->anonymous_ids);
     ecs_map_fini(&ctx->missing_reflection);
 }
@@ -163,16 +166,23 @@ ecs_entity_t flecs_json_ensure_entity(
 }
 
 static
-bool flecs_json_add_id_to_type(
+void flecs_json_track_id(
+    ecs_world_t *world,
+    ecs_from_json_ctx_t *ctx,
     ecs_id_t id)
 {
     if (id == ecs_pair_t(EcsIdentifier, EcsName)) {
-        return false;
+        return;
     }
     if (ECS_IS_PAIR(id) && ECS_PAIR_FIRST(id) == EcsChildOf) {
-        return false;
+        return;
     }
-    return true;
+    ecs_component_record_t *cr = flecs_components_get(world, id);
+    if (cr && (cr->flags & EcsIdDontFragment)) {
+        ecs_vec_append_t(ctx->a, &ctx->dont_fragment_ids, ecs_id_t)[0] = id;
+    } else {
+        ecs_vec_append_t(ctx->a, &ctx->table_type, ecs_id_t)[0] = id;
+    }
 }
 
 static
@@ -207,11 +217,8 @@ const char* flecs_json_deser_tags(
         }
 
         ecs_entity_t tag = flecs_json_lookup(world, 0, str, desc);
-        if (flecs_json_add_id_to_type(tag)) {
-            ecs_vec_append_t(ctx->a, &ctx->table_type, ecs_id_t)[0] = tag;
-        }
-
         ecs_add_id(world, e, tag);
+        flecs_json_track_id(world, ctx, tag);
 
         if (str != token) {
             ecs_os_free(str);
@@ -284,9 +291,7 @@ const char* flecs_json_deser_pairs(
                 if (str != token) ecs_os_free(str);
                 ecs_id_t id = ecs_pair(rel, tgt);
                 ecs_add_id(world, e, id);
-                if (flecs_json_add_id_to_type(id)) {
-                    ecs_vec_append_t(ctx->a, &ctx->table_type, ecs_id_t)[0] = id;
-                }
+                flecs_json_track_id(world, ctx, id);
             } else if (token_kind == JsonArrayOpen) {
                 if (multiple_targets) {
                     ecs_parser_error(NULL, expr, json - expr, 
@@ -450,9 +455,7 @@ const char* flecs_json_deser_components(
         }
 
         /* Don't add ids that have their own fields in serialized data. */
-        if (flecs_json_add_id_to_type(id)) {
-            ecs_vec_append_t(ctx->a, &ctx->table_type, ecs_id_t)[0] = id;
-        }
+        flecs_json_track_id(world, ctx, id);
 
         json = flecs_json_parse(json, &token_kind, token);
         if (token_kind != JsonComma) {
@@ -485,6 +488,7 @@ const char* flecs_entity_from_json(
     const char *expr = ctx->expr, *lah;
 
     ecs_vec_clear(&ctx->table_type);
+    ecs_vec_clear(&ctx->dont_fragment_ids);
 
     ecs_entity_t parent = 0;
 
@@ -671,60 +675,96 @@ const char* flecs_entity_from_json(
         goto error;
     }
 
-    ecs_record_t *r = flecs_entities_get(world, e);
-    ecs_table_t *table = r ? r->table : NULL;
-    if (table) {
-        ecs_id_t *ids = ecs_vec_first(&ctx->table_type);
-        int32_t ids_count = ecs_vec_count(&ctx->table_type);
-        qsort(ids, flecs_itosize(ids_count), sizeof(ecs_id_t), flecs_id_qsort_cmp);
+    {
+        ecs_record_t *r = flecs_entities_get(world, e);
+        ecs_table_t *table = r ? r->table : NULL;
+        if (table) {
+            ecs_id_t *ids = ecs_vec_first(&ctx->table_type);
+            int32_t ids_count = ecs_vec_count(&ctx->table_type);
+            qsort(ids, flecs_itosize(ids_count), sizeof(ecs_id_t),
+                flecs_id_qsort_cmp);
 
-        ecs_table_t *dst_table = ecs_table_find(world, 
-            ecs_vec_first(&ctx->table_type), ecs_vec_count(&ctx->table_type));
-        if (dst_table->type.count == 0) {
-            dst_table = NULL;
-        }
-
-        /* Entity had existing components that weren't in the serialized data */
-        if (table != dst_table) {
-            ecs_assert(ecs_get_target(world, e, EcsChildOf, 0) != EcsFlecsCore,
-                ECS_INVALID_OPERATION, "%s\n[%s] => \n[%s]",
-                    ecs_get_path(world, e),
-                    ecs_table_str(world, table),
-                    ecs_table_str(world, dst_table));
-
-            if (!dst_table) {
-                ecs_clear(world, e);
-            } else {
-                ecs_vec_clear(&ctx->remove_ids);
-
-                ecs_type_t *type = &table->type, *dst_type = &dst_table->type;
-                int32_t i = 0, i_dst = 0;
-                for (; (i_dst < dst_type->count) && (i < type->count); ) {
-                    ecs_id_t id = type->array[i], dst_id = dst_type->array[i_dst];
-
-                    if (dst_id > id) {
-                        ecs_vec_append_t(
-                            ctx->a, &ctx->remove_ids, ecs_id_t)[0] = id;
-                    }
-
-                    i_dst += dst_id <= id;
-                    i += dst_id >= id;
-                }
-
-                ecs_type_t removed = {
-                    .array = ecs_vec_first(&ctx->remove_ids),
-                    .count = ecs_vec_count(&ctx->remove_ids)
-                };
-
-                ecs_commit(world, e, r, dst_table, NULL, &removed);
+            ecs_table_t *dst_table = ecs_table_find(world,
+                ecs_vec_first(&ctx->table_type),
+                ecs_vec_count(&ctx->table_type));
+            if (dst_table->type.count == 0) {
+                dst_table = NULL;
             }
 
-            ecs_assert(ecs_get_table(world, e) == dst_table, 
-                ECS_INTERNAL_ERROR, NULL);
+            /* Entity had existing components not present in serialized data */
+            if (table != dst_table) {
+                ecs_assert(ecs_get_target(world, e, EcsChildOf, 0)
+                    != EcsFlecsCore,
+                    ECS_INVALID_OPERATION, "%s\n[%s] => \n[%s]",
+                        ecs_get_path(world, e),
+                        ecs_table_str(world, table),
+                        ecs_table_str(world, dst_table));
+
+                if (!dst_table) {
+                    ecs_clear(world, e);
+                } else {
+                    ecs_vec_clear(&ctx->remove_ids);
+
+                    ecs_type_t *type = &table->type;
+                    ecs_type_t *dst_type = &dst_table->type;
+                    int32_t i = 0, i_dst = 0;
+                    for (; (i_dst < dst_type->count) && (i < type->count); ) {
+                        ecs_id_t id = type->array[i];
+                        ecs_id_t dst_id = dst_type->array[i_dst];
+
+                        if (dst_id > id) {
+                            ecs_vec_append_t(
+                                ctx->a, &ctx->remove_ids, ecs_id_t)[0] = id;
+                        }
+
+                        i_dst += dst_id <= id;
+                        i += dst_id >= id;
+                    }
+
+                    ecs_type_t removed = {
+                        .array = ecs_vec_first(&ctx->remove_ids),
+                        .count = ecs_vec_count(&ctx->remove_ids)
+                    };
+
+                    ecs_commit(world, e, r, dst_table, NULL, &removed);
+                }
+
+                ecs_assert(ecs_get_table(world, e) == dst_table,
+                    ECS_INTERNAL_ERROR, NULL);
+            }
         }
     }
 
 end:
+    if (e) {
+        ecs_record_t *r = flecs_entities_get(world, e);
+        if (r && (r->row & EcsEntityHasDontFragment)) {
+            /* Remove DontFragment components if the deserialized data didn't
+             * have them. */
+            ecs_id_t *df_ids = ecs_vec_first(&ctx->dont_fragment_ids);
+            int32_t df_count = ecs_vec_count(&ctx->dont_fragment_ids);
+            qsort(df_ids, flecs_itosize(df_count), sizeof(ecs_id_t),
+                flecs_id_qsort_cmp);
+
+            ecs_component_record_t *cur = world->cr_non_fragmenting_head;
+            while (cur) {
+                ecs_component_record_t *next = cur->non_fragmenting.next;
+                if (cur->sparse && !ecs_id_is_wildcard(cur->id)) {
+                    if (flecs_sparse_has(cur->sparse, e)) {
+                        ecs_id_t cid = cur->id;
+                        bool keep = df_count && bsearch(&cid, df_ids,
+                            flecs_itosize(df_count), sizeof(ecs_id_t),
+                            flecs_id_qsort_cmp) != NULL;
+                        if (!keep) {
+                            ecs_remove_id(world, e, cid);
+                        }
+                    }
+                }
+                cur = next;
+            }
+        }
+    }
+
     return json;
 error:
     return NULL;

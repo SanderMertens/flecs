@@ -653,6 +653,12 @@ void DeserializeFromJson_deser_valid_after_unknown_member(void);
 void DeserializeFromJson_deser_unknown_member_w_strict(void);
 void DeserializeFromJson_deser_pretty_printed_identifier_pair(void);
 void DeserializeFromJson_ser_deser_alias(void);
+void DeserializeFromJson_ser_deser_dont_fragment_pair_w_component(void);
+void DeserializeFromJson_ser_deser_dont_fragment_tag(void);
+void DeserializeFromJson_ser_deser_dont_fragment_component(void);
+void DeserializeFromJson_ser_deser_dont_fragment_pair_multi_target(void);
+void DeserializeFromJson_ser_deser_dont_fragment_component_pair(void);
+void DeserializeFromJson_ser_deser_dont_fragment_tag_removes_stale(void);
 
 // Testsuite 'SerializeToJson'
 void SerializeToJson_struct_bool(void);
@@ -3704,6 +3710,30 @@ bake_test_case DeserializeFromJson_testcases[] = {
     {
         "ser_deser_alias",
         DeserializeFromJson_ser_deser_alias
+    },
+    {
+        "ser_deser_dont_fragment_pair_w_component",
+        DeserializeFromJson_ser_deser_dont_fragment_pair_w_component
+    },
+    {
+        "ser_deser_dont_fragment_tag",
+        DeserializeFromJson_ser_deser_dont_fragment_tag
+    },
+    {
+        "ser_deser_dont_fragment_component",
+        DeserializeFromJson_ser_deser_dont_fragment_component
+    },
+    {
+        "ser_deser_dont_fragment_pair_multi_target",
+        DeserializeFromJson_ser_deser_dont_fragment_pair_multi_target
+    },
+    {
+        "ser_deser_dont_fragment_component_pair",
+        DeserializeFromJson_ser_deser_dont_fragment_component_pair
+    },
+    {
+        "ser_deser_dont_fragment_tag_removes_stale",
+        DeserializeFromJson_ser_deser_dont_fragment_tag_removes_stale
     }
 };
 
@@ -5850,7 +5880,7 @@ static bake_test_suite suites[] = {
         "DeserializeFromJson",
         NULL,
         NULL,
-        154,
+        160,
         DeserializeFromJson_testcases
     },
     {

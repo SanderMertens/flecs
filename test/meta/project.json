@@ -679,7 +679,13 @@
                 "deser_valid_after_unknown_member",
                 "deser_unknown_member_w_strict",
                 "deser_pretty_printed_identifier_pair",
-                "ser_deser_alias"
+                "ser_deser_alias",
+                "ser_deser_dont_fragment_pair_w_component",
+                "ser_deser_dont_fragment_tag",
+                "ser_deser_dont_fragment_component",
+                "ser_deser_dont_fragment_pair_multi_target",
+                "ser_deser_dont_fragment_component_pair",
+                "ser_deser_dont_fragment_tag_removes_stale"
             ]
         }, {
             "id": "SerializeToJson",

@@ -6895,3 +6895,350 @@ void DeserializeFromJson_ser_deser_prefab_w_enum_constant_override_2(void) {
 
     ecs_os_free(json);
 }
+
+void DeserializeFromJson_ser_deser_dont_fragment_pair_w_component(void) {
+    typedef struct {
+        bool value;
+    } ComponentStruct;
+
+    char *json;
+
+    {
+        ecs_world_t *world = ecs_init();
+
+        ecs_entity_t component = ecs_component(world, {
+            .entity = ecs_entity(world, { .name = "ComponentStruct" }),
+            .type.size = sizeof(ComponentStruct),
+            .type.alignment = ECS_ALIGNOF(ComponentStruct)
+        });
+        ecs_struct(world, {
+            .entity = component,
+            .members = {
+                { "value", ecs_id(ecs_bool_t) }
+            }
+        });
+
+        ecs_entity_t relationship = ecs_entity(world, {
+            .name = "RelationshipStruct"
+        });
+        ecs_add_id(world, relationship, EcsRelationship);
+        ecs_add_id(world, relationship, EcsDontFragment);
+
+        ecs_entity_t entity = ecs_entity(world, { .name = "Entity" });
+        ecs_entity_t session = ecs_entity(world, { .name = "Session" });
+
+        ecs_add_pair(world, entity, relationship, session);
+
+        ComponentStruct value = { .value = true };
+        ecs_set_id(world, entity, component, sizeof(ComponentStruct), &value);
+
+        json = ecs_world_to_json(world, NULL);
+        test_assert(json != NULL);
+
+        ecs_fini(world);
+    }
+
+    {
+        ecs_world_t *world = ecs_init();
+
+        ecs_entity_t component = ecs_component(world, {
+            .entity = ecs_entity(world, { .name = "ComponentStruct" }),
+            .type.size = sizeof(ComponentStruct),
+            .type.alignment = ECS_ALIGNOF(ComponentStruct)
+        });
+        ecs_struct(world, {
+            .entity = component,
+            .members = {
+                { "value", ecs_id(ecs_bool_t) }
+            }
+        });
+
+        ecs_entity_t relationship = ecs_entity(world, {
+            .name = "RelationshipStruct"
+        });
+        ecs_add_id(world, relationship, EcsRelationship);
+        ecs_add_id(world, relationship, EcsDontFragment);
+
+        const char *r = ecs_world_from_json(world, json, NULL);
+        test_str(r, "");
+
+        ecs_entity_t entity = ecs_lookup(world, "Entity");
+        ecs_entity_t session = ecs_lookup(world, "Session");
+        test_assert(entity != 0);
+        test_assert(session != 0);
+        test_assert(ecs_has_id(world, entity, component));
+        test_assert(ecs_has_pair(world, entity, relationship, session));
+
+        ecs_fini(world);
+    }
+
+    ecs_os_free(json);
+}
+
+void DeserializeFromJson_ser_deser_dont_fragment_tag(void) {
+    char *json;
+
+    {
+        ecs_world_t *world = ecs_init();
+
+        ecs_entity_t Tag = ecs_entity(world, { .name = "Tag" });
+        ecs_add_id(world, Tag, EcsDontFragment);
+
+        ecs_entity_t e = ecs_entity(world, { .name = "e" });
+        ecs_add_id(world, e, Tag);
+
+        json = ecs_world_to_json(world, NULL);
+        test_assert(json != NULL);
+
+        ecs_fini(world);
+    }
+
+    {
+        ecs_world_t *world = ecs_init();
+
+        ecs_entity_t Tag = ecs_entity(world, { .name = "Tag" });
+        ecs_add_id(world, Tag, EcsDontFragment);
+
+        const char *r = ecs_world_from_json(world, json, NULL);
+        test_str(r, "");
+
+        ecs_entity_t e = ecs_lookup(world, "e");
+        test_assert(e != 0);
+        test_assert(ecs_has_id(world, e, Tag));
+
+        ecs_fini(world);
+    }
+
+    ecs_os_free(json);
+}
+
+void DeserializeFromJson_ser_deser_dont_fragment_component(void) {
+    typedef struct { int32_t x, y; } Position;
+
+    char *json;
+
+    {
+        ecs_world_t *world = ecs_init();
+
+        ecs_entity_t pos = ecs_component(world, {
+            .entity = ecs_entity(world, { .name = "Position" }),
+            .type.size = sizeof(Position),
+            .type.alignment = ECS_ALIGNOF(Position)
+        });
+        ecs_struct(world, {
+            .entity = pos,
+            .members = {
+                { "x", ecs_id(ecs_i32_t) },
+                { "y", ecs_id(ecs_i32_t) }
+            }
+        });
+        ecs_add_id(world, pos, EcsDontFragment);
+
+        ecs_entity_t e = ecs_entity(world, { .name = "e" });
+        Position p = { 10, 20 };
+        ecs_set_id(world, e, pos, sizeof(Position), &p);
+
+        json = ecs_world_to_json(world, NULL);
+        test_assert(json != NULL);
+
+        ecs_fini(world);
+    }
+
+    {
+        ecs_world_t *world = ecs_init();
+
+        ecs_entity_t pos = ecs_component(world, {
+            .entity = ecs_entity(world, { .name = "Position" }),
+            .type.size = sizeof(Position),
+            .type.alignment = ECS_ALIGNOF(Position)
+        });
+        ecs_struct(world, {
+            .entity = pos,
+            .members = {
+                { "x", ecs_id(ecs_i32_t) },
+                { "y", ecs_id(ecs_i32_t) }
+            }
+        });
+        ecs_add_id(world, pos, EcsDontFragment);
+
+        const char *r = ecs_world_from_json(world, json, NULL);
+        test_str(r, "");
+
+        ecs_entity_t e = ecs_lookup(world, "e");
+        test_assert(e != 0);
+        test_assert(ecs_has_id(world, e, pos));
+
+        const Position *p = ecs_get_id(world, e, pos);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+
+        ecs_fini(world);
+    }
+
+    ecs_os_free(json);
+}
+
+void DeserializeFromJson_ser_deser_dont_fragment_pair_multi_target(void) {
+    char *json;
+
+    {
+        ecs_world_t *world = ecs_init();
+
+        ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+        ecs_add_id(world, Rel, EcsDontFragment);
+
+        ecs_entity_t TgtA = ecs_entity(world, { .name = "TgtA" });
+        ecs_entity_t TgtB = ecs_entity(world, { .name = "TgtB" });
+
+        ecs_entity_t e = ecs_entity(world, { .name = "e" });
+        ecs_add_pair(world, e, Rel, TgtA);
+        ecs_add_pair(world, e, Rel, TgtB);
+
+        json = ecs_world_to_json(world, NULL);
+        test_assert(json != NULL);
+
+        ecs_fini(world);
+    }
+
+    {
+        ecs_world_t *world = ecs_init();
+
+        ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+        ecs_add_id(world, Rel, EcsDontFragment);
+
+        const char *r = ecs_world_from_json(world, json, NULL);
+        test_str(r, "");
+
+        ecs_entity_t e = ecs_lookup(world, "e");
+        ecs_entity_t TgtA = ecs_lookup(world, "TgtA");
+        ecs_entity_t TgtB = ecs_lookup(world, "TgtB");
+        test_assert(e != 0);
+        test_assert(TgtA != 0);
+        test_assert(TgtB != 0);
+        test_assert(ecs_has_pair(world, e, Rel, TgtA));
+        test_assert(ecs_has_pair(world, e, Rel, TgtB));
+
+        ecs_fini(world);
+    }
+
+    ecs_os_free(json);
+}
+
+void DeserializeFromJson_ser_deser_dont_fragment_component_pair(void) {
+    typedef struct { int32_t x, y; } Position;
+
+    char *json;
+
+    {
+        ecs_world_t *world = ecs_init();
+
+        ecs_entity_t pos = ecs_component(world, {
+            .entity = ecs_entity(world, { .name = "Position" }),
+            .type.size = sizeof(Position),
+            .type.alignment = ECS_ALIGNOF(Position)
+        });
+        ecs_struct(world, {
+            .entity = pos,
+            .members = {
+                { "x", ecs_id(ecs_i32_t) },
+                { "y", ecs_id(ecs_i32_t) }
+            }
+        });
+        ecs_add_id(world, pos, EcsDontFragment);
+
+        ecs_entity_t TgtA = ecs_entity(world, { .name = "TgtA" });
+
+        ecs_entity_t e = ecs_entity(world, { .name = "e" });
+        Position p = { 10, 20 };
+        ecs_set_id(world, e, ecs_pair(pos, TgtA), sizeof(Position), &p);
+
+        json = ecs_world_to_json(world, NULL);
+        test_assert(json != NULL);
+
+        ecs_fini(world);
+    }
+
+    {
+        ecs_world_t *world = ecs_init();
+
+        ecs_entity_t pos = ecs_component(world, {
+            .entity = ecs_entity(world, { .name = "Position" }),
+            .type.size = sizeof(Position),
+            .type.alignment = ECS_ALIGNOF(Position)
+        });
+        ecs_struct(world, {
+            .entity = pos,
+            .members = {
+                { "x", ecs_id(ecs_i32_t) },
+                { "y", ecs_id(ecs_i32_t) }
+            }
+        });
+        ecs_add_id(world, pos, EcsDontFragment);
+
+        const char *r = ecs_world_from_json(world, json, NULL);
+        test_str(r, "");
+
+        ecs_entity_t e = ecs_lookup(world, "e");
+        ecs_entity_t TgtA = ecs_lookup(world, "TgtA");
+        test_assert(e != 0);
+        test_assert(TgtA != 0);
+        test_assert(ecs_has_pair(world, e, pos, TgtA));
+
+        const Position *p = ecs_get_id(world, e, ecs_pair(pos, TgtA));
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+
+        ecs_fini(world);
+    }
+
+    ecs_os_free(json);
+}
+
+void DeserializeFromJson_ser_deser_dont_fragment_tag_removes_stale(void) {
+    char *json;
+
+    {
+        ecs_world_t *world = ecs_init();
+
+        ecs_entity_t TagA = ecs_entity(world, { .name = "TagA" });
+        ecs_add_id(world, TagA, EcsDontFragment);
+
+        ecs_entity_t TagB = ecs_entity(world, { .name = "TagB" });
+        ecs_add_id(world, TagB, EcsDontFragment);
+
+        ecs_entity_t e = ecs_entity(world, { .name = "e" });
+        ecs_add_id(world, e, TagA);
+
+        json = ecs_world_to_json(world, NULL);
+        test_assert(json != NULL);
+
+        ecs_fini(world);
+    }
+
+    {
+        ecs_world_t *world = ecs_init();
+
+        ecs_entity_t TagA = ecs_entity(world, { .name = "TagA" });
+        ecs_add_id(world, TagA, EcsDontFragment);
+
+        ecs_entity_t TagB = ecs_entity(world, { .name = "TagB" });
+        ecs_add_id(world, TagB, EcsDontFragment);
+
+        ecs_entity_t e = ecs_entity(world, { .name = "e" });
+        ecs_add_id(world, e, TagB);
+
+        const char *r = ecs_world_from_json(world, json, NULL);
+        test_str(r, "");
+
+        e = ecs_lookup(world, "e");
+        test_assert(e != 0);
+        test_assert(ecs_has_id(world, e, TagA));
+        test_assert(!ecs_has_id(world, e, TagB));
+
+        ecs_fini(world);
+    }
+
+    ecs_os_free(json);
+}
