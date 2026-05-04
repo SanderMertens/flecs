@@ -805,6 +805,10 @@ void SerializeEntityToJson_serialize_w_allow_blacklist(void);
 void SerializeEntityToJson_serialize_w_partial_blacklist(void);
 void SerializeEntityToJson_serialize_value_pair(void);
 void SerializeEntityToJson_serialize_parent_component(void);
+void SerializeEntityToJson_serialize_w_quote_in_name(void);
+void SerializeEntityToJson_serialize_w_backslash_in_name(void);
+void SerializeEntityToJson_serialize_w_quote_in_parent_name(void);
+void SerializeEntityToJson_serialize_w_quote_in_alert_message(void);
 
 // Testsuite 'SerializeIterToJson'
 void SerializeIterToJson_serialize_1_comps_empty(void);
@@ -4298,6 +4302,22 @@ bake_test_case SerializeEntityToJson_testcases[] = {
     {
         "serialize_parent_component",
         SerializeEntityToJson_serialize_parent_component
+    },
+    {
+        "serialize_w_quote_in_name",
+        SerializeEntityToJson_serialize_w_quote_in_name
+    },
+    {
+        "serialize_w_backslash_in_name",
+        SerializeEntityToJson_serialize_w_backslash_in_name
+    },
+    {
+        "serialize_w_quote_in_parent_name",
+        SerializeEntityToJson_serialize_w_quote_in_parent_name
+    },
+    {
+        "serialize_w_quote_in_alert_message",
+        SerializeEntityToJson_serialize_w_quote_in_alert_message
     }
 };
 
@@ -5844,7 +5864,7 @@ static bake_test_suite suites[] = {
         "SerializeEntityToJson",
         NULL,
         NULL,
-        92,
+        96,
         SerializeEntityToJson_testcases
     },
     {

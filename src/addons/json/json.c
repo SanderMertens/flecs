@@ -440,9 +440,7 @@ void flecs_json_string(
     ecs_strbuf_t *buf,
     const char *value)
 {
-    ecs_strbuf_appendch(buf, '"');
-    ecs_strbuf_appendstr(buf, value);
-    ecs_strbuf_appendch(buf, '"');
+    flecs_json_string_escape(buf, value);
 }
 
 void flecs_json_string_escape(

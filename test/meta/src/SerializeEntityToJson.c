@@ -2598,3 +2598,85 @@ void SerializeEntityToJson_serialize_parent_component(void) {
 
     ecs_fini(world);
 }
+
+void SerializeEntityToJson_serialize_w_quote_in_name(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set_name(world, e, "Foo\"Bar");
+
+    char *json = ecs_entity_to_json(world, e, NULL);
+    test_assert(json != NULL);
+    test_json(json, "{\"name\":\"Foo\\\"Bar\"}");
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+void SerializeEntityToJson_serialize_w_backslash_in_name(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set_name(world, e, "Foo\\Bar");
+
+    char *json = ecs_entity_to_json(world, e, NULL);
+    test_assert(json != NULL);
+    test_json(json, "{\"name\":\"Foo\\\\Bar\"}");
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+void SerializeEntityToJson_serialize_w_quote_in_parent_name(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t p = ecs_new(world);
+    ecs_set_name(world, p, "Par\"ent");
+    ecs_entity_t e = ecs_new(world);
+    ecs_set_name(world, e, "Child");
+    ecs_add_pair(world, e, EcsChildOf, p);
+
+    char *json = ecs_entity_to_json(world, e, NULL);
+    test_assert(json != NULL);
+    test_json(json, "{\"parent\":\"Par\\\"ent\", \"name\":\"Child\"}");
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+void SerializeEntityToJson_serialize_w_quote_in_alert_message(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_IMPORT(world, FlecsAlerts);
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t alert = ecs_alert(world, {
+        .entity = ecs_entity(world, { .name = "position_without_velocity" }),
+        .query.expr = "Position, !Velocity",
+        .message = "$this has Position but not Velocity"
+    });
+
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_set(world, e1, Position, {10, 20});
+
+    ecs_progress(world, 1.0);
+
+    ecs_entity_t ai = ecs_get_alert(world, e1, alert);
+    test_assert(ai != 0);
+    ecs_set_name(world, ai, "e1_alert");
+
+    ecs_set(world, ai, EcsAlertInstance, {
+        .message = "has \"quote\" and \\ slash" });
+
+    ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
+    desc.serialize_alerts = true;
+    char *json = ecs_entity_to_json(world, e1, &desc);
+    test_assert(json != NULL);
+
+    test_json(json, "{\"name\":\"e1\", \"has_alerts\":true, \"components\":{\"flecs.alerts.AlertsActive\":{\"info_count\":0, \"warning_count\":0, \"error_count\":1}, \"Position\":null}, \"alerts\":[{\"alert\":\"position_without_velocity.e1_alert\", \"message\":\"has \\\"quote\\\" and \\\\ slash\", \"severity\":\"Error\"}]}");
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}

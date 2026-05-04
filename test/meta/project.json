@@ -835,7 +835,11 @@
                 "serialize_w_allow_blacklist",
                 "serialize_w_partial_blacklist",
                 "serialize_value_pair",
-                "serialize_parent_component"
+                "serialize_parent_component",
+                "serialize_w_quote_in_name",
+                "serialize_w_backslash_in_name",
+                "serialize_w_quote_in_parent_name",
+                "serialize_w_quote_in_alert_message"
             ]
         }, {
             "id": "SerializeIterToJson",
