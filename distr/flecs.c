@@ -42753,13 +42753,18 @@ void flecs_table_init_flags(
     for (i = 0; i < count; i ++) {
         ecs_id_t id = ids[i];
 
-        ecs_id_t check_id = ECS_IS_PAIR(id)
-            ? ecs_pair(ECS_PAIR_FIRST(id), EcsWildcard)
-            : id;
-        ecs_component_record_t *id_cr = flecs_components_ensure(world, check_id);
-        ecs_assert(!(id_cr->flags & EcsIdDontFragment),
-            ECS_INVALID_OPERATION,
-            "table type cannot contain DontFragment components");
+#if !defined(FLECS_NDEBUG) || defined(FLECS_KEEP_ASSERT)
+        {
+            ecs_id_t check_id = ECS_IS_PAIR(id)
+                ? ecs_pair(ECS_PAIR_FIRST(id), EcsWildcard)
+                : id;
+            ecs_component_record_t *id_cr = flecs_components_ensure(
+                world, check_id);
+            ecs_assert(!(id_cr->flags & EcsIdDontFragment),
+                ECS_INVALID_OPERATION,
+                "table type cannot contain DontFragment components");
+        }
+#endif
 
         if (id <= EcsLastInternalComponentId) {
             table->flags |= EcsTableHasModule;
