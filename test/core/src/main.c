@@ -3224,6 +3224,7 @@ void Table_clear_table_twice_check_size(void);
 void Table_clear_table_on_remove_hooks(void);
 void Table_clear_table_on_remove_observer(void);
 void Table_65_records_w_tgt(void);
+void Table_find_w_dont_fragment(void);
 
 // Testsuite 'Poly'
 void Poly_on_set_poly_observer(void);
@@ -15886,6 +15887,10 @@ bake_test_case Table_testcases[] = {
     {
         "65_records_w_tgt",
         Table_65_records_w_tgt
+    },
+    {
+        "find_w_dont_fragment",
+        Table_find_w_dont_fragment
     }
 };
 
@@ -16462,7 +16467,7 @@ static bake_test_suite suites[] = {
         "Table",
         NULL,
         NULL,
-        32,
+        33,
         Table_testcases
     },
     {

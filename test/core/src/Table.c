@@ -819,6 +819,21 @@ void Table_clear_table_on_remove_observer(void) {
     ecs_fini(world);
 }
 
+void Table_find_w_dont_fragment(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+
+    ecs_id_t ids[1] = { ecs_id(Position) };
+
+    test_expect_abort();
+    ecs_table_find(world, ids, 1);
+}
+
 void Table_65_records_w_tgt(void) {
     ecs_world_t *world = ecs_mini();
 

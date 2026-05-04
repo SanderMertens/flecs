@@ -42753,6 +42753,14 @@ void flecs_table_init_flags(
     for (i = 0; i < count; i ++) {
         ecs_id_t id = ids[i];
 
+        ecs_id_t check_id = ECS_IS_PAIR(id)
+            ? ecs_pair(ECS_PAIR_FIRST(id), EcsWildcard)
+            : id;
+        ecs_component_record_t *id_cr = flecs_components_ensure(world, check_id);
+        ecs_assert(!(id_cr->flags & EcsIdDontFragment),
+            ECS_INVALID_OPERATION,
+            "table type cannot contain DontFragment components");
+
         if (id <= EcsLastInternalComponentId) {
             table->flags |= EcsTableHasModule;
         }
@@ -46738,7 +46746,13 @@ void flecs_add_with_property(
                 a = ecs_pair(ra, o);
             }
 
-            flecs_type_add(world, dst_type, a);
+            ecs_id_t check_id = ECS_IS_PAIR(a)
+                ? ecs_pair(ECS_PAIR_FIRST(a), EcsWildcard)
+                : a;
+            ecs_component_record_t *a_cr = flecs_components_ensure(world, check_id);
+            if (!(a_cr->flags & EcsIdDontFragment)) {
+                flecs_type_add(world, dst_type, a);
+            }
             flecs_add_with_property(world, cr_with_wildcard, dst_type, ra, o);
         }
     }
