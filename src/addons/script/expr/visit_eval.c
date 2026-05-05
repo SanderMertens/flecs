@@ -130,8 +130,16 @@ int flecs_expr_initializer_eval_static(
         ecs_assert(elem->value != NULL, ECS_INTERNAL_ERROR, NULL);
 
         if (elem->value->kind == EcsExprInitializer) {
-            if (flecs_expr_initializer_eval(ctx, 
-                (ecs_expr_initializer_t*)elem->value, value, NULL, value_size)) 
+            ecs_expr_initializer_t *inner =
+                (ecs_expr_initializer_t*)elem->value;
+            void *inner_value = value;
+            ecs_size_t inner_size = value_size;
+            if (inner->is_dynamic) {
+                inner_value = ECS_OFFSET(value, elem->offset);
+                inner_size = inner->node.type_info->size;
+            }
+            if (flecs_expr_initializer_eval(ctx,
+                inner, inner_value, NULL, inner_size))
             {
                 goto error;
             }

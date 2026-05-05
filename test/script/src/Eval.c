@@ -13332,12 +13332,278 @@ void Eval_vector_struct_component(void) {
     ecs_fini(world);
 }
 
+void Eval_vector_struct_field_in_struct_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t v = ecs_vector(world, {
+        .entity = ecs_entity(world, { .name = "PositionVec" }),
+        .type = ecs_id(Position)
+    });
+
+    /* Outer is a struct component that contains a vector-of-struct field. */
+    typedef struct {
+        ecs_f32_t scale;
+        ecs_vec_t points;
+    } Outer;
+
+    ecs_entity_t ecs_id(Outer) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Outer" }),
+        .members = {
+            {"scale", ecs_id(ecs_f32_t)},
+            {"points", v}
+        }
+    });
+
+    const char *expr =
+    HEAD "e {"
+    LINE " Outer: { scale: 2, points: [{10, 20}, {30, 40}] }"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const Outer *outer = ecs_get_id(world, e, ecs_id(Outer));
+    test_assert(outer != NULL);
+    test_int(outer->scale, 2);
+    test_int(ecs_vec_count(&outer->points), 2);
+    test_int(ecs_vec_get_t(&outer->points, Position, 0)->x, 10);
+    test_int(ecs_vec_get_t(&outer->points, Position, 0)->y, 20);
+    test_int(ecs_vec_get_t(&outer->points, Position, 1)->x, 30);
+    test_int(ecs_vec_get_t(&outer->points, Position, 1)->y, 40);
+
+    ecs_fini(world);
+}
+
+void Eval_vector_field_in_nested_struct_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t v = ecs_vector(world, {
+        .entity = ecs_entity(world, { .name = "PositionVec" }),
+        .type = ecs_id(Position)
+    });
+
+    typedef struct {
+        ecs_f32_t scale;
+        ecs_vec_t points;
+    } Inner;
+
+    ecs_entity_t ecs_id(Inner) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Inner" }),
+        .members = {
+            {"scale", ecs_id(ecs_f32_t)},
+            {"points", v}
+        }
+    });
+
+    typedef struct {
+        ecs_i32_t pad;
+        Inner inner;
+    } Outer;
+
+    ecs_entity_t ecs_id(Outer) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Outer" }),
+        .members = {
+            {"pad", ecs_id(ecs_i32_t)},
+            {"inner", ecs_id(Inner)}
+        }
+    });
+
+    const char *expr =
+    HEAD "e {"
+    LINE " Outer: { pad: 7, inner: { scale: 3, points: [{1,2},{3,4}] } }"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const Outer *outer = ecs_get_id(world, e, ecs_id(Outer));
+    test_assert(outer != NULL);
+    test_int(outer->pad, 7);
+    test_int(outer->inner.scale, 3);
+    test_int(ecs_vec_count(&outer->inner.points), 2);
+    test_int(ecs_vec_get_t(&outer->inner.points, Position, 0)->x, 1);
+    test_int(ecs_vec_get_t(&outer->inner.points, Position, 0)->y, 2);
+    test_int(ecs_vec_get_t(&outer->inner.points, Position, 1)->x, 3);
+    test_int(ecs_vec_get_t(&outer->inner.points, Position, 1)->y, 4);
+
+    ecs_fini(world);
+}
+
+void Eval_vector_field_followed_by_scalar(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t v = ecs_vector(world, {
+        .entity = ecs_entity(world, { .name = "Vec" }),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    typedef struct {
+        ecs_vec_t values;
+        ecs_i32_t trailing;
+    } Outer;
+
+    ecs_entity_t ecs_id(Outer) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Outer" }),
+        .members = {
+            {"values", v},
+            {"trailing", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "e {"
+    LINE " Outer: { values: [10, 20, 30], trailing: 99 }"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const Outer *outer = ecs_get_id(world, e, ecs_id(Outer));
+    test_assert(outer != NULL);
+    test_int(outer->trailing, 99);
+    test_int(ecs_vec_count(&outer->values), 3);
+    test_int(*ecs_vec_get_t(&outer->values, ecs_i32_t, 0), 10);
+    test_int(*ecs_vec_get_t(&outer->values, ecs_i32_t, 1), 20);
+    test_int(*ecs_vec_get_t(&outer->values, ecs_i32_t, 2), 30);
+
+    ecs_fini(world);
+}
+
+void Eval_two_vector_fields_in_struct_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t v_i32 = ecs_vector(world, {
+        .entity = ecs_entity(world, { .name = "VecI32" }),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_entity_t v_f32 = ecs_vector(world, {
+        .entity = ecs_entity(world, { .name = "VecF32" }),
+        .type = ecs_id(ecs_f32_t)
+    });
+
+    typedef struct {
+        ecs_vec_t a;
+        ecs_vec_t b;
+    } Outer;
+
+    ecs_entity_t ecs_id(Outer) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Outer" }),
+        .members = {
+            {"a", v_i32},
+            {"b", v_f32}
+        }
+    });
+
+    const char *expr =
+    HEAD "e {"
+    LINE " Outer: { a: [1, 2], b: [10.5, 20.5] }"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const Outer *outer = ecs_get_id(world, e, ecs_id(Outer));
+    test_assert(outer != NULL);
+    test_int(ecs_vec_count(&outer->a), 2);
+    test_int(*ecs_vec_get_t(&outer->a, ecs_i32_t, 0), 1);
+    test_int(*ecs_vec_get_t(&outer->a, ecs_i32_t, 1), 2);
+    test_int(ecs_vec_count(&outer->b), 2);
+    test_flt(*ecs_vec_get_t(&outer->b, ecs_f32_t, 0), 10.5);
+    test_flt(*ecs_vec_get_t(&outer->b, ecs_f32_t, 1), 20.5);
+
+    ecs_fini(world);
+}
+
+void Eval_vector_of_struct_with_vector_field(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        ecs_vec_t inner;
+    } Element;
+
+    ecs_entity_t v_i32 = ecs_vector(world, {
+        .entity = ecs_entity(world, { .name = "VecI32" }),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_entity_t ecs_id(Element) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Element" }),
+        .members = {
+            {"inner", v_i32}
+        }
+    });
+
+    ecs_entity_t v_elem = ecs_vector(world, {
+        .entity = ecs_entity(world, { .name = "VecElement" }),
+        .type = ecs_id(Element)
+    });
+
+    typedef struct {
+        ecs_vec_t outer;
+    } Container;
+
+    ecs_entity_t ecs_id(Container) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Container" }),
+        .members = {
+            {"outer", v_elem}
+        }
+    });
+
+    const char *expr =
+    HEAD "e {"
+    LINE " Container: { outer: [{inner: [1, 2]}, {inner: [3]}] }"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const Container *c = ecs_get_id(world, e, ecs_id(Container));
+    test_assert(c != NULL);
+    test_int(ecs_vec_count(&c->outer), 2);
+    Element *e0 = ecs_vec_get_t(&c->outer, Element, 0);
+    Element *e1 = ecs_vec_get_t(&c->outer, Element, 1);
+    test_int(ecs_vec_count(&e0->inner), 2);
+    test_int(*ecs_vec_get_t(&e0->inner, ecs_i32_t, 0), 1);
+    test_int(*ecs_vec_get_t(&e0->inner, ecs_i32_t, 1), 2);
+    test_int(ecs_vec_count(&e1->inner), 1);
+    test_int(*ecs_vec_get_t(&e1->inner, ecs_i32_t, 0), 3);
+
+    ecs_fini(world);
+}
+
 void Eval_vector_i32_export_var(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t v = ecs_vector(world, { 
+    ecs_entity_t v = ecs_vector(world, {
         .entity = ecs_entity(world, { .name = "Vector" }),
-        .type = ecs_id(ecs_i32_t) 
+        .type = ecs_id(ecs_i32_t)
     });
 
     const char *expr =

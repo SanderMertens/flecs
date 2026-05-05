@@ -56387,8 +56387,8 @@ void* flecs_meta_cursor_get_ptr(
 
             if (kind == EcsOpPushVector) {
                 if (parent->elem >= parent->elem_count) {
-                    ecs_vec_t *vec = flecs_meta_cursor_get_ptr(
-                        world, cursor, parent);
+                    ecs_vec_t *vec = cursor->scope[0].ptr ?
+                        flecs_meta_cursor_get_ptr(world, cursor, parent) : NULL;
                     if (vec) {
                         ecs_vec_init_if(vec, elem_size);
                         ecs_vec_set_min_count_w_type_info(
@@ -56869,7 +56869,7 @@ int ecs_meta_push(
             scope->elem_count = pop->elem_size; /* Array count is encoded on pop */
         } else
         if (op->kind == EcsOpPushVector) {
-            ecs_vec_t *vec = ptr;
+            ecs_vec_t *vec = cursor->scope[0].ptr ? ptr : NULL;
 
             next_scope->ptr = vec ? vec->array : NULL;
             next_scope->is_collection = true;
@@ -94058,8 +94058,16 @@ int flecs_expr_initializer_eval_static(
         ecs_assert(elem->value != NULL, ECS_INTERNAL_ERROR, NULL);
 
         if (elem->value->kind == EcsExprInitializer) {
-            if (flecs_expr_initializer_eval(ctx, 
-                (ecs_expr_initializer_t*)elem->value, value, NULL, value_size)) 
+            ecs_expr_initializer_t *inner =
+                (ecs_expr_initializer_t*)elem->value;
+            void *inner_value = value;
+            ecs_size_t inner_size = value_size;
+            if (inner->is_dynamic) {
+                inner_value = ECS_OFFSET(value, elem->offset);
+                inner_size = inner->node.type_info->size;
+            }
+            if (flecs_expr_initializer_eval(ctx,
+                inner, inner_value, NULL, inner_size))
             {
                 goto error;
             }

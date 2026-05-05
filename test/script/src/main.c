@@ -417,6 +417,11 @@ void Eval_run_script_w_nested_module_from_named_scope_managed(void);
 void Eval_vector_i32_component(void);
 void Eval_vector_string_component(void);
 void Eval_vector_struct_component(void);
+void Eval_vector_struct_field_in_struct_component(void);
+void Eval_vector_field_in_nested_struct_component(void);
+void Eval_vector_field_followed_by_scalar(void);
+void Eval_two_vector_fields_in_struct_component(void);
+void Eval_vector_of_struct_with_vector_field(void);
 void Eval_vector_i32_export_var(void);
 void Eval_vector_string_export_var(void);
 void Eval_vector_struct_export_var(void);
@@ -3023,6 +3028,26 @@ bake_test_case Eval_testcases[] = {
     {
         "vector_struct_component",
         Eval_vector_struct_component
+    },
+    {
+        "vector_struct_field_in_struct_component",
+        Eval_vector_struct_field_in_struct_component
+    },
+    {
+        "vector_field_in_nested_struct_component",
+        Eval_vector_field_in_nested_struct_component
+    },
+    {
+        "vector_field_followed_by_scalar",
+        Eval_vector_field_followed_by_scalar
+    },
+    {
+        "two_vector_fields_in_struct_component",
+        Eval_two_vector_fields_in_struct_component
+    },
+    {
+        "vector_of_struct_with_vector_field",
+        Eval_vector_of_struct_with_vector_field
     },
     {
         "vector_i32_export_var",
@@ -6880,7 +6905,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        449,
+        454,
         Eval_testcases
     },
     {
