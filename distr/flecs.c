@@ -26236,6 +26236,7 @@ static ecs_os_api_log_t flecs_log_prev_log = NULL;
 static ecs_os_api_log_t flecs_log_prev_fatal_log = NULL;
 static bool flecs_log_prev_color = false;
 static int flecs_log_prev_level = 0;
+static int flecs_log_capture_depth = 0;
 
 static
 void flecs_set_prev_log(
@@ -26292,6 +26293,9 @@ char* flecs_log_get_captured_log(void) {
 }
 
 void ecs_log_start_capture(bool try) {
+    if (flecs_log_capture_depth ++) {
+        return;
+    }
     flecs_log_prev_color = ecs_log_enable_colors(false);
     flecs_log_prev_log = ecs_os_api.log_;
     flecs_log_prev_level = ecs_os_api.log_level_;
@@ -26301,6 +26305,11 @@ void ecs_log_start_capture(bool try) {
 }
 
 char* ecs_log_stop_capture(void) {
+    ecs_assert(flecs_log_capture_depth > 0, ECS_INVALID_OPERATION,
+        "log capture not active");
+    if (-- flecs_log_capture_depth) {
+        return NULL;
+    }
     ecs_os_api.log_ = flecs_log_prev_fatal_log;
     ecs_os_api.log_level_ = flecs_log_prev_level;
     ecs_log_enable_colors(flecs_log_prev_color);

@@ -3293,6 +3293,7 @@ void Error_log_warning(void);
 void Error_log_error(void);
 void Error_set_log_level_return(void);
 void Error_print_backtrace(void);
+void Error_log_capture_nested_recursion(void);
 
 // Testsuite 'StackAlloc'
 void StackAlloc_init_fini(void);
@@ -16140,6 +16141,10 @@ bake_test_case Error_testcases[] = {
     {
         "print_backtrace",
         Error_print_backtrace
+    },
+    {
+        "log_capture_nested_recursion",
+        Error_log_capture_nested_recursion
     }
 };
 
@@ -16488,7 +16493,7 @@ static bake_test_suite suites[] = {
         "Error",
         Error_setup,
         NULL,
-        13,
+        14,
         Error_testcases
     },
     {
