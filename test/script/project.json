@@ -655,7 +655,9 @@
                 "annotation_to_unresolved_identifier",
                 "annotation_to_unresolved_identifier_managed_parse_twice",
                 "annotation_to_unresolved_identifier_managed_parse_twice_2",
-                "annotation_to_tag"
+                "annotation_to_tag",
+                "parse_error_logged",
+                "eval_error_logged"
             ]
         }, {
             "id": "Expr",

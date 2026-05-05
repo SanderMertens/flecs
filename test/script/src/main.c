@@ -648,6 +648,8 @@ void Error_annotation_to_unresolved_identifier(void);
 void Error_annotation_to_unresolved_identifier_managed_parse_twice(void);
 void Error_annotation_to_unresolved_identifier_managed_parse_twice_2(void);
 void Error_annotation_to_tag(void);
+void Error_parse_error_logged(void);
+void Error_eval_error_logged(void);
 
 // Testsuite 'Expr'
 void Expr_setup(void);
@@ -3942,6 +3944,14 @@ bake_test_case Error_testcases[] = {
     {
         "annotation_to_tag",
         Error_annotation_to_tag
+    },
+    {
+        "parse_error_logged",
+        Error_parse_error_logged
+    },
+    {
+        "eval_error_logged",
+        Error_eval_error_logged
     }
 };
 
@@ -6919,7 +6929,7 @@ static bake_test_suite suites[] = {
         "Error",
         NULL,
         NULL,
-        100,
+        102,
         Error_testcases
     },
     {

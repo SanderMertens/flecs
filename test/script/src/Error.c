@@ -2063,3 +2063,85 @@ void Error_string_tag_with_gt_capture_error(void) {
 
     ecs_fini(world);
 }
+
+static int log_error_count = 0;
+static int log_error_level = 0;
+
+static
+void log_error_count_callback(
+    int32_t level,
+    const char *file,
+    int32_t line,
+    const char *msg)
+{
+    (void)file;
+    (void)line;
+    (void)msg;
+    if (level <= -3) {
+        log_error_count ++;
+        log_error_level = level;
+    }
+}
+
+void Error_parse_error_logged(void) {
+    ecs_os_set_api_defaults();
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.log_ = log_error_count_callback;
+    ecs_os_set_api(&os_api);
+    ecs_log_set_level(-2);
+
+    log_error_count = 0;
+    log_error_level = 0;
+
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Parent {"
+    LINE " Child {";
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = expr
+    });
+    test_assert(s != 0);
+
+    const EcsScript *script = ecs_get(world, s, EcsScript);
+    test_assert(script != NULL);
+    test_assert(script->error != NULL);
+
+    test_assert(log_error_count > 0);
+    test_int(log_error_level, -3);
+
+    ecs_fini(world);
+}
+
+void Error_eval_error_logged(void) {
+    ecs_os_set_api_defaults();
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.log_ = log_error_count_callback;
+    ecs_os_set_api(&os_api);
+    ecs_log_set_level(-2);
+
+    log_error_count = 0;
+    log_error_level = 0;
+
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "e {"
+    LINE " Foo: {}"
+    LINE "}";
+
+    ecs_entity_t s = ecs_script(world, {
+        .code = expr
+    });
+    test_assert(s != 0);
+
+    const EcsScript *script = ecs_get(world, s, EcsScript);
+    test_assert(script != NULL);
+    test_assert(script->error != NULL);
+
+    test_assert(log_error_count > 0);
+    test_int(log_error_level, -3);
+
+    ecs_fini(world);
+}
