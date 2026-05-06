@@ -250,6 +250,26 @@ uint64_t win_time_now(void) {
 }
 
 static
+ecs_os_dl_t win_dlopen(const char *libname) {
+    return (ecs_os_dl_t)(uintptr_t)LoadLibraryA(libname);
+}
+
+static
+ecs_os_proc_t win_dlproc(ecs_os_dl_t lib, const char *procname) {
+    union {
+        FARPROC p;
+        ecs_os_proc_t fn;
+    } u;
+    u.p = GetProcAddress((HMODULE)(uintptr_t)lib, procname);
+    return u.fn;
+}
+
+static
+void win_dlclose(ecs_os_dl_t lib) {
+    FreeLibrary((HMODULE)(uintptr_t)lib);
+}
+
+static
 void win_fini(void) {
     if (ecs_os_api.flags_ & EcsOsApiHighResolutionTimer) {
         win_enable_high_timer_resolution(false);
@@ -282,6 +302,9 @@ void ecs_set_os_api_impl(void) {
     api.sleep_ = win_sleep;
     api.now_ = win_time_now;
     api.fini_ = win_fini;
+    api.dlopen_ = win_dlopen;
+    api.dlproc_ = win_dlproc;
+    api.dlclose_ = win_dlclose;
 
     win_time_setup();
 

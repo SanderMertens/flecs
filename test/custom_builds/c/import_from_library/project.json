@@ -1,0 +1,10 @@
+{
+    "id": "host",
+    "type": "application",
+    "value": {
+        "public": false,
+        "use": [
+            "flecs"
+        ]
+    }
+}

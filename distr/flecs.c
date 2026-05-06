@@ -27931,23 +27931,21 @@ ecs_entity_t ecs_import(
 
     char *path = flecs_module_path_from_c(module_name);
     ecs_entity_t e = ecs_lookup(world, path);
-    ecs_os_free(path);
-    
+
     if (!e) {
         ecs_trace("#[magenta]import#[reset] %s", module_name);
         ecs_log_push();
 
-        /* Load module */
         module(world);
 
-        /* Lookup module entity (must be registered by module) */
-        e = ecs_lookup(world, module_name);
-        ecs_check(e != 0, ECS_MODULE_UNDEFINED, "%s", module_name);
-
+        e = ecs_lookup(world, path);
         ecs_log_pop();
     }
 
-    /* Restore to previous state */
+    ecs_os_free(path);
+
+    ecs_check(e != 0, ECS_MODULE_UNDEFINED, "%s", module_name);
+
     ecs_set_scope(world, old_scope);
     world->info.name_prefix = old_name_prefix;
 
@@ -61267,6 +61265,26 @@ uint64_t win_time_now(void) {
 }
 
 static
+ecs_os_dl_t win_dlopen(const char *libname) {
+    return (ecs_os_dl_t)(uintptr_t)LoadLibraryA(libname);
+}
+
+static
+ecs_os_proc_t win_dlproc(ecs_os_dl_t lib, const char *procname) {
+    union {
+        FARPROC p;
+        ecs_os_proc_t fn;
+    } u;
+    u.p = GetProcAddress((HMODULE)(uintptr_t)lib, procname);
+    return u.fn;
+}
+
+static
+void win_dlclose(ecs_os_dl_t lib) {
+    FreeLibrary((HMODULE)(uintptr_t)lib);
+}
+
+static
 void win_fini(void) {
     if (ecs_os_api.flags_ & EcsOsApiHighResolutionTimer) {
         win_enable_high_timer_resolution(false);
@@ -61299,6 +61317,9 @@ void ecs_set_os_api_impl(void) {
     api.sleep_ = win_sleep;
     api.now_ = win_time_now;
     api.fini_ = win_fini;
+    api.dlopen_ = win_dlopen;
+    api.dlproc_ = win_dlproc;
+    api.dlclose_ = win_dlclose;
 
     win_time_setup();
 
@@ -61316,6 +61337,7 @@ void ecs_set_os_api_impl(void) {
  */
 
 #include "pthread.h"
+#include <dlfcn.h>
 
 #if defined(__APPLE__) && defined(__MACH__)
 #include <mach/mach_time.h>
@@ -61610,6 +61632,26 @@ uint64_t posix_time_now(void) {
     return now;
 }
 
+static
+ecs_os_dl_t posix_dlopen(const char *libname) {
+    return (ecs_os_dl_t)(uintptr_t)dlopen(libname, RTLD_NOW);
+}
+
+static
+ecs_os_proc_t posix_dlproc(ecs_os_dl_t lib, const char *procname) {
+    union {
+        void *obj;
+        ecs_os_proc_t fn;
+    } u;
+    u.obj = dlsym((void*)(uintptr_t)lib, procname);
+    return u.fn;
+}
+
+static
+void posix_dlclose(ecs_os_dl_t lib) {
+    dlclose((void*)(uintptr_t)lib);
+}
+
 void ecs_set_os_api_impl(void) {
     ecs_os_set_api_defaults();
 
@@ -61635,6 +61677,9 @@ void ecs_set_os_api_impl(void) {
     api.cond_wait_ = posix_cond_wait;
     api.sleep_ = posix_sleep;
     api.now_ = posix_time_now;
+    api.dlopen_ = posix_dlopen;
+    api.dlproc_ = posix_dlproc;
+    api.dlclose_ = posix_dlclose;
 
     posix_time_setup();
 

@@ -4,6 +4,7 @@
  */
 
 #include "pthread.h"
+#include <dlfcn.h>
 
 #if defined(__APPLE__) && defined(__MACH__)
 #include <mach/mach_time.h>
@@ -298,6 +299,26 @@ uint64_t posix_time_now(void) {
     return now;
 }
 
+static
+ecs_os_dl_t posix_dlopen(const char *libname) {
+    return (ecs_os_dl_t)(uintptr_t)dlopen(libname, RTLD_NOW);
+}
+
+static
+ecs_os_proc_t posix_dlproc(ecs_os_dl_t lib, const char *procname) {
+    union {
+        void *obj;
+        ecs_os_proc_t fn;
+    } u;
+    u.obj = dlsym((void*)(uintptr_t)lib, procname);
+    return u.fn;
+}
+
+static
+void posix_dlclose(ecs_os_dl_t lib) {
+    dlclose((void*)(uintptr_t)lib);
+}
+
 void ecs_set_os_api_impl(void) {
     ecs_os_set_api_defaults();
 
@@ -323,6 +344,9 @@ void ecs_set_os_api_impl(void) {
     api.cond_wait_ = posix_cond_wait;
     api.sleep_ = posix_sleep;
     api.now_ = posix_time_now;
+    api.dlopen_ = posix_dlopen;
+    api.dlproc_ = posix_dlproc;
+    api.dlclose_ = posix_dlclose;
 
     posix_time_setup();
 
