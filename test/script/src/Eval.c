@@ -7765,6 +7765,46 @@ void Eval_if_else_comment_no_space_scope_open(void) {
     ecs_fini(world);
 }
 
+void Eval_if_else_w_stmt_after(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const v: 1"
+    LINE "if $v == 1 {"
+    LINE "  a{}"
+    LINE "} else {"
+    LINE "  b{}"
+    LINE "}"
+    LINE "c {}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_lookup(world, "a") != 0);
+    test_assert(ecs_lookup(world, "b") == 0);
+    test_assert(ecs_lookup(world, "c") != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_if_else_if_w_stmt_after(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const v: 1"
+    LINE "if $v == 1 {"
+    LINE "  a{}"
+    LINE "} else if $v == 2 {"
+    LINE "  b{}"
+    LINE "}"
+    LINE "c {}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_lookup(world, "a") != 0);
+    test_assert(ecs_lookup(world, "b") == 0);
+    test_assert(ecs_lookup(world, "c") != 0);
+
+    ecs_fini(world);
+}
+
 void Eval_isa_in_module(void) {
     ecs_world_t *world = ecs_init();
 

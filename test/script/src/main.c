@@ -263,6 +263,8 @@ void Eval_if_else_comment_newline_scope_open(void);
 void Eval_if_else_comment_mixed_comment_newline_scope_open(void);
 void Eval_if_else_comment_mixed_comment_newline_scope_open_crlf(void);
 void Eval_if_else_comment_no_space_scope_open(void);
+void Eval_if_else_w_stmt_after(void);
+void Eval_if_else_if_w_stmt_after(void);
 void Eval_isa_in_module(void);
 void Eval_isa_hierarchy(void);
 void Eval_isa_hierarchy_in_module(void);
@@ -2414,6 +2416,14 @@ bake_test_case Eval_testcases[] = {
     {
         "if_else_comment_no_space_scope_open",
         Eval_if_else_comment_no_space_scope_open
+    },
+    {
+        "if_else_w_stmt_after",
+        Eval_if_else_w_stmt_after
+    },
+    {
+        "if_else_if_w_stmt_after",
+        Eval_if_else_if_w_stmt_after
     },
     {
         "isa_in_module",
@@ -6904,7 +6914,6 @@ const char* Expr_folding_param[] = {"enabled", "disabled"};
 bake_test_param Expr_params[] = {
     {"folding", (char**)Expr_folding_param, 2}
 };
-
 const char* Deserialize_folding_param[] = {"enabled", "disabled"};
 bake_test_param Deserialize_params[] = {
     {"folding", (char**)Deserialize_folding_param, 2}
@@ -6915,7 +6924,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        454,
+        456,
         Eval_testcases
     },
     {

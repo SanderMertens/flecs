@@ -267,6 +267,8 @@
                 "if_else_comment_mixed_comment_newline_scope_open",
                 "if_else_comment_mixed_comment_newline_scope_open_crlf",
                 "if_else_comment_no_space_scope_open",
+                "if_else_w_stmt_after",
+                "if_else_if_w_stmt_after",
                 "isa_in_module",
                 "isa_hierarchy",
                 "isa_hierarchy_in_module",

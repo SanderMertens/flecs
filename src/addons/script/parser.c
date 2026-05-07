@@ -272,18 +272,26 @@ const char* flecs_script_if_stmt(
                 Parse(
                     // if expr { } else if
                     case EcsTokKeywordIf: {
-                        Scope(stmt->if_false, 
-                            return flecs_script_if_stmt(parser, pos);
+                        Scope(stmt->if_false,
+                            pos = flecs_script_if_stmt(parser, pos);
                         )
+                        if (!pos) {
+                            goto error;
+                        }
+                        return pos;
                     }
 
                     // if expr { } else\n if
                     case EcsTokNewline: {
                         Parse(
                             case EcsTokKeywordIf: {
-                                Scope(stmt->if_false, 
-                                    return flecs_script_if_stmt(parser, pos);
+                                Scope(stmt->if_false,
+                                    pos = flecs_script_if_stmt(parser, pos);
                                 )
+                                if (!pos) {
+                                    goto error;
+                                }
+                                return pos;
                             }
 
                             // if expr { } else\n {
