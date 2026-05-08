@@ -911,6 +911,7 @@
                 "delete_with_parent_w_up_observer",
                 "delete_with_parent_nested_w_up_observer",
                 "delete_with_parent_mixed_nested_w_up_observer",
+                "delete_with_observer_iterates_children",
                 "delete_tree_1",
                 "delete_tree_2",
                 "delete_tree_3",

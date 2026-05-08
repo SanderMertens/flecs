@@ -18213,6 +18213,9 @@ void flecs_component_delete_non_fragmenting_childof(
         flecs_simple_delete(world, e, r);
     }
 
+    ecs_vec_set_count_t(&world->allocator, &pr->ordered_children,
+        ecs_entity_t, 0);
+
     ecs_component_record_t *tgt_wc = pr->second.prev;
     ecs_assert(ECS_PAIR_FIRST(tgt_wc->id) == EcsWildcard, ECS_INTERNAL_ERROR, NULL);
     flecs_component_release(world, tgt_wc);
