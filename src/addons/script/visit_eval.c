@@ -668,6 +668,7 @@ void flecs_script_apply_non_fragmenting_childof_to_scope(
         case EcsAstConst:
         case EcsAstExportConst:
         case EcsAstInclude:
+        case EcsAstFunction:
             break;
         }
     }
@@ -1815,6 +1816,287 @@ int flecs_script_eval_annot(
     return 0;
 }
 
+void flecs_script_user_function_callback(
+    const ecs_function_ctx_t *ctx,
+    int32_t argc,
+    const ecs_value_t *argv,
+    ecs_value_t *result)
+{
+    ecs_world_t *world = ctx->world;
+    bool failed = false;
+
+    const EcsScriptFunction *fcomp = ecs_get(
+        world, ctx->function, EcsScriptFunction);
+    if (!fcomp || !fcomp->binding_ctx) {
+        ecs_err("script function entity is missing binding context");
+        flecs_script_runtime_get(world)->error = true;
+        return;
+    }
+
+    ecs_script_user_function_t *uf = fcomp->binding_ctx;
+    ecs_script_function_node_t *node = uf->node;
+    ecs_script_impl_t *impl = flecs_script_impl(uf->script);
+
+    ecs_script_eval_visitor_t v;
+    ecs_script_eval_desc_t desc = {0};
+    flecs_script_eval_visit_init(impl, &v, &desc);
+
+    ecs_allocator_t *a = &v.r->allocator;
+    v.vars = flecs_script_vars_push(v.vars, &v.r->stack, a);
+
+    int32_t i, param_count = ecs_vec_count(&node->params);
+    ecs_script_fn_param_t *params = ecs_vec_first(&node->params);
+
+    for (i = 0; i < argc && i < param_count; i ++) {
+        const ecs_type_info_t *ti = ecs_get_type_info(world, argv[i].type);
+        ecs_script_var_t *var = ecs_script_vars_declare(
+            v.vars, params[i].name);
+        var->value.type = argv[i].type;
+        var->type_info = ti;
+        var->is_const = true;
+
+        if (ti) {
+            var->value.ptr = flecs_stack_calloc(
+                &v.r->stack, ti->size, ti->alignment);
+            flecs_type_info_ctor(var->value.ptr, 1, ti);
+            ecs_value_copy_w_type_info(
+                world, ti, var->value.ptr, argv[i].ptr);
+        } else {
+            var->value.ptr = argv[i].ptr;
+        }
+    }
+
+    int32_t stmt_count = ecs_vec_count(&node->body->stmts);
+    ecs_script_node_t **stmts = ecs_vec_first(&node->body->stmts);
+    for (i = 0; i < stmt_count; i ++) {
+        if (flecs_script_eval_node((ecs_script_visit_t*)&v, stmts[i])) {
+            failed = true;
+            goto done;
+        }
+    }
+
+    if (node->return_expr) {
+        if (flecs_script_eval_expr(&v, &node->return_expr, result)) {
+            failed = true;
+        }
+    }
+
+done:
+    v.vars = ecs_script_vars_pop(v.vars);
+    flecs_script_eval_visit_fini(&v, &desc);
+
+    if (failed) {
+        flecs_script_runtime_get(world)->error = true;
+    }
+}
+
+void flecs_script_user_function_ctx_free(
+    void *ctx)
+{
+    ecs_script_user_function_t *uf = ctx;
+    if (uf->script) {
+        ecs_script_free(uf->script);
+    }
+    ecs_os_free(uf);
+}
+
+static
+int flecs_script_function_type_check(
+    ecs_script_eval_visitor_t *outer_v,
+    ecs_script_function_node_t *node,
+    const ecs_function_desc_t *desc,
+    int32_t param_count)
+{
+    ecs_script_impl_t *impl = outer_v->base.script;
+    ecs_script_t *script = &impl->pub;
+
+    ecs_script_eval_visitor_t v;
+    ecs_script_eval_desc_t eval_desc = {0};
+    flecs_script_eval_visit_init(impl, &v, &eval_desc);
+
+    ecs_allocator_t *a = &v.r->allocator;
+    v.vars = flecs_script_vars_push(v.vars, &v.r->stack, a);
+
+    int32_t i;
+    ecs_script_fn_param_t *params = ecs_vec_first(&node->params);
+    for (i = 0; i < param_count; i ++) {
+        ecs_script_var_t *var = ecs_script_vars_declare(v.vars, params[i].name);
+        if (!var) {
+            flecs_script_eval_error(outer_v, node,
+                "duplicate parameter '%s' in function '%s'",
+                params[i].name, node->name);
+            goto error;
+        }
+        var->value.type = desc->params[i].type;
+        var->value.ptr = NULL;
+        var->type_info = ecs_get_type_info(v.world, desc->params[i].type);
+    }
+
+    int32_t stmt_count = ecs_vec_count(&node->body->stmts);
+    ecs_script_node_t **stmts = ecs_vec_first(&node->body->stmts);
+    for (i = 0; i < stmt_count; i ++) {
+        ecs_script_node_t *stmt = stmts[i];
+        if (stmt->kind != EcsAstConst) {
+            flecs_script_eval_error(outer_v, stmt,
+                "only const declarations are allowed in fn body");
+            goto error;
+        }
+
+        ecs_script_var_node_t *cnode = (ecs_script_var_node_t*)stmt;
+        if (!cnode->expr) {
+            flecs_script_eval_error(outer_v, cnode,
+                "const variable '%s' is missing initializer", cnode->name);
+            goto error;
+        }
+
+        ecs_entity_t expected_type = 0;
+        if (cnode->type) {
+            if (flecs_script_find_entity(&v, 0, cnode->type, NULL, NULL,
+                &expected_type, NULL) || !expected_type)
+            {
+                flecs_script_eval_error(outer_v, cnode,
+                    "unresolved type '%s' for variable '%s'",
+                    cnode->type, cnode->name);
+                goto error;
+            }
+        }
+
+        ecs_expr_eval_desc_t edesc = {
+            .name = script->name,
+            .lookup_action = flecs_script_find_entity_action,
+            .lookup_ctx = &v,
+            .vars = v.vars,
+            .type = expected_type,
+            .runtime = v.r,
+            .script_visitor = &v
+        };
+
+        if (flecs_expr_visit_type(script, cnode->expr, &edesc)) {
+            goto error;
+        }
+        if (flecs_expr_visit_fold(script, &cnode->expr, &edesc)) {
+            goto error;
+        }
+
+        ecs_entity_t var_type = expected_type
+            ? expected_type : cnode->expr->type;
+
+        ecs_script_var_t *var = ecs_script_vars_declare(v.vars, cnode->name);
+        if (!var) {
+            flecs_script_eval_error(outer_v, cnode,
+                "variable '%s' redeclared", cnode->name);
+            goto error;
+        }
+        var->value.type = var_type;
+        var->value.ptr = NULL;
+        var->type_info = ecs_get_type_info(v.world, var_type);
+    }
+
+    if (node->return_expr) {
+        ecs_expr_eval_desc_t edesc = {
+            .name = script->name,
+            .lookup_action = flecs_script_find_entity_action,
+            .lookup_ctx = &v,
+            .vars = v.vars,
+            .type = desc->return_type,
+            .runtime = v.r,
+            .script_visitor = &v
+        };
+
+        if (flecs_expr_visit_type(script, node->return_expr, &edesc)) {
+            goto error;
+        }
+        if (flecs_expr_visit_fold(script, &node->return_expr, &edesc)) {
+            goto error;
+        }
+    }
+
+    v.vars = ecs_script_vars_pop(v.vars);
+    flecs_script_eval_visit_fini(&v, &eval_desc);
+    return 0;
+error:
+    v.vars = ecs_script_vars_pop(v.vars);
+    flecs_script_eval_visit_fini(&v, &eval_desc);
+    return -1;
+}
+
+int flecs_script_eval_function(
+    ecs_script_eval_visitor_t *v,
+    ecs_script_function_node_t *node)
+{
+    ecs_world_t *world = v->world;
+
+    int32_t param_count = ecs_vec_count(&node->params);
+    if (param_count > FLECS_SCRIPT_FUNCTION_ARGS_MAX) {
+        flecs_script_eval_error(v, node,
+            "too many parameters for function '%s' (max %d)",
+            node->name, FLECS_SCRIPT_FUNCTION_ARGS_MAX);
+        return -1;
+    }
+
+    ecs_entity_t return_type = 0;
+    if (flecs_script_find_entity(v, 0, node->return_type, NULL, NULL,
+        &return_type, NULL) || !return_type)
+    {
+        flecs_script_eval_error(v, node,
+            "unresolved return type '%s' for function '%s'",
+            node->return_type, node->name);
+        return -1;
+    }
+
+    ecs_function_desc_t desc = {0};
+    desc.name = node->name;
+    desc.parent = v->parent;
+    desc.return_type = return_type;
+    desc.callback = flecs_script_user_function_callback;
+
+    int32_t i;
+    ecs_script_fn_param_t *params = ecs_vec_first(&node->params);
+    for (i = 0; i < param_count; i ++) {
+        ecs_entity_t ptype = 0;
+        if (flecs_script_find_entity(v, 0, params[i].type, NULL, NULL,
+            &ptype, NULL) || !ptype)
+        {
+            flecs_script_eval_error(v, node,
+                "unresolved type '%s' for parameter '%s' in function '%s'",
+                params[i].type, params[i].name, node->name);
+            return -1;
+        }
+        desc.params[i].name = params[i].name;
+        desc.params[i].type = ptype;
+    }
+
+    ecs_entity_t fn_entity = ecs_function_init(world, &desc);
+    if (!fn_entity) {
+        flecs_script_eval_error(v, node,
+            "failed to register function '%s'", node->name);
+        return -1;
+    }
+
+    if (flecs_script_function_type_check(v, node, &desc, param_count)) {
+        ecs_delete(world, fn_entity);
+        return -1;
+    }
+
+    ecs_script_user_function_t *uf = ecs_os_calloc_t(
+        ecs_script_user_function_t);
+    uf->script = &v->base.script->pub;
+    v->base.script->refcount ++;
+    uf->node = node;
+
+    EcsScriptFunction *fcomp = ecs_ensure(world, fn_entity, EcsScriptFunction);
+    if (fcomp->binding_ctx && fcomp->binding_ctx_free) {
+        fcomp->binding_ctx_free(fcomp->binding_ctx);
+    }
+    fcomp->binding_ctx = uf;
+    fcomp->binding_ctx_free = flecs_script_user_function_ctx_free;
+    ecs_modified(world, fn_entity, EcsScriptFunction);
+
+    node->eval = fn_entity;
+
+    return 0;
+}
+
 int flecs_script_eval_node(
     ecs_script_visit_t *_v,
     ecs_script_node_t *node)
@@ -1886,6 +2168,9 @@ int flecs_script_eval_node(
     case EcsAstInclude:
         return flecs_script_eval_include(
             v, (ecs_script_include_t*)node);
+    case EcsAstFunction:
+        return flecs_script_eval_function(
+            v, (ecs_script_function_node_t*)node);
     }
 
     ecs_abort(ECS_INTERNAL_ERROR, "corrupt AST node kind");
@@ -1957,6 +2242,8 @@ int ecs_script_eval(
     if (!priv_desc.runtime) {
         priv_desc.runtime = flecs_script_runtime_get(script->world);
     }
+
+    flecs_script_runtime_get(script->world)->error = false;
 
     if (result) {
         ecs_log_start_capture(true);

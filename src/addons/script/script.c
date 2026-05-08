@@ -351,6 +351,7 @@ void ecs_script_runtime_clear(
     ecs_vec_clear(&r->with);
     ecs_vec_clear(&r->with_type_info);
     ecs_vec_clear(&r->using);
+    r->error = false;
 }
 
 ecs_script_runtime_t* flecs_script_runtime_get(

@@ -197,6 +197,17 @@ int flecs_script_stmt_free(
     case EcsAstInclude:
         flecs_free_t(a, ecs_script_include_t, node);
         break;
+    case EcsAstFunction: {
+        ecs_script_function_node_t *fn = (ecs_script_function_node_t*)node;
+        flecs_script_scope_free(v, fn->body);
+        if (fn->return_expr) {
+            flecs_expr_visit_free(&v->script->pub, fn->return_expr);
+        }
+        ecs_vec_fini_t(&v->script->allocator, &fn->params,
+            ecs_script_fn_param_t);
+        flecs_free_t(a, ecs_script_function_node_t, node);
+        break;
+    }
     }
 
     return 0;

@@ -63,6 +63,8 @@ typedef enum ecs_token_kind_t {
     EcsTokKeywordNew = 134,
     EcsTokKeywordExport = 135,
     EcsTokKeywordInclude = 138,
+    EcsTokKeywordFn = 139,
+    EcsTokArrow = 140,
     EcsTokAddAssign = 136,
     EcsTokMulAssign = 137,
 } ecs_token_kind_t;

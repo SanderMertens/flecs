@@ -422,10 +422,123 @@ const char* flecs_script_parse_prop(
     return flecs_script_parse_var(parser, pos, tokenizer, EcsAstProp);
 }
 
+static
+const char* flecs_script_fn_params(
+    ecs_parser_t *parser,
+    ecs_script_function_node_t *fn,
+    const char *pos)
+{
+    ParserBegin;
+
+    bool prev_significant_newline = parser->significant_newline;
+    parser->significant_newline = false;
+
+    Loop(
+        LookAhead(
+            case EcsTokParenClose: {
+                pos = lookahead;
+                parser->significant_newline = prev_significant_newline;
+                return pos;
+            }
+            case EcsTokIdentifier: {
+                LookAhead_Keep();
+
+                Parse_2(EcsTokColon, EcsTokIdentifier, {
+                    ecs_script_fn_param_t *p = ecs_vec_append_t(
+                        &parser->script->allocator, &fn->params,
+                        ecs_script_fn_param_t);
+                    p->name = Token(0);
+                    p->type = Token(2);
+                    parser->token_keep = parser->token_cur;
+
+                    {
+                        LookAhead_1(EcsTokComma,
+                            pos = lookahead;
+                            continue;
+                        )
+                    }
+
+                    {
+                        LookAhead_1(EcsTokParenClose,
+                            pos = lookahead;
+                            parser->significant_newline = prev_significant_newline;
+                            return pos;
+                        )
+                    }
+
+                    Error("expected ',' or ')' after parameter");
+                })
+            }
+        )
+        Error("expected parameter or ')'");
+    )
+
+    ParserEnd;
+}
+
+static
+const char* flecs_script_fn_body(
+    ecs_parser_t *parser,
+    ecs_script_function_node_t *fn,
+    const char *pos)
+{
+    ParserBegin;
+
+    Loop(
+        LookAhead(
+            case EcsTokNewline: {
+                pos = lookahead;
+                continue;
+            }
+            case EcsTokScopeClose: {
+                Error("function body must end with an expression");
+            }
+            case EcsTokKeywordConst: {
+                pos = lookahead;
+                Scope(fn->body,
+                    pos = flecs_script_parse_const(parser, pos, tokenizer);
+                )
+                if (!pos) {
+                    goto error;
+                }
+                parser->token_keep = parser->token_cur;
+                continue;
+            }
+        )
+        break;
+    )
+
+    parser->significant_newline = false;
+    if (!(pos = flecs_script_parse_expr(parser, pos, 0, &fn->return_expr))) {
+        parser->significant_newline = true;
+        goto error;
+    }
+    parser->significant_newline = true;
+    parser->token_keep = parser->token_cur;
+
+    {
+        Loop(
+            LookAhead(
+                case EcsTokNewline: {
+                    pos = lookahead;
+                    continue;
+                }
+                case EcsTokScopeClose: {
+                    pos = lookahead;
+                    return pos;
+                }
+            )
+            Error("expected '}' after function body");
+        )
+    }
+
+    ParserEnd;
+}
+
 /* Parse a single statement */
 const char* flecs_script_stmt(
     ecs_parser_t *parser,
-    const char *pos) 
+    const char *pos)
 {
     ParserBegin;
 
@@ -447,6 +560,7 @@ const char* flecs_script_stmt(
         case EcsTokKeywordIf:         goto if_stmt;
         case EcsTokKeywordFor:        goto for_stmt;
         case EcsTokKeywordInclude:    goto include_stmt;
+        case EcsTokKeywordFn:         goto fn_stmt;
         EcsTokEndOfStatement:         EndOfRule;
     );
 
@@ -658,6 +772,29 @@ for_stmt: {
         });
 
     });
+}
+
+fn_stmt: {
+    Parse_2(EcsTokIdentifier, '(', {
+        ecs_script_function_node_t *fn = flecs_script_insert_function(
+            parser, Token(1));
+
+        pos = flecs_script_fn_params(parser, fn, pos);
+        if (!pos) {
+            goto error;
+        }
+
+        Parse_3(EcsTokArrow, EcsTokIdentifier, '{', {
+            fn->return_type = Token(4);
+
+            pos = flecs_script_fn_body(parser, fn, pos);
+            if (!pos) {
+                goto error;
+            }
+
+            EndOfRule;
+        })
+    })
 }
 
 // include foo.flecs
