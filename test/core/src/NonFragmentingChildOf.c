@@ -5652,6 +5652,51 @@ void NonFragmentingChildOf_prefab_ordered_children_child_offset_w_smaller_child_
     ecs_fini(world);
 }
 
+void NonFragmentingChildOf_prefab_children_w_gap_id(void) {
+    ecs_world_t* world = ecs_init();
+
+    ecs_entity_t prefab = ecs_new(world);
+    ecs_add_id(world, prefab, EcsPrefab);
+
+    ecs_entity_t prefab_child_1 = ecs_new_w_parent(world, prefab, NULL);
+    ecs_entity_t gap_1 = ecs_new(world);
+    ecs_entity_t prefab_child_2 = ecs_new_w_parent(world, prefab, NULL);
+    ecs_entity_t gap_2 = ecs_new(world);
+    ecs_entity_t prefab_child_3 = ecs_new_w_parent(world, prefab, NULL);
+
+    test_assert(ecs_is_alive(world, prefab_child_1));
+    test_assert(ecs_is_alive(world, prefab_child_2));
+    test_assert(ecs_is_alive(world, prefab_child_3));
+    test_assert(ecs_has_id(world, prefab_child_1, ecs_id(EcsParent)));
+    test_assert(ecs_has_id(world, prefab_child_2, ecs_id(EcsParent)));
+    test_assert(ecs_has_id(world, prefab_child_3, ecs_id(EcsParent)));
+
+    uint32_t offset_1 = prefab_child_1 - prefab;
+    uint32_t offset_2 = prefab_child_2 - prefab;
+    uint32_t offset_3 = prefab_child_3 - prefab;
+    test_assert(offset_2 != (offset_1 + 1));
+
+    ecs_entity_t instance = ecs_new(world);
+    ecs_add_pair(world, instance, EcsIsA, prefab);
+
+    ecs_entities_t children = ecs_get_ordered_children(world, instance);
+    test_int(children.count, 3);
+
+    uint32_t instance_offset_1 = children.ids[0] - instance;
+    uint32_t instance_offset_2 = children.ids[1] - instance;
+    uint32_t instance_offset_3 = children.ids[2] - instance;
+
+    test_int(offset_1, instance_offset_1);
+    test_int(offset_2, instance_offset_2);
+    test_int(offset_3, instance_offset_3);
+
+    test_assert(ecs_is_alive(world, children.ids[0]));
+    test_assert(ecs_is_alive(world, children.ids[1]));
+    test_assert(ecs_is_alive(world, children.ids[2]));
+
+    ecs_fini(world);
+}
+
 void NonFragmentingChildOf_defer_set_parent_to_deleted(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -6243,3 +6288,4 @@ void NonFragmentingChildOf_defer_set_parent_and_remove_tag(void) {
 
     ecs_fini(world);
 }
+

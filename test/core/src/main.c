@@ -938,6 +938,7 @@ void NonFragmentingChildOf_prefab_ordered_children_recycled_children_recycled_of
 void NonFragmentingChildOf_prefab_ordered_children_1_child_offset_id_occupied(void);
 void NonFragmentingChildOf_prefab_ordered_children_1_child_offset_id_recycled_occupied(void);
 void NonFragmentingChildOf_prefab_ordered_children_child_offset_w_smaller_child_id(void);
+void NonFragmentingChildOf_prefab_children_w_gap_id(void);
 void NonFragmentingChildOf_defer_set_parent_to_deleted(void);
 void NonFragmentingChildOf_defer_set_parent_to_deleted_batched(void);
 void NonFragmentingChildOf_defer_set_parent_to_deleted_w_on_remove(void);
@@ -2558,6 +2559,7 @@ void Prefab_prefab_recycled_children_recycled_offset_id_different_generation(voi
 void Prefab_prefab_1_child_offset_id_occupied(void);
 void Prefab_prefab_1_child_offset_id_recycled_occupied(void);
 void Prefab_prefab_child_offset_w_smaller_child_id(void);
+void Prefab_prefab_children_w_gap_id(void);
 void Prefab_prefab_ordered_children_1_child_offset_id(void);
 void Prefab_prefab_ordered_children_2_children_offset_id(void);
 void Prefab_prefab_ordered_children_3_children_offset_id(void);
@@ -6947,6 +6949,10 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "prefab_ordered_children_child_offset_w_smaller_child_id",
         NonFragmentingChildOf_prefab_ordered_children_child_offset_w_smaller_child_id
+    },
+    {
+        "prefab_children_w_gap_id",
+        NonFragmentingChildOf_prefab_children_w_gap_id
     },
     {
         "defer_set_parent_to_deleted",
@@ -13282,6 +13288,10 @@ bake_test_case Prefab_testcases[] = {
         Prefab_prefab_child_offset_w_smaller_child_id
     },
     {
+        "prefab_children_w_gap_id",
+        Prefab_prefab_children_w_gap_id
+    },
+    {
         "prefab_ordered_children_1_child_offset_id",
         Prefab_prefab_ordered_children_1_child_offset_id
     },
@@ -16255,7 +16265,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NULL,
         NULL,
-        239,
+        240,
         NonFragmentingChildOf_testcases
     },
     {
@@ -16416,7 +16426,7 @@ static bake_test_suite suites[] = {
         "Prefab",
         Prefab_setup,
         NULL,
-        197,
+        198,
         Prefab_testcases
     },
     {

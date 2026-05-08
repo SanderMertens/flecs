@@ -5288,6 +5288,46 @@ void Prefab_prefab_child_offset_w_smaller_child_id(void) {
     ecs_fini(world);
 }
 
+void Prefab_prefab_children_w_gap_id(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t prefab = ecs_new_w_id(world, EcsPrefab);
+
+    ecs_entity_t prefab_child_1 = ecs_new_w_pair(world, EcsChildOf, prefab);
+    ecs_entity_t gap_1 = ecs_new(world);
+    ecs_entity_t prefab_child_2 = ecs_new_w_pair(world, EcsChildOf, prefab);
+    ecs_entity_t gap_2 = ecs_new(world);
+    ecs_entity_t prefab_child_3 = ecs_new_w_pair(world, EcsChildOf, prefab);
+    (void)gap_1;
+    (void)gap_2;
+
+    test_assert(ecs_is_alive(world, prefab_child_1));
+    test_assert(ecs_is_alive(world, prefab_child_2));
+    test_assert(ecs_is_alive(world, prefab_child_3));
+
+    uint32_t offset_1 = (uint32_t)prefab_child_1 - (uint32_t)prefab;
+    uint32_t offset_2 = (uint32_t)prefab_child_2 - (uint32_t)prefab;
+    uint32_t offset_3 = (uint32_t)prefab_child_3 - (uint32_t)prefab;
+    test_assert(offset_2 != (offset_1 + 1));
+    test_assert(offset_3 != (offset_2 + 1));
+
+    ecs_entity_t instance = ecs_new(world);
+    ecs_add_pair(world, instance, EcsIsA, prefab);
+
+    ecs_entity_t ic1 = (uint32_t)instance + offset_1;
+    ecs_entity_t ic2 = (uint32_t)instance + offset_2;
+    ecs_entity_t ic3 = (uint32_t)instance + offset_3;
+
+    test_assert(ecs_is_alive(world, ic1));
+    test_assert(ecs_is_alive(world, ic2));
+    test_assert(ecs_is_alive(world, ic3));
+    test_assert(ecs_has_pair(world, ic1, EcsChildOf, instance));
+    test_assert(ecs_has_pair(world, ic2, EcsChildOf, instance));
+    test_assert(ecs_has_pair(world, ic3, EcsChildOf, instance));
+
+    ecs_fini(world);
+}
+
 void Prefab_prefab_ordered_children_1_child_offset_id(void) {
     ecs_world_t *world = ecs_mini();
 

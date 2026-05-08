@@ -17,6 +17,8 @@ EcsTreeSpawner* flecs_prefab_spawner_build(
 void flecs_spawner_instantiate(
     ecs_world_t *world,
     EcsTreeSpawner *spawner,
-    ecs_entity_t instance);
+    ecs_entity_t base,
+    ecs_entity_t instance,
+    const ecs_instantiate_ctx_t *ctx);
 
 #endif
