@@ -31,4 +31,10 @@ void flecs_instantiate_sparse(
     const ecs_entity_t *instance_children,
     int32_t row_offset);
 
+ecs_entity_t flecs_instantiate_alloc_child_id(
+    ecs_world_t *world,
+    ecs_entity_t prefab_child,
+    ecs_entity_t root_prefab,
+    ecs_entity_t root_instance);
+
 #endif

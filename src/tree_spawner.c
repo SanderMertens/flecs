@@ -221,14 +221,21 @@ EcsTreeSpawner* flecs_prefab_spawner_build(
 void flecs_spawner_instantiate(
     ecs_world_t *world,
     EcsTreeSpawner *spawner,
-    ecs_entity_t instance)
+    ecs_entity_t base,
+    ecs_entity_t instance,
+    const ecs_instantiate_ctx_t *ctx)
 {
     ecs_record_t *r_instance = flecs_entities_get(world, instance);
     int32_t depth = flecs_relation_depth(world, EcsChildOf, r_instance->table);
     int32_t i, child_count = ecs_vec_count(&spawner->data[0].children);
 
     bool is_prefab = r_instance->table->flags & EcsTableIsPrefab;
-    
+
+    ecs_instantiate_ctx_t ctx_cur = {base, instance};
+    if (ctx) {
+        ctx_cur = *ctx;
+    }
+
     /* Use cached spawner for depth if available. */
     ecs_vec_t *vec, tmp_vec;
     if (depth < FLECS_TREE_SPAWNER_DEPTH_CACHE_SIZE) {
@@ -244,7 +251,7 @@ void flecs_spawner_instantiate(
     }
 
     ecs_tree_spawner_child_t *spawn_children = ecs_vec_first(vec);
-    ecs_vec_set_min_count_t(&world->allocator, &world->allocators.tree_spawner, 
+    ecs_vec_set_min_count_t(&world->allocator, &world->allocators.tree_spawner,
         ecs_entity_t, child_count + 1);
     ecs_entity_t *parents = ecs_vec_first(&world->allocators.tree_spawner);
     parents[0] = instance;
@@ -255,8 +262,10 @@ void flecs_spawner_instantiate(
     ecs_assert(ecs_vec_count(vec) == child_count, ECS_INTERNAL_ERROR, NULL);
 
     for (i = 0; i < child_count; i ++) {
-        ecs_entity_t entity = parents[i + 1] = flecs_new_id(world);
         ecs_tree_spawner_child_t *spawn_child = &spawn_children[i];
+        ecs_entity_t entity = parents[i + 1] = flecs_instantiate_alloc_child_id(
+            world, spawn_child->child,
+            ctx_cur.root_prefab, ctx_cur.root_instance);
         ecs_table_t *table = spawn_child->table;
         ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 

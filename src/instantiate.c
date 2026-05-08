@@ -127,6 +127,34 @@ int32_t flecs_child_type_insert(
     return i;
 }
 
+ecs_entity_t flecs_instantiate_alloc_child_id(
+    ecs_world_t *world,
+    ecs_entity_t prefab_child,
+    ecs_entity_t root_prefab,
+    ecs_entity_t root_instance)
+{
+    if ((uint32_t)prefab_child < (uint32_t)root_prefab) {
+        return flecs_new_id(world);
+    }
+
+    ecs_entity_t prefab_offset =
+        (uint32_t)prefab_child - (uint32_t)root_prefab;
+    ecs_assert(prefab_offset != 0, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_entity_t instance_child = (uint32_t)root_instance + prefab_offset;
+    ecs_entity_t alive_id = flecs_entities_get_alive(world, instance_child);
+    if (alive_id && flecs_entities_is_alive(world, alive_id)) {
+        return flecs_new_id(world);
+    }
+
+    instance_child = root_instance + prefab_offset;
+    flecs_entities_make_alive(world, instance_child);
+    flecs_entities_ensure(world, instance_child);
+    ecs_assert(ecs_is_alive(world, instance_child), ECS_INTERNAL_ERROR, NULL);
+
+    return instance_child;
+}
+
 void flecs_instantiate_sparse(
     ecs_world_t *world,
     const ecs_table_range_t *base_child_range,
@@ -323,33 +351,8 @@ void flecs_instantiate_children(
 
     for (j = 0; j < child_range.count; j ++) {
         ecs_entity_t prefab_child = children[j + child_range.offset];
-        if ((uint32_t)prefab_child < (uint32_t)ctx_cur.root_prefab) {
-            /* Child id is smaller than root prefab id, can't use offset */
-            child_ids[j] = flecs_new_id(world);
-            continue;
-        }
-
-        /* Get prefab offset, ignore lifecycle generation count */
-        ecs_entity_t prefab_offset =
-            (uint32_t)prefab_child - (uint32_t)ctx_cur.root_prefab;
-        ecs_assert(prefab_offset != 0, ECS_INTERNAL_ERROR, NULL);
-
-        /* First check if any entity with the desired id exists */
-        ecs_entity_t instance_child = (uint32_t)ctx_cur.root_instance + prefab_offset;
-        ecs_entity_t alive_id = flecs_entities_get_alive(world, instance_child);
-        if (alive_id && flecs_entities_is_alive(world, alive_id)) {
-            /* Alive entity with requested id exists, can't use offset id */
-            child_ids[j] = flecs_new_id(world);
-            continue;
-        }
-
-        /* Id is not in use. Make it alive & match the generation of the instance. */
-        instance_child = ctx_cur.root_instance + prefab_offset;
-        flecs_entities_make_alive(world, instance_child);
-        flecs_entities_ensure(world, instance_child);
-        ecs_assert(ecs_is_alive(world, instance_child), ECS_INTERNAL_ERROR, NULL);
-
-        child_ids[j] = instance_child;
+        child_ids[j] = flecs_instantiate_alloc_child_id(
+            world, prefab_child, ctx_cur.root_prefab, ctx_cur.root_instance);
     }
 
     /* Create children */
@@ -489,7 +492,7 @@ void flecs_instantiate(
                 }
 
                 if (ts) {
-                    flecs_spawner_instantiate(world, ts, instance);
+                    flecs_spawner_instantiate(world, ts, base, instance, ctx);
                 }
 
                 ecs_os_perf_trace_pop("flecs.instantiate");
