@@ -207,8 +207,14 @@ void flecs_component_delete_non_fragmenting_childof(
     cr->flags |= EcsIdMarkedForDelete;
 
     ecs_pair_record_t *pr = cr->pair;
-    int32_t i, count = ecs_vec_count(&pr->ordered_children);
-    ecs_entity_t *children = ecs_vec_first(&pr->ordered_children);
+
+    /* Detach ordered_children so observers fired during cleanup don't see
+     * entries for siblings that have already been deleted in the loop. */
+    ecs_vec_t children_vec = pr->ordered_children;
+    pr->ordered_children = (ecs_vec_t){0};
+
+    int32_t i, count = ecs_vec_count(&children_vec);
+    ecs_entity_t *children = ecs_vec_first_t(&children_vec, ecs_entity_t);
 
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = children[i];
@@ -233,7 +239,7 @@ void flecs_component_delete_non_fragmenting_childof(
                         world, child_cr);
                 }
             } else {
-                /* Entity is a target but is not a (non-fragmenting) ChildOf 
+                /* Entity is a target but is not a (non-fragmenting) ChildOf
                  * target. Go through regular cleanup path. */
                 flecs_target_mark_for_delete(world, e);
             }
@@ -241,6 +247,8 @@ void flecs_component_delete_non_fragmenting_childof(
 
         flecs_simple_delete(world, e, r);
     }
+
+    ecs_vec_fini_t(&world->allocator, &children_vec, ecs_entity_t);
 
     ecs_component_record_t *tgt_wc = pr->second.prev;
     ecs_assert(ECS_PAIR_FIRST(tgt_wc->id) == EcsWildcard, ECS_INTERNAL_ERROR, NULL);

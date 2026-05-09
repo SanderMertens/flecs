@@ -4229,6 +4229,125 @@ void NonFragmentingChildOf_delete_with_parent_nested_w_up_observer(void) {
     ecs_fini(world);
 }
 
+typedef struct OwnChildrenObserverCtx {
+    int32_t invoked;
+    int32_t dead_children_seen;
+} OwnChildrenObserverCtx;
+
+static OwnChildrenObserverCtx own_children_observer_ctx;
+
+static void IterateOwnChildrenObserver(ecs_iter_t *it) {
+    for (int32_t e = 0; e < it->count; e++) {
+        ecs_entity_t entity = it->entities[e];
+        own_children_observer_ctx.invoked++;
+
+        ecs_iter_t cit = ecs_children(it->world, entity);
+        while (ecs_children_next(&cit)) {
+            for (int32_t i = 0; i < cit.count; i++) {
+                ecs_entity_t child = cit.entities[i];
+                if (!ecs_is_alive(it->world, child)) {
+                    own_children_observer_ctx.dead_children_seen++;
+                }
+            }
+        }
+    }
+}
+
+void NonFragmentingChildOf_delete_with_observer_iterates_children(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_os_zeromem(&own_children_observer_ctx);
+
+    ecs_observer(world, {
+        .query.terms = {{ Foo }},
+        .events = { EcsOnRemove },
+        .callback = IterateOwnChildrenObserver
+    });
+
+    ecs_entity_t p = ecs_new(world);
+    ecs_entity_t c = ecs_insert(world, ecs_value(EcsParent, {p}));
+    ecs_entity_t gc = ecs_insert(world, ecs_value(EcsParent, {c}));
+    ecs_add(world, gc, Foo);
+    ecs_entity_t ggc1 = ecs_insert(world, ecs_value(EcsParent, {gc}));
+    ecs_entity_t ggc2 = ecs_insert(world, ecs_value(EcsParent, {gc}));
+
+    ecs_entity_t z = ecs_new(world);
+    ecs_add_pair(world, z, Bar, c);
+
+    ecs_delete(world, p);
+
+    test_assert(!ecs_is_alive(world, p));
+    test_assert(!ecs_is_alive(world, c));
+    test_assert(!ecs_is_alive(world, gc));
+    test_assert(!ecs_is_alive(world, ggc1));
+    test_assert(!ecs_is_alive(world, ggc2));
+
+    test_assert(own_children_observer_ctx.invoked > 0);
+    test_int(own_children_observer_ctx.dead_children_seen, 0);
+
+    ecs_fini(world);
+}
+
+static void IterateParentChildrenObserver(ecs_iter_t *it) {
+    for (int32_t e = 0; e < it->count; e++) {
+        ecs_entity_t entity = it->entities[e];
+        own_children_observer_ctx.invoked++;
+
+        ecs_entity_t parent = ecs_get_parent(it->world, entity);
+        if (!parent) {
+            continue;
+        }
+
+        ecs_iter_t cit = ecs_children(it->world, parent);
+        while (ecs_children_next(&cit)) {
+            for (int32_t i = 0; i < cit.count; i++) {
+                ecs_entity_t child = cit.entities[i];
+                if (!ecs_is_alive(it->world, child)) {
+                    own_children_observer_ctx.dead_children_seen++;
+                }
+            }
+        }
+    }
+}
+
+void NonFragmentingChildOf_delete_with_observer_iterates_siblings(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_os_zeromem(&own_children_observer_ctx);
+
+    ecs_observer(world, {
+        .query.terms = {{ Foo }},
+        .events = { EcsOnRemove },
+        .callback = IterateParentChildrenObserver
+    });
+
+    ecs_entity_t p = ecs_new(world);
+
+    ecs_entity_t c1 = ecs_insert(world, ecs_value(EcsParent, {p}));
+    ecs_add(world, c1, Foo);
+    ecs_entity_t c2 = ecs_insert(world, ecs_value(EcsParent, {p}));
+    ecs_add(world, c2, Foo);
+    ecs_entity_t c3 = ecs_insert(world, ecs_value(EcsParent, {p}));
+    ecs_add(world, c3, Foo);
+
+    ecs_delete(world, p);
+
+    test_assert(!ecs_is_alive(world, p));
+    test_assert(!ecs_is_alive(world, c1));
+    test_assert(!ecs_is_alive(world, c2));
+    test_assert(!ecs_is_alive(world, c3));
+
+    test_assert(own_children_observer_ctx.invoked > 0);
+    test_int(own_children_observer_ctx.dead_children_seen, 0);
+
+    ecs_fini(world);
+}
+
 void NonFragmentingChildOf_delete_with_parent_mixed_nested_w_up_observer(void) {
     ecs_world_t *world = ecs_mini();
 
