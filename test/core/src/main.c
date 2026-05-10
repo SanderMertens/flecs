@@ -16275,7 +16275,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NULL,
         NULL,
-        241,
+        242,
         NonFragmentingChildOf_testcases
     },
     {
