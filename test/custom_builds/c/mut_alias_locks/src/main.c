@@ -379,6 +379,165 @@ void test_null_component_lock_target(void) {
     ecs_fini(world);
 }
 
+void test_inherited_table_component_lock_target(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+
+    ecs_entity_t base = ecs_new(world);
+    ecs_set(world, base, Position, {100, 200});
+
+    ecs_entity_t child = ecs_new(world);
+    ecs_add_pair(world, child, EcsIsA, base);
+
+    ecs_record_t *child_r = ecs_record_find(world, child);
+    assert(child_r != NULL);
+
+    ecs_get_ptr_t result = flecs_record_get_id(world, child, child_r, ecs_id(Position));
+    assert(result.ptr != NULL);
+
+    /* Inherited table component: lock target should point to the BASE table */
+    assert(result.lock_target.cr == NULL);
+    assert(result.lock_target.table != NULL);
+    assert(result.lock_target.column_index >= 0);
+
+    /* Verify it points to base's table, not child's */
+    ecs_table_t *base_table = ecs_get_table(world, base);
+    assert(result.lock_target.table == base_table);
+
+    /* Verify the pointer matches what ecs_get_id returns */
+    const Position *p = (const Position*)result.ptr;
+    assert(p->x == 100);
+    assert(p->y == 200);
+
+    ecs_fini(world);
+}
+
+void test_inherited_sparse_component_lock_target(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+
+    ecs_entity_t base = ecs_new(world);
+    ecs_set(world, base, Position, {50, 60});
+
+    ecs_entity_t child = ecs_new(world);
+    ecs_add_pair(world, child, EcsIsA, base);
+
+    ecs_record_t *child_r = ecs_record_find(world, child);
+    assert(child_r != NULL);
+
+    ecs_get_ptr_t result = flecs_record_get_id(world, child, child_r, ecs_id(Position));
+    assert(result.ptr != NULL);
+
+    /* Inherited sparse component: lock target should use component record */
+    assert(result.lock_target.cr != NULL);
+    assert(result.lock_target.table == NULL);
+    assert(result.lock_target.column_index == -1);
+
+    const Position *p = (const Position*)result.ptr;
+    assert(p->x == 50);
+    assert(p->y == 60);
+
+    ecs_fini(world);
+}
+
+void test_inherited_non_fragmenting_component_lock_target(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+
+    ecs_entity_t base = ecs_new(world);
+    ecs_set(world, base, Position, {70, 80});
+
+    ecs_entity_t child = ecs_new(world);
+    ecs_add_pair(world, child, EcsIsA, base);
+
+    ecs_record_t *child_r = ecs_record_find(world, child);
+    assert(child_r != NULL);
+
+    ecs_get_ptr_t result = flecs_record_get_id(world, child, child_r, ecs_id(Position));
+    assert(result.ptr != NULL);
+
+    /* Inherited non-fragmenting: lock target uses component record */
+    assert(result.lock_target.cr != NULL);
+    assert(result.lock_target.table == NULL);
+    assert(result.lock_target.column_index == -1);
+
+    const Position *p = (const Position*)result.ptr;
+    assert(p->x == 70);
+    assert(p->y == 80);
+
+    ecs_fini(world);
+}
+
+void test_inherited_not_found_lock_target(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
+
+    ecs_entity_t base = ecs_new(world);
+    ecs_set(world, base, Position, {1, 2});
+
+    ecs_entity_t child = ecs_new(world);
+    ecs_add_pair(world, child, EcsIsA, base);
+
+    ecs_record_t *child_r = ecs_record_find(world, child);
+    assert(child_r != NULL);
+
+    /* Velocity not on base or child — should return null */
+    ecs_get_ptr_t result = flecs_record_get_id(world, child, child_r, ecs_id(Velocity));
+    assert(result.ptr == NULL);
+    assert(result.lock_target.cr == NULL);
+    assert(result.lock_target.table == NULL);
+
+    ecs_fini(world);
+}
+
+void test_inherited_deep_isa_lock_target(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+
+    ecs_entity_t grandparent = ecs_new(world);
+    ecs_set(world, grandparent, Position, {1, 2});
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_add_pair(world, parent, EcsIsA, grandparent);
+
+    ecs_entity_t child = ecs_new(world);
+    ecs_add_pair(world, child, EcsIsA, parent);
+
+    ecs_record_t *child_r = ecs_record_find(world, child);
+    assert(child_r != NULL);
+
+    ecs_get_ptr_t result = flecs_record_get_id(world, child, child_r, ecs_id(Position));
+    assert(result.ptr != NULL);
+
+    /* Should resolve to grandparent's table column */
+    assert(result.lock_target.cr == NULL);
+    assert(result.lock_target.table != NULL);
+    assert(result.lock_target.column_index >= 0);
+
+    ecs_table_t *gp_table = ecs_get_table(world, grandparent);
+    assert(result.lock_target.table == gp_table);
+
+    const Position *p = (const Position*)result.ptr;
+    assert(p->x == 1);
+    assert(p->y == 2);
+
+    ecs_fini(world);
+}
+
 int main(int argc, char *argv[]) {
     (void)argc;
     (void)argv;
@@ -393,6 +552,12 @@ int main(int argc, char *argv[]) {
     test_sparse_fragmenting_lock_target();
     test_get_vs_get_mut_lock_target();
     test_null_component_lock_target();
+
+    test_inherited_table_component_lock_target();
+    test_inherited_sparse_component_lock_target();
+    test_inherited_non_fragmenting_component_lock_target();
+    test_inherited_not_found_lock_target();
+    test_inherited_deep_isa_lock_target();
 
     return 0;
 }

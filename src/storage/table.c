@@ -3005,7 +3005,7 @@ void flecs_table_init_column_locks(
         int32_t column_count = table->column_count;
 
         if (column_count == 0) {
-            //tags don't need column locks nor (new) column-less tables
+            /* tags don't need column locks nor (new) column-less tables */
             return;
         }
 
@@ -3021,6 +3021,20 @@ void flecs_table_init_column_locks(
     }
 }
 
+static
+bool flecs_table_column_locks_are_zero(
+    ecs_table_t *table,
+    int32_t column_count,
+    int32_t stage_count)
+{
+    for (int i = 0; i < column_count * stage_count; i ++) {
+        if (table->column_lock[i] != 0) {
+            return false;
+        }
+    }
+    return true;
+}
+
 void flecs_table_resize_column_locks(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -3033,8 +3047,14 @@ void flecs_table_resize_column_locks(
 
     if (table->column_lock) {
         int32_t column_count = table->column_count;
-        //if column_lock is not null, column count should be higher than 0
+        /* if column_lock is not null, column count should be higher than 0 */
         ecs_assert(column_count > 0, ECS_INTERNAL_ERROR, NULL);
+
+        /* assert no locks are held before resizing */
+        ecs_dbg_assert(
+            flecs_table_column_locks_are_zero(table, column_count,
+                previous_stage_count), ECS_INTERNAL_ERROR,
+            "cannot resize column locks while locks are held");
 
         table->column_lock = flecs_realloc_n(&world->allocator,
             int32_t, column_count * new_stage_count, column_count * previous_stage_count, table->column_lock);
@@ -3045,9 +3065,9 @@ void flecs_table_resize_column_locks(
         for (int i = 0; i < column_count * new_stage_count; i ++) {
             table->column_lock[i] = 0;
         }
-        
-    } else if(table->column_count > 0 && new_stage_count > 0) {
-        flecs_table_init_column_locks(world, table,new_stage_count);
+
+    } else if (table->column_count > 0 && new_stage_count > 0) {
+        flecs_table_init_column_locks(world, table, new_stage_count);
     }
 }
 
@@ -3058,7 +3078,7 @@ void flecs_tables_resize_column_locks(
     int32_t new_stage_count)
 {
     flecs_poly_assert(world, ecs_world_t);
-    //no need to resize when is world not initialized yet or changing to the same stage count
+    /* no need to resize when world not initialized yet or same stage count */
     if (world->flags & EcsWorldInit || previous_stage_count == new_stage_count) {
         return;
     }
@@ -3070,17 +3090,17 @@ void flecs_tables_resize_column_locks(
                 ecs_table_t, i);
             flecs_table_resize_column_locks(world, table, previous_stage_count, new_stage_count);
         }
-    // at world fini, we instead want to free the table locks, not resize.
-    // at world fini, the world returns to single threaded mode and sets the stage, this is where we clear the tables
-    // at the end of world fini, it sets the stage count to 0, we don't want to clean up here as it's already done so.
+    /* At world fini, free the table locks instead of resizing. The world
+     * returns to single threaded mode and sets the stage — that is where
+     * tables get cleaned up. When stage count is set to 0 at the end of
+     * fini, cleanup has already happened. */
     } else if (new_stage_count != 0) {
         int32_t i, count = flecs_sparse_count(&world->store.tables);
         for (i = 1; i < count; i ++) {
             ecs_table_t *table = flecs_sparse_get_dense_t(&world->store.tables,
                 ecs_table_t, i);
 
-            if(table->column_lock)
-            {
+            if (table->column_lock) {
                 flecs_wfree_n(world, int32_t, previous_stage_count * table->column_count, table->column_lock);
                 table->column_lock = NULL;
             }
