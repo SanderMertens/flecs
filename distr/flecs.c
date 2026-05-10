@@ -10068,6 +10068,7 @@ ecs_get_ptr_t flecs_record_get_mut_id(
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     flecs_poly_assert(world, ecs_world_t);
     ecs_assert(r != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_id_is_valid(world, component), ECS_INVALID_PARAMETER, NULL);
     ecs_dbg_assert(!flecs_component_has_on_replace(world, component, "get_mut"),
         ECS_INVALID_PARAMETER,
         "cannot call get_mut() for component '%s' which has an on_replace hook "
