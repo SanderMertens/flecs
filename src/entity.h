@@ -35,11 +35,32 @@
     ecs_assert(table->component_map != NULL, ECS_INTERNAL_ERROR, NULL);\
     int16_t column_index = table->component_map[id];\
     if (column_index > 0) {\
-        ecs_column_t *column = &table->data.columns[--column_index];\
-        return ECS_GET_PTR(\
-            ECS_ELEM(column->data, column->ti->size, ECS_RECORD_TO_ROW(r->row)),\
-            NULL, table, column_index);\
+        ecs_column_t *column = &table->data.columns[column_index - 1];\
+        return ECS_ELEM(column->data, column->ti->size, \
+            ECS_RECORD_TO_ROW(r->row));\
     }
+
+#ifdef FLECS_MUT_ALIAS_LOCKS
+#define ecs_record_get_low_id(tbl, r, id)\
+    ecs_assert(tbl->component_map != NULL, ECS_INTERNAL_ERROR, NULL);\
+    int16_t column_index = tbl->component_map[id];\
+    if (column_index > 0) {\
+        ecs_column_t *column = &tbl->data.columns[--column_index];\
+        return (ecs_get_ptr_t){\
+            .ptr = ECS_ELEM(column->data, column->ti->size, ECS_RECORD_TO_ROW(r->row)),\
+            .lock_target = (ecs_lock_target_t){ .cr = NULL, .table = (tbl), .column_index = column_index }\
+        };\
+    }
+#else
+#define ecs_record_get_low_id(tbl, r, id)\
+    ecs_assert(tbl->component_map != NULL, ECS_INTERNAL_ERROR, NULL);\
+    int16_t column_index = tbl->component_map[id];\
+    if (column_index > 0) {\
+        ecs_column_t *column = &tbl->data.columns[column_index - 1];\
+        return (ecs_get_ptr_t)ECS_ELEM(column->data, column->ti->size, \
+            ECS_RECORD_TO_ROW(r->row));\
+    }
+#endif
 
 typedef struct {
     const ecs_type_info_t *ti;
@@ -113,8 +134,8 @@ int32_t flecs_relation_depth(
     ecs_entity_t r,
     const ecs_table_t *table);
 
-/* Get component from base entity (follows IsA relationship). */
-ecs_get_ptr_t flecs_get_base_component(
+/* Get component from base entity (follows IsA relationship) */
+void* flecs_get_base_component(
     const ecs_world_t *world,
     ecs_table_t *table,
     ecs_id_t id,
