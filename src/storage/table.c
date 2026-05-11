@@ -3113,6 +3113,7 @@ void flecs_table_init_column_locks(
     }
 }
 
+#ifdef FLECS_DEBUG
 static
 bool flecs_table_column_locks_are_zero(
     ecs_table_t *table,
@@ -3126,6 +3127,7 @@ bool flecs_table_column_locks_are_zero(
     }
     return true;
 }
+#endif
 
 void flecs_table_resize_column_locks(
     ecs_world_t *world,
