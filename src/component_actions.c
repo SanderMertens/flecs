@@ -438,6 +438,10 @@ void flecs_actions_delete_tree(
             return;
         }
 
+        if (table->flags & EcsTableHasTraversable) {
+            flecs_emit_propagate_invalidate(world, table, row, count);
+        }
+
         flecs_actions_on_remove_intern(
             world, table, NULL, row, count, diff, diff_flags);
     }

@@ -41,6 +41,8 @@ void NonFragmentingChildOf_set_parent_no_ordered_children(void) {
     ecs_fini(world);
 }
 
+
+
 void NonFragmentingChildOf_add_ordered_children_before_set_parent(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -4229,6 +4231,37 @@ void NonFragmentingChildOf_delete_with_parent_nested_w_up_observer(void) {
     ecs_fini(world);
 }
 
+void NonFragmentingChildOf_fini_nested_w_up_observer_delete_targets(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Rel);
+    ecs_add_pair(world, Rel, EcsOnDeleteTarget, EcsDelete);
+
+    ecs_observer(world, {
+        .query.terms = {{ Foo, .src.id = EcsUp }},
+        .events = { EcsOnAdd, EcsOnRemove },
+        .callback = DummyObserver
+    });
+
+    ecs_entity_t e0 = ecs_new_w_id(world, Foo);
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(EcsParent, {e0}));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(EcsParent, {e1}));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(EcsParent, {e3}));
+    ecs_entity_t e6 = ecs_new(world);
+    ecs_add_pair(world, e6, Rel, e1);
+    ecs_entity_t e7 = ecs_insert(world, ecs_value(EcsParent, {e3}));
+    ecs_add_pair(world, e7, Rel, e7);
+    ecs_entity_t e14 = ecs_new(world);
+    ecs_add_pair(world, e14, Rel, e3);
+
+    test_assert(e5 != 0);
+    test_assert(e7 != 0);
+    test_assert(e14 != 0);
+
+    ecs_fini(world);
+}
+
 typedef struct OwnChildrenObserverCtx {
     int32_t invoked;
     int32_t dead_children_seen;
@@ -6407,4 +6440,3 @@ void NonFragmentingChildOf_defer_set_parent_and_remove_tag(void) {
 
     ecs_fini(world);
 }
-
