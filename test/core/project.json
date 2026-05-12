@@ -910,6 +910,7 @@
                 "delete_with_parent_nested_4",
                 "delete_with_parent_w_up_observer",
                 "delete_with_parent_nested_w_up_observer",
+                "fini_nested_w_up_observer_delete_targets",
                 "delete_with_parent_mixed_nested_w_up_observer",
                 "delete_with_observer_iterates_children",
                 "delete_with_observer_iterates_siblings",
