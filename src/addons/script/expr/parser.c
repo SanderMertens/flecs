@@ -829,6 +829,8 @@ int ecs_expr_eval(
         priv_desc.lookup_action = flecs_script_default_lookup;
     }
 
+    flecs_script_runtime_get(script->world)->error = false;
+
     if (flecs_expr_visit_eval(script, impl->expr, &priv_desc, value)) {
         goto error;
     }

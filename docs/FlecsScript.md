@@ -781,7 +781,7 @@ const x: pow(100, 2)
 const x: add({10, 20}, {30, 40})
 ```
 
-Currently functions can only be defined outside of scripts by the Flecs Script API. Flecs comes with a set of builtin and math functions. Math functions are defined by the script math addon, which must be explicitly enabled by defining `FLECS_SCRIPT_MATH`.
+Functions can be defined in scripts or by using the C/C++ API. Flecs also comes with a set of builtin functions for common math utilities and functions that provide access to ECS features. Math functions are defined by the script math addon, which must be explicitly enabled by defining `FLECS_SCRIPT_MATH`.
 
 A function can be created in code by doing:
 
@@ -809,6 +809,39 @@ void sum(
     int64_t *a = argv[0].ptr;
     int64_t *b = argv[1].ptr;
     *(int64_t*)result->ptr = *a + *b;
+}
+```
+
+The following syntax can be used to define a function in a script:
+
+```rust
+fn add(a: i32, b: i32) -> i32 {
+    a + b // last expression is return value
+}
+
+Foo = Position: {add(1, 2), add(10, 20)}
+```
+
+Script functions are created and called in the same way as functions created with the API.
+
+Function bodies may only contain expressions and const variables, for example:
+
+```rust
+fn poly(x: i32) -> i32 {
+    const x2 = i32: x * x
+    const x3 = i32: x2 * x
+    x3 + x2
+}
+```
+
+Control flow statement such as `if` and `for` are not allowed inside of a function. To expression conditional logic, functions can use `match` expressions:
+
+```rust
+fn factorial(n: i32) -> i32 {
+    match n {
+        0: 1
+        _: factorial(n - 1) * n
+    }
 }
 ```
 

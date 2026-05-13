@@ -127,6 +127,7 @@ const char* flecs_script_node_to_str(
     case EcsAstIf:                 return "if";
     case EcsAstFor:                return "for";
     case EcsAstInclude:            return "include";
+    case EcsAstFunction:           return "fn";
     }
     return "???";
 }
@@ -442,6 +443,27 @@ int flecs_script_stmt_to_str(
     case EcsAstInclude:
         flecs_script_include_to_str(v, (ecs_script_include_t*)node);
         break;
+    case EcsAstFunction: {
+        ecs_script_function_node_t *fn = (ecs_script_function_node_t*)node;
+        flecs_scriptbuf_node(v, &fn->node);
+        flecs_scriptbuf_append(v, "%s(", fn->name);
+        int32_t i, count = ecs_vec_count(&fn->params);
+        ecs_script_fn_param_t *params = ecs_vec_first(&fn->params);
+        for (i = 0; i < count; i ++) {
+            if (i) {
+                flecs_scriptbuf_appendstr(v, ", ");
+            }
+            flecs_scriptbuf_append(v, "%s: %s",
+                params[i].name, params[i].type);
+        }
+        flecs_scriptbuf_append(v, ") -> %s ", fn->return_type);
+        flecs_script_scope_to_str(v, fn->body);
+        if (fn->return_expr) {
+            flecs_expr_to_str(v, fn->return_expr);
+        }
+        flecs_scriptbuf_appendstr(v, "\n");
+        break;
+    }
     }
 
     return 0;

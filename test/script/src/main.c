@@ -466,6 +466,72 @@ void Eval_const_var_w_new_expr_two_tags(void);
 void Eval_const_var_w_new_expr_tag_component(void);
 void Eval_empty_entity_kind(void);
 
+// Testsuite 'Function'
+void Function_simple(void);
+void Function_no_args(void);
+void Function_with_locals(void);
+void Function_called_multiple_times(void);
+void Function_missing_return_expr(void);
+void Function_nested(void);
+void Function_string_arg(void);
+void Function_string_return(void);
+void Function_string_arg_and_return(void);
+void Function_struct_arg(void);
+void Function_struct_return(void);
+void Function_struct_arg_and_return(void);
+void Function_match_expr(void);
+void Function_recursion(void);
+void Function_undefined_var_in_body(void);
+void Function_runtime_error_propagation(void);
+void Function_missing_arrow(void);
+void Function_missing_return_type(void);
+void Function_missing_colon_in_param(void);
+void Function_missing_close_paren(void);
+void Function_trailing_comma_in_params(void);
+void Function_unclosed_body(void);
+void Function_empty_body(void);
+void Function_non_const_stmt_in_body(void);
+void Function_fn_as_identifier(void);
+void Function_fn_in_entity_scope(void);
+void Function_fn_in_template(void);
+void Function_unresolved_param_type(void);
+void Function_unresolved_return_type(void);
+void Function_duplicate_param(void);
+void Function_const_missing_initializer(void);
+void Function_const_unresolved_type(void);
+void Function_const_redeclared(void);
+void Function_too_many_params(void);
+void Function_too_few_args(void);
+void Function_too_many_args(void);
+void Function_wrong_arg_type(void);
+void Function_undefined_fn(void);
+void Function_forward_reference(void);
+void Function_fn_in_module(void);
+void Function_fn_in_module_qualified_call(void);
+void Function_fn_in_module_w_using(void);
+void Function_f32_arg_and_return(void);
+void Function_f64_arg_and_return(void);
+void Function_bool_arg_and_return(void);
+void Function_entity_arg_and_return(void);
+void Function_enum_arg_and_return(void);
+void Function_bitmask_arg_and_return(void);
+void Function_mixed_int_arg_float_return(void);
+void Function_nested_struct_arg(void);
+void Function_array_arg(void);
+void Function_struct_with_string_return(void);
+void Function_call_in_arithmetic(void);
+void Function_call_in_match_value(void);
+void Function_call_in_if_condition(void);
+void Function_call_in_for_body(void);
+void Function_call_in_with(void);
+void Function_call_in_const_rhs(void);
+void Function_call_via_expr_run(void);
+void Function_to_str_roundtrip(void);
+void Function_arrow_no_spaces(void);
+void Function_arrow_split_dash_gt(void);
+void Function_nested_runtime_error(void);
+void Function_const_runtime_error(void);
+
 // Testsuite 'Template'
 void Template_template_no_scope(void);
 void Template_template_no_props(void);
@@ -3224,6 +3290,265 @@ bake_test_case Eval_testcases[] = {
     {
         "empty_entity_kind",
         Eval_empty_entity_kind
+    }
+};
+
+bake_test_case Function_testcases[] = {
+    {
+        "simple",
+        Function_simple
+    },
+    {
+        "no_args",
+        Function_no_args
+    },
+    {
+        "with_locals",
+        Function_with_locals
+    },
+    {
+        "called_multiple_times",
+        Function_called_multiple_times
+    },
+    {
+        "missing_return_expr",
+        Function_missing_return_expr
+    },
+    {
+        "nested",
+        Function_nested
+    },
+    {
+        "string_arg",
+        Function_string_arg
+    },
+    {
+        "string_return",
+        Function_string_return
+    },
+    {
+        "string_arg_and_return",
+        Function_string_arg_and_return
+    },
+    {
+        "struct_arg",
+        Function_struct_arg
+    },
+    {
+        "struct_return",
+        Function_struct_return
+    },
+    {
+        "struct_arg_and_return",
+        Function_struct_arg_and_return
+    },
+    {
+        "match_expr",
+        Function_match_expr
+    },
+    {
+        "recursion",
+        Function_recursion
+    },
+    {
+        "undefined_var_in_body",
+        Function_undefined_var_in_body
+    },
+    {
+        "runtime_error_propagation",
+        Function_runtime_error_propagation
+    },
+    {
+        "missing_arrow",
+        Function_missing_arrow
+    },
+    {
+        "missing_return_type",
+        Function_missing_return_type
+    },
+    {
+        "missing_colon_in_param",
+        Function_missing_colon_in_param
+    },
+    {
+        "missing_close_paren",
+        Function_missing_close_paren
+    },
+    {
+        "trailing_comma_in_params",
+        Function_trailing_comma_in_params
+    },
+    {
+        "unclosed_body",
+        Function_unclosed_body
+    },
+    {
+        "empty_body",
+        Function_empty_body
+    },
+    {
+        "non_const_stmt_in_body",
+        Function_non_const_stmt_in_body
+    },
+    {
+        "fn_as_identifier",
+        Function_fn_as_identifier
+    },
+    {
+        "fn_in_entity_scope",
+        Function_fn_in_entity_scope
+    },
+    {
+        "fn_in_template",
+        Function_fn_in_template
+    },
+    {
+        "unresolved_param_type",
+        Function_unresolved_param_type
+    },
+    {
+        "unresolved_return_type",
+        Function_unresolved_return_type
+    },
+    {
+        "duplicate_param",
+        Function_duplicate_param
+    },
+    {
+        "const_missing_initializer",
+        Function_const_missing_initializer
+    },
+    {
+        "const_unresolved_type",
+        Function_const_unresolved_type
+    },
+    {
+        "const_redeclared",
+        Function_const_redeclared
+    },
+    {
+        "too_many_params",
+        Function_too_many_params
+    },
+    {
+        "too_few_args",
+        Function_too_few_args
+    },
+    {
+        "too_many_args",
+        Function_too_many_args
+    },
+    {
+        "wrong_arg_type",
+        Function_wrong_arg_type
+    },
+    {
+        "undefined_fn",
+        Function_undefined_fn
+    },
+    {
+        "forward_reference",
+        Function_forward_reference
+    },
+    {
+        "fn_in_module",
+        Function_fn_in_module
+    },
+    {
+        "fn_in_module_qualified_call",
+        Function_fn_in_module_qualified_call
+    },
+    {
+        "fn_in_module_w_using",
+        Function_fn_in_module_w_using
+    },
+    {
+        "f32_arg_and_return",
+        Function_f32_arg_and_return
+    },
+    {
+        "f64_arg_and_return",
+        Function_f64_arg_and_return
+    },
+    {
+        "bool_arg_and_return",
+        Function_bool_arg_and_return
+    },
+    {
+        "entity_arg_and_return",
+        Function_entity_arg_and_return
+    },
+    {
+        "enum_arg_and_return",
+        Function_enum_arg_and_return
+    },
+    {
+        "bitmask_arg_and_return",
+        Function_bitmask_arg_and_return
+    },
+    {
+        "mixed_int_arg_float_return",
+        Function_mixed_int_arg_float_return
+    },
+    {
+        "nested_struct_arg",
+        Function_nested_struct_arg
+    },
+    {
+        "array_arg",
+        Function_array_arg
+    },
+    {
+        "struct_with_string_return",
+        Function_struct_with_string_return
+    },
+    {
+        "call_in_arithmetic",
+        Function_call_in_arithmetic
+    },
+    {
+        "call_in_match_value",
+        Function_call_in_match_value
+    },
+    {
+        "call_in_if_condition",
+        Function_call_in_if_condition
+    },
+    {
+        "call_in_for_body",
+        Function_call_in_for_body
+    },
+    {
+        "call_in_with",
+        Function_call_in_with
+    },
+    {
+        "call_in_const_rhs",
+        Function_call_in_const_rhs
+    },
+    {
+        "call_via_expr_run",
+        Function_call_via_expr_run
+    },
+    {
+        "to_str_roundtrip",
+        Function_to_str_roundtrip
+    },
+    {
+        "arrow_no_spaces",
+        Function_arrow_no_spaces
+    },
+    {
+        "arrow_split_dash_gt",
+        Function_arrow_split_dash_gt
+    },
+    {
+        "nested_runtime_error",
+        Function_nested_runtime_error
+    },
+    {
+        "const_runtime_error",
+        Function_const_runtime_error
     }
 };
 
@@ -6914,6 +7239,7 @@ const char* Expr_folding_param[] = {"enabled", "disabled"};
 bake_test_param Expr_params[] = {
     {"folding", (char**)Expr_folding_param, 2}
 };
+
 const char* Deserialize_folding_param[] = {"enabled", "disabled"};
 bake_test_param Deserialize_params[] = {
     {"folding", (char**)Deserialize_folding_param, 2}
@@ -6926,6 +7252,13 @@ static bake_test_suite suites[] = {
         NULL,
         456,
         Eval_testcases
+    },
+    {
+        "Function",
+        NULL,
+        NULL,
+        64,
+        Function_testcases
     },
     {
         "Template",
@@ -6997,5 +7330,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("script", argc, argv, suites, 10);
+    return bake_test_run("script", argc, argv, suites, 11);
 }

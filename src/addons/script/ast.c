@@ -376,4 +376,22 @@ ecs_script_include_t* flecs_script_insert_include(
     return result;
 }
 
+ecs_script_function_node_t* flecs_script_insert_function(
+    ecs_parser_t *parser,
+    const char *name)
+{
+    ecs_script_scope_t *scope = parser->scope;
+    ecs_assert(scope != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_script_function_node_t *result = flecs_ast_new(
+        parser, ecs_script_function_node_t, EcsAstFunction);
+    result->name = name;
+    result->body = flecs_script_scope_new(parser);
+    ecs_vec_init_t(&parser->script->allocator, &result->params,
+        ecs_script_fn_param_t, 0);
+
+    flecs_ast_append(parser, scope->stmts, ecs_script_function_node_t, result);
+    return result;
+}
+
 #endif

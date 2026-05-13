@@ -146,6 +146,8 @@ struct ecs_script_function_t {
     ecs_function_callback_t callback;
     ecs_vector_function_callback_t vector_callbacks[FLECS_SCRIPT_VECTOR_FUNCTION_COUNT];
     void *ctx;
+    void *binding_ctx;
+    ecs_ctx_free_t binding_ctx_free;
 };
 
 /** Function component.

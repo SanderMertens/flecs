@@ -310,6 +310,8 @@ bool flecs_expr_oper_valid_for_type(
     case EcsTokKeywordProp:
     case EcsTokKeywordConst:
     case EcsTokKeywordInclude:
+    case EcsTokKeywordFn:
+    case EcsTokArrow:
     case EcsTokEnd:
     default:
         ecs_abort(ECS_INTERNAL_ERROR, NULL);
@@ -459,6 +461,8 @@ int flecs_expr_type_for_operator(
     case EcsTokKeywordProp:
     case EcsTokKeywordConst:
     case EcsTokKeywordInclude:
+    case EcsTokKeywordFn:
+    case EcsTokArrow:
     case EcsTokEnd:
     default:
         ecs_throw(ECS_INTERNAL_ERROR, "invalid operator");
