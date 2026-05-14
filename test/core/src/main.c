@@ -2276,6 +2276,7 @@ void Observer_up_propagate_w_parent_component_on_set(void);
 void Observer_self_up_propagate_w_parent_component_on_set(void);
 void Observer_up_forward_w_recycled_tag_generation_collision(void);
 void Observer_on_add_w_recycled_component_generation_collision(void);
+void Observer_forward_up_propagate_w_field(void);
 void Observer_parent_on_set_w_exclusive_pair(void);
 void Observer_cache_test_1(void);
 void Observer_cache_test_2(void);
@@ -12201,6 +12202,10 @@ bake_test_case Observer_testcases[] = {
         Observer_on_add_w_recycled_component_generation_collision
     },
     {
+        "forward_up_propagate_w_field",
+        Observer_forward_up_propagate_w_field
+    },
+    {
         "parent_on_set_w_exclusive_pair",
         Observer_parent_on_set_w_exclusive_pair
     },
@@ -16419,7 +16424,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        338,
+        339,
         Observer_testcases
     },
     {

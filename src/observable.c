@@ -1090,7 +1090,16 @@ void flecs_emit_forward(
                 int32_t ider_count = flecs_event_observers_get(
                     er, rc_cr->id, iders);
 
-                flecs_propagate_entities(world, it, rc_cr, it->entities, 
+                it->ids[0] = rc_cr->id;
+                it->event_id = rc_cr->id;
+                it->trs[0] = tr;
+                ECS_CONST_CAST(int32_t*, it->sizes)[0] = 0;
+                if (rc_cr->type_info) {
+                    ECS_CONST_CAST(int32_t*, it->sizes)[0] = 
+                        rc_cr->type_info->size;
+                }
+
+                flecs_propagate_entities(world, it, rc_cr, it->entities,
                     it->count, elem->src, iders, ider_count);
             }
         }
