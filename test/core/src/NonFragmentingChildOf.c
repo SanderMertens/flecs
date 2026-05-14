@@ -4177,6 +4177,37 @@ void NonFragmentingChildOf_delete_with_parent_nested_4(void) {
     ecs_fini(world);
 }
 
+void NonFragmentingChildOf_delete_with_target_empty_record_reparent(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_new(world);
+    ecs_entity_t p2 = ecs_new(world);
+
+    ecs_entity_t old = ecs_insert(world, ecs_value(EcsParent, {p}));
+    ecs_delete(world, old);
+
+    ecs_delete_with(world, ecs_pair(EcsWildcard, p));
+
+    ecs_entity_t c = ecs_insert(world, ecs_value(EcsParent, {p}));
+    ecs_set(world, c, EcsParent, {p2});
+
+    test_assert(ecs_is_alive(world, p));
+    test_assert(ecs_is_alive(world, p2));
+    test_assert(ecs_is_alive(world, c));
+    test_assert(ecs_get_parent(world, c) == p2);
+
+    ecs_iter_t it = ecs_children(world, p);
+    test_assert(!ecs_children_next(&it));
+
+    it = ecs_children(world, p2);
+    test_assert(ecs_children_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], c);
+    test_assert(!ecs_children_next(&it));
+
+    ecs_fini(world);
+}
+
 static void DummyObserver(ecs_iter_t *it) { }
 
 void NonFragmentingChildOf_delete_with_parent_w_up_observer(void) {

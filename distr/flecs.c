@@ -18249,11 +18249,11 @@ bool flecs_component_mark_non_fragmenting_childof(
         return false;
     }
 
-    childof_cr->flags |= EcsIdMarkedForDelete;
-
     if (!flecs_component_has_non_fragmenting_childof(childof_cr)) {
         return false;
     }
+
+    childof_cr->flags |= EcsIdMarkedForDelete;
 
     ecs_pair_record_t *pr = childof_cr->pair;
 
@@ -18351,9 +18351,12 @@ void flecs_component_mark_for_delete(
             }
         } else {
             /* Iterating all pairs for relationship target */
-            ecs_assert(ECS_PAIR_FIRST(id) == EcsWildcard, 
+            ecs_assert(ECS_PAIR_FIRST(id) == EcsWildcard,
                 ECS_INTERNAL_ERROR, NULL);
             while ((cur = flecs_component_second_next(cur))) {
+                if (cur->flags & EcsIdOrderedChildren) {
+                    continue;
+                }
                 cur->flags |= EcsIdMarkedForDelete;
 
                 /* If relationship is traversable and is removed upon deletion
@@ -41467,7 +41470,7 @@ void flecs_remove_non_fragmenting_child(
         return;
     }
 
-    ecs_component_record_t *cr = flecs_components_get(world, 
+    ecs_component_record_t *cr = flecs_components_get(world,
         ecs_pair(EcsChildOf, parent));
     if (!cr || (cr->flags & EcsIdMarkedForDelete)) {
         return;
