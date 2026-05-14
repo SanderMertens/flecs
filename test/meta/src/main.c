@@ -789,6 +789,10 @@ void SerializeEntityToJson_serialize_sparse_inherited_pair(void);
 void SerializeEntityToJson_serialize_sparse_inherited_mixed(void);
 void SerializeEntityToJson_serialize_sparse_w_type_info(void);
 void SerializeEntityToJson_serialize_sparse_tag(void);
+void SerializeEntityToJson_serialize_sparse_tag_simple(void);
+void SerializeEntityToJson_serialize_sparse_pair_tag(void);
+void SerializeEntityToJson_serialize_dont_fragment_tag_w_type_info(void);
+void SerializeEntityToJson_serialize_dont_fragment_pair_tag_w_type_info(void);
 void SerializeEntityToJson_serialize_dont_fragment_tag(void);
 void SerializeEntityToJson_serialize_dont_fragment_pair(void);
 void SerializeEntityToJson_serialize_dont_fragment_pair_multi_target(void);
@@ -4246,6 +4250,22 @@ bake_test_case SerializeEntityToJson_testcases[] = {
         SerializeEntityToJson_serialize_sparse_tag
     },
     {
+        "serialize_sparse_tag_simple",
+        SerializeEntityToJson_serialize_sparse_tag_simple
+    },
+    {
+        "serialize_sparse_pair_tag",
+        SerializeEntityToJson_serialize_sparse_pair_tag
+    },
+    {
+        "serialize_dont_fragment_tag_w_type_info",
+        SerializeEntityToJson_serialize_dont_fragment_tag_w_type_info
+    },
+    {
+        "serialize_dont_fragment_pair_tag_w_type_info",
+        SerializeEntityToJson_serialize_dont_fragment_pair_tag_w_type_info
+    },
+    {
         "serialize_dont_fragment_tag",
         SerializeEntityToJson_serialize_dont_fragment_tag
     },
@@ -5894,7 +5914,7 @@ static bake_test_suite suites[] = {
         "SerializeEntityToJson",
         NULL,
         NULL,
-        96,
+        100,
         SerializeEntityToJson_testcases
     },
     {

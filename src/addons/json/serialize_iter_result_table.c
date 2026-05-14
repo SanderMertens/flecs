@@ -107,7 +107,7 @@ void flecs_json_serialize_table_tags(
                 continue;
             }
         }
-        if (cr->flags & EcsIdSparse) {
+        if ((cr->flags & EcsIdSparse) && cr->type_info) {
             continue;
         }
 
@@ -245,7 +245,7 @@ void flecs_json_serialize_table_pairs(
                 continue;
             }
         }
-        if (cr->flags & EcsIdSparse) {
+        if ((cr->flags & EcsIdSparse) && cr->type_info) {
             continue;
         }
 
@@ -396,7 +396,7 @@ int flecs_json_serialize_table_components(
             ti = column->ti;
             ptr = ECS_ELEM(column->data, ti->size, row);
         } else {
-            if (!(cr->flags & EcsIdSparse)) {
+            if (!(cr->flags & EcsIdSparse) || !cr->type_info) {
                 continue;
             }
             ecs_entity_t e = ecs_table_entities(table)[row];
