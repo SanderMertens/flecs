@@ -15657,7 +15657,7 @@ void flecs_emit_forward_table_up(
         }
 
         /* Id has the same relationship, traverse to find ids for forwarding */
-        if ((ECS_HAS_ID_FLAG(id, PAIR) && (ECS_PAIR_FIRST(id) == trav ||
+        if ((ECS_IS_PAIR(id) && (ECS_PAIR_FIRST(id) == trav ||
             ECS_PAIR_FIRST(id) == EcsIsA)) ||
             ((trav == EcsChildOf) && id == ecs_id(EcsParent)))
         {
@@ -16296,7 +16296,9 @@ repeat_event:
         };
 
         bool dont_fragment = cr_flags & EcsIdDontFragment;
-        if (!dont_fragment && id != EcsAny && (ECS_PAIR_FIRST(id) != EcsChildOf)) {
+        if (!dont_fragment && id != EcsAny &&
+            !(ECS_IS_PAIR(id) && ECS_PAIR_FIRST(id) == EcsChildOf))
+        {
             if (tr == NULL) {
                 /* When a single batch contains multiple adds for an exclusive
                 * relationship, it's possible that an id was in the added list

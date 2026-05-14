@@ -13368,6 +13368,51 @@ void Observer_up_forward_w_recycled_tag_generation_collision(void) {
 }
 
 static
+void Observer_recycled_component_generation_collision(ecs_iter_t *it) {
+    int32_t *invoked = it->ctx;
+    (*invoked) ++;
+
+    test_int(it->count, 1);
+    test_assert(it->entities != NULL);
+    test_assert(it->entities[0] != 0);
+
+    Position *p = ecs_field(it, Position, 0);
+    test_assert(p != NULL);
+}
+
+void Observer_on_add_w_recycled_component_generation_collision(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t comp = ecs_new(world);
+    while (ecs_get_version(comp) != EcsChildOf) {
+        ecs_delete(world, comp);
+        comp = ecs_new(world);
+    }
+
+    comp = ecs_component_init(world, &(ecs_component_desc_t){
+        .entity = comp,
+        .type.size = sizeof(Position),
+        .type.alignment = ECS_ALIGNOF(Position)
+    });
+
+    int32_t invoked = 0;
+    ecs_observer(world, {
+        .query.terms = {{ comp }},
+        .events = { EcsOnAdd },
+        .callback = Observer_recycled_component_generation_collision,
+        .ctx = &invoked
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    Position p = {10, 20};
+    ecs_set_id(world, e, comp, sizeof(Position), &p);
+
+    test_int(invoked, 1);
+
+    ecs_fini(world);
+}
+
+static
 void Observer_parent_fixed(ecs_iter_t *it) {
     probe_iter(it);
 
