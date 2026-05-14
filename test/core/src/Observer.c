@@ -13338,6 +13338,35 @@ void Observer_self_up_propagate_w_parent_component_on_set(void) {
     ecs_fini(world);
 }
 
+void Observer_up_forward_w_recycled_tag_generation_collision(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    dummy_called = false;
+    ecs_observer(world, {
+        .query.terms = {{ Foo, .src.id = EcsUp, .trav = EcsChildOf }},
+        .events = { EcsOnAdd },
+        .callback = Dummy
+    });
+
+    ecs_entity_t tag = ecs_new(world);
+    while (ecs_get_version(tag) != EcsChildOf) {
+        ecs_delete(world, tag);
+        tag = ecs_new(world);
+    }
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_add_id(world, parent, tag);
+
+    ecs_entity_t child = ecs_new(world);
+    ecs_add_pair(world, child, EcsChildOf, parent);
+
+    test_assert(!dummy_called);
+
+    ecs_fini(world);
+}
+
 static
 void Observer_parent_fixed(ecs_iter_t *it) {
     probe_iter(it);
