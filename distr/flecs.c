@@ -18300,7 +18300,9 @@ void flecs_component_mark_for_delete(
     ecs_id_t id = cr->id;
 
     bool delete_target = flecs_id_is_delete_target(id, action);
-    if (delete_target) {
+    if (delete_target ||
+        (ecs_id_is_pair(id) && ECS_PAIR_FIRST(id) == EcsWildcard))
+    {
         if (flecs_component_mark_non_fragmenting_childof(world, cr)) {
             return;
         }
