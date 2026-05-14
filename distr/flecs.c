@@ -15657,8 +15657,9 @@ void flecs_emit_forward_table_up(
         }
 
         /* Id has the same relationship, traverse to find ids for forwarding */
-        if (ECS_PAIR_FIRST(id) == trav || ECS_PAIR_FIRST(id) == EcsIsA || (
-            (trav == EcsChildOf) && id == ecs_id(EcsParent))) 
+        if ((ECS_HAS_ID_FLAG(id, PAIR) && (ECS_PAIR_FIRST(id) == trav ||
+            ECS_PAIR_FIRST(id) == EcsIsA)) ||
+            ((trav == EcsChildOf) && id == ecs_id(EcsParent)))
         {
             ecs_table_t **t = ecs_vec_append_t(&world->allocator, stack, 
                 ecs_table_t*);
