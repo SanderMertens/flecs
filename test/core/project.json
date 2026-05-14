@@ -908,6 +908,7 @@
                 "delete_with_parent_nested_2",
                 "delete_with_parent_nested_3",
                 "delete_with_parent_nested_4",
+                "delete_with_target_empty_record_reparent",
                 "delete_with_parent_w_up_observer",
                 "delete_with_parent_nested_w_up_observer",
                 "fini_nested_w_up_observer_delete_targets",
