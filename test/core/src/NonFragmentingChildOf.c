@@ -4262,6 +4262,63 @@ void NonFragmentingChildOf_fini_nested_w_up_observer_delete_targets(void) {
     ecs_fini(world);
 }
 
+void NonFragmentingChildOf_fini_stale_up_observer_after_delete_with(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t Foo = ecs_new(world);
+
+    ecs_observer(world, {
+        .query.terms = {{ Foo, .src.id = EcsUp }},
+        .events = { EcsOnAdd, EcsOnRemove },
+        .callback = DummyObserver
+    });
+
+    ecs_entity_t e0 = ecs_new_w_id(world, Foo);
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(EcsParent, {e0}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(EcsParent, {e0}));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(EcsParent, {e1}));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(EcsParent, {e2}));
+    ecs_add_id(world, e4, Foo);
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(EcsParent, {e0}));
+    ecs_add_id(world, e5, Foo);
+    ecs_entity_t e6 = ecs_insert(world, ecs_value(EcsParent, {e0}));
+    ecs_add_id(world, e6, Foo);
+    ecs_entity_t e7 = ecs_insert(world, ecs_value(EcsParent, {e6}));
+    ecs_entity_t e8 = ecs_insert(world, ecs_value(EcsParent, {e2}));
+    ecs_entity_t e9 = ecs_insert(world, ecs_value(EcsParent, {e3}));
+    ecs_entity_t e10 = ecs_insert(world, ecs_value(EcsParent, {e8}));
+    ecs_entity_t e11 = ecs_insert(world, ecs_value(EcsParent, {e10}));
+    ecs_entity_t e12 = ecs_insert(world, ecs_value(EcsParent, {e10}));
+    ecs_entity_t e13 = ecs_insert(world, ecs_value(EcsParent, {e9}));
+    ecs_entity_t e14 = ecs_insert(world, ecs_value(EcsParent, {e4}));
+    ecs_entity_t e15 = ecs_insert(world, ecs_value(EcsParent, {e6}));
+    ecs_entity_t e16 = ecs_insert(world, ecs_value(EcsParent, {e10}));
+    ecs_entity_t e17 = ecs_insert(world, ecs_value(EcsParent, {e6}));
+    ecs_entity_t e18 = ecs_insert(world, ecs_value(EcsParent, {e14}));
+    ecs_entity_t e19 = ecs_insert(world, ecs_value(EcsParent, {e13}));
+    ecs_entity_t e20 = ecs_insert(world, ecs_value(EcsParent, {e18}));
+    ecs_entity_t e21 = ecs_insert(world, ecs_value(EcsParent, {e1}));
+    ecs_entity_t e22 = ecs_insert(world, ecs_value(EcsParent, {e18}));
+    ecs_entity_t e23 = ecs_insert(world, ecs_value(EcsParent, {e15}));
+
+    ecs_delete_with(world, ecs_pair(EcsWildcard, e3));
+    ecs_delete_with(world, ecs_pair(EcsWildcard, e1));
+    ecs_delete_with(world, ecs_childof(e15));
+
+    test_assert(e7 != 0);
+    test_assert(e11 != 0);
+    test_assert(e12 != 0);
+    test_assert(e16 != 0);
+    test_assert(e17 != 0);
+    test_assert(e19 != 0);
+    test_assert(e20 != 0);
+    test_assert(e21 != 0);
+    test_assert(e22 != 0);
+    test_assert(e23 != 0);
+
+    ecs_fini(world);
+}
+
 typedef struct OwnChildrenObserverCtx {
     int32_t invoked;
     int32_t dead_children_seen;
