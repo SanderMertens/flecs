@@ -131,8 +131,11 @@ void flecs_script_template_instantiate(
     ecs_entity_t template_entity,
     const ecs_entity_t *entities,
     void *data,
-    int32_t count)
+    int32_t count,
+    bool allow_stale_entities)
 {
+    (void)allow_stale_entities;
+
     ecs_assert(!ecs_is_deferred(world), ECS_INTERNAL_ERROR, NULL);
 
     ecs_record_t *r = ecs_record_find(world, template_entity);
@@ -184,7 +187,11 @@ void flecs_script_template_instantiate(
     int32_t i, m, a;
     for (i = 0; i < count; i ++) {
         v.parent = entities[i];
-        ecs_assert(ecs_is_alive(world, v.parent), ECS_INTERNAL_ERROR, NULL);
+        if (!ecs_is_alive(world, v.parent)) {
+            ecs_assert(allow_stale_entities, ECS_INTERNAL_ERROR, NULL);
+            data = ECS_OFFSET(data, ti->size);
+            continue;
+        }
 
         instance_node.eval = entities[i];
 
@@ -263,7 +270,8 @@ void flecs_on_template_set_event(
     ecs_defer_suspend(world);
 
     flecs_script_template_instantiate(
-        world, evt->template_entity, evt->entities, evt->data, evt->count);
+        world, evt->template_entity, evt->entities, evt->data, evt->count, 
+        true);
 
     ecs_defer_resume(world);
 }
@@ -304,7 +312,7 @@ void flecs_script_template_on_set(
     }
 
     flecs_script_template_instantiate(
-        world, template_entity, it->entities, data, it->count);
+        world, template_entity, it->entities, data, it->count, false);
     return;
 }
 
