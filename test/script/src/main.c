@@ -202,6 +202,9 @@ void Eval_parse_with_w_tag(void);
 void Eval_parse_with_value(void);
 void Eval_parse_with_2_values(void);
 void Eval_parse_with_2_nested_values(void);
+void Eval_parse_with_value_multiline_scope_open(void);
+void Eval_parse_with_value_multiline_comment_after_paren(void);
+void Eval_parse_with_value_multiline_comment_after_scope_open(void);
 void Eval_parse_with_var(void);
 void Eval_parse_with_2_vars(void);
 void Eval_parse_with_2_nested_vars(void);
@@ -2238,6 +2241,18 @@ bake_test_case Eval_testcases[] = {
     {
         "parse_with_2_nested_values",
         Eval_parse_with_2_nested_values
+    },
+    {
+        "parse_with_value_multiline_scope_open",
+        Eval_parse_with_value_multiline_scope_open
+    },
+    {
+        "parse_with_value_multiline_comment_after_paren",
+        Eval_parse_with_value_multiline_comment_after_paren
+    },
+    {
+        "parse_with_value_multiline_comment_after_scope_open",
+        Eval_parse_with_value_multiline_comment_after_scope_open
     },
     {
         "parse_with_var",
@@ -7250,7 +7265,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        456,
+        459,
         Eval_testcases
     },
     {

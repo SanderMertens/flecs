@@ -67424,10 +67424,14 @@ const char* flecs_script_with(
             goto error;
         }
 
+    next:
         Parse(
             case ',': {
                 has_next = true;
                 break;
+            }
+            case EcsTokNewline: {
+                goto next;
             }
             case '{': {
                 return flecs_script_scope(parser, with->scope, pos);

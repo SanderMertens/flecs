@@ -5883,6 +5883,147 @@ void Eval_parse_with_2_nested_values(void) {
     ecs_fini(world);
 }
 
+void Eval_parse_with_value_multiline_scope_open(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    LINE "with Position("
+    LINE "    x: 10,"
+    LINE "    y: 20)"
+    LINE "  {"
+    LINE "  Foo {}"
+    LINE "  Bar {}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+
+    test_assert(foo != 0);
+    test_assert(bar != 0);
+
+    {
+        const Position *ptr = ecs_get(world, foo, Position);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 10);
+        test_int(ptr->y, 20);
+    }
+
+    {
+        const Position *ptr = ecs_get(world, bar, Position);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 10);
+        test_int(ptr->y, 20);
+    }
+
+    ecs_fini(world);
+}
+
+void Eval_parse_with_value_multiline_comment_after_paren(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    LINE "with Position("
+    LINE "    x: 10,"
+    LINE "    y: 20) // comment after paren"
+    LINE "  {"
+    LINE "  Foo {}"
+    LINE "  Bar {}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+
+    test_assert(foo != 0);
+    test_assert(bar != 0);
+
+    {
+        const Position *ptr = ecs_get(world, foo, Position);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 10);
+        test_int(ptr->y, 20);
+    }
+
+    {
+        const Position *ptr = ecs_get(world, bar, Position);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 10);
+        test_int(ptr->y, 20);
+    }
+
+    ecs_fini(world);
+}
+
+void Eval_parse_with_value_multiline_comment_after_scope_open(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    LINE "with Position("
+    LINE "    x: 10,"
+    LINE "    y: 20)"
+    LINE "  { // comment after scope open"
+    LINE "  Foo {}"
+    LINE "  Bar {}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+
+    test_assert(foo != 0);
+    test_assert(bar != 0);
+
+    {
+        const Position *ptr = ecs_get(world, foo, Position);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 10);
+        test_int(ptr->y, 20);
+    }
+
+    {
+        const Position *ptr = ecs_get(world, bar, Position);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 10);
+        test_int(ptr->y, 20);
+    }
+
+    ecs_fini(world);
+}
+
 void Eval_parse_with_var(void) {
     ecs_world_t *world = ecs_init();
 
