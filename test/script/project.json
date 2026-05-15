@@ -206,6 +206,9 @@
                 "parse_with_value",
                 "parse_with_2_values",
                 "parse_with_2_nested_values",
+                "parse_with_value_multiline_scope_open",
+                "parse_with_value_multiline_comment_after_paren",
+                "parse_with_value_multiline_comment_after_scope_open",
                 "parse_with_var",
                 "parse_with_2_vars",
                 "parse_with_2_nested_vars",
@@ -621,7 +624,9 @@
                 "template_w_name_annotation",
                 "template_w_name_annotation_update_script",
                 "template_w_tree_parent",
-                "template_w_tree_parent_change_value"
+                "template_w_tree_parent_change_value",
+                "template_w_nested_template_w_with",
+                "template_w_nested_template_w_with_kind_value"
             ]
         }, {
             "id": "Error",

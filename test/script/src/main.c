@@ -202,6 +202,9 @@ void Eval_parse_with_w_tag(void);
 void Eval_parse_with_value(void);
 void Eval_parse_with_2_values(void);
 void Eval_parse_with_2_nested_values(void);
+void Eval_parse_with_value_multiline_scope_open(void);
+void Eval_parse_with_value_multiline_comment_after_paren(void);
+void Eval_parse_with_value_multiline_comment_after_scope_open(void);
 void Eval_parse_with_var(void);
 void Eval_parse_with_2_vars(void);
 void Eval_parse_with_2_nested_vars(void);
@@ -614,6 +617,8 @@ void Template_template_w_name_annotation(void);
 void Template_template_w_name_annotation_update_script(void);
 void Template_template_w_tree_parent(void);
 void Template_template_w_tree_parent_change_value(void);
+void Template_template_w_nested_template_w_with(void);
+void Template_template_w_nested_template_w_with_kind_value(void);
 
 // Testsuite 'Error'
 void Error_multi_line_comment_after_newline_before_newline_scope_open(void);
@@ -2238,6 +2243,18 @@ bake_test_case Eval_testcases[] = {
     {
         "parse_with_2_nested_values",
         Eval_parse_with_2_nested_values
+    },
+    {
+        "parse_with_value_multiline_scope_open",
+        Eval_parse_with_value_multiline_scope_open
+    },
+    {
+        "parse_with_value_multiline_comment_after_paren",
+        Eval_parse_with_value_multiline_comment_after_paren
+    },
+    {
+        "parse_with_value_multiline_comment_after_scope_open",
+        Eval_parse_with_value_multiline_comment_after_scope_open
     },
     {
         "parse_with_var",
@@ -3876,6 +3893,14 @@ bake_test_case Template_testcases[] = {
     {
         "template_w_tree_parent_change_value",
         Template_template_w_tree_parent_change_value
+    },
+    {
+        "template_w_nested_template_w_with",
+        Template_template_w_nested_template_w_with
+    },
+    {
+        "template_w_nested_template_w_with_kind_value",
+        Template_template_w_nested_template_w_with_kind_value
     }
 };
 
@@ -7239,7 +7264,6 @@ const char* Expr_folding_param[] = {"enabled", "disabled"};
 bake_test_param Expr_params[] = {
     {"folding", (char**)Expr_folding_param, 2}
 };
-
 const char* Deserialize_folding_param[] = {"enabled", "disabled"};
 bake_test_param Deserialize_params[] = {
     {"folding", (char**)Deserialize_folding_param, 2}
@@ -7250,7 +7274,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        456,
+        459,
         Eval_testcases
     },
     {
@@ -7264,7 +7288,7 @@ static bake_test_suite suites[] = {
         "Template",
         NULL,
         NULL,
-        81,
+        83,
         Template_testcases
     },
     {
