@@ -45,7 +45,7 @@ ecs_entity_t flecs_run_system(
             time_elapsed = tick->time_elapsed;
 
             /* If timer hasn't fired we shouldn't run the system */
-            if (!tick->tick) {
+            if (tick->ticks == 0) {
                 return 0;
             }
         } else {

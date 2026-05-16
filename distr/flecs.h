@@ -14627,7 +14627,7 @@ extern "C" {
 
 /** Component used to provide a tick source to systems. */
 typedef struct EcsTickSource {
-    bool tick;                 /**< True if providing a tick. */
+    uint32_t ticks;                 /**< Number of ticks provided this frame. */
     ecs_ftime_t time_elapsed;  /**< Time elapsed since the last tick. */
 } EcsTickSource;
 

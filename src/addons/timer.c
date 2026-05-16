@@ -6,7 +6,6 @@
 #include "flecs.h"
 #include "system/system.h"
 #include "../private_api.h"
-
 #ifdef FLECS_TIMER
 
 static
@@ -18,7 +17,7 @@ void ProgressTimers(ecs_iter_t *it) {
 
     int i;
     for (i = 0; i < it->count; i ++) {
-        tick_source[i].tick = false;
+        tick_source[i].ticks = 0;
 
         if (!timer[i].active) {
             continue;
@@ -35,7 +34,7 @@ void ProgressTimers(ecs_iter_t *it) {
             }
 
             timer[i].time = t; /* Initialize with remainder */
-            tick_source[i].tick = true;
+            tick_source[i].ticks = 1;
             tick_source[i].time_elapsed = time_elapsed - timer[i].overshoot;
             timer[i].overshoot = t;
 
@@ -64,7 +63,7 @@ void ProgressRateFilters(ecs_iter_t *it) {
             const EcsTickSource *tick_src = ecs_get(
                 it->world, src, EcsTickSource);
             if (tick_src) {
-                inc = tick_src->tick;
+                inc = tick_src->ticks > 0;
             } else {
                 inc = true;
             }
@@ -75,14 +74,14 @@ void ProgressRateFilters(ecs_iter_t *it) {
         if (inc) {
             filter[i].tick_count ++;
             bool triggered = !(filter[i].tick_count % filter[i].rate);
-            tick_dst[i].tick = triggered;
+            tick_dst[i].ticks = triggered ? 1 : 0;
             tick_dst[i].time_elapsed = filter[i].time_elapsed;
 
             if (triggered) {
                 filter[i].time_elapsed = 0;
             }            
         } else {
-            tick_dst[i].tick = false;
+            tick_dst[i].ticks = 0;
         }
     }
 }
@@ -94,7 +93,7 @@ void ProgressTickSource(ecs_iter_t *it) {
     /* If tick source has no filters, tick unconditionally */
     int i;
     for (i = 0; i < it->count; i ++) {
-        tick_src[i].tick = true;
+        tick_src[i].ticks = 1;
         tick_src[i].time_elapsed = it->delta_time;
     }
 }

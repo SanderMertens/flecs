@@ -446,18 +446,18 @@ void Timer_one_shot_timer_entity(void) {
         ecs_progress(world, 0.3);
         const EcsTickSource *src = ecs_get(world, timer, EcsTickSource);
         test_assert(src != NULL);
-        test_bool(src->tick, false);
+		test_int(src->ticks, 0);
     }
 
     ecs_progress(world, 0.3);
     const EcsTickSource *src = ecs_get(world, timer, EcsTickSource);
     test_assert(src != NULL);
-    test_bool(src->tick, true);   
+    test_int(src->ticks, 1);   
 
     /* Ensure timer doesn't tick again */
     for (i = 0; i < 12; i ++) {
         ecs_progress(world, 0.3);
-        test_bool(src->tick, false);
+        test_int(src->ticks, 0);
     }
 
     ecs_fini(world);
@@ -473,22 +473,22 @@ void Timer_interval_timer_entity(void) {
         ecs_progress(world, 0.3);
         const EcsTickSource *src = ecs_get(world, timer, EcsTickSource);
         test_assert(src != NULL);
-        test_bool(src->tick, false);
+        test_int(src->ticks, 0);
     }
 
     ecs_progress(world, 0.3);
     const EcsTickSource *src = ecs_get(world, timer, EcsTickSource);
     test_assert(src != NULL);
-    test_bool(src->tick, true);   
+    test_int(src->ticks, 1);   
 
     for (i = 0; i < 2; i ++) {
         ecs_progress(world, 0.3);
-        test_bool(src->tick, false);
+        test_int(src->ticks, 0);
     }
 
     /* Timer should tick again */
     ecs_progress(world, 0.3);
-    test_bool(src->tick, true);
+    test_int(src->ticks, 1);
 
     ecs_fini(world);
 }
@@ -504,24 +504,24 @@ void Timer_rate_entity(void) {
         ecs_progress(world, 0);
         const EcsTickSource *src = ecs_get(world, rate, EcsTickSource);
         test_assert(src != NULL);
-        test_bool(src->tick, false);
+        test_int(src->ticks, 0);
     }
 
     ecs_progress(world, 0);
     const EcsTickSource *src = ecs_get(world, rate, EcsTickSource);
     test_assert(src != NULL);
-    test_bool(src->tick, true);   
+    test_int(src->ticks, 1);   
 
     for (i = 0; i < 3; i ++) {
         ecs_progress(world, 0);
         const EcsTickSource *src = ecs_get(world, rate, EcsTickSource);
         test_assert(src != NULL);
-        test_bool(src->tick, false);
+        test_int(src->ticks, 0);
     }
 
     /* Query should tick again */
     ecs_progress(world, 0);
-    test_bool(src->tick, true);
+    test_int(src->ticks, 1);
 
     ecs_fini(world);
 }
@@ -538,24 +538,24 @@ void Timer_nested_rate_entity(void) {
         ecs_progress(world, 0);
         const EcsTickSource *src = ecs_get(world, rate, EcsTickSource);
         test_assert(src != NULL);
-        test_bool(src->tick, false);
+        test_int(src->ticks, 0);
     }
 
     ecs_progress(world, 0);
     const EcsTickSource *src = ecs_get(world, rate, EcsTickSource);
     test_assert(src != NULL);
-    test_bool(src->tick, true);   
+    test_int(src->ticks, 1);   
 
     for (i = 0; i < 3; i ++) {
         ecs_progress(world, 0);
         const EcsTickSource *src = ecs_get(world, rate, EcsTickSource);
         test_assert(src != NULL);
-        test_bool(src->tick, false);
+        test_int(src->ticks, 0);
     }
 
     /* Query should tick again */
     ecs_progress(world, 0);
-    test_bool(src->tick, true);
+    test_int(src->ticks, 1);
 
     ecs_fini(world);
 }
@@ -572,24 +572,24 @@ void Timer_nested_rate_entity_empty_src(void) {
         ecs_progress(world, 0);
         const EcsTickSource *src = ecs_get(world, rate, EcsTickSource);
         test_assert(src != NULL);
-        test_bool(src->tick, false);
+        test_int(src->ticks, 0);
     }
 
     ecs_progress(world, 0);
     const EcsTickSource *src = ecs_get(world, rate, EcsTickSource);
     test_assert(src != NULL);
-    test_bool(src->tick, true);   
+    test_int(src->ticks, 1);   
 
     for (i = 0; i < 3; i ++) {
         ecs_progress(world, 0);
         const EcsTickSource *src = ecs_get(world, rate, EcsTickSource);
         test_assert(src != NULL);
-        test_bool(src->tick, false);
+        test_int(src->ticks, 0);
     }
 
     /* Query should tick again */
     ecs_progress(world, 0);
-    test_bool(src->tick, true);
+    test_int(src->ticks, 1);
 
     ecs_fini(world);
 }
@@ -606,7 +606,7 @@ void Timer_naked_tick_entity(void) {
         test_assert(src != NULL);
 
         /* Tick should always be true, no filter is applied */
-        test_bool(src->tick, true);
+        test_int(src->ticks, 1);
     }
 
     ecs_fini(world);
@@ -622,7 +622,7 @@ void Timer_stop_timer_w_rate(void) {
         ecs_progress(world, 0.5);
         const EcsTickSource *src = ecs_get(world, rate, EcsTickSource);
         test_assert(src != NULL);
-        test_bool(src->tick, false);
+        test_int(src->ticks, 0);
     }
 
     ecs_progress(world, 0.5);
@@ -630,7 +630,7 @@ void Timer_stop_timer_w_rate(void) {
     {
         const EcsTickSource *src = ecs_get(world, rate, EcsTickSource);
         test_assert(src != NULL);
-        test_bool(src->tick, true);
+        test_int(src->ticks, 1);
     }
 
     ecs_stop_timer(world, timer);
@@ -639,7 +639,7 @@ void Timer_stop_timer_w_rate(void) {
         ecs_progress(world, 0.5);
         const EcsTickSource *src = ecs_get(world, rate, EcsTickSource);
         test_assert(src != NULL);
-        test_bool(src->tick, false);
+        test_int(src->ticks, 0);
     }
 
     ecs_progress(world, 0.5);
@@ -647,7 +647,7 @@ void Timer_stop_timer_w_rate(void) {
     {
         const EcsTickSource *src = ecs_get(world, rate, EcsTickSource);
         test_assert(src != NULL);
-        test_bool(src->tick, false);
+        test_int(src->ticks, 0);
     }
     
     ecs_start_timer(world, timer);
@@ -656,7 +656,7 @@ void Timer_stop_timer_w_rate(void) {
         ecs_progress(world, 0.5);
         const EcsTickSource *src = ecs_get(world, rate, EcsTickSource);
         test_assert(src != NULL);
-        test_bool(src->tick, false);
+        test_int(src->ticks, 0);
     }
 
     ecs_progress(world, 0.5);
@@ -664,7 +664,7 @@ void Timer_stop_timer_w_rate(void) {
     {
         const EcsTickSource *src = ecs_get(world, rate, EcsTickSource);
         test_assert(src != NULL);
-        test_bool(src->tick, true);
+        test_int(src->ticks, 1);
     }
 
     ecs_fini(world);
@@ -681,7 +681,7 @@ void Timer_stop_timer_w_rate_same_src(void) {
         ecs_progress(world, 0.5);
         const EcsTickSource *src = ecs_get(world, rate, EcsTickSource);
         test_assert(src != NULL);
-        test_bool(src->tick, false);
+        test_int(src->ticks, 0);
     }
 
     ecs_progress(world, 0.5);
@@ -689,7 +689,7 @@ void Timer_stop_timer_w_rate_same_src(void) {
     {
         const EcsTickSource *src = ecs_get(world, rate, EcsTickSource);
         test_assert(src != NULL);
-        test_bool(src->tick, true);
+        test_int(src->ticks, 1);
     }
 
     ecs_stop_timer(world, timer);
@@ -698,7 +698,7 @@ void Timer_stop_timer_w_rate_same_src(void) {
         ecs_progress(world, 0.5);
         const EcsTickSource *src = ecs_get(world, rate, EcsTickSource);
         test_assert(src != NULL);
-        test_bool(src->tick, false);
+        test_int(src->ticks, 0);
     }
 
     ecs_progress(world, 0.5);
@@ -706,7 +706,7 @@ void Timer_stop_timer_w_rate_same_src(void) {
     {
         const EcsTickSource *src = ecs_get(world, rate, EcsTickSource);
         test_assert(src != NULL);
-        test_bool(src->tick, false);
+        test_int(src->ticks, 0);
     }
     
     ecs_start_timer(world, timer);
@@ -715,7 +715,7 @@ void Timer_stop_timer_w_rate_same_src(void) {
         ecs_progress(world, 0.5);
         const EcsTickSource *src = ecs_get(world, rate, EcsTickSource);
         test_assert(src != NULL);
-        test_bool(src->tick, false);
+        test_int(src->ticks, 0);
     }
 
     ecs_progress(world, 0.5);
@@ -723,7 +723,7 @@ void Timer_stop_timer_w_rate_same_src(void) {
     {
         const EcsTickSource *src = ecs_get(world, rate, EcsTickSource);
         test_assert(src != NULL);
-        test_bool(src->tick, true);
+        test_int(src->ticks, 1);
     }
 
     ecs_fini(world);
