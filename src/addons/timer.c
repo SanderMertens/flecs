@@ -22,13 +22,16 @@ void ProgressTimers(ecs_iter_t *it) {
         if (!timer[i].active) {
             continue;
         }
-        
         const ecs_world_info_t *info = ecs_get_world_info(it->world);
-        if (timer[i].fixed_interval && !timer[i].single_shot) {
+        if (timer[i].fixed_interval) {
             timer[i].time += info->delta_time_raw;
-            while (timer[i].time >= timer[i].timeout) {
+            tick_source[i].time_elapsed = timer[i].timeout;
+            while (timer[i].time >= timer[i].timeout && timer[i].active) {
                 timer[i].time -= timer[i].timeout;
                 tick_source[i].ticks++;
+                if (timer[i].single_shot) {
+                    timer[i].active = false;
+                }
             }
         } else {
             ecs_ftime_t time_elapsed = timer[i].time + info->delta_time_raw;
@@ -147,6 +150,34 @@ error:
     return 0;
 }
 
+FLECS_API
+ecs_entity_t ecs_set_fixed_timeout(
+    ecs_world_t *world,
+    ecs_entity_t timer,
+    ecs_ftime_t timeout) {
+
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    if (!timer) {
+        timer = ecs_entity(world, {0});
+    }
+
+    ecs_set(world, timer, EcsTimer, {
+        .timeout = timeout,
+        .single_shot = true,
+        .fixed_interval = true,
+        .active = true
+    });
+
+    ecs_system_t *system_data = flecs_poly_get(world, timer, ecs_system_t);
+    if (system_data) {
+        system_data->tick_source = timer;
+    }
+
+error:
+    return timer;
+}
+
 ecs_entity_t ecs_set_interval(
     ecs_world_t *world,
     ecs_entity_t timer,
@@ -211,6 +242,36 @@ ecs_ftime_t ecs_get_interval(
     const EcsTimer *value = ecs_get(world, timer, EcsTimer);
     if (value) {
         return value->timeout;
+    }
+error:
+    return 0;
+}
+
+void ecs_set_is_fixed_timer(
+    ecs_world_t *world,
+    ecs_entity_t timer,
+    bool is_fixed)
+{
+    EcsTimer *ptr = ecs_ensure(world, timer, EcsTimer);
+    ecs_check(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+    ptr->fixed_interval = is_fixed;
+error:
+    return;
+}
+
+bool ecs_is_fixed_timer(
+    ecs_world_t *world,
+    ecs_entity_t timer) {
+    
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    if (!timer) {
+        return 0;
+    }
+
+    const EcsTimer *value = ecs_get(world, timer, EcsTimer);
+    if (value) {
+        return value->fixed_interval;
     }
 error:
     return 0;

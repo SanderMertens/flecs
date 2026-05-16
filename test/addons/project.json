@@ -273,6 +273,8 @@
                 "interval_timer_entity",
                 "rate_entity",
 				"fixed_interval",
+				"fixed_interval_set_after_init",
+				"fixed_interval_single_shot",
                 "nested_rate_entity",
                 "nested_rate_entity_empty_src",
                 "naked_tick_entity",

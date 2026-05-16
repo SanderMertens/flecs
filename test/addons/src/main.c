@@ -261,6 +261,8 @@ void Timer_one_shot_timer_entity(void);
 void Timer_interval_timer_entity(void);
 void Timer_rate_entity(void);
 void Timer_fixed_interval(void);
+void Timer_fixed_interval_set_after_init(void);
+void Timer_fixed_interval_single_shot(void);
 void Timer_nested_rate_entity(void);
 void Timer_nested_rate_entity_empty_src(void);
 void Timer_naked_tick_entity(void);
@@ -1574,6 +1576,14 @@ bake_test_case Timer_testcases[] = {
         Timer_fixed_interval
     },
     {
+        "fixed_interval_set_after_init",
+        Timer_fixed_interval_set_after_init
+    },
+    {
+        "fixed_interval_single_shot",
+        Timer_fixed_interval_single_shot
+    },
+    {
         "nested_rate_entity",
         Timer_nested_rate_entity
     },
@@ -2791,7 +2801,7 @@ static bake_test_suite suites[] = {
         "Timer",
         NULL,
         NULL,
-        20,
+        22,
         Timer_testcases
     },
     {

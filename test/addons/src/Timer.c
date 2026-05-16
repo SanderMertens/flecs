@@ -760,13 +760,47 @@ void Timer_randomize_timers(void) {
 void Timer_fixed_interval(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t timer = ecs_set_fixed_interval(world, 0, 1.0);
+    ecs_entity_t timer = ecs_set_fixed_interval(world, 0, 0.5);
 
     ecs_progress(world, 10.0);
     const EcsTickSource *src = ecs_get(world, timer, EcsTickSource);
     test_assert(src != NULL);
-    test_int(src->ticks, 10);   
-    test_flt(src->time_elapsed, 0);   
+    test_int(src->ticks, 20.0);   
+    test_flt(src->time_elapsed, 0.5);   
+
+    ecs_fini(world);
+}
+
+void Timer_fixed_interval_set_after_init(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t timer = ecs_set_interval(world, 0, 0.5);
+
+    ecs_progress(world, 10.0);
+    const EcsTickSource *src = ecs_get(world, timer, EcsTickSource);
+    test_assert(src != NULL);
+    test_int(src->ticks, 1);   
+    test_flt(src->time_elapsed, 10.0);
+
+    ecs_set_is_fixed_timer(world, timer, true);
+
+    ecs_progress(world, 10.0);
+    test_int(src->ticks, 20.0);   
+    test_flt(src->time_elapsed, 0.5);   
+
+    ecs_fini(world);
+}
+
+void Timer_fixed_interval_single_shot(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t timer = ecs_set_fixed_timeout(world, 0, 0.5);
+
+    ecs_progress(world, 10.0);
+    const EcsTickSource *src = ecs_get(world, timer, EcsTickSource);
+    test_assert(src != NULL);
+    test_int(src->ticks, 1);   
+    test_flt(src->time_elapsed, 0.5);
 
     ecs_fini(world);
 }
