@@ -208,7 +208,7 @@ ecs_entity_t ecs_set_fixed_interval(
  *
  * @param world The world.
  * @param tick_source The timer for which to set the interval (0 to create one).
- * @param interval The interval value.
+ * @param is_fixed True if this timer should use a fixed interval.
  */
 FLECS_API
 void ecs_set_is_fixed_timer(
