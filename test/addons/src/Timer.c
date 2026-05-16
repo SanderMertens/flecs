@@ -526,21 +526,6 @@ void Timer_rate_entity(void) {
     ecs_fini(world);
 }
 
-void Timer_interval_timer_entity_multi_tick(void) {
-    ecs_world_t *world = ecs_init();
-
-    ecs_entity_t timer = ecs_set_fixed_interval(world, 0, 1.0);
-
-    ecs_progress(world, 10.0);
-    const EcsTickSource *src = ecs_get(world, timer, EcsTickSource);
-    test_assert(src != NULL);
-    test_int(src->ticks, 10);   
-    test_flt(src->time_elapsed, 0);   
-
-
-    ecs_fini(world);
-}
-
 void Timer_nested_rate_entity(void) {
     ecs_world_t *world = ecs_init();
 
@@ -768,6 +753,20 @@ void Timer_randomize_timers(void) {
         test_assert(t != NULL);
         test_assert(t->time != 0);
     }
+
+    ecs_fini(world);
+}
+
+void Timer_fixed_interval(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t timer = ecs_set_fixed_interval(world, 0, 1.0);
+
+    ecs_progress(world, 10.0);
+    const EcsTickSource *src = ecs_get(world, timer, EcsTickSource);
+    test_assert(src != NULL);
+    test_int(src->ticks, 10);   
+    test_flt(src->time_elapsed, 0);   
 
     ecs_fini(world);
 }

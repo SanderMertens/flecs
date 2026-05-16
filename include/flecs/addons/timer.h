@@ -39,7 +39,7 @@ typedef struct EcsTimer {
     int32_t fired_count;         /**< Number of times ticked. */
     bool active;                 /**< Is the timer active or not. */
     bool single_shot;            /**< Is this a single-shot timer. */
-	bool multi_tick;			/**< Can this timer fire multiple times per frame? */
+	bool fixed_interval;		 /**< Timer fires at fixed interval (no overshoot). */
 } EcsTimer;
 
 /** Apply a rate filter to a tick source. */

@@ -22,9 +22,9 @@ void ProgressTimers(ecs_iter_t *it) {
         if (!timer[i].active) {
             continue;
         }
-
+        
         const ecs_world_info_t *info = ecs_get_world_info(it->world);
-        if (timer[i].multi_tick && !timer[i].single_shot) {
+        if (timer[i].fixed_interval && !timer[i].single_shot) {
             timer[i].time += info->delta_time_raw;
             while (timer[i].time >= timer[i].timeout) {
                 timer[i].time -= timer[i].timeout;
@@ -187,7 +187,7 @@ ecs_entity_t ecs_set_fixed_interval(
     ecs_check(t != NULL, ECS_INTERNAL_ERROR, NULL);
     t->timeout = interval;
     t->active = true;
-    t->multi_tick = true;
+    t->fixed_interval = true;
     ecs_modified(world, timer, EcsTimer);
 
     ecs_system_t *system_data = flecs_poly_get(world, timer, ecs_system_t);
