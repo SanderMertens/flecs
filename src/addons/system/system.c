@@ -83,6 +83,8 @@ ecs_entity_t flecs_run_system(
 
     flecs_poly_assert(stage, ecs_stage_t);
 
+    ecs_entity_t old_system = flecs_stage_set_system(stage, system);
+    ecs_entity_t interrupted_by = 0;
     for (uint32_t i = 0; i < num_ticks; i++) {
         /* Prepare the query iterator */
         ecs_iter_t wit, qit = ecs_query_iter(thread_ctx, system_data->query);
@@ -105,7 +107,6 @@ ecs_entity_t flecs_run_system(
             it = &wit;
         }
 
-        ecs_entity_t old_system = flecs_stage_set_system(stage, system);
         ecs_iter_action_t action = system_data->action;
         it->callback = action;
 
@@ -146,9 +147,10 @@ ecs_entity_t flecs_run_system(
                 ecs_iter_fini(&qit);
             }
         }
-        flecs_stage_set_system(stage, old_system);
+        interrupted_by = it->interrupted_by;
     }
 
+    flecs_stage_set_system(stage, old_system);
 
     if (measure_time) {
         system_data->time_spent += (ecs_ftime_t)ecs_time_measure(&time_start);
@@ -156,8 +158,7 @@ ecs_entity_t flecs_run_system(
 
     ecs_os_perf_trace_pop(system_data->name);
 
-    // return it->interrupted_by;
-    return 0;
+    return interrupted_by;
 }
 
 
