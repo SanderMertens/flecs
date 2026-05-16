@@ -39,6 +39,7 @@ typedef struct EcsTimer {
     int32_t fired_count;         /**< Number of times ticked. */
     bool active;                 /**< Is the timer active or not. */
     bool single_shot;            /**< Is this a single-shot timer. */
+	bool multi_tick;			/**< Can this timer fire multiple times per frame? */
 } EcsTimer;
 
 /** Apply a rate filter to a tick source. */
@@ -110,6 +111,12 @@ ecs_ftime_t ecs_get_timeout(
  */
 FLECS_API
 ecs_entity_t ecs_set_interval(
+    ecs_world_t *world,
+    ecs_entity_t tick_source,
+    ecs_ftime_t interval);
+
+FLECS_API
+ecs_entity_t ecs_set_fixed_interval(
     ecs_world_t *world,
     ecs_entity_t tick_source,
     ecs_ftime_t interval);

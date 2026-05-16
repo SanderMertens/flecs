@@ -31,6 +31,7 @@ ecs_entity_t flecs_run_system(
 {
     flecs_poly_assert(world, ecs_world_t);
     ecs_ftime_t time_elapsed = delta_time;
+    uint32_t num_ticks = 1;
     ecs_entity_t tick_source = system_data->tick_source;
 
     /* Support legacy behavior */
@@ -38,17 +39,15 @@ ecs_entity_t flecs_run_system(
         param = system_data->ctx;
     }
 
-    uint32_t num_ticks = 1;
     if (tick_source) {
         const EcsTickSource *tick = ecs_get(world, tick_source, EcsTickSource);
 
         if (tick) {
-            time_elapsed = tick->time_elapsed;
-
             /* If timer hasn't fired we shouldn't run the system */
             if (tick->ticks == 0) {
                 return 0;
             }
+            time_elapsed = tick->time_elapsed;
             num_ticks = tick->ticks;
         } else {
             /* If a timer has been set but the timer entity does not have the

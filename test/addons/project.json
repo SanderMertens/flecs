@@ -272,6 +272,7 @@
                 "one_shot_timer_entity",
                 "interval_timer_entity",
                 "rate_entity",
+				"interval_timer_entity_multi_tick",
                 "nested_rate_entity",
                 "nested_rate_entity_empty_src",
                 "naked_tick_entity",
