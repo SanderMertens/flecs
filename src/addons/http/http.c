@@ -1467,11 +1467,12 @@ void ecs_http_server_dequeue(
     srv->stats_timeout += (double)delta_time;
 
     if ((1000 * srv->dequeue_timeout) > (double)ECS_HTTP_MIN_DEQUEUE_INTERVAL) {
+        double elapsed = srv->dequeue_timeout;
         srv->dequeue_timeout = 0;
 
         ecs_time_t t = {0};
         ecs_time_measure(&t);
-        int32_t request_count = http_dequeue_requests(srv, srv->dequeue_timeout);
+        int32_t request_count = http_dequeue_requests(srv, elapsed);
         srv->requests_processed += request_count;
         srv->requests_processed_total += request_count;
         double time_spent = ecs_time_measure(&t);
