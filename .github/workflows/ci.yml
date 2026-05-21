@@ -446,6 +446,33 @@ jobs:
           bake rebuild test/custom_builds --strict
           bake runall test/custom_builds
 
+  build-custom-windows:
+    needs: build-windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ilammy/msvc-dev-cmd@v1
+      - name: install bake
+        run: |
+          git clone https://github.com/SanderMertens/bake
+          cd bake\build-Windows
+          nmake
+          cd ..
+          ./bake setup --local
+
+      - name: Build flecs
+        run: |
+          bake/bake rebuild --strict
+
+      - name: custom_build tests
+        run: |
+          bake/bake rebuild test/custom_builds --strict
+          bake/bake runall test/custom_builds
+
   build-amalgamated:
     needs: build-linux
     runs-on: ubuntu-latest

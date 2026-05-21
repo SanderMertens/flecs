@@ -453,6 +453,7 @@ void Modules_import_monitor_after_mini(void);
 void Modules_import_2_worlds(void);
 void Modules_component_parent_becomes_module(void);
 void Modules_module_has_singleton(void);
+void Modules_import_w_uppercase_name(void);
 
 // Testsuite 'App'
 void App_app_w_frame_action(void);
@@ -2250,6 +2251,10 @@ bake_test_case Modules_testcases[] = {
     {
         "module_has_singleton",
         Modules_module_has_singleton
+    },
+    {
+        "import_w_uppercase_name",
+        Modules_import_w_uppercase_name
     }
 };
 
@@ -2882,7 +2887,7 @@ static bake_test_suite suites[] = {
         "Modules",
         Modules_setup,
         NULL,
-        25,
+        26,
         Modules_testcases
     },
     {
