@@ -1881,7 +1881,8 @@
                 "this_self_up_w_3_levels_ppc_after_query", 
                 "this_self_up_w_3_levels_ppp_after_query",
                 "rematch_after_reparent_parent",
-                "no_rematch_after_reparent_child"
+                "no_rematch_after_reparent_child",
+                "filter_term_not_term_table_recycle"
             ]
         }, {
             "id": "ChangeDetection",

@@ -958,7 +958,7 @@ int flecs_multi_observer_init(
 
     bool self_term_handled = false;
     for (i = 0; i < term_count; i ++) {
-        if (query->terms[i].inout == EcsInOutFilter) {
+        if (query->terms[i].inout == EcsInOutFilter && !only_table_events) {
             continue;
         }
 
