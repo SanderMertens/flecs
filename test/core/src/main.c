@@ -304,6 +304,10 @@ void Iter_worker_iter_w_binding_ctx(void);
 void Iter_column_index_owned(void);
 void Iter_column_index_shared(void);
 void Iter_column_index_not(void);
+void Iter_column_index_trivial_cache(void);
+void Iter_column_index_shared_cached(void);
+void Iter_column_index_optional_not_set(void);
+void Iter_iter_trivial_cache_w_write_field(void);
 void Iter_page_iter_w_fini(void);
 void Iter_worker_iter_w_fini(void);
 void Iter_rule_page_iter_w_fini(void);
@@ -4474,6 +4478,22 @@ bake_test_case Iter_testcases[] = {
     {
         "column_index_not",
         Iter_column_index_not
+    },
+    {
+        "column_index_trivial_cache",
+        Iter_column_index_trivial_cache
+    },
+    {
+        "column_index_shared_cached",
+        Iter_column_index_shared_cached
+    },
+    {
+        "column_index_optional_not_set",
+        Iter_column_index_optional_not_set
+    },
+    {
+        "iter_trivial_cache_w_write_field",
+        Iter_iter_trivial_cache_w_write_field
     },
     {
         "page_iter_w_fini",
@@ -16240,7 +16260,7 @@ static bake_test_suite suites[] = {
         "Iter",
         NULL,
         NULL,
-        58,
+        62,
         Iter_testcases
     },
     {

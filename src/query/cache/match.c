@@ -11,20 +11,22 @@ void flecs_query_cache_match_elem_fini(
     ecs_query_cache_t *cache,
     ecs_query_cache_match_t *qm)
 {
-    flecs_bfree(&cache->allocators.pointers, 
-        ECS_CONST_CAST(void*, qm->base.trs));
+    if (qm->base.columns) {
+        flecs_bfree(&cache->allocators.columns, qm->base.columns);
+    }
 
     if (!flecs_query_cache_is_trivial(cache)) {
+        if (qm->_trs) {
+            flecs_bfree(&cache->allocators.pointers,
+                ECS_CONST_CAST(void*, qm->_trs));
+        }
+
         if (qm->_ids != cache->query->ids) {
             flecs_bfree(&cache->allocators.ids, qm->_ids);
         }
 
         if (qm->_sources != cache->sources) {
             flecs_bfree(&cache->allocators.ids, qm->_sources);
-        }
-
-        if (qm->_tables) {
-            flecs_bfree(&cache->allocators.pointers, qm->_tables);
         }
 
         if (qm->_monitor) {
@@ -70,13 +72,11 @@ void flecs_query_cache_match_set(
     qm->base.table = it->table;
     qm->base.set_fields = it->set_fields;
 
-    if (!qm->base.trs) {
-        qm->base.trs = flecs_balloc(&cache->allocators.pointers);
+    if (!qm->base.columns) {
+        qm->base.columns = flecs_balloc(&cache->allocators.columns);
     }
 
-    /* Reset resources in case this is an existing record */
-    ecs_os_memcpy_n(ECS_CONST_CAST(ecs_table_record_t**, qm->base.trs), 
-        it->trs, ecs_table_record_t*, field_count);
+    ecs_os_memcpy_n(qm->base.columns, it->columns, int16_t, field_count);
 
     /* Find out whether to store result-specific ids array or fixed array */
     ecs_id_t *ids = cache->query->ids;
@@ -113,28 +113,29 @@ void flecs_query_cache_match_set(
                 qm->_sources = flecs_balloc(&cache->allocators.ids);
             }
             ecs_os_memcpy_n(qm->_sources, it->sources, ecs_entity_t, field_count);
-            if (!qm->_tables) {
-                qm->_tables = flecs_balloc(&cache->allocators.pointers);
-            }
-            for (i = 0; i < field_count; i ++) {
-                if (it->trs[i]) {
-                    qm->_tables[i] = it->trs[i]->hdr.table;
-                }
-            }
         } else {
             if (qm->_sources != cache->sources) {
                 flecs_bfree(&cache->allocators.ids, qm->_sources);
                 qm->_sources = cache->sources;
             }
-            if (qm->_tables) {
-                flecs_bfree(&cache->allocators.pointers, qm->_tables);
-                qm->_tables = NULL;
-            }
         }
 
         qm->_up_fields = it->up_fields;
+
+        if (!qm->_trs) {
+            qm->_trs = flecs_balloc(&cache->allocators.pointers);
+        }
+        for (i = 0; i < field_count; i ++) {
+            if (it->trs[i] && !it->sources[i] &&
+                !(it->up_fields & (1llu << i)))
+            {
+                qm->_trs[i] = it->trs[i];
+            } else {
+                qm->_trs[i] = NULL;
+            }
+        }
     } else {
-        /* If this is a trivial cache, we shouldn't have any fields with 
+        /* If this is a trivial cache, we shouldn't have any fields with
          * non-$this sources */
         ecs_assert(i == field_count, ECS_INTERNAL_ERROR, NULL);
     }

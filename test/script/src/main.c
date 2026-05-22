@@ -7264,6 +7264,7 @@ const char* Expr_folding_param[] = {"enabled", "disabled"};
 bake_test_param Expr_params[] = {
     {"folding", (char**)Expr_folding_param, 2}
 };
+
 const char* Deserialize_folding_param[] = {"enabled", "disabled"};
 bake_test_param Deserialize_params[] = {
     {"folding", (char**)Deserialize_folding_param, 2}

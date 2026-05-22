@@ -1178,6 +1178,7 @@ struct ecs_iter_t {
     const ecs_entity_t *entities; /**< Entity identifiers. */
     void **ptrs;                  /**< Component pointers. If not set or if it is NULL for a field, use it->trs. */
     const ecs_table_record_t **trs; /**< Info on where to find the field in the table. */
+    const int16_t *columns;
     const ecs_size_t *sizes;      /**< Component sizes. */
     ecs_table_t *table;           /**< Current table. */
     ecs_table_t *other_table;     /**< Previous or next table when adding or removing. */

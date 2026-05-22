@@ -71,6 +71,7 @@ bool ecs_each_next(
     it->flags |= EcsIterIsValid;
     if (next) {
         each_iter->trs = next;
+        each_iter->columns = next->column;
         ecs_table_t *table = next->hdr.table;
         it->table = table;
         it->count = ecs_table_count(table);
@@ -81,6 +82,7 @@ bool ecs_each_next(
             it->ids = NULL;
         }
         it->trs = &each_iter->trs;
+        it->columns = &each_iter->columns;
         it->sources = &each_iter->sources;
         it->sizes = &each_iter->sizes;
         it->set_fields = 1;
