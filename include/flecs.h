@@ -3488,11 +3488,13 @@ void* ecs_ref_get_id(
  *
  * @param world The world.
  * @param ref The ref.
+ * @param component The component the ref was created with.
  */
 FLECS_ALWAYS_INLINE FLECS_API
 void ecs_ref_update(
     const ecs_world_t *world,
-    ecs_ref_t *ref);
+    ecs_ref_t *ref,
+    ecs_id_t component);
 
 /** Emplace a component.
  * Emplace is similar to ecs_ensure_id() except that the component constructor

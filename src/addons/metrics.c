@@ -90,6 +90,7 @@ typedef struct {
 /** Instance of member metric */
 typedef struct {
     ecs_ref_t ref;
+    ecs_id_t id;
     ecs_member_metric_ctx_t *ctx;
 } EcsMetricMemberInstance;
 
@@ -163,6 +164,7 @@ static void flecs_metrics_on_member_metric(ecs_iter_t *it) {
         EcsMetricMemberInstance *src = ecs_emplace(
             world, m, EcsMetricMemberInstance, NULL);
         src->ref = ecs_ref_init_id(world, e, id);
+        src->id = id;
         src->ctx = ctx;
         ecs_modified(world, m, EcsMetricMemberInstance);
         ecs_set(world, m, EcsMetricValue, { 0 });
@@ -266,7 +268,7 @@ static void UpdateMemberInstance(ecs_iter_t *it, bool counter) {
             continue;
         }
 
-        const void *ptr = ecs_ref_get_id(world, ref, ref->id);
+        const void *ptr = ecs_ref_get_id(world, ref, mi[i].id);
         if (ptr) {
             ptr = ECS_OFFSET(ptr, ctx->offset);
             if (!counter) {

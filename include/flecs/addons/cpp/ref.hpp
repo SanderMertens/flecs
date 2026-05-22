@@ -22,7 +22,7 @@ namespace flecs
 struct untyped_ref {
 
     /** Default constructor. Creates an empty reference. */
-    untyped_ref () : world_(nullptr), ref_{} {}
+    untyped_ref () : world_(nullptr), ref_{}, id_(0) {}
 
     /** Construct a reference from a world, entity, and component ID.
      *
@@ -31,7 +31,7 @@ struct untyped_ref {
      * @param id The component ID.
      */
     untyped_ref(world_t *world, entity_t entity, flecs::id_t id)
-        : ref_() {
+        : ref_(), id_(id) {
         ecs_assert(id != 0, ECS_INVALID_PARAMETER,
             "invalid id");
         // The world we were called with may be a stage; convert it to a world
@@ -60,12 +60,12 @@ struct untyped_ref {
 
     /** Return the component associated with the reference. */
     flecs::id component() const {
-        return flecs::id(world_, ref_.id);
+        return flecs::id(world_, id_);
     }
 
     /** Get a pointer to the component value. */
     void* get() {
-        return ecs_ref_get_id(world_, &ref_, this->ref_.id);
+        return ecs_ref_get_id(world_, &ref_, id_);
     }
 
     /** Check if the reference has a valid component value. */
@@ -99,6 +99,7 @@ struct untyped_ref {
 private:
     world_t *world_;
     flecs::ref_t ref_;
+    flecs::id_t id_;
 };
 
 /** Component reference.
