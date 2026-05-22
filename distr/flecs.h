@@ -4832,12 +4832,13 @@ typedef struct ecs_var_t {
 /** Cached reference. */
 struct ecs_ref_t {
     ecs_entity_t entity;         /* Entity. */
-    ecs_entity_t id;             /* Component ID. */
     uint64_t table_id;           /* Table ID for detecting ABA issues. */
     uint32_t table_version_fast; /* Fast change detection with false positives. */
     uint16_t table_version;      /* Change detection. */
-    ecs_record_t *record;        /* Entity index record. */
     void *ptr;                   /* Cached component pointer. */
+#ifdef FLECS_DEBUG
+    ecs_entity_t id;             /* Component ID (debug only, used for asserts). */
+#endif
 };
 
 /* Page-iterator-specific data. */
@@ -8507,11 +8508,13 @@ void* ecs_ref_get_id(
  *
  * @param world The world.
  * @param ref The ref.
+ * @param component The component the ref was created with.
  */
 FLECS_ALWAYS_INLINE FLECS_API
 void ecs_ref_update(
     const ecs_world_t *world,
-    ecs_ref_t *ref);
+    ecs_ref_t *ref,
+    ecs_id_t component);
 
 /** Emplace a component.
  * Emplace is similar to ecs_ensure_id() except that the component constructor
@@ -27835,7 +27838,7 @@ namespace flecs
 struct untyped_ref {
 
     /** Default constructor. Creates an empty reference. */
-    untyped_ref () : world_(nullptr), ref_{} {}
+    untyped_ref () : world_(nullptr), ref_{}, id_(0) {}
 
     /** Construct a reference from a world, entity, and component ID.
      *
@@ -27844,7 +27847,7 @@ struct untyped_ref {
      * @param id The component ID.
      */
     untyped_ref(world_t *world, entity_t entity, flecs::id_t id)
-        : ref_() {
+        : ref_(), id_(id) {
         ecs_assert(id != 0, ECS_INVALID_PARAMETER,
             "invalid id");
         // The world we were called with may be a stage; convert it to a world
@@ -27873,12 +27876,12 @@ struct untyped_ref {
 
     /** Return the component associated with the reference. */
     flecs::id component() const {
-        return flecs::id(world_, ref_.id);
+        return flecs::id(world_, id_);
     }
 
     /** Get a pointer to the component value. */
     void* get() {
-        return ecs_ref_get_id(world_, &ref_, this->ref_.id);
+        return ecs_ref_get_id(world_, &ref_, id_);
     }
 
     /** Check if the reference has a valid component value. */
@@ -27912,6 +27915,7 @@ struct untyped_ref {
 private:
     world_t *world_;
     flecs::ref_t ref_;
+    flecs::id_t id_;
 };
 
 /** Component reference.

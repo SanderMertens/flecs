@@ -73,12 +73,13 @@ typedef struct ecs_var_t {
 /** Cached reference. */
 struct ecs_ref_t {
     ecs_entity_t entity;         /* Entity. */
-    ecs_entity_t id;             /* Component ID. */
     uint64_t table_id;           /* Table ID for detecting ABA issues. */
     uint32_t table_version_fast; /* Fast change detection with false positives. */
     uint16_t table_version;      /* Change detection. */
-    ecs_record_t *record;        /* Entity index record. */
     void *ptr;                   /* Cached component pointer. */
+#ifdef FLECS_DEBUG
+    ecs_entity_t id;             /* Component ID (debug only, used for asserts). */
+#endif
 };
 
 /* Page-iterator-specific data. */

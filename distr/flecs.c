@@ -19680,7 +19680,7 @@ flecs_poly_dtor_t* flecs_get_dtor(
 /**
  * @file ref.c
  * @brief Ref API.
- * 
+ *
  * Refs provide faster access to components than get.
  */
 
@@ -19692,7 +19692,7 @@ ecs_ref_t ecs_ref_init_id(
 {
     ecs_check(ecs_is_alive(world, entity), ECS_INVALID_PARAMETER, NULL);
     ecs_check(ecs_id_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
-    
+
     world = ecs_get_world(world);
 
     flecs_check_exclusive_world_access_read(world);
@@ -19703,8 +19703,9 @@ ecs_ref_t ecs_ref_init_id(
 
     ecs_ref_t result = {
         .entity = entity,
+#ifdef FLECS_DEBUG
         .id = id,
-        .record = record
+#endif
     };
 
     ecs_table_t *table = record->table;
@@ -19714,7 +19715,7 @@ ecs_ref_t ecs_ref_init_id(
     result.table_version_fast = flecs_get_table_version_fast(world, result.table_id);
     result.table_version = table->version;
     result.ptr = flecs_get_component(
-        world, table, ECS_RECORD_TO_ROW(record->row), 
+        world, table, ECS_RECORD_TO_ROW(record->row),
         flecs_components_get(world, id));
 
     return result;
@@ -19724,25 +19725,28 @@ error:
 
 void ecs_ref_update(
     const ecs_world_t *world,
-    ecs_ref_t *ref)
+    ecs_ref_t *ref,
+    ecs_id_t id)
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(ref != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(ref->entity != 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(ref->id != 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(ref->record != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(ref->record == flecs_entities_get_any(world, ref->entity), 
-        ECS_INVALID_OPERATION, "a corrupt ref was passed to ecs_ref_update");
+    ecs_check(id != 0, ECS_INVALID_PARAMETER, NULL);
+#ifdef FLECS_DEBUG
+    ecs_check(id == ref->id, ECS_INVALID_PARAMETER, "id does not match ref");
+#endif
 
     flecs_check_exclusive_world_access_read(world);
 
     if (ref->table_version_fast == flecs_get_table_version_fast(
-        world, ref->table_id)) 
+        world, ref->table_id))
     {
         return;
     }
 
-    ecs_record_t *r = ref->record;
+    ecs_record_t *r = flecs_entities_get_any(world, ref->entity);
+    ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+
     ecs_table_t *table = r->table;
     if (!table) { /* Table can be NULL, entity could have been deleted */
         ref->table_id = 0;
@@ -19768,8 +19772,8 @@ void ecs_ref_update(
     ref->table_id = table->id;
     ref->table_version_fast = flecs_get_table_version_fast(world, ref->table_id);
     ref->table_version = table->version;
-    ref->ptr = flecs_get_component(world, table, ECS_RECORD_TO_ROW(r->row), 
-        flecs_components_get(world, ref->id));
+    ref->ptr = flecs_get_component(world, table, ECS_RECORD_TO_ROW(r->row),
+        flecs_components_get(world, id));
 
 error:
     return;
@@ -19783,13 +19787,12 @@ void* ecs_ref_get_id(
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(ref != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(ref->entity != 0, ECS_INVALID_PARAMETER, "ref not initialized");
-    ecs_check(ref->id != 0, ECS_INVALID_PARAMETER, "ref not initialized");
-    ecs_check(ref->record != NULL, ECS_INVALID_PARAMETER, "ref not initialized");
+    ecs_check(id != 0, ECS_INVALID_PARAMETER, "ref not initialized");
+#ifdef FLECS_DEBUG
     ecs_check(id == ref->id, ECS_INVALID_PARAMETER, "id does not match ref");
+#endif
 
-    (void)id;
-
-    ecs_ref_update(world, ref);
+    ecs_ref_update(world, ref, id);
 
     return ref->ptr;
 error:
@@ -27084,6 +27087,7 @@ typedef struct {
 /** Instance of member metric */
 typedef struct {
     ecs_ref_t ref;
+    ecs_id_t id;
     ecs_member_metric_ctx_t *ctx;
 } EcsMetricMemberInstance;
 
@@ -27157,6 +27161,7 @@ static void flecs_metrics_on_member_metric(ecs_iter_t *it) {
         EcsMetricMemberInstance *src = ecs_emplace(
             world, m, EcsMetricMemberInstance, NULL);
         src->ref = ecs_ref_init_id(world, e, id);
+        src->id = id;
         src->ctx = ctx;
         ecs_modified(world, m, EcsMetricMemberInstance);
         ecs_set(world, m, EcsMetricValue, { 0 });
@@ -27260,7 +27265,7 @@ static void UpdateMemberInstance(ecs_iter_t *it, bool counter) {
             continue;
         }
 
-        const void *ptr = ecs_ref_get_id(world, ref, ref->id);
+        const void *ptr = ecs_ref_get_id(world, ref, mi[i].id);
         if (ptr) {
             ptr = ECS_OFFSET(ptr, ctx->offset);
             if (!counter) {
@@ -43542,7 +43547,9 @@ void flecs_table_invoke_ctor_for_array(
         if (o) {
             ecs_ref_t *r = &o->refs[column_index];
             if (r->entity) {
-                void *base_ptr = ecs_ref_get_id(world, r, r->id);
+                ecs_id_t id = table->type.array[
+                    table->column_map[table->type.count + column_index]];
+                void *base_ptr = ecs_ref_get_id(world, r, id);
                 ecs_assert(base_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
 
                 ecs_iter_action_t on_set = ti->hooks.on_set;

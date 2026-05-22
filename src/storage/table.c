@@ -968,7 +968,9 @@ void flecs_table_invoke_ctor_for_array(
         if (o) {
             ecs_ref_t *r = &o->refs[column_index];
             if (r->entity) {
-                void *base_ptr = ecs_ref_get_id(world, r, r->id);
+                ecs_id_t id = table->type.array[
+                    table->column_map[table->type.count + column_index]];
+                void *base_ptr = ecs_ref_get_id(world, r, id);
                 ecs_assert(base_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
 
                 ecs_iter_action_t on_set = ti->hooks.on_set;
