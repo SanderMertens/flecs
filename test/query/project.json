@@ -1687,7 +1687,8 @@
                 "this_or_w_self_up_childof_2",
                 "this_or_w_self_up_childof_w_tag",
                 "this_written_or_w_self_up_childof",
-                "up_w_isa_component_recycled"
+                "up_w_isa_component_recycled",
+                "up_after_pair_target_delete"
             ]
         }, {
             "id": "Cascade",

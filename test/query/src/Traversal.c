@@ -13223,3 +13223,66 @@ void Traversal_up_w_isa_component_recycled(void) {
 
     ecs_fini(world);
 }
+
+void Traversal_up_after_pair_target_delete(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Sees);
+    ECS_TAG(world, Eyes);
+
+    ecs_entity_t host = ecs_new(world);
+    ecs_set(world, host, Position, {10, 20});
+
+    ecs_entity_t child = ecs_new(world);
+    ecs_add_pair(world, child, EcsChildOf, host);
+    ecs_add(world, child, Eyes);
+
+    ecs_entity_t targets[25];
+    for (int i = 0; i < 25; i ++) {
+        targets[i] = ecs_new(world);
+        ecs_add_pair(world, host, Sees, targets[i]);
+    }
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { .id = ecs_id(Position), .src.id = EcsUp },
+            { .id = Eyes }
+        },
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(child, it.entities[0]);
+        test_uint(host, ecs_field_src(&it, 0));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_defer_begin(world);
+    for (int i = 0; i < 10; i ++) {
+        ecs_delete(world, targets[i]);
+    }
+    ecs_defer_end(world);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(child, it.entities[0]);
+        test_uint(host, ecs_field_src(&it, 0));
+        Position *p = ecs_field(&it, Position, 0);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
