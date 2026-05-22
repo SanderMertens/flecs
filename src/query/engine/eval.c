@@ -165,7 +165,7 @@ bool flecs_query_all(
             op_ctx->dummy_tr.hdr.cr = NULL;
             if (field_index != -1) {
                 it->ids[field_index] = EcsWildcard;
-                it->trs[field_index] = &op_ctx->dummy_tr;
+                flecs_query_it_set_tr(it, field_index, &op_ctx->dummy_tr);
             }
             table = &world->store.root;
         } else if (op_ctx->cur < flecs_sparse_count(tables)) {
@@ -293,7 +293,8 @@ bool flecs_query_and_any(
         ctx->it->ids[field] = flecs_query_op_get_id(op, ctx);
     }
 
-    ctx->it->trs[field] = (const ecs_table_record_t*)op_ctx->it.cur;
+    flecs_query_it_set_tr(ctx->it, field,
+        (const ecs_table_record_t*)op_ctx->it.cur);
 
     return result;
 }
@@ -664,7 +665,7 @@ bool flecs_query_ids(
         ecs_iter_t *it = ctx->it;
         it->ids[op->field_index] = id;
         it->sources[op->field_index] = EcsWildcard;
-        it->trs[op->field_index] = NULL; /* Mark field as set */
+        flecs_query_it_set_tr(it, op->field_index, NULL); /* Mark field as set */
     }
 
     return true;
@@ -690,6 +691,7 @@ bool flecs_query_idsright(
             flecs_query_set_vars(op, id, ctx);
             it->ids[op->field_index] = id;
             it->sources[op->field_index] = EcsWildcard;
+            ECS_CONST_CAST(int16_t*, it->columns)[op->field_index] = -1;
             ECS_TERMSET_SET(it->set_fields, 1u << op->field_index);
             return flecs_query_ids_check(cur);
         }
@@ -724,6 +726,7 @@ next:
         ecs_id_t id = flecs_query_op_get_id_w_written(op, op->written, ctx);
         it->ids[op->field_index] = id;
         it->sources[op->field_index] = EcsWildcard;
+        ECS_CONST_CAST(int16_t*, it->columns)[op->field_index] = -1;
         ECS_TERMSET_SET(it->set_fields, 1u << op->field_index);
     }
 
@@ -774,6 +777,7 @@ bool flecs_query_idsleft(
         ecs_id_t id = flecs_query_op_get_id_w_written(op, op->written, ctx);
         it->ids[op->field_index] = id;
         it->sources[op->field_index] = EcsWildcard;
+        ECS_CONST_CAST(int16_t*, it->columns)[op->field_index] = -1;
         ECS_TERMSET_SET(it->set_fields, 1u << op->field_index);
     }
 
@@ -902,6 +906,7 @@ bool flecs_query_setvars(
         }
 
         it->sources[i] = flecs_query_var_get_entity(var_id, ctx);
+        ECS_CONST_CAST(int16_t*, it->columns)[i] = -1;
     }
 
     return true;
@@ -955,6 +960,7 @@ bool flecs_query_setfixed(
         const ecs_term_ref_t *src = &term->src;
         if (src->id & EcsIsEntity) {
             it->sources[term->field_index] = ECS_TERM_REF_ID(src);
+            ECS_CONST_CAST(int16_t*, it->columns)[term->field_index] = -1;
         }
     }
 
@@ -1074,7 +1080,7 @@ void flecs_query_reset_after_block(
         it->ids[field] = id;
     }
 
-    it->trs[field] = NULL;
+    flecs_query_it_set_tr(it, field, NULL);
 
     /* Reset variables */
     if (flags_1st & EcsQueryIsVar) {
@@ -1091,6 +1097,7 @@ void flecs_query_reset_after_block(
     /* If term has entity src, set it because no other instruction might */
     if (op->flags & (EcsQueryIsEntity << EcsQuerySrc)) {
         it->sources[field] = op->src.entity;
+        ECS_CONST_CAST(int16_t*, it->columns)[field] = -1;
     }
 
 done:
@@ -1230,6 +1237,7 @@ bool flecs_query_select_or(
             int16_t field_index = op->field_index;
             ecs_id_t prev_id = it->ids[field_index];
             const ecs_table_record_t *prev_tr = it->trs[field_index];
+            int16_t prev_column = it->columns[field_index];
 
             do {
                 ctx->written[prev] = ctx->written[last];
@@ -1268,6 +1276,7 @@ bool flecs_query_select_or(
             /* Restore id in case op set it */
             it->ids[field_index] = prev_id;
             it->trs[field_index] = prev_tr;
+            ECS_CONST_CAST(int16_t*, it->columns)[field_index] = prev_column;
             break;
         }
 

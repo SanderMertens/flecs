@@ -110,7 +110,7 @@ typedef struct ecs_each_iter_t {
     ecs_id_t ids;
     ecs_entity_t sources;
     ecs_size_t sizes;
-    int32_t columns;
+    int16_t columns;
     const ecs_table_record_t* trs;
 } ecs_each_iter_t;
 

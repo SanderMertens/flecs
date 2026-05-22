@@ -1810,17 +1810,17 @@ ecs_var_id_t flecs_query_find_var_id(
  * with different columns being matched by the query. */
 typedef struct ecs_query_triv_cache_match_t {
     ecs_table_t *table;              /* The current table. */
-    const ecs_table_record_t **trs;  /* Information about where to find field in table. */
+    int16_t *columns;
     ecs_termset_t set_fields;        /* Fields that are set (used by fields with Optional/Not). */
 } ecs_query_triv_cache_match_t;
 
 struct ecs_query_cache_match_t {
     ecs_query_triv_cache_match_t base;
+    const ecs_table_record_t **_trs;
     int32_t _offset;                  /* Starting point in table. */
     int32_t _count;                   /* Number of entities to iterate in table. */
     ecs_id_t *_ids;                   /* Resolved (component) ids for current table. */
     ecs_entity_t *_sources;           /* Sources of ids. */
-    ecs_table_t **_tables;            /* Tables for fields with non-$this source. */
     ecs_termset_t _up_fields;         /* Fields that are matched through traversal. */
     int32_t *_monitor;                /* Used to monitor table for changes. */
     int32_t rematch_count;            /* Track whether table was rematched. */
@@ -1845,6 +1845,7 @@ typedef struct ecs_query_cache_allocators_t {
     ecs_block_allocator_t pointers;
     ecs_block_allocator_t ids;
     ecs_block_allocator_t monitors;
+    ecs_block_allocator_t columns;
 } ecs_query_cache_allocators_t;
 
 /** Query that is automatically matched against tables */
@@ -3369,6 +3370,12 @@ void flecs_iter_init(
     const ecs_world_t *world,
     ecs_iter_t *it,
     bool alloc_resources);
+
+/* Slow path for ecs_field when field is not a $this column. */
+void* flecs_field_shared(
+    const ecs_iter_t *it,
+    size_t size,
+    int8_t index);
 
 /* Free iterator memory block. */
 void flecs_iter_free(
@@ -7082,11 +7089,13 @@ void flecs_invoke_hook(
     }
 
     ecs_entity_t dummy_src = 0;
+    int16_t column = tr->column;
 
     it.world = world;
     it.real_world = world;
     it.table = table;
     it.trs = &tr;
+    it.columns = &column;
     it.row_fields = !!(tr->hdr.cr->flags & EcsIdSparse);
     it.ref_fields = it.row_fields;
     it.sizes = ECS_CONST_CAST(ecs_size_t*, &ti->size);
@@ -7746,6 +7755,7 @@ bool ecs_each_next(
     it->flags |= EcsIterIsValid;
     if (next) {
         each_iter->trs = next;
+        each_iter->columns = next->column;
         ecs_table_t *table = next->hdr.table;
         it->table = table;
         it->count = ecs_table_count(table);
@@ -7756,6 +7766,7 @@ bool ecs_each_next(
             it->ids = NULL;
         }
         it->trs = &each_iter->trs;
+        it->columns = &each_iter->columns;
         it->sources = &each_iter->sources;
         it->sizes = &each_iter->sizes;
         it->set_fields = 1;
@@ -13347,12 +13358,20 @@ void flecs_iter_init(
         ecs_assert(it->ids == NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(it->sources == NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(it->trs == NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(it->columns == NULL, ECS_INTERNAL_ERROR, NULL);
 
         it->ids = flecs_stack_calloc_n(stack, ecs_id_t, it->field_count);
         it->sources = flecs_stack_calloc_n(
             stack, ecs_entity_t, it->field_count);
         it->trs = flecs_stack_calloc_n(
             stack, ecs_table_record_t*, it->field_count);
+        int16_t *columns = flecs_stack_calloc_n(
+            stack, int16_t, it->field_count);
+        int8_t i;
+        for (i = 0; i < it->field_count; i ++) {
+            columns[i] = -1;
+        }
+        it->columns = columns;
     }
 }
 
@@ -13411,52 +13430,37 @@ void* ecs_field_w_size(
         return it->ptrs[index];
     }
 
-    const ecs_table_record_t *tr = it->trs[index];
+    int16_t column = it->columns[index];
+    if (column >= 0) {
+        return ECS_ELEM(it->table->data.columns[column].data,
+            (ecs_size_t)size, it->offset);
+    }
 
-#ifdef FLECS_DEBUG  
-    ecs_component_record_t *cr = flecs_components_get(
-        it->real_world, it->ids[index]);
-    if (cr) {
-        ecs_assert(!(cr->flags & EcsIdSparse), ECS_INVALID_OPERATION,
-            "field %d: use ecs_field_at to access fields for sparse components", 
-            index);
-        }
-#endif
+    return flecs_field_shared(it, size, index);
+error:
+    return NULL;
+}
 
-    if (!tr) {
-        ecs_assert(!ecs_field_is_set(it, index), ECS_INTERNAL_ERROR, NULL);
+void* flecs_field_shared(
+    const ecs_iter_t *it,
+    size_t size,
+    int8_t index)
+{
+    if (!ecs_field_is_set(it, index)) {
         return NULL;
     }
 
     ecs_entity_t src = it->sources[index];
-    ecs_table_t *table;
-    int32_t row;
-    if (!src) {
-        table = it->table;
-        row = it->offset;
-    } else {
-        ecs_record_t *r = flecs_entities_get(it->real_world, src);
-        table = r->table;
-        row = ECS_RECORD_TO_ROW(r->row);
-    }
+    ecs_record_t *r = flecs_entities_get(it->real_world, src);
+    ecs_table_t *table = r->table;
 
-    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(tr->hdr.table == table, ECS_INTERNAL_ERROR, NULL);
+    ecs_component_record_t *cr = flecs_components_get(
+        it->real_world, it->ids[index]);
+    const ecs_table_record_t *tr = flecs_component_get_table(cr, table);
+    int16_t column = tr->column;
 
-    int32_t column_index = tr->column;
-    ecs_assert(column_index != -1, ECS_INVALID_PARAMETER, 
-        "field %d: only components can be fetched with fields", index);
-    ecs_assert(column_index >= 0, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(column_index < table->column_count, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_column_t *column = &table->data.columns[column_index];
-    ecs_assert((row < table->data.count) ||
-        (it->query && (it->query->flags & EcsQueryMatchEmptyTables)),
-            ECS_INTERNAL_ERROR, NULL);
-
-    return ECS_ELEM(column->data, (ecs_size_t)size, row);
-error:
-    return NULL;
+    return ECS_ELEM(table->data.columns[column].data,
+        (ecs_size_t)size, ECS_RECORD_TO_ROW(r->row));
 }
 
 void* ecs_field_at_w_size(
@@ -13600,17 +13604,34 @@ int32_t ecs_field_column(
     const ecs_iter_t *it,
     int8_t index)
 {
-    ecs_check(index >= 0, ECS_INVALID_PARAMETER, 
+    ecs_check(index >= 0, ECS_INVALID_PARAMETER,
         "invalid field index %d", index);
-    ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, 
+    ecs_check(index < it->field_count, ECS_INVALID_PARAMETER,
         "field index %d out of bounds", index);
 
-    const ecs_table_record_t *tr = it->trs[index];
-    if (tr) {
-        return tr->index;
-    } else {
+    if (!ecs_field_is_set(it, index)) {
         return -1;
     }
+
+    if (it->columns && it->columns[index] >= 0) {
+        return ecs_table_column_to_type_index(it->table, it->columns[index]);
+    }
+
+    if (it->trs && it->trs[index]) {
+        return it->trs[index]->index;
+    }
+
+    ecs_entity_t src = it->sources[index];
+    ecs_assert(src != 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_record_t *r = flecs_entities_get(it->real_world, src);
+    ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(r->table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_component_record_t *cr = flecs_components_get(
+        it->real_world, it->ids[index]);
+    ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
+    const ecs_table_record_t *tr = flecs_component_get_table(cr, r->table);
+    ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL);
+    return tr->index;
 error:
     return 0;
 }
@@ -15111,6 +15132,7 @@ void flecs_emit_propagate_id_for_range(
     it->offset = 0;
     it->count = count;
     it->up_fields = 1;
+    ECS_CONST_CAST(int16_t*, it->columns)[0] = -1;
     if (count) {
         it->entities = &ecs_table_entities(table)[offset];
     }
@@ -15426,6 +15448,7 @@ void flecs_emit_forward_id(
 
     int32_t storage_i = ecs_table_type_to_column_index(tgt_table, column);
     it->trs[0] = &tgt_table->_->records[column];
+    ECS_CONST_CAST(int16_t*, it->columns)[0] = -1;
     if (storage_i != -1) {
         ecs_column_t *c = &tgt_table->data.columns[storage_i];
         ecs_assert(cr->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -15920,6 +15943,7 @@ void flecs_emit_forward(
                 it->ids[0] = rc_cr->id;
                 it->event_id = rc_cr->id;
                 it->trs[0] = tr;
+                ECS_CONST_CAST(int16_t*, it->columns)[0] = tr ? tr->column : -1;
                 ECS_CONST_CAST(int32_t*, it->sizes)[0] = 0;
                 if (rc_cr->type_info) {
                     ECS_CONST_CAST(int32_t*, it->sizes)[0] = 
@@ -15977,6 +16001,8 @@ void flecs_emit_on_set_for_override_on_add(
     it->ids[0] = id;
     it->event_id = id;
     it->trs[0] = flecs_component_get_table(cr, table);
+    ECS_CONST_CAST(int16_t*, it->columns)[0] =
+        it->trs[0] ? it->trs[0]->column : -1;
     it->sources[0] = 0;
 
     /* Only valid for components, so type info must exist */
@@ -16030,6 +16056,7 @@ void flecs_emit_on_set_for_override_on_remove(
     it->event_id = id;
     it->sources[0] = base;
     it->trs[0] = base_tr;
+    ECS_CONST_CAST(int16_t*, it->columns)[0] = -1;
     it->up_fields = 1;
 
     /* Only valid for components, so type info must exist */
@@ -16105,6 +16132,7 @@ void flecs_emit(
     ecs_size_t sizes_cache = 0;
     const ecs_table_record_t* trs_cache = 0;
     ecs_entity_t sources_cache = 0;
+    int16_t columns_cache = -1;
 
     ecs_iter_t it = {
         .world = stage,
@@ -16116,6 +16144,7 @@ void flecs_emit(
         .ids = &ids_cache,
         .sizes = &sizes_cache,
         .trs = (const ecs_table_record_t**)&trs_cache,
+        .columns = &columns_cache,
         .sources = &sources_cache,
         .other_table = other_table,
         .offset = offset,
@@ -16320,6 +16349,7 @@ repeat_event:
         }
 
         it.trs[0] = tr;
+        ECS_CONST_CAST(int16_t*, it.columns)[0] = tr ? tr->column : -1;
         it.event_id = id;
         it.ids[0] = id;
 
@@ -16956,10 +16986,12 @@ void flecs_uni_observer_invoke(
             int32_t i, count = it->count;
             ecs_entity_t src = it->sources[0];
             ecs_table_t *old_table = it->table;
+            int16_t old_column = it->columns[0];
 
             it->entities = NULL;
             it->count = 0;
             it->table = NULL;
+            ECS_CONST_CAST(int16_t*, it->columns)[0] = -1;
 
             /* Loop all entities for which the event was emitted. Usually this is
             * just one, but it is possible to emit events for a table range. */
@@ -16989,6 +17021,7 @@ void flecs_uni_observer_invoke(
             it->entities = entities;
             it->count = count;
             it->table = old_table;
+            ECS_CONST_CAST(int16_t*, it->columns)[0] = old_column;
         }
 
         it->row_fields = row_fields;
@@ -17123,6 +17156,8 @@ void flecs_multi_observer_invoke(
         user_it.ids[pivot_field] = it->event_id;
         user_it.trs[pivot_field] = it->trs[0];
         user_it.sources[pivot_field] = it->sources[0];
+        ECS_CONST_CAST(int16_t*, user_it.columns)[pivot_field] =
+            it->sources[0] ? -1 : it->columns[0];
         user_it.term_index = pivot_term;
 
         user_it.ctx = o->ctx;
@@ -78384,7 +78419,7 @@ void flecs_query_cache_on_event(
         if (flecs_query_cache_match_table(world, cache, table)) {
             if (ecs_should_log_3()) {
                 char *table_str = ecs_table_str(world, table);
-                ecs_dbg_3("query cache event: %s for [%s]", 
+                ecs_dbg_3("query cache event: %s for [%s]",
                     ecs_get_name(world, event),
                     table_str);
                 ecs_os_free(table_str);
@@ -78425,12 +78460,14 @@ void flecs_query_cache_allocators_init(
 {
     int32_t field_count = cache->query->field_count;
     if (field_count) {
-        flecs_ballocator_init(&cache->allocators.pointers, 
+        flecs_ballocator_init(&cache->allocators.pointers,
             field_count * ECS_SIZEOF(ecs_table_record_t*));
-        flecs_ballocator_init(&cache->allocators.ids, 
+        flecs_ballocator_init(&cache->allocators.ids,
             field_count * ECS_SIZEOF(ecs_id_t));
         flecs_ballocator_init(&cache->allocators.monitors,
             (1 + field_count) * ECS_SIZEOF(int32_t));
+        flecs_ballocator_init(&cache->allocators.columns,
+            field_count * ECS_SIZEOF(int16_t));
     }
 }
 
@@ -78444,6 +78481,7 @@ void flecs_query_cache_allocators_fini(
         flecs_ballocator_fini(&cache->allocators.pointers);
         flecs_ballocator_fini(&cache->allocators.ids);
         flecs_ballocator_fini(&cache->allocators.monitors);
+        flecs_ballocator_fini(&cache->allocators.columns);
     }
 }
 
@@ -78725,50 +78763,6 @@ error:
  */
 
 
-/* Update trs for cached query that has up fields. If a component got matched on
- * another entity (typically a parent or prefab), that component could have 
- * moved which would cause the table record in the trs array to become invalid.
- * This function updates the table records array to make sure they're pointing
- * to the right table/column for fields that used up traversal. */
-static
-void flecs_query_update_node_up_trs(
-    const ecs_query_run_ctx_t *ctx,
-    ecs_query_cache_match_t *node)
-{
-    const ecs_query_impl_t *impl = ctx->query;
-    ecs_query_cache_t *cache = impl->cache;
-    ecs_assert(!flecs_query_cache_is_trivial(cache), ECS_INTERNAL_ERROR, NULL);
-
-    ecs_termset_t fields = node->_up_fields & node->base.set_fields;
-    if (fields) {
-        const ecs_query_t *q = cache->query;
-        int32_t f, field_count = q->field_count;
-        int8_t *field_map = cache->field_map;
-        for (f = 0; f < field_count; f ++) {
-            if (!(fields & (1llu << f))) {
-                continue;
-            }
-
-            ecs_entity_t src = node->_sources[f];
-            if (src && src != EcsWildcard) {
-                ecs_record_t *r = flecs_entities_get(ctx->world, src);
-                ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
-                ecs_assert(r->table != NULL, ECS_INTERNAL_ERROR, NULL);
-                if (r->table != node->_tables[f]) {
-                    node->_tables[f] = r->table;
-
-                    ecs_component_record_t *cr = flecs_components_get(
-                        ctx->world, q->ids[f]);
-                    const ecs_table_record_t *tr = node->base.trs[f] = 
-                        flecs_component_get_table(cr, r->table);
-
-                    ctx->it->trs[field_map ? field_map[f] : f] = tr;                    
-                }
-            }
-        }
-    }
-}
-
 /* Initialize cached query iterator. */
 void flecs_query_cache_iter_init(
     ecs_iter_t *it,
@@ -78903,7 +78897,7 @@ ecs_query_cache_match_t* flecs_query_trivial_cache_next(
         }
 
         it->entities = ecs_table_entities(table);
-        it->trs = qm->trs;
+        it->columns = qm->columns;
         it->set_fields = qm->set_fields;
 
         return qit->elem = (ecs_query_cache_match_t*)qm;
@@ -78957,10 +78951,12 @@ void flecs_query_cache_init_mapped_fields(
 
     int32_t i, field_count = cache->query->field_count;
     int8_t *field_map = cache->field_map;
+    int16_t *columns = ECS_CONST_CAST(int16_t*, it->columns);
 
     for (i = 0; i < field_count; i ++) {
         int8_t field_index = field_map[i];
-        it->trs[field_index] = node->base.trs[i];
+        it->trs[field_index] = node->_trs ? node->_trs[i] : NULL;
+        columns[field_index] = node->base.columns[i];
 
         it->ids[field_index] = node->_ids[i];
         it->sources[field_index] = node->_sources[i];
@@ -78989,8 +78985,6 @@ bool flecs_query_cache_search(
     ctx->vars[0].range.count = node->_count;
     ctx->vars[0].range.offset = node->_offset;
 
-    flecs_query_update_node_up_trs(ctx, node);
-
     return true;
 }
 
@@ -79010,7 +79004,8 @@ bool flecs_query_is_cache_search(
     ctx->vars[0].range.offset = node->_offset;
 
     ecs_iter_t *it = ctx->it;
-    it->trs = node->base.trs;
+    it->trs = node->_trs;
+    it->columns = node->base.columns;
     it->ids = node->_ids;
     it->sources = node->_sources;
     it->set_fields = node->base.set_fields;
@@ -79019,8 +79014,6 @@ bool flecs_query_is_cache_search(
 #ifdef FLECS_DEBUG
     it->flags |= EcsIterImmutableCacheData;
 #endif
-
-    flecs_query_update_node_up_trs(ctx, node);
 
     return true;
 }
@@ -79043,7 +79036,6 @@ bool flecs_query_cache_test(
     }
 
     flecs_query_cache_init_mapped_fields(ctx, node);
-    flecs_query_update_node_up_trs(ctx, node);
 
     return true;
 }
@@ -79062,7 +79054,8 @@ bool flecs_query_is_cache_test(
     }
 
     ecs_iter_t *it = ctx->it;
-    it->trs = node->base.trs;
+    it->trs = node->_trs;
+    it->columns = node->base.columns;
     it->ids = node->_ids;
     it->sources = node->_sources;
     it->set_fields = node->base.set_fields;
@@ -79070,8 +79063,6 @@ bool flecs_query_is_cache_test(
 #ifdef FLECS_DEBUG
     it->flags |= EcsIterImmutableCacheData;
 #endif
-
-    flecs_query_update_node_up_trs(ctx, node);
 
     return true;
 }
@@ -79096,9 +79087,9 @@ bool flecs_query_is_trivial_cache_test(
             return false;
         }
 
-        ecs_query_cache_match_t *qm = 
+        ecs_query_cache_match_t *qm =
             flecs_query_cache_match_from_table(cache, qt);
-        it->trs = qm->base.trs;
+        it->columns = qm->base.columns;
         it->set_fields = qm->base.set_fields;
         return true;
     }
@@ -79117,6 +79108,20 @@ typedef struct {
     int32_t column;
 } flecs_table_column_t;
 
+/* Look up table record for id in table. */
+static
+const ecs_table_record_t *flecs_query_get_tr(
+    ecs_world_t *world,
+    ecs_id_t id,
+    ecs_table_t *table)
+{
+    ecs_component_record_t *cr = flecs_components_get(world, id);
+    if (!cr) {
+        return NULL;
+    }
+    return flecs_component_get_table(cr, table);
+}
+
 /* Get table column index for query field. */
 static
 void flecs_query_get_column_for_field(
@@ -79127,14 +79132,43 @@ void flecs_query_get_column_for_field(
 {
     ecs_assert(field >= 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(field < q->field_count, ECS_INTERNAL_ERROR, NULL);
-    (void)q;
 
-    const ecs_table_record_t *tr = match->base.trs[field];
-    ecs_table_t *table = tr->hdr.table;
-    int32_t column = tr->column;
+    int32_t column = match->base.columns[field];
+    if (column != -1) {
+        out->table = match->base.table;
+        out->column = column;
+        return;
+    }
 
-    out->table = table;
-    out->column = column;
+    ecs_assert(!match->_trs || !match->_trs[field] ||
+        match->_trs[field]->column == -1,
+            ECS_INTERNAL_ERROR, NULL);
+
+    ecs_entity_t src = match->_sources ? match->_sources[field] : 0;
+    if (!src) {
+        out->table = NULL;
+        out->column = -1;
+        return;
+    }
+
+    ecs_record_t *r = flecs_entities_get(q->real_world, src);
+    if (!r || !r->table) {
+        out->table = NULL;
+        out->column = -1;
+        return;
+    }
+
+    ecs_id_t id = match->_ids ? match->_ids[field] : q->ids[field];
+    const ecs_table_record_t *tr = flecs_query_get_tr(
+        q->real_world, id, r->table);
+    if (!tr) {
+        out->table = NULL;
+        out->column = -1;
+        return;
+    }
+
+    out->table = r->table;
+    out->column = tr->column;
 }
 
 /* Get match monitor. Monitors are used to keep track of whether components 
@@ -79429,8 +79463,7 @@ bool flecs_query_check_match_monitor(
 
     const ecs_query_t *query = cache->query;
     ecs_world_t *world = query->world;
-    int32_t i, field_count = query->field_count; 
-    const ecs_table_record_t **trs = it ? it->trs : match->base.trs;
+    int32_t i, field_count = query->field_count;
     bool trivial_cache = flecs_query_cache_is_trivial(cache);
 
     ecs_entity_t *sources = NULL;
@@ -79448,8 +79481,6 @@ bool flecs_query_check_match_monitor(
         sources = match->_sources;
     }
 
-    ecs_assert(trs != NULL, ECS_INTERNAL_ERROR, NULL);
-
     for (i = 0; i < field_count; i ++) {
         int32_t mon = monitor[i + 1];
         if (mon == -1) {
@@ -79460,7 +79491,7 @@ bool flecs_query_check_match_monitor(
             continue;
         }
 
-        int32_t column = trs[i]->column;
+        int32_t column = match->base.columns[i];
         ecs_entity_t src = sources ? sources[i] : 0;
         if (!src) {
             if (column >= 0) {
@@ -79470,23 +79501,23 @@ bool flecs_query_check_match_monitor(
                     return true;
                 }
                 continue;
-            } else if (column == -1) {
+            } else {
                 continue; /* owned but not a component */
             }
         }
 
-        if (trivial_cache) {
-            continue;
-        }
+        ecs_assert(!trivial_cache, ECS_INTERNAL_ERROR, NULL);
 
         /* Component from non-this source */
         ecs_assert(match->_sources != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_entity_t fixed_src = match->_sources[i];
-        ecs_table_t *src_table = ecs_get_table(world, fixed_src);
-        ecs_assert(src_table != NULL, ECS_INTERNAL_ERROR, NULL);
+        flecs_table_column_t tc;
+        flecs_query_get_column_for_field(query, match, i, &tc);
+        if (!tc.table || tc.column < 0) {
+            continue;
+        }
         int32_t *src_dirty_state = flecs_table_get_dirty_state(
-            world, src_table);
-        if (mon != src_dirty_state[column + 1]) {
+            world, tc.table);
+        if (mon != src_dirty_state[tc.column + 1]) {
             return true;
         }
     }
@@ -79576,14 +79607,17 @@ void flecs_query_mark_fields_dirty(
             }
         }
 
-        const ecs_table_record_t *tr = it->trs[i];
+        const ecs_table_record_t *tr = it->trs ? it->trs[i] : NULL;
         if (!tr) {
-            continue; /* Non-fragmenting component */
+            tr = flecs_query_get_tr(world, it->ids[i], table);
+            if (!tr) {
+                continue;
+            }
         }
 
-        int32_t type_index = it->trs[i]->index;
+        int32_t type_index = tr->index;
         ecs_assert(type_index >= 0, ECS_INTERNAL_ERROR, NULL);
-        
+
         ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
         int32_t *dirty_state = table->dirty_state;
         if (!dirty_state) {
@@ -79629,8 +79663,15 @@ void flecs_query_mark_fixed_fields_dirty(
             continue;
         }
 
-        ecs_assert(it->trs[i]->column >= 0, ECS_INTERNAL_ERROR, NULL);
-        int32_t column = table->column_map[it->trs[i]->column];
+        const ecs_table_record_t *tr = it->trs ? it->trs[i] : NULL;
+        if (!tr) {
+            tr = flecs_query_get_tr(world, it->ids[i], table);
+            if (!tr) {
+                continue;
+            }
+        }
+        ecs_assert(tr->column >= 0, ECS_INTERNAL_ERROR, NULL);
+        int32_t column = table->column_map[tr->column];
         dirty_state[column + 1] ++;
     }
 }
@@ -80238,20 +80279,22 @@ void flecs_query_cache_match_elem_fini(
     ecs_query_cache_t *cache,
     ecs_query_cache_match_t *qm)
 {
-    flecs_bfree(&cache->allocators.pointers, 
-        ECS_CONST_CAST(void*, qm->base.trs));
+    if (qm->base.columns) {
+        flecs_bfree(&cache->allocators.columns, qm->base.columns);
+    }
 
     if (!flecs_query_cache_is_trivial(cache)) {
+        if (qm->_trs) {
+            flecs_bfree(&cache->allocators.pointers,
+                ECS_CONST_CAST(void*, qm->_trs));
+        }
+
         if (qm->_ids != cache->query->ids) {
             flecs_bfree(&cache->allocators.ids, qm->_ids);
         }
 
         if (qm->_sources != cache->sources) {
             flecs_bfree(&cache->allocators.ids, qm->_sources);
-        }
-
-        if (qm->_tables) {
-            flecs_bfree(&cache->allocators.pointers, qm->_tables);
         }
 
         if (qm->_monitor) {
@@ -80297,13 +80340,11 @@ void flecs_query_cache_match_set(
     qm->base.table = it->table;
     qm->base.set_fields = it->set_fields;
 
-    if (!qm->base.trs) {
-        qm->base.trs = flecs_balloc(&cache->allocators.pointers);
+    if (!qm->base.columns) {
+        qm->base.columns = flecs_balloc(&cache->allocators.columns);
     }
 
-    /* Reset resources in case this is an existing record */
-    ecs_os_memcpy_n(ECS_CONST_CAST(ecs_table_record_t**, qm->base.trs), 
-        it->trs, ecs_table_record_t*, field_count);
+    ecs_os_memcpy_n(qm->base.columns, it->columns, int16_t, field_count);
 
     /* Find out whether to store result-specific ids array or fixed array */
     ecs_id_t *ids = cache->query->ids;
@@ -80340,28 +80381,29 @@ void flecs_query_cache_match_set(
                 qm->_sources = flecs_balloc(&cache->allocators.ids);
             }
             ecs_os_memcpy_n(qm->_sources, it->sources, ecs_entity_t, field_count);
-            if (!qm->_tables) {
-                qm->_tables = flecs_balloc(&cache->allocators.pointers);
-            }
-            for (i = 0; i < field_count; i ++) {
-                if (it->trs[i]) {
-                    qm->_tables[i] = it->trs[i]->hdr.table;
-                }
-            }
         } else {
             if (qm->_sources != cache->sources) {
                 flecs_bfree(&cache->allocators.ids, qm->_sources);
                 qm->_sources = cache->sources;
             }
-            if (qm->_tables) {
-                flecs_bfree(&cache->allocators.pointers, qm->_tables);
-                qm->_tables = NULL;
-            }
         }
 
         qm->_up_fields = it->up_fields;
+
+        if (!qm->_trs) {
+            qm->_trs = flecs_balloc(&cache->allocators.pointers);
+        }
+        for (i = 0; i < field_count; i ++) {
+            if (it->trs[i] && !it->sources[i] &&
+                !(it->up_fields & (1llu << i)))
+            {
+                qm->_trs[i] = it->trs[i];
+            } else {
+                qm->_trs[i] = NULL;
+            }
+        }
     } else {
-        /* If this is a trivial cache, we shouldn't have any fields with 
+        /* If this is a trivial cache, we shouldn't have any fields with
          * non-$this sources */
         ecs_assert(i == field_count, ECS_INTERNAL_ERROR, NULL);
     }
@@ -80699,7 +80741,8 @@ void flecs_query_cache_build_sorted_table_range(
             ecs_size_t size = cache->query->sizes[field];
             ecs_entity_t src = qm->_sources[field];
             if (src == 0) {
-                int32_t column_index = qm->base.trs[field]->column;
+                int32_t column_index = qm->base.columns[field];
+                ecs_assert(column_index >= 0, ECS_INTERNAL_ERROR, NULL);
                 ecs_column_t *column = &table->data.columns[column_index];
                 helper[to_sort].ptr = column->data;
                 helper[to_sort].elem_size = size;
@@ -80778,7 +80821,7 @@ void flecs_query_cache_build_sorted_table_range(
         }
 
         sort_helper_t *cur_helper = &helper[min];
-        if (!cur || cur->base.trs != cur_helper->match->base.trs) {
+        if (!cur || cur->base.columns != cur_helper->match->base.columns) {
             cur = ecs_vec_append_t(NULL, &cache->table_slices, 
                 ecs_query_cache_match_t);
             *cur = *(cur_helper->match);
@@ -83795,7 +83838,7 @@ bool flecs_query_all(
             op_ctx->dummy_tr.hdr.cr = NULL;
             if (field_index != -1) {
                 it->ids[field_index] = EcsWildcard;
-                it->trs[field_index] = &op_ctx->dummy_tr;
+                flecs_query_it_set_tr(it, field_index, &op_ctx->dummy_tr);
             }
             table = &world->store.root;
         } else if (op_ctx->cur < flecs_sparse_count(tables)) {
@@ -83923,7 +83966,8 @@ bool flecs_query_and_any(
         ctx->it->ids[field] = flecs_query_op_get_id(op, ctx);
     }
 
-    ctx->it->trs[field] = (const ecs_table_record_t*)op_ctx->it.cur;
+    flecs_query_it_set_tr(ctx->it, field,
+        (const ecs_table_record_t*)op_ctx->it.cur);
 
     return result;
 }
@@ -84294,7 +84338,7 @@ bool flecs_query_ids(
         ecs_iter_t *it = ctx->it;
         it->ids[op->field_index] = id;
         it->sources[op->field_index] = EcsWildcard;
-        it->trs[op->field_index] = NULL; /* Mark field as set */
+        flecs_query_it_set_tr(it, op->field_index, NULL); /* Mark field as set */
     }
 
     return true;
@@ -84320,6 +84364,7 @@ bool flecs_query_idsright(
             flecs_query_set_vars(op, id, ctx);
             it->ids[op->field_index] = id;
             it->sources[op->field_index] = EcsWildcard;
+            ECS_CONST_CAST(int16_t*, it->columns)[op->field_index] = -1;
             ECS_TERMSET_SET(it->set_fields, 1u << op->field_index);
             return flecs_query_ids_check(cur);
         }
@@ -84354,6 +84399,7 @@ next:
         ecs_id_t id = flecs_query_op_get_id_w_written(op, op->written, ctx);
         it->ids[op->field_index] = id;
         it->sources[op->field_index] = EcsWildcard;
+        ECS_CONST_CAST(int16_t*, it->columns)[op->field_index] = -1;
         ECS_TERMSET_SET(it->set_fields, 1u << op->field_index);
     }
 
@@ -84404,6 +84450,7 @@ bool flecs_query_idsleft(
         ecs_id_t id = flecs_query_op_get_id_w_written(op, op->written, ctx);
         it->ids[op->field_index] = id;
         it->sources[op->field_index] = EcsWildcard;
+        ECS_CONST_CAST(int16_t*, it->columns)[op->field_index] = -1;
         ECS_TERMSET_SET(it->set_fields, 1u << op->field_index);
     }
 
@@ -84532,6 +84579,7 @@ bool flecs_query_setvars(
         }
 
         it->sources[i] = flecs_query_var_get_entity(var_id, ctx);
+        ECS_CONST_CAST(int16_t*, it->columns)[i] = -1;
     }
 
     return true;
@@ -84585,6 +84633,7 @@ bool flecs_query_setfixed(
         const ecs_term_ref_t *src = &term->src;
         if (src->id & EcsIsEntity) {
             it->sources[term->field_index] = ECS_TERM_REF_ID(src);
+            ECS_CONST_CAST(int16_t*, it->columns)[term->field_index] = -1;
         }
     }
 
@@ -84704,7 +84753,7 @@ void flecs_query_reset_after_block(
         it->ids[field] = id;
     }
 
-    it->trs[field] = NULL;
+    flecs_query_it_set_tr(it, field, NULL);
 
     /* Reset variables */
     if (flags_1st & EcsQueryIsVar) {
@@ -84721,6 +84770,7 @@ void flecs_query_reset_after_block(
     /* If term has entity src, set it because no other instruction might */
     if (op->flags & (EcsQueryIsEntity << EcsQuerySrc)) {
         it->sources[field] = op->src.entity;
+        ECS_CONST_CAST(int16_t*, it->columns)[field] = -1;
     }
 
 done:
@@ -84860,6 +84910,7 @@ bool flecs_query_select_or(
             int16_t field_index = op->field_index;
             ecs_id_t prev_id = it->ids[field_index];
             const ecs_table_record_t *prev_tr = it->trs[field_index];
+            int16_t prev_column = it->columns[field_index];
 
             do {
                 ctx->written[prev] = ctx->written[last];
@@ -84898,6 +84949,7 @@ bool flecs_query_select_or(
             /* Restore id in case op set it */
             it->ids[field_index] = prev_id;
             it->trs[field_index] = prev_tr;
+            ECS_CONST_CAST(int16_t*, it->columns)[field_index] = prev_column;
             break;
         }
 
@@ -85357,6 +85409,30 @@ void flecs_query_self_change_detection(
     flecs_query_change_detection(it, qit, impl);
 }
 
+#ifdef FLECS_DEBUG
+static
+void flecs_iter_assert_columns(
+    ecs_iter_t *it)
+{
+    const int16_t *columns = it->columns;
+    const ecs_table_record_t **trs = it->trs;
+    const ecs_entity_t *sources = it->sources;
+    ecs_termset_t up_fields = it->up_fields;
+    int8_t i, count = it->field_count;
+    for (i = 0; i < count; i ++) {
+        const ecs_table_record_t *tr = trs[i];
+        int16_t expected = (tr && !sources[i] && !(up_fields & (1llu << i)))
+            ? tr->column : -1;
+        ecs_assert(columns[i] == expected, ECS_INTERNAL_ERROR,
+            "it->columns[%d]=%d does not match expected %d "
+            "(tr=%p src=%llu up=%d)",
+            i, columns[i], expected, (const void*)tr,
+            (unsigned long long)sources[i],
+            (int)((up_fields >> i) & 1));
+    }
+}
+#endif
+
 bool ecs_query_next(
     ecs_iter_t *it)
 {
@@ -85443,13 +85519,16 @@ bool ecs_query_next(
 
             /* Default iterator mode. This enters the query VM dispatch loop. */
             if (flecs_query_run_until(
-                redo, &ctx, ops, -1, qit->op, impl->op_count - 1)) 
+                redo, &ctx, ops, -1, qit->op, impl->op_count - 1))
             {
-                ecs_assert(ops[ctx.op_index].kind == EcsQueryYield, 
+                ecs_assert(ops[ctx.op_index].kind == EcsQueryYield,
                     ECS_INTERNAL_ERROR, NULL);
                 flecs_query_set_iter_this(it, &ctx);
                 ecs_assert(it->count >= 0, ECS_INTERNAL_ERROR, NULL);
                 qit->op = flecs_itolbl(ctx.op_index - 1);
+#ifdef FLECS_DEBUG
+                flecs_iter_assert_columns(it);
+#endif
                 goto yield;
             }
         }
@@ -87775,7 +87854,7 @@ next:
                 goto next;
             }
 
-            it->trs[field_index] = tr;
+            flecs_query_it_set_tr(it, field_index, tr);
             flecs_query_var_set_range(op, op->src.var, table, 0, 0, ctx);
             goto done;
         }
@@ -88256,6 +88335,7 @@ retry:
         if (result) {
             /* Signal this table needs post processing */
             ctx->it->sources[op->field_index] = EcsWildcard;
+            ECS_CONST_CAST(int16_t*, ctx->it->columns)[op->field_index] = -1;
         }
 
         return result;
@@ -88440,6 +88520,7 @@ ecs_trav_down_t* flecs_query_up_find_next_traversable(
             if (record->row & EcsEntityIsTraversable) {
                 /* Found traversable entity */
                 it->sources[op->field_index] = entity;
+                ECS_CONST_CAST(int16_t*, it->columns)[op->field_index] = -1;
                 break;
             }
         }
@@ -88561,10 +88642,14 @@ next_down_entry:
              * means that before traversing downwards, we should also return 
              * the current table as result. */
             if (self) {
-                if (!flecs_query_table_filter(table, op->other, 
+                if (!flecs_query_table_filter(table, op->other,
                     (EcsTableNotQueryable|EcsTableIsPrefab|EcsTableIsDisabled)))
                 {
                     flecs_reset_source_set_flag(it, op->field_index);
+                    const ecs_table_record_t *tr =
+                        it->trs[op->field_index];
+                    ECS_CONST_CAST(int16_t*, it->columns)[op->field_index] =
+                        tr ? tr->column : -1;
                     impl->row --;
                     return true;
                 }
@@ -88681,6 +88766,7 @@ bool flecs_query_up_with(
                      * This helps distinguish between tables with a Parent 
                      * component that own the component vs. those that don't. */
                     it->sources[op->field_index] = EcsWildcard;
+                    ECS_CONST_CAST(int16_t*, it->columns)[op->field_index] = -1;
                     return true;
                 }
 
@@ -88721,7 +88807,7 @@ next_row:
 
     it->sources[op->field_index] = flecs_entities_get_alive(
         ctx->world, up->src);
-    it->trs[op->field_index] = up->tr;
+    flecs_query_it_set_tr(it, op->field_index, up->tr);
     it->ids[op->field_index] = up->id;
     if (op->match_flags & EcsTermMatchAny) {
         it->ids[op->field_index] = ecs_pair(impl->trav, EcsWildcard);
@@ -88771,10 +88857,14 @@ bool flecs_query_self_up_with(
         }
 
         if (result) {
-            /* Table has component, no need to traverse */            
+            /* Table has component, no need to traverse */
             if (flecs_query_ref_flags(op->flags, EcsQuerySrc) & EcsQueryIsVar) {
                 /* Matching self, so set sources to 0 */
                 it->sources[op->field_index] = 0;
+                flecs_reset_source_set_flag(it, op->field_index);
+                const ecs_table_record_t *tr = it->trs[op->field_index];
+                ECS_CONST_CAST(int16_t*, it->columns)[op->field_index] =
+                    tr ? tr->column : -1;
             }
             return true;
         }
@@ -88865,6 +88955,7 @@ void flecs_set_source_set_flag(
 {
     ecs_assert(field_index != -1, ECS_INTERNAL_ERROR, NULL);
     ECS_TERMSET_SET(it->up_fields, 1u << field_index);
+    ECS_CONST_CAST(int16_t*, it->columns)[field_index] = -1;
 }
 
 ecs_table_range_t flecs_query_var_get_range(
@@ -89163,6 +89254,9 @@ void flecs_query_it_set_tr(
 {
     ecs_assert(field_index >= 0, ECS_INTERNAL_ERROR, NULL);
     it->trs[field_index] = tr;
+    ECS_CONST_CAST(int16_t*, it->columns)[field_index] =
+        (tr && !it->sources[field_index] &&
+            !(it->up_fields & (1llu << field_index))) ? tr->column : -1;
 }
 
 static
@@ -90100,6 +90194,7 @@ bool flecs_query_trivial_search(
             continue;
         }
 
+        int16_t *columns = ECS_CONST_CAST(int16_t*, it->columns);
         for (t = op_ctx->first_to_eval; t < term_count; t ++) {
             if (!(term_set & (1llu << t))) {
                 continue;
@@ -90118,6 +90213,7 @@ bool flecs_query_trivial_search(
             }
 
             it->trs[term->field_index] = tr_with;
+            columns[term->field_index] = tr_with->column;
         }
 
         if (t == term_count) {
@@ -90125,6 +90221,7 @@ bool flecs_query_trivial_search(
             ctx->vars[0].range.count = 0;
             ctx->vars[0].range.offset = 0;
             it->trs[op_ctx->start_from] = tr;
+            columns[op_ctx->start_from] = tr->column;
             break;
         }
     } while (true);
@@ -90166,6 +90263,7 @@ next:
             goto next;
         }
 
+        int16_t *columns = ECS_CONST_CAST(int16_t*, it->columns);
         for (t = 1; t < term_count; t ++) {
             ecs_component_record_t *cr = flecs_components_get(ctx->world, ids[t]);
             if (!cr) {
@@ -90179,12 +90277,14 @@ next:
             }
 
             it->trs[t] = tr_with;
+            columns[t] = tr_with->column;
         }
 
         it->table = table;
         it->count = ecs_table_count(table);
         it->entities = ecs_table_entities(table);
         it->trs[0] = tr;
+        columns[0] = tr->column;
     }
 
     return true;
@@ -90212,6 +90312,7 @@ bool flecs_query_trivial_test(
             return false;
         }
 
+        int16_t *columns = ECS_CONST_CAST(int16_t*, it->columns);
         for (t = 0; t < term_count; t ++) {
             if (!(term_set & (1llu << t))) {
                 continue;
@@ -90229,6 +90330,7 @@ bool flecs_query_trivial_test(
             }
 
             it->trs[term->field_index] = tr;
+            columns[term->field_index] = tr->column;
         }
 
         it->entities = ecs_table_entities(table);

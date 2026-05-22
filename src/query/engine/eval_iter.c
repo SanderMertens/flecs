@@ -156,6 +156,30 @@ void flecs_query_self_change_detection(
     flecs_query_change_detection(it, qit, impl);
 }
 
+#ifdef FLECS_DEBUG
+static
+void flecs_iter_assert_columns(
+    ecs_iter_t *it)
+{
+    const int16_t *columns = it->columns;
+    const ecs_table_record_t **trs = it->trs;
+    const ecs_entity_t *sources = it->sources;
+    ecs_termset_t up_fields = it->up_fields;
+    int8_t i, count = it->field_count;
+    for (i = 0; i < count; i ++) {
+        const ecs_table_record_t *tr = trs[i];
+        int16_t expected = (tr && !sources[i] && !(up_fields & (1llu << i)))
+            ? tr->column : -1;
+        ecs_assert(columns[i] == expected, ECS_INTERNAL_ERROR,
+            "it->columns[%d]=%d does not match expected %d "
+            "(tr=%p src=%llu up=%d)",
+            i, columns[i], expected, (const void*)tr,
+            (unsigned long long)sources[i],
+            (int)((up_fields >> i) & 1));
+    }
+}
+#endif
+
 bool ecs_query_next(
     ecs_iter_t *it)
 {
@@ -242,13 +266,16 @@ bool ecs_query_next(
 
             /* Default iterator mode. This enters the query VM dispatch loop. */
             if (flecs_query_run_until(
-                redo, &ctx, ops, -1, qit->op, impl->op_count - 1)) 
+                redo, &ctx, ops, -1, qit->op, impl->op_count - 1))
             {
-                ecs_assert(ops[ctx.op_index].kind == EcsQueryYield, 
+                ecs_assert(ops[ctx.op_index].kind == EcsQueryYield,
                     ECS_INTERNAL_ERROR, NULL);
                 flecs_query_set_iter_this(it, &ctx);
                 ecs_assert(it->count >= 0, ECS_INTERNAL_ERROR, NULL);
                 qit->op = flecs_itolbl(ctx.op_index - 1);
+#ifdef FLECS_DEBUG
+                flecs_iter_assert_columns(it);
+#endif
                 goto yield;
             }
         }

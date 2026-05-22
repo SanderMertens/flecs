@@ -437,7 +437,7 @@ void flecs_query_cache_on_event(
         if (flecs_query_cache_match_table(world, cache, table)) {
             if (ecs_should_log_3()) {
                 char *table_str = ecs_table_str(world, table);
-                ecs_dbg_3("query cache event: %s for [%s]", 
+                ecs_dbg_3("query cache event: %s for [%s]",
                     ecs_get_name(world, event),
                     table_str);
                 ecs_os_free(table_str);
@@ -478,12 +478,14 @@ void flecs_query_cache_allocators_init(
 {
     int32_t field_count = cache->query->field_count;
     if (field_count) {
-        flecs_ballocator_init(&cache->allocators.pointers, 
+        flecs_ballocator_init(&cache->allocators.pointers,
             field_count * ECS_SIZEOF(ecs_table_record_t*));
-        flecs_ballocator_init(&cache->allocators.ids, 
+        flecs_ballocator_init(&cache->allocators.ids,
             field_count * ECS_SIZEOF(ecs_id_t));
         flecs_ballocator_init(&cache->allocators.monitors,
             (1 + field_count) * ECS_SIZEOF(int32_t));
+        flecs_ballocator_init(&cache->allocators.columns,
+            field_count * ECS_SIZEOF(int16_t));
     }
 }
 
@@ -497,6 +499,7 @@ void flecs_query_cache_allocators_fini(
         flecs_ballocator_fini(&cache->allocators.pointers);
         flecs_ballocator_fini(&cache->allocators.ids);
         flecs_ballocator_fini(&cache->allocators.monitors);
+        flecs_ballocator_fini(&cache->allocators.columns);
     }
 }
 

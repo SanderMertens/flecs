@@ -259,7 +259,7 @@ next:
                 goto next;
             }
 
-            it->trs[field_index] = tr;
+            flecs_query_it_set_tr(it, field_index, tr);
             flecs_query_var_set_range(op, op->src.var, table, 0, 0, ctx);
             goto done;
         }
@@ -740,6 +740,7 @@ retry:
         if (result) {
             /* Signal this table needs post processing */
             ctx->it->sources[op->field_index] = EcsWildcard;
+            ECS_CONST_CAST(int16_t*, ctx->it->columns)[op->field_index] = -1;
         }
 
         return result;

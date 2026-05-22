@@ -1633,6 +1633,7 @@ void Traversal_this_or_w_self_up_childof_2(void);
 void Traversal_this_or_w_self_up_childof_w_tag(void);
 void Traversal_this_written_or_w_self_up_childof(void);
 void Traversal_up_w_isa_component_recycled(void);
+void Traversal_up_after_pair_target_delete(void);
 
 // Testsuite 'Cascade'
 void Cascade_parent_cascade(void);
@@ -9205,6 +9206,10 @@ bake_test_case Traversal_testcases[] = {
     {
         "up_w_isa_component_recycled",
         Traversal_up_w_isa_component_recycled
+    },
+    {
+        "up_after_pair_target_delete",
+        Traversal_up_after_pair_target_delete
     }
 };
 
@@ -13963,7 +13968,7 @@ static bake_test_suite suites[] = {
         "Traversal",
         Traversal_setup,
         NULL,
-        184,
+        185,
         Traversal_testcases,
         1,
         Traversal_params
