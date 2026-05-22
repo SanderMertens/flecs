@@ -1823,6 +1823,7 @@ void Cached_this_self_up_w_3_levels_ppc_after_query(void);
 void Cached_this_self_up_w_3_levels_ppp_after_query(void);
 void Cached_rematch_after_reparent_parent(void);
 void Cached_no_rematch_after_reparent_child(void);
+void Cached_filter_term_not_term_table_recycle(void);
 
 // Testsuite 'ChangeDetection'
 void ChangeDetection_query_changed_after_new(void);
@@ -9954,6 +9955,10 @@ bake_test_case Cached_testcases[] = {
     {
         "no_rematch_after_reparent_child",
         Cached_no_rematch_after_reparent_child
+    },
+    {
+        "filter_term_not_term_table_recycle",
+        Cached_filter_term_not_term_table_recycle
     }
 };
 
@@ -13974,7 +13979,7 @@ static bake_test_suite suites[] = {
         "Cached",
         NULL,
         NULL,
-        152,
+        153,
         Cached_testcases
     },
     {
