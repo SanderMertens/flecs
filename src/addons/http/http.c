@@ -937,7 +937,17 @@ void http_recv_connection(
     }
 
     if (retries == ECS_HTTP_REQUEST_RECV_RETRY) {
-        http_close(&sock);
+        ecs_os_mutex_lock(srv->lock);
+        bool still_owns_sock = conn->pub.id == conn_id;
+        if (still_owns_sock) {
+            conn->sock = HTTP_SOCKET_INVALID;
+        }
+        ecs_os_mutex_unlock(srv->lock);
+        if (still_owns_sock) {
+            http_close(&sock);
+        } else {
+            sock = HTTP_SOCKET_INVALID;
+        }
     }
 
 done:
