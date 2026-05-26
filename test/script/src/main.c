@@ -173,6 +173,7 @@ void Eval_name_annotation(void);
 void Eval_name_annotation_crlf(void);
 void Eval_link_annotation(void);
 void Eval_color_annotation(void);
+void Eval_uuid_annotation(void);
 void Eval_multiple_annotations(void);
 void Eval_annotation_w_trailing_space(void);
 void Eval_multiline_string(void);
@@ -2127,6 +2128,10 @@ bake_test_case Eval_testcases[] = {
     {
         "color_annotation",
         Eval_color_annotation
+    },
+    {
+        "uuid_annotation",
+        Eval_uuid_annotation
     },
     {
         "multiple_annotations",
@@ -7275,7 +7280,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        459,
+        460,
         Eval_testcases
     },
     {

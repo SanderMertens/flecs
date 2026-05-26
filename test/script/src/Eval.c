@@ -4868,6 +4868,34 @@ void Eval_color_annotation(void) {
     ecs_fini(world);
 }
 
+void Eval_uuid_annotation(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "@uuid e02cf821-96cf-4a1c-bcfd-94fd0a1343bc"
+    LINE "Foo {}"
+    LINE "Bar {}"
+    LINE ""
+    LINE "@uuid 11111111-2222-3333-4444-555555555555"
+    LINE "Baz {}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    ecs_entity_t baz = ecs_lookup(world, "Baz");
+
+    test_assert(foo != 0);
+    test_assert(bar != 0);
+    test_assert(baz != 0);
+
+    test_str(ecs_doc_get_uuid(world, foo), "e02cf821-96cf-4a1c-bcfd-94fd0a1343bc");
+    test_str(ecs_doc_get_uuid(world, bar), NULL);
+    test_str(ecs_doc_get_uuid(world, baz), "11111111-2222-3333-4444-555555555555");
+
+    ecs_fini(world);
+}
+
 void Eval_multiple_annotations(void) {
     ecs_world_t *world = ecs_init();
 
@@ -4876,6 +4904,7 @@ void Eval_multiple_annotations(void) {
     LINE "@name A name"
     LINE "@link A link"
     LINE "@color #554433"
+    LINE "@uuid e02cf821-96cf-4a1c-bcfd-94fd0a1343bc"
     LINE "Foo {}"
     LINE "Bar {}"
     LINE ""
@@ -4897,6 +4926,7 @@ void Eval_multiple_annotations(void) {
     test_str(ecs_doc_get_name(world, foo), "A name");
     test_str(ecs_doc_get_link(world, foo), "A link");
     test_str(ecs_doc_get_color(world, foo), "#554433");
+    test_str(ecs_doc_get_uuid(world, foo), "e02cf821-96cf-4a1c-bcfd-94fd0a1343bc");
     test_str(ecs_doc_get_brief(world, bar), NULL);
     test_str(ecs_doc_get_brief(world, baz), "Another description");
     test_str(ecs_doc_get_name(world, baz), "Another name");

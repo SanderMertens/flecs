@@ -708,6 +708,9 @@ int flecs_script_apply_annot(
     if (!ecs_os_strcmp(annot->name, "color")) {
         ecs_doc_set_color(v->world, e, annot->expr);
     } else
+    if (!ecs_os_strcmp(annot->name, "uuid")) {
+        ecs_doc_set_uuid(v->world, e, annot->expr);
+    } else
     if (!ecs_os_strcmp(annot->name, "tree")) {
         if (!ecs_os_strcmp(annot->expr, "Parent")) {
             flecs_script_apply_non_fragmenting_childof(v->world, node, true);
