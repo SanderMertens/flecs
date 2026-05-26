@@ -5936,6 +5936,19 @@ size_t ecs_field_size(
     const ecs_iter_t *it,
     int8_t index);
 
+/** Return the storage stride of a field.
+ * Like ecs_field_size(), but for a field matched through component inheritance
+ * returns the size of the stored (derived) component, i.e. the array stride.
+ *
+ * @param it The iterator.
+ * @param index The index of the field in the iterator.
+ * @return The storage stride for the field.
+ */
+FLECS_API
+size_t ecs_field_stride(
+    const ecs_iter_t *it,
+    int8_t index);
+
 /** Test whether the field is matched on self.
  * This operation returns whether the field is matched on the currently iterated
  * entity. This function will return false when the field is owned by another

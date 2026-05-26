@@ -109,6 +109,8 @@ typedef struct ecs_table__t {
 
     struct ecs_table_record_t *records; /* Array with table records */
 
+    ecs_vec_t inherited_records;
+
 #ifdef FLECS_DEBUG_INFO
     /* Fields used for debug visualization */
     struct {
@@ -296,6 +298,19 @@ void flecs_table_keep(
 
 void flecs_table_release(
     ecs_table_t *table);
+
+void flecs_table_register_inherited(
+    ecs_world_t *world,
+    ecs_table_t *table);
+
+void flecs_table_unregister_inherited(
+    ecs_world_t *world,
+    ecs_table_t *table);
+
+void flecs_inheritance_on_change(
+    ecs_world_t *world,
+    ecs_entity_t component,
+    ecs_table_t *override_table);
 
 ecs_component_record_t* flecs_table_get_childof_cr(
     const ecs_world_t *world,

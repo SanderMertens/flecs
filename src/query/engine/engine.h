@@ -114,6 +114,12 @@ int16_t flecs_query_next_column(
     ecs_id_t id,
     int32_t column);
 
+int16_t flecs_query_next_inherited_column(
+    const ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_id_t base,
+    int32_t column);
+
 void flecs_query_it_set_tr(
     ecs_iter_t *it,
     int32_t field_index,

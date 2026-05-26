@@ -850,15 +850,11 @@ int flecs_term_finalize(
             }
         }
 
-        /* Only enable inheritance for ids which are inherited from at the time
-         * of query creation. To force component inheritance to be evaluated,
-         * an application can explicitly set traversal flags. */
-        if (flecs_components_get(world, ecs_pair(EcsIsA, first->id)) || 
+        (void)first_is_self;
+        if (flecs_components_get(world, ecs_pair(EcsIsA, first->id)) ||
             (cr_flags & EcsIdInheritable) || first_can_isa)
         {
-            if (!first_is_self) {
-                term->flags_ |= EcsTermIdInherited;
-            }
+            term->flags_ |= EcsTermIdInherited;
         } else {
 #ifdef FLECS_DEBUG
             if (!first_is_self) {
@@ -1156,6 +1152,10 @@ int flecs_query_finalize_terms(
 
         if (flecs_term_finalize(world, term, &ctx)) {
             return -1;
+        }
+
+        if (term->flags_ & EcsTermIdInherited) {
+            q->flags |= EcsQueryHasComponentInheritance;
         }
 
         if (term->flags_ & EcsTermNonFragmentingChildOf) {
@@ -1833,6 +1833,7 @@ bool flecs_query_finalize_simple(
 
         if (flecs_components_get(world, ecs_pair(EcsIsA, first)) != NULL) {
             term->flags_ |= EcsTermIdInherited;
+            q->flags |= EcsQueryHasComponentInheritance;
             cacheable = false; trivial = false;
         }
 

@@ -870,7 +870,12 @@
                 "optional_module",
                 "has_entity",
                 "has_table",
-                "has_range"
+                "has_range",
+                "component_inheritance_each",
+                "component_inheritance_each_multiple_derived",
+                "component_inheritance_each_entity",
+                "component_inheritance_base_field",
+                "component_inheritance_field_asserts"
             ]
         }, {
             "id": "QueryBuilder",

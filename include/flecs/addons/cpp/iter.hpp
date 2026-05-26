@@ -307,6 +307,28 @@ public:
     template <typename T, typename A = actual_type_t<T>, if_not_t<is_const_v<T>> = 0>
     flecs::field<A> field(int8_t index) const;
 
+    /** Get access to a field matched through component inheritance.
+     * Like field(), but returns a base_field that iterates with a runtime
+     * stride, so it works when the matched (derived) component is larger than T.
+     * Unlike field(), this does not assert when the field is of type T or a
+     * subtype of T.
+     *
+     * @tparam T Base type of the field.
+     * @param index The field index.
+     * @return The field data.
+     */
+    template <typename T, typename A = actual_type_t<T>, if_t<is_const_v<T>> = 0>
+    flecs::base_field<A> base_field(int8_t index) const;
+
+    /** Get read/write access to a field matched through component inheritance.
+     *
+     * @tparam T Base type of the field.
+     * @param index The field index.
+     * @return The field data.
+     */
+    template <typename T, typename A = actual_type_t<T>, if_not_t<is_const_v<T>> = 0>
+    flecs::base_field<A> base_field(int8_t index) const;
+
     /** Get unchecked access to field data.
      * Unchecked access is required when a system does not know the type of a
      * field at compile time.
@@ -509,6 +531,31 @@ private:
         return flecs::field<A>(
             static_cast<T*>(ecs_field_w_size(iter_, sizeof(A), index)),
             count, is_shared);
+    }
+
+    /* Get field matched through component inheritance. Checks the queried
+     * (base) type matches T, not the (possibly derived) matched id, so a field
+     * of type T or a subtype of T is accepted. Uses a runtime stride. */
+    template <typename T, typename A = actual_type_t<T>>
+    flecs::base_field<T> get_base_field(int8_t index) const {
+
+#ifndef FLECS_NDEBUG
+        ecs_assert(ecs_field_size(iter_, index) == sizeof(A),
+            ECS_COLUMN_TYPE_MISMATCH, NULL);
+#endif
+
+        size_t count;
+        bool is_shared = !ecs_field_is_self(iter_, index);
+
+        if (is_shared) {
+            count = 1;
+        } else {
+            count = static_cast<size_t>(iter_->count);
+        }
+
+        return flecs::base_field<A>(
+            static_cast<T*>(ecs_field_w_size(iter_, sizeof(A), index)),
+            ecs_field_stride(iter_, index), count, is_shared);
     }
 
     /* Get field, check if correct type is used. */

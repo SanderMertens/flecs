@@ -486,6 +486,7 @@ extern "C" {
 #define EcsIterHasCondSet              (1u << 6u)  /* Does the iterator have conditionally set fields. */
 #define EcsIterProfile                 (1u << 7u)  /* Profile iterator performance. */
 #define EcsIterTrivialSearch           (1u << 8u)  /* Trivial iterator mode. */
+#define EcsIterComponentInheritance    (1u << 9u)  /* Query matches via component inheritance. */
 #define EcsIterTrivialTest             (1u << 11u) /* Trivial test mode (constrained $this). */
 #define EcsIterTrivialCached           (1u << 14u) /* Trivial search for cached query. */
 #define EcsIterCached                  (1u << 15u) /* Cached query. */
@@ -531,6 +532,7 @@ extern "C" {
 #define EcsQueryNested                (1u << 29u) /* Query created by a query (for observer, cache). */
 #define EcsQueryCacheWithFilter       (1u << 30u)
 #define EcsQueryValid                 (1u << 31u)
+#define EcsQueryHasComponentInheritance (1u << 5u)  /* Query matches via component inheritance (low free bit; 11..31 exhausted). */
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Term flags (used by ecs_term_t::flags_)
@@ -10813,6 +10815,19 @@ ecs_entity_t ecs_field_src(
  */
 FLECS_API
 size_t ecs_field_size(
+    const ecs_iter_t *it,
+    int8_t index);
+
+/** Return the storage stride of a field.
+ * Like ecs_field_size(), but for a field matched through component inheritance
+ * returns the size of the stored (derived) component, i.e. the array stride.
+ *
+ * @param it The iterator.
+ * @param index The index of the field in the iterator.
+ * @return The storage stride for the field.
+ */
+FLECS_API
+size_t ecs_field_stride(
     const ecs_iter_t *it,
     int8_t index);
 
@@ -26514,6 +26529,40 @@ protected:
     bool is_shared_;
 };
 
+/** Wrapper class around a field matched through component inheritance.
+ *
+ * Same interface as field, but uses a runtime stride so it can iterate a field
+ * whose stored (derived) component is larger than T. Unlike field, this does
+ * not assert when the matched id is a subtype of T.
+ *
+ * @tparam T Base component type of the field.
+ *
+ * @ingroup cpp_iterator
+ */
+template <typename T>
+struct base_field {
+    static_assert(std::is_empty<T>::value == false,
+        "invalid type for field, cannot iterate empty type");
+
+    base_field(T* array, size_t stride, size_t count, bool is_shared = false)
+        : data_(array)
+        , stride_(stride)
+        , count_(count)
+        , is_shared_(is_shared) {}
+
+    base_field(iter &iter, int field);
+
+    T& operator[](size_t index) const;
+    T& operator*() const;
+    T* operator->() const;
+
+protected:
+    T* data_;
+    size_t stride_;
+    size_t count_;
+    bool is_shared_;
+};
+
 } // namespace flecs
 
 /** @} */
@@ -26822,6 +26871,28 @@ public:
     template <typename T, typename A = actual_type_t<T>, if_not_t<is_const_v<T>> = 0>
     flecs::field<A> field(int8_t index) const;
 
+    /** Get access to a field matched through component inheritance.
+     * Like field(), but returns a base_field that iterates with a runtime
+     * stride, so it works when the matched (derived) component is larger than T.
+     * Unlike field(), this does not assert when the field is of type T or a
+     * subtype of T.
+     *
+     * @tparam T Base type of the field.
+     * @param index The field index.
+     * @return The field data.
+     */
+    template <typename T, typename A = actual_type_t<T>, if_t<is_const_v<T>> = 0>
+    flecs::base_field<A> base_field(int8_t index) const;
+
+    /** Get read/write access to a field matched through component inheritance.
+     *
+     * @tparam T Base type of the field.
+     * @param index The field index.
+     * @return The field data.
+     */
+    template <typename T, typename A = actual_type_t<T>, if_not_t<is_const_v<T>> = 0>
+    flecs::base_field<A> base_field(int8_t index) const;
+
     /** Get unchecked access to field data.
      * Unchecked access is required when a system does not know the type of a
      * field at compile time.
@@ -27024,6 +27095,31 @@ private:
         return flecs::field<A>(
             static_cast<T*>(ecs_field_w_size(iter_, sizeof(A), index)),
             count, is_shared);
+    }
+
+    /* Get field matched through component inheritance. Checks the queried
+     * (base) type matches T, not the (possibly derived) matched id, so a field
+     * of type T or a subtype of T is accepted. Uses a runtime stride. */
+    template <typename T, typename A = actual_type_t<T>>
+    flecs::base_field<T> get_base_field(int8_t index) const {
+
+#ifndef FLECS_NDEBUG
+        ecs_assert(ecs_field_size(iter_, index) == sizeof(A),
+            ECS_COLUMN_TYPE_MISMATCH, NULL);
+#endif
+
+        size_t count;
+        bool is_shared = !ecs_field_is_self(iter_, index);
+
+        if (is_shared) {
+            count = 1;
+        } else {
+            count = static_cast<size_t>(iter_->count);
+        }
+
+        return flecs::base_field<A>(
+            static_cast<T*>(ecs_field_w_size(iter_, sizeof(A), index)),
+            ecs_field_stride(iter_, index), count, is_shared);
     }
 
     /* Get field, check if correct type is used. */
@@ -30930,6 +31026,7 @@ struct component_binding_ctx {
 // Utility to convert a template argument pack to an array of term pointers.
 struct field_ptr {
     void *ptr = nullptr;
+    int32_t stride = 0;
     int8_t index = 0;
     bool is_ref = false;
     bool is_row = false;
@@ -30947,9 +31044,30 @@ struct field_ptrs {
         populate_self_impl(iter, std::index_sequence_for<Components...>{});
     }
 
+    void populate_stride(const ecs_iter_t *iter) {
+        populate_stride_impl(iter, std::index_sequence_for<Components...>{});
+    }
+
     array fields_;
 
 private:
+    template <typename T>
+    void populate_stride_field(const ecs_iter_t *iter, size_t index) {
+        using A = remove_pointer_t<actual_type_t<T>>;
+        if constexpr (!is_empty_v<A>) {
+            fields_[index].stride = static_cast<int32_t>(
+                ecs_field_stride(iter, static_cast<int8_t>(index)));
+        } else {
+            (void)iter; (void)index;
+        }
+    }
+
+    template <size_t... Is>
+    void populate_stride_impl(const ecs_iter_t *iter, std::index_sequence<Is...>) {
+        (void)iter;
+        (populate_stride_field<Components>(iter, Is), ...);
+    }
+
     template <typename T>
     void populate_field(const ecs_iter_t *iter, size_t index) {
         using A = remove_pointer_t<actual_type_t<T>>;
@@ -31075,6 +31193,70 @@ struct each_field<T, if_t< is_pointer<T>::value &&
     }
 };
 
+template <typename T, typename = int>
+struct each_field_strided { };
+
+template <typename T>
+struct each_field_strided<T, if_t< !is_pointer<T>::value &&
+        !is_empty<actual_type_t<T>>::value && is_actual<T>::value > >
+    : each_column_base
+{
+    each_field_strided(const flecs::iter_t*, _::field_ptr& field, size_t row)
+        : each_column_base(field, row) { }
+
+    T& get_row() {
+        return *reinterpret_cast<T*>(static_cast<char*>(this->field_.ptr) +
+            this->row_ * static_cast<size_t>(this->field_.stride));
+    }
+};
+
+template <typename T>
+struct each_field_strided<T, if_t< !is_pointer<T>::value &&
+        !is_empty<actual_type_t<T>>::value && !is_actual<T>::value> >
+    : each_column_base
+{
+    each_field_strided(const flecs::iter_t*, _::field_ptr& field, size_t row)
+        : each_column_base(field, row) { }
+
+    T get_row() {
+        return *reinterpret_cast<actual_type_t<T>*>(
+            static_cast<char*>(this->field_.ptr) +
+                this->row_ * static_cast<size_t>(this->field_.stride));
+    }
+};
+
+template <typename T>
+struct each_field_strided<T, if_t< is_empty<actual_type_t<T>>::value &&
+        !is_pointer<T>::value > >
+    : each_column_base
+{
+    each_field_strided(const flecs::iter_t*, _::field_ptr& field, size_t row)
+        : each_column_base(field, row) { }
+
+    T get_row() {
+        return actual_type_t<T>();
+    }
+};
+
+template <typename T>
+struct each_field_strided<T, if_t< is_pointer<T>::value &&
+        !is_empty<actual_type_t<T>>::value > >
+    : each_column_base
+{
+    each_field_strided(const flecs::iter_t*, _::field_ptr& field, size_t row)
+        : each_column_base(field, row) { }
+
+    actual_type_t<T> get_row() {
+        if (this->field_.ptr) {
+            return reinterpret_cast<actual_type_t<T>>(
+                static_cast<char*>(this->field_.ptr) +
+                    this->row_ * static_cast<size_t>(this->field_.stride));
+        } else {
+            return nullptr;
+        }
+    }
+};
+
 // If the query contains component references to other entities, check if the
 // current argument is one.
 template <typename T, typename = int>
@@ -31096,7 +31278,25 @@ struct each_ref_field : public each_field<T> {
         }
 
         if (field.is_row) {
-            field.ptr = ecs_field_at_w_size(iter, sizeof(A), field.index, 
+            field.ptr = ecs_field_at_w_size(iter, sizeof(A), field.index,
+                static_cast<int32_t>(row));
+        }
+    }
+};
+
+template <typename T, typename = int>
+struct each_ref_field_strided : public each_field_strided<T> {
+    using A = remove_pointer_t<actual_type_t<T>>;
+
+    each_ref_field_strided(const flecs::iter_t *iter, _::field_ptr& field, size_t row)
+        : each_field_strided<T>(iter, field, row) {
+
+        if (field.is_ref) {
+            this->row_ = 0;
+        }
+
+        if (field.is_row) {
+            field.ptr = ecs_field_at_w_size(iter, sizeof(A), field.index,
                 static_cast<int32_t>(row));
         }
     }
@@ -31118,6 +31318,11 @@ struct each_delegate : public delegate {
     // function has just constructed the delegate, such as what happens when
     // iterating a query.
     void invoke(ecs_iter_t *iter) const {
+        if (iter->flags & EcsIterComponentInheritance) {
+            invoke_inherited(iter);
+            return;
+        }
+
         field_ptrs<Components...> terms;
 
         iter->flags |= EcsIterCppEach;
@@ -31128,6 +31333,22 @@ struct each_delegate : public delegate {
         } else {
             terms.populate_self(iter);
             invoke_unpack< each_field >(iter, func_, 0, terms.fields_);
+        }
+    }
+
+    void invoke_inherited(ecs_iter_t *iter) const {
+        field_ptrs<Components...> terms;
+
+        iter->flags |= EcsIterCppEach;
+
+        if (iter->ref_fields | iter->up_fields) {
+            terms.populate(iter);
+            terms.populate_stride(iter);
+            invoke_unpack< each_ref_field_strided >(iter, func_, 0, terms.fields_);
+        } else {
+            terms.populate_self(iter);
+            terms.populate_stride(iter);
+            invoke_unpack< each_field_strided >(iter, func_, 0, terms.fields_);
         }
     }
 
@@ -31287,6 +31508,10 @@ struct find_delegate : public delegate {
     // function has just constructed the delegate, such as what happens when
     // iterating a query.
     flecs::entity invoke(ecs_iter_t *iter) const {
+        if (iter->flags & EcsIterComponentInheritance) {
+            return invoke_inherited(iter);
+        }
+
         field_ptrs<Components...> terms;
 
         iter->flags |= EcsIterCppEach;
@@ -31297,6 +31522,22 @@ struct find_delegate : public delegate {
         } else {
             terms.populate_self(iter);
             return invoke_callback< each_field >(iter, func_, 0, terms.fields_);
+        }
+    }
+
+    flecs::entity invoke_inherited(ecs_iter_t *iter) const {
+        field_ptrs<Components...> terms;
+
+        iter->flags |= EcsIterCppEach;
+
+        if (iter->ref_fields | iter->up_fields) {
+            terms.populate(iter);
+            terms.populate_stride(iter);
+            return invoke_callback< each_ref_field_strided >(iter, func_, 0, terms.fields_);
+        } else {
+            terms.populate_self(iter);
+            terms.populate_stride(iter);
+            return invoke_callback< each_field_strided >(iter, func_, 0, terms.fields_);
         }
     }
 
@@ -32640,6 +32881,42 @@ struct component : untyped_component {
     {
         world_ = world;
         id_ = _::type<T>::register_id(world, name, allow_tag, true, true, id);
+    }
+
+    /** Mark this component as inheriting from a base component.
+     *
+     * @tparam Base The base component.
+     * @return Reference to self for chaining.
+     */
+    template <typename Base>
+    component<T>& is_a() {
+        if constexpr (std::is_base_of<Base, T>::value &&
+            !std::is_same<Base, T>::value)
+        {
+            alignas(T) static char storage[sizeof(T)];
+            T* derived_ptr = reinterpret_cast<T*>(&storage[0]);
+            Base* base_ptr = static_cast<Base*>(derived_ptr);
+            ecs_assert(
+                reinterpret_cast<char*>(base_ptr) ==
+                    reinterpret_cast<char*>(derived_ptr),
+                ECS_INVALID_OPERATION,
+                "component inheritance requires the base component to be at "
+                "offset 0 in the derived component (multiple/virtual "
+                "inheritance is not supported)");
+            (void)base_ptr;
+        }
+        this->add(flecs::IsA, _::type<Base>::id(this->world_));
+        return *this;
+    }
+
+    /** Mark this component as inheriting from a base component.
+     *
+     * @param base The base component id.
+     * @return Reference to self for chaining.
+     */
+    component<T>& is_a(flecs::entity_t base) {
+        this->add(flecs::IsA, base);
+        return *this;
     }
 
     /** Register on_add hook.
@@ -38299,6 +38576,42 @@ T* field<T>::operator->() const {
     return data_;
 }
 
+template <typename T>
+inline base_field<T>::base_field(iter &iter, int32_t index) {
+    *this = iter.base_field<T>(index);
+}
+
+template <typename T>
+T& base_field<T>::operator[](size_t index) const {
+    ecs_assert(data_ != nullptr, ECS_INVALID_OPERATION,
+        "invalid nullptr dereference of component type %s",
+            _::type_name<T>());
+    ecs_assert(index < count_, ECS_COLUMN_INDEX_OUT_OF_RANGE,
+        "index %d out of range for array of component type %s",
+            index, _::type_name<T>());
+    ecs_assert(!index || !is_shared_, ECS_INVALID_PARAMETER,
+        "non-zero index invalid for shared field of component type %s",
+            _::type_name<T>());
+    return *reinterpret_cast<T*>(
+        reinterpret_cast<char*>(data_) + index * stride_);
+}
+
+template <typename T>
+T& base_field<T>::operator*() const {
+    ecs_assert(data_ != nullptr, ECS_INVALID_OPERATION,
+        "invalid nullptr dereference of component type %s",
+            _::type_name<T>());
+    return *data_;
+}
+
+template <typename T>
+T* base_field<T>::operator->() const {
+    ecs_assert(data_ != nullptr, ECS_INVALID_OPERATION,
+        "invalid nullptr dereference of component type %s",
+            _::type_name<T>());
+    return data_;
+}
+
 }
 
 #pragma once
@@ -38393,6 +38706,28 @@ inline flecs::field<A> iter::field(int8_t index) const {
     ecs_assert(!ecs_field_is_readonly(iter_, index),
         ECS_ACCESS_VIOLATION, NULL);
     return get_field<A>(index);
+}
+
+/** Get base field data for a const component type. */
+template <typename T, typename A, if_t< is_const_v<T> >>
+inline flecs::base_field<A> iter::base_field(int8_t index) const {
+    ecs_assert(!(iter_->flags & EcsIterCppEach) ||
+               ecs_field_src(iter_, index) != 0, ECS_INVALID_OPERATION,
+        "cannot .base_field from .each, use .field_at<%s>(%d, row) instead",
+            _::type_name<T>(), index);
+    return get_base_field<A>(index);
+}
+
+/** Get base field data for a mutable component type. */
+template <typename T, typename A, if_not_t< is_const_v<T> >>
+inline flecs::base_field<A> iter::base_field(int8_t index) const {
+    ecs_assert(!(iter_->flags & EcsIterCppEach) ||
+               ecs_field_src(iter_, index) != 0, ECS_INVALID_OPERATION,
+        "cannot .base_field from .each, use .field_at<%s>(%d, row) instead",
+            _::type_name<T>(), index);
+    ecs_assert(!ecs_field_is_readonly(iter_, index),
+        ECS_ACCESS_VIOLATION, NULL);
+    return get_base_field<A>(index);
 }
 
 /** Get the value of a variable by ID. */

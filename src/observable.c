@@ -1455,6 +1455,22 @@ repeat_event:
                      * any new reachable components. */
                     er_fwd = er_onset;
                 }
+
+                if (!table_event) {
+                    const ecs_entity_t *entities = ecs_table_entities(table);
+                    int32_t e;
+                    if (event == EcsOnAdd) {
+                        for (e = 0; e < count; e ++) {
+                            flecs_inheritance_on_change(
+                                world, entities[offset + e], NULL);
+                        }
+                    } else if ((event == EcsOnRemove) && other_table) {
+                        for (e = 0; e < count; e ++) {
+                            flecs_inheritance_on_change(
+                                world, entities[offset + e], other_table);
+                        }
+                    }
+                }
             }
 
             /* Forward events for components from pair target */

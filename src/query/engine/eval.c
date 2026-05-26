@@ -17,6 +17,14 @@ bool flecs_query_dispatch(
     bool redo,
     ecs_query_run_ctx_t *ctx);
 
+static
+bool flecs_query_record_inherited(
+    const ecs_table_t *table,
+    const ecs_table_record_t *tr)
+{
+    return !ecs_id_match(table->type.array[tr->index], tr->hdr.cr->id);
+}
+
 bool flecs_query_select_w_id(
     const ecs_query_op_t *op,
     bool redo,
@@ -63,7 +71,13 @@ repeat:
         tr = (const ecs_table_record_t*)op_ctx->it.cur;
         ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL);
         table = tr->hdr.table;
-        op_ctx->column = flecs_query_next_column(table, cr->id, op_ctx->column);
+        if (flecs_query_record_inherited(table, tr)) {
+            op_ctx->column = flecs_query_next_inherited_column(
+                ctx->world, table, cr->id, op_ctx->column);
+        } else {
+            op_ctx->column = flecs_query_next_column(
+                table, cr->id, op_ctx->column);
+        }
         op_ctx->remaining --;
     }
 
@@ -120,14 +134,21 @@ bool flecs_query_with(
         op_ctx->remaining = flecs_ito(int16_t, tr->count);
         op_ctx->it.cur = &tr->hdr;
     } else {
-        ecs_assert((op_ctx->remaining + op_ctx->column - 1) < table->type.count, 
+        ecs_assert((op_ctx->remaining + op_ctx->column - 1) < table->type.count,
             ECS_INTERNAL_ERROR, NULL);
         ecs_assert(op_ctx->remaining >= 0, ECS_INTERNAL_ERROR, NULL);
         if (--op_ctx->remaining <= 0) {
             return false;
         }
 
-        op_ctx->column = flecs_query_next_column(table, cr->id, op_ctx->column);
+        tr = (const ecs_table_record_t*)op_ctx->it.cur;
+        if (flecs_query_record_inherited(table, tr)) {
+            op_ctx->column = flecs_query_next_inherited_column(
+                ctx->world, table, cr->id, op_ctx->column);
+        } else {
+            op_ctx->column = flecs_query_next_column(
+                table, cr->id, op_ctx->column);
+        }
         ecs_assert(op_ctx->column != -1, ECS_INTERNAL_ERROR, NULL);
     }
 

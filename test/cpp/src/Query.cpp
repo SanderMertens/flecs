@@ -4,6 +4,18 @@ struct Pair {
     float value;
 };
 
+struct InheritUnit {
+    int32_t hp;
+};
+
+struct InheritWarrior : InheritUnit {
+    int32_t dmg;
+};
+
+struct InheritMage : InheritUnit {
+    int32_t mana;
+};
+
 void Query_term_each_component(void) {
     flecs::world ecs;
 
@@ -3970,4 +3982,132 @@ void Query_has_range(void) {
 
     test_bool(q.has(e1.range()), true);
     test_bool(q.has(e2.range()), false);
+}
+
+void Query_component_inheritance_each(void) {
+    flecs::world ecs;
+
+    ecs.component<InheritUnit>();
+    ecs.component<InheritWarrior>().is_a<InheritUnit>();
+
+    auto w1 = ecs.entity().set<InheritWarrior>({{10}, 1});
+    auto w2 = ecs.entity().set<InheritWarrior>({{20}, 2});
+    auto w3 = ecs.entity().set<InheritWarrior>({{30}, 3});
+
+    int32_t sum = 0, count = 0;
+    ecs.query<InheritUnit>().each([&](InheritUnit& u) {
+        sum += u.hp;
+        count ++;
+    });
+
+    test_int(count, 3);
+    test_int(sum, 60);
+
+    ecs.query<InheritUnit>().each([](InheritUnit& u) {
+        u.hp *= 2;
+    });
+
+    test_int(w1.try_get<InheritWarrior>()->hp, 20);
+    test_int(w2.try_get<InheritWarrior>()->hp, 40);
+    test_int(w3.try_get<InheritWarrior>()->hp, 60);
+    test_int(w1.try_get<InheritWarrior>()->dmg, 1);
+    test_int(w2.try_get<InheritWarrior>()->dmg, 2);
+    test_int(w3.try_get<InheritWarrior>()->dmg, 3);
+}
+
+void Query_component_inheritance_each_multiple_derived(void) {
+    flecs::world ecs;
+
+    ecs.component<InheritUnit>();
+    ecs.component<InheritWarrior>().is_a<InheritUnit>();
+    ecs.component<InheritMage>().is_a<InheritUnit>();
+
+    auto w = ecs.entity().set<InheritWarrior>({{10}, 5});
+    auto m = ecs.entity().set<InheritMage>({{20}, 7});
+
+    int32_t sum = 0, count = 0;
+    ecs.query<InheritUnit>().each([&](InheritUnit& u) {
+        sum += u.hp;
+        count ++;
+    });
+
+    test_int(count, 2);
+    test_int(sum, 30);
+
+    test_int(w.try_get<InheritWarrior>()->dmg, 5);
+    test_int(m.try_get<InheritMage>()->mana, 7);
+}
+
+void Query_component_inheritance_each_entity(void) {
+    flecs::world ecs;
+
+    ecs.component<InheritUnit>();
+    ecs.component<InheritWarrior>().is_a<InheritUnit>();
+
+    auto w1 = ecs.entity().set<InheritWarrior>({{10}, 1});
+    auto w2 = ecs.entity().set<InheritWarrior>({{20}, 2});
+
+    int32_t found = 0;
+    ecs.query<InheritUnit>().each([&](flecs::entity e, InheritUnit& u) {
+        if (e == w1) { test_int(u.hp, 10); found ++; }
+        if (e == w2) { test_int(u.hp, 20); found ++; }
+    });
+
+    test_int(found, 2);
+}
+
+void Query_component_inheritance_base_field(void) {
+    flecs::world ecs;
+
+    ecs.component<InheritUnit>();
+    ecs.component<InheritWarrior>().is_a<InheritUnit>();
+
+    auto w1 = ecs.entity().set<InheritWarrior>({{10}, 1});
+    auto w2 = ecs.entity().set<InheritWarrior>({{20}, 2});
+    auto w3 = ecs.entity().set<InheritWarrior>({{30}, 3});
+
+    int32_t sum = 0, count = 0;
+    ecs.query<InheritUnit>().run([&](flecs::iter& it) {
+        while (it.next()) {
+            auto f = it.base_field<InheritUnit>(0);
+            for (auto i : it) {
+                sum += f[i].hp;
+                count ++;
+            }
+        }
+    });
+
+    test_int(count, 3);
+    test_int(sum, 60);
+
+    ecs.query<InheritUnit>().run([](flecs::iter& it) {
+        while (it.next()) {
+            auto f = it.base_field<InheritUnit>(0);
+            for (auto i : it) {
+                f[i].hp *= 2;
+            }
+        }
+    });
+
+    test_int(w1.try_get<InheritWarrior>()->hp, 20);
+    test_int(w2.try_get<InheritWarrior>()->hp, 40);
+    test_int(w3.try_get<InheritWarrior>()->hp, 60);
+    test_int(w1.try_get<InheritWarrior>()->dmg, 1);
+}
+
+void Query_component_inheritance_field_asserts(void) {
+    install_test_abort();
+
+    flecs::world ecs;
+
+    ecs.component<InheritUnit>();
+    ecs.component<InheritWarrior>().is_a<InheritUnit>();
+    ecs.entity().set<InheritWarrior>({{10}, 1});
+
+    ecs.query<InheritUnit>().run([](flecs::iter& it) {
+        while (it.next()) {
+            test_expect_abort();
+            it.field<InheritUnit>(0);
+        }
+    });
 }

@@ -457,6 +457,42 @@ struct component : untyped_component {
         id_ = _::type<T>::register_id(world, name, allow_tag, true, true, id);
     }
 
+    /** Mark this component as inheriting from a base component.
+     *
+     * @tparam Base The base component.
+     * @return Reference to self for chaining.
+     */
+    template <typename Base>
+    component<T>& is_a() {
+        if constexpr (std::is_base_of<Base, T>::value &&
+            !std::is_same<Base, T>::value)
+        {
+            alignas(T) static char storage[sizeof(T)];
+            T* derived_ptr = reinterpret_cast<T*>(&storage[0]);
+            Base* base_ptr = static_cast<Base*>(derived_ptr);
+            ecs_assert(
+                reinterpret_cast<char*>(base_ptr) ==
+                    reinterpret_cast<char*>(derived_ptr),
+                ECS_INVALID_OPERATION,
+                "component inheritance requires the base component to be at "
+                "offset 0 in the derived component (multiple/virtual "
+                "inheritance is not supported)");
+            (void)base_ptr;
+        }
+        this->add(flecs::IsA, _::type<Base>::id(this->world_));
+        return *this;
+    }
+
+    /** Mark this component as inheriting from a base component.
+     *
+     * @param base The base component id.
+     * @return Reference to self for chaining.
+     */
+    component<T>& is_a(flecs::entity_t base) {
+        this->add(flecs::IsA, base);
+        return *this;
+    }
+
     /** Register on_add hook.
      *
      * @param func The callback function.

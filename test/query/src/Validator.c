@@ -3587,7 +3587,8 @@ void Validator_validate_simple_w_inherited_component(void) {
     test_assert(!(q->data_fields & (1 << 0)));
 
     test_query_flags(EcsQueryMatchOnlyThis|EcsQueryMatchThis|
-        EcsQueryMatchOnlySelf|EcsQueryHasTableThisVar,
+        EcsQueryMatchOnlySelf|EcsQueryHasTableThisVar|
+        EcsQueryHasComponentInheritance,
         q->flags);
     
     ecs_query_fini(q);
