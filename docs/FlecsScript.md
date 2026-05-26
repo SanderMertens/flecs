@@ -757,6 +757,21 @@ const p0 = Position: {10, 20, 30}
 const p1 = p0 + 1 // {11, 21, 31}
 ```
 
+#### Swizzle operations
+When a member is accessed on a vector type whose members all have single-letter names, and the accessed member cannot be resolved to an existing member, the accessor is interpreted as a swizzle. A swizzle builds a new value from the members that match its letters, in the order they are specified. The result obtains the type of the lvalue it is assigned to.
+
+The members of a swizzle may appear in any order, and may be repeated. For a type with members `r`, `g`, `b`, the swizzles `rgb`, `bgr`, `rrr` and `bb` are all valid.
+
+For example:
+
+```cpp
+const p = Position: {10, 20, 30}
+e {
+  // Swizzle desugars to {p.z, p.y, p.x}
+  Velocity: p.zyx // {30, 20, 10}
+}
+```
+
 #### Lvalues
 Lvalues are the left side of assignments. There are two kinds of assignments possible in Flecs script:
 - Variable initialization

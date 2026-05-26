@@ -475,6 +475,22 @@ void Eval_component_expr_var(void);
 void Eval_component_expr_function(void);
 void Eval_pair_component_expr(void);
 void Eval_assign_w_component_expr(void);
+void Eval_component_expr_member(void);
+void Eval_component_expr_swizzle(void);
+void Eval_component_expr_swizzle_reorder(void);
+void Eval_component_expr_swizzle_repeat(void);
+void Eval_component_expr_swizzle_subset(void);
+void Eval_component_expr_swizzle_rgb(void);
+void Eval_component_expr_swizzle_no_target_type(void);
+void Eval_component_expr_swizzle_incompatible_target(void);
+void Eval_component_expr_unresolved_member(void);
+void Eval_component_expr_swizzle_var(void);
+void Eval_component_expr_swizzle_var_reorder(void);
+void Eval_component_expr_swizzle_var_repeat(void);
+void Eval_component_expr_swizzle_var_subset(void);
+void Eval_component_expr_swizzle_var_rgb(void);
+void Eval_component_expr_swizzle_var_no_target_type(void);
+void Eval_component_expr_member_no_var(void);
 
 // Testsuite 'Function'
 void Function_simple(void);
@@ -3342,6 +3358,70 @@ bake_test_case Eval_testcases[] = {
     {
         "assign_w_component_expr",
         Eval_assign_w_component_expr
+    },
+    {
+        "component_expr_member",
+        Eval_component_expr_member
+    },
+    {
+        "component_expr_swizzle",
+        Eval_component_expr_swizzle
+    },
+    {
+        "component_expr_swizzle_reorder",
+        Eval_component_expr_swizzle_reorder
+    },
+    {
+        "component_expr_swizzle_repeat",
+        Eval_component_expr_swizzle_repeat
+    },
+    {
+        "component_expr_swizzle_subset",
+        Eval_component_expr_swizzle_subset
+    },
+    {
+        "component_expr_swizzle_rgb",
+        Eval_component_expr_swizzle_rgb
+    },
+    {
+        "component_expr_swizzle_no_target_type",
+        Eval_component_expr_swizzle_no_target_type
+    },
+    {
+        "component_expr_swizzle_incompatible_target",
+        Eval_component_expr_swizzle_incompatible_target
+    },
+    {
+        "component_expr_unresolved_member",
+        Eval_component_expr_unresolved_member
+    },
+    {
+        "component_expr_swizzle_var",
+        Eval_component_expr_swizzle_var
+    },
+    {
+        "component_expr_swizzle_var_reorder",
+        Eval_component_expr_swizzle_var_reorder
+    },
+    {
+        "component_expr_swizzle_var_repeat",
+        Eval_component_expr_swizzle_var_repeat
+    },
+    {
+        "component_expr_swizzle_var_subset",
+        Eval_component_expr_swizzle_var_subset
+    },
+    {
+        "component_expr_swizzle_var_rgb",
+        Eval_component_expr_swizzle_var_rgb
+    },
+    {
+        "component_expr_swizzle_var_no_target_type",
+        Eval_component_expr_swizzle_var_no_target_type
+    },
+    {
+        "component_expr_member_no_var",
+        Eval_component_expr_member_no_var
     }
 };
 
@@ -7310,7 +7390,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        466,
+        482,
         Eval_testcases
     },
     {

@@ -15487,3 +15487,465 @@ void Eval_assign_w_component_expr(void) {
     ecs_fini(world);
 }
 
+void Eval_component_expr_member(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+    test_assert(ecs_id(Position) != 0);
+
+    const char *expr =
+    HEAD "const v = Position: {10, 20}"
+    LINE "e {"
+    LINE "  f32: $v.x"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const ecs_f32_t *ptr = ecs_get(world, e, ecs_f32_t);
+    test_assert(ptr != NULL);
+    test_int(*ptr, 10);
+
+    ecs_fini(world);
+}
+
+static
+ecs_entity_t flecs_swizzle_register_vec3(
+    ecs_world_t *world)
+{
+    ecs_entity_t ecs_id(Vec3) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Vec3" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)},
+            {"z", ecs_id(ecs_f32_t)}
+        }
+    });
+    return ecs_id(Vec3);
+}
+
+void Eval_component_expr_swizzle(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Vec3) = flecs_swizzle_register_vec3(world);
+    test_assert(ecs_id(Vec3) != 0);
+
+    const char *expr =
+    HEAD "const pos = Vec3: {10, 20, 30}"
+    LINE "e {"
+    LINE "  Vec3: pos.xyz"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const Vec3 *ptr = ecs_get(world, e, Vec3);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 10);
+    test_int(ptr->y, 20);
+    test_int(ptr->z, 30);
+
+    ecs_fini(world);
+}
+
+void Eval_component_expr_swizzle_reorder(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Vec3) = flecs_swizzle_register_vec3(world);
+    test_assert(ecs_id(Vec3) != 0);
+
+    const char *expr =
+    HEAD "const pos = Vec3: {10, 20, 30}"
+    LINE "e {"
+    LINE "  Vec3: pos.zyx"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const Vec3 *ptr = ecs_get(world, e, Vec3);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 30);
+    test_int(ptr->y, 20);
+    test_int(ptr->z, 10);
+
+    ecs_fini(world);
+}
+
+void Eval_component_expr_swizzle_repeat(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Vec3) = flecs_swizzle_register_vec3(world);
+    test_assert(ecs_id(Vec3) != 0);
+
+    const char *expr =
+    HEAD "const pos = Vec3: {10, 20, 30}"
+    LINE "e {"
+    LINE "  Vec3: pos.yyy"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const Vec3 *ptr = ecs_get(world, e, Vec3);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 20);
+    test_int(ptr->y, 20);
+    test_int(ptr->z, 20);
+
+    ecs_fini(world);
+}
+
+void Eval_component_expr_swizzle_subset(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Vec3) = flecs_swizzle_register_vec3(world);
+    test_assert(ecs_id(Vec3) != 0);
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+    test_assert(ecs_id(Position) != 0);
+
+    const char *expr =
+    HEAD "const pos = Vec3: {10, 20, 30}"
+    LINE "e {"
+    LINE "  Position: pos.zy"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const Position *ptr = ecs_get(world, e, Position);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 30);
+    test_int(ptr->y, 20);
+
+    ecs_fini(world);
+}
+
+void Eval_component_expr_swizzle_rgb(void) {
+    typedef struct { float r; float g; float b; } RGB;
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(RGB) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "RGB" }),
+        .members = {
+            {"r", ecs_id(ecs_f32_t)},
+            {"g", ecs_id(ecs_f32_t)},
+            {"b", ecs_id(ecs_f32_t)}
+        }
+    });
+    test_assert(ecs_id(RGB) != 0);
+
+    const char *expr =
+    HEAD "const c = RGB: {1, 2, 3}"
+    LINE "e {"
+    LINE "  RGB: c.bgr"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const RGB *ptr = ecs_get(world, e, RGB);
+    test_assert(ptr != NULL);
+    test_int(ptr->r, 3);
+    test_int(ptr->g, 2);
+    test_int(ptr->b, 1);
+
+    ecs_fini(world);
+}
+
+void Eval_component_expr_swizzle_no_target_type(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Vec3) = flecs_swizzle_register_vec3(world);
+    test_assert(ecs_id(Vec3) != 0);
+
+    const char *expr =
+    HEAD "const pos = Vec3: {10, 20, 30}"
+    LINE "const flipped = pos.zyx"
+    LINE "e {"
+    LINE "  Vec3: $flipped"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const Vec3 *ptr = ecs_get(world, e, Vec3);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 30);
+    test_int(ptr->y, 20);
+    test_int(ptr->z, 10);
+
+    ecs_fini(world);
+}
+
+void Eval_component_expr_swizzle_incompatible_target(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+
+    ecs_entity_t ecs_id(Vec3) = flecs_swizzle_register_vec3(world);
+    test_assert(ecs_id(Vec3) != 0);
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+    test_assert(ecs_id(Position) != 0);
+
+    const char *expr =
+    HEAD "const pos = Vec3: {10, 20, 30}"
+    LINE "e {"
+    LINE "  Position: pos.xyz"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_component_expr_unresolved_member(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+
+    ecs_entity_t ecs_id(Vec3) = flecs_swizzle_register_vec3(world);
+    test_assert(ecs_id(Vec3) != 0);
+
+    const char *expr =
+    HEAD "const pos = Vec3: {10, 20, 30}"
+    LINE "e {"
+    LINE "  f32: pos.w"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_component_expr_swizzle_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Vec3) = flecs_swizzle_register_vec3(world);
+    test_assert(ecs_id(Vec3) != 0);
+
+    const char *expr =
+    HEAD "const pos = Vec3: {10, 20, 30}"
+    LINE "e {"
+    LINE "  Vec3: $pos.xyz"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const Vec3 *ptr = ecs_get(world, e, Vec3);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 10);
+    test_int(ptr->y, 20);
+    test_int(ptr->z, 30);
+
+    ecs_fini(world);
+}
+
+void Eval_component_expr_swizzle_var_reorder(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Vec3) = flecs_swizzle_register_vec3(world);
+    test_assert(ecs_id(Vec3) != 0);
+
+    const char *expr =
+    HEAD "const pos = Vec3: {10, 20, 30}"
+    LINE "e {"
+    LINE "  Vec3: $pos.zyx"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const Vec3 *ptr = ecs_get(world, e, Vec3);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 30);
+    test_int(ptr->y, 20);
+    test_int(ptr->z, 10);
+
+    ecs_fini(world);
+}
+
+void Eval_component_expr_swizzle_var_repeat(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Vec3) = flecs_swizzle_register_vec3(world);
+    test_assert(ecs_id(Vec3) != 0);
+
+    const char *expr =
+    HEAD "const pos = Vec3: {10, 20, 30}"
+    LINE "e {"
+    LINE "  Vec3: $pos.yyy"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const Vec3 *ptr = ecs_get(world, e, Vec3);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 20);
+    test_int(ptr->y, 20);
+    test_int(ptr->z, 20);
+
+    ecs_fini(world);
+}
+
+void Eval_component_expr_swizzle_var_subset(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Vec3) = flecs_swizzle_register_vec3(world);
+    test_assert(ecs_id(Vec3) != 0);
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+    test_assert(ecs_id(Position) != 0);
+
+    const char *expr =
+    HEAD "const pos = Vec3: {10, 20, 30}"
+    LINE "e {"
+    LINE "  Position: $pos.zy"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const Position *ptr = ecs_get(world, e, Position);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 30);
+    test_int(ptr->y, 20);
+
+    ecs_fini(world);
+}
+
+void Eval_component_expr_swizzle_var_rgb(void) {
+    typedef struct { float r; float g; float b; } RGB;
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(RGB) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "RGB" }),
+        .members = {
+            {"r", ecs_id(ecs_f32_t)},
+            {"g", ecs_id(ecs_f32_t)},
+            {"b", ecs_id(ecs_f32_t)}
+        }
+    });
+    test_assert(ecs_id(RGB) != 0);
+
+    const char *expr =
+    HEAD "const c = RGB: {1, 2, 3}"
+    LINE "e {"
+    LINE "  RGB: $c.bgr"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const RGB *ptr = ecs_get(world, e, RGB);
+    test_assert(ptr != NULL);
+    test_int(ptr->r, 3);
+    test_int(ptr->g, 2);
+    test_int(ptr->b, 1);
+
+    ecs_fini(world);
+}
+
+void Eval_component_expr_swizzle_var_no_target_type(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Vec3) = flecs_swizzle_register_vec3(world);
+    test_assert(ecs_id(Vec3) != 0);
+
+    const char *expr =
+    HEAD "const pos = Vec3: {10, 20, 30}"
+    LINE "const flipped = $pos.zyx"
+    LINE "e {"
+    LINE "  Vec3: $flipped"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const Vec3 *ptr = ecs_get(world, e, Vec3);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 30);
+    test_int(ptr->y, 20);
+    test_int(ptr->z, 10);
+
+    ecs_fini(world);
+}
+
+void Eval_component_expr_member_no_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "v {"
+    LINE "  export const x: 10"
+    LINE "  export const y: 20"
+    LINE "}"
+    LINE "e {"
+    LINE "  f32: v.x"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const ecs_f32_t *ptr = ecs_get(world, e, ecs_f32_t);
+    test_assert(ptr != NULL);
+    test_int(*ptr, 10);
+
+    ecs_fini(world);
+}
+

@@ -478,7 +478,23 @@
                 "component_expr_var",
                 "component_expr_function",
                 "pair_component_expr",
-                "assign_w_component_expr"
+                "assign_w_component_expr",
+                "component_expr_member",
+                "component_expr_swizzle",
+                "component_expr_swizzle_reorder",
+                "component_expr_swizzle_repeat",
+                "component_expr_swizzle_subset",
+                "component_expr_swizzle_rgb",
+                "component_expr_swizzle_no_target_type",
+                "component_expr_swizzle_incompatible_target",
+                "component_expr_unresolved_member",
+                "component_expr_swizzle_var",
+                "component_expr_swizzle_var_reorder",
+                "component_expr_swizzle_var_repeat",
+                "component_expr_swizzle_var_subset",
+                "component_expr_swizzle_var_rgb",
+                "component_expr_swizzle_var_no_target_type",
+                "component_expr_member_no_var"
             ]
         }, {
             "id": "Function",
