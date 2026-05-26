@@ -146,6 +146,16 @@ my_entity {
 }
 ```
 
+The value after the `:` is an expression. For components that hold a single value, such as a scalar type, the value can be assigned directly without curly braces:
+
+```cpp
+my_entity {
+  Mass: 100
+  Mass: 50 + 50
+  Mass: $weight
+}
+```
+
 Components can be defined in a script:
 
 ```cpp
@@ -1063,7 +1073,7 @@ template Square {
   prop size: 10
   prop color = Color: {255, 0, 0}
 
-  $color
+  Color: $color
   Rectangle: {width: size, height: size}
 }
 
@@ -1088,7 +1098,7 @@ template Tree {
   Trunk {
     Position: {0, ($height / 2), 0}
     Rectangle: {$trunk_width, $trunk_height}
-    $wood_color
+    Color: $wood_color
   }
 
   Canopy {
@@ -1096,7 +1106,7 @@ template Tree {
 
     Position3: {0, $canopy_y, 0}
     Box: {$canopy_width, $canopy_height}
-    $leaves_color
+    Color: $leaves_color
   }
 }
 
@@ -1288,13 +1298,13 @@ pi {
 }
 ```
 
-Variables can be used in component values as shown in the previous examples, or can be used directly as component. When used like this, the variable name must be prefixed with a `$`. Example:
+Variables can be used in component values as shown in the previous examples. To assign a variable to a component, use the variable as the component expression. The variable name must be prefixed with a `$`. Example:
 
 ```cpp
 const wood = Color: {38, 25, 13}
 
 my_entity {
-  $wood
+  Color: $wood
 }
 
 // is equivalent to
