@@ -9,6 +9,44 @@
 #include "script.h"
 
 static
+bool flecs_script_scope_has_entity(
+    ecs_script_scope_t *scope,
+    const char *name)
+{
+    int32_t i, count = ecs_vec_count(&scope->stmts);
+    ecs_script_node_t **stmts = ecs_vec_first(&scope->stmts);
+    for (i = 0; i < count; i ++) {
+        ecs_script_node_t *node = stmts[i];
+        if (node->kind == EcsAstEntity) {
+            ecs_script_entity_t *entity = (ecs_script_entity_t*)node;
+            if (entity->name && !ecs_os_strcmp(entity->name, name)) {
+                return true;
+            }
+            if (entity->scope &&
+                flecs_script_scope_has_entity(entity->scope, name))
+            {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+static
+bool flecs_script_check_unresolved_identifier(
+    const ecs_world_t *world,
+    const char *value,
+    void *ctx)
+{
+    (void)world;
+    ecs_script_eval_visitor_t *v = ctx;
+    if (!v->template) {
+        return true;
+    }
+    return flecs_script_scope_has_entity(v->template->node->scope, value);
+}
+
+static
 int flecs_script_check_expr(
     ecs_script_eval_visitor_t *v,
     ecs_expr_node_t **expr_ptr,
@@ -25,7 +63,8 @@ int flecs_script_check_expr(
         .vars = v->vars,
         .type = type ? type[0] : 0,
         .runtime = v->r,
-        .allow_unresolved_identifiers = true
+        .allow_unresolved_identifiers = true,
+        .unresolved_identifier_action = flecs_script_check_unresolved_identifier
     };
 
     ecs_assert(expr->type_info == NULL, ECS_INTERNAL_ERROR, NULL);

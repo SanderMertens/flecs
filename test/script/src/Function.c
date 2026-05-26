@@ -1184,7 +1184,7 @@ void Function_array_arg(void) {
     HEAD "fn ident(a: Vec3F) -> Vec3F { a }"
     LINE "const v = Vec3F: [10, 20, 30]"
     LINE "const r: ident($v)"
-    LINE "Foo { $r }";
+    LINE "Foo { Vec3F: $r }";
 
     test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 

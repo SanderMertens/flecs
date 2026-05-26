@@ -469,6 +469,12 @@ void Eval_scientific_notation_positive_exponent_sign(void);
 void Eval_const_var_w_new_expr_two_tags(void);
 void Eval_const_var_w_new_expr_tag_component(void);
 void Eval_empty_entity_kind(void);
+void Eval_component_expr_scalar(void);
+void Eval_component_expr_binary(void);
+void Eval_component_expr_var(void);
+void Eval_component_expr_function(void);
+void Eval_pair_component_expr(void);
+void Eval_assign_w_component_expr(void);
 
 // Testsuite 'Function'
 void Function_simple(void);
@@ -3312,6 +3318,30 @@ bake_test_case Eval_testcases[] = {
     {
         "empty_entity_kind",
         Eval_empty_entity_kind
+    },
+    {
+        "component_expr_scalar",
+        Eval_component_expr_scalar
+    },
+    {
+        "component_expr_binary",
+        Eval_component_expr_binary
+    },
+    {
+        "component_expr_var",
+        Eval_component_expr_var
+    },
+    {
+        "component_expr_function",
+        Eval_component_expr_function
+    },
+    {
+        "pair_component_expr",
+        Eval_pair_component_expr
+    },
+    {
+        "assign_w_component_expr",
+        Eval_assign_w_component_expr
     }
 };
 
@@ -7280,7 +7310,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        460,
+        466,
         Eval_testcases
     },
     {

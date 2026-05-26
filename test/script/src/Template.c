@@ -1487,7 +1487,7 @@ void Template_template_w_composite_prop(void) {
     const char *expr =
     LINE "template Tree {"
     LINE "  prop pos = Position: {10, 20}"
-    LINE "  child { $pos }"
+    LINE "  child { Position: $pos }"
     LINE "}"
     LINE "t { Tree: {pos: {20, 30}} }"
     LINE "";
@@ -2597,7 +2597,7 @@ void Template_template_w_child_w_var(void) {
     HEAD "template Foo {"
     LINE "  const pos = Position: {10, 20}"
     LINE "  child {"
-    LINE "    $pos"
+    LINE "    Position: $pos"
     LINE "  }"
     LINE "}"
     LINE ""
@@ -2641,7 +2641,7 @@ void Template_template_w_child_w_prop(void) {
     HEAD "template Foo {"
     LINE "  prop pos = Position: {0, 0}"
     LINE "  child {"
-    LINE "    $pos"
+    LINE "    Position: $pos"
     LINE "  }"
     LINE "}"
     LINE ""

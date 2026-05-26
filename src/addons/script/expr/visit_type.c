@@ -1394,8 +1394,12 @@ int flecs_expr_identifier_visit_type(
         }
 
         /* If unresolved identifiers aren't allowed here, throw error */
-        if (!desc->allow_unresolved_identifiers) {
-            flecs_expr_visit_error(script, node, 
+        if (!desc->allow_unresolved_identifiers ||
+            (desc->unresolved_identifier_action &&
+                !desc->unresolved_identifier_action(
+                    script->world, node->value, desc->lookup_ctx)))
+        {
+            flecs_expr_visit_error(script, node,
                 "unresolved identifier '%s'", node->value);
             goto error;
         }

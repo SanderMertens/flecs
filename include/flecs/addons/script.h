@@ -606,6 +606,11 @@ typedef struct ecs_expr_eval_desc_t {
     ecs_script_runtime_t *runtime;   /**< Reusable runtime (optional). */
 
     void *script_visitor;            /**< For internal usage. */
+
+    bool (*unresolved_identifier_action)( /**< For internal usage. */
+        const ecs_world_t*,
+        const char *value,
+        void *ctx);
 } ecs_expr_eval_desc_t;
 
 /** Run expression.

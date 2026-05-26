@@ -651,18 +651,10 @@ identifier: {
 }
 
 insert_tag: {
-    if (Token(0)[0] == '$') {
-        if (!flecs_script_insert_var_component(parser, &Token(0)[1])) {
-            Error(
-                "invalid context for variable component '%s': must be "
-                    "part of entity", tokenizer->tokens[0].value);
-        }
-    } else {
-        if (!flecs_script_insert_tag(parser, Token(0))) {
-            Error(
-                "invalid context for tag '%s': must be part of entity", 
-                tokenizer->tokens[0].value);
-        }
+    if (!flecs_script_insert_tag(parser, Token(0))) {
+        Error(
+            "invalid context for tag '%s': must be part of entity",
+            tokenizer->tokens[0].value);
     }
 
     EndOfRule;
@@ -872,18 +864,29 @@ pair: {
                 })
             })
 
-            // (Eats, Apples): {
-            Parse_1('{', {
+            {
+                // (Eats, Apples): {
+                LookAhead_1('{', {
+                    pos = lookahead;
                     // (Eats, Apples): { expr }
                     Initializer('}',
-                        ecs_script_component_t *comp = 
+                        ecs_script_component_t *comp =
                             flecs_script_insert_pair_component(
                                 parser, Token(1), Token(3));
                         comp->expr = INITIALIZER;
                         EndOfRule;
                     )
-                }
-            )
+                })
+            }
+
+            // (Eats, Apples): expr
+            Expr('\n', {
+                ecs_script_component_t *comp =
+                    flecs_script_insert_pair_component(
+                        parser, Token(1), Token(3));
+                comp->expr = EXPR;
+                EndOfRule;
+            })
         }
 
         // (IsA, Machine) {
@@ -990,6 +993,31 @@ identifier_colon: {
         )
     }
 
+    bool is_inherit = tokenizer->tokens[0].kind == EcsTokString;
+    int32_t colon_stack_count = tokenizer->stack.count;
+    if (!is_inherit) {
+        LookAhead_1(EcsTokIdentifier,
+            if (lookahead_token.value[0] != '$') {
+                const char *id_pos = pos;
+                pos = lookahead;
+                LookAhead(
+                    case '{':
+                        is_inherit = true;
+                        break;
+                    case ',':
+                        is_inherit = true;
+                        break;
+                )
+                pos = id_pos;
+            }
+        )
+    }
+    tokenizer->stack.count = colon_stack_count;
+
+    if (!is_inherit) {
+        goto component_expr_value;
+    }
+
     // enterprise : SpaceShip
     Parse_1(EcsTokIdentifier, {
         ecs_script_entity_t *entity = flecs_script_insert_entity(
@@ -1033,22 +1061,35 @@ identifier_assign: {
             })
         })
 
-        // x = Position: {
-        Parse_1('{', {
-            // x = Position: {expr}
-            Expr('}',
-                Scope(entity->scope, 
-                    ecs_script_component_t *comp = 
-                        flecs_script_insert_component(parser, Token(2));
-                    comp->expr = EXPR;
-                )
+        {
+            // x = Position: {
+            LookAhead_1('{', {
+                pos = lookahead;
+                // x = Position: {expr}
+                Expr('}',
+                    Scope(entity->scope,
+                        ecs_script_component_t *comp =
+                            flecs_script_insert_component(parser, Token(2));
+                        comp->expr = EXPR;
+                    )
 
-                // x = Position: {expr}\n
-                Parse(
-                    EcsTokEndOfStatement:
-                        EndOfRule;
+                    // x = Position: {expr}\n
+                    Parse(
+                        EcsTokEndOfStatement:
+                            EndOfRule;
+                    )
                 )
+            })
+        }
+
+        // x = Position: expr
+        Expr('\n', {
+            Scope(entity->scope,
+                ecs_script_component_t *comp =
+                    flecs_script_insert_component(parser, Token(2));
+                comp->expr = EXPR;
             )
+            EndOfRule;
         })
     )
 
@@ -1181,7 +1222,17 @@ component_expr_match: {
         ecs_script_component_t *comp = flecs_script_insert_component(
             parser, Token(0));
         comp->expr = EXPR;
-        EndOfRule; 
+        EndOfRule;
+    })
+}
+
+// Position: expr
+component_expr_value: {
+    Expr('\n', {
+        ecs_script_component_t *comp = flecs_script_insert_component(
+            parser, Token(0));
+        comp->expr = EXPR;
+        EndOfRule;
     })
 }
 

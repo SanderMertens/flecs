@@ -472,7 +472,13 @@
                 "scientific_notation_positive_exponent_sign",
                 "const_var_w_new_expr_two_tags",
                 "const_var_w_new_expr_tag_component",
-                "empty_entity_kind"
+                "empty_entity_kind",
+                "component_expr_scalar",
+                "component_expr_binary",
+                "component_expr_var",
+                "component_expr_function",
+                "pair_component_expr",
+                "assign_w_component_expr"
             ]
         }, {
             "id": "Function",
