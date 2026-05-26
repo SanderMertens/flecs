@@ -177,6 +177,7 @@
                 "name_annotation_crlf",
                 "link_annotation",
                 "color_annotation",
+                "uuid_annotation",
                 "multiple_annotations",
                 "annotation_w_trailing_space",
                 "multiline_string",
