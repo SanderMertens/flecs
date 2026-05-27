@@ -6117,7 +6117,7 @@ FLECS_ALWAYS_INLINE ecs_table_t *flecs_table_traverse_add(
  * @return true if the mut alias was violated, false otherwise.
  */
 FLECS_API
-FLECS_ALWAYS_INLINE bool flecs_sparse_id_record_lock_read_begin(
+FLECS_ALWAYS_INLINE bool flecs_sparse_id_record_read_begin(
     ecs_component_record_t *cr);
 
 /** End read lock on sparse component record. 
@@ -6127,7 +6127,7 @@ FLECS_ALWAYS_INLINE bool flecs_sparse_id_record_lock_read_begin(
  * @return true if the mut alias was violated, false otherwise.
 */
 FLECS_API
-FLECS_ALWAYS_INLINE bool flecs_sparse_id_record_lock_read_end(
+FLECS_ALWAYS_INLINE bool flecs_sparse_id_record_read_end(
     ecs_component_record_t *cr);
 
 /** Begin write lock on sparse component record. 
@@ -6137,7 +6137,7 @@ FLECS_ALWAYS_INLINE bool flecs_sparse_id_record_lock_read_end(
  * @return true if the mut alias was violated, false otherwise.
 */
 FLECS_API
-FLECS_ALWAYS_INLINE bool flecs_sparse_id_record_lock_write_begin(
+FLECS_ALWAYS_INLINE bool flecs_sparse_id_record_write_begin(
     ecs_component_record_t *cr);
 
 /** End write lock on sparse component record. 
@@ -6147,7 +6147,7 @@ FLECS_ALWAYS_INLINE bool flecs_sparse_id_record_lock_write_begin(
  * @return true if the mut alias was violated, false otherwise.
 */
 FLECS_API
-FLECS_ALWAYS_INLINE bool flecs_sparse_id_record_lock_write_end(
+FLECS_ALWAYS_INLINE bool flecs_sparse_id_record_write_end(
     ecs_component_record_t *cr);
 
 /** Begin read lock on table column. 
@@ -6157,7 +6157,7 @@ FLECS_ALWAYS_INLINE bool flecs_sparse_id_record_lock_write_end(
  * @return true if the mut alias was violated, false otherwise.
 */
 FLECS_API
-FLECS_ALWAYS_INLINE bool flecs_table_column_lock_read_begin(
+FLECS_ALWAYS_INLINE bool flecs_table_column_read_begin(
     ecs_table_t *table,
     const int16_t column_index);
 
@@ -6168,7 +6168,7 @@ FLECS_ALWAYS_INLINE bool flecs_table_column_lock_read_begin(
  * @return true if the mut alias was violated, false otherwise.
 */
 FLECS_API
-FLECS_ALWAYS_INLINE bool flecs_table_column_lock_read_end(
+FLECS_ALWAYS_INLINE bool flecs_table_column_read_end(
     ecs_table_t *table,
     const int16_t column_index);
 
@@ -6179,7 +6179,7 @@ FLECS_ALWAYS_INLINE bool flecs_table_column_lock_read_end(
  * @return true if the mut alias was violated, false otherwise.
 */
 FLECS_API
-FLECS_ALWAYS_INLINE bool flecs_table_column_lock_write_begin(
+FLECS_ALWAYS_INLINE bool flecs_table_column_write_begin(
     ecs_table_t *table,
     const int16_t column_index);
 
@@ -6190,7 +6190,7 @@ FLECS_ALWAYS_INLINE bool flecs_table_column_lock_write_begin(
  * @return true if the mut alias was violated, false otherwise.
 */
 FLECS_API
-FLECS_ALWAYS_INLINE bool flecs_table_column_lock_write_end(
+FLECS_ALWAYS_INLINE bool flecs_table_column_write_end(
     ecs_table_t *table,
     const int16_t column_index);
 
@@ -6201,7 +6201,7 @@ FLECS_ALWAYS_INLINE bool flecs_table_column_lock_write_end(
  * @return true if the mut alias was violated, false otherwise.
 */
 FLECS_API
-FLECS_ALWAYS_INLINE bool flecs_sparse_id_record_lock_read_begin_multithreaded(
+FLECS_ALWAYS_INLINE bool flecs_sparse_id_record_read_begin_multithreaded(
     ecs_component_record_t *cr);
 
 /** End read lock on sparse component record in multithreaded context. 
@@ -6211,7 +6211,7 @@ FLECS_ALWAYS_INLINE bool flecs_sparse_id_record_lock_read_begin_multithreaded(
  * @return true if the mut alias was violated, false otherwise.
 */
 FLECS_API
-FLECS_ALWAYS_INLINE bool flecs_sparse_id_record_lock_read_end_multithreaded(
+FLECS_ALWAYS_INLINE bool flecs_sparse_id_record_read_end_multithreaded(
     ecs_component_record_t *cr);
 
 /** Begin write lock on sparse component record in multithreaded context. 
@@ -6221,7 +6221,7 @@ FLECS_ALWAYS_INLINE bool flecs_sparse_id_record_lock_read_end_multithreaded(
  * @return true if the mut alias was violated, false otherwise.
 */
 FLECS_API
-FLECS_ALWAYS_INLINE bool flecs_sparse_id_record_lock_write_begin_multithreaded(
+FLECS_ALWAYS_INLINE bool flecs_sparse_id_record_write_begin_multithreaded(
     ecs_component_record_t *cr);
 
 /** End write lock on sparse component record in multithreaded context. 
@@ -6231,7 +6231,7 @@ FLECS_ALWAYS_INLINE bool flecs_sparse_id_record_lock_write_begin_multithreaded(
  * @return true if the mut alias was violated, false otherwise.
 */
 FLECS_API
-FLECS_ALWAYS_INLINE bool flecs_sparse_id_record_lock_write_end_multithreaded(
+FLECS_ALWAYS_INLINE bool flecs_sparse_id_record_write_end_multithreaded(
     ecs_component_record_t *cr);
 
 /** Begin read lock on table column in multithreaded context. 
@@ -6242,7 +6242,7 @@ FLECS_ALWAYS_INLINE bool flecs_sparse_id_record_lock_write_end_multithreaded(
  * @return true if the mut alias was violated, false otherwise.
 */
 FLECS_API
-FLECS_ALWAYS_INLINE bool flecs_table_column_lock_read_begin_multithreaded(
+FLECS_ALWAYS_INLINE bool flecs_table_column_read_begin_multithreaded(
     ecs_table_t *table,
     const int16_t column_index,
     const int32_t stage_id);
@@ -6255,7 +6255,7 @@ FLECS_ALWAYS_INLINE bool flecs_table_column_lock_read_begin_multithreaded(
  * @return true if the mut alias was violated, false otherwise.
 */
 FLECS_API
-FLECS_ALWAYS_INLINE bool flecs_table_column_lock_read_end_multithreaded(
+FLECS_ALWAYS_INLINE bool flecs_table_column_read_end_multithreaded(
     ecs_table_t *table,
     const int16_t column_index,
     const int32_t stage_id);
@@ -6268,7 +6268,7 @@ FLECS_ALWAYS_INLINE bool flecs_table_column_lock_read_end_multithreaded(
  * @return true if the mut alias was violated, false otherwise.
 */
 FLECS_API
-FLECS_ALWAYS_INLINE bool flecs_table_column_lock_write_begin_multithreaded(
+FLECS_ALWAYS_INLINE bool flecs_table_column_write_begin_multithreaded(
     ecs_table_t *table,
     const int16_t column_index,
     const int32_t stage_id);
@@ -6281,7 +6281,7 @@ FLECS_ALWAYS_INLINE bool flecs_table_column_lock_write_begin_multithreaded(
  * @return true if the mut alias was violated, false otherwise.
 */
 FLECS_API
-FLECS_ALWAYS_INLINE bool flecs_table_column_lock_write_end_multithreaded(
+FLECS_ALWAYS_INLINE bool flecs_table_column_write_end_multithreaded(
     ecs_table_t *table,
     const int16_t column_index,
     const int32_t stage_id);

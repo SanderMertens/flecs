@@ -201,16 +201,16 @@ void flecs_component_ordered_children_init(
 
 #ifdef FLECS_MUT_ALIAS_LOCKS
 
-FLECS_ALWAYS_INLINE int32_t flecs_sparse_id_record_lock_inc(
+FLECS_ALWAYS_INLINE int32_t flecs_sparse_id_record_inc(
     ecs_component_record_t *cr);
 
-FLECS_ALWAYS_INLINE int32_t flecs_sparse_id_record_lock_inc_multithreaded(
+FLECS_ALWAYS_INLINE int32_t flecs_sparse_id_record_inc_multithreaded(
     ecs_component_record_t *cr);
 
-FLECS_ALWAYS_INLINE int32_t flecs_sparse_id_record_lock_dec(
+FLECS_ALWAYS_INLINE int32_t flecs_sparse_id_record_dec(
     ecs_component_record_t *cr);
 
-FLECS_ALWAYS_INLINE int32_t flecs_sparse_id_record_lock_dec_multithreaded(
+FLECS_ALWAYS_INLINE int32_t flecs_sparse_id_record_dec_multithreaded(
     ecs_component_record_t *cr);
     
 #endif

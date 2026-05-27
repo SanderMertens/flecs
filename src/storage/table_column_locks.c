@@ -125,7 +125,7 @@ void flecs_tables_resize_column_locks(
     }
 }
 
-int32_t flecs_table_column_lock_inc(
+int32_t flecs_table_column_inc(
     ecs_table_t *table,
     const int16_t column_index)
 {
@@ -134,7 +134,7 @@ int32_t flecs_table_column_lock_inc(
     return ++table->column_lock[ column_index ];
 }
 
-int32_t flecs_table_column_lock_inc_multithreaded(
+int32_t flecs_table_column_inc_multithreaded(
     ecs_table_t *table,
     const int16_t column_index,
     const int32_t stage_id
@@ -145,7 +145,7 @@ int32_t flecs_table_column_lock_inc_multithreaded(
     return ecs_os_ainc(&table->column_lock[ column_index + (stage_id * table->column_count) ]);
 }
 
-int32_t flecs_table_column_lock_dec(
+int32_t flecs_table_column_dec(
     ecs_table_t *table,
     const int16_t column_index)
 {
@@ -154,7 +154,7 @@ int32_t flecs_table_column_lock_dec(
     return --table->column_lock[ column_index ];
 }
 
-int32_t flecs_table_column_lock_dec_multithreaded(
+int32_t flecs_table_column_dec_multithreaded(
     ecs_table_t *table,
     const int16_t column_index,
     const int32_t stage_id
@@ -165,72 +165,72 @@ int32_t flecs_table_column_lock_dec_multithreaded(
     return ecs_os_adec(&table->column_lock[ column_index + (stage_id * table->column_count) ]);
 }
 
-bool flecs_table_column_lock_read_begin(
+bool flecs_table_column_read_begin(
     ecs_table_t *table,
     const int16_t column_index
     )
 {
-    return flecs_table_column_lock_inc(table, column_index) <= 0;
+    return flecs_table_column_inc(table, column_index) <= 0;
 }
 
-bool flecs_table_column_lock_read_begin_multithreaded(
+bool flecs_table_column_read_begin_multithreaded(
     ecs_table_t *table,
     const int16_t column_index,
     const int32_t stage_id
     )
 {
-    return flecs_table_column_lock_inc_multithreaded(table, column_index, stage_id) <= 0;
+    return flecs_table_column_inc_multithreaded(table, column_index, stage_id) <= 0;
 }
 
-bool flecs_table_column_lock_read_end(
+bool flecs_table_column_read_end(
     ecs_table_t *table,
     const int16_t column_index
     )
 {
-    return flecs_table_column_lock_dec(table, column_index) < 0;
+    return flecs_table_column_dec(table, column_index) < 0;
 }
 
-bool flecs_table_column_lock_read_end_multithreaded(
+bool flecs_table_column_read_end_multithreaded(
     ecs_table_t *table,
     const int16_t column_index,
     const int32_t stage_id
     )
 {
-    return flecs_table_column_lock_dec_multithreaded(table, column_index, stage_id) < 0;
+    return flecs_table_column_dec_multithreaded(table, column_index, stage_id) < 0;
 }
 
-bool flecs_table_column_lock_write_begin(
+bool flecs_table_column_write_begin(
     ecs_table_t *table,
     const int16_t column_index
     )
 {
-    return flecs_table_column_lock_dec(table, column_index) != -1;
+    return flecs_table_column_dec(table, column_index) != -1;
 }
 
-bool flecs_table_column_lock_write_begin_multithreaded(
+bool flecs_table_column_write_begin_multithreaded(
     ecs_table_t *table,
     const int16_t column_index,
     const int32_t stage_id
     )
 {
-    return flecs_table_column_lock_dec_multithreaded(table, column_index, stage_id) != -1;
+    return flecs_table_column_dec_multithreaded(table, column_index, stage_id) != -1;
 }
 
-bool flecs_table_column_lock_write_end(
+bool flecs_table_column_write_end(
     ecs_table_t *table,
     const int16_t column_index
     )
 {
-    return flecs_table_column_lock_inc(table, column_index) != 0;
+    return flecs_table_column_inc(table, column_index) != 0;
 }
 
-bool flecs_table_column_lock_write_end_multithreaded(
+bool flecs_table_column_write_end_multithreaded(
     ecs_table_t *table,
     const int16_t column_index,
     const int32_t stage_id
     )
 {
-    return flecs_table_column_lock_inc_multithreaded(table, column_index, stage_id) != 0;
+    return flecs_table_column_inc_multithreaded(table, column_index, stage_id) != 0;
 }
 
 #endif
