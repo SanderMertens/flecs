@@ -614,14 +614,27 @@ void flecs_multi_observer_invoke(
             ecs_assert(match, ECS_INTERNAL_ERROR, NULL);
         }
     } else {
-        ecs_table_range_t range = {
-            .table = table,
-            .offset = it->offset,
-            .count = it->count
-        };
+        /* Fast path: for trivial observer queries we can test the table
+         * directly without creating a full query iterator. Monitors are handled
+         * by the regular path as they require an additional check. */
+        int trivial = -1;
+        if (!(impl->flags & EcsObserverIsMonitor)) {
+            trivial = flecs_query_trivial_has_range(o->query, &user_it,
+                it->world, table, it->offset, it->count);
+        }
 
-        match = flecs_observer_query_has_range(
-            o->query, &range, term, it->event_id, &user_it);
+        if (trivial >= 0) {
+            match = trivial != 0;
+        } else {
+            ecs_table_range_t range = {
+                .table = table,
+                .offset = it->offset,
+                .count = it->count
+            };
+
+            match = flecs_observer_query_has_range(
+                o->query, &range, term, it->event_id, &user_it);
+        }
     }
 
     if (match) {
