@@ -1070,7 +1070,6 @@ void flecs_tables_resize_column_locks(
     int32_t previous_stage_count,
     int32_t new_stage_count);
 
-
 #endif
 
 #endif
@@ -41420,66 +41419,6 @@ void flecs_component_update_childof_depth(
     flecs_component_update_childof_w_depth(world, cr, new_depth);
 }
 
-#ifdef FLECS_MUT_ALIAS_LOCKS
-
-bool flecs_sparse_id_record_read_begin(
-    ecs_component_record_t *cr)
-{
-    ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
-    return ++cr->sparse_lock <= 0;
-}
-
-bool flecs_sparse_id_record_read_begin_multithreaded(
-    ecs_component_record_t *cr)
-{
-    ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
-    return ecs_os_ainc(&cr->sparse_lock) <= 0;
-}
-
-bool flecs_sparse_id_record_read_end(
-    ecs_component_record_t *cr)
-{
-    ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
-    return --cr->sparse_lock < 0;
-}
-
-bool flecs_sparse_id_record_read_end_multithreaded(
-    ecs_component_record_t *cr)
-{
-    ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
-    return ecs_os_adec(&cr->sparse_lock) < 0;
-}
-
-bool flecs_sparse_id_record_write_begin(
-    ecs_component_record_t *cr)
-{
-    ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
-    return --cr->sparse_lock != -1;
-}
-
-bool flecs_sparse_id_record_write_begin_multithreaded(
-    ecs_component_record_t *cr)
-{
-    ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
-    return ecs_os_adec(&cr->sparse_lock) != -1;
-}
-
-bool flecs_sparse_id_record_write_end(
-    ecs_component_record_t *cr)
-{
-    ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
-    return ++cr->sparse_lock != 0;
-}
-
-bool flecs_sparse_id_record_write_end_multithreaded(
-    ecs_component_record_t *cr)
-{
-    ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
-    return ecs_os_ainc(&cr->sparse_lock) != 0;
-}
-
-#endif
-
 ecs_entity_index_page_t* flecs_entity_index_ensure_page(
     ecs_entity_index_t *index,
     uint32_t id)
@@ -42780,6 +42719,66 @@ void flecs_ordered_children_reorder(
 error:
     return;
 }
+
+#ifdef FLECS_MUT_ALIAS_LOCKS
+
+bool flecs_sparse_id_record_read_begin(
+    ecs_component_record_t *cr)
+{
+    ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
+    return ++cr->sparse_lock <= 0;
+}
+
+bool flecs_sparse_id_record_read_begin_multithreaded(
+    ecs_component_record_t *cr)
+{
+    ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
+    return ecs_os_ainc(&cr->sparse_lock) <= 0;
+}
+
+bool flecs_sparse_id_record_read_end(
+    ecs_component_record_t *cr)
+{
+    ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
+    return --cr->sparse_lock < 0;
+}
+
+bool flecs_sparse_id_record_read_end_multithreaded(
+    ecs_component_record_t *cr)
+{
+    ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
+    return ecs_os_adec(&cr->sparse_lock) < 0;
+}
+
+bool flecs_sparse_id_record_write_begin(
+    ecs_component_record_t *cr)
+{
+    ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
+    return --cr->sparse_lock != -1;
+}
+
+bool flecs_sparse_id_record_write_begin_multithreaded(
+    ecs_component_record_t *cr)
+{
+    ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
+    return ecs_os_adec(&cr->sparse_lock) != -1;
+}
+
+bool flecs_sparse_id_record_write_end(
+    ecs_component_record_t *cr)
+{
+    ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
+    return ++cr->sparse_lock != 0;
+}
+
+bool flecs_sparse_id_record_write_end_multithreaded(
+    ecs_component_record_t *cr)
+{
+    ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
+    return ecs_os_ainc(&cr->sparse_lock) != 0;
+}
+
+#endif
 
 bool flecs_component_sparse_has(
     ecs_component_record_t *cr,
