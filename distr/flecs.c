@@ -2656,6 +2656,18 @@ ecs_iter_t flecs_query_iter(
     const ecs_world_t *world,
     const ecs_query_t *q);
 
+/* Fast path for testing a trivial query against a table range, used by
+ * observers. Avoids creating a full query iterator. Returns 1 on match, 0 on no
+ * match, and -1 if the query is not eligible for this path (caller must fall
+ * back to ecs_query_has_range). On a match, populates 'it'. */
+int flecs_query_trivial_has_range(
+    const ecs_query_t *q,
+    ecs_iter_t *it,
+    const ecs_world_t *world,
+    ecs_table_t *table,
+    int32_t offset,
+    int32_t count);
+
 /* Internal function for initializing an iterator after vars are constrained */
 void flecs_query_iter_constrain(
     ecs_iter_t *it);
@@ -17133,14 +17145,27 @@ void flecs_multi_observer_invoke(
             ecs_assert(match, ECS_INTERNAL_ERROR, NULL);
         }
     } else {
-        ecs_table_range_t range = {
-            .table = table,
-            .offset = it->offset,
-            .count = it->count
-        };
+        /* Fast path: for trivial observer queries we can test the table
+         * directly without creating a full query iterator. Monitors are handled
+         * by the regular path as they require an additional check. */
+        int trivial = -1;
+        if (!(impl->flags & EcsObserverIsMonitor)) {
+            trivial = flecs_query_trivial_has_range(o->query, &user_it,
+                it->world, table, it->offset, it->count);
+        }
 
-        match = flecs_observer_query_has_range(
-            o->query, &range, term, it->event_id, &user_it);
+        if (trivial >= 0) {
+            match = trivial != 0;
+        } else {
+            ecs_table_range_t range = {
+                .table = table,
+                .offset = it->offset,
+                .count = it->count
+            };
+
+            match = flecs_observer_query_has_range(
+                o->query, &range, term, it->event_id, &user_it);
+        }
     }
 
     if (match) {
@@ -85978,6 +86003,99 @@ ecs_iter_t flecs_query_iter(
     flecs_query_iter_constrain(&it);
 error:
     return it;
+}
+
+int flecs_query_trivial_has_range(
+    const ecs_query_t *q,
+    ecs_iter_t *it,
+    const ecs_world_t *world,
+    ecs_table_t *table,
+    int32_t offset,
+    int32_t count)
+{
+    ecs_query_impl_t *impl = flecs_query_impl(q);
+    ecs_flags32_t flags = q->flags;
+    ecs_flags32_t trivial_flags = EcsQueryIsTrivial|EcsQueryMatchOnlySelf;
+
+    /* Only handle the case where the constrained query would take the trivial
+     * test code path. This mirrors the conditions in
+     * flecs_query_apply_iter_flags. For anything else, signal the caller to use
+     * the regular (full iterator) path. */
+    if (impl->cache ||
+        ((flags & trivial_flags) != trivial_flags) ||
+        (flags & EcsQueryMatchWildcards) ||
+        q->row_fields)
+    {
+        return -1;
+    }
+
+    /* Eval count is incremented unconditionally, matching ecs_query_iter and
+     * the bloom filter reject path in ecs_query_has_range. */
+    ECS_CONST_CAST(ecs_query_t*, q)->eval_count ++;
+
+    if (table && ((offset + count) > ecs_table_count(table))) {
+        return 0;
+    }
+
+    if (!flecs_table_bloom_filter_test(table, q->bloom_filter)) {
+        return 0;
+    }
+
+    /* Build a minimal iterator for the trivial test. Unlike flecs_query_iter
+     * this skips the var/written/op_ctx allocations and the query VM, which the
+     * trivial test never uses. */
+    ecs_iter_t lit = {0};
+    lit.world = ECS_CONST_CAST(ecs_world_t*, world);
+    lit.real_world = q->real_world;
+    lit.query = q;
+    lit.system = q->entity;
+    lit.field_count = q->field_count;
+    lit.sizes = q->sizes;
+    lit.set_fields = q->set_fields;
+    lit.table = table;
+    lit.offset = offset;
+    lit.count = count;
+
+    /* flecs_iter_init asserts that EcsIterIsValid is not set on entry, so only
+     * mark the iterator valid after initialization. */
+    flecs_iter_init(lit.world, &lit, true);
+    lit.flags |= EcsIterIsValid;
+
+    ecs_os_memcpy_n(ECS_CONST_CAST(ecs_id_t*, lit.ids), q->ids,
+        ecs_id_t, q->field_count);
+
+    const ecs_term_t *terms = q->terms;
+    int16_t *columns = ECS_CONST_CAST(int16_t*, lit.columns);
+    int32_t t, term_count = q->term_count;
+    for (t = 0; t < term_count; t ++) {
+        const ecs_term_t *term = &terms[t];
+        ecs_component_record_t *cr = flecs_components_get(
+            lit.real_world, term->id);
+        if (!cr) {
+            goto no_match;
+        }
+
+        const ecs_table_record_t *tr = flecs_component_get_table(cr, table);
+        if (!tr) {
+            goto no_match;
+        }
+
+        lit.trs[term->field_index] = tr;
+        columns[term->field_index] = tr->column;
+    }
+
+    const ecs_entity_t *entities = ecs_table_entities(table);
+    if (entities) {
+        lit.entities = &entities[offset];
+    }
+
+    *it = lit;
+    return 1;
+
+no_match:
+    lit.flags |= EcsIterSkip;
+    ecs_iter_fini(&lit);
+    return 0;
 }
 
 ecs_iter_t ecs_query_iter(
