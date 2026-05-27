@@ -6,6 +6,8 @@
 #ifndef FLECS_SCRIPT_EXPR_AST_H
 #define FLECS_SCRIPT_EXPR_AST_H
 
+#define FLECS_EXPR_SWIZZLE_MAX (16)
+
 typedef enum ecs_expr_node_kind_t {
     EcsExprValue,
     EcsExprInterpolatedString,
@@ -99,6 +101,9 @@ typedef struct ecs_expr_member_t {
     ecs_expr_node_t *left;
     const char *member_name;
     uintptr_t offset;
+    int32_t swizzle_count;
+    ecs_size_t swizzle_size;
+    uint16_t swizzle[FLECS_EXPR_SWIZZLE_MAX];
 } ecs_expr_member_t;
 
 typedef struct ecs_expr_function_t {

@@ -814,9 +814,20 @@ int flecs_expr_member_visit_eval(
         goto error;
     }
 
-    out->value.ptr = ECS_OFFSET(expr->value.ptr, node->offset);
-    out->value.type = node->node.type;
-    out->owned = false;
+    if (node->swizzle_count) {
+        ecs_size_t size = node->swizzle_size;
+        int32_t i;
+        for (i = 0; i < node->swizzle_count; i ++) {
+            ecs_os_memcpy(ECS_OFFSET(out->value.ptr, i * size),
+                ECS_OFFSET(expr->value.ptr, node->swizzle[i]), size);
+        }
+        out->value.type = node->node.type;
+        out->owned = false;
+    } else {
+        out->value.ptr = ECS_OFFSET(expr->value.ptr, node->offset);
+        out->value.type = node->node.type;
+        out->owned = false;
+    }
 
     flecs_expr_stack_pop(ctx->stack);
     return 0;
