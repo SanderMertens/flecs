@@ -352,6 +352,30 @@ bool flecs_equals_illegal(
     ecs_abort(ECS_INVALID_OPERATION, "invalid equals hook for %s", ti->name);
 }
 
+static
+bool flecs_type_hooks_storage_equal(
+    const ecs_type_hooks_t *a,
+    const ecs_type_hooks_t *b)
+{
+    ecs_flags32_t flags = ECS_TYPE_HOOKS|ECS_TYPE_HOOKS_ILLEGAL;
+    if ((a->flags & flags) != (b->flags & flags)) {
+        return false;
+    }
+    if ((a->on_add != NULL) != (b->on_add != NULL)) {
+        return false;
+    }
+    if ((a->on_set != NULL) != (b->on_set != NULL)) {
+        return false;
+    }
+    if ((a->on_remove != NULL) != (b->on_remove != NULL)) {
+        return false;
+    }
+    if ((a->on_replace != NULL) != (b->on_replace != NULL)) {
+        return false;
+    }
+    return true;
+}
+
 void ecs_set_hooks_id(
     ecs_world_t *world,
     ecs_entity_t component,
@@ -437,17 +461,16 @@ void ecs_set_hooks_id(
 
     flecs_stage_from_world(&world);
 
-    /* Ensure that no tables have yet been created for the component */
-    ecs_check( ecs_id_in_use(world, component) == false,
-        ECS_ALREADY_IN_USE, ecs_get_name(world, component));
-    ecs_check( ecs_id_in_use(world, ecs_pair(component, EcsWildcard)) == false,
-        ECS_ALREADY_IN_USE, ecs_get_name(world, component));
+    bool in_use = ecs_id_in_use(world, component) ||
+        ecs_id_in_use(world, ecs_pair(component, EcsWildcard));
 
     ecs_type_info_t *ti = flecs_type_info_ensure(world, component);
     ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_check(!ti->component || ti->component == component,
         ECS_INCONSISTENT_COMPONENT_ACTION, NULL);
+
+    ecs_type_hooks_t prev_hooks = ti->hooks;
 
     if (!ti->size) {
         const EcsComponent *component_ptr = ecs_get(
@@ -597,6 +620,8 @@ void ecs_set_hooks_id(
     if (ti->hooks.cmp) ti->hooks.flags |= ECS_TYPE_HOOK_CMP;
     if (ti->hooks.equals) ti->hooks.flags |= ECS_TYPE_HOOK_EQUALS;
 
+    ti->hooks.flags |= prev_hooks.flags & ECS_TYPE_HOOK_IN_USE;
+
     if(flags & ECS_TYPE_HOOK_CTOR_ILLEGAL) ti->hooks.ctor = flecs_ctor_illegal;
     if(flags & ECS_TYPE_HOOK_DTOR_ILLEGAL) ti->hooks.dtor = flecs_dtor_illegal;
     if(flags & ECS_TYPE_HOOK_COPY_ILLEGAL) ti->hooks.copy = flecs_copy_illegal;
@@ -618,6 +643,13 @@ void ecs_set_hooks_id(
 
     if(ti->hooks.flags & ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL) {
         ti->hooks.move_dtor = flecs_move_ctor_illegal;
+    }
+
+    if (in_use && !flecs_type_hooks_storage_equal(&ti->hooks, &prev_hooks)) {
+        ti->hooks = prev_hooks;
+        ecs_throw(ECS_ALREADY_IN_USE, "illegal call to set_hooks() for "
+            "component '%s': cannot change which hooks are set while the "
+            "component is in use", flecs_errstr(ecs_get_path(world, component)));
     }
 
     if (component < FLECS_HI_COMPONENT_ID) {

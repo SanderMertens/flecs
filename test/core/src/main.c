@@ -1695,6 +1695,12 @@ void ComponentLifecycle_has_in_on_add_hook_move(void);
 void ComponentLifecycle_get_in_on_add_hook_new(void);
 void ComponentLifecycle_get_in_on_add_hook_move(void);
 void ComponentLifecycle_get_name_in_on_add_hook_move(void);
+void ComponentLifecycle_change_ctor_hook_while_in_use(void);
+void ComponentLifecycle_change_multiple_hooks_while_in_use(void);
+void ComponentLifecycle_change_on_set_hook_while_in_use(void);
+void ComponentLifecycle_change_hook_while_in_use_w_pair(void);
+void ComponentLifecycle_add_hook_while_in_use(void);
+void ComponentLifecycle_add_on_set_hook_while_in_use(void);
 
 // Testsuite 'Pairs'
 void Pairs_type_w_one_pair(void);
@@ -9895,6 +9901,30 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "get_name_in_on_add_hook_move",
         ComponentLifecycle_get_name_in_on_add_hook_move
+    },
+    {
+        "change_ctor_hook_while_in_use",
+        ComponentLifecycle_change_ctor_hook_while_in_use
+    },
+    {
+        "change_multiple_hooks_while_in_use",
+        ComponentLifecycle_change_multiple_hooks_while_in_use
+    },
+    {
+        "change_on_set_hook_while_in_use",
+        ComponentLifecycle_change_on_set_hook_while_in_use
+    },
+    {
+        "change_hook_while_in_use_w_pair",
+        ComponentLifecycle_change_hook_while_in_use_w_pair
+    },
+    {
+        "add_hook_while_in_use",
+        ComponentLifecycle_add_hook_while_in_use
+    },
+    {
+        "add_on_set_hook_while_in_use",
+        ComponentLifecycle_add_on_set_hook_while_in_use
     }
 };
 
@@ -16423,7 +16453,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         ComponentLifecycle_setup,
         NULL,
-        149,
+        155,
         ComponentLifecycle_testcases
     },
     {

@@ -4929,3 +4929,226 @@ void ComponentLifecycle_get_name_in_on_add_hook_move(void) {
 
     ecs_fini(world);
 }
+
+static int reload_ctor_a_invoked = 0;
+static void reload_ctor_a(void *ptr, int32_t count, const ecs_type_info_t *ti) {
+    (void)ti;
+    Position *p = ptr;
+    for (int i = 0; i < count; i ++) {
+        p[i].x = 0;
+        p[i].y = 0;
+    }
+    reload_ctor_a_invoked += count;
+}
+
+static int reload_ctor_b_invoked = 0;
+static void reload_ctor_b(void *ptr, int32_t count, const ecs_type_info_t *ti) {
+    (void)ti;
+    Position *p = ptr;
+    for (int i = 0; i < count; i ++) {
+        p[i].x = 0;
+        p[i].y = 0;
+    }
+    reload_ctor_b_invoked += count;
+}
+
+static int reload_dtor_a_invoked = 0;
+static void reload_dtor_a(void *ptr, int32_t count, const ecs_type_info_t *ti) {
+    (void)ptr;
+    (void)ti;
+    reload_dtor_a_invoked += count;
+}
+
+static int reload_dtor_b_invoked = 0;
+static void reload_dtor_b(void *ptr, int32_t count, const ecs_type_info_t *ti) {
+    (void)ptr;
+    (void)ti;
+    reload_dtor_b_invoked += count;
+}
+
+static int reload_on_set_a_invoked = 0;
+static void reload_on_set_a(ecs_iter_t *it) {
+    reload_on_set_a_invoked += it->count;
+}
+
+static int reload_on_set_b_invoked = 0;
+static void reload_on_set_b(ecs_iter_t *it) {
+    reload_on_set_b_invoked += it->count;
+}
+
+void ComponentLifecycle_change_ctor_hook_while_in_use(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = reload_ctor_a
+    });
+
+    ecs_new_w(world, Position);
+    test_int(reload_ctor_a_invoked, 1);
+    test_int(reload_ctor_b_invoked, 0);
+
+    const ecs_type_info_t *ti = ecs_get_type_info(world, ecs_id(Position));
+    test_assert(ti != NULL);
+    ecs_flags32_t flags = ti->hooks.flags;
+
+    ecs_set_hooks(world, Position, {
+        .ctor = reload_ctor_b
+    });
+
+    ti = ecs_get_type_info(world, ecs_id(Position));
+    test_assert(ti->hooks.ctor == reload_ctor_b);
+    test_assert(ti->hooks.flags == flags);
+
+    ecs_new_w(world, Position);
+    test_int(reload_ctor_a_invoked, 1);
+    test_int(reload_ctor_b_invoked, 1);
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_change_multiple_hooks_while_in_use(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = reload_ctor_a,
+        .dtor = reload_dtor_a
+    });
+
+    ecs_entity_t e = ecs_new_w(world, Position);
+    test_int(reload_ctor_a_invoked, 1);
+
+    const ecs_type_info_t *ti = ecs_get_type_info(world, ecs_id(Position));
+    test_assert(ti != NULL);
+    ecs_flags32_t flags = ti->hooks.flags;
+
+    ecs_set_hooks(world, Position, {
+        .ctor = reload_ctor_b,
+        .dtor = reload_dtor_b
+    });
+
+    ti = ecs_get_type_info(world, ecs_id(Position));
+    test_assert(ti->hooks.ctor == reload_ctor_b);
+    test_assert(ti->hooks.dtor == reload_dtor_b);
+    test_assert(ti->hooks.flags == flags);
+
+    ecs_delete(world, e);
+    test_int(reload_dtor_a_invoked, 0);
+    test_int(reload_dtor_b_invoked, 1);
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_change_on_set_hook_while_in_use(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .on_set = reload_on_set_a
+    });
+
+    ecs_entity_t e = ecs_new_w(world, Position);
+    ecs_set(world, e, Position, {10, 20});
+    test_int(reload_on_set_a_invoked, 1);
+    test_int(reload_on_set_b_invoked, 0);
+
+    const ecs_type_info_t *ti = ecs_get_type_info(world, ecs_id(Position));
+    test_assert(ti != NULL);
+    ecs_flags32_t flags = ti->hooks.flags;
+
+    ecs_set_hooks(world, Position, {
+        .on_set = reload_on_set_b
+    });
+
+    ti = ecs_get_type_info(world, ecs_id(Position));
+    test_assert(ti->hooks.on_set == reload_on_set_b);
+    test_assert(ti->hooks.flags == flags);
+
+    ecs_set(world, e, Position, {30, 40});
+    test_int(reload_on_set_a_invoked, 1);
+    test_int(reload_on_set_b_invoked, 1);
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_change_hook_while_in_use_w_pair(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tgt);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = reload_ctor_a
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add_pair(world, e, ecs_id(Position), Tgt);
+    test_int(reload_ctor_a_invoked, 1);
+
+    const ecs_type_info_t *ti = ecs_get_type_info(world, ecs_id(Position));
+    test_assert(ti != NULL);
+    ecs_flags32_t flags = ti->hooks.flags;
+
+    ecs_set_hooks(world, Position, {
+        .ctor = reload_ctor_b
+    });
+
+    ti = ecs_get_type_info(world, ecs_id(Position));
+    test_assert(ti->hooks.ctor == reload_ctor_b);
+    test_assert(ti->hooks.flags == flags);
+
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add_pair(world, e2, ecs_id(Position), Tgt);
+    test_int(reload_ctor_a_invoked, 1);
+    test_int(reload_ctor_b_invoked, 1);
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_add_hook_while_in_use(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = reload_ctor_a
+    });
+
+    ecs_new_w(world, Position);
+
+    test_expect_abort();
+
+    ecs_set_hooks(world, Position, {
+        .dtor = reload_dtor_a
+    });
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_add_on_set_hook_while_in_use(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = reload_ctor_a
+    });
+
+    ecs_new_w(world, Position);
+
+    test_expect_abort();
+
+    ecs_set_hooks(world, Position, {
+        .on_set = reload_on_set_a
+    });
+
+    ecs_fini(world);
+}
