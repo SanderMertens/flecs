@@ -1246,4 +1246,3 @@ void flecs_component_update_childof_depth(
 
     flecs_component_update_childof_w_depth(world, cr, new_depth);
 }
-

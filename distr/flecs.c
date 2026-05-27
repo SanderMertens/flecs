@@ -1125,7 +1125,6 @@ void flecs_tables_resize_column_locks(
     int32_t previous_stage_count,
     int32_t new_stage_count);
 
-
 #endif
 
 #endif
@@ -20969,7 +20968,6 @@ bool ecs_is_defer_suspended(
 error:
     return false;
 }
-
 
 
 /**
@@ -41000,7 +40998,6 @@ void flecs_component_update_childof_depth(
     flecs_component_update_childof_w_depth(world, cr, new_depth);
 }
 
-
 /**
  * @file storage/entity_index.c
  * @brief Entity index.
@@ -42905,7 +42902,6 @@ void* flecs_component_sparse_emplace(
  * stored beyond an element in the table type. A column_map member maps between
  * type indices and column indices.
  */
-
 
 
 /* Table sanity check to detect storage issues. Only enabled in SANITIZE mode as

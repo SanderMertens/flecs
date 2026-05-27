@@ -19,7 +19,6 @@
 
 #include "../private_api.h"
 
-
 /* Table sanity check to detect storage issues. Only enabled in SANITIZE mode as
  * this can severely slow down many ECS operations. */
 #ifdef FLECS_SANITIZE

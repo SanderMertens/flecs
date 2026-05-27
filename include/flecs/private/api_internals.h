@@ -47,7 +47,6 @@ typedef struct ecs_table_diff_t {
     ecs_flags32_t removed_flags;
 } ecs_table_diff_t;
 
-
 #ifdef FLECS_MUT_ALIAS_LOCKS
 /** safety information of where the ptr from `get` functions originates from.
  * when component record is null, that means it comes from a table.
@@ -75,7 +74,6 @@ struct ecs_get_ptr_t{
 typedef void* ecs_get_ptr_t;
 
 #endif
-
 
 /* Tracks which and how many non-fragmenting children are stored in a table for a parent. */
 typedef struct ecs_parent_record_t {
