@@ -508,6 +508,9 @@ void Eval_component_expr_swizzle_var_subset(void);
 void Eval_component_expr_swizzle_var_rgb(void);
 void Eval_component_expr_swizzle_var_no_target_type(void);
 void Eval_component_expr_member_no_var(void);
+void Eval_struct_inheritance(void);
+void Eval_struct_inheritance_empty_derived(void);
+void Eval_struct_inheritance_assign(void);
 void Eval_default_child_component_w_entity_in_if(void);
 void Eval_default_child_component_w_entity_in_for(void);
 void Eval_default_child_component_w_entity_in_nested_if(void);
@@ -3523,6 +3526,18 @@ bake_test_case Eval_testcases[] = {
     {
         "component_expr_member_no_var",
         Eval_component_expr_member_no_var
+    },
+    {
+        "struct_inheritance",
+        Eval_struct_inheritance
+    },
+    {
+        "struct_inheritance_empty_derived",
+        Eval_struct_inheritance_empty_derived
+    },
+    {
+        "struct_inheritance_assign",
+        Eval_struct_inheritance_assign
     },
     {
         "default_child_component_w_entity_in_if",
@@ -7555,7 +7570,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        505,
+        508,
         Eval_testcases
     },
     {

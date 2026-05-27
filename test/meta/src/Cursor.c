@@ -5333,6 +5333,50 @@ void Cursor_get_char(void) {
     ecs_fini(world);
 }
 
+void Cursor_struct_inherit(void) {
+    typedef struct {
+        ecs_i32_t x;
+        ecs_i32_t y;
+        ecs_i32_t z;
+    } Point3D;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t base = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "Point2D"}),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t t = ecs_entity(world, {.name = "Point3D"});
+    ecs_add_pair(world, t, EcsIsA, base);
+    ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = t,
+        .members = {
+            {"z", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    Point3D value = {0, 0, 0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+    test_ok( ecs_meta_push(&cur) );
+    test_ok( ecs_meta_set_int(&cur, 10) );
+    test_ok( ecs_meta_next(&cur) );
+    test_ok( ecs_meta_set_int(&cur, 20) );
+    test_ok( ecs_meta_next(&cur) );
+    test_ok( ecs_meta_set_int(&cur, 30) );
+    test_ok( ecs_meta_pop(&cur) );
+
+    test_int(value.x, 10);
+    test_int(value.y, 20);
+    test_int(value.z, 30);
+
+    ecs_fini(world);
+}
+
 void Cursor_set_value_enum_u8_underlying(void) {
     ecs_world_t *world = ecs_init();
 
@@ -5353,6 +5397,51 @@ void Cursor_set_value_enum_u8_underlying(void) {
     ecs_meta_cursor_t cur = ecs_meta_cursor(world, e, &dst);
     test_int(0, ecs_meta_set_value(&cur, &v));
     test_int(2, dst);
+
+    ecs_fini(world);
+}
+
+void Cursor_struct_inherit_by_member(void) {
+    typedef struct {
+        ecs_i32_t x;
+        ecs_i32_t y;
+        ecs_i32_t z;
+    } Point3D;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t base = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "Point2D"}),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t t = ecs_entity(world, {.name = "Point3D"});
+    ecs_add_pair(world, t, EcsIsA, base);
+    ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = t,
+        .members = {
+            {"z", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    Point3D value = {0, 0, 0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+    test_ok( ecs_meta_push(&cur) );
+    test_ok( ecs_meta_member(&cur, "z") );
+    test_ok( ecs_meta_set_int(&cur, 30) );
+    test_ok( ecs_meta_member(&cur, "x") );
+    test_ok( ecs_meta_set_int(&cur, 10) );
+    test_ok( ecs_meta_member(&cur, "y") );
+    test_ok( ecs_meta_set_int(&cur, 20) );
+    test_ok( ecs_meta_pop(&cur) );
+
+    test_int(value.x, 10);
+    test_int(value.y, 20);
+    test_int(value.z, 30);
 
     ecs_fini(world);
 }

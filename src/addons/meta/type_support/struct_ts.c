@@ -60,6 +60,202 @@ void flecs_set_struct_member(
 }
 
 static
+ecs_entity_t flecs_struct_base(
+    ecs_world_t *world,
+    ecs_entity_t type,
+    ecs_size_t *base_size,
+    ecs_size_t *base_align)
+{
+    if (base_size) *base_size = 0;
+    if (base_align) *base_align = 0;
+
+    ecs_entity_t base;
+    int32_t i = 0;
+    while ((base = ecs_get_target(world, type, EcsIsA, i ++))) {
+        const EcsComponent *comp = ecs_get(world, base, EcsComponent);
+        if (comp) {
+            if (base_size) *base_size = comp->size;
+            if (base_align) *base_align = comp->alignment;
+            return base;
+        }
+    }
+
+    return 0;
+}
+
+/* Total number of members in the struct, including inherited base members. */
+int32_t flecs_struct_member_count(
+    ecs_world_t *world,
+    ecs_entity_t type)
+{
+    int32_t count = 0;
+    ecs_entity_t base = flecs_struct_base(world, type, NULL, NULL);
+    if (base) {
+        count = flecs_struct_member_count(world, base);
+    }
+
+    const EcsStruct *s = ecs_get(world, type, EcsStruct);
+    if (s) {
+        count += ecs_vec_count(&s->members);
+    }
+
+    return count;
+}
+
+static
+int flecs_struct_compute_offsets(
+    ecs_world_t *world,
+    ecs_member_t *members,
+    int32_t from,
+    int32_t count,
+    ecs_size_t *size_inout,
+    ecs_size_t *align_inout)
+{
+    ecs_size_t size = *size_inout;
+    ecs_size_t alignment = *align_inout;
+
+    int32_t i;
+    for (i = from; i < count; i ++) {
+        ecs_member_t *elem = &members[i];
+
+        ecs_assert(elem->name != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(elem->type != 0, ECS_INTERNAL_ERROR, NULL);
+
+        const EcsComponent *mbr_comp = ecs_get(world, elem->type, EcsComponent);
+        if (!mbr_comp) {
+            char *path = ecs_get_path(world, elem->type);
+            ecs_err("member '%s' is not a type", path);
+            ecs_os_free(path);
+            return -1;
+        }
+
+        ecs_size_t member_size = mbr_comp->size;
+        ecs_size_t member_alignment = mbr_comp->alignment;
+
+        if (!member_size || !member_alignment) {
+            char *path = ecs_get_path(world, elem->type);
+            ecs_err("member '%s' has 0 size/alignment", path);
+            ecs_os_free(path);
+            return -1;
+        }
+
+        member_size *= elem->count ? elem->count : 1;
+        size = ECS_ALIGN(size, member_alignment);
+        elem->size = member_size;
+        elem->offset = size;
+
+        if (elem->member) {
+            EcsMember *member_data = ecs_ensure(world, elem->member, EcsMember);
+            member_data->offset = elem->offset;
+        }
+
+        size += member_size;
+
+        if (member_alignment > alignment) {
+            alignment = member_alignment;
+        }
+    }
+
+    *size_inout = size;
+    *align_inout = alignment;
+
+    return 0;
+}
+
+static
+void flecs_struct_propagate_to_derived(
+    ecs_world_t *world,
+    ecs_entity_t base);
+
+static ecs_entity_t flecs_struct_finalizing = 0;
+
+static
+int flecs_struct_init_layout(
+    ecs_world_t *world,
+    ecs_entity_t struct_type,
+    ecs_size_t size,
+    ecs_size_t alignment)
+{
+    if (!size) {
+        ecs_err("struct '%s' has 0 size", ecs_get_name(world, struct_type));
+        return -1;
+    }
+
+    if (!alignment) {
+        ecs_err("struct '%s' has 0 alignment", ecs_get_name(world, struct_type));
+        return -1;
+    }
+
+    size = ECS_ALIGN(size, alignment);
+
+    ecs_modified(world, struct_type, EcsStruct);
+
+    /* Do this last as it triggers the update of EcsTypeSerializer */
+    if (flecs_init_type(world, struct_type, EcsStructType, size, alignment)) {
+        return -1;
+    }
+
+    /* If current struct is also a member, assign to itself */
+    if (ecs_has(world, struct_type, EcsMember)) {
+        EcsMember *type_mbr = ecs_ensure(world, struct_type, EcsMember);
+        ecs_assert(type_mbr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        type_mbr->type = struct_type;
+        type_mbr->count = 0;
+
+        ecs_modified(world, struct_type, EcsMember);
+    }
+
+    flecs_struct_propagate_to_derived(world, struct_type);
+
+    return 0;
+}
+
+static
+int flecs_struct_finalize(
+    ecs_world_t *world,
+    ecs_entity_t struct_type,
+    EcsStruct *s)
+{
+    ecs_size_t size, alignment;
+    flecs_struct_base(world, struct_type, &size, &alignment);
+
+    ecs_member_t *members = ecs_vec_first_t(&s->members, ecs_member_t);
+    int32_t count = ecs_vec_count(&s->members);
+
+    if (flecs_struct_compute_offsets(world, members, 0, count, &size, &alignment)) {
+        return -1;
+    }
+
+    ecs_entity_t prev = flecs_struct_finalizing;
+    flecs_struct_finalizing = struct_type;
+    int ret = flecs_struct_init_layout(world, struct_type, size, alignment);
+    flecs_struct_finalizing = prev;
+    return ret;
+}
+
+static
+void flecs_struct_propagate_to_derived(
+    ecs_world_t *world,
+    ecs_entity_t base)
+{
+    if (!ecs_id_in_use(world, ecs_pair(EcsIsA, base))) {
+        return;
+    }
+
+    ecs_iter_t it = ecs_each_id(world, ecs_pair(EcsIsA, base));
+    while (ecs_each_next(&it)) {
+        int32_t i;
+        for (i = 0; i < it.count; i ++) {
+            if (ecs_has(world, it.entities[i], EcsStruct)) {
+                flecs_struct_finalize(world, it.entities[i],
+                    ecs_ensure(world, it.entities[i], EcsStruct));
+            }
+        }
+    }
+}
+
+static
 int flecs_add_member_to_struct(
     ecs_world_t *world,
     ecs_entity_t struct_type,
@@ -133,164 +329,64 @@ int flecs_add_member_to_struct(
     EcsStruct *s = ecs_ensure(world, struct_type, EcsStruct);
     ecs_assert(s != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    /* First check if member is already added to struct */
-    ecs_member_t *members = ecs_vec_first_t(&s->members, ecs_member_t);
-    int32_t i, count = ecs_vec_count(&s->members);
+    ecs_entity_t base = flecs_struct_base(world, struct_type, NULL, NULL);
 
-    bool has_member = false;
-    for (i = 0; i < count; i ++) {
-        if (member_entity && members[i].member) {
-            if (members[i].member == member_entity) {
-                flecs_set_struct_member(&members[i], member_entity, &m, unit);
-                break;
-            }
-        } else {
-            if (!ecs_os_strcmp(name, members[i].name)) {
-                flecs_set_struct_member(&members[i], member_entity, &m, unit);
-                break;
-            }
+    if (base) {
+        if (m.offset || m.use_offset) {
+            ecs_err("member '%s' of struct '%s' has an explicit offset, which is "
+                "not supported for a struct that inherits from a base", name,
+                flecs_errstr(ecs_get_path(world, struct_type)));
+            return -1;
+        }
+
+        if (ecs_struct_get_member(world, base, name)) {
+            ecs_err("member '%s' shadows base member of struct '%s'", name,
+                flecs_errstr(ecs_get_path(world, struct_type)));
+            return -1;
         }
     }
 
-    has_member = i != count;
+    ecs_member_t *members = ecs_vec_first_t(&s->members, ecs_member_t);
+    int32_t i, count = ecs_vec_count(&s->members);
 
-    /* If member wasn't added yet, add a new element to vector */
-    if (!has_member) {
+    for (i = 0; i < count; i ++) {
+        bool match = (member_entity && members[i].member)
+            ? members[i].member == member_entity
+            : !ecs_os_strcmp(name, members[i].name);
+        if (match) {
+            flecs_set_struct_member(&members[i], member_entity, &m, unit);
+            break;
+        }
+    }
+
+    if (i == count) {
         ecs_vec_init_if_t(&s->members, ecs_member_t);
         ecs_member_t *elem = ecs_vec_append_t(NULL, &s->members, ecs_member_t);
         elem->name = NULL;
         flecs_set_struct_member(elem, member_entity, &m, unit);
-
-        /* Reobtain members array in case it was reallocated */
-        members = ecs_vec_first_t(&s->members, ecs_member_t);
-        count ++;
     }
 
-    bool explicit_offset = m.offset || m.use_offset;
-
-    /* Compute member offsets and size & alignment of struct */
-    ecs_size_t size = 0;
-    ecs_size_t alignment = 0;
-
-    if (!explicit_offset) {
-        for (i = 0; i < count; i ++) {
-            ecs_member_t *elem = &members[i];
-
-            ecs_assert(elem->name != NULL, ECS_INTERNAL_ERROR, NULL);
-            ecs_assert(elem->type != 0, ECS_INTERNAL_ERROR, NULL);
-
-            /* Get component of member type to get its size & alignment */
-            const EcsComponent *mbr_comp = ecs_get(world, elem->type, EcsComponent);
-            if (!mbr_comp) {
-                char *path = ecs_get_path(world, elem->type);
-                ecs_err("member '%s' is not a type", path);
-                ecs_os_free(path);
-                return -1;
-            }
-
-            ecs_size_t member_size = mbr_comp->size;
-            ecs_size_t member_alignment = mbr_comp->alignment;
-
-            if (!member_size || !member_alignment) {
-                char *path = ecs_get_path(world, elem->type);
-                ecs_err("member '%s' has 0 size/alignment", path);
-                ecs_os_free(path);
-                return -1;
-            }
-
-            member_size *= elem->count ? elem->count : 1;
-            size = ECS_ALIGN(size, member_alignment);
-            elem->size = member_size;
-            elem->offset = size;
-
-            /* Synchronize offset with Member component */
-            if (elem->member) {
-                EcsMember *member_data = ecs_ensure(
-                    world, elem->member, EcsMember);
-                member_data->offset = elem->offset;
-            }
-
-            size += member_size;
-
-            if (member_alignment > alignment) {
-                alignment = member_alignment;
-            }
-        }
-    } else {
-        /* If members have explicit offsets, we can't rely on computed 
-         * size/alignment values. Calculate size as if this is the last member
-         * instead, since this will validate if the member fits in the struct.
-         * It doesn't matter if the size is smaller than the actual struct size
-         * because flecs_init_type function compares computed size with actual
-         * (component) size to determine if the type is partial. */
+    if (m.offset || m.use_offset) {
+        members = ecs_vec_first_t(&s->members, ecs_member_t);
         ecs_member_t *elem = &members[i];
 
-        ecs_assert(elem->name != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_assert(elem->type != 0, ECS_INTERNAL_ERROR, NULL);
-
-        /* Get component of member type to get its size & alignment */
         const EcsComponent *mbr_comp = ecs_get(world, elem->type, EcsComponent);
-        if (!mbr_comp) {
+        if (!mbr_comp || !mbr_comp->size || !mbr_comp->alignment) {
             char *path = ecs_get_path(world, elem->type);
-            ecs_err("member '%s' is not a type", path);
+            ecs_err("member '%s' is not a type or has 0 size/alignment", path);
             ecs_os_free(path);
             return -1;
         }
 
-        ecs_size_t member_size = mbr_comp->size;
-        ecs_size_t member_alignment = mbr_comp->alignment;
+        elem->size = mbr_comp->size * (elem->count ? elem->count : 1);
 
-        if (!member_size || !member_alignment) {
-            char *path = ecs_get_path(world, elem->type);
-            ecs_err("member '%s' has 0 size/alignment", path);
-            ecs_os_free(path);
-            return -1;
-        }
-
-        member_size *= elem->count ? elem->count : 1;
-        elem->size = member_size;
-        size = elem->offset + member_size;
-
-        const EcsComponent* comp = ecs_get(world, struct_type, EcsComponent);
-        if (comp) {
-            alignment = comp->alignment;
-        } else {
-            alignment = member_alignment;
-        }
+        const EcsComponent *comp = ecs_get(world, struct_type, EcsComponent);
+        return flecs_struct_init_layout(world, struct_type,
+            elem->offset + elem->size,
+            comp ? comp->alignment : mbr_comp->alignment);
     }
 
-    if (size == 0) {
-        ecs_err("struct '%s' has 0 size", ecs_get_name(world, struct_type));
-        return -1;
-    }
-
-    if (alignment == 0) {
-        ecs_err("struct '%s' has 0 alignment", ecs_get_name(world, struct_type));
-        return -1;
-    }
-
-    /* Align struct size to struct alignment */
-    size = ECS_ALIGN(size, alignment);
-
-    ecs_modified(world, struct_type, EcsStruct);
-
-    /* Do this last as it triggers the update of EcsTypeSerializer */
-    if (flecs_init_type(world, struct_type, EcsStructType, size, alignment)) {
-        return -1;
-    }
-
-    /* If current struct is also a member, assign to itself */
-    if (ecs_has(world, struct_type, EcsMember)) {
-        EcsMember *type_mbr = ecs_ensure(world, struct_type, EcsMember);
-        ecs_assert(type_mbr != NULL, ECS_INTERNAL_ERROR, NULL);
-
-        type_mbr->type = struct_type;
-        type_mbr->count = 0;
-
-        ecs_modified(world, struct_type, EcsMember);
-    }
-
-    return 0;
+    return flecs_struct_finalize(world, struct_type, s);
 }
 
 static
@@ -349,8 +445,25 @@ void flecs_set_member_ranges(ecs_iter_t *it) {
 
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
-        flecs_set_member_from_component(world, it->entities[i], 
+        flecs_set_member_from_component(world, it->entities[i],
             &member[i], &ranges[i]);
+    }
+}
+
+static
+void flecs_struct_on_set(ecs_iter_t *it) {
+    ecs_world_t *world = it->world;
+    EcsStruct *s = ecs_field(it, EcsStruct, 0);
+
+    int32_t i, count = it->count;
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t e = it->entities[i];
+        if (e != flecs_struct_finalizing &&
+            flecs_struct_base(world, e, NULL, NULL) &&
+            !ecs_has(world, e, EcsType))
+        {
+            flecs_struct_finalize(world, e, &s[i]);
+        }
     }
 }
 
@@ -526,6 +639,16 @@ ecs_entity_t ecs_struct_init(
 
     ecs_entity_t old_scope = ecs_set_scope(world, type);
 
+    if (ecs_has(world, type, EcsStruct)) {
+        EcsStruct *s = ecs_ensure(world, type, EcsStruct);
+        ecs_member_t *members = ecs_vec_first_t(&s->members, ecs_member_t);
+        int32_t m, mcount = ecs_vec_count(&s->members);
+        for (m = 0; m < mcount; m ++) {
+            ecs_os_free(ECS_CONST_CAST(char*, members[m].name));
+        }
+        ecs_vec_clear(&s->members);
+    }
+
     int i;
     for (i = 0; i < ECS_MEMBER_DESC_CACHE_SIZE; i ++) {
         const ecs_member_t *m_desc = &desc->members[i];
@@ -565,7 +688,7 @@ ecs_entity_t ecs_struct_init(
     if (i == 0) {
         EcsStruct *s = ecs_ensure(world, type, EcsStruct);
         ecs_assert(s != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_vec_init_t(NULL, &s->members, ecs_member_t, 0);
+        ecs_vec_init_if_t(&s->members, ecs_member_t);
         ecs_modified(world, type, EcsStruct);
     } else if (!ecs_has(world, type, EcsStruct)) {
         goto error;
@@ -611,17 +734,19 @@ ecs_member_t* ecs_struct_get_member(
     const char *name)
 {
     const EcsStruct *s = ecs_get(world, type, EcsStruct);
-    if (!s) {
-        return NULL;
+    if (s) {
+        ecs_member_t *members = ecs_vec_first(&s->members);
+        int32_t i, count = ecs_vec_count(&s->members);
+        for (i = 0; i < count; i ++) {
+            if (!ecs_os_strcmp(members[i].name, name)) {
+                return &members[i];
+            }
+        }
     }
 
-    ecs_member_t *members = ecs_vec_first(&s->members);
-    int32_t i, count = ecs_vec_count(&s->members);
-
-    for (i = 0; i < count; i ++) {
-        if (!ecs_os_strcmp(members[i].name, name)) {
-            return &members[i];
-        }
+    ecs_entity_t base = flecs_struct_base(world, type, NULL, NULL);
+    if (base) {
+        return ecs_struct_get_member(world, base, name);
     }
 
     return NULL;
@@ -632,18 +757,21 @@ ecs_member_t* ecs_struct_get_nth_member(
     ecs_entity_t type,
     int32_t i)
 {
+    ecs_entity_t base = flecs_struct_base(world, type, NULL, NULL);
+    if (base) {
+        int32_t base_count = flecs_struct_member_count(world, base);
+        if (i < base_count) {
+            return ecs_struct_get_nth_member(world, base, i);
+        }
+        i -= base_count;
+    }
+
     const EcsStruct *s = ecs_get(world, type, EcsStruct);
-    if (!s) {
+    if (!s || i >= ecs_vec_count(&s->members)) {
         return NULL;
     }
 
-    ecs_member_t *members = ecs_vec_first(&s->members);
-    int32_t count = ecs_vec_count(&s->members);
-    if (i >= count) {
-        return NULL;
-    }
-
-    return &members[i];
+    return ecs_vec_get_t(&s->members, ecs_member_t, i);
 }
 
 void flecs_meta_struct_init(
@@ -676,11 +804,12 @@ void flecs_meta_struct_init(
         .type.alignment = ECS_ALIGNOF(EcsStruct)
     });
 
-    ecs_set_hooks(world, EcsStruct, { 
+    ecs_set_hooks(world, EcsStruct, {
         .ctor = flecs_default_ctor,
         .move = ecs_move(EcsStruct),
         .copy = ecs_copy(EcsStruct),
-        .dtor = ecs_dtor(EcsStruct)
+        .dtor = ecs_dtor(EcsStruct),
+        .on_set = flecs_struct_on_set
     });
 
     ecs_set_hooks(world, EcsMember, { 

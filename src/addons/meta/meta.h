@@ -35,6 +35,10 @@ void flecs_rtt_init_default_hooks(
 const char* flecs_meta_op_kind_str(
     ecs_meta_op_kind_t kind);
 
+int32_t flecs_struct_member_count(
+    ecs_world_t *world,
+    ecs_entity_t type);
+
 #endif
 
 #endif

@@ -464,6 +464,7 @@ extern "C" {
 #define EcsIterHasCondSet              (1u << 6u)  /* Does the iterator have conditionally set fields. */
 #define EcsIterProfile                 (1u << 7u)  /* Profile iterator performance. */
 #define EcsIterTrivialSearch           (1u << 8u)  /* Trivial iterator mode. */
+#define EcsIterComponentInheritance    (1u << 9u)  /* Query matches via component inheritance. */
 #define EcsIterTrivialTest             (1u << 11u) /* Trivial test mode (constrained $this). */
 #define EcsIterTrivialCached           (1u << 14u) /* Trivial search for cached query. */
 #define EcsIterCached                  (1u << 15u) /* Cached query. */
@@ -509,6 +510,7 @@ extern "C" {
 #define EcsQueryNested                (1u << 29u) /* Query created by a query (for observer, cache). */
 #define EcsQueryCacheWithFilter       (1u << 30u)
 #define EcsQueryValid                 (1u << 31u)
+#define EcsQueryHasComponentInheritance (1u << 5u)  /* Query matches via component inheritance (low free bit; 11..31 exhausted). */
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Term flags (used by ecs_term_t::flags_)
@@ -10744,6 +10746,19 @@ ecs_entity_t ecs_field_src(
  */
 FLECS_API
 size_t ecs_field_size(
+    const ecs_iter_t *it,
+    int8_t index);
+
+/** Return the storage stride of a field.
+ * Like ecs_field_size(), but for a field matched through component inheritance
+ * returns the size of the stored (derived) component, i.e. the array stride.
+ *
+ * @param it The iterator.
+ * @param index The index of the field in the iterator.
+ * @return The storage stride for the field.
+ */
+FLECS_API
+size_t ecs_field_stride(
     const ecs_iter_t *it,
     int8_t index);
 
