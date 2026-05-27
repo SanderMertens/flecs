@@ -2241,7 +2241,81 @@ void SerializeEntityToJson_serialize_sparse_tag(void) {
     };
 
     char *json = ecs_entity_to_json(world, e, &desc);
-    test_str(json, "{\"type_info\":{}, \"name\":\"e\"}");
+    test_str(json, "{\"type_info\":{}, \"name\":\"e\", \"tags\":[\"SparseTag\"]}");
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+void SerializeEntityToJson_serialize_sparse_tag_simple(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, SparseTag, Sparse);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_add(world, e, SparseTag);
+
+    char *json = ecs_entity_to_json(world, e, NULL);
+    test_assert(json != NULL);
+    test_json(json, "{\"name\":\"e\", \"tags\":[\"SparseTag\"]}");
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+void SerializeEntityToJson_serialize_sparse_pair_tag(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, Rel, Sparse);
+    ECS_TAG(world, Tgt);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_add_pair(world, e, Rel, Tgt);
+
+    char *json = ecs_entity_to_json(world, e, NULL);
+    test_assert(json != NULL);
+    test_json(json, "{\"name\":\"e\", \"pairs\":{\"Rel\":\"Tgt\"}}");
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+void SerializeEntityToJson_serialize_dont_fragment_tag_w_type_info(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, DfTag, DontFragment);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_add(world, e, DfTag);
+
+    ecs_entity_to_json_desc_t desc = {
+        .serialize_values = true,
+        .serialize_type_info = true
+    };
+
+    char *json = ecs_entity_to_json(world, e, &desc);
+    test_str(json, "{\"type_info\":{}, \"name\":\"e\", \"tags\":[\"DfTag\"]}");
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+void SerializeEntityToJson_serialize_dont_fragment_pair_tag_w_type_info(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, Rel, DontFragment, Exclusive);
+    ECS_TAG(world, Tgt);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_add_pair(world, e, Rel, Tgt);
+
+    ecs_entity_to_json_desc_t desc = {
+        .serialize_values = true,
+        .serialize_type_info = true
+    };
+
+    char *json = ecs_entity_to_json(world, e, &desc);
+    test_str(json, "{\"type_info\":{}, \"name\":\"e\", \"pairs\":{\"Rel\":\"Tgt\"}}");
     ecs_os_free(json);
 
     ecs_fini(world);

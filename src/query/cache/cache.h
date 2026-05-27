@@ -14,17 +14,17 @@
  * with different columns being matched by the query. */
 typedef struct ecs_query_triv_cache_match_t {
     ecs_table_t *table;              /* The current table. */
-    const ecs_table_record_t **trs;  /* Information about where to find field in table. */
+    int16_t *columns;
     ecs_termset_t set_fields;        /* Fields that are set (used by fields with Optional/Not). */
 } ecs_query_triv_cache_match_t;
 
 struct ecs_query_cache_match_t {
     ecs_query_triv_cache_match_t base;
+    const ecs_table_record_t **_trs;
     int32_t _offset;                  /* Starting point in table. */
     int32_t _count;                   /* Number of entities to iterate in table. */
     ecs_id_t *_ids;                   /* Resolved (component) ids for current table. */
     ecs_entity_t *_sources;           /* Sources of ids. */
-    ecs_table_t **_tables;            /* Tables for fields with non-$this source. */
     ecs_termset_t _up_fields;         /* Fields that are matched through traversal. */
     int32_t *_monitor;                /* Used to monitor table for changes. */
     int32_t rematch_count;            /* Track whether table was rematched. */
@@ -49,6 +49,7 @@ typedef struct ecs_query_cache_allocators_t {
     ecs_block_allocator_t pointers;
     ecs_block_allocator_t ids;
     ecs_block_allocator_t monitors;
+    ecs_block_allocator_t columns;
 } ecs_query_cache_allocators_t;
 
 /** Query that is automatically matched against tables */

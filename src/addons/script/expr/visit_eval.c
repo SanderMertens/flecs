@@ -719,6 +719,15 @@ int flecs_expr_function_visit_eval(
         node->calldata.is.callback(&call_ctx, argc, argv, &out->value);
     }
 
+    ecs_script_runtime_t *r = flecs_script_runtime_get(ctx->world);
+    if (r->error) {
+        r->error = false;
+        flecs_expr_visit_error(ctx->script, node,
+            "error in script function '%s'",
+            node->function_name);
+        goto error;
+    }
+
     out->owned = true;
 
     flecs_expr_stack_pop(ctx->stack);
@@ -773,6 +782,15 @@ int flecs_expr_method_visit_eval(
             node->calldata.is.callback(&call_ctx, argc, argv, &out->value);
         }
 
+        ecs_script_runtime_t *r = flecs_script_runtime_get(ctx->world);
+        if (r->error) {
+            r->error = false;
+            flecs_expr_visit_error(ctx->script, node,
+                "error in script method '%s'",
+                node->function_name);
+            goto error;
+        }
+
         out->owned = true;
     }
 
@@ -796,9 +814,20 @@ int flecs_expr_member_visit_eval(
         goto error;
     }
 
-    out->value.ptr = ECS_OFFSET(expr->value.ptr, node->offset);
-    out->value.type = node->node.type;
-    out->owned = false;
+    if (node->swizzle_count) {
+        ecs_size_t size = node->swizzle_size;
+        int32_t i;
+        for (i = 0; i < node->swizzle_count; i ++) {
+            ecs_os_memcpy(ECS_OFFSET(out->value.ptr, i * size),
+                ECS_OFFSET(expr->value.ptr, node->swizzle[i]), size);
+        }
+        out->value.type = node->node.type;
+        out->owned = false;
+    } else {
+        out->value.ptr = ECS_OFFSET(expr->value.ptr, node->offset);
+        out->value.type = node->node.type;
+        out->owned = false;
+    }
 
     flecs_expr_stack_pop(ctx->stack);
     return 0;

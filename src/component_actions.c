@@ -45,11 +45,13 @@ void flecs_invoke_hook(
     }
 
     ecs_entity_t dummy_src = 0;
+    int16_t column = tr->column;
 
     it.world = world;
     it.real_world = world;
     it.table = table;
     it.trs = &tr;
+    it.columns = &column;
     it.row_fields = !!(tr->hdr.cr->flags & EcsIdSparse);
     it.ref_fields = it.row_fields;
     it.sizes = ECS_CONST_CAST(ecs_size_t*, &ti->size);
@@ -436,6 +438,10 @@ void flecs_actions_delete_tree(
         ecs_flags32_t diff_flags = diff->removed_flags;
         if (!diff_flags) {
             return;
+        }
+
+        if (table->flags & EcsTableHasTraversable) {
+            flecs_emit_propagate_invalidate(world, table, row, count);
         }
 
         flecs_actions_on_remove_intern(

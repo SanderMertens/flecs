@@ -2722,6 +2722,123 @@ void Iter_column_index_not(void) {
     ecs_fini(world);
 }
 
+void Iter_column_index_trivial_cache(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_query_t *f = ecs_query(world, {
+        .terms = {{ ecs_id(Position) }, { ecs_id(Velocity) }},
+        .cache_kind = EcsQueryCacheAll
+    });
+
+    ecs_entity_t e = ecs_new_w(world, Position);
+    ecs_add(world, e, Velocity);
+
+    ecs_iter_t it = ecs_query_iter(world, f);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e, it.entities[0]);
+    test_int(0, ecs_field_column(&it, 0));
+    test_int(1, ecs_field_column(&it, 1));
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(f);
+
+    ecs_fini(world);
+}
+
+void Iter_column_index_optional_not_set(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_query_t *f = ecs_query(world, {
+        .terms = {
+            { ecs_id(Position) },
+            { ecs_id(Velocity), .oper = EcsOptional }
+        }
+    });
+
+    ecs_new_w(world, Position);
+
+    ecs_iter_t it = ecs_query_iter(world, f);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_bool(false, ecs_field_is_set(&it, 1));
+    test_int(-1, ecs_field_column(&it, 1));
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(f);
+
+    ecs_fini(world);
+}
+
+void Iter_column_index_shared_cached(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+
+    ecs_add_pair(world, TagA, EcsOnInstantiate, EcsInherit);
+
+    ecs_query_t *f = ecs_query(world, {
+        .terms = {{ TagB }, { TagC }, { TagA }},
+        .cache_kind = EcsQueryCacheAll
+    });
+
+    ecs_entity_t base = ecs_new_w(world, TagA);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add_pair(world, e1, EcsIsA, base);
+    ecs_add(world, e1, TagB);
+    ecs_add(world, e1, TagC);
+
+    ecs_iter_t it = ecs_query_iter(world, f);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e1, it.entities[0]);
+    test_int(0, ecs_field_column(&it, 0));
+    test_int(1, ecs_field_column(&it, 1));
+    test_int(0, ecs_field_column(&it, 2));
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(f);
+
+    ecs_fini(world);
+}
+
+void Iter_iter_trivial_cache_w_write_field(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TAG(world, Foo);
+
+    ECS_QUERY(world, q, Position, Velocity);
+
+    ecs_entity_t e1 = ecs_new_w(world, Position);
+    ecs_add(world, e1, Velocity);
+
+    ecs_entity_t e2 = ecs_new_w(world, Position);
+    ecs_add(world, e2, Velocity);
+    ecs_add(world, e2, Foo);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    ecs_iter_t pit = ecs_page_iter(&it, 0, 1);
+    test_bool(true, ecs_page_next(&pit));
+    test_int(1, pit.count);
+    test_bool(false, ecs_page_next(&pit));
+
+    ecs_fini(world);
+}
+
 void Iter_page_iter_w_fini(void) {
     ecs_world_t *world = ecs_mini();
 

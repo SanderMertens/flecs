@@ -146,6 +146,8 @@ struct ecs_script_function_t {
     ecs_function_callback_t callback;
     ecs_vector_function_callback_t vector_callbacks[FLECS_SCRIPT_VECTOR_FUNCTION_COUNT];
     void *ctx;
+    void *binding_ctx;
+    ecs_ctx_free_t binding_ctx_free;
 };
 
 /** Function component.
@@ -604,6 +606,11 @@ typedef struct ecs_expr_eval_desc_t {
     ecs_script_runtime_t *runtime;   /**< Reusable runtime (optional). */
 
     void *script_visitor;            /**< For internal usage. */
+
+    bool (*unresolved_identifier_action)( /**< For internal usage. */
+        const ecs_world_t*,
+        const char *value,
+        void *ctx);
 } ecs_expr_eval_desc_t;
 
 /** Run expression.

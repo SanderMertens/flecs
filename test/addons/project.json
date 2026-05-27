@@ -496,7 +496,8 @@
                 "import_monitor_after_mini",
                 "import_2_worlds",
                 "component_parent_becomes_module",
-                "module_has_singleton"
+                "module_has_singleton",
+                "import_w_uppercase_name"
             ]
         }, {
             "id": "App",

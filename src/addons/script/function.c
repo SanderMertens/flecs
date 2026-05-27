@@ -99,6 +99,11 @@ ECS_DTOR(EcsScriptConstVar, ptr, {
 static
 ECS_COPY(EcsScriptFunction, dst, src, {
     ecs_script_params_free(&dst->params);
+    if (dst->binding_ctx && dst->binding_ctx_free) {
+        dst->binding_ctx_free(dst->binding_ctx);
+    }
+    dst->binding_ctx = NULL;
+    dst->binding_ctx_free = NULL;
     dst->return_type = src->return_type;
     dst->callback = src->callback;
     ecs_os_memcpy_n(dst->vector_callbacks, src->vector_callbacks,
@@ -110,6 +115,9 @@ ECS_COPY(EcsScriptFunction, dst, src, {
 static
 ECS_MOVE(EcsScriptFunction, dst, src, {
     ecs_script_params_free(&dst->params);
+    if (dst->binding_ctx && dst->binding_ctx_free) {
+        dst->binding_ctx_free(dst->binding_ctx);
+    }
     *dst = *src;
     ecs_os_zeromem(src);
 })
@@ -117,11 +125,21 @@ ECS_MOVE(EcsScriptFunction, dst, src, {
 static
 ECS_DTOR(EcsScriptFunction, ptr, {
     ecs_script_params_free(&ptr->params);
+    if (ptr->binding_ctx && ptr->binding_ctx_free) {
+        ptr->binding_ctx_free(ptr->binding_ctx);
+        ptr->binding_ctx = NULL;
+        ptr->binding_ctx_free = NULL;
+    }
 })
 
 static
 ECS_COPY(EcsScriptMethod, dst, src, {
     ecs_script_params_free(&dst->params);
+    if (dst->binding_ctx && dst->binding_ctx_free) {
+        dst->binding_ctx_free(dst->binding_ctx);
+    }
+    dst->binding_ctx = NULL;
+    dst->binding_ctx_free = NULL;
     dst->return_type = src->return_type;
     dst->callback = src->callback;
     ecs_os_memcpy_n(dst->vector_callbacks, src->vector_callbacks,
@@ -133,6 +151,9 @@ ECS_COPY(EcsScriptMethod, dst, src, {
 static
 ECS_MOVE(EcsScriptMethod, dst, src, {
     ecs_script_params_free(&dst->params);
+    if (dst->binding_ctx && dst->binding_ctx_free) {
+        dst->binding_ctx_free(dst->binding_ctx);
+    }
     *dst = *src;
     ecs_os_zeromem(src);
 })
@@ -140,6 +161,11 @@ ECS_MOVE(EcsScriptMethod, dst, src, {
 static
 ECS_DTOR(EcsScriptMethod, ptr, {
     ecs_script_params_free(&ptr->params);
+    if (ptr->binding_ctx && ptr->binding_ctx_free) {
+        ptr->binding_ctx_free(ptr->binding_ctx);
+        ptr->binding_ctx = NULL;
+        ptr->binding_ctx_free = NULL;
+    }
 })
 
 ecs_entity_t ecs_const_var_init(

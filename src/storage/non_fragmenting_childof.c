@@ -127,7 +127,7 @@ void flecs_remove_non_fragmenting_child(
         return;
     }
 
-    ecs_component_record_t *cr = flecs_components_get(world, 
+    ecs_component_record_t *cr = flecs_components_get(world,
         ecs_pair(EcsChildOf, parent));
     if (!cr || (cr->flags & EcsIdMarkedForDelete)) {
         return;

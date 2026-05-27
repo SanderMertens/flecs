@@ -937,7 +937,17 @@ void http_recv_connection(
     }
 
     if (retries == ECS_HTTP_REQUEST_RECV_RETRY) {
-        http_close(&sock);
+        ecs_os_mutex_lock(srv->lock);
+        bool still_owns_sock = conn->pub.id == conn_id;
+        if (still_owns_sock) {
+            conn->sock = HTTP_SOCKET_INVALID;
+        }
+        ecs_os_mutex_unlock(srv->lock);
+        if (still_owns_sock) {
+            http_close(&sock);
+        } else {
+            sock = HTTP_SOCKET_INVALID;
+        }
     }
 
 done:
@@ -1467,11 +1477,12 @@ void ecs_http_server_dequeue(
     srv->stats_timeout += (double)delta_time;
 
     if ((1000 * srv->dequeue_timeout) > (double)ECS_HTTP_MIN_DEQUEUE_INTERVAL) {
+        double elapsed = srv->dequeue_timeout;
         srv->dequeue_timeout = 0;
 
         ecs_time_t t = {0};
         ecs_time_measure(&t);
-        int32_t request_count = http_dequeue_requests(srv, srv->dequeue_timeout);
+        int32_t request_count = http_dequeue_requests(srv, elapsed);
         srv->requests_processed += request_count;
         srv->requests_processed_total += request_count;
         double time_spent = ecs_time_measure(&t);

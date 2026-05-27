@@ -310,6 +310,8 @@ bool flecs_expr_oper_valid_for_type(
     case EcsTokKeywordProp:
     case EcsTokKeywordConst:
     case EcsTokKeywordInclude:
+    case EcsTokKeywordFn:
+    case EcsTokArrow:
     case EcsTokEnd:
     default:
         ecs_abort(ECS_INTERNAL_ERROR, NULL);
@@ -459,6 +461,8 @@ int flecs_expr_type_for_operator(
     case EcsTokKeywordProp:
     case EcsTokKeywordConst:
     case EcsTokKeywordInclude:
+    case EcsTokKeywordFn:
+    case EcsTokArrow:
     case EcsTokEnd:
     default:
         ecs_throw(ECS_INTERNAL_ERROR, "invalid operator");
@@ -1226,6 +1230,7 @@ static
 int flecs_expr_identifier_variable_member_visit_type(
     ecs_script_t *script,
     ecs_expr_identifier_t *node,
+    ecs_meta_cursor_t *cur,
     const ecs_expr_eval_desc_t *desc)
 {
     char *member_sep = strchr(node->value, '.');
@@ -1255,8 +1260,7 @@ int flecs_expr_identifier_variable_member_visit_type(
 
     node->expr = (ecs_expr_node_t*)member_node;
 
-    ecs_meta_cursor_t tmp_cur; ecs_os_zeromem(&tmp_cur);
-    if (flecs_expr_visit_type_priv(script, node->expr, &tmp_cur, desc)) {
+    if (flecs_expr_visit_type_priv(script, node->expr, cur, desc)) {
         goto error;
     }
 
@@ -1382,7 +1386,7 @@ int flecs_expr_identifier_visit_type(
         }
 
         int var_member_result = flecs_expr_identifier_variable_member_visit_type(
-            script, node, desc);
+            script, node, cur, desc);
         if (var_member_result == 0) {
             return 0;
         } else if (var_member_result == -1) {
@@ -1390,8 +1394,12 @@ int flecs_expr_identifier_visit_type(
         }
 
         /* If unresolved identifiers aren't allowed here, throw error */
-        if (!desc->allow_unresolved_identifiers) {
-            flecs_expr_visit_error(script, node, 
+        if (!desc->allow_unresolved_identifiers ||
+            (desc->unresolved_identifier_action &&
+                !desc->unresolved_identifier_action(
+                    script->world, node->value, desc->lookup_ctx)))
+        {
+            flecs_expr_visit_error(script, node,
                 "unresolved identifier '%s'", node->value);
             goto error;
         }
@@ -1858,12 +1866,107 @@ error:
 }
 
 static
+int flecs_expr_member_try_swizzle(
+    ecs_script_t *script,
+    ecs_expr_member_t *node,
+    ecs_entity_t left_type,
+    ecs_entity_t target_type)
+{
+    ecs_world_t *world = script->world;
+
+    const EcsStruct *stype = ecs_get(world, left_type, EcsStruct);
+    if (!stype) {
+        return 1;
+    }
+
+    ecs_member_t *members = ecs_vec_first(&stype->members);
+    int32_t i, member_count = ecs_vec_count(&stype->members);
+    ecs_entity_t elem_type = 0;
+
+    for (i = 0; i < member_count; i ++) {
+        ecs_member_t *member = &members[i];
+        if (!member->name[0] || member->name[1]) {
+            return 1;
+        }
+        if (!ecs_owns(world, member->type, EcsPrimitive)) {
+            return 1;
+        }
+        if (!elem_type) {
+            elem_type = member->type;
+        } else if (member->type != elem_type) {
+            return 1;
+        }
+    }
+
+    if (!elem_type) {
+        return 1;
+    }
+
+    const char *name = node->member_name;
+    int32_t swizzle_count = ecs_os_strlen(name);
+    if (!swizzle_count || swizzle_count > FLECS_EXPR_SWIZZLE_MAX) {
+        return 1;
+    }
+
+    uint16_t offsets[FLECS_EXPR_SWIZZLE_MAX];
+    for (i = 0; i < swizzle_count; i ++) {
+        int32_t m;
+        for (m = 0; m < member_count; m ++) {
+            if (members[m].name[0] == name[i]) {
+                break;
+            }
+        }
+        if (m == member_count) {
+            return 1;
+        }
+        offsets[i] = flecs_ito(uint16_t, members[m].offset);
+    }
+
+    ecs_entity_t result_type = 0;
+    if (target_type) {
+        ecs_entity_t target_elem_type = 0;
+        int32_t target_count = flecs_script_get_vector_type_data(
+            world, target_type, &target_elem_type);
+        if (target_count != swizzle_count || target_elem_type != elem_type) {
+            flecs_expr_visit_error(script, node,
+                "swizzle '%s' of type '%s' is incompatible with type '%s'",
+                name, flecs_errstr(ecs_get_path(world, left_type)),
+                flecs_errstr_1(ecs_get_path(world, target_type)));
+            return -1;
+        }
+        result_type = target_type;
+    } else {
+        if (swizzle_count != member_count) {
+            flecs_expr_visit_error(script, node,
+                "cannot determine type for swizzle '%s'", name);
+            return -1;
+        }
+        result_type = left_type;
+    }
+
+    const ecs_type_info_t *eti = ecs_get_type_info(world, elem_type);
+    ecs_assert(eti != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    node->swizzle_count = swizzle_count;
+    node->swizzle_size = eti->size;
+    ecs_os_memcpy_n(node->swizzle, offsets, uint16_t, swizzle_count);
+    node->node.type = result_type;
+
+    return 0;
+}
+
+static
 int flecs_expr_member_visit_type(
     ecs_script_t *script,
     ecs_expr_member_t *node,
     ecs_meta_cursor_t *cur,
     const ecs_expr_eval_desc_t *desc)
 {
+    ecs_entity_t target_type = 0;
+    if (cur && cur->valid) {
+        target_type = ecs_meta_get_type(cur);
+    }
+
     if (flecs_expr_visit_type_priv(script, node->left, cur, desc)) {
         goto error;
     }
@@ -1896,9 +1999,16 @@ int flecs_expr_member_visit_type(
     int prev_log = ecs_log_set_level(-4);
     if (ecs_meta_dotmember(cur, node->member_name)) {
         ecs_log_set_level(prev_log);
+
+        int swizzle = flecs_expr_member_try_swizzle(
+            script, node, left_type, target_type);
+        if (swizzle <= 0) {
+            return swizzle;
+        }
+
         char *type_str = ecs_get_path(world, left_type);
-        flecs_expr_visit_error(script, node, 
-            "unresolved member '%s' for type '%s'", 
+        flecs_expr_visit_error(script, node,
+            "unresolved member '%s' for type '%s'",
                 node->member_name, type_str);
         ecs_os_free(type_str);
         goto error;

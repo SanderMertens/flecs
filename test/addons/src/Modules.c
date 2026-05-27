@@ -452,3 +452,18 @@ void Modules_module_has_singleton(void) {
 
     ecs_fini(world);
 }
+
+static
+void PhysicsPluginImport(ecs_world_t *world) {
+    ECS_MODULE(world, PhysicsPlugin);
+}
+
+void Modules_import_w_uppercase_name(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_import(world, PhysicsPluginImport, "PhysicsPlugin");
+    test_assert(e != 0);
+    test_assert(e == ecs_lookup(world, "physics.plugin"));
+
+    ecs_fini(world);
+}

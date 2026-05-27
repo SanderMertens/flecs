@@ -1183,6 +1183,7 @@ struct ecs_iter_t {
     const ecs_entity_t *entities; /**< Entity identifiers. */
     void **ptrs;                  /**< Component pointers. If not set or if it is NULL for a field, use it->trs. */
     const ecs_table_record_t **trs; /**< Info on where to find the field in the table. */
+    const int16_t *columns;
     const ecs_size_t *sizes;      /**< Component sizes. */
     ecs_table_t *table;           /**< Current table. */
     ecs_table_t *other_table;     /**< Previous or next table when adding or removing. */
@@ -3495,11 +3496,13 @@ void* ecs_ref_get_id(
  *
  * @param world The world.
  * @param ref The ref.
+ * @param component The component the ref was created with.
  */
 FLECS_ALWAYS_INLINE FLECS_API
 void ecs_ref_update(
     const ecs_world_t *world,
-    ecs_ref_t *ref);
+    ecs_ref_t *ref,
+    ecs_id_t component);
 
 /** Emplace a component.
  * Emplace is similar to ecs_ensure_id() except that the component constructor

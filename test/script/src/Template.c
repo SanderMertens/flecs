@@ -1487,7 +1487,7 @@ void Template_template_w_composite_prop(void) {
     const char *expr =
     LINE "template Tree {"
     LINE "  prop pos = Position: {10, 20}"
-    LINE "  child { $pos }"
+    LINE "  child { Position: $pos }"
     LINE "}"
     LINE "t { Tree: {pos: {20, 30}} }"
     LINE "";
@@ -2597,7 +2597,7 @@ void Template_template_w_child_w_var(void) {
     HEAD "template Foo {"
     LINE "  const pos = Position: {10, 20}"
     LINE "  child {"
-    LINE "    $pos"
+    LINE "    Position: $pos"
     LINE "  }"
     LINE "}"
     LINE ""
@@ -2641,7 +2641,7 @@ void Template_template_w_child_w_prop(void) {
     HEAD "template Foo {"
     LINE "  prop pos = Position: {0, 0}"
     LINE "  child {"
-    LINE "    $pos"
+    LINE "    Position: $pos"
     LINE "  }"
     LINE "}"
     LINE ""
@@ -3762,6 +3762,85 @@ void Template_template_w_tree_parent_change_value(void) {
             test_uint(p->value, e);
         }
     }
+
+    ecs_fini(world);
+}
+
+void Template_template_w_nested_template_w_with(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "template Frame {"
+    LINE "}"
+    LINE ""
+    LINE "template CityBlock {"
+    LINE "  Frame frame() { }"
+    LINE "}"
+    LINE ""
+    LINE "template Cross {"
+    LINE "  with CityBlock() {"
+    LINE "    CityBlock block() { }"
+    LINE "  }"
+    LINE "}"
+    LINE ""
+    LINE "Cross city()"
+    LINE "";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t Cross = ecs_lookup(world, "Cross");
+    test_assert(Cross != 0);
+
+    ecs_entity_t city = ecs_lookup(world, "city");
+    test_assert(city != 0);
+
+    ecs_entity_t block = ecs_lookup_child(world, city, "block");
+    test_assert(block != 0);
+
+    ecs_entity_t frame = ecs_lookup_child(world, block, "frame");
+    test_assert(frame != 0);
+
+    ecs_fini(world);
+}
+
+void Template_template_w_nested_template_w_with_kind_value(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "template Frame {"
+    LINE "}"
+    LINE ""
+    LINE "template CityBlock {"
+    LINE "  prop value = i32: 0"
+    LINE "  Frame frame() { }"
+    LINE "}"
+    LINE ""
+    LINE "template Cross {"
+    LINE "  with CityBlock(10) {"
+    LINE "    CityBlock block(20) { }"
+    LINE "  }"
+    LINE "}"
+    LINE ""
+    LINE "Cross city()"
+    LINE "";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t CityBlock = ecs_lookup(world, "CityBlock");
+    test_assert(CityBlock != 0);
+
+    ecs_entity_t city = ecs_lookup(world, "city");
+    test_assert(city != 0);
+
+    ecs_entity_t block = ecs_lookup_child(world, city, "block");
+    test_assert(block != 0);
+
+    const int32_t *value = ecs_get_id(world, block, CityBlock);
+    test_assert(value != NULL);
+    test_int(*value, 20);
+
+    ecs_entity_t frame = ecs_lookup_child(world, block, "frame");
+    test_assert(frame != 0);
 
     ecs_fini(world);
 }

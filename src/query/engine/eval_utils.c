@@ -52,6 +52,7 @@ void flecs_set_source_set_flag(
 {
     ecs_assert(field_index != -1, ECS_INTERNAL_ERROR, NULL);
     ECS_TERMSET_SET(it->up_fields, 1u << field_index);
+    ECS_CONST_CAST(int16_t*, it->columns)[field_index] = -1;
 }
 
 ecs_table_range_t flecs_query_var_get_range(
@@ -350,6 +351,9 @@ void flecs_query_it_set_tr(
 {
     ecs_assert(field_index >= 0, ECS_INTERNAL_ERROR, NULL);
     it->trs[field_index] = tr;
+    ECS_CONST_CAST(int16_t*, it->columns)[field_index] =
+        (tr && !it->sources[field_index] &&
+            !(it->up_fields & (1llu << field_index))) ? tr->column : -1;
 }
 
 static

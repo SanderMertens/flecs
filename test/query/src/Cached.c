@@ -7608,3 +7608,80 @@ void Cached_no_rematch_after_reparent_child(void) {
 
     ecs_fini(world);
 }
+
+void Cached_filter_term_not_term_table_recycle(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Body);
+    ECS_TAG(world, Rotation);
+    ECS_TAG(world, Position);
+
+    ecs_entity_t prefab_root = ecs_entity(world, { .name = "prefab_root" });
+    ecs_add_id(world, prefab_root, EcsPrefab);
+
+    ecs_entity_t child = ecs_entity(world, { .name = "child" });
+    ecs_add_pair(world, child, EcsChildOf, prefab_root);
+    ecs_add_id(world, child, Position);
+
+    ecs_entity_t prefab = ecs_entity(world, { .name = "prefab" });
+    ecs_add_id(world, prefab, EcsPrefab);
+    ecs_add_pair(world, prefab, EcsIsA, prefab_root);
+    ecs_add_id(world, prefab, Body);
+
+    ecs_entity_t dummy_prefab_root = ecs_entity(world,
+        { .name = "dummy_prefab_root" });
+    ecs_entity_t dummy = ecs_entity(world, { .name = "dummy" });
+    ecs_add_pair(world, dummy, EcsChildOf, dummy_prefab_root);
+    ecs_add_pair(world, dummy, EcsIsA, prefab);
+
+    ecs_query_t *position_q = ecs_query(world, {
+        .terms = {{ Position }},
+    });
+    {
+        ecs_iter_t it = ecs_query_iter(world, position_q);
+        while (ecs_query_next(&it)) {
+            for (int i = 0; i < it.count; i ++) {
+                ecs_add_id(world, it.entities[i], Rotation);
+            }
+        }
+    }
+
+    ecs_query_t *body_q = ecs_query(world, {
+        .terms = {
+            { Body, .inout = EcsInOutFilter },
+            { Rotation, .oper = EcsNot },
+        },
+        .cache_kind = EcsQueryCacheAuto
+    });
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, body_q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(dummy, it.entities[0]);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_delete(world, dummy_prefab_root);
+
+    ecs_entity_t scene = ecs_entity(world, { .name = "scene" });
+    ecs_entity_t entity = ecs_entity(world, { .name = "entity" });
+    ecs_add_pair(world, entity, EcsChildOf, scene);
+    ecs_add_pair(world, entity, EcsIsA, prefab);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, body_q);
+        while (ecs_query_next(&it)) {
+            for (int i = 0; i < it.count; i ++) {
+                ecs_entity_t e = it.entities[i];
+                test_assert(ecs_has_id(world, e, Body));
+                test_assert(!ecs_owns_id(world, e, Rotation));
+            }
+        }
+    }
+
+    ecs_query_fini(position_q);
+    ecs_query_fini(body_q);
+
+    ecs_fini(world);
+}

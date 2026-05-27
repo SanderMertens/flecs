@@ -1298,7 +1298,7 @@ void Sparse_update_ref(void) {
     }
 
     ecs_add(world, e, Foo);
-    ecs_ref_update(world, &ref);
+    ecs_ref_update(world, &ref, ecs_id(Position));
 
     {
         const Position *p = ecs_ref_get(world, &ref, Position);

@@ -13338,6 +13338,132 @@ void Observer_self_up_propagate_w_parent_component_on_set(void) {
     ecs_fini(world);
 }
 
+void Observer_up_forward_w_recycled_tag_generation_collision(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    dummy_called = false;
+    ecs_observer(world, {
+        .query.terms = {{ Foo, .src.id = EcsUp, .trav = EcsChildOf }},
+        .events = { EcsOnAdd },
+        .callback = Dummy
+    });
+
+    ecs_entity_t tag = ecs_new(world);
+    while (ecs_get_version(tag) != EcsChildOf) {
+        ecs_delete(world, tag);
+        tag = ecs_new(world);
+    }
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_add_id(world, parent, tag);
+
+    ecs_entity_t child = ecs_new(world);
+    ecs_add_pair(world, child, EcsChildOf, parent);
+
+    test_assert(!dummy_called);
+
+    ecs_fini(world);
+}
+
+static
+void Observer_recycled_component_generation_collision(ecs_iter_t *it) {
+    int32_t *invoked = it->ctx;
+    (*invoked) ++;
+
+    test_int(it->count, 1);
+    test_assert(it->entities != NULL);
+    test_assert(it->entities[0] != 0);
+
+    Position *p = ecs_field(it, Position, 0);
+    test_assert(p != NULL);
+}
+
+void Observer_on_add_w_recycled_component_generation_collision(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t comp = ecs_new(world);
+    while (ecs_get_version(comp) != EcsChildOf) {
+        ecs_delete(world, comp);
+        comp = ecs_new(world);
+    }
+
+    comp = ecs_component_init(world, &(ecs_component_desc_t){
+        .entity = comp,
+        .type.size = sizeof(Position),
+        .type.alignment = ECS_ALIGNOF(Position)
+    });
+
+    int32_t invoked = 0;
+    ecs_observer(world, {
+        .query.terms = {{ comp }},
+        .events = { EcsOnAdd },
+        .callback = Observer_recycled_component_generation_collision,
+        .ctx = &invoked
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    Position p = {10, 20};
+    ecs_set_id(world, e, comp, sizeof(Position), &p);
+
+    test_int(invoked, 1);
+
+    ecs_fini(world);
+}
+
+static
+void Observer_no_read(ecs_iter_t *it) {
+    (void)it;
+}
+
+void Observer_forward_up_propagate_w_field(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Bar);
+    ECS_TAG(world, Rel);
+    ecs_add_id(world, Rel, EcsTraversable);
+
+    Probe ctx = {0};
+
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position), .src.id = EcsUp, .trav = Rel }},
+        .events = { EcsOnAdd },
+        .callback = Observer_w_value_1,
+        .ctx = &ctx
+    });
+
+    ecs_observer(world, {
+        .query.terms = {{ Bar, .src.id = EcsUp, .trav = Rel }},
+        .events = { EcsOnAdd },
+        .callback = Observer_no_read
+    });
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_set(world, parent, Position, {10, 20});
+    ecs_add(world, parent, Bar);
+
+    ecs_entity_t mid = ecs_new(world);
+    ecs_entity_t child = ecs_new(world);
+    ecs_add_pair(world, child, Rel, mid);
+
+    test_int(ctx.invoked, 0);
+
+    ecs_add_pair(world, mid, Rel, parent);
+
+    test_int(ctx.invoked, 2);
+    test_int(ctx.count, 2);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnAdd);
+    test_uint(ctx.e[0], mid);
+    test_uint(ctx.s[0][0], parent);
+    test_uint(ctx.e[1], child);
+    test_uint(ctx.s[1][0], parent);
+
+    ecs_fini(world);
+}
+
 static
 void Observer_parent_fixed(ecs_iter_t *it) {
     probe_iter(it);

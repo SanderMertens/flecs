@@ -90,6 +90,7 @@ bool flecs_query_trivial_search(
             continue;
         }
 
+        int16_t *columns = ECS_CONST_CAST(int16_t*, it->columns);
         for (t = op_ctx->first_to_eval; t < term_count; t ++) {
             if (!(term_set & (1llu << t))) {
                 continue;
@@ -108,6 +109,7 @@ bool flecs_query_trivial_search(
             }
 
             it->trs[term->field_index] = tr_with;
+            columns[term->field_index] = tr_with->column;
         }
 
         if (t == term_count) {
@@ -115,6 +117,7 @@ bool flecs_query_trivial_search(
             ctx->vars[0].range.count = 0;
             ctx->vars[0].range.offset = 0;
             it->trs[op_ctx->start_from] = tr;
+            columns[op_ctx->start_from] = tr->column;
             break;
         }
     } while (true);
@@ -156,6 +159,7 @@ next:
             goto next;
         }
 
+        int16_t *columns = ECS_CONST_CAST(int16_t*, it->columns);
         for (t = 1; t < term_count; t ++) {
             ecs_component_record_t *cr = flecs_components_get(ctx->world, ids[t]);
             if (!cr) {
@@ -169,12 +173,14 @@ next:
             }
 
             it->trs[t] = tr_with;
+            columns[t] = tr_with->column;
         }
 
         it->table = table;
         it->count = ecs_table_count(table);
         it->entities = ecs_table_entities(table);
         it->trs[0] = tr;
+        columns[0] = tr->column;
     }
 
     return true;
@@ -202,6 +208,7 @@ bool flecs_query_trivial_test(
             return false;
         }
 
+        int16_t *columns = ECS_CONST_CAST(int16_t*, it->columns);
         for (t = 0; t < term_count; t ++) {
             if (!(term_set & (1llu << t))) {
                 continue;
@@ -219,6 +226,7 @@ bool flecs_query_trivial_test(
             }
 
             it->trs[term->field_index] = tr;
+            columns[term->field_index] = tr->column;
         }
 
         it->entities = ecs_table_entities(table);

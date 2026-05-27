@@ -304,6 +304,10 @@ void Iter_worker_iter_w_binding_ctx(void);
 void Iter_column_index_owned(void);
 void Iter_column_index_shared(void);
 void Iter_column_index_not(void);
+void Iter_column_index_trivial_cache(void);
+void Iter_column_index_shared_cached(void);
+void Iter_column_index_optional_not_set(void);
+void Iter_iter_trivial_cache_w_write_field(void);
 void Iter_page_iter_w_fini(void);
 void Iter_worker_iter_w_fini(void);
 void Iter_rule_page_iter_w_fini(void);
@@ -876,8 +880,11 @@ void NonFragmentingChildOf_delete_with_parent_nested(void);
 void NonFragmentingChildOf_delete_with_parent_nested_2(void);
 void NonFragmentingChildOf_delete_with_parent_nested_3(void);
 void NonFragmentingChildOf_delete_with_parent_nested_4(void);
+void NonFragmentingChildOf_delete_with_target_empty_record_reparent(void);
 void NonFragmentingChildOf_delete_with_parent_w_up_observer(void);
 void NonFragmentingChildOf_delete_with_parent_nested_w_up_observer(void);
+void NonFragmentingChildOf_fini_nested_w_up_observer_delete_targets(void);
+void NonFragmentingChildOf_fini_stale_up_observer_after_delete_with(void);
 void NonFragmentingChildOf_delete_with_parent_mixed_nested_w_up_observer(void);
 void NonFragmentingChildOf_delete_with_observer_iterates_children(void);
 void NonFragmentingChildOf_delete_with_observer_iterates_siblings(void);
@@ -2271,6 +2278,9 @@ void Observer_up_forward_w_parent_component_reparent(void);
 void Observer_self_up_forward_w_parent_component_reparent(void);
 void Observer_up_propagate_w_parent_component_on_set(void);
 void Observer_self_up_propagate_w_parent_component_on_set(void);
+void Observer_up_forward_w_recycled_tag_generation_collision(void);
+void Observer_on_add_w_recycled_component_generation_collision(void);
+void Observer_forward_up_propagate_w_field(void);
 void Observer_parent_on_set_w_exclusive_pair(void);
 void Observer_cache_test_1(void);
 void Observer_cache_test_2(void);
@@ -4468,6 +4478,22 @@ bake_test_case Iter_testcases[] = {
     {
         "column_index_not",
         Iter_column_index_not
+    },
+    {
+        "column_index_trivial_cache",
+        Iter_column_index_trivial_cache
+    },
+    {
+        "column_index_shared_cached",
+        Iter_column_index_shared_cached
+    },
+    {
+        "column_index_optional_not_set",
+        Iter_column_index_optional_not_set
+    },
+    {
+        "iter_trivial_cache_w_write_field",
+        Iter_iter_trivial_cache_w_write_field
     },
     {
         "page_iter_w_fini",
@@ -6705,12 +6731,24 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
         NonFragmentingChildOf_delete_with_parent_nested_4
     },
     {
+        "delete_with_target_empty_record_reparent",
+        NonFragmentingChildOf_delete_with_target_empty_record_reparent
+    },
+    {
         "delete_with_parent_w_up_observer",
         NonFragmentingChildOf_delete_with_parent_w_up_observer
     },
     {
         "delete_with_parent_nested_w_up_observer",
         NonFragmentingChildOf_delete_with_parent_nested_w_up_observer
+    },
+    {
+        "fini_nested_w_up_observer_delete_targets",
+        NonFragmentingChildOf_fini_nested_w_up_observer_delete_targets
+    },
+    {
+        "fini_stale_up_observer_after_delete_with",
+        NonFragmentingChildOf_fini_stale_up_observer_after_delete_with
     },
     {
         "delete_with_parent_mixed_nested_w_up_observer",
@@ -12176,6 +12214,18 @@ bake_test_case Observer_testcases[] = {
         Observer_self_up_propagate_w_parent_component_on_set
     },
     {
+        "up_forward_w_recycled_tag_generation_collision",
+        Observer_up_forward_w_recycled_tag_generation_collision
+    },
+    {
+        "on_add_w_recycled_component_generation_collision",
+        Observer_on_add_w_recycled_component_generation_collision
+    },
+    {
+        "forward_up_propagate_w_field",
+        Observer_forward_up_propagate_w_field
+    },
+    {
         "parent_on_set_w_exclusive_pair",
         Observer_parent_on_set_w_exclusive_pair
     },
@@ -16210,7 +16260,7 @@ static bake_test_suite suites[] = {
         "Iter",
         NULL,
         NULL,
-        58,
+        62,
         Iter_testcases
     },
     {
@@ -16275,7 +16325,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NULL,
         NULL,
-        242,
+        245,
         NonFragmentingChildOf_testcases
     },
     {
@@ -16394,7 +16444,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        336,
+        339,
         Observer_testcases
     },
     {

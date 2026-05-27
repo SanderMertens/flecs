@@ -485,10 +485,12 @@ void flecs_uni_observer_invoke(
             int32_t i, count = it->count;
             ecs_entity_t src = it->sources[0];
             ecs_table_t *old_table = it->table;
+            int16_t old_column = it->columns[0];
 
             it->entities = NULL;
             it->count = 0;
             it->table = NULL;
+            ECS_CONST_CAST(int16_t*, it->columns)[0] = -1;
 
             /* Loop all entities for which the event was emitted. Usually this is
             * just one, but it is possible to emit events for a table range. */
@@ -518,6 +520,7 @@ void flecs_uni_observer_invoke(
             it->entities = entities;
             it->count = count;
             it->table = old_table;
+            ECS_CONST_CAST(int16_t*, it->columns)[0] = old_column;
         }
 
         it->row_fields = row_fields;
@@ -652,6 +655,8 @@ void flecs_multi_observer_invoke(
         user_it.ids[pivot_field] = it->event_id;
         user_it.trs[pivot_field] = it->trs[0];
         user_it.sources[pivot_field] = it->sources[0];
+        ECS_CONST_CAST(int16_t*, user_it.columns)[pivot_field] =
+            it->sources[0] ? -1 : it->columns[0];
         user_it.term_index = pivot_term;
 
         user_it.ctx = o->ctx;
@@ -958,7 +963,7 @@ int flecs_multi_observer_init(
 
     bool self_term_handled = false;
     for (i = 0; i < term_count; i ++) {
-        if (query->terms[i].inout == EcsInOutFilter) {
+        if (query->terms[i].inout == EcsInOutFilter && !only_table_events) {
             continue;
         }
 

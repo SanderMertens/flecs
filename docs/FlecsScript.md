@@ -146,6 +146,16 @@ my_entity {
 }
 ```
 
+The value after the `:` is an expression. For components that hold a single value, such as a scalar type, the value can be assigned directly without curly braces:
+
+```cpp
+my_entity {
+  Mass: 100
+  Mass: 50 + 50
+  Mass: $weight
+}
+```
+
 Components can be defined in a script:
 
 ```cpp
@@ -747,6 +757,21 @@ const p0 = Position: {10, 20, 30}
 const p1 = p0 + 1 // {11, 21, 31}
 ```
 
+#### Swizzle operations
+When a member is accessed on a vector type whose members all have single-letter names, and the accessed member cannot be resolved to an existing member, the accessor is interpreted as a swizzle. A swizzle builds a new value from the members that match its letters, in the order they are specified. The result obtains the type of the lvalue it is assigned to.
+
+The members of a swizzle may appear in any order, and may be repeated. For a type with members `r`, `g`, `b`, the swizzles `rgb`, `bgr`, `rrr` and `bb` are all valid.
+
+For example:
+
+```cpp
+const p = Position: {10, 20, 30}
+e {
+  // Swizzle desugars to {p.z, p.y, p.x}
+  Velocity: p.zyx // {30, 20, 10}
+}
+```
+
 #### Lvalues
 Lvalues are the left side of assignments. There are two kinds of assignments possible in Flecs script:
 - Variable initialization
@@ -781,7 +806,7 @@ const x: pow(100, 2)
 const x: add({10, 20}, {30, 40})
 ```
 
-Currently functions can only be defined outside of scripts by the Flecs Script API. Flecs comes with a set of builtin and math functions. Math functions are defined by the script math addon, which must be explicitly enabled by defining `FLECS_SCRIPT_MATH`.
+Functions can be defined in scripts or by using the C/C++ API. Flecs also comes with a set of builtin functions for common math utilities and functions that provide access to ECS features. Math functions are defined by the script math addon, which must be explicitly enabled by defining `FLECS_SCRIPT_MATH`.
 
 A function can be created in code by doing:
 
@@ -809,6 +834,39 @@ void sum(
     int64_t *a = argv[0].ptr;
     int64_t *b = argv[1].ptr;
     *(int64_t*)result->ptr = *a + *b;
+}
+```
+
+The following syntax can be used to define a function in a script:
+
+```rust
+fn add(a: i32, b: i32) -> i32 {
+    a + b // last expression is return value
+}
+
+Foo = Position: {add(1, 2), add(10, 20)}
+```
+
+Script functions are created and called in the same way as functions created with the API.
+
+Function bodies may only contain expressions and const variables, for example:
+
+```rust
+fn poly(x: i32) -> i32 {
+    const x2 = i32: x * x
+    const x3 = i32: x2 * x
+    x3 + x2
+}
+```
+
+Control flow statement such as `if` and `for` are not allowed inside of a function. To expression conditional logic, functions can use `match` expressions:
+
+```rust
+fn factorial(n: i32) -> i32 {
+    match n {
+        0: 1
+        _: factorial(n - 1) * n
+    }
 }
 ```
 
@@ -1030,7 +1088,7 @@ template Square {
   prop size: 10
   prop color = Color: {255, 0, 0}
 
-  $color
+  Color: $color
   Rectangle: {width: size, height: size}
 }
 
@@ -1055,7 +1113,7 @@ template Tree {
   Trunk {
     Position: {0, ($height / 2), 0}
     Rectangle: {$trunk_width, $trunk_height}
-    $wood_color
+    Color: $wood_color
   }
 
   Canopy {
@@ -1063,7 +1121,7 @@ template Tree {
 
     Position3: {0, $canopy_y, 0}
     Box: {$canopy_width, $canopy_height}
-    $leaves_color
+    Color: $leaves_color
   }
 }
 
@@ -1255,13 +1313,13 @@ pi {
 }
 ```
 
-Variables can be used in component values as shown in the previous examples, or can be used directly as component. When used like this, the variable name must be prefixed with a `$`. Example:
+Variables can be used in component values as shown in the previous examples. To assign a variable to a component, use the variable as the component expression. The variable name must be prefixed with a `$`. Example:
 
 ```cpp
 const wood = Color: {38, 25, 13}
 
 my_entity {
-  $wood
+  Color: $wood
 }
 
 // is equivalent to

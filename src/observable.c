@@ -284,6 +284,7 @@ void flecs_emit_propagate_id_for_range(
     it->offset = 0;
     it->count = count;
     it->up_fields = 1;
+    ECS_CONST_CAST(int16_t*, it->columns)[0] = -1;
     if (count) {
         it->entities = &ecs_table_entities(table)[offset];
     }
@@ -599,6 +600,7 @@ void flecs_emit_forward_id(
 
     int32_t storage_i = ecs_table_type_to_column_index(tgt_table, column);
     it->trs[0] = &tgt_table->_->records[column];
+    ECS_CONST_CAST(int16_t*, it->columns)[0] = -1;
     if (storage_i != -1) {
         ecs_column_t *c = &tgt_table->data.columns[storage_i];
         ecs_assert(cr->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -830,8 +832,9 @@ void flecs_emit_forward_table_up(
         }
 
         /* Id has the same relationship, traverse to find ids for forwarding */
-        if (ECS_PAIR_FIRST(id) == trav || ECS_PAIR_FIRST(id) == EcsIsA || (
-            (trav == EcsChildOf) && id == ecs_id(EcsParent))) 
+        if ((ECS_IS_PAIR(id) && (ECS_PAIR_FIRST(id) == trav ||
+            ECS_PAIR_FIRST(id) == EcsIsA)) ||
+            ((trav == EcsChildOf) && id == ecs_id(EcsParent)))
         {
             ecs_table_t **t = ecs_vec_append_t(&world->allocator, stack, 
                 ecs_table_t*);
@@ -999,7 +1002,7 @@ void flecs_emit_forward(
         ecs_vec_t stack;
         ecs_vec_init_t(&world->allocator, &stack, ecs_table_t*, 0);
         ecs_vec_reset_t(&world->allocator, &rc->ids, ecs_reachable_elem_t);
-        flecs_emit_forward_up(world, er, er_onset, emit_ids, it, table, 
+        flecs_emit_forward_up(world, er, er_onset, emit_ids, it, table,
             cr, &stack, &rc->ids, 0);
         it->sources[0] = 0;
         ecs_vec_fini_t(&world->allocator, &stack, ecs_table_t*);
@@ -1089,7 +1092,17 @@ void flecs_emit_forward(
                 int32_t ider_count = flecs_event_observers_get(
                     er, rc_cr->id, iders);
 
-                flecs_propagate_entities(world, it, rc_cr, it->entities, 
+                it->ids[0] = rc_cr->id;
+                it->event_id = rc_cr->id;
+                it->trs[0] = tr;
+                ECS_CONST_CAST(int16_t*, it->columns)[0] = tr ? tr->column : -1;
+                ECS_CONST_CAST(int32_t*, it->sizes)[0] = 0;
+                if (rc_cr->type_info) {
+                    ECS_CONST_CAST(int32_t*, it->sizes)[0] = 
+                        rc_cr->type_info->size;
+                }
+
+                flecs_propagate_entities(world, it, rc_cr, it->entities,
                     it->count, elem->src, iders, ider_count);
             }
         }
@@ -1140,6 +1153,8 @@ void flecs_emit_on_set_for_override_on_add(
     it->ids[0] = id;
     it->event_id = id;
     it->trs[0] = flecs_component_get_table(cr, table);
+    ECS_CONST_CAST(int16_t*, it->columns)[0] =
+        it->trs[0] ? it->trs[0]->column : -1;
     it->sources[0] = 0;
 
     /* Only valid for components, so type info must exist */
@@ -1193,6 +1208,7 @@ void flecs_emit_on_set_for_override_on_remove(
     it->event_id = id;
     it->sources[0] = base;
     it->trs[0] = base_tr;
+    ECS_CONST_CAST(int16_t*, it->columns)[0] = -1;
     it->up_fields = 1;
 
     /* Only valid for components, so type info must exist */
@@ -1268,6 +1284,7 @@ void flecs_emit(
     ecs_size_t sizes_cache = 0;
     const ecs_table_record_t* trs_cache = 0;
     ecs_entity_t sources_cache = 0;
+    int16_t columns_cache = -1;
 
     ecs_iter_t it = {
         .world = stage,
@@ -1279,6 +1296,7 @@ void flecs_emit(
         .ids = &ids_cache,
         .sizes = &sizes_cache,
         .trs = (const ecs_table_record_t**)&trs_cache,
+        .columns = &columns_cache,
         .sources = &sources_cache,
         .other_table = other_table,
         .offset = offset,
@@ -1468,7 +1486,9 @@ repeat_event:
         };
 
         bool dont_fragment = cr_flags & EcsIdDontFragment;
-        if (!dont_fragment && id != EcsAny && (ECS_PAIR_FIRST(id) != EcsChildOf)) {
+        if (!dont_fragment && id != EcsAny &&
+            !(ECS_IS_PAIR(id) && ECS_PAIR_FIRST(id) == EcsChildOf))
+        {
             if (tr == NULL) {
                 /* When a single batch contains multiple adds for an exclusive
                 * relationship, it's possible that an id was in the added list
@@ -1481,6 +1501,7 @@ repeat_event:
         }
 
         it.trs[0] = tr;
+        ECS_CONST_CAST(int16_t*, it.columns)[0] = tr ? tr->column : -1;
         it.event_id = id;
         it.ids[0] = id;
 
