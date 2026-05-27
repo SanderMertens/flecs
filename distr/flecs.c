@@ -17064,7 +17064,7 @@ void flecs_observers_invoke(
     ecs_entity_t trav)
 {
     if (ecs_map_is_init(observers)) {
-        ecs_table_lock(it->world, table);
+        ECS_TABLE_LOCK(it->world, table);
 
         ecs_map_iter_t oit = ecs_map_iter(observers);
         while (ecs_map_next(&oit)) {
@@ -17072,12 +17072,12 @@ void flecs_observers_invoke(
             ecs_assert(it->table == table, ECS_INTERNAL_ERROR, NULL);
             flecs_uni_observer_invoke(world, o, it, table, trav);
 
-            ecs_assert(ecs_map_iter_valid(&oit), ECS_INVALID_OPERATION, 
+            ecs_assert(ecs_map_iter_valid(&oit), ECS_INVALID_OPERATION,
                 "observer list modified while notifying: "
                 "cannot create observer from observer");
         }
 
-        ecs_table_unlock(it->world, table);
+        ECS_TABLE_UNLOCK(it->world, table);
     }
 }
 
@@ -17190,7 +17190,7 @@ void flecs_multi_observer_invoke(
 
         ecs_entity_t old_system = flecs_stage_set_system(
             world->stages[0], o->entity);
-        ecs_table_lock(it->world, lock_table);
+        ECS_TABLE_LOCK(it->world, lock_table);
 
         if (o->run) {
             user_it.next = flecs_default_next_callback;
@@ -17202,7 +17202,7 @@ void flecs_multi_observer_invoke(
         user_it.flags |= EcsIterSkip; /* Prevent change detection on fini */
         ecs_iter_fini(&user_it);
 
-        ecs_table_unlock(it->world, lock_table);
+        ECS_TABLE_UNLOCK(it->world, lock_table);
         flecs_stage_set_system(world->stages[0], old_system);
     } else {
         /* While the observer query was strictly speaking evaluated, it's more
@@ -17235,7 +17235,7 @@ void flecs_multi_observer_invoke_no_query(
 
     ecs_entity_t old_system = flecs_stage_set_system(
         world->stages[0], o->entity);
-    ecs_table_lock(it->world, table);
+    ECS_TABLE_LOCK(it->world, table);
 
     if (o->run) {
         user_it.next = flecs_default_next_callback;
@@ -17244,7 +17244,7 @@ void flecs_multi_observer_invoke_no_query(
         user_it.callback(&user_it);
     }
 
-    ecs_table_unlock(it->world, table);
+    ECS_TABLE_UNLOCK(it->world, table);
     flecs_stage_set_system(world->stages[0], old_system);
 }
 
