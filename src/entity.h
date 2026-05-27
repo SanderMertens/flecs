@@ -135,7 +135,7 @@ int32_t flecs_relation_depth(
     const ecs_table_t *table);
 
 /* Get component from base entity (follows IsA relationship) */
-void* flecs_get_base_component(
+ecs_get_ptr_t flecs_get_base_component(
     const ecs_world_t *world,
     ecs_table_t *table,
     ecs_id_t id,
