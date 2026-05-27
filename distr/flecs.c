@@ -13360,17 +13360,21 @@ void flecs_iter_init(
         ecs_assert(it->trs == NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(it->columns == NULL, ECS_INTERNAL_ERROR, NULL);
 
-        it->ids = flecs_stack_calloc_n(stack, ecs_id_t, it->field_count);
-        it->sources = flecs_stack_calloc_n(
-            stack, ecs_entity_t, it->field_count);
-        it->trs = flecs_stack_calloc_n(
-            stack, ecs_table_record_t*, it->field_count);
-        int16_t *columns = flecs_stack_calloc_n(
-            stack, int16_t, it->field_count);
-        int8_t i;
-        for (i = 0; i < it->field_count; i ++) {
-            columns[i] = -1;
-        }
+        int32_t fc = it->field_count;
+        ecs_size_t wide = (ecs_size_t)(sizeof(ecs_id_t) + sizeof(ecs_entity_t) +
+            sizeof(ecs_table_record_t*)) * fc;
+        ecs_size_t cols = (ecs_size_t)sizeof(int16_t) * fc;
+        char *buf = flecs_stack_alloc(stack, wide + cols,
+            ECS_ALIGNOF(ecs_id_t));
+
+        it->ids = (ecs_id_t*)buf;
+        it->sources = (ecs_entity_t*)(buf + (ecs_size_t)sizeof(ecs_id_t) * fc);
+        it->trs = (const ecs_table_record_t**)(buf +
+            (ecs_size_t)(sizeof(ecs_id_t) + sizeof(ecs_entity_t)) * fc);
+        int16_t *columns = (int16_t*)(buf + wide);
+
+        ecs_os_memset(buf, 0, wide);
+        ecs_os_memset(columns, 0xFF, cols);
         it->columns = columns;
     }
 }
