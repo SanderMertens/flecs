@@ -24,23 +24,6 @@ void flecs_tables_resize_column_locks(
     int32_t previous_stage_count,
     int32_t new_stage_count);
 
-FLECS_ALWAYS_INLINE int32_t flecs_table_column_inc(
-    ecs_table_t *table,
-    const int16_t column_index);
-
-FLECS_ALWAYS_INLINE int32_t flecs_table_column_inc_multithreaded(
-    ecs_table_t *table,
-    const int16_t column_index,
-    const int32_t stage_id);
-
-FLECS_ALWAYS_INLINE int32_t flecs_table_column_dec(
-    ecs_table_t *table,
-    const int16_t column_index);
-
-FLECS_ALWAYS_INLINE int32_t flecs_table_column_dec_multithreaded(
-    ecs_table_t *table,
-    const int16_t column_index,
-    const int32_t stage_id);
 
 #endif
 
