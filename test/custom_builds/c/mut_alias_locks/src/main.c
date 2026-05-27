@@ -26,42 +26,42 @@ void test_singlethreaded_no_conflicts(void) {
     bool result;
     
     // Table column locks - basic operations
-    result = flecs_table_column_lock_read_begin(table, pos_column);
+    result = flecs_table_column_read_begin(table, pos_column);
     assert(result == false);
-    result = flecs_table_column_lock_read_end(table, pos_column);
+    result = flecs_table_column_read_end(table, pos_column);
     assert(result == false);
     
-    result = flecs_table_column_lock_write_begin(table, pos_column);
+    result = flecs_table_column_write_begin(table, pos_column);
     assert(result == false);
-    result = flecs_table_column_lock_write_end(table, pos_column);
+    result = flecs_table_column_write_end(table, pos_column);
     assert(result == false);
     
     // Multiple reads should work
-    result = flecs_table_column_lock_read_begin(table, pos_column);
+    result = flecs_table_column_read_begin(table, pos_column);
     assert(result == false);
-    result = flecs_table_column_lock_read_begin(table, pos_column);
+    result = flecs_table_column_read_begin(table, pos_column);
     assert(result == false);
-    flecs_table_column_lock_read_end(table, pos_column);
-    flecs_table_column_lock_read_end(table, pos_column);
+    flecs_table_column_read_end(table, pos_column);
+    flecs_table_column_read_end(table, pos_column);
     
     // Sparse component record locks - basic operations
-    result = flecs_sparse_id_record_lock_read_begin(cr);
+    result = flecs_sparse_id_record_read_begin(cr);
     assert(result == false);
-    result = flecs_sparse_id_record_lock_read_end(cr);
+    result = flecs_sparse_id_record_read_end(cr);
     assert(result == false);
     
-    result = flecs_sparse_id_record_lock_write_begin(cr);
+    result = flecs_sparse_id_record_write_begin(cr);
     assert(result == false);
-    result = flecs_sparse_id_record_lock_write_end(cr);
+    result = flecs_sparse_id_record_write_end(cr);
     assert(result == false);
     
     // Multiple sparse reads should work
-    result = flecs_sparse_id_record_lock_read_begin(cr);
+    result = flecs_sparse_id_record_read_begin(cr);
     assert(result == false);
-    result = flecs_sparse_id_record_lock_read_begin(cr);
+    result = flecs_sparse_id_record_read_begin(cr);
     assert(result == false);
-    flecs_sparse_id_record_lock_read_end(cr);
-    flecs_sparse_id_record_lock_read_end(cr);
+    flecs_sparse_id_record_read_end(cr);
+    flecs_sparse_id_record_read_end(cr);
     
     ecs_fini(world);
 }
@@ -82,44 +82,44 @@ void test_singlethreaded_with_conflicts(void) {
     bool result;
     
     // Table column locks - read/write conflicts
-    result = flecs_table_column_lock_read_begin(table, pos_column);
+    result = flecs_table_column_read_begin(table, pos_column);
     assert(result == false);
-    result = flecs_table_column_lock_write_begin(table, pos_column);
+    result = flecs_table_column_write_begin(table, pos_column);
     assert(result == true); // Should conflict
-    flecs_table_column_lock_write_end(table, pos_column);
-    flecs_table_column_lock_read_end(table, pos_column);
+    flecs_table_column_write_end(table, pos_column);
+    flecs_table_column_read_end(table, pos_column);
     
     // Write/write conflicts
-    result = flecs_table_column_lock_write_begin(table, pos_column);
+    result = flecs_table_column_write_begin(table, pos_column);
     assert(result == false);
-    result = flecs_table_column_lock_write_begin(table, pos_column);
+    result = flecs_table_column_write_begin(table, pos_column);
     assert(result == true); // Should conflict
-    flecs_table_column_lock_write_end(table, pos_column);
-    flecs_table_column_lock_write_end(table, pos_column);
+    flecs_table_column_write_end(table, pos_column);
+    flecs_table_column_write_end(table, pos_column);
     
     // Write/read conflicts
-    result = flecs_table_column_lock_write_begin(table, pos_column);
+    result = flecs_table_column_write_begin(table, pos_column);
     assert(result == false);
-    result = flecs_table_column_lock_read_begin(table, pos_column);
+    result = flecs_table_column_read_begin(table, pos_column);
     assert(result == true); // Should conflict
-    flecs_table_column_lock_read_end(table, pos_column);
-    flecs_table_column_lock_write_end(table, pos_column);
+    flecs_table_column_read_end(table, pos_column);
+    flecs_table_column_write_end(table, pos_column);
     
     // Sparse component record locks - read/write conflicts
-    result = flecs_sparse_id_record_lock_read_begin(cr);
+    result = flecs_sparse_id_record_read_begin(cr);
     assert(result == false);
-    result = flecs_sparse_id_record_lock_write_begin(cr);
+    result = flecs_sparse_id_record_write_begin(cr);
     assert(result == true); // Should conflict
-    flecs_sparse_id_record_lock_write_end(cr);
-    flecs_sparse_id_record_lock_read_end(cr);
+    flecs_sparse_id_record_write_end(cr);
+    flecs_sparse_id_record_read_end(cr);
     
     // Sparse write/write conflicts
-    result = flecs_sparse_id_record_lock_write_begin(cr);
+    result = flecs_sparse_id_record_write_begin(cr);
     assert(result == false);
-    result = flecs_sparse_id_record_lock_write_begin(cr);
+    result = flecs_sparse_id_record_write_begin(cr);
     assert(result == true); // Should conflict
-    flecs_sparse_id_record_lock_write_end(cr);
-    flecs_sparse_id_record_lock_write_end(cr);
+    flecs_sparse_id_record_write_end(cr);
+    flecs_sparse_id_record_write_end(cr);
     
     ecs_fini(world);
 }
@@ -141,30 +141,30 @@ void test_multithreaded_no_conflicts(void) {
     bool result;
     
     // Different stages should not conflict - table column locks
-    result = flecs_table_column_lock_read_begin_multithreaded(table, pos_column, 0);
+    result = flecs_table_column_read_begin_multithreaded(table, pos_column, 0);
     assert(result == false);
-    result = flecs_table_column_lock_write_begin_multithreaded(table, pos_column, 1);
+    result = flecs_table_column_write_begin_multithreaded(table, pos_column, 1);
     assert(result == false); // Different stage, no conflict
-    result = flecs_table_column_lock_read_begin_multithreaded(table, pos_column, 2);
+    result = flecs_table_column_read_begin_multithreaded(table, pos_column, 2);
     assert(result == false); // Different stage, no conflict
     
     // Multiple reads on same stage should work
-    result = flecs_table_column_lock_read_begin_multithreaded(table, pos_column, 0);
+    result = flecs_table_column_read_begin_multithreaded(table, pos_column, 0);
     assert(result == false);
     
-    flecs_table_column_lock_read_end_multithreaded(table, pos_column, 0);
-    flecs_table_column_lock_read_end_multithreaded(table, pos_column, 0);
-    flecs_table_column_lock_write_end_multithreaded(table, pos_column, 1);
-    flecs_table_column_lock_read_end_multithreaded(table, pos_column, 2);
+    flecs_table_column_read_end_multithreaded(table, pos_column, 0);
+    flecs_table_column_read_end_multithreaded(table, pos_column, 0);
+    flecs_table_column_write_end_multithreaded(table, pos_column, 1);
+    flecs_table_column_read_end_multithreaded(table, pos_column, 2);
     
     // Sparse component record locks are global - should conflict
-    result = flecs_sparse_id_record_lock_read_begin_multithreaded(cr);
+    result = flecs_sparse_id_record_read_begin_multithreaded(cr);
     assert(result == false);
-    result = flecs_sparse_id_record_lock_write_begin_multithreaded(cr);
+    result = flecs_sparse_id_record_write_begin_multithreaded(cr);
     assert(result == true); // Multithreaded sparse locks are global, should conflict
     
-    flecs_sparse_id_record_lock_read_end_multithreaded(cr);
-    flecs_sparse_id_record_lock_write_end_multithreaded(cr);
+    flecs_sparse_id_record_read_end_multithreaded(cr);
+    flecs_sparse_id_record_write_end_multithreaded(cr);
     
     ecs_fini(world);
 }
@@ -186,28 +186,28 @@ void test_multithreaded_with_conflicts(void) {
     bool result;
     
     // Same stage should still have conflicts - table column locks
-    result = flecs_table_column_lock_read_begin_multithreaded(table, pos_column, 0);
+    result = flecs_table_column_read_begin_multithreaded(table, pos_column, 0);
     assert(result == false);
-    result = flecs_table_column_lock_write_begin_multithreaded(table, pos_column, 0);
+    result = flecs_table_column_write_begin_multithreaded(table, pos_column, 0);
     assert(result == true); // Same stage, should conflict
-    flecs_table_column_lock_write_end_multithreaded(table, pos_column, 0);
-    flecs_table_column_lock_read_end_multithreaded(table, pos_column, 0);
+    flecs_table_column_write_end_multithreaded(table, pos_column, 0);
+    flecs_table_column_read_end_multithreaded(table, pos_column, 0);
     
     // Write/write conflicts on same stage
-    result = flecs_table_column_lock_write_begin_multithreaded(table, pos_column, 1);
+    result = flecs_table_column_write_begin_multithreaded(table, pos_column, 1);
     assert(result == false);
-    result = flecs_table_column_lock_write_begin_multithreaded(table, pos_column, 1);
+    result = flecs_table_column_write_begin_multithreaded(table, pos_column, 1);
     assert(result == true); // Same stage, should conflict
-    flecs_table_column_lock_write_end_multithreaded(table, pos_column, 1);
-    flecs_table_column_lock_write_end_multithreaded(table, pos_column, 1);
+    flecs_table_column_write_end_multithreaded(table, pos_column, 1);
+    flecs_table_column_write_end_multithreaded(table, pos_column, 1);
     
     // Sparse component record locks - conflicts (global scope)
-    result = flecs_sparse_id_record_lock_read_begin_multithreaded(cr);
+    result = flecs_sparse_id_record_read_begin_multithreaded(cr);
     assert(result == false);
-    result = flecs_sparse_id_record_lock_write_begin_multithreaded(cr);
+    result = flecs_sparse_id_record_write_begin_multithreaded(cr);
     assert(result == true); // Should conflict globally
-    flecs_sparse_id_record_lock_write_end_multithreaded(cr);
-    flecs_sparse_id_record_lock_read_end_multithreaded(cr);
+    flecs_sparse_id_record_write_end_multithreaded(cr);
+    flecs_sparse_id_record_read_end_multithreaded(cr);
     
     ecs_fini(world);
 }
@@ -227,34 +227,34 @@ void test_resizing(void) {
     bool result;
     
     // Test operations work with initial stage count (1)
-    result = flecs_table_column_lock_read_begin(table, pos_column);
+    result = flecs_table_column_read_begin(table, pos_column);
     assert(result == false);
-    flecs_table_column_lock_read_end(table, pos_column);
+    flecs_table_column_read_end(table, pos_column);
     
     // Resize to 2 stages
     ecs_set_stage_count(world, 2);
-    result = flecs_table_column_lock_read_begin_multithreaded(table, pos_column, 0);
+    result = flecs_table_column_read_begin_multithreaded(table, pos_column, 0);
     assert(result == false);
-    result = flecs_table_column_lock_write_begin_multithreaded(table, pos_column, 1);
+    result = flecs_table_column_write_begin_multithreaded(table, pos_column, 1);
     assert(result == false);
-    flecs_table_column_lock_read_end_multithreaded(table, pos_column, 0);
-    flecs_table_column_lock_write_end_multithreaded(table, pos_column, 1);
+    flecs_table_column_read_end_multithreaded(table, pos_column, 0);
+    flecs_table_column_write_end_multithreaded(table, pos_column, 1);
     
     // Resize to 4 stages
     ecs_set_stage_count(world, 4);
     for (int stage = 0; stage < 4; stage++) {
-        result = flecs_table_column_lock_read_begin_multithreaded(table, pos_column, stage);
+        result = flecs_table_column_read_begin_multithreaded(table, pos_column, stage);
         assert(result == false);
     }
     for (int stage = 0; stage < 4; stage++) {
-        flecs_table_column_lock_read_end_multithreaded(table, pos_column, stage);
+        flecs_table_column_read_end_multithreaded(table, pos_column, stage);
     }
     
     // Resize back to 1 stage
     ecs_set_stage_count(world, 1);
-    result = flecs_table_column_lock_write_begin(table, pos_column);
+    result = flecs_table_column_write_begin(table, pos_column);
     assert(result == false);
-    flecs_table_column_lock_write_end(table, pos_column);
+    flecs_table_column_write_end(table, pos_column);
     
     ecs_fini(world);
 }

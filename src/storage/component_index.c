@@ -1285,80 +1285,80 @@ void flecs_component_update_childof_depth(
 
 #ifdef FLECS_MUT_ALIAS_LOCKS
 
-int32_t flecs_sparse_id_record_lock_inc(
+int32_t flecs_sparse_id_record_inc(
     ecs_component_record_t *cr)
 {
     ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
     return ++cr->sparse_lock;
 }
 
-int32_t flecs_sparse_id_record_lock_inc_multithreaded(
+int32_t flecs_sparse_id_record_inc_multithreaded(
     ecs_component_record_t *cr)
 {
     ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
     return ecs_os_ainc(&cr->sparse_lock);
 }
 
-int32_t flecs_sparse_id_record_lock_dec(
+int32_t flecs_sparse_id_record_dec(
     ecs_component_record_t *cr)
 {
     ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
     return --cr->sparse_lock;
 }
 
-int32_t flecs_sparse_id_record_lock_dec_multithreaded(
+int32_t flecs_sparse_id_record_dec_multithreaded(
     ecs_component_record_t *cr)
 {
     ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
     return ecs_os_adec(&cr->sparse_lock);
 }
 
-bool flecs_sparse_id_record_lock_read_begin(
+bool flecs_sparse_id_record_read_begin(
     ecs_component_record_t *cr)
 {
-    return flecs_sparse_id_record_lock_inc(cr) <= 0;
+    return flecs_sparse_id_record_inc(cr) <= 0;
 }
 
-bool flecs_sparse_id_record_lock_read_begin_multithreaded(
+bool flecs_sparse_id_record_read_begin_multithreaded(
     ecs_component_record_t *cr)
 {
-    return flecs_sparse_id_record_lock_inc_multithreaded(cr) <= 0;
+    return flecs_sparse_id_record_inc_multithreaded(cr) <= 0;
 }
 
-bool flecs_sparse_id_record_lock_read_end(
+bool flecs_sparse_id_record_read_end(
     ecs_component_record_t *cr)
 {
-    return flecs_sparse_id_record_lock_dec(cr) < 0;
+    return flecs_sparse_id_record_dec(cr) < 0;
 }
 
-bool flecs_sparse_id_record_lock_read_end_multithreaded(
+bool flecs_sparse_id_record_read_end_multithreaded(
     ecs_component_record_t *cr)
 {
-    return flecs_sparse_id_record_lock_dec_multithreaded(cr) < 0;
+    return flecs_sparse_id_record_dec_multithreaded(cr) < 0;
 }
 
-bool flecs_sparse_id_record_lock_write_begin(
+bool flecs_sparse_id_record_write_begin(
     ecs_component_record_t *cr)
 {
-    return flecs_sparse_id_record_lock_dec(cr) != -1;
+    return flecs_sparse_id_record_dec(cr) != -1;
 }
 
-bool flecs_sparse_id_record_lock_write_begin_multithreaded(
+bool flecs_sparse_id_record_write_begin_multithreaded(
     ecs_component_record_t *cr)
 {
-    return flecs_sparse_id_record_lock_dec_multithreaded(cr) != -1;
+    return flecs_sparse_id_record_dec_multithreaded(cr) != -1;
 }
 
-bool flecs_sparse_id_record_lock_write_end(
+bool flecs_sparse_id_record_write_end(
     ecs_component_record_t *cr)
 {
-    return flecs_sparse_id_record_lock_inc(cr) != 0;
+    return flecs_sparse_id_record_inc(cr) != 0;
 }
 
-bool flecs_sparse_id_record_lock_write_end_multithreaded(
+bool flecs_sparse_id_record_write_end_multithreaded(
     ecs_component_record_t *cr)
 {
-    return flecs_sparse_id_record_lock_inc_multithreaded(cr) != 0;
+    return flecs_sparse_id_record_inc_multithreaded(cr) != 0;
 }
 
 #endif
