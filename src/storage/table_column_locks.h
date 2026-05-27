@@ -24,7 +24,6 @@ void flecs_tables_resize_column_locks(
     int32_t previous_stage_count,
     int32_t new_stage_count);
 
-
 #endif
 
 #endif

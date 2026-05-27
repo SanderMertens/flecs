@@ -20884,7 +20884,6 @@ void ecs_set_stage_count(
 #ifdef FLECS_MUT_ALIAS_LOCKS
     flecs_tables_resize_column_locks(world,world->stage_count,stage_count);
 #endif
-
     const ecs_entity_t *lookup_path = NULL;
     if (world->stage_count >= 1) {
         lookup_path = world->stages[0]->lookup_path;
