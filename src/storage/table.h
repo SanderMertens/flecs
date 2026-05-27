@@ -315,37 +315,6 @@ ecs_hashmap_t* flecs_table_get_name_index(
     const ecs_world_t *world,
     const ecs_table_t *table);
 
-#ifdef FLECS_MUT_ALIAS_LOCKS
-
-/* resize column locks for all tables. */
-void flecs_tables_resize_column_locks(
-    ecs_world_t *world,
-    int32_t previous_stage_count,
-    int32_t new_stage_count);
-#endif
-
-void flecs_table_resize_column_locks(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    int32_t previous_stage_count,
-    int32_t new_stage_count);
-
-FLECS_ALWAYS_INLINE int32_t flecs_table_column_lock_inc(
-    ecs_table_t *table,
-    const int16_t column_index);
-
-FLECS_ALWAYS_INLINE int32_t flecs_table_column_lock_inc_multithreaded(
-    ecs_table_t *table,
-    const int16_t column_index,
-    const int32_t stage_id);
-
-FLECS_ALWAYS_INLINE int32_t flecs_table_column_lock_dec(
-    ecs_table_t *table,
-    const int16_t column_index);
-
-FLECS_ALWAYS_INLINE int32_t flecs_table_column_lock_dec_multithreaded(
-    ecs_table_t *table,
-    const int16_t column_index,
-    const int32_t stage_id);
+#include "table_column_locks.h"
 
 #endif
