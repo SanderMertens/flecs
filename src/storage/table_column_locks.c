@@ -125,112 +125,80 @@ void flecs_tables_resize_column_locks(
     }
 }
 
-int32_t flecs_table_column_inc(
-    ecs_table_t *table,
-    const int16_t column_index)
-{
-    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(table->column_lock != NULL, ECS_INTERNAL_ERROR, NULL);
-    return ++table->column_lock[ column_index ];
-}
-
-int32_t flecs_table_column_inc_multithreaded(
-    ecs_table_t *table,
-    const int16_t column_index,
-    const int32_t stage_id
-    )
-{
-    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(table->column_lock != NULL, ECS_INTERNAL_ERROR, NULL);
-    return ecs_os_ainc(&table->column_lock[ column_index + (stage_id * table->column_count) ]);
-}
-
-int32_t flecs_table_column_dec(
-    ecs_table_t *table,
-    const int16_t column_index)
-{
-    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(table->column_lock != NULL, ECS_INTERNAL_ERROR, NULL);
-    return --table->column_lock[ column_index ];
-}
-
-int32_t flecs_table_column_dec_multithreaded(
-    ecs_table_t *table,
-    const int16_t column_index,
-    const int32_t stage_id
-    )
-{
-    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(table->column_lock != NULL, ECS_INTERNAL_ERROR, NULL);
-    return ecs_os_adec(&table->column_lock[ column_index + (stage_id * table->column_count) ]);
-}
-
 bool flecs_table_column_read_begin(
     ecs_table_t *table,
-    const int16_t column_index
-    )
+    const int16_t column_index)
 {
-    return flecs_table_column_inc(table, column_index) <= 0;
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(table->column_lock != NULL, ECS_INTERNAL_ERROR, NULL);
+    return ++table->column_lock[column_index] <= 0;
 }
 
 bool flecs_table_column_read_begin_multithreaded(
     ecs_table_t *table,
     const int16_t column_index,
-    const int32_t stage_id
-    )
+    const int32_t stage_id)
 {
-    return flecs_table_column_inc_multithreaded(table, column_index, stage_id) <= 0;
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(table->column_lock != NULL, ECS_INTERNAL_ERROR, NULL);
+    return ecs_os_ainc(&table->column_lock[column_index + (stage_id * table->column_count)]) <= 0;
 }
 
 bool flecs_table_column_read_end(
     ecs_table_t *table,
-    const int16_t column_index
-    )
+    const int16_t column_index)
 {
-    return flecs_table_column_dec(table, column_index) < 0;
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(table->column_lock != NULL, ECS_INTERNAL_ERROR, NULL);
+    return --table->column_lock[column_index] < 0;
 }
 
 bool flecs_table_column_read_end_multithreaded(
     ecs_table_t *table,
     const int16_t column_index,
-    const int32_t stage_id
-    )
+    const int32_t stage_id)
 {
-    return flecs_table_column_dec_multithreaded(table, column_index, stage_id) < 0;
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(table->column_lock != NULL, ECS_INTERNAL_ERROR, NULL);
+    return ecs_os_adec(&table->column_lock[column_index + (stage_id * table->column_count)]) < 0;
 }
 
 bool flecs_table_column_write_begin(
     ecs_table_t *table,
-    const int16_t column_index
-    )
+    const int16_t column_index)
 {
-    return flecs_table_column_dec(table, column_index) != -1;
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(table->column_lock != NULL, ECS_INTERNAL_ERROR, NULL);
+    return --table->column_lock[column_index] != -1;
 }
 
 bool flecs_table_column_write_begin_multithreaded(
     ecs_table_t *table,
     const int16_t column_index,
-    const int32_t stage_id
-    )
+    const int32_t stage_id)
 {
-    return flecs_table_column_dec_multithreaded(table, column_index, stage_id) != -1;
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(table->column_lock != NULL, ECS_INTERNAL_ERROR, NULL);
+    return ecs_os_adec(&table->column_lock[column_index + (stage_id * table->column_count)]) != -1;
 }
 
 bool flecs_table_column_write_end(
     ecs_table_t *table,
-    const int16_t column_index
-    )
+    const int16_t column_index)
 {
-    return flecs_table_column_inc(table, column_index) != 0;
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(table->column_lock != NULL, ECS_INTERNAL_ERROR, NULL);
+    return ++table->column_lock[column_index] != 0;
 }
 
 bool flecs_table_column_write_end_multithreaded(
     ecs_table_t *table,
     const int16_t column_index,
-    const int32_t stage_id
-    )
+    const int32_t stage_id)
 {
-    return flecs_table_column_inc_multithreaded(table, column_index, stage_id) != 0;
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(table->column_lock != NULL, ECS_INTERNAL_ERROR, NULL);
+    return ecs_os_ainc(&table->column_lock[column_index + (stage_id * table->column_count)]) != 0;
 }
 
 #endif
