@@ -115,6 +115,11 @@ void flecs_emit_propagate_invalidate(
     int32_t offset,
     int32_t count);
 
+/* Invalidate reachable cache for traversable relationships targeting cr. */
+void flecs_emit_propagate_invalidate_tables(
+    ecs_world_t *world,
+    ecs_component_record_t *tgt_cr);
+
 /* Set bit indicating that observer is disabled. */
 void flecs_observer_set_disable_bit(
     ecs_world_t *world,

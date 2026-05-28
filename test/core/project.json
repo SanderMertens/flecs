@@ -1003,7 +1003,10 @@
                 "defer_add_prefab_tag_after_hierarchy_creation_2",
                 "defer_set_parent_and_remove_tag",
                 "fini_w_mixed_childof_different_parents",
-                "fini_w_child_of_prefab_w_traversable_and_isa",
+                "delete_component_of_prefab_child",
+                "fini_delete_component_of_prefab_child",
+                "delete_pair_of_prefab_child",
+                "fini_delete_pair_of_prefab_child",
                 "fini_w_ordered_child_w_up_traversable",
                 "defer_reparent_mixed_childof",
                 "prefab_parent_w_mixed_childof",
@@ -2709,7 +2712,9 @@
                 "delete_with",
                 "prefab_children_after_adding_prefab",
                 "add_base_w_exclusive_override",
-                "fini_w_prefab_child_exclusive_pair_delete_with"
+                "fini_w_prefab_child_exclusive_pair_delete_with",
+                "delete_with_component_used_by_prefab",
+                "delete_component_used_by_prefab"
             ]
         }, {
             "id": "World",

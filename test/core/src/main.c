@@ -971,7 +971,10 @@ void NonFragmentingChildOf_add_prefab_tag_after_hierarchy_creation_2(void);
 void NonFragmentingChildOf_defer_add_prefab_tag_after_hierarchy_creation_2(void);
 void NonFragmentingChildOf_defer_set_parent_and_remove_tag(void);
 void NonFragmentingChildOf_fini_w_mixed_childof_different_parents(void);
-void NonFragmentingChildOf_fini_w_child_of_prefab_w_traversable_and_isa(void);
+void NonFragmentingChildOf_delete_component_of_prefab_child(void);
+void NonFragmentingChildOf_fini_delete_component_of_prefab_child(void);
+void NonFragmentingChildOf_delete_pair_of_prefab_child(void);
+void NonFragmentingChildOf_fini_delete_pair_of_prefab_child(void);
 void NonFragmentingChildOf_fini_w_ordered_child_w_up_traversable(void);
 void NonFragmentingChildOf_defer_reparent_mixed_childof(void);
 void NonFragmentingChildOf_prefab_parent_w_mixed_childof(void);
@@ -2631,6 +2634,8 @@ void Prefab_delete_with(void);
 void Prefab_prefab_children_after_adding_prefab(void);
 void Prefab_add_base_w_exclusive_override(void);
 void Prefab_fini_w_prefab_child_exclusive_pair_delete_with(void);
+void Prefab_delete_with_component_used_by_prefab(void);
+void Prefab_delete_component_used_by_prefab(void);
 
 // Testsuite 'World'
 void World_setup(void);
@@ -7113,8 +7118,20 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
         NonFragmentingChildOf_fini_w_mixed_childof_different_parents
     },
     {
-        "fini_w_child_of_prefab_w_traversable_and_isa",
-        NonFragmentingChildOf_fini_w_child_of_prefab_w_traversable_and_isa
+        "delete_component_of_prefab_child",
+        NonFragmentingChildOf_delete_component_of_prefab_child
+    },
+    {
+        "fini_delete_component_of_prefab_child",
+        NonFragmentingChildOf_fini_delete_component_of_prefab_child
+    },
+    {
+        "delete_pair_of_prefab_child",
+        NonFragmentingChildOf_delete_pair_of_prefab_child
+    },
+    {
+        "fini_delete_pair_of_prefab_child",
+        NonFragmentingChildOf_fini_delete_pair_of_prefab_child
     },
     {
         "fini_w_ordered_child_w_up_traversable",
@@ -13604,6 +13621,14 @@ bake_test_case Prefab_testcases[] = {
     {
         "fini_w_prefab_child_exclusive_pair_delete_with",
         Prefab_fini_w_prefab_child_exclusive_pair_delete_with
+    },
+    {
+        "delete_with_component_used_by_prefab",
+        Prefab_delete_with_component_used_by_prefab
+    },
+    {
+        "delete_component_used_by_prefab",
+        Prefab_delete_component_used_by_prefab
     }
 };
 
@@ -16415,7 +16440,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NULL,
         NULL,
-        253,
+        256,
         NonFragmentingChildOf_testcases
     },
     {
@@ -16576,7 +16601,7 @@ static bake_test_suite suites[] = {
         "Prefab",
         Prefab_setup,
         NULL,
-        199,
+        201,
         Prefab_testcases
     },
     {
