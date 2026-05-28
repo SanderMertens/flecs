@@ -30,22 +30,6 @@ void flecs_trav_entity_down(
     bool empty);
 
 static
-ecs_trav_down_t* flecs_trav_down_ensure(
-    const ecs_query_run_ctx_t *ctx,
-    ecs_trav_up_cache_t *cache,
-    ecs_entity_t entity)
-{
-    ecs_trav_down_t **trav = ecs_map_ensure_ref(
-        &cache->src, ecs_trav_down_t, entity);
-    if (!trav[0]) {
-        trav[0] = flecs_iter_calloc_t(ctx->it, ecs_trav_down_t);
-        ecs_vec_init_t(NULL, &trav[0]->elems, ecs_trav_down_elem_t, 0);
-    }
-
-    return trav[0];
-}
-
-static
 ecs_trav_down_t* flecs_trav_table_down(
     ecs_world_t *world,
     ecs_allocator_t *a,
@@ -316,12 +300,10 @@ ecs_trav_down_t* flecs_query_get_down_cache(
     cache->dir = EcsTravDown;
 
     ecs_allocator_t *a = flecs_query_get_allocator(ctx->it);
-    ecs_map_init_if(&cache->src, a);
 
-    ecs_trav_down_t *result = flecs_trav_down_ensure(ctx, cache, e);
-    if (result->ready) {
-        return result;
-    }
+    ecs_trav_down_t *result = &cache->down;
+    ecs_vec_init_if_t(&result->elems, ecs_trav_down_elem_t);
+    ecs_vec_clear(&result->elems);
 
     ecs_component_record_t *cr_trav = flecs_components_get(world, ecs_pair(trav, e));
     if (!cr_trav) {
@@ -332,11 +314,8 @@ ecs_trav_down_t* flecs_query_get_down_cache(
             }
 
         }
-        result->ready = true;
         return result;
     }
-
-    ecs_vec_init_t(a, &result->elems, ecs_trav_down_elem_t, 0);
 
     /* Cover IsA -> trav paths. If a parent inherits a component, then children
      * of that parent should find the component through up traversal. */
@@ -347,7 +326,6 @@ ecs_trav_down_t* flecs_query_get_down_cache(
 
     flecs_trav_entity_down(
         world, a, cache, result, trav, cr_trav, cr_with, self, empty);
-    result->ready = true;
 
     return result;
 }
@@ -356,10 +334,5 @@ void flecs_query_down_cache_fini(
     ecs_allocator_t *a,
     ecs_trav_up_cache_t *cache)
 {
-    ecs_map_iter_t it = ecs_map_iter(&cache->src);
-    while (ecs_map_next(&it)) {
-        ecs_trav_down_t *t = ecs_map_ptr(&it);
-        ecs_vec_fini_t(a, &t->elems, ecs_trav_down_elem_t);
-    }
-    ecs_map_fini(&cache->src);
+    ecs_vec_fini_t(a, &cache->down.elems, ecs_trav_down_elem_t);
 }
