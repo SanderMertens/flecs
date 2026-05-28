@@ -6441,3 +6441,25 @@ void Prefab_add_base_w_exclusive_override(void) {
 
     ecs_fini(world);
 }
+
+void Prefab_fini_w_prefab_child_exclusive_pair_delete_with(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Rel, Exclusive);
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t tgt = ecs_new(world);
+    ecs_entity_t parent = ecs_new(world);
+    ecs_entity_t prefab = ecs_new(world);
+
+    ecs_add_pair(world, prefab, Rel, tgt);
+    ecs_add_id(world, parent, Tag);
+    ecs_add_id(world, prefab, EcsPrefab);
+    ecs_add_pair(world, prefab, EcsChildOf, parent);
+
+    ecs_delete_with(world, Tag);
+
+    test_assert(true);
+
+    ecs_fini(world);
+}

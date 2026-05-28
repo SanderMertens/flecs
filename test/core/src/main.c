@@ -721,6 +721,8 @@ void Sparse_defer_set_w_sparse_w_observer(void);
 void Sparse_defer_ensure_modified_w_sparse_w_observer(void);
 void Sparse_defer_remove_override(void);
 void Sparse_defer_remove_add_override(void);
+void Sparse_remove_childof_pair_w_dont_fragment_component(void);
+void Sparse_fini_w_dont_fragment_pair_prefab_exclusive_delete_with(void);
 
 // Testsuite 'NonFragmentingChildOf'
 void NonFragmentingChildOf_set_parent_no_ordered_children(void);
@@ -968,6 +970,14 @@ void NonFragmentingChildOf_defer_add_prefab_tag_after_hierarchy_creation(void);
 void NonFragmentingChildOf_add_prefab_tag_after_hierarchy_creation_2(void);
 void NonFragmentingChildOf_defer_add_prefab_tag_after_hierarchy_creation_2(void);
 void NonFragmentingChildOf_defer_set_parent_and_remove_tag(void);
+void NonFragmentingChildOf_fini_w_mixed_childof_different_parents(void);
+void NonFragmentingChildOf_fini_w_child_of_prefab_w_traversable_and_isa(void);
+void NonFragmentingChildOf_fini_w_ordered_child_w_up_traversable(void);
+void NonFragmentingChildOf_defer_reparent_mixed_childof(void);
+void NonFragmentingChildOf_prefab_parent_w_mixed_childof(void);
+void NonFragmentingChildOf_defer_set_parent_to_deleted_entity(void);
+void NonFragmentingChildOf_defer_reparent_to_deleted_entity_w_sparse(void);
+void NonFragmentingChildOf_set_parent_to_deleted_entity_w_ordered_child(void);
 
 // Testsuite 'Hierarchies'
 void Hierarchies_setup(void);
@@ -2304,6 +2314,7 @@ void Observer_cache_test_13(void);
 void Observer_cache_test_14(void);
 void Observer_cache_test_15(void);
 void Observer_cache_test_16(void);
+void Observer_cache_test_17(void);
 void Observer_multi_term_on_set_w_base_and_3_instances_in_different_tables(void);
 
 // Testsuite 'ObserverOnSet'
@@ -2619,6 +2630,7 @@ void Prefab_remove_all(void);
 void Prefab_delete_with(void);
 void Prefab_prefab_children_after_adding_prefab(void);
 void Prefab_add_base_w_exclusive_override(void);
+void Prefab_fini_w_prefab_child_exclusive_pair_delete_with(void);
 
 // Testsuite 'World'
 void World_setup(void);
@@ -6104,6 +6116,14 @@ bake_test_case Sparse_testcases[] = {
     {
         "defer_remove_add_override",
         Sparse_defer_remove_add_override
+    },
+    {
+        "remove_childof_pair_w_dont_fragment_component",
+        Sparse_remove_childof_pair_w_dont_fragment_component
+    },
+    {
+        "fini_w_dont_fragment_pair_prefab_exclusive_delete_with",
+        Sparse_fini_w_dont_fragment_pair_prefab_exclusive_delete_with
     }
 };
 
@@ -7087,6 +7107,38 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "defer_set_parent_and_remove_tag",
         NonFragmentingChildOf_defer_set_parent_and_remove_tag
+    },
+    {
+        "fini_w_mixed_childof_different_parents",
+        NonFragmentingChildOf_fini_w_mixed_childof_different_parents
+    },
+    {
+        "fini_w_child_of_prefab_w_traversable_and_isa",
+        NonFragmentingChildOf_fini_w_child_of_prefab_w_traversable_and_isa
+    },
+    {
+        "fini_w_ordered_child_w_up_traversable",
+        NonFragmentingChildOf_fini_w_ordered_child_w_up_traversable
+    },
+    {
+        "defer_reparent_mixed_childof",
+        NonFragmentingChildOf_defer_reparent_mixed_childof
+    },
+    {
+        "prefab_parent_w_mixed_childof",
+        NonFragmentingChildOf_prefab_parent_w_mixed_childof
+    },
+    {
+        "defer_set_parent_to_deleted_entity",
+        NonFragmentingChildOf_defer_set_parent_to_deleted_entity
+    },
+    {
+        "defer_reparent_to_deleted_entity_w_sparse",
+        NonFragmentingChildOf_defer_reparent_to_deleted_entity_w_sparse
+    },
+    {
+        "set_parent_to_deleted_entity_w_ordered_child",
+        NonFragmentingChildOf_set_parent_to_deleted_entity_w_ordered_child
     }
 };
 
@@ -12324,6 +12376,10 @@ bake_test_case Observer_testcases[] = {
         Observer_cache_test_16
     },
     {
+        "cache_test_17",
+        Observer_cache_test_17
+    },
+    {
         "multi_term_on_set_w_base_and_3_instances_in_different_tables",
         Observer_multi_term_on_set_w_base_and_3_instances_in_different_tables
     }
@@ -13544,6 +13600,10 @@ bake_test_case Prefab_testcases[] = {
     {
         "add_base_w_exclusive_override",
         Prefab_add_base_w_exclusive_override
+    },
+    {
+        "fini_w_prefab_child_exclusive_pair_delete_with",
+        Prefab_fini_w_prefab_child_exclusive_pair_delete_with
     }
 };
 
@@ -16346,7 +16406,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         Sparse_setup,
         NULL,
-        227,
+        229,
         Sparse_testcases,
         1,
         Sparse_params
@@ -16355,7 +16415,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NULL,
         NULL,
-        245,
+        253,
         NonFragmentingChildOf_testcases
     },
     {
@@ -16474,7 +16534,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        339,
+        340,
         Observer_testcases
     },
     {
@@ -16516,7 +16576,7 @@ static bake_test_suite suites[] = {
         "Prefab",
         Prefab_setup,
         NULL,
-        198,
+        199,
         Prefab_testcases
     },
     {

@@ -6528,3 +6528,163 @@ void NonFragmentingChildOf_defer_set_parent_and_remove_tag(void) {
 
     ecs_fini(world);
 }
+
+void NonFragmentingChildOf_fini_w_mixed_childof_different_parents(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent_a = ecs_new(world);
+    ecs_entity_t parent_b = ecs_new(world);
+    ecs_entity_t child_a = ecs_new(world);
+    ecs_entity_t child_b = ecs_new(world);
+
+    ecs_add_pair(world, child_b, EcsChildOf, parent_a);
+    ecs_set(world, child_a, EcsParent, {parent_a});
+    ecs_set(world, child_b, EcsParent, {parent_b});
+
+    test_assert(true);
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_fini_w_child_of_prefab_w_traversable_and_isa(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t rel = ecs_new(world);
+    ecs_add_id(world, rel, EcsTraversable);
+
+    ecs_entity_t prefab = ecs_new(world);
+    ecs_add_id(world, prefab, EcsPrefab);
+
+    ecs_entity_t tgt = ecs_new(world);
+    ecs_entity_t child = ecs_new(world);
+    ecs_add_pair(world, child, rel, tgt);
+    ecs_set(world, child, EcsParent, {prefab});
+
+    ecs_entity_t inst = ecs_new(world);
+    ecs_add_pair(world, inst, EcsIsA, prefab);
+
+    test_assert(true);
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_fini_w_ordered_child_w_up_traversable(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t rel = ecs_new(world);
+    ecs_add_id(world, rel, EcsTraversable);
+    ecs_add_pair(world, rel, EcsOnInstantiate, EcsInherit);
+
+    ecs_entity_t grandparent = ecs_new(world);
+    ecs_entity_t parent = ecs_new(world);
+    ecs_entity_t other = ecs_new(world);
+    ecs_entity_t child = ecs_new(world);
+
+    ecs_add_pair(world, other, rel, grandparent);
+    ecs_add_pair(world, child, EcsChildOf, parent);
+    ecs_add_id(world, parent, EcsOrderedChildren);
+    ecs_set(world, parent, EcsParent, {grandparent});
+
+    test_assert(true);
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_defer_reparent_mixed_childof(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent_a = ecs_new(world);
+    ecs_entity_t parent_b = ecs_new(world);
+    ecs_entity_t child = ecs_new(world);
+
+    ecs_defer_begin(world);
+    ecs_set(world, parent_b, EcsParent, {parent_a});
+    ecs_add_pair(world, child, EcsChildOf, parent_a);
+    ecs_set(world, child, EcsParent, {parent_b});
+    ecs_defer_end(world);
+
+    test_assert(true);
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_prefab_parent_w_mixed_childof(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_entity_t child_a = ecs_new(world);
+    ecs_entity_t child_b = ecs_new(world);
+
+    ecs_set(world, child_b, EcsParent, {parent});
+    ecs_add_id(world, parent, EcsPrefab);
+    ecs_add_pair(world, child_a, EcsChildOf, parent);
+
+    test_assert(true);
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_defer_set_parent_to_deleted_entity(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t dont_fragment = ecs_new(world);
+    ecs_add_id(world, dont_fragment, EcsDontFragment);
+
+    ecs_entity_t deleted = ecs_new(world);
+    ecs_entity_t child = ecs_new(world);
+    ecs_entity_t other = ecs_new(world);
+    ecs_entity_t grandchild = ecs_new(world);
+    ecs_delete(world, deleted);
+
+    ecs_defer_begin(world);
+    ecs_set(world, child, EcsParent, {deleted});
+    ecs_add_id(world, other, dont_fragment);
+    ecs_remove_pair(world, grandchild, EcsChildOf, child);
+    ecs_defer_end(world);
+
+    test_assert(true);
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_defer_reparent_to_deleted_entity_w_sparse(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t sparse = ecs_new(world);
+    ecs_add_id(world, sparse, EcsSparse);
+
+    ecs_entity_t tag = ecs_new(world);
+    ecs_entity_t deleted = ecs_new(world);
+    ecs_entity_t parent = ecs_new(world);
+    ecs_entity_t child = ecs_new(world);
+
+    ecs_add_id(world, deleted, tag);
+    ecs_set(world, child, EcsParent, {parent});
+    ecs_delete_with(world, tag);
+
+    ecs_defer_begin(world);
+    ecs_add_id(world, child, sparse);
+    ecs_set(world, child, EcsParent, {deleted});
+    ecs_defer_end(world);
+
+    test_assert(true);
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_set_parent_to_deleted_entity_w_ordered_child(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t deleted = ecs_new(world);
+    ecs_entity_t parent = ecs_new(world);
+    ecs_entity_t child = ecs_new(world);
+    ecs_delete(world, deleted);
+
+    ecs_add_id(world, child, EcsOrderedChildren);
+    ecs_add_pair(world, child, EcsChildOf, parent);
+    ecs_set(world, parent, EcsParent, {deleted});
+
+    test_assert(true);
+
+    ecs_fini(world);
+}

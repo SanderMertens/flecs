@@ -7572,3 +7572,49 @@ void Sparse_defer_remove_add_override(void) {
     ecs_fini(world);
 }
 
+void Sparse_remove_childof_pair_w_dont_fragment_component(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t df = ecs_new(world);
+    ecs_add_id(world, df, EcsDontFragment);
+
+    ecs_entity_t a = ecs_new(world);
+    ecs_entity_t b = ecs_new(world);
+    ecs_entity_t c = ecs_new(world);
+
+    ecs_add_pair(world, a, df, b);
+    ecs_remove_pair(world, c, EcsChildOf, b);
+
+    test_assert(true);
+
+    ecs_fini(world);
+}
+
+void Sparse_fini_w_dont_fragment_pair_prefab_exclusive_delete_with(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t rel = ecs_new(world);
+    ecs_add_id(world, rel, EcsExclusive);
+
+    ecs_entity_t df = ecs_new(world);
+    ecs_add_id(world, df, EcsDontFragment);
+
+    ecs_entity_t tag = ecs_new(world);
+
+    ecs_entity_t tgt = ecs_new(world);
+    ecs_entity_t pair_tgt = ecs_new(world);
+    ecs_entity_t base = ecs_new(world);
+    ecs_entity_t prefab = ecs_new(world);
+
+    ecs_add_pair(world, prefab, rel, tgt);
+    ecs_add_pair(world, pair_tgt, df, tgt);
+    ecs_add_id(world, prefab, EcsPrefab);
+    ecs_add_id(world, tgt, tag);
+    ecs_delete_with(world, tag);
+    ecs_add_pair(world, base, EcsIsA, pair_tgt);
+
+    test_assert(true);
+
+    ecs_fini(world);
+}
+

@@ -8965,6 +8965,27 @@ void Observer_cache_test_16(void) {
     ecs_fini(world);
 }
 
+void Observer_cache_test_17(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t r = ecs_new(world);
+    ecs_add_id(world, r, EcsTraversable);
+    ecs_add_pair(world, r, EcsOnInstantiate, EcsInherit);
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_entity_t child = ecs_new(world);
+    ecs_set(world, child, EcsParent, {parent});
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add_id(world, e, EcsOrderedChildren);
+    ecs_add_pair(world, e, r, child);
+    ecs_add_pair(world, e, EcsChildOf, parent);
+
+    test_assert(true);
+
+    ecs_fini(world);
+}
+
 static int Observer_a_invoked = 0;
 static int Observer_b_invoked = 0;
 

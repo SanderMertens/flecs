@@ -750,7 +750,9 @@
                 "defer_set_w_sparse_w_observer",
                 "defer_ensure_modified_w_sparse_w_observer",
                 "defer_remove_override",
-                "defer_remove_add_override"
+                "defer_remove_add_override",
+                "remove_childof_pair_w_dont_fragment_component",
+                "fini_w_dont_fragment_pair_prefab_exclusive_delete_with"
             ]
         }, {
             "id": "NonFragmentingChildOf",
@@ -999,7 +1001,15 @@
                 "defer_add_prefab_tag_after_hierarchy_creation",
                 "add_prefab_tag_after_hierarchy_creation_2",
                 "defer_add_prefab_tag_after_hierarchy_creation_2",
-                "defer_set_parent_and_remove_tag"
+                "defer_set_parent_and_remove_tag",
+                "fini_w_mixed_childof_different_parents",
+                "fini_w_child_of_prefab_w_traversable_and_isa",
+                "fini_w_ordered_child_w_up_traversable",
+                "defer_reparent_mixed_childof",
+                "prefab_parent_w_mixed_childof",
+                "defer_set_parent_to_deleted_entity",
+                "defer_reparent_to_deleted_entity_w_sparse",
+                "set_parent_to_deleted_entity_w_ordered_child"
             ]
         }, {
             "id": "Hierarchies",
@@ -2371,6 +2381,7 @@
                 "cache_test_14",
                 "cache_test_15",
                 "cache_test_16",
+                "cache_test_17",
                 "multi_term_on_set_w_base_and_3_instances_in_different_tables"
             ]
         }, {
@@ -2697,7 +2708,8 @@
                 "remove_all",
                 "delete_with",
                 "prefab_children_after_adding_prefab",
-                "add_base_w_exclusive_override"
+                "add_base_w_exclusive_override",
+                "fini_w_prefab_child_exclusive_pair_delete_with"
             ]
         }, {
             "id": "World",
