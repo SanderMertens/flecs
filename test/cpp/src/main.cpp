@@ -847,6 +847,7 @@ void Query_component_inheritance_each_multiple_derived(void);
 void Query_component_inheritance_each_entity(void);
 void Query_component_inheritance_base_field(void);
 void Query_component_inheritance_field_asserts(void);
+void Query_component_inheritance_virtual(void);
 
 // Testsuite 'QueryBuilder'
 void QueryBuilder_setup(void);
@@ -4955,6 +4956,10 @@ bake_test_case Query_testcases[] = {
     {
         "component_inheritance_field_asserts",
         Query_component_inheritance_field_asserts
+    },
+    {
+        "component_inheritance_virtual",
+        Query_component_inheritance_virtual
     }
 };
 
@@ -8194,7 +8199,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        146,
+        147,
         Query_testcases
     },
     {

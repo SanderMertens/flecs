@@ -16,6 +16,19 @@ struct InheritMage : InheritUnit {
     int32_t mana;
 };
 
+struct VirtualBase {
+    int32_t x;
+    VirtualBase(int32_t x_ = 0) : x(x_) { }
+    virtual ~VirtualBase() { }
+    virtual int32_t value() const { return -1; }
+};
+
+struct VirtualDerived : VirtualBase {
+    int32_t y;
+    VirtualDerived(int32_t x_ = 0, int32_t y_ = 0) : VirtualBase(x_), y(y_) { }
+    int32_t value() const override { return x + y; }
+};
+
 void Query_term_each_component(void) {
     flecs::world ecs;
 
@@ -4110,4 +4123,46 @@ void Query_component_inheritance_field_asserts(void) {
             it.field<InheritUnit>(0);
         }
     });
+}
+
+void Query_component_inheritance_virtual(void) {
+    flecs::world ecs;
+
+    ecs.component<VirtualBase>();
+    ecs.component<VirtualDerived>().is_a<VirtualBase>();
+
+    auto e1 = ecs.entity().set<VirtualDerived>(VirtualDerived(10, 1));
+    auto e2 = ecs.entity().set<VirtualDerived>(VirtualDerived(20, 2));
+    auto e3 = ecs.entity().set<VirtualDerived>(VirtualDerived(30, 3));
+
+    const VirtualBase *b1 = e1.try_get<VirtualBase>();
+    const VirtualBase *b2 = e2.try_get<VirtualBase>();
+    const VirtualBase *b3 = e3.try_get<VirtualBase>();
+    test_assert(b1 != nullptr);
+    test_assert(b2 != nullptr);
+    test_assert(b3 != nullptr);
+    test_int(b1->value(), 11);
+    test_int(b2->value(), 22);
+    test_int(b3->value(), 33);
+
+    int32_t sum = 0, count = 0;
+    ecs.query<VirtualBase>().each([&](VirtualBase& b) {
+        sum += b.value();
+        count ++;
+    });
+    test_int(count, 3);
+    test_int(sum, 66);
+
+    sum = 0; count = 0;
+    ecs.query<VirtualBase>().run([&](flecs::iter& it) {
+        while (it.next()) {
+            auto f = it.base_field<VirtualBase>(0);
+            for (auto i : it) {
+                sum += f[i].value();
+                count ++;
+            }
+        }
+    });
+    test_int(count, 3);
+    test_int(sum, 66);
 }

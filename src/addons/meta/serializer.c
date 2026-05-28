@@ -449,8 +449,7 @@ int flecs_meta_serialize_struct(
     ecs_size_t offset,
     ecs_vec_t *ops)
 {
-    const EcsStruct *ptr = ecs_get(world, type, EcsStruct);
-    ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ecs_has(world, type, EcsStruct), ECS_INTERNAL_ERROR, NULL);
 
     int32_t cur, first = ecs_vec_count(ops);
     ecs_meta_op_t *op = flecs_meta_ops_add(ops, EcsOpPushStruct);

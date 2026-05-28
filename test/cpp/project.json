@@ -875,7 +875,8 @@
                 "component_inheritance_each_multiple_derived",
                 "component_inheritance_each_entity",
                 "component_inheritance_base_field",
-                "component_inheritance_field_asserts"
+                "component_inheritance_field_asserts",
+                "component_inheritance_virtual"
             ]
         }, {
             "id": "QueryBuilder",

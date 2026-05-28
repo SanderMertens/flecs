@@ -37918,7 +37918,6 @@ int flecs_term_finalize(
     ecs_term_ref_t *src = &term->src;
     ecs_term_ref_t *first = &term->first;
     ecs_term_ref_t *second = &term->second;
-    ecs_flags64_t first_flags = ECS_TERM_REF_FLAGS(first);
     ecs_flags64_t second_flags = ECS_TERM_REF_FLAGS(second);
 
     if (first->name && (first->id & ~EcsTermRefFlags)) {
@@ -38097,10 +38096,9 @@ int flecs_term_finalize(
     }
 
     if (first_entity && !ecs_term_match_0(term)) {
-        bool first_is_self = (first_flags & EcsTraverseFlags) == EcsSelf;
         ecs_record_t *first_record = flecs_entities_get(world, first_entity);
         ecs_table_t *first_table = first_record ? first_record->table : NULL;
-        
+
         bool first_can_isa = false;
         if (first_table) {
             first_can_isa = (first_table->flags & EcsTableHasIsA) != 0;
@@ -38109,14 +38107,14 @@ int flecs_term_finalize(
             }
         }
 
-        (void)first_is_self;
         if (flecs_components_get(world, ecs_pair(EcsIsA, first->id)) ||
             (cr_flags & EcsIdInheritable) || first_can_isa)
         {
             term->flags_ |= EcsTermIdInherited;
         } else {
 #ifdef FLECS_DEBUG
-            if (!first_is_self) {
+            ecs_flags64_t first_flags = ECS_TERM_REF_FLAGS(first);
+            if ((first_flags & EcsTraverseFlags) != EcsSelf) {
                 ecs_query_impl_t *q = flecs_query_impl(ctx->query);
                 if (q) {
                     ECS_TERMSET_SET(q->final_terms, 1u << ctx->term_index);
@@ -59765,9 +59763,7 @@ void flecs_rtt_init_default_hooks_struct(
     ecs_entity_t component,
     const ecs_type_info_t *ti)
 {
-    /* Obtain struct information to figure out what members it contains: */
-    const EcsStruct *struct_info = ecs_get(world, component, EcsStruct);
-    ecs_assert(struct_info != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ecs_has(world, component, EcsStruct), ECS_INTERNAL_ERROR, NULL);
 
     /* These flags will be set to true if we determine we need to generate a
      * hook of a particular type: */
@@ -60864,8 +60860,7 @@ int flecs_meta_serialize_struct(
     ecs_size_t offset,
     ecs_vec_t *ops)
 {
-    const EcsStruct *ptr = ecs_get(world, type, EcsStruct);
-    ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ecs_has(world, type, EcsStruct), ECS_INTERNAL_ERROR, NULL);
 
     int32_t cur, first = ecs_vec_count(ops);
     ecs_meta_op_t *op = flecs_meta_ops_add(ops, EcsOpPushStruct);
@@ -83491,11 +83486,17 @@ bool flecs_query_dispatch(
     ecs_query_run_ctx_t *ctx);
 
 static
-bool flecs_query_record_inherited(
-    const ecs_table_t *table,
-    const ecs_table_record_t *tr)
+int16_t flecs_query_next_column_w_inherited(
+    const ecs_world_t *world,
+    ecs_table_t *table,
+    const ecs_table_record_t *tr,
+    ecs_id_t id,
+    int32_t column)
 {
-    return !ecs_id_match(table->type.array[tr->index], tr->hdr.cr->id);
+    if (!ecs_id_match(table->type.array[tr->index], tr->hdr.cr->id)) {
+        return flecs_query_next_inherited_column(world, table, id, column);
+    }
+    return flecs_query_next_column(table, id, column);
 }
 
 bool flecs_query_select_w_id(
@@ -83544,13 +83545,8 @@ repeat:
         tr = (const ecs_table_record_t*)op_ctx->it.cur;
         ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL);
         table = tr->hdr.table;
-        if (flecs_query_record_inherited(table, tr)) {
-            op_ctx->column = flecs_query_next_inherited_column(
-                ctx->world, table, cr->id, op_ctx->column);
-        } else {
-            op_ctx->column = flecs_query_next_column(
-                table, cr->id, op_ctx->column);
-        }
+        op_ctx->column = flecs_query_next_column_w_inherited(
+            ctx->world, table, tr, cr->id, op_ctx->column);
         op_ctx->remaining --;
     }
 
@@ -83615,13 +83611,8 @@ bool flecs_query_with(
         }
 
         tr = (const ecs_table_record_t*)op_ctx->it.cur;
-        if (flecs_query_record_inherited(table, tr)) {
-            op_ctx->column = flecs_query_next_inherited_column(
-                ctx->world, table, cr->id, op_ctx->column);
-        } else {
-            op_ctx->column = flecs_query_next_column(
-                table, cr->id, op_ctx->column);
-        }
+        op_ctx->column = flecs_query_next_column_w_inherited(
+            ctx->world, table, tr, cr->id, op_ctx->column);
         ecs_assert(op_ctx->column != -1, ECS_INTERNAL_ERROR, NULL);
     }
 
@@ -95708,13 +95699,11 @@ int flecs_expr_member_visit_eval(
             ecs_os_memcpy(ECS_OFFSET(out->value.ptr, i * size),
                 ECS_OFFSET(expr->value.ptr, node->swizzle[i]), size);
         }
-        out->value.type = node->node.type;
-        out->owned = false;
     } else {
         out->value.ptr = ECS_OFFSET(expr->value.ptr, node->offset);
-        out->value.type = node->node.type;
-        out->owned = false;
     }
+    out->value.type = node->node.type;
+    out->owned = false;
 
     flecs_expr_stack_pop(ctx->stack);
     return 0;

@@ -352,9 +352,7 @@ void flecs_rtt_init_default_hooks_struct(
     ecs_entity_t component,
     const ecs_type_info_t *ti)
 {
-    /* Obtain struct information to figure out what members it contains: */
-    const EcsStruct *struct_info = ecs_get(world, component, EcsStruct);
-    ecs_assert(struct_info != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ecs_has(world, component, EcsStruct), ECS_INTERNAL_ERROR, NULL);
 
     /* These flags will be set to true if we determine we need to generate a
      * hook of a particular type: */
