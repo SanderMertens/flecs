@@ -163,15 +163,14 @@ void flecs_trav_entity_down_iter_children(
         bool leaf = false;
 
         /* Check if table has the component */
-        if (flecs_component_get_table(cr_with, r->table) != NULL) {
-            if (self) {
-                /* If matching self and the table has the component, entity
-                 * shouldn't be matched through traversal and will instead
-                 * be matched directly. */
-                continue;
-            }
+        if (self || r->table->_->traversable_count) {
+            if (flecs_component_get_table(cr_with, r->table) != NULL) {
+                if (self) {
+                    continue;
+                }
 
-            leaf = true;
+                leaf = true;
+            }
         }
 
         /* Add element to the cache for a single child */
@@ -213,11 +212,13 @@ void flecs_trav_entity_down_iter_tables(
             ecs_table_t *table = tr->hdr.table;
             bool leaf = false;
 
-            if (flecs_component_get_table(cr_with, table) != NULL) {
-                if (self) {
-                    continue;
+            if (self || table->_->traversable_count) {
+                if (flecs_component_get_table(cr_with, table) != NULL) {
+                    if (self) {
+                        continue;
+                    }
+                    leaf = true;
                 }
-                leaf = true;
             }
 
             /* If record is not the first instance of (trav, *), don't add it

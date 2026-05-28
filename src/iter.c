@@ -60,11 +60,12 @@ void flecs_iter_init(
         char *buf = flecs_stack_alloc(stack, wide + cols,
             ECS_ALIGNOF(ecs_id_t));
 
-        it->ids = (ecs_id_t*)buf;
-        it->sources = (ecs_entity_t*)(buf + (ecs_size_t)sizeof(ecs_id_t) * fc);
-        it->trs = (const ecs_table_record_t**)(buf +
+        it->ids = (ecs_id_t*)(void*)buf;
+        it->sources = (ecs_entity_t*)(void*)(buf +
+            (ecs_size_t)sizeof(ecs_id_t) * fc);
+        it->trs = (const ecs_table_record_t**)(void*)(buf +
             (ecs_size_t)(sizeof(ecs_id_t) + sizeof(ecs_entity_t)) * fc);
-        int16_t *columns = (int16_t*)(buf + wide);
+        int16_t *columns = (int16_t*)(void*)(buf + wide);
 
         ecs_os_memset(buf, 0, wide);
         ecs_os_memset(columns, 0xFF, cols);

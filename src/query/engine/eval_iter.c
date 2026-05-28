@@ -579,10 +579,6 @@ int flecs_query_trivial_has_range(
     ecs_flags32_t flags = q->flags;
     ecs_flags32_t trivial_flags = EcsQueryIsTrivial|EcsQueryMatchOnlySelf;
 
-    /* Only handle the case where the constrained query would take the trivial
-     * test code path. This mirrors the conditions in
-     * flecs_query_apply_iter_flags. For anything else, signal the caller to use
-     * the regular (full iterator) path. */
     if (impl->cache ||
         ((flags & trivial_flags) != trivial_flags) ||
         (flags & EcsQueryMatchWildcards) ||
@@ -591,8 +587,6 @@ int flecs_query_trivial_has_range(
         return -1;
     }
 
-    /* Eval count is incremented unconditionally, matching ecs_query_iter and
-     * the bloom filter reject path in ecs_query_has_range. */
     ECS_CONST_CAST(ecs_query_t*, q)->eval_count ++;
 
     if (table && ((offset + count) > ecs_table_count(table))) {
@@ -603,9 +597,6 @@ int flecs_query_trivial_has_range(
         return 0;
     }
 
-    /* Build a minimal iterator for the trivial test. Unlike flecs_query_iter
-     * this skips the var/written/op_ctx allocations and the query VM, which the
-     * trivial test never uses. */
     ecs_iter_t lit = {0};
     lit.world = ECS_CONST_CAST(ecs_world_t*, world);
     lit.real_world = q->real_world;
@@ -618,8 +609,6 @@ int flecs_query_trivial_has_range(
     lit.offset = offset;
     lit.count = count;
 
-    /* flecs_iter_init asserts that EcsIterIsValid is not set on entry, so only
-     * mark the iterator valid after initialization. */
     flecs_iter_init(lit.world, &lit, true);
     lit.flags |= EcsIterIsValid;
 

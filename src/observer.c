@@ -589,6 +589,7 @@ void flecs_multi_observer_invoke(
     }
 
     ecs_table_t *lock_table = table;
+    (void)lock_table;
     table = table ? table : &world->store.root;
     prev_table = prev_table ? prev_table : &world->store.root;
 
@@ -614,9 +615,6 @@ void flecs_multi_observer_invoke(
             ecs_assert(match, ECS_INTERNAL_ERROR, NULL);
         }
     } else {
-        /* Fast path: for trivial observer queries we can test the table
-         * directly without creating a full query iterator. Monitors are handled
-         * by the regular path as they require an additional check. */
         int trivial = -1;
         if (!(impl->flags & EcsObserverIsMonitor)) {
             trivial = flecs_query_trivial_has_range(o->query, &user_it,
@@ -716,7 +714,6 @@ void flecs_multi_observer_invoke_no_query(
     flecs_poly_assert(o, ecs_observer_t);
 
     ecs_world_t *world = it->real_world;
-    ecs_table_t *table = it->table;
     ecs_iter_t user_it = *it;
 
     user_it.ctx = o->ctx;
@@ -729,7 +726,7 @@ void flecs_multi_observer_invoke_no_query(
 
     ecs_entity_t old_system = flecs_stage_set_system(
         world->stages[0], o->entity);
-    ECS_TABLE_LOCK(it->world, table);
+    ECS_TABLE_LOCK(it->world, it->table);
 
     if (o->run) {
         user_it.next = flecs_default_next_callback;
@@ -738,7 +735,7 @@ void flecs_multi_observer_invoke_no_query(
         user_it.callback(&user_it);
     }
 
-    ECS_TABLE_UNLOCK(it->world, table);
+    ECS_TABLE_UNLOCK(it->world, it->table);
     flecs_stage_set_system(world->stages[0], old_system);
 }
 

@@ -221,9 +221,9 @@ typedef enum {
 } ecs_trav_direction_t;
 
 typedef struct {
-    ecs_map_t src;        /* map<table_id, trav_up_t> (up direction) */
-    ecs_trav_down_t down; /* reused buffer (down direction) */
-    ecs_trav_up_t up;     /* reused buffer for top-level up result */
+    ecs_map_t src;
+    ecs_trav_down_t down;
+    ecs_trav_up_t up;
     ecs_id_t with;
     ecs_trav_direction_t dir;
 } ecs_trav_up_cache_t;
