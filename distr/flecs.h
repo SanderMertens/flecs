@@ -944,6 +944,14 @@ typedef struct ecs_allocator_t ecs_allocator_t;
     #define FLECS_ALWAYS_INLINE
 #endif
 
+#if defined(ECS_TARGET_CLANG) || defined(ECS_TARGET_GCC)
+    #define FLECS_NOINLINE __attribute__((noinline))
+#elif defined(ECS_TARGET_MSVC)
+    #define FLECS_NOINLINE __declspec(noinline)
+#else
+    #define FLECS_NOINLINE
+#endif
+
 #ifndef FLECS_NO_DEPRECATED_WARNINGS
 #if defined(ECS_TARGET_GNU)
 #define ECS_DEPRECATED(msg) __attribute__((deprecated(msg)))
@@ -31036,53 +31044,39 @@ template <typename ... Components>
 struct field_ptrs {
     using array = flecs::array<_::field_ptr, sizeof...(Components)>;
 
-    void populate(const ecs_iter_t *iter) {
-        populate_impl(iter, std::index_sequence_for<Components...>{});
-    }
-
     void populate_self(const ecs_iter_t *iter) {
         populate_self_impl(iter, std::index_sequence_for<Components...>{});
     }
 
-    void populate_stride(const ecs_iter_t *iter) {
-        populate_stride_impl(iter, std::index_sequence_for<Components...>{});
+    void populate_inherited(const ecs_iter_t *iter) {
+        populate_inherited_impl(iter, std::index_sequence_for<Components...>{});
     }
 
     array fields_;
 
 private:
     template <typename T>
-    void populate_stride_field(const ecs_iter_t *iter, size_t index) {
-        using A = remove_pointer_t<actual_type_t<T>>;
-        if constexpr (!is_empty_v<A>) {
-            fields_[index].stride = static_cast<int32_t>(
-                ecs_field_stride(iter, static_cast<int8_t>(index)));
-        } else {
-            (void)iter; (void)index;
-        }
-    }
-
-    template <size_t... Is>
-    void populate_stride_impl(const ecs_iter_t *iter, std::index_sequence<Is...>) {
-        (void)iter;
-        (populate_stride_field<Components>(iter, Is), ...);
-    }
-
-    template <typename T>
-    void populate_field(const ecs_iter_t *iter, size_t index) {
+    void populate_inherited_field(const ecs_iter_t *iter, size_t index) {
         using A = remove_pointer_t<actual_type_t<T>>;
         if constexpr (!is_empty_v<A>) {
             if (iter->row_fields & (1llu << index)) {
-                /* Need to fetch the value with ecs_field_at() */
                 fields_[index].is_row = true;
                 fields_[index].is_ref = true;
                 fields_[index].index = static_cast<int8_t>(index);
             } else {
-                fields_[index].ptr = ecs_field_w_size(iter, sizeof(A), 
+                fields_[index].ptr = ecs_field_w_size(iter, sizeof(A),
                     static_cast<int8_t>(index));
                 fields_[index].is_ref = iter->sources[index] != 0;
             }
+            fields_[index].stride = static_cast<int32_t>(
+                ecs_field_stride(iter, static_cast<int8_t>(index)));
         }
+    }
+
+    template <size_t... Is>
+    void populate_inherited_impl(const ecs_iter_t *iter, std::index_sequence<Is...>) {
+        (void)iter;
+        (populate_inherited_field<Components>(iter, Is), ...);
     }
 
     template <typename T>
@@ -31095,12 +31089,6 @@ private:
                 static_cast<int8_t>(index));
             fields_[index].is_ref = false;
         }
-    }
-
-    template <size_t... Is>
-    void populate_impl(const ecs_iter_t *iter, std::index_sequence<Is...>) {
-        (void)iter;
-        (populate_field<Components>(iter, Is), ...);
     }
 
     template <size_t... Is>
@@ -31260,31 +31248,6 @@ struct each_field_strided<T, if_t< is_pointer<T>::value &&
 // If the query contains component references to other entities, check if the
 // current argument is one.
 template <typename T, typename = int>
-struct each_ref_field : public each_field<T> {
-    using A = remove_pointer_t<actual_type_t<T>>;
-
-    each_ref_field(const flecs::iter_t *iter, _::field_ptr& field, size_t row)
-        : each_field<T>(iter, field, row) {
-
-        if (field.is_ref) {
-            // If this is a reference, set the row to 0 as a ref is always a
-            // single value, not an array. This prevents the application from
-            // having to do an if-check on whether the field is owned.
-            //
-            // This check only happens when the current table being iterated
-            // over caused the query to match a reference. The check is
-            // performed once per iterated table.
-            this->row_ = 0;
-        }
-
-        if (field.is_row) {
-            field.ptr = ecs_field_at_w_size(iter, sizeof(A), field.index,
-                static_cast<int32_t>(row));
-        }
-    }
-};
-
-template <typename T, typename = int>
 struct each_ref_field_strided : public each_field_strided<T> {
     using A = remove_pointer_t<actual_type_t<T>>;
 
@@ -31318,37 +31281,18 @@ struct each_delegate : public delegate {
     // function has just constructed the delegate, such as what happens when
     // iterating a query.
     void invoke(ecs_iter_t *iter) const {
-        if (iter->flags & EcsIterComponentInheritance) {
-            invoke_inherited(iter);
-            return;
-        }
-
         field_ptrs<Components...> terms;
 
         iter->flags |= EcsIterCppEach;
 
-        if (iter->ref_fields | iter->up_fields) {
-            terms.populate(iter);
-            invoke_unpack< each_ref_field >(iter, func_, 0, terms.fields_);
-        } else {
-            terms.populate_self(iter);
-            invoke_unpack< each_field >(iter, func_, 0, terms.fields_);
-        }
-    }
-
-    void invoke_inherited(ecs_iter_t *iter) const {
-        field_ptrs<Components...> terms;
-
-        iter->flags |= EcsIterCppEach;
-
-        if (iter->ref_fields | iter->up_fields) {
-            terms.populate(iter);
-            terms.populate_stride(iter);
+        if (iter->ref_fields | iter->up_fields |
+            (iter->flags & EcsIterComponentInheritance))
+        {
+            terms.populate_inherited(iter);
             invoke_unpack< each_ref_field_strided >(iter, func_, 0, terms.fields_);
         } else {
             terms.populate_self(iter);
-            terms.populate_stride(iter);
-            invoke_unpack< each_field_strided >(iter, func_, 0, terms.fields_);
+            invoke_unpack< each_field >(iter, func_, 0, terms.fields_);
         }
     }
 
@@ -31508,36 +31452,18 @@ struct find_delegate : public delegate {
     // function has just constructed the delegate, such as what happens when
     // iterating a query.
     flecs::entity invoke(ecs_iter_t *iter) const {
-        if (iter->flags & EcsIterComponentInheritance) {
-            return invoke_inherited(iter);
-        }
-
         field_ptrs<Components...> terms;
 
         iter->flags |= EcsIterCppEach;
 
-        if (iter->ref_fields | iter->up_fields) {
-            terms.populate(iter);
-            return invoke_callback< each_ref_field >(iter, func_, 0, terms.fields_);
-        } else {
-            terms.populate_self(iter);
-            return invoke_callback< each_field >(iter, func_, 0, terms.fields_);
-        }
-    }
-
-    flecs::entity invoke_inherited(ecs_iter_t *iter) const {
-        field_ptrs<Components...> terms;
-
-        iter->flags |= EcsIterCppEach;
-
-        if (iter->ref_fields | iter->up_fields) {
-            terms.populate(iter);
-            terms.populate_stride(iter);
+        if (iter->ref_fields | iter->up_fields |
+            (iter->flags & EcsIterComponentInheritance))
+        {
+            terms.populate_inherited(iter);
             return invoke_callback< each_ref_field_strided >(iter, func_, 0, terms.fields_);
         } else {
             terms.populate_self(iter);
-            terms.populate_stride(iter);
-            return invoke_callback< each_field_strided >(iter, func_, 0, terms.fields_);
+            return invoke_callback< each_field >(iter, func_, 0, terms.fields_);
         }
     }
 
@@ -33734,8 +33660,13 @@ struct page_iterable;
 template <typename ... Components>
 struct worker_iterable;
 
-/** Base class for iterable query objects. */
-template <typename ... Components>
+/** Base class for iterable query objects.
+ *
+ * Uses static (CRTP) dispatch: the most-derived type (Derived) provides the
+ * non-virtual get_iter()/next_action() methods. This keeps the typed iterables
+ * non-polymorphic, so no per-signature vtables or RTTI are emitted.
+ */
+template <typename Derived, typename ... Components>
 struct iterable {
 
     /** Each iterator.
@@ -33749,8 +33680,8 @@ struct iterable {
      */
     template <typename Func>
     void each(Func&& func) const {
-        ecs_iter_t it = this->get_iter(nullptr);
-        ecs_iter_next_action_t next = this->next_action();
+        ecs_iter_t it = this->get_iter_(nullptr);
+        ecs_iter_next_action_t next = this->next_action_();
         while (next(&it)) {
             _::each_delegate<Func, Components...>(func).invoke(&it);
         }
@@ -33765,7 +33696,7 @@ struct iterable {
      */
     template <typename Func>
     void run(Func&& func) const {
-        ecs_iter_t it = this->get_iter(nullptr);
+        ecs_iter_t it = this->get_iter_(nullptr);
         _::run_delegate<Func>(func).invoke(&it);
     }
 
@@ -33777,8 +33708,8 @@ struct iterable {
      */
     template <typename Func>
     flecs::entity find(Func&& func) const {
-        ecs_iter_t it = this->get_iter(nullptr);
-        ecs_iter_next_action_t next = this->next_action();
+        ecs_iter_t it = this->get_iter_(nullptr);
+        ecs_iter_next_action_t next = this->next_action_();
 
         flecs::entity result;
         while (!result && next(&it)) {
@@ -33877,20 +33808,23 @@ struct iterable {
         return this->iter().template set_group<Group>();
     }
 
-    /** Virtual destructor. */
-    virtual ~iterable() { }
-protected:
-    friend iter_iterable<Components...>;
-    friend page_iterable<Components...>;
-    friend worker_iterable<Components...>;
+private:
+    const Derived& derived_() const {
+        return *static_cast<const Derived*>(this);
+    }
 
-    virtual ecs_iter_t get_iter(flecs::world_t *stage) const = 0;
-    virtual ecs_iter_next_action_t next_action() const = 0;
+    ecs_iter_t get_iter_(flecs::world_t *stage) const {
+        return derived_().get_iter(stage);
+    }
+
+    ecs_iter_next_action_t next_action_() const {
+        return derived_().next_action();
+    }
 };
 
 /** Iterable adapter for iterating with iter/each/run. */
 template <typename ... Components>
-struct iter_iterable final : iterable<Components...> {
+struct iter_iterable final : iterable<iter_iterable<Components...>, Components...> {
     /** Construct iter_iterable from an iterable and a world. */
     template <typename Iterable>
     iter_iterable(Iterable *it, flecs::world_t *world)
@@ -33997,8 +33931,7 @@ flecs::string to_json(flecs::iter_to_json_desc_t *desc = nullptr) {
         return *this;
     }
 
-protected:
-    ecs_iter_t get_iter(flecs::world_t *world) const override {
+    ecs_iter_t get_iter(flecs::world_t *world) const {
         if (world) {
             ecs_iter_t result = it_;
             result.world = world;
@@ -34007,7 +33940,7 @@ protected:
         return it_;
     }
 
-    ecs_iter_next_action_t next_action() const override {
+    ecs_iter_next_action_t next_action() const {
         return next_;
     }
 
@@ -34017,27 +33950,27 @@ private:
     ecs_iter_next_action_t next_each_;
 };
 
-template <typename ... Components>
-iter_iterable<Components...> iterable<Components...>::iter(flecs::world_t *world) const
+template <typename Derived, typename ... Components>
+iter_iterable<Components...> iterable<Derived, Components...>::iter(flecs::world_t *world) const
 {
-    return iter_iterable<Components...>(this, world);
+    return iter_iterable<Components...>(&derived_(), world);
 }
 
-template <typename ... Components>
-iter_iterable<Components...> iterable<Components...>::iter(flecs::iter& it) const
+template <typename Derived, typename ... Components>
+iter_iterable<Components...> iterable<Derived, Components...>::iter(flecs::iter& it) const
 {
-    return iter_iterable<Components...>(this, it.world());
+    return iter_iterable<Components...>(&derived_(), it.world());
 }
 
-template <typename ... Components>
-iter_iterable<Components...> iterable<Components...>::iter(flecs::entity e) const
+template <typename Derived, typename ... Components>
+iter_iterable<Components...> iterable<Derived, Components...>::iter(flecs::entity e) const
 {
-    return iter_iterable<Components...>(this, e.world());
+    return iter_iterable<Components...>(&derived_(), e.world());
 }
 
 /** Paged iterable adapter. Limits iteration to a range of entities. */
 template <typename ... Components>
-struct page_iterable final : iterable<Components...> {
+struct page_iterable final : iterable<page_iterable<Components...>, Components...> {
     /** Construct a page_iterable from an offset, limit, and source iterable. */
     template <typename Iterable>
     page_iterable(int32_t offset, int32_t limit, Iterable *it)
@@ -34047,7 +33980,6 @@ struct page_iterable final : iterable<Components...> {
         chain_it_ = it->get_iter(nullptr);
     }
 
-protected:
     ecs_iter_t get_iter(flecs::world_t*) const {
         return ecs_page_iter(&chain_it_, offset_, limit_);
     }
@@ -34062,26 +33994,26 @@ private:
     int32_t limit_;
 };
 
-template <typename ... Components>
-page_iterable<Components...> iterable<Components...>::page(
+template <typename Derived, typename ... Components>
+page_iterable<Components...> iterable<Derived, Components...>::page(
     int32_t offset,
     int32_t limit)
 {
-    return page_iterable<Components...>(offset, limit, this);
+    return page_iterable<Components...>(offset, limit, &derived_());
 }
 
 /** Worker iterable adapter. Divides entities across workers. */
 template <typename ... Components>
-struct worker_iterable final : iterable<Components...> {
+struct worker_iterable final : iterable<worker_iterable<Components...>, Components...> {
     /** Construct a worker_iterable from an index, count, and source iterable. */
-    worker_iterable(int32_t index, int32_t count, iterable<Components...> *it)
+    template <typename Iterable>
+    worker_iterable(int32_t index, int32_t count, Iterable *it)
         : index_(index)
         , count_(count)
     {
         chain_it_ = it->get_iter(nullptr);
     }
 
-protected:
     ecs_iter_t get_iter(flecs::world_t*) const {
         return ecs_worker_iter(&chain_it_, index_, count_);
     }
@@ -34096,12 +34028,12 @@ private:
     int32_t count_;
 };
 
-template <typename ... Components>
-worker_iterable<Components...> iterable<Components...>::worker(
+template <typename Derived, typename ... Components>
+worker_iterable<Components...> iterable<Derived, Components...>::worker(
     int32_t index,
     int32_t count)
 {
-    return worker_iterable<Components...>(index, count, this);
+    return worker_iterable<Components...>(index, count, &derived_());
 }
 
 }
@@ -34484,13 +34416,39 @@ namespace _ {
         return flecs::And;
     }
 
+    // Type-erased term population shared by all query/system/observer builders.
+    // Kept out-of-line so the per-signature builder code is reduced to building
+    // the id/inout/oper arrays plus a single call.
+    FLECS_NOINLINE
+    inline int32_t populate_query_terms(
+        ecs_query_desc_t *desc,
+        int32_t term_index,
+        const flecs::id_t *ids,
+        const flecs::inout_kind_t *inout,
+        const flecs::oper_kind_t *oper,
+        int32_t count)
+    {
+        for (int32_t i = 0; i < count; i ++) {
+            ecs_term_t *term = &desc->terms[term_index + i];
+            *term = ecs_term_t{};
+            if (ids[i] & ECS_ID_FLAGS_MASK) {
+                term->id = ids[i];
+            } else {
+                term->first.id = ids[i];
+            }
+            term->inout = static_cast<int16_t>(inout[i]);
+            term->oper = static_cast<int16_t>(oper[i]);
+        }
+        return term_index + count;
+    }
+
     template <typename ... Components>
     struct sig {
-        sig(flecs::world_t *world) 
+        sig(flecs::world_t *world)
             : world_(world)
             , ids({ (_::type<remove_pointer_t<Components>>::id(world))... })
             , inout ({ (type_to_inout<Components>())... })
-            , oper ({ (type_to_oper<Components>())... }) 
+            , oper ({ (type_to_oper<Components>())... })
         { }
 
         flecs::world_t *world_;
@@ -34500,11 +34458,8 @@ namespace _ {
 
         template <typename Builder>
         void populate(const Builder& b) {
-            size_t i = 0;
-            for (auto id : ids) {
-                b->with(id).inout(inout[i]).oper(oper[i]);
-                i ++;
-            }
+            b->populate_terms(ids.ptr(), inout.ptr(), oper.ptr(),
+                static_cast<int32_t>(sizeof...(Components)));
         }
     };
 
@@ -35156,6 +35111,17 @@ struct query_builder_i : term_builder_i<Base> {
         : term_index_(term_index)
         , expr_count_(0)
         , desc_(desc) { }
+
+    /** Append terms from type-erased id/inout/oper arrays.
+     * Used by the signature population path to keep per-signature code minimal.
+     */
+    Base& populate_terms(const flecs::id_t *ids, const flecs::inout_kind_t *inout,
+        const flecs::oper_kind_t *oper, int32_t count)
+    {
+        term_index_ = _::populate_query_terms(
+            desc_, term_index_, ids, inout, oper, count);
+        return *this;
+    }
 
     /** Set the query flags. */
     Base& query_flags(ecs_flags32_t flags) {
@@ -35879,7 +35845,7 @@ protected:
  * @ingroup cpp_core_queries
  */
 template<typename ... Components>
-struct query : query_base, iterable<Components...> {
+struct query : query_base, iterable<query<Components...>, Components...> {
 private:
     using Fields = typename _::field_ptrs<Components...>::array;
 
@@ -35913,9 +35879,8 @@ public:
         return flecs::query<>(q);
     }
 
-private:
-    ecs_iter_t get_iter(flecs::world_t *world) const override {
-        ecs_assert(query_ != nullptr, ECS_INVALID_PARAMETER, 
+    ecs_iter_t get_iter(flecs::world_t *world) const {
+        ecs_assert(query_ != nullptr, ECS_INVALID_PARAMETER,
             "cannot iterate invalid query");
         if (!world) {
             world = query_->world;
@@ -35923,7 +35888,7 @@ private:
         return ecs_query_iter(world, query_);
     }
 
-    ecs_iter_next_action_t next_action() const override {
+    ecs_iter_next_action_t next_action() const {
         return ecs_query_next;
     }
 };

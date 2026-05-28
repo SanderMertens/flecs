@@ -34,13 +34,39 @@ namespace _ {
         return flecs::And;
     }
 
+    // Type-erased term population shared by all query/system/observer builders.
+    // Kept out-of-line so the per-signature builder code is reduced to building
+    // the id/inout/oper arrays plus a single call.
+    FLECS_NOINLINE
+    inline int32_t populate_query_terms(
+        ecs_query_desc_t *desc,
+        int32_t term_index,
+        const flecs::id_t *ids,
+        const flecs::inout_kind_t *inout,
+        const flecs::oper_kind_t *oper,
+        int32_t count)
+    {
+        for (int32_t i = 0; i < count; i ++) {
+            ecs_term_t *term = &desc->terms[term_index + i];
+            *term = ecs_term_t{};
+            if (ids[i] & ECS_ID_FLAGS_MASK) {
+                term->id = ids[i];
+            } else {
+                term->first.id = ids[i];
+            }
+            term->inout = static_cast<int16_t>(inout[i]);
+            term->oper = static_cast<int16_t>(oper[i]);
+        }
+        return term_index + count;
+    }
+
     template <typename ... Components>
     struct sig {
-        sig(flecs::world_t *world) 
+        sig(flecs::world_t *world)
             : world_(world)
             , ids({ (_::type<remove_pointer_t<Components>>::id(world))... })
             , inout ({ (type_to_inout<Components>())... })
-            , oper ({ (type_to_oper<Components>())... }) 
+            , oper ({ (type_to_oper<Components>())... })
         { }
 
         flecs::world_t *world_;
@@ -50,11 +76,8 @@ namespace _ {
 
         template <typename Builder>
         void populate(const Builder& b) {
-            size_t i = 0;
-            for (auto id : ids) {
-                b->with(id).inout(inout[i]).oper(oper[i]);
-                i ++;
-            }
+            b->populate_terms(ids.ptr(), inout.ptr(), oper.ptr(),
+                static_cast<int32_t>(sizeof...(Components)));
         }
     };
 

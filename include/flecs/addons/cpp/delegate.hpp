@@ -53,53 +53,39 @@ template <typename ... Components>
 struct field_ptrs {
     using array = flecs::array<_::field_ptr, sizeof...(Components)>;
 
-    void populate(const ecs_iter_t *iter) {
-        populate_impl(iter, std::index_sequence_for<Components...>{});
-    }
-
     void populate_self(const ecs_iter_t *iter) {
         populate_self_impl(iter, std::index_sequence_for<Components...>{});
     }
 
-    void populate_stride(const ecs_iter_t *iter) {
-        populate_stride_impl(iter, std::index_sequence_for<Components...>{});
+    void populate_inherited(const ecs_iter_t *iter) {
+        populate_inherited_impl(iter, std::index_sequence_for<Components...>{});
     }
 
     array fields_;
 
 private:
     template <typename T>
-    void populate_stride_field(const ecs_iter_t *iter, size_t index) {
-        using A = remove_pointer_t<actual_type_t<T>>;
-        if constexpr (!is_empty_v<A>) {
-            fields_[index].stride = static_cast<int32_t>(
-                ecs_field_stride(iter, static_cast<int8_t>(index)));
-        } else {
-            (void)iter; (void)index;
-        }
-    }
-
-    template <size_t... Is>
-    void populate_stride_impl(const ecs_iter_t *iter, std::index_sequence<Is...>) {
-        (void)iter;
-        (populate_stride_field<Components>(iter, Is), ...);
-    }
-
-    template <typename T>
-    void populate_field(const ecs_iter_t *iter, size_t index) {
+    void populate_inherited_field(const ecs_iter_t *iter, size_t index) {
         using A = remove_pointer_t<actual_type_t<T>>;
         if constexpr (!is_empty_v<A>) {
             if (iter->row_fields & (1llu << index)) {
-                /* Need to fetch the value with ecs_field_at() */
                 fields_[index].is_row = true;
                 fields_[index].is_ref = true;
                 fields_[index].index = static_cast<int8_t>(index);
             } else {
-                fields_[index].ptr = ecs_field_w_size(iter, sizeof(A), 
+                fields_[index].ptr = ecs_field_w_size(iter, sizeof(A),
                     static_cast<int8_t>(index));
                 fields_[index].is_ref = iter->sources[index] != 0;
             }
+            fields_[index].stride = static_cast<int32_t>(
+                ecs_field_stride(iter, static_cast<int8_t>(index)));
         }
+    }
+
+    template <size_t... Is>
+    void populate_inherited_impl(const ecs_iter_t *iter, std::index_sequence<Is...>) {
+        (void)iter;
+        (populate_inherited_field<Components>(iter, Is), ...);
     }
 
     template <typename T>
@@ -112,12 +98,6 @@ private:
                 static_cast<int8_t>(index));
             fields_[index].is_ref = false;
         }
-    }
-
-    template <size_t... Is>
-    void populate_impl(const ecs_iter_t *iter, std::index_sequence<Is...>) {
-        (void)iter;
-        (populate_field<Components>(iter, Is), ...);
     }
 
     template <size_t... Is>
@@ -277,31 +257,6 @@ struct each_field_strided<T, if_t< is_pointer<T>::value &&
 // If the query contains component references to other entities, check if the
 // current argument is one.
 template <typename T, typename = int>
-struct each_ref_field : public each_field<T> {
-    using A = remove_pointer_t<actual_type_t<T>>;
-
-    each_ref_field(const flecs::iter_t *iter, _::field_ptr& field, size_t row)
-        : each_field<T>(iter, field, row) {
-
-        if (field.is_ref) {
-            // If this is a reference, set the row to 0 as a ref is always a
-            // single value, not an array. This prevents the application from
-            // having to do an if-check on whether the field is owned.
-            //
-            // This check only happens when the current table being iterated
-            // over caused the query to match a reference. The check is
-            // performed once per iterated table.
-            this->row_ = 0;
-        }
-
-        if (field.is_row) {
-            field.ptr = ecs_field_at_w_size(iter, sizeof(A), field.index,
-                static_cast<int32_t>(row));
-        }
-    }
-};
-
-template <typename T, typename = int>
 struct each_ref_field_strided : public each_field_strided<T> {
     using A = remove_pointer_t<actual_type_t<T>>;
 
@@ -335,37 +290,18 @@ struct each_delegate : public delegate {
     // function has just constructed the delegate, such as what happens when
     // iterating a query.
     void invoke(ecs_iter_t *iter) const {
-        if (iter->flags & EcsIterComponentInheritance) {
-            invoke_inherited(iter);
-            return;
-        }
-
         field_ptrs<Components...> terms;
 
         iter->flags |= EcsIterCppEach;
 
-        if (iter->ref_fields | iter->up_fields) {
-            terms.populate(iter);
-            invoke_unpack< each_ref_field >(iter, func_, 0, terms.fields_);
-        } else {
-            terms.populate_self(iter);
-            invoke_unpack< each_field >(iter, func_, 0, terms.fields_);
-        }
-    }
-
-    void invoke_inherited(ecs_iter_t *iter) const {
-        field_ptrs<Components...> terms;
-
-        iter->flags |= EcsIterCppEach;
-
-        if (iter->ref_fields | iter->up_fields) {
-            terms.populate(iter);
-            terms.populate_stride(iter);
+        if (iter->ref_fields | iter->up_fields |
+            (iter->flags & EcsIterComponentInheritance))
+        {
+            terms.populate_inherited(iter);
             invoke_unpack< each_ref_field_strided >(iter, func_, 0, terms.fields_);
         } else {
             terms.populate_self(iter);
-            terms.populate_stride(iter);
-            invoke_unpack< each_field_strided >(iter, func_, 0, terms.fields_);
+            invoke_unpack< each_field >(iter, func_, 0, terms.fields_);
         }
     }
 
@@ -525,36 +461,18 @@ struct find_delegate : public delegate {
     // function has just constructed the delegate, such as what happens when
     // iterating a query.
     flecs::entity invoke(ecs_iter_t *iter) const {
-        if (iter->flags & EcsIterComponentInheritance) {
-            return invoke_inherited(iter);
-        }
-
         field_ptrs<Components...> terms;
 
         iter->flags |= EcsIterCppEach;
 
-        if (iter->ref_fields | iter->up_fields) {
-            terms.populate(iter);
-            return invoke_callback< each_ref_field >(iter, func_, 0, terms.fields_);
-        } else {
-            terms.populate_self(iter);
-            return invoke_callback< each_field >(iter, func_, 0, terms.fields_);
-        }
-    }
-
-    flecs::entity invoke_inherited(ecs_iter_t *iter) const {
-        field_ptrs<Components...> terms;
-
-        iter->flags |= EcsIterCppEach;
-
-        if (iter->ref_fields | iter->up_fields) {
-            terms.populate(iter);
-            terms.populate_stride(iter);
+        if (iter->ref_fields | iter->up_fields |
+            (iter->flags & EcsIterComponentInheritance))
+        {
+            terms.populate_inherited(iter);
             return invoke_callback< each_ref_field_strided >(iter, func_, 0, terms.fields_);
         } else {
             terms.populate_self(iter);
-            terms.populate_stride(iter);
-            return invoke_callback< each_field_strided >(iter, func_, 0, terms.fields_);
+            return invoke_callback< each_field >(iter, func_, 0, terms.fields_);
         }
     }
 
