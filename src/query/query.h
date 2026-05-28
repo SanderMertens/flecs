@@ -38,10 +38,6 @@ ecs_iter_t flecs_query_iter(
     const ecs_world_t *world,
     const ecs_query_t *q);
 
-/* Fast path for testing a trivial query against a table range, used by
- * observers. Avoids creating a full query iterator. Returns 1 on match, 0 on no
- * match, and -1 if the query is not eligible for this path (caller must fall
- * back to ecs_query_has_range). On a match, populates 'it'. */
 int flecs_query_trivial_has_range(
     const ecs_query_t *q,
     ecs_iter_t *it,

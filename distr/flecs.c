@@ -1483,9 +1483,9 @@ typedef enum {
 } ecs_trav_direction_t;
 
 typedef struct {
-    ecs_map_t src;        /* map<table_id, trav_up_t> (up direction) */
-    ecs_trav_down_t down; /* reused buffer (down direction) */
-    ecs_trav_up_t up;     /* reused buffer for top-level up result */
+    ecs_map_t src;
+    ecs_trav_down_t down;
+    ecs_trav_up_t up;
     ecs_id_t with;
     ecs_trav_direction_t dir;
 } ecs_trav_up_cache_t;
@@ -2658,10 +2658,6 @@ ecs_iter_t flecs_query_iter(
     const ecs_world_t *world,
     const ecs_query_t *q);
 
-/* Fast path for testing a trivial query against a table range, used by
- * observers. Avoids creating a full query iterator. Returns 1 on match, 0 on no
- * match, and -1 if the query is not eligible for this path (caller must fall
- * back to ecs_query_has_range). On a match, populates 'it'. */
 int flecs_query_trivial_has_range(
     const ecs_query_t *q,
     ecs_iter_t *it,
@@ -13381,11 +13377,12 @@ void flecs_iter_init(
         char *buf = flecs_stack_alloc(stack, wide + cols,
             ECS_ALIGNOF(ecs_id_t));
 
-        it->ids = (ecs_id_t*)buf;
-        it->sources = (ecs_entity_t*)(buf + (ecs_size_t)sizeof(ecs_id_t) * fc);
-        it->trs = (const ecs_table_record_t**)(buf +
+        it->ids = (ecs_id_t*)(void*)buf;
+        it->sources = (ecs_entity_t*)(void*)(buf +
+            (ecs_size_t)sizeof(ecs_id_t) * fc);
+        it->trs = (const ecs_table_record_t**)(void*)(buf +
             (ecs_size_t)(sizeof(ecs_id_t) + sizeof(ecs_entity_t)) * fc);
-        int16_t *columns = (int16_t*)(buf + wide);
+        int16_t *columns = (int16_t*)(void*)(buf + wide);
 
         ecs_os_memset(buf, 0, wide);
         ecs_os_memset(columns, 0xFF, cols);
@@ -17108,6 +17105,7 @@ void flecs_multi_observer_invoke(
     }
 
     ecs_table_t *lock_table = table;
+    (void)lock_table;
     table = table ? table : &world->store.root;
     prev_table = prev_table ? prev_table : &world->store.root;
 
@@ -17133,9 +17131,6 @@ void flecs_multi_observer_invoke(
             ecs_assert(match, ECS_INTERNAL_ERROR, NULL);
         }
     } else {
-        /* Fast path: for trivial observer queries we can test the table
-         * directly without creating a full query iterator. Monitors are handled
-         * by the regular path as they require an additional check. */
         int trivial = -1;
         if (!(impl->flags & EcsObserverIsMonitor)) {
             trivial = flecs_query_trivial_has_range(o->query, &user_it,
@@ -17235,7 +17230,6 @@ void flecs_multi_observer_invoke_no_query(
     flecs_poly_assert(o, ecs_observer_t);
 
     ecs_world_t *world = it->real_world;
-    ecs_table_t *table = it->table;
     ecs_iter_t user_it = *it;
 
     user_it.ctx = o->ctx;
@@ -17248,7 +17242,7 @@ void flecs_multi_observer_invoke_no_query(
 
     ecs_entity_t old_system = flecs_stage_set_system(
         world->stages[0], o->entity);
-    ECS_TABLE_LOCK(it->world, table);
+    ECS_TABLE_LOCK(it->world, it->table);
 
     if (o->run) {
         user_it.next = flecs_default_next_callback;
@@ -17257,7 +17251,7 @@ void flecs_multi_observer_invoke_no_query(
         user_it.callback(&user_it);
     }
 
-    ECS_TABLE_UNLOCK(it->world, table);
+    ECS_TABLE_UNLOCK(it->world, it->table);
     flecs_stage_set_system(world->stages[0], old_system);
 }
 
@@ -86004,10 +85998,6 @@ int flecs_query_trivial_has_range(
     ecs_flags32_t flags = q->flags;
     ecs_flags32_t trivial_flags = EcsQueryIsTrivial|EcsQueryMatchOnlySelf;
 
-    /* Only handle the case where the constrained query would take the trivial
-     * test code path. This mirrors the conditions in
-     * flecs_query_apply_iter_flags. For anything else, signal the caller to use
-     * the regular (full iterator) path. */
     if (impl->cache ||
         ((flags & trivial_flags) != trivial_flags) ||
         (flags & EcsQueryMatchWildcards) ||
@@ -86016,8 +86006,6 @@ int flecs_query_trivial_has_range(
         return -1;
     }
 
-    /* Eval count is incremented unconditionally, matching ecs_query_iter and
-     * the bloom filter reject path in ecs_query_has_range. */
     ECS_CONST_CAST(ecs_query_t*, q)->eval_count ++;
 
     if (table && ((offset + count) > ecs_table_count(table))) {
@@ -86028,9 +86016,6 @@ int flecs_query_trivial_has_range(
         return 0;
     }
 
-    /* Build a minimal iterator for the trivial test. Unlike flecs_query_iter
-     * this skips the var/written/op_ctx allocations and the query VM, which the
-     * trivial test never uses. */
     ecs_iter_t lit = {0};
     lit.world = ECS_CONST_CAST(ecs_world_t*, world);
     lit.real_world = q->real_world;
@@ -86043,8 +86028,6 @@ int flecs_query_trivial_has_range(
     lit.offset = offset;
     lit.count = count;
 
-    /* flecs_iter_init asserts that EcsIterIsValid is not set on entry, so only
-     * mark the iterator valid after initialization. */
     flecs_iter_init(lit.world, &lit, true);
     lit.flags |= EcsIterIsValid;
 
@@ -89897,15 +89880,14 @@ void flecs_trav_entity_down_iter_children(
         bool leaf = false;
 
         /* Check if table has the component */
-        if (flecs_component_get_table(cr_with, r->table) != NULL) {
-            if (self) {
-                /* If matching self and the table has the component, entity
-                 * shouldn't be matched through traversal and will instead
-                 * be matched directly. */
-                continue;
-            }
+        if (self || r->table->_->traversable_count) {
+            if (flecs_component_get_table(cr_with, r->table) != NULL) {
+                if (self) {
+                    continue;
+                }
 
-            leaf = true;
+                leaf = true;
+            }
         }
 
         /* Add element to the cache for a single child */
@@ -89947,11 +89929,13 @@ void flecs_trav_entity_down_iter_tables(
             ecs_table_t *table = tr->hdr.table;
             bool leaf = false;
 
-            if (flecs_component_get_table(cr_with, table) != NULL) {
-                if (self) {
-                    continue;
+            if (self || table->_->traversable_count) {
+                if (flecs_component_get_table(cr_with, table) != NULL) {
+                    if (self) {
+                        continue;
+                    }
+                    leaf = true;
                 }
-                leaf = true;
             }
 
             /* If record is not the first instance of (trav, *), don't add it
