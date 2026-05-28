@@ -6625,6 +6625,8 @@ void NonFragmentingChildOf_prefab_parent_w_mixed_childof(void) {
 }
 
 void NonFragmentingChildOf_defer_set_parent_to_deleted_entity(void) {
+    install_test_abort();
+
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t dont_fragment = ecs_new(world);
@@ -6637,6 +6639,7 @@ void NonFragmentingChildOf_defer_set_parent_to_deleted_entity(void) {
     ecs_delete(world, deleted);
 
     ecs_defer_begin(world);
+    test_expect_abort();
     ecs_set(world, child, EcsParent, {deleted});
     ecs_add_id(world, other, dont_fragment);
     ecs_remove_pair(world, grandchild, EcsChildOf, child);
@@ -6648,6 +6651,8 @@ void NonFragmentingChildOf_defer_set_parent_to_deleted_entity(void) {
 }
 
 void NonFragmentingChildOf_defer_reparent_to_deleted_entity_w_sparse(void) {
+    install_test_abort();
+
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t sparse = ecs_new(world);
@@ -6664,6 +6669,7 @@ void NonFragmentingChildOf_defer_reparent_to_deleted_entity_w_sparse(void) {
 
     ecs_defer_begin(world);
     ecs_add_id(world, child, sparse);
+    test_expect_abort();
     ecs_set(world, child, EcsParent, {deleted});
     ecs_defer_end(world);
 
@@ -6673,6 +6679,8 @@ void NonFragmentingChildOf_defer_reparent_to_deleted_entity_w_sparse(void) {
 }
 
 void NonFragmentingChildOf_set_parent_to_deleted_entity_w_ordered_child(void) {
+    install_test_abort();
+
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t deleted = ecs_new(world);
@@ -6682,6 +6690,7 @@ void NonFragmentingChildOf_set_parent_to_deleted_entity_w_ordered_child(void) {
 
     ecs_add_id(world, child, EcsOrderedChildren);
     ecs_add_pair(world, child, EcsChildOf, parent);
+    test_expect_abort();
     ecs_set(world, parent, EcsParent, {deleted});
 
     test_assert(true);
