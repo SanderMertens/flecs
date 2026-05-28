@@ -308,7 +308,8 @@ void flecs_spawner_instantiate(
         parent_ptr = &parent_ptr[row];
         parent_ptr->value = parent;
 
-        flecs_actions_new(world, table, row, 1, &table_diff, 0, true, EcsWildcard);
+        flecs_actions_new(world, table, row, 1, &table_diff, EcsEventNoOnSet,
+            true, EcsWildcard);
 
         if (is_prefab && spawn_child->child_name) {
             ecs_set_name(world, entity, spawn_child->child_name);
@@ -325,8 +326,8 @@ void flecs_spawner_instantiate(
             .table = spawn_r->table,
             .offset = 0,
             .count = 1 };
-        flecs_instantiate_sparse(world, &base_range, &base_child, 
-            r->table, &entity, ECS_RECORD_TO_ROW(r->row));
+        flecs_instantiate_sparse(world, &base_range, &base_child,
+            r->table, &entity, ECS_RECORD_TO_ROW(r->row), true);
 
         if (spawn_r->row & EcsEntityHasDontFragment) {
             flecs_instantiate_dont_fragment(
