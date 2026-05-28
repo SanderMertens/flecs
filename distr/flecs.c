@@ -1029,10 +1029,6 @@ void flecs_table_register_inherited(
     ecs_world_t *world,
     ecs_table_t *table);
 
-void flecs_inheritance_on_change(
-    ecs_world_t *world,
-    ecs_entity_t component);
-
 ecs_component_record_t* flecs_table_get_childof_cr(
     const ecs_world_t *world,
     const ecs_table_t *table);
@@ -4314,6 +4310,38 @@ error:
     return;
 }
 
+#ifndef FLECS_NDEBUG
+static
+void flecs_assert_isa_change(ecs_iter_t *it) {
+    ecs_world_t *world = it->real_world;
+
+    if (world->flags & (EcsWorldInit|EcsWorldFini|EcsWorldQuit)) {
+        return;
+    }
+
+    int i, count = it->count;
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t component = it->entities[i];
+
+        ecs_component_record_t *cr = flecs_components_get(world, component);
+        if (cr && (cr->flags & EcsIdMarkedForDelete)) {
+            continue;
+        }
+
+        if (ecs_id_in_use(world, component) ||
+            ecs_id_in_use(world, ecs_pair(component, EcsWildcard)))
+        {
+            ecs_throw(ECS_INVALID_OPERATION,
+                "cannot change (IsA) trait for '%s': component is already in use",
+                    flecs_errstr(ecs_get_path(world, component)));
+        }
+
+        error:
+            continue;
+    }
+}
+#endif
+
 static
 void flecs_register_final(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
@@ -5155,6 +5183,18 @@ void flecs_bootstrap(
         .callback = flecs_register_final,
         .global_observer = true
     });
+
+#ifndef FLECS_NDEBUG
+    ecs_observer(world, {
+        .query.terms = {
+            { .id = ecs_pair(EcsIsA, EcsWildcard) }
+        },
+        .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
+        .events = {EcsOnAdd, EcsOnRemove},
+        .callback = flecs_assert_isa_change,
+        .global_observer = true
+    });
+#endif
 
     static ecs_on_trait_ctx_t inheritable_trait = { EcsIdInheritable, 0 };
     ecs_observer(world, {
@@ -16138,22 +16178,6 @@ repeat_event:
                     /* Adding an IsA relationship will emit OnSet events for
                      * any new reachable components. */
                     er_fwd = er_onset;
-                }
-
-                if (!table_event) {
-                    const ecs_entity_t *entities = ecs_table_entities(table);
-                    int32_t e;
-                    if (event == EcsOnAdd) {
-                        for (e = 0; e < count; e ++) {
-                            flecs_inheritance_on_change(
-                                world, entities[offset + e]);
-                        }
-                    } else if ((event == EcsOnRemove) && other_table) {
-                        for (e = 0; e < count; e ++) {
-                            flecs_inheritance_on_change(
-                                world, entities[offset + e]);
-                        }
-                    }
                 }
             }
 
@@ -43373,33 +43397,6 @@ void flecs_table_register_inherited(
     }
 
     ecs_vec_fini_t(&world->allocator, &inherited, ecs_table_record_t*);
-}
-
-void flecs_inheritance_on_change(
-    ecs_world_t *world,
-    ecs_entity_t component)
-{
-    if (world->flags & (EcsWorldInit|EcsWorldFini|EcsWorldQuit)) {
-        return;
-    }
-
-    ecs_component_record_t *cr = flecs_components_get(world, component);
-    if (cr && (cr->flags & EcsIdMarkedForDelete)) {
-        return;
-    }
-
-    if (ecs_id_in_use(world, component) ||
-        ecs_id_in_use(world, ecs_pair(component, EcsWildcard)))
-    {
-        char *path = ecs_get_path(world, component);
-        ecs_throw(ECS_INVALID_OPERATION,
-            "cannot change (IsA) trait for '%s': component is already in use",
-            path);
-        ecs_os_free(path);
-    }
-
-error:
-    return;
 }
 
 /* Unregister table from id records */

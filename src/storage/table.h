@@ -301,10 +301,6 @@ void flecs_table_register_inherited(
     ecs_world_t *world,
     ecs_table_t *table);
 
-void flecs_inheritance_on_change(
-    ecs_world_t *world,
-    ecs_entity_t component);
-
 ecs_component_record_t* flecs_table_get_childof_cr(
     const ecs_world_t *world,
     const ecs_table_t *table);

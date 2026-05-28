@@ -1019,33 +1019,6 @@ void flecs_table_register_inherited(
     ecs_vec_fini_t(&world->allocator, &inherited, ecs_table_record_t*);
 }
 
-void flecs_inheritance_on_change(
-    ecs_world_t *world,
-    ecs_entity_t component)
-{
-    if (world->flags & (EcsWorldInit|EcsWorldFini|EcsWorldQuit)) {
-        return;
-    }
-
-    ecs_component_record_t *cr = flecs_components_get(world, component);
-    if (cr && (cr->flags & EcsIdMarkedForDelete)) {
-        return;
-    }
-
-    if (ecs_id_in_use(world, component) ||
-        ecs_id_in_use(world, ecs_pair(component, EcsWildcard)))
-    {
-        char *path = ecs_get_path(world, component);
-        ecs_throw(ECS_INVALID_OPERATION,
-            "cannot change (IsA) trait for '%s': component is already in use",
-            path);
-        ecs_os_free(path);
-    }
-
-error:
-    return;
-}
-
 /* Unregister table from id records */
 static
 void flecs_table_records_unregister(
