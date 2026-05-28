@@ -554,7 +554,7 @@ private:
         }
 
         return flecs::base_field<A>(
-            static_cast<T*>(ecs_field_w_size(iter_, sizeof(A), index)),
+            static_cast<T*>(ecs_base_field_w_size(iter_, sizeof(A), index)),
             ecs_field_stride(iter_, index), count, is_shared);
     }
 

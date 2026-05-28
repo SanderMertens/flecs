@@ -68,6 +68,108 @@ int32_t flecs_table_offset_search(
     return -1;
 }
 
+static
+bool flecs_component_inherits_from(
+    const ecs_world_t *world,
+    ecs_entity_t component,
+    ecs_entity_t base,
+    int32_t depth)
+{
+    if (depth >= FLECS_DAG_DEPTH_MAX) {
+        return false;
+    }
+
+    ecs_record_t *r = flecs_entities_get(world, component);
+    if (!r) {
+        return false;
+    }
+
+    ecs_table_t *table = r->table;
+    if (!table || !(table->flags & EcsTableHasIsA)) {
+        return false;
+    }
+
+    const ecs_table_record_t *tr_isa = flecs_component_get_table(
+        world->cr_isa_wildcard, table);
+    if (!tr_isa) {
+        return false;
+    }
+
+    ecs_id_t *ids = table->type.array;
+    int32_t i = tr_isa->index, end = i + tr_isa->count;
+    for (; i < end; i ++) {
+        ecs_entity_t b = ecs_pair_second(world, ids[i]);
+        if (b == base) {
+            return true;
+        }
+        if (flecs_component_inherits_from(world, b, base, depth + 1)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+static
+bool flecs_id_match_inherited(
+    const ecs_world_t *world,
+    ecs_id_t type_id,
+    ecs_id_t id)
+{
+    if (ECS_IS_PAIR(id)) {
+        if (!ECS_IS_PAIR(type_id)) {
+            return false;
+        }
+        ecs_entity_t tgt = ECS_PAIR_SECOND(id);
+        if ((tgt != EcsWildcard) && (tgt != EcsAny)) {
+            if (ECS_PAIR_SECOND(type_id) != tgt) {
+                return false;
+            }
+        }
+        return flecs_component_inherits_from(world,
+            ecs_pair_first(world, type_id), ecs_pair_first(world, id), 0);
+    } else {
+        if (type_id & ECS_ID_FLAGS_MASK) {
+            return false;
+        }
+        return flecs_component_inherits_from(world, type_id, id, 0);
+    }
+}
+
+static
+int32_t flecs_table_offset_search_w_inherited(
+    const ecs_world_t *world,
+    const ecs_table_t *table,
+    int32_t offset,
+    ecs_id_t id,
+    ecs_id_t *id_out)
+{
+    ecs_assert(id != 0, ECS_INVALID_PARAMETER, NULL);
+
+    bool check_inherited = world && world->cr_isa_wildcard &&
+        flecs_table_cache_count(&world->cr_isa_wildcard->cache);
+
+    ecs_id_t *ids = table->type.array;
+    int32_t count = table->type.count;
+    while (offset < count) {
+        ecs_id_t type_id = ids[offset ++];
+        if (ecs_id_match(type_id, id)) {
+            if (id_out) {
+                id_out[0] = type_id;
+            }
+            return offset - 1;
+        }
+        if (check_inherited && flecs_id_match_inherited(world, type_id, id)) {
+            if (id_out) {
+                id_out[0] = type_id;
+            }
+            return offset - 1;
+        }
+    }
+
+    return -1;
+}
+
 bool flecs_type_can_inherit_id(
     const ecs_world_t *world,
     const ecs_table_t *table,
@@ -353,7 +455,7 @@ int32_t ecs_search_offset(
         return ecs_search(world, table, id, id_out);
     }
 
-    return flecs_table_offset_search(table, offset, id, id_out);
+    return flecs_table_offset_search_w_inherited(world, table, offset, id, id_out);
 }
 
 static

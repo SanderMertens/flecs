@@ -330,102 +330,15 @@ ecs_id_t flecs_query_op_get_id(
 }
 
 int16_t flecs_query_next_column(
+    const ecs_world_t *world,
     ecs_table_t *table,
     ecs_id_t id,
     int32_t column)
 {
-    if (!ECS_IS_PAIR(id) || (ECS_PAIR_FIRST(id) != EcsWildcard)) {
-        column = column + 1;
-    } else {
-        ecs_assert(column >= 0, ECS_INTERNAL_ERROR, NULL);
-        column = ecs_search_offset(NULL, table, column + 1, id, NULL);
-        ecs_assert(column != -1, ECS_INTERNAL_ERROR, NULL);
-    }
+    ecs_assert(column >= 0, ECS_INTERNAL_ERROR, NULL);
+    column = ecs_search_offset(world, table, column + 1, id, NULL);
+    ecs_assert(column != -1, ECS_INTERNAL_ERROR, NULL);
     return flecs_ito(int16_t, column);
-}
-
-static
-bool flecs_component_inherits_from(
-    const ecs_world_t *world,
-    ecs_entity_t component,
-    ecs_entity_t base,
-    int32_t depth)
-{
-    if (depth >= FLECS_DAG_DEPTH_MAX) {
-        return false;
-    }
-
-    ecs_record_t *r = flecs_entities_get(world, component);
-    if (!r) {
-        return false;
-    }
-
-    ecs_table_t *table = r->table;
-    if (!table || !(table->flags & EcsTableHasIsA)) {
-        return false;
-    }
-
-    const ecs_table_record_t *tr_isa = flecs_component_get_table(
-        world->cr_isa_wildcard, table);
-    if (!tr_isa) {
-        return false;
-    }
-
-    ecs_id_t *ids = table->type.array;
-    int32_t i = tr_isa->index, end = i + tr_isa->count;
-    for (; i < end; i ++) {
-        ecs_entity_t b = ecs_pair_second(world, ids[i]);
-        if (b == base) {
-            return true;
-        }
-        if (flecs_component_inherits_from(world, b, base, depth + 1)) {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-int16_t flecs_query_next_inherited_column(
-    const ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_id_t base,
-    int32_t column)
-{
-    ecs_id_t *ids = table->type.array;
-    int32_t i, count = table->type.count;
-
-    if (ECS_IS_PAIR(base)) {
-        ecs_entity_t base_rel = ecs_pair_first(world, base);
-        ecs_entity_t tgt = ECS_PAIR_SECOND(base);
-        bool any_tgt = (tgt == EcsWildcard) || (tgt == EcsAny);
-        for (i = column + 1; i < count; i ++) {
-            ecs_id_t id = ids[i];
-            if (!ECS_IS_PAIR(id)) {
-                continue;
-            }
-            if (!any_tgt && (ECS_PAIR_SECOND(id) != tgt)) {
-                continue;
-            }
-            if (flecs_component_inherits_from(
-                world, ecs_pair_first(world, id), base_rel, 0))
-            {
-                return flecs_ito(int16_t, i);
-            }
-        }
-    } else {
-        for (i = column + 1; i < count; i ++) {
-            ecs_id_t id = ids[i];
-            if (id & ECS_ID_FLAGS_MASK) {
-                continue;
-            }
-            if (flecs_component_inherits_from(world, id, base, 0)) {
-                return flecs_ito(int16_t, i);
-            }
-        }
-    }
-
-    ecs_abort(ECS_INTERNAL_ERROR, NULL);
 }
 
 void flecs_query_it_set_tr(

@@ -4352,7 +4352,7 @@ void ComponentInheritance_1_fixed_component(void) {
     test_uint(0, it.count);
     test_uint(e1, ecs_field_src(&it, 0));
     test_uint(ecs_id(HeavyWeight), ecs_field_id(&it, 0));
-    const Weight *w = ecs_field(&it, Weight, 0);
+    const Weight *w = ecs_base_field(&it, Weight, 0);
     test_assert(w != NULL);
     test_int(w->value, 10);
     test_bool(false, ecs_query_next(&it));
@@ -4380,7 +4380,7 @@ void ComponentInheritance_1_this_component(void) {
     test_uint(1, it.count);
     test_uint(e, it.entities[0]);
     test_uint(ecs_id(HeavyWeight), ecs_field_id(&it, 0));
-    const Weight *w = ecs_field(&it, Weight, 0);
+    const Weight *w = ecs_base_field(&it, Weight, 0);
     test_assert(w != NULL);
     test_int(w[0].value, 10);
     test_bool(false, ecs_query_next(&it));
@@ -4409,7 +4409,7 @@ void ComponentInheritance_1_this_component_written(void) {
     test_uint(1, it.count);
     test_uint(e, it.entities[0]);
     test_uint(ecs_id(HeavyWeight), ecs_field_id(&it, 1));
-    const Weight *w = ecs_field(&it, Weight, 1);
+    const Weight *w = ecs_base_field(&it, Weight, 1);
     test_assert(w != NULL);
     test_int(w[0].value, 10);
     test_bool(false, ecs_query_next(&it));
@@ -4440,7 +4440,7 @@ void ComponentInheritance_1_var_component(void) {
     test_uint(e, ecs_field_src(&it, 0));
     test_uint(e, ecs_iter_get_var(&it, x_var));
     test_uint(ecs_id(HeavyWeight), ecs_field_id(&it, 0));
-    const Weight *w = ecs_field(&it, Weight, 0);
+    const Weight *w = ecs_base_field(&it, Weight, 0);
     test_assert(w != NULL);
     test_int(w->value, 10);
     test_bool(false, ecs_query_next(&it));
@@ -4471,7 +4471,7 @@ void ComponentInheritance_1_var_component_written(void) {
     test_uint(0, it.count);
     test_uint(e, ecs_iter_get_var(&it, x_var));
     test_uint(ecs_id(HeavyWeight), ecs_field_id(&it, 1));
-    const Weight *w = ecs_field(&it, Weight, 1);
+    const Weight *w = ecs_base_field(&it, Weight, 1);
     test_assert(w != NULL);
     test_int(w->value, 10);
     test_bool(false, ecs_query_next(&it));
@@ -4502,7 +4502,7 @@ void ComponentInheritance_1_fixed_component_pair(void) {
     test_uint(0, it.count);
     test_uint(e1, ecs_field_src(&it, 0));
     test_uint(ecs_pair(ecs_id(HeavyWeight), Apples), ecs_field_id(&it, 0));
-    const Weight *w = ecs_field(&it, Weight, 0);
+    const Weight *w = ecs_base_field(&it, Weight, 0);
     test_assert(w != NULL);
     test_int(w->value, 10);
     test_bool(false, ecs_query_next(&it));
@@ -4531,7 +4531,7 @@ void ComponentInheritance_1_this_component_pair(void) {
     test_uint(1, it.count);
     test_uint(e, it.entities[0]);
     test_uint(ecs_pair(ecs_id(HeavyWeight), Apples), ecs_field_id(&it, 0));
-    const Weight *w = ecs_field(&it, Weight, 0);
+    const Weight *w = ecs_base_field(&it, Weight, 0);
     test_assert(w != NULL);
     test_int(w[0].value, 10);
     test_bool(false, ecs_query_next(&it));
@@ -4561,7 +4561,7 @@ void ComponentInheritance_1_this_component_pair_written(void) {
     test_uint(1, it.count);
     test_uint(e, it.entities[0]);
     test_uint(ecs_pair(ecs_id(HeavyWeight), Apples), ecs_field_id(&it, 1));
-    const Weight *w = ecs_field(&it, Weight, 1);
+    const Weight *w = ecs_base_field(&it, Weight, 1);
     test_assert(w != NULL);
     test_int(w[0].value, 10);
     test_bool(false, ecs_query_next(&it));
@@ -4592,7 +4592,7 @@ void ComponentInheritance_1_var_component_pair(void) {
     test_uint(0, it.count);
     test_uint(e, ecs_iter_get_var(&it, x_var));
     test_uint(ecs_pair(ecs_id(HeavyWeight), Apples), ecs_field_id(&it, 0));
-    const Weight *w = ecs_field(&it, Weight, 0);
+    const Weight *w = ecs_base_field(&it, Weight, 0);
     test_assert(w != NULL);
     test_int(w->value, 10);
     test_bool(false, ecs_query_next(&it));
@@ -4624,7 +4624,7 @@ void ComponentInheritance_1_var_component_pair_written(void) {
     test_uint(0, it.count);
     test_uint(e, ecs_iter_get_var(&it, x_var));
     test_uint(ecs_pair(ecs_id(HeavyWeight), Apples), ecs_field_id(&it, 1));
-    const Weight *w = ecs_field(&it, Weight, 1);
+    const Weight *w = ecs_base_field(&it, Weight, 1);
     test_assert(w != NULL);
     test_int(w->value, 10);
     test_bool(false, ecs_query_next(&it));

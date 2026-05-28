@@ -545,6 +545,170 @@ void flecs_table_emit(
     ecs_defer_end(world);
 }
 
+static
+bool flecs_table_register_inherited_for_base(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    int32_t type_index,
+    int16_t column,
+    ecs_id_t base_id,
+    ecs_vec_t *inherited)
+{
+    ecs_component_record_t *cr = flecs_components_ensure(world, base_id);
+
+    ecs_table_record_t *existing = ECS_CONST_CAST(ecs_table_record_t*,
+        flecs_component_get_table(cr, table));
+    if (existing) {
+        if (existing->index == type_index) {
+            return false;
+        }
+        if (ecs_id_match(table->type.array[existing->index], base_id)) {
+            return false;
+        }
+
+        existing->count ++;
+        existing->index = flecs_ito(int16_t, type_index);
+        existing->column = column;
+        return true;
+    }
+
+    ecs_table_record_t *tr = flecs_walloc_t(world, ecs_table_record_t);
+    tr->index = flecs_ito(int16_t, type_index);
+    tr->column = column;
+    tr->count = 1;
+
+    ecs_table_cache_insert(&cr->cache, table, &tr->hdr);
+    flecs_component_claim(world, cr);
+
+    *ecs_vec_append_t(&world->allocator, inherited, ecs_table_record_t*) = tr;
+
+    if (base_id < FLECS_HI_COMPONENT_ID) {
+        world->non_trivial_lookup[base_id] |= EcsNonTrivialIdInherit;
+    }
+
+    return true;
+}
+
+static
+void flecs_table_register_inherited_bases(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    int32_t type_index,
+    int16_t column,
+    ecs_entity_t rel,
+    ecs_entity_t tgt,
+    ecs_vec_t *inherited)
+{
+    ecs_record_t *r = flecs_entities_get(world, rel);
+    if (!r) {
+        return;
+    }
+
+    ecs_table_t *src = r->table;
+    if (!src || !(src->flags & EcsTableHasIsA)) {
+        return;
+    }
+
+    const ecs_table_record_t *tr_isa = flecs_component_get_table(
+        world->cr_isa_wildcard, src);
+    if (!tr_isa) {
+        return;
+    }
+
+    ecs_id_t *ids = src->type.array;
+    int32_t i = tr_isa->index, end = i + tr_isa->count;
+    for (; i < end; i ++) {
+        ecs_entity_t base = ecs_pair_second(world, ids[i]);
+        if (!base) {
+            continue;
+        }
+
+        ecs_id_t base_id = tgt ? ecs_pair(base, tgt) : base;
+        bool recurse = flecs_table_register_inherited_for_base(
+            world, table, type_index, column, base_id, inherited);
+
+        if (tgt) {
+            if (flecs_table_register_inherited_for_base(world, table,
+                type_index, column, ecs_pair(base, EcsWildcard), inherited))
+            {
+                recurse = true;
+            }
+        }
+
+        if (recurse) {
+            flecs_table_register_inherited_bases(world, table, type_index,
+                column, base, tgt, inherited);
+        }
+    }
+}
+
+static
+void flecs_table_register_inherited(
+    ecs_world_t *world,
+    ecs_table_t *table)
+{
+    ecs_component_record_t *cr_isa = world->cr_isa_wildcard;
+    if (!cr_isa || !flecs_table_cache_count(&cr_isa->cache)) {
+        return;
+    }
+
+    ecs_vec_t inherited;
+    ecs_vec_init_t(&world->allocator, &inherited, ecs_table_record_t*, 0);
+
+    ecs_type_t type = table->type;
+    int32_t ti, count = type.count;
+    for (ti = count - 1; ti >= 0; ti --) {
+        ecs_id_t id = type.array[ti];
+
+        ecs_entity_t rel, tgt;
+        if (id & ECS_ID_FLAGS_MASK) {
+            if (!ECS_IS_PAIR(id)) {
+                continue;
+            }
+            rel = ecs_pair_first(world, id);
+            tgt = ECS_PAIR_SECOND(id);
+        } else {
+            rel = id;
+            tgt = 0;
+        }
+
+        int16_t column = table->_->records[ti].column;
+        flecs_table_register_inherited_bases(
+            world, table, ti, column, rel, tgt, &inherited);
+    }
+
+    int32_t n = ecs_vec_count(&inherited);
+    if (n) {
+        int32_t i, old = table->_->record_count;
+        ecs_table_record_t *old_records = table->_->records;
+        ecs_table_record_t *records = flecs_walloc_n(
+            world, ecs_table_record_t, old + n);
+        ecs_os_memcpy_n(records, old_records, ecs_table_record_t, old);
+
+        ecs_table_record_t **inh = ecs_vec_first_t(
+            &inherited, ecs_table_record_t*);
+        for (i = 0; i < n; i ++) {
+            records[old + i] = *inh[i];
+        }
+
+        table->_->records = records;
+        table->_->record_count = flecs_ito(int16_t, old + n);
+
+        for (i = 0; i < old + n; i ++) {
+            ecs_table_record_t *tr = &records[i];
+            ecs_table_cache_replace(&tr->hdr.cr->cache, table, &tr->hdr);
+        }
+
+        for (i = 0; i < n; i ++) {
+            flecs_wfree_t(world, ecs_table_record_t, inh[i]);
+        }
+
+        flecs_wfree_n(world, ecs_table_record_t, old, old_records);
+    }
+
+    ecs_vec_fini_t(&world->allocator, &inherited, ecs_table_record_t*);
+}
+
 /* Main table initialization function */
 void flecs_table_init(
     ecs_world_t *world,
@@ -854,169 +1018,6 @@ void flecs_table_init(
     if (table->flags & EcsTableHasOnTableCreate) {
         flecs_table_emit(world, table, EcsOnTableCreate);
     }
-}
-
-static
-bool flecs_table_register_inherited_for_base(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    int32_t type_index,
-    int16_t column,
-    ecs_id_t base_id,
-    ecs_vec_t *inherited)
-{
-    ecs_component_record_t *cr = flecs_components_ensure(world, base_id);
-
-    ecs_table_record_t *existing = ECS_CONST_CAST(ecs_table_record_t*,
-        flecs_component_get_table(cr, table));
-    if (existing) {
-        if (existing->index == type_index) {
-            return false;
-        }
-        if (ecs_id_match(table->type.array[existing->index], base_id)) {
-            return false;
-        }
-
-        existing->count ++;
-        existing->index = flecs_ito(int16_t, type_index);
-        existing->column = column;
-        return true;
-    }
-
-    ecs_table_record_t *tr = flecs_walloc_t(world, ecs_table_record_t);
-    tr->index = flecs_ito(int16_t, type_index);
-    tr->column = column;
-    tr->count = 1;
-
-    ecs_table_cache_insert(&cr->cache, table, &tr->hdr);
-    flecs_component_claim(world, cr);
-
-    *ecs_vec_append_t(&world->allocator, inherited, ecs_table_record_t*) = tr;
-
-    if (base_id < FLECS_HI_COMPONENT_ID) {
-        world->non_trivial_lookup[base_id] |= EcsNonTrivialIdInherit;
-    }
-
-    return true;
-}
-
-static
-void flecs_table_register_inherited_bases(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    int32_t type_index,
-    int16_t column,
-    ecs_entity_t rel,
-    ecs_entity_t tgt,
-    ecs_vec_t *inherited)
-{
-    ecs_record_t *r = flecs_entities_get(world, rel);
-    if (!r) {
-        return;
-    }
-
-    ecs_table_t *src = r->table;
-    if (!src || !(src->flags & EcsTableHasIsA)) {
-        return;
-    }
-
-    const ecs_table_record_t *tr_isa = flecs_component_get_table(
-        world->cr_isa_wildcard, src);
-    if (!tr_isa) {
-        return;
-    }
-
-    ecs_id_t *ids = src->type.array;
-    int32_t i = tr_isa->index, end = i + tr_isa->count;
-    for (; i < end; i ++) {
-        ecs_entity_t base = ecs_pair_second(world, ids[i]);
-        if (!base) {
-            continue;
-        }
-
-        ecs_id_t base_id = tgt ? ecs_pair(base, tgt) : base;
-        bool recurse = flecs_table_register_inherited_for_base(
-            world, table, type_index, column, base_id, inherited);
-
-        if (tgt) {
-            if (flecs_table_register_inherited_for_base(world, table,
-                type_index, column, ecs_pair(base, EcsWildcard), inherited))
-            {
-                recurse = true;
-            }
-        }
-
-        if (recurse) {
-            flecs_table_register_inherited_bases(world, table, type_index,
-                column, base, tgt, inherited);
-        }
-    }
-}
-
-void flecs_table_register_inherited(
-    ecs_world_t *world,
-    ecs_table_t *table)
-{
-    ecs_component_record_t *cr_isa = world->cr_isa_wildcard;
-    if (!cr_isa || !flecs_table_cache_count(&cr_isa->cache)) {
-        return;
-    }
-
-    ecs_vec_t inherited;
-    ecs_vec_init_t(&world->allocator, &inherited, ecs_table_record_t*, 0);
-
-    ecs_type_t type = table->type;
-    int32_t ti, count = type.count;
-    for (ti = count - 1; ti >= 0; ti --) {
-        ecs_id_t id = type.array[ti];
-
-        ecs_entity_t rel, tgt;
-        if (id & ECS_ID_FLAGS_MASK) {
-            if (!ECS_IS_PAIR(id)) {
-                continue;
-            }
-            rel = ecs_pair_first(world, id);
-            tgt = ECS_PAIR_SECOND(id);
-        } else {
-            rel = id;
-            tgt = 0;
-        }
-
-        int16_t column = table->_->records[ti].column;
-        flecs_table_register_inherited_bases(
-            world, table, ti, column, rel, tgt, &inherited);
-    }
-
-    int32_t n = ecs_vec_count(&inherited);
-    if (n) {
-        int32_t i, old = table->_->record_count;
-        ecs_table_record_t *old_records = table->_->records;
-        ecs_table_record_t *records = flecs_walloc_n(
-            world, ecs_table_record_t, old + n);
-        ecs_os_memcpy_n(records, old_records, ecs_table_record_t, old);
-
-        ecs_table_record_t **inh = ecs_vec_first_t(
-            &inherited, ecs_table_record_t*);
-        for (i = 0; i < n; i ++) {
-            records[old + i] = *inh[i];
-        }
-
-        table->_->records = records;
-        table->_->record_count = flecs_ito(int16_t, old + n);
-
-        for (i = 0; i < old + n; i ++) {
-            ecs_table_record_t *tr = &records[i];
-            ecs_table_cache_replace(&tr->hdr.cr->cache, table, &tr->hdr);
-        }
-
-        for (i = 0; i < n; i ++) {
-            flecs_wfree_t(world, ecs_table_record_t, inh[i]);
-        }
-
-        flecs_wfree_n(world, ecs_table_record_t, old, old_records);
-    }
-
-    ecs_vec_fini_t(&world->allocator, &inherited, ecs_table_record_t*);
 }
 
 /* Unregister table from id records */
