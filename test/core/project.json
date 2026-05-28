@@ -347,6 +347,7 @@
                 "add_isa_w_multiple_tables",
                 "base_and_derived_same_table",
                 "diamond_allowed",
+                "derived_w_multiple_isa_bases",
                 "delete_with_base_deletes_derived",
                 "delete_with_base_deletes_derived_3_lvl",
                 "delete_with_middle_keeps_base",

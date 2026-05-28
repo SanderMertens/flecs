@@ -334,6 +334,7 @@ void ComponentInheritance_remove_isa_middle_3_lvl(void);
 void ComponentInheritance_add_isa_w_multiple_tables(void);
 void ComponentInheritance_base_and_derived_same_table(void);
 void ComponentInheritance_diamond_allowed(void);
+void ComponentInheritance_derived_w_multiple_isa_bases(void);
 void ComponentInheritance_delete_with_base_deletes_derived(void);
 void ComponentInheritance_delete_with_base_deletes_derived_3_lvl(void);
 void ComponentInheritance_delete_with_middle_keeps_base(void);
@@ -4715,6 +4716,10 @@ bake_test_case ComponentInheritance_testcases[] = {
     {
         "diamond_allowed",
         ComponentInheritance_diamond_allowed
+    },
+    {
+        "derived_w_multiple_isa_bases",
+        ComponentInheritance_derived_w_multiple_isa_bases
     },
     {
         "delete_with_base_deletes_derived",
@@ -16872,7 +16877,7 @@ static bake_test_suite suites[] = {
         "ComponentInheritance",
         NULL,
         NULL,
-        73,
+        74,
         ComponentInheritance_testcases
     },
     {

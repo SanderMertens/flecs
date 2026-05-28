@@ -3567,6 +3567,8 @@ void ComponentInheritance_query_before_isa_relationship_0_src(void) {
 }
 
 void ComponentInheritance_populated_remove_isa_2_lvl(void) {
+    install_test_abort();
+
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t Unit = ecs_entity(world, { .name = "Unit" });
@@ -3595,24 +3597,13 @@ void ComponentInheritance_populated_remove_isa_2_lvl(void) {
         test_bool(false, ecs_query_next(&it));
     }
 
+    test_expect_abort();
     ecs_remove_pair(world, Warrior, EcsIsA, Unit);
-
-    {
-        ecs_iter_t it = ecs_query_iter(world, r);
-        test_bool(true, ecs_query_next(&it));
-        test_uint(1, it.count);
-        test_uint(Unit, ecs_field_id(&it, 0));
-        test_uint(e2, it.entities[0]);
-
-        test_bool(false, ecs_query_next(&it));
-    }
-
-    ecs_query_fini(r);
-
-    ecs_fini(world);
 }
 
 void ComponentInheritance_populated_remove_isa_3_lvl(void) {
+    install_test_abort();
+
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t Unit = ecs_entity(world, { .name = "Unit" });
@@ -3643,34 +3634,8 @@ void ComponentInheritance_populated_remove_isa_3_lvl(void) {
         test_bool(false, ecs_query_next(&it));
     }
 
+    test_expect_abort();
     ecs_remove_pair(world, Melee, EcsIsA, Unit);
-
-    {
-        ecs_iter_t it = ecs_query_iter(world, r);
-        test_bool(true, ecs_query_next(&it));
-        test_uint(Unit, ecs_field_id(&it, 0));
-        test_uint(e3, it.entities[0]);
-        test_bool(false, ecs_query_next(&it));
-    }
-
-    ecs_query_t *rm = ecs_query(world, {
-        .cache_kind = cache_kind, .expr = "Melee($this)" });
-    test_assert(rm != NULL);
-    {
-        ecs_iter_t it = ecs_query_iter(world, rm);
-        test_bool(true, ecs_query_next(&it));
-        test_uint(Melee, ecs_field_id(&it, 0));
-        test_uint(e2, it.entities[0]);
-        test_bool(true, ecs_query_next(&it));
-        test_uint(Warrior, ecs_field_id(&it, 0));
-        test_uint(e1, it.entities[0]);
-        test_bool(false, ecs_query_next(&it));
-    }
-
-    ecs_query_fini(rm);
-    ecs_query_fini(r);
-
-    ecs_fini(world);
 }
 
 void ComponentInheritance_populated_match_entities_added_after(void) {
@@ -3713,6 +3678,8 @@ void ComponentInheritance_populated_match_entities_added_after(void) {
 }
 
 void ComponentInheritance_populated_remove_isa_var(void) {
+    install_test_abort();
+
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t Unit = ecs_entity(world, { .name = "Unit" });
@@ -3736,16 +3703,8 @@ void ComponentInheritance_populated_remove_isa_var(void) {
         test_bool(false, ecs_query_next(&it));
     }
 
+    test_expect_abort();
     ecs_remove_pair(world, Warrior, EcsIsA, Unit);
-
-    {
-        ecs_iter_t it = ecs_query_iter(world, r);
-        test_bool(false, ecs_query_next(&it));
-    }
-
-    ecs_query_fini(r);
-
-    ecs_fini(world);
 }
 
 void ComponentInheritance_optional_inherited(void) {

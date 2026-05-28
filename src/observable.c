@@ -1462,12 +1462,12 @@ repeat_event:
                     if (event == EcsOnAdd) {
                         for (e = 0; e < count; e ++) {
                             flecs_inheritance_on_change(
-                                world, entities[offset + e], NULL);
+                                world, entities[offset + e]);
                         }
                     } else if ((event == EcsOnRemove) && other_table) {
                         for (e = 0; e < count; e ++) {
                             flecs_inheritance_on_change(
-                                world, entities[offset + e], other_table);
+                                world, entities[offset + e]);
                         }
                     }
                 }

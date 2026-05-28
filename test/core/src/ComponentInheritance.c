@@ -203,6 +203,8 @@ void ComponentInheritance_search_3_lvl(void) {
 }
 
 void ComponentInheritance_get_after_add_isa(void) {
+    install_test_abort();
+
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Unit);
@@ -214,17 +216,13 @@ void ComponentInheritance_get_after_add_isa(void) {
     test_assert(ecs_get(world, e, Unit) == NULL);
     test_bool(ecs_has_id(world, e, ecs_id(Unit)), false);
 
+    test_expect_abort();
     ecs_add_pair(world, ecs_id(Warrior), EcsIsA, ecs_id(Unit));
-
-    const Unit *u = ecs_get(world, e, Unit);
-    test_assert(u != NULL);
-    test_int(u->hp, 10);
-    test_assert((const void*)u == (const void*)ecs_get(world, e, Warrior));
-
-    ecs_fini(world);
 }
 
 void ComponentInheritance_has_after_add_isa(void) {
+    install_test_abort();
+
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Unit);
@@ -235,20 +233,13 @@ void ComponentInheritance_has_after_add_isa(void) {
     test_bool(ecs_has_id(world, e, Unit), false);
     test_bool(ecs_owns_id(world, e, Unit), false);
 
+    test_expect_abort();
     ecs_add_pair(world, Warrior, EcsIsA, Unit);
-
-    test_bool(ecs_has_id(world, e, Unit), true);
-    test_bool(ecs_owns_id(world, e, Unit), true);
-
-    ecs_id_t id_out = 0;
-    ecs_table_t *table = ecs_get_table(world, e);
-    test_assert(ecs_search(world, table, Unit, &id_out) != -1);
-    test_uint(id_out, Warrior);
-
-    ecs_fini(world);
 }
 
 void ComponentInheritance_has_after_remove_isa(void) {
+    install_test_abort();
+
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Unit);
@@ -259,19 +250,13 @@ void ComponentInheritance_has_after_remove_isa(void) {
     ecs_entity_t e = ecs_new_w_id(world, Warrior);
     test_bool(ecs_has_id(world, e, Unit), true);
 
+    test_expect_abort();
     ecs_remove_pair(world, Warrior, EcsIsA, Unit);
-
-    test_bool(ecs_has_id(world, e, Unit), false);
-    test_bool(ecs_owns_id(world, e, Unit), false);
-    test_bool(ecs_has_id(world, e, Warrior), true);
-
-    ecs_table_t *table = ecs_get_table(world, e);
-    test_assert(ecs_search(world, table, Unit, NULL) == -1);
-
-    ecs_fini(world);
 }
 
 void ComponentInheritance_add_isa_3_lvl_after_populate(void) {
+    install_test_abort();
+
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Unit);
@@ -283,20 +268,13 @@ void ComponentInheritance_add_isa_3_lvl_after_populate(void) {
     test_bool(ecs_has_id(world, e, Melee), false);
     test_bool(ecs_has_id(world, e, Unit), false);
 
+    test_expect_abort();
     ecs_add_pair(world, Warrior, EcsIsA, Melee);
-
-    test_bool(ecs_has_id(world, e, Melee), true);
-    test_bool(ecs_has_id(world, e, Unit), false);
-
-    ecs_add_pair(world, Melee, EcsIsA, Unit);
-
-    test_bool(ecs_has_id(world, e, Melee), true);
-    test_bool(ecs_has_id(world, e, Unit), true);
-
-    ecs_fini(world);
 }
 
 void ComponentInheritance_remove_isa_middle_3_lvl(void) {
+    install_test_abort();
+
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Unit);
@@ -310,16 +288,13 @@ void ComponentInheritance_remove_isa_middle_3_lvl(void) {
     test_bool(ecs_has_id(world, e, Melee), true);
     test_bool(ecs_has_id(world, e, Unit), true);
 
+    test_expect_abort();
     ecs_remove_pair(world, Melee, EcsIsA, Unit);
-
-    test_bool(ecs_has_id(world, e, Warrior), true);
-    test_bool(ecs_has_id(world, e, Melee), true);
-    test_bool(ecs_has_id(world, e, Unit), false);
-
-    ecs_fini(world);
 }
 
 void ComponentInheritance_add_isa_w_multiple_tables(void) {
+    install_test_abort();
+
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Unit);
@@ -335,17 +310,8 @@ void ComponentInheritance_add_isa_w_multiple_tables(void) {
     test_bool(ecs_has_id(world, e1, Unit), false);
     test_bool(ecs_has_id(world, e2, Unit), false);
 
+    test_expect_abort();
     ecs_add_pair(world, Warrior, EcsIsA, Unit);
-
-    test_bool(ecs_has_id(world, e1, Unit), true);
-    test_bool(ecs_has_id(world, e2, Unit), true);
-
-    ecs_remove_pair(world, Warrior, EcsIsA, Unit);
-
-    test_bool(ecs_has_id(world, e1, Unit), false);
-    test_bool(ecs_has_id(world, e2, Unit), false);
-
-    ecs_fini(world);
 }
 
 void ComponentInheritance_base_and_derived_same_table(void) {
@@ -383,6 +349,34 @@ void ComponentInheritance_diamond_allowed(void) {
     test_bool(ecs_has_id(world, e, Wizard), true);
     test_bool(ecs_has_id(world, e, Unit), true);
     test_bool(ecs_owns_id(world, e, Unit), true);
+
+    ecs_fini(world);
+}
+
+void ComponentInheritance_derived_w_multiple_isa_bases(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Unit);
+    ECS_TAG(world, Warrior);
+
+    ecs_add_pair(world, Warrior, EcsIsA, Unit);
+
+    ecs_entity_t base_a = ecs_new(world);
+    ecs_entity_t base_b = ecs_new(world);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add_pair(world, e, EcsIsA, base_a);
+    ecs_add_pair(world, e, EcsIsA, base_b);
+    ecs_add_id(world, e, Warrior);
+
+    test_bool(ecs_has_id(world, e, Warrior), true);
+    test_bool(ecs_has_id(world, e, Unit), true);
+    test_bool(ecs_has_pair(world, e, EcsIsA, base_a), true);
+    test_bool(ecs_has_pair(world, e, EcsIsA, base_b), true);
+
+    ecs_id_t id_out = 0;
+    test_assert(ecs_search(world, ecs_get_table(world, e), Unit, &id_out) != -1);
+    test_uint(id_out, Warrior);
 
     ecs_fini(world);
 }
@@ -477,6 +471,8 @@ void ComponentInheritance_remove_all_base_removes_derived(void) {
 }
 
 void ComponentInheritance_delete_with_after_remove_isa(void) {
+    install_test_abort();
+
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Unit);
@@ -484,17 +480,11 @@ void ComponentInheritance_delete_with_after_remove_isa(void) {
 
     ecs_add_pair(world, Warrior, EcsIsA, Unit);
 
-    ecs_entity_t w1 = ecs_new_w_id(world, Warrior);
-    ecs_entity_t u1 = ecs_new_w_id(world, Unit);
+    ecs_new_w_id(world, Warrior);
+    ecs_new_w_id(world, Unit);
 
+    test_expect_abort();
     ecs_remove_pair(world, Warrior, EcsIsA, Unit);
-
-    ecs_delete_with(world, Unit);
-
-    test_bool(ecs_is_alive(world, w1), true);
-    test_bool(ecs_is_alive(world, u1), false);
-
-    ecs_fini(world);
 }
 
 void ComponentInheritance_get_mut_via_base(void) {
@@ -694,6 +684,8 @@ void ComponentInheritance_recycled_base(void) {
 }
 
 void ComponentInheritance_readd_isa_after_remove(void) {
+    install_test_abort();
+
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Unit);
@@ -703,17 +695,13 @@ void ComponentInheritance_readd_isa_after_remove(void) {
     ecs_entity_t e = ecs_new_w_id(world, Warrior);
     test_bool(ecs_has_id(world, e, Unit), true);
 
+    test_expect_abort();
     ecs_remove_pair(world, Warrior, EcsIsA, Unit);
-    test_bool(ecs_has_id(world, e, Unit), false);
-
-    ecs_add_pair(world, Warrior, EcsIsA, Unit);
-    test_bool(ecs_has_id(world, e, Unit), true);
-    test_bool(ecs_owns_id(world, e, Unit), true);
-
-    ecs_fini(world);
 }
 
 void ComponentInheritance_change_grandparent_isa(void) {
+    install_test_abort();
+
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Unit);
@@ -728,18 +716,13 @@ void ComponentInheritance_change_grandparent_isa(void) {
     test_bool(ecs_has_id(world, e, Unit), true);
     test_bool(ecs_has_id(world, e, Melee), true);
 
+    test_expect_abort();
     ecs_remove_pair(world, Melee, EcsIsA, Unit);
-    ecs_add_pair(world, Melee, EcsIsA, Super);
-
-    test_bool(ecs_has_id(world, e, Warrior), true);
-    test_bool(ecs_has_id(world, e, Melee), true);
-    test_bool(ecs_has_id(world, e, Super), true);
-    test_bool(ecs_has_id(world, e, Unit), false);
-
-    ecs_fini(world);
 }
 
 void ComponentInheritance_reparent_isa(void) {
+    install_test_abort();
+
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Unit);
@@ -756,17 +739,13 @@ void ComponentInheritance_reparent_isa(void) {
     test_bool(ecs_has_id(world, e, Ranged), false);
     test_bool(ecs_has_id(world, e, Unit), true);
 
+    test_expect_abort();
     ecs_remove_pair(world, Warrior, EcsIsA, Melee);
-    ecs_add_pair(world, Warrior, EcsIsA, Ranged);
-
-    test_bool(ecs_has_id(world, e, Melee), false);
-    test_bool(ecs_has_id(world, e, Ranged), true);
-    test_bool(ecs_has_id(world, e, Unit), true);
-
-    ecs_fini(world);
 }
 
 void ComponentInheritance_add_second_base_after_populate(void) {
+    install_test_abort();
+
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Unit);
@@ -783,16 +762,13 @@ void ComponentInheritance_add_second_base_after_populate(void) {
     test_bool(ecs_has_id(world, e, Unit), true);
     test_bool(ecs_has_id(world, e, Wizard), false);
 
+    test_expect_abort();
     ecs_add_pair(world, Warlock, EcsIsA, Wizard);
-
-    test_bool(ecs_has_id(world, e, Wizard), true);
-    test_bool(ecs_has_id(world, e, Warrior), true);
-    test_bool(ecs_has_id(world, e, Unit), true);
-
-    ecs_fini(world);
 }
 
 void ComponentInheritance_remove_second_base_after_populate(void) {
+    install_test_abort();
+
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Unit);
@@ -810,19 +786,13 @@ void ComponentInheritance_remove_second_base_after_populate(void) {
     test_bool(ecs_has_id(world, e, Warrior), true);
     test_bool(ecs_has_id(world, e, Wizard), true);
 
+    test_expect_abort();
     ecs_remove_pair(world, Warlock, EcsIsA, Warrior);
-    test_bool(ecs_has_id(world, e, Warrior), false);
-    test_bool(ecs_has_id(world, e, Wizard), true);
-    test_bool(ecs_has_id(world, e, Unit), true);
-
-    ecs_remove_pair(world, Warlock, EcsIsA, Wizard);
-    test_bool(ecs_has_id(world, e, Wizard), false);
-    test_bool(ecs_has_id(world, e, Unit), false);
-
-    ecs_fini(world);
 }
 
 void ComponentInheritance_add_isa_4_lvl_after_populate(void) {
+    install_test_abort();
+
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, A);
@@ -830,23 +800,13 @@ void ComponentInheritance_add_isa_4_lvl_after_populate(void) {
     ECS_TAG(world, C);
     ECS_TAG(world, D);
 
-    ecs_entity_t e = ecs_new_w_id(world, D);
+    ecs_new_w_id(world, D);
 
     ecs_add_pair(world, B, EcsIsA, A);
     ecs_add_pair(world, C, EcsIsA, B);
+
+    test_expect_abort();
     ecs_add_pair(world, D, EcsIsA, C);
-
-    test_bool(ecs_has_id(world, e, D), true);
-    test_bool(ecs_has_id(world, e, C), true);
-    test_bool(ecs_has_id(world, e, B), true);
-    test_bool(ecs_has_id(world, e, A), true);
-
-    ecs_remove_pair(world, C, EcsIsA, B);
-    test_bool(ecs_has_id(world, e, C), true);
-    test_bool(ecs_has_id(world, e, B), false);
-    test_bool(ecs_has_id(world, e, A), false);
-
-    ecs_fini(world);
 }
 
 void ComponentInheritance_wide_hierarchy(void) {
@@ -878,6 +838,8 @@ void ComponentInheritance_wide_hierarchy(void) {
 }
 
 void ComponentInheritance_change_isa_deferred(void) {
+    install_test_abort();
+
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Unit);
@@ -889,12 +851,9 @@ void ComponentInheritance_change_isa_deferred(void) {
     ecs_defer_begin(world);
     ecs_add_pair(world, Warrior, EcsIsA, Unit);
     test_bool(ecs_has_id(world, e, Unit), false);
+
+    test_expect_abort();
     ecs_defer_end(world);
-
-    test_bool(ecs_has_id(world, e, Unit), true);
-    test_bool(ecs_owns_id(world, e, Unit), true);
-
-    ecs_fini(world);
 }
 
 void ComponentInheritance_cyclic_isa_not_allowed(void) {
@@ -965,22 +924,18 @@ void ComponentInheritance_get_tag_base_w_data_derived(void) {
 }
 
 void ComponentInheritance_delete_base_component_entity(void) {
+    install_test_abort();
+
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Unit);
     ECS_TAG(world, Warrior);
 
     ecs_add_pair(world, Warrior, EcsIsA, Unit);
-    ecs_entity_t e = ecs_new_w_id(world, Warrior);
+    ecs_new_w_id(world, Warrior);
 
+    test_expect_abort();
     ecs_delete(world, Unit);
-
-    test_bool(ecs_is_alive(world, Unit), false);
-    test_bool(ecs_is_alive(world, Warrior), true);
-    test_bool(ecs_is_alive(world, e), true);
-    test_bool(ecs_has_id(world, e, Warrior), true);
-
-    ecs_fini(world);
 }
 
 void ComponentInheritance_delete_derived_component_entity(void) {
@@ -1238,6 +1193,8 @@ void ComponentInheritance_multi_derived_3_lvl_mixed(void) {
 }
 
 void ComponentInheritance_multi_derived_add_isa_after_populate(void) {
+    install_test_abort();
+
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Unit);
@@ -1249,15 +1206,8 @@ void ComponentInheritance_multi_derived_add_isa_after_populate(void) {
 
     test_bool(ecs_has_id(world, e, Unit), false);
 
+    test_expect_abort();
     ecs_add_pair(world, Warrior, EcsIsA, Unit);
-    test_bool(ecs_has_id(world, e, Unit), true);
-    test_int(ecs_count_id(world, Unit), 1);
-
-    ecs_add_pair(world, Wizard, EcsIsA, Unit);
-    test_bool(ecs_has_id(world, e, Unit), true);
-    test_int(ecs_count_id(world, Unit), 2);
-
-    ecs_fini(world);
 }
 
 void ComponentInheritance_multi_derived_delete_with(void) {
@@ -1546,6 +1496,8 @@ void ComponentInheritance_pair_rel_different_target(void) {
 }
 
 void ComponentInheritance_pair_rel_add_isa_after(void) {
+    install_test_abort();
+
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Likes);
@@ -1556,13 +1508,13 @@ void ComponentInheritance_pair_rel_add_isa_after(void) {
     ecs_add_pair(world, e, Loves, Apples);
     test_bool(ecs_has_pair(world, e, Likes, Apples), false);
 
+    test_expect_abort();
     ecs_add_pair(world, Loves, EcsIsA, Likes);
-    test_bool(ecs_has_pair(world, e, Likes, Apples), true);
-
-    ecs_fini(world);
 }
 
 void ComponentInheritance_pair_rel_remove_isa(void) {
+    install_test_abort();
+
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Likes);
@@ -1575,11 +1527,8 @@ void ComponentInheritance_pair_rel_remove_isa(void) {
     ecs_add_pair(world, e, Loves, Apples);
     test_bool(ecs_has_pair(world, e, Likes, Apples), true);
 
+    test_expect_abort();
     ecs_remove_pair(world, Loves, EcsIsA, Likes);
-    test_bool(ecs_has_pair(world, e, Likes, Apples), false);
-    test_bool(ecs_has_pair(world, e, Loves, Apples), true);
-
-    ecs_fini(world);
 }
 
 void ComponentInheritance_pair_rel_multi(void) {
