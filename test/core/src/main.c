@@ -596,6 +596,7 @@ void Sparse_on_set_observer_w_child_override(void);
 void Sparse_on_set_observer_w_n_children_override(void);
 void Sparse_on_set_observer_w_child_override_parent_hierarchy(void);
 void Sparse_on_set_observer_w_n_children_override_parent_hierarchy(void);
+void Sparse_on_set_observer_w_child_override_and_on_add_observer(void);
 void Sparse_on_remove_observer_remove(void);
 void Sparse_on_remove_observer_clear(void);
 void Sparse_on_remove_observer_delete(void);
@@ -5604,6 +5605,10 @@ bake_test_case Sparse_testcases[] = {
     {
         "on_set_observer_w_n_children_override_parent_hierarchy",
         Sparse_on_set_observer_w_n_children_override_parent_hierarchy
+    },
+    {
+        "on_set_observer_w_child_override_and_on_add_observer",
+        Sparse_on_set_observer_w_child_override_and_on_add_observer
     },
     {
         "on_remove_observer_remove",
@@ -16346,7 +16351,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         Sparse_setup,
         NULL,
-        227,
+        228,
         Sparse_testcases,
         1,
         Sparse_params

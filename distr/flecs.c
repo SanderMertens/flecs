@@ -3221,7 +3221,8 @@ void flecs_instantiate_sparse(
     const ecs_entity_t *base_children,
     ecs_table_t *instance_table,
     const ecs_entity_t *instance_children,
-    int32_t row_offset);
+    int32_t row_offset,
+    bool emit_non_sparse);
 
 ecs_entity_t flecs_instantiate_alloc_child_id(
     ecs_world_t *world,
@@ -12931,10 +12932,11 @@ void flecs_instantiate_sparse(
     const ecs_entity_t *base_children,
     ecs_table_t *instance_table,
     const ecs_entity_t *instance_children,
-    int32_t row_offset)
+    int32_t row_offset,
+    bool emit_non_sparse)
 {
     ecs_table_t *base_child_table = base_child_range->table;
-    if (!(base_child_table->flags & EcsTableHasSparse)) {
+    if (!emit_non_sparse && !(base_child_table->flags & EcsTableHasSparse)) {
         return;
     }
 
@@ -12944,7 +12946,8 @@ void flecs_instantiate_sparse(
         ecs_table_record_t *tr = &trs[i];
         ecs_component_record_t *cr = tr->hdr.cr;
 
-        if (!(cr->flags & EcsIdSparse)) {
+        bool sparse = cr->flags & EcsIdSparse;
+        if (!sparse && !emit_non_sparse) {
             continue;
         }
 
@@ -12953,19 +12956,30 @@ void flecs_instantiate_sparse(
             continue;
         }
 
+        if (cr->flags & EcsIdOnInstantiateDontInherit) {
+            continue;
+        }
+
         ecs_id_t id = base_child_table->type.array[i];
 
         for (int32_t j = 0; j < base_child_range->count; j ++) {
-            ecs_entity_t child = base_children[j + base_child_range->offset];
             ecs_entity_t instance_child = instance_children[j];
 
-            void *src_ptr = flecs_sparse_get(cr->sparse, ti->size, child);
-            ecs_assert(src_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+            /* Sparse component values live outside the instance table, so they
+             * are copied here. Non-sparse override values are already in place
+             * (copied when the instance entered its table). */
+            if (sparse) {
+                ecs_entity_t child = base_children[j + base_child_range->offset];
 
-            void *dst_ptr = flecs_sparse_get(cr->sparse, ti->size, instance_child);
-            ecs_assert(dst_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+                void *src_ptr = flecs_sparse_get(cr->sparse, ti->size, child);
+                ecs_assert(src_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
 
-            flecs_type_info_copy(dst_ptr, src_ptr, 1, ti);
+                void *dst_ptr = flecs_sparse_get(
+                    cr->sparse, ti->size, instance_child);
+                ecs_assert(dst_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+                flecs_type_info_copy(dst_ptr, src_ptr, 1, ti);
+            }
 
             flecs_notify_on_set(
                 world, instance_table, row_offset + j, id, true);
@@ -13132,7 +13146,7 @@ void flecs_instantiate_children(
         &diff.added, child_range.count, component_data, false, &child_row, &diff);
 
     flecs_instantiate_sparse(
-        world, &child_range, children, i_table, i_children, child_row);
+        world, &child_range, children, i_table, i_children, child_row, false);
 
     /* If children are slots, add slot relationships to parent */
     if (slot_of) {
@@ -21074,7 +21088,8 @@ void flecs_spawner_instantiate(
         parent_ptr = &parent_ptr[row];
         parent_ptr->value = parent;
 
-        flecs_actions_new(world, table, row, 1, &table_diff, 0, true, EcsWildcard);
+        flecs_actions_new(world, table, row, 1, &table_diff, EcsEventNoOnSet,
+            true, EcsWildcard);
 
         if (is_prefab && spawn_child->child_name) {
             ecs_set_name(world, entity, spawn_child->child_name);
@@ -21091,8 +21106,8 @@ void flecs_spawner_instantiate(
             .table = spawn_r->table,
             .offset = 0,
             .count = 1 };
-        flecs_instantiate_sparse(world, &base_range, &base_child, 
-            r->table, &entity, ECS_RECORD_TO_ROW(r->row));
+        flecs_instantiate_sparse(world, &base_range, &base_child,
+            r->table, &entity, ECS_RECORD_TO_ROW(r->row), true);
 
         if (spawn_r->row & EcsEntityHasDontFragment) {
             flecs_instantiate_dont_fragment(
