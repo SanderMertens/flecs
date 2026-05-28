@@ -1485,6 +1485,7 @@ typedef enum {
 typedef struct {
     ecs_map_t src;        /* map<table_id, trav_up_t> (up direction) */
     ecs_trav_down_t down; /* reused buffer (down direction) */
+    ecs_trav_up_t up;     /* reused buffer for top-level up result */
     ecs_id_t with;
     ecs_trav_direction_t dir;
 } ecs_trav_up_cache_t;
@@ -90141,13 +90142,21 @@ ecs_trav_up_t* flecs_trav_table_up(
     ecs_id_t with,
     ecs_id_t rel,
     ecs_component_record_t *cr_with,
-    ecs_component_record_t *cr_trav)
-{
-    ecs_trav_up_t *up = flecs_trav_up_ensure(ctx, cache, src);
-    if (up->ready) {
-        return up;
-    }
+    ecs_component_record_t *cr_trav);
 
+static
+void flecs_trav_table_up_w(
+    const ecs_query_run_ctx_t *ctx,
+    ecs_allocator_t *a,
+    ecs_trav_up_cache_t *cache,
+    const ecs_world_t *world,
+    ecs_entity_t src,
+    ecs_id_t with,
+    ecs_id_t rel,
+    ecs_component_record_t *cr_with,
+    ecs_component_record_t *cr_trav,
+    ecs_trav_up_t *up)
+{
     ecs_record_t *src_record = flecs_entities_get_any(world, src);
     ecs_table_t *table = src_record->table;
     if (!table) {
@@ -90262,6 +90271,28 @@ ecs_trav_up_t* flecs_trav_table_up(
 not_found:
     up->tr = NULL;
 found:
+    return;
+}
+
+static
+ecs_trav_up_t* flecs_trav_table_up(
+    const ecs_query_run_ctx_t *ctx,
+    ecs_allocator_t *a,
+    ecs_trav_up_cache_t *cache,
+    const ecs_world_t *world,
+    ecs_entity_t src,
+    ecs_id_t with,
+    ecs_id_t rel,
+    ecs_component_record_t *cr_with,
+    ecs_component_record_t *cr_trav)
+{
+    ecs_trav_up_t *up = flecs_trav_up_ensure(ctx, cache, src);
+    if (up->ready) {
+        return up;
+    }
+
+    flecs_trav_table_up_w(ctx, a, cache, world, src, with, rel, cr_with,
+        cr_trav, up);
     up->ready = true;
     return up;
 }
@@ -90303,9 +90334,10 @@ ecs_trav_up_t* flecs_query_get_up_cache(
             ecs_assert(p != NULL, ECS_INTERNAL_ERROR, NULL);
 
             ecs_entity_t tgt = (uint32_t)p->value;
-            ecs_trav_up_t *result = flecs_trav_table_up(ctx, a, cache, world, tgt,
-                with, ecs_pair(trav, EcsWildcard), cr_with, cr_trav);
-            ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_trav_up_t *result = &cache->up;
+            *result = (ecs_trav_up_t){0};
+            flecs_trav_table_up_w(ctx, a, cache, world, tgt,
+                with, ecs_pair(trav, EcsWildcard), cr_with, cr_trav, result);
             if (result->src != 0) {
                 return result;
             }
@@ -90323,9 +90355,10 @@ ecs_trav_up_t* flecs_query_get_up_cache(
     for (; i < end; i ++) {
         ecs_id_t id = table->type.array[i];
         ecs_entity_t tgt = ECS_PAIR_SECOND(id);
-        ecs_trav_up_t *result = flecs_trav_table_up(ctx, a, cache, world, tgt,
-            with, ecs_pair(trav, EcsWildcard), cr_with, cr_trav);
-        ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_trav_up_t *result = &cache->up;
+        *result = (ecs_trav_up_t){0};
+        flecs_trav_table_up_w(ctx, a, cache, world, tgt,
+            with, ecs_pair(trav, EcsWildcard), cr_with, cr_trav, result);
         if (result->src != 0) {
             return result;
         }
