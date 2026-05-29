@@ -2360,6 +2360,13 @@ void ecs_set_id(
             flecs_errstr(ecs_id_str(world, component)),
             flecs_errstr_1(ecs_id_str(world, entity)));
 
+    if (component == ecs_id(EcsParent)) {
+        ecs_check(!((const EcsParent*)ptr)->value ||
+            ecs_is_alive(world, ((const EcsParent*)ptr)->value),
+            ECS_INVALID_OPERATION,
+            "cannot set Parent component to entity that is not alive");
+    }
+
     ecs_stage_t *stage = flecs_stage_from_world(&world);
 
     if (flecs_defer_cmd(stage)) {
