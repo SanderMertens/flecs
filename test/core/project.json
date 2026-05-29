@@ -752,7 +752,8 @@
                 "defer_ensure_modified_w_sparse_w_observer",
                 "defer_remove_override",
                 "defer_remove_add_override",
-                "fini_w_dont_fragment_pair_prefab_exclusive_delete_with"
+                "fini_w_dont_fragment_pair_prefab_exclusive_delete_with",
+                "remove_childof_pair_w_dont_fragment_component"
             ]
         }, {
             "id": "NonFragmentingChildOf",

@@ -920,8 +920,7 @@ void flecs_compute_table_diff(
     if (ECS_IS_PAIR(id) && ECS_PAIR_FIRST(id) == EcsChildOf) {
         if (added_count) {
             diff->added_flags |= EcsTableEdgeReparent;
-        } else {
-            ecs_assert(removed_count != 0, ECS_INTERNAL_ERROR, NULL);
+        } else if (removed_count) {
             diff->removed_flags |= EcsTableEdgeReparent;
         }
     }
