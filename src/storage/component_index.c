@@ -292,6 +292,14 @@ void flecs_component_ordered_children_init(
 {
     cr->flags |= EcsIdOrderedChildren;
     flecs_ordered_children_init(world, cr);
+
+    ecs_table_cache_iter_t it;
+    if (flecs_table_cache_all_iter(&cr->cache, &it)) {
+        const ecs_table_record_t *tr;
+        while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
+            tr->hdr.table->flags |= EcsTableHasOrderedChildren;
+        }
+    }
 }
 
 static
