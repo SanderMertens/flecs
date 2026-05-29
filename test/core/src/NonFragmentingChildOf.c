@@ -6695,3 +6695,26 @@ void NonFragmentingChildOf_fini_delete_pair_of_prefab_child(void) {
 
     ecs_fini(world);
 }
+
+void NonFragmentingChildOf_fini_w_mixed_childof_different_parents(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent_a = ecs_new(world);
+    ecs_entity_t parent_b = ecs_new(world);
+    ecs_entity_t child_a = ecs_new(world);
+    ecs_entity_t child_b = ecs_new(world);
+
+    ecs_add_pair(world, child_b, EcsChildOf, parent_a);
+    ecs_set(world, child_a, EcsParent, {parent_a});
+    ecs_set(world, child_b, EcsParent, {parent_b});
+
+    ecs_entities_t children_a = ecs_get_ordered_children(world, parent_a);
+    test_int(1, children_a.count);
+    test_uint(child_a, children_a.ids[0]);
+
+    ecs_entities_t children_b = ecs_get_ordered_children(world, parent_b);
+    test_int(1, children_b.count);
+    test_uint(child_b, children_b.ids[0]);
+
+    ecs_fini(world);
+}
