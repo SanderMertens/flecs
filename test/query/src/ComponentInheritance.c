@@ -4744,3 +4744,75 @@ void ComponentInheritance_1_var_pair_written(void) {
     ecs_query_fini(r);
     ecs_fini(world);
 }
+
+void ComponentInheritance_cached_match_derived_table_added_after(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t Unit = ecs_entity(world, { .name = "Unit" });
+    ecs_entity_t Warrior = ecs_entity(world, { .name = "Warrior" });
+    ecs_add_pair(world, Warrior, EcsIsA, Unit);
+
+    ecs_query_t *q = ecs_query(world, {
+        .cache_kind = cache_kind, .expr = "Unit" });
+    test_assert(q != NULL);
+
+    if (cache_kind == EcsQueryCacheAuto) {
+        test_assert(q->flags & EcsQueryIsCacheable);
+    }
+
+    ecs_entity_t e1 = ecs_new_w_id(world, Warrior);
+    ecs_entity_t e2 = ecs_new_w_id(world, Unit);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_uint(1, it.count);
+    test_uint(e1, it.entities[0]);
+    test_uint(Warrior, ecs_field_id(&it, 0));
+
+    test_bool(true, ecs_query_next(&it));
+    test_uint(1, it.count);
+    test_uint(e2, it.entities[0]);
+    test_uint(Unit, ecs_field_id(&it, 0));
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+    ecs_fini(world);
+}
+
+void ComponentInheritance_cached_unmatch_derived_table_on_delete(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t Unit = ecs_entity(world, { .name = "Unit" });
+    ecs_entity_t Warrior = ecs_entity(world, { .name = "Warrior" });
+    ecs_add_pair(world, Warrior, EcsIsA, Unit);
+
+    ecs_query_t *q = ecs_query(world, {
+        .cache_kind = cache_kind, .expr = "Unit" });
+    test_assert(q != NULL);
+
+    ecs_entity_t e1 = ecs_new_w_id(world, Warrior);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_uint(1, it.count);
+        test_uint(e1, it.entities[0]);
+        test_uint(Warrior, ecs_field_id(&it, 0));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_delete(world, e1);
+
+    ecs_delete_empty_tables(world, &(ecs_delete_empty_tables_desc_t){
+        .delete_generation = 1
+    });
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+    ecs_fini(world);
+}

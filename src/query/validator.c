@@ -978,7 +978,6 @@ int flecs_term_finalize(
 
     if (term->flags_ & EcsTermIdInherited) {
         trivial_term = false;
-        cacheable_term = false;
     }
 
     if (term->flags_ & EcsTermReflexive) {
@@ -1717,6 +1716,7 @@ bool flecs_query_finalize_simple(
     /* Populate terms */
     bool has_this = false, has_only_this = true;
     int8_t cacheable_count = 0, trivial_count = 0, up_count = 0;
+    int8_t inherited_count = 0;
     for (i = 0; i < term_count; i ++) {
         ecs_term_t *term = &q->terms[i];
         ecs_id_t id = term->id;
@@ -1832,7 +1832,8 @@ bool flecs_query_finalize_simple(
         if (flecs_components_get(world, ecs_pair(EcsIsA, first)) != NULL) {
             term->flags_ |= EcsTermIdInherited;
             q->flags |= EcsQueryHasComponentInheritance;
-            cacheable = false; trivial = false;
+            trivial = false;
+            inherited_count ++;
         }
 
         if (cacheable) {
@@ -1871,8 +1872,14 @@ bool flecs_query_finalize_simple(
         q->flags |= EcsQueryHasCacheable;
     }
 
-    if (cacheable_count == term_count && trivial_count == term_count) {
-        q->flags |= EcsQueryIsCacheable|EcsQueryIsTrivial;
+    if (cacheable_count == term_count &&
+        (trivial_count + inherited_count) == term_count)
+    {
+        q->flags |= EcsQueryIsCacheable;
+    }
+
+    if (trivial_count == term_count) {
+        q->flags |= EcsQueryIsTrivial;
     }
 
     if (!up_count) {

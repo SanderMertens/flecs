@@ -1446,7 +1446,9 @@
                 "pair_multi",
                 "pair_different_target",
                 "pair_wildcard",
-                "pair_wildcard_multi_rel"
+                "pair_wildcard_multi_rel",
+                "cached_match_derived_table_added_after",
+                "cached_unmatch_derived_table_on_delete"
             ]
         }, {
             "id": "BuiltinPredicates",

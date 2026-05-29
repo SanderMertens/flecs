@@ -1405,6 +1405,8 @@ void ComponentInheritance_pair_multi(void);
 void ComponentInheritance_pair_different_target(void);
 void ComponentInheritance_pair_wildcard(void);
 void ComponentInheritance_pair_wildcard_multi_rel(void);
+void ComponentInheritance_cached_match_derived_table_added_after(void);
+void ComponentInheritance_cached_unmatch_derived_table_on_delete(void);
 
 // Testsuite 'BuiltinPredicates'
 void BuiltinPredicates_setup(void);
@@ -8409,6 +8411,14 @@ bake_test_case ComponentInheritance_testcases[] = {
     {
         "pair_wildcard_multi_rel",
         ComponentInheritance_pair_wildcard_multi_rel
+    },
+    {
+        "cached_match_derived_table_added_after",
+        ComponentInheritance_cached_match_derived_table_added_after
+    },
+    {
+        "cached_unmatch_derived_table_on_delete",
+        ComponentInheritance_cached_unmatch_derived_table_on_delete
     }
 };
 
@@ -14404,7 +14414,7 @@ static bake_test_suite suites[] = {
         "ComponentInheritance",
         ComponentInheritance_setup,
         NULL,
-        70,
+        72,
         ComponentInheritance_testcases,
         1,
         ComponentInheritance_params

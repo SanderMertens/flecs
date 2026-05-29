@@ -57,9 +57,9 @@ int main(int argc, char *argv[]) {
         void *bufs = ecs_base_field(&it, Buf, 0);
         size_t stride = ecs_field_stride(&it, 0);
         for (int i = 0; i < it.count; i ++) {
-            Buf *buf = ECS_OFFSET(bufs, stride * i);
+            Buf *buf = ECS_OFFSET(bufs, stride * (size_t)i);
             printf("%s has buf value %.0f\n",
-                ecs_get_name(ecs, it.entities[i]), buf->value);
+                ecs_get_name(ecs, it.entities[i]), (double)buf->value);
         }
     }
 

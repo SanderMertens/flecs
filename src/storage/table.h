@@ -109,6 +109,10 @@ typedef struct ecs_table__t {
 
     struct ecs_table_record_t *records; /* Array with table records */
 
+    ecs_type_t *extended_type;       /* Component ids + inherited base ids, used
+                                      * to emit OnTableCreate/OnTableDelete events
+                                      * for tables with derived components */
+
 #ifdef FLECS_DEBUG_INFO
     /* Fields used for debug visualization */
     struct {

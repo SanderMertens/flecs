@@ -625,6 +625,7 @@ ecs_query_cache_t* flecs_query_cache_init(
 
         if ((t == count) && (q->flags & EcsQueryMatchOnlySelf) &&
            !(q->flags & EcsQueryMatchWildcards) &&
+           !(q->flags & EcsQueryHasComponentInheritance) &&
            !(q->flags & EcsQueryCacheWithFilter))
         {
             if (!const_desc->order_by && !const_desc->group_by && 
