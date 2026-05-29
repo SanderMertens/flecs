@@ -7648,3 +7648,21 @@ void Sparse_fini_w_dont_fragment_pair_prefab_exclusive_delete_with(void) {
     ecs_fini(world);
 }
 
+void Sparse_remove_childof_pair_w_dont_fragment_component(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t df = ecs_new(world);
+    ecs_add_id(world, df, EcsDontFragment);
+
+    ecs_entity_t a = ecs_new(world);
+    ecs_entity_t b = ecs_new(world);
+    ecs_entity_t c = ecs_new(world);
+
+    ecs_add_pair(world, a, df, b);
+    ecs_remove_pair(world, c, EcsChildOf, b);
+
+    test_assert(true);
+
+    ecs_fini(world);
+}
+

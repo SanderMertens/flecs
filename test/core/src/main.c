@@ -723,6 +723,7 @@ void Sparse_defer_ensure_modified_w_sparse_w_observer(void);
 void Sparse_defer_remove_override(void);
 void Sparse_defer_remove_add_override(void);
 void Sparse_fini_w_dont_fragment_pair_prefab_exclusive_delete_with(void);
+void Sparse_remove_childof_pair_w_dont_fragment_component(void);
 
 // Testsuite 'NonFragmentingChildOf'
 void NonFragmentingChildOf_set_parent_no_ordered_children(void);
@@ -6129,6 +6130,10 @@ bake_test_case Sparse_testcases[] = {
     {
         "fini_w_dont_fragment_pair_prefab_exclusive_delete_with",
         Sparse_fini_w_dont_fragment_pair_prefab_exclusive_delete_with
+    },
+    {
+        "remove_childof_pair_w_dont_fragment_component",
+        Sparse_remove_childof_pair_w_dont_fragment_component
     }
 };
 
@@ -16431,7 +16436,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         Sparse_setup,
         NULL,
-        229,
+        230,
         Sparse_testcases,
         1,
         Sparse_params
