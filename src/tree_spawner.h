@@ -21,4 +21,7 @@ void flecs_spawner_instantiate(
     ecs_entity_t instance,
     const ecs_instantiate_ctx_t *ctx);
 
+void flecs_fini_tree_spawners(
+    ecs_world_t *world);
+
 #endif

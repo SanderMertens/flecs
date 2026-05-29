@@ -1272,6 +1272,11 @@ int ecs_fini(
 
     world->flags |= EcsWorldQuit;
 
+    /* Tree spawners can keep tables alive, which can conflict with entity
+     * cleanup. Cleanup treespawners first before cleaning up other entities.
+     * This means that prefab spawning does not work during world cleanup. */
+    flecs_fini_tree_spawners(world);
+
     /* Delete root entities first using regular APIs. This ensures that cleanup
      * policies get a chance to execute. */
     ecs_dbg_1("#[bold]cleanup root entities");

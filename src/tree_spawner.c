@@ -340,6 +340,19 @@ void flecs_spawner_instantiate(
     }
 }
 
+void flecs_fini_tree_spawners(
+    ecs_world_t *world)
+{
+    ecs_iter_t it = ecs_each(world, EcsTreeSpawner);
+    while (ecs_each_next(&it)) {
+        EcsTreeSpawner *t = ecs_field(&it, EcsTreeSpawner, 0);
+        int32_t i;
+        for (i = 0; i < it.count; i ++) {
+            EcsTreeSpawner_free(&t[i]);
+        }
+    }
+}
+
 void flecs_bootstrap_spawner(
     ecs_world_t *world)
 {

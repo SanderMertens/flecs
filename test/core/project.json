@@ -1003,7 +1003,11 @@
                 "defer_set_parent_and_remove_tag",
                 "defer_set_parent_to_deleted_entity",
                 "defer_reparent_to_deleted_entity_w_sparse",
-                "set_parent_to_deleted_entity_w_ordered_child"
+                "set_parent_to_deleted_entity_w_ordered_child",
+                "delete_component_of_prefab_child",
+                "fini_delete_component_of_prefab_child",
+                "delete_pair_of_prefab_child",
+                "fini_delete_pair_of_prefab_child"
             ]
         }, {
             "id": "Hierarchies",
