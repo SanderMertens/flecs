@@ -1009,7 +1009,8 @@
                 "delete_pair_of_prefab_child",
                 "fini_delete_pair_of_prefab_child",
                 "fini_w_mixed_childof_different_parents",
-                "fini_w_ordered_child_w_up_traversable"
+                "fini_w_ordered_child_w_up_traversable",
+                "defer_reparent_mixed_childof"
             ]
         }, {
             "id": "Hierarchies",

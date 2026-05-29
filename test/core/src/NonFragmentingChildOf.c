@@ -6753,3 +6753,24 @@ void NonFragmentingChildOf_fini_w_ordered_child_w_up_traversable(void) {
 
     ecs_fini(world);
 }
+
+void NonFragmentingChildOf_defer_reparent_mixed_childof(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent_a = ecs_new(world);
+    ecs_entity_t parent_b = ecs_new(world);
+    ecs_entity_t child = ecs_new(world);
+
+    ecs_defer_begin(world);
+    ecs_set(world, parent_b, EcsParent, {parent_a});
+    ecs_add_pair(world, child, EcsChildOf, parent_a);
+    ecs_set(world, child, EcsParent, {parent_b});
+    ecs_defer_end(world);
+
+    test_assert(ecs_get_parent(world, parent_b) == parent_a);
+    test_assert(ecs_get_parent(world, child) == parent_b);
+    test_assert(!ecs_has_pair(world, child, EcsChildOf, parent_a));
+    test_assert(ecs_has_pair(world, child, EcsChildOf, parent_b));
+
+    ecs_fini(world);
+}

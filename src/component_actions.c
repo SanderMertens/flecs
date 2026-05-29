@@ -135,13 +135,20 @@ void flecs_on_unparent(
     ecs_table_t *table,
     ecs_table_t *other_table,
     int32_t row,
-    int32_t count)
+    int32_t count,
+    ecs_flags32_t diff_flags)
 {
-    if (other_table) {
-        flecs_unparent_name_index(world, table, other_table, row, count);
+    if (diff_flags & EcsTableEdgeReparent) {
+        if (other_table) {
+            flecs_unparent_name_index(world, table, other_table, row, count);
+        }
+        flecs_non_fragmenting_childof_unparent(
+            world, other_table, table, row, count);
     }
-    flecs_ordered_children_unparent(world, table, row, count);
-    flecs_non_fragmenting_childof_unparent(world, other_table, table, row, count);
+
+    if (diff_flags & EcsTableHasOrderedChildren) {
+        flecs_ordered_children_unparent(world, table, row, count);
+    }
 }
 
 bool flecs_sparse_on_add_cr(
@@ -402,7 +409,8 @@ void flecs_actions_on_remove_intern_w_reparent(
 
     if (diff_flags & (EcsTableEdgeReparent|EcsTableHasOrderedChildren)) {
         if (!other_table || !(other_table->flags & EcsTableHasChildOf)) {
-            flecs_on_unparent(world, table, other_table, row, count);
+            flecs_on_unparent(
+                world, table, other_table, row, count, diff_flags);
         }
     }
 
