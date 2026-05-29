@@ -1,7 +1,7 @@
 #include <setting_variables.h>
 #include <iostream>
 
-// This example extends the component_inheritance example, and shows how
+// This example extends the tag_inheritance example, and shows how
 // we can use a single query to match units from different players and platoons
 // by setting query variables before we iterate.
 //
@@ -27,7 +27,7 @@ static const int PlatoonsPerPlayer = 3;
 int main(int, char *[]) {
     flecs::world ecs;
 
-    // See component_inheritance example
+    // See tag_inheritance example
     ecs.component<CombatUnit>().is_a<Unit>();
     ecs.component<MeleeUnit>().is_a<CombatUnit>();
     ecs.component<RangedUnit>().is_a<CombatUnit>();
