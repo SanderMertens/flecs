@@ -722,6 +722,7 @@ void Sparse_defer_set_w_sparse_w_observer(void);
 void Sparse_defer_ensure_modified_w_sparse_w_observer(void);
 void Sparse_defer_remove_override(void);
 void Sparse_defer_remove_add_override(void);
+void Sparse_fini_w_dont_fragment_pair_prefab_exclusive_delete_with(void);
 
 // Testsuite 'NonFragmentingChildOf'
 void NonFragmentingChildOf_set_parent_no_ordered_children(void);
@@ -2632,6 +2633,9 @@ void Prefab_remove_all(void);
 void Prefab_delete_with(void);
 void Prefab_prefab_children_after_adding_prefab(void);
 void Prefab_add_base_w_exclusive_override(void);
+void Prefab_fini_w_prefab_child_exclusive_pair_delete_with(void);
+void Prefab_delete_with_component_used_by_prefab(void);
+void Prefab_delete_component_used_by_prefab(void);
 
 // Testsuite 'World'
 void World_setup(void);
@@ -6121,6 +6125,10 @@ bake_test_case Sparse_testcases[] = {
     {
         "defer_remove_add_override",
         Sparse_defer_remove_add_override
+    },
+    {
+        "fini_w_dont_fragment_pair_prefab_exclusive_delete_with",
+        Sparse_fini_w_dont_fragment_pair_prefab_exclusive_delete_with
     }
 };
 
@@ -13609,6 +13617,18 @@ bake_test_case Prefab_testcases[] = {
     {
         "add_base_w_exclusive_override",
         Prefab_add_base_w_exclusive_override
+    },
+    {
+        "fini_w_prefab_child_exclusive_pair_delete_with",
+        Prefab_fini_w_prefab_child_exclusive_pair_delete_with
+    },
+    {
+        "delete_with_component_used_by_prefab",
+        Prefab_delete_with_component_used_by_prefab
+    },
+    {
+        "delete_component_used_by_prefab",
+        Prefab_delete_component_used_by_prefab
     }
 };
 
@@ -16411,7 +16431,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         Sparse_setup,
         NULL,
-        228,
+        229,
         Sparse_testcases,
         1,
         Sparse_params
@@ -16581,7 +16601,7 @@ static bake_test_suite suites[] = {
         "Prefab",
         Prefab_setup,
         NULL,
-        198,
+        201,
         Prefab_testcases
     },
     {

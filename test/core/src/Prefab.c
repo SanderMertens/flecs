@@ -6370,6 +6370,7 @@ void Prefab_delete_with(void) {
 
     ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
     ecs_set(world, p, Position, {10, 20});
+    ecs_set_name(world, p, "p");
 
     ecs_entity_t c = ecs_new_w_pair(world, EcsChildOf, p);
     ecs_set(world, c, Position, {10, 20});
@@ -6438,6 +6439,67 @@ void Prefab_add_base_w_exclusive_override(void) {
     ecs_add_pair(world, i, EcsIsA, base);
 
     test_assert(ecs_has_pair(world, i, Rel, TgtB));
+
+    ecs_fini(world);
+}
+
+void Prefab_fini_w_prefab_child_exclusive_pair_delete_with(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Rel, Exclusive);
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t tgt = ecs_new(world);
+    ecs_entity_t parent = ecs_new(world);
+    ecs_entity_t prefab = ecs_new(world);
+
+    ecs_add_pair(world, prefab, Rel, tgt);
+    ecs_add_id(world, parent, Tag);
+    ecs_add_id(world, prefab, EcsPrefab);
+    ecs_add_pair(world, prefab, EcsChildOf, parent);
+
+    ecs_delete_with(world, Tag);
+
+    test_assert(true);
+
+    ecs_fini(world);
+}
+
+void Prefab_delete_with_component_used_by_prefab(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_entity_t prefab = ecs_new(world);
+    ecs_add_id(world, prefab, EcsPrefab);
+    ecs_add(world, prefab, Foo);
+
+    ecs_add_id(world, Foo, Bar);
+
+    ecs_delete_with(world, Bar);
+
+    test_assert(!ecs_is_alive(world, Foo));
+    test_assert(ecs_is_alive(world, prefab));
+    test_assert(!ecs_has(world, prefab, Foo));
+
+    ecs_fini(world);
+}
+
+void Prefab_delete_component_used_by_prefab(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t prefab = ecs_new(world);
+    ecs_add_id(world, prefab, EcsPrefab);
+    ecs_add(world, prefab, Foo);
+
+    ecs_delete(world, Foo);
+
+    test_assert(!ecs_is_alive(world, Foo));
+    test_assert(ecs_is_alive(world, prefab));
+    test_assert(!ecs_has(world, prefab, Foo));
 
     ecs_fini(world);
 }
