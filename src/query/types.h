@@ -356,6 +356,7 @@ typedef struct {
     int32_t cur;
     int32_t block_index;
     ecs_flags64_t block;
+    ecs_flags64_t or_fields;
     ecs_termset_t prev_set_fields;
     bool optional_not;
     bool has_bitset;
