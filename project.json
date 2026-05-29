@@ -4,8 +4,37 @@
     "value": {
         "author": "Sander Mertens",
         "description": "Entity Component System written in C99/C++17",
-        "amalgamate": true,
-        "amalgamate-path": "distr"
+        "amalgamate": [{
+            "path": "distr"
+        }, {
+            "path": "distr",
+            "prefix": "flecs_no_addons",
+            "disable-flags": [ 
+                "FLECS_ALERTS",
+                "FLECS_APP",
+                "FLECS_CPP",
+                "FLECS_DOC",
+                "FLECS_EXCLUSIVE_ACCESS",
+                "FLECS_JOURNAL",
+                "FLECS_JSON",
+                "FLECS_HTTP",
+                "FLECS_LOG",
+                "FLECS_META",
+                "FLECS_METRICS",
+                "FLECS_MODULE",
+                "FLECS_PERF_TRACE",
+                "FLECS_PIPELINE",
+                "FLECS_REST",
+                "FLECS_PARSER",
+                "FLECS_QUERY_DSL",
+                "FLECS_SCRIPT",
+                "FLECS_SCRIPT_MATH",
+                "FLECS_SYSTEM",
+                "FLECS_STATS",
+                "FLECS_TIMER",
+                "FLECS_UNITS"
+            ]
+        }]
     },
     "dependee": {
         "lang.c": {
