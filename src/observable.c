@@ -420,7 +420,6 @@ void flecs_emit_propagate(
     ecs_log_pop_3();
 }
 
-static
 void flecs_emit_propagate_invalidate_tables(
     ecs_world_t *world,
     ecs_component_record_t *tgt_cr)

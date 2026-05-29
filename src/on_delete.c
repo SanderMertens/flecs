@@ -224,6 +224,12 @@ void flecs_component_delete_non_fragmenting_childof(
         ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
 
         if ((r->row & EcsEntityIsTarget)) {
+            ecs_component_record_t *tgt_cr = flecs_components_get(
+                world, ecs_pair(EcsWildcard, e));
+            if (tgt_cr) {
+                flecs_emit_propagate_invalidate_tables(world, tgt_cr);
+            }
+
             ecs_component_record_t *child_cr = flecs_components_get(
                 world, ecs_childof(e));
             if (child_cr &&
