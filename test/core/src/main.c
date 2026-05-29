@@ -2314,6 +2314,7 @@ void Observer_cache_test_13(void);
 void Observer_cache_test_14(void);
 void Observer_cache_test_15(void);
 void Observer_cache_test_16(void);
+void Observer_cache_test_17(void);
 void Observer_multi_term_on_set_w_base_and_3_instances_in_different_tables(void);
 
 // Testsuite 'ObserverOnSet'
@@ -12374,6 +12375,10 @@ bake_test_case Observer_testcases[] = {
         Observer_cache_test_16
     },
     {
+        "cache_test_17",
+        Observer_cache_test_17
+    },
+    {
         "multi_term_on_set_w_base_and_3_instances_in_different_tables",
         Observer_multi_term_on_set_w_base_and_3_instances_in_different_tables
     }
@@ -16524,7 +16529,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        339,
+        340,
         Observer_testcases
     },
     {
