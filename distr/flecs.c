@@ -3352,6 +3352,9 @@ void flecs_spawner_instantiate(
     ecs_entity_t instance,
     const ecs_instantiate_ctx_t *ctx);
 
+void flecs_fini_tree_spawners(
+    ecs_world_t *world);
+
 #endif
 
 #ifndef FLECS_STAGE_H
@@ -20751,6 +20754,19 @@ void flecs_spawner_instantiate(
     }
 }
 
+void flecs_fini_tree_spawners(
+    ecs_world_t *world)
+{
+    ecs_iter_t it = ecs_each(world, EcsTreeSpawner);
+    while (ecs_each_next(&it)) {
+        EcsTreeSpawner *t = ecs_field(&it, EcsTreeSpawner, 0);
+        int32_t i;
+        for (i = 0; i < it.count; i ++) {
+            EcsTreeSpawner_free(&t[i]);
+        }
+    }
+}
+
 void flecs_bootstrap_spawner(
     ecs_world_t *world)
 {
@@ -23137,6 +23153,11 @@ int ecs_fini(
     ecs_log_push();
 
     world->flags |= EcsWorldQuit;
+
+    /* Tree spawners can keep tables alive, which can conflict with entity
+     * cleanup. Cleanup treespawners first before cleaning up other entities.
+     * This means that prefab spawning does not work during world cleanup. */
+    flecs_fini_tree_spawners(world);
 
     /* Delete root entities first using regular APIs. This ensures that cleanup
      * policies get a chance to execute. */
