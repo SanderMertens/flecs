@@ -17062,7 +17062,8 @@ void flecs_multi_observer_invoke(
         user_it.trs[pivot_field] = it->trs[0];
         user_it.sources[pivot_field] = it->sources[0];
         ECS_CONST_CAST(int16_t*, user_it.columns)[pivot_field] =
-            it->sources[0] ? -1 : it->columns[0];
+            (it->sources[0] || !(user_it.set_fields & (1llu << pivot_field)))
+                ? -1 : it->columns[0];
         user_it.term_index = pivot_term;
 
         user_it.ctx = o->ctx;
@@ -43195,10 +43196,10 @@ void flecs_table_register_inherited(
             world, ecs_table_record_t, old + n);
         ecs_os_memcpy_n(records, old_records, ecs_table_record_t, old);
 
-        ecs_table_record_t **inh = ecs_vec_first_t(
+        ecs_table_record_t **inherited_records = ecs_vec_first_t(
             &inherited, ecs_table_record_t*);
         for (i = 0; i < n; i ++) {
-            records[old + i] = *inh[i];
+            records[old + i] = *inherited_records[i];
         }
 
         table->_->records = records;
@@ -43210,7 +43211,7 @@ void flecs_table_register_inherited(
         }
 
         for (i = 0; i < n; i ++) {
-            flecs_wfree_t(world, ecs_table_record_t, inh[i]);
+            flecs_wfree_t(world, ecs_table_record_t, inherited_records[i]);
         }
 
         flecs_wfree_n(world, ecs_table_record_t, old, old_records);

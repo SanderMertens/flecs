@@ -2435,6 +2435,7 @@ void ObserverOnSet_remove_set_component_in_on_set(void);
 void ObserverOnSet_match_table_created_w_add_in_on_set(void);
 void ObserverOnSet_set_optional(void);
 void ObserverOnSet_set_optional_one_term(void);
+void ObserverOnSet_set_optional_one_term_16_bytes(void);
 void ObserverOnSet_set_from_nothing(void);
 void ObserverOnSet_add_0_entity_in_on_set(void);
 void ObserverOnSet_on_set_prefab(void);
@@ -12955,6 +12956,10 @@ bake_test_case ObserverOnSet_testcases[] = {
         ObserverOnSet_set_optional_one_term
     },
     {
+        "set_optional_one_term_16_bytes",
+        ObserverOnSet_set_optional_one_term_16_bytes
+    },
+    {
         "set_from_nothing",
         ObserverOnSet_set_from_nothing
     },
@@ -17068,7 +17073,7 @@ static bake_test_suite suites[] = {
         "ObserverOnSet",
         NULL,
         NULL,
-        27,
+        28,
         ObserverOnSet_testcases
     },
     {

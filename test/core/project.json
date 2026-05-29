@@ -2506,6 +2506,7 @@
                 "match_table_created_w_add_in_on_set",
                 "set_optional",
                 "set_optional_one_term",
+                "set_optional_one_term_16_bytes",
                 "set_from_nothing",
                 "add_0_entity_in_on_set",
                 "on_set_prefab"
