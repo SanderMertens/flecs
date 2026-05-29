@@ -751,7 +751,8 @@
                 "defer_set_w_sparse_w_observer",
                 "defer_ensure_modified_w_sparse_w_observer",
                 "defer_remove_override",
-                "defer_remove_add_override"
+                "defer_remove_add_override",
+                "fini_w_dont_fragment_pair_prefab_exclusive_delete_with"
             ]
         }, {
             "id": "NonFragmentingChildOf",
@@ -2710,7 +2711,10 @@
                 "remove_all",
                 "delete_with",
                 "prefab_children_after_adding_prefab",
-                "add_base_w_exclusive_override"
+                "add_base_w_exclusive_override",
+                "fini_w_prefab_child_exclusive_pair_delete_with",
+                "delete_with_component_used_by_prefab",
+                "delete_component_used_by_prefab"
             ]
         }, {
             "id": "World",
