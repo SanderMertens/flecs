@@ -129,6 +129,22 @@ clang++ my_project.o flecs.o -o my_project
 </ul>
 </div>
 
+### Customizing distr files
+The distr folder contains two sets of files: one that contains the entire source code ([distr/flecs.c](https://raw.githubusercontent.com/SanderMertens/flecs/master/distr/flecs.c), [distr/flecs.h](https://raw.githubusercontent.com/SanderMertens/flecs/master/distr/flecs.h)) and one that strips all addons ([distr/flecs_no_addons.c](https://raw.githubusercontent.com/SanderMertens/flecs/master/distr/flecs_no_addons.c), [distr/flecs_no_addons.h](https://raw.githubusercontent.com/SanderMertens/flecs/master/distr/flecs_no_addons.h)). 
+
+It is possible to customize which compile-time flags get disabled when generating a distr build. In order to do this, add an `amalgamate` configuration to [project.json](project.json), and rerun bake on the repository. The following is an example of a configuration that generates a configuration without the C++ addon:
+
+```json
+// Add to "amalgamate": []
+{
+    "path": "distr",
+    "prefix": "flecs_no_cpp",
+    "disable-flags": [ 
+        "FLECS_CPP"
+    ]
+}
+```
+
 ### Build as shared library
 To build the [distr/flecs.c](https://raw.githubusercontent.com/SanderMertens/flecs/master/distr/flecs.c) and [distr/flecs.h](https://raw.githubusercontent.com/SanderMertens/flecs/master/distr/flecs.h) files as a shared library, remove this line from the top of `flecs.h`:
 
