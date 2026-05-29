@@ -199,6 +199,10 @@ void flecs_table_init_data(
 {
     flecs_table_init_columns(world, table, table->column_count);
 
+#ifdef FLECS_MUT_ALIAS_LOCKS
+    flecs_table_init_column_locks(world, table,ecs_get_stage_count(world));
+#endif
+
     ecs_table__t *meta = table->_;
     int32_t i, bs_count = meta->bs_count;
 
@@ -1195,6 +1199,14 @@ void flecs_table_fini_data(
 
             flecs_wfree_n(world, ecs_column_t, table->column_count, columns);
             table->data.columns = NULL;
+
+        #ifdef FLECS_MUT_ALIAS_LOCKS
+            if(table->column_lock)
+            {
+                flecs_wfree_n(world, int32_t, ecs_get_stage_count(world) * column_count, table->column_lock);
+                table->column_lock = NULL;
+            }
+        #endif
         }
     }
 
