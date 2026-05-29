@@ -201,6 +201,7 @@ void StructTypes_inherit_base_member_type_change(void);
 void StructTypes_inherit_explicit_offset_fails(void);
 void StructTypes_inherit_base_redefined_fewer_members(void);
 void StructTypes_redefine_fewer_members(void);
+void StructTypes_member_w_type_not_alive(void);
 
 // Testsuite 'NestedStructTypes'
 void NestedStructTypes_1_bool(void);
@@ -1978,6 +1979,10 @@ bake_test_case StructTypes_testcases[] = {
     {
         "redefine_fewer_members",
         StructTypes_redefine_fewer_members
+    },
+    {
+        "member_w_type_not_alive",
+        StructTypes_member_w_type_not_alive
     }
 };
 
@@ -6036,7 +6041,7 @@ static bake_test_suite suites[] = {
         "StructTypes",
         NULL,
         NULL,
-        51,
+        52,
         StructTypes_testcases
     },
     {

@@ -1676,6 +1676,27 @@ void StructTypes_inherit_base_redefined_fewer_members(void) {
     ecs_fini(world);
 }
 
+void StructTypes_member_w_type_not_alive(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+
+    ecs_entity_t not_alive = ecs_new(world);
+    ecs_delete(world, not_alive);
+    test_assert(!ecs_is_alive(world, not_alive));
+
+    ecs_entity_t s = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "S"}),
+        .members = {
+            {"x", not_alive}
+        }
+    });
+
+    test_assert(s == 0);
+
+    ecs_fini(world);
+}
+
 void StructTypes_redefine_fewer_members(void) {
     ecs_world_t *world = ecs_init();
 

@@ -213,7 +213,8 @@
                 "inherit_base_member_type_change",
                 "inherit_explicit_offset_fails",
                 "inherit_base_redefined_fewer_members",
-                "redefine_fewer_members"
+                "redefine_fewer_members",
+                "member_w_type_not_alive"
             ]
         }, {
             "id": "NestedStructTypes",
