@@ -1114,6 +1114,11 @@ void flecs_ordered_entities_append(
     ecs_component_record_t *cr,
     ecs_entity_t e);
 
+/* Promote ordered children storage to track prefab children. */
+void flecs_ordered_children_set_prefab(
+    ecs_world_t *world,
+    ecs_component_record_t *cr);
+
 /* Directly remove child from ordered children array. */
 void flecs_ordered_entities_remove(
     ecs_world_t *world,
@@ -4617,7 +4622,13 @@ void flecs_on_add_prefab(ecs_iter_t *it) {
 
     for (int32_t i = 0; i < it->count; i ++) {
         ecs_entity_t p = it->entities[i];
-        
+
+        ecs_component_record_t *cr = flecs_components_get(
+            world, ecs_childof(p));
+        if (cr && (cr->flags & EcsIdOrderedChildren)) {
+            flecs_ordered_children_set_prefab(world, cr);
+        }
+
         ecs_iter_t cit = ecs_children(world, p);
         while (ecs_children_next(&cit)) {
             for (int32_t j = 0; j < cit.count; j ++) {
@@ -41407,6 +41418,28 @@ void flecs_ordered_entities_append(
         ecs_assert(
             !ecs_owns_id(world, ecs_pair_second(world, cr->id), EcsPrefab),
             ECS_INTERNAL_ERROR, NULL);
+    }
+}
+
+void flecs_ordered_children_set_prefab(
+    ecs_world_t *world,
+    ecs_component_record_t *cr)
+{
+    ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(cr->pair != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    if (cr->flags & EcsIdPrefabChildren) {
+        return;
+    }
+
+    cr->flags |= EcsIdPrefabChildren;
+
+    ecs_vec_t *vec = &cr->pair->ordered_children;
+    int32_t i, count = ecs_vec_count(vec);
+    ecs_entity_t *entities = ecs_vec_first_t(vec, ecs_entity_t);
+    for (i = 0; i < count; i ++) {
+        ecs_map_ensure(&world->prefab_child_indices, entities[i])[0] =
+            flecs_ito(uint64_t, i);
     }
 }
 

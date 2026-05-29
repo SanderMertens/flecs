@@ -83,6 +83,28 @@ void flecs_ordered_entities_append(
     }
 }
 
+void flecs_ordered_children_set_prefab(
+    ecs_world_t *world,
+    ecs_component_record_t *cr)
+{
+    ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(cr->pair != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    if (cr->flags & EcsIdPrefabChildren) {
+        return;
+    }
+
+    cr->flags |= EcsIdPrefabChildren;
+
+    ecs_vec_t *vec = &cr->pair->ordered_children;
+    int32_t i, count = ecs_vec_count(vec);
+    ecs_entity_t *entities = ecs_vec_first_t(vec, ecs_entity_t);
+    for (i = 0; i < count; i ++) {
+        ecs_map_ensure(&world->prefab_child_indices, entities[i])[0] =
+            flecs_ito(uint64_t, i);
+    }
+}
+
 void flecs_ordered_entities_remove(
     ecs_world_t *world,
     ecs_component_record_t *cr,

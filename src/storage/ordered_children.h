@@ -53,6 +53,11 @@ void flecs_ordered_entities_append(
     ecs_component_record_t *cr,
     ecs_entity_t e);
 
+/* Promote ordered children storage to track prefab children. */
+void flecs_ordered_children_set_prefab(
+    ecs_world_t *world,
+    ecs_component_record_t *cr);
+
 /* Directly remove child from ordered children array. */
 void flecs_ordered_entities_remove(
     ecs_world_t *world,
