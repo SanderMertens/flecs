@@ -6774,3 +6774,30 @@ void NonFragmentingChildOf_defer_reparent_mixed_childof(void) {
 
     ecs_fini(world);
 }
+
+void NonFragmentingChildOf_prefab_parent_w_mixed_childof(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_entity_t child_a = ecs_new(world);
+    ecs_entity_t child_b = ecs_new(world);
+
+    ecs_set(world, child_b, EcsParent, {parent});
+    ecs_add_id(world, parent, EcsPrefab);
+    ecs_add_pair(world, child_a, EcsChildOf, parent);
+
+    test_assert(ecs_has_id(world, child_a, EcsPrefab));
+    test_assert(ecs_has_id(world, child_b, EcsPrefab));
+
+    ecs_entity_t instance = ecs_new_w_pair(world, EcsIsA, parent);
+    test_assert(instance != 0);
+
+    {
+        ecs_entity_t i_b = ecs_get_target(world, instance, child_b, 0);
+        test_assert(i_b != 0);
+        test_assert(ecs_has_pair(world, i_b, EcsIsA, child_b));
+        test_assert(ecs_get_parent(world, i_b) == instance);
+    }
+
+    ecs_fini(world);
+}

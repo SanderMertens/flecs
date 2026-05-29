@@ -591,7 +591,13 @@ void flecs_on_add_prefab(ecs_iter_t *it) {
 
     for (int32_t i = 0; i < it->count; i ++) {
         ecs_entity_t p = it->entities[i];
-        
+
+        ecs_component_record_t *cr = flecs_components_get(
+            world, ecs_childof(p));
+        if (cr && (cr->flags & EcsIdOrderedChildren)) {
+            flecs_ordered_children_set_prefab(world, cr);
+        }
+
         ecs_iter_t cit = ecs_children(world, p);
         while (ecs_children_next(&cit)) {
             for (int32_t j = 0; j < cit.count; j ++) {
