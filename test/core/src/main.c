@@ -969,6 +969,9 @@ void NonFragmentingChildOf_defer_add_prefab_tag_after_hierarchy_creation(void);
 void NonFragmentingChildOf_add_prefab_tag_after_hierarchy_creation_2(void);
 void NonFragmentingChildOf_defer_add_prefab_tag_after_hierarchy_creation_2(void);
 void NonFragmentingChildOf_defer_set_parent_and_remove_tag(void);
+void NonFragmentingChildOf_defer_set_parent_to_deleted_entity(void);
+void NonFragmentingChildOf_defer_reparent_to_deleted_entity_w_sparse(void);
+void NonFragmentingChildOf_set_parent_to_deleted_entity_w_ordered_child(void);
 
 // Testsuite 'Hierarchies'
 void Hierarchies_setup(void);
@@ -7092,6 +7095,18 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "defer_set_parent_and_remove_tag",
         NonFragmentingChildOf_defer_set_parent_and_remove_tag
+    },
+    {
+        "defer_set_parent_to_deleted_entity",
+        NonFragmentingChildOf_defer_set_parent_to_deleted_entity
+    },
+    {
+        "defer_reparent_to_deleted_entity_w_sparse",
+        NonFragmentingChildOf_defer_reparent_to_deleted_entity_w_sparse
+    },
+    {
+        "set_parent_to_deleted_entity_w_ordered_child",
+        NonFragmentingChildOf_set_parent_to_deleted_entity_w_ordered_child
     }
 };
 
@@ -16360,7 +16375,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NULL,
         NULL,
-        245,
+        248,
         NonFragmentingChildOf_testcases
     },
     {
