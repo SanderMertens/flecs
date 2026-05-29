@@ -6718,3 +6718,38 @@ void NonFragmentingChildOf_fini_w_mixed_childof_different_parents(void) {
 
     ecs_fini(world);
 }
+
+void NonFragmentingChildOf_fini_w_ordered_child_w_up_traversable(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t rel = ecs_new(world);
+    ecs_add_id(world, rel, EcsTraversable);
+    ecs_add_pair(world, rel, EcsOnInstantiate, EcsInherit);
+
+    ecs_entity_t grandparent = ecs_new(world);
+    ecs_entity_t parent = ecs_new(world);
+    ecs_entity_t other = ecs_new(world);
+    ecs_entity_t child = ecs_new(world);
+
+    ecs_add_pair(world, other, rel, grandparent);
+    ecs_add_pair(world, child, EcsChildOf, parent);
+    ecs_add_id(world, parent, EcsOrderedChildren);
+    ecs_set(world, parent, EcsParent, {grandparent});
+
+    test_assert(ecs_get_parent(world, parent) == grandparent);
+    test_assert(ecs_get_parent(world, child) == parent);
+
+    ecs_entities_t children = ecs_get_ordered_children(world, parent);
+    test_int(1, children.count);
+    test_uint(child, children.ids[0]);
+
+    ecs_delete(world, grandparent);
+
+    test_assert(!ecs_is_alive(world, grandparent));
+    test_assert(!ecs_is_alive(world, parent));
+    test_assert(!ecs_is_alive(world, child));
+    test_assert(ecs_is_alive(world, other));
+    test_assert(!ecs_has_pair(world, other, rel, grandparent));
+
+    ecs_fini(world);
+}

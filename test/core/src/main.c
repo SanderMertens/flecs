@@ -977,6 +977,7 @@ void NonFragmentingChildOf_fini_delete_component_of_prefab_child(void);
 void NonFragmentingChildOf_delete_pair_of_prefab_child(void);
 void NonFragmentingChildOf_fini_delete_pair_of_prefab_child(void);
 void NonFragmentingChildOf_fini_w_mixed_childof_different_parents(void);
+void NonFragmentingChildOf_fini_w_ordered_child_w_up_traversable(void);
 
 // Testsuite 'Hierarchies'
 void Hierarchies_setup(void);
@@ -7132,6 +7133,10 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "fini_w_mixed_childof_different_parents",
         NonFragmentingChildOf_fini_w_mixed_childof_different_parents
+    },
+    {
+        "fini_w_ordered_child_w_up_traversable",
+        NonFragmentingChildOf_fini_w_ordered_child_w_up_traversable
     }
 };
 
@@ -16400,7 +16405,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NULL,
         NULL,
-        253,
+        254,
         NonFragmentingChildOf_testcases
     },
     {
