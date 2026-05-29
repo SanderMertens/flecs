@@ -40149,7 +40149,10 @@ void flecs_entities_update_childof_depth(
         int32_t i, count = ecs_vec_count(&cr->pair->ordered_children);
         for (i = 0; i < count; i ++) {
             ecs_entity_t tgt = entities[i];
-            ecs_record_t *r = flecs_entities_get(world, tgt);
+            ecs_record_t *r = flecs_entities_try(world, tgt);
+            if (!r) {
+                continue;
+            }
             ecs_table_t *table = r->table;
 
             if (table->flags & EcsTableHasParent) {
