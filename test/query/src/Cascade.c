@@ -1913,3 +1913,102 @@ void Cascade_parent_component_n_parents_for_depth_after_query(void) {
 
     ecs_fini(world);
 }
+
+void Cascade_cascade_optional_change_detection_after_remove(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t root = ecs_entity(world, { .name = "root" });
+    ecs_set(world, root, Position, {10, 20});
+
+    ecs_entity_t child = ecs_entity(world, { .name = "child" });
+    ecs_add_pair(world, child, EcsChildOf, root);
+    ecs_set(world, child, Velocity, {1, 2});
+    ecs_set(world, child, Position, {30, 40});
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { .id = ecs_id(Position), .inout = EcsOut },
+            { .id = ecs_id(Position), .src.id = EcsCascade, .oper = EcsOptional, .inout = EcsIn },
+            { .id = ecs_id(Velocity), .oper = EcsOptional, .inout = EcsInOut },
+        },
+        .flags = EcsQueryDetectChanges,
+    });
+    test_assert(q != NULL);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(root, it.entities[0]);
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
+        test_bool(false, ecs_field_is_set(&it, 2));
+        test_bool(true, ecs_iter_changed(&it));
+
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(child, it.entities[0]);
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(root, it.sources[1]);
+        test_bool(true, ecs_field_is_set(&it, 2));
+        test_bool(true, ecs_iter_changed(&it));
+
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_remove(world, root, Position);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(child, it.entities[0]);
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
+        test_uint(0, it.sources[1]);
+        test_bool(true, ecs_field_is_set(&it, 2));
+
+        Position *p = ecs_field(&it, Position, 0);
+        test_assert(p != NULL);
+        test_int(p->x, 30); test_int(p->y, 40);
+        Velocity *v = ecs_field(&it, Velocity, 2);
+        test_assert(v != NULL);
+        test_int(v->x, 1); test_int(v->y, 2);
+
+        test_bool(false, ecs_iter_changed(&it));
+
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+
+        test_bool(true, ecs_query_next(&it));
+        test_uint(child, it.entities[0]);
+        test_bool(false, ecs_iter_changed(&it));
+
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_set(world, child, Velocity, {3, 4});
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+
+        test_bool(true, ecs_query_next(&it));
+        test_uint(child, it.entities[0]);
+        test_bool(true, ecs_iter_changed(&it));
+
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
