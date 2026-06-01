@@ -618,6 +618,9 @@ void flecs_query_sync_match_monitor(
             }
 
             flecs_query_get_column_for_field(q, match, field, &tc);
+            if (!tc.table) {
+                continue;
+            }
 
             /* Query for cache should never point to stage */
             ecs_assert(q->world == q->real_world, ECS_INTERNAL_ERROR, NULL);
