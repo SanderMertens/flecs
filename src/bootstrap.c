@@ -444,7 +444,7 @@ void flecs_register_singleton(ecs_iter_t *it) {
 #ifdef FLECS_DEBUG
         ecs_observer(world, {
             .entity = ecs_entity(world, {
-                .name = "SingletonSelfAdd", .parent = component
+                .name = "debug_only_SingletonInvariantCheck", .parent = component
             }),
             .query.terms[0] = {
                 .id = component, .src.id = EcsThis|EcsSelf
@@ -455,7 +455,7 @@ void flecs_register_singleton(ecs_iter_t *it) {
 
         ecs_observer(world, {
             .entity = ecs_entity(world, {
-                .name = "SingletonPairSelfAdd", .parent = component
+                .name = "debug_only_SingletonPairInvariantCheck", .parent = component
             }),
             .query.terms[0] = {
                 .id = ecs_pair(component, EcsWildcard), .src.id = EcsThis|EcsSelf
