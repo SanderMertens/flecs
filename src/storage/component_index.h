@@ -97,6 +97,13 @@ struct ecs_component_record_t {
     int32_t refcount;
 };
 
+/* Iterator over all component records in the world */
+typedef struct ecs_components_iter_t {
+    int32_t lo;
+    bool hi;
+    ecs_map_iter_t map_it;
+} ecs_components_iter_t;
+
 /* Bootstrap cached id records */
 void flecs_components_init(
     ecs_world_t *world);
@@ -137,6 +144,11 @@ ecs_component_record_t* flecs_component_second_next(
 /* Return next traversable (*, T) record */
 ecs_component_record_t* flecs_component_trav_next(
     ecs_component_record_t *cr);
+
+/* Return next component record, or NULL when iteration is done. */
+ecs_component_record_t* flecs_components_next(
+    const ecs_world_t *world,
+    ecs_components_iter_t *it);
 
 /* Ensure name index for component record */
 ecs_hashmap_t* flecs_component_name_index_ensure(

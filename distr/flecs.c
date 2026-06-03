@@ -506,6 +506,13 @@ struct ecs_component_record_t {
     int32_t refcount;
 };
 
+/* Iterator over all component records in the world */
+typedef struct ecs_components_iter_t {
+    int32_t lo;
+    bool hi;
+    ecs_map_iter_t map_it;
+} ecs_components_iter_t;
+
 /* Bootstrap cached id records */
 void flecs_components_init(
     ecs_world_t *world);
@@ -546,6 +553,11 @@ ecs_component_record_t* flecs_component_second_next(
 /* Return next traversable (*, T) record */
 ecs_component_record_t* flecs_component_trav_next(
     ecs_component_record_t *cr);
+
+/* Return next component record, or NULL when iteration is done. */
+ecs_component_record_t* flecs_components_next(
+    const ecs_world_t *world,
+    ecs_components_iter_t *it);
 
 /* Ensure name index for component record */
 ecs_hashmap_t* flecs_component_name_index_ensure(
@@ -1237,6 +1249,7 @@ typedef enum {
     EcsQueryIds,            /* Test for existence of ids matching wildcard */
     EcsQueryIdsRight,       /* Find ids in use that match (R, *) wildcard */
     EcsQueryIdsLeft,        /* Find ids in use that match (*, T) wildcard */
+    EcsQueryIdsAll,         /* Find all non-pair ids in use that match (*) */
     EcsQueryEach,           /* Iterate entities in table, populate entity variable */
     EcsQueryStore,          /* Store table or entity in variable */
     EcsQueryReset,          /* Reset value of variable to wildcard (*) */
@@ -1497,6 +1510,7 @@ typedef struct {
 /* Ids context */
 typedef struct {
     ecs_component_record_t *cur;
+    ecs_components_iter_t components_it;
 } ecs_query_ids_ctx_t;
 
 /* Control flow context */
@@ -36347,6 +36361,7 @@ const char* flecs_query_op_str(
     case EcsQueryIds:            return "ids         ";
     case EcsQueryIdsRight:       return "idsr        ";
     case EcsQueryIdsLeft:        return "idsl        ";
+    case EcsQueryIdsAll:         return "idsa        ";
     case EcsQueryEach:           return "each        ";
     case EcsQueryStore:          return "store       ";
     case EcsQueryReset:          return "reset       ";
@@ -40134,6 +40149,29 @@ ecs_component_record_t* flecs_component_trav_next(
 {
     ecs_assert(cr->pair != NULL, ECS_INTERNAL_ERROR, NULL);
     return cr->pair->trav.next;
+}
+
+ecs_component_record_t* flecs_components_next(
+    const ecs_world_t *world,
+    ecs_components_iter_t *it)
+{
+    if (!it->hi) {
+        while (it->lo < FLECS_HI_ID_RECORD_ID) {
+            ecs_component_record_t *cur = world->id_index_lo[it->lo ++];
+            if (cur) {
+                return cur;
+            }
+        }
+
+        it->hi = true;
+        it->map_it = ecs_map_iter(&world->id_index_hi);
+    }
+
+    if (!ecs_map_next(&it->map_it)) {
+        return NULL;
+    }
+
+    return ecs_map_ptr(&it->map_it);
 }
 
 bool flecs_component_iter(
@@ -82449,13 +82487,28 @@ int flecs_query_compile_term(
         /* Use up-to-date written values after potentially inserting each */
         if (!first_written || !second_written) {
             if (!first_written) {
-                /* If first is unknown, traverse left: <- (*, t) */
+                ecs_entity_t tgt = ECS_PAIR_SECOND(term->id);
                 if (ECS_TERM_REF_ID(&term->first) != EcsAny) {
-                    op.kind = EcsQueryIdsLeft;
+                    /* First is enumerable (variable or wildcard) */
+                    if (ECS_IS_PAIR(term->id) &&
+                        tgt != EcsWildcard && tgt != EcsAny)
+                    {
+                        /* If target is known, traverse left: <- (*, t) */
+                        op.kind = EcsQueryIdsLeft;
+                    } else {
+                        /* Find all ids in use that match the wildcard. */
+                        op.kind = EcsQueryIdsAll;
+                    }
+                } else if (ECS_IS_PAIR(term->id) && tgt == EcsWildcard) {
+                    /* First is Any (_) and target is enumerable: find all
+                     * targets in use that match (*, t). */
+                    op.kind = EcsQueryIdsAll;
                 }
             } else {
                 /* If second is wildcard, traverse right: (r, *) -> */
-                if (ECS_TERM_REF_ID(&term->second) != EcsAny) {
+                if (ECS_TERM_REF_ID(&term->second) != EcsAny &&
+                    ECS_IS_PAIR(term->id))
+                {
                     op.kind = EcsQueryIdsRight;
                 }
             }
@@ -83274,6 +83327,30 @@ bool flecs_query_ids_check(
 }
 
 static
+bool flecs_query_ids_in_use(
+    ecs_component_record_t *cur)
+{
+    ecs_table_cache_iter_t it;
+    flecs_table_cache_iter(&cur->cache, &it);
+    if (flecs_table_cache_next(&it, ecs_table_record_t)) {
+        return true;
+    }
+
+    if (cur->sparse && flecs_sparse_count(cur->sparse)) {
+        return true;
+    }
+
+    if (cur->flags & EcsIdOrderedChildren) {
+        ecs_assert(cur->pair != NULL, ECS_INTERNAL_ERROR, NULL);
+        if (ecs_vec_count(&cur->pair->ordered_children)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+static
 bool flecs_query_ids(
     const ecs_query_op_t *op,
     bool redo,
@@ -83346,7 +83423,7 @@ bool flecs_query_idsright(
 next:
     do {
         cur = op_ctx->cur = flecs_component_first_next(op_ctx->cur);
-    } while (cur && !flecs_query_ids_check(cur)); /* Skip empty ids */
+    } while (cur && !flecs_query_ids_in_use(cur)); /* Skip empty ids */
 
     if (!cur) {
         return false;
@@ -83402,7 +83479,7 @@ bool flecs_query_idsleft(
 
     do {
         cur = op_ctx->cur = flecs_component_second_next(op_ctx->cur);
-    } while (cur && !cur->cache.tables.count); /* Skip empty ids */ 
+    } while (cur && !flecs_query_ids_in_use(cur)); /* Skip empty ids */
 
     if (!cur) {
         return false;
@@ -83414,6 +83491,89 @@ bool flecs_query_idsleft(
         ecs_iter_t *it = ctx->it;
         ecs_id_t id = flecs_query_op_get_id_w_written(op, op->written, ctx);
         it->ids[op->field_index] = id;
+        it->sources[op->field_index] = EcsWildcard;
+        ECS_CONST_CAST(int16_t*, it->columns)[op->field_index] = -1;
+        ECS_TERMSET_SET(it->set_fields, 1u << op->field_index);
+    }
+
+    return true;
+}
+
+static
+bool flecs_query_idsall_match(
+    ecs_component_record_t *cur,
+    bool want_pair,
+    bool collapse_first,
+    bool collapse_second)
+{
+    ecs_id_t id = cur->id;
+
+    if (!flecs_query_ids_in_use(cur)) {
+        return false;
+    }
+
+    if (ECS_IS_PAIR(id) != want_pair) {
+        return false;
+    }
+
+    if (!want_pair) {
+        return !ecs_id_is_wildcard(id);
+    }
+
+    if (id == ecs_pair(EcsChildOf, 0)) {
+        return false;
+    }
+
+    /* An Any element (_) is collapsed to the (R, *) or (*, T) wildcard record,
+     * a variable or wildcard element is enumerated as a concrete id. */
+    bool first_wildcard = ECS_PAIR_FIRST(id) == EcsWildcard;
+    bool second_wildcard = ECS_PAIR_SECOND(id) == EcsWildcard;
+
+    if (collapse_first != first_wildcard) {
+        return false;
+    }
+
+    if (collapse_second != second_wildcard) {
+        return false;
+    }
+
+    return true;
+}
+
+static
+bool flecs_query_idsall(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx)
+{
+    ecs_query_ids_ctx_t *op_ctx = flecs_op_ctx(ctx, ids);
+    ecs_iter_t *it = ctx->it;
+    ecs_component_record_t *cur;
+
+    bool want_pair = ECS_IS_PAIR(flecs_query_op_get_id(op, ctx));
+    bool collapse_first = false, collapse_second = false;
+    if (want_pair) {
+        const ecs_term_t *term = &ctx->query->pub.terms[op->term_index];
+        collapse_first = ECS_TERM_REF_ID(&term->first) == EcsAny;
+        collapse_second = ECS_TERM_REF_ID(&term->second) == EcsAny;
+    }
+
+    if (!redo) {
+        op_ctx->components_it = (ecs_components_iter_t){0};
+    }
+
+    do {
+        cur = flecs_components_next(ctx->world, &op_ctx->components_it);
+        if (!cur) {
+            return false;
+        }
+    } while (!flecs_query_idsall_match(
+        cur, want_pair, collapse_first, collapse_second));
+
+    flecs_query_set_vars(op, cur->id, ctx);
+
+    if (op->field_index != -1) {
+        it->ids[op->field_index] = cur->id;
         it->sources[op->field_index] = EcsWildcard;
         ECS_CONST_CAST(int16_t*, it->columns)[op->field_index] = -1;
         ECS_TERMSET_SET(it->set_fields, 1u << op->field_index);
@@ -84108,6 +84268,7 @@ bool flecs_query_dispatch(
     case EcsQueryIds: return flecs_query_ids(op, redo, ctx);
     case EcsQueryIdsRight: return flecs_query_idsright(op, redo, ctx);
     case EcsQueryIdsLeft: return flecs_query_idsleft(op, redo, ctx);
+    case EcsQueryIdsAll: return flecs_query_idsall(op, redo, ctx);
     case EcsQueryEach: return flecs_query_each(op, redo, ctx);
     case EcsQueryStore: return flecs_query_store(op, redo, ctx);
     case EcsQueryReset: return flecs_query_reset(op, redo, ctx);

@@ -817,6 +817,14 @@ void Plan_populate_2_var_up_2_fixed(void);
 void Plan_cache_2_or(void);
 void Plan_cache_2_or_w_not(void);
 void Plan_1_plan_any_src(void);
+void Plan_1_plan_any_src_first_var(void);
+void Plan_1_plan_any_src_first_var_any_tgt(void);
+void Plan_1_plan_any_src_first_var_fixed_tgt(void);
+void Plan_1_plan_any_src_first_var_wildcard_tgt(void);
+void Plan_1_plan_any_src_first_var_var_tgt(void);
+void Plan_1_plan_any_src_fixed_first_var_tgt(void);
+void Plan_1_plan_any_src_any_first_var_tgt(void);
+void Plan_1_plan_any_src_wildcard_first_var_tgt(void);
 void Plan_1_plan_not_any_src(void);
 void Plan_1_plan_optional_any_src(void);
 void Plan_pair_first_wildcard(void);
@@ -1059,6 +1067,26 @@ void Variables_recycled_vars(void);
 void Variables_recycled_pair_vars(void);
 void Variables_recycled_this_ent_var(void);
 void Variables_has_recycled_id_from_pair(void);
+void Variables_first_var_any_src(void);
+void Variables_first_var_any_src_pair_fixed_tgt(void);
+void Variables_first_var_any_src_pair_wildcard_tgt(void);
+void Variables_first_var_any_src_pair_any_tgt(void);
+void Variables_first_var_any_src_pair_var_tgt(void);
+void Variables_first_var_any_src_sparse(void);
+void Variables_first_var_any_src_pair_sparse(void);
+void Variables_first_fixed_any_src_pair_var_tgt(void);
+void Variables_first_any_any_src_pair_var_tgt(void);
+void Variables_first_wildcard_any_src_pair_var_tgt(void);
+void Variables_first_fixed_any_src_pair_var_tgt_dont_fragment(void);
+void Variables_first_var_any_src_pair_fixed_tgt_dont_fragment(void);
+void Variables_first_fixed_any_src_pair_wildcard_tgt(void);
+void Variables_first_wildcard_any_src_pair_fixed_tgt(void);
+void Variables_first_any_any_src_pair_wildcard_tgt(void);
+void Variables_first_fixed_any_src_pair_any_tgt(void);
+void Variables_first_any_any_src_pair_any_tgt(void);
+void Variables_first_wildcard_any_src(void);
+void Variables_first_var_any_src_w_constrained_var(void);
+void Variables_first_var_any_src_pair_constrained_tgt(void);
 
 // Testsuite 'Operators'
 void Operators_setup(void);
@@ -6000,6 +6028,38 @@ bake_test_case Plan_testcases[] = {
         Plan_1_plan_any_src
     },
     {
+        "1_plan_any_src_first_var",
+        Plan_1_plan_any_src_first_var
+    },
+    {
+        "1_plan_any_src_first_var_any_tgt",
+        Plan_1_plan_any_src_first_var_any_tgt
+    },
+    {
+        "1_plan_any_src_first_var_fixed_tgt",
+        Plan_1_plan_any_src_first_var_fixed_tgt
+    },
+    {
+        "1_plan_any_src_first_var_wildcard_tgt",
+        Plan_1_plan_any_src_first_var_wildcard_tgt
+    },
+    {
+        "1_plan_any_src_first_var_var_tgt",
+        Plan_1_plan_any_src_first_var_var_tgt
+    },
+    {
+        "1_plan_any_src_fixed_first_var_tgt",
+        Plan_1_plan_any_src_fixed_first_var_tgt
+    },
+    {
+        "1_plan_any_src_any_first_var_tgt",
+        Plan_1_plan_any_src_any_first_var_tgt
+    },
+    {
+        "1_plan_any_src_wildcard_first_var_tgt",
+        Plan_1_plan_any_src_wildcard_first_var_tgt
+    },
+    {
         "1_plan_not_any_src",
         Plan_1_plan_not_any_src
     },
@@ -6957,6 +7017,86 @@ bake_test_case Variables_testcases[] = {
     {
         "has_recycled_id_from_pair",
         Variables_has_recycled_id_from_pair
+    },
+    {
+        "first_var_any_src",
+        Variables_first_var_any_src
+    },
+    {
+        "first_var_any_src_pair_fixed_tgt",
+        Variables_first_var_any_src_pair_fixed_tgt
+    },
+    {
+        "first_var_any_src_pair_wildcard_tgt",
+        Variables_first_var_any_src_pair_wildcard_tgt
+    },
+    {
+        "first_var_any_src_pair_any_tgt",
+        Variables_first_var_any_src_pair_any_tgt
+    },
+    {
+        "first_var_any_src_pair_var_tgt",
+        Variables_first_var_any_src_pair_var_tgt
+    },
+    {
+        "first_var_any_src_sparse",
+        Variables_first_var_any_src_sparse
+    },
+    {
+        "first_var_any_src_pair_sparse",
+        Variables_first_var_any_src_pair_sparse
+    },
+    {
+        "first_fixed_any_src_pair_var_tgt",
+        Variables_first_fixed_any_src_pair_var_tgt
+    },
+    {
+        "first_any_any_src_pair_var_tgt",
+        Variables_first_any_any_src_pair_var_tgt
+    },
+    {
+        "first_wildcard_any_src_pair_var_tgt",
+        Variables_first_wildcard_any_src_pair_var_tgt
+    },
+    {
+        "first_fixed_any_src_pair_var_tgt_dont_fragment",
+        Variables_first_fixed_any_src_pair_var_tgt_dont_fragment
+    },
+    {
+        "first_var_any_src_pair_fixed_tgt_dont_fragment",
+        Variables_first_var_any_src_pair_fixed_tgt_dont_fragment
+    },
+    {
+        "first_fixed_any_src_pair_wildcard_tgt",
+        Variables_first_fixed_any_src_pair_wildcard_tgt
+    },
+    {
+        "first_wildcard_any_src_pair_fixed_tgt",
+        Variables_first_wildcard_any_src_pair_fixed_tgt
+    },
+    {
+        "first_any_any_src_pair_wildcard_tgt",
+        Variables_first_any_any_src_pair_wildcard_tgt
+    },
+    {
+        "first_fixed_any_src_pair_any_tgt",
+        Variables_first_fixed_any_src_pair_any_tgt
+    },
+    {
+        "first_any_any_src_pair_any_tgt",
+        Variables_first_any_any_src_pair_any_tgt
+    },
+    {
+        "first_wildcard_any_src",
+        Variables_first_wildcard_any_src
+    },
+    {
+        "first_var_any_src_w_constrained_var",
+        Variables_first_var_any_src_w_constrained_var
+    },
+    {
+        "first_var_any_src_pair_constrained_tgt",
+        Variables_first_var_any_src_pair_constrained_tgt
     }
 };
 
@@ -13916,14 +14056,14 @@ static bake_test_suite suites[] = {
         "Plan",
         NULL,
         NULL,
-        106,
+        114,
         Plan_testcases
     },
     {
         "Variables",
         Variables_setup,
         NULL,
-        202,
+        222,
         Variables_testcases,
         1,
         Variables_params

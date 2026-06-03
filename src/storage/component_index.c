@@ -1077,6 +1077,29 @@ ecs_component_record_t* flecs_component_trav_next(
     return cr->pair->trav.next;
 }
 
+ecs_component_record_t* flecs_components_next(
+    const ecs_world_t *world,
+    ecs_components_iter_t *it)
+{
+    if (!it->hi) {
+        while (it->lo < FLECS_HI_ID_RECORD_ID) {
+            ecs_component_record_t *cur = world->id_index_lo[it->lo ++];
+            if (cur) {
+                return cur;
+            }
+        }
+
+        it->hi = true;
+        it->map_it = ecs_map_iter(&world->id_index_hi);
+    }
+
+    if (!ecs_map_next(&it->map_it)) {
+        return NULL;
+    }
+
+    return ecs_map_ptr(&it->map_it);
+}
+
 bool flecs_component_iter(
     const ecs_component_record_t *cr,
     ecs_table_cache_iter_t *iter_out)

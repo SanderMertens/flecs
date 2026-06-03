@@ -27,6 +27,7 @@ const char* flecs_query_op_str(
     case EcsQueryIds:            return "ids         ";
     case EcsQueryIdsRight:       return "idsr        ";
     case EcsQueryIdsLeft:        return "idsl        ";
+    case EcsQueryIdsAll:         return "idsa        ";
     case EcsQueryEach:           return "each        ";
     case EcsQueryStore:          return "store       ";
     case EcsQueryReset:          return "reset       ";

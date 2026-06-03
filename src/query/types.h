@@ -60,6 +60,7 @@ typedef enum {
     EcsQueryIds,            /* Test for existence of ids matching wildcard */
     EcsQueryIdsRight,       /* Find ids in use that match (R, *) wildcard */
     EcsQueryIdsLeft,        /* Find ids in use that match (*, T) wildcard */
+    EcsQueryIdsAll,         /* Find all non-pair ids in use that match (*) */
     EcsQueryEach,           /* Iterate entities in table, populate entity variable */
     EcsQueryStore,          /* Store table or entity in variable */
     EcsQueryReset,          /* Reset value of variable to wildcard (*) */
@@ -320,6 +321,7 @@ typedef struct {
 /* Ids context */
 typedef struct {
     ecs_component_record_t *cur;
+    ecs_components_iter_t components_it;
 } ecs_query_ids_ctx_t;
 
 /* Control flow context */
