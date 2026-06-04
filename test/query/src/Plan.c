@@ -2458,6 +2458,222 @@ void Plan_1_plan_any_src(void) {
     ecs_fini(world);
 }
 
+void Plan_1_plan_any_src_first_var(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, Tag);
+
+    ecs_query_t *r = ecs_query(world, {
+        .expr = "$rel(_)",
+        .cache_kind = EcsQueryCacheAuto
+    });
+
+    test_assert(r != NULL);
+
+    ecs_log_enable_colors(false);
+
+    const char *expect =
+    HEAD " 0. [-1,  1]  idsa                          ($rel)"
+    LINE " 1. [ 0,  2]  yield        "
+    LINE "";
+    char *plan = ecs_query_plan(r);
+
+    test_str(expect, plan);
+    ecs_os_free(plan);
+    ecs_query_fini(r);
+    ecs_fini(world);
+}
+
+void Plan_1_plan_any_src_first_var_any_tgt(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, Tag);
+
+    ecs_query_t *r = ecs_query(world, {
+        .expr = "$rel(_, _)",
+        .cache_kind = EcsQueryCacheAuto
+    });
+
+    test_assert(r != NULL);
+
+    ecs_log_enable_colors(false);
+
+    const char *expect =
+    HEAD " 0. [-1,  1]  idsa                          ($rel, $_'2)"
+    LINE " 1. [ 0,  2]  yield        "
+    LINE "";
+    char *plan = ecs_query_plan(r);
+
+    test_str(expect, plan);
+    ecs_os_free(plan);
+    ecs_query_fini(r);
+    ecs_fini(world);
+}
+
+void Plan_1_plan_any_src_first_var_fixed_tgt(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, Tgt);
+
+    ecs_query_t *r = ecs_query(world, {
+        .expr = "$rel(_, Tgt)",
+        .cache_kind = EcsQueryCacheAuto
+    });
+
+    test_assert(r != NULL);
+
+    ecs_log_enable_colors(false);
+
+    const char *expect =
+    HEAD " 0. [-1,  1]  idsl                          ($rel, Tgt)"
+    LINE " 1. [ 0,  2]  yield        "
+    LINE "";
+    char *plan = ecs_query_plan(r);
+
+    test_str(expect, plan);
+    ecs_os_free(plan);
+    ecs_query_fini(r);
+    ecs_fini(world);
+}
+
+void Plan_1_plan_any_src_first_var_wildcard_tgt(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, Tag);
+
+    ecs_query_t *r = ecs_query(world, {
+        .expr = "$rel(_, *)",
+        .cache_kind = EcsQueryCacheAuto
+    });
+
+    test_assert(r != NULL);
+
+    ecs_log_enable_colors(false);
+
+    const char *expect =
+    HEAD " 0. [-1,  1]  idsa                          ($rel, $*'2)"
+    LINE " 1. [ 0,  2]  yield        "
+    LINE "";
+    char *plan = ecs_query_plan(r);
+
+    test_str(expect, plan);
+    ecs_os_free(plan);
+    ecs_query_fini(r);
+    ecs_fini(world);
+}
+
+void Plan_1_plan_any_src_first_var_var_tgt(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, Tag);
+
+    ecs_query_t *r = ecs_query(world, {
+        .expr = "$rel(_, $tgt)",
+        .cache_kind = EcsQueryCacheAuto
+    });
+
+    test_assert(r != NULL);
+
+    ecs_log_enable_colors(false);
+
+    const char *expect =
+    HEAD " 0. [-1,  1]  idsa                          ($rel, $tgt)"
+    LINE " 1. [ 0,  2]  yield        "
+    LINE "";
+    char *plan = ecs_query_plan(r);
+
+    test_str(expect, plan);
+    ecs_os_free(plan);
+    ecs_query_fini(r);
+    ecs_fini(world);
+}
+
+void Plan_1_plan_any_src_fixed_first_var_tgt(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, Tag);
+
+    ecs_query_t *r = ecs_query(world, {
+        .expr = "RelA(_, $tgt)",
+        .cache_kind = EcsQueryCacheAuto
+    });
+
+    test_assert(r != NULL);
+
+    ecs_log_enable_colors(false);
+
+    const char *expect =
+    HEAD " 0. [-1,  1]  idsr                          (RelA, $tgt)"
+    LINE " 1. [ 0,  2]  yield        "
+    LINE "";
+    char *plan = ecs_query_plan(r);
+
+    test_str(expect, plan);
+    ecs_os_free(plan);
+    ecs_query_fini(r);
+    ecs_fini(world);
+}
+
+void Plan_1_plan_any_src_any_first_var_tgt(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, Tag);
+
+    ecs_query_t *r = ecs_query(world, {
+        .expr = "_(_, $tgt)",
+        .cache_kind = EcsQueryCacheAuto
+    });
+
+    test_assert(r != NULL);
+
+    ecs_log_enable_colors(false);
+
+    const char *expect =
+    HEAD " 0. [-1,  1]  idsa                          ($_'2, $tgt)"
+    LINE " 1. [ 0,  2]  yield        "
+    LINE "";
+    char *plan = ecs_query_plan(r);
+
+    test_str(expect, plan);
+    ecs_os_free(plan);
+    ecs_query_fini(r);
+    ecs_fini(world);
+}
+
+void Plan_1_plan_any_src_wildcard_first_var_tgt(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, Tag);
+
+    ecs_query_t *r = ecs_query(world, {
+        .expr = "*(_, $tgt)",
+        .cache_kind = EcsQueryCacheAuto
+    });
+
+    test_assert(r != NULL);
+
+    ecs_log_enable_colors(false);
+
+    const char *expect =
+    HEAD " 0. [-1,  1]  idsa                          ($*'2, $tgt)"
+    LINE " 1. [ 0,  2]  yield        "
+    LINE "";
+    char *plan = ecs_query_plan(r);
+
+    test_str(expect, plan);
+    ecs_os_free(plan);
+    ecs_query_fini(r);
+    ecs_fini(world);
+}
+
 void Plan_1_plan_not_any_src(void) {
     ecs_world_t *world = ecs_mini();
 

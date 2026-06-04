@@ -1362,13 +1362,28 @@ int flecs_query_compile_term(
         /* Use up-to-date written values after potentially inserting each */
         if (!first_written || !second_written) {
             if (!first_written) {
-                /* If first is unknown, traverse left: <- (*, t) */
+                ecs_entity_t tgt = ECS_PAIR_SECOND(term->id);
                 if (ECS_TERM_REF_ID(&term->first) != EcsAny) {
-                    op.kind = EcsQueryIdsLeft;
+                    /* First is enumerable (variable or wildcard) */
+                    if (ECS_IS_PAIR(term->id) &&
+                        tgt != EcsWildcard && tgt != EcsAny)
+                    {
+                        /* If target is known, traverse left: <- (*, t) */
+                        op.kind = EcsQueryIdsLeft;
+                    } else {
+                        /* Find all ids in use that match the wildcard. */
+                        op.kind = EcsQueryIdsAll;
+                    }
+                } else if (ECS_IS_PAIR(term->id) && tgt == EcsWildcard) {
+                    /* First is Any (_) and target is enumerable: find all
+                     * targets in use that match (*, t). */
+                    op.kind = EcsQueryIdsAll;
                 }
             } else {
                 /* If second is wildcard, traverse right: (r, *) -> */
-                if (ECS_TERM_REF_ID(&term->second) != EcsAny) {
+                if (ECS_TERM_REF_ID(&term->second) != EcsAny &&
+                    ECS_IS_PAIR(term->id))
+                {
                     op.kind = EcsQueryIdsRight;
                 }
             }

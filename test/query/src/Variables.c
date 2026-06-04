@@ -12240,11 +12240,1217 @@ void Variables_recycled_this_ent_var(void) {
     ecs_fini(world);
 }
 
+void Variables_first_fixed_any_src_pair_wildcard_tgt(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, RelB);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add_pair(world, e1, RelA, TgtA);
+
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add_pair(world, e2, RelA, TgtB);
+    ecs_add_pair(world, e2, RelB, TgtA);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "RelA(_, *)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    int32_t found_a = 0, found_b = 0;
+    int32_t count = 0;
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        test_int(0, it.count);
+        test_uint(EcsWildcard, ecs_field_src(&it, 0));
+
+        ecs_id_t id = ecs_field_id(&it, 0);
+        test_assert(ECS_IS_PAIR(id));
+        test_uint(RelA, ecs_pair_first(world, id));
+        test_assert(ecs_count_id(world, id) > 0);
+
+        if (id == ecs_pair(RelA, TgtA)) found_a ++;
+        if (id == ecs_pair(RelA, TgtB)) found_b ++;
+
+        count ++;
+    }
+
+    test_int(2, count);
+    test_int(1, found_a);
+    test_int(1, found_b);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Variables_first_wildcard_any_src_pair_fixed_tgt(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, RelB);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add_pair(world, e1, RelA, TgtA);
+
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add_pair(world, e2, RelB, TgtA);
+    ecs_add_pair(world, e2, RelA, TgtB);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "*(_, TgtA)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    int32_t found_a = 0, found_b = 0;
+    int32_t count = 0;
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        test_int(0, it.count);
+        test_uint(EcsWildcard, ecs_field_src(&it, 0));
+
+        ecs_id_t id = ecs_field_id(&it, 0);
+        test_assert(ECS_IS_PAIR(id));
+        test_uint(TgtA, ecs_pair_second(world, id));
+        test_assert(ecs_count_id(world, id) > 0);
+
+        if (id == ecs_pair(RelA, TgtA)) found_a ++;
+        if (id == ecs_pair(RelB, TgtA)) found_b ++;
+
+        count ++;
+    }
+
+    test_int(2, count);
+    test_int(1, found_a);
+    test_int(1, found_b);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Variables_first_any_any_src_pair_wildcard_tgt(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, RelB);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add_pair(world, e1, RelA, TgtA);
+
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add_pair(world, e2, RelB, TgtA);
+    ecs_add_pair(world, e2, RelA, TgtB);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "_(_, *)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    int32_t found_a = 0, found_b = 0;
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        test_int(0, it.count);
+        test_uint(EcsWildcard, ecs_field_src(&it, 0));
+
+        ecs_id_t id = ecs_field_id(&it, 0);
+        test_assert(ECS_IS_PAIR(id));
+        test_uint(EcsWildcard, ecs_pair_first(world, id));
+        test_assert(ecs_count_id(world, id) > 0);
+
+        if (id == ecs_pair(EcsWildcard, TgtA)) found_a ++;
+        if (id == ecs_pair(EcsWildcard, TgtB)) found_b ++;
+    }
+
+    test_int(1, found_a);
+    test_int(1, found_b);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Variables_first_fixed_any_src_pair_any_tgt(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add_pair(world, e1, RelA, TgtA);
+    ecs_add_pair(world, e1, RelA, TgtB);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "RelA(_, _)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    int32_t count = 0;
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        test_int(0, it.count);
+        test_uint(EcsWildcard, ecs_field_src(&it, 0));
+        test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 0));
+        count ++;
+    }
+
+    test_int(1, count);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Variables_first_any_any_src_pair_any_tgt(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, TgtA);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add_pair(world, e1, RelA, TgtA);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "_(_, _)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    int32_t count = 0;
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        test_int(0, it.count);
+        test_uint(EcsWildcard, ecs_field_src(&it, 0));
+        test_uint(ecs_pair(EcsWildcard, EcsWildcard), ecs_field_id(&it, 0));
+        count ++;
+    }
+
+    test_int(1, count);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Variables_first_wildcard_any_src(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+    ECS_TAG(world, Baz);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add(world, e1, Foo);
+    ecs_add(world, e1, Bar);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "*(_)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    int32_t found_foo = 0, found_bar = 0, found_baz = 0;
+    int32_t count = 0;
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        test_int(0, it.count);
+        test_uint(EcsWildcard, ecs_field_src(&it, 0));
+
+        ecs_id_t id = ecs_field_id(&it, 0);
+        test_assert(!ECS_IS_PAIR(id));
+        test_assert(!ecs_id_is_wildcard(id));
+        test_assert(ecs_count_id(world, id) > 0);
+
+        if (id == Foo) found_foo ++;
+        if (id == Bar) found_bar ++;
+        if (id == Baz) found_baz ++;
+
+        count ++;
+    }
+
+    test_assert(count > 0);
+    test_int(1, found_foo);
+    test_int(1, found_bar);
+    test_int(0, found_baz);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Variables_first_var_any_src_w_constrained_var(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+    ECS_TAG(world, Marked);
+
+    ecs_add(world, Foo, Marked);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add(world, e1, Foo);
+    ecs_add(world, e1, Bar);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "$rel(_), Marked($rel)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    int32_t rel_var = ecs_query_find_var(q, "rel");
+    test_assert(rel_var != -1);
+
+    int32_t found_foo = 0, found_bar = 0;
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        ecs_entity_t rel = ecs_iter_get_var(&it, rel_var);
+        test_assert(ecs_has(world, rel, Marked));
+
+        if (rel == Foo) found_foo ++;
+        if (rel == Bar) found_bar ++;
+    }
+
+    test_int(1, found_foo);
+    test_int(0, found_bar);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Variables_first_var_any_src_pair_constrained_tgt(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+    ECS_TAG(world, Marked);
+
+    ecs_add(world, TgtA, Marked);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add_pair(world, e1, RelA, TgtA);
+    ecs_add_pair(world, e1, RelA, TgtB);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "$rel(_, $tgt), Marked($tgt)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    int32_t rel_var = ecs_query_find_var(q, "rel");
+    int32_t tgt_var = ecs_query_find_var(q, "tgt");
+    test_assert(rel_var != -1);
+    test_assert(tgt_var != -1);
+
+    int32_t found_a = 0, found_b = 0;
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        ecs_id_t id = ecs_field_id(&it, 0);
+        ecs_entity_t tgt = ecs_iter_get_var(&it, tgt_var);
+        test_uint(RelA, ecs_iter_get_var(&it, rel_var));
+        test_assert(ecs_has(world, tgt, Marked));
+
+        if (id == ecs_pair(RelA, TgtA)) found_a ++;
+        if (id == ecs_pair(RelA, TgtB)) found_b ++;
+    }
+
+    test_int(1, found_a);
+    test_int(0, found_b);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Variables_first_fixed_any_src_pair_var_tgt(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, RelB);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+    ECS_TAG(world, TgtC);
+    ECS_TAG(world, TgtE);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add_pair(world, e1, RelA, TgtA);
+
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add_pair(world, e2, RelA, TgtB);
+    ecs_add_pair(world, e2, RelB, TgtC);
+
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_add_pair(world, e3, RelA, TgtE);
+    ecs_delete(world, e3);
+
+    test_bool(true, ecs_id_in_use(world, ecs_pair(RelA, TgtE)));
+    test_int(0, ecs_count_id(world, ecs_pair(RelA, TgtE)));
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "RelA(_, $tgt)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    int32_t tgt_var = ecs_query_find_var(q, "tgt");
+    test_assert(tgt_var != -1);
+
+    int32_t found_a = 0, found_b = 0, found_c = 0, found_e = 0;
+    int32_t count = 0;
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        test_int(0, it.count);
+        test_int(1, it.field_count);
+        test_uint(EcsWildcard, ecs_field_src(&it, 0));
+
+        ecs_id_t id = ecs_field_id(&it, 0);
+        test_assert(ECS_IS_PAIR(id));
+        test_assert(!ecs_id_is_wildcard(id));
+        test_uint(RelA, ecs_pair_first(world, id));
+        test_assert(ecs_count_id(world, id) > 0);
+
+        if (id == ecs_pair(RelA, TgtA)) {
+            found_a ++;
+            test_uint(TgtA, ecs_iter_get_var(&it, tgt_var));
+        }
+        if (id == ecs_pair(RelA, TgtB)) {
+            found_b ++;
+            test_uint(TgtB, ecs_iter_get_var(&it, tgt_var));
+        }
+        if (id == ecs_pair(RelB, TgtC)) found_c ++;
+        if (id == ecs_pair(RelA, TgtE)) found_e ++;
+
+        count ++;
+    }
+
+    test_int(2, count);
+    test_int(1, found_a);
+    test_int(1, found_b);
+    test_int(0, found_c);
+    test_int(0, found_e);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Variables_first_any_any_src_pair_var_tgt(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, RelB);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+    ECS_TAG(world, TgtE);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add_pair(world, e1, RelA, TgtA);
+
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add_pair(world, e2, RelB, TgtA);
+    ecs_add_pair(world, e2, RelA, TgtB);
+
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_add_pair(world, e3, RelA, TgtE);
+    ecs_delete(world, e3);
+
+    test_bool(true, ecs_id_in_use(world, ecs_pair(EcsWildcard, TgtE)));
+    test_int(0, ecs_count_id(world, ecs_pair(EcsWildcard, TgtE)));
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "_(_, $tgt)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    int32_t tgt_var = ecs_query_find_var(q, "tgt");
+    test_assert(tgt_var != -1);
+
+    int32_t found_a = 0, found_b = 0, found_e = 0;
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        test_int(0, it.count);
+        test_int(1, it.field_count);
+        test_uint(EcsWildcard, ecs_field_src(&it, 0));
+
+        ecs_id_t id = ecs_field_id(&it, 0);
+        test_assert(ECS_IS_PAIR(id));
+        test_uint(EcsWildcard, ecs_pair_first(world, id));
+        test_assert(ecs_count_id(world, id) > 0);
+
+        if (id == ecs_pair(EcsWildcard, TgtA)) {
+            found_a ++;
+            test_uint(TgtA, ecs_iter_get_var(&it, tgt_var));
+        }
+        if (id == ecs_pair(EcsWildcard, TgtB)) {
+            found_b ++;
+            test_uint(TgtB, ecs_iter_get_var(&it, tgt_var));
+        }
+        if (id == ecs_pair(EcsWildcard, TgtE)) found_e ++;
+    }
+
+    test_int(1, found_a);
+    test_int(1, found_b);
+    test_int(0, found_e);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Variables_first_wildcard_any_src_pair_var_tgt(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, RelB);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+    ECS_TAG(world, TgtE);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add_pair(world, e1, RelA, TgtA);
+
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add_pair(world, e2, RelB, TgtA);
+    ecs_add_pair(world, e2, RelA, TgtB);
+
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_add_pair(world, e3, RelA, TgtE);
+    ecs_delete(world, e3);
+
+    test_bool(true, ecs_id_in_use(world, ecs_pair(RelA, TgtE)));
+    test_int(0, ecs_count_id(world, ecs_pair(RelA, TgtE)));
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "*(_, $tgt)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    int32_t tgt_var = ecs_query_find_var(q, "tgt");
+    test_assert(tgt_var != -1);
+
+    int32_t found_a_a = 0, found_b_a = 0, found_a_b = 0, found_a_e = 0;
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        test_int(0, it.count);
+        test_int(1, it.field_count);
+        test_uint(EcsWildcard, ecs_field_src(&it, 0));
+
+        ecs_id_t id = ecs_field_id(&it, 0);
+        test_assert(ECS_IS_PAIR(id));
+        test_assert(!ecs_id_is_wildcard(id));
+        test_assert(ecs_count_id(world, id) > 0);
+
+        if (id == ecs_pair(RelA, TgtA)) {
+            found_a_a ++;
+            test_uint(TgtA, ecs_iter_get_var(&it, tgt_var));
+        }
+        if (id == ecs_pair(RelB, TgtA)) {
+            found_b_a ++;
+            test_uint(TgtA, ecs_iter_get_var(&it, tgt_var));
+        }
+        if (id == ecs_pair(RelA, TgtB)) {
+            found_a_b ++;
+            test_uint(TgtB, ecs_iter_get_var(&it, tgt_var));
+        }
+        if (id == ecs_pair(RelA, TgtE)) found_a_e ++;
+    }
+
+    test_int(1, found_a_a);
+    test_int(1, found_b_a);
+    test_int(1, found_a_b);
+    test_int(0, found_a_e);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Variables_first_fixed_any_src_pair_var_tgt_dont_fragment(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+    ECS_TAG(world, TgtE);
+    ecs_add_id(world, Rel, EcsDontFragment);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add_pair(world, e1, Rel, TgtA);
+
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add_pair(world, e2, Rel, TgtB);
+
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_add_pair(world, e3, Rel, TgtE);
+    ecs_delete(world, e3);
+
+    test_assert(ecs_has_pair(world, e1, Rel, TgtA));
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Rel(_, $tgt)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    int32_t tgt_var = ecs_query_find_var(q, "tgt");
+    test_assert(tgt_var != -1);
+
+    int32_t found_a = 0, found_b = 0, found_e = 0;
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        test_int(0, it.count);
+        test_int(1, it.field_count);
+        test_uint(EcsWildcard, ecs_field_src(&it, 0));
+
+        ecs_id_t id = ecs_field_id(&it, 0);
+        test_assert(ECS_IS_PAIR(id));
+        test_uint(Rel, ecs_pair_first(world, id));
+
+        if (id == ecs_pair(Rel, TgtA)) {
+            found_a ++;
+            test_uint(TgtA, ecs_iter_get_var(&it, tgt_var));
+        }
+        if (id == ecs_pair(Rel, TgtB)) {
+            found_b ++;
+            test_uint(TgtB, ecs_iter_get_var(&it, tgt_var));
+        }
+        if (id == ecs_pair(Rel, TgtE)) found_e ++;
+    }
+
+    test_int(1, found_a);
+    test_int(1, found_b);
+    test_int(0, found_e);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Variables_first_var_any_src_pair_fixed_tgt_dont_fragment(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, RelB);
+    ECS_TAG(world, RelE);
+    ECS_TAG(world, TgtA);
+    ecs_add_id(world, RelA, EcsDontFragment);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add_pair(world, e1, RelA, TgtA);
+
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add_pair(world, e2, RelB, TgtA);
+
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_add_pair(world, e3, RelE, TgtA);
+    ecs_delete(world, e3);
+
+    test_assert(ecs_has_pair(world, e1, RelA, TgtA));
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "$rel(_, TgtA)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    int32_t rel_var = ecs_query_find_var(q, "rel");
+    test_assert(rel_var != -1);
+
+    int32_t found_a = 0, found_b = 0, found_e = 0;
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        test_int(0, it.count);
+        test_int(1, it.field_count);
+        test_uint(EcsWildcard, ecs_field_src(&it, 0));
+
+        ecs_id_t id = ecs_field_id(&it, 0);
+        test_assert(ECS_IS_PAIR(id));
+        test_uint(TgtA, ecs_pair_second(world, id));
+
+        if (id == ecs_pair(RelA, TgtA)) {
+            found_a ++;
+            test_uint(RelA, ecs_iter_get_var(&it, rel_var));
+        }
+        if (id == ecs_pair(RelB, TgtA)) {
+            found_b ++;
+            test_uint(RelB, ecs_iter_get_var(&it, rel_var));
+        }
+        if (id == ecs_pair(RelE, TgtA)) found_e ++;
+    }
+
+    test_int(1, found_a);
+    test_int(1, found_b);
+    test_int(0, found_e);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Variables_first_var_any_src_sparse(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Spr);
+    ECS_TAG(world, Dnf);
+    ECS_TAG(world, SprEmpty);
+    ECS_TAG(world, DnfEmpty);
+    ecs_add_id(world, Spr, EcsSparse);
+    ecs_add_id(world, Dnf, EcsDontFragment);
+    ecs_add_id(world, SprEmpty, EcsSparse);
+    ecs_add_id(world, DnfEmpty, EcsDontFragment);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add(world, e1, Spr);
+    test_assert(ecs_has_id(world, e1, Spr));
+
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add(world, e2, Dnf);
+    test_assert(ecs_has_id(world, e2, Dnf));
+
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_add(world, e3, SprEmpty);
+    ecs_add(world, e3, DnfEmpty);
+    ecs_delete(world, e3);
+
+    test_bool(true, ecs_id_in_use(world, SprEmpty));
+    test_int(0, ecs_count_id(world, SprEmpty));
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "$rel(_)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    int32_t rel_var = ecs_query_find_var(q, "rel");
+    test_assert(rel_var != -1);
+
+    int32_t found_spr = 0, found_dnf = 0;
+    int32_t found_spr_empty = 0, found_dnf_empty = 0;
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        test_int(0, it.count);
+        test_int(1, it.field_count);
+        test_uint(EcsWildcard, ecs_field_src(&it, 0));
+
+        ecs_id_t id = ecs_field_id(&it, 0);
+        test_assert(!ECS_IS_PAIR(id));
+        test_assert(!ecs_id_is_wildcard(id));
+
+        if (id == Spr) {
+            found_spr ++;
+            test_uint(Spr, ecs_iter_get_var(&it, rel_var));
+        }
+        if (id == Dnf) {
+            found_dnf ++;
+            test_uint(Dnf, ecs_iter_get_var(&it, rel_var));
+        }
+        if (id == SprEmpty) found_spr_empty ++;
+        if (id == DnfEmpty) found_dnf_empty ++;
+    }
+
+    test_int(1, found_spr);
+    test_int(1, found_dnf);
+    test_int(0, found_spr_empty);
+    test_int(0, found_dnf_empty);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Variables_first_var_any_src_pair_sparse(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, SprRel);
+    ECS_TAG(world, DnfRel);
+    ECS_TAG(world, SprRelEmpty);
+    ECS_TAG(world, DnfRelEmpty);
+    ECS_TAG(world, Tgt);
+    ecs_add_id(world, SprRel, EcsSparse);
+    ecs_add_id(world, DnfRel, EcsDontFragment);
+    ecs_add_id(world, SprRelEmpty, EcsSparse);
+    ecs_add_id(world, DnfRelEmpty, EcsDontFragment);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add_pair(world, e1, SprRel, Tgt);
+    test_assert(ecs_has_pair(world, e1, SprRel, Tgt));
+
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add_pair(world, e2, DnfRel, Tgt);
+    test_assert(ecs_has_pair(world, e2, DnfRel, Tgt));
+
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_add_pair(world, e3, SprRelEmpty, Tgt);
+    ecs_add_pair(world, e3, DnfRelEmpty, Tgt);
+    ecs_delete(world, e3);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "$rel(_, _)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    int32_t rel_var = ecs_query_find_var(q, "rel");
+    test_assert(rel_var != -1);
+
+    int32_t found_spr = 0, found_dnf = 0;
+    int32_t found_spr_empty = 0, found_dnf_empty = 0;
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        test_int(0, it.count);
+        test_int(1, it.field_count);
+        test_uint(EcsWildcard, ecs_field_src(&it, 0));
+
+        ecs_id_t id = ecs_field_id(&it, 0);
+        test_assert(ECS_IS_PAIR(id));
+        test_uint(EcsWildcard, ecs_pair_second(world, id));
+
+        if (id == ecs_pair(SprRel, EcsWildcard)) {
+            found_spr ++;
+            test_uint(SprRel, ecs_iter_get_var(&it, rel_var));
+        }
+        if (id == ecs_pair(DnfRel, EcsWildcard)) {
+            found_dnf ++;
+            test_uint(DnfRel, ecs_iter_get_var(&it, rel_var));
+        }
+        if (id == ecs_pair(SprRelEmpty, EcsWildcard)) found_spr_empty ++;
+        if (id == ecs_pair(DnfRelEmpty, EcsWildcard)) found_dnf_empty ++;
+    }
+
+    test_int(1, found_spr);
+    test_int(1, found_dnf);
+    test_int(0, found_spr_empty);
+    test_int(0, found_dnf_empty);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Variables_first_var_any_src(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+    ECS_TAG(world, Baz);
+    ECS_TAG(world, Emptied);
+    ECS_TAG(world, Likes);
+    ECS_TAG(world, Apples);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add(world, e1, Foo);
+
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add(world, e2, Foo);
+    ecs_add(world, e2, Bar);
+    ecs_add_pair(world, e2, Likes, Apples);
+
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_add(world, e3, Emptied);
+    ecs_delete(world, e3);
+
+    test_bool(true, ecs_id_in_use(world, Emptied));
+    test_int(0, ecs_count_id(world, Emptied));
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "$rel(_)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    int32_t rel_var = ecs_query_find_var(q, "rel");
+    test_assert(rel_var != -1);
+
+    int32_t found_foo = 0, found_bar = 0, found_baz = 0;
+    int32_t found_emptied = 0, found_likes = 0, found_apples = 0;
+    int32_t count = 0;
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        test_int(0, it.count);
+        test_int(1, it.field_count);
+        test_uint(EcsWildcard, ecs_field_src(&it, 0));
+
+        ecs_id_t id = ecs_field_id(&it, 0);
+
+        test_assert(!ECS_IS_PAIR(id));
+        test_assert(!ecs_id_is_wildcard(id));
+        test_assert(ecs_count_id(world, id) > 0);
+
+        if (id == Foo) {
+            found_foo ++;
+            test_uint(Foo, ecs_iter_get_var(&it, rel_var));
+        }
+        if (id == Bar) {
+            found_bar ++;
+            test_uint(Bar, ecs_iter_get_var(&it, rel_var));
+        }
+        if (id == Baz) found_baz ++;
+        if (id == Emptied) found_emptied ++;
+        if (id == Likes) found_likes ++;
+        if (id == Apples) found_apples ++;
+
+        count ++;
+    }
+
+    test_assert(count > 0);
+    test_int(1, found_foo);
+    test_int(1, found_bar);
+    test_int(0, found_baz);
+    test_int(0, found_emptied);
+    test_int(0, found_likes);
+    test_int(0, found_apples);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Variables_first_var_any_src_pair_fixed_tgt(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, RelB);
+    ECS_TAG(world, RelC);
+    ECS_TAG(world, RelD);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add_pair(world, e1, RelA, TgtA);
+
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add_pair(world, e2, RelB, TgtA);
+    ecs_add_pair(world, e2, RelA, TgtB);
+
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_add_pair(world, e3, RelC, TgtB);
+
+    ecs_entity_t e4 = ecs_new(world);
+    ecs_add_pair(world, e4, RelD, TgtA);
+    ecs_delete(world, e4);
+
+    test_bool(true, ecs_id_in_use(world, ecs_pair(RelD, TgtA)));
+    test_int(0, ecs_count_id(world, ecs_pair(RelD, TgtA)));
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "$rel(_, TgtA)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    int32_t rel_var = ecs_query_find_var(q, "rel");
+    test_assert(rel_var != -1);
+
+    int32_t found_a = 0, found_b = 0, found_d = 0;
+    int32_t count = 0;
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        test_int(0, it.count);
+        test_int(1, it.field_count);
+        test_uint(EcsWildcard, ecs_field_src(&it, 0));
+
+        ecs_id_t id = ecs_field_id(&it, 0);
+        test_assert(ECS_IS_PAIR(id));
+        test_uint(TgtA, ecs_pair_second(world, id));
+        test_assert(ecs_count_id(world, id) > 0);
+
+        if (id == ecs_pair(RelA, TgtA)) {
+            found_a ++;
+            test_uint(RelA, ecs_iter_get_var(&it, rel_var));
+        }
+        if (id == ecs_pair(RelB, TgtA)) {
+            found_b ++;
+            test_uint(RelB, ecs_iter_get_var(&it, rel_var));
+        }
+        if (id == ecs_pair(RelD, TgtA)) found_d ++;
+
+        count ++;
+    }
+
+    test_int(2, count);
+    test_int(1, found_a);
+    test_int(1, found_b);
+    test_int(0, found_d);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Variables_first_var_any_src_pair_wildcard_tgt(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, RelB);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add_pair(world, e1, RelA, TgtA);
+    ecs_add(world, e1, Foo);
+
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add_pair(world, e2, RelB, TgtA);
+    ecs_add_pair(world, e2, RelA, TgtB);
+
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_add_pair(world, e3, RelB, TgtB);
+    ecs_delete(world, e3);
+
+    test_bool(true, ecs_id_in_use(world, ecs_pair(RelB, TgtB)));
+    test_int(0, ecs_count_id(world, ecs_pair(RelB, TgtB)));
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "$rel(_, *)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    int32_t rel_var = ecs_query_find_var(q, "rel");
+    test_assert(rel_var != -1);
+
+    int32_t found_a_a = 0, found_b_a = 0, found_a_b = 0;
+    int32_t found_b_b = 0, found_foo = 0;
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        test_int(0, it.count);
+        test_int(1, it.field_count);
+        test_uint(EcsWildcard, ecs_field_src(&it, 0));
+
+        ecs_id_t id = ecs_field_id(&it, 0);
+        test_assert(ECS_IS_PAIR(id));
+        test_assert(!ecs_id_is_wildcard(id));
+        test_assert(ecs_count_id(world, id) > 0);
+
+        if (id == ecs_pair(RelA, TgtA)) {
+            found_a_a ++;
+            test_uint(RelA, ecs_iter_get_var(&it, rel_var));
+        }
+        if (id == ecs_pair(RelB, TgtA)) {
+            found_b_a ++;
+            test_uint(RelB, ecs_iter_get_var(&it, rel_var));
+        }
+        if (id == ecs_pair(RelA, TgtB)) {
+            found_a_b ++;
+            test_uint(RelA, ecs_iter_get_var(&it, rel_var));
+        }
+        if (id == ecs_pair(RelB, TgtB)) found_b_b ++;
+        if (id == Foo) found_foo ++;
+    }
+
+    test_int(1, found_a_a);
+    test_int(1, found_b_a);
+    test_int(1, found_a_b);
+    test_int(0, found_b_b);
+    test_int(0, found_foo);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Variables_first_var_any_src_pair_any_tgt(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, RelB);
+    ECS_TAG(world, RelC);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add_pair(world, e1, RelA, TgtA);
+    ecs_add(world, e1, Foo);
+
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add_pair(world, e2, RelB, TgtA);
+    ecs_add_pair(world, e2, RelA, TgtB);
+
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_add_pair(world, e3, RelC, TgtA);
+    ecs_delete(world, e3);
+
+    test_bool(true, ecs_id_in_use(world, ecs_pair(RelC, EcsWildcard)));
+    test_int(0, ecs_count_id(world, ecs_pair(RelC, EcsWildcard)));
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "$rel(_, _)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    int32_t rel_var = ecs_query_find_var(q, "rel");
+    test_assert(rel_var != -1);
+
+    int32_t found_a = 0, found_b = 0, found_c = 0, found_foo = 0;
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        test_int(0, it.count);
+        test_int(1, it.field_count);
+        test_uint(EcsWildcard, ecs_field_src(&it, 0));
+
+        ecs_id_t id = ecs_field_id(&it, 0);
+        test_assert(ECS_IS_PAIR(id));
+        test_uint(EcsWildcard, ecs_pair_second(world, id));
+        test_assert(ecs_count_id(world, id) > 0);
+
+        if (id == ecs_pair(RelA, EcsWildcard)) {
+            found_a ++;
+            test_uint(RelA, ecs_iter_get_var(&it, rel_var));
+        }
+        if (id == ecs_pair(RelB, EcsWildcard)) {
+            found_b ++;
+            test_uint(RelB, ecs_iter_get_var(&it, rel_var));
+        }
+        if (id == ecs_pair(RelC, EcsWildcard)) found_c ++;
+        if (id == Foo) found_foo ++;
+    }
+
+    test_int(1, found_a);
+    test_int(1, found_b);
+    test_int(0, found_c);
+    test_int(0, found_foo);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Variables_first_var_any_src_pair_var_tgt(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, RelB);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add_pair(world, e1, RelA, TgtA);
+
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add_pair(world, e2, RelB, TgtA);
+    ecs_add_pair(world, e2, RelA, TgtB);
+
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_add_pair(world, e3, RelB, TgtB);
+    ecs_delete(world, e3);
+
+    test_bool(true, ecs_id_in_use(world, ecs_pair(RelB, TgtB)));
+    test_int(0, ecs_count_id(world, ecs_pair(RelB, TgtB)));
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "$rel(_, $tgt)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    int32_t rel_var = ecs_query_find_var(q, "rel");
+    int32_t tgt_var = ecs_query_find_var(q, "tgt");
+    test_assert(rel_var != -1);
+    test_assert(tgt_var != -1);
+
+    int32_t found_a_a = 0, found_b_a = 0, found_a_b = 0, found_b_b = 0;
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        test_int(0, it.count);
+        test_int(1, it.field_count);
+        test_uint(EcsWildcard, ecs_field_src(&it, 0));
+
+        ecs_id_t id = ecs_field_id(&it, 0);
+        test_assert(ECS_IS_PAIR(id));
+        test_assert(!ecs_id_is_wildcard(id));
+        test_assert(ecs_count_id(world, id) > 0);
+
+        if (id == ecs_pair(RelA, TgtA)) {
+            found_a_a ++;
+            test_uint(RelA, ecs_iter_get_var(&it, rel_var));
+            test_uint(TgtA, ecs_iter_get_var(&it, tgt_var));
+        }
+        if (id == ecs_pair(RelB, TgtA)) {
+            found_b_a ++;
+            test_uint(RelB, ecs_iter_get_var(&it, rel_var));
+            test_uint(TgtA, ecs_iter_get_var(&it, tgt_var));
+        }
+        if (id == ecs_pair(RelA, TgtB)) {
+            found_a_b ++;
+            test_uint(RelA, ecs_iter_get_var(&it, rel_var));
+            test_uint(TgtB, ecs_iter_get_var(&it, tgt_var));
+        }
+        if (id == ecs_pair(RelB, TgtB)) found_b_b ++;
+    }
+
+    test_int(1, found_a_a);
+    test_int(1, found_b_a);
+    test_int(1, found_a_b);
+    test_int(0, found_b_b);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
 void Variables_has_recycled_id_from_pair(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
-    
+
     ecs_entity_t src = recycled_id(world, "src");
     ecs_entity_t rel = recycled_id(world, "rel");
     ecs_entity_t tgt = recycled_id(world, "tgt");
