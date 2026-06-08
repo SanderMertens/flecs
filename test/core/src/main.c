@@ -2664,6 +2664,7 @@ void World_range_invalid_max_lt_min(void);
 void World_range_set_unknown_range(void);
 void World_range_overlapping_assert(void);
 void World_range_overlapping_at_boundary_assert(void);
+void World_range_new_after_delete_assert(void);
 void World_range_adjacent_no_overlap(void);
 void World_range_recycle_last_id_n_times(void);
 void World_range_cascade_delete_across_ranges(void);
@@ -2671,6 +2672,8 @@ void World_range_deferred_delete_across_ranges(void);
 void World_range_randomized_10_ranges(void);
 void World_range_exhausted(void);
 void World_range_delete_recycled_to_correct_range(void);
+void World_range_create_small_range_from_1(void);
+void World_range_create_large_range_from_1(void);
 void World_phases(void);
 void World_phases_w_merging(void);
 void World_phases_match_in_create(void);
@@ -13735,6 +13738,10 @@ bake_test_case World_testcases[] = {
         World_range_overlapping_at_boundary_assert
     },
     {
+        "range_new_after_delete_assert",
+        World_range_new_after_delete_assert
+    },
+    {
         "range_adjacent_no_overlap",
         World_range_adjacent_no_overlap
     },
@@ -13761,6 +13768,14 @@ bake_test_case World_testcases[] = {
     {
         "range_delete_recycled_to_correct_range",
         World_range_delete_recycled_to_correct_range
+    },
+    {
+        "range_create_small_range_from_1",
+        World_range_create_small_range_from_1
+    },
+    {
+        "range_create_large_range_from_1",
+        World_range_create_large_range_from_1
     },
     {
         "phases",
@@ -16613,7 +16628,7 @@ static bake_test_suite suites[] = {
         "World",
         World_setup,
         NULL,
-        173,
+        176,
         World_testcases
     },
     {
