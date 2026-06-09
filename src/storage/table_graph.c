@@ -1072,7 +1072,7 @@ ecs_table_t* flecs_find_table_with(
                 dst_type.array[tr->index] = with;
                 replaced = true;
             }
-        } 
+        }
     } else {
         r = with;
     }

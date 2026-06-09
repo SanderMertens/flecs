@@ -4331,6 +4331,50 @@ void ComponentInheritance_pair_wildcard_multi_rel(void) {
     ecs_fini(world);
 }
 
+void ComponentInheritance_pair_wildcard_w_owned_base_pair(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t Likes = ecs_entity(world, { .name = "Likes" });
+    ecs_entity_t Loves = ecs_entity(world, { .name = "Loves" });
+    ecs_entity_t Apples = ecs_entity(world, { .name = "Apples" });
+    ecs_entity_t Pears = ecs_entity(world, { .name = "Pears" });
+    ecs_add_pair(world, Loves, EcsIsA, Likes);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add_pair(world, e, Likes, Apples);
+    ecs_add_pair(world, e, Loves, Pears);
+
+    ecs_query_t *r = ecs_query(world, {
+        .cache_kind = cache_kind,
+        .expr = "(Likes, *)"
+    });
+
+    test_assert(r != NULL);
+
+    int32_t matched = 0;
+    bool found_likes = false, found_loves = false;
+    {
+        ecs_iter_t it = ecs_query_iter(world, r);
+        while (ecs_query_next(&it)) {
+            int32_t i;
+            for (i = 0; i < it.count; i ++) {
+                test_uint(e, it.entities[i]);
+                matched ++;
+                if (ecs_field_id(&it, 0) == ecs_pair(Likes, Apples)) found_likes = true;
+                if (ecs_field_id(&it, 0) == ecs_pair(Loves, Pears)) found_loves = true;
+            }
+        }
+    }
+
+    test_int(matched, 2);
+    test_bool(found_likes, true);
+    test_bool(found_loves, true);
+
+    ecs_query_fini(r);
+
+    ecs_fini(world);
+}
+
 /* --- Data component (value) inheritance, non-pair --- */
 
 void ComponentInheritance_1_fixed_component(void) {
@@ -4339,6 +4383,37 @@ void ComponentInheritance_1_fixed_component(void) {
     ECS_COMPONENT(world, Weight);
     ECS_COMPONENT(world, HeavyWeight);
     ecs_add_pair(world, ecs_id(HeavyWeight), EcsIsA, ecs_id(Weight));
+
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_set(world, e1, HeavyWeight, {.value = 10, .bonus = 3});
+
+    ecs_query_t *r = ecs_query(world, {
+        .cache_kind = cache_kind, .expr = "Weight(e1)" });
+    test_assert(r != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, r);
+    test_bool(true, ecs_query_next(&it));
+    test_uint(0, it.count);
+    test_uint(e1, ecs_field_src(&it, 0));
+    test_uint(ecs_id(HeavyWeight), ecs_field_id(&it, 0));
+    const Weight *w = ecs_base_field(&it, Weight, 0);
+    test_assert(w != NULL);
+    test_int(w->value, 10);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(r);
+    ecs_fini(world);
+}
+
+void ComponentInheritance_1_fixed_component_src_not_row_0(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Weight);
+    ECS_COMPONENT(world, HeavyWeight);
+    ecs_add_pair(world, ecs_id(HeavyWeight), EcsIsA, ecs_id(Weight));
+
+    ecs_entity_t e0 = ecs_entity(world, { .name = "e0" });
+    ecs_set(world, e0, HeavyWeight, {.value = 1, .bonus = 2});
 
     ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
     ecs_set(world, e1, HeavyWeight, {.value = 10, .bonus = 3});

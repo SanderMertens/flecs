@@ -34454,6 +34454,10 @@ namespace _ {
         const flecs::oper_kind_t *oper,
         int32_t count)
     {
+        ecs_assert((term_index + count) <= FLECS_TERM_COUNT_MAX,
+            ECS_INVALID_PARAMETER,
+            "query exceeds maximum number of terms (%d)", FLECS_TERM_COUNT_MAX);
+
         for (int32_t i = 0; i < count; i ++) {
             ecs_term_t *term = &desc->terms[term_index + i];
             *term = ecs_term_t{};

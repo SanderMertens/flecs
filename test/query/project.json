@@ -1398,6 +1398,7 @@
                 "1_var_2_lvl_written",
                 "1_var_3_lvl_written",
                 "1_fixed_component",
+                "1_fixed_component_src_not_row_0",
                 "1_this_component",
                 "1_this_component_written",
                 "1_var_component",
@@ -1447,6 +1448,7 @@
                 "pair_different_target",
                 "pair_wildcard",
                 "pair_wildcard_multi_rel",
+                "pair_wildcard_w_owned_base_pair",
                 "cached_match_derived_table_added_after",
                 "cached_unmatch_derived_table_on_delete"
             ]

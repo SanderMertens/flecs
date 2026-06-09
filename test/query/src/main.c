@@ -1356,6 +1356,7 @@ void ComponentInheritance_1_var_1_lvl_written(void);
 void ComponentInheritance_1_var_2_lvl_written(void);
 void ComponentInheritance_1_var_3_lvl_written(void);
 void ComponentInheritance_1_fixed_component(void);
+void ComponentInheritance_1_fixed_component_src_not_row_0(void);
 void ComponentInheritance_1_this_component(void);
 void ComponentInheritance_1_this_component_written(void);
 void ComponentInheritance_1_var_component(void);
@@ -1405,6 +1406,7 @@ void ComponentInheritance_pair_multi(void);
 void ComponentInheritance_pair_different_target(void);
 void ComponentInheritance_pair_wildcard(void);
 void ComponentInheritance_pair_wildcard_multi_rel(void);
+void ComponentInheritance_pair_wildcard_w_owned_base_pair(void);
 void ComponentInheritance_cached_match_derived_table_added_after(void);
 void ComponentInheritance_cached_unmatch_derived_table_on_delete(void);
 
@@ -8217,6 +8219,10 @@ bake_test_case ComponentInheritance_testcases[] = {
         ComponentInheritance_1_fixed_component
     },
     {
+        "1_fixed_component_src_not_row_0",
+        ComponentInheritance_1_fixed_component_src_not_row_0
+    },
+    {
         "1_this_component",
         ComponentInheritance_1_this_component
     },
@@ -8411,6 +8417,10 @@ bake_test_case ComponentInheritance_testcases[] = {
     {
         "pair_wildcard_multi_rel",
         ComponentInheritance_pair_wildcard_multi_rel
+    },
+    {
+        "pair_wildcard_w_owned_base_pair",
+        ComponentInheritance_pair_wildcard_w_owned_base_pair
     },
     {
         "cached_match_derived_table_added_after",
@@ -14414,7 +14424,7 @@ static bake_test_suite suites[] = {
         "ComponentInheritance",
         ComponentInheritance_setup,
         NULL,
-        72,
+        74,
         ComponentInheritance_testcases,
         1,
         ComponentInheritance_params

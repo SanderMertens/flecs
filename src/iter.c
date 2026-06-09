@@ -194,8 +194,10 @@ void* flecs_field_shared(
     const ecs_table_record_t *tr = flecs_component_get_table(cr, table);
     int16_t column = tr->column;
 
-    return ECS_ELEM(table->data.columns[column].data,
-        (ecs_size_t)size, ECS_RECORD_TO_ROW(r->row));
+    ecs_column_t *col = &table->data.columns[column];
+    (void)size;
+
+    return ECS_ELEM(col->data, col->ti->size, ECS_RECORD_TO_ROW(r->row));
 }
 
 void* ecs_field_at_w_size(

@@ -775,4 +775,3 @@ ecs_query_cache_t* flecs_query_cache_init(
 error:
     return NULL;
 }
-

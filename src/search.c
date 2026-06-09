@@ -136,7 +136,6 @@ bool flecs_id_match_inherited(
     }
 }
 
-static
 int32_t flecs_table_offset_search_w_inherited(
     const ecs_world_t *world,
     const ecs_table_t *table,
@@ -453,6 +452,10 @@ int32_t ecs_search_offset(
     if (!offset) {
         flecs_poly_assert(world, ecs_world_t);
         return ecs_search(world, table, id, id_out);
+    }
+
+    if (world) {
+        world = ecs_get_world(world);
     }
 
     return flecs_table_offset_search_w_inherited(world, table, offset, id, id_out);

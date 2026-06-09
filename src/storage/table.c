@@ -1065,6 +1065,7 @@ void flecs_table_init(
         }
     }
 
+    /* If table has IsA pairs, create overrides cache */
     if (isa_tr) {
         flecs_table_init_overrides(world, table, isa_tr);
     }
