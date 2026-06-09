@@ -7366,13 +7366,13 @@ void flecs_actions_delete_tree(
     const ecs_table_diff_t *diff)
 {
     if (diff->removed.count) {
+        if (table->flags & EcsTableHasTraversable) {
+            flecs_emit_propagate_invalidate(world, table, row, count);
+        }
+
         ecs_flags32_t diff_flags = diff->removed_flags;
         if (!diff_flags) {
             return;
-        }
-
-        if (table->flags & EcsTableHasTraversable) {
-            flecs_emit_propagate_invalidate(world, table, row, count);
         }
 
         flecs_actions_on_remove_intern(

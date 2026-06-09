@@ -944,6 +944,7 @@ void NonFragmentingChildOf_instantiate_tree_at_depth_n_w_parent(void);
 void NonFragmentingChildOf_instantiate_tree_at_depth_1_w_childof(void);
 void NonFragmentingChildOf_instantiate_tree_at_depth_2_w_childof(void);
 void NonFragmentingChildOf_instantiate_tree_at_depth_n_w_childof(void);
+void NonFragmentingChildOf_delete_parent_of_instantiated_tree_w_childof(void);
 void NonFragmentingChildOf_reparent_instantiated_tree_w_parent(void);
 void NonFragmentingChildOf_reparent_instantiated_tree_w_childof(void);
 void NonFragmentingChildOf_instantiate_instance_after_remove_all_tag(void);
@@ -7104,6 +7105,10 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "instantiate_tree_at_depth_n_w_childof",
         NonFragmentingChildOf_instantiate_tree_at_depth_n_w_childof
+    },
+    {
+        "delete_parent_of_instantiated_tree_w_childof",
+        NonFragmentingChildOf_delete_parent_of_instantiated_tree_w_childof
     },
     {
         "reparent_instantiated_tree_w_parent",
@@ -16947,7 +16952,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NULL,
         NULL,
-        261,
+        262,
         NonFragmentingChildOf_testcases
     },
     {

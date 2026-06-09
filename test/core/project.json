@@ -978,6 +978,7 @@
                 "instantiate_tree_at_depth_1_w_childof",
                 "instantiate_tree_at_depth_2_w_childof",
                 "instantiate_tree_at_depth_n_w_childof",
+                "delete_parent_of_instantiated_tree_w_childof",
                 "reparent_instantiated_tree_w_parent",
                 "reparent_instantiated_tree_w_childof",
                 "instantiate_instance_after_remove_all_tag",
