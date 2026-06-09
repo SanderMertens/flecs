@@ -12,7 +12,8 @@ function(target_default_compile_options_c THIS)
             LINKER_LANGUAGE C
             C_STANDARD 99
             C_STANDARD_REQUIRED ON
-            C_VISIBILITY_PRESET hidden)
+            C_VISIBILITY_PRESET hidden
+            POSITION_INDEPENDENT_CODE ON)
 
 endfunction()
 
@@ -21,6 +22,7 @@ function(target_default_compile_options_cxx THIS)
     set_target_properties(${THIS} PROPERTIES
             LINKER_LANGUAGE CXX
             CXX_STANDARD 17
-            CXX_STANDARD_REQUIRED ON)
+            CXX_STANDARD_REQUIRED ON
+            POSITION_INDEPENDENT_CODE ON)
 
 endfunction()
