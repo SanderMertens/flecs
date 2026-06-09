@@ -38223,6 +38223,10 @@ int flecs_term_finalize(
         cr_flags = flecs_component_get_flags(world, term->id);
     }
 
+    if (cr_flags & EcsIdDontFragment) {
+        term->flags_ |= EcsTermDontFragment;
+    }
+
     if (src_id || src->name) {
         if (!(term->src.id & EcsTraverseFlags)) {
             if (cr_flags & EcsIdOnInstantiateInherit) {
