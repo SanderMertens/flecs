@@ -2774,7 +2774,8 @@
                 "this_childof_w_prefab_match_prefab",
                 "this_set_childof_w_prefab",
                 "this_set_childof_w_prefab_match_prefab",
-                "query_parent_in_on_add_parent_observer"
+                "query_parent_in_on_add_parent_observer",
+                "up_query_cache_stale_table_after_shrink"
             ]
         }, {
             "id": "OrderBy",

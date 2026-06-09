@@ -23951,3 +23951,63 @@ void NonFragmentingChildOf_query_parent_in_on_add_parent_observer(void) {
 
     ecs_fini(world);
 }
+
+void NonFragmentingChildOf_up_query_cache_stale_table_after_shrink(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { .id = Foo, .src.id = EcsUp, .trav = EcsChildOf },
+            { .id = Foo, .src.id = EcsSelf, .oper = EcsNot }
+        },
+        .cache_kind = EcsQueryCacheAuto
+    });
+    test_assert(q != NULL);
+
+    ecs_entity_t parent = ecs_new_w(world, Foo);
+    ecs_entity_t child = ecs_insert(world, ecs_value(EcsParent, {parent}));
+    ecs_set(world, child, Position, {1, 2});
+
+    ecs_remove(world, parent, Foo);
+    ecs_add(world, parent, Foo);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(child, it.entities[0]);
+        test_uint(parent, ecs_field_src(&it, 0));
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(Foo, ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
+
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_delete(world, child);
+    ecs_shrink(world);
+
+    int32_t i;
+    for (i = 0; i < 8; i ++) {
+        ecs_entity_t tag = ecs_new(world);
+        ecs_entity_t c = ecs_insert(world, ecs_value(EcsParent, {parent}));
+        ecs_add_id(world, c, tag);
+    }
+
+    {
+        int32_t count = 0;
+        ecs_iter_t it = ecs_query_iter(world, q);
+        while (ecs_query_next(&it)) {
+            count += it.count;
+        }
+        test_int(count, 8);
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
