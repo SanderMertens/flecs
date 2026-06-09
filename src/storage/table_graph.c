@@ -1051,7 +1051,7 @@ ecs_table_t* flecs_find_table_with(
 {
     ecs_make_alive_id(world, with);
 
-    ecs_component_record_t *cr = NULL;
+    ecs_component_record_t *cr = flecs_components_ensure(world, with);
     ecs_entity_t r = 0, o = 0;
     ecs_type_t dst_type;
     bool replaced = false;
@@ -1059,10 +1059,11 @@ ecs_table_t* flecs_find_table_with(
     if (ECS_IS_PAIR(with)) {
         r = ECS_PAIR_FIRST(with);
         o = ECS_PAIR_SECOND(with);
-        cr = flecs_components_ensure(world, ecs_pair(r, EcsWildcard));
-        if (cr->flags & EcsIdExclusive) {
+        ecs_component_record_t *cr_r = flecs_components_ensure(
+            world, ecs_pair(r, EcsWildcard));
+        if (cr_r->flags & EcsIdExclusive) {
             /* Relationship is exclusive, check if table already has it */
-            const ecs_table_record_t *tr = flecs_component_get_table(cr, node);
+            const ecs_table_record_t *tr = flecs_component_get_table(cr_r, node);
             if (tr) {
                 /* Table already has an instance of the relationship, create
                  * a new id sequence with the existing id replaced */
@@ -1071,9 +1072,8 @@ ecs_table_t* flecs_find_table_with(
                 dst_type.array[tr->index] = with;
                 replaced = true;
             }
-        }
+        } 
     } else {
-        cr = flecs_components_ensure(world, with);
         r = with;
     }
 

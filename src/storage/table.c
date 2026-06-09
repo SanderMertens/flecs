@@ -240,16 +240,11 @@ void flecs_table_init_flags(
         ecs_id_t id = ids[i];
 
 #if !defined(FLECS_NDEBUG) || defined(FLECS_KEEP_ASSERT)
-        {
-            ecs_id_t check_id = ECS_IS_PAIR(id)
-                ? ecs_pair(ECS_PAIR_FIRST(id), EcsWildcard)
-                : id;
-            ecs_component_record_t *id_cr = flecs_components_ensure(
-                world, check_id);
-            ecs_assert(!(id_cr->flags & EcsIdDontFragment),
-                ECS_INVALID_OPERATION,
-                "table type cannot contain DontFragment components");
-        }
+        ecs_component_record_t *cr = flecs_components_ensure(world, id);
+        ecs_assert(!(cr->flags & EcsIdDontFragment),
+            ECS_INVALID_OPERATION,
+            "cannot create table with DontFragment component '%s'",
+                flecs_errstr(ecs_id_str(world, id)));
 #endif
 
         if (id <= EcsLastInternalComponentId) {

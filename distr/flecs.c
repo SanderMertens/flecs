@@ -42762,16 +42762,11 @@ void flecs_table_init_flags(
         ecs_id_t id = ids[i];
 
 #if !defined(FLECS_NDEBUG) || defined(FLECS_KEEP_ASSERT)
-        {
-            ecs_id_t check_id = ECS_IS_PAIR(id)
-                ? ecs_pair(ECS_PAIR_FIRST(id), EcsWildcard)
-                : id;
-            ecs_component_record_t *id_cr = flecs_components_ensure(
-                world, check_id);
-            ecs_assert(!(id_cr->flags & EcsIdDontFragment),
-                ECS_INVALID_OPERATION,
-                "table type cannot contain DontFragment components");
-        }
+        ecs_component_record_t *cr = flecs_components_ensure(world, id);
+        ecs_assert(!(cr->flags & EcsIdDontFragment),
+            ECS_INVALID_OPERATION,
+            "cannot create table with DontFragment component '%s'",
+                flecs_errstr(ecs_id_str(world, id)));
 #endif
 
         if (id <= EcsLastInternalComponentId) {
@@ -47010,7 +47005,7 @@ ecs_table_t* flecs_find_table_with(
 {
     ecs_make_alive_id(world, with);
 
-    ecs_component_record_t *cr = NULL;
+    ecs_component_record_t *cr = flecs_components_ensure(world, with);
     ecs_entity_t r = 0, o = 0;
     ecs_type_t dst_type;
     bool replaced = false;
@@ -47018,10 +47013,11 @@ ecs_table_t* flecs_find_table_with(
     if (ECS_IS_PAIR(with)) {
         r = ECS_PAIR_FIRST(with);
         o = ECS_PAIR_SECOND(with);
-        cr = flecs_components_ensure(world, ecs_pair(r, EcsWildcard));
-        if (cr->flags & EcsIdExclusive) {
+        ecs_component_record_t *cr_r = flecs_components_ensure(
+            world, ecs_pair(r, EcsWildcard));
+        if (cr_r->flags & EcsIdExclusive) {
             /* Relationship is exclusive, check if table already has it */
-            const ecs_table_record_t *tr = flecs_component_get_table(cr, node);
+            const ecs_table_record_t *tr = flecs_component_get_table(cr_r, node);
             if (tr) {
                 /* Table already has an instance of the relationship, create
                  * a new id sequence with the existing id replaced */
@@ -47030,9 +47026,8 @@ ecs_table_t* flecs_find_table_with(
                 dst_type.array[tr->index] = with;
                 replaced = true;
             }
-        }
+        } 
     } else {
-        cr = flecs_components_ensure(world, with);
         r = with;
     }
 
