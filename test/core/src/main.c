@@ -326,6 +326,12 @@ void ComponentInheritance_get_2_lvl(void);
 void ComponentInheritance_get_3_lvl(void);
 void ComponentInheritance_search_2_lvl(void);
 void ComponentInheritance_search_3_lvl(void);
+void ComponentInheritance_search_base_no_match(void);
+void ComponentInheritance_search_base_w_base_only(void);
+void ComponentInheritance_search_base_w_single_derived(void);
+void ComponentInheritance_search_base_w_two_derived(void);
+void ComponentInheritance_search_two_derived_for_base(void);
+void ComponentInheritance_search_base_and_derived_for_base(void);
 void ComponentInheritance_get_after_add_isa(void);
 void ComponentInheritance_has_after_add_isa(void);
 void ComponentInheritance_has_after_remove_isa(void);
@@ -4686,6 +4692,30 @@ bake_test_case ComponentInheritance_testcases[] = {
     {
         "search_3_lvl",
         ComponentInheritance_search_3_lvl
+    },
+    {
+        "search_base_no_match",
+        ComponentInheritance_search_base_no_match
+    },
+    {
+        "search_base_w_base_only",
+        ComponentInheritance_search_base_w_base_only
+    },
+    {
+        "search_base_w_single_derived",
+        ComponentInheritance_search_base_w_single_derived
+    },
+    {
+        "search_base_w_two_derived",
+        ComponentInheritance_search_base_w_two_derived
+    },
+    {
+        "search_two_derived_for_base",
+        ComponentInheritance_search_two_derived_for_base
+    },
+    {
+        "search_base_and_derived_for_base",
+        ComponentInheritance_search_base_and_derived_for_base
     },
     {
         "get_after_add_isa",
@@ -16887,7 +16917,7 @@ static bake_test_suite suites[] = {
         "ComponentInheritance",
         NULL,
         NULL,
-        74,
+        80,
         ComponentInheritance_testcases
     },
     {

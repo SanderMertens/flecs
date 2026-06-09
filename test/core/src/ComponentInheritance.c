@@ -202,6 +202,169 @@ void ComponentInheritance_search_3_lvl(void) {
     ecs_fini(world);
 }
 
+void ComponentInheritance_search_base_no_match(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Unit);
+    ECS_TAG(world, Warrior);
+    ECS_TAG(world, Foo);
+
+    ecs_add_pair(world, Warrior, EcsIsA, Unit);
+
+    ecs_entity_t e = ecs_new_w_id(world, Foo);
+    ecs_table_t *table = ecs_get_table(world, e);
+    test_assert(table != NULL);
+
+    ecs_id_t id_out = 0;
+    int32_t col = ecs_search(world, table, Unit, &id_out);
+    test_int(col, -1);
+    test_uint(id_out, 0);
+
+    col = ecs_search_offset(world, table, 0, Unit, &id_out);
+    test_int(col, -1);
+
+    ecs_fini(world);
+}
+
+void ComponentInheritance_search_base_w_base_only(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Unit);
+    ECS_TAG(world, Warrior);
+
+    ecs_add_pair(world, Warrior, EcsIsA, Unit);
+
+    ecs_entity_t e = ecs_new_w_id(world, Unit);
+    ecs_table_t *table = ecs_get_table(world, e);
+    test_assert(table != NULL);
+
+    ecs_id_t id_out = 0;
+    int32_t col = ecs_search(world, table, Unit, &id_out);
+    test_int(col, 0);
+    test_uint(id_out, Unit);
+
+    id_out = 0;
+    col = ecs_search_offset(world, table, 0, Unit, &id_out);
+    test_int(col, 0);
+    test_uint(id_out, Unit);
+
+    col = ecs_search_offset(world, table, 1, Unit, &id_out);
+    test_int(col, -1);
+
+    ecs_fini(world);
+}
+
+void ComponentInheritance_search_base_w_single_derived(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Unit);
+    ECS_TAG(world, Warrior);
+
+    ecs_add_pair(world, Warrior, EcsIsA, Unit);
+
+    ecs_entity_t e = ecs_new_w_id(world, Warrior);
+    ecs_table_t *table = ecs_get_table(world, e);
+    test_assert(table != NULL);
+
+    ecs_id_t id_out = 0;
+    int32_t col = ecs_search(world, table, Unit, &id_out);
+    test_int(col, 0);
+    test_uint(id_out, Warrior);
+
+    id_out = 0;
+    col = ecs_search_offset(world, table, 0, Unit, &id_out);
+    test_int(col, 0);
+    test_uint(id_out, Warrior);
+
+    col = ecs_search_offset(world, table, 1, Unit, &id_out);
+    test_int(col, -1);
+
+    ecs_fini(world);
+}
+
+void ComponentInheritance_search_base_w_two_derived(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Unit);
+    ECS_TAG(world, Warrior);
+    ECS_TAG(world, Wizard);
+
+    ecs_add_pair(world, Warrior, EcsIsA, Unit);
+    ecs_add_pair(world, Wizard, EcsIsA, Unit);
+
+    ecs_entity_t e = ecs_new_w_id(world, Warrior);
+    ecs_add_id(world, e, Wizard);
+    ecs_table_t *table = ecs_get_table(world, e);
+    test_assert(table != NULL);
+
+    ecs_id_t id_out = 0;
+    int32_t col = ecs_search(world, table, Unit, &id_out);
+    test_int(col, 0);
+    test_uint(id_out, Warrior);
+
+    ecs_fini(world);
+}
+
+void ComponentInheritance_search_two_derived_for_base(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Unit);
+    ECS_TAG(world, Warrior);
+    ECS_TAG(world, Wizard);
+
+    ecs_add_pair(world, Warrior, EcsIsA, Unit);
+    ecs_add_pair(world, Wizard, EcsIsA, Unit);
+
+    ecs_entity_t e = ecs_new_w_id(world, Warrior);
+    ecs_add_id(world, e, Wizard);
+    ecs_table_t *table = ecs_get_table(world, e);
+    test_assert(table != NULL);
+
+    ecs_id_t id_out = 0;
+    int32_t col = ecs_search_offset(world, table, 0, Unit, &id_out);
+    test_int(col, 0);
+    test_uint(id_out, Warrior);
+
+    id_out = 0;
+    col = ecs_search_offset(world, table, col + 1, Unit, &id_out);
+    test_int(col, 1);
+    test_uint(id_out, Wizard);
+
+    col = ecs_search_offset(world, table, col + 1, Unit, &id_out);
+    test_int(col, -1);
+
+    ecs_fini(world);
+}
+
+void ComponentInheritance_search_base_and_derived_for_base(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Unit);
+    ECS_TAG(world, Warrior);
+
+    ecs_add_pair(world, Warrior, EcsIsA, Unit);
+
+    ecs_entity_t e = ecs_new_w_id(world, Unit);
+    ecs_add_id(world, e, Warrior);
+    ecs_table_t *table = ecs_get_table(world, e);
+    test_assert(table != NULL);
+
+    ecs_id_t id_out = 0;
+    int32_t col = ecs_search(world, table, Unit, &id_out);
+    test_int(col, 0);
+    test_uint(id_out, Unit);
+
+    id_out = 0;
+    col = ecs_search_offset(world, table, col + 1, Unit, &id_out);
+    test_int(col, 1);
+    test_uint(id_out, Warrior);
+
+    col = ecs_search_offset(world, table, col + 1, Unit, &id_out);
+    test_int(col, -1);
+
+    ecs_fini(world);
+}
+
 void ComponentInheritance_get_after_add_isa(void) {
     install_test_abort();
 

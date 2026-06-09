@@ -19712,10 +19712,8 @@ bool flecs_component_inherits_from(
         return false;
     }
 
-    ecs_record_t *r = flecs_entities_get(world, component);
-    if (!r) {
-        return false;
-    }
+    ecs_record_t *r = flecs_entities_get_any(world, component);
+    ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_table_t *table = r->table;
     if (!table || !(table->flags & EcsTableHasIsA)) {
@@ -19728,11 +19726,12 @@ bool flecs_component_inherits_from(
         return false;
     }
 
+    uint32_t base_lo = (uint32_t)base;
     ecs_id_t *ids = table->type.array;
     int32_t i = tr_isa->index, end = i + tr_isa->count;
     for (; i < end; i ++) {
-        ecs_entity_t b = ecs_pair_second(world, ids[i]);
-        if (b == base) {
+        ecs_entity_t b = ECS_PAIR_SECOND(ids[i]);
+        if (b == base_lo) {
             return true;
         }
         if (flecs_component_inherits_from(world, b, base, depth + 1)) {
@@ -19760,7 +19759,7 @@ bool flecs_id_match_inherited(
             }
         }
         return flecs_component_inherits_from(world,
-            ecs_pair_first(world, type_id), ecs_pair_first(world, id), 0);
+            ECS_PAIR_FIRST(type_id), ECS_PAIR_FIRST(id), 0);
     } else {
         if (type_id & ECS_ID_FLAGS_MASK) {
             return false;
@@ -19778,10 +19777,14 @@ int32_t flecs_table_offset_search_w_inherited(
 {
     ecs_assert(id != 0, ECS_INVALID_PARAMETER, NULL);
 
-    bool check_inherited = world && world->cr_isa_wildcard &&
-        flecs_table_cache_count(&world->cr_isa_wildcard->cache);
+    if (!world || !world->cr_isa_wildcard ||
+        !(table->flags & EcsTableHasDerived))
+    {
+        return flecs_table_offset_search(table, offset, id, id_out);
+    }
 
     ecs_id_t *ids = table->type.array;
+    const ecs_table_record_t *trs = table->_->records;
     int32_t count = table->type.count;
     while (offset < count) {
         ecs_id_t type_id = ids[offset ++];
@@ -19791,11 +19794,13 @@ int32_t flecs_table_offset_search_w_inherited(
             }
             return offset - 1;
         }
-        if (check_inherited && flecs_id_match_inherited(world, type_id, id)) {
-            if (id_out) {
-                id_out[0] = type_id;
+        if (trs[offset - 1].hdr.cr->flags & EcsIdHasBases) {
+            if (flecs_id_match_inherited(world, type_id, id)) {
+                if (id_out) {
+                    id_out[0] = type_id;
+                }
+                return offset - 1;
             }
-            return offset - 1;
         }
     }
 
@@ -35216,6 +35221,7 @@ void flecs_table_init(
     int32_t inherited_start = ecs_vec_count(records);
     int32_t inherited_count = 0;
     if (all_flags & EcsIdHasBases) {
+        table->flags |= EcsTableHasDerived;
         flecs_table_register_inherited(world, table, records);
         inherited_count = ecs_vec_count(records) - inherited_start;
     }

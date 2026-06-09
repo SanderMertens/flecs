@@ -780,6 +780,7 @@ void flecs_table_init(
     int32_t inherited_start = ecs_vec_count(records);
     int32_t inherited_count = 0;
     if (all_flags & EcsIdHasBases) {
+        table->flags |= EcsTableHasDerived;
         flecs_table_register_inherited(world, table, records);
         inherited_count = ecs_vec_count(records) - inherited_start;
     }
