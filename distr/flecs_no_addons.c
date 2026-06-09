@@ -22959,6 +22959,32 @@ const ecs_entity_range_t* ecs_entity_range_new(
 
     /* Validate no overlap with existing ranges */
     ecs_entity_index_t *index = ecs_eis(world);
+    ecs_check(flecs_entity_index_not_alive_count(index) == 0,
+        ECS_INVALID_OPERATION,
+        "cannot create entity range after entities have been deleted");
+
+    bool first_range = ecs_vec_count(&index->ranges) == 0;
+
+    /* If this is the first range and it covers the default [1, ...] id space,
+     * it must be large enough to contain all currently alive entities. */
+    if (first_range && min == 1) {
+        ecs_check(!max || max >= index->max_id, ECS_INVALID_OPERATION,
+            "range [%u, %u] cannot be below last alive entity id %u",
+                min, max, (uint32_t)index->max_id);
+    }
+
+    /* If this is the first range to be created and it does not start at 1,
+     * create a default range for the [1, min) id space and activate it, so
+     * that the default id allocation behavior is preserved. */
+    if (first_range && min > 1) {
+        ecs_entity_range_t *default_range = ECS_CONST_CAST(ecs_entity_range_t*,
+            ecs_entity_range_new(world, 1, min - 1));
+        default_range->cur = index->max_id;
+        flecs_entity_index_set_range(index, default_range);
+    }
+
+    ecs_allocator_t *a = &world->allocator;
+
     int32_t count = ecs_vec_count(&index->ranges);
     if (count > 0) {
         ecs_entity_range_t **ranges = ecs_vec_first_t(&index->ranges,
@@ -22984,8 +23010,6 @@ const ecs_entity_range_t* ecs_entity_range_new(
         }
     }
 
-    ecs_allocator_t *a = &world->allocator;
-
     ecs_entity_range_t *range = flecs_walloc_t(world, ecs_entity_range_t);
     range->min = min;
     range->max = max;
@@ -23008,6 +23032,13 @@ const ecs_entity_range_t* ecs_entity_range_new(
             ranges[i] = ranges[i - 1];
         }
         ranges[i] = range;
+    }
+
+    /* If this is the first range and it covers the default [1, ...] id space,
+     * activate it so the default id allocation behavior is preserved. */
+    if (first_range && min == 1) {
+        range->cur = index->max_id;
+        flecs_entity_index_set_range(index, range);
     }
 
     return range;

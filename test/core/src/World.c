@@ -145,7 +145,12 @@ void World_range_get(void) {
     const ecs_entity_range_t *range_a = ecs_entity_range_new(world, 1000, 2000);
     const ecs_entity_range_t *range_b = ecs_entity_range_new(world, 3000, 4000);
 
-    test_assert(ecs_entity_range_get(world) == NULL);
+    const ecs_entity_range_t *default_range = ecs_entity_range_get(world);
+    test_assert(default_range != NULL);
+    test_assert(default_range != range_a);
+    test_assert(default_range != range_b);
+    test_uint(default_range->min, 1);
+    test_uint(default_range->max, 999);
 
     ecs_entity_range_set(world, range_a);
     test_assert(ecs_entity_range_get(world) == range_a);
@@ -327,12 +332,13 @@ void World_range_delete_outside_all_ranges(void) {
 void World_range_set_clears_pre_existing_not_alive(void) {
     ecs_world_t *world = ecs_mini();
 
+    const ecs_entity_range_t *range = ecs_entity_range_new(world, 5000, 6000);
+
     ecs_entity_t e1 = ecs_new(world);
     ecs_entity_t e2 = ecs_new(world);
     ecs_delete(world, e1);
     ecs_delete(world, e2);
 
-    const ecs_entity_range_t *range = ecs_entity_range_new(world, 5000, 6000);
     ecs_entity_range_set(world, range);
 
     ecs_entity_t e3 = ecs_new(world);
@@ -553,6 +559,18 @@ void World_range_overlapping_at_boundary_assert(void) {
     ecs_entity_range_new(world, 2000, 3000);
 }
 
+void World_range_new_after_delete_assert(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_delete(world, e);
+
+    test_expect_abort();
+    ecs_entity_range_new(world, 1000, 2000);
+}
+
 void World_range_adjacent_no_overlap(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -762,6 +780,32 @@ void World_range_delete_recycled_to_correct_range(void) {
     test_uint((uint32_t)e3, 1000);
     test_assert(e3 != e2);
     test_assert(e3 != e1);
+
+    ecs_fini(world);
+}
+
+void World_range_create_small_range_from_1(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    test_expect_abort();
+    // range cannot be below last alive entity id.
+    ecs_entity_range_new(world, 1, 10);
+}
+
+void World_range_create_large_range_from_1(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e1 = ecs_new(world);
+
+    const ecs_entity_range_t *range = ecs_entity_range_new(world, 1, 1000);
+    // first range and starts from 1
+    test_assert(ecs_entity_range_get(world) == range);
+
+    ecs_delete(world, e1);
+    ecs_entity_t e2 = ecs_new(world);
+    test_uint(e1, (uint32_t)e2);
 
     ecs_fini(world);
 }
