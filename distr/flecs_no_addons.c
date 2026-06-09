@@ -32948,19 +32948,19 @@ ecs_component_record_t* flecs_add_non_fragmenting_child(
 }
 
 static
-void flecs_remove_non_fragmenting_child(
+ecs_component_record_t* flecs_remove_non_fragmenting_child(
     ecs_world_t *world,
     ecs_entity_t parent,
     ecs_entity_t entity)
 {
     if (!parent) {
-        return;
+        return NULL;
     }
 
     ecs_component_record_t *cr = flecs_components_get(world,
         ecs_pair(EcsChildOf, parent));
     if (!cr || (cr->flags & EcsIdMarkedForDelete)) {
-        return;
+        return NULL;
     }
 
     flecs_ordered_entities_remove(world, cr, entity);
@@ -32971,6 +32971,8 @@ void flecs_remove_non_fragmenting_child(
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
     flecs_remove_non_fragmenting_child_from_table(cr, table);
+
+    return cr;
 }
 
 static
@@ -33050,9 +33052,10 @@ void flecs_on_replace_parent(ecs_iter_t *it) {
             .count = 1, .array = &new_parent
         }, NULL);
         
-        flecs_remove_non_fragmenting_child(world, old_parent, e);
+        ecs_component_record_t *cr_old =
+            flecs_remove_non_fragmenting_child(world, old_parent, e);
 
-        ecs_component_record_t *cr_parent = 
+        ecs_component_record_t *cr_parent =
             flecs_add_non_fragmenting_child(world, new_parent, e);
         if (!cr_parent) {
             continue;
@@ -33067,16 +33070,24 @@ void flecs_on_replace_parent(ecs_iter_t *it) {
          * it can trigger a table move that reads the parent value. */
         old[i].value = new_parent;
 
-        int32_t depth = cr_parent->pair->depth;
-        ecs_add_id(world, e, ecs_value_pair(EcsParentDepth, depth));
-
-        ecs_component_record_t *cr = flecs_components_get(world, ecs_childof(e));
-        if (cr) {
-            flecs_component_update_childof_w_depth(world, cr, depth + 1);
-        }
-
         ecs_record_t *r = flecs_entities_get(world, e);
         ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        int32_t depth = cr_parent->pair->depth;
+
+        /* If the entity had a parent before, it has a ParentDepth pair that
+         * matches the depth of the old parent. If the depth of the new parent
+         * is the same, the pair doesn't have to be updated and neither do the
+         * cached depths for the entity's children. */
+        if (!cr_old || cr_old->pair->depth != depth) {
+            ecs_add_id(world, e, ecs_value_pair(EcsParentDepth, depth));
+
+            ecs_component_record_t *cr = flecs_components_get(
+                world, ecs_childof(e));
+            if (cr) {
+                flecs_component_update_childof_w_depth(world, cr, depth + 1);
+            }
+        }
 
         if (r->row & EcsEntityIsTraversable) {
             ecs_id_t added = ecs_childof(new_parent);
