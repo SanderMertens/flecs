@@ -242,6 +242,48 @@ error:
     return;
 }
 
+static
+void flecs_register_isa(ecs_iter_t *it) {
+    ecs_world_t *world = it->real_world;
+
+    bool has_bases = true;
+    if (it->event == EcsOnRemove) {
+        has_bases = (it->other_table != NULL) &&
+            (it->other_table->flags & EcsTableHasIsA);
+    }
+
+    int i, count = it->count;
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t e = it->entities[i];
+
+        ecs_record_t *r = flecs_entities_get(world, e);
+        ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+        if (!(r->row & EcsEntityIsId)) {
+            continue;
+        }
+
+        ecs_component_record_t *cr = flecs_components_get(world, e);
+        if (cr) {
+            if (has_bases) {
+                flecs_set_id_flag(world, cr, EcsIdHasBases, EcsIsA);
+            } else {
+                flecs_unset_id_flag(cr, EcsIdHasBases);
+            }
+        }
+
+        cr = flecs_components_get(world, ecs_pair(e, EcsWildcard));
+        if (cr) {
+            do {
+                if (has_bases) {
+                    flecs_set_id_flag(world, cr, EcsIdHasBases, EcsIsA);
+                } else {
+                    flecs_unset_id_flag(cr, EcsIdHasBases);
+                }
+            } while ((cr = flecs_component_first_next(cr)));
+        }
+    }
+}
+
 #ifndef FLECS_NDEBUG
 static
 void flecs_assert_isa_change(ecs_iter_t *it) {
@@ -1114,6 +1156,16 @@ void flecs_bootstrap(
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd},
         .callback = flecs_register_final,
+        .global_observer = true
+    });
+
+    ecs_observer(world, {
+        .query.terms = {
+            { .id = ecs_pair(EcsIsA, EcsWildcard) }
+        },
+        .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
+        .events = {EcsOnAdd, EcsOnRemove},
+        .callback = flecs_register_isa,
         .global_observer = true
     });
 

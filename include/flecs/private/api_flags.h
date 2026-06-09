@@ -92,6 +92,7 @@ extern "C" {
         EcsIdHasOnTableCreate|EcsIdHasOnTableDelete|EcsIdSparse|\
         EcsIdOrderedChildren)
 #define EcsIdPrefabChildren            (1u << 26)
+#define EcsIdHasBases                  (1u << 27) /* Component/relationship entity has IsA pairs. */
 
 #define EcsIdMarkedForDelete           (1u << 30)
 
