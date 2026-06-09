@@ -1929,6 +1929,8 @@ void ChangeDetection_detect_w_childof_self_up(void);
 void ChangeDetection_detect_w_cascade(void);
 void ChangeDetection_detect_w_cascade_desc(void);
 void ChangeDetection_detect_partially_cached(void);
+void ChangeDetection_mark_fixed_fields_dirty_after_remove(void);
+void ChangeDetection_mark_fixed_fields_dirty_w_tag_before(void);
 
 // Testsuite 'GroupBy'
 void GroupBy_group_by(void);
@@ -10404,6 +10406,14 @@ bake_test_case ChangeDetection_testcases[] = {
     {
         "detect_partially_cached",
         ChangeDetection_detect_partially_cached
+    },
+    {
+        "mark_fixed_fields_dirty_after_remove",
+        ChangeDetection_mark_fixed_fields_dirty_after_remove
+    },
+    {
+        "mark_fixed_fields_dirty_w_tag_before",
+        ChangeDetection_mark_fixed_fields_dirty_w_tag_before
     }
 };
 
@@ -14136,7 +14146,7 @@ static bake_test_suite suites[] = {
         "ChangeDetection",
         NULL,
         NULL,
-        73,
+        75,
         ChangeDetection_testcases
     },
     {

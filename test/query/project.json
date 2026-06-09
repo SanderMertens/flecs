@@ -1989,7 +1989,9 @@
                 "detect_w_childof_self_up",
                 "detect_w_cascade",
                 "detect_w_cascade_desc",
-                "detect_partially_cached"
+                "detect_partially_cached",
+                "mark_fixed_fields_dirty_after_remove",
+                "mark_fixed_fields_dirty_w_tag_before"
             ]
         }, {
             "id": "GroupBy",

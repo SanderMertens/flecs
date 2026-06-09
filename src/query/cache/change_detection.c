@@ -573,7 +573,7 @@ void flecs_query_mark_fixed_fields_dirty(
             }
         }
         ecs_assert(tr->column >= 0, ECS_INTERNAL_ERROR, NULL);
-        int32_t column = table->column_map[tr->column];
+        int32_t column = table->column_map[tr->index];
         dirty_state[column + 1] ++;
     }
 }
