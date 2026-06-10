@@ -35563,8 +35563,10 @@ void flecs_table_move_bitset_columns(
                 flecs_bitset_fini(src_bs);
             }
         } else if (dst_id > src_id) {
-            ecs_bitset_t *src_bs = &src_columns[i_old];
-            flecs_bitset_fini(src_bs);
+            if (clear) {
+                ecs_bitset_t *src_bs = &src_columns[i_old];
+                flecs_bitset_fini(src_bs);
+            }
         }
 
         i_new += dst_id <= src_id;
