@@ -1401,7 +1401,8 @@ int flecs_query_finalize_terms(
 
             /* Sparse component fields must be accessed with ecs_field_at */
             if (!nodata_term) {
-                q->row_fields |= flecs_uto(uint32_t, 1llu << i);
+                q->row_fields |= flecs_uto(uint32_t,
+                    1llu << term->field_index);
             }
         }
 
