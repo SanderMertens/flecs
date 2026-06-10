@@ -43420,9 +43420,14 @@ void flecs_table_fini_data(
         }
         else {
             for (c = 0; c < column_count; c++) {
-                bs_columns[c].count = 0;
+                ecs_bitset_t *bs = &bs_columns[c];
+                if (bs->data) {
+                    ecs_os_memset(bs->data, 0,
+                        (bs->size >> 6) * ECS_SIZEOF(uint64_t));
+                }
+                bs->count = 0;
             }
-        }        
+        }
         
         if (deallocate) {
             flecs_wfree_n(world, ecs_bitset_t, column_count, bs_columns);
