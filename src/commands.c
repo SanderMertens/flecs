@@ -163,7 +163,7 @@ bool flecs_defer_delete(
     ecs_entity_t entity)
 {
     if (flecs_defer_cmd(stage)) {
-        ecs_cmd_t *cmd = flecs_cmd_new(stage);
+        ecs_cmd_t *cmd = flecs_cmd_new_batched(stage, entity);
         cmd->kind = EcsCmdDelete;
         cmd->entity = entity;
         return true;
@@ -941,10 +941,13 @@ void flecs_cmd_batch_for_entity(
             world->info.cmd.batched_command_count ++;
             cmd->kind = EcsCmdSkip;
             break;
+        case EcsCmdDelete:
+            /* Entity is deleted, don't batch commands after the delete */
+            next_for_entity = 0;
+            break;
         case EcsCmdClone:
         case EcsCmdBulkNew:
         case EcsCmdPath:
-        case EcsCmdDelete:
         case EcsCmdOnDeleteAction:
         case EcsCmdEnable:
         case EcsCmdDisable:
@@ -1058,6 +1061,10 @@ void flecs_cmd_batch_for_entity(
                 }
                 break;
             }
+            case EcsCmdDelete:
+                /* Entity is deleted, don't process commands after delete */
+                next_for_entity = 0;
+                break;
             case EcsCmdRemove:
             case EcsCmdClone:
             case EcsCmdBulkNew:
@@ -1068,7 +1075,6 @@ void flecs_cmd_batch_for_entity(
             case EcsCmdAddModified:
             case EcsCmdSetDontFragment:
             case EcsCmdPath:
-            case EcsCmdDelete:
             case EcsCmdClear:
             case EcsCmdOnDeleteAction:
             case EcsCmdEnable:
