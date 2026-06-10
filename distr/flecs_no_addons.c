@@ -12683,7 +12683,13 @@ void flecs_instantiate_children(
          * that have already been added to the child table type. */
         if (ECS_HAS_ID_FLAG(id, AUTO_OVERRIDE)) {
             ecs_id_t concreteId = id & ~ECS_AUTO_OVERRIDE;
-            flecs_child_type_insert(&diff.added, component_data, concreteId);
+            int32_t insert_index = flecs_child_type_insert(
+                &diff.added, component_data, concreteId);
+            if (childof_base_index != -1 && insert_index != -1 &&
+                insert_index <= childof_base_index)
+            {
+                childof_base_index ++;
+            }
             continue;
         }
 
