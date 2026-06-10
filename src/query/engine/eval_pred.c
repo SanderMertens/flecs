@@ -161,6 +161,7 @@ bool flecs_query_pred_neq_w_range(
 
         /* Cache old value */
         op_ctx->range = l;
+        op_ctx->redo = false;
     } else {
         l_offset = op_ctx->range.offset;
         l_count = op_ctx->range.count;
@@ -173,8 +174,8 @@ bool flecs_query_pred_neq_w_range(
     ecs_var_t *var = &ctx->vars[src_var];
     if (!redo && r.offset > l_offset) {
         int32_t end = r.offset;
-        if (end > l_count) {
-            end = l_count;
+        if (end > (l_offset + l_count)) {
+            end = l_offset + l_count;
         }
 
         /* Return first slice */
