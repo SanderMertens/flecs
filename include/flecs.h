@@ -6612,6 +6612,7 @@ int ecs_value_copy(
  * @param src A pointer to the value to move.
  * @return Zero if successful, nonzero if failed.
  */
+FLECS_API
 int ecs_value_move_w_type_info(
     const ecs_world_t *world,
     const ecs_type_info_t *ti,
@@ -6626,6 +6627,7 @@ int ecs_value_move_w_type_info(
  * @param src A pointer to the value to move.
  * @return Zero if successful, nonzero if failed.
  */
+FLECS_API
 int ecs_value_move(
     const ecs_world_t *world,
     ecs_entity_t type,
@@ -6640,6 +6642,7 @@ int ecs_value_move(
  * @param src A pointer to the value to move.
  * @return Zero if successful, nonzero if failed.
  */
+FLECS_API
 int ecs_value_move_ctor_w_type_info(
     const ecs_world_t *world,
     const ecs_type_info_t *ti,
@@ -6654,6 +6657,7 @@ int ecs_value_move_ctor_w_type_info(
  * @param src A pointer to the value to move.
  * @return Zero if successful, nonzero if failed.
  */
+FLECS_API
 int ecs_value_move_ctor(
     const ecs_world_t *world,
     ecs_entity_t type,
