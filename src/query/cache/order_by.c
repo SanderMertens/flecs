@@ -277,8 +277,10 @@ void flecs_query_cache_sort_tables(
 
             int32_t column = -1;
             if (order_by) {
+                int32_t order_by_field =
+                    cache->query->terms[order_by_term].field_index;
                 if (flecs_query_check_table_monitor(
-                    impl, qm, order_by_term + 1)) 
+                    impl, qm, order_by_field + 1))
                 {
                     dirty = true;
                 }
