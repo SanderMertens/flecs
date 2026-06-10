@@ -125,11 +125,8 @@ ecs_query_cache_group_t* flecs_query_cache_ensure_group(
         ecs_os_zeromem(group);
 
         ecs_allocator_t *a = &cache->query->real_world->allocator;
-        if (flecs_query_cache_is_trivial(cache)) {
-            ecs_vec_init_t(a, &group->tables, ecs_query_triv_cache_match_t, 0);
-        } else {
-            ecs_vec_init_t(a, &group->tables, ecs_query_cache_match_t, 0);
-        }
+        ecs_vec_init(a, &group->tables,
+            flecs_query_cache_elem_size(cache), 0);
 
         group->info.id = group_id;
 

@@ -455,6 +455,8 @@ struct ecs_query_impl_t {
     int32_t tokens_len;           /* Length of tokens buffer */
     char *tokens;                 /* Buffer with string tokens used by terms */
     int32_t *monitor;             /* Change monitor for fields with fixed src */
+    ecs_flags32_t iter_search_flags; /* Iterator mode flags for searching */
+    ecs_flags32_t iter_test_flags;   /* Iterator mode flags for testing */
 
 #ifdef FLECS_DEBUG
     ecs_termset_t final_terms;    /* Terms that don't use component inheritance */

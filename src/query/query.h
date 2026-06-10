@@ -50,6 +50,10 @@ int flecs_query_trivial_has_range(
 void flecs_query_iter_constrain(
     ecs_iter_t *it);
 
+/* Precompute iterator mode flags used by flecs_query_iter_constrain */
+void flecs_query_update_iter_mode_flags(
+    ecs_query_impl_t *impl);
+
 /* Rematch query after cache could have been invalidated */
 void flecs_query_rematch(
     ecs_world_t *world,

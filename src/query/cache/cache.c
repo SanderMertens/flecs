@@ -138,12 +138,13 @@ bool flecs_query_cache_is_trivial(
     return (cache->query->flags & EcsQueryTrivialCache) != 0;
 }
 
-/* Trivial caches have a significantly smaller cache element size */
+/* Trivial caches have a significantly smaller cache element size. The columns
+ * array is stored inline, right after the element. */
 ecs_size_t flecs_query_cache_elem_size(
-    const ecs_query_cache_t *cache) 
+    const ecs_query_cache_t *cache)
 {
-    return flecs_query_cache_is_trivial(cache) 
-        ? ECS_SIZEOF(ecs_query_triv_cache_match_t) 
+    return flecs_query_cache_is_trivial(cache)
+        ? flecs_query_triv_cache_elem_size(cache->query->field_count)
         : ECS_SIZEOF(ecs_query_cache_match_t)
         ;
 }

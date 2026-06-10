@@ -429,6 +429,8 @@ ecs_query_t* flecs_query_init(
         goto error;
     }
 
+    flecs_query_update_iter_mode_flags(result);
+
     /* Entity could've been set during query finalization if query is cached */
     entity = result->pub.entity;
     if (entity) {

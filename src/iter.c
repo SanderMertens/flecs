@@ -33,7 +33,7 @@ void flecs_iter_free(
     flecs_stack_free(ptr, size);
 }
 
-void flecs_iter_init(
+ecs_stack_t* flecs_iter_init(
     const ecs_world_t *world,
     ecs_iter_t *it,
     bool alloc_resources)
@@ -71,6 +71,8 @@ void flecs_iter_init(
         ecs_os_memset(columns, 0xFF, cols);
         it->columns = columns;
     }
+
+    return stack;
 }
 
 void ecs_iter_fini(

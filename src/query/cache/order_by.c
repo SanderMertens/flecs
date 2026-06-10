@@ -117,7 +117,7 @@ void flecs_query_cache_build_sorted_table_range(
             ecs_size_t size = cache->query->sizes[field];
             ecs_entity_t src = qm->_sources[field];
             if (src == 0) {
-                int32_t column_index = qm->base.columns[field];
+                int32_t column_index = qm->columns[field];
                 ecs_assert(column_index >= 0, ECS_INTERNAL_ERROR, NULL);
                 ecs_column_t *column = &table->data.columns[column_index];
                 helper[to_sort].ptr = column->data;
@@ -197,7 +197,7 @@ void flecs_query_cache_build_sorted_table_range(
         }
 
         sort_helper_t *cur_helper = &helper[min];
-        if (!cur || cur->base.columns != cur_helper->match->base.columns) {
+        if (!cur || cur->columns != cur_helper->match->columns) {
             cur = ecs_vec_append_t(NULL, &cache->table_slices, 
                 ecs_query_cache_match_t);
             *cur = *(cur_helper->match);
