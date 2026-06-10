@@ -724,7 +724,7 @@ void ecs_iter_set_var(
         var->range.count = 0;
     }
 
-    it->constrained_vars |= flecs_ito(uint64_t, 1 << var_id);
+    it->constrained_vars |= 1llu << var_id;
 
     /* Update iterator for constrained iterator */
     flecs_query_iter_constrain(it);
@@ -778,7 +778,7 @@ void ecs_iter_set_var_as_range(
         var->entity = 0;
     }
 
-    it->constrained_vars |= flecs_uto(uint64_t, 1 << var_id);
+    it->constrained_vars |= 1llu << var_id;
 
     /* Update iterator for constrained iterator */
     flecs_query_iter_constrain(it);
@@ -795,7 +795,7 @@ bool ecs_iter_var_is_constrained(
         return ecs_iter_var_is_constrained(it->chain_it, var_id);
     }
 
-    return (it->constrained_vars & (flecs_uto(uint64_t, 1 << var_id))) != 0;
+    return (it->constrained_vars & (1llu << var_id)) != 0;
 }
 
 uint64_t ecs_iter_get_group(
