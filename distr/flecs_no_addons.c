@@ -26017,7 +26017,7 @@ bool flecs_sparse_remove(
         /* Reset memory to zero on remove */
         if (sparse->size) {
             void *ptr = DATA(page->data, sparse->size, offset);
-            ecs_os_memset(ptr, 0, size);
+            ecs_os_memset(ptr, 0, sparse->size);
         }
 
         return true;
@@ -26076,7 +26076,7 @@ bool flecs_sparse_remove_w_gen(
         /* Reset memory to zero on remove */
         if (sparse->size) {
             void *ptr = DATA(page->data, sparse->size, offset);
-            ecs_os_memset(ptr, 0, size);
+            ecs_os_memset(ptr, 0, sparse->size);
         }
 
         return true;
