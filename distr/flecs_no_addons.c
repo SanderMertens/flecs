@@ -41428,7 +41428,15 @@ bool flecs_query_check_match_monitor(
             continue;
         }
 
-        if (!(set_fields & (1llu << i))) {
+        /* When set_fields comes from the iterator it uses the field indices of
+         * the actual query, which can differ from the cache query fields if
+         * the query is partially cached. */
+        int32_t set_field_index = i;
+        if (it && cache->field_map) {
+            set_field_index = cache->field_map[i];
+        }
+
+        if (!(set_fields & (1llu << set_field_index))) {
             continue;
         }
 
