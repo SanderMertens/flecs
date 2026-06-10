@@ -6417,15 +6417,20 @@ void flecs_cmd_batch_for_entity(
                     const ecs_type_info_t *ti = dst.ti;
                     if (ti->hooks.on_replace) {
                         ecs_table_t *prev_table = r->table;
-                        flecs_invoke_replace_hook(world, prev_table, entity, 
+                        flecs_invoke_replace_hook(world, prev_table, entity,
                             cmd->id, dst.ptr, ptr, ti);
-                        if (prev_table != r->table) {
-                            if (!r->table) {
-                                /* Entity was deleted */
-                                goto done;
-                            }
-                            dst = flecs_get_mut(
-                                world, entity, cmd->id, r, cmd->is._1.size);
+                        if (!r->table) {
+                            /* Entity was deleted */
+                            goto done;
+                        }
+
+                        /* Refetch pointer as the hook could have grown the
+                         * table or moved the entity to a different table. */
+                        dst = flecs_get_mut(
+                            world, entity, cmd->id, r, cmd->is._1.size);
+                        if (!dst.ptr) {
+                            cmd->kind = EcsCmdSkip;
+                            break;
                         }
                     }
 
