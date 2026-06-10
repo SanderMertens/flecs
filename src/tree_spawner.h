@@ -14,6 +14,14 @@ EcsTreeSpawner* flecs_prefab_spawner_build(
     ecs_world_t *world,
     ecs_entity_t base);
 
+#ifdef FLECS_DEBUG
+void flecs_tree_spawner_assert_not_instantiated(
+    ecs_world_t *world,
+    ecs_entity_t parent);
+#else
+#define flecs_tree_spawner_assert_not_instantiated(world, parent)
+#endif
+
 void flecs_spawner_instantiate(
     ecs_world_t *world,
     EcsTreeSpawner *spawner,

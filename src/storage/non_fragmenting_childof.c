@@ -90,6 +90,8 @@ int flecs_add_non_fragmenting_child_w_records(
 
     flecs_add_non_fragmenting_child_to_table(world, cr, entity, r->table);
 
+    flecs_tree_spawner_assert_not_instantiated(world, parent);
+
     ecs_record_t *r_parent = flecs_entities_get(world, parent);
     if (r_parent->table->flags & EcsTableIsPrefab) {
         ecs_add_id(world, entity, EcsPrefab);
@@ -141,6 +143,8 @@ ecs_component_record_t* flecs_remove_non_fragmenting_child(
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
     flecs_remove_non_fragmenting_child_from_table(cr, table);
+
+    flecs_tree_spawner_assert_not_instantiated(world, parent);
 
     return cr;
 }
@@ -334,6 +338,8 @@ void flecs_on_non_fragmenting_child_move_remove(
             }
         } else {
             flecs_ordered_entities_remove(world, cr, e);
+
+            flecs_tree_spawner_assert_not_instantiated(world, p);
 
             if (names) {
                 flecs_on_reparent_update_name(world, e, &names[i], p, NULL);
