@@ -1715,7 +1715,7 @@ int ecs_meta_set_string_literal(
     }
 
     ecs_size_t len = ecs_os_strlen(value);
-    if (value[0] != '\"' || value[len - 1] != '\"') {
+    if (len < 2 || value[0] != '\"' || value[len - 1] != '\"') {
         ecs_err("invalid string literal '%s'", value);
         goto error;
     }
