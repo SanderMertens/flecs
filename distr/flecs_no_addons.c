@@ -38291,6 +38291,8 @@ ecs_table_t* flecs_find_table_with(
 
     ecs_component_record_t *cr = NULL;
     ecs_entity_t r = 0, o = 0;
+    ecs_type_t dst_type;
+    bool replaced = false;
 
     if (ECS_IS_PAIR(with)) {
         r = ECS_PAIR_FIRST(with);
@@ -38302,10 +38304,10 @@ ecs_table_t* flecs_find_table_with(
             if (tr) {
                 /* Table already has an instance of the relationship, create
                  * a new id sequence with the existing id replaced */
-                ecs_type_t dst_type = flecs_type_copy(world, &node->type);
+                dst_type = flecs_type_copy(world, &node->type);
                 ecs_assert(dst_type.array != NULL, ECS_INTERNAL_ERROR, NULL);
                 dst_type.array[tr->index] = with;
-                return flecs_table_ensure(world, &dst_type, true, node);
+                replaced = true;
             }
         }
     } else {
@@ -38313,17 +38315,18 @@ ecs_table_t* flecs_find_table_with(
         r = with;
     }
 
-    if (cr->flags & EcsIdDontFragment) {
-        /* Component doesn't fragment tables */
-        node->flags |= EcsTableHasDontFragment;
-        return node;
-    }
+    if (!replaced) {
+        if (cr->flags & EcsIdDontFragment) {
+            /* Component doesn't fragment tables */
+            node->flags |= EcsTableHasDontFragment;
+            return node;
+        }
 
-    /* Create sequence with new id */
-    ecs_type_t dst_type;
-    int res = flecs_type_new_with(world, &dst_type, &node->type, with);
-    if (res == -1) {
-        return node; /* Current table already has id */
+        /* Create sequence with new id */
+        int res = flecs_type_new_with(world, &dst_type, &node->type, with);
+        if (res == -1) {
+            return node; /* Current table already has id */
+        }
     }
 
     if (r == EcsIsA) {
