@@ -78020,8 +78020,18 @@ ecs_query_cache_match_t* flecs_query_cache_next(
         if (!ecs_table_count(table)) {
             if (!(always_match_empty || (it->flags & EcsIterMatchEmptyTables))) {
                 if (ctx->query->pub.flags & EcsQueryHasChangeDetection) {
-                    flecs_query_sync_match_monitor(
-                        flecs_query_impl(it->query), qm);
+                    ecs_query_impl_t *impl = flecs_query_impl(it->query);
+                    flecs_query_sync_match_monitor(impl, qm);
+
+                    if (qm->wildcard_matches) {
+                        ecs_query_cache_match_t *wc_qms =
+                            ecs_vec_first(qm->wildcard_matches);
+                        int32_t j, wc_count =
+                            ecs_vec_count(qm->wildcard_matches);
+                        for (j = 0; j < wc_count; j ++) {
+                            flecs_query_sync_match_monitor(impl, &wc_qms[j]);
+                        }
+                    }
                 }
                 qit->cur ++;
                 goto repeat;
