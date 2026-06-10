@@ -610,7 +610,7 @@ int flecs_json_serialize_iter_result_table(
         flecs_json_object_pop(buf);
     }
 
-    for (i = 0; i < component_count; i ++) {
+    for (i = 0; i < FLECS_JSON_MAX_TABLE_COMPONENTS; i ++) {
         ecs_os_free(values_ctx[i].id_label);
     }
 
