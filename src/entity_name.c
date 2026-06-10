@@ -896,7 +896,7 @@ ecs_entity_t ecs_add_path_w_sep(
         }
 
         if (parent) {
-            ecs_add_pair(world, entity, EcsChildOf, entity);
+            ecs_add_pair(world, entity, EcsChildOf, parent);
         }
 
         return entity;
