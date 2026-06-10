@@ -452,7 +452,7 @@ struct ecs_query_impl_t {
     int32_t op_count;             /* Number of operations */
 
     /* Misc */
-    int16_t tokens_len;           /* Length of tokens buffer */
+    int32_t tokens_len;           /* Length of tokens buffer */
     char *tokens;                 /* Buffer with string tokens used by terms */
     int32_t *monitor;             /* Change monitor for fields with fixed src */
 
