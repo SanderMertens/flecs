@@ -1619,7 +1619,7 @@ int flecs_query_query_populate_terms(
 
         /* Store on query object so we can free it later */
         flecs_query_impl(q)->tokens = token_buffer;
-        flecs_query_impl(q)->tokens_len = flecs_ito(int16_t, token_buffer_size);
+        flecs_query_impl(q)->tokens_len = token_buffer_size;
     #else
         (void)world;
         (void)stage;
@@ -1922,7 +1922,7 @@ void flecs_query_populate_tokens(
     /* Step 2: reassign term tokens to buffer */
     if (len) {
         impl->tokens = flecs_alloc(&impl->stage->allocator, len);
-        impl->tokens_len = flecs_ito(int16_t, len);
+        impl->tokens_len = len;
         char *token = impl->tokens, *next;
 
         for (i = 0; i < term_count; i ++) {

@@ -1641,7 +1641,7 @@ struct ecs_query_impl_t {
     int32_t op_count;             /* Number of operations */
 
     /* Misc */
-    int16_t tokens_len;           /* Length of tokens buffer */
+    int32_t tokens_len;           /* Length of tokens buffer */
     char *tokens;                 /* Buffer with string tokens used by terms */
     int32_t *monitor;             /* Change monitor for fields with fixed src */
 
@@ -38806,7 +38806,7 @@ int flecs_query_query_populate_terms(
 
         /* Store on query object so we can free it later */
         flecs_query_impl(q)->tokens = token_buffer;
-        flecs_query_impl(q)->tokens_len = flecs_ito(int16_t, token_buffer_size);
+        flecs_query_impl(q)->tokens_len = token_buffer_size;
     #else
         (void)world;
         (void)stage;
@@ -39109,7 +39109,7 @@ void flecs_query_populate_tokens(
     /* Step 2: reassign term tokens to buffer */
     if (len) {
         impl->tokens = flecs_alloc(&impl->stage->allocator, len);
-        impl->tokens_len = flecs_ito(int16_t, len);
+        impl->tokens_len = len;
         char *token = impl->tokens, *next;
 
         for (i = 0; i < term_count; i ++) {
