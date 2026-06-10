@@ -207,7 +207,7 @@ int ecs_value_move_ctor(
     flecs_poly_assert(world, ecs_world_t);
     const ecs_type_info_t *ti = ecs_get_type_info(world, type);
     ecs_check(ti != NULL, ECS_INVALID_PARAMETER, "entity is not a type");
-    return ecs_value_move_w_type_info(world, ti, dst, src);
+    return ecs_value_move_ctor_w_type_info(world, ti, dst, src);
 error:
     return -1;
 }
