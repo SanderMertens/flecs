@@ -59779,11 +59779,8 @@ bool flecs_rtt_vector_equals(
 
     ecs_size_t count_a = ecs_vec_count(vec_a);
     ecs_size_t count_b = ecs_vec_count(vec_b);
-    {
-        int c = count_a - count_b;
-        if(c != 0) {
-            return c;
-        }
+    if (count_a != count_b) {
+        return false;
     }
 
     ecs_rtt_vector_ctx_t *rtt_ctx = type_info->hooks.lifecycle_ctx;
