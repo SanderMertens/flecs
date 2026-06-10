@@ -143,7 +143,7 @@ void flecs_strbuf_ftoa(
     }
 
     /* Make sure that number can be represented as 64bit int, increase exp */
-    while (f > INT64_MAX_F) {
+    while (f >= INT64_MAX_F) {
         f /= 1000 * 1000 * 1000;
         exp += 9;
     }
