@@ -1509,3 +1509,43 @@ void Sparse_sparse_pair_second_after_query(void) {
 
     ecs_fini(world);
 }
+
+void Sparse_sparse_after_or(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, TagA);
+    ecs_set(world, e, Position, {10, 20});
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "TagA || TagB, Position",
+        .cache_kind = cache_kind
+    });
+    test_assert(q != NULL);
+
+    test_int(2, q->field_count);
+    test_bool(true, !!(q->row_fields & (1llu << 1)));
+    test_bool(false, !!(q->row_fields & (1llu << 2)));
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e, it.entities[0]);
+    {
+        Position *p = ecs_field_at(&it, Position, 1, 0);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}

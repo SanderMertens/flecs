@@ -5152,3 +5152,63 @@ void ComponentLifecycle_add_on_set_hook_while_in_use(void) {
 
     ecs_fini(world);
 }
+
+static int value_move_ctor_move_invoked = 0;
+static int value_move_ctor_move_ctor_invoked = 0;
+
+static
+void value_move_hook(
+    void *dst_ptr,
+    void *src_ptr,
+    int32_t count,
+    const ecs_type_info_t *info)
+{
+    (void)info;
+    Position *dst = dst_ptr;
+    Position *src = src_ptr;
+    int i;
+    for (i = 0; i < count; i ++) {
+        dst[i] = src[i];
+    }
+    value_move_ctor_move_invoked ++;
+}
+
+static
+void value_move_ctor_hook(
+    void *dst_ptr,
+    void *src_ptr,
+    int32_t count,
+    const ecs_type_info_t *info)
+{
+    (void)info;
+    Position *dst = dst_ptr;
+    Position *src = src_ptr;
+    int i;
+    for (i = 0; i < count; i ++) {
+        dst[i] = src[i];
+    }
+    value_move_ctor_move_ctor_invoked ++;
+}
+
+void ComponentLifecycle_value_move_ctor_invokes_move_ctor(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .move = value_move_hook,
+        .move_ctor = value_move_ctor_hook
+    });
+
+    Position src = {10, 20};
+    Position dst;
+
+    test_int(0, ecs_value_move_ctor(world, ecs_id(Position), &dst, &src));
+
+    test_int(value_move_ctor_move_ctor_invoked, 1);
+    test_int(value_move_ctor_move_invoked, 0);
+    test_int(dst.x, 10);
+    test_int(dst.y, 20);
+
+    ecs_fini(world);
+}

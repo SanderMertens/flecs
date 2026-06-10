@@ -362,3 +362,52 @@ void Vars_init_fini_vars(void) {
 
     test_assert(true);
 }
+
+void Vars_from_iter_17_fields(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t comps[17];
+    int i;
+    for (i = 0; i < 17; i ++) {
+        char name[8];
+        ecs_os_snprintf(name, 8, "C%d", i);
+        comps[i] = ecs_component(world, {
+            .entity = ecs_entity(world, { .name = name }),
+            .type = { .size = 4, .alignment = 4 }
+        });
+    }
+
+    ecs_query_t *q = ecs_query(world, { .terms = {
+        [0].id=comps[0],[1].id=comps[1],[2].id=comps[2],[3].id=comps[3],
+        [4].id=comps[4],[5].id=comps[5],[6].id=comps[6],[7].id=comps[7],
+        [8].id=comps[8],[9].id=comps[9],[10].id=comps[10],[11].id=comps[11],
+        [12].id=comps[12],[13].id=comps[13],[14].id=comps[14],[15].id=comps[15],
+        [16].id=comps[16] } });
+    test_assert(q != NULL);
+
+    ecs_entity_t e = ecs_new(world);
+    for (i = 0; i < 17; i ++) {
+        ecs_add_id(world, e, comps[i]);
+    }
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        test_int(it.field_count, 17);
+        ecs_script_vars_from_iter(&it, vars, 0);
+    }
+
+    ecs_script_var_t *v15 = ecs_script_vars_lookup(vars, "15");
+    test_assert(v15 != NULL);
+    test_uint(v15->value.type, comps[15]);
+
+    ecs_script_var_t *v16 = ecs_script_vars_lookup(vars, "16");
+    test_assert(v16 != NULL);
+    test_uint(v16->value.type, comps[16]);
+
+    ecs_script_vars_fini(vars);
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}

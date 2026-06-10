@@ -5298,3 +5298,16 @@ void Cursor_get_vector_type(void) {
 
     ecs_fini(world);
 }
+
+void Cursor_set_string_literal_single_quote(void) {
+    ecs_world_t *world = ecs_init();
+
+    char *value = NULL;
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(ecs_string_t), &value);
+    test_fail( ecs_meta_set_string_literal(&cur, "\"") );
+
+    test_assert(value == NULL);
+
+    ecs_fini(world);
+}

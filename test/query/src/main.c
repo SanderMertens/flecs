@@ -481,6 +481,7 @@ void Parser_singleton_trait_w_explicit_src(void);
 void Parser_lookup_component_by_symbol_1(void);
 void Parser_lookup_component_by_symbol_2(void);
 void Parser_lookup_component_by_symbol_3(void);
+void Parser_expr_longer_than_16kb(void);
 
 // Testsuite 'Fuzzing'
 void Fuzzing_setup(void);
@@ -1087,6 +1088,8 @@ void Variables_first_any_any_src_pair_any_tgt(void);
 void Variables_first_wildcard_any_src(void);
 void Variables_first_var_any_src_w_constrained_var(void);
 void Variables_first_var_any_src_pair_constrained_tgt(void);
+void Variables_1_any_src_set_pair_tgt_var_no_match(void);
+void Variables_set_var_id_31(void);
 
 // Testsuite 'Operators'
 void Operators_setup(void);
@@ -1460,6 +1463,8 @@ void BuiltinPredicates_neq_any(void);
 void BuiltinPredicates_match_variable(void);
 void BuiltinPredicates_match_wildcard(void);
 void BuiltinPredicates_match_any(void);
+void BuiltinPredicates_this_neq_id_written_after_eq(void);
+void BuiltinPredicates_this_neq_id_written_same_table_twice(void);
 
 // Testsuite 'Scopes'
 void Scopes_setup(void);
@@ -1931,6 +1936,8 @@ void ChangeDetection_detect_w_cascade_desc(void);
 void ChangeDetection_detect_partially_cached(void);
 void ChangeDetection_mark_fixed_fields_dirty_after_remove(void);
 void ChangeDetection_mark_fixed_fields_dirty_w_tag_before(void);
+void ChangeDetection_query_changed_after_wildcard_matched_table_emptied(void);
+void ChangeDetection_detect_w_not_cached_fixed_src_term(void);
 
 // Testsuite 'GroupBy'
 void GroupBy_group_by(void);
@@ -2200,6 +2207,8 @@ void Toggle_this_sort(void);
 void Toggle_this_table_move_2_from_3(void);
 void Toggle_toggle_0_src_only_term(void);
 void Toggle_toggle_0_src(void);
+void Toggle_remove_toggle_from_table_w_other_toggle_and_entity(void);
+void Toggle_this_toggle_after_or_chain(void);
 
 // Testsuite 'Sparse'
 void Sparse_setup(void);
@@ -2234,6 +2243,7 @@ void Sparse_sparse_pair_first(void);
 void Sparse_sparse_pair_second(void);
 void Sparse_sparse_pair_first_after_query(void);
 void Sparse_sparse_pair_second_after_query(void);
+void Sparse_sparse_after_or(void);
 
 // Testsuite 'DontFragment'
 void DontFragment_setup(void);
@@ -2735,6 +2745,7 @@ void OrderBy_sort_optional_term(void);
 void OrderBy_order_empty_table(void);
 void OrderBy_order_empty_table_only(void);
 void OrderBy_order_empty_table_only_2_tables(void);
+void OrderBy_sort_w_or_term_before_order_by_term(void);
 
 // Testsuite 'OrderByEntireTable'
 void OrderByEntireTable_sort_by_component(void);
@@ -4717,6 +4728,10 @@ bake_test_case Parser_testcases[] = {
     {
         "lookup_component_by_symbol_3",
         Parser_lookup_component_by_symbol_3
+    },
+    {
+        "expr_longer_than_16kb",
+        Parser_expr_longer_than_16kb
     }
 };
 
@@ -7100,6 +7115,14 @@ bake_test_case Variables_testcases[] = {
     {
         "first_var_any_src_pair_constrained_tgt",
         Variables_first_var_any_src_pair_constrained_tgt
+    },
+    {
+        "1_any_src_set_pair_tgt_var_no_match",
+        Variables_1_any_src_set_pair_tgt_var_no_match
+    },
+    {
+        "set_var_id_31",
+        Variables_set_var_id_31
     }
 };
 
@@ -8564,6 +8587,14 @@ bake_test_case BuiltinPredicates_testcases[] = {
     {
         "match_any",
         BuiltinPredicates_match_any
+    },
+    {
+        "this_neq_id_written_after_eq",
+        BuiltinPredicates_this_neq_id_written_after_eq
+    },
+    {
+        "this_neq_id_written_same_table_twice",
+        BuiltinPredicates_this_neq_id_written_same_table_twice
     }
 };
 
@@ -10415,6 +10446,14 @@ bake_test_case ChangeDetection_testcases[] = {
     {
         "mark_fixed_fields_dirty_w_tag_before",
         ChangeDetection_mark_fixed_fields_dirty_w_tag_before
+    },
+    {
+        "query_changed_after_wildcard_matched_table_emptied",
+        ChangeDetection_query_changed_after_wildcard_matched_table_emptied
+    },
+    {
+        "detect_w_not_cached_fixed_src_term",
+        ChangeDetection_detect_w_not_cached_fixed_src_term
     }
 };
 
@@ -11468,6 +11507,14 @@ bake_test_case Toggle_testcases[] = {
     {
         "toggle_0_src",
         Toggle_toggle_0_src
+    },
+    {
+        "remove_toggle_from_table_w_other_toggle_and_entity",
+        Toggle_remove_toggle_from_table_w_other_toggle_and_entity
+    },
+    {
+        "this_toggle_after_or_chain",
+        Toggle_this_toggle_after_or_chain
     }
 };
 
@@ -11595,6 +11642,10 @@ bake_test_case Sparse_testcases[] = {
     {
         "sparse_pair_second_after_query",
         Sparse_sparse_pair_second_after_query
+    },
+    {
+        "sparse_after_or",
+        Sparse_sparse_after_or
     }
 };
 
@@ -13576,6 +13627,10 @@ bake_test_case OrderBy_testcases[] = {
     {
         "order_empty_table_only_2_tables",
         OrderBy_order_empty_table_only_2_tables
+    },
+    {
+        "sort_w_or_term_before_order_by_term",
+        OrderBy_sort_w_or_term_before_order_by_term
     }
 };
 
@@ -14037,7 +14092,7 @@ static bake_test_suite suites[] = {
         "Parser",
         NULL,
         NULL,
-        309,
+        310,
         Parser_testcases
     },
     {
@@ -14078,7 +14133,7 @@ static bake_test_suite suites[] = {
         "Variables",
         Variables_setup,
         NULL,
-        222,
+        224,
         Variables_testcases,
         1,
         Variables_params
@@ -14110,7 +14165,7 @@ static bake_test_suite suites[] = {
         "BuiltinPredicates",
         BuiltinPredicates_setup,
         NULL,
-        92,
+        94,
         BuiltinPredicates_testcases,
         1,
         BuiltinPredicates_params
@@ -14151,7 +14206,7 @@ static bake_test_suite suites[] = {
         "ChangeDetection",
         NULL,
         NULL,
-        75,
+        77,
         ChangeDetection_testcases
     },
     {
@@ -14174,7 +14229,7 @@ static bake_test_suite suites[] = {
         "Toggle",
         Toggle_setup,
         NULL,
-        163,
+        165,
         Toggle_testcases,
         1,
         Toggle_params
@@ -14183,7 +14238,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         Sparse_setup,
         NULL,
-        31,
+        32,
         Sparse_testcases,
         1,
         Sparse_params
@@ -14210,7 +14265,7 @@ static bake_test_suite suites[] = {
         "OrderBy",
         NULL,
         NULL,
-        45,
+        46,
         OrderBy_testcases
     },
     {

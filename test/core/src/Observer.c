@@ -13645,3 +13645,60 @@ void Observer_multi_term_on_set_w_base_and_3_instances_in_different_tables(void)
 
     ecs_fini(world);
 }
+
+void Observer_propagate_isa_two_bases_dirty_reachable_cache(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, ecs_id(Mass), EcsOnInstantiate, EcsInherit);
+
+    ecs_entity_t base1 = ecs_entity(world, { .add = ecs_ids(EcsPrefab) });
+    ecs_set(world, base1, Position, {1, 2});
+
+    ecs_entity_t base2 = ecs_entity(world, { .add = ecs_ids(EcsPrefab) });
+    ecs_set(world, base2, Velocity, {3, 4});
+
+    ecs_entity_t mid = ecs_entity(world, { .add = ecs_ids(EcsPrefab) });
+    ecs_add_pair(world, mid, EcsIsA, base1);
+    ecs_add_pair(world, mid, EcsIsA, base2);
+
+    ecs_set(world, base1, Mass, {10});
+
+    Probe ctx_pos = {0};
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position), .src.id = EcsUp, .trav = EcsIsA }},
+        .events = {EcsOnAdd},
+        .callback = Observer,
+        .ctx = &ctx_pos
+    });
+
+    Probe ctx_vel = {0};
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Velocity), .src.id = EcsUp, .trav = EcsIsA }},
+        .events = {EcsOnAdd},
+        .callback = Observer,
+        .ctx = &ctx_vel
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add_pair(world, e, EcsIsA, mid);
+
+    test_int(ctx_pos.invoked, 1);
+    test_int(ctx_pos.count, 1);
+    test_int(ctx_pos.e[0], e);
+    test_int(ctx_pos.s[0][0], base1);
+    test_int(ctx_pos.c[0][0], ecs_id(Position));
+
+    test_int(ctx_vel.invoked, 1);
+    test_int(ctx_vel.count, 1);
+    test_int(ctx_vel.e[0], e);
+    test_int(ctx_vel.s[0][0], base2);
+    test_int(ctx_vel.c[0][0], ecs_id(Velocity));
+
+    ecs_fini(world);
+}

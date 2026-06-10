@@ -13491,3 +13491,87 @@ void Variables_has_recycled_id_from_pair(void) {
 
     ecs_fini(world);
 }
+
+void Variables_1_any_src_set_pair_tgt_var_no_match(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add_pair(world, e, Rel, TgtA);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Rel(_, $x)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    int x_var = ecs_query_find_var(q, "x");
+    test_assert(x_var != -1);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        ecs_iter_set_var(&it, x_var, TgtA);
+
+        test_bool(true, ecs_query_next(&it));
+        test_uint(0, it.count);
+        test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 0));
+        test_uint(EcsWildcard, ecs_field_src(&it, 0));
+        test_uint(TgtA, ecs_iter_get_var(&it, x_var));
+
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        ecs_iter_set_var(&it, x_var, TgtB);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Variables_set_var_id_31(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    char expr[1024] = "";
+    for (int i = 0; i < 31; i ++) {
+        char term[32];
+        ecs_os_snprintf(term, 32, "%sTag($v%02d)", i ? ", " : "", i);
+        strcat(expr, term);
+    }
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = expr,
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_entity_t e = ecs_new_w(world, Tag);
+
+    int32_t var_id = ecs_query_find_var(q, "v30");
+    test_int(var_id, 31);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    ecs_iter_set_var(&it, var_id, e);
+
+    test_uint(it.constrained_vars, (uint64_t)1 << 31);
+    test_bool(true, ecs_iter_var_is_constrained(&it, var_id));
+    test_bool(false, ecs_iter_var_is_constrained(&it, 1));
+
+    test_bool(true, ecs_query_next(&it));
+    test_uint(e, ecs_iter_get_var(&it, var_id));
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}

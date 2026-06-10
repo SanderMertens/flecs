@@ -567,3 +567,13 @@ void Strbuf_append_int64_min(void) {
     test_str(str, "-9223372036854775808");
     ecs_os_free(str);
 }
+
+void Strbuf_append_flt_2_pow_63(void) {
+    ecs_strbuf_t b = ECS_STRBUF_INIT;
+    ecs_strbuf_appendflt(&b, 9223372036854775808.0, 0);
+
+    char *str = ecs_strbuf_get(&b);
+    test_assert(str != NULL);
+    test_str(str, "9.22337203e18");
+    ecs_os_free(str);
+}

@@ -7242,3 +7242,41 @@ void DeserializeFromJson_ser_deser_dont_fragment_tag_removes_stale(void) {
 
     ecs_os_free(json);
 }
+
+void DeserializeFromJson_struct_i32_long_number_literal(void) {
+    typedef struct {
+        int32_t v;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"v", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    test_assert(t != 0);
+
+    char json[600];
+    int i;
+    json[0] = '{';
+    json[1] = '"';
+    json[2] = 'v';
+    json[3] = '"';
+    json[4] = ':';
+    json[5] = ' ';
+    for (i = 0; i < 500; i ++) {
+        json[6 + i] = '1';
+    }
+    json[506] = '}';
+    json[507] = '\0';
+
+    T value = {0};
+
+    const char *ptr = ecs_ptr_from_json(world, t, &value, json, NULL);
+    test_assert(ptr == NULL);
+
+    ecs_fini(world);
+}

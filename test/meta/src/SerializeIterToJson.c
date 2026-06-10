@@ -3077,3 +3077,60 @@ void SerializeIterToJson_serialize_childof_var_w_parent(void) {
     ecs_fini(world);
 }
 
+
+void SerializeIterToJson_serialize_table_dont_fragment_no_leak(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_add_id(world, ecs_id(Velocity), EcsDontFragment);
+
+    ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_id(Velocity),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+
+    ecs_set(world, e1, Position, {10, 20});
+    ecs_set(world, e2, Position, {20, 30});
+    ecs_set(world, e1, Velocity, {1, 2});
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { .id = ecs_id(Position) }
+        }
+    });
+
+    int64_t balance_before = (ecs_os_api_malloc_count + 
+        ecs_os_api_calloc_count) - ecs_os_api_free_count;
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
+    desc.serialize_table = true;
+    char *json = ecs_iter_to_json(&it, &desc);
+    test_assert(json != NULL);
+    test_json(json, "{\"results\":[{\"name\":\"e1\", \"components\":{\"Position\":{\"x\":10, \"y\":20}, \"Velocity\":{\"x\":1, \"y\":2}}}, {\"name\":\"e2\", \"components\":{\"Position\":{\"x\":20, \"y\":30}}}]}");
+    ecs_os_free(json);
+
+    int64_t balance_after = (ecs_os_api_malloc_count + 
+        ecs_os_api_calloc_count) - ecs_os_api_free_count;
+    test_int(0, balance_after - balance_before);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}

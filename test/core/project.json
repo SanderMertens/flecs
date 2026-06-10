@@ -753,7 +753,8 @@
                 "defer_remove_override",
                 "defer_remove_add_override",
                 "fini_w_dont_fragment_pair_prefab_exclusive_delete_with",
-                "remove_childof_pair_w_dont_fragment_component"
+                "remove_childof_pair_w_dont_fragment_component",
+                "remove_zeroes_storage"
             ]
         }, {
             "id": "NonFragmentingChildOf",
@@ -1013,7 +1014,9 @@
                 "fini_w_mixed_childof_different_parents",
                 "fini_w_ordered_child_w_up_traversable",
                 "defer_reparent_mixed_childof",
-                "prefab_parent_w_mixed_childof"
+                "prefab_parent_w_mixed_childof",
+                "instantiate_tree_after_add_child",
+                "set_parent_w_childof_observer_and_wildcard_event_observer"
             ]
         }, {
             "id": "Hierarchies",
@@ -1133,7 +1136,8 @@
                 "lookup_after_delete_from_root",
                 "lookup_after_delete_from_parent",
                 "defer_batch_remove_name_w_add_childof",
-                "defer_batch_remove_childof_w_add_name"
+                "defer_batch_remove_childof_w_add_name",
+                "add_path_w_sep_null_path"
             ]
         }, {
             "id": "OrderedChildren",
@@ -1615,7 +1619,8 @@
                 "clone_component_w_value",
                 "clone_component_w_entity",
                 "clone_component_w_entity_w_value",
-                "clone_after_delete_deferred"
+                "clone_after_delete_deferred",
+                "clone_pair_component_w_value_w_name"
             ]
         }, {
             "id": "ComponentLifecycle",
@@ -1775,7 +1780,8 @@
                 "change_on_set_hook_while_in_use",
                 "change_hook_while_in_use_w_pair",
                 "add_hook_while_in_use",
-                "add_on_set_hook_while_in_use"
+                "add_on_set_hook_while_in_use",
+                "value_move_ctor_invokes_move_ctor"
             ]
         }, {
             "id": "Pairs",
@@ -2386,7 +2392,8 @@
                 "cache_test_15",
                 "cache_test_16",
                 "cache_test_17",
-                "multi_term_on_set_w_base_and_3_instances_in_different_tables"
+                "multi_term_on_set_w_base_and_3_instances_in_different_tables",
+                "propagate_isa_two_bases_dirty_reachable_cache"
             ]
         }, {
             "id": "ObserverOnSet",
@@ -2715,7 +2722,9 @@
                 "add_base_w_exclusive_override",
                 "fini_w_prefab_child_exclusive_pair_delete_with",
                 "delete_with_component_used_by_prefab",
-                "delete_component_used_by_prefab"
+                "delete_component_used_by_prefab",
+                "prefab_child_auto_override_pair_low_rel_id",
+                "reparent_to_prefab_is_prefab"
             ]
         }, {
             "id": "World",
@@ -3232,7 +3241,9 @@
                 "set_existing_after_remove_move_table",
                 "set_existing_after_remove_w_is_a",
                 "set_existing_after_remove_w_is_a_move_table",
-                "set_existing_after_remove_2_stages"
+                "set_existing_after_remove_2_stages",
+                "on_replace_w_set_batched_grow_table_in_hook",
+                "defer_batched_add_after_delete"
             ]
         }, {
             "id": "SingleThreadStaging",
@@ -3360,7 +3371,8 @@
                 "clear_table_on_remove_hooks",
                 "clear_table_on_remove_observer",
                 "65_records_w_tgt",
-                "find_w_dont_fragment"
+                "find_w_dont_fragment",
+                "clear_table_toggle_reset"
             ]
         }, {
             "id": "Poly",

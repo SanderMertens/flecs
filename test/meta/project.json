@@ -521,11 +521,13 @@
                 "set_out_of_bounds",
                 "get_member_id",
                 "get_array_type",
-                "get_vector_type"
+                "get_vector_type",
+                "set_string_literal_single_quote"
             ]
         }, {
             "id": "DeserializeFromJson",
             "testcases": [
+                "struct_i32_long_number_literal",
                 "struct_bool",
                 "struct_byte",
                 "struct_char",
@@ -939,7 +941,8 @@
                 "serialize_children_w_tag_w_parent_component",
                 "serialize_children_w_tag_w_parent_component_table",
                 "serialize_childof_var_w_parent",
-                "serialize_childof_wildcard_w_parent"
+                "serialize_childof_wildcard_w_parent",
+                "serialize_table_dont_fragment_no_leak"
             ]
         }, {
             "id": "SerializeIterToRowJson",
@@ -1240,7 +1243,8 @@
                 "vector_of_struct_with_ints",
                 "vector_of_struct_with_strings",
                 "vector_of_arrays_of_strings",
-                "vector_of_opaque"
+                "vector_of_opaque",
+                "struct_with_vector_of_ints_different_length"
             ]
         }]
     }

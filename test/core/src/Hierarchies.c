@@ -2093,3 +2093,20 @@ void Hierarchies_recreated_parent_w_named_children(void) {
 
     ecs_fini(world);
 }
+
+void Hierarchies_add_path_w_sep_null_path(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_new(world);
+    test_assert(parent != 0);
+
+    ecs_entity_t child = ecs_new(world);
+    test_assert(child != 0);
+
+    ecs_entity_t e = ecs_add_path_w_sep(world, child, parent, NULL, ".", NULL);
+    test_assert(e == child);
+    test_assert(ecs_has_pair(world, child, EcsChildOf, parent));
+    test_uint(ecs_get_target(world, child, EcsChildOf, 0), parent);
+
+    ecs_fini(world);
+}
