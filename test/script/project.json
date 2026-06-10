@@ -1134,7 +1134,8 @@
                 "struct_expr_w_struct_var",
                 "nested_struct_expr_w_struct_var",
                 "redeclare_in_scope",
-                "init_fini_vars"
+                "init_fini_vars",
+                "from_iter_17_fields"
             ]
         }, {
             "id": "Serialize",

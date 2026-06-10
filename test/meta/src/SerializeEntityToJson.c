@@ -2754,3 +2754,7 @@ void SerializeEntityToJson_serialize_w_quote_in_alert_message(void) {
 
     ecs_fini(world);
 }
+
+void SerializeEntityToJson_struct_i32_long_number_literal(void) {
+}
+

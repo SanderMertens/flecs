@@ -6165,3 +6165,79 @@ void Toggle_toggle_0_src(void) {
 
     ecs_fini(world);
 }
+
+void Toggle_remove_toggle_from_table_w_other_toggle_and_entity(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_add_id(world, ecs_id(Position), EcsCanToggle);
+    ecs_add_id(world, ecs_id(Velocity), EcsCanToggle);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add(world, e1, Position);
+    ecs_add(world, e1, Velocity);
+    ecs_enable_id(world, e1, ecs_id(Position), false);
+    ecs_enable_id(world, e1, ecs_id(Velocity), false);
+
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add(world, e2, Position);
+    ecs_add(world, e2, Velocity);
+    ecs_enable_id(world, e2, ecs_id(Position), false);
+    ecs_enable_id(world, e2, ecs_id(Velocity), true);
+
+    ecs_remove_id(world, e1, ECS_TOGGLE | ecs_id(Position));
+
+    test_assert(ecs_has(world, e1, Position));
+    test_bool(true, ecs_is_enabled_id(world, e1, ecs_id(Position)));
+    test_bool(false, ecs_is_enabled_id(world, e1, ecs_id(Velocity)));
+
+    test_bool(false, ecs_is_enabled_id(world, e2, ecs_id(Position)));
+    test_bool(true, ecs_is_enabled_id(world, e2, ecs_id(Velocity)));
+
+    ecs_fini(world);
+}
+
+void Toggle_this_toggle_after_or_chain(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, Walking);
+
+    ecs_add_id(world, Walking, EcsCanToggle);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, TagA);
+    ecs_add(world, e, Walking);
+    ecs_enable_id(world, e, Walking, true);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "TagA || TagB, Walking",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(e, it.entities[0]);
+        test_uint(TagA, ecs_field_id(&it, 0));
+        test_uint(Walking, ecs_field_id(&it, 1));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_enable_id(world, e, Walking, false);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}

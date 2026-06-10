@@ -7271,3 +7271,30 @@ void Parser_lookup_component_by_symbol_3(void) {
 
     ecs_fini(world);
 }
+
+void Parser_expr_longer_than_16kb(void) {
+    ecs_world_t *world = ecs_mini();
+
+    int32_t len = 20000;
+    char *name = ecs_os_malloc(len + 1);
+    ecs_os_memset(name, 'a', len);
+    name[len] = 0;
+
+    ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
+        .name = name
+    });
+    test_assert(e != 0);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = name
+    });
+    test_assert(q != NULL);
+    test_int(q->term_count, 1);
+    test_uint(q->terms[0].id, e);
+
+    ecs_query_fini(q);
+
+    ecs_os_free(name);
+
+    ecs_fini(world);
+}

@@ -2394,3 +2394,46 @@ void RttCompare_vector_of_opaque(void) {
 
     ecs_fini(world);
 }
+
+void RttCompare_struct_with_vector_of_ints_different_length(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t /* vector<ecs_i32_t> */ vector_of_ints =
+        ecs_vector(world, {.type = ecs_id(ecs_i32_t)});
+
+    typedef struct {
+        ecs_vec_t a;
+    } StructWithVectorOfInts;
+
+    ecs_entity_t struct_with_vector_of_ints = ecs_struct(world, {
+        .members = {
+            {"a", vector_of_ints},
+        }
+    });
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+
+    StructWithVectorOfInts *ptr1 = test_ecs_ensure(world, e1, struct_with_vector_of_ints);
+    ecs_vec_set_count(NULL, &ptr1->a, sizeof(ecs_i32_t), 3);
+    ecs_i32_t *v1 = ecs_vec_first(&ptr1->a);
+    v1[0] = 10;
+    v1[1] = 20;
+    v1[2] = 30;
+
+    StructWithVectorOfInts *ptr2 = test_ecs_ensure(world, e2, struct_with_vector_of_ints);
+    ecs_vec_set_count(NULL, &ptr2->a, sizeof(ecs_i32_t), 2);
+    ecs_i32_t *v2 = ecs_vec_first(&ptr2->a);
+    v2[0] = 10;
+    v2[1] = 20;
+
+    /* {10, 20, 30} != {10, 20} (different element count) */
+    test_assert(cmp(world, struct_with_vector_of_ints, e1, e2) != 0);
+    test_assert(equals(world, struct_with_vector_of_ints, e1, e2) == false);
+    test_assert(equals(world, struct_with_vector_of_ints, e2, e1) == false);
+
+    ecs_delete(world, e1);
+    ecs_delete(world, e2);
+
+    ecs_fini(world);
+}

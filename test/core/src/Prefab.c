@@ -6503,3 +6503,55 @@ void Prefab_delete_component_used_by_prefab(void) {
 
     ecs_fini(world);
 }
+
+void Prefab_prefab_child_auto_override_pair_low_rel_id(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t tgt = ecs_new(world);
+
+    ecs_entity_t prefab = ecs_entity(world, { .add = ecs_ids(EcsPrefab) });
+    ecs_entity_t child = ecs_entity(world, { 
+        .name = "child", .parent = prefab });
+    ecs_add_id(world, child, 
+        ECS_AUTO_OVERRIDE | ecs_pair(ecs_id(Position), tgt));
+
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, prefab);
+    test_assert(inst != 0);
+
+    ecs_entity_t inst_child = ecs_lookup_child(world, inst, "child");
+    test_assert(inst_child != 0);
+    test_assert(ecs_has_pair(world, inst_child, EcsChildOf, inst));
+    test_assert(!ecs_has_pair(world, inst_child, EcsChildOf, prefab));
+    test_assert(ecs_has_id(world, inst_child, 
+        ecs_pair(ecs_id(Position), tgt)));
+
+    int32_t prefab_children = 0;
+    ecs_iter_t it = ecs_children(world, prefab);
+    while (ecs_children_next(&it)) {
+        prefab_children += it.count;
+    }
+    test_int(prefab_children, 1);
+
+    ecs_fini(world);
+}
+
+void Prefab_reparent_to_prefab_is_prefab(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t prefab_parent = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t regular_parent = ecs_new(world);
+
+    ecs_entity_t direct_child = ecs_new_w_pair(world, EcsChildOf, prefab_parent);
+    test_assert(ecs_has_id(world, direct_child, EcsPrefab));
+
+    ecs_entity_t reparented_child = ecs_new_w_pair(world, EcsChildOf, regular_parent);
+    test_assert(!ecs_has_id(world, reparented_child, EcsPrefab));
+
+    ecs_add_pair(world, reparented_child, EcsChildOf, prefab_parent);
+    test_assert(ecs_has_pair(world, reparented_child, EcsChildOf, prefab_parent));
+    test_assert(ecs_has_id(world, reparented_child, EcsPrefab));
+
+    ecs_fini(world);
+}

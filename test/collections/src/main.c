@@ -107,6 +107,7 @@ void Strbuf_append_inf(void);
 void Strbuf_append_nan_delim(void);
 void Strbuf_append_inf_delim(void);
 void Strbuf_append_int64_min(void);
+void Strbuf_append_flt_2_pow_63(void);
 
 // Testsuite 'Allocator'
 void Allocator_setup(void);
@@ -482,6 +483,10 @@ bake_test_case Strbuf_testcases[] = {
     {
         "append_int64_min",
         Strbuf_append_int64_min
+    },
+    {
+        "append_flt_2_pow_63",
+        Strbuf_append_flt_2_pow_63
     }
 };
 
@@ -511,7 +516,7 @@ static bake_test_suite suites[] = {
         "Strbuf",
         Strbuf_setup,
         NULL,
-        37,
+        38,
         Strbuf_testcases
     },
     {

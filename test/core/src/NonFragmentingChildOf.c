@@ -6801,3 +6801,62 @@ void NonFragmentingChildOf_prefab_parent_w_mixed_childof(void) {
 
     ecs_fini(world);
 }
+
+void NonFragmentingChildOf_instantiate_tree_after_add_child(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t p_a = ecs_new_w_parent(world, p, "child_a");
+
+    ecs_entity_t i1 = ecs_new_w_pair(world, EcsIsA, p);
+    {
+        ecs_entities_t entities = ecs_get_ordered_children(world, i1);
+        test_int(entities.count, 1);
+        test_assert(ecs_has_pair(world, entities.ids[0], EcsIsA, p_a));
+    }
+
+    test_expect_abort();
+    ecs_new_w_parent(world, p, "child_b");
+}
+
+static int childof_w_wildcard_event_observer_invoked = 0;
+
+static
+void ChildOfPairObserver(ecs_iter_t *it) {
+    childof_w_wildcard_event_observer_invoked += it->count;
+}
+
+static
+void DummyWildcardEventObserver(ecs_iter_t *it) {
+    (void)it;
+}
+
+void NonFragmentingChildOf_set_parent_w_childof_observer_and_wildcard_event_observer(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_observer(world, {
+        .query.terms = {{ Foo }},
+        .events = { EcsWildcard },
+        .callback = DummyWildcardEventObserver
+    });
+
+    ecs_entity_t parent = ecs_new(world);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_pair(EcsChildOf, parent) }},
+        .events = { EcsOnAdd },
+        .callback = ChildOfPairObserver
+    });
+
+    ecs_entity_t child = ecs_new(world);
+    ecs_set(world, child, EcsParent, { parent });
+    test_assert(ecs_has_pair(world, child, EcsChildOf, parent));
+
+    test_int(childof_w_wildcard_event_observer_invoked, 1);
+
+    ecs_fini(world);
+}

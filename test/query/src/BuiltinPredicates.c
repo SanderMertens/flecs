@@ -3761,3 +3761,90 @@ void BuiltinPredicates_match_any(void) {
 
     ecs_fini(world);
 }
+
+void BuiltinPredicates_this_neq_id_written_after_eq(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, RelA);
+
+    ecs_entity_t ent_1 = ecs_entity(world, { .name = "ent_1" });
+    ecs_add(world, ent_1, RelA);
+    ecs_entity_t ent_2 = ecs_entity(world, { .name = "ent_2" });
+    ecs_add(world, ent_2, RelA);
+    ecs_entity_t ent_3 = ecs_entity(world, { .name = "ent_3" });
+    ecs_add(world, ent_3, RelA);
+    ecs_entity_t ent_4 = ecs_entity(world, { .name = "ent_4" });
+    ecs_add(world, ent_4, RelA);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "RelA($this), $this == ent_3, $this != ent_4",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_uint(1, it.count);
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(true, ecs_field_is_set(&it, 0));
+        test_uint(ent_3, it.entities[0]);
+
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void BuiltinPredicates_this_neq_id_written_same_table_twice(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+
+    ecs_entity_t ent_1 = ecs_entity(world, { .name = "ent_1" });
+    ecs_entity_t ent_2 = ecs_entity(world, { .name = "ent_2" });
+    ecs_add_pair(world, ent_1, Rel, TgtA);
+    ecs_add_pair(world, ent_2, Rel, TgtA);
+    ecs_add_pair(world, ent_1, Rel, TgtB);
+    ecs_add_pair(world, ent_2, Rel, TgtB);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Rel($this, $tgt), $this != ent_1",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    int tgt_var = ecs_query_find_var(q, "tgt");
+    test_assert(tgt_var != -1);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_uint(1, it.count);
+        test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 0));
+        test_uint(true, ecs_field_is_set(&it, 0));
+        test_uint(false, ecs_field_is_set(&it, 1));
+        test_uint(TgtA, ecs_iter_get_var(&it, tgt_var));
+        test_uint(ent_2, it.entities[0]);
+
+        test_bool(true, ecs_query_next(&it));
+        test_uint(1, it.count);
+        test_uint(ecs_pair(Rel, TgtB), ecs_field_id(&it, 0));
+        test_uint(true, ecs_field_is_set(&it, 0));
+        test_uint(false, ecs_field_is_set(&it, 1));
+        test_uint(TgtB, ecs_iter_get_var(&it, tgt_var));
+        test_uint(ent_2, it.entities[0]);
+
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}

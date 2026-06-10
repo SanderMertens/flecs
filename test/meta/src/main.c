@@ -497,8 +497,10 @@ void Cursor_set_out_of_bounds(void);
 void Cursor_get_member_id(void);
 void Cursor_get_array_type(void);
 void Cursor_get_vector_type(void);
+void Cursor_set_string_literal_single_quote(void);
 
 // Testsuite 'DeserializeFromJson'
+void DeserializeFromJson_struct_i32_long_number_literal(void);
 void DeserializeFromJson_struct_bool(void);
 void DeserializeFromJson_struct_byte(void);
 void DeserializeFromJson_struct_char(void);
@@ -907,6 +909,7 @@ void SerializeIterToJson_serialize_children_w_tag_w_parent_component(void);
 void SerializeIterToJson_serialize_children_w_tag_w_parent_component_table(void);
 void SerializeIterToJson_serialize_childof_var_w_parent(void);
 void SerializeIterToJson_serialize_childof_wildcard_w_parent(void);
+void SerializeIterToJson_serialize_table_dont_fragment_no_leak(void);
 
 // Testsuite 'SerializeIterToRowJson'
 void SerializeIterToRowJson_serialize_this_w_1_tag(void);
@@ -1192,6 +1195,7 @@ void RttCompare_vector_of_struct_with_ints(void);
 void RttCompare_vector_of_struct_with_strings(void);
 void RttCompare_vector_of_arrays_of_strings(void);
 void RttCompare_vector_of_opaque(void);
+void RttCompare_struct_with_vector_of_ints_different_length(void);
 
 bake_test_case PrimitiveTypes_testcases[] = {
     {
@@ -3095,10 +3099,18 @@ bake_test_case Cursor_testcases[] = {
     {
         "get_vector_type",
         Cursor_get_vector_type
+    },
+    {
+        "set_string_literal_single_quote",
+        Cursor_set_string_literal_single_quote
     }
 };
 
 bake_test_case DeserializeFromJson_testcases[] = {
+    {
+        "struct_i32_long_number_literal",
+        DeserializeFromJson_struct_i32_long_number_literal
+    },
     {
         "struct_bool",
         DeserializeFromJson_struct_bool
@@ -4715,6 +4727,10 @@ bake_test_case SerializeIterToJson_testcases[] = {
     {
         "serialize_childof_wildcard_w_parent",
         SerializeIterToJson_serialize_childof_wildcard_w_parent
+    },
+    {
+        "serialize_table_dont_fragment_no_leak",
+        SerializeIterToJson_serialize_table_dont_fragment_no_leak
     }
 };
 
@@ -5815,6 +5831,10 @@ bake_test_case RttCompare_testcases[] = {
     {
         "vector_of_opaque",
         RttCompare_vector_of_opaque
+    },
+    {
+        "struct_with_vector_of_ints_different_length",
+        RttCompare_struct_with_vector_of_ints_different_length
     }
 };
 
@@ -5893,14 +5913,14 @@ static bake_test_suite suites[] = {
         "Cursor",
         NULL,
         NULL,
-        158,
+        159,
         Cursor_testcases
     },
     {
         "DeserializeFromJson",
         NULL,
         NULL,
-        160,
+        161,
         DeserializeFromJson_testcases
     },
     {
@@ -5921,7 +5941,7 @@ static bake_test_suite suites[] = {
         "SerializeIterToJson",
         NULL,
         NULL,
-        86,
+        87,
         SerializeIterToJson_testcases
     },
     {
@@ -5977,7 +5997,7 @@ static bake_test_suite suites[] = {
         "RttCompare",
         NULL,
         NULL,
-        26,
+        27,
         RttCompare_testcases
     }
 };

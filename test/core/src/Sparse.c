@@ -7666,3 +7666,31 @@ void Sparse_remove_childof_pair_w_dont_fragment_component(void) {
     ecs_fini(world);
 }
 
+
+void Sparse_remove_zeroes_storage(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+    if (!fragment) ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set(world, e, Position, {10, 20});
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_remove(world, e, Position);
+    test_assert(!ecs_has(world, e, Position));
+
+    ecs_add(world, e, Position);
+    p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 0);
+    test_int(p->y, 0);
+
+    ecs_fini(world);
+}

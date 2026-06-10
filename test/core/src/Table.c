@@ -868,3 +868,30 @@ void Table_65_records_w_tgt(void) {
 
     ecs_fini(world);
 }
+
+void Table_clear_table_toggle_reset(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ecs_add_id(world, ecs_id(Position), EcsCanToggle);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add(world, e1, Position);
+    ecs_add_id(world, e1, ECS_TOGGLE | ecs_id(Position));
+    ecs_enable_id(world, e1, ecs_id(Position), true);
+    test_bool(ecs_is_enabled_id(world, e1, ecs_id(Position)), true);
+
+    ecs_table_t *table = ecs_get_table(world, e1);
+    test_assert(table != NULL);
+    ecs_table_clear_entities(world, table);
+
+    test_assert(!ecs_is_alive(world, e1));
+    test_int(0, ecs_table_count(table));
+
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add(world, e2, Position);
+    ecs_add_id(world, e2, ECS_TOGGLE | ecs_id(Position));
+    test_bool(ecs_is_enabled_id(world, e2, ecs_id(Position)), false);
+
+    ecs_fini(world);
+}

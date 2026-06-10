@@ -487,7 +487,8 @@
                 "singleton_trait_w_explicit_src",
                 "lookup_component_by_symbol_1",
                 "lookup_component_by_symbol_2",
-                "lookup_component_by_symbol_3"
+                "lookup_component_by_symbol_3",
+                "expr_longer_than_16kb"
             ]
         }, {
             "id": "Fuzzing",
@@ -1116,7 +1117,9 @@
                 "first_any_any_src_pair_any_tgt",
                 "first_wildcard_any_src",
                 "first_var_any_src_w_constrained_var",
-                "first_var_any_src_pair_constrained_tgt"
+                "first_var_any_src_pair_constrained_tgt",
+                "1_any_src_set_pair_tgt_var_no_match",
+                "set_var_id_31"
             ]
         }, {
             "id": "Operators",
@@ -1503,7 +1506,9 @@
                 "neq_any",
                 "match_variable",
                 "match_wildcard",
-                "match_any"
+                "match_any",
+                "this_neq_id_written_after_eq",
+                "this_neq_id_written_same_table_twice"
             ]
         }, {
             "id": "Scopes",
@@ -1991,7 +1996,9 @@
                 "detect_w_cascade_desc",
                 "detect_partially_cached",
                 "mark_fixed_fields_dirty_after_remove",
-                "mark_fixed_fields_dirty_w_tag_before"
+                "mark_fixed_fields_dirty_w_tag_before",
+                "query_changed_after_wildcard_matched_table_emptied",
+                "detect_w_not_cached_fixed_src_term"
             ]
         }, {
             "id": "GroupBy",
@@ -2272,7 +2279,9 @@
                 "this_sort",
                 "this_table_move_2_from_3",
                 "toggle_0_src_only_term",
-                "toggle_0_src"
+                "toggle_0_src",
+                "remove_toggle_from_table_w_other_toggle_and_entity",
+                "this_toggle_after_or_chain"
             ]
         }, {
             "id": "Sparse",
@@ -2311,7 +2320,8 @@
                 "sparse_pair_first",
                 "sparse_pair_second",
                 "sparse_pair_first_after_query",
-                "sparse_pair_second_after_query"
+                "sparse_pair_second_after_query",
+                "sparse_after_or"
             ]
         }, {
             "id": "DontFragment",
@@ -2824,7 +2834,8 @@
                 "sort_optional_term",
                 "order_empty_table",
                 "order_empty_table_only",
-                "order_empty_table_only_2_tables"
+                "order_empty_table_only_2_tables",
+                "sort_w_or_term_before_order_by_term"
             ]
         }, {
             "id": "OrderByEntireTable",

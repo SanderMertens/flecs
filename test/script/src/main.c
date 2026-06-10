@@ -1116,6 +1116,7 @@ void Vars_struct_expr_w_struct_var(void);
 void Vars_nested_struct_expr_w_struct_var(void);
 void Vars_redeclare_in_scope(void);
 void Vars_init_fini_vars(void);
+void Vars_from_iter_17_fields(void);
 
 // Testsuite 'Serialize'
 void Serialize_bool(void);
@@ -5888,6 +5889,10 @@ bake_test_case Vars_testcases[] = {
     {
         "init_fini_vars",
         Vars_init_fini_vars
+    },
+    {
+        "from_iter_17_fields",
+        Vars_from_iter_17_fields
     }
 };
 
@@ -7434,7 +7439,7 @@ static bake_test_suite suites[] = {
         "Vars",
         NULL,
         NULL,
-        14,
+        15,
         Vars_testcases
     },
     {

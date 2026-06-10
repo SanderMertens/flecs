@@ -2264,3 +2264,51 @@ void OrderBy_order_empty_table_only_2_tables(void) {
 
     ecs_fini(world);
 }
+
+void OrderBy_sort_w_or_term_before_order_by_term(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {3, 0}));
+    ecs_add(world, e1, TagA);
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {1, 0}));
+    ecs_add(world, e2, TagB);
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {2, 0}));
+    ecs_add(world, e3, TagA);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "TagA || TagB, Position",
+        .cache_kind = EcsQueryCacheAuto,
+        .order_by = ecs_id(Position),
+        .order_by_callback = compare_position
+    });
+
+    test_assert(q != NULL);
+    test_int(q->term_count, 3);
+    test_int(q->field_count, 2);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 3);
+    test_uint(it.entities[0], e2);
+    test_uint(it.entities[1], e3);
+    test_uint(it.entities[2], e1);
+    test_assert(!ecs_query_next(&it));
+
+    ecs_set(world, e2, Position, {4, 0});
+
+    it = ecs_query_iter(world, q);
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 3);
+    test_uint(it.entities[0], e3);
+    test_uint(it.entities[1], e1);
+    test_uint(it.entities[2], e2);
+    test_assert(!ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}

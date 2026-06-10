@@ -556,3 +556,34 @@ void Clone_clone_after_delete_deferred(void) {
     ecs_fini(world);
 }
 
+
+void Clone_clone_pair_component_w_value_w_name(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t tgt = ecs_new(world);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "Foo" });
+    test_assert(e1 != 0);
+
+    ecs_set_pair(world, e1, Position, tgt, {10, 20});
+
+    ecs_entity_t e2 = ecs_clone(world, 0, e1, true);
+    test_assert(e2 != 0);
+    test_assert(e1 != e2);
+
+    test_assert(ecs_has_pair(world, e2, ecs_id(Position), tgt));
+
+    const Position *p = ecs_get_pair(world, e2, Position, tgt);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    const Position *p1 = ecs_get_pair(world, e1, Position, tgt);
+    test_assert(p1 != NULL);
+    test_assert(p != p1);
+    test_int(p1->x, 10);
+    test_int(p1->y, 20);
+
+    ecs_fini(world);
+}
