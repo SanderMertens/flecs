@@ -431,7 +431,8 @@ bool flecs_parse_is_e(
 
 const char* flecs_parse_digit(
     const char *ptr,
-    char *token)
+    char *token,
+    int32_t token_size)
 {
     char *tptr = token;
     char ch = ptr[0];
@@ -452,12 +453,17 @@ const char* flecs_parse_digit(
             }
         }
 
+        if ((tptr - token) >= (token_size - 1)) {
+            ecs_parser_error(NULL, NULL, 0, "number too long");
+            return NULL;
+        }
+
         tptr[0] = ch;
         tptr ++;
     }
 
     tptr[0] = '\0';
-    
+
     return ptr;
 }
 

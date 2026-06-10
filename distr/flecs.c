@@ -14550,7 +14550,8 @@ bool flecs_parse_is_e(
 
 const char* flecs_parse_digit(
     const char *ptr,
-    char *token)
+    char *token,
+    int32_t token_size)
 {
     char *tptr = token;
     char ch = ptr[0];
@@ -14571,12 +14572,17 @@ const char* flecs_parse_digit(
             }
         }
 
+        if ((tptr - token) >= (token_size - 1)) {
+            ecs_parser_error(NULL, NULL, 0, "number too long");
+            return NULL;
+        }
+
         tptr[0] = ch;
         tptr ++;
     }
 
     tptr[0] = '\0';
-    
+
     return ptr;
 }
 
@@ -51137,8 +51143,12 @@ const char* flecs_json_parse(
         }
     } else if (isdigit(ch) || (ch == '-')) {
         token_kind[0] = JsonNumber;
-        const char *result = flecs_parse_digit(json, token);
-        
+        const char *result = flecs_parse_digit(json, token, ECS_MAX_TOKEN_SIZE);
+        if (!result) {
+            token_kind[0] = JsonInvalid;
+            return NULL;
+        }
+
         /* Cheap initial check if parsed token could represent large int */
         if (result - json > 15) {
             /* Less cheap secondary check to see if number is integer */
@@ -55085,7 +55095,7 @@ const char* parse_c_digit(
 {
     char token[24];
     ptr = flecs_parse_ws_eol(ptr);
-    ptr = flecs_parse_digit(ptr, token);
+    ptr = flecs_parse_digit(ptr, token, 24);
     if (!ptr) {
         goto error;
     }
