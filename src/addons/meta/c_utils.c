@@ -92,7 +92,7 @@ const char* parse_c_digit(
 {
     char token[24];
     ptr = flecs_parse_ws_eol(ptr);
-    ptr = flecs_parse_digit(ptr, token);
+    ptr = flecs_parse_digit(ptr, token, 24);
     if (!ptr) {
         goto error;
     }

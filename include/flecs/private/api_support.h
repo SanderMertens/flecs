@@ -213,12 +213,14 @@ const char* flecs_parse_ws_eol(
  *
  * @param ptr The expression to parse.
  * @param token The output buffer.
+ * @param token_size The size of the output buffer.
  * @return Pointer to the first non-digit character.
  */
 FLECS_API
 const char* flecs_parse_digit(
     const char *ptr,
-    char *token);
+    char *token,
+    int32_t token_size);
 
 /* Convert an identifier to snake case. */
 FLECS_API
