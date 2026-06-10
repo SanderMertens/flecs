@@ -3423,10 +3423,10 @@ typedef struct ecs_time_t {
 } ecs_time_t;
 
 /** Allocation counters. */
-extern int64_t ecs_os_api_malloc_count;            /**< malloc count. */
-extern int64_t ecs_os_api_realloc_count;           /**< realloc count. */
-extern int64_t ecs_os_api_calloc_count;            /**< calloc count. */
-extern int64_t ecs_os_api_free_count;              /**< free count. */
+FLECS_API extern int64_t ecs_os_api_malloc_count;  /**< malloc count. */
+FLECS_API extern int64_t ecs_os_api_realloc_count; /**< realloc count. */
+FLECS_API extern int64_t ecs_os_api_calloc_count;  /**< calloc count. */
+FLECS_API extern int64_t ecs_os_api_free_count;    /**< free count. */
 
 /* Enabling this flag will add a header to each allocation that allows the code
  * to track exactly how much memory has been allocated. Increases memory 
@@ -11491,6 +11491,7 @@ int ecs_value_copy(
  * @param src A pointer to the value to move.
  * @return Zero if successful, nonzero if failed.
  */
+FLECS_API
 int ecs_value_move_w_type_info(
     const ecs_world_t *world,
     const ecs_type_info_t *ti,
@@ -11505,6 +11506,7 @@ int ecs_value_move_w_type_info(
  * @param src A pointer to the value to move.
  * @return Zero if successful, nonzero if failed.
  */
+FLECS_API
 int ecs_value_move(
     const ecs_world_t *world,
     ecs_entity_t type,
@@ -11519,6 +11521,7 @@ int ecs_value_move(
  * @param src A pointer to the value to move.
  * @return Zero if successful, nonzero if failed.
  */
+FLECS_API
 int ecs_value_move_ctor_w_type_info(
     const ecs_world_t *world,
     const ecs_type_info_t *ti,
@@ -11533,6 +11536,7 @@ int ecs_value_move_ctor_w_type_info(
  * @param src A pointer to the value to move.
  * @return Zero if successful, nonzero if failed.
  */
+FLECS_API
 int ecs_value_move_ctor(
     const ecs_world_t *world,
     ecs_entity_t type,

@@ -42,10 +42,10 @@ typedef struct ecs_time_t {
 } ecs_time_t;
 
 /** Allocation counters. */
-extern int64_t ecs_os_api_malloc_count;            /**< malloc count. */
-extern int64_t ecs_os_api_realloc_count;           /**< realloc count. */
-extern int64_t ecs_os_api_calloc_count;            /**< calloc count. */
-extern int64_t ecs_os_api_free_count;              /**< free count. */
+FLECS_API extern int64_t ecs_os_api_malloc_count;  /**< malloc count. */
+FLECS_API extern int64_t ecs_os_api_realloc_count; /**< realloc count. */
+FLECS_API extern int64_t ecs_os_api_calloc_count;  /**< calloc count. */
+FLECS_API extern int64_t ecs_os_api_free_count;    /**< free count. */
 
 /* Enabling this flag will add a header to each allocation that allows the code
  * to track exactly how much memory has been allocated. Increases memory 

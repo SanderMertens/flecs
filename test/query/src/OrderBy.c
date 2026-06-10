@@ -2292,20 +2292,24 @@ void OrderBy_sort_w_or_term_before_order_by_term(void) {
 
     ecs_iter_t it = ecs_query_iter(world, q);
     test_assert(ecs_query_next(&it));
-    test_int(it.count, 3);
+    test_int(it.count, 1);
     test_uint(it.entities[0], e2);
-    test_uint(it.entities[1], e3);
-    test_uint(it.entities[2], e1);
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 2);
+    test_uint(it.entities[0], e3);
+    test_uint(it.entities[1], e1);
     test_assert(!ecs_query_next(&it));
 
     ecs_set(world, e2, Position, {4, 0});
 
     it = ecs_query_iter(world, q);
     test_assert(ecs_query_next(&it));
-    test_int(it.count, 3);
+    test_int(it.count, 2);
     test_uint(it.entities[0], e3);
     test_uint(it.entities[1], e1);
-    test_uint(it.entities[2], e2);
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e2);
     test_assert(!ecs_query_next(&it));
 
     ecs_query_fini(q);
