@@ -7105,3 +7105,124 @@ void DontFragment_this_written_not_sparse_pair(void) {
     ecs_fini(world);
 }
 
+void DontFragment_1_sparse_written_up_w_non_fragmenting_childof(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Foo);
+
+    ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+
+    ecs_entity_t p1 = ecs_new(world);
+    ecs_set(world, p1, Position, {10, 20});
+    ecs_entity_t p2 = ecs_new(world);
+
+    ecs_entity_t c1 = ecs_insert(world, ecs_value(EcsParent, {p1}));
+    ecs_add(world, c1, Foo);
+    ecs_entity_t c2 = ecs_insert(world, ecs_value(EcsParent, {p2}));
+    ecs_add(world, c2, Foo);
+    ecs_entity_t c3 = ecs_insert(world, ecs_value(EcsParent, {p1}));
+    ecs_add(world, c3, Foo);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Foo, Position(up ChildOf)",
+        .cache_kind = cache_kind
+    });
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(c1, it.entities[0]);
+    test_uint(Foo, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    {
+        Position *ptr = ecs_field_at(&it, Position, 1, 0);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 10); test_int(ptr->y, 20);
+    }
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(c3, it.entities[0]);
+    test_uint(p1, ecs_field_src(&it, 1));
+    {
+        Position *ptr = ecs_field_at(&it, Position, 1, 0);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 10); test_int(ptr->y, 20);
+    }
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void DontFragment_1_sparse_written_self_up_w_non_fragmenting_childof(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Foo);
+
+    ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+
+    ecs_entity_t p1 = ecs_new(world);
+    ecs_set(world, p1, Position, {10, 20});
+    ecs_entity_t p2 = ecs_new(world);
+
+    ecs_entity_t c1 = ecs_insert(world, ecs_value(EcsParent, {p1}));
+    ecs_add(world, c1, Foo);
+    ecs_entity_t c2 = ecs_insert(world, ecs_value(EcsParent, {p2}));
+    ecs_add(world, c2, Foo);
+    ecs_entity_t c3 = ecs_insert(world, ecs_value(EcsParent, {p1}));
+    ecs_add(world, c3, Foo);
+    ecs_entity_t c4 = ecs_new_w(world, Foo);
+    ecs_set(world, c4, Position, {30, 40});
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Foo, Position(self|up ChildOf)",
+        .cache_kind = cache_kind
+    });
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(c1, it.entities[0]);
+    test_uint(p1, ecs_field_src(&it, 1));
+    {
+        Position *ptr = ecs_field_at(&it, Position, 1, 0);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 10); test_int(ptr->y, 20);
+    }
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(c3, it.entities[0]);
+    test_uint(p1, ecs_field_src(&it, 1));
+    {
+        Position *ptr = ecs_field_at(&it, Position, 1, 0);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 10); test_int(ptr->y, 20);
+    }
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(c4, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 1));
+    {
+        Position *ptr = ecs_field_at(&it, Position, 1, 0);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 30); test_int(ptr->y, 40);
+    }
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+

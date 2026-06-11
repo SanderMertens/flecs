@@ -3889,3 +3889,28 @@ void BuiltinPredicates_this_neq_2_terms_second_lower_row(void) {
 
     ecs_fini(world);
 }
+
+void BuiltinPredicates_2_or_w_eq_wildcard(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t e = ecs_new_w(world, TagA);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "TagA($this) || $this == *",
+        .cache_kind = cache_kind
+    });
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e, it.entities[0]);
+    test_uint(TagA, ecs_field_id(&it, 0));
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}

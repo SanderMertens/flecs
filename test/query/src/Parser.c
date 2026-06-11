@@ -7298,3 +7298,16 @@ void Parser_expr_longer_than_16kb(void) {
 
     ecs_fini(world);
 }
+
+void Parser_neq_w_or(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_log_set_level(-4);
+    test_assert(NULL == ecs_query_init(world, &(ecs_query_desc_t){
+        .expr = "$this != TagA || TagA($this)"
+    }));
+
+    ecs_fini(world);
+}

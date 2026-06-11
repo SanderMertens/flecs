@@ -356,6 +356,8 @@ void Eval_component_w_match(void);
 void Eval_component_w_match_invalid(void);
 void Eval_pair_component_w_match(void);
 void Eval_component_assign_w_match(void);
+void Eval_component_assign_w_match_matched_case(void);
+void Eval_unknown_annotation(void);
 void Eval_const_w_match(void);
 void Eval_component_w_assign_add(void);
 void Eval_component_w_assign_mul(void);
@@ -661,6 +663,7 @@ void Error_default_type_with_tag(void);
 void Error_invalid_oneof(void);
 void Error_default_type_with_tag(void);
 void Error_unterminated_multiline_string(void);
+void Error_unterminated_string_ending_with_backslash(void);
 void Error_invalid_assign_multiline_string(void);
 void Error_const_var_redeclare(void);
 void Error_typed_const_w_composite_type_invalid_assignment(void);
@@ -832,6 +835,7 @@ void Expr_add_var_to(void);
 void Expr_var_member(void);
 void Expr_var_member_member(void);
 void Expr_var_element(void);
+void Expr_var_element_out_of_range(void);
 void Expr_var_element_element(void);
 void Expr_var_member_element(void);
 void Expr_var_member_element_inline(void);
@@ -858,6 +862,7 @@ void Expr_cond_neq_string(void);
 void Expr_cond_neq_entity(void);
 void Expr_cond_eq_bool_int(void);
 void Expr_cond_eq_int_flt(void);
+void Expr_cond_eq_flt(void);
 void Expr_cond_eq_cond_and(void);
 void Expr_cond_eq_cond_or(void);
 void Expr_cond_gt_bool(void);
@@ -2888,6 +2893,14 @@ bake_test_case Eval_testcases[] = {
         Eval_component_assign_w_match
     },
     {
+        "component_assign_w_match_matched_case",
+        Eval_component_assign_w_match_matched_case
+    },
+    {
+        "unknown_annotation",
+        Eval_unknown_annotation
+    },
+    {
         "const_w_match",
         Eval_const_w_match
     },
@@ -4093,6 +4106,10 @@ bake_test_case Error_testcases[] = {
         Error_unterminated_multiline_string
     },
     {
+        "unterminated_string_ending_with_backslash",
+        Error_unterminated_string_ending_with_backslash
+    },
+    {
         "invalid_assign_multiline_string",
         Error_invalid_assign_multiline_string
     },
@@ -4768,6 +4785,10 @@ bake_test_case Expr_testcases[] = {
         Expr_var_element
     },
     {
+        "var_element_out_of_range",
+        Expr_var_element_out_of_range
+    },
+    {
         "var_element_element",
         Expr_var_element_element
     },
@@ -4870,6 +4891,10 @@ bake_test_case Expr_testcases[] = {
     {
         "cond_eq_int_flt",
         Expr_cond_eq_int_flt
+    },
+    {
+        "cond_eq_flt",
+        Expr_cond_eq_flt
     },
     {
         "cond_eq_cond_and",
@@ -7410,7 +7435,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        482,
+        484,
         Eval_testcases
     },
     {
@@ -7431,14 +7456,14 @@ static bake_test_suite suites[] = {
         "Error",
         NULL,
         NULL,
-        103,
+        104,
         Error_testcases
     },
     {
         "Expr",
         Expr_setup,
         NULL,
-        340,
+        342,
         Expr_testcases,
         1,
         Expr_params

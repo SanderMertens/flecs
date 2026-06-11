@@ -488,7 +488,8 @@
                 "lookup_component_by_symbol_1",
                 "lookup_component_by_symbol_2",
                 "lookup_component_by_symbol_3",
-                "expr_longer_than_16kb"
+                "expr_longer_than_16kb",
+                "neq_w_or"
             ]
         }, {
             "id": "Fuzzing",
@@ -1510,7 +1511,8 @@
                 "match_wildcard",
                 "match_any",
                 "this_neq_id_written_after_eq",
-                "this_neq_id_written_same_table_twice"
+                "this_neq_id_written_same_table_twice",
+                "2_or_w_eq_wildcard"
             ]
         }, {
             "id": "Scopes",
@@ -2002,7 +2004,8 @@
                 "mark_fixed_fields_dirty_after_remove",
                 "mark_fixed_fields_dirty_w_tag_before",
                 "query_changed_after_wildcard_matched_table_emptied",
-                "detect_w_not_cached_fixed_src_term"
+                "detect_w_not_cached_fixed_src_term",
+                "detect_changes_w_order_by"
             ]
         }, {
             "id": "GroupBy",
@@ -2464,7 +2467,9 @@
                 "this_written_sparse_wildcard_pair_recycled",
                 "this_written_sparse_any_pair_recycled",
                 "this_written_not_sparse_wildcard_pair",
-                "this_written_not_sparse_pair"
+                "this_written_not_sparse_pair",
+                "1_sparse_written_up_w_non_fragmenting_childof",
+                "1_sparse_written_self_up_w_non_fragmenting_childof"
             ]
         }, {
             "id": "NonFragmentingChildOf",
@@ -2791,7 +2796,8 @@
                 "this_set_childof_w_prefab",
                 "this_set_childof_w_prefab_match_prefab",
                 "query_parent_in_on_add_parent_observer",
-                "up_query_cache_stale_table_after_shrink"
+                "up_query_cache_stale_table_after_shrink",
+                "this_src_childof_var_doesnt_match_root"
             ]
         }, {
             "id": "OrderBy",
@@ -2841,7 +2847,9 @@
                 "order_empty_table",
                 "order_empty_table_only",
                 "order_empty_table_only_2_tables",
-                "sort_w_or_term_before_order_by_term"
+                "sort_w_or_term_before_order_by_term",
+                "sort_after_set_shared_component",
+                "sort_w_scope_term"
             ]
         }, {
             "id": "OrderByEntireTable",

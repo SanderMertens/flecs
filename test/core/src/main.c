@@ -986,6 +986,9 @@ void NonFragmentingChildOf_defer_reparent_mixed_childof(void);
 void NonFragmentingChildOf_prefab_parent_w_mixed_childof(void);
 void NonFragmentingChildOf_instantiate_tree_after_add_child(void);
 void NonFragmentingChildOf_set_parent_w_childof_observer_and_wildcard_event_observer(void);
+void NonFragmentingChildOf_prefab_get_target_after_delete_instance_child(void);
+void NonFragmentingChildOf_defer_remove_add_batched_w_sibling_in_table(void);
+void NonFragmentingChildOf_instantiate_tree_after_rename_child(void);
 
 // Testsuite 'Hierarchies'
 void Hierarchies_setup(void);
@@ -7197,6 +7200,18 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "set_parent_w_childof_observer_and_wildcard_event_observer",
         NonFragmentingChildOf_set_parent_w_childof_observer_and_wildcard_event_observer
+    },
+    {
+        "prefab_get_target_after_delete_instance_child",
+        NonFragmentingChildOf_prefab_get_target_after_delete_instance_child
+    },
+    {
+        "defer_remove_add_batched_w_sibling_in_table",
+        NonFragmentingChildOf_defer_remove_add_batched_w_sibling_in_table
+    },
+    {
+        "instantiate_tree_after_rename_child",
+        NonFragmentingChildOf_instantiate_tree_after_rename_child
     }
 };
 
@@ -16545,7 +16560,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NULL,
         NULL,
-        258,
+        261,
         NonFragmentingChildOf_testcases
     },
     {

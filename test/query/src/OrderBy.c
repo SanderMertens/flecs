@@ -2316,3 +2316,106 @@ void OrderBy_sort_w_or_term_before_order_by_term(void) {
 
     ecs_fini(world);
 }
+
+void OrderBy_sort_after_set_shared_component(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_entity_t p1 = ecs_insert(world, ecs_value(Position, {1, 0}));
+    ecs_entity_t p2 = ecs_insert(world, ecs_value(Position, {2, 0}));
+
+    ecs_entity_t c1 = ecs_new_w(world, TagA);
+    ecs_add_pair(world, c1, EcsChildOf, p1);
+    ecs_entity_t c2 = ecs_new_w(world, TagB);
+    ecs_add_pair(world, c2, EcsChildOf, p2);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{
+            .id = ecs_id(Position),
+            .src.id = EcsUp,
+            .trav = EcsChildOf
+        }},
+        .cache_kind = EcsQueryCacheAuto,
+        .order_by = ecs_id(Position),
+        .order_by_callback = compare_position
+    });
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], c1);
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], c2);
+    test_assert(!ecs_query_next(&it));
+
+    ecs_set(world, p1, Position, {10, 0});
+
+    it = ecs_query_iter(world, q);
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], c2);
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], c1);
+    test_assert(!ecs_query_next(&it));
+
+    it = ecs_query_iter(world, q);
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], c2);
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], c1);
+    test_assert(!ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void OrderBy_sort_w_scope_term(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+    ECS_TAG(world, Apples);
+
+    ecs_entity_t e[5];
+    float xs[] = {5, 4, 3, 2, 1};
+    for (int i = 0; i < 5; i ++) {
+        e[i] = ecs_new(world);
+        ecs_set(world, e[i], Position, {xs[i], 0});
+        ecs_add(world, e[i], Velocity);
+        ecs_add(world, e[i], Mass);
+        ecs_add(world, e[i], Apples);
+    }
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Position, Velocity, Mass, {Apples}",
+        .order_by = ecs_id(Position),
+        .order_by_callback = compare_position
+    });
+    test_assert(q != NULL);
+
+    test_int(EcsQueryCacheAuto, q->cache_kind);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 5);
+    test_uint(it.entities[0], e[4]);
+    test_uint(it.entities[1], e[3]);
+    test_uint(it.entities[2], e[2]);
+    test_uint(it.entities[3], e[1]);
+    test_uint(it.entities[4], e[0]);
+    test_assert(!ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
