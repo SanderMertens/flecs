@@ -1525,12 +1525,21 @@ int ecs_meta_set_string(
     case EcsOpU64:
     case EcsOpIPtr:
     case EcsOpUPtr:
-    case EcsOpF32:
-    case EcsOpF64:
         if (!flecs_meta_valid_digit(value)) {
             ecs_err("expected number, got '%s'", value);
             goto error;
         }
+        break;
+    case EcsOpF32:
+    case EcsOpF64: {
+        char *endptr;
+        strtod(value, &endptr);
+        if (endptr == value) {
+            ecs_err("expected number, got '%s'", value);
+            goto error;
+        }
+        break;
+    }
     case EcsOpEnum:
     case EcsOpBitmask:
     case EcsOpPushStruct:
