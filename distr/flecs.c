@@ -15790,6 +15790,14 @@ void flecs_emit_on_set_for_override_on_add(
 {
     (void)evtx;
 
+    ecs_event_id_record_t *iders_set[5] = {0};
+    int32_t ider_set_i, ider_set_count =
+        flecs_event_observers_get(er_onset, id, iders_set);
+    if (!ider_set_count) {
+        /* No OnSet observers for component */
+        return;
+    }
+
     ecs_ref_t storage;
     const ecs_ref_t *o = flecs_table_get_override(
         world, table, id, cr, &storage);
@@ -15805,18 +15813,10 @@ void flecs_emit_on_set_for_override_on_add(
     ecs_table_t *other = it->other_table;
     if (other) {
         if (ecs_table_has_id(world, other, ecs_pair(EcsIsA, base))) {
-            /* If previous table already had (IsA, base), entity already 
+            /* If previous table already had (IsA, base), entity already
              * inherited the component, so no new value needs to be emitted. */
             return;
         }
-    }
-
-    ecs_event_id_record_t *iders_set[5] = {0};
-    int32_t ider_set_i, ider_set_count = 
-        flecs_event_observers_get(er_onset, id, iders_set);
-    if (!ider_set_count) {
-        /* No OnSet observers for component */
-        return;
     }
 
     it->ids[0] = id;
@@ -15852,17 +15852,17 @@ void flecs_emit_on_set_for_override_on_remove(
 {
     (void)evtx;
 
-    ecs_ref_t storage;
-    const ecs_ref_t *o = flecs_table_get_override(world, table, id, cr, &storage);
-    if (!o) {
-        return;
-    }
-
     ecs_event_id_record_t *iders_set[5] = {0};
-    int32_t ider_set_i, ider_set_count = 
+    int32_t ider_set_i, ider_set_count =
         flecs_event_observers_get(er_onset, id, iders_set);
     if (!ider_set_count) {
         /* No OnSet observers for component */
+        return;
+    }
+
+    ecs_ref_t storage;
+    const ecs_ref_t *o = flecs_table_get_override(world, table, id, cr, &storage);
+    if (!o) {
         return;
     }
 
@@ -16004,8 +16004,9 @@ void flecs_emit(
      * same event. If a new override is added for an existing base component,
      * it changes the ownership of the component, but not the value, so no OnSet
      * is needed. */
-    bool can_override_on_add = count && 
+    bool can_override_on_add = count &&
         do_on_set &&
+        (er_onset != NULL) &&
         (event == EcsOnAdd) &&
         (table_flags & EcsTableHasIsA);
 
@@ -16015,6 +16016,7 @@ void flecs_emit(
      * OnSet event must be emitted. */
     bool can_override_on_remove = count &&
         do_on_set &&
+        (er_onset != NULL) &&
         (event == EcsOnRemove) &&
         (it.other_table) &&
         (it.other_table->flags & EcsTableHasIsA);
