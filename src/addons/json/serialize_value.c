@@ -27,14 +27,22 @@ int flecs_json_ser_enum(
     ecs_map_key_t value;
     ecs_meta_op_kind_t kind = op->underlying_kind;
 
-    if (kind == EcsOpU8 || kind == EcsOpI8) {
+    if (kind == EcsOpU8) {
         value = *(const uint8_t*)base;
-    } else if (kind == EcsOpU16 || kind == EcsOpI16) {
+    } else if (kind == EcsOpI8) {
+        value = (ecs_map_key_t)(int64_t)*(const int8_t*)base;
+    } else if (kind == EcsOpU16) {
         value = *(const uint16_t*)base;
-    } else if (kind == EcsOpU32 || kind == EcsOpI32) {
+    } else if (kind == EcsOpI16) {
+        value = (ecs_map_key_t)(int64_t)*(const int16_t*)base;
+    } else if (kind == EcsOpU32) {
         value = *(const uint32_t*)base;
-    } else if (kind == EcsOpUPtr || kind == EcsOpIPtr) {
+    } else if (kind == EcsOpI32) {
+        value = (ecs_map_key_t)(int64_t)*(const int32_t*)base;
+    } else if (kind == EcsOpUPtr) {
         value = *(const uintptr_t*)base;
+    } else if (kind == EcsOpIPtr) {
+        value = (ecs_map_key_t)(int64_t)*(const intptr_t*)base;
     } else if (kind == EcsOpU64 || kind == EcsOpI64) {
         value = *(const uint64_t*)base;
     } else {
