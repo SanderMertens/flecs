@@ -50342,7 +50342,7 @@ bool flecs_query_tree_up_post(
 
         op_ctx->cur ++;
 
-        if (op_ctx->cur >= op_ctx->range.count) {
+        if (op_ctx->cur >= (op_ctx->range.offset + op_ctx->range.count)) {
             flecs_query_src_set_range(op, &op_ctx->range, ctx);
             return false;
         }
