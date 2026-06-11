@@ -1857,11 +1857,13 @@ void flecs_query_cache_iter_init(
 
 /* Cache search */
 bool flecs_query_cache_search(
-    const ecs_query_run_ctx_t *ctx);
+    const ecs_query_run_ctx_t *ctx,
+    bool redo);
 
 /* Cache search where entire query is cached */
 bool flecs_query_is_cache_search(
-    const ecs_query_run_ctx_t *ctx);
+    const ecs_query_run_ctx_t *ctx,
+    bool redo);
 
 /* Cache test */
 bool flecs_query_cache_test(
@@ -40937,12 +40939,42 @@ void flecs_query_cache_init_mapped_fields(
     }
 }
 
-/* Iterate cache for query that's partially cached */
-bool flecs_query_cache_search(
+/* Reset the cache iteration cursor to the start of the iteration. This is
+ * called when the cache operation is entered fresh (redo == false), which
+ * happens when a preceding operation in the plan yields a new result. */
+static
+void flecs_query_cache_iter_restart(
     const ecs_query_run_ctx_t *ctx)
 {
-    ecs_assert(!flecs_query_cache_is_trivial(ctx->query->cache), 
+    ecs_iter_t *it = ctx->it;
+    ecs_query_iter_t *qit = &it->priv_.iter.query;
+    ecs_query_cache_t *cache = ctx->query->cache;
+
+    if (qit->iter_single_group) {
+        qit->tables = qit->all_tables;
+        qit->cur = 0;
+    } else if (cache->order_by_callback) {
+        qit->tables = qit->all_tables = &cache->table_slices;
+        qit->group = NULL;
+        qit->cur = 0;
+    } else {
+        qit->group = cache->first_group;
+        qit->tables = qit->all_tables = &qit->group->tables;
+        qit->cur = 0;
+    }
+}
+
+/* Iterate cache for query that's partially cached */
+bool flecs_query_cache_search(
+    const ecs_query_run_ctx_t *ctx,
+    bool redo)
+{
+    ecs_assert(!flecs_query_cache_is_trivial(ctx->query->cache),
         ECS_INTERNAL_ERROR, NULL);
+
+    if (!redo) {
+        flecs_query_cache_iter_restart(ctx);
+    }
 
     ecs_query_cache_match_t *node = flecs_query_cache_next(ctx, false);
     if (!node) {
@@ -40958,10 +40990,15 @@ bool flecs_query_cache_search(
 
 /* Iterate cache for query that's entirely cached */
 bool flecs_query_is_cache_search(
-    const ecs_query_run_ctx_t *ctx)
+    const ecs_query_run_ctx_t *ctx,
+    bool redo)
 {
-    ecs_assert(!flecs_query_cache_is_trivial(ctx->query->cache), 
+    ecs_assert(!flecs_query_cache_is_trivial(ctx->query->cache),
         ECS_INTERNAL_ERROR, NULL);
+
+    if (!redo) {
+        flecs_query_cache_iter_restart(ctx);
+    }
 
     ecs_query_cache_match_t *node = flecs_query_cache_next(ctx, false);
     if (!node) {
@@ -45866,14 +45903,13 @@ bool flecs_query_cache(
     const ecs_query_run_ctx_t *ctx)
 {
     (void)op;
-    (void)redo;
 
     uint64_t written = ctx->written[ctx->op_index];
     ctx->written[ctx->op_index + 1] |= 1ull;
     if (written & 1ull) {
         return flecs_query_cache_test(ctx, redo);
     } else {
-        return flecs_query_cache_search(ctx);
+        return flecs_query_cache_search(ctx, redo);
     }
 }
 
@@ -45890,7 +45926,7 @@ bool flecs_query_is_cache(
     if (written & 1ull) {
         return flecs_query_is_cache_test(ctx, redo);
     } else {
-        return flecs_query_is_cache_search(ctx);
+        return flecs_query_is_cache_search(ctx, redo);
     }
 }
 
@@ -47390,7 +47426,7 @@ bool ecs_query_next(
         /* Cached iterator modes */
         if (it->flags & EcsIterTrivialSearch) {
             ecs_assert(impl->ops == NULL, ECS_INTERNAL_ERROR, NULL);
-            if (flecs_query_is_cache_search(&ctx)) {
+            if (flecs_query_is_cache_search(&ctx, redo)) {
                 goto trivial_search_yield;
             }
         } else if (it->flags & EcsIterTrivialTest) {
