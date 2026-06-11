@@ -1819,3 +1819,70 @@ void SerializeToJson_serialize_from_stage(void) {
 
     ecs_fini(world);
 }
+
+void SerializeToJson_struct_uptr_large(void) {
+    typedef struct {
+        ecs_uptr_t x;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"x", ecs_id(ecs_uptr_t)}
+        }
+    });
+
+    T value = { (uintptr_t)0x1234567890ull };
+    char *expr = ecs_ptr_to_json(world, t, &value);
+    test_assert(expr != NULL);
+    test_str(expr, "{\"x\":78187493520}");
+    ecs_os_free(expr);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_enum_negative_constant(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_enum_init(world, &(ecs_enum_desc_t){
+        .entity = ecs_entity(world, {.name = "Color"}),
+        .constants = {
+            {"Red", -1}
+        }
+    });
+
+    test_assert(e != 0);
+
+    int32_t value = -1;
+    char *expr = ecs_ptr_to_json(world, e, &value);
+    test_assert(expr != NULL);
+    test_str(expr, "\"Red\"");
+    ecs_os_free(expr);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_struct_string_w_control_char(void) {
+    typedef struct {
+        char *s;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"s", ecs_id(ecs_string_t)}
+        }
+    });
+
+    T value = { "a\033b" };
+    char *expr = ecs_ptr_to_json(world, t, &value);
+    test_assert(expr != NULL);
+    test_str(expr, "{\"s\":\"a\\u001bb\"}");
+    ecs_os_free(expr);
+
+    ecs_fini(world);
+}

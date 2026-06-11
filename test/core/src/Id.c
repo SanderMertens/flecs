@@ -622,3 +622,16 @@ void Id_wildcard_pair_match_value_pair(void) {
 
     ecs_fini(world);
 }
+
+void Id_long_entity_from_str(void) {
+    ecs_world_t *world = ecs_init();
+
+    char buf[400];
+    memset(buf, 'A', sizeof(buf) - 1);
+    buf[sizeof(buf) - 1] = '\0';
+
+    ecs_id_t id = ecs_id_from_str(world, buf);
+    test_assert(id == 0);
+
+    ecs_fini(world);
+}

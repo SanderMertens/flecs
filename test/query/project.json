@@ -1295,6 +1295,7 @@
         }, {
             "id": "Transitive",
             "testcases": [
+                "written_src_unknown_tgt_first_leaf",
                 "1_fact_0_lvl_true",
                 "1_fact_1_lvl_true",
                 "1_fact_2_lvl_true",
@@ -1415,6 +1416,7 @@
                 "cache_kind": ["default", "auto"]
             },
             "testcases": [
+                "this_neq_2_terms_second_lower_row",
                 "this_eq_id",
                 "this_eq_name",
                 "this_eq_var",
@@ -1765,6 +1767,8 @@
         }, {
             "id": "Cached",
             "testcases": [
+                "fixed_src_wildcard_before_cache",
+                "rematch_fewer_wildcard_matches",
                 "simple_query_existing_table",
                 "simple_query_2_existing_tables",
                 "simple_query_new_table",
@@ -2290,6 +2294,7 @@
                 "cache_kind": ["default", "auto"]
             },
             "testcases": [
+                "sparse_written_up_2_levels",
                 "1_fixed_sparse",
                 "1_fixed_sparse_none",
                 "1_fixed_sparse_self",
@@ -2468,6 +2473,7 @@
                 "cache_kind": ["default", "auto"]
             },
             "testcases": [
+                "optional_up_set_var_2nd_child",
                 "0_src_childof_parent",
                 "0_src_childof_0",
                 "fixed_src_childof_0",

@@ -3848,3 +3848,44 @@ void BuiltinPredicates_this_neq_id_written_same_table_twice(void) {
 
     ecs_fini(world);
 }
+
+void BuiltinPredicates_this_neq_2_terms_second_lower_row(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e0 = ecs_entity(world, { .name = "e0" });
+    ecs_add(world, e0, Tag);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add(world, e1, Tag);
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_add(world, e2, Tag);
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
+    ecs_add(world, e3, Tag);
+    ecs_entity_t e4 = ecs_entity(world, { .name = "e4" });
+    ecs_add(world, e4, Tag);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Tag($this), $this != e3, $this != e0",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+
+    test_bool(true, ecs_query_next(&it));
+    test_uint(2, it.count);
+    test_uint(e1, it.entities[0]);
+    test_uint(e2, it.entities[1]);
+
+    test_bool(true, ecs_query_next(&it));
+    test_uint(1, it.count);
+    test_uint(e4, it.entities[0]);
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}

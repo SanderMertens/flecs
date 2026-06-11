@@ -364,6 +364,8 @@
         }, {
             "id": "Cursor",
             "testcases": [
+                "set_value_enum_u8_underlying",
+                "get_char",
                 "set_bool",
                 "set_byte",
                 "set_char",
@@ -527,6 +529,9 @@
         }, {
             "id": "DeserializeFromJson",
             "testcases": [
+                "string_w_unknown_escape_large",
+                "u64_max_roundtrip",
+                "f64_nan_roundtrip",
                 "struct_i32_long_number_literal",
                 "struct_bool",
                 "struct_byte",
@@ -692,6 +697,9 @@
         }, {
             "id": "SerializeToJson",
             "testcases": [
+                "struct_string_w_control_char",
+                "struct_uptr_large",
+                "enum_negative_constant",
                 "struct_bool",
                 "struct_byte",
                 "struct_char",
@@ -1218,6 +1226,7 @@
         },{
             "id": "RttCompare",
             "testcases": [
+                "struct_with_array",
                 "struct_with_ints",
                 "struct_with_strings",
                 "struct_with_opaque",

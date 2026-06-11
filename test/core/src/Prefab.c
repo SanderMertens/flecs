@@ -6555,3 +6555,19 @@ void Prefab_reparent_to_prefab_is_prefab(void) {
 
     ecs_fini(world);
 }
+
+void Prefab_enable_prefab_w_isa_variant(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t base = ecs_entity(world, { .add = ecs_ids(EcsPrefab) });
+    ecs_entity_t variant = ecs_entity(world, { .add = ecs_ids(EcsPrefab) });
+    ecs_add_pair(world, variant, EcsIsA, base);
+
+    ecs_enable(world, variant, false);
+    test_assert(ecs_has_id(world, variant, EcsDisabled));
+
+    ecs_enable(world, variant, true);
+    test_assert(!ecs_has_id(world, variant, EcsDisabled));
+
+    ecs_fini(world);
+}

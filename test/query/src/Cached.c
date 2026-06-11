@@ -7685,3 +7685,118 @@ void Cached_filter_term_not_term_table_recycle(void) {
 
     ecs_fini(world);
 }
+
+void Cached_rematch_fewer_wildcard_matches(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t Likes = ecs_new(world);
+    ecs_add_pair(world, Likes, EcsOnInstantiate, EcsInherit);
+
+    ecs_entity_t A = ecs_entity(world, { .name = "A" });
+    ecs_entity_t B = ecs_entity(world, { .name = "B" });
+    ecs_entity_t C = ecs_entity(world, { .name = "C" });
+
+    ecs_entity_t prefab = ecs_entity(world, { .add = ecs_ids(EcsPrefab) });
+    ecs_add_pair(world, prefab, Likes, A);
+    ecs_add_pair(world, prefab, Likes, B);
+    ecs_add_pair(world, prefab, Likes, C);
+
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, prefab);
+    test_assert(inst != 0);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ .id = ecs_pair(Likes, EcsWildcard) }},
+        .cache_kind = EcsQueryCacheAuto
+    });
+
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+
+    test_bool(true, ecs_query_next(&it));
+    test_uint(1, it.count);
+    test_uint(inst, it.entities[0]);
+    test_uint(ecs_pair(Likes, A), ecs_field_id(&it, 0));
+
+    test_bool(true, ecs_query_next(&it));
+    test_uint(1, it.count);
+    test_uint(inst, it.entities[0]);
+    test_uint(ecs_pair(Likes, B), ecs_field_id(&it, 0));
+
+    test_bool(true, ecs_query_next(&it));
+    test_uint(1, it.count);
+    test_uint(inst, it.entities[0]);
+    test_uint(ecs_pair(Likes, C), ecs_field_id(&it, 0));
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_remove_pair(world, prefab, Likes, C);
+
+    it = ecs_query_iter(world, q);
+
+    test_bool(true, ecs_query_next(&it));
+    test_uint(1, it.count);
+    test_uint(inst, it.entities[0]);
+    test_uint(ecs_pair(Likes, A), ecs_field_id(&it, 0));
+
+    test_bool(true, ecs_query_next(&it));
+    test_uint(1, it.count);
+    test_uint(inst, it.entities[0]);
+    test_uint(ecs_pair(Likes, B), ecs_field_id(&it, 0));
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Cached_fixed_src_wildcard_before_cache(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t Likes = ecs_new(world);
+    ecs_entity_t A = ecs_new(world), B = ecs_new(world), C = ecs_new(world);
+
+    ecs_entity_t src = ecs_new(world);
+    ecs_add_pair(world, src, Likes, A);
+    ecs_add_pair(world, src, Likes, B);
+    ecs_add_pair(world, src, Likes, C);
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_set(world, parent, Position, {1, 2});
+    ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { .id = ecs_id(Position), .src.id = EcsUp, .trav = EcsChildOf },
+            { .id = ecs_pair(Likes, EcsWildcard), .src.id = src | EcsIsEntity }},
+        .cache_kind = EcsQueryCacheAuto });
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+
+    test_bool(true, ecs_query_next(&it));
+    test_uint(1, it.count);
+    test_uint(child, it.entities[0]);
+    test_uint(ecs_pair(Likes, A), ecs_field_id(&it, 1));
+    test_uint(src, ecs_field_src(&it, 1));
+
+    test_bool(true, ecs_query_next(&it));
+    test_uint(1, it.count);
+    test_uint(child, it.entities[0]);
+    test_uint(ecs_pair(Likes, B), ecs_field_id(&it, 1));
+    test_uint(src, ecs_field_src(&it, 1));
+
+    test_bool(true, ecs_query_next(&it));
+    test_uint(1, it.count);
+    test_uint(child, it.entities[0]);
+    test_uint(ecs_pair(Likes, C), ecs_field_id(&it, 1));
+    test_uint(src, ecs_field_src(&it, 1));
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+    ecs_fini(world);
+}

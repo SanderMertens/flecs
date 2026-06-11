@@ -281,3 +281,19 @@ void Get_component_get_wildcard(void) {
 
     ecs_fini(world);
 }
+
+void Get_component_get_inherited_tag_w_isa(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t Tag = ecs_new(world);
+    ecs_add_pair(world, Tag, EcsOnInstantiate, EcsInherit);
+
+    ecs_entity_t base = ecs_new_w_id(world, Tag);
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+
+    test_assert(ecs_has_id(world, inst, Tag));
+    const void *ptr = ecs_get_id(world, inst, Tag);
+    test_assert(ptr == NULL);
+
+    ecs_fini(world);
+}

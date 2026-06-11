@@ -1258,6 +1258,7 @@ void Operators_not_reflexive_rel_wildcard(void);
 void Operators_and_optional_and(void);
 
 // Testsuite 'Transitive'
+void Transitive_written_src_unknown_tgt_first_leaf(void);
 void Transitive_1_fact_0_lvl_true(void);
 void Transitive_1_fact_1_lvl_true(void);
 void Transitive_1_fact_2_lvl_true(void);
@@ -1371,6 +1372,7 @@ void ComponentInheritance_query_before_isa_relationship_0_src(void);
 
 // Testsuite 'BuiltinPredicates'
 void BuiltinPredicates_setup(void);
+void BuiltinPredicates_this_neq_2_terms_second_lower_row(void);
 void BuiltinPredicates_this_eq_id(void);
 void BuiltinPredicates_this_eq_name(void);
 void BuiltinPredicates_this_eq_var(void);
@@ -1706,6 +1708,8 @@ void Cascade_parent_component_n_parents_for_depth_after_query(void);
 void Cascade_cascade_optional_change_detection_after_remove(void);
 
 // Testsuite 'Cached'
+void Cached_fixed_src_wildcard_before_cache(void);
+void Cached_rematch_fewer_wildcard_matches(void);
 void Cached_simple_query_existing_table(void);
 void Cached_simple_query_2_existing_tables(void);
 void Cached_simple_query_new_table(void);
@@ -2212,6 +2216,7 @@ void Toggle_this_toggle_after_or_chain(void);
 
 // Testsuite 'Sparse'
 void Sparse_setup(void);
+void Sparse_sparse_written_up_2_levels(void);
 void Sparse_1_fixed_sparse(void);
 void Sparse_1_fixed_sparse_none(void);
 void Sparse_1_fixed_sparse_self(void);
@@ -2380,6 +2385,7 @@ void DontFragment_this_written_not_sparse_pair(void);
 
 // Testsuite 'NonFragmentingChildOf'
 void NonFragmentingChildOf_setup(void);
+void NonFragmentingChildOf_optional_up_set_var_2nd_child(void);
 void NonFragmentingChildOf_0_src_childof_parent(void);
 void NonFragmentingChildOf_0_src_childof_0(void);
 void NonFragmentingChildOf_fixed_src_childof_0(void);
@@ -7783,6 +7789,10 @@ bake_test_case Operators_testcases[] = {
 
 bake_test_case Transitive_testcases[] = {
     {
+        "written_src_unknown_tgt_first_leaf",
+        Transitive_written_src_unknown_tgt_first_leaf
+    },
+    {
         "1_fact_0_lvl_true",
         Transitive_1_fact_0_lvl_true
     },
@@ -8220,6 +8230,10 @@ bake_test_case ComponentInheritance_testcases[] = {
 };
 
 bake_test_case BuiltinPredicates_testcases[] = {
+    {
+        "this_neq_2_terms_second_lower_row",
+        BuiltinPredicates_this_neq_2_terms_second_lower_row
+    },
     {
         "this_eq_id",
         BuiltinPredicates_this_eq_id
@@ -9532,6 +9546,14 @@ bake_test_case Cascade_testcases[] = {
 };
 
 bake_test_case Cached_testcases[] = {
+    {
+        "fixed_src_wildcard_before_cache",
+        Cached_fixed_src_wildcard_before_cache
+    },
+    {
+        "rematch_fewer_wildcard_matches",
+        Cached_rematch_fewer_wildcard_matches
+    },
     {
         "simple_query_existing_table",
         Cached_simple_query_existing_table
@@ -11520,6 +11542,10 @@ bake_test_case Toggle_testcases[] = {
 
 bake_test_case Sparse_testcases[] = {
     {
+        "sparse_written_up_2_levels",
+        Sparse_sparse_written_up_2_levels
+    },
+    {
         "1_fixed_sparse",
         Sparse_1_fixed_sparse
     },
@@ -12173,6 +12199,10 @@ bake_test_case DontFragment_testcases[] = {
 };
 
 bake_test_case NonFragmentingChildOf_testcases[] = {
+    {
+        "optional_up_set_var_2nd_child",
+        NonFragmentingChildOf_optional_up_set_var_2nd_child
+    },
     {
         "0_src_childof_parent",
         NonFragmentingChildOf_0_src_childof_parent
@@ -14151,7 +14181,7 @@ static bake_test_suite suites[] = {
         "Transitive",
         NULL,
         NULL,
-        72,
+        73,
         Transitive_testcases
     },
     {
@@ -14165,7 +14195,7 @@ static bake_test_suite suites[] = {
         "BuiltinPredicates",
         BuiltinPredicates_setup,
         NULL,
-        94,
+        95,
         BuiltinPredicates_testcases,
         1,
         BuiltinPredicates_params
@@ -14199,7 +14229,7 @@ static bake_test_suite suites[] = {
         "Cached",
         NULL,
         NULL,
-        153,
+        155,
         Cached_testcases
     },
     {
@@ -14238,7 +14268,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         Sparse_setup,
         NULL,
-        32,
+        33,
         Sparse_testcases,
         1,
         Sparse_params
@@ -14256,7 +14286,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NonFragmentingChildOf_setup,
         NULL,
-        318,
+        319,
         NonFragmentingChildOf_testcases,
         1,
         NonFragmentingChildOf_params
