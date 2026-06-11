@@ -4001,3 +4001,33 @@ void ChangeDetection_detect_w_not_cached_fixed_src_term(void) {
 
     ecs_fini(world);
 }
+
+static
+int compare_position(
+    ecs_entity_t e1,
+    const void *ptr1,
+    ecs_entity_t e2,
+    const void *ptr2)
+{
+    const Position *p1 = ptr1;
+    const Position *p2 = ptr2;
+    return (p1->x > p2->x) - (p1->x < p2->x);
+}
+
+void ChangeDetection_detect_changes_w_order_by(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_log_set_level(-4);
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "[in] Position",
+        .cache_kind = EcsQueryCacheAuto,
+        .order_by = ecs_id(Position),
+        .order_by_callback = compare_position,
+        .flags = EcsQueryDetectChanges
+    });
+    test_assert(q == NULL);
+
+    ecs_fini(world);
+}

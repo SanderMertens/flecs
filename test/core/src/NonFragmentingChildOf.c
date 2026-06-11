@@ -6860,3 +6860,101 @@ void NonFragmentingChildOf_set_parent_w_childof_observer_and_wildcard_event_obse
 
     ecs_fini(world);
 }
+
+static
+void prefab_get_target_abort(void) {
+    test_int(ecs_log_last_error(), ECS_INVALID_OPERATION);
+    test_abort();
+}
+
+void NonFragmentingChildOf_prefab_get_target_after_delete_instance_child(void) {
+    ecs_os_set_api_defaults();
+    ecs_os_api_t os_api = ecs_os_get_api();
+    os_api.abort_ = prefab_get_target_abort;
+    ecs_os_set_api(&os_api);
+    ecs_log_set_level(-5);
+
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t c1 = ecs_new_w_parent(world, p, NULL);
+    ecs_entity_t c2 = ecs_new_w_parent(world, p, NULL);
+    (void)c1;
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+
+    ecs_entity_t ic2 = ecs_get_target(world, i, c2, 0);
+    test_assert(ic2 != 0);
+
+    ecs_delete(world, ic2);
+
+    test_expect_abort();
+    ecs_get_target(world, i, c2, 0);
+}
+
+void NonFragmentingChildOf_defer_remove_add_batched_w_sibling_in_table(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t p = ecs_new(world);
+    ecs_entity_t q = ecs_new(world);
+    ecs_entity_t c1 = ecs_new_w_parent(world, p, NULL);
+    ecs_entity_t c2 = ecs_new_w_parent(world, p, NULL);
+    ecs_entity_t c3 = ecs_new_w_parent(world, q, NULL);
+
+    ecs_set(world, c1, Position, {1, 1});
+    ecs_set(world, c2, Position, {2, 2});
+    ecs_set(world, c3, Position, {3, 3});
+
+    ecs_defer_begin(world);
+    ecs_remove(world, c1, Position);
+    ecs_add(world, c1, Velocity);
+    ecs_defer_end(world);
+
+    test_assert(ecs_is_alive(world, c2));
+    test_assert(ecs_has(world, c2, Position));
+    test_assert(ecs_get_parent(world, c2) == p);
+
+    ecs_query_t *qry = ecs_query(world, {
+        .terms = {
+            { .id = ecs_id(Position) },
+            { .id = ecs_childof(p) }
+        }
+    });
+
+    ecs_iter_t it = ecs_query_iter(world, qry);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(c2, it.entities[0]);
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+    test_uint(ecs_childof(p), ecs_field_id(&it, 1));
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(qry);
+
+    ecs_fini(world);
+}
+
+void NonFragmentingChildOf_instantiate_tree_after_rename_child(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t child = ecs_new_w_parent(world, p, "OriginalChildName");
+
+    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
+    test_assert(i != 0);
+
+    ecs_set_name(world, child, "Renamed_Child_With_A_Much_Longer_Name_AAAAAAAA");
+
+    ecs_entity_t p2 = ecs_new_w_id(world, EcsPrefab);
+    ecs_add_pair(world, p2, EcsIsA, p);
+
+    ecs_entities_t children = ecs_get_ordered_children(world, p2);
+    test_int(children.count, 1);
+    test_str(ecs_get_name(world, children.ids[0]),
+        "Renamed_Child_With_A_Much_Longer_Name_AAAAAAAA");
+
+    ecs_fini(world);
+}

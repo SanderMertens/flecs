@@ -1611,6 +1611,38 @@ void Expr_var_element(void) {
     ecs_fini(world);
 }
 
+void Expr_var_element_out_of_range(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t array = ecs_array(world, {
+        .entity = ecs_entity(world, { .name = "array" }),
+        .type = ecs_id(ecs_i32_t),
+        .count = 2
+    });
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *var = ecs_script_vars_define_id(
+        vars, "foo", array);
+    ((int*)var->value.ptr)[0] = 10;
+    ((int*)var->value.ptr)[1] = 20;
+
+    ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
+
+    ecs_log_set_level(-4);
+    {
+        ecs_value_t v = {0};
+        test_assert(ecs_expr_run(world, "$foo[2]", &v, &desc) == NULL);
+    }
+    {
+        ecs_value_t v = {0};
+        test_assert(ecs_expr_run(world, "$foo[1000000]", &v, &desc) == NULL);
+    }
+
+    ecs_script_vars_fini(vars);
+    ecs_fini(world);
+}
+
 void Expr_var_element_element(void) {
     ecs_world_t *world = ecs_init();
 
@@ -2731,6 +2763,20 @@ void Expr_cond_eq_int_flt(void) {
     test_assert(ecs_expr_run(world, "1 != 1.0", &v, NULL) == NULL);
     test_assert(ecs_expr_run(world, "1 != 0.0", &v, NULL) == NULL);
     test_assert(ecs_expr_run(world, "0 != 0.0", &v, NULL) == NULL);
+
+    ecs_fini(world);
+}
+
+void Expr_cond_eq_flt(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_value_t v = {0};
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_expr_run(world, "1.5 == 1.5", &v, NULL) == NULL);
+    test_assert(ecs_expr_run(world, "1.5 == 0.5", &v, NULL) == NULL);
+    test_assert(ecs_expr_run(world, "1.5 != 1.5", &v, NULL) == NULL);
+    test_assert(ecs_expr_run(world, "1.5 != 0.5", &v, NULL) == NULL);
 
     ecs_fini(world);
 }

@@ -234,6 +234,17 @@ void Error_unterminated_multiline_string(void) {
     ecs_fini(world);
 }
 
+void Error_unterminated_string_ending_with_backslash(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr = "e { x: \"abc\\";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+
+    ecs_fini(world);
+}
+
 void Error_invalid_assign_multiline_string(void) {
     ecs_world_t *world = ecs_init();
 

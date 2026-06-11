@@ -1017,7 +1017,10 @@
                 "defer_reparent_mixed_childof",
                 "prefab_parent_w_mixed_childof",
                 "instantiate_tree_after_add_child",
-                "set_parent_w_childof_observer_and_wildcard_event_observer"
+                "set_parent_w_childof_observer_and_wildcard_event_observer",
+                "prefab_get_target_after_delete_instance_child",
+                "defer_remove_add_batched_w_sibling_in_table",
+                "instantiate_tree_after_rename_child"
             ]
         }, {
             "id": "Hierarchies",
