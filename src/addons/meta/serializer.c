@@ -80,7 +80,8 @@ int flecs_expr_ser_primitive(
         ecs_strbuf_appendint(str, flecs_ito(int64_t, *(const intptr_t*)base));
         break;
     case EcsUPtr:
-        ecs_strbuf_append(str, "%u", *(const uintptr_t*)base);
+        ecs_strbuf_append(str, "%llu",
+            (unsigned long long)*(const uintptr_t*)base);
         break;
     case EcsString: {
         const char *value = *ECS_CONST_CAST(const char**, base);
