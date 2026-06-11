@@ -16,6 +16,7 @@ typedef enum ecs_cmd_kind_t {
     EcsCmdSetDontFragment,
     EcsCmdEmplace,
     EcsCmdEnsure,
+    EcsCmdEnsureDontFragment,
     EcsCmdModified,
     EcsCmdModifiedNoHook,
     EcsCmdAddModified,

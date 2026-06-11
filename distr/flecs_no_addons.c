@@ -2691,6 +2691,7 @@ typedef enum ecs_cmd_kind_t {
     EcsCmdSetDontFragment,
     EcsCmdEmplace,
     EcsCmdEnsure,
+    EcsCmdEnsureDontFragment,
     EcsCmdModified,
     EcsCmdModifiedNoHook,
     EcsCmdAddModified,
@@ -6216,6 +6217,8 @@ void flecs_cmd_batch_for_entity(
                 /* Nothing to batch for non-fragmenting components */
                 if (cmd->kind == EcsCmdSet) {
                     cmd->kind = EcsCmdSetDontFragment;
+                } else if (cmd->kind == EcsCmdEnsure) {
+                    cmd->kind = EcsCmdEnsureDontFragment;
                 }
                 continue;
             }
@@ -6294,6 +6297,7 @@ void flecs_cmd_batch_for_entity(
         case EcsCmdModifiedNoHook:
         case EcsCmdModified:
         case EcsCmdSetDontFragment:
+        case EcsCmdEnsureDontFragment:
             break;
         }
     } while ((cur = next_for_entity));
@@ -6412,6 +6416,7 @@ void flecs_cmd_batch_for_entity(
             case EcsCmdModifiedNoHook:
             case EcsCmdAddModified:
             case EcsCmdSetDontFragment:
+            case EcsCmdEnsureDontFragment:
             case EcsCmdPath:
             case EcsCmdClear:
             case EcsCmdOnDeleteAction:
@@ -6604,8 +6609,9 @@ bool flecs_defer_end(
                     world->info.cmd.ensure_count ++;
                     break;
                 case EcsCmdEnsure:
-                    flecs_set_id_move(world, dst_stage, e, 
-                        cmd->id, flecs_itosize(cmd->is._1.size), 
+                case EcsCmdEnsureDontFragment:
+                    flecs_set_id_move(world, dst_stage, e,
+                        cmd->id, flecs_itosize(cmd->is._1.size),
                         cmd->is._1.value, kind);
                     world->info.cmd.ensure_count ++;
                     break;

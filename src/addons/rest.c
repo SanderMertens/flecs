@@ -1730,6 +1730,7 @@ const char* flecs_rest_cmd_kind_to_str(
     case EcsCmdSetDontFragment:
     case EcsCmdSet: return "Set";
     case EcsCmdEmplace: return "Emplace";
+    case EcsCmdEnsureDontFragment:
     case EcsCmdEnsure: return "Ensure";
     case EcsCmdModified: return "Modified";
     case EcsCmdModifiedNoHook: return "ModifiedNoHook";
@@ -1764,6 +1765,7 @@ bool flecs_rest_cmd_has_id(
     case EcsCmdSetDontFragment:
     case EcsCmdEmplace:
     case EcsCmdEnsure:
+    case EcsCmdEnsureDontFragment:
     case EcsCmdModified:
     case EcsCmdModifiedNoHook:
     case EcsCmdAddModified:
