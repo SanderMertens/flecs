@@ -642,6 +642,8 @@ void Template_template_w_tree_parent(void);
 void Template_template_w_tree_parent_change_value(void);
 void Template_template_w_nested_template_w_with(void);
 void Template_template_w_nested_template_w_with_kind_value(void);
+void Template_pair_component_w_entity_prop_target(void);
+void Template_child_name_from_string_prop(void);
 
 // Testsuite 'Error'
 void Error_multi_line_comment_after_newline_before_newline_scope_open(void);
@@ -746,6 +748,7 @@ void Error_annotation_to_unresolved_identifier_managed_parse_twice_2(void);
 void Error_annotation_to_tag(void);
 void Error_parse_error_logged(void);
 void Error_eval_error_logged(void);
+void Error_template_unresolved_var_in_entity_name(void);
 
 // Testsuite 'Expr'
 void Expr_setup(void);
@@ -4017,6 +4020,14 @@ bake_test_case Template_testcases[] = {
     {
         "template_w_nested_template_w_with_kind_value",
         Template_template_w_nested_template_w_with_kind_value
+    },
+    {
+        "pair_component_w_entity_prop_target",
+        Template_pair_component_w_entity_prop_target
+    },
+    {
+        "child_name_from_string_prop",
+        Template_child_name_from_string_prop
     }
 };
 
@@ -4428,6 +4439,10 @@ bake_test_case Error_testcases[] = {
     {
         "eval_error_logged",
         Error_eval_error_logged
+    },
+    {
+        "template_unresolved_var_in_entity_name",
+        Error_template_unresolved_var_in_entity_name
     }
 };
 
@@ -7409,14 +7424,14 @@ static bake_test_suite suites[] = {
         "Template",
         NULL,
         NULL,
-        83,
+        85,
         Template_testcases
     },
     {
         "Error",
         NULL,
         NULL,
-        102,
+        103,
         Error_testcases
     },
     {

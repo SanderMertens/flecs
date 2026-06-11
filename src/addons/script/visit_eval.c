@@ -181,7 +181,8 @@ ecs_entity_t flecs_script_eval_name_expr(
         .lookup_ctx = v,
         .vars = v->vars,
         .type = ecs_id(ecs_string_t),
-        .runtime = v->r
+        .runtime = v->r,
+        .disable_dynamic_variable_binding = !v->dynamic_variable_binding
     };
 
     ecs_expr_node_t *expr = *expr_ptr;
