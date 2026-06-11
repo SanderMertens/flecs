@@ -51133,6 +51133,10 @@ const char* flecs_json_parse(
             }
 
             json = flecs_chrparse(json, token_ptr ++);
+            if (!json) {
+                token_kind[0] = JsonInvalid;
+                return NULL;
+            }
         }
 
         if (!ch) {
@@ -51202,6 +51206,9 @@ const char* flecs_json_parse_large_string(
         }
 
         json = flecs_chrparse(json, &ch_out);
+        if (!json) {
+            return NULL;
+        }
         ecs_strbuf_appendch(buf, ch_out);
     }
 
@@ -51372,6 +51379,9 @@ const char* flecs_json_skip_string(
         }
 
         json = flecs_chrparse(json, &ch_out);
+        if (!json) {
+            return NULL;
+        }
     }
 
     return ch ? json : NULL;
