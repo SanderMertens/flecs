@@ -51873,7 +51873,7 @@ void flecs_trav_table_up_w(
 
             ecs_trav_up_t *up_parent = flecs_trav_table_up(ctx, a, cache,
                 world, p->value, with, rel, cr_with, cr_trav);
-            if (up_parent->tr) {
+            if (up_parent->src) {
                 up->src = up_parent->src;
                 up->tr = up_parent->tr;
                 up->id = up_parent->id;
@@ -51891,7 +51891,7 @@ void flecs_trav_table_up_w(
 
             ecs_trav_up_t *up_parent = flecs_trav_table_up(ctx, a, cache,
                 world, tgt, with, rel, cr_with, cr_trav);
-            if (up_parent->tr) {
+            if (up_parent->src) {
                 up->src = up_parent->src;
                 up->tr = up_parent->tr;
                 up->id = up_parent->id;
@@ -51913,7 +51913,7 @@ void flecs_trav_table_up_w(
 
                 ecs_trav_up_t *up_parent = flecs_trav_table_up(ctx, a, cache,
                     world, tgt, with, rel, cr_with, cr_trav);
-                if (up_parent->tr) {
+                if (up_parent->src) {
                     up->src = up_parent->src;
                     up->tr = up_parent->tr;
                     up->id = up_parent->id;
