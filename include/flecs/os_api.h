@@ -475,7 +475,12 @@ void ecs_os_set_api_defaults(void);
 #endif
 
 #define ecs_os_memcpy_t(ptr1, ptr2, T) ecs_os_memcpy(ptr1, ptr2, ECS_SIZEOF(T))
-#define ecs_os_memcpy_n(ptr1, ptr2, T, count) ecs_os_memcpy(ptr1, ptr2, ECS_SIZEOF(T) * (size_t)count)
+#define ecs_os_memcpy_n(ptr1, ptr2, T, count) \
+    do { \
+        ecs_assert((count) >= 0, ECS_INVALID_PARAMETER, NULL); \
+        ecs_assert((size_t)(count) <= (~(size_t)0 / (size_t)ECS_SIZEOF(T)), ECS_INVALID_PARAMETER, NULL); \
+        ecs_os_memcpy(ptr1, ptr2, ECS_SIZEOF(T) * (size_t)(count)); \
+    } while (0)
 #define ecs_os_memcmp_t(ptr1, ptr2, T) ecs_os_memcmp(ptr1, ptr2, ECS_SIZEOF(T))
 
 #define ecs_os_memmove_t(ptr1, ptr2, T) ecs_os_memmove(ptr1, ptr2, ECS_SIZEOF(T))
