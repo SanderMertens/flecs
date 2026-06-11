@@ -466,6 +466,31 @@ void flecs_json_string_escape(
         return;
     }
 
+    ecs_size_t length = flecs_stresc(NULL, 0, '"', value);
+    if (length == ecs_os_strlen(value)) {
+        ecs_strbuf_appendch(buf, '"');
+        ecs_strbuf_appendstrn(buf, value, length);
+        ecs_strbuf_appendch(buf, '"');
+    } else {
+        char *out = ecs_os_malloc(length + 3);
+        flecs_stresc(out + 1, length, '"', value);
+        out[0] = '"';
+        out[length + 1] = '"';
+        out[length + 2] = '\0';
+        ecs_strbuf_appendstr(buf, out);
+        ecs_os_free(out);
+    }
+}
+
+void flecs_json_string_escape_ctrl(
+    ecs_strbuf_t *buf,
+    const char *value)
+{
+    if (!value) {
+        ecs_strbuf_appendlit(buf, "null");
+        return;
+    }
+
     ecs_strbuf_appendch(buf, '"');
 
     const char *ptr;
