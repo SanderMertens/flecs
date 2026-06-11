@@ -853,6 +853,8 @@ typedef struct ecs_table__t {
 typedef struct ecs_column_t {
     void *data;                      /* Array with component data */
     ecs_type_info_t *ti;             /* Component type info */
+    ecs_id_t id;                     /* Component id */
+    ecs_size_t size;                 /* Component size */
 } ecs_column_t;
 
 /** Table data */
@@ -42476,6 +42478,8 @@ void flecs_table_init_columns(
         tr->column = flecs_ito(int16_t, cur);
 
         columns[cur].ti = ECS_CONST_CAST(ecs_type_info_t*, ti);
+        columns[cur].id = id;
+        columns[cur].size = ti->size;
         
         if (id < FLECS_HI_COMPONENT_ID) {
             table->component_map[id] = flecs_ito(int16_t, cur + 1);
@@ -44002,6 +44006,41 @@ int32_t flecs_table_grow_data(
     return count;
 }
 
+static
+void flecs_table_copy_elem(
+    void *dst_ptr,
+    const void *src_ptr,
+    ecs_size_t size)
+{
+    char *dst = dst_ptr;
+    const char *src = src_ptr;
+    if (size == 16) {
+        ecs_os_memcpy(dst, src, 16);
+    } else if (size == 8) {
+        ecs_os_memcpy(dst, src, 8);
+    } else if (size == 4) {
+        ecs_os_memcpy(dst, src, 4);
+    } else if (size > 32) {
+        ecs_os_memcpy(dst, src, size);
+    } else if (size > 16) {
+        ecs_os_memcpy(dst, src, 16);
+        ecs_os_memcpy(&dst[size - 16], &src[size - 16], 16);
+    } else if (size > 8) {
+        ecs_os_memcpy(dst, src, 8);
+        ecs_os_memcpy(&dst[size - 8], &src[size - 8], 8);
+    } else if (size > 4) {
+        ecs_os_memcpy(dst, src, 4);
+        ecs_os_memcpy(&dst[size - 4], &src[size - 4], 4);
+    } else if (size > 2) {
+        ecs_os_memcpy(dst, src, 2);
+        ecs_os_memcpy(&dst[size - 2], &src[size - 2], 2);
+    } else if (size == 2) {
+        ecs_os_memcpy(dst, src, 2);
+    } else {
+        dst[0] = src[0];
+    }
+}
+
 /* Append operation for tables that don't have any complex logic */
 static
 void flecs_table_fast_append(
@@ -44053,7 +44092,9 @@ void flecs_table_append(
 
     /* Fast path: no toggle columns, no lifecycle actions */
     if (!(table->flags & (EcsTableIsComplex|EcsTableHasIsA))) {
-        flecs_table_fast_append(table);
+        if (v_entities.size != table->data.size) {
+            flecs_table_fast_append(table);
+        }
         table->data.count = v_entities.count;
         table->data.size = v_entities.size;
         return;
@@ -44115,13 +44156,14 @@ void flecs_table_fast_delete(
     int32_t row)
 {
     ecs_column_t *columns = table->data.columns;
+    int32_t last = table->data.count - 1;
     int32_t i, count = table->column_count;
     for (i = 0; i < count; i ++) {
         ecs_column_t *column = &columns[i];
-        const ecs_type_info_t *ti = column->ti;
-        ecs_vec_t v = ecs_vec_from_column(column, table, ti->size);
-        ecs_vec_remove(&v, ti->size, row);
-        column->data = v.array;
+        ecs_size_t size = column->size;
+        flecs_table_copy_elem(
+            ECS_ELEM(column->data, size, row),
+            ECS_ELEM(column->data, size, last), size);
     }
 }
 
@@ -44251,21 +44293,24 @@ void flecs_table_fast_move(
     ecs_column_t *src_columns = src_table->data.columns;
     ecs_column_t *dst_columns = dst_table->data.columns;
 
-    for (; (i_new < dst_column_count) && (i_old < src_column_count);) {
+    while ((i_new < dst_column_count) && (i_old < src_column_count)) {
         ecs_column_t *dst_column = &dst_columns[i_new];
         ecs_column_t *src_column = &src_columns[i_old];
-        ecs_id_t dst_id = flecs_column_id(dst_table, i_new);
-        ecs_id_t src_id = flecs_column_id(src_table, i_old);
+        ecs_id_t dst_id = dst_column->id;
+        ecs_id_t src_id = src_column->id;
 
         if (dst_id == src_id) {
-            int32_t size = dst_column->ti->size;
+            ecs_size_t size = dst_column->size;
             void *dst = ECS_ELEM(dst_column->data, size, dst_index);
             void *src = ECS_ELEM(src_column->data, size, src_index);
-            ecs_os_memcpy(dst, src, size);
+            flecs_table_copy_elem(dst, src, size);
+            i_new ++;
+            i_old ++;
+        } else if (dst_id < src_id) {
+            i_new ++;
+        } else {
+            i_old ++;
         }
-
-        i_new += dst_id <= src_id;
-        i_old += dst_id >= src_id;
     }
 }
 
