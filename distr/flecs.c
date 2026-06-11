@@ -85658,10 +85658,17 @@ bool flecs_query_pred_neq_w_range(
             return false;
         }
 
-        /* Return second slice */
+        /* Return second slice. Clamp the start to the source range in case the
+         * excluded range starts before it, so rows outside the source range are
+         * not returned. */
+        int32_t r_start = r_end;
+        if (r_start < l_offset) {
+            r_start = l_offset;
+        }
+
         var->range.table = l.table;
-        var->range.offset = r_end;
-        var->range.count = l_end - r_end;
+        var->range.offset = r_start;
+        var->range.count = l_end - r_start;
 
         /* Flag so we know we're done on the next redo */
         op_ctx->redo = true;
