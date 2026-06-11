@@ -238,6 +238,9 @@ bool flecs_query_cache_rematch_next(
                     ecs_vec_fini(a, wildcard_matches, elem_size);
                     flecs_free_t(a, ecs_vec_t, wildcard_matches);
                     qm->wildcard_matches = NULL;
+                } else {
+                    ecs_vec_set_count(a, wildcard_matches, elem_size,
+                        wildcard_elem);
                 }
             }
 
