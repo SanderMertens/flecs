@@ -59177,12 +59177,16 @@ int flecs_rtt_struct_cmp(
     for (i = 0; i < cb_count; i++) {
         ecs_rtt_call_data_t *comp_data =
         ecs_vec_get_t(&rtt_ctx->vcmp, ecs_rtt_call_data_t, i);
-        int c = comp_data->hook.cmp(
-            ECS_OFFSET(a_ptr, comp_data->offset),
-            ECS_OFFSET(b_ptr, comp_data->offset),
-            comp_data->type_info);
-        if (c != 0) {
-            return c;
+        ecs_size_t size = comp_data->type_info->size;
+        int32_t e;
+        for (e = 0; e < comp_data->count; e++) {
+            int c = comp_data->hook.cmp(
+                ECS_OFFSET(a_ptr, comp_data->offset + e * size),
+                ECS_OFFSET(b_ptr, comp_data->offset + e * size),
+                comp_data->type_info);
+            if (c != 0) {
+                return c;
+            }
         }
     }
     return 0;
@@ -59209,12 +59213,16 @@ bool flecs_rtt_struct_equals(
     for (i = 0; i < cb_count; i++) {
         ecs_rtt_call_data_t *comp_data =
         ecs_vec_get_t(&rtt_ctx->vequals, ecs_rtt_call_data_t, i);
-        bool eq = comp_data->hook.equals(
-            ECS_OFFSET(a_ptr, comp_data->offset),
-            ECS_OFFSET(b_ptr, comp_data->offset),
-            comp_data->type_info);
-        if (!eq) {
-            return false;
+        ecs_size_t size = comp_data->type_info->size;
+        int32_t e;
+        for (e = 0; e < comp_data->count; e++) {
+            bool eq = comp_data->hook.equals(
+                ECS_OFFSET(a_ptr, comp_data->offset + e * size),
+                ECS_OFFSET(b_ptr, comp_data->offset + e * size),
+                comp_data->type_info);
+            if (!eq) {
+                return false;
+            }
         }
     }
     return true;
@@ -59426,7 +59434,7 @@ void flecs_rtt_init_default_hooks_struct(
             ecs_vec_append_t(NULL, &rtt_ctx->vcmp, ecs_rtt_call_data_t);
             comp_data->offset = m->offset;
             comp_data->type_info = member_ti;
-            comp_data->count = 1;
+            comp_data->count = m->count ? m->count : 1;
             ecs_assert(member_ti->hooks.cmp, ECS_INTERNAL_ERROR, NULL);
             comp_data->hook.cmp = member_ti->hooks.cmp; 
         }
@@ -59435,7 +59443,7 @@ void flecs_rtt_init_default_hooks_struct(
             ecs_vec_append_t(NULL, &rtt_ctx->vequals, ecs_rtt_call_data_t);
             comp_data->offset = m->offset;
             comp_data->type_info = member_ti;
-            comp_data->count = 1;
+            comp_data->count = m->count ? m->count : 1;
             ecs_assert(member_ti->hooks.equals, ECS_INTERNAL_ERROR, NULL);
             comp_data->hook.equals = member_ti->hooks.equals; 
         }
