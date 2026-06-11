@@ -2034,8 +2034,8 @@ char ecs_meta_get_char(
     ecs_meta_op_t *op = flecs_cursor_get_op(scope);
     void *ptr = flecs_meta_cursor_get_ptr(cursor->world, cursor, scope);
     switch(op->kind) {
-    case EcsOpChar: 
-        return *(ecs_char_t*)ptr != 0;
+    case EcsOpChar:
+        return *(ecs_char_t*)ptr;
     case EcsOpPushStruct:
     case EcsOpPushArray:
     case EcsOpPushVector:
