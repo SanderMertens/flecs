@@ -54903,7 +54903,7 @@ int flecs_json_ser_type_slice(
             }
             break;
         case EcsOpString:
-            flecs_json_string_escape_ctrl(str, *(const char**)ptr);
+            flecs_json_string_escape_ctrl(str, *ECS_CONST_CAST(const char**, ptr));
             break;
         case EcsOpPrimitive:
         case EcsOpScope:
@@ -57332,6 +57332,17 @@ int ecs_meta_set_value(
         case EcsI8:  return ecs_meta_set_int(cursor, *(int8_t*)value->ptr);
         case EcsI16: return ecs_meta_set_int(cursor, *(int16_t*)value->ptr);
         case EcsI64: return ecs_meta_set_int(cursor, *(int64_t*)value->ptr);
+        case EcsI32:
+        case EcsBool:
+        case EcsChar:
+        case EcsByte:
+        case EcsF32:
+        case EcsF64:
+        case EcsUPtr:
+        case EcsIPtr:
+        case EcsString:
+        case EcsEntity:
+        case EcsId:
         default:     return ecs_meta_set_int(cursor, *(int32_t*)value->ptr);
         }
     } else if (mt->kind == EcsBitmaskType) {
@@ -57558,10 +57569,10 @@ int ecs_meta_set_string(
         set_T(ecs_uptr_t, ptr, strtoull(value, NULL, 10));
         break;
     case EcsOpF32:
-        set_T(ecs_f32_t, ptr, atof(value));
+        set_T(ecs_f32_t, ptr, strtod(value, NULL));
         break;
     case EcsOpF64:
-        set_T(ecs_f64_t, ptr, atof(value));
+        set_T(ecs_f64_t, ptr, strtod(value, NULL));
         break;
     case EcsOpString: {
         if (*(ecs_string_t*)ptr == value) {

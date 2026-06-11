@@ -1834,11 +1834,19 @@ void SerializeToJson_struct_uptr_large(void) {
         }
     });
 
+#if UINTPTR_MAX > 0xFFFFFFFFu
     T value = { (uintptr_t)0x1234567890ull };
     char *expr = ecs_ptr_to_json(world, t, &value);
     test_assert(expr != NULL);
     test_str(expr, "{\"x\":78187493520}");
     ecs_os_free(expr);
+#else
+    T value = { (uintptr_t)0x12345678u };
+    char *expr = ecs_ptr_to_json(world, t, &value);
+    test_assert(expr != NULL);
+    test_str(expr, "{\"x\":305419896}");
+    ecs_os_free(expr);
+#endif
 
     ecs_fini(world);
 }
