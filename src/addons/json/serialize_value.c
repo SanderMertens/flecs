@@ -370,12 +370,14 @@ int flecs_json_ser_type_slice(
         case EcsOpI32:
         case EcsOpUPtr:
         case EcsOpIPtr:
-        case EcsOpString:
-            if (flecs_expr_ser_primitive(world, 
-                flecs_json_op_to_primitive_kind(op->kind), ptr, str, true)) 
+            if (flecs_expr_ser_primitive(world,
+                flecs_json_op_to_primitive_kind(op->kind), ptr, str, true))
             {
                 ecs_throw(ECS_INTERNAL_ERROR, NULL);
             }
+            break;
+        case EcsOpString:
+            flecs_json_string_escape(str, *(const char**)ptr);
             break;
         case EcsOpPrimitive:
         case EcsOpScope:
