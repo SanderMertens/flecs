@@ -456,20 +456,30 @@ void flecs_json_string_escape(
         return;
     }
 
-    ecs_size_t length = flecs_stresc(NULL, 0, '"', value);
-    if (length == ecs_os_strlen(value)) {
-        ecs_strbuf_appendch(buf, '"');
-        ecs_strbuf_appendstrn(buf, value, length);
-        ecs_strbuf_appendch(buf, '"');
-    } else {
-        char *out = ecs_os_malloc(length + 3);
-        flecs_stresc(out + 1, length, '"', value);
-        out[0] = '"';
-        out[length + 1] = '"';
-        out[length + 2] = '\0';
-        ecs_strbuf_appendstr(buf, out);
-        ecs_os_free(out);
+    ecs_strbuf_appendch(buf, '"');
+
+    const char *ptr;
+    for (ptr = value; ptr[0]; ptr ++) {
+        char ch = ptr[0];
+        switch(ch) {
+        case '"':  ecs_strbuf_appendlit(buf, "\\\""); break;
+        case '\\': ecs_strbuf_appendlit(buf, "\\\\"); break;
+        case '\b': ecs_strbuf_appendlit(buf, "\\b"); break;
+        case '\f': ecs_strbuf_appendlit(buf, "\\f"); break;
+        case '\n': ecs_strbuf_appendlit(buf, "\\n"); break;
+        case '\r': ecs_strbuf_appendlit(buf, "\\r"); break;
+        case '\t': ecs_strbuf_appendlit(buf, "\\t"); break;
+        default:
+            if ((unsigned char)ch < 0x20) {
+                ecs_strbuf_append(buf, "\\u%04x", (unsigned char)ch);
+            } else {
+                ecs_strbuf_appendch(buf, ch);
+            }
+            break;
+        }
     }
+
+    ecs_strbuf_appendch(buf, '"');
 }
 
 void flecs_json_member(
