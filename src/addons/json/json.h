@@ -147,6 +147,10 @@ void flecs_json_string_escape(
     ecs_strbuf_t *buf,
     const char *value);
 
+void flecs_json_string_escape_ctrl(
+    ecs_strbuf_t *buf,
+    const char *value);
+
 void flecs_json_member(
     ecs_strbuf_t *buf,
     const char *name);

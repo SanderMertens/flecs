@@ -377,7 +377,7 @@ int flecs_json_ser_type_slice(
             }
             break;
         case EcsOpString:
-            flecs_json_string_escape(str, *(const char**)ptr);
+            flecs_json_string_escape_ctrl(str, *(const char**)ptr);
             break;
         case EcsOpPrimitive:
         case EcsOpScope:
