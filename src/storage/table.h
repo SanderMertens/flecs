@@ -92,6 +92,7 @@ typedef struct ecs_table_overrides_t {
         ecs_table_n_overrides_t _n;
     } is;
     ecs_ref_t *refs;                 /* Refs to base components (one for each column) */
+    bool has_refs;                   /* Does the table have any base component refs */
 } ecs_table_overrides_t;
 
 /** Infrequently accessed data not stored inline in ecs_table_t */
@@ -121,12 +122,21 @@ typedef struct ecs_table__t {
 #endif
 } ecs_table__t;
 
+/* Column flags, set when table is initialized based on which hooks are
+ * registered for the column's component. */
+#define EcsColumnHasCtor      (1u << 0)
+#define EcsColumnHasDtor      (1u << 1)
+#define EcsColumnHasMove      (1u << 2)
+#define EcsColumnHasOnAdd     (1u << 3)
+#define EcsColumnHasOnRemove  (1u << 4)
+
 /** Table column */
 typedef struct ecs_column_t {
     void *data;                      /* Array with component data */
     ecs_type_info_t *ti;             /* Component type info */
     ecs_id_t id;                     /* Component id */
     ecs_size_t size;                 /* Component size */
+    ecs_flags32_t flags;             /* Column flags */
 } ecs_column_t;
 
 /** Table data */
