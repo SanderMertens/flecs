@@ -339,6 +339,8 @@ void Serialized_ops_struct_w_enum(void);
 void Serialized_ops_missing_metatype(void);
 
 // Testsuite 'Cursor'
+void Cursor_set_value_enum_u8_underlying(void);
+void Cursor_get_char(void);
 void Cursor_set_bool(void);
 void Cursor_set_byte(void);
 void Cursor_set_char(void);
@@ -500,6 +502,9 @@ void Cursor_get_vector_type(void);
 void Cursor_set_string_literal_single_quote(void);
 
 // Testsuite 'DeserializeFromJson'
+void DeserializeFromJson_string_w_unknown_escape_large(void);
+void DeserializeFromJson_u64_max_roundtrip(void);
+void DeserializeFromJson_f64_nan_roundtrip(void);
 void DeserializeFromJson_struct_i32_long_number_literal(void);
 void DeserializeFromJson_struct_bool(void);
 void DeserializeFromJson_struct_byte(void);
@@ -663,6 +668,9 @@ void DeserializeFromJson_ser_deser_dont_fragment_component_pair(void);
 void DeserializeFromJson_ser_deser_dont_fragment_tag_removes_stale(void);
 
 // Testsuite 'SerializeToJson'
+void SerializeToJson_struct_string_w_control_char(void);
+void SerializeToJson_struct_uptr_large(void);
+void SerializeToJson_enum_negative_constant(void);
 void SerializeToJson_struct_bool(void);
 void SerializeToJson_struct_byte(void);
 void SerializeToJson_struct_char(void);
@@ -1169,6 +1177,7 @@ void PrimitiveCompare_string(void);
 void PrimitiveCompare_const_string(void);
 
 // Testsuite 'RttCompare'
+void RttCompare_struct_with_array(void);
 void RttCompare_struct_with_ints(void);
 void RttCompare_struct_with_strings(void);
 void RttCompare_struct_with_opaque(void);
@@ -2469,6 +2478,14 @@ bake_test_case Serialized_testcases[] = {
 
 bake_test_case Cursor_testcases[] = {
     {
+        "set_value_enum_u8_underlying",
+        Cursor_set_value_enum_u8_underlying
+    },
+    {
+        "get_char",
+        Cursor_get_char
+    },
+    {
         "set_bool",
         Cursor_set_bool
     },
@@ -3107,6 +3124,18 @@ bake_test_case Cursor_testcases[] = {
 };
 
 bake_test_case DeserializeFromJson_testcases[] = {
+    {
+        "string_w_unknown_escape_large",
+        DeserializeFromJson_string_w_unknown_escape_large
+    },
+    {
+        "u64_max_roundtrip",
+        DeserializeFromJson_u64_max_roundtrip
+    },
+    {
+        "f64_nan_roundtrip",
+        DeserializeFromJson_f64_nan_roundtrip
+    },
     {
         "struct_i32_long_number_literal",
         DeserializeFromJson_struct_i32_long_number_literal
@@ -3754,6 +3783,18 @@ bake_test_case DeserializeFromJson_testcases[] = {
 };
 
 bake_test_case SerializeToJson_testcases[] = {
+    {
+        "struct_string_w_control_char",
+        SerializeToJson_struct_string_w_control_char
+    },
+    {
+        "struct_uptr_large",
+        SerializeToJson_struct_uptr_large
+    },
+    {
+        "enum_negative_constant",
+        SerializeToJson_enum_negative_constant
+    },
     {
         "struct_bool",
         SerializeToJson_struct_bool
@@ -5729,6 +5770,10 @@ bake_test_case PrimitiveCompare_testcases[] = {
 
 bake_test_case RttCompare_testcases[] = {
     {
+        "struct_with_array",
+        RttCompare_struct_with_array
+    },
+    {
         "struct_with_ints",
         RttCompare_struct_with_ints
     },
@@ -5913,21 +5958,21 @@ static bake_test_suite suites[] = {
         "Cursor",
         NULL,
         NULL,
-        159,
+        161,
         Cursor_testcases
     },
     {
         "DeserializeFromJson",
         NULL,
         NULL,
-        161,
+        164,
         DeserializeFromJson_testcases
     },
     {
         "SerializeToJson",
         NULL,
         NULL,
-        56,
+        59,
         SerializeToJson_testcases
     },
     {
@@ -5997,7 +6042,7 @@ static bake_test_suite suites[] = {
         "RttCompare",
         NULL,
         NULL,
-        27,
+        28,
         RttCompare_testcases
     }
 };

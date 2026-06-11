@@ -5311,3 +5311,48 @@ void Cursor_set_string_literal_single_quote(void) {
 
     ecs_fini(world);
 }
+
+void Cursor_get_char(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"c", ecs_id(ecs_char_t)}
+        }
+    });
+
+    typedef struct { ecs_char_t c; } T;
+    T value = { 'x' };
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+    test_int(0, ecs_meta_push(&cur));
+    test_int(0, ecs_meta_member(&cur, "c"));
+    test_int('x', ecs_meta_get_char(&cur));
+
+    ecs_fini(world);
+}
+
+void Cursor_set_value_enum_u8_underlying(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_enum_init(world, &(ecs_enum_desc_t){
+        .entity = ecs_entity(world, {.name = "E"}),
+        .underlying_type = ecs_id(ecs_u8_t),
+        .constants = {
+            {"Red", .value_unsigned = 1},
+            {"Green", .value_unsigned = 2}
+        }
+    });
+    test_assert(e != 0);
+
+    struct { uint8_t v; uint8_t pad[3]; } src = { 2, {0xFF, 0xFF, 0xFF} };
+    uint8_t dst = 0;
+
+    ecs_value_t v = { .type = e, .ptr = &src };
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, e, &dst);
+    test_int(0, ecs_meta_set_value(&cur, &v));
+    test_int(2, dst);
+
+    ecs_fini(world);
+}

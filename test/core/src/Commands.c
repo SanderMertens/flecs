@@ -5443,3 +5443,30 @@ void Commands_defer_batched_add_after_delete(void) {
 
     ecs_fini(world);
 }
+
+void Commands_defer_ensure_dont_fragment_w_set(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ecs_add_id(world, ecs_id(Velocity), EcsDontFragment);
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_defer_begin(world);
+    ecs_set(world, e, Position, {1, 2});
+    Velocity *v = ecs_ensure_id(world, e, ecs_id(Velocity), sizeof(Velocity));
+    v->x = 10;
+    v->y = 20;
+    ecs_defer_end(world);
+
+    test_assert(ecs_has(world, e, Position));
+    test_assert(ecs_has_id(world, e, ecs_id(Velocity)));
+
+    const Velocity *vp = ecs_get_id(world, e, ecs_id(Velocity));
+    test_assert(vp != NULL);
+    test_int(vp->x, 10);
+    test_int(vp->y, 20);
+
+    ecs_fini(world);
+}

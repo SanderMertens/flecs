@@ -3541,3 +3541,32 @@ void Pairs_inherit_relationship_trait(void) {
     ecs_fini(world);
 }
 
+
+void Pairs_disable_toggle_component_and_toggle_pair(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t comp = ecs_new(world);
+    ecs_add_id(world, comp, EcsCanToggle);
+
+    ecs_entity_t rel = ecs_new(world);
+    ecs_add_id(world, rel, EcsCanToggle);
+
+    ecs_entity_t tgt = ecs_new(world);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add_id(world, e, comp);
+    ecs_add_pair(world, e, rel, tgt);
+
+    test_bool(true, ecs_is_enabled_id(world, e, comp));
+    test_bool(true, ecs_is_enabled_id(world, e, ecs_pair(rel, tgt)));
+
+    ecs_enable_id(world, e, comp, false);
+    test_bool(false, ecs_is_enabled_id(world, e, comp));
+    test_bool(true, ecs_is_enabled_id(world, e, ecs_pair(rel, tgt)));
+
+    ecs_enable_id(world, e, ecs_pair(rel, tgt), false);
+    test_bool(false, ecs_is_enabled_id(world, e, comp));
+    test_bool(false, ecs_is_enabled_id(world, e, ecs_pair(rel, tgt)));
+
+    ecs_fini(world);
+}

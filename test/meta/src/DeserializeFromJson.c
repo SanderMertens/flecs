@@ -1,4 +1,5 @@
 #include <meta.h>
+#include <math.h>
 
 void DeserializeFromJson_struct_bool(void) {
     typedef struct {
@@ -7278,5 +7279,90 @@ void DeserializeFromJson_struct_i32_long_number_literal(void) {
     const char *ptr = ecs_ptr_from_json(world, t, &value, json, NULL);
     test_assert(ptr == NULL);
 
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_string_w_unknown_escape_large(void) {
+    typedef struct {
+        char *s;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"s", ecs_id(ecs_string_t)}
+        }
+    });
+
+    char json[600];
+    char *p = json;
+    p += sprintf(p, "{\"s\": \"");
+    int i;
+    for (i = 0; i < 300; i ++) {
+        *(p ++) = 'x';
+    }
+    sprintf(p, "\\u0042\"}");
+
+    T value = {0};
+    const char *r = ecs_ptr_from_json(world, t, &value, json, NULL);
+    test_assert(r == NULL);
+
+    ecs_os_free(value.s);
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_u64_max_roundtrip(void) {
+    typedef struct {
+        uint64_t v;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"v", ecs_id(ecs_u64_t)}
+        }
+    });
+
+    T in = { 18446744073709551615ull };
+    char *json = ecs_ptr_to_json(world, t, &in);
+    test_assert(json != NULL);
+
+    T out = {0};
+    const char *r = ecs_ptr_from_json(world, t, &out, json, NULL);
+    test_assert(r != NULL);
+    test_uint(out.v, in.v);
+
+    ecs_os_free(json);
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_f64_nan_roundtrip(void) {
+    typedef struct {
+        double d;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"d", ecs_id(ecs_f64_t)}
+        }
+    });
+
+    T in = { (double)NAN };
+    char *json = ecs_ptr_to_json(world, t, &in);
+    test_assert(json != NULL);
+
+    T out = { 0 };
+    const char *r = ecs_ptr_from_json(world, t, &out, json, NULL);
+    test_assert(r != NULL);
+    test_assert(isnan(out.d));
+
+    ecs_os_free(json);
     ecs_fini(world);
 }

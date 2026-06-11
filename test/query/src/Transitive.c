@@ -5327,3 +5327,44 @@ void Transitive_isa_disabled_match_disabled_term(void) {
 
     ecs_fini(world);
 }
+
+void Transitive_written_src_unknown_tgt_first_leaf(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsTransitive);
+    ecs_entity_t Tag = ecs_entity(world, { .name = "Tag" });
+
+    ecs_entity_t X = ecs_entity(world, { .name = "X" });
+    ecs_entity_t Y = ecs_entity(world, { .name = "Y" });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_add_id(world, e, Tag);
+    ecs_add_pair(world, e, Rel, X);
+    ecs_add_pair(world, e, Rel, Y);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Tag($this), Rel($this, $tgt)",
+        .cache_kind = EcsQueryCacheNone });
+    test_assert(q != NULL);
+
+    int32_t tgt_var = ecs_query_find_var(q, "tgt");
+    test_assert(tgt_var != -1);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+
+    test_bool(true, ecs_query_next(&it));
+    test_uint(1, it.count);
+    test_uint(e, it.entities[0]);
+    test_uint(X, ecs_iter_get_var(&it, tgt_var));
+
+    test_bool(true, ecs_query_next(&it));
+    test_uint(1, it.count);
+    test_uint(e, it.entities[0]);
+    test_uint(Y, ecs_iter_get_var(&it, tgt_var));
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+    ecs_fini(world);
+}

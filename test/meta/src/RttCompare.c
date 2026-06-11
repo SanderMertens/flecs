@@ -2437,3 +2437,31 @@ void RttCompare_struct_with_vector_of_ints_different_length(void) {
 
     ecs_fini(world);
 }
+
+void RttCompare_struct_with_array(void) {
+    typedef struct {
+        int32_t arr[2];
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"arr", ecs_id(ecs_i32_t), 2}
+        }
+    });
+
+    const ecs_type_info_t *ti = ecs_get_type_info(world, t);
+    test_assert(ti != NULL);
+    test_assert(ti->hooks.cmp != NULL);
+    test_assert(ti->hooks.equals != NULL);
+
+    T a = {{ 7, 1 }};
+    T b = {{ 7, 2 }};
+
+    test_bool(false, ti->hooks.equals(&a, &b, ti));
+    test_assert(ti->hooks.cmp(&a, &b, ti) != 0);
+
+    ecs_fini(world);
+}

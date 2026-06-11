@@ -24011,3 +24011,42 @@ void NonFragmentingChildOf_up_query_cache_stale_table_after_shrink(void) {
 
     ecs_fini(world);
 }
+
+void NonFragmentingChildOf_optional_up_set_var_2nd_child(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ecs_entity_t Tag = ecs_entity(world, { .name = "Tag" });
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_set(world, parent, Position, {1, 2});
+
+    ecs_entity_t c1 = ecs_new_w_parent(world, parent, NULL);
+    ecs_add_id(world, c1, Tag);
+    ecs_entity_t c2 = ecs_new_w_parent(world, parent, NULL);
+    ecs_add_id(world, c2, Tag);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Tag, ?Position(up)",
+        .cache_kind = EcsQueryCacheAuto });
+    test_assert(q != NULL);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        ecs_iter_set_var(&it, 0, c1);
+        test_bool(true, ecs_query_next(&it));
+        test_uint(c1, it.entities[0]);
+        ecs_iter_fini(&it);
+    }
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        ecs_iter_set_var(&it, 0, c2);
+        test_bool(true, ecs_query_next(&it));
+        test_uint(c2, it.entities[0]);
+        ecs_iter_fini(&it);
+    }
+
+    ecs_query_fini(q);
+    ecs_fini(world);
+}
