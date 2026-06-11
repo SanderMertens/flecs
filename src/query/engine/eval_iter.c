@@ -235,7 +235,7 @@ bool ecs_query_next(
         /* Cached iterator modes */
         if (it->flags & EcsIterTrivialSearch) {
             ecs_assert(impl->ops == NULL, ECS_INTERNAL_ERROR, NULL);
-            if (flecs_query_is_cache_search(&ctx)) {
+            if (flecs_query_is_cache_search(&ctx, redo)) {
                 goto trivial_search_yield;
             }
         } else if (it->flags & EcsIterTrivialTest) {

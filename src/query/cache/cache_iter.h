@@ -15,11 +15,13 @@ void flecs_query_cache_iter_init(
 
 /* Cache search */
 bool flecs_query_cache_search(
-    const ecs_query_run_ctx_t *ctx);
+    const ecs_query_run_ctx_t *ctx,
+    bool redo);
 
 /* Cache search where entire query is cached */
 bool flecs_query_is_cache_search(
-    const ecs_query_run_ctx_t *ctx);
+    const ecs_query_run_ctx_t *ctx,
+    bool redo);
 
 /* Cache test */
 bool flecs_query_cache_test(
