@@ -46045,7 +46045,7 @@ bool flecs_query_select_w_id(
     ecs_query_and_ctx_t *op_ctx = flecs_op_ctx(ctx, and);
     ecs_component_record_t *cr = op_ctx->cr;
     const ecs_table_record_t *tr;
-    ecs_table_t *table;
+    ecs_table_t *table = NULL;
 
     if (!redo) {
         if (!cr || cr->id != id) {
