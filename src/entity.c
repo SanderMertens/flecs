@@ -3306,6 +3306,9 @@ void ecs_enable(
         int32_t i, count = type->count;
         for (i = 0; i < count; i ++) {
             ecs_id_t component = ids[i];
+            if (component & ECS_ID_FLAGS_MASK) {
+                continue;
+            }
             ecs_flags32_t flags = ecs_id_get_flags(world, component);
             if (!(flags & EcsIdOnInstantiateDontInherit)){
                 ecs_enable(world, component, enabled);
