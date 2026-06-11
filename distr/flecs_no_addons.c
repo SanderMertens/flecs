@@ -51335,9 +51335,9 @@ void flecs_query_build_up_cache(
             const ecs_table_record_t *r_tr = flecs_component_get_table(
                 cache->cr, r->table);
             if (!r_tr) {
-                return;
+                continue;
             }
-            flecs_query_build_up_cache(world, a, ctx, cache, trav, r->table, 
+            flecs_query_build_up_cache(world, a, ctx, cache, trav, r->table,
                 r_tr, root_column);
         }
     }
