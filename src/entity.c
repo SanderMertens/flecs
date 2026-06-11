@@ -2431,17 +2431,13 @@ void ecs_enable_id(
         return;
     }
 
-    ecs_record_t *r = flecs_entities_get(world, entity);    
+    ecs_record_t *r = flecs_entities_get(world, entity);
     ecs_table_t *table = r->table;
-    int32_t index = ecs_table_get_type_index(world, table, bs_id);
-    ecs_assert(index != -1, ECS_INTERNAL_ERROR, NULL);
 
     ecs_assert(table->_ != NULL, ECS_INTERNAL_ERROR, NULL);
-    index -= table->_->bs_offset;
-    ecs_assert(index >= 0, ECS_INTERNAL_ERROR, NULL);
 
     /* Data cannot be NULL, since entity is stored in the table */
-    ecs_bitset_t *bs = &table->_->bs_columns[index];
+    ecs_bitset_t *bs = flecs_table_get_toggle(table, component);
     ecs_assert(bs != NULL, ECS_INTERNAL_ERROR, NULL);
 
     flecs_bitset_set(bs, ECS_RECORD_TO_ROW(r->row), enable);
@@ -2468,18 +2464,12 @@ bool ecs_is_enabled_id(
     ecs_table_t *table = r->table;
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_entity_t bs_id = component | ECS_TOGGLE;
-    int32_t index = ecs_table_get_type_index(world, table, bs_id);
-    if (index == -1) {
+    ecs_bitset_t *bs = flecs_table_get_toggle(table, component);
+    if (!bs) {
         /* If table does not have TOGGLE column for component, component is
          * always enabled, if the entity has it */
         return ecs_has_id(world, entity, component);
     }
-
-    ecs_assert(table->_ != NULL, ECS_INTERNAL_ERROR, NULL);
-    index -= table->_->bs_offset;
-    ecs_assert(index >= 0, ECS_INTERNAL_ERROR, NULL);
-    ecs_bitset_t *bs = &table->_->bs_columns[index];
 
     return flecs_bitset_get(bs, ECS_RECORD_TO_ROW(r->row));
 error:

@@ -10011,17 +10011,13 @@ void ecs_enable_id(
         return;
     }
 
-    ecs_record_t *r = flecs_entities_get(world, entity);    
+    ecs_record_t *r = flecs_entities_get(world, entity);
     ecs_table_t *table = r->table;
-    int32_t index = ecs_table_get_type_index(world, table, bs_id);
-    ecs_assert(index != -1, ECS_INTERNAL_ERROR, NULL);
 
     ecs_assert(table->_ != NULL, ECS_INTERNAL_ERROR, NULL);
-    index -= table->_->bs_offset;
-    ecs_assert(index >= 0, ECS_INTERNAL_ERROR, NULL);
 
     /* Data cannot be NULL, since entity is stored in the table */
-    ecs_bitset_t *bs = &table->_->bs_columns[index];
+    ecs_bitset_t *bs = flecs_table_get_toggle(table, component);
     ecs_assert(bs != NULL, ECS_INTERNAL_ERROR, NULL);
 
     flecs_bitset_set(bs, ECS_RECORD_TO_ROW(r->row), enable);
@@ -10048,18 +10044,12 @@ bool ecs_is_enabled_id(
     ecs_table_t *table = r->table;
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_entity_t bs_id = component | ECS_TOGGLE;
-    int32_t index = ecs_table_get_type_index(world, table, bs_id);
-    if (index == -1) {
+    ecs_bitset_t *bs = flecs_table_get_toggle(table, component);
+    if (!bs) {
         /* If table does not have TOGGLE column for component, component is
          * always enabled, if the entity has it */
         return ecs_has_id(world, entity, component);
     }
-
-    ecs_assert(table->_ != NULL, ECS_INTERNAL_ERROR, NULL);
-    index -= table->_->bs_offset;
-    ecs_assert(index >= 0, ECS_INTERNAL_ERROR, NULL);
-    ecs_bitset_t *bs = &table->_->bs_columns[index];
 
     return flecs_bitset_get(bs, ECS_RECORD_TO_ROW(r->row));
 error:
@@ -34208,13 +34198,17 @@ void flecs_table_check_sanity(
 
     if (bs_count) {
         ecs_assert(table->_->bs_columns != NULL, ECS_INTERNAL_ERROR, NULL);
-        for (i = 0; i < bs_count; i ++) {
-            ecs_bitset_t *bs = &table->_->bs_columns[i];
+        int32_t bs_i = 0;
+        for (i = bs_offset; i < type_count; i ++) {
+            if (!ECS_HAS_ID_FLAG(ids[i], TOGGLE)) {
+                continue;
+            }
+            ecs_bitset_t *bs = &table->_->bs_columns[bs_i];
             ecs_assert(flecs_bitset_count(bs) == count,
                 ECS_INTERNAL_ERROR, NULL);
-            ecs_assert(ECS_HAS_ID_FLAG(ids[i + bs_offset], TOGGLE),
-                ECS_INTERNAL_ERROR, NULL);
+            bs_i ++;
         }
+        ecs_assert(bs_i == bs_count, ECS_INTERNAL_ERROR, NULL);
     }
 
     ecs_assert((table->_->traversable_count == 0) || 
@@ -35592,34 +35586,30 @@ void flecs_table_move_bitset_columns(
     int32_t count,
     bool clear)
 {
-    ecs_table__t *dst_meta = dst_table->_;
-    ecs_table__t *src_meta = src_table->_;
-    if (!dst_meta && !src_meta) {
-        return;
-    }
-
-    int32_t i_old = 0, src_column_count = src_meta ? src_meta->bs_count : 0;
-    int32_t i_new = 0, dst_column_count = dst_meta ? dst_meta->bs_count : 0;
+    int32_t i_old = 0, src_column_count = src_table->_->bs_count;
+    int32_t i_new = 0, dst_column_count = dst_table->_->bs_count;
 
     if (!src_column_count && !dst_column_count) {
         return;
     }
 
-    ecs_bitset_t *src_columns = src_meta ? src_meta->bs_columns : NULL;
-    ecs_bitset_t *dst_columns = dst_meta ? dst_meta->bs_columns : NULL;
+    ecs_bitset_t *src_columns = src_table->_->bs_columns;
+    ecs_bitset_t *dst_columns = dst_table->_->bs_columns;
 
     ecs_type_t dst_type = dst_table->type;
     ecs_type_t src_type = src_table->type;
 
-    int32_t offset_new = dst_meta ? dst_meta->bs_offset : 0;
-    int32_t offset_old = src_meta ? src_meta->bs_offset : 0;
-
     ecs_id_t *dst_ids = dst_type.array;
     ecs_id_t *src_ids = src_type.array;
 
+    int32_t dst_type_count = dst_type.count;
+    int32_t src_type_count = src_type.count;
+    int32_t ti_new = dst_table->_->bs_offset;
+    int32_t ti_old = src_table->_->bs_offset;
+
     for (; (i_new < dst_column_count) && (i_old < src_column_count);) {
-        ecs_id_t dst_id = dst_ids[i_new + offset_new];
-        ecs_id_t src_id = src_ids[i_old + offset_old];
+        ecs_id_t dst_id = dst_ids[ti_new];
+        ecs_id_t src_id = src_ids[ti_old];
 
         if (dst_id == src_id) {
             ecs_bitset_t *src_bs = &src_columns[i_old];
@@ -35634,7 +35624,7 @@ void flecs_table_move_bitset_columns(
             }
 
             if (clear) {
-                ecs_assert(count == flecs_bitset_count(src_bs), 
+                ecs_assert(count == flecs_bitset_count(src_bs),
                     ECS_INTERNAL_ERROR, NULL);
                 flecs_bitset_fini(src_bs);
             }
@@ -35645,8 +35635,24 @@ void flecs_table_move_bitset_columns(
             }
         }
 
-        i_new += dst_id <= src_id;
-        i_old += dst_id >= src_id;
+        if (dst_id <= src_id) {
+            i_new ++;
+            ti_new ++;
+            while ((ti_new < dst_type_count) &&
+                !ECS_HAS_ID_FLAG(dst_ids[ti_new], TOGGLE))
+            {
+                ti_new ++;
+            }
+        }
+        if (dst_id >= src_id) {
+            i_old ++;
+            ti_old ++;
+            while ((ti_old < src_type_count) &&
+                !ECS_HAS_ID_FLAG(src_ids[ti_old], TOGGLE))
+            {
+                ti_old ++;
+            }
+        }
     }
 
     /* Clear remaining columns */
@@ -36610,13 +36616,20 @@ int32_t flecs_table_get_toggle_column(
     ecs_table_t *table,
     ecs_id_t id)
 {
+    ecs_id_t bs_id = ECS_TOGGLE | id;
     ecs_id_t *ids = table->type.array;
-    int32_t i = table->_->bs_offset, end = i + table->_->bs_count;
+    int32_t i = table->_->bs_offset, end = table->type.count;
+    int32_t column = 0;
 
     for (; i < end; i ++) {
-        if (ids[i] == (ECS_TOGGLE | id)) {
-            return i;
+        ecs_id_t cur = ids[i];
+        if (!ECS_HAS_ID_FLAG(cur, TOGGLE)) {
+            continue;
         }
+        if (cur == bs_id) {
+            return column;
+        }
+        column ++;
     }
 
     return -1;
@@ -36631,8 +36644,6 @@ ecs_bitset_t* flecs_table_get_toggle(
         return NULL;
     }
 
-    toggle_column -= table->_->bs_offset;
-    ecs_assert(toggle_column >= 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(toggle_column < table->_->bs_count, ECS_INTERNAL_ERROR, NULL);
     return &table->_->bs_columns[toggle_column];
 }
