@@ -125,6 +125,8 @@ typedef struct ecs_table__t {
 typedef struct ecs_column_t {
     void *data;                      /* Array with component data */
     ecs_type_info_t *ti;             /* Component type info */
+    ecs_id_t id;                     /* Component id */
+    ecs_size_t size;                 /* Component size */
 } ecs_column_t;
 
 /** Table data */
