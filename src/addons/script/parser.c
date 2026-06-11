@@ -722,8 +722,16 @@ template_stmt: {
 
         Parse(
             // template SpaceShip {
-            case '{':
-                return flecs_script_scope(parser, template->scope, pos);
+            case '{': {
+                pos = flecs_script_scope(parser, template->scope, pos);
+                if (!pos) {
+                    goto error;
+                }
+                if (flecs_script_template_check(parser, template)) {
+                    goto error;
+                }
+                return pos;
+            }
 
             // template SpaceShip\n
             EcsTokEndOfStatement:

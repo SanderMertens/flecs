@@ -69,6 +69,7 @@ flecs_src = files(
     'src/addons/query_dsl/parser.c',
     'src/addons/rest.c',
     'src/addons/script/template.c',
+    'src/addons/script/template_check.c',
     'src/addons/script/ast.c',
     'src/addons/script/function.c',
     'src/addons/script/functions_builtin.c',

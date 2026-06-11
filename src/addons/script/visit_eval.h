@@ -6,12 +6,15 @@
 #ifndef FLECS_SCRIPT_VISIT_EVAL_H
 #define FLECS_SCRIPT_VISIT_EVAL_H
 
+typedef struct ecs_script_template_eval_ctx_t ecs_script_template_eval_ctx_t;
+
 typedef struct ecs_script_eval_visitor_t {
     ecs_script_visit_t base;
     ecs_world_t *world;
     ecs_script_runtime_t *r;
     ecs_script_template_t *template; /* Set when creating template */
     ecs_entity_t template_entity; /* Set when creating template instance */
+    ecs_script_template_eval_ctx_t *tmpl_ctx;
     ecs_entity_t module;
     ecs_entity_t parent;
     ecs_script_entity_t *entity;
@@ -58,6 +61,25 @@ int flecs_script_eval_expr(
     ecs_script_eval_visitor_t *v,
     ecs_expr_node_t **expr_ptr,
     ecs_value_t *value);
+
+int flecs_script_eval_bool_expr(
+    ecs_script_eval_visitor_t *v,
+    ecs_expr_node_t **expr_ptr,
+    bool *out);
+
+ecs_entity_t flecs_script_eval_name_expr(
+    ecs_script_eval_visitor_t *v,
+    ecs_script_entity_t *node,
+    ecs_expr_node_t **expr_ptr,
+    bool find);
+
+char* flecs_script_name_expr_dup(
+    ecs_script_eval_visitor_t *v,
+    ecs_expr_node_t **expr_ptr);
+
+void flecs_script_template_apply_with(
+    ecs_script_eval_visitor_t *v,
+    ecs_entity_t entity);
 
 void flecs_script_eval_visit_init(
     const ecs_script_impl_t *script,
