@@ -57484,12 +57484,16 @@ int ecs_meta_set_string(
         set_T(ecs_i32_t, ptr, atol(value));
         break;
     case EcsOpI64:
-    case EcsOpU64:
         set_T(ecs_i64_t, ptr, atoll(value));
         break;
+    case EcsOpU64:
+        set_T(ecs_u64_t, ptr, strtoull(value, NULL, 10));
+        break;
     case EcsOpIPtr:
-    case EcsOpUPtr:
         set_T(ecs_iptr_t, ptr, atoll(value));
+        break;
+    case EcsOpUPtr:
+        set_T(ecs_uptr_t, ptr, strtoull(value, NULL, 10));
         break;
     case EcsOpF32:
         set_T(ecs_f32_t, ptr, atof(value));
