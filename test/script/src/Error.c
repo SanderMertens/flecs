@@ -2145,3 +2145,18 @@ void Error_eval_error_logged(void) {
 
     ecs_fini(world);
 }
+
+void Error_template_unresolved_var_in_entity_name(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "template Foo {"
+    LINE "  \"child_$suffix\" {}"
+    LINE "}"
+    LINE "ent { Foo: {} }";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+
+    ecs_fini(world);
+}

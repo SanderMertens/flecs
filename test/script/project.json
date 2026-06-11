@@ -649,7 +649,9 @@
                 "template_w_tree_parent",
                 "template_w_tree_parent_change_value",
                 "template_w_nested_template_w_with",
-                "template_w_nested_template_w_with_kind_value"
+                "template_w_nested_template_w_with_kind_value",
+                "pair_component_w_entity_prop_target",
+                "child_name_from_string_prop"
             ]
         }, {
             "id": "Error",
@@ -755,7 +757,8 @@
                 "annotation_to_unresolved_identifier_managed_parse_twice_2",
                 "annotation_to_tag",
                 "parse_error_logged",
-                "eval_error_logged"
+                "eval_error_logged",
+                "template_unresolved_var_in_entity_name"
             ]
         }, {
             "id": "Expr",

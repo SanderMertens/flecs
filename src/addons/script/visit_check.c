@@ -145,6 +145,13 @@ int flecs_script_check_entity(
         }
     }
 
+    if (node->name_expr && !node->name_expr->type_info) {
+        ecs_entity_t type = ecs_id(ecs_string_t);
+        if (flecs_script_check_expr(v, &node->name_expr, &type)) {
+            return -1;
+        }
+    }
+
     ecs_script_entity_t *old_entity = v->entity;
     v->entity = node;
 
@@ -216,6 +223,10 @@ int flecs_script_check_component(
     }
 
     if (node->expr) {
+        if (!node->id.eval) {
+            return 0;
+        }
+
         const ecs_type_info_t *ti = ecs_get_type_info(v->world, node->id.eval);
         if (!ti) {
             return 0;

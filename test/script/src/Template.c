@@ -3844,3 +3844,65 @@ void Template_template_w_nested_template_w_with_kind_value(void) {
 
     ecs_fini(world);
 }
+
+void Template_pair_component_w_entity_prop_target(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    LINE "template Foo {\n"
+    LINE "  prop tgt = flecs.meta.entity: flecs\n"
+    LINE "  (Position, $tgt): {5, 6}\n"
+    LINE "}\n"
+    LINE "ent { Foo: {flecs.core} }\n"
+    LINE "\n";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t ent = ecs_lookup(world, "ent");
+
+    test_assert(foo != 0);
+    test_assert(ent != 0);
+
+    test_assert(ecs_has_id(world, ent, foo));
+    test_assert(ecs_has_pair(world, ent, ecs_id(Position), EcsFlecsCore));
+
+    const Position *p = ecs_get_pair(world, ent, Position, EcsFlecsCore);
+    test_assert(p != NULL);
+    test_int(p->x, 5);
+    test_int(p->y, 6);
+
+    ecs_fini(world);
+}
+
+void Template_child_name_from_string_prop(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    LINE "template Foo {"
+    LINE "  prop suffix = flecs.meta.string: \"a\""
+    LINE "  \"child_$suffix\" {}"
+    LINE "}"
+    LINE "ent { Foo: {suffix: \"hello\"} }"
+    LINE "";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t ent = ecs_lookup(world, "ent");
+    test_assert(ent != 0);
+
+    ecs_entity_t child = ecs_lookup(world, "ent.child_hello");
+    test_assert(child != 0);
+
+    ecs_fini(world);
+}
