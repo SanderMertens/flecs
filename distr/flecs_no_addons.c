@@ -20492,10 +20492,6 @@ void flecs_prefab_spawner_build_from_cr(
         elem->child_name = NULL;
         elem->child = (uint32_t)child;
 
-        if (table->flags & EcsTableHasName) {
-            elem->child_name = ecs_get_name(world, child);
-        }
-
         ecs_type_t type = flecs_prefab_spawner_build_type(
             world, child, table, depth);
         elem->table = flecs_table_find_or_create(world, &type);
@@ -20668,12 +20664,15 @@ void flecs_spawner_instantiate(
         ecs_table_t *table = spawn_child->table;
         ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
+        const char *child_name = NULL;
         if (is_prefab) {
             ecs_table_diff_t diff = ECS_TABLE_DIFF_INIT;
             ecs_id_t id = EcsPrefab;
             table = flecs_table_traverse_add(world, table, &id, &diff);
 
-            if (spawn_child->child_name) {
+            child_name = ecs_get_name(world,
+                flecs_entities_get_alive(world, spawn_child->child));
+            if (child_name) {
                 id = ecs_pair_t(EcsIdentifier, EcsName);
                 table = flecs_table_traverse_add(world, table, &id, &diff);
             }
@@ -20710,8 +20709,8 @@ void flecs_spawner_instantiate(
         flecs_actions_new(world, table, row, 1, &table_diff, EcsEventNoOnSet,
             true, EcsWildcard);
 
-        if (is_prefab && spawn_child->child_name) {
-            ecs_set_name(world, entity, spawn_child->child_name);
+        if (is_prefab && child_name) {
+            ecs_set_name(world, entity, child_name);
         }
 
         flecs_add_non_fragmenting_child_w_records(world, parent, entity, cr, r);
