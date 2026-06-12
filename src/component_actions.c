@@ -110,6 +110,8 @@ void flecs_invoke_replace_hook(
     it.count = 1;
     it.offset = 0; /* Don't set row because we don't want to offset ptrs */
     it.flags = EcsIterIsValid;
+    it.other_table = table;
+    it.set_fields = (table != NULL && ecs_table_has_id(world, table, id)) ? 3 : 2;
 
     ti->hooks.on_replace(&it);
 
