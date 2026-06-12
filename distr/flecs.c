@@ -10429,7 +10429,7 @@ ecs_entity_t flecs_get_prefab_instance_child(
 
     ecs_vec_t *v = &childof_cr->pair->ordered_children;
     int32_t index = flecs_uto(int32_t, *index_ptr);
-    ecs_check(ecs_vec_count(v) >= index, ECS_INVALID_OPERATION, 
+    ecs_check(ecs_vec_count(v) > index, ECS_INVALID_OPERATION,
         "cannot get target for '%s': children of '%s' have changed since "
         "prefab instantiation",
             flecs_errstr(ecs_id_str(world, prefab_child)),
