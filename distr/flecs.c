@@ -6474,8 +6474,7 @@ void flecs_cmd_batch_for_entity(
                     void *ptr = cmd->is._1.value;
                     const ecs_type_info_t *ti = dst.ti;
                     if (ti->hooks.on_replace) {
-                        ecs_table_t *prev_table = r->table;
-                        flecs_invoke_replace_hook(world, prev_table, entity,
+                        flecs_invoke_replace_hook(world, start_table, entity,
                             cmd->id, dst.ptr, ptr, ti);
                         if (!r->table) {
                             /* Entity was deleted */
@@ -7029,6 +7028,8 @@ void flecs_invoke_replace_hook(
     it.count = 1;
     it.offset = 0; /* Don't set row because we don't want to offset ptrs */
     it.flags = EcsIterIsValid;
+    it.other_table = table;
+    it.set_fields = (table != NULL && ecs_table_has_id(world, table, id)) ? 3 : 2;
 
     ti->hooks.on_replace(&it);
 
@@ -10179,6 +10180,7 @@ void flecs_set_id_move(
     }
 
     ecs_record_t *r = flecs_entities_get(world, entity);
+    ecs_table_t *prev_table = r->table;
     flecs_component_ptr_t dst = flecs_ensure(
         world, entity, component, r, flecs_uto(int32_t, size));
     ecs_check(dst.ptr != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -10188,7 +10190,7 @@ void flecs_set_id_move(
 
     if (ti->hooks.on_replace) {
         flecs_invoke_replace_hook(
-            world, r->table, entity, component, dst.ptr, ptr, ti);
+            world, prev_table, entity, component, dst.ptr, ptr, ti);
     }
 
     if (cmd_kind != EcsCmdEmplace) {
@@ -26285,9 +26287,10 @@ ecs_cpp_get_mut_t ecs_cpp_set(
     }
 
     ecs_record_t *r = flecs_entities_get(world, entity);
-    flecs_component_ptr_t dst = flecs_ensure(world, entity, id, r, 
+    ecs_table_t *prev_table = r->table;
+    flecs_component_ptr_t dst = flecs_ensure(world, entity, id, r,
         flecs_uto(int32_t, size));
-    
+
     result.ptr = dst.ptr;
     result.world = world;
     result.stage = stage;
@@ -26304,10 +26307,10 @@ ecs_cpp_get_mut_t ecs_cpp_set(
 
     if (dst.ti->hooks.on_replace) {
         flecs_invoke_replace_hook(
-            world, r->table, entity, id, dst.ptr, new_ptr, dst.ti);
+            world, prev_table, entity, id, dst.ptr, new_ptr, dst.ti);
     }
 
-done:    
+done:
     return result;
 error:
     return (ecs_cpp_get_mut_t){0};
@@ -26336,12 +26339,13 @@ ecs_cpp_get_mut_t ecs_cpp_assign(
     }
 
     ecs_record_t *r = flecs_entities_get(world, entity);
-    flecs_component_ptr_t dst = flecs_get_mut(world, entity, id, r, 
+    ecs_table_t *prev_table = r->table;
+    flecs_component_ptr_t dst = flecs_get_mut(world, entity, id, r,
         flecs_uto(int32_t, size));
 
-    ecs_assert(dst.ptr != NULL, ECS_INVALID_OPERATION, 
+    ecs_assert(dst.ptr != NULL, ECS_INVALID_OPERATION,
         "entity does not have component, use set() instead");
-        
+
     result.ptr = dst.ptr;
     result.world = world;
     result.stage = stage;
@@ -26358,7 +26362,7 @@ ecs_cpp_get_mut_t ecs_cpp_assign(
 
     if (dst.ti->hooks.on_replace) {
         flecs_invoke_replace_hook(
-            world, r->table, entity, id, dst.ptr, new_ptr, dst.ti);
+            world, prev_table, entity, id, dst.ptr, new_ptr, dst.ti);
     }
 
 done:
