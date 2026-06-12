@@ -1963,6 +1963,18 @@ int flecs_query_finalize_query(
         "ecs_query_desc_t was not initialized to zero");
     ecs_stage_t *stage = flecs_stage_from_world(&world);
 
+    if ((desc->flags & EcsQueryDetectChanges) &&
+        (desc->order_by || desc->order_by_callback))
+    {
+        ecs_query_validator_ctx_t ctx = {0};
+        ctx.world = world;
+        ctx.query = q;
+        ctx.desc = desc;
+        flecs_query_validator_error(&ctx,
+            "change detection is not supported for queries with order_by");
+        goto error;
+    }
+
     q->flags |= desc->flags | world->default_query_flags;
 
     ecs_term_t terms[FLECS_TERM_COUNT_MAX] = {0};
