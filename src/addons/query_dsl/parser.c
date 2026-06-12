@@ -269,6 +269,9 @@ const char* flecs_term_parse_id(
             const char *ret = flecs_term_parse_equality_pred(
                 parser, pos, EcsPredEq);
             if (ret) {
+                if (parser->term->oper == EcsOr) {
+                    Error("cannot mix operators in || expression");
+                }
                 parser->term->oper = EcsNot;
             }
             return ret;
