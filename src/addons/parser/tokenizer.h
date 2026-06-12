@@ -111,4 +111,8 @@ const char* flecs_tokenizer_identifier(
     const char *pos,
     ecs_token_t *out);
 
+int64_t flecs_parser_errpos(
+    const ecs_parser_t *parser,
+    const char *pos);
+
 #endif

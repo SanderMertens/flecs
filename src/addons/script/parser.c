@@ -37,7 +37,8 @@ const char* flecs_script_scope(
     ecs_assert(pos[-1] == '{', ECS_INTERNAL_ERROR, NULL);
 
     if (parser->scope_depth >= ECS_PARSER_MAX_RECURSION_DEPTH) {
-        ecs_parser_error(parser->name, parser->code, pos - parser->code,
+        ecs_parser_error(parser->name, parser->code,
+            flecs_parser_errpos(parser, pos),
             "maximum scope nesting depth exceeded");
         return NULL;
     }
@@ -557,6 +558,8 @@ const char* flecs_script_stmt(
     const char *pos)
 {
     ParserBegin;
+
+    parser->stmt_pos = NULL;
 
     bool name_is_expr_0 = false;
 
@@ -1281,6 +1284,7 @@ ecs_script_t* ecs_script_parse(
     ecs_parser_t parser = {
         .name = script->name,
         .code = script->code,
+        .pos = script->code,
         .script = impl,
         .scope = impl->root,
         .significant_newline = true
@@ -1324,6 +1328,7 @@ ecs_script_t* ecs_script_parse(
 error:
     if (result) {
         result->error = ecs_log_stop_capture();
+        flecs_log_get_captured_error_pos(&result->line, &result->column);
     }
 
     ecs_script_free(script);

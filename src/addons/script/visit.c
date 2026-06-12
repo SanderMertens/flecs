@@ -46,22 +46,6 @@ ecs_script_scope_t* ecs_script_current_scope_(
     return NULL;
 }
 
-int32_t ecs_script_node_line_number_(
-    ecs_script_impl_t *script,
-    ecs_script_node_t *node)
-{
-    const char *ptr;
-    int32_t line_count = 1;
-    for (ptr = script->pub.code; ptr < node->pos; ptr ++) {
-        ecs_assert(ptr[0] != 0, ECS_INTERNAL_ERROR, NULL);
-        if (ptr[0] == '\n') {
-            line_count ++;
-        }
-    }
-
-    return line_count;
-}
-
 void ecs_script_visit_push_(
     ecs_script_visit_t *v,
     ecs_script_node_t *node)

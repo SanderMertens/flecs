@@ -8,6 +8,10 @@
 #ifdef FLECS_LOG
 
 static char *flecs_log_last_err = NULL;
+static int32_t flecs_log_last_err_line = 0;
+static int32_t flecs_log_last_err_column = 0;
+static int32_t flecs_parser_err_line = 0;
+static int32_t flecs_parser_err_column = 0;
 static ecs_os_api_log_t flecs_log_prev_log = NULL;
 static ecs_os_api_log_t flecs_log_prev_fatal_log = NULL;
 static bool flecs_log_prev_color = false;
@@ -59,6 +63,11 @@ void flecs_log_capture_log(
     if (!flecs_log_last_err && level <= -3) {
         flecs_log_last_err = ecs_os_strdup(msg);
     }
+
+    if (!flecs_log_last_err_line && level <= -3) {
+        flecs_log_last_err_line = flecs_parser_err_line;
+        flecs_log_last_err_column = flecs_parser_err_column;
+    }
 }
 
 static
@@ -72,6 +81,10 @@ void ecs_log_start_capture(bool try) {
     if (flecs_log_capture_depth ++) {
         return;
     }
+    flecs_log_last_err_line = 0;
+    flecs_log_last_err_column = 0;
+    flecs_parser_err_line = 0;
+    flecs_parser_err_column = 0;
     flecs_log_prev_color = ecs_log_enable_colors(false);
     flecs_log_prev_log = ecs_os_api.log_;
     flecs_log_prev_level = ecs_os_api.log_level_;
@@ -90,6 +103,18 @@ char* ecs_log_stop_capture(void) {
     ecs_os_api.log_level_ = flecs_log_prev_level;
     ecs_log_enable_colors(flecs_log_prev_color);
     return flecs_log_get_captured_log();
+}
+
+void flecs_log_get_captured_error_pos(
+    int32_t *line,
+    int32_t *column)
+{
+    if (line) {
+        *line = flecs_log_last_err_line;
+    }
+    if (column) {
+        *column = flecs_log_last_err_column;
+    }
 }
 
 void flecs_colorize_buf(
@@ -323,22 +348,37 @@ void flecs_parser_errorv(
          * function is called with (expr - ptr), and expr is NULL. */
         column_arg = 0;
     }
-    
+
+    if (column_arg < -1) {
+        column_arg = -1;
+    }
+
     int32_t column = flecs_itoi32(column_arg);
 
     if (ecs_os_api.log_level_ >= -2) {
         ecs_strbuf_t msg_buf = ECS_STRBUF_INIT;
 
         /* Count number of newlines up until column_arg */
-        int32_t i, line = 1;
+        int32_t i, line = 1, line_start = 0;
         if (expr) {
             for (i = 0; i < column; i ++) {
                 if (expr[i] == '\n') {
                     line ++;
+                    line_start = i + 1;
                 }
             }
-            
+
             ecs_strbuf_append(&msg_buf, "%d: ", line);
+        }
+
+        if (!is_warning) {
+            if (expr && column != -1) {
+                flecs_parser_err_line = line;
+                flecs_parser_err_column = column - line_start + 1;
+            } else {
+                flecs_parser_err_line = 0;
+                flecs_parser_err_column = 0;
+            }
         }
 
         ecs_strbuf_vappend(&msg_buf, fmt, args);
@@ -673,6 +713,18 @@ void ecs_log_start_capture(bool try) {
 
 char* ecs_log_stop_capture(void) {
     return NULL;
+}
+
+void flecs_log_get_captured_error_pos(
+    int32_t *line,
+    int32_t *column)
+{
+    if (line) {
+        *line = 0;
+    }
+    if (column) {
+        *column = 0;
+    }
 }
 
 #endif

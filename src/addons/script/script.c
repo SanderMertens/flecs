@@ -217,7 +217,7 @@ int ecs_script_update(
         ecs_script_free(s->script);
     }
 
-    ecs_script_eval_result_t eval_result = {NULL};
+    ecs_script_eval_result_t eval_result = {0};
 
     s->script = ecs_script_parse(world, name, code, NULL, &eval_result);
     if (s->script == NULL) {

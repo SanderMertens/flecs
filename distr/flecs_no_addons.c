@@ -3978,6 +3978,11 @@ void flecs_colorize_buf(
     bool enable_colors,
     ecs_strbuf_t *buf);
 
+/* Get line/column of first error logged during last log capture. */
+void flecs_log_get_captured_error_pos(
+    int32_t *line,
+    int32_t *column);
+
 /* Check whether id can be inherited. */
 bool flecs_type_can_inherit_id(
     const ecs_world_t *world,
@@ -23747,6 +23752,18 @@ char* ecs_log_stop_capture(void) {
     return NULL;
 }
 
+void flecs_log_get_captured_error_pos(
+    int32_t *line,
+    int32_t *column)
+{
+    if (line) {
+        *line = 0;
+    }
+    if (column) {
+        *column = 0;
+    }
+}
+
 int ecs_log_get_level(void) {
     return ecs_os_api.log_level_;
 }
@@ -38950,6 +38967,8 @@ typedef struct ecs_parser_t {
     const char *code;
 
     const char *pos;
+    const char *fixed_pos;
+    const char *stmt_pos;
     char *token_cur;
     char *token_end;
     char *token_keep;
@@ -39078,6 +39097,10 @@ const char* flecs_tokenizer_identifier(
     ecs_parser_t *parser,
     const char *pos,
     ecs_token_t *out);
+
+int64_t flecs_parser_errpos(
+    const ecs_parser_t *parser,
+    const char *pos);
 
 #endif
 
@@ -39826,13 +39849,13 @@ void ecs_set_os_api_impl(void) {
 /* Error */
 #define Error(...)\
     ecs_parser_error(parser->name, parser->code,\
-        (pos - parser->code) - 1, __VA_ARGS__);\
+        flecs_parser_errpos(parser, pos - 1), __VA_ARGS__);\
     goto error
 
 /* Warning */
 #define Warning(...)\
     ecs_parser_warning(parser->name, parser->code,\
-        (pos - parser->code) - 1, __VA_ARGS__);\
+        flecs_parser_errpos(parser, pos - 1), __VA_ARGS__);\
 
 /* Parse expression */
 #define Expr(until, ...)\

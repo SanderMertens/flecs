@@ -4043,6 +4043,11 @@ void flecs_colorize_buf(
     bool enable_colors,
     ecs_strbuf_t *buf);
 
+/* Get line/column of first error logged during last log capture. */
+void flecs_log_get_captured_error_pos(
+    int32_t *line,
+    int32_t *column);
+
 /* Check whether id can be inherited. */
 bool flecs_type_can_inherit_id(
     const ecs_world_t *world,
@@ -26137,6 +26142,10 @@ int flecs_journal_get_counter(void) {
 #ifdef FLECS_LOG
 
 static char *flecs_log_last_err = NULL;
+static int32_t flecs_log_last_err_line = 0;
+static int32_t flecs_log_last_err_column = 0;
+static int32_t flecs_parser_err_line = 0;
+static int32_t flecs_parser_err_column = 0;
 static ecs_os_api_log_t flecs_log_prev_log = NULL;
 static ecs_os_api_log_t flecs_log_prev_fatal_log = NULL;
 static bool flecs_log_prev_color = false;
@@ -26188,6 +26197,11 @@ void flecs_log_capture_log(
     if (!flecs_log_last_err && level <= -3) {
         flecs_log_last_err = ecs_os_strdup(msg);
     }
+
+    if (!flecs_log_last_err_line && level <= -3) {
+        flecs_log_last_err_line = flecs_parser_err_line;
+        flecs_log_last_err_column = flecs_parser_err_column;
+    }
 }
 
 static
@@ -26201,6 +26215,10 @@ void ecs_log_start_capture(bool try) {
     if (flecs_log_capture_depth ++) {
         return;
     }
+    flecs_log_last_err_line = 0;
+    flecs_log_last_err_column = 0;
+    flecs_parser_err_line = 0;
+    flecs_parser_err_column = 0;
     flecs_log_prev_color = ecs_log_enable_colors(false);
     flecs_log_prev_log = ecs_os_api.log_;
     flecs_log_prev_level = ecs_os_api.log_level_;
@@ -26219,6 +26237,18 @@ char* ecs_log_stop_capture(void) {
     ecs_os_api.log_level_ = flecs_log_prev_level;
     ecs_log_enable_colors(flecs_log_prev_color);
     return flecs_log_get_captured_log();
+}
+
+void flecs_log_get_captured_error_pos(
+    int32_t *line,
+    int32_t *column)
+{
+    if (line) {
+        *line = flecs_log_last_err_line;
+    }
+    if (column) {
+        *column = flecs_log_last_err_column;
+    }
 }
 
 void flecs_colorize_buf(
@@ -26451,22 +26481,37 @@ void flecs_parser_errorv(
          * function is called with (expr - ptr), and expr is NULL. */
         column_arg = 0;
     }
-    
+
+    if (column_arg < -1) {
+        column_arg = -1;
+    }
+
     int32_t column = flecs_itoi32(column_arg);
 
     if (ecs_os_api.log_level_ >= -2) {
         ecs_strbuf_t msg_buf = ECS_STRBUF_INIT;
 
         /* Count number of newlines up until column_arg */
-        int32_t i, line = 1;
+        int32_t i, line = 1, line_start = 0;
         if (expr) {
             for (i = 0; i < column; i ++) {
                 if (expr[i] == '\n') {
                     line ++;
+                    line_start = i + 1;
                 }
             }
-            
+
             ecs_strbuf_append(&msg_buf, "%d: ", line);
+        }
+
+        if (!is_warning) {
+            if (expr && column != -1) {
+                flecs_parser_err_line = line;
+                flecs_parser_err_column = column - line_start + 1;
+            } else {
+                flecs_parser_err_line = 0;
+                flecs_parser_err_column = 0;
+            }
         }
 
         ecs_strbuf_vappend(&msg_buf, fmt, args);
@@ -26800,6 +26845,18 @@ void ecs_log_start_capture(bool try) {
 
 char* ecs_log_stop_capture(void) {
     return NULL;
+}
+
+void flecs_log_get_captured_error_pos(
+    int32_t *line,
+    int32_t *column)
+{
+    if (line) {
+        *line = 0;
+    }
+    if (column) {
+        *column = 0;
+    }
 }
 
 #endif
@@ -49764,6 +49821,8 @@ typedef struct ecs_parser_t {
     const char *code;
 
     const char *pos;
+    const char *fixed_pos;
+    const char *stmt_pos;
     char *token_cur;
     char *token_end;
     char *token_keep;
@@ -49892,6 +49951,10 @@ const char* flecs_tokenizer_identifier(
     ecs_parser_t *parser,
     const char *pos,
     ecs_token_t *out);
+
+int64_t flecs_parser_errpos(
+    const ecs_parser_t *parser,
+    const char *pos);
 
 #endif
 
@@ -50494,11 +50557,14 @@ ecs_expr_cast_t* flecs_expr_cast(
 #ifndef FLECS_EXPR_SCRIPT_VISIT_H
 #define FLECS_EXPR_SCRIPT_VISIT_H
 
+void flecs_expr_visit_error_(
+    const ecs_script_t *script,
+    const void *node,
+    const char *fmt,
+    ...);
+
 #define flecs_expr_visit_error(script, node, ...) \
-    ecs_parser_error( \
-        script->name, script->code, \
-            ((const ecs_expr_node_t*)node)->pos - script->code, \
-                __VA_ARGS__);
+    flecs_expr_visit_error_(script, node, __VA_ARGS__)
 
 int flecs_expr_visit_type(
     ecs_script_t *script,
@@ -50676,13 +50742,6 @@ ecs_script_scope_t* ecs_script_current_scope_(
 
 #define ecs_script_current_scope(visitor) \
     ecs_script_current_scope_((ecs_script_visit_t*)visitor)
-
-int32_t ecs_script_node_line_number_(
-    ecs_script_impl_t *script,
-    ecs_script_node_t *node);
-
-#define ecs_script_node_line_number(script, node) \
-    ecs_script_node_line_number_(script, (ecs_script_node_t*)node)
 
 #endif
 
@@ -61401,6 +61460,16 @@ void ecs_set_os_api_impl(void) {
 
 #ifdef FLECS_PARSER
 
+int64_t flecs_parser_errpos(
+    const ecs_parser_t *parser,
+    const char *pos)
+{
+    if (parser->fixed_pos) {
+        return parser->fixed_pos - parser->code;
+    }
+    return pos - parser->code;
+}
+
 static
 bool flecs_is_comment(
     const char *pos)
@@ -61669,6 +61738,7 @@ const char* flecs_scan_multiline_comment(
 {
     ecs_assert(pos[0] == '/' && pos[1] == '*', ECS_INTERNAL_ERROR, NULL);
 
+    const char *start = pos;
     for (pos = &pos[2]; pos[0] != 0; pos ++) {
         if (pos[0] == '*' && pos[1] == '/') {
             return pos + 2;
@@ -61676,7 +61746,7 @@ const char* flecs_scan_multiline_comment(
     }
 
     ecs_parser_error(parser->name, parser->code,
-        pos - parser->code, "missing */ for multiline comment");
+        flecs_parser_errpos(parser, start), "missing */ for multiline comment");
     return NULL;
 }
 
@@ -61995,7 +62065,7 @@ const char* flecs_script_number(
         if (!valid_number) {
             if (!digit_parsed && base != 10) {
                 ecs_parser_error(parser->name, parser->code,
-                    pos - parser->code, "missing digits in number literal");
+                    flecs_parser_errpos(parser, pos), "missing digits in number literal");
                 return NULL;
             }
 
@@ -62020,6 +62090,7 @@ const char* flecs_script_skip_string(
     char delim)
 {
     char ch;
+    const char *start = pos;
     for (; (ch = pos[0]) && pos[0] != delim; pos ++) {
         if (ch == '\\' && pos[1]) {
             pos ++;
@@ -62028,7 +62099,7 @@ const char* flecs_script_skip_string(
 
     if (!pos[0]) {
         ecs_parser_error(parser->name, parser->code,
-            pos - parser->code, "unterminated string");
+            flecs_parser_errpos(parser, start), "unterminated string");
         return NULL;
     }
 
@@ -62052,11 +62123,11 @@ const char* flecs_script_char(
     int32_t len = flecs_ito(int32_t, end - pos);
     if(len == 0) {
         ecs_parser_error(parser->name, parser->code,
-            pos - parser->code, "Empty char");
+            flecs_parser_errpos(parser, pos), "Empty char");
         return NULL;
     } else if ((len > 1) && !((len == 2) && (pos[1] == '\\'))) {
         ecs_parser_error(parser->name, parser->code,
-            pos - parser->code, "only one char allowed");
+            flecs_parser_errpos(parser, pos), "only one char allowed");
         return NULL;
     }
 
@@ -62118,7 +62189,7 @@ const char* flecs_script_multiline_string(
 
     if (ch != '`') {
         ecs_parser_error(parser->name, parser->code,
-            end - parser->code, "unterminated string");
+            flecs_parser_errpos(parser, pos), "unterminated string");
         return NULL;
     }
 
@@ -62144,10 +62215,13 @@ const char* flecs_tokenizer_until(
     ecs_token_t *out,
     char until)
 {
-    parser->pos = pos;
-    
     const char *start = pos = flecs_scan_whitespace(parser, pos);
     char ch;
+
+    parser->pos = parser->fixed_pos ? parser->fixed_pos : pos;
+    if (!parser->stmt_pos) {
+        parser->stmt_pos = parser->pos;
+    }
 
     for (; (ch = pos[0]); pos ++) {
         if (ch == until) {
@@ -62158,16 +62232,16 @@ const char* flecs_tokenizer_until(
     if (!pos[0]) {
         if (until == '\0') {
             ecs_parser_error(parser->name, parser->code,
-                pos - parser->code, "expected end of script");
+                flecs_parser_errpos(parser, pos), "expected end of script");
             return NULL;
         } else
         if (until == '\n') {
             ecs_parser_error(parser->name, parser->code,
-                pos - parser->code, "expected newline");
+                flecs_parser_errpos(parser, pos), "expected newline");
             return NULL;
         } else {
             ecs_parser_error(parser->name, parser->code,
-                pos - parser->code, "expected '%c'", until);
+                flecs_parser_errpos(parser, pos), "expected '%c'", until);
             return NULL;
         }
     }
@@ -62205,11 +62279,16 @@ const char* flecs_token(
         return NULL;
     }
 
-    parser->pos = pos;
-
     pos = flecs_scan_whitespace_and_comment(parser, pos);
     if (!pos) {
         return NULL;
+    }
+
+    if (!is_lookahead) {
+        parser->pos = parser->fixed_pos ? parser->fixed_pos : pos;
+        if (!parser->stmt_pos) {
+            parser->stmt_pos = parser->pos;
+        }
     }
 
     out->kind = EcsTokUnknown;
@@ -62307,7 +62386,7 @@ const char* flecs_token(
 
     if (!is_lookahead) {
         ecs_parser_error(parser->name, parser->code,
-            pos - parser->code, "unknown token '%c'", pos[0]);
+            flecs_parser_errpos(parser, pos), "unknown token '%c'", pos[0]);
     }
 
     return NULL;
@@ -63873,13 +63952,13 @@ bool ecs_using_task_threads(
 /* Error */
 #define Error(...)\
     ecs_parser_error(parser->name, parser->code,\
-        (pos - parser->code) - 1, __VA_ARGS__);\
+        flecs_parser_errpos(parser, pos - 1), __VA_ARGS__);\
     goto error
 
 /* Warning */
 #define Warning(...)\
     ecs_parser_warning(parser->name, parser->code,\
-        (pos - parser->code) - 1, __VA_ARGS__);\
+        flecs_parser_errpos(parser, pos - 1), __VA_ARGS__);\
 
 /* Parse expression */
 #define Expr(until, ...)\
@@ -64949,7 +65028,7 @@ void* flecs_ast_new_(
     ecs_script_node_t *result = flecs_calloc_w_dbg_info(
         a, size, "ecs_script_node_t");
     result->kind = kind;
-    result->pos = parser->pos;
+    result->pos = parser->stmt_pos ? parser->stmt_pos : parser->pos;
     return result;
 }
 
@@ -66853,7 +66932,8 @@ const char* flecs_script_scope(
     ecs_assert(pos[-1] == '{', ECS_INTERNAL_ERROR, NULL);
 
     if (parser->scope_depth >= ECS_PARSER_MAX_RECURSION_DEPTH) {
-        ecs_parser_error(parser->name, parser->code, pos - parser->code,
+        ecs_parser_error(parser->name, parser->code,
+            flecs_parser_errpos(parser, pos),
             "maximum scope nesting depth exceeded");
         return NULL;
     }
@@ -67373,6 +67453,8 @@ const char* flecs_script_stmt(
     const char *pos)
 {
     ParserBegin;
+
+    parser->stmt_pos = NULL;
 
     bool name_is_expr_0 = false;
 
@@ -68097,6 +68179,7 @@ ecs_script_t* ecs_script_parse(
     ecs_parser_t parser = {
         .name = script->name,
         .code = script->code,
+        .pos = script->code,
         .script = impl,
         .scope = impl->root,
         .significant_newline = true
@@ -68140,6 +68223,7 @@ ecs_script_t* ecs_script_parse(
 error:
     if (result) {
         result->error = ecs_log_stop_capture();
+        flecs_log_get_captured_error_pos(&result->line, &result->column);
     }
 
     ecs_script_free(script);
@@ -68359,7 +68443,7 @@ int ecs_script_update(
         ecs_script_free(s->script);
     }
 
-    ecs_script_eval_result_t eval_result = {NULL};
+    ecs_script_eval_result_t eval_result = {0};
 
     s->script = ecs_script_parse(world, name, code, NULL, &eval_result);
     if (s->script == NULL) {
@@ -70104,22 +70188,6 @@ ecs_script_scope_t* ecs_script_current_scope_(
     return NULL;
 }
 
-int32_t ecs_script_node_line_number_(
-    ecs_script_impl_t *script,
-    ecs_script_node_t *node)
-{
-    const char *ptr;
-    int32_t line_count = 1;
-    for (ptr = script->pub.code; ptr < node->pos; ptr ++) {
-        ecs_assert(ptr[0] != 0, ECS_INTERNAL_ERROR, NULL);
-        if (ptr[0] == '\n') {
-            line_count ++;
-        }
-    }
-
-    return line_count;
-}
-
 void ecs_script_visit_push_(
     ecs_script_visit_t *v,
     ecs_script_node_t *node)
@@ -70874,11 +70942,18 @@ void flecs_script_eval_error_(
     char *msg = flecs_vasprintf(fmt, args);
     va_end(args);
 
-    if (node) {
-        int32_t line = ecs_script_node_line_number(v->base.script, node);
-        ecs_parser_error(v->base.script->pub.name, NULL, 0, "%d: %s", line, msg);
+    if (!node && v->base.depth > 0) {
+        node = v->base.nodes[v->base.depth - 1];
+    }
+
+    const char *name = v->base.script->pub.name;
+    const char *code = v->base.script->pub.code;
+    const char *pos = node ? node->pos : NULL;
+
+    if (code && pos && (pos >= code) && (pos <= &code[ecs_os_strlen(code)])) {
+        ecs_parser_error(name, code, pos - code, "%s", msg);
     } else {
-        ecs_parser_error(v->base.script->pub.name, NULL, 0, "%s", msg);
+        ecs_parser_error(name, NULL, 0, "%s", msg);
     }
 
     ecs_os_free(msg);
@@ -73144,6 +73219,7 @@ int ecs_script_eval(
 
     if (result) {
         result->error = ecs_log_stop_capture();
+        flecs_log_get_captured_error_pos(&result->line, &result->column);
     }
 
     if (r) {
@@ -93637,7 +93713,8 @@ const char* flecs_script_parse_expr(
     ecs_expr_node_t **out)
 {
     if (parser->expr_depth >= ECS_PARSER_MAX_RECURSION_DEPTH) {
-        ecs_parser_error(parser->name, parser->code, pos - parser->code,
+        ecs_parser_error(parser->name, parser->code,
+            flecs_parser_errpos(parser, pos),
             "maximum expression nesting depth exceeded");
         return NULL;
     }
@@ -93682,10 +93759,12 @@ ecs_script_t* ecs_expr_parse(
 
     ecs_script_t *script = flecs_script_new(world);
     ecs_script_impl_t *impl = flecs_script_impl(script);
+    script->code = ecs_os_strdup(expr);
 
     ecs_parser_t parser = {
         .name = script->name,
         .code = script->code,
+        .pos = script->code,
         .script = impl,
         .scope = impl->root,
         .significant_newline = false,
@@ -93698,12 +93777,13 @@ ecs_script_t* ecs_expr_parse(
     parser.token_cur = impl->token_buffer;
     parser.token_end = &impl->token_buffer[impl->token_buffer_size];
 
-    const char *ptr = flecs_script_parse_expr(&parser, expr, 0, &impl->expr);
+    const char *ptr = flecs_script_parse_expr(
+        &parser, script->code, 0, &impl->expr);
     if (!ptr) {
         goto error;
     }
 
-    impl->next_token = ptr;
+    impl->next_token = &expr[ptr - script->code];
     impl->token_remaining = parser.token_cur;
 
     if (flecs_expr_visit_type(script, impl->expr, &priv_desc)) {
@@ -93943,6 +94023,30 @@ void flecs_expr_stack_pop(
 #endif
 
 #ifdef FLECS_SCRIPT
+
+void flecs_expr_visit_error_(
+    const ecs_script_t *script,
+    const void *node,
+    const char *fmt,
+    ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    char *msg = flecs_vasprintf(fmt, args);
+    va_end(args);
+
+    const ecs_expr_node_t *expr_node = node;
+    const char *code = script->code;
+    const char *pos = expr_node ? expr_node->pos : NULL;
+
+    if (code && pos && (pos >= code) && (pos <= &code[ecs_os_strlen(code)])) {
+        ecs_parser_error(script->name, code, pos - code, "%s", msg);
+    } else {
+        ecs_parser_error(script->name, NULL, 0, "%s", msg);
+    }
+
+    ecs_os_free(msg);
+}
 
 int flecs_value_copy_to(
     ecs_world_t *world,
@@ -97517,7 +97621,7 @@ int flecs_expr_type_for_operator(
         flecs_expr_visit_error(script, node, 
             "invalid types for binary expression (%s, %s)", 
             flecs_errstr(ecs_get_path(world, left->type)),
-            flecs_errstr_1(ecs_get_path(world, right->type)))
+            flecs_errstr_1(ecs_get_path(world, right->type)));
         goto error;
     }
 
@@ -97725,6 +97829,8 @@ int flecs_expr_interpolated_string_visit_type(
                 ecs_parser_t parser = {
                     .name = script->name,
                     .code = script->code,
+                    .pos = node->node.pos,
+                    .fixed_pos = node->node.pos,
                     .script = impl,
                     .scope = impl->root,
                     .significant_newline = false,

@@ -20,6 +20,8 @@ typedef struct ecs_parser_t {
     const char *code;
 
     const char *pos;
+    const char *fixed_pos;
+    const char *stmt_pos;
     char *token_cur;
     char *token_end;
     char *token_keep;

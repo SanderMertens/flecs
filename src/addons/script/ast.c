@@ -26,7 +26,7 @@ void* flecs_ast_new_(
     ecs_script_node_t *result = flecs_calloc_w_dbg_info(
         a, size, "ecs_script_node_t");
     result->kind = kind;
-    result->pos = parser->pos;
+    result->pos = parser->stmt_pos ? parser->stmt_pos : parser->pos;
     return result;
 }
 

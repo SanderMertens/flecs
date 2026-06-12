@@ -540,7 +540,7 @@ int flecs_expr_type_for_operator(
         flecs_expr_visit_error(script, node, 
             "invalid types for binary expression (%s, %s)", 
             flecs_errstr(ecs_get_path(world, left->type)),
-            flecs_errstr_1(ecs_get_path(world, right->type)))
+            flecs_errstr_1(ecs_get_path(world, right->type)));
         goto error;
     }
 
@@ -748,6 +748,8 @@ int flecs_expr_interpolated_string_visit_type(
                 ecs_parser_t parser = {
                     .name = script->name,
                     .code = script->code,
+                    .pos = node->node.pos,
+                    .fixed_pos = node->node.pos,
                     .script = impl,
                     .scope = impl->root,
                     .significant_newline = false,
