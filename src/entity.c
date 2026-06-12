@@ -868,6 +868,7 @@ void flecs_copy_id(
     const void *src_ptr,
     const ecs_type_info_t *ti)
 {
+    (void)entity;
     ecs_assert(dst_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(src_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
     (void)size;
