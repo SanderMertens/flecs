@@ -629,7 +629,7 @@ const char* flecs_script_skip_string(
 {
     char ch;
     for (; (ch = pos[0]) && pos[0] != delim; pos ++) {
-        if (ch == '\\') {
+        if (ch == '\\' && pos[1]) {
             pos ++;
         }
     }
