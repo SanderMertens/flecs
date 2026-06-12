@@ -50322,6 +50322,7 @@ typedef struct ecs_expr_initializer_t {
     const ecs_type_info_t *type_info;
     bool is_collection;
     bool is_dynamic;
+    bool is_partial;
 } ecs_expr_initializer_t;
 
 typedef struct ecs_expr_variable_t {
@@ -66830,6 +66831,15 @@ void FlecsScriptMathPerlinImport(
     case '\n':\
     case '\0'
 
+static
+void flecs_script_initializer_set_full(
+    ecs_expr_node_t *node)
+{
+    if (node->kind == EcsExprInitializer) {
+        ((ecs_expr_initializer_t*)node)->is_partial = false;
+    }
+}
+
 /* Parse scope (statements inside {}) */
 static
 const char* flecs_script_scope(
@@ -66942,6 +66952,7 @@ const char* flecs_script_with_expr(
                         flecs_script_insert_component(parser, Token(0));
                     component->node.kind = EcsAstWithComponent;
                     component->expr = INITIALIZER;
+                    flecs_script_initializer_set_full(component->expr);
                     EndOfRule;
                 )
             )
@@ -66970,10 +66981,11 @@ const char* flecs_script_with_expr(
                     // (Eats, Apples) ( expr )
                     Initializer(')',
                         ecs_script_component_t *component =
-                            flecs_script_insert_pair_component(parser, 
+                            flecs_script_insert_pair_component(parser,
                                 Token(1), Token(3));
                         component->node.kind = EcsAstWithComponent;
                         component->expr = INITIALIZER;
+                        flecs_script_initializer_set_full(component->expr);
                         EndOfRule;
                     )
                 )
@@ -67038,10 +67050,11 @@ const char* flecs_script_paren_expr(
     Initializer(')',
         entity->kind_w_expr = true;
 
-        Scope(entity->scope, 
-            ecs_script_component_t *component = 
+        Scope(entity->scope,
+            ecs_script_component_t *component =
                 flecs_script_insert_component(parser, kind);
             component->expr = INITIALIZER;
+            flecs_script_initializer_set_full(component->expr);
         )
 
         Parse(
@@ -67980,10 +67993,11 @@ identifier_paren: {
                 ecs_script_entity_t *entity = flecs_script_insert_entity(
                     parser, NULL);
 
-                Scope(entity->scope, 
-                    ecs_script_component_t *comp = 
-                        flecs_script_insert_component(parser, Token(0)); 
+                Scope(entity->scope,
+                    ecs_script_component_t *comp =
+                        flecs_script_insert_component(parser, Token(0));
                     comp->expr = INITIALIZER;
+                    flecs_script_initializer_set_full(comp->expr);
                 )
 
                 EndOfRule;
@@ -67994,10 +68008,11 @@ identifier_paren: {
                 ecs_script_entity_t *entity = flecs_script_insert_entity(
                     parser, NULL);
 
-                Scope(entity->scope, 
-                    ecs_script_component_t *comp = 
-                        flecs_script_insert_component(parser, Token(0)); 
+                Scope(entity->scope,
+                    ecs_script_component_t *comp =
+                        flecs_script_insert_component(parser, Token(0));
                     comp->expr = INITIALIZER;
+                    flecs_script_initializer_set_full(comp->expr);
                 )
 
                 return flecs_script_scope(parser, entity->scope, pos);
@@ -71822,25 +71837,44 @@ int flecs_script_eval_component(
         }
 
         bool needs_set = ti->hooks.on_replace != NULL;
-        ecs_record_t *r = flecs_entities_get(v->world, src);
-        ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_table_t *table = r->table;
- 
+
+        bool partial = false;
+        if (node->expr->kind == EcsExprInitializer) {
+            partial = ((ecs_expr_initializer_t*)node->expr)->is_partial;
+        }
+
+        const void *existing = NULL;
+        if (partial) {
+            existing = ecs_get_id(v->world, src, node->id.eval);
+        }
+
         ecs_value_t value = {
-            .ptr = needs_set 
-                ? ecs_os_alloca(ti->size) 
-                : ecs_ensure_id(v->world, src, node->id.eval, 
+            .ptr = needs_set
+                ? ecs_os_alloca(ti->size)
+                : ecs_ensure_id(v->world, src, node->id.eval,
                     flecs_ito(size_t, ti->size)),
             .type = ti->component
         };
 
-        /* Assign entire value, including members not set by expression. This 
-         * prevents uninitialized or unexpected values. */
-        if (needs_set || (r->table != table)) {
+        /* For full assignments, assign entire value including members not set
+         * by expression. This prevents uninitialized or unexpected values. For
+         * partial assignments, members not set by the expression keep the
+         * existing component value. */
+        if (needs_set) {
             if (!ti->hooks.ctor) {
                 ecs_os_memset(value.ptr, 0, ti->size);
             } else {
-                if (!needs_set && ti->hooks.dtor) {
+                flecs_type_info_ctor(value.ptr, 1, ti);
+            }
+
+            if (existing) {
+                ecs_value_copy_w_type_info(v->world, ti, value.ptr, existing);
+            }
+        } else if (!existing) {
+            if (!ti->hooks.ctor) {
+                ecs_os_memset(value.ptr, 0, ti->size);
+            } else {
+                if (ti->hooks.dtor) {
                     flecs_type_info_dtor(value.ptr, 1, ti);
                 }
                 flecs_type_info_ctor(value.ptr, 1, ti);
@@ -71972,11 +72006,32 @@ int flecs_script_eval_default_component(
         return -1;
     }
 
+    bool partial = false;
+    if (node->expr->kind == EcsExprInitializer) {
+        partial = ((ecs_expr_initializer_t*)node->expr)->is_partial;
+    }
+
+    const void *existing = NULL;
+    if (partial) {
+        existing = ecs_get_id(v->world, v->entity->eval, default_type);
+    }
+
     ecs_value_t value = {
-        .ptr = ecs_ensure_id(v->world, v->entity->eval, default_type, 
+        .ptr = ecs_ensure_id(v->world, v->entity->eval, default_type,
             flecs_ito(size_t, ti->size)),
         .type = default_type
     };
+
+    if (!existing) {
+        if (!ti->hooks.ctor) {
+            ecs_os_memset(value.ptr, 0, ti->size);
+        } else {
+            if (ti->hooks.dtor) {
+                flecs_type_info_dtor(value.ptr, 1, ti);
+            }
+            flecs_type_info_ctor(value.ptr, 1, ti);
+        }
+    }
 
     if (flecs_script_eval_expr(v, &node->expr, &value)) {
         return -1;
@@ -93044,6 +93099,16 @@ const char* flecs_script_parse_initializer(
             goto error;
         }
 
+        if (elem->member) {
+            node->is_partial = true;
+        }
+
+        if (elem->value && elem->value->kind == EcsExprInitializer &&
+            ((ecs_expr_initializer_t*)elem->value)->is_partial)
+        {
+            node->is_partial = true;
+        }
+
         {
             /* Parse next element or end of initializer */
             LookAhead(
@@ -93053,7 +93118,7 @@ const char* flecs_script_parse_initializer(
                 }
 
                 case ')':
-                case '}': 
+                case '}':
                     /* Return last character of initializer */
                     pos = lookahead - 1;
 
@@ -93106,6 +93171,12 @@ const char* flecs_script_parse_collection_initializer(
         pos = flecs_script_parse_expr(parser, pos, 0, &elem->value);
         if (!pos) {
             goto error;
+        }
+
+        if (elem->value && elem->value->kind == EcsExprInitializer &&
+            ((ecs_expr_initializer_t*)elem->value)->is_partial)
+        {
+            node->is_partial = true;
         }
 
         {
@@ -95906,6 +95977,10 @@ int flecs_expr_initializer_visit_fold(
     void *value = NULL;
 
     ecs_expr_initializer_t *node = (ecs_expr_initializer_t*)*node_ptr;
+
+    if (node->is_partial) {
+        can_fold = false;
+    }
 
     if (flecs_expr_initializer_pre_fold(script, node, desc, &can_fold)) {
         goto error;

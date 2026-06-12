@@ -15,6 +15,15 @@
     case '\n':\
     case '\0'
 
+static
+void flecs_script_initializer_set_full(
+    ecs_expr_node_t *node)
+{
+    if (node->kind == EcsExprInitializer) {
+        ((ecs_expr_initializer_t*)node)->is_partial = false;
+    }
+}
+
 /* Parse scope (statements inside {}) */
 static
 const char* flecs_script_scope(
@@ -127,6 +136,7 @@ const char* flecs_script_with_expr(
                         flecs_script_insert_component(parser, Token(0));
                     component->node.kind = EcsAstWithComponent;
                     component->expr = INITIALIZER;
+                    flecs_script_initializer_set_full(component->expr);
                     EndOfRule;
                 )
             )
@@ -155,10 +165,11 @@ const char* flecs_script_with_expr(
                     // (Eats, Apples) ( expr )
                     Initializer(')',
                         ecs_script_component_t *component =
-                            flecs_script_insert_pair_component(parser, 
+                            flecs_script_insert_pair_component(parser,
                                 Token(1), Token(3));
                         component->node.kind = EcsAstWithComponent;
                         component->expr = INITIALIZER;
+                        flecs_script_initializer_set_full(component->expr);
                         EndOfRule;
                     )
                 )
@@ -223,10 +234,11 @@ const char* flecs_script_paren_expr(
     Initializer(')',
         entity->kind_w_expr = true;
 
-        Scope(entity->scope, 
-            ecs_script_component_t *component = 
+        Scope(entity->scope,
+            ecs_script_component_t *component =
                 flecs_script_insert_component(parser, kind);
             component->expr = INITIALIZER;
+            flecs_script_initializer_set_full(component->expr);
         )
 
         Parse(
@@ -1165,10 +1177,11 @@ identifier_paren: {
                 ecs_script_entity_t *entity = flecs_script_insert_entity(
                     parser, NULL);
 
-                Scope(entity->scope, 
-                    ecs_script_component_t *comp = 
-                        flecs_script_insert_component(parser, Token(0)); 
+                Scope(entity->scope,
+                    ecs_script_component_t *comp =
+                        flecs_script_insert_component(parser, Token(0));
                     comp->expr = INITIALIZER;
+                    flecs_script_initializer_set_full(comp->expr);
                 )
 
                 EndOfRule;
@@ -1179,10 +1192,11 @@ identifier_paren: {
                 ecs_script_entity_t *entity = flecs_script_insert_entity(
                     parser, NULL);
 
-                Scope(entity->scope, 
-                    ecs_script_component_t *comp = 
-                        flecs_script_insert_component(parser, Token(0)); 
+                Scope(entity->scope,
+                    ecs_script_component_t *comp =
+                        flecs_script_insert_component(parser, Token(0));
                     comp->expr = INITIALIZER;
+                    flecs_script_initializer_set_full(comp->expr);
                 )
 
                 return flecs_script_scope(parser, entity->scope, pos);

@@ -64,6 +64,7 @@ typedef struct ecs_expr_initializer_t {
     const ecs_type_info_t *type_info;
     bool is_collection;
     bool is_dynamic;
+    bool is_partial;
 } ecs_expr_initializer_t;
 
 typedef struct ecs_expr_variable_t {

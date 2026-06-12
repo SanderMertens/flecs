@@ -311,6 +311,21 @@ void Eval_partial_assign_nontrivial(void);
 void Eval_partial_assign_with(void);
 void Eval_partial_assign_nontrivial_with(void);
 void Eval_partial_assign_with_large_array(void);
+void Eval_partial_assign_to_existing(void);
+void Eval_partial_assign_to_new(void);
+void Eval_partial_assign_to_existing_nontrivial(void);
+void Eval_partial_assign_to_new_nontrivial(void);
+void Eval_partial_assign_to_existing_w_var(void);
+void Eval_full_assign_to_existing(void);
+void Eval_full_assign_fewer_elems_to_existing(void);
+void Eval_full_assign_fewer_elems_w_var_to_existing(void);
+void Eval_full_assign_fewer_elems_w_expr_to_existing(void);
+void Eval_partial_assign_to_existing_w_expr(void);
+void Eval_full_assign_empty_to_existing(void);
+void Eval_partial_assign_paren_to_existing(void);
+void Eval_partial_assign_to_existing_pair(void);
+void Eval_partial_assign_nested_to_existing(void);
+void Eval_partial_assign_to_inherited(void);
 void Eval_non_trivial_var_component(void);
 void Eval_non_trivial_var_with(void);
 void Eval_update_template_w_tag(void);
@@ -2720,6 +2735,66 @@ bake_test_case Eval_testcases[] = {
     {
         "partial_assign_with_large_array",
         Eval_partial_assign_with_large_array
+    },
+    {
+        "partial_assign_to_existing",
+        Eval_partial_assign_to_existing
+    },
+    {
+        "partial_assign_to_new",
+        Eval_partial_assign_to_new
+    },
+    {
+        "partial_assign_to_existing_nontrivial",
+        Eval_partial_assign_to_existing_nontrivial
+    },
+    {
+        "partial_assign_to_new_nontrivial",
+        Eval_partial_assign_to_new_nontrivial
+    },
+    {
+        "partial_assign_to_existing_w_var",
+        Eval_partial_assign_to_existing_w_var
+    },
+    {
+        "full_assign_to_existing",
+        Eval_full_assign_to_existing
+    },
+    {
+        "full_assign_fewer_elems_to_existing",
+        Eval_full_assign_fewer_elems_to_existing
+    },
+    {
+        "full_assign_fewer_elems_w_var_to_existing",
+        Eval_full_assign_fewer_elems_w_var_to_existing
+    },
+    {
+        "full_assign_fewer_elems_w_expr_to_existing",
+        Eval_full_assign_fewer_elems_w_expr_to_existing
+    },
+    {
+        "partial_assign_to_existing_w_expr",
+        Eval_partial_assign_to_existing_w_expr
+    },
+    {
+        "full_assign_empty_to_existing",
+        Eval_full_assign_empty_to_existing
+    },
+    {
+        "partial_assign_paren_to_existing",
+        Eval_partial_assign_paren_to_existing
+    },
+    {
+        "partial_assign_to_existing_pair",
+        Eval_partial_assign_to_existing_pair
+    },
+    {
+        "partial_assign_nested_to_existing",
+        Eval_partial_assign_nested_to_existing
+    },
+    {
+        "partial_assign_to_inherited",
+        Eval_partial_assign_to_inherited
     },
     {
         "non_trivial_var_component",
@@ -7480,7 +7555,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        490,
+        505,
         Eval_testcases
     },
     {
