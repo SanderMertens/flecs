@@ -145,6 +145,14 @@ int flecs_script_check_entity(
         }
     }
 
+    if (node->eval_kind) {
+        const EcsDefaultChildComponent *default_comp = ecs_get(
+            v->world, node->eval_kind, EcsDefaultChildComponent);
+        if (default_comp && default_comp->component) {
+            node->scope->default_component_eval = default_comp->component;
+        }
+    }
+
     if (node->name_expr && !node->name_expr->type_info) {
         ecs_entity_t type = ecs_id(ecs_string_t);
         if (flecs_script_check_expr(v, &node->name_expr, &type)) {
@@ -297,9 +305,34 @@ int flecs_script_check_default_component(
     ecs_script_default_component_t *node)
 {
     if (!v->entity) {
-        flecs_script_eval_error(v, node, 
+        flecs_script_eval_error(v, node,
             "missing entity for default component");
         return -1;
+    }
+
+    ecs_script_scope_t *scope = ecs_script_current_scope(v);
+    ecs_assert(scope != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(scope->node.kind == EcsAstScope, ECS_INTERNAL_ERROR, NULL);
+    scope = scope->parent;
+    if (!scope) {
+        return 0;
+    }
+
+    ecs_id_t default_type = scope->default_component_eval;
+    if (!default_type) {
+        return 0;
+    }
+
+    const ecs_type_info_t *ti = ecs_get_type_info(v->world, default_type);
+    if (!ti) {
+        return 0;
+    }
+
+    if (node->expr && !node->expr->type_info) {
+        ecs_entity_t type = ti->component;
+        if (flecs_script_check_expr(v, &node->expr, &type)) {
+            return -1;
+        }
     }
 
     return 0;
