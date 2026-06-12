@@ -9506,6 +9506,523 @@ void Eval_partial_assign_with_large_array(void) {
     ecs_fini(world);
 }
 
+void Eval_partial_assign_to_existing(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "foo { Position: {10, 20} }"
+    LINE "foo { Position: {y: 30} }";
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = expr
+    });
+    test_assert(s != 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+
+    const Position *p = ecs_get(world, foo, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 30);
+
+    ecs_fini(world);
+}
+
+void Eval_partial_assign_to_new(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "foo { Position: {y: 30} }";
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = expr
+    });
+    test_assert(s != 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+
+    const Position *p = ecs_get(world, foo, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 0);
+    test_int(p->y, 30);
+
+    ecs_fini(world);
+}
+
+void Eval_partial_assign_to_existing_nontrivial(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Strings);
+
+    ecs_set_hooks(world, Strings, {
+        .ctor = ecs_ctor(Strings),
+        .dtor = ecs_dtor(Strings),
+        .move = ecs_move(Strings),
+        .copy = ecs_copy(Strings)
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Strings"}),
+        .members = {
+            {"a", ecs_id(ecs_string_t)},
+            {"b", ecs_id(ecs_string_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "foo { Strings: {a: \"hello\", b: \"world\"} }"
+    LINE "foo { Strings: {b: \"bar\"} }";
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = expr
+    });
+    test_assert(s != 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+
+    const Strings *p = ecs_get(world, foo, Strings);
+    test_assert(p != NULL);
+    test_str(p->a, "hello");
+    test_str(p->b, "bar");
+
+    ecs_fini(world);
+}
+
+void Eval_partial_assign_to_new_nontrivial(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Strings);
+
+    ecs_set_hooks(world, Strings, {
+        .ctor = ecs_ctor(Strings),
+        .dtor = ecs_dtor(Strings),
+        .move = ecs_move(Strings),
+        .copy = ecs_copy(Strings)
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Strings"}),
+        .members = {
+            {"a", ecs_id(ecs_string_t)},
+            {"b", ecs_id(ecs_string_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "foo { Strings: {b: \"bar\"} }";
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = expr
+    });
+    test_assert(s != 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+
+    const Strings *p = ecs_get(world, foo, Strings);
+    test_assert(p != NULL);
+    test_str(p->a, NULL);
+    test_str(p->b, "bar");
+
+    ecs_fini(world);
+}
+
+void Eval_partial_assign_to_existing_w_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "foo { Position: {10, 20} }"
+    LINE "const v: 30"
+    LINE "foo { Position: {y: $v} }";
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = expr
+    });
+    test_assert(s != 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+
+    const Position *p = ecs_get(world, foo, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 30);
+
+    ecs_fini(world);
+}
+
+void Eval_full_assign_to_existing(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "foo { Position: {10, 20} }"
+    LINE "foo { Position: {30, 40} }";
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = expr
+    });
+    test_assert(s != 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+
+    const Position *p = ecs_get(world, foo, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 30);
+    test_int(p->y, 40);
+
+    ecs_fini(world);
+}
+
+void Eval_full_assign_fewer_elems_to_existing(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "foo { Position: {10, 20} }"
+    LINE "foo { Position: {30} }";
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = expr
+    });
+    test_assert(s != 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+
+    const Position *p = ecs_get(world, foo, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 30);
+    test_int(p->y, 0);
+
+    ecs_fini(world);
+}
+
+void Eval_full_assign_fewer_elems_w_var_to_existing(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "foo { Position: {10, 20} }"
+    LINE "const v: 30"
+    LINE "foo { Position: {$v} }";
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = expr
+    });
+    test_assert(s != 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+
+    const Position *p = ecs_get(world, foo, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 30);
+    test_int(p->y, 0);
+
+    ecs_fini(world);
+}
+
+void Eval_full_assign_fewer_elems_w_expr_to_existing(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "foo { Position: {10, 20} }"
+    LINE "bar { Position: {30, 40} }"
+    LINE "foo { Position: {bar[Position].x} }";
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = expr
+    });
+    test_assert(s != 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+
+    const Position *p = ecs_get(world, foo, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 30);
+    test_int(p->y, 0);
+
+    ecs_fini(world);
+}
+
+void Eval_partial_assign_to_existing_w_expr(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "foo { Position: {10, 20} }"
+    LINE "bar { Position: {30, 40} }"
+    LINE "foo { Position: {y: bar[Position].x} }";
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = expr
+    });
+    test_assert(s != 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+
+    const Position *p = ecs_get(world, foo, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 30);
+
+    ecs_fini(world);
+}
+
+void Eval_full_assign_empty_to_existing(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "foo { Position: {10, 20} }"
+    LINE "foo { Position: {} }";
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = expr
+    });
+    test_assert(s != 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+
+    const Position *p = ecs_get(world, foo, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 0);
+    test_int(p->y, 0);
+
+    ecs_fini(world);
+}
+
+void Eval_partial_assign_paren_to_existing(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "foo { Position: {10, 20} }"
+    LINE "Position foo(y: 30)";
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = expr
+    });
+    test_assert(s != 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+
+    const Position *p = ecs_get(world, foo, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 0);
+    test_int(p->y, 30);
+
+    ecs_fini(world);
+}
+
+void Eval_partial_assign_to_existing_pair(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t eats = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Eats" }),
+        .members = {
+            {"amount", ecs_id(ecs_f32_t)},
+            {"quality", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t apples = ecs_entity(world, { .name = "Apples" });
+
+    const char *expr =
+    HEAD "foo { (Eats, Apples): {amount: 10, quality: 20} }"
+    LINE "foo { (Eats, Apples): {quality: 30} }";
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = expr
+    });
+    test_assert(s != 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+
+    const Position *p = ecs_get_id(world, foo, ecs_pair(eats, apples));
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 30);
+
+    ecs_fini(world);
+}
+
+void Eval_partial_assign_nested_to_existing(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Line" }),
+        .members = {
+            {"start", ecs_id(Position)},
+            {"stop", ecs_id(Position)}
+        }
+    });
+
+    const char *expr =
+    HEAD "foo { Line: {{1, 2}, {3, 4}} }"
+    LINE "foo { Line: {start: {y: 10}} }";
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = expr
+    });
+    test_assert(s != 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+
+    ecs_entity_t line = ecs_lookup(world, "Line");
+    test_assert(line != 0);
+
+    const Position *p = ecs_get_id(world, foo, line);
+    test_assert(p != NULL);
+    test_int(p[0].x, 1);
+    test_int(p[0].y, 10);
+    test_int(p[1].x, 3);
+    test_int(p[1].y, 4);
+
+    ecs_fini(world);
+}
+
+void Eval_partial_assign_to_inherited(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+
+    const char *expr =
+    HEAD "prefab base { Position: {1, 2} }"
+    LINE "inst : base { Position: {y: 10} }";
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = expr
+    });
+    test_assert(s != 0);
+
+    ecs_entity_t inst = ecs_lookup(world, "inst");
+    test_assert(inst != 0);
+
+    const Position *p = ecs_get(world, inst, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 1);
+    test_int(p->y, 10);
+
+    ecs_fini(world);
+}
+
 void Eval_non_trivial_var_component(void) {
     ecs_world_t *world = ecs_init();
 

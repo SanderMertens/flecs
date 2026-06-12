@@ -198,6 +198,16 @@ const char* flecs_script_parse_initializer(
             goto error;
         }
 
+        if (elem->member) {
+            node->is_partial = true;
+        }
+
+        if (elem->value && elem->value->kind == EcsExprInitializer &&
+            ((ecs_expr_initializer_t*)elem->value)->is_partial)
+        {
+            node->is_partial = true;
+        }
+
         {
             /* Parse next element or end of initializer */
             LookAhead(
@@ -207,7 +217,7 @@ const char* flecs_script_parse_initializer(
                 }
 
                 case ')':
-                case '}': 
+                case '}':
                     /* Return last character of initializer */
                     pos = lookahead - 1;
 
@@ -260,6 +270,12 @@ const char* flecs_script_parse_collection_initializer(
         pos = flecs_script_parse_expr(parser, pos, 0, &elem->value);
         if (!pos) {
             goto error;
+        }
+
+        if (elem->value && elem->value->kind == EcsExprInitializer &&
+            ((ecs_expr_initializer_t*)elem->value)->is_partial)
+        {
+            node->is_partial = true;
         }
 
         {
