@@ -2315,7 +2315,7 @@ void flecs_set_id_move(
 
     if (ti->hooks.on_replace) {
         flecs_invoke_replace_hook(
-            world, prev_table, entity, component, dst.ptr, ptr, ti, prev_table);
+            world, r->table, entity, component, dst.ptr, ptr, ti, prev_table);
     }
 
     if (cmd_kind != EcsCmdEmplace) {
@@ -2390,7 +2390,7 @@ void ecs_set_id(
 
     if (dst.ti->hooks.on_replace) {
         flecs_invoke_replace_hook(
-            world, prev_table, entity, component, dst.ptr, ptr, dst.ti, prev_table);
+            world, r->table, entity, component, dst.ptr, ptr, dst.ti, prev_table);
     }
 
     flecs_copy_id(world, entity, r, component, size, dst.ptr, ptr, dst.ti);
