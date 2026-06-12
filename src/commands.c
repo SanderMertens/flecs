@@ -1019,7 +1019,7 @@ void flecs_cmd_batch_for_entity(
                     void *ptr = cmd->is._1.value;
                     const ecs_type_info_t *ti = dst.ti;
                     if (ti->hooks.on_replace) {
-                        flecs_invoke_replace_hook(world, start_table, entity,
+                        flecs_invoke_replace_hook(world, r->table, entity,
                             cmd->id, dst.ptr, ptr, ti, start_table);
                         if (!r->table) {
                             /* Entity was deleted */
