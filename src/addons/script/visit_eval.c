@@ -580,6 +580,15 @@ int flecs_script_eval_scope(
         }
     }
 
+    if (v->base.depth > 0) {
+        ecs_script_node_t *prev = v->base.nodes[v->base.depth - 1];
+        if ((prev->kind == EcsAstIf || prev->kind == EcsAstFor) &&
+            node->parent)
+        {
+            node->default_component_eval = node->parent->default_component_eval;
+        }
+    }
+
     ecs_allocator_t *a = &v->r->allocator;
     v->vars = flecs_script_vars_push(v->vars, &v->r->stack, a);
 

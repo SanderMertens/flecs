@@ -16008,3 +16008,248 @@ void Eval_component_expr_member_no_var(void) {
     ecs_fini(world);
 }
 
+
+
+void Eval_default_child_component_w_entity_in_if(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "DefaultChildComponent Foo(Position)"
+    LINE "const cond: true"
+    LINE "Foo parent {"
+    LINE "  if $cond {"
+    LINE "    child = 10, 20"
+    LINE "  }"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t child = ecs_lookup(world, "parent.child");
+    test_assert(child != 0);
+
+    const Position *p = ecs_get(world, child, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Eval_default_child_component_w_entity_in_for(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "DefaultChildComponent Foo(Position)"
+    LINE "Foo parent {"
+    LINE "  for i in 0..2 {"
+    LINE "    \"child_$i\" = 10, 20"
+    LINE "  }"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t child_0 = ecs_lookup(world, "parent.child_0");
+    ecs_entity_t child_1 = ecs_lookup(world, "parent.child_1");
+    test_assert(child_0 != 0);
+    test_assert(child_1 != 0);
+
+    const Position *p = ecs_get(world, child_0, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    p = ecs_get(world, child_1, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Eval_default_child_component_w_entity_in_nested_if(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "DefaultChildComponent Foo(Position)"
+    LINE "const cond: true"
+    LINE "Foo parent {"
+    LINE "  if $cond {"
+    LINE "    if $cond {"
+    LINE "      child = 10, 20"
+    LINE "    }"
+    LINE "  }"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t child = ecs_lookup(world, "parent.child");
+    test_assert(child != 0);
+
+    const Position *p = ecs_get(world, child, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Eval_default_child_component_w_entity_in_nested_for(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "DefaultChildComponent Foo(Position)"
+    LINE "Foo parent {"
+    LINE "  for i in 0..2 {"
+    LINE "    for j in 0..2 {"
+    LINE "      \"child_{$i}_{$j}\" = 10, 20"
+    LINE "    }"
+    LINE "  }"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    int i, j;
+    for (i = 0; i < 2; i ++) {
+        for (j = 0; j < 2; j ++) {
+            char name[64];
+            ecs_os_snprintf(name, 64, "parent.child_%d_%d", i, j);
+            ecs_entity_t child = ecs_lookup(world, name);
+            test_assert(child != 0);
+
+            const Position *p = ecs_get(world, child, Position);
+            test_assert(p != NULL);
+            test_int(p->x, 10);
+            test_int(p->y, 20);
+        }
+    }
+
+    ecs_fini(world);
+}
+
+void Eval_default_child_component_w_entity_in_if_in_for(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "DefaultChildComponent Foo(Position)"
+    LINE "const cond: true"
+    LINE "Foo parent {"
+    LINE "  for i in 0..2 {"
+    LINE "    if $cond {"
+    LINE "      \"child_$i\" = 10, 20"
+    LINE "    }"
+    LINE "  }"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t child_0 = ecs_lookup(world, "parent.child_0");
+    ecs_entity_t child_1 = ecs_lookup(world, "parent.child_1");
+    test_assert(child_0 != 0);
+    test_assert(child_1 != 0);
+
+    const Position *p = ecs_get(world, child_0, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    p = ecs_get(world, child_1, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Eval_default_child_component_w_entity_in_for_in_if(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "DefaultChildComponent Foo(Position)"
+    LINE "const cond: true"
+    LINE "Foo parent {"
+    LINE "  if $cond {"
+    LINE "    for i in 0..2 {"
+    LINE "      \"child_$i\" = 10, 20"
+    LINE "    }"
+    LINE "  }"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t child_0 = ecs_lookup(world, "parent.child_0");
+    ecs_entity_t child_1 = ecs_lookup(world, "parent.child_1");
+    test_assert(child_0 != 0);
+    test_assert(child_1 != 0);
+
+    const Position *p = ecs_get(world, child_0, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    p = ecs_get(world, child_1, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
