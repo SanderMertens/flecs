@@ -5153,165 +5153,168 @@ void ComponentLifecycle_add_on_set_hook_while_in_use(void) {
     ecs_fini(world);
 }
 
+typedef struct {
+    char *ptr;
+} HeapComp;
+
+static int heap_dtor_invoked = 0;
+static int heap_move_dtor_invoked = 0;
+static int heap_ctor_move_dtor_invoked = 0;
+
+static void heap_dtor(void *raw, int32_t count, const ecs_type_info_t *ti) {
+    (void)ti;
+    HeapComp *c = raw;
+    int i;
+    for (i = 0; i < count; i++) {
+        ecs_os_free(c[i].ptr);
+        c[i].ptr = NULL;
+    }
+    heap_dtor_invoked++;
+}
+
+static void heap_move_dtor(void *dst_raw, void *src_raw, int32_t count,
+    const ecs_type_info_t *ti)
+{
+    (void)ti;
+    HeapComp *dst = dst_raw;
+    HeapComp *src = src_raw;
+    int i;
+    for (i = 0; i < count; i++) {
+        ecs_os_free(dst[i].ptr);
+        dst[i].ptr = src[i].ptr;
+        src[i].ptr = NULL;
+    }
+    heap_move_dtor_invoked++;
+}
+
+static void heap_ctor_move_dtor(void *dst_raw, void *src_raw, int32_t count,
+    const ecs_type_info_t *ti)
+{
+    (void)ti;
+    HeapComp *dst = dst_raw;
+    HeapComp *src = src_raw;
+    int i;
+    for (i = 0; i < count; i++) {
+        dst[i].ptr = src[i].ptr;
+        src[i].ptr = NULL;
+    }
+    heap_ctor_move_dtor_invoked++;
+}
+
 /* Validates that deleting a non-last entity (destruct=true) with move_ctor=NULL
- * invokes move_dtor (not ctor_move_dtor) for table compaction. When
- * destruct=true, the destination slot holds live data that must be dropped
- * before overwriting. ctor_move_dtor treats dst as uninitialized, skipping
- * the drop and causing a resource leak.
+ * invokes move_dtor (not ctor_move_dtor) for table compaction. move_dtor must
+ * free dst before overwriting; ctor_move_dtor skips this, causing a resource
+ * leak. Uses heap-allocated data so ASAN detects the leak when fix is reverted.
  * Code path: ecs_delete -> flecs_table_delete(world, table, row, true) */
 void ComponentLifecycle_delete_nonlast_with_destruct_no_move_ctor(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, HeapComp);
 
-    cl_ctx ctx = { { 0 } };
+    heap_move_dtor_invoked = 0;
+    heap_ctor_move_dtor_invoked = 0;
 
-    ecs_set_hooks(world, Position, {
-        .ctor = NULL,
-        .move = NULL,
-        .move_ctor = NULL,
-        .dtor = comp_dtor,
-        .ctor_move_dtor = comp_pos_ctor_move_dtor,
-        .move_dtor = comp_move_dtor,
-        .ctx = &ctx
+    ecs_set_hooks(world, HeapComp, {
+        .dtor = heap_dtor,
+        .move_dtor = heap_move_dtor,
+        .ctor_move_dtor = heap_ctor_move_dtor
     });
 
     ecs_entity_t e1 = ecs_new(world);
-    ecs_add(world, e1, Position);
+    ecs_set(world, e1, HeapComp, {ecs_os_strdup("e1")});
 
     ecs_entity_t e2 = ecs_new(world);
-    ecs_add(world, e2, Position);
+    ecs_set(world, e2, HeapComp, {ecs_os_strdup("e2")});
 
-    ctx.ctor_move_dtor.invoked = 0;
-    ctx.ctor_move_dtor.count = 0;
-    ctx.move_dtor.invoked = 0;
-    ctx.move_dtor.count = 0;
-    ctx.dtor.invoked = 0;
-    ctx.dtor.count = 0;
-
-    /* Delete e1 (row 0, not last). e2 must be moved into e1's slot.
-     * With destruct=true and move_ctor=NULL, move_dtor must be used
-     * because dst holds live data that needs dropping first. */
+    /* Delete e1 (row 0, not last). e2 compacts into e1's slot.
+     * move_dtor must free e1's ptr before moving e2 in.
+     * Without fix: ctor_move_dtor skips freeing e1's ptr -> leak. */
     ecs_delete(world, e1);
 
-    /* move_dtor must be called to move e2 into e1's slot */
-    test_int(ctx.move_dtor.invoked, 1);
-    test_int(ctx.move_dtor.count, 1);
-
-    /* ctor_move_dtor must NOT be called -- that would skip dropping dst */
-    test_int(ctx.ctor_move_dtor.invoked, 0);
-
+    test_int(heap_move_dtor_invoked, 1);
+    test_int(heap_ctor_move_dtor_invoked, 0);
     test_assert(!ecs_is_alive(world, e1));
     test_assert(ecs_is_alive(world, e2));
 
     ecs_fini(world);
 }
 
-/* Validates that removing a component from a non-last entity calls the dtor
- * for the removed component immediately, even when use_move_dtor=false.
- * Exercises the trailing source columns loop in flecs_table_move.
- * When moving from [Position, Velocity] to [Position], Velocity (higher id)
- * falls in the trailing loop. Without the fix, dtor=false would be passed,
- * skipping cleanup of Velocity's resources.
+/* Validates that removing a component from a non-last entity (trailing src
+ * columns loop) with move_ctor=NULL calls dtor immediately for the removed
+ * component. Without the fix dtor=false is passed, skipping cleanup and leaking
+ * heap-allocated resources (detectable by ASAN when fix is reverted).
  * Code path: ecs_remove -> flecs_table_move trailing src loop */
 void ComponentLifecycle_remove_component_nonlast_no_move_ctor_calls_dtor_trailing(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, HeapComp);
 
-    cl_ctx vel_ctx = { { 0 } };
+    heap_dtor_invoked = 0;
 
-    ecs_set_hooks(world, Velocity, {
-        .ctor = NULL,
-        .move = NULL,
-        .move_ctor = NULL,
-        .dtor = comp_dtor,
-        .ctor_move_dtor = comp_pos_ctor_move_dtor,
-        .move_dtor = comp_move_dtor,
-        .ctx = &vel_ctx
+    ecs_set_hooks(world, HeapComp, {
+        .dtor = heap_dtor,
+        .move_dtor = heap_move_dtor,
+        .ctor_move_dtor = heap_ctor_move_dtor
     });
 
     ecs_entity_t e1 = ecs_new(world);
     ecs_add(world, e1, Position);
-    ecs_add(world, e1, Velocity);
+    ecs_set(world, e1, HeapComp, {ecs_os_strdup("e1")});
 
     ecs_entity_t e2 = ecs_new(world);
     ecs_add(world, e2, Position);
-    ecs_add(world, e2, Velocity);
+    ecs_set(world, e2, HeapComp, {ecs_os_strdup("e2")});
 
-    vel_ctx.dtor.invoked = 0;
-    vel_ctx.dtor.count = 0;
-    vel_ctx.ctor_move_dtor.invoked = 0;
-    vel_ctx.move_dtor.invoked = 0;
+    /* Remove HeapComp from e1 (not last). HeapComp has higher id -> trailing
+     * loop. The fix forces dtor=true so e1's ptr is freed immediately.
+     * Without fix: dtor skipped -> e1's HeapComp.ptr leaks. */
+    ecs_remove(world, e1, HeapComp);
 
-    /* Remove Velocity from e1 (row 0, not last). Entity moves from
-     * [Position, Velocity] to [Position]. Velocity is a trailing source
-     * column. The fix forces dtor=true so Velocity's dtor fires. */
-    ecs_remove(world, e1, Velocity);
-
-    /* dtor must have been called for the removed Velocity */
-    test_int(vel_ctx.dtor.invoked, 1);
-    test_int(vel_ctx.dtor.count, 1);
-
+    test_int(heap_dtor_invoked, 1);
     test_assert(ecs_has(world, e1, Position));
-    test_assert(!ecs_has(world, e1, Velocity));
+    test_assert(!ecs_has(world, e1, HeapComp));
     test_assert(ecs_has(world, e2, Position));
-    test_assert(ecs_has(world, e2, Velocity));
+    test_assert(ecs_has(world, e2, HeapComp));
 
     ecs_fini(world);
 }
 
-/* Validates the same dtor-on-remove fix as above, but exercises the
- * interleaved column loop in flecs_table_move. When removing Position from
- * [Position, Velocity], Position (lower id) hits the dst_id > src_id branch
- * in the interleaved loop. Without the fix, dtor=false would be passed,
- * skipping cleanup of Position's resources.
+/* Validates the same dtor-on-remove fix as above, but exercises the interleaved
+ * column loop in flecs_table_move. HeapComp (lower id) hits the dst_id > src_id
+ * branch. Without fix dtor=false -> heap resource leaked (ASAN detects).
  * Code path: ecs_remove -> flecs_table_move interleaved loop else branch */
 void ComponentLifecycle_remove_component_nonlast_no_move_ctor_calls_dtor_interleaved(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, HeapComp);
     ECS_COMPONENT(world, Velocity);
 
-    cl_ctx pos_ctx = { { 0 } };
+    heap_dtor_invoked = 0;
 
-    ecs_set_hooks(world, Position, {
-        .ctor = NULL,
-        .move = NULL,
-        .move_ctor = NULL,
-        .dtor = comp_dtor,
-        .ctor_move_dtor = comp_pos_ctor_move_dtor,
-        .move_dtor = comp_move_dtor,
-        .ctx = &pos_ctx
+    ecs_set_hooks(world, HeapComp, {
+        .dtor = heap_dtor,
+        .move_dtor = heap_move_dtor,
+        .ctor_move_dtor = heap_ctor_move_dtor
     });
 
     ecs_entity_t e1 = ecs_new(world);
-    ecs_add(world, e1, Position);
+    ecs_set(world, e1, HeapComp, {ecs_os_strdup("e1")});
     ecs_add(world, e1, Velocity);
 
     ecs_entity_t e2 = ecs_new(world);
-    ecs_add(world, e2, Position);
+    ecs_set(world, e2, HeapComp, {ecs_os_strdup("e2")});
     ecs_add(world, e2, Velocity);
 
-    pos_ctx.dtor.invoked = 0;
-    pos_ctx.dtor.count = 0;
-    pos_ctx.ctor_move_dtor.invoked = 0;
-    pos_ctx.move_dtor.invoked = 0;
+    /* Remove HeapComp from e1 (not last). HeapComp has lower id -> interleaved
+     * loop else branch (dst_id > src_id). The fix forces dtor=true so e1's ptr
+     * is freed immediately. Without fix: dtor skipped -> leak. */
+    ecs_remove(world, e1, HeapComp);
 
-    /* Remove Position from e1 (row 0, not last). Entity moves from
-     * [Position, Velocity] to [Velocity]. Position (lower id) hits the
-     * interleaved loop's dst_id > src_id branch.
-     * The fix forces dtor=true so Position's dtor fires. */
-    ecs_remove(world, e1, Position);
-
-    /* dtor must have been called for the removed Position */
-    test_int(pos_ctx.dtor.invoked, 1);
-    test_int(pos_ctx.dtor.count, 1);
-
-    test_assert(!ecs_has(world, e1, Position));
+    test_int(heap_dtor_invoked, 1);
+    test_assert(!ecs_has(world, e1, HeapComp));
     test_assert(ecs_has(world, e1, Velocity));
-    test_assert(ecs_has(world, e2, Position));
+    test_assert(ecs_has(world, e2, HeapComp));
     test_assert(ecs_has(world, e2, Velocity));
 
     ecs_fini(world);
@@ -5533,8 +5536,6 @@ void ComponentLifecycle_remove_component_nonlast_nontrivial_move_ctor_not_affect
     test_assert(ecs_has(world, e1, Position));
     test_assert(!ecs_has(world, e1, Velocity));
 
-    ecs_fini(world);
-}
     ecs_fini(world);
 }
 
