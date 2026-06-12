@@ -546,6 +546,16 @@ int flecs_expr_type_for_operator(
 
     /* If left and right types are the same, do nothing */
     if (left_type == right->type) {
+        if (operator == EcsTokEq || operator == EcsTokNeq) {
+            if (left_type == ecs_id(ecs_f32_t) ||
+                left_type == ecs_id(ecs_f64_t))
+            {
+                flecs_expr_visit_error(script, node,
+                    "floating point value is invalid in equality comparison");
+                goto error;
+            }
+        }
+
         *operand_type = left->type;
         goto done;
     }
