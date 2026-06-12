@@ -1409,6 +1409,8 @@ void ComponentInheritance_pair_wildcard_multi_rel(void);
 void ComponentInheritance_pair_wildcard_w_owned_base_pair(void);
 void ComponentInheritance_cached_match_derived_table_added_after(void);
 void ComponentInheritance_cached_unmatch_derived_table_on_delete(void);
+void ComponentInheritance_inheritable_trait_terms_query_before_derived(void);
+void ComponentInheritance_query_base_and_derived_same_table(void);
 
 // Testsuite 'BuiltinPredicates'
 void BuiltinPredicates_setup(void);
@@ -8429,6 +8431,14 @@ bake_test_case ComponentInheritance_testcases[] = {
     {
         "cached_unmatch_derived_table_on_delete",
         ComponentInheritance_cached_unmatch_derived_table_on_delete
+    },
+    {
+        "inheritable_trait_terms_query_before_derived",
+        ComponentInheritance_inheritable_trait_terms_query_before_derived
+    },
+    {
+        "query_base_and_derived_same_table",
+        ComponentInheritance_query_base_and_derived_same_table
     }
 };
 
@@ -14424,7 +14434,7 @@ static bake_test_suite suites[] = {
         "ComponentInheritance",
         ComponentInheritance_setup,
         NULL,
-        74,
+        76,
         ComponentInheritance_testcases,
         1,
         ComponentInheritance_params

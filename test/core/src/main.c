@@ -397,6 +397,7 @@ void ComponentInheritance_pair_rel_remove_isa(void);
 void ComponentInheritance_pair_rel_multi(void);
 void ComponentInheritance_pair_rel_wildcard(void);
 void ComponentInheritance_pair_rel_wildcard_unrelated(void);
+void ComponentInheritance_depth_w_derived_pairs_non_contiguous(void);
 
 // Testsuite 'Search'
 void Search_search(void);
@@ -4976,6 +4977,10 @@ bake_test_case ComponentInheritance_testcases[] = {
     {
         "pair_rel_wildcard_unrelated",
         ComponentInheritance_pair_rel_wildcard_unrelated
+    },
+    {
+        "depth_w_derived_pairs_non_contiguous",
+        ComponentInheritance_depth_w_derived_pairs_non_contiguous
     }
 };
 
@@ -16917,7 +16922,7 @@ static bake_test_suite suites[] = {
         "ComponentInheritance",
         NULL,
         NULL,
-        80,
+        81,
         ComponentInheritance_testcases
     },
     {

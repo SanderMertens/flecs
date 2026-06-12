@@ -1450,7 +1450,9 @@
                 "pair_wildcard_multi_rel",
                 "pair_wildcard_w_owned_base_pair",
                 "cached_match_derived_table_added_after",
-                "cached_unmatch_derived_table_on_delete"
+                "cached_unmatch_derived_table_on_delete",
+                "inheritable_trait_terms_query_before_derived",
+                "query_base_and_derived_same_table"
             ]
         }, {
             "id": "BuiltinPredicates",

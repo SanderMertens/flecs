@@ -20113,8 +20113,14 @@ int32_t flecs_relation_depth_walk(
         return 0;
     }
 
-    int32_t i = tr->index, end = i + tr->count;
-    for (; i != end; i ++) {
+    int32_t i = tr->index, remaining = tr->count;
+    for (; remaining; i ++) {
+        i = flecs_table_offset_search_w_inherited(world, table, i, cr->id, NULL);
+        if (i == -1) {
+            break;
+        }
+        remaining --;
+
         ecs_entity_t o = ecs_pair_second(world, table->type.array[i]);
         if (!o) {
             /* Rare, but can happen during cleanup when an intermediate table is
@@ -20129,7 +20135,7 @@ int32_t flecs_relation_depth_walk(
         if (!ot) {
             continue;
         }
-        
+
         ecs_assert(ot != first, ECS_CYCLE_DETECTED, NULL);
         int32_t cur = flecs_relation_depth_walk(world, cr, first, ot);
         if (cur > result) {
@@ -31159,7 +31165,21 @@ bool flecs_query_finalize_simple(
             }
         }
 
-        if (flecs_components_get(world, ecs_pair(EcsIsA, first)) != NULL) {
+        bool first_inherited =
+            flecs_components_get(world, ecs_pair(EcsIsA, first)) != NULL;
+        if (!first_inherited) {
+            first_inherited = (cr_flags & EcsIdInheritable) != 0;
+        }
+        if (!first_inherited) {
+            ecs_record_t *first_record = flecs_entities_get(world, first);
+            ecs_table_t *first_table = first_record ? first_record->table : NULL;
+            if (first_table && (first_table->flags & EcsTableHasIsA)) {
+                first_inherited = !ecs_table_has_id(
+                    world, first_table, EcsFinal);
+            }
+        }
+
+        if (first_inherited) {
             term->flags_ |= EcsTermIdInherited;
             q->flags |= EcsQueryHasComponentInheritance;
             trivial = false;
@@ -52618,8 +52638,15 @@ ecs_trav_up_t* flecs_query_get_up_cache(
         return NULL; /* Table doesn't have the relationship */
     }
 
-    int32_t i = tr->index, end = i + tr->count;
-    for (; i < end; i ++) {
+    int32_t i = tr->index, remaining = tr->count;
+    for (; remaining; i ++) {
+        i = flecs_table_offset_search_w_inherited(
+            world, table, i, cr_trav->id, NULL);
+        if (i == -1) {
+            break;
+        }
+        remaining --;
+
         ecs_id_t id = table->type.array[i];
         ecs_entity_t tgt = ECS_PAIR_SECOND(id);
         ecs_trav_up_t *result = &cache->up;

@@ -409,7 +409,8 @@
                 "pair_rel_remove_isa",
                 "pair_rel_multi",
                 "pair_rel_wildcard",
-                "pair_rel_wildcard_unrelated"
+                "pair_rel_wildcard_unrelated",
+                "depth_w_derived_pairs_non_contiguous"
             ]
         }, {
             "id": "Search",

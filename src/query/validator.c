@@ -1833,7 +1833,21 @@ bool flecs_query_finalize_simple(
             }
         }
 
-        if (flecs_components_get(world, ecs_pair(EcsIsA, first)) != NULL) {
+        bool first_inherited =
+            flecs_components_get(world, ecs_pair(EcsIsA, first)) != NULL;
+        if (!first_inherited) {
+            first_inherited = (cr_flags & EcsIdInheritable) != 0;
+        }
+        if (!first_inherited) {
+            ecs_record_t *first_record = flecs_entities_get(world, first);
+            ecs_table_t *first_table = first_record ? first_record->table : NULL;
+            if (first_table && (first_table->flags & EcsTableHasIsA)) {
+                first_inherited = !ecs_table_has_id(
+                    world, first_table, EcsFinal);
+            }
+        }
+
+        if (first_inherited) {
             term->flags_ |= EcsTermIdInherited;
             q->flags |= EcsQueryHasComponentInheritance;
             trivial = false;

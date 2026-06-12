@@ -279,8 +279,15 @@ ecs_trav_up_t* flecs_query_get_up_cache(
         return NULL; /* Table doesn't have the relationship */
     }
 
-    int32_t i = tr->index, end = i + tr->count;
-    for (; i < end; i ++) {
+    int32_t i = tr->index, remaining = tr->count;
+    for (; remaining; i ++) {
+        i = flecs_table_offset_search_w_inherited(
+            world, table, i, cr_trav->id, NULL);
+        if (i == -1) {
+            break;
+        }
+        remaining --;
+
         ecs_id_t id = table->type.array[i];
         ecs_entity_t tgt = ECS_PAIR_SECOND(id);
         ecs_trav_up_t *result = &cache->up;

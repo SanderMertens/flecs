@@ -1753,3 +1753,32 @@ void ComponentInheritance_pair_rel_wildcard_unrelated(void) {
 
     ecs_fini(world);
 }
+
+void ComponentInheritance_depth_w_derived_pairs_non_contiguous(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, DerivedA);
+    ECS_TAG(world, Other);
+    ECS_TAG(world, DerivedB);
+
+    ecs_add_id(world, Rel, EcsAcyclic);
+    ecs_add_id(world, Rel, EcsTraversable);
+    ecs_add_pair(world, DerivedA, EcsIsA, Rel);
+    ecs_add_pair(world, DerivedB, EcsIsA, Rel);
+
+    ecs_entity_t pa = ecs_new(world);
+    ecs_entity_t po = ecs_new(world);
+    ecs_entity_t pb = ecs_new(world);
+    ecs_entity_t pb_parent = ecs_new(world);
+    ecs_add_pair(world, pb, Rel, pb_parent);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add_pair(world, e, DerivedA, pa);
+    ecs_add_pair(world, e, Other, po);
+    ecs_add_pair(world, e, DerivedB, pb);
+
+    test_int(2, ecs_get_depth(world, e, Rel));
+
+    ecs_fini(world);
+}

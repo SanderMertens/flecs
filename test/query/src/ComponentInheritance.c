@@ -4891,3 +4891,70 @@ void ComponentInheritance_cached_unmatch_derived_table_on_delete(void) {
     ecs_query_fini(q);
     ecs_fini(world);
 }
+
+void ComponentInheritance_inheritable_trait_terms_query_before_derived(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Weight);
+    ecs_add_id(world, ecs_id(Weight), EcsInheritable);
+
+    ecs_query_t *r = ecs_query(world, {
+        .cache_kind = cache_kind,
+        .terms = {{ ecs_id(Weight) }}
+    });
+    test_assert(r != NULL);
+
+    ECS_COMPONENT(world, HeavyWeight);
+    ecs_add_pair(world, ecs_id(HeavyWeight), EcsIsA, ecs_id(Weight));
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set(world, e, HeavyWeight, {.value = 10, .bonus = 3});
+
+    ecs_iter_t it = ecs_query_iter(world, r);
+    test_bool(true, ecs_query_next(&it));
+    test_uint(1, it.count);
+    test_uint(e, it.entities[0]);
+    test_uint(ecs_id(HeavyWeight), ecs_field_id(&it, 0));
+    const Weight *w = ecs_base_field(&it, Weight, 0);
+    test_assert(w != NULL);
+    test_int(w[0].value, 10);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(r);
+    ecs_fini(world);
+}
+
+void ComponentInheritance_query_base_and_derived_same_table(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Unit);
+    ECS_TAG(world, Warrior);
+    ecs_add_pair(world, Warrior, EcsIsA, Unit);
+
+    ecs_entity_t e = ecs_new_w_id(world, Unit);
+    ecs_add_id(world, e, Warrior);
+
+    test_int(1, ecs_count_id(world, Unit));
+
+    ecs_query_t *r = ecs_query(world, {
+        .cache_kind = cache_kind,
+        .expr = "Unit($this)"
+    });
+    test_assert(r != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, r);
+    test_bool(true, ecs_query_next(&it));
+    test_uint(1, it.count);
+    test_uint(e, it.entities[0]);
+    test_uint(Unit, ecs_field_id(&it, 0));
+
+    test_bool(true, ecs_query_next(&it));
+    test_uint(1, it.count);
+    test_uint(e, it.entities[0]);
+    test_uint(Warrior, ecs_field_id(&it, 0));
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(r);
+    ecs_fini(world);
+}

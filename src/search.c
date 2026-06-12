@@ -480,8 +480,14 @@ int32_t flecs_relation_depth_walk(
         return 0;
     }
 
-    int32_t i = tr->index, end = i + tr->count;
-    for (; i != end; i ++) {
+    int32_t i = tr->index, remaining = tr->count;
+    for (; remaining; i ++) {
+        i = flecs_table_offset_search_w_inherited(world, table, i, cr->id, NULL);
+        if (i == -1) {
+            break;
+        }
+        remaining --;
+
         ecs_entity_t o = ecs_pair_second(world, table->type.array[i]);
         if (!o) {
             /* Rare, but can happen during cleanup when an intermediate table is
@@ -496,7 +502,7 @@ int32_t flecs_relation_depth_walk(
         if (!ot) {
             continue;
         }
-        
+
         ecs_assert(ot != first, ECS_CYCLE_DETECTED, NULL);
         int32_t cur = flecs_relation_depth_walk(world, cr, first, ot);
         if (cur > result) {

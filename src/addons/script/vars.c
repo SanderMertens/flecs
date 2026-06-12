@@ -287,12 +287,16 @@ void ecs_script_vars_from_iter(
                 continue;
             }
 
-            void *ptr = ecs_field_w_size(it, flecs_itosize(size), i);
+            void *ptr = ecs_base_field_w_size(it, flecs_itosize(size), i);
             if (!ptr) {
                 continue;
             }
 
-            ptr = ECS_OFFSET(ptr, offset * size);
+            if (!it->sources[i]) {
+                ecs_size_t stride = flecs_uto(ecs_size_t,
+                    ecs_field_stride(it, i));
+                ptr = ECS_OFFSET(ptr, offset * stride);
+            }
 
             const char *name = flecs_script_iter_field_names[i];
             ecs_script_var_t *var = ecs_script_vars_lookup(vars, name);
