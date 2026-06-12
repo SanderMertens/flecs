@@ -1433,8 +1433,10 @@ int flecs_query_finalize_terms(
         if (scope_nesting) {
             term->flags_ |= EcsTermIsScope;
             ECS_BIT_CLEAR16(term->flags_, EcsTermIsTrivial);
-            ECS_BIT_CLEAR16(term->flags_, EcsTermIsCacheable);
-            cacheable_terms --;
+            if (term->flags_ & EcsTermIsCacheable) {
+                cacheable_terms --;
+                ECS_BIT_CLEAR16(term->flags_, EcsTermIsCacheable);
+            }
         }
 
         if (first_id == EcsScopeClose) {
