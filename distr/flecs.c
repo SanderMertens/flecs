@@ -6475,7 +6475,7 @@ void flecs_cmd_batch_for_entity(
                     void *ptr = cmd->is._1.value;
                     const ecs_type_info_t *ti = dst.ti;
                     if (ti->hooks.on_replace) {
-                        flecs_invoke_replace_hook(world, start_table, entity,
+                        flecs_invoke_replace_hook(world, r->table, entity,
                             cmd->id, dst.ptr, ptr, ti, start_table);
                         if (!r->table) {
                             /* Entity was deleted */
@@ -10192,7 +10192,7 @@ void flecs_set_id_move(
 
     if (ti->hooks.on_replace) {
         flecs_invoke_replace_hook(
-            world, prev_table, entity, component, dst.ptr, ptr, ti, prev_table);
+            world, r->table, entity, component, dst.ptr, ptr, ti, prev_table);
     }
 
     if (cmd_kind != EcsCmdEmplace) {
@@ -10267,7 +10267,7 @@ void ecs_set_id(
 
     if (dst.ti->hooks.on_replace) {
         flecs_invoke_replace_hook(
-            world, prev_table, entity, component, dst.ptr, ptr, dst.ti, prev_table);
+            world, r->table, entity, component, dst.ptr, ptr, dst.ti, prev_table);
     }
 
     flecs_copy_id(world, entity, r, component, size, dst.ptr, ptr, dst.ti);
@@ -26315,7 +26315,7 @@ ecs_cpp_get_mut_t ecs_cpp_set(
 
     if (dst.ti->hooks.on_replace) {
         flecs_invoke_replace_hook(
-            world, prev_table, entity, id, dst.ptr, new_ptr, dst.ti, prev_table);
+            world, r->table, entity, id, dst.ptr, new_ptr, dst.ti, prev_table);
     }
 
 done:
@@ -26370,7 +26370,7 @@ ecs_cpp_get_mut_t ecs_cpp_assign(
 
     if (dst.ti->hooks.on_replace) {
         flecs_invoke_replace_hook(
-            world, prev_table, entity, id, dst.ptr, new_ptr, dst.ti, prev_table);
+            world, r->table, entity, id, dst.ptr, new_ptr, dst.ti, prev_table);
     }
 
 done:
