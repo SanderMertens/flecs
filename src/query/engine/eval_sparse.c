@@ -530,17 +530,9 @@ bool flecs_query_sparse_up(
 {
     uint64_t written = ctx->written[ctx->op_index];
     if (flecs_ref_is_written(op, &op->src, EcsQuerySrc, written)) {
-        if (!redo) {
-            /* Can use regular up traversal since sparse components are resolved
-             * by the traversal cache */
-            if (!flecs_query_up_with(op, redo, ctx)) {
-                return false;
-            }
-
-            return true;
-        } else {
-            return false;
-        }
+        /* Can use regular up traversal since sparse components are resolved
+         * by the traversal cache */
+        return flecs_query_up_with(op, redo, ctx);
     } else {
         return flecs_query_up_select(op, redo, ctx, 
             FlecsQueryUpSelectUp, FlecsQueryUpSelectSparse);
@@ -555,6 +547,8 @@ bool flecs_query_sparse_self_up(
     uint64_t written = ctx->written[ctx->op_index];
     if (flecs_ref_is_written(op, &op->src, EcsQuerySrc, written)) {
         ecs_query_sparse_ctx_t *op_ctx = flecs_op_ctx(ctx, sparse);
+        ecs_query_up_ctx_t *up_ctx = flecs_op_ctx(ctx, up);
+        ecs_iter_t *it = ctx->it;
 
         if (!redo) {
             op_ctx->self = true;
@@ -563,18 +557,39 @@ bool flecs_query_sparse_self_up(
         if (op_ctx->self) {
             bool result = flecs_query_sparse_with(op, redo, ctx, false);
             if (result) {
+                if (op->flags & (EcsQueryIsEntity << EcsQuerySrc)) {
+                    it->sources[op->field_index] = op->src.entity;
+                } else {
+                    it->sources[op->field_index] = 0;
+                }
+                flecs_reset_source_set_flag(it, op->field_index);
                 return true;
             }
 
             op_ctx->self = false;
-
-            if (!flecs_query_up_with(op, false, ctx)) {
-                return false;
-            }
-
-            flecs_query_sparse_init_range(op, ctx, op_ctx);
+            redo = false;
+        } else if (up_ctx->cur == -1) {
+            return flecs_query_sparse_next_entity(op, ctx, op_ctx, true, NULL);
         }
 
+next_up:
+        if (!flecs_query_up_with(op, redo, ctx)) {
+            return false;
+        }
+
+        if (up_ctx->cur != -1) {
+            ecs_table_range_t row = flecs_query_get_range(
+                op, &op->src, EcsQuerySrc, ctx);
+            ecs_entity_t e = ecs_table_entities(row.table)[row.offset];
+            if (op_ctx->sparse && flecs_sparse_has(op_ctx->sparse, e)) {
+                redo = true;
+                goto next_up;
+            }
+
+            return true;
+        }
+
+        flecs_query_sparse_init_range(op, ctx, op_ctx);
         return flecs_query_sparse_next_entity(op, ctx, op_ctx, true, NULL);
     } else {
         ecs_query_sparse_ctx_t *op_ctx = flecs_op_ctx(ctx, sparse);
