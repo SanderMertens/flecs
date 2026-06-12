@@ -872,11 +872,6 @@ void flecs_copy_id(
     ecs_assert(src_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
     (void)size;
 
-    if (ti->hooks.on_replace) {
-        flecs_invoke_replace_hook(
-            world, r->table, entity, component, dst_ptr, src_ptr, ti);
-    }
-
     flecs_type_info_copy(dst_ptr, src_ptr, 1, ti);
 
     flecs_table_mark_dirty(world, r->table, component);
@@ -1096,7 +1091,11 @@ int flecs_traverse_add(
                     flecs_errstr_2(ecs_get_path(world, result)));
             
             const ecs_type_info_t *ti = cr->type_info;
-            flecs_copy_id(world, result, r, v->type, 
+            if (ti->hooks.on_replace) {
+                flecs_invoke_replace_hook(
+                    world, r->table, result, v->type, ptr.ptr, v->ptr, ti);
+            }
+            flecs_copy_id(world, result, r, v->type,
                 flecs_itosize(ti->size), ptr.ptr, v->ptr, ti);
         }
 
@@ -2422,7 +2421,8 @@ void ecs_set_id(
     }
 
     ecs_record_t *r = flecs_entities_get(world, entity);
-    flecs_component_ptr_t dst = flecs_ensure(world, entity, component, r, 
+    ecs_table_t *prev_table = r->table;
+    flecs_component_ptr_t dst = flecs_ensure(world, entity, component, r,
         flecs_uto(int32_t, size));
 
     if (component < FLECS_HI_COMPONENT_ID) {
@@ -2430,6 +2430,11 @@ void ecs_set_id(
             ecs_os_memcpy(dst.ptr, ptr, size);
             goto done;
         }
+    }
+
+    if (dst.ti->hooks.on_replace) {
+        flecs_invoke_replace_hook(
+            world, prev_table, entity, component, dst.ptr, ptr, dst.ti);
     }
 
     flecs_copy_id(world, entity, r, component, size, dst.ptr, ptr, dst.ti);
