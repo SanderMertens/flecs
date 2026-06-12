@@ -1051,13 +1051,14 @@ identifier_assign: {
 
         // Use lookahead so that expression parser starts at "match"
         LookAhead_1(EcsTokKeywordMatch, {
-            // (Eats, Apples): match expr
+            // x = Position: match expr
             Expr('\n', {
-                ecs_script_component_t *comp = 
-                    flecs_script_insert_pair_component(
-                        parser, Token(1), Token(3));
-                comp->expr = EXPR;
-                EndOfRule; 
+                Scope(entity->scope,
+                    ecs_script_component_t *comp =
+                        flecs_script_insert_component(parser, Token(2));
+                    comp->expr = EXPR;
+                )
+                EndOfRule;
             })
         })
 
