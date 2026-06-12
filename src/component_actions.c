@@ -72,7 +72,8 @@ void flecs_invoke_replace_hook(
     ecs_id_t id,
     const void *old_ptr,
     const void *new_ptr,
-    const ecs_type_info_t *ti)
+    const ecs_type_info_t *ti,
+    ecs_table_t *prev_table)
 {
     int32_t defer = world->stages[0]->defer;
     if (defer < 0) {
@@ -105,8 +106,8 @@ void flecs_invoke_replace_hook(
     it.count = 1;
     it.offset = 0; /* Don't set row because we don't want to offset ptrs */
     it.flags = EcsIterIsValid;
-    it.other_table = table;
-    it.set_fields = (table != NULL && ecs_table_has_id(world, table, id)) ? 3 : 2;
+    it.other_table = prev_table;
+    it.set_fields = (prev_table != NULL && ecs_table_has_id(world, prev_table, id)) ? 3 : 2;
 
     ti->hooks.on_replace(&it);
 

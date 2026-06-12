@@ -540,7 +540,7 @@ void* flecs_defer_set(
         /* Call on_replace hook before copying the new value. */
         if (ti->hooks.on_replace) {
             flecs_invoke_replace_hook(
-                world, r->table, entity, id, ptr.ptr, value, ti);
+                world, r->table, entity, id, ptr.ptr, value, ti, r->table);
         }
 
         flecs_type_info_copy(ptr.ptr, value, 1, ti);
@@ -616,7 +616,7 @@ void* flecs_defer_cpp_set(
         /* Call on_replace hook before copying the new value. */
         if (ti->hooks.on_replace) {
             flecs_invoke_replace_hook(
-                world, r->table, entity, id, ptr.ptr, value, ti);
+                world, r->table, entity, id, ptr.ptr, value, ti, r->table);
         }
     }
 
@@ -650,7 +650,7 @@ void* flecs_defer_cpp_assign(
     ecs_iter_action_t on_replace = ptr.ti->hooks.on_replace;
     if (on_replace) {
         flecs_invoke_replace_hook(
-            world, r->table, entity, id, ptr.ptr, value, ptr.ti);
+            world, r->table, entity, id, ptr.ptr, value, ptr.ti, r->table);
     }
 
     ecs_cmd_t *cmd = flecs_cmd_new(stage);
@@ -1020,7 +1020,7 @@ void flecs_cmd_batch_for_entity(
                     const ecs_type_info_t *ti = dst.ti;
                     if (ti->hooks.on_replace) {
                         flecs_invoke_replace_hook(world, start_table, entity,
-                            cmd->id, dst.ptr, ptr, ti);
+                            cmd->id, dst.ptr, ptr, ti, start_table);
                         if (!r->table) {
                             /* Entity was deleted */
                             goto done;

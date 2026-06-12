@@ -31,7 +31,8 @@ void flecs_invoke_replace_hook(
     ecs_id_t id,
     const void *old_ptr,
     const void *new_ptr,
-    const ecs_type_info_t *ti);
+    const ecs_type_info_t *ti,
+    ecs_table_t *prev_table);
 
 /* Add action for sparse components. */
 bool flecs_sparse_on_add(

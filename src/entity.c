@@ -1011,9 +1011,9 @@ int flecs_traverse_add(
     }
 
     /* Find existing table */
-    ecs_table_t *src_table = NULL, *table = NULL;
+    ecs_table_t *src_table = NULL, *table = NULL, *init_table = NULL;
     ecs_record_t *r = flecs_entities_get(world, result);
-    table = r->table;
+    init_table = table = r->table;
 
     /* Add components from the 'add' array */
     if (desc->add) {
@@ -1093,7 +1093,7 @@ int flecs_traverse_add(
             const ecs_type_info_t *ti = cr->type_info;
             if (ti->hooks.on_replace) {
                 flecs_invoke_replace_hook(
-                    world, r->table, result, v->type, ptr.ptr, v->ptr, ti);
+                    world, r->table, result, v->type, ptr.ptr, v->ptr, ti, init_table);
             }
             flecs_copy_id(world, result, r, v->type,
                 flecs_itosize(ti->size), ptr.ptr, v->ptr, ti);
@@ -2359,7 +2359,7 @@ void flecs_set_id_move(
 
     if (ti->hooks.on_replace) {
         flecs_invoke_replace_hook(
-            world, prev_table, entity, component, dst.ptr, ptr, ti);
+            world, prev_table, entity, component, dst.ptr, ptr, ti, prev_table);
     }
 
     if (cmd_kind != EcsCmdEmplace) {
@@ -2434,7 +2434,7 @@ void ecs_set_id(
 
     if (dst.ti->hooks.on_replace) {
         flecs_invoke_replace_hook(
-            world, prev_table, entity, component, dst.ptr, ptr, dst.ti);
+            world, prev_table, entity, component, dst.ptr, ptr, dst.ti, prev_table);
     }
 
     flecs_copy_id(world, entity, r, component, size, dst.ptr, ptr, dst.ti);

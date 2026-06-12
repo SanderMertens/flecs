@@ -4730,16 +4730,16 @@ void ComponentLifecycle_on_replace_other_table_entity_init(void) {
         .ctx = &ctx,
     });
 
-    /* Entity created with .set: component values set after commit to final table.
-     * r->table already equals the final {Position} table at hook call time. */
+    /* init_table = r->table before any components added (root, no Position).
+     * set_fields=2: bit 0 unset, new add. */
     ecs_entity_t e = ecs_entity(world, {
         .set = ecs_values(ecs_value(Position, {10, 20}))
     });
     test_int(ctx.invoked, 1);
 
-    ecs_table_t *table = ecs_get_table(world, e);
-    test_assert(ctx.other_table == table);
-    test_assert(ctx.set_fields == 3);
+    test_assert(ctx.other_table != ecs_get_table(world, e));
+    test_assert(!(ctx.set_fields & 1));
+    test_assert(ctx.set_fields & 2);
 
     ecs_fini(world);
 }
