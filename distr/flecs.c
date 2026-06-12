@@ -50377,6 +50377,7 @@ typedef struct ecs_expr_element_t {
     ecs_expr_node_t *left;
     ecs_expr_node_t *index;
     ecs_size_t elem_size;
+    int32_t elem_count;
 } ecs_expr_element_t;
 
 typedef struct ecs_expr_component_t {
@@ -94258,6 +94259,7 @@ bool flecs_value_is_0(
 #endif
 
 #ifdef FLECS_SCRIPT
+#include <inttypes.h>
 
 typedef struct ecs_script_eval_ctx_t {
     const ecs_script_t *script;
@@ -95104,6 +95106,20 @@ int flecs_expr_element_visit_eval(
     }
 
     int64_t index_value = *(int64_t*)index->value.ptr;
+
+    int64_t elem_count = node->elem_count;
+    if (!elem_count) {
+        if (ecs_get(ctx->world, expr->value.type, EcsVector) != NULL) {
+            elem_count = ecs_vec_count(expr->value.ptr);
+        }
+    }
+
+    if (index_value < 0 || index_value >= elem_count) {
+        flecs_expr_visit_error(ctx->script, node,
+            "index %" PRId64 " is out of range for collection (count = %"
+                PRId64 ")", index_value, elem_count);
+        goto error;
+    }
 
     out->value.ptr = ECS_OFFSET(expr->value.ptr, node->elem_size * index_value);
     out->value.type = node->node.type;
@@ -98941,6 +98957,7 @@ int flecs_expr_element_visit_type(
     const ecs_type_info_t *elem_ti = ecs_get_type_info(
         script->world, node->node.type);
     node->elem_size = elem_ti->size;
+    node->elem_count = cur->scope[cur->depth - 1].elem_count;
 
     return 0;
 

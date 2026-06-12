@@ -119,6 +119,7 @@ typedef struct ecs_expr_element_t {
     ecs_expr_node_t *left;
     ecs_expr_node_t *index;
     ecs_size_t elem_size;
+    int32_t elem_count;
 } ecs_expr_element_t;
 
 typedef struct ecs_expr_component_t {
