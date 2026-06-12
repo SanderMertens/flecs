@@ -207,10 +207,14 @@ next:
 
     /* Select next (ChildOf, parent) pair */
     case EcsQueryTreeIterNext: {
-        ecs_component_record_t *cr = op_ctx->cr = 
+        ecs_component_record_t *cr = op_ctx->cr =
             flecs_component_first_next(op_ctx->cr);
         if (!cr) {
             return false;
+        }
+
+        if (cr == ctx->world->cr_childof_0) {
+            goto next;
         }
 
         flecs_query_var_reset(0, ctx);
