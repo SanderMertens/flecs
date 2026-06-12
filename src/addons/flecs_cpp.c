@@ -600,7 +600,7 @@ ecs_cpp_get_mut_t ecs_cpp_set(
 
     if (dst.ti->hooks.on_replace) {
         flecs_invoke_replace_hook(
-            world, prev_table, entity, id, dst.ptr, new_ptr, dst.ti);
+            world, prev_table, entity, id, dst.ptr, new_ptr, dst.ti, prev_table);
     }
 
 done:
@@ -655,7 +655,7 @@ ecs_cpp_get_mut_t ecs_cpp_assign(
 
     if (dst.ti->hooks.on_replace) {
         flecs_invoke_replace_hook(
-            world, prev_table, entity, id, dst.ptr, new_ptr, dst.ti);
+            world, prev_table, entity, id, dst.ptr, new_ptr, dst.ti, prev_table);
     }
 
 done:
