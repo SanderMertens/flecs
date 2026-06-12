@@ -1274,7 +1274,28 @@ int flecs_query_compile_term(
     if (builtin_pred) {
         ecs_entity_t id_noflags = ECS_TERM_REF_ID(&term->second);
         if (id_noflags == EcsWildcard || id_noflags == EcsAny) {
-            /* Noop */
+            if (!is_or) {
+                /* Noop */
+                return 0;
+            }
+
+            op.field_index = flecs_ito(int8_t, term->field_index);
+            op.term_index = flecs_ito(int8_t, term - q->terms);
+            op.kind = EcsQueryNothing;
+
+            if (first_or) {
+                flecs_query_begin_block_or(&op, term, ctx);
+                ctx->ctrlflow->written_or = ctx->written;
+            }
+
+            flecs_query_op_insert(&op, ctx);
+            ctx->cur->lbl_query = flecs_itolbl(ecs_vec_count(ctx->ops) - 1);
+            flecs_query_mark_last_or_op(ctx);
+
+            if (last_or) {
+                flecs_query_end_block_or(query, ctx);
+            }
+
             return 0;
         }
     }
