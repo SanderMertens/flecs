@@ -2106,6 +2106,7 @@ int flecs_expr_element_visit_type(
     const ecs_type_info_t *elem_ti = ecs_get_type_info(
         script->world, node->node.type);
     node->elem_size = elem_ti->size;
+    node->elem_count = cur->scope[cur->depth - 1].elem_count;
 
     return 0;
 
