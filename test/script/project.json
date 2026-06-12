@@ -785,7 +785,20 @@
                 "annotation_to_tag",
                 "parse_error_logged",
                 "eval_error_logged",
-                "template_unresolved_var_in_entity_name"
+                "template_unresolved_var_in_entity_name",
+                "parse_error_line_column",
+                "parse_error_first_line_column",
+                "eval_error_line_column",
+                "eval_error_line_column_after_blank_lines",
+                "eval_error_line_column_after_multiline_string",
+                "interpolated_expr_error_line_column",
+                "interpolated_var_error_line_column",
+                "interpolated_parse_error_line_column",
+                "template_eval_error_line_column",
+                "expr_error_line_column",
+                "no_error_line_column",
+                "script_parse_line_column",
+                "script_eval_line_column"
             ]
         }, {
             "id": "Expr",

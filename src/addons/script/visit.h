@@ -90,11 +90,4 @@ ecs_script_scope_t* ecs_script_current_scope_(
 #define ecs_script_current_scope(visitor) \
     ecs_script_current_scope_((ecs_script_visit_t*)visitor)
 
-int32_t ecs_script_node_line_number_(
-    ecs_script_impl_t *script,
-    ecs_script_node_t *node);
-
-#define ecs_script_node_line_number(script, node) \
-    ecs_script_node_line_number_(script, (ecs_script_node_t*)node)
-
 #endif

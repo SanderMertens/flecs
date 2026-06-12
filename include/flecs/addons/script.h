@@ -173,6 +173,8 @@ typedef struct ecs_script_eval_desc_t {
 /** Used to capture error output from script evaluation. */
 typedef struct ecs_script_eval_result_t {
     char *error;       /**< Error message, or NULL if no error. Must be freed by the application. */
+    int32_t line;      /**< Line number (1-based) of first error, or 0 if not available. */
+    int32_t column;    /**< Column number (1-based) of first error, or 0 if not available. */
 } ecs_script_eval_result_t;
 
 /** Parse script.

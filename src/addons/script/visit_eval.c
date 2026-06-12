@@ -39,11 +39,18 @@ void flecs_script_eval_error_(
     char *msg = flecs_vasprintf(fmt, args);
     va_end(args);
 
-    if (node) {
-        int32_t line = ecs_script_node_line_number(v->base.script, node);
-        ecs_parser_error(v->base.script->pub.name, NULL, 0, "%d: %s", line, msg);
+    if (!node && v->base.depth > 0) {
+        node = v->base.nodes[v->base.depth - 1];
+    }
+
+    const char *name = v->base.script->pub.name;
+    const char *code = v->base.script->pub.code;
+    const char *pos = node ? node->pos : NULL;
+
+    if (code && pos && (pos >= code) && (pos <= &code[ecs_os_strlen(code)])) {
+        ecs_parser_error(name, code, pos - code, "%s", msg);
     } else {
-        ecs_parser_error(v->base.script->pub.name, NULL, 0, "%s", msg);
+        ecs_parser_error(name, NULL, 0, "%s", msg);
     }
 
     ecs_os_free(msg);
@@ -2310,6 +2317,7 @@ int ecs_script_eval(
 
     if (result) {
         result->error = ecs_log_stop_capture();
+        flecs_log_get_captured_error_pos(&result->line, &result->column);
     }
 
     if (r) {

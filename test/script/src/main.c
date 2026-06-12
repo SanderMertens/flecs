@@ -776,6 +776,19 @@ void Error_annotation_to_tag(void);
 void Error_parse_error_logged(void);
 void Error_eval_error_logged(void);
 void Error_template_unresolved_var_in_entity_name(void);
+void Error_parse_error_line_column(void);
+void Error_parse_error_first_line_column(void);
+void Error_eval_error_line_column(void);
+void Error_eval_error_line_column_after_blank_lines(void);
+void Error_eval_error_line_column_after_multiline_string(void);
+void Error_interpolated_expr_error_line_column(void);
+void Error_interpolated_var_error_line_column(void);
+void Error_interpolated_parse_error_line_column(void);
+void Error_template_eval_error_line_column(void);
+void Error_expr_error_line_column(void);
+void Error_no_error_line_column(void);
+void Error_script_parse_line_column(void);
+void Error_script_eval_line_column(void);
 
 // Testsuite 'Expr'
 void Expr_setup(void);
@@ -4580,6 +4593,58 @@ bake_test_case Error_testcases[] = {
     {
         "template_unresolved_var_in_entity_name",
         Error_template_unresolved_var_in_entity_name
+    },
+    {
+        "parse_error_line_column",
+        Error_parse_error_line_column
+    },
+    {
+        "parse_error_first_line_column",
+        Error_parse_error_first_line_column
+    },
+    {
+        "eval_error_line_column",
+        Error_eval_error_line_column
+    },
+    {
+        "eval_error_line_column_after_blank_lines",
+        Error_eval_error_line_column_after_blank_lines
+    },
+    {
+        "eval_error_line_column_after_multiline_string",
+        Error_eval_error_line_column_after_multiline_string
+    },
+    {
+        "interpolated_expr_error_line_column",
+        Error_interpolated_expr_error_line_column
+    },
+    {
+        "interpolated_var_error_line_column",
+        Error_interpolated_var_error_line_column
+    },
+    {
+        "interpolated_parse_error_line_column",
+        Error_interpolated_parse_error_line_column
+    },
+    {
+        "template_eval_error_line_column",
+        Error_template_eval_error_line_column
+    },
+    {
+        "expr_error_line_column",
+        Error_expr_error_line_column
+    },
+    {
+        "no_error_line_column",
+        Error_no_error_line_column
+    },
+    {
+        "script_parse_line_column",
+        Error_script_parse_line_column
+    },
+    {
+        "script_eval_line_column",
+        Error_script_eval_line_column
     }
 };
 
@@ -7576,7 +7641,7 @@ static bake_test_suite suites[] = {
         "Error",
         NULL,
         NULL,
-        104,
+        117,
         Error_testcases
     },
     {

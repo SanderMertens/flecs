@@ -176,6 +176,11 @@ void flecs_colorize_buf(
     bool enable_colors,
     ecs_strbuf_t *buf);
 
+/* Get line/column of first error logged during last log capture. */
+void flecs_log_get_captured_error_pos(
+    int32_t *line,
+    int32_t *column);
+
 /* Check whether id can be inherited. */
 bool flecs_type_can_inherit_id(
     const ecs_world_t *world,
