@@ -1726,6 +1726,17 @@ void ComponentLifecycle_change_hook_while_in_use_w_pair(void);
 void ComponentLifecycle_add_hook_while_in_use(void);
 void ComponentLifecycle_add_on_set_hook_while_in_use(void);
 void ComponentLifecycle_value_move_ctor_invokes_move_ctor(void);
+void ComponentLifecycle_delete_nonlast_with_destruct_no_move_ctor(void);
+void ComponentLifecycle_delete_nonlast_with_destruct_no_move_ctor_w_leak(void);
+void ComponentLifecycle_remove_component_nonlast_no_move_ctor_calls_dtor_trailing(void);
+void ComponentLifecycle_remove_component_nonlast_no_move_ctor_calls_dtor_trailing_w_leak(void);
+void ComponentLifecycle_remove_component_nonlast_no_move_ctor_calls_dtor_interleaved(void);
+void ComponentLifecycle_remove_component_nonlast_no_move_ctor_calls_dtor_interleaved_w_leak(void);
+void ComponentLifecycle_delete_last_no_move_ctor(void);
+void ComponentLifecycle_delete_nonlast_trivial_move_with_dtor_move_dtor_called(void);
+void ComponentLifecycle_remove_component_nonlast_trivial_move_with_dtor_dtor_called(void);
+void ComponentLifecycle_delete_nonlast_nontrivial_move_ctor_move_dtor_not_affected(void);
+void ComponentLifecycle_remove_component_nonlast_nontrivial_move_ctor_not_affected(void);
 
 // Testsuite 'Pairs'
 void Pairs_disable_toggle_component_and_toggle_pair(void);
@@ -10066,6 +10077,50 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "value_move_ctor_invokes_move_ctor",
         ComponentLifecycle_value_move_ctor_invokes_move_ctor
+    },
+    {
+        "delete_nonlast_with_destruct_no_move_ctor",
+        ComponentLifecycle_delete_nonlast_with_destruct_no_move_ctor
+    },
+    {
+        "delete_nonlast_with_destruct_no_move_ctor_w_leak",
+        ComponentLifecycle_delete_nonlast_with_destruct_no_move_ctor_w_leak
+    },
+    {
+        "remove_component_nonlast_no_move_ctor_calls_dtor_trailing",
+        ComponentLifecycle_remove_component_nonlast_no_move_ctor_calls_dtor_trailing
+    },
+    {
+        "remove_component_nonlast_no_move_ctor_calls_dtor_trailing_w_leak",
+        ComponentLifecycle_remove_component_nonlast_no_move_ctor_calls_dtor_trailing_w_leak
+    },
+    {
+        "remove_component_nonlast_no_move_ctor_calls_dtor_interleaved",
+        ComponentLifecycle_remove_component_nonlast_no_move_ctor_calls_dtor_interleaved
+    },
+    {
+        "remove_component_nonlast_no_move_ctor_calls_dtor_interleaved_w_leak",
+        ComponentLifecycle_remove_component_nonlast_no_move_ctor_calls_dtor_interleaved_w_leak
+    },
+    {
+        "delete_last_no_move_ctor",
+        ComponentLifecycle_delete_last_no_move_ctor
+    },
+    {
+        "delete_nonlast_trivial_move_with_dtor_move_dtor_called",
+        ComponentLifecycle_delete_nonlast_trivial_move_with_dtor_move_dtor_called
+    },
+    {
+        "remove_component_nonlast_trivial_move_with_dtor_dtor_called",
+        ComponentLifecycle_remove_component_nonlast_trivial_move_with_dtor_dtor_called
+    },
+    {
+        "delete_nonlast_nontrivial_move_ctor_move_dtor_not_affected",
+        ComponentLifecycle_delete_nonlast_nontrivial_move_ctor_move_dtor_not_affected
+    },
+    {
+        "remove_component_nonlast_nontrivial_move_ctor_not_affected",
+        ComponentLifecycle_remove_component_nonlast_nontrivial_move_ctor_not_affected
     }
 };
 
@@ -16658,7 +16713,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         ComponentLifecycle_setup,
         NULL,
-        156,
+        167,
         ComponentLifecycle_testcases
     },
     {

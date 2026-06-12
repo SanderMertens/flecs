@@ -36047,8 +36047,8 @@ void flecs_table_delete(
                         EcsOnRemove, column, &entity_to_delete, row, 1);
                 }
 
-                /* If neither move nor move_ctor are set, this indicates that 
-                 * non-destructive move semantics are not supported for this 
+                /* If neither move nor move_ctor are set, this indicates that
+                 * non-destructive move semantics are not supported for this
                  * type. In such cases, use ctor_move_dtor for destructive move
                  * semantics to ensure compatibility with language bindings. */
                 if (!ti->hooks.move_ctor && ti->hooks.ctor_move_dtor) {
@@ -36197,7 +36197,7 @@ void flecs_table_move(
     }
 
     for (; (i_old < src_column_count); i_old ++) {
-        flecs_table_invoke_remove_hooks(world, src_table, &src_columns[i_old], 
+        flecs_table_invoke_remove_hooks(world, src_table, &src_columns[i_old],
             &src_entity, src_index, 1, use_move_dtor);
     }
 
