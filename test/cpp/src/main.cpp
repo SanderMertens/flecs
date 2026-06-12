@@ -378,6 +378,10 @@ void Entity_defer_on_replace_w_assign_existing(void);
 void Entity_defer_on_replace_w_assign_existing_twice(void);
 void Entity_defer_on_replace_w_assign_batched_existing(void);
 void Entity_defer_on_replace_w_assign_batched_existing_twice(void);
+void Entity_on_replace_other_table_set_new(void);
+void Entity_on_replace_other_table_set_existing(void);
+void Entity_on_replace_other_table_assign_new(void);
+void Entity_on_replace_other_table_assign_existing(void);
 void Entity_set_lvalue_to_mutable(void);
 void Entity_set_lvalue_to_const(void);
 void Entity_set_rvalue(void);
@@ -3119,6 +3123,22 @@ bake_test_case Entity_testcases[] = {
     {
         "defer_on_replace_w_assign_batched_existing_twice",
         Entity_defer_on_replace_w_assign_batched_existing_twice
+    },
+    {
+        "on_replace_other_table_set_new",
+        Entity_on_replace_other_table_set_new
+    },
+    {
+        "on_replace_other_table_set_existing",
+        Entity_on_replace_other_table_set_existing
+    },
+    {
+        "on_replace_other_table_assign_new",
+        Entity_on_replace_other_table_assign_new
+    },
+    {
+        "on_replace_other_table_assign_existing",
+        Entity_on_replace_other_table_assign_existing
     },
     {
         "set_lvalue_to_mutable",
@@ -8106,7 +8126,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        399,
+        403,
         Entity_testcases
     },
     {
