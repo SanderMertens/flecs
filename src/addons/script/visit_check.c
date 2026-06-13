@@ -105,10 +105,14 @@ int flecs_script_check_scope(
         ecs_id_t id = 0;
         if (stmt->kind == EcsAstComponent) {
             ecs_script_component_t *cmp = (ecs_script_component_t*)stmt;
-            id = cmp->id.eval;
+            if (!cmp->id.dynamic) {
+                id = cmp->id.eval;
+            }
         } else if (stmt->kind == EcsAstTag) {
             ecs_script_tag_t *cmp = (ecs_script_tag_t*)stmt;
-            id = cmp->id.eval;
+            if (!cmp->id.dynamic) {
+                id = cmp->id.eval;
+            }
         }
 
         if (id) {
@@ -394,6 +398,28 @@ int flecs_script_check_with(
 {
     if (ecs_script_visit_scope(v, ((ecs_script_with_t*)node)->expressions)) {
         return -1;
+    }
+
+    /* Mirror eval behavior: a with expression without a value sets the
+     * default component for the scope. Setting it during the check pass
+     * allows default component expressions to be type checked. */
+    int32_t wcount = ecs_vec_count(&node->expressions->stmts);
+    if (wcount) {
+        ecs_script_node_t *last = ecs_vec_get_t(
+            &node->expressions->stmts, ecs_script_node_t*, wcount - 1)[0];
+        ecs_id_t with_id = 0;
+        if (last->kind == EcsAstWithTag) {
+            with_id = ((ecs_script_tag_t*)last)->id.eval;
+        } else if (last->kind == EcsAstWithComponent) {
+            ecs_script_component_t *comp = (ecs_script_component_t*)last;
+            if (!comp->expr) {
+                with_id = comp->id.eval;
+            }
+        }
+
+        if (with_id && ecs_is_valid(v->world, with_id)) {
+            node->scope->default_component_eval = with_id;
+        }
     }
 
     bool old_is_with_scope = v->is_with_scope;

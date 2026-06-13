@@ -3845,6 +3845,7 @@ void Template_template_w_nested_template_w_with_kind_value(void) {
     ecs_fini(world);
 }
 
+
 void Template_pair_component_w_entity_prop_target(void) {
     ecs_world_t *world = ecs_init();
 
@@ -3907,6 +3908,170 @@ void Template_child_name_from_string_prop(void) {
     ecs_fini(world);
 }
 
+void Template_template_w_new_expr_in_const(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Foo {}"
+    LINE "Rel {}"
+    LINE "template Tree {"
+    LINE "  const helper: new { Foo }"
+    LINE "  child {"
+    LINE "    (Rel, $helper)"
+    LINE "  }"
+    LINE "}"
+    LINE "Tree e1()"
+    LINE "Tree e2()";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t rel = ecs_lookup(world, "Rel");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t e1 = ecs_lookup(world, "e1");
+    ecs_entity_t e2 = ecs_lookup(world, "e2");
+    test_assert(e1 != 0);
+    test_assert(e2 != 0);
+
+    ecs_entity_t child_1 = ecs_lookup(world, "e1.child");
+    ecs_entity_t child_2 = ecs_lookup(world, "e2.child");
+    test_assert(child_1 != 0);
+    test_assert(child_2 != 0);
+
+    ecs_entity_t helper_1 = ecs_get_target(world, child_1, rel, 0);
+    ecs_entity_t helper_2 = ecs_get_target(world, child_2, rel, 0);
+    test_assert(helper_1 != 0);
+    test_assert(helper_2 != 0);
+    test_assert(helper_1 != helper_2);
+
+    test_assert(ecs_has_id(world, helper_1, foo));
+    test_assert(ecs_has_id(world, helper_2, foo));
+    test_assert(ecs_has_pair(world, helper_1, EcsChildOf, e1));
+    test_assert(ecs_has_pair(world, helper_2, EcsChildOf, e2));
+
+    ecs_fini(world);
+}
+
+void Template_template_w_new_expr_in_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ref_comp = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "RefComp" }),
+        .members = {
+            {"e", ecs_id(ecs_entity_t)},
+            {"x", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "Foo {}"
+    LINE "template Tree {"
+    LINE "  prop height = flecs.meta.f32: 1"
+    LINE "  child {"
+    LINE "    RefComp: {e: new { Foo }, x: $height}"
+    LINE "  }"
+    LINE "}"
+    LINE "Tree e(height: 10)";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    typedef struct { ecs_entity_t e; float x; } RefComp;
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    ecs_entity_t child = ecs_lookup(world, "e.child");
+    test_assert(child != 0);
+
+    const RefComp *rc = ecs_get_id(world, child, ref_comp);
+    test_assert(rc != NULL);
+    test_int(rc->x, 10);
+    test_assert(rc->e != 0);
+    test_assert(ecs_is_alive(world, rc->e));
+    test_assert(ecs_has_id(world, rc->e, foo));
+
+    ecs_fini(world);
+}
+
+void Template_ast_to_str_annotations(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "Tall {}"
+    LINE "template Tree {"
+    LINE "  prop height = flecs.meta.f32: 1"
+    LINE "  prop count = flecs.meta.i32: 1"
+    LINE "  child {"
+    LINE "    Position: {$height, 2}"
+    LINE "  }"
+    LINE "  if $height > 5 {"
+    LINE "    Tall"
+    LINE "  }"
+    LINE "  for i in 0..$count {"
+    LINE "    \"c_$i\" {}"
+    LINE "  }"
+    LINE "}";
+
+    ecs_script_t *s = ecs_script_parse(world, NULL, expr, NULL, NULL);
+    test_assert(s != NULL);
+    test_assert(ecs_script_eval(s, NULL, NULL) == 0);
+
+    char *str = ecs_script_ast_to_str_w_desc(s,
+        &(ecs_script_ast_to_str_desc_t){ .annotations = true });
+    test_assert(str != NULL);
+    test_assert(strstr(str, "@{pos=") != NULL);
+    test_assert(strstr(str, "bit=0") != NULL);
+    test_assert(strstr(str, "bit=1") != NULL);
+    test_assert(strstr(str, "deps=0x1") != NULL);
+    test_assert(strstr(str, "expr_deps=0x1") != NULL);
+    test_assert(strstr(str, "control=1") != NULL);
+    test_assert(strstr(str, "slot=1") != NULL);
+    test_assert(strstr(str, "dyn_slot=1") != NULL);
+    test_assert(strstr(str, "name_deps=0x2") != NULL);
+    test_assert(strstr(str, "slots=") != NULL);
+    ecs_os_free(str);
+
+    ecs_script_free(s);
+    ecs_fini(world);
+}
+
+void Template_ast_to_str_no_annotations(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "template Tree {"
+    LINE "  prop height = flecs.meta.f32: 1"
+    LINE "  child {"
+    LINE "    Foo"
+    LINE "  }"
+    LINE "}";
+
+    ecs_script_t *s = ecs_script_parse(world, NULL, expr, NULL, NULL);
+    test_assert(s != NULL);
+
+    char *str = ecs_script_ast_to_str(s, false);
+    test_assert(str != NULL);
+    test_assert(strstr(str, "@{") == NULL);
+    ecs_os_free(str);
+
+    str = ecs_script_ast_to_str_w_desc(s, NULL);
+    test_assert(str != NULL);
+    test_assert(strstr(str, "@{") == NULL);
+    ecs_os_free(str);
+
+    ecs_script_free(s);
+    ecs_fini(world);
+}
 
 void Template_default_component_w_prop_var(void) {
     ecs_world_t *world = ecs_init();

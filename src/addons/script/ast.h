@@ -34,6 +34,8 @@ typedef enum ecs_script_node_kind_t {
 typedef struct ecs_script_node_t {
     ecs_script_node_kind_t kind;
     const char *pos;
+    uint64_t depends_on;
+    bool contains_entities;
 } ecs_script_node_t;
 
 struct ecs_script_scope_t {
@@ -45,6 +47,13 @@ struct ecs_script_scope_t {
     /* Array with component ids that are added in scope. Used to limit
      * archetype moves. */
     ecs_vec_t components; /* vec<ecs_id_t> */
+
+    int32_t slot_start;
+    int32_t slot_end;
+    int32_t dyn_start;
+    int32_t dyn_end;
+    int32_t control_start;
+    int32_t control_end;
 };
 
 typedef struct ecs_script_id_t {
@@ -66,6 +75,9 @@ typedef struct ecs_script_id_t {
      * for entities that are defined inside of templates, which have different
      * values for each instantiation. */
     bool dynamic;
+
+    int32_t target_slot;
+    int32_t id_slot;
 } ecs_script_id_t;
 
 typedef struct ecs_script_tag_t {
@@ -107,12 +119,17 @@ struct ecs_script_entity_t {
     ecs_script_entity_t *parent;
     ecs_entity_t eval;
     ecs_entity_t eval_kind;
+
+    int32_t slot;
+    int32_t dyn_slot;
+    uint64_t name_depends_on;
 };
 
 typedef struct ecs_script_with_t {
     ecs_script_node_t node;
     ecs_script_scope_t *expressions;
     ecs_script_scope_t *scope;
+    uint64_t expr_depends_on;
 } ecs_script_with_t;
 
 typedef struct ecs_script_inherit_t {
@@ -124,6 +141,7 @@ typedef struct ecs_script_pair_scope_t {
     ecs_script_node_t node;
     ecs_script_id_t id;
     ecs_script_scope_t *scope;
+    uint64_t expr_depends_on;
 } ecs_script_pair_scope_t;
 
 typedef struct ecs_script_using_t {
@@ -160,6 +178,8 @@ typedef struct ecs_script_if_t {
     ecs_script_scope_t *if_true;
     ecs_script_scope_t *if_false;
     ecs_expr_node_t *expr;
+    uint64_t expr_depends_on;
+    int32_t control_slot;
 } ecs_script_if_t;
 
 typedef struct ecs_script_for_range_t {
@@ -168,6 +188,12 @@ typedef struct ecs_script_for_range_t {
     ecs_expr_node_t *from;
     ecs_expr_node_t *to;
     ecs_script_scope_t *scope;
+    uint64_t expr_depends_on;
+
+    /* Set when the loop contains a pair with a dynamic element that is added
+     * to a persistent entity. Such pairs can't be tracked per slot, so the
+     * matching wildcard is cleared before the loop is re-evaluated. */
+    bool has_clear_ids;
 } ecs_script_for_range_t;
 
 typedef struct ecs_script_include_t {

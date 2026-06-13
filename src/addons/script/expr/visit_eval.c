@@ -955,10 +955,20 @@ int flecs_expr_new_visit_eval(
     ecs_script_eval_visitor_t temp_v = {0};
     ecs_script_eval_desc_t desc = {0};
 
+    if (v && v->template) {
+        if (ecs_script_visit_node(v, node->entity)) {
+            return -1;
+        }
+
+        *(ecs_entity_t*)out->value.ptr = 0;
+        out->value.type = ecs_id(ecs_entity_t);
+        return 0;
+    }
+
     if (!v) {
-        /* Safe const cast, script won't modify variables since it only contains 
+        /* Safe const cast, script won't modify variables since it only contains
          * an entity statement. */
-        desc.vars = ctx->desc ? 
+        desc.vars = ctx->desc ?
             ECS_CONST_CAST(ecs_script_vars_t*, ctx->desc->vars) : NULL;
         flecs_script_eval_visit_init(
             (const ecs_script_impl_t*)ctx->script, &temp_v, &desc);

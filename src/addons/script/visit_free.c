@@ -177,6 +177,7 @@ int flecs_script_stmt_free(
         flecs_free_t(a, ecs_script_var_component_t, node);
         break;
     case EcsAstWithTag:
+        flecs_script_tag_free(v, (ecs_script_tag_t*)node);
         flecs_free_t(a, ecs_script_tag_t, node);
         break;
     case EcsAstUsing:
