@@ -659,7 +659,6 @@ int flecs_term_finalize(
     ecs_term_ref_t *src = &term->src;
     ecs_term_ref_t *first = &term->first;
     ecs_term_ref_t *second = &term->second;
-    ecs_flags64_t first_flags = ECS_TERM_REF_FLAGS(first);
     ecs_flags64_t second_flags = ECS_TERM_REF_FLAGS(second);
 
     if (first->name && (first->id & ~EcsTermRefFlags)) {
@@ -761,6 +760,10 @@ int flecs_term_finalize(
         cr_flags = flecs_component_get_flags(world, term->id);
     }
 
+    if (cr_flags & EcsIdDontFragment) {
+        term->flags_ |= EcsTermDontFragment;
+    }
+
     if (src_id || src->name) {
         if (!(term->src.id & EcsTraverseFlags)) {
             if (cr_flags & EcsIdOnInstantiateInherit) {
@@ -838,10 +841,9 @@ int flecs_term_finalize(
     }
 
     if (first_entity && !ecs_term_match_0(term)) {
-        bool first_is_self = (first_flags & EcsTraverseFlags) == EcsSelf;
         ecs_record_t *first_record = flecs_entities_get(world, first_entity);
         ecs_table_t *first_table = first_record ? first_record->table : NULL;
-        
+
         bool first_can_isa = false;
         if (first_table) {
             first_can_isa = (first_table->flags & EcsTableHasIsA) != 0;
@@ -850,18 +852,14 @@ int flecs_term_finalize(
             }
         }
 
-        /* Only enable inheritance for ids which are inherited from at the time
-         * of query creation. To force component inheritance to be evaluated,
-         * an application can explicitly set traversal flags. */
-        if (flecs_components_get(world, ecs_pair(EcsIsA, first->id)) || 
+        if (flecs_components_get(world, ecs_pair(EcsIsA, first->id)) ||
             (cr_flags & EcsIdInheritable) || first_can_isa)
         {
-            if (!first_is_self) {
-                term->flags_ |= EcsTermIdInherited;
-            }
+            term->flags_ |= EcsTermIdInherited;
         } else {
 #ifdef FLECS_DEBUG
-            if (!first_is_self) {
+            ecs_flags64_t first_flags = ECS_TERM_REF_FLAGS(first);
+            if ((first_flags & EcsTraverseFlags) != EcsSelf) {
                 ecs_query_impl_t *q = flecs_query_impl(ctx->query);
                 if (q) {
                     ECS_TERMSET_SET(q->final_terms, 1u << ctx->term_index);
@@ -984,7 +982,6 @@ int flecs_term_finalize(
 
     if (term->flags_ & EcsTermIdInherited) {
         trivial_term = false;
-        cacheable_term = false;
     }
 
     if (term->flags_ & EcsTermReflexive) {
@@ -1156,6 +1153,10 @@ int flecs_query_finalize_terms(
 
         if (flecs_term_finalize(world, term, &ctx)) {
             return -1;
+        }
+
+        if (term->flags_ & EcsTermIdInherited) {
+            q->flags |= EcsQueryHasComponentInheritance;
         }
 
         if (term->flags_ & EcsTermNonFragmentingChildOf) {
@@ -1719,6 +1720,7 @@ bool flecs_query_finalize_simple(
     /* Populate terms */
     bool has_this = false, has_only_this = true;
     int8_t cacheable_count = 0, trivial_count = 0, up_count = 0;
+    int8_t inherited_count = 0;
     for (i = 0; i < term_count; i ++) {
         ecs_term_t *term = &q->terms[i];
         ecs_id_t id = term->id;
@@ -1831,9 +1833,25 @@ bool flecs_query_finalize_simple(
             }
         }
 
-        if (flecs_components_get(world, ecs_pair(EcsIsA, first)) != NULL) {
+        bool first_inherited =
+            flecs_components_get(world, ecs_pair(EcsIsA, first)) != NULL;
+        if (!first_inherited) {
+            first_inherited = (cr_flags & EcsIdInheritable) != 0;
+        }
+        if (!first_inherited) {
+            ecs_record_t *first_record = flecs_entities_get(world, first);
+            ecs_table_t *first_table = first_record ? first_record->table : NULL;
+            if (first_table && (first_table->flags & EcsTableHasIsA)) {
+                first_inherited = !ecs_table_has_id(
+                    world, first_table, EcsFinal);
+            }
+        }
+
+        if (first_inherited) {
             term->flags_ |= EcsTermIdInherited;
-            cacheable = false; trivial = false;
+            q->flags |= EcsQueryHasComponentInheritance;
+            trivial = false;
+            inherited_count ++;
         }
 
         if (cacheable) {
@@ -1872,8 +1890,14 @@ bool flecs_query_finalize_simple(
         q->flags |= EcsQueryHasCacheable;
     }
 
-    if (cacheable_count == term_count && trivial_count == term_count) {
-        q->flags |= EcsQueryIsCacheable|EcsQueryIsTrivial;
+    if (cacheable_count == term_count &&
+        (trivial_count + inherited_count) == term_count)
+    {
+        q->flags |= EcsQueryIsCacheable;
+    }
+
+    if (trivial_count == term_count) {
+        q->flags |= EcsQueryIsTrivial;
     }
 
     if (!up_count) {

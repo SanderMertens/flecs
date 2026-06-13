@@ -3687,6 +3687,26 @@ void NonFragmentingChildOf_instantiate_tree_at_depth_n_w_childof(void) {
     ecs_fini(world);
 }
 
+void NonFragmentingChildOf_delete_parent_of_instantiated_tree_w_childof(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
+    ecs_insert(world, ecs_value(EcsParent, {base}));
+
+    ecs_entity_t root = ecs_new(world);
+    ecs_entity_t p = ecs_insert(world, ecs_value(EcsParent, {root}));
+    ecs_entity_t i = ecs_new_w_pair(world, EcsChildOf, p);
+    ecs_add_pair(world, i, EcsIsA, base);
+
+    ecs_delete(world, root);
+
+    test_assert(!ecs_is_alive(world, root));
+    test_assert(!ecs_is_alive(world, p));
+    test_assert(!ecs_is_alive(world, i));
+
+    ecs_fini(world);
+}
+
 void NonFragmentingChildOf_reparent_instantiated_tree_w_parent(void) {
     ecs_world_t *world = ecs_mini();
 

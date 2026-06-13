@@ -508,6 +508,9 @@ void Eval_component_expr_swizzle_var_subset(void);
 void Eval_component_expr_swizzle_var_rgb(void);
 void Eval_component_expr_swizzle_var_no_target_type(void);
 void Eval_component_expr_member_no_var(void);
+void Eval_struct_inheritance(void);
+void Eval_struct_inheritance_empty_derived(void);
+void Eval_struct_inheritance_assign(void);
 void Eval_default_child_component_w_entity_in_if(void);
 void Eval_default_child_component_w_entity_in_for(void);
 void Eval_default_child_component_w_entity_in_nested_if(void);
@@ -1162,6 +1165,7 @@ void Vars_nested_struct_expr_w_struct_var(void);
 void Vars_redeclare_in_scope(void);
 void Vars_init_fini_vars(void);
 void Vars_from_iter_17_fields(void);
+void Vars_from_iter_w_derived_component(void);
 
 // Testsuite 'Serialize'
 void Serialize_bool(void);
@@ -3536,6 +3540,18 @@ bake_test_case Eval_testcases[] = {
     {
         "component_expr_member_no_var",
         Eval_component_expr_member_no_var
+    },
+    {
+        "struct_inheritance",
+        Eval_struct_inheritance
+    },
+    {
+        "struct_inheritance_empty_derived",
+        Eval_struct_inheritance_empty_derived
+    },
+    {
+        "struct_inheritance_assign",
+        Eval_struct_inheritance_assign
     },
     {
         "default_child_component_w_entity_in_if",
@@ -6118,6 +6134,10 @@ bake_test_case Vars_testcases[] = {
     {
         "from_iter_17_fields",
         Vars_from_iter_17_fields
+    },
+    {
+        "from_iter_w_derived_component",
+        Vars_from_iter_w_derived_component
     }
 };
 
@@ -7620,7 +7640,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        505,
+        508,
         Eval_testcases
     },
     {
@@ -7664,7 +7684,7 @@ static bake_test_suite suites[] = {
         "Vars",
         NULL,
         NULL,
-        15,
+        16,
         Vars_testcases
     },
     {

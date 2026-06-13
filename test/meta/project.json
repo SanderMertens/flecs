@@ -198,7 +198,23 @@
                 "direct_cycle",
                 "indirect_cycle",
                 "use_before_registering_reflection",
-                "use_before_registering_reflection_w_hooks"
+                "use_before_registering_reflection_w_hooks",
+                "inherit_layout",
+                "inherit_multi_level",
+                "inherit_base_change_propagates",
+                "inherit_base_tail_padding",
+                "inherit_derived_larger_align",
+                "inherit_shadow_member_fails",
+                "inherit_empty_base",
+                "inherit_empty_derived",
+                "inherit_empty_both",
+                "inherit_from_non_component",
+                "inherit_propagate_stress",
+                "inherit_base_member_type_change",
+                "inherit_explicit_offset_fails",
+                "inherit_base_redefined_fewer_members",
+                "redefine_fewer_members",
+                "member_w_type_not_alive"
             ]
         }, {
             "id": "NestedStructTypes",
@@ -359,7 +375,8 @@
                 "ops_struct_w_bitmask",
                 "ops_enum",
                 "ops_struct_w_enum",
-                "ops_missing_metatype"
+                "ops_missing_metatype",
+                "ops_inherit"
             ]
         }, {
             "id": "Cursor",
@@ -524,7 +541,9 @@
                 "get_member_id",
                 "get_array_type",
                 "get_vector_type",
-                "set_string_literal_single_quote"
+                "set_string_literal_single_quote",
+                "struct_inherit",
+                "struct_inherit_by_member"
             ]
         }, {
             "id": "DeserializeFromJson",
@@ -692,7 +711,8 @@
                 "ser_deser_dont_fragment_component",
                 "ser_deser_dont_fragment_pair_multi_target",
                 "ser_deser_dont_fragment_component_pair",
-                "ser_deser_dont_fragment_tag_removes_stale"
+                "ser_deser_dont_fragment_tag_removes_stale",
+                "struct_inherit"
             ]
         }, {
             "id": "SerializeToJson",
@@ -755,7 +775,8 @@
                 "enum_underlying_u32",
                 "enum_underlying_u64",
                 "enum_underlying_uptr",
-                "serialize_from_stage"
+                "serialize_from_stage",
+                "struct_inherit"
             ]
         }, {
             "id": "SerializeEntityToJson",
@@ -950,7 +971,8 @@
                 "serialize_children_w_tag_w_parent_component_table",
                 "serialize_childof_var_w_parent",
                 "serialize_childof_wildcard_w_parent",
-                "serialize_table_dont_fragment_no_leak"
+                "serialize_table_dont_fragment_no_leak",
+                "serialize_w_inherited_component"
             ]
         }, {
             "id": "SerializeIterToRowJson",
@@ -1059,7 +1081,9 @@
                 "struct_nested",
                 "struct_nested_2_lvls",
                 "struct_nested_2_members",
-                "struct_nested_3_members"
+                "struct_nested_3_members",
+                "struct_inherit",
+                "struct_inherit_w_range"
             ]
         }, {
             "id": "SerializeQueryInfoToJson",
@@ -1119,7 +1143,9 @@
                 "enum_constant_w_type_prefix",
                 "enum_constant_w_name_type_prefix",
                 "struct_has_member_entities",
-                "fwd_decl"
+                "fwd_decl",
+                "struct_inherit",
+                "struct_inherit_from_expr"
             ]
         }, {
             "id": "OpaqueTypes",

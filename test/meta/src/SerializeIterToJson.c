@@ -3077,7 +3077,6 @@ void SerializeIterToJson_serialize_childof_var_w_parent(void) {
     ecs_fini(world);
 }
 
-
 void SerializeIterToJson_serialize_table_dont_fragment_no_leak(void) {
     ecs_world_t *world = ecs_init();
 
@@ -3115,7 +3114,7 @@ void SerializeIterToJson_serialize_table_dont_fragment_no_leak(void) {
         }
     });
 
-    int64_t balance_before = (ecs_os_api_malloc_count + 
+    int64_t balance_before = (ecs_os_api_malloc_count +
         ecs_os_api_calloc_count) - ecs_os_api_free_count;
 
     ecs_iter_t it = ecs_query_iter(world, q);
@@ -3126,11 +3125,53 @@ void SerializeIterToJson_serialize_table_dont_fragment_no_leak(void) {
     test_json(json, "{\"results\":[{\"name\":\"e1\", \"components\":{\"Position\":{\"x\":10, \"y\":20}, \"Velocity\":{\"x\":1, \"y\":2}}}, {\"name\":\"e2\", \"components\":{\"Position\":{\"x\":20, \"y\":30}}}]}");
     ecs_os_free(json);
 
-    int64_t balance_after = (ecs_os_api_malloc_count + 
+    int64_t balance_after = (ecs_os_api_malloc_count +
         ecs_os_api_calloc_count) - ecs_os_api_free_count;
     test_int(0, balance_after - balance_before);
 
     ecs_query_fini(q);
 
+    ecs_fini(world);
+}
+
+void SerializeIterToJson_serialize_w_inherited_component(void) {
+    typedef struct {
+        ecs_i32_t x;
+        ecs_i32_t y;
+        ecs_i32_t z;
+    } Point3D;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t base = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "Point2D"}),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t t = ecs_entity(world, {.name = "Point3D"});
+    ecs_add_pair(world, t, EcsIsA, base);
+    ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = t,
+        .members = {
+            {"z", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    Point3D value = {10, 20, 30};
+    ecs_set_id(world, e1, t, sizeof(Point3D), &value);
+
+    ecs_query_t *q = ecs_query(world, { .expr = "Point2D" });
+    ecs_iter_t it = ecs_query_iter(world, q);
+
+    char *json = ecs_iter_to_json(&it, NULL);
+    test_assert(json != NULL);
+    test_json(json, "{\"results\":[{\"name\":\"e1\", \"fields\":{\"values\":[{\"x\":10, \"y\":20, \"z\":30}]}}]}");
+    ecs_os_free(json);
+
+    ecs_query_fini(q);
     ecs_fini(world);
 }

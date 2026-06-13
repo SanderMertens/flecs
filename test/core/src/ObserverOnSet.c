@@ -7,6 +7,22 @@ void OnPosition(ecs_iter_t *it) {
 }
 
 static
+void OnColor(ecs_iter_t *it) {
+    if (ecs_field_is_set(it, 0)) {
+        test_assert(ecs_field(it, Color, 0) != NULL);
+    }
+    probe_iter(it);
+}
+
+static
+void OnPositionOptional(ecs_iter_t *it) {
+    if (ecs_field_is_set(it, 0)) {
+        test_assert(ecs_field(it, Position, 0) != NULL);
+    }
+    probe_iter(it);
+}
+
+static
 void Add_to_current(ecs_iter_t *it) {
     IterData *ctx = ecs_get_ctx(it->world);
 
@@ -898,7 +914,7 @@ void ObserverOnSet_set_optional_one_term(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
-    ECS_OBSERVER(world, OnPosition, EcsOnSet, ?Position);
+    ECS_OBSERVER(world, OnPositionOptional, EcsOnSet, ?Position);
 
     Probe ctx = { 0 };
     ecs_set_ctx(world, &ctx, NULL);
@@ -909,11 +925,36 @@ void ObserverOnSet_set_optional_one_term(void) {
     ecs_set(world, e, Position, {10, 20});
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
-    test_int(ctx.system, OnPosition);
+    test_int(ctx.system, OnPositionOptional);
     test_int(ctx.term_count, 1);
     test_null(ctx.param);
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], ecs_id(Position));
+    test_int(ctx.s[0][0], 0);
+
+    ecs_fini(world);
+}
+
+void ObserverOnSet_set_optional_one_term_16_bytes(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Color);
+    ECS_OBSERVER(world, OnColor, EcsOnSet, ?Color);
+
+    Probe ctx = { 0 };
+    ecs_set_ctx(world, &ctx, NULL);
+
+    ecs_entity_t e = ecs_new_w(world, Color);
+    test_int(ctx.invoked, 0);
+
+    ecs_set(world, e, Color, {10, 20, 30, 40});
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, OnColor);
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_id(Color));
     test_int(ctx.s[0][0], 0);
 
     ecs_fini(world);

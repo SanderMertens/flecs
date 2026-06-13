@@ -3582,12 +3582,14 @@ void Validator_validate_simple_w_inherited_component(void) {
     test_int(q->terms[0].field_index, 0);
     test_uint(q->terms[0].first.id, Unit|EcsSelf|EcsIsEntity);
     test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
-    test_uint(q->terms[0].flags_, EcsTermIdInherited);
+    test_uint(q->terms[0].flags_, EcsTermIdInherited|EcsTermIsCacheable);
 
     test_assert(!(q->data_fields & (1 << 0)));
 
     test_query_flags(EcsQueryMatchOnlyThis|EcsQueryMatchThis|
-        EcsQueryMatchOnlySelf|EcsQueryHasTableThisVar,
+        EcsQueryMatchOnlySelf|EcsQueryHasTableThisVar|
+        EcsQueryHasComponentInheritance|EcsQueryHasCacheable|
+        EcsQueryIsCacheable,
         q->flags);
     
     ecs_query_fini(q);

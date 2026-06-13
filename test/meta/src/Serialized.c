@@ -2187,3 +2187,42 @@ void Serialized_ops_missing_metatype(void) {
 
     ecs_fini(world);
 }
+
+void Serialized_ops_inherit(void) {
+    typedef struct {
+        ecs_i32_t x;
+        ecs_i32_t y;
+        ecs_i32_t z;
+    } Point3D;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t base = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "Point2D"}),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t t = ecs_entity(world, {.name = "Point3D"});
+    ecs_add_pair(world, t, EcsIsA, base);
+    ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = t,
+        .members = {
+            {"z", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    const EcsTypeSerializer *s = ecs_get(world, t, EcsTypeSerializer);
+    test_assert(s != NULL);
+    test_int(ecs_vec_count(&s->ops), 5);
+
+    test_op(&s->ops, 0, EcsOpPushStruct, 1, 5, t);
+    test_mp(&s->ops, 1, EcsOpPrimitive + EcsI32, 1, 1, Point3D, x, ecs_id(ecs_i32_t));
+    test_mp(&s->ops, 2, EcsOpPrimitive + EcsI32, 1, 1, Point3D, y, ecs_id(ecs_i32_t));
+    test_mp(&s->ops, 3, EcsOpPrimitive + EcsI32, 1, 1, Point3D, z, ecs_id(ecs_i32_t));
+    test_op(&s->ops, 4, EcsOpPop, 1, 1, t);
+
+    ecs_fini(world);
+}

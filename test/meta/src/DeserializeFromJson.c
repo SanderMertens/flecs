@@ -7366,3 +7366,42 @@ void DeserializeFromJson_f64_nan_roundtrip(void) {
     ecs_os_free(json);
     ecs_fini(world);
 }
+
+void DeserializeFromJson_struct_inherit(void) {
+    typedef struct {
+        ecs_i32_t x;
+        ecs_i32_t y;
+        ecs_i32_t z;
+    } Point3D;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t base = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "Point2D"}),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t t = ecs_entity(world, {.name = "Point3D"});
+    ecs_add_pair(world, t, EcsIsA, base);
+    ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = t,
+        .members = {
+            {"z", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    Point3D value = {0, 0, 0};
+    const char *r = ecs_ptr_from_json(
+        world, t, &value, "{\"x\":10, \"y\":20, \"z\":30}", NULL);
+    test_assert(r != NULL);
+    test_assert(r[0] == '\0');
+
+    test_int(value.x, 10);
+    test_int(value.y, 20);
+    test_int(value.z, 30);
+
+    ecs_fini(world);
+}

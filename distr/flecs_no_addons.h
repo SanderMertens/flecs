@@ -426,6 +426,7 @@ extern "C" {
         EcsIdHasOnTableCreate|EcsIdHasOnTableDelete|EcsIdSparse|\
         EcsIdOrderedChildren)
 #define EcsIdPrefabChildren            (1u << 26)
+#define EcsIdHasBases                  (1u << 27) /* Component/relationship entity has IsA pairs. */
 
 #define EcsIdMarkedForDelete           (1u << 30)
 
@@ -464,6 +465,7 @@ extern "C" {
 #define EcsIterHasCondSet              (1u << 6u)  /* Does the iterator have conditionally set fields. */
 #define EcsIterProfile                 (1u << 7u)  /* Profile iterator performance. */
 #define EcsIterTrivialSearch           (1u << 8u)  /* Trivial iterator mode. */
+#define EcsIterComponentInheritance    (1u << 9u)  /* Query matches via component inheritance. */
 #define EcsIterTrivialTest             (1u << 11u) /* Trivial test mode (constrained $this). */
 #define EcsIterTrivialCached           (1u << 14u) /* Trivial search for cached query. */
 #define EcsIterCached                  (1u << 15u) /* Cached query. */
@@ -509,6 +511,7 @@ extern "C" {
 #define EcsQueryNested                (1u << 29u) /* Query created by a query (for observer, cache). */
 #define EcsQueryCacheWithFilter       (1u << 30u)
 #define EcsQueryValid                 (1u << 31u)
+#define EcsQueryHasComponentInheritance (1u << 5u)  /* Query matches via component inheritance (low free bit; 11..31 exhausted). */
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Term flags (used by ecs_term_t::flags_)
@@ -575,7 +578,7 @@ extern "C" {
 #define EcsTableOverrideDontFragment   (1u << 23u)
 #define EcsTableHasOrderedChildren     (1u << 24u)
 #define EcsTableHasOverrides           (1u << 25u)
-
+#define EcsTableHasDerived             (1u << 26u) /* Does the table have components that inherit from a base. */
 #define EcsTableHasTraversable         (1u << 27u)
 #define EcsTableEdgeReparent           (1u << 28u)
 #define EcsTableMarkedForDelete        (1u << 29u)
@@ -918,6 +921,14 @@ typedef struct ecs_allocator_t ecs_allocator_t;
     #endif
 #else
     #define FLECS_ALWAYS_INLINE
+#endif
+
+#if defined(ECS_TARGET_CLANG) || defined(ECS_TARGET_GCC)
+    #define FLECS_NOINLINE __attribute__((noinline))
+#elif defined(ECS_TARGET_MSVC)
+    #define FLECS_NOINLINE __declspec(noinline)
+#else
+    #define FLECS_NOINLINE
 #endif
 
 #ifndef FLECS_NO_DEPRECATED_WARNINGS
@@ -10631,6 +10642,24 @@ void* ecs_field_w_size(
     size_t size,
     int8_t index);
 
+/** Get data for a field matched through component inheritance.
+ * This operation is like ecs_field_w_size(), but is used when a field is
+ * matched on a component that is derived from the queried (base) type. Because
+ * the stored (derived) component can be larger than the requested (base) type,
+ * the returned pointer is computed using the stride of the stored component. To
+ * iterate the values, use the stride returned by ecs_field_stride().
+ *
+ * @param it The iterator.
+ * @param size The size of the field type.
+ * @param index The index of the field.
+ * @return A pointer to the data of the field.
+ */
+FLECS_API
+void* ecs_base_field_w_size(
+    const ecs_iter_t *it,
+    size_t size,
+    int8_t index);
+
 /** Get data for a field at a specified row.
  * This operation should be used instead of ecs_field_w_size() for sparse 
  * component fields. This operation should be called for each returned row in a
@@ -10744,6 +10773,19 @@ ecs_entity_t ecs_field_src(
  */
 FLECS_API
 size_t ecs_field_size(
+    const ecs_iter_t *it,
+    int8_t index);
+
+/** Return the storage stride of a field.
+ * Like ecs_field_size(), but for a field matched through component inheritance
+ * returns the size of the stored (derived) component, i.e. the array stride.
+ *
+ * @param it The iterator.
+ * @param index The index of the field in the iterator.
+ * @return The storage stride for the field.
+ */
+FLECS_API
+size_t ecs_field_stride(
     const ecs_iter_t *it,
     int8_t index);
 
@@ -12210,6 +12252,13 @@ int ecs_value_move_ctor(
 /** Get field data for a component. */
 #define ecs_field(it, T, index)\
     (ECS_CAST(T*, ecs_field_w_size(it, sizeof(T), index)))
+
+/** Get field data for a component matched through component inheritance.
+ * Use this instead of ecs_field() when a field is matched on a component that
+ * is derived from the queried (base) type. The data is iterated with the stride
+ * returned by ecs_field_stride(). */
+#define ecs_base_field(it, T, index)\
+    (ECS_CAST(T*, ecs_base_field_w_size(it, sizeof(T), index)))
 
 /** Get field data for a self-owned component. */
 #define ecs_field_self(it, T, index)\

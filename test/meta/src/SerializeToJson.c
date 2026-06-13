@@ -1894,3 +1894,38 @@ void SerializeToJson_struct_string_w_control_char(void) {
 
     ecs_fini(world);
 }
+
+void SerializeToJson_struct_inherit(void) {
+    typedef struct {
+        ecs_i32_t x;
+        ecs_i32_t y;
+        ecs_i32_t z;
+    } Point3D;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t base = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "Point2D"}),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t t = ecs_entity(world, {.name = "Point3D"});
+    ecs_add_pair(world, t, EcsIsA, base);
+    ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = t,
+        .members = {
+            {"z", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    Point3D value = {10, 20, 30};
+    char *json = ecs_ptr_to_json(world, t, &value);
+    test_assert(json != NULL);
+    test_str(json, "{\"x\":10, \"y\":20, \"z\":30}");
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}

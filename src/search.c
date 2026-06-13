@@ -68,6 +68,112 @@ int32_t flecs_table_offset_search(
     return -1;
 }
 
+static
+bool flecs_component_inherits_from(
+    const ecs_world_t *world,
+    ecs_entity_t component,
+    ecs_entity_t base,
+    int32_t depth)
+{
+    if (depth >= FLECS_DAG_DEPTH_MAX) {
+        return false;
+    }
+
+    ecs_record_t *r = flecs_entities_get_any(world, component);
+    ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_table_t *table = r->table;
+    if (!table || !(table->flags & EcsTableHasIsA)) {
+        return false;
+    }
+
+    const ecs_table_record_t *tr_isa = flecs_component_get_table(
+        world->cr_isa_wildcard, table);
+    if (!tr_isa) {
+        return false;
+    }
+
+    uint32_t base_lo = (uint32_t)base;
+    ecs_id_t *ids = table->type.array;
+    int32_t i = tr_isa->index, end = i + tr_isa->count;
+    for (; i < end; i ++) {
+        ecs_entity_t b = ECS_PAIR_SECOND(ids[i]);
+        if (b == base_lo) {
+            return true;
+        }
+        if (flecs_component_inherits_from(world, b, base, depth + 1)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+static
+bool flecs_id_match_inherited(
+    const ecs_world_t *world,
+    ecs_id_t type_id,
+    ecs_id_t id)
+{
+    if (ECS_IS_PAIR(id)) {
+        if (!ECS_IS_PAIR(type_id)) {
+            return false;
+        }
+        ecs_entity_t tgt = ECS_PAIR_SECOND(id);
+        if ((tgt != EcsWildcard) && (tgt != EcsAny)) {
+            if (ECS_PAIR_SECOND(type_id) != tgt) {
+                return false;
+            }
+        }
+        return flecs_component_inherits_from(world,
+            ECS_PAIR_FIRST(type_id), ECS_PAIR_FIRST(id), 0);
+    } else {
+        if (type_id & ECS_ID_FLAGS_MASK) {
+            return false;
+        }
+        return flecs_component_inherits_from(world, type_id, id, 0);
+    }
+}
+
+int32_t flecs_table_offset_search_w_inherited(
+    const ecs_world_t *world,
+    const ecs_table_t *table,
+    int32_t offset,
+    ecs_id_t id,
+    ecs_id_t *id_out)
+{
+    ecs_assert(id != 0, ECS_INVALID_PARAMETER, NULL);
+
+    if (!world || !world->cr_isa_wildcard ||
+        !(table->flags & EcsTableHasDerived))
+    {
+        return flecs_table_offset_search(table, offset, id, id_out);
+    }
+
+    ecs_id_t *ids = table->type.array;
+    const ecs_table_record_t *trs = table->_->records;
+    int32_t count = table->type.count;
+    while (offset < count) {
+        ecs_id_t type_id = ids[offset ++];
+        if (ecs_id_match(type_id, id)) {
+            if (id_out) {
+                id_out[0] = type_id;
+            }
+            return offset - 1;
+        }
+        if (trs[offset - 1].hdr.cr->flags & EcsIdHasBases) {
+            if (flecs_id_match_inherited(world, type_id, id)) {
+                if (id_out) {
+                    id_out[0] = type_id;
+                }
+                return offset - 1;
+            }
+        }
+    }
+
+    return -1;
+}
+
 bool flecs_type_can_inherit_id(
     const ecs_world_t *world,
     const ecs_table_t *table,
@@ -353,7 +459,11 @@ int32_t ecs_search_offset(
         return ecs_search(world, table, id, id_out);
     }
 
-    return flecs_table_offset_search(table, offset, id, id_out);
+    if (world) {
+        world = ecs_get_world(world);
+    }
+
+    return flecs_table_offset_search_w_inherited(world, table, offset, id, id_out);
 }
 
 static
@@ -370,8 +480,14 @@ int32_t flecs_relation_depth_walk(
         return 0;
     }
 
-    int32_t i = tr->index, end = i + tr->count;
-    for (; i != end; i ++) {
+    int32_t i = tr->index, remaining = tr->count;
+    for (; remaining; i ++) {
+        i = flecs_table_offset_search_w_inherited(world, table, i, cr->id, NULL);
+        if (i == -1) {
+            break;
+        }
+        remaining --;
+
         ecs_entity_t o = ecs_pair_second(world, table->type.array[i]);
         if (!o) {
             /* Rare, but can happen during cleanup when an intermediate table is
@@ -386,7 +502,7 @@ int32_t flecs_relation_depth_walk(
         if (!ot) {
             continue;
         }
-        
+
         ecs_assert(ot != first, ECS_CYCLE_DETECTED, NULL);
         int32_t cur = flecs_relation_depth_walk(world, cr, first, ot);
         if (cur > result) {

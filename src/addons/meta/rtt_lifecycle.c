@@ -352,9 +352,7 @@ void flecs_rtt_init_default_hooks_struct(
     ecs_entity_t component,
     const ecs_type_info_t *ti)
 {
-    /* Obtain struct information to figure out what members it contains: */
-    const EcsStruct *struct_info = ecs_get(world, component, EcsStruct);
-    ecs_assert(struct_info != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ecs_has(world, component, EcsStruct), ECS_INTERNAL_ERROR, NULL);
 
     /* These flags will be set to true if we determine we need to generate a
      * hook of a particular type: */
@@ -367,11 +365,10 @@ void flecs_rtt_init_default_hooks_struct(
 
     /* Iterate all struct members and see if any member type has hooks. If so,
      * the struct itself will need to have that hook: */
-    int i, member_count = ecs_vec_count(&struct_info->members);
-    ecs_member_t *members = ecs_vec_first(&struct_info->members);
+    int i, member_count = flecs_struct_member_count(world, component);
     ecs_flags32_t flags = 0;
     for (i = 0; i < member_count; i++) {
-        ecs_member_t *m = &members[i];
+        ecs_member_t *m = ecs_struct_get_nth_member(world, component, i);
         const ecs_type_info_t *member_ti = ecs_get_type_info(world, m->type);
         if (!member_ti || member_ti == ti) {
             continue;
@@ -409,7 +406,7 @@ void flecs_rtt_init_default_hooks_struct(
      * build the vector of calls that will then be executed by the generic hook
      * handler: */
     for (i = 0; i < member_count; i++) {
-        ecs_member_t *m = &members[i];
+        ecs_member_t *m = ecs_struct_get_nth_member(world, component, i);
         const ecs_type_info_t *member_ti = ecs_get_type_info(world, m->type);
         if (!member_ti || member_ti == ti) {
             continue;

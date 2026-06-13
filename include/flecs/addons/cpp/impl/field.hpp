@@ -67,4 +67,40 @@ T* field<T>::operator->() const {
     return data_;
 }
 
+template <typename T>
+inline base_field<T>::base_field(iter &iter, int32_t index) {
+    *this = iter.base_field<T>(index);
+}
+
+template <typename T>
+T& base_field<T>::operator[](size_t index) const {
+    ecs_assert(data_ != nullptr, ECS_INVALID_OPERATION,
+        "invalid nullptr dereference of component type %s",
+            _::type_name<T>());
+    ecs_assert(index < count_, ECS_COLUMN_INDEX_OUT_OF_RANGE,
+        "index %d out of range for array of component type %s",
+            index, _::type_name<T>());
+    ecs_assert(!index || !is_shared_, ECS_INVALID_PARAMETER,
+        "non-zero index invalid for shared field of component type %s",
+            _::type_name<T>());
+    return *reinterpret_cast<T*>(
+        reinterpret_cast<char*>(data_) + index * stride_);
+}
+
+template <typename T>
+T& base_field<T>::operator*() const {
+    ecs_assert(data_ != nullptr, ECS_INVALID_OPERATION,
+        "invalid nullptr dereference of component type %s",
+            _::type_name<T>());
+    return *data_;
+}
+
+template <typename T>
+T* base_field<T>::operator->() const {
+    ecs_assert(data_ != nullptr, ECS_INVALID_OPERATION,
+        "invalid nullptr dereference of component type %s",
+            _::type_name<T>());
+    return data_;
+}
+
 }

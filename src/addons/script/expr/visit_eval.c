@@ -822,13 +822,11 @@ int flecs_expr_member_visit_eval(
             ecs_os_memcpy(ECS_OFFSET(out->value.ptr, i * size),
                 ECS_OFFSET(expr->value.ptr, node->swizzle[i]), size);
         }
-        out->value.type = node->node.type;
-        out->owned = false;
     } else {
         out->value.ptr = ECS_OFFSET(expr->value.ptr, node->offset);
-        out->value.type = node->node.type;
-        out->owned = false;
     }
+    out->value.type = node->node.type;
+    out->owned = false;
 
     flecs_expr_stack_pop(ctx->stack);
     return 0;

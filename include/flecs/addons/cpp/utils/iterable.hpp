@@ -17,8 +17,13 @@ struct page_iterable;
 template <typename ... Components>
 struct worker_iterable;
 
-/** Base class for iterable query objects. */
-template <typename ... Components>
+/** Base class for iterable query objects.
+ *
+ * Uses static (CRTP) dispatch: the most-derived type (Derived) provides the
+ * non-virtual get_iter()/next_action() methods. This keeps the typed iterables
+ * non-polymorphic, so no per-signature vtables or RTTI are emitted.
+ */
+template <typename Derived, typename ... Components>
 struct iterable {
 
     /** Each iterator.
@@ -32,8 +37,8 @@ struct iterable {
      */
     template <typename Func>
     void each(Func&& func) const {
-        ecs_iter_t it = this->get_iter(nullptr);
-        ecs_iter_next_action_t next = this->next_action();
+        ecs_iter_t it = this->get_iter_(nullptr);
+        ecs_iter_next_action_t next = this->next_action_();
         while (next(&it)) {
             _::each_delegate<Func, Components...>(func).invoke(&it);
         }
@@ -48,7 +53,7 @@ struct iterable {
      */
     template <typename Func>
     void run(Func&& func) const {
-        ecs_iter_t it = this->get_iter(nullptr);
+        ecs_iter_t it = this->get_iter_(nullptr);
         _::run_delegate<Func>(func).invoke(&it);
     }
 
@@ -60,8 +65,8 @@ struct iterable {
      */
     template <typename Func>
     flecs::entity find(Func&& func) const {
-        ecs_iter_t it = this->get_iter(nullptr);
-        ecs_iter_next_action_t next = this->next_action();
+        ecs_iter_t it = this->get_iter_(nullptr);
+        ecs_iter_next_action_t next = this->next_action_();
 
         flecs::entity result;
         while (!result && next(&it)) {
@@ -160,20 +165,23 @@ struct iterable {
         return this->iter().template set_group<Group>();
     }
 
-    /** Virtual destructor. */
-    virtual ~iterable() { }
-protected:
-    friend iter_iterable<Components...>;
-    friend page_iterable<Components...>;
-    friend worker_iterable<Components...>;
+private:
+    const Derived& derived_() const {
+        return *static_cast<const Derived*>(this);
+    }
 
-    virtual ecs_iter_t get_iter(flecs::world_t *stage) const = 0;
-    virtual ecs_iter_next_action_t next_action() const = 0;
+    ecs_iter_t get_iter_(flecs::world_t *stage) const {
+        return derived_().get_iter(stage);
+    }
+
+    ecs_iter_next_action_t next_action_() const {
+        return derived_().next_action();
+    }
 };
 
 /** Iterable adapter for iterating with iter/each/run. */
 template <typename ... Components>
-struct iter_iterable final : iterable<Components...> {
+struct iter_iterable final : iterable<iter_iterable<Components...>, Components...> {
     /** Construct iter_iterable from an iterable and a world. */
     template <typename Iterable>
     iter_iterable(Iterable *it, flecs::world_t *world)
@@ -270,8 +278,7 @@ struct iter_iterable final : iterable<Components...> {
         return *this;
     }
 
-protected:
-    ecs_iter_t get_iter(flecs::world_t *world) const override {
+    ecs_iter_t get_iter(flecs::world_t *world) const {
         if (world) {
             ecs_iter_t result = it_;
             result.world = world;
@@ -280,7 +287,7 @@ protected:
         return it_;
     }
 
-    ecs_iter_next_action_t next_action() const override {
+    ecs_iter_next_action_t next_action() const {
         return next_;
     }
 
@@ -290,27 +297,27 @@ private:
     ecs_iter_next_action_t next_each_;
 };
 
-template <typename ... Components>
-iter_iterable<Components...> iterable<Components...>::iter(flecs::world_t *world) const
+template <typename Derived, typename ... Components>
+iter_iterable<Components...> iterable<Derived, Components...>::iter(flecs::world_t *world) const
 {
-    return iter_iterable<Components...>(this, world);
+    return iter_iterable<Components...>(&derived_(), world);
 }
 
-template <typename ... Components>
-iter_iterable<Components...> iterable<Components...>::iter(flecs::iter& it) const
+template <typename Derived, typename ... Components>
+iter_iterable<Components...> iterable<Derived, Components...>::iter(flecs::iter& it) const
 {
-    return iter_iterable<Components...>(this, it.world());
+    return iter_iterable<Components...>(&derived_(), it.world());
 }
 
-template <typename ... Components>
-iter_iterable<Components...> iterable<Components...>::iter(flecs::entity e) const
+template <typename Derived, typename ... Components>
+iter_iterable<Components...> iterable<Derived, Components...>::iter(flecs::entity e) const
 {
-    return iter_iterable<Components...>(this, e.world());
+    return iter_iterable<Components...>(&derived_(), e.world());
 }
 
 /** Paged iterable adapter. Limits iteration to a range of entities. */
 template <typename ... Components>
-struct page_iterable final : iterable<Components...> {
+struct page_iterable final : iterable<page_iterable<Components...>, Components...> {
     /** Construct a page_iterable from an offset, limit, and source iterable. */
     template <typename Iterable>
     page_iterable(int32_t offset, int32_t limit, Iterable *it)
@@ -320,7 +327,6 @@ struct page_iterable final : iterable<Components...> {
         chain_it_ = it->get_iter(nullptr);
     }
 
-protected:
     ecs_iter_t get_iter(flecs::world_t*) const {
         return ecs_page_iter(&chain_it_, offset_, limit_);
     }
@@ -335,26 +341,26 @@ private:
     int32_t limit_;
 };
 
-template <typename ... Components>
-page_iterable<Components...> iterable<Components...>::page(
+template <typename Derived, typename ... Components>
+page_iterable<Components...> iterable<Derived, Components...>::page(
     int32_t offset,
     int32_t limit)
 {
-    return page_iterable<Components...>(offset, limit, this);
+    return page_iterable<Components...>(offset, limit, &derived_());
 }
 
 /** Worker iterable adapter. Divides entities across workers. */
 template <typename ... Components>
-struct worker_iterable final : iterable<Components...> {
+struct worker_iterable final : iterable<worker_iterable<Components...>, Components...> {
     /** Construct a worker_iterable from an index, count, and source iterable. */
-    worker_iterable(int32_t index, int32_t count, iterable<Components...> *it)
+    template <typename Iterable>
+    worker_iterable(int32_t index, int32_t count, Iterable *it)
         : index_(index)
         , count_(count)
     {
         chain_it_ = it->get_iter(nullptr);
     }
 
-protected:
     ecs_iter_t get_iter(flecs::world_t*) const {
         return ecs_worker_iter(&chain_it_, index_, count_);
     }
@@ -369,12 +375,12 @@ private:
     int32_t count_;
 };
 
-template <typename ... Components>
-worker_iterable<Components...> iterable<Components...>::worker(
+template <typename Derived, typename ... Components>
+worker_iterable<Components...> iterable<Derived, Components...>::worker(
     int32_t index,
     int32_t count)
 {
-    return worker_iterable<Components...>(index, count, this);
+    return worker_iterable<Components...>(index, count, &derived_());
 }
 
 }

@@ -97,6 +97,28 @@ inline flecs::field<A> iter::field(int8_t index) const {
     return get_field<A>(index);
 }
 
+/** Get base field data for a const component type. */
+template <typename T, typename A, if_t< is_const_v<T> >>
+inline flecs::base_field<A> iter::base_field(int8_t index) const {
+    ecs_assert(!(iter_->flags & EcsIterCppEach) ||
+               ecs_field_src(iter_, index) != 0, ECS_INVALID_OPERATION,
+        "cannot .base_field from .each, use .field_at<%s>(%d, row) instead",
+            _::type_name<T>(), index);
+    return get_base_field<A>(index);
+}
+
+/** Get base field data for a mutable component type. */
+template <typename T, typename A, if_not_t< is_const_v<T> >>
+inline flecs::base_field<A> iter::base_field(int8_t index) const {
+    ecs_assert(!(iter_->flags & EcsIterCppEach) ||
+               ecs_field_src(iter_, index) != 0, ECS_INVALID_OPERATION,
+        "cannot .base_field from .each, use .field_at<%s>(%d, row) instead",
+            _::type_name<T>(), index);
+    ecs_assert(!ecs_field_is_readonly(iter_, index),
+        ECS_ACCESS_VIOLATION, NULL);
+    return get_base_field<A>(index);
+}
+
 /** Get the value of a variable by ID. */
 inline flecs::entity iter::get_var(int var_id) const {
     ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, 0);

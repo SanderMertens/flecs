@@ -1,0 +1,10 @@
+{
+    "id": "tag_inheritance",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "public": false
+    }
+}

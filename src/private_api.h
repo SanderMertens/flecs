@@ -188,6 +188,14 @@ bool flecs_type_can_inherit_id(
     const ecs_component_record_t *cr,
     ecs_id_t id);
 
+/* Search table type from offset, matching derived components. */
+int32_t flecs_table_offset_search_w_inherited(
+    const ecs_world_t *world,
+    const ecs_table_t *table,
+    int32_t offset,
+    ecs_id_t id,
+    ecs_id_t *id_out);
+
 /* Cleanup type info data. */
 void flecs_fini_type_info(
     ecs_world_t *world);
