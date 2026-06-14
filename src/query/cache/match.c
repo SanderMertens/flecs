@@ -11,11 +11,11 @@ void flecs_query_cache_match_elem_fini(
     ecs_query_cache_t *cache,
     ecs_query_cache_match_t *qm)
 {
-    if (qm->base.columns) {
-        flecs_bfree(&cache->allocators.columns, qm->base.columns);
-    }
-
     if (!flecs_query_cache_is_trivial(cache)) {
+        if (qm->columns) {
+            flecs_bfree(&cache->allocators.columns, qm->columns);
+        }
+
         if (qm->_trs) {
             flecs_bfree(&cache->allocators.pointers,
                 ECS_CONST_CAST(void*, qm->_trs));
@@ -72,11 +72,17 @@ void flecs_query_cache_match_set(
     qm->base.table = it->table;
     qm->base.set_fields = it->set_fields;
 
-    if (!qm->base.columns) {
-        qm->base.columns = flecs_balloc(&cache->allocators.columns);
+    int16_t *columns;
+    if (trivial_cache) {
+        columns = flecs_query_triv_cache_columns(&qm->base);
+    } else {
+        if (!qm->columns) {
+            qm->columns = flecs_balloc(&cache->allocators.columns);
+        }
+        columns = qm->columns;
     }
 
-    ecs_os_memcpy_n(qm->base.columns, it->columns, int16_t, field_count);
+    ecs_os_memcpy_n(columns, it->columns, int16_t, field_count);
 
     /* Find out whether to store result-specific ids array or fixed array */
     ecs_id_t *ids = cache->query->ids;

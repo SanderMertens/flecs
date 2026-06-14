@@ -6,8 +6,8 @@
 #ifndef FLECS_ITER_H
 #define FLECS_ITER_H
 
-/* Initialize iterator. */
-void flecs_iter_init(
+/* Initialize iterator. Returns iterator stack allocator. */
+ecs_stack_t* flecs_iter_init(
     const ecs_world_t *world,
     ecs_iter_t *it,
     bool alloc_resources);

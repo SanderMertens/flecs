@@ -14,12 +14,24 @@
  * with different columns being matched by the query. */
 typedef struct ecs_query_triv_cache_match_t {
     ecs_table_t *table;              /* The current table. */
-    int16_t *columns;
     ecs_termset_t set_fields;        /* Fields that are set (used by fields with Optional/Not). */
 } ecs_query_triv_cache_match_t;
 
+/* Trivial cache elements store the matched columns inline, right after the
+ * struct. This avoids a pointer indirection while iterating, and means the
+ * columns don't have to be allocated separately. Because the size of the
+ * columns array depends on the query field count, trivial cache elements have
+ * a query-specific size (see flecs_query_cache_elem_size). */
+#define flecs_query_triv_cache_columns(qm) ((int16_t*)&(qm)[1])
+
+#define flecs_query_triv_cache_elem_size(field_count)\
+    ECS_ALIGN(ECS_SIZEOF(ecs_query_triv_cache_match_t) +\
+        (field_count) * ECS_SIZEOF(int16_t),\
+            ECS_SIZEOF(ecs_table_t*))
+
 struct ecs_query_cache_match_t {
     ecs_query_triv_cache_match_t base;
+    int16_t *columns;                 /* Matched columns. */
     const ecs_table_record_t **_trs;
     int32_t _offset;                  /* Starting point in table. */
     int32_t _count;                   /* Number of entities to iterate in table. */

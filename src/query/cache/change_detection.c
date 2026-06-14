@@ -35,7 +35,7 @@ void flecs_query_get_column_for_field(
     ecs_assert(field >= 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(field < q->field_count, ECS_INTERNAL_ERROR, NULL);
 
-    int32_t column = match->base.columns[field];
+    int32_t column = match->columns[field];
     if (column != -1) {
         out->table = match->base.table;
         out->column = column;
@@ -136,6 +136,7 @@ bool flecs_query_get_match_monitor(
     match->_monitor = monitor;
 
     impl->pub.flags |= EcsQueryHasChangeDetection;
+    flecs_query_update_iter_mode_flags(impl);
 
     return true;
 }
@@ -401,7 +402,7 @@ bool flecs_query_check_match_monitor(
             continue;
         }
 
-        int32_t column = match->base.columns[i];
+        int32_t column = match->columns[i];
         ecs_entity_t src = sources ? sources[i] : 0;
         if (!src) {
             if (column >= 0) {

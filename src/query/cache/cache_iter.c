@@ -20,6 +20,7 @@ void flecs_query_cache_iter_init(
     qit->tables = &qit->group->tables;
     qit->all_tables = qit->tables;
     qit->cur = 0;
+    qit->elem_size = flecs_ito(int16_t, flecs_query_cache_elem_size(cache));
 
     /* If query uses order_by, iterate the array with ordered table slices. */
     if (cache->order_by_callback) {
@@ -122,38 +123,93 @@ ecs_query_cache_match_t* flecs_query_cache_next(
 }
 
 /* Find next match in trivial cache. A trivial cache doesn't have to handle
- * wildcards, multiple groups or fields matched through up traversal. */
+ * wildcards, multiple groups or fields matched through up traversal. Note that
+ * for trivial cache iteration qit->cur is a byte offset into the table vector
+ * instead of an index, which avoids a multiplication with the (non-constant)
+ * cache element size when computing the address of the current element. */
 static
-ecs_query_cache_match_t* flecs_query_trivial_cache_next(
-    const ecs_query_run_ctx_t *ctx)
+bool flecs_query_trivial_cache_walk(
+    ecs_iter_t *it)
 {
-    ecs_iter_t *it = ctx->it;
     ecs_query_iter_t *qit = &it->priv_.iter.query;
+    ecs_vec_t *tables = qit->tables;
+    ecs_size_t elem_size = qit->elem_size;
+    int32_t cur = qit->cur;
+    int32_t end = ecs_vec_count(tables) * elem_size;
+    char *elems = ecs_vec_first(tables);
 
-    repeat: {
-        if (qit->cur == ecs_vec_count(qit->tables)) {
-            return NULL;
-        }
-
-        ecs_query_triv_cache_match_t *qm = ecs_vec_get_t(
-            qit->tables, ecs_query_triv_cache_match_t, qit->cur);
-        ecs_table_t *table = it->table = qm->table;
-        int32_t count = it->count = ecs_table_count(table);
-
-        qit->cur ++;
+    for (; cur < end; cur += elem_size) {
+        ecs_query_triv_cache_match_t *qm =
+            ECS_OFFSET(elems, cur);
+        ecs_table_t *table = qm->table;
+        int32_t count = ecs_table_count(table);
 
         if (!count) {
             if (!(it->flags & EcsIterMatchEmptyTables)) {
-                goto repeat;
+                continue;
             }
         }
 
+        it->table = table;
+        it->count = count;
         it->entities = ecs_table_entities(table);
-        it->columns = qm->columns;
+        it->columns = flecs_query_triv_cache_columns(qm);
         it->set_fields = qm->set_fields;
-
-        return qit->elem = (ecs_query_cache_match_t*)qm;
+        qit->elem = (ecs_query_cache_match_t*)qm;
+        qit->cur = cur + elem_size;
+        return true;
     }
+
+    qit->cur = cur;
+    return false;
+}
+
+static
+FLECS_NOINLINE
+void flecs_query_trivial_cache_mark_dirty(
+    ecs_iter_t *it)
+{
+    flecs_query_mark_fields_dirty(flecs_query_impl(it->query), it);
+}
+
+static
+FLECS_NOINLINE
+bool flecs_query_trivial_cache_done(
+    ecs_iter_t *it)
+{
+    it->flags |= EcsIterSkip; /* Prevent change detection on fini */
+    ecs_iter_fini(it);
+    ecs_os_linc(&it->real_world->info.queries_ran_total);
+    return false;
+}
+
+FLECS_NOINLINE
+bool flecs_query_trivial_cached_next(
+    ecs_iter_t *it)
+{
+    ecs_assert(it != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(it->flags & EcsIterTrivialCached, ECS_INVALID_OPERATION,
+        "query does not have trivial cache, use ecs_query_next instead");
+    ecs_assert(it->flags & EcsIterTrivialSearch, ECS_INVALID_OPERATION,
+        "iterator has constrained variables, use ecs_query_next instead");
+
+    uint32_t flags = it->flags;
+    if ((flags & (EcsIterIsValid|EcsIterSkip)) == EcsIterIsValid) {
+        /* Redo: mark fields of previous result dirty if table is monitored
+         * for changes. */
+        if (it->table->dirty_state) {
+            flecs_query_trivial_cache_mark_dirty(it);
+        }
+    }
+
+    it->flags = (flags & ~EcsIterSkip) | EcsIterIsValid;
+    it->frame_offset += it->count;
+
+    if (flecs_query_trivial_cache_walk(it)) {
+        return true;
+    }
+
+    return flecs_query_trivial_cache_done(it);
 }
 
 static
@@ -208,7 +264,7 @@ void flecs_query_cache_init_mapped_fields(
     for (i = 0; i < field_count; i ++) {
         int8_t field_index = field_map[i];
         it->trs[field_index] = node->_trs ? node->_trs[i] : NULL;
-        columns[field_index] = node->base.columns[i];
+        columns[field_index] = node->columns[i];
 
         it->ids[field_index] = node->_ids[i];
         it->sources[field_index] = node->_sources[i];
@@ -292,7 +348,7 @@ bool flecs_query_is_cache_search(
 
     ecs_iter_t *it = ctx->it;
     it->trs = node->_trs;
-    it->columns = node->base.columns;
+    it->columns = node->columns;
     it->ids = node->_ids;
     it->sources = node->_sources;
     it->set_fields = node->base.set_fields;
@@ -309,7 +365,7 @@ bool flecs_query_is_cache_search(
 bool flecs_query_is_trivial_cache_search(
     const ecs_query_run_ctx_t *ctx)
 {
-    return flecs_query_trivial_cache_next(ctx) != NULL;
+    return flecs_query_trivial_cache_walk(ctx->it);
 }
 
 /* Test if query that is partially cached matches constrained $this */
@@ -342,7 +398,7 @@ bool flecs_query_is_cache_test(
 
     ecs_iter_t *it = ctx->it;
     it->trs = node->_trs;
-    it->columns = node->base.columns;
+    it->columns = node->columns;
     it->ids = node->_ids;
     it->sources = node->_sources;
     it->set_fields = node->base.set_fields;
@@ -376,7 +432,7 @@ bool flecs_query_is_trivial_cache_test(
 
         ecs_query_cache_match_t *qm =
             flecs_query_cache_match_from_table(cache, qt);
-        it->columns = qm->base.columns;
+        it->columns = flecs_query_triv_cache_columns(&qm->base);
         it->set_fields = qm->base.set_fields;
         return true;
     }

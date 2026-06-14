@@ -1711,9 +1711,6 @@ bool flecs_query_finalize_simple(
     term_count = i;
     ecs_os_memcpy_n(q->terms, desc->terms, ecs_term_t, term_count);
 
-    /* All fields are InOut */
-    q->write_fields = (1u << term_count) - 1;
-
     /* Simple query that only queries for component ids */
 
     /* Populate terms */
@@ -1859,6 +1856,14 @@ bool flecs_query_finalize_simple(
     q->field_count = term_count;
     q->set_fields = (ecs_termset_t)((1llu << i) - 1);
     q->static_id_fields = (ecs_termset_t)((1llu << i) - 1);
+
+    /* All terms have default (InOut) access. This matches the behavior of the
+     * regular finalize path, where only fields with data are marked as being
+     * read/written, and fields with default access are readonly when matched
+     * on a non-$this source. */
+    q->write_fields = q->data_fields;
+    q->read_fields = q->data_fields;
+    q->shared_readonly_fields = q->data_fields;
 
     if (has_this) {
         q->flags |= EcsQueryHasTableThisVar|EcsQueryMatchThis;

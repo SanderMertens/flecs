@@ -136,6 +136,7 @@ typedef struct ecs_query_iter_t {
     ecs_query_op_profile_t *profile;
 
     int16_t op;                               /* Currently iterated query plan operation (index into ops). */
+    int16_t elem_size;                        /* Cache element size. */
     bool iter_single_group;
 } ecs_query_iter_t;
 
