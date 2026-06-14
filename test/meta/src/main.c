@@ -5883,6 +5883,7 @@ bake_test_case RttCompare_testcases[] = {
     }
 };
 
+
 static bake_test_suite suites[] = {
     {
         "PrimitiveTypes",

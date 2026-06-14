@@ -4545,6 +4545,205 @@ void ComponentLifecycle_on_replace_set_2_entities(void) {
     ecs_fini(world);
 }
 
+/* ---- on_replace other_table / set_fields tests ---- */
+
+typedef struct replace_ctx {
+    ecs_table_t *other_table;
+    ecs_termset_t set_fields;
+    int invoked;
+} replace_ctx;
+
+static
+void replace_capture(ecs_iter_t *it) {
+    replace_ctx *ctx = it->ctx;
+    ctx->other_table = it->other_table;
+    ctx->set_fields  = it->set_fields;
+    ctx->invoked++;
+}
+
+void ComponentLifecycle_on_replace_other_table_new_entity(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    replace_ctx ctx = {0};
+
+    ecs_set_hooks(world, Position, {
+        .ctor = flecs_default_ctor,
+        .on_replace = replace_capture,
+        .ctx = &ctx,
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_table_t *prev = ecs_get_table(world, e); /* root table, no Position */
+    test_int(ctx.invoked, 0);
+
+    ecs_set(world, e, Position, {10, 20});
+    test_int(ctx.invoked, 1);
+
+    /* prev_table captured before flecs_ensure: root table, no Position.
+     * set_fields=2: bit 0 unset (no old value), bit 1 set (new value). */
+    test_assert(ctx.other_table == prev);
+    test_assert(!(ctx.set_fields & 1));
+    test_assert(ctx.set_fields & 2);
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_on_replace_other_table_existing_entity(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    replace_ctx ctx = {0};
+
+    ecs_set_hooks(world, Position, {
+        .ctor = flecs_default_ctor,
+        .on_replace = replace_capture,
+        .ctx = &ctx,
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, Velocity);
+    ecs_table_t *prev = ecs_get_table(world, e); /* {Velocity}, no Position */
+
+    test_int(ctx.invoked, 0);
+    ecs_set(world, e, Position, {10, 20});
+    test_int(ctx.invoked, 1);
+
+    /* prev_table = {Velocity} before ensure; set_fields=2: Position not yet in prev. */
+    test_assert(ctx.other_table == prev);
+    test_assert(!(ctx.set_fields & 1));
+    test_assert(ctx.set_fields & 2);
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_on_replace_other_table_set_existing(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    replace_ctx ctx = {0};
+
+    ecs_set_hooks(world, Position, {
+        .ctor = flecs_default_ctor,
+        .on_replace = replace_capture,
+        .ctx = &ctx,
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set(world, e, Position, {10, 20});
+    test_int(ctx.invoked, 1);
+
+    ecs_table_t *table_with_pos = ecs_get_table(world, e);
+
+    ctx = (replace_ctx){0};
+    ecs_set(world, e, Position, {11, 21});
+    test_int(ctx.invoked, 1);
+
+    /* prev_table = {Position} (unchanged by ensure); set_fields=3: Position in prev. */
+    test_assert(ctx.other_table == table_with_pos);
+    test_assert(ctx.set_fields == 3);
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_on_replace_other_table_batched_new_entity(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    replace_ctx ctx = {0};
+
+    ecs_set_hooks(world, Position, {
+        .ctor = flecs_default_ctor,
+        .on_replace = replace_capture,
+        .ctx = &ctx,
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_table_t *start_table = ecs_get_table(world, e);
+    test_int(ctx.invoked, 0);
+
+    ecs_defer_begin(world);
+    ecs_set(world, e, Position, {10, 20});
+    ecs_set(world, e, Velocity, {1, 2});
+    test_int(ctx.invoked, 0);
+    ecs_defer_end(world);
+    test_int(ctx.invoked, 1);
+
+    /* Batch flush second-pass: uses start_table (root, no Position).
+     * set_fields=2: bit 0 unset because start_table lacks Position. */
+    test_assert(ctx.other_table == start_table);
+    test_assert(!(ctx.set_fields & 1));
+    test_assert(ctx.set_fields & 2);
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_on_replace_other_table_batched_existing(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    replace_ctx ctx = {0};
+
+    ecs_set_hooks(world, Position, {
+        .ctor = flecs_default_ctor,
+        .on_replace = replace_capture,
+        .ctx = &ctx,
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set(world, e, Position, {10, 20});
+    test_int(ctx.invoked, 1);
+    ecs_table_t *table_with_pos = ecs_get_table(world, e);
+
+    ctx = (replace_ctx){0};
+
+    /* Setting existing component during defer fires hook immediately via
+     * EcsCmdAddModified path (not batched), using r->table at that moment. */
+    ecs_defer_begin(world);
+    ecs_set(world, e, Position, {11, 21});
+    test_int(ctx.invoked, 1);
+    test_assert(ctx.other_table == table_with_pos);
+    test_assert(ctx.set_fields == 3);
+    ecs_defer_end(world);
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_on_replace_other_table_entity_init(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    replace_ctx ctx = {0};
+
+    ecs_set_hooks(world, Position, {
+        .ctor = flecs_default_ctor,
+        .on_replace = replace_capture,
+        .ctx = &ctx,
+    });
+
+    /* init_table = r->table before any components added (root, no Position).
+     * set_fields=2: bit 0 unset, new add. */
+    ecs_entity_t e = ecs_entity(world, {
+        .set = ecs_values(ecs_value(Position, {10, 20}))
+    });
+    test_int(ctx.invoked, 1);
+
+    test_assert(ctx.other_table != ecs_get_table(world, e));
+    test_assert(!(ctx.set_fields & 1));
+    test_assert(ctx.set_fields & 2);
+
+    ecs_fini(world);
+}
+
 void ComponentLifecycle_copy_ctor_w_override(void) {
     ecs_world_t *world = ecs_mini();
 
