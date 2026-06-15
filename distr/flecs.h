@@ -7872,8 +7872,7 @@ ecs_entity_t ecs_new_low_id(
     ecs_world_t *world);
 
 /** Create new entity with (component) ID.
- * This operation creates a new entity with an optional (component) ID. When 0
- * is passed to the ID parameter, no component is added to the new entity.
+ * This operation creates a new entity with an optional (component) ID.
  *
  * @param world The world.
  * @param component The component to create the new entity with.
