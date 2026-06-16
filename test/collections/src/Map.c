@@ -497,3 +497,39 @@ void Map_randomized_after_clear(void) {
 
     ecs_os_free(keys);
 }
+
+static
+uint64_t hashmap_key_hash(
+    const void *ptr)
+{
+    return *(const uint64_t*)ptr;
+}
+
+static
+int hashmap_key_compare(
+    const void *a,
+    const void *b)
+{
+    uint64_t ka = *(const uint64_t*)a;
+    uint64_t kb = *(const uint64_t*)b;
+    return (ka > kb) - (ka < kb);
+}
+
+void Map_hashmap_iter_terminates(void) {
+    ecs_hashmap_t hm;
+    flecs_hashmap_init(&hm, uint64_t, uint64_t,
+        hashmap_key_hash, hashmap_key_compare, NULL);
+
+    uint64_t key = 1, value = 10;
+    flecs_hashmap_set(&hm, &key, &value);
+
+    flecs_hashmap_iter_t it = flecs_hashmap_iter(&hm);
+
+    /* First element */
+    test_assert(flecs_hashmap_next(&it, uint64_t) != NULL);
+
+    /* Iterator must terminate after the last element */
+    test_assert(flecs_hashmap_next(&it, uint64_t) == NULL);
+
+    flecs_hashmap_fini(&hm);
+}
