@@ -9,6 +9,112 @@
 #include "../script.h"
 
 static
+uint64_t flecs_script_ownership_name_hash(
+    const void *ptr)
+{
+    const char *name = *(const char* const*)ptr;
+    return flecs_hash(name, ecs_os_strlen(name));
+}
+
+static
+int flecs_script_ownership_name_cmp(
+    const void *a,
+    const void *b)
+{
+    const char *n1 = *(const char* const*)a;
+    const char *n2 = *(const char* const*)b;
+    return ecs_os_strcmp(n1, n2);
+}
+
+static
+uint64_t flecs_script_ownership_id_hash(
+    const void *ptr)
+{
+    return *(const ecs_id_t*)ptr;
+}
+
+static
+int flecs_script_ownership_id_cmp(
+    const void *a,
+    const void *b)
+{
+    ecs_id_t id1 = *(const ecs_id_t*)a;
+    ecs_id_t id2 = *(const ecs_id_t*)b;
+    return (id1 > id2) - (id1 < id2);
+}
+
+void flecs_script_check_ownership_init(
+    ecs_script_eval_visitor_t *v,
+    ecs_hashmap_t *entities,
+    ecs_hashmap_t *components)
+{
+    ecs_allocator_t *a = &v->base.script->allocator;
+    flecs_hashmap_init(entities, const char*, ecs_script_scope_t*,
+        flecs_script_ownership_name_hash, flecs_script_ownership_name_cmp, a);
+    flecs_hashmap_init(components, ecs_id_t, ecs_script_scope_t*,
+        flecs_script_ownership_id_hash, flecs_script_ownership_id_cmp, a);
+    v->owned_entities = entities;
+    v->owned_components = components;
+}
+
+void flecs_script_check_ownership_fini(
+    ecs_script_eval_visitor_t *v,
+    ecs_hashmap_t *old_entities,
+    ecs_hashmap_t *old_components)
+{
+    flecs_hashmap_fini(v->owned_entities);
+    flecs_hashmap_fini(v->owned_components);
+    v->owned_entities = old_entities;
+    v->owned_components = old_components;
+}
+
+static
+int flecs_script_check_ownership_entity(
+    ecs_script_eval_visitor_t *v,
+    ecs_script_entity_t *node)
+{
+    if (!v->owned_entities || !node->name) {
+        return 0;
+    }
+
+    const char *name = node->name;
+    if (flecs_hashmap_get(v->owned_entities, &name, ecs_script_scope_t*)) {
+        flecs_script_eval_error(v, node,
+            "entity '%s' is already created in this scope", name);
+        return -1;
+    }
+
+    ecs_script_scope_t *scope = ecs_script_current_scope(v);
+    flecs_hashmap_set(v->owned_entities, &name, &scope);
+
+    return 0;
+}
+
+static
+int flecs_script_check_ownership_component(
+    ecs_script_eval_visitor_t *v,
+    ecs_script_node_t *node,
+    ecs_id_t id)
+{
+    if (!v->owned_components || !id) {
+        return 0;
+    }
+
+    if (flecs_hashmap_get(v->owned_components, &id, ecs_script_scope_t*)) {
+        char *id_str = ecs_id_str(v->world, id);
+        flecs_script_eval_error(v, node,
+            "component '%s' is already assigned in this scope", id_str);
+        ecs_os_free(id_str);
+        return -1;
+    }
+
+    ecs_script_scope_t *scope = ecs_script_current_scope(v);
+    flecs_hashmap_set(v->owned_components, &id, &scope);
+
+    return 0;
+}
+
+static
 bool flecs_script_scope_has_entity(
     ecs_script_scope_t *scope,
     const char *name)
@@ -160,20 +266,30 @@ int flecs_script_check_entity(
         }
     }
 
+    if (flecs_script_check_ownership_entity(v, node)) {
+        return -1;
+    }
+
     ecs_script_entity_t *old_entity = v->entity;
     v->entity = node;
 
     bool old_is_with_scope = v->is_with_scope;
     v->is_with_scope = false;
 
-    if (ecs_script_visit_node(v, node->scope)) {
-        return -1;
-    }
+    ecs_hashmap_t *old_owned_entities = v->owned_entities;
+    ecs_hashmap_t *old_owned_components = v->owned_components;
+    ecs_hashmap_t owned_entities, owned_components;
+    flecs_script_check_ownership_init(v, &owned_entities, &owned_components);
+
+    int result = ecs_script_visit_node(v, node->scope);
+
+    flecs_script_check_ownership_fini(
+        v, old_owned_entities, old_owned_components);
 
     v->is_with_scope = old_is_with_scope;
     v->entity = old_entity;
 
-    return 0;
+    return result;
 }
 
 static
@@ -202,6 +318,12 @@ int flecs_script_check_tag(
         return -1;
     }
 
+    if (flecs_script_check_ownership_component(
+        v, (ecs_script_node_t*)node, node->id.eval))
+    {
+        return -1;
+    }
+
     return 0;
 }
 
@@ -226,8 +348,20 @@ int flecs_script_check_component(
     }
 
     if (v->is_with_scope) {
-        flecs_script_eval_error(v, node, "invalid component in with scope"); 
+        flecs_script_eval_error(v, node, "invalid component in with scope");
         return -1;
+    }
+
+    bool is_partial = node->expr &&
+        node->expr->kind == EcsExprInitializer &&
+        ((ecs_expr_initializer_t*)node->expr)->is_partial;
+
+    if (!is_partial) {
+        if (flecs_script_check_ownership_component(
+            v, (ecs_script_node_t*)node, node->id.eval))
+        {
+            return -1;
+        }
     }
 
     if (node->expr) {
@@ -495,15 +629,13 @@ int flecs_script_check_for_range(
     var->value.type = ecs_id(ecs_i32_t);
     var->type_info = ti;
 
-    if (flecs_script_eval_scope(v, node->scope)) {
-        return -1;
-    }
+    int result = flecs_script_eval_scope(v, node->scope);
 
     var->value.ptr = NULL;
 
     v->vars = ecs_script_vars_pop(v->vars);
 
-    return 0;
+    return result;
 }
 
 static

@@ -534,7 +534,17 @@ int flecs_script_template_preprocess(
     v->vars = flecs_script_vars_push(v->vars, &v->r->stack, &v->r->allocator);
     ecs_script_var_t *var = ecs_script_vars_declare(v->vars, "this");
     var->value.type = ecs_id(ecs_entity_t);
+
+    ecs_hashmap_t *old_owned_entities = v->owned_entities;
+    ecs_hashmap_t *old_owned_components = v->owned_components;
+    ecs_hashmap_t owned_entities, owned_components;
+    flecs_script_check_ownership_init(v, &owned_entities, &owned_components);
+
     int result = flecs_script_check_scope(v, template->node->scope);
+
+    flecs_script_check_ownership_fini(
+        v, old_owned_entities, old_owned_components);
+
     v->vars = ecs_script_vars_pop(v->vars);
     v->base.visit = prev_visit;
     v->template = NULL;

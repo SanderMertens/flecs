@@ -20,6 +20,11 @@ typedef struct ecs_script_eval_visitor_t {
     bool is_with_scope;
     bool dynamic_variable_binding;
     ecs_script_vars_t *vars;
+
+    /* Ownership maps for current entity scope, used by check visitor to ensure
+     * the same entity/component is not created/assigned in two locations. */
+    ecs_hashmap_t *owned_entities;
+    ecs_hashmap_t *owned_components;
 } ecs_script_eval_visitor_t;
 
 void flecs_script_eval_error_(
@@ -79,6 +84,16 @@ int flecs_script_check_node(
 int flecs_script_check_scope(
     ecs_script_eval_visitor_t *v,
     ecs_script_scope_t *node);
+
+void flecs_script_check_ownership_init(
+    ecs_script_eval_visitor_t *v,
+    ecs_hashmap_t *entities,
+    ecs_hashmap_t *components);
+
+void flecs_script_check_ownership_fini(
+    ecs_script_eval_visitor_t *v,
+    ecs_hashmap_t *old_entities,
+    ecs_hashmap_t *old_components);
 
 /* Functions shared between check and eval visitor */
 

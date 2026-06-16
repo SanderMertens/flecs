@@ -4451,3 +4451,604 @@ void Template_changed_mask_all_changed(void) {
     ecs_fini(world);
 }
 
+void Template_duplicate_component_same_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "template Foo {"
+    LINE "  child {"
+    LINE "    Position: {1, 2}"
+    LINE "    Position: {3, 4}"
+    LINE "  }"
+    LINE "}";
+
+    ecs_log_set_level(-4);
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Template_duplicate_tag_same_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Bar);
+
+    const char *expr =
+    HEAD "template Foo {"
+    LINE "  child {"
+    LINE "    Bar"
+    LINE "    Bar"
+    LINE "  }"
+    LINE "}";
+
+    ecs_log_set_level(-4);
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Template_duplicate_component_different_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "template Foo {"
+    LINE "  child_a {"
+    LINE "    Position: {1, 2}"
+    LINE "  }"
+    LINE "  child_b {"
+    LINE "    Position: {3, 4}"
+    LINE "  }"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_fini(world);
+}
+
+void Template_duplicate_child_same_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "template Foo {"
+    LINE "  child {}"
+    LINE "  child {}"
+    LINE "}";
+
+    ecs_log_set_level(-4);
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Template_duplicate_child_different_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "template Foo {"
+    LINE "  a {"
+    LINE "    child {}"
+    LINE "  }"
+    LINE "  b {"
+    LINE "    child {}"
+    LINE "  }"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_fini(world);
+}
+
+
+void Template_duplicate_pair_tag_same_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Tgt);
+
+    const char *expr =
+    HEAD "template Foo {"
+    LINE "  child {"
+    LINE "    (Rel, Tgt)"
+    LINE "    (Rel, Tgt)"
+    LINE "  }"
+    LINE "}";
+
+    ecs_log_set_level(-4);
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Template_duplicate_pair_component_same_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ECS_TAG(world, Tgt);
+
+    const char *expr =
+    HEAD "template Foo {"
+    LINE "  child {"
+    LINE "    (Position, Tgt): {1, 2}"
+    LINE "    (Position, Tgt): {3, 4}"
+    LINE "  }"
+    LINE "}";
+
+    ecs_log_set_level(-4);
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Template_duplicate_pair_different_target(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+
+    const char *expr =
+    HEAD "template Foo {"
+    LINE "  child {"
+    LINE "    (Rel, TgtA)"
+    LINE "    (Rel, TgtB)"
+    LINE "  }"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_fini(world);
+}
+
+void Template_duplicate_pair_different_relationship(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, RelB);
+    ECS_TAG(world, Tgt);
+
+    const char *expr =
+    HEAD "template Foo {"
+    LINE "  child {"
+    LINE "    (RelA, Tgt)"
+    LINE "    (RelB, Tgt)"
+    LINE "  }"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_fini(world);
+}
+
+void Template_duplicate_pair_component_different_target(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+
+    const char *expr =
+    HEAD "template Foo {"
+    LINE "  child {"
+    LINE "    (Position, TgtA): {1, 2}"
+    LINE "    (Position, TgtB): {3, 4}"
+    LINE "  }"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_fini(world);
+}
+
+void Template_duplicate_pair_component_different_relationship(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ECS_COMPONENT(world, Velocity);
+    ecs_struct(world, {
+        .entity = ecs_id(Velocity),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ECS_TAG(world, Tgt);
+
+    const char *expr =
+    HEAD "template Foo {"
+    LINE "  child {"
+    LINE "    (Position, Tgt): {1, 2}"
+    LINE "    (Velocity, Tgt): {3, 4}"
+    LINE "  }"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_fini(world);
+}
+
+void Template_duplicate_component_in_for(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "template Foo {"
+    LINE "  child {"
+    LINE "    Position: {1, 2}"
+    LINE "    for i in 0..2 {"
+    LINE "      Position: {3, 4}"
+    LINE "    }"
+    LINE "  }"
+    LINE "}";
+
+    ecs_log_set_level(-4);
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Template_duplicate_component_in_if(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "template Foo {"
+    LINE "  prop cond = flecs.meta.bool: true"
+    LINE "  child {"
+    LINE "    Position: {1, 2}"
+    LINE "    if $cond {"
+    LINE "      Position: {3, 4}"
+    LINE "    }"
+    LINE "  }"
+    LINE "}";
+
+    ecs_log_set_level(-4);
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Template_duplicate_component_in_else_if(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "template Foo {"
+    LINE "  prop v = flecs.meta.i32: 1"
+    LINE "  child {"
+    LINE "    Position: {1, 2}"
+    LINE "    if $v == 1 {"
+    LINE "    } else if $v == 2 {"
+    LINE "      Position: {3, 4}"
+    LINE "    }"
+    LINE "  }"
+    LINE "}";
+
+    ecs_log_set_level(-4);
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Template_duplicate_component_in_else(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "template Foo {"
+    LINE "  prop cond = flecs.meta.bool: true"
+    LINE "  child {"
+    LINE "    Position: {1, 2}"
+    LINE "    if $cond {"
+    LINE "    } else {"
+    LINE "      Position: {3, 4}"
+    LINE "    }"
+    LINE "  }"
+    LINE "}";
+
+    ecs_log_set_level(-4);
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Template_partial_update_same_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "template Foo {"
+    LINE "  child {"
+    LINE "    Position: {x: 1}"
+    LINE "    Position: {y: 2}"
+    LINE "  }"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_fini(world);
+}
+
+void Template_partial_update_aliases_full(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "template Foo {"
+    LINE "  child {"
+    LINE "    Position: {1, 2}"
+    LINE "    Position: {x: 5}"
+    LINE "  }"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_fini(world);
+}
+
+void Template_partial_update_pair_same_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ECS_TAG(world, Tgt);
+
+    const char *expr =
+    HEAD "template Foo {"
+    LINE "  child {"
+    LINE "    (Position, Tgt): {x: 1}"
+    LINE "    (Position, Tgt): {y: 2}"
+    LINE "  }"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_fini(world);
+}
+
+void Template_partial_update_pair_aliases_full(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ECS_TAG(world, Tgt);
+
+    const char *expr =
+    HEAD "template Foo {"
+    LINE "  child {"
+    LINE "    (Position, Tgt): {1, 2}"
+    LINE "    (Position, Tgt): {x: 5}"
+    LINE "  }"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_fini(world);
+}
+
+void Template_partial_update_in_for(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "template Foo {"
+    LINE "  child {"
+    LINE "    Position: {1, 2}"
+    LINE "    for i in 0..2 {"
+    LINE "      Position: {x: 5}"
+    LINE "    }"
+    LINE "  }"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_fini(world);
+}
+
+void Template_partial_update_in_if(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "template Foo {"
+    LINE "  prop cond = flecs.meta.bool: true"
+    LINE "  child {"
+    LINE "    Position: {1, 2}"
+    LINE "    if $cond {"
+    LINE "      Position: {x: 5}"
+    LINE "    }"
+    LINE "  }"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_fini(world);
+}
+
+void Template_partial_update_in_else_if(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "template Foo {"
+    LINE "  prop v = flecs.meta.i32: 1"
+    LINE "  child {"
+    LINE "    Position: {1, 2}"
+    LINE "    if $v == 1 {"
+    LINE "    } else if $v == 2 {"
+    LINE "      Position: {x: 5}"
+    LINE "    }"
+    LINE "  }"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_fini(world);
+}
+
+void Template_partial_update_in_else(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "template Foo {"
+    LINE "  prop cond = flecs.meta.bool: true"
+    LINE "  child {"
+    LINE "    Position: {1, 2}"
+    LINE "    if $cond {"
+    LINE "    } else {"
+    LINE "      Position: {x: 5}"
+    LINE "    }"
+    LINE "  }"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_fini(world);
+}
+

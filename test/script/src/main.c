@@ -680,6 +680,29 @@ void Template_changed_mask_first_second_changed(void);
 void Template_changed_mask_first_third_changed(void);
 void Template_changed_mask_second_third_changed(void);
 void Template_changed_mask_all_changed(void);
+void Template_duplicate_component_same_entity(void);
+void Template_duplicate_tag_same_entity(void);
+void Template_duplicate_component_different_entity(void);
+void Template_duplicate_child_same_scope(void);
+void Template_duplicate_child_different_scope(void);
+void Template_duplicate_pair_tag_same_entity(void);
+void Template_duplicate_pair_component_same_entity(void);
+void Template_duplicate_pair_different_target(void);
+void Template_duplicate_pair_different_relationship(void);
+void Template_duplicate_pair_component_different_target(void);
+void Template_duplicate_pair_component_different_relationship(void);
+void Template_duplicate_component_in_for(void);
+void Template_duplicate_component_in_if(void);
+void Template_duplicate_component_in_else_if(void);
+void Template_duplicate_component_in_else(void);
+void Template_partial_update_same_scope(void);
+void Template_partial_update_aliases_full(void);
+void Template_partial_update_pair_same_scope(void);
+void Template_partial_update_pair_aliases_full(void);
+void Template_partial_update_in_for(void);
+void Template_partial_update_in_if(void);
+void Template_partial_update_in_else_if(void);
+void Template_partial_update_in_else(void);
 
 // Testsuite 'IncrementalUpdates'
 void IncrementalUpdates_component_value_update(void);
@@ -4440,6 +4463,98 @@ bake_test_case Template_testcases[] = {
     {
         "changed_mask_all_changed",
         Template_changed_mask_all_changed
+    },
+    {
+        "duplicate_component_same_entity",
+        Template_duplicate_component_same_entity
+    },
+    {
+        "duplicate_tag_same_entity",
+        Template_duplicate_tag_same_entity
+    },
+    {
+        "duplicate_component_different_entity",
+        Template_duplicate_component_different_entity
+    },
+    {
+        "duplicate_child_same_scope",
+        Template_duplicate_child_same_scope
+    },
+    {
+        "duplicate_child_different_scope",
+        Template_duplicate_child_different_scope
+    },
+    {
+        "duplicate_pair_tag_same_entity",
+        Template_duplicate_pair_tag_same_entity
+    },
+    {
+        "duplicate_pair_component_same_entity",
+        Template_duplicate_pair_component_same_entity
+    },
+    {
+        "duplicate_pair_different_target",
+        Template_duplicate_pair_different_target
+    },
+    {
+        "duplicate_pair_different_relationship",
+        Template_duplicate_pair_different_relationship
+    },
+    {
+        "duplicate_pair_component_different_target",
+        Template_duplicate_pair_component_different_target
+    },
+    {
+        "duplicate_pair_component_different_relationship",
+        Template_duplicate_pair_component_different_relationship
+    },
+    {
+        "duplicate_component_in_for",
+        Template_duplicate_component_in_for
+    },
+    {
+        "duplicate_component_in_if",
+        Template_duplicate_component_in_if
+    },
+    {
+        "duplicate_component_in_else_if",
+        Template_duplicate_component_in_else_if
+    },
+    {
+        "duplicate_component_in_else",
+        Template_duplicate_component_in_else
+    },
+    {
+        "partial_update_same_scope",
+        Template_partial_update_same_scope
+    },
+    {
+        "partial_update_aliases_full",
+        Template_partial_update_aliases_full
+    },
+    {
+        "partial_update_pair_same_scope",
+        Template_partial_update_pair_same_scope
+    },
+    {
+        "partial_update_pair_aliases_full",
+        Template_partial_update_pair_aliases_full
+    },
+    {
+        "partial_update_in_for",
+        Template_partial_update_in_for
+    },
+    {
+        "partial_update_in_if",
+        Template_partial_update_in_if
+    },
+    {
+        "partial_update_in_else_if",
+        Template_partial_update_in_else_if
+    },
+    {
+        "partial_update_in_else",
+        Template_partial_update_in_else
     }
 };
 
@@ -8759,7 +8874,7 @@ static bake_test_suite suites[] = {
         "Template",
         NULL,
         NULL,
-        98,
+        121,
         Template_testcases
     },
     {
