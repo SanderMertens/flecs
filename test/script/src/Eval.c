@@ -16262,7 +16262,7 @@ void Eval_component_expr_swizzle_no_target_type(void) {
 
     const char *expr =
     HEAD "const pos = Vec3: {10, 20, 30}"
-    LINE "const flipped = pos.zyx"
+    LINE "const flipped: pos.zyx"
     LINE "e {"
     LINE "  Vec3: $flipped"
     LINE "}";
@@ -16482,7 +16482,7 @@ void Eval_component_expr_swizzle_var_no_target_type(void) {
 
     const char *expr =
     HEAD "const pos = Vec3: {10, 20, 30}"
-    LINE "const flipped = $pos.zyx"
+    LINE "const flipped: $pos.zyx"
     LINE "e {"
     LINE "  Vec3: $flipped"
     LINE "}";
