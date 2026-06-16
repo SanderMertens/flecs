@@ -6,7 +6,7 @@
 #include "flecs.h"
 
 #ifdef FLECS_SCRIPT
-#include "script.h"
+#include "../script.h"
 
 ECS_COMPONENT_DECLARE(EcsScriptTemplateSetEvent);
 ECS_DECLARE(EcsScriptTemplate);

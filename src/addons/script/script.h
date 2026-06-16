@@ -41,7 +41,7 @@ typedef struct ecs_function_calldata_t {
 #include "expr/expr.h"
 #include "visit.h"
 #include "visit_eval.h"
-#include "template.h"
+#include "reactivity/template.h"
 
 struct ecs_script_runtime_t {
     ecs_allocator_t allocator;

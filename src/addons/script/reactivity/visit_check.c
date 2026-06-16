@@ -6,7 +6,7 @@
 #include "flecs.h"
 
 #ifdef FLECS_SCRIPT
-#include "script.h"
+#include "../script.h"
 
 static
 bool flecs_script_scope_has_entity(

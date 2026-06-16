@@ -6,7 +6,7 @@
 #include "flecs.h"
 
 #ifdef FLECS_SCRIPT
-#include "script.h"
+#include "../script.h"
 
 static
 uint64_t flecs_script_node_visit_deps(
