@@ -17425,6 +17425,21 @@ int ecs_expr_eval(
     ecs_value_t *value,
     const ecs_expr_eval_desc_t *desc);
 
+/** Get variable dependencies of an expression.
+ * This operation returns a bitmask that indicates which variables are accessed
+ * by an expression parsed with ecs_expr_parse(). Each bit in the returned mask
+ * corresponds to the changed_mask of an accessed variable, as found in the
+ * provided variable scope.
+ *
+ * @param script The script containing the expression.
+ * @param vars The variables to resolve expression variables against.
+ * @return Bitmask with the changed_mask of all accessed variables.
+ */
+FLECS_API
+uint64_t ecs_expr_get_deps(
+    const ecs_script_t *script,
+    const ecs_script_vars_t *vars);
+
 /** Evaluate interpolated expressions in string.
  * This operation evaluates expressions in a string, and replaces them with
  * their evaluated result. Supported expression formats are:

@@ -50019,6 +50019,7 @@ typedef enum ecs_script_node_kind_t {
 typedef struct ecs_script_node_t {
     ecs_script_node_kind_t kind;
     const char *pos;
+    uint64_t changed_mask;
 } ecs_script_node_t;
 
 struct ecs_script_scope_t {
@@ -50586,6 +50587,11 @@ void flecs_expr_visit_free(
     ecs_script_t *script,
     ecs_expr_node_t *node);
 
+uint64_t flecs_expr_visit_deps(
+    const ecs_script_t *script,
+    ecs_expr_node_t *node,
+    const ecs_script_vars_t *vars);
+
 #endif
 
 int flecs_value_copy_to(
@@ -50928,6 +50934,11 @@ int flecs_script_visit_free(
 int flecs_script_visit_free_node(
     ecs_script_t *script,
     ecs_script_node_t *node);
+
+uint64_t flecs_script_visit_deps(
+    const ecs_script_t *script,
+    ecs_script_node_t *node,
+    const ecs_script_vars_t *vars);
 
 ecs_script_vars_t* flecs_script_vars_push(
     ecs_script_vars_t *parent,
@@ -69484,7 +69495,6 @@ void flecs_script_template_on_replace(
     void *new = ecs_field_w_size(it, size, 1);
 
     for (int32_t i = 0; i < it->count; i ++) {
-        ecs_entity_t instance = it->entities[i];
         inst_data[i].changed_mask = 0;
         
         void *old_ptr = ECS_ELEM(old, size, i);
@@ -70987,6 +70997,181 @@ int flecs_script_check_node(
     }
 
     ecs_abort(ECS_INTERNAL_ERROR, "corrupt AST node kind");
+}
+
+#endif
+
+#ifdef FLECS_SCRIPT
+
+static
+uint64_t flecs_script_node_visit_deps(
+    const ecs_script_t *script,
+    ecs_script_node_t *node,
+    const ecs_script_vars_t *vars);
+
+static
+uint64_t flecs_script_var_deps(
+    const ecs_script_vars_t *vars,
+    const char *name)
+{
+    const ecs_script_var_t *var = flecs_script_find_var(vars, name, NULL);
+    if (!var) {
+        return 0;
+    }
+    return var->changed_mask;
+}
+
+static
+uint64_t flecs_script_id_visit_deps(
+    const ecs_script_t *script,
+    ecs_script_id_t *id,
+    const ecs_script_vars_t *vars)
+{
+    uint64_t result = 0;
+    if (id->first_expr) {
+        result |= flecs_expr_visit_deps(script, id->first_expr, vars);
+    }
+    if (id->second_expr) {
+        result |= flecs_expr_visit_deps(script, id->second_expr, vars);
+    }
+    if (id->first && id->first[0] == '$') {
+        result |= flecs_script_var_deps(vars, &id->first[1]);
+    }
+    if (id->second && id->second[0] == '$') {
+        result |= flecs_script_var_deps(vars, &id->second[1]);
+    }
+    return result;
+}
+
+static
+uint64_t flecs_script_scope_visit_deps(
+    const ecs_script_t *script,
+    ecs_script_scope_t *scope,
+    const ecs_script_vars_t *vars)
+{
+    uint64_t result = 0;
+    if (!scope) {
+        return 0;
+    }
+
+    ecs_script_node_t **nodes = ecs_vec_first(&scope->stmts);
+    int32_t i, count = ecs_vec_count(&scope->stmts);
+    for (i = 0; i < count; i ++) {
+        result |= flecs_script_node_visit_deps(script, nodes[i], vars);
+    }
+
+    scope->node.changed_mask = result;
+    return result;
+}
+
+static
+uint64_t flecs_script_node_visit_deps(
+    const ecs_script_t *script,
+    ecs_script_node_t *node,
+    const ecs_script_vars_t *vars)
+{
+    uint64_t result = 0;
+
+    switch(node->kind) {
+    case EcsAstScope:
+        result = flecs_script_scope_visit_deps(
+            script, (ecs_script_scope_t*)node, vars);
+        return result;
+    case EcsAstTag:
+    case EcsAstWithTag:
+        result |= flecs_script_id_visit_deps(
+            script, &((ecs_script_tag_t*)node)->id, vars);
+        break;
+    case EcsAstComponent:
+    case EcsAstWithComponent: {
+        ecs_script_component_t *comp = (ecs_script_component_t*)node;
+        result |= flecs_script_id_visit_deps(script, &comp->id, vars);
+        result |= flecs_expr_visit_deps(script, comp->expr, vars);
+        break;
+    }
+    case EcsAstDefaultComponent: {
+        ecs_script_default_component_t *comp =
+            (ecs_script_default_component_t*)node;
+        result |= flecs_expr_visit_deps(script, comp->expr, vars);
+        break;
+    }
+    case EcsAstVarComponent:
+    case EcsAstWithVar:
+        result |= flecs_script_var_deps(
+            vars, ((ecs_script_var_component_t*)node)->name);
+        break;
+    case EcsAstWith: {
+        ecs_script_with_t *with = (ecs_script_with_t*)node;
+        result |= flecs_script_scope_visit_deps(
+            script, with->expressions, vars);
+        result |= flecs_script_scope_visit_deps(script, with->scope, vars);
+        break;
+    }
+    case EcsAstTemplate:
+        flecs_script_scope_visit_deps(
+            script, ((ecs_script_template_node_t*)node)->scope, vars);
+        break;
+    case EcsAstProp:
+    case EcsAstConst:
+    case EcsAstExportConst:
+        result |= flecs_expr_visit_deps(
+            script, ((ecs_script_var_node_t*)node)->expr, vars);
+        break;
+    case EcsAstEntity: {
+        ecs_script_entity_t *entity = (ecs_script_entity_t*)node;
+        result |= flecs_expr_visit_deps(script, entity->name_expr, vars);
+        result |= flecs_script_scope_visit_deps(script, entity->scope, vars);
+        break;
+    }
+    case EcsAstPairScope: {
+        ecs_script_pair_scope_t *pair = (ecs_script_pair_scope_t*)node;
+        result |= flecs_script_id_visit_deps(script, &pair->id, vars);
+        result |= flecs_script_scope_visit_deps(script, pair->scope, vars);
+        break;
+    }
+    case EcsAstIf: {
+        ecs_script_if_t *if_node = (ecs_script_if_t*)node;
+        result |= flecs_expr_visit_deps(script, if_node->expr, vars);
+        result |= flecs_script_scope_visit_deps(
+            script, if_node->if_true, vars);
+        result |= flecs_script_scope_visit_deps(
+            script, if_node->if_false, vars);
+        break;
+    }
+    case EcsAstFor: {
+        ecs_script_for_range_t *for_node = (ecs_script_for_range_t*)node;
+        result |= flecs_expr_visit_deps(script, for_node->from, vars);
+        result |= flecs_expr_visit_deps(script, for_node->to, vars);
+        result |= flecs_script_scope_visit_deps(script, for_node->scope, vars);
+        break;
+    }
+    case EcsAstFunction: {
+        ecs_script_function_node_t *fn = (ecs_script_function_node_t*)node;
+        flecs_script_scope_visit_deps(script, fn->body, vars);
+        flecs_expr_visit_deps(script, fn->return_expr, vars);
+        break;
+    }
+    case EcsAstUsing:
+    case EcsAstModule:
+    case EcsAstAnnotation:
+    case EcsAstInclude:
+        break;
+    }
+
+    node->changed_mask = result;
+    return result;
+}
+
+uint64_t flecs_script_visit_deps(
+    const ecs_script_t *script,
+    ecs_script_node_t *node,
+    const ecs_script_vars_t *vars)
+{
+    if (!node) {
+        return 0;
+    }
+
+    return flecs_script_node_visit_deps(script, node, vars);
 }
 
 #endif
@@ -93919,6 +94104,19 @@ error:
     return -1;
 }
 
+uint64_t ecs_expr_get_deps(
+    const ecs_script_t *script,
+    const ecs_script_vars_t *vars)
+{
+    ecs_assert(script != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_script_impl_t *impl = flecs_script_impl(
+        /* Safe, won't be writing to script */
+        ECS_CONST_CAST(ecs_script_t*, script));
+    ecs_assert(impl->expr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    return flecs_expr_visit_deps(script, impl->expr, vars);
+}
+
 const char* ecs_expr_run(
     ecs_world_t *world,
     const char *expr,
@@ -94562,6 +94760,220 @@ bool flecs_value_is_0(
     } else {
         return true;
     }
+}
+
+#endif
+
+#ifdef FLECS_SCRIPT
+
+static
+uint64_t flecs_expr_interpolated_string_visit_deps(
+    const ecs_script_t *script,
+    ecs_expr_interpolated_string_t *node,
+    const ecs_script_vars_t *vars)
+{
+    uint64_t result = 0;
+    int32_t i, count = ecs_vec_count(&node->expressions);
+    ecs_expr_node_t **expressions = ecs_vec_first(&node->expressions);
+    for (i = 0; i < count; i ++) {
+        result |= flecs_expr_visit_deps(script, expressions[i], vars);
+    }
+    return result;
+}
+
+static
+uint64_t flecs_expr_initializer_visit_deps(
+    const ecs_script_t *script,
+    ecs_expr_initializer_t *node,
+    const ecs_script_vars_t *vars)
+{
+    uint64_t result = 0;
+    ecs_expr_initializer_element_t *elems = ecs_vec_first(&node->elements);
+    int32_t i, count = ecs_vec_count(&node->elements);
+    for (i = 0; i < count; i ++) {
+        result |= flecs_expr_visit_deps(script, elems[i].value, vars);
+    }
+    return result;
+}
+
+static
+uint64_t flecs_expr_variable_visit_deps(
+    const ecs_script_t *script,
+    ecs_expr_variable_t *node,
+    const ecs_script_vars_t *vars)
+{
+    (void)script;
+
+    const ecs_script_var_t *var = flecs_script_find_var(
+        vars, node->name, NULL);
+    if (!var) {
+        return 0;
+    }
+
+    return var->changed_mask;
+}
+
+static
+uint64_t flecs_expr_unary_visit_deps(
+    const ecs_script_t *script,
+    ecs_expr_unary_t *node,
+    const ecs_script_vars_t *vars)
+{
+    return flecs_expr_visit_deps(script, node->expr, vars);
+}
+
+static
+uint64_t flecs_expr_binary_visit_deps(
+    const ecs_script_t *script,
+    ecs_expr_binary_t *node,
+    const ecs_script_vars_t *vars)
+{
+    return flecs_expr_visit_deps(script, node->left, vars) |
+           flecs_expr_visit_deps(script, node->right, vars);
+}
+
+static
+uint64_t flecs_expr_identifier_visit_deps(
+    const ecs_script_t *script,
+    ecs_expr_identifier_t *node,
+    const ecs_script_vars_t *vars)
+{
+    return flecs_expr_visit_deps(script, node->expr, vars);
+}
+
+static
+uint64_t flecs_expr_function_visit_deps(
+    const ecs_script_t *script,
+    ecs_expr_function_t *node,
+    const ecs_script_vars_t *vars)
+{
+    return flecs_expr_visit_deps(script, node->left, vars) |
+           flecs_expr_visit_deps(script, (ecs_expr_node_t*)node->args, vars);
+}
+
+static
+uint64_t flecs_expr_member_visit_deps(
+    const ecs_script_t *script,
+    ecs_expr_member_t *node,
+    const ecs_script_vars_t *vars)
+{
+    return flecs_expr_visit_deps(script, node->left, vars);
+}
+
+static
+uint64_t flecs_expr_element_visit_deps(
+    const ecs_script_t *script,
+    ecs_expr_element_t *node,
+    const ecs_script_vars_t *vars)
+{
+    return flecs_expr_visit_deps(script, node->left, vars) |
+           flecs_expr_visit_deps(script, node->index, vars);
+}
+
+static
+uint64_t flecs_expr_match_visit_deps(
+    const ecs_script_t *script,
+    ecs_expr_match_t *node,
+    const ecs_script_vars_t *vars)
+{
+    uint64_t result = flecs_expr_visit_deps(script, node->expr, vars);
+
+    int32_t i, count = ecs_vec_count(&node->elements);
+    ecs_expr_match_element_t *elems = ecs_vec_first(&node->elements);
+    for (i = 0; i < count; i ++) {
+        result |= flecs_expr_visit_deps(script, elems[i].compare, vars);
+        result |= flecs_expr_visit_deps(script, elems[i].expr, vars);
+    }
+
+    if (node->any.compare) {
+        result |= flecs_expr_visit_deps(script, node->any.compare, vars);
+    }
+    if (node->any.expr) {
+        result |= flecs_expr_visit_deps(script, node->any.expr, vars);
+    }
+
+    return result;
+}
+
+static
+uint64_t flecs_expr_cast_visit_deps(
+    const ecs_script_t *script,
+    ecs_expr_cast_t *node,
+    const ecs_script_vars_t *vars)
+{
+    return flecs_expr_visit_deps(script, node->expr, vars);
+}
+
+static
+uint64_t flecs_expr_new_visit_deps(
+    const ecs_script_t *script,
+    ecs_expr_new_t *node,
+    const ecs_script_vars_t *vars)
+{
+    if (!node->entity) {
+        return 0;
+    }
+    return flecs_script_visit_deps(
+        script, (ecs_script_node_t*)node->entity, vars);
+}
+
+uint64_t flecs_expr_visit_deps(
+    const ecs_script_t *script,
+    ecs_expr_node_t *node,
+    const ecs_script_vars_t *vars)
+{
+    if (!node) {
+        return 0;
+    }
+
+    switch(node->kind) {
+    case EcsExprValue:
+        return 0;
+    case EcsExprInterpolatedString:
+        return flecs_expr_interpolated_string_visit_deps(
+            script, (ecs_expr_interpolated_string_t*)node, vars);
+    case EcsExprInitializer:
+    case EcsExprEmptyInitializer:
+        return flecs_expr_initializer_visit_deps(
+            script, (ecs_expr_initializer_t*)node, vars);
+    case EcsExprUnary:
+        return flecs_expr_unary_visit_deps(
+            script, (ecs_expr_unary_t*)node, vars);
+    case EcsExprBinary:
+        return flecs_expr_binary_visit_deps(
+            script, (ecs_expr_binary_t*)node, vars);
+    case EcsExprIdentifier:
+        return flecs_expr_identifier_visit_deps(
+            script, (ecs_expr_identifier_t*)node, vars);
+    case EcsExprVariable:
+        return flecs_expr_variable_visit_deps(
+            script, (ecs_expr_variable_t*)node, vars);
+    case EcsExprGlobalVariable:
+        return 0;
+    case EcsExprFunction:
+    case EcsExprMethod:
+        return flecs_expr_function_visit_deps(
+            script, (ecs_expr_function_t*)node, vars);
+    case EcsExprMember:
+        return flecs_expr_member_visit_deps(
+            script, (ecs_expr_member_t*)node, vars);
+    case EcsExprElement:
+    case EcsExprComponent:
+        return flecs_expr_element_visit_deps(
+            script, (ecs_expr_element_t*)node, vars);
+    case EcsExprMatch:
+        return flecs_expr_match_visit_deps(
+            script, (ecs_expr_match_t*)node, vars);
+    case EcsExprCast:
+    case EcsExprCastNumber:
+        return flecs_expr_cast_visit_deps(
+            script, (ecs_expr_cast_t*)node, vars);
+    case EcsExprNew:
+        return flecs_expr_new_visit_deps(
+            script, (ecs_expr_new_t*)node, vars);
+    }
+
+    return 0;
 }
 
 #endif

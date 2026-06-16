@@ -35,4 +35,9 @@ void flecs_expr_visit_free(
     ecs_script_t *script,
     ecs_expr_node_t *node);
 
+uint64_t flecs_expr_visit_deps(
+    const ecs_script_t *script,
+    ecs_expr_node_t *node,
+    const ecs_script_vars_t *vars);
+
 #endif

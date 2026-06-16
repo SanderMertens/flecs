@@ -860,6 +860,19 @@ error:
     return -1;
 }
 
+uint64_t ecs_expr_get_deps(
+    const ecs_script_t *script,
+    const ecs_script_vars_t *vars)
+{
+    ecs_assert(script != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_script_impl_t *impl = flecs_script_impl(
+        /* Safe, won't be writing to script */
+        ECS_CONST_CAST(ecs_script_t*, script));
+    ecs_assert(impl->expr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    return flecs_expr_visit_deps(script, impl->expr, vars);
+}
+
 const char* ecs_expr_run(
     ecs_world_t *world,
     const char *expr,

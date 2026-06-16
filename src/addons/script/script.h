@@ -68,6 +68,11 @@ int flecs_script_visit_free_node(
     ecs_script_t *script,
     ecs_script_node_t *node);
 
+uint64_t flecs_script_visit_deps(
+    const ecs_script_t *script,
+    ecs_script_node_t *node,
+    const ecs_script_vars_t *vars);
+
 ecs_script_vars_t* flecs_script_vars_push(
     ecs_script_vars_t *parent,
     ecs_stack_t *stack,

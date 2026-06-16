@@ -345,7 +345,6 @@ void flecs_script_template_on_replace(
     void *new = ecs_field_w_size(it, size, 1);
 
     for (int32_t i = 0; i < it->count; i ++) {
-        ecs_entity_t instance = it->entities[i];
         inst_data[i].changed_mask = 0;
         
         void *old_ptr = ECS_ELEM(old, size, i);

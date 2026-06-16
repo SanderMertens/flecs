@@ -10426,3 +10426,1219 @@ void Expr_new_entity_w_unterminated_scope(void) {
 
     ecs_fini(world);
 }
+
+void Expr_get_deps_none(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *a = ecs_script_vars_define(vars, "a", ecs_f32_t);
+    a->changed_mask = 1 << 0;
+    ecs_script_var_t *b = ecs_script_vars_define(vars, "b", ecs_f32_t);
+    b->changed_mask = 1 << 1;
+    ecs_script_var_t *c = ecs_script_vars_define(vars, "c", ecs_f32_t);
+    c->changed_mask = 1 << 2;
+
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .disable_folding = disable_folding
+    };
+
+    ecs_script_t *s = ecs_expr_parse(world, "1 + 2", &desc);
+    test_assert(s != NULL);
+
+    test_uint(ecs_expr_get_deps(s, vars), 0);
+
+    ecs_script_free(s);
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_get_deps_first(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *a = ecs_script_vars_define(vars, "a", ecs_f32_t);
+    a->changed_mask = 1 << 0;
+    ecs_script_var_t *b = ecs_script_vars_define(vars, "b", ecs_f32_t);
+    b->changed_mask = 1 << 1;
+    ecs_script_var_t *c = ecs_script_vars_define(vars, "c", ecs_f32_t);
+    c->changed_mask = 1 << 2;
+
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .disable_folding = disable_folding
+    };
+
+    ecs_script_t *s = ecs_expr_parse(world, "$a", &desc);
+    test_assert(s != NULL);
+
+    test_uint(ecs_expr_get_deps(s, vars), 1 << 0);
+
+    ecs_script_free(s);
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_get_deps_second(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *a = ecs_script_vars_define(vars, "a", ecs_f32_t);
+    a->changed_mask = 1 << 0;
+    ecs_script_var_t *b = ecs_script_vars_define(vars, "b", ecs_f32_t);
+    b->changed_mask = 1 << 1;
+    ecs_script_var_t *c = ecs_script_vars_define(vars, "c", ecs_f32_t);
+    c->changed_mask = 1 << 2;
+
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .disable_folding = disable_folding
+    };
+
+    ecs_script_t *s = ecs_expr_parse(world, "$b", &desc);
+    test_assert(s != NULL);
+
+    test_uint(ecs_expr_get_deps(s, vars), 1 << 1);
+
+    ecs_script_free(s);
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_get_deps_third(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *a = ecs_script_vars_define(vars, "a", ecs_f32_t);
+    a->changed_mask = 1 << 0;
+    ecs_script_var_t *b = ecs_script_vars_define(vars, "b", ecs_f32_t);
+    b->changed_mask = 1 << 1;
+    ecs_script_var_t *c = ecs_script_vars_define(vars, "c", ecs_f32_t);
+    c->changed_mask = 1 << 2;
+
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .disable_folding = disable_folding
+    };
+
+    ecs_script_t *s = ecs_expr_parse(world, "$c", &desc);
+    test_assert(s != NULL);
+
+    test_uint(ecs_expr_get_deps(s, vars), 1 << 2);
+
+    ecs_script_free(s);
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_get_deps_first_second(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *a = ecs_script_vars_define(vars, "a", ecs_f32_t);
+    a->changed_mask = 1 << 0;
+    ecs_script_var_t *b = ecs_script_vars_define(vars, "b", ecs_f32_t);
+    b->changed_mask = 1 << 1;
+    ecs_script_var_t *c = ecs_script_vars_define(vars, "c", ecs_f32_t);
+    c->changed_mask = 1 << 2;
+
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .disable_folding = disable_folding
+    };
+
+    ecs_script_t *s = ecs_expr_parse(world, "$a + $b", &desc);
+    test_assert(s != NULL);
+
+    test_uint(ecs_expr_get_deps(s, vars), (1 << 0) | (1 << 1));
+
+    ecs_script_free(s);
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_get_deps_first_third(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *a = ecs_script_vars_define(vars, "a", ecs_f32_t);
+    a->changed_mask = 1 << 0;
+    ecs_script_var_t *b = ecs_script_vars_define(vars, "b", ecs_f32_t);
+    b->changed_mask = 1 << 1;
+    ecs_script_var_t *c = ecs_script_vars_define(vars, "c", ecs_f32_t);
+    c->changed_mask = 1 << 2;
+
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .disable_folding = disable_folding
+    };
+
+    ecs_script_t *s = ecs_expr_parse(world, "$a + $c", &desc);
+    test_assert(s != NULL);
+
+    test_uint(ecs_expr_get_deps(s, vars), (1 << 0) | (1 << 2));
+
+    ecs_script_free(s);
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_get_deps_second_third(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *a = ecs_script_vars_define(vars, "a", ecs_f32_t);
+    a->changed_mask = 1 << 0;
+    ecs_script_var_t *b = ecs_script_vars_define(vars, "b", ecs_f32_t);
+    b->changed_mask = 1 << 1;
+    ecs_script_var_t *c = ecs_script_vars_define(vars, "c", ecs_f32_t);
+    c->changed_mask = 1 << 2;
+
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .disable_folding = disable_folding
+    };
+
+    ecs_script_t *s = ecs_expr_parse(world, "$b + $c", &desc);
+    test_assert(s != NULL);
+
+    test_uint(ecs_expr_get_deps(s, vars), (1 << 1) | (1 << 2));
+
+    ecs_script_free(s);
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_get_deps_all(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *a = ecs_script_vars_define(vars, "a", ecs_f32_t);
+    a->changed_mask = 1 << 0;
+    ecs_script_var_t *b = ecs_script_vars_define(vars, "b", ecs_f32_t);
+    b->changed_mask = 1 << 1;
+    ecs_script_var_t *c = ecs_script_vars_define(vars, "c", ecs_f32_t);
+    c->changed_mask = 1 << 2;
+
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .disable_folding = disable_folding
+    };
+
+    ecs_script_t *s = ecs_expr_parse(world, "$a + $b + $c", &desc);
+    test_assert(s != NULL);
+
+    test_uint(ecs_expr_get_deps(s, vars), (1 << 0) | (1 << 1) | (1 << 2));
+
+    ecs_script_free(s);
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_get_deps_value(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .disable_folding = disable_folding
+    };
+
+    ecs_script_t *s = ecs_expr_parse(world, "10", &desc);
+    test_assert(s != NULL);
+
+    test_uint(ecs_expr_get_deps(s, vars), 0);
+
+    ecs_script_free(s);
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_get_deps_unary(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *a = ecs_script_vars_define(vars, "a", ecs_f32_t);
+    a->changed_mask = 1 << 0;
+
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .disable_folding = disable_folding
+    };
+
+    ecs_script_t *s = ecs_expr_parse(world, "-$a", &desc);
+    test_assert(s != NULL);
+
+    test_uint(ecs_expr_get_deps(s, vars), 1 << 0);
+
+    ecs_script_free(s);
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_get_deps_member(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t point = ecs_struct(world, {
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *p = ecs_script_vars_define_id(vars, "p", point);
+    p->changed_mask = 1 << 0;
+
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .disable_folding = disable_folding
+    };
+
+    ecs_script_t *s = ecs_expr_parse(world, "$p.x", &desc);
+    test_assert(s != NULL);
+
+    test_uint(ecs_expr_get_deps(s, vars), 1 << 0);
+
+    ecs_script_free(s);
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_get_deps_element(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t array = ecs_array(world, {
+        .type = ecs_id(ecs_i32_t),
+        .count = 2
+    });
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *arr = ecs_script_vars_define_id(vars, "arr", array);
+    arr->changed_mask = 1 << 0;
+    ecs_script_var_t *i = ecs_script_vars_define(vars, "i", ecs_i32_t);
+    i->changed_mask = 1 << 1;
+
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .disable_folding = disable_folding
+    };
+
+    ecs_script_t *s = ecs_expr_parse(world, "$arr[$i]", &desc);
+    test_assert(s != NULL);
+
+    test_uint(ecs_expr_get_deps(s, vars), (1 << 0) | (1 << 1));
+
+    ecs_script_free(s);
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_get_deps_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, Position, {10, 20});
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .disable_folding = disable_folding
+    };
+
+    ecs_script_t *s = ecs_expr_parse(world, "e[Position]", &desc);
+    test_assert(s != NULL);
+
+    test_uint(ecs_expr_get_deps(s, vars), 0);
+
+    ecs_script_free(s);
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_get_deps_match(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *a = ecs_script_vars_define(vars, "a", ecs_f32_t);
+    a->changed_mask = 1 << 0;
+    ecs_script_var_t *b = ecs_script_vars_define(vars, "b", ecs_f32_t);
+    b->changed_mask = 1 << 1;
+    ecs_script_var_t *i = ecs_script_vars_define(vars, "i", ecs_i32_t);
+    i->changed_mask = 1 << 2;
+
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .disable_folding = disable_folding
+    };
+
+    ecs_script_t *s = ecs_expr_parse(world,
+        "match $i {\n"
+        "1: $a\n"
+        "_: $b\n"
+        "}", &desc);
+    test_assert(s != NULL);
+
+    test_uint(ecs_expr_get_deps(s, vars), (1 << 0) | (1 << 1) | (1 << 2));
+
+    ecs_script_free(s);
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_get_deps_cast(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *a = ecs_script_vars_define(vars, "a", ecs_f32_t);
+    a->changed_mask = 1 << 0;
+
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .type = ecs_id(ecs_i32_t),
+        .disable_folding = disable_folding
+    };
+
+    ecs_script_t *s = ecs_expr_parse(world, "$a", &desc);
+    test_assert(s != NULL);
+
+    test_uint(ecs_expr_get_deps(s, vars), 1 << 0);
+
+    ecs_script_free(s);
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_get_deps_function(void) {
+    ecs_world_t *world = ecs_init();
+
+    test_assert(ecs_script_run(world, NULL,
+        "fn add(a: i32, b: i32) -> i32 { a + b }", NULL) == 0);
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *x = ecs_script_vars_define(vars, "x", ecs_i32_t);
+    x->changed_mask = 1 << 0;
+
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .disable_folding = disable_folding
+    };
+
+    ecs_script_t *s = ecs_expr_parse(world, "add($x, 2)", &desc);
+    test_assert(s != NULL);
+
+    test_uint(ecs_expr_get_deps(s, vars), 1 << 0);
+
+    ecs_script_free(s);
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_get_deps_initializer(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *a = ecs_script_vars_define(vars, "a", ecs_f32_t);
+    a->changed_mask = 1 << 0;
+    ecs_script_var_t *b = ecs_script_vars_define(vars, "b", ecs_f32_t);
+    b->changed_mask = 1 << 1;
+
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .type = ecs_id(Position),
+        .disable_folding = disable_folding
+    };
+
+    ecs_script_t *s = ecs_expr_parse(world, "{$a, $b}", &desc);
+    test_assert(s != NULL);
+
+    test_uint(ecs_expr_get_deps(s, vars), (1 << 0) | (1 << 1));
+
+    ecs_script_free(s);
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_get_deps_empty_initializer(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .type = ecs_id(Position),
+        .disable_folding = disable_folding
+    };
+
+    ecs_script_t *s = ecs_expr_parse(world, "{}", &desc);
+    test_assert(s != NULL);
+
+    test_uint(ecs_expr_get_deps(s, vars), 0);
+
+    ecs_script_free(s);
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_get_deps_interpolated_string(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *a = ecs_script_vars_define(vars, "a", ecs_i32_t);
+    a->changed_mask = 1 << 0;
+
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .disable_folding = disable_folding
+    };
+
+    ecs_script_t *s = ecs_expr_parse(world, "\"value: $a\"", &desc);
+    test_assert(s != NULL);
+
+    test_uint(ecs_expr_get_deps(s, vars), 1 << 0);
+
+    ecs_script_free(s);
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_get_deps_global_variable(void) {
+    ecs_world_t *world = ecs_init();
+
+    int32_t v = 10;
+    test_assert(0 != ecs_const_var(world, {
+        .name = "FOO",
+        .type = ecs_id(ecs_i32_t),
+        .value = &v
+    }));
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .disable_folding = disable_folding
+    };
+
+    ecs_script_t *s = ecs_expr_parse(world, "$FOO", &desc);
+    test_assert(s != NULL);
+
+    test_uint(ecs_expr_get_deps(s, vars), 0);
+
+    ecs_script_free(s);
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_get_deps_identifier(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *foo = ecs_script_vars_define(vars, "foo", ecs_f32_t);
+    foo->changed_mask = 1 << 0;
+
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .disable_folding = disable_folding
+    };
+
+    ecs_script_t *s = ecs_expr_parse(world, "foo", &desc);
+    test_assert(s != NULL);
+
+    test_uint(ecs_expr_get_deps(s, vars), 1 << 0);
+
+    ecs_script_free(s);
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_get_deps_new(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .type = ecs_id(ecs_entity_t),
+        .disable_folding = disable_folding
+    };
+
+    ecs_script_t *s = ecs_expr_parse(world, "new { Position: {10, 20} }", &desc);
+    test_assert(s != NULL);
+
+    test_uint(ecs_expr_get_deps(s, vars), 0);
+
+    ecs_script_free(s);
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_get_deps_new_w_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *a = ecs_script_vars_define(vars, "a", ecs_f32_t);
+    a->changed_mask = 1 << 0;
+    ecs_script_var_t *b = ecs_script_vars_define(vars, "b", ecs_f32_t);
+    b->changed_mask = 1 << 1;
+
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .type = ecs_id(ecs_entity_t),
+        .disable_folding = disable_folding
+    };
+
+    ecs_script_t *s = ecs_expr_parse(world, "new { Position: {$a, $b} }", &desc);
+    test_assert(s != NULL);
+
+    test_uint(ecs_expr_get_deps(s, vars), (1 << 0) | (1 << 1));
+
+    ecs_script_free(s);
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_get_deps_new_w_var_in_child(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *a = ecs_script_vars_define(vars, "a", ecs_f32_t);
+    a->changed_mask = 1 << 0;
+    ecs_script_var_t *b = ecs_script_vars_define(vars, "b", ecs_f32_t);
+    b->changed_mask = 1 << 1;
+
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .type = ecs_id(ecs_entity_t),
+        .disable_folding = disable_folding
+    };
+
+    ecs_script_t *s = ecs_expr_parse(world,
+        "new {\n"
+        "  child {\n"
+        "    Position: {$a, 0}\n"
+        "  }\n"
+        "}", &desc);
+    test_assert(s != NULL);
+
+    test_uint(ecs_expr_get_deps(s, vars), 1 << 0);
+
+    ecs_script_free(s);
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_get_deps_new_empty_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .type = ecs_id(ecs_entity_t),
+        .disable_folding = disable_folding
+    };
+
+    ecs_script_t *s = ecs_expr_parse(world, "new {}", &desc);
+    test_assert(s != NULL);
+
+    test_uint(ecs_expr_get_deps(s, vars), 0);
+
+    ecs_script_free(s);
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_get_deps_new_tag_pair_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *tgt = ecs_script_vars_define(vars, "tgt", ecs_entity_t);
+    tgt->changed_mask = 1 << 0;
+
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .type = ecs_id(ecs_entity_t),
+        .disable_folding = disable_folding
+    };
+
+    ecs_script_t *s = ecs_expr_parse(world, "new { (Rel, $tgt) }", &desc);
+    test_assert(s != NULL);
+
+    test_uint(ecs_expr_get_deps(s, vars), 1 << 0);
+
+    ecs_script_free(s);
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_get_deps_new_var_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t point = ecs_struct(world, {
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *foo = ecs_script_vars_define_id(vars, "foo", point);
+    foo->changed_mask = 1 << 0;
+
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .type = ecs_id(ecs_entity_t),
+        .disable_folding = disable_folding
+    };
+
+    ecs_script_t *s = ecs_expr_parse(world, "new { $foo }", &desc);
+    test_assert(s != NULL);
+
+    test_uint(ecs_expr_get_deps(s, vars), 1 << 0);
+
+    ecs_script_free(s);
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_get_deps_new_with(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *a = ecs_script_vars_define(vars, "a", ecs_f32_t);
+    a->changed_mask = 1 << 0;
+    ecs_script_var_t *b = ecs_script_vars_define(vars, "b", ecs_f32_t);
+    b->changed_mask = 1 << 1;
+
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .type = ecs_id(ecs_entity_t),
+        .disable_folding = disable_folding
+    };
+
+    ecs_script_t *s = ecs_expr_parse(world,
+        "new { with Position($a, $b) { child {} } }", &desc);
+    test_assert(s != NULL);
+
+    test_uint(ecs_expr_get_deps(s, vars), (1 << 0) | (1 << 1));
+
+    ecs_script_free(s);
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_get_deps_new_with_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t point = ecs_struct(world, {
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *foo = ecs_script_vars_define_id(vars, "foo", point);
+    foo->changed_mask = 1 << 0;
+
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .type = ecs_id(ecs_entity_t),
+        .disable_folding = disable_folding
+    };
+
+    ecs_script_t *s = ecs_expr_parse(world,
+        "new { with $foo { child {} } }", &desc);
+    test_assert(s != NULL);
+
+    test_uint(ecs_expr_get_deps(s, vars), 1 << 0);
+
+    ecs_script_free(s);
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_get_deps_new_with_tag(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *a = ecs_script_vars_define(vars, "a", ecs_f32_t);
+    a->changed_mask = 1 << 0;
+
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .type = ecs_id(ecs_entity_t),
+        .disable_folding = disable_folding
+    };
+
+    ecs_script_t *s = ecs_expr_parse(world,
+        "new { with Tag { child {} } }", &desc);
+    test_assert(s != NULL);
+
+    test_uint(ecs_expr_get_deps(s, vars), 0);
+
+    ecs_script_free(s);
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_get_deps_new_pair_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *tgt = ecs_script_vars_define(vars, "tgt", ecs_entity_t);
+    tgt->changed_mask = 1 << 0;
+    ecs_script_var_t *a = ecs_script_vars_define(vars, "a", ecs_f32_t);
+    a->changed_mask = 1 << 1;
+
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .type = ecs_id(ecs_entity_t),
+        .disable_folding = disable_folding
+    };
+
+    ecs_script_t *s = ecs_expr_parse(world,
+        "new { (Rel, $tgt) { Position: {$a, 0} } }", &desc);
+    test_assert(s != NULL);
+
+    test_uint(ecs_expr_get_deps(s, vars), (1 << 0) | (1 << 1));
+
+    ecs_script_free(s);
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_get_deps_new_if(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *cond = ecs_script_vars_define(vars, "cond", ecs_bool_t);
+    cond->changed_mask = 1 << 0;
+    ecs_script_var_t *a = ecs_script_vars_define(vars, "a", ecs_f32_t);
+    a->changed_mask = 1 << 1;
+
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .type = ecs_id(ecs_entity_t),
+        .disable_folding = disable_folding
+    };
+
+    ecs_script_t *s = ecs_expr_parse(world,
+        "new { if $cond { Position: {$a, 0} } }", &desc);
+    test_assert(s != NULL);
+
+    test_uint(ecs_expr_get_deps(s, vars), (1 << 0) | (1 << 1));
+
+    ecs_script_free(s);
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_get_deps_new_if_else(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *cond = ecs_script_vars_define(vars, "cond", ecs_bool_t);
+    cond->changed_mask = 1 << 0;
+    ecs_script_var_t *b = ecs_script_vars_define(vars, "b", ecs_f32_t);
+    b->changed_mask = 1 << 1;
+
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .type = ecs_id(ecs_entity_t),
+        .disable_folding = disable_folding
+    };
+
+    ecs_script_t *s = ecs_expr_parse(world,
+        "new { if $cond { } else { Position: {$b, 0} } }", &desc);
+    test_assert(s != NULL);
+
+    test_uint(ecs_expr_get_deps(s, vars), (1 << 0) | (1 << 1));
+
+    ecs_script_free(s);
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_get_deps_new_for(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *n = ecs_script_vars_define(vars, "n", ecs_i32_t);
+    n->changed_mask = 1 << 0;
+    ecs_script_var_t *a = ecs_script_vars_define(vars, "a", ecs_f32_t);
+    a->changed_mask = 1 << 1;
+
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .type = ecs_id(ecs_entity_t),
+        .disable_folding = disable_folding
+    };
+
+    ecs_script_t *s = ecs_expr_parse(world,
+        "new { for i in 0..$n { Position: {$a, 0} } }", &desc);
+    test_assert(s != NULL);
+
+    test_uint(ecs_expr_get_deps(s, vars), (1 << 0) | (1 << 1));
+
+    ecs_script_free(s);
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_get_deps_new_const(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *a = ecs_script_vars_define(vars, "a", ecs_f32_t);
+    a->changed_mask = 1 << 0;
+
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .type = ecs_id(ecs_entity_t),
+        .disable_folding = disable_folding
+    };
+
+    ecs_script_t *s = ecs_expr_parse(world,
+        "new { const x: $a }", &desc);
+    test_assert(s != NULL);
+
+    test_uint(ecs_expr_get_deps(s, vars), 1 << 0);
+
+    ecs_script_free(s);
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_get_deps_new_function(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *a = ecs_script_vars_define(vars, "a", ecs_f32_t);
+    a->changed_mask = 1 << 0;
+
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .type = ecs_id(ecs_entity_t),
+        .disable_folding = disable_folding
+    };
+
+    ecs_script_t *s = ecs_expr_parse(world,
+        "new { fn f() -> f32 { $a } }", &desc);
+    test_assert(s != NULL);
+
+    test_uint(ecs_expr_get_deps(s, vars), 0);
+
+    ecs_script_free(s);
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+
+void Expr_get_deps_new_unused_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *a = ecs_script_vars_define(vars, "a", ecs_f32_t);
+    a->changed_mask = 1 << 0;
+
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .type = ecs_id(ecs_entity_t),
+        .disable_folding = disable_folding
+    };
+
+    ecs_script_t *s = ecs_expr_parse(world,
+        "new { Position: {10, 20} }", &desc);
+    test_assert(s != NULL);
+
+    test_uint(ecs_expr_get_deps(s, vars), 0);
+
+    ecs_script_free(s);
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_get_deps_new_second_var_only(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *a = ecs_script_vars_define(vars, "a", ecs_f32_t);
+    a->changed_mask = 1 << 0;
+    ecs_script_var_t *b = ecs_script_vars_define(vars, "b", ecs_f32_t);
+    b->changed_mask = 1 << 1;
+
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .type = ecs_id(ecs_entity_t),
+        .disable_folding = disable_folding
+    };
+
+    ecs_script_t *s = ecs_expr_parse(world,
+        "new { Position: {$b, 0} }", &desc);
+    test_assert(s != NULL);
+
+    test_uint(ecs_expr_get_deps(s, vars), 1 << 1);
+
+    ecs_script_free(s);
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_get_deps_new_if_else_both_branches(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *cond = ecs_script_vars_define(vars, "cond", ecs_bool_t);
+    cond->changed_mask = 1 << 0;
+    ecs_script_var_t *a = ecs_script_vars_define(vars, "a", ecs_f32_t);
+    a->changed_mask = 1 << 1;
+    ecs_script_var_t *b = ecs_script_vars_define(vars, "b", ecs_f32_t);
+    b->changed_mask = 1 << 2;
+
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .type = ecs_id(ecs_entity_t),
+        .disable_folding = disable_folding
+    };
+
+    ecs_script_t *s = ecs_expr_parse(world,
+        "new { if $cond { Position: {$a, 0} } else { Position: {$b, 0} } }",
+        &desc);
+    test_assert(s != NULL);
+
+    test_uint(ecs_expr_get_deps(s, vars), (1 << 0) | (1 << 1) | (1 << 2));
+
+    ecs_script_free(s);
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_get_deps_new_if_else_if(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *c1 = ecs_script_vars_define(vars, "c1", ecs_bool_t);
+    c1->changed_mask = 1 << 0;
+    ecs_script_var_t *a = ecs_script_vars_define(vars, "a", ecs_f32_t);
+    a->changed_mask = 1 << 1;
+    ecs_script_var_t *c2 = ecs_script_vars_define(vars, "c2", ecs_bool_t);
+    c2->changed_mask = 1 << 2;
+    ecs_script_var_t *b = ecs_script_vars_define(vars, "b", ecs_f32_t);
+    b->changed_mask = 1 << 3;
+
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .type = ecs_id(ecs_entity_t),
+        .disable_folding = disable_folding
+    };
+
+    ecs_script_t *s = ecs_expr_parse(world,
+        "new { if $c1 { Position: {$a, 0} } "
+        "else if $c2 { Position: {$b, 0} } }",
+        &desc);
+    test_assert(s != NULL);
+
+    test_uint(ecs_expr_get_deps(s, vars),
+        (1 << 0) | (1 << 1) | (1 << 2) | (1 << 3));
+
+    ecs_script_free(s);
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
