@@ -672,6 +672,14 @@ void Template_default_component_w_prop_var_in_nested_if(void);
 void Template_default_component_w_prop_var_in_nested_for(void);
 void Template_template_w_new_expr_in_const(void);
 void Template_template_w_new_expr_in_component(void);
+void Template_changed_mask_none_changed(void);
+void Template_changed_mask_first_changed(void);
+void Template_changed_mask_second_changed(void);
+void Template_changed_mask_third_changed(void);
+void Template_changed_mask_first_second_changed(void);
+void Template_changed_mask_first_third_changed(void);
+void Template_changed_mask_second_third_changed(void);
+void Template_changed_mask_all_changed(void);
 
 // Testsuite 'IncrementalUpdates'
 void IncrementalUpdates_component_value_update(void);
@@ -4360,6 +4368,38 @@ bake_test_case Template_testcases[] = {
     {
         "template_w_new_expr_in_component",
         Template_template_w_new_expr_in_component
+    },
+    {
+        "changed_mask_none_changed",
+        Template_changed_mask_none_changed
+    },
+    {
+        "changed_mask_first_changed",
+        Template_changed_mask_first_changed
+    },
+    {
+        "changed_mask_second_changed",
+        Template_changed_mask_second_changed
+    },
+    {
+        "changed_mask_third_changed",
+        Template_changed_mask_third_changed
+    },
+    {
+        "changed_mask_first_second_changed",
+        Template_changed_mask_first_second_changed
+    },
+    {
+        "changed_mask_first_third_changed",
+        Template_changed_mask_first_third_changed
+    },
+    {
+        "changed_mask_second_third_changed",
+        Template_changed_mask_second_third_changed
+    },
+    {
+        "changed_mask_all_changed",
+        Template_changed_mask_all_changed
     }
 };
 
@@ -8519,7 +8559,7 @@ static bake_test_suite suites[] = {
         "Template",
         NULL,
         NULL,
-        90,
+        98,
         Template_testcases
     },
     {

@@ -16857,7 +16857,7 @@ typedef struct EcsScript {
  * each instance of a template.
  */
 typedef struct EcsScriptTemplateInstance {
-    int8_t dummy_;                      /**< Placeholder, currently unused. */
+    uint64_t changed_mask;
 } EcsScriptTemplateInstance;
 
 /** Script function context. */

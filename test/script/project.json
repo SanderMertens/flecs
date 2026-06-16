@@ -679,7 +679,15 @@
                 "default_component_w_prop_var_in_nested_if",
                 "default_component_w_prop_var_in_nested_for",
                 "template_w_new_expr_in_const",
-                "template_w_new_expr_in_component"
+                "template_w_new_expr_in_component",
+                "changed_mask_none_changed",
+                "changed_mask_first_changed",
+                "changed_mask_second_changed",
+                "changed_mask_third_changed",
+                "changed_mask_first_second_changed",
+                "changed_mask_first_third_changed",
+                "changed_mask_second_third_changed",
+                "changed_mask_all_changed"
             ]
         }, {
             "id": "IncrementalUpdates",

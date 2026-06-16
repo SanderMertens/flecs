@@ -3733,10 +3733,10 @@ void Template_template_w_tree_parent_change_value(void) {
         }
 
         {
-            void *bar = ecs_get_mut_id(world, e, Bar);
+            void *bar = ECS_CONST_CAST(void*, ecs_get_id(world, e, Bar));
             test_assert(bar != NULL);
             *(int32_t*)bar = 20;
-            ecs_modified_id(world, e, Bar);
+            ecs_set_id(world, e, Bar, sizeof(int32_t), bar);
         }
     }
 
@@ -4113,6 +4113,340 @@ void Template_template_w_new_expr_in_const(void) {
     test_assert(ecs_has_id(world, helper_2, foo));
     test_assert(ecs_has_pair(world, helper_1, EcsChildOf, e1));
     test_assert(ecs_has_pair(world, helper_2, EcsChildOf, e2));
+
+    ecs_fini(world);
+}
+
+typedef struct {
+    float a;
+    float b;
+    float c;
+} TmplChangedABC;
+
+void Template_changed_mask_none_changed(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "template Tree {"
+    LINE "  prop a = flecs.meta.f32: 1"
+    LINE "  prop b = flecs.meta.f32: 2"
+    LINE "  prop c = flecs.meta.f32: 3"
+    LINE "  child {"
+    LINE "    Position: {$a, $b}"
+    LINE "  }"
+    LINE "}"
+    LINE "Tree e()";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t tree = ecs_lookup(world, "Tree");
+    test_assert(tree != 0);
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    ecs_entity_t ecs_id(TmplChangedABC) = tree;
+    ecs_set(world, e, TmplChangedABC, {1, 2, 3});
+
+    const EcsScriptTemplateInstance *inst = ecs_get_id(world, e,
+        ecs_pair_t(EcsScriptTemplateInstance, tree));
+    test_assert(inst != NULL);
+    test_uint(inst->changed_mask, 0);
+
+    ecs_fini(world);
+}
+
+void Template_changed_mask_first_changed(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "template Tree {"
+    LINE "  prop a = flecs.meta.f32: 1"
+    LINE "  prop b = flecs.meta.f32: 2"
+    LINE "  prop c = flecs.meta.f32: 3"
+    LINE "  child {"
+    LINE "    Position: {$a, $b}"
+    LINE "  }"
+    LINE "}"
+    LINE "Tree e()";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t tree = ecs_lookup(world, "Tree");
+    test_assert(tree != 0);
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    ecs_entity_t ecs_id(TmplChangedABC) = tree;
+    ecs_set(world, e, TmplChangedABC, {9, 2, 3});
+
+    const EcsScriptTemplateInstance *inst = ecs_get_id(world, e,
+        ecs_pair_t(EcsScriptTemplateInstance, tree));
+    test_assert(inst != NULL);
+    test_uint(inst->changed_mask, 1 << 0);
+
+    ecs_fini(world);
+}
+
+void Template_changed_mask_second_changed(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "template Tree {"
+    LINE "  prop a = flecs.meta.f32: 1"
+    LINE "  prop b = flecs.meta.f32: 2"
+    LINE "  prop c = flecs.meta.f32: 3"
+    LINE "  child {"
+    LINE "    Position: {$a, $b}"
+    LINE "  }"
+    LINE "}"
+    LINE "Tree e()";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t tree = ecs_lookup(world, "Tree");
+    test_assert(tree != 0);
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    ecs_entity_t ecs_id(TmplChangedABC) = tree;
+    ecs_set(world, e, TmplChangedABC, {1, 9, 3});
+
+    const EcsScriptTemplateInstance *inst = ecs_get_id(world, e,
+        ecs_pair_t(EcsScriptTemplateInstance, tree));
+    test_assert(inst != NULL);
+    test_uint(inst->changed_mask, 1 << 1);
+
+    ecs_fini(world);
+}
+
+void Template_changed_mask_third_changed(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "template Tree {"
+    LINE "  prop a = flecs.meta.f32: 1"
+    LINE "  prop b = flecs.meta.f32: 2"
+    LINE "  prop c = flecs.meta.f32: 3"
+    LINE "  child {"
+    LINE "    Position: {$a, $b}"
+    LINE "  }"
+    LINE "}"
+    LINE "Tree e()";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t tree = ecs_lookup(world, "Tree");
+    test_assert(tree != 0);
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    ecs_entity_t ecs_id(TmplChangedABC) = tree;
+    ecs_set(world, e, TmplChangedABC, {1, 2, 9});
+
+    const EcsScriptTemplateInstance *inst = ecs_get_id(world, e,
+        ecs_pair_t(EcsScriptTemplateInstance, tree));
+    test_assert(inst != NULL);
+    test_uint(inst->changed_mask, 1 << 2);
+
+    ecs_fini(world);
+}
+
+void Template_changed_mask_first_second_changed(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "template Tree {"
+    LINE "  prop a = flecs.meta.f32: 1"
+    LINE "  prop b = flecs.meta.f32: 2"
+    LINE "  prop c = flecs.meta.f32: 3"
+    LINE "  child {"
+    LINE "    Position: {$a, $b}"
+    LINE "  }"
+    LINE "}"
+    LINE "Tree e()";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t tree = ecs_lookup(world, "Tree");
+    test_assert(tree != 0);
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    ecs_entity_t ecs_id(TmplChangedABC) = tree;
+    ecs_set(world, e, TmplChangedABC, {9, 9, 3});
+
+    const EcsScriptTemplateInstance *inst = ecs_get_id(world, e,
+        ecs_pair_t(EcsScriptTemplateInstance, tree));
+    test_assert(inst != NULL);
+    test_uint(inst->changed_mask, (1 << 0) | (1 << 1));
+
+    ecs_fini(world);
+}
+
+void Template_changed_mask_first_third_changed(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "template Tree {"
+    LINE "  prop a = flecs.meta.f32: 1"
+    LINE "  prop b = flecs.meta.f32: 2"
+    LINE "  prop c = flecs.meta.f32: 3"
+    LINE "  child {"
+    LINE "    Position: {$a, $b}"
+    LINE "  }"
+    LINE "}"
+    LINE "Tree e()";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t tree = ecs_lookup(world, "Tree");
+    test_assert(tree != 0);
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    ecs_entity_t ecs_id(TmplChangedABC) = tree;
+    ecs_set(world, e, TmplChangedABC, {9, 2, 9});
+
+    const EcsScriptTemplateInstance *inst = ecs_get_id(world, e,
+        ecs_pair_t(EcsScriptTemplateInstance, tree));
+    test_assert(inst != NULL);
+    test_uint(inst->changed_mask, (1 << 0) | (1 << 2));
+
+    ecs_fini(world);
+}
+
+void Template_changed_mask_second_third_changed(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "template Tree {"
+    LINE "  prop a = flecs.meta.f32: 1"
+    LINE "  prop b = flecs.meta.f32: 2"
+    LINE "  prop c = flecs.meta.f32: 3"
+    LINE "  child {"
+    LINE "    Position: {$a, $b}"
+    LINE "  }"
+    LINE "}"
+    LINE "Tree e()";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t tree = ecs_lookup(world, "Tree");
+    test_assert(tree != 0);
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    ecs_entity_t ecs_id(TmplChangedABC) = tree;
+    ecs_set(world, e, TmplChangedABC, {1, 9, 9});
+
+    const EcsScriptTemplateInstance *inst = ecs_get_id(world, e,
+        ecs_pair_t(EcsScriptTemplateInstance, tree));
+    test_assert(inst != NULL);
+    test_uint(inst->changed_mask, (1 << 1) | (1 << 2));
+
+    ecs_fini(world);
+}
+
+void Template_changed_mask_all_changed(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "template Tree {"
+    LINE "  prop a = flecs.meta.f32: 1"
+    LINE "  prop b = flecs.meta.f32: 2"
+    LINE "  prop c = flecs.meta.f32: 3"
+    LINE "  child {"
+    LINE "    Position: {$a, $b}"
+    LINE "  }"
+    LINE "}"
+    LINE "Tree e()";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t tree = ecs_lookup(world, "Tree");
+    test_assert(tree != 0);
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    ecs_entity_t ecs_id(TmplChangedABC) = tree;
+    ecs_set(world, e, TmplChangedABC, {9, 9, 9});
+
+    const EcsScriptTemplateInstance *inst = ecs_get_id(world, e,
+        ecs_pair_t(EcsScriptTemplateInstance, tree));
+    test_assert(inst != NULL);
+    test_uint(inst->changed_mask, (1 << 0) | (1 << 1) | (1 << 2));
 
     ecs_fini(world);
 }
