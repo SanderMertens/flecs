@@ -46,6 +46,9 @@ FLECS_API
 extern ECS_DECLARE(EcsScriptTemplate);
 
 FLECS_API
+extern ECS_COMPONENT_DECLARE(EcsScriptTemplateInstance);
+
+FLECS_API
 extern ECS_COMPONENT_DECLARE(EcsScriptConstVar);
 
 FLECS_API
@@ -103,6 +106,14 @@ typedef struct EcsScript {
     ecs_script_t *script;               /**< Parsed script object. */
     ecs_script_template_t *template_;   /**< Only set for template scripts. */
 } EcsScript;
+
+/** Template instance component.
+ * This component is added as a pair (EcsScriptTemplateInstance, template) to
+ * each instance of a template.
+ */
+typedef struct EcsScriptTemplateInstance {
+    int8_t dummy_;                      /**< Placeholder, currently unused. */
+} EcsScriptTemplateInstance;
 
 /** Script function context. */
 typedef struct ecs_function_ctx_t {

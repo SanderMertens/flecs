@@ -10,6 +10,7 @@
 
 ECS_COMPONENT_DECLARE(EcsScriptTemplateSetEvent);
 ECS_DECLARE(EcsScriptTemplate);
+ECS_COMPONENT_DECLARE(EcsScriptTemplateInstance);
 
 static
 void flecs_template_set_event_free(EcsScriptTemplateSetEvent *ptr) {
@@ -194,6 +195,9 @@ void flecs_script_template_instantiate(
         }
 
         instance_node.eval = entities[i];
+
+        ecs_add_pair(
+            world, entities[i], ecs_id(EcsScriptTemplateInstance), template_entity);
 
         /* Apply annotations, if any */
         bool annot_failed = false;
@@ -642,6 +646,7 @@ void flecs_script_template_import(
 {
     ECS_COMPONENT_DEFINE(world, EcsScriptTemplateSetEvent);
     ECS_TAG_DEFINE(world, EcsScriptTemplate);
+    ECS_COMPONENT_DEFINE(world, EcsScriptTemplateInstance);
 
     ecs_add_id(world, EcsScriptTemplate, EcsPairIsTag);
 
@@ -650,6 +655,10 @@ void flecs_script_template_import(
         .move = ecs_move(EcsScriptTemplateSetEvent),
         .dtor = ecs_dtor(EcsScriptTemplateSetEvent),
         .flags = ECS_TYPE_HOOK_COPY_ILLEGAL
+    });
+
+    ecs_set_hooks(world, EcsScriptTemplateInstance, {
+        .ctor = flecs_default_ctor
     });
 
     ecs_observer(world, {
