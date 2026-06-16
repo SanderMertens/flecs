@@ -16813,6 +16813,7 @@ typedef struct ecs_script_var_t {
     const char *name;                    /**< Variable name. */
     ecs_value_t value;                   /**< Variable value. */
     const ecs_type_info_t *type_info;    /**< Type information. */
+    uint64_t changed_mask;               /**< Mask used by template change tracking */
     int32_t sp;                          /**< Stack pointer. */
     bool is_const;                       /**< Whether the variable is constant. */
 } ecs_script_var_t;

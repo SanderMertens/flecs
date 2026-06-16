@@ -69614,6 +69614,8 @@ int flecs_script_template_eval_prop(
         flecs_free(&v->world->allocator, ti->size, value.ptr);
     }
 
+    var->changed_mask = 1llu << ecs_vec_count(&template->prop_defaults);
+
     ecs_script_var_t *value = ecs_vec_append_t(&v->base.script->allocator, 
         &template->prop_defaults, ecs_script_var_t);
     value->value.ptr = flecs_calloc_w_dbg_info(
