@@ -39,6 +39,7 @@ void Map_randomized_remove(void);
 void Map_randomized_insert_large(void);
 void Map_randomized_remove_large(void);
 void Map_randomized_after_clear(void);
+void Map_hashmap_iter_terminates(void);
 
 // Testsuite 'Sparse'
 void Sparse_setup(void);
@@ -229,6 +230,10 @@ bake_test_case Map_testcases[] = {
     {
         "randomized_after_clear",
         Map_randomized_after_clear
+    },
+    {
+        "hashmap_iter_terminates",
+        Map_hashmap_iter_terminates
     }
 };
 
@@ -502,7 +507,7 @@ static bake_test_suite suites[] = {
         "Map",
         Map_setup,
         NULL,
-        29,
+        30,
         Map_testcases
     },
     {

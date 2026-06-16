@@ -268,11 +268,11 @@ void* flecs_hashmap_next_(
     int32_t index = ++ it->index;
     ecs_hm_bucket_t *bucket = it->bucket;
     while (!bucket || it->index >= ecs_vec_count(&bucket->keys)) {
-        ecs_map_next(&it->it);
-        bucket = it->bucket = ecs_map_ptr(&it->it);
-        if (!bucket) {
+        if (!ecs_map_next(&it->it)) {
+            it->bucket = NULL;
             return NULL;
         }
+        bucket = it->bucket = ecs_map_ptr(&it->it);
         index = it->index = 0;
     }
 

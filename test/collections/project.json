@@ -43,7 +43,8 @@
                 "randomized_remove",
                 "randomized_insert_large",
                 "randomized_remove_large",
-                "randomized_after_clear"
+                "randomized_after_clear",
+                "hashmap_iter_terminates"
             ]
         }, {
             "id": "Sparse",
