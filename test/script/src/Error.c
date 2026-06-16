@@ -2191,6 +2191,7 @@ void Error_annotation_to_unresolved_identifier_managed_parse_twice(void) {
     LINE "Foo"
     ;
 
+    ecs_log_set_level(-4);
     ecs_entity_t s = ecs_script(world, {
         .code = expr
     });
@@ -2216,6 +2217,7 @@ void Error_annotation_to_unresolved_identifier_managed_parse_twice_2(void) {
 
     ecs_entity_t s = ecs_new(world);
 
+    ecs_log_set_level(-4);
     ecs_script(world, {
         .entity = s,
         .code = expr

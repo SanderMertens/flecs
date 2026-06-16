@@ -955,6 +955,12 @@ int flecs_expr_new_visit_eval(
     ecs_script_eval_visitor_t temp_v = {0};
     ecs_script_eval_desc_t desc = {0};
 
+    if (v && v->template) {
+        *(ecs_entity_t*)out->value.ptr = 0;
+        out->value.type = ecs_id(ecs_entity_t);
+        return 0;
+    }
+
     if (!v) {
         /* Safe const cast, script won't modify variables since it only contains 
          * an entity statement. */

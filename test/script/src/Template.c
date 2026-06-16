@@ -4031,3 +4031,47 @@ void Template_default_component_w_prop_var_in_nested_for(void) {
 
     ecs_fini(world);
 }
+
+void Template_template_w_new_expr_in_const(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Foo {}"
+    LINE "Rel {}"
+    LINE "template Tree {"
+    LINE "  const helper: new { Foo }"
+    LINE "  child {"
+    LINE "    (Rel, $helper)"
+    LINE "  }"
+    LINE "}"
+    LINE "Tree e1()"
+    LINE "Tree e2()";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t rel = ecs_lookup(world, "Rel");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t e1 = ecs_lookup(world, "e1");
+    ecs_entity_t e2 = ecs_lookup(world, "e2");
+    test_assert(e1 != 0);
+    test_assert(e2 != 0);
+
+    ecs_entity_t child_1 = ecs_lookup(world, "e1.child");
+    ecs_entity_t child_2 = ecs_lookup(world, "e2.child");
+    test_assert(child_1 != 0);
+    test_assert(child_2 != 0);
+
+    ecs_entity_t helper_1 = ecs_get_target(world, child_1, rel, 0);
+    ecs_entity_t helper_2 = ecs_get_target(world, child_2, rel, 0);
+    test_assert(helper_1 != 0);
+    test_assert(helper_2 != 0);
+    test_assert(helper_1 != helper_2);
+
+    test_assert(ecs_has_id(world, helper_1, foo));
+    test_assert(ecs_has_id(world, helper_2, foo));
+    test_assert(ecs_has_pair(world, helper_1, EcsChildOf, e1));
+    test_assert(ecs_has_pair(world, helper_2, EcsChildOf, e2));
+
+    ecs_fini(world);
+}
+
