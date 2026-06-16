@@ -3845,6 +3845,7 @@ void Template_template_w_nested_template_w_with_kind_value(void) {
     ecs_fini(world);
 }
 
+
 void Template_pair_component_w_entity_prop_target(void) {
     ecs_world_t *world = ecs_init();
 
@@ -3907,6 +3908,47 @@ void Template_child_name_from_string_prop(void) {
     ecs_fini(world);
 }
 
+void Template_template_w_new_expr_in_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ref_comp = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "RefComp" }),
+        .members = {
+            {"e", ecs_id(ecs_entity_t)},
+            {"x", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "Foo {}"
+    LINE "template Tree {"
+    LINE "  prop height = flecs.meta.f32: 1"
+    LINE "  child {"
+    LINE "    RefComp: {e: new { Foo }, x: $height}"
+    LINE "  }"
+    LINE "}"
+    LINE "Tree e(height: 10)";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    typedef struct { ecs_entity_t e; float x; } RefComp;
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    ecs_entity_t child = ecs_lookup(world, "e.child");
+    test_assert(child != 0);
+
+    const RefComp *rc = ecs_get_id(world, child, ref_comp);
+    test_assert(rc != NULL);
+    test_int(rc->x, 10);
+    test_assert(rc->e != 0);
+    test_assert(ecs_is_alive(world, rc->e));
+    test_assert(ecs_has_id(world, rc->e, foo));
+
+    ecs_fini(world);
+}
 
 void Template_default_component_w_prop_var(void) {
     ecs_world_t *world = ecs_init();
