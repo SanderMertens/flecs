@@ -31904,7 +31904,9 @@ void register_lifecycle_actions(
     ecs_entity_t component)
 {
     (void)world; (void)component;
-    if constexpr (!std::is_trivial<T>::value) {
+    if constexpr (!(std::is_trivially_default_constructible<T>::value &&
+        std::is_trivially_copyable<T>::value))
+    {
         // If the component is non-trivial, register component lifecycle actions.
         // Depending on the type, not all callbacks may be available.
         ecs_type_hooks_t cl{};
@@ -31931,7 +31933,9 @@ void register_lifecycle_actions(
 
 template <typename T>
 inline ecs_cpp_type_action_t lifecycle_action() {
-    if constexpr (std::is_trivial<T>::value) {
+    if constexpr (std::is_trivially_default_constructible<T>::value &&
+        std::is_trivially_copyable<T>::value)
+    {
         return nullptr;
     } else {
         return &register_lifecycle_actions<T>;
