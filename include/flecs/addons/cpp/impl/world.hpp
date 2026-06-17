@@ -65,7 +65,7 @@ inline flecs::entity world::use(const char *alias) const {
 /** Import an entity by name as an alias. */
 inline flecs::entity world::use(const char *name, const char *alias) const {
     entity_t e = ecs_lookup_path_w_sep(world_, 0, name, "::", "::", true);
-    ecs_assert(e != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(e != 0, ECS_INVALID_PARAMETER, nullptr);
 
     ecs_set_alias(world_, e, alias);
     return flecs::entity(world_, e);

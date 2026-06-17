@@ -181,13 +181,13 @@ struct iter_iterable final : iterable<Components...> {
         it_ = it->get_iter(world);
         next_ = it->next_action();
         next_each_ = it->next_action();
-        ecs_assert(next_ != nullptr, ECS_INTERNAL_ERROR, NULL);
-        ecs_assert(next_each_ != nullptr, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(next_ != nullptr, ECS_INTERNAL_ERROR, nullptr);
+        ecs_assert(next_each_ != nullptr, ECS_INTERNAL_ERROR, nullptr);
     }
 
     /** Set query variable by ID. */
     iter_iterable<Components...>& set_var(int var_id, flecs::entity_t value) {
-        ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, nullptr);
         ecs_iter_set_var(&it_, var_id, value);
         return *this;
     }

@@ -247,7 +247,7 @@ struct each_delegate : public delegate {
     // Static function that can be used as callback for systems/observers.
     static void run(ecs_iter_t *iter) {
         auto self = static_cast<const each_delegate*>(iter->callback_ctx);
-        ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, nullptr);
         self->invoke(iter);
     }
 
@@ -255,7 +255,7 @@ struct each_delegate : public delegate {
     // Different from run() in that it loops the iterator.
     static void run_each(ecs_iter_t *iter) {
         auto self = static_cast<const each_delegate*>(iter->run_ctx);
-        ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, nullptr);
         while (iter->next(iter)) {
             self->invoke(iter);
         }
@@ -561,7 +561,7 @@ struct run_delegate : delegate {
     // Static function that can be used as callback for systems/observers.
     static void run(ecs_iter_t *iter) {
         auto self = static_cast<const run_delegate*>(iter->run_ctx);
-        ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, nullptr);
         self->invoke(iter);
     }
 
@@ -588,7 +588,7 @@ private:
         decltype(std::declval<const F&>()(std::declval<flecs::entity>()), 0) = 0>
     static void invoke(ecs_iter_t *iter) {
         auto self = static_cast<const entity_observer_delegate*>(iter->callback_ctx);
-        ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, nullptr);
         self->func_(flecs::entity(iter->world, ecs_field_src(iter, 0)));
     }
 
@@ -596,7 +596,7 @@ private:
         decltype(std::declval<const F&>()(), 0) = 0>
     static void invoke(ecs_iter_t *iter) {
         auto self = static_cast<const entity_observer_delegate*>(iter->callback_ctx);
-        ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, nullptr);
         self->func_();
     }
 
@@ -620,7 +620,7 @@ private:
     static void invoke(ecs_iter_t *iter) {
         auto self = static_cast<const entity_payload_observer_delegate*>(
             iter->callback_ctx);
-        ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, nullptr);
         ecs_assert(iter->param != nullptr, ECS_INVALID_OPERATION, 
             "entity observer invoked without payload");
 
@@ -635,7 +635,7 @@ private:
     static void invoke(ecs_iter_t *iter) {
         auto self = static_cast<const entity_payload_observer_delegate*>(
             iter->callback_ctx);
-        ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, nullptr);
         ecs_assert(iter->param != nullptr, ECS_INVALID_OPERATION, 
             "entity observer invoked without payload");
 
@@ -669,7 +669,7 @@ struct entity_with_delegate_impl<arg_list<Args ...>> {
     bool get_ptrs(world_t *world, flecs::entity_t e, const ecs_record_t *r, ecs_table_t *table,
         ArrayType& ptrs) 
     {
-        ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(table != nullptr, ECS_INTERNAL_ERROR, nullptr);
 
         /* table_index_of needs the real world. */
         const flecs::world_t *real_world = ecs_get_world(world);
@@ -825,7 +825,7 @@ struct entity_with_delegate_impl<arg_list<Args ...>> {
         flecs::world w(world);
 
         ArrayType ptrs;
-        ecs_table_t *table = NULL;
+        ecs_table_t *table = nullptr;
 
         // When not deferred, take the fast path.
         if (!w.is_deferred()) {
@@ -835,7 +835,7 @@ struct entity_with_delegate_impl<arg_list<Args ...>> {
             // Make sure the object is not a stage. Operations on a stage are
             // only allowed when the stage is in deferred mode, which is when
             // the world is in readonly mode.
-            ecs_assert(!w.is_stage(), ECS_INVALID_PARAMETER, NULL);
+            ecs_assert(!w.is_stage(), ECS_INVALID_PARAMETER, nullptr);
 
             // Find the table for the entity.
             ecs_record_t *r = ecs_record_find(world, id);
@@ -856,12 +856,12 @@ struct entity_with_delegate_impl<arg_list<Args ...>> {
                 ecs_type_t ids;
                 ids.array = ctx.added.ptr();
                 ids.count = static_cast<ecs_size_t>(ctx.component_count);
-                ecs_commit(world, id, r, ctx.table, &ids, NULL);
+                ecs_commit(world, id, r, ctx.table, &ids, nullptr);
                 table = ctx.table;
             }
 
             if (!get_ptrs(w, id, r, table, ptrs)) {
-                ecs_abort(ECS_INTERNAL_ERROR, NULL);
+                ecs_abort(ECS_INTERNAL_ERROR, nullptr);
             }
 
             ECS_TABLE_LOCK(world, table);

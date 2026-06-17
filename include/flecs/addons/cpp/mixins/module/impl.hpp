@@ -36,7 +36,7 @@ ecs_entity_t do_import(world& world, const char *symbol) {
     // It should now be possible to look up the module.
     ecs_entity_t m = ecs_lookup_symbol(world, symbol, false, false);
     ecs_assert(m != 0, ECS_MODULE_UNDEFINED, "%s", symbol);
-    ecs_assert(m == c_, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(m == c_, ECS_INTERNAL_ERROR, nullptr);
 
     ecs_log_pop();
 
@@ -45,7 +45,7 @@ ecs_entity_t do_import(world& world, const char *symbol) {
 
 template <typename T>
 flecs::entity import(world& world) {
-    char *symbol = ecs_cpp_get_symbol_name(NULL, type_name<T>(), 0);
+    char *symbol = ecs_cpp_get_symbol_name(nullptr, type_name<T>(), 0);
 
     ecs_entity_t m = ecs_lookup_symbol(world, symbol, true, false);
 

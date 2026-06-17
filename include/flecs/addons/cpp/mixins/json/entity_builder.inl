@@ -22,7 +22,7 @@ const Self& set_json(
     flecs::entity_t type = ti->component;
 
     void *ptr = ecs_ensure_id(world_, id_, e, static_cast<size_t>(ti->size));
-    ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ptr != nullptr, ECS_INTERNAL_ERROR, nullptr);
     ecs_ptr_from_json(world_, type, ptr, json, desc);
     ecs_modified_id(world_, id_, e);
 

@@ -689,7 +689,7 @@ struct entity_builder : entity_view {
        const ecs_type_info_t *type_info = ecs_get_type_info(this->world_, comp);
 
         /* Can't set if it's not a component */
-        ecs_assert(type_info != NULL, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(type_info != nullptr, ECS_INVALID_PARAMETER, nullptr);
 
         return set_ptr(comp, type_info->size, ptr);
     }
@@ -836,7 +836,7 @@ struct entity_builder : entity_view {
     template <typename Second>
     const Self& set_second(entity_t first, const Second& value) const  {
         auto second = _::type<Second>::id(this->world_);
-        ecs_assert( ecs_get_type_info(world_, ecs_pair(first, second)) != NULL,
+        ecs_assert( ecs_get_type_info(world_, ecs_pair(first, second)) != nullptr,
             ECS_INVALID_PARAMETER, "pair is not a component");
         ecs_assert( ecs_get_type_info(world_, ecs_pair(first, second))->component == second,
             ECS_INVALID_PARAMETER, "type of pair is not Second");
@@ -856,7 +856,7 @@ struct entity_builder : entity_view {
     template <typename Second>
     const Self& set_second(entity_t first, Second&& value) const  {
         auto second = _::type<Second>::id(this->world_);
-        ecs_assert( ecs_get_type_info(world_, ecs_pair(first, second)) != NULL,
+        ecs_assert( ecs_get_type_info(world_, ecs_pair(first, second)) != nullptr,
             ECS_INVALID_PARAMETER, "pair is not a component");
         ecs_assert( ecs_get_type_info(world_, ecs_pair(first, second))->component == second,
             ECS_INVALID_PARAMETER, "type of pair is not Second");
@@ -1022,7 +1022,7 @@ struct entity_builder : entity_view {
     template <typename Second>
     const Self& assign_second(entity_t first, const Second& value) const  {
         auto second = _::type<Second>::id(this->world_);
-        ecs_assert( ecs_get_type_info(world_, ecs_pair(first, second)) != NULL,
+        ecs_assert( ecs_get_type_info(world_, ecs_pair(first, second)) != nullptr,
             ECS_INVALID_PARAMETER, "pair is not a component");
         ecs_assert( ecs_get_type_info(world_, ecs_pair(first, second))->component == second,
             ECS_INVALID_PARAMETER, "type of pair is not Second");
@@ -1042,7 +1042,7 @@ struct entity_builder : entity_view {
     template <typename Second>
     const Self& assign_second(entity_t first, Second&& value) const  {
         auto second = _::type<Second>::id(this->world_);
-        ecs_assert( ecs_get_type_info(world_, ecs_pair(first, second)) != NULL,
+        ecs_assert( ecs_get_type_info(world_, ecs_pair(first, second)) != nullptr,
             ECS_INVALID_PARAMETER, "pair is not a component");
         ecs_assert( ecs_get_type_info(world_, ecs_pair(first, second))->component == second,
             ECS_INVALID_PARAMETER, "type of pair is not Second");
@@ -1112,7 +1112,7 @@ struct entity_builder : entity_view {
     template <typename Second, typename ... Args>
     const Self& emplace_second(flecs::entity_t first, Args&&... args) const  {
         auto second = _::type<Second>::id(this->world_);
-        ecs_assert( ecs_get_type_info(world_, ecs_pair(first, second)) != NULL,
+        ecs_assert( ecs_get_type_info(world_, ecs_pair(first, second)) != nullptr,
             ECS_INVALID_PARAMETER, "pair is not a component");
         ecs_assert( ecs_get_type_info(world_, ecs_pair(first, second))->component == second,
             ECS_INVALID_PARAMETER, "type of pair is not Second");

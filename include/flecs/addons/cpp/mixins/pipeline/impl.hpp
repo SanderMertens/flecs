@@ -17,7 +17,7 @@ struct pipeline : entity {
         id_ = ecs_pipeline_init(world, desc);
 
         if (!id_) {
-            ecs_abort(ECS_INVALID_PARAMETER, NULL);
+            ecs_abort(ECS_INVALID_PARAMETER, nullptr);
         }
     }
 };

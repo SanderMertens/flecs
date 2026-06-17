@@ -8,8 +8,8 @@
 namespace flecs {
 
 inline flecs::entity id::entity() const {
-    ecs_assert(!is_pair(), ECS_INVALID_OPERATION, NULL);
-    ecs_assert(!flags(), ECS_INVALID_OPERATION, NULL);
+    ecs_assert(!is_pair(), ECS_INVALID_OPERATION, nullptr);
+    ecs_assert(!flags(), ECS_INVALID_OPERATION, nullptr);
     return flecs::entity(world_, id_);
 }
 
@@ -18,7 +18,7 @@ inline flecs::entity id::flags() const {
 }
 
 inline flecs::entity id::first() const {
-    ecs_assert(is_pair(), ECS_INVALID_OPERATION, NULL);
+    ecs_assert(is_pair(), ECS_INVALID_OPERATION, nullptr);
 
     flecs::entity_t e = ECS_PAIR_FIRST(id_);
     if (world_) {
@@ -43,7 +43,7 @@ inline flecs::entity id::add_flags(flecs::id_t flags) const {
 
 inline flecs::entity id::remove_flags(flecs::id_t flags) const {
     (void)flags;
-    ecs_assert((id_ & ECS_ID_FLAGS_MASK) == flags, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert((id_ & ECS_ID_FLAGS_MASK) == flags, ECS_INVALID_PARAMETER, nullptr);
     return flecs::entity(world_, id_ & ECS_COMPONENT_MASK);
 }
 

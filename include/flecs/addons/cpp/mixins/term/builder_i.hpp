@@ -84,7 +84,7 @@ protected:
     virtual flecs::world_t* world_v() = 0;
 
     void assert_term_ref() {
-        ecs_assert(term_ref_ != NULL, ECS_INVALID_PARAMETER, 
+        ecs_assert(term_ref_ != nullptr, ECS_INVALID_PARAMETER, 
             "no active term (call .with() first)");
     }
 
@@ -155,7 +155,7 @@ struct term_builder_i : term_ref_builder_i<Base> {
     /** Select the src identifier, initialize it with a name. If the name starts with a $,
      * the name is interpreted as a variable. */
     Base& src(const char *name) {
-        ecs_assert(name != NULL, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(name != nullptr, ECS_INVALID_PARAMETER, nullptr);
         this->src();
         if (name[0] == '$') {
             this->var(&name[1]);
@@ -182,7 +182,7 @@ struct term_builder_i : term_ref_builder_i<Base> {
     /** Select the first identifier, initialize it with a name. If the name starts with a $,
      * the name is interpreted as a variable. */
     Base& first(const char *name) {
-        ecs_assert(name != NULL, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(name != nullptr, ECS_INVALID_PARAMETER, nullptr);
         this->first();
         if (name[0] == '$') {
             this->var(&name[1]);
@@ -209,7 +209,7 @@ struct term_builder_i : term_ref_builder_i<Base> {
     /** Select the second identifier, initialize it with a name. If the name starts with a $,
      * the name is interpreted as a variable. */
     Base& second(const char *name) {
-        ecs_assert(name != NULL, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(name != nullptr, ECS_INVALID_PARAMETER, nullptr);
         this->second();
         if (name[0] == '$') {
             this->var(&name[1]);
@@ -419,7 +419,7 @@ protected:
 
 private:
     void assert_term() {
-        ecs_assert(term_ != NULL, ECS_INVALID_PARAMETER, 
+        ecs_assert(term_ != nullptr, ECS_INVALID_PARAMETER, 
             "no active term (call .with() first)");
     }
 
