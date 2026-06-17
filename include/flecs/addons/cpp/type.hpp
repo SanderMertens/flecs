@@ -67,8 +67,8 @@ struct type {
      * @return The ID at the specified index.
      */
     flecs::id get(int32_t index) const {
-        ecs_assert(type_ != NULL, ECS_INVALID_PARAMETER, NULL);
-        ecs_assert(type_->count > index, ECS_OUT_OF_RANGE, NULL);
+        ecs_assert(type_ != nullptr, ECS_INVALID_PARAMETER, nullptr);
+        ecs_assert(type_->count > index, ECS_OUT_OF_RANGE, nullptr);
         if (!type_) {
             return flecs::id();
         }

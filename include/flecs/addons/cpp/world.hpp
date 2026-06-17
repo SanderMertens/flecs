@@ -658,7 +658,7 @@ struct world {
      * This operation retrieves a previously set world context.
      *
      * @return The context set with set_ctx(). If no context was set, the
-     *         function returns NULL.
+     *         function returns nullptr.
      *
      * @see ecs_get_ctx()
      * @see flecs::world::set_ctx()
@@ -686,7 +686,7 @@ struct world {
      * This operation retrieves a previously set world binding context.
      *
      * @return The context set with set_binding_ctx(). If no context was set, the
-     *         function returns NULL.
+     *         function returns nullptr.
      *
      * @see ecs_get_binding_ctx()
      * @see flecs::world::set_binding_ctx()

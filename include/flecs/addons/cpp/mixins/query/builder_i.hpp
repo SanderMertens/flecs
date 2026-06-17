@@ -284,13 +284,13 @@ struct query_builder_i : term_builder_i<Base> {
 
     /** Set the current term to the one at the provided index. */
     Base& term_at(int32_t term_index) {
-        ecs_assert(term_index >= 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(term_index >= 0, ECS_INVALID_PARAMETER, nullptr);
         int32_t prev_index = term_index_;
         term_index_ = term_index;
         this->term();
         term_index_ = prev_index;
         ecs_assert(ecs_term_is_initialized(this->term_), 
-            ECS_INVALID_PARAMETER, NULL);
+            ECS_INVALID_PARAMETER, nullptr);
         return *this;
     }
 

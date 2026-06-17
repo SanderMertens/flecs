@@ -131,7 +131,7 @@ struct ref : public untyped_ref {
     T* operator->() {
         T* result = static_cast<T*>(get());
 
-        ecs_assert(result != NULL, ECS_INVALID_PARAMETER,
+        ecs_assert(result != nullptr, ECS_INVALID_PARAMETER,
             "nullptr dereference by flecs::ref");
 
         return result;

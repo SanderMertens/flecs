@@ -109,7 +109,7 @@ inline flecs::entity world::primitive(flecs::meta::primitive_kind_t kind) {
     ecs_primitive_desc_t desc = {};
     desc.kind = kind;
     flecs::entity_t eid = ecs_primitive_init(world_, &desc);
-    ecs_assert(eid != 0, ECS_INVALID_OPERATION, NULL);
+    ecs_assert(eid != 0, ECS_INVALID_OPERATION, nullptr);
     return flecs::entity(world_, eid);
 }
 
@@ -119,7 +119,7 @@ inline flecs::entity world::array(flecs::entity_t elem_id, int32_t array_count) 
     desc.type = elem_id;
     desc.count = array_count;
     flecs::entity_t eid = ecs_array_init(world_, &desc);
-    ecs_assert(eid != 0, ECS_INVALID_OPERATION, NULL);
+    ecs_assert(eid != 0, ECS_INVALID_OPERATION, nullptr);
     return flecs::entity(world_, eid);
 }
 
@@ -133,7 +133,7 @@ inline flecs::entity world::vector(flecs::entity_t elem_id) {
     ecs_vector_desc_t desc = {};
     desc.type = elem_id;
     flecs::entity_t eid = ecs_vector_init(world_, &desc);
-    ecs_assert(eid != 0, ECS_INVALID_OPERATION, NULL);
+    ecs_assert(eid != 0, ECS_INVALID_OPERATION, nullptr);
     return flecs::entity(world_, eid);
 }
 

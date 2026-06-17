@@ -193,7 +193,7 @@ untyped_component& constant(
     desc.name = name;
     desc.parent = id_;
     ecs_entity_t eid = ecs_entity_init(world_, &desc);
-    ecs_assert(eid != 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(eid != 0, ECS_INTERNAL_ERROR, nullptr);
 
     ecs_set_id(world_, eid, 
         ecs_pair(flecs::Constant, _::type<T>::id(world_)), sizeof(T),
@@ -214,7 +214,7 @@ untyped_component& bit(
     desc.name = name;
     desc.parent = id_;
     ecs_entity_t eid = ecs_entity_init(world_, &desc);
-    ecs_assert(eid != 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(eid != 0, ECS_INTERNAL_ERROR, nullptr);
 
     ecs_set_id(world_, eid, 
         ecs_pair(flecs::Constant, _::type<T>::id(world_)), sizeof(T),

@@ -162,7 +162,7 @@ struct query_base {
         if (gi) {
             return gi->ctx;
         } else {
-            return NULL;
+            return nullptr;
         }
     }
 

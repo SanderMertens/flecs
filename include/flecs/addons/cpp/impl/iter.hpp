@@ -31,7 +31,7 @@ inline flecs::world iter::world() const {
 /** Get the entity for a given row. */
 inline flecs::entity iter::entity(size_t row) const {
     ecs_assert(row < static_cast<size_t>(iter_->count),
-        ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
+        ECS_COLUMN_INDEX_OUT_OF_RANGE, nullptr);
     return flecs::entity(iter_->world, iter_->entities[row]);
 }
 
@@ -48,7 +48,7 @@ inline flecs::id iter::id(int8_t index) const {
 /** Get the pair ID for a field. */
 inline flecs::id iter::pair(int8_t index) const {
     flecs::id_t id = ecs_field_id(iter_, index);
-    ecs_check(ECS_HAS_ID_FLAG(id, PAIR), ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ECS_HAS_ID_FLAG(id, PAIR), ECS_INVALID_PARAMETER, nullptr);
     return flecs::id(iter_->world, id);
 error:
     return flecs::id();
@@ -93,13 +93,13 @@ inline flecs::field<A> iter::field(int8_t index) const {
         "cannot .field from .each, use .field_at<%s>(%d, row) instead",
             _::type_name<T>(), index);
     ecs_assert(!ecs_field_is_readonly(iter_, index),
-        ECS_ACCESS_VIOLATION, NULL);
+        ECS_ACCESS_VIOLATION, nullptr);
     return get_field<A>(index);
 }
 
 /** Get the value of a variable by ID. */
 inline flecs::entity iter::get_var(int var_id) const {
-    ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, nullptr);
     return flecs::entity(iter_->world, ecs_iter_get_var(iter_, var_id));
 }
 
@@ -117,9 +117,9 @@ inline flecs::entity iter::get_var(const char *name) const {
 /** Iterate over targets for a field. */
 template <typename Func>
 void iter::targets(int8_t index, const Func& func) {
-    ecs_assert(iter_->table != nullptr, ECS_INVALID_OPERATION, NULL);
-    ecs_assert(index < iter_->field_count, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(ecs_field_is_set(iter_, index), ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(iter_->table != nullptr, ECS_INVALID_OPERATION, nullptr);
+    ecs_assert(index < iter_->field_count, ECS_INVALID_PARAMETER, nullptr);
+    ecs_assert(ecs_field_is_set(iter_, index), ECS_INVALID_PARAMETER, nullptr);
     const ecs_type_t *table_type = ecs_table_get_type(iter_->table);
     const ecs_table_record_t *tr = iter_->trs[index];
     int32_t i = tr->index, end = i + tr->count;

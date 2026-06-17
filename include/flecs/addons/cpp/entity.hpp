@@ -213,7 +213,7 @@ struct entity : entity_builder<entity>
     template <typename Second>
     Second& ensure_second(entity_t first) const {
         auto second = _::type<Second>::id(world_);
-        ecs_assert( ecs_get_type_info(world_, ecs_pair(first, second)) != NULL,
+        ecs_assert( ecs_get_type_info(world_, ecs_pair(first, second)) != nullptr,
             ECS_INVALID_PARAMETER, "pair is not a component");
         ecs_assert( ecs_get_type_info(world_, ecs_pair(first, second))->component == second,
             ECS_INVALID_PARAMETER, "type of pair is not Second");
@@ -390,7 +390,7 @@ struct entity : entity_builder<entity>
     template <typename Second>
     ref<Second> get_ref_second(flecs::entity_t first) const {
         auto second = _::type<Second>::id(world_);
-        ecs_assert( ecs_get_type_info(world_, ecs_pair(first, second)) != NULL,
+        ecs_assert( ecs_get_type_info(world_, ecs_pair(first, second)) != nullptr,
             ECS_INVALID_PARAMETER, "pair is not a component");
         ecs_assert( ecs_get_type_info(world_, ecs_pair(first, second))->component == second,
             ECS_INVALID_PARAMETER, "type of pair is not Second");

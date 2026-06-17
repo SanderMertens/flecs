@@ -44,7 +44,7 @@ component<T>& constant(const char *name, T value) {
     desc.name = name;
     desc.parent = id_;
     ecs_entity_t eid = ecs_entity_init(world_, &desc);
-    ecs_assert(eid != 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(eid != 0, ECS_INTERNAL_ERROR, nullptr);
 
     flecs::id_t pair = ecs_pair(flecs::Constant, _::type<U>::id(world_));
     U *ptr = static_cast<U*>(ecs_ensure_id(world_, eid, pair, sizeof(U)));

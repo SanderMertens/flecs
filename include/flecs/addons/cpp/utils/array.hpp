@@ -129,7 +129,7 @@ struct array<T, Size, enable_if_t<Size == 0>> final {
 
     /** Return a null pointer (no data). */
     T* ptr() {
-        return NULL;
+        return nullptr;
     }
 };
 
