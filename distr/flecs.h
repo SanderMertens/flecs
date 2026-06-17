@@ -33632,7 +33632,7 @@ struct iter_iterable final : iterable<Components...> {
 
     /** Set query variable by ID. */
     iter_iterable<Components...>& set_var(int var_id, flecs::entity_t value) {
-        ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, 0);
+        ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, NULL);
         ecs_iter_set_var(&it_, var_id, value);
         return *this;
     }
@@ -34085,7 +34085,7 @@ inline void entity_view::each(flecs::id_t pred, flecs::id_t obj, const Func& fun
     int32_t cur = 0;
     id_t *ids = type->array;
     
-    while (-1 != (cur = ecs_search_offset(real_world, table, cur, pattern, 0)))
+    while (-1 != (cur = ecs_search_offset(real_world, table, cur, pattern, nullptr)))
     {
         flecs::id ent(world_, ids[cur]);
         func(ent);
@@ -38402,7 +38402,7 @@ inline flecs::field<A> iter::field(int8_t index) const {
 
 /** Get the value of a variable by ID. */
 inline flecs::entity iter::get_var(int var_id) const {
-    ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, 0);
+    ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, NULL);
     return flecs::entity(iter_->world, ecs_iter_get_var(iter_, var_id));
 }
 

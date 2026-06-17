@@ -99,7 +99,7 @@ inline flecs::field<A> iter::field(int8_t index) const {
 
 /** Get the value of a variable by ID. */
 inline flecs::entity iter::get_var(int var_id) const {
-    ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, 0);
+    ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, NULL);
     return flecs::entity(iter_->world, ecs_iter_get_var(iter_, var_id));
 }
 

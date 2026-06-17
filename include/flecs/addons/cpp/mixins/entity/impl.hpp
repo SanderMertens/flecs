@@ -148,7 +148,7 @@ inline void entity_view::each(flecs::id_t pred, flecs::id_t obj, const Func& fun
     int32_t cur = 0;
     id_t *ids = type->array;
     
-    while (-1 != (cur = ecs_search_offset(real_world, table, cur, pattern, 0)))
+    while (-1 != (cur = ecs_search_offset(real_world, table, cur, pattern, nullptr)))
     {
         flecs::id ent(world_, ids[cur]);
         func(ent);
