@@ -148,6 +148,14 @@ typedef struct {
     ecs_table_record_t dummy_tr;
 } ecs_query_all_ctx_t;
 
+typedef struct {
+    ecs_component_record_t *cr;
+    ecs_table_cache_iter_t it;
+    int16_t column;
+    int16_t remaining;
+    bool non_fragmenting;
+} ecs_query_table_iter_ctx_t;
+
 /* And context */
 typedef struct {
     ecs_component_record_t *cr;
@@ -155,11 +163,16 @@ typedef struct {
     int16_t column;
     int16_t remaining;
     bool non_fragmenting;
+
+    ecs_component_record_t *df_cr;
+    int32_t cur;
+    int32_t row;
+    int32_t count;
 } ecs_query_and_ctx_t;
 
 /* Sparse context */
 typedef struct {
-    ecs_query_and_ctx_t and_; /* For mixed results */
+    ecs_query_table_iter_ctx_t and_; /* For mixed results */
 
     ecs_sparse_t *sparse;
     ecs_table_range_t range;
@@ -179,7 +192,7 @@ typedef enum ecs_query_tree_iter_state_t {
 } ecs_query_tree_iter_state_t;
 
 typedef struct {
-    ecs_query_and_ctx_t and_; /* For mixed results */
+    ecs_query_table_iter_ctx_t and_; /* For mixed results */
     ecs_component_record_t *cr;
     ecs_entity_t tgt;
     ecs_entity_t *entities;
@@ -254,7 +267,7 @@ typedef struct {
 
 typedef struct {
     union {
-        ecs_query_and_ctx_t and_;
+        ecs_query_table_iter_ctx_t and_;
         ecs_query_sparse_ctx_t sparse_;
     } is;
 
@@ -269,7 +282,7 @@ typedef struct {
 
 typedef struct {
     union {
-        ecs_query_and_ctx_t and_;
+        ecs_query_table_iter_ctx_t and_;
         ecs_query_up_ctx_t up_;
     } is;
     ecs_query_tree_iter_state_t state;
@@ -292,7 +305,7 @@ typedef struct {
 
 /* Trav context */
 typedef struct {
-    ecs_query_and_ctx_t and_;
+    ecs_query_table_iter_ctx_t and_;
     int32_t index;
     int32_t offset;
     int32_t count;
@@ -341,7 +354,7 @@ typedef struct {
 
 /* *From operator iterator context */
 typedef struct {
-    ecs_query_and_ctx_t and_;
+    ecs_query_table_iter_ctx_t and_;
     ecs_entity_t type_id;
     ecs_type_t *type;
     int32_t first_id_index;

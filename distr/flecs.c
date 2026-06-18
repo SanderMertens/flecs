@@ -1337,6 +1337,14 @@ typedef struct {
     ecs_table_record_t dummy_tr;
 } ecs_query_all_ctx_t;
 
+typedef struct {
+    ecs_component_record_t *cr;
+    ecs_table_cache_iter_t it;
+    int16_t column;
+    int16_t remaining;
+    bool non_fragmenting;
+} ecs_query_table_iter_ctx_t;
+
 /* And context */
 typedef struct {
     ecs_component_record_t *cr;
@@ -1344,11 +1352,16 @@ typedef struct {
     int16_t column;
     int16_t remaining;
     bool non_fragmenting;
+
+    ecs_component_record_t *df_cr;
+    int32_t cur;
+    int32_t row;
+    int32_t count;
 } ecs_query_and_ctx_t;
 
 /* Sparse context */
 typedef struct {
-    ecs_query_and_ctx_t and_; /* For mixed results */
+    ecs_query_table_iter_ctx_t and_; /* For mixed results */
 
     ecs_sparse_t *sparse;
     ecs_table_range_t range;
@@ -1368,7 +1381,7 @@ typedef enum ecs_query_tree_iter_state_t {
 } ecs_query_tree_iter_state_t;
 
 typedef struct {
-    ecs_query_and_ctx_t and_; /* For mixed results */
+    ecs_query_table_iter_ctx_t and_; /* For mixed results */
     ecs_component_record_t *cr;
     ecs_entity_t tgt;
     ecs_entity_t *entities;
@@ -1443,7 +1456,7 @@ typedef struct {
 
 typedef struct {
     union {
-        ecs_query_and_ctx_t and_;
+        ecs_query_table_iter_ctx_t and_;
         ecs_query_sparse_ctx_t sparse_;
     } is;
 
@@ -1458,7 +1471,7 @@ typedef struct {
 
 typedef struct {
     union {
-        ecs_query_and_ctx_t and_;
+        ecs_query_table_iter_ctx_t and_;
         ecs_query_up_ctx_t up_;
     } is;
     ecs_query_tree_iter_state_t state;
@@ -1481,7 +1494,7 @@ typedef struct {
 
 /* Trav context */
 typedef struct {
-    ecs_query_and_ctx_t and_;
+    ecs_query_table_iter_ctx_t and_;
     int32_t index;
     int32_t offset;
     int32_t count;
@@ -1530,7 +1543,7 @@ typedef struct {
 
 /* *From operator iterator context */
 typedef struct {
-    ecs_query_and_ctx_t and_;
+    ecs_query_table_iter_ctx_t and_;
     ecs_entity_t type_id;
     ecs_type_t *type;
     int32_t first_id_index;
@@ -83505,6 +83518,103 @@ repeat:
     }
 }
 
+static
+bool flecs_query_select_dont_fragment(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx)
+{
+    ecs_query_and_ctx_t *op_ctx = flecs_op_ctx(ctx, and_);
+    ecs_world_t *world = ctx->world;
+    ecs_iter_t *it = ctx->it;
+    int8_t field_index = op->field_index;
+    ecs_sparse_t *tables = &world->store.tables;
+    ecs_table_t *table;
+    ecs_id_t id = 0;
+
+    if (!redo) {
+        op_ctx->cur = -1;
+        goto next_table;
+    } else {
+        table = flecs_sparse_get_dense_t(tables, ecs_table_t, op_ctx->cur);
+        goto next_component;
+    }
+
+next_table:
+    op_ctx->cur ++;
+    if (op_ctx->cur >= flecs_sparse_count(tables)) {
+        return false;
+    }
+
+    table = flecs_sparse_get_dense_t(tables, ecs_table_t, op_ctx->cur);
+    if (!(table->flags & EcsTableHasDontFragment) || !ecs_table_count(table)) {
+        goto next_table;
+    }
+
+    if (flecs_query_table_filter(table, op->other,
+        (EcsTableNotQueryable|EcsTableIsPrefab|EcsTableIsDisabled)))
+    {
+        goto next_table;
+    }
+
+    op_ctx->row = -1;
+    op_ctx->count = ecs_table_count(table);
+
+next_entity:
+    op_ctx->row ++;
+    if (op_ctx->row >= op_ctx->count) {
+        goto next_table;
+    }
+
+    op_ctx->column = -1;
+    op_ctx->df_cr = NULL;
+    goto this_component;
+
+next_component:
+    if (op_ctx->df_cr) {
+        op_ctx->df_cr = op_ctx->df_cr->non_fragmenting.next;
+        goto next_dont_fragment;
+    }
+
+this_component:
+    op_ctx->column ++;
+    if (op_ctx->column < table->type.count) {
+        flecs_query_var_set_range(op, op->src.var, table, op_ctx->row, 1, ctx);
+        flecs_query_set_match(op, table, op_ctx->column, ctx);
+        return true;
+    }
+
+    op_ctx->df_cr = world->cr_non_fragmenting_head;
+
+next_dont_fragment:
+    {
+        ecs_entity_t e = ecs_table_entities(table)[op_ctx->row];
+        while (op_ctx->df_cr) {
+            ecs_component_record_t *df_cr = op_ctx->df_cr;
+            if (!ecs_id_is_wildcard(df_cr->id) && df_cr->sparse &&
+                flecs_sparse_has(df_cr->sparse, e))
+            {
+                id = df_cr->id;
+                break;
+            }
+            op_ctx->df_cr = df_cr->non_fragmenting.next;
+        }
+    }
+
+    if (!op_ctx->df_cr) {
+        goto next_entity;
+    }
+
+    flecs_query_var_set_range(op, op->src.var, table, op_ctx->row, 1, ctx);
+    if (field_index != -1) {
+        it->ids[field_index] = id;
+        flecs_query_it_set_tr(it, field_index, NULL);
+    }
+    flecs_query_set_vars(op, id, ctx);
+
+    return true;
+}
+
 bool flecs_query_and(
     const ecs_query_op_t *op,
     bool redo,
@@ -83514,7 +83624,28 @@ bool flecs_query_and(
     if (written & (1ull << op->src.var)) {
         return flecs_query_with(op, redo, ctx);
     } else {
-        return flecs_query_select(op, redo, ctx);
+        ecs_query_and_ctx_t *op_ctx = flecs_op_ctx(ctx, and_);
+        if (!redo) {
+            op_ctx->non_fragmenting = false;
+        }
+
+        if (!op_ctx->non_fragmenting) {
+            if (flecs_query_select(op, redo, ctx)) {
+                return true;
+            }
+
+            ecs_id_t id = flecs_query_op_get_id(op, ctx);
+            if (ECS_IS_PAIR(id) || !ecs_id_is_wildcard(id) ||
+                !ctx->world->cr_non_fragmenting_head)
+            {
+                return false;
+            }
+
+            op_ctx->non_fragmenting = true;
+            return flecs_query_select_dont_fragment(op, false, ctx);
+        }
+
+        return flecs_query_select_dont_fragment(op, true, ctx);
     }
 }
 

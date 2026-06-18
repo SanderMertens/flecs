@@ -24123,3 +24123,7 @@ void NonFragmentingChildOf_this_src_childof_var_doesnt_match_root(void) {
 
     ecs_fini(world);
 }
+
+void NonFragmentingChildOf_src_var_w_trait_on_dont_fragment_tag(void) {
+}
+
