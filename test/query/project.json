@@ -2469,7 +2469,8 @@
                 "this_written_not_sparse_wildcard_pair",
                 "this_written_not_sparse_pair",
                 "1_sparse_written_up_w_non_fragmenting_childof",
-                "1_sparse_written_self_up_w_non_fragmenting_childof"
+                "1_sparse_written_self_up_w_non_fragmenting_childof",
+                "src_var_w_trait_on_dont_fragment_tag"
             ]
         }, {
             "id": "NonFragmentingChildOf",
