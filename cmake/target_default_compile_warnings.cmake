@@ -24,7 +24,16 @@ function(target_default_compile_warnings_c THIS)
                     -Wsign-conversion
                     -Wdouble-promotion
                     -Wno-missing-prototypes
-                    -Wno-missing-variable-declarations)
+                    -Wno-missing-variable-declarations
+                    -Wno-unknown-warning-option
+                    -Wno-padded
+                    -Wno-c++-compat
+                    -Wno-c++-keyword
+                    -Wno-implicit-void-ptr-cast
+                    -Wno-implicit-int-enum-cast
+                    -Wno-jump-misses-init
+                    -Wno-nrvo
+                    -Wno-shadow-header)
 
         elseif (CMAKE_C_COMPILER_ID STREQUAL "GNU")
 
@@ -80,7 +89,8 @@ function(target_default_compile_warnings_cxx THIS)
                 -Wpedantic
                 -Wconversion
                 -Wsign-conversion
-                -Wdouble-promotion)
+                -Wdouble-promotion
+                -Wno-padded)
 
     elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 

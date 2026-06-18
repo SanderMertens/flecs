@@ -24,7 +24,7 @@ bool flecs_query_select_w_id(
     ecs_id_t id,
     ecs_flags32_t filter_mask)
 {
-    ecs_query_and_ctx_t *op_ctx = flecs_op_ctx(ctx, and);
+    ecs_query_and_ctx_t *op_ctx = flecs_op_ctx(ctx, and_);
     ecs_component_record_t *cr = op_ctx->cr;
     const ecs_table_record_t *tr;
     ecs_table_t *table;
@@ -93,7 +93,7 @@ bool flecs_query_with(
     bool redo,
     const ecs_query_run_ctx_t *ctx)
 {
-    ecs_query_and_ctx_t *op_ctx = flecs_op_ctx(ctx, and);
+    ecs_query_and_ctx_t *op_ctx = flecs_op_ctx(ctx, and_);
     ecs_component_record_t *cr = op_ctx->cr;
     const ecs_table_record_t *tr;
 
@@ -217,7 +217,7 @@ bool flecs_query_select_id(
     const ecs_query_run_ctx_t *ctx,
     ecs_flags32_t table_filter)
 {
-    ecs_query_and_ctx_t *op_ctx = flecs_op_ctx(ctx, and);
+    ecs_query_and_ctx_t *op_ctx = flecs_op_ctx(ctx, and_);
     ecs_iter_t *it = ctx->it;
     int8_t field = op->field_index;
     ecs_assert(field != -1, ECS_INTERNAL_ERROR, NULL);
@@ -282,7 +282,7 @@ bool flecs_query_and_any(
         remaining = 0;
     }
 
-    ecs_query_and_ctx_t *op_ctx = flecs_op_ctx(ctx, and);
+    ecs_query_and_ctx_t *op_ctx = flecs_op_ctx(ctx, and_);
 
     if (match_flags & EcsTermMatchAny && op_ctx->remaining) {
         op_ctx->remaining = flecs_ito(int16_t, remaining);
@@ -305,7 +305,7 @@ bool flecs_query_and_wctgt(
     bool redo,
     const ecs_query_run_ctx_t *ctx)
 {
-    ecs_query_and_ctx_t *op_ctx = flecs_op_ctx(ctx, and);
+    ecs_query_and_ctx_t *op_ctx = flecs_op_ctx(ctx, and_);
     if (!redo) {
         op_ctx->non_fragmenting = false;
     }
@@ -343,7 +343,7 @@ bool flecs_query_with_wctgt(
     bool redo,
     const ecs_query_run_ctx_t *ctx)
 {
-    ecs_query_and_ctx_t *op_ctx = flecs_op_ctx(ctx, and);
+    ecs_query_and_ctx_t *op_ctx = flecs_op_ctx(ctx, and_);
     if (!redo) {
         op_ctx->non_fragmenting = false;
     }
