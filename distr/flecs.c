@@ -1443,7 +1443,7 @@ typedef struct {
 
 typedef struct {
     union {
-        ecs_query_and_ctx_t and;
+        ecs_query_and_ctx_t and_;
         ecs_query_sparse_ctx_t sparse_;
     } is;
 
@@ -1458,7 +1458,7 @@ typedef struct {
 
 typedef struct {
     union {
-        ecs_query_and_ctx_t and;
+        ecs_query_and_ctx_t and_;
         ecs_query_up_ctx_t up_;
     } is;
     ecs_query_tree_iter_state_t state;
@@ -1481,7 +1481,7 @@ typedef struct {
 
 /* Trav context */
 typedef struct {
-    ecs_query_and_ctx_t and;
+    ecs_query_and_ctx_t and_;
     int32_t index;
     int32_t offset;
     int32_t count;
@@ -1530,7 +1530,7 @@ typedef struct {
 
 /* *From operator iterator context */
 typedef struct {
-    ecs_query_and_ctx_t and;
+    ecs_query_and_ctx_t and_;
     ecs_entity_t type_id;
     ecs_type_t *type;
     int32_t first_id_index;
@@ -1562,7 +1562,7 @@ typedef struct {
 typedef struct ecs_query_op_ctx_t {
     union {
         ecs_query_all_ctx_t all;
-        ecs_query_and_ctx_t and;
+        ecs_query_and_ctx_t and_;
         ecs_query_xfrom_ctx_t xfrom;
         ecs_query_up_ctx_t up;
         ecs_query_trav_ctx_t trav;
@@ -83295,7 +83295,7 @@ bool flecs_query_select_w_id(
     ecs_id_t id,
     ecs_flags32_t filter_mask)
 {
-    ecs_query_and_ctx_t *op_ctx = flecs_op_ctx(ctx, and);
+    ecs_query_and_ctx_t *op_ctx = flecs_op_ctx(ctx, and_);
     ecs_component_record_t *cr = op_ctx->cr;
     const ecs_table_record_t *tr;
     ecs_table_t *table;
@@ -83364,7 +83364,7 @@ bool flecs_query_with(
     bool redo,
     const ecs_query_run_ctx_t *ctx)
 {
-    ecs_query_and_ctx_t *op_ctx = flecs_op_ctx(ctx, and);
+    ecs_query_and_ctx_t *op_ctx = flecs_op_ctx(ctx, and_);
     ecs_component_record_t *cr = op_ctx->cr;
     const ecs_table_record_t *tr;
 
@@ -83488,7 +83488,7 @@ bool flecs_query_select_id(
     const ecs_query_run_ctx_t *ctx,
     ecs_flags32_t table_filter)
 {
-    ecs_query_and_ctx_t *op_ctx = flecs_op_ctx(ctx, and);
+    ecs_query_and_ctx_t *op_ctx = flecs_op_ctx(ctx, and_);
     ecs_iter_t *it = ctx->it;
     int8_t field = op->field_index;
     ecs_assert(field != -1, ECS_INTERNAL_ERROR, NULL);
@@ -83553,7 +83553,7 @@ bool flecs_query_and_any(
         remaining = 0;
     }
 
-    ecs_query_and_ctx_t *op_ctx = flecs_op_ctx(ctx, and);
+    ecs_query_and_ctx_t *op_ctx = flecs_op_ctx(ctx, and_);
 
     if (match_flags & EcsTermMatchAny && op_ctx->remaining) {
         op_ctx->remaining = flecs_ito(int16_t, remaining);
@@ -83576,7 +83576,7 @@ bool flecs_query_and_wctgt(
     bool redo,
     const ecs_query_run_ctx_t *ctx)
 {
-    ecs_query_and_ctx_t *op_ctx = flecs_op_ctx(ctx, and);
+    ecs_query_and_ctx_t *op_ctx = flecs_op_ctx(ctx, and_);
     if (!redo) {
         op_ctx->non_fragmenting = false;
     }
@@ -83614,7 +83614,7 @@ bool flecs_query_with_wctgt(
     bool redo,
     const ecs_query_run_ctx_t *ctx)
 {
-    ecs_query_and_ctx_t *op_ctx = flecs_op_ctx(ctx, and);
+    ecs_query_and_ctx_t *op_ctx = flecs_op_ctx(ctx, and_);
     if (!redo) {
         op_ctx->non_fragmenting = false;
     }
@@ -87249,7 +87249,7 @@ bool flecs_query_trav_unknown_src_up_fixed_second(
     ecs_trav_elem_t *elems = ecs_vec_first(&trav_ctx->cache.entities);
     for (; trav_ctx->index < count; trav_ctx->index ++) {
         ecs_trav_elem_t *el = &elems[trav_ctx->index];
-        trav_ctx->and.cr = el->cr; /* prevents lookup by select */
+        trav_ctx->and_.cr = el->cr; /* prevents lookup by select */
         if (flecs_query_select_w_id(op, redo, ctx, ecs_pair(trav, el->entity),
             (EcsTableNotQueryable|EcsTableIsPrefab|EcsTableIsDisabled))) 
         {
