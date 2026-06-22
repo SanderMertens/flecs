@@ -1689,6 +1689,41 @@ int32_t flecs_table_grow_data(
     return count;
 }
 
+static
+void flecs_table_copy_elem(
+    void *dst_ptr,
+    const void *src_ptr,
+    ecs_size_t size)
+{
+    char *dst = dst_ptr;
+    const char *src = src_ptr;
+    if (size == 16) {
+        ecs_os_memcpy(dst, src, 16);
+    } else if (size == 8) {
+        ecs_os_memcpy(dst, src, 8);
+    } else if (size == 4) {
+        ecs_os_memcpy(dst, src, 4);
+    } else if (size > 32) {
+        ecs_os_memcpy(dst, src, size);
+    } else if (size > 16) {
+        ecs_os_memcpy(dst, src, 16);
+        ecs_os_memcpy(&dst[size - 16], &src[size - 16], 16);
+    } else if (size > 8) {
+        ecs_os_memcpy(dst, src, 8);
+        ecs_os_memcpy(&dst[size - 8], &src[size - 8], 8);
+    } else if (size > 4) {
+        ecs_os_memcpy(dst, src, 4);
+        ecs_os_memcpy(&dst[size - 4], &src[size - 4], 4);
+    } else if (size > 2) {
+        ecs_os_memcpy(dst, src, 2);
+        ecs_os_memcpy(&dst[size - 2], &src[size - 2], 2);
+    } else if (size == 2) {
+        ecs_os_memcpy(dst, src, 2);
+    } else {
+        dst[0] = src[0];
+    }
+}
+
 /* Append operation for tables that don't have any complex logic */
 static
 void flecs_table_fast_append(
@@ -1802,13 +1837,14 @@ void flecs_table_fast_delete(
     int32_t row)
 {
     ecs_column_t *columns = table->data.columns;
+    int32_t last = table->data.count - 1;
     int32_t i, count = table->column_count;
     for (i = 0; i < count; i ++) {
         ecs_column_t *column = &columns[i];
-        const ecs_type_info_t *ti = column->ti;
-        ecs_vec_t v = ecs_vec_from_column(column, table, ti->size);
-        ecs_vec_remove(&v, ti->size, row);
-        column->data = v.array;
+        ecs_size_t size = column->ti->size;
+        flecs_table_copy_elem(
+            ECS_ELEM(column->data, size, row),
+            ECS_ELEM(column->data, size, last), size);
     }
 }
 
@@ -1948,7 +1984,7 @@ void flecs_table_fast_move(
             int32_t size = dst_column->ti->size;
             void *dst = ECS_ELEM(dst_column->data, size, dst_index);
             void *src = ECS_ELEM(src_column->data, size, src_index);
-            ecs_os_memcpy(dst, src, size);
+            flecs_table_copy_elem(dst, src, size);
         }
 
         i_new += dst_id <= src_id;
