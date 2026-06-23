@@ -173,12 +173,6 @@ int flecs_query_discover_vars(
         ecs_var_id_t first_var_id = flecs_query_add_var_for_term_id(
             query, first, vars, EcsVarEntity);
         if (first_var_id == EcsVarNone) {
-            /* If first is not a variable, check if we need to insert anonymous
-             * variable for resolving component inheritance */
-            if (term->flags_ & EcsTermIdInherited) {
-                anonymous_count += 2; /* table & entity variable */
-            }
-
             /* If first is a wildcard, insert anonymous variable */
             if (flecs_term_ref_is_wildcard(first)) {
                 anonymous_count ++;

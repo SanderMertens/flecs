@@ -110,6 +110,7 @@ ecs_id_t flecs_query_op_get_id(
     const ecs_query_run_ctx_t *ctx);
 
 int16_t flecs_query_next_column(
+    const ecs_world_t *world,
     ecs_table_t *table,
     ecs_id_t id,
     int32_t column);

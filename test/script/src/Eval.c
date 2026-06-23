@@ -16526,6 +16526,116 @@ void Eval_component_expr_member_no_var(void) {
 }
 
 
+void Eval_struct_inheritance(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE
+    LINE "struct Foo {"
+    LINE "  x { member: {i32} }"
+    LINE "  y { member: {i32} }"
+    LINE "}"
+    LINE
+    LINE "struct Bar : Foo {"
+    LINE "  z { member: {i32} }"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    test_assert(foo != 0);
+    test_assert(bar != 0);
+    test_assert(ecs_has_pair(world, bar, EcsIsA, foo));
+
+    test_assert(ecs_struct_get_nth_member(world, bar, 3) == NULL);
+    test_str(ecs_struct_get_nth_member(world, bar, 0)->name, "x");
+    test_int(ecs_struct_get_nth_member(world, bar, 0)->offset, 0);
+    test_str(ecs_struct_get_nth_member(world, bar, 1)->name, "y");
+    test_int(ecs_struct_get_nth_member(world, bar, 1)->offset, 4);
+    test_str(ecs_struct_get_nth_member(world, bar, 2)->name, "z");
+    test_int(ecs_struct_get_nth_member(world, bar, 2)->offset, 8);
+
+    const EcsComponent *c = ecs_get(world, bar, EcsComponent);
+    test_assert(c != NULL);
+    test_int(c->size, 12);
+
+    ecs_fini(world);
+}
+
+void Eval_struct_inheritance_empty_derived(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE
+    LINE "struct Foo {"
+    LINE "  x { member: {i32} }"
+    LINE "  y { member: {i32} }"
+    LINE "}"
+    LINE
+    LINE "struct Bar : Foo {}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    test_assert(bar != 0);
+
+    test_assert(ecs_has(world, bar, EcsType));
+
+    test_assert(ecs_struct_get_nth_member(world, bar, 2) == NULL);
+    test_str(ecs_struct_get_nth_member(world, bar, 0)->name, "x");
+    test_int(ecs_struct_get_nth_member(world, bar, 0)->offset, 0);
+    test_str(ecs_struct_get_nth_member(world, bar, 1)->name, "y");
+    test_int(ecs_struct_get_nth_member(world, bar, 1)->offset, 4);
+
+    const EcsComponent *c = ecs_get(world, bar, EcsComponent);
+    test_assert(c != NULL);
+    test_int(c->size, 8);
+
+    ecs_fini(world);
+}
+
+void Eval_struct_inheritance_assign(void) {
+    typedef struct {
+        ecs_i32_t x;
+        ecs_i32_t y;
+        ecs_i32_t z;
+    } Bar;
+
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE
+    LINE "struct Foo {"
+    LINE "  x { member: {i32} }"
+    LINE "  y { member: {i32} }"
+    LINE "}"
+    LINE
+    LINE "struct Bar : Foo {"
+    LINE "  z { member: {i32} }"
+    LINE "}"
+    LINE
+    LINE "e { Bar: {x: 10, y: 20, z: 30} }";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t ecs_id(Bar) = ecs_lookup(world, "Bar");
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(ecs_id(Bar) != 0);
+    test_assert(e != 0);
+    test_assert(ecs_has(world, e, Bar));
+
+    const Bar *ptr = ecs_get(world, e, Bar);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 10);
+    test_int(ptr->y, 20);
+    test_int(ptr->z, 30);
+
+    ecs_fini(world);
+}
 
 void Eval_default_child_component_w_entity_in_if(void) {
     ecs_world_t *world = ecs_init();

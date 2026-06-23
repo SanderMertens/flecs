@@ -1334,10 +1334,11 @@ void Transitive_isa_disabled_match_disabled_flag(void);
 void Transitive_isa_disabled_match_disabled_term(void);
 
 // Testsuite 'ComponentInheritance'
-void ComponentInheritance_1_ent_0_lvl(void);
-void ComponentInheritance_1_ent_1_lvl(void);
-void ComponentInheritance_1_ent_2_lvl(void);
-void ComponentInheritance_1_ent_3_lvl(void);
+void ComponentInheritance_setup(void);
+void ComponentInheritance_1_fixed_0_lvl(void);
+void ComponentInheritance_1_fixed_1_lvl(void);
+void ComponentInheritance_1_fixed_2_lvl(void);
+void ComponentInheritance_1_fixed_3_lvl(void);
 void ComponentInheritance_1_this_0_lvl(void);
 void ComponentInheritance_1_this_1_lvl(void);
 void ComponentInheritance_1_this_2_lvl(void);
@@ -1354,12 +1355,28 @@ void ComponentInheritance_1_var_0_lvl_written(void);
 void ComponentInheritance_1_var_1_lvl_written(void);
 void ComponentInheritance_1_var_2_lvl_written(void);
 void ComponentInheritance_1_var_3_lvl_written(void);
-void ComponentInheritance_1_ent_1_lvl_self(void);
+void ComponentInheritance_1_fixed_component(void);
+void ComponentInheritance_1_fixed_component_src_not_row_0(void);
+void ComponentInheritance_1_this_component(void);
+void ComponentInheritance_1_this_component_written(void);
+void ComponentInheritance_1_var_component(void);
+void ComponentInheritance_1_var_component_written(void);
+void ComponentInheritance_1_fixed_pair(void);
+void ComponentInheritance_1_this_pair(void);
+void ComponentInheritance_1_this_pair_written(void);
+void ComponentInheritance_1_var_pair(void);
+void ComponentInheritance_1_var_pair_written(void);
+void ComponentInheritance_1_fixed_component_pair(void);
+void ComponentInheritance_1_this_component_pair(void);
+void ComponentInheritance_1_this_component_pair_written(void);
+void ComponentInheritance_1_var_component_pair(void);
+void ComponentInheritance_1_var_component_pair_written(void);
+void ComponentInheritance_1_fixed_1_lvl_self(void);
 void ComponentInheritance_1_this_1_lvl_self(void);
 void ComponentInheritance_1_this_1_lvl_written_self(void);
 void ComponentInheritance_1_var_1_lvl_self(void);
 void ComponentInheritance_1_var_1_lvl_written_self(void);
-void ComponentInheritance_1_ent_src_not(void);
+void ComponentInheritance_1_fixed_src_not(void);
 void ComponentInheritance_1_this_src_not(void);
 void ComponentInheritance_1_var_src_not(void);
 void ComponentInheritance_1_this_src_not_written(void);
@@ -1370,6 +1387,30 @@ void ComponentInheritance_query_before_isa_relationship_1st_term(void);
 void ComponentInheritance_query_before_isa_relationship_2nd_term(void);
 void ComponentInheritance_query_before_isa_relationship_subtype(void);
 void ComponentInheritance_query_before_isa_relationship_0_src(void);
+void ComponentInheritance_populated_remove_isa_2_lvl(void);
+void ComponentInheritance_populated_remove_isa_3_lvl(void);
+void ComponentInheritance_populated_match_entities_added_after(void);
+void ComponentInheritance_populated_remove_isa_var(void);
+void ComponentInheritance_optional_inherited(void);
+void ComponentInheritance_or_inherited(void);
+void ComponentInheritance_multiple_inherited_terms(void);
+void ComponentInheritance_up_traversal_inherited(void);
+void ComponentInheritance_multi_derived_fixed(void);
+void ComponentInheritance_multi_derived_this(void);
+void ComponentInheritance_multi_derived_this_written(void);
+void ComponentInheritance_multi_derived_var(void);
+void ComponentInheritance_multi_derived_mid_level_once(void);
+void ComponentInheritance_multi_derived_count_results(void);
+void ComponentInheritance_pair_3_lvl(void);
+void ComponentInheritance_pair_multi(void);
+void ComponentInheritance_pair_different_target(void);
+void ComponentInheritance_pair_wildcard(void);
+void ComponentInheritance_pair_wildcard_multi_rel(void);
+void ComponentInheritance_pair_wildcard_w_owned_base_pair(void);
+void ComponentInheritance_cached_match_derived_table_added_after(void);
+void ComponentInheritance_cached_unmatch_derived_table_on_delete(void);
+void ComponentInheritance_inheritable_trait_terms_query_before_derived(void);
+void ComponentInheritance_query_base_and_derived_same_table(void);
 
 // Testsuite 'BuiltinPredicates'
 void BuiltinPredicates_setup(void);
@@ -8097,20 +8138,20 @@ bake_test_case Transitive_testcases[] = {
 
 bake_test_case ComponentInheritance_testcases[] = {
     {
-        "1_ent_0_lvl",
-        ComponentInheritance_1_ent_0_lvl
+        "1_fixed_0_lvl",
+        ComponentInheritance_1_fixed_0_lvl
     },
     {
-        "1_ent_1_lvl",
-        ComponentInheritance_1_ent_1_lvl
+        "1_fixed_1_lvl",
+        ComponentInheritance_1_fixed_1_lvl
     },
     {
-        "1_ent_2_lvl",
-        ComponentInheritance_1_ent_2_lvl
+        "1_fixed_2_lvl",
+        ComponentInheritance_1_fixed_2_lvl
     },
     {
-        "1_ent_3_lvl",
-        ComponentInheritance_1_ent_3_lvl
+        "1_fixed_3_lvl",
+        ComponentInheritance_1_fixed_3_lvl
     },
     {
         "1_this_0_lvl",
@@ -8177,8 +8218,72 @@ bake_test_case ComponentInheritance_testcases[] = {
         ComponentInheritance_1_var_3_lvl_written
     },
     {
-        "1_ent_1_lvl_self",
-        ComponentInheritance_1_ent_1_lvl_self
+        "1_fixed_component",
+        ComponentInheritance_1_fixed_component
+    },
+    {
+        "1_fixed_component_src_not_row_0",
+        ComponentInheritance_1_fixed_component_src_not_row_0
+    },
+    {
+        "1_this_component",
+        ComponentInheritance_1_this_component
+    },
+    {
+        "1_this_component_written",
+        ComponentInheritance_1_this_component_written
+    },
+    {
+        "1_var_component",
+        ComponentInheritance_1_var_component
+    },
+    {
+        "1_var_component_written",
+        ComponentInheritance_1_var_component_written
+    },
+    {
+        "1_fixed_pair",
+        ComponentInheritance_1_fixed_pair
+    },
+    {
+        "1_this_pair",
+        ComponentInheritance_1_this_pair
+    },
+    {
+        "1_this_pair_written",
+        ComponentInheritance_1_this_pair_written
+    },
+    {
+        "1_var_pair",
+        ComponentInheritance_1_var_pair
+    },
+    {
+        "1_var_pair_written",
+        ComponentInheritance_1_var_pair_written
+    },
+    {
+        "1_fixed_component_pair",
+        ComponentInheritance_1_fixed_component_pair
+    },
+    {
+        "1_this_component_pair",
+        ComponentInheritance_1_this_component_pair
+    },
+    {
+        "1_this_component_pair_written",
+        ComponentInheritance_1_this_component_pair_written
+    },
+    {
+        "1_var_component_pair",
+        ComponentInheritance_1_var_component_pair
+    },
+    {
+        "1_var_component_pair_written",
+        ComponentInheritance_1_var_component_pair_written
+    },
+    {
+        "1_fixed_1_lvl_self",
+        ComponentInheritance_1_fixed_1_lvl_self
     },
     {
         "1_this_1_lvl_self",
@@ -8197,8 +8302,8 @@ bake_test_case ComponentInheritance_testcases[] = {
         ComponentInheritance_1_var_1_lvl_written_self
     },
     {
-        "1_ent_src_not",
-        ComponentInheritance_1_ent_src_not
+        "1_fixed_src_not",
+        ComponentInheritance_1_fixed_src_not
     },
     {
         "1_this_src_not",
@@ -8239,6 +8344,102 @@ bake_test_case ComponentInheritance_testcases[] = {
     {
         "query_before_isa_relationship_0_src",
         ComponentInheritance_query_before_isa_relationship_0_src
+    },
+    {
+        "populated_remove_isa_2_lvl",
+        ComponentInheritance_populated_remove_isa_2_lvl
+    },
+    {
+        "populated_remove_isa_3_lvl",
+        ComponentInheritance_populated_remove_isa_3_lvl
+    },
+    {
+        "populated_match_entities_added_after",
+        ComponentInheritance_populated_match_entities_added_after
+    },
+    {
+        "populated_remove_isa_var",
+        ComponentInheritance_populated_remove_isa_var
+    },
+    {
+        "optional_inherited",
+        ComponentInheritance_optional_inherited
+    },
+    {
+        "or_inherited",
+        ComponentInheritance_or_inherited
+    },
+    {
+        "multiple_inherited_terms",
+        ComponentInheritance_multiple_inherited_terms
+    },
+    {
+        "up_traversal_inherited",
+        ComponentInheritance_up_traversal_inherited
+    },
+    {
+        "multi_derived_fixed",
+        ComponentInheritance_multi_derived_fixed
+    },
+    {
+        "multi_derived_this",
+        ComponentInheritance_multi_derived_this
+    },
+    {
+        "multi_derived_this_written",
+        ComponentInheritance_multi_derived_this_written
+    },
+    {
+        "multi_derived_var",
+        ComponentInheritance_multi_derived_var
+    },
+    {
+        "multi_derived_mid_level_once",
+        ComponentInheritance_multi_derived_mid_level_once
+    },
+    {
+        "multi_derived_count_results",
+        ComponentInheritance_multi_derived_count_results
+    },
+    {
+        "pair_3_lvl",
+        ComponentInheritance_pair_3_lvl
+    },
+    {
+        "pair_multi",
+        ComponentInheritance_pair_multi
+    },
+    {
+        "pair_different_target",
+        ComponentInheritance_pair_different_target
+    },
+    {
+        "pair_wildcard",
+        ComponentInheritance_pair_wildcard
+    },
+    {
+        "pair_wildcard_multi_rel",
+        ComponentInheritance_pair_wildcard_multi_rel
+    },
+    {
+        "pair_wildcard_w_owned_base_pair",
+        ComponentInheritance_pair_wildcard_w_owned_base_pair
+    },
+    {
+        "cached_match_derived_table_added_after",
+        ComponentInheritance_cached_match_derived_table_added_after
+    },
+    {
+        "cached_unmatch_derived_table_on_delete",
+        ComponentInheritance_cached_unmatch_derived_table_on_delete
+    },
+    {
+        "inheritable_trait_terms_query_before_derived",
+        ComponentInheritance_inheritable_trait_terms_query_before_derived
+    },
+    {
+        "query_base_and_derived_same_table",
+        ComponentInheritance_query_base_and_derived_same_table
     }
 };
 
@@ -14113,6 +14314,11 @@ bake_test_param Operators_params[] = {
     {"cache_kind", (char**)Operators_cache_kind_param, 2}
 };
 
+const char* ComponentInheritance_cache_kind_param[] = {"default", "auto"};
+bake_test_param ComponentInheritance_params[] = {
+    {"cache_kind", (char**)ComponentInheritance_cache_kind_param, 2}
+};
+
 const char* BuiltinPredicates_cache_kind_param[] = {"default", "auto"};
 bake_test_param BuiltinPredicates_params[] = {
     {"cache_kind", (char**)BuiltinPredicates_cache_kind_param, 2}
@@ -14231,10 +14437,12 @@ static bake_test_suite suites[] = {
     },
     {
         "ComponentInheritance",
+        ComponentInheritance_setup,
         NULL,
-        NULL,
-        36,
-        ComponentInheritance_testcases
+        76,
+        ComponentInheritance_testcases,
+        1,
+        ComponentInheritance_params
     },
     {
         "BuiltinPredicates",

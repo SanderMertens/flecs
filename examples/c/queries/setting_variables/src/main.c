@@ -1,7 +1,7 @@
 #include <setting_variables.h>
 #include <stdio.h>
 
-// This example extends the component_inheritance example, and shows how
+// This example extends the tag_inheritance example, and shows how
 // we can use a single query to match units from different players and platoons
 // by setting query variables before we iterate.
 //
@@ -14,7 +14,7 @@ static const int PlatoonsPerPlayer = 3;
 int main(int argc, char *argv[]) {
     ecs_world_t *ecs = ecs_init_w_args(argc, argv);
 
-    // Unit datamodel - see component_inheritance example
+    // Unit datamodel - see tag_inheritance example
     ECS_TAG(ecs, Unit);
     ECS_ENTITY(ecs, CombatUnit, (IsA, Unit));
     ECS_ENTITY(ecs, MeleeUnit,  (IsA, CombatUnit));

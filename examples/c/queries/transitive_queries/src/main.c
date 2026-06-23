@@ -10,7 +10,7 @@
 // San Francisco is located in the United States
 // Therefore Bob also lives in the United States.
 //
-// An example of transitivity can be seen in the component_inheritance example.
+// An example of transitivity can be seen in the tag_inheritance example.
 // This example uses the builtin IsA relationship, which is transitive. This
 // example shows how to achieve similar behavior with a user-defined relationship.
 

@@ -1,70 +1,74 @@
 #include <component_inheritance.h>
 #include <stdio.h>
 
-// This example shows how queries can be used to match simple inheritance trees.
+// This example shows how queries can match components that derive from a base
+// component through the IsA relationship. A query for the base component
+// matches all entities that have a derived component, and can read the members
+// that are inherited from the base. See the tag_inheritance example for
+// inheritance trees built from tags instead of components.
+
+// Buf is the base component. HealthBuf and ManaBuf derive from it, so they
+// start with the same members as Buf (the base layout is a prefix of the
+// derived layout).
+typedef struct {
+    float value;
+} Buf;
+
+typedef struct {
+    float value;
+} HealthBuf;
+
+typedef struct {
+    float value;
+} ManaBuf;
 
 int main(int argc, char *argv[]) {
     ecs_world_t *ecs = ecs_init_w_args(argc, argv);
 
-    // Use convenience macros to create simple hierarchy of unit types.
-    // This macro call:
-    //   ECS_ENTITY(ecs, CombatUnit, (IsA, Unit))
-    //
-    // is the same as these C statements:
-    //   ecs_entity_t CombatUnit = ecs_new_entity("CombatUnit");
-    //   ecs_add_pair(ecs, CombatUnit, EcsIsA, Unit);
+    ECS_COMPONENT(ecs, Buf);
+    ECS_COMPONENT(ecs, HealthBuf);
+    ECS_COMPONENT(ecs, ManaBuf);
 
-    ECS_TAG(ecs, Unit);
-    ECS_ENTITY(ecs, CombatUnit, (IsA, Unit));
-    ECS_ENTITY(ecs, MeleeUnit,  (IsA, CombatUnit));
-    ECS_ENTITY(ecs, RangedUnit, (IsA, CombatUnit));
+    // Make the ECS aware of the inheritance relationships.
+    ecs_add_pair(ecs, ecs_id(HealthBuf), EcsIsA, ecs_id(Buf));
+    ecs_add_pair(ecs, ecs_id(ManaBuf), EcsIsA, ecs_id(Buf));
 
-    ECS_ENTITY(ecs, Warrior,    (IsA, MeleeUnit));
-    ECS_ENTITY(ecs, Wizard,     (IsA, RangedUnit));
-    ECS_ENTITY(ecs, Marksman,   (IsA, RangedUnit));
-    ECS_ENTITY(ecs, Builder,    (IsA, Unit));
+    // Create a few entities with derived buf components
+    ecs_entity_t warrior = ecs_entity(ecs, { .name = "warrior" });
+    ecs_set(ecs, warrior, HealthBuf, { .value = 10 });
 
-    // Create a few units
-    ecs_entity_t warrior_1 = ecs_entity(ecs, { .name = "warrior_1" });
-    ecs_add(ecs, warrior_1, Warrior);
-    ecs_entity_t warrior_2 = ecs_entity(ecs, { .name = "warrior_2" });
-    ecs_add(ecs, warrior_2, Warrior);
+    ecs_entity_t wizard = ecs_entity(ecs, { .name = "wizard" });
+    ecs_set(ecs, wizard, ManaBuf, { .value = 25 });
 
-    ecs_entity_t marksman_1 = ecs_entity(ecs, { .name = "marksman_1" });
-    ecs_add(ecs, marksman_1, Marksman);
-    ecs_entity_t marksman_2 = ecs_entity(ecs, { .name = "marksman_2" });
-    ecs_add(ecs, marksman_2, Marksman);
+    ecs_entity_t paladin = ecs_entity(ecs, { .name = "paladin" });
+    ecs_set(ecs, paladin, HealthBuf, { .value = 5 });
 
-    ecs_entity_t wizard_1 = ecs_entity(ecs, { .name = "wizard_1" });
-    ecs_add(ecs, wizard_1, Wizard);
-    ecs_entity_t wizard_2 = ecs_entity(ecs, { .name = "wizard_2" });
-    ecs_add(ecs, wizard_2, Wizard);
-
-    ecs_entity_t builder_1 = ecs_entity(ecs, { .name = "builder_1" });
-    ecs_add(ecs, builder_1, Builder);
-    ecs_entity_t builder_2 = ecs_entity(ecs, { .name = "builder_2" });
-    ecs_add(ecs, builder_2, Builder);
-
-    // Create a query to find all ranged units
+    // Create a query for the base component. This matches all entities with a
+    // component that derives from Buf.
     ecs_query_t *q = ecs_query(ecs, {
-        .terms = {{ .id = RangedUnit }}
+        .terms = {{ .id = ecs_id(Buf) }}
     });
 
-    // Iterate the query
+    // Iterate the query. Because the matched component can be a derived type
+    // that is larger than Buf, use ecs_base_field to get the field pointer and
+    // ecs_field_stride to advance from one element to the next.
     ecs_iter_t it = ecs_query_iter(ecs, q);
     while (ecs_query_next(&it)) {
+        void *bufs = ecs_base_field(&it, Buf, 0);
+        size_t stride = ecs_field_stride(&it, 0);
         for (int i = 0; i < it.count; i ++) {
-            printf("Unit %s found\n", ecs_get_name(ecs, it.entities[i]));
+            Buf *buf = ECS_OFFSET(bufs, stride * (size_t)i);
+            printf("%s has buf value %.0f\n",
+                ecs_get_name(ecs, it.entities[i]), (double)buf->value);
         }
     }
 
     ecs_query_fini(q);
 
     // Output
-    //  Unit wizard_1 found
-    //  Unit wizard_2 found
-    //  Unit marksman_1 found
-    //  Unit marksman_2 found
+    //  warrior has buf value 10
+    //  paladin has buf value 5
+    //  wizard has buf value 25
 
     return ecs_fini(ecs);
 }

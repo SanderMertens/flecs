@@ -215,12 +215,13 @@ int flecs_json_typeinfo_ser_type_slice(
     int32_t op_count,
     ecs_strbuf_t *str) 
 {
-    const EcsStruct *st = NULL;
+    ecs_entity_t struct_type = 0;
     if (ops[0].name) { /* If a member, previous operation is PushStruct */
         const ecs_meta_op_t *push = &ops[-1];
         ecs_assert(push->kind == EcsOpPushStruct, ECS_INTERNAL_ERROR, NULL);
-        st = ecs_get(world, push->type, EcsStruct);
-        ecs_assert(st != NULL, ECS_INTERNAL_ERROR, NULL);
+        struct_type = push->type;
+        ecs_assert(ecs_has(world, struct_type, EcsStruct),
+            ECS_INTERNAL_ERROR, NULL);
     }
 
     for (int i = 0; i < op_count; i ++) {
@@ -314,9 +315,10 @@ int flecs_json_typeinfo_ser_type_slice(
         }
 
         if (op->name) {
-            ecs_assert(st != NULL, ECS_INTERNAL_ERROR, NULL);
-            ecs_member_t *m = ecs_vec_get_t(
-                &st->members, ecs_member_t, op->member_index);
+            ecs_assert(struct_type != 0, ECS_INTERNAL_ERROR, NULL);
+            ecs_member_t *m = ecs_struct_get_nth_member(
+                ECS_CONST_CAST(ecs_world_t*, world), struct_type,
+                op->member_index);
             ecs_assert(m != NULL, ECS_INTERNAL_ERROR, NULL);
 
             bool value_range = ECS_NEQ(m->range.min, m->range.max);

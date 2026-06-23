@@ -1,56 +1,45 @@
 #include <component_inheritance.h>
 #include <iostream>
 
-// This example shows how queries can be used to match simple inheritance trees.
+// This example shows how queries can match components that derive from a base
+// component through the IsA relationship. A query for the base component
+// matches all entities that have a derived component, and can read the members
+// that are inherited from the base. See the tag_inheritance example for
+// inheritance trees built from tags instead of components.
 
-struct Unit { };
-struct CombatUnit : Unit { };
-struct MeleeUnit : CombatUnit { };
-struct RangedUnit : CombatUnit { };
+// Buf is the base component. HealthBuf and ManaBuf derive from it, so they
+// inherit the base members (the base subobject is stored at the start of the
+// derived component).
+struct Buf {
+    float value;
+};
 
-struct Warrior : MeleeUnit { };
-struct Wizard : RangedUnit { };
-struct Marksman : RangedUnit { };
-struct Builder : Unit { };
+struct HealthBuf : Buf { };
+struct ManaBuf : Buf { };
 
 int main(int, char *[]) {
     flecs::world ecs;
 
-    // Make the ECS aware of the inheritance relationships. Note that IsA
-    // relationship used here is the same as in the prefab example.
-    ecs.component<CombatUnit>().is_a<Unit>();
-    ecs.component<MeleeUnit>().is_a<CombatUnit>();
-    ecs.component<RangedUnit>().is_a<CombatUnit>();
+    // Make the ECS aware of the inheritance relationships.
+    ecs.component<HealthBuf>().is_a<Buf>();
+    ecs.component<ManaBuf>().is_a<Buf>();
 
-    ecs.component<Warrior>().is_a<MeleeUnit>();
-    ecs.component<Wizard>().is_a<RangedUnit>();
-    ecs.component<Marksman>().is_a<RangedUnit>();
-    ecs.component<Builder>().is_a<Unit>();
+    // Create a few entities with derived buf components
+    ecs.entity("warrior").set<HealthBuf>({{ 10 }});
+    ecs.entity("wizard").set<ManaBuf>({{ 25 }});
+    ecs.entity("paladin").set<HealthBuf>({{ 5 }});
 
-    // Create a few units
-    ecs.entity("warrior_1").add<Warrior>();
-    ecs.entity("warrior_2").add<Warrior>();
+    // Create a query for the base component. This matches all entities with a
+    // component that derives from Buf.
+    flecs::query<Buf> q = ecs.query<Buf>();
 
-    ecs.entity("marksman_1").add<Marksman>();
-    ecs.entity("marksman_2").add<Marksman>();
-
-    ecs.entity("wizard_1").add<Wizard>();
-    ecs.entity("wizard_2").add<Wizard>();
-
-    ecs.entity("builder_1").add<Builder>();
-    ecs.entity("builder_2").add<Builder>();
-
-    // Create a query to find all ranged units
-    flecs::query<RangedUnit> q = ecs.query<RangedUnit>();
-
-    // Iterate the query
-    q.each([](flecs::entity e, RangedUnit) {
-        std::cout << "Unit " << e.name() << " found\n";
+    // Iterate the query. The Buf members are accessible for derived components.
+    q.each([](flecs::entity e, Buf& b) {
+        std::cout << e.name() << " has buf value " << b.value << "\n";
     });
 
     // Output:
-    //   Unit wizard_1 found
-    //   Unit wizard_2 found
-    //   Unit marksman_1 found
-    //   Unit marksman_2 found
+    //   warrior has buf value 10
+    //   paladin has buf value 5
+    //   wizard has buf value 25
 }

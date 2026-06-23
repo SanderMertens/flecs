@@ -512,6 +512,9 @@
                 "component_expr_swizzle_var_rgb",
                 "component_expr_swizzle_var_no_target_type",
                 "component_expr_member_no_var",
+                "struct_inheritance",
+                "struct_inheritance_empty_derived",
+                "struct_inheritance_assign",
                 "default_child_component_w_entity_in_if",
                 "default_child_component_w_entity_in_for",
                 "default_child_component_w_entity_in_nested_if",
@@ -1181,7 +1184,8 @@
                 "nested_struct_expr_w_struct_var",
                 "redeclare_in_scope",
                 "init_fini_vars",
-                "from_iter_17_fields"
+                "from_iter_17_fields",
+                "from_iter_w_derived_component"
             ]
         }, {
             "id": "Serialize",

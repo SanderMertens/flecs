@@ -33,29 +33,22 @@ void _meta_test_member(
         test_assert(mptr->type == type);
     }
 
-    const EcsStruct *sptr = ecs_get(world, t, EcsStruct);
-    test_assert(sptr != NULL);
+    ecs_member_t *member = ecs_struct_get_member(world, t, name);
+    test_assert(member != NULL);
 
-    ecs_member_t *members = ecs_vec_first_t(&sptr->members, ecs_member_t);
-    int i, count = ecs_vec_count(&sptr->members);
+    test_str(member->name, name);
+    test_assert(member->type == type);
+    test_int(member->offset, offset);
+    test_int(member->count, elem_count);
+}
 
-    for (i = 0; i < count; i ++) {
-        if (m && (members[i].member == m)) {
-            break;
-        } else {
-            if (!ecs_os_strcmp(name, members[i].name)) {
-                break;
-            }
-        }
+static
+int32_t meta_member_count(ecs_world_t *world, ecs_entity_t t) {
+    int32_t n = 0;
+    while (ecs_struct_get_nth_member(world, t, n)) {
+        n ++;
     }
-
-    /* Make sure member was found */
-    test_assert(i != count);
-
-    test_str(members[i].name, name);
-    test_assert(members[i].type == type);
-    test_int(members[i].offset, offset);
-    test_int(members[i].count, elem_count);
+    return n;
 }
 
 void StructTypes_i32(void) {
@@ -1106,3 +1099,630 @@ void StructTypes_use_before_registering_reflection_w_hooks(void) {
     ecs_fini(world);
 }
 
+
+void StructTypes_inherit_layout(void) {
+    typedef struct {
+        ecs_i32_t x;
+        ecs_i32_t y;
+    } Point2D;
+
+    typedef struct {
+        ecs_i32_t x;
+        ecs_i32_t y;
+        ecs_i32_t z;
+    } Point3D;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t base = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "Point2D"}),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+    test_assert(base != 0);
+
+    ecs_entity_t derived = ecs_entity(world, {.name = "Point3D"});
+    ecs_add_pair(world, derived, EcsIsA, base);
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = derived,
+        .members = {
+            {"z", ecs_id(ecs_i32_t)}
+        }
+    });
+    test_assert(t == derived);
+
+    meta_test_struct(world, base, Point2D);
+    meta_test_member(world, base, Point2D, x, ecs_id(ecs_i32_t), 0);
+    meta_test_member(world, base, Point2D, y, ecs_id(ecs_i32_t), 0);
+
+    meta_test_struct(world, t, Point3D);
+    meta_test_member(world, t, Point3D, x, ecs_id(ecs_i32_t), 0);
+    meta_test_member(world, t, Point3D, y, ecs_id(ecs_i32_t), 0);
+    meta_test_member(world, t, Point3D, z, ecs_id(ecs_i32_t), 0);
+
+    test_int(meta_member_count(world, t), 3);
+
+    test_str(ecs_struct_get_nth_member(world, t, 0)->name, "x");
+    test_int(ecs_struct_get_nth_member(world, t, 0)->offset, 0);
+    test_str(ecs_struct_get_nth_member(world, t, 1)->name, "y");
+    test_int(ecs_struct_get_nth_member(world, t, 1)->offset, 4);
+    test_str(ecs_struct_get_nth_member(world, t, 2)->name, "z");
+    test_int(ecs_struct_get_nth_member(world, t, 2)->offset, 8);
+
+    ecs_fini(world);
+}
+
+void StructTypes_inherit_multi_level(void) {
+    typedef struct {
+        ecs_i32_t x;
+        ecs_i32_t y;
+        ecs_i32_t z;
+        ecs_i32_t w;
+    } Point4D;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t base2 = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "Point2D"}),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t base3 = ecs_entity(world, {.name = "Point3D"});
+    ecs_add_pair(world, base3, EcsIsA, base2);
+    ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = base3,
+        .members = {
+            {"z", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t t = ecs_entity(world, {.name = "Point4D"});
+    ecs_add_pair(world, t, EcsIsA, base3);
+    ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = t,
+        .members = {
+            {"w", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    meta_test_struct(world, t, Point4D);
+    meta_test_member(world, t, Point4D, x, ecs_id(ecs_i32_t), 0);
+    meta_test_member(world, t, Point4D, y, ecs_id(ecs_i32_t), 0);
+    meta_test_member(world, t, Point4D, z, ecs_id(ecs_i32_t), 0);
+    meta_test_member(world, t, Point4D, w, ecs_id(ecs_i32_t), 0);
+
+    test_int(meta_member_count(world, t), 4);
+
+    test_str(ecs_struct_get_nth_member(world, t, 0)->name, "x");
+    test_int(ecs_struct_get_nth_member(world, t, 0)->offset, 0);
+    test_str(ecs_struct_get_nth_member(world, t, 1)->name, "y");
+    test_int(ecs_struct_get_nth_member(world, t, 1)->offset, 4);
+    test_str(ecs_struct_get_nth_member(world, t, 2)->name, "z");
+    test_int(ecs_struct_get_nth_member(world, t, 2)->offset, 8);
+    test_str(ecs_struct_get_nth_member(world, t, 3)->name, "w");
+    test_int(ecs_struct_get_nth_member(world, t, 3)->offset, 12);
+
+    ecs_fini(world);
+}
+
+void StructTypes_inherit_base_change_propagates(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t base = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "Base"}),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t derived = ecs_entity(world, {.name = "Derived"});
+    ecs_add_pair(world, derived, EcsIsA, base);
+    ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = derived,
+        .members = {
+            {"z", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    {
+        const EcsComponent *c = ecs_get(world, derived, EcsComponent);
+        test_assert(c != NULL);
+        test_int(c->size, 8);
+
+        test_int(meta_member_count(world, derived), 2);
+        test_str(ecs_struct_get_nth_member(world, derived, 0)->name, "x");
+        test_int(ecs_struct_get_nth_member(world, derived, 0)->offset, 0);
+        test_str(ecs_struct_get_nth_member(world, derived, 1)->name, "z");
+        test_int(ecs_struct_get_nth_member(world, derived, 1)->offset, 4);
+    }
+
+    ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = base,
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    {
+        const EcsComponent *c = ecs_get(world, derived, EcsComponent);
+        test_assert(c != NULL);
+        test_int(c->size, 12);
+
+        test_int(meta_member_count(world, derived), 3);
+        test_str(ecs_struct_get_nth_member(world, derived, 0)->name, "x");
+        test_int(ecs_struct_get_nth_member(world, derived, 0)->offset, 0);
+        test_str(ecs_struct_get_nth_member(world, derived, 1)->name, "y");
+        test_int(ecs_struct_get_nth_member(world, derived, 1)->offset, 4);
+        test_str(ecs_struct_get_nth_member(world, derived, 2)->name, "z");
+        test_int(ecs_struct_get_nth_member(world, derived, 2)->offset, 8);
+    }
+
+    ecs_fini(world);
+}
+
+void StructTypes_inherit_base_tail_padding(void) {
+    typedef struct {
+        ecs_i32_t i;
+        ecs_char_t c;
+    } BaseTP;
+
+    typedef struct {
+        BaseTP base;
+        ecs_char_t d;
+    } DerivedTP;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t base = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "BaseTP"}),
+        .members = {
+            {"i", ecs_id(ecs_i32_t)},
+            {"c", ecs_id(ecs_char_t)}
+        }
+    });
+
+    ecs_entity_t t = ecs_entity(world, {.name = "DerivedTP"});
+    ecs_add_pair(world, t, EcsIsA, base);
+    ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = t,
+        .members = {
+            {"d", ecs_id(ecs_char_t)}
+        }
+    });
+
+    meta_test_struct(world, base, BaseTP);
+    meta_test_struct(world, t, DerivedTP);
+
+    test_int(meta_member_count(world, t), 3);
+
+    test_str(ecs_struct_get_nth_member(world, t, 0)->name, "i");
+    test_int(ecs_struct_get_nth_member(world, t, 0)->offset, 0);
+    test_str(ecs_struct_get_nth_member(world, t, 1)->name, "c");
+    test_int(ecs_struct_get_nth_member(world, t, 1)->offset, 4);
+
+    test_str(ecs_struct_get_nth_member(world, t, 2)->name, "d");
+    test_int(ecs_struct_get_nth_member(world, t, 2)->offset, 8);
+    test_int(ecs_struct_get_nth_member(world, t, 2)->offset, offsetof(DerivedTP, d));
+
+    ecs_fini(world);
+}
+
+void StructTypes_inherit_derived_larger_align(void) {
+    typedef struct {
+        ecs_i32_t x;
+    } Base;
+
+    typedef struct {
+        Base base;
+        ecs_f64_t v;
+    } Derived;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t base = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "Base"}),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t t = ecs_entity(world, {.name = "Derived"});
+    ecs_add_pair(world, t, EcsIsA, base);
+    ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = t,
+        .members = {
+            {"v", ecs_id(ecs_f64_t)}
+        }
+    });
+
+    meta_test_struct(world, base, Base);
+    meta_test_struct(world, t, Derived);
+
+    test_int(meta_member_count(world, t), 2);
+
+    test_str(ecs_struct_get_nth_member(world, t, 0)->name, "x");
+    test_int(ecs_struct_get_nth_member(world, t, 0)->offset, 0);
+
+    test_str(ecs_struct_get_nth_member(world, t, 1)->name, "v");
+    test_int(ecs_struct_get_nth_member(world, t, 1)->offset, 8);
+    test_int(ecs_struct_get_nth_member(world, t, 1)->offset, offsetof(Derived, v));
+
+    ecs_fini(world);
+}
+
+void StructTypes_inherit_shadow_member_fails(void) {
+    ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t base = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "Base"}),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)}
+        }
+    });
+    test_assert(base != 0);
+
+    ecs_entity_t derived = ecs_entity(world, {.name = "Derived"});
+    ecs_add_pair(world, derived, EcsIsA, base);
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = derived,
+        .members = {
+            {"x", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    test_assert(t == 0);
+
+    ecs_fini(world);
+}
+
+void StructTypes_inherit_empty_base(void) {
+    typedef struct {
+        ecs_i32_t z;
+    } Derived;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t base = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "Base"})
+    });
+    test_assert(base != 0);
+    test_assert(!ecs_has(world, base, EcsType));
+
+    ecs_entity_t t = ecs_entity(world, {.name = "Derived"});
+    ecs_add_pair(world, t, EcsIsA, base);
+    ecs_entity_t r = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = t,
+        .members = {
+            {"z", ecs_id(ecs_i32_t)}
+        }
+    });
+    test_assert(r == t);
+
+    meta_test_struct(world, t, Derived);
+
+    test_int(meta_member_count(world, t), 1);
+    test_str(ecs_struct_get_nth_member(world, t, 0)->name, "z");
+    test_int(ecs_struct_get_nth_member(world, t, 0)->offset, 0);
+
+    ecs_fini(world);
+}
+
+void StructTypes_inherit_empty_derived(void) {
+    typedef struct {
+        ecs_i32_t x;
+        ecs_i32_t y;
+    } Point2D;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t base = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "Point2D"}),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t t = ecs_entity(world, {.name = "Derived"});
+    ecs_add_pair(world, t, EcsIsA, base);
+    ecs_entity_t r = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = t
+    });
+    test_assert(r == t);
+
+    test_assert(ecs_has(world, t, EcsType));
+    meta_test_struct(world, t, Point2D);
+
+    test_int(meta_member_count(world, t), 2);
+    test_str(ecs_struct_get_nth_member(world, t, 0)->name, "x");
+    test_int(ecs_struct_get_nth_member(world, t, 0)->offset, 0);
+    test_str(ecs_struct_get_nth_member(world, t, 1)->name, "y");
+    test_int(ecs_struct_get_nth_member(world, t, 1)->offset, 4);
+
+    ecs_fini(world);
+}
+
+void StructTypes_inherit_empty_both(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t base = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "Base"})
+    });
+    test_assert(base != 0);
+
+    ecs_entity_t t = ecs_entity(world, {.name = "Derived"});
+    ecs_add_pair(world, t, EcsIsA, base);
+    ecs_entity_t r = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = t
+    });
+    test_assert(r == t);
+
+    test_int(meta_member_count(world, t), 0);
+
+    ecs_fini(world);
+}
+
+void StructTypes_inherit_from_non_component(void) {
+    typedef struct {
+        ecs_i32_t x;
+    } Derived;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t base = ecs_entity(world, {.name = "NotAType"});
+
+    ecs_entity_t t = ecs_entity(world, {.name = "Derived"});
+    ecs_add_pair(world, t, EcsIsA, base);
+    ecs_entity_t r = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = t,
+        .members = {
+            {"x", ecs_id(ecs_i32_t)}
+        }
+    });
+    test_assert(r == t);
+
+    meta_test_struct(world, t, Derived);
+
+    test_int(meta_member_count(world, t), 1);
+    test_str(ecs_struct_get_nth_member(world, t, 0)->name, "x");
+    test_int(ecs_struct_get_nth_member(world, t, 0)->offset, 0);
+
+    ecs_fini(world);
+}
+
+void StructTypes_inherit_propagate_stress(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t base = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "Base"}),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t d[16];
+    int i;
+    for (i = 0; i < 16; i ++) {
+        d[i] = ecs_new(world);
+        ecs_add_pair(world, d[i], EcsIsA, base);
+        ecs_add_id(world, d[i], ecs_id(EcsStruct));
+        test_assert(!ecs_has(world, d[i], EcsType));
+    }
+
+    ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = base,
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    for (i = 0; i < 16; i ++) {
+        test_int(meta_member_count(world, d[i]), 2);
+        test_assert(ecs_has(world, d[i], EcsType));
+    }
+
+    ecs_entity_t mid = ecs_entity(world, {.name = "Mid"});
+    ecs_add_pair(world, mid, EcsIsA, base);
+    ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = mid, .members = {{"z", ecs_id(ecs_i32_t)}}
+    });
+
+    ecs_entity_t leaf = ecs_entity(world, {.name = "Leaf"});
+    ecs_add_pair(world, leaf, EcsIsA, mid);
+    ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = leaf, .members = {{"w", ecs_id(ecs_i32_t)}}
+    });
+
+    ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = base,
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    test_int(meta_member_count(world, mid), 3);
+    test_int(meta_member_count(world, leaf), 4);
+
+    ecs_fini(world);
+}
+
+void StructTypes_inherit_base_member_type_change(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t base = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "Base"}),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t derived = ecs_entity(world, {.name = "Derived"});
+    ecs_add_pair(world, derived, EcsIsA, base);
+    ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = derived,
+        .members = {
+            {"z", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    {
+        test_int(meta_member_count(world, derived), 2);
+        test_uint(ecs_struct_get_nth_member(world, derived, 0)->type, ecs_id(ecs_i32_t));
+        test_int(ecs_struct_get_nth_member(world, derived, 0)->offset, 0);
+        test_int(ecs_struct_get_nth_member(world, derived, 1)->offset, 4);
+        test_int(ecs_get(world, derived, EcsComponent)->size, 8);
+    }
+
+    ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = base,
+        .members = {
+            {"x", ecs_id(ecs_i64_t)}
+        }
+    });
+
+    {
+        test_int(meta_member_count(world, derived), 2);
+        test_str(ecs_struct_get_nth_member(world, derived, 0)->name, "x");
+        test_uint(ecs_struct_get_nth_member(world, derived, 0)->type, ecs_id(ecs_i64_t));
+        test_int(ecs_struct_get_nth_member(world, derived, 0)->offset, 0);
+        test_str(ecs_struct_get_nth_member(world, derived, 1)->name, "z");
+        test_int(ecs_struct_get_nth_member(world, derived, 1)->offset, 8);
+        test_int(ecs_get(world, derived, EcsComponent)->size, 16);
+    }
+
+    ecs_fini(world);
+}
+
+void StructTypes_inherit_explicit_offset_fails(void) {
+    ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t base = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "Base"}),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)}
+        }
+    });
+    test_assert(base != 0);
+
+    ecs_entity_t derived = ecs_entity(world, {.name = "Derived"});
+    ecs_add_pair(world, derived, EcsIsA, base);
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = derived,
+        .members = {
+            {"z", ecs_id(ecs_i32_t), .offset = 64}
+        }
+    });
+
+    test_assert(t == 0);
+
+    ecs_fini(world);
+}
+
+void StructTypes_inherit_base_redefined_fewer_members(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t base = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "Base"}),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t derived = ecs_entity(world, {.name = "Derived"});
+    ecs_add_pair(world, derived, EcsIsA, base);
+    ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = derived,
+        .members = {
+            {"z", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    test_int(meta_member_count(world, derived), 3);
+
+    ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = base,
+        .members = {
+            {"x", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    test_int(meta_member_count(world, base), 1);
+    test_int(meta_member_count(world, derived), 2);
+
+    test_str(ecs_struct_get_nth_member(world, derived, 0)->name, "x");
+    test_int(ecs_struct_get_nth_member(world, derived, 0)->offset, 0);
+    test_str(ecs_struct_get_nth_member(world, derived, 1)->name, "z");
+    test_int(ecs_struct_get_nth_member(world, derived, 1)->offset, 4);
+
+    test_assert(ecs_struct_get_member(world, derived, "y") == NULL);
+    test_int(ecs_get(world, derived, EcsComponent)->size, 8);
+
+    ecs_fini(world);
+}
+
+void StructTypes_member_w_type_not_alive(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+
+    ecs_entity_t not_alive = ecs_new(world);
+    ecs_delete(world, not_alive);
+    test_assert(!ecs_is_alive(world, not_alive));
+
+    ecs_entity_t s = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "S"}),
+        .members = {
+            {"x", not_alive}
+        }
+    });
+
+    test_assert(s == 0);
+
+    ecs_fini(world);
+}
+
+void StructTypes_redefine_fewer_members(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    test_int(meta_member_count(world, t), 2);
+    test_int(ecs_get(world, t, EcsComponent)->size, 8);
+
+    ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = t,
+        .members = {
+            {"x", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    test_int(meta_member_count(world, t), 1);
+    test_str(ecs_struct_get_nth_member(world, t, 0)->name, "x");
+    test_int(ecs_struct_get_nth_member(world, t, 0)->offset, 0);
+    test_assert(ecs_struct_get_member(world, t, "y") == NULL);
+    test_int(ecs_get(world, t, EcsComponent)->size, 4);
+
+    ecs_fini(world);
+}

@@ -330,17 +330,14 @@ ecs_id_t flecs_query_op_get_id(
 }
 
 int16_t flecs_query_next_column(
+    const ecs_world_t *world,
     ecs_table_t *table,
     ecs_id_t id,
     int32_t column)
 {
-    if (!ECS_IS_PAIR(id) || (ECS_PAIR_FIRST(id) != EcsWildcard)) {
-        column = column + 1;
-    } else {
-        ecs_assert(column >= 0, ECS_INTERNAL_ERROR, NULL);
-        column = ecs_search_offset(NULL, table, column + 1, id, NULL);
-        ecs_assert(column != -1, ECS_INTERNAL_ERROR, NULL);
-    }
+    ecs_assert(column >= 0, ECS_INTERNAL_ERROR, NULL);
+    column = ecs_search_offset(world, table, column + 1, id, NULL);
+    ecs_assert(column != -1, ECS_INTERNAL_ERROR, NULL);
     return flecs_ito(int16_t, column);
 }
 

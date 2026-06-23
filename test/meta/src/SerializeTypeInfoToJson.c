@@ -677,3 +677,60 @@ void SerializeTypeInfoToJson_struct_nested_3_members(void) {
 
     ecs_fini(world);
 }
+
+void SerializeTypeInfoToJson_struct_inherit(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t base = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "Point2D"}),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t t = ecs_entity(world, {.name = "Point3D"});
+    ecs_add_pair(world, t, EcsIsA, base);
+    ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = t,
+        .members = {
+            {"z", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    char *str = ecs_type_info_to_json(world, t);
+    test_assert(str != NULL);
+    test_str(str, "{\"x\":[\"int\"], \"y\":[\"int\"], \"z\":[\"int\"]}");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}
+
+void SerializeTypeInfoToJson_struct_inherit_w_range(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t base = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "Base"}),
+        .members = {
+            {"x", ecs_id(ecs_i32_t), .range = {-1, 1}},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t t = ecs_entity(world, {.name = "Derived"});
+    ecs_add_pair(world, t, EcsIsA, base);
+    ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = t,
+        .members = {
+            {"z", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    char *str = ecs_type_info_to_json(world, t);
+    test_assert(str != NULL);
+    test_str(str,
+        "{\"x\":[\"int\", {\"range\":[-1, 1]}], \"y\":[\"int\"], \"z\":[\"int\"]}");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}

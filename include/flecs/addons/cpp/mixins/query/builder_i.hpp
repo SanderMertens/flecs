@@ -22,6 +22,17 @@ struct query_builder_i : term_builder_i<Base> {
         , expr_count_(0)
         , desc_(desc) { }
 
+    /** Append terms from type-erased id/inout/oper arrays.
+     * Used by the signature population path to keep per-signature code minimal.
+     */
+    Base& populate_terms(const flecs::id_t *ids, const flecs::inout_kind_t *inout,
+        const flecs::oper_kind_t *oper, int32_t count)
+    {
+        term_index_ = _::populate_query_terms(
+            desc_, term_index_, ids, inout, oper, count);
+        return *this;
+    }
+
     /** Set the query flags. */
     Base& query_flags(ecs_flags32_t flags) {
         desc_->flags |= flags;

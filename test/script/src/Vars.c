@@ -411,3 +411,51 @@ void Vars_from_iter_17_fields(void) {
 
     ecs_fini(world);
 }
+
+void Vars_from_iter_w_derived_component(void) {
+    typedef struct {
+        float x, y;
+    } Base;
+
+    typedef struct {
+        float x, y, z;
+    } Derived;
+
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Base);
+    ECS_COMPONENT(world, Derived);
+    ecs_add_pair(world, ecs_id(Derived), EcsIsA, ecs_id(Base));
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_set(world, e1, Derived, {10, 20, 30});
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_set(world, e2, Derived, {40, 50, 60});
+
+    ecs_query_t *q = ecs_query(world, { .expr = "Base" });
+    test_assert(q != NULL);
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(2, it.count);
+
+    ecs_script_vars_from_iter(&it, vars, 1);
+
+    ecs_script_var_t *this_var = ecs_script_vars_lookup(vars, "this");
+    test_assert(this_var != NULL);
+    test_uint(e2, *(ecs_entity_t*)this_var->value.ptr);
+
+    ecs_script_var_t *v = ecs_script_vars_lookup(vars, "0");
+    test_assert(v != NULL);
+    test_assert(v->value.ptr != NULL);
+    test_int(40, (int32_t)((Base*)v->value.ptr)->x);
+    test_int(50, (int32_t)((Base*)v->value.ptr)->y);
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_script_vars_fini(vars);
+    ecs_query_fini(q);
+    ecs_fini(world);
+}

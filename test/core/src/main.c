@@ -316,6 +316,89 @@ void Iter_rule_worker_iter_w_fini(void);
 void Iter_to_str_before_next(void);
 void Iter_to_str(void);
 
+// Testsuite 'ComponentInheritance'
+void ComponentInheritance_has_2_lvl(void);
+void ComponentInheritance_has_3_lvl(void);
+void ComponentInheritance_has_not_derived(void);
+void ComponentInheritance_owns_2_lvl(void);
+void ComponentInheritance_owns_3_lvl(void);
+void ComponentInheritance_get_2_lvl(void);
+void ComponentInheritance_get_3_lvl(void);
+void ComponentInheritance_search_2_lvl(void);
+void ComponentInheritance_search_3_lvl(void);
+void ComponentInheritance_search_base_no_match(void);
+void ComponentInheritance_search_base_w_base_only(void);
+void ComponentInheritance_search_base_w_single_derived(void);
+void ComponentInheritance_search_base_w_two_derived(void);
+void ComponentInheritance_search_two_derived_for_base(void);
+void ComponentInheritance_search_base_and_derived_for_base(void);
+void ComponentInheritance_get_after_add_isa(void);
+void ComponentInheritance_has_after_add_isa(void);
+void ComponentInheritance_has_after_remove_isa(void);
+void ComponentInheritance_add_isa_3_lvl_after_populate(void);
+void ComponentInheritance_remove_isa_middle_3_lvl(void);
+void ComponentInheritance_add_isa_w_multiple_tables(void);
+void ComponentInheritance_base_and_derived_same_table(void);
+void ComponentInheritance_diamond_allowed(void);
+void ComponentInheritance_derived_w_multiple_isa_bases(void);
+void ComponentInheritance_delete_with_base_deletes_derived(void);
+void ComponentInheritance_delete_with_base_deletes_derived_3_lvl(void);
+void ComponentInheritance_delete_with_middle_keeps_base(void);
+void ComponentInheritance_remove_all_base_removes_derived(void);
+void ComponentInheritance_delete_with_after_remove_isa(void);
+void ComponentInheritance_get_mut_via_base(void);
+void ComponentInheritance_each_base_matches_derived(void);
+void ComponentInheritance_count_base_counts_derived(void);
+void ComponentInheritance_ensure_via_base(void);
+void ComponentInheritance_id_in_use_base(void);
+void ComponentInheritance_clone_derived(void);
+void ComponentInheritance_low_id_base(void);
+void ComponentInheritance_recycled_base(void);
+void ComponentInheritance_readd_isa_after_remove(void);
+void ComponentInheritance_change_grandparent_isa(void);
+void ComponentInheritance_reparent_isa(void);
+void ComponentInheritance_add_second_base_after_populate(void);
+void ComponentInheritance_remove_second_base_after_populate(void);
+void ComponentInheritance_add_isa_4_lvl_after_populate(void);
+void ComponentInheritance_wide_hierarchy(void);
+void ComponentInheritance_change_isa_deferred(void);
+void ComponentInheritance_cyclic_isa_not_allowed(void);
+void ComponentInheritance_has_tag_base(void);
+void ComponentInheritance_get_tag_base_asserts(void);
+void ComponentInheritance_get_tag_base_w_data_derived(void);
+void ComponentInheritance_delete_base_component_entity(void);
+void ComponentInheritance_delete_derived_component_entity(void);
+void ComponentInheritance_clear_with_derived(void);
+void ComponentInheritance_add_base_to_derived(void);
+void ComponentInheritance_multi_derived_has(void);
+void ComponentInheritance_multi_derived_search_first(void);
+void ComponentInheritance_multi_derived_count(void);
+void ComponentInheritance_multi_derived_each_once(void);
+void ComponentInheritance_multi_derived_get_returns_first(void);
+void ComponentInheritance_multi_derived_remove_one_keeps_base(void);
+void ComponentInheritance_multi_derived_remove_both_loses_base(void);
+void ComponentInheritance_multi_derived_3_lvl_mixed(void);
+void ComponentInheritance_multi_derived_add_isa_after_populate(void);
+void ComponentInheritance_multi_derived_delete_with(void);
+void ComponentInheritance_multi_derived_remove_all(void);
+void ComponentInheritance_multi_derived_clone(void);
+void ComponentInheritance_multi_derived_three_bases(void);
+void ComponentInheritance_multi_derived_component_diamond_plus_extra(void);
+void ComponentInheritance_multi_derived_id_in_use(void);
+void ComponentInheritance_multi_derived_deferred(void);
+void ComponentInheritance_pair_rel_has(void);
+void ComponentInheritance_pair_rel_3_lvl(void);
+void ComponentInheritance_pair_rel_search(void);
+void ComponentInheritance_pair_rel_unrelated(void);
+void ComponentInheritance_pair_rel_target_not_inherited(void);
+void ComponentInheritance_pair_rel_different_target(void);
+void ComponentInheritance_pair_rel_add_isa_after(void);
+void ComponentInheritance_pair_rel_remove_isa(void);
+void ComponentInheritance_pair_rel_multi(void);
+void ComponentInheritance_pair_rel_wildcard(void);
+void ComponentInheritance_pair_rel_wildcard_unrelated(void);
+void ComponentInheritance_depth_w_derived_pairs_non_contiguous(void);
+
 // Testsuite 'Search'
 void Search_search(void);
 void Search_search_wildcard(void);
@@ -868,6 +951,7 @@ void NonFragmentingChildOf_instantiate_tree_at_depth_n_w_parent(void);
 void NonFragmentingChildOf_instantiate_tree_at_depth_1_w_childof(void);
 void NonFragmentingChildOf_instantiate_tree_at_depth_2_w_childof(void);
 void NonFragmentingChildOf_instantiate_tree_at_depth_n_w_childof(void);
+void NonFragmentingChildOf_delete_parent_of_instantiated_tree_w_childof(void);
 void NonFragmentingChildOf_reparent_instantiated_tree_w_parent(void);
 void NonFragmentingChildOf_reparent_instantiated_tree_w_childof(void);
 void NonFragmentingChildOf_instantiate_instance_after_remove_all_tag(void);
@@ -2359,6 +2443,7 @@ void ObserverOnSet_remove_set_component_in_on_set(void);
 void ObserverOnSet_match_table_created_w_add_in_on_set(void);
 void ObserverOnSet_set_optional(void);
 void ObserverOnSet_set_optional_one_term(void);
+void ObserverOnSet_set_optional_one_term_16_bytes(void);
 void ObserverOnSet_set_from_nothing(void);
 void ObserverOnSet_add_0_entity_in_on_set(void);
 void ObserverOnSet_on_set_prefab(void);
@@ -4572,6 +4657,333 @@ bake_test_case Iter_testcases[] = {
     }
 };
 
+bake_test_case ComponentInheritance_testcases[] = {
+    {
+        "has_2_lvl",
+        ComponentInheritance_has_2_lvl
+    },
+    {
+        "has_3_lvl",
+        ComponentInheritance_has_3_lvl
+    },
+    {
+        "has_not_derived",
+        ComponentInheritance_has_not_derived
+    },
+    {
+        "owns_2_lvl",
+        ComponentInheritance_owns_2_lvl
+    },
+    {
+        "owns_3_lvl",
+        ComponentInheritance_owns_3_lvl
+    },
+    {
+        "get_2_lvl",
+        ComponentInheritance_get_2_lvl
+    },
+    {
+        "get_3_lvl",
+        ComponentInheritance_get_3_lvl
+    },
+    {
+        "search_2_lvl",
+        ComponentInheritance_search_2_lvl
+    },
+    {
+        "search_3_lvl",
+        ComponentInheritance_search_3_lvl
+    },
+    {
+        "search_base_no_match",
+        ComponentInheritance_search_base_no_match
+    },
+    {
+        "search_base_w_base_only",
+        ComponentInheritance_search_base_w_base_only
+    },
+    {
+        "search_base_w_single_derived",
+        ComponentInheritance_search_base_w_single_derived
+    },
+    {
+        "search_base_w_two_derived",
+        ComponentInheritance_search_base_w_two_derived
+    },
+    {
+        "search_two_derived_for_base",
+        ComponentInheritance_search_two_derived_for_base
+    },
+    {
+        "search_base_and_derived_for_base",
+        ComponentInheritance_search_base_and_derived_for_base
+    },
+    {
+        "get_after_add_isa",
+        ComponentInheritance_get_after_add_isa
+    },
+    {
+        "has_after_add_isa",
+        ComponentInheritance_has_after_add_isa
+    },
+    {
+        "has_after_remove_isa",
+        ComponentInheritance_has_after_remove_isa
+    },
+    {
+        "add_isa_3_lvl_after_populate",
+        ComponentInheritance_add_isa_3_lvl_after_populate
+    },
+    {
+        "remove_isa_middle_3_lvl",
+        ComponentInheritance_remove_isa_middle_3_lvl
+    },
+    {
+        "add_isa_w_multiple_tables",
+        ComponentInheritance_add_isa_w_multiple_tables
+    },
+    {
+        "base_and_derived_same_table",
+        ComponentInheritance_base_and_derived_same_table
+    },
+    {
+        "diamond_allowed",
+        ComponentInheritance_diamond_allowed
+    },
+    {
+        "derived_w_multiple_isa_bases",
+        ComponentInheritance_derived_w_multiple_isa_bases
+    },
+    {
+        "delete_with_base_deletes_derived",
+        ComponentInheritance_delete_with_base_deletes_derived
+    },
+    {
+        "delete_with_base_deletes_derived_3_lvl",
+        ComponentInheritance_delete_with_base_deletes_derived_3_lvl
+    },
+    {
+        "delete_with_middle_keeps_base",
+        ComponentInheritance_delete_with_middle_keeps_base
+    },
+    {
+        "remove_all_base_removes_derived",
+        ComponentInheritance_remove_all_base_removes_derived
+    },
+    {
+        "delete_with_after_remove_isa",
+        ComponentInheritance_delete_with_after_remove_isa
+    },
+    {
+        "get_mut_via_base",
+        ComponentInheritance_get_mut_via_base
+    },
+    {
+        "each_base_matches_derived",
+        ComponentInheritance_each_base_matches_derived
+    },
+    {
+        "count_base_counts_derived",
+        ComponentInheritance_count_base_counts_derived
+    },
+    {
+        "ensure_via_base",
+        ComponentInheritance_ensure_via_base
+    },
+    {
+        "id_in_use_base",
+        ComponentInheritance_id_in_use_base
+    },
+    {
+        "clone_derived",
+        ComponentInheritance_clone_derived
+    },
+    {
+        "low_id_base",
+        ComponentInheritance_low_id_base
+    },
+    {
+        "recycled_base",
+        ComponentInheritance_recycled_base
+    },
+    {
+        "readd_isa_after_remove",
+        ComponentInheritance_readd_isa_after_remove
+    },
+    {
+        "change_grandparent_isa",
+        ComponentInheritance_change_grandparent_isa
+    },
+    {
+        "reparent_isa",
+        ComponentInheritance_reparent_isa
+    },
+    {
+        "add_second_base_after_populate",
+        ComponentInheritance_add_second_base_after_populate
+    },
+    {
+        "remove_second_base_after_populate",
+        ComponentInheritance_remove_second_base_after_populate
+    },
+    {
+        "add_isa_4_lvl_after_populate",
+        ComponentInheritance_add_isa_4_lvl_after_populate
+    },
+    {
+        "wide_hierarchy",
+        ComponentInheritance_wide_hierarchy
+    },
+    {
+        "change_isa_deferred",
+        ComponentInheritance_change_isa_deferred
+    },
+    {
+        "cyclic_isa_not_allowed",
+        ComponentInheritance_cyclic_isa_not_allowed
+    },
+    {
+        "has_tag_base",
+        ComponentInheritance_has_tag_base
+    },
+    {
+        "get_tag_base_asserts",
+        ComponentInheritance_get_tag_base_asserts
+    },
+    {
+        "get_tag_base_w_data_derived",
+        ComponentInheritance_get_tag_base_w_data_derived
+    },
+    {
+        "delete_base_component_entity",
+        ComponentInheritance_delete_base_component_entity
+    },
+    {
+        "delete_derived_component_entity",
+        ComponentInheritance_delete_derived_component_entity
+    },
+    {
+        "clear_with_derived",
+        ComponentInheritance_clear_with_derived
+    },
+    {
+        "add_base_to_derived",
+        ComponentInheritance_add_base_to_derived
+    },
+    {
+        "multi_derived_has",
+        ComponentInheritance_multi_derived_has
+    },
+    {
+        "multi_derived_search_first",
+        ComponentInheritance_multi_derived_search_first
+    },
+    {
+        "multi_derived_count",
+        ComponentInheritance_multi_derived_count
+    },
+    {
+        "multi_derived_each_once",
+        ComponentInheritance_multi_derived_each_once
+    },
+    {
+        "multi_derived_get_returns_first",
+        ComponentInheritance_multi_derived_get_returns_first
+    },
+    {
+        "multi_derived_remove_one_keeps_base",
+        ComponentInheritance_multi_derived_remove_one_keeps_base
+    },
+    {
+        "multi_derived_remove_both_loses_base",
+        ComponentInheritance_multi_derived_remove_both_loses_base
+    },
+    {
+        "multi_derived_3_lvl_mixed",
+        ComponentInheritance_multi_derived_3_lvl_mixed
+    },
+    {
+        "multi_derived_add_isa_after_populate",
+        ComponentInheritance_multi_derived_add_isa_after_populate
+    },
+    {
+        "multi_derived_delete_with",
+        ComponentInheritance_multi_derived_delete_with
+    },
+    {
+        "multi_derived_remove_all",
+        ComponentInheritance_multi_derived_remove_all
+    },
+    {
+        "multi_derived_clone",
+        ComponentInheritance_multi_derived_clone
+    },
+    {
+        "multi_derived_three_bases",
+        ComponentInheritance_multi_derived_three_bases
+    },
+    {
+        "multi_derived_component_diamond_plus_extra",
+        ComponentInheritance_multi_derived_component_diamond_plus_extra
+    },
+    {
+        "multi_derived_id_in_use",
+        ComponentInheritance_multi_derived_id_in_use
+    },
+    {
+        "multi_derived_deferred",
+        ComponentInheritance_multi_derived_deferred
+    },
+    {
+        "pair_rel_has",
+        ComponentInheritance_pair_rel_has
+    },
+    {
+        "pair_rel_3_lvl",
+        ComponentInheritance_pair_rel_3_lvl
+    },
+    {
+        "pair_rel_search",
+        ComponentInheritance_pair_rel_search
+    },
+    {
+        "pair_rel_unrelated",
+        ComponentInheritance_pair_rel_unrelated
+    },
+    {
+        "pair_rel_target_not_inherited",
+        ComponentInheritance_pair_rel_target_not_inherited
+    },
+    {
+        "pair_rel_different_target",
+        ComponentInheritance_pair_rel_different_target
+    },
+    {
+        "pair_rel_add_isa_after",
+        ComponentInheritance_pair_rel_add_isa_after
+    },
+    {
+        "pair_rel_remove_isa",
+        ComponentInheritance_pair_rel_remove_isa
+    },
+    {
+        "pair_rel_multi",
+        ComponentInheritance_pair_rel_multi
+    },
+    {
+        "pair_rel_wildcard",
+        ComponentInheritance_pair_rel_wildcard
+    },
+    {
+        "pair_rel_wildcard_unrelated",
+        ComponentInheritance_pair_rel_wildcard_unrelated
+    },
+    {
+        "depth_w_derived_pairs_non_contiguous",
+        ComponentInheritance_depth_w_derived_pairs_non_contiguous
+    }
+};
+
 bake_test_case Search_testcases[] = {
     {
         "search",
@@ -6728,6 +7140,10 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
     {
         "instantiate_tree_at_depth_n_w_childof",
         NonFragmentingChildOf_instantiate_tree_at_depth_n_w_childof
+    },
+    {
+        "delete_parent_of_instantiated_tree_w_childof",
+        NonFragmentingChildOf_delete_parent_of_instantiated_tree_w_childof
     },
     {
         "reparent_instantiated_tree_w_parent",
@@ -12580,6 +12996,10 @@ bake_test_case ObserverOnSet_testcases[] = {
         ObserverOnSet_set_optional_one_term
     },
     {
+        "set_optional_one_term_16_bytes",
+        ObserverOnSet_set_optional_one_term_16_bytes
+    },
+    {
         "set_from_nothing",
         ObserverOnSet_set_from_nothing
     },
@@ -16499,6 +16919,13 @@ static bake_test_suite suites[] = {
         Iter_testcases
     },
     {
+        "ComponentInheritance",
+        NULL,
+        NULL,
+        81,
+        ComponentInheritance_testcases
+    },
+    {
         "Search",
         NULL,
         NULL,
@@ -16560,7 +16987,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NULL,
         NULL,
-        261,
+        262,
         NonFragmentingChildOf_testcases
     },
     {
@@ -16686,7 +17113,7 @@ static bake_test_suite suites[] = {
         "ObserverOnSet",
         NULL,
         NULL,
-        27,
+        28,
         ObserverOnSet_testcases
     },
     {
@@ -16811,5 +17238,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("core", argc, argv, suites, 48);
+    return bake_test_run("core", argc, argv, suites, 49);
 }

@@ -449,8 +449,7 @@ int flecs_meta_serialize_struct(
     ecs_size_t offset,
     ecs_vec_t *ops)
 {
-    const EcsStruct *ptr = ecs_get(world, type, EcsStruct);
-    ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ecs_has(world, type, EcsStruct), ECS_INTERNAL_ERROR, NULL);
 
     int32_t cur, first = ecs_vec_count(ops);
     ecs_meta_op_t *op = flecs_meta_ops_add(ops, EcsOpPushStruct);
@@ -459,16 +458,15 @@ int flecs_meta_serialize_struct(
     op->type_info = ecs_get_type_info(world, type);
     ecs_assert(op->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_member_t *members = ecs_vec_first(&ptr->members);
-    int32_t i, count = ecs_vec_count(&ptr->members);
+    int32_t i, count = flecs_struct_member_count(world, type);
 
     ecs_hashmap_t *member_index = NULL;
-    if (count) {        
+    if (count) {
         op->is.members = member_index = flecs_name_index_new(&world->allocator);
     }
 
     for (i = 0; i < count; i ++) {
-        ecs_member_t *member = &members[i];
+        ecs_member_t *member = ecs_struct_get_nth_member(world, type, i);
 
         cur = ecs_vec_count(ops);
 

@@ -842,6 +842,12 @@ void Query_optional_module(void);
 void Query_has_entity(void);
 void Query_has_table(void);
 void Query_has_range(void);
+void Query_component_inheritance_each(void);
+void Query_component_inheritance_each_multiple_derived(void);
+void Query_component_inheritance_each_entity(void);
+void Query_component_inheritance_base_field(void);
+void Query_component_inheritance_field_asserts(void);
+void Query_component_inheritance_virtual(void);
 
 // Testsuite 'QueryBuilder'
 void QueryBuilder_setup(void);
@@ -4930,6 +4936,30 @@ bake_test_case Query_testcases[] = {
     {
         "has_range",
         Query_has_range
+    },
+    {
+        "component_inheritance_each",
+        Query_component_inheritance_each
+    },
+    {
+        "component_inheritance_each_multiple_derived",
+        Query_component_inheritance_each_multiple_derived
+    },
+    {
+        "component_inheritance_each_entity",
+        Query_component_inheritance_each_entity
+    },
+    {
+        "component_inheritance_base_field",
+        Query_component_inheritance_base_field
+    },
+    {
+        "component_inheritance_field_asserts",
+        Query_component_inheritance_field_asserts
+    },
+    {
+        "component_inheritance_virtual",
+        Query_component_inheritance_virtual
     }
 };
 
@@ -8169,7 +8199,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        141,
+        147,
         Query_testcases
     },
     {

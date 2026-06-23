@@ -259,7 +259,7 @@ protected:
  * @ingroup cpp_core_queries
  */
 template<typename ... Components>
-struct query : query_base, iterable<Components...> {
+struct query : query_base, iterable<query<Components...>, Components...> {
 private:
     using Fields = typename _::field_ptrs<Components...>::array;
 
@@ -293,9 +293,8 @@ public:
         return flecs::query<>(q);
     }
 
-private:
-    ecs_iter_t get_iter(flecs::world_t *world) const override {
-        ecs_assert(query_ != nullptr, ECS_INVALID_PARAMETER, 
+    ecs_iter_t get_iter(flecs::world_t *world) const {
+        ecs_assert(query_ != nullptr, ECS_INVALID_PARAMETER,
             "cannot iterate invalid query");
         if (!world) {
             world = query_->world;
@@ -303,7 +302,7 @@ private:
         return ecs_query_iter(world, query_);
     }
 
-    ecs_iter_next_action_t next_action() const override {
+    ecs_iter_next_action_t next_action() const {
         return ecs_query_next;
     }
 };

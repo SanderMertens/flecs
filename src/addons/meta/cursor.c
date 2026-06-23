@@ -798,17 +798,12 @@ ecs_entity_t ecs_meta_get_unit(
     const ecs_meta_cursor_t *cursor)
 {
     ecs_meta_scope_t *scope = flecs_cursor_get_scope(cursor);
-    ecs_entity_t type = scope->type;
-    const EcsStruct *st = ecs_get(cursor->world, type, EcsStruct);
-    if (!st) {
-        return 0;
-    }
-
     ecs_meta_op_t *op = flecs_cursor_get_op(scope);
-    ecs_member_t *m = ecs_vec_get_t(
-        &st->members, ecs_member_t, op->member_index);
+    ecs_member_t *m = ecs_struct_get_nth_member(
+        ECS_CONST_CAST(ecs_world_t*, cursor->world), scope->type,
+        op->member_index);
 
-    return m->unit;
+    return m ? m->unit : 0;
 }
 
 const char* ecs_meta_get_member(
@@ -823,17 +818,12 @@ ecs_entity_t ecs_meta_get_member_id(
     const ecs_meta_cursor_t *cursor)
 {
     ecs_meta_scope_t *scope = flecs_cursor_get_scope(cursor);
-    ecs_entity_t type = scope->type;
-    const EcsStruct *st = ecs_get(cursor->world, type, EcsStruct);
-    if (!st) {
-        return 0;
-    }
-
     ecs_meta_op_t *op = flecs_cursor_get_op(scope);
-    ecs_member_t *m = ecs_vec_get_t(
-        &st->members, ecs_member_t, op->member_index);
+    ecs_member_t *m = ecs_struct_get_nth_member(
+        ECS_CONST_CAST(ecs_world_t*, cursor->world), scope->type,
+        op->member_index);
 
-    return m->member;
+    return m ? m->member : 0;
 }
 
 /* Utilities for type conversions and bounds checking */

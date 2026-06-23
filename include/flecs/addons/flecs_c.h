@@ -727,6 +727,13 @@
 #define ecs_field(it, T, index)\
     (ECS_CAST(T*, ecs_field_w_size(it, sizeof(T), index)))
 
+/** Get field data for a component matched through component inheritance.
+ * Use this instead of ecs_field() when a field is matched on a component that
+ * is derived from the queried (base) type. The data is iterated with the stride
+ * returned by ecs_field_stride(). */
+#define ecs_base_field(it, T, index)\
+    (ECS_CAST(T*, ecs_base_field_w_size(it, sizeof(T), index)))
+
 /** Get field data for a self-owned component. */
 #define ecs_field_self(it, T, index)\
     (ECS_CAST(T*, ecs_field_self_w_size(it, sizeof(T), index)))
