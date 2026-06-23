@@ -5153,6 +5153,492 @@ void ComponentLifecycle_add_on_set_hook_while_in_use(void) {
     ecs_fini(world);
 }
 
+typedef struct {
+    char *ptr;
+} HeapComp;
+
+static void heap_dtor(void *raw, int32_t count, const ecs_type_info_t *ti) {
+    (void)ti;
+    HeapComp *c = raw;
+    int i;
+    for (i = 0; i < count; i++) {
+        ecs_os_free(c[i].ptr);
+        c[i].ptr = NULL;
+    }
+}
+
+static void heap_move_dtor(void *dst_raw, void *src_raw, int32_t count,
+    const ecs_type_info_t *ti)
+{
+    (void)ti;
+    HeapComp *dst = dst_raw;
+    HeapComp *src = src_raw;
+    int i;
+    for (i = 0; i < count; i++) {
+        ecs_os_free(dst[i].ptr);
+        dst[i].ptr = src[i].ptr;
+        src[i].ptr = NULL;
+    }
+}
+
+static void heap_ctor_move_dtor(void *dst_raw, void *src_raw, int32_t count,
+    const ecs_type_info_t *ti)
+{
+    (void)ti;
+    HeapComp *dst = dst_raw;
+    HeapComp *src = src_raw;
+    int i;
+    for (i = 0; i < count; i++) {
+        dst[i].ptr = src[i].ptr;
+        src[i].ptr = NULL;
+    }
+}
+
+/* Validates that deleting a non-last entity (destruct=true) with move_ctor=NULL
+ * invokes move_dtor (not ctor_move_dtor) for table compaction. When
+ * destruct=true, dst holds live data that must be dropped before overwriting.
+ * ctor_move_dtor treats dst as uninitialized, skipping the drop -> resource leak.
+ * Code path: ecs_delete -> flecs_table_delete(world, table, row, true) */
+void ComponentLifecycle_delete_nonlast_with_destruct_no_move_ctor(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    cl_ctx ctx = { { 0 } };
+
+    ecs_set_hooks(world, Position, {
+        .move_ctor = NULL,
+        .dtor = comp_dtor,
+        .ctor_move_dtor = comp_pos_ctor_move_dtor,
+        .move_dtor = comp_move_dtor,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add(world, e1, Position);
+
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add(world, e2, Position);
+
+    ctx = (cl_ctx){ { 0 } };
+
+    /* Delete e1 (row 0, not last). e2 compacts into e1's slot.
+     * move_dtor must be called (drops dst first).
+     * Without fix: ctor_move_dtor called instead, skipping drop of dst. */
+    ecs_delete(world, e1);
+
+    test_int(ctx.move_dtor.invoked, 1);
+    test_int(ctx.move_dtor.count, 1);
+    test_int(ctx.ctor_move_dtor.invoked, 0);
+    test_assert(!ecs_is_alive(world, e1));
+    test_assert(ecs_is_alive(world, e2));
+
+    ecs_fini(world);
+}
+
+/* ASAN variant: same code path as above but uses heap-allocated component data
+ * so the missing free is detectable by LeakSanitizer.
+ * Code path: ecs_delete -> flecs_table_delete(world, table, row, true) */
+void ComponentLifecycle_delete_nonlast_with_destruct_no_move_ctor_w_leak(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, HeapComp);
+
+    ecs_set_hooks(world, HeapComp, {
+        .dtor = heap_dtor,
+        .move_dtor = heap_move_dtor,
+        .ctor_move_dtor = heap_ctor_move_dtor
+    });
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_set(world, e1, HeapComp, {ecs_os_strdup("e1")});
+
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_set(world, e2, HeapComp, {ecs_os_strdup("e2")});
+
+    /* Without fix: ctor_move_dtor skips freeing e1's ptr -> LSan reports leak. */
+    ecs_delete(world, e1);
+
+    test_assert(!ecs_is_alive(world, e1));
+    test_assert(ecs_is_alive(world, e2));
+
+    ecs_fini(world);
+}
+
+/* Validates that removing a component from a non-last entity (trailing src
+ * columns loop) with move_ctor=NULL calls dtor immediately. Without the fix,
+ * dtor=false is passed, skipping cleanup of the removed component's resources.
+ * Code path: ecs_remove -> flecs_table_move trailing src loop */
+void ComponentLifecycle_remove_component_nonlast_no_move_ctor_calls_dtor_trailing(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    cl_ctx vel_ctx = { { 0 } };
+
+    ecs_set_hooks(world, Velocity, {
+        .move_ctor = NULL,
+        .dtor = comp_dtor,
+        .ctor_move_dtor = comp_pos_ctor_move_dtor,
+        .move_dtor = comp_move_dtor,
+        .ctx = &vel_ctx
+    });
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add(world, e1, Position);
+    ecs_add(world, e1, Velocity);
+
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add(world, e2, Position);
+    ecs_add(world, e2, Velocity);
+
+    vel_ctx = (cl_ctx){ { 0 } };
+
+    /* Remove Velocity from e1 (not last). Velocity (higher id) -> trailing loop.
+     * Without fix: dtor=false passed, dtor not called for removed component. */
+    ecs_remove(world, e1, Velocity);
+
+    test_int(vel_ctx.dtor.invoked, 1);
+    test_int(vel_ctx.dtor.count, 1);
+    test_assert(ecs_has(world, e1, Position));
+    test_assert(!ecs_has(world, e1, Velocity));
+    test_assert(ecs_has(world, e2, Position));
+    test_assert(ecs_has(world, e2, Velocity));
+
+    ecs_fini(world);
+}
+
+/* ASAN variant: same code path as above but uses heap-allocated component data.
+ * Code path: ecs_remove -> flecs_table_move trailing src loop */
+void ComponentLifecycle_remove_component_nonlast_no_move_ctor_calls_dtor_trailing_w_leak(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, HeapComp);
+
+    ecs_set_hooks(world, HeapComp, {
+        .dtor = heap_dtor,
+        .move_dtor = heap_move_dtor,
+        .ctor_move_dtor = heap_ctor_move_dtor
+    });
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add(world, e1, Position);
+    ecs_set(world, e1, HeapComp, {ecs_os_strdup("e1")});
+
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add(world, e2, Position);
+    ecs_set(world, e2, HeapComp, {ecs_os_strdup("e2")});
+
+    /* Without fix: dtor skipped -> e1's HeapComp.ptr leaks (LSan detects). */
+    ecs_remove(world, e1, HeapComp);
+
+    test_assert(ecs_has(world, e1, Position));
+    test_assert(!ecs_has(world, e1, HeapComp));
+    test_assert(ecs_has(world, e2, Position));
+    test_assert(ecs_has(world, e2, HeapComp));
+
+    ecs_fini(world);
+}
+
+/* Validates the same dtor-on-remove fix, exercising the interleaved column loop.
+ * When removing a component with lower id, it hits the dst_id > src_id branch.
+ * Without fix: dtor=false -> removed component's resources not freed.
+ * Code path: ecs_remove -> flecs_table_move interleaved loop else branch */
+void ComponentLifecycle_remove_component_nonlast_no_move_ctor_calls_dtor_interleaved(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    cl_ctx pos_ctx = { { 0 } };
+
+    ecs_set_hooks(world, Position, {
+        .move_ctor = NULL,
+        .dtor = comp_dtor,
+        .ctor_move_dtor = comp_pos_ctor_move_dtor,
+        .move_dtor = comp_move_dtor,
+        .ctx = &pos_ctx
+    });
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add(world, e1, Position);
+    ecs_add(world, e1, Velocity);
+
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add(world, e2, Position);
+    ecs_add(world, e2, Velocity);
+
+    pos_ctx = (cl_ctx){ { 0 } };
+
+    /* Remove Position from e1 (not last). Position (lower id) -> interleaved
+     * loop dst_id > src_id branch.
+     * Without fix: dtor=false passed, dtor not called for removed component. */
+    ecs_remove(world, e1, Position);
+
+    test_int(pos_ctx.dtor.invoked, 1);
+    test_int(pos_ctx.dtor.count, 1);
+    test_assert(!ecs_has(world, e1, Position));
+    test_assert(ecs_has(world, e1, Velocity));
+    test_assert(ecs_has(world, e2, Position));
+    test_assert(ecs_has(world, e2, Velocity));
+
+    ecs_fini(world);
+}
+
+/* ASAN variant: same code path as above but uses heap-allocated component data.
+ * Code path: ecs_remove -> flecs_table_move interleaved loop else branch */
+void ComponentLifecycle_remove_component_nonlast_no_move_ctor_calls_dtor_interleaved_w_leak(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, HeapComp);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_set_hooks(world, HeapComp, {
+        .dtor = heap_dtor,
+        .move_dtor = heap_move_dtor,
+        .ctor_move_dtor = heap_ctor_move_dtor
+    });
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_set(world, e1, HeapComp, {ecs_os_strdup("e1")});
+    ecs_add(world, e1, Velocity);
+
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_set(world, e2, HeapComp, {ecs_os_strdup("e2")});
+    ecs_add(world, e2, Velocity);
+
+    /* Without fix: dtor skipped -> e1's HeapComp.ptr leaks (LSan detects). */
+    ecs_remove(world, e1, HeapComp);
+
+    test_assert(!ecs_has(world, e1, HeapComp));
+    test_assert(ecs_has(world, e1, Velocity));
+    test_assert(ecs_has(world, e2, HeapComp));
+    test_assert(ecs_has(world, e2, Velocity));
+
+    ecs_fini(world);
+}
+
+/* Validates that deleting the LAST entity (destruct=true) with move_ctor=NULL
+ * does NOT invoke move_dtor or ctor_move_dtor, since no compaction is needed.
+ * The dtor should still be called for the deleted entity's data.
+ * Code path: ecs_delete -> flecs_table_delete (last element branch) */
+void ComponentLifecycle_delete_last_no_move_ctor(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    cl_ctx ctx = { { 0 } };
+
+    ecs_set_hooks(world, Position, {
+        .ctor = NULL,
+        .move = NULL,
+        .move_ctor = NULL,
+        .dtor = comp_dtor,
+        .ctor_move_dtor = comp_pos_ctor_move_dtor,
+        .move_dtor = comp_move_dtor,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add(world, e1, Position);
+
+    ctx = (cl_ctx){ { 0 } };
+
+    /* Delete e1 which is the only (last) entity. No compaction needed. */
+    ecs_delete(world, e1);
+
+    /* No move hooks should be called -- nothing to compact */
+    test_int(ctx.move_dtor.invoked, 0);
+    test_int(ctx.ctor_move_dtor.invoked, 0);
+
+    /* dtor should be called for the deleted entity */
+    test_int(ctx.dtor.invoked, 1);
+    test_int(ctx.dtor.count, 1);
+
+    ecs_fini(world);
+}
+
+/* Validates that deleting a non-last entity works correctly for C++ types
+ * with trivial move but non-trivial dtor (move_ctor=NULL, ctor_move_dtor=set,
+ * move_dtor=set, ctor=set). This hook configuration matches what the C++
+ * binding registers for such types (lifecycle_traits.hpp:227-259).
+ * The fix also benefits these types: move_dtor correctly drops dst before
+ * overwriting, whereas ctor_move_dtor would skip the drop.
+ * Code path: ecs_delete -> flecs_table_delete(world, table, row, true) */
+void ComponentLifecycle_delete_nonlast_trivial_move_with_dtor_move_dtor_called(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    cl_ctx ctx = { { 0 } };
+
+    /* Mimics C++ trivial-move type with non-trivial dtor:
+     * ctor=set, dtor=set, move=NULL, move_ctor=NULL,
+     * ctor_move_dtor=set, move_dtor=set */
+    ecs_set_hooks(world, Position, {
+        .ctor = comp_ctor,
+        .move = NULL,
+        .move_ctor = NULL,
+        .dtor = comp_dtor,
+        .ctor_move_dtor = comp_pos_ctor_move_dtor,
+        .move_dtor = comp_move_dtor,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add(world, e1, Position);
+
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add(world, e2, Position);
+
+    ctx = (cl_ctx){ { 0 } };
+
+    /* Delete e1 (not last). With destruct=true, move_dtor must be used. */
+    ecs_delete(world, e1);
+
+    test_int(ctx.move_dtor.invoked, 1);
+    test_int(ctx.move_dtor.count, 1);
+    test_int(ctx.ctor_move_dtor.invoked, 0);
+
+    ecs_fini(world);
+}
+
+/* Validates that removing a component from a non-last entity with C++ trivial-
+ * move-with-dtor hooks (move_ctor=NULL, ctor_move_dtor=set) properly calls
+ * the dtor for the removed component.
+ * Code path: ecs_remove -> flecs_table_move trailing src loop */
+void ComponentLifecycle_remove_component_nonlast_trivial_move_with_dtor_dtor_called(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    cl_ctx vel_ctx = { { 0 } };
+
+    /* Mimics C++ trivial-move type with non-trivial dtor */
+    ecs_set_hooks(world, Velocity, {
+        .ctor = comp_ctor,
+        .move = NULL,
+        .move_ctor = NULL,
+        .dtor = comp_dtor,
+        .ctor_move_dtor = comp_pos_ctor_move_dtor,
+        .move_dtor = comp_move_dtor,
+        .ctx = &vel_ctx
+    });
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add(world, e1, Position);
+    ecs_add(world, e1, Velocity);
+
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add(world, e2, Position);
+    ecs_add(world, e2, Velocity);
+
+    vel_ctx = (cl_ctx){ { 0 } };
+
+    /* Remove Velocity from e1 (not last). Dtor must fire. */
+    ecs_remove(world, e1, Velocity);
+
+    test_int(vel_ctx.dtor.invoked, 1);
+    test_int(vel_ctx.dtor.count, 1);
+
+    test_assert(ecs_has(world, e1, Position));
+    test_assert(!ecs_has(world, e1, Velocity));
+
+    ecs_fini(world);
+}
+
+/* Validates that deleting a non-last entity with a NON-trivial move ctor
+ * (move_ctor=set) is NOT affected by the fix. When move_ctor is set, the
+ * condition !move_ctor is false, so the original code path is taken.
+ * Code path: ecs_delete -> flecs_table_delete (else branch, move_dtor) */
+void ComponentLifecycle_delete_nonlast_nontrivial_move_ctor_move_dtor_not_affected(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    cl_ctx ctx = { { 0 } };
+
+    /* Mimics C++ non-trivial type: all hooks set */
+    ecs_set_hooks(world, Position, {
+        .ctor = comp_ctor,
+        .move = comp_move,
+        .move_ctor = comp_move,
+        .dtor = comp_dtor,
+        .ctor_move_dtor = comp_pos_ctor_move_dtor,
+        .move_dtor = comp_move_dtor,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add(world, e1, Position);
+
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add(world, e2, Position);
+
+    ctx = (cl_ctx){ { 0 } };
+
+    ecs_delete(world, e1);
+
+    /* With move_ctor set, the fix doesn't apply. move_dtor is used as before
+     * (the else branch in flecs_table_delete). */
+    test_int(ctx.move_dtor.invoked, 1);
+    test_int(ctx.move_dtor.count, 1);
+    test_int(ctx.ctor_move_dtor.invoked, 0);
+
+    ecs_fini(world);
+}
+
+/* Validates that removing a component from a non-last entity with a NON-trivial
+ * move ctor (move_ctor=set) is NOT affected by the fix. The dtor behavior
+ * should be unchanged -- use_move_dtor determines it, not our fix.
+ * Code path: ecs_remove -> flecs_table_move */
+void ComponentLifecycle_remove_component_nonlast_nontrivial_move_ctor_not_affected(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    cl_ctx vel_ctx = { { 0 } };
+
+    /* Mimics C++ non-trivial type: all hooks set */
+    ecs_set_hooks(world, Velocity, {
+        .ctor = comp_ctor,
+        .move = comp_move,
+        .move_ctor = comp_move,
+        .dtor = comp_dtor,
+        .ctor_move_dtor = comp_pos_ctor_move_dtor,
+        .move_dtor = comp_move_dtor,
+        .ctx = &vel_ctx
+    });
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add(world, e1, Position);
+    ecs_add(world, e1, Velocity);
+
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add(world, e2, Position);
+    ecs_add(world, e2, Velocity);
+
+    vel_ctx = (cl_ctx){ { 0 } };
+
+    /* Remove Velocity from e1 (not last). With move_ctor set, the fix
+     * condition !move_ctor is false, so dtor behavior is unchanged. */
+    ecs_remove(world, e1, Velocity);
+
+    /* dtor should NOT be called here -- move_ctor is set, so the fix doesn't
+     * force dtor=true. use_move_dtor is false (not last), so dtor is deferred
+     * to table compaction which handles it via move_dtor. */
+    test_int(vel_ctx.dtor.invoked, 0);
+
+    test_assert(ecs_has(world, e1, Position));
+    test_assert(!ecs_has(world, e1, Velocity));
+
+    ecs_fini(world);
+}
+
 static int value_move_ctor_move_invoked = 0;
 static int value_move_ctor_move_ctor_invoked = 0;
 
