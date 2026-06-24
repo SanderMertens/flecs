@@ -11308,6 +11308,71 @@ void Observer_2_singleton_terms_on_set(void) {
     ecs_fini(world);
 }
 
+void Observer_yield_existing_on_remove(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_new_w(world, Tag);
+    ecs_new_w(world, Tag);
+    ecs_new_w(world, Tag);
+
+    Probe ctx = {0};
+    ecs_observer_init(world, &(ecs_observer_desc_t){
+        .query.terms = {{ Tag }},
+        .events = {EcsOnRemove},
+        .callback = Observer,
+        .ctx = &ctx,
+        .yield_existing = true
+    });
+
+    ecs_fini(world);
+
+    test_assert(true);
+}
+
+void Observer_yield_existing_on_remove_singleton(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Singleton);
+
+    ecs_add_id(world, Singleton, EcsSingleton);
+
+    Probe ctx = {0};
+    ecs_observer_init(world, &(ecs_observer_desc_t){
+        .query.terms = {{ Singleton }},
+        .events = {EcsOnRemove},
+        .callback = Observer,
+        .ctx = &ctx,
+        .yield_existing = true
+    });
+
+    ecs_fini(world);
+
+    test_assert(true);
+}
+
+void Observer_yield_existing_on_remove_static_source(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e = ecs_new_w(world, Tag);
+
+    Probe ctx = {0};
+    ecs_observer_init(world, &(ecs_observer_desc_t){
+        .query.terms = {{ Tag, .src.id = e }},
+        .events = {EcsOnRemove},
+        .callback = Observer,
+        .ctx = &ctx,
+        .yield_existing = true
+    });
+
+    ecs_fini(world);
+
+    test_assert(true);
+}
+
 void Observer_on_set_singleton_set_component_named_entity(void) {
     ecs_world_t *world = ecs_mini();
 

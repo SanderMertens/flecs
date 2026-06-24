@@ -657,6 +657,29 @@ void flecs_fini_root_tables(
 }
 
 static
+void flecs_fini_yield_on_remove_observers(
+    ecs_world_t *world)
+{
+    ecs_defer_begin(world);
+
+    ecs_iter_t it = ecs_each_id(world, EcsObserver);
+    while (ecs_each_next(&it)) {
+        int32_t i;
+        for (i = 0; i < it.count; i ++) {
+            ecs_entity_t e = it.entities[i];
+            const ecs_observer_t *o = ecs_observer_get(world, e);
+            if (!o || !(flecs_observer_impl(o)->flags & EcsObserverYieldOnDelete)) {
+                continue;
+            }
+
+            ecs_delete(world, it.entities[i]);
+        }
+    }
+
+    ecs_defer_end(world);
+}
+
+static
 void flecs_fini_roots(
     ecs_world_t *world)
 {
@@ -1276,6 +1299,13 @@ int ecs_fini(
      * cleanup. Cleanup treespawners first before cleaning up other entities.
      * This means that prefab spawning does not work during world cleanup. */
     flecs_fini_tree_spawners(world);
+
+    /* yield_existing, OnRemove observers will fire for all matching results
+     * when the observer is deleted, but there is no guarantee that components
+     * and/or sources used by the observer aren't already deleted by the time
+     * the observer entity will be deleted. Therefore delete those observers
+     * before regular entity removal. */
+    flecs_fini_yield_on_remove_observers(world);
 
     /* Delete root entities first using regular APIs. This ensures that cleanup
      * policies get a chance to execute. */
