@@ -83519,6 +83519,17 @@ repeat:
 }
 
 static
+ecs_table_t* flecs_query_select_dont_fragment_table(
+    ecs_world_t *world,
+    int32_t index)
+{
+    if (!index) {
+        return &world->store.root;
+    }
+    return flecs_sparse_get_dense_t(&world->store.tables, ecs_table_t, index);
+}
+
+static
 bool flecs_query_select_dont_fragment(
     const ecs_query_op_t *op,
     bool redo,
@@ -83536,7 +83547,7 @@ bool flecs_query_select_dont_fragment(
         op_ctx->cur = -1;
         goto next_table;
     } else {
-        table = flecs_sparse_get_dense_t(tables, ecs_table_t, op_ctx->cur);
+        table = flecs_query_select_dont_fragment_table(world, op_ctx->cur);
         goto next_component;
     }
 
@@ -83546,7 +83557,7 @@ next_table:
         return false;
     }
 
-    table = flecs_sparse_get_dense_t(tables, ecs_table_t, op_ctx->cur);
+    table = flecs_query_select_dont_fragment_table(world, op_ctx->cur);
     if (!(table->flags & EcsTableHasDontFragment) || !ecs_table_count(table)) {
         goto next_table;
     }
