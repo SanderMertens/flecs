@@ -7261,3 +7261,41 @@ void DontFragment_src_var_w_trait_on_dont_fragment_tag(void) {
 
     ecs_fini(world);
 }
+
+void DontFragment_src_var_w_trait_on_dont_fragment_tag_anonymous(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t trait = ecs_new(world);
+    ecs_entity_t tag = ecs_new(world);
+
+    ecs_add_id(world, tag, EcsDontFragment);
+    ecs_add_id(world, tag, trait);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add_id(world, e1, tag);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { .first.name = "$Src" },
+            { .id = trait, .src.name = "$Src" }
+        },
+        .cache_kind = cache_kind
+    });
+    test_assert(q != NULL);
+
+    int src_var = ecs_query_find_var(q, "Src");
+    test_assert(src_var != -1);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e1, it.entities[0]);
+    test_uint(tag, ecs_iter_get_var(&it, src_var));
+    test_uint(tag, ecs_field_id(&it, 0));
+    test_uint(trait, ecs_field_id(&it, 1));
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
