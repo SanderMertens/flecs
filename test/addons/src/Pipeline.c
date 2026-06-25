@@ -421,7 +421,7 @@ static void SysInMain(ecs_iter_t *it) {
 
     test_assert(sys_out_invoked != 0);
     sys_in_invoked ++;
-    
+
     int i;
     for (i = 0; i < it->count; i ++) {
         ecs_entity_t e = it->entities[i];
@@ -430,6 +430,21 @@ static void SysInMain(ecs_iter_t *it) {
         test_int(v[i].x, 10);
         test_int(v[i].y, 20);
     }
+}
+
+static void SingletonOut(ecs_iter_t *it) {
+    sys_out_invoked ++;
+    ecs_singleton_set(it->world, Velocity, {10, 20});
+}
+
+static void SingletonIn(ecs_iter_t *it) {
+    const Velocity *v = ecs_field(it, Velocity, 0);
+
+    test_assert(sys_out_invoked != 0);
+    sys_in_invoked ++;
+
+    test_int(v->x, 10);
+    test_int(v->y, 20);
 }
 
 void Pipeline_merge_after_staged_out(void) {
@@ -542,6 +557,80 @@ void Pipeline_merge_after_staged_in_out(void) {
 
     ecs_progress(world, 1);
     test_int(stats->pipeline_build_count_total, 1);
+
+    ecs_fini(world);
+}
+
+void Pipeline_merge_after_singleton_out(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_COMPONENT_DEFINE(world, Velocity);
+
+    ecs_add_id(world, ecs_id(Velocity), EcsSingleton);
+
+    ECS_ENTITY(world, E, Position);
+
+    ECS_SYSTEM(world, SingletonOut, EcsOnUpdate, Position, [out] Velocity());
+    ECS_SYSTEM(world, SingletonIn, EcsOnUpdate, Velocity);
+
+    const ecs_world_info_t *stats = ecs_get_world_info(world);
+
+    ecs_progress(world, 1);
+
+    test_int(sys_out_invoked, 1);
+    test_int(sys_in_invoked, 1);
+    test_int(stats->merge_count_total, 2);
+
+    ecs_fini(world);
+}
+
+void Pipeline_merge_after_singleton_out_set(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_COMPONENT_DEFINE(world, Velocity);
+
+    ecs_add_id(world, ecs_id(Velocity), EcsSingleton);
+    ecs_singleton_set(world, Velocity, {10, 20});
+
+    ECS_ENTITY(world, E, Position);
+
+    ECS_SYSTEM(world, SingletonOut, EcsOnUpdate, Position, [out] Velocity());
+    ECS_SYSTEM(world, SingletonIn, EcsOnUpdate, Velocity);
+
+    const ecs_world_info_t *stats = ecs_get_world_info(world);
+
+    ecs_progress(world, 1);
+
+    test_int(sys_out_invoked, 1);
+    test_int(sys_in_invoked, 1);
+    test_int(stats->merge_count_total, 2);
+
+    ecs_fini(world);
+}
+
+void Pipeline_no_merge_after_singleton_out_no_read(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_COMPONENT_DEFINE(world, Velocity);
+
+    ecs_add_id(world, ecs_id(Velocity), EcsSingleton);
+    ecs_singleton_set(world, Velocity, {10, 20});
+
+    ECS_ENTITY(world, E, Position);
+
+    ECS_SYSTEM(world, SingletonOut, EcsOnUpdate, Position, [out] Velocity());
+    ECS_SYSTEM(world, SysA, EcsOnUpdate, Position);
+
+    const ecs_world_info_t *stats = ecs_get_world_info(world);
+
+    ecs_progress(world, 1);
+
+    test_int(sys_out_invoked, 1);
+    test_int(sys_a_invoked, 1);
+    test_int(stats->merge_count_total, 1);
 
     ecs_fini(world);
 }
