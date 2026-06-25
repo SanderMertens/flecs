@@ -791,8 +791,6 @@ void flecs_pipeline_memory_get(
                 ECS_SIZEOF(ecs_pipeline_op_t);
             result->bytes_pipelines += ecs_vec_size(&ps->systems) *
                 ECS_SIZEOF(ecs_entity_t);
-            result->bytes_pipelines += ps->iter_count *
-                ECS_SIZEOF(ecs_iter_t);
         }
     }
 }
