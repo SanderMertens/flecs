@@ -543,15 +543,17 @@ ecs_iter_t flecs_query_iter(
 
     flecs_query_cache_iter_init(&it, qit, impl);
 
+    ecs_size_t vars_size = var_count * ECS_SIZEOF(ecs_var_t);
+    ecs_size_t written_size = op_count * ECS_SIZEOF(ecs_write_flags_t);
+    char *scratch = flecs_iter_calloc(
+        &it, vars_size + written_size, ECS_ALIGNOF(ecs_var_t));
     if (var_count) {
-        qit->vars = flecs_iter_calloc_n(&it, ecs_var_t, var_count);
+        qit->vars = (ecs_var_t*)(void*)scratch;
     }
+    qit->written = (ecs_write_flags_t*)(void*)(scratch + vars_size);
 
-    if (op_count) {
-        qit->written = flecs_iter_calloc_n(&it, ecs_write_flags_t, op_count);
-        if (impl->ops || !impl->cache) {
-            qit->op_ctx = flecs_iter_calloc_n(&it, ecs_query_op_ctx_t, op_count);
-        }
+    if (impl->ops || !impl->cache) {
+        qit->op_ctx = flecs_iter_calloc_n(&it, ecs_query_op_ctx_t, op_count);
     }
 
 #ifdef FLECS_DEBUG
