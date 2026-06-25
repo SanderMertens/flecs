@@ -85722,7 +85722,9 @@ ecs_iter_t flecs_query_iter(
 
     if (op_count) {
         qit->written = flecs_iter_calloc_n(&it, ecs_write_flags_t, op_count);
-        qit->op_ctx = flecs_iter_calloc_n(&it, ecs_query_op_ctx_t, op_count);
+        if (impl->ops || !impl->cache) {
+            qit->op_ctx = flecs_iter_calloc_n(&it, ecs_query_op_ctx_t, op_count);
+        }
     }
 
 #ifdef FLECS_DEBUG
