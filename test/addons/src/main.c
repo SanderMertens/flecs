@@ -37,6 +37,9 @@ void Pipeline_merge_after_staged_out(void);
 void Pipeline_merge_after_not_out(void);
 void Pipeline_no_merge_after_main_out(void);
 void Pipeline_merge_after_staged_in_out(void);
+void Pipeline_merge_after_singleton_out(void);
+void Pipeline_merge_after_singleton_out_set(void);
+void Pipeline_no_merge_after_singleton_out_no_read(void);
 void Pipeline_merge_after_staged_inout_main_implicit_inout(void);
 void Pipeline_merge_after_staged_inout_main_inout(void);
 void Pipeline_merge_after_staged_out_before_owned(void);
@@ -691,6 +694,18 @@ bake_test_case Pipeline_testcases[] = {
     {
         "merge_after_staged_in_out",
         Pipeline_merge_after_staged_in_out
+    },
+    {
+        "merge_after_singleton_out",
+        Pipeline_merge_after_singleton_out
+    },
+    {
+        "merge_after_singleton_out_set",
+        Pipeline_merge_after_singleton_out_set
+    },
+    {
+        "no_merge_after_singleton_out_no_read",
+        Pipeline_no_merge_after_singleton_out_no_read
     },
     {
         "merge_after_staged_inout_main_implicit_inout",
@@ -2771,7 +2786,7 @@ static bake_test_suite suites[] = {
         "Pipeline",
         NULL,
         NULL,
-        91,
+        94,
         Pipeline_testcases
     },
     {

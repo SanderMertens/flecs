@@ -152,6 +152,7 @@ bool flecs_pipeline_check_term(
     bool from_any = ecs_term_match_0(term);
     bool from_this = ecs_term_match_this(term);
     bool is_shared = !from_any && (!from_this || !(src->id & EcsSelf));
+    bool is_fixed_src = !from_any && !from_this;
 
     ecs_write_kind_t ws = flecs_pipeline_get_write_state(write_state, id);
 
@@ -183,7 +184,7 @@ bool flecs_pipeline_check_term(
         from_any = true;
     }
 
-    if (from_any) {
+    if (from_any || is_fixed_src) {
         switch(inout) {
         case EcsOut:
         case EcsInOut:
