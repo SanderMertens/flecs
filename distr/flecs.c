@@ -28150,8 +28150,6 @@ struct ecs_pipeline_state_t {
     ecs_entity_t last_system;   /* Last system run by pipeline */
     int32_t match_count;        /* Used to track if rebuild is necessary */
     int32_t rebuild_count;      /* Number of pipeline rebuilds */
-    ecs_iter_t *iters;          /* Iterator for worker(s) */
-    int32_t iter_count;
 
     /* Members for continuing pipeline iteration after pipeline rebuild */
     ecs_pipeline_op_t *cur_op;  /* Current pipeline op */
@@ -62670,7 +62668,6 @@ static void flecs_pipeline_state_free(
         ecs_allocator_t *a = &world->allocator;
         ecs_vec_fini_t(a, &p->ops, ecs_pipeline_op_t);
         ecs_vec_fini_t(a, &p->systems, ecs_system_t*);
-        ecs_os_free(p->iters);
         ecs_os_free(p);
     }
 }
@@ -63162,12 +63159,6 @@ bool flecs_pipeline_update(
 
     bool rebuilt = flecs_pipeline_build(world, pq);
     if (start_of_frame) {
-        /* Initialize iterators */
-        int32_t i, count = pq->iter_count;
-        for (i = 0; i < count; i ++) {
-            ecs_world_t *stage = ecs_get_stage(world, i);
-            pq->iters[i] = ecs_query_iter(stage, pq->query);
-        }
         pq->cur_op = ecs_vec_first_t(&pq->ops, ecs_pipeline_op_t);
         pq->cur_i = 0;
     } else {
@@ -74939,8 +74930,6 @@ void flecs_pipeline_memory_get(
                 ECS_SIZEOF(ecs_pipeline_op_t);
             result->bytes_pipelines += ecs_vec_size(&ps->systems) *
                 ECS_SIZEOF(ecs_entity_t);
-            result->bytes_pipelines += ps->iter_count *
-                ECS_SIZEOF(ecs_iter_t);
         }
     }
 }

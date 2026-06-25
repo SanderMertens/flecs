@@ -19,7 +19,6 @@ static void flecs_pipeline_state_free(
         ecs_allocator_t *a = &world->allocator;
         ecs_vec_fini_t(a, &p->ops, ecs_pipeline_op_t);
         ecs_vec_fini_t(a, &p->systems, ecs_system_t*);
-        ecs_os_free(p->iters);
         ecs_os_free(p);
     }
 }
@@ -511,12 +510,6 @@ bool flecs_pipeline_update(
 
     bool rebuilt = flecs_pipeline_build(world, pq);
     if (start_of_frame) {
-        /* Initialize iterators */
-        int32_t i, count = pq->iter_count;
-        for (i = 0; i < count; i ++) {
-            ecs_world_t *stage = ecs_get_stage(world, i);
-            pq->iters[i] = ecs_query_iter(stage, pq->query);
-        }
         pq->cur_op = ecs_vec_first_t(&pq->ops, ecs_pipeline_op_t);
         pq->cur_i = 0;
     } else {

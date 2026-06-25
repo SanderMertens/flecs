@@ -27,8 +27,6 @@ struct ecs_pipeline_state_t {
     ecs_entity_t last_system;   /* Last system run by pipeline */
     int32_t match_count;        /* Used to track if rebuild is necessary */
     int32_t rebuild_count;      /* Number of pipeline rebuilds */
-    ecs_iter_t *iters;          /* Iterator for worker(s) */
-    int32_t iter_count;
 
     /* Members for continuing pipeline iteration after pipeline rebuild */
     ecs_pipeline_op_t *cur_op;  /* Current pipeline op */
