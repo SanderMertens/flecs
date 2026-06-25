@@ -6958,3 +6958,24 @@ void NonFragmentingChildOf_instantiate_tree_after_rename_child(void) {
 
     ecs_fini(world);
 }
+
+void NonFragmentingChildOf_fini_w_instantiated_prefab_non_fragmenting_child(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ecs_add_pair(world, Rel, EcsOnDeleteTarget, EcsDelete);
+
+    ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t child = ecs_insert(world, ecs_value(EcsParent, {base}));
+
+    ecs_entity_t t = ecs_new(world);
+    ecs_add_pair(world, child, Rel, t);
+
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+    test_assert(inst != 0);
+    ecs_delete(world, inst);
+
+    ecs_fini(world);
+
+    test_assert(true);
+}
