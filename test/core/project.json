@@ -1020,7 +1020,8 @@
                 "set_parent_w_childof_observer_and_wildcard_event_observer",
                 "prefab_get_target_after_delete_instance_child",
                 "defer_remove_add_batched_w_sibling_in_table",
-                "instantiate_tree_after_rename_child"
+                "instantiate_tree_after_rename_child",
+                "fini_w_instantiated_prefab_non_fragmenting_child"
             ]
         }, {
             "id": "Hierarchies",

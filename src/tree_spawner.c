@@ -188,6 +188,19 @@ void flecs_spawner_transpose_depth(
 }
 
 #ifdef FLECS_DEBUG
+static
+bool flecs_tree_spawner_is_empty(
+    const EcsTreeSpawner *ts)
+{
+    int32_t i;
+    for (i = 0; i < FLECS_TREE_SPAWNER_DEPTH_CACHE_SIZE; i ++) {
+        if (ecs_vec_count(&ts->data[i].children)) {
+            return false;
+        }
+    }
+    return true;
+}
+
 void flecs_tree_spawner_assert_not_instantiated(
     ecs_world_t *world,
     ecs_entity_t parent)
@@ -208,7 +221,8 @@ void flecs_tree_spawner_assert_not_instantiated(
             break;
         }
 
-        if (ecs_get_id(world, cur, ecs_id(EcsTreeSpawner)) != NULL) {
+        const EcsTreeSpawner *ts = ecs_get(world, cur, EcsTreeSpawner);
+        if (ts != NULL && !flecs_tree_spawner_is_empty(ts)) {
             char *path = ecs_get_path(world, cur);
             ecs_abort(ECS_INVALID_OPERATION,
                 "cannot change children of prefab '%s' after it has been "
