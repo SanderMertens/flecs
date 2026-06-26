@@ -3260,7 +3260,8 @@
                 "set_existing_after_remove_w_is_a_move_table",
                 "set_existing_after_remove_2_stages",
                 "on_replace_w_set_batched_grow_table_in_hook",
-                "defer_batched_add_after_delete"
+                "defer_batched_add_after_delete",
+                "defer_add_remove_childof_w_dont_fragment"
             ]
         }, {
             "id": "SingleThreadStaging",

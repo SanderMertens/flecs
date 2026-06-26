@@ -5470,3 +5470,23 @@ void Commands_defer_ensure_dont_fragment_w_set(void) {
 
     ecs_fini(world);
 }
+
+void Commands_defer_add_remove_childof_w_dont_fragment(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Velocity);
+    ecs_add_id(world, ecs_id(Velocity), EcsDontFragment);
+
+    ecs_entity_t p = ecs_new(world);
+    ecs_entity_t c = ecs_new(world);
+    ecs_add_id(world, c, ecs_id(Velocity));
+
+    ecs_defer_begin(world);
+    ecs_add_pair(world, c, EcsChildOf, p);
+    ecs_remove_pair(world, c, EcsChildOf, EcsWildcard);
+    ecs_defer_end(world);
+
+    test_assert(!ecs_has_pair(world, c, EcsChildOf, EcsWildcard));
+
+    ecs_fini(world);
+}

@@ -408,7 +408,9 @@ void flecs_actions_on_remove_intern_w_reparent(
     }
 
     if (diff_flags & (EcsTableEdgeReparent|EcsTableHasOrderedChildren)) {
-        if (!other_table || !(other_table->flags & EcsTableHasChildOf)) {
+        if (table != other_table &&
+            (!other_table || !(other_table->flags & EcsTableHasChildOf)))
+        {
             flecs_on_unparent(
                 world, table, other_table, row, count, diff_flags);
         }
