@@ -6332,6 +6332,153 @@ void Observer_observer_w_2_fixed_src(void) {
     ecs_fini(world);
 }
 
+void Observer_1_term_wildcard_batched(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    Probe ctx = {0};
+    ecs_observer(world, {
+        .query.expr = "*",
+        .events = { EcsOnAdd },
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    ecs_defer_begin(world);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add_id(world, e, TagA);
+    ecs_add_id(world, e, TagB);
+
+    ecs_defer_end(world);
+
+    test_int(ctx.invoked, 2);
+
+    ecs_fini(world);
+}
+
+void Observer_2_terms_wildcard_batched(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, Foo);
+
+    Probe ctx = {0};
+    ecs_observer(world, {
+        .query.expr = "*, Foo",
+        .events = { EcsOnAdd },
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t e = ecs_new_w(world, Foo);
+
+    ctx.invoked = 0;
+
+    ecs_defer_begin(world);
+
+    ecs_add_id(world, e, TagA);
+    ecs_add_id(world, e, TagB);
+
+    ecs_defer_end(world);
+
+    test_int(ctx.invoked, 2);
+
+    ecs_fini(world);
+}
+
+void Observer_1_term_var_batched(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    Probe ctx = {0};
+    ecs_observer(world, {
+        .query.expr = "$Src",
+        .events = { EcsOnAdd },
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    ecs_defer_begin(world);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add_id(world, e, TagA);
+    ecs_add_id(world, e, TagB);
+
+    ecs_defer_end(world);
+
+    test_int(ctx.invoked, 2);
+
+    ecs_fini(world);
+}
+
+void Observer_2_terms_var_batched(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, Foo);
+
+    Probe ctx = {0};
+    ecs_observer(world, {
+        .query.expr = "$Src, Foo",
+        .events = { EcsOnAdd },
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t e = ecs_new_w(world, Foo);
+
+    ctx.invoked = 0;
+
+    ecs_defer_begin(world);
+
+    ecs_add_id(world, e, TagA);
+    ecs_add_id(world, e, TagB);
+
+    ecs_defer_end(world);
+
+    test_int(ctx.invoked, 2);
+
+    ecs_fini(world);
+}
+
+void Observer_2_terms_var_src_w_trait_batched(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Trait);
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_add(world, TagA, Trait);
+    ecs_add(world, TagB, Trait);
+
+    Probe ctx = {0};
+    ecs_observer(world, {
+        .query.expr = "$Src, Trait($Src)",
+        .events = { EcsOnAdd },
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    ecs_defer_begin(world);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add_id(world, e, TagA);
+    ecs_add_id(world, e, TagB);
+
+    ecs_defer_end(world);
+
+    test_int(ctx.invoked, 2);
+
+    ecs_fini(world);
+}
+
 void Observer_emit_for_recreated_id_after_remove_all(void) {
     ecs_world_t *world = ecs_mini();
 

@@ -2141,6 +2141,11 @@ void Observer_query_eval_w_pair_first_var_that_triggered_observer(void);
 void Observer_query_eval_w_pair_second_var_that_triggered_observer(void);
 void Observer_query_eval_w_pair_both_vars_that_triggered_observer(void);
 void Observer_observer_w_2_fixed_src(void);
+void Observer_1_term_wildcard_batched(void);
+void Observer_2_terms_wildcard_batched(void);
+void Observer_1_term_var_batched(void);
+void Observer_2_terms_var_batched(void);
+void Observer_2_terms_var_src_w_trait_batched(void);
 void Observer_emit_for_recreated_id_after_remove_all(void);
 void Observer_emit_for_recreated_id_after_remove_all_wildcard(void);
 void Observer_emit_for_recreated_id_after_delete_with(void);
@@ -11717,6 +11722,26 @@ bake_test_case Observer_testcases[] = {
         Observer_observer_w_2_fixed_src
     },
     {
+        "1_term_wildcard_batched",
+        Observer_1_term_wildcard_batched
+    },
+    {
+        "2_terms_wildcard_batched",
+        Observer_2_terms_wildcard_batched
+    },
+    {
+        "1_term_var_batched",
+        Observer_1_term_var_batched
+    },
+    {
+        "2_terms_var_batched",
+        Observer_2_terms_var_batched
+    },
+    {
+        "2_terms_var_src_w_trait_batched",
+        Observer_2_terms_var_src_w_trait_batched
+    },
+    {
         "emit_for_recreated_id_after_remove_all",
         Observer_emit_for_recreated_id_after_remove_all
     },
@@ -16699,7 +16724,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        344,
+        349,
         Observer_testcases
     },
     {

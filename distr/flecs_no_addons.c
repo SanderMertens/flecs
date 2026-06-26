@@ -3116,6 +3116,7 @@ typedef struct ecs_observer_impl_t {
 
     int32_t *last_event_id;     /**< Last handled event id */
     int32_t last_event_id_storage;
+    ecs_termset_t last_event_field; /**< Field that last handled event triggered */
 
     ecs_flags32_t flags;        /**< Observer flags */
 
@@ -16732,15 +16733,20 @@ void flecs_multi_observer_invoke(
     ecs_observer_impl_t *impl = flecs_observer_impl(o);
     ecs_world_t *world = it->real_world;
     
-    if (impl->last_event_id[0] == it->event_cur) {
-        /* Already handled this event */
+    int8_t pivot_term = it->term_index;
+    ecs_term_t *term = &o->query->terms[pivot_term];
+    int8_t pivot_field = term->field_index;
+    ecs_termset_t pivot_field_bit = ((ecs_termset_t)1 << pivot_field);
+
+    if (impl->last_event_id[0] == it->event_cur &&
+        !(impl->last_event_field & pivot_field_bit))
+    {
+        /* Already handled this event for a different field */
         return;
     }
 
     ecs_table_t *table = it->table;
     ecs_table_t *prev_table = it->other_table;
-    int8_t pivot_term = it->term_index;
-    ecs_term_t *term = &o->query->terms[pivot_term];
 
     bool is_not = term->oper == EcsNot;
     if (is_not) {
@@ -16814,13 +16820,13 @@ void flecs_multi_observer_invoke(
         }
 
         impl->last_event_id[0] = it->event_cur;
+        impl->last_event_field = pivot_field_bit;
 
-        /* Patch data from original iterator. If the observer query has 
+        /* Patch data from original iterator. If the observer query has
          * wildcards which triggered the original event, the component id that
          * got matched by ecs_query_has_range may not be the same as the one
          * that caused the event. We need to make sure to communicate the
          * component id that actually triggered the observer. */
-        int8_t pivot_field = term->field_index;
         ecs_assert(pivot_field >= 0, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(pivot_field < user_it.field_count, ECS_INTERNAL_ERROR, NULL);
         user_it.ids[pivot_field] = it->event_id;
