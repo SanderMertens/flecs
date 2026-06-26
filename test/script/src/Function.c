@@ -911,6 +911,74 @@ void Function_fn_in_module_w_using(void) {
     ecs_fini(world);
 }
 
+void Function_fn_in_namespace_called_from_fn_w_using(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "module foo"
+    LINE "fn sum(a: i32, b: i32) -> i32 { a + b }";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    const char *call =
+    HEAD "using foo"
+    LINE "fn test(a: i32, b: i32) -> i32 { sum(a, b) }"
+    LINE "Foo = Position: {test(1, 2), test(10, 20)}";
+
+    test_assert(ecs_script_run(world, NULL, call, NULL) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    test_assert(foo != 0);
+    const Position *p = ecs_get(world, foo, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 3);
+    test_int(p->y, 30);
+
+    ecs_fini(world);
+}
+
+void Function_fn_in_nested_namespace_called_from_fn_w_using(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "module foo.bar"
+    LINE "fn sum(a: i32, b: i32) -> i32 { a + b }";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    const char *call =
+    HEAD "using foo"
+    LINE "fn test(a: i32, b: i32) -> i32 { bar.sum(a, b) }"
+    LINE "Foo = Position: {test(1, 2), test(10, 20)}";
+
+    test_assert(ecs_script_run(world, NULL, call, NULL) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    test_assert(foo != 0);
+    const Position *p = ecs_get(world, foo, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 3);
+    test_int(p->y, 30);
+
+    ecs_fini(world);
+}
+
 void Function_f32_arg_and_return(void) {
     ecs_world_t *world = ecs_init();
 

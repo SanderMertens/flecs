@@ -1976,6 +1976,15 @@ int flecs_script_function_type_check(
     ecs_script_eval_desc_t eval_desc = {0};
     flecs_script_eval_visit_init(impl, &v, &eval_desc);
 
+    v.parent = outer_v->parent;
+
+    int32_t outer_using_count = ecs_vec_count(&outer_v->r->using);
+    ecs_entity_t *outer_using = ecs_vec_first(&outer_v->r->using);
+    for (int32_t u = 0; u < outer_using_count; u ++) {
+        ecs_vec_append_t(&v.r->allocator, &v.r->using, ecs_entity_t)[0] =
+            outer_using[u];
+    }
+
     ecs_allocator_t *a = &v.r->allocator;
     v.vars = flecs_script_vars_push(v.vars, &v.r->stack, a);
 
