@@ -1471,7 +1471,7 @@ repeat_event:
             ider_count = flecs_event_observers_get(er, id, iders);
         }
 
-        if (!ider_count && !(can_override_on_add || can_override_on_remove)) {
+        if (!ider_count) {
             /* If nothing more to do for this id, early out */
             continue;
         }
