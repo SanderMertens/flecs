@@ -558,6 +558,8 @@ void Function_forward_reference(void);
 void Function_fn_in_module(void);
 void Function_fn_in_module_qualified_call(void);
 void Function_fn_in_module_w_using(void);
+void Function_fn_in_namespace_called_from_fn_w_using(void);
+void Function_fn_in_nested_namespace_called_from_fn_w_using(void);
 void Function_f32_arg_and_return(void);
 void Function_f64_arg_and_return(void);
 void Function_bool_arg_and_return(void);
@@ -3732,6 +3734,14 @@ bake_test_case Function_testcases[] = {
     {
         "fn_in_module_w_using",
         Function_fn_in_module_w_using
+    },
+    {
+        "fn_in_namespace_called_from_fn_w_using",
+        Function_fn_in_namespace_called_from_fn_w_using
+    },
+    {
+        "fn_in_nested_namespace_called_from_fn_w_using",
+        Function_fn_in_nested_namespace_called_from_fn_w_using
     },
     {
         "f32_arg_and_return",
@@ -7632,7 +7642,7 @@ static bake_test_suite suites[] = {
         "Function",
         NULL,
         NULL,
-        64,
+        66,
         Function_testcases
     },
     {

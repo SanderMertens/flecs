@@ -564,6 +564,8 @@
                 "fn_in_module",
                 "fn_in_module_qualified_call",
                 "fn_in_module_w_using",
+                "fn_in_namespace_called_from_fn_w_using",
+                "fn_in_nested_namespace_called_from_fn_w_using",
                 "f32_arg_and_return",
                 "f64_arg_and_return",
                 "bool_arg_and_return",
