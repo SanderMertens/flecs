@@ -22,6 +22,7 @@ typedef struct ecs_observer_impl_t {
 
     int32_t *last_event_id;     /**< Last handled event id */
     int32_t last_event_id_storage;
+    ecs_termset_t last_event_field; /**< Field that last handled event triggered */
 
     ecs_flags32_t flags;        /**< Observer flags */
 
