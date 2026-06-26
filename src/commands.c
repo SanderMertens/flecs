@@ -1203,6 +1203,8 @@ bool flecs_defer_end(
                         }
 
                         flecs_cmd_batch_for_entity(world, &diff, e, cmds, i);
+
+                        is_alive = flecs_entities_is_alive(world, e);
                     } else {
                         world->info.cmd.discard_count ++;
                     }
