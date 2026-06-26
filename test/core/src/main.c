@@ -3173,6 +3173,7 @@ void Commands_set_existing_after_remove_2_stages(void);
 void Commands_on_replace_w_set_batched_grow_table_in_hook(void);
 void Commands_defer_batched_add_after_delete(void);
 void Commands_defer_add_remove_childof_w_dont_fragment(void);
+void Commands_defer_remove_dont_fragment_on_cascade_deleted_child(void);
 
 // Testsuite 'SingleThreadStaging'
 void SingleThreadStaging_setup(void);
@@ -15778,6 +15779,10 @@ bake_test_case Commands_testcases[] = {
     {
         "defer_add_remove_childof_w_dont_fragment",
         Commands_defer_add_remove_childof_w_dont_fragment
+    },
+    {
+        "defer_remove_dont_fragment_on_cascade_deleted_child",
+        Commands_defer_remove_dont_fragment_on_cascade_deleted_child
     }
 };
 
@@ -16806,7 +16811,7 @@ static bake_test_suite suites[] = {
         "Commands",
         NULL,
         NULL,
-        179,
+        180,
         Commands_testcases
     },
     {
