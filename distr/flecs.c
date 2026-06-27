@@ -64998,13 +64998,6 @@ const char* flecs_term_parse(
 
     parser.term = term;
 
-    const char *result = flecs_query_term_parse(&parser, expr);
-    if (!result) {
-        return NULL;
-    }
-
-    ecs_os_memset_t(term, 0, ecs_term_t);
-
     return flecs_query_term_parse(&parser, expr);
 }
 
