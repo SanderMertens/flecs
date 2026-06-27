@@ -62,6 +62,7 @@
                 "wildcard_pair_from_str",
                 "any_pair_from_str",
                 "invalid_pair",
+                "pair_from_str_too_many_args",
                 "value_pair_is_wildcard",
                 "value_pair_w_rel_wildcard_is_wildcard",
                 "value_pair_w_obj_wildcard_is_wildcard",

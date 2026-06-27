@@ -57,6 +57,7 @@ void Id_unresolved_pair_from_str(void);
 void Id_wildcard_pair_from_str(void);
 void Id_any_pair_from_str(void);
 void Id_invalid_pair(void);
+void Id_pair_from_str_too_many_args(void);
 void Id_value_pair_is_wildcard(void);
 void Id_value_pair_w_rel_wildcard_is_wildcard(void);
 void Id_value_pair_w_obj_wildcard_is_wildcard(void);
@@ -3563,6 +3564,10 @@ bake_test_case Id_testcases[] = {
     {
         "invalid_pair",
         Id_invalid_pair
+    },
+    {
+        "pair_from_str_too_many_args",
+        Id_pair_from_str_too_many_args
     },
     {
         "value_pair_is_wildcard",
@@ -16529,7 +16534,7 @@ static bake_test_suite suites[] = {
         "Id",
         NULL,
         NULL,
-        79,
+        80,
         Id_testcases
     },
     {

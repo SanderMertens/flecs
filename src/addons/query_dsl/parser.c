@@ -150,7 +150,7 @@ const char* flecs_term_parse_arg(
     } else if (arg == 1) {
         ref = &parser->term->second;
     } else {
-        if (arg > FLECS_TERM_ARG_COUNT_MAX) {
+        if (arg > FLECS_TERM_ARG_COUNT_MAX || !parser->extra_args) {
             Error("too many arguments in term");
         }
         ref = &parser->extra_args[arg - 2];
