@@ -310,7 +310,7 @@ int flecs_query_cache_process_query(
             cache->cascade_by = i + 1;
         }
 
-        /* Set the EcsQueryHasRefs flag. Ref fields are fields that can be 
+        /* Set the EcsQueryHasRefs flag. Ref fields are fields that can be
          * matched on another entity, and can require rematching. */
         if (src->id & EcsUp) {
             impl->pub.flags |= EcsQueryHasRefs;

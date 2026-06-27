@@ -174,7 +174,9 @@
                 "validator_1_var_src_terms_match_this",
                 "validator_2_var_src_terms_match_this",
                 "validator_2_terms_1_var_src_match_this",
-                "validator_1_tag_term_this_src_match_this"
+                "validator_1_tag_term_this_src_match_this",
+                "exceed_max_var_count",
+                "from_op_w_pair"
             ]
         }, {
             "id": "Parser",
@@ -489,7 +491,9 @@
                 "lookup_component_by_symbol_2",
                 "lookup_component_by_symbol_3",
                 "expr_longer_than_16kb",
-                "neq_w_or"
+                "neq_w_or",
+                "invalid_id_literal",
+                "escaped_gt_in_entity_name"
             ]
         }, {
             "id": "Fuzzing",
@@ -1120,7 +1124,10 @@
                 "first_var_any_src_w_constrained_var",
                 "first_var_any_src_pair_constrained_tgt",
                 "1_any_src_set_pair_tgt_var_no_match",
-                "set_var_id_31"
+                "set_var_id_31",
+                "invalid_var_name_in_pair",
+                "invalid_var_name_w_toggle_cascade",
+                "invalid_var_name_w_neq"
             ]
         }, {
             "id": "Operators",
@@ -1291,7 +1298,9 @@
                 "not_isa_wildcard",
                 "not_transitive_rel_wildcard",
                 "not_reflexive_rel_wildcard",
-                "and_optional_and"
+                "and_optional_and",
+                "or_w_two_variables",
+                "or_w_two_entity_vars"
             ]
         }, {
             "id": "Transitive",
@@ -1532,7 +1541,9 @@
                 "term_w_not_scope_2_terms_w_not_w_var",
                 "term_w_not_scope_2_terms_w_or",
                 "term_w_not_scope_3_terms_w_or",
-                "term_w_not_scope_2_terms_w_before_after"
+                "term_w_not_scope_2_terms_w_before_after",
+                "optional_operator_for_scope",
+                "max_scope_nesting"
             ]
         }, {
             "id": "Traversal",
@@ -1764,7 +1775,9 @@
                 "parent_component_after_query",
                 "parent_component_n_children_after_query",
                 "parent_component_n_parents_for_depth_after_query",
-                "cascade_optional_change_detection_after_remove"
+                "cascade_optional_change_detection_after_remove",
+                "two_cascade_terms",
+                "cascade_in_or_chain"
             ]
         }, {
             "id": "Cached",

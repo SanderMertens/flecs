@@ -2012,3 +2012,33 @@ void Cascade_cascade_optional_change_detection_after_remove(void) {
 
     ecs_fini(world);
 }
+
+void Cascade_two_cascade_terms(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Position);
+
+    ecs_log_set_level(-4);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Position(cascade),*(cascade)"
+    });
+
+    test_assert(q == NULL);
+
+    ecs_fini(world);
+}
+
+void Cascade_cascade_in_or_chain(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_log_set_level(-4);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "toggle|$l||toggle|$n(cascade)"
+    });
+
+    test_assert(q == NULL);
+
+    ecs_fini(world);
+}

@@ -506,3 +506,25 @@ void Scopes_term_w_not_scope_2_terms_w_before_after(void) {
 
     ecs_fini(world);
 }
+
+void Scopes_optional_operator_for_scope(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_log_set_level(-4);
+    test_assert(NULL == ecs_query_init(world, &(ecs_query_desc_t){
+        .expr = "?{$x}"
+    }));
+
+    ecs_fini(world);
+}
+
+void Scopes_max_scope_nesting(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_log_set_level(-4);
+    test_assert(NULL == ecs_query_init(world, &(ecs_query_desc_t){
+        .expr = "{{{{{{{{$o}}}}}}}}"
+    }));
+
+    ecs_fini(world);
+}

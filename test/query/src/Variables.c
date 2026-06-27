@@ -13575,3 +13575,36 @@ void Variables_set_var_id_31(void) {
 
     ecs_fini(world);
 }
+
+void Variables_invalid_var_name_in_pair(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_log_set_level(-4);
+    test_assert(NULL == ecs_query_init(world, &(ecs_query_desc_t){
+        .expr = "(_,#5,$.)"
+    }));
+
+    ecs_fini(world);
+}
+
+void Variables_invalid_var_name_w_toggle_cascade(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_log_set_level(-4);
+    test_assert(NULL == ecs_query_init(world, &(ecs_query_desc_t){
+        .expr = "toggle|$.(cascade)"
+    }));
+
+    ecs_fini(world);
+}
+
+void Variables_invalid_var_name_w_neq(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_log_set_level(-4);
+    test_assert(NULL == ecs_query_init(world, &(ecs_query_desc_t){
+        .expr = "*,*,$$(cascade),$f,*,$.!=*,$s,*,*,*,*,*,*"
+    }));
+
+    ecs_fini(world);
+}
