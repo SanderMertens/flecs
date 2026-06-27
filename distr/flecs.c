@@ -11260,10 +11260,16 @@ ecs_entity_t flecs_name_to_id(
 {
     ecs_assert(name != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(name[0] == '#', ECS_INVALID_PARAMETER, NULL);
-    ecs_entity_t res = flecs_ito(uint64_t, atoll(name + 1));
+    int64_t value = atoll(name + 1);
+    if (value < 0) {
+        return 0; /* Invalid id */
+    }
+
+    ecs_entity_t res = flecs_ito(uint64_t, value);
     if (res >= UINT32_MAX) {
         return 0; /* Invalid id */
     }
+
     return res;
 }
 
@@ -11322,7 +11328,9 @@ const char* flecs_path_elem(
         if (ch == '<') {
             template_nesting ++;
         } else if (ch == '>') {
-            template_nesting --;
+            if (template_nesting > 0) {
+                template_nesting --;
+            }
         } else if (ch == '\\') {
             ptr ++;
             ch = ptr[0];
@@ -11331,8 +11339,6 @@ const char* flecs_path_elem(
             }
             escaped = true;
         }
-
-        ecs_check(template_nesting >= 0, ECS_INVALID_PARAMETER, "%s", path);
 
         if (!escaped && !template_nesting && flecs_is_sep(&ptr, sep)) {
             break;
@@ -11368,8 +11374,6 @@ const char* flecs_path_elem(
     } else {
         return NULL;
     }
-error:
-    return NULL;
 }
 
 static
@@ -18649,8 +18653,6 @@ void ecs_remove_all(
 
     flecs_journal_end();
 }
-
-#include <time.h>
 
 void ecs_os_api_impl(ecs_os_api_t *api);
 
@@ -37470,6 +37472,14 @@ int flecs_term_ref_lookup(
             ref->name = NULL;
             return 0;
         }
+
+        ecs_size_t name_len = ecs_os_strlen(name);
+        if (name[0] == '.' || name[name_len - 1] == '.' ||
+            strstr(name, "..") != NULL)
+        {
+            flecs_query_validator_error(ctx, "invalid variable name '%s'", name);
+            return -1;
+        }
         return 0;
     } else if (ref->id & EcsIsName) {
         if (ref->name == NULL) {
@@ -37811,6 +37821,35 @@ error:
 }
 
 static
+bool flecs_term_ref_same(
+    const ecs_term_ref_t *a,
+    const ecs_term_ref_t *b,
+    bool match_this)
+{
+    ecs_flags64_t mask = EcsIsEntity | EcsIsVariable;
+    if ((a->id & mask) != (b->id & mask)) {
+        return false;
+    }
+
+    ecs_entity_t a_id = ECS_TERM_REF_ID(a), b_id = ECS_TERM_REF_ID(b);
+    if (a_id != b_id) {
+        return false;
+    }
+
+    if (a_id) {
+        if (a_id == EcsWildcard || a_id == EcsAny) {
+            return false;
+        }
+        if (a->id & EcsIsVariable) {
+            return match_this;
+        }
+        return true;
+    }
+
+    return a->name && b->name && !ecs_os_strcmp(a->name, b->name);
+}
+
+static
 int flecs_term_verify(
     const ecs_world_t *world,
     const ecs_term_t *term,
@@ -37828,7 +37867,6 @@ int flecs_term_verify(
         return -1;
     }
 
-    ecs_entity_t src_id = ECS_TERM_REF_ID(src);
     if (first->id & EcsIsEntity) {
         first_id = ECS_TERM_REF_ID(first);
     }
@@ -37928,24 +37966,13 @@ int flecs_term_verify(
 
     if (first_id) {
         if (ecs_term_ref_is_set(second)) {
-            ecs_flags64_t mask = EcsIsEntity | EcsIsVariable;
-            if ((src->id & mask) == (second->id & mask)) {
-                bool is_same = false;
-                if (src->id & EcsIsEntity) {
-                    if (src_id) {
-                        is_same = src_id == second_id;
-                    }
-                } else if (src->name && second->name) {
-                    is_same = !ecs_os_strcmp(src->name, second->name);
-                }
-
-                if (is_same && ecs_has_id(world, first_id, EcsAcyclic)
-                    && !(term->flags_ & EcsTermReflexive)) 
-                {
-                    flecs_query_validator_error(ctx, "term with acyclic "
-                        "relationship cannot have the same source and target");
-                    return -1;
-                }
+            if (flecs_term_ref_same(src, second, false)
+                && ecs_has_id(world, first_id, EcsAcyclic)
+                && !(term->flags_ & EcsTermReflexive))
+            {
+                flecs_query_validator_error(ctx, "term with acyclic "
+                    "relationship cannot have the same source and target");
+                return -1;
             }
         }
 
@@ -38255,8 +38282,14 @@ int flecs_term_finalize(
 
     if (term->oper == EcsAndFrom || term->oper == EcsOrFrom || term->oper == EcsNotFrom) {
         if (term->inout != EcsInOutDefault && term->inout != EcsInOutNone) {
-            flecs_query_validator_error(ctx, 
+            flecs_query_validator_error(ctx,
                 "invalid inout value for AndFrom/OrFrom/NotFrom term");
+            return -1;
+        }
+
+        if (ECS_IS_PAIR(term->id) || ecs_id_is_wildcard(term->id)) {
+            flecs_query_validator_error(ctx,
+                "invalid AndFrom/OrFrom/NotFrom term: id must be a regular entity");
             return -1;
         }
     }
@@ -38487,6 +38520,12 @@ int flecs_query_finalize_terms(
         ctx.term_index = i;
 
         if (flecs_term_finalize(world, term, &ctx)) {
+            return -1;
+        }
+
+        if (prev_is_or && !flecs_term_ref_same(&term[-1].src, &term->src, true)) {
+            flecs_query_validator_error(&ctx,
+                "terms in an OR chain must have the same source");
             return -1;
         }
 
@@ -38758,8 +38797,18 @@ int flecs_query_finalize_terms(
         }
 
         if (first_id == EcsScopeOpen) {
+            if (term->oper != EcsAnd && term->oper != EcsNot) {
+                flecs_query_validator_error(&ctx,
+                    "invalid operator for scope");
+                return -1;
+            }
             q->flags |= EcsQueryHasScopes;
             scope_nesting ++;
+            if (scope_nesting >= FLECS_QUERY_SCOPE_NESTING_MAX) {
+                flecs_query_validator_error(&ctx,
+                    "query has too many nested scopes");
+                return -1;
+            }
         }
 
         if (scope_nesting) {
@@ -38793,9 +38842,29 @@ int flecs_query_finalize_terms(
     }
 
     if (term_count && (terms[term_count - 1].oper == EcsOr)) {
-        flecs_query_validator_error(&ctx, 
+        flecs_query_validator_error(&ctx,
             "last term of query can't have OR operator");
         return -1;
+    }
+
+    {
+        int8_t cascade_count = 0;
+        for (i = 0; i < term_count; i ++) {
+            if (terms[i].src.id & EcsCascade) {
+                cascade_count ++;
+
+                if (terms[i].flags_ & EcsTermIsOr) {
+                    flecs_query_validator_error(&ctx,
+                        "cascade term cannot be part of an OR chain");
+                    return -1;
+                }
+            }
+        }
+        if (cascade_count > 1) {
+            flecs_query_validator_error(&ctx,
+                "query can only have one cascade term");
+            return -1;
+        }
     }
 
     q->field_count = flecs_ito(int8_t, field_count);
@@ -40619,8 +40688,6 @@ void flecs_component_update_childof_depth(
 
     flecs_component_update_childof_w_depth(world, cr, new_depth);
 }
-
-#include <inttypes.h>
 
 ecs_entity_index_page_t* flecs_entity_index_ensure_page(
     ecs_entity_index_t *index,
@@ -47251,8 +47318,6 @@ ecs_table_t* ecs_table_find(
     };
     return flecs_table_ensure(world, &type, false, NULL);
 }
-
-#include <errno.h>
 
 #ifdef FLECS_HTTP
 
@@ -56149,7 +56214,6 @@ error:
 #endif
 
 #include <ctype.h>
-#include <inttypes.h>
 
 #ifdef FLECS_META
 #ifdef FLECS_QUERY_DSL
@@ -68776,8 +68840,6 @@ void FlecsScriptImport(
 
 #endif
 
-#include <inttypes.h>
-
 #ifdef FLECS_SCRIPT
 
 static
@@ -77947,7 +78009,7 @@ int flecs_query_cache_process_query(
             cache->cascade_by = i + 1;
         }
 
-        /* Set the EcsQueryHasRefs flag. Ref fields are fields that can be 
+        /* Set the EcsQueryHasRefs flag. Ref fields are fields that can be
          * matched on another entity, and can require rematching. */
         if (src->id & EcsUp) {
             impl->pub.flags |= EcsQueryHasRefs;
@@ -81016,9 +81078,16 @@ int flecs_query_discover_vars(
     query->vars = query_vars;
     query->var_count = var_count;
     query->pub.var_count = flecs_ito(int8_t, var_count);
-    ECS_BIT_COND(query->pub.flags, EcsQueryHasTableThisVar, 
+    ECS_BIT_COND(query->pub.flags, EcsQueryHasTableThisVar,
         !entity_before_table_this);
     query->var_size = var_count + anonymous_count;
+
+    if (query->var_size > EcsQueryMaxVarCount) {
+        ecs_err(
+            "query has too many (%d) variables (maximum is %d)",
+            query->var_size, EcsQueryMaxVarCount);
+        goto error;
+    }
 
     char **var_names;
     if (query_vars != &flecs_this_array) {
@@ -82099,6 +82168,7 @@ void flecs_query_end_block_or(
 
     ecs_query_op_t *first = &ops[ctx->cur->lbl_begin];
     bool src_is_var = first->flags & (EcsQueryIsVar << EcsQuerySrc);
+    ecs_var_id_t first_src_var = first->src.var;
     first->next = flecs_itolbl(end);
     ops[end].prev = ctx->cur->lbl_begin;
     ops[end - 1].prev = ctx->cur->lbl_begin;
@@ -82139,7 +82209,7 @@ void flecs_query_end_block_or(
         ecs_write_flags_t cur = 1 & (ctx->cond_written >> i);
 
         /* Skip variable if it's the source for the OR chain */
-        if (src_is_var && (i == first->src.var)) {
+        if (src_is_var && (i == first_src_var)) {
             continue;
         }
 

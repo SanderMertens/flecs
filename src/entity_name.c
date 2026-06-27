@@ -129,10 +129,16 @@ ecs_entity_t flecs_name_to_id(
 {
     ecs_assert(name != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(name[0] == '#', ECS_INVALID_PARAMETER, NULL);
-    ecs_entity_t res = flecs_ito(uint64_t, atoll(name + 1));
+    int64_t value = atoll(name + 1);
+    if (value < 0) {
+        return 0; /* Invalid id */
+    }
+
+    ecs_entity_t res = flecs_ito(uint64_t, value);
     if (res >= UINT32_MAX) {
         return 0; /* Invalid id */
     }
+
     return res;
 }
 
@@ -191,7 +197,9 @@ const char* flecs_path_elem(
         if (ch == '<') {
             template_nesting ++;
         } else if (ch == '>') {
-            template_nesting --;
+            if (template_nesting > 0) {
+                template_nesting --;
+            }
         } else if (ch == '\\') {
             ptr ++;
             ch = ptr[0];
@@ -200,8 +208,6 @@ const char* flecs_path_elem(
             }
             escaped = true;
         }
-
-        ecs_check(template_nesting >= 0, ECS_INVALID_PARAMETER, "%s", path);
 
         if (!escaped && !template_nesting && flecs_is_sep(&ptr, sep)) {
             break;
@@ -237,8 +243,6 @@ const char* flecs_path_elem(
     } else {
         return NULL;
     }
-error:
-    return NULL;
 }
 
 static

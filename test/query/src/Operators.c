@@ -10086,3 +10086,51 @@ void Operators_and_optional_and(void) {
 
     ecs_fini(world);
 }
+
+void Operators_or_w_two_variables(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "$f||$h",
+        .cache_kind = cache_kind
+    });
+    test_assert(q != NULL);
+
+    ecs_entity_t e1 = ecs_new_w(world, Foo);
+    ecs_add(world, e1, Bar);
+
+    bool matched = false;
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        int32_t i;
+        for (i = 0; i < it.count; i ++) {
+            if (it.entities[i] == e1) {
+                matched = true;
+            }
+        }
+    }
+    test_assert(matched);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Operators_or_w_two_entity_vars(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_log_set_level(-4);
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Foo($a) || Bar($b)",
+        .cache_kind = cache_kind
+    });
+    test_assert(q == NULL);
+
+    ecs_fini(world);
+}

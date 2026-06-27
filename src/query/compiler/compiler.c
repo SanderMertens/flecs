@@ -395,9 +395,16 @@ int flecs_query_discover_vars(
     query->vars = query_vars;
     query->var_count = var_count;
     query->pub.var_count = flecs_ito(int8_t, var_count);
-    ECS_BIT_COND(query->pub.flags, EcsQueryHasTableThisVar, 
+    ECS_BIT_COND(query->pub.flags, EcsQueryHasTableThisVar,
         !entity_before_table_this);
     query->var_size = var_count + anonymous_count;
+
+    if (query->var_size > EcsQueryMaxVarCount) {
+        ecs_err(
+            "query has too many (%d) variables (maximum is %d)",
+            query->var_size, EcsQueryMaxVarCount);
+        goto error;
+    }
 
     char **var_names;
     if (query_vars != &flecs_this_array) {

@@ -170,6 +170,8 @@ void Validator_validator_1_var_src_terms_match_this(void);
 void Validator_validator_2_var_src_terms_match_this(void);
 void Validator_validator_2_terms_1_var_src_match_this(void);
 void Validator_validator_1_tag_term_this_src_match_this(void);
+void Validator_exceed_max_var_count(void);
+void Validator_from_op_w_pair(void);
 
 // Testsuite 'Parser'
 void Parser_resolve_this(void);
@@ -483,6 +485,8 @@ void Parser_lookup_component_by_symbol_2(void);
 void Parser_lookup_component_by_symbol_3(void);
 void Parser_expr_longer_than_16kb(void);
 void Parser_neq_w_or(void);
+void Parser_invalid_id_literal(void);
+void Parser_escaped_gt_in_entity_name(void);
 
 // Testsuite 'Fuzzing'
 void Fuzzing_setup(void);
@@ -1091,6 +1095,9 @@ void Variables_first_var_any_src_w_constrained_var(void);
 void Variables_first_var_any_src_pair_constrained_tgt(void);
 void Variables_1_any_src_set_pair_tgt_var_no_match(void);
 void Variables_set_var_id_31(void);
+void Variables_invalid_var_name_in_pair(void);
+void Variables_invalid_var_name_w_toggle_cascade(void);
+void Variables_invalid_var_name_w_neq(void);
 
 // Testsuite 'Operators'
 void Operators_setup(void);
@@ -1257,6 +1264,8 @@ void Operators_not_isa_wildcard(void);
 void Operators_not_transitive_rel_wildcard(void);
 void Operators_not_reflexive_rel_wildcard(void);
 void Operators_and_optional_and(void);
+void Operators_or_w_two_variables(void);
+void Operators_or_w_two_entity_vars(void);
 
 // Testsuite 'Transitive'
 void Transitive_written_src_unknown_tgt_first_leaf(void);
@@ -1483,6 +1492,8 @@ void Scopes_term_w_not_scope_2_terms_w_not_w_var(void);
 void Scopes_term_w_not_scope_2_terms_w_or(void);
 void Scopes_term_w_not_scope_3_terms_w_or(void);
 void Scopes_term_w_not_scope_2_terms_w_before_after(void);
+void Scopes_optional_operator_for_scope(void);
+void Scopes_max_scope_nesting(void);
 
 // Testsuite 'Traversal'
 void Traversal_setup(void);
@@ -1708,6 +1719,8 @@ void Cascade_parent_component_after_query(void);
 void Cascade_parent_component_n_children_after_query(void);
 void Cascade_parent_component_n_parents_for_depth_after_query(void);
 void Cascade_cascade_optional_change_detection_after_remove(void);
+void Cascade_two_cascade_terms(void);
+void Cascade_cascade_in_or_chain(void);
 
 // Testsuite 'Cached'
 void Cached_fixed_src_wildcard_before_cache(void);
@@ -3505,6 +3518,14 @@ bake_test_case Validator_testcases[] = {
     {
         "validator_1_tag_term_this_src_match_this",
         Validator_validator_1_tag_term_this_src_match_this
+    },
+    {
+        "exceed_max_var_count",
+        Validator_exceed_max_var_count
+    },
+    {
+        "from_op_w_pair",
+        Validator_from_op_w_pair
     }
 };
 
@@ -4752,6 +4773,14 @@ bake_test_case Parser_testcases[] = {
     {
         "neq_w_or",
         Parser_neq_w_or
+    },
+    {
+        "invalid_id_literal",
+        Parser_invalid_id_literal
+    },
+    {
+        "escaped_gt_in_entity_name",
+        Parser_escaped_gt_in_entity_name
     }
 };
 
@@ -7143,6 +7172,18 @@ bake_test_case Variables_testcases[] = {
     {
         "set_var_id_31",
         Variables_set_var_id_31
+    },
+    {
+        "invalid_var_name_in_pair",
+        Variables_invalid_var_name_in_pair
+    },
+    {
+        "invalid_var_name_w_toggle_cascade",
+        Variables_invalid_var_name_w_toggle_cascade
+    },
+    {
+        "invalid_var_name_w_neq",
+        Variables_invalid_var_name_w_neq
     }
 };
 
@@ -7798,6 +7839,14 @@ bake_test_case Operators_testcases[] = {
     {
         "and_optional_and",
         Operators_and_optional_and
+    },
+    {
+        "or_w_two_variables",
+        Operators_or_w_two_variables
+    },
+    {
+        "or_w_two_entity_vars",
+        Operators_or_w_two_entity_vars
     }
 };
 
@@ -8674,6 +8723,14 @@ bake_test_case Scopes_testcases[] = {
     {
         "term_w_not_scope_2_terms_w_before_after",
         Scopes_term_w_not_scope_2_terms_w_before_after
+    },
+    {
+        "optional_operator_for_scope",
+        Scopes_optional_operator_for_scope
+    },
+    {
+        "max_scope_nesting",
+        Scopes_max_scope_nesting
     }
 };
 
@@ -9560,6 +9617,14 @@ bake_test_case Cascade_testcases[] = {
     {
         "cascade_optional_change_detection_after_remove",
         Cascade_cascade_optional_change_detection_after_remove
+    },
+    {
+        "two_cascade_terms",
+        Cascade_two_cascade_terms
+    },
+    {
+        "cascade_in_or_chain",
+        Cascade_cascade_in_or_chain
     }
 };
 
@@ -14165,14 +14230,14 @@ static bake_test_suite suites[] = {
         "Validator",
         NULL,
         NULL,
-        161,
+        163,
         Validator_testcases
     },
     {
         "Parser",
         NULL,
         NULL,
-        311,
+        313,
         Parser_testcases
     },
     {
@@ -14213,7 +14278,7 @@ static bake_test_suite suites[] = {
         "Variables",
         Variables_setup,
         NULL,
-        224,
+        227,
         Variables_testcases,
         1,
         Variables_params
@@ -14222,7 +14287,7 @@ static bake_test_suite suites[] = {
         "Operators",
         Operators_setup,
         NULL,
-        163,
+        165,
         Operators_testcases,
         1,
         Operators_params
@@ -14254,7 +14319,7 @@ static bake_test_suite suites[] = {
         "Scopes",
         Scopes_setup,
         NULL,
-        11,
+        13,
         Scopes_testcases,
         2,
         Scopes_params
@@ -14272,7 +14337,7 @@ static bake_test_suite suites[] = {
         "Cascade",
         NULL,
         NULL,
-        35,
+        37,
         Cascade_testcases
     },
     {

@@ -4208,8 +4208,30 @@ void Validator_validator_1_tag_term_this_src_match_this(void) {
     
     test_assert((q->flags & EcsQueryMatchThis));
     test_assert((q->flags & EcsQueryMatchOnlyThis));
-    
+
     ecs_query_fini(q);
-    
+
+    ecs_fini(world);
+}
+
+void Validator_exceed_max_var_count(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_log_set_level(-4);
+    test_assert(NULL == ecs_query_init(world, &(ecs_query_desc_t){
+        .expr = "(*,*,*,*,*,*,*,*,*,*,*),(*,*,*,*,*,*,*,*,*,*,*,*,*)"
+    }));
+
+    ecs_fini(world);
+}
+
+void Validator_from_op_w_pair(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_log_set_level(-4);
+    test_assert(NULL == ecs_query_init(world, &(ecs_query_desc_t){
+        .expr = "or|#5($i,$i)"
+    }));
+
     ecs_fini(world);
 }

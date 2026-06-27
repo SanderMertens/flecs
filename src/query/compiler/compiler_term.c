@@ -304,6 +304,7 @@ void flecs_query_end_block_or(
 
     ecs_query_op_t *first = &ops[ctx->cur->lbl_begin];
     bool src_is_var = first->flags & (EcsQueryIsVar << EcsQuerySrc);
+    ecs_var_id_t first_src_var = first->src.var;
     first->next = flecs_itolbl(end);
     ops[end].prev = ctx->cur->lbl_begin;
     ops[end - 1].prev = ctx->cur->lbl_begin;
@@ -344,7 +345,7 @@ void flecs_query_end_block_or(
         ecs_write_flags_t cur = 1 & (ctx->cond_written >> i);
 
         /* Skip variable if it's the source for the OR chain */
-        if (src_is_var && (i == first->src.var)) {
+        if (src_is_var && (i == first_src_var)) {
             continue;
         }
 

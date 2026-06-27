@@ -7311,3 +7311,26 @@ void Parser_neq_w_or(void) {
 
     ecs_fini(world);
 }
+
+void Parser_invalid_id_literal(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_log_set_level(-4);
+    test_assert(NULL == ecs_query_init(world, &(ecs_query_desc_t){
+        .expr = "#\\-4"
+    }));
+
+    ecs_fini(world);
+}
+
+void Parser_escaped_gt_in_entity_name(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_log_set_level(-4);
+    test_assert(NULL == ecs_query_init(world, &(ecs_query_desc_t){
+        .expr = "a\\>"
+    }));
+
+    ecs_fini(world);
+}
+
