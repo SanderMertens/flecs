@@ -558,6 +558,7 @@ void DeserializeFromJson_deser_entity_2_components_missing_object_close(void);
 void DeserializeFromJson_deser_entity_1_component_composite_member(void);
 void DeserializeFromJson_deser_entity_1_component_nested_member(void);
 void DeserializeFromJson_deser_entity_1_pair(void);
+void DeserializeFromJson_deser_entity_pair_w_long_name(void);
 void DeserializeFromJson_deser_entity_2_pairs(void);
 void DeserializeFromJson_deser_entity_1_pair_2_targets(void);
 void DeserializeFromJson_deser_entity_empty(void);
@@ -3349,6 +3350,10 @@ bake_test_case DeserializeFromJson_testcases[] = {
         DeserializeFromJson_deser_entity_1_pair
     },
     {
+        "deser_entity_pair_w_long_name",
+        DeserializeFromJson_deser_entity_pair_w_long_name
+    },
+    {
         "deser_entity_2_pairs",
         DeserializeFromJson_deser_entity_2_pairs
     },
@@ -5965,7 +5970,7 @@ static bake_test_suite suites[] = {
         "DeserializeFromJson",
         NULL,
         NULL,
-        164,
+        165,
         DeserializeFromJson_testcases
     },
     {

@@ -1824,6 +1824,30 @@ void DeserializeFromJson_deser_entity_1_pair(void) {
     ecs_fini(world);
 }
 
+void DeserializeFromJson_deser_entity_pair_w_long_name(void) {
+    ecs_world_t *world = ecs_init();
+
+    char rel[128], tgt[128];
+    ecs_os_memset(rel, 'a', 100); rel[100] = '\0';
+    ecs_os_memset(tgt, 'b', 100); tgt[100] = '\0';
+
+    ecs_entity_t r = ecs_entity(world, {.name = rel});
+    ecs_entity_t t = ecs_entity(world, {.name = tgt});
+    test_assert(r != 0);
+    test_assert(t != 0);
+
+    char json[512];
+    ecs_os_snprintf(json, sizeof(json),
+        "{\"components\": {\"(%s,%s)\": null}}", rel, tgt);
+
+    ecs_entity_t e = ecs_new(world);
+    const char *ptr = ecs_entity_from_json(world, e, json, NULL);
+    test_assert(ptr != NULL);
+    test_assert(ecs_has_pair(world, e, r, t));
+
+    ecs_fini(world);
+}
+
 void DeserializeFromJson_deser_entity_2_pairs(void) {
     ecs_world_t *world = ecs_init();
 

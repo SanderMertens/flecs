@@ -585,6 +585,7 @@
                 "deser_entity_1_component_composite_member",
                 "deser_entity_1_component_nested_member",
                 "deser_entity_1_pair",
+                "deser_entity_pair_w_long_name",
                 "deser_entity_2_pairs",
                 "deser_entity_1_pair_2_targets",
                 "deser_entity_empty",
