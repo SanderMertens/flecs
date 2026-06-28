@@ -727,6 +727,7 @@ void Sparse_defer_remove_add_override(void);
 void Sparse_fini_w_dont_fragment_pair_prefab_exclusive_delete_with(void);
 void Sparse_remove_childof_pair_w_dont_fragment_component(void);
 void Sparse_remove_zeroes_storage(void);
+void Sparse_instantiate_prefab_w_tag_on_add_observer(void);
 
 // Testsuite 'NonFragmentingChildOf'
 void NonFragmentingChildOf_set_parent_no_ordered_children(void);
@@ -6181,6 +6182,10 @@ bake_test_case Sparse_testcases[] = {
     {
         "remove_zeroes_storage",
         Sparse_remove_zeroes_storage
+    },
+    {
+        "instantiate_prefab_w_tag_on_add_observer",
+        Sparse_instantiate_prefab_w_tag_on_add_observer
     }
 };
 
@@ -16611,7 +16616,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         Sparse_setup,
         NULL,
-        231,
+        232,
         Sparse_testcases,
         1,
         Sparse_params

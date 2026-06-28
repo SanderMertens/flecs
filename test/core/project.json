@@ -756,7 +756,8 @@
                 "defer_remove_add_override",
                 "fini_w_dont_fragment_pair_prefab_exclusive_delete_with",
                 "remove_childof_pair_w_dont_fragment_component",
-                "remove_zeroes_storage"
+                "remove_zeroes_storage",
+                "instantiate_prefab_w_tag_on_add_observer"
             ]
         }, {
             "id": "NonFragmentingChildOf",

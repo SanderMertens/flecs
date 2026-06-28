@@ -424,7 +424,7 @@ void flecs_instantiate_dont_fragment(
                 ecs_record_t *r = flecs_entities_get(world, instance);
 
                 void *ptr = NULL;
-                flecs_sparse_on_add_cr(world, 
+                bool is_new = flecs_sparse_on_add_cr(world,
                     r->table, ECS_RECORD_TO_ROW(r->row), cur, true, &ptr);
 
                 if (ti) {
@@ -432,9 +432,22 @@ void flecs_instantiate_dont_fragment(
                     flecs_type_info_copy(ptr, base_ptr, 1, ti);
                 }
 
+                if (is_new) {
+                    ecs_type_t added = { .array = &cur->id, .count = 1 };
+                    flecs_emit(world, world, &(ecs_event_desc_t){
+                        .event = EcsOnAdd,
+                        .ids = &added,
+                        .table = r->table,
+                        .offset = ECS_RECORD_TO_ROW(r->row),
+                        .count = 1,
+                        .observable = world,
+                        .flags = EcsEventNoOnSet
+                    });
+                }
+
                 if (ti) {
                     flecs_notify_on_set(
-                        world, r->table, ECS_RECORD_TO_ROW(r->row), 
+                        world, r->table, ECS_RECORD_TO_ROW(r->row),
                         cur->id, true);
                 }
             }
