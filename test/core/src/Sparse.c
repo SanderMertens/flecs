@@ -7694,3 +7694,38 @@ void Sparse_remove_zeroes_storage(void) {
 
     ecs_fini(world);
 }
+
+static void TagOnAdd(ecs_iter_t *it) {
+    probe_iter(it);
+}
+
+void Sparse_instantiate_prefab_w_tag_on_add_observer(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t tag = ecs_new(world);
+    if (!fragment) ecs_add_id(world, tag, EcsDontFragment);
+
+    Probe ctx = {0};
+    ecs_observer(world, {
+        .query.terms[0].id = tag,
+        .events = { EcsOnAdd },
+        .callback = TagOnAdd,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t prefab = ecs_new_w_id(world, EcsPrefab);
+    ecs_add_id(world, prefab, tag);
+
+    test_int(ctx.invoked, 0);
+
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, prefab);
+    test_assert(ecs_has_id(world, inst, tag));
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_uint(ctx.e[0], inst);
+    test_int(ctx.event, EcsOnAdd);
+    test_uint(ctx.event_id, tag);
+
+    ecs_fini(world);
+}
