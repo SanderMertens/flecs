@@ -4593,7 +4593,7 @@ void Entity_child(void) {
 
     auto base = world.entity();
 
-    auto e = base.child();
+    auto e = world.entity(base, nullptr);
 
     test_assert(e.has(flecs::ChildOf, base));
 }
@@ -4605,7 +4605,7 @@ void Entity_child_custom_rel(void) {
 
     auto base = world.entity();
 
-    auto e = base.child(r);
+    auto e = world.entity().add(r, base);
 
     test_assert(e.has(r, base));
 }
@@ -4617,7 +4617,7 @@ void Entity_child_custom_type(void) {
 
     auto base = world.entity();
 
-    auto e = base.child<R>();
+    auto e = world.entity().add<R>(base);
 
     test_assert(e.has<R>(base));
 }
