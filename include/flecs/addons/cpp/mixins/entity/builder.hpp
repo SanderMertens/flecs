@@ -1171,11 +1171,6 @@ struct entity_builder : entity_view {
         return to_base();
     }
 
-    /** Return a world scoped to the entity. */
-    scoped_world scope() const {
-        return scoped_world(world_, id_);
-    }
-
     /** Set the entity name. */
     const Self& set_name(const char *name) const  {
         ecs_set_name(this->world_, this->id_, name);

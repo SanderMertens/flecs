@@ -229,8 +229,6 @@ inline uint32_t get_generation(flecs::entity_t e) {
     return ECS_GENERATION(e);
 }
 
-struct scoped_world;
-
 /**
  * @defgroup cpp_world World
  * @ingroup cpp_core
@@ -1239,16 +1237,6 @@ struct world {
         scope(parent, func);
     }
 
-    /** Use the provided scope for operations run on the returned world.
-     * Operations need to be run in a single statement.
-     */
-    flecs::scoped_world scope(id_t parent) const;
-
-    template <typename T>
-    flecs::scoped_world scope() const;
-
-    flecs::scoped_world scope(const char* name) const;
-
     /** Delete all entities with specified id. */
     void delete_with(id_t the_id) const {
         ecs_delete_with(world_, the_id);
@@ -1538,37 +1526,6 @@ public:
     void init_builtin_components();
 
     world_t *world_; /**< Pointer to the underlying C world. */
-};
-
-/** Scoped world.
- * Utility class used by the world::scope() method to create entities in a scope.
- */
-struct scoped_world : world {
-    /** Create a scoped world.
-     *
-     * @param w The world.
-     * @param s The scope entity.
-     */
-    scoped_world(
-        flecs::world_t *w,
-        flecs::entity_t s) : world(w)
-    {
-        prev_scope_ = ecs_set_scope(w, s);
-    }
-
-    /** Destructor. Restores the previous scope. */
-    ~scoped_world() {
-        ecs_set_scope(world_, prev_scope_);
-    }
-
-    /** Copy constructor. */
-    scoped_world(const scoped_world& obj) : world(nullptr) {
-        prev_scope_ = obj.prev_scope_;
-        world_ = obj.world_;
-        flecs_poly_claim(world_);
-    }
-
-    flecs::entity_t prev_scope_; /**< The previous scope entity. */
 };
 
 /** @} */

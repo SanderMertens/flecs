@@ -2744,7 +2744,7 @@ void Entity_path(void) {
     flecs::world world;
 
     flecs::entity parent = world.entity("parent");
-    flecs::entity child = world.scope(parent).entity("child");
+    flecs::entity child = world.entity(parent,"child");
     test_str(child.path().c_str(), "::parent::child");
 }
 
@@ -2752,8 +2752,8 @@ void Entity_path_from(void) {
     flecs::world world;
 
     flecs::entity parent = world.entity("parent");
-    flecs::entity child = world.scope(parent).entity("child");
-    flecs::entity grandchild = world.scope(child).entity("grandchild");
+    flecs::entity child = world.entity(parent,"child");
+    flecs::entity grandchild = world.entity(child,"grandchild");
     test_str(grandchild.path().c_str(), "::parent::child::grandchild");
     test_str(grandchild.path_from(parent).c_str(), "child::grandchild");
 }
@@ -2762,8 +2762,8 @@ void Entity_path_from_type(void) {
     flecs::world world;
 
     flecs::entity parent = world.entity<Parent>();
-    flecs::entity child = world.scope(parent).entity("child");
-    flecs::entity grandchild = world.scope(child).entity("grandchild");
+    flecs::entity child = world.entity(parent,"child");
+    flecs::entity grandchild = world.entity(child,"grandchild");
     test_str(grandchild.path().c_str(), "::Parent::child::grandchild");
     test_str(grandchild.path_from<Parent>().c_str(), "child::grandchild");
 }
@@ -2772,7 +2772,7 @@ void Entity_path_custom_sep(void) {
     flecs::world world;
 
     flecs::entity parent = world.entity("parent");
-    flecs::entity child = world.scope(parent).entity("child");
+    flecs::entity child = world.entity(parent,"child");
     test_str(child.path("_", "").c_str(), "parent_child");
 }
 
@@ -2780,8 +2780,8 @@ void Entity_path_from_custom_sep(void) {
     flecs::world world;
 
     flecs::entity parent = world.entity("parent");
-    flecs::entity child = world.scope(parent).entity("child");
-    flecs::entity grandchild = world.scope(child).entity("grandchild");
+    flecs::entity child = world.entity(parent,"child");
+    flecs::entity grandchild = world.entity(child,"grandchild");
     test_str(grandchild.path().c_str(), "::parent::child::grandchild");
     test_str(grandchild.path_from(parent, "_").c_str(), "child_grandchild");
 }
@@ -2790,8 +2790,8 @@ void Entity_path_from_type_custom_sep(void) {
     flecs::world world;
 
     flecs::entity parent = world.entity<Parent>();
-    flecs::entity child = world.scope(parent).entity("child");
-    flecs::entity grandchild = world.scope(child).entity("grandchild");
+    flecs::entity child = world.entity(parent,"child");
+    flecs::entity grandchild = world.entity(child,"grandchild");
     test_str(grandchild.path().c_str(), "::Parent::child::grandchild");
     test_str(grandchild.path_from<Parent>("_").c_str(), "child_grandchild");
 }
@@ -4811,8 +4811,8 @@ void Entity_create_named_twice_deferred(void) {
     auto f1 = ecs.entity("p::f");
     auto f2 = ecs.entity("p::f");
 
-    auto g1 = ecs.scope(ecs.entity("q")).entity("g");
-    auto g2 = ecs.scope(ecs.entity("q")).entity("g");
+    auto g1 = ecs.entity(ecs.entity("q"), "g");
+    auto g2 = ecs.entity(ecs.entity("q"), "g");
 
     ecs.defer_end();
 
@@ -5530,7 +5530,7 @@ void Entity_scoped_world(void) {
     flecs::world world;
 
     flecs::entity parent = world.entity();
-    flecs::entity child = parent.scope().entity();
+    flecs::entity child = world.entity(parent, nullptr);
     test_assert(child.parent() == parent);
 }
 
@@ -5538,8 +5538,8 @@ void Entity_entity_lookup_not_recursive(void) {
     flecs::world world;
 
     flecs::entity parent = world.entity("parent");
-    flecs::entity child = world.scope(parent).entity("child");
-    flecs::entity foo = world.scope(parent).entity("foo");
+    flecs::entity child = world.entity(parent,"child");
+    flecs::entity foo = world.entity(parent,"foo");
 
     test_assert(child.lookup("foo") == 0);
     test_assert(child.lookup("foo", true) == foo);
@@ -5549,19 +5549,19 @@ void Entity_world_lookup_not_recursive(void) {
     flecs::world world;
 
     flecs::entity parent = world.entity("parent");
-    flecs::entity child = world.scope(parent).entity("child");
-    flecs::entity foo = world.scope(parent).entity("foo");
+    flecs::entity child = world.entity(parent,"child");
+    flecs::entity foo = world.entity(parent,"foo");
 
-    test_assert(world.scope(child).lookup("foo") == foo);
-    test_assert(world.scope(child).lookup("foo", "::", "::", false) == 0);
+    test_assert(child.lookup("foo", true) == foo);
+    test_assert(child.lookup("foo") == 0);
 }
 
 void Entity_world_lookup_custom_sep(void) {
     flecs::world world;
 
     flecs::entity parent = world.entity("parent");
-    flecs::entity child = world.scope(parent).entity("child");
-    flecs::entity foo = world.scope(parent).entity("foo");
+    flecs::entity child = world.entity(parent,"child");
+    flecs::entity foo = world.entity(parent,"foo");
 
     test_assert(world.lookup("parent.child", ".") == child);
     test_assert(world.lookup("parent.foo", ".") == foo);
@@ -5571,8 +5571,8 @@ void Entity_world_lookup_custom_root_sep(void) {
     flecs::world world;
 
     flecs::entity parent = world.entity("parent");
-    flecs::entity child = world.scope(parent).entity("child");
-    flecs::entity foo = world.scope(parent).entity("foo");
+    flecs::entity child = world.entity(parent,"child");
+    flecs::entity foo = world.entity(parent,"foo");
 
     test_assert(world.lookup(".parent.child", ".", ".") == child);
     test_assert(world.lookup(".parent.foo", ".", ".") == foo);
