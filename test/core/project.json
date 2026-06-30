@@ -2412,7 +2412,9 @@
                 "cache_test_16",
                 "cache_test_17",
                 "multi_term_on_set_w_base_and_3_instances_in_different_tables",
-                "propagate_isa_two_bases_dirty_reachable_cache"
+                "propagate_isa_two_bases_dirty_reachable_cache",
+                "propagate_on_set_2_lvls",
+                "propagate_on_set_2_lvls_2_terms"
             ]
         }, {
             "id": "ObserverOnSet",

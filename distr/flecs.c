@@ -14996,7 +14996,7 @@ void flecs_emit_propagate_id_for_range(
         }
     }
 
-    if (!table->_->traversable_count) {
+    if (!table->_->traversable_count || owned) {
         return;
     }
 
