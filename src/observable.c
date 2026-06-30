@@ -356,7 +356,7 @@ void flecs_emit_propagate_id(
         return;
     }
 
-    if (!flecs_table_cache_all_iter(&cur->cache, &idt)) {
+    if (!flecs_table_cache_iter(&cur->cache, &idt, EcsTableEmpty|EcsTableNotEmpty)) {
         return;
     }
 
@@ -458,7 +458,7 @@ void flecs_emit_propagate_invalidate_tables(
         }
 
         ecs_table_cache_iter_t idt;
-        if (!flecs_table_cache_all_iter(&cur->cache, &idt)) {
+        if (!flecs_table_cache_iter(&cur->cache, &idt, EcsTableEmpty|EcsTableNotEmpty)) {
             continue;
         }
 

@@ -348,7 +348,7 @@ void flecs_component_mark_for_delete(
 
     /* Mark all tables with the id for delete */
     ecs_table_cache_iter_t it;
-    if (flecs_table_cache_iter(&cr->cache, &it)) {
+    if (flecs_table_cache_iter(&cr->cache, &it, EcsTableNotEmpty)) {
         const ecs_table_cache_elem_t *elem;
         while ((elem = flecs_table_cache_next(&it))) {
             const ecs_table_record_t *tr = elem->tr;
@@ -380,7 +380,7 @@ void flecs_component_mark_for_delete(
     }
 
     /* Same for empty tables */
-    if (flecs_table_cache_empty_iter(&cr->cache, &it)) {
+    if (flecs_table_cache_iter(&cr->cache, &it, EcsTableEmpty)) {
         const ecs_table_cache_elem_t *elem;
         while ((elem = flecs_table_cache_next(&it))) {
             elem->table->flags |= EcsTableMarkedForDelete;
@@ -569,7 +569,7 @@ bool flecs_on_delete_clear_entities(
 
             /* Empty all tables for id */
             ecs_table_cache_iter_t it;
-            if (flecs_table_cache_iter(&cr->cache, &it)) {
+            if (flecs_table_cache_iter(&cr->cache, &it, EcsTableNotEmpty)) {
                 const ecs_table_cache_elem_t *elem;
                 while ((elem = flecs_table_cache_next(&it))) {
                     ecs_table_t *table = elem->table;

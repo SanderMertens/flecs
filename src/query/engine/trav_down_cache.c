@@ -98,7 +98,7 @@ void flecs_trav_entity_down_isa(
     }
 
     ecs_table_cache_iter_t it;
-    if (flecs_table_cache_iter(&cr_isa->cache, &it)) {
+    if (flecs_table_cache_iter(&cr_isa->cache, &it, EcsTableNotEmpty)) {
         const ecs_table_cache_elem_t *elem;
         while ((elem = flecs_table_cache_next(&it))) {
             ecs_table_t *table = elem->table;
@@ -200,9 +200,9 @@ void flecs_trav_entity_down_iter_tables(
     ecs_table_cache_iter_t it;
     bool result;
     if (empty) {
-        result = flecs_table_cache_all_iter(&cr_trav->cache, &it);
+        result = flecs_table_cache_iter(&cr_trav->cache, &it, EcsTableEmpty|EcsTableNotEmpty);
     } else {
-        result = flecs_table_cache_iter(&cr_trav->cache, &it);
+        result = flecs_table_cache_iter(&cr_trav->cache, &it, EcsTableNotEmpty);
     }
 
     if (result) {
@@ -224,7 +224,7 @@ void flecs_trav_entity_down_iter_tables(
 
             /* If record is not the first instance of (trav, *), don't add it
              * to the cache. */
-            int32_t index = tr->index;
+            int32_t index = celem->index;
             if (index) {
                 ecs_id_t id = table->type.array[index - 1];
                 if (ECS_IS_PAIR(id) && ECS_PAIR_FIRST(id) == trav) {

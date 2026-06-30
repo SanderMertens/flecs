@@ -38,11 +38,11 @@ bool flecs_query_select_w_id(
         }
 
         if (ctx->query->pub.flags & EcsQueryMatchEmptyTables) {
-            if (!flecs_table_cache_all_iter(&cr->cache, &op_ctx->it)) {
+            if (!flecs_table_cache_iter(&cr->cache, &op_ctx->it, EcsTableEmpty|EcsTableNotEmpty)) {
                 return false;
             }
         } else {
-            if (!flecs_table_cache_iter(&cr->cache, &op_ctx->it)) {
+            if (!flecs_table_cache_iter(&cr->cache, &op_ctx->it, EcsTableNotEmpty)) {
                 return false;
             }
         }
@@ -57,7 +57,7 @@ repeat:
         }
 
         tr = elem->tr;
-        op_ctx->column = flecs_ito(int16_t, tr->index);
+        op_ctx->column = elem->index;
         op_ctx->remaining = flecs_ito(int16_t, tr->count - 1);
         table = elem->table;
         flecs_query_var_set_range(op, op->src.var, table, 0, 0, ctx);
@@ -119,7 +119,7 @@ bool flecs_query_with(
         }
 
         tr = elem->tr;
-        op_ctx->column = flecs_ito(int16_t, tr->index);
+        op_ctx->column = elem->index;
         op_ctx->remaining = flecs_ito(int16_t, tr->count);
         op_ctx->it.cur = elem;
     } else {
@@ -365,11 +365,11 @@ bool flecs_query_select_id(
         }
 
         if (ctx->query->pub.flags & EcsQueryMatchEmptyTables) {
-            if (!flecs_table_cache_all_iter(&cr->cache, &op_ctx->it)) {
+            if (!flecs_table_cache_iter(&cr->cache, &op_ctx->it, EcsTableEmpty|EcsTableNotEmpty)) {
                 return false;
             }
         } else {
-            if (!flecs_table_cache_iter(&cr->cache, &op_ctx->it)) {
+            if (!flecs_table_cache_iter(&cr->cache, &op_ctx->it, EcsTableNotEmpty)) {
                 return false;
             }
         }
@@ -771,7 +771,7 @@ bool flecs_query_ids_in_use(
     ecs_component_record_t *cur)
 {
     ecs_table_cache_iter_t it;
-    flecs_table_cache_iter(&cur->cache, &it);
+    flecs_table_cache_iter(&cur->cache, &it, EcsTableNotEmpty);
     if (flecs_table_cache_next(&it)) {
         return true;
     }

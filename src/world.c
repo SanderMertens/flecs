@@ -595,7 +595,7 @@ void flecs_fini_root_tables(
         ecs_size_t queue_size = 0;
         finished = true;
 
-        bool has_roots = flecs_table_cache_iter(&cr->cache, &it);
+        bool has_roots = flecs_table_cache_iter(&cr->cache, &it, EcsTableNotEmpty);
         ecs_assert(has_roots == true, ECS_INTERNAL_ERROR, NULL);
         (void)has_roots;
 
@@ -1197,7 +1197,7 @@ void flecs_notify_tables(
         ecs_table_cache_iter_t it;
         const ecs_table_cache_elem_t *elem;
 
-        flecs_table_cache_all_iter(&cr->cache, &it);
+        flecs_table_cache_iter(&cr->cache, &it, EcsTableEmpty|EcsTableNotEmpty);
         while ((elem = flecs_table_cache_next(&it))) {
             flecs_table_notify(world, elem->table, id, event);
         }

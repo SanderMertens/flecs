@@ -1336,7 +1336,7 @@ void flecs_rest_append_component(
     ecs_strbuf_list_push(reply, "[", ",");
     ecs_table_cache_iter_t it;
     int32_t entity_count = 0, entity_size = 0, storage_bytes = 0;
-    flecs_table_cache_iter(&cr->cache, &it);
+    flecs_table_cache_iter(&cr->cache, &it, EcsTableNotEmpty);
     const ecs_table_cache_elem_t *elem;
     while ((elem = flecs_table_cache_next(&it))) {
         ecs_strbuf_list_next(reply);
