@@ -161,6 +161,7 @@ void flecs_table_init_columns(
         t2s[i] = cur;
         s2t[cur] = i;
         tr->column = flecs_ito(int16_t, cur);
+        flecs_table_cache_set_column(&cr->cache, table, tr->column);
 
         columns[cur].ti = ECS_CONST_CAST(ecs_type_info_t*, ti);
         
@@ -181,6 +182,7 @@ void flecs_table_init_columns(
         if (ecs_id_is_wildcard(id)) {
             ecs_table_record_t *first_tr = &records[tr->index];
             tr->column = first_tr->column;
+            flecs_table_cache_set_column(&cr->cache, table, tr->column);
         }
     }
 

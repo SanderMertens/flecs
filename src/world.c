@@ -599,9 +599,9 @@ void flecs_fini_root_tables(
         ecs_assert(has_roots == true, ECS_INTERNAL_ERROR, NULL);
         (void)has_roots;
 
-        const ecs_table_record_t *tr;
-        while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
-            ecs_table_t *table = tr->hdr.table;
+        const ecs_table_cache_elem_t *elem;
+        while ((elem = flecs_table_cache_next(&it))) {
+            ecs_table_t *table = elem->table;
 
             if (table->flags & (EcsTableHasBuiltins|EcsTableHasModule)) {
                 continue; /* Skip modules */
@@ -1195,11 +1195,11 @@ void flecs_notify_tables(
         }
 
         ecs_table_cache_iter_t it;
-        const ecs_table_record_t *tr;
+        const ecs_table_cache_elem_t *elem;
 
         flecs_table_cache_all_iter(&cr->cache, &it);
-        while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
-            flecs_table_notify(world, tr->hdr.table, id, event);
+        while ((elem = flecs_table_cache_next(&it))) {
+            flecs_table_notify(world, elem->table, id, event);
         }
     }
 }
@@ -1950,7 +1950,7 @@ bool flecs_component_record_in_use(
     } else if (cr->flags & EcsIdOrderedChildren) {
         return ecs_vec_count(&cr->pair->ordered_children) != 0;
     } else {
-        return cr->cache.tables.count != 0;
+        return flecs_table_cache_count(&cr->cache) != 0;
     }
 }
 

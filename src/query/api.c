@@ -274,6 +274,8 @@ void flecs_query_copy_arrays(
     q->terms = flecs_dup_n(a, ecs_term_t, q->term_count, q->terms);
     q->sizes = flecs_dup_n(a, ecs_size_t, q->term_count, q->sizes);
     q->ids = flecs_dup_n(a, ecs_id_t, q->term_count, q->ids);
+    flecs_query_impl(q)->cr_cache = q->field_count
+        ? flecs_calloc_n(a, ecs_component_record_t*, q->field_count) : NULL;
 }
 
 static
@@ -284,6 +286,7 @@ void flecs_query_free_arrays(
     flecs_free_n(a, ecs_term_t, q->term_count, q->terms);
     flecs_free_n(a, ecs_size_t, q->term_count, q->sizes);
     flecs_free_n(a, ecs_id_t, q->term_count, q->ids);
+    flecs_free_n(a, ecs_component_record_t*, q->field_count, flecs_query_impl(q)->cr_cache);
 }
 
 static

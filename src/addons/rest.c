@@ -1337,12 +1337,12 @@ void flecs_rest_append_component(
     ecs_table_cache_iter_t it;
     int32_t entity_count = 0, entity_size = 0, storage_bytes = 0;
     flecs_table_cache_iter(&cr->cache, &it);
-    const ecs_table_record_t *tr;
-    while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
+    const ecs_table_cache_elem_t *elem;
+    while ((elem = flecs_table_cache_next(&it))) {
         ecs_strbuf_list_next(reply);
-        ecs_strbuf_appendint(reply, (int64_t)tr->hdr.table->id);
-        entity_count += ecs_table_count(tr->hdr.table);
-        entity_size += ecs_table_size(tr->hdr.table);
+        ecs_strbuf_appendint(reply, (int64_t)elem->table->id);
+        entity_count += ecs_table_count(elem->table);
+        entity_size += ecs_table_size(elem->table);
     }
     ecs_strbuf_list_pop(reply, "]");
 

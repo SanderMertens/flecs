@@ -99,9 +99,9 @@ void flecs_trav_entity_down_isa(
 
     ecs_table_cache_iter_t it;
     if (flecs_table_cache_iter(&cr_isa->cache, &it)) {
-        const ecs_table_record_t *tr;
-        while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
-            ecs_table_t *table = tr->hdr.table;
+        const ecs_table_cache_elem_t *elem;
+        while ((elem = flecs_table_cache_next(&it))) {
+            ecs_table_t *table = elem->table;
             if (!table->_->traversable_count) {
                 continue;
             }
@@ -206,10 +206,11 @@ void flecs_trav_entity_down_iter_tables(
     }
 
     if (result) {
-        ecs_table_record_t *tr; 
-        while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
+        const ecs_table_cache_elem_t *celem;
+        while ((celem = flecs_table_cache_next(&it))) {
+            ecs_table_record_t *tr = celem->tr;
             ecs_assert(tr->count == 1, ECS_INTERNAL_ERROR, NULL);
-            ecs_table_t *table = tr->hdr.table;
+            ecs_table_t *table = celem->table;
             bool leaf = false;
 
             if (self || table->_->traversable_count) {

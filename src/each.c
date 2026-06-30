@@ -66,13 +66,14 @@ bool ecs_each_next(
     ecs_iter_t *it)
 {
     ecs_each_iter_t *each_iter = &it->priv_.iter.each;
-    const ecs_table_record_t *next = flecs_table_cache_next(
-        &each_iter->it, ecs_table_record_t);
+    const ecs_table_cache_elem_t *elem = flecs_table_cache_next(
+        &each_iter->it);
     it->flags |= EcsIterIsValid;
-    if (next) {
+    if (elem) {
+        const ecs_table_record_t *next = elem->tr;
         each_iter->trs = next;
-        each_iter->columns = next->column;
-        ecs_table_t *table = next->hdr.table;
+        each_iter->columns = elem->column;
+        ecs_table_t *table = elem->table;
         it->table = table;
         it->count = ecs_table_count(table);
         it->entities = ecs_table_entities(table);

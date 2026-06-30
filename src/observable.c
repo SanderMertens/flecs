@@ -360,9 +360,10 @@ void flecs_emit_propagate_id(
         return;
     }
 
-    const ecs_table_record_t *tr;
+    const ecs_table_cache_elem_t *elem;
     int32_t event_cur = it->event_cur;
-    while ((tr = flecs_table_cache_next(&idt, ecs_table_record_t))) {
+    while ((elem = flecs_table_cache_next(&idt))) {
+        const ecs_table_record_t *tr = elem->tr;
         ecs_table_t *table = tr->hdr.table;
         if (!ecs_table_count(table)) {
             continue;
@@ -461,8 +462,9 @@ void flecs_emit_propagate_invalidate_tables(
             continue;
         }
 
-        const ecs_table_record_t *tr;
-        while ((tr = flecs_table_cache_next(&idt, ecs_table_record_t))) {
+        const ecs_table_cache_elem_t *elem;
+        while ((elem = flecs_table_cache_next(&idt))) {
+            const ecs_table_record_t *tr = elem->tr;
             ecs_table_t *table = tr->hdr.table;
             if (!table->_->traversable_count) {
                 continue;
