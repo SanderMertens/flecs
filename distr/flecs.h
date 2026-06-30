@@ -30760,30 +30760,6 @@ struct entity : entity_builder<entity>
         ecs_delete(world_, id_);
     }
 
-    /** Create a child entity with a specified relationship.
-     *
-     * @param r The relationship to use (defaults to ChildOf).
-     * @param args Additional arguments forwarded to entity creation.
-     * @return The created child entity.
-     */
-    template <typename ... Args>
-    flecs::entity child(flecs::entity_t r = flecs::ChildOf, Args&&... args) {
-        flecs::world world(world_);
-        return world.entity(FLECS_FWD(args)...).add(r, id_);
-    }
-
-    /** Create a child entity with a typed relationship.
-     *
-     * @tparam R The relationship type.
-     * @param args Additional arguments forwarded to entity creation.
-     * @return The created child entity.
-     */
-    template <typename R, typename ... Args>
-    flecs::entity child(Args&&... args) {
-        flecs::world world(world_);
-        return world.entity(FLECS_FWD(args)...).add(_::type<R>::id(world_), id_);
-    }
-
     /** Set child order.
      * Changes the order of children as returned by entity::children(). Only
      * applicable to entities with the flecs::OrderedChildren trait.
