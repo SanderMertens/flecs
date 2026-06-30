@@ -3301,6 +3301,13 @@ void Table_clear_table_on_remove_observer(void);
 void Table_65_records_w_tgt(void);
 void Table_find_w_dont_fragment(void);
 void Table_clear_table_toggle_reset(void);
+void Table_empty_flag_new(void);
+void Table_empty_flag_new_w_id(void);
+void Table_empty_flag_delete(void);
+void Table_empty_flag_clear(void);
+void Table_empty_flag_bulk_init(void);
+void Table_empty_flag_table_clear(void);
+void Table_empty_flag_on_delete_delete_children(void);
 
 // Testsuite 'Poly'
 void Poly_on_set_poly_observer(void);
@@ -16272,6 +16279,34 @@ bake_test_case Table_testcases[] = {
     {
         "clear_table_toggle_reset",
         Table_clear_table_toggle_reset
+    },
+    {
+        "empty_flag_new",
+        Table_empty_flag_new
+    },
+    {
+        "empty_flag_new_w_id",
+        Table_empty_flag_new_w_id
+    },
+    {
+        "empty_flag_delete",
+        Table_empty_flag_delete
+    },
+    {
+        "empty_flag_clear",
+        Table_empty_flag_clear
+    },
+    {
+        "empty_flag_bulk_init",
+        Table_empty_flag_bulk_init
+    },
+    {
+        "empty_flag_table_clear",
+        Table_empty_flag_table_clear
+    },
+    {
+        "empty_flag_on_delete_delete_children",
+        Table_empty_flag_on_delete_delete_children
     }
 };
 
@@ -16852,7 +16887,7 @@ static bake_test_suite suites[] = {
         "Table",
         NULL,
         NULL,
-        34,
+        41,
         Table_testcases
     },
     {

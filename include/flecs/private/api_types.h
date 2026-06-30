@@ -107,8 +107,7 @@ typedef struct ecs_table_cache_iter_t {
     const ecs_table_cache_elem_t *elems;           /* Pointer into elements array */
     int32_t remaining;                             /* Elements left to scan */
     const ecs_table_cache_elem_t *cur;             /* Most recently returned element */
-    bool iter_fill;
-    bool iter_empty;
+    ecs_flags32_t flags;                           /* Table flags to match (EcsTableEmpty, EcsTableNotEmpty) */
 } ecs_table_cache_iter_t;
 
 /** Each iterator. */

@@ -174,8 +174,7 @@ bool flecs_table_cache_iter(
         ecs_table_cache_elem_t);
     out->remaining = ecs_vec_count(&cache->records);
     out->cur = NULL;
-    out->iter_fill = true;
-    out->iter_empty = false;
+    out->flags = EcsTableNotEmpty;
     return out->remaining != 0;
 }
 
@@ -190,8 +189,7 @@ bool flecs_table_cache_empty_iter(
         ecs_table_cache_elem_t);
     out->remaining = ecs_vec_count(&cache->records);
     out->cur = NULL;
-    out->iter_fill = false;
-    out->iter_empty = true;
+    out->flags = EcsTableEmpty;
     return out->remaining != 0;
 }
 
@@ -206,34 +204,24 @@ bool flecs_table_cache_all_iter(
         ecs_table_cache_elem_t);
     out->remaining = ecs_vec_count(&cache->records);
     out->cur = NULL;
-    out->iter_fill = true;
-    out->iter_empty = true;
+    out->flags = EcsTableEmpty | EcsTableNotEmpty;
     return out->remaining != 0;
 }
 
 const ecs_table_cache_elem_t* flecs_table_cache_next_(
     ecs_table_cache_iter_t *it)
 {
-    bool iter_fill = it->iter_fill;
-    bool iter_empty = it->iter_empty;
+    ecs_flags32_t flags = it->flags;
 
     while (it->remaining > 0) {
         const ecs_table_cache_elem_t *next = it->elems;
         it->elems ++;
         it->remaining --;
 
-        if (ecs_table_count(next->table)) {
-            if (!iter_fill) {
-                continue;
-            }
-        } else {
-            if (!iter_empty) {
-                continue;
-            }
+        if (next->table->flags & flags) {
+            it->cur = next;
+            return next;
         }
-
-        it->cur = next;
-        return next;
     }
 
     it->cur = NULL;

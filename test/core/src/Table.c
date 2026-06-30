@@ -895,3 +895,171 @@ void Table_clear_table_toggle_reset(void) {
 
     ecs_fini(world);
 }
+
+void Table_empty_flag_new(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_table_t *table = ecs_get_table(world, e1);
+    test_assert(table != NULL);
+    test_assert(!ecs_table_has_flags(table, EcsTableEmpty));
+    test_assert(ecs_table_has_flags(table, EcsTableNotEmpty));
+
+    ecs_delete(world, e1);
+    test_assert(ecs_table_has_flags(table, EcsTableEmpty));
+    test_assert(!ecs_table_has_flags(table, EcsTableNotEmpty));
+
+    ecs_entity_t e2 = ecs_new(world);
+    test_assert(ecs_get_table(world, e2) == table);
+    test_assert(!ecs_table_has_flags(table, EcsTableEmpty));
+    test_assert(ecs_table_has_flags(table, EcsTableNotEmpty));
+
+    ecs_fini(world);
+}
+
+void Table_empty_flag_new_w_id(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t e1 = ecs_new_w_id(world, Foo);
+    ecs_table_t *table = ecs_get_table(world, e1);
+    test_assert(table != NULL);
+    test_assert(!ecs_table_has_flags(table, EcsTableEmpty));
+    test_assert(ecs_table_has_flags(table, EcsTableNotEmpty));
+
+    ecs_delete(world, e1);
+    test_assert(ecs_table_has_flags(table, EcsTableEmpty));
+    test_assert(!ecs_table_has_flags(table, EcsTableNotEmpty));
+
+    ecs_entity_t e2 = ecs_new_w_id(world, Foo);
+    test_assert(ecs_get_table(world, e2) == table);
+    test_assert(!ecs_table_has_flags(table, EcsTableEmpty));
+    test_assert(ecs_table_has_flags(table, EcsTableNotEmpty));
+
+    ecs_fini(world);
+}
+
+void Table_empty_flag_delete(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t e1 = ecs_new_w_id(world, Foo);
+    ecs_entity_t e2 = ecs_new_w_id(world, Foo);
+    ecs_table_t *table = ecs_get_table(world, e1);
+    test_assert(table != NULL);
+    test_assert(!ecs_table_has_flags(table, EcsTableEmpty));
+    test_assert(ecs_table_has_flags(table, EcsTableNotEmpty));
+
+    ecs_delete(world, e1);
+    test_assert(!ecs_table_has_flags(table, EcsTableEmpty));
+    test_assert(ecs_table_has_flags(table, EcsTableNotEmpty));
+
+    ecs_delete(world, e2);
+    test_assert(ecs_table_has_flags(table, EcsTableEmpty));
+    test_assert(!ecs_table_has_flags(table, EcsTableNotEmpty));
+
+    ecs_fini(world);
+}
+
+void Table_empty_flag_clear(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t e1 = ecs_new_w_id(world, Foo);
+    ecs_table_t *table = ecs_get_table(world, e1);
+    test_assert(table != NULL);
+    test_assert(!ecs_table_has_flags(table, EcsTableEmpty));
+    test_assert(ecs_table_has_flags(table, EcsTableNotEmpty));
+
+    ecs_clear(world, e1);
+    test_assert(ecs_is_alive(world, e1));
+    test_assert(ecs_get_table(world, e1) != table);
+    test_assert(ecs_table_has_flags(table, EcsTableEmpty));
+    test_assert(!ecs_table_has_flags(table, EcsTableNotEmpty));
+
+    ecs_fini(world);
+}
+
+void Table_empty_flag_bulk_init(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t e1 = ecs_new_w_id(world, Foo);
+    ecs_table_t *table = ecs_get_table(world, e1);
+    test_assert(table != NULL);
+
+    ecs_delete(world, e1);
+    test_assert(ecs_table_has_flags(table, EcsTableEmpty));
+    test_assert(!ecs_table_has_flags(table, EcsTableNotEmpty));
+
+    const ecs_entity_t *entities = ecs_bulk_init(world, &(ecs_bulk_desc_t){
+        .count = 3,
+        .ids = { Foo }
+    });
+    test_assert(entities != NULL);
+    test_assert(ecs_get_table(world, entities[0]) == table);
+    test_assert(!ecs_table_has_flags(table, EcsTableEmpty));
+    test_assert(ecs_table_has_flags(table, EcsTableNotEmpty));
+
+    ecs_fini(world);
+}
+
+void Table_empty_flag_table_clear(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t e1 = ecs_new_w_id(world, Foo);
+    ecs_new_w_id(world, Foo);
+    ecs_table_t *table = ecs_get_table(world, e1);
+    test_assert(table != NULL);
+    test_assert(!ecs_table_has_flags(table, EcsTableEmpty));
+    test_assert(ecs_table_has_flags(table, EcsTableNotEmpty));
+
+    ecs_table_clear_entities(world, table);
+    test_int(0, ecs_table_count(table));
+    test_assert(ecs_table_has_flags(table, EcsTableEmpty));
+    test_assert(!ecs_table_has_flags(table, EcsTableNotEmpty));
+
+    ecs_entity_t e3 = ecs_new_w_id(world, Foo);
+    test_assert(ecs_get_table(world, e3) == table);
+    test_assert(!ecs_table_has_flags(table, EcsTableEmpty));
+    test_assert(ecs_table_has_flags(table, EcsTableNotEmpty));
+
+    ecs_fini(world);
+}
+
+void Table_empty_flag_on_delete_delete_children(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_table_t *root = ecs_get_table(world, parent);
+    test_assert(root != NULL);
+    test_assert(!ecs_table_has_flags(root, EcsTableEmpty));
+    test_assert(ecs_table_has_flags(root, EcsTableNotEmpty));
+
+    ecs_entity_t child1 = ecs_new_w_pair(world, EcsChildOf, parent);
+    ecs_entity_t child2 = ecs_new_w_pair(world, EcsChildOf, parent);
+    ecs_table_t *table = ecs_get_table(world, child1);
+    test_assert(table != NULL);
+    test_assert(ecs_get_table(world, child2) == table);
+    test_assert(!ecs_table_has_flags(table, EcsTableEmpty));
+    test_assert(ecs_table_has_flags(table, EcsTableNotEmpty));
+
+    ecs_delete(world, child1);
+    test_assert(!ecs_table_has_flags(table, EcsTableEmpty));
+    test_assert(ecs_table_has_flags(table, EcsTableNotEmpty));
+
+    ecs_delete(world, parent);
+    test_assert(!ecs_is_alive(world, child1));
+    test_assert(!ecs_is_alive(world, child2));
+    test_assert(!ecs_is_alive(world, parent));
+    test_assert(ecs_table_has_flags(root, EcsTableEmpty));
+    test_assert(!ecs_table_has_flags(root, EcsTableNotEmpty));
+
+    ecs_fini(world);
+}
