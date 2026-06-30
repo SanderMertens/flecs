@@ -472,23 +472,4 @@ inline flecs::entity enum_data<E>::entity(E value) const {
     return entity(static_cast<underlying_type_t<E>>(value));
 }
 
-/** Use the provided scope for operations run on the returned world.
- * Operations need to be run in a single statement.
- */
-inline flecs::scoped_world world::scope(id_t parent) const {
-    return scoped_world(world_, parent);
-}
-
-/** Use the provided scope (by type) for operations run on the returned world. */
-template <typename T>
-inline flecs::scoped_world world::scope() const {
-    flecs::id_t parent = _::type<T>::id(world_);
-    return scoped_world(world_, parent);
-}
-
-/** Use the provided scope (by name) for operations run on the returned world. */
-inline flecs::scoped_world world::scope(const char* name) const {
-  return scope(entity(name));
-}
-
 } // namespace flecs

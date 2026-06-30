@@ -105,15 +105,15 @@ inline untyped_component& untyped_component::metric(
         const char *component_name = e.name();
         if (!metric_name) {
             if (ecs_os_strcmp(m->name, "value") || !component_name) {
-                metric_entity = w.scope(parent).entity(m->name);
+                metric_entity = w.entity(parent, m->name);
             } else {
                 // If name of member is "value", use name of type.
                 char *snake_name = flecs_to_snake_case(component_name);
-                metric_entity = w.scope(parent).entity(snake_name);
+                metric_entity = w.entity(parent, snake_name);
                 ecs_os_free(snake_name);
             }
         } else {
-            metric_entity = w.scope(parent).entity(metric_name);
+            metric_entity = w.entity(parent, metric_name);
         }
     }
 

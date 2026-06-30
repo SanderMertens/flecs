@@ -23,10 +23,10 @@ int main(int argc, char *argv[]) {
     flecs::entity Sun = world.entity("Sun")
         .set<Mass>({1.988500e31});
 
-    flecs::entity Earth = world.scope(Sun).entity("Earth")
+    flecs::entity Earth = world.entity(Sun, "Earth")
         .set<Mass>({5.9722e24});
 
-    world.scope(Earth).entity("Moon")
+    world.entity(Earth, "Moon")
         .set<Mass>({7.34767309e22});
     
     // Run application with REST interface. When the application is running,
