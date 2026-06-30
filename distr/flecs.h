@@ -597,10 +597,12 @@ extern "C" {
 #define EcsTableOverrideDontFragment   (1u << 23u)
 #define EcsTableHasOrderedChildren     (1u << 24u)
 #define EcsTableHasOverrides           (1u << 25u)
+#define EcsTableEmpty                  (1u << 26u) /* Does the table have no entities. */
 
 #define EcsTableHasTraversable         (1u << 27u)
 #define EcsTableEdgeReparent           (1u << 28u)
 #define EcsTableMarkedForDelete        (1u << 29u)
+#define EcsTableNotEmpty               (1u << 30u) /* Does the table have entities. */
 
 /* Composite table flags */
 #define EcsTableHasLifecycle     (EcsTableHasCtors | EcsTableHasDtors)
@@ -4758,8 +4760,7 @@ typedef struct ecs_table_cache_iter_t {
     const ecs_table_cache_elem_t *elems;           /* Pointer into elements array */
     int32_t remaining;                             /* Elements left to scan */
     const ecs_table_cache_elem_t *cur;             /* Most recently returned element */
-    bool iter_fill;
-    bool iter_empty;
+    ecs_flags32_t flags;                           /* Table flags to match (EcsTableEmpty, EcsTableNotEmpty) */
 } ecs_table_cache_iter_t;
 
 /** Each iterator. */

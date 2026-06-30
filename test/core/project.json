@@ -3395,7 +3395,14 @@
                 "clear_table_on_remove_observer",
                 "65_records_w_tgt",
                 "find_w_dont_fragment",
-                "clear_table_toggle_reset"
+                "clear_table_toggle_reset",
+                "empty_flag_new",
+                "empty_flag_new_w_id",
+                "empty_flag_delete",
+                "empty_flag_clear",
+                "empty_flag_bulk_init",
+                "empty_flag_table_clear",
+                "empty_flag_on_delete_delete_children"
             ]
         }, {
             "id": "Poly",

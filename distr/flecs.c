@@ -43800,6 +43800,8 @@ void flecs_table_fini_data(
     table->data.count = 0;
     table->_->traversable_count = 0;
     table->flags &= ~EcsTableHasTraversable;
+    table->flags |= EcsTableEmpty;
+    table->flags &= ~EcsTableNotEmpty;
 
     flecs_increment_table_version(world, table);
 }
@@ -44183,6 +44185,11 @@ int32_t flecs_table_grow_data(
     int32_t count = ecs_table_count(table);
     int32_t column_count = table->column_count;
 
+    if (!count && to_add) {
+        table->flags &= ~EcsTableEmpty;
+        table->flags |= EcsTableNotEmpty;
+    }
+
     /* Add entity to column with entity ids */
     ecs_vec_t v_entities = ecs_vec_from_entities(table);
     ecs_vec_set_size_t(NULL, &v_entities, ecs_entity_t, size);
@@ -44335,6 +44342,11 @@ void flecs_table_append(
     flecs_table_mark_table_dirty(world, table, 0);
     ecs_assert(count >= 0, ECS_INTERNAL_ERROR, NULL);
 
+    if (!count) {
+        table->flags &= ~EcsTableEmpty;
+        table->flags |= EcsTableNotEmpty;
+    }
+
     /* Fast path: no toggle columns, no lifecycle actions */
     if (!(table->flags & (EcsTableIsComplex|EcsTableHasIsA))) {
         flecs_table_fast_append(table);
@@ -44462,6 +44474,10 @@ void flecs_table_delete(
         }
 
         table->data.count --;
+        if (!count) {
+            table->flags |= EcsTableEmpty;
+            table->flags &= ~EcsTableNotEmpty;
+        }
 
         flecs_table_check_sanity(table);
         return;
@@ -44518,6 +44534,10 @@ void flecs_table_delete(
     }
 
     table->data.count --;
+    if (!count) {
+        table->flags |= EcsTableEmpty;
+        table->flags &= ~EcsTableNotEmpty;
+    }
 
     flecs_table_check_sanity(table);
 }
@@ -45053,6 +45073,11 @@ void flecs_table_merge(
         flecs_table_traversable_add(dst_table, src_table->_->traversable_count);
         flecs_table_traversable_add(src_table, -src_table->_->traversable_count);
         ecs_assert(src_table->_->traversable_count == 0, ECS_INTERNAL_ERROR, NULL);
+
+        dst_table->flags &= ~EcsTableEmpty;
+        dst_table->flags |= EcsTableNotEmpty;
+        src_table->flags |= EcsTableEmpty;
+        src_table->flags &= ~EcsTableNotEmpty;
     }
 
     flecs_table_check_sanity(src_table);
@@ -45754,8 +45779,7 @@ bool flecs_table_cache_iter(
         ecs_table_cache_elem_t);
     out->remaining = ecs_vec_count(&cache->records);
     out->cur = NULL;
-    out->iter_fill = true;
-    out->iter_empty = false;
+    out->flags = EcsTableNotEmpty;
     return out->remaining != 0;
 }
 
@@ -45770,8 +45794,7 @@ bool flecs_table_cache_empty_iter(
         ecs_table_cache_elem_t);
     out->remaining = ecs_vec_count(&cache->records);
     out->cur = NULL;
-    out->iter_fill = false;
-    out->iter_empty = true;
+    out->flags = EcsTableEmpty;
     return out->remaining != 0;
 }
 
@@ -45786,34 +45809,24 @@ bool flecs_table_cache_all_iter(
         ecs_table_cache_elem_t);
     out->remaining = ecs_vec_count(&cache->records);
     out->cur = NULL;
-    out->iter_fill = true;
-    out->iter_empty = true;
+    out->flags = EcsTableEmpty | EcsTableNotEmpty;
     return out->remaining != 0;
 }
 
 const ecs_table_cache_elem_t* flecs_table_cache_next_(
     ecs_table_cache_iter_t *it)
 {
-    bool iter_fill = it->iter_fill;
-    bool iter_empty = it->iter_empty;
+    ecs_flags32_t flags = it->flags;
 
     while (it->remaining > 0) {
         const ecs_table_cache_elem_t *next = it->elems;
         it->elems ++;
         it->remaining --;
 
-        if (ecs_table_count(next->table)) {
-            if (!iter_fill) {
-                continue;
-            }
-        } else {
-            if (!iter_empty) {
-                continue;
-            }
+        if (next->table->flags & flags) {
+            it->cur = next;
+            return next;
         }
-
-        it->cur = next;
-        return next;
     }
 
     it->cur = NULL;
@@ -46432,7 +46445,7 @@ void flecs_init_table(
     ecs_table_t *table,
     ecs_table_t *prev)
 {
-    table->flags = 0;
+    table->flags = EcsTableEmpty;
     table->dirty_state = NULL;
     table->_->lock = 0;
     table->_->generation = 0;
