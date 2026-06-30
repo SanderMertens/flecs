@@ -1329,16 +1329,16 @@ void Meta_struct_member_ptr(void) {
     };
 
     auto t = ecs.component<Test>()
-        .member("x", &Test::x);
+        .member(&Test::x, "x");
     test_assert(t != 0);
 
     auto t2 = ecs.component<Test2>()
-        .member("y", &Test2::y);
+        .member(&Test2::y, "y");
     test_assert(t2 != 0);
 
     auto n = ecs.component<Nested>()
-        .member("a", &Nested::a)
-        .member("b", &Nested::b);
+        .member(&Nested::a, "a")
+        .member(&Nested::b, "b");
     test_assert(n != 0);
 
     { // Validate Test
@@ -1390,9 +1390,9 @@ void Meta_struct_member_ptr_packed_struct(void) {
 #endif
 
     auto s = ecs.component<PackedStruct>()
-        .member("a", &PackedStruct::a)
-        .member("b", &PackedStruct::b)
-        .member("c", &PackedStruct::c);
+        .member(&PackedStruct::a, "a")
+        .member(&PackedStruct::b, "b")
+        .member(&PackedStruct::c, "c");
 
     test_assert(s != 0);
 

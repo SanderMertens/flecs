@@ -3303,7 +3303,7 @@ struct Movement {
 
 // Register 'Movement' component and reflection data
 world.component<Movement>()
-  .member("value", &Movement::value);
+  .member(&Movement::value, "value");
 
 // Create two entities for the direction
 flecs::entity Left = world.entity();
