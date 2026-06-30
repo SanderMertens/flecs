@@ -2346,6 +2346,8 @@ void Observer_cache_test_16(void);
 void Observer_cache_test_17(void);
 void Observer_multi_term_on_set_w_base_and_3_instances_in_different_tables(void);
 void Observer_propagate_isa_two_bases_dirty_reachable_cache(void);
+void Observer_propagate_on_set_2_lvls(void);
+void Observer_propagate_on_set_2_lvls_2_terms(void);
 
 // Testsuite 'ObserverOnSet'
 void ObserverOnSet_set_1_of_1(void);
@@ -12553,6 +12555,14 @@ bake_test_case Observer_testcases[] = {
     {
         "propagate_isa_two_bases_dirty_reachable_cache",
         Observer_propagate_isa_two_bases_dirty_reachable_cache
+    },
+    {
+        "propagate_on_set_2_lvls",
+        Observer_propagate_on_set_2_lvls
+    },
+    {
+        "propagate_on_set_2_lvls_2_terms",
+        Observer_propagate_on_set_2_lvls_2_terms
     }
 };
 
@@ -16789,7 +16799,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        349,
+        351,
         Observer_testcases
     },
     {
