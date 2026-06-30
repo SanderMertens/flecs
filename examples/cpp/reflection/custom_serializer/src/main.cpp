@@ -265,20 +265,20 @@ int main(int, char *[]) {
     // with the serializer code.
 
     ecs.component<Rgb>()
-        .member("red", &Rgb::red)
-        .member("green", &Rgb::green)
-        .member("blue", &Rgb::blue);
+        .member(&Rgb::red, "red")
+        .member(&Rgb::green, "green")
+        .member(&Rgb::blue, "blue");
 
     ecs.component<StrokeKind>();
 
     ecs.component<Point>()
-        .member("x", &Point::x)
-        .member("y", &Point::y);
+        .member(&Point::x, "x")
+        .member(&Point::y, "y");
 
     ecs.component<Polygon>()
-        .member("color", &Polygon::color)
-        .member("stroke_color", &Polygon::stroke_color)
-        .member("stroke_kind", &Polygon::stroke_kind)
+        .member(&Polygon::color, "color")
+        .member(&Polygon::stroke_color, "stroke_color")
+        .member(&Polygon::stroke_kind, "stroke_kind")
         .member(ecs.vector<Point>(), "points");
 
     // Create the value
