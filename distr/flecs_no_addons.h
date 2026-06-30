@@ -4726,6 +4726,7 @@ typedef struct ecs_table_cache_elem_t {
     ecs_table_t *table;                            /* Table associated with element */
     ecs_table_record_t *tr;                        /* Table record for element */
     int16_t column;                                /* Column for the table record */
+    int16_t index;                                 /* Index of element in table cache */
 } ecs_table_cache_elem_t;
 
 /* Convenience struct to iterate a table array for an ID. */

@@ -358,6 +358,7 @@ const uint64_t* flecs_entity_index_ids(
 typedef struct ecs_table_cache_t {
     ecs_map_t index;  /* <table_id, int32_t array index> */
     ecs_vec_t records; /* vec<ecs_table_cache_elem_t> */
+    int32_t queryable_count; /* Number of queryable tables, stored at front */
 } ecs_table_cache_t;
 
 void ecs_table_cache_init(
@@ -399,21 +400,16 @@ const ecs_table_cache_elem_t* flecs_table_cache_get_elem(
 
 bool flecs_table_cache_iter(
     const ecs_table_cache_t *cache,
-    ecs_table_cache_iter_t *out);
+    ecs_table_cache_iter_t *out,
+    ecs_flags32_t empty_flags);
 
-bool flecs_table_cache_empty_iter(
+bool flecs_table_cache_queryable_iter(
     const ecs_table_cache_t *cache,
-    ecs_table_cache_iter_t *out);
+    ecs_table_cache_iter_t *out,
+    ecs_flags32_t empty_flags);
 
-bool flecs_table_cache_all_iter(
-    const ecs_table_cache_t *cache,
-    ecs_table_cache_iter_t *out);
-
-const ecs_table_cache_elem_t* flecs_table_cache_next_(
+const ecs_table_cache_elem_t* flecs_table_cache_next(
     ecs_table_cache_iter_t *it);
-
-#define flecs_table_cache_next(it)\
-    (ECS_CONST_CAST(ecs_table_cache_elem_t*, flecs_table_cache_next_(it)))
 
 #endif
 
@@ -7573,7 +7569,7 @@ bool flecs_each_component_record(
 
     each_iter->sources = 0;
     each_iter->trs = NULL;
-    flecs_table_cache_iter((ecs_table_cache_t*)cr, &each_iter->it);
+    flecs_table_cache_iter((ecs_table_cache_t*)cr, &each_iter->it, EcsTableNotEmpty);
 
     return true;
 error:
@@ -7620,15 +7616,14 @@ bool ecs_each_next(
         &each_iter->it);
     it->flags |= EcsIterIsValid;
     if (elem) {
-        const ecs_table_record_t *next = elem->tr;
-        each_iter->trs = next;
+        each_iter->trs = elem->tr;
         each_iter->columns = elem->column;
         ecs_table_t *table = elem->table;
         it->table = table;
         it->count = ecs_table_count(table);
         it->entities = ecs_table_entities(table);
-        if (next->index != -1) {
-            it->ids = &table->type.array[next->index];
+        if (elem->index != -1) {
+            it->ids = &table->type.array[elem->index];
         } else {
             it->ids = NULL;
         }
@@ -7637,7 +7632,6 @@ bool ecs_each_next(
         it->sources = &each_iter->sources;
         it->sizes = &each_iter->sizes;
         it->set_fields = 1;
-
         return true;
     } else {
         return false;
@@ -13153,7 +13147,7 @@ void flecs_instantiate(
             }
         } else {
             ecs_table_cache_iter_t it;
-            if (flecs_table_cache_all_iter((ecs_table_cache_t*)cr, &it)) {
+            if (flecs_table_cache_iter((ecs_table_cache_t*)cr, &it, EcsTableEmpty|EcsTableNotEmpty)) {
                 const ecs_table_cache_elem_t *elem;
                 while ((elem = flecs_table_cache_next(&it))) {
                     ecs_table_range_t range = {
@@ -15056,7 +15050,7 @@ void flecs_emit_propagate_id(
         return;
     }
 
-    if (!flecs_table_cache_all_iter(&cur->cache, &idt)) {
+    if (!flecs_table_cache_iter(&cur->cache, &idt, EcsTableEmpty|EcsTableNotEmpty)) {
         return;
     }
 
@@ -15158,7 +15152,7 @@ void flecs_emit_propagate_invalidate_tables(
         }
 
         ecs_table_cache_iter_t idt;
-        if (!flecs_table_cache_all_iter(&cur->cache, &idt)) {
+        if (!flecs_table_cache_iter(&cur->cache, &idt, EcsTableEmpty|EcsTableNotEmpty)) {
             continue;
         }
 
@@ -18227,7 +18221,7 @@ void flecs_component_mark_for_delete(
 
     /* Mark all tables with the id for delete */
     ecs_table_cache_iter_t it;
-    if (flecs_table_cache_iter(&cr->cache, &it)) {
+    if (flecs_table_cache_iter(&cr->cache, &it, EcsTableNotEmpty)) {
         const ecs_table_cache_elem_t *elem;
         while ((elem = flecs_table_cache_next(&it))) {
             const ecs_table_record_t *tr = elem->tr;
@@ -18259,7 +18253,7 @@ void flecs_component_mark_for_delete(
     }
 
     /* Same for empty tables */
-    if (flecs_table_cache_empty_iter(&cr->cache, &it)) {
+    if (flecs_table_cache_iter(&cr->cache, &it, EcsTableEmpty)) {
         const ecs_table_cache_elem_t *elem;
         while ((elem = flecs_table_cache_next(&it))) {
             elem->table->flags |= EcsTableMarkedForDelete;
@@ -18448,7 +18442,7 @@ bool flecs_on_delete_clear_entities(
 
             /* Empty all tables for id */
             ecs_table_cache_iter_t it;
-            if (flecs_table_cache_iter(&cr->cache, &it)) {
+            if (flecs_table_cache_iter(&cr->cache, &it, EcsTableNotEmpty)) {
                 const ecs_table_cache_elem_t *elem;
                 while ((elem = flecs_table_cache_next(&it))) {
                     ecs_table_t *table = elem->table;
@@ -22714,7 +22708,7 @@ void flecs_fini_root_tables(
         ecs_size_t queue_size = 0;
         finished = true;
 
-        bool has_roots = flecs_table_cache_iter(&cr->cache, &it);
+        bool has_roots = flecs_table_cache_iter(&cr->cache, &it, EcsTableNotEmpty);
         ecs_assert(has_roots == true, ECS_INTERNAL_ERROR, NULL);
         (void)has_roots;
 
@@ -23316,7 +23310,7 @@ void flecs_notify_tables(
         ecs_table_cache_iter_t it;
         const ecs_table_cache_elem_t *elem;
 
-        flecs_table_cache_all_iter(&cr->cache, &it);
+        flecs_table_cache_iter(&cr->cache, &it, EcsTableEmpty|EcsTableNotEmpty);
         while ((elem = flecs_table_cache_next(&it))) {
             flecs_table_notify(world, elem->table, id, event);
         }
@@ -29918,7 +29912,7 @@ void flecs_rest_append_component(
     ecs_strbuf_list_push(reply, "[", ",");
     ecs_table_cache_iter_t it;
     int32_t entity_count = 0, entity_size = 0, storage_bytes = 0;
-    flecs_table_cache_iter(&cr->cache, &it);
+    flecs_table_cache_iter(&cr->cache, &it, EcsTableNotEmpty);
     const ecs_table_cache_elem_t *elem;
     while ((elem = flecs_table_cache_next(&it))) {
         ecs_strbuf_list_next(reply);
@@ -39756,7 +39750,7 @@ void flecs_component_ordered_children_init(
     flecs_ordered_children_init(world, cr);
 
     ecs_table_cache_iter_t it;
-    if (flecs_table_cache_all_iter(&cr->cache, &it)) {
+    if (flecs_table_cache_iter(&cr->cache, &it, EcsTableEmpty|EcsTableNotEmpty)) {
         const ecs_table_cache_elem_t *elem;
         while ((elem = flecs_table_cache_next(&it))) {
             elem->table->flags |= EcsTableHasOrderedChildren;
@@ -40310,26 +40304,20 @@ bool flecs_component_release_tables(
 {
     bool remaining = false;
 
-    ecs_table_cache_iter_t it;
-    if (flecs_table_cache_all_iter(&cr->cache, &it)) {
-        const ecs_table_cache_elem_t *elem;
-        while ((elem = flecs_table_cache_next(&it))) {
-            const ecs_table_record_t *tr = elem->tr;
-            ecs_table_t *table = tr->hdr.table;
+    ecs_table_cache_t *cache = &cr->cache;
+    int32_t i = 0;
+    while (i < ecs_vec_count(&cache->records)) {
+        ecs_table_cache_elem_t *elem = ecs_vec_get_t(
+            &cache->records, ecs_table_cache_elem_t, i);
+        ecs_table_t *table = elem->table;
 
-            if (table->keep) {
-                remaining = true;
-                continue;
-            }
-
-            if (ecs_table_count(table)) {
-                remaining = true;
-                continue;
-            }
-
-            /* Release current table */
-            flecs_table_fini(world, tr->hdr.table);
+        if (table->keep || ecs_table_count(table)) {
+            remaining = true;
+            i ++;
+            continue;
         }
+
+        flecs_table_fini(world, table);
     }
 
     return remaining;
@@ -40567,7 +40555,7 @@ bool flecs_component_iter(
     const ecs_component_record_t *cr,
     ecs_table_cache_iter_t *iter_out)
 {
-    return flecs_table_cache_all_iter(&cr->cache, iter_out);
+    return flecs_table_cache_iter(&cr->cache, iter_out, EcsTableEmpty|EcsTableNotEmpty);
 }
 
 const ecs_table_record_t* flecs_component_next(
@@ -45622,6 +45610,46 @@ char* ecs_table_str(
     }
 }
 
+static
+void flecs_table_cache_move(
+    ecs_table_cache_t *cache,
+    ecs_table_cache_elem_t *records,
+    int32_t dst,
+    int32_t src)
+{
+    if (dst == src) {
+        return;
+    }
+
+    records[dst] = records[src];
+    ecs_map_val_t *idx = ecs_map_get(&cache->index, records[dst].table->id);
+    ecs_assert(idx != NULL, ECS_INTERNAL_ERROR, NULL);
+    *idx = flecs_ito(uint64_t, dst);
+}
+
+static
+void flecs_table_cache_swap(
+    ecs_table_cache_t *cache,
+    ecs_table_cache_elem_t *records,
+    int32_t a,
+    int32_t b)
+{
+    if (a == b) {
+        return;
+    }
+
+    ecs_table_cache_elem_t tmp = records[a];
+    records[a] = records[b];
+    records[b] = tmp;
+
+    ecs_map_val_t *a_idx = ecs_map_get(&cache->index, records[a].table->id);
+    ecs_map_val_t *b_idx = ecs_map_get(&cache->index, records[b].table->id);
+    ecs_assert(a_idx != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(b_idx != NULL, ECS_INTERNAL_ERROR, NULL);
+    *a_idx = flecs_ito(uint64_t, a);
+    *b_idx = flecs_ito(uint64_t, b);
+}
+
 void ecs_table_cache_init(
     ecs_world_t *world,
     ecs_table_cache_t *cache)
@@ -45629,6 +45657,7 @@ void ecs_table_cache_init(
     ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_map_init(&cache->index, &world->allocator);
     ecs_vec_init_t(&world->allocator, &cache->records, ecs_table_cache_elem_t, 0);
+    cache->queryable_count = 0;
 }
 
 void ecs_table_cache_fini(
@@ -45659,8 +45688,16 @@ void ecs_table_cache_insert(
     slot->table = ECS_CONST_CAST(ecs_table_t*, table);
     slot->tr = (ecs_table_record_t*)result;
     slot->column = -1;
+    slot->index = ((ecs_table_record_t*)result)->index;
 
     ecs_map_insert(&cache->index, table->id, flecs_ito(uint64_t, index));
+
+    if (!(table->flags & (EcsTableNotQueryable|EcsTableIsPrefab|EcsTableIsDisabled))) {
+        ecs_table_cache_elem_t *records = ecs_vec_first_t(
+            &cache->records, ecs_table_cache_elem_t);
+        flecs_table_cache_swap(cache, records, cache->queryable_count, index);
+        cache->queryable_count ++;
+    }
 }
 
 void ecs_table_cache_replace(
@@ -45679,6 +45716,7 @@ void ecs_table_cache_replace(
     slot->table = ECS_CONST_CAST(ecs_table_t*, table);
     slot->tr = (ecs_table_record_t*)elem;
     slot->column = -1;
+    slot->index = ((ecs_table_record_t*)elem)->index;
 }
 
 void flecs_table_cache_set_column(
@@ -45754,13 +45792,13 @@ void* ecs_table_cache_remove(
     ecs_assert(records[index].tr == (ecs_table_record_t*)elem,
         ECS_INTERNAL_ERROR, NULL);
 
-    if (index != last) {
-        ecs_table_cache_elem_t moved = records[last];
-        records[index] = moved;
-        ecs_map_val_t *moved_idx = ecs_map_get(
-            &cache->index, moved.table->id);
-        ecs_assert(moved_idx != NULL, ECS_INTERNAL_ERROR, NULL);
-        *moved_idx = flecs_ito(uint64_t, index);
+    if (index < cache->queryable_count) {
+        int32_t last_queryable = cache->queryable_count - 1;
+        flecs_table_cache_move(cache, records, index, last_queryable);
+        flecs_table_cache_move(cache, records, last_queryable, last);
+        cache->queryable_count --;
+    } else {
+        flecs_table_cache_move(cache, records, index, last);
     }
 
     ecs_vec_remove_last(&cache->records);
@@ -45770,7 +45808,8 @@ void* ecs_table_cache_remove(
 
 bool flecs_table_cache_iter(
     const ecs_table_cache_t *cache,
-    ecs_table_cache_iter_t *out)
+    ecs_table_cache_iter_t *out,
+    ecs_flags32_t empty_flags)
 {
     ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(out != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -45779,41 +45818,27 @@ bool flecs_table_cache_iter(
         ecs_table_cache_elem_t);
     out->remaining = ecs_vec_count(&cache->records);
     out->cur = NULL;
-    out->flags = EcsTableNotEmpty;
+    out->flags = empty_flags;
     return out->remaining != 0;
 }
 
-bool flecs_table_cache_empty_iter(
+bool flecs_table_cache_queryable_iter(
     const ecs_table_cache_t *cache,
-    ecs_table_cache_iter_t *out)
+    ecs_table_cache_iter_t *out,
+    ecs_flags32_t empty_flags)
 {
     ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(out != NULL, ECS_INTERNAL_ERROR, NULL);
     out->elems = ecs_vec_first_t(
         ECS_CONST_CAST(ecs_vec_t*, &cache->records),
         ecs_table_cache_elem_t);
-    out->remaining = ecs_vec_count(&cache->records);
+    out->remaining = cache->queryable_count;
     out->cur = NULL;
-    out->flags = EcsTableEmpty;
+    out->flags = empty_flags;
     return out->remaining != 0;
 }
 
-bool flecs_table_cache_all_iter(
-    const ecs_table_cache_t *cache,
-    ecs_table_cache_iter_t *out)
-{
-    ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(out != NULL, ECS_INTERNAL_ERROR, NULL);
-    out->elems = ecs_vec_first_t(
-        ECS_CONST_CAST(ecs_vec_t*, &cache->records),
-        ecs_table_cache_elem_t);
-    out->remaining = ecs_vec_count(&cache->records);
-    out->cur = NULL;
-    out->flags = EcsTableEmpty | EcsTableNotEmpty;
-    return out->remaining != 0;
-}
-
-const ecs_table_cache_elem_t* flecs_table_cache_next_(
+const ecs_table_cache_elem_t* flecs_table_cache_next(
     ecs_table_cache_iter_t *it)
 {
     ecs_flags32_t flags = it->flags;
@@ -52839,7 +52864,7 @@ int flecs_json_serialize_matches(
 
     if (cr) {
         ecs_table_cache_iter_t it;
-        if (cr && flecs_table_cache_iter((ecs_table_cache_t*)cr, &it)) {
+        if (cr && flecs_table_cache_iter((ecs_table_cache_t*)cr, &it, EcsTableNotEmpty)) {
             const ecs_table_cache_elem_t *elem;
             while ((elem = flecs_table_cache_next(&it))) {
                 ecs_table_t *table = elem->table;
@@ -52895,7 +52920,7 @@ int flecs_json_serialize_refs_cr(
     flecs_json_array_push(buf);
 
     ecs_table_cache_iter_t it;
-    if (cr && flecs_table_cache_all_iter((ecs_table_cache_t*)cr, &it)) {
+    if (cr && flecs_table_cache_iter((ecs_table_cache_t*)cr, &it, EcsTableEmpty|EcsTableNotEmpty)) {
         const ecs_table_cache_elem_t *elem;
         while ((elem = flecs_table_cache_next(&it))) {
             ecs_table_t *table = elem->table;
@@ -83562,11 +83587,11 @@ bool flecs_query_select_w_id(
         }
 
         if (ctx->query->pub.flags & EcsQueryMatchEmptyTables) {
-            if (!flecs_table_cache_all_iter(&cr->cache, &op_ctx->it)) {
+            if (!flecs_table_cache_iter(&cr->cache, &op_ctx->it, EcsTableEmpty|EcsTableNotEmpty)) {
                 return false;
             }
         } else {
-            if (!flecs_table_cache_iter(&cr->cache, &op_ctx->it)) {
+            if (!flecs_table_cache_iter(&cr->cache, &op_ctx->it, EcsTableNotEmpty)) {
                 return false;
             }
         }
@@ -83581,7 +83606,7 @@ repeat:
         }
 
         tr = elem->tr;
-        op_ctx->column = flecs_ito(int16_t, tr->index);
+        op_ctx->column = elem->index;
         op_ctx->remaining = flecs_ito(int16_t, tr->count - 1);
         table = elem->table;
         flecs_query_var_set_range(op, op->src.var, table, 0, 0, ctx);
@@ -83643,7 +83668,7 @@ bool flecs_query_with(
         }
 
         tr = elem->tr;
-        op_ctx->column = flecs_ito(int16_t, tr->index);
+        op_ctx->column = elem->index;
         op_ctx->remaining = flecs_ito(int16_t, tr->count);
         op_ctx->it.cur = elem;
     } else {
@@ -83889,11 +83914,11 @@ bool flecs_query_select_id(
         }
 
         if (ctx->query->pub.flags & EcsQueryMatchEmptyTables) {
-            if (!flecs_table_cache_all_iter(&cr->cache, &op_ctx->it)) {
+            if (!flecs_table_cache_iter(&cr->cache, &op_ctx->it, EcsTableEmpty|EcsTableNotEmpty)) {
                 return false;
             }
         } else {
-            if (!flecs_table_cache_iter(&cr->cache, &op_ctx->it)) {
+            if (!flecs_table_cache_iter(&cr->cache, &op_ctx->it, EcsTableNotEmpty)) {
                 return false;
             }
         }
@@ -84295,7 +84320,7 @@ bool flecs_query_ids_in_use(
     ecs_component_record_t *cur)
 {
     ecs_table_cache_iter_t it;
-    flecs_table_cache_iter(&cur->cache, &it);
+    flecs_table_cache_iter(&cur->cache, &it, EcsTableNotEmpty);
     if (flecs_table_cache_next(&it)) {
         return true;
     }
@@ -89491,7 +89516,7 @@ void flecs_query_build_down_cache(
     elem->cr = cr;
 
     ecs_table_cache_iter_t it;
-    if (flecs_table_cache_iter(&cr->cache, &it)) {
+    if (flecs_table_cache_iter(&cr->cache, &it, EcsTableNotEmpty)) {
         const ecs_table_cache_elem_t *celem;
         while ((celem = flecs_table_cache_next(&it))) {
             const ecs_table_record_t *tr = celem->tr;
@@ -89709,7 +89734,7 @@ void flecs_trav_entity_down_isa(
     }
 
     ecs_table_cache_iter_t it;
-    if (flecs_table_cache_iter(&cr_isa->cache, &it)) {
+    if (flecs_table_cache_iter(&cr_isa->cache, &it, EcsTableNotEmpty)) {
         const ecs_table_cache_elem_t *elem;
         while ((elem = flecs_table_cache_next(&it))) {
             ecs_table_t *table = elem->table;
@@ -89811,9 +89836,9 @@ void flecs_trav_entity_down_iter_tables(
     ecs_table_cache_iter_t it;
     bool result;
     if (empty) {
-        result = flecs_table_cache_all_iter(&cr_trav->cache, &it);
+        result = flecs_table_cache_iter(&cr_trav->cache, &it, EcsTableEmpty|EcsTableNotEmpty);
     } else {
-        result = flecs_table_cache_iter(&cr_trav->cache, &it);
+        result = flecs_table_cache_iter(&cr_trav->cache, &it, EcsTableNotEmpty);
     }
 
     if (result) {
@@ -89835,7 +89860,7 @@ void flecs_trav_entity_down_iter_tables(
 
             /* If record is not the first instance of (trav, *), don't add it
              * to the cache. */
-            int32_t index = tr->index;
+            int32_t index = celem->index;
             if (index) {
                 ecs_id_t id = table->type.array[index - 1];
                 if (ECS_IS_PAIR(id) && ECS_PAIR_FIRST(id) == trav) {
@@ -90274,11 +90299,15 @@ bool flecs_query_trivial_search_init(
         }
 
         if (query->flags & EcsQueryMatchEmptyTables) {
-            if (!flecs_table_cache_all_iter(&cr->cache, &op_ctx->it)){
+            if (!flecs_table_cache_queryable_iter(&cr->cache, &op_ctx->it, 
+                EcsTableEmpty|EcsTableNotEmpty))
+            {
                 return false;
             }
         } else {
-            if (!flecs_table_cache_iter(&cr->cache, &op_ctx->it)) {
+            if (!flecs_table_cache_queryable_iter(&cr->cache, &op_ctx->it, 
+                EcsTableNotEmpty)) 
+            {
                 return false;
             }
         }
@@ -90334,10 +90363,6 @@ bool flecs_query_trivial_search(
         }
 
         ecs_table_t *table = elem->table;
-        if (table->flags & (EcsTableNotQueryable|EcsTableIsPrefab|EcsTableIsDisabled)) {
-            continue;
-        }
-
         if (!flecs_table_bloom_filter_test(table, q_filter)) {
             continue;
         }
@@ -90402,10 +90427,6 @@ next:
         }
 
         ecs_table_t *table = elem->table;
-        if (table->flags & (EcsTableNotQueryable|EcsTableIsPrefab|EcsTableIsDisabled)) {
-            goto next;
-        }
-
         if (!flecs_table_bloom_filter_test(table, q_filter)) {
             goto next;
         }

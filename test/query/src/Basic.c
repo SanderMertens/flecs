@@ -8664,7 +8664,7 @@ void Basic_3_trivial_w_prefab(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(e1, it.entities[0]);
+        test_uint(e2, it.entities[0]);
         test_uint(TagA, ecs_field_id(&it, 0));
         test_uint(TagB, ecs_field_id(&it, 1));
         test_uint(EcsPrefab, ecs_field_id(&it, 2));
@@ -8673,7 +8673,7 @@ void Basic_3_trivial_w_prefab(void) {
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(e2, it.entities[0]);
+        test_uint(e1, it.entities[0]);
         test_uint(TagA, ecs_field_id(&it, 0));
         test_uint(TagB, ecs_field_id(&it, 1));
         test_uint(EcsPrefab, ecs_field_id(&it, 2));
@@ -8765,7 +8765,7 @@ void Basic_3_trivial_w_disabled(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(e1, it.entities[0]);
+        test_uint(e2, it.entities[0]);
         test_uint(TagA, ecs_field_id(&it, 0));
         test_uint(TagB, ecs_field_id(&it, 1));
         test_uint(EcsDisabled, ecs_field_id(&it, 2));
@@ -8774,7 +8774,7 @@ void Basic_3_trivial_w_disabled(void) {
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(e2, it.entities[0]);
+        test_uint(e1, it.entities[0]);
         test_uint(TagA, ecs_field_id(&it, 0));
         test_uint(TagB, ecs_field_id(&it, 1));
         test_uint(EcsDisabled, ecs_field_id(&it, 2));

@@ -547,7 +547,7 @@ void flecs_instantiate(
             }
         } else {
             ecs_table_cache_iter_t it;
-            if (flecs_table_cache_all_iter((ecs_table_cache_t*)cr, &it)) {
+            if (flecs_table_cache_iter((ecs_table_cache_t*)cr, &it, EcsTableEmpty|EcsTableNotEmpty)) {
                 const ecs_table_cache_elem_t *elem;
                 while ((elem = flecs_table_cache_next(&it))) {
                     ecs_table_range_t range = {

@@ -25,7 +25,7 @@ void flecs_query_build_down_cache(
     elem->cr = cr;
 
     ecs_table_cache_iter_t it;
-    if (flecs_table_cache_iter(&cr->cache, &it)) {
+    if (flecs_table_cache_iter(&cr->cache, &it, EcsTableNotEmpty)) {
         const ecs_table_cache_elem_t *celem;
         while ((celem = flecs_table_cache_next(&it))) {
             const ecs_table_record_t *tr = celem->tr;

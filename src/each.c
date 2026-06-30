@@ -23,7 +23,7 @@ bool flecs_each_component_record(
 
     each_iter->sources = 0;
     each_iter->trs = NULL;
-    flecs_table_cache_iter((ecs_table_cache_t*)cr, &each_iter->it);
+    flecs_table_cache_iter((ecs_table_cache_t*)cr, &each_iter->it, EcsTableNotEmpty);
 
     return true;
 error:
@@ -70,15 +70,14 @@ bool ecs_each_next(
         &each_iter->it);
     it->flags |= EcsIterIsValid;
     if (elem) {
-        const ecs_table_record_t *next = elem->tr;
-        each_iter->trs = next;
+        each_iter->trs = elem->tr;
         each_iter->columns = elem->column;
         ecs_table_t *table = elem->table;
         it->table = table;
         it->count = ecs_table_count(table);
         it->entities = ecs_table_entities(table);
-        if (next->index != -1) {
-            it->ids = &table->type.array[next->index];
+        if (elem->index != -1) {
+            it->ids = &table->type.array[elem->index];
         } else {
             it->ids = NULL;
         }
@@ -87,7 +86,6 @@ bool ecs_each_next(
         it->sources = &each_iter->sources;
         it->sizes = &each_iter->sizes;
         it->set_fields = 1;
-
         return true;
     } else {
         return false;

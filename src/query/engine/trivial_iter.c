@@ -33,11 +33,15 @@ bool flecs_query_trivial_search_init(
         }
 
         if (query->flags & EcsQueryMatchEmptyTables) {
-            if (!flecs_table_cache_all_iter(&cr->cache, &op_ctx->it)){
+            if (!flecs_table_cache_queryable_iter(&cr->cache, &op_ctx->it, 
+                EcsTableEmpty|EcsTableNotEmpty))
+            {
                 return false;
             }
         } else {
-            if (!flecs_table_cache_iter(&cr->cache, &op_ctx->it)) {
+            if (!flecs_table_cache_queryable_iter(&cr->cache, &op_ctx->it, 
+                EcsTableNotEmpty)) 
+            {
                 return false;
             }
         }
@@ -93,10 +97,6 @@ bool flecs_query_trivial_search(
         }
 
         ecs_table_t *table = elem->table;
-        if (table->flags & (EcsTableNotQueryable|EcsTableIsPrefab|EcsTableIsDisabled)) {
-            continue;
-        }
-
         if (!flecs_table_bloom_filter_test(table, q_filter)) {
             continue;
         }
@@ -161,10 +161,6 @@ next:
         }
 
         ecs_table_t *table = elem->table;
-        if (table->flags & (EcsTableNotQueryable|EcsTableIsPrefab|EcsTableIsDisabled)) {
-            goto next;
-        }
-
         if (!flecs_table_bloom_filter_test(table, q_filter)) {
             goto next;
         }

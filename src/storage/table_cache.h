@@ -13,6 +13,7 @@
 typedef struct ecs_table_cache_t {
     ecs_map_t index;  /* <table_id, int32_t array index> */
     ecs_vec_t records; /* vec<ecs_table_cache_elem_t> */
+    int32_t queryable_count; /* Number of queryable tables, stored at front */
 } ecs_table_cache_t;
 
 void ecs_table_cache_init(
@@ -54,20 +55,15 @@ const ecs_table_cache_elem_t* flecs_table_cache_get_elem(
 
 bool flecs_table_cache_iter(
     const ecs_table_cache_t *cache,
-    ecs_table_cache_iter_t *out);
+    ecs_table_cache_iter_t *out,
+    ecs_flags32_t empty_flags);
 
-bool flecs_table_cache_empty_iter(
+bool flecs_table_cache_queryable_iter(
     const ecs_table_cache_t *cache,
-    ecs_table_cache_iter_t *out);
+    ecs_table_cache_iter_t *out,
+    ecs_flags32_t empty_flags);
 
-bool flecs_table_cache_all_iter(
-    const ecs_table_cache_t *cache,
-    ecs_table_cache_iter_t *out);
-
-const ecs_table_cache_elem_t* flecs_table_cache_next_(
+const ecs_table_cache_elem_t* flecs_table_cache_next(
     ecs_table_cache_iter_t *it);
-
-#define flecs_table_cache_next(it)\
-    (ECS_CONST_CAST(ecs_table_cache_elem_t*, flecs_table_cache_next_(it)))
 
 #endif
