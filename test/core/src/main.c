@@ -1403,6 +1403,8 @@ void OnDelete_delete_with_1(void);
 void OnDelete_delete_with_2(void);
 void OnDelete_delete_with_3(void);
 void OnDelete_empty_after_remove(void);
+void OnDelete_remove_target_no_intermediate_table(void);
+void OnDelete_remove_target_no_intermediate_table_3_pairs(void);
 
 // Testsuite 'Set'
 void Set_set_empty(void);
@@ -8825,6 +8827,14 @@ bake_test_case OnDelete_testcases[] = {
     {
         "empty_after_remove",
         OnDelete_empty_after_remove
+    },
+    {
+        "remove_target_no_intermediate_table",
+        OnDelete_remove_target_no_intermediate_table
+    },
+    {
+        "remove_target_no_intermediate_table_3_pairs",
+        OnDelete_remove_target_no_intermediate_table_3_pairs
     }
 };
 
@@ -16681,7 +16691,7 @@ static bake_test_suite suites[] = {
         "OnDelete",
         NULL,
         NULL,
-        127,
+        129,
         OnDelete_testcases
     },
     {

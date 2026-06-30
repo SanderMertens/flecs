@@ -476,6 +476,9 @@ struct ecs_query_impl_t {
     /* Query cache */
     struct ecs_query_cache_t *cache; /* Cache, if query contains cached terms */
 
+    /* Component record cache */
+    ecs_component_record_t **cr_cache;
+
     /* User context */
     ecs_ctx_free_t ctx_free;         /* Callback to free ctx */
     ecs_ctx_free_t binding_ctx_free; /* Callback to free binding_ctx */

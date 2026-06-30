@@ -3429,3 +3429,74 @@ void OnDelete_empty_after_remove(void) {
 
     ecs_fini(world);
 }
+
+void OnDelete_remove_target_no_intermediate_table(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, R1);
+    ECS_TAG(world, R2);
+
+    ecs_entity_t t = ecs_new(world);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add_pair(world, e1, R1, t);
+    ecs_add_pair(world, e1, R2, t);
+    ecs_add(world, e1, Foo);
+
+    ecs_entity_t e2 = ecs_new_w(world, Foo);
+
+    const ecs_world_info_t *wi = ecs_get_world_info(world);
+    int64_t create_total = wi->table_create_total;
+
+    ecs_delete(world, t);
+
+    test_int(wi->table_create_total, create_total);
+
+    test_assert(ecs_is_alive(world, e1));
+    test_assert(!ecs_has_pair(world, e1, R1, t));
+    test_assert(!ecs_has_pair(world, e1, R2, t));
+    test_assert(ecs_has(world, e1, Foo));
+
+    test_assert(ecs_is_alive(world, e2));
+    test_assert(ecs_has(world, e2, Foo));
+
+    ecs_fini(world);
+}
+
+void OnDelete_remove_target_no_intermediate_table_3_pairs(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, R1);
+    ECS_TAG(world, R2);
+    ECS_TAG(world, R3);
+
+    ecs_entity_t t = ecs_new(world);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add_pair(world, e1, R1, t);
+    ecs_add_pair(world, e1, R2, t);
+    ecs_add_pair(world, e1, R3, t);
+    ecs_add(world, e1, Foo);
+
+    ecs_entity_t e2 = ecs_new_w(world, Foo);
+
+    const ecs_world_info_t *wi = ecs_get_world_info(world);
+    int64_t create_total = wi->table_create_total;
+
+    ecs_delete(world, t);
+
+    test_int(wi->table_create_total, create_total);
+
+    test_assert(ecs_is_alive(world, e1));
+    test_assert(!ecs_has_pair(world, e1, R1, t));
+    test_assert(!ecs_has_pair(world, e1, R2, t));
+    test_assert(!ecs_has_pair(world, e1, R3, t));
+    test_assert(ecs_has(world, e1, Foo));
+
+    test_assert(ecs_is_alive(world, e2));
+    test_assert(ecs_has(world, e2, Foo));
+
+    ecs_fini(world);
+}

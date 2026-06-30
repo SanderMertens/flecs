@@ -26,10 +26,13 @@ void flecs_query_build_down_cache(
 
     ecs_table_cache_iter_t it;
     if (flecs_table_cache_iter(&cr->cache, &it)) {
-        const ecs_table_record_t *tr;
-        while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
+        const ecs_table_cache_elem_t *celem;
+        while ((celem = flecs_table_cache_next(&it))) {
+            const ecs_table_record_t *tr = celem->tr;
             ecs_assert(tr->count == 1, ECS_INTERNAL_ERROR, NULL);
-            ecs_table_t *table = tr->hdr.table;
+            (void)tr;
+
+            ecs_table_t *table = celem->table;
             if (!table->_->traversable_count) {
                 continue;
             }

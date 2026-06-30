@@ -95,9 +95,18 @@ typedef struct ecs_worker_iter_t {
     int32_t count;
 } ecs_worker_iter_t;
 
+/* Inlined element stored in a table cache. */
+typedef struct ecs_table_cache_elem_t {
+    ecs_table_t *table;                            /* Table associated with element */
+    ecs_table_record_t *tr;                        /* Table record for element */
+    int16_t column;                                /* Column for the table record */
+} ecs_table_cache_elem_t;
+
 /* Convenience struct to iterate a table array for an ID. */
 typedef struct ecs_table_cache_iter_t {
-    const struct ecs_table_cache_hdr_t *cur, *next;
+    const ecs_table_cache_elem_t *elems;           /* Pointer into elements array */
+    int32_t remaining;                             /* Elements left to scan */
+    const ecs_table_cache_elem_t *cur;             /* Most recently returned element */
     bool iter_fill;
     bool iter_empty;
 } ecs_table_cache_iter_t;

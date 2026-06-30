@@ -6,17 +6,13 @@
 #ifndef FLECS_TABLE_CACHE_H_
 #define FLECS_TABLE_CACHE_H_
 
-/** Linked list of tables in table cache */
-typedef struct ecs_table_cache_list_t {
-    ecs_table_cache_hdr_t *first;
-    ecs_table_cache_hdr_t *last;
-    int32_t count;
-} ecs_table_cache_list_t;
-
-/** Table cache */
+/** Table cache.
+ * Stores table records in a dense array for cache-friendly iteration. The map
+ * tracks the index of each table record into the array so that insertion and
+ * removal remain O(1) amortized. */
 typedef struct ecs_table_cache_t {
-    ecs_map_t index; /* <table_id, T*> */
-    ecs_table_cache_list_t tables;
+    ecs_map_t index;  /* <table_id, int32_t array index> */
+    ecs_vec_t records; /* vec<ecs_table_cache_elem_t> */
 } ecs_table_cache_t;
 
 void ecs_table_cache_init(
@@ -36,6 +32,11 @@ void ecs_table_cache_replace(
     const ecs_table_t *table,
     ecs_table_cache_hdr_t *elem);
 
+void flecs_table_cache_set_column(
+    ecs_table_cache_t *cache,
+    const ecs_table_t *table,
+    int16_t column);
+
 void* ecs_table_cache_remove(
     ecs_table_cache_t *cache,
     uint64_t table_id,
@@ -45,7 +46,11 @@ void* ecs_table_cache_get(
     const ecs_table_cache_t *cache,
     const ecs_table_t *table);
 
-#define flecs_table_cache_count(cache) (cache)->tables.count
+const ecs_table_cache_elem_t* flecs_table_cache_get_elem(
+    const ecs_table_cache_t *cache,
+    const ecs_table_t *table);
+
+#define flecs_table_cache_count(cache) ecs_vec_count(&(cache)->records)
 
 bool flecs_table_cache_iter(
     const ecs_table_cache_t *cache,
@@ -59,10 +64,10 @@ bool flecs_table_cache_all_iter(
     const ecs_table_cache_t *cache,
     ecs_table_cache_iter_t *out);
 
-const ecs_table_cache_hdr_t* flecs_table_cache_next_(
+const ecs_table_cache_elem_t* flecs_table_cache_next_(
     ecs_table_cache_iter_t *it);
 
-#define flecs_table_cache_next(it, T)\
-    (ECS_CONST_CAST(T*, flecs_table_cache_next_(it)))
+#define flecs_table_cache_next(it)\
+    (ECS_CONST_CAST(ecs_table_cache_elem_t*, flecs_table_cache_next_(it)))
 
 #endif

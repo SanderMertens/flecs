@@ -50,19 +50,20 @@ bool flecs_query_select_w_id(
 
 repeat:
     if (!redo || (op_ctx->remaining <= 0)) {
-        tr = flecs_table_cache_next(&op_ctx->it, ecs_table_record_t);
-        if (!tr) {
+        const ecs_table_cache_elem_t *elem = flecs_table_cache_next(
+            &op_ctx->it);
+        if (!elem) {
             return false;
         }
 
+        tr = elem->tr;
         op_ctx->column = flecs_ito(int16_t, tr->index);
         op_ctx->remaining = flecs_ito(int16_t, tr->count - 1);
-        table = tr->hdr.table;
+        table = elem->table;
         flecs_query_var_set_range(op, op->src.var, table, 0, 0, ctx);
     } else {
-        tr = (const ecs_table_record_t*)op_ctx->it.cur;
-        ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL);
-        table = tr->hdr.table;
+        ecs_assert(op_ctx->it.cur != NULL, ECS_INTERNAL_ERROR, NULL);
+        table = op_ctx->it.cur->table;
         op_ctx->column = flecs_query_next_column(table, cr->id, op_ctx->column);
         op_ctx->remaining --;
     }
@@ -111,14 +112,16 @@ bool flecs_query_with(
             }
         }
 
-        tr = flecs_component_get_table(cr, table);
-        if (!tr) {
+        const ecs_table_cache_elem_t *elem = flecs_table_cache_get_elem(
+            &cr->cache, table);
+        if (!elem) {
             return false;
         }
 
+        tr = elem->tr;
         op_ctx->column = flecs_ito(int16_t, tr->index);
         op_ctx->remaining = flecs_ito(int16_t, tr->count);
-        op_ctx->it.cur = &tr->hdr;
+        op_ctx->it.cur = elem;
     } else {
         ecs_assert((op_ctx->remaining + op_ctx->column - 1) < table->type.count, 
             ECS_INTERNAL_ERROR, NULL);
@@ -373,19 +376,19 @@ bool flecs_query_select_id(
     }
 
 repeat: {}
-    const ecs_table_record_t *tr = flecs_table_cache_next(
-        &op_ctx->it, ecs_table_record_t);
-    if (!tr) {
+    const ecs_table_cache_elem_t *elem = flecs_table_cache_next(
+        &op_ctx->it);
+    if (!elem) {
         return false;
     }
 
-    ecs_table_t *table = tr->hdr.table;
+    ecs_table_t *table = elem->table;
     if (flecs_query_table_filter(table, op->other, table_filter)) {
         goto repeat;
     }
 
     flecs_query_var_set_range(op, op->src.var, table, 0, 0, ctx);
-    flecs_query_it_set_tr(it, field, tr);
+    flecs_query_it_set_tr(it, field, elem->tr);
     return true;
 }
 
@@ -423,7 +426,7 @@ bool flecs_query_and_any(
     }
 
     flecs_query_it_set_tr(ctx->it, field,
-        (const ecs_table_record_t*)op_ctx->it.cur);
+        op_ctx->it.cur ? op_ctx->it.cur->tr : NULL);
 
     return result;
 }
@@ -748,7 +751,7 @@ static
 bool flecs_query_ids_check(
     ecs_component_record_t *cur)
 {
-    if (!cur->cache.tables.count) {
+    if (!flecs_table_cache_count(&cur->cache)) {
         if (!(cur->flags & EcsIdOrderedChildren)) {
             return false;
         }
@@ -769,7 +772,7 @@ bool flecs_query_ids_in_use(
 {
     ecs_table_cache_iter_t it;
     flecs_table_cache_iter(&cur->cache, &it);
-    if (flecs_table_cache_next(&it, ecs_table_record_t)) {
+    if (flecs_table_cache_next(&it)) {
         return true;
     }
 
