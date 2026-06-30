@@ -2236,8 +2236,8 @@ void Misc_get_const_var_struct(void) {
     flecs::world world;
 
     world.component<Position>()
-        .member("x", &Position::x)
-        .member("y", &Position::y);
+        .member(&Position::x, "x")
+        .member(&Position::y, "y");
 
     world.script()
         .code("export const x = Position: {10, 20}")
@@ -2333,8 +2333,8 @@ void Misc_get_const_var_struct_w_out(void) {
     flecs::world world;
 
     world.component<Position>()
-        .member("x", &Position::x)
-        .member("y", &Position::y);
+        .member(&Position::x, "x")
+        .member(&Position::y, "y");
 
     world.script()
         .code("export const x = Position: {10, 20}")
@@ -2350,8 +2350,8 @@ void Misc_get_const_var_struct_w_out_not_found(void) {
     flecs::world world;
 
     world.component<Position>()
-        .member("x", &Position::x)
-        .member("y", &Position::y);
+        .member(&Position::x, "x")
+        .member(&Position::y, "y");
 
     Position v;
     flecs::log::set_level(-4);
