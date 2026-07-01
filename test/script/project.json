@@ -680,7 +680,8 @@
                 "default_component_w_prop_var",
                 "default_component_w_prop_var_in_nested_if",
                 "default_component_w_prop_var_in_nested_for",
-                "template_w_new_expr_in_const"
+                "template_w_new_expr_in_const",
+                "template_w_existing_observer"
             ]
         }, {
             "id": "Error",

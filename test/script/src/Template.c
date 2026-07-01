@@ -4075,3 +4075,43 @@ void Template_template_w_new_expr_in_const(void) {
     ecs_fini(world);
 }
 
+static Position on_position = {};
+static int on_position_count = 0;
+
+static
+void OnPosition(ecs_iter_t *it) {
+    Position *p = ecs_field(it, Position, 0);
+    test_int(it->count, 1);
+    on_position = *p;
+    on_position_count ++;
+}
+
+void Template_template_w_existing_observer(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }},
+        .events = { EcsOnSet },
+        .callback = OnPosition
+    });
+
+    const char *expr =
+    HEAD "template Position {"
+    LINE "  prop x = f32: 0"
+    LINE "  prop y = f32: 0"
+    LINE "}"
+    LINE ""
+    LINE "Position e(10, 20)"
+    LINE "";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    test_int(on_position_count, 1);
+    test_int(on_position.x, 10);
+    test_int(on_position.y, 20);
+
+    ecs_fini(world);
+}
+

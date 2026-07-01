@@ -673,6 +673,7 @@ void Template_default_component_w_prop_var(void);
 void Template_default_component_w_prop_var_in_nested_if(void);
 void Template_default_component_w_prop_var_in_nested_for(void);
 void Template_template_w_new_expr_in_const(void);
+void Template_template_w_existing_observer(void);
 
 // Testsuite 'Error'
 void Error_multi_line_comment_after_newline_before_newline_scope_open(void);
@@ -4189,6 +4190,10 @@ bake_test_case Template_testcases[] = {
     {
         "template_w_new_expr_in_const",
         Template_template_w_new_expr_in_const
+    },
+    {
+        "template_w_existing_observer",
+        Template_template_w_existing_observer
     }
 };
 
@@ -7649,7 +7654,7 @@ static bake_test_suite suites[] = {
         "Template",
         NULL,
         NULL,
-        89,
+        90,
         Template_testcases
     },
     {
