@@ -1412,6 +1412,7 @@ repeat_event:
                     ecs_id_t pair = ecs_childof(parent);
                     ecs_type_t type = { .count = 1, .array = &pair };
                     pdesc.ids = &type;
+                    pdesc.set_ptr = NULL;
                     flecs_emit(world, stage, &pdesc);
                 }
             }
@@ -1516,6 +1517,10 @@ repeat_event:
             ECS_CONST_CAST(int32_t*, it.sizes)[0] = 0;
         }
 
+        if (desc->set_ptr && id_count == 1) {
+            it.ptrs = &desc->set_ptr;
+        }
+
         /* Actually invoke observers for this event/id */
         for (ider_i = 0; ider_i < ider_count; ider_i ++) {
             ecs_event_id_record_t *ider = iders[ider_i];
@@ -1524,6 +1529,8 @@ repeat_event:
             flecs_observers_invoke(world, &ider->self_up, &it, table, 0);
             ecs_assert(it.event_cur == evtx, ECS_INTERNAL_ERROR, NULL);
         }
+
+        it.ptrs = NULL;
 
         if (!ider_count || !count || !has_observed) {
             continue;

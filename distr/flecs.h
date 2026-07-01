@@ -6347,6 +6347,12 @@ typedef struct ecs_event_desc_t {
      * is copied to a temporary storage of the event type. */
     const void *const_param;
 
+    /** Optional pointer to the value of the component for which the event is
+     * emitted. May only be set for events that are emitted for a single
+     * component id and a single entity. If provided, observers will use this
+     * pointer instead of fetching the component from the table/storage. */
+    void *set_ptr;
+
     /** Observable (usually the world). */
     ecs_poly_t *observable;
 
