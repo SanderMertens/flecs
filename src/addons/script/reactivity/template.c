@@ -6,10 +6,11 @@
 #include "flecs.h"
 
 #ifdef FLECS_SCRIPT
-#include "script.h"
+#include "../script.h"
 
 ECS_COMPONENT_DECLARE(EcsScriptTemplateSetEvent);
 ECS_DECLARE(EcsScriptTemplate);
+ECS_COMPONENT_DECLARE(EcsScriptTemplateInstance);
 
 static
 void flecs_template_set_event_free(EcsScriptTemplateSetEvent *ptr) {
@@ -195,6 +196,9 @@ void flecs_script_template_instantiate(
 
         instance_node.eval = entities[i];
 
+        ecs_add_pair(
+            world, entities[i], ecs_id(EcsScriptTemplateInstance), template_entity);
+
         /* Apply annotations, if any */
         bool annot_failed = false;
         for (a = 0; a < ecs_vec_count(&template->annot); a ++) {
@@ -283,6 +287,83 @@ void flecs_on_template_set_event(
     ecs_defer_resume(world);
 }
 
+static
+ecs_script_template_t* flecs_script_template_get(
+    const ecs_world_t *world,
+    ecs_entity_t template_entity)
+{
+    ecs_record_t *r = ecs_record_find(world, template_entity);
+    if (!r) {
+        ecs_err("template entity is empty (should never happen)");
+        return NULL;
+    }
+
+    const EcsScript *script = ecs_record_get(world, r, EcsScript);
+    if (!script) {
+        ecs_err("template is missing script component");
+        return NULL;
+    }
+
+    ecs_script_template_t *template = script->template_;
+    ecs_assert(template != NULL, ECS_INTERNAL_ERROR, NULL);
+    return template;
+}
+
+static
+void flecs_script_template_on_replace(
+    ecs_iter_t *it)
+{
+    if (it->table->flags & EcsTableIsPrefab) {
+        /* Don't instantiate templates for prefabs */
+        return;
+    }
+
+    ecs_world_t *world = it->world;
+    ecs_entity_t template_entity = ecs_field_id(it, 0);
+    EcsScriptTemplateInstance *inst_data = ecs_table_get_id(world, it->table,
+        ecs_pair_t(EcsScriptTemplateInstance, template_entity), it->offset);
+    if (!inst_data) {
+        return;
+    }
+
+    const EcsStruct *st = ecs_get(world, template_entity, EcsStruct);
+    if (!st) {
+        return;
+    }
+
+    ecs_script_template_t *template = flecs_script_template_get(
+        world, template_entity);
+    if (!template) {
+        return;
+    }
+
+    const ecs_type_info_t *ti = template->type_info;
+    ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
+    size_t size = flecs_ito(size_t, ti->size);
+
+    void *old = ecs_field_w_size(it, size, 0);
+    void *new = ecs_field_w_size(it, size, 1);
+
+    for (int32_t i = 0; i < it->count; i ++) {
+        inst_data[i].changed_mask = 0;
+        
+        void *old_ptr = ECS_ELEM(old, size, i);
+        void *new_ptr = ECS_ELEM(new, size, i);
+
+        ecs_member_t *members = ecs_vec_first(&st->members);
+        int32_t member_count = ecs_vec_count(&st->members);
+        for (int32_t m = 0; m < member_count; m ++) {
+            uint64_t bit = 1llu << m;
+            void *old_member = ECS_OFFSET(old_ptr, members[m].offset);
+            void *new_member = ECS_OFFSET(new_ptr, members[m].offset);
+            const ecs_type_info_t *mti = ecs_get_type_info(world, members[m].type);
+            if (!flecs_type_info_equals(old_member, new_member, mti)) {
+                inst_data[i].changed_mask |= bit;
+            }
+        }
+    }
+}
+
 /* Template on_set handler to update contents for new property values */
 static
 void flecs_script_template_on_set(
@@ -295,20 +376,12 @@ void flecs_script_template_on_set(
 
     ecs_world_t *world = it->world;
     ecs_entity_t template_entity = ecs_field_id(it, 0);
-    ecs_record_t *r = ecs_record_find(world, template_entity);
-    if (!r) {
-        ecs_err("template entity is empty (should never happen)");
+    ecs_script_template_t *template = flecs_script_template_get(
+        world, template_entity);
+    if (!template) {
         return;
     }
 
-    const EcsScript *script = ecs_record_get(world, r, EcsScript);
-    if (!script) {
-        ecs_err("template is missing script component");
-        return;
-    }
-
-    ecs_script_template_t *template = script->template_;
-    ecs_assert(template != NULL, ECS_INTERNAL_ERROR, NULL);
     const ecs_type_info_t *ti = template->type_info;
     ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
     void *data = ecs_field_w_size(it, flecs_ito(size_t, ti->size), 0);
@@ -401,6 +474,8 @@ int flecs_script_template_eval_prop(
         flecs_free(&v->world->allocator, ti->size, value.ptr);
     }
 
+    var->changed_mask = 1llu << ecs_vec_count(&template->prop_defaults);
+
     ecs_script_var_t *value = ecs_vec_append_t(&v->base.script->allocator, 
         &template->prop_defaults, ecs_script_var_t);
     value->value.ptr = flecs_calloc_w_dbg_info(
@@ -459,7 +534,17 @@ int flecs_script_template_preprocess(
     v->vars = flecs_script_vars_push(v->vars, &v->r->stack, &v->r->allocator);
     ecs_script_var_t *var = ecs_script_vars_declare(v->vars, "this");
     var->value.type = ecs_id(ecs_entity_t);
+
+    ecs_hashmap_t *old_owned_entities = v->owned_entities;
+    ecs_hashmap_t *old_owned_components = v->owned_components;
+    ecs_hashmap_t owned_entities, owned_components;
+    flecs_script_check_ownership_init(v, &owned_entities, &owned_components);
+
     int result = flecs_script_check_scope(v, template->node->scope);
+
+    flecs_script_check_ownership_fini(
+        v, old_owned_entities, old_owned_components);
+
     v->vars = ecs_script_vars_pop(v->vars);
     v->base.visit = prev_visit;
     v->template = NULL;
@@ -625,6 +710,7 @@ int flecs_script_eval_template(
     ecs_set_hooks_id(v->world, template_entity, &(ecs_type_hooks_t) {
         .ctor = flecs_script_template_ctor,
         .on_set = flecs_script_template_on_set,
+        .on_replace = flecs_script_template_on_replace,
         .ctx = v->world
     });
 
@@ -642,6 +728,7 @@ void flecs_script_template_import(
 {
     ECS_COMPONENT_DEFINE(world, EcsScriptTemplateSetEvent);
     ECS_TAG_DEFINE(world, EcsScriptTemplate);
+    ECS_COMPONENT_DEFINE(world, EcsScriptTemplateInstance);
 
     ecs_add_id(world, EcsScriptTemplate, EcsPairIsTag);
 
@@ -650,6 +737,10 @@ void flecs_script_template_import(
         .move = ecs_move(EcsScriptTemplateSetEvent),
         .dtor = ecs_dtor(EcsScriptTemplateSetEvent),
         .flags = ECS_TYPE_HOOK_COPY_ILLEGAL
+    });
+
+    ecs_set_hooks(world, EcsScriptTemplateInstance, {
+        .ctor = flecs_default_ctor
     });
 
     ecs_observer(world, {
