@@ -954,7 +954,7 @@ void flecs_table_invoke_hook(
     ecs_assert(type_index < table->type.count, ECS_INTERNAL_ERROR, NULL);
     const ecs_table_record_t *tr = &table->_->records[type_index];
     ecs_component_record_t *cr = tr->hdr.cr;
-    flecs_invoke_hook(world, table, cr, tr, count, row, entities,
+    flecs_invoke_hook(world, table, cr, tr->column, count, row, entities,
         table->type.array[type_index], column->ti, event, callback, NULL);
 }
 
@@ -995,7 +995,7 @@ void flecs_table_invoke_ctor_for_array(
                     int32_t record_index = table->column_map[table->type.count + column_index];
                     const ecs_table_record_t *tr = &table->_->records[record_index];
                     const ecs_entity_t *entities = &ecs_table_entities(table)[row];
-                    flecs_invoke_hook(world, table, tr->hdr.cr, tr,
+                    flecs_invoke_hook(world, table, tr->hdr.cr, tr->column,
                         count, row, entities, ti->component, ti, EcsOnSet,
                         on_set, ECS_ELEM(array, ti->size, row));
                 }
