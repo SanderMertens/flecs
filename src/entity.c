@@ -2335,9 +2335,8 @@ void flecs_set_id_move(
     if (cmd_kind == EcsCmdSet) {
         ecs_table_t *table = r->table;
         if (table->flags & EcsTableHasOnSet || ti->hooks.on_set) {
-            ecs_type_t ids = { .array = &component, .count = 1 };
-            flecs_notify_on_set_ids(
-                world, table, ECS_RECORD_TO_ROW(r->row), 1, &ids);
+            flecs_notify_on_set(world, table, ECS_RECORD_TO_ROW(r->row), 
+                component, true, dst.ptr);
         }
     } else if (cmd_kind == EcsCmdSetDontFragment) {
         flecs_notify_on_set(

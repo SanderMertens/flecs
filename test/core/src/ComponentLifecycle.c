@@ -5212,3 +5212,261 @@ void ComponentLifecycle_value_move_ctor_invokes_move_ctor(void) {
 
     ecs_fini(world);
 }
+
+static int on_validate_invoked = 0;
+static ecs_entity_t on_validate_last_entity = 0;
+static Position on_validate_last_value = {0, 0};
+static int on_validate_observer_invoked = 0;
+
+static
+bool ValidatePosition(ecs_world_t *world, ecs_entity_t e, void *ptr) {
+    test_assert(world != NULL);
+    test_assert(e != 0);
+    test_assert(ptr != NULL);
+    Position *p = ptr;
+    on_validate_invoked ++;
+    on_validate_last_entity = e;
+    on_validate_last_value = *p;
+    return p->x != 0 || p->y != 0;
+}
+
+static int on_validate_on_set_invoked = 0;
+
+static
+void OnSetHookAfterValidate(ecs_iter_t *it) {
+    on_validate_on_set_invoked += it->count;
+}
+
+static
+void OnSetObserverAfterValidate(ecs_iter_t *it) {
+    on_validate_observer_invoked += it->count;
+}
+
+void ComponentLifecycle_on_validate_true_invokes_on_set(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = flecs_default_ctor,
+        .on_validate = ValidatePosition,
+        .on_set = OnSetHookAfterValidate
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set(world, e, Position, {10, 20});
+
+    test_int(on_validate_invoked, 1);
+    test_int(on_validate_on_set_invoked, 1);
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_on_validate_false_blocks_on_set(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = flecs_default_ctor,
+        .on_validate = ValidatePosition,
+        .on_set = OnSetHookAfterValidate
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set(world, e, Position, {0, 0});
+
+    test_int(on_validate_invoked, 1);
+    test_int(on_validate_on_set_invoked, 0);
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_on_validate_true_invokes_on_set_observer(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = flecs_default_ctor,
+        .on_validate = ValidatePosition
+    });
+
+    ecs_observer_init(world, &(ecs_observer_desc_t){
+        .query.terms[0].id = ecs_id(Position),
+        .events = {EcsOnSet},
+        .callback = OnSetObserverAfterValidate
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set(world, e, Position, {10, 20});
+
+    test_int(on_validate_invoked, 1);
+    test_int(on_validate_observer_invoked, 1);
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_on_validate_false_blocks_on_set_observer(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = flecs_default_ctor,
+        .on_validate = ValidatePosition
+    });
+
+    ecs_observer_init(world, &(ecs_observer_desc_t){
+        .query.terms[0].id = ecs_id(Position),
+        .events = {EcsOnSet},
+        .callback = OnSetObserverAfterValidate
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set(world, e, Position, {0, 0});
+
+    test_int(on_validate_invoked, 1);
+    test_int(on_validate_observer_invoked, 0);
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_on_validate_receives_value(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = flecs_default_ctor,
+        .on_validate = ValidatePosition
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set(world, e, Position, {10, 20});
+
+    test_int(on_validate_invoked, 1);
+    test_uint(on_validate_last_entity, e);
+    test_int(on_validate_last_value.x, 10);
+    test_int(on_validate_last_value.y, 20);
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_on_validate_blocks_modified(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = flecs_default_ctor,
+        .on_validate = ValidatePosition,
+        .on_set = OnSetHookAfterValidate
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set(world, e, Position, {10, 20});
+
+    on_validate_invoked = 0;
+    on_validate_on_set_invoked = 0;
+
+    Position *p = ecs_get_mut(world, e, Position);
+    test_assert(p != NULL);
+    p->x = 0;
+    p->y = 0;
+
+    ecs_modified(world, e, Position);
+
+    test_int(on_validate_invoked, 1);
+    test_int(on_validate_on_set_invoked, 0);
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_on_validate_per_entity_in_bulk(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = flecs_default_ctor,
+        .on_validate = ValidatePosition,
+        .on_set = OnSetHookAfterValidate
+    });
+
+    ecs_observer_init(world, &(ecs_observer_desc_t){
+        .query.terms[0].id = ecs_id(Position),
+        .events = {EcsOnSet},
+        .callback = OnSetObserverAfterValidate
+    });
+
+    Position p[] = {
+        {10, 20},
+        {0, 0},
+        {50, 60}
+    };
+
+    void *data[] = {p};
+
+    const ecs_entity_t *entities = ecs_bulk_init(world, &(ecs_bulk_desc_t){
+        .count = 3,
+        .ids = {ecs_id(Position)},
+        .data = data
+    });
+
+    test_assert(entities != NULL);
+
+    test_int(on_validate_invoked, 3);
+    test_int(on_validate_on_set_invoked, 2);
+    test_int(on_validate_observer_invoked, 2);
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_on_validate_false_blocks_on_set_deferred(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = flecs_default_ctor,
+        .on_validate = ValidatePosition,
+        .on_set = OnSetHookAfterValidate
+    });
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_defer_begin(world);
+    ecs_set(world, e, Position, {0, 0});
+    test_int(on_validate_invoked, 0);
+    test_int(on_validate_on_set_invoked, 0);
+    ecs_defer_end(world);
+
+    test_int(on_validate_invoked, 1);
+    test_int(on_validate_on_set_invoked, 0);
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_on_validate_true_invokes_on_set_deferred(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = flecs_default_ctor,
+        .on_validate = ValidatePosition,
+        .on_set = OnSetHookAfterValidate
+    });
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_defer_begin(world);
+    ecs_set(world, e, Position, {10, 20});
+    ecs_defer_end(world);
+
+    test_int(on_validate_invoked, 1);
+    test_int(on_validate_on_set_invoked, 1);
+
+    ecs_fini(world);
+}

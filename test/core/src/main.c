@@ -1731,6 +1731,15 @@ void ComponentLifecycle_change_hook_while_in_use_w_pair(void);
 void ComponentLifecycle_add_hook_while_in_use(void);
 void ComponentLifecycle_add_on_set_hook_while_in_use(void);
 void ComponentLifecycle_value_move_ctor_invokes_move_ctor(void);
+void ComponentLifecycle_on_validate_true_invokes_on_set(void);
+void ComponentLifecycle_on_validate_false_blocks_on_set(void);
+void ComponentLifecycle_on_validate_true_invokes_on_set_observer(void);
+void ComponentLifecycle_on_validate_false_blocks_on_set_observer(void);
+void ComponentLifecycle_on_validate_receives_value(void);
+void ComponentLifecycle_on_validate_blocks_modified(void);
+void ComponentLifecycle_on_validate_per_entity_in_bulk(void);
+void ComponentLifecycle_on_validate_false_blocks_on_set_deferred(void);
+void ComponentLifecycle_on_validate_true_invokes_on_set_deferred(void);
 
 // Testsuite 'Pairs'
 void Pairs_disable_toggle_component_and_toggle_pair(void);
@@ -10110,6 +10119,42 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "value_move_ctor_invokes_move_ctor",
         ComponentLifecycle_value_move_ctor_invokes_move_ctor
+    },
+    {
+        "on_validate_true_invokes_on_set",
+        ComponentLifecycle_on_validate_true_invokes_on_set
+    },
+    {
+        "on_validate_false_blocks_on_set",
+        ComponentLifecycle_on_validate_false_blocks_on_set
+    },
+    {
+        "on_validate_true_invokes_on_set_observer",
+        ComponentLifecycle_on_validate_true_invokes_on_set_observer
+    },
+    {
+        "on_validate_false_blocks_on_set_observer",
+        ComponentLifecycle_on_validate_false_blocks_on_set_observer
+    },
+    {
+        "on_validate_receives_value",
+        ComponentLifecycle_on_validate_receives_value
+    },
+    {
+        "on_validate_blocks_modified",
+        ComponentLifecycle_on_validate_blocks_modified
+    },
+    {
+        "on_validate_per_entity_in_bulk",
+        ComponentLifecycle_on_validate_per_entity_in_bulk
+    },
+    {
+        "on_validate_false_blocks_on_set_deferred",
+        ComponentLifecycle_on_validate_false_blocks_on_set_deferred
+    },
+    {
+        "on_validate_true_invokes_on_set_deferred",
+        ComponentLifecycle_on_validate_true_invokes_on_set_deferred
     }
 };
 
@@ -16778,7 +16823,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         ComponentLifecycle_setup,
         NULL,
-        156,
+        165,
         ComponentLifecycle_testcases
     },
     {
