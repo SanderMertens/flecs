@@ -2574,7 +2574,7 @@ void flecs_invoke_hook(
     ecs_world_t *world,
     ecs_table_t *table,
     const ecs_component_record_t *cr,
-    const ecs_table_record_t *tr,
+    int16_t column,
     int32_t count,
     int32_t row,
     const ecs_entity_t *entities,
@@ -6853,7 +6853,7 @@ void flecs_invoke_hook(
     ecs_world_t *world,
     ecs_table_t *table,
     const ecs_component_record_t *cr,
-    const ecs_table_record_t *tr,
+    int16_t column,
     int32_t count,
     int32_t row,
     const ecs_entity_t *entities,
@@ -6875,25 +6875,15 @@ void flecs_invoke_hook(
         it.ptrs = &ptr;
     }
 
-    ecs_table_record_t dummy_tr;
-    if (!tr) {
-        dummy_tr.hdr.cr = ECS_CONST_CAST(ecs_component_record_t*, cr);
-        dummy_tr.hdr.table = table;
-        dummy_tr.index = -1;
-        dummy_tr.column = -1;
-        dummy_tr.count = 0;
-        tr = &dummy_tr;
-    }
-
+    const ecs_table_record_t *tr = NULL;
     ecs_entity_t dummy_src = 0;
-    int16_t column = tr->column;
 
     it.world = world;
     it.real_world = world;
     it.table = table;
     it.trs = &tr;
     it.columns = &column;
-    it.row_fields = !!(tr->hdr.cr->flags & EcsIdSparse);
+    it.row_fields = !!(cr->flags & EcsIdSparse);
     it.ref_fields = it.row_fields;
     it.sizes = ECS_CONST_CAST(ecs_size_t*, &ti->size);
     it.ids = &id;
@@ -7393,31 +7383,20 @@ void flecs_notify_on_set_ids(
             continue;
         }
 
-        ecs_table_record_t dummy_tr;
-        const ecs_table_record_t *tr = 
-        flecs_component_get_table(cr, table);
-        if (!tr) {
-            dummy_tr.hdr.cr = cr;
-            dummy_tr.hdr.table = table;
-            dummy_tr.column = -1;
-            dummy_tr.index = -1;
-            dummy_tr.count = 0;
-            tr = &dummy_tr;
-        }
-
         if (cr->flags & EcsIdSparse) {
             int32_t j;
             for (j = 0; j < count; j ++) {
-                flecs_invoke_hook(world, table, cr, tr, 1, row,
+                flecs_invoke_hook(world, table, cr, -1, 1, row,
                     &entities[j], id, ti, EcsOnSet, on_set, NULL);
             }
         } else {
-            ecs_assert(tr->column != -1, ECS_INTERNAL_ERROR, NULL);
-            ecs_assert(tr->count == 1, ECS_INTERNAL_ERROR, NULL);
-            if (on_set) {
-                flecs_invoke_hook(world, table, cr, tr, count, row,
-                    entities, id, ti, EcsOnSet, on_set, NULL);
-            }
+            const ecs_table_cache_elem_t *elem = flecs_table_cache_get_elem(
+                &cr->cache, table);
+            ecs_assert(elem != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(elem->column != -1, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(elem->tr->count == 1, ECS_INTERNAL_ERROR, NULL);
+            flecs_invoke_hook(world, table, cr, elem->column, count, row,
+                entities, id, ti, EcsOnSet, on_set, NULL);
         }
     }
 
@@ -7452,32 +7431,22 @@ void flecs_notify_on_set(
     ecs_assert(cr->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
     bool dont_fragment = (cr->flags & EcsIdDontFragment) != 0;
 
-    if (invoke_hook) {        
+    if (invoke_hook) {
         const ecs_type_info_t *ti = cr->type_info;
         ecs_iter_action_t on_set = ti->hooks.on_set;
         if (on_set) {
-            ecs_table_record_t dummy_tr;
-            const ecs_table_record_t *tr = flecs_component_get_table(cr, table);
-            if (!tr) {
-                dummy_tr.hdr.cr = cr;
-                dummy_tr.hdr.table = table;
-                dummy_tr.column = -1;
-                dummy_tr.index = -1;
-                dummy_tr.count = 0;
-                tr = &dummy_tr;
+            int16_t column = -1;
+            if (!(cr->flags & EcsIdSparse)) {
+                const ecs_table_cache_elem_t *elem =
+                    flecs_table_cache_get_elem(&cr->cache, table);
+                ecs_assert(elem != NULL, ECS_INTERNAL_ERROR, NULL);
+                ecs_assert(elem->column != -1, ECS_INTERNAL_ERROR, NULL);
+                ecs_assert(elem->tr->count == 1, ECS_INTERNAL_ERROR, NULL);
+                column = elem->column;
             }
-    
-            if (cr->flags & EcsIdSparse) {
-                flecs_invoke_hook(world, table, cr, tr, 1, row,
-                    entities, id, ti, EcsOnSet, on_set, ptr);
-            } else {
-                ecs_assert(tr->column != -1, ECS_INTERNAL_ERROR, NULL);
-                ecs_assert(tr->count == 1, ECS_INTERNAL_ERROR, NULL);
-                if (on_set) {
-                    flecs_invoke_hook(world, table, cr, tr, 1, row,
-                        entities, id, ti, EcsOnSet, on_set, ptr);
-                }
-            }
+
+            flecs_invoke_hook(world, table, cr, column, 1, row,
+                entities, id, ti, EcsOnSet, on_set, ptr);
         }
     }
 
@@ -33997,12 +33966,7 @@ ecs_entity_t flecs_component_sparse_remove_intern(
 
     ecs_iter_action_t on_remove = ti->hooks.on_remove;
     if (on_remove) {
-        const ecs_table_record_t *tr = NULL;
-        if (!(cr->flags & EcsIdDontFragment)) {
-            tr = flecs_component_get_table(cr, table);
-        }
-
-        flecs_invoke_hook(world, table, cr, tr, 1, row,
+        flecs_invoke_hook(world, table, cr, -1, 1, row,
             &entity, cr->id, ti, EcsOnRemove, on_remove, ptr);
     }
 
@@ -34138,7 +34102,7 @@ void flecs_component_sparse_remove_all_id(
             for (i = 0; i < count; i ++) {
                 ecs_entity_t e = entities[i];
                 ecs_record_t *r = flecs_entities_get(world, e);
-                flecs_invoke_hook(world, r->table, cr, NULL, 1,
+                flecs_invoke_hook(world, r->table, cr, -1, 1,
                     ECS_RECORD_TO_ROW(r->row), &entities[i], component_id, ti,
                     EcsOnRemove, on_remove, NULL);
             }
@@ -34349,12 +34313,7 @@ void* flecs_component_sparse_insert(
         return ptr;
     }
 
-    const ecs_table_record_t *tr = NULL;
-    if (!(cr->flags & EcsIdDontFragment)) {
-        tr = flecs_component_get_table(cr, table);
-    }
-
-    flecs_invoke_hook(world, table, cr, tr, 1, row,
+    flecs_invoke_hook(world, table, cr, -1, 1, row,
         &entity, component_id, ti, EcsOnAdd, on_add, ptr);
 
     return ptr;
@@ -34385,12 +34344,7 @@ void* flecs_component_sparse_emplace(
         return ptr;
     }
 
-    const ecs_table_record_t *tr = NULL;
-    if (!(cr->flags & EcsIdDontFragment)) {
-        tr = flecs_component_get_table(cr, table);
-    }
-
-    flecs_invoke_hook(world, table, cr, tr, 1, row,
+    flecs_invoke_hook(world, table, cr, -1, 1, row,
         &entity, cr->id, ti, EcsOnAdd, on_add, ptr);
 
     return ptr;
@@ -35331,7 +35285,7 @@ void flecs_table_invoke_hook(
     ecs_assert(type_index < table->type.count, ECS_INTERNAL_ERROR, NULL);
     const ecs_table_record_t *tr = &table->_->records[type_index];
     ecs_component_record_t *cr = tr->hdr.cr;
-    flecs_invoke_hook(world, table, cr, tr, count, row, entities,
+    flecs_invoke_hook(world, table, cr, tr->column, count, row, entities,
         table->type.array[type_index], column->ti, event, callback, NULL);
 }
 
@@ -35372,7 +35326,7 @@ void flecs_table_invoke_ctor_for_array(
                     int32_t record_index = table->column_map[table->type.count + column_index];
                     const ecs_table_record_t *tr = &table->_->records[record_index];
                     const ecs_entity_t *entities = &ecs_table_entities(table)[row];
-                    flecs_invoke_hook(world, table, tr->hdr.cr, tr,
+                    flecs_invoke_hook(world, table, tr->hdr.cr, tr->column,
                         count, row, entities, ti->component, ti, EcsOnSet,
                         on_set, ECS_ELEM(array, ti->size, row));
                 }
