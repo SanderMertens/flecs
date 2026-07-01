@@ -1791,7 +1791,16 @@
                 "change_hook_while_in_use_w_pair",
                 "add_hook_while_in_use",
                 "add_on_set_hook_while_in_use",
-                "value_move_ctor_invokes_move_ctor"
+                "value_move_ctor_invokes_move_ctor",
+                "on_validate_true_invokes_on_set",
+                "on_validate_false_blocks_on_set",
+                "on_validate_true_invokes_on_set_observer",
+                "on_validate_false_blocks_on_set_observer",
+                "on_validate_receives_value",
+                "on_validate_blocks_modified",
+                "on_validate_per_entity_in_bulk",
+                "on_validate_false_blocks_on_set_deferred",
+                "on_validate_true_invokes_on_set_deferred"
             ]
         }, {
             "id": "Pairs",
