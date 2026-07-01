@@ -236,6 +236,7 @@
 #define FLECS_QUERY_DSL      /**< Flecs query DSL parser. */
 #define FLECS_SCRIPT         /**< Flecs entity notation language. */
 // #define FLECS_SCRIPT_MATH /**< Math functions for Flecs script (may require linking with libm). */
+// #define FLECS_SCRIPT_PLATFORM /**< Platform constants for Flecs script. */
 #define FLECS_SYSTEM         /**< System support. */
 #define FLECS_STATS          /**< Track runtime statistics. */
 #define FLECS_TIMER          /**< Timer support. */
@@ -12528,6 +12529,9 @@ int ecs_value_move_ctor(
 #ifdef FLECS_NO_SCRIPT_MATH
 #undef FLECS_SCRIPT_MATH
 #endif
+#ifdef FLECS_NO_SCRIPT_PLATFORM
+#undef FLECS_SCRIPT_PLATFORM
+#endif
 #ifdef FLECS_NO_STATS
 #undef FLECS_STATS
 #endif
@@ -16726,6 +16730,55 @@ typedef struct {
  */
 FLECS_API
 void FlecsScriptMathImport(
+    ecs_world_t *world);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
+
+/** @} */
+
+#endif
+
+#endif
+
+#ifdef FLECS_SCRIPT_PLATFORM
+#ifdef FLECS_NO_SCRIPT_PLATFORM
+#error "FLECS_NO_SCRIPT_PLATFORM failed: SCRIPT_PLATFORM is required by other addons"
+#endif
+
+#ifdef FLECS_SCRIPT_PLATFORM
+
+#ifndef FLECS_SCRIPT
+#define FLECS_SCRIPT
+#endif
+
+/**
+ * @defgroup c_addons_script_platform Script Platform
+ * @ingroup c_addons
+ * Platform constants for Flecs script.
+ * @{
+ */
+
+#ifndef FLECS_SCRIPT_PLATFORM_H
+#define FLECS_SCRIPT_PLATFORM_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/** Script platform import function.
+ * Usage:
+ * @code
+ * ECS_IMPORT(world, FlecsScriptPlatform)
+ * @endcode
+ *
+ * @param world The world.
+ */
+FLECS_API
+void FlecsScriptPlatformImport(
     ecs_world_t *world);
 
 #ifdef __cplusplus

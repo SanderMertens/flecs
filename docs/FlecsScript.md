@@ -1050,6 +1050,48 @@ To use the math functions, make sure to use a Flecs build compiled with the `FLE
 ECS_IMPORT(world, FlecsScriptMath);
 ```
 
+### Platform constants
+The script platform addon exposes constants in the `flecs.script.platform` namespace that describe the operating system and compiler that the application was built with. This makes it possible to write scripts that conditionally load assets or configuration based on the platform.
+
+The following table lists the string constants in the `flecs.script.platform` namespace:
+
+| **Constant Name** | **Description**                          | **Type**       | **Possible Values**                                                   |
+|-------------------|------------------------------------------|----------------|-----------------------------------------------------------------------|
+| `os`              | Operating system the build targets       | `string`       | `windows`, `android`, `linux`, `freebsd`, `darwin`, `emscripten`, `unknown` |
+| `compiler`        | Compiler the build was compiled with     | `string`       | `msvc`, `clang`, `mingw`, `gcc`, `unknown`                            |
+
+The following table lists the boolean constants in the `flecs.script.platform` namespace. A constant is `true` when the application was built for that platform or compiler, and `false` otherwise:
+
+| **Constant Name** | **Description**                          | **Type**       |
+|-------------------|------------------------------------------|----------------|
+| `WINDOWS`         | Whether the build targets Windows        | `bool`         |
+| `POSIX`           | Whether the build targets a POSIX system | `bool`         |
+| `ANDROID`         | Whether the build targets Android        | `bool`         |
+| `LINUX`           | Whether the build targets Linux          | `bool`         |
+| `FREEBSD`         | Whether the build targets FreeBSD        | `bool`         |
+| `DARWIN`          | Whether the build targets macOS/iOS      | `bool`         |
+| `EMSCRIPTEN`      | Whether the build targets Emscripten     | `bool`         |
+| `MINGW`           | Whether the build was compiled with MinGW| `bool`         |
+| `GNU`             | Whether the build was compiled with GCC  | `bool`         |
+
+The platform constants can be used like this:
+
+```cpp
+using flecs.script
+
+const platform_name: platform.os
+
+if platform.WINDOWS {
+  // ...
+}
+```
+
+To use the platform constants, make sure to use a Flecs build compiled with the `FLECS_SCRIPT_PLATFORM` addon (disabled by default) and that the module is imported:
+
+```cpp
+ECS_IMPORT(world, FlecsScriptPlatform);
+```
+
 ## Templates
 Templates are parameterized scripts that can be used to create procedural assets. Templates can be created with the `template` keyword. Example:
 
