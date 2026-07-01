@@ -92,7 +92,7 @@ void flecs_observer_fini(
     ecs_observer_t *observer);
 
 /* Emit event. */
-void flecs_emit( 
+void flecs_emit(
     ecs_world_t *world,
     ecs_world_t *stage,
     ecs_event_desc_t *desc);

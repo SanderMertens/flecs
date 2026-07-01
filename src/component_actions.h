@@ -20,7 +20,8 @@ void flecs_invoke_hook(
     ecs_id_t id,
     const ecs_type_info_t *ti,
     ecs_entity_t event,
-    ecs_iter_action_t hook);
+    ecs_iter_action_t hook,
+    void *ptr);
 
 /* Invoke replace hook. */
 void flecs_invoke_replace_hook(
@@ -97,7 +98,8 @@ void flecs_notify_on_set(
     ecs_table_t *table,
     int32_t row,
     ecs_id_t id,
-    bool invoke_hook);
+    bool invoke_hook,
+    void *ptr);
 
 /* Same as flecs_notify_on_set but for multiple component ids. */
 void flecs_notify_on_set_ids(

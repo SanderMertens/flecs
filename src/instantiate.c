@@ -193,6 +193,7 @@ void flecs_instantiate_sparse(
 
         for (int32_t j = 0; j < base_child_range->count; j ++) {
             ecs_entity_t instance_child = instance_children[j];
+            void *dst_ptr = NULL;
 
             /* Sparse component values live outside the instance table, so they
              * are copied here. Non-sparse override values are already in place
@@ -203,7 +204,7 @@ void flecs_instantiate_sparse(
                 void *src_ptr = flecs_sparse_get(cr->sparse, ti->size, child);
                 ecs_assert(src_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
 
-                void *dst_ptr = flecs_sparse_get(
+                dst_ptr = flecs_sparse_get(
                     cr->sparse, ti->size, instance_child);
                 ecs_assert(dst_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -211,7 +212,7 @@ void flecs_instantiate_sparse(
             }
 
             flecs_notify_on_set(
-                world, instance_table, row_offset + j, id, true);
+                world, instance_table, row_offset + j, id, true, dst_ptr);
         }
     }
 }
@@ -448,7 +449,7 @@ void flecs_instantiate_dont_fragment(
                 if (ti) {
                     flecs_notify_on_set(
                         world, r->table, ECS_RECORD_TO_ROW(r->row),
-                        cur->id, true);
+                        cur->id, true, ptr);
                 }
             }
         }
