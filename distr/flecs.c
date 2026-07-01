@@ -70132,8 +70132,6 @@ int flecs_script_eval_template(
 
     template->type_info = ecs_get_type_info(v->world, template_entity);
 
-    ecs_add_pair(v->world, template_entity, EcsOnInstantiate, EcsOverride);
-
     EcsScript *script = ecs_ensure(v->world, template_entity, EcsScript);
     if (script->script) {
         if (script->template_) {
