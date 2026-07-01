@@ -27,6 +27,9 @@
 #ifdef FLECS_NO_SCRIPT_MATH
 #undef FLECS_SCRIPT_MATH
 #endif
+#ifdef FLECS_NO_SCRIPT_PLATFORM
+#undef FLECS_SCRIPT_PLATFORM
+#endif
 #ifdef FLECS_NO_STATS
 #undef FLECS_STATS
 #endif
@@ -174,6 +177,13 @@
 #error "FLECS_NO_SCRIPT_MATH failed: SCRIPT_MATH is required by other addons"
 #endif
 #include "../addons/script_math.h"
+#endif
+
+#ifdef FLECS_SCRIPT_PLATFORM
+#ifdef FLECS_NO_SCRIPT_PLATFORM
+#error "FLECS_NO_SCRIPT_PLATFORM failed: SCRIPT_PLATFORM is required by other addons"
+#endif
+#include "../addons/script_platform.h"
 #endif
 
 #ifdef FLECS_PARSER

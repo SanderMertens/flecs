@@ -29,6 +29,7 @@
                 "FLECS_QUERY_DSL",
                 "FLECS_SCRIPT",
                 "FLECS_SCRIPT_MATH",
+                "FLECS_SCRIPT_PLATFORM",
                 "FLECS_SYSTEM",
                 "FLECS_STATS",
                 "FLECS_TIMER",
