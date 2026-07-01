@@ -22,12 +22,24 @@ public:
         , desc_{}
         , world_(world)
     {
-        ecs_entity_desc_t entity_desc = {};
-        entity_desc.name = name;
-        entity_desc.sep = "::";
-        entity_desc.root_sep = "::";
-        desc_.entity = ecs_entity_init(world_, &entity_desc);
+        if (name != nullptr) {
+            ecs_entity_desc_t entity_desc = {};
+            entity_desc.name = name;
+            entity_desc.sep = "::";
+            entity_desc.root_sep = "::";
+            desc_.entity = ecs_entity_init(world_, &entity_desc);
+        }
     }
+
+    node_builder(const node_builder& f)
+        : IBase(&desc_, f.term_index_)
+    {
+        world_ = f.world_;
+        desc_ = f.desc_;
+    }
+
+    node_builder(node_builder&& f) noexcept
+        : node_builder<T, TDesc, Base, IBuilder, Components...>(f) { }
 
     template <typename Func>
     T run(Func&& func) {

@@ -20,8 +20,8 @@ private:
     using BaseClass = query_builder_i<Base, Components ...>;
 
 public:
-    system_builder_i(ecs_system_desc_t *desc) 
-        : BaseClass(&desc->query)
+    system_builder_i(ecs_system_desc_t *desc, int32_t term_index = 0)
+        : BaseClass(&desc->query, term_index)
         , desc_(desc) { }
 
     /** Specify in which phase the system should run.
@@ -29,16 +29,7 @@ public:
      * @param phase The phase.
      */
     Base& kind(entity_t phase) {
-        flecs::entity_t cur_phase = ecs_get_target(
-            world_v(), desc_->entity, EcsDependsOn, 0);
-        if (cur_phase) {
-            ecs_remove_id(world_v(), desc_->entity, ecs_dependson(cur_phase));
-            ecs_remove_id(world_v(), desc_->entity, cur_phase);
-        }
-        if (phase) {
-            ecs_add_id(world_v(), desc_->entity, ecs_dependson(phase));
-            ecs_add_id(world_v(), desc_->entity, phase);
-        }
+        desc_->phase = phase;
         return *this;
     }
 
