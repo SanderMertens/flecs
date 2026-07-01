@@ -1016,6 +1016,52 @@ void OrderedChildren_add_remove_ordered_children_no_children(void) {
     test_assert(true);
 }
 
+void OrderedChildren_add_child_after_late_ordered_children(void) {
+    /* Adding EcsOrderedChildren to a parent that already has children must
+     * still track children added afterwards. */
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_new(world);
+
+    ecs_entity_t e1 = ecs_new_w_pair(world, EcsChildOf, parent);
+    ecs_entity_t e2 = ecs_new_w_pair(world, EcsChildOf, parent);
+
+    /* Trait added after children exist. */
+    ecs_add_id(world, parent, EcsOrderedChildren);
+
+    /* A child added later must appear in the ordered list. */
+    ecs_entity_t e3 = ecs_new_w_pair(world, EcsChildOf, parent);
+
+    ecs_entities_t oc = ecs_get_ordered_children(world, parent);
+    test_int(3, oc.count);
+    test_uint(e1, oc.ids[0]);
+    test_uint(e2, oc.ids[1]);
+    test_uint(e3, oc.ids[2]);
+
+    {
+        ecs_iter_t it = ecs_children(world, parent);
+        test_bool(true, ecs_children_next(&it));
+        test_int(3, it.count);
+        test_uint(e1, it.entities[0]);
+        test_uint(e2, it.entities[1]);
+        test_uint(e3, it.entities[2]);
+        test_bool(false, ecs_children_next(&it));
+    }
+
+    /* Also works after a set_child_order reorder. */
+    ecs_entity_t ord[] = {e3, e1, e2};
+    ecs_set_child_order(world, parent, ord, 3);
+    ecs_entity_t e4 = ecs_new_w_pair(world, EcsChildOf, parent);
+    oc = ecs_get_ordered_children(world, parent);
+    test_int(4, oc.count);
+    test_uint(e3, oc.ids[0]);
+    test_uint(e1, oc.ids[1]);
+    test_uint(e2, oc.ids[2]);
+    test_uint(e4, oc.ids[3]);
+
+    ecs_fini(world);
+}
+
 void OrderedChildren_change_order_no_children(void) {
     ecs_world_t *world = ecs_mini();
 

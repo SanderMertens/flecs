@@ -1170,6 +1170,7 @@
                 "delete_with_tag_some_children",
                 "add_remove_ordered_children_after_in_use",
                 "add_remove_ordered_children_no_children",
+                "add_child_after_late_ordered_children",
                 "change_order_no_children",
                 "change_order_mismatching_child_count",
                 "change_order_mismatching_child_id",
