@@ -871,3 +871,49 @@ void SystemBuilder_name_from_root(void) {
     flecs::entity ns = ecs.entity("::ns");
     test_assert(ns == sys.parent());
 }
+
+void SystemBuilder_reuse_system_builder(void) {
+    flecs::world ecs;
+
+    flecs::entity e1 = ecs.entity().set(Position {10, 20});
+    flecs::entity e2 = ecs.entity().set(Position {10, 20}).set(Velocity{1, 2});
+
+    auto sb = ecs.system<Position>();
+
+    int count_1 = 0;
+    flecs::system s1 = sb.each([&](Position& p) {
+        count_1 ++;
+    });
+
+    int count_2 = 0;
+    flecs::system s2 = sb.with<Velocity>().each([&](Position& p) {
+        count_2 ++;
+    });
+
+    test_assert(s1 != s2);
+
+    ecs.progress();
+
+    test_int(count_1, 2);
+    test_int(count_2, 1);
+}
+
+void SystemBuilder_kind_on_shared_builder(void) {
+    flecs::world ecs;
+
+    auto sb = ecs.system<Position>();
+
+    flecs::system s1 = sb.each([](Position& p) { });
+
+    flecs::system s2 = sb.kind(flecs::PostUpdate).each([](Position& p) { });
+
+    test_assert(s1 != s2);
+
+    test_assert(s1.has(flecs::DependsOn, flecs::OnUpdate));
+    test_assert(s1.has(flecs::OnUpdate));
+
+    test_assert(s2.has(flecs::DependsOn, flecs::PostUpdate));
+    test_assert(s2.has(flecs::PostUpdate));
+    test_assert(!s2.has(flecs::DependsOn, flecs::OnUpdate));
+    test_assert(!s2.has(flecs::OnUpdate));
+}

@@ -23,8 +23,8 @@ struct observer_builder_i : query_builder_i<Base, Components ...> {
         , event_count_(0) { }
 
     /** Construct from an observer descriptor. */
-    observer_builder_i(ecs_observer_desc_t *desc)
-        : BaseClass(&desc->query)
+    observer_builder_i(ecs_observer_desc_t *desc, int32_t term_index = 0)
+        : BaseClass(&desc->query, term_index)
         , desc_(desc)
         , event_count_(0) { }
 

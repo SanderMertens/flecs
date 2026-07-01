@@ -1838,3 +1838,27 @@ void Observer_untyped_field(void) {
     test_int(invoked, 1);
     test_int(count, 1);
 }
+
+void Observer_reuse_observer_builder(void) {
+    flecs::world ecs;
+
+    auto ob = ecs.observer<Position>().event(flecs::OnSet);
+
+    int count_1 = 0;
+    flecs::observer o1 = ob.each([&](Position& p) {
+        count_1 ++;
+    });
+
+    int count_2 = 0;
+    flecs::observer o2 = ob.with<Velocity>().each([&](Position& p) {
+        count_2 ++;
+    });
+
+    test_assert(o1 != o2);
+
+    ecs.entity().set(Position {10, 20});
+    ecs.entity().set(Position {10, 20}).set(Velocity{1, 2});
+
+    test_int(count_1, 2);
+    test_int(count_2, 1);
+}

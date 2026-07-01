@@ -1064,6 +1064,8 @@ void SystemBuilder_deduce_singleton_and_component_terms_from_each_callback(void)
 void SystemBuilder_with_terms_after_deduced_terms(void);
 void SystemBuilder_write_annotation(void);
 void SystemBuilder_name_from_root(void);
+void SystemBuilder_reuse_system_builder(void);
+void SystemBuilder_kind_on_shared_builder(void);
 
 // Testsuite 'Observer'
 void Observer_2_terms_on_add(void);
@@ -1138,6 +1140,7 @@ void Observer_query_eval_w_pair_both_vars_that_triggered_observer(void);
 void Observer_fixed_src_w_each(void);
 void Observer_fixed_src_w_run(void);
 void Observer_untyped_field(void);
+void Observer_reuse_observer_builder(void);
 
 // Testsuite 'ComponentLifecycle'
 void ComponentLifecycle_ctor_on_add(void);
@@ -5804,6 +5807,14 @@ bake_test_case SystemBuilder_testcases[] = {
     {
         "name_from_root",
         SystemBuilder_name_from_root
+    },
+    {
+        "reuse_system_builder",
+        SystemBuilder_reuse_system_builder
+    },
+    {
+        "kind_on_shared_builder",
+        SystemBuilder_kind_on_shared_builder
     }
 };
 
@@ -6095,6 +6106,10 @@ bake_test_case Observer_testcases[] = {
     {
         "untyped_field",
         Observer_untyped_field
+    },
+    {
+        "reuse_observer_builder",
+        Observer_reuse_observer_builder
     }
 };
 
@@ -8185,14 +8200,14 @@ static bake_test_suite suites[] = {
         "SystemBuilder",
         NULL,
         NULL,
-        28,
+        30,
         SystemBuilder_testcases
     },
     {
         "Observer",
         NULL,
         NULL,
-        72,
+        73,
         Observer_testcases
     },
     {

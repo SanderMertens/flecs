@@ -35726,12 +35726,24 @@ public:
         , desc_{}
         , world_(world)
     {
-        ecs_entity_desc_t entity_desc = {};
-        entity_desc.name = name;
-        entity_desc.sep = "::";
-        entity_desc.root_sep = "::";
-        desc_.entity = ecs_entity_init(world_, &entity_desc);
+        if (name != nullptr) {
+            ecs_entity_desc_t entity_desc = {};
+            entity_desc.name = name;
+            entity_desc.sep = "::";
+            entity_desc.root_sep = "::";
+            desc_.entity = ecs_entity_init(world_, &entity_desc);
+        }
     }
+
+    node_builder(const node_builder& f)
+        : IBase(&desc_, f.term_index_)
+    {
+        world_ = f.world_;
+        desc_ = f.desc_;
+    }
+
+    node_builder(node_builder&& f) noexcept
+        : node_builder<T, TDesc, Base, IBuilder, Components...>(f) { }
 
     template <typename Func>
     T run(Func&& func) {
@@ -35808,8 +35820,8 @@ struct observer_builder_i : query_builder_i<Base, Components ...> {
         , event_count_(0) { }
 
     /** Construct from an observer descriptor. */
-    observer_builder_i(ecs_observer_desc_t *desc)
-        : BaseClass(&desc->query)
+    observer_builder_i(ecs_observer_desc_t *desc, int32_t term_index = 0)
+        : BaseClass(&desc->query, term_index)
         , desc_(desc)
         , event_count_(0) { }
 
@@ -36252,8 +36264,8 @@ private:
     using BaseClass = query_builder_i<Base, Components ...>;
 
 public:
-    system_builder_i(ecs_system_desc_t *desc) 
-        : BaseClass(&desc->query)
+    system_builder_i(ecs_system_desc_t *desc, int32_t term_index = 0)
+        : BaseClass(&desc->query, term_index)
         , desc_(desc) { }
 
     /** Specify in which phase the system should run.
@@ -36261,16 +36273,7 @@ public:
      * @param phase The phase.
      */
     Base& kind(entity_t phase) {
-        flecs::entity_t cur_phase = ecs_get_target(
-            world_v(), desc_->entity, EcsDependsOn, 0);
-        if (cur_phase) {
-            ecs_remove_id(world_v(), desc_->entity, ecs_dependson(cur_phase));
-            ecs_remove_id(world_v(), desc_->entity, cur_phase);
-        }
-        if (phase) {
-            ecs_add_id(world_v(), desc_->entity, ecs_dependson(phase));
-            ecs_add_id(world_v(), desc_->entity, phase);
-        }
+        desc_->phase = phase;
         return *this;
     }
 
@@ -36417,8 +36420,7 @@ struct system_builder final : _::system_builder_base<Components...> {
         _::sig<Components...>(world).populate(this);
 
 #ifdef FLECS_PIPELINE
-        ecs_add_id(world, this->desc_.entity, ecs_dependson(flecs::OnUpdate));
-        ecs_add_id(world, this->desc_.entity, flecs::OnUpdate);
+        this->desc_.phase = flecs::OnUpdate;
 #endif
     }
 

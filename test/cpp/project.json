@@ -1099,7 +1099,9 @@
                 "deduce_singleton_and_component_terms_from_each_callback",
                 "with_terms_after_deduced_terms",
                 "write_annotation",
-                "name_from_root"
+                "name_from_root",
+                "reuse_system_builder",
+                "kind_on_shared_builder"
             ]
         }, {
             "id": "Observer",
@@ -1175,7 +1177,8 @@
                 "query_eval_w_pair_both_vars_that_triggered_observer",
                 "fixed_src_w_each",
                 "fixed_src_w_run",
-                "untyped_field"
+                "untyped_field",
+                "reuse_observer_builder"
             ]
         }, {
             "id": "ComponentLifecycle",
