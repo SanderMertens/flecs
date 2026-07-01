@@ -263,6 +263,9 @@ void Timer_rate_filter_with_empty_src(void);
 void Timer_one_shot_timer_entity(void);
 void Timer_interval_timer_entity(void);
 void Timer_rate_entity(void);
+void Timer_fixed_interval(void);
+void Timer_fixed_interval_set_after_init(void);
+void Timer_fixed_interval_single_shot(void);
 void Timer_nested_rate_entity(void);
 void Timer_nested_rate_entity_empty_src(void);
 void Timer_naked_tick_entity(void);
@@ -1585,6 +1588,18 @@ bake_test_case Timer_testcases[] = {
         Timer_rate_entity
     },
     {
+        "fixed_interval",
+        Timer_fixed_interval
+    },
+    {
+        "fixed_interval_set_after_init",
+        Timer_fixed_interval_set_after_init
+    },
+    {
+        "fixed_interval_single_shot",
+        Timer_fixed_interval_single_shot
+    },
+    {
         "nested_rate_entity",
         Timer_nested_rate_entity
     },
@@ -2768,7 +2783,6 @@ const char* MultiThread_worker_kind_param[] = {"thread", "task"};
 bake_test_param MultiThread_params[] = {
     {"worker_kind", (char**)MultiThread_worker_kind_param, 2}
 };
-
 const char* MultiThreadStaging_worker_kind_param[] = {"thread", "task"};
 bake_test_param MultiThreadStaging_params[] = {
     {"worker_kind", (char**)MultiThreadStaging_worker_kind_param, 2}
@@ -2807,7 +2821,7 @@ static bake_test_suite suites[] = {
         "Timer",
         NULL,
         NULL,
-        19,
+        22,
         Timer_testcases
     },
     {
