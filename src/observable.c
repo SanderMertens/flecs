@@ -18,6 +18,8 @@ void flecs_observable_init(
     observable->on_add.event = EcsOnAdd;
     observable->on_remove.event = EcsOnRemove;
     observable->on_set.event = EcsOnSet;
+    observable->on_table_create.event = EcsOnTableCreate;
+    observable->on_table_delete.event = EcsOnTableDelete;
 }
 
 void flecs_observable_fini(
@@ -64,6 +66,8 @@ ecs_event_record_t* flecs_event_record_get(
     else if (event == EcsOnRemove) return ECS_CONST_CAST(ecs_event_record_t*, &o->on_remove);
     else if (event == EcsOnSet)    return ECS_CONST_CAST(ecs_event_record_t*, &o->on_set);
     else if (event == EcsWildcard) return ECS_CONST_CAST(ecs_event_record_t*, &o->on_wildcard);
+    else if (event == EcsOnTableCreate) return ECS_CONST_CAST(ecs_event_record_t*, &o->on_table_create);
+    else if (event == EcsOnTableDelete) return ECS_CONST_CAST(ecs_event_record_t*, &o->on_table_delete);
 
     /* User events */
     return flecs_sparse_get_t(&o->events, ecs_event_record_t, event);
@@ -125,7 +129,7 @@ ecs_event_id_record_t* flecs_event_id_record_get(
     else if (id == EcsWildcard)                        return er->wildcard;
     else if (id == ecs_pair(EcsWildcard, EcsWildcard)) return er->wildcard_pair;
     else {
-        if (ecs_map_is_init(&er->event_ids)) {
+        if (er->event_ids_filter & (1llu << (id % 64))) {
             return ecs_map_get_deref(&er->event_ids, ecs_event_id_record_t, id);
         }
         return NULL;
@@ -171,6 +175,7 @@ ecs_event_id_record_t* flecs_event_id_record_ensure(
 
     ecs_map_init_if(&er->event_ids, &world->allocator);
     ecs_map_insert_ptr(&er->event_ids, id, ider);
+    er->event_ids_filter |= 1llu << (id % 64);
     return ider;
 }
 
@@ -188,6 +193,14 @@ void flecs_event_id_record_remove(
         ecs_map_remove(&er->event_ids, id);
         if (!ecs_map_count(&er->event_ids)) {
             ecs_map_fini(&er->event_ids);
+            er->event_ids_filter = 0;
+        } else {
+            uint64_t filter = 0;
+            ecs_map_iter_t it = ecs_map_iter(&er->event_ids);
+            while (ecs_map_next(&it)) {
+                filter |= 1llu << (ecs_map_key(&it) % 64);
+            }
+            er->event_ids_filter = filter;
         }
     }
 }

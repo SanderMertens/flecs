@@ -735,6 +735,8 @@ ecs_size_t flecs_observer_index_memory_get(
     result += flecs_event_record_memory_get(&o->on_remove);
     result += flecs_event_record_memory_get(&o->on_set);
     result += flecs_event_record_memory_get(&o->on_wildcard);
+    result += flecs_event_record_memory_get(&o->on_table_create);
+    result += flecs_event_record_memory_get(&o->on_table_delete);
 
     const ecs_sparse_t *events = &o->events;
     result += flecs_sparse_memory_get(events,
