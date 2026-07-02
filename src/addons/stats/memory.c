@@ -571,8 +571,10 @@ void ecs_table_memory_get(
 
     result->bytes_column_map += 
         (type_count + column_count) * ECS_SIZEOF(int16_t);
-    if (table->component_map) {
-        result->bytes_component_map += 
+    if (table->component_map &&
+        (table->component_map != flecs_table_empty_component_map))
+    {
+        result->bytes_component_map +=
             FLECS_HI_COMPONENT_ID * ECS_SIZEOF(int16_t);
     }
 

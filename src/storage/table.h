@@ -167,6 +167,8 @@ struct ecs_table_t {
     ecs_table__t *_;                 /* Infrequently accessed table metadata */
 };
 
+extern const int16_t flecs_table_empty_component_map[];
+
 /* Init table */
 void flecs_table_init(
     ecs_world_t *world,

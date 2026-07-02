@@ -19,6 +19,8 @@
 
 #include "../private_api.h"
 
+const int16_t flecs_table_empty_component_map[FLECS_HI_COMPONENT_ID] = {0};
+
 /* Table sanity check to detect storage issues. Only enabled in SANITIZE mode as
  * this can severely slow down many ECS operations. */
 #ifdef FLECS_SANITIZE
@@ -587,6 +589,7 @@ void flecs_table_init(
     int32_t last_id = -1; /* Track last regular (non-pair) id */
     int32_t first_pair = -1; /* Track the first pair in the table */
     int32_t first_role = -1; /* Track first id with role */
+    bool has_low_id = false;
 
     /* Scan to find boundaries of regular ids, pairs and roles */
     for (dst_i = 0; dst_i < dst_count; dst_i ++) {
@@ -599,6 +602,8 @@ void flecs_table_init(
         } else if (first_role == -1 && !ECS_IS_PAIR(dst_id)) {
             first_role = dst_i;
         }
+
+        has_low_id |= dst_id < FLECS_HI_COMPONENT_ID;
 
         /* Build bloom filter for table */
         table->bloom_filter = 
@@ -827,7 +832,12 @@ void flecs_table_init(
     /* Initialize event flags for any record */
     table->flags |= world->cr_any->flags & EcsIdEventMask;
 
-    table->component_map = ecs_os_calloc_n(int16_t, FLECS_HI_COMPONENT_ID);
+    if (has_low_id) {
+        table->component_map = ecs_os_calloc_n(int16_t, FLECS_HI_COMPONENT_ID);
+    } else {
+        table->component_map = ECS_CONST_CAST(int16_t*,
+            flecs_table_empty_component_map);
+    }
 
     if (column_count) {
         table->column_map = ecs_os_calloc_n(int16_t, dst_count + column_count);
@@ -1323,7 +1333,9 @@ void flecs_table_fini(
     flecs_table_fini_overrides(world, table);
     flecs_wfree_n(world, int32_t, table->column_count + 1, table->dirty_state);
     ecs_os_free(table->column_map);
-    ecs_os_free(table->component_map);
+    if (table->component_map != flecs_table_empty_component_map) {
+        ecs_os_free(table->component_map);
+    }
     flecs_table_records_unregister(world, table);
 
     /* Update counters */
