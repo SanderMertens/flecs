@@ -4706,6 +4706,7 @@ typedef struct ecs_event_record_t {
     struct ecs_event_id_record_t *wildcard;
     struct ecs_event_id_record_t *wildcard_pair;
     ecs_map_t event_ids; /* map<id, ecs_event_id_record_t> */
+    uint64_t event_ids_filter;
     ecs_entity_t event;
 } ecs_event_record_t;
 
@@ -4714,6 +4715,8 @@ struct ecs_observable_t {
     ecs_event_record_t on_remove;
     ecs_event_record_t on_set;
     ecs_event_record_t on_wildcard;
+    ecs_event_record_t on_table_create;
+    ecs_event_record_t on_table_delete;
     ecs_sparse_t events;  /* sparse<event, ecs_event_record_t> */
     ecs_vec_t global_observers; /* vector<ecs_observable_t> */
     uint64_t last_observer_id;

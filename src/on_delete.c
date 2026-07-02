@@ -419,7 +419,7 @@ void flecs_component_mark_for_delete(
                      * component through the deleted entity. */
                     if (!(cur->flags & EcsIdOnDeleteTargetDelete)) {
                         /* Only bother if tables have the relationship. */
-                        if (ecs_map_count(&cur->cache.index)) {
+                        if (flecs_table_cache_count(&cur->cache)) {
                             flecs_update_component_monitors(world, NULL, 
                                 &(ecs_type_t){
                                     .array = (ecs_id_t[]){cur->id},

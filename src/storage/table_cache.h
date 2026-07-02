@@ -28,11 +28,6 @@ void ecs_table_cache_insert(
     const ecs_table_t *table,
     ecs_table_cache_hdr_t *result);
 
-void ecs_table_cache_replace(
-    ecs_table_cache_t *cache,
-    const ecs_table_t *table,
-    ecs_table_cache_hdr_t *elem);
-
 void flecs_table_cache_set_column(
     ecs_table_cache_t *cache,
     const ecs_table_t *table,
