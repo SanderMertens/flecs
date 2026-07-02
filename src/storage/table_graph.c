@@ -1194,7 +1194,9 @@ void flecs_init_edge_for_add(
 {
     flecs_table_init_edge(table, edge, id, to);
 
-    flecs_table_ensure_hi_edge(world, &table->node.add, id);
+    if (id < FLECS_HI_COMPONENT_ID) {
+        flecs_table_ensure_hi_edge(world, &table->node.add, id);
+    }
 
     if ((table != to) || (table->flags & EcsTableHasDontFragment)) {
         /* Add edges are appended to refs.next */
@@ -1223,7 +1225,9 @@ void flecs_init_edge_for_remove(
 {
     flecs_table_init_edge(table, edge, id, to);
 
-    flecs_table_ensure_hi_edge(world, &table->node.remove, id);
+    if (id < FLECS_HI_COMPONENT_ID) {
+        flecs_table_ensure_hi_edge(world, &table->node.remove, id);
+    }
 
     if ((table != to) || (table->flags & EcsTableHasDontFragment)) {
         /* Remove edges are appended to refs.prev */

@@ -380,29 +380,31 @@ void flecs_table_init_flags(
 static
 void flecs_table_append_to_records(
     ecs_world_t *world,
-    ecs_table_t *table,
     ecs_vec_t *records,
     ecs_id_t id,
-    int32_t column)
+    int32_t column,
+    int32_t scan_start)
 {
-    /* To avoid a quadratic search, use the O(1) lookup that the index
-     * already provides. */
     ecs_component_record_t *cr = flecs_components_ensure(world, id);
 
-    /* Safe, record is owned by table. */
-    ecs_table_record_t *tr = ECS_CONST_CAST(ecs_table_record_t*, 
-        flecs_component_get_table(cr, table));
+    int32_t i, count = ecs_vec_count(records);
+    ecs_table_record_t *array = ecs_vec_first_t(records, ecs_table_record_t);
+    ecs_table_record_t *tr = NULL;
+    for (i = scan_start; i < count; i ++) {
+        if (array[i].hdr.cr == cr) {
+            tr = &array[i];
+            break;
+        }
+    }
+
     if (!tr) {
         tr = ecs_vec_append_t(&world->allocator, records, ecs_table_record_t);
+        tr->hdr.cr = cr;
         tr->index = flecs_ito(int16_t, column);
         tr->count = 1;
-
-        ecs_table_cache_insert(&cr->cache, table, &tr->hdr);
     } else {
         tr->count ++;
     }
-
-    ecs_assert(tr->hdr.cr != NULL, ECS_INTERNAL_ERROR, NULL);
 }
 
 static
@@ -645,10 +647,6 @@ void flecs_table_init(
         tr->count = 1;
     }
 
-    /* We're going to insert records from the vector into the index that
-     * will get patched up later. To ensure the record pointers don't get
-     * invalidated we need to grow the vector so that it won't realloc as
-     * we're adding the next set of records */
     if (first_role != -1 || first_pair != -1) {
         int32_t start = first_role;
         if (first_pair != -1 && (start == -1 || first_pair < start)) {
@@ -666,10 +664,6 @@ void flecs_table_init(
         ecs_vec_set_min_size_t(a, records, ecs_table_record_t, record_count);
     }
 
-    /* Get records size now so we can check that array did not resize */
-    int32_t records_size = ecs_vec_size(records);
-    (void)records_size;
-
     /* Add records for ids with roles (used by cleanup logic) */
     if (first_role != -1) {
         for (dst_i = first_role; dst_i < dst_count; dst_i ++) {
@@ -684,12 +678,12 @@ void flecs_table_init(
                     first = id & ECS_COMPONENT_MASK;
                 }
                 if (first) {
-                    flecs_table_append_to_records(world, table, records, 
-                        ecs_pair(EcsFlag, first), dst_i);
+                    flecs_table_append_to_records(world, records,
+                        ecs_pair(EcsFlag, first), dst_i, dst_count);
                 }
                 if (second) {
-                    flecs_table_append_to_records(world, table, records, 
-                        ecs_pair(EcsFlag, second), dst_i);
+                    flecs_table_append_to_records(world, records,
+                        ecs_pair(EcsFlag, second), dst_i, dst_count);
                 }
             }
         }
@@ -745,7 +739,7 @@ void flecs_table_init(
             ecs_id_t tgt_id = ecs_pair(EcsWildcard, ECS_PAIR_SECOND(dst_id));
 
             flecs_table_append_to_records(
-                world, table, records, tgt_id, dst_i);
+                world, records, tgt_id, dst_i, dst_count);
         }
     }
 
@@ -789,21 +783,7 @@ void flecs_table_init(
         cr = dst_tr[i].hdr.cr;
         ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        if (ecs_table_cache_get(&cr->cache, table)) {
-            /* If this is a target wildcard record it has already been 
-             * registered, but the record is now at a different location in
-             * memory. Patch up the linked list with the new address */
-
-            /* Ensure that record array hasn't been reallocated */
-            ecs_assert(records_size == ecs_vec_size(records), 
-                ECS_INTERNAL_ERROR, NULL);
-
-            ecs_table_cache_replace(&cr->cache, table, &tr->hdr);
-        } else {
-            /* Other records are not registered yet */
-            ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
-            ecs_table_cache_insert(&cr->cache, table, &tr->hdr);
-        }
+        ecs_table_cache_insert(&cr->cache, table, &tr->hdr);
 
         /* Claim component record so it stays alive as long as the table exists */
         flecs_component_claim(world, cr);
