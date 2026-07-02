@@ -154,6 +154,8 @@ typedef struct {
     int16_t column;
     int16_t remaining;
     bool non_fragmenting;
+    ecs_table_t *prev_table;
+    const ecs_table_cache_elem_t *prev_elem;
 } ecs_query_table_iter_ctx_t;
 
 /* And context */
@@ -163,6 +165,8 @@ typedef struct {
     int16_t column;
     int16_t remaining;
     bool non_fragmenting;
+    ecs_table_t *prev_table;
+    const ecs_table_cache_elem_t *prev_elem;
 
     ecs_component_record_t *df_cr;
     int32_t cur;
@@ -176,6 +180,7 @@ typedef struct {
 
     ecs_sparse_t *sparse;
     ecs_table_range_t range;
+    ecs_id_t id;
     int32_t cur;
     bool self;
     bool exclusive;
@@ -468,6 +473,7 @@ struct ecs_query_impl_t {
     int32_t tokens_len;           /* Length of tokens buffer */
     char *tokens;                 /* Buffer with string tokens used by terms */
     int32_t *monitor;             /* Change monitor for fields with fixed src */
+    ecs_termset_t dont_fragment_fields; /* Fields with only DontFragment terms */
 
 #ifdef FLECS_DEBUG
     ecs_termset_t final_terms;    /* Terms that don't use component inheritance */
