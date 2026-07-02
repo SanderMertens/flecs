@@ -2399,6 +2399,7 @@
                 "trivial_sparse_worker_iter",
                 "trivial_sparse_page_iter",
                 "trivial_sparse_constrained_this",
+                "trivial_sparse_desc_terms",
                 "1_var_sparse_written_not",
                 "1_fixed_sparse_pair_not",
                 "1_fixed_sparse_pair_exclusive_not",

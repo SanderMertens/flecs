@@ -7260,3 +7260,47 @@ void DontFragment_trivial_sparse_constrained_this(void) {
 
     ecs_fini(world);
 }
+
+void DontFragment_trivial_sparse_desc_terms(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+    ecs_add_id(world, ecs_id(Velocity), EcsDontFragment);
+
+    int32_t i, count = 8;
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t e = ecs_new(world);
+        ecs_set(world, e, Position, {i, i * 2});
+        ecs_set(world, e, Velocity, {i, i});
+    }
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ .id = ecs_id(Position) }, { .id = ecs_id(Velocity) }},
+        .cache_kind = cache_kind
+    });
+    test_assert(q != NULL);
+
+    int32_t matched = 0;
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        test_assert(it.count > 0);
+        test_assert(it.table == NULL);
+        for (i = 0; i < it.count; i ++) {
+            Position *p = ecs_field_at(&it, Position, 0, i);
+            Velocity *v = ecs_field_at(&it, Velocity, 1, i);
+            test_assert(p != NULL);
+            test_assert(v != NULL);
+            test_int(p->y, p->x * 2);
+            test_int(v->x, v->y);
+            matched ++;
+        }
+    }
+
+    test_int(matched, count);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
