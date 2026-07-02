@@ -21,6 +21,9 @@ namespace flecs {
  * query engine: the smallest sparse storage is iterated, and the other
  * storages are probed for each entity.
  *
+ * Like regular queries, entities that are prefabs, disabled or otherwise not
+ * queryable are skipped.
+ *
  * Structural changes (add/remove/delete) are not allowed while iterating
  * unless they are deferred.
  */
@@ -79,6 +82,13 @@ private:
             void *ptrs[n];
             if (!(... && (ptrs[Is] = _::field_at_sparse(sparse[Is],
                 sizeof(remove_reference_t<Components>), e, Is != lead))))
+            {
+                continue;
+            }
+
+            const ecs_record_t *r = ecs_record_find(world_, e);
+            if (flecs_table_flags(r->table) &
+                (EcsTableNotQueryable|EcsTableIsPrefab|EcsTableIsDisabled))
             {
                 continue;
             }

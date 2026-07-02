@@ -4204,3 +4204,27 @@ void Query_sparse_query_recycled_entity(void) {
 
     test_int(count, 1);
 }
+
+void Query_sparse_query_skip_prefab_disabled(void) {
+    flecs::world world;
+
+    auto e = world.entity().set<PositionDontFragment>({10, 20});
+    world.entity().add(flecs::Prefab).set<PositionDontFragment>({1, 2});
+    world.entity().add(flecs::Disabled).set<PositionDontFragment>({3, 4});
+    world.entity().add(EcsNotQueryable).set<PositionDontFragment>({5, 6});
+
+    auto q = world.query<PositionDontFragment>();
+    test_assert((std::is_same<decltype(q),
+        flecs::sparse_query<PositionDontFragment>>::value));
+
+    int32_t count = 0;
+    q.each([&](flecs::entity ent, PositionDontFragment& pos) {
+        test_assert(ent == e);
+        test_int(pos.x, 10);
+        test_int(pos.y, 20);
+        count ++;
+    });
+
+    test_int(count, 1);
+    test_int(q.count(), 1);
+}

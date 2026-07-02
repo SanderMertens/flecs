@@ -852,6 +852,7 @@ void Query_sparse_query_type(void);
 void Query_sparse_query_each(void);
 void Query_sparse_query_empty(void);
 void Query_sparse_query_recycled_entity(void);
+void Query_sparse_query_skip_prefab_disabled(void);
 
 // Testsuite 'QueryBuilder'
 void QueryBuilder_setup(void);
@@ -4986,6 +4987,10 @@ bake_test_case Query_testcases[] = {
     {
         "sparse_query_recycled_entity",
         Query_sparse_query_recycled_entity
+    },
+    {
+        "sparse_query_skip_prefab_disabled",
+        Query_sparse_query_skip_prefab_disabled
     }
 };
 
@@ -8249,7 +8254,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        151,
+        152,
         Query_testcases
     },
     {

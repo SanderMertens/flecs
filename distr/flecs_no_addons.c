@@ -37294,7 +37294,13 @@ ecs_component_record_t* flecs_table_record_get_component(
 uint64_t flecs_table_id(
     ecs_table_t* table)
 {
-    return table->id;    
+    return table->id;
+}
+
+ecs_flags32_t flecs_table_flags(
+    const ecs_table_t* table)
+{
+    return table->flags;
 }
 
 const ecs_ref_t* flecs_table_get_override(

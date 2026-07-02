@@ -5934,6 +5934,17 @@ FLECS_API
 uint64_t flecs_table_id(
     ecs_table_t* table);
 
+/** Get the table flags.
+ * This operation returns the flags for a table. See
+ * include/flecs/private/api_flags.h for a list of table flags.
+ *
+ * @param table The table.
+ * @return The flags of the table.
+ */
+FLECS_API
+ecs_flags32_t flecs_table_flags(
+    const ecs_table_t* table);
+
 /** Find a table by adding an ID to the current table.
  * Same as ecs_table_add_id(), but with an additional diff parameter that contains
  * information about the traversed edge.
@@ -33103,6 +33114,9 @@ namespace flecs {
  * query engine: the smallest sparse storage is iterated, and the other
  * storages are probed for each entity.
  *
+ * Like regular queries, entities that are prefabs, disabled or otherwise not
+ * queryable are skipped.
+ *
  * Structural changes (add/remove/delete) are not allowed while iterating
  * unless they are deferred.
  */
@@ -33161,6 +33175,13 @@ private:
             void *ptrs[n];
             if (!(... && (ptrs[Is] = _::field_at_sparse(sparse[Is],
                 sizeof(remove_reference_t<Components>), e, Is != lead))))
+            {
+                continue;
+            }
+
+            const ecs_record_t *r = ecs_record_find(world_, e);
+            if (flecs_table_flags(r->table) &
+                (EcsTableNotQueryable|EcsTableIsPrefab|EcsTableIsDisabled))
             {
                 continue;
             }

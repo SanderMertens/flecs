@@ -413,6 +413,17 @@ FLECS_API
 uint64_t flecs_table_id(
     ecs_table_t* table);
 
+/** Get the table flags.
+ * This operation returns the flags for a table. See
+ * include/flecs/private/api_flags.h for a list of table flags.
+ *
+ * @param table The table.
+ * @return The flags of the table.
+ */
+FLECS_API
+ecs_flags32_t flecs_table_flags(
+    const ecs_table_t* table);
+
 /** Find a table by adding an ID to the current table.
  * Same as ecs_table_add_id(), but with an additional diff parameter that contains
  * information about the traversed edge.
