@@ -22,6 +22,9 @@ struct query;
 template<typename ... Components>
 struct query_builder;
 
+template<typename ... Components>
+struct sparse_query;
+
 /** @} */
 
 }

@@ -223,13 +223,6 @@ struct each_field<T, if_t< is_pointer<T>::value &&
     }
 };
 
-template <typename T>
-struct is_sparse_field {
-    static constexpr bool value = !is_pointer<T>::value &&
-        !is_empty<actual_type_t<T>>::value && is_actual<T>::value &&
-        dont_fragment<std::remove_cv_t<T>>::value;
-};
-
 template <typename ... Components>
 struct sparse_field_mask {
     static constexpr uint32_t compute() {

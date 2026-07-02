@@ -4108,3 +4108,99 @@ void Query_each_optional_sparse(void) {
     test_int(count, 2);
     test_int(with_p, 1);
 }
+
+struct VelocityDontFragment {
+    static constexpr bool dont_fragment = true;
+    float x, y;
+};
+
+void Query_sparse_query_type(void) {
+    flecs::world world;
+
+    auto q1 = world.query<PositionDontFragment>();
+    test_assert((std::is_same<decltype(q1),
+        flecs::sparse_query<PositionDontFragment>>::value));
+
+    auto q2 = world.query<PositionDontFragment, VelocityDontFragment>();
+    test_assert((std::is_same<decltype(q2),
+        flecs::sparse_query<PositionDontFragment, VelocityDontFragment>>::value));
+
+    auto q3 = world.query<PositionDontFragment, Velocity>();
+    test_assert((std::is_same<decltype(q3),
+        flecs::query<PositionDontFragment, Velocity>>::value));
+
+    auto q4 = world.query<Position>();
+    test_assert((std::is_same<decltype(q4), flecs::query<Position>>::value));
+}
+
+void Query_sparse_query_each(void) {
+    flecs::world world;
+
+    auto e1 = world.entity()
+        .set<PositionDontFragment>({10, 20})
+        .set<VelocityDontFragment>({1, 2});
+    auto e2 = world.entity()
+        .set<PositionDontFragment>({30, 40});
+    auto e3 = world.entity()
+        .set<VelocityDontFragment>({3, 4});
+
+    auto q = world.query<PositionDontFragment, VelocityDontFragment>();
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e, PositionDontFragment& p,
+        VelocityDontFragment& v)
+    {
+        test_assert(e == e1);
+        test_int(p.x, 10);
+        test_int(p.y, 20);
+        p.x += v.x;
+        p.y += v.y;
+        count ++;
+    });
+
+    test_int(count, 1);
+    test_int(q.count(), 1);
+
+    const PositionDontFragment *p = e1.try_get<PositionDontFragment>();
+    test_int(p->x, 11);
+    test_int(p->y, 22);
+
+    test_assert(e2.is_alive());
+    test_assert(e3.is_alive());
+}
+
+void Query_sparse_query_empty(void) {
+    flecs::world world;
+
+    auto q = world.query<PositionDontFragment, VelocityDontFragment>();
+
+    int32_t count = 0;
+    q.each([&](PositionDontFragment&, VelocityDontFragment&) {
+        count ++;
+    });
+
+    test_int(count, 0);
+    test_int(q.count(), 0);
+}
+
+void Query_sparse_query_recycled_entity(void) {
+    flecs::world world;
+
+    auto e1 = world.entity().set<PositionDontFragment>({10, 20});
+    e1.destruct();
+    auto e2 = world.entity().set<PositionDontFragment>({30, 40});
+    test_assert(e1 != e2);
+    test_assert((uint32_t)e1.id() == (uint32_t)e2.id());
+
+    auto q = world.query<PositionDontFragment>();
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e, PositionDontFragment& p) {
+        test_assert(e == e2);
+        test_int(p.x, 30);
+        test_int(p.y, 40);
+        count ++;
+    });
+
+    test_int(count, 1);
+}

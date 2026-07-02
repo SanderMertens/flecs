@@ -266,6 +266,18 @@ FLECS_API
 const ecs_type_info_t* flecs_component_get_type_info(
     const ecs_component_record_t *cr);
 
+/** Get the sparse storage for a component record.
+ * This operation returns the sparse set that stores component values for
+ * components with the Sparse or DontFragment trait. The returned sparse set
+ * can be used to look up component values by (unsigned 32 bit) entity id.
+ *
+ * @param cr The component record.
+ * @return The sparse storage, or NULL if the component is not sparse.
+ */
+FLECS_API
+ecs_sparse_t* flecs_component_get_sparse(
+    const ecs_component_record_t *cr);
+
 /** Find the table record for a component record.
  * This operation returns the table record for the table and component record if it
  * exists. If the record exists, it means the table has the component.

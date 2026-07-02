@@ -165,6 +165,23 @@ struct is_actual {
 template <typename T>
 inline constexpr bool is_actual_v = is_actual<T>::value;
 
+namespace _ {
+
+template <typename T>
+struct is_sparse_field {
+    static constexpr bool value = !is_pointer<T>::value &&
+        !is_empty<actual_type_t<T>>::value && is_actual<T>::value &&
+        dont_fragment<std::remove_cv_t<T>>::value;
+};
+
+template <typename ... Components>
+struct is_sparse_query {
+    static constexpr bool value = sizeof...(Components) != 0 &&
+        (is_sparse_field<remove_reference_t<Components>>::value && ...);
+};
+
+} // namespace _
+
 /** @} */
 
 } // namespace flecs

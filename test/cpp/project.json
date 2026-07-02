@@ -876,7 +876,11 @@
                 "each_dont_fragment_trait",
                 "each_dont_fragment_trait_mixed",
                 "each_dont_fragment_trait_shared",
-                "each_optional_sparse"
+                "each_optional_sparse",
+                "sparse_query_type",
+                "sparse_query_each",
+                "sparse_query_empty",
+                "sparse_query_recycled_entity"
             ]
         }, {
             "id": "QueryBuilder",
