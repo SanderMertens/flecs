@@ -1776,92 +1776,46 @@ void DontFragment_2_sparse_and_regular(void) {
 
     ecs_iter_t it = ecs_query_iter(world, q);
 
-    if (cache_kind == EcsQueryCacheDefault) {
-        test_bool(true, ecs_query_next(&it));
-        test_int(1, it.count);
-        test_uint(e3, it.entities[0]);
-        {
-            Position *p = ecs_field_at(&it, Position, 0, 0);
-            test_assert(p != NULL);
-            test_int(p->x, 50); test_int(p->y, 60);
-        }
-        {
-            Velocity *v = ecs_field(&it, Velocity, 1);
-            test_assert(v != NULL);
-            test_int(v->x, 5); test_int(v->y, 6);
-        }
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e1, it.entities[0]);
+    {
+        Position *p = ecs_field_at(&it, Position, 0, 0);
+        test_assert(p != NULL);
+        test_int(p->x, 10); test_int(p->y, 20);
+    }
+    {
+        Velocity *v = ecs_field(&it, Velocity, 1);
+        test_assert(v != NULL);
+        test_int(v->x, 1); test_int(v->y, 2);
+    }
 
-        test_bool(true, ecs_query_next(&it));
-        test_int(1, it.count);
-        test_uint(e2, it.entities[0]);
-        {
-            Position *p = ecs_field_at(&it, Position, 0, 0);
-            test_assert(p != NULL);
-            test_int(p->x, 30); test_int(p->y, 40);
-        }
-        {
-            Velocity *v = ecs_field(&it, Velocity, 1);
-            test_assert(v != NULL);
-            test_int(v->x, 3); test_int(v->y, 4);
-        }
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e2, it.entities[0]);
+    {
+        Position *p = ecs_field_at(&it, Position, 0, 0);
+        test_assert(p != NULL);
+        test_int(p->x, 30); test_int(p->y, 40);
+    }
+    {
+        Velocity *v = ecs_field(&it, Velocity, 1);
+        test_assert(v != NULL);
+        test_int(v->x, 3); test_int(v->y, 4);
+    }
 
-        test_bool(true, ecs_query_next(&it));
-        test_int(1, it.count);
-        test_uint(e1, it.entities[0]);
-        {
-            Position *p = ecs_field_at(&it, Position, 0, 0);
-            test_assert(p != NULL);
-            test_int(p->x, 10); test_int(p->y, 20);
-        }
-        {
-            Velocity *v = ecs_field(&it, Velocity, 1);
-            test_assert(v != NULL);
-            test_int(v->x, 1); test_int(v->y, 2);
-        }
-    } else {
-        // Different ordering, same results
-
-        test_bool(true, ecs_query_next(&it));
-        test_int(1, it.count);
-        test_uint(e1, it.entities[0]);
-        {
-            Position *p = ecs_field_at(&it, Position, 0, 0);
-            test_assert(p != NULL);
-            test_int(p->x, 10); test_int(p->y, 20);
-        }
-        {
-            Velocity *v = ecs_field(&it, Velocity, 1);
-            test_assert(v != NULL);
-            test_int(v->x, 1); test_int(v->y, 2);
-        }
-
-        test_bool(true, ecs_query_next(&it));
-        test_int(1, it.count);
-        test_uint(e2, it.entities[0]);
-        {
-            Position *p = ecs_field_at(&it, Position, 0, 0);
-            test_assert(p != NULL);
-            test_int(p->x, 30); test_int(p->y, 40);
-        }
-        {
-            Velocity *v = ecs_field(&it, Velocity, 1);
-            test_assert(v != NULL);
-            test_int(v->x, 3); test_int(v->y, 4);
-        }
-
-        test_bool(true, ecs_query_next(&it));
-        test_int(1, it.count);
-        test_uint(e3, it.entities[0]);
-        {
-            Position *p = ecs_field_at(&it, Position, 0, 0);
-            test_assert(p != NULL);
-            test_int(p->x, 50); test_int(p->y, 60);
-        }
-        {
-            Velocity *v = ecs_field(&it, Velocity, 1);
-            test_assert(v != NULL);
-            test_int(v->x, 5); test_int(v->y, 6);
-        }
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e3, it.entities[0]);
+    {
+        Position *p = ecs_field_at(&it, Position, 0, 0);
+        test_assert(p != NULL);
+        test_int(p->x, 50); test_int(p->y, 60);
+    }
+    {
+        Velocity *v = ecs_field(&it, Velocity, 1);
+        test_assert(v != NULL);
+        test_int(v->x, 5); test_int(v->y, 6);
     }
 
     test_bool(false, ecs_query_next(&it));
