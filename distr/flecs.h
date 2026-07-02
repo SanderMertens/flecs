@@ -20396,6 +20396,28 @@ using if_t = enable_if_t<V, int>;
 template <bool V>
 using if_not_t = enable_if_t<false == V, int>;
 
+/** Trait that marks a component as DontFragment at compile time.
+ * When the trait evaluates to true for a component, the component is
+ * automatically registered with the flecs::DontFragment trait, and queries
+ * iterated with each() will use a faster code path for the component.
+ *
+ * The trait can be enabled for a type by adding a member to the type:
+ *
+ *     struct Position {
+ *         static constexpr bool dont_fragment = true;
+ *         float x, y;
+ *     };
+ *
+ * or by specializing the trait:
+ *
+ *     template <> struct flecs::dont_fragment<Position> : std::true_type { };
+ */
+template <typename T, typename = void>
+struct dont_fragment : std::false_type { };
+
+template <typename T>
+struct dont_fragment<T, enable_if_t<T::dont_fragment>> : std::true_type { };
+
 namespace _
 {
 
@@ -31124,6 +31146,46 @@ struct each_field<T, if_t< is_pointer<T>::value &&
     }
 };
 
+template <typename T>
+struct is_sparse_field {
+    static constexpr bool value = !is_pointer<T>::value &&
+        !is_empty<actual_type_t<T>>::value && is_actual<T>::value &&
+        dont_fragment<std::remove_cv_t<T>>::value;
+};
+
+template <typename ... Components>
+struct sparse_field_mask {
+    static constexpr uint32_t compute() {
+        uint32_t mask = 0;
+        uint32_t i = 0;
+        ((mask |= is_sparse_field<remove_reference_t<Components>>::value
+            ? (1u << i) : 0u, i ++), ...);
+        (void)i;
+        return mask;
+    }
+    static constexpr uint32_t value = compute();
+};
+
+template <typename T, typename = int>
+struct each_sparse_field : each_field<T> {
+    each_sparse_field(const flecs::iter_t *iter, _::field_ptr& field, size_t row)
+        : each_field<T>(iter, field, row) { }
+};
+
+template <typename T>
+struct each_sparse_field<T, if_t< is_sparse_field<T>::value >> {
+    each_sparse_field(const flecs::iter_t *iter, _::field_ptr& field, size_t row)
+        : ptr_(static_cast<T*>(field_at_sparse(field.sparse, sizeof(T),
+            iter->entities[row]))) { }
+
+    T& get_row() {
+        return *ptr_;
+    }
+
+private:
+    T *ptr_;
+};
+
 // If the query contains component references to other entities, check if the
 // current argument is one.
 template <typename T, typename = int>
@@ -31178,6 +31240,18 @@ struct each_delegate : public delegate {
 
         if (iter->ref_fields | iter->up_fields) {
             terms.populate(iter);
+
+            constexpr uint32_t mask = sparse_field_mask<Components...>::value;
+            if constexpr (mask != 0) {
+                if (iter->row_fields == mask && iter->ref_fields == mask &&
+                    !iter->up_fields)
+                {
+                    invoke_unpack< each_sparse_field >(
+                        iter, func_, 0, terms.fields_);
+                    return;
+                }
+            }
+
             invoke_unpack< each_ref_field >(iter, func_, 0, terms.fields_);
         } else {
             terms.populate_self(iter);
@@ -32128,6 +32202,10 @@ struct type_impl {
         flecs::entity_t c = ecs_cpp_component_register(world, &desc);
 
         ecs_assert(c != 0, ECS_INTERNAL_ERROR, nullptr);
+
+        if constexpr (flecs::dont_fragment<T>::value) {
+            ecs_add_id(world, c, flecs::DontFragment);
+        }
 
 #ifdef FLECS_META
         register_cpp_meta<T>(world, c);

@@ -842,6 +842,11 @@ void Query_optional_module(void);
 void Query_has_entity(void);
 void Query_has_table(void);
 void Query_has_range(void);
+void Query_dont_fragment_trait_registered(void);
+void Query_dont_fragment_trait_specialized_registered(void);
+void Query_each_dont_fragment_trait(void);
+void Query_each_dont_fragment_trait_mixed(void);
+void Query_each_dont_fragment_trait_shared(void);
 
 // Testsuite 'QueryBuilder'
 void QueryBuilder_setup(void);
@@ -4936,6 +4941,26 @@ bake_test_case Query_testcases[] = {
     {
         "has_range",
         Query_has_range
+    },
+    {
+        "dont_fragment_trait_registered",
+        Query_dont_fragment_trait_registered
+    },
+    {
+        "dont_fragment_trait_specialized_registered",
+        Query_dont_fragment_trait_specialized_registered
+    },
+    {
+        "each_dont_fragment_trait",
+        Query_each_dont_fragment_trait
+    },
+    {
+        "each_dont_fragment_trait_mixed",
+        Query_each_dont_fragment_trait_mixed
+    },
+    {
+        "each_dont_fragment_trait_shared",
+        Query_each_dont_fragment_trait_shared
     }
 };
 
@@ -8199,7 +8224,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        141,
+        146,
         Query_testcases
     },
     {

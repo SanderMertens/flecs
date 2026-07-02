@@ -870,7 +870,12 @@
                 "optional_module",
                 "has_entity",
                 "has_table",
-                "has_range"
+                "has_range",
+                "dont_fragment_trait_registered",
+                "dont_fragment_trait_specialized_registered",
+                "each_dont_fragment_trait",
+                "each_dont_fragment_trait_mixed",
+                "each_dont_fragment_trait_shared"
             ]
         }, {
             "id": "QueryBuilder",

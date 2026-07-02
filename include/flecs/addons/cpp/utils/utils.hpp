@@ -171,6 +171,28 @@ using if_t = enable_if_t<V, int>;
 template <bool V>
 using if_not_t = enable_if_t<false == V, int>;
 
+/** Trait that marks a component as DontFragment at compile time.
+ * When the trait evaluates to true for a component, the component is
+ * automatically registered with the flecs::DontFragment trait, and queries
+ * iterated with each() will use a faster code path for the component.
+ *
+ * The trait can be enabled for a type by adding a member to the type:
+ *
+ *     struct Position {
+ *         static constexpr bool dont_fragment = true;
+ *         float x, y;
+ *     };
+ *
+ * or by specializing the trait:
+ *
+ *     template <> struct flecs::dont_fragment<Position> : std::true_type { };
+ */
+template <typename T, typename = void>
+struct dont_fragment : std::false_type { };
+
+template <typename T>
+struct dont_fragment<T, enable_if_t<T::dont_fragment>> : std::true_type { };
+
 namespace _
 {
 

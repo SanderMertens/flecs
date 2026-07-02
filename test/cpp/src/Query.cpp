@@ -3971,3 +3971,108 @@ void Query_has_range(void) {
     test_bool(q.has(e1.range()), true);
     test_bool(q.has(e2.range()), false);
 }
+
+struct PositionDontFragment {
+    static constexpr bool dont_fragment = true;
+    float x, y;
+};
+
+struct PositionTraitSpecialized {
+    float x, y;
+};
+
+template <>
+struct flecs::dont_fragment<PositionTraitSpecialized> : std::true_type { };
+
+void Query_dont_fragment_trait_registered(void) {
+    flecs::world world;
+
+    auto c = world.component<PositionDontFragment>();
+    test_assert(c.has(flecs::DontFragment));
+}
+
+void Query_dont_fragment_trait_specialized_registered(void) {
+    flecs::world world;
+
+    auto c = world.component<PositionTraitSpecialized>();
+    test_assert(c.has(flecs::DontFragment));
+}
+
+void Query_each_dont_fragment_trait(void) {
+    flecs::world world;
+
+    auto e1 = world.entity().set<PositionDontFragment>({10, 20});
+    auto e2 = world.entity().set<PositionDontFragment>({30, 40});
+
+    auto q = world.query<PositionDontFragment>();
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e, PositionDontFragment& p) {
+        if (e == e1) {
+            test_int(p.x, 10);
+            test_int(p.y, 20);
+        } else if (e == e2) {
+            test_int(p.x, 30);
+            test_int(p.y, 40);
+        }
+        p.x ++;
+        p.y ++;
+        count ++;
+    });
+
+    test_int(count, 2);
+
+    const PositionDontFragment *p = e1.try_get<PositionDontFragment>();
+    test_int(p->x, 11);
+    test_int(p->y, 21);
+
+    p = e2.try_get<PositionDontFragment>();
+    test_int(p->x, 31);
+    test_int(p->y, 41);
+}
+
+void Query_each_dont_fragment_trait_mixed(void) {
+    flecs::world world;
+
+    auto entity = world.entity()
+        .set<PositionDontFragment>({10, 20})
+        .set<Velocity>({1, 2});
+
+    auto q = world.query<PositionDontFragment, Velocity>();
+
+    q.each([](PositionDontFragment& p, Velocity& v) {
+        p.x += v.x;
+        p.y += v.y;
+    });
+
+    const PositionDontFragment *p = entity.try_get<PositionDontFragment>();
+    test_int(p->x, 11);
+    test_int(p->y, 22);
+}
+
+void Query_each_dont_fragment_trait_shared(void) {
+    flecs::world world;
+
+    auto parent = world.entity().set<Velocity>({1, 2});
+    auto entity = world.entity().child_of(parent)
+        .set<PositionDontFragment>({10, 20});
+
+    auto q = world.query_builder<PositionDontFragment, Velocity>()
+        .term_at(1).up()
+        .build();
+
+    int32_t count = 0;
+    q.each([&](PositionDontFragment& p, Velocity& v) {
+        test_int(v.x, 1);
+        test_int(v.y, 2);
+        p.x += v.x;
+        p.y += v.y;
+        count ++;
+    });
+
+    test_int(count, 1);
+
+    const PositionDontFragment *p = entity.try_get<PositionDontFragment>();
+    test_int(p->x, 11);
+    test_int(p->y, 22);
+}
