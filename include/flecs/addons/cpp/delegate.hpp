@@ -48,10 +48,22 @@ struct component_binding_ctx {
 // Utility to convert a template argument pack to an array of term pointers.
 struct field_ptr {
     void *ptr = nullptr;
+    ecs_sparse_t *sparse = nullptr;
     int8_t index = 0;
     bool is_ref = false;
     bool is_row = false;
 };
+
+inline void* field_at_sparse(
+    const ecs_sparse_t *sparse, size_t size, uint64_t entity)
+{
+    uint32_t id = static_cast<uint32_t>(entity);
+    const ecs_sparse_page_t *page =
+        &static_cast<const ecs_sparse_page_t*>(
+            sparse->pages.array)[FLECS_SPARSE_PAGE(id)];
+    return ECS_ELEM(page->data, static_cast<ecs_size_t>(size),
+        FLECS_SPARSE_OFFSET(id));
+}
 
 template <typename ... Components>
 struct field_ptrs {
@@ -77,6 +89,8 @@ private:
                 fields_[index].is_row = true;
                 fields_[index].is_ref = true;
                 fields_[index].index = static_cast<int8_t>(index);
+                fields_[index].sparse = flecs_field_sparse(iter,
+                    static_cast<int8_t>(index));
             } else {
                 fields_[index].ptr = ecs_field_w_size(iter, sizeof(A), 
                     static_cast<int8_t>(index));
@@ -214,8 +228,13 @@ struct each_ref_field : public each_field<T> {
         }
 
         if (field.is_row) {
-            field.ptr = ecs_field_at_w_size(iter, sizeof(A), field.index, 
-                static_cast<int32_t>(row));
+            if (field.sparse) {
+                field.ptr = field_at_sparse(field.sparse, sizeof(A),
+                    iter->entities[row]);
+            } else {
+                field.ptr = ecs_field_at_w_size(iter, sizeof(A), field.index,
+                    static_cast<int32_t>(row));
+            }
         }
     }
 };

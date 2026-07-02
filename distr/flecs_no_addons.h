@@ -5825,6 +5825,22 @@ FLECS_API
 ecs_component_record_t* flecs_table_record_get_component(
     const ecs_table_record_t *tr);
 
+/** Get the sparse storage for a row field.
+ * This operation returns the sparse set that stores the component data for a
+ * field that is returned per-row (see ecs_field_at()). The returned sparse set
+ * can be used to look up component values by (unsigned 32 bit) entity id.
+ *
+ * The operation returns NULL when the field has a non-$this source.
+ *
+ * @param it The iterator.
+ * @param index The field index.
+ * @return The sparse set storing component values for the field.
+ */
+FLECS_API
+ecs_sparse_t* flecs_field_sparse(
+    const ecs_iter_t *it,
+    int8_t index);
+
 /** Get the table ID.
  * This operation returns a unique numerical identifier for a table.
  *

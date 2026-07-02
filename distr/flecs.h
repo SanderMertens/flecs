@@ -5894,6 +5894,22 @@ FLECS_API
 ecs_component_record_t* flecs_table_record_get_component(
     const ecs_table_record_t *tr);
 
+/** Get the sparse storage for a row field.
+ * This operation returns the sparse set that stores the component data for a
+ * field that is returned per-row (see ecs_field_at()). The returned sparse set
+ * can be used to look up component values by (unsigned 32 bit) entity id.
+ *
+ * The operation returns NULL when the field has a non-$this source.
+ *
+ * @param it The iterator.
+ * @param index The field index.
+ * @return The sparse set storing component values for the field.
+ */
+FLECS_API
+ecs_sparse_t* flecs_field_sparse(
+    const ecs_iter_t *it,
+    int8_t index);
+
 /** Get the table ID.
  * This operation returns a unique numerical identifier for a table.
  *
@@ -30949,10 +30965,22 @@ struct component_binding_ctx {
 // Utility to convert a template argument pack to an array of term pointers.
 struct field_ptr {
     void *ptr = nullptr;
+    ecs_sparse_t *sparse = nullptr;
     int8_t index = 0;
     bool is_ref = false;
     bool is_row = false;
 };
+
+inline void* field_at_sparse(
+    const ecs_sparse_t *sparse, size_t size, uint64_t entity)
+{
+    uint32_t id = static_cast<uint32_t>(entity);
+    const ecs_sparse_page_t *page =
+        &static_cast<const ecs_sparse_page_t*>(
+            sparse->pages.array)[FLECS_SPARSE_PAGE(id)];
+    return ECS_ELEM(page->data, static_cast<ecs_size_t>(size),
+        FLECS_SPARSE_OFFSET(id));
+}
 
 template <typename ... Components>
 struct field_ptrs {
@@ -30978,6 +31006,8 @@ private:
                 fields_[index].is_row = true;
                 fields_[index].is_ref = true;
                 fields_[index].index = static_cast<int8_t>(index);
+                fields_[index].sparse = flecs_field_sparse(iter,
+                    static_cast<int8_t>(index));
             } else {
                 fields_[index].ptr = ecs_field_w_size(iter, sizeof(A), 
                     static_cast<int8_t>(index));
@@ -31115,8 +31145,13 @@ struct each_ref_field : public each_field<T> {
         }
 
         if (field.is_row) {
-            field.ptr = ecs_field_at_w_size(iter, sizeof(A), field.index, 
-                static_cast<int32_t>(row));
+            if (field.sparse) {
+                field.ptr = field_at_sparse(field.sparse, sizeof(A),
+                    iter->entities[row]);
+            } else {
+                field.ptr = ecs_field_at_w_size(iter, sizeof(A), field.index,
+                    static_cast<int32_t>(row));
+            }
         }
     }
 };
