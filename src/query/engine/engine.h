@@ -218,6 +218,10 @@ bool flecs_query_sparse_self_up(
     bool redo,
     const ecs_query_run_ctx_t *ctx);
 
+bool flecs_query_trivial_sparse_search(
+    const ecs_query_run_ctx_t *ctx,
+    bool redo);
+
 
 /* Hierarchy evaluation */
 

@@ -1618,6 +1618,48 @@ int flecs_query_finalize_terms(
         }
     }
 
+    /* Check if this is a query for which all terms are sparse, which can use
+     * an iterator that directly iterates the sparse component storages. */
+    if (term_count && (term_count == q->field_count) &&
+        ((q->flags & (EcsQueryMatchOnlyThis|EcsQueryMatchOnlySelf)) ==
+            (EcsQueryMatchOnlyThis|EcsQueryMatchOnlySelf)) &&
+        !(q->flags & (EcsQueryHasPred|EcsQueryHasScopes|EcsQueryTableOnly|
+            EcsQueryMatchDisabled|EcsQueryMatchPrefab)))
+    {
+        bool trivial_sparse = true;
+
+        for (i = 0; i < term_count; i ++) {
+            ecs_term_t *term = &terms[i];
+
+            if (term->oper != EcsAnd) {
+                trivial_sparse = false;
+                break;
+            }
+
+            if (!(term->flags_ & EcsTermIsSparse) ||
+                !(term->flags_ & EcsTermDontFragment))
+            {
+                trivial_sparse = false;
+                break;
+            }
+
+            if (term->flags_ & (EcsTermMatchAny|EcsTermMatchAnySrc|
+                EcsTermTransitive|EcsTermReflexive|EcsTermIdInherited|
+                EcsTermIsScope|EcsTermIsMember|EcsTermIsToggle|EcsTermIsOr))
+            {
+                trivial_sparse = false;
+                break;
+            }
+
+            if (ecs_id_is_wildcard(term->id)) {
+                trivial_sparse = false;
+                break;
+            }
+        }
+
+        ECS_BIT_COND(q->flags, EcsQueryTrivialSparse, trivial_sparse);
+    }
+
     /* Set cacheable flags */
     ECS_BIT_COND(q->flags, EcsQueryHasCacheable, 
         cacheable_terms != 0);

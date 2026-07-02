@@ -357,6 +357,16 @@ typedef struct {
     int32_t first_to_eval;
 } ecs_query_trivial_ctx_t;
 
+/* Trivial sparse iterator context */
+#define FLECS_QUERY_SPARSE_BATCH_SIZE (1024)
+
+typedef struct {
+    ecs_sparse_t **sparse;
+    ecs_entity_t *entities;
+    int32_t cur;
+    int8_t lead;
+} ecs_query_sparse_trivial_ctx_t;
+
 /* *From operator iterator context */
 typedef struct {
     ecs_query_table_iter_ctx_t and_;
@@ -401,6 +411,7 @@ typedef struct ecs_query_op_ctx_t {
         ecs_query_setthis_ctx_t setthis;
         ecs_query_ctrl_ctx_t ctrl;
         ecs_query_trivial_ctx_t trivial;
+        ecs_query_sparse_trivial_ctx_t sparse_trivial;
         ecs_query_membereq_ctx_t membereq;
         ecs_query_toggle_ctx_t toggle;
         ecs_query_sparse_ctx_t sparse;

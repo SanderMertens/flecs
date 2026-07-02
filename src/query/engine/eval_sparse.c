@@ -716,3 +716,85 @@ bool flecs_query_sparse(
             (EcsTableNotQueryable|EcsTableIsPrefab|EcsTableIsDisabled));
     }
 }
+
+bool flecs_query_trivial_sparse_search(
+    const ecs_query_run_ctx_t *ctx,
+    bool redo)
+{
+    ecs_iter_t *it = ctx->it;
+    const ecs_query_t *q = &ctx->query->pub;
+    ecs_query_sparse_trivial_ctx_t *op_ctx = &ctx->op_ctx[0].is.sparse_trivial;
+    int8_t i, field_count = q->field_count;
+
+    if (!redo) {
+        op_ctx->sparse = flecs_iter_calloc_n(it, ecs_sparse_t*, field_count);
+        op_ctx->entities = flecs_iter_calloc_n(it, ecs_entity_t, 
+            FLECS_QUERY_SPARSE_BATCH_SIZE);
+
+        int8_t lead = 0;
+        for (i = 0; i < field_count; i ++) {
+            ecs_component_record_t *cr = flecs_components_get(
+                ctx->world, q->ids[i]);
+            if (!cr || !cr->sparse) {
+                return false;
+            }
+
+            op_ctx->sparse[i] = cr->sparse;
+            if (op_ctx->sparse[i]->count < op_ctx->sparse[lead]->count) {
+                lead = i;
+            }
+        }
+
+        op_ctx->lead = lead;
+        op_ctx->cur = 0;
+    }
+
+    int8_t lead = op_ctx->lead;
+    ecs_sparse_t *lead_sparse = op_ctx->sparse[lead];
+    const uint64_t *ids = flecs_sparse_ids(lead_sparse);
+    int32_t cur = op_ctx->cur, count = flecs_sparse_count(lead_sparse);
+    ecs_entity_t *entities = op_ctx->entities;
+    int32_t n = 0;
+
+    for (; cur < count && n < FLECS_QUERY_SPARSE_BATCH_SIZE; cur ++) {
+        ecs_entity_t e = ids[cur];
+
+        for (i = 0; i < field_count; i ++) {
+            if (i == lead) {
+                continue;
+            }
+            if (!flecs_sparse_has(op_ctx->sparse[i], e)) {
+                goto next;
+            }
+        }
+
+        {
+            ecs_record_t *r = flecs_entities_get(ctx->world, e);
+            ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_table_t *table = r->table;
+            ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+            if (table->flags & 
+                (EcsTableNotQueryable|EcsTableIsPrefab|EcsTableIsDisabled))
+            {
+                goto next;
+            }
+        }
+
+        entities[n ++] = e;
+next:
+        continue;
+    }
+
+    op_ctx->cur = cur;
+
+    if (!n) {
+        return false;
+    }
+
+    it->table = NULL;
+    it->offset = 0;
+    it->count = n;
+    it->entities = entities;
+
+    return true;
+}

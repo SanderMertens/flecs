@@ -1544,6 +1544,16 @@ typedef struct {
     int32_t first_to_eval;
 } ecs_query_trivial_ctx_t;
 
+/* Trivial sparse iterator context */
+#define FLECS_QUERY_SPARSE_BATCH_SIZE (1024)
+
+typedef struct {
+    ecs_sparse_t **sparse;
+    ecs_entity_t *entities;
+    int32_t cur;
+    int8_t lead;
+} ecs_query_sparse_trivial_ctx_t;
+
 /* *From operator iterator context */
 typedef struct {
     ecs_query_table_iter_ctx_t and_;
@@ -1588,6 +1598,7 @@ typedef struct ecs_query_op_ctx_t {
         ecs_query_setthis_ctx_t setthis;
         ecs_query_ctrl_ctx_t ctrl;
         ecs_query_trivial_ctx_t trivial;
+        ecs_query_sparse_trivial_ctx_t sparse_trivial;
         ecs_query_membereq_ctx_t membereq;
         ecs_query_toggle_ctx_t toggle;
         ecs_query_sparse_ctx_t sparse;
@@ -2269,6 +2280,10 @@ bool flecs_query_sparse_self_up(
     const ecs_query_op_t *op,
     bool redo,
     const ecs_query_run_ctx_t *ctx);
+
+bool flecs_query_trivial_sparse_search(
+    const ecs_query_run_ctx_t *ctx,
+    bool redo);
 
 /* Hierarchy evaluation */
 
@@ -13386,7 +13401,7 @@ void* ecs_field_at_w_size(
 
     ecs_entity_t src = it->sources[index];
     if (!src) {
-        src = ecs_table_entities(it->table)[row + it->offset];
+        src = it->entities[row];
     }
 
     return flecs_sparse_get(cr->sparse, flecs_uto(int32_t, size), src);
@@ -14069,7 +14084,7 @@ bool ecs_page_next(
         /* Copy everything up to the private iterator data */
         ecs_os_memcpy(it, chain_it, offsetof(ecs_iter_t, priv_));
 
-        if (!chain_it->table) {
+        if (!chain_it->table && !chain_it->count) {
             goto yield; /* Task query */
         }
 
@@ -14096,8 +14111,12 @@ bool ecs_page_next(
                 iter->offset = 0;
                 it->offset = offset;
                 count = it->count -= offset;
-                it->entities = 
-                    &(ecs_table_entities(it->table)[it->offset]);
+                if (it->table) {
+                    it->entities =
+                        &(ecs_table_entities(it->table)[it->offset]);
+                } else {
+                    it->entities = &it->entities[offset];
+                }
             }
         }
 
@@ -14204,7 +14223,11 @@ bool ecs_worker_next(
     it->count = per_worker;
     it->offset += first;
 
-    it->entities = &(ecs_table_entities(it->table)[it->offset]);
+    if (it->table) {
+        it->entities = &(ecs_table_entities(it->table)[it->offset]);
+    } else {
+        it->entities = &it->entities[first];
+    }
 
     return true;
 error:
@@ -31059,6 +31082,48 @@ int flecs_query_finalize_terms(
                 ECS_BIT_SET(q->flags, EcsQueryIsTrivial);
             }
         }
+    }
+
+    /* Check if this is a query for which all terms are sparse, which can use
+     * an iterator that directly iterates the sparse component storages. */
+    if (term_count && (term_count == q->field_count) &&
+        ((q->flags & (EcsQueryMatchOnlyThis|EcsQueryMatchOnlySelf)) ==
+            (EcsQueryMatchOnlyThis|EcsQueryMatchOnlySelf)) &&
+        !(q->flags & (EcsQueryHasPred|EcsQueryHasScopes|EcsQueryTableOnly|
+            EcsQueryMatchDisabled|EcsQueryMatchPrefab)))
+    {
+        bool trivial_sparse = true;
+
+        for (i = 0; i < term_count; i ++) {
+            ecs_term_t *term = &terms[i];
+
+            if (term->oper != EcsAnd) {
+                trivial_sparse = false;
+                break;
+            }
+
+            if (!(term->flags_ & EcsTermIsSparse) ||
+                !(term->flags_ & EcsTermDontFragment))
+            {
+                trivial_sparse = false;
+                break;
+            }
+
+            if (term->flags_ & (EcsTermMatchAny|EcsTermMatchAnySrc|
+                EcsTermTransitive|EcsTermReflexive|EcsTermIdInherited|
+                EcsTermIsScope|EcsTermIsMember|EcsTermIsToggle|EcsTermIsOr))
+            {
+                trivial_sparse = false;
+                break;
+            }
+
+            if (ecs_id_is_wildcard(term->id)) {
+                trivial_sparse = false;
+                break;
+            }
+        }
+
+        ECS_BIT_COND(q->flags, EcsQueryTrivialSparse, trivial_sparse);
     }
 
     /* Set cacheable flags */
@@ -48041,7 +48106,7 @@ void flecs_query_iter_constrain(
     /* This function can be called multiple times when setting variables, so
      * reset flags before setting them. */
     it->flags &= ~(EcsIterTrivialTest|EcsIterTrivialCached|
-        EcsIterTrivialSearch);
+        EcsIterTrivialSearch|EcsIterTrivialSparse);
 
     /* Figure out whether this query can utilize specialized iterator modes for
      * improved performance. */
@@ -48090,6 +48155,10 @@ void flecs_query_iter_constrain(
                         EcsIterTrivialChangeDetection;
                     flecs_query_setids(NULL, false, &ctx);
                 }
+            } else if (flags & EcsQueryTrivialSparse) {
+                it->flags |= EcsIterTrivialSparse|
+                    EcsIterTrivialChangeDetection;
+                flecs_query_setids(NULL, false, &ctx);
             } else if ((flags & (EcsQueryMatchOnlyThis|EcsQueryMatchOnlySelf))
                 == (EcsQueryMatchOnlyThis|EcsQueryMatchOnlySelf))
             {
@@ -48242,6 +48311,10 @@ bool ecs_query_next(
 
             ecs_query_trivial_ctx_t *op_ctx = &ctx.op_ctx[0].is.trivial;
             if (flecs_query_is_trivial_search(&ctx, op_ctx, redo)) {
+                goto yield;
+            }
+        } else if (it->flags & EcsIterTrivialSparse) {
+            if (flecs_query_trivial_sparse_search(&ctx, redo)) {
                 goto yield;
             }
         } else if (it->flags & EcsIterTrivialTest) {
@@ -48412,6 +48485,15 @@ void flecs_query_iter_fini(
 
     flecs_iter_free_n(qit->profile, ecs_query_op_profile_t, op_count);
 #endif
+
+    if ((it->flags & EcsIterTrivialSparse) && qit->op_ctx) {
+        ecs_query_sparse_trivial_ctx_t *op_ctx =
+            &qit->op_ctx[0].is.sparse_trivial;
+        if (op_ctx->entities) {
+            flecs_iter_free_n(op_ctx->entities, ecs_entity_t,
+                FLECS_QUERY_SPARSE_BATCH_SIZE);
+        }
+    }
 
     flecs_query_iter_fini_ctx(it, qit);
     flecs_iter_free_n(qit->vars, ecs_var_t, var_count);
@@ -49848,6 +49930,88 @@ bool flecs_query_sparse(
         return flecs_query_sparse_select(op, redo, ctx, 
             (EcsTableNotQueryable|EcsTableIsPrefab|EcsTableIsDisabled));
     }
+}
+
+bool flecs_query_trivial_sparse_search(
+    const ecs_query_run_ctx_t *ctx,
+    bool redo)
+{
+    ecs_iter_t *it = ctx->it;
+    const ecs_query_t *q = &ctx->query->pub;
+    ecs_query_sparse_trivial_ctx_t *op_ctx = &ctx->op_ctx[0].is.sparse_trivial;
+    int8_t i, field_count = q->field_count;
+
+    if (!redo) {
+        op_ctx->sparse = flecs_iter_calloc_n(it, ecs_sparse_t*, field_count);
+        op_ctx->entities = flecs_iter_calloc_n(it, ecs_entity_t, 
+            FLECS_QUERY_SPARSE_BATCH_SIZE);
+
+        int8_t lead = 0;
+        for (i = 0; i < field_count; i ++) {
+            ecs_component_record_t *cr = flecs_components_get(
+                ctx->world, q->ids[i]);
+            if (!cr || !cr->sparse) {
+                return false;
+            }
+
+            op_ctx->sparse[i] = cr->sparse;
+            if (op_ctx->sparse[i]->count < op_ctx->sparse[lead]->count) {
+                lead = i;
+            }
+        }
+
+        op_ctx->lead = lead;
+        op_ctx->cur = 0;
+    }
+
+    int8_t lead = op_ctx->lead;
+    ecs_sparse_t *lead_sparse = op_ctx->sparse[lead];
+    const uint64_t *ids = flecs_sparse_ids(lead_sparse);
+    int32_t cur = op_ctx->cur, count = flecs_sparse_count(lead_sparse);
+    ecs_entity_t *entities = op_ctx->entities;
+    int32_t n = 0;
+
+    for (; cur < count && n < FLECS_QUERY_SPARSE_BATCH_SIZE; cur ++) {
+        ecs_entity_t e = ids[cur];
+
+        for (i = 0; i < field_count; i ++) {
+            if (i == lead) {
+                continue;
+            }
+            if (!flecs_sparse_has(op_ctx->sparse[i], e)) {
+                goto next;
+            }
+        }
+
+        {
+            ecs_record_t *r = flecs_entities_get(ctx->world, e);
+            ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_table_t *table = r->table;
+            ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+            if (table->flags & 
+                (EcsTableNotQueryable|EcsTableIsPrefab|EcsTableIsDisabled))
+            {
+                goto next;
+            }
+        }
+
+        entities[n ++] = e;
+next:
+        continue;
+    }
+
+    op_ctx->cur = cur;
+
+    if (!n) {
+        return false;
+    }
+
+    it->table = NULL;
+    it->offset = 0;
+    it->count = n;
+    it->entities = entities;
+
+    return true;
 }
 
 typedef struct {

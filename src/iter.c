@@ -233,7 +233,7 @@ void* ecs_field_at_w_size(
 
     ecs_entity_t src = it->sources[index];
     if (!src) {
-        src = ecs_table_entities(it->table)[row + it->offset];
+        src = it->entities[row];
     }
 
     return flecs_sparse_get(cr->sparse, flecs_uto(int32_t, size), src);
@@ -916,7 +916,7 @@ bool ecs_page_next(
         /* Copy everything up to the private iterator data */
         ecs_os_memcpy(it, chain_it, offsetof(ecs_iter_t, priv_));
 
-        if (!chain_it->table) {
+        if (!chain_it->table && !chain_it->count) {
             goto yield; /* Task query */
         }
 
@@ -943,8 +943,12 @@ bool ecs_page_next(
                 iter->offset = 0;
                 it->offset = offset;
                 count = it->count -= offset;
-                it->entities = 
-                    &(ecs_table_entities(it->table)[it->offset]);
+                if (it->table) {
+                    it->entities =
+                        &(ecs_table_entities(it->table)[it->offset]);
+                } else {
+                    it->entities = &it->entities[offset];
+                }
             }
         }
 
@@ -1051,7 +1055,11 @@ bool ecs_worker_next(
     it->count = per_worker;
     it->offset += first;
 
-    it->entities = &(ecs_table_entities(it->table)[it->offset]);
+    if (it->table) {
+        it->entities = &(ecs_table_entities(it->table)[it->offset]);
+    } else {
+        it->entities = &it->entities[first];
+    }
 
     return true;
 error:

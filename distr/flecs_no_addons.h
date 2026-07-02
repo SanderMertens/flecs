@@ -465,6 +465,7 @@ extern "C" {
 #define EcsIterHasCondSet              (1u << 6u)  /* Does the iterator have conditionally set fields. */
 #define EcsIterProfile                 (1u << 7u)  /* Profile iterator performance. */
 #define EcsIterTrivialSearch           (1u << 8u)  /* Trivial iterator mode. */
+#define EcsIterTrivialSparse           (1u << 9u)  /* Trivial sparse iterator mode (batched entity list results). */
 #define EcsIterTrivialTest             (1u << 11u) /* Trivial test mode (constrained $this). */
 #define EcsIterTrivialCached           (1u << 14u) /* Trivial search for cached query. */
 #define EcsIterCached                  (1u << 15u) /* Cached query. */
@@ -489,6 +490,7 @@ extern "C" {
 ////////////////////////////////////////////////////////////////////////////////
 
 /* Flags that can only be set by the query implementation. */
+#define EcsQueryTrivialSparse         (1u << 4u)  /* All terms are self, $this, And, sparse. */
 #define EcsQueryMatchThis             (1u << 11u) /* Query has terms with $this source. */
 #define EcsQueryMatchOnlyThis         (1u << 12u) /* Query only has terms with $this source. */
 #define EcsQueryMatchOnlySelf         (1u << 13u) /* Query has no terms with up traversal. */
