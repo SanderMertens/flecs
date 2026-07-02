@@ -6674,23 +6674,11 @@ void Sparse_query_after_delete(void) {
         test_assert(q != NULL);
 
         ecs_iter_t it = ecs_query_iter(world, q);
-        if (!fragment) {
-            test_bool(true, ecs_query_next(&it));
-            test_int(1, it.count);
-            test_uint(p2, it.entities[0]);
-            test_uint(ecs_pair(Rel, e), ecs_field_id(&it, 0));
-
-            test_bool(true, ecs_query_next(&it));
-            test_int(1, it.count);
-            test_uint(p1, it.entities[0]);
-            test_uint(ecs_pair(Rel, e), ecs_field_id(&it, 0));
-        } else {
-            test_bool(true, ecs_query_next(&it));
-            test_int(2, it.count);
-            test_uint(p1, it.entities[0]);
-            test_uint(p2, it.entities[1]);
-            test_uint(ecs_pair(Rel, e), ecs_field_id(&it, 0));
-        }
+        test_bool(true, ecs_query_next(&it));
+        test_int(2, it.count);
+        test_uint(p1, it.entities[0]);
+        test_uint(p2, it.entities[1]);
+        test_uint(ecs_pair(Rel, e), ecs_field_id(&it, 0));
 
         test_bool(false, ecs_query_next(&it));
 
@@ -6764,13 +6752,9 @@ void Sparse_query_after_delete_symmetric(void) {
             test_uint(ecs_pair(Rel, p1), ecs_field_id(&it, 0));
 
             test_bool(true, ecs_query_next(&it));
-            test_int(1, it.count);
-            test_uint(p2, it.entities[0]);
-            test_uint(ecs_pair(Rel, e), ecs_field_id(&it, 0));
-
-            test_bool(true, ecs_query_next(&it));
-            test_int(1, it.count);
+            test_int(2, it.count);
             test_uint(p1, it.entities[0]);
+            test_uint(p2, it.entities[1]);
             test_uint(ecs_pair(Rel, e), ecs_field_id(&it, 0));
         } else {
             test_bool(true, ecs_query_next(&it));

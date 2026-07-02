@@ -56,6 +56,7 @@ bool flecs_query_sparse_next_entity(
     void **ptr_out)
 {
     int32_t end = op_ctx->range.count + op_ctx->range.offset;
+    const ecs_entity_t *entities = ecs_table_entities(op_ctx->range.table);
 
 next:
     op_ctx->cur ++;
@@ -65,7 +66,7 @@ next:
         return false;
     }
 
-    ecs_entity_t e = ecs_table_entities(op_ctx->range.table)[op_ctx->cur];
+    ecs_entity_t e = entities[op_ctx->cur];
     bool result;
 
     if (ptr_out) {
@@ -82,6 +83,32 @@ next:
 
     if (!result) {
         goto next;
+    }
+
+    if (!ptr_out && (op->flags & (EcsQueryIsVar << EcsQuerySrc)) &&
+        !op->src.var)
+    {
+        int32_t start = op_ctx->cur;
+        while ((op_ctx->cur + 1) < end) {
+            result = flecs_sparse_has(op_ctx->sparse, entities[op_ctx->cur + 1]);
+            if (not) {
+                result = !result;
+            }
+            if (!result) {
+                break;
+            }
+            op_ctx->cur ++;
+        }
+
+        if (op_ctx->cur != start) {
+            ecs_table_range_t range = {
+                .table = op_ctx->range.table,
+                .offset = start,
+                .count = op_ctx->cur - start + 1
+            };
+            flecs_query_src_set_range(op, &range, ctx);
+            return true;
+        }
     }
 
     flecs_query_src_set_single(op, op_ctx->cur, ctx);
@@ -114,18 +141,39 @@ next:
     }
 
     ecs_assert(op_ctx->cur >= 0, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(op_ctx->cur < flecs_sparse_count(op_ctx->sparse), 
+    ecs_assert(op_ctx->cur < flecs_sparse_count(op_ctx->sparse),
         ECS_INVALID_OPERATION, "sparse iterator invalidated while iterating");
 
-    ecs_entity_t e = flecs_sparse_ids(op_ctx->sparse)[op_ctx->cur];
-    ecs_table_range_t range = flecs_range_from_entity(ctx->world, e);
+    const uint64_t *sparse_ids = flecs_sparse_ids(op_ctx->sparse);
+    ecs_entity_t e = sparse_ids[op_ctx->cur];
+    ecs_record_t *r = flecs_entities_get(ctx->world, e);
+    ecs_table_t *table = r->table;
+    int32_t row = ECS_RECORD_TO_ROW(r->row);
+    int32_t count = 1;
 
-    if (flecs_query_table_filter(range.table, op->other, table_mask)) {
+    if (flecs_query_table_filter(table, op->other, table_mask)) {
         goto next;
     }
 
-    flecs_query_var_set_range(op, op->src.var, 
-        range.table, range.offset, range.count, ctx);
+    while (!op->src.var && op_ctx->cur > 0) {
+        ecs_record_t *r_next = flecs_entities_get(
+            ctx->world, sparse_ids[op_ctx->cur - 1]);
+        if (r_next->table != table) {
+            break;
+        }
+
+        int32_t row_next = ECS_RECORD_TO_ROW(r_next->row);
+        if (row_next == row - 1) {
+            row --;
+        } else if (row_next != row + count) {
+            break;
+        }
+
+        count ++;
+        op_ctx->cur --;
+    }
+
+    flecs_query_var_set_range(op, op->src.var, table, row, count, ctx);
     it->ids[field_index] = id;
     flecs_query_set_vars(op, it->ids[field_index], ctx);
 
