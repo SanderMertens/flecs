@@ -270,7 +270,8 @@ ecs_entity_t flecs_lookup_child_n(
     const ecs_world_t *world,
     ecs_entity_t parent,
     const char *name,
-    ecs_size_t length)
+    ecs_size_t length,
+    uint64_t hash)
 {
     if (name[0] == '#') {
         uint64_t value = 0;
@@ -300,7 +301,7 @@ ecs_entity_t flecs_lookup_child_n(
     if (cr) {
         ecs_hashmap_t *index = cr->pair->name_index;
         if (index) {
-            return flecs_name_index_find(index, name, length, 0);
+            return flecs_name_index_find(index, name, length, hash);
         }
     }
     return 0;
@@ -685,7 +686,7 @@ ecs_entity_t ecs_lookup_child(
     ecs_check(world != NULL, ECS_INTERNAL_ERROR, NULL);
     world = ecs_get_world(world);
 
-    return flecs_lookup_child_n(world, parent, name, ecs_os_strlen(name));
+    return flecs_lookup_child_n(world, parent, name, ecs_os_strlen(name), 0);
 error:
     return 0;
 }
@@ -758,11 +759,8 @@ ecs_entity_t ecs_lookup_path_w_sep(
     ecs_entity_t cur;
     bool lookup_path_search = false;
 
-    const ecs_entity_t *lookup_path = ecs_get_lookup_path(stage);
-    const ecs_entity_t *lookup_path_cur = lookup_path;
-    while (lookup_path_cur && *lookup_path_cur) {
-        lookup_path_cur ++;
-    }
+    const ecs_entity_t *lookup_path = NULL;
+    const ecs_entity_t *lookup_path_cur = NULL;
 
     if (!sep) {
         sep = ".";
@@ -788,20 +786,32 @@ ecs_entity_t ecs_lookup_path_w_sep(
     }
 
     ecs_size_t sep_len = ecs_os_strlen(sep);
+    char sep0 = sep[0];
     bool has_escape = strchr(path, '\\') != NULL;
+    ecs_size_t path_len = 0;
+    uint64_t path_hash = 0;
+    if (!has_escape && !strchr(path, sep0)) {
+        path_len = ecs_os_strlen(path);
+        path_hash = flecs_hash(path, path_len);
+    }
 
 retry:
     cur = parent;
     ptr = path;
 
-    if (!has_escape) {
+    if (path_len) {
+        cur = flecs_lookup_child_n(world, cur, path, path_len, path_hash);
+        if (!cur) {
+            goto tail;
+        }
+    } else if (!has_escape) {
         while (ptr) {
             ecs_size_t len;
             const char *next = flecs_path_elem_n(ptr, sep, sep_len, &len);
             if (!len && !next) {
                 break;
             }
-            cur = flecs_lookup_child_n(world, cur, ptr, len);
+            cur = flecs_lookup_child_n(world, cur, ptr, len, 0);
             if (!cur) {
                 goto tail;
             }
@@ -824,6 +834,11 @@ tail:
                 goto retry;
             } else {
                 lookup_path_search = true;
+                lookup_path = ecs_get_lookup_path(stage);
+                lookup_path_cur = lookup_path;
+                while (lookup_path_cur && *lookup_path_cur) {
+                    lookup_path_cur ++;
+                }
             }
         }
 
