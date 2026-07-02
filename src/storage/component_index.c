@@ -805,6 +805,8 @@ ecs_component_record_t* flecs_components_get(
         return world->cr_isa_wildcard;
     } else if (id == ecs_pair(EcsChildOf, EcsWildcard)) {
         return world->cr_childof_wildcard;
+    } else if (id == ecs_pair(EcsWildcard, EcsWildcard)) {
+        return world->cr_wildcard_wildcard;
     } else if (id == ecs_pair_t(EcsIdentifier, EcsName)) {
         return world->cr_identifier_name;
     }
