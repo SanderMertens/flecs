@@ -34,10 +34,12 @@ void flecs_add_non_fragmenting_child_to_table(
     }
 
     elem->count ++;
+    world->non_fragmenting_child_count ++;
 }
 
 static
 void flecs_remove_non_fragmenting_child_from_table(
+    ecs_world_t *world,
     ecs_component_record_t *cr,
     const ecs_table_t *table)
 {
@@ -47,6 +49,9 @@ void flecs_remove_non_fragmenting_child_from_table(
     }
 
     elem->count --;
+    world->non_fragmenting_child_count --;
+    ecs_assert(world->non_fragmenting_child_count >= 0,
+        ECS_INTERNAL_ERROR, NULL);
 
     if (!elem->count) {
         ecs_map_remove(&cr->pair->children_tables, table->id);
@@ -142,7 +147,7 @@ ecs_component_record_t* flecs_remove_non_fragmenting_child(
     ecs_table_t *table = r->table;
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    flecs_remove_non_fragmenting_child_from_table(cr, table);
+    flecs_remove_non_fragmenting_child_from_table(world, cr, table);
 
     flecs_tree_spawner_assert_not_instantiated(world, parent);
 
@@ -296,7 +301,7 @@ void flecs_on_non_fragmenting_child_move_add(
         ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
 
         if (src && (src->flags & EcsTableHasParent)) {
-            flecs_remove_non_fragmenting_child_from_table(cr, src);
+            flecs_remove_non_fragmenting_child_from_table(world, cr, src);
         }
 
         flecs_add_non_fragmenting_child_to_table(world, cr, e, dst);
@@ -329,7 +334,7 @@ void flecs_on_non_fragmenting_child_move_remove(
             world, ecs_childof(p));
         
         if (update_parent_records) {
-            flecs_remove_non_fragmenting_child_from_table(cr, src);
+            flecs_remove_non_fragmenting_child_from_table(world, cr, src);
         }
 
         if (dst && (dst->flags & EcsTableHasParent)) {

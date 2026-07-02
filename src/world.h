@@ -115,6 +115,8 @@ struct ecs_world_t {
 
     int32_t cr_flag_count;
 
+    int32_t non_fragmenting_child_count;
+
     /* -- Mixins -- */
     ecs_world_t *self;
     ecs_observable_t observable;
