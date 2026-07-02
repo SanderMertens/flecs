@@ -1655,6 +1655,7 @@ struct ecs_query_impl_t {
     int32_t tokens_len;           /* Length of tokens buffer */
     char *tokens;                 /* Buffer with string tokens used by terms */
     int32_t *monitor;             /* Change monitor for fields with fixed src */
+    ecs_termset_t dont_fragment_fields; /* Fields with only DontFragment terms */
 
 #ifdef FLECS_DEBUG
     ecs_termset_t final_terms;    /* Terms that don't use component inheritance */
@@ -31457,6 +31458,23 @@ done:
 
     flecs_query_copy_arrays(q);
 
+    {
+        ecs_query_impl_t *impl = flecs_query_impl(q);
+        ecs_termset_t df_fields = 0, non_df_fields = 0;
+        int8_t i;
+        for (i = 0; i < q->term_count; i ++) {
+            ecs_term_t *term = &q->terms[i];
+            ecs_termset_t bit = (ecs_termset_t)(1u << term->field_index);
+            if (term->flags_ & EcsTermDontFragment) {
+                df_fields |= bit;
+            } else {
+                non_df_fields |= bit;
+            }
+        }
+
+        impl->dont_fragment_fields = df_fields & (ecs_termset_t)~non_df_fields;
+    }
+
     q->flags |= EcsQueryValid;
 
     return 0;
@@ -42113,8 +42131,9 @@ void flecs_query_mark_fields_dirty(
     ecs_query_t *q = &impl->pub;
 
     /* Evaluate all writable non-fixed, set fields */
-    ecs_termset_t write_fields = 
-        (ecs_termset_t)(q->write_fields & ~q->fixed_fields & it->set_fields);
+    ecs_termset_t write_fields =
+        (ecs_termset_t)(q->write_fields & ~q->fixed_fields & it->set_fields &
+            ~impl->dont_fragment_fields);
     if (!write_fields || (it->flags & EcsIterNoData)) {
         return;
     }
@@ -47961,6 +47980,10 @@ void flecs_query_iter_constrain(
                     it->flags |= EcsIterTrivialTest;
                     flecs_query_setids(NULL, false, &ctx);
                 }
+            } else if ((flags & (EcsQueryMatchOnlyThis|EcsQueryMatchOnlySelf))
+                == (EcsQueryMatchOnlyThis|EcsQueryMatchOnlySelf))
+            {
+                it->flags |= EcsIterTrivialChangeDetection;
             }
         } else if (flags & EcsQueryIsCacheable) {
             if (!query->ops) {
@@ -47979,13 +48002,17 @@ void flecs_query_iter_constrain(
             }
         }
     } else {
-        if (!cache) { 
+        if (!cache) {
             if ((flags & (trivial_flags)) == trivial_flags) {
                 if (!(flags & EcsQueryMatchWildcards)) {
                     it->flags |= EcsIterTrivialSearch|
                         EcsIterTrivialChangeDetection;
                     flecs_query_setids(NULL, false, &ctx);
                 }
+            } else if ((flags & (EcsQueryMatchOnlyThis|EcsQueryMatchOnlySelf))
+                == (EcsQueryMatchOnlyThis|EcsQueryMatchOnlySelf))
+            {
+                it->flags |= EcsIterTrivialChangeDetection;
             }
         } else if (flags & EcsQueryIsCacheable) {
             if (!query->ops) {
@@ -48032,7 +48059,7 @@ void flecs_query_self_change_detection(
     ecs_query_iter_t *qit,
     ecs_query_impl_t *impl)
 {
-    if (!it->table->dirty_state) {
+    if (!it->table || !it->table->dirty_state) {
         return;
     }
 

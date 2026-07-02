@@ -78,6 +78,10 @@ void flecs_query_iter_constrain(
                     it->flags |= EcsIterTrivialTest;
                     flecs_query_setids(NULL, false, &ctx);
                 }
+            } else if ((flags & (EcsQueryMatchOnlyThis|EcsQueryMatchOnlySelf))
+                == (EcsQueryMatchOnlyThis|EcsQueryMatchOnlySelf))
+            {
+                it->flags |= EcsIterTrivialChangeDetection;
             }
         } else if (flags & EcsQueryIsCacheable) {
             if (!query->ops) {
@@ -96,13 +100,17 @@ void flecs_query_iter_constrain(
             }
         }
     } else {
-        if (!cache) { 
+        if (!cache) {
             if ((flags & (trivial_flags)) == trivial_flags) {
                 if (!(flags & EcsQueryMatchWildcards)) {
                     it->flags |= EcsIterTrivialSearch|
                         EcsIterTrivialChangeDetection;
                     flecs_query_setids(NULL, false, &ctx);
                 }
+            } else if ((flags & (EcsQueryMatchOnlyThis|EcsQueryMatchOnlySelf))
+                == (EcsQueryMatchOnlyThis|EcsQueryMatchOnlySelf))
+            {
+                it->flags |= EcsIterTrivialChangeDetection;
             }
         } else if (flags & EcsQueryIsCacheable) {
             if (!query->ops) {
@@ -149,7 +157,7 @@ void flecs_query_self_change_detection(
     ecs_query_iter_t *qit,
     ecs_query_impl_t *impl)
 {
-    if (!it->table->dirty_state) {
+    if (!it->table || !it->table->dirty_state) {
         return;
     }
 

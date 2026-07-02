@@ -468,6 +468,7 @@ struct ecs_query_impl_t {
     int32_t tokens_len;           /* Length of tokens buffer */
     char *tokens;                 /* Buffer with string tokens used by terms */
     int32_t *monitor;             /* Change monitor for fields with fixed src */
+    ecs_termset_t dont_fragment_fields; /* Fields with only DontFragment terms */
 
 #ifdef FLECS_DEBUG
     ecs_termset_t final_terms;    /* Terms that don't use component inheritance */

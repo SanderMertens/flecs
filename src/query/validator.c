@@ -2082,6 +2082,23 @@ done:
 
     flecs_query_copy_arrays(q);
 
+    {
+        ecs_query_impl_t *impl = flecs_query_impl(q);
+        ecs_termset_t df_fields = 0, non_df_fields = 0;
+        int8_t i;
+        for (i = 0; i < q->term_count; i ++) {
+            ecs_term_t *term = &q->terms[i];
+            ecs_termset_t bit = (ecs_termset_t)(1u << term->field_index);
+            if (term->flags_ & EcsTermDontFragment) {
+                df_fields |= bit;
+            } else {
+                non_df_fields |= bit;
+            }
+        }
+
+        impl->dont_fragment_fields = df_fields & (ecs_termset_t)~non_df_fields;
+    }
+
     q->flags |= EcsQueryValid;
 
     return 0;
