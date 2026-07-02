@@ -55,12 +55,28 @@ struct field_ptr {
 };
 
 inline void* field_at_sparse(
-    const ecs_sparse_t *sparse, size_t size, uint64_t entity)
+    const ecs_sparse_t *sparse, size_t size, uint64_t entity, bool checked)
 {
     uint32_t id = static_cast<uint32_t>(entity);
+    int32_t page_index = FLECS_SPARSE_PAGE(id);
+    if (checked && page_index >= sparse->pages.count) {
+        return nullptr;
+    }
+
     const ecs_sparse_page_t *page =
         &static_cast<const ecs_sparse_page_t*>(
-            sparse->pages.array)[FLECS_SPARSE_PAGE(id)];
+            sparse->pages.array)[page_index];
+    if (checked) {
+        if (!page->sparse) {
+            return nullptr;
+        }
+
+        int32_t dense = page->sparse[FLECS_SPARSE_OFFSET(id)];
+        if (!dense || (dense >= sparse->count)) {
+            return nullptr;
+        }
+    }
+
     return ECS_ELEM(page->data, static_cast<ecs_size_t>(size),
         FLECS_SPARSE_OFFSET(id));
 }
@@ -237,7 +253,7 @@ template <typename T>
 struct each_sparse_field<T, if_t< is_sparse_field<T>::value >> {
     each_sparse_field(const flecs::iter_t *iter, _::field_ptr& field, size_t row)
         : ptr_(static_cast<T*>(field_at_sparse(field.sparse, sizeof(T),
-            iter->entities[row]))) { }
+            iter->entities[row], false))) { }
 
     T& get_row() {
         return *ptr_;
@@ -270,7 +286,7 @@ struct each_ref_field : public each_field<T> {
         if (field.is_row) {
             if (field.sparse) {
                 field.ptr = field_at_sparse(field.sparse, sizeof(A),
-                    iter->entities[row]);
+                    iter->entities[row], true);
             } else {
                 field.ptr = ecs_field_at_w_size(iter, sizeof(A), field.index,
                     static_cast<int32_t>(row));

@@ -847,6 +847,7 @@ void Query_dont_fragment_trait_specialized_registered(void);
 void Query_each_dont_fragment_trait(void);
 void Query_each_dont_fragment_trait_mixed(void);
 void Query_each_dont_fragment_trait_shared(void);
+void Query_each_optional_sparse(void);
 
 // Testsuite 'QueryBuilder'
 void QueryBuilder_setup(void);
@@ -4961,6 +4962,10 @@ bake_test_case Query_testcases[] = {
     {
         "each_dont_fragment_trait_shared",
         Query_each_dont_fragment_trait_shared
+    },
+    {
+        "each_optional_sparse",
+        Query_each_optional_sparse
     }
 };
 
@@ -8224,7 +8229,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        146,
+        147,
         Query_testcases
     },
     {

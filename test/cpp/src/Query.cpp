@@ -4076,3 +4076,35 @@ void Query_each_dont_fragment_trait_shared(void) {
     test_int(p->x, 11);
     test_int(p->y, 22);
 }
+
+void Query_each_optional_sparse(void) {
+    flecs::world world;
+
+    world.component<Position>().add(flecs::Sparse);
+
+    auto e1 = world.entity().set<Velocity>({1, 2}).set<Position>({10, 20});
+    auto e2 = world.entity().set<Velocity>({3, 4});
+
+    auto q = world.query<Velocity, Position*>();
+
+    int32_t count = 0, with_p = 0;
+    q.each([&](flecs::entity e, Velocity& v, Position* p) {
+        if (e == e1) {
+            test_assert(p != nullptr);
+            test_int(p->x, 10);
+            test_int(p->y, 20);
+            test_int(v.x, 1);
+            test_int(v.y, 2);
+            with_p ++;
+        } else {
+            test_assert(e == e2);
+            test_assert(p == nullptr);
+            test_int(v.x, 3);
+            test_int(v.y, 4);
+        }
+        count ++;
+    });
+
+    test_int(count, 2);
+    test_int(with_p, 1);
+}

@@ -875,7 +875,8 @@
                 "dont_fragment_trait_specialized_registered",
                 "each_dont_fragment_trait",
                 "each_dont_fragment_trait_mixed",
-                "each_dont_fragment_trait_shared"
+                "each_dont_fragment_trait_shared",
+                "each_optional_sparse"
             ]
         }, {
             "id": "QueryBuilder",
