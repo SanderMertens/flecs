@@ -123,7 +123,20 @@ const uint64_t* flecs_name_index_find_ptr(
         return NULL;
     }
 
-    ecs_hashed_string_t hs = flecs_get_hashed_string(name, length, hash);
+    if (!length) {
+        length = ecs_os_strlen(name);
+    }
+
+    if (!hash) {
+        hash = flecs_hash(name, length);
+    }
+
+    ecs_hashed_string_t hs = {
+        .value = ECS_CONST_CAST(char*, name),
+        .length = length,
+        .hash = hash
+    };
+
     ecs_hm_bucket_t *b = flecs_hashmap_get_bucket(map, hs.hash);
     if (!b) {
         return NULL;
@@ -140,7 +153,7 @@ const uint64_t* flecs_name_index_find_ptr(
             continue;
         }
 
-        if (!ecs_os_strcmp(name, key->value)) {
+        if (!ecs_os_memcmp(name, key->value, hs.length)) {
             uint64_t *e = ecs_vec_get_t(&b->values, uint64_t, i);
             ecs_assert(e != NULL, ECS_INTERNAL_ERROR, NULL);
             return e;
