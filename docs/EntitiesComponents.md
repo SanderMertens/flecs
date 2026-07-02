@@ -1253,6 +1253,7 @@ The following table lists all component hooks:
 |------------------|-------------|
 | `on_add`         | Invoked when a component is added to an entity. |
 | `on_replace`     | Invoked with the previous value when a component is set. |
+| `on_validate`    | Invoked when a component is set, before `on_set`. Can block `on_set` and `OnSet` observers. |
 | `on_set`         | Invoked when a component is set. |
 | `on_remove`      | Invoked when a component is removed. |
 
@@ -1372,6 +1373,52 @@ world
         println!("prev = {:?}", prev);
         println!("next = {:?}", next);
     });
+```
+</li>
+</ul>
+</div>
+
+The `on_validate` hook has a different signature than the other component hooks. It is invoked once per entity with the entity and the new component value, and returns a boolean. When the hook returns false, the `on_set` hook and `OnSet` observers are not invoked for the entity. This makes it possible to guard application logic from component values that are invalid or irrelevant. The hook is invoked for all operations that trigger `OnSet` events, such as `set`, `assign` and `modified`. An example:
+
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
+
+```c
+bool validate_position(ecs_world_t *world, ecs_entity_t e, void *ptr) {
+    Position *p = ptr;
+    return p->x >= 0 && p->y >= 0;
+}
+
+ECS_COMPONENT(world, Position);
+
+ecs_set_hooks(world, Position, {
+    .on_validate = validate_position
+});
+```
+
+</li>
+<li><b class="tab-title">C++</b>
+
+```cpp
+world.component<Position>()
+    .on_validate([](flecs::entity e, Position& p) {
+        return p.x >= 0 && p.y >= 0;
+    });
+```
+
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+// TODO
+```
+
+</li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+// TODO
 ```
 </li>
 </ul>

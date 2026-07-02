@@ -1,0 +1,10 @@
+{
+    "id": "on_validate",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "language": "c++"
+    }
+}

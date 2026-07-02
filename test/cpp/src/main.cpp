@@ -1248,6 +1248,9 @@ void ComponentLifecycle_compare_int16_Enum(void);
 void ComponentLifecycle_compare_int32_Enum(void);
 void ComponentLifecycle_compare_int64_Enum(void);
 void ComponentLifecycle_move_ctor_no_default_ctor(void);
+void ComponentLifecycle_on_validate_hook(void);
+void ComponentLifecycle_on_validate_hook_blocks_on_set(void);
+void ComponentLifecycle_on_validate_hook_blocks_observer(void);
 
 // Testsuite 'Refs'
 void Refs_get_ref_by_ptr(void);
@@ -6533,6 +6536,18 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "move_ctor_no_default_ctor",
         ComponentLifecycle_move_ctor_no_default_ctor
+    },
+    {
+        "on_validate_hook",
+        ComponentLifecycle_on_validate_hook
+    },
+    {
+        "on_validate_hook_blocks_on_set",
+        ComponentLifecycle_on_validate_hook_blocks_on_set
+    },
+    {
+        "on_validate_hook_blocks_observer",
+        ComponentLifecycle_on_validate_hook_blocks_observer
     }
 };
 
@@ -8214,7 +8229,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         NULL,
         NULL,
-        105,
+        108,
         ComponentLifecycle_testcases
     },
     {

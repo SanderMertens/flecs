@@ -2876,3 +2876,82 @@ void ComponentLifecycle_move_ctor_no_default_ctor(void) {
         test_int(ptr->x, 2);
     }
 }
+
+void ComponentLifecycle_on_validate_hook(void) {
+    int validate_count = 0;
+    int on_set_count = 0;
+    flecs::entity e_arg;
+    Position v = {0, 0};
+
+    flecs::world ecs;
+
+    ecs.component<Position>()
+        .on_validate([&](flecs::entity arg, Position& p) {
+            validate_count ++;
+            e_arg = arg;
+            v = p;
+            return p.x != 0 || p.y != 0;
+        })
+        .on_set([&](Position&) {
+            on_set_count ++;
+        });
+
+    flecs::entity e = ecs.entity();
+    e.set<Position>({10, 20});
+
+    test_int(validate_count, 1);
+    test_int(on_set_count, 1);
+    test_assert(e_arg == e);
+    test_int(v.x, 10);
+    test_int(v.y, 20);
+}
+
+void ComponentLifecycle_on_validate_hook_blocks_on_set(void) {
+    int validate_count = 0;
+    int on_set_count = 0;
+
+    flecs::world ecs;
+
+    ecs.component<Position>()
+        .on_validate([&](flecs::entity, Position& p) {
+            validate_count ++;
+            return p.x != 0 || p.y != 0;
+        })
+        .on_set([&](Position&) {
+            on_set_count ++;
+        });
+
+    flecs::entity e = ecs.entity();
+    e.set<Position>({0, 0});
+
+    test_int(validate_count, 1);
+    test_int(on_set_count, 0);
+}
+
+void ComponentLifecycle_on_validate_hook_blocks_observer(void) {
+    int validate_count = 0;
+    int observer_count = 0;
+
+    flecs::world ecs;
+
+    ecs.component<Position>()
+        .on_validate([&](flecs::entity, Position& p) {
+            validate_count ++;
+            return p.x != 0 || p.y != 0;
+        });
+
+    ecs.observer<Position>()
+        .event(flecs::OnSet)
+        .each([&](Position&) {
+            observer_count ++;
+        });
+
+    flecs::entity e = ecs.entity();
+    e.set<Position>({10, 20});
+    test_int(validate_count, 1);
+    test_int(observer_count, 1);
+
+    e.set<Position>({0, 0});
+    test_int(validate_count, 2);
+    test_int(observer_count, 1);
+}

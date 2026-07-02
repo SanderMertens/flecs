@@ -30917,10 +30917,12 @@ struct component_binding_ctx {
     void *on_remove = nullptr;
     void *on_set = nullptr;
     void *on_replace = nullptr;
+    void *on_validate = nullptr;
     ecs_ctx_free_t free_on_add = nullptr;
     ecs_ctx_free_t free_on_remove = nullptr;
     ecs_ctx_free_t free_on_set = nullptr;
     ecs_ctx_free_t free_on_replace = nullptr;
+    ecs_ctx_free_t free_on_validate = nullptr;
 
     ~component_binding_ctx() {
         if (on_add && free_on_add) {
@@ -30934,6 +30936,9 @@ struct component_binding_ctx {
         }
         if (on_replace && free_on_replace) {
             free_on_replace(on_replace);
+        }
+        if (on_validate && free_on_validate) {
+            free_on_validate(on_validate);
         }
     }
 };
@@ -31280,6 +31285,30 @@ private:
     }    
 
 public:
+    Func func_;
+};
+
+template <typename Func, typename T>
+struct validate_delegate : public delegate {
+    template < if_not_t< is_same< decay_t<Func>, decay_t<Func>& >::value > = 0>
+    explicit validate_delegate(Func&& func) noexcept
+        : func_(FLECS_MOV(func)) { }
+
+    explicit validate_delegate(const Func& func) noexcept
+        : func_(func) { }
+
+    static bool run(ecs_world_t *world, ecs_entity_t entity, void *ptr) {
+        const ecs_type_hooks_t *h = ecs_get_hooks_id(
+            world, _::type<T>::id(world));
+        ecs_assert(h != nullptr, ECS_INTERNAL_ERROR, nullptr);
+        auto ctx = static_cast<component_binding_ctx*>(h->binding_ctx);
+        ecs_assert(ctx != nullptr, ECS_INTERNAL_ERROR, nullptr);
+        auto self = static_cast<const validate_delegate*>(ctx->on_validate);
+        ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, nullptr);
+        return self->func_(
+            flecs::entity(world, entity), *static_cast<T*>(ptr));
+    }
+
     Func func_;
 };
 
@@ -32732,6 +32761,30 @@ struct component : untyped_component {
         h.on_replace = Delegate::run_replace;
         ctx->on_replace = FLECS_NEW(Delegate)(FLECS_FWD(func));
         ctx->free_on_replace = _::free_obj<Delegate>;
+        set_hooks(h);
+        return *this;
+    }
+
+    /** Register on_validate hook.
+     * The hook is invoked with signature bool(flecs::entity, T&) before the
+     * on_set hook and OnSet observers are invoked. When the hook returns
+     * false, the on_set hook and OnSet observers are not invoked for the
+     * entity.
+     *
+     * @param func The callback function.
+     * @return Reference to self for chaining.
+     */
+    template <typename Func>
+    component<T>& on_validate(Func&& func) {
+        using Delegate = _::validate_delegate<
+            typename std::decay<Func>::type, T>;
+        flecs::type_hooks_t h = get_hooks();
+        ecs_assert(h.on_validate == nullptr, ECS_INVALID_OPERATION,
+            "on_validate hook is already set");
+        BindingCtx *ctx = get_binding_ctx(h);
+        h.on_validate = Delegate::run;
+        ctx->on_validate = FLECS_NEW(Delegate)(FLECS_FWD(func));
+        ctx->free_on_validate = _::free_obj<Delegate>;
         set_hooks(h);
         return *this;
     }
