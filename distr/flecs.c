@@ -11355,21 +11355,6 @@ ecs_entity_t flecs_get_builtin(
 }
 
 static
-bool flecs_is_sep(
-    const char **ptr,
-    const char *sep)
-{
-    ecs_size_t len = ecs_os_strlen(sep);
-
-    if (!ecs_os_strncmp(*ptr, sep, len)) {
-        *ptr += len;
-        return true;
-    } else {
-        return false;
-    }
-}
-
-static
 const char* flecs_path_elem(
     const char *path,
     const char *sep,
@@ -11383,6 +11368,8 @@ const char* flecs_path_elem(
 
     const char *ptr;
     char ch;
+    char sep0 = sep[0];
+    ecs_size_t sep_len = ecs_os_strlen(sep);
     int32_t template_nesting = 0;
     int32_t pos = 0;
     ecs_size_t size = size_out ? *size_out : 0;
@@ -11404,8 +11391,11 @@ const char* flecs_path_elem(
             escaped = true;
         }
 
-        if (!escaped && !template_nesting && flecs_is_sep(&ptr, sep)) {
-            break;
+        if (!escaped && !template_nesting && ch == sep0) {
+            if (sep_len == 1 || !ecs_os_strncmp(ptr, sep, sep_len)) {
+                ptr += sep_len;
+                break;
+            }
         }
 
         if (buffer) {
@@ -33882,6 +33872,10 @@ const uint64_t* flecs_name_index_find_ptr(
     ecs_size_t length,
     uint64_t hash)
 {
+    if (!ecs_map_count(&map->impl)) {
+        return NULL;
+    }
+
     ecs_hashed_string_t hs = flecs_get_hashed_string(name, length, hash);
     ecs_hm_bucket_t *b = flecs_hashmap_get_bucket(map, hs.hash);
     if (!b) {

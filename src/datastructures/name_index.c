@@ -119,6 +119,10 @@ const uint64_t* flecs_name_index_find_ptr(
     ecs_size_t length,
     uint64_t hash)
 {
+    if (!ecs_map_count(&map->impl)) {
+        return NULL;
+    }
+
     ecs_hashed_string_t hs = flecs_get_hashed_string(name, length, hash);
     ecs_hm_bucket_t *b = flecs_hashmap_get_bucket(map, hs.hash);
     if (!b) {
