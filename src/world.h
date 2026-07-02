@@ -113,6 +113,8 @@ struct ecs_world_t {
     /* Head of list that points to all non-fragmenting component ids */
     ecs_component_record_t *cr_non_fragmenting_head;
 
+    int32_t cr_flag_count;
+
     /* -- Mixins -- */
     ecs_world_t *self;
     ecs_observable_t observable;
