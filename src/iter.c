@@ -180,7 +180,17 @@ void* ecs_field_at_w_size(
     ecs_component_record_t *cr = NULL;
     const ecs_table_record_t *tr = it->trs[index];
     if (!tr) {
-        cr = flecs_components_get(it->real_world, it->ids[index]);
+        const ecs_query_t *q = it->query;
+        if (q) {
+            ecs_component_record_t **cr_cache = flecs_query_impl(q)->cr_cache;
+            cr = cr_cache[index];
+            if (!cr || cr->id != it->ids[index]) {
+                cr = cr_cache[index] = flecs_components_get(
+                    it->real_world, it->ids[index]);
+            }
+        } else {
+            cr = flecs_components_get(it->real_world, it->ids[index]);
+        }
         ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
     } else {
         cr = tr->hdr.cr;

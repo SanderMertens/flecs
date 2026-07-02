@@ -271,7 +271,13 @@ bool flecs_query_sparse_select(
     const ecs_query_run_ctx_t *ctx,
     ecs_flags32_t table_mask)
 {
-    ecs_id_t id = flecs_query_op_get_id(op, ctx);
+    ecs_query_sparse_ctx_t *op_ctx = flecs_op_ctx(ctx, sparse);
+    ecs_id_t id;
+    if (!redo) {
+        id = op_ctx->id = flecs_query_op_get_id(op, ctx);
+    } else {
+        id = op_ctx->id;
+    }
     if (ecs_id_is_wildcard(id)) {
         if (id == ecs_pair(EcsWildcard, EcsWildcard)) {
             return flecs_query_sparse_select_all_wildcard_pairs(
@@ -511,7 +517,13 @@ bool flecs_query_sparse_with(
     const ecs_query_run_ctx_t *ctx,
     bool not)
 {
-    ecs_id_t id = flecs_query_op_get_id(op, ctx);
+    ecs_query_sparse_ctx_t *op_ctx = flecs_op_ctx(ctx, sparse);
+    ecs_id_t id;
+    if (!redo) {
+        id = op_ctx->id = flecs_query_op_get_id(op, ctx);
+    } else {
+        id = op_ctx->id;
+    }
     if (ecs_id_is_wildcard(id)) {
         if (id == ecs_pair(EcsWildcard, EcsWildcard)) {
             return flecs_query_sparse_with_all_wildcard_pairs(op, redo, ctx, not);
