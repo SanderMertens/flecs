@@ -1287,7 +1287,10 @@
                 "compare_int16_Enum",
                 "compare_int32_Enum",
                 "compare_int64_Enum",
-                "move_ctor_no_default_ctor"
+                "move_ctor_no_default_ctor",
+                "on_validate_hook",
+                "on_validate_hook_blocks_on_set",
+                "on_validate_hook_blocks_observer"
             ]
         }, {
             "id": "Refs",
