@@ -2045,7 +2045,7 @@ void* flecs_sparse_get_dense(
  * @param sparse The sparse set.
  * @return The number of alive elements.
  */
-FLECS_DBG_API
+FLECS_API
 int32_t flecs_sparse_count(
     const ecs_sparse_t *sparse);
 
@@ -2067,10 +2067,20 @@ bool flecs_sparse_has(
  * @return Pointer to the element, regardless of liveness.
  */
 FLECS_DBG_API
-void* flecs_sparse_get(
+FLECS_ALWAYS_INLINE void* flecs_sparse_get(
     const ecs_sparse_t *sparse,
     ecs_size_t elem_size,
     uint64_t id);
+
+/** Get element by sparse ID with optional liveness checking.
+ * When checked is true this behaves like flecs_sparse_get(). When checked is
+ * false the element must be alive, and no bounds/liveness checks are done. */
+FLECS_API
+FLECS_ALWAYS_INLINE void* flecs_sparse_get_w_check(
+    const ecs_sparse_t *sparse,
+    ecs_size_t elem_size,
+    uint64_t id,
+    bool checked);
 
 /** Typed get by sparse ID.
  *
@@ -2159,7 +2169,7 @@ void* flecs_sparse_ensure_fast(
  * @param sparse The sparse set.
  * @return Pointer to the dense array of IDs.
  */
-FLECS_DBG_API
+FLECS_API
 const uint64_t* flecs_sparse_ids(
     const ecs_sparse_t *sparse);
 
@@ -5719,13 +5729,8 @@ const ecs_type_info_t* flecs_component_get_type_info(
     const ecs_component_record_t *cr);
 
 /** Get the sparse storage for a component record.
- * This operation returns the sparse set that stores component values for
- * components with the Sparse or DontFragment trait. The returned sparse set
- * can be used to look up component values by (unsigned 32 bit) entity id.
- *
- * @param cr The component record.
- * @return The sparse storage, or NULL if the component is not sparse.
- */
+ * Returns the sparse set that stores values for components with the Sparse or
+ * DontFragment trait, indexed by (unsigned 32 bit) entity id. */
 FLECS_API
 ecs_sparse_t* flecs_component_get_sparse(
     const ecs_component_record_t *cr);
@@ -5840,16 +5845,8 @@ ecs_component_record_t* flecs_table_record_get_component(
     const ecs_table_record_t *tr);
 
 /** Get the sparse storage for a row field.
- * This operation returns the sparse set that stores the component data for a
- * field that is returned per-row (see ecs_field_at()). The returned sparse set
- * can be used to look up component values by (unsigned 32 bit) entity id.
- *
- * The operation returns NULL when the field has a non-$this source.
- *
- * @param it The iterator.
- * @param index The field index.
- * @return The sparse set storing component values for the field.
- */
+ * Returns the sparse set that stores values for a field returned per-row (see
+ * ecs_field_at()), or NULL when the field has a non-$this source. */
 FLECS_API
 ecs_sparse_t* flecs_field_sparse(
     const ecs_iter_t *it,
@@ -5866,12 +5863,7 @@ uint64_t flecs_table_id(
     ecs_table_t* table);
 
 /** Get the table flags.
- * This operation returns the flags for a table. See
- * include/flecs/private/api_flags.h for a list of table flags.
- *
- * @param table The table.
- * @return The flags of the table.
- */
+ * See include/flecs/private/api_flags.h for a list of table flags. */
 FLECS_API
 ecs_flags32_t flecs_table_flags(
     const ecs_table_t* table);

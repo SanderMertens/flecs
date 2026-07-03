@@ -48,38 +48,10 @@ struct component_binding_ctx {
 // Utility to convert a template argument pack to an array of term pointers.
 struct field_ptr {
     void *ptr = nullptr;
-    ecs_sparse_t *sparse = nullptr;
     int8_t index = 0;
     bool is_ref = false;
     bool is_row = false;
 };
-
-inline void* field_at_sparse(
-    const ecs_sparse_t *sparse, size_t size, uint64_t entity, bool checked)
-{
-    uint32_t id = static_cast<uint32_t>(entity);
-    int32_t page_index = FLECS_SPARSE_PAGE(id);
-    if (checked && page_index >= sparse->pages.count) {
-        return nullptr;
-    }
-
-    const ecs_sparse_page_t *page =
-        &static_cast<const ecs_sparse_page_t*>(
-            sparse->pages.array)[page_index];
-    if (checked) {
-        if (!page->sparse) {
-            return nullptr;
-        }
-
-        int32_t dense = page->sparse[FLECS_SPARSE_OFFSET(id)];
-        if (!dense || (dense >= sparse->count)) {
-            return nullptr;
-        }
-    }
-
-    return ECS_ELEM(page->data, static_cast<ecs_size_t>(size),
-        FLECS_SPARSE_OFFSET(id));
-}
 
 template <typename ... Components>
 struct field_ptrs {
@@ -105,8 +77,6 @@ private:
                 fields_[index].is_row = true;
                 fields_[index].is_ref = true;
                 fields_[index].index = static_cast<int8_t>(index);
-                fields_[index].sparse = flecs_field_sparse(iter,
-                    static_cast<int8_t>(index));
             } else {
                 fields_[index].ptr = ecs_field_w_size(iter, sizeof(A), 
                     static_cast<int8_t>(index));
@@ -223,39 +193,6 @@ struct each_field<T, if_t< is_pointer<T>::value &&
     }
 };
 
-template <typename ... Components>
-struct sparse_field_mask {
-    static constexpr uint32_t compute() {
-        uint32_t mask = 0;
-        uint32_t i = 0;
-        ((mask |= is_sparse_field<remove_reference_t<Components>>::value
-            ? (1u << i) : 0u, i ++), ...);
-        (void)i;
-        return mask;
-    }
-    static constexpr uint32_t value = compute();
-};
-
-template <typename T, typename = int>
-struct each_sparse_field : each_field<T> {
-    each_sparse_field(const flecs::iter_t *iter, _::field_ptr& field, size_t row)
-        : each_field<T>(iter, field, row) { }
-};
-
-template <typename T>
-struct each_sparse_field<T, if_t< is_sparse_field<T>::value >> {
-    each_sparse_field(const flecs::iter_t *iter, _::field_ptr& field, size_t row)
-        : ptr_(static_cast<T*>(field_at_sparse(field.sparse, sizeof(T),
-            iter->entities[row], false))) { }
-
-    T& get_row() {
-        return *ptr_;
-    }
-
-private:
-    T *ptr_;
-};
-
 // If the query contains component references to other entities, check if the
 // current argument is one.
 template <typename T, typename = int>
@@ -277,13 +214,8 @@ struct each_ref_field : public each_field<T> {
         }
 
         if (field.is_row) {
-            if (field.sparse) {
-                field.ptr = field_at_sparse(field.sparse, sizeof(A),
-                    iter->entities[row], true);
-            } else {
-                field.ptr = ecs_field_at_w_size(iter, sizeof(A), field.index,
-                    static_cast<int32_t>(row));
-            }
+            field.ptr = ecs_field_at_w_size(iter, sizeof(A), field.index, 
+                static_cast<int32_t>(row));
         }
     }
 };
@@ -310,18 +242,6 @@ struct each_delegate : public delegate {
 
         if (iter->ref_fields | iter->up_fields) {
             terms.populate(iter);
-
-            constexpr uint32_t mask = sparse_field_mask<Components...>::value;
-            if constexpr (mask != 0) {
-                if (iter->row_fields == mask && iter->ref_fields == mask &&
-                    !iter->up_fields)
-                {
-                    invoke_unpack< each_sparse_field >(
-                        iter, func_, 0, terms.fields_);
-                    return;
-                }
-            }
-
             invoke_unpack< each_ref_field >(iter, func_, 0, terms.fields_);
         } else {
             terms.populate_self(iter);

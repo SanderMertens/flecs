@@ -406,6 +406,9 @@ void flecs_query_iter_fini_ctx(
     int32_t i, count = query->op_count;
     ecs_query_op_t *ops = query->ops;
     ecs_query_op_ctx_t *ctx = qit->op_ctx;
+    if (!ctx) {
+        return;
+    }
 
     for (i = 0; i < count; i ++) {
         ecs_query_op_t *op = &ops[i];

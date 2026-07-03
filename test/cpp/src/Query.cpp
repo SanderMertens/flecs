@@ -4,6 +4,42 @@ struct Pair {
     float value;
 };
 
+struct Position_Df {
+    static constexpr bool dont_fragment = true;
+    float x, y;
+};
+
+struct Position_Df_Or {
+    static constexpr bool dont_fragment = true;
+    static constexpr auto on_instantiate = flecs::on_instantiate::override;
+    float x, y;
+};
+
+struct Velocity_Df_Or {
+    static constexpr bool dont_fragment = true;
+    static constexpr auto on_instantiate = flecs::on_instantiate::override;
+    float x, y;
+};
+
+struct Position_Df_Ih {
+    static constexpr bool dont_fragment = true;
+    static constexpr auto on_instantiate = flecs::on_instantiate::inherit;
+    float x, y;
+};
+
+struct Position_Df_Di {
+    static constexpr bool dont_fragment = true;
+    static constexpr auto on_instantiate = flecs::on_instantiate::dont_inherit;
+    float x, y;
+};
+
+struct PositionSpecialized_Df {
+    float x, y;
+};
+
+template <>
+struct flecs::dont_fragment<PositionSpecialized_Df> : std::true_type { };
+
 void Query_term_each_component(void) {
     flecs::world ecs;
 
@@ -3972,42 +4008,30 @@ void Query_has_range(void) {
     test_bool(q.has(e2.range()), false);
 }
 
-struct PositionDontFragment {
-    static constexpr bool dont_fragment = true;
-    float x, y;
-};
-
-struct PositionTraitSpecialized {
-    float x, y;
-};
-
-template <>
-struct flecs::dont_fragment<PositionTraitSpecialized> : std::true_type { };
-
 void Query_dont_fragment_trait_registered(void) {
     flecs::world world;
 
-    auto c = world.component<PositionDontFragment>();
+    auto c = world.component<Position_Df_Or>();
     test_assert(c.has(flecs::DontFragment));
 }
 
 void Query_dont_fragment_trait_specialized_registered(void) {
     flecs::world world;
 
-    auto c = world.component<PositionTraitSpecialized>();
+    auto c = world.component<PositionSpecialized_Df>();
     test_assert(c.has(flecs::DontFragment));
 }
 
 void Query_each_dont_fragment_trait(void) {
     flecs::world world;
 
-    auto e1 = world.entity().set<PositionDontFragment>({10, 20});
-    auto e2 = world.entity().set<PositionDontFragment>({30, 40});
+    auto e1 = world.entity().set<Position_Df_Or>({10, 20});
+    auto e2 = world.entity().set<Position_Df_Or>({30, 40});
 
-    auto q = world.query<PositionDontFragment>();
+    auto q = world.query<Position_Df_Or>();
 
     int32_t count = 0;
-    q.each([&](flecs::entity e, PositionDontFragment& p) {
+    q.each([&](flecs::entity e, Position_Df_Or& p) {
         if (e == e1) {
             test_int(p.x, 10);
             test_int(p.y, 20);
@@ -4022,11 +4046,11 @@ void Query_each_dont_fragment_trait(void) {
 
     test_int(count, 2);
 
-    const PositionDontFragment *p = e1.try_get<PositionDontFragment>();
+    const Position_Df_Or *p = e1.try_get<Position_Df_Or>();
     test_int(p->x, 11);
     test_int(p->y, 21);
 
-    p = e2.try_get<PositionDontFragment>();
+    p = e2.try_get<Position_Df_Or>();
     test_int(p->x, 31);
     test_int(p->y, 41);
 }
@@ -4035,17 +4059,17 @@ void Query_each_dont_fragment_trait_mixed(void) {
     flecs::world world;
 
     auto entity = world.entity()
-        .set<PositionDontFragment>({10, 20})
+        .set<Position_Df_Or>({10, 20})
         .set<Velocity>({1, 2});
 
-    auto q = world.query<PositionDontFragment, Velocity>();
+    auto q = world.query<Position_Df_Or, Velocity>();
 
-    q.each([](PositionDontFragment& p, Velocity& v) {
+    q.each([](Position_Df_Or& p, Velocity& v) {
         p.x += v.x;
         p.y += v.y;
     });
 
-    const PositionDontFragment *p = entity.try_get<PositionDontFragment>();
+    const Position_Df_Or *p = entity.try_get<Position_Df_Or>();
     test_int(p->x, 11);
     test_int(p->y, 22);
 }
@@ -4055,14 +4079,14 @@ void Query_each_dont_fragment_trait_shared(void) {
 
     auto parent = world.entity().set<Velocity>({1, 2});
     auto entity = world.entity().child_of(parent)
-        .set<PositionDontFragment>({10, 20});
+        .set<Position_Df_Or>({10, 20});
 
-    auto q = world.query_builder<PositionDontFragment, Velocity>()
+    auto q = world.query_builder<Position_Df_Or, Velocity>()
         .term_at(1).up()
         .build();
 
     int32_t count = 0;
-    q.each([&](PositionDontFragment& p, Velocity& v) {
+    q.each([&](Position_Df_Or& p, Velocity& v) {
         test_int(v.x, 1);
         test_int(v.y, 2);
         p.x += v.x;
@@ -4072,7 +4096,7 @@ void Query_each_dont_fragment_trait_shared(void) {
 
     test_int(count, 1);
 
-    const PositionDontFragment *p = entity.try_get<PositionDontFragment>();
+    const Position_Df_Or *p = entity.try_get<Position_Df_Or>();
     test_int(p->x, 11);
     test_int(p->y, 22);
 }
@@ -4109,25 +4133,20 @@ void Query_each_optional_sparse(void) {
     test_int(with_p, 1);
 }
 
-struct VelocityDontFragment {
-    static constexpr bool dont_fragment = true;
-    float x, y;
-};
-
 void Query_sparse_query_type(void) {
     flecs::world world;
 
-    auto q1 = world.query<PositionDontFragment>();
+    auto q1 = world.query<Position_Df_Or>();
     test_assert((std::is_same<decltype(q1),
-        flecs::sparse_query<PositionDontFragment>>::value));
+        flecs::sparse_query<Position_Df_Or>>::value));
 
-    auto q2 = world.query<PositionDontFragment, VelocityDontFragment>();
+    auto q2 = world.query<Position_Df_Or, Velocity_Df_Or>();
     test_assert((std::is_same<decltype(q2),
-        flecs::sparse_query<PositionDontFragment, VelocityDontFragment>>::value));
+        flecs::sparse_query<Position_Df_Or, Velocity_Df_Or>>::value));
 
-    auto q3 = world.query<PositionDontFragment, Velocity>();
+    auto q3 = world.query<Position_Df_Or, Velocity>();
     test_assert((std::is_same<decltype(q3),
-        flecs::query<PositionDontFragment, Velocity>>::value));
+        flecs::query<Position_Df_Or, Velocity>>::value));
 
     auto q4 = world.query<Position>();
     test_assert((std::is_same<decltype(q4), flecs::query<Position>>::value));
@@ -4137,18 +4156,18 @@ void Query_sparse_query_each(void) {
     flecs::world world;
 
     auto e1 = world.entity()
-        .set<PositionDontFragment>({10, 20})
-        .set<VelocityDontFragment>({1, 2});
+        .set<Position_Df_Or>({10, 20})
+        .set<Velocity_Df_Or>({1, 2});
     auto e2 = world.entity()
-        .set<PositionDontFragment>({30, 40});
+        .set<Position_Df_Or>({30, 40});
     auto e3 = world.entity()
-        .set<VelocityDontFragment>({3, 4});
+        .set<Velocity_Df_Or>({3, 4});
 
-    auto q = world.query<PositionDontFragment, VelocityDontFragment>();
+    auto q = world.query<Position_Df_Or, Velocity_Df_Or>();
 
     int32_t count = 0;
-    q.each([&](flecs::entity e, PositionDontFragment& p,
-        VelocityDontFragment& v)
+    q.each([&](flecs::entity e, Position_Df_Or& p,
+        Velocity_Df_Or& v)
     {
         test_assert(e == e1);
         test_int(p.x, 10);
@@ -4161,7 +4180,7 @@ void Query_sparse_query_each(void) {
     test_int(count, 1);
     test_int(q.count(), 1);
 
-    const PositionDontFragment *p = e1.try_get<PositionDontFragment>();
+    const Position_Df_Or *p = e1.try_get<Position_Df_Or>();
     test_int(p->x, 11);
     test_int(p->y, 22);
 
@@ -4172,10 +4191,10 @@ void Query_sparse_query_each(void) {
 void Query_sparse_query_empty(void) {
     flecs::world world;
 
-    auto q = world.query<PositionDontFragment, VelocityDontFragment>();
+    auto q = world.query<Position_Df_Or, Velocity_Df_Or>();
 
     int32_t count = 0;
-    q.each([&](PositionDontFragment&, VelocityDontFragment&) {
+    q.each([&](Position_Df_Or&, Velocity_Df_Or&) {
         count ++;
     });
 
@@ -4186,16 +4205,16 @@ void Query_sparse_query_empty(void) {
 void Query_sparse_query_recycled_entity(void) {
     flecs::world world;
 
-    auto e1 = world.entity().set<PositionDontFragment>({10, 20});
+    auto e1 = world.entity().set<Position_Df_Or>({10, 20});
     e1.destruct();
-    auto e2 = world.entity().set<PositionDontFragment>({30, 40});
+    auto e2 = world.entity().set<Position_Df_Or>({30, 40});
     test_assert(e1 != e2);
     test_assert((uint32_t)e1.id() == (uint32_t)e2.id());
 
-    auto q = world.query<PositionDontFragment>();
+    auto q = world.query<Position_Df_Or>();
 
     int32_t count = 0;
-    q.each([&](flecs::entity e, PositionDontFragment& p) {
+    q.each([&](flecs::entity e, Position_Df_Or& p) {
         test_assert(e == e2);
         test_int(p.x, 30);
         test_int(p.y, 40);
@@ -4208,17 +4227,17 @@ void Query_sparse_query_recycled_entity(void) {
 void Query_sparse_query_skip_prefab_disabled(void) {
     flecs::world world;
 
-    auto e = world.entity().set<PositionDontFragment>({10, 20});
-    world.entity().add(flecs::Prefab).set<PositionDontFragment>({1, 2});
-    world.entity().add(flecs::Disabled).set<PositionDontFragment>({3, 4});
-    world.entity().add(EcsNotQueryable).set<PositionDontFragment>({5, 6});
+    auto e = world.entity().set<Position_Df_Or>({10, 20});
+    world.entity().add(flecs::Prefab).set<Position_Df_Or>({1, 2});
+    world.entity().add(flecs::Disabled).set<Position_Df_Or>({3, 4});
+    world.entity().add(EcsNotQueryable).set<Position_Df_Or>({5, 6});
 
-    auto q = world.query<PositionDontFragment>();
+    auto q = world.query<Position_Df_Or>();
     test_assert((std::is_same<decltype(q),
-        flecs::sparse_query<PositionDontFragment>>::value));
+        flecs::sparse_query<Position_Df_Or>>::value));
 
     int32_t count = 0;
-    q.each([&](flecs::entity ent, PositionDontFragment& pos) {
+    q.each([&](flecs::entity ent, Position_Df_Or& pos) {
         test_assert(ent == e);
         test_int(pos.x, 10);
         test_int(pos.y, 20);
@@ -4227,4 +4246,404 @@ void Query_sparse_query_skip_prefab_disabled(void) {
 
     test_int(count, 1);
     test_int(q.count(), 1);
+}
+
+void Query_sparse_query_type_on_instantiate(void) {
+    flecs::world world;
+
+    auto q1 = world.query<Position_Df_Di>();
+    test_assert((std::is_same<decltype(q1),
+        flecs::sparse_query<Position_Df_Di>>::value));
+
+    auto q2 = world.query<Position_Df_Ih>();
+    test_assert((std::is_same<decltype(q2),
+        flecs::query<Position_Df_Ih>>::value));
+
+    auto q3 = world.query<Position_Df_Or, Position_Df_Ih>();
+    test_assert((std::is_same<decltype(q3),
+        flecs::query<Position_Df_Or, Position_Df_Ih>>::value));
+
+    auto q4 = world.query<Position_Df_Or, Position_Df_Di>();
+    test_assert((std::is_same<decltype(q4),
+        flecs::sparse_query<Position_Df_Or, Position_Df_Di>>::value));
+}
+
+void Query_sparse_query_type_no_on_instantiate(void) {
+    flecs::world world;
+
+    auto e1 = world.entity().set<Position_Df>({10, 20});
+    auto e2 = world.entity().set<Position_Df>({30, 40});
+
+    auto q = world.query<Position_Df>();
+    test_assert((std::is_same<decltype(q),
+        flecs::sparse_query<Position_Df>>::value));
+
+    auto q2 = world.query<Position_Df, Position_Df_Or>();
+    test_assert((std::is_same<decltype(q2),
+        flecs::sparse_query<Position_Df, Position_Df_Or>>::value));
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e, Position_Df& p) {
+        if (e == e1) {
+            test_int(p.x, 10);
+            test_int(p.y, 20);
+        } else {
+            test_assert(e == e2);
+            test_int(p.x, 30);
+            test_int(p.y, 40);
+        }
+        count ++;
+    });
+
+    test_int(count, 2);
+}
+
+void Query_sparse_query_each_on_instantiate_override(void) {
+    flecs::world world;
+
+    auto e1 = world.entity().set<Position_Df_Or>({10, 20});
+    auto e2 = world.entity().set<Position_Df_Or>({30, 40});
+    auto e3 = world.entity();
+
+    auto q = world.query<Position_Df_Or>();
+    test_assert((std::is_same<decltype(q),
+        flecs::sparse_query<Position_Df_Or>>::value));
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e, Position_Df_Or& p) {
+        if (e == e1) {
+            test_int(p.x, 10);
+            test_int(p.y, 20);
+        } else {
+            test_assert(e == e2);
+            test_int(p.x, 30);
+            test_int(p.y, 40);
+        }
+        p.x ++;
+        p.y ++;
+        count ++;
+    });
+
+    test_int(count, 2);
+    test_int(q.count(), 2);
+
+    const Position_Df_Or *p1 = e1.try_get<Position_Df_Or>();
+    test_int(p1->x, 11);
+    test_int(p1->y, 21);
+
+    const Position_Df_Or *p2 = e2.try_get<Position_Df_Or>();
+    test_int(p2->x, 31);
+    test_int(p2->y, 41);
+
+    test_assert(e3.is_alive());
+}
+
+void Query_sparse_query_each_on_instantiate_dont_inherit(void) {
+    flecs::world world;
+
+    auto e1 = world.entity().set<Position_Df_Di>({10, 20});
+    auto e2 = world.entity().set<Position_Df_Di>({30, 40});
+
+    auto q = world.query<Position_Df_Di>();
+    test_assert((std::is_same<decltype(q),
+        flecs::sparse_query<Position_Df_Di>>::value));
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e, Position_Df_Di& p) {
+        if (e == e1) {
+            test_int(p.x, 10);
+            test_int(p.y, 20);
+        } else {
+            test_assert(e == e2);
+            test_int(p.x, 30);
+            test_int(p.y, 40);
+        }
+        p.x ++;
+        p.y ++;
+        count ++;
+    });
+
+    test_int(count, 2);
+    test_int(q.count(), 2);
+
+    const Position_Df_Di *p1 = e1.try_get<Position_Df_Di>();
+    test_int(p1->x, 11);
+    test_int(p1->y, 21);
+
+    const Position_Df_Di *p2 = e2.try_get<Position_Df_Di>();
+    test_int(p2->x, 31);
+    test_int(p2->y, 41);
+}
+
+void Query_sparse_query_each_on_instantiate_mixed_terms(void) {
+    flecs::world world;
+
+    auto e1 = world.entity()
+        .set<Position_Df_Or>({10, 20})
+        .set<Position_Df_Di>({1, 2});
+    auto e2 = world.entity()
+        .set<Position_Df_Or>({30, 40});
+    auto e3 = world.entity()
+        .set<Position_Df_Di>({3, 4});
+
+    auto q = world.query<Position_Df_Or, Position_Df_Di>();
+    test_assert((std::is_same<decltype(q),
+        flecs::sparse_query<Position_Df_Or, Position_Df_Di>>::value));
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e, Position_Df_Or& p,
+        Position_Df_Di& d)
+    {
+        test_assert(e == e1);
+        test_int(p.x, 10);
+        test_int(p.y, 20);
+        p.x += d.x;
+        p.y += d.y;
+        count ++;
+    });
+
+    test_int(count, 1);
+    test_int(q.count(), 1);
+
+    const Position_Df_Or *p = e1.try_get<Position_Df_Or>();
+    test_int(p->x, 11);
+    test_int(p->y, 22);
+
+    test_assert(e2.is_alive());
+    test_assert(e3.is_alive());
+}
+
+void Query_sparse_query_dynamic_inherit_1_term(void) {
+    flecs::world world;
+
+    world.component<Position_Df_Di>()
+        .add(flecs::OnInstantiate, flecs::Inherit);
+
+    auto owner = world.entity().set<Position_Df_Di>({10, 20});
+    auto base = world.prefab().set<Position_Df_Di>({1, 2});
+    auto inst = world.entity().is_a(base);
+
+    test_assert(!inst.owns<Position_Df_Di>());
+    test_assert(inst.has<Position_Df_Di>());
+
+    for (auto cache_kind : { flecs::QueryCacheNone, flecs::QueryCacheAuto }) {
+        auto q = world.query_builder<Position_Df_Di>()
+            .cache_kind(cache_kind).build();
+
+        int32_t owner_count = 0, inst_count = 0;
+        q.each([&](flecs::entity e, Position_Df_Di& p) {
+            if (e == owner) {
+                test_int(p.x, 10);
+                test_int(p.y, 20);
+                owner_count ++;
+            } else {
+                test_assert(e == inst);
+                test_int(p.x, 1);
+                test_int(p.y, 2);
+                inst_count ++;
+            }
+        });
+
+        test_int(owner_count, 1);
+        test_int(inst_count, 1);
+    }
+}
+
+void Query_sparse_query_dynamic_inherit_3_terms(void) {
+    flecs::world world;
+
+    world.component<Position_Df_Di>()
+        .add(flecs::OnInstantiate, flecs::Inherit);
+
+    auto owner = world.entity()
+        .set<Position_Df_Di>({10, 20})
+        .set<Position_Df_Or>({30, 40})
+        .set<Velocity_Df_Or>({1, 2});
+
+    auto base = world.prefab().set<Position_Df_Di>({50, 60});
+    auto inst = world.entity().is_a(base)
+        .set<Position_Df_Or>({70, 80})
+        .set<Velocity_Df_Or>({3, 4});
+
+    test_assert(!inst.owns<Position_Df_Di>());
+    test_assert(inst.has<Position_Df_Di>());
+
+    for (auto cache_kind : { flecs::QueryCacheNone, flecs::QueryCacheAuto }) {
+        auto q = world.query_builder<Position_Df_Di,
+            Position_Df_Or, Velocity_Df_Or>()
+            .cache_kind(cache_kind).build();
+
+        int32_t owner_count = 0, inst_count = 0;
+        q.each([&](flecs::entity e, Position_Df_Di& p,
+            Position_Df_Or& p2, Velocity_Df_Or& v)
+        {
+            if (e == owner) {
+                test_int(p.x, 10);
+                test_int(p.y, 20);
+                test_int(p2.x, 30);
+                test_int(p2.y, 40);
+                test_int(v.x, 1);
+                test_int(v.y, 2);
+                owner_count ++;
+            } else {
+                test_assert(e == inst);
+                test_int(p.x, 50);
+                test_int(p.y, 60);
+                test_int(p2.x, 70);
+                test_int(p2.y, 80);
+                test_int(v.x, 3);
+                test_int(v.y, 4);
+                inst_count ++;
+            }
+        });
+
+        test_int(owner_count, 1);
+        test_int(inst_count, 1);
+    }
+}
+
+void Query_sparse_query_dynamic_inherit_assert(void) {
+    install_test_abort();
+
+    flecs::world world;
+
+    world.component<Position_Df_Di>()
+        .add(flecs::OnInstantiate, flecs::Inherit);
+
+    test_expect_abort();
+
+    world.query<Position_Df_Di>();
+}
+
+void Query_sparse_query_convert_to_query_1_term(void) {
+    flecs::world world;
+
+    auto e1 = world.entity().set<Position_Df_Or>({10, 20});
+    auto e2 = world.entity().set<Position_Df_Or>({30, 40});
+
+    flecs::query<Position_Df_Or> q = world.query<Position_Df_Or>();
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e, Position_Df_Or& p) {
+        if (e == e1) {
+            test_int(p.x, 10);
+            test_int(p.y, 20);
+        } else {
+            test_assert(e == e2);
+            test_int(p.x, 30);
+            test_int(p.y, 40);
+        }
+        count ++;
+    });
+
+    test_int(count, 2);
+    test_int(q.count(), 2);
+}
+
+void Query_sparse_query_convert_to_query_3_terms(void) {
+    flecs::world world;
+
+    auto e1 = world.entity()
+        .set<Position_Df_Or>({10, 20})
+        .set<Velocity_Df_Or>({1, 2})
+        .set<Position_Df_Di>({3, 4});
+    world.entity().set<Position_Df_Or>({30, 40});
+
+    flecs::query<Position_Df_Or, Velocity_Df_Or, Position_Df_Di> q =
+        world.query<Position_Df_Or, Velocity_Df_Or, Position_Df_Di>();
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e, Position_Df_Or& p, Velocity_Df_Or& v,
+        Position_Df_Di& d)
+    {
+        test_assert(e == e1);
+        test_int(p.x, 10);
+        test_int(p.y, 20);
+        test_int(v.x, 1);
+        test_int(v.y, 2);
+        test_int(d.x, 3);
+        test_int(d.y, 4);
+        count ++;
+    });
+
+    test_int(count, 1);
+    test_int(q.count(), 1);
+}
+
+void Query_world_each_sparse(void) {
+    flecs::world world;
+
+    auto e1 = world.entity()
+        .set<Position_Df_Or>({10, 20})
+        .set<Velocity_Df_Or>({1, 2});
+    world.entity().set<Position_Df_Or>({30, 40});
+
+    int32_t count = 0;
+    world.each([&](Position_Df_Or& p, Velocity_Df_Or& v) {
+        test_int(p.x, 10);
+        test_int(p.y, 20);
+        test_int(v.x, 1);
+        test_int(v.y, 2);
+        p.x += v.x;
+        p.y += v.y;
+        count ++;
+    });
+
+    test_int(count, 1);
+
+    const Position_Df_Or *p = e1.try_get<Position_Df_Or>();
+    test_int(p->x, 11);
+    test_int(p->y, 22);
+}
+
+void Query_world_each_sparse_w_entity(void) {
+    flecs::world world;
+
+    auto e1 = world.entity().set<Position_Df_Or>({10, 20});
+    auto e2 = world.entity().set<Position_Df_Or>({30, 40});
+
+    int32_t count = 0;
+    world.each([&](flecs::entity e, Position_Df_Or& p) {
+        if (e == e1) {
+            test_int(p.x, 10);
+            test_int(p.y, 20);
+        } else {
+            test_assert(e == e2);
+            test_int(p.x, 30);
+            test_int(p.y, 40);
+        }
+        count ++;
+    });
+
+    test_int(count, 2);
+}
+
+void Query_sparse_query_dynamic_dont_inherit(void) {
+    flecs::world world;
+
+    world.component<Position_Df>()
+        .add(flecs::OnInstantiate, flecs::DontInherit);
+
+    auto e1 = world.entity().set<Position_Df>({10, 20});
+    auto e2 = world.entity().set<Position_Df>({30, 40});
+
+    auto q = world.query<Position_Df>();
+    test_assert((std::is_same<decltype(q),
+        flecs::sparse_query<Position_Df>>::value));
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e, Position_Df& p) {
+        if (e == e1) {
+            test_int(p.x, 10);
+            test_int(p.y, 20);
+        } else {
+            test_assert(e == e2);
+            test_int(p.x, 30);
+            test_int(p.y, 40);
+        }
+        count ++;
+    });
+
+    test_int(count, 2);
+    test_int(q.count(), 2);
 }

@@ -332,6 +332,11 @@ inline flecs::query_builder<Comps...> world::query_builder(Args &&... args) cons
     return flecs::query_builder<Comps...>(world_, FLECS_FWD(args)...);
 }
 
+template <typename ... Components>
+inline sparse_query<Components...>::operator flecs::query<Components...>() const {
+    return flecs::query_builder<Components...>(world_).build();
+}
+
 // world::each
 namespace _ {
 

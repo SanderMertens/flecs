@@ -2067,7 +2067,7 @@ void* flecs_sparse_get_dense(
  * @param sparse The sparse set.
  * @return The number of alive elements.
  */
-FLECS_DBG_API
+FLECS_API
 int32_t flecs_sparse_count(
     const ecs_sparse_t *sparse);
 
@@ -2089,10 +2089,20 @@ bool flecs_sparse_has(
  * @return Pointer to the element, regardless of liveness.
  */
 FLECS_DBG_API
-void* flecs_sparse_get(
+FLECS_ALWAYS_INLINE void* flecs_sparse_get(
     const ecs_sparse_t *sparse,
     ecs_size_t elem_size,
     uint64_t id);
+
+/** Get element by sparse ID with optional liveness checking.
+ * When checked is true this behaves like flecs_sparse_get(). When checked is
+ * false the element must be alive, and no bounds/liveness checks are done. */
+FLECS_API
+FLECS_ALWAYS_INLINE void* flecs_sparse_get_w_check(
+    const ecs_sparse_t *sparse,
+    ecs_size_t elem_size,
+    uint64_t id,
+    bool checked);
 
 /** Typed get by sparse ID.
  *
@@ -2181,7 +2191,7 @@ void* flecs_sparse_ensure_fast(
  * @param sparse The sparse set.
  * @return Pointer to the dense array of IDs.
  */
-FLECS_DBG_API
+FLECS_API
 const uint64_t* flecs_sparse_ids(
     const ecs_sparse_t *sparse);
 
@@ -5788,13 +5798,8 @@ const ecs_type_info_t* flecs_component_get_type_info(
     const ecs_component_record_t *cr);
 
 /** Get the sparse storage for a component record.
- * This operation returns the sparse set that stores component values for
- * components with the Sparse or DontFragment trait. The returned sparse set
- * can be used to look up component values by (unsigned 32 bit) entity id.
- *
- * @param cr The component record.
- * @return The sparse storage, or NULL if the component is not sparse.
- */
+ * Returns the sparse set that stores values for components with the Sparse or
+ * DontFragment trait, indexed by (unsigned 32 bit) entity id. */
 FLECS_API
 ecs_sparse_t* flecs_component_get_sparse(
     const ecs_component_record_t *cr);
@@ -5909,16 +5914,8 @@ ecs_component_record_t* flecs_table_record_get_component(
     const ecs_table_record_t *tr);
 
 /** Get the sparse storage for a row field.
- * This operation returns the sparse set that stores the component data for a
- * field that is returned per-row (see ecs_field_at()). The returned sparse set
- * can be used to look up component values by (unsigned 32 bit) entity id.
- *
- * The operation returns NULL when the field has a non-$this source.
- *
- * @param it The iterator.
- * @param index The field index.
- * @return The sparse set storing component values for the field.
- */
+ * Returns the sparse set that stores values for a field returned per-row (see
+ * ecs_field_at()), or NULL when the field has a non-$this source. */
 FLECS_API
 ecs_sparse_t* flecs_field_sparse(
     const ecs_iter_t *it,
@@ -5935,12 +5932,7 @@ uint64_t flecs_table_id(
     ecs_table_t* table);
 
 /** Get the table flags.
- * This operation returns the flags for a table. See
- * include/flecs/private/api_flags.h for a list of table flags.
- *
- * @param table The table.
- * @return The flags of the table.
- */
+ * See include/flecs/private/api_flags.h for a list of table flags. */
 FLECS_API
 ecs_flags32_t flecs_table_flags(
     const ecs_table_t* table);
@@ -20422,26 +20414,39 @@ template <bool V>
 using if_not_t = enable_if_t<false == V, int>;
 
 /** Trait that marks a component as DontFragment at compile time.
- * When the trait evaluates to true for a component, the component is
- * automatically registered with the flecs::DontFragment trait, and queries
- * iterated with each() will use a faster code path for the component.
- *
- * The trait can be enabled for a type by adding a member to the type:
- *
- *     struct Position {
- *         static constexpr bool dont_fragment = true;
- *         float x, y;
- *     };
- *
- * or by specializing the trait:
- *
- *     template <> struct flecs::dont_fragment<Position> : std::true_type { };
- */
+ * Enable by adding a `static constexpr bool dont_fragment = true` member to
+ * the type, or by specializing the trait to derive from std::true_type. */
 template <typename T, typename = void>
 struct dont_fragment : std::false_type { };
 
 template <typename T>
 struct dont_fragment<T, enable_if_t<T::dont_fragment>> : std::true_type { };
+
+/** OnInstantiate policies that can be assigned to a component at compile
+ * time with the flecs::on_instantiate_trait trait. */
+enum class on_instantiate {
+    override,
+    inherit,
+    dont_inherit
+};
+
+/** Trait that assigns an OnInstantiate policy to a component at compile time.
+ * Enable by adding a `static constexpr auto on_instantiate` member set to a
+ * flecs::on_instantiate value, or by specializing the trait. */
+template <typename T, typename = void>
+struct on_instantiate_trait {
+    static constexpr bool declared = false;
+    static constexpr flecs::on_instantiate value =
+        flecs::on_instantiate::override;
+};
+
+template <typename T>
+struct on_instantiate_trait<T, enable_if_t<is_same<flecs::on_instantiate,
+    typename std::remove_cv<decltype(T::on_instantiate)>::type>::value>>
+{
+    static constexpr bool declared = true;
+    static constexpr flecs::on_instantiate value = T::on_instantiate;
+};
 
 namespace _
 {
@@ -23989,10 +23994,17 @@ struct is_sparse_field {
         dont_fragment<std::remove_cv_t<T>>::value;
 };
 
+template <typename T>
+struct is_sparse_query_field {
+    static constexpr bool value = is_sparse_field<T>::value &&
+        on_instantiate_trait<std::remove_cv_t<T>>::value !=
+            flecs::on_instantiate::inherit;
+};
+
 template <typename ... Components>
 struct is_sparse_query {
     static constexpr bool value = sizeof...(Components) != 0 &&
-        (is_sparse_field<remove_reference_t<Components>>::value && ...);
+        (is_sparse_query_field<remove_reference_t<Components>>::value && ...);
 };
 
 } // namespace _
@@ -26032,10 +26044,8 @@ flecs::observer_builder<Components...> observer(Args &&... args) const;
  */
 
 /** Create a query.
- * When all components in the template argument list have the
- * flecs::dont_fragment trait and no arguments are provided, this operation
- * returns a flecs::sparse_query that iterates the sparse component storages
- * directly, bypassing the query engine.
+ * Returns a flecs::sparse_query when all components have the dont_fragment
+ * trait and don't declare the on_instantiate::inherit policy.
  *
  * @see ecs_query_init()
  */
@@ -31038,38 +31048,10 @@ struct component_binding_ctx {
 // Utility to convert a template argument pack to an array of term pointers.
 struct field_ptr {
     void *ptr = nullptr;
-    ecs_sparse_t *sparse = nullptr;
     int8_t index = 0;
     bool is_ref = false;
     bool is_row = false;
 };
-
-inline void* field_at_sparse(
-    const ecs_sparse_t *sparse, size_t size, uint64_t entity, bool checked)
-{
-    uint32_t id = static_cast<uint32_t>(entity);
-    int32_t page_index = FLECS_SPARSE_PAGE(id);
-    if (checked && page_index >= sparse->pages.count) {
-        return nullptr;
-    }
-
-    const ecs_sparse_page_t *page =
-        &static_cast<const ecs_sparse_page_t*>(
-            sparse->pages.array)[page_index];
-    if (checked) {
-        if (!page->sparse) {
-            return nullptr;
-        }
-
-        int32_t dense = page->sparse[FLECS_SPARSE_OFFSET(id)];
-        if (!dense || (dense >= sparse->count)) {
-            return nullptr;
-        }
-    }
-
-    return ECS_ELEM(page->data, static_cast<ecs_size_t>(size),
-        FLECS_SPARSE_OFFSET(id));
-}
 
 template <typename ... Components>
 struct field_ptrs {
@@ -31095,8 +31077,6 @@ private:
                 fields_[index].is_row = true;
                 fields_[index].is_ref = true;
                 fields_[index].index = static_cast<int8_t>(index);
-                fields_[index].sparse = flecs_field_sparse(iter,
-                    static_cast<int8_t>(index));
             } else {
                 fields_[index].ptr = ecs_field_w_size(iter, sizeof(A), 
                     static_cast<int8_t>(index));
@@ -31213,39 +31193,6 @@ struct each_field<T, if_t< is_pointer<T>::value &&
     }
 };
 
-template <typename ... Components>
-struct sparse_field_mask {
-    static constexpr uint32_t compute() {
-        uint32_t mask = 0;
-        uint32_t i = 0;
-        ((mask |= is_sparse_field<remove_reference_t<Components>>::value
-            ? (1u << i) : 0u, i ++), ...);
-        (void)i;
-        return mask;
-    }
-    static constexpr uint32_t value = compute();
-};
-
-template <typename T, typename = int>
-struct each_sparse_field : each_field<T> {
-    each_sparse_field(const flecs::iter_t *iter, _::field_ptr& field, size_t row)
-        : each_field<T>(iter, field, row) { }
-};
-
-template <typename T>
-struct each_sparse_field<T, if_t< is_sparse_field<T>::value >> {
-    each_sparse_field(const flecs::iter_t *iter, _::field_ptr& field, size_t row)
-        : ptr_(static_cast<T*>(field_at_sparse(field.sparse, sizeof(T),
-            iter->entities[row], false))) { }
-
-    T& get_row() {
-        return *ptr_;
-    }
-
-private:
-    T *ptr_;
-};
-
 // If the query contains component references to other entities, check if the
 // current argument is one.
 template <typename T, typename = int>
@@ -31267,13 +31214,8 @@ struct each_ref_field : public each_field<T> {
         }
 
         if (field.is_row) {
-            if (field.sparse) {
-                field.ptr = field_at_sparse(field.sparse, sizeof(A),
-                    iter->entities[row], true);
-            } else {
-                field.ptr = ecs_field_at_w_size(iter, sizeof(A), field.index,
-                    static_cast<int32_t>(row));
-            }
+            field.ptr = ecs_field_at_w_size(iter, sizeof(A), field.index, 
+                static_cast<int32_t>(row));
         }
     }
 };
@@ -31300,18 +31242,6 @@ struct each_delegate : public delegate {
 
         if (iter->ref_fields | iter->up_fields) {
             terms.populate(iter);
-
-            constexpr uint32_t mask = sparse_field_mask<Components...>::value;
-            if constexpr (mask != 0) {
-                if (iter->row_fields == mask && iter->ref_fields == mask &&
-                    !iter->up_fields)
-                {
-                    invoke_unpack< each_sparse_field >(
-                        iter, func_, 0, terms.fields_);
-                    return;
-                }
-            }
-
             invoke_unpack< each_ref_field >(iter, func_, 0, terms.fields_);
         } else {
             terms.populate_self(iter);
@@ -32267,6 +32197,19 @@ struct type_impl {
             ecs_add_id(world, c, flecs::DontFragment);
         }
 
+        if constexpr (flecs::on_instantiate_trait<T>::declared) {
+            constexpr flecs::on_instantiate policy =
+                flecs::on_instantiate_trait<T>::value;
+            if constexpr (policy == flecs::on_instantiate::override) {
+                ecs_add_pair(world, c, flecs::OnInstantiate, flecs::Override);
+            } else if constexpr (policy == flecs::on_instantiate::inherit) {
+                ecs_add_pair(world, c, flecs::OnInstantiate, flecs::Inherit);
+            } else {
+                ecs_add_pair(world, c, flecs::OnInstantiate,
+                    flecs::DontInherit);
+            }
+        }
+
 #ifdef FLECS_META
         register_cpp_meta<T>(world, c);
 #endif
@@ -33100,42 +33043,40 @@ private:
 
 namespace flecs {
 
-/**
- * @defgroup cpp_core_sparse_queries Sparse queries
+/** @defgroup cpp_queries Sparse queries
  * @ingroup cpp_core
- * Direct iteration of sparse component storages.
- *
- * @{
- */
+ * Direct iteration of sparse component storages. @{ */
+
+namespace _ {
+
+inline void* field_at_sparse(
+    const ecs_sparse_t *sparse, size_t size, uint64_t entity, bool checked)
+{
+    return flecs_sparse_get_w_check(sparse, static_cast<ecs_size_t>(size),
+        entity, checked);
+}
+
+}
 
 /** Query that iterates sparse component storages directly.
- * This type is returned by world::query() when all components in the template
- * argument list have the flecs::dont_fragment trait. Iteration bypasses the
- * query engine: the smallest sparse storage is iterated, and the other
- * storages are probed for each entity.
- *
- * Like regular queries, entities that are prefabs, disabled or otherwise not
- * queryable are skipped.
- *
- * Structural changes (add/remove/delete) are not allowed while iterating
- * unless they are deferred.
- */
+ * Returned by world::query() when all components have the dont_fragment
+ * trait and don't declare the on_instantiate::inherit policy. */
 template <typename ... Components>
 struct sparse_query {
     static_assert(_::is_sparse_query<Components...>::value,
-        "all sparse_query components must have the dont_fragment trait");
+        "all sparse_query components must have the dont_fragment trait and "
+        "must not declare the on_instantiate::inherit policy");
 
     explicit sparse_query(flecs::world_t *world)
         : world_(ECS_CONST_CAST(flecs::world_t*, ecs_get_world(world)))
-        , ids_{ _::type<Components>::id(world)... } { }
+        , ids_{ _::type<Components>::id(world)... }
+    {
+        assert_policies();
+    }
 
     /** Iterate the query.
-     * The function signature must match one of:
-     *  - func(flecs::entity e, Components& ...)
-     *  - func(Components& ...)
-     *
-     * @param func The callback function.
-     */
+     * The function signature must match func(flecs::entity e, Components&...)
+     * or func(Components&...). */
     template <typename Func>
     void each(Func&& func) const {
         each_impl(std::index_sequence_for<Components...>{}, func);
@@ -33147,6 +33088,9 @@ struct sparse_query {
         each([&](Components&...) { result ++; });
         return result;
     }
+
+    /** Convert to a regular flecs::query for the same components. */
+    operator flecs::query<Components...>() const;
 
 private:
     template <size_t ... Is, typename Func>
@@ -33173,8 +33117,9 @@ private:
         for (int32_t i = 0; i < count; i ++) {
             uint64_t e = entities[i];
             void *ptrs[n];
-            if (!(... && (ptrs[Is] = _::field_at_sparse(sparse[Is],
-                sizeof(remove_reference_t<Components>), e, Is != lead))))
+            if (!(... && (ptrs[Is] = flecs_sparse_get_w_check(
+                sparse[Is], ECS_SIZEOF(remove_reference_t<Components>), e, 
+                Is != lead))))
             {
                 continue;
             }
@@ -33202,6 +33147,17 @@ private:
     ecs_sparse_t* storage(flecs::id_t id) const {
         ecs_component_record_t *cr = flecs_components_get(world_, id);
         return cr ? flecs_component_get_sparse(cr) : nullptr;
+    }
+
+    void assert_policies() const {
+        for (flecs::id_t id : ids_) {
+            (void)id;
+            ecs_assert(ecs_get_target(world_, id, flecs::OnInstantiate, 0) !=
+                flecs::Inherit, ECS_INVALID_OPERATION,
+                "sparse_query component has the OnInstantiate Inherit trait, "
+                "which sparse queries cannot match; add the on_instantiate "
+                "trait at compile time instead");
+        }
     }
 
     flecs::world_t *world_;
@@ -36033,6 +35989,11 @@ inline flecs::query<> world::query(flecs::entity query_entity) const {
 template <typename... Comps, typename... Args>
 inline flecs::query_builder<Comps...> world::query_builder(Args &&... args) const {
     return flecs::query_builder<Comps...>(world_, FLECS_FWD(args)...);
+}
+
+template <typename ... Components>
+inline sparse_query<Components...>::operator flecs::query<Components...>() const {
+    return flecs::query_builder<Components...>(world_).build();
 }
 
 // world::each

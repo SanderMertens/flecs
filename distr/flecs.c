@@ -34737,31 +34737,44 @@ bool flecs_sparse_is_alive(
     return true;
 }
 
+void* flecs_sparse_get_w_check(
+    const ecs_sparse_t *sparse,
+    ecs_size_t size,
+    uint64_t id,
+    bool checked)
+{
+    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(!size || size == sparse->size, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_size_t elem_size = size ? size : sparse->size;
+    int32_t page_index = FLECS_SPARSE_PAGE(id);
+    if (checked && page_index >= ecs_vec_count(&sparse->pages)) {
+        return NULL;
+    }
+
+    ecs_sparse_page_t *page = ecs_vec_get_t(
+        &sparse->pages, ecs_sparse_page_t, page_index);
+    int32_t offset = FLECS_SPARSE_OFFSET(id);
+    if (checked) {
+        if (!page->sparse) {
+            return NULL;
+        }
+
+        int32_t dense = page->sparse[offset];
+        if (!dense || (dense >= sparse->count)) {
+            return NULL;
+        }
+    }
+
+    return DATA(page->data, elem_size, offset);
+}
+
 void* flecs_sparse_get(
     const ecs_sparse_t *sparse,
     ecs_size_t size,
     uint64_t id)
 {
-    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(!size || size == sparse->size, ECS_INVALID_PARAMETER, NULL);
-    (void)size;
-    
-    uint64_t index = (uint32_t)id;
-    ecs_sparse_page_t *page = flecs_sparse_get_page(
-        sparse, FLECS_SPARSE_PAGE(index));
-    if (!page || !page->sparse) {
-        return NULL;
-    }
-
-    int32_t offset = FLECS_SPARSE_OFFSET(index);
-    int32_t dense = page->sparse[offset];
-    bool in_use = dense && (dense < sparse->count);
-    if (!in_use) {
-        return NULL;
-    }
-
-    ecs_assert(dense == page->sparse[offset], ECS_INTERNAL_ERROR, NULL);
-    return DATA(page->data, sparse->size, offset);
+    return flecs_sparse_get_w_check(sparse, size, id, true);
 }
 
 bool flecs_sparse_has(
@@ -86278,6 +86291,9 @@ void flecs_query_iter_fini_ctx(
     int32_t i, count = query->op_count;
     ecs_query_op_t *ops = query->ops;
     ecs_query_op_ctx_t *ctx = qit->op_ctx;
+    if (!ctx) {
+        return;
+    }
 
     for (i = 0; i < count; i ++) {
         ecs_query_op_t *op = &ops[i];

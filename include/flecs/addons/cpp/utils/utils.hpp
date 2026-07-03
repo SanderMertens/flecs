@@ -172,26 +172,39 @@ template <bool V>
 using if_not_t = enable_if_t<false == V, int>;
 
 /** Trait that marks a component as DontFragment at compile time.
- * When the trait evaluates to true for a component, the component is
- * automatically registered with the flecs::DontFragment trait, and queries
- * iterated with each() will use a faster code path for the component.
- *
- * The trait can be enabled for a type by adding a member to the type:
- *
- *     struct Position {
- *         static constexpr bool dont_fragment = true;
- *         float x, y;
- *     };
- *
- * or by specializing the trait:
- *
- *     template <> struct flecs::dont_fragment<Position> : std::true_type { };
- */
+ * Enable by adding a `static constexpr bool dont_fragment = true` member to
+ * the type, or by specializing the trait to derive from std::true_type. */
 template <typename T, typename = void>
 struct dont_fragment : std::false_type { };
 
 template <typename T>
 struct dont_fragment<T, enable_if_t<T::dont_fragment>> : std::true_type { };
+
+/** OnInstantiate policies that can be assigned to a component at compile
+ * time with the flecs::on_instantiate_trait trait. */
+enum class on_instantiate {
+    override,
+    inherit,
+    dont_inherit
+};
+
+/** Trait that assigns an OnInstantiate policy to a component at compile time.
+ * Enable by adding a `static constexpr auto on_instantiate` member set to a
+ * flecs::on_instantiate value, or by specializing the trait. */
+template <typename T, typename = void>
+struct on_instantiate_trait {
+    static constexpr bool declared = false;
+    static constexpr flecs::on_instantiate value =
+        flecs::on_instantiate::override;
+};
+
+template <typename T>
+struct on_instantiate_trait<T, enable_if_t<is_same<flecs::on_instantiate,
+    typename std::remove_cv<decltype(T::on_instantiate)>::type>::value>>
+{
+    static constexpr bool declared = true;
+    static constexpr flecs::on_instantiate value = T::on_instantiate;
+};
 
 namespace _
 {

@@ -174,10 +174,17 @@ struct is_sparse_field {
         dont_fragment<std::remove_cv_t<T>>::value;
 };
 
+template <typename T>
+struct is_sparse_query_field {
+    static constexpr bool value = is_sparse_field<T>::value &&
+        on_instantiate_trait<std::remove_cv_t<T>>::value !=
+            flecs::on_instantiate::inherit;
+};
+
 template <typename ... Components>
 struct is_sparse_query {
     static constexpr bool value = sizeof...(Components) != 0 &&
-        (is_sparse_field<remove_reference_t<Components>>::value && ...);
+        (is_sparse_query_field<remove_reference_t<Components>>::value && ...);
 };
 
 } // namespace _

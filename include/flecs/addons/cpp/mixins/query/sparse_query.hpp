@@ -1,48 +1,44 @@
-/**
- * @file addons/cpp/sparse_query.hpp
- * @brief Direct iteration of sparse component storages.
- */
+/** @file addons/cpp/mixins/query/sparse_query.hpp
+ * @brief Direct iteration of sparse component storages. */
 
 #pragma once
 
 namespace flecs {
 
-/**
- * @defgroup cpp_core_sparse_queries Sparse queries
+/** @defgroup cpp_queries Sparse queries
  * @ingroup cpp_core
- * Direct iteration of sparse component storages.
- *
- * @{
- */
+ * Direct iteration of sparse component storages. @{ */
+
+namespace _ {
+
+inline void* field_at_sparse(
+    const ecs_sparse_t *sparse, size_t size, uint64_t entity, bool checked)
+{
+    return flecs_sparse_get_w_check(sparse, static_cast<ecs_size_t>(size),
+        entity, checked);
+}
+
+}
 
 /** Query that iterates sparse component storages directly.
- * This type is returned by world::query() when all components in the template
- * argument list have the flecs::dont_fragment trait. Iteration bypasses the
- * query engine: the smallest sparse storage is iterated, and the other
- * storages are probed for each entity.
- *
- * Like regular queries, entities that are prefabs, disabled or otherwise not
- * queryable are skipped.
- *
- * Structural changes (add/remove/delete) are not allowed while iterating
- * unless they are deferred.
- */
+ * Returned by world::query() when all components have the dont_fragment
+ * trait and don't declare the on_instantiate::inherit policy. */
 template <typename ... Components>
 struct sparse_query {
     static_assert(_::is_sparse_query<Components...>::value,
-        "all sparse_query components must have the dont_fragment trait");
+        "all sparse_query components must have the dont_fragment trait and "
+        "must not declare the on_instantiate::inherit policy");
 
     explicit sparse_query(flecs::world_t *world)
         : world_(ECS_CONST_CAST(flecs::world_t*, ecs_get_world(world)))
-        , ids_{ _::type<Components>::id(world)... } { }
+        , ids_{ _::type<Components>::id(world)... }
+    {
+        assert_policies();
+    }
 
     /** Iterate the query.
-     * The function signature must match one of:
-     *  - func(flecs::entity e, Components& ...)
-     *  - func(Components& ...)
-     *
-     * @param func The callback function.
-     */
+     * The function signature must match func(flecs::entity e, Components&...)
+     * or func(Components&...). */
     template <typename Func>
     void each(Func&& func) const {
         each_impl(std::index_sequence_for<Components...>{}, func);
@@ -54,6 +50,9 @@ struct sparse_query {
         each([&](Components&...) { result ++; });
         return result;
     }
+
+    /** Convert to a regular flecs::query for the same components. */
+    operator flecs::query<Components...>() const;
 
 private:
     template <size_t ... Is, typename Func>
@@ -80,8 +79,9 @@ private:
         for (int32_t i = 0; i < count; i ++) {
             uint64_t e = entities[i];
             void *ptrs[n];
-            if (!(... && (ptrs[Is] = _::field_at_sparse(sparse[Is],
-                sizeof(remove_reference_t<Components>), e, Is != lead))))
+            if (!(... && (ptrs[Is] = flecs_sparse_get_w_check(
+                sparse[Is], ECS_SIZEOF(remove_reference_t<Components>), e, 
+                Is != lead))))
             {
                 continue;
             }
@@ -109,6 +109,17 @@ private:
     ecs_sparse_t* storage(flecs::id_t id) const {
         ecs_component_record_t *cr = flecs_components_get(world_, id);
         return cr ? flecs_component_get_sparse(cr) : nullptr;
+    }
+
+    void assert_policies() const {
+        for (flecs::id_t id : ids_) {
+            (void)id;
+            ecs_assert(ecs_get_target(world_, id, flecs::OnInstantiate, 0) !=
+                flecs::Inherit, ECS_INVALID_OPERATION,
+                "sparse_query component has the OnInstantiate Inherit trait, "
+                "which sparse queries cannot match; add the on_instantiate "
+                "trait at compile time instead");
+        }
     }
 
     flecs::world_t *world_;

@@ -11,10 +11,8 @@
  */
 
 /** Create a query.
- * When all components in the template argument list have the
- * flecs::dont_fragment trait and no arguments are provided, this operation
- * returns a flecs::sparse_query that iterates the sparse component storages
- * directly, bypassing the query engine.
+ * Returns a flecs::sparse_query when all components have the dont_fragment
+ * trait and don't declare the on_instantiate::inherit policy.
  *
  * @see ecs_query_init()
  */

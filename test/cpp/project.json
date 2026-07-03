@@ -881,7 +881,20 @@
                 "sparse_query_each",
                 "sparse_query_empty",
                 "sparse_query_recycled_entity",
-                "sparse_query_skip_prefab_disabled"
+                "sparse_query_skip_prefab_disabled",
+                "sparse_query_type_on_instantiate",
+                "sparse_query_type_no_on_instantiate",
+                "sparse_query_each_on_instantiate_override",
+                "sparse_query_each_on_instantiate_dont_inherit",
+                "sparse_query_each_on_instantiate_mixed_terms",
+                "sparse_query_dynamic_inherit_1_term",
+                "sparse_query_dynamic_inherit_3_terms",
+                "sparse_query_dynamic_inherit_assert",
+                "sparse_query_dynamic_dont_inherit",
+                "sparse_query_convert_to_query_1_term",
+                "sparse_query_convert_to_query_3_terms",
+                "world_each_sparse",
+                "world_each_sparse_w_entity"
             ]
         }, {
             "id": "QueryBuilder",
@@ -1720,6 +1733,24 @@
                 "unlock",
                 "has_flags",
                 "clear_entities"
+            ]
+        }, {
+            "id": "ComponentTraits",
+            "testcases": [
+                "dont_fragment_explicit",
+                "dont_fragment_implicit",
+                "on_instantiate_override_explicit",
+                "on_instantiate_override_implicit",
+                "on_instantiate_inherit_explicit",
+                "on_instantiate_inherit_implicit",
+                "on_instantiate_dont_inherit_explicit",
+                "on_instantiate_dont_inherit_implicit",
+                "on_instantiate_specialized_explicit",
+                "on_instantiate_specialized_implicit",
+                "dont_fragment_dont_inherit_explicit",
+                "dont_fragment_dont_inherit_implicit",
+                "no_traits_explicit",
+                "no_traits_implicit"
             ]
         }]
     }
