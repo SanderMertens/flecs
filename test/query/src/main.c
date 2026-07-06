@@ -2310,6 +2310,13 @@ void DontFragment_1_fixed_sparse_not(void);
 void DontFragment_1_this_sparse_not(void);
 void DontFragment_1_var_sparse_not(void);
 void DontFragment_1_this_sparse_written_not(void);
+void DontFragment_trivial_sparse_batched(void);
+void DontFragment_trivial_sparse_multi_term(void);
+void DontFragment_trivial_sparse_prefab_disabled(void);
+void DontFragment_trivial_sparse_worker_iter(void);
+void DontFragment_trivial_sparse_page_iter(void);
+void DontFragment_trivial_sparse_constrained_this(void);
+void DontFragment_trivial_sparse_desc_terms(void);
 void DontFragment_1_var_sparse_written_not(void);
 void DontFragment_1_fixed_sparse_pair_not(void);
 void DontFragment_1_fixed_sparse_pair_exclusive_not(void);
@@ -11932,6 +11939,34 @@ bake_test_case DontFragment_testcases[] = {
         DontFragment_1_this_sparse_written_not
     },
     {
+        "trivial_sparse_batched",
+        DontFragment_trivial_sparse_batched
+    },
+    {
+        "trivial_sparse_multi_term",
+        DontFragment_trivial_sparse_multi_term
+    },
+    {
+        "trivial_sparse_prefab_disabled",
+        DontFragment_trivial_sparse_prefab_disabled
+    },
+    {
+        "trivial_sparse_worker_iter",
+        DontFragment_trivial_sparse_worker_iter
+    },
+    {
+        "trivial_sparse_page_iter",
+        DontFragment_trivial_sparse_page_iter
+    },
+    {
+        "trivial_sparse_constrained_this",
+        DontFragment_trivial_sparse_constrained_this
+    },
+    {
+        "trivial_sparse_desc_terms",
+        DontFragment_trivial_sparse_desc_terms
+    },
+    {
         "1_var_sparse_written_not",
         DontFragment_1_var_sparse_written_not
     },
@@ -14392,7 +14427,7 @@ static bake_test_suite suites[] = {
         "DontFragment",
         DontFragment_setup,
         NULL,
-        134,
+        141,
         DontFragment_testcases,
         1,
         DontFragment_params

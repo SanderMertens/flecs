@@ -487,6 +487,7 @@ extern "C" {
 #define EcsIterHasCondSet              (1u << 6u)  /* Does the iterator have conditionally set fields. */
 #define EcsIterProfile                 (1u << 7u)  /* Profile iterator performance. */
 #define EcsIterTrivialSearch           (1u << 8u)  /* Trivial iterator mode. */
+#define EcsIterTrivialSparse           (1u << 9u)  /* Trivial sparse iterator mode (batched entity list results). */
 #define EcsIterTrivialTest             (1u << 11u) /* Trivial test mode (constrained $this). */
 #define EcsIterTrivialCached           (1u << 14u) /* Trivial search for cached query. */
 #define EcsIterCached                  (1u << 15u) /* Cached query. */
@@ -511,6 +512,7 @@ extern "C" {
 ////////////////////////////////////////////////////////////////////////////////
 
 /* Flags that can only be set by the query implementation. */
+#define EcsQueryTrivialSparse         (1u << 4u)  /* All terms are self, $this, And, sparse. */
 #define EcsQueryMatchThis             (1u << 11u) /* Query has terms with $this source. */
 #define EcsQueryMatchOnlyThis         (1u << 12u) /* Query only has terms with $this source. */
 #define EcsQueryMatchOnlySelf         (1u << 13u) /* Query has no terms with up traversal. */
@@ -2065,7 +2067,7 @@ void* flecs_sparse_get_dense(
  * @param sparse The sparse set.
  * @return The number of alive elements.
  */
-FLECS_DBG_API
+FLECS_API
 int32_t flecs_sparse_count(
     const ecs_sparse_t *sparse);
 
@@ -2087,10 +2089,20 @@ bool flecs_sparse_has(
  * @return Pointer to the element, regardless of liveness.
  */
 FLECS_DBG_API
-void* flecs_sparse_get(
+FLECS_ALWAYS_INLINE void* flecs_sparse_get(
     const ecs_sparse_t *sparse,
     ecs_size_t elem_size,
     uint64_t id);
+
+/** Get element by sparse ID with optional liveness checking.
+ * When checked is true this behaves like flecs_sparse_get(). When checked is
+ * false the element must be alive, and no bounds/liveness checks are done. */
+FLECS_API
+FLECS_ALWAYS_INLINE void* flecs_sparse_get_w_check(
+    const ecs_sparse_t *sparse,
+    ecs_size_t elem_size,
+    uint64_t id,
+    bool checked);
 
 /** Typed get by sparse ID.
  *
@@ -2179,7 +2191,7 @@ void* flecs_sparse_ensure_fast(
  * @param sparse The sparse set.
  * @return Pointer to the dense array of IDs.
  */
-FLECS_DBG_API
+FLECS_API
 const uint64_t* flecs_sparse_ids(
     const ecs_sparse_t *sparse);
 
@@ -5785,6 +5797,13 @@ FLECS_API
 const ecs_type_info_t* flecs_component_get_type_info(
     const ecs_component_record_t *cr);
 
+/** Get the sparse storage for a component record.
+ * Returns the sparse set that stores values for components with the Sparse or
+ * DontFragment trait, indexed by (unsigned 32 bit) entity id. */
+FLECS_API
+ecs_sparse_t* flecs_component_get_sparse(
+    const ecs_component_record_t *cr);
+
 /** Find the table record for a component record.
  * This operation returns the table record for the table and component record if it
  * exists. If the record exists, it means the table has the component.
@@ -5894,6 +5913,14 @@ FLECS_API
 ecs_component_record_t* flecs_table_record_get_component(
     const ecs_table_record_t *tr);
 
+/** Get the sparse storage for a row field.
+ * Returns the sparse set that stores values for a field returned per-row (see
+ * ecs_field_at()), or NULL when the field has a non-$this source. */
+FLECS_API
+ecs_sparse_t* flecs_field_sparse(
+    const ecs_iter_t *it,
+    int8_t index);
+
 /** Get the table ID.
  * This operation returns a unique numerical identifier for a table.
  *
@@ -5903,6 +5930,12 @@ ecs_component_record_t* flecs_table_record_get_component(
 FLECS_API
 uint64_t flecs_table_id(
     ecs_table_t* table);
+
+/** Get the table flags.
+ * See include/flecs/private/api_flags.h for a list of table flags. */
+FLECS_API
+ecs_flags32_t flecs_table_flags(
+    const ecs_table_t* table);
 
 /** Find a table by adding an ID to the current table.
  * Same as ecs_table_add_id(), but with an additional diff parameter that contains
@@ -20380,6 +20413,41 @@ using if_t = enable_if_t<V, int>;
 template <bool V>
 using if_not_t = enable_if_t<false == V, int>;
 
+/** Trait that marks a component as DontFragment at compile time.
+ * Enable by adding a `static constexpr bool dont_fragment = true` member to
+ * the type, or by specializing the trait to derive from std::true_type. */
+template <typename T, typename = void>
+struct dont_fragment : std::false_type { };
+
+template <typename T>
+struct dont_fragment<T, enable_if_t<T::dont_fragment>> : std::true_type { };
+
+/** OnInstantiate policies that can be assigned to a component at compile
+ * time with the flecs::on_instantiate_trait trait. */
+enum class on_instantiate {
+    override,
+    inherit,
+    dont_inherit
+};
+
+/** Trait that assigns an OnInstantiate policy to a component at compile time.
+ * Enable by adding a `static constexpr auto on_instantiate` member set to a
+ * flecs::on_instantiate value, or by specializing the trait. */
+template <typename T, typename = void>
+struct on_instantiate_trait {
+    static constexpr bool declared = false;
+    static constexpr flecs::on_instantiate value =
+        flecs::on_instantiate::override;
+};
+
+template <typename T>
+struct on_instantiate_trait<T, enable_if_t<is_same<flecs::on_instantiate,
+    typename std::remove_cv<decltype(T::on_instantiate)>::type>::value>>
+{
+    static constexpr bool declared = true;
+    static constexpr flecs::on_instantiate value = T::on_instantiate;
+};
+
 namespace _
 {
 
@@ -21823,6 +21891,9 @@ struct query;
 
 template<typename ... Components>
 struct query_builder;
+
+template<typename ... Components>
+struct sparse_query;
 
 /** @} */
 
@@ -23914,6 +23985,30 @@ struct is_actual {
 template <typename T>
 inline constexpr bool is_actual_v = is_actual<T>::value;
 
+namespace _ {
+
+template <typename T>
+struct is_sparse_field {
+    static constexpr bool value = !is_pointer<T>::value &&
+        !is_empty<actual_type_t<T>>::value && is_actual<T>::value &&
+        dont_fragment<std::remove_cv_t<T>>::value;
+};
+
+template <typename T>
+struct is_sparse_query_field {
+    static constexpr bool value = is_sparse_field<T>::value &&
+        on_instantiate_trait<std::remove_cv_t<T>>::value !=
+            flecs::on_instantiate::inherit;
+};
+
+template <typename ... Components>
+struct is_sparse_query {
+    static constexpr bool value = sizeof...(Components) != 0 &&
+        (is_sparse_query_field<remove_reference_t<Components>>::value && ...);
+};
+
+} // namespace _
+
 /** @} */
 
 } // namespace flecs
@@ -25949,11 +26044,15 @@ flecs::observer_builder<Components...> observer(Args &&... args) const;
  */
 
 /** Create a query.
- * 
+ * Returns a flecs::sparse_query when all components have the dont_fragment
+ * trait and don't declare the on_instantiate::inherit policy.
+ *
  * @see ecs_query_init()
  */
 template <typename... Comps, typename... Args>
-flecs::query<Comps...> query(Args &&... args) const;
+conditional_t<sizeof...(Args) == 0 && _::is_sparse_query<Comps...>::value,
+    flecs::sparse_query<Comps...>, flecs::query<Comps...>>
+query(Args &&... args) const;
 
 /** Create a query from an entity.
  *
@@ -32094,6 +32193,23 @@ struct type_impl {
 
         ecs_assert(c != 0, ECS_INTERNAL_ERROR, nullptr);
 
+        if constexpr (flecs::dont_fragment<T>::value) {
+            ecs_add_id(world, c, flecs::DontFragment);
+        }
+
+        if constexpr (flecs::on_instantiate_trait<T>::declared) {
+            constexpr flecs::on_instantiate policy =
+                flecs::on_instantiate_trait<T>::value;
+            if constexpr (policy == flecs::on_instantiate::override) {
+                ecs_add_pair(world, c, flecs::OnInstantiate, flecs::Override);
+            } else if constexpr (policy == flecs::on_instantiate::inherit) {
+                ecs_add_pair(world, c, flecs::OnInstantiate, flecs::Inherit);
+            } else {
+                ecs_add_pair(world, c, flecs::OnInstantiate,
+                    flecs::DontInherit);
+            }
+        }
+
 #ifdef FLECS_META
         register_cpp_meta<T>(world, c);
 #endif
@@ -32922,6 +33038,135 @@ private:
 }
 
 /** @} */
+
+#pragma once
+
+namespace flecs {
+
+/** @defgroup cpp_queries Sparse queries
+ * @ingroup cpp_core
+ * Direct iteration of sparse component storages. @{ */
+
+namespace _ {
+
+inline void* field_at_sparse(
+    const ecs_sparse_t *sparse, size_t size, uint64_t entity, bool checked)
+{
+    return flecs_sparse_get_w_check(sparse, static_cast<ecs_size_t>(size),
+        entity, checked);
+}
+
+}
+
+/** Query that iterates sparse component storages directly.
+ * Returned by world::query() when all components have the dont_fragment
+ * trait and don't declare the on_instantiate::inherit policy. */
+template <typename ... Components>
+struct sparse_query {
+    static_assert(_::is_sparse_query<Components...>::value,
+        "all sparse_query components must have the dont_fragment trait and "
+        "must not declare the on_instantiate::inherit policy");
+
+    explicit sparse_query(flecs::world_t *world)
+        : world_(ECS_CONST_CAST(flecs::world_t*, ecs_get_world(world)))
+        , ids_{ _::type<Components>::id(world)... }
+    {
+        assert_policies();
+    }
+
+    /** Iterate the query.
+     * The function signature must match func(flecs::entity e, Components&...)
+     * or func(Components&...). */
+    template <typename Func>
+    void each(Func&& func) const {
+        each_impl(std::index_sequence_for<Components...>{}, func);
+    }
+
+    /** Return the number of entities matched by the query. */
+    int32_t count() const {
+        int32_t result = 0;
+        each([&](Components&...) { result ++; });
+        return result;
+    }
+
+    /** Convert to a regular flecs::query for the same components. */
+    operator flecs::query<Components...>() const;
+
+private:
+    template <size_t ... Is, typename Func>
+    void each_impl(std::index_sequence<Is...>, const Func& func) const {
+        constexpr size_t n = sizeof...(Components);
+
+        ecs_sparse_t *sparse[n] = { storage(ids_[Is])... };
+        for (size_t f = 0; f < n; f ++) {
+            if (!sparse[f]) {
+                return;
+            }
+        }
+
+        size_t lead = 0;
+        for (size_t f = 1; f < n; f ++) {
+            if (sparse[f]->count < sparse[lead]->count) {
+                lead = f;
+            }
+        }
+
+        const uint64_t *entities = flecs_sparse_ids(sparse[lead]);
+        int32_t count = sparse[lead]->count - 1;
+
+        for (int32_t i = 0; i < count; i ++) {
+            uint64_t e = entities[i];
+            void *ptrs[n];
+            if (!(... && (ptrs[Is] = flecs_sparse_get_w_check(
+                sparse[Is], ECS_SIZEOF(remove_reference_t<Components>), e, 
+                Is != lead))))
+            {
+                continue;
+            }
+
+            const ecs_record_t *r = ecs_record_find(world_, e);
+            if (flecs_table_flags(r->table) &
+                (EcsTableNotQueryable|EcsTableIsPrefab|EcsTableIsDisabled))
+            {
+                continue;
+            }
+
+            if constexpr (std::is_invocable<
+                Func, flecs::entity, Components&...>::value)
+            {
+                func(flecs::entity(world_, e),
+                    (*static_cast<remove_reference_t<Components>*>(
+                        ptrs[Is]))...);
+            } else {
+                func((*static_cast<remove_reference_t<Components>*>(
+                    ptrs[Is]))...);
+            }
+        }
+    }
+
+    ecs_sparse_t* storage(flecs::id_t id) const {
+        ecs_component_record_t *cr = flecs_components_get(world_, id);
+        return cr ? flecs_component_get_sparse(cr) : nullptr;
+    }
+
+    void assert_policies() const {
+        for (flecs::id_t id : ids_) {
+            (void)id;
+            ecs_assert(ecs_get_target(world_, id, flecs::OnInstantiate, 0) !=
+                flecs::Inherit, ECS_INVALID_OPERATION,
+                "sparse_query component has the OnInstantiate Inherit trait, "
+                "which sparse queries cannot match; add the on_instantiate "
+                "trait at compile time instead");
+        }
+    }
+
+    flecs::world_t *world_;
+    flecs::id_t ids_[sizeof...(Components)];
+};
+
+/** @} */
+
+}
 
 #pragma once
 
@@ -35724,9 +35969,15 @@ private:
 
 // World mixin implementation
 template <typename... Comps, typename... Args>
-inline flecs::query<Comps...> world::query(Args &&... args) const {
-    return flecs::query_builder<Comps...>(world_, FLECS_FWD(args)...)
-        .build();
+inline conditional_t<sizeof...(Args) == 0 && _::is_sparse_query<Comps...>::value,
+    flecs::sparse_query<Comps...>, flecs::query<Comps...>>
+world::query(Args &&... args) const {
+    if constexpr (sizeof...(Args) == 0 && _::is_sparse_query<Comps...>::value) {
+        return flecs::sparse_query<Comps...>(world_);
+    } else {
+        return flecs::query_builder<Comps...>(world_, FLECS_FWD(args)...)
+            .build();
+    }
 }
 
 inline flecs::query<> world::query(flecs::entity query_entity) const {
@@ -35738,6 +35989,11 @@ inline flecs::query<> world::query(flecs::entity query_entity) const {
 template <typename... Comps, typename... Args>
 inline flecs::query_builder<Comps...> world::query_builder(Args &&... args) const {
     return flecs::query_builder<Comps...>(world_, FLECS_FWD(args)...);
+}
+
+template <typename ... Components>
+inline sparse_query<Components...>::operator flecs::query<Components...>() const {
+    return flecs::query_builder<Components...>(world_).build();
 }
 
 // world::each

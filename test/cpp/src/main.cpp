@@ -842,6 +842,30 @@ void Query_optional_module(void);
 void Query_has_entity(void);
 void Query_has_table(void);
 void Query_has_range(void);
+void Query_dont_fragment_trait_registered(void);
+void Query_dont_fragment_trait_specialized_registered(void);
+void Query_each_dont_fragment_trait(void);
+void Query_each_dont_fragment_trait_mixed(void);
+void Query_each_dont_fragment_trait_shared(void);
+void Query_each_optional_sparse(void);
+void Query_sparse_query_type(void);
+void Query_sparse_query_each(void);
+void Query_sparse_query_empty(void);
+void Query_sparse_query_recycled_entity(void);
+void Query_sparse_query_skip_prefab_disabled(void);
+void Query_sparse_query_type_on_instantiate(void);
+void Query_sparse_query_type_no_on_instantiate(void);
+void Query_sparse_query_each_on_instantiate_override(void);
+void Query_sparse_query_each_on_instantiate_dont_inherit(void);
+void Query_sparse_query_each_on_instantiate_mixed_terms(void);
+void Query_sparse_query_dynamic_inherit_1_term(void);
+void Query_sparse_query_dynamic_inherit_3_terms(void);
+void Query_sparse_query_dynamic_inherit_assert(void);
+void Query_sparse_query_dynamic_dont_inherit(void);
+void Query_sparse_query_convert_to_query_1_term(void);
+void Query_sparse_query_convert_to_query_3_terms(void);
+void Query_world_each_sparse(void);
+void Query_world_each_sparse_w_entity(void);
 
 // Testsuite 'QueryBuilder'
 void QueryBuilder_setup(void);
@@ -1653,6 +1677,22 @@ void Table_lock(void);
 void Table_unlock(void);
 void Table_has_flags(void);
 void Table_clear_entities(void);
+
+// Testsuite 'ComponentTraits'
+void ComponentTraits_dont_fragment_explicit(void);
+void ComponentTraits_dont_fragment_implicit(void);
+void ComponentTraits_on_instantiate_override_explicit(void);
+void ComponentTraits_on_instantiate_override_implicit(void);
+void ComponentTraits_on_instantiate_inherit_explicit(void);
+void ComponentTraits_on_instantiate_inherit_implicit(void);
+void ComponentTraits_on_instantiate_dont_inherit_explicit(void);
+void ComponentTraits_on_instantiate_dont_inherit_implicit(void);
+void ComponentTraits_on_instantiate_specialized_explicit(void);
+void ComponentTraits_on_instantiate_specialized_implicit(void);
+void ComponentTraits_dont_fragment_dont_inherit_explicit(void);
+void ComponentTraits_dont_fragment_dont_inherit_implicit(void);
+void ComponentTraits_no_traits_explicit(void);
+void ComponentTraits_no_traits_implicit(void);
 
 bake_test_case PrettyFunction_testcases[] = {
     {
@@ -4936,6 +4976,102 @@ bake_test_case Query_testcases[] = {
     {
         "has_range",
         Query_has_range
+    },
+    {
+        "dont_fragment_trait_registered",
+        Query_dont_fragment_trait_registered
+    },
+    {
+        "dont_fragment_trait_specialized_registered",
+        Query_dont_fragment_trait_specialized_registered
+    },
+    {
+        "each_dont_fragment_trait",
+        Query_each_dont_fragment_trait
+    },
+    {
+        "each_dont_fragment_trait_mixed",
+        Query_each_dont_fragment_trait_mixed
+    },
+    {
+        "each_dont_fragment_trait_shared",
+        Query_each_dont_fragment_trait_shared
+    },
+    {
+        "each_optional_sparse",
+        Query_each_optional_sparse
+    },
+    {
+        "sparse_query_type",
+        Query_sparse_query_type
+    },
+    {
+        "sparse_query_each",
+        Query_sparse_query_each
+    },
+    {
+        "sparse_query_empty",
+        Query_sparse_query_empty
+    },
+    {
+        "sparse_query_recycled_entity",
+        Query_sparse_query_recycled_entity
+    },
+    {
+        "sparse_query_skip_prefab_disabled",
+        Query_sparse_query_skip_prefab_disabled
+    },
+    {
+        "sparse_query_type_on_instantiate",
+        Query_sparse_query_type_on_instantiate
+    },
+    {
+        "sparse_query_type_no_on_instantiate",
+        Query_sparse_query_type_no_on_instantiate
+    },
+    {
+        "sparse_query_each_on_instantiate_override",
+        Query_sparse_query_each_on_instantiate_override
+    },
+    {
+        "sparse_query_each_on_instantiate_dont_inherit",
+        Query_sparse_query_each_on_instantiate_dont_inherit
+    },
+    {
+        "sparse_query_each_on_instantiate_mixed_terms",
+        Query_sparse_query_each_on_instantiate_mixed_terms
+    },
+    {
+        "sparse_query_dynamic_inherit_1_term",
+        Query_sparse_query_dynamic_inherit_1_term
+    },
+    {
+        "sparse_query_dynamic_inherit_3_terms",
+        Query_sparse_query_dynamic_inherit_3_terms
+    },
+    {
+        "sparse_query_dynamic_inherit_assert",
+        Query_sparse_query_dynamic_inherit_assert
+    },
+    {
+        "sparse_query_dynamic_dont_inherit",
+        Query_sparse_query_dynamic_dont_inherit
+    },
+    {
+        "sparse_query_convert_to_query_1_term",
+        Query_sparse_query_convert_to_query_1_term
+    },
+    {
+        "sparse_query_convert_to_query_3_terms",
+        Query_sparse_query_convert_to_query_3_terms
+    },
+    {
+        "world_each_sparse",
+        Query_world_each_sparse
+    },
+    {
+        "world_each_sparse_w_entity",
+        Query_world_each_sparse_w_entity
     }
 };
 
@@ -8119,6 +8255,65 @@ bake_test_case Table_testcases[] = {
     }
 };
 
+bake_test_case ComponentTraits_testcases[] = {
+    {
+        "dont_fragment_explicit",
+        ComponentTraits_dont_fragment_explicit
+    },
+    {
+        "dont_fragment_implicit",
+        ComponentTraits_dont_fragment_implicit
+    },
+    {
+        "on_instantiate_override_explicit",
+        ComponentTraits_on_instantiate_override_explicit
+    },
+    {
+        "on_instantiate_override_implicit",
+        ComponentTraits_on_instantiate_override_implicit
+    },
+    {
+        "on_instantiate_inherit_explicit",
+        ComponentTraits_on_instantiate_inherit_explicit
+    },
+    {
+        "on_instantiate_inherit_implicit",
+        ComponentTraits_on_instantiate_inherit_implicit
+    },
+    {
+        "on_instantiate_dont_inherit_explicit",
+        ComponentTraits_on_instantiate_dont_inherit_explicit
+    },
+    {
+        "on_instantiate_dont_inherit_implicit",
+        ComponentTraits_on_instantiate_dont_inherit_implicit
+    },
+    {
+        "on_instantiate_specialized_explicit",
+        ComponentTraits_on_instantiate_specialized_explicit
+    },
+    {
+        "on_instantiate_specialized_implicit",
+        ComponentTraits_on_instantiate_specialized_implicit
+    },
+    {
+        "dont_fragment_dont_inherit_explicit",
+        ComponentTraits_dont_fragment_dont_inherit_explicit
+    },
+    {
+        "dont_fragment_dont_inherit_implicit",
+        ComponentTraits_dont_fragment_dont_inherit_implicit
+    },
+    {
+        "no_traits_explicit",
+        ComponentTraits_no_traits_explicit
+    },
+    {
+        "no_traits_implicit",
+        ComponentTraits_no_traits_implicit
+    }
+};
+
 const char* QueryBuilder_cache_kind_param[] = {"default", "auto"};
 bake_test_param QueryBuilder_params[] = {
     {"cache_kind", (char**)QueryBuilder_cache_kind_param, 2}
@@ -8199,7 +8394,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        141,
+        165,
         Query_testcases
     },
     {
@@ -8287,9 +8482,16 @@ static bake_test_suite suites[] = {
         NULL,
         40,
         Table_testcases
+    },
+    {
+        "ComponentTraits",
+        NULL,
+        NULL,
+        14,
+        ComponentTraits_testcases
     }
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("cpp", argc, argv, suites, 23);
+    return bake_test_run("cpp", argc, argv, suites, 24);
 }

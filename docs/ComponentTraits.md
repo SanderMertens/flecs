@@ -611,16 +611,73 @@ world.component::<Position>().add_trait::<flecs::DontFragment>();
 </ul>
 </div>
 
+### C++ trait
+C++ applications can set a `dont_fragment` trait on the type:
+
+```cpp
+struct Position {
+    static constexpr bool dont_fragment = true;
+    float x, y;
+};
+```
+
+or by specializing the `flecs::dont_fragment` trait:
+
+```cpp
+template <>
+struct flecs::dont_fragment<Position> : std::true_type { };
+```
+
+When component types provided to `world.query()` all have the `dont_fragment` trait the method will return a `flecs::sparse_query`, which is a query implementation that is optimized for `DontFragment` components, and runs much faster:
+
+```cpp
+flecs::sparse_query<Position, Velocity> q = world.query<Position, Velocity>();
+
+q.each([](Position& p, Velocity& v) {
+    // ...
+});
+```
+
+The query can be iterated directly which allows code to be agnostic:
+
+```cpp
+world.query<Position, Velocity>()
+    .each([](Position& p, Velocity& v) {
+        // ...
+    });
+```
+
+Similarly, querying the world with `world.each` will run much faster if components have the `dont_fragment` trait (compared to specifying the `flecs::DontFragment` trait dynamically):
+
+```cpp
+world.each([](Position& p, Velocity& v) {
+    // ...
+});
+```
+
+If a component also implements the `on_instantiate = flecs::on_instantiate::inherit` trait, `flecs::sparse_query` will not be used which limits the performance benefits.
+
+A `sparse_query` can be implicitly converted to a slower `flecs:query` for backwards compatibility:
+
+```cpp
+flecs::query<Position, Velocity> q = world.query<Position, Velocity>();
+
+q.each([](Position& p, Velocity& v) {
+    // ...
+});
+```
+
+When a query is created with `world.query_builder()`, it will always return a `flecs::query`.
+
+### Limitations
 Components with the `DontFragment` trait have the following limitations:
 - They don't show up in types (obtained by `ecs_get_type` / `entity::type`)
 - Monitors don't trigger on `DontFragment` components. The reason for this is that monitors compare the previous table with the current table of an entity to determine if an entity started matching, and `DontFragment` components aren't part of the table.
 
 Support for `DontFragment` has a number of (temporary) limitations:
 - `target_for` does not yet work for `DontFragment` components.
-- `DontFragment` components are not serialized yet to JSON (and don't show up in the explorer).
 - `Or`, `Optional`, `AndFrom` and `NotFrom` operators are not yet supported.
 - Component inheritance and transitivity are not yet supported.
-- Queries for `DontFragment` components may run slower than expected.
 
 What does work:
 - ECS operations (`add`, `remove`, `get`, `get_mut`, `ensure`, `emplace`, `set`, `delete`).
@@ -1241,6 +1298,27 @@ assert!(!inst.try_get::<&Mass>(|mass| {}));
 </li>
 </ul>
 </div>
+
+### C++ trait
+C++ applications can set an `on_instantiate` trait on the type:
+
+```cpp
+struct Mass {
+    static constexpr auto on_instantiate = flecs::on_instantiate::inherit;
+    float value;
+};
+```
+
+or by specializing the `flecs::on_instantiate_trait` trait:
+
+```cpp
+template <>
+struct flecs::on_instantiate_trait<Mass> {
+    static constexpr bool declared = true;
+    static constexpr flecs::on_instantiate value = 
+        flecs::on_instantiate::inherit;
+};
+```
 
 ## PairIsTag trait
 A relationship can be marked with PairIsTag in which case a pair with the relationship will never contain data. By default the data associated with a pair is determined by whether either the relationship or target are components. For some relationships however, even if the target is a component, no data should be added to the relationship. Consider the following example:

@@ -310,9 +310,15 @@ private:
 
 // World mixin implementation
 template <typename... Comps, typename... Args>
-inline flecs::query<Comps...> world::query(Args &&... args) const {
-    return flecs::query_builder<Comps...>(world_, FLECS_FWD(args)...)
-        .build();
+inline conditional_t<sizeof...(Args) == 0 && _::is_sparse_query<Comps...>::value,
+    flecs::sparse_query<Comps...>, flecs::query<Comps...>>
+world::query(Args &&... args) const {
+    if constexpr (sizeof...(Args) == 0 && _::is_sparse_query<Comps...>::value) {
+        return flecs::sparse_query<Comps...>(world_);
+    } else {
+        return flecs::query_builder<Comps...>(world_, FLECS_FWD(args)...)
+            .build();
+    }
 }
 
 inline flecs::query<> world::query(flecs::entity query_entity) const {
@@ -324,6 +330,11 @@ inline flecs::query<> world::query(flecs::entity query_entity) const {
 template <typename... Comps, typename... Args>
 inline flecs::query_builder<Comps...> world::query_builder(Args &&... args) const {
     return flecs::query_builder<Comps...>(world_, FLECS_FWD(args)...);
+}
+
+template <typename ... Components>
+inline sparse_query<Components...>::operator flecs::query<Components...>() const {
+    return flecs::query_builder<Components...>(world_).build();
 }
 
 // world::each

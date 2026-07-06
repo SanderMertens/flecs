@@ -211,6 +211,23 @@ struct type_impl {
 
         ecs_assert(c != 0, ECS_INTERNAL_ERROR, nullptr);
 
+        if constexpr (flecs::dont_fragment<T>::value) {
+            ecs_add_id(world, c, flecs::DontFragment);
+        }
+
+        if constexpr (flecs::on_instantiate_trait<T>::declared) {
+            constexpr flecs::on_instantiate policy =
+                flecs::on_instantiate_trait<T>::value;
+            if constexpr (policy == flecs::on_instantiate::override) {
+                ecs_add_pair(world, c, flecs::OnInstantiate, flecs::Override);
+            } else if constexpr (policy == flecs::on_instantiate::inherit) {
+                ecs_add_pair(world, c, flecs::OnInstantiate, flecs::Inherit);
+            } else {
+                ecs_add_pair(world, c, flecs::OnInstantiate,
+                    flecs::DontInherit);
+            }
+        }
+
 #ifdef FLECS_META
         register_cpp_meta<T>(world, c);
 #endif

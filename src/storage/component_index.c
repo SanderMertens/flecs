@@ -904,6 +904,13 @@ const ecs_type_info_t* flecs_component_get_type_info(
     return cr->type_info;
 }
 
+ecs_sparse_t* flecs_component_get_sparse(
+    const ecs_component_record_t *cr)
+{
+    ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
+    return cr->sparse;
+}
+
 ecs_hashmap_t* flecs_component_name_index_ensure(
     ecs_world_t *world,
     ecs_component_record_t *cr)

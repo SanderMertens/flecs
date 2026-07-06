@@ -58,7 +58,7 @@ void flecs_query_iter_constrain(
     /* This function can be called multiple times when setting variables, so
      * reset flags before setting them. */
     it->flags &= ~(EcsIterTrivialTest|EcsIterTrivialCached|
-        EcsIterTrivialSearch);
+        EcsIterTrivialSearch|EcsIterTrivialSparse);
 
     /* Figure out whether this query can utilize specialized iterator modes for
      * improved performance. */
@@ -78,6 +78,10 @@ void flecs_query_iter_constrain(
                     it->flags |= EcsIterTrivialTest;
                     flecs_query_setids(NULL, false, &ctx);
                 }
+            } else if ((flags & (EcsQueryMatchOnlyThis|EcsQueryMatchOnlySelf))
+                == (EcsQueryMatchOnlyThis|EcsQueryMatchOnlySelf))
+            {
+                it->flags |= EcsIterTrivialChangeDetection;
             }
         } else if (flags & EcsQueryIsCacheable) {
             if (!query->ops) {
@@ -96,13 +100,21 @@ void flecs_query_iter_constrain(
             }
         }
     } else {
-        if (!cache) { 
+        if (!cache) {
             if ((flags & (trivial_flags)) == trivial_flags) {
                 if (!(flags & EcsQueryMatchWildcards)) {
                     it->flags |= EcsIterTrivialSearch|
                         EcsIterTrivialChangeDetection;
                     flecs_query_setids(NULL, false, &ctx);
                 }
+            } else if (flags & EcsQueryTrivialSparse) {
+                it->flags |= EcsIterTrivialSparse|
+                    EcsIterTrivialChangeDetection;
+                flecs_query_setids(NULL, false, &ctx);
+            } else if ((flags & (EcsQueryMatchOnlyThis|EcsQueryMatchOnlySelf))
+                == (EcsQueryMatchOnlyThis|EcsQueryMatchOnlySelf))
+            {
+                it->flags |= EcsIterTrivialChangeDetection;
             }
         } else if (flags & EcsQueryIsCacheable) {
             if (!query->ops) {
@@ -149,7 +161,7 @@ void flecs_query_self_change_detection(
     ecs_query_iter_t *qit,
     ecs_query_impl_t *impl)
 {
-    if (!it->table->dirty_state) {
+    if (!it->table || !it->table->dirty_state) {
         return;
     }
 
@@ -251,6 +263,10 @@ bool ecs_query_next(
 
             ecs_query_trivial_ctx_t *op_ctx = &ctx.op_ctx[0].is.trivial;
             if (flecs_query_is_trivial_search(&ctx, op_ctx, redo)) {
+                goto yield;
+            }
+        } else if (it->flags & EcsIterTrivialSparse) {
+            if (flecs_query_trivial_sparse_search(&ctx, redo)) {
                 goto yield;
             }
         } else if (it->flags & EcsIterTrivialTest) {
@@ -390,6 +406,9 @@ void flecs_query_iter_fini_ctx(
     int32_t i, count = query->op_count;
     ecs_query_op_t *ops = query->ops;
     ecs_query_op_ctx_t *ctx = qit->op_ctx;
+    if (!ctx) {
+        return;
+    }
 
     for (i = 0; i < count; i ++) {
         ecs_query_op_t *op = &ops[i];
@@ -421,6 +440,15 @@ void flecs_query_iter_fini(
 
     flecs_iter_free_n(qit->profile, ecs_query_op_profile_t, op_count);
 #endif
+
+    if ((it->flags & EcsIterTrivialSparse) && qit->op_ctx) {
+        ecs_query_sparse_trivial_ctx_t *op_ctx =
+            &qit->op_ctx[0].is.sparse_trivial;
+        if (op_ctx->entities) {
+            flecs_iter_free_n(op_ctx->entities, ecs_entity_t,
+                FLECS_QUERY_SPARSE_BATCH_SIZE);
+        }
+    }
 
     flecs_query_iter_fini_ctx(it, qit);
     flecs_iter_free_n(qit->vars, ecs_var_t, var_count);

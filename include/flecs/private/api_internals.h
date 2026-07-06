@@ -266,6 +266,13 @@ FLECS_API
 const ecs_type_info_t* flecs_component_get_type_info(
     const ecs_component_record_t *cr);
 
+/** Get the sparse storage for a component record.
+ * Returns the sparse set that stores values for components with the Sparse or
+ * DontFragment trait, indexed by (unsigned 32 bit) entity id. */
+FLECS_API
+ecs_sparse_t* flecs_component_get_sparse(
+    const ecs_component_record_t *cr);
+
 /** Find the table record for a component record.
  * This operation returns the table record for the table and component record if it
  * exists. If the record exists, it means the table has the component.
@@ -375,6 +382,14 @@ FLECS_API
 ecs_component_record_t* flecs_table_record_get_component(
     const ecs_table_record_t *tr);
 
+/** Get the sparse storage for a row field.
+ * Returns the sparse set that stores values for a field returned per-row (see
+ * ecs_field_at()), or NULL when the field has a non-$this source. */
+FLECS_API
+ecs_sparse_t* flecs_field_sparse(
+    const ecs_iter_t *it,
+    int8_t index);
+
 /** Get the table ID.
  * This operation returns a unique numerical identifier for a table.
  *
@@ -384,6 +399,12 @@ ecs_component_record_t* flecs_table_record_get_component(
 FLECS_API
 uint64_t flecs_table_id(
     ecs_table_t* table);
+
+/** Get the table flags.
+ * See include/flecs/private/api_flags.h for a list of table flags. */
+FLECS_API
+ecs_flags32_t flecs_table_flags(
+    const ecs_table_t* table);
 
 /** Find a table by adding an ID to the current table.
  * Same as ecs_table_add_id(), but with an additional diff parameter that contains

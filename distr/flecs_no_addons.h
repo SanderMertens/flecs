@@ -465,6 +465,7 @@ extern "C" {
 #define EcsIterHasCondSet              (1u << 6u)  /* Does the iterator have conditionally set fields. */
 #define EcsIterProfile                 (1u << 7u)  /* Profile iterator performance. */
 #define EcsIterTrivialSearch           (1u << 8u)  /* Trivial iterator mode. */
+#define EcsIterTrivialSparse           (1u << 9u)  /* Trivial sparse iterator mode (batched entity list results). */
 #define EcsIterTrivialTest             (1u << 11u) /* Trivial test mode (constrained $this). */
 #define EcsIterTrivialCached           (1u << 14u) /* Trivial search for cached query. */
 #define EcsIterCached                  (1u << 15u) /* Cached query. */
@@ -489,6 +490,7 @@ extern "C" {
 ////////////////////////////////////////////////////////////////////////////////
 
 /* Flags that can only be set by the query implementation. */
+#define EcsQueryTrivialSparse         (1u << 4u)  /* All terms are self, $this, And, sparse. */
 #define EcsQueryMatchThis             (1u << 11u) /* Query has terms with $this source. */
 #define EcsQueryMatchOnlyThis         (1u << 12u) /* Query only has terms with $this source. */
 #define EcsQueryMatchOnlySelf         (1u << 13u) /* Query has no terms with up traversal. */
@@ -2043,7 +2045,7 @@ void* flecs_sparse_get_dense(
  * @param sparse The sparse set.
  * @return The number of alive elements.
  */
-FLECS_DBG_API
+FLECS_API
 int32_t flecs_sparse_count(
     const ecs_sparse_t *sparse);
 
@@ -2065,10 +2067,20 @@ bool flecs_sparse_has(
  * @return Pointer to the element, regardless of liveness.
  */
 FLECS_DBG_API
-void* flecs_sparse_get(
+FLECS_ALWAYS_INLINE void* flecs_sparse_get(
     const ecs_sparse_t *sparse,
     ecs_size_t elem_size,
     uint64_t id);
+
+/** Get element by sparse ID with optional liveness checking.
+ * When checked is true this behaves like flecs_sparse_get(). When checked is
+ * false the element must be alive, and no bounds/liveness checks are done. */
+FLECS_API
+FLECS_ALWAYS_INLINE void* flecs_sparse_get_w_check(
+    const ecs_sparse_t *sparse,
+    ecs_size_t elem_size,
+    uint64_t id,
+    bool checked);
 
 /** Typed get by sparse ID.
  *
@@ -2157,7 +2169,7 @@ void* flecs_sparse_ensure_fast(
  * @param sparse The sparse set.
  * @return Pointer to the dense array of IDs.
  */
-FLECS_DBG_API
+FLECS_API
 const uint64_t* flecs_sparse_ids(
     const ecs_sparse_t *sparse);
 
@@ -5716,6 +5728,13 @@ FLECS_API
 const ecs_type_info_t* flecs_component_get_type_info(
     const ecs_component_record_t *cr);
 
+/** Get the sparse storage for a component record.
+ * Returns the sparse set that stores values for components with the Sparse or
+ * DontFragment trait, indexed by (unsigned 32 bit) entity id. */
+FLECS_API
+ecs_sparse_t* flecs_component_get_sparse(
+    const ecs_component_record_t *cr);
+
 /** Find the table record for a component record.
  * This operation returns the table record for the table and component record if it
  * exists. If the record exists, it means the table has the component.
@@ -5825,6 +5844,14 @@ FLECS_API
 ecs_component_record_t* flecs_table_record_get_component(
     const ecs_table_record_t *tr);
 
+/** Get the sparse storage for a row field.
+ * Returns the sparse set that stores values for a field returned per-row (see
+ * ecs_field_at()), or NULL when the field has a non-$this source. */
+FLECS_API
+ecs_sparse_t* flecs_field_sparse(
+    const ecs_iter_t *it,
+    int8_t index);
+
 /** Get the table ID.
  * This operation returns a unique numerical identifier for a table.
  *
@@ -5834,6 +5861,12 @@ ecs_component_record_t* flecs_table_record_get_component(
 FLECS_API
 uint64_t flecs_table_id(
     ecs_table_t* table);
+
+/** Get the table flags.
+ * See include/flecs/private/api_flags.h for a list of table flags. */
+FLECS_API
+ecs_flags32_t flecs_table_flags(
+    const ecs_table_t* table);
 
 /** Find a table by adding an ID to the current table.
  * Same as ecs_table_add_id(), but with an additional diff parameter that contains

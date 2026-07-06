@@ -607,7 +607,26 @@ void flecs_query_insert_trivial_search(
         trivial_terms ++;
     }
 
-    if (trivial_terms >= 2) {
+    bool first_uncompiled_dont_fragment = false;
+    for (i = 0; i < term_count; i ++) {
+        if (*compiled & (1ull << i)) {
+            continue;
+        }
+
+        ecs_term_t *term = &terms[i];
+        first_uncompiled_dont_fragment =
+            (term->flags_ & EcsTermDontFragment) &&
+                !(trivial_set & (1llu << i)) &&
+                (term->oper == EcsAnd) &&
+                !flecs_term_is_or(q, term) &&
+                ecs_term_match_this(term) &&
+                ((term->src.id & EcsTraverseFlags) == EcsSelf) &&
+                !(term->flags_ & EcsTermIsScope) &&
+                !ecs_id_is_wildcard(term->id);
+        break;
+    }
+
+    if (trivial_terms >= 2 || (trivial_terms && first_uncompiled_dont_fragment)) {
         /* Mark terms as compiled & populated */
         for (i = 0; i < q->term_count; i ++) {
             if (trivial_set & (1llu << i)) {

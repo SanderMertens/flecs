@@ -2082,6 +2082,66 @@ done:
 
     flecs_query_copy_arrays(q);
 
+    {
+        ecs_query_impl_t *impl = flecs_query_impl(q);
+        ecs_termset_t df_fields = 0, non_df_fields = 0;
+        int8_t i;
+        for (i = 0; i < q->term_count; i ++) {
+            ecs_term_t *term = &q->terms[i];
+            ecs_termset_t bit = (ecs_termset_t)(1u << term->field_index);
+            if (term->flags_ & EcsTermDontFragment) {
+                df_fields |= bit;
+            } else {
+                non_df_fields |= bit;
+            }
+        }
+
+        impl->dont_fragment_fields = df_fields & (ecs_termset_t)~non_df_fields;
+    }
+
+    /* Check if this is a query for which all terms are sparse, which can use
+     * an iterator that directly iterates the sparse component storages. */
+    if (q->term_count && (q->term_count == q->field_count) &&
+        ((q->flags & (EcsQueryMatchOnlyThis|EcsQueryMatchOnlySelf)) ==
+            (EcsQueryMatchOnlyThis|EcsQueryMatchOnlySelf)) &&
+        !(q->flags & (EcsQueryHasPred|EcsQueryHasScopes|EcsQueryTableOnly|
+            EcsQueryMatchDisabled|EcsQueryMatchPrefab)))
+    {
+        bool trivial_sparse = true;
+        int8_t i;
+
+        for (i = 0; i < q->term_count; i ++) {
+            ecs_term_t *term = &q->terms[i];
+
+            if (term->oper != EcsAnd) {
+                trivial_sparse = false;
+                break;
+            }
+
+            if (!(term->flags_ & EcsTermIsSparse) ||
+                !(term->flags_ & EcsTermDontFragment))
+            {
+                trivial_sparse = false;
+                break;
+            }
+
+            if (term->flags_ & (EcsTermMatchAny|EcsTermMatchAnySrc|
+                EcsTermTransitive|EcsTermReflexive|EcsTermIdInherited|
+                EcsTermIsScope|EcsTermIsMember|EcsTermIsToggle|EcsTermIsOr))
+            {
+                trivial_sparse = false;
+                break;
+            }
+
+            if (ecs_id_is_wildcard(term->id)) {
+                trivial_sparse = false;
+                break;
+            }
+        }
+
+        ECS_BIT_COND(q->flags, EcsQueryTrivialSparse, trivial_sparse);
+    }
+
     q->flags |= EcsQueryValid;
 
     return 0;

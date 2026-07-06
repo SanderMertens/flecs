@@ -107,6 +107,7 @@ struct each_delegate;
 #include "entity.hpp"
 #include "delegate.hpp"
 #include "component.hpp"
+#include "mixins/query/sparse_query.hpp"
 #include "type.hpp"
 #include "table.hpp"
 #include "utils/iterable.hpp"

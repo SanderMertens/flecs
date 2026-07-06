@@ -11,11 +11,15 @@
  */
 
 /** Create a query.
- * 
+ * Returns a flecs::sparse_query when all components have the dont_fragment
+ * trait and don't declare the on_instantiate::inherit policy.
+ *
  * @see ecs_query_init()
  */
 template <typename... Comps, typename... Args>
-flecs::query<Comps...> query(Args &&... args) const;
+conditional_t<sizeof...(Args) == 0 && _::is_sparse_query<Comps...>::value,
+    flecs::sparse_query<Comps...>, flecs::query<Comps...>>
+query(Args &&... args) const;
 
 /** Create a query from an entity.
  *
