@@ -400,8 +400,8 @@ int flecs_json_serialize_table_components(
                 continue;
             }
             ecs_entity_t e = ecs_table_entities(table)[row];
-            ptr = flecs_sparse_get(cr->sparse, 0, e);
             ti = cr->type_info;
+            ptr = flecs_sparse_get(cr->sparse, ti->size, e);
         }
 
         if (!ptr) {
@@ -427,7 +427,8 @@ int flecs_json_serialize_table_components(
             {
                 continue;
             }
-            void *ptr = flecs_sparse_get(cur->sparse, 0, entity);
+            void *ptr = flecs_sparse_get(
+                cur->sparse, cur->type_info->size, entity);
             if (!ptr) continue;
 
             if (flecs_json_serialize_component_value(world, cur->id, ptr,

@@ -297,3 +297,102 @@ void Get_component_get_inherited_tag_w_isa(void) {
 
     ecs_fini(world);
 }
+
+void Get_component_get_sparse(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_new(world);
+
+    Position *p = ecs_get_sparse_id(world, e, ecs_id(Position), sizeof(Position));
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    test_assert(ecs_get_sparse_id(world, e2, ecs_id(Position), sizeof(Position)) == NULL);
+
+    ecs_fini(world);
+}
+
+void Get_component_get_sparse_w_dont_fragment(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ecs_add_id(world, ecs_id(Position), EcsDontFragment);
+
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_new(world);
+
+    Position *p = ecs_get_sparse_id(world, e, ecs_id(Position), sizeof(Position));
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    test_assert(ecs_get_sparse_id(world, e2, ecs_id(Position), sizeof(Position)) == NULL);
+
+    ecs_fini(world);
+}
+
+void Get_component_get_sparse_w_pair(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tgt);
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+
+    ecs_entity_t e = ecs_insert(world, ecs_pair_value(Position, Tgt, {10, 20}));
+    ecs_entity_t e2 = ecs_new(world);
+
+    Position *p = ecs_get_sparse_id(world, e, ecs_pair(ecs_id(Position), Tgt), sizeof(Position));
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    test_assert(ecs_get_sparse_id(
+        world, e2, ecs_pair(ecs_id(Position), Tgt), sizeof(Position)) == NULL);
+
+    ecs_fini(world);
+}
+
+void Get_component_get_sparse_w_non_sparse(void) {
+    install_test_abort();
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
+
+    test_expect_abort();
+    ecs_get_sparse_id(world, e, ecs_id(Position), sizeof(Position));
+}
+
+void Get_component_get_sparse_w_inherit(void) {
+    install_test_abort();
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
+
+    test_expect_abort();
+    ecs_get_sparse_id(world, e, ecs_id(Position), sizeof(Position));
+}
+
+void Get_component_get_sparse_w_wildcard(void) {
+    install_test_abort();
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tgt);
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+
+    ecs_entity_t e = ecs_insert(world, ecs_pair_value(Position, Tgt, {10, 20}));
+
+    test_expect_abort();
+    ecs_get_sparse_id(world, e, ecs_pair(ecs_id(Position), EcsWildcard), sizeof(Position));
+}

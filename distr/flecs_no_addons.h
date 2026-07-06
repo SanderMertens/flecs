@@ -8304,6 +8304,27 @@ FLECS_ALWAYS_INLINE void* ecs_get_mut_id(
     ecs_entity_t entity,
     ecs_id_t component);
 
+/** Get a pointer to a sparse component.
+ * This operation obtains a pointer to a sparse component, and is a faster 
+ * alternative to using ecs_get_id() and ecs_get_mut_id(). This operation should
+ * only be used for sparse, non-inheritable components.
+ *
+ * @param world The world.
+ * @param entity The entity.
+ * @param component The component to get.
+ * @param size The size of the component type. Must match the size of the component.
+ * @return The component pointer, NULL if the entity does not have the component.
+ *
+ * @see ecs_get_id()
+ * @see ecs_get_mut_id()
+ */
+FLECS_API
+FLECS_ALWAYS_INLINE void* ecs_get_sparse_id(
+    const ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t component,
+    size_t size);
+
 /** Ensure an entity has a component and return a pointer.
  * This operation returns a mutable pointer to a component. If the entity did
  * not yet have the component, it will be added.

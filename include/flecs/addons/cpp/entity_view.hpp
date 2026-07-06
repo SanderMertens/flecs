@@ -287,7 +287,7 @@ struct entity_view : public id {
         auto comp_id = _::type<T>::id(world_);
         ecs_assert(_::type<T>::size() != 0, ECS_INVALID_PARAMETER,
             "operation invalid for empty type");
-        return static_cast<const T*>(ecs_get_id(world_, id_, comp_id));
+        return static_cast<const T*>(_::get_ptr<T>(world_, id_, comp_id));
     }
 
     /** Get component value.
@@ -627,7 +627,7 @@ struct entity_view : public id {
         auto comp_id = _::type<T>::id(world_);
         ecs_assert(_::type<T>::size() != 0, ECS_INVALID_PARAMETER,
             "operation invalid for empty type");
-        return static_cast<T*>(ecs_get_mut_id(world_, id_, comp_id));
+        return static_cast<T*>(_::get_mut_ptr<T>(world_, id_, comp_id));
     }
 
     /** Get mutable component value.

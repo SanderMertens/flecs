@@ -1211,6 +1211,12 @@ void Get_component_ensure_equal_get(void);
 void Get_component_get_tag(void);
 void Get_component_get_pair_tag(void);
 void Get_component_get_wildcard(void);
+void Get_component_get_sparse(void);
+void Get_component_get_sparse_w_dont_fragment(void);
+void Get_component_get_sparse_w_pair(void);
+void Get_component_get_sparse_w_non_sparse(void);
+void Get_component_get_sparse_w_inherit(void);
+void Get_component_get_sparse_w_wildcard(void);
 
 // Testsuite 'Reference'
 void Reference_setup(void);
@@ -8101,6 +8107,30 @@ bake_test_case Get_component_testcases[] = {
     {
         "get_wildcard",
         Get_component_get_wildcard
+    },
+    {
+        "get_sparse",
+        Get_component_get_sparse
+    },
+    {
+        "get_sparse_w_dont_fragment",
+        Get_component_get_sparse_w_dont_fragment
+    },
+    {
+        "get_sparse_w_pair",
+        Get_component_get_sparse_w_pair
+    },
+    {
+        "get_sparse_w_non_sparse",
+        Get_component_get_sparse_w_non_sparse
+    },
+    {
+        "get_sparse_w_inherit",
+        Get_component_get_sparse_w_inherit
+    },
+    {
+        "get_sparse_w_wildcard",
+        Get_component_get_sparse_w_wildcard
     }
 };
 
@@ -16765,7 +16795,7 @@ static bake_test_suite suites[] = {
         "Get_component",
         Get_component_setup,
         NULL,
-        15,
+        21,
         Get_component_testcases
     },
     {

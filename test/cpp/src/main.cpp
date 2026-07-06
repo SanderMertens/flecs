@@ -1693,6 +1693,31 @@ void ComponentTraits_dont_fragment_dont_inherit_explicit(void);
 void ComponentTraits_dont_fragment_dont_inherit_implicit(void);
 void ComponentTraits_no_traits_explicit(void);
 void ComponentTraits_no_traits_implicit(void);
+void ComponentTraits_sparse_explicit(void);
+void ComponentTraits_sparse_implicit(void);
+void ComponentTraits_sparse_specialized(void);
+void ComponentTraits_sparse_get_get_mut(void);
+void ComponentTraits_sparse_try_get_not_found(void);
+void ComponentTraits_dont_fragment_get_get_mut(void);
+void ComponentTraits_on_instantiate_override_get_get_mut(void);
+void ComponentTraits_on_instantiate_dont_inherit_get_get_mut(void);
+void ComponentTraits_on_instantiate_inherit_get_inherited(void);
+void ComponentTraits_no_traits_get_inherited(void);
+void ComponentTraits_get_dispatch(void);
+void ComponentTraits_dynamic_inherit_dense_owned(void);
+void ComponentTraits_dynamic_inherit_dense_inherited(void);
+void ComponentTraits_dynamic_inherit_sparse_owned(void);
+void ComponentTraits_dynamic_inherit_sparse_owned_get_mut(void);
+void ComponentTraits_dynamic_inherit_sparse_inherited(void);
+void ComponentTraits_dynamic_inherit_dont_fragment_owned(void);
+void ComponentTraits_dynamic_inherit_dont_fragment_owned_get_mut(void);
+void ComponentTraits_dynamic_inherit_dont_fragment_inherited(void);
+void ComponentTraits_static_inherit_dense_owned(void);
+void ComponentTraits_static_inherit_dense_inherited(void);
+void ComponentTraits_static_inherit_sparse_owned(void);
+void ComponentTraits_static_inherit_sparse_inherited(void);
+void ComponentTraits_static_inherit_dont_fragment_owned(void);
+void ComponentTraits_static_inherit_dont_fragment_inherited(void);
 
 bake_test_case PrettyFunction_testcases[] = {
     {
@@ -8311,6 +8336,106 @@ bake_test_case ComponentTraits_testcases[] = {
     {
         "no_traits_implicit",
         ComponentTraits_no_traits_implicit
+    },
+    {
+        "sparse_explicit",
+        ComponentTraits_sparse_explicit
+    },
+    {
+        "sparse_implicit",
+        ComponentTraits_sparse_implicit
+    },
+    {
+        "sparse_specialized",
+        ComponentTraits_sparse_specialized
+    },
+    {
+        "sparse_get_get_mut",
+        ComponentTraits_sparse_get_get_mut
+    },
+    {
+        "sparse_try_get_not_found",
+        ComponentTraits_sparse_try_get_not_found
+    },
+    {
+        "dont_fragment_get_get_mut",
+        ComponentTraits_dont_fragment_get_get_mut
+    },
+    {
+        "on_instantiate_override_get_get_mut",
+        ComponentTraits_on_instantiate_override_get_get_mut
+    },
+    {
+        "on_instantiate_dont_inherit_get_get_mut",
+        ComponentTraits_on_instantiate_dont_inherit_get_get_mut
+    },
+    {
+        "on_instantiate_inherit_get_inherited",
+        ComponentTraits_on_instantiate_inherit_get_inherited
+    },
+    {
+        "no_traits_get_inherited",
+        ComponentTraits_no_traits_get_inherited
+    },
+    {
+        "get_dispatch",
+        ComponentTraits_get_dispatch
+    },
+    {
+        "dynamic_inherit_dense_owned",
+        ComponentTraits_dynamic_inherit_dense_owned
+    },
+    {
+        "dynamic_inherit_dense_inherited",
+        ComponentTraits_dynamic_inherit_dense_inherited
+    },
+    {
+        "dynamic_inherit_sparse_owned",
+        ComponentTraits_dynamic_inherit_sparse_owned
+    },
+    {
+        "dynamic_inherit_sparse_owned_get_mut",
+        ComponentTraits_dynamic_inherit_sparse_owned_get_mut
+    },
+    {
+        "dynamic_inherit_sparse_inherited",
+        ComponentTraits_dynamic_inherit_sparse_inherited
+    },
+    {
+        "dynamic_inherit_dont_fragment_owned",
+        ComponentTraits_dynamic_inherit_dont_fragment_owned
+    },
+    {
+        "dynamic_inherit_dont_fragment_owned_get_mut",
+        ComponentTraits_dynamic_inherit_dont_fragment_owned_get_mut
+    },
+    {
+        "dynamic_inherit_dont_fragment_inherited",
+        ComponentTraits_dynamic_inherit_dont_fragment_inherited
+    },
+    {
+        "static_inherit_dense_owned",
+        ComponentTraits_static_inherit_dense_owned
+    },
+    {
+        "static_inherit_dense_inherited",
+        ComponentTraits_static_inherit_dense_inherited
+    },
+    {
+        "static_inherit_sparse_owned",
+        ComponentTraits_static_inherit_sparse_owned
+    },
+    {
+        "static_inherit_sparse_inherited",
+        ComponentTraits_static_inherit_sparse_inherited
+    },
+    {
+        "static_inherit_dont_fragment_owned",
+        ComponentTraits_static_inherit_dont_fragment_owned
+    },
+    {
+        "static_inherit_dont_fragment_inherited",
+        ComponentTraits_static_inherit_dont_fragment_inherited
     }
 };
 
@@ -8487,7 +8612,7 @@ static bake_test_suite suites[] = {
         "ComponentTraits",
         NULL,
         NULL,
-        14,
+        39,
         ComponentTraits_testcases
     }
 };

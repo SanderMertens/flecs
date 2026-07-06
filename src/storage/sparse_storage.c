@@ -67,7 +67,8 @@ void* flecs_component_sparse_get(
     ecs_assert(entity != 0, ECS_INTERNAL_ERROR, NULL);
 
     if (!ecs_id_is_wildcard(cr->id)) {
-        return flecs_sparse_get(cr->sparse, 0, entity);
+        ecs_sparse_t *sparse = cr->sparse;
+        return flecs_sparse_get(sparse, sparse->size, entity);
     }
 
     /* Table should always be provided from context where wildcard is allowed */
@@ -114,7 +115,8 @@ void* flecs_component_sparse_get(
         }
     }
 
-    return flecs_sparse_get(cr->sparse, 0, entity);
+    ecs_sparse_t *sparse = cr->sparse;
+    return flecs_sparse_get(sparse, sparse->size, entity);
 }
 
 static
@@ -137,7 +139,7 @@ ecs_entity_t flecs_component_sparse_remove_intern(
         return 0;
     }
 
-    void *ptr = flecs_sparse_get(cr->sparse, 0, entity);
+    void *ptr = flecs_sparse_get(cr->sparse, ti->size, entity);
     if (!ptr) {
         return 0;
     }

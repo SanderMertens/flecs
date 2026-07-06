@@ -211,6 +211,10 @@ struct type_impl {
 
         ecs_assert(c != 0, ECS_INTERNAL_ERROR, nullptr);
 
+        if constexpr (flecs::sparse<T>::value) {
+            ecs_add_id(world, c, flecs::Sparse);
+        }
+
         if constexpr (flecs::dont_fragment<T>::value) {
             ecs_add_id(world, c, flecs::DontFragment);
         }

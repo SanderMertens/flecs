@@ -176,7 +176,7 @@ int flecs_json_serialize_iter_result_field_values(
 
         void *ptr;
         if (row_fields & field_bit) {
-            ptr = ecs_field_at_w_size(it, 0, f, i);
+            ptr = ecs_field_at_w_size(it, flecs_itosize(it->sizes[f]), f, i);
         } else {
             ecs_size_t size = it->sizes[f];
             ptr = ecs_field_w_size(it, flecs_itosize(size), f);

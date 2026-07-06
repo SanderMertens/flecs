@@ -9,6 +9,15 @@ struct Position {
     double x, y;
 };
 
+// The sparse member registers the component with the Sparse trait, which
+// stores the component in a sparse storage. Unlike DontFragment, adding or
+// removing a sparse component still fragments tables, but the component data
+// stays at a stable address and is never moved between tables.
+struct Velocity {
+    static constexpr bool sparse = true;
+    double x, y;
+};
+
 // The on_instantiate member registers the component with an OnInstantiate
 // policy. Mass is registered with (OnInstantiate, Inherit), which makes
 // instances share the component with their prefab instead of copying it.
@@ -25,6 +34,10 @@ int main(int, char *[]) {
     std::cout << "Position has DontFragment: "
         << pos.has(flecs::DontFragment) << "\n";
 
+    flecs::entity vel = ecs.component<Velocity>();
+    std::cout << "Velocity has Sparse: "
+        << vel.has(flecs::Sparse) << "\n";
+
     // Because Mass is inheritable, instances share it with the prefab.
     flecs::entity base = ecs.prefab("Spaceship").set<Mass>({100});
     flecs::entity inst = ecs.entity("MySpaceship").is_a(base);
@@ -32,6 +45,13 @@ int main(int, char *[]) {
     std::cout << "MySpaceship mass: " << inst.get<Mass>().value << "\n";
 
     inst.set<Position>({10, 20});
+
+    // Sparse components are used just like regular components. Because Velocity
+    // is stored in a sparse set, get<Velocity>() returns a pointer that stays
+    // valid even as the entity moves between tables.
+    inst.set<Velocity>({1, 2});
+    std::cout << "MySpaceship velocity: {"
+        << inst.get<Velocity>().x << ", " << inst.get<Velocity>().y << "}\n";
 
     // When all components in a query have the dont_fragment trait, the query
     // returns a flecs::sparse_query, which iterates the sparse component
@@ -51,9 +71,10 @@ int main(int, char *[]) {
 
     // Output
     //  Position has DontFragment: 1
-    //  Mass has (OnInstantiate, Inherit): 1
+    //  Velocity has Sparse: 1
     //  MySpaceship owns Mass: 0
     //  MySpaceship mass: 100
+    //  MySpaceship velocity: {1, 2}
     //  MySpaceship: {10, 20}
     //  MySpaceship: {10, 20}
 }

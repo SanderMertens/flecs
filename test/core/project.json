@@ -1252,7 +1252,13 @@
                 "ensure_equal_get",
                 "get_tag",
                 "get_pair_tag",
-                "get_wildcard"
+                "get_wildcard",
+                "get_sparse",
+                "get_sparse_w_dont_fragment",
+                "get_sparse_w_pair",
+                "get_sparse_w_non_sparse",
+                "get_sparse_w_inherit",
+                "get_sparse_w_wildcard"
             ]
         }, {
             "id": "Reference",
