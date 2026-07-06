@@ -1750,7 +1750,32 @@
                 "dont_fragment_dont_inherit_explicit",
                 "dont_fragment_dont_inherit_implicit",
                 "no_traits_explicit",
-                "no_traits_implicit"
+                "no_traits_implicit",
+                "sparse_explicit",
+                "sparse_implicit",
+                "sparse_specialized",
+                "sparse_get_get_mut",
+                "sparse_try_get_not_found",
+                "dont_fragment_get_get_mut",
+                "on_instantiate_override_get_get_mut",
+                "on_instantiate_dont_inherit_get_get_mut",
+                "on_instantiate_inherit_get_inherited",
+                "no_traits_get_inherited",
+                "get_dispatch",
+                "dynamic_inherit_dense_owned",
+                "dynamic_inherit_dense_inherited",
+                "dynamic_inherit_sparse_owned",
+                "dynamic_inherit_sparse_owned_get_mut",
+                "dynamic_inherit_sparse_inherited",
+                "dynamic_inherit_dont_fragment_owned",
+                "dynamic_inherit_dont_fragment_owned_get_mut",
+                "dynamic_inherit_dont_fragment_inherited",
+                "static_inherit_dense_owned",
+                "static_inherit_dense_inherited",
+                "static_inherit_sparse_owned",
+                "static_inherit_sparse_inherited",
+                "static_inherit_dont_fragment_owned",
+                "static_inherit_dont_fragment_inherited"
             ]
         }]
     }

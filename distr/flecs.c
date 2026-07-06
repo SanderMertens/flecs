@@ -9690,7 +9690,8 @@ ecs_entity_t ecs_clone(
                 ecs_assert(cur->flags & EcsIdSparse, ECS_INTERNAL_ERROR, NULL);
                 if (cur->sparse) {
                     if (cur->type_info) {
-                        void *src_ptr = flecs_sparse_get(cur->sparse, 0, src);
+                        void *src_ptr = flecs_sparse_get(
+                            cur->sparse, cur->type_info->size, src);
                         if (src_ptr) {
                             ecs_set_id(world, dst, cur->id, 
                                 flecs_ito(size_t, cur->type_info->size), src_ptr);
@@ -9816,6 +9817,41 @@ void* ecs_get_mut_id(
     ecs_component_record_t *cr = flecs_components_get(world, component);
     int32_t row = ECS_RECORD_TO_ROW(r->row);
     return flecs_get_component_ptr(world, r->table, row, cr).ptr;
+error:
+    return NULL;
+}
+
+void* ecs_get_sparse_id(
+    const ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t component,
+    size_t size)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    flecs_assert_entity_valid(world, entity, "get_sparse");
+    ecs_check(!ecs_id_is_wildcard(component), ECS_INVALID_PARAMETER,
+        "cannot call get_sparse() with wildcard component '%s'",
+            flecs_errstr(ecs_id_str(world, component)));
+    ecs_check(ecs_id_is_valid(world, component), ECS_INVALID_PARAMETER, NULL);
+
+    world = ecs_get_world(world);
+
+    ecs_component_record_t *cr = flecs_components_get(world, component);
+    if (!cr) {
+        return NULL;
+    }
+
+    ecs_check(cr->flags & EcsIdSparse, ECS_INVALID_PARAMETER,
+        "cannot call get_sparse() for non-sparse component '%s' "
+        "(use get()/get_mut())",
+            flecs_errstr(ecs_id_str(world, component)));
+    ecs_check(!(cr->flags & EcsIdOnInstantiateInherit), ECS_INVALID_PARAMETER,
+        "cannot call get_sparse() for component '%s' with the "
+        "(OnInstantiate, Inherit) trait (use get())",
+            flecs_errstr(ecs_id_str(world, component)));
+    ecs_assert(cr->sparse != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    return flecs_sparse_get(cr->sparse, flecs_utosize(size), entity);
 error:
     return NULL;
 }
@@ -10612,12 +10648,14 @@ ecs_entity_t ecs_get_target(
                     return 0;
                 }
 
-                ecs_entity_t *tgt = flecs_sparse_get(cr->sparse, 0, entity);
+                ecs_entity_t *tgt = flecs_sparse_get_t(
+                    cr->sparse, ecs_entity_t, entity);
                 if (tgt) {
                     return *tgt;
                 }
             } else {
-                ecs_type_t *type = flecs_sparse_get(cr->sparse, 0, entity);
+                ecs_type_t *type = flecs_sparse_get_t(
+                    cr->sparse, ecs_type_t, entity);
                 if (type && (index < type->count)) {
                     return type->array[index];
                 }
@@ -20043,7 +20081,8 @@ int32_t flecs_table_search_relation_for_tgt(
     int32_t result = -1;
 
     if (cr->flags & EcsIdDontFragment) {
-        if (flecs_sparse_get(cr->sparse, 0, tgt) != NULL) {
+        ecs_sparse_t *sparse = cr->sparse;
+        if (flecs_sparse_get(sparse, sparse->size, tgt) != NULL) {
             result = -2;
             goto found;
         }
@@ -34744,9 +34783,8 @@ void* flecs_sparse_get_w_check(
     bool checked)
 {
     ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(!size || size == sparse->size, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(size == sparse->size, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_size_t elem_size = size ? size : sparse->size;
     int32_t page_index = FLECS_SPARSE_PAGE(id);
     if (checked && page_index >= ecs_vec_count(&sparse->pages)) {
         return NULL;
@@ -34766,7 +34804,7 @@ void* flecs_sparse_get_w_check(
         }
     }
 
-    return DATA(page->data, elem_size, offset);
+    return DATA(page->data, size, offset);
 }
 
 void* flecs_sparse_get(
@@ -40588,14 +40626,9 @@ ecs_component_record_t* flecs_components_get(
     ecs_id_t id)
 {
     flecs_poly_assert(world, ecs_world_t);
-    if (id == ecs_pair(EcsIsA, EcsWildcard)) {
-        return world->cr_isa_wildcard;
-    } else if (id == ecs_pair(EcsChildOf, EcsWildcard)) {
-        return world->cr_childof_wildcard;
-    } else if (id == ecs_pair(EcsWildcard, EcsWildcard)) {
-        return world->cr_wildcard_wildcard;
-    } else if (id == ecs_pair_t(EcsIdentifier, EcsName)) {
-        return world->cr_identifier_name;
+
+    if (id < FLECS_HI_ID_RECORD_ID) {
+        return world->id_index_lo[id];
     }
 
     ecs_id_t hash = flecs_component_hash(id);
@@ -42438,7 +42471,8 @@ void* flecs_component_sparse_get(
     ecs_assert(entity != 0, ECS_INTERNAL_ERROR, NULL);
 
     if (!ecs_id_is_wildcard(cr->id)) {
-        return flecs_sparse_get(cr->sparse, 0, entity);
+        ecs_sparse_t *sparse = cr->sparse;
+        return flecs_sparse_get(sparse, sparse->size, entity);
     }
 
     /* Table should always be provided from context where wildcard is allowed */
@@ -42485,7 +42519,8 @@ void* flecs_component_sparse_get(
         }
     }
 
-    return flecs_sparse_get(cr->sparse, 0, entity);
+    ecs_sparse_t *sparse = cr->sparse;
+    return flecs_sparse_get(sparse, sparse->size, entity);
 }
 
 static
@@ -42508,7 +42543,7 @@ ecs_entity_t flecs_component_sparse_remove_intern(
         return 0;
     }
 
-    void *ptr = flecs_sparse_get(cr->sparse, 0, entity);
+    void *ptr = flecs_sparse_get(cr->sparse, ti->size, entity);
     if (!ptr) {
         return 0;
     }
@@ -53906,7 +53941,7 @@ int flecs_json_serialize_iter_result_field_values(
 
         void *ptr;
         if (row_fields & field_bit) {
-            ptr = ecs_field_at_w_size(it, 0, f, i);
+            ptr = ecs_field_at_w_size(it, flecs_itosize(it->sizes[f]), f, i);
         } else {
             ecs_size_t size = it->sizes[f];
             ptr = ecs_field_w_size(it, flecs_itosize(size), f);
@@ -54405,8 +54440,8 @@ int flecs_json_serialize_table_components(
                 continue;
             }
             ecs_entity_t e = ecs_table_entities(table)[row];
-            ptr = flecs_sparse_get(cr->sparse, 0, e);
             ti = cr->type_info;
+            ptr = flecs_sparse_get(cr->sparse, ti->size, e);
         }
 
         if (!ptr) {
@@ -54432,7 +54467,8 @@ int flecs_json_serialize_table_components(
             {
                 continue;
             }
-            void *ptr = flecs_sparse_get(cur->sparse, 0, entity);
+            void *ptr = flecs_sparse_get(
+                cur->sparse, cur->type_info->size, entity);
             if (!ptr) continue;
 
             if (flecs_json_serialize_component_value(world, cur->id, ptr,
@@ -87125,7 +87161,8 @@ next:
     bool result;
 
     if (ptr_out) {
-        void *ptr = flecs_sparse_get(op_ctx->sparse, 0, e);
+        void *ptr = flecs_sparse_get(
+            op_ctx->sparse, op_ctx->sparse->size, e);
         result = ptr != NULL;
         *ptr_out = ptr;
     } else {

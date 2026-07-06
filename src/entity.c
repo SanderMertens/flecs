@@ -1861,7 +1861,8 @@ ecs_entity_t ecs_clone(
                 ecs_assert(cur->flags & EcsIdSparse, ECS_INTERNAL_ERROR, NULL);
                 if (cur->sparse) {
                     if (cur->type_info) {
-                        void *src_ptr = flecs_sparse_get(cur->sparse, 0, src);
+                        void *src_ptr = flecs_sparse_get(
+                            cur->sparse, cur->type_info->size, src);
                         if (src_ptr) {
                             ecs_set_id(world, dst, cur->id, 
                                 flecs_ito(size_t, cur->type_info->size), src_ptr);
@@ -1987,6 +1988,41 @@ void* ecs_get_mut_id(
     ecs_component_record_t *cr = flecs_components_get(world, component);
     int32_t row = ECS_RECORD_TO_ROW(r->row);
     return flecs_get_component_ptr(world, r->table, row, cr).ptr;
+error:
+    return NULL;
+}
+
+void* ecs_get_sparse_id(
+    const ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t component,
+    size_t size)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    flecs_assert_entity_valid(world, entity, "get_sparse");
+    ecs_check(!ecs_id_is_wildcard(component), ECS_INVALID_PARAMETER,
+        "cannot call get_sparse() with wildcard component '%s'",
+            flecs_errstr(ecs_id_str(world, component)));
+    ecs_check(ecs_id_is_valid(world, component), ECS_INVALID_PARAMETER, NULL);
+
+    world = ecs_get_world(world);
+
+    ecs_component_record_t *cr = flecs_components_get(world, component);
+    if (!cr) {
+        return NULL;
+    }
+
+    ecs_check(cr->flags & EcsIdSparse, ECS_INVALID_PARAMETER,
+        "cannot call get_sparse() for non-sparse component '%s' "
+        "(use get()/get_mut())",
+            flecs_errstr(ecs_id_str(world, component)));
+    ecs_check(!(cr->flags & EcsIdOnInstantiateInherit), ECS_INVALID_PARAMETER,
+        "cannot call get_sparse() for component '%s' with the "
+        "(OnInstantiate, Inherit) trait (use get())",
+            flecs_errstr(ecs_id_str(world, component)));
+    ecs_assert(cr->sparse != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    return flecs_sparse_get(cr->sparse, flecs_utosize(size), entity);
 error:
     return NULL;
 }
@@ -2783,12 +2819,14 @@ ecs_entity_t ecs_get_target(
                     return 0;
                 }
 
-                ecs_entity_t *tgt = flecs_sparse_get(cr->sparse, 0, entity);
+                ecs_entity_t *tgt = flecs_sparse_get_t(
+                    cr->sparse, ecs_entity_t, entity);
                 if (tgt) {
                     return *tgt;
                 }
             } else {
-                ecs_type_t *type = flecs_sparse_get(cr->sparse, 0, entity);
+                ecs_type_t *type = flecs_sparse_get_t(
+                    cr->sparse, ecs_type_t, entity);
                 if (type && (index < type->count)) {
                     return type->array[index];
                 }

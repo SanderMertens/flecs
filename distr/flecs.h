@@ -8373,6 +8373,27 @@ FLECS_ALWAYS_INLINE void* ecs_get_mut_id(
     ecs_entity_t entity,
     ecs_id_t component);
 
+/** Get a pointer to a sparse component.
+ * This operation obtains a pointer to a sparse component, and is a faster 
+ * alternative to using ecs_get_id() and ecs_get_mut_id(). This operation should
+ * only be used for sparse, non-inheritable components.
+ *
+ * @param world The world.
+ * @param entity The entity.
+ * @param component The component to get.
+ * @param size The size of the component type. Must match the size of the component.
+ * @return The component pointer, NULL if the entity does not have the component.
+ *
+ * @see ecs_get_id()
+ * @see ecs_get_mut_id()
+ */
+FLECS_API
+FLECS_ALWAYS_INLINE void* ecs_get_sparse_id(
+    const ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t component,
+    size_t size);
+
 /** Ensure an entity has a component and return a pointer.
  * This operation returns a mutable pointer to a component. If the entity did
  * not yet have the component, it will be added.
@@ -20422,6 +20443,15 @@ struct dont_fragment : std::false_type { };
 template <typename T>
 struct dont_fragment<T, enable_if_t<T::dont_fragment>> : std::true_type { };
 
+/** Trait that marks a component as Sparse at compile time.
+ * Enable by adding a `static constexpr bool sparse = true` member to the
+ * type, or by specializing the trait to derive from std::true_type. */
+template <typename T, typename = void>
+struct sparse : std::false_type { };
+
+template <typename T>
+struct sparse<T, enable_if_t<T::sparse>> : std::true_type { };
+
 /** OnInstantiate policies that can be assigned to a component at compile
  * time with the flecs::on_instantiate_trait trait. */
 enum class on_instantiate {
@@ -24006,6 +24036,45 @@ struct is_sparse_query {
     static constexpr bool value = sizeof...(Components) != 0 &&
         (is_sparse_query_field<remove_reference_t<Components>>::value && ...);
 };
+
+/** Test if a component is sparse at compile time. Components with the
+ * DontFragment trait are always sparse. */
+template <typename T>
+struct is_sparse_component {
+    static constexpr bool value =
+        flecs::sparse<std::remove_cv_t<T>>::value ||
+        dont_fragment<std::remove_cv_t<T>>::value;
+};
+
+/** Test if get/get_mut for a component can use ecs_get_sparse_id(). */
+template <typename T>
+struct is_get_sparse_component {
+    static constexpr bool value = is_sparse_component<T>::value &&
+        on_instantiate_trait<std::remove_cv_t<T>>::value !=
+            flecs::on_instantiate::inherit;
+};
+
+template <typename T>
+const void* get_ptr(
+    const flecs::world_t *world, flecs::entity_t entity, flecs::id_t id)
+{
+    if constexpr (is_get_sparse_component<T>::value) {
+        return ecs_get_sparse_id(world, entity, id, sizeof(T));
+    } else {
+        return ecs_get_id(world, entity, id);
+    }
+}
+
+template <typename T>
+void* get_mut_ptr(
+    const flecs::world_t *world, flecs::entity_t entity, flecs::id_t id)
+{
+    if constexpr (is_get_sparse_component<T>::value) {
+        return ecs_get_sparse_id(world, entity, id, sizeof(T));
+    } else {
+        return ecs_get_mut_id(world, entity, id);
+    }
+}
 
 } // namespace _
 
@@ -27800,7 +27869,7 @@ struct entity_view : public id {
         auto comp_id = _::type<T>::id(world_);
         ecs_assert(_::type<T>::size() != 0, ECS_INVALID_PARAMETER,
             "operation invalid for empty type");
-        return static_cast<const T*>(ecs_get_id(world_, id_, comp_id));
+        return static_cast<const T*>(_::get_ptr<T>(world_, id_, comp_id));
     }
 
     /** Get component value.
@@ -28138,7 +28207,7 @@ struct entity_view : public id {
         auto comp_id = _::type<T>::id(world_);
         ecs_assert(_::type<T>::size() != 0, ECS_INVALID_PARAMETER,
             "operation invalid for empty type");
-        return static_cast<T*>(ecs_get_mut_id(world_, id_, comp_id));
+        return static_cast<T*>(_::get_mut_ptr<T>(world_, id_, comp_id));
     }
 
     /** Get mutable component value.
@@ -32192,6 +32261,10 @@ struct type_impl {
         flecs::entity_t c = ecs_cpp_component_register(world, &desc);
 
         ecs_assert(c != 0, ECS_INTERNAL_ERROR, nullptr);
+
+        if constexpr (flecs::sparse<T>::value) {
+            ecs_add_id(world, c, flecs::Sparse);
+        }
 
         if constexpr (flecs::dont_fragment<T>::value) {
             ecs_add_id(world, c, flecs::DontFragment);

@@ -187,6 +187,45 @@ struct is_sparse_query {
         (is_sparse_query_field<remove_reference_t<Components>>::value && ...);
 };
 
+/** Test if a component is sparse at compile time. Components with the
+ * DontFragment trait are always sparse. */
+template <typename T>
+struct is_sparse_component {
+    static constexpr bool value =
+        flecs::sparse<std::remove_cv_t<T>>::value ||
+        dont_fragment<std::remove_cv_t<T>>::value;
+};
+
+/** Test if get/get_mut for a component can use ecs_get_sparse_id(). */
+template <typename T>
+struct is_get_sparse_component {
+    static constexpr bool value = is_sparse_component<T>::value &&
+        on_instantiate_trait<std::remove_cv_t<T>>::value !=
+            flecs::on_instantiate::inherit;
+};
+
+template <typename T>
+const void* get_ptr(
+    const flecs::world_t *world, flecs::entity_t entity, flecs::id_t id)
+{
+    if constexpr (is_get_sparse_component<T>::value) {
+        return ecs_get_sparse_id(world, entity, id, sizeof(T));
+    } else {
+        return ecs_get_id(world, entity, id);
+    }
+}
+
+template <typename T>
+void* get_mut_ptr(
+    const flecs::world_t *world, flecs::entity_t entity, flecs::id_t id)
+{
+    if constexpr (is_get_sparse_component<T>::value) {
+        return ecs_get_sparse_id(world, entity, id, sizeof(T));
+    } else {
+        return ecs_get_mut_id(world, entity, id);
+    }
+}
+
 } // namespace _
 
 /** @} */

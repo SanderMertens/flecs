@@ -180,6 +180,15 @@ struct dont_fragment : std::false_type { };
 template <typename T>
 struct dont_fragment<T, enable_if_t<T::dont_fragment>> : std::true_type { };
 
+/** Trait that marks a component as Sparse at compile time.
+ * Enable by adding a `static constexpr bool sparse = true` member to the
+ * type, or by specializing the trait to derive from std::true_type. */
+template <typename T, typename = void>
+struct sparse : std::false_type { };
+
+template <typename T>
+struct sparse<T, enable_if_t<T::sparse>> : std::true_type { };
+
 /** OnInstantiate policies that can be assigned to a component at compile
  * time with the flecs::on_instantiate_trait trait. */
 enum class on_instantiate {

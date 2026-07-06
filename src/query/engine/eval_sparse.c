@@ -70,7 +70,8 @@ next:
     bool result;
 
     if (ptr_out) {
-        void *ptr = flecs_sparse_get(op_ctx->sparse, 0, e);
+        void *ptr = flecs_sparse_get(
+            op_ctx->sparse, op_ctx->sparse->size, e);
         result = ptr != NULL;
         *ptr_out = ptr;
     } else {

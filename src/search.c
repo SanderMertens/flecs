@@ -114,7 +114,8 @@ int32_t flecs_table_search_relation_for_tgt(
     int32_t result = -1;
 
     if (cr->flags & EcsIdDontFragment) {
-        if (flecs_sparse_get(cr->sparse, 0, tgt) != NULL) {
+        ecs_sparse_t *sparse = cr->sparse;
+        if (flecs_sparse_get(sparse, sparse->size, tgt) != NULL) {
             result = -2;
             goto found;
         }

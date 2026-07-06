@@ -575,9 +575,8 @@ void* flecs_sparse_get_w_check(
     bool checked)
 {
     ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(!size || size == sparse->size, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(size == sparse->size, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_size_t elem_size = size ? size : sparse->size;
     int32_t page_index = FLECS_SPARSE_PAGE(id);
     if (checked && page_index >= ecs_vec_count(&sparse->pages)) {
         return NULL;
@@ -597,7 +596,7 @@ void* flecs_sparse_get_w_check(
         }
     }
 
-    return DATA(page->data, elem_size, offset);
+    return DATA(page->data, size, offset);
 }
 
 void* flecs_sparse_get(
