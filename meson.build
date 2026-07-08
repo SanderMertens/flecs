@@ -89,6 +89,7 @@ flecs_src = files(
     'src/addons/script/expr/visit_eval.c',
     'src/addons/script/expr/visit_fold.c',
     'src/addons/script/expr/visit_free.c',
+    'src/addons/script/expr/visit_refs.c',
     'src/addons/script/expr/visit_to_str.c',
     'src/addons/script/expr/visit_type.c',
     'src/addons/system/system.c',

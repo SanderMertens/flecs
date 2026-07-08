@@ -558,6 +558,11 @@ int flecs_script_eval_expr(
         if (flecs_expr_visit_type(script, expr, &desc)) {
             goto error;
         }
+        if (v->script_entity) {
+            if (flecs_expr_visit_refs(script, expr, &impl->refs)) {
+                goto error;
+            }
+        }
         if (flecs_expr_visit_fold(script, expr_ptr, &desc)) {
             goto error;
         }
@@ -2045,6 +2050,11 @@ int flecs_script_function_type_check(
         if (flecs_expr_visit_type(script, cnode->expr, &edesc)) {
             goto error;
         }
+        if (v.script_entity) {
+            if (flecs_expr_visit_refs(script, cnode->expr, &impl->refs)) {
+                goto error;
+            }
+        }
         if (flecs_expr_visit_fold(script, &cnode->expr, &edesc)) {
             goto error;
         }
@@ -2076,6 +2086,11 @@ int flecs_script_function_type_check(
 
         if (flecs_expr_visit_type(script, node->return_expr, &edesc)) {
             goto error;
+        }
+        if (v.script_entity) {
+            if (flecs_expr_visit_refs(script, node->return_expr, &impl->refs)) {
+                goto error;
+            }
         }
         if (flecs_expr_visit_fold(script, &node->return_expr, &edesc)) {
             goto error;
@@ -2263,6 +2278,13 @@ void flecs_script_eval_visit_init(
 
     if (!v->r) {
         v->r = ecs_script_runtime_new();
+    }
+
+    ecs_id_t with = ecs_get_with(v->world);
+    if (with && ECS_HAS_ID_FLAG(with, PAIR)) {
+        if (ECS_PAIR_FIRST(with) == ecs_id(EcsScript)) {
+            v->script_entity = ecs_pair_second(v->world, with);
+        }
     }
 
     if (desc && desc->vars) {

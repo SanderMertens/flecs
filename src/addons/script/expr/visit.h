@@ -35,4 +35,9 @@ void flecs_expr_visit_free(
     ecs_script_t *script,
     ecs_expr_node_t *node);
 
+int flecs_expr_visit_refs(
+    const ecs_script_t *script,
+    ecs_expr_node_t *node,
+    ecs_vec_t *refs);
+
 #endif

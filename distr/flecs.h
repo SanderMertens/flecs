@@ -16986,6 +16986,7 @@ typedef struct EcsScript {
     char *error;                        /**< Set if script evaluation had errors. */
     ecs_script_t *script;               /**< Parsed script object. */
     ecs_script_template_t *template_;   /**< Only set for template scripts. */
+    ecs_vec_t observers;                /**< Observers for referenced components. */
 } EcsScript;
 
 /** Script function context. */

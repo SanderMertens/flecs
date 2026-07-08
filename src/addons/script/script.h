@@ -15,6 +15,12 @@ typedef struct ecs_script_entity_t ecs_script_entity_t;
 
 #define flecs_script_impl(script) ((ecs_script_impl_t*)script)
 
+typedef struct ecs_script_ref_t {
+    ecs_entity_t entity;
+    ecs_id_t component;
+    ecs_entity_t observer;
+} ecs_script_ref_t;
+
 struct ecs_script_impl_t {
     ecs_script_t pub;
     ecs_allocator_t allocator;
@@ -25,6 +31,8 @@ struct ecs_script_impl_t {
     const char *next_token; /* First character after expression */
     int32_t token_buffer_size;
     int32_t refcount;
+    ecs_vec_t refs;
+    bool evaluating;
 };
 
 typedef struct ecs_function_calldata_t {

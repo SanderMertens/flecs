@@ -1452,6 +1452,7 @@ int flecs_expr_global_variable_resolve(
     node->node.kind = EcsExprGlobalVariable;
     node->node.type = v->value.type;
     node->global_value = v->value;
+    node->global = global;
 
     return 0;
 error:
