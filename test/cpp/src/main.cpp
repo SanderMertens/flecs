@@ -515,6 +515,7 @@ void Enum_enum_as_component(void);
 void Enum_query_enum_wildcard(void);
 void Enum_query_enum_constant(void);
 void Enum_query_singleton_enum_constant(void);
+void Enum_query_singleton_enum_constant_or(void);
 void Enum_enum_type_from_stage(void);
 void Enum_add_enum_from_stage(void);
 void Enum_enum_w_2_worlds(void);
@@ -3723,6 +3724,10 @@ bake_test_case Enum_testcases[] = {
     {
         "query_singleton_enum_constant",
         Enum_query_singleton_enum_constant
+    },
+    {
+        "query_singleton_enum_constant_or",
+        Enum_query_singleton_enum_constant_or
     },
     {
         "enum_type_from_stage",
@@ -8477,7 +8482,7 @@ static bake_test_suite suites[] = {
         "Enum",
         NULL,
         NULL,
-        53,
+        54,
         Enum_testcases
     },
     {

@@ -532,6 +532,7 @@
                 "query_enum_wildcard",
                 "query_enum_constant",
                 "query_singleton_enum_constant",
+                "query_singleton_enum_constant_or",
                 "enum_type_from_stage",
                 "add_enum_from_stage",
                 "enum_w_2_worlds",

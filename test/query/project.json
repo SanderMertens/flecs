@@ -1300,7 +1300,8 @@
                 "not_reflexive_rel_wildcard",
                 "and_optional_and",
                 "or_w_two_variables",
-                "or_w_two_entity_vars"
+                "or_w_two_entity_vars",
+                "or_singleton_pair"
             ]
         }, {
             "id": "Transitive",
