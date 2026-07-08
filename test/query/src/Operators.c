@@ -10134,3 +10134,61 @@ void Operators_or_w_two_entity_vars(void) {
 
     ecs_fini(world);
 }
+
+void Operators_or_singleton_pair(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+
+    ecs_add_id(world, Rel, EcsSingleton);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { .id = ecs_pair(Rel, TgtA), .oper = EcsOr },
+            { .id = ecs_pair(Rel, TgtB) }
+        },
+        .cache_kind = cache_kind
+    });
+    test_assert(q != NULL);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_add_pair(world, Rel, Rel, TgtA);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(0, it.count);
+        test_uint(Rel, ecs_field_src(&it, 0));
+        test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 0));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_remove_pair(world, Rel, Rel, TgtA);
+    ecs_add_pair(world, Rel, Rel, TgtB);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(0, it.count);
+        test_uint(Rel, ecs_field_src(&it, 0));
+        test_uint(ecs_pair(Rel, TgtB), ecs_field_id(&it, 0));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_remove_pair(world, Rel, Rel, TgtB);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}

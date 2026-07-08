@@ -745,6 +745,50 @@ void Enum_query_singleton_enum_constant(void) {
     test_int(count, 1);
 }
 
+void Enum_query_singleton_enum_constant_or(void) {
+    flecs::world ecs;
+
+    ecs.component<StandardEnum>().add(flecs::Singleton);
+
+    auto q = ecs.query_builder()
+        .with(StandardEnum::Red).or_().with(StandardEnum::Blue)
+        .build();
+
+    int32_t count = 0;
+
+    q.each([&](flecs::iter& it, size_t index) {
+        count ++;
+    });
+
+    test_int(count, 0);
+
+    ecs.add(StandardEnum::Green);
+
+    q.each([&](flecs::iter& it, size_t index) {
+        count ++;
+    });
+
+    test_int(count, 0);
+
+    ecs.add(StandardEnum::Blue);
+
+    q.each([&](flecs::iter& it, size_t index) {
+        test_assert(it.src(0) == ecs.component<StandardEnum>());
+        count ++;
+    });
+
+    test_int(count, 1);
+
+    ecs.add(StandardEnum::Red);
+
+    q.each([&](flecs::iter& it, size_t index) {
+        test_assert(it.src(0) == ecs.component<StandardEnum>());
+        count ++;
+    });
+
+    test_int(count, 2);
+}
+
 void Enum_enum_type_from_stage(void) {
     flecs::world ecs;
 

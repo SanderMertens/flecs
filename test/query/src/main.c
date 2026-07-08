@@ -1266,6 +1266,7 @@ void Operators_not_reflexive_rel_wildcard(void);
 void Operators_and_optional_and(void);
 void Operators_or_w_two_variables(void);
 void Operators_or_w_two_entity_vars(void);
+void Operators_or_singleton_pair(void);
 
 // Testsuite 'Transitive'
 void Transitive_written_src_unknown_tgt_first_leaf(void);
@@ -7854,6 +7855,10 @@ bake_test_case Operators_testcases[] = {
     {
         "or_w_two_entity_vars",
         Operators_or_w_two_entity_vars
+    },
+    {
+        "or_singleton_pair",
+        Operators_or_singleton_pair
     }
 };
 
@@ -14322,7 +14327,7 @@ static bake_test_suite suites[] = {
         "Operators",
         Operators_setup,
         NULL,
-        165,
+        166,
         Operators_testcases,
         1,
         Operators_params
