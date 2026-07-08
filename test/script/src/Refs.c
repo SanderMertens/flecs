@@ -1144,3 +1144,271 @@ void Refs_global_const_var_assigned_to_component(void) {
 
     ecs_fini(world);
 }
+
+static
+void SetMass(ecs_iter_t *it) {
+    ecs_entity_t e = ecs_lookup(it->world, "e");
+    ecs_entity_t mass = ecs_lookup(it->world, "Mass");
+    ecs_set_id(it->world, e, mass, sizeof(float), &(float){ 20 });
+}
+
+void Refs_reeval_hierarchy(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Mass) = define_mass(world);
+    ecs_entity_t ecs_id(Position) = define_position(world);
+
+    ECS_TAG(world, TagP1);
+    ECS_TAG(world, TagP2);
+    ECS_TAG(world, TagC1);
+    ECS_TAG(world, TagC2);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, Mass, {10});
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "gp {"
+            LINE "  Position: {e[Mass].value, 0}"
+            LINE "  p1 {"
+            LINE "    TagP1"
+            LINE "    c1 { TagC1 }"
+            LINE "  }"
+            LINE "  p2 {"
+            LINE "    TagP2"
+            LINE "    c2 { TagC2 }"
+            LINE "  }"
+            LINE "}"
+    });
+    test_assert(s != 0);
+
+    test_assert(ecs_lookup(world, "gp") != 0);
+    test_assert(ecs_lookup(world, "gp.p1.c1") != 0);
+    test_assert(ecs_lookup(world, "gp.p2.c2") != 0);
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, {
+            .add = ecs_ids( ecs_dependson(EcsOnUpdate) )
+        }),
+        .callback = SetMass
+    });
+
+    ecs_progress(world, 0);
+
+    test_assert(ecs_lookup(world, "gp") != 0);
+    test_assert(ecs_lookup(world, "gp.p1.c1") != 0);
+    test_assert(ecs_lookup(world, "gp.p2.c2") != 0);
+
+    ecs_fini(world);
+}
+
+void Refs_reeval_prefab_in_branch(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Mass) = define_mass(world);
+    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+
+    ecs_entity_t assets = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "assets" }),
+        .code =
+            HEAD "Prefab base_prefab {"
+            LINE "  Position: {1, 2}"
+            LINE "  turret { Position: {3, 4} }"
+            LINE "}"
+    });
+    test_assert(assets != 0);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, Mass, {10});
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "if e[Mass].value < 15 {"
+            LINE "  world_root {"
+            LINE "    base : base_prefab {"
+            LINE "      Position: {e[Mass].value, 0}"
+            LINE "      slot { Position: {7, 8} }"
+            LINE "    }"
+            LINE "  }"
+            LINE "} else {"
+            LINE "  replacement { Position: {e[Mass].value, 0} }"
+            LINE "}"
+    });
+    test_assert(s != 0);
+
+    int32_t i;
+    for (i = 0; i < 8; i ++) {
+        ecs_set(world, e, Mass, {20 + i});
+    }
+
+    ecs_fini(world);
+}
+
+static
+void RefDummyObserver(ecs_iter_t *it);
+
+void Refs_progress_reeval_prefab_w_isa_observer(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Mass) = define_mass(world);
+    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+
+    ecs_observer(world, {
+        .query.terms = {{
+            .id = ecs_id(Position),
+            .src.id = EcsUp,
+            .trav = EcsIsA
+        }},
+        .events = { EcsOnAdd, EcsOnRemove },
+        .callback = RefDummyObserver
+    });
+
+    ecs_entity_t assets = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "assets" }),
+        .code =
+            HEAD "Prefab base_prefab {"
+            LINE "  Position: {1, 2}"
+            LINE "  turret { Position: {3, 4} }"
+            LINE "}"
+    });
+    test_assert(assets != 0);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, Mass, {10});
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "@tree Parent"
+            LINE "world_root {"
+            LINE "  base : base_prefab {"
+            LINE "    Position: {e[Mass].value, 0}"
+            LINE "    slot { Position: {7, 8} }"
+            LINE "  }"
+            LINE "}"
+    });
+    test_assert(s != 0);
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, {
+            .add = ecs_ids( ecs_dependson(EcsOnUpdate) )
+        }),
+        .callback = SetMass
+    });
+
+    int32_t i;
+    for (i = 0; i < 2; i ++) {
+        ecs_progress(world, 0);
+    }
+
+    ecs_fini(world);
+}
+
+static
+void RefDummyObserver(ecs_iter_t *it) {
+    (void)it;
+}
+
+void Refs_reeval_prefab_w_isa_observer(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Mass) = define_mass(world);
+    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+
+    ecs_observer(world, {
+        .query.terms = {{
+            .id = ecs_id(Position),
+            .src.id = EcsUp,
+            .trav = EcsIsA
+        }},
+        .events = { EcsOnAdd, EcsOnRemove },
+        .callback = RefDummyObserver
+    });
+
+    ecs_entity_t assets = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "assets" }),
+        .code =
+            HEAD "Prefab base_prefab {"
+            LINE "  Position: {1, 2}"
+            LINE "  turret { Position: {3, 4} }"
+            LINE "}"
+    });
+    test_assert(assets != 0);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, Mass, {10});
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "@tree Parent"
+            LINE "world_root {"
+            LINE "  base : base_prefab {"
+            LINE "    Position: {e[Mass].value, 0}"
+            LINE "    slot { Position: {7, 8} }"
+            LINE "  }"
+            LINE "}"
+    });
+    test_assert(s != 0);
+
+    ecs_set(world, e, Mass, {20});
+    ecs_set(world, e, Mass, {21});
+
+    ecs_fini(world);
+}
+
+void Refs_reeval_prefab_delete_with_inherited_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Mass) = define_mass(world);
+    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+
+    ecs_observer(world, {
+        .query.terms = {{
+            .id = ecs_id(Position),
+            .src.id = EcsUp,
+            .trav = EcsIsA
+        }},
+        .events = { EcsOnAdd, EcsOnRemove },
+        .callback = RefDummyObserver
+    });
+
+    ecs_entity_t assets = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "assets" }),
+        .code =
+            HEAD "Prefab base_prefab {"
+            LINE "  Position: {1, 2}"
+            LINE "  turret { Position: {3, 4} }"
+            LINE "}"
+    });
+    test_assert(assets != 0);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, Mass, {10});
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "@tree Parent"
+            LINE "world_root {"
+            LINE "  base : base_prefab {"
+            LINE "    Position: {e[Mass].value, 0}"
+            LINE "    slot { Position: {7, 8} }"
+            LINE "  }"
+            LINE "}"
+    });
+    test_assert(s != 0);
+
+    ecs_set(world, e, Mass, {20});
+    ecs_set(world, e, Mass, {21});
+
+    ecs_delete_with(world, ecs_id(Position));
+
+    ecs_fini(world);
+}

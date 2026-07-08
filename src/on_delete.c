@@ -201,6 +201,10 @@ bool flecs_is_childof_tgt_only(
         return false;
     }
 
+    if (flecs_table_cache_count(&cr->cache)) {
+        return false;
+    }
+
     return true;
 }
 
@@ -299,13 +303,11 @@ bool flecs_component_mark_non_fragmenting_childof(
 
     ecs_pair_record_t *pr = childof_cr->pair;
 
-    if (!pr->second.next) {
-        if (ECS_PAIR_FIRST(pr->second.prev->id) == EcsWildcard) {
-            /* Entity is only used as ChildOf target */
-            flecs_component_delete_non_fragmenting_childof(
-                world, childof_cr, force_delete);
-            return true;
-        }
+    if (flecs_is_childof_tgt_only(childof_cr)) {
+        /* Entity is only used as ChildOf target */
+        flecs_component_delete_non_fragmenting_childof(
+            world, childof_cr, force_delete);
+        return true;
     }
 
     flecs_marked_id_push(world, childof_cr, EcsDelete, true);
