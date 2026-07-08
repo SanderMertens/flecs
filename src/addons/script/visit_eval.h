@@ -12,6 +12,7 @@ typedef struct ecs_script_eval_visitor_t {
     ecs_script_runtime_t *r;
     ecs_script_template_t *template; /* Set when creating template */
     ecs_entity_t template_entity; /* Set when creating template instance */
+    ecs_entity_t script_entity;
     ecs_entity_t module;
     ecs_entity_t parent;
     ecs_script_entity_t *entity;

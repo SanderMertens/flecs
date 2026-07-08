@@ -1574,6 +1574,35 @@
                 "149",
                 "150"
             ]
+        }, {
+            "id": "Refs",
+            "testcases": [
+                "ref_in_component_initializer",
+                "ref_in_const_var",
+                "ref_in_with_initializer",
+                "ref_in_match_expr",
+                "ref_in_if_expr",
+                "ref_in_for_expr",
+                "non_managed_script_no_update",
+                "set_after_managed_script_deleted",
+                "global_const_var_in_component_initializer",
+                "global_const_var_in_with_initializer",
+                "global_const_var_in_match_expr",
+                "global_const_var_in_if_expr",
+                "global_const_var_in_for_expr",
+                "global_const_var_non_managed_script_no_update",
+                "global_const_var_set_after_managed_script_deleted",
+                "ref_in_function",
+                "global_const_var_in_function",
+                "ref_in_new_expr",
+                "global_const_var_in_new_expr",
+                "ref_in_function_in_new_expr",
+                "global_const_var_in_function_in_new_expr",
+                "ref_in_script_function_body",
+                "global_const_var_in_script_function_body",
+                "ref_assigned_to_component",
+                "global_const_var_assigned_to_component"
+            ]
         }]
     }
 }

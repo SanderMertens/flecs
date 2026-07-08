@@ -1544,6 +1544,33 @@ void Fuzzing_147(void);
 void Fuzzing_149(void);
 void Fuzzing_150(void);
 
+// Testsuite 'Refs'
+void Refs_ref_in_component_initializer(void);
+void Refs_ref_in_const_var(void);
+void Refs_ref_in_with_initializer(void);
+void Refs_ref_in_match_expr(void);
+void Refs_ref_in_if_expr(void);
+void Refs_ref_in_for_expr(void);
+void Refs_non_managed_script_no_update(void);
+void Refs_set_after_managed_script_deleted(void);
+void Refs_global_const_var_in_component_initializer(void);
+void Refs_global_const_var_in_with_initializer(void);
+void Refs_global_const_var_in_match_expr(void);
+void Refs_global_const_var_in_if_expr(void);
+void Refs_global_const_var_in_for_expr(void);
+void Refs_global_const_var_non_managed_script_no_update(void);
+void Refs_global_const_var_set_after_managed_script_deleted(void);
+void Refs_ref_in_function(void);
+void Refs_global_const_var_in_function(void);
+void Refs_ref_in_new_expr(void);
+void Refs_global_const_var_in_new_expr(void);
+void Refs_ref_in_function_in_new_expr(void);
+void Refs_global_const_var_in_function_in_new_expr(void);
+void Refs_ref_in_script_function_body(void);
+void Refs_global_const_var_in_script_function_body(void);
+void Refs_ref_assigned_to_component(void);
+void Refs_global_const_var_assigned_to_component(void);
+
 bake_test_case Eval_testcases[] = {
     {
         "null",
@@ -7625,6 +7652,109 @@ bake_test_case Fuzzing_testcases[] = {
     }
 };
 
+bake_test_case Refs_testcases[] = {
+    {
+        "ref_in_component_initializer",
+        Refs_ref_in_component_initializer
+    },
+    {
+        "ref_in_const_var",
+        Refs_ref_in_const_var
+    },
+    {
+        "ref_in_with_initializer",
+        Refs_ref_in_with_initializer
+    },
+    {
+        "ref_in_match_expr",
+        Refs_ref_in_match_expr
+    },
+    {
+        "ref_in_if_expr",
+        Refs_ref_in_if_expr
+    },
+    {
+        "ref_in_for_expr",
+        Refs_ref_in_for_expr
+    },
+    {
+        "non_managed_script_no_update",
+        Refs_non_managed_script_no_update
+    },
+    {
+        "set_after_managed_script_deleted",
+        Refs_set_after_managed_script_deleted
+    },
+    {
+        "global_const_var_in_component_initializer",
+        Refs_global_const_var_in_component_initializer
+    },
+    {
+        "global_const_var_in_with_initializer",
+        Refs_global_const_var_in_with_initializer
+    },
+    {
+        "global_const_var_in_match_expr",
+        Refs_global_const_var_in_match_expr
+    },
+    {
+        "global_const_var_in_if_expr",
+        Refs_global_const_var_in_if_expr
+    },
+    {
+        "global_const_var_in_for_expr",
+        Refs_global_const_var_in_for_expr
+    },
+    {
+        "global_const_var_non_managed_script_no_update",
+        Refs_global_const_var_non_managed_script_no_update
+    },
+    {
+        "global_const_var_set_after_managed_script_deleted",
+        Refs_global_const_var_set_after_managed_script_deleted
+    },
+    {
+        "ref_in_function",
+        Refs_ref_in_function
+    },
+    {
+        "global_const_var_in_function",
+        Refs_global_const_var_in_function
+    },
+    {
+        "ref_in_new_expr",
+        Refs_ref_in_new_expr
+    },
+    {
+        "global_const_var_in_new_expr",
+        Refs_global_const_var_in_new_expr
+    },
+    {
+        "ref_in_function_in_new_expr",
+        Refs_ref_in_function_in_new_expr
+    },
+    {
+        "global_const_var_in_function_in_new_expr",
+        Refs_global_const_var_in_function_in_new_expr
+    },
+    {
+        "ref_in_script_function_body",
+        Refs_ref_in_script_function_body
+    },
+    {
+        "global_const_var_in_script_function_body",
+        Refs_global_const_var_in_script_function_body
+    },
+    {
+        "ref_assigned_to_component",
+        Refs_ref_assigned_to_component
+    },
+    {
+        "global_const_var_assigned_to_component",
+        Refs_global_const_var_assigned_to_component
+    }
+};
+
 const char* Expr_folding_param[] = {"enabled", "disabled"};
 bake_test_param Expr_params[] = {
     {"folding", (char**)Expr_folding_param, 2}
@@ -7716,9 +7846,16 @@ static bake_test_suite suites[] = {
         NULL,
         146,
         Fuzzing_testcases
+    },
+    {
+        "Refs",
+        NULL,
+        NULL,
+        25,
+        Refs_testcases
     }
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("script", argc, argv, suites, 11);
+    return bake_test_run("script", argc, argv, suites, 12);
 }
