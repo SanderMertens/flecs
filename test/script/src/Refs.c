@@ -1412,3 +1412,2177 @@ void Refs_reeval_prefab_delete_with_inherited_component(void) {
 
     ecs_fini(world);
 }
+
+void Refs_ref_in_template_not_instantiated(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Mass) = define_mass(world);
+    ecs_entity_t ecs_id(Position) = define_position(world);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, Mass, {10});
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "foo {"
+            LINE "  Position: {100, 0}"
+            LINE "}"
+            LINE "template Bar {"
+            LINE "  Position: {e[Mass].value, 0}"
+            LINE "}"
+    });
+    test_assert(s != 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+    {
+        const Position *p = ecs_get(world, foo, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 100);
+    }
+
+    ecs_set(world, foo, Position, {999, 0});
+
+    ecs_set(world, e, Mass, {20});
+
+    {
+        const Position *p = ecs_get(world, foo, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 999);
+    }
+
+    ecs_fini(world);
+}
+
+void Refs_ref_in_template_component_initializer(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Mass) = define_mass(world);
+    ecs_entity_t ecs_id(Position) = define_position(world);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, Mass, {10});
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Bar {"
+            LINE "  Position: {e[Mass].value, 0}"
+            LINE "}"
+            LINE "Bar inst1()"
+            LINE "Bar inst2()"
+            LINE "Bar inst3()"
+    });
+    test_assert(s != 0);
+
+    ecs_entity_t inst1 = ecs_lookup(world, "inst1");
+    ecs_entity_t inst2 = ecs_lookup(world, "inst2");
+    ecs_entity_t inst3 = ecs_lookup(world, "inst3");
+    test_assert(inst1 != 0);
+    test_assert(inst2 != 0);
+    test_assert(inst3 != 0);
+
+    {
+        const Position *p1 = ecs_get(world, inst1, Position);
+        const Position *p2 = ecs_get(world, inst2, Position);
+        const Position *p3 = ecs_get(world, inst3, Position);
+        test_assert(p1 != NULL);
+        test_assert(p2 != NULL);
+        test_assert(p3 != NULL);
+        test_int(p1->x, 10);
+        test_int(p2->x, 10);
+        test_int(p3->x, 10);
+    }
+
+    ecs_set(world, e, Mass, {20});
+
+    {
+        const Position *p1 = ecs_get(world, inst1, Position);
+        const Position *p2 = ecs_get(world, inst2, Position);
+        const Position *p3 = ecs_get(world, inst3, Position);
+        test_assert(p1 != NULL);
+        test_assert(p2 != NULL);
+        test_assert(p3 != NULL);
+        test_int(p1->x, 20);
+        test_int(p2->x, 20);
+        test_int(p3->x, 20);
+    }
+
+    ecs_fini(world);
+}
+
+void Refs_global_const_var_in_template_component_initializer(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = define_position(world);
+
+    ecs_entity_t v = ecs_const_var(world, {
+        .name = "v",
+        .type = ecs_id(ecs_f32_t),
+        .value = &(ecs_f32_t){10}
+    });
+    test_assert(v != 0);
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Bar {"
+            LINE "  Position: {$v, 0}"
+            LINE "}"
+            LINE "Bar inst1()"
+            LINE "Bar inst2()"
+            LINE "Bar inst3()"
+    });
+    test_assert(s != 0);
+
+    ecs_entity_t inst1 = ecs_lookup(world, "inst1");
+    ecs_entity_t inst2 = ecs_lookup(world, "inst2");
+    ecs_entity_t inst3 = ecs_lookup(world, "inst3");
+    test_assert(inst1 != 0);
+    test_assert(inst2 != 0);
+    test_assert(inst3 != 0);
+
+    {
+        const Position *p1 = ecs_get(world, inst1, Position);
+        const Position *p2 = ecs_get(world, inst2, Position);
+        const Position *p3 = ecs_get(world, inst3, Position);
+        test_assert(p1 != NULL);
+        test_assert(p2 != NULL);
+        test_assert(p3 != NULL);
+        test_int(p1->x, 10);
+        test_int(p2->x, 10);
+        test_int(p3->x, 10);
+    }
+
+    EcsScriptConstVar *cv = ecs_ensure(world, v, EcsScriptConstVar);
+    *(ecs_f32_t*)cv->value.ptr = 20;
+    ecs_modified(world, v, EcsScriptConstVar);
+
+    {
+        const Position *p1 = ecs_get(world, inst1, Position);
+        const Position *p2 = ecs_get(world, inst2, Position);
+        const Position *p3 = ecs_get(world, inst3, Position);
+        test_assert(p1 != NULL);
+        test_assert(p2 != NULL);
+        test_assert(p3 != NULL);
+        test_int(p1->x, 20);
+        test_int(p2->x, 20);
+        test_int(p3->x, 20);
+    }
+
+    ecs_fini(world);
+}
+
+void Refs_ref_in_template_with_initializer(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Mass) = define_mass(world);
+    ecs_entity_t ecs_id(Position) = define_position(world);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, Mass, {10});
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Bar {"
+            LINE "  with Position(e[Mass].value, 0) {"
+            LINE "    foo {}"
+            LINE "  }"
+            LINE "}"
+            LINE "Bar inst1()"
+            LINE "Bar inst2()"
+            LINE "Bar inst3()"
+    });
+    test_assert(s != 0);
+
+    {
+        const Position *p1 = ecs_get(world, ecs_lookup(world, "inst1.foo"), Position);
+        const Position *p2 = ecs_get(world, ecs_lookup(world, "inst2.foo"), Position);
+        const Position *p3 = ecs_get(world, ecs_lookup(world, "inst3.foo"), Position);
+        test_assert(p1 != NULL); test_assert(p2 != NULL); test_assert(p3 != NULL);
+        test_int(p1->x, 10); test_int(p2->x, 10); test_int(p3->x, 10);
+    }
+
+    ecs_set(world, e, Mass, {20});
+
+    {
+        const Position *p1 = ecs_get(world, ecs_lookup(world, "inst1.foo"), Position);
+        const Position *p2 = ecs_get(world, ecs_lookup(world, "inst2.foo"), Position);
+        const Position *p3 = ecs_get(world, ecs_lookup(world, "inst3.foo"), Position);
+        test_assert(p1 != NULL); test_assert(p2 != NULL); test_assert(p3 != NULL);
+        test_int(p1->x, 20); test_int(p2->x, 20); test_int(p3->x, 20);
+    }
+
+    ecs_fini(world);
+}
+
+void Refs_ref_in_template_match_expr(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(PositionI) = define_position_i(world);
+    ecs_entity_t ecs_id(Position) = define_position(world);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, PositionI, {1, 0});
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Bar {"
+            LINE "  Position: match e[PositionI].x {"
+            LINE "    1: {100, 0}"
+            LINE "    2: {200, 0}"
+            LINE "    _: {0, 0}"
+            LINE "  }"
+            LINE "}"
+            LINE "Bar inst1()"
+            LINE "Bar inst2()"
+            LINE "Bar inst3()"
+    });
+    test_assert(s != 0);
+
+    {
+        const Position *p1 = ecs_get(world, ecs_lookup(world, "inst1"), Position);
+        const Position *p2 = ecs_get(world, ecs_lookup(world, "inst2"), Position);
+        const Position *p3 = ecs_get(world, ecs_lookup(world, "inst3"), Position);
+        test_assert(p1 != NULL); test_assert(p2 != NULL); test_assert(p3 != NULL);
+        test_int(p1->x, 100); test_int(p2->x, 100); test_int(p3->x, 100);
+    }
+
+    ecs_set(world, e, PositionI, {2, 0});
+
+    {
+        const Position *p1 = ecs_get(world, ecs_lookup(world, "inst1"), Position);
+        const Position *p2 = ecs_get(world, ecs_lookup(world, "inst2"), Position);
+        const Position *p3 = ecs_get(world, ecs_lookup(world, "inst3"), Position);
+        test_assert(p1 != NULL); test_assert(p2 != NULL); test_assert(p3 != NULL);
+        test_int(p1->x, 200); test_int(p2->x, 200); test_int(p3->x, 200);
+    }
+
+    ecs_fini(world);
+}
+
+void Refs_ref_in_template_if_expr(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(PositionI) = define_position_i(world);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, PositionI, {1, 0});
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Bar {"
+            LINE "  if e[PositionI].x > 0 {"
+            LINE "    foo {}"
+            LINE "  } else {"
+            LINE "    bar {}"
+            LINE "  }"
+            LINE "}"
+            LINE "Bar inst1()"
+            LINE "Bar inst2()"
+            LINE "Bar inst3()"
+    });
+    test_assert(s != 0);
+
+    test_assert(ecs_lookup(world, "inst1.foo") != 0);
+    test_assert(ecs_lookup(world, "inst2.foo") != 0);
+    test_assert(ecs_lookup(world, "inst3.foo") != 0);
+    test_assert(ecs_lookup(world, "inst1.bar") == 0);
+    test_assert(ecs_lookup(world, "inst2.bar") == 0);
+    test_assert(ecs_lookup(world, "inst3.bar") == 0);
+
+    ecs_set(world, e, PositionI, {0, 0});
+
+    test_assert(ecs_lookup(world, "inst1.foo") == 0);
+    test_assert(ecs_lookup(world, "inst2.foo") == 0);
+    test_assert(ecs_lookup(world, "inst3.foo") == 0);
+    test_assert(ecs_lookup(world, "inst1.bar") != 0);
+    test_assert(ecs_lookup(world, "inst2.bar") != 0);
+    test_assert(ecs_lookup(world, "inst3.bar") != 0);
+
+    ecs_fini(world);
+}
+
+void Refs_ref_in_template_for_expr(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(PositionI) = define_position_i(world);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, PositionI, {2, 0});
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Bar {"
+            LINE "  for i in 0..e[PositionI].x {"
+            LINE "    \"e_{$i}\" {}"
+            LINE "  }"
+            LINE "}"
+            LINE "Bar inst1()"
+            LINE "Bar inst2()"
+            LINE "Bar inst3()"
+    });
+    test_assert(s != 0);
+
+    test_assert(ecs_lookup(world, "inst1.e_0") != 0);
+    test_assert(ecs_lookup(world, "inst1.e_1") != 0);
+    test_assert(ecs_lookup(world, "inst1.e_2") == 0);
+    test_assert(ecs_lookup(world, "inst3.e_1") != 0);
+    test_assert(ecs_lookup(world, "inst3.e_2") == 0);
+
+    ecs_set(world, e, PositionI, {3, 0});
+
+    test_assert(ecs_lookup(world, "inst1.e_2") != 0);
+    test_assert(ecs_lookup(world, "inst2.e_2") != 0);
+    test_assert(ecs_lookup(world, "inst3.e_2") != 0);
+    test_assert(ecs_lookup(world, "inst1.e_3") == 0);
+
+    ecs_fini(world);
+}
+
+void Refs_ref_in_template_function(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Mass) = define_mass(world);
+    ecs_entity_t ecs_id(Position) = define_position(world);
+
+    ecs_function(world, {
+        .name = "times_two",
+        .return_type = ecs_id(ecs_f32_t),
+        .params = {{ "x", ecs_id(ecs_f32_t) }},
+        .callback = times_two
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, Mass, {10});
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Bar {"
+            LINE "  Position: {times_two(e[Mass].value), 0}"
+            LINE "}"
+            LINE "Bar inst1()"
+            LINE "Bar inst2()"
+            LINE "Bar inst3()"
+    });
+    test_assert(s != 0);
+
+    {
+        const Position *p1 = ecs_get(world, ecs_lookup(world, "inst1"), Position);
+        const Position *p2 = ecs_get(world, ecs_lookup(world, "inst2"), Position);
+        const Position *p3 = ecs_get(world, ecs_lookup(world, "inst3"), Position);
+        test_assert(p1 != NULL); test_assert(p2 != NULL); test_assert(p3 != NULL);
+        test_int(p1->x, 20); test_int(p2->x, 20); test_int(p3->x, 20);
+    }
+
+    ecs_set(world, e, Mass, {30});
+
+    {
+        const Position *p1 = ecs_get(world, ecs_lookup(world, "inst1"), Position);
+        const Position *p2 = ecs_get(world, ecs_lookup(world, "inst2"), Position);
+        const Position *p3 = ecs_get(world, ecs_lookup(world, "inst3"), Position);
+        test_assert(p1 != NULL); test_assert(p2 != NULL); test_assert(p3 != NULL);
+        test_int(p1->x, 60); test_int(p2->x, 60); test_int(p3->x, 60);
+    }
+
+    ecs_fini(world);
+}
+
+void Refs_ref_in_template_new_expr(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Mass) = define_mass(world);
+    ecs_entity_t ecs_id(Position) = define_position(world);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, Mass, {10});
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Bar {"
+            LINE "  entity: { new { Position: {e[Mass].value, 0} } }"
+            LINE "}"
+            LINE "Bar inst1()"
+            LINE "Bar inst2()"
+            LINE "Bar inst3()"
+    });
+    test_assert(s != 0);
+
+    {
+        const ecs_entity_t *x1 = ecs_get(world, ecs_lookup(world, "inst1"), ecs_entity_t);
+        const ecs_entity_t *x2 = ecs_get(world, ecs_lookup(world, "inst2"), ecs_entity_t);
+        const ecs_entity_t *x3 = ecs_get(world, ecs_lookup(world, "inst3"), ecs_entity_t);
+        test_assert(x1 != NULL); test_assert(x2 != NULL); test_assert(x3 != NULL);
+        const Position *p1 = ecs_get(world, *x1, Position);
+        const Position *p2 = ecs_get(world, *x2, Position);
+        const Position *p3 = ecs_get(world, *x3, Position);
+        test_assert(p1 != NULL); test_assert(p2 != NULL); test_assert(p3 != NULL);
+        test_int(p1->x, 10); test_int(p2->x, 10); test_int(p3->x, 10);
+    }
+
+    ecs_set(world, e, Mass, {20});
+
+    {
+        const ecs_entity_t *x1 = ecs_get(world, ecs_lookup(world, "inst1"), ecs_entity_t);
+        const ecs_entity_t *x2 = ecs_get(world, ecs_lookup(world, "inst2"), ecs_entity_t);
+        const ecs_entity_t *x3 = ecs_get(world, ecs_lookup(world, "inst3"), ecs_entity_t);
+        test_assert(x1 != NULL); test_assert(x2 != NULL); test_assert(x3 != NULL);
+        const Position *p1 = ecs_get(world, *x1, Position);
+        const Position *p2 = ecs_get(world, *x2, Position);
+        const Position *p3 = ecs_get(world, *x3, Position);
+        test_assert(p1 != NULL); test_assert(p2 != NULL); test_assert(p3 != NULL);
+        test_int(p1->x, 20); test_int(p2->x, 20); test_int(p3->x, 20);
+    }
+
+    ecs_fini(world);
+}
+
+void Refs_ref_in_template_function_in_new_expr(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Mass) = define_mass(world);
+    ecs_entity_t ecs_id(Position) = define_position(world);
+
+    ecs_function(world, {
+        .name = "times_two",
+        .return_type = ecs_id(ecs_f32_t),
+        .params = {{ "x", ecs_id(ecs_f32_t) }},
+        .callback = times_two
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, Mass, {10});
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Bar {"
+            LINE "  entity: { new { Position: {times_two(e[Mass].value), 0} } }"
+            LINE "}"
+            LINE "Bar inst1()"
+            LINE "Bar inst2()"
+            LINE "Bar inst3()"
+    });
+    test_assert(s != 0);
+
+    {
+        const ecs_entity_t *x1 = ecs_get(world, ecs_lookup(world, "inst1"), ecs_entity_t);
+        const ecs_entity_t *x2 = ecs_get(world, ecs_lookup(world, "inst2"), ecs_entity_t);
+        const ecs_entity_t *x3 = ecs_get(world, ecs_lookup(world, "inst3"), ecs_entity_t);
+        test_assert(x1 != NULL); test_assert(x2 != NULL); test_assert(x3 != NULL);
+        const Position *p1 = ecs_get(world, *x1, Position);
+        const Position *p2 = ecs_get(world, *x2, Position);
+        const Position *p3 = ecs_get(world, *x3, Position);
+        test_assert(p1 != NULL); test_assert(p2 != NULL); test_assert(p3 != NULL);
+        test_int(p1->x, 20); test_int(p2->x, 20); test_int(p3->x, 20);
+    }
+
+    ecs_set(world, e, Mass, {30});
+
+    {
+        const ecs_entity_t *x1 = ecs_get(world, ecs_lookup(world, "inst1"), ecs_entity_t);
+        const ecs_entity_t *x2 = ecs_get(world, ecs_lookup(world, "inst2"), ecs_entity_t);
+        const ecs_entity_t *x3 = ecs_get(world, ecs_lookup(world, "inst3"), ecs_entity_t);
+        test_assert(x1 != NULL); test_assert(x2 != NULL); test_assert(x3 != NULL);
+        const Position *p1 = ecs_get(world, *x1, Position);
+        const Position *p2 = ecs_get(world, *x2, Position);
+        const Position *p3 = ecs_get(world, *x3, Position);
+        test_assert(p1 != NULL); test_assert(p2 != NULL); test_assert(p3 != NULL);
+        test_int(p1->x, 60); test_int(p2->x, 60); test_int(p3->x, 60);
+    }
+
+    ecs_fini(world);
+}
+
+void Refs_ref_in_template_script_function_body(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Mass) = define_mass(world);
+    ecs_entity_t ecs_id(Position) = define_position(world);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, Mass, {10});
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "fn get_mass() -> f32 { e[Mass].value }"
+            LINE "template Bar {"
+            LINE "  Position: {get_mass(), 0}"
+            LINE "}"
+            LINE "Bar inst1()"
+            LINE "Bar inst2()"
+            LINE "Bar inst3()"
+    });
+    test_assert(s != 0);
+
+    {
+        const Position *p1 = ecs_get(world, ecs_lookup(world, "inst1"), Position);
+        const Position *p2 = ecs_get(world, ecs_lookup(world, "inst2"), Position);
+        const Position *p3 = ecs_get(world, ecs_lookup(world, "inst3"), Position);
+        test_assert(p1 != NULL); test_assert(p2 != NULL); test_assert(p3 != NULL);
+        test_int(p1->x, 10); test_int(p2->x, 10); test_int(p3->x, 10);
+    }
+
+    ecs_set(world, e, Mass, {20});
+
+    {
+        const Position *p1 = ecs_get(world, ecs_lookup(world, "inst1"), Position);
+        const Position *p2 = ecs_get(world, ecs_lookup(world, "inst2"), Position);
+        const Position *p3 = ecs_get(world, ecs_lookup(world, "inst3"), Position);
+        test_assert(p1 != NULL); test_assert(p2 != NULL); test_assert(p3 != NULL);
+        test_int(p1->x, 20); test_int(p2->x, 20); test_int(p3->x, 20);
+    }
+
+    ecs_fini(world);
+}
+
+void Refs_ref_in_template_assigned_to_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = define_position(world);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, Position, {10, 20});
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Bar {"
+            LINE "  Position: e[Position]"
+            LINE "}"
+            LINE "Bar inst1()"
+            LINE "Bar inst2()"
+            LINE "Bar inst3()"
+    });
+    test_assert(s != 0);
+
+    {
+        const Position *p1 = ecs_get(world, ecs_lookup(world, "inst1"), Position);
+        const Position *p2 = ecs_get(world, ecs_lookup(world, "inst2"), Position);
+        const Position *p3 = ecs_get(world, ecs_lookup(world, "inst3"), Position);
+        test_assert(p1 != NULL); test_assert(p2 != NULL); test_assert(p3 != NULL);
+        test_int(p1->x, 10); test_int(p2->x, 10); test_int(p3->x, 10);
+    }
+
+    ecs_set(world, e, Position, {30, 40});
+
+    {
+        const Position *p1 = ecs_get(world, ecs_lookup(world, "inst1"), Position);
+        const Position *p2 = ecs_get(world, ecs_lookup(world, "inst2"), Position);
+        const Position *p3 = ecs_get(world, ecs_lookup(world, "inst3"), Position);
+        test_assert(p1 != NULL); test_assert(p2 != NULL); test_assert(p3 != NULL);
+        test_int(p1->x, 30); test_int(p2->x, 30); test_int(p3->x, 30);
+    }
+
+    ecs_fini(world);
+}
+
+void Refs_global_const_var_in_template_with_initializer(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = define_position(world);
+
+    ecs_entity_t v = ecs_const_var(world, {
+        .name = "v",
+        .type = ecs_id(ecs_f32_t),
+        .value = &(ecs_f32_t){10}
+    });
+    test_assert(v != 0);
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Bar {"
+            LINE "  with Position($v, 0) {"
+            LINE "    foo {}"
+            LINE "  }"
+            LINE "}"
+            LINE "Bar inst1()"
+            LINE "Bar inst2()"
+            LINE "Bar inst3()"
+    });
+    test_assert(s != 0);
+
+    {
+        const Position *p1 = ecs_get(world, ecs_lookup(world, "inst1.foo"), Position);
+        const Position *p2 = ecs_get(world, ecs_lookup(world, "inst2.foo"), Position);
+        const Position *p3 = ecs_get(world, ecs_lookup(world, "inst3.foo"), Position);
+        test_assert(p1 != NULL); test_assert(p2 != NULL); test_assert(p3 != NULL);
+        test_int(p1->x, 10); test_int(p2->x, 10); test_int(p3->x, 10);
+    }
+
+    EcsScriptConstVar *cv = ecs_ensure(world, v, EcsScriptConstVar);
+    *(ecs_f32_t*)cv->value.ptr = 20;
+    ecs_modified(world, v, EcsScriptConstVar);
+
+    {
+        const Position *p1 = ecs_get(world, ecs_lookup(world, "inst1.foo"), Position);
+        const Position *p2 = ecs_get(world, ecs_lookup(world, "inst2.foo"), Position);
+        const Position *p3 = ecs_get(world, ecs_lookup(world, "inst3.foo"), Position);
+        test_assert(p1 != NULL); test_assert(p2 != NULL); test_assert(p3 != NULL);
+        test_int(p1->x, 20); test_int(p2->x, 20); test_int(p3->x, 20);
+    }
+
+    ecs_fini(world);
+}
+
+void Refs_global_const_var_in_template_match_expr(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = define_position(world);
+
+    ecs_entity_t v = ecs_const_var(world, {
+        .name = "v",
+        .type = ecs_id(ecs_i32_t),
+        .value = &(ecs_i32_t){1}
+    });
+    test_assert(v != 0);
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Bar {"
+            LINE "  Position: match $v {"
+            LINE "    1: {100, 0}"
+            LINE "    2: {200, 0}"
+            LINE "    _: {0, 0}"
+            LINE "  }"
+            LINE "}"
+            LINE "Bar inst1()"
+            LINE "Bar inst2()"
+            LINE "Bar inst3()"
+    });
+    test_assert(s != 0);
+
+    {
+        const Position *p1 = ecs_get(world, ecs_lookup(world, "inst1"), Position);
+        const Position *p2 = ecs_get(world, ecs_lookup(world, "inst2"), Position);
+        const Position *p3 = ecs_get(world, ecs_lookup(world, "inst3"), Position);
+        test_assert(p1 != NULL); test_assert(p2 != NULL); test_assert(p3 != NULL);
+        test_int(p1->x, 100); test_int(p2->x, 100); test_int(p3->x, 100);
+    }
+
+    EcsScriptConstVar *cv = ecs_ensure(world, v, EcsScriptConstVar);
+    *(ecs_i32_t*)cv->value.ptr = 2;
+    ecs_modified(world, v, EcsScriptConstVar);
+
+    {
+        const Position *p1 = ecs_get(world, ecs_lookup(world, "inst1"), Position);
+        const Position *p2 = ecs_get(world, ecs_lookup(world, "inst2"), Position);
+        const Position *p3 = ecs_get(world, ecs_lookup(world, "inst3"), Position);
+        test_assert(p1 != NULL); test_assert(p2 != NULL); test_assert(p3 != NULL);
+        test_int(p1->x, 200); test_int(p2->x, 200); test_int(p3->x, 200);
+    }
+
+    ecs_fini(world);
+}
+
+void Refs_global_const_var_in_template_if_expr(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t v = ecs_const_var(world, {
+        .name = "v",
+        .type = ecs_id(ecs_i32_t),
+        .value = &(ecs_i32_t){1}
+    });
+    test_assert(v != 0);
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Bar {"
+            LINE "  if $v > 0 {"
+            LINE "    foo {}"
+            LINE "  } else {"
+            LINE "    bar {}"
+            LINE "  }"
+            LINE "}"
+            LINE "Bar inst1()"
+            LINE "Bar inst2()"
+            LINE "Bar inst3()"
+    });
+    test_assert(s != 0);
+
+    test_assert(ecs_lookup(world, "inst1.foo") != 0);
+    test_assert(ecs_lookup(world, "inst2.foo") != 0);
+    test_assert(ecs_lookup(world, "inst3.foo") != 0);
+    test_assert(ecs_lookup(world, "inst1.bar") == 0);
+
+    EcsScriptConstVar *cv = ecs_ensure(world, v, EcsScriptConstVar);
+    *(ecs_i32_t*)cv->value.ptr = 0;
+    ecs_modified(world, v, EcsScriptConstVar);
+
+    test_assert(ecs_lookup(world, "inst1.foo") == 0);
+    test_assert(ecs_lookup(world, "inst2.foo") == 0);
+    test_assert(ecs_lookup(world, "inst3.foo") == 0);
+    test_assert(ecs_lookup(world, "inst1.bar") != 0);
+    test_assert(ecs_lookup(world, "inst2.bar") != 0);
+    test_assert(ecs_lookup(world, "inst3.bar") != 0);
+
+    ecs_fini(world);
+}
+
+void Refs_global_const_var_in_template_for_expr(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t v = ecs_const_var(world, {
+        .name = "v",
+        .type = ecs_id(ecs_i32_t),
+        .value = &(ecs_i32_t){2}
+    });
+    test_assert(v != 0);
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Bar {"
+            LINE "  for i in 0..$v {"
+            LINE "    \"e_{$i}\" {}"
+            LINE "  }"
+            LINE "}"
+            LINE "Bar inst1()"
+            LINE "Bar inst2()"
+            LINE "Bar inst3()"
+    });
+    test_assert(s != 0);
+
+    test_assert(ecs_lookup(world, "inst1.e_0") != 0);
+    test_assert(ecs_lookup(world, "inst1.e_1") != 0);
+    test_assert(ecs_lookup(world, "inst1.e_2") == 0);
+    test_assert(ecs_lookup(world, "inst3.e_1") != 0);
+
+    EcsScriptConstVar *cv = ecs_ensure(world, v, EcsScriptConstVar);
+    *(ecs_i32_t*)cv->value.ptr = 3;
+    ecs_modified(world, v, EcsScriptConstVar);
+
+    test_assert(ecs_lookup(world, "inst1.e_2") != 0);
+    test_assert(ecs_lookup(world, "inst2.e_2") != 0);
+    test_assert(ecs_lookup(world, "inst3.e_2") != 0);
+    test_assert(ecs_lookup(world, "inst1.e_3") == 0);
+
+    ecs_fini(world);
+}
+
+void Refs_global_const_var_in_template_function(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = define_position(world);
+
+    ecs_function(world, {
+        .name = "times_two",
+        .return_type = ecs_id(ecs_f32_t),
+        .params = {{ "x", ecs_id(ecs_f32_t) }},
+        .callback = times_two
+    });
+
+    ecs_entity_t v = ecs_const_var(world, {
+        .name = "v",
+        .type = ecs_id(ecs_f32_t),
+        .value = &(ecs_f32_t){10}
+    });
+    test_assert(v != 0);
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Bar {"
+            LINE "  Position: {times_two($v), 0}"
+            LINE "}"
+            LINE "Bar inst1()"
+            LINE "Bar inst2()"
+            LINE "Bar inst3()"
+    });
+    test_assert(s != 0);
+
+    {
+        const Position *p1 = ecs_get(world, ecs_lookup(world, "inst1"), Position);
+        const Position *p2 = ecs_get(world, ecs_lookup(world, "inst2"), Position);
+        const Position *p3 = ecs_get(world, ecs_lookup(world, "inst3"), Position);
+        test_assert(p1 != NULL); test_assert(p2 != NULL); test_assert(p3 != NULL);
+        test_int(p1->x, 20); test_int(p2->x, 20); test_int(p3->x, 20);
+    }
+
+    EcsScriptConstVar *cv = ecs_ensure(world, v, EcsScriptConstVar);
+    *(ecs_f32_t*)cv->value.ptr = 30;
+    ecs_modified(world, v, EcsScriptConstVar);
+
+    {
+        const Position *p1 = ecs_get(world, ecs_lookup(world, "inst1"), Position);
+        const Position *p2 = ecs_get(world, ecs_lookup(world, "inst2"), Position);
+        const Position *p3 = ecs_get(world, ecs_lookup(world, "inst3"), Position);
+        test_assert(p1 != NULL); test_assert(p2 != NULL); test_assert(p3 != NULL);
+        test_int(p1->x, 60); test_int(p2->x, 60); test_int(p3->x, 60);
+    }
+
+    ecs_fini(world);
+}
+
+void Refs_global_const_var_in_template_new_expr(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = define_position(world);
+
+    ecs_entity_t v = ecs_const_var(world, {
+        .name = "v",
+        .type = ecs_id(ecs_f32_t),
+        .value = &(ecs_f32_t){10}
+    });
+    test_assert(v != 0);
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Bar {"
+            LINE "  entity: { new { Position: {$v, 0} } }"
+            LINE "}"
+            LINE "Bar inst1()"
+            LINE "Bar inst2()"
+            LINE "Bar inst3()"
+    });
+    test_assert(s != 0);
+
+    {
+        const ecs_entity_t *x1 = ecs_get(world, ecs_lookup(world, "inst1"), ecs_entity_t);
+        const ecs_entity_t *x2 = ecs_get(world, ecs_lookup(world, "inst2"), ecs_entity_t);
+        const ecs_entity_t *x3 = ecs_get(world, ecs_lookup(world, "inst3"), ecs_entity_t);
+        test_assert(x1 != NULL); test_assert(x2 != NULL); test_assert(x3 != NULL);
+        const Position *p1 = ecs_get(world, *x1, Position);
+        const Position *p2 = ecs_get(world, *x2, Position);
+        const Position *p3 = ecs_get(world, *x3, Position);
+        test_assert(p1 != NULL); test_assert(p2 != NULL); test_assert(p3 != NULL);
+        test_int(p1->x, 10); test_int(p2->x, 10); test_int(p3->x, 10);
+    }
+
+    EcsScriptConstVar *cv = ecs_ensure(world, v, EcsScriptConstVar);
+    *(ecs_f32_t*)cv->value.ptr = 20;
+    ecs_modified(world, v, EcsScriptConstVar);
+
+    {
+        const ecs_entity_t *x1 = ecs_get(world, ecs_lookup(world, "inst1"), ecs_entity_t);
+        const ecs_entity_t *x2 = ecs_get(world, ecs_lookup(world, "inst2"), ecs_entity_t);
+        const ecs_entity_t *x3 = ecs_get(world, ecs_lookup(world, "inst3"), ecs_entity_t);
+        test_assert(x1 != NULL); test_assert(x2 != NULL); test_assert(x3 != NULL);
+        const Position *p1 = ecs_get(world, *x1, Position);
+        const Position *p2 = ecs_get(world, *x2, Position);
+        const Position *p3 = ecs_get(world, *x3, Position);
+        test_assert(p1 != NULL); test_assert(p2 != NULL); test_assert(p3 != NULL);
+        test_int(p1->x, 20); test_int(p2->x, 20); test_int(p3->x, 20);
+    }
+
+    ecs_fini(world);
+}
+
+void Refs_global_const_var_in_template_function_in_new_expr(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = define_position(world);
+
+    ecs_function(world, {
+        .name = "times_two",
+        .return_type = ecs_id(ecs_f32_t),
+        .params = {{ "x", ecs_id(ecs_f32_t) }},
+        .callback = times_two
+    });
+
+    ecs_entity_t v = ecs_const_var(world, {
+        .name = "v",
+        .type = ecs_id(ecs_f32_t),
+        .value = &(ecs_f32_t){10}
+    });
+    test_assert(v != 0);
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Bar {"
+            LINE "  entity: { new { Position: {times_two($v), 0} } }"
+            LINE "}"
+            LINE "Bar inst1()"
+            LINE "Bar inst2()"
+            LINE "Bar inst3()"
+    });
+    test_assert(s != 0);
+
+    {
+        const ecs_entity_t *x1 = ecs_get(world, ecs_lookup(world, "inst1"), ecs_entity_t);
+        const ecs_entity_t *x2 = ecs_get(world, ecs_lookup(world, "inst2"), ecs_entity_t);
+        const ecs_entity_t *x3 = ecs_get(world, ecs_lookup(world, "inst3"), ecs_entity_t);
+        test_assert(x1 != NULL); test_assert(x2 != NULL); test_assert(x3 != NULL);
+        const Position *p1 = ecs_get(world, *x1, Position);
+        const Position *p2 = ecs_get(world, *x2, Position);
+        const Position *p3 = ecs_get(world, *x3, Position);
+        test_assert(p1 != NULL); test_assert(p2 != NULL); test_assert(p3 != NULL);
+        test_int(p1->x, 20); test_int(p2->x, 20); test_int(p3->x, 20);
+    }
+
+    EcsScriptConstVar *cv = ecs_ensure(world, v, EcsScriptConstVar);
+    *(ecs_f32_t*)cv->value.ptr = 30;
+    ecs_modified(world, v, EcsScriptConstVar);
+
+    {
+        const ecs_entity_t *x1 = ecs_get(world, ecs_lookup(world, "inst1"), ecs_entity_t);
+        const ecs_entity_t *x2 = ecs_get(world, ecs_lookup(world, "inst2"), ecs_entity_t);
+        const ecs_entity_t *x3 = ecs_get(world, ecs_lookup(world, "inst3"), ecs_entity_t);
+        test_assert(x1 != NULL); test_assert(x2 != NULL); test_assert(x3 != NULL);
+        const Position *p1 = ecs_get(world, *x1, Position);
+        const Position *p2 = ecs_get(world, *x2, Position);
+        const Position *p3 = ecs_get(world, *x3, Position);
+        test_assert(p1 != NULL); test_assert(p2 != NULL); test_assert(p3 != NULL);
+        test_int(p1->x, 60); test_int(p2->x, 60); test_int(p3->x, 60);
+    }
+
+    ecs_fini(world);
+}
+
+void Refs_global_const_var_in_template_script_function_body(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = define_position(world);
+
+    ecs_entity_t v = ecs_const_var(world, {
+        .name = "v",
+        .type = ecs_id(ecs_f32_t),
+        .value = &(ecs_f32_t){10}
+    });
+    test_assert(v != 0);
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "fn get_v() -> f32 { $v }"
+            LINE "template Bar {"
+            LINE "  Position: {get_v(), 0}"
+            LINE "}"
+            LINE "Bar inst1()"
+            LINE "Bar inst2()"
+            LINE "Bar inst3()"
+    });
+    test_assert(s != 0);
+
+    {
+        const Position *p1 = ecs_get(world, ecs_lookup(world, "inst1"), Position);
+        const Position *p2 = ecs_get(world, ecs_lookup(world, "inst2"), Position);
+        const Position *p3 = ecs_get(world, ecs_lookup(world, "inst3"), Position);
+        test_assert(p1 != NULL); test_assert(p2 != NULL); test_assert(p3 != NULL);
+        test_int(p1->x, 10); test_int(p2->x, 10); test_int(p3->x, 10);
+    }
+
+    EcsScriptConstVar *cv = ecs_ensure(world, v, EcsScriptConstVar);
+    *(ecs_f32_t*)cv->value.ptr = 20;
+    ecs_modified(world, v, EcsScriptConstVar);
+
+    {
+        const Position *p1 = ecs_get(world, ecs_lookup(world, "inst1"), Position);
+        const Position *p2 = ecs_get(world, ecs_lookup(world, "inst2"), Position);
+        const Position *p3 = ecs_get(world, ecs_lookup(world, "inst3"), Position);
+        test_assert(p1 != NULL); test_assert(p2 != NULL); test_assert(p3 != NULL);
+        test_int(p1->x, 20); test_int(p2->x, 20); test_int(p3->x, 20);
+    }
+
+    ecs_fini(world);
+}
+
+void Refs_global_const_var_in_template_assigned_to_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = define_position(world);
+
+    ecs_entity_t v = ecs_const_var(world, {
+        .name = "v",
+        .type = ecs_id(Position),
+        .value = &(Position){10, 20}
+    });
+    test_assert(v != 0);
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Bar {"
+            LINE "  Position: $v"
+            LINE "}"
+            LINE "Bar inst1()"
+            LINE "Bar inst2()"
+            LINE "Bar inst3()"
+    });
+    test_assert(s != 0);
+
+    {
+        const Position *p1 = ecs_get(world, ecs_lookup(world, "inst1"), Position);
+        const Position *p2 = ecs_get(world, ecs_lookup(world, "inst2"), Position);
+        const Position *p3 = ecs_get(world, ecs_lookup(world, "inst3"), Position);
+        test_assert(p1 != NULL); test_assert(p2 != NULL); test_assert(p3 != NULL);
+        test_int(p1->x, 10); test_int(p2->x, 10); test_int(p3->x, 10);
+    }
+
+    EcsScriptConstVar *cv = ecs_ensure(world, v, EcsScriptConstVar);
+    ((Position*)cv->value.ptr)->x = 30;
+    ((Position*)cv->value.ptr)->y = 40;
+    ecs_modified(world, v, EcsScriptConstVar);
+
+    {
+        const Position *p1 = ecs_get(world, ecs_lookup(world, "inst1"), Position);
+        const Position *p2 = ecs_get(world, ecs_lookup(world, "inst2"), Position);
+        const Position *p3 = ecs_get(world, ecs_lookup(world, "inst3"), Position);
+        test_assert(p1 != NULL); test_assert(p2 != NULL); test_assert(p3 != NULL);
+        test_int(p1->x, 30); test_int(p2->x, 30); test_int(p3->x, 30);
+    }
+
+    ecs_fini(world);
+}
+
+void Refs_template_ref_observer_lifecycle(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Mass) = define_mass(world);
+    ecs_entity_t ecs_id(Position) = define_position(world);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, Mass, {10});
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Bar {"
+            LINE "  Position: {e[Mass].value, 0}"
+            LINE "}"
+            LINE "Bar inst1()"
+    });
+    test_assert(s != 0);
+
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    test_assert(bar != 0);
+
+    ecs_entity_t inst1 = ecs_lookup(world, "inst1");
+    test_assert(inst1 != 0);
+    test_int(ecs_get(world, inst1, Position)->x, 10);
+
+    ecs_set(world, e, Mass, {20});
+    test_int(ecs_get(world, inst1, Position)->x, 20);
+
+    int32_t observer_count = 0;
+    ecs_iter_t cit = ecs_children(world, bar);
+    while (ecs_children_next(&cit)) {
+        int32_t i;
+        for (i = 0; i < cit.count; i ++) {
+            if (ecs_has_id(world, cit.entities[i], EcsObserver)) {
+                observer_count ++;
+            }
+        }
+    }
+    test_int(observer_count, 1);
+
+    ecs_delete(world, inst1);
+    test_assert(!ecs_is_alive(world, inst1));
+
+    observer_count = 0;
+    cit = ecs_children(world, bar);
+    while (ecs_children_next(&cit)) {
+        int32_t i;
+        for (i = 0; i < cit.count; i ++) {
+            if (ecs_has_id(world, cit.entities[i], EcsObserver)) {
+                observer_count ++;
+            }
+        }
+    }
+    test_int(observer_count, 0);
+
+    ecs_set(world, e, Mass, {30});
+
+    test_assert(ecs_script_run(world, "reinstantiate", "Bar inst2()", NULL) == 0);
+    ecs_entity_t inst2 = ecs_lookup(world, "inst2");
+    test_assert(inst2 != 0);
+    test_assert(ecs_get(world, inst2, Position) != NULL);
+    test_int(ecs_get(world, inst2, Position)->x, 30);
+
+    observer_count = 0;
+    cit = ecs_children(world, bar);
+    while (ecs_children_next(&cit)) {
+        int32_t i;
+        for (i = 0; i < cit.count; i ++) {
+            if (ecs_has_id(world, cit.entities[i], EcsObserver)) {
+                observer_count ++;
+            }
+        }
+    }
+    test_int(observer_count, 1);
+
+    ecs_set(world, e, Mass, {40});
+    test_int(ecs_get(world, inst2, Position)->x, 40);
+
+    ecs_fini(world);
+}
+
+void Refs_this_ref_in_template_component_initializer(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Mass) = define_mass(world);
+    ecs_entity_t ecs_id(Position) = define_position(world);
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Bar {"
+            LINE "  Position: {$this[Mass].value, 0}"
+            LINE "}"
+            LINE "inst1 { Mass: {10} Bar: {} }"
+            LINE "inst2 { Mass: {20} Bar: {} }"
+            LINE "inst3 { Mass: {30} Bar: {} }"
+    });
+    test_assert(s != 0);
+
+    ecs_entity_t inst1 = ecs_lookup(world, "inst1");
+    ecs_entity_t inst2 = ecs_lookup(world, "inst2");
+    ecs_entity_t inst3 = ecs_lookup(world, "inst3");
+    test_assert(inst1 != 0);
+    test_assert(inst2 != 0);
+    test_assert(inst3 != 0);
+
+    {
+        const Position *p1 = ecs_get(world, inst1, Position);
+        const Position *p2 = ecs_get(world, inst2, Position);
+        const Position *p3 = ecs_get(world, inst3, Position);
+        test_assert(p1 != NULL); test_assert(p2 != NULL); test_assert(p3 != NULL);
+        test_int(p1->x, 10); test_int(p2->x, 20); test_int(p3->x, 30);
+    }
+
+    ecs_set(world, inst2, Mass, {40});
+
+    {
+        const Position *p1 = ecs_get(world, inst1, Position);
+        const Position *p2 = ecs_get(world, inst2, Position);
+        const Position *p3 = ecs_get(world, inst3, Position);
+        test_assert(p1 != NULL); test_assert(p2 != NULL); test_assert(p3 != NULL);
+        test_int(p1->x, 10); test_int(p2->x, 40); test_int(p3->x, 30);
+    }
+
+    ecs_fini(world);
+}
+
+void Refs_this_ref_in_template_with_initializer(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Mass) = define_mass(world);
+    ecs_entity_t ecs_id(Position) = define_position(world);
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Bar {"
+            LINE "  with Position($this[Mass].value, 0) {"
+            LINE "    foo {}"
+            LINE "  }"
+            LINE "}"
+            LINE "inst1 { Mass: {10} Bar: {} }"
+            LINE "inst2 { Mass: {20} Bar: {} }"
+    });
+    test_assert(s != 0);
+
+    {
+        const Position *p1 = ecs_get(world, ecs_lookup(world, "inst1.foo"), Position);
+        const Position *p2 = ecs_get(world, ecs_lookup(world, "inst2.foo"), Position);
+        test_assert(p1 != NULL); test_assert(p2 != NULL);
+        test_int(p1->x, 10); test_int(p2->x, 20);
+    }
+
+    ecs_set(world, ecs_lookup(world, "inst1"), Mass, {30});
+
+    {
+        const Position *p1 = ecs_get(world, ecs_lookup(world, "inst1.foo"), Position);
+        const Position *p2 = ecs_get(world, ecs_lookup(world, "inst2.foo"), Position);
+        test_assert(p1 != NULL); test_assert(p2 != NULL);
+        test_int(p1->x, 30); test_int(p2->x, 20);
+    }
+
+    ecs_fini(world);
+}
+
+void Refs_this_ref_in_template_match_expr(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(PositionI) = define_position_i(world);
+    ecs_entity_t ecs_id(Position) = define_position(world);
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Bar {"
+            LINE "  Position: match $this[PositionI].x {"
+            LINE "    1: {100, 0}"
+            LINE "    2: {200, 0}"
+            LINE "    _: {0, 0}"
+            LINE "  }"
+            LINE "}"
+            LINE "inst1 { PositionI: {1, 0} Bar: {} }"
+            LINE "inst2 { PositionI: {2, 0} Bar: {} }"
+    });
+    test_assert(s != 0);
+
+    ecs_entity_t inst1 = ecs_lookup(world, "inst1");
+    ecs_entity_t inst2 = ecs_lookup(world, "inst2");
+    test_assert(inst1 != 0);
+    test_assert(inst2 != 0);
+
+    {
+        const Position *p1 = ecs_get(world, inst1, Position);
+        const Position *p2 = ecs_get(world, inst2, Position);
+        test_assert(p1 != NULL); test_assert(p2 != NULL);
+        test_int(p1->x, 100); test_int(p2->x, 200);
+    }
+
+    ecs_set(world, inst1, PositionI, {2, 0});
+
+    {
+        const Position *p1 = ecs_get(world, inst1, Position);
+        const Position *p2 = ecs_get(world, inst2, Position);
+        test_assert(p1 != NULL); test_assert(p2 != NULL);
+        test_int(p1->x, 200); test_int(p2->x, 200);
+    }
+
+    ecs_fini(world);
+}
+
+void Refs_this_ref_in_template_if_expr(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(PositionI) = define_position_i(world);
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Bar {"
+            LINE "  if $this[PositionI].x > 0 {"
+            LINE "    foo {}"
+            LINE "  } else {"
+            LINE "    bar {}"
+            LINE "  }"
+            LINE "}"
+            LINE "inst1 { PositionI: {1, 0} Bar: {} }"
+            LINE "inst2 { PositionI: {0, 0} Bar: {} }"
+    });
+    test_assert(s != 0);
+
+    test_assert(ecs_lookup(world, "inst1.foo") != 0);
+    test_assert(ecs_lookup(world, "inst1.bar") == 0);
+    test_assert(ecs_lookup(world, "inst2.foo") == 0);
+    test_assert(ecs_lookup(world, "inst2.bar") != 0);
+
+    ecs_set(world, ecs_lookup(world, "inst1"), PositionI, {0, 0});
+
+    test_assert(ecs_lookup(world, "inst1.foo") == 0);
+    test_assert(ecs_lookup(world, "inst1.bar") != 0);
+    test_assert(ecs_lookup(world, "inst2.foo") == 0);
+    test_assert(ecs_lookup(world, "inst2.bar") != 0);
+
+    ecs_fini(world);
+}
+
+void Refs_this_ref_in_template_for_expr(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(PositionI) = define_position_i(world);
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Bar {"
+            LINE "  for i in 0..$this[PositionI].x {"
+            LINE "    \"e_{$i}\" {}"
+            LINE "  }"
+            LINE "}"
+            LINE "inst1 { PositionI: {2, 0} Bar: {} }"
+            LINE "inst2 { PositionI: {1, 0} Bar: {} }"
+    });
+    test_assert(s != 0);
+
+    test_assert(ecs_lookup(world, "inst1.e_0") != 0);
+    test_assert(ecs_lookup(world, "inst1.e_1") != 0);
+    test_assert(ecs_lookup(world, "inst1.e_2") == 0);
+    test_assert(ecs_lookup(world, "inst2.e_0") != 0);
+    test_assert(ecs_lookup(world, "inst2.e_1") == 0);
+
+    ecs_set(world, ecs_lookup(world, "inst1"), PositionI, {3, 0});
+
+    test_assert(ecs_lookup(world, "inst1.e_2") != 0);
+    test_assert(ecs_lookup(world, "inst1.e_3") == 0);
+    test_assert(ecs_lookup(world, "inst2.e_1") == 0);
+
+    ecs_fini(world);
+}
+
+void Refs_this_ref_in_template_function(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Mass) = define_mass(world);
+    ecs_entity_t ecs_id(Position) = define_position(world);
+
+    ecs_function(world, {
+        .name = "times_two",
+        .return_type = ecs_id(ecs_f32_t),
+        .params = {{ "x", ecs_id(ecs_f32_t) }},
+        .callback = times_two
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Bar {"
+            LINE "  Position: {times_two($this[Mass].value), 0}"
+            LINE "}"
+            LINE "inst1 { Mass: {10} Bar: {} }"
+            LINE "inst2 { Mass: {20} Bar: {} }"
+    });
+    test_assert(s != 0);
+
+    ecs_entity_t inst1 = ecs_lookup(world, "inst1");
+    ecs_entity_t inst2 = ecs_lookup(world, "inst2");
+    test_assert(inst1 != 0);
+    test_assert(inst2 != 0);
+
+    {
+        const Position *p1 = ecs_get(world, inst1, Position);
+        const Position *p2 = ecs_get(world, inst2, Position);
+        test_assert(p1 != NULL); test_assert(p2 != NULL);
+        test_int(p1->x, 20); test_int(p2->x, 40);
+    }
+
+    ecs_set(world, inst1, Mass, {30});
+
+    {
+        const Position *p1 = ecs_get(world, inst1, Position);
+        const Position *p2 = ecs_get(world, inst2, Position);
+        test_assert(p1 != NULL); test_assert(p2 != NULL);
+        test_int(p1->x, 60); test_int(p2->x, 40);
+    }
+
+    ecs_fini(world);
+}
+
+void Refs_this_ref_in_template_new_expr(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Mass) = define_mass(world);
+    ecs_entity_t ecs_id(Position) = define_position(world);
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Bar {"
+            LINE "  entity: { new { Position: {$this[Mass].value, 0} } }"
+            LINE "}"
+            LINE "inst1 { Mass: {10} Bar: {} }"
+            LINE "inst2 { Mass: {20} Bar: {} }"
+    });
+    test_assert(s != 0);
+
+    ecs_entity_t inst1 = ecs_lookup(world, "inst1");
+    ecs_entity_t inst2 = ecs_lookup(world, "inst2");
+    test_assert(inst1 != 0);
+    test_assert(inst2 != 0);
+
+    {
+        const ecs_entity_t *x1 = ecs_get(world, inst1, ecs_entity_t);
+        const ecs_entity_t *x2 = ecs_get(world, inst2, ecs_entity_t);
+        test_assert(x1 != NULL); test_assert(x2 != NULL);
+        const Position *p1 = ecs_get(world, *x1, Position);
+        const Position *p2 = ecs_get(world, *x2, Position);
+        test_assert(p1 != NULL); test_assert(p2 != NULL);
+        test_int(p1->x, 10); test_int(p2->x, 20);
+    }
+
+    ecs_set(world, inst1, Mass, {30});
+
+    {
+        const ecs_entity_t *x1 = ecs_get(world, inst1, ecs_entity_t);
+        const ecs_entity_t *x2 = ecs_get(world, inst2, ecs_entity_t);
+        test_assert(x1 != NULL); test_assert(x2 != NULL);
+        const Position *p1 = ecs_get(world, *x1, Position);
+        const Position *p2 = ecs_get(world, *x2, Position);
+        test_assert(p1 != NULL); test_assert(p2 != NULL);
+        test_int(p1->x, 30); test_int(p2->x, 20);
+    }
+
+    ecs_fini(world);
+}
+
+void Refs_this_ref_in_template_function_in_new_expr(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Mass) = define_mass(world);
+    ecs_entity_t ecs_id(Position) = define_position(world);
+
+    ecs_function(world, {
+        .name = "times_two",
+        .return_type = ecs_id(ecs_f32_t),
+        .params = {{ "x", ecs_id(ecs_f32_t) }},
+        .callback = times_two
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Bar {"
+            LINE "  entity: { new { Position: {times_two($this[Mass].value), 0} } }"
+            LINE "}"
+            LINE "inst1 { Mass: {10} Bar: {} }"
+            LINE "inst2 { Mass: {20} Bar: {} }"
+    });
+    test_assert(s != 0);
+
+    ecs_entity_t inst1 = ecs_lookup(world, "inst1");
+    ecs_entity_t inst2 = ecs_lookup(world, "inst2");
+    test_assert(inst1 != 0);
+    test_assert(inst2 != 0);
+
+    {
+        const ecs_entity_t *x1 = ecs_get(world, inst1, ecs_entity_t);
+        const ecs_entity_t *x2 = ecs_get(world, inst2, ecs_entity_t);
+        test_assert(x1 != NULL); test_assert(x2 != NULL);
+        const Position *p1 = ecs_get(world, *x1, Position);
+        const Position *p2 = ecs_get(world, *x2, Position);
+        test_assert(p1 != NULL); test_assert(p2 != NULL);
+        test_int(p1->x, 20); test_int(p2->x, 40);
+    }
+
+    ecs_set(world, inst1, Mass, {30});
+
+    {
+        const ecs_entity_t *x1 = ecs_get(world, inst1, ecs_entity_t);
+        const ecs_entity_t *x2 = ecs_get(world, inst2, ecs_entity_t);
+        test_assert(x1 != NULL); test_assert(x2 != NULL);
+        const Position *p1 = ecs_get(world, *x1, Position);
+        const Position *p2 = ecs_get(world, *x2, Position);
+        test_assert(p1 != NULL); test_assert(p2 != NULL);
+        test_int(p1->x, 60); test_int(p2->x, 40);
+    }
+
+    ecs_fini(world);
+}
+
+void Refs_this_ref_in_template_assigned_to_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = define_position(world);
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Bar {"
+            LINE "  foo = Position: $this[Position]"
+            LINE "}"
+            LINE "inst1 { Position: {10, 20} Bar: {} }"
+            LINE "inst2 { Position: {30, 40} Bar: {} }"
+    });
+    test_assert(s != 0);
+
+    {
+        const Position *p1 = ecs_get(world, ecs_lookup(world, "inst1.foo"), Position);
+        const Position *p2 = ecs_get(world, ecs_lookup(world, "inst2.foo"), Position);
+        test_assert(p1 != NULL); test_assert(p2 != NULL);
+        test_int(p1->x, 10); test_int(p1->y, 20);
+        test_int(p2->x, 30); test_int(p2->y, 40);
+    }
+
+    ecs_set(world, ecs_lookup(world, "inst1"), Position, {50, 60});
+
+    {
+        const Position *p1 = ecs_get(world, ecs_lookup(world, "inst1.foo"), Position);
+        const Position *p2 = ecs_get(world, ecs_lookup(world, "inst2.foo"), Position);
+        test_assert(p1 != NULL); test_assert(p2 != NULL);
+        test_int(p1->x, 50); test_int(p1->y, 60);
+        test_int(p2->x, 30); test_int(p2->y, 40);
+    }
+
+    ecs_fini(world);
+}
+
+void Refs_prop_ref_in_template_component_initializer(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Mass) = define_mass(world);
+    ecs_entity_t ecs_id(Position) = define_position(world);
+
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_set(world, e1, Mass, {10});
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_set(world, e2, Mass, {20});
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Bar {"
+            LINE "  prop target = flecs.meta.entity: flecs"
+            LINE "  Position: {$target[Mass].value, 0}"
+            LINE "}"
+            LINE "inst1 { Bar: {target: e1} }"
+            LINE "inst2 { Bar: {target: e2} }"
+    });
+    test_assert(s != 0);
+
+    ecs_entity_t inst1 = ecs_lookup(world, "inst1");
+    ecs_entity_t inst2 = ecs_lookup(world, "inst2");
+    test_assert(inst1 != 0);
+    test_assert(inst2 != 0);
+
+    {
+        const Position *p1 = ecs_get(world, inst1, Position);
+        const Position *p2 = ecs_get(world, inst2, Position);
+        test_assert(p1 != NULL); test_assert(p2 != NULL);
+        test_int(p1->x, 10); test_int(p2->x, 20);
+    }
+
+    ecs_set(world, e1, Mass, {30});
+
+    {
+        const Position *p1 = ecs_get(world, inst1, Position);
+        const Position *p2 = ecs_get(world, inst2, Position);
+        test_assert(p1 != NULL); test_assert(p2 != NULL);
+        test_int(p1->x, 30); test_int(p2->x, 20);
+    }
+
+    ecs_set(world, e2, Mass, {40});
+
+    {
+        const Position *p1 = ecs_get(world, inst1, Position);
+        const Position *p2 = ecs_get(world, inst2, Position);
+        test_assert(p1 != NULL); test_assert(p2 != NULL);
+        test_int(p1->x, 30); test_int(p2->x, 40);
+    }
+
+    ecs_fini(world);
+}
+
+void Refs_prop_ref_in_template_with_initializer(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Mass) = define_mass(world);
+    ecs_entity_t ecs_id(Position) = define_position(world);
+
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_set(world, e1, Mass, {10});
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_set(world, e2, Mass, {20});
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Bar {"
+            LINE "  prop target = flecs.meta.entity: flecs"
+            LINE "  with Position($target[Mass].value, 0) {"
+            LINE "    foo {}"
+            LINE "  }"
+            LINE "}"
+            LINE "inst1 { Bar: {target: e1} }"
+            LINE "inst2 { Bar: {target: e2} }"
+    });
+    test_assert(s != 0);
+
+    {
+        const Position *p1 = ecs_get(world, ecs_lookup(world, "inst1.foo"), Position);
+        const Position *p2 = ecs_get(world, ecs_lookup(world, "inst2.foo"), Position);
+        test_assert(p1 != NULL); test_assert(p2 != NULL);
+        test_int(p1->x, 10); test_int(p2->x, 20);
+    }
+
+    ecs_set(world, e1, Mass, {30});
+
+    {
+        const Position *p1 = ecs_get(world, ecs_lookup(world, "inst1.foo"), Position);
+        const Position *p2 = ecs_get(world, ecs_lookup(world, "inst2.foo"), Position);
+        test_assert(p1 != NULL); test_assert(p2 != NULL);
+        test_int(p1->x, 30); test_int(p2->x, 20);
+    }
+
+    ecs_fini(world);
+}
+
+void Refs_prop_ref_in_template_match_expr(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(PositionI) = define_position_i(world);
+    ecs_entity_t ecs_id(Position) = define_position(world);
+
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_set(world, e1, PositionI, {1, 0});
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_set(world, e2, PositionI, {2, 0});
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Bar {"
+            LINE "  prop target = flecs.meta.entity: flecs"
+            LINE "  Position: match $target[PositionI].x {"
+            LINE "    1: {100, 0}"
+            LINE "    2: {200, 0}"
+            LINE "    _: {0, 0}"
+            LINE "  }"
+            LINE "}"
+            LINE "inst1 { Bar: {target: e1} }"
+            LINE "inst2 { Bar: {target: e2} }"
+    });
+    test_assert(s != 0);
+
+    ecs_entity_t inst1 = ecs_lookup(world, "inst1");
+    ecs_entity_t inst2 = ecs_lookup(world, "inst2");
+    test_assert(inst1 != 0);
+    test_assert(inst2 != 0);
+
+    {
+        const Position *p1 = ecs_get(world, inst1, Position);
+        const Position *p2 = ecs_get(world, inst2, Position);
+        test_assert(p1 != NULL); test_assert(p2 != NULL);
+        test_int(p1->x, 100); test_int(p2->x, 200);
+    }
+
+    ecs_set(world, e1, PositionI, {2, 0});
+
+    {
+        const Position *p1 = ecs_get(world, inst1, Position);
+        const Position *p2 = ecs_get(world, inst2, Position);
+        test_assert(p1 != NULL); test_assert(p2 != NULL);
+        test_int(p1->x, 200); test_int(p2->x, 200);
+    }
+
+    ecs_fini(world);
+}
+
+void Refs_prop_ref_in_template_if_expr(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(PositionI) = define_position_i(world);
+
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_set(world, e1, PositionI, {1, 0});
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_set(world, e2, PositionI, {0, 0});
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Bar {"
+            LINE "  prop target = flecs.meta.entity: flecs"
+            LINE "  if $target[PositionI].x > 0 {"
+            LINE "    foo {}"
+            LINE "  } else {"
+            LINE "    bar {}"
+            LINE "  }"
+            LINE "}"
+            LINE "inst1 { Bar: {target: e1} }"
+            LINE "inst2 { Bar: {target: e2} }"
+    });
+    test_assert(s != 0);
+
+    test_assert(ecs_lookup(world, "inst1.foo") != 0);
+    test_assert(ecs_lookup(world, "inst1.bar") == 0);
+    test_assert(ecs_lookup(world, "inst2.foo") == 0);
+    test_assert(ecs_lookup(world, "inst2.bar") != 0);
+
+    ecs_set(world, e1, PositionI, {0, 0});
+
+    test_assert(ecs_lookup(world, "inst1.foo") == 0);
+    test_assert(ecs_lookup(world, "inst1.bar") != 0);
+    test_assert(ecs_lookup(world, "inst2.foo") == 0);
+    test_assert(ecs_lookup(world, "inst2.bar") != 0);
+
+    ecs_fini(world);
+}
+
+void Refs_prop_ref_in_template_for_expr(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(PositionI) = define_position_i(world);
+
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_set(world, e1, PositionI, {2, 0});
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_set(world, e2, PositionI, {1, 0});
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Bar {"
+            LINE "  prop target = flecs.meta.entity: flecs"
+            LINE "  for i in 0..$target[PositionI].x {"
+            LINE "    \"e_{$i}\" {}"
+            LINE "  }"
+            LINE "}"
+            LINE "inst1 { Bar: {target: e1} }"
+            LINE "inst2 { Bar: {target: e2} }"
+    });
+    test_assert(s != 0);
+
+    test_assert(ecs_lookup(world, "inst1.e_0") != 0);
+    test_assert(ecs_lookup(world, "inst1.e_1") != 0);
+    test_assert(ecs_lookup(world, "inst1.e_2") == 0);
+    test_assert(ecs_lookup(world, "inst2.e_0") != 0);
+    test_assert(ecs_lookup(world, "inst2.e_1") == 0);
+
+    ecs_set(world, e1, PositionI, {3, 0});
+
+    test_assert(ecs_lookup(world, "inst1.e_2") != 0);
+    test_assert(ecs_lookup(world, "inst1.e_3") == 0);
+    test_assert(ecs_lookup(world, "inst2.e_1") == 0);
+
+    ecs_fini(world);
+}
+
+void Refs_prop_ref_in_template_function(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Mass) = define_mass(world);
+    ecs_entity_t ecs_id(Position) = define_position(world);
+
+    ecs_function(world, {
+        .name = "times_two",
+        .return_type = ecs_id(ecs_f32_t),
+        .params = {{ "x", ecs_id(ecs_f32_t) }},
+        .callback = times_two
+    });
+
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_set(world, e1, Mass, {10});
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_set(world, e2, Mass, {20});
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Bar {"
+            LINE "  prop target = flecs.meta.entity: flecs"
+            LINE "  Position: {times_two($target[Mass].value), 0}"
+            LINE "}"
+            LINE "inst1 { Bar: {target: e1} }"
+            LINE "inst2 { Bar: {target: e2} }"
+    });
+    test_assert(s != 0);
+
+    ecs_entity_t inst1 = ecs_lookup(world, "inst1");
+    ecs_entity_t inst2 = ecs_lookup(world, "inst2");
+    test_assert(inst1 != 0);
+    test_assert(inst2 != 0);
+
+    {
+        const Position *p1 = ecs_get(world, inst1, Position);
+        const Position *p2 = ecs_get(world, inst2, Position);
+        test_assert(p1 != NULL); test_assert(p2 != NULL);
+        test_int(p1->x, 20); test_int(p2->x, 40);
+    }
+
+    ecs_set(world, e1, Mass, {30});
+
+    {
+        const Position *p1 = ecs_get(world, inst1, Position);
+        const Position *p2 = ecs_get(world, inst2, Position);
+        test_assert(p1 != NULL); test_assert(p2 != NULL);
+        test_int(p1->x, 60); test_int(p2->x, 40);
+    }
+
+    ecs_fini(world);
+}
+
+void Refs_prop_ref_in_template_new_expr(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Mass) = define_mass(world);
+    ecs_entity_t ecs_id(Position) = define_position(world);
+
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_set(world, e1, Mass, {10});
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_set(world, e2, Mass, {20});
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Bar {"
+            LINE "  prop target = flecs.meta.entity: flecs"
+            LINE "  entity: { new { Position: {$target[Mass].value, 0} } }"
+            LINE "}"
+            LINE "inst1 { Bar: {target: e1} }"
+            LINE "inst2 { Bar: {target: e2} }"
+    });
+    test_assert(s != 0);
+
+    ecs_entity_t inst1 = ecs_lookup(world, "inst1");
+    ecs_entity_t inst2 = ecs_lookup(world, "inst2");
+    test_assert(inst1 != 0);
+    test_assert(inst2 != 0);
+
+    {
+        const ecs_entity_t *x1 = ecs_get(world, inst1, ecs_entity_t);
+        const ecs_entity_t *x2 = ecs_get(world, inst2, ecs_entity_t);
+        test_assert(x1 != NULL); test_assert(x2 != NULL);
+        const Position *p1 = ecs_get(world, *x1, Position);
+        const Position *p2 = ecs_get(world, *x2, Position);
+        test_assert(p1 != NULL); test_assert(p2 != NULL);
+        test_int(p1->x, 10); test_int(p2->x, 20);
+    }
+
+    ecs_set(world, e1, Mass, {30});
+
+    {
+        const ecs_entity_t *x1 = ecs_get(world, inst1, ecs_entity_t);
+        const ecs_entity_t *x2 = ecs_get(world, inst2, ecs_entity_t);
+        test_assert(x1 != NULL); test_assert(x2 != NULL);
+        const Position *p1 = ecs_get(world, *x1, Position);
+        const Position *p2 = ecs_get(world, *x2, Position);
+        test_assert(p1 != NULL); test_assert(p2 != NULL);
+        test_int(p1->x, 30); test_int(p2->x, 20);
+    }
+
+    ecs_fini(world);
+}
+
+void Refs_prop_ref_in_template_function_in_new_expr(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Mass) = define_mass(world);
+    ecs_entity_t ecs_id(Position) = define_position(world);
+
+    ecs_function(world, {
+        .name = "times_two",
+        .return_type = ecs_id(ecs_f32_t),
+        .params = {{ "x", ecs_id(ecs_f32_t) }},
+        .callback = times_two
+    });
+
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_set(world, e1, Mass, {10});
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_set(world, e2, Mass, {20});
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Bar {"
+            LINE "  prop target = flecs.meta.entity: flecs"
+            LINE "  entity: { new { Position: {times_two($target[Mass].value), 0} } }"
+            LINE "}"
+            LINE "inst1 { Bar: {target: e1} }"
+            LINE "inst2 { Bar: {target: e2} }"
+    });
+    test_assert(s != 0);
+
+    ecs_entity_t inst1 = ecs_lookup(world, "inst1");
+    ecs_entity_t inst2 = ecs_lookup(world, "inst2");
+    test_assert(inst1 != 0);
+    test_assert(inst2 != 0);
+
+    {
+        const ecs_entity_t *x1 = ecs_get(world, inst1, ecs_entity_t);
+        const ecs_entity_t *x2 = ecs_get(world, inst2, ecs_entity_t);
+        test_assert(x1 != NULL); test_assert(x2 != NULL);
+        const Position *p1 = ecs_get(world, *x1, Position);
+        const Position *p2 = ecs_get(world, *x2, Position);
+        test_assert(p1 != NULL); test_assert(p2 != NULL);
+        test_int(p1->x, 20); test_int(p2->x, 40);
+    }
+
+    ecs_set(world, e1, Mass, {30});
+
+    {
+        const ecs_entity_t *x1 = ecs_get(world, inst1, ecs_entity_t);
+        const ecs_entity_t *x2 = ecs_get(world, inst2, ecs_entity_t);
+        test_assert(x1 != NULL); test_assert(x2 != NULL);
+        const Position *p1 = ecs_get(world, *x1, Position);
+        const Position *p2 = ecs_get(world, *x2, Position);
+        test_assert(p1 != NULL); test_assert(p2 != NULL);
+        test_int(p1->x, 60); test_int(p2->x, 40);
+    }
+
+    ecs_fini(world);
+}
+
+void Refs_prop_ref_in_template_assigned_to_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = define_position(world);
+
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_set(world, e1, Position, {10, 20});
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_set(world, e2, Position, {30, 40});
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Bar {"
+            LINE "  prop target = flecs.meta.entity: flecs"
+            LINE "  foo = Position: $target[Position]"
+            LINE "}"
+            LINE "inst1 { Bar: {target: e1} }"
+            LINE "inst2 { Bar: {target: e2} }"
+    });
+    test_assert(s != 0);
+
+    {
+        const Position *p1 = ecs_get(world, ecs_lookup(world, "inst1.foo"), Position);
+        const Position *p2 = ecs_get(world, ecs_lookup(world, "inst2.foo"), Position);
+        test_assert(p1 != NULL); test_assert(p2 != NULL);
+        test_int(p1->x, 10); test_int(p1->y, 20);
+        test_int(p2->x, 30); test_int(p2->y, 40);
+    }
+
+    ecs_set(world, e1, Position, {50, 60});
+
+    {
+        const Position *p1 = ecs_get(world, ecs_lookup(world, "inst1.foo"), Position);
+        const Position *p2 = ecs_get(world, ecs_lookup(world, "inst2.foo"), Position);
+        test_assert(p1 != NULL); test_assert(p2 != NULL);
+        test_int(p1->x, 50); test_int(p1->y, 60);
+        test_int(p2->x, 30); test_int(p2->y, 40);
+    }
+
+    ecs_fini(world);
+}
+
+void Refs_template_prop_ref_observer_lifecycle(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Mass) = define_mass(world);
+    ecs_entity_t ecs_id(Position) = define_position(world);
+
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_set(world, e1, Mass, {10});
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_set(world, e2, Mass, {20});
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Bar {"
+            LINE "  prop target = flecs.meta.entity: flecs"
+            LINE "  Position: {$target[Mass].value, 0}"
+            LINE "}"
+            LINE "inst1 { Bar: {target: e1} }"
+    });
+    test_assert(s != 0);
+
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    test_assert(bar != 0);
+
+    ecs_entity_t inst1 = ecs_lookup(world, "inst1");
+    test_assert(inst1 != 0);
+    test_int(ecs_get(world, inst1, Position)->x, 10);
+
+    ecs_set(world, e1, Mass, {30});
+    test_int(ecs_get(world, inst1, Position)->x, 30);
+
+    int32_t observer_count = 0;
+    ecs_iter_t cit = ecs_children(world, bar);
+    while (ecs_children_next(&cit)) {
+        int32_t i;
+        for (i = 0; i < cit.count; i ++) {
+            if (ecs_has_id(world, cit.entities[i], EcsObserver)) {
+                observer_count ++;
+            }
+        }
+    }
+    test_int(observer_count, 1);
+
+    test_assert(ecs_script_run(world, "instantiate2",
+        "inst2 { Bar: {target: e2} }", NULL) == 0);
+    ecs_entity_t inst2 = ecs_lookup(world, "inst2");
+    test_assert(inst2 != 0);
+    test_int(ecs_get(world, inst2, Position)->x, 20);
+
+    observer_count = 0;
+    cit = ecs_children(world, bar);
+    while (ecs_children_next(&cit)) {
+        int32_t i;
+        for (i = 0; i < cit.count; i ++) {
+            if (ecs_has_id(world, cit.entities[i], EcsObserver)) {
+                observer_count ++;
+            }
+        }
+    }
+    test_int(observer_count, 2);
+
+    ecs_delete(world, inst1);
+    test_assert(!ecs_is_alive(world, inst1));
+
+    observer_count = 0;
+    cit = ecs_children(world, bar);
+    while (ecs_children_next(&cit)) {
+        int32_t i;
+        for (i = 0; i < cit.count; i ++) {
+            if (ecs_has_id(world, cit.entities[i], EcsObserver)) {
+                observer_count ++;
+            }
+        }
+    }
+    test_int(observer_count, 1);
+
+    ecs_set(world, e2, Mass, {40});
+    test_int(ecs_get(world, inst2, Position)->x, 40);
+
+    ecs_delete(world, inst2);
+    test_assert(!ecs_is_alive(world, inst2));
+
+    observer_count = 0;
+    cit = ecs_children(world, bar);
+    while (ecs_children_next(&cit)) {
+        int32_t i;
+        for (i = 0; i < cit.count; i ++) {
+            if (ecs_has_id(world, cit.entities[i], EcsObserver)) {
+                observer_count ++;
+            }
+        }
+    }
+    test_int(observer_count, 0);
+
+    ecs_fini(world);
+}
+
+void Refs_template_prop_ref_retarget(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Mass) = define_mass(world);
+    ecs_entity_t ecs_id(Position) = define_position(world);
+
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_set(world, e1, Mass, {10});
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_set(world, e2, Mass, {20});
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Bar {"
+            LINE "  prop target = flecs.meta.entity: flecs"
+            LINE "  Position: {$target[Mass].value, 0}"
+            LINE "}"
+            LINE "inst1 { Bar: {target: e1} }"
+    });
+    test_assert(s != 0);
+
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    test_assert(bar != 0);
+
+    ecs_entity_t inst1 = ecs_lookup(world, "inst1");
+    test_assert(inst1 != 0);
+    test_int(ecs_get(world, inst1, Position)->x, 10);
+
+    ecs_set_id(world, inst1, bar, sizeof(ecs_entity_t), &e2);
+    test_int(ecs_get(world, inst1, Position)->x, 20);
+
+    ecs_set(world, e1, Mass, {99});
+    test_int(ecs_get(world, inst1, Position)->x, 20);
+
+    ecs_set(world, e2, Mass, {30});
+    test_int(ecs_get(world, inst1, Position)->x, 30);
+
+    int32_t observer_count = 0;
+    ecs_iter_t cit = ecs_children(world, bar);
+    while (ecs_children_next(&cit)) {
+        int32_t i;
+        for (i = 0; i < cit.count; i ++) {
+            if (ecs_has_id(world, cit.entities[i], EcsObserver)) {
+                observer_count ++;
+            }
+        }
+    }
+    test_int(observer_count, 1);
+
+    ecs_fini(world);
+}
+
+void Refs_template_this_ref_observer_lifecycle(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Mass) = define_mass(world);
+    ecs_entity_t ecs_id(Position) = define_position(world);
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Bar {"
+            LINE "  Position: {$this[Mass].value, 0}"
+            LINE "}"
+            LINE "inst1 { Mass: {10} Bar: {} }"
+    });
+    test_assert(s != 0);
+
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    test_assert(bar != 0);
+
+    ecs_entity_t inst1 = ecs_lookup(world, "inst1");
+    test_assert(inst1 != 0);
+    test_int(ecs_get(world, inst1, Position)->x, 10);
+
+    ecs_set(world, inst1, Mass, {20});
+    test_int(ecs_get(world, inst1, Position)->x, 20);
+
+    int32_t observer_count = 0;
+    ecs_iter_t cit = ecs_children(world, bar);
+    while (ecs_children_next(&cit)) {
+        int32_t i;
+        for (i = 0; i < cit.count; i ++) {
+            if (ecs_has_id(world, cit.entities[i], EcsObserver)) {
+                observer_count ++;
+            }
+        }
+    }
+    test_int(observer_count, 1);
+
+    test_assert(ecs_script_run(world, "instantiate2",
+        "inst2 { Mass: {30} Bar: {} }", NULL) == 0);
+    ecs_entity_t inst2 = ecs_lookup(world, "inst2");
+    test_assert(inst2 != 0);
+    test_int(ecs_get(world, inst2, Position)->x, 30);
+
+    observer_count = 0;
+    cit = ecs_children(world, bar);
+    while (ecs_children_next(&cit)) {
+        int32_t i;
+        for (i = 0; i < cit.count; i ++) {
+            if (ecs_has_id(world, cit.entities[i], EcsObserver)) {
+                observer_count ++;
+            }
+        }
+    }
+    test_int(observer_count, 2);
+
+    ecs_delete(world, inst1);
+    test_assert(!ecs_is_alive(world, inst1));
+
+    observer_count = 0;
+    cit = ecs_children(world, bar);
+    while (ecs_children_next(&cit)) {
+        int32_t i;
+        for (i = 0; i < cit.count; i ++) {
+            if (ecs_has_id(world, cit.entities[i], EcsObserver)) {
+                observer_count ++;
+            }
+        }
+    }
+    test_int(observer_count, 1);
+
+    ecs_set(world, inst2, Mass, {40});
+    test_int(ecs_get(world, inst2, Position)->x, 40);
+
+    ecs_delete(world, inst2);
+    test_assert(!ecs_is_alive(world, inst2));
+
+    observer_count = 0;
+    cit = ecs_children(world, bar);
+    while (ecs_children_next(&cit)) {
+        int32_t i;
+        for (i = 0; i < cit.count; i ++) {
+            if (ecs_has_id(world, cit.entities[i], EcsObserver)) {
+                observer_count ++;
+            }
+        }
+    }
+    test_int(observer_count, 0);
+
+    ecs_fini(world);
+}

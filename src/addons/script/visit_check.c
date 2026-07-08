@@ -64,7 +64,8 @@ int flecs_script_check_expr(
         .type = type ? type[0] : 0,
         .runtime = v->r,
         .allow_unresolved_identifiers = true,
-        .unresolved_identifier_action = flecs_script_check_unresolved_identifier
+        .unresolved_identifier_action = flecs_script_check_unresolved_identifier,
+        .script_visitor = v
     };
 
     ecs_assert(expr->type_info == NULL, ECS_INTERNAL_ERROR, NULL);
@@ -75,6 +76,16 @@ int flecs_script_check_expr(
 
     if (flecs_expr_visit_fold(script, expr_ptr, &desc)) {
         goto error;
+    }
+
+    /* Collect statically known component references used in a template body so
+     * a single observer per reference can trigger reevaluation of instances. */
+    if (v->template) {
+        if (flecs_expr_visit_refs(script, *expr_ptr, &v->template->refs,
+            &v->template->dynamic_refs))
+        {
+            goto error;
+        }
     }
 
     if (type) {

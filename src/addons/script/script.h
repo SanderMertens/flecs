@@ -17,9 +17,15 @@ typedef struct ecs_script_entity_t ecs_script_entity_t;
 
 typedef struct ecs_script_ref_t {
     ecs_entity_t entity;
+    const char *name;
     ecs_id_t component;
     ecs_entity_t observer;
 } ecs_script_ref_t;
+
+typedef struct ecs_script_ref_ctx_t {
+    ecs_entity_t script;
+    ecs_entity_t instance;
+} ecs_script_ref_ctx_t;
 
 struct ecs_script_impl_t {
     ecs_script_t pub;
@@ -65,6 +71,22 @@ struct ecs_script_runtime_t {
 
 ecs_script_t* flecs_script_new(
     ecs_world_t *world);
+
+ecs_entity_t flecs_script_create_ref_observer(
+    ecs_world_t *world,
+    ecs_entity_t script,
+    ecs_entity_t instance,
+    ecs_entity_t entity,
+    ecs_id_t component,
+    ecs_iter_action_t callback);
+
+void flecs_script_update_ref_observers(
+    ecs_world_t *world,
+    ecs_entity_t script,
+    ecs_entity_t instance,
+    ecs_vec_t *refs,
+    ecs_vec_t *observers,
+    ecs_iter_action_t callback);
 
 ecs_script_scope_t* flecs_script_scope_new(
     ecs_parser_t *parser);

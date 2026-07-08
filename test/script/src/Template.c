@@ -1854,6 +1854,90 @@ void Template_template_w_pair_scope_w_const_var(void) {
     ecs_fini(world);
 }
 
+void Template_template_w_this_var_assigned_to_entity_field(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct Ref {
+        ecs_entity_t e;
+    } Ref;
+
+    ECS_COMPONENT(world, Ref);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Ref),
+        .members = {{ .name = "e", .type = ecs_id(ecs_entity_t) }}
+    });
+
+    const char *expr =
+    HEAD "template Foo {"
+    LINE "  Ref: {$this}"
+    LINE "}"
+    LINE "Foo ent()";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    test_assert(foo != 0);
+
+    ecs_entity_t ent = ecs_lookup(world, "ent");
+    test_assert(ent != 0);
+    test_assert(ecs_has_id(world, ent, foo));
+
+    const Ref *r = ecs_get(world, ent, Ref);
+    test_assert(r != NULL);
+    test_assert(r->e == ent);
+
+    ecs_fini(world);
+}
+
+void Template_template_w_this_var_in_component_expr(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(Velocity),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "template Foo {"
+    LINE "  Velocity: {$this[Position].x + 1, $this[Position].y + 2}"
+    LINE "}"
+    LINE "ent {"
+    LINE "  Position: {10, 20}"
+    LINE "  Foo: {}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    test_assert(foo != 0);
+
+    ecs_entity_t ent = ecs_lookup(world, "ent");
+    test_assert(ent != 0);
+    test_assert(ecs_has_id(world, ent, foo));
+
+    const Velocity *v = ecs_get(world, ent, Velocity);
+    test_assert(v != NULL);
+    test_int(v->x, 11);
+    test_int(v->y, 22);
+
+    ecs_fini(world);
+}
+
 void Template_template_w_pair_w_unresolved_var_first(void) {
     ecs_world_t *world = ecs_init();
 
