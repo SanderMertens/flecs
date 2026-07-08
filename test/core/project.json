@@ -2763,7 +2763,8 @@
                 "delete_with_component_used_by_prefab",
                 "delete_component_used_by_prefab",
                 "prefab_child_auto_override_pair_low_rel_id",
-                "reparent_to_prefab_is_prefab"
+                "reparent_to_prefab_is_prefab",
+                "add_same_childof_to_prefab_parent_w_name"
             ]
         }, {
             "id": "World",

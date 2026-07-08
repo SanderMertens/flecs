@@ -2685,6 +2685,7 @@ void Prefab_delete_with_component_used_by_prefab(void);
 void Prefab_delete_component_used_by_prefab(void);
 void Prefab_prefab_child_auto_override_pair_low_rel_id(void);
 void Prefab_reparent_to_prefab_is_prefab(void);
+void Prefab_add_same_childof_to_prefab_parent_w_name(void);
 
 // Testsuite 'World'
 void World_setup(void);
@@ -13890,6 +13891,10 @@ bake_test_case Prefab_testcases[] = {
     {
         "reparent_to_prefab_is_prefab",
         Prefab_reparent_to_prefab_is_prefab
+    },
+    {
+        "add_same_childof_to_prefab_parent_w_name",
+        Prefab_add_same_childof_to_prefab_parent_w_name
     }
 };
 
@@ -16926,7 +16931,7 @@ static bake_test_suite suites[] = {
         "Prefab",
         Prefab_setup,
         NULL,
-        204,
+        205,
         Prefab_testcases
     },
     {

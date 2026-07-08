@@ -6575,3 +6575,21 @@ void Prefab_enable_prefab_w_isa_variant(void) {
 
     ecs_fini(world);
 }
+
+void Prefab_add_same_childof_to_prefab_parent_w_name(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
+    ecs_set_name(world, child, "child");
+    test_assert(ecs_has_id(world, child, EcsPrefab));
+    ecs_remove_id(world, child, EcsPrefab);
+
+    ecs_add_pair(world, child, EcsChildOf, parent);
+
+    test_assert(ecs_has_id(world, child, EcsPrefab));
+    test_assert(ecs_has_pair(world, child, EcsChildOf, parent));
+    test_assert(ecs_lookup_child(world, parent, "child") == child);
+
+    ecs_fini(world);
+}
