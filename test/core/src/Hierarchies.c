@@ -2077,6 +2077,38 @@ void Hierarchies_defer_batch_remove_childof_w_add_name(void) {
     ecs_fini(world);
 }
 
+void Hierarchies_defer_batch_remove_add_childof_same_pair_named(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_add_id(world, parent, EcsOrderedChildren);
+
+    ecs_entity_t c1 = ecs_new_w_pair(world, EcsChildOf, parent);
+    ecs_set_name(world, c1, "c1");
+    ecs_entity_t c2 = ecs_new_w_pair(world, EcsChildOf, parent);
+    ecs_set_name(world, c2, "c2");
+
+    /* Remove + re-add the same (ChildOf, parent) in a defer batch moves a
+     * named child to the end of its siblings. The child returns to its
+     * original table, so the name-index reparent is a no-op. */
+    ecs_defer_begin(world);
+    ecs_remove_pair(world, c1, EcsChildOf, parent);
+    ecs_add_pair(world, c1, EcsChildOf, parent);
+    ecs_defer_end(world);
+
+    test_assert(ecs_has_pair(world, c1, EcsChildOf, parent));
+    test_str("c1", ecs_get_name(world, c1));
+    test_assert(ecs_lookup_child(world, parent, "c1") == c1);
+    test_assert(ecs_lookup_child(world, parent, "c2") == c2);
+
+    ecs_entities_t children = ecs_get_ordered_children(world, parent);
+    test_int(children.count, 2);
+    test_uint(children.ids[0], c2);
+    test_uint(children.ids[1], c1);
+
+    ecs_fini(world);
+}
+
 void Hierarchies_recreated_parent_w_named_children(void) {
     ecs_world_t *world = ecs_mini();
 

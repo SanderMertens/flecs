@@ -1110,6 +1110,7 @@ void Hierarchies_lookup_after_delete_from_root(void);
 void Hierarchies_lookup_after_delete_from_parent(void);
 void Hierarchies_defer_batch_remove_name_w_add_childof(void);
 void Hierarchies_defer_batch_remove_childof_w_add_name(void);
+void Hierarchies_defer_batch_remove_add_childof_same_pair_named(void);
 void Hierarchies_add_path_w_sep_null_path(void);
 
 // Testsuite 'OrderedChildren'
@@ -7727,6 +7728,10 @@ bake_test_case Hierarchies_testcases[] = {
     {
         "defer_batch_remove_childof_w_add_name",
         Hierarchies_defer_batch_remove_childof_w_add_name
+    },
+    {
+        "defer_batch_remove_add_childof_same_pair_named",
+        Hierarchies_defer_batch_remove_add_childof_same_pair_named
     },
     {
         "add_path_w_sep_null_path",
@@ -16767,7 +16772,7 @@ static bake_test_suite suites[] = {
         "Hierarchies",
         Hierarchies_setup,
         NULL,
-        116,
+        117,
         Hierarchies_testcases
     },
     {

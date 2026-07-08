@@ -11842,8 +11842,9 @@ void flecs_reparent_name_index(
 
     ecs_hashmap_t *src_index = flecs_table_get_name_index(world, src);
     ecs_hashmap_t *dst_index = flecs_table_get_name_index(world, dst);
-    ecs_assert(src_index != dst_index, ECS_INTERNAL_ERROR, NULL);
-    if ((!src_index && !dst_index)) {
+    if (src_index == dst_index) {
+        /* Both tables share a name index, so the entry doesn't need to move.
+         * Also covers the case where neither table has a name index. */
         return;
     }
 
