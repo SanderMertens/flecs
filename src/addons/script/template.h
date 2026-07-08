@@ -7,6 +7,7 @@
 #define FLECS_SCRIPT_TEMPLATE_H
 
 extern ECS_COMPONENT_DECLARE(EcsScriptTemplateSetEvent);
+extern ECS_COMPONENT_DECLARE(EcsScriptTemplateRoot);
 
 struct ecs_script_template_t {
     /* Template handle */
@@ -30,11 +31,25 @@ struct ecs_script_template_t {
     /* Annotations to apply to template instance */
     ecs_vec_t annot;
 
+    /* Statically known component references used in the template body */
+    ecs_vec_t refs;
+
+    /* Observers monitoring the refs, shared by all template instances */
+    ecs_vec_t observers;
+
+    ecs_vec_t dynamic_refs;
+
+    int32_t refcount;
+
     /* Use non-fragmenting hierarchy */
     bool non_fragmenting_parent;
 };
 
 #define ECS_TEMPLATE_SMALL_SIZE (36)
+
+typedef struct EcsScriptTemplateRoot {
+    ecs_vec_t observers;
+} EcsScriptTemplateRoot;
 
 /* Event used for deferring template instantiation */
 typedef struct EcsScriptTemplateSetEvent {

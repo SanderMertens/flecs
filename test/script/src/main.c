@@ -618,6 +618,8 @@ void Template_template_w_pair_w_const_var(void);
 void Template_template_w_pair_scope_w_this_var(void);
 void Template_template_w_pair_scope_w_prop_var(void);
 void Template_template_w_pair_scope_w_const_var(void);
+void Template_template_w_this_var_assigned_to_entity_field(void);
+void Template_template_w_this_var_in_component_expr(void);
 void Template_template_w_pair_w_unresolved_var_first(void);
 void Template_template_w_pair_w_unresolved_var_second(void);
 void Template_template_w_pair_scope_w_unresolved_var_first(void);
@@ -1575,6 +1577,49 @@ void Refs_reeval_prefab_in_branch(void);
 void Refs_progress_reeval_prefab_w_isa_observer(void);
 void Refs_reeval_prefab_w_isa_observer(void);
 void Refs_reeval_prefab_delete_with_inherited_component(void);
+void Refs_ref_in_template_not_instantiated(void);
+void Refs_template_ref_observer_lifecycle(void);
+void Refs_ref_in_template_component_initializer(void);
+void Refs_ref_in_template_with_initializer(void);
+void Refs_ref_in_template_match_expr(void);
+void Refs_ref_in_template_if_expr(void);
+void Refs_ref_in_template_for_expr(void);
+void Refs_ref_in_template_function(void);
+void Refs_ref_in_template_new_expr(void);
+void Refs_ref_in_template_function_in_new_expr(void);
+void Refs_ref_in_template_script_function_body(void);
+void Refs_ref_in_template_assigned_to_component(void);
+void Refs_global_const_var_in_template_component_initializer(void);
+void Refs_global_const_var_in_template_with_initializer(void);
+void Refs_global_const_var_in_template_match_expr(void);
+void Refs_global_const_var_in_template_if_expr(void);
+void Refs_global_const_var_in_template_for_expr(void);
+void Refs_global_const_var_in_template_function(void);
+void Refs_global_const_var_in_template_new_expr(void);
+void Refs_global_const_var_in_template_function_in_new_expr(void);
+void Refs_global_const_var_in_template_script_function_body(void);
+void Refs_global_const_var_in_template_assigned_to_component(void);
+void Refs_this_ref_in_template_component_initializer(void);
+void Refs_this_ref_in_template_with_initializer(void);
+void Refs_this_ref_in_template_match_expr(void);
+void Refs_this_ref_in_template_if_expr(void);
+void Refs_this_ref_in_template_for_expr(void);
+void Refs_this_ref_in_template_function(void);
+void Refs_this_ref_in_template_new_expr(void);
+void Refs_this_ref_in_template_function_in_new_expr(void);
+void Refs_this_ref_in_template_assigned_to_component(void);
+void Refs_template_this_ref_observer_lifecycle(void);
+void Refs_prop_ref_in_template_component_initializer(void);
+void Refs_prop_ref_in_template_with_initializer(void);
+void Refs_prop_ref_in_template_match_expr(void);
+void Refs_prop_ref_in_template_if_expr(void);
+void Refs_prop_ref_in_template_for_expr(void);
+void Refs_prop_ref_in_template_function(void);
+void Refs_prop_ref_in_template_new_expr(void);
+void Refs_prop_ref_in_template_function_in_new_expr(void);
+void Refs_prop_ref_in_template_assigned_to_component(void);
+void Refs_template_prop_ref_observer_lifecycle(void);
+void Refs_template_prop_ref_retarget(void);
 
 bake_test_case Eval_testcases[] = {
     {
@@ -4002,6 +4047,14 @@ bake_test_case Template_testcases[] = {
     {
         "template_w_pair_scope_w_const_var",
         Template_template_w_pair_scope_w_const_var
+    },
+    {
+        "template_w_this_var_assigned_to_entity_field",
+        Template_template_w_this_var_assigned_to_entity_field
+    },
+    {
+        "template_w_this_var_in_component_expr",
+        Template_template_w_this_var_in_component_expr
     },
     {
         "template_w_pair_w_unresolved_var_first",
@@ -7777,6 +7830,178 @@ bake_test_case Refs_testcases[] = {
     {
         "reeval_prefab_delete_with_inherited_component",
         Refs_reeval_prefab_delete_with_inherited_component
+    },
+    {
+        "ref_in_template_not_instantiated",
+        Refs_ref_in_template_not_instantiated
+    },
+    {
+        "template_ref_observer_lifecycle",
+        Refs_template_ref_observer_lifecycle
+    },
+    {
+        "ref_in_template_component_initializer",
+        Refs_ref_in_template_component_initializer
+    },
+    {
+        "ref_in_template_with_initializer",
+        Refs_ref_in_template_with_initializer
+    },
+    {
+        "ref_in_template_match_expr",
+        Refs_ref_in_template_match_expr
+    },
+    {
+        "ref_in_template_if_expr",
+        Refs_ref_in_template_if_expr
+    },
+    {
+        "ref_in_template_for_expr",
+        Refs_ref_in_template_for_expr
+    },
+    {
+        "ref_in_template_function",
+        Refs_ref_in_template_function
+    },
+    {
+        "ref_in_template_new_expr",
+        Refs_ref_in_template_new_expr
+    },
+    {
+        "ref_in_template_function_in_new_expr",
+        Refs_ref_in_template_function_in_new_expr
+    },
+    {
+        "ref_in_template_script_function_body",
+        Refs_ref_in_template_script_function_body
+    },
+    {
+        "ref_in_template_assigned_to_component",
+        Refs_ref_in_template_assigned_to_component
+    },
+    {
+        "global_const_var_in_template_component_initializer",
+        Refs_global_const_var_in_template_component_initializer
+    },
+    {
+        "global_const_var_in_template_with_initializer",
+        Refs_global_const_var_in_template_with_initializer
+    },
+    {
+        "global_const_var_in_template_match_expr",
+        Refs_global_const_var_in_template_match_expr
+    },
+    {
+        "global_const_var_in_template_if_expr",
+        Refs_global_const_var_in_template_if_expr
+    },
+    {
+        "global_const_var_in_template_for_expr",
+        Refs_global_const_var_in_template_for_expr
+    },
+    {
+        "global_const_var_in_template_function",
+        Refs_global_const_var_in_template_function
+    },
+    {
+        "global_const_var_in_template_new_expr",
+        Refs_global_const_var_in_template_new_expr
+    },
+    {
+        "global_const_var_in_template_function_in_new_expr",
+        Refs_global_const_var_in_template_function_in_new_expr
+    },
+    {
+        "global_const_var_in_template_script_function_body",
+        Refs_global_const_var_in_template_script_function_body
+    },
+    {
+        "global_const_var_in_template_assigned_to_component",
+        Refs_global_const_var_in_template_assigned_to_component
+    },
+    {
+        "this_ref_in_template_component_initializer",
+        Refs_this_ref_in_template_component_initializer
+    },
+    {
+        "this_ref_in_template_with_initializer",
+        Refs_this_ref_in_template_with_initializer
+    },
+    {
+        "this_ref_in_template_match_expr",
+        Refs_this_ref_in_template_match_expr
+    },
+    {
+        "this_ref_in_template_if_expr",
+        Refs_this_ref_in_template_if_expr
+    },
+    {
+        "this_ref_in_template_for_expr",
+        Refs_this_ref_in_template_for_expr
+    },
+    {
+        "this_ref_in_template_function",
+        Refs_this_ref_in_template_function
+    },
+    {
+        "this_ref_in_template_new_expr",
+        Refs_this_ref_in_template_new_expr
+    },
+    {
+        "this_ref_in_template_function_in_new_expr",
+        Refs_this_ref_in_template_function_in_new_expr
+    },
+    {
+        "this_ref_in_template_assigned_to_component",
+        Refs_this_ref_in_template_assigned_to_component
+    },
+    {
+        "template_this_ref_observer_lifecycle",
+        Refs_template_this_ref_observer_lifecycle
+    },
+    {
+        "prop_ref_in_template_component_initializer",
+        Refs_prop_ref_in_template_component_initializer
+    },
+    {
+        "prop_ref_in_template_with_initializer",
+        Refs_prop_ref_in_template_with_initializer
+    },
+    {
+        "prop_ref_in_template_match_expr",
+        Refs_prop_ref_in_template_match_expr
+    },
+    {
+        "prop_ref_in_template_if_expr",
+        Refs_prop_ref_in_template_if_expr
+    },
+    {
+        "prop_ref_in_template_for_expr",
+        Refs_prop_ref_in_template_for_expr
+    },
+    {
+        "prop_ref_in_template_function",
+        Refs_prop_ref_in_template_function
+    },
+    {
+        "prop_ref_in_template_new_expr",
+        Refs_prop_ref_in_template_new_expr
+    },
+    {
+        "prop_ref_in_template_function_in_new_expr",
+        Refs_prop_ref_in_template_function_in_new_expr
+    },
+    {
+        "prop_ref_in_template_assigned_to_component",
+        Refs_prop_ref_in_template_assigned_to_component
+    },
+    {
+        "template_prop_ref_observer_lifecycle",
+        Refs_template_prop_ref_observer_lifecycle
+    },
+    {
+        "template_prop_ref_retarget",
+        Refs_template_prop_ref_retarget
     }
 };
 
@@ -7809,7 +8034,7 @@ static bake_test_suite suites[] = {
         "Template",
         NULL,
         NULL,
-        90,
+        92,
         Template_testcases
     },
     {
@@ -7876,7 +8101,7 @@ static bake_test_suite suites[] = {
         "Refs",
         NULL,
         NULL,
-        30,
+        73,
         Refs_testcases
     }
 };

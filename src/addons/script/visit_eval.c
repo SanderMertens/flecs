@@ -558,11 +558,23 @@ int flecs_script_eval_expr(
         if (flecs_expr_visit_type(script, expr, &desc)) {
             goto error;
         }
+
+        ecs_vec_t *refs = NULL, *dynamic_refs = NULL;
         if (v->script_entity) {
-            if (flecs_expr_visit_refs(script, expr, &impl->refs)) {
+            refs = &impl->refs;
+        }
+        if (v->instance_template) {
+            if (!refs) {
+                refs = &v->instance_template->refs;
+            }
+            dynamic_refs = &v->instance_template->dynamic_refs;
+        }
+        if (refs) {
+            if (flecs_expr_visit_refs(script, expr, refs, dynamic_refs)) {
                 goto error;
             }
         }
+
         if (flecs_expr_visit_fold(script, expr_ptr, &desc)) {
             goto error;
         }
@@ -2051,7 +2063,7 @@ int flecs_script_function_type_check(
             goto error;
         }
         if (v.script_entity) {
-            if (flecs_expr_visit_refs(script, cnode->expr, &impl->refs)) {
+            if (flecs_expr_visit_refs(script, cnode->expr, &impl->refs, NULL)) {
                 goto error;
             }
         }
@@ -2088,7 +2100,9 @@ int flecs_script_function_type_check(
             goto error;
         }
         if (v.script_entity) {
-            if (flecs_expr_visit_refs(script, node->return_expr, &impl->refs)) {
+            if (flecs_expr_visit_refs(
+                script, node->return_expr, &impl->refs, NULL))
+            {
                 goto error;
             }
         }
