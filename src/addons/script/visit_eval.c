@@ -245,8 +245,9 @@ int flecs_script_find_entity(
     }
 
     ecs_entity_t result = 0;
+    bool is_this = !ecs_os_strcmp(path, "this");
 
-    if (path[0] != '$') {
+    if (path[0] != '$' && !is_this) {
         bool valid_path = flecs_script_valid_lookup_path(path);
 
         if (name_expr && *name_expr) {
@@ -286,12 +287,14 @@ int flecs_script_find_entity(
         }
     } else {
         if (!sp) {
-            flecs_script_eval_error(v, NULL, 
+            flecs_script_eval_error(v, NULL,
                 "variable identifier '%s' not allowed here", path);
             goto error;
         }
 
-        path ++;
+        if (!is_this) {
+            path ++;
+        }
     }
 
     const ecs_script_var_t *var = flecs_script_find_var(
@@ -435,25 +438,42 @@ int flecs_script_eval_id(
 
     if (v->template) {
         /* Can't resolve variables while preprocessing template scope */
+        const char *first_var = NULL;
         if (id->first[0] == '$') {
-            if (flecs_script_find_var(v->vars, &id->first[1], 
-                v->dynamic_variable_binding ? NULL : &id->first_sp)) 
+            first_var = &id->first[1];
+        } else if (!ecs_os_strcmp(id->first, "this")) {
+            first_var = id->first;
+        }
+
+        if (first_var) {
+            if (flecs_script_find_var(v->vars, first_var,
+                v->dynamic_variable_binding ? NULL : &id->first_sp))
             {
                 return 0;
             } else {
-                flecs_script_eval_error(v, node, 
-                    "unresolved variable '%s'", &id->first[1]);
+                flecs_script_eval_error(v, node,
+                    "unresolved variable '%s'", first_var);
                 return -1;
             }
         }
-        if (id->second && id->second[0] == '$') {
-            if (flecs_script_find_var(v->vars, &id->second[1], 
+
+        const char *second_var = NULL;
+        if (id->second) {
+            if (id->second[0] == '$') {
+                second_var = &id->second[1];
+            } else if (!ecs_os_strcmp(id->second, "this")) {
+                second_var = id->second;
+            }
+        }
+
+        if (second_var) {
+            if (flecs_script_find_var(v->vars, second_var,
                 v->dynamic_variable_binding ? NULL : &id->second_sp))
             {
                 return 0;
             } else {
-                flecs_script_eval_error(v, node, 
-                    "unresolved variable '%s'", &id->second[1]);
+                flecs_script_eval_error(v, node,
+                    "unresolved variable '%s'", second_var);
                 return -1;
             }
         }
@@ -1577,7 +1597,9 @@ int flecs_script_eval_pair_scope(
 
     ecs_entity_t second = 0;
     if (node->id.second) {
-        if (node->id.second[0] == '$') {
+        if (node->id.second[0] == '$' ||
+            !ecs_os_strcmp(node->id.second, "this"))
+        {
             if (flecs_script_find_entity(v, 0, node->id.second, 
                 &node->id.second_expr, &node->id.second_sp, &second, NULL)) 
             {
