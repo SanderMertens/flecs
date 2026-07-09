@@ -532,6 +532,8 @@ const char* flecs_script_parse_lhs(
             const char *expr = Token(0);
             if (expr[0] == '$') {
                 *out = (ecs_expr_node_t*)flecs_expr_variable(parser, &expr[1]);
+            } else if (!ecs_os_strcmp(expr, "this")) {
+                *out = (ecs_expr_node_t*)flecs_expr_variable(parser, expr);
             } else if (!ecs_os_strcmp(expr, "true")) {
                 *out = (ecs_expr_node_t*)flecs_expr_bool(parser, true);
             } else if (!ecs_os_strcmp(expr, "false")) {

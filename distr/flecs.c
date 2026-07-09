@@ -70554,12 +70554,12 @@ void flecs_script_template_ref_on_set(
     ecs_vec_t instances;
     ecs_vec_init_t(NULL, &instances, ecs_entity_t, 0);
 
-    ecs_iter_t iit = ecs_each_id(world, template_entity);
-    while (ecs_each_next(&iit)) {
+    ecs_iter_t each_it = ecs_each_id(world, template_entity);
+    while (ecs_each_next(&each_it)) {
         int32_t i;
-        for (i = 0; i < iit.count; i ++) {
+        for (i = 0; i < each_it.count; i ++) {
             ecs_vec_append_t(NULL, &instances, ecs_entity_t)[0] =
-                iit.entities[i];
+                each_it.entities[i];
         }
     }
 
@@ -72446,8 +72446,9 @@ int flecs_script_find_entity(
     }
 
     ecs_entity_t result = 0;
+    bool is_this = !ecs_os_strcmp(path, "this");
 
-    if (path[0] != '$') {
+    if (path[0] != '$' && !is_this) {
         bool valid_path = flecs_script_valid_lookup_path(path);
 
         if (name_expr && *name_expr) {
@@ -72487,12 +72488,14 @@ int flecs_script_find_entity(
         }
     } else {
         if (!sp) {
-            flecs_script_eval_error(v, NULL, 
+            flecs_script_eval_error(v, NULL,
                 "variable identifier '%s' not allowed here", path);
             goto error;
         }
 
-        path ++;
+        if (!is_this) {
+            path ++;
+        }
     }
 
     const ecs_script_var_t *var = flecs_script_find_var(
@@ -72636,25 +72639,42 @@ int flecs_script_eval_id(
 
     if (v->template) {
         /* Can't resolve variables while preprocessing template scope */
+        const char *first_var = NULL;
         if (id->first[0] == '$') {
-            if (flecs_script_find_var(v->vars, &id->first[1], 
-                v->dynamic_variable_binding ? NULL : &id->first_sp)) 
+            first_var = &id->first[1];
+        } else if (!ecs_os_strcmp(id->first, "this")) {
+            first_var = id->first;
+        }
+
+        if (first_var) {
+            if (flecs_script_find_var(v->vars, first_var,
+                v->dynamic_variable_binding ? NULL : &id->first_sp))
             {
                 return 0;
             } else {
-                flecs_script_eval_error(v, node, 
-                    "unresolved variable '%s'", &id->first[1]);
+                flecs_script_eval_error(v, node,
+                    "unresolved variable '%s'", first_var);
                 return -1;
             }
         }
-        if (id->second && id->second[0] == '$') {
-            if (flecs_script_find_var(v->vars, &id->second[1], 
+
+        const char *second_var = NULL;
+        if (id->second) {
+            if (id->second[0] == '$') {
+                second_var = &id->second[1];
+            } else if (!ecs_os_strcmp(id->second, "this")) {
+                second_var = id->second;
+            }
+        }
+
+        if (second_var) {
+            if (flecs_script_find_var(v->vars, second_var,
                 v->dynamic_variable_binding ? NULL : &id->second_sp))
             {
                 return 0;
             } else {
-                flecs_script_eval_error(v, node, 
-                    "unresolved variable '%s'", &id->second[1]);
+                flecs_script_eval_error(v, node,
+                    "unresolved variable '%s'", second_var);
                 return -1;
             }
         }
@@ -73777,7 +73797,9 @@ int flecs_script_eval_pair_scope(
 
     ecs_entity_t second = 0;
     if (node->id.second) {
-        if (node->id.second[0] == '$') {
+        if (node->id.second[0] == '$' ||
+            !ecs_os_strcmp(node->id.second, "this"))
+        {
             if (flecs_script_find_entity(v, 0, node->id.second, 
                 &node->id.second_expr, &node->id.second_sp, &second, NULL)) 
             {
@@ -95206,6 +95228,8 @@ const char* flecs_script_parse_lhs(
             const char *expr = Token(0);
             if (expr[0] == '$') {
                 *out = (ecs_expr_node_t*)flecs_expr_variable(parser, &expr[1]);
+            } else if (!ecs_os_strcmp(expr, "this")) {
+                *out = (ecs_expr_node_t*)flecs_expr_variable(parser, expr);
             } else if (!ecs_os_strcmp(expr, "true")) {
                 *out = (ecs_expr_node_t*)flecs_expr_bool(parser, true);
             } else if (!ecs_os_strcmp(expr, "false")) {

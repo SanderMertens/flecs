@@ -431,12 +431,12 @@ void flecs_script_template_ref_on_set(
     ecs_vec_t instances;
     ecs_vec_init_t(NULL, &instances, ecs_entity_t, 0);
 
-    ecs_iter_t iit = ecs_each_id(world, template_entity);
-    while (ecs_each_next(&iit)) {
+    ecs_iter_t each_it = ecs_each_id(world, template_entity);
+    while (ecs_each_next(&each_it)) {
         int32_t i;
-        for (i = 0; i < iit.count; i ++) {
+        for (i = 0; i < each_it.count; i ++) {
             ecs_vec_append_t(NULL, &instances, ecs_entity_t)[0] =
-                iit.entities[i];
+                each_it.entities[i];
         }
     }
 
