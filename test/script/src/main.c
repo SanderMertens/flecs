@@ -1570,6 +1570,11 @@ void Refs_ref_in_script_function_body(void);
 void Refs_global_const_var_in_script_function_body(void);
 void Refs_ref_assigned_to_component(void);
 void Refs_global_const_var_assigned_to_component(void);
+void Refs_reeval_hierarchy(void);
+void Refs_reeval_prefab_in_branch(void);
+void Refs_progress_reeval_prefab_w_isa_observer(void);
+void Refs_reeval_prefab_w_isa_observer(void);
+void Refs_reeval_prefab_delete_with_inherited_component(void);
 
 bake_test_case Eval_testcases[] = {
     {
@@ -7752,6 +7757,26 @@ bake_test_case Refs_testcases[] = {
     {
         "global_const_var_assigned_to_component",
         Refs_global_const_var_assigned_to_component
+    },
+    {
+        "reeval_hierarchy",
+        Refs_reeval_hierarchy
+    },
+    {
+        "reeval_prefab_in_branch",
+        Refs_reeval_prefab_in_branch
+    },
+    {
+        "progress_reeval_prefab_w_isa_observer",
+        Refs_progress_reeval_prefab_w_isa_observer
+    },
+    {
+        "reeval_prefab_w_isa_observer",
+        Refs_reeval_prefab_w_isa_observer
+    },
+    {
+        "reeval_prefab_delete_with_inherited_component",
+        Refs_reeval_prefab_delete_with_inherited_component
     }
 };
 
@@ -7851,7 +7876,7 @@ static bake_test_suite suites[] = {
         "Refs",
         NULL,
         NULL,
-        25,
+        30,
         Refs_testcases
     }
 };

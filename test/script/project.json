@@ -1601,7 +1601,12 @@
                 "ref_in_script_function_body",
                 "global_const_var_in_script_function_body",
                 "ref_assigned_to_component",
-                "global_const_var_assigned_to_component"
+                "global_const_var_assigned_to_component",
+                "reeval_hierarchy",
+                "reeval_prefab_in_branch",
+                "progress_reeval_prefab_w_isa_observer",
+                "reeval_prefab_w_isa_observer",
+                "reeval_prefab_delete_with_inherited_component"
             ]
         }]
     }
