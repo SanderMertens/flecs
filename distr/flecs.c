@@ -18987,8 +18987,6 @@ void ecs_remove_all(
     flecs_journal_end();
 }
 
-#include <time.h>
-
 void ecs_os_api_impl(ecs_os_api_t *api);
 
 static bool ecs_os_api_initialized = false;
@@ -41125,8 +41123,6 @@ void flecs_component_update_childof_depth(
     flecs_component_update_childof_w_depth(world, cr, new_depth);
 }
 
-#include <inttypes.h>
-
 ecs_entity_index_page_t* flecs_entity_index_ensure_page(
     ecs_entity_index_t *index,
     uint32_t id)
@@ -47842,8 +47838,6 @@ ecs_table_t* ecs_table_find(
     };
     return flecs_table_ensure(world, &type, false, NULL);
 }
-
-#include <errno.h>
 
 #ifdef FLECS_HTTP
 
@@ -56795,7 +56789,6 @@ error:
 #endif
 
 #include <ctype.h>
-#include <inttypes.h>
 
 #ifdef FLECS_META
 #ifdef FLECS_QUERY_DSL
@@ -69676,8 +69669,6 @@ void FlecsScriptImport(
 }
 
 #endif
-
-#include <inttypes.h>
 
 #ifdef FLECS_SCRIPT
 
