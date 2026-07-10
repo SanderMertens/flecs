@@ -1870,6 +1870,14 @@ int flecs_script_eval_include(
             result = -1;
             goto done;
         }
+
+        const EcsScript *sc = ecs_get(v->world, e, EcsScript);
+        if (sc && sc->error) {
+            flecs_script_eval_error(v, node,
+                "failed to include managed script '%s': %s",
+                resolved, sc->error);
+            result = -1;
+        }
     } else {
         char *code = flecs_load_from_file(resolved);
         if (!code) {
@@ -2375,7 +2383,7 @@ int ecs_script_eval(
     flecs_script_runtime_get(script->world)->error = false;
 
     if (result) {
-        ecs_log_start_capture(true);
+        flecs_log_capture_push(true);
     }
 
     flecs_script_eval_visit_init(impl, &v, &priv_desc);
@@ -2383,7 +2391,7 @@ int ecs_script_eval(
     flecs_script_eval_visit_fini(&v, &priv_desc);
 
     if (result) {
-        result->error = ecs_log_stop_capture();
+        result->error = flecs_log_capture_pop();
         flecs_log_get_captured_error_pos(&result->line, &result->column);
     }
 

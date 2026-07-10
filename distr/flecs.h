@@ -3659,6 +3659,14 @@ typedef
 void (*ecs_os_api_fclose_t)(
     FILE *file);
 
+/** OS API fread function type. */
+typedef
+size_t (*ecs_os_api_fread_t)(
+    void *ptr,
+    size_t size,
+    size_t count,
+    FILE *file);
+
 /** OS API performance tracing function type.
  *
  * @param filename The source file name.
@@ -3749,6 +3757,7 @@ typedef struct ecs_os_api_t {
     /* File I/O */
     ecs_os_api_fopen_t fopen_;                     /**< fopen callback. */
     ecs_os_api_fclose_t fclose_;                   /**< fclose callback. */
+    ecs_os_api_fread_t fread_;                     /**< fread callback. */
 
     /* Performance tracing */
     ecs_os_api_perf_trace_t perf_trace_push_; /**< perf_trace_push callback. */
@@ -3905,6 +3914,7 @@ void ecs_os_set_api_defaults(void);
 /* Files */
 #define ecs_os_fopen(file, mode) ecs_os_api.fopen_(file, mode)
 #define ecs_os_fclose(file) ecs_os_api.fclose_(file)
+#define ecs_os_fread(ptr, size, count, file) ecs_os_api.fread_(ptr, size, count, file)
 
 /* Threads */
 #define ecs_os_thread_new(callback, param) ecs_os_api.thread_new_(callback, param)
