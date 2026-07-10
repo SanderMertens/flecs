@@ -47,6 +47,9 @@ void flecs_meta_struct_init(
 void flecs_meta_array_init(
     ecs_world_t *world);
 
+void flecs_meta_map_init(
+    ecs_world_t *world);
+
 void flecs_meta_opaque_init(
     ecs_world_t *world);
 

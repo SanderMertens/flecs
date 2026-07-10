@@ -677,3 +677,88 @@ void SerializeTypeInfoToJson_struct_nested_3_members(void) {
 
     ecs_fini(world);
 }
+
+void SerializeTypeInfoToJson_map_type(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t mt = ecs_map_type(world, {
+        .key_type = ecs_id(ecs_i64_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    char *str = ecs_type_info_to_json(world, mt);
+    test_assert(str != NULL);
+    test_str(str, "[\"map\", [\"int\"], [\"int\"]]");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}
+
+void SerializeTypeInfoToJson_struct_map_type(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t mt = ecs_map_type(world, {
+        .key_type = ecs_id(ecs_i64_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"m", mt}
+        }
+    });
+
+    char *str = ecs_type_info_to_json(world, t);
+    test_assert(str != NULL);
+    test_str(str, "{\"m\":[\"map\", [\"int\"], [\"int\"]]}");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}
+
+void SerializeTypeInfoToJson_map_enum_key_type(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t c = ecs_enum_init(world, &(ecs_enum_desc_t){
+        .entity = ecs_entity(world, {.name = "Color"}),
+        .constants = {
+            {"Red"}, {"Green"}, {"Blue"}
+        }
+    });
+
+    ecs_entity_t mt = ecs_map_type(world, {
+        .key_type = c,
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    char *str = ecs_type_info_to_json(world, mt);
+    test_assert(str != NULL);
+    test_str(str, "[\"map\", [\"enum\", \"Red\", \"Green\", \"Blue\"], [\"int\"]]");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}
+
+void SerializeTypeInfoToJson_map_bitmask_key_type(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t b = ecs_bitmask_init(world, &(ecs_bitmask_desc_t){
+        .entity = ecs_entity(world, {.name = "Toppings"}),
+        .constants = {
+            {"Lettuce"}, {"Bacon"}, {"Tomato"}
+        }
+    });
+
+    ecs_entity_t mt = ecs_map_type(world, {
+        .key_type = b,
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    char *str = ecs_type_info_to_json(world, mt);
+    test_assert(str != NULL);
+    test_str(str, "[\"map\", [\"bitmask\", \"Lettuce\", \"Bacon\", \"Tomato\"], [\"int\"]]");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}

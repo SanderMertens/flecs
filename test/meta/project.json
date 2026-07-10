@@ -158,7 +158,11 @@
                 "vector_of_struct_with_ints",
                 "vector_of_struct_with_strings",
                 "vector_of_arrays_of_strings",
-                "vector_of_opaque"
+                "vector_of_opaque",
+                "map_lifecycle",
+                "map_lifecycle_trivial_type",
+                "map_lifecycle_alloc_values",
+                "map_cmp_illegal"
             ]
         }, {
             "id": "StructTypes",
@@ -262,6 +266,22 @@
                 "vector_struct",
                 "vector_w_short_notation"
             ]
+        }, {
+            "id": "MapTypes",
+            "testcases": [
+                "map_i32_i32",
+                "map_i64_string",
+                "map_entity_struct",
+                "map_w_short_notation",
+                "map_no_key_type",
+                "map_no_value_type",
+                "map_invalid_key_type_string",
+                "map_invalid_key_type_f32",
+                "map_invalid_key_type_f64",
+                "map_invalid_key_type_struct",
+                "map_enum_i32",
+                "map_bitmask_i32"
+            ]
         },  {
             "id": "Units",
             "testcases": [
@@ -359,7 +379,9 @@
                 "ops_struct_w_bitmask",
                 "ops_enum",
                 "ops_struct_w_enum",
-                "ops_missing_metatype"
+                "ops_missing_metatype",
+                "ops_map",
+                "ops_struct_w_map"
             ]
         }, {
             "id": "Cursor",
@@ -524,7 +546,57 @@
                 "get_member_id",
                 "get_array_type",
                 "get_vector_type",
-                "set_string_literal_single_quote"
+                "set_string_literal_single_quote",
+                "map_i64_i32_1",
+                "map_i64_i32_3",
+                "map_i64_string_2",
+                "map_entity_i32_2",
+                "map_i64_struct_2",
+                "map_i64_i32_replace",
+                "struct_w_map_i64_i32",
+                "map_get_map_type",
+                "map_bool_i32",
+                "map_char_i32",
+                "map_byte_i32",
+                "map_u8_i32",
+                "map_u16_i32",
+                "map_u32_i32",
+                "map_u64_i32",
+                "map_i8_i32",
+                "map_i16_i32",
+                "map_i32_i32",
+                "map_uptr_i32",
+                "map_iptr_i32",
+                "map_id_i32",
+                "map_enum_i32",
+                "map_enum_i32_invalid_constant",
+                "map_bitmask_i32",
+                "map_i64_enum_underlying_i8",
+                "map_i64_enum_underlying_i16",
+                "map_i64_enum_underlying_i32",
+                "map_key_bool_i32",
+                "map_key_i8_i32",
+                "map_key_i16_i32",
+                "map_key_i32_i32",
+                "map_key_u8_i32",
+                "map_key_u16_i32",
+                "map_key_u32_i32",
+                "map_key_u64_i32",
+                "map_key_entity_i32",
+                "map_key_id_i32",
+                "map_key_enum_i32",
+                "map_key_bitmask_i32",
+                "map_key_i64_i8",
+                "map_key_i64_i16",
+                "map_key_i64_i32",
+                "map_key_i64_i64",
+                "map_key_i64_string",
+                "map_key_i64_entity",
+                "map_key_i64_struct",
+                "map_key_i64_nested_struct",
+                "map_key_i64_array_i32",
+                "map_key_i64_vector_i32",
+                "map_key_i64_map_i32"
             ]
         }, {
             "id": "DeserializeFromJson",
@@ -693,7 +765,26 @@
                 "ser_deser_dont_fragment_component",
                 "ser_deser_dont_fragment_pair_multi_target",
                 "ser_deser_dont_fragment_component_pair",
-                "ser_deser_dont_fragment_tag_removes_stale"
+                "ser_deser_dont_fragment_tag_removes_stale",
+                "map_i64_i32",
+                "map_i64_string",
+                "map_entity_i32",
+                "map_i64_struct",
+                "map_empty",
+                "map_into_populated",
+                "struct_w_map_i64_i32",
+                "map_bool_i32",
+                "map_char_i32",
+                "map_u64_i32",
+                "map_i32_i32_negative_key",
+                "map_i64_i32_negative_key",
+                "map_enum_i32",
+                "map_bitmask_i32",
+                "map_bitmask_i32_multi_flag_key",
+                "map_id_pair_i32",
+                "map_i64_enum_underlying_i8",
+                "map_i64_enum_underlying_i16",
+                "map_i64_enum_underlying_i32"
             ]
         }, {
             "id": "SerializeToJson",
@@ -756,7 +847,26 @@
                 "enum_underlying_u32",
                 "enum_underlying_u64",
                 "enum_underlying_uptr",
-                "serialize_from_stage"
+                "serialize_from_stage",
+                "map_i64_i32_1",
+                "map_i64_i32_3",
+                "map_i64_string",
+                "map_entity_i32",
+                "map_i64_struct",
+                "map_empty",
+                "map_uninitialized",
+                "struct_w_map_i64_i32",
+                "map_bool_i32",
+                "map_char_i32",
+                "map_u64_i32",
+                "map_i32_i32_negative_key",
+                "map_enum_i32",
+                "map_enum_i32_invalid_key",
+                "map_bitmask_i32",
+                "map_id_pair_i32",
+                "map_i64_enum_underlying_i8",
+                "map_i64_enum_underlying_i16",
+                "map_i64_enum_underlying_i32"
             ]
         }, {
             "id": "SerializeEntityToJson",
@@ -1060,7 +1170,11 @@
                 "struct_nested",
                 "struct_nested_2_lvls",
                 "struct_nested_2_members",
-                "struct_nested_3_members"
+                "struct_nested_3_members",
+                "map_type",
+                "struct_map_type",
+                "map_enum_key_type",
+                "map_bitmask_key_type"
             ]
         }, {
             "id": "SerializeQueryInfoToJson",
@@ -1120,7 +1234,9 @@
                 "enum_constant_w_type_prefix",
                 "enum_constant_w_name_type_prefix",
                 "struct_has_member_entities",
-                "fwd_decl"
+                "fwd_decl",
+                "struct_w_vec",
+                "struct_w_map"
             ]
         }, {
             "id": "OpaqueTypes",
@@ -1254,7 +1370,10 @@
                 "vector_of_struct_with_strings",
                 "vector_of_arrays_of_strings",
                 "vector_of_opaque",
-                "struct_with_vector_of_ints_different_length"
+                "struct_with_vector_of_ints_different_length",
+                "map_of_ints",
+                "map_of_strings",
+                "map_of_struct_with_strings"
             ]
         }]
     }

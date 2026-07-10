@@ -4094,3 +4094,600 @@ void Deserialize_opaque_vector_struct_1_into_2(void) {
 
     ecs_fini(world);
 }
+
+void Deserialize_map_i64_i32_0(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t m = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "Ints" }),
+        .key_type = ecs_id(ecs_i64_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    test_assert(m != 0);
+
+    ecs_map_t value = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world, 
+        "[]",
+        &(ecs_value_t){m, &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(ecs_map_count(&value), 0);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void Deserialize_map_i64_i32_2(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t m = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "Ints" }),
+        .key_type = ecs_id(ecs_i64_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    test_assert(m != 0);
+
+    ecs_map_t value = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world, 
+        "[10: 100, 20: 200]",
+        &(ecs_value_t){m, &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(ecs_map_count(&value), 2);
+    ecs_map_val_t *v = ecs_map_get(&value, 10);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 100);
+    v = ecs_map_get(&value, 20);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 200);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void Deserialize_map_i64_i32_2_into_2(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t m = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "Ints" }),
+        .key_type = ecs_id(ecs_i64_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    test_assert(m != 0);
+
+    ecs_map_t value = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world, 
+        "[10: 100, 20: 200]",
+        &(ecs_value_t){m, &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(ecs_map_count(&value), 2);
+
+    ptr = ecs_expr_run(world, 
+        "[30: 300, 40: 400]",
+        &(ecs_value_t){m, &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(ecs_map_count(&value), 2);
+    test_assert(ecs_map_get(&value, 10) == NULL);
+    test_assert(ecs_map_get(&value, 20) == NULL);
+    ecs_map_val_t *v = ecs_map_get(&value, 30);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 300);
+    v = ecs_map_get(&value, 40);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 400);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void Deserialize_map_i64_string_2(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t m = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "Strings" }),
+        .key_type = ecs_id(ecs_i64_t),
+        .type = ecs_id(ecs_string_t)
+    });
+
+    test_assert(m != 0);
+
+    ecs_map_t value = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world, 
+        "[10: \"Hello\", 20: \"World\"]",
+        &(ecs_value_t){m, &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(ecs_map_count(&value), 2);
+    ecs_map_val_t *v = ecs_map_get(&value, 10);
+    test_assert(v != NULL);
+    test_str(*(char**)v, "Hello");
+    v = ecs_map_get(&value, 20);
+    test_assert(v != NULL);
+    test_str(*(char**)v, "World");
+
+    ecs_map_iter_t it = ecs_map_iter(&value);
+    while (ecs_map_next(&it)) {
+        ecs_os_free(*(char**)&it.res[1]);
+    }
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void Deserialize_map_entity_i32_2(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+
+    ecs_entity_t m = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "Ints" }),
+        .key_type = ecs_id(ecs_entity_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    test_assert(m != 0);
+
+    ecs_map_t value = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world, 
+        "[e1: 100, e2: 200]",
+        &(ecs_value_t){m, &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(ecs_map_count(&value), 2);
+    ecs_map_val_t *v = ecs_map_get(&value, e1);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 100);
+    v = ecs_map_get(&value, e2);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 200);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void Deserialize_map_i64_struct_2(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        int32_t x, y, z;
+    } N;
+
+    ecs_entity_t n = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "N"}),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)},
+            {"z", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t m = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "Structs" }),
+        .key_type = ecs_id(ecs_i64_t),
+        .type = n
+    });
+
+    test_assert(m != 0);
+
+    ecs_map_t value = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world, 
+        "[10: {1, 2, 3}, 20: {4, 5, 6}]",
+        &(ecs_value_t){m, &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(ecs_map_count(&value), 2);
+    N *nptr = ecs_map_get_deref(&value, N, 10);
+    test_assert(nptr != NULL);
+    test_int(nptr->x, 1);
+    test_int(nptr->y, 2);
+    test_int(nptr->z, 3);
+    nptr = ecs_map_get_deref(&value, N, 20);
+    test_assert(nptr != NULL);
+    test_int(nptr->x, 4);
+    test_int(nptr->y, 5);
+    test_int(nptr->z, 6);
+
+    ecs_map_iter_t it = ecs_map_iter(&value);
+    while (ecs_map_next(&it)) {
+        ecs_os_free(ecs_map_ptr(&it));
+    }
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void Deserialize_struct_w_map_i64_i32(void) {
+    typedef struct {
+        ecs_map_t m;
+    } S;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t m = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "Ints" }),
+        .key_type = ecs_id(ecs_i64_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    test_assert(m != 0);
+
+    ecs_entity_t ecs_id(S) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "S" }),
+        .members = {
+            { "m", m }
+        }
+    });
+
+    S value = {{0}};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world, 
+        "{m: [10: 100]}",
+        &(ecs_value_t){ecs_id(S), &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(ecs_map_count(&value.m), 1);
+    ecs_map_val_t *v = ecs_map_get(&value.m, 10);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 100);
+
+    ecs_map_fini(&value.m);
+
+    ecs_fini(world);
+}
+
+void Deserialize_map_bool_i32_2(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t m = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "Ints" }),
+        .key_type = ecs_id(ecs_bool_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    test_assert(m != 0);
+
+    ecs_map_t value = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world, 
+        "[true: 10, false: 20]",
+        &(ecs_value_t){m, &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(ecs_map_count(&value), 2);
+    ecs_map_val_t *v = ecs_map_get(&value, true);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 10);
+    v = ecs_map_get(&value, false);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 20);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void Deserialize_map_char_i32_2(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t m = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "Ints" }),
+        .key_type = ecs_id(ecs_char_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    test_assert(m != 0);
+
+    ecs_map_t value = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world, 
+        "['a': 10, 'b': 20]",
+        &(ecs_value_t){m, &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(ecs_map_count(&value), 2);
+    ecs_map_val_t *v = ecs_map_get(&value, 'a');
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 10);
+    v = ecs_map_get(&value, 'b');
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 20);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void Deserialize_map_i64_i32_negative_key(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t m = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "Ints" }),
+        .key_type = ecs_id(ecs_i64_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    test_assert(m != 0);
+
+    ecs_map_t value = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world, 
+        "[-10: 1, 10: 2]",
+        &(ecs_value_t){m, &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(ecs_map_count(&value), 2);
+    ecs_map_val_t *v = ecs_map_get(&value, (ecs_map_key_t)-10);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 1);
+    v = ecs_map_get(&value, 10);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 2);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void Deserialize_map_u64_i32_2(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t m = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "Ints" }),
+        .key_type = ecs_id(ecs_u64_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    test_assert(m != 0);
+
+    ecs_map_t value = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world, 
+        "[10: 1, 18446744073709551615: 2]",
+        &(ecs_value_t){m, &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(ecs_map_count(&value), 2);
+    ecs_map_val_t *v = ecs_map_get(&value, 10);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 1);
+    v = ecs_map_get(&value, UINT64_MAX);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 2);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void Deserialize_map_enum_i32_2(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t c = ecs_enum_init(world, &(ecs_enum_desc_t){
+        .entity = ecs_entity(world, {.name = "Color"}),
+        .constants = {
+            {"Red"}, {"Green"}, {"Blue"}
+        }
+    });
+
+    ecs_entity_t m = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "Ints" }),
+        .key_type = c,
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    test_assert(m != 0);
+
+    ecs_map_t value = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world, 
+        "[Red: 10, Green: 20]",
+        &(ecs_value_t){m, &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(ecs_map_count(&value), 2);
+    ecs_map_val_t *v = ecs_map_get(&value, 0);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 10);
+    v = ecs_map_get(&value, 1);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 20);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void Deserialize_map_bitmask_i32_2(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t b = ecs_bitmask_init(world, &(ecs_bitmask_desc_t){
+        .entity = ecs_entity(world, {.name = "Toppings"}),
+        .constants = {
+            {"Lettuce"}, {"Bacon"}, {"Tomato"}
+        }
+    });
+
+    ecs_entity_t m = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "Ints" }),
+        .key_type = b,
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    test_assert(m != 0);
+
+    ecs_map_t value = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world, 
+        "[Lettuce: 10, Bacon: 20]",
+        &(ecs_value_t){m, &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(ecs_map_count(&value), 2);
+    ecs_map_val_t *v = ecs_map_get(&value, 1);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 10);
+    v = ecs_map_get(&value, 2);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 20);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void Deserialize_map_bitmask_i32_multi_flag_key(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t b = ecs_bitmask_init(world, &(ecs_bitmask_desc_t){
+        .entity = ecs_entity(world, {.name = "Toppings"}),
+        .constants = {
+            {"Lettuce"}, {"Bacon"}, {"Tomato"}
+        }
+    });
+
+    ecs_entity_t m = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "Ints" }),
+        .key_type = b,
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    test_assert(m != 0);
+
+    ecs_map_t value = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world, 
+        "[Lettuce|Bacon: 10, Tomato: 20]",
+        &(ecs_value_t){m, &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(ecs_map_count(&value), 2);
+    ecs_map_val_t *v = ecs_map_get(&value, 3);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 10);
+    v = ecs_map_get(&value, 4);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 20);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void Deserialize_map_i64_i32_expr_key(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t m = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "Ints" }),
+        .key_type = ecs_id(ecs_i64_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    test_assert(m != 0);
+
+    ecs_map_t value = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world, 
+        "[10 + 20: 30]",
+        &(ecs_value_t){m, &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(ecs_map_count(&value), 1);
+    ecs_map_val_t *v = ecs_map_get(&value, 30);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 30);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void Deserialize_map_i64_i32_var_key(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t m = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "Ints" }),
+        .key_type = ecs_id(ecs_i64_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    test_assert(m != 0);
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+    ecs_script_var_t *var = ecs_script_vars_define(vars, "k", ecs_i64_t);
+    *(int64_t*)var->value.ptr = 10;
+
+    ecs_map_t value = {0};
+    ecs_expr_eval_desc_t desc = { 
+        .disable_folding = disable_folding, .vars = vars 
+    };
+    const char *ptr = ecs_expr_run(world, 
+        "[$k: 100]",
+        &(ecs_value_t){m, &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(ecs_map_count(&value), 1);
+    ecs_map_val_t *v = ecs_map_get(&value, 10);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 100);
+
+    ecs_map_fini(&value);
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Deserialize_vector_i32_w_key(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t vec = ecs_vector(world, {
+        .entity = ecs_entity(world, { .name = "Ints" }),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    test_assert(vec != 0);
+
+    ecs_vec_t value = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    ecs_log_set_level(-4);
+    const char *ptr = ecs_expr_run(world, 
+        "[10: 20]",
+        &(ecs_value_t){vec, &value}, &desc);
+    test_assert(ptr == NULL);
+
+    ecs_fini(world);
+}

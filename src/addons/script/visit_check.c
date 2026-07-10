@@ -264,6 +264,7 @@ int flecs_script_check_component(
                 break;
             case EcsArrayType:
             case EcsVectorType:
+            case EcsMapType:
                 is_collection = true;
                 break;
             }

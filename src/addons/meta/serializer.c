@@ -14,153 +14,6 @@ int flecs_meta_serialize_type(
     ecs_size_t offset,
     ecs_vec_t *ops);
 
-/* Serialize a primitive value */
-int flecs_expr_ser_primitive(
-    const ecs_world_t *world,
-    ecs_primitive_kind_t kind,
-    const void *base, 
-    ecs_strbuf_t *str,
-    bool is_expr) 
-{
-    switch(kind) {
-    case EcsBool:
-        if (*(const bool*)base) {
-            ecs_strbuf_appendlit(str, "true");
-        } else {
-            ecs_strbuf_appendlit(str, "false");
-        }
-        break;
-    case EcsChar: {
-        char chbuf[3];
-        char ch = *(const char*)base;
-        if (ch) {
-            flecs_chresc(chbuf, *(const char*)base, '"');
-            if (is_expr) ecs_strbuf_appendch(str, '"');
-            ecs_strbuf_appendstr(str, chbuf);
-            if (is_expr) ecs_strbuf_appendch(str, '"');
-        } else {
-            ecs_strbuf_appendch(str, '0');
-        }
-        break;
-    }
-    case EcsByte:
-        ecs_strbuf_appendint(str, flecs_uto(int64_t, *(const uint8_t*)base));
-        break;
-    case EcsU8:
-        ecs_strbuf_appendint(str, flecs_uto(int64_t, *(const uint8_t*)base));
-        break;
-    case EcsU16:
-        ecs_strbuf_appendint(str, flecs_uto(int64_t, *(const uint16_t*)base));
-        break;
-    case EcsU32:
-        ecs_strbuf_appendint(str, flecs_uto(int64_t, *(const uint32_t*)base));
-        break;
-    case EcsU64:
-        ecs_strbuf_append(str, "%llu", *(const uint64_t*)base);
-        break;
-    case EcsI8:
-        ecs_strbuf_appendint(str, flecs_ito(int64_t, *(const int8_t*)base));
-        break;
-    case EcsI16:
-        ecs_strbuf_appendint(str, flecs_ito(int64_t, *(const int16_t*)base));
-        break;
-    case EcsI32:
-        ecs_strbuf_appendint(str, flecs_ito(int64_t, *(const int32_t*)base));
-        break;
-    case EcsI64:
-        ecs_strbuf_appendint(str, *(const int64_t*)base);
-        break;
-    case EcsF32:
-        ecs_strbuf_appendflt(str, (double)*(const float*)base, 0);
-        break;
-    case EcsF64:
-        ecs_strbuf_appendflt(str, *(const double*)base, 0);
-        break;
-    case EcsIPtr:
-        ecs_strbuf_appendint(str, flecs_ito(int64_t, *(const intptr_t*)base));
-        break;
-    case EcsUPtr:
-        ecs_strbuf_append(str, "%llu",
-            (unsigned long long)*(const uintptr_t*)base);
-        break;
-    case EcsString: {
-        const char *value = *ECS_CONST_CAST(const char**, base);
-        if (value) {
-            if (!is_expr) {
-                ecs_strbuf_appendstr(str, value);
-            } else {
-                ecs_size_t length = flecs_stresc(NULL, 0, '"', value);
-                if (length == ecs_os_strlen(value)) {
-                    ecs_strbuf_appendch(str, '"');
-                    ecs_strbuf_appendstrn(str, value, length);
-                    ecs_strbuf_appendch(str, '"');
-                } else {
-                    char *out = ecs_os_malloc(length + 3);
-                    flecs_stresc(out + 1, length, '"', value);
-                    out[0] = '"';
-                    out[length + 1] = '"';
-                    out[length + 2] = '\0';
-                    ecs_strbuf_appendstr(str, out);
-                    ecs_os_free(out);
-                }
-            }
-        } else {
-            ecs_strbuf_appendlit(str, "null");
-        }
-        break;
-    }
-    case EcsEntity: {
-        ecs_entity_t e = *(const ecs_entity_t*)base;
-        if (!e) {
-            ecs_strbuf_appendlit(str, "#0");
-        } else {
-            ecs_get_path_w_sep_buf(world, 0, e, ".", NULL, str, false);
-        }
-        break;
-    }
-    case EcsId: {
-        ecs_id_t id = *(const ecs_id_t*)base;
-        if (!id) {
-            ecs_strbuf_appendlit(str, "#0");
-        } else {
-            ecs_id_str_buf(world, id, str);
-        }
-        break;
-    }
-    default:
-        ecs_err("invalid primitive kind");
-        return -1;
-    }
-
-    return 0;
-}
-
-ecs_meta_op_kind_t flecs_meta_primitive_to_op_kind(
-    ecs_primitive_kind_t kind) 
-{
-    switch(kind) {
-    case EcsBool: return EcsOpBool;
-    case EcsChar: return EcsOpChar;
-    case EcsByte: return EcsOpByte;
-    case EcsU8: return EcsOpU8;
-    case EcsU16: return EcsOpU16;
-    case EcsU32: return EcsOpU32;
-    case EcsU64: return EcsOpU64;
-    case EcsI8: return EcsOpI8;
-    case EcsI16: return EcsOpI16;
-    case EcsI32: return EcsOpI32;
-    case EcsI64: return EcsOpI64;
-    case EcsF32: return EcsOpF32;
-    case EcsF64: return EcsOpF64;
-    case EcsUPtr: return EcsOpUPtr;
-    case EcsIPtr: return EcsOpIPtr;
-    case EcsString: return EcsOpString;
-    case EcsEntity: return EcsOpEntity;
-    case EcsId: return EcsOpId;
-    default: ecs_abort(ECS_INTERNAL_ERROR, NULL);
-    }
-}
-
 static
 ecs_meta_op_t* flecs_meta_ops_add(ecs_vec_t *ops, ecs_meta_op_kind_t kind) {
     ecs_meta_op_t *op = ecs_vec_append_t(NULL, ops, ecs_meta_op_t);
@@ -395,6 +248,76 @@ int flecs_meta_serialize_vector_type(
 }
 
 static
+int flecs_meta_serialize_map_type(
+    ecs_world_t *world,
+    ecs_entity_t type,
+    ecs_vec_t *ops)
+{
+    const EcsMap *ptr = ecs_get(world, type, EcsMap);
+    if (!ptr) {
+        return -1;
+    }
+
+    const EcsType *key_type = ecs_get(world, ptr->key_type, EcsType);
+    if (!key_type) {
+        return -1;
+    }
+
+    int32_t first = ecs_vec_count(ops);
+
+    {
+        ecs_meta_op_t *op = flecs_meta_ops_add(ops, EcsOpPushMap);
+        op->offset = 0;
+        op->type = type;
+        op->type_info = ecs_get_type_info(world, type);
+        ecs_assert(op->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
+        op->elem_size = flecs_type_size(world, ptr->type);
+
+        if (key_type->kind == EcsEnumType) {
+            op->underlying_kind = EcsOpEnum;
+        } else if (key_type->kind == EcsBitmaskType) {
+            op->underlying_kind = EcsOpBitmask;
+        } else {
+            const EcsPrimitive *key_prim = ecs_get(
+                world, ptr->key_type, EcsPrimitive);
+            if (!key_prim) {
+                return -1;
+            }
+
+            op->underlying_kind = flecs_meta_primitive_to_op_kind(
+                key_prim->kind);
+        }
+
+        if (key_type->kind == EcsEnumType ||
+            key_type->kind == EcsBitmaskType)
+        {
+            const EcsConstants *constants = ecs_get(
+                world, ptr->key_type, EcsConstants);
+            ecs_assert(constants != NULL, ECS_INVALID_PARAMETER, NULL);
+            op->is.constants = constants->constants;
+            ecs_assert(op->is.constants != NULL, ECS_INTERNAL_ERROR, NULL);
+        }
+    }
+
+    if (flecs_meta_serialize_type(world, ptr->type, 0, ops) != 0) {
+        return -1;
+    }
+
+    {
+        ecs_meta_op_t *op = flecs_meta_ops_add(ops, EcsOpPop);
+        op->offset = 0;
+        op->type = type;
+        op->type_info = ecs_get_type_info(world, type);
+        ecs_assert(op->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
+    }
+
+    flecs_meta_ops_get(ops, first)->op_count =
+        flecs_ito(int16_t, ecs_vec_count(ops) - first);
+
+    return 0;
+}
+
+static
 int flecs_meta_serialize_forward(
     ecs_world_t *world,
     ecs_entity_t type,
@@ -547,6 +470,9 @@ int flecs_meta_serialize_type(
     case EcsVectorType:
         ret = flecs_meta_serialize_forward(world, type, offset, ops);
         break;
+    case EcsMapType:
+        ret = flecs_meta_serialize_forward(world, type, offset, ops);
+        break;
     case EcsOpaqueType:
         ret = flecs_meta_serialize_opaque_type(world, type, offset, ops);
         break;
@@ -579,6 +505,8 @@ void flecs_meta_type_serializer_init(
             ret = flecs_meta_serialize_array_type(world, type, &ops);
         } else if (type_ptr->kind == EcsVectorType) {
             ret = flecs_meta_serialize_vector_type(world, type, &ops);
+        } else if (type_ptr->kind == EcsMapType) {
+            ret = flecs_meta_serialize_map_type(world, type, &ops);
         } else {
             ret = flecs_meta_serialize_type(world, type, 0, &ops);
         }

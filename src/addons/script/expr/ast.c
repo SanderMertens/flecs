@@ -124,7 +124,11 @@ ecs_expr_value_node_t* flecs_expr_uint(
         parser, ecs_expr_value_node_t, EcsExprValue);
     result->storage.u64 = value;
     result->ptr = &result->storage.u64;
-    result->node.type = ecs_id(ecs_i64_t);
+    if (value > INT64_MAX) {
+        result->node.type = ecs_id(ecs_u64_t);
+    } else {
+        result->node.type = ecs_id(ecs_i64_t);
+    }
     return result;
 }
 

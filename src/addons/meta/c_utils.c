@@ -514,13 +514,61 @@ ecs_entity_t flecs_meta_utils_lookup_vector(
     }
 
     ecs_entity_t element_type = flecs_meta_utils_lookup(
-        world, &params.type, params_decl, 1, &param_ctx);
+        world, &params.type, params_decl, 0, &param_ctx);
+    if (!element_type) {
+        goto error;
+    }
 
     if (!e) {
         e = ecs_new(world);
     }
 
     ecs_set(world, e, EcsVector, { element_type });
+
+    return e;
+error:
+    return 0;
+}
+
+static
+ecs_entity_t flecs_meta_utils_lookup_map(
+    ecs_world_t *world,
+    ecs_entity_t e,
+    const char *params_decl,
+    flecs_meta_utils_parse_ctx_t *ctx)
+{
+    flecs_meta_utils_parse_ctx_t param_ctx = {
+        .name = ctx->name,
+        .desc = params_decl
+    };
+
+    flecs_meta_utils_params_t params;
+    if (flecs_meta_utils_parse_desc(params_decl, &params, &param_ctx)) {
+        goto error;
+    }
+
+    if (!params.is_key_value) {
+        ecs_meta_error(ctx, params_decl, "missing key type for map");
+        goto error;
+    }
+
+    ecs_entity_t key_type = flecs_meta_utils_lookup(
+        world, &params.key_type, params_decl, 0, &param_ctx);
+    if (!key_type) {
+        goto error;
+    }
+
+    ecs_entity_t value_type = flecs_meta_utils_lookup(
+        world, &params.type, params_decl, 0, &param_ctx);
+    if (!value_type) {
+        goto error;
+    }
+
+    if (!e) {
+        e = ecs_new(world);
+    }
+
+    ecs_set(world, e, EcsMap, { .key_type = key_type, .type = value_type });
 
     return e;
 error:
@@ -596,9 +644,13 @@ ecs_entity_t flecs_meta_utils_lookup(
             type = flecs_meta_utils_lookup_array(world, 0, token->params, ctx);
 
         } else if (!ecs_os_strcmp(typename, "ecs_vector") || 
+                !ecs_os_strcmp(typename, "ecs_vec") ||
                 !ecs_os_strcmp(typename, "flecs::vector")) 
         {
             type = flecs_meta_utils_lookup_vector(world, 0, token->params, ctx);
+
+        } else if (!ecs_os_strcmp(typename, "ecs_map")) {
+            type = flecs_meta_utils_lookup_map(world, 0, token->params, ctx);
 
         } else if (!ecs_os_strcmp(typename, "flecs::bitmask")) {
             type = flecs_meta_utils_lookup_bitmask(world, 0, token->params, ctx);
@@ -856,6 +908,7 @@ int ecs_meta_from_desc(
     case EcsPrimitiveType:
     case EcsArrayType:
     case EcsVectorType:
+    case EcsMapType:
     case EcsOpaqueType:
         break;
     default:

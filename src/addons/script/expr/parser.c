@@ -272,6 +272,26 @@ const char* flecs_script_parse_collection_initializer(
             goto error;
         }
 
+        {
+            bool is_key = false;
+
+            LookAhead_1(':', {
+                pos = lookahead;
+                is_key = true;
+                break;
+            })
+
+            if (is_key) {
+                elem->key = elem->value;
+                elem->value = NULL;
+
+                pos = flecs_script_parse_expr(parser, pos, 0, &elem->value);
+                if (!pos) {
+                    goto error;
+                }
+            }
+        }
+
         if (elem->value && elem->value->kind == EcsExprInitializer &&
             ((ecs_expr_initializer_t*)elem->value)->is_partial)
         {

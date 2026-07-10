@@ -45,6 +45,10 @@ typedef struct ecs_rtt_vector_ctx_t {
     const ecs_type_info_t *type_info;
 } ecs_rtt_vector_ctx_t;
 
+typedef struct ecs_rtt_map_ctx_t {
+    const ecs_type_info_t *type_info;
+} ecs_rtt_map_ctx_t;
+
 /* Generic copy assign hook */
 static
 void flecs_rtt_default_copy(
@@ -946,6 +950,297 @@ void flecs_rtt_init_default_hooks_vector(
     ecs_set_hooks_id(world, component, &hooks);
 }
 
+static
+void flecs_rtt_free_lifecycle_map_ctx(
+    void *ctx)
+{
+    if (!ctx) {
+        return;
+    }
+
+    ecs_os_free(ctx);
+}
+
+static
+void* flecs_rtt_map_value_ptr(
+    const ecs_type_info_t *value_ti,
+    ecs_map_val_t *val)
+{
+    if (value_ti->size > ECS_SIZEOF(ecs_map_val_t)) {
+        return (void*)(uintptr_t)val[0];
+    } else {
+        return val;
+    }
+}
+
+static
+void flecs_rtt_map_dtor(
+    void *ptr,
+    int32_t count,
+    const ecs_type_info_t *type_info)
+{
+    ecs_rtt_map_ctx_t *rtt_ctx = type_info->hooks.lifecycle_ctx;
+    int i;
+    for (i = 0; i < count; i++) {
+        ecs_map_t *map = ECS_ELEM(ptr, type_info->size, i);
+        flecs_meta_map_clear(map, rtt_ctx->type_info);
+        ecs_map_fini(map);
+    }
+}
+
+static
+void flecs_rtt_map_move(
+    void *dst_ptr,
+    void *src_ptr,
+    int32_t count,
+    const ecs_type_info_t *type_info)
+{
+    flecs_rtt_map_dtor(dst_ptr, count, type_info);
+    int i;
+    for (i = 0; i < count; i++) {
+        ecs_map_t *src_map = ECS_ELEM(src_ptr, type_info->size, i);
+        ecs_map_t *dst_map = ECS_ELEM(dst_ptr, type_info->size, i);
+        *dst_map = *src_map;
+        ecs_os_zeromem(src_map);
+    }
+}
+
+static
+void flecs_rtt_map_copy(
+    void *dst_ptr,
+    const void *src_ptr,
+    int32_t count,
+    const ecs_type_info_t *type_info)
+{
+    ecs_rtt_map_ctx_t *rtt_ctx = type_info->hooks.lifecycle_ctx;
+    const ecs_type_info_t *value_ti = rtt_ctx->type_info;
+    bool is_alloc = value_ti->size > ECS_SIZEOF(ecs_map_val_t);
+    int i;
+    for (i = 0; i < count; i++) {
+        const ecs_map_t *src_map = ECS_ELEM(src_ptr, type_info->size, i);
+        ecs_map_t *dst_map = ECS_ELEM(dst_ptr, type_info->size, i);
+        flecs_meta_map_clear(dst_map, value_ti);
+        ecs_map_init_if(dst_map, NULL);
+
+        if (!ecs_map_is_init(src_map)) {
+            continue;
+        }
+
+        ecs_map_iter_t it = ecs_map_iter(src_map);
+        while (ecs_map_next(&it)) {
+            ecs_map_val_t *val = ecs_map_ensure(dst_map, ecs_map_key(&it));
+            void *dst_value;
+            const void *src_value;
+            if (is_alloc) {
+                val[0] = (ecs_map_val_t)(uintptr_t)
+                    ecs_os_calloc(value_ti->size);
+                dst_value = (void*)(uintptr_t)val[0];
+                src_value = ecs_map_ptr(&it);
+            } else {
+                dst_value = val;
+                src_value = &it.res[1];
+            }
+
+            if (value_ti->hooks.ctor) {
+                value_ti->hooks.ctor(dst_value, 1, value_ti);
+            }
+
+            if (value_ti->hooks.copy) {
+                value_ti->hooks.copy(dst_value, src_value, 1, value_ti);
+            } else {
+                flecs_rtt_default_copy(dst_value, src_value, 1, value_ti);
+            }
+        }
+    }
+}
+
+static
+ecs_map_key_t* flecs_rtt_map_sorted_keys(
+    const ecs_map_t *map)
+{
+    int32_t i = 0, count = ecs_map_count(map);
+    ecs_map_key_t *keys = ecs_os_malloc_n(ecs_map_key_t, count);
+    ecs_map_iter_t it = ecs_map_iter(map);
+    while (ecs_map_next(&it)) {
+        keys[i ++] = ecs_map_key(&it);
+    }
+
+    int32_t j;
+    for (i = 1; i < count; i ++) {
+        ecs_map_key_t key = keys[i];
+        for (j = i; (j > 0) && (keys[j - 1] > key); j --) {
+            keys[j] = keys[j - 1];
+        }
+        keys[j] = key;
+    }
+
+    return keys;
+}
+
+static
+int flecs_rtt_map_cmp(
+    const void *a_ptr,
+    const void *b_ptr,
+    const ecs_type_info_t *type_info)
+{
+    if (a_ptr == b_ptr) {
+        return 0;
+    }
+
+    const ecs_map_t *map_a = a_ptr;
+    const ecs_map_t *map_b = b_ptr;
+
+    int32_t count_a = ecs_map_count(map_a);
+    int32_t count_b = ecs_map_count(map_b);
+    {
+        int c = count_a - count_b;
+        if (c != 0) {
+            return c;
+        }
+    }
+
+    if (!count_a) {
+        return 0;
+    }
+
+    ecs_rtt_map_ctx_t *rtt_ctx = type_info->hooks.lifecycle_ctx;
+    const ecs_type_info_t *value_ti = rtt_ctx->type_info;
+
+    int result = 0;
+    ecs_map_key_t *keys_a = flecs_rtt_map_sorted_keys(map_a);
+    ecs_map_key_t *keys_b = flecs_rtt_map_sorted_keys(map_b);
+
+    int32_t i;
+    for (i = 0; i < count_a; i ++) {
+        if (keys_a[i] != keys_b[i]) {
+            result = (keys_a[i] > keys_b[i]) ? 1 : -1;
+            goto done;
+        }
+    }
+
+    for (i = 0; i < count_a; i ++) {
+        ecs_map_val_t *val_a = ecs_map_get(map_a, keys_a[i]);
+        ecs_map_val_t *val_b = ecs_map_get(map_b, keys_a[i]);
+        result = flecs_type_info_cmp(
+            flecs_rtt_map_value_ptr(value_ti, val_a),
+            flecs_rtt_map_value_ptr(value_ti, val_b),
+            value_ti);
+        if (result != 0) {
+            goto done;
+        }
+    }
+
+done:
+    ecs_os_free(keys_a);
+    ecs_os_free(keys_b);
+    return result;
+}
+
+static
+bool flecs_rtt_map_equals(
+    const void *a_ptr,
+    const void *b_ptr,
+    const ecs_type_info_t *type_info)
+{
+    if (a_ptr == b_ptr) {
+        return true;
+    }
+
+    const ecs_map_t *map_a = a_ptr;
+    const ecs_map_t *map_b = b_ptr;
+
+    int32_t count_a = ecs_map_count(map_a);
+    int32_t count_b = ecs_map_count(map_b);
+    if (count_a != count_b) {
+        return false;
+    }
+
+    if (!count_a) {
+        return true;
+    }
+
+    ecs_rtt_map_ctx_t *rtt_ctx = type_info->hooks.lifecycle_ctx;
+    const ecs_type_info_t *value_ti = rtt_ctx->type_info;
+
+    ecs_map_iter_t it = ecs_map_iter(map_a);
+    while (ecs_map_next(&it)) {
+        ecs_map_val_t *val_a = &it.res[1];
+        ecs_map_val_t *val_b = ecs_map_get(map_b, ecs_map_key(&it));
+        if (!val_b) {
+            return false;
+        }
+
+        bool eq = flecs_type_info_equals(
+            flecs_rtt_map_value_ptr(value_ti, val_a),
+            flecs_rtt_map_value_ptr(value_ti, val_b),
+            value_ti);
+        if (!eq) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+static
+void flecs_rtt_init_default_hooks_map(
+    ecs_world_t *world,
+    ecs_entity_t component)
+{
+    const EcsMap *map_info = ecs_get(world, component, EcsMap);
+    ecs_assert(map_info != NULL, ECS_INTERNAL_ERROR, NULL);
+    if (!ecs_is_alive(world, map_info->type)) {
+        ecs_err("map '%s' has invalid value type",
+            ecs_get_name(world, component));
+        return;
+    }
+
+    const ecs_type_info_t *value_ti =
+        ecs_get_type_info(world, map_info->type);
+    if (!value_ti) {
+        ecs_err("map '%s' has invalid value type",
+            ecs_get_name(world, component));
+        return;
+    }
+
+    ecs_rtt_map_ctx_t *rtt_ctx = ecs_os_malloc_t(ecs_rtt_map_ctx_t);
+    rtt_ctx->type_info = value_ti;
+    ecs_flags32_t flags = value_ti->hooks.flags;
+
+    ecs_type_hooks_t hooks = *ecs_get_hooks_id(world, component);
+
+    if (hooks.lifecycle_ctx_free) {
+        hooks.lifecycle_ctx_free(hooks.lifecycle_ctx);
+    }
+    hooks.lifecycle_ctx = rtt_ctx;
+    hooks.lifecycle_ctx_free = flecs_rtt_free_lifecycle_map_ctx;
+
+    hooks.ctor = flecs_default_ctor;
+    hooks.dtor = flecs_rtt_map_dtor;
+    hooks.move = flecs_rtt_map_move;
+    hooks.copy = flecs_rtt_map_copy;
+
+    if (value_ti->hooks.cmp != NULL && !(flags & ECS_TYPE_HOOK_CMP_ILLEGAL)) {
+        hooks.cmp = flecs_rtt_map_cmp;
+    } else {
+        hooks.cmp = NULL;
+    }
+
+    if (value_ti->hooks.equals != NULL &&
+        !(flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL))
+    {
+        hooks.equals = flecs_rtt_map_equals;
+    } else {
+        hooks.equals = NULL;
+    }
+
+    hooks.flags |= flags &
+        (ECS_TYPE_HOOK_CMP_ILLEGAL|ECS_TYPE_HOOK_EQUALS_ILLEGAL);
+
+    hooks.flags &= ECS_TYPE_HOOKS_ILLEGAL;
+    ecs_set_hooks_id(world, component, &hooks);
+}
+
 void flecs_rtt_init_default_hooks(
     ecs_iter_t *it)
 {
@@ -989,6 +1284,8 @@ void flecs_rtt_init_default_hooks(
             flecs_rtt_init_default_hooks_array(world, component);
         } else if (type->kind == EcsVectorType) {
             flecs_rtt_init_default_hooks_vector(world, component);
+        } else if (type->kind == EcsMapType) {
+            flecs_rtt_init_default_hooks_map(world, component);
         }
 
         ecs_type_hooks_t hooks = ti->hooks;

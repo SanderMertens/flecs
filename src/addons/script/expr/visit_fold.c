@@ -252,6 +252,12 @@ int flecs_expr_initializer_pre_fold(
         ecs_expr_initializer_element_t *elem = &elems[i];
         ecs_assert(elem->value != NULL, ECS_INTERNAL_ERROR, NULL);
 
+        if (elem->key) {
+            if (flecs_expr_visit_fold(script, &elem->key, desc)) {
+                goto error;
+            }
+        }
+
         /* If this is a nested initializer, don't fold it but instead fold its
          * values. Because nested initializers are flattened, this ensures that
          * we'll be using the correct member offsets later. */

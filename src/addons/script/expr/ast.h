@@ -53,6 +53,7 @@ typedef struct ecs_expr_interpolated_string_t {
 
 typedef struct ecs_expr_initializer_element_t {
     const char *member;
+    ecs_expr_node_t *key;
     ecs_expr_node_t *value;
     uintptr_t offset;
     ecs_token_kind_t operator;
