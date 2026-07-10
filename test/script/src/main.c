@@ -1449,6 +1449,8 @@ void Include_include_auto_appends_extension_subdir(void);
 void Include_include_keeps_explicit_extension(void);
 void Include_include_auto_appends_extension_managed(void);
 void Include_fopen_override_remaps_filename(void);
+void Include_include_managed_eval_error_logged(void);
+void Include_include_managed_eval_error_set_on_script(void);
 
 // Testsuite 'Fuzzing'
 void Fuzzing_1(void);
@@ -7380,6 +7382,14 @@ bake_test_case Include_testcases[] = {
     {
         "fopen_override_remaps_filename",
         Include_fopen_override_remaps_filename
+    },
+    {
+        "include_managed_eval_error_logged",
+        Include_include_managed_eval_error_logged
+    },
+    {
+        "include_managed_eval_error_set_on_script",
+        Include_include_managed_eval_error_set_on_script
     }
 };
 
@@ -8347,7 +8357,7 @@ static bake_test_suite suites[] = {
         "Include",
         NULL,
         NULL,
-        24,
+        26,
         Include_testcases
     },
     {

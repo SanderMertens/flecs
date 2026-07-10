@@ -4090,6 +4090,11 @@ void flecs_log_get_captured_error_pos(
     int32_t *line,
     int32_t *column);
 
+void flecs_log_capture_push(
+    bool try);
+
+char* flecs_log_capture_pop(void);
+
 /* Check whether id can be inherited. */
 bool flecs_type_can_inherit_id(
     const ecs_world_t *world,
@@ -14630,47 +14635,31 @@ char* flecs_to_snake_case(const char *str) {
 char* flecs_load_from_file(
     const char *filename)
 {
-    FILE* file;
-    char* content = NULL;
-    int32_t bytes;
-    size_t size;
-
-    /* Open file for reading */
-    file = ecs_os_fopen(filename, "r");
+    FILE* file = ecs_os_fopen(filename, "r");
     if (!file) {
         ecs_err("%s (%s)", ecs_os_strerror(errno), filename);
-        goto error;
+        return NULL;
     }
 
-    /* Determine file size */
-    fseek(file, 0, SEEK_END);
-    bytes = (int32_t)ftell(file);
-    if (bytes == -1) {
-        goto error;
-    }
-    fseek(file, 0, SEEK_SET);
+    int32_t size = 0;
+    int32_t cap = 4096;
+    char *content = ecs_os_malloc(cap + 1);
+    size_t read;
 
-    /* Load contents in memory */
-    content = ecs_os_malloc(bytes + 1);
-    size = (size_t)bytes;
-    if (!(size = fread(content, 1, size, file)) && bytes) {
-        ecs_err("%s: read zero bytes instead of %d", filename, size);
-        ecs_os_free(content);
-        content = NULL;
-        goto error;
-    } else {
-        content[size] = '\0';
+    while ((read = ecs_os_fread(
+        &content[size], 1, flecs_itosize(cap - size), file)))
+    {
+        size += flecs_uto(int32_t, read);
+        if (size == cap) {
+            cap *= 2;
+            content = ecs_os_realloc(content, cap + 1);
+        }
     }
 
+    content[size] = '\0';
     ecs_os_fclose(file);
 
     return content;
-error:
-    if (file) {
-        ecs_os_fclose(file);
-    }
-    ecs_os_free(content);
-    return NULL;
 }
 
 char* flecs_chresc(
@@ -19430,6 +19419,11 @@ void ecs_os_api_fclose(FILE *file) {
     fclose(file);
 }
 
+static
+size_t ecs_os_api_fread(void *ptr, size_t size, size_t count, FILE *file) {
+    return fread(ptr, size, count, file);
+}
+
 void ecs_os_strset(char **str, const char *value) {
     char *old = str[0];
     str[0] = ecs_os_strdup(value);
@@ -19535,6 +19529,7 @@ void ecs_os_set_api_defaults(void)
     /* File I/O */
     ecs_os_api.fopen_ = ecs_os_api_fopen;
     ecs_os_api.fclose_ = ecs_os_api_fclose;
+    ecs_os_api.fread_ = ecs_os_api_fread;
 
     /* Time */
     ecs_os_api.get_time_ = ecs_os_gettime;
@@ -26558,6 +26553,20 @@ static ecs_os_api_log_t flecs_log_prev_fatal_log = NULL;
 static bool flecs_log_prev_color = false;
 static int flecs_log_prev_level = 0;
 static int flecs_log_capture_depth = 0;
+static int32_t flecs_log_stopped_err_line = 0;
+static int32_t flecs_log_stopped_err_column = 0;
+
+typedef struct flecs_log_capture_frame_t {
+    char *last_err;
+    int32_t last_err_line;
+    int32_t last_err_column;
+    int32_t parser_err_line;
+    int32_t parser_err_column;
+    int32_t depth;
+    struct flecs_log_capture_frame_t *prev;
+} flecs_log_capture_frame_t;
+
+static flecs_log_capture_frame_t *flecs_log_capture_frames = NULL;
 
 static
 void flecs_set_prev_log(
@@ -26640,10 +26649,57 @@ char* ecs_log_stop_capture(void) {
     if (-- flecs_log_capture_depth) {
         return NULL;
     }
+    flecs_log_stopped_err_line = flecs_log_last_err_line;
+    flecs_log_stopped_err_column = flecs_log_last_err_column;
     ecs_os_api.log_ = flecs_log_prev_fatal_log;
     ecs_os_api.log_level_ = flecs_log_prev_level;
     ecs_log_enable_colors(flecs_log_prev_color);
     return flecs_log_get_captured_log();
+}
+
+void flecs_log_capture_push(bool try) {
+    ecs_log_start_capture(try);
+    if (flecs_log_capture_depth == 1) {
+        return;
+    }
+
+    flecs_log_capture_frame_t *frame =
+        ecs_os_malloc_t(flecs_log_capture_frame_t);
+    frame->last_err = flecs_log_last_err;
+    frame->last_err_line = flecs_log_last_err_line;
+    frame->last_err_column = flecs_log_last_err_column;
+    frame->parser_err_line = flecs_parser_err_line;
+    frame->parser_err_column = flecs_parser_err_column;
+    frame->depth = flecs_log_capture_depth;
+    frame->prev = flecs_log_capture_frames;
+    flecs_log_capture_frames = frame;
+
+    flecs_log_last_err = NULL;
+    flecs_log_last_err_line = 0;
+    flecs_log_last_err_column = 0;
+    flecs_parser_err_line = 0;
+    flecs_parser_err_column = 0;
+}
+
+char* flecs_log_capture_pop(void) {
+    flecs_log_capture_frame_t *frame = flecs_log_capture_frames;
+    if (!frame || frame->depth != flecs_log_capture_depth) {
+        return ecs_log_stop_capture();
+    }
+
+    char *result = flecs_log_last_err;
+    flecs_log_stopped_err_line = flecs_log_last_err_line;
+    flecs_log_stopped_err_column = flecs_log_last_err_column;
+
+    flecs_log_last_err = frame->last_err;
+    flecs_log_last_err_line = frame->last_err_line;
+    flecs_log_last_err_column = frame->last_err_column;
+    flecs_parser_err_line = frame->parser_err_line;
+    flecs_parser_err_column = frame->parser_err_column;
+    flecs_log_capture_frames = frame->prev;
+    ecs_os_free(frame);
+    flecs_log_capture_depth --;
+    return result;
 }
 
 void flecs_log_get_captured_error_pos(
@@ -26651,10 +26707,10 @@ void flecs_log_get_captured_error_pos(
     int32_t *column)
 {
     if (line) {
-        *line = flecs_log_last_err_line;
+        *line = flecs_log_stopped_err_line;
     }
     if (column) {
-        *column = flecs_log_last_err_column;
+        *column = flecs_log_stopped_err_column;
     }
 }
 
@@ -27251,6 +27307,14 @@ void ecs_log_start_capture(bool try) {
 }
 
 char* ecs_log_stop_capture(void) {
+    return NULL;
+}
+
+void flecs_log_capture_push(bool try) {
+    (void)try;
+}
+
+char* flecs_log_capture_pop(void) {
     return NULL;
 }
 
@@ -69958,7 +70022,7 @@ ecs_script_t* ecs_script_parse(
     }
 
     if (result) {
-        ecs_log_start_capture(true);
+        flecs_log_capture_push(true);
     }
 
     ecs_script_t *script = flecs_script_new(world);
@@ -70007,13 +70071,13 @@ ecs_script_t* ecs_script_parse(
     impl->token_remaining = parser.token_cur;
 
     if (result) {
-        ecs_log_stop_capture();
+        ecs_os_free(flecs_log_capture_pop());
     }
 
     return script;
 error:
     if (result) {
-        result->error = ecs_log_stop_capture();
+        result->error = flecs_log_capture_pop();
         flecs_log_get_captured_error_pos(&result->line, &result->column);
     }
 
@@ -70575,16 +70639,13 @@ ecs_entity_t ecs_script_init(
         comp->filename = ecs_os_strdup(desc->filename);
     }
 
-    if (ecs_script_update(world, e, 0, script)) {
-        goto code_error;
-    }
+    ecs_script_update(world, e, 0, script);
 
     if (script != desc->code) {
         /* Safe cast, only happens when script is loaded from file */
         ecs_os_free(ECS_CONST_CAST(char*, script));
     }
 
-code_error:
     return e;
 error:
     if (script != desc->code) {
@@ -75118,6 +75179,14 @@ int flecs_script_eval_include(
             result = -1;
             goto done;
         }
+
+        const EcsScript *sc = ecs_get(v->world, e, EcsScript);
+        if (sc && sc->error) {
+            flecs_script_eval_error(v, node,
+                "failed to include managed script '%s': %s",
+                resolved, sc->error);
+            result = -1;
+        }
     } else {
         char *code = flecs_load_from_file(resolved);
         if (!code) {
@@ -75623,7 +75692,7 @@ int ecs_script_eval(
     flecs_script_runtime_get(script->world)->error = false;
 
     if (result) {
-        ecs_log_start_capture(true);
+        flecs_log_capture_push(true);
     }
 
     flecs_script_eval_visit_init(impl, &v, &priv_desc);
@@ -75631,7 +75700,7 @@ int ecs_script_eval(
     flecs_script_eval_visit_fini(&v, &priv_desc);
 
     if (result) {
-        result->error = ecs_log_stop_capture();
+        result->error = flecs_log_capture_pop();
         flecs_log_get_captured_error_pos(&result->line, &result->column);
     }
 

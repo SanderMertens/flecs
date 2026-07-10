@@ -1272,7 +1272,7 @@ ecs_script_t* ecs_script_parse(
     }
 
     if (result) {
-        ecs_log_start_capture(true);
+        flecs_log_capture_push(true);
     }
 
     ecs_script_t *script = flecs_script_new(world);
@@ -1321,13 +1321,13 @@ ecs_script_t* ecs_script_parse(
     impl->token_remaining = parser.token_cur;
 
     if (result) {
-        ecs_log_stop_capture();
+        ecs_os_free(flecs_log_capture_pop());
     }
 
     return script;
 error:
     if (result) {
-        result->error = ecs_log_stop_capture();
+        result->error = flecs_log_capture_pop();
         flecs_log_get_captured_error_pos(&result->line, &result->column);
     }
 

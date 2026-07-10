@@ -435,16 +435,13 @@ ecs_entity_t ecs_script_init(
         comp->filename = ecs_os_strdup(desc->filename);
     }
 
-    if (ecs_script_update(world, e, 0, script)) {
-        goto code_error;
-    }
+    ecs_script_update(world, e, 0, script);
 
     if (script != desc->code) {
         /* Safe cast, only happens when script is loaded from file */
         ecs_os_free(ECS_CONST_CAST(char*, script));
     }
 
-code_error:
     return e;
 error:
     if (script != desc->code) {
