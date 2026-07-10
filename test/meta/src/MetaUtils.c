@@ -66,6 +66,14 @@ ECS_PRIVATE
     struct Struct_w_fwd_decl *ptr;
 });
 
+ECS_STRUCT(Struct_w_vec, {
+    ecs_vec(int32_t) elems;
+});
+
+ECS_STRUCT(Struct_w_map, {
+    ecs_map(int32_t, Struct_2_i32) points;
+});
+
 ECS_ENUM(Enum_Default, {
     Red, Green, Blue
 });
@@ -586,6 +594,63 @@ void MetaUtils_fwd_decl(void) {
     (void)v2;
 
     test_assert(true);
+
+    ecs_fini(world);
+}
+
+void MetaUtils_struct_w_vec(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_META_COMPONENT(world, Struct_w_vec);
+
+    ecs_member_t *m = ecs_struct_get_member(
+        world, ecs_id(Struct_w_vec), "elems");
+    test_assert(m != NULL);
+
+    const EcsVector *vt = ecs_get(world, m->type, EcsVector);
+    test_assert(vt != NULL);
+    test_assert(vt->type == ecs_id(ecs_i32_t));
+
+    Struct_w_vec v;
+    ecs_vec_init_t(NULL, &v.elems, int32_t, 0);
+    *ecs_vec_append_t(NULL, &v.elems, int32_t) = 10;
+    *ecs_vec_append_t(NULL, &v.elems, int32_t) = 20;
+
+    char *expr = ecs_ptr_to_expr(world, ecs_id(Struct_w_vec), &v);
+    test_assert(expr != NULL);
+    test_str(expr, "{elems: [10, 20]}");
+    ecs_os_free(expr);
+
+    ecs_vec_fini_t(NULL, &v.elems, int32_t);
+
+    ecs_fini(world);
+}
+
+void MetaUtils_struct_w_map(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_META_COMPONENT(world, Struct_2_i32);
+    ECS_META_COMPONENT(world, Struct_w_map);
+
+    ecs_member_t *m = ecs_struct_get_member(
+        world, ecs_id(Struct_w_map), "points");
+    test_assert(m != NULL);
+
+    const EcsMap *mt = ecs_get(world, m->type, EcsMap);
+    test_assert(mt != NULL);
+    test_assert(mt->key_type == ecs_id(ecs_i32_t));
+    test_assert(mt->type == ecs_id(Struct_2_i32));
+
+    Struct_w_map v;
+    ecs_map_init(&v.points, NULL);
+    *(Struct_2_i32*)ecs_map_ensure(&v.points, 10) = (Struct_2_i32){1, 2};
+
+    char *expr = ecs_ptr_to_expr(world, ecs_id(Struct_w_map), &v);
+    test_assert(expr != NULL);
+    test_str(expr, "{points: [10: {x: 1, y: 2}]}");
+    ecs_os_free(expr);
+
+    ecs_map_fini(&v.points);
 
     ecs_fini(world);
 }

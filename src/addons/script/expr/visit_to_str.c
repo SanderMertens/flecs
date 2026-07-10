@@ -122,6 +122,13 @@ int flecs_expr_initializer_to_str(
             ecs_strbuf_appendlit(v->buf, ":");
         }
 
+        if (elem->key) {
+            if (flecs_expr_node_to_str(v, elem->key)) {
+                goto error;
+            }
+            ecs_strbuf_appendlit(v->buf, ":");
+        }
+
         if (flecs_expr_node_to_str(v, elem->value)) {
             goto error;
         }

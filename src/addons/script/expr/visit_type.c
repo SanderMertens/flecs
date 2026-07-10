@@ -835,7 +835,9 @@ int flecs_expr_initializer_collection_check(
     ecs_meta_cursor_t *cur)
 {
     if (cur) {
-        if (ecs_meta_is_collection(cur) != node->is_collection) {
+        bool is_collection = ecs_meta_is_collection(cur) ||
+            ecs_meta_is_map(cur);
+        if (is_collection != node->is_collection) {
             char *type_str = ecs_get_path(script->world, node->node.type);
             if (node->is_collection) {
                 flecs_expr_visit_error(script, node, 
@@ -866,7 +868,9 @@ int flecs_expr_initializer_collection_check(
                 /* Only do this check if no cursor is provided. Cursors also 
                  * handle inline arrays. */
                 if (!cur) {
-                    if (kind != EcsArrayType && kind != EcsVectorType) {
+                    if (kind != EcsArrayType && kind != EcsVectorType &&
+                        kind != EcsMapType)
+                    {
                         char *type_str = ecs_get_path(
                             script->world, node->node.type);
                         flecs_expr_visit_error(script, node, 
@@ -903,7 +907,8 @@ bool flecs_expr_initializer_is_dynamic(
 {
     const EcsType *t = ecs_get(world, type, EcsType);
     if (t) {
-        return t->kind == EcsOpaqueType || t->kind == EcsVectorType;
+        return t->kind == EcsOpaqueType || t->kind == EcsVectorType ||
+            t->kind == EcsMapType;
     }
     return false;
 }
@@ -971,6 +976,14 @@ int flecs_expr_initializer_visit_type(
         goto error;
     }
 
+    bool is_map = ecs_meta_is_map(cur);
+    ecs_entity_t key_type = 0;
+    if (is_map) {
+        const EcsMap *map_type = ecs_get(script->world, type, EcsMap);
+        ecs_assert(map_type != NULL, ECS_INTERNAL_ERROR, NULL);
+        key_type = map_type->key_type;
+    }
+
     ecs_expr_initializer_element_t *elems = ecs_vec_first(&node->elements);
     int32_t i, count = ecs_vec_count(&node->elements);
     for (i = 0; i < count; i ++) {
@@ -982,9 +995,42 @@ int flecs_expr_initializer_visit_type(
 
         ecs_expr_initializer_element_t *elem = &elems[i];
         if (!elem->value) {
-            flecs_expr_visit_error(script, node, 
+            flecs_expr_visit_error(script, node,
                 "missing value for initializer element");
             goto error;
+        }
+
+        if (elem->key) {
+            if (!is_map) {
+                char *type_str = ecs_get_path(script->world, type);
+                flecs_expr_visit_error(script, node,
+                    "invalid key for non-map type '%s'", type_str);
+                ecs_os_free(type_str);
+                goto error;
+            }
+
+            ecs_meta_cursor_t key_cur = ecs_meta_cursor(
+                script->world, key_type, NULL);
+            if (flecs_expr_visit_type_priv(
+                script, elem->key, &key_cur, desc))
+            {
+                goto error;
+            }
+
+            if (elem->key->type != key_type) {
+                ecs_expr_node_t *cast = (ecs_expr_node_t*)flecs_expr_cast(
+                    script, elem->key, key_type);
+                if (!cast) {
+                    goto error;
+                }
+                elem->key = cast;
+            }
+        } else {
+            if (is_map) {
+                flecs_expr_visit_error(script, node,
+                    "missing key for map initializer element");
+                goto error;
+            }
         }
 
         if (elem->member) {
@@ -2045,13 +2091,6 @@ int flecs_expr_element_visit_type(
 {
     ecs_world_t *world = script->world;
 
-    ecs_meta_cursor_t index_cur = {0};
-    if (flecs_expr_visit_type_priv(
-        script, node->index, &index_cur, desc)) 
-    {
-        goto error;
-    }
-
     /* Check if this is a component expression */
     if (node->index->kind == EcsExprIdentifier) {
         /* Fetch type of left side of expression to check if it's of an entity
@@ -2084,6 +2123,13 @@ int flecs_expr_element_visit_type(
         }
 
         if (is_entity_type) {
+            ecs_meta_cursor_t index_cur = {0};
+            if (flecs_expr_visit_type_priv(
+                script, node->index, &index_cur, desc))
+            {
+                goto error;
+            }
+
             ecs_expr_identifier_t *ident = (ecs_expr_identifier_t*)node->index;
             node->node.type = desc->lookup_action(
                 script->world, ident->value, desc->lookup_ctx);
@@ -2110,19 +2156,56 @@ int flecs_expr_element_visit_type(
         goto not_a_collection;
     }
 
-    if (!ecs_meta_is_collection(cur)) {
-        goto not_a_collection;
+    if (ecs_meta_is_map(cur)) {
+        const EcsMap *map_type = ecs_get(world, node->left->type, EcsMap);
+        ecs_assert(map_type != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        ecs_meta_cursor_t key_cur = ecs_meta_cursor(
+            world, map_type->key_type, NULL);
+        if (flecs_expr_visit_type_priv(
+            script, node->index, &key_cur, desc))
+        {
+            goto error;
+        }
+
+        if (node->index->type != map_type->key_type) {
+            ecs_expr_node_t *cast = (ecs_expr_node_t*)flecs_expr_cast(
+                script, node->index, map_type->key_type);
+            if (!cast) {
+                goto error;
+            }
+
+            node->index = cast;
+        }
+
+        node->node.type = ecs_meta_get_type(cur);
+
+        const ecs_type_info_t *elem_ti = ecs_get_type_info(
+            script->world, node->node.type);
+        node->elem_size = elem_ti->size;
+        node->elem_count = 0;
+
+    } else {
+        if (!ecs_meta_is_collection(cur)) {
+            goto not_a_collection;
+        }
+
+        ecs_meta_cursor_t index_cur = {0};
+        if (flecs_expr_visit_type_priv(
+            script, node->index, &index_cur, desc))
+        {
+            goto error;
+        }
+
+        node->node.type = ecs_meta_get_type(cur);
+
+        const ecs_type_info_t *elem_ti = ecs_get_type_info(
+            script->world, node->node.type);
+        node->elem_size = elem_ti->size;
+        node->elem_count = cur->scope[cur->depth - 1].elem_count;
     }
 
-    node->node.type = ecs_meta_get_type(cur);
-
-    const ecs_type_info_t *elem_ti = ecs_get_type_info(
-        script->world, node->node.type);
-    node->elem_size = elem_ti->size;
-    node->elem_count = cur->scope[cur->depth - 1].elem_count;
-
     return 0;
-
 not_a_collection: {
     char *type_str = ecs_get_path(script->world, node->left->type);
     flecs_expr_visit_error(script, node, 

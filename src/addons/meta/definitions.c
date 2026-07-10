@@ -255,6 +255,14 @@ void flecs_meta_import_meta_definitions(
     });
 
     ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_id(EcsMap),
+        .members = {
+            { .name = "key_type", .type = ecs_id(ecs_entity_t) },
+            { .name = "type", .type = ecs_id(ecs_entity_t) }
+        }
+    });
+
+    ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity = ecs_id(EcsOpaque),
         .members = {
             { .name = "as_type", .type = ecs_id(ecs_entity_t) }

@@ -18187,6 +18187,7 @@ FLECS_API extern const ecs_entity_t ecs_id(EcsMemberRanges);    /**< ID for comp
 FLECS_API extern const ecs_entity_t ecs_id(EcsStruct);          /**< ID for component that stores reflection data for a struct type. */
 FLECS_API extern const ecs_entity_t ecs_id(EcsArray);           /**< ID for component that stores reflection data for an array type. */
 FLECS_API extern const ecs_entity_t ecs_id(EcsVector);          /**< ID for component that stores reflection data for a vector type. */
+FLECS_API extern const ecs_entity_t ecs_id(EcsMap);             /**< ID for component that stores reflection data for a map type. */
 FLECS_API extern const ecs_entity_t ecs_id(EcsOpaque);          /**< ID for component that stores reflection data for an opaque type. */
 FLECS_API extern const ecs_entity_t ecs_id(EcsUnit);            /**< ID for component that stores unit data. */
 FLECS_API extern const ecs_entity_t ecs_id(EcsUnitPrefix);      /**< ID for component that stores unit prefix data. */
@@ -18222,7 +18223,8 @@ typedef enum ecs_type_kind_t {
     EcsArrayType,
     EcsVectorType,
     EcsOpaqueType,
-    EcsTypeKindLast = EcsOpaqueType
+    EcsMapType,
+    EcsTypeKindLast = EcsMapType
 } ecs_type_kind_t;
 
 /** Component that is automatically added to every type with the right kind. */
@@ -18391,6 +18393,12 @@ typedef struct EcsArray {
 typedef struct EcsVector {
     ecs_entity_t type; /**< Element type. */
 } EcsVector;
+
+/** Component added to map type entities. */
+typedef struct EcsMap {
+    ecs_entity_t key_type; /**< Key type. Must be a primitive (other than string, f32 or f64), enum or bitmask type. */
+    ecs_entity_t type;     /**< Value type. */
+} EcsMap;
 
 /* Opaque type support */
 
@@ -18590,6 +18598,7 @@ typedef enum ecs_meta_op_kind_t {
     EcsOpPushStruct,   /**< Push struct. */
     EcsOpPushArray,    /**< Push array. */
     EcsOpPushVector,   /**< Push vector. */
+    EcsOpPushMap,      /**< Push map. */
     EcsOpPop,          /**< Pop scope. */
 
     EcsOpOpaqueStruct, /**< Opaque struct. */
@@ -18661,7 +18670,7 @@ typedef struct EcsTypeSerializer {
 /** Type with information about the currently iterated scope. */
 typedef struct ecs_meta_scope_t {
     ecs_entity_t type;                             /**< The type being iterated. */
-    ecs_meta_op_t *ops;                       /**< The type operations (see ecs_meta_op_t). */
+    ecs_meta_op_t *ops;                            /**< The type operations (see ecs_meta_op_t). */
     int16_t ops_count;                             /**< Number of elements in ops. */
     int16_t ops_cur;                               /**< Current element in ops. */
     int16_t prev_depth;                            /**< Depth to restore, in case dotmember was used. */
@@ -18669,6 +18678,7 @@ typedef struct ecs_meta_scope_t {
     const EcsOpaque *opaque;                       /**< Opaque type interface. */
     ecs_hashmap_t *members;                        /**< string -> member index. */
     bool is_collection;                            /**< Whether the scope is iterating elements. */
+    bool is_map;                                   /**< Whether the scope is a map. */
     bool is_empty_scope;                           /**< Whether the scope was populated (for vectors). */
     bool is_moved_scope;                           /**< Whether the scope was moved in (with ecs_meta_elem(), for vectors). */
     int32_t elem, elem_count;                      /**< Set for collections. */
@@ -18757,6 +18767,17 @@ int ecs_meta_member(
     ecs_meta_cursor_t *cursor,
     const char *name);
 
+/** Move cursor to key (for map scopes).
+ * 
+ * @param cursor The cursor.
+ * @param key The key value.
+ * @return Zero if success, non-zero if failed.
+ */
+FLECS_API
+int ecs_meta_key(
+    ecs_meta_cursor_t *cursor,
+    const ecs_value_t *key);
+
 /** Same as ecs_meta_member(), but doesn't throw an error.
  * 
  * @param cursor The cursor.
@@ -18813,12 +18834,24 @@ int ecs_meta_pop(
     ecs_meta_cursor_t *cursor);
 
 /** Is the current scope a collection?
- * 
+ *
  * @param cursor The cursor.
  * @return True if current scope is a collection, false if not.
  */
 FLECS_API
 bool ecs_meta_is_collection(
+    const ecs_meta_cursor_t *cursor);
+
+/** Is the current scope a map?
+ * When the current scope is a map, elements can be selected by moving the
+ * cursor to a key with ecs_meta_member(), where the member name is the string
+ * representation of the key.
+ *
+ * @param cursor The cursor.
+ * @return True if current scope is a map, false if not.
+ */
+FLECS_API
+bool ecs_meta_is_map(
     const ecs_meta_cursor_t *cursor);
 
 /** Get type of current field.
@@ -19069,9 +19102,10 @@ double ecs_meta_ptr_to_float(
     ecs_primitive_kind_t type_kind,
     const void *ptr);
 
-/** Get element count for array or vector operations.
- * The operation must either be EcsOpPushArray or EcsOpPushVector. If the 
- * operation is EcsOpPushArray, the provided pointer may be NULL.
+/** Get element count for array, vector or map operations.
+ * The operation must either be EcsOpPushArray, EcsOpPushVector or
+ * EcsOpPushMap. If the operation is EcsOpPushArray, the provided pointer may
+ * be NULL.
  * 
  * @param op The serializer operation.
  * @param ptr Pointer to the array or vector value.
@@ -19170,6 +19204,24 @@ FLECS_API
 ecs_entity_t ecs_vector_init(
     ecs_world_t *world,
     const ecs_vector_desc_t *desc);
+
+/** Used with ecs_map_type_init(). */
+typedef struct ecs_map_desc_t {
+    ecs_entity_t entity;   /**< Existing entity to use for type (optional). */
+    ecs_entity_t key_type; /**< Key type. Must be a primitive (other than string, f32 or f64), enum or bitmask type. */
+    ecs_entity_t type;     /**< Value type. */
+} ecs_map_desc_t;
+
+/** Create a new map type.
+ *
+ * @param world The world.
+ * @param desc The type descriptor.
+ * @return The new type, 0 if failed.
+ */
+FLECS_API
+ecs_entity_t ecs_map_type_init(
+    ecs_world_t *world,
+    const ecs_map_desc_t *desc);
 
 /** Used with ecs_struct_init(). */
 typedef struct ecs_struct_desc_t {
@@ -19358,6 +19410,10 @@ ecs_entity_t ecs_quantity_init(
 #define ecs_vector(world, ...)\
     ecs_vector_init(world, &(ecs_vector_desc_t) __VA_ARGS__ )
 
+/** Create a map type. */
+#define ecs_map_type(world, ...)\
+    ecs_map_type_init(world, &(ecs_map_desc_t) __VA_ARGS__ )
+
 /** Create an opaque type. */
 #define ecs_opaque(world, ...)\
     ecs_opaque_init(world, &(ecs_opaque_desc_t) __VA_ARGS__ )
@@ -19450,6 +19506,12 @@ extern "C" {
 
 /** Macro used to mark part of type for which no reflection data is created. */
 #define ECS_PRIVATE
+
+/** Macro used to declare a vector member in types with reflection data. */
+#define ecs_vec(T) ecs_vec_t
+
+/** Macro used to declare a map member in types with reflection data. */
+#define ecs_map(K, V) ecs_map_t
 
 /** Populate meta information from type descriptor. */
 FLECS_API
@@ -22422,6 +22484,7 @@ static const type_kind_t StructType = EcsStructType;
 static const type_kind_t ArrayType = EcsArrayType;
 static const type_kind_t VectorType = EcsVectorType;
 static const type_kind_t CustomType = EcsOpaqueType;
+static const type_kind_t MapType = EcsMapType;
 static const type_kind_t TypeKindLast = EcsTypeKindLast;
 
 /** Primitive type kinds supported by the reflection system. */

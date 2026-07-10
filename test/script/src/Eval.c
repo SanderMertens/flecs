@@ -16770,3 +16770,383 @@ void Eval_default_child_component_w_entity_in_for_in_if(void) {
 
     ecs_fini(world);
 }
+
+void Eval_map_i64_i32_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t m = ecs_map_type(world, { 
+        .entity = ecs_entity(world, { .name = "Map" }),
+        .key_type = ecs_id(ecs_i64_t),
+        .type = ecs_id(ecs_i32_t) 
+    });
+
+    const char *expr =
+    HEAD "e {"
+    LINE " Map: [10: 100, 20: 200]"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+
+    const ecs_map_t *ptr = ecs_get_id(world, e, m);
+    test_assert(ptr != NULL);
+    test_int(ecs_map_count(ptr), 2);
+    ecs_map_val_t *v = ecs_map_get(ptr, 10);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 100);
+    v = ecs_map_get(ptr, 20);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 200);
+
+    ecs_fini(world);
+}
+
+void Eval_map_i64_string_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t m = ecs_map_type(world, { 
+        .entity = ecs_entity(world, { .name = "Map" }),
+        .key_type = ecs_id(ecs_i64_t),
+        .type = ecs_id(ecs_string_t) 
+    });
+
+    const char *expr =
+    HEAD "e {"
+    LINE " Map: [10: \"Hello\", 20: \"World\"]"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+
+    const ecs_map_t *ptr = ecs_get_id(world, e, m);
+    test_assert(ptr != NULL);
+    test_int(ecs_map_count(ptr), 2);
+    ecs_map_val_t *v = ecs_map_get(ptr, 10);
+    test_assert(v != NULL);
+    test_str(*(char**)v, "Hello");
+    v = ecs_map_get(ptr, 20);
+    test_assert(v != NULL);
+    test_str(*(char**)v, "World");
+
+    ecs_fini(world);
+}
+
+void Eval_map_entity_struct_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        int32_t r, g, b;
+    } Color;
+
+    ecs_entity_t color = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Color" }),
+        .members = {
+            {"r", ecs_id(ecs_i32_t)},
+            {"g", ecs_id(ecs_i32_t)},
+            {"b", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t m = ecs_map_type(world, { 
+        .entity = ecs_entity(world, { .name = "Colors" }),
+        .key_type = ecs_id(ecs_entity_t),
+        .type = color
+    });
+
+    const char *expr =
+    HEAD "Red {}"
+    LINE "Green {}"
+    LINE "e {"
+    LINE " Colors: [Red: {255, 0, 0}, Green: {0, 255, 0}]"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t red = ecs_lookup(world, "Red");
+    ecs_entity_t green = ecs_lookup(world, "Green");
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(red != 0);
+    test_assert(green != 0);
+    test_assert(e != 0);
+
+    const ecs_map_t *ptr = ecs_get_id(world, e, m);
+    test_assert(ptr != NULL);
+    test_int(ecs_map_count(ptr), 2);
+    Color *c = ecs_map_get_deref(ptr, Color, red);
+    test_assert(c != NULL);
+    test_int(c->r, 255);
+    test_int(c->g, 0);
+    test_int(c->b, 0);
+    c = ecs_map_get_deref(ptr, Color, green);
+    test_assert(c != NULL);
+    test_int(c->g, 255);
+    test_int(c->r, 0);
+    test_int(c->b, 0);
+
+    ecs_fini(world);
+}
+
+void Eval_map_component_empty(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t m = ecs_map_type(world, { 
+        .entity = ecs_entity(world, { .name = "Map" }),
+        .key_type = ecs_id(ecs_i64_t),
+        .type = ecs_id(ecs_i32_t) 
+    });
+
+    const char *expr =
+    HEAD "e {"
+    LINE " Map: []"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+
+    const ecs_map_t *ptr = ecs_get_id(world, e, m);
+    test_assert(ptr != NULL);
+    test_int(ecs_map_count(ptr), 0);
+
+    ecs_fini(world);
+}
+
+void Eval_map_component_object_literal(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t m = ecs_map_type(world, { 
+        .entity = ecs_entity(world, { .name = "Map" }),
+        .key_type = ecs_id(ecs_i64_t),
+        .type = ecs_id(ecs_i32_t) 
+    });
+
+    test_assert(m != 0);
+
+    const char *expr =
+    HEAD "e {"
+    LINE " Map: {10: 100}"
+    LINE "}";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_map_enum_i32_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t c = ecs_enum_init(world, &(ecs_enum_desc_t){
+        .entity = ecs_entity(world, {.name = "Color"}),
+        .constants = {
+            {"Red"}, {"Green"}, {"Blue"}
+        }
+    });
+
+    test_assert(c != 0);
+
+    ecs_entity_t m = ecs_map_type(world, { 
+        .entity = ecs_entity(world, { .name = "Map" }),
+        .key_type = c,
+        .type = ecs_id(ecs_i32_t) 
+    });
+
+    const char *expr =
+    HEAD "e {"
+    LINE " Map: [Red: 10, Green: 20]"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+
+    const ecs_map_t *ptr = ecs_get_id(world, e, m);
+    test_assert(ptr != NULL);
+    test_int(ecs_map_count(ptr), 2);
+    ecs_map_val_t *v = ecs_map_get(ptr, 0);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 10);
+    v = ecs_map_get(ptr, 1);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 20);
+
+    ecs_fini(world);
+}
+
+void Eval_map_bitmask_i32_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t b = ecs_bitmask_init(world, &(ecs_bitmask_desc_t){
+        .entity = ecs_entity(world, {.name = "Toppings"}),
+        .constants = {
+            {"Lettuce"}, {"Bacon"}, {"Tomato"}
+        }
+    });
+
+    test_assert(b != 0);
+
+    ecs_entity_t m = ecs_map_type(world, { 
+        .entity = ecs_entity(world, { .name = "Map" }),
+        .key_type = b,
+        .type = ecs_id(ecs_i32_t) 
+    });
+
+    const char *expr =
+    HEAD "e {"
+    LINE " Map: [Lettuce: 10, Bacon: 20]"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+
+    const ecs_map_t *ptr = ecs_get_id(world, e, m);
+    test_assert(ptr != NULL);
+    test_int(ecs_map_count(ptr), 2);
+    ecs_map_val_t *v = ecs_map_get(ptr, 1);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 10);
+    v = ecs_map_get(ptr, 2);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 20);
+
+    ecs_fini(world);
+}
+
+void Eval_map_bitmask_i32_component_w_expr_key(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t b = ecs_bitmask_init(world, &(ecs_bitmask_desc_t){
+        .entity = ecs_entity(world, {.name = "Toppings"}),
+        .constants = {
+            {"Lettuce"}, {"Bacon"}, {"Tomato"}
+        }
+    });
+
+    test_assert(b != 0);
+
+    ecs_entity_t m = ecs_map_type(world, { 
+        .entity = ecs_entity(world, { .name = "Map" }),
+        .key_type = b,
+        .type = ecs_id(ecs_i32_t) 
+    });
+
+    const char *expr =
+    HEAD "e {"
+    LINE " Map: [Lettuce|Tomato: 100]"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+
+    const ecs_map_t *ptr = ecs_get_id(world, e, m);
+    test_assert(ptr != NULL);
+    test_int(ecs_map_count(ptr), 1);
+    ecs_map_val_t *v = ecs_map_get(ptr, 5);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 100);
+
+    ecs_fini(world);
+}
+
+void Eval_map_i64_i32_component_w_expr_key(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t m = ecs_map_type(world, { 
+        .entity = ecs_entity(world, { .name = "Map" }),
+        .key_type = ecs_id(ecs_i64_t),
+        .type = ecs_id(ecs_i32_t) 
+    });
+
+    const char *expr =
+    HEAD "e {"
+    LINE " Map: [10 + 20: 30]"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+
+    const ecs_map_t *ptr = ecs_get_id(world, e, m);
+    test_assert(ptr != NULL);
+    test_int(ecs_map_count(ptr), 1);
+    ecs_map_val_t *v = ecs_map_get(ptr, 30);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 30);
+
+    ecs_fini(world);
+}
+
+void Eval_map_i64_i32_component_w_var_key(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t m = ecs_map_type(world, { 
+        .entity = ecs_entity(world, { .name = "Map" }),
+        .key_type = ecs_id(ecs_i64_t),
+        .type = ecs_id(ecs_i32_t) 
+    });
+
+    const char *expr =
+    HEAD "const k = 10"
+    LINE "e {"
+    LINE " Map: [$k: 100, $k + 10: 200]"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+
+    const ecs_map_t *ptr = ecs_get_id(world, e, m);
+    test_assert(ptr != NULL);
+    test_int(ecs_map_count(ptr), 2);
+    ecs_map_val_t *v = ecs_map_get(ptr, 10);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 100);
+    v = ecs_map_get(ptr, 20);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 200);
+
+    ecs_fini(world);
+}
+
+void Eval_map_component_element(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t m = ecs_map_type(world, { 
+        .entity = ecs_entity(world, { .name = "Map" }),
+        .key_type = ecs_id(ecs_i64_t),
+        .type = ecs_id(ecs_i32_t) 
+    });
+
+    test_assert(m != 0);
+
+    ecs_entity_t val = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Val" }),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "e {"
+    LINE " Map: [10: 100, 20: 200]"
+    LINE "}"
+    LINE "const v: e[Map][20]"
+    LINE "o {"
+    LINE " Val: {$v}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t o = ecs_lookup(world, "o");
+    test_assert(o != 0);
+
+    const int32_t *ptr = ecs_get_id(world, o, val);
+    test_assert(ptr != NULL);
+    test_int(*ptr, 200);
+
+    ecs_fini(world);
+}

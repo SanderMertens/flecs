@@ -5356,3 +5356,2146 @@ void Cursor_set_value_enum_u8_underlying(void) {
 
     ecs_fini(world);
 }
+
+void Cursor_map_i64_i32_1(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .key_type = ecs_id(ecs_i64_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_map_t value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+
+    test_int(0, ecs_meta_push(&cur));
+    test_int(0, ecs_meta_member(&cur, "10"));
+    test_int(0, ecs_meta_set_int(&cur, 100));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(ecs_map_count(&value), 1);
+    ecs_map_val_t *v = ecs_map_get(&value, 10);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 100);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void Cursor_map_i64_i32_3(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .key_type = ecs_id(ecs_i64_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_map_t value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+
+    test_int(0, ecs_meta_push(&cur));
+    test_int(0, ecs_meta_member(&cur, "10"));
+    test_int(0, ecs_meta_set_int(&cur, 100));
+    test_int(0, ecs_meta_next(&cur));
+    test_int(0, ecs_meta_member(&cur, "20"));
+    test_int(0, ecs_meta_set_int(&cur, 200));
+    test_int(0, ecs_meta_next(&cur));
+    test_int(0, ecs_meta_member(&cur, "30"));
+    test_int(0, ecs_meta_set_int(&cur, 300));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(ecs_map_count(&value), 3);
+    ecs_map_val_t *v = ecs_map_get(&value, 10);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 100);
+    v = ecs_map_get(&value, 20);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 200);
+    v = ecs_map_get(&value, 30);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 300);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void Cursor_map_i64_string_2(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .key_type = ecs_id(ecs_i64_t),
+        .type = ecs_id(ecs_string_t)
+    });
+
+    ecs_map_t value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+
+    test_int(0, ecs_meta_push(&cur));
+    test_int(0, ecs_meta_member(&cur, "10"));
+    test_int(0, ecs_meta_set_string(&cur, "Hello"));
+    test_int(0, ecs_meta_next(&cur));
+    test_int(0, ecs_meta_member(&cur, "20"));
+    test_int(0, ecs_meta_set_string(&cur, "World"));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(ecs_map_count(&value), 2);
+    ecs_map_val_t *v = ecs_map_get(&value, 10);
+    test_assert(v != NULL);
+    test_str(*(char**)v, "Hello");
+    v = ecs_map_get(&value, 20);
+    test_assert(v != NULL);
+    test_str(*(char**)v, "World");
+
+    ecs_map_iter_t it = ecs_map_iter(&value);
+    while (ecs_map_next(&it)) {
+        ecs_os_free(*(char**)&it.res[1]);
+    }
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void Cursor_map_entity_i32_2(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+
+    ecs_entity_t t = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .key_type = ecs_id(ecs_entity_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_map_t value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+
+    test_int(0, ecs_meta_push(&cur));
+    test_int(0, ecs_meta_member(&cur, "e1"));
+    test_int(0, ecs_meta_set_int(&cur, 100));
+    test_int(0, ecs_meta_next(&cur));
+    test_int(0, ecs_meta_member(&cur, "e2"));
+    test_int(0, ecs_meta_set_int(&cur, 200));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(ecs_map_count(&value), 2);
+    ecs_map_val_t *v = ecs_map_get(&value, e1);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 100);
+    v = ecs_map_get(&value, e2);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 200);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void Cursor_map_i64_struct_2(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        int32_t x, y, z;
+    } N;
+
+    ecs_entity_t n = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "N"}),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)},
+            {"z", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t t = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .key_type = ecs_id(ecs_i64_t),
+        .type = n
+    });
+
+    ecs_map_t value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+
+    test_int(0, ecs_meta_push(&cur));
+    test_int(0, ecs_meta_member(&cur, "10"));
+        test_int(0, ecs_meta_push(&cur));
+        test_int(0, ecs_meta_set_int(&cur, 1));
+        test_int(0, ecs_meta_next(&cur));
+        test_int(0, ecs_meta_set_int(&cur, 2));
+        test_int(0, ecs_meta_next(&cur));
+        test_int(0, ecs_meta_set_int(&cur, 3));
+        test_int(0, ecs_meta_pop(&cur));
+    test_int(0, ecs_meta_next(&cur));
+    test_int(0, ecs_meta_member(&cur, "20"));
+        test_int(0, ecs_meta_push(&cur));
+        test_int(0, ecs_meta_set_int(&cur, 4));
+        test_int(0, ecs_meta_next(&cur));
+        test_int(0, ecs_meta_set_int(&cur, 5));
+        test_int(0, ecs_meta_next(&cur));
+        test_int(0, ecs_meta_set_int(&cur, 6));
+        test_int(0, ecs_meta_pop(&cur));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(ecs_map_count(&value), 2);
+    N *ptr = ecs_map_get_deref(&value, N, 10);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 1);
+    test_int(ptr->y, 2);
+    test_int(ptr->z, 3);
+    ptr = ecs_map_get_deref(&value, N, 20);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 4);
+    test_int(ptr->y, 5);
+    test_int(ptr->z, 6);
+
+    ecs_map_iter_t it = ecs_map_iter(&value);
+    while (ecs_map_next(&it)) {
+        ecs_os_free(ecs_map_ptr(&it));
+    }
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void Cursor_map_i64_i32_replace(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .key_type = ecs_id(ecs_i64_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_map_t value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+
+    test_int(0, ecs_meta_push(&cur));
+    test_int(0, ecs_meta_member(&cur, "10"));
+    test_int(0, ecs_meta_set_int(&cur, 100));
+    test_int(0, ecs_meta_next(&cur));
+    test_int(0, ecs_meta_member(&cur, "20"));
+    test_int(0, ecs_meta_set_int(&cur, 200));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(ecs_map_count(&value), 2);
+
+    cur = ecs_meta_cursor(world, t, &value);
+
+    test_int(0, ecs_meta_push(&cur));
+    test_int(0, ecs_meta_member(&cur, "30"));
+    test_int(0, ecs_meta_set_int(&cur, 300));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(ecs_map_count(&value), 1);
+    test_assert(ecs_map_get(&value, 10) == NULL);
+    test_assert(ecs_map_get(&value, 20) == NULL);
+    ecs_map_val_t *v = ecs_map_get(&value, 30);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 300);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void Cursor_struct_w_map_i64_i32(void) {
+    typedef struct {
+        ecs_map_t m;
+    } S;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .key_type = ecs_id(ecs_i64_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_entity_t ecs_id(S) = ecs_struct(world, {
+        .members = {
+            { "m", t }
+        }
+    });
+
+    S value = {{0}};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(S), &value);
+
+    test_int(0, ecs_meta_push(&cur));
+    test_int(0, ecs_meta_member(&cur, "m"));
+    test_int(0, ecs_meta_push(&cur));
+    test_int(0, ecs_meta_member(&cur, "10"));
+    test_int(0, ecs_meta_set_int(&cur, 100));
+    test_int(0, ecs_meta_pop(&cur));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(ecs_map_count(&value.m), 1);
+    ecs_map_val_t *v = ecs_map_get(&value.m, 10);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 100);
+
+    ecs_map_fini(&value.m);
+
+    ecs_fini(world);
+}
+
+void Cursor_map_get_map_type(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .key_type = ecs_id(ecs_i64_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_map_t value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+    test_uint(ecs_meta_get_type(&cur), t);
+    test_bool(ecs_meta_is_map(&cur), false);
+
+    test_int(0, ecs_meta_push(&cur));
+    test_bool(ecs_meta_is_map(&cur), true);
+    test_bool(ecs_meta_is_collection(&cur), false);
+    test_int(0, ecs_meta_member(&cur, "10"));
+    test_uint(ecs_meta_get_type(&cur), ecs_id(ecs_i32_t));
+    test_int(0, ecs_meta_pop(&cur));
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void Cursor_map_bool_i32(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .key_type = ecs_id(ecs_bool_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_map_t value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+
+    test_int(0, ecs_meta_push(&cur));
+    test_int(0, ecs_meta_member(&cur, "true"));
+    test_int(0, ecs_meta_set_int(&cur, 10));
+    test_int(0, ecs_meta_next(&cur));
+    test_int(0, ecs_meta_member(&cur, "false"));
+    test_int(0, ecs_meta_set_int(&cur, 20));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(ecs_map_count(&value), 2);
+    ecs_map_val_t *v = ecs_map_get(&value, true);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 10);
+    v = ecs_map_get(&value, false);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 20);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void Cursor_map_char_i32(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .key_type = ecs_id(ecs_char_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_map_t value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+
+    test_int(0, ecs_meta_push(&cur));
+    test_int(0, ecs_meta_member(&cur, "a"));
+    test_int(0, ecs_meta_set_int(&cur, 10));
+    test_int(0, ecs_meta_next(&cur));
+    test_int(0, ecs_meta_member(&cur, "b"));
+    test_int(0, ecs_meta_set_int(&cur, 20));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(ecs_map_count(&value), 2);
+    ecs_map_val_t *v = ecs_map_get(&value, 'a');
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 10);
+    v = ecs_map_get(&value, 'b');
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 20);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void Cursor_map_byte_i32(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .key_type = ecs_id(ecs_byte_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_map_t value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+
+    test_int(0, ecs_meta_push(&cur));
+    test_int(0, ecs_meta_member(&cur, "10"));
+    test_int(0, ecs_meta_set_int(&cur, 10));
+    test_int(0, ecs_meta_next(&cur));
+    test_int(0, ecs_meta_member(&cur, "255"));
+    test_int(0, ecs_meta_set_int(&cur, 20));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(ecs_map_count(&value), 2);
+    ecs_map_val_t *v = ecs_map_get(&value, 10);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 10);
+    v = ecs_map_get(&value, 255);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 20);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void Cursor_map_u8_i32(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .key_type = ecs_id(ecs_u8_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_map_t value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+
+    test_int(0, ecs_meta_push(&cur));
+    test_int(0, ecs_meta_member(&cur, "10"));
+    test_int(0, ecs_meta_set_int(&cur, 10));
+    test_int(0, ecs_meta_next(&cur));
+    test_int(0, ecs_meta_member(&cur, "255"));
+    test_int(0, ecs_meta_set_int(&cur, 20));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(ecs_map_count(&value), 2);
+    ecs_map_val_t *v = ecs_map_get(&value, 10);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 10);
+    v = ecs_map_get(&value, 255);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 20);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void Cursor_map_u16_i32(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .key_type = ecs_id(ecs_u16_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_map_t value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+
+    test_int(0, ecs_meta_push(&cur));
+    test_int(0, ecs_meta_member(&cur, "10"));
+    test_int(0, ecs_meta_set_int(&cur, 10));
+    test_int(0, ecs_meta_next(&cur));
+    test_int(0, ecs_meta_member(&cur, "65535"));
+    test_int(0, ecs_meta_set_int(&cur, 20));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(ecs_map_count(&value), 2);
+    ecs_map_val_t *v = ecs_map_get(&value, 10);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 10);
+    v = ecs_map_get(&value, 65535);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 20);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void Cursor_map_u32_i32(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .key_type = ecs_id(ecs_u32_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_map_t value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+
+    test_int(0, ecs_meta_push(&cur));
+    test_int(0, ecs_meta_member(&cur, "10"));
+    test_int(0, ecs_meta_set_int(&cur, 10));
+    test_int(0, ecs_meta_next(&cur));
+    test_int(0, ecs_meta_member(&cur, "4294967295"));
+    test_int(0, ecs_meta_set_int(&cur, 20));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(ecs_map_count(&value), 2);
+    ecs_map_val_t *v = ecs_map_get(&value, 10);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 10);
+    v = ecs_map_get(&value, 4294967295);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 20);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void Cursor_map_u64_i32(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .key_type = ecs_id(ecs_u64_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_map_t value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+
+    test_int(0, ecs_meta_push(&cur));
+    test_int(0, ecs_meta_member(&cur, "10"));
+    test_int(0, ecs_meta_set_int(&cur, 10));
+    test_int(0, ecs_meta_next(&cur));
+    test_int(0, ecs_meta_member(&cur, "18446744073709551615"));
+    test_int(0, ecs_meta_set_int(&cur, 20));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(ecs_map_count(&value), 2);
+    ecs_map_val_t *v = ecs_map_get(&value, 10);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 10);
+    v = ecs_map_get(&value, UINT64_MAX);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 20);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void Cursor_map_i8_i32(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .key_type = ecs_id(ecs_i8_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_map_t value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+
+    test_int(0, ecs_meta_push(&cur));
+    test_int(0, ecs_meta_member(&cur, "-10"));
+    test_int(0, ecs_meta_set_int(&cur, 10));
+    test_int(0, ecs_meta_next(&cur));
+    test_int(0, ecs_meta_member(&cur, "10"));
+    test_int(0, ecs_meta_set_int(&cur, 20));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(ecs_map_count(&value), 2);
+    ecs_map_val_t *v = ecs_map_get(&value, (uint8_t)-10);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 10);
+    v = ecs_map_get(&value, 10);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 20);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void Cursor_map_i16_i32(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .key_type = ecs_id(ecs_i16_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_map_t value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+
+    test_int(0, ecs_meta_push(&cur));
+    test_int(0, ecs_meta_member(&cur, "-10"));
+    test_int(0, ecs_meta_set_int(&cur, 10));
+    test_int(0, ecs_meta_next(&cur));
+    test_int(0, ecs_meta_member(&cur, "10"));
+    test_int(0, ecs_meta_set_int(&cur, 20));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(ecs_map_count(&value), 2);
+    ecs_map_val_t *v = ecs_map_get(&value, (uint16_t)-10);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 10);
+    v = ecs_map_get(&value, 10);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 20);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void Cursor_map_i32_i32(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .key_type = ecs_id(ecs_i32_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_map_t value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+
+    test_int(0, ecs_meta_push(&cur));
+    test_int(0, ecs_meta_member(&cur, "-10"));
+    test_int(0, ecs_meta_set_int(&cur, 10));
+    test_int(0, ecs_meta_next(&cur));
+    test_int(0, ecs_meta_member(&cur, "10"));
+    test_int(0, ecs_meta_set_int(&cur, 20));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(ecs_map_count(&value), 2);
+    ecs_map_val_t *v = ecs_map_get(&value, (uint32_t)-10);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 10);
+    v = ecs_map_get(&value, 10);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 20);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void Cursor_map_uptr_i32(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .key_type = ecs_id(ecs_uptr_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_map_t value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+
+    test_int(0, ecs_meta_push(&cur));
+    test_int(0, ecs_meta_member(&cur, "10"));
+    test_int(0, ecs_meta_set_int(&cur, 10));
+    test_int(0, ecs_meta_next(&cur));
+    test_int(0, ecs_meta_member(&cur, "20"));
+    test_int(0, ecs_meta_set_int(&cur, 20));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(ecs_map_count(&value), 2);
+    ecs_map_val_t *v = ecs_map_get(&value, 10);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 10);
+    v = ecs_map_get(&value, 20);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 20);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void Cursor_map_iptr_i32(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .key_type = ecs_id(ecs_iptr_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_map_t value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+
+    test_int(0, ecs_meta_push(&cur));
+    test_int(0, ecs_meta_member(&cur, "-10"));
+    test_int(0, ecs_meta_set_int(&cur, 10));
+    test_int(0, ecs_meta_next(&cur));
+    test_int(0, ecs_meta_member(&cur, "10"));
+    test_int(0, ecs_meta_set_int(&cur, 20));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(ecs_map_count(&value), 2);
+    ecs_map_val_t *v = ecs_map_get(&value, (uintptr_t)-10);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 10);
+    v = ecs_map_get(&value, 10);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 20);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void Cursor_map_id_i32(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_entity_t rel = ecs_entity(world, { .name = "Rel" });
+    ecs_entity_t tgt = ecs_entity(world, { .name = "Tgt" });
+
+    ecs_entity_t t = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .key_type = ecs_id(ecs_id_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_map_t value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+
+    test_int(0, ecs_meta_push(&cur));
+    test_int(0, ecs_meta_member(&cur, "e1"));
+    test_int(0, ecs_meta_set_int(&cur, 10));
+    test_int(0, ecs_meta_next(&cur));
+    test_int(0, ecs_meta_member(&cur, "(Rel,Tgt)"));
+    test_int(0, ecs_meta_set_int(&cur, 20));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(ecs_map_count(&value), 2);
+    ecs_map_val_t *v = ecs_map_get(&value, e1);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 10);
+    v = ecs_map_get(&value, ecs_pair(rel, tgt));
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 20);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void Cursor_map_enum_i32(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t c = ecs_enum_init(world, &(ecs_enum_desc_t){
+        .entity = ecs_entity(world, {.name = "Color"}),
+        .constants = {
+            {"Red"}, {"Green"}, {"Blue"}
+        }
+    });
+
+    ecs_entity_t t = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .key_type = c,
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_map_t value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+
+    test_int(0, ecs_meta_push(&cur));
+    test_int(0, ecs_meta_member(&cur, "Red"));
+    test_int(0, ecs_meta_set_int(&cur, 10));
+    test_int(0, ecs_meta_next(&cur));
+    test_int(0, ecs_meta_member(&cur, "Green"));
+    test_int(0, ecs_meta_set_int(&cur, 20));
+    test_int(0, ecs_meta_next(&cur));
+    test_int(0, ecs_meta_member(&cur, "Blue"));
+    test_int(0, ecs_meta_set_int(&cur, 30));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(ecs_map_count(&value), 3);
+    ecs_map_val_t *v = ecs_map_get(&value, 0);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 10);
+    v = ecs_map_get(&value, 1);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 20);
+    v = ecs_map_get(&value, 2);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 30);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void Cursor_map_enum_i32_invalid_constant(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t c = ecs_enum_init(world, &(ecs_enum_desc_t){
+        .entity = ecs_entity(world, {.name = "Color"}),
+        .constants = {
+            {"Red"}, {"Green"}, {"Blue"}
+        }
+    });
+
+    ecs_entity_t t = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .key_type = c,
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_map_t value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+
+    test_int(0, ecs_meta_push(&cur));
+    ecs_log_set_level(-4);
+    test_assert(0 != ecs_meta_member(&cur, "Yellow"));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(ecs_map_count(&value), 0);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void Cursor_map_bitmask_i32(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t b = ecs_bitmask_init(world, &(ecs_bitmask_desc_t){
+        .entity = ecs_entity(world, {.name = "Toppings"}),
+        .constants = {
+            {"Lettuce"}, {"Bacon"}, {"Tomato"}
+        }
+    });
+
+    ecs_entity_t t = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .key_type = b,
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_map_t value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+
+    test_int(0, ecs_meta_push(&cur));
+    test_int(0, ecs_meta_member(&cur, "Lettuce"));
+    test_int(0, ecs_meta_set_int(&cur, 10));
+    test_int(0, ecs_meta_next(&cur));
+    test_int(0, ecs_meta_member(&cur, "Lettuce|Bacon"));
+    test_int(0, ecs_meta_set_int(&cur, 20));
+    test_int(0, ecs_meta_next(&cur));
+    test_int(0, ecs_meta_member(&cur, "0"));
+    test_int(0, ecs_meta_set_int(&cur, 30));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(ecs_map_count(&value), 3);
+    ecs_map_val_t *v = ecs_map_get(&value, 1);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 10);
+    v = ecs_map_get(&value, 3);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 20);
+    v = ecs_map_get(&value, 0);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 30);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void Cursor_map_i64_enum_underlying_i8(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t c = ecs_enum_init(world, &(ecs_enum_desc_t){
+        .entity = ecs_entity(world, {.name = "Color"}),
+        .underlying_type = ecs_id(ecs_i8_t),
+        .constants = {
+            {"Red"}, {"Green"}, {"Blue"}
+        }
+    });
+
+    ecs_entity_t t = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .key_type = ecs_id(ecs_i64_t),
+        .type = c
+    });
+
+    ecs_map_t value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+
+    test_int(0, ecs_meta_push(&cur));
+    test_int(0, ecs_meta_member(&cur, "10"));
+    test_int(0, ecs_meta_set_string(&cur, "Red"));
+    test_int(0, ecs_meta_next(&cur));
+    test_int(0, ecs_meta_member(&cur, "20"));
+    test_int(0, ecs_meta_set_string(&cur, "Green"));
+    test_int(0, ecs_meta_next(&cur));
+    test_int(0, ecs_meta_member(&cur, "30"));
+    test_int(0, ecs_meta_set_string(&cur, "Blue"));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(ecs_map_count(&value), 3);
+    ecs_map_val_t *v = ecs_map_get(&value, 10);
+    test_assert(v != NULL);
+    test_int(*(int8_t*)v, 0);
+    v = ecs_map_get(&value, 20);
+    test_assert(v != NULL);
+    test_int(*(int8_t*)v, 1);
+    v = ecs_map_get(&value, 30);
+    test_assert(v != NULL);
+    test_int(*(int8_t*)v, 2);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void Cursor_map_i64_enum_underlying_i16(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t c = ecs_enum_init(world, &(ecs_enum_desc_t){
+        .entity = ecs_entity(world, {.name = "Color"}),
+        .underlying_type = ecs_id(ecs_i16_t),
+        .constants = {
+            {"Red"}, {"Green"}, {"Blue"}
+        }
+    });
+
+    ecs_entity_t t = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .key_type = ecs_id(ecs_i64_t),
+        .type = c
+    });
+
+    ecs_map_t value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+
+    test_int(0, ecs_meta_push(&cur));
+    test_int(0, ecs_meta_member(&cur, "10"));
+    test_int(0, ecs_meta_set_string(&cur, "Red"));
+    test_int(0, ecs_meta_next(&cur));
+    test_int(0, ecs_meta_member(&cur, "20"));
+    test_int(0, ecs_meta_set_string(&cur, "Green"));
+    test_int(0, ecs_meta_next(&cur));
+    test_int(0, ecs_meta_member(&cur, "30"));
+    test_int(0, ecs_meta_set_string(&cur, "Blue"));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(ecs_map_count(&value), 3);
+    ecs_map_val_t *v = ecs_map_get(&value, 10);
+    test_assert(v != NULL);
+    test_int(*(int16_t*)v, 0);
+    v = ecs_map_get(&value, 20);
+    test_assert(v != NULL);
+    test_int(*(int16_t*)v, 1);
+    v = ecs_map_get(&value, 30);
+    test_assert(v != NULL);
+    test_int(*(int16_t*)v, 2);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void Cursor_map_i64_enum_underlying_i32(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t c = ecs_enum_init(world, &(ecs_enum_desc_t){
+        .entity = ecs_entity(world, {.name = "Color"}),
+        .underlying_type = ecs_id(ecs_i32_t),
+        .constants = {
+            {"Red"}, {"Green"}, {"Blue"}
+        }
+    });
+
+    ecs_entity_t t = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .key_type = ecs_id(ecs_i64_t),
+        .type = c
+    });
+
+    ecs_map_t value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+
+    test_int(0, ecs_meta_push(&cur));
+    test_int(0, ecs_meta_member(&cur, "10"));
+    test_int(0, ecs_meta_set_string(&cur, "Red"));
+    test_int(0, ecs_meta_next(&cur));
+    test_int(0, ecs_meta_member(&cur, "20"));
+    test_int(0, ecs_meta_set_string(&cur, "Green"));
+    test_int(0, ecs_meta_next(&cur));
+    test_int(0, ecs_meta_member(&cur, "30"));
+    test_int(0, ecs_meta_set_string(&cur, "Blue"));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(ecs_map_count(&value), 3);
+    ecs_map_val_t *v = ecs_map_get(&value, 10);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 0);
+    v = ecs_map_get(&value, 20);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 1);
+    v = ecs_map_get(&value, 30);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 2);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void Cursor_map_key_bool_i32(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .key_type = ecs_id(ecs_bool_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_map_t value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+
+    bool key = false;
+    ecs_value_t key_value = { .type = ecs_id(ecs_bool_t), .ptr = &key };
+
+    test_int(0, ecs_meta_push(&cur));
+    key = true;
+    test_int(0, ecs_meta_key(&cur, &key_value));
+    test_int(0, ecs_meta_set_int(&cur, 10));
+    test_int(0, ecs_meta_next(&cur));
+    key = false;
+    test_int(0, ecs_meta_key(&cur, &key_value));
+    test_int(0, ecs_meta_set_int(&cur, 20));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(ecs_map_count(&value), 2);
+    ecs_map_val_t *v = ecs_map_get(&value, true);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 10);
+    v = ecs_map_get(&value, false);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 20);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void Cursor_map_key_i8_i32(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .key_type = ecs_id(ecs_i8_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_map_t value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+
+    int8_t key = 0;
+    ecs_value_t key_value = { .type = ecs_id(ecs_i8_t), .ptr = &key };
+
+    test_int(0, ecs_meta_push(&cur));
+    key = 10;
+    test_int(0, ecs_meta_key(&cur, &key_value));
+    test_int(0, ecs_meta_set_int(&cur, 10));
+    test_int(0, ecs_meta_next(&cur));
+    key = 20;
+    test_int(0, ecs_meta_key(&cur, &key_value));
+    test_int(0, ecs_meta_set_int(&cur, 20));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(ecs_map_count(&value), 2);
+    ecs_map_val_t *v = ecs_map_get(&value, 10);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 10);
+    v = ecs_map_get(&value, 20);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 20);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void Cursor_map_key_i16_i32(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .key_type = ecs_id(ecs_i16_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_map_t value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+
+    int16_t key = 0;
+    ecs_value_t key_value = { .type = ecs_id(ecs_i16_t), .ptr = &key };
+
+    test_int(0, ecs_meta_push(&cur));
+    key = 10;
+    test_int(0, ecs_meta_key(&cur, &key_value));
+    test_int(0, ecs_meta_set_int(&cur, 10));
+    test_int(0, ecs_meta_next(&cur));
+    key = 20;
+    test_int(0, ecs_meta_key(&cur, &key_value));
+    test_int(0, ecs_meta_set_int(&cur, 20));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(ecs_map_count(&value), 2);
+    ecs_map_val_t *v = ecs_map_get(&value, 10);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 10);
+    v = ecs_map_get(&value, 20);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 20);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void Cursor_map_key_i32_i32(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .key_type = ecs_id(ecs_i32_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_map_t value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+
+    int32_t key = 0;
+    ecs_value_t key_value = { .type = ecs_id(ecs_i32_t), .ptr = &key };
+
+    test_int(0, ecs_meta_push(&cur));
+    key = 10;
+    test_int(0, ecs_meta_key(&cur, &key_value));
+    test_int(0, ecs_meta_set_int(&cur, 10));
+    test_int(0, ecs_meta_next(&cur));
+    key = 20;
+    test_int(0, ecs_meta_key(&cur, &key_value));
+    test_int(0, ecs_meta_set_int(&cur, 20));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(ecs_map_count(&value), 2);
+    ecs_map_val_t *v = ecs_map_get(&value, 10);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 10);
+    v = ecs_map_get(&value, 20);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 20);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void Cursor_map_key_u8_i32(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .key_type = ecs_id(ecs_u8_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_map_t value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+
+    uint8_t key = 0;
+    ecs_value_t key_value = { .type = ecs_id(ecs_u8_t), .ptr = &key };
+
+    test_int(0, ecs_meta_push(&cur));
+    key = 10;
+    test_int(0, ecs_meta_key(&cur, &key_value));
+    test_int(0, ecs_meta_set_int(&cur, 10));
+    test_int(0, ecs_meta_next(&cur));
+    key = 255;
+    test_int(0, ecs_meta_key(&cur, &key_value));
+    test_int(0, ecs_meta_set_int(&cur, 20));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(ecs_map_count(&value), 2);
+    ecs_map_val_t *v = ecs_map_get(&value, 10);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 10);
+    v = ecs_map_get(&value, 255);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 20);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void Cursor_map_key_u16_i32(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .key_type = ecs_id(ecs_u16_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_map_t value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+
+    uint16_t key = 0;
+    ecs_value_t key_value = { .type = ecs_id(ecs_u16_t), .ptr = &key };
+
+    test_int(0, ecs_meta_push(&cur));
+    key = 10;
+    test_int(0, ecs_meta_key(&cur, &key_value));
+    test_int(0, ecs_meta_set_int(&cur, 10));
+    test_int(0, ecs_meta_next(&cur));
+    key = 65535;
+    test_int(0, ecs_meta_key(&cur, &key_value));
+    test_int(0, ecs_meta_set_int(&cur, 20));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(ecs_map_count(&value), 2);
+    ecs_map_val_t *v = ecs_map_get(&value, 10);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 10);
+    v = ecs_map_get(&value, 65535);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 20);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void Cursor_map_key_u32_i32(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .key_type = ecs_id(ecs_u32_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_map_t value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+
+    uint32_t key = 0;
+    ecs_value_t key_value = { .type = ecs_id(ecs_u32_t), .ptr = &key };
+
+    test_int(0, ecs_meta_push(&cur));
+    key = 10;
+    test_int(0, ecs_meta_key(&cur, &key_value));
+    test_int(0, ecs_meta_set_int(&cur, 10));
+    test_int(0, ecs_meta_next(&cur));
+    key = 4294967295u;
+    test_int(0, ecs_meta_key(&cur, &key_value));
+    test_int(0, ecs_meta_set_int(&cur, 20));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(ecs_map_count(&value), 2);
+    ecs_map_val_t *v = ecs_map_get(&value, 10);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 10);
+    v = ecs_map_get(&value, 4294967295u);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 20);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void Cursor_map_key_u64_i32(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .key_type = ecs_id(ecs_u64_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_map_t value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+
+    uint64_t key = 0;
+    ecs_value_t key_value = { .type = ecs_id(ecs_u64_t), .ptr = &key };
+
+    test_int(0, ecs_meta_push(&cur));
+    key = 10;
+    test_int(0, ecs_meta_key(&cur, &key_value));
+    test_int(0, ecs_meta_set_int(&cur, 10));
+    test_int(0, ecs_meta_next(&cur));
+    key = 18446744073709551615llu;
+    test_int(0, ecs_meta_key(&cur, &key_value));
+    test_int(0, ecs_meta_set_int(&cur, 20));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(ecs_map_count(&value), 2);
+    ecs_map_val_t *v = ecs_map_get(&value, 10);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 10);
+    v = ecs_map_get(&value, 18446744073709551615llu);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 20);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void Cursor_map_key_entity_i32(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+
+    ecs_entity_t t = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .key_type = ecs_id(ecs_entity_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_map_t value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+
+    ecs_entity_t key = 0;
+    ecs_value_t key_value = { .type = ecs_id(ecs_entity_t), .ptr = &key };
+
+    test_int(0, ecs_meta_push(&cur));
+    key = e1;
+    test_int(0, ecs_meta_key(&cur, &key_value));
+    test_int(0, ecs_meta_set_int(&cur, 10));
+    test_int(0, ecs_meta_next(&cur));
+    key = e2;
+    test_int(0, ecs_meta_key(&cur, &key_value));
+    test_int(0, ecs_meta_set_int(&cur, 20));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(ecs_map_count(&value), 2);
+    ecs_map_val_t *v = ecs_map_get(&value, e1);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 10);
+    v = ecs_map_get(&value, e2);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 20);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void Cursor_map_key_id_i32(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_entity_t rel = ecs_entity(world, { .name = "Rel" });
+    ecs_entity_t tgt = ecs_entity(world, { .name = "Tgt" });
+
+    ecs_entity_t t = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .key_type = ecs_id(ecs_id_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_map_t value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+
+    ecs_id_t key = 0;
+    ecs_value_t key_value = { .type = ecs_id(ecs_id_t), .ptr = &key };
+
+    test_int(0, ecs_meta_push(&cur));
+    key = e1;
+    test_int(0, ecs_meta_key(&cur, &key_value));
+    test_int(0, ecs_meta_set_int(&cur, 10));
+    test_int(0, ecs_meta_next(&cur));
+    key = ecs_pair(rel, tgt);
+    test_int(0, ecs_meta_key(&cur, &key_value));
+    test_int(0, ecs_meta_set_int(&cur, 20));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(ecs_map_count(&value), 2);
+    ecs_map_val_t *v = ecs_map_get(&value, e1);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 10);
+    v = ecs_map_get(&value, ecs_pair(rel, tgt));
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 20);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void Cursor_map_key_enum_i32(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t c = ecs_enum_init(world, &(ecs_enum_desc_t){
+        .entity = ecs_entity(world, {.name = "Color"}),
+        .constants = {
+            {"Red"}, {"Green"}, {"Blue"}
+        }
+    });
+
+    ecs_entity_t t = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .key_type = c,
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_map_t value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+
+    int32_t key = 0;
+    ecs_value_t key_value = { .type = c, .ptr = &key };
+
+    test_int(0, ecs_meta_push(&cur));
+    key = 0;
+    test_int(0, ecs_meta_key(&cur, &key_value));
+    test_int(0, ecs_meta_set_int(&cur, 10));
+    test_int(0, ecs_meta_next(&cur));
+    key = 1;
+    test_int(0, ecs_meta_key(&cur, &key_value));
+    test_int(0, ecs_meta_set_int(&cur, 20));
+    test_int(0, ecs_meta_next(&cur));
+    key = 2;
+    test_int(0, ecs_meta_key(&cur, &key_value));
+    test_int(0, ecs_meta_set_int(&cur, 30));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(ecs_map_count(&value), 3);
+    ecs_map_val_t *v = ecs_map_get(&value, 0);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 10);
+    v = ecs_map_get(&value, 1);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 20);
+    v = ecs_map_get(&value, 2);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 30);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void Cursor_map_key_bitmask_i32(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t b = ecs_bitmask_init(world, &(ecs_bitmask_desc_t){
+        .entity = ecs_entity(world, {.name = "Toppings"}),
+        .constants = {
+            {"Lettuce"}, {"Bacon"}, {"Tomato"}
+        }
+    });
+
+    ecs_entity_t t = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .key_type = b,
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_map_t value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+
+    uint32_t key = 0;
+    ecs_value_t key_value = { .type = b, .ptr = &key };
+
+    test_int(0, ecs_meta_push(&cur));
+    key = 1;
+    test_int(0, ecs_meta_key(&cur, &key_value));
+    test_int(0, ecs_meta_set_int(&cur, 10));
+    test_int(0, ecs_meta_next(&cur));
+    key = 3;
+    test_int(0, ecs_meta_key(&cur, &key_value));
+    test_int(0, ecs_meta_set_int(&cur, 20));
+    test_int(0, ecs_meta_next(&cur));
+    key = 0;
+    test_int(0, ecs_meta_key(&cur, &key_value));
+    test_int(0, ecs_meta_set_int(&cur, 30));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(ecs_map_count(&value), 3);
+    ecs_map_val_t *v = ecs_map_get(&value, 1);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 10);
+    v = ecs_map_get(&value, 3);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 20);
+    v = ecs_map_get(&value, 0);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 30);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void Cursor_map_key_i64_i8(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .key_type = ecs_id(ecs_i64_t),
+        .type = ecs_id(ecs_i8_t)
+    });
+
+    ecs_map_t value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+
+    int64_t key = 0;
+    ecs_value_t key_value = { .type = ecs_id(ecs_i64_t), .ptr = &key };
+
+    test_int(0, ecs_meta_push(&cur));
+    key = 10;
+    test_int(0, ecs_meta_key(&cur, &key_value));
+    test_int(0, ecs_meta_set_int(&cur, 100));
+    test_int(0, ecs_meta_next(&cur));
+    key = 20;
+    test_int(0, ecs_meta_key(&cur, &key_value));
+    test_int(0, ecs_meta_set_int(&cur, 120));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(ecs_map_count(&value), 2);
+    ecs_map_val_t *v = ecs_map_get(&value, 10);
+    test_assert(v != NULL);
+    test_int(*(int8_t*)v, 100);
+    v = ecs_map_get(&value, 20);
+    test_assert(v != NULL);
+    test_int(*(int8_t*)v, 120);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void Cursor_map_key_i64_i16(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .key_type = ecs_id(ecs_i64_t),
+        .type = ecs_id(ecs_i16_t)
+    });
+
+    ecs_map_t value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+
+    int64_t key = 0;
+    ecs_value_t key_value = { .type = ecs_id(ecs_i64_t), .ptr = &key };
+
+    test_int(0, ecs_meta_push(&cur));
+    key = 10;
+    test_int(0, ecs_meta_key(&cur, &key_value));
+    test_int(0, ecs_meta_set_int(&cur, 100));
+    test_int(0, ecs_meta_next(&cur));
+    key = 20;
+    test_int(0, ecs_meta_key(&cur, &key_value));
+    test_int(0, ecs_meta_set_int(&cur, 200));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(ecs_map_count(&value), 2);
+    ecs_map_val_t *v = ecs_map_get(&value, 10);
+    test_assert(v != NULL);
+    test_int(*(int16_t*)v, 100);
+    v = ecs_map_get(&value, 20);
+    test_assert(v != NULL);
+    test_int(*(int16_t*)v, 200);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void Cursor_map_key_i64_i32(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .key_type = ecs_id(ecs_i64_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_map_t value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+
+    int64_t key = 0;
+    ecs_value_t key_value = { .type = ecs_id(ecs_i64_t), .ptr = &key };
+
+    test_int(0, ecs_meta_push(&cur));
+    key = 10;
+    test_int(0, ecs_meta_key(&cur, &key_value));
+    test_int(0, ecs_meta_set_int(&cur, 100));
+    test_int(0, ecs_meta_next(&cur));
+    key = 20;
+    test_int(0, ecs_meta_key(&cur, &key_value));
+    test_int(0, ecs_meta_set_int(&cur, 200));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(ecs_map_count(&value), 2);
+    ecs_map_val_t *v = ecs_map_get(&value, 10);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 100);
+    v = ecs_map_get(&value, 20);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 200);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void Cursor_map_key_i64_i64(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .key_type = ecs_id(ecs_i64_t),
+        .type = ecs_id(ecs_i64_t)
+    });
+
+    ecs_map_t value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+
+    int64_t key = 0;
+    ecs_value_t key_value = { .type = ecs_id(ecs_i64_t), .ptr = &key };
+
+    test_int(0, ecs_meta_push(&cur));
+    key = 10;
+    test_int(0, ecs_meta_key(&cur, &key_value));
+    test_int(0, ecs_meta_set_int(&cur, 100));
+    test_int(0, ecs_meta_next(&cur));
+    key = 20;
+    test_int(0, ecs_meta_key(&cur, &key_value));
+    test_int(0, ecs_meta_set_int(&cur, 200));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(ecs_map_count(&value), 2);
+    ecs_map_val_t *v = ecs_map_get(&value, 10);
+    test_assert(v != NULL);
+    test_int(*(int64_t*)v, 100);
+    v = ecs_map_get(&value, 20);
+    test_assert(v != NULL);
+    test_int(*(int64_t*)v, 200);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void Cursor_map_key_i64_string(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .key_type = ecs_id(ecs_i64_t),
+        .type = ecs_id(ecs_string_t)
+    });
+
+    ecs_map_t value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+
+    int64_t key = 0;
+    ecs_value_t key_value = { .type = ecs_id(ecs_i64_t), .ptr = &key };
+
+    test_int(0, ecs_meta_push(&cur));
+    key = 10;
+    test_int(0, ecs_meta_key(&cur, &key_value));
+    test_int(0, ecs_meta_set_string(&cur, "Hello"));
+    test_int(0, ecs_meta_next(&cur));
+    key = 20;
+    test_int(0, ecs_meta_key(&cur, &key_value));
+    test_int(0, ecs_meta_set_string(&cur, "World"));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(ecs_map_count(&value), 2);
+    ecs_map_val_t *v = ecs_map_get(&value, 10);
+    test_assert(v != NULL);
+    test_str(*(char**)v, "Hello");
+    v = ecs_map_get(&value, 20);
+    test_assert(v != NULL);
+    test_str(*(char**)v, "World");
+
+    ecs_map_iter_t it = ecs_map_iter(&value);
+    while (ecs_map_next(&it)) {
+        ecs_os_free(*(char**)&it.res[1]);
+    }
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void Cursor_map_key_i64_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+
+    ecs_entity_t t = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .key_type = ecs_id(ecs_i64_t),
+        .type = ecs_id(ecs_entity_t)
+    });
+
+    ecs_map_t value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+
+    int64_t key = 0;
+    ecs_value_t key_value = { .type = ecs_id(ecs_i64_t), .ptr = &key };
+
+    test_int(0, ecs_meta_push(&cur));
+    key = 10;
+    test_int(0, ecs_meta_key(&cur, &key_value));
+    test_int(0, ecs_meta_set_entity(&cur, e1));
+    test_int(0, ecs_meta_next(&cur));
+    key = 20;
+    test_int(0, ecs_meta_key(&cur, &key_value));
+    test_int(0, ecs_meta_set_entity(&cur, e2));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(ecs_map_count(&value), 2);
+    ecs_map_val_t *v = ecs_map_get(&value, 10);
+    test_assert(v != NULL);
+    test_uint(*(ecs_entity_t*)v, e1);
+    v = ecs_map_get(&value, 20);
+    test_assert(v != NULL);
+    test_uint(*(ecs_entity_t*)v, e2);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void Cursor_map_key_i64_struct(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t t = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .key_type = ecs_id(ecs_i64_t),
+        .type = ecs_id(Position)
+    });
+
+    ecs_map_t value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+
+    int64_t key = 0;
+    ecs_value_t key_value = { .type = ecs_id(ecs_i64_t), .ptr = &key };
+
+    test_int(0, ecs_meta_push(&cur));
+    key = 10;
+    test_int(0, ecs_meta_key(&cur, &key_value));
+        test_int(0, ecs_meta_push(&cur));
+        test_int(0, ecs_meta_set_int(&cur, 10));
+        test_int(0, ecs_meta_next(&cur));
+        test_int(0, ecs_meta_set_int(&cur, 20));
+        test_int(0, ecs_meta_pop(&cur));
+    test_int(0, ecs_meta_next(&cur));
+    key = 20;
+    test_int(0, ecs_meta_key(&cur, &key_value));
+        test_int(0, ecs_meta_push(&cur));
+        test_int(0, ecs_meta_set_int(&cur, 30));
+        test_int(0, ecs_meta_next(&cur));
+        test_int(0, ecs_meta_set_int(&cur, 40));
+        test_int(0, ecs_meta_pop(&cur));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(ecs_map_count(&value), 2);
+    Position *p = (Position*)ecs_map_get(&value, 10);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+    p = (Position*)ecs_map_get(&value, 20);
+    test_assert(p != NULL);
+    test_int(p->x, 30);
+    test_int(p->y, 40);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void Cursor_map_key_i64_nested_struct(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Point) = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "Point"}),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t ecs_id(Line) = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "Line"}),
+        .members = {
+            {"start", ecs_id(Point)},
+            {"stop", ecs_id(Point)}
+        }
+    });
+
+    ecs_entity_t t = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .key_type = ecs_id(ecs_i64_t),
+        .type = ecs_id(Line)
+    });
+
+    ecs_map_t value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+
+    int64_t key = 0;
+    ecs_value_t key_value = { .type = ecs_id(ecs_i64_t), .ptr = &key };
+
+    test_int(0, ecs_meta_push(&cur));
+    key = 10;
+    test_int(0, ecs_meta_key(&cur, &key_value));
+        test_int(0, ecs_meta_push(&cur));
+        test_int(0, ecs_meta_member(&cur, "start"));
+            test_int(0, ecs_meta_push(&cur));
+            test_int(0, ecs_meta_set_int(&cur, 1));
+            test_int(0, ecs_meta_next(&cur));
+            test_int(0, ecs_meta_set_int(&cur, 2));
+            test_int(0, ecs_meta_pop(&cur));
+        test_int(0, ecs_meta_member(&cur, "stop"));
+            test_int(0, ecs_meta_push(&cur));
+            test_int(0, ecs_meta_set_int(&cur, 3));
+            test_int(0, ecs_meta_next(&cur));
+            test_int(0, ecs_meta_set_int(&cur, 4));
+            test_int(0, ecs_meta_pop(&cur));
+        test_int(0, ecs_meta_pop(&cur));
+    test_int(0, ecs_meta_next(&cur));
+    key = 20;
+    test_int(0, ecs_meta_key(&cur, &key_value));
+        test_int(0, ecs_meta_push(&cur));
+        test_int(0, ecs_meta_member(&cur, "start"));
+            test_int(0, ecs_meta_push(&cur));
+            test_int(0, ecs_meta_set_int(&cur, 5));
+            test_int(0, ecs_meta_next(&cur));
+            test_int(0, ecs_meta_set_int(&cur, 6));
+            test_int(0, ecs_meta_pop(&cur));
+        test_int(0, ecs_meta_member(&cur, "stop"));
+            test_int(0, ecs_meta_push(&cur));
+            test_int(0, ecs_meta_set_int(&cur, 7));
+            test_int(0, ecs_meta_next(&cur));
+            test_int(0, ecs_meta_set_int(&cur, 8));
+            test_int(0, ecs_meta_pop(&cur));
+        test_int(0, ecs_meta_pop(&cur));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(ecs_map_count(&value), 2);
+    Line *l = ecs_map_get_deref(&value, Line, 10);
+    test_assert(l != NULL);
+    test_int(l->start.x, 1);
+    test_int(l->start.y, 2);
+    test_int(l->stop.x, 3);
+    test_int(l->stop.y, 4);
+    l = ecs_map_get_deref(&value, Line, 20);
+    test_assert(l != NULL);
+    test_int(l->start.x, 5);
+    test_int(l->start.y, 6);
+    test_int(l->stop.x, 7);
+    test_int(l->stop.y, 8);
+
+    ecs_map_iter_t it = ecs_map_iter(&value);
+    while (ecs_map_next(&it)) {
+        ecs_os_free(ecs_map_ptr(&it));
+    }
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void Cursor_map_key_i64_array_i32(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t a = ecs_array(world, {
+        .entity = ecs_entity(world, { .name = "A" }),
+        .type = ecs_id(ecs_i32_t),
+        .count = 3
+    });
+
+    ecs_entity_t t = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .key_type = ecs_id(ecs_i64_t),
+        .type = a
+    });
+
+    ecs_map_t value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+
+    int64_t key = 0;
+    ecs_value_t key_value = { .type = ecs_id(ecs_i64_t), .ptr = &key };
+
+    test_int(0, ecs_meta_push(&cur));
+    key = 10;
+    test_int(0, ecs_meta_key(&cur, &key_value));
+        test_int(0, ecs_meta_push(&cur));
+        test_int(0, ecs_meta_set_int(&cur, 100));
+        test_int(0, ecs_meta_next(&cur));
+        test_int(0, ecs_meta_set_int(&cur, 200));
+        test_int(0, ecs_meta_next(&cur));
+        test_int(0, ecs_meta_set_int(&cur, 300));
+        test_int(0, ecs_meta_pop(&cur));
+    test_int(0, ecs_meta_next(&cur));
+    key = 20;
+    test_int(0, ecs_meta_key(&cur, &key_value));
+        test_int(0, ecs_meta_push(&cur));
+        test_int(0, ecs_meta_set_int(&cur, 400));
+        test_int(0, ecs_meta_next(&cur));
+        test_int(0, ecs_meta_set_int(&cur, 500));
+        test_int(0, ecs_meta_next(&cur));
+        test_int(0, ecs_meta_set_int(&cur, 600));
+        test_int(0, ecs_meta_pop(&cur));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(ecs_map_count(&value), 2);
+    int32_t *arr = ecs_map_get_deref(&value, int32_t, 10);
+    test_assert(arr != NULL);
+    test_int(arr[0], 100);
+    test_int(arr[1], 200);
+    test_int(arr[2], 300);
+    arr = ecs_map_get_deref(&value, int32_t, 20);
+    test_assert(arr != NULL);
+    test_int(arr[0], 400);
+    test_int(arr[1], 500);
+    test_int(arr[2], 600);
+
+    ecs_map_iter_t it = ecs_map_iter(&value);
+    while (ecs_map_next(&it)) {
+        ecs_os_free(ecs_map_ptr(&it));
+    }
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void Cursor_map_key_i64_vector_i32(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t v = ecs_vector(world, {
+        .entity = ecs_entity(world, { .name = "V" }),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_entity_t t = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .key_type = ecs_id(ecs_i64_t),
+        .type = v
+    });
+
+    ecs_map_t value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+
+    int64_t key = 0;
+    ecs_value_t key_value = { .type = ecs_id(ecs_i64_t), .ptr = &key };
+
+    test_int(0, ecs_meta_push(&cur));
+    key = 10;
+    test_int(0, ecs_meta_key(&cur, &key_value));
+        test_int(0, ecs_meta_push(&cur));
+        test_int(0, ecs_meta_set_int(&cur, 100));
+        test_int(0, ecs_meta_next(&cur));
+        test_int(0, ecs_meta_set_int(&cur, 200));
+        test_int(0, ecs_meta_pop(&cur));
+    test_int(0, ecs_meta_next(&cur));
+    key = 20;
+    test_int(0, ecs_meta_key(&cur, &key_value));
+        test_int(0, ecs_meta_push(&cur));
+        test_int(0, ecs_meta_set_int(&cur, 300));
+        test_int(0, ecs_meta_next(&cur));
+        test_int(0, ecs_meta_set_int(&cur, 400));
+        test_int(0, ecs_meta_pop(&cur));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(ecs_map_count(&value), 2);
+    ecs_vec_t *vec = ecs_map_get_deref(&value, ecs_vec_t, 10);
+    test_assert(vec != NULL);
+    test_int(vec->count, 2);
+    test_int(((int32_t*)vec->array)[0], 100);
+    test_int(((int32_t*)vec->array)[1], 200);
+    vec = ecs_map_get_deref(&value, ecs_vec_t, 20);
+    test_assert(vec != NULL);
+    test_int(vec->count, 2);
+    test_int(((int32_t*)vec->array)[0], 300);
+    test_int(((int32_t*)vec->array)[1], 400);
+
+    ecs_map_iter_t it = ecs_map_iter(&value);
+    while (ecs_map_next(&it)) {
+        vec = ecs_map_ptr(&it);
+        ecs_os_free(vec->array);
+        ecs_os_free(vec);
+    }
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void Cursor_map_key_i64_map_i32(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t m = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "M" }),
+        .key_type = ecs_id(ecs_i64_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_entity_t t = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .key_type = ecs_id(ecs_i64_t),
+        .type = m
+    });
+
+    ecs_map_t value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+
+    int64_t key = 0;
+    ecs_value_t key_value = { .type = ecs_id(ecs_i64_t), .ptr = &key };
+
+    test_int(0, ecs_meta_push(&cur));
+    key = 10;
+    test_int(0, ecs_meta_key(&cur, &key_value));
+        test_int(0, ecs_meta_push(&cur));
+        key = 1;
+        test_int(0, ecs_meta_key(&cur, &key_value));
+        test_int(0, ecs_meta_set_int(&cur, 100));
+        test_int(0, ecs_meta_next(&cur));
+        key = 2;
+        test_int(0, ecs_meta_key(&cur, &key_value));
+        test_int(0, ecs_meta_set_int(&cur, 200));
+        test_int(0, ecs_meta_pop(&cur));
+    test_int(0, ecs_meta_next(&cur));
+    key = 20;
+    test_int(0, ecs_meta_key(&cur, &key_value));
+        test_int(0, ecs_meta_push(&cur));
+        key = 3;
+        test_int(0, ecs_meta_key(&cur, &key_value));
+        test_int(0, ecs_meta_set_int(&cur, 300));
+        test_int(0, ecs_meta_next(&cur));
+        key = 4;
+        test_int(0, ecs_meta_key(&cur, &key_value));
+        test_int(0, ecs_meta_set_int(&cur, 400));
+        test_int(0, ecs_meta_pop(&cur));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(ecs_map_count(&value), 2);
+    ecs_map_t *mv = ecs_map_get_deref(&value, ecs_map_t, 10);
+    test_assert(mv != NULL);
+    test_int(ecs_map_count(mv), 2);
+    ecs_map_val_t *elem = ecs_map_get(mv, 1);
+    test_assert(elem != NULL);
+    test_int(*(int32_t*)elem, 100);
+    elem = ecs_map_get(mv, 2);
+    test_assert(elem != NULL);
+    test_int(*(int32_t*)elem, 200);
+    mv = ecs_map_get_deref(&value, ecs_map_t, 20);
+    test_assert(mv != NULL);
+    test_int(ecs_map_count(mv), 2);
+    elem = ecs_map_get(mv, 3);
+    test_assert(elem != NULL);
+    test_int(*(int32_t*)elem, 300);
+    elem = ecs_map_get(mv, 4);
+    test_assert(elem != NULL);
+    test_int(*(int32_t*)elem, 400);
+
+    ecs_map_iter_t it = ecs_map_iter(&value);
+    while (ecs_map_next(&it)) {
+        mv = ecs_map_ptr(&it);
+        ecs_map_fini(mv);
+        ecs_os_free(mv);
+    }
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}

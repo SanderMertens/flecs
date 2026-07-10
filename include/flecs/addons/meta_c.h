@@ -60,6 +60,12 @@ extern "C" {
 /** Macro used to mark part of type for which no reflection data is created. */
 #define ECS_PRIVATE
 
+/** Macro used to declare a vector member in types with reflection data. */
+#define ecs_vec(T) ecs_vec_t
+
+/** Macro used to declare a map member in types with reflection data. */
+#define ecs_map(K, V) ecs_map_t
+
 /** Populate meta information from type descriptor. */
 FLECS_API
 int ecs_meta_from_desc(

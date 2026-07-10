@@ -46,6 +46,7 @@ void flecs_expr_initializer_visit_free(
     int32_t i, count = ecs_vec_count(&node->elements);
     for (i = 0; i < count; i ++) {
         ecs_expr_initializer_element_t *elem = &elems[i];
+        flecs_expr_visit_free(script, elem->key);
         flecs_expr_visit_free(script, elem->value);
     }
 

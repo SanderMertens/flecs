@@ -114,6 +114,13 @@ int flecs_expr_visit_refs(
         ecs_expr_initializer_element_t *elems = ecs_vec_first(&n->elements);
         int32_t i, count = ecs_vec_count(&n->elements);
         for (i = 0; i < count; i ++) {
+            if (elems[i].key) {
+                if (flecs_expr_visit_refs(
+                    script, elems[i].key, refs, dynamic_refs))
+                {
+                    goto error;
+                }
+            }
             if (flecs_expr_visit_refs(
                 script, elems[i].value, refs, dynamic_refs))
             {

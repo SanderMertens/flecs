@@ -2187,3 +2187,62 @@ void Serialized_ops_missing_metatype(void) {
 
     ecs_fini(world);
 }
+
+void Serialized_ops_map(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t m = ecs_map_type_init(world, &(ecs_map_desc_t){
+        .entity = ecs_entity(world, {.name = "M"}),
+        .key_type = ecs_id(ecs_i64_t),
+        .type = ecs_id(ecs_bool_t)
+    });
+
+    test_assert(m != 0);
+
+    const EcsTypeSerializer *s = ecs_get(world, m, EcsTypeSerializer);
+    test_assert(s != NULL);
+    test_int(ecs_vec_count(&s->ops), 3);
+
+    test_op(&s->ops, 0, EcsOpPushMap, 1, 3, m);
+    test_op(&s->ops, 1, EcsOpBool, 1, 1, ecs_id(ecs_bool_t));
+    test_op(&s->ops, 2, EcsOpPop, 1, 1, m);
+
+    ecs_meta_op_t *op = ecs_vec_get_t(&s->ops, ecs_meta_op_t, 0);
+    test_int(op->underlying_kind, EcsOpI64);
+
+    ecs_fini(world);
+}
+
+void Serialized_ops_struct_w_map(void) {
+    typedef struct {
+        ecs_map_t m;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t m = ecs_map_type_init(world, &(ecs_map_desc_t){
+        .entity = ecs_entity(world, {.name = "M"}),
+        .key_type = ecs_id(ecs_i64_t),
+        .type = ecs_id(ecs_bool_t)
+    });
+
+    test_assert(m != 0);
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"m", m}
+        }
+    });
+    test_assert(t != 0);
+
+    const EcsTypeSerializer *s = ecs_get(world, t, EcsTypeSerializer);
+    test_assert(s != NULL);
+    test_int(ecs_vec_count(&s->ops), 3);
+
+    test_op(&s->ops, 0, EcsOpPushStruct, 1, 3, t);
+    test_mp(&s->ops, 1, EcsOpForward, 1, 1, T, m, m);
+    test_op(&s->ops, 2, EcsOpPop, 1, 1, t);
+
+    ecs_fini(world);
+}
