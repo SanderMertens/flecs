@@ -12,9 +12,10 @@
 
 /** Create a new pipeline.
  *
+ * @param name The pipeline name (optional).
  * @return A pipeline builder.
  */
-flecs::pipeline_builder<> pipeline() const;
+flecs::pipeline_builder<> pipeline(const char *name = nullptr) const;
 
 /** Create a new pipeline.
  *

@@ -22,8 +22,8 @@ struct pipeline : entity {
     }
 };
 
-inline flecs::pipeline_builder<> world::pipeline() const {
-    return flecs::pipeline_builder<>(world_);
+inline flecs::pipeline_builder<> world::pipeline(const char *name) const {
+    return flecs::pipeline_builder<>(world_, name);
 }
 
 template <typename Pipeline, if_not_t< is_enum<Pipeline>::value >>
