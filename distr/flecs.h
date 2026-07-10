@@ -4659,7 +4659,10 @@ struct ecs_type_hooks_t {
     /** Callback that is invoked with the existing and new value before the
      * value is assigned. Invoked after on_add and before on_set. Registering
      * an on_replace hook prevents using operations that return a mutable
-     * pointer to the component, like get_mut(), ensure(), and emplace(). */
+     * pointer to the component, like get_mut(), ensure(), and emplace().
+     * The iterator's other_table field is set to the table of the entity
+     * before the operation. To find out whether the component existed before
+     * the operation, call ecs_table_has_id() on other_table. */
     ecs_iter_action_t on_replace;
 
     /** Callback that is invoked before the on_set/OnSet hooks and observers are

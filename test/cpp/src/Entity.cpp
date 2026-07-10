@@ -6697,10 +6697,10 @@ void Entity_on_replace_other_table_set_new(void) {
     e.set(Position{10, 20});
     test_int(ctx.invoked, 1);
 
-    /* prev captured before ensure: root table, no Position -> bit 0 unset */
+    /* prev captured before ensure: root table, no Position */
     test_assert(ctx.other_table == prev);
-    test_assert(!(ctx.set_fields & 1));
-    test_assert(ctx.set_fields & 2);
+    test_assert(ctx.set_fields == 3);
+    test_assert(!ecs_table_has_id(world, ctx.other_table, pos_id));
 }
 
 void Entity_on_replace_other_table_set_existing(void) {
@@ -6724,9 +6724,10 @@ void Entity_on_replace_other_table_set_existing(void) {
     e.set(Position{11, 21});
     test_int(ctx.invoked, 1);
 
-    /* Entity already had Position -> other_table == {Position} table, both bits set */
+    /* Entity already had Position -> other_table == {Position} table */
     test_assert(ctx.other_table == table_with_pos);
     test_assert(ctx.set_fields == 3);
+    test_assert(ecs_table_has_id(world, ctx.other_table, pos_id));
 }
 
 void Entity_on_replace_other_table_assign_new(void) {
@@ -6749,9 +6750,10 @@ void Entity_on_replace_other_table_assign_new(void) {
     e.assign(Position{10, 20});
     test_int(ctx.invoked, 1);
 
-    /* assign requires component to already exist; other_table == {Position}, both bits set */
+    /* assign requires component to already exist; other_table == {Position} */
     test_assert(ctx.other_table == table_with_pos);
     test_assert(ctx.set_fields == 3);
+    test_assert(ecs_table_has_id(world, ctx.other_table, pos_id));
 }
 
 void Entity_on_replace_other_table_assign_existing(void) {
@@ -6775,9 +6777,10 @@ void Entity_on_replace_other_table_assign_existing(void) {
     e.assign(Position{11, 21});
     test_int(ctx.invoked, 1);
 
-    /* Replacing existing via assign: other_table == {Position}, both bits set */
+    /* Replacing existing via assign: other_table == {Position} */
     test_assert(ctx.other_table == table_with_pos);
     test_assert(ctx.set_fields == 3);
+    test_assert(ecs_table_has_id(world, ctx.other_table, pos_id));
 }
 
 void Entity_set_lvalue_to_mutable(void) {

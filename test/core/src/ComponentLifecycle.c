@@ -4581,11 +4581,10 @@ void ComponentLifecycle_on_replace_other_table_new_entity(void) {
     ecs_set(world, e, Position, {10, 20});
     test_int(ctx.invoked, 1);
 
-    /* prev_table captured before flecs_ensure: root table, no Position.
-     * set_fields=2: bit 0 unset (no old value), bit 1 set (new value). */
+    /* prev_table captured before flecs_ensure: root table, no Position. */
     test_assert(ctx.other_table == prev);
-    test_assert(!(ctx.set_fields & 1));
-    test_assert(ctx.set_fields & 2);
+    test_assert(ctx.set_fields == 3);
+    test_assert(!ecs_table_has_id(world, ctx.other_table, ecs_id(Position)));
 
     ecs_fini(world);
 }
@@ -4612,10 +4611,10 @@ void ComponentLifecycle_on_replace_other_table_existing_entity(void) {
     ecs_set(world, e, Position, {10, 20});
     test_int(ctx.invoked, 1);
 
-    /* prev_table = {Velocity} before ensure; set_fields=2: Position not yet in prev. */
+    /* prev_table = {Velocity} before ensure: Position not yet in prev. */
     test_assert(ctx.other_table == prev);
-    test_assert(!(ctx.set_fields & 1));
-    test_assert(ctx.set_fields & 2);
+    test_assert(ctx.set_fields == 3);
+    test_assert(!ecs_table_has_id(world, ctx.other_table, ecs_id(Position)));
 
     ecs_fini(world);
 }
@@ -4643,9 +4642,10 @@ void ComponentLifecycle_on_replace_other_table_set_existing(void) {
     ecs_set(world, e, Position, {11, 21});
     test_int(ctx.invoked, 1);
 
-    /* prev_table = {Position} (unchanged by ensure); set_fields=3: Position in prev. */
+    /* prev_table = {Position} (unchanged by ensure): Position in prev. */
     test_assert(ctx.other_table == table_with_pos);
     test_assert(ctx.set_fields == 3);
+    test_assert(ecs_table_has_id(world, ctx.other_table, ecs_id(Position)));
 
     ecs_fini(world);
 }
@@ -4675,11 +4675,10 @@ void ComponentLifecycle_on_replace_other_table_batched_new_entity(void) {
     ecs_defer_end(world);
     test_int(ctx.invoked, 1);
 
-    /* Batch flush second-pass: uses start_table (root, no Position).
-     * set_fields=2: bit 0 unset because start_table lacks Position. */
+    /* Batch flush second-pass: uses start_table (root, no Position). */
     test_assert(ctx.other_table == start_table);
-    test_assert(!(ctx.set_fields & 1));
-    test_assert(ctx.set_fields & 2);
+    test_assert(ctx.set_fields == 3);
+    test_assert(!ecs_table_has_id(world, ctx.other_table, ecs_id(Position)));
 
     ecs_fini(world);
 }
@@ -4712,6 +4711,7 @@ void ComponentLifecycle_on_replace_other_table_batched_existing(void) {
     test_int(ctx.invoked, 1);
     test_assert(ctx.other_table == table_with_pos);
     test_assert(ctx.set_fields == 3);
+    test_assert(ecs_table_has_id(world, ctx.other_table, ecs_id(Position)));
     ecs_defer_end(world);
 
     ecs_fini(world);
@@ -4730,16 +4730,15 @@ void ComponentLifecycle_on_replace_other_table_entity_init(void) {
         .ctx = &ctx,
     });
 
-    /* init_table = r->table before any components added (root, no Position).
-     * set_fields=2: bit 0 unset, new add. */
+    /* init_table = r->table before any components added (root, no Position). */
     ecs_entity_t e = ecs_entity(world, {
         .set = ecs_values(ecs_value(Position, {10, 20}))
     });
     test_int(ctx.invoked, 1);
 
     test_assert(ctx.other_table != ecs_get_table(world, e));
-    test_assert(!(ctx.set_fields & 1));
-    test_assert(ctx.set_fields & 2);
+    test_assert(ctx.set_fields == 3);
+    test_assert(!ecs_table_has_id(world, ctx.other_table, ecs_id(Position)));
 
     ecs_fini(world);
 }
