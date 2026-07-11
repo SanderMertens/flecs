@@ -1468,6 +1468,25 @@
                 "map_of_strings",
                 "map_of_struct_with_strings"
             ]
+        },{
+            "id": "SetRttHooks",
+            "testcases": [
+                "compare_struct_with_ints",
+                "equals_struct_with_ints",
+                "compare_generates_equals",
+                "equals_struct_with_strings",
+                "compare_nested_struct",
+                "equals_nested_struct",
+                "compare_array",
+                "compare_vector",
+                "compare_map",
+                "compare_opaque_without_hook_fails",
+                "compare_primitive_noop",
+                "compare_idempotent",
+                "value_compare",
+                "value_equals",
+                "value_different_types"
+            ]
         }]
     }
 }

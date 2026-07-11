@@ -205,6 +205,58 @@ void ecs_value_move_ctor(
     src->ptr = NULL;
 }
 
+int ecs_value_compare(
+    const ecs_world_t *world,
+    const ecs_value_t *a,
+    const ecs_value_t *b)
+{
+    ecs_assert(a != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    if (a->type != b->type) {
+        return (a->type > b->type) ? 1 : -1;
+    }
+
+    if (a->ptr == b->ptr) {
+        return 0;
+    }
+
+    if (!a->ptr || !b->ptr) {
+        return a->ptr ? 1 : -1;
+    }
+
+    const ecs_type_info_t *ti = flecs_value_type_info(world, a->type);
+    ecs_assert(ti != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    return flecs_type_info_cmp(a->ptr, b->ptr, ti);
+}
+
+bool ecs_value_equals(
+    const ecs_world_t *world,
+    const ecs_value_t *a,
+    const ecs_value_t *b)
+{
+    ecs_assert(a != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    if (a->type != b->type) {
+        return false;
+    }
+
+    if (a->ptr == b->ptr) {
+        return true;
+    }
+
+    if (!a->ptr || !b->ptr) {
+        return false;
+    }
+
+    const ecs_type_info_t *ti = flecs_value_type_info(world, a->type);
+    ecs_assert(ti != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    return flecs_type_info_equals(a->ptr, b->ptr, ti);
+}
+
 static
 ecs_world_t* flecs_value_world(
     const ecs_type_info_t *ti)
