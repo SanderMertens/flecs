@@ -1648,6 +1648,7 @@
                 "global_const_var_in_for_expr",
                 "global_const_var_non_managed_script_no_update",
                 "global_const_var_set_after_managed_script_deleted",
+                "global_const_var_modified",
                 "ref_in_function",
                 "global_const_var_in_function",
                 "ref_in_new_expr",

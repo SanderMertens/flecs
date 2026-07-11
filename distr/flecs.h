@@ -17619,12 +17619,23 @@ ecs_entity_t ecs_const_var_init(
  * ecs_const_var_init(), or in a script with "export const v: ...".
  *
  * @param world The world.
- * @param var The variable associated with the entity.
+ * @param var The const variable.
  * @return The value of the const variable.
  */
 FLECS_API
 ecs_value_t ecs_const_var_get(
     const ecs_world_t *world,
+    ecs_entity_t var);
+
+/** Mark const var as modified.
+ * This will notify OnSet observers.
+ * 
+ * @param world The world.
+ * @param var The const variable.
+ */
+FLECS_API
+void ecs_const_var_modified(
+    ecs_world_t *world,
     ecs_entity_t var);
 
 /* Functions */
