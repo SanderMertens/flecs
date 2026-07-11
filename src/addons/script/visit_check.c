@@ -78,16 +78,6 @@ int flecs_script_check_expr(
         goto error;
     }
 
-    /* Collect statically known component references used in a template body so
-     * a single observer per reference can trigger reevaluation of instances. */
-    if (v->template) {
-        if (flecs_expr_visit_refs(script, *expr_ptr, &v->template->refs,
-            &v->template->dynamic_refs, &impl->refs))
-        {
-            goto error;
-        }
-    }
-
     if (type) {
         type[0] = expr_ptr[0]->type;
     }

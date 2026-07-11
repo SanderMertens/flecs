@@ -451,9 +451,11 @@ int flecs_expr_global_variable_visit_fold(
     ecs_entity_t type = node->node.type;
 
     /* In a template body the node is kept unfolded so its value is read live
-     * from the const variable on every (re)instantiation. */
+     * from the const variable on every (re)instantiation. This includes
+     * expressions that are lazily folded during instantiation, such as the
+     * body of a 'new' expression. */
     ecs_script_eval_visitor_t *v = desc->script_visitor;
-    if (v && v->template) {
+    if (v && (v->template || v->template_instance)) {
         return 0;
     }
 

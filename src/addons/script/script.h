@@ -15,17 +15,11 @@ typedef struct ecs_script_entity_t ecs_script_entity_t;
 
 #define flecs_script_impl(script) ((ecs_script_impl_t*)script)
 
-typedef struct ecs_script_ref_t {
-    ecs_entity_t entity;
-    const char *name;
-    ecs_id_t component;
-    ecs_entity_t observer;
-} ecs_script_ref_t;
-
-typedef struct ecs_script_ref_ctx_t {
+typedef struct EcsScriptRefChangedEvent {
     ecs_entity_t script;
-    ecs_entity_t instance;
-} ecs_script_ref_ctx_t;
+} EcsScriptRefChangedEvent;
+
+extern ECS_COMPONENT_DECLARE(EcsScriptRefChangedEvent);
 
 struct ecs_script_impl_t {
     ecs_script_t pub;
@@ -37,7 +31,8 @@ struct ecs_script_impl_t {
     const char *next_token; /* First character after expression */
     int32_t token_buffer_size;
     int32_t refcount;
-    ecs_vec_t refs;
+    ecs_vec_t refs; /* vec<ecs_script_requirement_t> */
+    ecs_vec_t usings; /* vec<char*> */
     bool evaluating;
 };
 
@@ -72,21 +67,59 @@ struct ecs_script_runtime_t {
 ecs_script_t* flecs_script_new(
     ecs_world_t *world);
 
-ecs_entity_t flecs_script_create_ref_observer(
+int flecs_script_visit_refs(
+    ecs_script_impl_t *script,
+    ecs_script_scope_t *scope,
+    bool template_scope,
+    const ecs_script_vars_t *vars,
+    ecs_vec_t *refs,
+    ecs_vec_t *usings,
+    ecs_vec_t *fn_refs);
+
+int flecs_script_visit_fn_refs(
+    ecs_script_impl_t *script,
+    ecs_script_function_node_t *node,
+    ecs_vec_t *refs);
+
+void flecs_script_refs_fini(
+    ecs_vec_t *refs);
+
+void flecs_script_strings_fini(
+    ecs_vec_t *strings);
+
+bool flecs_script_requirements_met(
+    const ecs_world_t *world,
+    const ecs_vec_t *requirements,
+    const ecs_script_vars_t *vars,
+    const ecs_vec_t *usings);
+
+void flecs_script_requirements_update(
     ecs_world_t *world,
     ecs_entity_t script,
-    ecs_entity_t instance,
-    ecs_entity_t entity,
-    ecs_id_t component,
+    const ecs_vec_t *refs,
+    const ecs_vec_t *usings,
+    bool met,
     ecs_iter_action_t callback);
 
-void flecs_script_update_ref_observers(
+void flecs_script_requirements_delete_observers(
+    ecs_world_t *world,
+    EcsScriptRequirements *reqs);
+
+bool flecs_script_requirements_should_reeval(
     ecs_world_t *world,
     ecs_entity_t script,
-    ecs_entity_t instance,
-    ecs_vec_t *refs,
-    ecs_vec_t *observers,
-    ecs_iter_action_t callback);
+    ecs_entity_t template_component,
+    ecs_iter_t *it);
+
+void flecs_script_enqueue_ref_changed(
+    ecs_world_t *world,
+    ecs_entity_t script);
+
+void flecs_script_ref_on_set(
+    ecs_iter_t *it);
+
+void flecs_script_requirements_import(
+    ecs_world_t *world);
 
 ecs_script_scope_t* flecs_script_scope_new(
     ecs_parser_t *parser);

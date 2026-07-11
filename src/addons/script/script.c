@@ -29,14 +29,12 @@ ECS_MOVE(EcsScript, dst, src, {
     dst->error = src->error;
     dst->script = src->script;
     dst->template_ = src->template_;
-    dst->observers = src->observers;
 
     src->filename = NULL;
     src->code = NULL;
     src->error = NULL;
     src->script = NULL;
     src->template_ = NULL;
-    ecs_os_zeromem(&src->observers);
 })
 
 static
@@ -49,8 +47,6 @@ ECS_DTOR(EcsScript, ptr, {
     if (ptr->script) {
         ecs_script_free(ptr->script);
     }
-
-    ecs_vec_fini_t(NULL, &ptr->observers, ecs_script_ref_t);
 
     ecs_os_free(ptr->filename);
     ecs_os_free(ptr->code);
@@ -78,7 +74,8 @@ ecs_script_t* flecs_script_new(
     result->root = flecs_script_scope_new(&parser);
     result->pub.world = world;
     result->refcount = 1;
-    ecs_vec_init_t(NULL, &result->refs, ecs_script_ref_t, 0);
+    ecs_vec_init_t(NULL, &result->refs, ecs_script_requirement_t, 0);
+    ecs_vec_init_t(NULL, &result->usings, char*, 0);
     return &result->pub;
 }
 
@@ -124,129 +121,6 @@ void ecs_script_clear(
         }
         ecs_vec_fini_t(&world->allocator, &to_delete, ecs_entity_t);
     }
-}
-
-static
-void flecs_script_ref_on_set(
-    ecs_iter_t *it)
-{
-    ecs_entity_t script = (ecs_entity_t)(uintptr_t)it->ctx;
-    ecs_world_t *world = it->real_world;
-
-    if (!ecs_is_alive(world, script)) {
-        return;
-    }
-
-    const EcsScript *s = ecs_get(world, script, EcsScript);
-    if (!s || !s->script || !s->code) {
-        return;
-    }
-
-    if (flecs_script_impl(s->script)->evaluating) {
-        return;
-    }
-
-    char *code = ecs_os_strdup(s->code);
-    ecs_script_update(world, script, 0, code);
-    ecs_os_free(code);
-}
-
-static
-void flecs_script_ref_ctx_free(
-    void *ptr)
-{
-    ecs_os_free(ptr);
-}
-
-ecs_entity_t flecs_script_create_ref_observer(
-    ecs_world_t *world,
-    ecs_entity_t script,
-    ecs_entity_t instance,
-    ecs_entity_t entity,
-    ecs_id_t component,
-    ecs_iter_action_t callback)
-{
-    ecs_entity_t prev_scope = ecs_set_scope(world, script);
-    ecs_entity_t prev_with = ecs_set_with(world, 0);
-
-    ecs_observer_desc_t desc = {
-        .query.terms = {{ .id = component, .src.id = entity }},
-        .events = { EcsOnSet },
-        .callback = callback
-    };
-
-    if (instance) {
-        ecs_script_ref_ctx_t *ctx = ecs_os_malloc_t(ecs_script_ref_ctx_t);
-        ctx->script = script;
-        ctx->instance = instance;
-        desc.ctx = ctx;
-        desc.ctx_free = flecs_script_ref_ctx_free;
-    } else {
-        desc.ctx = (void*)(uintptr_t)script;
-    }
-
-    ecs_entity_t observer = ecs_observer_init(world, &desc);
-
-    ecs_set_with(world, prev_with);
-    ecs_set_scope(world, prev_scope);
-
-    return observer;
-}
-
-void flecs_script_update_ref_observers(
-    ecs_world_t *world,
-    ecs_entity_t script,
-    ecs_entity_t instance,
-    ecs_vec_t *refs,
-    ecs_vec_t *observers,
-    ecs_iter_action_t callback)
-{
-    ecs_script_ref_t *new_refs = ecs_vec_first(refs);
-    int32_t i, new_count = ecs_vec_count(refs);
-
-    ecs_script_ref_t *old_refs = ecs_vec_first(observers);
-    int32_t j, old_count = ecs_vec_count(observers);
-
-    ecs_vec_t result;
-    ecs_vec_init_t(NULL, &result, ecs_script_ref_t, new_count);
-
-    for (i = 0; i < new_count; i ++) {
-        ecs_entity_t entity = new_refs[i].entity;
-        ecs_id_t component = new_refs[i].component;
-        ecs_entity_t observer = 0;
-
-        for (j = 0; j < old_count; j ++) {
-            if (old_refs[j].observer &&
-                old_refs[j].entity == entity &&
-                old_refs[j].component == component)
-            {
-                observer = old_refs[j].observer;
-                old_refs[j].observer = 0;
-                break;
-            }
-        }
-
-        if (!observer) {
-            observer = flecs_script_create_ref_observer(
-                world, script, instance, entity, component, callback);
-        }
-
-        ecs_script_ref_t *ref = ecs_vec_append_t(
-            NULL, &result, ecs_script_ref_t);
-        ref->entity = entity;
-        ref->name = NULL;
-        ref->component = component;
-        ref->observer = observer;
-    }
-
-    for (j = 0; j < old_count; j ++) {
-        if (old_refs[j].observer) {
-            ecs_delete(world, old_refs[j].observer);
-        }
-    }
-
-    ecs_vec_fini_t(NULL, observers, ecs_script_ref_t);
-    *observers = result;
 }
 
 int ecs_script_run(
@@ -299,7 +173,8 @@ void ecs_script_free(
     if (!--impl->refcount) {
         flecs_script_visit_free(script);
         flecs_expr_visit_free(script, impl->expr);
-        ecs_vec_fini_t(NULL, &impl->refs, ecs_script_ref_t);
+        flecs_script_refs_fini(&impl->refs);
+        flecs_script_strings_fini(&impl->usings);
         flecs_free(&impl->allocator,
             impl->token_buffer_size, impl->token_buffer);
         flecs_allocator_fini(&impl->allocator);
@@ -377,33 +252,51 @@ int ecs_script_update(
     ecs_entity_t prev = ecs_set_with(world, flecs_script_tag(e, instance));
 
     ecs_script_t *parsed = s->script;
-    flecs_script_impl(parsed)->evaluating = true;
-    if (ecs_script_eval(parsed, NULL, &eval_result)) {
+    ecs_script_impl_t *impl = flecs_script_impl(parsed);
+
+    bool met = true;
+    if (!instance) {
+        /* Statically collect references made by the script. If a reference is
+         * not yet satisfied, defer evaluation until it is. */
+        flecs_script_visit_refs(impl, impl->root, false, NULL,
+            &impl->refs, &impl->usings, NULL);
+        met = flecs_script_requirements_met(
+            world, &impl->refs, NULL, &impl->usings);
+    }
+
+    bool eval_failed = false;
+    if (met) {
+        impl->evaluating = true;
+        if (ecs_script_eval(parsed, NULL, &eval_result)) {
+            eval_failed = true;
+            s = ecs_ensure(world, e, EcsScript);
+            s->error = eval_result.error;
+            ecs_log_(-3, NULL, 0, "%s: %s", name ? name : "script", s->error);
+            result = -1;
+        }
+        impl->evaluating = false;
+    } else {
         s = ecs_ensure(world, e, EcsScript);
-        s->error = eval_result.error;
-        ecs_log_(-3, NULL, 0, "%s: %s", name ? name : "script", s->error);
+        s->error = ecs_os_strdup(
+            "script was not evaluated because of unmet requirements");
+    }
+
+    if (!instance) {
+        if (ecs_vec_count(&impl->refs) ||
+            ecs_has(world, e, EcsScriptRequirements))
+        {
+            flecs_script_requirements_update(world, e, &impl->refs,
+                &impl->usings, met, flecs_script_ref_on_set);
+        }
+    }
+
+    if (eval_failed) {
+        /* Free the script before deleting the entities it created, as the
+         * parsed AST can hold values of types defined by the script. */
+        s = ecs_ensure(world, e, EcsScript);
         ecs_script_free(parsed);
         s->script = NULL;
         ecs_delete_with(world, ecs_pair_t(EcsScript, e));
-        result = -1;
-    } else {
-        flecs_script_impl(parsed)->evaluating = false;
-        if (!instance) {
-            s = ecs_ensure(world, e, EcsScript);
-            ecs_vec_t *script_refs = &flecs_script_impl(s->script)->refs;
-            ecs_script_ref_t *refs = ecs_vec_first(script_refs);
-            int32_t i;
-            for (i = ecs_vec_count(script_refs) - 1; i >= 0; i --) {
-                if (refs[i].entity && ecs_has_pair(
-                    world, refs[i].entity, ecs_id(EcsScript), e))
-                {
-                    ecs_vec_remove_t(script_refs, ecs_script_ref_t, i);
-                }
-            }
-            flecs_script_update_ref_observers(world, e, 0,
-                script_refs, &s->observers, flecs_script_ref_on_set);
-            ecs_vec_clear(script_refs);
-        }
     }
 
     ecs_set_with(world, prev);
@@ -585,6 +478,7 @@ void FlecsScriptImport(
     ecs_add_id(world, ecs_id(EcsScript), EcsPairIsTag);
     ecs_add_pair(world, ecs_id(EcsScript), EcsOnInstantiate, EcsDontInherit);
 
+    flecs_script_requirements_import(world);
     flecs_script_template_import(world);
     flecs_function_import(world);
 }

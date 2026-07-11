@@ -1738,7 +1738,7 @@
                 "prop_ref_in_template_assigned_to_component",
                 "template_prop_ref_observer_lifecycle",
                 "template_prop_ref_retarget",
-                "global_const_var_declared_in_same_script",
+"global_const_var_declared_in_same_script",
                 "global_const_var_declared_in_same_script_w_fn",
                 "global_const_var_declared_in_same_script_w_fn_other_script",
                 "global_const_var_declared_in_same_script_w_fn_other_scripts",
@@ -1746,7 +1746,25 @@
                 "ref_declared_in_same_script_w_fn",
                 "ref_declared_in_same_script_w_fn_other_script",
                 "ref_declared_in_same_script_w_fn_other_scripts",
-                "global_const_var_declared_in_same_script_w_template"
+                "global_const_var_declared_in_same_script_w_template",
+                "ref_component_not_available_yet",
+                "ref_component_removed",
+                "global_const_var_not_available_yet",
+                "global_const_var_removed",
+                "ref_in_template_component_not_available_yet",
+                "ref_in_template_component_removed",
+                "global_const_var_in_template_not_available_yet",
+                "global_const_var_in_template_removed",
+                "this_ref_in_template_component_not_available_yet",
+                "this_ref_in_template_component_removed",
+                "prop_ref_in_template_component_not_available_yet",
+                "prop_ref_in_template_component_removed",
+                "script_requirements_component",
+                "script_requirements_component_unresolved_var",
+                "template_requirements_component",
+                "template_instance_requirements_component",
+                "global_const_var_entity_not_a_var",
+                "ref_via_variable_component_not_available_yet"
             ]
         }]
     }

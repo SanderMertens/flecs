@@ -50508,17 +50508,11 @@ typedef struct ecs_script_entity_t ecs_script_entity_t;
 
 #define flecs_script_impl(script) ((ecs_script_impl_t*)script)
 
-typedef struct ecs_script_ref_t {
-    ecs_entity_t entity;
-    const char *name;
-    ecs_id_t component;
-    ecs_entity_t observer;
-} ecs_script_ref_t;
-
-typedef struct ecs_script_ref_ctx_t {
+typedef struct EcsScriptRefChangedEvent {
     ecs_entity_t script;
-    ecs_entity_t instance;
-} ecs_script_ref_ctx_t;
+} EcsScriptRefChangedEvent;
+
+extern ECS_COMPONENT_DECLARE(EcsScriptRefChangedEvent);
 
 struct ecs_script_impl_t {
     ecs_script_t pub;
@@ -50530,7 +50524,8 @@ struct ecs_script_impl_t {
     const char *next_token; /* First character after expression */
     int32_t token_buffer_size;
     int32_t refcount;
-    ecs_vec_t refs;
+    ecs_vec_t refs; /* vec<ecs_script_requirement_t> */
+    ecs_vec_t usings; /* vec<char*> */
     bool evaluating;
 };
 
@@ -51144,13 +51139,6 @@ void flecs_expr_visit_free(
     ecs_script_t *script,
     ecs_expr_node_t *node);
 
-int flecs_expr_visit_refs(
-    const ecs_script_t *script,
-    ecs_expr_node_t *node,
-    ecs_vec_t *refs,
-    ecs_vec_t *dynamic_refs,
-    ecs_vec_t *fn_refs);
-
 #endif
 
 int flecs_value_copy_to(
@@ -51318,8 +51306,8 @@ typedef struct ecs_script_eval_visitor_t {
     ecs_world_t *world;
     ecs_script_runtime_t *r;
     ecs_script_template_t *template; /* Set when creating template */
-    ecs_script_template_t *instance_template;
     ecs_entity_t template_entity; /* Set when creating template instance */
+    bool template_instance; /* Evaluating template instance */
     ecs_entity_t script_entity;
     ecs_entity_t module;
     ecs_entity_t parent;
@@ -51416,7 +51404,6 @@ ecs_entity_t flecs_script_find_entity_action(
 #define FLECS_SCRIPT_TEMPLATE_H
 
 extern ECS_COMPONENT_DECLARE(EcsScriptTemplateSetEvent);
-extern ECS_COMPONENT_DECLARE(EcsScriptTemplateRoot);
 
 struct ecs_script_template_t {
     /* Template handle */
@@ -51440,25 +51427,24 @@ struct ecs_script_template_t {
     /* Annotations to apply to template instance */
     ecs_vec_t annot;
 
-    /* Statically known component references used in the template body */
-    ecs_vec_t refs;
+    /* Statically collected references used in the template body */
+    ecs_vec_t refs; /* vec<ecs_script_requirement_t> */
 
-    /* Observers monitoring the refs, shared by all template instances */
-    ecs_vec_t observers;
-
-    ecs_vec_t dynamic_refs;
+    /* Using scopes for resolving reference names */
+    ecs_vec_t using_names; /* vec<char*> */
 
     int32_t refcount;
+
+    /* Nonzero while template instances are being evaluated. Prevents
+     * reference observers from retriggering instantiation for component
+     * writes done by the template itself. */
+    int32_t instantiating;
 
     /* Use non-fragmenting hierarchy */
     bool non_fragmenting_parent;
 };
 
 #define ECS_TEMPLATE_SMALL_SIZE (36)
-
-typedef struct EcsScriptTemplateRoot {
-    ecs_vec_t observers;
-} EcsScriptTemplateRoot;
 
 /* Event used for deferring template instantiation */
 typedef struct EcsScriptTemplateSetEvent {
@@ -51476,6 +51462,15 @@ typedef struct EcsScriptTemplateSetEvent {
 int flecs_script_eval_template(
     ecs_script_eval_visitor_t *v,
     ecs_script_template_node_t *template);
+
+void flecs_script_template_reinstantiate(
+    ecs_world_t *world,
+    ecs_entity_t template_entity,
+    ecs_entity_t instance);
+
+void flecs_script_template_reinstantiate_all(
+    ecs_world_t *world,
+    ecs_entity_t template_entity);
 
 void flecs_script_template_fini(
     ecs_script_impl_t *script,
@@ -51501,21 +51496,59 @@ struct ecs_script_runtime_t {
 ecs_script_t* flecs_script_new(
     ecs_world_t *world);
 
-ecs_entity_t flecs_script_create_ref_observer(
+int flecs_script_visit_refs(
+    ecs_script_impl_t *script,
+    ecs_script_scope_t *scope,
+    bool template_scope,
+    const ecs_script_vars_t *vars,
+    ecs_vec_t *refs,
+    ecs_vec_t *usings,
+    ecs_vec_t *fn_refs);
+
+int flecs_script_visit_fn_refs(
+    ecs_script_impl_t *script,
+    ecs_script_function_node_t *node,
+    ecs_vec_t *refs);
+
+void flecs_script_refs_fini(
+    ecs_vec_t *refs);
+
+void flecs_script_strings_fini(
+    ecs_vec_t *strings);
+
+bool flecs_script_requirements_met(
+    const ecs_world_t *world,
+    const ecs_vec_t *requirements,
+    const ecs_script_vars_t *vars,
+    const ecs_vec_t *usings);
+
+void flecs_script_requirements_update(
     ecs_world_t *world,
     ecs_entity_t script,
-    ecs_entity_t instance,
-    ecs_entity_t entity,
-    ecs_id_t component,
+    const ecs_vec_t *refs,
+    const ecs_vec_t *usings,
+    bool met,
     ecs_iter_action_t callback);
 
-void flecs_script_update_ref_observers(
+void flecs_script_requirements_delete_observers(
+    ecs_world_t *world,
+    EcsScriptRequirements *reqs);
+
+bool flecs_script_requirements_should_reeval(
     ecs_world_t *world,
     ecs_entity_t script,
-    ecs_entity_t instance,
-    ecs_vec_t *refs,
-    ecs_vec_t *observers,
-    ecs_iter_action_t callback);
+    ecs_entity_t template_component,
+    ecs_iter_t *it);
+
+void flecs_script_enqueue_ref_changed(
+    ecs_world_t *world,
+    ecs_entity_t script);
+
+void flecs_script_ref_on_set(
+    ecs_iter_t *it);
+
+void flecs_script_requirements_import(
+    ecs_world_t *world);
 
 ecs_script_scope_t* flecs_script_scope_new(
     ecs_parser_t *parser);
@@ -71260,6 +71293,624 @@ void FlecsScriptPlatformImport(
 
 #ifdef FLECS_SCRIPT
 
+ECS_COMPONENT_DECLARE(EcsScriptRequirements);
+ECS_COMPONENT_DECLARE(EcsScriptRefChangedEvent);
+
+void flecs_script_refs_fini(
+    ecs_vec_t *refs)
+{
+    int32_t i, count = ecs_vec_count(refs);
+    ecs_script_requirement_t *elems = ecs_vec_first(refs);
+    for (i = 0; i < count; i ++) {
+        ecs_os_free(elems[i].entity);
+        ecs_os_free(elems[i].var);
+        ecs_os_free(elems[i].scope);
+        ecs_os_free(elems[i].component);
+    }
+    ecs_vec_fini_t(NULL, refs, ecs_script_requirement_t);
+}
+
+void flecs_script_strings_fini(
+    ecs_vec_t *strings)
+{
+    int32_t i, count = ecs_vec_count(strings);
+    char **elems = ecs_vec_first(strings);
+    for (i = 0; i < count; i ++) {
+        ecs_os_free(elems[i]);
+    }
+    ecs_vec_fini_t(NULL, strings, char*);
+}
+
+static
+void flecs_script_requirements_free(
+    EcsScriptRequirements *ptr)
+{
+    flecs_script_refs_fini(&ptr->requirements);
+    flecs_script_strings_fini(&ptr->usings);
+    ecs_vec_fini_t(NULL, &ptr->observers, ecs_script_ref_observer_t);
+}
+
+static
+ECS_MOVE(EcsScriptRequirements, dst, src, {
+    flecs_script_requirements_free(dst);
+    dst->requirements = src->requirements;
+    dst->observers = src->observers;
+    dst->usings = src->usings;
+    dst->met = src->met;
+    ecs_os_zeromem(&src->requirements);
+    ecs_os_zeromem(&src->observers);
+    ecs_os_zeromem(&src->usings);
+})
+
+static
+ECS_DTOR(EcsScriptRequirements, ptr, {
+    flecs_script_requirements_free(ptr);
+})
+
+void flecs_script_requirements_delete_observers(
+    ecs_world_t *world,
+    EcsScriptRequirements *reqs)
+{
+    int32_t i, count = ecs_vec_count(&reqs->observers);
+    ecs_script_ref_observer_t *observers = ecs_vec_first(&reqs->observers);
+    for (i = 0; i < count; i ++) {
+        if (observers[i].observer &&
+            ecs_is_alive(world, observers[i].observer))
+        {
+            ecs_delete(world, observers[i].observer);
+        }
+        observers[i].observer = 0;
+    }
+}
+
+static
+void flecs_script_requirements_on_remove(
+    ecs_iter_t *it)
+{
+    ecs_world_t *world = it->world;
+    EcsScriptRequirements *ptr = ecs_field_w_size(
+        it, sizeof(EcsScriptRequirements), 0);
+
+    int32_t i;
+    for (i = 0; i < it->count; i ++) {
+        flecs_script_requirements_delete_observers(world, &ptr[i]);
+    }
+}
+
+static
+ecs_entity_t flecs_script_requirement_lookup(
+    const ecs_world_t *world,
+    const char *scope,
+    const char *name,
+    const ecs_vec_t *usings)
+{
+    ecs_assert(name != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_entity_t result = 0;
+    ecs_size_t name_len = ecs_os_strlen(name);
+
+    if (scope) {
+        ecs_size_t len = ecs_os_strlen(scope);
+        char *path = ecs_os_malloc(len + name_len + 2);
+        while (len) {
+            ecs_os_memcpy(path, scope, len);
+            path[len] = '.';
+            ecs_os_memcpy(&path[len + 1], name, name_len + 1);
+            result = ecs_lookup(world, path);
+            if (result) {
+                break;
+            }
+
+            while (len && scope[len - 1] != '.') {
+                len --;
+            }
+            if (len) {
+                len --;
+            }
+        }
+        ecs_os_free(path);
+    }
+
+    if (!result) {
+        result = ecs_lookup(world, name);
+    }
+
+    if (!result && usings) {
+        int32_t i, count = ecs_vec_count(usings);
+        char **elems = ecs_vec_first(usings);
+        for (i = count - 1; i >= 0 && !result; i --) {
+            const char *using_name = elems[i];
+            ecs_size_t len = ecs_os_strlen(using_name);
+            if (len > 2 && !ecs_os_strcmp(&using_name[len - 2], ".*")) {
+                len -= 2;
+            }
+
+            char *path = ecs_os_malloc(len + name_len + 2);
+            ecs_os_memcpy(path, using_name, len);
+            path[len] = '.';
+            ecs_os_memcpy(&path[len + 1], name, name_len + 1);
+            result = ecs_lookup(world, path);
+            ecs_os_free(path);
+        }
+    }
+
+    return result;
+}
+
+static
+ecs_id_t flecs_script_requirement_component(
+    const ecs_world_t *world,
+    const ecs_script_requirement_t *req,
+    const ecs_vec_t *usings)
+{
+    if (req->component_id) {
+        return req->component_id;
+    }
+    if (!req->component) {
+        return 0;
+    }
+    return flecs_script_requirement_lookup(
+        world, req->scope, req->component, usings);
+}
+
+static
+bool flecs_script_requirement_met(
+    const ecs_world_t *world,
+    const ecs_script_requirement_t *req,
+    const ecs_script_vars_t *vars,
+    const ecs_vec_t *usings)
+{
+    ecs_id_t component = flecs_script_requirement_component(
+        world, req, usings);
+    if (!component) {
+        /* Unresolved component. If the reference was made from a scope that
+         * can't be statically resolved, let evaluation decide. */
+        return req->dynamic_scope;
+    }
+
+    ecs_entity_t entity = 0;
+    if (req->var) {
+        if (!vars) {
+            return true;
+        }
+
+        const ecs_script_var_t *var = ecs_script_vars_lookup(vars, req->var);
+        if (!var || var->value.type != ecs_id(ecs_entity_t) ||
+            !var->value.ptr)
+        {
+            return true;
+        }
+
+        entity = *(ecs_entity_t*)var->value.ptr;
+        if (!entity) {
+            return true;
+        }
+
+        if (!ecs_is_alive(world, entity)) {
+            return false;
+        }
+    } else if (req->entity) {
+        entity = flecs_script_requirement_lookup(
+            world, req->scope, req->entity, usings);
+        if (!entity) {
+            return req->dynamic_scope;
+        }
+    } else {
+        /* Reference can't be statically resolved, let evaluation decide. */
+        return true;
+    }
+
+    return ecs_has_id(world, entity, component);
+}
+
+bool flecs_script_requirements_met(
+    const ecs_world_t *world,
+    const ecs_vec_t *requirements,
+    const ecs_script_vars_t *vars,
+    const ecs_vec_t *usings)
+{
+    int32_t i, count = ecs_vec_count(requirements);
+    const ecs_script_requirement_t *elems = ecs_vec_first(requirements);
+    for (i = 0; i < count; i ++) {
+        if (!flecs_script_requirement_met(world, &elems[i], vars, usings)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+static
+ecs_entity_t flecs_script_create_ref_observer(
+    ecs_world_t *world,
+    ecs_entity_t script,
+    ecs_id_t component,
+    ecs_iter_action_t callback)
+{
+    ecs_entity_t prev_scope = ecs_set_scope(world, script);
+    ecs_entity_t prev_with = ecs_set_with(world, 0);
+
+    ecs_observer_desc_t desc = {
+        .query.terms = {{ .id = component }},
+        .events = { EcsOnSet, EcsOnRemove },
+        .callback = callback,
+        .ctx = (void*)(uintptr_t)script
+    };
+
+    ecs_entity_t observer = ecs_observer_init(world, &desc);
+
+    ecs_set_with(world, prev_with);
+    ecs_set_scope(world, prev_scope);
+
+    return observer;
+}
+
+void flecs_script_requirements_update(
+    ecs_world_t *world,
+    ecs_entity_t script,
+    const ecs_vec_t *refs,
+    const ecs_vec_t *usings,
+    bool met,
+    ecs_iter_action_t callback)
+{
+    EcsScriptRequirements *reqs = ecs_ensure(
+        world, script, EcsScriptRequirements);
+    ecs_assert(reqs != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    /* Collect unique component ids from requirements */
+    ecs_vec_t components;
+    ecs_vec_init_t(NULL, &components, ecs_id_t, 0);
+
+    int32_t i, j, ref_count = ecs_vec_count(refs);
+    const ecs_script_requirement_t *ref_elems = ecs_vec_first(refs);
+    for (i = 0; i < ref_count; i ++) {
+        ecs_id_t component = flecs_script_requirement_component(
+            world, &ref_elems[i], usings);
+        if (!component) {
+            continue;
+        }
+
+        int32_t component_count = ecs_vec_count(&components);
+        ecs_id_t *component_elems = ecs_vec_first(&components);
+        for (j = 0; j < component_count; j ++) {
+            if (component_elems[j] == component) {
+                break;
+            }
+        }
+        if (j == component_count) {
+            ecs_vec_append_t(NULL, &components, ecs_id_t)[0] = component;
+        }
+    }
+
+    /* Reuse existing observers for components that are still referenced,
+     * create observers for new components, delete stale observers. */
+    ecs_script_ref_observer_t *old_observers = ecs_vec_first(&reqs->observers);
+    int32_t old_count = ecs_vec_count(&reqs->observers);
+
+    ecs_vec_t observers;
+    int32_t component_count = ecs_vec_count(&components);
+    ecs_id_t *component_elems = ecs_vec_first(&components);
+    ecs_vec_init_t(NULL, &observers, ecs_script_ref_observer_t,
+        component_count);
+
+    for (i = 0; i < component_count; i ++) {
+        ecs_id_t component = component_elems[i];
+        ecs_entity_t observer = 0;
+
+        for (j = 0; j < old_count; j ++) {
+            if (old_observers[j].observer &&
+                old_observers[j].component == component)
+            {
+                observer = old_observers[j].observer;
+                old_observers[j].observer = 0;
+                break;
+            }
+        }
+
+        if (!observer) {
+            observer = flecs_script_create_ref_observer(
+                world, script, component, callback);
+        }
+
+        ecs_script_ref_observer_t *elem = ecs_vec_append_t(
+            NULL, &observers, ecs_script_ref_observer_t);
+        elem->component = component;
+        elem->observer = observer;
+    }
+
+    for (j = 0; j < old_count; j ++) {
+        if (old_observers[j].observer) {
+            ecs_delete(world, old_observers[j].observer);
+        }
+    }
+
+    ecs_vec_fini_t(NULL, &components, ecs_id_t);
+
+    /* Copy requirements & usings into component */
+    ecs_vec_t requirements;
+    ecs_vec_init_t(NULL, &requirements, ecs_script_requirement_t, ref_count);
+    for (i = 0; i < ref_count; i ++) {
+        const ecs_script_requirement_t *src = &ref_elems[i];
+        ecs_script_requirement_t *dst = ecs_vec_append_t(
+            NULL, &requirements, ecs_script_requirement_t);
+        dst->entity = src->entity ? ecs_os_strdup(src->entity) : NULL;
+        dst->var = src->var ? ecs_os_strdup(src->var) : NULL;
+        dst->scope = src->scope ? ecs_os_strdup(src->scope) : NULL;
+        dst->component = src->component ? ecs_os_strdup(src->component) : NULL;
+        dst->component_id = src->component_id;
+        dst->dynamic_scope = src->dynamic_scope;
+    }
+
+    ecs_vec_t using_names;
+    int32_t using_count = usings ? ecs_vec_count(usings) : 0;
+    ecs_vec_init_t(NULL, &using_names, char*, using_count);
+    for (i = 0; i < using_count; i ++) {
+        ecs_vec_append_t(NULL, &using_names, char*)[0] =
+            ecs_os_strdup(ecs_vec_get_t(usings, char*, i)[0]);
+    }
+
+    flecs_script_requirements_free(reqs);
+    reqs->requirements = requirements;
+    reqs->observers = observers;
+    reqs->usings = using_names;
+    reqs->met = met;
+
+    ecs_modified(world, script, EcsScriptRequirements);
+}
+
+static
+bool flecs_script_requirement_created_by(
+    const ecs_world_t *world,
+    ecs_entity_t script,
+    ecs_entity_t template_component,
+    ecs_entity_t entity)
+{
+    if (template_component) {
+        return ecs_has_pair(world, entity, EcsScriptTemplate,
+            template_component);
+    }
+    return ecs_has_pair(world, entity, ecs_id(EcsScript), script);
+}
+
+bool flecs_script_requirements_should_reeval(
+    ecs_world_t *world,
+    ecs_entity_t script,
+    ecs_entity_t template_component,
+    ecs_iter_t *it)
+{
+    const EcsScriptRequirements *reqs = ecs_get(
+        world, script, EcsScriptRequirements);
+    if (!reqs) {
+        return true;
+    }
+
+    ecs_id_t component = ecs_field_id(it, 0);
+
+    int32_t i, e, count = ecs_vec_count(&reqs->requirements);
+    const ecs_script_requirement_t *elems = ecs_vec_first(&reqs->requirements);
+    for (i = 0; i < count; i ++) {
+        const ecs_script_requirement_t *req = &elems[i];
+        ecs_id_t req_component = flecs_script_requirement_component(
+            world, req, &reqs->usings);
+        if (req_component != component) {
+            continue;
+        }
+
+        if (req->var) {
+            if (template_component && !ecs_os_strcmp(req->var, "this")) {
+                /* Reference to template instance: only reevaluate if the
+                 * component changed for an instance of the template. */
+                for (e = 0; e < it->count; e ++) {
+                    if (ecs_has_id(world, it->entities[e],
+                        template_component))
+                    {
+                        return true;
+                    }
+                }
+                continue;
+            }
+
+            /* Reference through variable, can't be statically resolved. Only
+             * skip changes for entities the script created itself, so that
+             * cleaning up script output doesn't retrigger evaluation. */
+            for (e = 0; e < it->count; e ++) {
+                if (!flecs_script_requirement_created_by(
+                    world, script, template_component, it->entities[e]))
+                {
+                    return true;
+                }
+            }
+            continue;
+        }
+
+        if (req->entity) {
+            ecs_entity_t entity = flecs_script_requirement_lookup(
+                world, req->scope, req->entity, &reqs->usings);
+            if (!entity) {
+                return true;
+            }
+
+            for (e = 0; e < it->count; e ++) {
+                if (it->entities[e] == entity) {
+                    return true;
+                }
+            }
+            continue;
+        }
+
+        return true;
+    }
+
+    return false;
+}
+
+static
+void flecs_script_ref_changed_handle(
+    ecs_world_t *world,
+    ecs_entity_t script);
+
+void flecs_script_enqueue_ref_changed(
+    ecs_world_t *world,
+    ecs_entity_t script)
+{
+    if (!ecs_is_deferred(world)) {
+        flecs_script_ref_changed_handle(ECS_CONST_CAST(ecs_world_t*,
+            ecs_get_world(world)), script);
+        return;
+    }
+
+    EcsScriptRefChangedEvent evt = {
+        .script = script
+    };
+
+    ecs_enqueue(world, &(ecs_event_desc_t){
+        .event = ecs_id(EcsScriptRefChangedEvent),
+        .entity = EcsAny,
+        .param = &evt
+    });
+}
+
+static
+void flecs_script_ref_changed_handle(
+    ecs_world_t *world,
+    ecs_entity_t script)
+{
+    if (!ecs_is_alive(world, script)) {
+        return;
+    }
+
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    if (!s) {
+        return;
+    }
+
+    if (s->template_) {
+        flecs_script_template_reinstantiate_all(world, script);
+        return;
+    }
+
+    if (!s->code) {
+        return;
+    }
+
+    if (s->script && flecs_script_impl(s->script)->evaluating) {
+        return;
+    }
+
+    char *code = ecs_os_strdup(s->code);
+    ecs_script_update(world, script, 0, code);
+    ecs_os_free(code);
+}
+
+static
+void flecs_script_on_ref_changed_event(
+    ecs_iter_t *it)
+{
+    EcsScriptRefChangedEvent *evt = it->param;
+    ecs_world_t *world = it->real_world;
+
+    if (ecs_is_fini(world)) {
+        return;
+    }
+
+    flecs_script_ref_changed_handle(world, evt->script);
+}
+
+void flecs_script_ref_on_set(
+    ecs_iter_t *it)
+{
+    ecs_entity_t script = (ecs_entity_t)(uintptr_t)it->ctx;
+    ecs_world_t *world = it->real_world;
+
+    if (ecs_is_fini(world)) {
+        return;
+    }
+
+    if (!ecs_is_alive(world, script)) {
+        return;
+    }
+
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    if (!s || !s->code) {
+        return;
+    }
+
+    if (s->script && flecs_script_impl(s->script)->evaluating) {
+        return;
+    }
+
+    if (!flecs_script_requirements_should_reeval(world, script, 0, it)) {
+        return;
+    }
+
+    flecs_script_enqueue_ref_changed(it->world, script);
+}
+
+void flecs_script_requirements_import(
+    ecs_world_t *world)
+{
+    ECS_COMPONENT_DEFINE(world, EcsScriptRequirements);
+    ECS_COMPONENT_DEFINE(world, EcsScriptRefChangedEvent);
+
+    ecs_set_hooks(world, EcsScriptRequirements, {
+        .ctor = flecs_default_ctor,
+        .move = ecs_move(EcsScriptRequirements),
+        .dtor = ecs_dtor(EcsScriptRequirements),
+        .on_remove = flecs_script_requirements_on_remove,
+        .flags = ECS_TYPE_HOOK_COPY_ILLEGAL
+    });
+
+    ecs_add_pair(world, ecs_id(EcsScriptRequirements),
+        EcsOnInstantiate, EcsDontInherit);
+
+    ecs_entity_t requirement_type = ecs_struct(world, {
+        .entity = ecs_entity(world, {
+            .name = "ecs_script_requirement_t"
+        }),
+        .members = {
+            { .name = "entity", .type = ecs_id(ecs_string_t) },
+            { .name = "var", .type = ecs_id(ecs_string_t) },
+            { .name = "scope", .type = ecs_id(ecs_string_t) },
+            { .name = "component", .type = ecs_id(ecs_string_t) },
+            { .name = "component_id", .type = ecs_id(ecs_id_t) },
+            { .name = "dynamic_scope", .type = ecs_id(ecs_bool_t) }
+        }
+    });
+
+    ecs_entity_t requirement_vec = ecs_vector(world, {
+        .entity = ecs_entity(world, {
+            .name = "ecs_script_requirement_vec_t"
+        }),
+        .type = requirement_type
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(EcsScriptRequirements),
+        .members = {
+            {
+                .name = "requirements",
+                .type = requirement_vec,
+                .offset = offsetof(EcsScriptRequirements, requirements)
+            },
+            {
+                .name = "met",
+                .type = ecs_id(ecs_bool_t),
+                .offset = offsetof(EcsScriptRequirements, met)
+            }
+        }
+    });
+
+    ecs_observer(world, {
+        .entity = ecs_entity(world, { .name = "ScriptRefChangedObserver" }),
+        .query.terms = {{ .id = EcsAny }},
+        .events = { ecs_id(EcsScriptRefChangedEvent) },
+        .callback = flecs_script_on_ref_changed_event
+    });
+}
+
+#endif
+
+#ifdef FLECS_SCRIPT
+
 ECS_COMPONENT_DECLARE(EcsScript);
 ECS_COMPONENT_DECLARE(EcsScriptConstVar);
 ECS_COMPONENT_DECLARE(EcsScriptFunction);
@@ -71281,14 +71932,12 @@ ECS_MOVE(EcsScript, dst, src, {
     dst->error = src->error;
     dst->script = src->script;
     dst->template_ = src->template_;
-    dst->observers = src->observers;
 
     src->filename = NULL;
     src->code = NULL;
     src->error = NULL;
     src->script = NULL;
     src->template_ = NULL;
-    ecs_os_zeromem(&src->observers);
 })
 
 static
@@ -71301,8 +71950,6 @@ ECS_DTOR(EcsScript, ptr, {
     if (ptr->script) {
         ecs_script_free(ptr->script);
     }
-
-    ecs_vec_fini_t(NULL, &ptr->observers, ecs_script_ref_t);
 
     ecs_os_free(ptr->filename);
     ecs_os_free(ptr->code);
@@ -71330,7 +71977,8 @@ ecs_script_t* flecs_script_new(
     result->root = flecs_script_scope_new(&parser);
     result->pub.world = world;
     result->refcount = 1;
-    ecs_vec_init_t(NULL, &result->refs, ecs_script_ref_t, 0);
+    ecs_vec_init_t(NULL, &result->refs, ecs_script_requirement_t, 0);
+    ecs_vec_init_t(NULL, &result->usings, char*, 0);
     return &result->pub;
 }
 
@@ -71376,129 +72024,6 @@ void ecs_script_clear(
         }
         ecs_vec_fini_t(&world->allocator, &to_delete, ecs_entity_t);
     }
-}
-
-static
-void flecs_script_ref_on_set(
-    ecs_iter_t *it)
-{
-    ecs_entity_t script = (ecs_entity_t)(uintptr_t)it->ctx;
-    ecs_world_t *world = it->real_world;
-
-    if (!ecs_is_alive(world, script)) {
-        return;
-    }
-
-    const EcsScript *s = ecs_get(world, script, EcsScript);
-    if (!s || !s->script || !s->code) {
-        return;
-    }
-
-    if (flecs_script_impl(s->script)->evaluating) {
-        return;
-    }
-
-    char *code = ecs_os_strdup(s->code);
-    ecs_script_update(world, script, 0, code);
-    ecs_os_free(code);
-}
-
-static
-void flecs_script_ref_ctx_free(
-    void *ptr)
-{
-    ecs_os_free(ptr);
-}
-
-ecs_entity_t flecs_script_create_ref_observer(
-    ecs_world_t *world,
-    ecs_entity_t script,
-    ecs_entity_t instance,
-    ecs_entity_t entity,
-    ecs_id_t component,
-    ecs_iter_action_t callback)
-{
-    ecs_entity_t prev_scope = ecs_set_scope(world, script);
-    ecs_entity_t prev_with = ecs_set_with(world, 0);
-
-    ecs_observer_desc_t desc = {
-        .query.terms = {{ .id = component, .src.id = entity }},
-        .events = { EcsOnSet },
-        .callback = callback
-    };
-
-    if (instance) {
-        ecs_script_ref_ctx_t *ctx = ecs_os_malloc_t(ecs_script_ref_ctx_t);
-        ctx->script = script;
-        ctx->instance = instance;
-        desc.ctx = ctx;
-        desc.ctx_free = flecs_script_ref_ctx_free;
-    } else {
-        desc.ctx = (void*)(uintptr_t)script;
-    }
-
-    ecs_entity_t observer = ecs_observer_init(world, &desc);
-
-    ecs_set_with(world, prev_with);
-    ecs_set_scope(world, prev_scope);
-
-    return observer;
-}
-
-void flecs_script_update_ref_observers(
-    ecs_world_t *world,
-    ecs_entity_t script,
-    ecs_entity_t instance,
-    ecs_vec_t *refs,
-    ecs_vec_t *observers,
-    ecs_iter_action_t callback)
-{
-    ecs_script_ref_t *new_refs = ecs_vec_first(refs);
-    int32_t i, new_count = ecs_vec_count(refs);
-
-    ecs_script_ref_t *old_refs = ecs_vec_first(observers);
-    int32_t j, old_count = ecs_vec_count(observers);
-
-    ecs_vec_t result;
-    ecs_vec_init_t(NULL, &result, ecs_script_ref_t, new_count);
-
-    for (i = 0; i < new_count; i ++) {
-        ecs_entity_t entity = new_refs[i].entity;
-        ecs_id_t component = new_refs[i].component;
-        ecs_entity_t observer = 0;
-
-        for (j = 0; j < old_count; j ++) {
-            if (old_refs[j].observer &&
-                old_refs[j].entity == entity &&
-                old_refs[j].component == component)
-            {
-                observer = old_refs[j].observer;
-                old_refs[j].observer = 0;
-                break;
-            }
-        }
-
-        if (!observer) {
-            observer = flecs_script_create_ref_observer(
-                world, script, instance, entity, component, callback);
-        }
-
-        ecs_script_ref_t *ref = ecs_vec_append_t(
-            NULL, &result, ecs_script_ref_t);
-        ref->entity = entity;
-        ref->name = NULL;
-        ref->component = component;
-        ref->observer = observer;
-    }
-
-    for (j = 0; j < old_count; j ++) {
-        if (old_refs[j].observer) {
-            ecs_delete(world, old_refs[j].observer);
-        }
-    }
-
-    ecs_vec_fini_t(NULL, observers, ecs_script_ref_t);
-    *observers = result;
 }
 
 int ecs_script_run(
@@ -71551,7 +72076,8 @@ void ecs_script_free(
     if (!--impl->refcount) {
         flecs_script_visit_free(script);
         flecs_expr_visit_free(script, impl->expr);
-        ecs_vec_fini_t(NULL, &impl->refs, ecs_script_ref_t);
+        flecs_script_refs_fini(&impl->refs);
+        flecs_script_strings_fini(&impl->usings);
         flecs_free(&impl->allocator,
             impl->token_buffer_size, impl->token_buffer);
         flecs_allocator_fini(&impl->allocator);
@@ -71629,33 +72155,51 @@ int ecs_script_update(
     ecs_entity_t prev = ecs_set_with(world, flecs_script_tag(e, instance));
 
     ecs_script_t *parsed = s->script;
-    flecs_script_impl(parsed)->evaluating = true;
-    if (ecs_script_eval(parsed, NULL, &eval_result)) {
+    ecs_script_impl_t *impl = flecs_script_impl(parsed);
+
+    bool met = true;
+    if (!instance) {
+        /* Statically collect references made by the script. If a reference is
+         * not yet satisfied, defer evaluation until it is. */
+        flecs_script_visit_refs(impl, impl->root, false, NULL,
+            &impl->refs, &impl->usings, NULL);
+        met = flecs_script_requirements_met(
+            world, &impl->refs, NULL, &impl->usings);
+    }
+
+    bool eval_failed = false;
+    if (met) {
+        impl->evaluating = true;
+        if (ecs_script_eval(parsed, NULL, &eval_result)) {
+            eval_failed = true;
+            s = ecs_ensure(world, e, EcsScript);
+            s->error = eval_result.error;
+            ecs_log_(-3, NULL, 0, "%s: %s", name ? name : "script", s->error);
+            result = -1;
+        }
+        impl->evaluating = false;
+    } else {
         s = ecs_ensure(world, e, EcsScript);
-        s->error = eval_result.error;
-        ecs_log_(-3, NULL, 0, "%s: %s", name ? name : "script", s->error);
+        s->error = ecs_os_strdup(
+            "script was not evaluated because of unmet requirements");
+    }
+
+    if (!instance) {
+        if (ecs_vec_count(&impl->refs) ||
+            ecs_has(world, e, EcsScriptRequirements))
+        {
+            flecs_script_requirements_update(world, e, &impl->refs,
+                &impl->usings, met, flecs_script_ref_on_set);
+        }
+    }
+
+    if (eval_failed) {
+        /* Free the script before deleting the entities it created, as the
+         * parsed AST can hold values of types defined by the script. */
+        s = ecs_ensure(world, e, EcsScript);
         ecs_script_free(parsed);
         s->script = NULL;
         ecs_delete_with(world, ecs_pair_t(EcsScript, e));
-        result = -1;
-    } else {
-        flecs_script_impl(parsed)->evaluating = false;
-        if (!instance) {
-            s = ecs_ensure(world, e, EcsScript);
-            ecs_vec_t *script_refs = &flecs_script_impl(s->script)->refs;
-            ecs_script_ref_t *refs = ecs_vec_first(script_refs);
-            int32_t i;
-            for (i = ecs_vec_count(script_refs) - 1; i >= 0; i --) {
-                if (refs[i].entity && ecs_has_pair(
-                    world, refs[i].entity, ecs_id(EcsScript), e))
-                {
-                    ecs_vec_remove_t(script_refs, ecs_script_ref_t, i);
-                }
-            }
-            flecs_script_update_ref_observers(world, e, 0,
-                script_refs, &s->observers, flecs_script_ref_on_set);
-            ecs_vec_clear(script_refs);
-        }
     }
 
     ecs_set_with(world, prev);
@@ -71837,6 +72381,7 @@ void FlecsScriptImport(
     ecs_add_id(world, ecs_id(EcsScript), EcsPairIsTag);
     ecs_add_pair(world, ecs_id(EcsScript), EcsOnInstantiate, EcsDontInherit);
 
+    flecs_script_requirements_import(world);
     flecs_script_template_import(world);
     flecs_function_import(world);
 }
@@ -72345,46 +72890,7 @@ char* ecs_ptr_to_str(
 #ifdef FLECS_SCRIPT
 
 ECS_COMPONENT_DECLARE(EcsScriptTemplateSetEvent);
-ECS_COMPONENT_DECLARE(EcsScriptTemplateRoot);
 ECS_DECLARE(EcsScriptTemplate);
-
-static
-ECS_CTOR(EcsScriptTemplateRoot, ptr, {
-    ecs_vec_init_t(NULL, &ptr->observers, ecs_script_ref_t, 0);
-})
-
-static
-ECS_MOVE(EcsScriptTemplateRoot, dst, src, {
-    ecs_vec_fini_t(NULL, &dst->observers, ecs_script_ref_t);
-    dst->observers = src->observers;
-    ecs_vec_init_t(NULL, &src->observers, ecs_script_ref_t, 0);
-})
-
-static
-ECS_DTOR(EcsScriptTemplateRoot, ptr, {
-    ecs_vec_fini_t(NULL, &ptr->observers, ecs_script_ref_t);
-})
-
-static
-void flecs_script_template_root_on_remove(
-    ecs_iter_t *it)
-{
-    ecs_world_t *world = it->world;
-    EcsScriptTemplateRoot *ptr = ecs_field_w_size(
-        it, sizeof(EcsScriptTemplateRoot), 0);
-
-    int32_t i, j;
-    for (i = 0; i < it->count; i ++) {
-        ecs_vec_t *observers = &ptr[i].observers;
-        ecs_script_ref_t *obs = ecs_vec_first(observers);
-        int32_t count = ecs_vec_count(observers);
-        for (j = 0; j < count; j ++) {
-            if (obs[j].observer && ecs_is_alive(world, obs[j].observer)) {
-                ecs_delete(world, obs[j].observer);
-            }
-        }
-    }
-}
 
 static
 void flecs_template_set_event_free(EcsScriptTemplateSetEvent *ptr) {
@@ -72524,65 +73030,20 @@ void flecs_script_template_ref_on_set(
     ecs_iter_t *it);
 
 static
-void flecs_script_template_instance_ref_on_set(
-    ecs_iter_t *it);
-
-static
-void flecs_script_template_update_instance_observers(
+void flecs_script_template_clear_instance(
     ecs_world_t *world,
-    ecs_script_template_t *template,
     ecs_entity_t template_entity,
-    ecs_entity_t instance,
-    const ecs_script_vars_t *vars)
+    ecs_script_template_t *template,
+    ecs_entity_t instance)
 {
-    int32_t i, j, count = ecs_vec_count(&template->dynamic_refs);
-    ecs_script_ref_t *dynamic_refs = ecs_vec_first(&template->dynamic_refs);
+    ecs_script_clear(world, template_entity, instance);
 
-    ecs_vec_t refs;
-    ecs_vec_init_t(NULL, &refs, ecs_script_ref_t, count);
+    ecs_script_scope_t *scope = template->node->scope;
+    int32_t i, count = ecs_vec_count(&scope->components);
+    ecs_id_t *ids = ecs_vec_first(&scope->components);
     for (i = 0; i < count; i ++) {
-        const ecs_script_var_t *var = ecs_script_vars_lookup(
-            vars, dynamic_refs[i].name);
-        if (!var || var->value.type != ecs_id(ecs_entity_t) ||
-            !var->value.ptr)
-        {
-            continue;
-        }
-
-        ecs_entity_t entity = *(ecs_entity_t*)var->value.ptr;
-        if (!entity) {
-            continue;
-        }
-
-        ecs_id_t component = dynamic_refs[i].component;
-        ecs_script_ref_t *elems = ecs_vec_first(&refs);
-        int32_t resolved_count = ecs_vec_count(&refs);
-        for (j = 0; j < resolved_count; j ++) {
-            if (elems[j].entity == entity &&
-                elems[j].component == component)
-            {
-                break;
-            }
-        }
-        if (j != resolved_count) {
-            continue;
-        }
-
-        ecs_script_ref_t *ref = ecs_vec_append_t(NULL, &refs, ecs_script_ref_t);
-        ref->entity = entity;
-        ref->name = NULL;
-        ref->component = component;
-        ref->observer = 0;
+        ecs_remove_id(world, instance, ids[i]);
     }
-
-    EcsScriptTemplateRoot *root = ecs_ensure_pair(
-        world, instance, EcsScriptTemplateRoot, template_entity);
-    ecs_assert(root != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    flecs_script_update_ref_observers(world, template_entity, instance, &refs,
-        &root->observers, flecs_script_template_instance_ref_on_set);
-
-    ecs_vec_fini_t(NULL, &refs, ecs_script_ref_t);
 }
 
 static
@@ -72628,7 +73089,8 @@ void flecs_script_template_instantiate(
 
     v.r->using = template->using_;
     v.template_entity = template_entity;
-    v.instance_template = template;
+    v.template_instance = true;
+    template->instantiating ++;
     ecs_vec_init_t(NULL, &desc.runtime->with, ecs_value_t, 0);
     ecs_vec_init_t(NULL, &desc.runtime->with_type_info, ecs_type_info_t*, 0);
 
@@ -72699,16 +73161,19 @@ void flecs_script_template_instantiate(
             }
         }
 
-        ecs_script_clear(world, template_entity, instance);
+        bool met = flecs_script_requirements_met(
+            world, &template->refs, vars, &template->using_names);
 
-        /* Run template code */
-        v.vars = vars;
+        if (met) {
+            ecs_script_clear(world, template_entity, instance);
 
-        flecs_script_eval_scope(&v, scope);
+            /* Run template code */
+            v.vars = vars;
 
-        if (ecs_vec_count(&template->dynamic_refs)) {
-            flecs_script_template_update_instance_observers(
-                world, template, template_entity, instance, vars);
+            flecs_script_eval_scope(&v, scope);
+        } else {
+            flecs_script_template_clear_instance(
+                world, template_entity, template, instance);
         }
 
         /* Pop variable scope */
@@ -72727,26 +73192,21 @@ void flecs_script_template_instantiate(
     v.r->using = prev_using;
     flecs_script_eval_visit_fini(&v, &desc);
 
-    if (count && ecs_vec_count(&template->refs) &&
-        !ecs_vec_count(&template->observers))
-    {
-        flecs_script_update_ref_observers(world, template_entity, 0,
-            &template->refs, &template->observers,
+    template->instantiating --;
+
+    if (count && ecs_vec_count(&template->refs)) {
+        flecs_script_requirements_update(world, template_entity,
+            &template->refs, &template->using_names,
+            flecs_script_requirements_met(
+                world, &template->refs, NULL, &template->using_names),
             flecs_script_template_ref_on_set);
     }
 }
 
-static
-void flecs_script_template_ref_on_set(
-    ecs_iter_t *it)
+void flecs_script_template_reinstantiate_all(
+    ecs_world_t *world,
+    ecs_entity_t template_entity)
 {
-    ecs_entity_t template_entity = (ecs_entity_t)(uintptr_t)it->ctx;
-    ecs_world_t *world = it->real_world;
-
-    if (!ecs_is_alive(world, template_entity)) {
-        return;
-    }
-
     const EcsScript *s = ecs_get(world, template_entity, EcsScript);
     if (!s || !s->template_) {
         return;
@@ -72795,19 +73255,11 @@ void flecs_script_template_ref_on_set(
     }
 }
 
-static
-void flecs_script_template_instance_ref_on_set(
-    ecs_iter_t *it)
+void flecs_script_template_reinstantiate(
+    ecs_world_t *world,
+    ecs_entity_t template_entity,
+    ecs_entity_t instance)
 {
-    ecs_script_ref_ctx_t *ctx = it->ctx;
-    ecs_entity_t template_entity = ctx->script;
-    ecs_entity_t instance = ctx->instance;
-    ecs_world_t *world = it->real_world;
-
-    if (!ecs_is_alive(world, template_entity)) {
-        return;
-    }
-
     const EcsScript *s = ecs_get(world, template_entity, EcsScript);
     if (!s || !s->template_) {
         return;
@@ -72834,6 +73286,39 @@ void flecs_script_template_instance_ref_on_set(
     if (is_deferred) {
         ecs_defer_resume(world);
     }
+}
+
+static
+void flecs_script_template_ref_on_set(
+    ecs_iter_t *it)
+{
+    ecs_entity_t template_entity = (ecs_entity_t)(uintptr_t)it->ctx;
+    ecs_world_t *world = it->real_world;
+
+    if (ecs_is_fini(world)) {
+        return;
+    }
+
+    if (!ecs_is_alive(world, template_entity)) {
+        return;
+    }
+
+    const EcsScript *s = ecs_get(world, template_entity, EcsScript);
+    if (!s || !s->template_) {
+        return;
+    }
+
+    if (s->template_->instantiating) {
+        return;
+    }
+
+    if (!flecs_script_requirements_should_reeval(
+        world, template_entity, template_entity, it))
+    {
+        return;
+    }
+
+    flecs_script_enqueue_ref_changed(it->world, template_entity);
 }
 
 static
@@ -72898,16 +73383,16 @@ void flecs_script_template_on_set(
 static
 void flecs_script_template_delete_observers(
     ecs_world_t *world,
-    ecs_script_template_t *template)
+    ecs_entity_t template_entity)
 {
-    ecs_script_ref_t *obs = ecs_vec_first(&template->observers);
-    int32_t i, count = ecs_vec_count(&template->observers);
-    for (i = 0; i < count; i ++) {
-        if (obs[i].observer && ecs_is_alive(world, obs[i].observer)) {
-            ecs_delete(world, obs[i].observer);
-        }
+    if (!ecs_has(world, template_entity, EcsScriptRequirements)) {
+        return;
     }
-    ecs_vec_clear(&template->observers);
+
+    EcsScriptRequirements *reqs = ecs_ensure(
+        world, template_entity, EcsScriptRequirements);
+    flecs_script_requirements_delete_observers(world, reqs);
+    ecs_modified(world, template_entity, EcsScriptRequirements);
 }
 
 static
@@ -72928,18 +73413,10 @@ void flecs_script_template_on_remove(
 
     ecs_script_template_t *template = script->template_;
 
-    if (ecs_vec_count(&template->dynamic_refs)) {
-        int32_t i;
-        for (i = 0; i < it->count; i ++) {
-            ecs_remove_pair(world, it->entities[i],
-                ecs_id(EcsScriptTemplateRoot), template_entity);
-        }
-    }
-
     template->refcount -= it->count;
     if (template->refcount <= 0) {
         template->refcount = 0;
-        flecs_script_template_delete_observers(world, template);
+        flecs_script_template_delete_observers(world, template_entity);
     }
 }
 
@@ -73144,10 +73621,10 @@ ecs_script_template_t* flecs_script_template_init(
     ecs_vec_init_t(NULL, &result->prop_defaults, ecs_script_var_t, 0);
     ecs_vec_init_t(NULL, &result->using_, ecs_entity_t, 0);
     ecs_vec_init_t(NULL, &result->annot, ecs_script_annot_t*, 0);
-    ecs_vec_init_t(NULL, &result->refs, ecs_script_ref_t, 0);
-    ecs_vec_init_t(NULL, &result->observers, ecs_script_ref_t, 0);
-    ecs_vec_init_t(NULL, &result->dynamic_refs, ecs_script_ref_t, 0);
+    ecs_vec_init_t(NULL, &result->refs, ecs_script_requirement_t, 0);
+    ecs_vec_init_t(NULL, &result->using_names, char*, 0);
     result->refcount = 0;
+    result->instantiating = 0;
 
     result->vars = ecs_script_vars_init(script->pub.world);
     return result;
@@ -73175,9 +73652,8 @@ void flecs_script_template_fini(
 
     ecs_vec_fini_t(a, &template->using_, ecs_entity_t);
     ecs_vec_fini_t(a, &template->annot, ecs_script_annot_t*);
-    ecs_vec_fini_t(NULL, &template->refs, ecs_script_ref_t);
-    ecs_vec_fini_t(NULL, &template->observers, ecs_script_ref_t);
-    ecs_vec_fini_t(NULL, &template->dynamic_refs, ecs_script_ref_t);
+    flecs_script_refs_fini(&template->refs);
+    flecs_script_strings_fini(&template->using_names);
     ecs_script_vars_fini(template->vars);
     flecs_free_t(a, ecs_script_template_t, template);
 }
@@ -73196,6 +73672,16 @@ int flecs_script_eval_template(
     template->entity = template_entity;
     template->node = node;
 
+    /* Statically collect references made in the template body. Variables
+     * declared by the script are hoisted into the template, so they don't
+     * count as external references. */
+    if (flecs_script_visit_refs(
+        v->base.script, node->scope, true, v->vars, &template->refs, NULL,
+        &v->base.script->refs))
+    {
+        goto error;
+    }
+
     /* Variables are always presented to a template in a well-defined order, so
      * we don't need dynamic variable binding. */
     bool old_dynamic_variable_binding = v->dynamic_variable_binding;
@@ -73211,6 +73697,18 @@ int flecs_script_eval_template(
 
     if (flecs_script_template_hoist_vars(v, template, v->vars)) {
         goto error;
+    }
+
+    /* Store paths of hoisted using scopes for reference name lookups */
+    {
+        int32_t i, count = ecs_vec_count(&template->using_);
+        ecs_entity_t *using_elems = ecs_vec_first(&template->using_);
+        for (i = 0; i < count; i ++) {
+            char *path = ecs_get_path(v->world, using_elems[i]);
+            if (path) {
+                ecs_vec_append_t(NULL, &template->using_names, char*)[0] = path;
+            }
+        }
     }
 
     v->dynamic_variable_binding = old_dynamic_variable_binding;
@@ -73268,7 +73766,6 @@ void flecs_script_template_import(
     ecs_world_t *world)
 {
     ECS_COMPONENT_DEFINE(world, EcsScriptTemplateSetEvent);
-    ECS_COMPONENT_DEFINE(world, EcsScriptTemplateRoot);
     ECS_TAG_DEFINE(world, EcsScriptTemplate);
 
     ecs_add_id(world, EcsScriptTemplate, EcsPairIsTag);
@@ -73279,17 +73776,6 @@ void flecs_script_template_import(
         .dtor = ecs_dtor(EcsScriptTemplateSetEvent),
         .flags = ECS_TYPE_HOOK_COPY_ILLEGAL
     });
-
-    ecs_set_hooks(world, EcsScriptTemplateRoot, {
-        .ctor = ecs_ctor(EcsScriptTemplateRoot),
-        .move = ecs_move(EcsScriptTemplateRoot),
-        .dtor = ecs_dtor(EcsScriptTemplateRoot),
-        .on_remove = flecs_script_template_root_on_remove,
-        .flags = ECS_TYPE_HOOK_COPY_ILLEGAL
-    });
-
-    ecs_add_pair(world, ecs_id(EcsScriptTemplateRoot),
-        EcsOnInstantiate, EcsDontInherit);
 
     ecs_observer(world, {
         .entity = ecs_entity(world, { .name = "TemplateSetObserver" }),
@@ -73881,16 +74367,6 @@ int flecs_script_check_expr(
 
     if (flecs_expr_visit_fold(script, expr_ptr, &desc)) {
         goto error;
-    }
-
-    /* Collect statically known component references used in a template body so
-     * a single observer per reference can trigger reevaluation of instances. */
-    if (v->template) {
-        if (flecs_expr_visit_refs(script, *expr_ptr, &v->template->refs,
-            &v->template->dynamic_refs, &impl->refs))
-        {
-            goto error;
-        }
     }
 
     if (type) {
@@ -74993,22 +75469,6 @@ int flecs_script_eval_expr(
     if (expr->type_info == NULL) {
         if (flecs_expr_visit_type(script, expr, &desc)) {
             goto error;
-        }
-
-        ecs_vec_t *refs = NULL, *dynamic_refs = NULL;
-        if (v->script_entity) {
-            refs = &impl->refs;
-        }
-        if (v->instance_template) {
-            if (!refs) {
-                refs = &v->instance_template->refs;
-            }
-            dynamic_refs = &v->instance_template->dynamic_refs;
-        }
-        if (refs) {
-            if (flecs_expr_visit_refs(script, expr, refs, dynamic_refs, refs)) {
-                goto error;
-            }
         }
 
         if (flecs_expr_visit_fold(script, expr_ptr, &desc)) {
@@ -76421,7 +76881,7 @@ void flecs_script_user_function_ctx_free(
     if (uf->script) {
         ecs_script_free(uf->script);
     }
-    ecs_vec_fini_t(NULL, &uf->refs, ecs_script_ref_t);
+    flecs_script_refs_fini(&uf->refs);
     ecs_os_free(uf);
 }
 
@@ -76430,8 +76890,7 @@ int flecs_script_function_type_check(
     ecs_script_eval_visitor_t *outer_v,
     ecs_script_function_node_t *node,
     const ecs_function_desc_t *desc,
-    int32_t param_count,
-    ecs_vec_t *fn_refs)
+    int32_t param_count)
 {
     ecs_script_impl_t *impl = outer_v->base.script;
     ecs_script_t *script = &impl->pub;
@@ -76509,9 +76968,6 @@ int flecs_script_function_type_check(
         if (flecs_expr_visit_type(script, cnode->expr, &edesc)) {
             goto error;
         }
-        if (flecs_expr_visit_refs(script, cnode->expr, fn_refs, NULL, fn_refs)) {
-            goto error;
-        }
         if (flecs_expr_visit_fold(script, &cnode->expr, &edesc)) {
             goto error;
         }
@@ -76542,11 +76998,6 @@ int flecs_script_function_type_check(
         };
 
         if (flecs_expr_visit_type(script, node->return_expr, &edesc)) {
-            goto error;
-        }
-        if (flecs_expr_visit_refs(
-            script, node->return_expr, fn_refs, NULL, fn_refs))
-        {
             goto error;
         }
         if (flecs_expr_visit_fold(script, &node->return_expr, &edesc)) {
@@ -76617,12 +77068,16 @@ int flecs_script_eval_function(
     }
 
     ecs_vec_t fn_refs;
-    ecs_vec_init_t(NULL, &fn_refs, ecs_script_ref_t, 0);
+    ecs_vec_init_t(NULL, &fn_refs, ecs_script_requirement_t, 0);
 
-    if (flecs_script_function_type_check(v, node, &desc, param_count,
-        &fn_refs))
-    {
-        ecs_vec_fini_t(NULL, &fn_refs, ecs_script_ref_t);
+    if (flecs_script_visit_fn_refs(v->base.script, node, &fn_refs)) {
+        flecs_script_refs_fini(&fn_refs);
+        ecs_delete(world, fn_entity);
+        return -1;
+    }
+
+    if (flecs_script_function_type_check(v, node, &desc, param_count)) {
+        flecs_script_refs_fini(&fn_refs);
         ecs_delete(world, fn_entity);
         return -1;
     }
@@ -77075,6 +77530,759 @@ int flecs_script_visit_free(
     return 0;
 error:
     return - 1;
+}
+
+#endif
+
+#ifdef FLECS_SCRIPT
+
+typedef struct ecs_script_refs_var_t {
+    const char *name;
+    const char *entity;
+} ecs_script_refs_var_t;
+
+typedef struct ecs_script_refs_visitor_t {
+    ecs_script_impl_t *script;
+    ecs_vec_t *refs;
+    ecs_vec_t *fn_refs;
+    ecs_vec_t *usings;
+    ecs_vec_t vars;        /* vec<ecs_script_refs_var_t> */
+    ecs_vec_t entities;    /* vec<const char*> */
+    ecs_vec_t scope_names; /* vec<const char*> */
+    ecs_vec_t fn_nodes;    /* vec<ecs_script_function_node_t*> */
+    int32_t dynamic_scope;
+    bool template_scope;
+} ecs_script_refs_visitor_t;
+
+static
+int flecs_script_refs_visit_node(
+    ecs_script_refs_visitor_t *v,
+    ecs_script_node_t *node);
+
+static
+int flecs_script_refs_visit_expr(
+    ecs_script_refs_visitor_t *v,
+    ecs_expr_node_t *node);
+
+static
+int flecs_script_refs_visit_scope(
+    ecs_script_refs_visitor_t *v,
+    ecs_script_scope_t *scope);
+
+static
+bool flecs_script_refs_str_eq(
+    const char *a,
+    const char *b)
+{
+    if (a == b) {
+        return true;
+    }
+    if (!a || !b) {
+        return false;
+    }
+    return !ecs_os_strcmp(a, b);
+}
+
+static
+bool flecs_script_refs_is_declared(
+    ecs_script_refs_visitor_t *v,
+    const char *name)
+{
+    const char *sep = strchr(name, '.');
+    ecs_size_t len = sep
+        ? flecs_ito(ecs_size_t, sep - name)
+        : ecs_os_strlen(name);
+
+    int32_t i, count = ecs_vec_count(&v->entities);
+    const char **entities = ecs_vec_first(&v->entities);
+    for (i = 0; i < count; i ++) {
+        if (!ecs_os_strncmp(entities[i], name, len) && !entities[i][len]) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+static
+ecs_script_refs_var_t* flecs_script_refs_find_var(
+    ecs_script_refs_visitor_t *v,
+    const char *name)
+{
+    int32_t i, count = ecs_vec_count(&v->vars);
+    ecs_script_refs_var_t *vars = ecs_vec_first(&v->vars);
+    for (i = count - 1; i >= 0; i --) {
+        if (!ecs_os_strcmp(vars[i].name, name)) {
+            return &vars[i];
+        }
+    }
+    return NULL;
+}
+
+static
+void flecs_script_refs_declare_var(
+    ecs_script_refs_visitor_t *v,
+    const char *name,
+    const char *entity)
+{
+    ecs_script_refs_var_t *var = ecs_vec_append_t(
+        NULL, &v->vars, ecs_script_refs_var_t);
+    var->name = name;
+    var->entity = entity;
+}
+
+static
+char* flecs_script_refs_scope_path(
+    ecs_script_refs_visitor_t *v)
+{
+    int32_t i, count = ecs_vec_count(&v->scope_names);
+    if (!count) {
+        return NULL;
+    }
+
+    ecs_strbuf_t buf = ECS_STRBUF_INIT;
+    const char **names = ecs_vec_first(&v->scope_names);
+    for (i = 0; i < count; i ++) {
+        if (i) {
+            ecs_strbuf_appendch(&buf, '.');
+        }
+        ecs_strbuf_appendstr(&buf, names[i]);
+    }
+
+    return ecs_strbuf_get(&buf);
+}
+
+static
+void flecs_script_refs_add(
+    ecs_script_refs_visitor_t *v,
+    const char *entity,
+    const char *var,
+    const char *component,
+    ecs_id_t component_id)
+{
+    if (entity && flecs_script_refs_is_declared(v, entity)) {
+        return;
+    }
+
+    bool dynamic = v->template_scope || (v->dynamic_scope != 0);
+    if (component_id == ecs_id(EcsScriptConstVar)) {
+        /* Global const variable names resolve the same way regardless of the
+         * scope the reference was made from. */
+        dynamic = false;
+    }
+
+    char *scope = dynamic ? NULL : flecs_script_refs_scope_path(v);
+
+    int32_t i, count = ecs_vec_count(v->refs);
+    ecs_script_requirement_t *refs = ecs_vec_first(v->refs);
+    for (i = 0; i < count; i ++) {
+        ecs_script_requirement_t *ref = &refs[i];
+        if (ref->component_id == component_id &&
+            flecs_script_refs_str_eq(ref->entity, entity) &&
+            flecs_script_refs_str_eq(ref->var, var) &&
+            flecs_script_refs_str_eq(ref->scope, scope) &&
+            flecs_script_refs_str_eq(ref->component, component))
+        {
+            ecs_os_free(scope);
+            return;
+        }
+    }
+
+    ecs_script_requirement_t *ref = ecs_vec_append_t(
+        NULL, v->refs, ecs_script_requirement_t);
+    ref->entity = entity ? ecs_os_strdup(entity) : NULL;
+    ref->var = var ? ecs_os_strdup(var) : NULL;
+    ref->scope = scope;
+    ref->component = component ? ecs_os_strdup(component) : NULL;
+    ref->component_id = component_id;
+    ref->dynamic_scope = dynamic;
+}
+
+static
+void flecs_script_refs_visit_var(
+    ecs_script_refs_visitor_t *v,
+    const char *name)
+{
+    if (!name || !name[0]) {
+        /* Member shorthand notation ({x: $}), resolves to a local variable */
+        return;
+    }
+
+    if (!ecs_os_strcmp(name, "this")) {
+        return;
+    }
+
+    if (flecs_script_refs_find_var(v, name)) {
+        return;
+    }
+
+    /* Variable is not declared in the script, so it refers to a global
+     * const variable. */
+    flecs_script_refs_add(v, name, NULL, NULL, ecs_id(EcsScriptConstVar));
+}
+
+static
+void flecs_script_refs_visit_element(
+    ecs_script_refs_visitor_t *v,
+    ecs_expr_element_t *node)
+{
+    if (!node->index || node->index->kind != EcsExprIdentifier) {
+        return;
+    }
+
+    const char *component = ((ecs_expr_identifier_t*)node->index)->value;
+    ecs_expr_node_t *left = node->left;
+    if (!left) {
+        return;
+    }
+
+    if (left->kind == EcsExprIdentifier) {
+        const char *entity = ((ecs_expr_identifier_t*)left)->value;
+        if (!ecs_os_strcmp(entity, "this")) {
+            if (v->template_scope) {
+                flecs_script_refs_add(v, NULL, "this", component, 0);
+            }
+        } else {
+            flecs_script_refs_add(v, entity, NULL, component, 0);
+        }
+    } else if (left->kind == EcsExprVariable) {
+        const char *var_name = ((ecs_expr_variable_t*)left)->name;
+        if (!ecs_os_strcmp(var_name, "this")) {
+            if (v->template_scope) {
+                flecs_script_refs_add(v, NULL, "this", component, 0);
+            }
+            return;
+        }
+
+        ecs_script_refs_var_t *var = flecs_script_refs_find_var(v, var_name);
+        if (var && var->entity) {
+            flecs_script_refs_add(v, var->entity, NULL, component, 0);
+        } else {
+            flecs_script_refs_add(v, NULL, var_name, component, 0);
+        }
+    } else {
+        flecs_script_refs_add(v, NULL, NULL, component, 0);
+    }
+}
+
+static
+int flecs_script_refs_visit_fn_body(
+    ecs_script_refs_visitor_t *v,
+    ecs_script_function_node_t *node)
+{
+    int32_t var_count = ecs_vec_count(&v->vars);
+    int32_t i, count = ecs_vec_count(&node->params);
+    ecs_script_fn_param_t *params = ecs_vec_first(&node->params);
+    for (i = 0; i < count; i ++) {
+        flecs_script_refs_declare_var(v, params[i].name, NULL);
+    }
+    int result = flecs_script_refs_visit_scope(v, node->body);
+    if (!result) {
+        result = flecs_script_refs_visit_expr(v, node->return_expr);
+    }
+    ecs_vec_set_count_t(NULL, &v->vars, ecs_script_refs_var_t, var_count);
+    return result;
+}
+
+static
+void flecs_script_refs_visit_fn_call(
+    ecs_script_refs_visitor_t *v,
+    ecs_expr_function_t *node)
+{
+    const char *name = node->function_name;
+    if (!name && node->left && node->left->kind == EcsExprIdentifier) {
+        name = ((ecs_expr_identifier_t*)node->left)->value;
+    }
+    if (!name) {
+        return;
+    }
+
+    int32_t i, count = ecs_vec_count(&v->fn_nodes);
+    ecs_script_function_node_t **fn_nodes = ecs_vec_first(&v->fn_nodes);
+    for (i = count - 1; i >= 0; i --) {
+        ecs_script_function_node_t *fn_node = fn_nodes[i];
+        if (fn_node && fn_node->name &&
+            !ecs_os_strcmp(fn_node->name, name))
+        {
+            fn_nodes[i] = NULL;
+            flecs_script_refs_visit_fn_body(v, fn_node);
+            ecs_vec_get_t(&v->fn_nodes,
+                ecs_script_function_node_t*, i)[0] = fn_node;
+            return;
+        }
+    }
+
+    ecs_world_t *world = v->script->pub.world;
+    ecs_entity_t fn = ecs_lookup(world, name);
+    if (!fn) {
+        return;
+    }
+
+    const EcsScriptFunction *f = ecs_get(world, fn, EcsScriptFunction);
+    if (!f || f->callback != flecs_script_user_function_callback ||
+        !f->binding_ctx)
+    {
+        return;
+    }
+
+    ecs_script_user_function_t *uf = f->binding_ctx;
+    ecs_vec_t *prev_refs = v->refs;
+    v->refs = v->fn_refs;
+    count = ecs_vec_count(&uf->refs);
+    ecs_script_requirement_t *refs = ecs_vec_first(&uf->refs);
+    for (i = 0; i < count; i ++) {
+        ecs_script_requirement_t *ref = &refs[i];
+        if (ref->component_id == ecs_id(EcsScriptConstVar) && ref->entity &&
+            flecs_script_refs_find_var(v, ref->entity))
+        {
+            continue;
+        }
+        flecs_script_refs_add(v, ref->entity, ref->var, ref->component,
+            ref->component_id);
+    }
+    v->refs = prev_refs;
+}
+
+static
+int flecs_script_refs_visit_expr(
+    ecs_script_refs_visitor_t *v,
+    ecs_expr_node_t *node)
+{
+    if (!node) {
+        return 0;
+    }
+
+    switch(node->kind) {
+    case EcsExprValue:
+    case EcsExprIdentifier:
+        break;
+    case EcsExprVariable:
+    case EcsExprGlobalVariable:
+        flecs_script_refs_visit_var(v, ((ecs_expr_variable_t*)node)->name);
+        break;
+    case EcsExprInterpolatedString: {
+        ecs_expr_interpolated_string_t *n =
+            (ecs_expr_interpolated_string_t*)node;
+        int32_t i, count = ecs_vec_count(&n->expressions);
+        ecs_expr_node_t **expressions = ecs_vec_first(&n->expressions);
+        for (i = 0; i < count; i ++) {
+            if (flecs_script_refs_visit_expr(v, expressions[i])) {
+                return -1;
+            }
+        }
+        break;
+    }
+    case EcsExprInitializer:
+    case EcsExprEmptyInitializer: {
+        ecs_expr_initializer_t *n = (ecs_expr_initializer_t*)node;
+        ecs_expr_initializer_element_t *elems = ecs_vec_first(&n->elements);
+        int32_t i, count = ecs_vec_count(&n->elements);
+        for (i = 0; i < count; i ++) {
+            if (flecs_script_refs_visit_expr(v, elems[i].key)) {
+                return -1;
+            }
+            if (flecs_script_refs_visit_expr(v, elems[i].value)) {
+                return -1;
+            }
+        }
+        break;
+    }
+    case EcsExprUnary:
+        return flecs_script_refs_visit_expr(
+            v, ((ecs_expr_unary_t*)node)->expr);
+    case EcsExprBinary: {
+        ecs_expr_binary_t *n = (ecs_expr_binary_t*)node;
+        if (flecs_script_refs_visit_expr(v, n->left)) {
+            return -1;
+        }
+        return flecs_script_refs_visit_expr(v, n->right);
+    }
+    case EcsExprFunction:
+    case EcsExprMethod: {
+        ecs_expr_function_t *n = (ecs_expr_function_t*)node;
+        if (flecs_script_refs_visit_expr(v, n->left)) {
+            return -1;
+        }
+        if (flecs_script_refs_visit_expr(v, (ecs_expr_node_t*)n->args)) {
+            return -1;
+        }
+        if (node->kind == EcsExprFunction) {
+            flecs_script_refs_visit_fn_call(v, n);
+        }
+        break;
+    }
+    case EcsExprMember:
+        return flecs_script_refs_visit_expr(
+            v, ((ecs_expr_member_t*)node)->left);
+    case EcsExprElement: {
+        ecs_expr_element_t *n = (ecs_expr_element_t*)node;
+        if (flecs_script_refs_visit_expr(v, n->left)) {
+            return -1;
+        }
+        if (flecs_script_refs_visit_expr(v, n->index)) {
+            return -1;
+        }
+        flecs_script_refs_visit_element(v, n);
+        break;
+    }
+    case EcsExprComponent:
+        return flecs_script_refs_visit_expr(
+            v, ((ecs_expr_component_t*)node)->expr);
+    case EcsExprCast:
+    case EcsExprCastNumber:
+        return flecs_script_refs_visit_expr(
+            v, ((ecs_expr_cast_t*)node)->expr);
+    case EcsExprMatch: {
+        ecs_expr_match_t *n = (ecs_expr_match_t*)node;
+        if (flecs_script_refs_visit_expr(v, n->expr)) {
+            return -1;
+        }
+        int32_t i, count = ecs_vec_count(&n->elements);
+        ecs_expr_match_element_t *elems = ecs_vec_first(&n->elements);
+        for (i = 0; i < count; i ++) {
+            if (flecs_script_refs_visit_expr(v, elems[i].compare)) {
+                return -1;
+            }
+            if (flecs_script_refs_visit_expr(v, elems[i].expr)) {
+                return -1;
+            }
+        }
+        if (flecs_script_refs_visit_expr(v, n->any.compare)) {
+            return -1;
+        }
+        return flecs_script_refs_visit_expr(v, n->any.expr);
+    }
+    case EcsExprNew: {
+        ecs_expr_new_t *n = (ecs_expr_new_t*)node;
+        if (n->entity) {
+            v->dynamic_scope ++;
+            int result = flecs_script_refs_visit_node(
+                v, (ecs_script_node_t*)n->entity);
+            v->dynamic_scope --;
+            return result;
+        }
+        break;
+    }
+    }
+
+    return 0;
+}
+
+static
+int flecs_script_refs_visit_scope(
+    ecs_script_refs_visitor_t *v,
+    ecs_script_scope_t *scope)
+{
+    int32_t var_count = ecs_vec_count(&v->vars);
+
+    int32_t i, count = ecs_vec_count(&scope->stmts);
+    ecs_script_node_t **stmts = ecs_vec_first(&scope->stmts);
+    for (i = 0; i < count; i ++) {
+        if (flecs_script_refs_visit_node(v, stmts[i])) {
+            return -1;
+        }
+    }
+
+    ecs_vec_set_count_t(NULL, &v->vars, ecs_script_refs_var_t, var_count);
+
+    return 0;
+}
+
+static
+int flecs_script_refs_visit_entity(
+    ecs_script_refs_visitor_t *v,
+    ecs_script_entity_t *node)
+{
+    bool static_name = node->name && !node->name_is_var && !node->name_expr;
+
+    if (static_name) {
+        ecs_vec_append_t(NULL, &v->scope_names, const char*)[0] = node->name;
+    } else {
+        v->dynamic_scope ++;
+    }
+
+    int result = 0;
+    if (node->scope) {
+        result = flecs_script_refs_visit_scope(v, node->scope);
+    }
+
+    if (static_name) {
+        ecs_vec_remove_last(&v->scope_names);
+    } else {
+        v->dynamic_scope --;
+    }
+
+    return result;
+}
+
+static
+int flecs_script_refs_visit_node(
+    ecs_script_refs_visitor_t *v,
+    ecs_script_node_t *node)
+{
+    switch(node->kind) {
+    case EcsAstScope:
+        return flecs_script_refs_visit_scope(v, (ecs_script_scope_t*)node);
+    case EcsAstTag:
+    case EcsAstAnnotation:
+    case EcsAstInclude:
+    case EcsAstWithTag:
+        break;
+    case EcsAstComponent:
+    case EcsAstWithComponent:
+        return flecs_script_refs_visit_expr(
+            v, ((ecs_script_component_t*)node)->expr);
+    case EcsAstDefaultComponent:
+        return flecs_script_refs_visit_expr(
+            v, ((ecs_script_default_component_t*)node)->expr);
+    case EcsAstVarComponent:
+    case EcsAstWithVar:
+        flecs_script_refs_visit_var(
+            v, ((ecs_script_var_component_t*)node)->name);
+        break;
+    case EcsAstWith: {
+        ecs_script_with_t *n = (ecs_script_with_t*)node;
+        if (flecs_script_refs_visit_scope(v, n->expressions)) {
+            return -1;
+        }
+        return flecs_script_refs_visit_scope(v, n->scope);
+    }
+    case EcsAstUsing:
+        if (v->usings) {
+            ecs_vec_append_t(NULL, v->usings, char*)[0] =
+                ecs_os_strdup(((ecs_script_using_t*)node)->name);
+        }
+        break;
+    case EcsAstModule:
+        ecs_vec_append_t(NULL, &v->scope_names, const char*)[0] =
+            ((ecs_script_module_t*)node)->name;
+        break;
+    case EcsAstTemplate:
+        /* References made in template bodies don't gate script evaluation.
+         * They are collected separately when the template entity is created
+         * (see flecs_script_eval_template). */
+        break;
+    case EcsAstProp: {
+        ecs_script_var_node_t *n = (ecs_script_var_node_t*)node;
+        if (flecs_script_refs_visit_expr(v, n->expr)) {
+            return -1;
+        }
+        flecs_script_refs_declare_var(v, n->name, NULL);
+        break;
+    }
+    case EcsAstConst:
+    case EcsAstExportConst: {
+        ecs_script_var_node_t *n = (ecs_script_var_node_t*)node;
+        if (flecs_script_refs_visit_expr(v, n->expr)) {
+            return -1;
+        }
+        const char *entity = NULL;
+        if (n->expr && n->expr->kind == EcsExprIdentifier) {
+            entity = ((ecs_expr_identifier_t*)n->expr)->value;
+        }
+        flecs_script_refs_declare_var(v, n->name, entity);
+        break;
+    }
+    case EcsAstEntity:
+        return flecs_script_refs_visit_entity(v, (ecs_script_entity_t*)node);
+    case EcsAstPairScope:
+        return flecs_script_refs_visit_scope(
+            v, ((ecs_script_pair_scope_t*)node)->scope);
+    case EcsAstIf: {
+        ecs_script_if_t *n = (ecs_script_if_t*)node;
+        if (flecs_script_refs_visit_expr(v, n->expr)) {
+            return -1;
+        }
+        if (n->if_true && flecs_script_refs_visit_scope(v, n->if_true)) {
+            return -1;
+        }
+        if (n->if_false && flecs_script_refs_visit_scope(v, n->if_false)) {
+            return -1;
+        }
+        break;
+    }
+    case EcsAstFor: {
+        ecs_script_for_range_t *n = (ecs_script_for_range_t*)node;
+        if (flecs_script_refs_visit_expr(v, n->from)) {
+            return -1;
+        }
+        if (flecs_script_refs_visit_expr(v, n->to)) {
+            return -1;
+        }
+        int32_t var_count = ecs_vec_count(&v->vars);
+        flecs_script_refs_declare_var(v, n->loop_var, NULL);
+        int result = flecs_script_refs_visit_scope(v, n->scope);
+        ecs_vec_set_count_t(NULL, &v->vars, ecs_script_refs_var_t, var_count);
+        return result;
+    }
+    case EcsAstFunction:
+        ecs_vec_append_t(NULL, &v->fn_nodes, ecs_script_function_node_t*)[0] =
+            (ecs_script_function_node_t*)node;
+        break;
+    }
+
+    return 0;
+}
+
+static
+void flecs_script_refs_collect_entities(
+    ecs_script_refs_visitor_t *v,
+    ecs_script_scope_t *scope)
+{
+    int32_t i, count = ecs_vec_count(&scope->stmts);
+    ecs_script_node_t **stmts = ecs_vec_first(&scope->stmts);
+    for (i = 0; i < count; i ++) {
+        ecs_script_node_t *node = stmts[i];
+        switch(node->kind) {
+        case EcsAstEntity: {
+            ecs_script_entity_t *entity = (ecs_script_entity_t*)node;
+            if (entity->name && !entity->name_is_var && !entity->name_expr) {
+                ecs_vec_append_t(NULL, &v->entities, const char*)[0] =
+                    entity->name;
+            }
+            if (entity->scope) {
+                flecs_script_refs_collect_entities(v, entity->scope);
+            }
+            break;
+        }
+        case EcsAstTemplate: {
+            ecs_script_template_node_t *template =
+                (ecs_script_template_node_t*)node;
+            if (template->name) {
+                ecs_vec_append_t(NULL, &v->entities, const char*)[0] =
+                    template->name;
+            }
+            break;
+        }
+        case EcsAstWith:
+            flecs_script_refs_collect_entities(
+                v, ((ecs_script_with_t*)node)->scope);
+            break;
+        case EcsAstPairScope:
+            flecs_script_refs_collect_entities(
+                v, ((ecs_script_pair_scope_t*)node)->scope);
+            break;
+        case EcsAstIf: {
+            ecs_script_if_t *n = (ecs_script_if_t*)node;
+            if (n->if_true) {
+                flecs_script_refs_collect_entities(v, n->if_true);
+            }
+            if (n->if_false) {
+                flecs_script_refs_collect_entities(v, n->if_false);
+            }
+            break;
+        }
+        case EcsAstFor:
+            flecs_script_refs_collect_entities(
+                v, ((ecs_script_for_range_t*)node)->scope);
+            break;
+        case EcsAstScope:
+            flecs_script_refs_collect_entities(v, (ecs_script_scope_t*)node);
+            break;
+        case EcsAstTag:
+        case EcsAstComponent:
+        case EcsAstDefaultComponent:
+        case EcsAstVarComponent:
+        case EcsAstWithVar:
+        case EcsAstWithTag:
+        case EcsAstWithComponent:
+        case EcsAstUsing:
+        case EcsAstModule:
+        case EcsAstAnnotation:
+        case EcsAstProp:
+        case EcsAstConst:
+        case EcsAstExportConst:
+        case EcsAstInclude:
+        case EcsAstFunction:
+            break;
+        }
+    }
+}
+
+static
+void flecs_script_refs_declare_outer_vars(
+    ecs_script_refs_visitor_t *v,
+    const ecs_script_vars_t *vars)
+{
+    if (!vars) {
+        return;
+    }
+
+    flecs_script_refs_declare_outer_vars(v, vars->parent);
+
+    int32_t i, count = ecs_vec_count(&vars->vars);
+    const ecs_script_var_t *elems = ecs_vec_first(&vars->vars);
+    for (i = 0; i < count; i ++) {
+        if (elems[i].name) {
+            flecs_script_refs_declare_var(v, elems[i].name, NULL);
+        }
+    }
+}
+
+int flecs_script_visit_refs(
+    ecs_script_impl_t *script,
+    ecs_script_scope_t *scope,
+    bool template_scope,
+    const ecs_script_vars_t *vars,
+    ecs_vec_t *refs,
+    ecs_vec_t *usings,
+    ecs_vec_t *fn_refs)
+{
+    ecs_script_refs_visitor_t v = {
+        .script = script,
+        .refs = refs,
+        .fn_refs = fn_refs ? fn_refs : refs,
+        .usings = usings,
+        .template_scope = template_scope
+    };
+
+    ecs_vec_init_t(NULL, &v.vars, ecs_script_refs_var_t, 0);
+    ecs_vec_init_t(NULL, &v.entities, const char*, 0);
+    ecs_vec_init_t(NULL, &v.scope_names, const char*, 0);
+    ecs_vec_init_t(NULL, &v.fn_nodes, ecs_script_function_node_t*, 0);
+
+    flecs_script_refs_collect_entities(&v, scope);
+
+    flecs_script_refs_declare_outer_vars(&v, vars);
+
+    if (template_scope) {
+        flecs_script_refs_declare_var(&v, "this", NULL);
+    }
+
+    int result = flecs_script_refs_visit_scope(&v, scope);
+
+    ecs_vec_fini_t(NULL, &v.vars, ecs_script_refs_var_t);
+    ecs_vec_fini_t(NULL, &v.entities, const char*);
+    ecs_vec_fini_t(NULL, &v.scope_names, const char*);
+    ecs_vec_fini_t(NULL, &v.fn_nodes, ecs_script_function_node_t*);
+
+    return result;
+}
+
+int flecs_script_visit_fn_refs(
+    ecs_script_impl_t *script,
+    ecs_script_function_node_t *node,
+    ecs_vec_t *refs)
+{
+    ecs_script_refs_visitor_t v = {
+        .script = script,
+        .refs = refs,
+        .fn_refs = refs
+    };
+
+    ecs_vec_init_t(NULL, &v.vars, ecs_script_refs_var_t, 0);
+    ecs_vec_init_t(NULL, &v.entities, const char*, 0);
+    ecs_vec_init_t(NULL, &v.scope_names, const char*, 0);
+    ecs_vec_init_t(NULL, &v.fn_nodes, ecs_script_function_node_t*, 0);
+
+    int result = flecs_script_refs_visit_fn_body(&v, node);
+
+    ecs_vec_fini_t(NULL, &v.vars, ecs_script_refs_var_t);
+    ecs_vec_fini_t(NULL, &v.entities, const char*);
+    ecs_vec_fini_t(NULL, &v.scope_names, const char*);
+    ecs_vec_fini_t(NULL, &v.fn_nodes, ecs_script_function_node_t*);
+
+    return result;
 }
 
 #endif
@@ -100380,9 +101588,11 @@ int flecs_expr_global_variable_visit_fold(
     ecs_entity_t type = node->node.type;
 
     /* In a template body the node is kept unfolded so its value is read live
-     * from the const variable on every (re)instantiation. */
+     * from the const variable on every (re)instantiation. This includes
+     * expressions that are lazily folded during instantiation, such as the
+     * body of a 'new' expression. */
     ecs_script_eval_visitor_t *v = desc->script_visitor;
-    if (v && v->template) {
+    if (v && (v->template || v->template_instance)) {
         return 0;
     }
 
@@ -100821,262 +102031,6 @@ void flecs_expr_visit_free(
         flecs_free_t(a, ecs_expr_cast_t, node);
         break;
     }
-}
-
-#endif
-
-#ifdef FLECS_SCRIPT
-
-static
-ecs_entity_t flecs_expr_ref_entity(
-    ecs_expr_node_t *node)
-{
-    if (!node) {
-        return 0;
-    }
-
-    if (node->kind == EcsExprValue) {
-        ecs_expr_value_node_t *value = (ecs_expr_value_node_t*)node;
-        if (value->ptr) {
-            return *(ecs_entity_t*)value->ptr;
-        }
-    } else if (node->kind == EcsExprIdentifier) {
-        return flecs_expr_ref_entity(((ecs_expr_identifier_t*)node)->expr);
-    }
-
-    return 0;
-}
-
-static
-const char* flecs_expr_ref_var_name(
-    ecs_expr_node_t *node)
-{
-    if (!node) {
-        return NULL;
-    }
-
-    if (node->kind == EcsExprVariable) {
-        ecs_expr_variable_t *var = (ecs_expr_variable_t*)node;
-        if (var->node.type == ecs_id(ecs_entity_t)) {
-            return var->name;
-        }
-    }
-
-    return NULL;
-}
-
-static
-void flecs_expr_add_ref(
-    ecs_vec_t *refs,
-    ecs_entity_t entity,
-    const char *name,
-    ecs_id_t component)
-{
-    ecs_script_ref_t *elems = ecs_vec_first(refs);
-    int32_t i, count = ecs_vec_count(refs);
-    for (i = 0; i < count; i ++) {
-        if (elems[i].entity == entity && elems[i].component == component) {
-            const char *elem_name = elems[i].name;
-            if ((!elem_name && !name) || (elem_name && name &&
-                !ecs_os_strcmp(elem_name, name)))
-            {
-                return;
-            }
-        }
-    }
-
-    ecs_script_ref_t *ref = ecs_vec_append_t(NULL, refs, ecs_script_ref_t);
-    ref->entity = entity;
-    ref->name = name;
-    ref->component = component;
-    ref->observer = 0;
-}
-
-int flecs_expr_visit_refs(
-    const ecs_script_t *script,
-    ecs_expr_node_t *node,
-    ecs_vec_t *refs,
-    ecs_vec_t *dynamic_refs,
-    ecs_vec_t *fn_refs)
-{
-    if (!node) {
-        return 0;
-    }
-
-    switch(node->kind) {
-    case EcsExprValue:
-    case EcsExprVariable:
-        break;
-    case EcsExprGlobalVariable: {
-        ecs_entity_t global = ((ecs_expr_variable_t*)node)->global;
-        if (global) {
-            flecs_expr_add_ref(refs, global, NULL, ecs_id(EcsScriptConstVar));
-        }
-        break;
-    }
-    case EcsExprInterpolatedString: {
-        ecs_expr_interpolated_string_t *n =
-            (ecs_expr_interpolated_string_t*)node;
-        int32_t i, count = ecs_vec_count(&n->expressions);
-        ecs_expr_node_t **expressions = ecs_vec_first(&n->expressions);
-        for (i = 0; i < count; i ++) {
-            if (flecs_expr_visit_refs(
-                script, expressions[i], refs, dynamic_refs, fn_refs))
-            {
-                goto error;
-            }
-        }
-        break;
-    }
-    case EcsExprInitializer:
-    case EcsExprEmptyInitializer: {
-        ecs_expr_initializer_t *n = (ecs_expr_initializer_t*)node;
-        ecs_expr_initializer_element_t *elems = ecs_vec_first(&n->elements);
-        int32_t i, count = ecs_vec_count(&n->elements);
-        for (i = 0; i < count; i ++) {
-            if (elems[i].key) {
-                if (flecs_expr_visit_refs(
-                    script, elems[i].key, refs, dynamic_refs, fn_refs))
-                {
-                    goto error;
-                }
-            }
-            if (flecs_expr_visit_refs(
-                script, elems[i].value, refs, dynamic_refs, fn_refs))
-            {
-                goto error;
-            }
-        }
-        break;
-    }
-    case EcsExprUnary:
-        if (flecs_expr_visit_refs(script,
-            ((ecs_expr_unary_t*)node)->expr, refs, dynamic_refs, fn_refs))
-        {
-            goto error;
-        }
-        break;
-    case EcsExprBinary: {
-        ecs_expr_binary_t *n = (ecs_expr_binary_t*)node;
-        if (flecs_expr_visit_refs(script, n->left, refs, dynamic_refs, fn_refs)) {
-            goto error;
-        }
-        if (flecs_expr_visit_refs(script, n->right, refs, dynamic_refs, fn_refs)) {
-            goto error;
-        }
-        break;
-    }
-    case EcsExprIdentifier:
-        if (flecs_expr_visit_refs(script,
-            ((ecs_expr_identifier_t*)node)->expr, refs, dynamic_refs, fn_refs))
-        {
-            goto error;
-        }
-        break;
-    case EcsExprFunction:
-    case EcsExprMethod: {
-        ecs_expr_function_t *n = (ecs_expr_function_t*)node;
-        if (flecs_expr_visit_refs(script, n->left, refs, dynamic_refs, fn_refs)) {
-            goto error;
-        }
-        if (flecs_expr_visit_refs(script,
-            (ecs_expr_node_t*)n->args, refs, dynamic_refs, fn_refs))
-        {
-            goto error;
-        }
-        if (fn_refs &&
-            n->calldata.is.callback == flecs_script_user_function_callback)
-        {
-            const EcsScriptFunction *fn = ecs_get(
-                script->world, n->calldata.function, EcsScriptFunction);
-            if (fn && fn->binding_ctx) {
-                ecs_script_user_function_t *uf = fn->binding_ctx;
-                ecs_script_ref_t *uf_refs = ecs_vec_first(&uf->refs);
-                int32_t i, count = ecs_vec_count(&uf->refs);
-                for (i = 0; i < count; i ++) {
-                    flecs_expr_add_ref(fn_refs, uf_refs[i].entity,
-                        uf_refs[i].name, uf_refs[i].component);
-                }
-            }
-        }
-        break;
-    }
-    case EcsExprMember:
-        if (flecs_expr_visit_refs(script,
-            ((ecs_expr_member_t*)node)->left, refs, dynamic_refs, fn_refs))
-        {
-            goto error;
-        }
-        break;
-    case EcsExprElement: {
-        ecs_expr_element_t *n = (ecs_expr_element_t*)node;
-        if (flecs_expr_visit_refs(script, n->left, refs, dynamic_refs, fn_refs)) {
-            goto error;
-        }
-        if (flecs_expr_visit_refs(script, n->index, refs, dynamic_refs, fn_refs)) {
-            goto error;
-        }
-        break;
-    }
-    case EcsExprComponent: {
-        ecs_expr_element_t *n = (ecs_expr_element_t*)node;
-        ecs_entity_t entity = flecs_expr_ref_entity(n->left);
-        ecs_id_t component = n->node.type;
-        if (entity && component) {
-            flecs_expr_add_ref(refs, entity, NULL, component);
-        } else if (component && dynamic_refs) {
-            const char *var_name = flecs_expr_ref_var_name(n->left);
-            if (var_name) {
-                flecs_expr_add_ref(dynamic_refs, 0, var_name, component);
-            }
-        }
-        if (flecs_expr_visit_refs(script, n->left, refs, dynamic_refs, fn_refs)) {
-            goto error;
-        }
-        break;
-    }
-    case EcsExprMatch: {
-        ecs_expr_match_t *n = (ecs_expr_match_t*)node;
-        if (flecs_expr_visit_refs(script, n->expr, refs, dynamic_refs, fn_refs)) {
-            goto error;
-        }
-        int32_t i, count = ecs_vec_count(&n->elements);
-        ecs_expr_match_element_t *elems = ecs_vec_first(&n->elements);
-        for (i = 0; i < count; i ++) {
-            if (flecs_expr_visit_refs(
-                script, elems[i].compare, refs, dynamic_refs, fn_refs))
-            {
-                goto error;
-            }
-            if (flecs_expr_visit_refs(
-                script, elems[i].expr, refs, dynamic_refs, fn_refs))
-            {
-                goto error;
-            }
-        }
-        if (flecs_expr_visit_refs(script, n->any.compare, refs, dynamic_refs, fn_refs)) {
-            goto error;
-        }
-        if (flecs_expr_visit_refs(script, n->any.expr, refs, dynamic_refs, fn_refs)) {
-            goto error;
-        }
-        break;
-    }
-    case EcsExprCast:
-    case EcsExprCastNumber:
-        if (flecs_expr_visit_refs(script,
-            ((ecs_expr_cast_t*)node)->expr, refs, dynamic_refs, fn_refs))
-        {
-            goto error;
-        }
-        break;
-    case EcsExprNew:
-        break;
-    }
-
-    return 0;
-error:
-    return -1;
 }
 
 #endif
