@@ -1706,7 +1706,16 @@
                 "prop_ref_in_template_function_in_new_expr",
                 "prop_ref_in_template_assigned_to_component",
                 "template_prop_ref_observer_lifecycle",
-                "template_prop_ref_retarget"
+                "template_prop_ref_retarget",
+                "global_const_var_declared_in_same_script",
+                "global_const_var_declared_in_same_script_w_fn",
+                "global_const_var_declared_in_same_script_w_fn_other_script",
+                "global_const_var_declared_in_same_script_w_fn_other_scripts",
+                "ref_declared_in_same_script",
+                "ref_declared_in_same_script_w_fn",
+                "ref_declared_in_same_script_w_fn_other_script",
+                "ref_declared_in_same_script_w_fn_other_scripts",
+                "global_const_var_declared_in_same_script_w_template"
             ]
         }]
     }

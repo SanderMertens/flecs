@@ -590,7 +590,7 @@ int flecs_script_eval_expr(
             dynamic_refs = &v->instance_template->dynamic_refs;
         }
         if (refs) {
-            if (flecs_expr_visit_refs(script, expr, refs, dynamic_refs)) {
+            if (flecs_expr_visit_refs(script, expr, refs, dynamic_refs, refs)) {
                 goto error;
             }
         }
@@ -2006,6 +2006,7 @@ void flecs_script_user_function_ctx_free(
     if (uf->script) {
         ecs_script_free(uf->script);
     }
+    ecs_vec_fini_t(NULL, &uf->refs, ecs_script_ref_t);
     ecs_os_free(uf);
 }
 
@@ -2014,7 +2015,8 @@ int flecs_script_function_type_check(
     ecs_script_eval_visitor_t *outer_v,
     ecs_script_function_node_t *node,
     const ecs_function_desc_t *desc,
-    int32_t param_count)
+    int32_t param_count,
+    ecs_vec_t *fn_refs)
 {
     ecs_script_impl_t *impl = outer_v->base.script;
     ecs_script_t *script = &impl->pub;
@@ -2092,10 +2094,8 @@ int flecs_script_function_type_check(
         if (flecs_expr_visit_type(script, cnode->expr, &edesc)) {
             goto error;
         }
-        if (v.script_entity) {
-            if (flecs_expr_visit_refs(script, cnode->expr, &impl->refs, NULL)) {
-                goto error;
-            }
+        if (flecs_expr_visit_refs(script, cnode->expr, fn_refs, NULL, fn_refs)) {
+            goto error;
         }
         if (flecs_expr_visit_fold(script, &cnode->expr, &edesc)) {
             goto error;
@@ -2129,12 +2129,10 @@ int flecs_script_function_type_check(
         if (flecs_expr_visit_type(script, node->return_expr, &edesc)) {
             goto error;
         }
-        if (v.script_entity) {
-            if (flecs_expr_visit_refs(
-                script, node->return_expr, &impl->refs, NULL))
-            {
-                goto error;
-            }
+        if (flecs_expr_visit_refs(
+            script, node->return_expr, fn_refs, NULL, fn_refs))
+        {
+            goto error;
         }
         if (flecs_expr_visit_fold(script, &node->return_expr, &edesc)) {
             goto error;
@@ -2203,7 +2201,13 @@ int flecs_script_eval_function(
         return -1;
     }
 
-    if (flecs_script_function_type_check(v, node, &desc, param_count)) {
+    ecs_vec_t fn_refs;
+    ecs_vec_init_t(NULL, &fn_refs, ecs_script_ref_t, 0);
+
+    if (flecs_script_function_type_check(v, node, &desc, param_count,
+        &fn_refs))
+    {
+        ecs_vec_fini_t(NULL, &fn_refs, ecs_script_ref_t);
         ecs_delete(world, fn_entity);
         return -1;
     }
@@ -2213,6 +2217,7 @@ int flecs_script_eval_function(
     uf->script = &v->base.script->pub;
     v->base.script->refcount ++;
     uf->node = node;
+    uf->refs = fn_refs;
 
     EcsScriptFunction *fcomp = ecs_ensure(world, fn_entity, EcsScriptFunction);
     if (fcomp->binding_ctx && fcomp->binding_ctx_free) {
