@@ -19249,6 +19249,68 @@ void ecs_value_move_ctor(
     ecs_value_t *dst,
     ecs_value_t *src);
 
+/** Compare two values.
+ *
+ * @param world The world.
+ * @param a The first value.
+ * @param b The second value.
+ * @return 0 if equal, <0 if a is less than b, >0 if a is greater than b.
+ */
+FLECS_API
+int ecs_value_compare(
+    const ecs_world_t *world,
+    const ecs_value_t *a,
+    const ecs_value_t *b);
+
+/** Test if two values are equal.
+ *
+ * @param world The world.
+ * @param a The first value.
+ * @param b The second value.
+ * @return true if the values are equal, false otherwise.
+ */
+FLECS_API
+bool ecs_value_equals(
+    const ecs_world_t *world,
+    const ecs_value_t *a,
+    const ecs_value_t *b);
+
+/** Generate a runtime compare hook for a type.
+ * This generates a compare hook for a type based on its reflection data. This
+ * can be used to add a compare hook to a compile-time type that does not have
+ * one.
+ *
+ * The operation is recursive: if the type has members, elements or values of a
+ * type that does not have a compare hook, a compare hook is generated for that
+ * type as well.
+ *
+ * @param world The world.
+ * @param type The type to generate a compare hook for.
+ * @return 0 if successful, -1 if the hook could not be generated.
+ */
+FLECS_API
+int ecs_set_rtt_compare(
+    ecs_world_t *world,
+    ecs_entity_t type);
+
+/** Generate a runtime equals hook for a type.
+ * This generates an equals hook for a type based on its reflection data. This
+ * can be used to add an equals hook to a compile-time type that does not have
+ * one.
+ *
+ * The operation is recursive: if the type has members, elements or values of a
+ * type that does not have an equals hook, an equals hook is generated for that
+ * type as well.
+ *
+ * @param world The world.
+ * @param type The type to generate an equals hook for.
+ * @return 0 if successful, -1 if the hook could not be generated.
+ */
+FLECS_API
+int ecs_set_rtt_equals(
+    ecs_world_t *world,
+    ecs_entity_t type);
+
 /* API functions for creating meta types */
 
 /** Used with ecs_primitive_init(). */

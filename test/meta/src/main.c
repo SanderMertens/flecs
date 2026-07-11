@@ -1417,6 +1417,23 @@ void RttCompare_map_of_ints(void);
 void RttCompare_map_of_strings(void);
 void RttCompare_map_of_struct_with_strings(void);
 
+// Testsuite 'SetRttHooks'
+void SetRttHooks_compare_struct_with_ints(void);
+void SetRttHooks_equals_struct_with_ints(void);
+void SetRttHooks_compare_generates_equals(void);
+void SetRttHooks_equals_struct_with_strings(void);
+void SetRttHooks_compare_nested_struct(void);
+void SetRttHooks_equals_nested_struct(void);
+void SetRttHooks_compare_array(void);
+void SetRttHooks_compare_vector(void);
+void SetRttHooks_compare_map(void);
+void SetRttHooks_compare_opaque_without_hook_fails(void);
+void SetRttHooks_compare_primitive_noop(void);
+void SetRttHooks_compare_idempotent(void);
+void SetRttHooks_value_compare(void);
+void SetRttHooks_value_equals(void);
+void SetRttHooks_value_different_types(void);
+
 bake_test_case PrimitiveTypes_testcases[] = {
     {
         "bool",
@@ -6933,6 +6950,69 @@ bake_test_case RttCompare_testcases[] = {
     }
 };
 
+bake_test_case SetRttHooks_testcases[] = {
+    {
+        "compare_struct_with_ints",
+        SetRttHooks_compare_struct_with_ints
+    },
+    {
+        "equals_struct_with_ints",
+        SetRttHooks_equals_struct_with_ints
+    },
+    {
+        "compare_generates_equals",
+        SetRttHooks_compare_generates_equals
+    },
+    {
+        "equals_struct_with_strings",
+        SetRttHooks_equals_struct_with_strings
+    },
+    {
+        "compare_nested_struct",
+        SetRttHooks_compare_nested_struct
+    },
+    {
+        "equals_nested_struct",
+        SetRttHooks_equals_nested_struct
+    },
+    {
+        "compare_array",
+        SetRttHooks_compare_array
+    },
+    {
+        "compare_vector",
+        SetRttHooks_compare_vector
+    },
+    {
+        "compare_map",
+        SetRttHooks_compare_map
+    },
+    {
+        "compare_opaque_without_hook_fails",
+        SetRttHooks_compare_opaque_without_hook_fails
+    },
+    {
+        "compare_primitive_noop",
+        SetRttHooks_compare_primitive_noop
+    },
+    {
+        "compare_idempotent",
+        SetRttHooks_compare_idempotent
+    },
+    {
+        "value_compare",
+        SetRttHooks_value_compare
+    },
+    {
+        "value_equals",
+        SetRttHooks_value_equals
+    },
+    {
+        "value_different_types",
+        SetRttHooks_value_different_types
+    }
+};
+
 static bake_test_suite suites[] = {
     {
         "PrimitiveTypes",
@@ -7101,9 +7181,16 @@ static bake_test_suite suites[] = {
         NULL,
         31,
         RttCompare_testcases
+    },
+    {
+        "SetRttHooks",
+        NULL,
+        NULL,
+        15,
+        SetRttHooks_testcases
     }
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("meta", argc, argv, suites, 24);
+    return bake_test_run("meta", argc, argv, suites, 25);
 }
