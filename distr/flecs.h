@@ -3177,6 +3177,7 @@ extern "C" {
 typedef struct ecs_strbuf_list_elem {
     int32_t count;            /**< Number of elements appended to the list. */
     const char *separator;    /**< Separator string inserted between elements. */
+    int32_t separator_len;    /**< Length of separator string. */
 } ecs_strbuf_list_elem;
 
 /** A string buffer for efficient string construction. */
@@ -18645,6 +18646,7 @@ typedef struct ecs_meta_op_t {
     ecs_meta_op_kind_t kind;                       /**< Instruction opcode. */
     ecs_meta_op_kind_t underlying_kind;            /**< Underlying type kind (for enums). */
     ecs_size_t offset;                             /**< Offset of current field. */
+    ecs_size_t name_len;                           /**< Length of name. */
     const char *name;                              /**< Name of value (only used for struct members). */
     ecs_size_t elem_size;                          /**< Element size (for PushArray or PushVector) and element count (for PopArray). */
     int16_t op_count;                              /**< Number of operations until next field or end. */

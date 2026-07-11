@@ -529,9 +529,24 @@ void flecs_json_membern(
     const char *name,
     int32_t name_len)
 {
-    ecs_strbuf_list_appendch(buf, '"');
-    ecs_strbuf_appendstrn(buf, name, name_len);
-    ecs_strbuf_appendlit(buf, "\":");
+    ecs_strbuf_list_elem *list_elem = &buf->list_stack[buf->list_sp];
+    int32_t i, sep_len = list_elem->separator_len;
+    char *dst = flecs_strbuf_reserve(buf, name_len + 3 + sep_len);
+    if (list_elem->count ++) {
+        for (i = 0; i < sep_len; i ++) {
+            dst[i] = list_elem->separator[i];
+        }
+        dst += sep_len;
+        buf->length += sep_len;
+    }
+
+    dst[0] = '"';
+    for (i = 0; i < name_len; i ++) {
+        dst[i + 1] = name[i];
+    }
+    dst[name_len + 1] = '"';
+    dst[name_len + 2] = ':';
+    buf->length += name_len + 3;
 }
 
 void flecs_json_path(

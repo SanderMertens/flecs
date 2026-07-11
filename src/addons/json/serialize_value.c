@@ -142,11 +142,22 @@ int flecs_json_ser_array(
 {
     flecs_json_array_push(str);
 
+    ecs_meta_op_t *elem_ops = &ops[1];
+    int32_t elem_op_count = ops->op_count - 2;
+
     int32_t i;
     for (i = 0; i < count; i ++) {
-        ecs_strbuf_list_next(str);
+        if (i) {
+            char *dst = flecs_strbuf_reserve(str, 2);
+            dst[0] = ',';
+            dst[1] = ' ';
+            str->length += 2;
+        }
+
         void *ptr = ECS_ELEM(array, elem_size, i);
-        if (flecs_json_ser_scope(world, ops, ptr, str)) {
+        if (flecs_json_ser_type_slice(
+            world, elem_ops, elem_op_count, ptr, str))
+        {
             return -1;
         }
     }
@@ -229,22 +240,7 @@ int flecs_json_ser_type_slice(
         const void *ptr = ECS_OFFSET(base, op->offset);
 
         if (op->name) {
-            flecs_json_member(str, op->name);
-        }
-
-        bool large_int = false;
-        if (op->kind == EcsOpI64) {
-            if (*(const int64_t*)ptr >= 2147483648) {
-                large_int = true;
-            }
-        } else if (op->kind == EcsOpU64) {
-            if (*(const uint64_t*)ptr >= 2147483648) {
-                large_int = true;
-            }
-        }
-
-        if (large_int) {
-            ecs_strbuf_appendch(str, '"');
+            flecs_json_membern(str, op->name, op->name_len);
         }
 
         switch(op->kind) {
@@ -338,19 +334,58 @@ int flecs_json_ser_type_slice(
             }
             break;
         }
-        case EcsOpU64:
-        case EcsOpI64:
-        case EcsOpBool:
-        case EcsOpChar:
         case EcsOpByte:
         case EcsOpU8:
+            ecs_strbuf_appendint(str, flecs_uto(int64_t, *(const uint8_t*)ptr));
+            break;
         case EcsOpU16:
+            ecs_strbuf_appendint(str, flecs_uto(int64_t, *(const uint16_t*)ptr));
+            break;
         case EcsOpU32:
+            ecs_strbuf_appendint(str, flecs_uto(int64_t, *(const uint32_t*)ptr));
+            break;
         case EcsOpI8:
+            ecs_strbuf_appendint(str, flecs_ito(int64_t, *(const int8_t*)ptr));
+            break;
         case EcsOpI16:
+            ecs_strbuf_appendint(str, flecs_ito(int64_t, *(const int16_t*)ptr));
+            break;
         case EcsOpI32:
-        case EcsOpUPtr:
+            ecs_strbuf_appendint(str, flecs_ito(int64_t, *(const int32_t*)ptr));
+            break;
+        case EcsOpI64: {
+            int64_t value = *(const int64_t*)ptr;
+            if (value >= 2147483648) {
+                ecs_strbuf_appendch(str, '"');
+                ecs_strbuf_appendint(str, value);
+                ecs_strbuf_appendch(str, '"');
+            } else {
+                ecs_strbuf_appendint(str, value);
+            }
+            break;
+        }
         case EcsOpIPtr:
+            ecs_strbuf_appendint(str, flecs_ito(int64_t, *(const intptr_t*)ptr));
+            break;
+        case EcsOpU64: {
+            uint64_t value = *(const uint64_t*)ptr;
+            bool large_int = value >= 2147483648;
+            if (large_int) {
+                ecs_strbuf_appendch(str, '"');
+            }
+            if (flecs_meta_ser_primitive(world,
+                flecs_json_op_to_primitive_kind(op->kind), ptr, str, true))
+            {
+                ecs_throw(ECS_INTERNAL_ERROR, NULL);
+            }
+            if (large_int) {
+                ecs_strbuf_appendch(str, '"');
+            }
+            break;
+        }
+        case EcsOpBool:
+        case EcsOpChar:
+        case EcsOpUPtr:
             if (flecs_meta_ser_primitive(world,
                 flecs_json_op_to_primitive_kind(op->kind), ptr, str, true))
             {
@@ -364,12 +399,8 @@ int flecs_json_ser_type_slice(
         case EcsOpScope:
         case EcsOpPop:
         default:
-            ecs_throw(ECS_INTERNAL_ERROR, 
+            ecs_throw(ECS_INTERNAL_ERROR,
                 "unexpected serializer operation");
-        }
-
-        if (large_int) {
-            ecs_strbuf_appendch(str, '"');
         }
     }
 

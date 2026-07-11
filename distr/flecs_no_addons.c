@@ -27498,6 +27498,8 @@ void ecs_strbuf_list_push(
 
     b->list_stack[b->list_sp].count = 0;
     b->list_stack[b->list_sp].separator = separator;
+    b->list_stack[b->list_sp].separator_len =
+        separator ? ecs_os_strlen(separator) : 0;
 
     if (list_open) {
         char ch = list_open[0];
@@ -27535,16 +27537,16 @@ void ecs_strbuf_list_next(
 {
     ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    int32_t list_sp = b->list_sp;
-    if (b->list_stack[list_sp].count != 0) {
-        const char *sep = b->list_stack[list_sp].separator;
-        if (sep && !sep[1]) {
-            ecs_strbuf_appendch(b, sep[0]);
-        } else {
-            ecs_strbuf_appendstr(b, sep);
+    ecs_strbuf_list_elem *elem = &b->list_stack[b->list_sp];
+    if (elem->count != 0) {
+        int32_t sep_len = elem->separator_len;
+        if (sep_len == 1) {
+            flecs_strbuf_appendch(b, elem->separator[0]);
+        } else if (sep_len != 0) {
+            flecs_strbuf_appendstr(b, elem->separator, sep_len);
         }
     }
-    b->list_stack[list_sp].count ++;
+    elem->count ++;
 }
 
 void ecs_strbuf_list_appendch(

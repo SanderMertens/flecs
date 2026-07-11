@@ -35649,6 +35649,8 @@ void ecs_strbuf_list_push(
 
     b->list_stack[b->list_sp].count = 0;
     b->list_stack[b->list_sp].separator = separator;
+    b->list_stack[b->list_sp].separator_len =
+        separator ? ecs_os_strlen(separator) : 0;
 
     if (list_open) {
         char ch = list_open[0];
@@ -35686,16 +35688,16 @@ void ecs_strbuf_list_next(
 {
     ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    int32_t list_sp = b->list_sp;
-    if (b->list_stack[list_sp].count != 0) {
-        const char *sep = b->list_stack[list_sp].separator;
-        if (sep && !sep[1]) {
-            ecs_strbuf_appendch(b, sep[0]);
-        } else {
-            ecs_strbuf_appendstr(b, sep);
+    ecs_strbuf_list_elem *elem = &b->list_stack[b->list_sp];
+    if (elem->count != 0) {
+        int32_t sep_len = elem->separator_len;
+        if (sep_len == 1) {
+            flecs_strbuf_appendch(b, elem->separator[0]);
+        } else if (sep_len != 0) {
+            flecs_strbuf_appendstr(b, elem->separator, sep_len);
         }
     }
-    b->list_stack[list_sp].count ++;
+    elem->count ++;
 }
 
 void ecs_strbuf_list_appendch(
@@ -52465,9 +52467,24 @@ void flecs_json_membern(
     const char *name,
     int32_t name_len)
 {
-    ecs_strbuf_list_appendch(buf, '"');
-    ecs_strbuf_appendstrn(buf, name, name_len);
-    ecs_strbuf_appendlit(buf, "\":");
+    ecs_strbuf_list_elem *list_elem = &buf->list_stack[buf->list_sp];
+    int32_t i, sep_len = list_elem->separator_len;
+    char *dst = flecs_strbuf_reserve(buf, name_len + 3 + sep_len);
+    if (list_elem->count ++) {
+        for (i = 0; i < sep_len; i ++) {
+            dst[i] = list_elem->separator[i];
+        }
+        dst += sep_len;
+        buf->length += sep_len;
+    }
+
+    dst[0] = '"';
+    for (i = 0; i < name_len; i ++) {
+        dst[i + 1] = name[i];
+    }
+    dst[name_len + 1] = '"';
+    dst[name_len + 2] = ':';
+    buf->length += name_len + 3;
 }
 
 void flecs_json_path(
@@ -55629,11 +55646,22 @@ int flecs_json_ser_array(
 {
     flecs_json_array_push(str);
 
+    ecs_meta_op_t *elem_ops = &ops[1];
+    int32_t elem_op_count = ops->op_count - 2;
+
     int32_t i;
     for (i = 0; i < count; i ++) {
-        ecs_strbuf_list_next(str);
+        if (i) {
+            char *dst = flecs_strbuf_reserve(str, 2);
+            dst[0] = ',';
+            dst[1] = ' ';
+            str->length += 2;
+        }
+
         void *ptr = ECS_ELEM(array, elem_size, i);
-        if (flecs_json_ser_scope(world, ops, ptr, str)) {
+        if (flecs_json_ser_type_slice(
+            world, elem_ops, elem_op_count, ptr, str))
+        {
             return -1;
         }
     }
@@ -55716,22 +55744,7 @@ int flecs_json_ser_type_slice(
         const void *ptr = ECS_OFFSET(base, op->offset);
 
         if (op->name) {
-            flecs_json_member(str, op->name);
-        }
-
-        bool large_int = false;
-        if (op->kind == EcsOpI64) {
-            if (*(const int64_t*)ptr >= 2147483648) {
-                large_int = true;
-            }
-        } else if (op->kind == EcsOpU64) {
-            if (*(const uint64_t*)ptr >= 2147483648) {
-                large_int = true;
-            }
-        }
-
-        if (large_int) {
-            ecs_strbuf_appendch(str, '"');
+            flecs_json_membern(str, op->name, op->name_len);
         }
 
         switch(op->kind) {
@@ -55825,19 +55838,58 @@ int flecs_json_ser_type_slice(
             }
             break;
         }
-        case EcsOpU64:
-        case EcsOpI64:
-        case EcsOpBool:
-        case EcsOpChar:
         case EcsOpByte:
         case EcsOpU8:
+            ecs_strbuf_appendint(str, flecs_uto(int64_t, *(const uint8_t*)ptr));
+            break;
         case EcsOpU16:
+            ecs_strbuf_appendint(str, flecs_uto(int64_t, *(const uint16_t*)ptr));
+            break;
         case EcsOpU32:
+            ecs_strbuf_appendint(str, flecs_uto(int64_t, *(const uint32_t*)ptr));
+            break;
         case EcsOpI8:
+            ecs_strbuf_appendint(str, flecs_ito(int64_t, *(const int8_t*)ptr));
+            break;
         case EcsOpI16:
+            ecs_strbuf_appendint(str, flecs_ito(int64_t, *(const int16_t*)ptr));
+            break;
         case EcsOpI32:
-        case EcsOpUPtr:
+            ecs_strbuf_appendint(str, flecs_ito(int64_t, *(const int32_t*)ptr));
+            break;
+        case EcsOpI64: {
+            int64_t value = *(const int64_t*)ptr;
+            if (value >= 2147483648) {
+                ecs_strbuf_appendch(str, '"');
+                ecs_strbuf_appendint(str, value);
+                ecs_strbuf_appendch(str, '"');
+            } else {
+                ecs_strbuf_appendint(str, value);
+            }
+            break;
+        }
         case EcsOpIPtr:
+            ecs_strbuf_appendint(str, flecs_ito(int64_t, *(const intptr_t*)ptr));
+            break;
+        case EcsOpU64: {
+            uint64_t value = *(const uint64_t*)ptr;
+            bool large_int = value >= 2147483648;
+            if (large_int) {
+                ecs_strbuf_appendch(str, '"');
+            }
+            if (flecs_meta_ser_primitive(world,
+                flecs_json_op_to_primitive_kind(op->kind), ptr, str, true))
+            {
+                ecs_throw(ECS_INTERNAL_ERROR, NULL);
+            }
+            if (large_int) {
+                ecs_strbuf_appendch(str, '"');
+            }
+            break;
+        }
+        case EcsOpBool:
+        case EcsOpChar:
+        case EcsOpUPtr:
             if (flecs_meta_ser_primitive(world,
                 flecs_json_op_to_primitive_kind(op->kind), ptr, str, true))
             {
@@ -55851,12 +55903,8 @@ int flecs_json_ser_type_slice(
         case EcsOpScope:
         case EcsOpPop:
         default:
-            ecs_throw(ECS_INTERNAL_ERROR, 
+            ecs_throw(ECS_INTERNAL_ERROR,
                 "unexpected serializer operation");
-        }
-
-        if (large_int) {
-            ecs_strbuf_appendch(str, '"');
         }
     }
 
@@ -62074,6 +62122,7 @@ ecs_meta_op_t* flecs_meta_ops_add(ecs_vec_t *ops, ecs_meta_op_kind_t kind) {
     op->op_count = 1;
     op->type_info = NULL;
     op->name = NULL;
+    op->name_len = 0;
     op->is.members = NULL;
     op->type = 0;
     op->member_index = 0;
@@ -62472,6 +62521,7 @@ int flecs_meta_serialize_struct(
 
         const char *member_name = member->name;
         op->name = member_name;
+        op->name_len = ecs_os_strlen(member_name);
         op->member_index = flecs_ito(int16_t, i);
 
         flecs_name_index_ensure(
