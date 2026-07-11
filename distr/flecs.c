@@ -68328,6 +68328,13 @@ void flecs_function_import(
     ECS_COMPONENT_DEFINE(world, EcsScriptMethod);
 
     ecs_struct(world, {
+        .entity = ecs_id(EcsScriptConstVar),
+        .members = {
+            { .name = "value", .type = ecs_id(ecs_value_t) }
+        }
+    });
+
+    ecs_struct(world, {
         .entity = ecs_id(EcsScriptFunction),
         .members = {
             { .name = "return_type", .type = ecs_id(ecs_entity_t) }
