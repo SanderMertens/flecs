@@ -272,8 +272,8 @@ void Fuzzing_14(void) {
 /* crash=out/fuzzer02/crashes/id:000000,sig:11,src:000009,time:34419,execs:4908,op:havoc,rep:1, sha1=28c972a5c8e7fc949987fd9cb73b615aea9410b9
  * asan_stack:
  *     #0 0x000105783128 in __asan_memcpy (/Library/Developer/CommandLineTools/usr/lib/clang/17/lib/darwin/libclang_rt.asan_osx_dynamic.dylib:arm64e+0x3b128)
- *     #1 0x000104e28d3c in ecs_value_copy_w_type_info flecs/src/value.c:142:9
- *     #2 0x000104e28d3c in ecs_value_copy flecs/src/value.c:159:12
+ *     #1 0x000104e28d3c in ecs_ptr_copy_w_type_info flecs/src/value.c:142:9
+ *     #2 0x000104e28d3c in ecs_ptr_copy flecs/src/value.c:159:12
  *     #3 0x000104ccd128 in flecs_expr_initializer_post_fold flecs/src/addons/script/expr/visit_fold.c:314:13
  *     #4 0x000104ccb60c in flecs_expr_initializer_visit_fold flecs/src/addons/script/expr/visit_fold.c:345:13
  *     #5 0x000104ccb60c in flecs_expr_visit_fold flecs/src/addons/script/expr/visit_fold.c:563:13
@@ -2318,8 +2318,8 @@ void Fuzzing_50(void) {
 /* crash=out/fuzzer13/crashes/id:000003,sig:11,src:000009,time:379807,execs:54788,op:havoc,rep:1, sha1=12aad1271444c55165b1088b3db0a7b2eff46c72
  * asan_stack:
  *     #0 0x000104dcf128 in __asan_memcpy (/Library/Developer/CommandLineTools/usr/lib/clang/17/lib/darwin/libclang_rt.asan_osx_dynamic.dylib:arm64e+0x3b128)
- *     #1 0x000104278d3c in ecs_value_copy_w_type_info flecs/src/value.c:142:9
- *     #2 0x000104278d3c in ecs_value_copy flecs/src/value.c:159:12
+ *     #1 0x000104278d3c in ecs_ptr_copy_w_type_info flecs/src/value.c:142:9
+ *     #2 0x000104278d3c in ecs_ptr_copy flecs/src/value.c:159:12
  *     #3 0x00010411d128 in flecs_expr_initializer_post_fold flecs/src/addons/script/expr/visit_fold.c:314:13
  *     #4 0x00010411b60c in flecs_expr_initializer_visit_fold flecs/src/addons/script/expr/visit_fold.c:345:13
  *     #5 0x00010411b60c in flecs_expr_visit_fold flecs/src/addons/script/expr/visit_fold.c:563:13
@@ -4884,7 +4884,7 @@ void Fuzzing_80(void) {
  *     #0 0x0001011927d8 in __asan::Allocator::Deallocate(void*, unsigned long, unsigned long, __sanitizer::BufferedStackTrace*, __asan::AllocType) (/opt/homebrew/Cellar/llvm/20.1.8/lib/clang/20/lib/darwin/libclang_rt.asan_osx_dynamic.dylib:arm64+0x27d8)
  *     #1 0x0001011e29a0 in free (/opt/homebrew/Cellar/llvm/20.1.8/lib/clang/20/lib/darwin/libclang_rt.asan_osx_dynamic.dylib:arm64+0x529a0)
  *     #2 0x0001007f2a44 in ecs_string_t_copy flecs/src/addons/meta/type_support/primitive_ts.c:12:8
- *     #3 0x0001009cbdc4 in ecs_value_copy_w_type_info flecs/src/value.c:140:9
+ *     #3 0x0001009cbdc4 in ecs_ptr_copy_w_type_info flecs/src/value.c:140:9
  *     #4 0x000100899068 in flecs_script_template_ctor flecs/src/addons/script/template.c:89:13
  *     #5 0x0001009b3bdc in flecs_table_invoke_add_hooks flecs/src/storage/table.c:1055:9
  *     #6 0x0001009b2c6c in flecs_table_move flecs/src/storage/table.c:2035:17
@@ -6970,8 +6970,8 @@ void Fuzzing_115(void) {
  *     #2 0x00010296d23c in flecs_rtt_struct_dtor flecs/src/addons/meta/rtt_lifecycle.c:125:5
  *     #3 0x00010296d23c in flecs_rtt_struct_xtor flecs/src/addons/meta/rtt_lifecycle.c:92:13
  *     #4 0x00010296d23c in flecs_rtt_struct_dtor flecs/src/addons/meta/rtt_lifecycle.c:125:5
- *     #5 0x000102b541d4 in ecs_value_fini_w_type_info flecs/src/value.c:87:9
- *     #6 0x000102b541d4 in ecs_value_free flecs/src/value.c:117:9
+ *     #5 0x000102b541d4 in ecs_ptr_fini_w_type_info flecs/src/value.c:87:9
+ *     #6 0x000102b541d4 in ecs_ptr_free flecs/src/value.c:117:9
  *     #7 0x0001029f7090 in flecs_expr_value_visit_free flecs/src/addons/script/expr/visit_free.c:17:9
  *     #8 0x0001029f7090 in flecs_expr_visit_free flecs/src/addons/script/expr/visit_free.c:164:9
  *     #9 0x000102a30a20 in flecs_script_component_free flecs/src/addons/script/visit_free.c:105:5
@@ -8457,8 +8457,8 @@ void Fuzzing_141(void) {
  *     #0 0x000104c1b134 in ecs_string_t_dtor flecs/src/addons/meta/type_support/primitive_ts.c:23:8
  *     #1 0x000104c0d378 in flecs_rtt_struct_xtor flecs/src/addons/meta/rtt_lifecycle.c:92:13
  *     #2 0x000104c0d378 in flecs_rtt_struct_dtor flecs/src/addons/meta/rtt_lifecycle.c:125:5
- *     #3 0x000104df504c in ecs_value_fini_w_type_info flecs/src/value.c:87:9
- *     #4 0x000104df504c in ecs_value_free flecs/src/value.c:117:9
+ *     #3 0x000104df504c in ecs_ptr_fini_w_type_info flecs/src/value.c:87:9
+ *     #4 0x000104df504c in ecs_ptr_free flecs/src/value.c:117:9
  *     #5 0x000104c974dc in flecs_expr_value_visit_free flecs/src/addons/script/expr/visit_free.c:17:9
  *     #6 0x000104c974dc in flecs_expr_visit_free flecs/src/addons/script/expr/visit_free.c:164:9
  *     #7 0x000104cd0f28 in flecs_script_component_free flecs/src/addons/script/visit_free.c:105:5

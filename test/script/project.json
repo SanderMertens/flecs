@@ -528,7 +528,12 @@
                 "map_bitmask_i32_component_w_expr_key",
                 "map_i64_i32_component_w_expr_key",
                 "map_i64_i32_component_w_var_key",
-                "map_component_element"
+                "map_component_element",
+                "struct_w_value_member",
+                "struct_w_value_member_w_type",
+                "struct_w_value_member_reassign",
+                "value_component",
+                "value_const_var"
             ]
         }, {
             "id": "Function",
@@ -1296,7 +1301,15 @@
                 "map_i32_i32_negative_key",
                 "map_u64_i32",
                 "map_enum_i32",
-                "map_bitmask_i32"
+                "map_bitmask_i32",
+                "value_i64",
+                "value_u16",
+                "value_f64",
+                "value_string",
+                "value_entity",
+                "value_struct",
+                "struct_w_value",
+                "value_roundtrip"
             ]
         }, {
             "id": "Deserialize",
@@ -1448,7 +1461,25 @@
                 "map_bitmask_i32_multi_flag_key",
                 "map_i64_i32_expr_key",
                 "map_i64_i32_var_key",
-                "vector_i32_w_key"
+                "vector_i32_w_key",
+                "value_i64",
+                "value_negative_i64",
+                "value_f64",
+                "value_bool",
+                "value_string",
+                "value_entity",
+                "value_expr",
+                "value_w_type_u16",
+                "value_w_type_f32",
+                "value_w_type_string",
+                "value_w_type_struct",
+                "value_w_type_vector",
+                "value_assign_same_type",
+                "value_assign_different_type",
+                "struct_w_value",
+                "struct_w_value_w_type",
+                "struct_w_value_string",
+                "value_unknown_type"
             ]
         }, {
             "id": "Include",

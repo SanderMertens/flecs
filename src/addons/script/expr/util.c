@@ -43,7 +43,7 @@ int flecs_value_copy_to(
 
     if (src->value.type == dst->type) {
         ecs_assert(src->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_value_copy_w_type_info(
+        ecs_ptr_copy_w_type_info(
             world, src->type_info, dst->ptr, src->value.ptr);
     } else {
         /* Cast value to desired output type */
@@ -68,12 +68,12 @@ int flecs_value_move_to(
     ecs_assert(src->ptr != 0, ECS_INTERNAL_ERROR, NULL);
 
     if (src->type == dst->type) {
-        ecs_value_move(world, src->type, dst->ptr, src->ptr);
+        ecs_ptr_move(world, src->type, dst->ptr, src->ptr);
     } else {
         ecs_value_t tmp;
         tmp.type = src->type;
-        tmp.ptr = ecs_value_new(world, src->type);
-        ecs_value_move(world, src->type, tmp.ptr, src->ptr);
+        tmp.ptr = ecs_ptr_new(world, src->type);
+        ecs_ptr_move(world, src->type, tmp.ptr, src->ptr);
 
         /* Cast value to desired output type */
         ecs_meta_cursor_t cur = ecs_meta_cursor(world, dst->type, dst->ptr);
@@ -81,7 +81,7 @@ int flecs_value_move_to(
             goto error;
         }
 
-        ecs_value_free(world, src->type, tmp.ptr);
+        ecs_ptr_free(world, src->type, tmp.ptr);
     }
 
     return 0;

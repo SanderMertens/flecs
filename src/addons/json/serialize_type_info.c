@@ -312,6 +312,10 @@ int flecs_json_typeinfo_ser_type_slice(
             }
             i += op->op_count - 1;
             break;
+        case EcsOpPushValue:
+            ecs_strbuf_list_appendstr(str, "\"value\"");
+            i += op->op_count - 1;
+            break;
         case EcsOpEnum:
             flecs_json_typeinfo_ser_enum(world, op->type, str);
             break;

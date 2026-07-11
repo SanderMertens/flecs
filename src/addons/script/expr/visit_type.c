@@ -881,7 +881,7 @@ int flecs_expr_initializer_collection_check(
                     }
                 }
             } else {
-                if (kind != EcsStructType) {
+                if (kind != EcsStructType && kind != EcsValueType) {
                     char *type_str = ecs_get_path(
                         script->world, node->node.type);
                     flecs_expr_visit_error(script, node, 
@@ -908,7 +908,7 @@ bool flecs_expr_initializer_is_dynamic(
     const EcsType *t = ecs_get(world, type, EcsType);
     if (t) {
         return t->kind == EcsOpaqueType || t->kind == EcsVectorType ||
-            t->kind == EcsMapType;
+            t->kind == EcsMapType || t->kind == EcsValueType;
     }
     return false;
 }
@@ -1055,6 +1055,15 @@ int flecs_expr_initializer_visit_type(
 
         ecs_entity_t elem_type = ecs_meta_get_type(cur);
         ecs_meta_cursor_t elem_cur = *cur;
+        if (elem_type == ecs_id(ecs_value_t) &&
+            elem->value->kind != EcsExprInitializer &&
+            elem->value->kind != EcsExprEmptyInitializer)
+        {
+            /* When assigning an expression to a value, derive the type of
+             * the value from the expression. */
+            ecs_os_zeromem(&elem_cur);
+        }
+
         if (flecs_expr_visit_type_priv(
             script, elem->value, &elem_cur, desc)) 
         {
@@ -1374,7 +1383,7 @@ int flecs_expr_identifier_visit_type(
             }
             if (!global) {
                 bool is_opaque = false;
-                if (!type) {
+                if (!type || type == ecs_id(ecs_value_t)) {
                     type = ecs_id(ecs_entity_t);
                 } else if (!flecs_expr_is_entity_type(script->world, type, &is_opaque)) {
                     char *type_str = ecs_get_path(script->world, type);

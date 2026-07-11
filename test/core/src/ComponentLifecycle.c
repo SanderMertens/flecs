@@ -5203,7 +5203,7 @@ void ComponentLifecycle_value_move_ctor_invokes_move_ctor(void) {
     Position src = {10, 20};
     Position dst;
 
-    test_int(0, ecs_value_move_ctor(world, ecs_id(Position), &dst, &src));
+    test_int(0, ecs_ptr_move_ctor(world, ecs_id(Position), &dst, &src));
 
     test_int(value_move_ctor_move_ctor_invoked, 1);
     test_int(value_move_ctor_move_invoked, 0);

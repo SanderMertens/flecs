@@ -277,6 +277,11 @@ bool flecs_expr_explicit_cast_allowed(
         return true;
     }
 
+    /* Any type can be cast to and from a value */
+    if (to == ecs_id(ecs_value_t) || from == ecs_id(ecs_value_t)) {
+        return true;
+    }
+
     const EcsType *from_type = ecs_get(world, from, EcsType);
     const EcsType *to_type = ecs_get(world, to, EcsType);
     ecs_assert(from_type != NULL, ECS_INTERNAL_ERROR, NULL);

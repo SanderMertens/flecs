@@ -96,6 +96,19 @@ int flecs_meta_map_set_key(
 void flecs_rtt_init_default_hooks(
     ecs_iter_t *it);
 
+int flecs_value_ensure_type(
+    const ecs_world_t *world,
+    ecs_value_t *v,
+    ecs_entity_t type);
+
+void flecs_meta_value_init(
+    ecs_world_t *world);
+
+int flecs_meta_value_type_str(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    ecs_strbuf_t *str);
+
 void flecs_meta_import_definitions(
     ecs_world_t *world);
 

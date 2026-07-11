@@ -525,6 +525,11 @@ void Eval_map_bitmask_i32_component_w_expr_key(void);
 void Eval_map_i64_i32_component_w_expr_key(void);
 void Eval_map_i64_i32_component_w_var_key(void);
 void Eval_map_component_element(void);
+void Eval_struct_w_value_member(void);
+void Eval_struct_w_value_member_w_type(void);
+void Eval_struct_w_value_member_reassign(void);
+void Eval_value_component(void);
+void Eval_value_const_var(void);
 
 // Testsuite 'Function'
 void Function_simple(void);
@@ -1276,6 +1281,14 @@ void Serialize_map_i32_i32_negative_key(void);
 void Serialize_map_u64_i32(void);
 void Serialize_map_enum_i32(void);
 void Serialize_map_bitmask_i32(void);
+void Serialize_value_i64(void);
+void Serialize_value_u16(void);
+void Serialize_value_f64(void);
+void Serialize_value_string(void);
+void Serialize_value_entity(void);
+void Serialize_value_struct(void);
+void Serialize_struct_w_value(void);
+void Serialize_value_roundtrip(void);
 
 // Testsuite 'Deserialize'
 void Deserialize_setup(void);
@@ -1423,6 +1436,24 @@ void Deserialize_map_bitmask_i32_multi_flag_key(void);
 void Deserialize_map_i64_i32_expr_key(void);
 void Deserialize_map_i64_i32_var_key(void);
 void Deserialize_vector_i32_w_key(void);
+void Deserialize_value_i64(void);
+void Deserialize_value_negative_i64(void);
+void Deserialize_value_f64(void);
+void Deserialize_value_bool(void);
+void Deserialize_value_string(void);
+void Deserialize_value_entity(void);
+void Deserialize_value_expr(void);
+void Deserialize_value_w_type_u16(void);
+void Deserialize_value_w_type_f32(void);
+void Deserialize_value_w_type_string(void);
+void Deserialize_value_w_type_struct(void);
+void Deserialize_value_w_type_vector(void);
+void Deserialize_value_assign_same_type(void);
+void Deserialize_value_assign_different_type(void);
+void Deserialize_struct_w_value(void);
+void Deserialize_struct_w_value_w_type(void);
+void Deserialize_struct_w_value_string(void);
+void Deserialize_value_unknown_type(void);
 
 // Testsuite 'Include'
 void Include_include_simple(void);
@@ -3749,6 +3780,26 @@ bake_test_case Eval_testcases[] = {
     {
         "map_component_element",
         Eval_map_component_element
+    },
+    {
+        "struct_w_value_member",
+        Eval_struct_w_value_member
+    },
+    {
+        "struct_w_value_member_w_type",
+        Eval_struct_w_value_member_w_type
+    },
+    {
+        "struct_w_value_member_reassign",
+        Eval_struct_w_value_member_reassign
+    },
+    {
+        "value_component",
+        Eval_value_component
+    },
+    {
+        "value_const_var",
+        Eval_value_const_var
     }
 };
 
@@ -6714,6 +6765,38 @@ bake_test_case Serialize_testcases[] = {
     {
         "map_bitmask_i32",
         Serialize_map_bitmask_i32
+    },
+    {
+        "value_i64",
+        Serialize_value_i64
+    },
+    {
+        "value_u16",
+        Serialize_value_u16
+    },
+    {
+        "value_f64",
+        Serialize_value_f64
+    },
+    {
+        "value_string",
+        Serialize_value_string
+    },
+    {
+        "value_entity",
+        Serialize_value_entity
+    },
+    {
+        "value_struct",
+        Serialize_value_struct
+    },
+    {
+        "struct_w_value",
+        Serialize_struct_w_value
+    },
+    {
+        "value_roundtrip",
+        Serialize_value_roundtrip
     }
 };
 
@@ -7293,6 +7376,78 @@ bake_test_case Deserialize_testcases[] = {
     {
         "vector_i32_w_key",
         Deserialize_vector_i32_w_key
+    },
+    {
+        "value_i64",
+        Deserialize_value_i64
+    },
+    {
+        "value_negative_i64",
+        Deserialize_value_negative_i64
+    },
+    {
+        "value_f64",
+        Deserialize_value_f64
+    },
+    {
+        "value_bool",
+        Deserialize_value_bool
+    },
+    {
+        "value_string",
+        Deserialize_value_string
+    },
+    {
+        "value_entity",
+        Deserialize_value_entity
+    },
+    {
+        "value_expr",
+        Deserialize_value_expr
+    },
+    {
+        "value_w_type_u16",
+        Deserialize_value_w_type_u16
+    },
+    {
+        "value_w_type_f32",
+        Deserialize_value_w_type_f32
+    },
+    {
+        "value_w_type_string",
+        Deserialize_value_w_type_string
+    },
+    {
+        "value_w_type_struct",
+        Deserialize_value_w_type_struct
+    },
+    {
+        "value_w_type_vector",
+        Deserialize_value_w_type_vector
+    },
+    {
+        "value_assign_same_type",
+        Deserialize_value_assign_same_type
+    },
+    {
+        "value_assign_different_type",
+        Deserialize_value_assign_different_type
+    },
+    {
+        "struct_w_value",
+        Deserialize_struct_w_value
+    },
+    {
+        "struct_w_value_w_type",
+        Deserialize_struct_w_value_w_type
+    },
+    {
+        "struct_w_value_string",
+        Deserialize_struct_w_value_string
+    },
+    {
+        "value_unknown_type",
+        Deserialize_value_unknown_type
     }
 };
 
@@ -8340,7 +8495,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        516,
+        521,
         Eval_testcases
     },
     {
@@ -8391,14 +8546,14 @@ static bake_test_suite suites[] = {
         "Serialize",
         NULL,
         NULL,
-        83,
+        91,
         Serialize_testcases
     },
     {
         "Deserialize",
         Deserialize_setup,
         NULL,
-        144,
+        162,
         Deserialize_testcases,
         1,
         Deserialize_params

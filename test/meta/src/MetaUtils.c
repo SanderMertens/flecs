@@ -74,6 +74,10 @@ ECS_STRUCT(Struct_w_map, {
     ecs_map(int32_t, Struct_2_i32) points;
 });
 
+ECS_STRUCT(Struct_w_value, {
+    ecs_value_t value;
+});
+
 ECS_ENUM(Enum_Default, {
     Red, Green, Blue
 });
@@ -651,6 +655,31 @@ void MetaUtils_struct_w_map(void) {
     ecs_os_free(expr);
 
     ecs_map_fini(&v.points);
+
+    ecs_fini(world);
+}
+
+void MetaUtils_struct_w_value(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_META_COMPONENT(world, Struct_w_value);
+
+    ecs_member_t *m = ecs_struct_get_member(
+        world, ecs_id(Struct_w_value), "value");
+    test_assert(m != NULL);
+    test_assert(m->type == ecs_id(ecs_value_t));
+
+    int32_t i = 10;
+    Struct_w_value v = {
+        .value = ecs_value_init(world, ecs_id(ecs_i32_t), &i)
+    };
+
+    char *expr = ecs_ptr_to_expr(world, ecs_id(Struct_w_value), &v);
+    test_assert(expr != NULL);
+    test_str(expr, "{value: {i32: 10}}");
+    ecs_os_free(expr);
+
+    ecs_value_fini(world, &v.value);
 
     ecs_fini(world);
 }

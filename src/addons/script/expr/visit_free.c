@@ -14,7 +14,7 @@ void flecs_expr_value_visit_free(
     ecs_expr_value_node_t *node)
 {
     if (node->ptr != &node->storage) {
-        ecs_value_free(script->world, node->node.type, node->ptr);
+        ecs_ptr_free(script->world, node->node.type, node->ptr);
     }
 }
 

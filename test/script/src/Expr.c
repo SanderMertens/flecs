@@ -24,7 +24,7 @@ void Expr_add_2_int_literals(void) {
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(uint64_t*)v.ptr, 10 + 20);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -43,7 +43,7 @@ void Expr_add_2_int_literals_twice(void) {
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(uint64_t*)v.ptr, 10 + 20);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -57,7 +57,7 @@ void Expr_sub_2_int_literals(void) {
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_int(*(int64_t*)v.ptr, 20 - 10);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -71,7 +71,7 @@ void Expr_mul_2_int_literals(void) {
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_u64_t*)v.ptr, 20 * 10);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -85,7 +85,7 @@ void Expr_div_2_int_literals(void) {
     test_assert(v.type == ecs_id(ecs_f64_t));
     test_assert(v.ptr != NULL);
     test_flt(*(ecs_f64_t*)v.ptr, 10 / 2);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -99,7 +99,7 @@ void Expr_add_3_int_literals(void) {
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(uint64_t*)v.ptr, 10 + 20 + 30);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -113,7 +113,7 @@ void Expr_add_3_int_literals_dec_hex_bin(void) {
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(uint64_t*)v.ptr, 10 + 0xABCDEF1 + 0b1101);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -132,7 +132,7 @@ void Expr_add_3_int_literals_twice(void) {
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(uint64_t*)v.ptr, 10 + 20 + 30);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -146,7 +146,7 @@ void Expr_sub_3_int_literals(void) {
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_int(*(ecs_i64_t*)v.ptr, 30 - 10 - 5);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -160,7 +160,7 @@ void Expr_mul_3_int_literals(void) {
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_i64_t*)v.ptr, 2 * 5 * 10);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -174,7 +174,7 @@ void Expr_div_3_int_literals(void) {
     test_assert(v.type == ecs_id(ecs_f64_t));
     test_assert(v.ptr != NULL);
     test_flt(*(ecs_f64_t*)v.ptr, 40 / 5 / 2);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -188,7 +188,7 @@ void Expr_mod_2_int_literals(void) {
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_flt(*(ecs_i64_t*)v.ptr, 1);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -202,7 +202,7 @@ void Expr_mod_2_flt_literals(void) {
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_flt(*(ecs_i64_t*)v.ptr, 1);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -216,7 +216,7 @@ void Expr_add_no_space(void) {
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(uint64_t*)v.ptr, 10 + 20);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -230,7 +230,7 @@ void Expr_sub_no_space(void) {
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(uint64_t*)v.ptr, 20 - 10);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -244,7 +244,7 @@ void Expr_div_no_space(void) {
     test_assert(v.type == ecs_id(ecs_f64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(double*)v.ptr, 20 / 2);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -258,7 +258,7 @@ void Expr_mul_no_space(void) {
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(uint64_t*)v.ptr, 10 * 2);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -278,7 +278,7 @@ void Expr_add_no_space_var(void) {
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(int64_t*)v.ptr, 10 + 20);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_script_vars_fini(vars);
 
@@ -300,7 +300,7 @@ void Expr_sub_no_space_var(void) {
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(int64_t*)v.ptr, 20 - 10);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_script_vars_fini(vars);
 
@@ -322,7 +322,7 @@ void Expr_div_no_space_var(void) {
     test_assert(v.type == ecs_id(ecs_f64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(double*)v.ptr, 20 / 2);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_script_vars_fini(vars);
 
@@ -344,7 +344,7 @@ void Expr_mul_no_space_var(void) {
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(int64_t*)v.ptr, 10 * 2);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_script_vars_fini(vars);
 
@@ -366,7 +366,7 @@ void Expr_add_no_space_var_reverse(void) {
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(int64_t*)v.ptr, 10 + 20);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_script_vars_fini(vars);
 
@@ -388,7 +388,7 @@ void Expr_sub_no_space_var_reverse(void) {
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(int64_t*)v.ptr, 20 - 10);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_script_vars_fini(vars);
 
@@ -410,7 +410,7 @@ void Expr_div_no_space_var_reverse(void) {
     test_assert(v.type == ecs_id(ecs_f64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(double*)v.ptr, 20 / 2);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_script_vars_fini(vars);
 
@@ -432,7 +432,7 @@ void Expr_mul_no_space_var_reverse(void) {
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(int64_t*)v.ptr, 10 * 2);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_script_vars_fini(vars);
 
@@ -616,7 +616,7 @@ void Expr_add_mul_3_int_literals(void) {
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(uint64_t*)v.ptr, 10 + 20 * 2);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -630,7 +630,7 @@ void Expr_sub_mul_3_int_literals(void) {
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_int(*(int64_t*)v.ptr, 50 - 10 * 2);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -644,7 +644,7 @@ void Expr_div_mul_3_int_literals(void) {
     test_assert(v.type == ecs_id(ecs_f64_t));
     test_assert(v.ptr != NULL);
     test_flt(*(ecs_f64_t*)v.ptr, 10 / 5 * 2);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -658,7 +658,7 @@ void Expr_add_div_3_int_literals(void) {
     test_assert(v.type == ecs_id(ecs_f64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_f64_t*)v.ptr, 10 + 30 / 2);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -672,7 +672,7 @@ void Expr_sub_div_3_int_literals(void) {
     test_assert(v.type == ecs_id(ecs_f64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_f64_t*)v.ptr, 30 - 10 / 2);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -686,7 +686,7 @@ void Expr_mul_div_3_int_literals(void) {
     test_assert(v.type == ecs_id(ecs_f64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_f64_t*)v.ptr, 20 * 10 / 2);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -700,7 +700,7 @@ void Expr_mul_add_mul_add_int_literals(void) {
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_i64_t*)v.ptr, 2 * 4 + 6 * 8 + 10);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -714,7 +714,7 @@ void Expr_mul_sub_mul_sub_int_literals(void) {
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_int(*(ecs_i64_t*)v.ptr, 2 * 4 - 6 * 8 - 10);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -728,7 +728,7 @@ void Expr_mul_div_mul_div_int_literals(void) {
     test_assert(v.type == ecs_id(ecs_f64_t));
     test_assert(v.ptr != NULL);
     test_flt(*(ecs_f64_t*)v.ptr, 2.0 * 4.0 / 6.0 * 8.0 / 10.0);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -742,7 +742,7 @@ void Expr_div_add_div_add_int_literals(void) {
     test_assert(v.type == ecs_id(ecs_f64_t));
     test_assert(v.ptr != NULL);
     test_flt(*(ecs_f64_t*)v.ptr, 2.0 / 4.0 + 6.0 / 8.0 + 10.0);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -756,7 +756,7 @@ void Expr_div_sub_div_sub_int_literals(void) {
     test_assert(v.type == ecs_id(ecs_f64_t));
     test_assert(v.ptr != NULL);
     test_flt(*(ecs_f64_t*)v.ptr, 2.0 / 4.0 - 6.0 / 8.0 - 10.0);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -770,7 +770,7 @@ void Expr_div_sub_div_mul_int_literals(void) {
     test_assert(v.type == ecs_id(ecs_f64_t));
     test_assert(v.ptr != NULL);
     test_flt(*(ecs_f64_t*)v.ptr, 2.0 / 4.0 - 6.0 / 8.0 * 10.0);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -784,7 +784,7 @@ void Expr_div_mul_div_mul_int_literals(void) {
     test_assert(v.type == ecs_id(ecs_f64_t));
     test_assert(v.ptr != NULL);
     test_flt(*(ecs_f64_t*)v.ptr, 2.0 / 4.0 * 6.0 / 8.0 * 10.0);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -798,7 +798,7 @@ void Expr_add_2_flt_literals(void) {
     test_assert(v.type == ecs_id(ecs_f64_t));
     test_assert(v.ptr != NULL);
     test_flt(*(ecs_f64_t*)v.ptr, 10.5 + 20.0);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -812,7 +812,7 @@ void Expr_sub_2_flt_literals(void) {
     test_assert(v.type == ecs_id(ecs_f64_t));
     test_assert(v.ptr != NULL);
     test_flt(*(ecs_f64_t*)v.ptr, 20.5 - 10.0);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -826,7 +826,7 @@ void Expr_mul_2_flt_literals(void) {
     test_assert(v.type == ecs_id(ecs_f64_t));
     test_assert(v.ptr != NULL);
     test_flt(*(ecs_f64_t*)v.ptr, 20.5 * 10.0);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -840,7 +840,7 @@ void Expr_div_2_flt_literals(void) {
     test_assert(v.type == ecs_id(ecs_f64_t));
     test_assert(v.ptr != NULL);
     test_flt(*(ecs_f64_t*)v.ptr, 10.5 / 2.0);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -854,7 +854,7 @@ void Expr_add_2_int_neg_literals(void) {
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_int(*(ecs_i64_t*)v.ptr, -10 + -20);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -868,7 +868,7 @@ void Expr_sub_2_int_neg_literals(void) {
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_int(*(ecs_i64_t*)v.ptr, -10 - -20);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -882,7 +882,7 @@ void Expr_mul_2_int_neg_literals(void) {
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_int(*(ecs_i64_t*)v.ptr, -10 * -20);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -896,7 +896,7 @@ void Expr_div_2_int_neg_literals(void) {
     test_assert(v.type == ecs_id(ecs_f64_t));
     test_assert(v.ptr != NULL);
     test_flt(*(ecs_f64_t*)v.ptr, -10.0 / -20.0);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -910,7 +910,7 @@ void Expr_mul_lparen_add_add_rparen_int_literals(void) {
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_i64_t*)v.ptr, 10 * (20 + 30));
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -924,7 +924,7 @@ void Expr_mul_lparen_add_add_add_rparen_int_literals(void) {
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_i64_t*)v.ptr, 10 * (20 + 30 + 40));
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -938,7 +938,7 @@ void Expr_mul_lparen_add_add_rparen_add_int_literals(void) {
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_i64_t*)v.ptr, 10 * (20 + 30) + 40);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -952,7 +952,7 @@ void Expr_lparen_add_add_rparen_mul_int_literals(void) {
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_i64_t*)v.ptr, (20 + 30) * 10);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -966,7 +966,7 @@ void Expr_lparen_add_add_add_rparen_mul_int_literals(void) {
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_i64_t*)v.ptr, (20 + 30 + 40) * 10);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -980,7 +980,7 @@ void Expr_double_paren_add_add(void) {
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_i64_t*)v.ptr, ((20 + 30)));
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -994,7 +994,7 @@ void Expr_double_paren_literal(void) {
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_i64_t*)v.ptr, ((20)));
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -1008,7 +1008,7 @@ void Expr_lparen_add_add_rparen_mul_lparen_add_add_rparen(void) {
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_i64_t*)v.ptr, (10 + 20) * (20 + 30));
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -1426,7 +1426,7 @@ void Expr_add_to_var(void) {
     test_assert(ptr != NULL);
     test_assert(!ptr[0]);
     test_int(*(int32_t*)v.ptr, 10 + 20);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_script_vars_fini(vars);
     ecs_fini(world);
@@ -1447,7 +1447,7 @@ void Expr_add_var_to(void) {
     test_assert(ptr != NULL);
     test_assert(!ptr[0]);
     test_int(*(int32_t*)v.ptr, 20 + 10);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_script_vars_fini(vars);
     ecs_fini(world);
@@ -1480,7 +1480,7 @@ void Expr_var_member(void) {
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
         test_int(*(ecs_i32_t*)v.ptr, 10);
-        ecs_value_free(world, v.type, v.ptr);
+        ecs_ptr_free(world, v.type, v.ptr);
     }
     {
         ecs_value_t v = {0};
@@ -1489,7 +1489,7 @@ void Expr_var_member(void) {
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
         test_int(*(ecs_i32_t*)v.ptr, 20);
-        ecs_value_free(world, v.type, v.ptr);
+        ecs_ptr_free(world, v.type, v.ptr);
     }
 
     ecs_script_vars_fini(vars);
@@ -1537,7 +1537,7 @@ void Expr_var_member_member(void) {
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
         test_int(*(ecs_i32_t*)v.ptr, 10);
-        ecs_value_free(world, v.type, v.ptr);
+        ecs_ptr_free(world, v.type, v.ptr);
     }
     {
         ecs_value_t v = {0};
@@ -1546,7 +1546,7 @@ void Expr_var_member_member(void) {
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
         test_int(*(ecs_i32_t*)v.ptr, 20);
-        ecs_value_free(world, v.type, v.ptr);
+        ecs_ptr_free(world, v.type, v.ptr);
     }
     {
         ecs_value_t v = {0};
@@ -1555,7 +1555,7 @@ void Expr_var_member_member(void) {
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
         test_int(*(ecs_i32_t*)v.ptr, 30);
-        ecs_value_free(world, v.type, v.ptr);
+        ecs_ptr_free(world, v.type, v.ptr);
     }
     {
         ecs_value_t v = {0};
@@ -1564,7 +1564,7 @@ void Expr_var_member_member(void) {
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
         test_int(*(ecs_i32_t*)v.ptr, 40);
-        ecs_value_free(world, v.type, v.ptr);
+        ecs_ptr_free(world, v.type, v.ptr);
     }
 
     ecs_script_vars_fini(vars);
@@ -1595,7 +1595,7 @@ void Expr_var_element(void) {
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
         test_int(*(ecs_i32_t*)v.ptr, 10);
-        ecs_value_free(world, v.type, v.ptr);
+        ecs_ptr_free(world, v.type, v.ptr);
     }
     {
         ecs_value_t v = {0};
@@ -1604,7 +1604,7 @@ void Expr_var_element(void) {
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
         test_int(*(ecs_i32_t*)v.ptr, 20);
-        ecs_value_free(world, v.type, v.ptr);
+        ecs_ptr_free(world, v.type, v.ptr);
     }
 
     ecs_script_vars_fini(vars);
@@ -1673,7 +1673,7 @@ void Expr_var_element_element(void) {
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
         test_int(*(ecs_i32_t*)v.ptr, 10);
-        ecs_value_free(world, v.type, v.ptr);
+        ecs_ptr_free(world, v.type, v.ptr);
     }
     {
         ecs_value_t v = {0};
@@ -1682,7 +1682,7 @@ void Expr_var_element_element(void) {
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
         test_int(*(ecs_i32_t*)v.ptr, 20);
-        ecs_value_free(world, v.type, v.ptr);
+        ecs_ptr_free(world, v.type, v.ptr);
     }
     {
         ecs_value_t v = {0};
@@ -1691,7 +1691,7 @@ void Expr_var_element_element(void) {
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
         test_int(*(ecs_i32_t*)v.ptr, 30);
-        ecs_value_free(world, v.type, v.ptr);
+        ecs_ptr_free(world, v.type, v.ptr);
     }
     {
         ecs_value_t v = {0};
@@ -1700,7 +1700,7 @@ void Expr_var_element_element(void) {
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
         test_int(*(ecs_i32_t*)v.ptr, 40);
-        ecs_value_free(world, v.type, v.ptr);
+        ecs_ptr_free(world, v.type, v.ptr);
     }
 
     ecs_script_vars_fini(vars);
@@ -1741,7 +1741,7 @@ void Expr_var_member_element(void) {
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
         test_int(*(ecs_i32_t*)v.ptr, 10);
-        ecs_value_free(world, v.type, v.ptr);
+        ecs_ptr_free(world, v.type, v.ptr);
     }
     {
         ecs_value_t v = {0};
@@ -1750,7 +1750,7 @@ void Expr_var_member_element(void) {
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
         test_int(*(ecs_i32_t*)v.ptr, 20);
-        ecs_value_free(world, v.type, v.ptr);
+        ecs_ptr_free(world, v.type, v.ptr);
     }
     {
         ecs_value_t v = {0};
@@ -1759,7 +1759,7 @@ void Expr_var_member_element(void) {
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
         test_int(*(ecs_i32_t*)v.ptr, 30);
-        ecs_value_free(world, v.type, v.ptr);
+        ecs_ptr_free(world, v.type, v.ptr);
     }
     {
         ecs_value_t v = {0};
@@ -1768,7 +1768,7 @@ void Expr_var_member_element(void) {
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
         test_int(*(ecs_i32_t*)v.ptr, 40);
-        ecs_value_free(world, v.type, v.ptr);
+        ecs_ptr_free(world, v.type, v.ptr);
     }
 
     ecs_script_vars_fini(vars);
@@ -1804,7 +1804,7 @@ void Expr_var_member_element_inline(void) {
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
         test_int(*(ecs_i32_t*)v.ptr, 10);
-        ecs_value_free(world, v.type, v.ptr);
+        ecs_ptr_free(world, v.type, v.ptr);
     }
     {
         ecs_value_t v = {0};
@@ -1813,7 +1813,7 @@ void Expr_var_member_element_inline(void) {
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
         test_int(*(ecs_i32_t*)v.ptr, 20);
-        ecs_value_free(world, v.type, v.ptr);
+        ecs_ptr_free(world, v.type, v.ptr);
     }
     {
         ecs_value_t v = {0};
@@ -1822,7 +1822,7 @@ void Expr_var_member_element_inline(void) {
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
         test_int(*(ecs_i32_t*)v.ptr, 30);
-        ecs_value_free(world, v.type, v.ptr);
+        ecs_ptr_free(world, v.type, v.ptr);
     }
     {
         ecs_value_t v = {0};
@@ -1831,7 +1831,7 @@ void Expr_var_member_element_inline(void) {
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
         test_int(*(ecs_i32_t*)v.ptr, 40);
-        ecs_value_free(world, v.type, v.ptr);
+        ecs_ptr_free(world, v.type, v.ptr);
     }
 
     ecs_script_vars_fini(vars);
@@ -1873,7 +1873,7 @@ void Expr_var_element_member(void) {
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
         test_int(*(ecs_i32_t*)v.ptr, 10);
-        ecs_value_free(world, v.type, v.ptr);
+        ecs_ptr_free(world, v.type, v.ptr);
     }
     {
         ecs_value_t v = {0};
@@ -1882,7 +1882,7 @@ void Expr_var_element_member(void) {
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
         test_int(*(ecs_i32_t*)v.ptr, 20);
-        ecs_value_free(world, v.type, v.ptr);
+        ecs_ptr_free(world, v.type, v.ptr);
     }
     {
         ecs_value_t v = {0};
@@ -1891,7 +1891,7 @@ void Expr_var_element_member(void) {
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
         test_int(*(ecs_i32_t*)v.ptr, 30);
-        ecs_value_free(world, v.type, v.ptr);
+        ecs_ptr_free(world, v.type, v.ptr);
     }
     {
         ecs_value_t v = {0};
@@ -1900,7 +1900,7 @@ void Expr_var_element_member(void) {
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
         test_int(*(ecs_i32_t*)v.ptr, 40);
-        ecs_value_free(world, v.type, v.ptr);
+        ecs_ptr_free(world, v.type, v.ptr);
     }
 
     ecs_script_vars_fini(vars);
@@ -1931,7 +1931,7 @@ void Expr_bool_cond_and_bool(void) {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -1960,7 +1960,7 @@ void Expr_bool_cond_or_bool(void) {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -1989,7 +1989,7 @@ void Expr_int_cond_and_int(void) {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -2018,7 +2018,7 @@ void Expr_int_cond_or_int(void) {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -2047,7 +2047,7 @@ void Expr_bool_cond_and_int(void) {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -2076,7 +2076,7 @@ void Expr_int_cond_and_bool(void) {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -2105,7 +2105,7 @@ void Expr_bool_cond_or_int(void) {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -2134,7 +2134,7 @@ void Expr_int_cond_or_bool(void) {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -2163,7 +2163,7 @@ void Expr_cond_eq_bool(void) {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -2192,7 +2192,7 @@ void Expr_cond_eq_int(void) {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -2328,7 +2328,7 @@ void Expr_cond_eq_enum(void) {
         test_bool(*(bool*)v.ptr, true);
     }
 
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_script_vars_fini(vars);
 
@@ -2369,7 +2369,7 @@ void Expr_cond_eq_enum_literal(void) {
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
 
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
     ecs_script_vars_fini(vars);
 
     ecs_fini(world);
@@ -2389,7 +2389,7 @@ void Expr_cond_eq_string(void) {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -2413,7 +2413,7 @@ void Expr_cond_eq_entity(void) {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -2442,7 +2442,7 @@ void Expr_cond_neq_bool(void) {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -2471,7 +2471,7 @@ void Expr_cond_neq_int(void) {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -2608,7 +2608,7 @@ void Expr_cond_neq_enum(void) {
     }
 
     ecs_script_vars_fini(vars);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -2647,7 +2647,7 @@ void Expr_cond_neq_enum_literal(void) {
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
 
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
     ecs_script_vars_fini(vars);
 
     ecs_fini(world);
@@ -2667,7 +2667,7 @@ void Expr_cond_neq_string(void) {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -2691,7 +2691,7 @@ void Expr_cond_neq_entity(void) {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -2704,7 +2704,7 @@ void Expr_cond_eq_bool_int(void) {
         test_assert(ecs_expr_run(world, "true == 1", &v, NULL) != NULL);
         test_assert(v.type == ecs_id(ecs_bool_t));
         test_assert(*(bool*)v.ptr == true);
-        ecs_value_free(world, v.type, v.ptr);
+        ecs_ptr_free(world, v.type, v.ptr);
     }
 
     {
@@ -2712,7 +2712,7 @@ void Expr_cond_eq_bool_int(void) {
         test_assert(ecs_expr_run(world, "true == 2", &v, NULL) != NULL);
         test_assert(v.type == ecs_id(ecs_bool_t));
         test_assert(*(bool*)v.ptr == true);
-        ecs_value_free(world, v.type, v.ptr);
+        ecs_ptr_free(world, v.type, v.ptr);
     }
 
     {
@@ -2720,7 +2720,7 @@ void Expr_cond_eq_bool_int(void) {
         test_assert(ecs_expr_run(world, "true == 0", &v, NULL) != NULL);
         test_assert(v.type == ecs_id(ecs_bool_t));
         test_assert(*(bool*)v.ptr == false);
-        ecs_value_free(world, v.type, v.ptr);
+        ecs_ptr_free(world, v.type, v.ptr);
     }
 
     {
@@ -2728,7 +2728,7 @@ void Expr_cond_eq_bool_int(void) {
         test_assert(ecs_expr_run(world, "false == 1", &v, NULL) != NULL);
         test_assert(v.type == ecs_id(ecs_bool_t));
         test_assert(*(bool*)v.ptr == false);
-        ecs_value_free(world, v.type, v.ptr);
+        ecs_ptr_free(world, v.type, v.ptr);
     }
 
     {
@@ -2736,7 +2736,7 @@ void Expr_cond_eq_bool_int(void) {
         test_assert(ecs_expr_run(world, "false == 2", &v, NULL) != NULL);
         test_assert(v.type == ecs_id(ecs_bool_t));
         test_assert(*(bool*)v.ptr == false);
-        ecs_value_free(world, v.type, v.ptr);
+        ecs_ptr_free(world, v.type, v.ptr);
     }
 
     {
@@ -2744,7 +2744,7 @@ void Expr_cond_eq_bool_int(void) {
         test_assert(ecs_expr_run(world, "false == 0", &v, NULL) != NULL);
         test_assert(v.type == ecs_id(ecs_bool_t));
         test_assert(*(bool*)v.ptr == true);
-        ecs_value_free(world, v.type, v.ptr);
+        ecs_ptr_free(world, v.type, v.ptr);
     }
 
     ecs_fini(world);
@@ -2800,7 +2800,7 @@ void Expr_cond_eq_cond_and(void) {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true && true == true);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -2819,7 +2819,7 @@ void Expr_cond_eq_cond_or(void) {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true || false == false);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -2848,7 +2848,7 @@ void Expr_cond_gt_bool(void) {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -2877,7 +2877,7 @@ void Expr_cond_gt_int(void) {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -2906,7 +2906,7 @@ void Expr_cond_gt_flt(void) {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -2948,7 +2948,7 @@ void Expr_cond_gt_enum(void) {
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
 
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
     ecs_script_vars_fini(vars);
 
     ecs_fini(world);
@@ -2988,7 +2988,7 @@ void Expr_cond_gt_enum_literal(void) {
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
 
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
     ecs_script_vars_fini(vars);
 
     ecs_fini(world);
@@ -3018,7 +3018,7 @@ void Expr_cond_gteq_bool(void) {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -3047,7 +3047,7 @@ void Expr_cond_gteq_int(void) {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -3076,7 +3076,7 @@ void Expr_cond_gteq_flt(void) {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -3118,7 +3118,7 @@ void Expr_cond_gteq_enum(void) {
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
 
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
     ecs_script_vars_fini(vars);
 
     ecs_fini(world);
@@ -3158,7 +3158,7 @@ void Expr_cond_gteq_enum_literal(void) {
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
 
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
     ecs_script_vars_fini(vars);
 
     ecs_fini(world);
@@ -3188,7 +3188,7 @@ void Expr_cond_lt_bool(void) {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -3217,7 +3217,7 @@ void Expr_cond_lt_int(void) {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -3246,7 +3246,7 @@ void Expr_cond_lt_flt(void) {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -3288,7 +3288,7 @@ void Expr_cond_lt_enum(void) {
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
 
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
     ecs_script_vars_fini(vars);
 
     ecs_fini(world);
@@ -3328,7 +3328,7 @@ void Expr_cond_lt_enum_literal(void) {
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
 
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
     ecs_script_vars_fini(vars);
 
     ecs_fini(world);
@@ -3358,7 +3358,7 @@ void Expr_cond_lteq_bool(void) {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -3387,7 +3387,7 @@ void Expr_cond_lteq_int(void) {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -3416,7 +3416,7 @@ void Expr_cond_lteq_flt(void) {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -3458,7 +3458,7 @@ void Expr_cond_lteq_enum(void) {
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
 
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
     ecs_script_vars_fini(vars);
 
     ecs_fini(world);
@@ -3498,7 +3498,7 @@ void Expr_cond_lteq_enum_literal(void) {
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
 
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
     ecs_script_vars_fini(vars);
 
     ecs_fini(world);
@@ -3513,7 +3513,7 @@ void Expr_min_lparen_int_rparen(void) {
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_int(*(ecs_i64_t*)v.ptr, -10);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -3527,7 +3527,7 @@ void Expr_min_lparen_int_add_int_rparen(void) {
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_int(*(ecs_i64_t*)v.ptr, -30);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -3541,7 +3541,7 @@ void Expr_min_number_hex(void) {
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_int(*(ecs_i64_t*)v.ptr, 0xABCDEF9);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -3555,7 +3555,7 @@ void Expr_min_number_bin(void) {
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_int(*(ecs_i64_t*)v.ptr, 0b10);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -3575,7 +3575,7 @@ void Expr_min_var(void) {
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_int(*(ecs_i64_t*)v.ptr, -10);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_script_vars_fini(vars);
 
@@ -3803,7 +3803,7 @@ void Expr_not_bool(void) {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
     
     ecs_os_zeromem(&v);
 
@@ -3811,7 +3811,7 @@ void Expr_not_bool(void) {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -3825,7 +3825,7 @@ void Expr_not_int(void) {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_os_zeromem(&v);
 
@@ -3833,7 +3833,7 @@ void Expr_not_int(void) {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -3847,7 +3847,7 @@ void Expr_not_paren_int(void) {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_os_zeromem(&v);
 
@@ -3855,7 +3855,7 @@ void Expr_not_paren_int(void) {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -3869,7 +3869,7 @@ void Expr_not_paren_expr(void) {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_os_zeromem(&v);
 
@@ -3877,7 +3877,7 @@ void Expr_not_paren_expr(void) {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -3898,7 +3898,7 @@ void Expr_not_var(void) {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_uint(*(bool*)v.ptr, false);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_os_zeromem(&v);
 
@@ -3907,7 +3907,7 @@ void Expr_not_var(void) {
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_uint(*(bool*)v.ptr, true);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_script_vars_fini(vars);
 
@@ -3923,7 +3923,7 @@ void Expr_shift_left_int(void) {
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_i64_t*)v.ptr, 1 << 2);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -3937,7 +3937,7 @@ void Expr_shift_right_int(void) {
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_i64_t*)v.ptr, 4 >> 2);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -3951,7 +3951,7 @@ void Expr_shift_left_int_add_int(void) {
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_i64_t*)v.ptr, 1 << (2 + 10));
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -3965,7 +3965,7 @@ void Expr_shift_left_int_mul_int(void) {
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_i64_t*)v.ptr, 1 << 2 * 10);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -3979,7 +3979,7 @@ void Expr_add_int_shift_left_int(void) {
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_i64_t*)v.ptr, (10 + 1) << 2);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -3993,7 +3993,7 @@ void Expr_mul_int_shift_left_int(void) {
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_i64_t*)v.ptr, 10 * 1 << 2);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -4007,7 +4007,7 @@ void Expr_add_int_shift_left_int_add_int(void) {
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_i64_t*)v.ptr, (10 + 1) << (2 + 2));
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -4021,7 +4021,7 @@ void Expr_mul_int_shift_left_int_mul_int(void) {
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_i64_t*)v.ptr, 10 * 1 << 2 * 2);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -4038,7 +4038,7 @@ void Expr_entity_expr(void) {
     test_assert(v.type == ecs_id(ecs_entity_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_entity_t*)v.ptr, foo);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -4052,7 +4052,7 @@ void Expr_entity_0_expr(void) {
     test_assert(v.type == ecs_id(ecs_entity_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_entity_t*)v.ptr, 0);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -4072,7 +4072,7 @@ void Expr_entity_path_expr(void) {
     test_assert(v.type == ecs_id(ecs_entity_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_entity_t*)v.ptr, foo);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -4089,7 +4089,7 @@ void Expr_root_lookup_func(void) {
     test_assert(v.type == ecs_id(ecs_entity_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_entity_t*)v.ptr, foo);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -4106,7 +4106,7 @@ void Expr_root_lookup_func_not_found(void) {
     test_assert(v.type == ecs_id(ecs_entity_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_entity_t*)v.ptr, 0);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -4142,7 +4142,7 @@ void Expr_entity_lookup_func(void) {
     test_assert(v.type == ecs_id(ecs_entity_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_entity_t*)v.ptr, foo);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -4162,7 +4162,7 @@ void Expr_entity_lookup_func_not_found(void) {
     test_assert(v.type == ecs_id(ecs_entity_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_entity_t*)v.ptr, 0);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -4201,7 +4201,7 @@ void Expr_entity_parent_func(void) {
     test_assert(v.type == ecs_id(ecs_entity_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_entity_t*)v.ptr, parent);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -4221,7 +4221,7 @@ void Expr_entity_name_func(void) {
     test_assert(v.type == ecs_id(ecs_string_t));
     test_assert(v.ptr != NULL);
     test_str(*(char**)v.ptr, "foo");
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -4244,7 +4244,7 @@ void Expr_entity_has_func(void) {
         test_assert(v.type == ecs_id(ecs_bool_t));
         test_assert(v.ptr != NULL);
         test_bool(*(bool*)v.ptr, true);
-        ecs_value_free(world, v.type, v.ptr);
+        ecs_ptr_free(world, v.type, v.ptr);
     }
 
     {
@@ -4254,7 +4254,7 @@ void Expr_entity_has_func(void) {
         test_assert(v.type == ecs_id(ecs_bool_t));
         test_assert(v.ptr != NULL);
         test_bool(*(bool*)v.ptr, false);
-        ecs_value_free(world, v.type, v.ptr);
+        ecs_ptr_free(world, v.type, v.ptr);
     }
 
     ecs_fini(world);
@@ -4279,7 +4279,7 @@ void Expr_entity_has_func_w_pair(void) {
         test_assert(v.type == ecs_id(ecs_bool_t));
         test_assert(v.ptr != NULL);
         test_bool(*(bool*)v.ptr, true);
-        ecs_value_free(world, v.type, v.ptr);
+        ecs_ptr_free(world, v.type, v.ptr);
     }
 
     {
@@ -4289,7 +4289,7 @@ void Expr_entity_has_func_w_pair(void) {
         test_assert(v.type == ecs_id(ecs_bool_t));
         test_assert(v.ptr != NULL);
         test_bool(*(bool*)v.ptr, false);
-        ecs_value_free(world, v.type, v.ptr);
+        ecs_ptr_free(world, v.type, v.ptr);
     }
 
     ecs_fini(world);
@@ -4340,7 +4340,7 @@ void Expr_entity_doc_name_func(void) {
     test_assert(v.type == ecs_id(ecs_string_t));
     test_assert(v.ptr != NULL);
     test_str(*(char**)v.ptr, "FooName");
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -4366,7 +4366,7 @@ void Expr_entity_doc_uuid_func(void) {
     test_assert(v.type == ecs_id(ecs_string_t));
     test_assert(v.ptr != NULL);
     test_str(*(char**)v.ptr, "FooUuid");
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -4392,7 +4392,7 @@ void Expr_entity_doc_brief_func(void) {
     test_assert(v.type == ecs_id(ecs_string_t));
     test_assert(v.ptr != NULL);
     test_str(*(char**)v.ptr, "FooBrief");
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -4418,7 +4418,7 @@ void Expr_entity_doc_detail_func(void) {
     test_assert(v.type == ecs_id(ecs_string_t));
     test_assert(v.ptr != NULL);
     test_str(*(char**)v.ptr, "FooDetail");
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -4444,7 +4444,7 @@ void Expr_entity_doc_link_func(void) {
     test_assert(v.type == ecs_id(ecs_string_t));
     test_assert(v.ptr != NULL);
     test_str(*(char**)v.ptr, "FooLink");
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -4470,7 +4470,7 @@ void Expr_entity_doc_color_func(void) {
     test_assert(v.type == ecs_id(ecs_string_t));
     test_assert(v.ptr != NULL);
     test_str(*(char**)v.ptr, "FooColor");
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -4490,7 +4490,7 @@ void Expr_entity_path_func(void) {
     test_assert(v.type == ecs_id(ecs_string_t));
     test_assert(v.ptr != NULL);
     test_str(*(char**)v.ptr, "parent.foo");
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -4510,7 +4510,7 @@ void Expr_entity_chain_func(void) {
     test_assert(v.type == ecs_id(ecs_string_t));
     test_assert(v.ptr != NULL);
     test_str(*(char**)v.ptr, "parent");
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -4537,7 +4537,7 @@ void Expr_var_parent_func(void) {
     test_assert(v.type == ecs_id(ecs_entity_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_entity_t*)v.ptr, parent);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_script_vars_fini(vars);
 
@@ -4566,7 +4566,7 @@ void Expr_var_name_func(void) {
     test_assert(v.type == ecs_id(ecs_string_t));
     test_assert(v.ptr != NULL);
     test_str(*(char**)v.ptr, "child");
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_script_vars_fini(vars);
 
@@ -4596,7 +4596,7 @@ void Expr_var_doc_name_func(void) {
     test_assert(v.type == ecs_id(ecs_string_t));
     test_assert(v.ptr != NULL);
     test_str(*(char**)v.ptr, "ChildDoc");
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_script_vars_fini(vars);
 
@@ -4625,7 +4625,7 @@ void Expr_var_chain_func(void) {
     test_assert(v.type == ecs_id(ecs_string_t));
     test_assert(v.ptr != NULL);
     test_str(*(char**)v.ptr, "parent");
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_script_vars_fini(vars);
 
@@ -5616,7 +5616,7 @@ void Expr_vector_func_add_w_int_literal(void) {
     test_uint(v.type, ecs_id(ecs_i64_t));
     test_int(*(int64_t*)v.ptr, 30);
 
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -5647,7 +5647,7 @@ void Expr_vector_func_add_w_float_literal(void) {
     test_uint(v.type, ecs_id(ecs_f64_t));
     test_int(*(double*)v.ptr, 4);
 
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -5690,7 +5690,7 @@ void Expr_vector_func_add_w_i32(void) {
     test_uint(v.type, ecs_id(ecs_i32_t));
     test_int(*(int32_t*)v.ptr, 30);
 
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_script_vars_fini(vars);
 
@@ -5735,7 +5735,7 @@ void Expr_vector_func_add_w_i64(void) {
     test_uint(v.type, ecs_id(ecs_i64_t));
     test_int(*(int64_t*)v.ptr, 30);
 
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_script_vars_fini(vars);
 
@@ -5775,7 +5775,7 @@ void Expr_vector_func_add_w_i32_w_literal(void) {
     test_uint(v.type, ecs_id(ecs_i32_t));
     test_int(*(int32_t*)v.ptr, 30);
 
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_script_vars_fini(vars);
 
@@ -5815,7 +5815,7 @@ void Expr_vector_func_add_w_i64_w_literal(void) {
     test_uint(v.type, ecs_id(ecs_i64_t));
     test_int(*(int64_t*)v.ptr, 30);
 
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_script_vars_fini(vars);
 
@@ -5855,7 +5855,7 @@ void Expr_vector_func_add_w_f32_w_literal(void) {
     test_uint(v.type, ecs_id(ecs_f32_t));
     test_int(*(ecs_f32_t*)v.ptr, 2);
 
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_script_vars_fini(vars);
 
@@ -5895,7 +5895,7 @@ void Expr_vector_func_add_w_f64_w_literal(void) {
     test_uint(v.type, ecs_id(ecs_f64_t));
     test_int(*(ecs_f64_t*)v.ptr, 2);
 
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_script_vars_fini(vars);
 
@@ -5950,7 +5950,7 @@ void Expr_vector_func_add_w_struct(void) {
     test_int(((Position*)v.ptr)->x, 40);
     test_int(((Position*)v.ptr)->y, 60);
 
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_script_vars_fini(vars);
 
@@ -5983,7 +5983,7 @@ void Expr_vector_add_struct_int_literal(void) {
     test_int(((Position*)v.ptr)->x, 12);
     test_int(((Position*)v.ptr)->y, 22);
 
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_script_vars_fini(vars);
 
@@ -6016,7 +6016,7 @@ void Expr_vector_add_struct_float_literal(void) {
     test_int(((Position*)v.ptr)->x * 10, 105);
     test_int(((Position*)v.ptr)->y * 10, 205);
 
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_script_vars_fini(vars);
 
@@ -6054,7 +6054,7 @@ void Expr_vector_add_struct_i32(void) {
     test_int(((Position*)v.ptr)->x, 12);
     test_int(((Position*)v.ptr)->y, 22);
 
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_script_vars_fini(vars);
 
@@ -6092,7 +6092,7 @@ void Expr_vector_add_struct_i64(void) {
     test_int(((Position*)v.ptr)->x, 12);
     test_int(((Position*)v.ptr)->y, 22);
 
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_script_vars_fini(vars);
 
@@ -6130,7 +6130,7 @@ void Expr_vector_add_struct_f32(void) {
     test_int(((Position*)v.ptr)->x * 10.0, 105);
     test_int(((Position*)v.ptr)->y * 10.0, 205);
 
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_script_vars_fini(vars);
 
@@ -6168,7 +6168,7 @@ void Expr_vector_add_struct_f64(void) {
     test_int(((Position*)v.ptr)->x * 10.0, 105);
     test_int(((Position*)v.ptr)->y * 10.0, 205);
 
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_script_vars_fini(vars);
 
@@ -6207,7 +6207,7 @@ void Expr_vector_add_struct_struct(void) {
     test_int(((Position*)v.ptr)->x, 40);
     test_int(((Position*)v.ptr)->y, 60);
 
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_script_vars_fini(vars);
 
@@ -7271,7 +7271,7 @@ void Expr_component_expr(void) {
     Position *p = v.ptr;
     test_int(p->x, 10);
     test_int(p->y, 20);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -7298,7 +7298,7 @@ void Expr_component_member_expr(void) {
     {
         float *ptr = v.ptr;
         test_int(*ptr, 10);
-        ecs_value_free(world, v.type, v.ptr);
+        ecs_ptr_free(world, v.type, v.ptr);
     }
 
     v = (ecs_value_t){0};
@@ -7309,7 +7309,7 @@ void Expr_component_member_expr(void) {
     {
         float *ptr = v.ptr;
         test_int(*ptr, 20);
-        ecs_value_free(world, v.type, v.ptr);
+        ecs_ptr_free(world, v.type, v.ptr);
     }
 
     ecs_fini(world);
@@ -7337,7 +7337,7 @@ void Expr_component_elem_expr(void) {
     {
         char **ptr = v.ptr;
         test_str(*ptr, "Hello");
-        ecs_value_free(world, v.type, v.ptr);
+        ecs_ptr_free(world, v.type, v.ptr);
     }
 
     ecs_os_zeromem(&v);
@@ -7348,7 +7348,7 @@ void Expr_component_elem_expr(void) {
     {
         char **ptr = v.ptr;
         test_str(*ptr, "World");
-        ecs_value_free(world, v.type, v.ptr);
+        ecs_ptr_free(world, v.type, v.ptr);
     }
 
     ecs_fini(world);
@@ -7379,7 +7379,7 @@ void Expr_component_expr_string(void) {
     {
         String *ptr = v.ptr;
         test_str(ptr->value, "Hello World");
-        ecs_value_free(world, v.type, v.ptr);
+        ecs_ptr_free(world, v.type, v.ptr);
     }
 
     const String *s = ecs_get(world, e, String);
@@ -7414,7 +7414,7 @@ void Expr_component_member_expr_string(void) {
     {
         char **ptr = v.ptr;
         test_str(*ptr, "Hello World");
-        ecs_value_free(world, v.type, v.ptr);
+        ecs_ptr_free(world, v.type, v.ptr);
     }
 
     ecs_fini(world);
@@ -7450,7 +7450,7 @@ void Expr_component_elem_expr_string(void) {
     {
         char **ptr = v.ptr;
         test_str(*ptr, "Hello");
-        ecs_value_free(world, v.type, v.ptr);
+        ecs_ptr_free(world, v.type, v.ptr);
     }
 
     ecs_os_zeromem(&v);
@@ -7461,7 +7461,7 @@ void Expr_component_elem_expr_string(void) {
     {
         char **ptr = v.ptr;
         test_str(*ptr, "World");
-        ecs_value_free(world, v.type, v.ptr);
+        ecs_ptr_free(world, v.type, v.ptr);
     }
 
     ecs_fini(world);
@@ -7492,7 +7492,7 @@ void Expr_component_inline_elem_expr_string(void) {
     {
         char **ptr = v.ptr;
         test_str(*ptr, "Hello");
-        ecs_value_free(world, v.type, v.ptr);
+        ecs_ptr_free(world, v.type, v.ptr);
     }
 
     ecs_os_zeromem(&v);
@@ -7503,7 +7503,7 @@ void Expr_component_inline_elem_expr_string(void) {
     {
         char **ptr = v.ptr;
         test_str(*ptr, "World");
-        ecs_value_free(world, v.type, v.ptr);
+        ecs_ptr_free(world, v.type, v.ptr);
     }
 
     ecs_fini(world);
@@ -7555,7 +7555,7 @@ void Expr_component_expr_in_object(void) {
     test_int(ptr->stop.x, 30);
     test_int(ptr->stop.y, 40);
 
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -7587,7 +7587,7 @@ void Expr_component_member_expr_in_object(void) {
     Point *ptr = v.ptr;
     test_int(ptr->x, 10);
     test_int(ptr->y, 20);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -8334,7 +8334,7 @@ void Expr_match_i32_1_i_case(void) {
         test_assert(0 == ecs_expr_eval(s, &result, &desc));
         test_assert(result.type == ecs_id(ecs_i64_t));
         test_int(*(int64_t*)result.ptr, 10);
-        ecs_value_free(world, result.type, result.ptr);
+        ecs_ptr_free(world, result.type, result.ptr);
     }
 
     ecs_script_vars_fini(vars);
@@ -8374,7 +8374,7 @@ void Expr_match_i32_2_i_cases(void) {
         test_assert(0 == ecs_expr_eval(s, &result, &desc));
         test_assert(result.type == ecs_id(ecs_i64_t));
         test_int(*(int64_t*)result.ptr, 10);
-        ecs_value_free(world, result.type, result.ptr);
+        ecs_ptr_free(world, result.type, result.ptr);
     }
 
     {
@@ -8383,7 +8383,7 @@ void Expr_match_i32_2_i_cases(void) {
         test_assert(0 == ecs_expr_eval(s, &result, &desc));
         test_assert(result.type == ecs_id(ecs_i64_t));
         test_int(*(int64_t*)result.ptr, 20);
-        ecs_value_free(world, result.type, result.ptr);
+        ecs_ptr_free(world, result.type, result.ptr);
     }
 
     ecs_script_vars_fini(vars);
@@ -8423,7 +8423,7 @@ void Expr_match_i32_2_i_f_cases(void) {
         test_assert(0 == ecs_expr_eval(s, &result, &desc));
         test_assert(result.type == ecs_id(ecs_f64_t));
         test_assert(*(ecs_f64_t*)result.ptr == 10);
-        ecs_value_free(world, result.type, result.ptr);
+        ecs_ptr_free(world, result.type, result.ptr);
     }
 
     {
@@ -8432,7 +8432,7 @@ void Expr_match_i32_2_i_f_cases(void) {
         test_assert(0 == ecs_expr_eval(s, &result, &desc));
         test_assert(result.type == ecs_id(ecs_f64_t));
         test_assert(*(ecs_f64_t*)result.ptr == 20.5);
-        ecs_value_free(world, result.type, result.ptr);
+        ecs_ptr_free(world, result.type, result.ptr);
     }
 
     ecs_script_vars_fini(vars);
@@ -8472,7 +8472,7 @@ void Expr_match_i32_2_f_i_cases(void) {
         test_assert(0 == ecs_expr_eval(s, &result, &desc));
         test_assert(result.type == ecs_id(ecs_f64_t));
         test_assert(*(ecs_f64_t*)result.ptr == 10.5);
-        ecs_value_free(world, result.type, result.ptr);
+        ecs_ptr_free(world, result.type, result.ptr);
     }
 
     {
@@ -8481,7 +8481,7 @@ void Expr_match_i32_2_f_i_cases(void) {
         test_assert(0 == ecs_expr_eval(s, &result, &desc));
         test_assert(result.type == ecs_id(ecs_f64_t));
         test_assert(*(ecs_f64_t*)result.ptr == 20);
-        ecs_value_free(world, result.type, result.ptr);
+        ecs_ptr_free(world, result.type, result.ptr);
     }
 
     ecs_script_vars_fini(vars);
@@ -8522,7 +8522,7 @@ void Expr_match_i32_3_i_cases(void) {
         test_assert(0 == ecs_expr_eval(s, &result, &desc));
         test_assert(result.type == ecs_id(ecs_i64_t));
         test_int(*(int64_t*)result.ptr, 10);
-        ecs_value_free(world, result.type, result.ptr);
+        ecs_ptr_free(world, result.type, result.ptr);
     }
 
     {
@@ -8531,7 +8531,7 @@ void Expr_match_i32_3_i_cases(void) {
         test_assert(0 == ecs_expr_eval(s, &result, &desc));
         test_assert(result.type == ecs_id(ecs_i64_t));
         test_int(*(int64_t*)result.ptr, 20);
-        ecs_value_free(world, result.type, result.ptr);
+        ecs_ptr_free(world, result.type, result.ptr);
     }
 
     {
@@ -8540,7 +8540,7 @@ void Expr_match_i32_3_i_cases(void) {
         test_assert(0 == ecs_expr_eval(s, &result, &desc));
         test_assert(result.type == ecs_id(ecs_i64_t));
         test_int(*(int64_t*)result.ptr, 30);
-        ecs_value_free(world, result.type, result.ptr);
+        ecs_ptr_free(world, result.type, result.ptr);
     }
 
     ecs_script_vars_fini(vars);
@@ -8581,7 +8581,7 @@ void Expr_match_i32_3_i_i_f_cases(void) {
         test_assert(0 == ecs_expr_eval(s, &result, &desc));
         test_assert(result.type == ecs_id(ecs_f64_t));
         test_assert(*(ecs_f64_t*)result.ptr == 10);
-        ecs_value_free(world, result.type, result.ptr);
+        ecs_ptr_free(world, result.type, result.ptr);
     }
 
     {
@@ -8590,7 +8590,7 @@ void Expr_match_i32_3_i_i_f_cases(void) {
         test_assert(0 == ecs_expr_eval(s, &result, &desc));
         test_assert(result.type == ecs_id(ecs_f64_t));
         test_assert(*(ecs_f64_t*)result.ptr == 20);
-        ecs_value_free(world, result.type, result.ptr);
+        ecs_ptr_free(world, result.type, result.ptr);
     }
 
     {
@@ -8599,7 +8599,7 @@ void Expr_match_i32_3_i_i_f_cases(void) {
         test_assert(0 == ecs_expr_eval(s, &result, &desc));
         test_assert(result.type == ecs_id(ecs_f64_t));
         test_assert(*(ecs_f64_t*)result.ptr == 30.5);
-        ecs_value_free(world, result.type, result.ptr);
+        ecs_ptr_free(world, result.type, result.ptr);
     }
 
     ecs_script_vars_fini(vars);
@@ -8640,7 +8640,7 @@ void Expr_match_i32_3_i_f_i_cases(void) {
         test_assert(0 == ecs_expr_eval(s, &result, &desc));
         test_assert(result.type == ecs_id(ecs_f64_t));
         test_assert(*(ecs_f64_t*)result.ptr == 10);
-        ecs_value_free(world, result.type, result.ptr);
+        ecs_ptr_free(world, result.type, result.ptr);
     }
 
     {
@@ -8649,7 +8649,7 @@ void Expr_match_i32_3_i_f_i_cases(void) {
         test_assert(0 == ecs_expr_eval(s, &result, &desc));
         test_assert(result.type == ecs_id(ecs_f64_t));
         test_assert(*(ecs_f64_t*)result.ptr == 20.5);
-        ecs_value_free(world, result.type, result.ptr);
+        ecs_ptr_free(world, result.type, result.ptr);
     }
 
     {
@@ -8658,7 +8658,7 @@ void Expr_match_i32_3_i_f_i_cases(void) {
         test_assert(0 == ecs_expr_eval(s, &result, &desc));
         test_assert(result.type == ecs_id(ecs_f64_t));
         test_assert(*(ecs_f64_t*)result.ptr == 30);
-        ecs_value_free(world, result.type, result.ptr);
+        ecs_ptr_free(world, result.type, result.ptr);
     }
 
     ecs_script_vars_fini(vars);
@@ -8699,7 +8699,7 @@ void Expr_match_i32_3_f_i_i_cases(void) {
         test_assert(0 == ecs_expr_eval(s, &result, &desc));
         test_assert(result.type == ecs_id(ecs_f64_t));
         test_assert(*(ecs_f64_t*)result.ptr == 10.5);
-        ecs_value_free(world, result.type, result.ptr);
+        ecs_ptr_free(world, result.type, result.ptr);
     }
 
     {
@@ -8708,7 +8708,7 @@ void Expr_match_i32_3_f_i_i_cases(void) {
         test_assert(0 == ecs_expr_eval(s, &result, &desc));
         test_assert(result.type == ecs_id(ecs_f64_t));
         test_assert(*(ecs_f64_t*)result.ptr == 20);
-        ecs_value_free(world, result.type, result.ptr);
+        ecs_ptr_free(world, result.type, result.ptr);
     }
 
     {
@@ -8717,7 +8717,7 @@ void Expr_match_i32_3_f_i_i_cases(void) {
         test_assert(0 == ecs_expr_eval(s, &result, &desc));
         test_assert(result.type == ecs_id(ecs_f64_t));
         test_assert(*(ecs_f64_t*)result.ptr == 30);
-        ecs_value_free(world, result.type, result.ptr);
+        ecs_ptr_free(world, result.type, result.ptr);
     }
 
     ecs_script_vars_fini(vars);
@@ -9438,7 +9438,7 @@ void Expr_match_i32_string(void) {
         test_assert(0 == ecs_expr_eval(s, &result, &desc));
         test_assert(result.type == ecs_id(ecs_string_t));
         test_str(*(char**)result.ptr, "100");
-        ecs_value_free(world, result.type, result.ptr);
+        ecs_ptr_free(world, result.type, result.ptr);
     }
 
     {
@@ -9447,7 +9447,7 @@ void Expr_match_i32_string(void) {
         test_assert(0 == ecs_expr_eval(s, &result, &desc));
         test_assert(result.type == ecs_id(ecs_string_t));
         test_str(*(char**)result.ptr, "200");
-        ecs_value_free(world, result.type, result.ptr);
+        ecs_ptr_free(world, result.type, result.ptr);
     }
 
     {
@@ -9456,7 +9456,7 @@ void Expr_match_i32_string(void) {
         test_assert(0 == ecs_expr_eval(s, &result, &desc));
         test_assert(result.type == ecs_id(ecs_string_t));
         test_str(*(char**)result.ptr, "300");
-        ecs_value_free(world, result.type, result.ptr);
+        ecs_ptr_free(world, result.type, result.ptr);
     }
 
     ecs_script_vars_fini(vars);
@@ -9510,7 +9510,7 @@ void Expr_match_enum_string(void) {
         test_assert(0 == ecs_expr_eval(s, &result, &desc));
         test_assert(result.type == ecs_id(ecs_string_t));
         test_str(*(char**)result.ptr, "Red");
-        ecs_value_free(world, result.type, result.ptr);
+        ecs_ptr_free(world, result.type, result.ptr);
     }
 
     {
@@ -9519,7 +9519,7 @@ void Expr_match_enum_string(void) {
         test_assert(0 == ecs_expr_eval(s, &result, &desc));
         test_assert(result.type == ecs_id(ecs_string_t));
         test_str(*(char**)result.ptr, "Green");
-        ecs_value_free(world, result.type, result.ptr);
+        ecs_ptr_free(world, result.type, result.ptr);
     }
 
     {
@@ -9528,7 +9528,7 @@ void Expr_match_enum_string(void) {
         test_assert(0 == ecs_expr_eval(s, &result, &desc));
         test_assert(result.type == ecs_id(ecs_string_t));
         test_str(*(char**)result.ptr, "Blue");
-        ecs_value_free(world, result.type, result.ptr);
+        ecs_ptr_free(world, result.type, result.ptr);
     }
 
     ecs_script_vars_fini(vars);
@@ -9577,7 +9577,7 @@ void Expr_match_string_i(void) {
         test_assert(0 == ecs_expr_eval(s, &result, &desc));
         test_assert(result.type == ecs_id(ecs_i64_t));
         test_int(*(int64_t*)result.ptr, 1);
-        ecs_value_free(world, result.type, result.ptr);
+        ecs_ptr_free(world, result.type, result.ptr);
     }
 
     {
@@ -9586,7 +9586,7 @@ void Expr_match_string_i(void) {
         test_assert(0 == ecs_expr_eval(s, &result, &desc));
         test_assert(result.type == ecs_id(ecs_i64_t));
         test_int(*(int64_t*)result.ptr, 2);
-        ecs_value_free(world, result.type, result.ptr);
+        ecs_ptr_free(world, result.type, result.ptr);
     }
 
     {
@@ -9595,7 +9595,7 @@ void Expr_match_string_i(void) {
         test_assert(0 == ecs_expr_eval(s, &result, &desc));
         test_assert(result.type == ecs_id(ecs_i64_t));
         test_int(*(int64_t*)result.ptr, 3);
-        ecs_value_free(world, result.type, result.ptr);
+        ecs_ptr_free(world, result.type, result.ptr);
     }
 
     *(char**)var->value.ptr = NULL;
@@ -9631,7 +9631,7 @@ void Expr_match_w_any(void) {
         test_assert(0 == ecs_expr_eval(s, &result, &desc));
         test_assert(result.type == ecs_id(ecs_i64_t));
         test_int(*(int64_t*)result.ptr, 40);
-        ecs_value_free(world, result.type, result.ptr);
+        ecs_ptr_free(world, result.type, result.ptr);
     }
 
     {
@@ -9640,7 +9640,7 @@ void Expr_match_w_any(void) {
         test_assert(0 == ecs_expr_eval(s, &result, &desc));
         test_assert(result.type == ecs_id(ecs_i64_t));
         test_int(*(int64_t*)result.ptr, 10);
-        ecs_value_free(world, result.type, result.ptr);
+        ecs_ptr_free(world, result.type, result.ptr);
     }
 
     {
@@ -9649,7 +9649,7 @@ void Expr_match_w_any(void) {
         test_assert(0 == ecs_expr_eval(s, &result, &desc));
         test_assert(result.type == ecs_id(ecs_i64_t));
         test_int(*(int64_t*)result.ptr, 20);
-        ecs_value_free(world, result.type, result.ptr);
+        ecs_ptr_free(world, result.type, result.ptr);
     }
 
     {
@@ -9658,7 +9658,7 @@ void Expr_match_w_any(void) {
         test_assert(0 == ecs_expr_eval(s, &result, &desc));
         test_assert(result.type == ecs_id(ecs_i64_t));
         test_int(*(int64_t*)result.ptr, 30);
-        ecs_value_free(world, result.type, result.ptr);
+        ecs_ptr_free(world, result.type, result.ptr);
     }
 
     {
@@ -9667,7 +9667,7 @@ void Expr_match_w_any(void) {
         test_assert(0 == ecs_expr_eval(s, &result, &desc));
         test_assert(result.type == ecs_id(ecs_i64_t));
         test_int(*(int64_t*)result.ptr, 40);
-        ecs_value_free(world, result.type, result.ptr);
+        ecs_ptr_free(world, result.type, result.ptr);
     }
 
     ecs_script_vars_fini(vars);
@@ -9775,7 +9775,7 @@ void Expr_match_i_w_any_f(void) {
         test_assert(0 == ecs_expr_eval(s, &result, &desc));
         test_assert(result.type == ecs_id(ecs_f64_t));
         test_assert(*(ecs_f64_t*)result.ptr == 30.5);
-        ecs_value_free(world, result.type, result.ptr);
+        ecs_ptr_free(world, result.type, result.ptr);
     }
 
     {
@@ -9784,7 +9784,7 @@ void Expr_match_i_w_any_f(void) {
         test_assert(0 == ecs_expr_eval(s, &result, &desc));
         test_assert(result.type == ecs_id(ecs_f64_t));
         test_assert(*(ecs_f64_t*)result.ptr == 10);
-        ecs_value_free(world, result.type, result.ptr);
+        ecs_ptr_free(world, result.type, result.ptr);
     }
 
     {
@@ -9793,7 +9793,7 @@ void Expr_match_i_w_any_f(void) {
         test_assert(0 == ecs_expr_eval(s, &result, &desc));
         test_assert(result.type == ecs_id(ecs_f64_t));
         test_assert(*(ecs_f64_t*)result.ptr == 20);
-        ecs_value_free(world, result.type, result.ptr);
+        ecs_ptr_free(world, result.type, result.ptr);
     }
 
     {
@@ -9802,7 +9802,7 @@ void Expr_match_i_w_any_f(void) {
         test_assert(0 == ecs_expr_eval(s, &result, &desc));
         test_assert(result.type == ecs_id(ecs_f64_t));
         test_assert(*(ecs_f64_t*)result.ptr == 30.5);
-        ecs_value_free(world, result.type, result.ptr);
+        ecs_ptr_free(world, result.type, result.ptr);
     }
 
     ecs_script_vars_fini(vars);
@@ -9826,7 +9826,7 @@ void Expr_identifier_as_var(void) {
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(int64_t*)v.ptr, 20);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_script_vars_fini(vars);
 
@@ -9890,7 +9890,7 @@ void Expr_member_w_identifier_as_var_and_entity(void) {
         test_assert(v.type == ecs_id(ecs_entity_t));
         test_assert(v.ptr != NULL);
         test_uint(*(ecs_entity_t*)v.ptr, foo_x);
-        ecs_value_free(world, v.type, v.ptr);
+        ecs_ptr_free(world, v.type, v.ptr);
     }
 
     {
@@ -9953,7 +9953,7 @@ void Expr_nested_member_w_identifier_as_var_and_entity(void) {
         test_assert(v.type == ecs_id(ecs_entity_t));
         test_assert(v.ptr != NULL);
         test_uint(*(ecs_entity_t*)v.ptr, foo_start_x);
-        ecs_value_free(world, v.type, v.ptr);
+        ecs_ptr_free(world, v.type, v.ptr);
     }
 
     {
@@ -9986,7 +9986,7 @@ void Expr_identifier_as_const_var(void) {
     test_assert(v.type == ecs_id(ecs_i32_t));
     test_assert(v.ptr != NULL);
     test_uint(*(int32_t*)v.ptr, 10);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }
@@ -10006,7 +10006,7 @@ void Expr_expr_w_identifier_as_var(void) {
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(int64_t*)v.ptr, 10 + 20);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_script_vars_fini(vars);
 
@@ -10452,7 +10452,7 @@ void Expr_var_element_map_i64_i32(void) {
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
         test_int(*(ecs_i32_t*)v.ptr, 100);
-        ecs_value_free(world, v.type, v.ptr);
+        ecs_ptr_free(world, v.type, v.ptr);
     }
     {
         ecs_value_t v = {0};
@@ -10461,7 +10461,7 @@ void Expr_var_element_map_i64_i32(void) {
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
         test_int(*(ecs_i32_t*)v.ptr, 200);
-        ecs_value_free(world, v.type, v.ptr);
+        ecs_ptr_free(world, v.type, v.ptr);
     }
 
     ecs_script_vars_fini(vars);
@@ -10496,7 +10496,7 @@ void Expr_var_element_map_entity_i32(void) {
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
         test_int(*(ecs_i32_t*)v.ptr, 100);
-        ecs_value_free(world, v.type, v.ptr);
+        ecs_ptr_free(world, v.type, v.ptr);
     }
     {
         ecs_value_t v = {0};
@@ -10505,7 +10505,7 @@ void Expr_var_element_map_entity_i32(void) {
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
         test_int(*(ecs_i32_t*)v.ptr, 200);
-        ecs_value_free(world, v.type, v.ptr);
+        ecs_ptr_free(world, v.type, v.ptr);
     }
 
     ecs_script_vars_fini(vars);
@@ -10544,7 +10544,7 @@ void Expr_var_element_map_enum_i32(void) {
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
         test_int(*(ecs_i32_t*)v.ptr, 100);
-        ecs_value_free(world, v.type, v.ptr);
+        ecs_ptr_free(world, v.type, v.ptr);
     }
     {
         ecs_value_t v = {0};
@@ -10553,7 +10553,7 @@ void Expr_var_element_map_enum_i32(void) {
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
         test_int(*(ecs_i32_t*)v.ptr, 200);
-        ecs_value_free(world, v.type, v.ptr);
+        ecs_ptr_free(world, v.type, v.ptr);
     }
 
     ecs_script_vars_fini(vars);
@@ -10592,7 +10592,7 @@ void Expr_var_element_map_bitmask_i32(void) {
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
         test_int(*(ecs_i32_t*)v.ptr, 100);
-        ecs_value_free(world, v.type, v.ptr);
+        ecs_ptr_free(world, v.type, v.ptr);
     }
     {
         ecs_value_t v = {0};
@@ -10601,7 +10601,7 @@ void Expr_var_element_map_bitmask_i32(void) {
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
         test_int(*(ecs_i32_t*)v.ptr, 200);
-        ecs_value_free(world, v.type, v.ptr);
+        ecs_ptr_free(world, v.type, v.ptr);
     }
 
     ecs_script_vars_fini(vars);
@@ -10632,7 +10632,7 @@ void Expr_var_element_map_expr_key(void) {
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
         test_int(*(ecs_i32_t*)v.ptr, 100);
-        ecs_value_free(world, v.type, v.ptr);
+        ecs_ptr_free(world, v.type, v.ptr);
     }
 
     ecs_script_vars_fini(vars);
@@ -10681,7 +10681,7 @@ void Expr_var_element_map_struct(void) {
         test_int(((N*)v.ptr)->x, 1);
         test_int(((N*)v.ptr)->y, 2);
         test_int(((N*)v.ptr)->z, 3);
-        ecs_value_free(world, v.type, v.ptr);
+        ecs_ptr_free(world, v.type, v.ptr);
     }
 
     ecs_script_vars_fini(vars);
@@ -10728,7 +10728,7 @@ void Expr_var_element_map_struct_member(void) {
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
         test_int(*(ecs_i32_t*)v.ptr, 1);
-        ecs_value_free(world, v.type, v.ptr);
+        ecs_ptr_free(world, v.type, v.ptr);
     }
     {
         ecs_value_t v = {0};
@@ -10737,7 +10737,7 @@ void Expr_var_element_map_struct_member(void) {
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
         test_int(*(ecs_i32_t*)v.ptr, 3);
-        ecs_value_free(world, v.type, v.ptr);
+        ecs_ptr_free(world, v.type, v.ptr);
     }
 
     ecs_script_vars_fini(vars);

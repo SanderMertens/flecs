@@ -146,7 +146,7 @@ void flecs_script_template_ctor(
 
         for (i = 0; i < count; i ++) {
             void *el = ECS_ELEM(ptr, ti->size, i);
-            ecs_value_copy_w_type_info(world, mti, 
+            ecs_ptr_copy_w_type_info(world, mti, 
                 ECS_OFFSET(el, member->offset), value->value.ptr);
         }
     }
@@ -680,8 +680,8 @@ int flecs_script_template_eval_prop(
 
         flecs_type_info_ctor(var->value.ptr, 1, ti);
 
-        ecs_value_copy_w_type_info(v->world, ti, var->value.ptr, value.ptr);
-        ecs_value_fini_w_type_info(v->world, ti, value.ptr);
+        ecs_ptr_copy_w_type_info(v->world, ti, var->value.ptr, value.ptr);
+        ecs_ptr_fini_w_type_info(v->world, ti, value.ptr);
         flecs_free(&v->world->allocator, ti->size, value.ptr);
     }
 
@@ -691,7 +691,7 @@ int flecs_script_template_eval_prop(
         &v->base.script->allocator, ti->size, ti->name);
     value->value.type = type;
     value->type_info = ti;
-    ecs_value_copy_w_type_info(
+    ecs_ptr_copy_w_type_info(
         v->world, ti, value->value.ptr, var->value.ptr);
 
     ecs_entity_t mbr = ecs_entity(v->world, {
@@ -788,7 +788,7 @@ int flecs_script_template_hoist_vars(
         ecs_script_var_t *dst = ecs_script_vars_define_id(
             template->vars, src->name, src->value.type);
         ecs_assert(dst != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_value_copy(v->world,
+        ecs_ptr_copy(v->world,
             src->value.type, dst->value.ptr, src->value.ptr);
     }
 
