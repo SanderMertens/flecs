@@ -225,6 +225,13 @@ error:
     return (ecs_value_t){0};
 }
 
+void ecs_const_var_modified(
+    ecs_world_t *world,
+    ecs_entity_t entity)
+{
+    ecs_modified(world, entity, EcsScriptConstVar);
+}
+
 #ifdef FLECS_DEBUG
 static
 bool flecs_script_function_has_vector_args(

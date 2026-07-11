@@ -1616,6 +1616,7 @@ void Refs_global_const_var_in_if_expr(void);
 void Refs_global_const_var_in_for_expr(void);
 void Refs_global_const_var_non_managed_script_no_update(void);
 void Refs_global_const_var_set_after_managed_script_deleted(void);
+void Refs_global_const_var_modified(void);
 void Refs_ref_in_function(void);
 void Refs_global_const_var_in_function(void);
 void Refs_ref_in_new_expr(void);
@@ -8042,6 +8043,10 @@ bake_test_case Refs_testcases[] = {
         Refs_global_const_var_set_after_managed_script_deleted
     },
     {
+        "global_const_var_modified",
+        Refs_global_const_var_modified
+    },
+    {
         "ref_in_function",
         Refs_ref_in_function
     },
@@ -8371,7 +8376,7 @@ static bake_test_suite suites[] = {
         "Refs",
         NULL,
         NULL,
-        73,
+        74,
         Refs_testcases
     }
 };

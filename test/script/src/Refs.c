@@ -664,6 +664,51 @@ void Refs_global_const_var_set_after_managed_script_deleted(void) {
     ecs_fini(world);
 }
 
+void Refs_global_const_var_modified(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = define_position(world);
+
+    ecs_entity_t v = ecs_const_var(world, {
+        .name = "v",
+        .type = ecs_id(ecs_f32_t),
+        .value = &(ecs_f32_t){10}
+    });
+    test_assert(v != 0);
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "foo {"
+            LINE "  Position: {$v, 0}"
+            LINE "}"
+    });
+    test_assert(s != 0);
+
+    {
+        ecs_entity_t foo = ecs_lookup(world, "foo");
+        test_assert(foo != 0);
+        const Position *p = ecs_get(world, foo, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+    }
+
+    ecs_value_t val = ecs_const_var_get(world, v);
+    test_assert(val.ptr != NULL);
+    *(ecs_f32_t*)val.ptr = 20;
+    ecs_const_var_modified(world, v);
+
+    {
+        ecs_entity_t foo = ecs_lookup(world, "foo");
+        test_assert(foo != 0);
+        const Position *p = ecs_get(world, foo, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 20);
+    }
+
+    ecs_fini(world);
+}
+
 void Refs_ref_in_function(void) {
     ecs_world_t *world = ecs_init();
 
