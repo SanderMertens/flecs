@@ -132,22 +132,27 @@ bool flecs_json_serialize_common_for_table(
     return result;
 }
 
+#define FLECS_JSON_FIELD_NONE   0
+#define FLECS_JSON_FIELD_SELF   1
+#define FLECS_JSON_FIELD_SHARED 2
+#define FLECS_JSON_FIELD_ROW    3
+
+typedef struct ecs_json_field_plan_t {
+    int8_t kind;
+    ecs_size_t size;
+    void *ptr;
+    const ecs_json_value_ser_ctx_t *value_ctx;
+} ecs_json_field_plan_t;
+
 static
-int flecs_json_serialize_iter_result_field_values(
-    const ecs_world_t *world, 
-    const ecs_iter_t *it, 
-    int32_t i,
-    ecs_strbuf_t *buf,
+void flecs_json_iter_result_field_plan(
+    const ecs_world_t *world,
+    const ecs_iter_t *it,
     const ecs_iter_to_json_desc_t *desc,
-    ecs_json_ser_ctx_t *ser_ctx)
+    ecs_json_ser_ctx_t *ser_ctx,
+    ecs_json_field_plan_t *field_plan)
 {
     int8_t f, field_count = it->field_count;
-    if (!field_count) {
-        return 0;
-    }
-
-    ecs_strbuf_appendlit(buf, "\"values\":");
-    flecs_json_array_push(buf);
 
     ecs_termset_t fields = it->set_fields;
     if (it->query) {
@@ -157,9 +162,11 @@ int flecs_json_serialize_iter_result_field_values(
     ecs_termset_t row_fields = it->query ? it->query->row_fields : 0;
 
     for (f = 0; f < field_count; f ++) {
+        ecs_json_field_plan_t *fp = &field_plan[f];
+        fp->kind = FLECS_JSON_FIELD_NONE;
+
         ecs_termset_t field_bit = (ecs_termset_t)(1u << f);
         if (!(fields & field_bit)) {
-            ecs_strbuf_list_appendlit(buf, "0");
             continue;
         }
 
@@ -170,29 +177,60 @@ int flecs_json_serialize_iter_result_field_values(
         flecs_json_accum_type_info(world, value_ctx->type, ser_ctx);
 
         if (!has_ser) {
+            continue;
+        }
+
+        fp->size = it->sizes[f];
+        fp->value_ctx = value_ctx;
+
+        if (row_fields & field_bit) {
+            fp->kind = FLECS_JSON_FIELD_ROW;
+        } else {
+            fp->ptr = ecs_field_w_size(it, flecs_itosize(fp->size), f);
+            if (!fp->ptr) {
+                continue;
+            }
+
+            fp->kind = it->sources[f] ?
+                FLECS_JSON_FIELD_SHARED : FLECS_JSON_FIELD_SELF;
+        }
+    }
+}
+
+static
+int flecs_json_serialize_iter_result_field_values(
+    const ecs_world_t *world,
+    const ecs_iter_t *it,
+    int32_t i,
+    ecs_strbuf_t *buf,
+    const ecs_json_field_plan_t *field_plan)
+{
+    int8_t f, field_count = it->field_count;
+
+    ecs_strbuf_appendlit(buf, "\"values\":");
+    flecs_json_array_push(buf);
+
+    for (f = 0; f < field_count; f ++) {
+        const ecs_json_field_plan_t *fp = &field_plan[f];
+        void *ptr;
+
+        switch(fp->kind) {
+        case FLECS_JSON_FIELD_SELF:
+            ptr = ECS_ELEM(fp->ptr, fp->size, i);
+            break;
+        case FLECS_JSON_FIELD_SHARED:
+            ptr = fp->ptr;
+            break;
+        case FLECS_JSON_FIELD_ROW:
+            ptr = ecs_field_at_w_size(it, flecs_itosize(fp->size), f, i);
+            break;
+        default:
             ecs_strbuf_list_appendlit(buf, "0");
             continue;
         }
 
-        void *ptr;
-        if (row_fields & field_bit) {
-            ptr = ecs_field_at_w_size(it, flecs_itosize(it->sizes[f]), f, i);
-        } else {
-            ecs_size_t size = it->sizes[f];
-            ptr = ecs_field_w_size(it, flecs_itosize(size), f);
-
-            if (!ptr) {
-                ecs_strbuf_list_appendlit(buf, "0");
-                continue;
-            }
-
-            if (!it->sources[f]) {
-                ptr = ECS_ELEM(ptr, size, i);
-            }
-        }
-
         flecs_json_next(buf);
-        if (flecs_json_ser_type(world, &value_ctx->ser->ops, ptr, buf) != 0) {
+        if (flecs_json_ser_value_ctx(world, fp->value_ctx, ptr, buf) != 0) {
             return -1;
         }
     }
@@ -225,6 +263,22 @@ int flecs_json_serialize_iter_result_query(
         common_data = ecs_strbuf_get(&common_data_buf);
     }
 
+    bool serialize_fields = !desc || desc->serialize_fields;
+    bool has_values = !desc || desc->serialize_values;
+    if (it->flags & EcsIterNoData || !it->field_count) {
+        has_values = false;
+    }
+
+    const ecs_query_t *q = it->query;
+    if (q && !q->data_fields) {
+        has_values = false;
+    }
+
+    ecs_json_field_plan_t field_plan[FLECS_TERM_COUNT_MAX];
+    if (serialize_fields && has_values) {
+        flecs_json_iter_result_field_plan(world, it, desc, ser_ctx, field_plan);
+    }
+
     int32_t i;
     for (i = 0; i < count; i ++) {
         if (has_this) {
@@ -239,35 +293,25 @@ int flecs_json_serialize_iter_result_query(
         }
 
         if (common_data) {
-            ecs_strbuf_list_appendstrn(buf, 
+            ecs_strbuf_list_appendstrn(buf,
                 common_data, common_data_len);
         }
 
-        if (!desc || desc->serialize_fields) {
-            bool has_values = !desc || desc->serialize_values;
-            if (it->flags & EcsIterNoData || !it->field_count) {
-                has_values = false;
-            }
-
-            const ecs_query_t *q = it->query;
-            if (q && !q->data_fields) {
-                has_values = false;
-            }
-
+        if (serialize_fields) {
             if (has_values) {
                 if (common_field_data) {
                     flecs_json_next(buf);
                 }
 
                 if (flecs_json_serialize_iter_result_field_values(
-                    world, it, i, buf, desc, ser_ctx))
+                    world, it, i, buf, field_plan))
                 {
                     ecs_os_free(common_data);
                     return -1;
                 }
             }
 
-            ecs_strbuf_appendstr(buf, "}"); /* end "fields" */
+            ecs_strbuf_appendch(buf, '}'); /* end "fields" */
         }
 
         flecs_json_object_pop(buf);

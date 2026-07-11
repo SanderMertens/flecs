@@ -27021,8 +27021,7 @@ static const double pow10s[MAX_PRECISION + 1] =
 	1.0, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9, 1e10
 };
 
-static
-char* flecs_strbuf_itoa(
+char* flecs_itoa(
     char *buf,
     int64_t v)
 {
@@ -27063,46 +27062,44 @@ char* flecs_strbuf_itoa(
     return ptr;
 }
 
-static
-void flecs_strbuf_ftoa(
-    ecs_strbuf_t *out, 
-    double f, 
+char* flecs_ftoa(
+    char *buf,
+    double f,
     int precision,
     char nan_delim)
 {
-    char *buf, *ptr;
+    char *ptr;
 	char c;
 	int64_t intPart;
     int64_t exp = 0;
 
     if (ecs_os_isnan(f)) {
+        ptr = buf;
         if (nan_delim) {
-            ecs_strbuf_appendch(out, nan_delim);
-            ecs_strbuf_appendlit(out, "NaN");
-            ecs_strbuf_appendch(out, nan_delim);
-            return;
-        } else {
-            ecs_strbuf_appendlit(out, "NaN");
-            return;
+            *ptr++ = nan_delim;
         }
+        *ptr++ = 'N'; *ptr++ = 'a'; *ptr++ = 'N';
+        if (nan_delim) {
+            *ptr++ = nan_delim;
+        }
+        return ptr;
     }
     if (ecs_os_isinf(f)) {
+        ptr = buf;
         if (nan_delim) {
-            ecs_strbuf_appendch(out, nan_delim);
-            ecs_strbuf_appendlit(out, "Inf");
-            ecs_strbuf_appendch(out, nan_delim);
-            return;
-        } else {
-            ecs_strbuf_appendlit(out, "Inf");
-            return;
+            *ptr++ = nan_delim;
         }
+        *ptr++ = 'I'; *ptr++ = 'n'; *ptr++ = 'f';
+        if (nan_delim) {
+            *ptr++ = nan_delim;
+        }
+        return ptr;
     }
 
 	if (precision > MAX_PRECISION) {
 		precision = MAX_PRECISION;
     }
 
-    buf = flecs_strbuf_reserve(out, 64);
     ptr = buf;
 
 	if (f < 0) {
@@ -27133,7 +27130,7 @@ void flecs_strbuf_ftoa(
 	intPart = (int64_t)f;
 	f -= (double)intPart;
 
-    ptr = flecs_strbuf_itoa(ptr, intPart);
+    ptr = flecs_itoa(ptr, intPart);
 
 	if (precision) {
 		uint64_t frac = (uint64_t)(f * pow10s[precision]);
@@ -27204,7 +27201,7 @@ void flecs_strbuf_ftoa(
         }
 
         ptr[0] = 'e';
-        ptr = flecs_strbuf_itoa(ptr + 1, exp);
+        ptr = flecs_itoa(ptr + 1, exp);
 
         if (nan_delim) {
             ptr[0] = nan_delim;
@@ -27214,6 +27211,18 @@ void flecs_strbuf_ftoa(
         ptr[0] = '\0';
     }
 
+    return ptr;
+}
+
+static
+void flecs_strbuf_ftoa(
+    ecs_strbuf_t *out,
+    double f,
+    int precision,
+    char nan_delim)
+{
+    char *buf = flecs_strbuf_reserve(out, 64);
+    char *ptr = flecs_ftoa(buf, f, precision, nan_delim);
     out->length += (int32_t)(ptr - buf);
 }
 
@@ -27388,7 +27397,7 @@ void ecs_strbuf_appendint(
 {
     ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
     char *numbuf = flecs_strbuf_reserve(b, 32);
-    char *ptr = flecs_strbuf_itoa(numbuf, v);
+    char *ptr = flecs_itoa(numbuf, v);
     b->length += flecs_ito(int32_t, ptr - numbuf);
 }
 

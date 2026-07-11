@@ -29,10 +29,19 @@ typedef enum ecs_json_token_t {
     JsonInvalid
 } ecs_json_token_t;
 
+typedef struct ecs_json_flat_member_t {
+    ecs_meta_op_kind_t kind;
+    ecs_size_t offset;
+    int32_t prefix_len;
+    char prefix[24];
+} ecs_json_flat_member_t;
+
 typedef struct ecs_json_value_ser_ctx_t {
     ecs_entity_t type;
     const EcsTypeSerializer *ser;
     char *id_label;
+    ecs_json_flat_member_t *flat_members;
+    int32_t flat_count;
     bool initialized;
 } ecs_json_value_ser_ctx_t;
 
@@ -224,6 +233,15 @@ bool flecs_json_serialize_get_value_ctx(
     ecs_id_t id,
     ecs_json_value_ser_ctx_t *ctx,
     const ecs_iter_to_json_desc_t *desc);
+
+void flecs_json_value_ser_ctx_fini(
+    ecs_json_value_ser_ctx_t *ctx);
+
+int flecs_json_ser_value_ctx(
+    const ecs_world_t *world,
+    const ecs_json_value_ser_ctx_t *ctx,
+    const void *ptr,
+    ecs_strbuf_t *buf);
 
 int flecs_json_serialize_iter_result_table(
     const ecs_world_t *world, 

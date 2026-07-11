@@ -535,7 +535,7 @@ typedef struct ecs_json_table_column_t {
     void *base;
     ecs_component_record_t *cr;
     const ecs_type_info_t *ti;
-    const ecs_vec_t *ops;
+    const ecs_json_value_ser_ctx_t *value_ctx;
     const char *label;
     int32_t label_len;
 } ecs_json_table_column_t;
@@ -591,8 +591,8 @@ int32_t flecs_json_table_components_plan(
         col->base = base;
         col->cr = cr;
         col->ti = ti;
-        col->ops = (has_ser && desc->serialize_values) ?
-            &value_ctx->ser->ops : NULL;
+        col->value_ctx = (has_ser && desc->serialize_values) ?
+            value_ctx : NULL;
         col->label = value_ctx->id_label;
         col->label_len = ecs_os_strlen(value_ctx->id_label);
         col_count ++;
@@ -719,8 +719,10 @@ int flecs_json_serialize_iter_result_table(
                 flecs_json_membern(buf, col->label, col->label_len);
                 component_count ++;
 
-                if (col->ops) {
-                    if (flecs_json_ser_type(world, col->ops, ptr, buf) != 0) {
+                if (col->value_ctx) {
+                    if (flecs_json_ser_value_ctx(
+                        world, col->value_ctx, ptr, buf) != 0)
+                    {
                         result = -1;
                         break;
                     }
@@ -767,7 +769,7 @@ int flecs_json_serialize_iter_result_table(
     ecs_os_free(common_data);
 
     for (i = 0; i < FLECS_JSON_MAX_TABLE_COMPONENTS; i ++) {
-        ecs_os_free(values_ctx[i].id_label);
+        flecs_json_value_ser_ctx_fini(&values_ctx[i]);
     }
 
     return result;

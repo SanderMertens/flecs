@@ -5037,6 +5037,18 @@ char* flecs_strbuf_reserve(
     ecs_strbuf_t *b,
     int32_t n);
 
+FLECS_API
+char* flecs_itoa(
+    char *buf,
+    int64_t v);
+
+FLECS_API
+char* flecs_ftoa(
+    char *buf,
+    double f,
+    int precision,
+    char nan_delim);
+
 /** Return an escaped string.
  * Same as flecs_stresc(), but returns an
  * allocated string of the right size.

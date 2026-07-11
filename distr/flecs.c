@@ -28581,10 +28581,19 @@ typedef enum ecs_json_token_t {
     JsonInvalid
 } ecs_json_token_t;
 
+typedef struct ecs_json_flat_member_t {
+    ecs_meta_op_kind_t kind;
+    ecs_size_t offset;
+    int32_t prefix_len;
+    char prefix[24];
+} ecs_json_flat_member_t;
+
 typedef struct ecs_json_value_ser_ctx_t {
     ecs_entity_t type;
     const EcsTypeSerializer *ser;
     char *id_label;
+    ecs_json_flat_member_t *flat_members;
+    int32_t flat_count;
     bool initialized;
 } ecs_json_value_ser_ctx_t;
 
@@ -28776,6 +28785,15 @@ bool flecs_json_serialize_get_value_ctx(
     ecs_id_t id,
     ecs_json_value_ser_ctx_t *ctx,
     const ecs_iter_to_json_desc_t *desc);
+
+void flecs_json_value_ser_ctx_fini(
+    ecs_json_value_ser_ctx_t *ctx);
+
+int flecs_json_ser_value_ctx(
+    const ecs_world_t *world,
+    const ecs_json_value_ser_ctx_t *ctx,
+    const void *ptr,
+    ecs_strbuf_t *buf);
 
 int flecs_json_serialize_iter_result_table(
     const ecs_world_t *world, 
@@ -35172,8 +35190,7 @@ static const double pow10s[MAX_PRECISION + 1] =
 	1.0, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9, 1e10
 };
 
-static
-char* flecs_strbuf_itoa(
+char* flecs_itoa(
     char *buf,
     int64_t v)
 {
@@ -35214,46 +35231,44 @@ char* flecs_strbuf_itoa(
     return ptr;
 }
 
-static
-void flecs_strbuf_ftoa(
-    ecs_strbuf_t *out, 
-    double f, 
+char* flecs_ftoa(
+    char *buf,
+    double f,
     int precision,
     char nan_delim)
 {
-    char *buf, *ptr;
+    char *ptr;
 	char c;
 	int64_t intPart;
     int64_t exp = 0;
 
     if (ecs_os_isnan(f)) {
+        ptr = buf;
         if (nan_delim) {
-            ecs_strbuf_appendch(out, nan_delim);
-            ecs_strbuf_appendlit(out, "NaN");
-            ecs_strbuf_appendch(out, nan_delim);
-            return;
-        } else {
-            ecs_strbuf_appendlit(out, "NaN");
-            return;
+            *ptr++ = nan_delim;
         }
+        *ptr++ = 'N'; *ptr++ = 'a'; *ptr++ = 'N';
+        if (nan_delim) {
+            *ptr++ = nan_delim;
+        }
+        return ptr;
     }
     if (ecs_os_isinf(f)) {
+        ptr = buf;
         if (nan_delim) {
-            ecs_strbuf_appendch(out, nan_delim);
-            ecs_strbuf_appendlit(out, "Inf");
-            ecs_strbuf_appendch(out, nan_delim);
-            return;
-        } else {
-            ecs_strbuf_appendlit(out, "Inf");
-            return;
+            *ptr++ = nan_delim;
         }
+        *ptr++ = 'I'; *ptr++ = 'n'; *ptr++ = 'f';
+        if (nan_delim) {
+            *ptr++ = nan_delim;
+        }
+        return ptr;
     }
 
 	if (precision > MAX_PRECISION) {
 		precision = MAX_PRECISION;
     }
 
-    buf = flecs_strbuf_reserve(out, 64);
     ptr = buf;
 
 	if (f < 0) {
@@ -35284,7 +35299,7 @@ void flecs_strbuf_ftoa(
 	intPart = (int64_t)f;
 	f -= (double)intPart;
 
-    ptr = flecs_strbuf_itoa(ptr, intPart);
+    ptr = flecs_itoa(ptr, intPart);
 
 	if (precision) {
 		uint64_t frac = (uint64_t)(f * pow10s[precision]);
@@ -35355,7 +35370,7 @@ void flecs_strbuf_ftoa(
         }
 
         ptr[0] = 'e';
-        ptr = flecs_strbuf_itoa(ptr + 1, exp);
+        ptr = flecs_itoa(ptr + 1, exp);
 
         if (nan_delim) {
             ptr[0] = nan_delim;
@@ -35365,6 +35380,18 @@ void flecs_strbuf_ftoa(
         ptr[0] = '\0';
     }
 
+    return ptr;
+}
+
+static
+void flecs_strbuf_ftoa(
+    ecs_strbuf_t *out,
+    double f,
+    int precision,
+    char nan_delim)
+{
+    char *buf = flecs_strbuf_reserve(out, 64);
+    char *ptr = flecs_ftoa(buf, f, precision, nan_delim);
     out->length += (int32_t)(ptr - buf);
 }
 
@@ -35539,7 +35566,7 @@ void ecs_strbuf_appendint(
 {
     ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
     char *numbuf = flecs_strbuf_reserve(b, 32);
-    char *ptr = flecs_strbuf_itoa(numbuf, v);
+    char *ptr = flecs_itoa(numbuf, v);
     b->length += flecs_ito(int32_t, ptr - numbuf);
 }
 
@@ -53163,7 +53190,7 @@ void flecs_iter_free_ser_ctx(
 {
     int32_t f, field_count = it->field_count;
     for (f = 0; f < field_count; f ++) {
-        ecs_os_free(ser_ctx->value_ctx[f].id_label);
+        flecs_json_value_ser_ctx_fini(&ser_ctx->value_ctx[f]);
     }
 }
 
@@ -53596,6 +53623,159 @@ int flecs_json_serialize_alerts(
     return 0;
 }
 
+/* Check if type is a struct that only contains primitive members that don't
+ * require special serialization logic. Serialization of such types can skip
+ * the serializer instruction walk and directly emit precomputed member
+ * prefixes and values. */
+static
+void flecs_json_init_flat_struct(
+    ecs_json_value_ser_ctx_t *ctx)
+{
+    const ecs_vec_t *v_ops = &ctx->ser->ops;
+    ecs_meta_op_t *ops = ecs_vec_first_t(v_ops, ecs_meta_op_t);
+    int32_t i, count = ecs_vec_count(v_ops);
+
+    if (count < 3) {
+        return;
+    }
+    if (ops[0].kind != EcsOpPushStruct || ops[0].op_count != count) {
+        return;
+    }
+    if (ops[count - 1].kind != EcsOpPop) {
+        return;
+    }
+
+    int32_t member_count = count - 2;
+    for (i = 1; i <= member_count; i ++) {
+        ecs_meta_op_t *op = &ops[i];
+        if (!op->name || op->op_count != 1) {
+            return;
+        }
+        switch(op->kind) {
+        case EcsOpBool:
+        case EcsOpByte:
+        case EcsOpU8:
+        case EcsOpU16:
+        case EcsOpU32:
+        case EcsOpI8:
+        case EcsOpI16:
+        case EcsOpI32:
+        case EcsOpF32:
+        case EcsOpF64:
+            break;
+        default:
+            return;
+        }
+        if (op->name_len > 18) {
+            return;
+        }
+    }
+
+    ecs_json_flat_member_t *members = ecs_os_malloc_n(
+        ecs_json_flat_member_t, member_count);
+
+    for (i = 0; i < member_count; i ++) {
+        ecs_meta_op_t *op = &ops[i + 1];
+        ecs_json_flat_member_t *m = &members[i];
+        m->kind = op->kind;
+        m->offset = op->offset;
+
+        char *prefix = m->prefix;
+        if (!i) {
+            *prefix++ = '{';
+        } else {
+            *prefix++ = ',';
+            *prefix++ = ' ';
+        }
+        *prefix++ = '"';
+        ecs_os_memcpy(prefix, op->name, op->name_len);
+        prefix += op->name_len;
+        *prefix++ = '"';
+        *prefix++ = ':';
+        m->prefix_len = flecs_ito(int32_t, prefix - m->prefix);
+    }
+
+    ctx->flat_members = members;
+    ctx->flat_count = member_count;
+}
+
+int flecs_json_ser_value_ctx(
+    const ecs_world_t *world,
+    const ecs_json_value_ser_ctx_t *ctx,
+    const void *ptr,
+    ecs_strbuf_t *buf)
+{
+    int32_t i, j, count = ctx->flat_count;
+    if (!count) {
+        return flecs_json_ser_type(world, &ctx->ser->ops, ptr, buf);
+    }
+
+    char *dst = flecs_strbuf_reserve(buf, count * 88 + 1);
+    char *p = dst;
+
+    const ecs_json_flat_member_t *members = ctx->flat_members;
+    for (i = 0; i < count; i ++) {
+        const ecs_json_flat_member_t *m = &members[i];
+        for (j = 0; j < m->prefix_len; j ++) {
+            p[j] = m->prefix[j];
+        }
+        p += m->prefix_len;
+
+        const void *mptr = ECS_OFFSET(ptr, m->offset);
+        switch(m->kind) {
+        case EcsOpBool:
+            if (*(const bool*)mptr) {
+                p[0] = 't'; p[1] = 'r'; p[2] = 'u'; p[3] = 'e';
+                p += 4;
+            } else {
+                p[0] = 'f'; p[1] = 'a'; p[2] = 'l'; p[3] = 's'; p[4] = 'e';
+                p += 5;
+            }
+            break;
+        case EcsOpByte:
+        case EcsOpU8:
+            p = flecs_itoa(p, flecs_uto(int64_t, *(const uint8_t*)mptr));
+            break;
+        case EcsOpU16:
+            p = flecs_itoa(p, flecs_uto(int64_t, *(const uint16_t*)mptr));
+            break;
+        case EcsOpU32:
+            p = flecs_itoa(p, flecs_uto(int64_t, *(const uint32_t*)mptr));
+            break;
+        case EcsOpI8:
+            p = flecs_itoa(p, flecs_ito(int64_t, *(const int8_t*)mptr));
+            break;
+        case EcsOpI16:
+            p = flecs_itoa(p, flecs_ito(int64_t, *(const int16_t*)mptr));
+            break;
+        case EcsOpI32:
+            p = flecs_itoa(p, flecs_ito(int64_t, *(const int32_t*)mptr));
+            break;
+        case EcsOpF32:
+            p = flecs_ftoa(p, (ecs_f64_t)*(const ecs_f32_t*)mptr, 10, '"');
+            break;
+        case EcsOpF64:
+            p = flecs_ftoa(p, *(const ecs_f64_t*)mptr, 10, '"');
+            break;
+        default:
+            ecs_throw(ECS_INTERNAL_ERROR, "invalid flat member kind");
+        }
+    }
+
+    *p++ = '}';
+    buf->length += flecs_ito(int32_t, p - dst);
+    return 0;
+error:
+    return -1;
+}
+
+void flecs_json_value_ser_ctx_fini(
+    ecs_json_value_ser_ctx_t *ctx)
+{
+    ecs_os_free(ctx->id_label);
+    ecs_os_free(ctx->flat_members);
+}
+
 bool flecs_json_serialize_get_value_ctx(
     const ecs_world_t *world,
     ecs_id_t id,
@@ -53610,7 +53790,7 @@ bool flecs_json_serialize_get_value_ctx(
         ctx->initialized = true;
 
         ecs_strbuf_t idlbl = ECS_STRBUF_INIT;
-        flecs_json_id_member(&idlbl, world, id, 
+        flecs_json_id_member(&idlbl, world, id,
             desc ? desc->serialize_full_paths : true);
         ctx->id_label = ecs_strbuf_get(&idlbl);
 
@@ -53624,6 +53804,8 @@ bool flecs_json_serialize_get_value_ctx(
         if (!ctx->ser) {
             return false;
         }
+
+        flecs_json_init_flat_struct(ctx);
 
         return true;
     } else {
@@ -54006,22 +54188,27 @@ bool flecs_json_serialize_common_for_table(
     return result;
 }
 
+#define FLECS_JSON_FIELD_NONE   0
+#define FLECS_JSON_FIELD_SELF   1
+#define FLECS_JSON_FIELD_SHARED 2
+#define FLECS_JSON_FIELD_ROW    3
+
+typedef struct ecs_json_field_plan_t {
+    int8_t kind;
+    ecs_size_t size;
+    void *ptr;
+    const ecs_json_value_ser_ctx_t *value_ctx;
+} ecs_json_field_plan_t;
+
 static
-int flecs_json_serialize_iter_result_field_values(
-    const ecs_world_t *world, 
-    const ecs_iter_t *it, 
-    int32_t i,
-    ecs_strbuf_t *buf,
+void flecs_json_iter_result_field_plan(
+    const ecs_world_t *world,
+    const ecs_iter_t *it,
     const ecs_iter_to_json_desc_t *desc,
-    ecs_json_ser_ctx_t *ser_ctx)
+    ecs_json_ser_ctx_t *ser_ctx,
+    ecs_json_field_plan_t *field_plan)
 {
     int8_t f, field_count = it->field_count;
-    if (!field_count) {
-        return 0;
-    }
-
-    ecs_strbuf_appendlit(buf, "\"values\":");
-    flecs_json_array_push(buf);
 
     ecs_termset_t fields = it->set_fields;
     if (it->query) {
@@ -54031,9 +54218,11 @@ int flecs_json_serialize_iter_result_field_values(
     ecs_termset_t row_fields = it->query ? it->query->row_fields : 0;
 
     for (f = 0; f < field_count; f ++) {
+        ecs_json_field_plan_t *fp = &field_plan[f];
+        fp->kind = FLECS_JSON_FIELD_NONE;
+
         ecs_termset_t field_bit = (ecs_termset_t)(1u << f);
         if (!(fields & field_bit)) {
-            ecs_strbuf_list_appendlit(buf, "0");
             continue;
         }
 
@@ -54044,29 +54233,60 @@ int flecs_json_serialize_iter_result_field_values(
         flecs_json_accum_type_info(world, value_ctx->type, ser_ctx);
 
         if (!has_ser) {
+            continue;
+        }
+
+        fp->size = it->sizes[f];
+        fp->value_ctx = value_ctx;
+
+        if (row_fields & field_bit) {
+            fp->kind = FLECS_JSON_FIELD_ROW;
+        } else {
+            fp->ptr = ecs_field_w_size(it, flecs_itosize(fp->size), f);
+            if (!fp->ptr) {
+                continue;
+            }
+
+            fp->kind = it->sources[f] ?
+                FLECS_JSON_FIELD_SHARED : FLECS_JSON_FIELD_SELF;
+        }
+    }
+}
+
+static
+int flecs_json_serialize_iter_result_field_values(
+    const ecs_world_t *world,
+    const ecs_iter_t *it,
+    int32_t i,
+    ecs_strbuf_t *buf,
+    const ecs_json_field_plan_t *field_plan)
+{
+    int8_t f, field_count = it->field_count;
+
+    ecs_strbuf_appendlit(buf, "\"values\":");
+    flecs_json_array_push(buf);
+
+    for (f = 0; f < field_count; f ++) {
+        const ecs_json_field_plan_t *fp = &field_plan[f];
+        void *ptr;
+
+        switch(fp->kind) {
+        case FLECS_JSON_FIELD_SELF:
+            ptr = ECS_ELEM(fp->ptr, fp->size, i);
+            break;
+        case FLECS_JSON_FIELD_SHARED:
+            ptr = fp->ptr;
+            break;
+        case FLECS_JSON_FIELD_ROW:
+            ptr = ecs_field_at_w_size(it, flecs_itosize(fp->size), f, i);
+            break;
+        default:
             ecs_strbuf_list_appendlit(buf, "0");
             continue;
         }
 
-        void *ptr;
-        if (row_fields & field_bit) {
-            ptr = ecs_field_at_w_size(it, flecs_itosize(it->sizes[f]), f, i);
-        } else {
-            ecs_size_t size = it->sizes[f];
-            ptr = ecs_field_w_size(it, flecs_itosize(size), f);
-
-            if (!ptr) {
-                ecs_strbuf_list_appendlit(buf, "0");
-                continue;
-            }
-
-            if (!it->sources[f]) {
-                ptr = ECS_ELEM(ptr, size, i);
-            }
-        }
-
         flecs_json_next(buf);
-        if (flecs_json_ser_type(world, &value_ctx->ser->ops, ptr, buf) != 0) {
+        if (flecs_json_ser_value_ctx(world, fp->value_ctx, ptr, buf) != 0) {
             return -1;
         }
     }
@@ -54099,6 +54319,22 @@ int flecs_json_serialize_iter_result_query(
         common_data = ecs_strbuf_get(&common_data_buf);
     }
 
+    bool serialize_fields = !desc || desc->serialize_fields;
+    bool has_values = !desc || desc->serialize_values;
+    if (it->flags & EcsIterNoData || !it->field_count) {
+        has_values = false;
+    }
+
+    const ecs_query_t *q = it->query;
+    if (q && !q->data_fields) {
+        has_values = false;
+    }
+
+    ecs_json_field_plan_t field_plan[FLECS_TERM_COUNT_MAX];
+    if (serialize_fields && has_values) {
+        flecs_json_iter_result_field_plan(world, it, desc, ser_ctx, field_plan);
+    }
+
     int32_t i;
     for (i = 0; i < count; i ++) {
         if (has_this) {
@@ -54113,35 +54349,25 @@ int flecs_json_serialize_iter_result_query(
         }
 
         if (common_data) {
-            ecs_strbuf_list_appendstrn(buf, 
+            ecs_strbuf_list_appendstrn(buf,
                 common_data, common_data_len);
         }
 
-        if (!desc || desc->serialize_fields) {
-            bool has_values = !desc || desc->serialize_values;
-            if (it->flags & EcsIterNoData || !it->field_count) {
-                has_values = false;
-            }
-
-            const ecs_query_t *q = it->query;
-            if (q && !q->data_fields) {
-                has_values = false;
-            }
-
+        if (serialize_fields) {
             if (has_values) {
                 if (common_field_data) {
                     flecs_json_next(buf);
                 }
 
                 if (flecs_json_serialize_iter_result_field_values(
-                    world, it, i, buf, desc, ser_ctx))
+                    world, it, i, buf, field_plan))
                 {
                     ecs_os_free(common_data);
                     return -1;
                 }
             }
 
-            ecs_strbuf_appendstr(buf, "}"); /* end "fields" */
+            ecs_strbuf_appendch(buf, '}'); /* end "fields" */
         }
 
         flecs_json_object_pop(buf);
@@ -54684,7 +54910,7 @@ typedef struct ecs_json_table_column_t {
     void *base;
     ecs_component_record_t *cr;
     const ecs_type_info_t *ti;
-    const ecs_vec_t *ops;
+    const ecs_json_value_ser_ctx_t *value_ctx;
     const char *label;
     int32_t label_len;
 } ecs_json_table_column_t;
@@ -54740,8 +54966,8 @@ int32_t flecs_json_table_components_plan(
         col->base = base;
         col->cr = cr;
         col->ti = ti;
-        col->ops = (has_ser && desc->serialize_values) ?
-            &value_ctx->ser->ops : NULL;
+        col->value_ctx = (has_ser && desc->serialize_values) ?
+            value_ctx : NULL;
         col->label = value_ctx->id_label;
         col->label_len = ecs_os_strlen(value_ctx->id_label);
         col_count ++;
@@ -54868,8 +55094,10 @@ int flecs_json_serialize_iter_result_table(
                 flecs_json_membern(buf, col->label, col->label_len);
                 component_count ++;
 
-                if (col->ops) {
-                    if (flecs_json_ser_type(world, col->ops, ptr, buf) != 0) {
+                if (col->value_ctx) {
+                    if (flecs_json_ser_value_ctx(
+                        world, col->value_ctx, ptr, buf) != 0)
+                    {
                         result = -1;
                         break;
                     }
@@ -54916,7 +55144,7 @@ int flecs_json_serialize_iter_result_table(
     ecs_os_free(common_data);
 
     for (i = 0; i < FLECS_JSON_MAX_TABLE_COMPONENTS; i ++) {
-        ecs_os_free(values_ctx[i].id_label);
+        flecs_json_value_ser_ctx_fini(&values_ctx[i]);
     }
 
     return result;
