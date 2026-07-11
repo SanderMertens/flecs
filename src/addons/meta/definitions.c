@@ -162,7 +162,9 @@ void flecs_meta_import_meta_definitions(
             { .name = "StructType" },
             { .name = "ArrayType" },
             { .name = "VectorType" },
-            { .name = "OpaqueType" }
+            { .name = "OpaqueType" },
+            { .name = "MapType" },
+            { .name = "ValueType" }
         }
     });
 

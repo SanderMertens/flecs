@@ -201,8 +201,8 @@ ecs_entity_t ecs_const_var_init(
     v->value.ptr = ecs_os_malloc(ti->size);
     v->value.type = desc->type;
     v->type_info = ti;
-    ecs_value_init(world, desc->type, v->value.ptr);
-    ecs_value_copy(world, desc->type, v->value.ptr, desc->value);
+    ecs_ptr_init(world, desc->type, v->value.ptr);
+    ecs_ptr_copy(world, desc->type, v->value.ptr, desc->value);
     ecs_modified(world, result, EcsScriptConstVar);
 
     return result;

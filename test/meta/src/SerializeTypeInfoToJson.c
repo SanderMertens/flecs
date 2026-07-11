@@ -762,3 +762,21 @@ void SerializeTypeInfoToJson_map_bitmask_key_type(void) {
 
     ecs_fini(world);
 }
+
+void SerializeTypeInfoToJson_struct_value(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .members = {
+            { "v", ecs_id(ecs_value_t) }
+        }
+    });
+
+    char *json = ecs_type_info_to_json(world, t);
+    test_assert(json != NULL);
+    test_str(json, "{\"v\":[\"value\"]}");
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}

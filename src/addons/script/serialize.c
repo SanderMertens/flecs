@@ -28,6 +28,14 @@ int flecs_expr_ser_type_ops(
     bool is_expr);
 
 static
+int flecs_expr_ser_forward(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    const void *base,
+    ecs_strbuf_t *str,
+    bool is_expr);
+
+static
 ecs_primitive_kind_t flecs_expr_op_to_primitive_kind(ecs_meta_op_kind_t kind) {
     return kind - EcsOpPrimitive;
 }
@@ -138,6 +146,40 @@ int flecs_expr_ser_map(
     return 0;
 error:
     return -1;
+}
+
+static
+int flecs_expr_ser_value(
+    const ecs_world_t *world,
+    const void *base,
+    ecs_strbuf_t *str,
+    bool is_expr)
+{
+    const ecs_value_t *value = base;
+
+    if (!value->type || !value->ptr) {
+        ecs_assert(false, ECS_INVALID_PARAMETER,
+            "cannot serialize value without value");
+        ecs_err("cannot serialize value without value");
+        return -1;
+    }
+
+    ecs_strbuf_list_push(str, "{", ", ");
+    ecs_strbuf_list_next(str);
+
+    if (flecs_meta_value_type_str(world, value->type, str)) {
+        return -1;
+    }
+
+    ecs_strbuf_appendlit(str, ": ");
+
+    if (flecs_expr_ser_forward(world, value->type, value->ptr, str, is_expr)) {
+        return -1;
+    }
+
+    ecs_strbuf_list_pop(str, "}");
+
+    return 0;
 }
 
 static
@@ -296,6 +338,12 @@ int flecs_expr_ser_type_ops(
         }
         case EcsOpPushMap: {
             if (flecs_expr_ser_map(world, op, ptr, str, is_expr)) {
+                goto error;
+            }
+            break;
+        }
+        case EcsOpPushValue: {
+            if (flecs_expr_ser_value(world, ptr, str, is_expr)) {
                 goto error;
             }
             break;

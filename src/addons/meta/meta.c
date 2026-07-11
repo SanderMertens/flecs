@@ -66,6 +66,7 @@ const char* flecs_type_kind_str(
     case EcsArrayType: return "Array";
     case EcsVectorType: return "Vector";
     case EcsMapType: return "Map";
+    case EcsValueType: return "Value";
     case EcsOpaqueType: return "Opaque";
     default: return "unknown";
     }
@@ -304,6 +305,7 @@ void FlecsMetaImport(
     flecs_meta_struct_init(world);
     flecs_meta_array_init(world);
     flecs_meta_map_init(world);
+    flecs_meta_value_init(world);
     flecs_meta_opaque_init(world);
     flecs_meta_units_init(world);
 

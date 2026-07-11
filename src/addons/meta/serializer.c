@@ -318,6 +318,36 @@ int flecs_meta_serialize_map_type(
 }
 
 static
+int flecs_meta_serialize_value_type(
+    ecs_world_t *world,
+    ecs_entity_t type,
+    ecs_vec_t *ops)
+{
+    int32_t first = ecs_vec_count(ops);
+
+    {
+        ecs_meta_op_t *op = flecs_meta_ops_add(ops, EcsOpPushValue);
+        op->offset = 0;
+        op->type = type;
+        op->type_info = ecs_get_type_info(world, type);
+        ecs_assert(op->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
+    }
+
+    {
+        ecs_meta_op_t *op = flecs_meta_ops_add(ops, EcsOpPop);
+        op->offset = 0;
+        op->type = type;
+        op->type_info = ecs_get_type_info(world, type);
+        ecs_assert(op->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
+    }
+
+    flecs_meta_ops_get(ops, first)->op_count =
+        flecs_ito(int16_t, ecs_vec_count(ops) - first);
+
+    return 0;
+}
+
+static
 int flecs_meta_serialize_forward(
     ecs_world_t *world,
     ecs_entity_t type,
@@ -473,6 +503,9 @@ int flecs_meta_serialize_type(
     case EcsMapType:
         ret = flecs_meta_serialize_forward(world, type, offset, ops);
         break;
+    case EcsValueType:
+        ret = flecs_meta_serialize_forward(world, type, offset, ops);
+        break;
     case EcsOpaqueType:
         ret = flecs_meta_serialize_opaque_type(world, type, offset, ops);
         break;
@@ -507,6 +540,8 @@ void flecs_meta_type_serializer_init(
             ret = flecs_meta_serialize_vector_type(world, type, &ops);
         } else if (type_ptr->kind == EcsMapType) {
             ret = flecs_meta_serialize_map_type(world, type, &ops);
+        } else if (type_ptr->kind == EcsValueType) {
+            ret = flecs_meta_serialize_value_type(world, type, &ops);
         } else {
             ret = flecs_meta_serialize_type(world, type, 0, &ops);
         }

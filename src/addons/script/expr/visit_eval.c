@@ -164,13 +164,13 @@ int flecs_expr_initializer_eval_static(
 
         if (!elem->operator) {
             if (expr->owned) {
-                if (ecs_value_move(ctx->world, type, 
+                if (ecs_ptr_move(ctx->world, type, 
                     ECS_OFFSET(value, elem->offset), expr->value.ptr))
                 {
                     goto error;
                 }
             } else {
-                if (ecs_value_copy(ctx->world, type, 
+                if (ecs_ptr_copy(ctx->world, type, 
                     ECS_OFFSET(value, elem->offset), expr->value.ptr))
                 {
                     goto error;
@@ -1311,7 +1311,7 @@ int flecs_expr_visit_eval(
     }
 
     if (out->type && !out->ptr) {
-        out->ptr = ecs_value_new(ctx.world, out->type);
+        out->ptr = ecs_ptr_new(ctx.world, out->type);
     }
 
     if (val != &val_tmp || out->ptr != val->value.ptr) {

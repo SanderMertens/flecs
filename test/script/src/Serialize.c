@@ -2667,3 +2667,165 @@ void Serialize_map_bitmask_i32(void) {
 
     ecs_fini(world);
 }
+
+void Serialize_value_i64(void) {
+    ecs_world_t *world = ecs_init();
+
+    int64_t value = 10;
+    ecs_value_t v = ecs_value_init(world, ecs_id(ecs_i64_t), &value);
+
+    char *expr = ecs_ptr_to_expr(world, ecs_id(ecs_value_t), &v);
+    test_assert(expr != NULL);
+    test_str(expr, "{i64: 10}");
+    ecs_os_free(expr);
+
+    ecs_value_fini(world, &v);
+
+    ecs_fini(world);
+}
+
+void Serialize_value_u16(void) {
+    ecs_world_t *world = ecs_init();
+
+    uint16_t value = 10;
+    ecs_value_t v = ecs_value_init(world, ecs_id(ecs_u16_t), &value);
+
+    char *expr = ecs_ptr_to_expr(world, ecs_id(ecs_value_t), &v);
+    test_assert(expr != NULL);
+    test_str(expr, "{u16: 10}");
+    ecs_os_free(expr);
+
+    ecs_value_fini(world, &v);
+
+    ecs_fini(world);
+}
+
+void Serialize_value_f64(void) {
+    ecs_world_t *world = ecs_init();
+
+    double value = 10.5;
+    ecs_value_t v = ecs_value_init(world, ecs_id(ecs_f64_t), &value);
+
+    char *expr = ecs_ptr_to_expr(world, ecs_id(ecs_value_t), &v);
+    test_assert(expr != NULL);
+    test_str(expr, "{f64: 10.5}");
+    ecs_os_free(expr);
+
+    ecs_value_fini(world, &v);
+
+    ecs_fini(world);
+}
+
+void Serialize_value_string(void) {
+    ecs_world_t *world = ecs_init();
+
+    char *value = "Hello World";
+    ecs_value_t v = ecs_value_init(world, ecs_id(ecs_string_t), &value);
+
+    char *expr = ecs_ptr_to_expr(world, ecs_id(ecs_value_t), &v);
+    test_assert(expr != NULL);
+    test_str(expr, "{string: \"Hello World\"}");
+    ecs_os_free(expr);
+
+    ecs_value_fini(world, &v);
+
+    ecs_fini(world);
+}
+
+void Serialize_value_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t value = EcsFlecsCore;
+    ecs_value_t v = ecs_value_init(world, ecs_id(ecs_entity_t), &value);
+
+    char *expr = ecs_ptr_to_expr(world, ecs_id(ecs_value_t), &v);
+    test_assert(expr != NULL);
+    test_str(expr, "{entity: flecs.core}");
+    ecs_os_free(expr);
+
+    ecs_value_fini(world, &v);
+
+    ecs_fini(world);
+}
+
+void Serialize_value_struct(void) {
+    typedef struct {
+        int32_t x;
+        int32_t y;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .members = {
+            { "x", ecs_id(ecs_i32_t) },
+            { "y", ecs_id(ecs_i32_t) }
+        }
+    });
+
+    T value = {10, 20};
+    ecs_value_t v = ecs_value_init(world, t, &value);
+
+    char *expr = ecs_ptr_to_expr(world, ecs_id(ecs_value_t), &v);
+    test_assert(expr != NULL);
+    test_str(expr, "{T: {x: 10, y: 20}}");
+    ecs_os_free(expr);
+
+    ecs_value_fini(world, &v);
+
+    ecs_fini(world);
+}
+
+void Serialize_struct_w_value(void) {
+    typedef struct {
+        ecs_value_t v;
+    } S;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(S) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "S" }),
+        .members = {
+            { "v", ecs_id(ecs_value_t) }
+        }
+    });
+
+    int32_t i = 10;
+    S value = { .v = ecs_value_init(world, ecs_id(ecs_i32_t), &i) };
+
+    char *expr = ecs_ptr_to_expr(world, ecs_id(S), &value);
+    test_assert(expr != NULL);
+    test_str(expr, "{v: {i32: 10}}");
+    ecs_os_free(expr);
+
+    ecs_value_fini(world, &value.v);
+
+    ecs_fini(world);
+}
+
+void Serialize_value_roundtrip(void) {
+    ecs_world_t *world = ecs_init();
+
+    uint16_t value = 10;
+    ecs_value_t v = ecs_value_init(world, ecs_id(ecs_u16_t), &value);
+
+    char *expr = ecs_ptr_to_expr(world, ecs_id(ecs_value_t), &v);
+    test_assert(expr != NULL);
+
+    ecs_value_t v2 = {0};
+    const char *ptr = ecs_expr_run(world, expr,
+        &ecs_value_ptr(ecs_value_t, &v2), NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+    ecs_os_free(expr);
+
+    test_uint(v2.type, ecs_id(ecs_u16_t));
+    test_assert(v2.ptr != NULL);
+    test_uint(*(uint16_t*)v2.ptr, 10);
+
+    ecs_value_fini(world, &v);
+    ecs_value_fini(world, &v2);
+
+    ecs_fini(world);
+}

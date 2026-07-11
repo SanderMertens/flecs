@@ -570,6 +570,67 @@ void Cursor_map_key_i64_nested_struct(void);
 void Cursor_map_key_i64_array_i32(void);
 void Cursor_map_key_i64_vector_i32(void);
 void Cursor_map_key_i64_map_i32(void);
+void Cursor_value_bool(void);
+void Cursor_value_char(void);
+void Cursor_value_u8(void);
+void Cursor_value_u16(void);
+void Cursor_value_u32(void);
+void Cursor_value_u64(void);
+void Cursor_value_i8(void);
+void Cursor_value_i16(void);
+void Cursor_value_i32(void);
+void Cursor_value_i64(void);
+void Cursor_value_f32(void);
+void Cursor_value_f64(void);
+void Cursor_value_string(void);
+void Cursor_value_entity(void);
+void Cursor_value_id(void);
+void Cursor_value_default_bool(void);
+void Cursor_value_default_char(void);
+void Cursor_value_default_int(void);
+void Cursor_value_default_uint(void);
+void Cursor_value_default_float(void);
+void Cursor_value_default_string(void);
+void Cursor_value_default_entity(void);
+void Cursor_value_default_id(void);
+void Cursor_value_default_int_no_push(void);
+void Cursor_value_enum(void);
+void Cursor_value_bitmask(void);
+void Cursor_value_struct(void);
+void Cursor_value_array_i32(void);
+void Cursor_value_vector_i32(void);
+void Cursor_value_map_i64_i32(void);
+void Cursor_value_assign_same_type(void);
+void Cursor_value_assign_same_type_string(void);
+void Cursor_value_assign_different_type(void);
+void Cursor_value_assign_string_to_int(void);
+void Cursor_value_assign_int_to_string(void);
+void Cursor_value_assign_struct_to_int(void);
+void Cursor_value_assign_int_to_struct(void);
+void Cursor_value_assign_string_to_struct_w_string(void);
+void Cursor_value_set_value(void);
+void Cursor_value_set_value_overwrite(void);
+void Cursor_value_set_value_w_value_value(void);
+void Cursor_value_unwrap_to_i32(void);
+void Cursor_struct_w_value(void);
+void Cursor_struct_w_value_set_value(void);
+void Cursor_value_get_type(void);
+void Cursor_value_invalid_type_name(void);
+void Cursor_value_w_value_type_name(void);
+void Cursor_value_set_null(void);
+void Cursor_value_api_new(void);
+void Cursor_value_api_init(void);
+void Cursor_value_api_init_string(void);
+void Cursor_value_api_set(void);
+void Cursor_value_api_set_same_type(void);
+void Cursor_value_api_set_different_type(void);
+void Cursor_value_api_set_string_same_type(void);
+void Cursor_value_api_copy(void);
+void Cursor_value_api_copy_different_type(void);
+void Cursor_value_api_copy_ctor(void);
+void Cursor_value_api_move(void);
+void Cursor_value_api_move_ctor(void);
+void Cursor_value_component_lifecycle(void);
 
 // Testsuite 'DeserializeFromJson'
 void DeserializeFromJson_string_w_unknown_escape_large(void);
@@ -756,6 +817,23 @@ void DeserializeFromJson_map_id_pair_i32(void);
 void DeserializeFromJson_map_i64_enum_underlying_i8(void);
 void DeserializeFromJson_map_i64_enum_underlying_i16(void);
 void DeserializeFromJson_map_i64_enum_underlying_i32(void);
+void DeserializeFromJson_value_bool(void);
+void DeserializeFromJson_value_u16(void);
+void DeserializeFromJson_value_i64(void);
+void DeserializeFromJson_value_f64(void);
+void DeserializeFromJson_value_string(void);
+void DeserializeFromJson_value_entity(void);
+void DeserializeFromJson_value_enum(void);
+void DeserializeFromJson_value_bitmask(void);
+void DeserializeFromJson_value_struct(void);
+void DeserializeFromJson_value_array(void);
+void DeserializeFromJson_value_vector(void);
+void DeserializeFromJson_value_map(void);
+void DeserializeFromJson_value_assign_same_type(void);
+void DeserializeFromJson_value_assign_different_type(void);
+void DeserializeFromJson_struct_w_value(void);
+void DeserializeFromJson_value_unknown_type(void);
+void DeserializeFromJson_value_unknown_type_strict(void);
 
 // Testsuite 'SerializeToJson'
 void SerializeToJson_struct_string_w_control_char(void);
@@ -836,6 +914,19 @@ void SerializeToJson_map_id_pair_i32(void);
 void SerializeToJson_map_i64_enum_underlying_i8(void);
 void SerializeToJson_map_i64_enum_underlying_i16(void);
 void SerializeToJson_map_i64_enum_underlying_i32(void);
+void SerializeToJson_value_bool(void);
+void SerializeToJson_value_u16(void);
+void SerializeToJson_value_i64(void);
+void SerializeToJson_value_f64(void);
+void SerializeToJson_value_string(void);
+void SerializeToJson_value_entity(void);
+void SerializeToJson_value_enum(void);
+void SerializeToJson_value_struct(void);
+void SerializeToJson_value_array(void);
+void SerializeToJson_value_vector(void);
+void SerializeToJson_value_map(void);
+void SerializeToJson_struct_w_value(void);
+void SerializeToJson_value_roundtrip(void);
 
 // Testsuite 'SerializeEntityToJson'
 void SerializeEntityToJson_serialize_empty(void);
@@ -1136,6 +1227,7 @@ void SerializeTypeInfoToJson_map_type(void);
 void SerializeTypeInfoToJson_struct_map_type(void);
 void SerializeTypeInfoToJson_map_enum_key_type(void);
 void SerializeTypeInfoToJson_map_bitmask_key_type(void);
+void SerializeTypeInfoToJson_struct_value(void);
 
 // Testsuite 'SerializeQueryInfoToJson'
 void SerializeQueryInfoToJson_1_tag(void);
@@ -1194,6 +1286,7 @@ void MetaUtils_struct_has_member_entities(void);
 void MetaUtils_fwd_decl(void);
 void MetaUtils_struct_w_vec(void);
 void MetaUtils_struct_w_map(void);
+void MetaUtils_struct_w_value(void);
 
 // Testsuite 'OpaqueTypes'
 void OpaqueTypes_ser_i32_type_to_json(void);
@@ -3513,6 +3606,250 @@ bake_test_case Cursor_testcases[] = {
     {
         "map_key_i64_map_i32",
         Cursor_map_key_i64_map_i32
+    },
+    {
+        "value_bool",
+        Cursor_value_bool
+    },
+    {
+        "value_char",
+        Cursor_value_char
+    },
+    {
+        "value_u8",
+        Cursor_value_u8
+    },
+    {
+        "value_u16",
+        Cursor_value_u16
+    },
+    {
+        "value_u32",
+        Cursor_value_u32
+    },
+    {
+        "value_u64",
+        Cursor_value_u64
+    },
+    {
+        "value_i8",
+        Cursor_value_i8
+    },
+    {
+        "value_i16",
+        Cursor_value_i16
+    },
+    {
+        "value_i32",
+        Cursor_value_i32
+    },
+    {
+        "value_i64",
+        Cursor_value_i64
+    },
+    {
+        "value_f32",
+        Cursor_value_f32
+    },
+    {
+        "value_f64",
+        Cursor_value_f64
+    },
+    {
+        "value_string",
+        Cursor_value_string
+    },
+    {
+        "value_entity",
+        Cursor_value_entity
+    },
+    {
+        "value_id",
+        Cursor_value_id
+    },
+    {
+        "value_default_bool",
+        Cursor_value_default_bool
+    },
+    {
+        "value_default_char",
+        Cursor_value_default_char
+    },
+    {
+        "value_default_int",
+        Cursor_value_default_int
+    },
+    {
+        "value_default_uint",
+        Cursor_value_default_uint
+    },
+    {
+        "value_default_float",
+        Cursor_value_default_float
+    },
+    {
+        "value_default_string",
+        Cursor_value_default_string
+    },
+    {
+        "value_default_entity",
+        Cursor_value_default_entity
+    },
+    {
+        "value_default_id",
+        Cursor_value_default_id
+    },
+    {
+        "value_default_int_no_push",
+        Cursor_value_default_int_no_push
+    },
+    {
+        "value_enum",
+        Cursor_value_enum
+    },
+    {
+        "value_bitmask",
+        Cursor_value_bitmask
+    },
+    {
+        "value_struct",
+        Cursor_value_struct
+    },
+    {
+        "value_array_i32",
+        Cursor_value_array_i32
+    },
+    {
+        "value_vector_i32",
+        Cursor_value_vector_i32
+    },
+    {
+        "value_map_i64_i32",
+        Cursor_value_map_i64_i32
+    },
+    {
+        "value_assign_same_type",
+        Cursor_value_assign_same_type
+    },
+    {
+        "value_assign_same_type_string",
+        Cursor_value_assign_same_type_string
+    },
+    {
+        "value_assign_different_type",
+        Cursor_value_assign_different_type
+    },
+    {
+        "value_assign_string_to_int",
+        Cursor_value_assign_string_to_int
+    },
+    {
+        "value_assign_int_to_string",
+        Cursor_value_assign_int_to_string
+    },
+    {
+        "value_assign_struct_to_int",
+        Cursor_value_assign_struct_to_int
+    },
+    {
+        "value_assign_int_to_struct",
+        Cursor_value_assign_int_to_struct
+    },
+    {
+        "value_assign_string_to_struct_w_string",
+        Cursor_value_assign_string_to_struct_w_string
+    },
+    {
+        "value_set_value",
+        Cursor_value_set_value
+    },
+    {
+        "value_set_value_overwrite",
+        Cursor_value_set_value_overwrite
+    },
+    {
+        "value_set_value_w_value_value",
+        Cursor_value_set_value_w_value_value
+    },
+    {
+        "value_unwrap_to_i32",
+        Cursor_value_unwrap_to_i32
+    },
+    {
+        "struct_w_value",
+        Cursor_struct_w_value
+    },
+    {
+        "struct_w_value_set_value",
+        Cursor_struct_w_value_set_value
+    },
+    {
+        "value_get_type",
+        Cursor_value_get_type
+    },
+    {
+        "value_invalid_type_name",
+        Cursor_value_invalid_type_name
+    },
+    {
+        "value_w_value_type_name",
+        Cursor_value_w_value_type_name
+    },
+    {
+        "value_set_null",
+        Cursor_value_set_null
+    },
+    {
+        "value_api_new",
+        Cursor_value_api_new
+    },
+    {
+        "value_api_init",
+        Cursor_value_api_init
+    },
+    {
+        "value_api_init_string",
+        Cursor_value_api_init_string
+    },
+    {
+        "value_api_set",
+        Cursor_value_api_set
+    },
+    {
+        "value_api_set_same_type",
+        Cursor_value_api_set_same_type
+    },
+    {
+        "value_api_set_different_type",
+        Cursor_value_api_set_different_type
+    },
+    {
+        "value_api_set_string_same_type",
+        Cursor_value_api_set_string_same_type
+    },
+    {
+        "value_api_copy",
+        Cursor_value_api_copy
+    },
+    {
+        "value_api_copy_different_type",
+        Cursor_value_api_copy_different_type
+    },
+    {
+        "value_api_copy_ctor",
+        Cursor_value_api_copy_ctor
+    },
+    {
+        "value_api_move",
+        Cursor_value_api_move
+    },
+    {
+        "value_api_move_ctor",
+        Cursor_value_api_move_ctor
+    },
+    {
+        "value_component_lifecycle",
+        Cursor_value_component_lifecycle
     }
 };
 
@@ -4252,6 +4589,74 @@ bake_test_case DeserializeFromJson_testcases[] = {
     {
         "map_i64_enum_underlying_i32",
         DeserializeFromJson_map_i64_enum_underlying_i32
+    },
+    {
+        "value_bool",
+        DeserializeFromJson_value_bool
+    },
+    {
+        "value_u16",
+        DeserializeFromJson_value_u16
+    },
+    {
+        "value_i64",
+        DeserializeFromJson_value_i64
+    },
+    {
+        "value_f64",
+        DeserializeFromJson_value_f64
+    },
+    {
+        "value_string",
+        DeserializeFromJson_value_string
+    },
+    {
+        "value_entity",
+        DeserializeFromJson_value_entity
+    },
+    {
+        "value_enum",
+        DeserializeFromJson_value_enum
+    },
+    {
+        "value_bitmask",
+        DeserializeFromJson_value_bitmask
+    },
+    {
+        "value_struct",
+        DeserializeFromJson_value_struct
+    },
+    {
+        "value_array",
+        DeserializeFromJson_value_array
+    },
+    {
+        "value_vector",
+        DeserializeFromJson_value_vector
+    },
+    {
+        "value_map",
+        DeserializeFromJson_value_map
+    },
+    {
+        "value_assign_same_type",
+        DeserializeFromJson_value_assign_same_type
+    },
+    {
+        "value_assign_different_type",
+        DeserializeFromJson_value_assign_different_type
+    },
+    {
+        "struct_w_value",
+        DeserializeFromJson_struct_w_value
+    },
+    {
+        "value_unknown_type",
+        DeserializeFromJson_value_unknown_type
+    },
+    {
+        "value_unknown_type_strict",
+        DeserializeFromJson_value_unknown_type_strict
     }
 };
 
@@ -4567,6 +4972,58 @@ bake_test_case SerializeToJson_testcases[] = {
     {
         "map_i64_enum_underlying_i32",
         SerializeToJson_map_i64_enum_underlying_i32
+    },
+    {
+        "value_bool",
+        SerializeToJson_value_bool
+    },
+    {
+        "value_u16",
+        SerializeToJson_value_u16
+    },
+    {
+        "value_i64",
+        SerializeToJson_value_i64
+    },
+    {
+        "value_f64",
+        SerializeToJson_value_f64
+    },
+    {
+        "value_string",
+        SerializeToJson_value_string
+    },
+    {
+        "value_entity",
+        SerializeToJson_value_entity
+    },
+    {
+        "value_enum",
+        SerializeToJson_value_enum
+    },
+    {
+        "value_struct",
+        SerializeToJson_value_struct
+    },
+    {
+        "value_array",
+        SerializeToJson_value_array
+    },
+    {
+        "value_vector",
+        SerializeToJson_value_vector
+    },
+    {
+        "value_map",
+        SerializeToJson_value_map
+    },
+    {
+        "struct_w_value",
+        SerializeToJson_struct_w_value
+    },
+    {
+        "value_roundtrip",
+        SerializeToJson_value_roundtrip
     }
 };
 
@@ -5747,6 +6204,10 @@ bake_test_case SerializeTypeInfoToJson_testcases[] = {
     {
         "map_bitmask_key_type",
         SerializeTypeInfoToJson_map_bitmask_key_type
+    },
+    {
+        "struct_value",
+        SerializeTypeInfoToJson_struct_value
     }
 };
 
@@ -5969,6 +6430,10 @@ bake_test_case MetaUtils_testcases[] = {
     {
         "struct_w_map",
         MetaUtils_struct_w_map
+    },
+    {
+        "struct_w_value",
+        MetaUtils_struct_w_value
     }
 };
 
@@ -6550,21 +7015,21 @@ static bake_test_suite suites[] = {
         "Cursor",
         NULL,
         NULL,
-        211,
+        272,
         Cursor_testcases
     },
     {
         "DeserializeFromJson",
         NULL,
         NULL,
-        184,
+        201,
         DeserializeFromJson_testcases
     },
     {
         "SerializeToJson",
         NULL,
         NULL,
-        78,
+        91,
         SerializeToJson_testcases
     },
     {
@@ -6592,7 +7057,7 @@ static bake_test_suite suites[] = {
         "SerializeTypeInfoToJson",
         NULL,
         NULL,
-        44,
+        45,
         SerializeTypeInfoToJson_testcases
     },
     {
@@ -6606,7 +7071,7 @@ static bake_test_suite suites[] = {
         "MetaUtils",
         NULL,
         NULL,
-        27,
+        28,
         MetaUtils_testcases
     },
     {

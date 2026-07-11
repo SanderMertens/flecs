@@ -622,7 +622,7 @@ typedef struct ecs_expr_eval_desc_t {
  * expression, the expression will be cast to the value.
  *
  * If the provided value for value.ptr is NULL, the value must be freed with 
- * ecs_value_free() afterwards.
+ * ecs_ptr_free() afterwards.
  *
  * @param world The world.
  * @param ptr The pointer to the expression to parse.
@@ -659,7 +659,7 @@ ecs_script_t* ecs_expr_parse(
  * cast to the value.
  * 
  * If the provided value for value.ptr is NULL, the value must be freed with 
- * ecs_value_free() afterwards.
+ * ecs_ptr_free() afterwards.
  * 
  * @param script The script containing the expression.
  * @param value The value in which to store the expression result.

@@ -146,7 +146,7 @@ int flecs_expr_cast_visit_fold(
         return 0;
     }
 
-    void *dst_ptr = ecs_value_new(script->world, dst_type);
+    void *dst_ptr = ecs_ptr_new(script->world, dst_type);
 
     ecs_meta_cursor_t cur = ecs_meta_cursor(script->world, dst_type, dst_ptr);
     ecs_value_t value = {
@@ -156,12 +156,12 @@ int flecs_expr_cast_visit_fold(
 
     if (ecs_meta_set_value(&cur, &value)) {
         flecs_expr_visit_error(script, node, "failed to assign value");
-        ecs_value_free(script->world, dst_type, dst_ptr);
+        ecs_ptr_free(script->world, dst_type, dst_ptr);
         goto error;
     }
 
     if (expr->ptr != &expr->storage) {
-        ecs_value_free(script->world, expr->node.type, expr->ptr);
+        ecs_ptr_free(script->world, expr->node.type, expr->ptr);
     }
 
     expr->node.type = dst_type;
@@ -224,7 +224,7 @@ int flecs_expr_interpolated_string_visit_fold(
             }
         }
 
-        char **value = ecs_value_new(script->world, ecs_id(ecs_string_t));
+        char **value = ecs_ptr_new(script->world, ecs_id(ecs_string_t));
         *value = ecs_strbuf_get(&buf);
 
         ecs_expr_value_node_t *result = flecs_expr_value_from(
@@ -332,7 +332,7 @@ int flecs_expr_initializer_post_fold(
             goto error;
         }
 
-        if (ecs_value_copy(script->world, type, 
+        if (ecs_ptr_copy(script->world, type, 
             ECS_OFFSET(value, elem->offset), elem_value->ptr)) 
         {
             goto error;
@@ -366,7 +366,7 @@ int flecs_expr_initializer_visit_fold(
     /* If all elements of initializer fold to literals, initializer itself can
      * be folded into a literal. */
     if (can_fold) {
-        value = ecs_value_new(script->world, node->node.type);
+        value = ecs_ptr_new(script->world, node->node.type);
         const ecs_type_info_t *type_info = ecs_get_type_info(
             script->world, node->node.type);
         ecs_assert(type_info != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -388,7 +388,7 @@ int flecs_expr_initializer_visit_fold(
     return 0;
 error:
     if (value) {
-        ecs_value_free(script->world, node->node.type, value);
+        ecs_ptr_free(script->world, node->node.type, value);
     }
     return -1;
 }
@@ -432,8 +432,8 @@ int flecs_expr_variable_visit_fold(
     if (var->is_const) {
         ecs_expr_value_node_t *result = flecs_expr_value_from(
             script, (ecs_expr_node_t*)node, type);
-        void *value = ecs_value_new(script->world, type);
-        ecs_value_copy(script->world, type, value, var->value.ptr);
+        void *value = ecs_ptr_new(script->world, type);
+        ecs_ptr_copy(script->world, type, value, var->value.ptr);
         result->ptr = value;
         flecs_visit_fold_replace(script, node_ptr, (ecs_expr_node_t*)result);
     }
@@ -461,8 +461,8 @@ int flecs_expr_global_variable_visit_fold(
 
     ecs_expr_value_node_t *result = flecs_expr_value_from(
         script, (ecs_expr_node_t*)node, type);
-    void *value = ecs_value_new(script->world, type);
-    ecs_value_copy(script->world, type, value, node->global_value.ptr);
+    void *value = ecs_ptr_new(script->world, type);
+    ecs_ptr_copy(script->world, type, value, node->global_value.ptr);
     result->ptr = value;
     flecs_visit_fold_replace(script, node_ptr, (ecs_expr_node_t*)result);
 

@@ -59,8 +59,10 @@ flecs_src = files(
     'src/addons/meta/cursor.c',
     'src/addons/meta/meta.c',
     'src/addons/meta/meta_utils.c',
+    'src/addons/meta/ptr.c',
     'src/addons/meta/rtt_lifecycle.c',
     'src/addons/meta/serializer.c',
+    'src/addons/meta/value.c',
     'src/addons/metrics.c',
     'src/addons/module.c',
     'src/addons/os_api_impl/os_api_impl.c',
@@ -161,7 +163,6 @@ flecs_src = files(
     'src/search.c',
     'src/tree_spawner.c',
     'src/type_info.c',
-    'src/value.c',
     'src/world.c',
 )
 

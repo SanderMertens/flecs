@@ -17150,3 +17150,161 @@ void Eval_map_component_element(void) {
 
     ecs_fini(world);
 }
+
+void Eval_struct_w_value_member(void) {
+    typedef struct {
+        ecs_value_t v;
+    } S;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(S) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "S" }),
+        .members = {
+            { "v", ecs_id(ecs_value_t) }
+        }
+    });
+
+    const char *expr =
+    HEAD "e {"
+    LINE "  S: {v: 10}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const S *s = ecs_get_id(world, e, ecs_id(S));
+    test_assert(s != NULL);
+    test_uint(s->v.type, ecs_id(ecs_i64_t));
+    test_assert(s->v.ptr != NULL);
+    test_int(*(int64_t*)s->v.ptr, 10);
+
+    ecs_fini(world);
+}
+
+void Eval_struct_w_value_member_w_type(void) {
+    typedef struct {
+        ecs_value_t v;
+    } S;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(S) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "S" }),
+        .members = {
+            { "v", ecs_id(ecs_value_t) }
+        }
+    });
+
+    const char *expr =
+    HEAD "e {"
+    LINE "  S: {v: {u16: 10}}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const S *s = ecs_get_id(world, e, ecs_id(S));
+    test_assert(s != NULL);
+    test_uint(s->v.type, ecs_id(ecs_u16_t));
+    test_assert(s->v.ptr != NULL);
+    test_uint(*(uint16_t*)s->v.ptr, 10);
+
+    ecs_fini(world);
+}
+
+void Eval_struct_w_value_member_reassign(void) {
+    typedef struct {
+        ecs_value_t v;
+    } S;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(S) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "S" }),
+        .members = {
+            { "v", ecs_id(ecs_value_t) }
+        }
+    });
+
+    test_assert(ecs_script_run(world, NULL,
+        "e { S: {v: \"Hello World\"} }", NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const S *s = ecs_get_id(world, e, ecs_id(S));
+    test_assert(s != NULL);
+    test_uint(s->v.type, ecs_id(ecs_string_t));
+    test_str(*(char**)s->v.ptr, "Hello World");
+
+    test_assert(ecs_script_run(world, NULL,
+        "e { S: {v: 10} }", NULL) == 0);
+
+    s = ecs_get_id(world, e, ecs_id(S));
+    test_assert(s != NULL);
+    test_uint(s->v.type, ecs_id(ecs_i64_t));
+    test_int(*(int64_t*)s->v.ptr, 10);
+
+    ecs_fini(world);
+}
+
+void Eval_value_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "e {"
+    LINE "  flecs.meta.value: {u32: 10}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const ecs_value_t *v = ecs_get_id(world, e, ecs_id(ecs_value_t));
+    test_assert(v != NULL);
+    test_uint(v->type, ecs_id(ecs_u32_t));
+    test_assert(v->ptr != NULL);
+    test_uint(*(uint32_t*)v->ptr, 10);
+
+    ecs_fini(world);
+}
+
+void Eval_value_const_var(void) {
+    typedef struct {
+        ecs_value_t v;
+    } S;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(S) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "S" }),
+        .members = {
+            { "v", ecs_id(ecs_value_t) }
+        }
+    });
+
+    const char *expr =
+    HEAD "const x = 10"
+    LINE "e {"
+    LINE "  S: {v: $x}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const S *s = ecs_get_id(world, e, ecs_id(S));
+    test_assert(s != NULL);
+    test_uint(s->v.type, ecs_id(ecs_i64_t));
+    test_assert(s->v.ptr != NULL);
+    test_int(*(int64_t*)s->v.ptr, 10);
+
+    ecs_fini(world);
+}

@@ -17,6 +17,13 @@ int flecs_json_ser_type_slice(
     ecs_strbuf_t *str);
 
 static
+int flecs_json_ser_forward(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    const void *base,
+    ecs_strbuf_t *str);
+
+static
 int flecs_json_ser_enum(
     const ecs_world_t *world,
     ecs_meta_op_t *op, 
@@ -198,6 +205,42 @@ int flecs_json_ser_map(
 }
 
 static
+int flecs_json_ser_value(
+    const ecs_world_t *world,
+    const void *base,
+    ecs_strbuf_t *str)
+{
+    const ecs_value_t *value = base;
+
+    if (!value->type || !value->ptr) {
+        ecs_assert(false, ECS_INVALID_PARAMETER, 
+            "cannot serialize value without value");
+        ecs_err("cannot serialize value without value");
+        return -1;
+    }
+
+    ecs_strbuf_t type_str = ECS_STRBUF_INIT;
+    if (flecs_meta_value_type_str(world, value->type, &type_str)) {
+        ecs_strbuf_reset(&type_str);
+        return -1;
+    }
+
+    flecs_json_object_push(str);
+
+    char *type_name = ecs_strbuf_get(&type_str);
+    flecs_json_member(str, type_name);
+    ecs_os_free(type_name);
+
+    if (flecs_json_ser_forward(world, value->type, value->ptr, str)) {
+        return -1;
+    }
+
+    flecs_json_object_pop(str);
+
+    return 0;
+}
+
+static
 int flecs_json_ser_forward(
     const ecs_world_t *world,
     ecs_entity_t type,
@@ -281,6 +324,14 @@ int flecs_json_ser_type_slice(
         }
         case EcsOpPushMap: {
             if (flecs_json_ser_map(world, op, ptr, str)) {
+                goto error;
+            }
+
+            i += op->op_count - 1;
+            break;
+        }
+        case EcsOpPushValue: {
+            if (flecs_json_ser_value(world, ptr, str)) {
                 goto error;
             }
 

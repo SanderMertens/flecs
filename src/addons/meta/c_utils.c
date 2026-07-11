@@ -909,6 +909,7 @@ int ecs_meta_from_desc(
     case EcsArrayType:
     case EcsVectorType:
     case EcsMapType:
+    case EcsValueType:
     case EcsOpaqueType:
         break;
     default:

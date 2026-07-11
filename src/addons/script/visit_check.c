@@ -261,6 +261,7 @@ int flecs_script_check_component(
             case EcsEnumType:
             case EcsStructType:
             case EcsOpaqueType:
+            case EcsValueType:
                 break;
             case EcsArrayType:
             case EcsVectorType:
