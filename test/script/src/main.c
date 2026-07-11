@@ -1675,6 +1675,15 @@ void Refs_prop_ref_in_template_function_in_new_expr(void);
 void Refs_prop_ref_in_template_assigned_to_component(void);
 void Refs_template_prop_ref_observer_lifecycle(void);
 void Refs_template_prop_ref_retarget(void);
+void Refs_global_const_var_declared_in_same_script(void);
+void Refs_global_const_var_declared_in_same_script_w_fn(void);
+void Refs_global_const_var_declared_in_same_script_w_fn_other_script(void);
+void Refs_global_const_var_declared_in_same_script_w_fn_other_scripts(void);
+void Refs_ref_declared_in_same_script(void);
+void Refs_ref_declared_in_same_script_w_fn(void);
+void Refs_ref_declared_in_same_script_w_fn_other_script(void);
+void Refs_ref_declared_in_same_script_w_fn_other_scripts(void);
+void Refs_global_const_var_declared_in_same_script_w_template(void);
 
 bake_test_case Eval_testcases[] = {
     {
@@ -8277,6 +8286,42 @@ bake_test_case Refs_testcases[] = {
     {
         "template_prop_ref_retarget",
         Refs_template_prop_ref_retarget
+    },
+    {
+        "global_const_var_declared_in_same_script",
+        Refs_global_const_var_declared_in_same_script
+    },
+    {
+        "global_const_var_declared_in_same_script_w_fn",
+        Refs_global_const_var_declared_in_same_script_w_fn
+    },
+    {
+        "global_const_var_declared_in_same_script_w_fn_other_script",
+        Refs_global_const_var_declared_in_same_script_w_fn_other_script
+    },
+    {
+        "global_const_var_declared_in_same_script_w_fn_other_scripts",
+        Refs_global_const_var_declared_in_same_script_w_fn_other_scripts
+    },
+    {
+        "ref_declared_in_same_script",
+        Refs_ref_declared_in_same_script
+    },
+    {
+        "ref_declared_in_same_script_w_fn",
+        Refs_ref_declared_in_same_script_w_fn
+    },
+    {
+        "ref_declared_in_same_script_w_fn_other_script",
+        Refs_ref_declared_in_same_script_w_fn_other_script
+    },
+    {
+        "ref_declared_in_same_script_w_fn_other_scripts",
+        Refs_ref_declared_in_same_script_w_fn_other_scripts
+    },
+    {
+        "global_const_var_declared_in_same_script_w_template",
+        Refs_global_const_var_declared_in_same_script_w_template
     }
 };
 
@@ -8376,7 +8421,7 @@ static bake_test_suite suites[] = {
         "Refs",
         NULL,
         NULL,
-        74,
+        83,
         Refs_testcases
     }
 };

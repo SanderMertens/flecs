@@ -51354,7 +51354,8 @@ int flecs_expr_visit_refs(
     const ecs_script_t *script,
     ecs_expr_node_t *node,
     ecs_vec_t *refs,
-    ecs_vec_t *dynamic_refs);
+    ecs_vec_t *dynamic_refs,
+    ecs_vec_t *fn_refs);
 
 #endif
 
@@ -51774,6 +51775,7 @@ double flecs_lerp(
 typedef struct ecs_script_user_function_t {
     ecs_script_t *script;
     ecs_script_function_node_t *node;
+    ecs_vec_t refs;
 } ecs_script_user_function_t;
 
 void flecs_script_user_function_callback(
@@ -70602,6 +70604,15 @@ int ecs_script_update(
         if (!instance) {
             s = ecs_ensure(world, e, EcsScript);
             ecs_vec_t *script_refs = &flecs_script_impl(s->script)->refs;
+            ecs_script_ref_t *refs = ecs_vec_first(script_refs);
+            int32_t i;
+            for (i = ecs_vec_count(script_refs) - 1; i >= 0; i --) {
+                if (refs[i].entity && ecs_has_pair(
+                    world, refs[i].entity, ecs_id(EcsScript), e))
+                {
+                    ecs_vec_remove_t(script_refs, ecs_script_ref_t, i);
+                }
+            }
             flecs_script_update_ref_observers(world, e, 0,
                 script_refs, &s->observers, flecs_script_ref_on_set);
             ecs_vec_clear(script_refs);
@@ -72789,7 +72800,7 @@ int flecs_script_check_expr(
      * a single observer per reference can trigger reevaluation of instances. */
     if (v->template) {
         if (flecs_expr_visit_refs(script, *expr_ptr, &v->template->refs,
-            &v->template->dynamic_refs))
+            &v->template->dynamic_refs, &impl->refs))
         {
             goto error;
         }
@@ -73907,7 +73918,7 @@ int flecs_script_eval_expr(
             dynamic_refs = &v->instance_template->dynamic_refs;
         }
         if (refs) {
-            if (flecs_expr_visit_refs(script, expr, refs, dynamic_refs)) {
+            if (flecs_expr_visit_refs(script, expr, refs, dynamic_refs, refs)) {
                 goto error;
             }
         }
@@ -75322,6 +75333,7 @@ void flecs_script_user_function_ctx_free(
     if (uf->script) {
         ecs_script_free(uf->script);
     }
+    ecs_vec_fini_t(NULL, &uf->refs, ecs_script_ref_t);
     ecs_os_free(uf);
 }
 
@@ -75330,7 +75342,8 @@ int flecs_script_function_type_check(
     ecs_script_eval_visitor_t *outer_v,
     ecs_script_function_node_t *node,
     const ecs_function_desc_t *desc,
-    int32_t param_count)
+    int32_t param_count,
+    ecs_vec_t *fn_refs)
 {
     ecs_script_impl_t *impl = outer_v->base.script;
     ecs_script_t *script = &impl->pub;
@@ -75408,10 +75421,8 @@ int flecs_script_function_type_check(
         if (flecs_expr_visit_type(script, cnode->expr, &edesc)) {
             goto error;
         }
-        if (v.script_entity) {
-            if (flecs_expr_visit_refs(script, cnode->expr, &impl->refs, NULL)) {
-                goto error;
-            }
+        if (flecs_expr_visit_refs(script, cnode->expr, fn_refs, NULL, fn_refs)) {
+            goto error;
         }
         if (flecs_expr_visit_fold(script, &cnode->expr, &edesc)) {
             goto error;
@@ -75445,12 +75456,10 @@ int flecs_script_function_type_check(
         if (flecs_expr_visit_type(script, node->return_expr, &edesc)) {
             goto error;
         }
-        if (v.script_entity) {
-            if (flecs_expr_visit_refs(
-                script, node->return_expr, &impl->refs, NULL))
-            {
-                goto error;
-            }
+        if (flecs_expr_visit_refs(
+            script, node->return_expr, fn_refs, NULL, fn_refs))
+        {
+            goto error;
         }
         if (flecs_expr_visit_fold(script, &node->return_expr, &edesc)) {
             goto error;
@@ -75519,7 +75528,13 @@ int flecs_script_eval_function(
         return -1;
     }
 
-    if (flecs_script_function_type_check(v, node, &desc, param_count)) {
+    ecs_vec_t fn_refs;
+    ecs_vec_init_t(NULL, &fn_refs, ecs_script_ref_t, 0);
+
+    if (flecs_script_function_type_check(v, node, &desc, param_count,
+        &fn_refs))
+    {
+        ecs_vec_fini_t(NULL, &fn_refs, ecs_script_ref_t);
         ecs_delete(world, fn_entity);
         return -1;
     }
@@ -75529,6 +75544,7 @@ int flecs_script_eval_function(
     uf->script = &v->base.script->pub;
     v->base.script->refcount ++;
     uf->node = node;
+    uf->refs = fn_refs;
 
     EcsScriptFunction *fcomp = ecs_ensure(world, fn_entity, EcsScriptFunction);
     if (fcomp->binding_ctx && fcomp->binding_ctx_free) {
@@ -99787,7 +99803,8 @@ int flecs_expr_visit_refs(
     const ecs_script_t *script,
     ecs_expr_node_t *node,
     ecs_vec_t *refs,
-    ecs_vec_t *dynamic_refs)
+    ecs_vec_t *dynamic_refs,
+    ecs_vec_t *fn_refs)
 {
     if (!node) {
         return 0;
@@ -99811,7 +99828,7 @@ int flecs_expr_visit_refs(
         ecs_expr_node_t **expressions = ecs_vec_first(&n->expressions);
         for (i = 0; i < count; i ++) {
             if (flecs_expr_visit_refs(
-                script, expressions[i], refs, dynamic_refs))
+                script, expressions[i], refs, dynamic_refs, fn_refs))
             {
                 goto error;
             }
@@ -99826,13 +99843,13 @@ int flecs_expr_visit_refs(
         for (i = 0; i < count; i ++) {
             if (elems[i].key) {
                 if (flecs_expr_visit_refs(
-                    script, elems[i].key, refs, dynamic_refs))
+                    script, elems[i].key, refs, dynamic_refs, fn_refs))
                 {
                     goto error;
                 }
             }
             if (flecs_expr_visit_refs(
-                script, elems[i].value, refs, dynamic_refs))
+                script, elems[i].value, refs, dynamic_refs, fn_refs))
             {
                 goto error;
             }
@@ -99841,24 +99858,24 @@ int flecs_expr_visit_refs(
     }
     case EcsExprUnary:
         if (flecs_expr_visit_refs(script,
-            ((ecs_expr_unary_t*)node)->expr, refs, dynamic_refs))
+            ((ecs_expr_unary_t*)node)->expr, refs, dynamic_refs, fn_refs))
         {
             goto error;
         }
         break;
     case EcsExprBinary: {
         ecs_expr_binary_t *n = (ecs_expr_binary_t*)node;
-        if (flecs_expr_visit_refs(script, n->left, refs, dynamic_refs)) {
+        if (flecs_expr_visit_refs(script, n->left, refs, dynamic_refs, fn_refs)) {
             goto error;
         }
-        if (flecs_expr_visit_refs(script, n->right, refs, dynamic_refs)) {
+        if (flecs_expr_visit_refs(script, n->right, refs, dynamic_refs, fn_refs)) {
             goto error;
         }
         break;
     }
     case EcsExprIdentifier:
         if (flecs_expr_visit_refs(script,
-            ((ecs_expr_identifier_t*)node)->expr, refs, dynamic_refs))
+            ((ecs_expr_identifier_t*)node)->expr, refs, dynamic_refs, fn_refs))
         {
             goto error;
         }
@@ -99866,29 +99883,44 @@ int flecs_expr_visit_refs(
     case EcsExprFunction:
     case EcsExprMethod: {
         ecs_expr_function_t *n = (ecs_expr_function_t*)node;
-        if (flecs_expr_visit_refs(script, n->left, refs, dynamic_refs)) {
+        if (flecs_expr_visit_refs(script, n->left, refs, dynamic_refs, fn_refs)) {
             goto error;
         }
         if (flecs_expr_visit_refs(script,
-            (ecs_expr_node_t*)n->args, refs, dynamic_refs))
+            (ecs_expr_node_t*)n->args, refs, dynamic_refs, fn_refs))
         {
             goto error;
+        }
+        if (fn_refs &&
+            n->calldata.is.callback == flecs_script_user_function_callback)
+        {
+            const EcsScriptFunction *fn = ecs_get(
+                script->world, n->calldata.function, EcsScriptFunction);
+            if (fn && fn->binding_ctx) {
+                ecs_script_user_function_t *uf = fn->binding_ctx;
+                ecs_script_ref_t *uf_refs = ecs_vec_first(&uf->refs);
+                int32_t i, count = ecs_vec_count(&uf->refs);
+                for (i = 0; i < count; i ++) {
+                    flecs_expr_add_ref(fn_refs, uf_refs[i].entity,
+                        uf_refs[i].name, uf_refs[i].component);
+                }
+            }
         }
         break;
     }
     case EcsExprMember:
         if (flecs_expr_visit_refs(script,
-            ((ecs_expr_member_t*)node)->left, refs, dynamic_refs))
+            ((ecs_expr_member_t*)node)->left, refs, dynamic_refs, fn_refs))
         {
             goto error;
         }
         break;
     case EcsExprElement: {
         ecs_expr_element_t *n = (ecs_expr_element_t*)node;
-        if (flecs_expr_visit_refs(script, n->left, refs, dynamic_refs)) {
+        if (flecs_expr_visit_refs(script, n->left, refs, dynamic_refs, fn_refs)) {
             goto error;
         }
-        if (flecs_expr_visit_refs(script, n->index, refs, dynamic_refs)) {
+        if (flecs_expr_visit_refs(script, n->index, refs, dynamic_refs, fn_refs)) {
             goto error;
         }
         break;
@@ -99905,34 +99937,34 @@ int flecs_expr_visit_refs(
                 flecs_expr_add_ref(dynamic_refs, 0, var_name, component);
             }
         }
-        if (flecs_expr_visit_refs(script, n->left, refs, dynamic_refs)) {
+        if (flecs_expr_visit_refs(script, n->left, refs, dynamic_refs, fn_refs)) {
             goto error;
         }
         break;
     }
     case EcsExprMatch: {
         ecs_expr_match_t *n = (ecs_expr_match_t*)node;
-        if (flecs_expr_visit_refs(script, n->expr, refs, dynamic_refs)) {
+        if (flecs_expr_visit_refs(script, n->expr, refs, dynamic_refs, fn_refs)) {
             goto error;
         }
         int32_t i, count = ecs_vec_count(&n->elements);
         ecs_expr_match_element_t *elems = ecs_vec_first(&n->elements);
         for (i = 0; i < count; i ++) {
             if (flecs_expr_visit_refs(
-                script, elems[i].compare, refs, dynamic_refs))
+                script, elems[i].compare, refs, dynamic_refs, fn_refs))
             {
                 goto error;
             }
             if (flecs_expr_visit_refs(
-                script, elems[i].expr, refs, dynamic_refs))
+                script, elems[i].expr, refs, dynamic_refs, fn_refs))
             {
                 goto error;
             }
         }
-        if (flecs_expr_visit_refs(script, n->any.compare, refs, dynamic_refs)) {
+        if (flecs_expr_visit_refs(script, n->any.compare, refs, dynamic_refs, fn_refs)) {
             goto error;
         }
-        if (flecs_expr_visit_refs(script, n->any.expr, refs, dynamic_refs)) {
+        if (flecs_expr_visit_refs(script, n->any.expr, refs, dynamic_refs, fn_refs)) {
             goto error;
         }
         break;
@@ -99940,7 +99972,7 @@ int flecs_expr_visit_refs(
     case EcsExprCast:
     case EcsExprCastNumber:
         if (flecs_expr_visit_refs(script,
-            ((ecs_expr_cast_t*)node)->expr, refs, dynamic_refs))
+            ((ecs_expr_cast_t*)node)->expr, refs, dynamic_refs, fn_refs))
         {
             goto error;
         }

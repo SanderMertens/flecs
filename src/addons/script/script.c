@@ -391,6 +391,15 @@ int ecs_script_update(
         if (!instance) {
             s = ecs_ensure(world, e, EcsScript);
             ecs_vec_t *script_refs = &flecs_script_impl(s->script)->refs;
+            ecs_script_ref_t *refs = ecs_vec_first(script_refs);
+            int32_t i;
+            for (i = ecs_vec_count(script_refs) - 1; i >= 0; i --) {
+                if (refs[i].entity && ecs_has_pair(
+                    world, refs[i].entity, ecs_id(EcsScript), e))
+                {
+                    ecs_vec_remove_t(script_refs, ecs_script_ref_t, i);
+                }
+            }
             flecs_script_update_ref_observers(world, e, 0,
                 script_refs, &s->observers, flecs_script_ref_on_set);
             ecs_vec_clear(script_refs);

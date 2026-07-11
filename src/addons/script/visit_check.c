@@ -82,7 +82,7 @@ int flecs_script_check_expr(
      * a single observer per reference can trigger reevaluation of instances. */
     if (v->template) {
         if (flecs_expr_visit_refs(script, *expr_ptr, &v->template->refs,
-            &v->template->dynamic_refs))
+            &v->template->dynamic_refs, &impl->refs))
         {
             goto error;
         }
