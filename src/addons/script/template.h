@@ -7,7 +7,6 @@
 #define FLECS_SCRIPT_TEMPLATE_H
 
 extern ECS_COMPONENT_DECLARE(EcsScriptTemplateSetEvent);
-extern ECS_COMPONENT_DECLARE(EcsScriptTemplateRoot);
 
 struct ecs_script_template_t {
     /* Template handle */
@@ -31,25 +30,24 @@ struct ecs_script_template_t {
     /* Annotations to apply to template instance */
     ecs_vec_t annot;
 
-    /* Statically known component references used in the template body */
-    ecs_vec_t refs;
+    /* Statically collected references used in the template body */
+    ecs_vec_t refs; /* vec<ecs_script_requirement_t> */
 
-    /* Observers monitoring the refs, shared by all template instances */
-    ecs_vec_t observers;
-
-    ecs_vec_t dynamic_refs;
+    /* Using scopes for resolving reference names */
+    ecs_vec_t using_names; /* vec<char*> */
 
     int32_t refcount;
+
+    /* Nonzero while template instances are being evaluated. Prevents
+     * reference observers from retriggering instantiation for component
+     * writes done by the template itself. */
+    int32_t instantiating;
 
     /* Use non-fragmenting hierarchy */
     bool non_fragmenting_parent;
 };
 
 #define ECS_TEMPLATE_SMALL_SIZE (36)
-
-typedef struct EcsScriptTemplateRoot {
-    ecs_vec_t observers;
-} EcsScriptTemplateRoot;
 
 /* Event used for deferring template instantiation */
 typedef struct EcsScriptTemplateSetEvent {
@@ -67,6 +65,15 @@ typedef struct EcsScriptTemplateSetEvent {
 int flecs_script_eval_template(
     ecs_script_eval_visitor_t *v,
     ecs_script_template_node_t *template);
+
+void flecs_script_template_reinstantiate(
+    ecs_world_t *world,
+    ecs_entity_t template_entity,
+    ecs_entity_t instance);
+
+void flecs_script_template_reinstantiate_all(
+    ecs_world_t *world,
+    ecs_entity_t template_entity);
 
 void flecs_script_template_fini(
     ecs_script_impl_t *script,

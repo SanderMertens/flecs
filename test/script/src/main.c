@@ -1715,6 +1715,24 @@ void Refs_ref_declared_in_same_script_w_fn(void);
 void Refs_ref_declared_in_same_script_w_fn_other_script(void);
 void Refs_ref_declared_in_same_script_w_fn_other_scripts(void);
 void Refs_global_const_var_declared_in_same_script_w_template(void);
+void Refs_ref_component_not_available_yet(void);
+void Refs_ref_component_removed(void);
+void Refs_global_const_var_not_available_yet(void);
+void Refs_global_const_var_removed(void);
+void Refs_ref_in_template_component_not_available_yet(void);
+void Refs_ref_in_template_component_removed(void);
+void Refs_global_const_var_in_template_not_available_yet(void);
+void Refs_global_const_var_in_template_removed(void);
+void Refs_this_ref_in_template_component_not_available_yet(void);
+void Refs_this_ref_in_template_component_removed(void);
+void Refs_prop_ref_in_template_component_not_available_yet(void);
+void Refs_prop_ref_in_template_component_removed(void);
+void Refs_script_requirements_component(void);
+void Refs_script_requirements_component_unresolved_var(void);
+void Refs_template_requirements_component(void);
+void Refs_template_instance_requirements_component(void);
+void Refs_global_const_var_entity_not_a_var(void);
+void Refs_ref_via_variable_component_not_available_yet(void);
 
 bake_test_case Eval_testcases[] = {
     {
@@ -8477,6 +8495,78 @@ bake_test_case Refs_testcases[] = {
     {
         "global_const_var_declared_in_same_script_w_template",
         Refs_global_const_var_declared_in_same_script_w_template
+    },
+    {
+        "ref_component_not_available_yet",
+        Refs_ref_component_not_available_yet
+    },
+    {
+        "ref_component_removed",
+        Refs_ref_component_removed
+    },
+    {
+        "global_const_var_not_available_yet",
+        Refs_global_const_var_not_available_yet
+    },
+    {
+        "global_const_var_removed",
+        Refs_global_const_var_removed
+    },
+    {
+        "ref_in_template_component_not_available_yet",
+        Refs_ref_in_template_component_not_available_yet
+    },
+    {
+        "ref_in_template_component_removed",
+        Refs_ref_in_template_component_removed
+    },
+    {
+        "global_const_var_in_template_not_available_yet",
+        Refs_global_const_var_in_template_not_available_yet
+    },
+    {
+        "global_const_var_in_template_removed",
+        Refs_global_const_var_in_template_removed
+    },
+    {
+        "this_ref_in_template_component_not_available_yet",
+        Refs_this_ref_in_template_component_not_available_yet
+    },
+    {
+        "this_ref_in_template_component_removed",
+        Refs_this_ref_in_template_component_removed
+    },
+    {
+        "prop_ref_in_template_component_not_available_yet",
+        Refs_prop_ref_in_template_component_not_available_yet
+    },
+    {
+        "prop_ref_in_template_component_removed",
+        Refs_prop_ref_in_template_component_removed
+    },
+    {
+        "script_requirements_component",
+        Refs_script_requirements_component
+    },
+    {
+        "script_requirements_component_unresolved_var",
+        Refs_script_requirements_component_unresolved_var
+    },
+    {
+        "template_requirements_component",
+        Refs_template_requirements_component
+    },
+    {
+        "template_instance_requirements_component",
+        Refs_template_instance_requirements_component
+    },
+    {
+        "global_const_var_entity_not_a_var",
+        Refs_global_const_var_entity_not_a_var
+    },
+    {
+        "ref_via_variable_component_not_available_yet",
+        Refs_ref_via_variable_component_not_available_yet
     }
 };
 
@@ -8576,7 +8666,7 @@ static bake_test_suite suites[] = {
         "Refs",
         NULL,
         NULL,
-        83,
+        101,
         Refs_testcases
     }
 };

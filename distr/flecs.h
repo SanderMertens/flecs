@@ -16757,6 +16757,9 @@ FLECS_API
 extern ECS_DECLARE(EcsScriptTemplate);
 
 FLECS_API
+extern ECS_COMPONENT_DECLARE(EcsScriptRequirements);
+
+FLECS_API
 extern ECS_COMPONENT_DECLARE(EcsScriptConstVar);
 
 FLECS_API
@@ -16813,8 +16816,35 @@ typedef struct EcsScript {
     char *error;                        /**< Set if script evaluation had errors. */
     ecs_script_t *script;               /**< Parsed script object. */
     ecs_script_template_t *template_;   /**< Only set for template scripts. */
-    ecs_vec_t observers;                /**< Observers for referenced components. */
 } EcsScript;
+
+/** Script requirement.
+ * A reference to an entity/component that must exist for a script to be fully
+ * evaluated. Requirements are collected statically from the script AST, and
+ * track referenced entities by name so scripts can depend on entities that
+ * don't exist yet.
+ */
+typedef struct ecs_script_requirement_t {
+    char *entity;          /**< Name of referenced entity (can be NULL). */
+    char *var;             /**< Variable through which entity is referenced (can be NULL). */
+    char *scope;           /**< Scope in which the reference was made (can be NULL). */
+    char *component;       /**< Name of referenced component (can be NULL). */
+    ecs_id_t component_id; /**< Pre-resolved component id (0 if component is set). */
+    bool dynamic_scope;    /**< Reference is made from a scope that can't be statically resolved. */
+} ecs_script_requirement_t;
+
+/** Observer created for a component that appears in a script's requirements. */
+typedef struct ecs_script_ref_observer_t {
+    ecs_id_t component;
+    ecs_entity_t observer;
+} ecs_script_ref_observer_t;
+
+typedef struct EcsScriptRequirements {
+    ecs_vec_t requirements; /**< vec<ecs_script_requirement_t> */
+    ecs_vec_t observers;    /**< vec<ecs_script_ref_observer_t> */
+    ecs_vec_t usings;       /**< vec<char*>, using scopes for name lookups */
+    bool met;
+} EcsScriptRequirements;
 
 /** Script function context. */
 typedef struct ecs_function_ctx_t {
