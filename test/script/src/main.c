@@ -525,6 +525,10 @@ void Eval_map_bitmask_i32_component_w_expr_key(void);
 void Eval_map_i64_i32_component_w_expr_key(void);
 void Eval_map_i64_i32_component_w_var_key(void);
 void Eval_map_component_element(void);
+void Eval_map_export_var_element(void);
+void Eval_struct_export_var_member(void);
+void Eval_array_export_var_element(void);
+void Eval_vector_export_var_element(void);
 void Eval_struct_w_value_member(void);
 void Eval_struct_w_value_member_w_type(void);
 void Eval_struct_w_value_member_reassign(void);
@@ -3784,6 +3788,22 @@ bake_test_case Eval_testcases[] = {
     {
         "map_component_element",
         Eval_map_component_element
+    },
+    {
+        "map_export_var_element",
+        Eval_map_export_var_element
+    },
+    {
+        "struct_export_var_member",
+        Eval_struct_export_var_member
+    },
+    {
+        "array_export_var_element",
+        Eval_array_export_var_element
+    },
+    {
+        "vector_export_var_element",
+        Eval_vector_export_var_element
     },
     {
         "struct_w_value_member",
@@ -8515,7 +8535,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        522,
+        526,
         Eval_testcases
     },
     {
