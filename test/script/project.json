@@ -533,7 +533,8 @@
                 "struct_w_value_member_w_type",
                 "struct_w_value_member_reassign",
                 "value_component",
-                "value_const_var"
+                "value_const_var",
+                "var_w_value_name"
             ]
         }, {
             "id": "Function",
@@ -703,7 +704,9 @@
                 "default_component_w_prop_var_in_nested_if",
                 "default_component_w_prop_var_in_nested_for",
                 "template_w_new_expr_in_const",
-                "template_w_existing_observer"
+                "template_w_existing_observer",
+                "template_w_prop_w_value_name",
+                "template_w_var_w_value_name"
             ]
         }, {
             "id": "Error",
