@@ -17151,6 +17151,154 @@ void Eval_map_component_element(void) {
     ecs_fini(world);
 }
 
+void Eval_map_export_var_element(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t k = ecs_entity(world, { .name = "k1" });
+    test_assert(k != 0);
+
+    ecs_entity_t m = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "Map" }),
+        .key_type = ecs_id(ecs_entity_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    test_assert(m != 0);
+
+    ecs_entity_t val = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Val" }),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "export const totals = Map: [k1: 100]"
+    LINE "o {"
+    LINE " Val: {x: totals[k1]}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t o = ecs_lookup(world, "o");
+    test_assert(o != 0);
+
+    const int32_t *ptr = ecs_get_id(world, o, val);
+    test_assert(ptr != NULL);
+    test_int(*ptr, 100);
+
+    ecs_fini(world);
+}
+
+void Eval_struct_export_var_member(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t point = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Point" }),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    test_assert(point != 0);
+
+    ecs_entity_t val = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Val" }),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "export const p = Point: {10, 20}"
+    LINE "o {"
+    LINE " Val: {x: p.y}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t o = ecs_lookup(world, "o");
+    test_assert(o != 0);
+
+    const int32_t *ptr = ecs_get_id(world, o, val);
+    test_assert(ptr != NULL);
+    test_int(*ptr, 20);
+
+    ecs_fini(world);
+}
+
+void Eval_array_export_var_element(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t arr = ecs_array(world, {
+        .entity = ecs_entity(world, { .name = "Arr" }),
+        .type = ecs_id(ecs_i32_t),
+        .count = 3
+    });
+
+    test_assert(arr != 0);
+
+    ecs_entity_t val = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Val" }),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "export const a = Arr: [10, 20, 30]"
+    LINE "o {"
+    LINE " Val: {x: a[1]}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t o = ecs_lookup(world, "o");
+    test_assert(o != 0);
+
+    const int32_t *ptr = ecs_get_id(world, o, val);
+    test_assert(ptr != NULL);
+    test_int(*ptr, 20);
+
+    ecs_fini(world);
+}
+
+void Eval_vector_export_var_element(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t vec = ecs_vector(world, {
+        .entity = ecs_entity(world, { .name = "Vec" }),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    test_assert(vec != 0);
+
+    ecs_entity_t val = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Val" }),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "export const v = Vec: [10, 20, 30]"
+    LINE "o {"
+    LINE " Val: {x: v[1]}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t o = ecs_lookup(world, "o");
+    test_assert(o != 0);
+
+    const int32_t *ptr = ecs_get_id(world, o, val);
+    test_assert(ptr != NULL);
+    test_int(*ptr, 20);
+
+    ecs_fini(world);
+}
+
 void Eval_struct_w_value_member(void) {
     typedef struct {
         ecs_value_t v;

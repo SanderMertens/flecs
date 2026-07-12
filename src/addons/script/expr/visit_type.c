@@ -1306,17 +1306,24 @@ int flecs_expr_identifier_variable_member_visit_type(
             member_sep = strchr(member_sep + 1, '.');
             continue;
         }
-        break;
+
+        member_sep[0] = '\0';
+
+        if (flecs_script_find_var(desc->vars, node->value, NULL)) {
+            break;
+        }
+
+        ecs_entity_t global = desc->lookup_action(
+            script->world, node->value, desc->lookup_ctx);
+        if (global && ecs_get(script->world, global, EcsScriptConstVar)) {
+            break;
+        }
+
+        member_sep[0] = '.';
+        member_sep = strchr(member_sep + 1, '.');
     }
 
     if (!member_sep) {
-        return 1;
-    }
-
-    member_sep[0] = '\0';
-
-    if (!flecs_script_find_var(desc->vars, node->value, NULL)) {
-        member_sep[0] = '.';
         return 1;
     }
 
@@ -1347,6 +1354,11 @@ int flecs_expr_identifier_visit_type(
     const ecs_expr_eval_desc_t *desc)
 {
     (void)desc;
+
+    if (node->expr) {
+        flecs_expr_visit_free(script, node->expr);
+        node->expr = NULL;
+    }
 
     ecs_entity_t type = node->node.type;
     if (cur->valid) {
@@ -1383,9 +1395,8 @@ int flecs_expr_identifier_visit_type(
             node->expr = (ecs_expr_node_t*)var_node;
             node->node.type = var->value.type;
 
-            ecs_meta_cursor_t tmp_cur; ecs_os_zeromem(&tmp_cur);
             if (flecs_expr_visit_type_priv(
-                script, (ecs_expr_node_t*)var_node, &tmp_cur, desc))
+                script, (ecs_expr_node_t*)var_node, cur, desc))
             {
                 goto error;
             }
@@ -1441,9 +1452,8 @@ int flecs_expr_identifier_visit_type(
                 node->expr = (ecs_expr_node_t*)var_node;
                 node->node.type = global->value.type;
 
-                ecs_meta_cursor_t tmp_cur; ecs_os_zeromem(&tmp_cur);
                 if (flecs_expr_visit_type_priv(
-                    script, (ecs_expr_node_t*)var_node, &tmp_cur, desc))
+                    script, (ecs_expr_node_t*)var_node, cur, desc))
                 {
                     goto error;
                 }
