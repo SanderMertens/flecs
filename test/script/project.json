@@ -1749,7 +1749,8 @@
                 "ref_declared_in_same_script_w_fn",
                 "ref_declared_in_same_script_w_fn_other_script",
                 "ref_declared_in_same_script_w_fn_other_scripts",
-                "global_const_var_declared_in_same_script_w_template"
+                "global_const_var_declared_in_same_script_w_template",
+                "reeval_instantiates_template_w_global_const_var_ref"
             ]
         }]
     }

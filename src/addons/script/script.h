@@ -27,6 +27,12 @@ typedef struct ecs_script_ref_ctx_t {
     ecs_entity_t instance;
 } ecs_script_ref_ctx_t;
 
+typedef struct EcsScriptUpdateEvent {
+    ecs_entity_t script;
+} EcsScriptUpdateEvent;
+
+extern ECS_COMPONENT_DECLARE(EcsScriptUpdateEvent);
+
 struct ecs_script_impl_t {
     ecs_script_t pub;
     ecs_allocator_t allocator;

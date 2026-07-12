@@ -9,6 +9,7 @@
 #include "script.h"
 
 ECS_COMPONENT_DECLARE(EcsScript);
+ECS_COMPONENT_DECLARE(EcsScriptUpdateEvent);
 ECS_COMPONENT_DECLARE(EcsScriptConstVar);
 ECS_COMPONENT_DECLARE(EcsScriptFunction);
 ECS_COMPONENT_DECLARE(EcsScriptMethod);
@@ -130,7 +131,8 @@ static
 void flecs_script_ref_on_set(
     ecs_iter_t *it)
 {
-    ecs_entity_t script = (ecs_entity_t)(uintptr_t)it->ctx;
+    ecs_script_ref_ctx_t *ctx = it->ctx;
+    ecs_entity_t script = ctx->script;
     ecs_world_t *world = it->real_world;
 
     if (!ecs_is_alive(world, script)) {
@@ -146,8 +148,46 @@ void flecs_script_ref_on_set(
         return;
     }
 
+    if (ecs_is_deferred(it->world)) {
+        EcsScriptUpdateEvent evt = { .script = script };
+        ecs_enqueue(it->world, &(ecs_event_desc_t){
+            .event = ecs_id(EcsScriptUpdateEvent),
+            .entity = EcsAny,
+            .param = &evt
+        });
+        return;
+    }
+
     char *code = ecs_os_strdup(s->code);
     ecs_script_update(world, script, 0, code);
+    ecs_os_free(code);
+}
+
+static
+void flecs_script_on_update_event(
+    ecs_iter_t *it)
+{
+    ecs_assert(ecs_is_deferred(it->world), ECS_INTERNAL_ERROR, NULL);
+
+    EcsScriptUpdateEvent *evt = it->param;
+    ecs_world_t *world = it->real_world;
+    ecs_assert(flecs_poly_is(world, ecs_world_t), ECS_INTERNAL_ERROR, NULL);
+
+    if (!ecs_is_alive(world, evt->script)) {
+        return;
+    }
+
+    const EcsScript *s = ecs_get(world, evt->script, EcsScript);
+    if (!s || !s->script || !s->code) {
+        return;
+    }
+
+    if (flecs_script_impl(s->script)->evaluating) {
+        return;
+    }
+
+    char *code = ecs_os_strdup(s->code);
+    ecs_script_update(world, evt->script, 0, code);
     ecs_os_free(code);
 }
 
@@ -175,15 +215,11 @@ ecs_entity_t flecs_script_create_ref_observer(
         .callback = callback
     };
 
-    if (instance) {
-        ecs_script_ref_ctx_t *ctx = ecs_os_malloc_t(ecs_script_ref_ctx_t);
-        ctx->script = script;
-        ctx->instance = instance;
-        desc.ctx = ctx;
-        desc.ctx_free = flecs_script_ref_ctx_free;
-    } else {
-        desc.ctx = (void*)(uintptr_t)script;
-    }
+    ecs_script_ref_ctx_t *ctx = ecs_os_malloc_t(ecs_script_ref_ctx_t);
+    ctx->script = script;
+    ctx->instance = instance;
+    desc.ctx = ctx;
+    desc.ctx_free = flecs_script_ref_ctx_free;
 
     ecs_entity_t observer = ecs_observer_init(world, &desc);
 
@@ -555,6 +591,7 @@ void FlecsScriptImport(
 
     ecs_set_name_prefix(world, "Ecs");
     ECS_COMPONENT_DEFINE(world, EcsScript);
+    ECS_COMPONENT_DEFINE(world, EcsScriptUpdateEvent);
     ECS_TAG_DEFINE(world, EcsScriptVectorType);
 
     ecs_set_hooks(world, EcsScript, {
@@ -584,6 +621,13 @@ void FlecsScriptImport(
 
     ecs_add_id(world, ecs_id(EcsScript), EcsPairIsTag);
     ecs_add_pair(world, ecs_id(EcsScript), EcsOnInstantiate, EcsDontInherit);
+
+    ecs_observer(world, {
+        .entity = ecs_entity(world, { .name = "ScriptUpdateObserver" }),
+        .query.terms = {{ .id = EcsAny }},
+        .events = { ecs_id(EcsScriptUpdateEvent) },
+        .callback = flecs_script_on_update_event
+    });
 
     flecs_script_template_import(world);
     flecs_function_import(world);

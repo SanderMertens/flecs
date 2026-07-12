@@ -404,7 +404,8 @@ static
 void flecs_script_template_ref_on_set(
     ecs_iter_t *it)
 {
-    ecs_entity_t template_entity = (ecs_entity_t)(uintptr_t)it->ctx;
+    ecs_script_ref_ctx_t *ctx = it->ctx;
+    ecs_entity_t template_entity = ctx->script;
     ecs_world_t *world = it->real_world;
 
     if (!ecs_is_alive(world, template_entity)) {
