@@ -492,6 +492,7 @@ void Rest_request_commands_no_frames(void);
 void Rest_request_commands_no_commands(void);
 void Rest_request_commands_garbage_collect(void);
 void Rest_script_error(void);
+void Rest_script_error_new_script_deferred(void);
 void Rest_script_update(void);
 void Rest_script_update_w_body(void);
 void Rest_import_rest_after_mini(void);
@@ -2397,6 +2398,10 @@ bake_test_case Rest_testcases[] = {
         Rest_script_error
     },
     {
+        "script_error_new_script_deferred",
+        Rest_script_error_new_script_deferred
+    },
+    {
         "script_update",
         Rest_script_update
     },
@@ -2923,7 +2928,7 @@ static bake_test_suite suites[] = {
         "Rest",
         NULL,
         NULL,
-        36,
+        37,
         Rest_testcases
     },
     {

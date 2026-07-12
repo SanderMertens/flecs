@@ -320,6 +320,16 @@ int ecs_script_update(
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(code != NULL, ECS_INTERNAL_ERROR, NULL);
 
+    int result = 0;
+    bool is_defer = ecs_is_deferred(world);
+    ecs_suspend_readonly_state_t srs;
+    ecs_world_t *real_world = NULL;
+    if (is_defer) {
+        ecs_assert(flecs_poly_is(world, ecs_world_t), ECS_INTERNAL_ERROR, NULL);
+        real_world = flecs_suspend_readonly(world, &srs);
+        ecs_assert(real_world != NULL, ECS_INTERNAL_ERROR, NULL);
+    }
+
     const char *name = ecs_get_name(world, e);
     EcsScript *s = ecs_ensure(world, e, EcsScript);
     if (s->template_) {
@@ -328,7 +338,8 @@ int ecs_script_update(
             "update parent script instead (tried to update '%s')",
                 template_name);
         ecs_os_free(template_name);
-        return -1;
+        result = -1;
+        goto done;
     }
 
     if (s->code) {
@@ -352,17 +363,8 @@ int ecs_script_update(
     if (s->script == NULL) {
         s->error = eval_result.error;
         ecs_log_(-3, NULL, 0, "%s: %s", name ? name : "script", s->error);
-        return -1;
-    }
-
-    int result = 0;
-    bool is_defer = ecs_is_deferred(world);
-    ecs_suspend_readonly_state_t srs;
-    ecs_world_t *real_world = NULL;
-    if (is_defer) {
-        ecs_assert(flecs_poly_is(world, ecs_world_t), ECS_INTERNAL_ERROR, NULL);
-        real_world = flecs_suspend_readonly(world, &srs);
-        ecs_assert(real_world != NULL, ECS_INTERNAL_ERROR, NULL);
+        result = -1;
+        goto done;
     }
 
     ecs_script_clear(world, e, instance);
@@ -408,6 +410,7 @@ int ecs_script_update(
 
     ecs_set_with(world, prev);
 
+done:
     if (is_defer) {
         flecs_resume_readonly(real_world, &srs);
     }

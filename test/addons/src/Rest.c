@@ -624,6 +624,31 @@ void Rest_script_error(void) {
     ecs_fini(world);
 }
 
+void Rest_script_error_new_script_deferred(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    {
+        ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+        ecs_log_set_level(-4);
+        ecs_defer_begin(world);
+        test_int(-1, ecs_http_server_request(srv, "PUT",
+            "/script/main.flecs?code=foo%2B%7B",
+            NULL, &reply));
+        ecs_defer_end(world);
+        test_int(reply.code, 400);
+        char *reply_str = ecs_strbuf_get(&reply.body);
+        test_assert(reply_str != NULL);
+        ecs_os_free(reply_str);
+    }
+
+    ecs_rest_server_fini(srv);
+
+    ecs_fini(world);
+}
+
 void Rest_script_update(void) {
     ecs_world_t *world = ecs_init();
 
