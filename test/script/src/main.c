@@ -530,6 +530,7 @@ void Eval_struct_w_value_member_w_type(void);
 void Eval_struct_w_value_member_reassign(void);
 void Eval_value_component(void);
 void Eval_value_const_var(void);
+void Eval_var_w_value_name(void);
 
 // Testsuite 'Function'
 void Function_simple(void);
@@ -696,6 +697,8 @@ void Template_default_component_w_prop_var_in_nested_if(void);
 void Template_default_component_w_prop_var_in_nested_for(void);
 void Template_template_w_new_expr_in_const(void);
 void Template_template_w_existing_observer(void);
+void Template_template_w_prop_w_value_name(void);
+void Template_template_w_var_w_value_name(void);
 
 // Testsuite 'Error'
 void Error_multi_line_comment_after_newline_before_newline_scope_open(void);
@@ -3800,6 +3803,10 @@ bake_test_case Eval_testcases[] = {
     {
         "value_const_var",
         Eval_value_const_var
+    },
+    {
+        "var_w_value_name",
+        Eval_var_w_value_name
     }
 };
 
@@ -4454,6 +4461,14 @@ bake_test_case Template_testcases[] = {
     {
         "template_w_existing_observer",
         Template_template_w_existing_observer
+    },
+    {
+        "template_w_prop_w_value_name",
+        Template_template_w_prop_w_value_name
+    },
+    {
+        "template_w_var_w_value_name",
+        Template_template_w_var_w_value_name
     }
 };
 
@@ -8495,7 +8510,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        521,
+        522,
         Eval_testcases
     },
     {
@@ -8509,7 +8524,7 @@ static bake_test_suite suites[] = {
         "Template",
         NULL,
         NULL,
-        96,
+        98,
         Template_testcases
     },
     {

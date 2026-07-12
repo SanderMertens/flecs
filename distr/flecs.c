@@ -102932,6 +102932,26 @@ int flecs_expr_identifier_visit_type(
 
         return 0;
     } else {
+        /* Variables take precedence over entities */
+        int32_t var_sp = -1;
+        ecs_script_var_t *var = flecs_script_find_var(
+            desc->vars, node->value, &var_sp);
+        if (var) {
+            ecs_expr_variable_t *var_node = flecs_expr_variable_from(
+                script, (ecs_expr_node_t*)node, node->value);
+            node->expr = (ecs_expr_node_t*)var_node;
+            node->node.type = var->value.type;
+
+            ecs_meta_cursor_t tmp_cur; ecs_os_zeromem(&tmp_cur);
+            if (flecs_expr_visit_type_priv(
+                script, (ecs_expr_node_t*)var_node, &tmp_cur, desc))
+            {
+                goto error;
+            }
+
+            return 0;
+        }
+
         /* If not, try to resolve the identifier as an entity */
         ecs_entity_t e = desc->lookup_action(
             script->world, node->value, desc->lookup_ctx);
@@ -102986,26 +103006,6 @@ int flecs_expr_identifier_visit_type(
                 {
                     goto error;
                 }
-            }
-
-            return 0;
-        }
-
-        /* If the identifier could not be resolved as an entity, try as a variable */
-        int32_t var_sp = -1;
-        ecs_script_var_t *var = flecs_script_find_var(
-            desc->vars, node->value, &var_sp);
-        if (var) {
-            ecs_expr_variable_t *var_node = flecs_expr_variable_from(
-                script, (ecs_expr_node_t*)node, node->value);
-            node->expr = (ecs_expr_node_t*)var_node;
-            node->node.type = var->value.type;
-
-            ecs_meta_cursor_t tmp_cur; ecs_os_zeromem(&tmp_cur);
-            if (flecs_expr_visit_type_priv(
-                script, (ecs_expr_node_t*)var_node, &tmp_cur, desc))
-            {
-                goto error;
             }
 
             return 0;
