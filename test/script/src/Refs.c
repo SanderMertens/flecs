@@ -4112,3 +4112,66 @@ void Refs_global_const_var_declared_in_same_script_w_template(void) {
     ecs_fini(world);
 }
 
+
+void Refs_reeval_instantiates_template_w_global_const_var_ref(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = define_position(world);
+
+    ecs_entity_t size = ecs_const_var(world, {
+        .name = "size",
+        .type = ecs_id(ecs_f32_t),
+        .value = &(ecs_f32_t){10}
+    });
+    test_assert(size != 0);
+
+    ecs_entity_t v = ecs_const_var(world, {
+        .name = "v",
+        .type = ecs_id(ecs_i32_t),
+        .value = &(ecs_i32_t){0}
+    });
+    test_assert(v != 0);
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "template Bar {"
+            LINE "  child {"
+            LINE "    Position: {$size, 0}"
+            LINE "  }"
+            LINE "}"
+            LINE "if $v > 0 {"
+            LINE "  Bar inst()"
+            LINE "}"
+    });
+    test_assert(s != 0);
+
+    test_assert(ecs_lookup(world, "inst") == 0);
+
+    EcsScriptConstVar *cv = ecs_ensure(world, v, EcsScriptConstVar);
+    *(ecs_i32_t*)cv->value.ptr = 1;
+    ecs_modified(world, v, EcsScriptConstVar);
+
+    ecs_entity_t inst = ecs_lookup(world, "inst");
+    test_assert(inst != 0);
+
+    ecs_entity_t child = ecs_lookup_child(world, inst, "child");
+    test_assert(child != 0);
+
+    const Position *p = ecs_get(world, child, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+
+    cv = ecs_ensure(world, size, EcsScriptConstVar);
+    *(ecs_f32_t*)cv->value.ptr = 20;
+    ecs_modified(world, size, EcsScriptConstVar);
+
+    child = ecs_lookup_child(world, inst, "child");
+    test_assert(child != 0);
+
+    p = ecs_get(world, child, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 20);
+
+    ecs_fini(world);
+}
