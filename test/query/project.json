@@ -2820,6 +2820,7 @@
                 "this_set_childof_w_prefab_match_prefab",
                 "query_parent_in_on_add_parent_observer",
                 "up_query_cache_stale_table_after_shrink",
+                "not_up_cached_rematch_after_remove_from_parent",
                 "this_src_childof_var_doesnt_match_root"
             ]
         }, {

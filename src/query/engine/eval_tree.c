@@ -777,17 +777,41 @@ bool flecs_query_tree_up_post(
         op_ctx->tgt = ctx->it->sources[op->field_index];
     }
 
+    const ecs_term_t *term = &ctx->query->pub.terms[op->term_index];
+
     /* Passthrough tables that own the component */
-    if (op_ctx->tgt != EcsWildcard) {
+    if (term->oper != EcsNot && op_ctx->tgt != EcsWildcard) {
         return !redo;
     }
 
     /* Shouldn't have gotten here if the table has neither ChildOf nor Parent */
     ecs_assert(range.table->flags & EcsTableHasParent, ECS_INTERNAL_ERROR, NULL);
 
-    const ecs_term_t *term = &ctx->query->pub.terms[op->term_index];
+    if (term->oper == EcsNot) {
+        if (!redo) {
+            if (!range.count) {
+                range.count = ecs_table_count(range.table);
+            }
 
-    if (term->oper == EcsOptional) {
+            op_ctx->range = range;
+            op_ctx->cur = range.offset - 1;
+        }
+
+        do {
+            op_ctx->cur ++;
+
+            if (op_ctx->cur >= (op_ctx->range.offset + op_ctx->range.count)) {
+                flecs_query_src_set_range(op, &op_ctx->range, ctx);
+                return false;
+            }
+
+            flecs_query_src_set_single(op, op_ctx->cur, ctx);
+        } while (self
+            ? flecs_query_self_up_with(op, false, ctx)
+            : flecs_query_up_with(op, false, ctx));
+
+        return true;
+    } else if (term->oper == EcsOptional) {
         if (!redo) {
             if (!range.count) {
                 range.count = ecs_table_count(range.table);
