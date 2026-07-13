@@ -42,6 +42,18 @@ typedef struct ecs_expr_value_node_t {
     ecs_expr_small_value_t storage;
 } ecs_expr_value_node_t;
 
+typedef struct ecs_expr_format_t {
+    const char *pos;
+    ecs_expr_node_t *width;
+    ecs_expr_node_t *precision;
+    char fill;
+    char alignment;
+    char notation;
+    bool sign;
+    bool leading_zero;
+    bool is_present;
+} ecs_expr_format_t;
+
 typedef struct ecs_expr_interpolated_string_t {
     ecs_expr_node_t node;
     char *value;              /* modified by parser */
@@ -49,6 +61,7 @@ typedef struct ecs_expr_interpolated_string_t {
     ecs_size_t buffer_size;
     ecs_vec_t fragments;      /* vec<char*> */
     ecs_vec_t expressions;    /* vec<ecs_expr_node_t*> */
+    ecs_vec_t formats;        /* vec<ecs_expr_format_t> */
 } ecs_expr_interpolated_string_t;
 
 typedef struct ecs_expr_initializer_element_t {

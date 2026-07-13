@@ -188,6 +188,7 @@ int flecs_expr_interpolated_string_visit_fold(
 
     int32_t i, e = 0, count = ecs_vec_count(&node->fragments);
     char **fragments = ecs_vec_first(&node->fragments);
+    ecs_expr_format_t *formats = ecs_vec_first(&node->formats);
     for (i = 0; i < count; i ++) {
         char *fragment = fragments[i];
         if (!fragment) {
@@ -200,6 +201,31 @@ int flecs_expr_interpolated_string_visit_fold(
 
             if (expr_ptr[0]->kind != EcsExprValue) {
                 can_fold = false;
+            }
+
+            ecs_expr_format_t *format = &formats[e - 1];
+            if (format->is_present) {
+                if (format->width && flecs_expr_visit_fold(
+                    script, &format->width, desc))
+                {
+                    goto error;
+                }
+                if (format->width &&
+                    format->width->kind != EcsExprValue)
+                {
+                    can_fold = false;
+                }
+
+                if (format->precision && flecs_expr_visit_fold(
+                    script, &format->precision, desc))
+                {
+                    goto error;
+                }
+                if (format->precision &&
+                    format->precision->kind != EcsExprValue)
+                {
+                    can_fold = false;
+                }
             }
         }
     }
@@ -214,13 +240,49 @@ int flecs_expr_interpolated_string_visit_fold(
                 ecs_strbuf_appendstr(&buf, fragment);
             } else {
                 ecs_expr_node_t *expr = ecs_vec_get_t(
-                    &node->expressions, ecs_expr_node_t*, e ++)[0];
+                    &node->expressions, ecs_expr_node_t*, e)[0];
+                ecs_expr_format_t *format = &formats[e ++];
                 ecs_assert(expr->kind == EcsExprValue, 
                     ECS_INTERNAL_ERROR, NULL);
-                ecs_assert(expr->type == ecs_id(ecs_string_t),
-                    ECS_INTERNAL_ERROR, NULL);
-                ecs_expr_value_node_t *val = (ecs_expr_value_node_t*)expr;
-                ecs_strbuf_appendstr(&buf, *(char**)val->ptr);
+
+                ecs_expr_value_node_t *value = (ecs_expr_value_node_t*)expr;
+                if (format->is_present) {
+                    int32_t width = 0;
+                    int32_t precision = -1;
+                    if (format->width) {
+                        ecs_assert(format->width->kind == EcsExprValue,
+                            ECS_INTERNAL_ERROR, NULL);
+                        ecs_expr_value_node_t *width_value =
+                            (ecs_expr_value_node_t*)format->width;
+                        ecs_assert(width_value->node.type ==
+                            ecs_id(ecs_i32_t), ECS_INTERNAL_ERROR, NULL);
+                        width = *(int32_t*)width_value->ptr;
+                    }
+                    if (format->precision) {
+                        ecs_assert(format->precision->kind == EcsExprValue,
+                            ECS_INTERNAL_ERROR, NULL);
+                        ecs_expr_value_node_t *precision_value =
+                            (ecs_expr_value_node_t*)format->precision;
+                        ecs_assert(precision_value->node.type ==
+                            ecs_id(ecs_i32_t), ECS_INTERNAL_ERROR, NULL);
+                        precision = *(int32_t*)precision_value->ptr;
+                    }
+
+                    ecs_value_t format_value = {
+                        .type = value->node.type,
+                        .ptr = value->ptr
+                    };
+                    if (flecs_expr_format_value(script, expr, &format_value,
+                        format, width, precision, &buf))
+                    {
+                        ecs_strbuf_reset(&buf);
+                        goto error;
+                    }
+                } else {
+                    ecs_assert(expr->type == ecs_id(ecs_string_t),
+                        ECS_INTERNAL_ERROR, NULL);
+                    ecs_strbuf_appendstr(&buf, *(char**)value->ptr);
+                }
             }
         }
 
@@ -406,10 +468,16 @@ int flecs_expr_identifier_visit_fold(
     ecs_expr_node_t *expr = node->expr;
     if (expr) {
         node->expr = NULL;
+        if (flecs_expr_visit_fold(script, &expr, desc)) {
+            flecs_expr_visit_free(script, expr);
+            goto error;
+        }
         flecs_visit_fold_replace(script, node_ptr, expr);
     }
 
     return 0;
+error:
+    return -1;
 }
 
 static

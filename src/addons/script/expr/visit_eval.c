@@ -51,13 +51,15 @@ int flecs_expr_interpolated_string_visit_eval(
 
     int32_t i, e = 0, count = ecs_vec_count(&node->fragments);
     char **fragments = ecs_vec_first(&node->fragments);
+    ecs_expr_format_t *formats = ecs_vec_first(&node->formats);
     for (i = 0; i < count; i ++) {
         char *fragment = fragments[i];
         if (fragment) {
             ecs_strbuf_appendstr(&buf, fragment);
         } else {
             ecs_expr_node_t *expr = ecs_vec_get_t(
-                &node->expressions, ecs_expr_node_t*, e ++)[0];
+                &node->expressions, ecs_expr_node_t*, e)[0];
+            ecs_expr_format_t *format = &formats[e ++];
             
             ecs_expr_value_t *val = flecs_expr_stack_result(ctx->stack, 
                 (ecs_expr_node_t*)node);
@@ -66,10 +68,41 @@ int flecs_expr_interpolated_string_visit_eval(
                 goto error;
             }
 
-            ecs_assert(val->value.type == ecs_id(ecs_string_t), 
-                ECS_INTERNAL_ERROR, NULL);
+            if (format->is_present) {
+                int32_t width = 0;
+                int32_t precision = -1;
+                ecs_expr_node_t *format_exprs[2] = {
+                    format->width, format->precision
+                };
+                int32_t *format_values[2] = { &width, &precision };
+                int32_t f;
+                for (f = 0; f < 2; f ++) {
+                    if (!format_exprs[f]) {
+                        continue;
+                    }
 
-            ecs_strbuf_appendstr(&buf, *(char**)val->value.ptr);
+                    ecs_expr_value_t *format_val = flecs_expr_stack_result(
+                        ctx->stack, format_exprs[f]);
+                    if (flecs_expr_visit_eval_priv(
+                        ctx, format_exprs[f], format_val))
+                    {
+                        goto error;
+                    }
+                    ecs_assert(format_val->value.type == ecs_id(ecs_i32_t),
+                        ECS_INTERNAL_ERROR, NULL);
+                    format_values[f][0] = *(int32_t*)format_val->value.ptr;
+                }
+
+                if (flecs_expr_format_value(ctx->script, expr, &val->value,
+                    format, width, precision, &buf))
+                {
+                    goto error;
+                }
+            } else {
+                ecs_assert(val->value.type == ecs_id(ecs_string_t),
+                    ECS_INTERNAL_ERROR, NULL);
+                ecs_strbuf_appendstr(&buf, *(char**)val->value.ptr);
+            }
         }
     }
 
@@ -79,6 +112,7 @@ int flecs_expr_interpolated_string_visit_eval(
     flecs_expr_stack_pop(ctx->stack);
     return 0;
 error:
+    ecs_strbuf_reset(&buf);
     flecs_expr_stack_pop(ctx->stack);
     return -1;
 }

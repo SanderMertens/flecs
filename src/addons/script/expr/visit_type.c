@@ -720,6 +720,7 @@ int flecs_expr_interpolated_string_visit_type(
             char *frag_end = ptr;
 
             ecs_expr_node_t *result = NULL;
+            ecs_expr_format_t format = {0};
 
             if (ch == '$') {
                 char *var_name = ++ ptr;
@@ -765,9 +766,21 @@ int flecs_expr_interpolated_string_visit_type(
 
                 impl->token_remaining = parser.token_cur;
 
+                if (ptr[0] == ':') {
+                    ptr = ECS_CONST_CAST(char*, flecs_expr_format_parse(
+                        &parser, ptr + 1, &format, desc));
+                    if (!ptr) {
+                        flecs_expr_visit_free(script, result);
+                        flecs_expr_format_fini(script, &format);
+                        goto error;
+                    }
+                }
+
                 if (ptr[0] != '}') {
                     flecs_expr_visit_error(script, node,
                         "expected '}' at end of interpolated expression");
+                    flecs_expr_visit_free(script, result);
+                    flecs_expr_format_fini(script, &format);
                     goto error;
                 }
 
@@ -777,24 +790,84 @@ int flecs_expr_interpolated_string_visit_type(
             ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
 
             ecs_expr_eval_desc_t priv_desc = *desc;
-            priv_desc.type = ecs_id(ecs_string_t); /* String output */
+            priv_desc.type = format.is_present ? 0 : ecs_id(ecs_string_t);
 
-            if (flecs_expr_visit_type_priv(script, result, cur, &priv_desc)) {
+            ecs_meta_cursor_t value_cur = {0};
+            ecs_meta_cursor_t *result_cur = format.is_present ? &value_cur : cur;
+            if (flecs_expr_visit_type_priv(
+                script, result, result_cur, &priv_desc))
+            {
                 flecs_expr_visit_free(script, result);
+                flecs_expr_format_fini(script, &format);
                 goto error;
             }
 
-            if (result->type != ecs_id(ecs_string_t)) {
+            if (format.is_present) {
+                if (result->type != ecs_id(ecs_f32_t) &&
+                    result->type != ecs_id(ecs_f64_t))
+                {
+                    flecs_expr_visit_error(script, result,
+                        "format specifiers require an f32 or f64 value");
+                    flecs_expr_visit_free(script, result);
+                    flecs_expr_format_fini(script, &format);
+                    goto error;
+                }
+
+                ecs_expr_node_t **format_values[2] = {
+                    &format.width, &format.precision
+                };
+                int32_t f;
+                for (f = 0; f < 2; f ++) {
+                    ecs_expr_node_t **format_value = format_values[f];
+                    if (!format_value[0]) {
+                        continue;
+                    }
+
+                    ecs_expr_eval_desc_t format_desc = *desc;
+                    format_desc.type = 0;
+                    ecs_meta_cursor_t format_cur = {0};
+                    if (flecs_expr_visit_type_priv(script,
+                        format_value[0], &format_cur, &format_desc))
+                    {
+                        flecs_expr_visit_free(script, result);
+                        flecs_expr_format_fini(script, &format);
+                        goto error;
+                    }
+
+                    if (!flecs_expr_is_type_integer(format_value[0]->type)) {
+                        flecs_expr_visit_error(script, format_value[0],
+                            "format width and precision must be integers");
+                        flecs_expr_visit_free(script, result);
+                        flecs_expr_format_fini(script, &format);
+                        goto error;
+                    }
+
+                    if (format_value[0]->type != ecs_id(ecs_i32_t)) {
+                        ecs_expr_node_t *cast =
+                            (ecs_expr_node_t*)flecs_expr_cast(
+                            script, format_value[0], ecs_id(ecs_i32_t));
+                        if (!cast) {
+                            flecs_expr_visit_free(script, result);
+                            flecs_expr_format_fini(script, &format);
+                            goto error;
+                        }
+                        format_value[0] = cast;
+                    }
+                }
+            } else if (result->type != ecs_id(ecs_string_t)) {
                 result = (ecs_expr_node_t*)flecs_expr_cast(script, 
                     (ecs_expr_node_t*)result, ecs_id(ecs_string_t));
                 if (!result) {
                     /* Cast failed */
+                    flecs_expr_format_fini(script, &format);
                     goto error;
                 }
             }
 
             ecs_vec_append_t(&((ecs_script_impl_t*)script)->allocator, 
                 &node->expressions, ecs_expr_node_t*)[0] = result;
+            ecs_vec_append_t(&((ecs_script_impl_t*)script)->allocator,
+                &node->formats, ecs_expr_format_t)[0] = format;
 
             frag_end[0] = '\0';
 

@@ -176,6 +176,8 @@ ecs_expr_interpolated_string_t* flecs_expr_interpolated_string(
     ecs_vec_init_t(&parser->script->allocator, &result->fragments, char*, 0);
     ecs_vec_init_t(&parser->script->allocator, &result->expressions, 
         ecs_expr_node_t*, 0);
+    ecs_vec_init_t(&parser->script->allocator, &result->formats,
+        ecs_expr_format_t, 0);
 
     return result;
 }

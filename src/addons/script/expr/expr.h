@@ -45,6 +45,25 @@ const char* flecs_script_parse_initializer(
     char until,
     ecs_expr_initializer_t **node_out);
 
+const char* flecs_expr_format_parse(
+    ecs_parser_t *parser,
+    const char *pos,
+    ecs_expr_format_t *format,
+    const ecs_expr_eval_desc_t *desc);
+
+void flecs_expr_format_fini(
+    ecs_script_t *script,
+    ecs_expr_format_t *format);
+
+int flecs_expr_format_value(
+    const ecs_script_t *script,
+    const ecs_expr_node_t *node,
+    const ecs_value_t *value,
+    const ecs_expr_format_t *format,
+    int32_t width,
+    int32_t precision,
+    ecs_strbuf_t *buf);
+
 void flecs_expr_to_str_buf(
     const ecs_script_t *world,
     const ecs_expr_node_t *expr,
