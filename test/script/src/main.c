@@ -507,6 +507,10 @@ void Eval_component_expr_swizzle_var_repeat(void);
 void Eval_component_expr_swizzle_var_subset(void);
 void Eval_component_expr_swizzle_var_rgb(void);
 void Eval_component_expr_swizzle_var_no_target_type(void);
+void Eval_component_expr_swizzle_initializer_r(void);
+void Eval_component_expr_swizzle_initializer_rg(void);
+void Eval_component_expr_swizzle_initializer_rgb(void);
+void Eval_component_expr_swizzle_initializer_rgba(void);
 void Eval_component_expr_member_no_var(void);
 void Eval_default_child_component_w_entity_in_if(void);
 void Eval_default_child_component_w_entity_in_for(void);
@@ -3717,6 +3721,22 @@ bake_test_case Eval_testcases[] = {
     {
         "component_expr_swizzle_var_no_target_type",
         Eval_component_expr_swizzle_var_no_target_type
+    },
+    {
+        "component_expr_swizzle_initializer_r",
+        Eval_component_expr_swizzle_initializer_r
+    },
+    {
+        "component_expr_swizzle_initializer_rg",
+        Eval_component_expr_swizzle_initializer_rg
+    },
+    {
+        "component_expr_swizzle_initializer_rgb",
+        Eval_component_expr_swizzle_initializer_rgb
+    },
+    {
+        "component_expr_swizzle_initializer_rgba",
+        Eval_component_expr_swizzle_initializer_rgba
     },
     {
         "component_expr_member_no_var",
@@ -8540,7 +8560,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        526,
+        530,
         Eval_testcases
     },
     {

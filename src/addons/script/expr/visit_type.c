@@ -950,6 +950,50 @@ error:
 }
 
 static
+void flecs_expr_member_swizzle_expand_hint(
+    ecs_meta_cursor_t *cur,
+    ecs_expr_member_t *node)
+{
+    int32_t i, count = ecs_os_strlen(node->member_name);
+    if (count < 2 || count > FLECS_EXPR_SWIZZLE_MAX) {
+        return;
+    }
+
+    ecs_meta_scope_t *scope = &cur->scope[cur->depth];
+    if (scope->is_collection || scope->is_map || scope->is_value ||
+        scope->opaque || !scope->ops)
+    {
+        return;
+    }
+
+    int32_t ops_cur = scope->ops_cur;
+    if ((ops_cur + count) > scope->ops_count) {
+        return;
+    }
+
+    ecs_meta_op_t *first = &scope->ops[ops_cur];
+    if (first->kind <= EcsOpPrimitive) {
+        return;
+    }
+
+    for (i = 0; i < count; i ++) {
+        ecs_meta_op_t *op = &scope->ops[ops_cur + i];
+        if (op->kind <= EcsOpPrimitive || op->type != first->type) {
+            return;
+        }
+
+        ecs_size_t offset = op->offset - first->offset;
+        if (offset < 0 || offset > UINT16_MAX) {
+            return;
+        }
+
+        node->swizzle_dst[i] = flecs_ito(uint16_t, offset);
+    }
+
+    node->swizzle_can_expand = true;
+}
+
+static
 int flecs_expr_initializer_visit_type(
     ecs_script_t *script,
     ecs_expr_initializer_t *node,
@@ -1053,6 +1097,15 @@ int flecs_expr_initializer_visit_type(
             }
         }
 
+        bool swizzle_expand_allowed = !elem->operator && !is_dynamic;
+        if (elem->value->kind == EcsExprMember) {
+            ((ecs_expr_member_t*)elem->value)->swizzle_expand_allowed =
+                swizzle_expand_allowed;
+        } else if (elem->value->kind == EcsExprIdentifier) {
+            ((ecs_expr_identifier_t*)elem->value)->swizzle_expand_allowed =
+                swizzle_expand_allowed;
+        }
+
         ecs_entity_t elem_type = ecs_meta_get_type(cur);
         ecs_meta_cursor_t elem_cur = *cur;
         if (elem_type == ecs_id(ecs_value_t) &&
@@ -1100,6 +1153,16 @@ int flecs_expr_initializer_visit_type(
                  * a nested initializer may have to allocate elements in the 
                  * parent collection value. */
                 ((ecs_expr_initializer_t*)elem->value)->is_dynamic = true;
+            }
+        }
+
+        ecs_expr_member_t *member = flecs_expr_expand_swizzle_get(elem->value);
+        if (member) {
+            int32_t s;
+            for (s = 1; s < member->swizzle_count; s ++) {
+                if (ecs_meta_next(cur)) {
+                    goto error;
+                }
             }
         }
     }
@@ -1331,6 +1394,7 @@ int flecs_expr_identifier_variable_member_visit_type(
         script, (ecs_expr_node_t*)node, node->value);
     ecs_expr_member_t *member_node = flecs_expr_member_from(
         script, (ecs_expr_node_t*)var_node, &member_sep[1]);
+    member_node->swizzle_expand_allowed = node->swizzle_expand_allowed;
 
     node->expr = (ecs_expr_node_t*)member_node;
 
@@ -2005,14 +2069,18 @@ int flecs_expr_member_try_swizzle(
         ecs_entity_t target_elem_type = 0;
         int32_t target_count = flecs_script_get_vector_type_data(
             world, target_type, &target_elem_type);
-        if (target_count != swizzle_count || target_elem_type != elem_type) {
+        if (target_count == swizzle_count && target_elem_type == elem_type) {
+            result_type = target_type;
+        } else if (node->swizzle_can_expand && elem_type == target_type) {
+            result_type = target_type;
+            node->swizzle_expand = true;
+        } else {
             flecs_expr_visit_error(script, node,
                 "swizzle '%s' of type '%s' is incompatible with type '%s'",
                 name, flecs_errstr(ecs_get_path(world, left_type)),
                 flecs_errstr_1(ecs_get_path(world, target_type)));
             return -1;
         }
-        result_type = target_type;
     } else {
         if (swizzle_count != member_count) {
             flecs_expr_visit_error(script, node,
@@ -2043,6 +2111,12 @@ int flecs_expr_member_visit_type(
     ecs_entity_t target_type = 0;
     if (cur && cur->valid) {
         target_type = ecs_meta_get_type(cur);
+    }
+
+    node->swizzle_can_expand = false;
+    node->swizzle_expand = false;
+    if (node->swizzle_expand_allowed && cur && cur->valid) {
+        flecs_expr_member_swizzle_expand_hint(cur, node);
     }
 
     if (flecs_expr_visit_type_priv(script, node->left, cur, desc)) {

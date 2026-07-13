@@ -468,4 +468,26 @@ bool flecs_value_is_0(
     }
 }
 
+ecs_expr_member_t* flecs_expr_expand_swizzle_get(
+    ecs_expr_node_t *node)
+{
+    if (node->kind == EcsExprIdentifier) {
+        node = ((ecs_expr_identifier_t*)node)->expr;
+        if (!node) {
+            return NULL;
+        }
+    }
+
+    if (node->kind != EcsExprMember) {
+        return NULL;
+    }
+
+    ecs_expr_member_t *member = (ecs_expr_member_t*)node;
+    if (!member->swizzle_expand) {
+        return NULL;
+    }
+
+    return member;
+}
+
 #endif

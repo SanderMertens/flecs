@@ -50975,6 +50975,7 @@ typedef struct ecs_expr_identifier_t {
     ecs_expr_node_t node;
     const char *value;
     ecs_expr_node_t *expr;
+    bool swizzle_expand_allowed;
 } ecs_expr_identifier_t;
 
 typedef struct ecs_expr_unary_t {
@@ -51002,6 +51003,10 @@ typedef struct ecs_expr_member_t {
     int32_t swizzle_count;
     ecs_size_t swizzle_size;
     uint16_t swizzle[FLECS_EXPR_SWIZZLE_MAX];
+    uint16_t swizzle_dst[FLECS_EXPR_SWIZZLE_MAX];
+    bool swizzle_expand_allowed;
+    bool swizzle_can_expand;
+    bool swizzle_expand;
 } ecs_expr_member_t;
 
 typedef struct ecs_expr_function_t {
@@ -51236,6 +51241,9 @@ int flecs_expr_initializer_validate_assign(
     ecs_expr_initializer_element_t *elem,
     ecs_entity_t type,
     ecs_size_t value_size);
+
+ecs_expr_member_t* flecs_expr_expand_swizzle_get(
+    ecs_expr_node_t *node);
 
 #endif
 
@@ -98782,6 +98790,28 @@ bool flecs_value_is_0(
     }
 }
 
+ecs_expr_member_t* flecs_expr_expand_swizzle_get(
+    ecs_expr_node_t *node)
+{
+    if (node->kind == EcsExprIdentifier) {
+        node = ((ecs_expr_identifier_t*)node)->expr;
+        if (!node) {
+            return NULL;
+        }
+    }
+
+    if (node->kind != EcsExprMember) {
+        return NULL;
+    }
+
+    ecs_expr_member_t *member = (ecs_expr_member_t*)node;
+    if (!member->swizzle_expand) {
+        return NULL;
+    }
+
+    return member;
+}
+
 #endif
 
 #ifdef FLECS_SCRIPT
@@ -98925,6 +98955,34 @@ int flecs_expr_initializer_eval_static(
             continue;
         }
 
+        ecs_expr_member_t *member = flecs_expr_expand_swizzle_get(elem->value);
+        if (member) {
+            ecs_expr_value_t *left = flecs_expr_stack_result(
+                ctx->stack, member->left);
+            if (flecs_expr_visit_eval_priv(ctx, member->left, left)) {
+                goto error;
+            }
+
+            ecs_size_t size = member->swizzle_size;
+            int32_t s;
+            for (s = 0; s < member->swizzle_count; s ++) {
+                uintptr_t offset = elem->offset + member->swizzle_dst[s];
+                if ((offset + flecs_uto(uintptr_t, size)) >
+                    flecs_uto(uintptr_t, value_size))
+                {
+                    flecs_expr_visit_error(ctx->script, node,
+                        "initializer of type '%s' writes past end of "
+                        "target value", flecs_errstr(ecs_get_path(
+                            ctx->world, member->node.type)));
+                    goto error;
+                }
+
+                ecs_os_memcpy(ECS_OFFSET(value, offset),
+                    ECS_OFFSET(left->value.ptr, member->swizzle[s]), size);
+            }
+            continue;
+        }
+
         ecs_expr_value_t *expr = flecs_expr_stack_result(ctx->stack, elem->value);
         if (flecs_expr_visit_eval_priv(ctx, elem->value, expr)) {
             goto error;
@@ -99028,6 +99086,34 @@ int flecs_expr_initializer_eval_dynamic(
                 (ecs_expr_initializer_t*)elem->value, value, cur, value_size))
             {
                 goto error;
+            }
+            continue;
+        }
+
+        ecs_expr_member_t *member = flecs_expr_expand_swizzle_get(elem->value);
+        if (member) {
+            ecs_expr_value_t *left = flecs_expr_stack_result(
+                ctx->stack, member->left);
+            if (flecs_expr_visit_eval_priv(ctx, member->left, left)) {
+                goto error;
+            }
+
+            int32_t s;
+            for (s = 0; s < member->swizzle_count; s ++) {
+                if (s) {
+                    if (ecs_meta_next(cur)) {
+                        goto error;
+                    }
+                }
+
+                ecs_value_t v_swizzle_value = {
+                    .ptr = ECS_OFFSET(left->value.ptr, member->swizzle[s]),
+                    .type = member->node.type
+                };
+
+                if (ecs_meta_set_value(cur, &v_swizzle_value)) {
+                    goto error;
+                }
             }
             continue;
         }
@@ -99606,6 +99692,7 @@ int flecs_expr_member_visit_eval(
     }
 
     if (node->swizzle_count) {
+        ecs_assert(!node->swizzle_expand, ECS_INTERNAL_ERROR, NULL);
         ecs_size_t size = node->swizzle_size;
         int32_t i;
         for (i = 0; i < node->swizzle_count; i ++) {
@@ -102700,6 +102787,50 @@ error:
 }
 
 static
+void flecs_expr_member_swizzle_expand_hint(
+    ecs_meta_cursor_t *cur,
+    ecs_expr_member_t *node)
+{
+    int32_t i, count = ecs_os_strlen(node->member_name);
+    if (count < 2 || count > FLECS_EXPR_SWIZZLE_MAX) {
+        return;
+    }
+
+    ecs_meta_scope_t *scope = &cur->scope[cur->depth];
+    if (scope->is_collection || scope->is_map || scope->is_value ||
+        scope->opaque || !scope->ops)
+    {
+        return;
+    }
+
+    int32_t ops_cur = scope->ops_cur;
+    if ((ops_cur + count) > scope->ops_count) {
+        return;
+    }
+
+    ecs_meta_op_t *first = &scope->ops[ops_cur];
+    if (first->kind <= EcsOpPrimitive) {
+        return;
+    }
+
+    for (i = 0; i < count; i ++) {
+        ecs_meta_op_t *op = &scope->ops[ops_cur + i];
+        if (op->kind <= EcsOpPrimitive || op->type != first->type) {
+            return;
+        }
+
+        ecs_size_t offset = op->offset - first->offset;
+        if (offset < 0 || offset > UINT16_MAX) {
+            return;
+        }
+
+        node->swizzle_dst[i] = flecs_ito(uint16_t, offset);
+    }
+
+    node->swizzle_can_expand = true;
+}
+
+static
 int flecs_expr_initializer_visit_type(
     ecs_script_t *script,
     ecs_expr_initializer_t *node,
@@ -102803,6 +102934,15 @@ int flecs_expr_initializer_visit_type(
             }
         }
 
+        bool swizzle_expand_allowed = !elem->operator && !is_dynamic;
+        if (elem->value->kind == EcsExprMember) {
+            ((ecs_expr_member_t*)elem->value)->swizzle_expand_allowed =
+                swizzle_expand_allowed;
+        } else if (elem->value->kind == EcsExprIdentifier) {
+            ((ecs_expr_identifier_t*)elem->value)->swizzle_expand_allowed =
+                swizzle_expand_allowed;
+        }
+
         ecs_entity_t elem_type = ecs_meta_get_type(cur);
         ecs_meta_cursor_t elem_cur = *cur;
         if (elem_type == ecs_id(ecs_value_t) &&
@@ -102850,6 +102990,16 @@ int flecs_expr_initializer_visit_type(
                  * a nested initializer may have to allocate elements in the 
                  * parent collection value. */
                 ((ecs_expr_initializer_t*)elem->value)->is_dynamic = true;
+            }
+        }
+
+        ecs_expr_member_t *member = flecs_expr_expand_swizzle_get(elem->value);
+        if (member) {
+            int32_t s;
+            for (s = 1; s < member->swizzle_count; s ++) {
+                if (ecs_meta_next(cur)) {
+                    goto error;
+                }
             }
         }
     }
@@ -103081,6 +103231,7 @@ int flecs_expr_identifier_variable_member_visit_type(
         script, (ecs_expr_node_t*)node, node->value);
     ecs_expr_member_t *member_node = flecs_expr_member_from(
         script, (ecs_expr_node_t*)var_node, &member_sep[1]);
+    member_node->swizzle_expand_allowed = node->swizzle_expand_allowed;
 
     node->expr = (ecs_expr_node_t*)member_node;
 
@@ -103755,14 +103906,18 @@ int flecs_expr_member_try_swizzle(
         ecs_entity_t target_elem_type = 0;
         int32_t target_count = flecs_script_get_vector_type_data(
             world, target_type, &target_elem_type);
-        if (target_count != swizzle_count || target_elem_type != elem_type) {
+        if (target_count == swizzle_count && target_elem_type == elem_type) {
+            result_type = target_type;
+        } else if (node->swizzle_can_expand && elem_type == target_type) {
+            result_type = target_type;
+            node->swizzle_expand = true;
+        } else {
             flecs_expr_visit_error(script, node,
                 "swizzle '%s' of type '%s' is incompatible with type '%s'",
                 name, flecs_errstr(ecs_get_path(world, left_type)),
                 flecs_errstr_1(ecs_get_path(world, target_type)));
             return -1;
         }
-        result_type = target_type;
     } else {
         if (swizzle_count != member_count) {
             flecs_expr_visit_error(script, node,
@@ -103793,6 +103948,12 @@ int flecs_expr_member_visit_type(
     ecs_entity_t target_type = 0;
     if (cur && cur->valid) {
         target_type = ecs_meta_get_type(cur);
+    }
+
+    node->swizzle_can_expand = false;
+    node->swizzle_expand = false;
+    if (node->swizzle_expand_allowed && cur && cur->valid) {
+        flecs_expr_member_swizzle_expand_hint(cur, node);
     }
 
     if (flecs_expr_visit_type_priv(script, node->left, cur, desc)) {

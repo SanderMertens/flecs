@@ -16501,6 +16501,134 @@ void Eval_component_expr_swizzle_var_no_target_type(void) {
     ecs_fini(world);
 }
 
+static
+ecs_entity_t flecs_swizzle_register_rgba(
+    ecs_world_t *world)
+{
+    ecs_entity_t ecs_id(Rgba) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Rgba" }),
+        .members = {
+            {"r", ecs_id(ecs_f32_t)},
+            {"g", ecs_id(ecs_f32_t)},
+            {"b", ecs_id(ecs_f32_t)},
+            {"a", ecs_id(ecs_f32_t)}
+        }
+    });
+    return ecs_id(Rgba);
+}
+
+void Eval_component_expr_swizzle_initializer_r(void) {
+    typedef struct { float r; float g; float b; float a; } Rgba;
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Rgba) = flecs_swizzle_register_rgba(world);
+    test_assert(ecs_id(Rgba) != 0);
+
+    const char *expr =
+    HEAD "const color = Rgba: {1, 2, 3, 4}"
+    LINE "e {"
+    LINE "  Rgba: {color.r, 20, 30, 255}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const Rgba *ptr = ecs_get(world, e, Rgba);
+    test_assert(ptr != NULL);
+    test_int(ptr->r, 1);
+    test_int(ptr->g, 20);
+    test_int(ptr->b, 30);
+    test_int(ptr->a, 255);
+
+    ecs_fini(world);
+}
+
+void Eval_component_expr_swizzle_initializer_rg(void) {
+    typedef struct { float r; float g; float b; float a; } Rgba;
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Rgba) = flecs_swizzle_register_rgba(world);
+    test_assert(ecs_id(Rgba) != 0);
+
+    const char *expr =
+    HEAD "const color = Rgba: {1, 2, 3, 4}"
+    LINE "e {"
+    LINE "  Rgba: {color.rg, 30, 255}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const Rgba *ptr = ecs_get(world, e, Rgba);
+    test_assert(ptr != NULL);
+    test_int(ptr->r, 1);
+    test_int(ptr->g, 2);
+    test_int(ptr->b, 30);
+    test_int(ptr->a, 255);
+
+    ecs_fini(world);
+}
+
+void Eval_component_expr_swizzle_initializer_rgb(void) {
+    typedef struct { float r; float g; float b; float a; } Rgba;
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Rgba) = flecs_swizzle_register_rgba(world);
+    test_assert(ecs_id(Rgba) != 0);
+
+    const char *expr =
+    HEAD "const color = Rgba: {1, 2, 3, 4}"
+    LINE "e {"
+    LINE "  Rgba: {color.rgb, 255}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const Rgba *ptr = ecs_get(world, e, Rgba);
+    test_assert(ptr != NULL);
+    test_int(ptr->r, 1);
+    test_int(ptr->g, 2);
+    test_int(ptr->b, 3);
+    test_int(ptr->a, 255);
+
+    ecs_fini(world);
+}
+
+void Eval_component_expr_swizzle_initializer_rgba(void) {
+    typedef struct { float r; float g; float b; float a; } Rgba;
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Rgba) = flecs_swizzle_register_rgba(world);
+    test_assert(ecs_id(Rgba) != 0);
+
+    const char *expr =
+    HEAD "const color = Rgba: {1, 2, 3, 4}"
+    LINE "e {"
+    LINE "  Rgba: {color.rgba}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const Rgba *ptr = ecs_get(world, e, Rgba);
+    test_assert(ptr != NULL);
+    test_int(ptr->r, 1);
+    test_int(ptr->g, 2);
+    test_int(ptr->b, 3);
+    test_int(ptr->a, 4);
+
+    ecs_fini(world);
+}
+
 void Eval_component_expr_member_no_var(void) {
     ecs_world_t *world = ecs_init();
 
