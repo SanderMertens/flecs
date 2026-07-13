@@ -468,7 +468,12 @@ int flecs_expr_identifier_visit_fold(
     ecs_expr_node_t *expr = node->expr;
     if (expr) {
         node->expr = NULL;
-        if (flecs_expr_visit_fold(script, &expr, desc)) {
+        /* Keep resolved global variables live. Their value can change after a
+         * function is compiled, in which case dependent scripts are reevaluated
+         * with the existing function AST. */
+        if (expr->kind != EcsExprGlobalVariable &&
+            flecs_expr_visit_fold(script, &expr, desc))
+        {
             flecs_expr_visit_free(script, expr);
             goto error;
         }

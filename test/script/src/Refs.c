@@ -3834,6 +3834,52 @@ void Refs_global_const_var_declared_in_same_script_w_fn_other_scripts(void) {
     ecs_fini(world);
 }
 
+void Refs_global_const_var_in_scoped_function_other_script(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t player_script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "player_script" }),
+        .code =
+            HEAD "player {"
+            LINE "  export const BuildingsPlaced = u64: 0"
+            LINE "  fn isBuildingPlaced(bit: i32) -> bool {"
+            LINE "    BuildingsPlaced & (1 << bit)"
+            LINE "  }"
+            LINE "}"
+    });
+    test_assert(player_script != 0);
+
+    ecs_entity_t hud_script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "hud_script" }),
+        .code =
+            HEAD "hud {"
+            LINE "  if player.isBuildingPlaced(0) {"
+            LINE "    placed {}"
+            LINE "  } else {"
+            LINE "    not_placed {}"
+            LINE "  }"
+            LINE "}"
+    });
+    test_assert(hud_script != 0);
+
+    test_assert(ecs_lookup(world, "hud.placed") == 0);
+    test_assert(ecs_lookup(world, "hud.not_placed") != 0);
+
+    ecs_entity_t buildings_placed = ecs_lookup(
+        world, "player.BuildingsPlaced");
+    test_assert(buildings_placed != 0);
+
+    ecs_value_t value = ecs_const_var_get(world, buildings_placed);
+    test_assert(value.ptr != NULL);
+    *(ecs_u64_t*)value.ptr |= 1;
+    ecs_const_var_modified(world, buildings_placed);
+
+    test_assert(ecs_lookup(world, "hud.placed") != 0);
+    test_assert(ecs_lookup(world, "hud.not_placed") == 0);
+
+    ecs_fini(world);
+}
+
 void Refs_ref_declared_in_same_script(void) {
     ecs_world_t *world = ecs_init();
 

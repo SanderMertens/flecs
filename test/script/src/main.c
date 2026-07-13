@@ -1858,6 +1858,7 @@ void Refs_global_const_var_declared_in_same_script(void);
 void Refs_global_const_var_declared_in_same_script_w_fn(void);
 void Refs_global_const_var_declared_in_same_script_w_fn_other_script(void);
 void Refs_global_const_var_declared_in_same_script_w_fn_other_scripts(void);
+void Refs_global_const_var_in_scoped_function_other_script(void);
 void Refs_ref_declared_in_same_script(void);
 void Refs_ref_declared_in_same_script_w_fn(void);
 void Refs_ref_declared_in_same_script_w_fn_other_script(void);
@@ -9195,6 +9196,10 @@ bake_test_case Refs_testcases[] = {
         Refs_global_const_var_declared_in_same_script_w_fn_other_scripts
     },
     {
+        "global_const_var_in_scoped_function_other_script",
+        Refs_global_const_var_in_scoped_function_other_script
+    },
+    {
         "ref_declared_in_same_script",
         Refs_ref_declared_in_same_script
     },
@@ -9330,7 +9335,7 @@ static bake_test_suite suites[] = {
         "Refs",
         NULL,
         NULL,
-        84,
+        85,
         Refs_testcases
     }
 };
