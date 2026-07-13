@@ -2671,3 +2671,1217 @@ void Format_reproducer_width_variable_named_e(void) {
     ecs_script_vars_fini(vars);
     ecs_fini(world);
 }
+
+void Format_boundary_precision_zero_f32_literal(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *value = ecs_script_vars_define(
+        vars, "value", ecs_f32_t);
+    test_assert(value != NULL);
+    *(ecs_f32_t*)value->value.ptr = 12.25f;
+
+    const char *folding = test_param("folding");
+    test_assert(folding != NULL);
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .disable_folding = !strcmp(folding, "disabled")
+    };
+
+    char *result = NULL;
+    test_assert(ecs_expr_run(world, "\"{value:.0}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) != NULL);
+    test_str(result, "12");
+    ecs_os_free(result);
+
+    ecs_script_vars_fini(vars);
+    ecs_fini(world);
+}
+
+void Format_boundary_precision_zero_f32_variable(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *value = ecs_script_vars_define(
+        vars, "value", ecs_f32_t);
+    test_assert(value != NULL);
+    *(ecs_f32_t*)value->value.ptr = 12.25f;
+
+    ecs_script_var_t *boundary = ecs_script_vars_define(
+        vars, "boundary", ecs_i32_t);
+    test_assert(boundary != NULL);
+    *(ecs_i32_t*)boundary->value.ptr = 0;
+
+    const char *folding = test_param("folding");
+    test_assert(folding != NULL);
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .disable_folding = !strcmp(folding, "disabled")
+    };
+
+    char *result = NULL;
+    test_assert(ecs_expr_run(world, "\"{value:.boundary}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) != NULL);
+    test_str(result, "12");
+    ecs_os_free(result);
+
+    result = NULL;
+    test_assert(ecs_expr_run(world, "\"{value:.$boundary}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) != NULL);
+    test_str(result, "12");
+    ecs_os_free(result);
+
+    ecs_script_vars_fini(vars);
+    ecs_fini(world);
+}
+
+void Format_boundary_precision_zero_f32_expression(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *value = ecs_script_vars_define(
+        vars, "value", ecs_f32_t);
+    test_assert(value != NULL);
+    *(ecs_f32_t*)value->value.ptr = 12.25f;
+
+    ecs_script_var_t *boundary = ecs_script_vars_define(
+        vars, "boundary", ecs_i32_t);
+    test_assert(boundary != NULL);
+    *(ecs_i32_t*)boundary->value.ptr = 0;
+
+    const char *folding = test_param("folding");
+    test_assert(folding != NULL);
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .disable_folding = !strcmp(folding, "disabled")
+    };
+
+    char *result = NULL;
+    test_assert(ecs_expr_run(world, "\"{value:.(boundary + 0)}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) != NULL);
+    test_str(result, "12");
+    ecs_os_free(result);
+
+    ecs_script_vars_fini(vars);
+    ecs_fini(world);
+}
+
+void Format_boundary_precision_zero_f64_literal(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *value = ecs_script_vars_define(
+        vars, "value", ecs_f64_t);
+    test_assert(value != NULL);
+    *(ecs_f64_t*)value->value.ptr = 12.25;
+
+    const char *folding = test_param("folding");
+    test_assert(folding != NULL);
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .disable_folding = !strcmp(folding, "disabled")
+    };
+
+    char *result = NULL;
+    test_assert(ecs_expr_run(world, "\"{value:.0}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) != NULL);
+    test_str(result, "12");
+    ecs_os_free(result);
+
+    ecs_script_vars_fini(vars);
+    ecs_fini(world);
+}
+
+void Format_boundary_precision_zero_f64_variable(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *value = ecs_script_vars_define(
+        vars, "value", ecs_f64_t);
+    test_assert(value != NULL);
+    *(ecs_f64_t*)value->value.ptr = 12.25;
+
+    ecs_script_var_t *boundary = ecs_script_vars_define(
+        vars, "boundary", ecs_i32_t);
+    test_assert(boundary != NULL);
+    *(ecs_i32_t*)boundary->value.ptr = 0;
+
+    const char *folding = test_param("folding");
+    test_assert(folding != NULL);
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .disable_folding = !strcmp(folding, "disabled")
+    };
+
+    char *result = NULL;
+    test_assert(ecs_expr_run(world, "\"{value:.boundary}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) != NULL);
+    test_str(result, "12");
+    ecs_os_free(result);
+
+    result = NULL;
+    test_assert(ecs_expr_run(world, "\"{value:.$boundary}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) != NULL);
+    test_str(result, "12");
+    ecs_os_free(result);
+
+    ecs_script_vars_fini(vars);
+    ecs_fini(world);
+}
+
+void Format_boundary_precision_zero_f64_expression(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *value = ecs_script_vars_define(
+        vars, "value", ecs_f64_t);
+    test_assert(value != NULL);
+    *(ecs_f64_t*)value->value.ptr = 12.25;
+
+    ecs_script_var_t *boundary = ecs_script_vars_define(
+        vars, "boundary", ecs_i32_t);
+    test_assert(boundary != NULL);
+    *(ecs_i32_t*)boundary->value.ptr = 0;
+
+    const char *folding = test_param("folding");
+    test_assert(folding != NULL);
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .disable_folding = !strcmp(folding, "disabled")
+    };
+
+    char *result = NULL;
+    test_assert(ecs_expr_run(world, "\"{value:.(boundary + 0)}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) != NULL);
+    test_str(result, "12");
+    ecs_os_free(result);
+
+    ecs_script_vars_fini(vars);
+    ecs_fini(world);
+}
+
+void Format_boundary_precision_negative_f32_literal(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *value = ecs_script_vars_define(
+        vars, "value", ecs_f32_t);
+    test_assert(value != NULL);
+    *(ecs_f32_t*)value->value.ptr = 12.25f;
+
+    const char *folding = test_param("folding");
+    test_assert(folding != NULL);
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .disable_folding = !strcmp(folding, "disabled")
+    };
+
+    char *result = NULL;
+    ecs_log_set_level(-4);
+    test_assert(ecs_expr_run(world, "\"{value:.-1}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) == NULL);
+
+    ecs_script_vars_fini(vars);
+    ecs_fini(world);
+}
+
+void Format_boundary_precision_negative_f32_variable(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *value = ecs_script_vars_define(
+        vars, "value", ecs_f32_t);
+    test_assert(value != NULL);
+    *(ecs_f32_t*)value->value.ptr = 12.25f;
+
+    ecs_script_var_t *boundary = ecs_script_vars_define(
+        vars, "boundary", ecs_i32_t);
+    test_assert(boundary != NULL);
+    *(ecs_i32_t*)boundary->value.ptr = -1;
+
+    const char *folding = test_param("folding");
+    test_assert(folding != NULL);
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .disable_folding = !strcmp(folding, "disabled")
+    };
+
+    char *result = NULL;
+    ecs_log_set_level(-4);
+    test_assert(ecs_expr_run(world, "\"{value:.boundary}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) == NULL);
+    test_assert(ecs_expr_run(world, "\"{value:.$boundary}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) == NULL);
+
+    ecs_script_vars_fini(vars);
+    ecs_fini(world);
+}
+
+void Format_boundary_precision_negative_f32_expression(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *value = ecs_script_vars_define(
+        vars, "value", ecs_f32_t);
+    test_assert(value != NULL);
+    *(ecs_f32_t*)value->value.ptr = 12.25f;
+
+    ecs_script_var_t *boundary = ecs_script_vars_define(
+        vars, "boundary", ecs_i32_t);
+    test_assert(boundary != NULL);
+    *(ecs_i32_t*)boundary->value.ptr = -1;
+
+    const char *folding = test_param("folding");
+    test_assert(folding != NULL);
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .disable_folding = !strcmp(folding, "disabled")
+    };
+
+    char *result = NULL;
+    ecs_log_set_level(-4);
+    test_assert(ecs_expr_run(world, "\"{value:.(boundary + 0)}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) == NULL);
+
+    ecs_script_vars_fini(vars);
+    ecs_fini(world);
+}
+
+void Format_boundary_precision_negative_f64_literal(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *value = ecs_script_vars_define(
+        vars, "value", ecs_f64_t);
+    test_assert(value != NULL);
+    *(ecs_f64_t*)value->value.ptr = 12.25;
+
+    const char *folding = test_param("folding");
+    test_assert(folding != NULL);
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .disable_folding = !strcmp(folding, "disabled")
+    };
+
+    char *result = NULL;
+    ecs_log_set_level(-4);
+    test_assert(ecs_expr_run(world, "\"{value:.-1}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) == NULL);
+
+    ecs_script_vars_fini(vars);
+    ecs_fini(world);
+}
+
+void Format_boundary_precision_negative_f64_variable(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *value = ecs_script_vars_define(
+        vars, "value", ecs_f64_t);
+    test_assert(value != NULL);
+    *(ecs_f64_t*)value->value.ptr = 12.25;
+
+    ecs_script_var_t *boundary = ecs_script_vars_define(
+        vars, "boundary", ecs_i32_t);
+    test_assert(boundary != NULL);
+    *(ecs_i32_t*)boundary->value.ptr = -1;
+
+    const char *folding = test_param("folding");
+    test_assert(folding != NULL);
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .disable_folding = !strcmp(folding, "disabled")
+    };
+
+    char *result = NULL;
+    ecs_log_set_level(-4);
+    test_assert(ecs_expr_run(world, "\"{value:.boundary}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) == NULL);
+    test_assert(ecs_expr_run(world, "\"{value:.$boundary}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) == NULL);
+
+    ecs_script_vars_fini(vars);
+    ecs_fini(world);
+}
+
+void Format_boundary_precision_negative_f64_expression(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *value = ecs_script_vars_define(
+        vars, "value", ecs_f64_t);
+    test_assert(value != NULL);
+    *(ecs_f64_t*)value->value.ptr = 12.25;
+
+    ecs_script_var_t *boundary = ecs_script_vars_define(
+        vars, "boundary", ecs_i32_t);
+    test_assert(boundary != NULL);
+    *(ecs_i32_t*)boundary->value.ptr = -1;
+
+    const char *folding = test_param("folding");
+    test_assert(folding != NULL);
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .disable_folding = !strcmp(folding, "disabled")
+    };
+
+    char *result = NULL;
+    ecs_log_set_level(-4);
+    test_assert(ecs_expr_run(world, "\"{value:.(boundary + 0)}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) == NULL);
+
+    ecs_script_vars_fini(vars);
+    ecs_fini(world);
+}
+
+void Format_boundary_precision_large_f32_literal(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *value = ecs_script_vars_define(
+        vars, "value", ecs_f32_t);
+    test_assert(value != NULL);
+    *(ecs_f32_t*)value->value.ptr = 12.25f;
+
+    const char *folding = test_param("folding");
+    test_assert(folding != NULL);
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .disable_folding = !strcmp(folding, "disabled")
+    };
+
+    char *result = NULL;
+    ecs_log_set_level(-4);
+    test_assert(ecs_expr_run(world, "\"{value:.1025}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) == NULL);
+
+    ecs_script_vars_fini(vars);
+    ecs_fini(world);
+}
+
+void Format_boundary_precision_large_f32_variable(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *value = ecs_script_vars_define(
+        vars, "value", ecs_f32_t);
+    test_assert(value != NULL);
+    *(ecs_f32_t*)value->value.ptr = 12.25f;
+
+    ecs_script_var_t *boundary = ecs_script_vars_define(
+        vars, "boundary", ecs_i32_t);
+    test_assert(boundary != NULL);
+    *(ecs_i32_t*)boundary->value.ptr = 1025;
+
+    const char *folding = test_param("folding");
+    test_assert(folding != NULL);
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .disable_folding = !strcmp(folding, "disabled")
+    };
+
+    char *result = NULL;
+    ecs_log_set_level(-4);
+    test_assert(ecs_expr_run(world, "\"{value:.boundary}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) == NULL);
+    test_assert(ecs_expr_run(world, "\"{value:.$boundary}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) == NULL);
+
+    ecs_script_vars_fini(vars);
+    ecs_fini(world);
+}
+
+void Format_boundary_precision_large_f32_expression(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *value = ecs_script_vars_define(
+        vars, "value", ecs_f32_t);
+    test_assert(value != NULL);
+    *(ecs_f32_t*)value->value.ptr = 12.25f;
+
+    ecs_script_var_t *boundary = ecs_script_vars_define(
+        vars, "boundary", ecs_i32_t);
+    test_assert(boundary != NULL);
+    *(ecs_i32_t*)boundary->value.ptr = 1025;
+
+    const char *folding = test_param("folding");
+    test_assert(folding != NULL);
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .disable_folding = !strcmp(folding, "disabled")
+    };
+
+    char *result = NULL;
+    ecs_log_set_level(-4);
+    test_assert(ecs_expr_run(world, "\"{value:.(boundary + 0)}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) == NULL);
+
+    ecs_script_vars_fini(vars);
+    ecs_fini(world);
+}
+
+void Format_boundary_precision_large_f64_literal(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *value = ecs_script_vars_define(
+        vars, "value", ecs_f64_t);
+    test_assert(value != NULL);
+    *(ecs_f64_t*)value->value.ptr = 12.25;
+
+    const char *folding = test_param("folding");
+    test_assert(folding != NULL);
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .disable_folding = !strcmp(folding, "disabled")
+    };
+
+    char *result = NULL;
+    ecs_log_set_level(-4);
+    test_assert(ecs_expr_run(world, "\"{value:.1025}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) == NULL);
+
+    ecs_script_vars_fini(vars);
+    ecs_fini(world);
+}
+
+void Format_boundary_precision_large_f64_variable(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *value = ecs_script_vars_define(
+        vars, "value", ecs_f64_t);
+    test_assert(value != NULL);
+    *(ecs_f64_t*)value->value.ptr = 12.25;
+
+    ecs_script_var_t *boundary = ecs_script_vars_define(
+        vars, "boundary", ecs_i32_t);
+    test_assert(boundary != NULL);
+    *(ecs_i32_t*)boundary->value.ptr = 1025;
+
+    const char *folding = test_param("folding");
+    test_assert(folding != NULL);
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .disable_folding = !strcmp(folding, "disabled")
+    };
+
+    char *result = NULL;
+    ecs_log_set_level(-4);
+    test_assert(ecs_expr_run(world, "\"{value:.boundary}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) == NULL);
+    test_assert(ecs_expr_run(world, "\"{value:.$boundary}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) == NULL);
+
+    ecs_script_vars_fini(vars);
+    ecs_fini(world);
+}
+
+void Format_boundary_precision_large_f64_expression(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *value = ecs_script_vars_define(
+        vars, "value", ecs_f64_t);
+    test_assert(value != NULL);
+    *(ecs_f64_t*)value->value.ptr = 12.25;
+
+    ecs_script_var_t *boundary = ecs_script_vars_define(
+        vars, "boundary", ecs_i32_t);
+    test_assert(boundary != NULL);
+    *(ecs_i32_t*)boundary->value.ptr = 1025;
+
+    const char *folding = test_param("folding");
+    test_assert(folding != NULL);
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .disable_folding = !strcmp(folding, "disabled")
+    };
+
+    char *result = NULL;
+    ecs_log_set_level(-4);
+    test_assert(ecs_expr_run(world, "\"{value:.(boundary + 0)}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) == NULL);
+
+    ecs_script_vars_fini(vars);
+    ecs_fini(world);
+}
+
+void Format_boundary_width_zero_f32_literal(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *value = ecs_script_vars_define(
+        vars, "value", ecs_f32_t);
+    test_assert(value != NULL);
+    *(ecs_f32_t*)value->value.ptr = 12.25f;
+
+    const char *folding = test_param("folding");
+    test_assert(folding != NULL);
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .disable_folding = !strcmp(folding, "disabled")
+    };
+
+    char *result = NULL;
+    test_assert(ecs_expr_run(world, "\"{value:00}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) != NULL);
+    test_str(result, "12.250000");
+    ecs_os_free(result);
+
+    ecs_script_vars_fini(vars);
+    ecs_fini(world);
+}
+
+void Format_boundary_width_zero_f32_variable(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *value = ecs_script_vars_define(
+        vars, "value", ecs_f32_t);
+    test_assert(value != NULL);
+    *(ecs_f32_t*)value->value.ptr = 12.25f;
+
+    ecs_script_var_t *boundary = ecs_script_vars_define(
+        vars, "boundary", ecs_i32_t);
+    test_assert(boundary != NULL);
+    *(ecs_i32_t*)boundary->value.ptr = 0;
+
+    const char *folding = test_param("folding");
+    test_assert(folding != NULL);
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .disable_folding = !strcmp(folding, "disabled")
+    };
+
+    char *result = NULL;
+    test_assert(ecs_expr_run(world, "\"{value:boundary}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) != NULL);
+    test_str(result, "12.250000");
+    ecs_os_free(result);
+
+    result = NULL;
+    test_assert(ecs_expr_run(world, "\"{value:$boundary}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) != NULL);
+    test_str(result, "12.250000");
+    ecs_os_free(result);
+
+    ecs_script_vars_fini(vars);
+    ecs_fini(world);
+}
+
+void Format_boundary_width_zero_f32_expression(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *value = ecs_script_vars_define(
+        vars, "value", ecs_f32_t);
+    test_assert(value != NULL);
+    *(ecs_f32_t*)value->value.ptr = 12.25f;
+
+    ecs_script_var_t *boundary = ecs_script_vars_define(
+        vars, "boundary", ecs_i32_t);
+    test_assert(boundary != NULL);
+    *(ecs_i32_t*)boundary->value.ptr = 0;
+
+    const char *folding = test_param("folding");
+    test_assert(folding != NULL);
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .disable_folding = !strcmp(folding, "disabled")
+    };
+
+    char *result = NULL;
+    test_assert(ecs_expr_run(world, "\"{value:(boundary + 0)}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) != NULL);
+    test_str(result, "12.250000");
+    ecs_os_free(result);
+
+    ecs_script_vars_fini(vars);
+    ecs_fini(world);
+}
+
+void Format_boundary_width_zero_f64_literal(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *value = ecs_script_vars_define(
+        vars, "value", ecs_f64_t);
+    test_assert(value != NULL);
+    *(ecs_f64_t*)value->value.ptr = 12.25;
+
+    const char *folding = test_param("folding");
+    test_assert(folding != NULL);
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .disable_folding = !strcmp(folding, "disabled")
+    };
+
+    char *result = NULL;
+    test_assert(ecs_expr_run(world, "\"{value:00}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) != NULL);
+    test_str(result, "12.250000");
+    ecs_os_free(result);
+
+    ecs_script_vars_fini(vars);
+    ecs_fini(world);
+}
+
+void Format_boundary_width_zero_f64_variable(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *value = ecs_script_vars_define(
+        vars, "value", ecs_f64_t);
+    test_assert(value != NULL);
+    *(ecs_f64_t*)value->value.ptr = 12.25;
+
+    ecs_script_var_t *boundary = ecs_script_vars_define(
+        vars, "boundary", ecs_i32_t);
+    test_assert(boundary != NULL);
+    *(ecs_i32_t*)boundary->value.ptr = 0;
+
+    const char *folding = test_param("folding");
+    test_assert(folding != NULL);
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .disable_folding = !strcmp(folding, "disabled")
+    };
+
+    char *result = NULL;
+    test_assert(ecs_expr_run(world, "\"{value:boundary}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) != NULL);
+    test_str(result, "12.250000");
+    ecs_os_free(result);
+
+    result = NULL;
+    test_assert(ecs_expr_run(world, "\"{value:$boundary}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) != NULL);
+    test_str(result, "12.250000");
+    ecs_os_free(result);
+
+    ecs_script_vars_fini(vars);
+    ecs_fini(world);
+}
+
+void Format_boundary_width_zero_f64_expression(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *value = ecs_script_vars_define(
+        vars, "value", ecs_f64_t);
+    test_assert(value != NULL);
+    *(ecs_f64_t*)value->value.ptr = 12.25;
+
+    ecs_script_var_t *boundary = ecs_script_vars_define(
+        vars, "boundary", ecs_i32_t);
+    test_assert(boundary != NULL);
+    *(ecs_i32_t*)boundary->value.ptr = 0;
+
+    const char *folding = test_param("folding");
+    test_assert(folding != NULL);
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .disable_folding = !strcmp(folding, "disabled")
+    };
+
+    char *result = NULL;
+    test_assert(ecs_expr_run(world, "\"{value:(boundary + 0)}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) != NULL);
+    test_str(result, "12.250000");
+    ecs_os_free(result);
+
+    ecs_script_vars_fini(vars);
+    ecs_fini(world);
+}
+
+void Format_boundary_width_negative_f32_literal(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *value = ecs_script_vars_define(
+        vars, "value", ecs_f32_t);
+    test_assert(value != NULL);
+    *(ecs_f32_t*)value->value.ptr = 12.25f;
+
+    const char *folding = test_param("folding");
+    test_assert(folding != NULL);
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .disable_folding = !strcmp(folding, "disabled")
+    };
+
+    char *result = NULL;
+    ecs_log_set_level(-4);
+    test_assert(ecs_expr_run(world, "\"{value:-1}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) == NULL);
+
+    ecs_script_vars_fini(vars);
+    ecs_fini(world);
+}
+
+void Format_boundary_width_negative_f32_variable(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *value = ecs_script_vars_define(
+        vars, "value", ecs_f32_t);
+    test_assert(value != NULL);
+    *(ecs_f32_t*)value->value.ptr = 12.25f;
+
+    ecs_script_var_t *boundary = ecs_script_vars_define(
+        vars, "boundary", ecs_i32_t);
+    test_assert(boundary != NULL);
+    *(ecs_i32_t*)boundary->value.ptr = -1;
+
+    const char *folding = test_param("folding");
+    test_assert(folding != NULL);
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .disable_folding = !strcmp(folding, "disabled")
+    };
+
+    char *result = NULL;
+    ecs_log_set_level(-4);
+    test_assert(ecs_expr_run(world, "\"{value:boundary}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) == NULL);
+    test_assert(ecs_expr_run(world, "\"{value:$boundary}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) == NULL);
+
+    ecs_script_vars_fini(vars);
+    ecs_fini(world);
+}
+
+void Format_boundary_width_negative_f32_expression(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *value = ecs_script_vars_define(
+        vars, "value", ecs_f32_t);
+    test_assert(value != NULL);
+    *(ecs_f32_t*)value->value.ptr = 12.25f;
+
+    ecs_script_var_t *boundary = ecs_script_vars_define(
+        vars, "boundary", ecs_i32_t);
+    test_assert(boundary != NULL);
+    *(ecs_i32_t*)boundary->value.ptr = -1;
+
+    const char *folding = test_param("folding");
+    test_assert(folding != NULL);
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .disable_folding = !strcmp(folding, "disabled")
+    };
+
+    char *result = NULL;
+    ecs_log_set_level(-4);
+    test_assert(ecs_expr_run(world, "\"{value:(boundary + 0)}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) == NULL);
+
+    ecs_script_vars_fini(vars);
+    ecs_fini(world);
+}
+
+void Format_boundary_width_negative_f64_literal(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *value = ecs_script_vars_define(
+        vars, "value", ecs_f64_t);
+    test_assert(value != NULL);
+    *(ecs_f64_t*)value->value.ptr = 12.25;
+
+    const char *folding = test_param("folding");
+    test_assert(folding != NULL);
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .disable_folding = !strcmp(folding, "disabled")
+    };
+
+    char *result = NULL;
+    ecs_log_set_level(-4);
+    test_assert(ecs_expr_run(world, "\"{value:-1}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) == NULL);
+
+    ecs_script_vars_fini(vars);
+    ecs_fini(world);
+}
+
+void Format_boundary_width_negative_f64_variable(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *value = ecs_script_vars_define(
+        vars, "value", ecs_f64_t);
+    test_assert(value != NULL);
+    *(ecs_f64_t*)value->value.ptr = 12.25;
+
+    ecs_script_var_t *boundary = ecs_script_vars_define(
+        vars, "boundary", ecs_i32_t);
+    test_assert(boundary != NULL);
+    *(ecs_i32_t*)boundary->value.ptr = -1;
+
+    const char *folding = test_param("folding");
+    test_assert(folding != NULL);
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .disable_folding = !strcmp(folding, "disabled")
+    };
+
+    char *result = NULL;
+    ecs_log_set_level(-4);
+    test_assert(ecs_expr_run(world, "\"{value:boundary}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) == NULL);
+    test_assert(ecs_expr_run(world, "\"{value:$boundary}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) == NULL);
+
+    ecs_script_vars_fini(vars);
+    ecs_fini(world);
+}
+
+void Format_boundary_width_negative_f64_expression(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *value = ecs_script_vars_define(
+        vars, "value", ecs_f64_t);
+    test_assert(value != NULL);
+    *(ecs_f64_t*)value->value.ptr = 12.25;
+
+    ecs_script_var_t *boundary = ecs_script_vars_define(
+        vars, "boundary", ecs_i32_t);
+    test_assert(boundary != NULL);
+    *(ecs_i32_t*)boundary->value.ptr = -1;
+
+    const char *folding = test_param("folding");
+    test_assert(folding != NULL);
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .disable_folding = !strcmp(folding, "disabled")
+    };
+
+    char *result = NULL;
+    ecs_log_set_level(-4);
+    test_assert(ecs_expr_run(world, "\"{value:(boundary + 0)}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) == NULL);
+
+    ecs_script_vars_fini(vars);
+    ecs_fini(world);
+}
+
+void Format_boundary_width_large_f32_literal(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *value = ecs_script_vars_define(
+        vars, "value", ecs_f32_t);
+    test_assert(value != NULL);
+    *(ecs_f32_t*)value->value.ptr = 12.25f;
+
+    const char *folding = test_param("folding");
+    test_assert(folding != NULL);
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .disable_folding = !strcmp(folding, "disabled")
+    };
+
+    char *result = NULL;
+    ecs_log_set_level(-4);
+    test_assert(ecs_expr_run(world, "\"{value:1025}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) == NULL);
+
+    ecs_script_vars_fini(vars);
+    ecs_fini(world);
+}
+
+void Format_boundary_width_large_f32_variable(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *value = ecs_script_vars_define(
+        vars, "value", ecs_f32_t);
+    test_assert(value != NULL);
+    *(ecs_f32_t*)value->value.ptr = 12.25f;
+
+    ecs_script_var_t *boundary = ecs_script_vars_define(
+        vars, "boundary", ecs_i32_t);
+    test_assert(boundary != NULL);
+    *(ecs_i32_t*)boundary->value.ptr = 1025;
+
+    const char *folding = test_param("folding");
+    test_assert(folding != NULL);
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .disable_folding = !strcmp(folding, "disabled")
+    };
+
+    char *result = NULL;
+    ecs_log_set_level(-4);
+    test_assert(ecs_expr_run(world, "\"{value:boundary}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) == NULL);
+    test_assert(ecs_expr_run(world, "\"{value:$boundary}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) == NULL);
+
+    ecs_script_vars_fini(vars);
+    ecs_fini(world);
+}
+
+void Format_boundary_width_large_f32_expression(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *value = ecs_script_vars_define(
+        vars, "value", ecs_f32_t);
+    test_assert(value != NULL);
+    *(ecs_f32_t*)value->value.ptr = 12.25f;
+
+    ecs_script_var_t *boundary = ecs_script_vars_define(
+        vars, "boundary", ecs_i32_t);
+    test_assert(boundary != NULL);
+    *(ecs_i32_t*)boundary->value.ptr = 1025;
+
+    const char *folding = test_param("folding");
+    test_assert(folding != NULL);
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .disable_folding = !strcmp(folding, "disabled")
+    };
+
+    char *result = NULL;
+    ecs_log_set_level(-4);
+    test_assert(ecs_expr_run(world, "\"{value:(boundary + 0)}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) == NULL);
+
+    ecs_script_vars_fini(vars);
+    ecs_fini(world);
+}
+
+void Format_boundary_width_large_f64_literal(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *value = ecs_script_vars_define(
+        vars, "value", ecs_f64_t);
+    test_assert(value != NULL);
+    *(ecs_f64_t*)value->value.ptr = 12.25;
+
+    const char *folding = test_param("folding");
+    test_assert(folding != NULL);
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .disable_folding = !strcmp(folding, "disabled")
+    };
+
+    char *result = NULL;
+    ecs_log_set_level(-4);
+    test_assert(ecs_expr_run(world, "\"{value:1025}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) == NULL);
+
+    ecs_script_vars_fini(vars);
+    ecs_fini(world);
+}
+
+void Format_boundary_width_large_f64_variable(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *value = ecs_script_vars_define(
+        vars, "value", ecs_f64_t);
+    test_assert(value != NULL);
+    *(ecs_f64_t*)value->value.ptr = 12.25;
+
+    ecs_script_var_t *boundary = ecs_script_vars_define(
+        vars, "boundary", ecs_i32_t);
+    test_assert(boundary != NULL);
+    *(ecs_i32_t*)boundary->value.ptr = 1025;
+
+    const char *folding = test_param("folding");
+    test_assert(folding != NULL);
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .disable_folding = !strcmp(folding, "disabled")
+    };
+
+    char *result = NULL;
+    ecs_log_set_level(-4);
+    test_assert(ecs_expr_run(world, "\"{value:boundary}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) == NULL);
+    test_assert(ecs_expr_run(world, "\"{value:$boundary}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) == NULL);
+
+    ecs_script_vars_fini(vars);
+    ecs_fini(world);
+}
+
+void Format_boundary_width_large_f64_expression(void) {
+    ecs_world_t *world = ecs_init();
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *value = ecs_script_vars_define(
+        vars, "value", ecs_f64_t);
+    test_assert(value != NULL);
+    *(ecs_f64_t*)value->value.ptr = 12.25;
+
+    ecs_script_var_t *boundary = ecs_script_vars_define(
+        vars, "boundary", ecs_i32_t);
+    test_assert(boundary != NULL);
+    *(ecs_i32_t*)boundary->value.ptr = 1025;
+
+    const char *folding = test_param("folding");
+    test_assert(folding != NULL);
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .disable_folding = !strcmp(folding, "disabled")
+    };
+
+    char *result = NULL;
+    ecs_log_set_level(-4);
+    test_assert(ecs_expr_run(world, "\"{value:(boundary + 0)}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) == NULL);
+
+    ecs_script_vars_fini(vars);
+    ecs_fini(world);
+}
+
+void Format_boundary_precision_zero_literal_value(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *folding = test_param("folding");
+    test_assert(folding != NULL);
+    ecs_expr_eval_desc_t desc = {
+        .disable_folding = !strcmp(folding, "disabled")
+    };
+
+    char *result = NULL;
+    test_assert(ecs_expr_run(world, "\"{12.25:.0}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) != NULL);
+    test_str(result, "12");
+    ecs_os_free(result);
+
+    ecs_fini(world);
+}
+
+void Format_boundary_precision_negative_literal_value(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *folding = test_param("folding");
+    test_assert(folding != NULL);
+    ecs_expr_eval_desc_t desc = {
+        .disable_folding = !strcmp(folding, "disabled")
+    };
+
+    char *result = NULL;
+    ecs_log_set_level(-4);
+    test_assert(ecs_expr_run(world, "\"{12.25:.-1}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) == NULL);
+
+    ecs_fini(world);
+}
+
+void Format_boundary_precision_large_literal_value(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *folding = test_param("folding");
+    test_assert(folding != NULL);
+    ecs_expr_eval_desc_t desc = {
+        .disable_folding = !strcmp(folding, "disabled")
+    };
+
+    char *result = NULL;
+    ecs_log_set_level(-4);
+    test_assert(ecs_expr_run(world, "\"{12.25:.1025}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) == NULL);
+
+    ecs_fini(world);
+}
+
+void Format_boundary_width_zero_literal_value(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *folding = test_param("folding");
+    test_assert(folding != NULL);
+    ecs_expr_eval_desc_t desc = {
+        .disable_folding = !strcmp(folding, "disabled")
+    };
+
+    char *result = NULL;
+    test_assert(ecs_expr_run(world, "\"{12.25:00}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) != NULL);
+    test_str(result, "12.250000");
+    ecs_os_free(result);
+
+    ecs_fini(world);
+}
+
+void Format_boundary_width_negative_literal_value(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *folding = test_param("folding");
+    test_assert(folding != NULL);
+    ecs_expr_eval_desc_t desc = {
+        .disable_folding = !strcmp(folding, "disabled")
+    };
+
+    char *result = NULL;
+    ecs_log_set_level(-4);
+    test_assert(ecs_expr_run(world, "\"{12.25:-1}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) == NULL);
+
+    ecs_fini(world);
+}
+
+void Format_boundary_width_large_literal_value(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *folding = test_param("folding");
+    test_assert(folding != NULL);
+    ecs_expr_eval_desc_t desc = {
+        .disable_folding = !strcmp(folding, "disabled")
+    };
+
+    char *result = NULL;
+    ecs_log_set_level(-4);
+    test_assert(ecs_expr_run(world, "\"{12.25:1025}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) == NULL);
+
+    ecs_fini(world);
+}
+
+void Format_boundary_precision_max_literal_value(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *folding = test_param("folding");
+    test_assert(folding != NULL);
+    ecs_expr_eval_desc_t desc = {
+        .disable_folding = !strcmp(folding, "disabled")
+    };
+
+    char *result = NULL;
+    test_assert(ecs_expr_run(world, "\"{12.25:.1024}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) != NULL);
+    test_int(ecs_os_strlen(result), 1027);
+    test_assert(!strncmp(result, "12.25", 5));
+    ecs_os_free(result);
+
+    ecs_fini(world);
+}
+
+void Format_boundary_width_max_literal_value(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *folding = test_param("folding");
+    test_assert(folding != NULL);
+    ecs_expr_eval_desc_t desc = {
+        .disable_folding = !strcmp(folding, "disabled")
+    };
+
+    char *result = NULL;
+    test_assert(ecs_expr_run(world, "\"{12.25:1024}\"",
+        &ecs_value_ptr(ecs_string_t, &result), &desc) != NULL);
+    test_int(ecs_os_strlen(result), 1024);
+    test_str(&result[1015], "12.250000");
+    ecs_os_free(result);
+
+    ecs_fini(world);
+}

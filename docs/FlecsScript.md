@@ -668,6 +668,9 @@ const e: "{value:.$precision}"
 const f: "{value:.(precision + 1)}"
 ```
 
+Width and precision values must be between `0` and `1024`, inclusive. Values
+outside this range produce an error.
+
 ### Types
 The type of an expression is determined by the kind of expression, its operands and the context in which the expression is evaluated. The words "type" and "component" can be used interchangeably, as every type in Flecs is a component, and every component is a type. For component types to be used with scripts, they have to be described using the meta reflection addon.
 

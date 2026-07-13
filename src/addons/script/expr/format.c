@@ -246,9 +246,19 @@ int flecs_expr_format_value(
             "minimum width must not be negative");
         return -1;
     }
+    if (format->width && width > 1024) {
+        flecs_expr_visit_error(script, node,
+            "minimum width must not exceed 1024");
+        return -1;
+    }
     if (format->precision && precision < 0) {
         flecs_expr_visit_error(script, node,
             "precision must not be negative");
+        return -1;
+    }
+    if (format->precision && precision > 1024) {
+        flecs_expr_visit_error(script, node,
+            "precision must not exceed 1024");
         return -1;
     }
 
