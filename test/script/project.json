@@ -1895,6 +1895,7 @@
                 "global_const_var_declared_in_same_script_w_fn",
                 "global_const_var_declared_in_same_script_w_fn_other_script",
                 "global_const_var_declared_in_same_script_w_fn_other_scripts",
+                "global_const_var_in_scoped_function_other_script",
                 "ref_declared_in_same_script",
                 "ref_declared_in_same_script_w_fn",
                 "ref_declared_in_same_script_w_fn_other_script",
