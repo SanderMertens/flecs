@@ -2075,6 +2075,55 @@ void Template_template_w_this_kw_in_component_expr(void) {
     ecs_fini(world);
 }
 
+void Template_template_w_const_w_this_kw_in_component_expr(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(Velocity),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "template Foo {"
+    LINE "  Position: {10, 20}"
+    LINE "  const px = this[Position].x"
+    LINE "  Velocity: {px, 0}"
+    LINE "}"
+    LINE "ent {"
+    LINE "  Foo: {}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    test_assert(foo != 0);
+
+    ecs_entity_t ent = ecs_lookup(world, "ent");
+    test_assert(ent != 0);
+    test_assert(ecs_has_id(world, ent, foo));
+
+    const Velocity *v = ecs_get(world, ent, Velocity);
+    test_assert(v != NULL);
+    test_int(v->x, 10);
+    test_int(v->y, 0);
+
+    ecs_fini(world);
+}
+
 void Template_template_w_pair_w_unresolved_var_first(void) {
     ecs_world_t *world = ecs_init();
 
