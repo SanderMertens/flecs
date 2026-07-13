@@ -107,6 +107,20 @@ int flecs_expr_visit_refs(
                 goto error;
             }
         }
+        ecs_expr_format_t *formats = ecs_vec_first(&n->formats);
+        count = ecs_vec_count(&n->formats);
+        for (i = 0; i < count; i ++) {
+            if (formats[i].width && flecs_expr_visit_refs(script,
+                formats[i].width, refs, dynamic_refs, fn_refs))
+            {
+                goto error;
+            }
+            if (formats[i].precision && flecs_expr_visit_refs(script,
+                formats[i].precision, refs, dynamic_refs, fn_refs))
+            {
+                goto error;
+            }
+        }
         break;
     }
     case EcsExprInitializer:

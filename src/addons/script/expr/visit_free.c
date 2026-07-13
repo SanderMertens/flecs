@@ -29,10 +29,19 @@ void flecs_expr_interpolated_string_visit_free(
         flecs_expr_visit_free(script, expressions[i]);
     }
 
+    ecs_expr_format_t *formats = ecs_vec_first(&node->formats);
+    count = ecs_vec_count(&node->formats);
+    for (i = 0; i < count; i ++) {
+        flecs_expr_visit_free(script, formats[i].width);
+        flecs_expr_visit_free(script, formats[i].precision);
+    }
+
     ecs_vec_fini_t(&flecs_script_impl(script)->allocator, 
         &node->fragments, char*);
     ecs_vec_fini_t(&flecs_script_impl(script)->allocator, 
         &node->expressions, ecs_expr_node_t*);
+    ecs_vec_fini_t(&flecs_script_impl(script)->allocator,
+        &node->formats, ecs_expr_format_t);
     flecs_free_n(&flecs_script_impl(script)->allocator,
         char, node->buffer_size, node->buffer);
 }

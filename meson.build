@@ -87,6 +87,7 @@ flecs_src = files(
     'src/addons/script/visit_to_str.c',
     'src/addons/script/visit.c',
     'src/addons/script/expr/ast.c',
+    'src/addons/script/expr/format.c',
     'src/addons/script/expr/parser.c',
     'src/addons/script/expr/stack.c',
     'src/addons/script/expr/util.c',
