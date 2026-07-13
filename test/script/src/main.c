@@ -919,6 +919,50 @@ void Format_fold_const_expression(void);
 void Format_dont_fold_dynamic_expression(void);
 void Format_reproducer_precision_variable_ending_in_e(void);
 void Format_reproducer_width_variable_named_e(void);
+void Format_boundary_precision_zero_f32_literal(void);
+void Format_boundary_precision_zero_f32_variable(void);
+void Format_boundary_precision_zero_f32_expression(void);
+void Format_boundary_precision_zero_f64_literal(void);
+void Format_boundary_precision_zero_f64_variable(void);
+void Format_boundary_precision_zero_f64_expression(void);
+void Format_boundary_precision_negative_f32_literal(void);
+void Format_boundary_precision_negative_f32_variable(void);
+void Format_boundary_precision_negative_f32_expression(void);
+void Format_boundary_precision_negative_f64_literal(void);
+void Format_boundary_precision_negative_f64_variable(void);
+void Format_boundary_precision_negative_f64_expression(void);
+void Format_boundary_precision_large_f32_literal(void);
+void Format_boundary_precision_large_f32_variable(void);
+void Format_boundary_precision_large_f32_expression(void);
+void Format_boundary_precision_large_f64_literal(void);
+void Format_boundary_precision_large_f64_variable(void);
+void Format_boundary_precision_large_f64_expression(void);
+void Format_boundary_width_zero_f32_literal(void);
+void Format_boundary_width_zero_f32_variable(void);
+void Format_boundary_width_zero_f32_expression(void);
+void Format_boundary_width_zero_f64_literal(void);
+void Format_boundary_width_zero_f64_variable(void);
+void Format_boundary_width_zero_f64_expression(void);
+void Format_boundary_width_negative_f32_literal(void);
+void Format_boundary_width_negative_f32_variable(void);
+void Format_boundary_width_negative_f32_expression(void);
+void Format_boundary_width_negative_f64_literal(void);
+void Format_boundary_width_negative_f64_variable(void);
+void Format_boundary_width_negative_f64_expression(void);
+void Format_boundary_width_large_f32_literal(void);
+void Format_boundary_width_large_f32_variable(void);
+void Format_boundary_width_large_f32_expression(void);
+void Format_boundary_width_large_f64_literal(void);
+void Format_boundary_width_large_f64_variable(void);
+void Format_boundary_width_large_f64_expression(void);
+void Format_boundary_precision_zero_literal_value(void);
+void Format_boundary_precision_negative_literal_value(void);
+void Format_boundary_precision_large_literal_value(void);
+void Format_boundary_width_zero_literal_value(void);
+void Format_boundary_width_negative_literal_value(void);
+void Format_boundary_width_large_literal_value(void);
+void Format_boundary_precision_max_literal_value(void);
+void Format_boundary_width_max_literal_value(void);
 
 // Testsuite 'Expr'
 void Expr_setup(void);
@@ -5441,6 +5485,182 @@ bake_test_case Format_testcases[] = {
     {
         "reproducer_width_variable_named_e",
         Format_reproducer_width_variable_named_e
+    },
+    {
+        "boundary_precision_zero_f32_literal",
+        Format_boundary_precision_zero_f32_literal
+    },
+    {
+        "boundary_precision_zero_f32_variable",
+        Format_boundary_precision_zero_f32_variable
+    },
+    {
+        "boundary_precision_zero_f32_expression",
+        Format_boundary_precision_zero_f32_expression
+    },
+    {
+        "boundary_precision_zero_f64_literal",
+        Format_boundary_precision_zero_f64_literal
+    },
+    {
+        "boundary_precision_zero_f64_variable",
+        Format_boundary_precision_zero_f64_variable
+    },
+    {
+        "boundary_precision_zero_f64_expression",
+        Format_boundary_precision_zero_f64_expression
+    },
+    {
+        "boundary_precision_negative_f32_literal",
+        Format_boundary_precision_negative_f32_literal
+    },
+    {
+        "boundary_precision_negative_f32_variable",
+        Format_boundary_precision_negative_f32_variable
+    },
+    {
+        "boundary_precision_negative_f32_expression",
+        Format_boundary_precision_negative_f32_expression
+    },
+    {
+        "boundary_precision_negative_f64_literal",
+        Format_boundary_precision_negative_f64_literal
+    },
+    {
+        "boundary_precision_negative_f64_variable",
+        Format_boundary_precision_negative_f64_variable
+    },
+    {
+        "boundary_precision_negative_f64_expression",
+        Format_boundary_precision_negative_f64_expression
+    },
+    {
+        "boundary_precision_large_f32_literal",
+        Format_boundary_precision_large_f32_literal
+    },
+    {
+        "boundary_precision_large_f32_variable",
+        Format_boundary_precision_large_f32_variable
+    },
+    {
+        "boundary_precision_large_f32_expression",
+        Format_boundary_precision_large_f32_expression
+    },
+    {
+        "boundary_precision_large_f64_literal",
+        Format_boundary_precision_large_f64_literal
+    },
+    {
+        "boundary_precision_large_f64_variable",
+        Format_boundary_precision_large_f64_variable
+    },
+    {
+        "boundary_precision_large_f64_expression",
+        Format_boundary_precision_large_f64_expression
+    },
+    {
+        "boundary_width_zero_f32_literal",
+        Format_boundary_width_zero_f32_literal
+    },
+    {
+        "boundary_width_zero_f32_variable",
+        Format_boundary_width_zero_f32_variable
+    },
+    {
+        "boundary_width_zero_f32_expression",
+        Format_boundary_width_zero_f32_expression
+    },
+    {
+        "boundary_width_zero_f64_literal",
+        Format_boundary_width_zero_f64_literal
+    },
+    {
+        "boundary_width_zero_f64_variable",
+        Format_boundary_width_zero_f64_variable
+    },
+    {
+        "boundary_width_zero_f64_expression",
+        Format_boundary_width_zero_f64_expression
+    },
+    {
+        "boundary_width_negative_f32_literal",
+        Format_boundary_width_negative_f32_literal
+    },
+    {
+        "boundary_width_negative_f32_variable",
+        Format_boundary_width_negative_f32_variable
+    },
+    {
+        "boundary_width_negative_f32_expression",
+        Format_boundary_width_negative_f32_expression
+    },
+    {
+        "boundary_width_negative_f64_literal",
+        Format_boundary_width_negative_f64_literal
+    },
+    {
+        "boundary_width_negative_f64_variable",
+        Format_boundary_width_negative_f64_variable
+    },
+    {
+        "boundary_width_negative_f64_expression",
+        Format_boundary_width_negative_f64_expression
+    },
+    {
+        "boundary_width_large_f32_literal",
+        Format_boundary_width_large_f32_literal
+    },
+    {
+        "boundary_width_large_f32_variable",
+        Format_boundary_width_large_f32_variable
+    },
+    {
+        "boundary_width_large_f32_expression",
+        Format_boundary_width_large_f32_expression
+    },
+    {
+        "boundary_width_large_f64_literal",
+        Format_boundary_width_large_f64_literal
+    },
+    {
+        "boundary_width_large_f64_variable",
+        Format_boundary_width_large_f64_variable
+    },
+    {
+        "boundary_width_large_f64_expression",
+        Format_boundary_width_large_f64_expression
+    },
+    {
+        "boundary_precision_zero_literal_value",
+        Format_boundary_precision_zero_literal_value
+    },
+    {
+        "boundary_precision_negative_literal_value",
+        Format_boundary_precision_negative_literal_value
+    },
+    {
+        "boundary_precision_large_literal_value",
+        Format_boundary_precision_large_literal_value
+    },
+    {
+        "boundary_width_zero_literal_value",
+        Format_boundary_width_zero_literal_value
+    },
+    {
+        "boundary_width_negative_literal_value",
+        Format_boundary_width_negative_literal_value
+    },
+    {
+        "boundary_width_large_literal_value",
+        Format_boundary_width_large_literal_value
+    },
+    {
+        "boundary_precision_max_literal_value",
+        Format_boundary_precision_max_literal_value
+    },
+    {
+        "boundary_width_max_literal_value",
+        Format_boundary_width_max_literal_value
     }
 };
 
@@ -9004,10 +9224,12 @@ const char* Format_folding_param[] = {"enabled", "disabled"};
 bake_test_param Format_params[] = {
     {"folding", (char**)Format_folding_param, 2}
 };
+
 const char* Expr_folding_param[] = {"enabled", "disabled"};
 bake_test_param Expr_params[] = {
     {"folding", (char**)Expr_folding_param, 2}
 };
+
 const char* Deserialize_folding_param[] = {"enabled", "disabled"};
 bake_test_param Deserialize_params[] = {
     {"folding", (char**)Deserialize_folding_param, 2}
@@ -9046,7 +9268,7 @@ static bake_test_suite suites[] = {
         "Format",
         NULL,
         NULL,
-        90,
+        134,
         Format_testcases,
         1,
         Format_params
