@@ -854,3 +854,73 @@ bool flecs_query_tree_up_post(
         }
     }
 }
+
+bool flecs_query_tree_up_not(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx,
+    bool self)
+{
+    ecs_query_tree_ctx_t *op_ctx = flecs_op_ctx(ctx, tree);
+    ecs_iter_t *it = ctx->it;
+
+    ecs_table_range_t range = flecs_query_get_range(
+        op, &op->src, EcsQuerySrc, ctx);
+    if (!range.table) {
+        return false;
+    }
+
+    if (!(range.table->flags & EcsTableHasParent)) {
+        if (redo) {
+            return false;
+        }
+
+        bool result;
+        if (self) {
+            result = flecs_query_self_up_with(op, false, ctx);
+        } else {
+            result = flecs_query_up_with(op, false, ctx);
+        }
+
+        if (result) {
+            return false;
+        }
+
+        goto yield;
+    }
+
+    if (!redo) {
+        if (!range.count) {
+            range.count = ecs_table_count(range.table);
+        }
+
+        op_ctx->range = range;
+        op_ctx->cur = range.offset - 1;
+    }
+
+    do {
+        op_ctx->cur ++;
+
+        if (op_ctx->cur >= (op_ctx->range.offset + op_ctx->range.count)) {
+            flecs_query_src_set_range(op, &op_ctx->range, ctx);
+            return false;
+        }
+
+        flecs_query_src_set_single(op, op_ctx->cur, ctx);
+    } while (self
+        ? flecs_query_self_up_with(op, false, ctx)
+        : flecs_query_up_with(op, false, ctx));
+
+yield: {
+        ecs_id_t id = flecs_query_op_get_id(op, ctx);
+        if (id) {
+            it->ids[op->field_index] = id;
+        }
+
+        it->sources[op->field_index] = 0;
+        flecs_query_it_set_tr(it, op->field_index, NULL);
+        flecs_reset_source_set_flag(it, op->field_index);
+    }
+
+    return true;
+}
