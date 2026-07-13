@@ -80,6 +80,7 @@ typedef struct ecs_expr_identifier_t {
     ecs_expr_node_t node;
     const char *value;
     ecs_expr_node_t *expr;
+    bool swizzle_expand_allowed;
 } ecs_expr_identifier_t;
 
 typedef struct ecs_expr_unary_t {
@@ -107,6 +108,10 @@ typedef struct ecs_expr_member_t {
     int32_t swizzle_count;
     ecs_size_t swizzle_size;
     uint16_t swizzle[FLECS_EXPR_SWIZZLE_MAX];
+    uint16_t swizzle_dst[FLECS_EXPR_SWIZZLE_MAX];
+    bool swizzle_expand_allowed;
+    bool swizzle_can_expand;
+    bool swizzle_expand;
 } ecs_expr_member_t;
 
 typedef struct ecs_expr_function_t {
