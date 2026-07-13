@@ -99758,6 +99758,15 @@ int flecs_expr_component_visit_eval(
     ecs_expr_element_t *node,
     ecs_expr_value_t *out)
 {
+    ecs_script_eval_visitor_t *v = ctx->desc ? ctx->desc->script_visitor : NULL;
+    if (v && v->template) {
+        ecs_assert(out->value.type == node->node.type,
+            ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(out->value.ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+        out->owned = true;
+        return 0;
+    }
+
     ecs_expr_value_t *left = flecs_expr_stack_result(ctx->stack, node->left);
     if (flecs_expr_visit_eval_priv(ctx, node->left, left)) {
         goto error;

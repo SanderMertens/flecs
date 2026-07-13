@@ -645,6 +645,7 @@ void Template_template_w_pair_w_this_kw(void);
 void Template_template_w_pair_scope_w_this_kw(void);
 void Template_template_w_this_kw_assigned_to_entity_field(void);
 void Template_template_w_this_kw_in_component_expr(void);
+void Template_template_w_const_w_this_kw_in_component_expr(void);
 void Template_template_w_pair_w_unresolved_var_first(void);
 void Template_template_w_pair_w_unresolved_var_second(void);
 void Template_template_w_pair_scope_w_unresolved_var_first(void);
@@ -4258,6 +4259,10 @@ bake_test_case Template_testcases[] = {
     {
         "template_w_this_kw_in_component_expr",
         Template_template_w_this_kw_in_component_expr
+    },
+    {
+        "template_w_const_w_this_kw_in_component_expr",
+        Template_template_w_const_w_this_kw_in_component_expr
     },
     {
         "template_w_pair_w_unresolved_var_first",
@@ -8549,7 +8554,7 @@ static bake_test_suite suites[] = {
         "Template",
         NULL,
         NULL,
-        98,
+        99,
         Template_testcases
     },
     {

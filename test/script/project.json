@@ -653,6 +653,7 @@
                 "template_w_pair_scope_w_this_kw",
                 "template_w_this_kw_assigned_to_entity_field",
                 "template_w_this_kw_in_component_expr",
+                "template_w_const_w_this_kw_in_component_expr",
                 "template_w_pair_w_unresolved_var_first",
                 "template_w_pair_w_unresolved_var_second",
                 "template_w_pair_scope_w_unresolved_var_first",
