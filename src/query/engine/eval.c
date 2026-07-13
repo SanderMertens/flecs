@@ -1753,6 +1753,8 @@ bool flecs_query_dispatch(
     case EcsQueryTreeSelfUpPre: return flecs_query_tree_up_pre(op, redo, ctx, true);
     case EcsQueryTreeUpPost: return flecs_query_tree_up_post(op, redo, ctx, false);
     case EcsQueryTreeSelfUpPost: return flecs_query_tree_up_post(op, redo, ctx, true);
+    case EcsQueryTreeUpNot: return flecs_query_tree_up_not(op, redo, ctx, false);
+    case EcsQueryTreeSelfUpNot: return flecs_query_tree_up_not(op, redo, ctx, true);
     case EcsQueryChildrenWc: return flecs_query_tree_and_wildcard(op, redo, ctx, true);
     case EcsQueryTreeWith: return flecs_query_tree_with(op, redo, ctx);
     case EcsQueryChildren: return flecs_query_children(op, redo, ctx);

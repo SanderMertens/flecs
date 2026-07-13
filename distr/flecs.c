@@ -1283,6 +1283,8 @@ typedef enum {
     EcsQueryTreeSelfUpPre,  /* Up traversal for ChildOf that doesn't filter Parent component / returns entire tables */
     EcsQueryTreeUpPost,     /* Up traversal for ChildOf that filters cached tables w/Parent component. */
     EcsQueryTreeSelfUpPost, /* Up traversal for ChildOf that filters cached tables w/Parent component. */
+    EcsQueryTreeUpNot,      /* Up traversal for ChildOf Not terms that evaluates tables w/Parent component per entity. */
+    EcsQueryTreeSelfUpNot,  /* Up traversal for ChildOf Not terms that evaluates tables w/Parent component per entity. */
     EcsQueryChildren,       /* Return children for parent, if possible in order */
     EcsQueryChildrenWc,     /* Return children for parents, if possible in order */
     EcsQueryLookup,         /* Lookup relative to variable */
@@ -2318,6 +2320,12 @@ bool flecs_query_tree_up_pre(
     bool self);
 
 bool flecs_query_tree_up_post(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx,
+    bool self);
+
+bool flecs_query_tree_up_not(
     const ecs_query_op_t *op,
     bool redo,
     const ecs_query_run_ctx_t *ctx,
@@ -36865,6 +36873,8 @@ const char* flecs_query_op_str(
     case EcsQueryTreeSelfUpPre:  return "treesup_pre ";
     case EcsQueryTreeUpPost:     return "treeup_post ";
     case EcsQueryTreeSelfUpPost: return "treesup_post";
+    case EcsQueryTreeUpNot:      return "treeup_not  ";
+    case EcsQueryTreeSelfUpNot:  return "treesup_not ";
     case EcsQueryTreeUp:         return "tree_up     ";
     case EcsQueryTreeSelfUp:     return "tree_selfup ";
     case EcsQueryTreeWith:       return "tree_w      ";
@@ -86496,6 +86506,10 @@ void flecs_query_set_op_kind(
                     op->kind = EcsQueryTreeUpPost;
                 } else if (query->pub.flags & EcsQueryNested) {
                     op->kind = EcsQueryTreeUpPre;
+                } else if (term->oper == EcsNot &&
+                    !(term->flags_ & EcsTermIsToggle))
+                {
+                    op->kind = EcsQueryTreeUpNot;
                 }
             }
         } else if ((term->src.id & trav_flags) == (EcsSelf|EcsUp)) {
@@ -86505,6 +86519,10 @@ void flecs_query_set_op_kind(
                     op->kind = EcsQueryTreeSelfUpPost;
                 } else if (query->pub.flags & EcsQueryNested) {
                     op->kind = EcsQueryTreeSelfUpPre;
+                } else if (term->oper == EcsNot &&
+                    !(term->flags_ & EcsTermIsToggle))
+                {
+                    op->kind = EcsQueryTreeSelfUpNot;
                 }
             }
         } else if (term->flags_ & (EcsTermMatchAny|EcsTermMatchAnySrc)) {
@@ -86678,7 +86696,9 @@ int flecs_query_compile_term(
     flecs_query_set_op_kind(query, &op, term, src_is_var);
 
     bool is_not = (term->oper == EcsNot) && !builtin_pred;
-    if (op.kind == EcsQuerySparseNot) {
+    if (op.kind == EcsQuerySparseNot || op.kind == EcsQueryTreeUpNot ||
+        op.kind == EcsQueryTreeSelfUpNot)
+    {
         is_not = false;
     }
 
@@ -88712,6 +88732,8 @@ bool flecs_query_dispatch(
     case EcsQueryTreeSelfUpPre: return flecs_query_tree_up_pre(op, redo, ctx, true);
     case EcsQueryTreeUpPost: return flecs_query_tree_up_post(op, redo, ctx, false);
     case EcsQueryTreeSelfUpPost: return flecs_query_tree_up_post(op, redo, ctx, true);
+    case EcsQueryTreeUpNot: return flecs_query_tree_up_not(op, redo, ctx, false);
+    case EcsQueryTreeSelfUpNot: return flecs_query_tree_up_not(op, redo, ctx, true);
     case EcsQueryChildrenWc: return flecs_query_tree_and_wildcard(op, redo, ctx, true);
     case EcsQueryTreeWith: return flecs_query_tree_with(op, redo, ctx);
     case EcsQueryChildren: return flecs_query_children(op, redo, ctx);
@@ -89160,6 +89182,8 @@ void flecs_query_op_ctx_fini(
     case EcsQueryTreeSelfUpPre:
     case EcsQueryTreeUpPost:
     case EcsQueryTreeSelfUpPost:
+    case EcsQueryTreeUpNot:
+    case EcsQueryTreeSelfUpNot:
     case EcsQuerySparseUp:
     case EcsQuerySparseSelfUp: {
         ecs_allocator_t *a = flecs_query_get_allocator(it);
@@ -92222,6 +92246,76 @@ bool flecs_query_tree_up_post(
             return flecs_query_up_with(op, redo, ctx);
         }
     }
+}
+
+bool flecs_query_tree_up_not(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx,
+    bool self)
+{
+    ecs_query_tree_ctx_t *op_ctx = flecs_op_ctx(ctx, tree);
+    ecs_iter_t *it = ctx->it;
+
+    ecs_table_range_t range = flecs_query_get_range(
+        op, &op->src, EcsQuerySrc, ctx);
+    if (!range.table) {
+        return false;
+    }
+
+    if (!(range.table->flags & EcsTableHasParent)) {
+        if (redo) {
+            return false;
+        }
+
+        bool result;
+        if (self) {
+            result = flecs_query_self_up_with(op, false, ctx);
+        } else {
+            result = flecs_query_up_with(op, false, ctx);
+        }
+
+        if (result) {
+            return false;
+        }
+
+        goto yield;
+    }
+
+    if (!redo) {
+        if (!range.count) {
+            range.count = ecs_table_count(range.table);
+        }
+
+        op_ctx->range = range;
+        op_ctx->cur = range.offset - 1;
+    }
+
+    do {
+        op_ctx->cur ++;
+
+        if (op_ctx->cur >= (op_ctx->range.offset + op_ctx->range.count)) {
+            flecs_query_src_set_range(op, &op_ctx->range, ctx);
+            return false;
+        }
+
+        flecs_query_src_set_single(op, op_ctx->cur, ctx);
+    } while (self
+        ? flecs_query_self_up_with(op, false, ctx)
+        : flecs_query_up_with(op, false, ctx));
+
+yield: {
+        ecs_id_t id = flecs_query_op_get_id(op, ctx);
+        if (id) {
+            it->ids[op->field_index] = id;
+        }
+
+        it->sources[op->field_index] = 0;
+        flecs_query_it_set_tr(it, op->field_index, NULL);
+        flecs_reset_source_set_flag(it, op->field_index);
+    }
+
+    return true;
 }
 
 /* Find tables with requested component that have traversable entities. */
