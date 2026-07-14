@@ -798,7 +798,12 @@ int flecs_script_eval_entity(
         };
 
         if (!ecs_os_strcmp(node->kind, "prefab")) {
+#ifdef FLECS_PREFAB
             id.eval = EcsPrefab;
+#else
+            flecs_script_eval_error(v, node, "prefabs are unsupported in this "
+                "flecs build, enable FLECS_PREFAB addon");
+#endif
         } else if (!ecs_os_strcmp(node->kind, "slot")) {
             is_slot = true;
         } else if (flecs_script_eval_id(v, node, &id)) {

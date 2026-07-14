@@ -236,6 +236,7 @@
 #define FLECS_OS_API_IMPL    /**< Default implementation for OS API. */
 // #define FLECS_PERF_TRACE  /**< Enable performance tracing. */
 #define FLECS_PIPELINE       /**< Pipeline support. */
+#define FLECS_PREFAB         /**< Prefabs */
 #define FLECS_REST           /**< REST API for querying application data. */
 #define FLECS_PARSER         /**< Utilities for script and query DSL parsers. */
 #define FLECS_QUERY_DSL      /**< Flecs query DSL parser. */
@@ -1940,7 +1941,9 @@ FLECS_API extern const ecs_entity_t EcsModule;
 
 /** Tag added to prefab entities. Any entity with this tag is automatically
  * ignored by queries, unless #EcsPrefab is explicitly queried for. */
+#ifdef FLECS_PREFAB
 FLECS_API extern const ecs_entity_t EcsPrefab;
+#endif
 
 /** When this tag is added to an entity, it is skipped by queries, unless
  * #EcsDisabled is explicitly queried for. */

@@ -90,8 +90,12 @@ static const flecs::entity_t Query = EcsQuery;
 static const flecs::entity_t Observer = EcsObserver;
 /** Built-in Module tag. */
 static const flecs::entity_t Module = EcsModule;
+
+#ifdef FLECS_PREFAB
 /** Built-in Prefab tag. */
 static const flecs::entity_t Prefab = EcsPrefab;
+#endif
+
 /** Built-in Disabled tag. */
 static const flecs::entity_t Disabled = EcsDisabled;
 /** Built-in Empty tag. */

@@ -231,6 +231,7 @@
 #define FLECS_OS_API_IMPL    /**< Default implementation for OS API. */
 // #define FLECS_PERF_TRACE  /**< Enable performance tracing. */
 #define FLECS_PIPELINE       /**< Pipeline support. */
+#define FLECS_PREFAB         /**< Prefabs */
 #define FLECS_REST           /**< REST API for querying application data. */
 #define FLECS_PARSER         /**< Utilities for script and query DSL parsers. */
 #define FLECS_QUERY_DSL      /**< Flecs query DSL parser. */
@@ -6877,7 +6878,9 @@ FLECS_API extern const ecs_entity_t EcsModule;
 
 /** Tag added to prefab entities. Any entity with this tag is automatically
  * ignored by queries, unless #EcsPrefab is explicitly queried for. */
+#ifdef FLECS_PREFAB
 FLECS_API extern const ecs_entity_t EcsPrefab;
+#endif
 
 /** When this tag is added to an entity, it is skipped by queries, unless
  * #EcsDisabled is explicitly queried for. */
@@ -12419,6 +12422,9 @@ void ecs_table_clear_entities(
 #endif
 #ifdef FLECS_NO_MODULE
 #undef FLECS_MODULE
+#endif
+#ifdef FLECS_NO_PREFAB
+#undef FLECS_PREFAB
 #endif
 #ifdef FLECS_NO_SCRIPT
 #undef FLECS_SCRIPT
@@ -20371,8 +20377,12 @@ static const flecs::entity_t Query = EcsQuery;
 static const flecs::entity_t Observer = EcsObserver;
 /** Built-in Module tag. */
 static const flecs::entity_t Module = EcsModule;
+
+#ifdef FLECS_PREFAB
 /** Built-in Prefab tag. */
 static const flecs::entity_t Prefab = EcsPrefab;
+#endif
+
 /** Built-in Disabled tag. */
 static const flecs::entity_t Disabled = EcsDisabled;
 /** Built-in Empty tag. */
@@ -26260,14 +26270,6 @@ flecs::id id(E value) const;
 template <typename E, if_t< is_enum<E>::value > = 0>
 flecs::entity entity(E value) const;
 
-/** Create a prefab.
- * 
- * @memberof flecs::world
- * @ingroup cpp_entities
- */
-template <typename... Args>
-flecs::entity prefab(Args &&... args) const;
-
 /** Create an entity that's associated with a type.
  * 
  * @memberof flecs::world
@@ -26275,14 +26277,6 @@ flecs::entity prefab(Args &&... args) const;
  */
 template <typename T>
 flecs::entity entity(const char *name = nullptr) const;
-
-/** Create a prefab that's associated with a type.
- * 
- * @memberof flecs::world
- * @ingroup cpp_entities
- */
-template <typename T>
-flecs::entity prefab(const char *name = nullptr) const;
 
 /**
  * @defgroup cpp_addons_event Events
@@ -34790,6 +34784,14 @@ inline flecs::entity world::entity(const char *name) const {
     return flecs::entity(world_, _::type<T>::register_id(world_, name, true, false) );
 }
 
+}
+
+#ifdef FLECS_PREFAB
+
+#pragma once
+
+namespace flecs {
+
 template <typename... Args>
 inline flecs::entity world::prefab(Args &&... args) const {
     flecs::entity result = flecs::entity(world_, FLECS_FWD(args)...);
@@ -34805,6 +34807,8 @@ inline flecs::entity world::prefab(const char *name) const {
 }
 
 }
+
+#endif
 
 #pragma once
 

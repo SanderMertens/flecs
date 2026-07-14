@@ -1309,7 +1309,7 @@ int ecs_fini(
     /* Tree spawners can keep tables alive, which can conflict with entity
      * cleanup. Cleanup treespawners first before cleaning up other entities.
      * This means that prefab spawning does not work during world cleanup. */
-    flecs_fini_tree_spawners(world);
+    flecs_fini_prefab(world);
 
     /* yield_existing, OnRemove observers will fire for all matching results
      * when the observer is deleted, but there is no guarantee that components

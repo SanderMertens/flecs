@@ -6808,7 +6808,6 @@ FLECS_API extern const ecs_entity_t EcsModule;
 
 /** Tag added to prefab entities. Any entity with this tag is automatically
  * ignored by queries, unless #EcsPrefab is explicitly queried for. */
-FLECS_API extern const ecs_entity_t EcsPrefab;
 
 /** When this tag is added to an entity, it is skipped by queries, unless
  * #EcsDisabled is explicitly queried for. */
@@ -12350,6 +12349,9 @@ void ecs_table_clear_entities(
 #endif
 #ifdef FLECS_NO_MODULE
 #undef FLECS_MODULE
+#endif
+#ifdef FLECS_NO_PREFAB
+#undef FLECS_PREFAB
 #endif
 #ifdef FLECS_NO_SCRIPT
 #undef FLECS_SCRIPT
