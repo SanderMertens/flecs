@@ -4369,7 +4369,6 @@ typedef enum ecs_oper_kind_t {
 typedef enum ecs_query_cache_kind_t {
     EcsQueryCacheDefault,   /**< Behavior determined by query creation context. */
     EcsQueryCacheAuto,      /**< Cache query terms that are cacheable. */
-    EcsQueryCacheAll,       /**< Require that all query terms can be cached. */
     EcsQueryCacheNone,      /**< No caching. */
 } ecs_query_cache_kind_t;
 
@@ -9743,32 +9742,6 @@ const char* ecs_query_args_parse(
     ecs_iter_t *it,
     const char *expr);
 
-/** Return whether the query data changed since the last iteration.
- * The operation will return true after:
- * - new entities have been matched
- * - new tables have been matched or unmatched
- * - matched entities were deleted
- * - matched components were changed
- *
- * The operation will not return true after a write-only (EcsOut) or filter
- * (EcsInOutFilter) term has changed, when a term is not matched with the
- * current table ($this source) or for tag terms.
- *
- * The changed state of a table is reset after it is iterated. If an iterator was
- * not iterated until completion, tables may still be marked as changed.
- *
- * To check the changed state of the current iterator result, use
- * ecs_iter_changed().
- *
- * @param query The query.
- * @return True if entities changed, otherwise false.
- *
- * @see ecs_iter_changed()
- */
-FLECS_API
-bool ecs_query_changed(
-    ecs_query_t *query);
-
 /** Get the query object.
  * Return the query object. Can be used to access various information about
  * the query.
@@ -9781,20 +9754,6 @@ FLECS_API
 const ecs_query_t* ecs_query_get(
     const ecs_world_t *world,
     ecs_entity_t query);
-
-/** Skip a table while iterating.
- * This operation lets the query iterator know that a table was skipped while
- * iterating. A skipped table will not reset its changed state, and the query
- * will not update the dirty flags of the table for its out fields.
- *
- * Only valid iterators must be provided (next() has to be called at least once
- * and must return true), and the iterator must be a query iterator.
- *
- * @param it The iterator result to skip.
- */
-FLECS_API
-void ecs_iter_skip(
-    ecs_iter_t *it);
 
 /** Set the group to iterate for a query iterator.
  * This operation limits the results returned by the query to only the selected
@@ -10288,21 +10247,6 @@ bool ecs_iter_var_is_constrained(
 FLECS_API
 uint64_t ecs_iter_get_group(
     const ecs_iter_t *it);
-
-/** Return whether the current iterator result has changed.
- * This operation must be used in combination with a query that supports change
- * detection (e.g., is cached). The operation returns whether the currently
- * iterated result has changed since the last time it was iterated by the query.
- * 
- * Change detection works on a per-table basis. Changes to individual entities
- * cannot be detected this way.
- * 
- * @param it The iterator.
- * @return True if the result changed, false if it didn't.
- */
-FLECS_API
-bool ecs_iter_changed(
-    ecs_iter_t *it);
 
 /** Convert an iterator to a string.
  * Prints the contents of an iterator to a string. Useful for debugging and/or
@@ -12052,6 +11996,9 @@ void ecs_table_clear_entities(
 /* Blacklist macros */
 #ifdef FLECS_NO_CPP
 #undef FLECS_CPP
+#endif
+#ifdef FLECS_NO_CACHED_QUERIES
+#undef FLECS_CACHED_QUERIES
 #endif
 #ifdef FLECS_NO_CONSTRAINT_TRAITS
 #undef FLECS_CONSTRAINT_TRAITS

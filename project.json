@@ -12,6 +12,7 @@
             "disable-flags": [ 
                 "FLECS_ALERTS",
                 "FLECS_APP",
+                "FLECS_CACHED_QUERIES",
                 "FLECS_CPP",
                 "FLECS_CONSTRAINT_TRAITS",
                 "FLECS_DOC",
