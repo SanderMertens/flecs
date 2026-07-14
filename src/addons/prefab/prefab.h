@@ -18,6 +18,29 @@ void flecs_instantiate(
     const ecs_instantiate_ctx_t *ctx,
     int32_t depth);
 
+ecs_entity_t flecs_get_prefab_instance_child(
+    const ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t prefab_child);
+
+#ifdef FLECS_DEBUG
+void flecs_tree_spawner_assert_not_instantiated(
+    ecs_world_t *world,
+    ecs_entity_t parent);
+#else
+#define flecs_tree_spawner_assert_not_instantiated(world, parent)
+#endif
+
+/* Called during bootstrap to register spawner entities with the world. */
+void flecs_bootstrap_prefab(
+    ecs_world_t *world);
+
+/* Called during world fini to delete all spawners in the world. */
+void flecs_fini_prefab(
+    ecs_world_t *world);
+
+#ifdef FLECS_PREFAB
+
 void flecs_instantiate_dont_fragment(
     ecs_world_t *world,
     ecs_entity_t base,
@@ -37,5 +60,22 @@ ecs_entity_t flecs_instantiate_alloc_child_id(
     ecs_entity_t prefab_child,
     ecs_entity_t root_prefab,
     ecs_entity_t root_instance);
+
+EcsTreeSpawner* flecs_prefab_spawner_build(
+    ecs_world_t *world,
+    ecs_entity_t base);
+
+void flecs_spawner_instantiate(
+    ecs_world_t *world,
+    EcsTreeSpawner *spawner,
+    ecs_entity_t base,
+    ecs_entity_t instance,
+    const ecs_instantiate_ctx_t *ctx);
+
+void EcsTreeSpawner_free(
+    EcsTreeSpawner *ptr);
+
+#endif
+
 
 #endif

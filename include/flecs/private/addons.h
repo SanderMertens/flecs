@@ -15,6 +15,9 @@
 #ifdef FLECS_NO_MODULE
 #undef FLECS_MODULE
 #endif
+#ifdef FLECS_NO_PREFAB
+#undef FLECS_PREFAB
+#endif
 #ifdef FLECS_NO_SCRIPT
 #undef FLECS_SCRIPT
 #endif

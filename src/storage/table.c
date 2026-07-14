@@ -262,8 +262,10 @@ void flecs_table_init_flags(
 
         if (id == EcsModule) {
             table->flags |= EcsTableHasModule;
+#ifdef FLECS_PREFAB
         } else if (id == EcsPrefab) {
             table->flags |= EcsTableIsPrefab;
+#endif
         } else if (id == EcsDisabled) {
             table->flags |= EcsTableIsDisabled;
         } else if (id == EcsNotQueryable) {
