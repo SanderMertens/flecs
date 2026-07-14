@@ -221,6 +221,7 @@
 #define FLECS_CPP            /**< C++ API. */
 #define FLECS_DOC            /**< Document entities and components. */
 // #define FLECS_EXCLUSIVE_ACCESS /**< Enable exclusive world access checks. */
+#define FLECS_FRAME          /**< Frame management. */
 // #define FLECS_JOURNAL     /**< Journaling addon. */
 #define FLECS_JSON           /**< Parsing JSON to/from component values. */
 #define FLECS_HTTP           /**< Tiny HTTP server for connecting to remote UI. */
@@ -7125,127 +7126,6 @@ ecs_flags32_t ecs_world_get_flags(
 
 /** @} */
 
-/**
- * @defgroup world_frame Frame functions
- * @{
- */
-
-/** Begin frame.
- * When an application does not use ecs_progress() to control the main loop, it
- * can still use Flecs features such as FPS limiting and time measurements. This
- * operation needs to be invoked whenever a new frame is about to get processed.
- *
- * Calls to ecs_frame_begin() must always be followed by ecs_frame_end().
- *
- * The function accepts a delta_time parameter, which will get passed to
- * systems. This value is also used to compute the amount of time the function
- * needs to sleep to ensure it does not exceed the target_fps, when it is set.
- * When 0 is provided for delta_time, the time will be measured.
- *
- * This function should only be run from the main thread.
- *
- * @param world The world.
- * @param delta_time Time elapsed since the last frame.
- * @return The provided delta_time, or measured time if 0 was provided.
- */
-FLECS_API
-ecs_ftime_t ecs_frame_begin(
-    ecs_world_t *world,
-    ecs_ftime_t delta_time);
-
-/** End frame.
- * This operation must be called at the end of the frame, and always after
- * ecs_frame_begin().
- *
- * @param world The world.
- */
-FLECS_API
-void ecs_frame_end(
-    ecs_world_t *world);
-
-/** Register an action to be executed once after the frame.
- * Post frame actions are typically used for calling operations that cannot be
- * invoked during iteration, such as changing the number of threads.
- *
- * @param world The world.
- * @param action The function to execute.
- * @param ctx Userdata to pass to the function.
- */
-FLECS_API
-void ecs_run_post_frame(
-    ecs_world_t *world,
-    ecs_fini_action_t action,
-    void *ctx);
-
-/** Signal exit.
- * This operation signals that the application should quit. It will cause
- * ecs_progress() to return false.
- *
- * @param world The world to quit.
- */
-FLECS_API
-void ecs_quit(
-    ecs_world_t *world);
-
-/** Return whether a quit has been requested.
- *
- * @param world The world.
- * @return Whether a quit has been requested.
- * @see ecs_quit()
- */
-FLECS_API
-bool ecs_should_quit(
-    const ecs_world_t *world);
-
-/** Measure frame time.
- * Frame time measurements measure the total time passed in a single frame, and
- * how much of that time was spent on systems and on merging.
- *
- * Frame time measurements add a small constant-time overhead to an application.
- * When an application sets a target FPS, frame time measurements are enabled by
- * default.
- *
- * @param world The world.
- * @param enable Whether to enable or disable frame time measuring.
- */
-FLECS_API void ecs_measure_frame_time(
-    ecs_world_t *world,
-    bool enable);
-
-/** Measure system time.
- * System time measurements measure the time spent in each system.
- *
- * System time measurements add overhead to every system invocation and
- * therefore have a small but measurable impact on application performance.
- * System time measurements must be enabled before obtaining system statistics.
- *
- * @param world The world.
- * @param enable Whether to enable or disable system time measuring.
- */
-FLECS_API void ecs_measure_system_time(
-    ecs_world_t *world,
-    bool enable);
-
-/** Set target frames per second (FPS) for an application.
- * Setting the target FPS ensures that ecs_progress() is not invoked faster than
- * the specified FPS. When enabled, ecs_progress() tracks the time passed since
- * the last invocation, and sleeps the remaining time of the frame (if any).
- *
- * This feature ensures systems are run at a consistent interval, as well as
- * conserving CPU time by not running systems more often than required.
- *
- * Note that ecs_progress() only sleeps if there is time left in the frame. Both
- * time spent in Flecs and time spent outside of Flecs are taken into
- * account.
- *
- * @param world The world.
- * @param fps The target FPS.
- */
-FLECS_API
-void ecs_set_target_fps(
-    ecs_world_t *world,
-    ecs_ftime_t fps);
-
 /** Set the default query flags.
  * Set a default value for the ecs_query_desc_t::flags field. Default flags
  * are applied in addition to the flags provided in the descriptor. For a
@@ -7263,8 +7143,6 @@ FLECS_API
 void ecs_set_default_query_flags(
     ecs_world_t *world,
     ecs_flags32_t flags);
-
-/** @} */
 
 /**
  * @defgroup commands Commands
@@ -12420,6 +12298,9 @@ void ecs_table_clear_entities(
 #ifdef FLECS_NO_CPP
 #undef FLECS_CPP
 #endif
+#ifdef FLECS_NO_FRAME
+#undef FLECS_FRAME
+#endif
 #ifdef FLECS_NO_MODULE
 #undef FLECS_MODULE
 #endif
@@ -13242,6 +13123,190 @@ char* ecs_log_stop_capture(void);
 #ifndef FLECS_HTTP
 #define FLECS_HTTP
 #endif
+#endif
+
+#if defined(FLECS_ALERTS) || defined(FLECS_APP) || defined(FLECS_HTTP) || \
+    defined(FLECS_JSON) || defined(FLECS_METRICS) || defined(FLECS_PIPELINE) || \
+    defined(FLECS_REST) || defined(FLECS_STATS) || defined(FLECS_SYSTEM) || \
+    defined(FLECS_TIMER)
+#ifndef FLECS_FRAME
+#define FLECS_FRAME
+#endif
+#endif
+
+#ifdef FLECS_FRAME
+#ifdef FLECS_NO_FRAME
+#error "FLECS_NO_FRAME failed: FRAME is required by other addons"
+#endif
+
+#ifdef FLECS_FRAME
+
+#if !defined(FLECS_OS_API_IMPL) && !defined(FLECS_NO_OS_API_IMPL)
+#define FLECS_OS_API_IMPL
+#endif
+
+#ifndef FLECS_FRAME_H
+#define FLECS_FRAME_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/**
+ * @defgroup c_addons_frame Frame
+ * @ingroup c_addons
+ * Frame management.
+ *
+ * @{
+ */
+
+/** Begin frame.
+ * When an application does not use ecs_progress() to control the main loop, it
+ * can still use Flecs features such as FPS limiting and time measurements. This
+ * operation needs to be invoked whenever a new frame is about to get processed.
+ *
+ * Calls to ecs_frame_begin() must always be followed by ecs_frame_end().
+ *
+ * The function accepts a delta_time parameter, which will get passed to
+ * systems. This value is also used to compute the amount of time the function
+ * needs to sleep to ensure it does not exceed the target_fps, when it is set.
+ * When 0 is provided for delta_time, the time will be measured.
+ *
+ * This function should only be run from the main thread.
+ *
+ * @param world The world.
+ * @param delta_time Time elapsed since the last frame.
+ * @return The provided delta_time, or measured time if 0 was provided.
+ */
+FLECS_API
+ecs_ftime_t ecs_frame_begin(
+    ecs_world_t *world,
+    ecs_ftime_t delta_time);
+
+/** End frame.
+ * This operation must be called at the end of the frame, and always after
+ * ecs_frame_begin().
+ *
+ * @param world The world.
+ */
+FLECS_API
+void ecs_frame_end(
+    ecs_world_t *world);
+
+/** Register an action to be executed once after the frame.
+ * Post frame actions are typically used for calling operations that cannot be
+ * invoked during iteration, such as changing the number of threads.
+ *
+ * @param world The world.
+ * @param action The function to execute.
+ * @param ctx Userdata to pass to the function.
+ */
+FLECS_API
+void ecs_run_post_frame(
+    ecs_world_t *world,
+    ecs_fini_action_t action,
+    void *ctx);
+
+/** Signal exit.
+ * This operation signals that the application should quit. It will cause
+ * ecs_progress() to return false.
+ *
+ * @param world The world to quit.
+ */
+FLECS_API
+void ecs_quit(
+    ecs_world_t *world);
+
+/** Return whether a quit has been requested.
+ *
+ * @param world The world.
+ * @return Whether a quit has been requested.
+ * @see ecs_quit()
+ */
+FLECS_API
+bool ecs_should_quit(
+    const ecs_world_t *world);
+
+/** Measure frame time.
+ * Frame time measurements measure the total time passed in a single frame, and
+ * how much of that time was spent on systems and on merging.
+ *
+ * Frame time measurements add a small constant-time overhead to an application.
+ * When an application sets a target FPS, frame time measurements are enabled by
+ * default.
+ *
+ * @param world The world.
+ * @param enable Whether to enable or disable frame time measuring.
+ */
+FLECS_API
+void ecs_measure_frame_time(
+    ecs_world_t *world,
+    bool enable);
+
+/** Measure system time.
+ * System time measurements measure the time spent in each system.
+ *
+ * System time measurements add overhead to every system invocation and
+ * therefore have a small but measurable impact on application performance.
+ * System time measurements must be enabled before obtaining system statistics.
+ *
+ * @param world The world.
+ * @param enable Whether to enable or disable system time measuring.
+ */
+FLECS_API
+void ecs_measure_system_time(
+    ecs_world_t *world,
+    bool enable);
+
+/** Set target frames per second (FPS) for an application.
+ * Setting the target FPS ensures that ecs_progress() is not invoked faster than
+ * the specified FPS. When enabled, ecs_progress() tracks the time passed since
+ * the last invocation, and sleeps the remaining time of the frame (if any).
+ *
+ * This feature ensures systems are run at a consistent interval, as well as
+ * conserving CPU time by not running systems more often than required.
+ *
+ * Note that ecs_progress() only sleeps if there is time left in the frame. Both
+ * time spent in Flecs and time spent outside of Flecs are taken into account.
+ *
+ * @param world The world.
+ * @param fps The target FPS.
+ */
+FLECS_API
+void ecs_set_target_fps(
+    ecs_world_t *world,
+    ecs_ftime_t fps);
+
+/** Set time scale.
+ * Increase or decrease simulation speed by the provided multiplier.
+ *
+ * @param world The world.
+ * @param scale The scale to apply (default = 1).
+ */
+FLECS_API
+void ecs_set_time_scale(
+    ecs_world_t *world,
+    ecs_ftime_t scale);
+
+/** Reset world clock.
+ * Reset the clock that keeps track of the total time passed in the simulation.
+ *
+ * @param world The world.
+ */
+FLECS_API
+void ecs_reset_clock(
+    ecs_world_t *world);
+
+/** @} */
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
+
+#endif // FLECS_FRAME
+
 #endif
 
 #ifdef FLECS_APP
@@ -14154,26 +14219,6 @@ FLECS_API
 bool ecs_progress(
     ecs_world_t *world,
     ecs_ftime_t delta_time);
-
-/** Set time scale.
- * Increase or decrease simulation speed by the provided multiplier.
- *
- * @param world The world.
- * @param scale The scale to apply (default = 1).
- */
-FLECS_API
-void ecs_set_time_scale(
-    ecs_world_t *world,
-    ecs_ftime_t scale);
-
-/** Reset world clock.
- * Reset the clock that keeps track of the total time passed in the simulation.
- *
- * @param world The world.
- */
-FLECS_API
-void ecs_reset_clock(
-    ecs_world_t *world);
 
 /** Run pipeline.
  * This will run all systems in the provided pipeline. This operation may be
@@ -25070,61 +25115,10 @@ struct world {
         return world_;
     }
 
-    /** Signal application should quit.
-     * After calling this operation, the next call to progress() returns false.
-     */
-    void quit() const {
-        ecs_quit(world_);
-    }
-
     /** Register action to be executed when world is destroyed.
      */
     void atfini(ecs_fini_action_t action, void *ctx = nullptr) const {
         ecs_atfini(world_, action, ctx);
-    }
-
-    /** Test if quit() has been called.
-     */
-    bool should_quit() const {
-        return ecs_should_quit(world_);
-    }
-
-    /** Begin frame.
-     * When an application does not use progress() to control the main loop, it
-     * can still use Flecs features such as FPS limiting and time measurements.
-     * This operation needs to be invoked whenever a new frame is about to get
-     * processed.
-     *
-     * Calls to frame_begin() must always be followed by frame_end().
-     *
-     * The function accepts a delta_time parameter, which will get passed to
-     * systems. This value is also used to compute the amount of time the
-     * function needs to sleep to ensure it does not exceed the target_fps, when
-     * it is set. When 0 is provided for delta_time, the time will be measured.
-     *
-     * This function should only be run from the main thread.
-     *
-     * @param delta_time Time elapsed since the last frame.
-     * @return The provided delta_time, or measured time if 0 was provided.
-     *
-     * @see ecs_frame_begin()
-     * @see flecs::world::frame_end()
-     */
-    ecs_ftime_t frame_begin(float delta_time = 0) const {
-        return ecs_frame_begin(world_, delta_time);
-    }
-
-    /** End frame.
-     * This operation must be called at the end of the frame, and always after
-     * frame_begin().
-     *
-     * This function should only be run from the main thread.
-     *
-     * @see ecs_frame_end()
-     * @see flecs::world::frame_begin()
-     */
-    void frame_end() const {
-        ecs_frame_end(world_);
     }
 
     /** Begin readonly mode.
@@ -26107,11 +26101,6 @@ struct world {
         return ecs_get_version(e);
     }
 
-    /** Run callback after completing the frame. */
-    void run_post_frame(ecs_fini_action_t action, void *ctx) const {
-        ecs_run_post_frame(world_, action, ctx);
-    }
-
     /** Get the world info.
      *
      * @see ecs_get_world_info()
@@ -26444,6 +26433,71 @@ void each(flecs::id_t term_id, Func&& func) const;
 template <typename E, if_t< is_enum<E>::value > = 0>
 flecs::entity to_entity(E constant) const;
 
+#   ifdef FLECS_FRAME
+
+/**
+ * @defgroup cpp_addons_frame Frame
+ * @ingroup cpp_addons
+ * Frame management.
+ *
+ * @{
+ * @}
+ */
+
+/**
+ * @memberof flecs::world
+ * @ingroup cpp_addons_frame
+ *
+ * @{
+ */
+
+/** Begin frame.
+ * Calls to frame_begin() must always be followed by frame_end().
+ *
+ * @param delta_time Time elapsed since the last frame.
+ * @return The provided delta_time, or measured time if 0 was provided.
+ * @see ecs_frame_begin()
+ */
+ecs_ftime_t frame_begin(ecs_ftime_t delta_time = 0) const;
+
+/** End frame.
+ * @see ecs_frame_end()
+ */
+void frame_end() const;
+
+/** Run callback after completing the frame.
+ * @see ecs_run_post_frame()
+ */
+void run_post_frame(ecs_fini_action_t action, void *ctx) const;
+
+/** Signal application should quit.
+ * @see ecs_quit()
+ */
+void quit() const;
+
+/** Test if quit() has been called.
+ * @see ecs_should_quit()
+ */
+bool should_quit() const;
+
+/** Set the time scale.
+ * @see ecs_set_time_scale()
+ */
+void set_time_scale(ecs_ftime_t mul) const;
+
+/** Set the target FPS.
+ * @see ecs_set_target_fps()
+ */
+void set_target_fps(ecs_ftime_t target_fps) const;
+
+/** Reset the simulation clock.
+ * @see ecs_reset_clock()
+ */
+void reset_clock() const;
+
+/** @} */
+
+#   endif
 #   ifdef FLECS_MODULE
 
 /** 
@@ -26530,21 +26584,6 @@ void run_pipeline(const flecs::entity_t pip, ecs_ftime_t delta_time = 0.0) const
  */
 template <typename Pipeline, if_not_t< is_enum<Pipeline>::value > = 0>
 void run_pipeline(ecs_ftime_t delta_time = 0.0) const;
-
-/** Set the time scale.
- * @see ecs_set_time_scale()
- */
-void set_time_scale(ecs_ftime_t mul) const;
-
-/** Set the target FPS.
- * @see ecs_set_target_fps()
- */
-void set_target_fps(ecs_ftime_t target_fps) const;
-
-/** Reset the simulation clock.
- * @see ecs_reset_clock()
- */
-void reset_clock() const;
 
 /** Set the number of threads.
  * @see ecs_set_threads()
@@ -34579,6 +34618,51 @@ inline flecs::id world::pair(entity_t r, entity_t o) const {
 
 }
 
+#ifdef FLECS_FRAME
+
+#pragma once
+
+namespace flecs {
+
+inline ecs_ftime_t world::frame_begin(ecs_ftime_t delta_time) const {
+    return ecs_frame_begin(world_, delta_time);
+}
+
+inline void world::frame_end() const {
+    ecs_frame_end(world_);
+}
+
+inline void world::run_post_frame(
+    ecs_fini_action_t action,
+    void *ctx) const
+{
+    ecs_run_post_frame(world_, action, ctx);
+}
+
+inline void world::quit() const {
+    ecs_quit(world_);
+}
+
+inline bool world::should_quit() const {
+    return ecs_should_quit(world_);
+}
+
+inline void world::set_time_scale(ecs_ftime_t mul) const {
+    ecs_set_time_scale(world_, mul);
+}
+
+inline void world::set_target_fps(ecs_ftime_t target_fps) const {
+    ecs_set_target_fps(world_, target_fps);
+}
+
+inline void world::reset_clock() const {
+    ecs_reset_clock(world_);
+}
+
+}
+
+#endif
+
 #pragma once
 
 namespace flecs {
@@ -37601,18 +37685,6 @@ inline void world::run_pipeline(const flecs::entity_t pip, ecs_ftime_t delta_tim
 template <typename Pipeline, if_not_t< is_enum<Pipeline>::value >>
 inline void world::run_pipeline(ecs_ftime_t delta_time) const {
     return ecs_run_pipeline(world_, _::type<Pipeline>::id(world_), delta_time);
-}
-
-inline void world::set_time_scale(ecs_ftime_t mul) const {
-    ecs_set_time_scale(world_, mul);
-}
-
-inline void world::set_target_fps(ecs_ftime_t target_fps) const {
-    ecs_set_target_fps(world_, target_fps);
-}
-
-inline void world::reset_clock() const {
-    ecs_reset_clock(world_);
 }
 
 inline void world::set_threads(int32_t threads) const {

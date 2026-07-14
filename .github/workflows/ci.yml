@@ -361,6 +361,11 @@ jobs:
           bake rebuild --strict -D FLECS_CUSTOM_BUILD
           bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD
 
+      - name: FLECS_FRAME
+        run: |
+          bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_FRAME
+          bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_FRAME
+
       - name: FLECS_SYSTEM
         run: |
           bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_SYSTEM

@@ -20879,7 +20879,6 @@ const ecs_entity_t EcsWorld =                       FLECS_HI_COMPONENT_ID + 3;
 const ecs_entity_t EcsFlecs =                       FLECS_HI_COMPONENT_ID + 4;
 const ecs_entity_t EcsFlecsCore =                   FLECS_HI_COMPONENT_ID + 5;
 const ecs_entity_t EcsModule =                      FLECS_HI_COMPONENT_ID + 7;
-const ecs_entity_t EcsPrefab =                      FLECS_HI_COMPONENT_ID + 9;
 const ecs_entity_t EcsDisabled =                    FLECS_HI_COMPONENT_ID + 10;
 const ecs_entity_t EcsNotQueryable =                FLECS_HI_COMPONENT_ID + 11;
 
@@ -21699,26 +21698,6 @@ ecs_world_t* ecs_init_w_args(
     return world;
 }
 
-void ecs_quit(
-    ecs_world_t *world)
-{
-    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    flecs_stage_from_world(&world);
-    world->flags |= EcsWorldQuit;
-error:
-    return;
-}
-
-bool ecs_should_quit(
-    const ecs_world_t *world)
-{
-    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    world = ecs_get_world(world);
-    return ECS_BIT_IS_SET(world->flags, EcsWorldQuit);
-error:
-    return true;
-}
-
 void flecs_notify_tables(
     ecs_world_t *world,
     ecs_id_t id,
@@ -21762,28 +21741,6 @@ void ecs_atfini(
 
     ecs_action_elem_t *elem = ecs_vec_append_t(NULL, &world->fini_actions,
         ecs_action_elem_t);
-    ecs_assert(elem != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    elem->action = action;
-    elem->ctx = ctx;
-error:
-    return;
-}
-
-void ecs_run_post_frame(
-    ecs_world_t *world,
-    ecs_fini_action_t action,
-    void *ctx)
-{
-    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(action != NULL, ECS_INVALID_PARAMETER, NULL);
-
-    ecs_stage_t *stage = flecs_stage_from_world(&world);
-    ecs_check((world->flags & EcsWorldFrameInProgress), ECS_INVALID_OPERATION, 
-        "cannot register post frame action while frame is not in progress");
-
-    ecs_action_elem_t *elem = ecs_vec_append_t(&stage->allocator,
-        &stage->post_frame_actions, ecs_action_elem_t);
     ecs_assert(elem != NULL, ECS_INTERNAL_ERROR, NULL);
 
     elem->action = action;
@@ -21963,44 +21920,6 @@ void flecs_eval_component_monitors(
 {
     flecs_poly_assert(world, ecs_world_t); 
     flecs_eval_component_monitor(world);
-}
-
-void ecs_measure_frame_time(
-    ecs_world_t *world,
-    bool enable)
-{
-    flecs_poly_assert(world, ecs_world_t);
-    ecs_check(ecs_os_has_time(), ECS_MISSING_OS_API, NULL);
-
-    if (ECS_EQZERO(world->info.target_fps) || enable) {
-        ECS_BIT_COND(world->flags, EcsWorldMeasureFrameTime, enable);
-    }
-error:
-    return;
-}
-
-void ecs_measure_system_time(
-    ecs_world_t *world,
-    bool enable)
-{
-    flecs_poly_assert(world, ecs_world_t);
-    ecs_check(ecs_os_has_time(), ECS_MISSING_OS_API, NULL);
-    ECS_BIT_COND(world->flags, EcsWorldMeasureSystemTime, enable);
-error:
-    return;
-}
-
-void ecs_set_target_fps(
-    ecs_world_t *world,
-    ecs_ftime_t fps)
-{
-    flecs_poly_assert(world, ecs_world_t);
-    ecs_check(ecs_os_has_time(), ECS_MISSING_OS_API, NULL);
-
-    ecs_measure_frame_time(world, true);
-    world->info.target_fps = fps;
-error:
-    return;
 }
 
 void ecs_set_default_query_flags(
@@ -39109,6 +39028,7 @@ void flecs_instantiate(
 void flecs_bootstrap_prefab(
     ecs_world_t *world)
 {
+    (void)world;
 }
 
 void flecs_fini_prefab(
@@ -39128,13 +39048,15 @@ ecs_entity_t flecs_get_prefab_instance_child(
     return 0;
 }
 
+#ifdef FLECS_DEBUG
 void flecs_tree_spawner_assert_not_instantiated(
     ecs_world_t *world,
     ecs_entity_t parent)
 {
     (void)world;
-    (void)world;
+    (void)parent;
 }
+#endif
 
 #ifndef FLECS_PARSER_GRAMMAR_H
 #define FLECS_PARSER_GRAMMAR_H
