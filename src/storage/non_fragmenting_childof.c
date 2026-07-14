@@ -97,10 +97,12 @@ int flecs_add_non_fragmenting_child_w_records(
 
     flecs_tree_spawner_assert_not_instantiated(world, parent);
 
+#ifdef FLECS_PREFAB
     ecs_record_t *r_parent = flecs_entities_get(world, parent);
     if (r_parent->table->flags & EcsTableIsPrefab) {
         ecs_add_id(world, entity, EcsPrefab);
     }
+#endif
 
     return 0;
 error:

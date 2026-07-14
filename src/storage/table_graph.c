@@ -1094,11 +1094,13 @@ ecs_table_t* flecs_find_table_with(
     if (r == EcsIsA) {
         /* If adding a prefab, check if prefab has overrides */
         flecs_add_overrides_for_base(world, &dst_type, with);
+#ifdef FLECS_PREFAB
     } else if (r == EcsChildOf) {
         o = ecs_get_alive(world, o);
         if (ecs_has_id(world, o, EcsPrefab)) {
             flecs_type_add(world, &dst_type, EcsPrefab);
         }
+#endif
     }
 
     if (cr->flags & EcsIdWith) {
