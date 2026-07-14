@@ -12,6 +12,9 @@
 #ifdef FLECS_NO_CPP
 #undef FLECS_CPP
 #endif
+#ifdef FLECS_NO_ENTITY_RANGES
+#undef FLECS_ENTITY_RANGES
+#endif
 #ifdef FLECS_NO_FRAME
 #undef FLECS_FRAME
 #endif
@@ -99,6 +102,13 @@
 #ifndef FLECS_HTTP
 #define FLECS_HTTP
 #endif
+#endif
+
+#ifdef FLECS_ENTITY_RANGES
+#ifdef FLECS_NO_ENTITY_RANGES
+#error "FLECS_NO_ENTITY_RANGES failed: ENTITY_RANGES is required by other addons"
+#endif
+#include "../addons/entity_ranges.h"
 #endif
 
 #if defined(FLECS_ALERTS) || defined(FLECS_APP) || defined(FLECS_HTTP) || \
