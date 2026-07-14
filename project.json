@@ -24,6 +24,7 @@
                 "FLECS_MODULE",
                 "FLECS_PERF_TRACE",
                 "FLECS_PIPELINE",
+                "FLECS_PREFAB",
                 "FLECS_REST",
                 "FLECS_PARSER",
                 "FLECS_QUERY_DSL",

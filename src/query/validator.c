@@ -1293,9 +1293,12 @@ int flecs_query_finalize_terms(
             ECS_TERMSET_SET(q->static_id_fields, 1u << term->field_index);
         }
 
+#ifdef FLECS_PREFAB
         if (ECS_TERM_REF_ID(term) == EcsPrefab) {
             ECS_BIT_SET(q->flags, EcsQueryMatchPrefab);
         }
+#endif
+
         if (ECS_TERM_REF_ID(term) == EcsDisabled && (term->src.id & EcsSelf)) {
             ECS_BIT_SET(q->flags, EcsQueryMatchDisabled);
         }
@@ -1748,7 +1751,12 @@ bool flecs_query_finalize_simple(
             return false;
         }
 
-        if (id == EcsPrefab || id == EcsDisabled) {
+#ifdef FLECS_PREFAB
+        if (id == EcsPrefab) {
+            return false;
+        }
+#endif
+        if (id == EcsDisabled) {
             return false;
         }
 

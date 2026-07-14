@@ -3,7 +3,9 @@
  * @brief Functions for instantiating prefabs (IsA relationship).
  */
 
-#include "private_api.h"
+#include "../../private_api.h"
+
+#ifdef FLECS_PREFAB
 
 static
 void flecs_instantiate_slot(
@@ -568,3 +570,106 @@ void flecs_instantiate(
 error:
     return;
 }
+
+void* flecs_get_base_component(
+    const ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_id_t component,
+    ecs_component_record_t *cr,
+    int32_t recur_depth)
+{
+    ecs_check(recur_depth < ECS_MAX_RECURSION, ECS_INVALID_OPERATION,
+        "cycle detected in IsA relationship");
+
+    /* Table (and thus entity) does not have component, look for base */
+    if (!(table->flags & EcsTableHasIsA)) {
+        return NULL;
+    }
+
+    if (!(cr->flags & EcsIdOnInstantiateInherit)) {
+        return NULL;
+    }
+
+    /* Exclude Name */
+    if (component == ecs_pair(ecs_id(EcsIdentifier), EcsName)) {
+        return NULL;
+    }
+
+    /* Table should always be in the table index for (IsA, *), otherwise the
+     * HasBase flag should not have been set */
+    const ecs_table_record_t *tr_isa = flecs_component_get_table(
+        world->cr_isa_wildcard, table);
+    ecs_check(tr_isa != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_type_t type = table->type;
+    ecs_id_t *ids = type.array;
+    int32_t i = tr_isa->index, end = tr_isa->count + tr_isa->index;
+    void *ptr = NULL;
+
+    do {
+        ecs_id_t pair = ids[i ++];
+        ecs_entity_t base = ecs_pair_second(world, pair);
+
+        ecs_record_t *r = flecs_entities_get(world, base);
+        ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        table = r->table;
+        ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        const ecs_table_record_t *tr = flecs_component_get_table(cr, table);
+        if (!tr) {
+            if (cr->flags & EcsIdDontFragment) {
+                ptr = flecs_component_sparse_get(world, cr, table, base);
+            }
+
+            if (!ptr) {
+                ptr = flecs_get_base_component(world, table, component, cr, 
+                    recur_depth + 1);
+            }
+        } else {
+            if (cr->flags & EcsIdSparse) {
+                return flecs_component_sparse_get(world, cr, table, base);
+            } else if (tr->column != -1) {
+                int32_t row = ECS_RECORD_TO_ROW(r->row);
+                return flecs_table_get_component(table, tr->column, row).ptr;
+            }
+        }
+    } while (!ptr && (i < end));
+
+    return ptr;
+error:
+    return NULL;
+}
+
+#else
+
+void* flecs_get_base_component(
+    const ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_id_t component,
+    ecs_component_record_t *cr,
+    int32_t recur_depth)
+{
+    (void)world;
+    (void)table;
+    (void)component;
+    (void)cr;
+    (void)recur_depth;
+    return NULL;
+}
+
+void flecs_instantiate(
+    ecs_world_t *world,
+    ecs_entity_t base,
+    ecs_entity_t instance,
+    const ecs_instantiate_ctx_t *ctx,
+    int32_t depth)
+{
+    (void)world;
+    (void)base;
+    (void)instance;
+    (void)ctx;
+    (void)depth;
+}
+
+#endif

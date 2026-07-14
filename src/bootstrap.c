@@ -586,28 +586,6 @@ void flecs_disable_observer(
 }
 
 static
-void flecs_on_add_prefab(ecs_iter_t *it) {
-    ecs_world_t *world = it->world;
-
-    for (int32_t i = 0; i < it->count; i ++) {
-        ecs_entity_t p = it->entities[i];
-
-        ecs_component_record_t *cr = flecs_components_get(
-            world, ecs_childof(p));
-        if (cr && (cr->flags & EcsIdOrderedChildren)) {
-            flecs_ordered_children_set_prefab(world, cr);
-        }
-
-        ecs_iter_t cit = ecs_children(world, p);
-        while (ecs_children_next(&cit)) {
-            for (int32_t j = 0; j < cit.count; j ++) {
-                ecs_add_id(world, cit.entities[j], EcsPrefab);
-            }
-        }
-    }
-}
-
-static
 void flecs_register_ordered_children(ecs_iter_t *it) {
     int32_t i;
     if (it->event == EcsOnAdd) {
@@ -976,7 +954,6 @@ void flecs_bootstrap(
     flecs_bootstrap_tag(world, EcsObserver);
 
     flecs_bootstrap_tag(world, EcsModule);
-    flecs_bootstrap_tag(world, EcsPrefab);
     flecs_bootstrap_tag(world, EcsSlotOf);
     flecs_bootstrap_tag(world, EcsDisabled);
     flecs_bootstrap_tag(world, EcsNotQueryable);
@@ -1238,16 +1215,6 @@ void flecs_bootstrap(
         .global_observer = true
     });
 
-    /* Observer that ensures children of a prefab are also prefabs */
-    ecs_observer(world, {
-        .query.terms = {
-            { .id = EcsPrefab },
-        },
-        .events = {EcsOnAdd},
-        .callback = flecs_on_add_prefab,
-        .global_observer = true
-    });
-
     /* Exclusive properties */
     ecs_add_id(world, EcsChildOf, EcsExclusive);
     ecs_add_id(world, EcsOnDelete, EcsExclusive);
@@ -1298,7 +1265,6 @@ void flecs_bootstrap(
     ecs_add_pair(world, EcsModule, EcsWith, EcsSingleton);
 
     /* DontInherit components */
-    ecs_add_pair(world, EcsPrefab, EcsOnInstantiate, EcsDontInherit);
     ecs_add_pair(world, ecs_id(EcsComponent), EcsOnInstantiate, EcsDontInherit);
     ecs_add_pair(world, EcsOnDelete, EcsOnInstantiate, EcsDontInherit);
     ecs_add_pair(world, EcsExclusive, EcsOnInstantiate, EcsDontInherit);
@@ -1324,7 +1290,7 @@ void flecs_bootstrap(
     /* Run bootstrap functions for other parts of the code */
     flecs_bootstrap_entity_name(world);
     flecs_bootstrap_parent_component(world);
-    flecs_bootstrap_spawner(world);
+    flecs_bootstrap_prefab(world);
 
     ecs_set_scope(world, 0);
     ecs_set_name_prefix(world, NULL);

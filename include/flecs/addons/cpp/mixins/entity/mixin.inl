@@ -27,14 +27,6 @@ flecs::id id(E value) const;
 template <typename E, if_t< is_enum<E>::value > = 0>
 flecs::entity entity(E value) const;
 
-/** Create a prefab.
- * 
- * @memberof flecs::world
- * @ingroup cpp_entities
- */
-template <typename... Args>
-flecs::entity prefab(Args &&... args) const;
-
 /** Create an entity that's associated with a type.
  * 
  * @memberof flecs::world
@@ -42,11 +34,3 @@ flecs::entity prefab(Args &&... args) const;
  */
 template <typename T>
 flecs::entity entity(const char *name = nullptr) const;
-
-/** Create a prefab that's associated with a type.
- * 
- * @memberof flecs::world
- * @ingroup cpp_entities
- */
-template <typename T>
-flecs::entity prefab(const char *name = nullptr) const;
