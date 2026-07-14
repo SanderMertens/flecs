@@ -899,7 +899,9 @@ void FlecsMetricsImport(ecs_world_t *world) {
         .move = ecs_move(EcsMetricCountTargets)
     });
 
+#ifdef FLECS_CONSTRAINT_TRAITS
     ecs_add_id(world, EcsMetric, EcsOneOf);
+#endif
 
 #ifdef FLECS_DOC
     ECS_OBSERVER(world, SetMetricDocName, EcsOnSet, 

@@ -12,6 +12,9 @@
 #ifdef FLECS_NO_CPP
 #undef FLECS_CPP
 #endif
+#ifdef FLECS_NO_CONSTRAINT_TRAITS
+#undef FLECS_CONSTRAINT_TRAITS
+#endif
 #ifdef FLECS_NO_ENTITY_RANGES
 #undef FLECS_ENTITY_RANGES
 #endif
@@ -105,6 +108,13 @@
 #ifndef FLECS_HTTP
 #define FLECS_HTTP
 #endif
+#endif
+
+#ifdef FLECS_CONSTRAINT_TRAITS
+#ifdef FLECS_NO_CONSTRAINT_TRAITS
+#error "FLECS_NO_CONSTRAINT_TRAITS failed: CONSTRAINT_TRAITS is required by other addons"
+#endif
+#include "../addons/constraint_traits.h"
 #endif
 
 #ifdef FLECS_ENTITY_RANGES

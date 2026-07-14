@@ -124,6 +124,25 @@ static const flecs::entity_t OnTableCreate = EcsOnTableCreate;
 /** Built-in OnTableDelete event. */
 static const flecs::entity_t OnTableDelete = EcsOnTableDelete;
 
+#ifdef FLECS_CONSTRAINT_TRAITS
+/** Acyclic trait. */
+static const flecs::entity_t Acyclic = EcsAcyclic;
+/** Final trait. */
+static const flecs::entity_t Final = EcsFinal;
+/** OneOf trait. */
+static const flecs::entity_t OneOf = EcsOneOf;
+/** Relationship tag. */
+static const flecs::entity_t Relationship = EcsRelationship;
+/** Target tag. */
+static const flecs::entity_t Target = EcsTarget;
+/** Trait tag. */
+static const flecs::entity_t Trait = EcsTrait;
+/** Singleton tag. */
+static const flecs::entity_t Singleton = EcsSingleton;
+/** Symmetric trait. */
+static const flecs::entity_t Symmetric = EcsSymmetric;
+#endif
+
 /** Self term flag. */
 static const uint64_t Self = EcsSelf;
 /** Up term flag. */
@@ -162,30 +181,16 @@ static const flecs::entity_t This = EcsThis;
 static const flecs::entity_t Transitive = EcsTransitive;
 /** Reflexive trait. */
 static const flecs::entity_t Reflexive = EcsReflexive;
-/** Final trait. */
-static const flecs::entity_t Final = EcsFinal;
 /** Inheritable trait. */
 static const flecs::entity_t Inheritable = EcsInheritable;
 /** PairIsTag trait. */
 static const flecs::entity_t PairIsTag = EcsPairIsTag;
 /** Exclusive trait. */
 static const flecs::entity_t Exclusive = EcsExclusive;
-/** Acyclic trait. */
-static const flecs::entity_t Acyclic = EcsAcyclic;
 /** Traversable trait. */
 static const flecs::entity_t Traversable = EcsTraversable;
-/** Symmetric trait. */
-static const flecs::entity_t Symmetric = EcsSymmetric;
 /** With trait. */
 static const flecs::entity_t With = EcsWith;
-/** OneOf trait. */
-static const flecs::entity_t OneOf = EcsOneOf;
-/** Trait tag. */
-static const flecs::entity_t Trait = EcsTrait;
-/** Relationship tag. */
-static const flecs::entity_t Relationship = EcsRelationship;
-/** Target tag. */
-static const flecs::entity_t Target = EcsTarget;
 /** CanToggle trait. */
 static const flecs::entity_t CanToggle = EcsCanToggle;
 
@@ -220,8 +225,6 @@ static const flecs::entity_t SlotOf = EcsSlotOf;
 
 /** OrderedChildren tag. */
 static const flecs::entity_t OrderedChildren = EcsOrderedChildren;
-/** Singleton tag. */
-static const flecs::entity_t Singleton = EcsSingleton;
 
 /** Name identifier. */
 static const flecs::entity_t Name = EcsName;
