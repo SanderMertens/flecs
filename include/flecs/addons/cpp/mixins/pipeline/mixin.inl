@@ -58,21 +58,6 @@ void run_pipeline(const flecs::entity_t pip, ecs_ftime_t delta_time = 0.0) const
 template <typename Pipeline, if_not_t< is_enum<Pipeline>::value > = 0>
 void run_pipeline(ecs_ftime_t delta_time = 0.0) const;
 
-/** Set the time scale.
- * @see ecs_set_time_scale()
- */
-void set_time_scale(ecs_ftime_t mul) const;
-
-/** Set the target FPS.
- * @see ecs_set_target_fps()
- */
-void set_target_fps(ecs_ftime_t target_fps) const;
-
-/** Reset the simulation clock.
- * @see ecs_reset_clock()
- */
-void reset_clock() const;
-
 /** Set the number of threads.
  * @see ecs_set_threads()
  */

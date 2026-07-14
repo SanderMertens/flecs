@@ -1,19 +1,18 @@
 /**
- * @file addons/pipeline/frame.c
- * @brief Functions for frame begin/end.
+ * @file addons/frame.c
+ * @brief Frame management.
  */
 
-#include "../../private_api.h"
+#include "../private_api.h"
 
-#ifdef FLECS_PIPELINE
-#include "pipeline.h"
+#ifdef FLECS_FRAME
 
 static
 ecs_ftime_t flecs_insert_sleep(
     ecs_world_t *world,
     ecs_time_t *stop)
 {
-    flecs_poly_assert(world, ecs_world_t);  
+    flecs_poly_assert(world, ecs_world_t);
 
     ecs_time_t start = *stop, now = start;
     ecs_ftime_t delta_time = (ecs_ftime_t)ecs_time_measure(stop);
@@ -62,7 +61,7 @@ ecs_ftime_t flecs_start_measure_frame(
     ecs_world_t *world,
     ecs_ftime_t user_delta_time)
 {
-    flecs_poly_assert(world, ecs_world_t);  
+    flecs_poly_assert(world, ecs_world_t);
 
     ecs_ftime_t delta_time = 0;
 
@@ -104,7 +103,7 @@ static
 void flecs_stop_measure_frame(
     ecs_world_t* world)
 {
-    flecs_poly_assert(world, ecs_world_t);  
+    flecs_poly_assert(world, ecs_world_t);
 
     if (world->flags & EcsWorldMeasureFrameTime) {
         ecs_time_t t = world->frame_start_time;
@@ -117,11 +116,11 @@ ecs_ftime_t ecs_frame_begin(
     ecs_ftime_t user_delta_time)
 {
     flecs_poly_assert(world, ecs_world_t);
-    ecs_check(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION, 
+    ecs_check(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION,
         "cannot begin frame while world is in readonly mode");
-    ecs_check(!(world->flags & EcsWorldFrameInProgress), ECS_INVALID_OPERATION, 
+    ecs_check(!(world->flags & EcsWorldFrameInProgress), ECS_INVALID_OPERATION,
         "cannot begin frame while frame is already in progress");
-    ecs_check(ECS_NEQZERO(user_delta_time) || ecs_os_has_time(), 
+    ecs_check(ECS_NEQZERO(user_delta_time) || ecs_os_has_time(),
         ECS_MISSING_OS_API, "get_time");
 
     /* Start measuring total frame time */
@@ -156,13 +155,13 @@ void ecs_frame_end(
     ecs_world_t *world)
 {
     flecs_poly_assert(world, ecs_world_t);
-    ecs_check(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION, 
+    ecs_check(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION,
         "cannot end frame while world is in readonly mode");
-    ecs_check((world->flags & EcsWorldFrameInProgress), ECS_INVALID_OPERATION, 
+    ecs_check((world->flags & EcsWorldFrameInProgress), ECS_INVALID_OPERATION,
         "cannot end frame while frame is not in progress");
 
     world->info.frame_count_total ++;
-    
+
     int32_t i, count = world->stage_count;
     for (i = 0; i < count; i ++) {
         flecs_stage_merge_post_frame(world, world->stages[i]);
@@ -175,9 +174,106 @@ void ecs_frame_end(
     world->on_commands_ctx_active = NULL;
 
     world->flags &= ~EcsWorldFrameInProgress;
-    
+
 error:
     return;
+}
+
+void ecs_run_post_frame(
+    ecs_world_t *world,
+    ecs_fini_action_t action,
+    void *ctx)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(action != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_stage_t *stage = flecs_stage_from_world(&world);
+    ecs_check((world->flags & EcsWorldFrameInProgress), ECS_INVALID_OPERATION,
+        "cannot register post frame action while frame is not in progress");
+
+    ecs_action_elem_t *elem = ecs_vec_append_t(&stage->allocator,
+        &stage->post_frame_actions, ecs_action_elem_t);
+    ecs_assert(elem != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    elem->action = action;
+    elem->ctx = ctx;
+error:
+    return;
+}
+
+void ecs_quit(
+    ecs_world_t *world)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    flecs_stage_from_world(&world);
+    world->flags |= EcsWorldQuit;
+error:
+    return;
+}
+
+bool ecs_should_quit(
+    const ecs_world_t *world)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    world = ecs_get_world(world);
+    return ECS_BIT_IS_SET(world->flags, EcsWorldQuit);
+error:
+    return true;
+}
+
+void ecs_measure_frame_time(
+    ecs_world_t *world,
+    bool enable)
+{
+    flecs_poly_assert(world, ecs_world_t);
+    ecs_check(ecs_os_has_time(), ECS_MISSING_OS_API, NULL);
+
+    if (ECS_EQZERO(world->info.target_fps) || enable) {
+        ECS_BIT_COND(world->flags, EcsWorldMeasureFrameTime, enable);
+    }
+error:
+    return;
+}
+
+void ecs_measure_system_time(
+    ecs_world_t *world,
+    bool enable)
+{
+    flecs_poly_assert(world, ecs_world_t);
+    ecs_check(ecs_os_has_time(), ECS_MISSING_OS_API, NULL);
+    ECS_BIT_COND(world->flags, EcsWorldMeasureSystemTime, enable);
+error:
+    return;
+}
+
+void ecs_set_target_fps(
+    ecs_world_t *world,
+    ecs_ftime_t fps)
+{
+    flecs_poly_assert(world, ecs_world_t);
+    ecs_check(ecs_os_has_time(), ECS_MISSING_OS_API, NULL);
+
+    ecs_measure_frame_time(world, true);
+    world->info.target_fps = fps;
+error:
+    return;
+}
+
+void ecs_set_time_scale(
+    ecs_world_t *world,
+    ecs_ftime_t scale)
+{
+    flecs_poly_assert(world, ecs_world_t);
+    ecs_assert(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION,
+        "cannot set time scale while world is in readonly mode");
+    world->info.time_scale = scale;
+}
+
+void ecs_reset_clock(
+    ecs_world_t *world)
+{
+    world->info.world_time_total = 0;
+    world->info.world_time_total_raw = 0;
 }
 
 #endif

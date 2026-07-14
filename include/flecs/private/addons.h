@@ -12,6 +12,9 @@
 #ifdef FLECS_NO_CPP
 #undef FLECS_CPP
 #endif
+#ifdef FLECS_NO_FRAME
+#undef FLECS_FRAME
+#endif
 #ifdef FLECS_NO_MODULE
 #undef FLECS_MODULE
 #endif
@@ -96,6 +99,22 @@
 #ifndef FLECS_HTTP
 #define FLECS_HTTP
 #endif
+#endif
+
+#if defined(FLECS_ALERTS) || defined(FLECS_APP) || defined(FLECS_HTTP) || \
+    defined(FLECS_JSON) || defined(FLECS_METRICS) || defined(FLECS_PIPELINE) || \
+    defined(FLECS_REST) || defined(FLECS_STATS) || defined(FLECS_SYSTEM) || \
+    defined(FLECS_TIMER)
+#ifndef FLECS_FRAME
+#define FLECS_FRAME
+#endif
+#endif
+
+#ifdef FLECS_FRAME
+#ifdef FLECS_NO_FRAME
+#error "FLECS_NO_FRAME failed: FRAME is required by other addons"
+#endif
+#include "../addons/frame.h"
 #endif
 
 #ifdef FLECS_APP
