@@ -2893,10 +2893,12 @@ int32_t ecs_get_depth(
 {
     ecs_check(ecs_is_valid(world, rel), ECS_INVALID_PARAMETER, NULL);
     flecs_assert_entity_valid(world, entity, "get_depth");
-    ecs_check(ecs_has_id(world, rel, EcsAcyclic), ECS_INVALID_PARAMETER, 
+#ifdef FLECS_CONSTRAINT_TRAITS
+    ecs_check(ecs_has_id(world, rel, EcsAcyclic), ECS_INVALID_PARAMETER,
         "cannot determine depth for non-acyclic relationship '%s' "
             "(add Acyclic trait to relationship)",
                 flecs_errstr(ecs_get_path(world, rel)));
+#endif
 
     ecs_table_t *table = ecs_get_table(world, entity);
     if (table) {

@@ -22,6 +22,7 @@ endif
 flecs_src = files(
     'src/addons/alerts.c',
     'src/addons/app.c',
+    'src/addons/constraint_traits/constraint_traits.c',
     'src/addons/doc.c',
     'src/addons/entity_ranges.c',
     'src/addons/flecs_cpp.c',

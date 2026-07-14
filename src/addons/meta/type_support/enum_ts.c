@@ -381,7 +381,9 @@ void flecs_add_enum(ecs_iter_t *it) {
         }
 
         ecs_add_id(world, e, EcsExclusive);
+#ifdef FLECS_CONSTRAINT_TRAITS
         ecs_add_id(world, e, EcsOneOf);
+#endif
         ecs_add_id(world, e, EcsPairIsTag);
     }
 }

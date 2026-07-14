@@ -13,6 +13,7 @@
                 "FLECS_ALERTS",
                 "FLECS_APP",
                 "FLECS_CPP",
+                "FLECS_CONSTRAINT_TRAITS",
                 "FLECS_DOC",
                 "FLECS_EXCLUSIVE_ACCESS",
                 "FLECS_ENTITY_RANGES",
