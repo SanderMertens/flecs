@@ -235,6 +235,7 @@
 #define FLECS_META           /**< Reflection support. */
 #define FLECS_METRICS        /**< Expose component data as statistics. */
 #define FLECS_MODULE         /**< Module support. */
+#define FLECS_MULTI_WORLD    /**< Support C++ component ids across multiple worlds. */
 #define FLECS_OS_API_IMPL    /**< Default implementation for OS API. */
 // #define FLECS_PERF_TRACE  /**< Enable performance tracing. */
 #define FLECS_PIPELINE       /**< Pipeline support. */

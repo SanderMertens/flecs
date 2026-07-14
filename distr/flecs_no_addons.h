@@ -5144,51 +5144,6 @@ FLECS_API
 int32_t flecs_poly_refcount(
     ecs_poly_t *poly);
 
-/** Get an unused index for the static world-local component ID array.
- * This operation returns an unused index for the world-local component ID
- * array. This index can be used by language bindings to obtain a component ID.
- * 
- * @return Unused index for component ID array.
- */
-FLECS_API
-int32_t flecs_component_ids_index_get(void);
-
-/** Get a world-local component ID.
- *
- * @param world The world.
- * @param index Component ID array index.
- * @return The component ID.
- */
-FLECS_API
-ecs_entity_t flecs_component_ids_get(
-    const ecs_world_t *world, 
-    int32_t index);
-
-/** Get an alive world-local component ID.
- * Same as flecs_component_ids_get(), but returns 0 if the component is no
- * longer alive.
- *
- * @param world The world.
- * @param index Component ID array index.
- * @return The component ID.
- */
-FLECS_API
-ecs_entity_t flecs_component_ids_get_alive(
-    const ecs_world_t *world, 
-    int32_t index);
-
-/** Set a world-local component ID.
- *
- * @param world The world.
- * @param index Component ID array index.
- * @param id The component ID.
- */
-FLECS_API
-void flecs_component_ids_set(
-    ecs_world_t *world, 
-    int32_t index,
-    ecs_entity_t id);
-
 /** Query iterator function for trivially cached queries.
  * This operation can be called if an iterator matches the conditions for
  * trivial iteration.
@@ -12172,6 +12127,9 @@ void ecs_table_clear_entities(
 #endif
 #ifdef FLECS_NO_MODULE
 #undef FLECS_MODULE
+#endif
+#ifdef FLECS_NO_MULTI_WORLD
+#undef FLECS_MULTI_WORLD
 #endif
 #ifdef FLECS_NO_PREFAB
 #undef FLECS_PREFAB

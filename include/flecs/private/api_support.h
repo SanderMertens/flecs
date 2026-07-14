@@ -314,6 +314,8 @@ FLECS_API
 int32_t flecs_poly_refcount(
     ecs_poly_t *poly);
 
+#ifdef FLECS_MULTI_WORLD
+
 /** Get an unused index for the static world-local component ID array.
  * This operation returns an unused index for the world-local component ID
  * array. This index can be used by language bindings to obtain a component ID.
@@ -358,6 +360,8 @@ void flecs_component_ids_set(
     ecs_world_t *world, 
     int32_t index,
     ecs_entity_t id);
+
+#endif
 
 /** Query iterator function for trivially cached queries.
  * This operation can be called if an iterator matches the conditions for

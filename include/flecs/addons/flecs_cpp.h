@@ -103,7 +103,11 @@ typedef void (*ecs_cpp_type_action_t)(
 
 typedef struct ecs_cpp_component_desc_t {
     ecs_entity_t id;
+#ifdef FLECS_MULTI_WORLD
     int32_t ids_index;
+#else
+    ecs_entity_t *id_storage;
+#endif
     const char *name;
     const char *cpp_name;
     const char *cpp_symbol;
