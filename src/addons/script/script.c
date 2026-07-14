@@ -89,7 +89,7 @@ void ecs_script_clear(
     ecs_entity_t instance)
 {
     if (!instance) {
-        ecs_delete_with(world, ecs_pair_t(EcsScript, script));
+        flecs_delete_with(world, ecs_pair_t(EcsScript, script), true);
     } else {
         ecs_assert(ecs_is_alive(world, instance), ECS_INTERNAL_ERROR, NULL);
         ecs_vec_t to_delete = {0};

@@ -146,6 +146,12 @@ void flecs_on_delete(
     bool delete_id,
     bool force_delete);
 
+/* Delete all entities with id, including prefabs when force_delete is true. */
+void flecs_delete_with(
+    ecs_world_t *world,
+    ecs_id_t id,
+    bool force_delete);
+
 /* Remove non-fragmenting components from entity. */
 void flecs_entity_remove_non_fragmenting(
     ecs_world_t *world,
