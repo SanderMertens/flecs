@@ -418,6 +418,7 @@ Addon         | Description                                      | Define       
 --------------|--------------------------------------------------|---------------------|
 [Cpp](/flecs/group__cpp.html)                              | C++17 API                                        | FLECS_CPP           |
 [Module](/flecs/group__c__addons__module.html)             | Organize game logic into reusable modules        | FLECS_MODULE        |
+[Multi World](/flecs/group__c__addons.html)                | Support C++ component IDs across multiple worlds | FLECS_MULTI_WORLD   |
 [Entity Ranges](/flecs/group__c__addons__entity__ranges.html) | Entity id range management                    | FLECS_ENTITY_RANGES |
 [Frame](/flecs/group__c__addons__frame.html)               | Frame management                                 | FLECS_FRAME         |
 [System](/flecs/group__c__addons__system.html)             | Create & run systems                             | FLECS_SYSTEM        |

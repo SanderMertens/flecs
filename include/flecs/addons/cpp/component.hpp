@@ -162,7 +162,9 @@ struct type_impl {
     static void init(
         bool allow_tag = true)
     {
+#ifdef FLECS_MULTI_WORLD
         index(); // Make sure the global component index is initialized.
+#endif
 
         s_size = sizeof(T);
         s_alignment = alignof(T);
@@ -178,7 +180,12 @@ struct type_impl {
         bool allow_tag = true)
     {
         init(allow_tag);
+#ifdef FLECS_MULTI_WORLD
         flecs_component_ids_set(world, index(), id);
+#else
+        (void)world;
+        s_id = id;
+#endif
     }
 
     // Register the component ID.
@@ -191,11 +198,17 @@ struct type_impl {
         flecs::id_t id = 0)                 // User-provided component ID
     {
         init(allow_tag);
+#ifdef FLECS_MULTI_WORLD
         ecs_assert(index() != 0, ECS_INTERNAL_ERROR, nullptr);
+#endif
 
         ecs_cpp_component_desc_t desc = {
             id,
+#ifdef FLECS_MULTI_WORLD
             index(),
+#else
+            &s_id,
+#endif
             name,
             type_name<T>(),
             component_symbol_name<T>(),
@@ -249,13 +262,24 @@ struct type_impl {
             "component '%s' must be registered before use",
             type_name<T>());
 
+#ifdef FLECS_MULTI_WORLD
         flecs::entity_t c = flecs_component_ids_get(world, index());
+#else
+        flecs::entity_t c = s_id;
+#endif
         ecs_assert(c != 0, ECS_INTERNAL_ERROR, nullptr);
         ecs_assert(ecs_is_alive(world, c), ECS_INVALID_OPERATION,
             "component '%s' was deleted, reregister before using",
             type_name<T>());
 #else
+#ifdef FLECS_MULTI_WORLD
         flecs::entity_t c = flecs_component_ids_get_alive(world, index());
+#else
+        flecs::entity_t c = s_id;
+        if (c && !ecs_is_alive(world, c)) {
+            c = 0;
+        }
+#endif
         if (!c) {
             c = register_id(world);
         }
@@ -277,7 +301,11 @@ struct type_impl {
     static bool registered(flecs::world_t *world) {
         ecs_assert(world != nullptr, ECS_INVALID_PARAMETER, nullptr);
 
+#ifdef FLECS_MULTI_WORLD
         if (!flecs_component_ids_get(world, index())) {
+#else
+        if (!s_id) {
+#endif
             return false;
         }
 
@@ -289,12 +317,19 @@ struct type_impl {
     static void reset() {
         s_size = 0;
         s_alignment = 0;
+#ifndef FLECS_MULTI_WORLD
+        s_id = 0;
+#endif
     }
 
+#ifdef FLECS_MULTI_WORLD
     static int32_t index() {
         static int32_t index_ = flecs_component_ids_index_get();
         return index_;
     }
+#else
+    static entity_t s_id;
+#endif
 
     static size_t s_size;
     static size_t s_alignment;
@@ -303,6 +338,9 @@ struct type_impl {
 // Global templated variables that hold the component identifier and other info.
 template <typename T> inline size_t   type_impl<T>::s_size;
 template <typename T> inline size_t   type_impl<T>::s_alignment;
+#ifndef FLECS_MULTI_WORLD
+template <typename T> inline entity_t type_impl<T>::s_id;
+#endif
 
 // Front-facing class for implicitly registering a component and obtaining
 // static component data.

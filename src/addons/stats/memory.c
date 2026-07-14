@@ -1050,8 +1050,10 @@ ecs_misc_memory_t ecs_misc_memory_get(
     result.bytes_prefab_child_indices = flecs_map_memory_get(
         &world->prefab_child_indices, 0);
 
+#ifdef FLECS_MULTI_WORLD
     result.bytes_component_ids += 
         ecs_vec_size(&world->component_ids) * ECS_SIZEOF(ecs_entity_t);
+#endif
     
     result.bytes_table_lookup += 
         flecs_hashmap_memory_get(&world->store.table_map);

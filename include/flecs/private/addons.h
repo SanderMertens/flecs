@@ -21,6 +21,9 @@
 #ifdef FLECS_NO_MODULE
 #undef FLECS_MODULE
 #endif
+#ifdef FLECS_NO_MULTI_WORLD
+#undef FLECS_MULTI_WORLD
+#endif
 #ifdef FLECS_NO_PREFAB
 #undef FLECS_PREFAB
 #endif
