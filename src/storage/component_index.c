@@ -396,70 +396,12 @@ void flecs_component_record_check_constraints(
             return;
         }
 
-        if (tgt) {
-            ecs_assert(tgt != 0, ECS_INTERNAL_ERROR, NULL);
-
-            /* Can't use relationship as target */
-            if (ecs_has_id(world, tgt, EcsRelationship)) {
-                if (!ecs_id_is_wildcard(rel) && 
-                    !ecs_has_id(world, rel, EcsTrait))
-                {
-                    ecs_throw(ECS_CONSTRAINT_VIOLATED, "cannot use '%s' as target"
-                        " in pair '%s': '%s' has the Relationship trait",
-                            flecs_errstr(ecs_get_path(world, tgt)),
-                            flecs_errstr_1(ecs_id_str(world, cr->id)),
-                            flecs_errstr_2(ecs_get_path(world, tgt)));
-                }
-            }
-        }
-
-        if (ecs_has_id(world, rel, EcsTarget)) {
-            ecs_throw(ECS_CONSTRAINT_VIOLATED, "cannot use '%s' as relationship "
-                "in pair '%s': '%s' has the Target trait",
-                    flecs_errstr(ecs_get_path(world, rel)),
-                    flecs_errstr_1(ecs_id_str(world, cr->id)),
-                    flecs_errstr_2(ecs_get_path(world, rel)));
+        if (flecs_check_constraint_traits(world, cr, rel, tgt)) {
+            goto error;
         }
 
         if (tgt && !ecs_id_is_wildcard(tgt)) {
-            /* Check if target of relationship satisfies OneOf property */
-            ecs_entity_t oneof = flecs_get_oneof(world, rel);
-            if (oneof) {
-                if (!ecs_has_pair(world, tgt, EcsChildOf, oneof)) {
-                    if (oneof == rel) {
-                        ecs_throw(ECS_CONSTRAINT_VIOLATED, 
-                            "cannot use '%s' as target in pair '%s': "
-                            "relationship '%s' has the OneOf trait and '%s' "
-                            "is not a child of '%s'",
-                                flecs_errstr(ecs_get_path(world, tgt)),
-                                flecs_errstr_1(ecs_id_str(world, cr->id)),
-                                flecs_errstr_2(ecs_get_path(world, rel)),
-                                flecs_errstr_3(ecs_get_path(world, tgt)),
-                                flecs_errstr_4(ecs_get_path(world, rel)));
-                        } else {
-                            ecs_throw(ECS_CONSTRAINT_VIOLATED, 
-                                "cannot use '%s' as target in pair '%s': "
-                                "relationship '%s' has (OneOf, %s) and '%s' "
-                                "is not a child of '%s'",
-                                    flecs_errstr(ecs_get_path(world, tgt)),
-                                    flecs_errstr_1(ecs_id_str(world, cr->id)),
-                                    flecs_errstr_2(ecs_get_path(world, rel)),
-                                    flecs_errstr_3(ecs_get_path(world, oneof)),
-                                    flecs_errstr_4(ecs_get_path(world, tgt)),
-                                    flecs_errstr_5(ecs_get_path(world, oneof)));
-                        }
-                }
-            }
-
-            /* Check if we're not trying to inherit from a final target */
             if (rel == EcsIsA) {
-                if (ecs_has_id(world, tgt, EcsFinal)) {
-                    ecs_throw(ECS_CONSTRAINT_VIOLATED, 
-                        "cannot add '(IsA, %s)': '%s' has the Final trait",
-                            flecs_errstr(ecs_get_path(world, tgt)),
-                            flecs_errstr_1(ecs_get_path(world, tgt)));
-                }
-
                 if (flecs_component_is_trait_locked(world, tgt)) {
                     if (!ecs_has_id(world, tgt, EcsInheritable) && !ecs_has_pair(world, tgt, EcsIsA, EcsWildcard)) {
                         ecs_throw(ECS_INVALID_OPERATION, 
@@ -471,21 +413,8 @@ void flecs_component_record_check_constraints(
             }
         }
     } else {
-        bool is_tgt = false;
-        if (ecs_has_id(world, rel, EcsRelationship) ||
-            (is_tgt = ecs_has_id(world, rel, EcsTarget)))
-        {
-            if (is_tgt) {
-                ecs_throw(ECS_CONSTRAINT_VIOLATED, 
-                    "cannot use '%s' by itself: it has the Target trait and "
-                    "must be used in pair with relationship",
-                        flecs_errstr(ecs_get_path(world, rel)));
-            } else {
-                ecs_throw(ECS_CONSTRAINT_VIOLATED, 
-                    "cannot use '%s' by itself: it has the Relationship trait "
-                    "and must be used in pair with target",
-                        flecs_errstr(ecs_get_path(world, rel)));
-            }
+        if (flecs_check_constraint_traits(world, cr, rel, tgt)) {
+            goto error;
         }
     }
 error:

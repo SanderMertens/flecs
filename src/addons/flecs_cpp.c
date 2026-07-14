@@ -482,7 +482,9 @@ void ecs_cpp_enum_init(
 #else
     /* Make sure that enums still behave the same even without meta */
     ecs_add_id(world, id, EcsExclusive);
+#ifdef FLECS_CONSTRAINT_TRAITS
     ecs_add_id(world, id, EcsOneOf);
+#endif
 #endif
 }
 

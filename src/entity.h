@@ -93,11 +93,6 @@ void flecs_record_add_flag(
     ecs_record_t *record,
     uint32_t flag);
 
-/* Get entity that should be used for OneOf constraint from relationship. */
-ecs_entity_t flecs_get_oneof(
-    const ecs_world_t *world,
-    ecs_entity_t e);
-
 /* Compute relationship depth for table. */
 int32_t flecs_relation_depth(
     const ecs_world_t *world,
