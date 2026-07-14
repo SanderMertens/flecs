@@ -162,6 +162,7 @@ void flecs_bootstrap_prefab(
 void flecs_bootstrap_prefab(
     ecs_world_t *world)
 {
+    (void)world;
 #ifdef FLECS_REST
     /* If the REST addon is enabled, just create an entity called Prefab. 
      * Without this the explorer tree query (which checks if an entity is a

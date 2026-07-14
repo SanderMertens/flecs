@@ -366,12 +366,14 @@ void flecs_fini_prefab(
 
 #else
 
+#ifdef FLECS_DEBUG
 void flecs_tree_spawner_assert_not_instantiated(
     ecs_world_t *world,
     ecs_entity_t parent)
 {
     (void)world;
-    (void)world;
+    (void)parent;
 }
+#endif
 
 #endif

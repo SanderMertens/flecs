@@ -15,6 +15,7 @@
                 "FLECS_CPP",
                 "FLECS_DOC",
                 "FLECS_EXCLUSIVE_ACCESS",
+                "FLECS_FRAME",
                 "FLECS_JOURNAL",
                 "FLECS_JSON",
                 "FLECS_HTTP",

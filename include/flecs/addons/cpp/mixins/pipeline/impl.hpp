@@ -57,18 +57,6 @@ inline void world::run_pipeline(ecs_ftime_t delta_time) const {
     return ecs_run_pipeline(world_, _::type<Pipeline>::id(world_), delta_time);
 }
 
-inline void world::set_time_scale(ecs_ftime_t mul) const {
-    ecs_set_time_scale(world_, mul);
-}
-
-inline void world::set_target_fps(ecs_ftime_t target_fps) const {
-    ecs_set_target_fps(world_, target_fps);
-}
-
-inline void world::reset_clock() const {
-    ecs_reset_clock(world_);
-}
-
 inline void world::set_threads(int32_t threads) const {
     ecs_set_threads(world_, threads);
 }
