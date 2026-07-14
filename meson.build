@@ -23,6 +23,7 @@ flecs_src = files(
     'src/addons/alerts.c',
     'src/addons/app.c',
     'src/addons/doc.c',
+    'src/addons/entity_ranges.c',
     'src/addons/flecs_cpp.c',
     'src/addons/frame.c',
     'src/addons/http/http.c',

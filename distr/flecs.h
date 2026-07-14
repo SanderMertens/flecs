@@ -221,7 +221,8 @@
 #define FLECS_CPP            /**< C++ API. */
 #define FLECS_DOC            /**< Document entities and components. */
 // #define FLECS_EXCLUSIVE_ACCESS /**< Enable exclusive world access checks. */
-#define FLECS_FRAME          /**< Frame management. */
+#define FLECS_ENTITY_RANGES  /**< Create entities in custom id ranges. */
+#define FLECS_FRAME          /**< Frame management utilities. */
 // #define FLECS_JOURNAL     /**< Journaling addon. */
 #define FLECS_JSON           /**< Parsing JSON to/from component values. */
 #define FLECS_HTTP           /**< Tiny HTTP server for connecting to remote UI. */
@@ -6511,16 +6512,6 @@ typedef struct ecs_query_group_info_t {
     void *ctx;            /**< Group context, returned by on_group_create. */
 } ecs_query_group_info_t;
 
-/** Type that stores an entity id range.
- * Returned by ecs_entity_range_new(), used with ecs_entity_range_set().
- */
-typedef struct ecs_entity_range_t {
-    uint32_t min;           /**< First id in range (inclusive). */
-    uint32_t max;           /**< Last id in range (inclusive, 0 = unlimited). */
-    uint32_t cur;           /**< Last issued id in range. */
-    ecs_vec_t recycled;     /**< Recycled entity ids (vec<entity_t>). */
-} ecs_entity_range_t;
-
 /** @} */
 
 /**
@@ -7535,56 +7526,6 @@ void ecs_dim(
 FLECS_API
 void ecs_shrink(
     ecs_world_t *world);
-
-/** Create a new entity range.
- * This function creates a range that constrains new entity identifiers returned 
- * by the specified [min, max] interval. Each range maintains its own list of 
- * recycled entity ids, which ensures that recycled ids always respect the 
- * configured range. If `max` is set to 0, the range is unbounded.
- *
- * Entity ranges cannot be deleted once created. Use ecs_entity_range_set() to 
- * activate a range.
- *
- * @param world The world.
- * @param min The first entity id in the range (inclusive).
- * @param max The last entity id in the range (inclusive, 0 = unlimited).
- * @return A pointer to the new range. Does not need to be freed.
- */
-FLECS_API
-const ecs_entity_range_t* ecs_entity_range_new(
-    ecs_world_t *world,
-    uint32_t min,
-    uint32_t max);
-
-/** Set the active entity range.
- * This function activates a range created with ecs_entity_range_new().
- * When a range is activated, new entity identifiers will fall within the 
- * specified [min, max] interval, including recycled identifiers.
- *
- * When the active range is out of available ids, operations that create new
- * entity ids will assert.
- * 
- * The operation only accepts ranges that have been created by 
- * ecs_entity_range_new().
- *
- * @param world The world.
- * @param range The range to activate.
- */
-FLECS_API
-void ecs_entity_range_set(
-    ecs_world_t *world,
-    const ecs_entity_range_t *range);
-
-/** Get the currently active entity id range.
- * Returns the range set by ecs_entity_range_set(), or NULL if no range is
- * active.
- *
- * @param world The world.
- * @return The active range, or NULL.
- */
-FLECS_API
-const ecs_entity_range_t* ecs_entity_range_get(
-    const ecs_world_t *world);
 
 /** Get the largest issued entity ID (not counting generation).
  *
@@ -12298,6 +12239,9 @@ void ecs_table_clear_entities(
 #ifdef FLECS_NO_CPP
 #undef FLECS_CPP
 #endif
+#ifdef FLECS_NO_ENTITY_RANGES
+#undef FLECS_ENTITY_RANGES
+#endif
 #ifdef FLECS_NO_FRAME
 #undef FLECS_FRAME
 #endif
@@ -13123,6 +13067,100 @@ char* ecs_log_stop_capture(void);
 #ifndef FLECS_HTTP
 #define FLECS_HTTP
 #endif
+#endif
+
+#ifdef FLECS_ENTITY_RANGES
+#ifdef FLECS_NO_ENTITY_RANGES
+#error "FLECS_NO_ENTITY_RANGES failed: ENTITY_RANGES is required by other addons"
+#endif
+
+#ifdef FLECS_ENTITY_RANGES
+
+#ifndef FLECS_ENTITY_RANGES_H
+#define FLECS_ENTITY_RANGES_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/**
+ * @defgroup c_addons_entity_ranges Entity Ranges
+ * @ingroup c_addons
+ * Entity id range management.
+ *
+ * @{
+ */
+
+/** Type that stores an entity id range.
+ * Returned by ecs_entity_range_new(), used with ecs_entity_range_set().
+ */
+typedef struct ecs_entity_range_t {
+    uint32_t min;           /**< First id in range (inclusive). */
+    uint32_t max;           /**< Last id in range (inclusive, 0 = unlimited). */
+    uint32_t cur;           /**< Last issued id in range. */
+    ecs_vec_t recycled;     /**< Recycled entity ids (vec<entity_t>). */
+} ecs_entity_range_t;
+
+/** Create a new entity range.
+ * This function creates a range that constrains new entity identifiers returned
+ * by the specified [min, max] interval. Each range maintains its own list of
+ * recycled entity ids, which ensures that recycled ids always respect the
+ * configured range. If `max` is set to 0, the range is unbounded.
+ *
+ * Entity ranges cannot be deleted once created. Use ecs_entity_range_set() to
+ * activate a range.
+ *
+ * @param world The world.
+ * @param min The first entity id in the range (inclusive).
+ * @param max The last entity id in the range (inclusive, 0 = unlimited).
+ * @return A pointer to the new range. Does not need to be freed.
+ */
+FLECS_API
+const ecs_entity_range_t* ecs_entity_range_new(
+    ecs_world_t *world,
+    uint32_t min,
+    uint32_t max);
+
+/** Set the active entity range.
+ * This function activates a range created with ecs_entity_range_new().
+ * When a range is activated, new entity identifiers will fall within the
+ * specified [min, max] interval, including recycled identifiers.
+ *
+ * When the active range is out of available ids, operations that create new
+ * entity ids will assert.
+ *
+ * The operation only accepts ranges that have been created by
+ * ecs_entity_range_new().
+ *
+ * @param world The world.
+ * @param range The range to activate.
+ */
+FLECS_API
+void ecs_entity_range_set(
+    ecs_world_t *world,
+    const ecs_entity_range_t *range);
+
+/** Get the currently active entity id range.
+ * Returns the range set by ecs_entity_range_set(), or NULL if no range is
+ * active.
+ *
+ * @param world The world.
+ * @return The active range, or NULL.
+ */
+FLECS_API
+const ecs_entity_range_t* ecs_entity_range_get(
+    const ecs_world_t *world);
+
+/** @} */
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
+
+#endif // FLECS_ENTITY_RANGES
+
 #endif
 
 #if defined(FLECS_ALERTS) || defined(FLECS_APP) || defined(FLECS_HTTP) || \
@@ -25417,27 +25455,6 @@ struct world {
         ecs_dim(world_, entity_count);
     }
 
-    /** Create a new entity id range.
-     * @see ecs_entity_range_new()
-     */
-    const ecs_entity_range_t* range_new(uint32_t min, uint32_t max) const {
-        return ecs_entity_range_new(world_, min, max);
-    }
-
-    /** Set the active entity id range.
-     * @see ecs_entity_range_set()
-     */
-    void range_set(const ecs_entity_range_t *range) const {
-        ecs_entity_range_set(world_, range);
-    }
-
-    /** Get the currently active entity id range.
-     * @see ecs_entity_range_get()
-     */
-    const ecs_entity_range_t* range_get() const {
-        return ecs_entity_range_get(world_);
-    }
-
     /** Set current scope.
      *
      * @param scope The scope to set.
@@ -26433,6 +26450,61 @@ void each(flecs::id_t term_id, Func&& func) const;
 template <typename E, if_t< is_enum<E>::value > = 0>
 flecs::entity to_entity(E constant) const;
 
+#   ifdef FLECS_PREFAB
+
+/** Create a prefab that's associated with a type.
+ * 
+ * @memberof flecs::world
+ * @ingroup cpp_entities
+ */
+template <typename T>
+flecs::entity prefab(const char *name = nullptr) const;
+
+/** Create a prefab.
+ * 
+ * @memberof flecs::world
+ * @ingroup cpp_entities
+ */
+template <typename... Args>
+flecs::entity prefab(Args &&... args) const;
+
+#   endif
+#   ifdef FLECS_ENTITY_RANGES
+
+/**
+ * @defgroup cpp_addons_entity_ranges Entity Ranges
+ * @ingroup cpp_addons
+ * Entity id range management.
+ *
+ * @{
+ * @}
+ */
+
+/**
+ * @memberof flecs::world
+ * @ingroup cpp_addons_entity_ranges
+ *
+ * @{
+ */
+
+/** Create a new entity id range.
+ * @see ecs_entity_range_new()
+ */
+const ecs_entity_range_t* range_new(uint32_t min, uint32_t max) const;
+
+/** Set the active entity id range.
+ * @see ecs_entity_range_set()
+ */
+void range_set(const ecs_entity_range_t *range) const;
+
+/** Get the currently active entity id range.
+ * @see ecs_entity_range_get()
+ */
+const ecs_entity_range_t* range_get() const;
+
+/** @} */
+
+#   endif
 #   ifdef FLECS_FRAME
 
 /**
@@ -34618,6 +34690,30 @@ inline flecs::id world::pair(entity_t r, entity_t o) const {
 
 }
 
+#ifdef FLECS_ENTITY_RANGES
+
+#pragma once
+
+namespace flecs {
+
+inline const ecs_entity_range_t* world::range_new(
+    uint32_t min,
+    uint32_t max) const
+{
+    return ecs_entity_range_new(world_, min, max);
+}
+
+inline void world::range_set(const ecs_entity_range_t *range) const {
+    ecs_entity_range_set(world_, range);
+}
+
+inline const ecs_entity_range_t* world::range_get() const {
+    return ecs_entity_range_get(world_);
+}
+
+}
+
+#endif
 #ifdef FLECS_FRAME
 
 #pragma once

@@ -43,6 +43,34 @@ static ECS_DTOR(EcsTreeSpawner, ptr, {
     EcsTreeSpawner_free(ptr);
 })
 
+bool flecs_enable_prefab(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    bool enabled)
+{
+    if (!ecs_has_id(world, entity, EcsPrefab)) {
+        return false;
+    }
+
+    /* If entity is a prefab, enable/disable all entities in the type. */
+    const ecs_type_t *type = ecs_get_type(world, entity);
+    ecs_assert(type != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_id_t *ids = type->array;
+    int32_t i, count = type->count;
+    for (i = 0; i < count; i ++) {
+        ecs_id_t component = ids[i];
+        if (component & ECS_ID_FLAGS_MASK) {
+            continue;
+        }
+        ecs_flags32_t flags = ecs_id_get_flags(world, component);
+        if (!(flags & EcsIdOnInstantiateDontInherit)) {
+            ecs_enable(world, component, enabled);
+        }
+    }
+
+    return true;
+}
+
 static
 void flecs_on_add_prefab(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
