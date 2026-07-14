@@ -114,6 +114,9 @@ struct each_delegate;
 
 // Mixin implementations
 #include "mixins/id/impl.hpp"
+#ifdef FLECS_ENTITY_RANGES
+#include "mixins/entity_ranges/impl.hpp"
+#endif
 #ifdef FLECS_FRAME
 #include "mixins/frame/impl.hpp"
 #endif

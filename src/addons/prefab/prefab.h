@@ -41,6 +41,13 @@ void flecs_fini_prefab(
 
 #ifdef FLECS_PREFAB
 
+/* Enable or disable the ids of a prefab. Returns whether the entity was a
+ * prefab and the operation was handled. */
+bool flecs_enable_prefab(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    bool enabled);
+
 void flecs_instantiate_dont_fragment(
     ecs_world_t *world,
     ecs_entity_t base,
