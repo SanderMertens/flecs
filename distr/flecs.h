@@ -219,6 +219,7 @@
 #define FLECS_APP            /**< Application addon. */
 // #define FLECS_C           /**< C API convenience macros, always enabled. */
 #define FLECS_CPP            /**< C++ API. */
+#define FLECS_CONSTRAINT_TRAITS /**< Component traits that enforce constraints. */
 #define FLECS_DOC            /**< Document entities and components. */
 // #define FLECS_EXCLUSIVE_ACCESS /**< Enable exclusive world access checks. */
 #define FLECS_ENTITY_RANGES  /**< Create entities in custom id ranges. */
@@ -6725,18 +6726,6 @@ FLECS_API extern const ecs_entity_t EcsTransitive;
  */
 FLECS_API extern const ecs_entity_t EcsReflexive;
 
-/** Ensure that an entity or component cannot be used as a target in an `IsA` relationship.
- * Final can improve the performance of queries as they will not attempt to 
- * substitute a final component with its subsets.
- *
- * Behavior:
- *
- * @code
- *   if IsA(X, Y) and Final(Y) throw error
- * @endcode
- */
-FLECS_API extern const ecs_entity_t EcsFinal;
-
 /** Mark component as inheritable.
  * This is the opposite of Final. This trait can be used to enforce that queries
  * take into account component inheritance before inheritance (IsA) 
@@ -6763,15 +6752,6 @@ FLECS_API extern const ecs_entity_t EcsInherit;
  * from the base entity. */
 FLECS_API extern const ecs_entity_t EcsDontInherit;
 
-/** Mark relationship as commutative.
- * Behavior:
- *
- * @code
- *   if R(X, Y) then R(Y, X)
- * @endcode
- */
-FLECS_API extern const ecs_entity_t EcsSymmetric;
-
 /** Can be added to a relationship to indicate that the relationship can only occur
  * once on an entity. Adding a second instance will replace the first.
  *
@@ -6782,9 +6762,6 @@ FLECS_API extern const ecs_entity_t EcsSymmetric;
  * @endcode
  */
 FLECS_API extern const ecs_entity_t EcsExclusive;
-
-/** Mark a relationship as acyclic. Acyclic relationships may not form cycles. */
-FLECS_API extern const ecs_entity_t EcsAcyclic;
 
 /** Mark a relationship as traversable. Traversable relationships may be
  * traversed with "up" queries. Traversable relationships are acyclic. */
@@ -6801,46 +6778,8 @@ FLECS_API extern const ecs_entity_t EcsTraversable;
  */
 FLECS_API extern const ecs_entity_t EcsWith;
 
-/** Ensure that a relationship target is a child of the specified entity.
- *
- * Behavior:
- *
- * @code
- *   If OneOf(R, O) and R(X, Y), Y must be a child of O
- *   If OneOf(R) and R(X, Y), Y must be a child of R
- * @endcode
- */
-FLECS_API extern const ecs_entity_t EcsOneOf;
-
 /** Mark a component as toggleable with ecs_enable_id(). */
 FLECS_API extern const ecs_entity_t EcsCanToggle;
-
-/** Can be added to components to indicate it is a trait. Traits are components
- * and/or tags that are added to other components to modify their behavior.
- */
-FLECS_API extern const ecs_entity_t EcsTrait;
-
-/** Ensure that an entity is always used in a pair as a relationship.
- *
- * Behavior:
- *
- * @code
- *   e.add(R) panics
- *   e.add(X, R) panics, unless X has the "Trait" trait
- * @endcode
- */
-FLECS_API extern const ecs_entity_t EcsRelationship;
-
-/** Ensure that an entity is always used in a pair as a target.
- *
- * Behavior:
- *
- * @code
- *   e.add(T) panics
- *   e.add(T, X) panics
- * @endcode
- */
-FLECS_API extern const ecs_entity_t EcsTarget;
 
 /** Can be added to a relationship to indicate that it should never hold data,
  * even when it or the relationship target is a component. */
@@ -6924,10 +6863,6 @@ FLECS_API extern const ecs_entity_t EcsDelete;
 /** Panic cleanup policy. Must be used as a target in a pair with #EcsOnDelete or
  * #EcsOnDeleteTarget. */
 FLECS_API extern const ecs_entity_t EcsPanic;
-
-/** Mark component as singleton. Singleton components may only be added to 
- * themselves. */
-FLECS_API extern const ecs_entity_t EcsSingleton;
 
 /** Mark component as sparse. */
 FLECS_API extern const ecs_entity_t EcsSparse;
@@ -12244,6 +12179,9 @@ void ecs_table_clear_entities(
 #ifdef FLECS_NO_CPP
 #undef FLECS_CPP
 #endif
+#ifdef FLECS_NO_CONSTRAINT_TRAITS
+#undef FLECS_CONSTRAINT_TRAITS
+#endif
 #ifdef FLECS_NO_ENTITY_RANGES
 #undef FLECS_ENTITY_RANGES
 #endif
@@ -13075,6 +13013,106 @@ char* ecs_log_stop_capture(void);
 #ifndef FLECS_HTTP
 #define FLECS_HTTP
 #endif
+#endif
+
+#ifdef FLECS_CONSTRAINT_TRAITS
+#ifdef FLECS_NO_CONSTRAINT_TRAITS
+#error "FLECS_NO_CONSTRAINT_TRAITS failed: CONSTRAINT_TRAITS is required by other addons"
+#endif
+
+#ifdef FLECS_CONSTRAINT_TRAITS
+
+#ifndef FLECS_CONSTRAINT_TRAITS_H
+#define FLECS_CONSTRAINT_TRAITS_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/**
+ * @defgroup c_addons_constraint_traits Constraint Traits
+ * @ingroup c_addons
+ * Traits that enforce constraints on entities, components and relationships.
+ *
+ * @{
+ */
+
+/** Ensure that an entity or component cannot be used as a target in an `IsA` relationship.
+ * Final can improve the performance of queries as they will not attempt to
+ * substitute a final component with its subsets.
+ *
+ * Behavior:
+ *
+ * @code
+ *   if IsA(X, Y) and Final(Y) throw error
+ * @endcode
+ */
+FLECS_API extern const ecs_entity_t EcsFinal;
+
+/** Mark relationship as commutative.
+ * Behavior:
+ *
+ * @code
+ *   if R(X, Y) then R(Y, X)
+ * @endcode
+ */
+FLECS_API extern const ecs_entity_t EcsSymmetric;
+
+/** Mark a relationship as acyclic. Acyclic relationships may not form cycles. */
+FLECS_API extern const ecs_entity_t EcsAcyclic;
+
+/** Ensure that a relationship target is a child of the specified entity.
+ *
+ * Behavior:
+ *
+ * @code
+ *   If OneOf(R, O) and R(X, Y), Y must be a child of O
+ *   If OneOf(R) and R(X, Y), Y must be a child of R
+ * @endcode
+ */
+FLECS_API extern const ecs_entity_t EcsOneOf;
+
+/** Can be added to components to indicate it is a trait. Traits are components
+ * and/or tags that are added to other components to modify their behavior.
+ */
+FLECS_API extern const ecs_entity_t EcsTrait;
+
+/** Ensure that an entity is always used in a pair as a relationship.
+ *
+ * Behavior:
+ *
+ * @code
+ *   e.add(R) panics
+ *   e.add(X, R) panics, unless X has the "Trait" trait
+ * @endcode
+ */
+FLECS_API extern const ecs_entity_t EcsRelationship;
+
+/** Ensure that an entity is always used in a pair as a target.
+ *
+ * Behavior:
+ *
+ * @code
+ *   e.add(T) panics
+ *   e.add(T, X) panics
+ * @endcode
+ */
+FLECS_API extern const ecs_entity_t EcsTarget;
+
+/** Mark component as singleton. Singleton components may only be added to
+ * themselves. */
+FLECS_API extern const ecs_entity_t EcsSingleton;
+
+/** @} */
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
+
+#endif // FLECS_CONSTRAINT_TRAITS
+
 #endif
 
 #ifdef FLECS_ENTITY_RANGES
@@ -20506,6 +20544,25 @@ static const flecs::entity_t OnTableCreate = EcsOnTableCreate;
 /** Built-in OnTableDelete event. */
 static const flecs::entity_t OnTableDelete = EcsOnTableDelete;
 
+#ifdef FLECS_CONSTRAINT_TRAITS
+/** Acyclic trait. */
+static const flecs::entity_t Acyclic = EcsAcyclic;
+/** Final trait. */
+static const flecs::entity_t Final = EcsFinal;
+/** OneOf trait. */
+static const flecs::entity_t OneOf = EcsOneOf;
+/** Relationship tag. */
+static const flecs::entity_t Relationship = EcsRelationship;
+/** Target tag. */
+static const flecs::entity_t Target = EcsTarget;
+/** Trait tag. */
+static const flecs::entity_t Trait = EcsTrait;
+/** Singleton tag. */
+static const flecs::entity_t Singleton = EcsSingleton;
+/** Symmetric trait. */
+static const flecs::entity_t Symmetric = EcsSymmetric;
+#endif
+
 /** Self term flag. */
 static const uint64_t Self = EcsSelf;
 /** Up term flag. */
@@ -20544,30 +20601,16 @@ static const flecs::entity_t This = EcsThis;
 static const flecs::entity_t Transitive = EcsTransitive;
 /** Reflexive trait. */
 static const flecs::entity_t Reflexive = EcsReflexive;
-/** Final trait. */
-static const flecs::entity_t Final = EcsFinal;
 /** Inheritable trait. */
 static const flecs::entity_t Inheritable = EcsInheritable;
 /** PairIsTag trait. */
 static const flecs::entity_t PairIsTag = EcsPairIsTag;
 /** Exclusive trait. */
 static const flecs::entity_t Exclusive = EcsExclusive;
-/** Acyclic trait. */
-static const flecs::entity_t Acyclic = EcsAcyclic;
 /** Traversable trait. */
 static const flecs::entity_t Traversable = EcsTraversable;
-/** Symmetric trait. */
-static const flecs::entity_t Symmetric = EcsSymmetric;
 /** With trait. */
 static const flecs::entity_t With = EcsWith;
-/** OneOf trait. */
-static const flecs::entity_t OneOf = EcsOneOf;
-/** Trait tag. */
-static const flecs::entity_t Trait = EcsTrait;
-/** Relationship tag. */
-static const flecs::entity_t Relationship = EcsRelationship;
-/** Target tag. */
-static const flecs::entity_t Target = EcsTarget;
 /** CanToggle trait. */
 static const flecs::entity_t CanToggle = EcsCanToggle;
 
@@ -20602,8 +20645,6 @@ static const flecs::entity_t SlotOf = EcsSlotOf;
 
 /** OrderedChildren tag. */
 static const flecs::entity_t OrderedChildren = EcsOrderedChildren;
-/** Singleton tag. */
-static const flecs::entity_t Singleton = EcsSingleton;
 
 /** Name identifier. */
 static const flecs::entity_t Name = EcsName;
@@ -37135,7 +37176,9 @@ ecs_entity_t do_import(world& world, const char *symbol) {
     // module resources.
     c_.add(flecs::Sparse);
 
+#ifdef FLECS_CONSTRAINT_TRAITS
     c_.add(flecs::Singleton);
+#endif
 
     ecs_set_scope(world, c_);
     world.emplace<T>(world);

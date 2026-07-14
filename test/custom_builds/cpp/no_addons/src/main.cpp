@@ -4,6 +4,10 @@
 #error "FLECS_MULTI_WORLD should not be enabled in this custom build"
 #endif
 
+#ifdef FLECS_CONSTRAINT_TRAITS
+#error "FLECS_CONSTRAINT_TRAITS should not be enabled in this custom build"
+#endif
+
 struct Position {
     float x;
     float y;

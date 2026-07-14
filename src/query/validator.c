@@ -632,6 +632,7 @@ int flecs_term_verify(
 
     if (first_id) {
         if (ecs_term_ref_is_set(second)) {
+#ifdef FLECS_CONSTRAINT_TRAITS
             if (flecs_term_ref_same(src, second, false)
                 && ecs_has_id(world, first_id, EcsAcyclic)
                 && !(term->flags_ & EcsTermReflexive))
@@ -640,6 +641,7 @@ int flecs_term_verify(
                     "relationship cannot have the same source and target");
                 return -1;
             }
+#endif
         }
 
         if (second_id && !ecs_id_is_wildcard(second_id)) {
@@ -870,9 +872,11 @@ int flecs_term_finalize(
         bool first_can_isa = false;
         if (first_table) {
             first_can_isa = (first_table->flags & EcsTableHasIsA) != 0;
+#ifdef FLECS_CONSTRAINT_TRAITS
             if (first_can_isa) {
                 first_can_isa = !ecs_table_has_id(world, first_table, EcsFinal);
             }
+#endif
         }
 
         /* Only enable inheritance for ids which are inherited from at the time
@@ -1182,7 +1186,9 @@ int flecs_query_finalize_terms(
         ecs_term_t *term = &terms[i];
         bool prev_is_or = i && term[-1].oper == EcsOr;
         bool nodata_term = false;
+#ifdef FLECS_CONSTRAINT_TRAITS
         bool default_src = term->src.id == 0 && term->src.name == NULL;
+#endif
         ctx.term_index = i;
 
         if (flecs_term_finalize(world, term, &ctx)) {
@@ -1204,9 +1210,11 @@ int flecs_query_finalize_terms(
             is_sparse = true;
         }
 
+#ifdef FLECS_CONSTRAINT_TRAITS
         if ((cr_flags & EcsIdSingleton) && default_src) {
             term->src.id = term->first.id|EcsSelf|EcsIsEntity;
         }
+#endif
 
         if (prev_is_or && !flecs_term_ref_same(&term[-1].src, &term->src, true)) {
             flecs_query_validator_error(&ctx,
@@ -1387,6 +1395,7 @@ int flecs_query_finalize_terms(
             }
         }
 
+#ifdef FLECS_CONSTRAINT_TRAITS
         if ((cr_flags & EcsIdSingleton) && default_src) {
             ECS_BIT_CLEAR16(term->flags_, EcsTermIsTrivial);
             if (term->flags_ & EcsTermIsCacheable) {
@@ -1394,6 +1403,7 @@ int flecs_query_finalize_terms(
                 ECS_BIT_CLEAR16(term->flags_, EcsTermIsCacheable);
             }
         }
+#endif
 
         /* If this is a static field, we need to assume that we might have
          * to do change detection. */
@@ -1809,7 +1819,9 @@ bool flecs_query_finalize_simple(
         }
 
         bool is_self = term->src.id == EcsSelf;
+#ifdef FLECS_CONSTRAINT_TRAITS
         bool default_src = term->src.id == 0;
+#endif
 
         term->field_index = i;
         term->first.id = first | EcsIsEntity | EcsSelf;
@@ -1866,6 +1878,7 @@ bool flecs_query_finalize_simple(
             q->row_fields |= flecs_uto(uint32_t, 1llu << i);
         }
 
+#ifdef FLECS_CONSTRAINT_TRAITS
         if (cr_flags & EcsIdSingleton) {
             if (default_src) {
                 term->src.id = term->first.id|EcsSelf|EcsIsEntity;
@@ -1875,6 +1888,9 @@ bool flecs_query_finalize_simple(
         } else {
             has_this = true;
         }
+#else
+        has_this = true;
+#endif
 
         if (ECS_IS_PAIR(id)) {
             if (first == EcsChildOf) {

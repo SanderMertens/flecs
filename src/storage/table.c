@@ -306,9 +306,13 @@ void flecs_table_init_flags(
             table->trait_flags |= EcsIdCanToggle;
         } else if (id == EcsInheritable) {
             table->trait_flags |= EcsIdInheritable;
-        } else if (id == EcsSingleton) {
+        }
+#ifdef FLECS_CONSTRAINT_TRAITS
+        else if (id == EcsSingleton) {
             table->trait_flags |= EcsIdSingleton;
-        } else if (id == EcsSparse) {
+        }
+#endif
+        else if (id == EcsSparse) {
             table->trait_flags |= EcsIdSparse;
         } else if (id == EcsDontFragment) {
             table->trait_flags |= EcsIdDontFragment;
@@ -2984,9 +2988,11 @@ int32_t ecs_table_get_depth(
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(table != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(ecs_id_is_valid(world, rel), ECS_INVALID_PARAMETER, NULL);
+#ifdef FLECS_CONSTRAINT_TRAITS
     ecs_check(ecs_has_id(world, rel, EcsAcyclic), ECS_INVALID_PARAMETER,
         "cannot safely determine depth for relationship that is not acyclic "
             "(add Acyclic property to relationship)");
+#endif
 
     world = ecs_get_world(world);
 
