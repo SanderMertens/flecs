@@ -3740,7 +3740,9 @@ struct ecs_world_t {
     int32_t stage_count;             /* Number of stages */
 
     /* -- Component ids -- */
+#ifdef FLECS_MULTI_WORLD
     ecs_vec_t component_ids;         /* World local component ids */
+#endif
 
     /* Index of prefab children in ordered children vector. Used by ecs_get_target. */
     ecs_map_t prefab_child_indices;
@@ -3954,6 +3956,17 @@ bool flecs_component_is_delete_locked(
             }\
         }\
     }
+
+#ifdef FLECS_MULTI_WORLD
+void flecs_multi_world_init(
+    ecs_world_t *world);
+
+void flecs_multi_world_fini(
+    ecs_world_t *world);
+#else
+#define flecs_multi_world_init(world) (void)world
+#define flecs_multi_world_fini(world) (void)world
+#endif
 
 #endif
 
@@ -21968,6 +21981,9 @@ static const char *flecs_addons_info[] = {
 #ifdef FLECS_MODULE
     "FLECS_MODULE",
 #endif
+#ifdef FLECS_MULTI_WORLD
+    "FLECS_MULTI_WORLD",
+#endif
 #ifdef FLECS_FRAME
     "FLECS_FRAME",
 #endif
@@ -22244,7 +22260,7 @@ ecs_world_t *ecs_mini(void) {
     flecs_name_index_init(&world->aliases, a);
     flecs_name_index_init(&world->symbols, a);
     ecs_vec_init_t(a, &world->fini_actions, ecs_action_elem_t, 0);
-    ecs_vec_init_t(a, &world->component_ids, ecs_id_t, 0);
+    flecs_multi_world_init(world);
 
     world->info.time_scale = 1.0;
     if (ecs_os_has_time()) {
@@ -22524,7 +22540,7 @@ int ecs_fini(
     flecs_name_index_fini(&world->symbols);
     ecs_set_stage_count(world, 0);
     ecs_map_fini(&world->prefab_child_indices);
-    ecs_vec_fini_t(&world->allocator, &world->component_ids, ecs_id_t);
+    flecs_multi_world_fini(world);
     ecs_log_pop_1();
 
     flecs_world_allocators_fini(world);
@@ -22637,67 +22653,6 @@ uint32_t flecs_get_table_version_fast(
 {
     flecs_poly_assert(world, ecs_world_t);
     return world->table_version[table_id & ECS_TABLE_VERSION_ARRAY_BITMASK];
-}
-
-static int32_t flecs_component_ids_last_index = 0;
-
-int32_t flecs_component_ids_index_get(void) {
-    if (ecs_os_api.ainc_) {
-        return ecs_os_ainc(&flecs_component_ids_last_index);
-    } else {
-        return ++ flecs_component_ids_last_index;
-    }
-}
-
-ecs_entity_t flecs_component_ids_get(
-    const ecs_world_t *stage_world, 
-    int32_t index)
-{
-    ecs_world_t *world =
-        ECS_CONST_CAST(ecs_world_t*, ecs_get_world(stage_world));
-    flecs_poly_assert(world, ecs_world_t);
-
-    if (index >= ecs_vec_count(&world->component_ids)) {
-        return 0;
-    }
-
-    return ecs_vec_get_t(
-        &world->component_ids, ecs_entity_t, index)[0];
-}
-
-ecs_entity_t flecs_component_ids_get_alive(
-    const ecs_world_t *stage_world, 
-    int32_t index)
-{
-    ecs_world_t *world =
-        ECS_CONST_CAST(ecs_world_t*, ecs_get_world(stage_world));
-    flecs_poly_assert(world, ecs_world_t);
-
-    if (index >= ecs_vec_count(&world->component_ids)) {
-        return 0;
-    }
-
-    ecs_entity_t result = ecs_vec_get_t(
-        &world->component_ids, ecs_entity_t, index)[0];
-    if (!flecs_entities_is_alive(world, result)) {
-        return 0;
-    }
-
-    return result;
-}
-
-void flecs_component_ids_set(
-    ecs_world_t *stage_world, 
-    int32_t index,
-    ecs_entity_t component)
-{
-    ecs_world_t *world =
-        ECS_CONST_CAST(ecs_world_t*, ecs_get_world(stage_world));
-    flecs_poly_assert(world, ecs_world_t);
-
-    ecs_vec_set_min_count_zeromem_t(
-        &world->allocator, &world->component_ids, ecs_entity_t, index + 1);
-    ecs_vec_get_t(&world->component_ids, ecs_entity_t, index)[0] = component;
 }
 
 #ifdef FLECS_EXCLUSIVE_ACCESS
@@ -24830,7 +24785,11 @@ ecs_entity_t ecs_cpp_component_register(
     const char *cpp_symbol = desc->cpp_symbol;
 
     bool existing = false;
+#ifdef FLECS_MULTI_WORLD
     ecs_entity_t c = flecs_component_ids_get(world, desc->ids_index);
+#else
+    ecs_entity_t c = *desc->id_storage;
+#endif
 
     if (!c || !ecs_is_alive(world, c)) {
     } else {
@@ -25048,8 +25007,12 @@ ecs_entity_t ecs_cpp_component_register(
     ecs_set_with(world, prev_with);
     ecs_set_scope(world, prev_scope);
 
-    /* Set world-local component id */
+    /* Set component id before invoking callbacks that can request it. */
+#ifdef FLECS_MULTI_WORLD
     flecs_component_ids_set(world, desc->ids_index, c);
+#else
+    *desc->id_storage = c;
+#endif
 
     if (desc->lifecycle_action && desc->size && !existing) {
         desc->lifecycle_action(world, c);
@@ -27721,6 +27684,85 @@ ecs_entity_t ecs_module_init(
     return e;
 error:
     return 0;
+}
+
+#endif
+
+#ifdef FLECS_MULTI_WORLD
+
+static int32_t flecs_component_ids_last_index = 0;
+
+void flecs_multi_world_init(
+    ecs_world_t *world)
+{
+    ecs_vec_init_t(
+        &world->allocator, &world->component_ids, ecs_entity_t, 0);
+}
+
+void flecs_multi_world_fini(
+    ecs_world_t *world)
+{
+    ecs_vec_fini_t(
+        &world->allocator, &world->component_ids, ecs_entity_t);
+}
+
+int32_t flecs_component_ids_index_get(void) {
+    if (ecs_os_api.ainc_) {
+        return ecs_os_ainc(&flecs_component_ids_last_index);
+    } else {
+        return ++ flecs_component_ids_last_index;
+    }
+}
+
+ecs_entity_t flecs_component_ids_get(
+    const ecs_world_t *stage_world,
+    int32_t index)
+{
+    ecs_world_t *world =
+        ECS_CONST_CAST(ecs_world_t*, ecs_get_world(stage_world));
+    flecs_poly_assert(world, ecs_world_t);
+
+    if (index >= ecs_vec_count(&world->component_ids)) {
+        return 0;
+    }
+
+    return ecs_vec_get_t(
+        &world->component_ids, ecs_entity_t, index)[0];
+}
+
+ecs_entity_t flecs_component_ids_get_alive(
+    const ecs_world_t *stage_world,
+    int32_t index)
+{
+    ecs_world_t *world =
+        ECS_CONST_CAST(ecs_world_t*, ecs_get_world(stage_world));
+    flecs_poly_assert(world, ecs_world_t);
+
+    if (index >= ecs_vec_count(&world->component_ids)) {
+        return 0;
+    }
+
+    ecs_entity_t result = ecs_vec_get_t(
+        &world->component_ids, ecs_entity_t, index)[0];
+    if (!flecs_entities_is_alive(world, result)) {
+        return 0;
+    }
+
+    return result;
+}
+
+void flecs_component_ids_set(
+    ecs_world_t *stage_world,
+    int32_t index,
+    ecs_entity_t component)
+{
+    ecs_world_t *world =
+        ECS_CONST_CAST(ecs_world_t*, ecs_get_world(stage_world));
+    flecs_poly_assert(world, ecs_world_t);
+
+    ecs_vec_set_min_count_zeromem_t(
+        &world->allocator, &world->component_ids, ecs_entity_t, index + 1);
+    ecs_vec_get_t(&world->component_ids, ecs_entity_t, index)[0] = component;
 }
 
 #endif
@@ -79123,8 +79165,10 @@ ecs_misc_memory_t ecs_misc_memory_get(
     result.bytes_prefab_child_indices = flecs_map_memory_get(
         &world->prefab_child_indices, 0);
 
+#ifdef FLECS_MULTI_WORLD
     result.bytes_component_ids += 
         ecs_vec_size(&world->component_ids) * ECS_SIZEOF(ecs_entity_t);
+#endif
     
     result.bytes_table_lookup += 
         flecs_hashmap_memory_get(&world->store.table_map);

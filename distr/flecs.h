@@ -230,6 +230,7 @@
 #define FLECS_META           /**< Reflection support. */
 #define FLECS_METRICS        /**< Expose component data as statistics. */
 #define FLECS_MODULE         /**< Module support. */
+#define FLECS_MULTI_WORLD    /**< Support C++ component ids across multiple worlds. */
 #define FLECS_OS_API_IMPL    /**< Default implementation for OS API. */
 // #define FLECS_PERF_TRACE  /**< Enable performance tracing. */
 #define FLECS_PIPELINE       /**< Pipeline support. */
@@ -5174,6 +5175,8 @@ FLECS_API
 int32_t flecs_poly_refcount(
     ecs_poly_t *poly);
 
+#ifdef FLECS_MULTI_WORLD
+
 /** Get an unused index for the static world-local component ID array.
  * This operation returns an unused index for the world-local component ID
  * array. This index can be used by language bindings to obtain a component ID.
@@ -5218,6 +5221,8 @@ void flecs_component_ids_set(
     ecs_world_t *world, 
     int32_t index,
     ecs_entity_t id);
+
+#endif
 
 /** Query iterator function for trivially cached queries.
  * This operation can be called if an iterator matches the conditions for
@@ -12247,6 +12252,9 @@ void ecs_table_clear_entities(
 #endif
 #ifdef FLECS_NO_MODULE
 #undef FLECS_MODULE
+#endif
+#ifdef FLECS_NO_MULTI_WORLD
+#undef FLECS_MULTI_WORLD
 #endif
 #ifdef FLECS_NO_PREFAB
 #undef FLECS_PREFAB
@@ -20193,7 +20201,11 @@ typedef void (*ecs_cpp_type_action_t)(
 
 typedef struct ecs_cpp_component_desc_t {
     ecs_entity_t id;
+#ifdef FLECS_MULTI_WORLD
     int32_t ids_index;
+#else
+    ecs_entity_t *id_storage;
+#endif
     const char *name;
     const char *cpp_name;
     const char *cpp_symbol;
@@ -21455,14 +21467,27 @@ struct enum_reflection {
  */
 template<typename T>
 struct enum_constant {
+#ifdef FLECS_MULTI_WORLD
     /** Global index used to obtain a world-local entity ID. */
     int32_t index;
+#else
+    /** Entity ID for the constant. */
+    flecs::entity_t id;
+#endif
     /** The constant value. */
     T value;
     /** Offset from the previous constant value. */
     T offset;
     /** The constant name. */
     const char *name;
+
+    bool discovered() const {
+#ifdef FLECS_MULTI_WORLD
+        return index != 0;
+#else
+        return name != nullptr || id != 0;
+#endif
+    }
 };
 
 /** @private Class that scans an enum for constants, extracts names, and creates entities. */
@@ -21525,10 +21550,12 @@ private:
                 me.constants[me.max].value = v;
                 me.constants[me.max].offset = v - last_value;
                 me.constants[me.max].name = name;
+#ifdef FLECS_MULTI_WORLD
                 if (!me.constants[me.max].index) {
                     me.constants[me.max].index =
                         flecs_component_ids_index_get();
                 }
+#endif
 
                 return v;
             } else {
@@ -21559,6 +21586,7 @@ public:
         return instance;
     }
 
+#ifndef FLECS_MULTI_WORLD
     /** Get entity for a given enum value. */
     flecs::entity_t entity(E value) const {
         int index = index_by_value(value);
@@ -21567,6 +21595,7 @@ public:
         }
         return 0;
     }
+#endif
 
     /** Register enum constants for a world. */
     void register_for_world(flecs::world_t *world, flecs::entity_t id) {
@@ -21578,12 +21607,16 @@ public:
         ecs_cpp_enum_init(world, id, type<U>::id(world));
 
         for (U v = 0; v < static_cast<U>(max + 1); v ++) {
-            if (constants[v].index) {
+            if (constants[v].discovered()) {
                 flecs::entity_t constant = ecs_cpp_enum_constant_register(world,
                     type<E>::id(world), 0, constants[v].name, &constants[v].value,
                     type<U>::id(world), sizeof(U));
 
+#ifdef FLECS_MULTI_WORLD
                 flecs_component_ids_set(world, constants[v].index, constant);
+#else
+                constants[v].id = constant;
+#endif
             }
         }
 
@@ -21648,7 +21681,7 @@ struct enum_data {
         if (index < 0) {
             return false;
         }
-        return impl_.constants[index].index != 0;
+        return impl_.constants[index].discovered();
     }
 
     /**
@@ -21728,11 +21761,18 @@ struct enum_data {
     #ifdef FLECS_CPP_NO_ENUM_REFLECTION
     void register_constant(flecs::world_t *world, U v, flecs::entity_t e) {
         if (v < 128) {
+#ifdef FLECS_MULTI_WORLD
             if (!impl_.constants[v].index) {
                 impl_.constants[v].index = flecs_component_ids_index_get();
             }
+#endif
 
+#ifdef FLECS_MULTI_WORLD
             flecs_component_ids_set(world, impl_.constants[v].index, e);
+#else
+            (void)world;
+            impl_.constants[v].id = e;
+#endif
 
             impl_.max ++;
 
@@ -32579,7 +32619,9 @@ struct type_impl {
     static void init(
         bool allow_tag = true)
     {
+#ifdef FLECS_MULTI_WORLD
         index(); // Make sure the global component index is initialized.
+#endif
 
         s_size = sizeof(T);
         s_alignment = alignof(T);
@@ -32595,7 +32637,12 @@ struct type_impl {
         bool allow_tag = true)
     {
         init(allow_tag);
+#ifdef FLECS_MULTI_WORLD
         flecs_component_ids_set(world, index(), id);
+#else
+        (void)world;
+        s_id = id;
+#endif
     }
 
     // Register the component ID.
@@ -32608,11 +32655,17 @@ struct type_impl {
         flecs::id_t id = 0)                 // User-provided component ID
     {
         init(allow_tag);
+#ifdef FLECS_MULTI_WORLD
         ecs_assert(index() != 0, ECS_INTERNAL_ERROR, nullptr);
+#endif
 
         ecs_cpp_component_desc_t desc = {
             id,
+#ifdef FLECS_MULTI_WORLD
             index(),
+#else
+            &s_id,
+#endif
             name,
             type_name<T>(),
             component_symbol_name<T>(),
@@ -32666,13 +32719,24 @@ struct type_impl {
             "component '%s' must be registered before use",
             type_name<T>());
 
+#ifdef FLECS_MULTI_WORLD
         flecs::entity_t c = flecs_component_ids_get(world, index());
+#else
+        flecs::entity_t c = s_id;
+#endif
         ecs_assert(c != 0, ECS_INTERNAL_ERROR, nullptr);
         ecs_assert(ecs_is_alive(world, c), ECS_INVALID_OPERATION,
             "component '%s' was deleted, reregister before using",
             type_name<T>());
 #else
+#ifdef FLECS_MULTI_WORLD
         flecs::entity_t c = flecs_component_ids_get_alive(world, index());
+#else
+        flecs::entity_t c = s_id;
+        if (c && !ecs_is_alive(world, c)) {
+            c = 0;
+        }
+#endif
         if (!c) {
             c = register_id(world);
         }
@@ -32694,7 +32758,11 @@ struct type_impl {
     static bool registered(flecs::world_t *world) {
         ecs_assert(world != nullptr, ECS_INVALID_PARAMETER, nullptr);
 
+#ifdef FLECS_MULTI_WORLD
         if (!flecs_component_ids_get(world, index())) {
+#else
+        if (!s_id) {
+#endif
             return false;
         }
 
@@ -32706,12 +32774,19 @@ struct type_impl {
     static void reset() {
         s_size = 0;
         s_alignment = 0;
+#ifndef FLECS_MULTI_WORLD
+        s_id = 0;
+#endif
     }
 
+#ifdef FLECS_MULTI_WORLD
     static int32_t index() {
         static int32_t index_ = flecs_component_ids_index_get();
         return index_;
     }
+#else
+    static entity_t s_id;
+#endif
 
     static size_t s_size;
     static size_t s_alignment;
@@ -32720,6 +32795,9 @@ struct type_impl {
 // Global templated variables that hold the component identifier and other info.
 template <typename T> inline size_t   type_impl<T>::s_size;
 template <typename T> inline size_t   type_impl<T>::s_alignment;
+#ifndef FLECS_MULTI_WORLD
+template <typename T> inline entity_t type_impl<T>::s_id;
+#endif
 
 // Front-facing class for implicitly registering a component and obtaining
 // static component data.
@@ -39725,8 +39803,12 @@ template <typename E>
 inline flecs::entity enum_data<E>::entity(underlying_type_t<E> value) const {
     int index = index_by_value(value);
     if (index >= 0) {
+#ifdef FLECS_MULTI_WORLD
         int32_t constant_i = impl_.constants[index].index;
         flecs::entity_t entity = flecs_component_ids_get(world_, constant_i);
+#else
+        flecs::entity_t entity = impl_.constants[index].id;
+#endif
         return flecs::entity(world_, entity);
     }
 #ifdef FLECS_META

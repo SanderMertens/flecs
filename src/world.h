@@ -152,7 +152,9 @@ struct ecs_world_t {
     int32_t stage_count;             /* Number of stages */
 
     /* -- Component ids -- */
+#ifdef FLECS_MULTI_WORLD
     ecs_vec_t component_ids;         /* World local component ids */
+#endif
 
     /* Index of prefab children in ordered children vector. Used by ecs_get_target. */
     ecs_map_t prefab_child_indices;
@@ -366,5 +368,16 @@ bool flecs_component_is_delete_locked(
             }\
         }\
     }
+
+#ifdef FLECS_MULTI_WORLD
+void flecs_multi_world_init(
+    ecs_world_t *world);
+
+void flecs_multi_world_fini(
+    ecs_world_t *world);
+#else
+#define flecs_multi_world_init(world) (void)world
+#define flecs_multi_world_fini(world) (void)world
+#endif
 
 #endif

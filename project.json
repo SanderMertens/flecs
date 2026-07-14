@@ -24,6 +24,7 @@
                 "FLECS_META",
                 "FLECS_METRICS",
                 "FLECS_MODULE",
+                "FLECS_MULTI_WORLD",
                 "FLECS_PERF_TRACE",
                 "FLECS_PIPELINE",
                 "FLECS_PREFAB",
