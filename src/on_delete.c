@@ -800,21 +800,29 @@ void flecs_on_delete(
     }
 }
 
-void ecs_delete_with(
+void flecs_delete_with(
     ecs_world_t *world,
-    ecs_id_t id)
+    ecs_id_t id,
+    bool force_delete)
 {
     flecs_journal_begin(world, EcsJournalDeleteWith, id, NULL, NULL);
 
     ecs_stage_t *stage = flecs_stage_from_world(&world);
-    if (flecs_defer_on_delete_action(stage, id, EcsDelete)) {
+    if (flecs_defer_on_delete_action(stage, id, EcsDelete, force_delete)) {
         return;
     }
 
-    flecs_on_delete(world, id, EcsDelete, false, false);
+    flecs_on_delete(world, id, EcsDelete, false, force_delete);
     flecs_defer_end(world, stage);
 
     flecs_journal_end();
+}
+
+void ecs_delete_with(
+    ecs_world_t *world,
+    ecs_id_t id)
+{
+    flecs_delete_with(world, id, false);
 }
 
 void ecs_remove_all(
@@ -824,7 +832,7 @@ void ecs_remove_all(
     flecs_journal_begin(world, EcsJournalRemoveAll, id, NULL, NULL);
 
     ecs_stage_t *stage = flecs_stage_from_world(&world);
-    if (flecs_defer_on_delete_action(stage, id, EcsRemove)) {
+    if (flecs_defer_on_delete_action(stage, id, EcsRemove, false)) {
         return;
     }
 

@@ -305,6 +305,7 @@
                 "path_tag_in_nested_scope",
                 "path_tag_in_nested_module",
                 "dont_inherit_script_pair",
+                "update_script_w_prefab_child",
                 "update_script_w_anonymous",
                 "update_script_w_anonymous_paren",
                 "clear_script",

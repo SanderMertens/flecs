@@ -9061,6 +9061,64 @@ void Eval_dont_inherit_script_pair(void) {
     ecs_fini(world);
 }
 
+void Eval_update_script_w_prefab_child(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr_a =
+    HEAD "prefab Parent {"
+    LINE "  A {}"
+    LINE "}";
+
+    const char *expr_b =
+    HEAD "prefab Parent {"
+    LINE "  B {}"
+    LINE "}";
+
+    ecs_entity_t script = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = expr_a
+    });
+    test_assert(script != 0);
+
+    ecs_entity_t parent = ecs_lookup(world, "Parent");
+    test_assert(parent != 0);
+    test_assert(ecs_has_id(world, parent, EcsPrefab));
+
+    ecs_entity_t prefab_a = ecs_lookup_child(world, parent, "A");
+    test_assert(prefab_a != 0);
+    test_assert(ecs_has_id(world, prefab_a, EcsPrefab));
+
+    test_assert(ecs_script_update(world, script, 0, expr_b) == 0);
+
+    parent = ecs_lookup(world, "Parent");
+    test_assert(parent != 0);
+    test_assert(ecs_lookup_child(world, parent, "A") == 0);
+
+    ecs_entity_t prefab_b = ecs_lookup_child(world, parent, "B");
+    test_assert(prefab_b != 0);
+    test_assert(ecs_has_id(world, prefab_b, EcsPrefab));
+
+    ecs_entity_t instance = ecs_new_w_pair(world, EcsIsA, parent);
+    test_assert(instance != 0);
+
+    ecs_entity_t instance_b = ecs_lookup_child(world, instance, "B");
+    test_assert(instance_b != 0);
+    test_assert(ecs_lookup_child(world, instance, "A") == 0);
+
+    int32_t child_count = 0;
+    ecs_iter_t it = ecs_children(world, instance);
+    while (ecs_children_next(&it)) {
+        child_count += it.count;
+        for (int32_t i = 0; i < it.count; i ++) {
+            test_uint(it.entities[i], instance_b);
+        }
+    }
+
+    test_int(child_count, 1);
+
+    ecs_fini(world);
+}
+
 void Eval_update_script_w_anonymous(void) {
     ecs_world_t *world = ecs_init();
 
@@ -17614,4 +17672,3 @@ void Eval_var_w_value_name(void) {
 
     ecs_fini(world);
 }
-

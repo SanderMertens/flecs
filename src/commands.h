@@ -40,6 +40,7 @@ typedef struct ecs_cmd_1_t {
     void *value;                     /* Component value (used by set / ensure) */
     ecs_size_t size;                 /* Size of value */
     bool clone_value;                /* Clone entity with value (used for clone) */ 
+    bool force_delete;               /* Delete prefab tables (used for delete_with) */
 } ecs_cmd_1_t;
 
 typedef struct ecs_cmd_n_t {
@@ -134,7 +135,8 @@ bool flecs_defer_clear(
 bool flecs_defer_on_delete_action(
     ecs_stage_t *stage,
     ecs_id_t id,
-    ecs_entity_t action);
+    ecs_entity_t action,
+    bool force_delete);
 
 /* Insert enable command (component toggling). */
 bool flecs_defer_enable(

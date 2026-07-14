@@ -2763,6 +2763,7 @@ typedef struct ecs_cmd_1_t {
     void *value;                     /* Component value (used by set / ensure) */
     ecs_size_t size;                 /* Size of value */
     bool clone_value;                /* Clone entity with value (used for clone) */ 
+    bool force_delete;               /* Delete prefab tables (used for delete_with) */
 } ecs_cmd_1_t;
 
 typedef struct ecs_cmd_n_t {
@@ -2857,7 +2858,8 @@ bool flecs_defer_clear(
 bool flecs_defer_on_delete_action(
     ecs_stage_t *stage,
     ecs_id_t id,
-    ecs_entity_t action);
+    ecs_entity_t action,
+    bool force_delete);
 
 /* Insert enable command (component toggling). */
 bool flecs_defer_enable(
@@ -3067,6 +3069,12 @@ void flecs_on_delete(
     ecs_id_t id,
     ecs_entity_t action,
     bool delete_id,
+    bool force_delete);
+
+/* Delete all entities with id, including prefabs when force_delete is true. */
+void flecs_delete_with(
+    ecs_world_t *world,
+    ecs_id_t id,
     bool force_delete);
 
 /* Remove non-fragmenting components from entity. */
@@ -5655,13 +5663,15 @@ bool flecs_defer_clear(
 bool flecs_defer_on_delete_action(
     ecs_stage_t *stage,
     ecs_id_t id,
-    ecs_entity_t action)
+    ecs_entity_t action,
+    bool force_delete)
 {
     if (flecs_defer_cmd(stage)) {
         ecs_cmd_t *cmd = flecs_cmd_new(stage);
         cmd->kind = EcsCmdOnDeleteAction;
         cmd->id = id;
         cmd->entity = action;
+        cmd->is._1.force_delete = force_delete;
         return true;
     }
     return false;
@@ -6774,7 +6784,8 @@ bool flecs_defer_end(
                     break;
                 case EcsCmdOnDeleteAction:
                     ecs_defer_begin(world);
-                    flecs_on_delete(world, id, e, false, false);
+                    flecs_on_delete(world, id, e, false,
+                        cmd->is._1.force_delete);
                     ecs_defer_end(world);
                     world->info.cmd.other_count ++;
                     break;
@@ -18940,21 +18951,29 @@ void flecs_on_delete(
     }
 }
 
-void ecs_delete_with(
+void flecs_delete_with(
     ecs_world_t *world,
-    ecs_id_t id)
+    ecs_id_t id,
+    bool force_delete)
 {
     flecs_journal_begin(world, EcsJournalDeleteWith, id, NULL, NULL);
 
     ecs_stage_t *stage = flecs_stage_from_world(&world);
-    if (flecs_defer_on_delete_action(stage, id, EcsDelete)) {
+    if (flecs_defer_on_delete_action(stage, id, EcsDelete, force_delete)) {
         return;
     }
 
-    flecs_on_delete(world, id, EcsDelete, false, false);
+    flecs_on_delete(world, id, EcsDelete, false, force_delete);
     flecs_defer_end(world, stage);
 
     flecs_journal_end();
+}
+
+void ecs_delete_with(
+    ecs_world_t *world,
+    ecs_id_t id)
+{
+    flecs_delete_with(world, id, false);
 }
 
 void ecs_remove_all(
@@ -18964,7 +18983,7 @@ void ecs_remove_all(
     flecs_journal_begin(world, EcsJournalRemoveAll, id, NULL, NULL);
 
     ecs_stage_t *stage = flecs_stage_from_world(&world);
-    if (flecs_defer_on_delete_action(stage, id, EcsRemove)) {
+    if (flecs_defer_on_delete_action(stage, id, EcsRemove, false)) {
         return;
     }
 
@@ -71406,7 +71425,7 @@ void ecs_script_clear(
     ecs_entity_t instance)
 {
     if (!instance) {
-        ecs_delete_with(world, ecs_pair_t(EcsScript, script));
+        flecs_delete_with(world, ecs_pair_t(EcsScript, script), true);
     } else {
         ecs_assert(ecs_is_alive(world, instance), ECS_INTERNAL_ERROR, NULL);
         ecs_vec_t to_delete = {0};

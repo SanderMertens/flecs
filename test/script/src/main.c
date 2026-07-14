@@ -301,6 +301,7 @@ void Eval_path_tag_in_module(void);
 void Eval_path_tag_in_nested_scope(void);
 void Eval_path_tag_in_nested_module(void);
 void Eval_dont_inherit_script_pair(void);
+void Eval_update_script_w_prefab_child(void);
 void Eval_update_script_w_anonymous(void);
 void Eval_update_script_w_anonymous_paren(void);
 void Eval_clear_script(void);
@@ -3034,6 +3035,10 @@ bake_test_case Eval_testcases[] = {
     {
         "dont_inherit_script_pair",
         Eval_dont_inherit_script_pair
+    },
+    {
+        "update_script_w_prefab_child",
+        Eval_update_script_w_prefab_child
     },
     {
         "update_script_w_anonymous",
@@ -9245,7 +9250,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        530,
+        531,
         Eval_testcases
     },
     {
