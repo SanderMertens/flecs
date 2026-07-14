@@ -417,6 +417,7 @@ The following addons can be configured:
 Addon         | Description                                      | Define              |
 --------------|--------------------------------------------------|---------------------|
 [Cpp](/flecs/group__cpp.html)                              | C++17 API                                        | FLECS_CPP           |
+[Cached Queries](/flecs/md_docs_2Queries.html)             | Cached query support                             | FLECS_CACHED_QUERIES |
 [Constraint Traits](/flecs/group__c__addons__constraint__traits.html) | Constraint trait support              | FLECS_CONSTRAINT_TRAITS |
 [Module](/flecs/group__c__addons__module.html)             | Organize game logic into reusable modules        | FLECS_MODULE        |
 [Multi World](/flecs/group__c__addons.html)                | Support C++ component IDs across multiple worlds | FLECS_MULTI_WORLD   |

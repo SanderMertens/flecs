@@ -384,6 +384,7 @@ public:
             iter_->entities, static_cast<size_t>(iter_->count), false);
     }
 
+#ifdef FLECS_CACHED_QUERIES
     /** Check if the current table has changed since the last iteration.
      * Can only be used when iterating queries and/or systems.
      *
@@ -403,6 +404,7 @@ public:
     void skip() {
         ecs_iter_skip(iter_);
     }
+#endif
 
     /** Return the group ID for the current table (grouped queries only).
      *
