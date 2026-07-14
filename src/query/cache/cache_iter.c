@@ -5,6 +5,8 @@
 
 #include "../../private_api.h"
 
+#ifdef FLECS_CACHED_QUERIES
+
 /* Initialize cached query iterator. */
 void flecs_query_cache_iter_init(
     ecs_iter_t *it,
@@ -383,3 +385,5 @@ bool flecs_query_is_trivial_cache_test(
 
     return false;
 }
+
+#endif

@@ -60,7 +60,9 @@ enum oper_kind_t {
 enum query_cache_kind_t {
     QueryCacheDefault = EcsQueryCacheDefault, /**< Default query cache. */
     QueryCacheAuto = EcsQueryCacheAuto,       /**< Auto query cache. */
+#ifdef FLECS_CACHED_QUERIES
     QueryCacheAll = EcsQueryCacheAll,         /**< Cache all. */
+#endif
     QueryCacheNone = EcsQueryCacheNone        /**< No caching. */
 };
 

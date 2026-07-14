@@ -130,6 +130,7 @@ flecs_src = files(
     'src/query/cache/cache.c',
     'src/query/cache/cache_iter.c',
     'src/query/cache/change_detection.c',
+    'src/query/cache/component_monitor.c',
     'src/query/cache/group.c',
     'src/query/cache/match.c',
     'src/query/cache/order_by.c',

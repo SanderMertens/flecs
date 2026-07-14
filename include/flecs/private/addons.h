@@ -12,6 +12,9 @@
 #ifdef FLECS_NO_CPP
 #undef FLECS_CPP
 #endif
+#ifdef FLECS_NO_CACHED_QUERIES
+#undef FLECS_CACHED_QUERIES
+#endif
 #ifdef FLECS_NO_CONSTRAINT_TRAITS
 #undef FLECS_CONSTRAINT_TRAITS
 #endif
@@ -107,6 +110,18 @@
 #ifdef FLECS_REST
 #ifndef FLECS_HTTP
 #define FLECS_HTTP
+#endif
+#endif
+
+#ifdef FLECS_PIPELINE
+#ifndef FLECS_CACHED_QUERIES
+#define FLECS_CACHED_QUERIES
+#endif
+#endif
+
+#ifdef FLECS_CACHED_QUERIES
+#ifdef FLECS_NO_CACHED_QUERIES
+#error "FLECS_NO_CACHED_QUERIES failed: CACHED_QUERIES is required by other addons"
 #endif
 #endif
 

@@ -11,7 +11,9 @@ typedef struct ecs_stage_allocators_t {
     ecs_stack_t iter_stack;
     ecs_block_allocator_t cmd_entry_chunk;
     ecs_block_allocator_t query_impl;
+#ifdef FLECS_CACHED_QUERIES
     ecs_block_allocator_t query_cache;
+#endif
 } ecs_stage_allocators_t;
 
 /** A stage is a context that allows for safely using the API from multiple 

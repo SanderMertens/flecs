@@ -131,6 +131,8 @@
 
 #include "../../private_api.h"
 
+#ifdef FLECS_CACHED_QUERIES
+
 /* Is cache trivial? */
 bool flecs_query_cache_is_trivial(
     const ecs_query_cache_t *cache)
@@ -774,3 +776,5 @@ ecs_query_cache_t* flecs_query_cache_init(
 error:
     return NULL;
 }
+
+#endif
