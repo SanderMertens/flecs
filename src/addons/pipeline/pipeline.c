@@ -781,23 +781,6 @@ error:
     return false;
 }
 
-void ecs_set_time_scale(
-    ecs_world_t *world,
-    ecs_ftime_t scale)
-{
-    flecs_poly_assert(world, ecs_world_t);
-    ecs_assert(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION,
-        "cannot set time scale while world is in readonly mode");
-    world->info.time_scale = scale;
-}
-
-void ecs_reset_clock(
-    ecs_world_t *world)
-{
-    world->info.world_time_total = 0;
-    world->info.world_time_total_raw = 0;
-}
-
 void ecs_set_pipeline(
     ecs_world_t *world,
     ecs_entity_t pipeline)
