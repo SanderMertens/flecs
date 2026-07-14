@@ -1,7 +1,7 @@
-#include <no_addons.h>
+#include <no_multi_world.h>
 
 #ifdef FLECS_MULTI_WORLD
-#error "FLECS_MULTI_WORLD should not be enabled in this custom build"
+#error "FLECS_MULTI_WORLD should be disabled"
 #endif
 
 struct Position {
