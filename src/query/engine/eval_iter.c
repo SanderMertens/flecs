@@ -135,6 +135,7 @@ void flecs_query_iter_constrain(
     }
 }
 
+#ifdef FLECS_CACHED_QUERIES
 static
 void flecs_query_change_detection(
     ecs_iter_t *it,
@@ -167,6 +168,8 @@ void flecs_query_self_change_detection(
 
     flecs_query_change_detection(it, qit, impl);
 }
+
+#endif
 
 #ifdef FLECS_DEBUG
 static
@@ -210,6 +213,7 @@ bool ecs_query_next(
     flecs_query_iter_run_ctx_init(it, &ctx);
 
     bool redo = it->flags & EcsIterIsValid;
+#ifdef FLECS_CACHED_QUERIES
     if (redo) {
         if (it->flags & EcsIterTrivialChangeDetection) {
             flecs_query_self_change_detection(it, qit, impl);
@@ -217,6 +221,7 @@ bool ecs_query_next(
             flecs_query_change_detection(it, qit, impl);
         }
     }
+#endif
 
     it->flags &= ~(EcsIterSkip);
     it->flags |= EcsIterIsValid;
@@ -230,6 +235,7 @@ bool ecs_query_next(
      * testing, where searching returns all matches for a query, whereas testing
      * tests a single table or table range against the query. */
 
+#ifdef FLECS_CACHED_QUERIES
     if (it->flags & EcsIterTrivialCached) {
         /* Trivial cache iterator. Only supported for search */
         ecs_assert(impl->ops == NULL, ECS_INTERNAL_ERROR, NULL);
@@ -256,7 +262,9 @@ bool ecs_query_next(
                 goto yield;
             }
         }
-    } else {
+    } else
+#endif
+    {
         /* Uncached iterator modes */
         if (it->flags & EcsIterTrivialSearch) {
             ecs_assert(impl->ops == NULL, ECS_INTERNAL_ERROR, NULL);
@@ -298,11 +306,13 @@ bool ecs_query_next(
     }
 
     /* Done iterating */
+#ifdef FLECS_CACHED_QUERIES
     flecs_query_mark_fixed_fields_dirty(impl, it);
     if (ctx.query->monitor) {
         flecs_query_update_fixed_monitor(
             ECS_CONST_CAST(ecs_query_impl_t*, ctx.query));
     }
+#endif
 
     it->flags |= EcsIterSkip; /* Prevent change detection on fini */
 
@@ -310,10 +320,12 @@ bool ecs_query_next(
     ecs_os_linc(&it->real_world->info.queries_ran_total);
     return false;
 
+#ifdef FLECS_CACHED_QUERIES
 trivial_search_yield:
     it->table = ctx.vars[0].range.table;
     it->count = ecs_table_count(it->table);
     it->entities = ecs_table_entities(it->table);
+#endif
 
 yield:
     return true;
@@ -322,6 +334,9 @@ yield:
 bool flecs_query_trivial_cached_next(
     ecs_iter_t *it)
 {
+#ifndef FLECS_CACHED_QUERIES
+    return ecs_query_next(it);
+#else
     ecs_assert(it != NULL, ECS_INVALID_PARAMETER, NULL);
 
     ecs_query_iter_t *qit = &it->priv_.iter.query;
@@ -355,6 +370,7 @@ bool flecs_query_trivial_cached_next(
     ecs_iter_fini(it);
     ecs_os_linc(&it->real_world->info.queries_ran_total);
     return false;
+#endif
 }
 
 void flecs_query_op_ctx_fini(
@@ -429,9 +445,11 @@ void flecs_query_iter_fini(
     int32_t op_count = flecs_query_impl(q)->op_count;
     int32_t var_count = flecs_query_impl(q)->var_count;
 
+#ifdef FLECS_CACHED_QUERIES
     if (it->flags & EcsIterIsValid) {
         flecs_query_change_detection(it, qit, flecs_query_impl(q));
     }
+#endif
 
 #ifdef FLECS_DEBUG
     if (it->flags & EcsIterProfile) {
@@ -571,7 +589,9 @@ ecs_iter_t flecs_query_iter(
         it.flags |= EcsIterMatchEmptyTables;
     }
 
+#ifdef FLECS_CACHED_QUERIES
     flecs_query_cache_iter_init(&it, qit, impl);
+#endif
 
     ecs_size_t vars_size = var_count * ECS_SIZEOF(ecs_var_t);
     ecs_size_t written_size = op_count * ECS_SIZEOF(ecs_write_flags_t);
@@ -693,6 +713,7 @@ ecs_iter_t ecs_query_iter(
     /* Ok, only for stats */
     ecs_os_linc(&ECS_CONST_CAST(ecs_query_t*, q)->eval_count);
 
+#ifdef FLECS_CACHED_QUERIES
     ecs_query_impl_t *impl = flecs_query_impl(q);
     ecs_query_cache_t *cache = impl->cache;
     if (cache) {
@@ -704,6 +725,7 @@ ecs_iter_t ecs_query_iter(
             flecs_eval_component_monitors(q->world);
         }
     }
+#endif
 
     return flecs_query_iter(world, q);
 }

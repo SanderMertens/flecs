@@ -413,6 +413,7 @@ void flecs_component_mark_for_delete(
                 }
                 cur->flags |= EcsIdMarkedForDelete;
 
+#ifdef FLECS_CACHED_QUERIES
                 /* If relationship is traversable and is removed upon deletion
                  * of a target, we may have to rematch queries. If a query 
                  * matched for example (IsA, A) -> (IsA, B) -> Position, and 
@@ -434,6 +435,7 @@ void flecs_component_mark_for_delete(
                         }
                     }
                 }
+#endif
             }
         }
     }
@@ -539,6 +541,7 @@ void flecs_remove_from_table(
                 .removed_flags = removed_flags
             };
 
+#ifdef FLECS_CACHED_QUERIES
             if (table->flags & EcsTableHasTraversable) {
                 for (i = 0; i < remove_count; i ++) {
                     flecs_update_component_monitors(world, NULL, &(ecs_type_t){
@@ -547,6 +550,7 @@ void flecs_remove_from_table(
                     });
                 }
             }
+#endif
 
             flecs_actions_move_remove(world, table, dst_table, 0, table_count, &diff);
             ecs_log_pop_3();

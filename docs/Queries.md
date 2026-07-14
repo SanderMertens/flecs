@@ -93,7 +93,7 @@ Queries can be created with a "cache kind", which specifies the caching behavior
 |---------|---|-----|-------------|
 | Default | `EcsQueryCacheDefault` | `flecs::QueryCacheDefault` | Behavior determined by query creation context |
 | Auto    | `EcsQueryCacheAuto`    | `flecs::QueryCacheAuto`    | Cache query terms that are cacheable |
-| All     | `EcsQueryCacheAll`     | `flecs::QueryCacheAll`     | Require that all query terms are cached |
+| All     | `EcsQueryCacheAll`     | `flecs::QueryCacheAll`     | Require that all query terms are cached (requires `FLECS_CACHED_QUERIES`) |
 | None    | `EcsQueryCacheNone`    | `flecs::QueryCacheNone`    | No caching |
 
 The following sections describe each of the kinds.

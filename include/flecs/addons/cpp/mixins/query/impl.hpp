@@ -120,6 +120,7 @@ struct query_base {
         }
     }
 
+#ifdef FLECS_CACHED_QUERIES
     /** Return whether the query data changed since the last iteration.
      * This operation must be invoked before obtaining the iterator, as this will
      * reset the changed state. The operation will return true after:
@@ -132,6 +133,7 @@ struct query_base {
     bool changed() const {
         return ecs_query_changed(query_);
     }
+#endif
 
     /** Get info for a group.
      *

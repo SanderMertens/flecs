@@ -5,6 +5,8 @@
 
 #include "../../private_api.h"
 
+#ifdef FLECS_CACHED_QUERIES
+
 ECS_SORT_TABLE_WITH_COMPARE(_, flecs_query_cache_sort_table_generic, order_by, static)
 
 static
@@ -318,3 +320,5 @@ void flecs_query_cache_sort_tables(
         cache->match_count ++; /* Increase version if tables changed */
     }
 }
+
+#endif

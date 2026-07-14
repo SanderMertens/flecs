@@ -68,7 +68,7 @@ ecs_var_id_t flecs_query_add_var(
         var = ecs_vec_append_t(NULL, vars, ecs_query_var_t);
         result = var->id = flecs_itovar(ecs_vec_count(vars));
     } else {
-        ecs_dbg_assert(query->var_count < query->var_size, 
+        ecs_dbg_assert(query->var_count < query->var_size,
             ECS_INTERNAL_ERROR, NULL);
         var = &query->vars[query->var_count];
         result = var->id = flecs_itovar(query->var_count);
@@ -663,10 +663,13 @@ void flecs_query_insert_cache_search(
     int32_t childof_term = -1;
     bool has_childof_trav = false;
 
+#ifdef FLECS_CACHED_QUERIES
     if (q->cache_kind == EcsQueryCacheAll) {
         /* If all terms are cacheable, make sure no other terms are compiled */
         *compiled = 0xFFFFFFFFFFFFFFFF;
-    } else if (q->cache_kind == EcsQueryCacheAuto) {
+    } else
+#endif
+    if (q->cache_kind == EcsQueryCacheAuto) {
         /* The query is partially cacheable */
         ecs_term_t *terms = q->terms;
         int32_t i, count = q->term_count;
@@ -981,7 +984,10 @@ int flecs_query_compile(
      * insert instruction that initializes ecs_iter_t::ids. This allows for the
      * insertion of simpler instructions later on. 
      * If the query is entirely cacheable, ids are populated by the cache. */
-    if (q->cache_kind != EcsQueryCacheAll) {
+#ifdef FLECS_CACHED_QUERIES
+    if (q->cache_kind != EcsQueryCacheAll)
+#endif
+    {
         for (i = 0; i < term_count; i ++) {
             ecs_term_t *term = &terms[i];
             if (flecs_term_is_fixed_id(q, term) || 

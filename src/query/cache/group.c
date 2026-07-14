@@ -5,6 +5,8 @@
 
 #include "../../private_api.h"
 
+#ifdef FLECS_CACHED_QUERIES
+
 /* Check if group is currently linked in the cache group list. */
 static
 bool flecs_query_cache_group_is_linked(
@@ -448,3 +450,5 @@ void flecs_query_cache_remove_all_tables(
 
     ecs_assert(ecs_map_count(&cache->groups) == 0, ECS_INTERNAL_ERROR, NULL);
 }
+
+#endif

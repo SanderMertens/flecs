@@ -212,6 +212,7 @@ void flecs_commit(
 
     flecs_table_traversable_add(src_table, -is_trav);
 
+#ifdef FLECS_CACHED_QUERIES
     /* If the entity is traversable, it is being monitored for changes and
      * requires rematching queries when components are added or removed. This
      * ensures that queries that rely on components from traversable entities
@@ -220,6 +221,7 @@ void flecs_commit(
     if (is_trav) {
         flecs_update_component_monitors(world, &diff->added, &diff->removed);
     }
+#endif
 
     ecs_os_perf_trace_pop("flecs.commit");
 

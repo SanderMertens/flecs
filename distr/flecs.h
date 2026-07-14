@@ -217,6 +217,7 @@
 #ifndef FLECS_CUSTOM_BUILD
 #define FLECS_ALERTS         /**< Monitor conditions for errors. */
 #define FLECS_APP            /**< Application addon. */
+#define FLECS_CACHED_QUERIES /**< Cached query support. */
 // #define FLECS_C           /**< C API convenience macros, always enabled. */
 #define FLECS_CPP            /**< C++ API. */
 #define FLECS_CONSTRAINT_TRAITS /**< Component traits that enforce constraints. */
@@ -4402,7 +4403,9 @@ typedef enum ecs_oper_kind_t {
 typedef enum ecs_query_cache_kind_t {
     EcsQueryCacheDefault,   /**< Behavior determined by query creation context. */
     EcsQueryCacheAuto,      /**< Cache query terms that are cacheable. */
+#ifdef FLECS_CACHED_QUERIES
     EcsQueryCacheAll,       /**< Require that all query terms can be cached. */
+#endif
     EcsQueryCacheNone,      /**< No caching. */
 } ecs_query_cache_kind_t;
 
@@ -9885,6 +9888,7 @@ const char* ecs_query_args_parse(
     ecs_iter_t *it,
     const char *expr);
 
+#ifdef FLECS_CACHED_QUERIES
 /** Return whether the query data changed since the last iteration.
  * The operation will return true after:
  * - new entities have been matched
@@ -9910,6 +9914,7 @@ const char* ecs_query_args_parse(
 FLECS_API
 bool ecs_query_changed(
     ecs_query_t *query);
+#endif
 
 /** Get the query object.
  * Return the query object. Can be used to access various information about
@@ -9924,6 +9929,7 @@ const ecs_query_t* ecs_query_get(
     const ecs_world_t *world,
     ecs_entity_t query);
 
+#ifdef FLECS_CACHED_QUERIES
 /** Skip a table while iterating.
  * This operation lets the query iterator know that a table was skipped while
  * iterating. A skipped table will not reset its changed state, and the query
@@ -9937,6 +9943,7 @@ const ecs_query_t* ecs_query_get(
 FLECS_API
 void ecs_iter_skip(
     ecs_iter_t *it);
+#endif
 
 /** Set the group to iterate for a query iterator.
  * This operation limits the results returned by the query to only the selected
@@ -10431,6 +10438,7 @@ FLECS_API
 uint64_t ecs_iter_get_group(
     const ecs_iter_t *it);
 
+#ifdef FLECS_CACHED_QUERIES
 /** Return whether the current iterator result has changed.
  * This operation must be used in combination with a query that supports change
  * detection (e.g., is cached). The operation returns whether the currently
@@ -10445,6 +10453,7 @@ uint64_t ecs_iter_get_group(
 FLECS_API
 bool ecs_iter_changed(
     ecs_iter_t *it);
+#endif
 
 /** Convert an iterator to a string.
  * Prints the contents of an iterator to a string. Useful for debugging and/or
@@ -12195,6 +12204,9 @@ void ecs_table_clear_entities(
 #ifdef FLECS_NO_CPP
 #undef FLECS_CPP
 #endif
+#ifdef FLECS_NO_CACHED_QUERIES
+#undef FLECS_CACHED_QUERIES
+#endif
 #ifdef FLECS_NO_CONSTRAINT_TRAITS
 #undef FLECS_CONSTRAINT_TRAITS
 #endif
@@ -13028,6 +13040,18 @@ char* ecs_log_stop_capture(void);
 #ifdef FLECS_REST
 #ifndef FLECS_HTTP
 #define FLECS_HTTP
+#endif
+#endif
+
+#ifdef FLECS_PIPELINE
+#ifndef FLECS_CACHED_QUERIES
+#define FLECS_CACHED_QUERIES
+#endif
+#endif
+
+#ifdef FLECS_CACHED_QUERIES
+#ifdef FLECS_NO_CACHED_QUERIES
+#error "FLECS_NO_CACHED_QUERIES failed: CACHED_QUERIES is required by other addons"
 #endif
 #endif
 
@@ -20526,7 +20550,9 @@ enum oper_kind_t {
 enum query_cache_kind_t {
     QueryCacheDefault = EcsQueryCacheDefault, /**< Default query cache. */
     QueryCacheAuto = EcsQueryCacheAuto,       /**< Auto query cache. */
+#ifdef FLECS_CACHED_QUERIES
     QueryCacheAll = EcsQueryCacheAll,         /**< Cache all. */
+#endif
     QueryCacheNone = EcsQueryCacheNone        /**< No caching. */
 };
 
@@ -27601,6 +27627,7 @@ public:
             iter_->entities, static_cast<size_t>(iter_->count), false);
     }
 
+#ifdef FLECS_CACHED_QUERIES
     /** Check if the current table has changed since the last iteration.
      * Can only be used when iterating queries and/or systems.
      *
@@ -27620,6 +27647,7 @@ public:
     void skip() {
         ecs_iter_skip(iter_);
     }
+#endif
 
     /** Return the group ID for the current table (grouped queries only).
      *
@@ -36483,6 +36511,7 @@ struct query_base {
         }
     }
 
+#ifdef FLECS_CACHED_QUERIES
     /** Return whether the query data changed since the last iteration.
      * This operation must be invoked before obtaining the iterator, as this will
      * reset the changed state. The operation will return true after:
@@ -36495,6 +36524,7 @@ struct query_base {
     bool changed() const {
         return ecs_query_changed(query_);
     }
+#endif
 
     /** Get info for a group.
      *

@@ -5,6 +5,8 @@
 
 #include "../../private_api.h"
 
+#ifdef FLECS_CACHED_QUERIES
+
 /* Free cache entry element. */
 static
 void flecs_query_cache_match_elem_fini(
@@ -357,3 +359,5 @@ void flecs_query_rematch(
 done:
     ecs_os_perf_trace_pop("flecs.query.rematch");
 }
+
+#endif
