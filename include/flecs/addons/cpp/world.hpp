@@ -653,27 +653,6 @@ struct world {
         ecs_dim(world_, entity_count);
     }
 
-    /** Create a new entity id range.
-     * @see ecs_entity_range_new()
-     */
-    const ecs_entity_range_t* range_new(uint32_t min, uint32_t max) const {
-        return ecs_entity_range_new(world_, min, max);
-    }
-
-    /** Set the active entity id range.
-     * @see ecs_entity_range_set()
-     */
-    void range_set(const ecs_entity_range_t *range) const {
-        ecs_entity_range_set(world_, range);
-    }
-
-    /** Get the currently active entity id range.
-     * @see ecs_entity_range_get()
-     */
-    const ecs_entity_range_t* range_get() const {
-        return ecs_entity_range_get(world_);
-    }
-
     /** Set current scope.
      *
      * @param scope The scope to set.
@@ -1434,6 +1413,12 @@ struct world {
 #   include "mixins/query/mixin.inl"
 #   include "mixins/enum/mixin.inl"
 
+#   ifdef FLECS_PREFAB
+#   include "mixins/prefab/mixin.inl"
+#   endif
+#   ifdef FLECS_ENTITY_RANGES
+#   include "mixins/entity_ranges/mixin.inl"
+#   endif
 #   ifdef FLECS_FRAME
 #   include "mixins/frame/mixin.inl"
 #   endif

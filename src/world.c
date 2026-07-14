@@ -788,6 +788,9 @@ static const char *flecs_addons_info[] = {
 #ifdef FLECS_CPP
     "FLECS_CPP",
 #endif
+#ifdef FLECS_ENTITY_RANGES
+    "FLECS_ENTITY_RANGES",
+#endif
 #ifdef FLECS_MODULE
     "FLECS_MODULE",
 #endif
@@ -1431,129 +1434,6 @@ void ecs_set_binding_ctx(
     flecs_poly_assert(world, ecs_world_t);
     world->binding_ctx = ctx;
     world->binding_ctx_free = ctx_free;
-}
-
-const ecs_entity_range_t* ecs_entity_range_new(
-    ecs_world_t *world,
-    uint32_t min,
-    uint32_t max)
-{
-    flecs_poly_assert(world, ecs_world_t);
-    ecs_check(min > 0, ECS_INVALID_PARAMETER, "min must be > 0");
-    ecs_check(!max || max >= min, ECS_INVALID_PARAMETER,
-        "max must be >= min or 0");
-
-    /* Validate no overlap with existing ranges */
-    ecs_entity_index_t *index = ecs_eis(world);
-    ecs_check(flecs_entity_index_not_alive_count(index) == 0,
-        ECS_INVALID_OPERATION,
-        "cannot create entity range after entities have been deleted");
-
-    bool first_range = ecs_vec_count(&index->ranges) == 0;
-
-    /* If this is the first range and it covers the default [1, ...] id space,
-     * it must be large enough to contain all currently alive entities. */
-    if (first_range && min == 1) {
-        ecs_check(!max || max >= index->max_id, ECS_INVALID_OPERATION,
-            "range [%u, %u] cannot be below last alive entity id %u",
-                min, max, (uint32_t)index->max_id);
-    }
-
-    /* If this is the first range to be created and it does not start at 1,
-     * create a default range for the [1, min) id space and activate it, so
-     * that the default id allocation behavior is preserved. */
-    if (first_range && min > 1) {
-        ecs_entity_range_t *default_range = ECS_CONST_CAST(ecs_entity_range_t*,
-            ecs_entity_range_new(world, 1, min - 1));
-        default_range->cur = index->max_id;
-        flecs_entity_index_set_range(index, default_range);
-    }
-
-    ecs_allocator_t *a = &world->allocator;
-
-    int32_t count = ecs_vec_count(&index->ranges);
-    if (count > 0) {
-        ecs_entity_range_t **ranges = ecs_vec_first_t(&index->ranges,
-            ecs_entity_range_t*);
-        int32_t i;
-        for (i = 0; i < count; i ++) {
-            ecs_entity_range_t *existing = ranges[i];
-            /* Two ranges overlap if one starts before the other ends */
-            bool overlap;
-            if (!existing->max && !max) {
-                overlap = true;
-            } else if (!existing->max) {
-                overlap = max >= existing->min;
-            } else if (!max) {
-                overlap = min <= existing->max;
-            } else {
-                overlap = min <= existing->max && max >= existing->min;
-            }
-            ecs_check(!overlap, ECS_INVALID_PARAMETER,
-                "range [%u, %u] overlaps with existing range [%u, %u]",
-                    min, max, existing->min, existing->max);
-            (void)overlap;
-        }
-    }
-
-    ecs_entity_range_t *range = flecs_walloc_t(world, ecs_entity_range_t);
-    range->min = min;
-    range->max = max;
-    range->cur = min - 1;
-    ecs_vec_init_t(a, &range->recycled, uint64_t, 0);
-
-    /* Insert into sorted ranges vec (sorted by min) */
-    ecs_vec_append_t(a, &index->ranges, ecs_entity_range_t*)[0] = range;
-
-    if (count > 0) {
-        ecs_entity_range_t **ranges = ecs_vec_first_t(&index->ranges,
-            ecs_entity_range_t*);
-
-        /* Find insertion point and shift elements */
-        int32_t i;
-        for (i = count; i > 0; i --) {
-            if (ranges[i - 1]->min <= min) {
-                break;
-            }
-            ranges[i] = ranges[i - 1];
-        }
-        ranges[i] = range;
-    }
-
-    /* If this is the first range and it covers the default [1, ...] id space,
-     * activate it so the default id allocation behavior is preserved. */
-    if (first_range && min == 1) {
-        range->cur = index->max_id;
-        flecs_entity_index_set_range(index, range);
-    }
-
-    return range;
-error:
-    return NULL;
-}
-
-void ecs_entity_range_set(
-    ecs_world_t *world,
-    const ecs_entity_range_t *range)
-{
-    flecs_poly_assert(world, ecs_world_t);
-    ecs_check(range != NULL, ECS_INVALID_PARAMETER, NULL);
-
-    flecs_entity_index_set_range(ecs_eis(world),
-        ECS_CONST_CAST(ecs_entity_range_t*, range));
-
-error:
-    return;
-}
-
-const ecs_entity_range_t* ecs_entity_range_get(
-    const ecs_world_t *world)
-{
-    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    world = ecs_get_world(world);
-    return ecs_eis(world)->active_range;
-error:
-    return NULL;
 }
 
 ecs_entity_t ecs_get_max_id(
