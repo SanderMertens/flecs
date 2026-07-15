@@ -601,7 +601,7 @@ ecs_query_cache_t* flecs_query_cache_init(
     ecs_observer_desc_t observer_desc = { .query = desc };
     observer_desc.query.flags |= EcsQueryNested;
 
-    ecs_flags32_t query_flags = const_desc->flags | world->default_query_flags;
+    ecs_flags32_t query_flags = const_desc->flags;
     desc.flags |= EcsQueryMatchEmptyTables | EcsQueryTableOnly | EcsQueryNested;
 
     /* order_by is not compatible with matching empty tables, as it causes
