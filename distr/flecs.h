@@ -10642,21 +10642,6 @@ bool ecs_iter_changed(
     ecs_iter_t *it);
 #endif
 
-/** Convert an iterator to a string.
- * Prints the contents of an iterator to a string. Useful for debugging and/or
- * testing the output of an iterator.
- *
- * The function only converts the currently iterated data to a string. To
- * convert all data, the application has to manually call the next function and
- * call ecs_iter_str() on each result.
- *
- * @param it The iterator.
- * @return A string representing the contents of the iterator.
- */
-FLECS_API
-char* ecs_iter_str(
-    const ecs_iter_t *it);
-
 /** Create a paged iterator.
  * Paged iterators limit the results to those starting from 'offset', and will
  * return at most 'limit' results.
@@ -27548,15 +27533,6 @@ public:
      */
     int8_t term_index() const {
         return iter_->term_index;
-    }
-
-    /** Convert current iterator result to string.
-     *
-     * @return String representation of the current iterator result.
-     */
-    flecs::string str() const {
-        char *s = ecs_iter_str(iter_);
-        return flecs::string(s);
     }
 
     /** Get read-only access to field data.

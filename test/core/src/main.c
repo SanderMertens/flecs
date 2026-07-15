@@ -314,8 +314,6 @@ void Iter_page_iter_w_fini(void);
 void Iter_worker_iter_w_fini(void);
 void Iter_rule_page_iter_w_fini(void);
 void Iter_rule_worker_iter_w_fini(void);
-void Iter_to_str_before_next(void);
-void Iter_to_str(void);
 
 // Testsuite 'Search'
 void Search_search(void);
@@ -4611,14 +4609,6 @@ bake_test_case Iter_testcases[] = {
     {
         "rule_worker_iter_w_fini",
         Iter_rule_worker_iter_w_fini
-    },
-    {
-        "to_str_before_next",
-        Iter_to_str_before_next
-    },
-    {
-        "to_str",
-        Iter_to_str
     }
 };
 
@@ -16725,7 +16715,7 @@ static bake_test_suite suites[] = {
         "Iter",
         NULL,
         NULL,
-        62,
+        60,
         Iter_testcases
     },
     {

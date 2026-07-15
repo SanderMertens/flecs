@@ -324,9 +324,7 @@
                 "page_iter_w_fini",
                 "worker_iter_w_fini",
                 "rule_page_iter_w_fini",
-                "rule_worker_iter_w_fini",
-                "to_str_before_next",
-                "to_str"
+                "rule_worker_iter_w_fini"
             ]
         }, {
             "id": "Search",
