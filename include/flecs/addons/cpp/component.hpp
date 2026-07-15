@@ -235,11 +235,15 @@ struct type_impl {
         if constexpr (flecs::on_instantiate_trait<T>::declared) {
             constexpr flecs::on_instantiate policy =
                 flecs::on_instantiate_trait<T>::value;
+#ifdef FLECS_PREFAB
             if constexpr (policy == flecs::on_instantiate::override) {
                 ecs_add_pair(world, c, flecs::OnInstantiate, flecs::Override);
-            } else if constexpr (policy == flecs::on_instantiate::inherit) {
+            }
+            if constexpr (policy == flecs::on_instantiate::inherit) {
                 ecs_add_pair(world, c, flecs::OnInstantiate, flecs::Inherit);
-            } else {
+            }
+#endif
+            if constexpr (policy == flecs::on_instantiate::dont_inherit) {
                 ecs_add_pair(world, c, flecs::OnInstantiate,
                     flecs::DontInherit);
             }

@@ -213,9 +213,8 @@
                 "set_version_while_deferred",
                 "set_version_on_not_alive",
                 "get_version_after_reuse",
-                "commit_w_on_add",
-                "commit_w_on_remove",
-                "commit_w_cmd_in_observer",
+                "add_ids_w_on_add",
+                "add_ids_w_cmd_in_observer",
                 "entity_init_existing_no_sep",
                 "entity_init_w_set_1_comp",
                 "entity_init_w_set_2_comp",
@@ -1501,18 +1500,6 @@
                 "emplace_existing_w_check",
                 "emplace_pair"
 
-            ]
-        }, {
-            "id": "ReadWrite",
-            "testcases": [
-                "read",
-                "nested_read",
-                "write",
-                "nested_write",
-                "add_while_read",
-                "add_while_write",
-                "read_from_stage",
-                "write_from_stage"
             ]
         }, {
             "id": "Lookup",

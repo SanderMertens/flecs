@@ -3,15 +3,6 @@
  * @brief Builtin Windows implementation for OS API.
  */
 
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
-#endif
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
-#include <winsock2.h>
-#include <windows.h>
-
 typedef struct ecs_win_thread_t {
     HANDLE thread;
     ecs_os_thread_callback_t callback;

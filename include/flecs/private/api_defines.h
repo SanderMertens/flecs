@@ -37,10 +37,8 @@
 #define ECS_TARGET_MINGW
 #endif
 
-#if defined(_MSC_VER)
-#ifndef __clang__
+#if defined(_MSC_VER) && !defined(__clang__)
 #define ECS_TARGET_MSVC
-#endif
 #endif
 
 #if defined(__clang__)

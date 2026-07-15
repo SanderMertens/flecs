@@ -952,9 +952,7 @@ static void flecs_http_memory_get(
         }
     }
 }
-#endif
 
-#ifdef FLECS_REST
 static void flecs_rest_memory_get(
     const ecs_world_t *world,
     ecs_misc_memory_t *result)

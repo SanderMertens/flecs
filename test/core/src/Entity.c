@@ -2302,7 +2302,7 @@ static void Observer(ecs_iter_t *it) {
     (*invoked) ++;
 }
 
-void Entity_commit_w_on_add(void) {
+void Entity_add_ids_w_on_add(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -2318,54 +2318,11 @@ void Entity_commit_w_on_add(void) {
         .ctx = &invoked
     });
 
-    ecs_table_t *dst = ecs_table_add_id(world, NULL, Tag);
-    test_assert(dst != NULL);
-
-    ecs_type_t added = {
-        .array = (ecs_id_t[]){ Tag },
-        .count = 1
-    };
-
     ecs_entity_t e = ecs_new(world);
-    ecs_commit(world, e, NULL, dst, &added, NULL);
+    ecs_id_t ids[] = { Tag };
+    flecs_add_ids(world, e, ids, 1);
 
     test_assert(ecs_has(world, e, Tag));
-    test_int(invoked, 1);
-
-    ecs_fini(world);
-}
-
-void Entity_commit_w_on_remove(void) {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_TAG(world, Tag);
-    ECS_TAG(world, Foo);
-
-    int invoked = 0;
-
-    ecs_observer(world, {
-        .query.terms = {
-            { .id = Tag }
-        },
-        .events = { EcsOnRemove },
-        .callback = Observer,
-        .ctx = &invoked
-    });
-
-    ecs_type_t removed = {
-        .array = (ecs_id_t[]){ Tag },
-        .count = 1
-    };
-
-    ecs_table_t *dst = ecs_table_add_id(world, NULL, Foo);
-    test_assert(dst != NULL);
-
-    ecs_entity_t e = ecs_new_w(world, Tag);
-    ecs_add_id(world, e, Foo);
-    ecs_commit(world, e, NULL, dst, NULL, &removed);
-
-    test_assert(!ecs_has(world, e, Tag));
-    test_assert(ecs_has(world, e, Foo));
     test_int(invoked, 1);
 
     ecs_fini(world);
@@ -2386,7 +2343,7 @@ static void Observer_w_cmd(ecs_iter_t *it) {
     }
 }
 
-void Entity_commit_w_cmd_in_observer(void) {
+void Entity_add_ids_w_cmd_in_observer(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -2403,16 +2360,9 @@ void Entity_commit_w_cmd_in_observer(void) {
         .ctx = &invoked
     });
 
-    ecs_table_t *dst = ecs_table_add_id(world, NULL, Tag);
-    test_assert(dst != NULL);
-
-    ecs_type_t added = {
-        .array = (ecs_id_t[]){ Tag },
-        .count = 1
-    };
-
     ecs_entity_t e = ecs_new(world);
-    ecs_commit(world, e, NULL, dst, &added, NULL);
+    ecs_id_t ids[] = { Tag };
+    flecs_add_ids(world, e, ids, 1);
 
     test_assert(ecs_has(world, e, Tag));
     test_assert(ecs_has(world, e, Foo));

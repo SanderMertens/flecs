@@ -272,6 +272,7 @@ bool flecs_defer_remove(
         cmd->id = id;
         cmd->entity = entity;
 
+#ifdef FLECS_PREFAB
         /* If an override is removed, restore the component to the value of
          * the overridden component. This serves two purposes:
          *
@@ -328,7 +329,7 @@ bool flecs_defer_remove(
                 }
             }
         }
-
+#endif
         return true;
     }
     return false;

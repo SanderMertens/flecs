@@ -714,7 +714,11 @@ static const char* flecs_entity_from_json(
                         .count = ecs_vec_count(&ctx->remove_ids)
                     };
 
-                    ecs_commit(world, e, r, dst_table, NULL, &removed);
+                    ecs_table_diff_t diff = ECS_TABLE_DIFF_INIT;
+                    diff.removed = removed;
+                    ecs_defer_begin(world);
+                    flecs_commit(world, e, r, dst_table, &diff, 0, 0);
+                    ecs_defer_end(world);
                 }
 
                 ecs_assert(ecs_get_table(world, e) == dst_table,
