@@ -29,11 +29,11 @@ bool flecs_query_needs_plan(
     return true;
 }
 
+#ifdef FLECS_QUERY_PLANS
 static
 void flecs_query_compile_trivial(
     ecs_query_impl_t *query)
 {
-#ifdef FLECS_QUERY_PLANS
     /* Initialize space for $this variable */
     query->pub.var_count = 1;
     query->var_count = 1;
@@ -41,12 +41,7 @@ void flecs_query_compile_trivial(
     query->vars = &flecs_this_array;
     query->pub.vars = &flecs_this_name_array;
     query->pub.flags |= EcsQueryHasTableThisVar;
-#else
-    (void)query;
-#endif
 }
-
-#ifdef FLECS_QUERY_PLANS
 
 static
 bool flecs_query_var_is_anonymous(
@@ -1239,12 +1234,9 @@ int flecs_query_compile(
     ecs_stage_t *stage,
     ecs_query_impl_t *query)
 {
-    (void)world;
-    (void)stage;
+    (void)world; (void)stage;
     ecs_check(!flecs_query_needs_plan(query), ECS_UNSUPPORTED,
         "query uses features that require the FLECS_QUERY_PLANS addon");
-
-    flecs_query_compile_trivial(query);
     return 0;
 error:
     return -1;

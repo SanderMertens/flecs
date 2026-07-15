@@ -8,6 +8,8 @@
 
 #include "../../private_api.h"
 
+#ifdef FLECS_PARSER
+
 typedef struct ecs_script_impl_t ecs_script_impl_t;
 typedef struct ecs_script_scope_t ecs_script_scope_t;
 
@@ -44,5 +46,7 @@ typedef struct ecs_parser_t {
 } ecs_parser_t;
 
 #include "tokenizer.h"
+
+#endif
 
 #endif
