@@ -5,6 +5,8 @@
 
 #include "../../private_api.h"
 
+#ifdef FLECS_QUERY_PLANS
+
 const EcsParent* flecs_query_tree_get_parents(
     ecs_table_range_t range)
 {
@@ -924,3 +926,5 @@ yield: {
 
     return true;
 }
+
+#endif // FLECS_QUERY_PLANS

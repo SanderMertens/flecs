@@ -5,7 +5,7 @@
 
 #include "../../private_api.h"
 
-#define FlecsRuleOrMarker ((int16_t)-2) /* Marks instruction in OR chain */
+#ifdef FLECS_QUERY_PLANS
 
 ecs_var_id_t flecs_query_find_var_id(
     const ecs_query_impl_t *query,
@@ -58,6 +58,8 @@ ecs_var_id_t flecs_query_find_var_id(
 
     return flecs_query_find_var_id(query, name, EcsVarTable);
 }
+
+#define FlecsRuleOrMarker ((int16_t)-2) /* Marks instruction in OR chain */
 
 static
 ecs_var_id_t flecs_query_most_specific_var(
@@ -1602,3 +1604,5 @@ int flecs_query_compile_term(
 error:
     return -1;
 }
+
+#endif // FLECS_QUERY_PLANS

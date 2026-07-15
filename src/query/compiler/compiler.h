@@ -14,6 +14,14 @@ int flecs_query_compile(
     ecs_stage_t *stage,
     ecs_query_impl_t *query);
 
+#ifdef FLECS_QUERY_PLANS
+
+/* Find variable by name/kind */
+ecs_var_id_t flecs_query_find_var_id(
+    const ecs_query_impl_t *query,
+    const char *name,
+    ecs_var_kind_t kind);
+
 /* Compile single term */
 int flecs_query_compile_term(
     ecs_world_t *world,
@@ -63,10 +71,6 @@ ecs_var_id_t flecs_query_add_var(
     ecs_vec_t *vars,
     ecs_var_kind_t kind);
 
-/* Find variable by name/kind */
-ecs_var_id_t flecs_query_find_var_id(
-    const ecs_query_impl_t *query,
-    const char *name,
-    ecs_var_kind_t kind);
+#endif
 
 #endif

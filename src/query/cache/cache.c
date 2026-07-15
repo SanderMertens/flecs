@@ -234,7 +234,8 @@ bool flecs_query_cache_match_table(
      * wildcard query, a table can match multiple times. */
     ecs_iter_t it = flecs_query_iter(world, q);
     it.flags |= EcsIterNoData;
-    ecs_iter_set_var_as_table(&it, 0, table);
+    ecs_table_range_t range = { .table = table };
+    ecs_iter_set_var_as_range(&it, 0, &range);
 
     if (!ecs_query_next(&it)) {
         /* Table doesn't match */

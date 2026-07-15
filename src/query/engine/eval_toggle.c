@@ -5,6 +5,8 @@
 
 #include "../../private_api.h"
 
+#ifdef FLECS_QUERY_PLANS
+
 typedef struct {
     ecs_flags64_t mask;
     bool has_bitset;
@@ -342,3 +344,4 @@ repeat: {}
     return result;
 }
 
+#endif // FLECS_QUERY_PLANS

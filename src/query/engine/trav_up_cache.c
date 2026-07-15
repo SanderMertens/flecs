@@ -5,6 +5,8 @@
 
 #include "../../private_api.h"
 
+#ifdef FLECS_QUERY_PLANS
+
 static
 ecs_trav_up_t* flecs_trav_up_ensure(
     const ecs_query_run_ctx_t *ctx,
@@ -300,3 +302,5 @@ void flecs_query_up_cache_fini(
 {
     ecs_map_fini(&cache->src);
 }
+
+#endif // FLECS_QUERY_PLANS

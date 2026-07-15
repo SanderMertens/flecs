@@ -431,6 +431,7 @@ int flecs_term_verify_eq_pred(
     const ecs_term_t *term,
     ecs_query_validator_ctx_t *ctx)
 {
+#ifdef FLECS_QUERY_PLANS
     const ecs_term_ref_t *second = &term->second;
     const ecs_term_ref_t *src = &term->src;
     ecs_entity_t first_id = ECS_TERM_REF_ID(&term->first);
@@ -484,6 +485,10 @@ int flecs_term_verify_eq_pred(
     return 0;
 error:
     return -1;
+#else
+    (void)term; (void)ctx;
+    return 0;
+#endif
 }
 
 static
@@ -1112,6 +1117,7 @@ bool ecs_term_match_0(
     return (!ECS_TERM_REF_ID(&term->src) && (term->src.id & EcsIsEntity));
 }
 
+#ifdef FLECS_QUERY_PLANS
 static
 ecs_term_t* flecs_query_or_other_type(
     ecs_query_t *q,
@@ -1155,6 +1161,7 @@ void flecs_normalize_term_name(
         }
     }
 }
+#endif
 
 static
 int flecs_query_finalize_terms(
@@ -1379,10 +1386,12 @@ int flecs_query_finalize_terms(
             /* If terms in an OR chain do not all return the same type, the 
              * field will not provide any data */
             if (term->flags_ & EcsTermIsOr) {
+#ifdef FLECS_QUERY_PLANS
                 ecs_term_t *first = flecs_query_or_other_type(q, i);
                 if (first) {
                     nodata_term = true;
                 }
+#endif
                 q->data_fields &= (ecs_termset_t)~(1llu << term->field_index);
             }
         }
@@ -1434,11 +1443,13 @@ int flecs_query_finalize_terms(
             ECS_TERMSET_SET(q->fixed_fields, 1u << term->field_index);
         }
 
+#ifdef FLECS_QUERY_PLANS
         if ((term->src.id & EcsIsVariable) && 
             (ECS_TERM_REF_ID(&term->src) != EcsThis)) 
         {
             ECS_TERMSET_SET(q->var_fields, 1u << term->field_index);
         }
+#endif
 
         if (prev_is_or) {
             if (ECS_TERM_REF_ID(&term[-1].src) != ECS_TERM_REF_ID(&term->src)) {
@@ -1572,11 +1583,13 @@ int flecs_query_finalize_terms(
             }
 
             if (term->flags_ & EcsTermIsOr) {
+#ifdef FLECS_QUERY_PLANS
                 if (flecs_query_or_other_type(q, i)) {
                     q->sizes[field] = 0;
                     q->ids[field] = 0;
                     continue;
                 }
+#endif
             }
 
             ecs_component_record_t *cr = flecs_components_get(world, term->id);
@@ -1661,6 +1674,7 @@ int flecs_query_finalize_terms(
     /* If none of the terms match a source, the query matches nothing */
     ECS_BIT_COND(q->flags, EcsQueryMatchNothing, match_nothing);
 
+#ifdef FLECS_QUERY_PLANS
     for (i = 0; i < q->term_count; i ++) {
         ecs_term_t *term = &q->terms[i];
         /* Post process term names in case they were used to create variables */
@@ -1668,6 +1682,7 @@ int flecs_query_finalize_terms(
         flecs_normalize_term_name(&term->second);
         flecs_normalize_term_name(&term->src);
     }
+#endif
 
     return 0;
 }

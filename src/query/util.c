@@ -5,6 +5,12 @@
 
 #include "../private_api.h"
 
+#ifdef FLECS_QUERY_PLANS
+
+ecs_var_id_t flecs_utovar(uint64_t val) {
+    return flecs_uto(uint8_t, val);
+}
+
 const char* flecs_query_op_str(
     uint16_t kind)
 {
@@ -87,10 +93,6 @@ ecs_query_lbl_t flecs_itolbl(int64_t val) {
 
 ecs_var_id_t flecs_itovar(int64_t val) {
     return flecs_ito(uint8_t, val);
-}
-
-ecs_var_id_t flecs_utovar(uint64_t val) {
-    return flecs_uto(uint8_t, val);
 }
 
 bool flecs_term_is_builtin_pred(
@@ -244,6 +246,17 @@ ecs_allocator_t* flecs_query_get_allocator(
         ecs_assert(flecs_poly_is(world, ecs_stage_t), ECS_INTERNAL_ERROR, NULL);
         return &((ecs_stage_t*)world)->allocator;
     }
+}
+
+ecs_id_t flecs_query_iter_set_id(
+    ecs_iter_t *it,
+    int8_t field,
+    ecs_id_t id)
+{
+    ecs_assert(!(it->flags & EcsIterImmutableCacheData),
+        ECS_INTERNAL_ERROR, NULL);
+    it->ids[field] = id;
+    return id;
 }
 
 static
@@ -478,11 +491,13 @@ char* ecs_query_plans(
 
     flecs_query_plan_w_profile(q, NULL, &buf);
 
+#ifdef FLECS_CACHED_QUERIES
     ecs_query_impl_t *impl = flecs_query_impl(q);
     if (impl->cache) {
         ecs_strbuf_appendstr(&buf, "---\n");
         flecs_query_plan_w_profile(impl->cache->query, NULL, &buf);
     }
+#endif
 
 #ifdef FLECS_LOG
     char *str = ecs_strbuf_get(&buf);
@@ -492,6 +507,8 @@ char* ecs_query_plans(
 
     return ecs_strbuf_get(&buf);
 }
+
+#endif // FLECS_QUERY_PLANS
 
 static
 void flecs_query_str_add_id(
@@ -733,6 +750,8 @@ void flecs_query_apply_iter_flags(
     ECS_BIT_COND(it->flags, EcsIterNoData, query->data_fields == 0);
 }
 
+#ifdef FLECS_CACHED_QUERIES
+
 void flecs_query_reclaim(
     ecs_query_t *query)
 {
@@ -745,13 +764,4 @@ void flecs_query_reclaim(
     }
 }
 
-ecs_id_t flecs_query_iter_set_id(
-    ecs_iter_t *it,
-    int8_t field,
-    ecs_id_t id)
-{
-    ecs_assert(!(it->flags & EcsIterImmutableCacheData), 
-        ECS_INTERNAL_ERROR, NULL);
-    it->ids[field] = id;
-    return id;
-}
+#endif // FLECS_CACHED_QUERIES

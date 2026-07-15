@@ -5,6 +5,8 @@
 
 #include "../../private_api.h"
 
+#ifdef FLECS_QUERY_PLANS
+
 // #define FLECS_QUERY_TRACE
 
 #ifdef FLECS_QUERY_TRACE
@@ -1836,3 +1838,5 @@ bool flecs_query_run_until(
 
     return true;
 }
+
+#endif // FLECS_QUERY_PLANS
