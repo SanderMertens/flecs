@@ -133,7 +133,6 @@ struct query_base {
     bool changed() const {
         return ecs_query_changed(query_);
     }
-#endif
 
     /** Get info for a group.
      *
@@ -167,6 +166,7 @@ struct query_base {
             return nullptr;
         }
     }
+#endif
 
     /** Iterate each term in the query, invoking a callback for each. */
     template <typename Func>
@@ -193,10 +193,21 @@ struct query_base {
         return query_->field_count;
     }
 
+#ifdef FLECS_QUERY_PLANS
     /** Find a variable by name. */
     int32_t find_var(const char *name) const {
         return ecs_query_find_var(query_, name);
     }
+
+    /** Return a string representing the query plan.
+     * This can be used to analyze the behavior and performance of the query.
+     * @see ecs_query_plan()
+     */
+    flecs::string plan() const {
+        char *result = ecs_query_plan(query_);
+        return flecs::string(result);
+    }
+#endif
 
     bool has(flecs::entity_t e) const {
         ecs_iter_t it;
@@ -233,15 +244,6 @@ struct query_base {
     /** Convert the query to a string expression. */
     flecs::string str() const {
         char *result = ecs_query_str(query_);
-        return flecs::string(result);
-    }
-
-    /** Return a string representing the query plan.
-     * This can be used to analyze the behavior and performance of the query.
-     * @see ecs_query_plan()
-     */
-    flecs::string plan() const {
-        char *result = ecs_query_plan(query_);
         return flecs::string(result);
     }
 
@@ -289,11 +291,13 @@ public:
         return *this;
     }
 
+#ifdef FLECS_CACHED_QUERIES
     /** Get the cache query, if any. */
     flecs::query<> cache_query() const {
         const flecs::query_t *q = ecs_query_get_cache_query(query_);
         return flecs::query<>(q);
     }
+#endif
 
 private:
     ecs_iter_t get_iter(flecs::world_t *world) const override {

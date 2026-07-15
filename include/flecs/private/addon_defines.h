@@ -15,6 +15,9 @@
 #ifdef FLECS_NO_CACHED_QUERIES
 #undef FLECS_CACHED_QUERIES
 #endif
+#ifdef FLECS_NO_QUERY_PLANS
+#undef FLECS_QUERY_PLANS
+#endif
 #ifdef FLECS_NO_CONSTRAINT_TRAITS
 #undef FLECS_CONSTRAINT_TRAITS
 #endif
@@ -191,6 +194,9 @@
 #ifndef FLECS_CACHED_QUERIES
 #define FLECS_CACHED_QUERIES
 #endif
+#ifndef FLECS_QUERY_PLANS
+#define FLECS_QUERY_PLANS
+#endif
 #if !defined(FLECS_OS_API_IMPL) && !defined(FLECS_NO_OS_API_IMPL)
 #define FLECS_OS_API_IMPL
 #endif
@@ -206,6 +212,9 @@
 #ifdef FLECS_QUERY_DSL
 #ifndef FLECS_PARSER
 #define FLECS_PARSER
+#endif
+#ifndef FLECS_QUERY_PLANS
+#define FLECS_QUERY_PLANS
 #endif
 #endif
 

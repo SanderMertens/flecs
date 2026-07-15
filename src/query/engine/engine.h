@@ -6,8 +6,11 @@
 #ifndef FLECS_QUERY_ENGINE_H
 #define FLECS_QUERY_ENGINE_H
 
-#include "trav_cache.h"
 #include "trivial_iter.h"
+
+#ifdef FLECS_QUERY_PLANS
+
+#include "trav_cache.h"
 
 /* Query evaluation utilities */
 
@@ -384,5 +387,6 @@ bool flecs_query_trav(
     bool redo,
     const ecs_query_run_ctx_t *ctx);
 
-#endif
+#endif // FLECS_QUERY_PLANS
 
+#endif

@@ -8,6 +8,8 @@
 
 #include "../types.h"
 
+#ifdef FLECS_QUERY_PLANS
+
 /* Traversal cache for transitive queries. Finds all reachable entities by
  * following a relationship. */
 
@@ -62,5 +64,7 @@ ecs_trav_up_t* flecs_query_get_up_cache(
 /* Free up traversal cache */
 void flecs_query_up_cache_fini(
     ecs_trav_up_cache_t *cache);
+
+#endif // FLECS_QUERY_PLANS
 
 #endif

@@ -23,6 +23,12 @@ int flecs_term_finalize(
     ecs_term_t *term,
     ecs_query_validator_ctx_t *ctx);
 
+#ifdef FLECS_QUERY_PLANS
+
+/* Convert unsigned integer to variable id */
+ecs_var_id_t flecs_utovar(
+    uint64_t val);
+
 /* Convert integer to label */
 ecs_query_lbl_t flecs_itolbl(
     int64_t val);
@@ -30,10 +36,6 @@ ecs_query_lbl_t flecs_itolbl(
 /* Convert integer to variable id */
 ecs_var_id_t flecs_itovar(
     int64_t val);
-
-/* Convert unsigned integer to variable id */
-ecs_var_id_t flecs_utovar(
-    uint64_t val);
 
 /* Get name for term ref */
 const char* flecs_term_ref_var_name(
@@ -78,9 +80,16 @@ bool flecs_ref_is_written(
 ecs_allocator_t* flecs_query_get_allocator(
     const ecs_iter_t *it);
 
+ecs_id_t flecs_query_iter_set_id(
+    ecs_iter_t *it,
+    int8_t field,
+    ecs_id_t id);
+
 /* Convert instruction kind to string */
 const char* flecs_query_op_str(
     uint16_t kind);
+
+#endif // FLECS_QUERY_PLANS
 
 /* Convert term to string */
 void flecs_term_to_buf(
@@ -94,10 +103,4 @@ void flecs_query_apply_iter_flags(
     ecs_iter_t *it,
     const ecs_query_t *query);
 
-ecs_id_t flecs_query_iter_set_id(
-    ecs_iter_t *it,
-    int8_t field,
-    ecs_id_t id);
-
 #endif
-

@@ -5,6 +5,8 @@
 
 #include "../../private_api.h"
 
+#ifdef FLECS_QUERY_PLANS
+
 static
 bool flecs_query_trav_fixed_src_reflexive(
     const ecs_query_op_t *op,
@@ -287,3 +289,5 @@ bool flecs_query_trav(
         }
     }
 }
+
+#endif // FLECS_QUERY_PLANS

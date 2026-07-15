@@ -371,8 +371,10 @@ void flecs_component_ids_set(
  * @return Whether the query has more results.
  */
 FLECS_API
+#ifdef FLECS_CACHED_QUERIES
 bool flecs_query_trivial_cached_next(
     ecs_iter_t *it);
+#endif
 
 #ifdef FLECS_EXCLUSIVE_ACCESS
 /** Check if the current thread has exclusive access to the world.

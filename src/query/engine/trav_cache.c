@@ -5,6 +5,8 @@
 
 #include "../../private_api.h"
 
+#ifdef FLECS_QUERY_PLANS
+
 static
 void flecs_query_build_down_cache(
     ecs_world_t *world,
@@ -149,3 +151,5 @@ void flecs_query_get_trav_up_cache(
         cache->up = true;
     }
 }
+
+#endif // FLECS_QUERY_PLANS
