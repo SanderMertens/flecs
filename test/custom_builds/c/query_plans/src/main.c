@@ -8,8 +8,7 @@ typedef struct Position {
     int x;
 } Position;
 
-static
-int count_query(
+static int count_query(
     ecs_world_t *world,
     ecs_query_t *q)
 {
@@ -21,8 +20,7 @@ int count_query(
     return result;
 }
 
-static
-bool query_has(
+static bool query_has(
     ecs_query_t *q,
     ecs_entity_t e)
 {
@@ -48,8 +46,7 @@ bool query_has(
     return true;
 }
 
-static
-bool query_set_this(
+static bool query_set_this(
     ecs_world_t *world,
     ecs_query_t *q,
     ecs_entity_t e)

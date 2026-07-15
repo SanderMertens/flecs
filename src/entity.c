@@ -26,8 +26,7 @@ flecs_component_ptr_t flecs_table_get_component(
     };
 }
 
-static
-flecs_component_ptr_t flecs_get_component_ptr(
+static flecs_component_ptr_t flecs_get_component_ptr(
     const ecs_world_t *world,
     ecs_table_t *table,
     int32_t row,
@@ -92,8 +91,7 @@ ecs_entity_t flecs_new_id(
     return entity;
 }
 
-static
-ecs_record_t* flecs_new_entity(
+static ecs_record_t* flecs_new_entity(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_record_t *r,
@@ -117,8 +115,7 @@ ecs_record_t* flecs_new_entity(
     return r;
 }
 
-static
-void flecs_move_entity(
+static void flecs_move_entity(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_record_t *record,
@@ -360,8 +357,7 @@ const ecs_entity_t* flecs_bulk_new(
     }
 }
 
-static
-void flecs_add_id_w_record(
+static void flecs_add_id_w_record(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_record_t *record,
@@ -774,8 +770,7 @@ error:
     return 0;
 }
 
-static
-void flecs_copy_id(
+static void flecs_copy_id(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_record_t *r,
@@ -807,8 +802,7 @@ void flecs_copy_id(
 
 /* Traverse table graph by adding identifiers parsed from the
  * passed in expression. */
-static
-int flecs_traverse_from_expr(
+static int flecs_traverse_from_expr(
     ecs_world_t *world,
     const char *name,
     const char *expr,
@@ -853,8 +847,7 @@ error:
 
 /* Add components based on the parsed expression. This operation is
  * slower than flecs_traverse_from_expr, but safe to use from a deferred context. */
-static
-void flecs_defer_from_expr(
+static void flecs_defer_from_expr(
     ecs_world_t *world,
     ecs_entity_t entity,
     const char *name,
@@ -882,8 +875,7 @@ void flecs_defer_from_expr(
 
 /* If operation is not deferred, add components by finding the target
  * table and moving the entity towards it. */
-static 
-int flecs_traverse_add(
+static int flecs_traverse_add(
     ecs_world_t *world,
     ecs_entity_t result,
     const char *name,
@@ -1031,8 +1023,7 @@ error:
 
 /* When in deferred mode, we need to add/remove components one by one using
  * the regular operations. */
-static 
-void flecs_deferred_add_remove(
+static void flecs_deferred_add_remove(
     ecs_world_t *world,
     ecs_entity_t entity,
     const char *name,
@@ -1426,8 +1417,7 @@ error:
     return NULL;
 }
 
-static
-void flecs_check_component(
+static void flecs_check_component(
     ecs_world_t *world,
     ecs_entity_t result,
     const EcsComponent *ptr,
@@ -1858,8 +1848,7 @@ error:
 }
 
 #ifdef FLECS_DEBUG
-static
-bool flecs_component_has_on_replace(
+static bool flecs_component_has_on_replace(
     const ecs_world_t *world,
     ecs_id_t component,
     const char *funcname)
@@ -2051,8 +2040,7 @@ error:
     return NULL;
 }
 
-static
-ecs_record_t* flecs_access_begin(
+static ecs_record_t* flecs_access_begin(
     ecs_world_t *stage,
     ecs_entity_t entity,
     bool write)
@@ -2079,8 +2067,7 @@ error:
     return NULL;
 }
 
-static
-void flecs_access_end(
+static void flecs_access_end(
     const ecs_record_t *r,
     bool write)
 {
@@ -2357,8 +2344,7 @@ error:
 }
 
 #if defined(FLECS_DEBUG) || defined(FLECS_KEEP_ASSERT)
-static
-bool flecs_can_toggle(
+static bool flecs_can_toggle(
     ecs_world_t *world,
     ecs_id_t component)
 {
@@ -3198,8 +3184,7 @@ error:
     return;
 }
 
-static
-void ecs_type_str_buf(
+static void ecs_type_str_buf(
     const ecs_world_t *world,
     const ecs_type_t *type,
     ecs_strbuf_t *buf)

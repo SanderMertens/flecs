@@ -5,15 +5,13 @@
     (((uint32_t) (x)) + ((uint32_t) (x) << 8) + ((uint32_t) (x) << 16) + \
      ((uint32_t) (x) << 24))
 
-static
-void* test_ecs_ensure(ecs_world_t *world, ecs_entity_t entity, ecs_id_t component) {
+static void* test_ecs_ensure(ecs_world_t *world, ecs_entity_t entity, ecs_id_t component) {
     const ecs_type_info_t *ti = ecs_get_type_info(world, component);
     test_assert(ti != NULL);
     return ecs_ensure_id(world, entity, component, ti->size);
 }
 
-static 
-bool is_memory_filled_with(
+static bool is_memory_filled_with(
     const void *ptr,
     size_t size,
     unsigned char byte)
@@ -29,8 +27,7 @@ bool is_memory_filled_with(
     return true;
 }
 
-static 
-bool memory_is_zero(
+static bool memory_is_zero(
     const void *ptr,
     size_t size)
 {
@@ -97,8 +94,7 @@ static uintptr_t ctor_ptr = 0;
 static int32_t ctor_count = 0;
 static ecs_entity_t ctor_component = 0;
 
-static
-void test_ctor(
+static void test_ctor(
     void *ptr,
     int32_t count,
     const ecs_type_info_t *type_info)
@@ -115,8 +111,7 @@ static uintptr_t dtor_ptr = 0;
 static int32_t dtor_count = 0;
 static ecs_entity_t dtor_component = 0;
 
-static
-void test_dtor(
+static void test_dtor(
     void *ptr,
     int32_t count,
     const ecs_type_info_t *type_info)
@@ -134,8 +129,7 @@ static uintptr_t move_src_ptr = 0;
 static int32_t move_count = 0;
 static ecs_entity_t move_component = 0;
 
-static
-void test_move(
+static void test_move(
     void *dst_ptr,
     void *src_ptr,
     int32_t count,
@@ -156,8 +150,7 @@ static uintptr_t copy_src_ptr = 0;
 static int32_t copy_count = 0;
 static ecs_entity_t copy_component = 0;
 
-static
-void test_copy(
+static void test_copy(
     void *dst_ptr,
     const void *src_ptr,
     int32_t count,
@@ -180,8 +173,7 @@ typedef struct NestedStruct {
 
 static ecs_entity_t nested_struct;
 
-static
-const ecs_type_info_t *define_nested_struct(
+static const ecs_type_info_t *define_nested_struct(
     ecs_world_t *world) 
 {
     nested_struct = ecs_struct(world, {
@@ -205,8 +197,7 @@ typedef struct TestStruct {
 
 static ecs_entity_t test_struct;
 
-static
-const ecs_type_info_t *define_test_struct(
+static const ecs_type_info_t *define_test_struct(
     ecs_world_t *world) 
 {
     test_struct = ecs_struct(world, {
@@ -223,8 +214,7 @@ const ecs_type_info_t *define_test_struct(
 }
 
 /* Compares two instances of the given type */
-static
-int cmp(const ecs_world_t* world, ecs_entity_t id, const void *a, const void *b) {
+static int cmp(const ecs_world_t* world, ecs_entity_t id, const void *a, const void *b) {
     const ecs_type_info_t* ti = ecs_get_type_info(world, id);
     return ti->hooks.cmp(a, b, ti);
 }
@@ -638,8 +628,7 @@ typedef struct ResourceHandle {
 static ecs_vec_t resource_ids;
 
 /* Initializes the available "resource ids" */
-static
-void initialize_resource_ids(
+static void initialize_resource_ids(
     int num_resources) 
 {
     ecs_vec_init_t(NULL, &resource_ids, int, num_resources);
@@ -649,15 +638,13 @@ void initialize_resource_ids(
     }
 }
 
-static
-void free_resource_ids() {
+static void free_resource_ids() {
     ecs_vec_fini_t(NULL, &resource_ids, int);
 }
 
 /* Gets a resource id from the vector. It will return 0 if no more resources
  * available. */
-static
-int get_resource_id() 
+static int get_resource_id()
 {
     size_t idcount = ecs_vec_count(&resource_ids);
     if (idcount == 0)
@@ -668,8 +655,7 @@ int get_resource_id()
 }
 
 /* Returns a resource for reuse. */
-static
-void return_resource_id(
+static void return_resource_id(
     int id) 
 {
     if (id == 0)
@@ -678,8 +664,7 @@ void return_resource_id(
 }
 
 /* Returns true if a specific resource id is in the pool. */
-static
-bool resource_id_available(
+static bool resource_id_available(
     int id) 
 {
     for (int i = 0; i < ecs_vec_count(&resource_ids); i++) {
@@ -690,16 +675,14 @@ bool resource_id_available(
 }
 
 /* Returns the numer of currently available resources */
-static
-int resources_left() 
+static int resources_left()
 { 
     return ecs_vec_count(&resource_ids); 
 }
 
 /* Define a ResourceHandle constructor that sets the payload value to 0 and
  * obtains a unique resource id: */
-static
-void ResourceHandle_ctor(
+static void ResourceHandle_ctor(
     void *ptr, 
     int32_t count,
     const ecs_type_info_t *type_info) 
@@ -714,8 +697,7 @@ void ResourceHandle_ctor(
 }
 
 /* Define a ResourceHandle destructor that returns the borrowed resource id: */
-static
-void ResourceHandle_dtor(
+static void ResourceHandle_dtor(
     void *ptr, 
     int32_t count,
     const ecs_type_info_t *type_info) 
@@ -728,8 +710,7 @@ void ResourceHandle_dtor(
 }
 
 /* Define a ResourceHandle move operation that transfers the resource id: */
-static
-void ResourceHandle_move(
+static void ResourceHandle_move(
     void *dst_ptr, 
     void *src_ptr, 
     int32_t count,
@@ -748,8 +729,7 @@ void ResourceHandle_move(
 
 /* Define a ResourceHandle copy operation that copies the payload value but
  * obtains its own resource id: */
-static
-void ResourceHandle_copy(
+static void ResourceHandle_copy(
     void *dst_ptr, 
     const void *src_ptr, 
     int32_t count,
@@ -768,8 +748,7 @@ void ResourceHandle_copy(
 }
 
 /* compares two resource handles */
-static 
-int ResourceHandle_comp(
+static int ResourceHandle_comp(
     const void *a, 
     const void *b,
     const ecs_type_info_t *ti) 
@@ -783,8 +762,7 @@ int ResourceHandle_comp(
  * For different tests, it can set specific hooks or not. */
 static ecs_entity_t resource_handle;
 
-static
-void define_resource_handle(
+static void define_resource_handle(
     ecs_world_t *world, 
     bool ctor, 
     bool dtor, 
@@ -1483,8 +1461,7 @@ void RuntimeTypes_opaque(void) {
 
 /* Helper function used in the tests below to invoke a type's registered
  * constructor, if any, when adding items to vectors */
-static 
-void invoke_type_ctor(
+static void invoke_type_ctor(
     ecs_world_t *world, 
     void *ptr, 
     int32_t count,

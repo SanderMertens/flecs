@@ -56,8 +56,7 @@ static ECS_DTOR(EcsConstants, ptr, {
     flecs_ordered_constants_dtor(&ptr->ordered_constants);
 })
 
-static
-int flecs_add_constant_to_enum(
+static int flecs_add_constant_to_enum(
     ecs_world_t *world, 
     ecs_entity_t type, 
     ecs_entity_t e,
@@ -256,8 +255,7 @@ int flecs_add_constant_to_enum(
     return 0;
 }
 
-static
-int flecs_add_constant_to_bitmask(
+static int flecs_add_constant_to_bitmask(
     ecs_world_t *world, 
     ecs_entity_t type, 
     ecs_entity_t e,
@@ -353,8 +351,7 @@ int flecs_add_constant_to_bitmask(
     return 0;
 }
 
-static
-void flecs_add_enum(ecs_iter_t *it) {
+static void flecs_add_enum(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
 
     EcsEnum *data = ecs_field(it, EcsEnum, 0);
@@ -388,8 +385,7 @@ void flecs_add_enum(ecs_iter_t *it) {
     }
 }
 
-static
-void flecs_add_bitmask(ecs_iter_t *it) {
+static void flecs_add_bitmask(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
 
     int i, count = it->count;
@@ -402,8 +398,7 @@ void flecs_add_bitmask(ecs_iter_t *it) {
     }
 }
 
-static
-void flecs_add_constant(ecs_iter_t *it) {
+static void flecs_add_constant(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
 
     int i, count = it->count;

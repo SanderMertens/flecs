@@ -4,8 +4,7 @@ void MultiThreadStaging_setup(void) {
     ecs_log_set_level(-3);
 }
 
-static
-void Add_to_current(ecs_iter_t *it) {
+static void Add_to_current(ecs_iter_t *it) {
     IterData *ctx = ecs_get_ctx(it->world);
 
     int i;
@@ -237,8 +236,7 @@ void MultiThreadStaging_6_threads_add_to_current(void) {
     ecs_fini(world);
 }
 
-static
-void InitVelocity(ecs_iter_t *it) {
+static void InitVelocity(ecs_iter_t *it) {
     Velocity *v = ecs_field(it, Velocity, 0);
 
     int i;
@@ -248,8 +246,7 @@ void InitVelocity(ecs_iter_t *it) {
     }
 }
 
-static
-void AddVelocity(ecs_iter_t *it) {
+static void AddVelocity(ecs_iter_t *it) {
     ecs_id_t ecs_id(Velocity) = ecs_field_id(it, 1);
 
     int i;

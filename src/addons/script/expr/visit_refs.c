@@ -8,8 +8,7 @@
 #ifdef FLECS_SCRIPT
 #include "../script.h"
 
-static
-ecs_entity_t flecs_expr_ref_entity(
+static ecs_entity_t flecs_expr_ref_entity(
     ecs_expr_node_t *node)
 {
     if (!node) {
@@ -28,8 +27,7 @@ ecs_entity_t flecs_expr_ref_entity(
     return 0;
 }
 
-static
-const char* flecs_expr_ref_var_name(
+static const char* flecs_expr_ref_var_name(
     ecs_expr_node_t *node)
 {
     if (!node) {
@@ -46,8 +44,7 @@ const char* flecs_expr_ref_var_name(
     return NULL;
 }
 
-static
-void flecs_expr_add_ref(
+static void flecs_expr_add_ref(
     ecs_vec_t *refs,
     ecs_entity_t entity,
     const char *name,

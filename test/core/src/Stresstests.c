@@ -5,8 +5,7 @@ void Stresstests_setup(void) {
     ecs_log_set_level(-3);
 }
 
-static
-void add_random(
+static void add_random(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t component)
@@ -20,8 +19,7 @@ void add_random(
     }    
 }
 
-static
-void set_random(
+static void set_random(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t component,
@@ -34,8 +32,7 @@ void set_random(
     }  
 }
 
-static
-void Delete_above_1000(ecs_iter_t *it) {
+static void Delete_above_1000(ecs_iter_t *it) {
     int i;
 
     for (i = 0; i < it->count; i ++) {
@@ -45,8 +42,7 @@ void Delete_above_1000(ecs_iter_t *it) {
     }
 }
 
-static
-void Add_random(ecs_iter_t *it) {
+static void Add_random(ecs_iter_t *it) {
     IterData *ctx = ecs_get_ctx(it->world);
 
     int i;
@@ -57,8 +53,7 @@ void Add_random(ecs_iter_t *it) {
     }
 }
 
-static
-void Set_velocity_callback(ecs_iter_t *it) {
+static void Set_velocity_callback(ecs_iter_t *it) {
     Velocity *v = ecs_field(it, Velocity, 0);
 
     int i;
@@ -68,8 +63,7 @@ void Set_velocity_callback(ecs_iter_t *it) {
     }
 }
 
-static
-void Set_random(ecs_iter_t *it) {
+static void Set_random(ecs_iter_t *it) {
     IterData *ctx = ecs_get_ctx(it->world);     
 
     int i;
@@ -88,8 +82,7 @@ void Set_random(ecs_iter_t *it) {
     }
 }
 
-static
-void create_delete_entity_random_components_staged(
+static void create_delete_entity_random_components_staged(
     int32_t threads)
 {
     test_quarantine("16 Jan 2023");
@@ -133,8 +126,7 @@ void create_delete_entity_random_components_staged(
     ecs_fini(world);
 }
 
-static
-void set_entity_random_components(
+static void set_entity_random_components(
     int32_t threads)
 {
     test_quarantine("16 Jan 2023");

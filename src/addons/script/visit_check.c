@@ -8,8 +8,7 @@
 #ifdef FLECS_SCRIPT
 #include "script.h"
 
-static
-bool flecs_script_scope_has_entity(
+static bool flecs_script_scope_has_entity(
     ecs_script_scope_t *scope,
     const char *name)
 {
@@ -32,8 +31,7 @@ bool flecs_script_scope_has_entity(
     return false;
 }
 
-static
-bool flecs_script_check_unresolved_identifier(
+static bool flecs_script_check_unresolved_identifier(
     const ecs_world_t *world,
     const char *value,
     void *ctx)
@@ -46,8 +44,7 @@ bool flecs_script_check_unresolved_identifier(
     return flecs_script_scope_has_entity(v->template->node->scope, value);
 }
 
-static
-int flecs_script_check_expr(
+static int flecs_script_check_expr(
     ecs_script_eval_visitor_t *v,
     ecs_expr_node_t **expr_ptr,
     ecs_entity_t *type)
@@ -130,8 +127,7 @@ int flecs_script_check_scope(
     return 0;
 }
 
-static
-int flecs_script_check_entity(
+static int flecs_script_check_entity(
     ecs_script_eval_visitor_t *v,
     ecs_script_entity_t *node)
 {
@@ -177,8 +173,7 @@ int flecs_script_check_entity(
     return 0;
 }
 
-static
-int flecs_script_check_tag(
+static int flecs_script_check_tag(
     ecs_script_eval_visitor_t *v,
     ecs_script_tag_t *node)
 {
@@ -206,8 +201,7 @@ int flecs_script_check_tag(
     return 0;
 }
 
-static
-int flecs_script_check_component(
+static int flecs_script_check_component(
     ecs_script_eval_visitor_t *v,
     ecs_script_component_t *node)
 {
@@ -293,8 +287,7 @@ int flecs_script_check_component(
     return 0;
 }
 
-static
-int flecs_script_check_var_component(
+static int flecs_script_check_var_component(
     ecs_script_eval_visitor_t *v,
     ecs_script_var_component_t *node)
 {
@@ -310,8 +303,7 @@ int flecs_script_check_var_component(
     return 0;
 }
 
-static
-int flecs_script_check_with_var(
+static int flecs_script_check_with_var(
     ecs_script_eval_visitor_t *v,
     ecs_script_var_component_t *node)
 {
@@ -327,8 +319,7 @@ int flecs_script_check_with_var(
     return 0;
 }
 
-static
-int flecs_script_check_with_tag(
+static int flecs_script_check_with_tag(
     ecs_script_eval_visitor_t *v,
     ecs_script_tag_t *node)
 {
@@ -339,8 +330,7 @@ int flecs_script_check_with_tag(
     return 0;
 }
 
-static
-int flecs_script_check_with_component(
+static int flecs_script_check_with_component(
     ecs_script_eval_visitor_t *v,
     ecs_script_component_t *node)
 {
@@ -359,8 +349,7 @@ int flecs_script_check_with_component(
     return 0;
 }
 
-static
-int flecs_script_check_with(
+static int flecs_script_check_with(
     ecs_script_eval_visitor_t *v,
     ecs_script_with_t *node)
 {
@@ -380,8 +369,7 @@ int flecs_script_check_with(
     return 0;
 }
 
-static
-int flecs_script_check_using(
+static int flecs_script_check_using(
     ecs_script_eval_visitor_t *v,
     ecs_script_using_t *node)
 {
@@ -389,16 +377,14 @@ int flecs_script_check_using(
     return -1;
 }
 
-static
-int flecs_script_check_const(
+static int flecs_script_check_const(
     ecs_script_eval_visitor_t *v,
     ecs_script_var_node_t *node)
 {
     return flecs_script_eval_const(v, node, false);
 }
 
-static
-int flecs_script_check_pair_scope(
+static int flecs_script_check_pair_scope(
     ecs_script_eval_visitor_t *v,
     ecs_script_pair_scope_t *node)
 {
@@ -423,8 +409,7 @@ int flecs_script_check_pair_scope(
     return 0;
 }
 
-static
-int flecs_script_check_if(
+static int flecs_script_check_if(
     ecs_script_eval_visitor_t *v,
     ecs_script_if_t *node)
 {
@@ -443,8 +428,7 @@ int flecs_script_check_if(
     return 0;
 }
 
-static
-int flecs_script_check_for_range(
+static int flecs_script_check_for_range(
     ecs_script_eval_visitor_t *v,
     ecs_script_for_range_t *node)
 {
@@ -478,8 +462,7 @@ int flecs_script_check_for_range(
     return 0;
 }
 
-static
-int flecs_script_check_annot(
+static int flecs_script_check_annot(
     ecs_script_eval_visitor_t *v,
     ecs_script_annot_t *node)
 {

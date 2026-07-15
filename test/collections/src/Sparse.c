@@ -26,8 +26,7 @@ void flecs_sparse_free(
     ecs_os_free(sp);
 }
 
-static
-void populate(ecs_sparse_t *sp, int count) {
+static void populate(ecs_sparse_t *sp, int count) {
     int prev_count = flecs_sparse_count(sp);
     int i;
     for (i = 0; i < count; i ++) {

@@ -4,8 +4,7 @@ void SystemManual_setup(void) {
     ecs_log_set_level(-3);
 }
 
-static
-void Iter(ecs_iter_t *it) {
+static void Iter(ecs_iter_t *it) {
     Position *p = ecs_field(it, Position, 0);
     Velocity *v = NULL;
     Mass *m = NULL;

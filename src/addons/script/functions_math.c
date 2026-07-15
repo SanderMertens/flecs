@@ -17,8 +17,7 @@ typedef struct ecs_script_rng_t {
     bool initialized;
 } ecs_script_rng_t;
 
-static
-ecs_script_rng_t* flecs_script_rng_new(void) {
+static ecs_script_rng_t* flecs_script_rng_new(void) {
     ecs_script_rng_t *result = ecs_os_calloc_t(ecs_script_rng_t);
     result->x = 0;
     result->w = 0;
@@ -28,16 +27,14 @@ ecs_script_rng_t* flecs_script_rng_new(void) {
     return result;
 }
 
-static
-void flecs_script_rng_keep(ecs_script_rng_t *rng) {
+static void flecs_script_rng_keep(ecs_script_rng_t *rng) {
     if (!rng) {
         return;
     }
     rng->refcount ++;
 }
 
-static
-void flecs_script_rng_free(ecs_script_rng_t *rng) {
+static void flecs_script_rng_free(ecs_script_rng_t *rng) {
     if (!rng) {
         return;
     }
@@ -47,8 +44,7 @@ void flecs_script_rng_free(ecs_script_rng_t *rng) {
     }
 }
 
-static
-uint64_t flecs_script_rng_next(ecs_script_rng_t *rng) {
+static uint64_t flecs_script_rng_next(ecs_script_rng_t *rng) {
     rng->x *= rng->x;
     rng->x += (rng->w += rng->s);
     rng->x = (rng->x >> 32) | (rng->x << 32);
@@ -57,14 +53,12 @@ uint64_t flecs_script_rng_next(ecs_script_rng_t *rng) {
 
 ECS_COMPONENT_DECLARE(EcsScriptRng);
 
-static
-ECS_CTOR(EcsScriptRng, ptr, {
+static ECS_CTOR(EcsScriptRng, ptr, {
     ptr->seed = 0;
     ptr->impl = flecs_script_rng_new();
 })
 
-static
-ECS_COPY(EcsScriptRng, dst, src, {
+static ECS_COPY(EcsScriptRng, dst, src, {
     flecs_script_rng_keep(src->impl);
     if (dst->impl != src->impl) {
         flecs_script_rng_free(dst->impl);
@@ -73,16 +67,14 @@ ECS_COPY(EcsScriptRng, dst, src, {
     dst->impl = src->impl;
 })
 
-static
-ECS_MOVE(EcsScriptRng, dst, src, {
+static ECS_MOVE(EcsScriptRng, dst, src, {
     flecs_script_rng_free(dst->impl);
     dst->seed = src->seed;
     dst->impl = src->impl;
     src->impl = NULL;
 })
 
-static
-ECS_DTOR(EcsScriptRng, ptr, {
+static ECS_DTOR(EcsScriptRng, ptr, {
     flecs_script_rng_free(ptr->impl);
 })
 

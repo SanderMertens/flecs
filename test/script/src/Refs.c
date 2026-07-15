@@ -1,7 +1,6 @@
 #include <script.h>
 
-static
-void times_two(
+static void times_two(
     const ecs_function_ctx_t *ctx,
     int argc,
     const ecs_value_t *argv,
@@ -12,8 +11,7 @@ void times_two(
     *(ecs_f32_t*)result->ptr = *(ecs_f32_t*)argv[0].ptr * 2;
 }
 
-static
-ecs_entity_t define_mass(ecs_world_t *world) {
+static ecs_entity_t define_mass(ecs_world_t *world) {
     return ecs_struct(world, {
         .entity = ecs_entity(world, { .name = "Mass" }),
         .members = {
@@ -22,8 +20,7 @@ ecs_entity_t define_mass(ecs_world_t *world) {
     });
 }
 
-static
-ecs_entity_t define_position(ecs_world_t *world) {
+static ecs_entity_t define_position(ecs_world_t *world) {
     return ecs_struct(world, {
         .entity = ecs_entity(world, { .name = "Position" }),
         .members = {
@@ -33,8 +30,7 @@ ecs_entity_t define_position(ecs_world_t *world) {
     });
 }
 
-static
-ecs_entity_t define_position_i(ecs_world_t *world) {
+static ecs_entity_t define_position_i(ecs_world_t *world) {
     return ecs_struct(world, {
         .entity = ecs_entity(world, { .name = "PositionI" }),
         .members = {
@@ -1190,8 +1186,7 @@ void Refs_global_const_var_assigned_to_component(void) {
     ecs_fini(world);
 }
 
-static
-void SetMass(ecs_iter_t *it) {
+static void SetMass(ecs_iter_t *it) {
     ecs_entity_t e = ecs_lookup(it->world, "e");
     ecs_entity_t mass = ecs_lookup(it->world, "Mass");
     ecs_set_id(it->world, e, mass, sizeof(float), &(float){ 20 });
@@ -1292,8 +1287,7 @@ void Refs_reeval_prefab_in_branch(void) {
     ecs_fini(world);
 }
 
-static
-void RefDummyObserver(ecs_iter_t *it);
+static void RefDummyObserver(ecs_iter_t *it);
 
 void Refs_progress_reeval_prefab_w_isa_observer(void) {
     ecs_world_t *world = ecs_init();
@@ -1353,8 +1347,7 @@ void Refs_progress_reeval_prefab_w_isa_observer(void) {
     ecs_fini(world);
 }
 
-static
-void RefDummyObserver(ecs_iter_t *it) {
+static void RefDummyObserver(ecs_iter_t *it) {
     (void)it;
 }
 

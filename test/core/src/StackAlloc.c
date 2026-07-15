@@ -18,8 +18,7 @@ void StackAlloc_init_fini(void) {
 /// @param stack Stack to use
 /// @param allocSizes Array of sizes to alloc. All of alignment 1. Ends with a size of 0.
 /// @return cursor to start of allocations
-static 
-ecs_stack_cursor_t* init_some_object(ecs_stack_t* stack, int32_t* allocSizes) {
+static ecs_stack_cursor_t* init_some_object(ecs_stack_t* stack, int32_t* allocSizes) {
     ecs_stack_cursor_t *cursor = flecs_stack_get_cursor(stack);
     while (*allocSizes > 0)
     {

@@ -568,16 +568,14 @@ void Set_modified_no_component(void) {
 static ECS_COMPONENT_DECLARE(Position);
 static ECS_COMPONENT_DECLARE(Velocity);
 
-static
-void OnAdd(ecs_iter_t *it) {
+static void OnAdd(ecs_iter_t *it) {
     int i;
     for (i = 0; i < it->count; i ++) {
         ecs_add(it->world, it->entities[i], Velocity);
     }
 }
 
-static
-void OnAddRemove(ecs_iter_t *it) {
+static void OnAddRemove(ecs_iter_t *it) {
     int i;
     for (i = 0; i < it->count; i ++) {
         ecs_remove(it->world, it->entities[i], Position);
@@ -623,8 +621,7 @@ void Set_ensure_w_remove_in_on_add(void) {
     ecs_ensure(world, e, Position);
 }
 
-static
-void OnAddRealloc(ecs_iter_t *it) {
+static void OnAddRealloc(ecs_iter_t *it) {
     ecs_entity_t *entities = it->ctx;
 
     int i;
@@ -744,8 +741,7 @@ void Set_emplace_w_move(void) {
     ecs_fini(world);
 }
 
-static
-void OnAddMove(ecs_iter_t *it) {
+static void OnAddMove(ecs_iter_t *it) {
     int i;
     for (i = 0; i < it->count; i ++) {
         ecs_set(it->world, it->entities[i], Velocity, {1, 2});

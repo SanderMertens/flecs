@@ -316,11 +316,9 @@ void Commands_defer_set(void) {
     ecs_fini(world);
 }
 
-static
-void dummy_xtor(void *ptr, ecs_size_t count, const ecs_type_info_t *ti) { }
+static void dummy_xtor(void *ptr, ecs_size_t count, const ecs_type_info_t *ti) { }
 
-static
-void dummy_move(void *ptr, void *src, ecs_size_t count, const ecs_type_info_t *ti) { 
+static void dummy_move(void *ptr, void *src, ecs_size_t count, const ecs_type_info_t *ti) {
     ecs_os_memcpy(ptr, src, count * ti->size);
 }
 
@@ -651,8 +649,7 @@ void Commands_defer_twice_in_progress(void) {
     ecs_fini(world);
 }
 
-static
-void AddVelocity(ecs_iter_t *it) {
+static void AddVelocity(ecs_iter_t *it) {
     ecs_id_t ecs_id(Velocity) = ecs_field_id(it, 1);
 
     ecs_defer_begin(it->world);
@@ -946,8 +943,7 @@ void Commands_defer_ensure_3x_vector_append_existing(void) {
 
 static bool on_set_invoked = 0;
 
-static
-void OnSetTestInvoked(ecs_iter_t *it) {
+static void OnSetTestInvoked(ecs_iter_t *it) {
     on_set_invoked = 1;
 }
 
@@ -2167,8 +2163,7 @@ void Commands_async_stage_readonly(void) {
     ecs_fini(world);
 }
 
-static
-void RegisterComponent(ecs_iter_t *it) {
+static void RegisterComponent(ecs_iter_t *it) {
     ecs_entity_t ecs_id(Position) = ecs_component_init(it->world, 
         &(ecs_component_desc_t){
             .entity = ecs_entity(it->world, {.name = "Position"}),
@@ -2603,15 +2598,13 @@ void Commands_defer_suspend_resume(void) {
     ecs_fini(world);
 }
 
-static
-void System(ecs_iter_t *it) {
+static void System(ecs_iter_t *it) {
     probe_system_w_ctx(it, it->ctx);
 }
 
 static int system_2_invoked = 0;
 
-static
-void System2(ecs_iter_t *it) {
+static void System2(ecs_iter_t *it) {
     probe_system_w_ctx(it, it->ctx);
     system_2_invoked ++;
 }
@@ -2859,8 +2852,7 @@ void Commands_defer_remove_after_set(void) {
 
 static int position_observer_invoked = 0;
 
-static
-void PositionObserver(ecs_iter_t *it) {
+static void PositionObserver(ecs_iter_t *it) {
     position_observer_invoked ++;
 }
 
@@ -3145,8 +3137,7 @@ void Commands_flush_stage_to_deferred_world(void) {
     ecs_fini(world);
 }
 
-static
-void AddPosition(ecs_iter_t *it) {
+static void AddPosition(ecs_iter_t *it) {
     test_int(it->count, 1);
     ecs_set(it->world, it->entities[0], Position, {10, 20});
 }
@@ -3212,8 +3203,7 @@ void Commands_add_in_observer_during_merge_2_commands(void) {
 static ECS_DECLARE(TagB);
 static ECS_DECLARE(TagC);
 
-static
-void AddTwoTags(ecs_iter_t *it) {
+static void AddTwoTags(ecs_iter_t *it) {
     test_int(it->count, 1);
     ecs_add(it->world, it->entities[0], TagB);
     ecs_add(it->world, it->entities[0], TagC);
@@ -3473,8 +3463,7 @@ void Commands_register_while_deferred_with_n_stages(void) {
 
 static int position_velocity_observer_invoked = 0;
 
-static
-void PositionVelocityObserver(ecs_iter_t *it) {
+static void PositionVelocityObserver(ecs_iter_t *it) {
     position_velocity_observer_invoked ++;
     test_int(it->count, 1);
     
@@ -4163,8 +4152,7 @@ void Commands_defer_delete_recycle_same_id(void) {
 
 static ECS_COMPONENT_DECLARE(Velocity);
 
-static
-void AddWhileSuspended(ecs_iter_t *it) {
+static void AddWhileSuspended(ecs_iter_t *it) {
     for (int i = 0; i < it->count; i ++) {
         ecs_add(it->world, it->entities[i], Velocity);
     }
@@ -4292,8 +4280,7 @@ static int dummy_observer_invoked = 0;
 static ECS_TAG_DECLARE(Foo);
 static ECS_TAG_DECLARE(Bar);
 
-static
-void OnSetIsDeferred(ecs_iter_t *it) {
+static void OnSetIsDeferred(ecs_iter_t *it) {
     on_set_is_deferred_invoked ++;
     test_int(it->count, 1);
     ecs_table_t *t = ecs_get_table(it->world, it->entities[0]);
@@ -4302,8 +4289,7 @@ void OnSetIsDeferred(ecs_iter_t *it) {
     test_assert(t == ecs_get_table(it->world, it->entities[0]));
 }
 
-static
-void DummyObserver(ecs_iter_t *it) {
+static void DummyObserver(ecs_iter_t *it) {
     dummy_observer_invoked ++;
 }
 
@@ -4832,8 +4818,7 @@ void Commands_defer_emplace_2nd(void) {
     ecs_fini(world);
 }
 
-static
-void RemoveVelocity(ecs_iter_t *it) {
+static void RemoveVelocity(ecs_iter_t *it) {
     test_int(it->count, 1);
     ecs_remove(it->world, it->entities[0], Velocity);
 }
@@ -4934,8 +4919,7 @@ static ECS_COMPONENT_DECLARE(TestNestEvent);
 
 static int test_nest_invoked = 0;
 
-static
-void test_nest_observer(ecs_iter_t *it) {
+static void test_nest_observer(ecs_iter_t *it) {
     TestNestEvent *param = it->param;
 
     TestNestEvent evt = { .depth = param->depth - 1 };
@@ -5162,8 +5146,7 @@ void Commands_enable_component_from_stage(void) {
 
 static int replace_Position_invoked = 0;
 
-static
-void replace_Position(ecs_iter_t *it) {
+static void replace_Position(ecs_iter_t *it) {
     Position *old = ecs_field(it, Position, 0);
     Position *new = ecs_field(it, Position, 1);
 
@@ -5632,8 +5615,7 @@ void Commands_on_replace_w_set_batched_grow_table_in_hook(void) {
 
 static int defer_batched_add_after_delete_invoked = 0;
 
-static
-void DeferBatchedAddAfterDeleteObserver(ecs_iter_t *it) {
+static void DeferBatchedAddAfterDeleteObserver(ecs_iter_t *it) {
     defer_batched_add_after_delete_invoked ++;
 }
 

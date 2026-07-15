@@ -61,8 +61,7 @@ ecs_var_id_t flecs_query_find_var_id(
 
 #define FlecsRuleOrMarker ((int16_t)-2) /* Marks instruction in OR chain */
 
-static
-ecs_var_id_t flecs_query_most_specific_var(
+static ecs_var_id_t flecs_query_most_specific_var(
     ecs_query_impl_t *query,
     const char *name,
     ecs_var_kind_t kind,
@@ -115,8 +114,7 @@ ecs_query_lbl_t flecs_query_op_insert(
     return flecs_itolbl(count - 1);
 }
 
-static
-ecs_query_op_t* flecs_query_begin_block(
+static ecs_query_op_t* flecs_query_begin_block(
     ecs_query_op_kind_t kind,
     ecs_query_compile_ctx_t *ctx)
 {
@@ -126,8 +124,7 @@ ecs_query_op_t* flecs_query_begin_block(
     return ecs_vec_get_t(ctx->ops, ecs_query_op_t, ctx->cur->lbl_begin);
 }
 
-static
-void flecs_query_end_block(
+static void flecs_query_end_block(
     ecs_query_compile_ctx_t *ctx,
     bool reset)
 {
@@ -155,8 +152,7 @@ void flecs_query_end_block(
     ctx->cur->lbl_begin = -1;
 }
 
-static
-void flecs_query_begin_block_cond_eval(
+static void flecs_query_begin_block_cond_eval(
     ecs_query_op_t *op,
     ecs_query_compile_ctx_t *ctx,
     ecs_write_flags_t cond_write_state)
@@ -215,8 +211,7 @@ void flecs_query_begin_block_cond_eval(
     }
 }
 
-static
-void flecs_query_end_block_cond_eval(
+static void flecs_query_end_block_cond_eval(
     ecs_query_compile_ctx_t *ctx)
 {
     if (ctx->cur->lbl_cond_eval == -1) {
@@ -241,8 +236,7 @@ void flecs_query_end_block_cond_eval(
     end_op_ptr->field_index = query_op->field_index;
 }
 
-static
-void flecs_query_begin_block_or(
+static void flecs_query_begin_block_or(
     ecs_query_op_t *op,
     ecs_term_t *term,
     ecs_query_compile_ctx_t *ctx)
@@ -279,8 +273,7 @@ void flecs_query_begin_block_or(
     }
 }
 
-static
-void flecs_query_end_block_or(
+static void flecs_query_end_block_or(
     ecs_query_impl_t *impl,
     ecs_query_compile_ctx_t *ctx)
 {
@@ -383,8 +376,7 @@ void flecs_query_insert_each(
     flecs_query_op_insert(&each, ctx);
 }
 
-static
-void flecs_query_insert_lookup(
+static void flecs_query_insert_lookup(
     ecs_var_id_t base_var,
     ecs_var_id_t evar,
     ecs_query_compile_ctx_t *ctx,
@@ -401,8 +393,7 @@ void flecs_query_insert_lookup(
     flecs_query_op_insert(&lookup, ctx);
 }
 
-static
-void flecs_query_insert_unconstrained_transitive(
+static void flecs_query_insert_unconstrained_transitive(
     ecs_query_impl_t *query,
     ecs_query_op_t *op,
     ecs_query_compile_ctx_t *ctx,
@@ -441,8 +432,7 @@ void flecs_query_insert_unconstrained_transitive(
     flecs_query_op_insert(&and_op, ctx);
 }
 
-static
-void flecs_query_insert_inheritance(
+static void flecs_query_insert_inheritance(
     ecs_query_impl_t *query,
     ecs_term_t *term,
     ecs_query_op_t *op,
@@ -525,8 +515,7 @@ void flecs_query_compile_term_ref(
     }
 }
 
-static
-int flecs_query_compile_ensure_vars(
+static int flecs_query_compile_ensure_vars(
     ecs_query_impl_t *query,
     ecs_query_op_t *op,
     ecs_query_ref_t *ref,
@@ -591,8 +580,7 @@ int flecs_query_compile_ensure_vars(
     return 0;
 }
 
-static
-bool flecs_query_compile_lookup(
+static bool flecs_query_compile_lookup(
     ecs_query_impl_t *query,
     ecs_var_id_t var_id,
     ecs_query_compile_ctx_t *ctx,
@@ -607,8 +595,7 @@ bool flecs_query_compile_lookup(
     }
 }
 
-static
-void flecs_query_insert_contains(
+static void flecs_query_insert_contains(
     ecs_query_impl_t *query,
     ecs_var_id_t src_var,
     ecs_var_id_t other_var,
@@ -625,8 +612,7 @@ void flecs_query_insert_contains(
     }
 }
 
-static
-void flecs_query_insert_pair_eq(
+static void flecs_query_insert_pair_eq(
     int32_t field_index,
     ecs_query_compile_ctx_t *ctx)
 {
@@ -636,8 +622,7 @@ void flecs_query_insert_pair_eq(
     flecs_query_op_insert(&contains, ctx);
 }
 
-static
-int flecs_query_compile_builtin_pred(
+static int flecs_query_compile_builtin_pred(
     ecs_query_t *q,
     ecs_term_t *term,
     ecs_query_op_t *op,
@@ -687,8 +672,7 @@ int flecs_query_compile_builtin_pred(
     return 0;
 }
 
-static
-int flecs_query_ensure_scope_var(
+static int flecs_query_ensure_scope_var(
     ecs_query_impl_t *query,
     ecs_query_op_t *op,
     ecs_query_ref_t *ref,
@@ -717,8 +701,7 @@ error:
     return -1;
 }
 
-static
-int flecs_query_ensure_scope_vars(
+static int flecs_query_ensure_scope_vars(
     ecs_world_t *world,
     ecs_query_impl_t *query,
     ecs_query_compile_ctx_t *ctx,
@@ -759,8 +742,7 @@ error:
     return -1;
 }
 
-static
-void flecs_query_compile_push(
+static void flecs_query_compile_push(
     ecs_query_compile_ctx_t *ctx)
 {
     ctx->cur = &ctx->ctrlflow[++ ctx->scope];
@@ -768,8 +750,7 @@ void flecs_query_compile_push(
     ctx->cur->lbl_begin = -1;
 }
 
-static
-void flecs_query_compile_pop(
+static void flecs_query_compile_pop(
     ecs_query_compile_ctx_t *ctx)
 {
     /* Should've been caught by query validator */
@@ -777,8 +758,7 @@ void flecs_query_compile_pop(
     ctx->cur = &ctx->ctrlflow[-- ctx->scope];
 }
 
-static
-int flecs_query_compile_0_src(
+static int flecs_query_compile_0_src(
     ecs_world_t *world,
     ecs_query_impl_t *impl,
     ecs_term_t *term,
@@ -810,8 +790,7 @@ error:
     return -1;
 }
 
-static
-ecs_flags32_t flecs_query_to_table_flags(
+static ecs_flags32_t flecs_query_to_table_flags(
     const ecs_query_t *q)
 {
     ecs_flags32_t query_flags = q->flags;
@@ -832,8 +811,7 @@ ecs_flags32_t flecs_query_to_table_flags(
     return EcsTableNotQueryable;
 }
 
-static
-bool flecs_query_select_all(
+static bool flecs_query_select_all(
     const ecs_query_t *q,
     ecs_term_t *term,
     ecs_query_op_t *op,
@@ -873,8 +851,7 @@ bool flecs_query_select_all(
 }
 
 #ifdef FLECS_META
-static
-int flecs_query_compile_begin_member_term(
+static int flecs_query_compile_begin_member_term(
     ecs_world_t *world,
     ecs_term_t *term,
     ecs_query_compile_ctx_t *ctx,
@@ -920,8 +897,7 @@ int flecs_query_compile_begin_member_term(
     return 0;
 }
 
-static
-int flecs_query_compile_end_member_term(
+static int flecs_query_compile_end_member_term(
     ecs_world_t *world,
     ecs_query_impl_t *impl,
     ecs_query_op_t *op,
@@ -1035,8 +1011,7 @@ error:
     return -1;
 }
 #else
-static
-int flecs_query_compile_begin_member_term(
+static int flecs_query_compile_begin_member_term(
     ecs_world_t *world,
     ecs_term_t *term,
     ecs_query_compile_ctx_t *ctx,
@@ -1046,8 +1021,7 @@ int flecs_query_compile_begin_member_term(
     return 0;
 }
 
-static
-int flecs_query_compile_end_member_term(
+static int flecs_query_compile_end_member_term(
     ecs_world_t *world,
     ecs_query_impl_t *impl,
     ecs_query_op_t *op,
@@ -1064,16 +1038,14 @@ int flecs_query_compile_end_member_term(
 }
 #endif
 
-static
-void flecs_query_mark_last_or_op(
+static void flecs_query_mark_last_or_op(
     ecs_query_compile_ctx_t *ctx)
 {
     ecs_query_op_t *op_ptr = ecs_vec_last_t(ctx->ops, ecs_query_op_t);
     op_ptr->next = FlecsRuleOrMarker;
 }
 
-static
-void flecs_query_set_op_kind(
+static void flecs_query_set_op_kind(
     ecs_query_impl_t *query,
     ecs_query_op_t *op,
     ecs_term_t *term,

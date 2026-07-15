@@ -7,8 +7,7 @@
 
 #ifdef FLECS_APP
 
-static
-int flecs_default_run_action(
+static int flecs_default_run_action(
     ecs_world_t *world,
     ecs_app_desc_t *desc)
 {
@@ -41,8 +40,7 @@ int flecs_default_run_action(
     }
 }
 
-static
-int flecs_default_frame_action(
+static int flecs_default_frame_action(
     ecs_world_t *world,
     const ecs_app_desc_t *desc)
 {

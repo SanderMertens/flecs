@@ -13,8 +13,7 @@ typedef struct {
 } flecs_table_column_t;
 
 /* Look up table record for id in table. */
-static
-const ecs_table_record_t *flecs_query_get_tr(
+static const ecs_table_record_t *flecs_query_get_tr(
     ecs_world_t *world,
     ecs_id_t id,
     ecs_table_t *table)
@@ -27,8 +26,7 @@ const ecs_table_record_t *flecs_query_get_tr(
 }
 
 /* Get table column index for query field. */
-static
-void flecs_query_get_column_for_field(
+static void flecs_query_get_column_for_field(
     const ecs_query_t *q,
     ecs_query_cache_match_t *match,
     int32_t field,
@@ -77,8 +75,7 @@ void flecs_query_get_column_for_field(
 
 /* Get match monitor. Monitors are used to keep track of whether components 
  * matched by the query in a table have changed. */
-static
-bool flecs_query_get_match_monitor(
+static bool flecs_query_get_match_monitor(
     ecs_query_impl_t *impl,
     ecs_query_cache_match_t *match)
 {
@@ -144,8 +141,7 @@ bool flecs_query_get_match_monitor(
 
 /* Get monitor for fixed query terms. Fixed terms are handled separately as they
  * don't require a query cache, and fixed terms aren't stored in the cache. */
-static
-bool flecs_query_get_fixed_monitor(
+static bool flecs_query_get_fixed_monitor(
     ecs_query_impl_t *impl,
     bool check)
 {
@@ -214,16 +210,14 @@ bool flecs_query_update_fixed_monitor(
 }
 
 /* Compare fixed source monitor */
-static
-bool flecs_query_check_fixed_monitor(
+static bool flecs_query_check_fixed_monitor(
     ecs_query_impl_t *impl)
 {
     return flecs_query_get_fixed_monitor(impl, true);
 }
 
 /* Check if a single match term has changed */
-static
-bool flecs_query_check_match_monitor_term(
+static bool flecs_query_check_match_monitor_term(
     ecs_query_impl_t *impl,
     ecs_query_cache_match_t *match,
     int32_t field)
@@ -267,8 +261,7 @@ bool flecs_query_check_match_monitor_term(
 }
 
 /* Check if any tables in the cache changed. */
-static
-bool flecs_query_check_cache_monitor(
+static bool flecs_query_check_cache_monitor(
     ecs_query_impl_t *impl)
 {
     ecs_query_cache_t *cache = impl->cache;
@@ -307,8 +300,7 @@ bool flecs_query_check_cache_monitor(
 }
 
 /* Initialize monitors for the elements in the query cache. */
-static
-void flecs_query_init_query_monitors(
+static void flecs_query_init_query_monitors(
     ecs_query_impl_t *impl)
 {
     /* Change monitor for cache */
@@ -336,8 +328,7 @@ void flecs_query_init_query_monitors(
 }
 
 /* Check if a specific match (table) has changed. */
-static
-bool flecs_query_check_match_monitor(
+static bool flecs_query_check_match_monitor(
     ecs_query_impl_t *impl,
     ecs_query_cache_match_t *match,
     const ecs_iter_t *it)
@@ -438,8 +429,7 @@ bool flecs_query_check_match_monitor(
 }
 
 /* Check if one or more fields of a specific match have changed. */
-static
-bool flecs_query_check_table_monitor_match(
+static bool flecs_query_check_table_monitor_match(
     ecs_query_impl_t *impl,
     ecs_query_cache_match_t *qm,
     int32_t field)

@@ -8,15 +8,13 @@
 #include "../private_api.h"
 
 #ifndef FLECS_USE_OS_ALLOC
-static
-ecs_size_t flecs_allocator_size(
+static ecs_size_t flecs_allocator_size(
     ecs_size_t size)
 {
     return ECS_ALIGN(size, 16);
 }
 
-static
-ecs_size_t flecs_allocator_size_hash(
+static ecs_size_t flecs_allocator_size_hash(
     ecs_size_t size)
 {
     return size >> 4;

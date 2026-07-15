@@ -7,8 +7,7 @@
 
 #ifdef FLECS_CONSTRAINT_TRAITS
 
-static
-void flecs_register_final(ecs_iter_t *it) {
+static void flecs_register_final(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
 
     int i, count = it->count;
@@ -30,8 +29,7 @@ void flecs_register_final(ecs_iter_t *it) {
     }
 }
 
-static
-void flecs_on_symmetric_add_remove(ecs_iter_t *it) {
+static void flecs_on_symmetric_add_remove(ecs_iter_t *it) {
     ecs_entity_t pair = ecs_field_id(it, 0);
 
     if (!ECS_HAS_ID_FLAG(pair, PAIR)) {
@@ -61,8 +59,7 @@ void flecs_on_symmetric_add_remove(ecs_iter_t *it) {
     }
 }
 
-static
-void flecs_register_symmetric(ecs_iter_t *it) {
+static void flecs_register_symmetric(ecs_iter_t *it) {
     ecs_world_t *world = it->real_world;
 
     int i, count = it->count;
@@ -82,8 +79,7 @@ void flecs_register_symmetric(ecs_iter_t *it) {
 }
 
 #ifdef FLECS_DEBUG
-static
-void flecs_on_singleton_add_remove(ecs_iter_t *it) {
+static void flecs_on_singleton_add_remove(ecs_iter_t *it) {
     ecs_entity_t component = ecs_field_id(it, 0);
     ecs_world_t *world = it->real_world;
 
@@ -115,8 +111,7 @@ void flecs_on_singleton_add_remove(ecs_iter_t *it) {
 }
 #endif
 
-static
-void flecs_register_singleton(ecs_iter_t *it) {
+static void flecs_register_singleton(ecs_iter_t *it) {
     flecs_register_flag_for_trait(
         it, EcsSingleton, EcsIdSingleton, 0, 0);
 

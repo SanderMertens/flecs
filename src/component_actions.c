@@ -111,8 +111,7 @@ void flecs_invoke_replace_hook(
     world->stages[0]->defer = defer;
 }
 
-static
-void flecs_on_reparent(
+static void flecs_on_reparent(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_table_t *other_table,
@@ -124,8 +123,7 @@ void flecs_on_reparent(
     flecs_non_fragmenting_childof_reparent(world, table, other_table, row, count);
 }
 
-static
-void flecs_on_unparent(
+static void flecs_on_unparent(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_table_t *other_table,
@@ -211,8 +209,7 @@ bool flecs_sparse_on_add(
     return is_new;
 }
 
-static
-void flecs_sparse_on_remove(
+static void flecs_sparse_on_remove(
     ecs_world_t *world,
     ecs_table_t *table,
     int32_t row,
@@ -231,8 +228,7 @@ void flecs_sparse_on_remove(
     }
 }
 
-static
-bool flecs_dont_fragment_on_remove(
+static bool flecs_dont_fragment_on_remove(
     ecs_world_t *world,
     ecs_table_t *table,
     int32_t row,
@@ -298,8 +294,7 @@ void flecs_entity_remove_non_fragmenting(
     r->row &= ~EcsEntityHasDontFragment;
 }
 
-static
-void flecs_actions_on_add_intern(
+static void flecs_actions_on_add_intern(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_table_t *other_table,
@@ -343,8 +338,7 @@ void flecs_actions_on_add_intern(
     }
 }
 
-static
-void flecs_actions_on_remove_intern(
+static void flecs_actions_on_remove_intern(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_table_t *other_table,
@@ -382,8 +376,7 @@ void flecs_actions_on_remove_intern(
     }
 }
 
-static
-void flecs_actions_on_remove_intern_w_reparent(
+static void flecs_actions_on_remove_intern_w_reparent(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_table_t *other_table,

@@ -194,8 +194,7 @@ ecs_entity_t ecs_run(
 }
 
 /* System deinitialization */
-static
-void flecs_system_fini(ecs_system_t *sys) {
+static void flecs_system_fini(ecs_system_t *sys) {
     if (sys->ctx_free) {
         sys->ctx_free(sys->ctx);
     }
@@ -215,14 +214,12 @@ void flecs_system_fini(ecs_system_t *sys) {
 }
 
 /* ecs_poly_dtor_t-compatible wrapper */
-static
-void flecs_system_poly_fini(void *sys)
+static void flecs_system_poly_fini(void *sys)
 {
     flecs_system_fini(sys);
 }
 
-static
-int flecs_system_init_timer(
+static int flecs_system_init_timer(
     ecs_world_t *world,
     ecs_entity_t entity,
     const ecs_system_desc_t *desc)

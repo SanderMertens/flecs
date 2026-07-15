@@ -21,8 +21,7 @@
 static pthread_mutex_t atomic_mutex = PTHREAD_MUTEX_INITIALIZER;
 #endif
 
-static
-ecs_os_thread_t posix_thread_new(
+static ecs_os_thread_t posix_thread_new(
     ecs_os_thread_callback_t callback, 
     void *arg)
 {
@@ -35,8 +34,7 @@ ecs_os_thread_t posix_thread_new(
     return (ecs_os_thread_t)(uintptr_t)thread;
 }
 
-static
-void* posix_thread_join(
+static void* posix_thread_join(
     ecs_os_thread_t thread)
 {
     void *arg;
@@ -46,14 +44,12 @@ void* posix_thread_join(
     return arg;
 }
 
-static
-ecs_os_thread_id_t posix_thread_self(void)
+static ecs_os_thread_id_t posix_thread_self(void)
 {
     return (ecs_os_thread_id_t)pthread_self();
 }
 
-static
-int32_t posix_ainc(
+static int32_t posix_ainc(
     int32_t *count)
 {
     int value;
@@ -72,8 +68,7 @@ int32_t posix_ainc(
 #endif
 }
 
-static
-int32_t posix_adec(
+static int32_t posix_adec(
     int32_t *count) 
 {
     int32_t value;
@@ -92,8 +87,7 @@ int32_t posix_adec(
 #endif
 }
 
-static
-int64_t posix_lainc(
+static int64_t posix_lainc(
     int64_t *count)
 {
     int64_t value;
@@ -112,8 +106,7 @@ int64_t posix_lainc(
 #endif
 }
 
-static
-int64_t posix_ladec(
+static int64_t posix_ladec(
     int64_t *count) 
 {
     int64_t value;
@@ -132,8 +125,7 @@ int64_t posix_ladec(
 #endif
 }
 
-static
-ecs_os_mutex_t posix_mutex_new(void) {
+static ecs_os_mutex_t posix_mutex_new(void) {
     pthread_mutex_t *mutex = ecs_os_malloc(sizeof(pthread_mutex_t));
     if (pthread_mutex_init(mutex, NULL)) {
         abort();
@@ -141,8 +133,7 @@ ecs_os_mutex_t posix_mutex_new(void) {
     return (ecs_os_mutex_t)(uintptr_t)mutex;
 }
 
-static
-void posix_mutex_free(
+static void posix_mutex_free(
     ecs_os_mutex_t m) 
 {
     pthread_mutex_t *mutex = (pthread_mutex_t*)(intptr_t)m;
@@ -150,8 +141,7 @@ void posix_mutex_free(
     ecs_os_free(mutex);
 }
 
-static
-void posix_mutex_lock(
+static void posix_mutex_lock(
     ecs_os_mutex_t m) 
 {
     pthread_mutex_t *mutex = (pthread_mutex_t*)(intptr_t)m;
@@ -160,8 +150,7 @@ void posix_mutex_lock(
     }
 }
 
-static
-void posix_mutex_unlock(
+static void posix_mutex_unlock(
     ecs_os_mutex_t m) 
 {
     pthread_mutex_t *mutex = (pthread_mutex_t*)(intptr_t)m;
@@ -170,8 +159,7 @@ void posix_mutex_unlock(
     }
 }
 
-static
-ecs_os_cond_t posix_cond_new(void) {
+static ecs_os_cond_t posix_cond_new(void) {
     pthread_cond_t *cond = ecs_os_malloc(sizeof(pthread_cond_t));
     if (pthread_cond_init(cond, NULL)) {
         abort();
@@ -179,8 +167,7 @@ ecs_os_cond_t posix_cond_new(void) {
     return (ecs_os_cond_t)(uintptr_t)cond;
 }
 
-static 
-void posix_cond_free(
+static void posix_cond_free(
     ecs_os_cond_t c) 
 {
     pthread_cond_t *cond = (pthread_cond_t*)(intptr_t)c;
@@ -190,8 +177,7 @@ void posix_cond_free(
     ecs_os_free(cond);
 }
 
-static 
-void posix_cond_signal(
+static void posix_cond_signal(
     ecs_os_cond_t c) 
 {
     pthread_cond_t *cond = (pthread_cond_t*)(intptr_t)c;
@@ -200,8 +186,7 @@ void posix_cond_signal(
     }
 }
 
-static 
-void posix_cond_broadcast(
+static void posix_cond_broadcast(
     ecs_os_cond_t c) 
 {
     pthread_cond_t *cond = (pthread_cond_t*)(intptr_t)c;
@@ -210,8 +195,7 @@ void posix_cond_broadcast(
     }
 }
 
-static 
-void posix_cond_wait(
+static void posix_cond_wait(
     ecs_os_cond_t c, 
     ecs_os_mutex_t m) 
 {
@@ -231,8 +215,7 @@ static uint64_t posix_time_start;
 static uint64_t posix_time_start;
 #endif
 
-static
-void posix_time_setup(void) {
+static void posix_time_setup(void) {
     if (posix_time_initialized) {
         return;
     }
@@ -249,8 +232,7 @@ void posix_time_setup(void) {
     #endif
 }
 
-static
-void posix_sleep(
+static void posix_sleep(
     int32_t sec, 
     int32_t nanosec) 
 {
@@ -269,16 +251,14 @@ void posix_sleep(
     see https://gist.github.com/jspohr/3dc4f00033d79ec5bdaf67bc46c813e3
 */
 #if defined(ECS_TARGET_DARWIN)
-static
-int64_t posix_int64_muldiv(int64_t value, int64_t numer, int64_t denom) {
+static int64_t posix_int64_muldiv(int64_t value, int64_t numer, int64_t denom) {
     int64_t q = value / denom;
     int64_t r = value % denom;
     return q * numer + r * numer / denom;
 }
 #endif
 
-static
-uint64_t posix_time_now(void) {
+static uint64_t posix_time_now(void) {
     ecs_assert(posix_time_initialized != 0, ECS_INTERNAL_ERROR, NULL);
 
     uint64_t now;
@@ -299,13 +279,11 @@ uint64_t posix_time_now(void) {
     return now;
 }
 
-static
-ecs_os_dl_t posix_dlopen(const char *libname) {
+static ecs_os_dl_t posix_dlopen(const char *libname) {
     return (ecs_os_dl_t)(uintptr_t)dlopen(libname, RTLD_NOW);
 }
 
-static
-ecs_os_proc_t posix_dlproc(ecs_os_dl_t lib, const char *procname) {
+static ecs_os_proc_t posix_dlproc(ecs_os_dl_t lib, const char *procname) {
     union {
         void *obj;
         ecs_os_proc_t fn;
@@ -314,8 +292,7 @@ ecs_os_proc_t posix_dlproc(ecs_os_dl_t lib, const char *procname) {
     return u.fn;
 }
 
-static
-void posix_dlclose(ecs_os_dl_t lib) {
+static void posix_dlclose(ecs_os_dl_t lib) {
     dlclose((void*)(uintptr_t)lib);
 }
 

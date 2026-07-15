@@ -1,8 +1,7 @@
 #include <collections.h>
 #include <stdlib.h>
 
-static
-uint64_t* generate_keys(
+static uint64_t* generate_keys(
     int count)
 {
     uint64_t *keys = ecs_os_malloc_n(uint64_t, count);
@@ -12,8 +11,7 @@ uint64_t* generate_keys(
     return keys;
 }
 
-static
-uint64_t* generate_random_keys(
+static uint64_t* generate_random_keys(
     int count)
 {
     uint64_t *keys = ecs_os_malloc_n(uint64_t, count);
@@ -38,8 +36,7 @@ uint64_t* generate_random_keys(
     return keys;
 }
 
-static
-void insert_map(
+static void insert_map(
     ecs_map_t *map,
     uint64_t *keys,
     int count)
@@ -59,8 +56,7 @@ void insert_map(
     }
 }
 
-static
-ecs_map_t populate_map(
+static ecs_map_t populate_map(
     uint64_t *keys,
     int count)
 {
@@ -70,8 +66,7 @@ ecs_map_t populate_map(
     return map;
 }
 
-static
-void free_map(
+static void free_map(
     ecs_map_t *map,
     uint64_t *keys,
     int count)
@@ -93,20 +88,17 @@ void free_map(
 
 static int32_t malloc_count;
 
-static
-void *test_malloc(ecs_size_t size) {
+static void *test_malloc(ecs_size_t size) {
     malloc_count ++;
     return malloc(size);
 }
 
-static
-void *test_calloc(ecs_size_t size) {
+static void *test_calloc(ecs_size_t size) {
     malloc_count ++;
     return calloc(1, size);
 }
 
-static
-void *test_realloc(void *old_ptr, ecs_size_t size) {
+static void *test_realloc(void *old_ptr, ecs_size_t size) {
     malloc_count ++;
     return realloc(old_ptr, size);
 }
@@ -498,15 +490,13 @@ void Map_randomized_after_clear(void) {
     ecs_os_free(keys);
 }
 
-static
-uint64_t hashmap_key_hash(
+static uint64_t hashmap_key_hash(
     const void *ptr)
 {
     return *(const uint64_t*)ptr;
 }
 
-static
-int hashmap_key_compare(
+static int hashmap_key_compare(
     const void *a,
     const void *b)
 {

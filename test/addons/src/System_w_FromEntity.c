@@ -1,7 +1,6 @@
 #include <addons.h>
 
-static
-void Iter(ecs_iter_t *it) {
+static void Iter(ecs_iter_t *it) {
     Mass *m_ptr = ecs_field(it, Mass, 0);
 
     Position *p = NULL;
@@ -78,15 +77,13 @@ static bool dummy_invoked = 0;
 static ecs_entity_t dummy_component = 0;
 static ecs_entity_t dummy_source = 0;
 
-static
-void dummy_reset(void) {
+static void dummy_reset(void) {
     dummy_invoked = false;
     dummy_component = 0;
     dummy_source = 0;
 }
 
-static
-void Dummy(ecs_iter_t *it) {
+static void Dummy(ecs_iter_t *it) {
     dummy_invoked = 1;
     dummy_component = ecs_field_id(it, 0);
     dummy_source = ecs_field_src(it, 0);

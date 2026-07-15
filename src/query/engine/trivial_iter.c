@@ -18,8 +18,7 @@ void flecs_query_trivial_set_ids(
     }
 }
 
-static
-bool flecs_query_trivial_search_init(
+static bool flecs_query_trivial_search_init(
     const ecs_query_run_ctx_t *ctx,
     ecs_query_trivial_ctx_t *op_ctx,
     const ecs_query_t *query,

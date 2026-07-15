@@ -150,8 +150,7 @@ void flecs_dump_backtrace(
 #endif
 #undef HAVE_EXECINFO_H
 
-static
-void flecs_log_msg(
+static void flecs_log_msg(
     int32_t level,
     const char *file, 
     int32_t line,  
@@ -327,8 +326,7 @@ void ecs_os_fatal(
     }
 }
 
-static
-void ecs_os_gettime(ecs_time_t *time) {
+static void ecs_os_gettime(ecs_time_t *time) {
     ecs_assert(ecs_os_has_time() == true, ECS_MISSING_OS_API, NULL);
     
     uint64_t now = ecs_os_now();
@@ -343,8 +341,7 @@ void ecs_os_gettime(ecs_time_t *time) {
 
 #ifdef FLECS_TRACK_OS_ALLOC
 ecs_size_t ecs_os_allocated_bytes = 0;
-static
-void* ecs_os_api_malloc(ecs_size_t size) {
+static void* ecs_os_api_malloc(ecs_size_t size) {
     ecs_os_linc(&ecs_os_api_malloc_count);
     ecs_assert(size > 0, ECS_INVALID_PARAMETER, NULL);
     void *result = malloc((size_t)size + 16);
@@ -353,8 +350,7 @@ void* ecs_os_api_malloc(ecs_size_t size) {
     return ECS_OFFSET(result, 16);
 }
 
-static
-void* ecs_os_api_calloc(ecs_size_t size) {
+static void* ecs_os_api_calloc(ecs_size_t size) {
     ecs_os_linc(&ecs_os_api_calloc_count);
     ecs_assert(size > 0, ECS_INVALID_PARAMETER, NULL);
     void *result = calloc(1, (size_t)size + 16);
@@ -363,8 +359,7 @@ void* ecs_os_api_calloc(ecs_size_t size) {
     return ECS_OFFSET(result, 16);
 }
 
-static
-void* ecs_os_api_realloc(void *ptr, ecs_size_t size) {
+static void* ecs_os_api_realloc(void *ptr, ecs_size_t size) {
     ecs_assert(size > 0, ECS_INVALID_PARAMETER, NULL);
 
     if (ptr) {
@@ -386,8 +381,7 @@ void* ecs_os_api_realloc(void *ptr, ecs_size_t size) {
     return ECS_OFFSET(ptr, 16);
 }
 
-static
-void ecs_os_api_free(void *ptr) {
+static void ecs_os_api_free(void *ptr) {
     if (ptr) {
         ptr = ECS_OFFSET(ptr, -16);
         ecs_size_t size = *(ecs_size_t*)ptr;
@@ -397,22 +391,19 @@ void ecs_os_api_free(void *ptr) {
     free(ptr);
 }
 #else
-static
-void* ecs_os_api_malloc(ecs_size_t size) {
+static void* ecs_os_api_malloc(ecs_size_t size) {
     ecs_os_linc(&ecs_os_api_malloc_count);
     ecs_assert(size > 0, ECS_INVALID_PARAMETER, NULL);
     return malloc((size_t)size);
 }
 
-static
-void* ecs_os_api_calloc(ecs_size_t size) {
+static void* ecs_os_api_calloc(ecs_size_t size) {
     ecs_os_linc(&ecs_os_api_calloc_count);
     ecs_assert(size > 0, ECS_INVALID_PARAMETER, NULL);
     return calloc(1, (size_t)size);
 }
 
-static
-void* ecs_os_api_realloc(void *ptr, ecs_size_t size) {
+static void* ecs_os_api_realloc(void *ptr, ecs_size_t size) {
     ecs_assert(size > 0, ECS_INVALID_PARAMETER, NULL);
 
     if (ptr) {
@@ -425,8 +416,7 @@ void* ecs_os_api_realloc(void *ptr, ecs_size_t size) {
     return realloc(ptr, (size_t)size);
 }
 
-static
-void ecs_os_api_free(void *ptr) {
+static void ecs_os_api_free(void *ptr) {
     if (ptr) {
         ecs_os_linc(&ecs_os_api_free_count);
     }
@@ -434,8 +424,7 @@ void ecs_os_api_free(void *ptr) {
 }
 #endif
 
-static
-char* ecs_os_api_strdup(const char *str) {
+static char* ecs_os_api_strdup(const char *str) {
     if (str) {
         int len = ecs_os_strlen(str);
         char *result = ecs_os_malloc(len + 1);
@@ -447,8 +436,7 @@ char* ecs_os_api_strdup(const char *str) {
     }
 }
 
-static
-FILE* ecs_os_api_fopen(const char *file, const char *mode) {
+static FILE* ecs_os_api_fopen(const char *file, const char *mode) {
 #ifndef ECS_TARGET_POSIX
     FILE *result = NULL;
     fopen_s(&result, file, mode);
@@ -458,13 +446,11 @@ FILE* ecs_os_api_fopen(const char *file, const char *mode) {
 #endif
 }
 
-static
-void ecs_os_api_fclose(FILE *file) {
+static void ecs_os_api_fclose(FILE *file) {
     fclose(file);
 }
 
-static
-size_t ecs_os_api_fread(void *ptr, size_t size, size_t count, FILE *file) {
+static size_t ecs_os_api_fread(void *ptr, size_t size, size_t count, FILE *file) {
     return fread(ptr, size, count, file);
 }
 
@@ -495,8 +481,7 @@ void ecs_os_perf_trace_pop_(
 }
 
 /* Replace dots with underscores */
-static
-char *module_file_base(const char *module, char sep) {
+static char *module_file_base(const char *module, char sep) {
     char *base = ecs_os_strdup(module);
     ecs_size_t i, len = ecs_os_strlen(base);
     for (i = 0; i < len; i ++) {
@@ -508,8 +493,7 @@ char *module_file_base(const char *module, char sep) {
     return base;
 }
 
-static
-char* ecs_os_api_module_to_dl(const char *module) {
+static char* ecs_os_api_module_to_dl(const char *module) {
     ecs_strbuf_t lib = ECS_STRBUF_INIT;
 
     /* Best guess, use module name with underscores + OS library extension */
@@ -533,8 +517,7 @@ char* ecs_os_api_module_to_dl(const char *module) {
     return ecs_strbuf_get(&lib);
 }
 
-static
-char* ecs_os_api_module_to_etc(const char *module) {
+static char* ecs_os_api_module_to_etc(const char *module) {
     ecs_strbuf_t lib = ECS_STRBUF_INIT;
 
     /* Best guess, use module name with dashes + /etc */

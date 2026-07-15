@@ -70,8 +70,7 @@ bool ecs_query_var_is_entity(
 
 #endif // FLECS_QUERY_PLANS
 
-static
-int flecs_query_set_caching_policy(
+static int flecs_query_set_caching_policy(
     ecs_query_impl_t *impl,
     const ecs_query_desc_t *desc)
 {
@@ -189,8 +188,7 @@ int flecs_query_set_caching_policy(
 
 #ifdef FLECS_CACHED_QUERIES
 
-static
-int flecs_query_create_cache(
+static int flecs_query_create_cache(
     ecs_query_impl_t *impl,
     ecs_query_desc_t *desc)
 {
@@ -261,8 +259,7 @@ void flecs_query_copy_arrays(
         ? flecs_calloc_n(a, ecs_component_record_t*, q->field_count) : NULL;
 }
 
-static
-void flecs_query_free_arrays(
+static void flecs_query_free_arrays(
     ecs_query_t *q)
 {
     ecs_allocator_t *a = &flecs_query_impl(q)->stage->allocator;
@@ -272,8 +269,7 @@ void flecs_query_free_arrays(
     flecs_free_n(a, ecs_component_record_t*, q->field_count, flecs_query_impl(q)->cr_cache);
 }
 
-static
-void flecs_query_fini(
+static void flecs_query_fini(
     ecs_query_impl_t *impl)
 {
     ecs_stage_t *stage = impl->stage;
@@ -332,13 +328,11 @@ void flecs_query_fini(
     flecs_bfree(&stage->allocators.query_impl, impl);
 }
 
-static
-void flecs_query_poly_fini(void *ptr) {
+static void flecs_query_poly_fini(void *ptr) {
     flecs_query_fini(ptr);
 }
 
-static
-void flecs_query_add_self_ref(
+static void flecs_query_add_self_ref(
     ecs_query_t *q)
 {
     if (q->entity) {
@@ -367,8 +361,7 @@ void ecs_query_fini(
     }
 }
 
-static
-ecs_query_t* flecs_query_init(
+static ecs_query_t* flecs_query_init(
     ecs_world_t *world,
     const ecs_query_desc_t *const_desc)
 {

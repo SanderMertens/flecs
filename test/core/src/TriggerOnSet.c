@@ -1,12 +1,10 @@
 #include <core.h>
 
-static
-void Trigger(ecs_iter_t *it) {
+static void Trigger(ecs_iter_t *it) {
     probe_iter(it);
 }
 
-static
-void OnSet(ecs_iter_t *it) {
+static void OnSet(ecs_iter_t *it) {
     Position *p = ecs_field(it, Position, 0);
 
     Velocity *v = NULL;
@@ -28,8 +26,7 @@ void OnSet(ecs_iter_t *it) {
 
 static bool dummy_called = false;
 
-static
-void Dummy(ecs_iter_t *it) {
+static void Dummy(ecs_iter_t *it) {
     dummy_called = true;
 }
 
@@ -226,8 +223,7 @@ void TriggerOnSet_clone_w_value(void) {
 static bool add_called;
 static bool set_called;
 
-static
-void OnAdd_check_order(ecs_iter_t *it) {
+static void OnAdd_check_order(ecs_iter_t *it) {
     Position *p = ecs_field(it, Position, 0);
 
     test_assert(!add_called);
@@ -244,8 +240,7 @@ void OnAdd_check_order(ecs_iter_t *it) {
     add_called = true;
 }
 
-static
-void OnSet_check_order(ecs_iter_t *it) {
+static void OnSet_check_order(ecs_iter_t *it) {
     Position *p = ecs_field(it, Position, 0);
 
     probe_iter(it);
@@ -300,8 +295,7 @@ void TriggerOnSet_set_and_add_system(void) {
     ecs_fini(world);
 }
 
-static
-void OnSetShared(ecs_iter_t *it) {
+static void OnSetShared(ecs_iter_t *it) {
     Position *p = ecs_field(it, Position, 0);
 
     Velocity *v = NULL;

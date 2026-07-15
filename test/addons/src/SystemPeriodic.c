@@ -1,7 +1,6 @@
 #include <addons.h>
 
-static
-void Iter(ecs_iter_t *it) {
+static void Iter(ecs_iter_t *it) {
     Position *p = ecs_field(it, Position, 0);
     Velocity *v = NULL;
     Mass *m = NULL;
@@ -1052,23 +1051,19 @@ static int normal_count;
 static int normal_count_2;
 static int normal_count_3;
 
-static
-void OnPeriodSystem(ecs_iter_t *it) {
+static void OnPeriodSystem(ecs_iter_t *it) {
     on_period_count ++;
 }
 
-static
-void NormalSystem(ecs_iter_t *it) {
+static void NormalSystem(ecs_iter_t *it) {
     normal_count ++;
 }
 
-static
-void NormalSystem2(ecs_iter_t *it) {
+static void NormalSystem2(ecs_iter_t *it) {
     normal_count_2 ++;
 }
 
-static
-void NormalSystem3(ecs_iter_t *it) {
+static void NormalSystem3(ecs_iter_t *it) {
     normal_count_3 ++;
 }
 
@@ -1465,8 +1460,7 @@ void SystemPeriodic_match_prefab_and_normal(void) {
     ecs_fini(world);
 }
 
-static
-void TestIsSharedOnNotSet(ecs_iter_t *it) {
+static void TestIsSharedOnNotSet(ecs_iter_t *it) {
     test_assert(ecs_field_is_self(it, 1) != false);
 }
 
@@ -1796,8 +1790,7 @@ void SystemPeriodic_not_from_entity(void) {
     ecs_fini(world);
 }
 
-static
-void TestContext(ecs_iter_t *it) {
+static void TestContext(ecs_iter_t *it) {
     void *world_ctx = ecs_get_ctx(it->world);
     test_assert(world_ctx == it->ctx);
     int32_t *ctx = it->ctx;

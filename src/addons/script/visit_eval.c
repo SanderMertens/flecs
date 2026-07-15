@@ -8,8 +8,7 @@
 #ifdef FLECS_SCRIPT
 #include "script.h"
 
-static
-bool flecs_script_valid_lookup_path(
+static bool flecs_script_valid_lookup_path(
     const char *path)
 {
     int32_t template_nesting = 0;
@@ -56,8 +55,7 @@ void flecs_script_eval_error_(
     ecs_os_free(msg);
 }
 
-static
-ecs_value_t* flecs_script_with_append(
+static ecs_value_t* flecs_script_with_append(
     ecs_allocator_t *a,
     ecs_script_eval_visitor_t *v,
     const ecs_type_info_t *ti)
@@ -78,8 +76,7 @@ ecs_value_t* flecs_script_with_append(
     return ecs_vec_get_t(&v->r->with, ecs_value_t, ecs_vec_count(&v->r->with) - 2);
 }
 
-static
-void flecs_script_with_set_count(
+static void flecs_script_with_set_count(
     ecs_allocator_t *a,
     ecs_script_eval_visitor_t *v,
     int32_t count)
@@ -108,8 +105,7 @@ void flecs_script_with_set_count(
     ecs_vec_set_count_t(a, &v->r->with_type_info, ecs_type_info_t*, count);
 }
 
-static
-int32_t flecs_script_with_count(
+static int32_t flecs_script_with_count(
     ecs_script_eval_visitor_t *v)
 {
     if (ecs_vec_count(&v->r->with)) {
@@ -163,8 +159,7 @@ ecs_script_var_t* flecs_script_find_var(
     }
 }
 
-static
-ecs_entity_t flecs_script_eval_name_expr(
+static ecs_entity_t flecs_script_eval_name_expr(
     ecs_script_eval_visitor_t *v,
     ecs_script_entity_t *node,
     ecs_expr_node_t **expr_ptr,
@@ -366,8 +361,7 @@ ecs_entity_t flecs_script_find_entity_action(
     return 0;
 }
 
-static
-int flecs_script_find_template_entity(
+static int flecs_script_find_template_entity(
     ecs_script_eval_visitor_t *v,
     void *node,
     const char *name)
@@ -640,14 +634,12 @@ int flecs_script_eval_scope(
     return result;
 }
 
-static
-void flecs_script_apply_non_fragmenting_childof(
+static void flecs_script_apply_non_fragmenting_childof(
     ecs_world_t *world,
     ecs_script_entity_t *node,
     bool enabled);
 
-static
-void flecs_script_apply_non_fragmenting_childof_to_scope(
+static void flecs_script_apply_non_fragmenting_childof_to_scope(
     ecs_world_t *world,
     ecs_script_scope_t *scope,
     bool enabled)
@@ -708,8 +700,7 @@ void flecs_script_apply_non_fragmenting_childof_to_scope(
     }
 }
 
-static
-void flecs_script_apply_non_fragmenting_childof(
+static void flecs_script_apply_non_fragmenting_childof(
     ecs_world_t *world,
     ecs_script_entity_t *node,
     bool enabled)
@@ -765,8 +756,7 @@ int flecs_script_apply_annot(
     return 0;
 }
 
-static
-int flecs_script_eval_entity(
+static int flecs_script_eval_entity(
     ecs_script_eval_visitor_t *v,
     ecs_script_entity_t *node)
 {
@@ -863,8 +853,7 @@ int flecs_script_eval_entity(
     return 0;
 }
 
-static
-ecs_entity_t flecs_script_get_src(
+static ecs_entity_t flecs_script_get_src(
     ecs_script_eval_visitor_t *v,
     ecs_entity_t entity,
     ecs_id_t id)
@@ -879,8 +868,7 @@ ecs_entity_t flecs_script_get_src(
     return entity;
 }
 
-static
-bool flecs_script_can_default_ctor(
+static bool flecs_script_can_default_ctor(
     ecs_world_t *world,
     ecs_id_t component)
 {
@@ -897,8 +885,7 @@ bool flecs_script_can_default_ctor(
     return true;
 }
 
-static
-int flecs_script_eval_tag(
+static int flecs_script_eval_tag(
     ecs_script_eval_visitor_t *v,
     ecs_script_tag_t *node)
 {
@@ -956,8 +943,7 @@ int flecs_script_eval_tag(
     return 0;
 }
 
-static
-int flecs_script_eval_component(
+static int flecs_script_eval_component(
     ecs_script_eval_visitor_t *v,
     ecs_script_component_t *node)
 {
@@ -1105,8 +1091,7 @@ int flecs_script_eval_component(
     return 0;
 }
 
-static
-int flecs_script_eval_var_component(
+static int flecs_script_eval_var_component(
     ecs_script_eval_visitor_t *v,
     ecs_script_var_component_t *node)
 {
@@ -1172,8 +1157,7 @@ int flecs_script_eval_var_component(
     return 0;
 }
 
-static
-int flecs_script_eval_with_var(
+static int flecs_script_eval_with_var(
     ecs_script_eval_visitor_t *v,
     ecs_script_var_component_t *node)
 {
@@ -1192,8 +1176,7 @@ int flecs_script_eval_with_var(
     return 0;
 }
 
-static
-int flecs_script_eval_with_tag(
+static int flecs_script_eval_with_tag(
     ecs_script_eval_visitor_t *v,
     ecs_script_tag_t *node)
 {
@@ -1209,8 +1192,7 @@ int flecs_script_eval_with_tag(
     return 0;
 }
 
-static
-int flecs_script_eval_with_component(
+static int flecs_script_eval_with_component(
     ecs_script_eval_visitor_t *v,
     ecs_script_component_t *node)
 {
@@ -1246,8 +1228,7 @@ int flecs_script_eval_with_component(
     return 0;
 }
 
-static
-int flecs_script_eval_with(
+static int flecs_script_eval_with(
     ecs_script_eval_visitor_t *v,
     ecs_script_with_t *node)
 {
@@ -1277,8 +1258,7 @@ error:
     return result;
 }
 
-static
-int flecs_script_eval_using(
+static int flecs_script_eval_using(
     ecs_script_eval_visitor_t *v,
     ecs_script_using_t *node)
 {
@@ -1328,8 +1308,7 @@ int flecs_script_eval_using(
     return 0;
 }
 
-static
-int flecs_script_eval_module(
+static int flecs_script_eval_module(
     ecs_script_eval_visitor_t *v,
     ecs_script_module_t *node)
 {
@@ -1493,8 +1472,7 @@ int flecs_script_eval_const(
     return 0;
 }
 
-static
-int flecs_script_eval_pair_scope(
+static int flecs_script_eval_pair_scope(
     ecs_script_eval_visitor_t *v,
     ecs_script_pair_scope_t *node)
 {
@@ -1571,8 +1549,7 @@ int flecs_script_eval_pair_scope(
     return 0;
 }
 
-static
-int flecs_script_eval_if(
+static int flecs_script_eval_if(
     ecs_script_eval_visitor_t *v,
     ecs_script_if_t *node)
 {
@@ -1599,8 +1576,7 @@ int flecs_script_eval_if(
     return 0;
 }
 
-static
-int flecs_script_eval_for_range(
+static int flecs_script_eval_for_range(
     ecs_script_eval_visitor_t *v,
     ecs_script_for_range_t *node)
 {
@@ -1638,8 +1614,7 @@ int flecs_script_eval_for_range(
     return 0;
 }
 
-static
-bool flecs_script_include_has_parent_dir(
+static bool flecs_script_include_has_parent_dir(
     const char *path)
 {
     const char *p = path;
@@ -1658,8 +1633,7 @@ bool flecs_script_include_has_parent_dir(
     return false;
 }
 
-static
-char* flecs_script_include_resolve(
+static char* flecs_script_include_resolve(
     const char *script_name,
     const char *include_path)
 {
@@ -1686,8 +1660,7 @@ char* flecs_script_include_resolve(
     }
 }
 
-static
-bool flecs_script_include_is_absolute(
+static bool flecs_script_include_is_absolute(
     const char *path)
 {
     if (path[0] == '/' || path[0] == '\\') {
@@ -1699,8 +1672,7 @@ bool flecs_script_include_is_absolute(
     return false;
 }
 
-static
-int flecs_script_eval_include(
+static int flecs_script_eval_include(
     ecs_script_eval_visitor_t *v,
     ecs_script_include_t *node)
 {
@@ -1815,8 +1787,7 @@ done:
     return result;
 }
 
-static
-int flecs_script_eval_annot(
+static int flecs_script_eval_annot(
     ecs_script_eval_visitor_t *v,
     ecs_script_annot_t *node)
 {
@@ -1936,8 +1907,7 @@ void flecs_script_user_function_ctx_free(
     ecs_os_free(uf);
 }
 
-static
-int flecs_script_function_type_check(
+static int flecs_script_function_type_check(
     ecs_script_eval_visitor_t *outer_v,
     ecs_script_function_node_t *node,
     const ecs_function_desc_t *desc,

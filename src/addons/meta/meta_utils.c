@@ -7,8 +7,7 @@
 
 #ifdef FLECS_META
 
-static
-int flecs_meta_ser_scalar(
+static int flecs_meta_ser_scalar(
     const ecs_world_t *world,
     ecs_meta_op_kind_t op_kind,
     const void *ptr, 
@@ -474,8 +473,7 @@ int flecs_meta_find_constant(
     return -1;
 }
 
-static
-int flecs_meta_add_bitmask_constant(
+static int flecs_meta_add_bitmask_constant(
     const ecs_world_t *world,
     ecs_entity_t type,
     ecs_map_t *constants,

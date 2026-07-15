@@ -8,23 +8,20 @@
 
 #ifdef FLECS_JSON
 
-static
-int flecs_json_ser_type_slice(
+static int flecs_json_ser_type_slice(
     const ecs_world_t *world,
     ecs_meta_op_t *ops,
     int32_t op_count,
     const void *base, 
     ecs_strbuf_t *str);
 
-static
-int flecs_json_ser_forward(
+static int flecs_json_ser_forward(
     const ecs_world_t *world,
     ecs_entity_t type,
     const void *base,
     ecs_strbuf_t *str);
 
-static
-int flecs_json_ser_enum(
+static int flecs_json_ser_enum(
     const ecs_world_t *world,
     ecs_meta_op_t *op, 
     const void *base, 
@@ -39,8 +36,7 @@ int flecs_json_ser_enum(
     return 0;
 }
 
-static
-int flecs_json_ser_bitmask(
+static int flecs_json_ser_bitmask(
     const ecs_world_t *world,
     ecs_meta_op_t *op, 
     const void *ptr, 
@@ -59,8 +55,7 @@ typedef struct json_serializer_ctx_t {
     bool is_collection;
 } json_serializer_ctx_t;
 
-static
-int flecs_json_ser_opaque_value(
+static int flecs_json_ser_opaque_value(
     const ecs_serializer_t *ser,
     ecs_entity_t type,
     const void *value)
@@ -72,8 +67,7 @@ int flecs_json_ser_opaque_value(
     return ecs_ptr_to_json_buf(ser->world, type, value, json_ser->str);
 }
 
-static
-int flecs_json_ser_opaque_member(
+static int flecs_json_ser_opaque_member(
     const ecs_serializer_t *ser,
     const char *name)
 {
@@ -82,8 +76,7 @@ int flecs_json_ser_opaque_member(
     return 0;
 }
 
-static
-int flecs_json_ser_opaque(
+static int flecs_json_ser_opaque(
     const ecs_world_t *world,
     ecs_meta_op_t *op, 
     const void *base, 
@@ -124,8 +117,7 @@ int flecs_json_ser_opaque(
     return 0;
 }
 
-static
-int flecs_json_ser_scope(
+static int flecs_json_ser_scope(
     const ecs_world_t *world,
     ecs_meta_op_t *op,
     const void *base,
@@ -138,8 +130,7 @@ int flecs_json_ser_scope(
     return 0;
 }
 
-static
-int flecs_json_ser_array(
+static int flecs_json_ser_array(
     const ecs_world_t *world,
     ecs_meta_op_t *ops,
     const void *array,
@@ -162,8 +153,7 @@ int flecs_json_ser_array(
     return 0;
 }
 
-static
-int flecs_json_ser_map(
+static int flecs_json_ser_map(
     const ecs_world_t *world,
     ecs_meta_op_t *ops,
     const void *base,
@@ -204,8 +194,7 @@ int flecs_json_ser_map(
     return 0;
 }
 
-static
-int flecs_json_ser_value(
+static int flecs_json_ser_value(
     const ecs_world_t *world,
     const void *base,
     ecs_strbuf_t *str)
@@ -240,8 +229,7 @@ int flecs_json_ser_value(
     return 0;
 }
 
-static
-int flecs_json_ser_forward(
+static int flecs_json_ser_forward(
     const ecs_world_t *world,
     ecs_entity_t type,
     const void *base,
@@ -259,8 +247,7 @@ int flecs_json_ser_forward(
 }
 
 /* Iterate over a slice of the type ops array */
-static
-int flecs_json_ser_type_slice(
+static int flecs_json_ser_type_slice(
     const ecs_world_t *world,
     ecs_meta_op_t *ops,
     int32_t op_count,
@@ -441,8 +428,7 @@ int flecs_json_ser_type(
     return flecs_json_ser_type_slice(world, ops, count, base, str);
 }
 
-static
-int flecs_array_to_json_buf_w_type_data(
+static int flecs_array_to_json_buf_w_type_data(
     const ecs_world_t *world,
     const void *ptr,
     int32_t count,

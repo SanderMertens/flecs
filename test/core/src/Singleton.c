@@ -104,8 +104,7 @@ void Singleton_emplace_singleton(void) {
     ecs_fini(world);
 }
 
-static
-void IncSingleton(ecs_iter_t *it) {
+static void IncSingleton(ecs_iter_t *it) {
     Position *p = ecs_field(it, Position, 0);
     p->x ++;
     p->y ++;

@@ -2,26 +2,22 @@
 
 static ecs_id_t NamePair;
 
-static
-ECS_CTOR(Position, ptr, {
+static ECS_CTOR(Position, ptr, {
     ptr->x = 15;
     ptr->y = 25;
 });
 
-static
-void Position_custom_copy(void *dst, const void *src, int32_t count, const ecs_type_info_t *ti) {
+static void Position_custom_copy(void *dst, const void *src, int32_t count, const ecs_type_info_t *ti) {
     test_int(count, 1);
     ((Position*)dst)->x = ((Position*)src)->x + 1;
     ((Position*)dst)->y = ((Position*)src)->y + 1;
 }
 
-static
-ECS_ON_ADD(Position, ptr, {
+static ECS_ON_ADD(Position, ptr, {
     ecs_os_zeromem(ptr);
 });
 
-static
-ECS_ON_SET(Position, ptr, {
+static ECS_ON_SET(Position, ptr, {
     ptr->x ++;
     ptr->y ++;
 });
@@ -30,8 +26,7 @@ void Prefab_setup(void) {
     NamePair = ecs_pair(ecs_id(EcsIdentifier), EcsName);
 }
 
-static
-void Iter(ecs_iter_t *it) {
+static void Iter(ecs_iter_t *it) {
     Mass *m_ptr = ecs_field(it, Mass, 0);
     bool shared = !ecs_field_is_self(it, 0);
 
@@ -590,8 +585,7 @@ void Prefab_get_ptr_prefab(void) {
     ecs_fini(world);
 }
 
-static
-void Prefab_w_shared(ecs_iter_t *it) {
+static void Prefab_w_shared(ecs_iter_t *it) {
     Velocity *v = NULL;
     if (it->field_count >= 2) {
         v = ecs_field(it, Velocity, 1);
@@ -783,8 +777,7 @@ void Prefab_prefab_in_system_expr(void) {
     ecs_fini(world);
 }
 
-static
-void Dummy(ecs_iter_t *it) {
+static void Dummy(ecs_iter_t *it) {
     probe_iter(it);
 }
 
@@ -1066,8 +1059,7 @@ void Prefab_ignore_prefab_parent_component(void) {
     ecs_fini(world);
 }
 
-static
-void Move(ecs_iter_t *it) {
+static void Move(ecs_iter_t *it) {
     Position *p = ecs_field(it, Position, 0);
     Velocity *v = ecs_field(it, Velocity, 1);
 
@@ -1078,8 +1070,7 @@ void Move(ecs_iter_t *it) {
     }
 }
 
-static
-void AddVelocity(ecs_iter_t *it) {
+static void AddVelocity(ecs_iter_t *it) {
     ecs_id_t ecs_id(Velocity) = ecs_field_id(it, 1);
 
     int i;
@@ -2123,8 +2114,7 @@ void Prefab_nested_prefab_in_progress_w_count(void) {
 
 static int on_set_velocity_invoked;
 
-static
-void OnSetVelocity(ecs_iter_t *it) {
+static void OnSetVelocity(ecs_iter_t *it) {
     Velocity *v = ecs_field(it, Velocity, 0);
     ecs_id_t ecs_id(Velocity) = ecs_field_id(it, 0);
 
@@ -2272,8 +2262,7 @@ void Prefab_match_base(void) {
     ecs_fini(world);
 }
 
-static
-void AddMass(ecs_iter_t *it) {
+static void AddMass(ecs_iter_t *it) {
     ecs_id_t ecs_id(Mass) = ecs_field_id(it, 1);
 
     int i;
@@ -2377,8 +2366,7 @@ void Prefab_rematch_twice(void) {
     ecs_fini(world);
 }
 
-static
-void AddPosition(ecs_iter_t *it) {
+static void AddPosition(ecs_iter_t *it) {
     ecs_id_t ecs_id(Position) = ecs_field_id(it, 0);
     
     ecs_entity_t *base = ecs_get_ctx(it->world);
@@ -2434,8 +2422,7 @@ void Prefab_inherit_disabled(void) {
 
 static bool has_cloned = false;
 
-static
-void CloneInOnAdd(ecs_iter_t *it)
+static void CloneInOnAdd(ecs_iter_t *it)
 {
     Position *p = ecs_field(it, Position, 0);
 
@@ -2512,8 +2499,7 @@ void Prefab_override_from_nested(void) {
     ecs_fini(world);
 }
 
-static
-void OnAddEntity(ecs_iter_t *it) {
+static void OnAddEntity(ecs_iter_t *it) {
     ecs_entity_t *e = ecs_field(it, ecs_entity_t, 0);
 
     int i;
@@ -2591,8 +2577,7 @@ void Prefab_create_multiple_nested_w_on_set(void) {
 
 static ecs_entity_t new_instance_1, new_instance_2;
 
-static
-void CreateInstances(ecs_iter_t *it) {
+static void CreateInstances(ecs_iter_t *it) {
     ecs_id_t Prefab = ecs_field_id(it, 0);
 
     new_instance_1 = ecs_new_w_pair(it->world, EcsIsA, Prefab);
@@ -3769,8 +3754,7 @@ void Prefab_fail_on_override_final(void) {
     ecs_fini(world);
 }
 
-static
-int child_count(ecs_world_t *world, ecs_entity_t e) {
+static int child_count(ecs_world_t *world, ecs_entity_t e) {
     int32_t count = 0;
     ecs_iter_t it = ecs_each_pair(world, EcsChildOf, e);
 
@@ -4265,8 +4249,7 @@ void Prefab_override_exclusive_2_lvls(void) {
     ecs_fini(ecs);
 }
 
-static
-ecs_entity_t make_prefabs(ecs_world_t *ecs) {
+static ecs_entity_t make_prefabs(ecs_world_t *ecs) {
     ecs_entity_t root = ecs_new_w_id(ecs, EcsPrefab);
     ecs_entity_t parent = ecs_new_w_pair(ecs, EcsChildOf, root);
     ecs_new_w_pair(ecs, EcsChildOf, parent);

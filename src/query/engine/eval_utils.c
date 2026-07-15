@@ -358,8 +358,7 @@ void flecs_query_it_set_tr(
             !(it->up_fields & (1llu << field_index))) ? tr->column : -1;
 }
 
-static
-ecs_id_t flecs_query_it_set_id(
+static ecs_id_t flecs_query_it_set_id(
     ecs_iter_t *it,
     ecs_table_t *table,
     int32_t field_index,
