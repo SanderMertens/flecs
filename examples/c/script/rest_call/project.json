@@ -1,0 +1,10 @@
+{
+    "id": "rest_call",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "public": false
+    }
+}
