@@ -39,8 +39,7 @@ static ECS_MOVE(EcsStruct, dst, src, {
 
 static ECS_DTOR(EcsStruct, ptr, { flecs_struct_dtor(ptr); })
 
-static
-void flecs_set_struct_member(
+static void flecs_set_struct_member(
     ecs_member_t *member,
     ecs_entity_t entity,
     ecs_member_t *m,
@@ -60,8 +59,7 @@ void flecs_set_struct_member(
     member->warning_range = m->warning_range;
 }
 
-static
-int flecs_add_member_to_struct(
+static int flecs_add_member_to_struct(
     ecs_world_t *world,
     ecs_entity_t struct_type,
     ecs_entity_t member_entity,
@@ -294,8 +292,7 @@ int flecs_add_member_to_struct(
     return 0;
 }
 
-static
-void flecs_set_member_from_component(
+static void flecs_set_member_from_component(
     ecs_world_t *world,
     ecs_entity_t e,
     EcsMember *member,
@@ -324,8 +321,7 @@ void flecs_set_member_from_component(
     flecs_add_member_to_struct(world, struct_type, e, &m);
 }
 
-static
-void flecs_set_member(ecs_iter_t *it) {
+static void flecs_set_member(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
     EcsMember *member = ecs_field(it, EcsMember, 0);
     EcsMemberRanges *ranges = ecs_table_get_id(world, it->table, 
@@ -338,8 +334,7 @@ void flecs_set_member(ecs_iter_t *it) {
     }
 }
 
-static
-void flecs_set_member_ranges(ecs_iter_t *it) {
+static void flecs_set_member_ranges(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
     EcsMemberRanges *ranges = ecs_field(it, EcsMemberRanges, 0);
     EcsMember *member = ecs_table_get_id(world, it->table, 
@@ -355,8 +350,7 @@ void flecs_set_member_ranges(ecs_iter_t *it) {
     }
 }
 
-static
-bool flecs_member_range_overlaps(
+static bool flecs_member_range_overlaps(
     const ecs_member_value_range_t *range,
     const ecs_member_value_range_t *with)
 {
@@ -377,8 +371,7 @@ bool flecs_member_range_overlaps(
     return false;
 }
 
-static
-bool flecs_type_is_number(
+static bool flecs_type_is_number(
     ecs_world_t *world,
     ecs_entity_t type)
 {
@@ -414,8 +407,7 @@ bool flecs_type_is_number(
     }
 }
 
-static
-int flecs_member_validate_ranges(
+static int flecs_member_validate_ranges(
     ecs_world_t *world,
     ecs_entity_t type,
     const ecs_member_t *member,
@@ -488,8 +480,7 @@ error:
     return -1;
 }
 
-static
-void flecs_struct_create_member_entity(
+static void flecs_struct_create_member_entity(
     ecs_world_t *world,
     ecs_entity_t type,
     const ecs_member_t *member,

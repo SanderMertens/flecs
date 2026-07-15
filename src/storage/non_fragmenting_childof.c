@@ -5,8 +5,7 @@
 
 #include "../private_api.h"
 
-static
-void flecs_add_non_fragmenting_child_to_table(
+static void flecs_add_non_fragmenting_child_to_table(
     ecs_world_t *world,
     ecs_component_record_t *cr,
     ecs_entity_t entity,
@@ -37,8 +36,7 @@ void flecs_add_non_fragmenting_child_to_table(
     world->non_fragmenting_child_count ++;
 }
 
-static
-void flecs_remove_non_fragmenting_child_from_table(
+static void flecs_remove_non_fragmenting_child_from_table(
     ecs_world_t *world,
     ecs_component_record_t *cr,
     const ecs_table_t *table)
@@ -109,8 +107,7 @@ error:
     return -1;
 }
 
-static
-ecs_component_record_t* flecs_add_non_fragmenting_child(
+static ecs_component_record_t* flecs_add_non_fragmenting_child(
     ecs_world_t *world,
     ecs_entity_t parent,
     ecs_entity_t entity)
@@ -126,8 +123,7 @@ ecs_component_record_t* flecs_add_non_fragmenting_child(
     return cr;
 }
 
-static
-ecs_component_record_t* flecs_remove_non_fragmenting_child(
+static ecs_component_record_t* flecs_remove_non_fragmenting_child(
     ecs_world_t *world,
     ecs_entity_t parent,
     ecs_entity_t entity)
@@ -156,8 +152,7 @@ ecs_component_record_t* flecs_remove_non_fragmenting_child(
     return cr;
 }
 
-static
-void flecs_on_reparent_update_name(
+static void flecs_on_reparent_update_name(
     ecs_world_t *world,
     ecs_entity_t e,
     EcsIdentifier *name,
@@ -189,8 +184,7 @@ void flecs_on_reparent_update_name(
     }
 }
 
-static
-void flecs_on_replace_parent(ecs_iter_t *it) {
+static void flecs_on_replace_parent(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
     EcsParent *old = ecs_field(it, EcsParent, 0);
     EcsParent *new = ecs_field(it, EcsParent, 1);

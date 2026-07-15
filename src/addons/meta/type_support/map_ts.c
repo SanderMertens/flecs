@@ -7,8 +7,7 @@
 
 #ifdef FLECS_META
 
-static
-bool flecs_map_valid_key_type(
+static bool flecs_map_valid_key_type(
     ecs_world_t *world,
     ecs_entity_t key_type)
 {
@@ -48,8 +47,7 @@ bool flecs_map_valid_key_type(
     }
 }
 
-static
-void flecs_set_map(ecs_iter_t *it) {
+static void flecs_set_map(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
     EcsMap *map = ecs_field(it, EcsMap, 0);
 

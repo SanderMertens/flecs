@@ -15,8 +15,7 @@ void Fuzzing_setup(void) {
     }
 }
 
-static
-void fuzz(const char *expr) {
+static void fuzz(const char *expr) {
     ecs_world_t *world = ecs_mini();
 
     ecs_log_set_level(-4);

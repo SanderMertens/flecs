@@ -8,8 +8,7 @@
 #ifdef FLECS_SCRIPT
 #include "../script.h"
 
-static
-const char* flecs_expr_format_skip_space(
+static const char* flecs_expr_format_skip_space(
     const char *pos)
 {
     while (isspace(pos[0])) {
@@ -18,15 +17,13 @@ const char* flecs_expr_format_skip_space(
     return pos;
 }
 
-static
-bool flecs_expr_format_is_alignment(
+static bool flecs_expr_format_is_alignment(
     char ch)
 {
     return ch == '<' || ch == '^' || ch == '>';
 }
 
-static
-bool flecs_expr_format_identifier_exists(
+static bool flecs_expr_format_identifier_exists(
     ecs_parser_t *parser,
     const ecs_expr_eval_desc_t *desc,
     const char *start,
@@ -53,8 +50,7 @@ bool flecs_expr_format_identifier_exists(
     return result;
 }
 
-static
-void flecs_expr_format_parse_error(
+static void flecs_expr_format_parse_error(
     ecs_parser_t *parser,
     const char *message)
 {
@@ -220,8 +216,7 @@ const char* flecs_expr_format_parse(
     return pos;
 }
 
-static
-void flecs_expr_format_append_fill(
+static void flecs_expr_format_append_fill(
     ecs_strbuf_t *buf,
     char fill,
     int32_t count)

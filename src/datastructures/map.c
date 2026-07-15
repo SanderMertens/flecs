@@ -16,8 +16,7 @@
 #define ECS_MAP_FREE(a, T, ptr) a ? flecs_free_t(a, T, ptr) : ecs_os_free(ptr)
 #define ECS_MAP_FREE_N(a, T, n, ptr) a ? flecs_free_n(a, T, n, ptr) : ecs_os_free(ptr)
 
-static
-uint8_t flecs_log2(uint32_t v) {
+static uint8_t flecs_log2(uint32_t v) {
     static const uint8_t log2table[32] = 
         {0, 9,  1,  10, 13, 21, 2,  29, 11, 14, 16, 18, 22, 25, 3, 30,
          8, 12, 20, 28, 15, 17, 24, 7,  19, 27, 23, 6,  26, 5,  4, 31};
@@ -31,24 +30,21 @@ uint8_t flecs_log2(uint32_t v) {
 }
 
 /* Get bucket count for number of elements */
-static
-int32_t flecs_map_get_bucket_count(
+static int32_t flecs_map_get_bucket_count(
     int32_t count)
 {
     return flecs_next_pow_of_2((int32_t)(count * ECS_LOAD_FACTOR * 0.1));
 }
 
 /* Get bucket shift amount for a given bucket count */
-static
-uint8_t flecs_map_get_bucket_shift(
+static uint8_t flecs_map_get_bucket_shift(
     int32_t bucket_count)
 {
     return (uint8_t)(64u - flecs_log2((uint32_t)bucket_count));
 }
 
 /* Get bucket index for provided map key */
-static
-int32_t flecs_map_get_bucket_index(
+static int32_t flecs_map_get_bucket_index(
     uint16_t bucket_shift,
     ecs_map_key_t key) 
 {
@@ -57,8 +53,7 @@ int32_t flecs_map_get_bucket_index(
 }
 
 /* Get bucket for key */
-static
-ecs_bucket_t* flecs_map_get_bucket(
+static ecs_bucket_t* flecs_map_get_bucket(
     const ecs_map_t *map,
     ecs_map_key_t key)
 {
@@ -69,8 +64,7 @@ ecs_bucket_t* flecs_map_get_bucket(
 }
 
 /* Add element to bucket */
-static
-ecs_map_val_t* flecs_map_bucket_add(
+static ecs_map_val_t* flecs_map_bucket_add(
     ecs_allocator_t *a,
     ecs_bucket_t *bucket,
     ecs_map_key_t key)
@@ -83,8 +77,7 @@ ecs_map_val_t* flecs_map_bucket_add(
 }
 
 /* Remove element from bucket */
-static
-ecs_map_val_t flecs_map_bucket_remove(
+static ecs_map_val_t flecs_map_bucket_remove(
     ecs_map_t *map,
     ecs_bucket_t *bucket,
     ecs_map_key_t key)
@@ -108,8 +101,7 @@ ecs_map_val_t flecs_map_bucket_remove(
 }
 
 /* Free contents of bucket */
-static
-void flecs_map_bucket_clear(
+static void flecs_map_bucket_clear(
     ecs_allocator_t *allocator,
     ecs_bucket_t *bucket)
 {
@@ -122,8 +114,7 @@ void flecs_map_bucket_clear(
 }
 
 /* Get payload pointer for key from bucket */
-static
-ecs_map_val_t* flecs_map_bucket_get(
+static ecs_map_val_t* flecs_map_bucket_get(
     ecs_bucket_t *bucket,
     ecs_map_key_t key)
 {
@@ -137,8 +128,7 @@ ecs_map_val_t* flecs_map_bucket_get(
 }
 
 /* Grow number of buckets */
-static
-void flecs_map_rehash(
+static void flecs_map_rehash(
     ecs_map_t *map,
     int32_t count)
 {

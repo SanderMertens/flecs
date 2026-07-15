@@ -8,8 +8,7 @@
 #ifdef FLECS_SCRIPT
 #include "script.h"
 
-static
-int flecs_script_visit_push_checked(
+static int flecs_script_visit_push_checked(
     ecs_script_visit_t *v,
     ecs_script_node_t *node)
 {

@@ -12,8 +12,7 @@ typedef struct ReproObserverCtx {
 
 static ReproObserverCtx repro_observer_ctx;
 
-static
-void ReproDummyObserver(ecs_iter_t *it) {
+static void ReproDummyObserver(ecs_iter_t *it) {
     test_int(it->count, 1);
 
     Position *child_position = ecs_field(it, Position, 0);
@@ -4572,8 +4571,7 @@ void NonFragmentingChildOf_delete_tree_2(void) {
     ecs_fini(world);
 }
 
-static
-void on_remove_rel(ecs_iter_t* it)
+static void on_remove_rel(ecs_iter_t* it)
 {
     const ecs_id_t id = it->ids[0];
     for (int i = 0; i < it->count; i++) {
@@ -6823,13 +6821,11 @@ void NonFragmentingChildOf_instantiate_tree_after_add_child(void) {
 
 static int childof_w_wildcard_event_observer_invoked = 0;
 
-static
-void ChildOfPairObserver(ecs_iter_t *it) {
+static void ChildOfPairObserver(ecs_iter_t *it) {
     childof_w_wildcard_event_observer_invoked += it->count;
 }
 
-static
-void DummyWildcardEventObserver(ecs_iter_t *it) {
+static void DummyWildcardEventObserver(ecs_iter_t *it) {
     (void)it;
 }
 
@@ -6861,8 +6857,7 @@ void NonFragmentingChildOf_set_parent_w_childof_observer_and_wildcard_event_obse
     ecs_fini(world);
 }
 
-static
-void prefab_get_target_abort(void) {
+static void prefab_get_target_abort(void) {
     test_int(ecs_log_last_error(), ECS_INVALID_OPERATION);
     test_abort();
 }

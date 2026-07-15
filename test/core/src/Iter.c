@@ -1462,8 +1462,7 @@ void Iter_paged_iter_w_singleton_component_instanced(void) {
     ecs_fini(world);
 }
 
-static
-void Iter(ecs_world_t *world, ecs_query_t *q, int32_t offset, int32_t limit) {
+static void Iter(ecs_world_t *world, ecs_query_t *q, int32_t offset, int32_t limit) {
     ecs_iter_t it = ecs_query_iter(world, q);
     ecs_iter_t pit = ecs_page_iter(&it, offset, limit);
     while (ecs_page_next(&pit)) {
@@ -2175,8 +2174,7 @@ typedef struct Param {
 
 static ECS_QUERY_DECLARE(qTestSubset);
 
-static
-void TestSubset(ecs_world_t *world, ecs_query_t *query, int32_t offset, 
+static void TestSubset(ecs_world_t *world, ecs_query_t *query, int32_t offset,
     int32_t limit, Param *param) 
 {
     ecs_iter_t it = ecs_query_iter(world, query);
@@ -2190,8 +2188,7 @@ void TestSubset(ecs_world_t *world, ecs_query_t *query, int32_t offset,
     }
 }
 
-static
-void TestAll(ecs_world_t *world, ecs_query_t *query) {
+static void TestAll(ecs_world_t *world, ecs_query_t *query) {
     ecs_iter_t it = ecs_query_iter(world, query);
     while (ecs_query_next(&it)) {
         Position *p = ecs_field(&it, Position, 0);

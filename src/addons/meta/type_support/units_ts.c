@@ -67,8 +67,7 @@ static ECS_MOVE(EcsUnitPrefix, dst, src, {
 
 static ECS_DTOR(EcsUnitPrefix, ptr, { flecs_unit_prefix_dtor(ptr); })
 
-static
-bool flecs_unit_validate(
+static bool flecs_unit_validate(
     ecs_world_t *world,
     ecs_entity_t t,
     EcsUnit *data)
@@ -190,8 +189,7 @@ error:
     return false;
 }
 
-static
-void flecs_set_unit(ecs_iter_t *it) {
+static void flecs_set_unit(ecs_iter_t *it) {
     EcsUnit *u = ecs_field(it, EcsUnit, 0);
 
     ecs_world_t *world = it->world;
@@ -203,8 +201,7 @@ void flecs_set_unit(ecs_iter_t *it) {
     }
 }
 
-static
-void flecs_unit_quantity_monitor(ecs_iter_t *it) {
+static void flecs_unit_quantity_monitor(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
 
     int i, count = it->count;

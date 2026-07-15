@@ -9,8 +9,7 @@
 
 #include "../private_api.h"
 
-static
-int32_t flecs_hashmap_find_key(
+static int32_t flecs_hashmap_find_key(
     const ecs_hashmap_t *map,
     ecs_vec_t *keys,
     ecs_size_t key_size, 
@@ -27,8 +26,7 @@ int32_t flecs_hashmap_find_key(
     return -1;
 }
 
-static
-ecs_hm_bucket_t* flecs_hm_bucket_new(
+static ecs_hm_bucket_t* flecs_hm_bucket_new(
     ecs_hashmap_t *map)
 {
     if (map->impl.allocator) {
@@ -38,8 +36,7 @@ ecs_hm_bucket_t* flecs_hm_bucket_new(
     }
 }
 
-static
-void flecs_hm_bucket_free(
+static void flecs_hm_bucket_free(
     ecs_hashmap_t *map,
     ecs_hm_bucket_t *bucket)
 {

@@ -2297,8 +2297,7 @@ void Entity_get_version_after_reuse(void) {
     ecs_fini(world);
 }
 
-static
-void Observer(ecs_iter_t *it) {
+static void Observer(ecs_iter_t *it) {
     int *invoked = it->ctx;
     (*invoked) ++;
 }
@@ -2374,8 +2373,7 @@ void Entity_commit_w_on_remove(void) {
 
 static ECS_TAG_DECLARE(Foo);
 
-static
-void Observer_w_cmd(ecs_iter_t *it) {
+static void Observer_w_cmd(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
 
     int *invoked = it->ctx;

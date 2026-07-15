@@ -10,8 +10,7 @@
 
 #include "private_api.h"
 
-static
-ecs_entity_t flecs_get_observer_event(
+static ecs_entity_t flecs_get_observer_event(
     ecs_term_t *term,
     ecs_entity_t event)
 {
@@ -27,8 +26,7 @@ ecs_entity_t flecs_get_observer_event(
     return event;
 }
 
-static
-ecs_flags32_t flecs_id_flag_for_event(
+static ecs_flags32_t flecs_id_flag_for_event(
     ecs_entity_t e)
 {
     if (e == EcsOnAdd) {
@@ -53,8 +51,7 @@ ecs_flags32_t flecs_id_flag_for_event(
     return 0;
 }
 
-static
-void flecs_inc_observer_count(
+static void flecs_inc_observer_count(
     ecs_world_t *world,
     ecs_entity_t event,
     ecs_event_record_t *evt,
@@ -126,8 +123,7 @@ void flecs_inc_observer_count(
     }
 }
 
-static
-ecs_id_t flecs_observer_id(
+static ecs_id_t flecs_observer_id(
     ecs_id_t id)
 {
     if (ECS_IS_PAIR(id)) {
@@ -142,8 +138,7 @@ ecs_id_t flecs_observer_id(
     return id;
 }
 
-static
-void flecs_register_observer_for_event_and_id(
+static void flecs_register_observer_for_event_and_id(
     ecs_world_t *world,
     ecs_observable_t *observable,
     ecs_observer_t *o,
@@ -175,8 +170,7 @@ void flecs_register_observer_for_event_and_id(
     }
 }
 
-static
-void flecs_register_observer_for_id(
+static void flecs_register_observer_for_id(
     ecs_world_t *world,
     ecs_observable_t *observable,
     ecs_observer_t *o,
@@ -205,8 +199,7 @@ void flecs_register_observer_for_id(
     }
 }
 
-static
-void flecs_uni_observer_register(
+static void flecs_uni_observer_register(
     ecs_world_t *world,
     ecs_observable_t *observable,
     ecs_observer_t *o)
@@ -241,8 +234,7 @@ void flecs_uni_observer_register(
     }
 }
 
-static
-void flecs_unregister_observer_for_id(
+static void flecs_unregister_observer_for_id(
     ecs_world_t *world,
     ecs_observable_t *observable,
     ecs_observer_t *o,
@@ -289,8 +281,7 @@ void flecs_unregister_observer_for_id(
     }
 }
 
-static
-void flecs_unregister_observer(
+static void flecs_unregister_observer(
     ecs_world_t *world,
     ecs_observable_t *observable,
     ecs_observer_t *o)
@@ -329,8 +320,7 @@ void flecs_unregister_observer(
     }
 }
 
-static
-bool flecs_ignore_observer(
+static bool flecs_ignore_observer(
     ecs_observer_t *o,
     ecs_table_t *table)
 {
@@ -353,16 +343,14 @@ bool flecs_ignore_observer(
     return result;
 }
 
-static
-void flecs_default_uni_observer_run_callback(ecs_iter_t *it) {
+static void flecs_default_uni_observer_run_callback(ecs_iter_t *it) {
     ecs_observer_t *o = it->ctx;
     it->ctx = o->ctx;
     it->callback = o->callback;
     o->callback(it);
 }
 
-static
-bool flecs_observer_query_has_range(
+static bool flecs_observer_query_has_range(
     const ecs_query_t *query,
     ecs_table_range_t *range,
     const ecs_term_t *term,
@@ -399,8 +387,7 @@ bool flecs_observer_query_has_range(
 #endif
 }
 
-static
-void flecs_observer_invoke(
+static void flecs_observer_invoke(
     ecs_observer_t *o,
     ecs_iter_t *it)
 {
@@ -421,8 +408,7 @@ void flecs_observer_invoke(
     }
 }
 
-static
-void flecs_uni_observer_invoke(
+static void flecs_uni_observer_invoke(
     ecs_world_t *world,
     ecs_observer_t *o,
     ecs_iter_t *it,
@@ -568,8 +554,7 @@ void flecs_observers_invoke(
     }
 }
 
-static
-void flecs_multi_observer_invoke(
+static void flecs_multi_observer_invoke(
     ecs_iter_t *it) 
 {
     ecs_observer_t *o = it->ctx;
@@ -717,8 +702,7 @@ done:
     return;
 }
 
-static
-void flecs_multi_observer_invoke_no_query(
+static void flecs_multi_observer_invoke_no_query(
     ecs_iter_t *it) 
 {
     ecs_observer_t *o = it->ctx;
@@ -764,8 +748,7 @@ bool flecs_default_next_callback(ecs_iter_t *it) {
 }
 
 /* Run action for children of multi observer */
-static
-void flecs_multi_observer_builtin_run(ecs_iter_t *it) {
+static void flecs_multi_observer_builtin_run(ecs_iter_t *it) {
     ecs_observer_t *o = it->ctx;
     ecs_run_action_t run = o->run;
 
@@ -783,8 +766,7 @@ void flecs_multi_observer_builtin_run(ecs_iter_t *it) {
     flecs_multi_observer_invoke(it);
 }
 
-static
-void flecs_observer_yield_existing(
+static void flecs_observer_yield_existing(
     ecs_world_t *world,
     ecs_observer_t *o,
     bool yield_on_remove)
@@ -841,8 +823,7 @@ void flecs_observer_yield_existing(
     ecs_defer_end(world);
 }
 
-static
-int flecs_uni_observer_init(
+static int flecs_uni_observer_init(
     ecs_world_t *world,
     ecs_observer_t *o,
     ecs_id_t component_id,
@@ -883,8 +864,7 @@ int flecs_uni_observer_init(
     return 0;
 }
 
-static
-int flecs_observer_add_child(
+static int flecs_observer_add_child(
     ecs_world_t *world,
     ecs_observer_t *o,
     const ecs_observer_desc_t *child_desc)
@@ -905,8 +885,7 @@ int flecs_observer_add_child(
     return 0;
 }
 
-static
-int flecs_multi_observer_init(
+static int flecs_multi_observer_init(
     ecs_world_t *world,
     ecs_observer_t *o,
     const ecs_observer_desc_t *desc)
@@ -1105,15 +1084,13 @@ error:
     return -1;
 }
 
-static
-void flecs_observer_poly_fini(void *ptr) {
+static void flecs_observer_poly_fini(void *ptr) {
     flecs_observer_fini(ptr);
 }
 
 /* Small helper that allows simple observers which are rejected by the regular
  * query fast path to be created without relying on query plans. */
-static
-bool flecs_observer_finalize_simple_special(
+static bool flecs_observer_finalize_simple_special(
     ecs_world_t *world,
     ecs_query_t *q,
     const ecs_query_desc_t *desc)

@@ -7,8 +7,7 @@
 
 #ifdef FLECS_META
 
-static
-void flecs_set_opaque_type(ecs_iter_t *it) {
+static void flecs_set_opaque_type(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
     EcsOpaque *serialize = ecs_field(it, EcsOpaque, 0);
 

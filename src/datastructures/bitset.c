@@ -8,8 +8,7 @@
 
 #include "../private_api.h"
 
-static
-void flecs_bitset_ensure_size(
+static void flecs_bitset_ensure_size(
     ecs_bitset_t *bs,
     ecs_size_t size)
 {

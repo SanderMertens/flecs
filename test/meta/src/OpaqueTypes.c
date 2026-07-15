@@ -49,8 +49,7 @@ typedef struct {
 } Struct_w_IntVec;
 
 // Custom serializer functions
-static
-int Int32_serialize(const ecs_serializer_t *ser, const void *ptr) {
+static int Int32_serialize(const ecs_serializer_t *ser, const void *ptr) {
     test_assert(ser != NULL);
     test_assert(ptr != NULL);
     int result = ser->value(ser, ecs_id(ecs_i32_t), ptr);
@@ -59,8 +58,7 @@ int Int32_serialize(const ecs_serializer_t *ser, const void *ptr) {
     return result;
 }
 
-static
-int String_serialize(const ecs_serializer_t *ser, const void *ptr) {
+static int String_serialize(const ecs_serializer_t *ser, const void *ptr) {
     test_assert(ser != NULL);
     test_assert(ptr != NULL);
     int result = ser->value(ser, ecs_id(ecs_string_t), ptr);
@@ -69,8 +67,7 @@ int String_serialize(const ecs_serializer_t *ser, const void *ptr) {
     return result;
 }
 
-static
-int IntVec_serialize(const ecs_serializer_t *ser, const void *ptr) {
+static int IntVec_serialize(const ecs_serializer_t *ser, const void *ptr) {
     test_assert(ser != NULL);
     test_assert(ptr != NULL);
 
@@ -84,20 +81,17 @@ int IntVec_serialize(const ecs_serializer_t *ser, const void *ptr) {
     return 0;
 }
 
-static 
-void* IntArray_ensure(void *ptr, size_t index) {
+static void* IntArray_ensure(void *ptr, size_t index) {
     IntArray *data = ptr;
     return &data->array[index];
 }
 
-static 
-size_t IntVec_count(const void *ptr) {
+static size_t IntVec_count(const void *ptr) {
     const IntVec *data = ptr;
     return data->count;
 }
 
-static 
-void* IntVec_ensure(void *ptr, size_t index) {
+static void* IntVec_ensure(void *ptr, size_t index) {
     IntVec *data = ptr;
     if (data->count <= index) {
         data->count = index + 1;
@@ -106,8 +100,7 @@ void* IntVec_ensure(void *ptr, size_t index) {
     return &data->array[index];
 }
 
-static 
-void IntVec_resize(void *ptr, size_t size) {
+static void IntVec_resize(void *ptr, size_t size) {
     IntVec *data = ptr;
     if (data->count != size) {
         data->count = size;
@@ -120,8 +113,7 @@ void IntVec_resize(void *ptr, size_t size) {
     }
 }
 
-static
-int StringVec_serialize(const ecs_serializer_t *ser, const void *ptr) {
+static int StringVec_serialize(const ecs_serializer_t *ser, const void *ptr) {
     test_assert(ser != NULL);
     test_assert(ptr != NULL);
 
@@ -135,14 +127,12 @@ int StringVec_serialize(const ecs_serializer_t *ser, const void *ptr) {
     return 0;
 }
 
-static
-size_t StringVec_count(const void *ptr) {
+static size_t StringVec_count(const void *ptr) {
     const StringVec *data = ptr;
     return data->count;
 }
 
-static 
-void* StringVec_ensure(void *ptr, size_t index) {
+static void* StringVec_ensure(void *ptr, size_t index) {
     StringVec *data = ptr;
     if (data->count <= index) {
         data->count = index + 1;
@@ -152,8 +142,7 @@ void* StringVec_ensure(void *ptr, size_t index) {
     return &data->array[index];
 }
 
-static 
-void StringVec_resize(void *ptr, size_t size) {
+static void StringVec_resize(void *ptr, size_t size) {
     StringVec *data = ptr;
     if (data->count != size) {
         data->count = size;
@@ -166,14 +155,12 @@ void StringVec_resize(void *ptr, size_t size) {
     }
 }
 
-static
-size_t StructVec_count(const void *ptr) {
+static size_t StructVec_count(const void *ptr) {
     const StructVec *data = ptr;
     return data->count;
 }
 
-static 
-void* StructVec_ensure(void *ptr, size_t index) {
+static void* StructVec_ensure(void *ptr, size_t index) {
     StructVec *data = ptr;
     if (data->count <= index) {
         data->count = index + 1;
@@ -182,8 +169,7 @@ void* StructVec_ensure(void *ptr, size_t index) {
     return &data->array[index];
 }
 
-static 
-void StructVec_resize(void *ptr, size_t size) {
+static void StructVec_resize(void *ptr, size_t size) {
     StructVec *data = ptr;
     if (data->count != size) {
         data->count = size;
@@ -196,8 +182,7 @@ void StructVec_resize(void *ptr, size_t size) {
     }
 }
 
-static
-void* OpaqueStruct_member(void *ptr, const char *member) {
+static void* OpaqueStruct_member(void *ptr, const char *member) {
     OpaqueStruct *data = ptr;
     if (!strcmp(member, "x")) {
         return &data->x;

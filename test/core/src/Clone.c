@@ -270,29 +270,25 @@ void Clone_3_component_w_value(void) {
 }
 
 static int ctor_position = 0;
-static
-ECS_CTOR(Position, ptr, {
+static ECS_CTOR(Position, ptr, {
     ptr->x = 7;
     ptr->y = 9;
     ctor_position ++;
 })
 
 static int dtor_position = 0;
-static
-ECS_DTOR(Position, ptr, {
+static ECS_DTOR(Position, ptr, {
     dtor_position ++;
 })
 
 static int copy_position = 0;
-static
-ECS_COPY(Position, dst, src, {
+static ECS_COPY(Position, dst, src, {
     copy_position ++;
     *dst = *src;
 })
 
 static int move_position = 0;
-static
-ECS_MOVE(Position, dst, src, {
+static ECS_MOVE(Position, dst, src, {
     move_position ++;
     *dst = *src;
 })

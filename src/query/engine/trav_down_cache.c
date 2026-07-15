@@ -7,8 +7,7 @@
 
 #ifdef FLECS_QUERY_PLANS
 
-static
-void flecs_trav_entity_down_isa(
+static void flecs_trav_entity_down_isa(
     ecs_world_t *world,
     ecs_allocator_t *a,
     ecs_trav_up_cache_t *cache,
@@ -19,8 +18,7 @@ void flecs_trav_entity_down_isa(
     bool self,
     bool empty);
 
-static
-void flecs_trav_entity_down(
+static void flecs_trav_entity_down(
     ecs_world_t *world,
     ecs_allocator_t *a,
     ecs_trav_up_cache_t *cache,
@@ -31,8 +29,7 @@ void flecs_trav_entity_down(
     bool self,
     bool empty);
 
-static
-ecs_trav_down_t* flecs_trav_table_down(
+static ecs_trav_down_t* flecs_trav_table_down(
     ecs_world_t *world,
     ecs_allocator_t *a,
     ecs_trav_up_cache_t *cache,
@@ -77,8 +74,7 @@ ecs_trav_down_t* flecs_trav_table_down(
     return dst;
 }
 
-static
-void flecs_trav_entity_down_isa(
+static void flecs_trav_entity_down_isa(
     ecs_world_t *world,
     ecs_allocator_t *a,
     ecs_trav_up_cache_t *cache,
@@ -139,8 +135,7 @@ void flecs_trav_entity_down_isa(
     }
 }
 
-static
-void flecs_trav_entity_down_iter_children(
+static void flecs_trav_entity_down_iter_children(
     ecs_world_t *world,
     ecs_allocator_t *a,
     ecs_trav_up_cache_t *cache,
@@ -185,8 +180,7 @@ void flecs_trav_entity_down_iter_children(
     }
 }
 
-static
-void flecs_trav_entity_down_iter_tables(
+static void flecs_trav_entity_down_iter_tables(
     ecs_world_t *world,
     ecs_allocator_t *a,
     ecs_trav_up_cache_t *cache,
@@ -252,8 +246,7 @@ void flecs_trav_entity_down_iter_tables(
     }
 }
 
-static
-void flecs_trav_entity_down(
+static void flecs_trav_entity_down(
     ecs_world_t *world,
     ecs_allocator_t *a,
     ecs_trav_up_cache_t *cache,

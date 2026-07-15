@@ -5,8 +5,7 @@
 
 #include "private_api.h"
 
-static
-void flecs_marked_id_push(
+static void flecs_marked_id_push(
     ecs_world_t *world,
     ecs_component_record_t* cr,
     ecs_entity_t action,
@@ -25,16 +24,14 @@ void flecs_marked_id_push(
     flecs_component_claim(world, cr);
 }
 
-static
-void flecs_component_mark_for_delete(
+static void flecs_component_mark_for_delete(
     ecs_world_t *world,
     ecs_component_record_t *cr,
     ecs_entity_t action,
     bool delete_id,
     bool force_delete);
 
-static
-void flecs_target_mark_for_delete(
+static void flecs_target_mark_for_delete(
     ecs_world_t *world,
     ecs_entity_t e,
     bool force_delete)
@@ -74,8 +71,7 @@ void flecs_target_mark_for_delete(
     }
 }
 
-static
-void flecs_targets_mark_for_delete(
+static void flecs_targets_mark_for_delete(
     ecs_world_t *world,
     ecs_table_t *table,
     bool force_delete)
@@ -87,8 +83,7 @@ void flecs_targets_mark_for_delete(
     }
 }
 
-static
-bool flecs_id_is_delete_target(
+static bool flecs_id_is_delete_target(
     ecs_id_t id,
     ecs_entity_t action)
 {
@@ -100,8 +95,7 @@ bool flecs_id_is_delete_target(
     return false;
 }
 
-static
-ecs_entity_t flecs_get_delete_action(
+static ecs_entity_t flecs_get_delete_action(
     ecs_table_t *table,
     const ecs_table_record_t *tr,
     ecs_entity_t action,
@@ -144,8 +138,7 @@ ecs_entity_t flecs_get_delete_action(
     return result;
 }
 
-static
-void flecs_simple_delete(
+static void flecs_simple_delete(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_record_t *r)
@@ -188,8 +181,7 @@ error:
     return;
 }
 
-static
-bool flecs_is_childof_tgt_only(
+static bool flecs_is_childof_tgt_only(
     const ecs_component_record_t *cr)
 {
     ecs_pair_record_t *pr = cr->pair;
@@ -208,8 +200,7 @@ bool flecs_is_childof_tgt_only(
     return true;
 }
 
-static
-void flecs_component_delete_non_fragmenting_childof(
+static void flecs_component_delete_non_fragmenting_childof(
     ecs_world_t *world,
     ecs_component_record_t *cr,
     bool force_delete)
@@ -271,8 +262,7 @@ void flecs_component_delete_non_fragmenting_childof(
     flecs_component_release(world, tgt_wc);
 }
 
-static
-bool flecs_component_mark_non_fragmenting_childof(
+static bool flecs_component_mark_non_fragmenting_childof(
     ecs_world_t *world,
     ecs_component_record_t *cr,
     bool force_delete)
@@ -329,8 +319,7 @@ bool flecs_component_mark_non_fragmenting_childof(
     return false;
 }
 
-static
-void flecs_component_mark_for_delete(
+static void flecs_component_mark_for_delete(
     ecs_world_t *world,
     ecs_component_record_t *cr,
     ecs_entity_t action,
@@ -441,8 +430,7 @@ void flecs_component_mark_for_delete(
     }
 }
 
-static
-bool flecs_on_delete_mark(
+static bool flecs_on_delete_mark(
     ecs_world_t *world,
     ecs_id_t id,
     ecs_entity_t action,
@@ -475,8 +463,7 @@ bool flecs_on_delete_mark(
     return true;
 }
 
-static
-void flecs_remove_from_table(
+static void flecs_remove_from_table(
     ecs_world_t *world,
     ecs_table_t *table)
 {
@@ -565,8 +552,7 @@ void flecs_remove_from_table(
     flecs_wfree_n(world, bool, type_count, remove);
 }
 
-static
-bool flecs_on_delete_clear_entities(
+static bool flecs_on_delete_clear_entities(
     ecs_world_t *world,
     bool force_delete)
 {
@@ -646,8 +632,7 @@ bool flecs_on_delete_clear_entities(
     return true;
 }
 
-static
-void flecs_on_delete_clear_sparse(
+static void flecs_on_delete_clear_sparse(
     ecs_world_t *world,
     ecs_component_record_t *cr)
 {
@@ -665,8 +650,7 @@ void flecs_on_delete_clear_sparse(
     }
 }
 
-static
-bool flecs_on_delete_clear_ids(
+static bool flecs_on_delete_clear_ids(
     ecs_world_t *world,
     bool force_delete)
 {

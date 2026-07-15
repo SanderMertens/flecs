@@ -1,7 +1,6 @@
 #include <script.h>
 
-static
-void fuzz(const char *expr) {
+static void fuzz(const char *expr) {
     ecs_world_t *world = ecs_init();
 
 #ifdef FLECS_SCRIPT_MATH

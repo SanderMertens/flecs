@@ -14,8 +14,7 @@
 
 static uint8_t flecs_perlin_perm[512];
 
-static
-uint32_t flecs_perlin_xs32(
+static uint32_t flecs_perlin_xs32(
     uint32_t *state) 
 {
     uint32_t x = *state;
@@ -48,15 +47,13 @@ void flecs_perlin_seed(
     }
 }
 
-static 
-double flecs_perlin_fade(
+static double flecs_perlin_fade(
     double t) 
 {
     return t * t * t * (t * (t * 6.0 - 15.0) + 10.0);
 }
 
-static 
-double flecs_perlin_grad2(
+static double flecs_perlin_grad2(
     int hash, 
     double x, 
     double y) 
@@ -73,8 +70,7 @@ double flecs_perlin_grad2(
     }
 }
 
-static
-double flecs_perlin2(
+static double flecs_perlin2(
     double x, 
     double y) 
 {
@@ -105,8 +101,7 @@ double flecs_perlin2(
     return flecs_lerp(x1, x2, v);
 }
 
-static
-void flecs_script_perlin2(
+static void flecs_script_perlin2(
     const ecs_function_ctx_t *ctx,
     int32_t argc,
     const ecs_value_t *argv,

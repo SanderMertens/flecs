@@ -16,8 +16,7 @@ ECS_COMPONENT_DECLARE(EcsScriptFunction);
 ECS_COMPONENT_DECLARE(EcsScriptMethod);
 ECS_DECLARE(EcsScriptVectorType);
 
-static
-ECS_MOVE(EcsScript, dst, src, {
+static ECS_MOVE(EcsScript, dst, src, {
     if (dst->script && (dst->script != src->script)) {
         if (dst->template_ && (dst->template_ != src->template_)) {
             flecs_script_template_fini(
@@ -41,8 +40,7 @@ ECS_MOVE(EcsScript, dst, src, {
     ecs_os_zeromem(&src->observers);
 })
 
-static
-ECS_DTOR(EcsScript, ptr, {
+static ECS_DTOR(EcsScript, ptr, {
     if (ptr->template_) {
         flecs_script_template_fini(
             flecs_script_impl(ptr->script), ptr->template_);
@@ -59,8 +57,7 @@ ECS_DTOR(EcsScript, ptr, {
     ecs_os_free(ptr->error);
 })
 
-static
-ecs_id_t flecs_script_tag(
+static ecs_id_t flecs_script_tag(
     ecs_entity_t script,
     ecs_entity_t instance)
 {
@@ -128,8 +125,7 @@ void ecs_script_clear(
     }
 }
 
-static
-void flecs_script_ref_on_set(
+static void flecs_script_ref_on_set(
     ecs_iter_t *it)
 {
     ecs_script_ref_ctx_t *ctx = it->ctx;
@@ -164,8 +160,7 @@ void flecs_script_ref_on_set(
     ecs_os_free(code);
 }
 
-static
-void flecs_script_on_update_event(
+static void flecs_script_on_update_event(
     ecs_iter_t *it)
 {
     ecs_assert(ecs_is_deferred(it->world), ECS_INTERNAL_ERROR, NULL);
@@ -192,8 +187,7 @@ void flecs_script_on_update_event(
     ecs_os_free(code);
 }
 
-static
-void flecs_script_ref_ctx_free(
+static void flecs_script_ref_ctx_free(
     void *ptr)
 {
     ecs_os_free(ptr);
@@ -578,8 +572,7 @@ ecs_script_runtime_t* flecs_script_runtime_get(
     return stage->runtime;
 }
 
-static
-int EcsScript_serialize(
+static int EcsScript_serialize(
     const ecs_serializer_t *ser, 
     const void *ptr) 
 {

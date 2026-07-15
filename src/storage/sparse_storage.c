@@ -119,8 +119,7 @@ void* flecs_component_sparse_get(
     return flecs_sparse_get(sparse, sparse->size, entity);
 }
 
-static
-ecs_entity_t flecs_component_sparse_remove_intern(
+static ecs_entity_t flecs_component_sparse_remove_intern(
     ecs_world_t *world,
     ecs_component_record_t *cr,
     ecs_table_t *table,
@@ -157,8 +156,7 @@ ecs_entity_t flecs_component_sparse_remove_intern(
     return entity;
 }
 
-static
-void flecs_component_sparse_dont_fragment_pair_remove(
+static void flecs_component_sparse_dont_fragment_pair_remove(
     ecs_world_t *world,
     ecs_component_record_t *cr,
     ecs_entity_t entity)
@@ -188,8 +186,7 @@ void flecs_component_sparse_dont_fragment_pair_remove(
     }
 }
 
-static
-void flecs_component_sparse_dont_fragment_exclusive_remove(
+static void flecs_component_sparse_dont_fragment_exclusive_remove(
     ecs_component_record_t *cr,
     ecs_entity_t entity)
 {
@@ -262,8 +259,7 @@ void flecs_component_sparse_remove(
     }
 }
 
-static
-void flecs_component_sparse_remove_all_id(
+static void flecs_component_sparse_remove_all_id(
     ecs_world_t *world,
     ecs_component_record_t *cr)
 {
@@ -311,8 +307,7 @@ void flecs_component_sparse_remove_all_id(
     }
 }
 
-static
-void flecs_component_sparse_remove_all_wildcard(
+static void flecs_component_sparse_remove_all_wildcard(
     ecs_world_t *world,
     ecs_component_record_t *cr)
 {
@@ -349,8 +344,7 @@ void flecs_component_sparse_remove_all(
     }
 }
 
-static
-void flecs_component_sparse_dont_fragment_pair_insert(
+static void flecs_component_sparse_dont_fragment_pair_insert(
     ecs_world_t *world,
     ecs_component_record_t *cr,
     ecs_entity_t entity)
@@ -368,8 +362,7 @@ void flecs_component_sparse_dont_fragment_pair_insert(
     flecs_type_add(world, type, ecs_pair_second(world, cr->id));
 }
 
-static
-void flecs_component_sparse_dont_fragment_exclusive_insert(
+static void flecs_component_sparse_dont_fragment_exclusive_insert(
     ecs_world_t *world,
     ecs_component_record_t *cr,
     ecs_table_t *table,
@@ -418,8 +411,7 @@ void flecs_component_sparse_dont_fragment_exclusive_insert(
     *tgt_ptr = flecs_entities_get_alive(world, ECS_PAIR_SECOND(component_id));
 }
 
-static
-void flecs_component_sparse_override(
+static void flecs_component_sparse_override(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_id_t component_id,

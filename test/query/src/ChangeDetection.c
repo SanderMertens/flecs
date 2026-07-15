@@ -4002,8 +4002,7 @@ void ChangeDetection_detect_w_not_cached_fixed_src_term(void) {
     ecs_fini(world);
 }
 
-static
-int compare_position(
+static int compare_position(
     ecs_entity_t e1,
     const void *ptr1,
     ecs_entity_t e2,

@@ -7,8 +7,7 @@
 
 #ifdef FLECS_JSON
 
-static
-bool flecs_json_serialize_iter_result_is_set(
+static bool flecs_json_serialize_iter_result_is_set(
     const ecs_iter_t *it,
     ecs_strbuf_t *buf)
 {
@@ -30,8 +29,7 @@ bool flecs_json_serialize_iter_result_is_set(
     return true;
 }
 
-static
-bool flecs_json_serialize_iter_result_ids(
+static bool flecs_json_serialize_iter_result_ids(
     const ecs_iter_t *it,
     ecs_strbuf_t *buf)
 {
@@ -67,8 +65,7 @@ bool flecs_json_serialize_iter_result_ids(
     return true;
 }
 
-static
-bool flecs_json_serialize_iter_result_sources(
+static bool flecs_json_serialize_iter_result_sources(
     const ecs_iter_t *it,
     ecs_strbuf_t *buf)
 {
@@ -109,8 +106,7 @@ bool flecs_json_serialize_iter_result_sources(
     return true;
 }
 
-static
-bool flecs_json_serialize_common_for_table(
+static bool flecs_json_serialize_common_for_table(
     const ecs_world_t *world,
     const ecs_iter_t *it,
     ecs_strbuf_t *buf,
@@ -132,8 +128,7 @@ bool flecs_json_serialize_common_for_table(
     return result;
 }
 
-static
-int flecs_json_serialize_iter_result_field_values(
+static int flecs_json_serialize_iter_result_field_values(
     const ecs_world_t *world, 
     const ecs_iter_t *it, 
     int32_t i,

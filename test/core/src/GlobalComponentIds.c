@@ -5,23 +5,19 @@ static ECS_DECLARE(MyEntity);
 static ECS_COMPONENT_DECLARE(Position);
 static ECS_COMPONENT_DECLARE(Velocity);
 
-static
-ecs_entity_t create_entity(ecs_world_t *world) {
+static ecs_entity_t create_entity(ecs_world_t *world) {
     return ecs_new_w(world, Position);
 }
 
-static
-ecs_entity_t create_entity_w_entity(ecs_world_t *world) {
+static ecs_entity_t create_entity_w_entity(ecs_world_t *world) {
     return ecs_new_w_id(world, ecs_id(Position));
 }
 
-static
-ecs_entity_t create_tag_entity(ecs_world_t *world) {
+static ecs_entity_t create_tag_entity(ecs_world_t *world) {
     return ecs_new_w(world, MyTag);
 }
 
-static
-ecs_entity_t create_tag_entity_w_entity(ecs_world_t *world) {
+static ecs_entity_t create_tag_entity_w_entity(ecs_world_t *world) {
     return ecs_new_w_id(world, MyTag);
 }
 

@@ -3,8 +3,7 @@
 static
 int32_t dummy_invoked = false;
 
-static
-void Dummy(ecs_iter_t *it) {
+static void Dummy(ecs_iter_t *it) {
     dummy_invoked ++;
     probe_iter(it);
 }
@@ -287,8 +286,7 @@ void SystemMisc_update_row_system(void) {
 
 static int is_invoked;
 
-static
-void IsInvoked(ecs_iter_t *it) {
+static void IsInvoked(ecs_iter_t *it) {
     is_invoked ++;
 }
 
@@ -345,8 +343,7 @@ void SystemMisc_system_w_or_disabled_and_prefab(void) {
     ecs_fini(world);
 }
 
-static
-void TableColumns(ecs_iter_t *it) {
+static void TableColumns(ecs_iter_t *it) {
     Position *p = ecs_field(it, Position, 0);
     Velocity *v = ecs_field(it, Velocity, 1);
 
@@ -500,11 +497,9 @@ void SystemMisc_system_initial_state(void) {
     ecs_fini(world);
 }
 
-static
-void FooSystem(ecs_iter_t *it) { }
+static void FooSystem(ecs_iter_t *it) { }
 
-static
-void BarSystem(ecs_iter_t *it) { }
+static void BarSystem(ecs_iter_t *it) { }
 
 void SystemMisc_add_own_component(void) {
     ecs_world_t * world = ecs_init();
@@ -524,13 +519,11 @@ void SystemMisc_add_own_component(void) {
 static bool action_a_invoked;
 static bool action_b_invoked;
 
-static
-void ActionA(ecs_iter_t *it) {
+static void ActionA(ecs_iter_t *it) {
     action_a_invoked = true;
 }
 
-static
-void ActionB(ecs_iter_t *it) {
+static void ActionB(ecs_iter_t *it) {
     action_b_invoked = true;
 }
 
@@ -600,11 +593,9 @@ void SystemMisc_system_readeactivate(void) {
     ecs_fini(world);
 }
 
-static
-void Dummy1(ecs_iter_t *it) { }
+static void Dummy1(ecs_iter_t *it) { }
 
-static
-void Dummy2(ecs_iter_t *it) { }
+static void Dummy2(ecs_iter_t *it) { }
 
 void SystemMisc_system_readeactivate_w_2_systems(void) {
     ecs_world_t * world = ecs_init();
@@ -666,8 +657,7 @@ void SystemMisc_add_to_system_in_progress(void) {
     ecs_fini(world);
 }
 
-static
-void Action(ecs_iter_t *it) { }
+static void Action(ecs_iter_t *it) { }
 
 void SystemMisc_redefine_null_signature(void) {
     install_test_abort();
@@ -1346,29 +1336,25 @@ void SystemMisc_delete_pipeline_system(void) {
 }
 
 static int ctx_value;
-static
-void ctx_free(void *ctx) {
+static void ctx_free(void *ctx) {
     test_assert(&ctx_value == ctx);
     ctx_value ++;
 }
 
 static int binding_ctx_value;
-static
-void callback_ctx_free(void *ctx) {
+static void callback_ctx_free(void *ctx) {
     test_assert(&binding_ctx_value == ctx);
     binding_ctx_value ++;
 }
 
 static int ctx_value_2;
-static
-void ctx_free_2(void *ctx) {
+static void ctx_free_2(void *ctx) {
     test_assert(&ctx_value_2 == ctx);
     ctx_value_2 ++;
 }
 
 static int binding_ctx_value_2;
-static
-void binding_ctx_free_2(void *ctx) {
+static void binding_ctx_free_2(void *ctx) {
     test_assert(&binding_ctx_value_2 == ctx);
     binding_ctx_value_2 ++;
 }
@@ -1769,24 +1755,21 @@ void SystemMisc_system_w_rate_filter_self(void) {
 static
 int32_t sys_a_invoked = false;
 
-static
-void SA(ecs_iter_t *it) {
+static void SA(ecs_iter_t *it) {
     sys_a_invoked = true;
 }
 
 static
 int32_t sys_b_invoked = false;
 
-static
-void SB(ecs_iter_t *it) {
+static void SB(ecs_iter_t *it) {
     sys_b_invoked = true;
 }
 
 static
 int32_t sys_c_invoked = false;
 
-static
-void SC(ecs_iter_t *it) {
+static void SC(ecs_iter_t *it) {
     sys_c_invoked = true;
 }
 
@@ -1849,13 +1832,11 @@ void SystemMisc_system_no_id_in_scope(void) {
 static int callback_callback_invoked = 0;
 static int callback_run_invoked = 0;
 
-static
-void callback_callback(ecs_iter_t *it) {
+static void callback_callback(ecs_iter_t *it) {
     callback_callback_invoked ++;
 }
 
-static
-void callback_run(ecs_iter_t *it) {
+static void callback_run(ecs_iter_t *it) {
     callback_run_invoked ++;
 }
 
@@ -1903,8 +1884,7 @@ void SystemMisc_register_run_after_callback(void) {
     ecs_fini(world);
 }
 
-static
-void ctx_free_3(void *ptr) {
+static void ctx_free_3(void *ptr) {
     int32_t *ctx = ptr;
     ctx[0]++;
 }
@@ -1971,8 +1951,7 @@ static void Run_w_query_next(ecs_iter_t *it) {
     run_invoked ++;
 }
 
-static
-uint64_t SystemMisc_group_by_rel(
+static uint64_t SystemMisc_group_by_rel(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_id_t id,
@@ -1991,14 +1970,12 @@ uint64_t SystemMisc_group_by_rel(
 static
 uint64_t system_misc_expected_group;
 
-static
-void SystemMisc_grouped_dummy(ecs_iter_t *it) {
+static void SystemMisc_grouped_dummy(ecs_iter_t *it) {
     test_uint(ecs_iter_get_group(it), system_misc_expected_group);
     probe_iter(it);
 }
 
-static
-void SystemMisc_reset_probe(Probe *ctx) {
+static void SystemMisc_reset_probe(Probe *ctx) {
     ecs_os_zeromem(ctx);
 }
 

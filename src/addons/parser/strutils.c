@@ -179,8 +179,7 @@ char* flecs_astresc(
     return out;
 }
 
-static
-bool flecs_parse_is_e(
+static bool flecs_parse_is_e(
     char e)
 {
     return e == 'e' || e == 'E';

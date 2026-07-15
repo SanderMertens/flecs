@@ -7,8 +7,7 @@
 
 #ifdef FLECS_META
 
-static
-void flecs_set_array(ecs_iter_t *it) {
+static void flecs_set_array(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
     EcsArray *array = ecs_field(it, EcsArray, 0);
 
@@ -54,8 +53,7 @@ void flecs_set_array(ecs_iter_t *it) {
     }
 }
 
-static
-void flecs_set_vector(ecs_iter_t *it) {
+static void flecs_set_vector(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
     EcsVector *array = ecs_field(it, EcsVector, 0);
 

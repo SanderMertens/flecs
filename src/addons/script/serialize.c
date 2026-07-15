@@ -10,16 +10,14 @@
 #ifdef FLECS_SCRIPT
 #include "script.h"
 
-static
-int flecs_expr_ser_type(
+static int flecs_expr_ser_type(
     const ecs_world_t *world,
     const ecs_vec_t *ser, 
     const void *base, 
     ecs_strbuf_t *str,
     bool is_expr);
 
-static
-int flecs_expr_ser_type_ops(
+static int flecs_expr_ser_type_ops(
     const ecs_world_t *world,
     ecs_meta_op_t *ops,
     int32_t op_count,
@@ -27,21 +25,18 @@ int flecs_expr_ser_type_ops(
     ecs_strbuf_t *str,
     bool is_expr);
 
-static
-int flecs_expr_ser_forward(
+static int flecs_expr_ser_forward(
     const ecs_world_t *world,
     ecs_entity_t type,
     const void *base,
     ecs_strbuf_t *str,
     bool is_expr);
 
-static
-ecs_primitive_kind_t flecs_expr_op_to_primitive_kind(ecs_meta_op_kind_t kind) {
+static ecs_primitive_kind_t flecs_expr_op_to_primitive_kind(ecs_meta_op_kind_t kind) {
     return kind - EcsOpPrimitive;
 }
 
-static
-int flecs_expr_ser_enum(
+static int flecs_expr_ser_enum(
     const ecs_world_t *world,
     ecs_meta_op_t *op, 
     const void *base, 
@@ -51,8 +46,7 @@ int flecs_expr_ser_enum(
         world, op->type, op->underlying_kind, op->is.constants, base, str);
 }
 
-static
-int flecs_expr_ser_bitmask(
+static int flecs_expr_ser_bitmask(
     const ecs_world_t *world,
     ecs_meta_op_t *op, 
     const void *ptr, 
@@ -62,8 +56,7 @@ int flecs_expr_ser_bitmask(
         world, op->type, op->is.constants, ptr, "", str);
 }
 
-static
-int flecs_expr_ser_scope(
+static int flecs_expr_ser_scope(
     const ecs_world_t *world,
     ecs_meta_op_t *ops,
     const void *base,
@@ -78,8 +71,7 @@ int flecs_expr_ser_scope(
     return 0;
 }
 
-static
-int flecs_expr_ser_array(
+static int flecs_expr_ser_array(
     const ecs_world_t *world,
     ecs_meta_op_t *ops,
     const void *array,
@@ -105,8 +97,7 @@ error:
     return -1;
 }
 
-static
-int flecs_expr_ser_map(
+static int flecs_expr_ser_map(
     const ecs_world_t *world,
     ecs_meta_op_t *ops,
     const void *base,
@@ -148,8 +139,7 @@ error:
     return -1;
 }
 
-static
-int flecs_expr_ser_value(
+static int flecs_expr_ser_value(
     const ecs_world_t *world,
     const void *base,
     ecs_strbuf_t *str,
@@ -182,8 +172,7 @@ int flecs_expr_ser_value(
     return 0;
 }
 
-static
-int flecs_expr_ser_struct(
+static int flecs_expr_ser_struct(
     const ecs_world_t *world,
     ecs_meta_op_t *ops,
     const void *base,
@@ -201,8 +190,7 @@ int flecs_expr_ser_struct(
     return 0;
 }
 
-static
-int flecs_expr_ser_forward(
+static int flecs_expr_ser_forward(
     const ecs_world_t *world,
     ecs_entity_t type,
     const void *base,
@@ -225,8 +213,7 @@ typedef struct flecs_expr_serializer_ctx_t {
     bool is_collection;
 } flecs_expr_serializer_ctx_t;
 
-static
-int flecs_expr_ser_opaque_value(
+static int flecs_expr_ser_opaque_value(
     const ecs_serializer_t *ser,
     ecs_entity_t type,
     const void *value)
@@ -238,8 +225,7 @@ int flecs_expr_ser_opaque_value(
     return ecs_ptr_to_expr_buf(ser->world, type, value, expr_ser->str);
 }
 
-static
-int flecs_expr_ser_opaque_member(
+static int flecs_expr_ser_opaque_member(
     const ecs_serializer_t *ser,
     const char *name)
 {
@@ -249,8 +235,7 @@ int flecs_expr_ser_opaque_member(
     return 0;
 }
 
-static
-int flecs_expr_ser_opaque(
+static int flecs_expr_ser_opaque(
     const ecs_world_t *world,
     ecs_meta_op_t *op, 
     const void *base, 
@@ -292,8 +277,7 @@ int flecs_expr_ser_opaque(
 }
 
 /* Iterate over a slice of the type ops array */
-static
-int flecs_expr_ser_type_ops(
+static int flecs_expr_ser_type_ops(
     const ecs_world_t *world,
     ecs_meta_op_t *ops,
     int32_t op_count,
@@ -414,8 +398,7 @@ error:
 }
 
 /* Iterate over the type ops of a type */
-static
-int flecs_expr_ser_type(
+static int flecs_expr_ser_type(
     const ecs_world_t *world,
     const ecs_vec_t *v_ops,
     const void *base, 

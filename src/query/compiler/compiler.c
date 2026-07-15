@@ -5,8 +5,7 @@
 
 #include "../../private_api.h"
 
-static
-bool flecs_query_needs_plan(
+static bool flecs_query_needs_plan(
     const ecs_query_impl_t *query)
 {
     ecs_flags32_t flags = query->pub.flags;
@@ -30,8 +29,7 @@ bool flecs_query_needs_plan(
 }
 
 #ifdef FLECS_QUERY_PLANS
-static
-void flecs_query_compile_trivial(
+static void flecs_query_compile_trivial(
     ecs_query_impl_t *query)
 {
     /* Initialize space for $this variable */
@@ -43,8 +41,7 @@ void flecs_query_compile_trivial(
     query->pub.flags |= EcsQueryHasTableThisVar;
 }
 
-static
-bool flecs_query_var_is_anonymous(
+static bool flecs_query_var_is_anonymous(
     const ecs_query_impl_t *query,
     ecs_var_id_t var_id)
 {
@@ -135,8 +132,7 @@ ecs_var_id_t flecs_query_add_var(
     return result;
 }
 
-static
-ecs_var_id_t flecs_query_add_var_for_term_id(
+static ecs_var_id_t flecs_query_add_var_for_term_id(
     ecs_query_impl_t *query,
     ecs_term_ref_t *term_id,
     ecs_vec_t *vars,
@@ -163,8 +159,7 @@ ecs_var_id_t flecs_query_add_var_for_term_id(
  * - ensure variables created inside scopes are anonymous
  * - place anonymous variables after public variables in vars array
  */
-static
-int flecs_query_discover_vars(
+static int flecs_query_discover_vars(
     ecs_stage_t *stage,
     ecs_query_impl_t *query)
 {
@@ -493,8 +488,7 @@ error:
     return -1;
 }
 
-static
-bool flecs_query_var_is_unknown(
+static bool flecs_query_var_is_unknown(
     ecs_query_impl_t *query,
     ecs_var_id_t var_id,
     ecs_query_compile_ctx_t *ctx)
@@ -513,8 +507,7 @@ bool flecs_query_var_is_unknown(
 
 /* Returns whether term is unknown. A term is unknown when it has variable
  * elements (first, second, src) that are all unknown. */
-static
-bool flecs_query_term_is_unknown(
+static bool flecs_query_term_is_unknown(
     ecs_query_impl_t *query, 
     ecs_term_t *term, 
     ecs_query_compile_ctx_t *ctx) 
@@ -560,8 +553,7 @@ bool flecs_query_term_is_unknown(
 /* Find the next known term from specified offset. This function is used to find
  * a term that can be evaluated before a term that is unknown. Evaluating known
  * before unknown terms can significantly decrease the search space. */
-static
-int32_t flecs_query_term_next_known(
+static int32_t flecs_query_term_next_known(
     ecs_query_impl_t *query, 
     ecs_query_compile_ctx_t *ctx,
     int32_t offset,
@@ -599,8 +591,7 @@ int32_t flecs_query_term_next_known(
 
 /* If the first part of a query contains more than one trivial term, insert a
  * special instruction which batch-evaluates multiple terms. */
-static
-void flecs_query_insert_trivial_search(
+static void flecs_query_insert_trivial_search(
     ecs_query_impl_t *query,
     ecs_flags64_t *compiled,
     ecs_query_compile_ctx_t *ctx)
@@ -687,8 +678,7 @@ void flecs_query_insert_trivial_search(
     }
 }
 
-static
-void flecs_query_insert_cache_search(
+static void flecs_query_insert_cache_search(
     ecs_query_impl_t *query,
     ecs_flags64_t *compiled,
     ecs_query_compile_ctx_t *ctx)
@@ -781,23 +771,20 @@ void flecs_query_insert_cache_search(
     }
 }
 
-static
-bool flecs_term_ref_match_multiple(
+static bool flecs_term_ref_match_multiple(
     ecs_term_ref_t *ref)
 {
     return (ref->id & EcsIsVariable) && (ECS_TERM_REF_ID(ref) != EcsAny);
 }
 
-static
-bool flecs_term_match_multiple(
+static bool flecs_term_match_multiple(
     ecs_term_t *term)
 {
     return flecs_term_ref_match_multiple(&term->first) ||
         flecs_term_ref_match_multiple(&term->second);
 }
 
-static
-int flecs_query_insert_toggle(
+static int flecs_query_insert_toggle(
     ecs_query_impl_t *impl,
     ecs_query_compile_ctx_t *ctx)
 {
@@ -903,8 +890,7 @@ int flecs_query_insert_toggle(
     return 0;
 }
 
-static
-int flecs_query_insert_fixed_src_terms(
+static int flecs_query_insert_fixed_src_terms(
     ecs_world_t *world,
     ecs_query_impl_t *impl,
     ecs_flags64_t *compiled,

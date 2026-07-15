@@ -37,8 +37,7 @@ void flecs_query_cache_iter_init(
 
 /* Find next match in cache. This function is called for non-trivial caches and
  * handles features like wildcards, up traversal and grouping. */
-static
-ecs_query_cache_match_t* flecs_query_cache_next(
+static ecs_query_cache_match_t* flecs_query_cache_next(
     const ecs_query_run_ctx_t *ctx,
     bool always_match_empty)
 {
@@ -129,8 +128,7 @@ ecs_query_cache_match_t* flecs_query_cache_next(
 
 /* Find next match in trivial cache. A trivial cache doesn't have to handle
  * wildcards, multiple groups or fields matched through up traversal. */
-static
-ecs_query_cache_match_t* flecs_query_trivial_cache_next(
+static ecs_query_cache_match_t* flecs_query_trivial_cache_next(
     const ecs_query_run_ctx_t *ctx)
 {
     ecs_iter_t *it = ctx->it;
@@ -162,8 +160,7 @@ ecs_query_cache_match_t* flecs_query_trivial_cache_next(
     }
 }
 
-static
-ecs_query_cache_match_t* flecs_query_test(
+static ecs_query_cache_match_t* flecs_query_test(
     const ecs_query_run_ctx_t *ctx,
     bool redo)
 {
@@ -203,8 +200,7 @@ ecs_query_cache_match_t* flecs_query_test(
 /* Reset the cache iteration cursor to the start of the iteration. This is
  * called when the cache operation is entered fresh (redo == false), which
  * happens when a preceding operation in the plan yields a new result. */
-static
-void flecs_query_cache_iter_restart(
+static void flecs_query_cache_iter_restart(
     const ecs_query_run_ctx_t *ctx)
 {
     ecs_iter_t *it = ctx->it;
@@ -330,8 +326,7 @@ bool flecs_query_is_trivial_cache_test(
 
 #ifdef FLECS_QUERY_PLANS
 
-static
-void flecs_query_cache_init_mapped_fields(
+static void flecs_query_cache_init_mapped_fields(
     const ecs_query_run_ctx_t *ctx,
     ecs_query_cache_match_t *node)
 {

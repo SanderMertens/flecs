@@ -161,8 +161,7 @@ void* flecs_field_shared(
         (ecs_size_t)size, ECS_RECORD_TO_ROW(r->row));
 }
 
-static
-ecs_component_record_t* flecs_field_cr(
+static ecs_component_record_t* flecs_field_cr(
     const ecs_iter_t *it,
     int8_t index)
 {
@@ -829,8 +828,7 @@ error:
 
 #endif // FLECS_CACHED_QUERIES
 
-static
-void ecs_chained_iter_fini(
+static void ecs_chained_iter_fini(
     ecs_iter_t *it)
 {
     ecs_assert(it != NULL, ECS_INVALID_PARAMETER, NULL);

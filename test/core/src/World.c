@@ -5,8 +5,7 @@ void World_setup(void) {
     ecs_log_set_level(-3);
 }
 
-static
-void Move(ecs_iter_t *it) {
+static void Move(ecs_iter_t *it) {
     Position *pos = ecs_field(it, Position, 0);
     Velocity *vel = ecs_field(it, Velocity, 1);
     probe_iter(it);
@@ -827,8 +826,7 @@ void World_get_tick(void) {
     ecs_fini(world);
 }
 
-static
-void TOnLoad(ecs_iter_t *it) {
+static void TOnLoad(ecs_iter_t *it) {
     Position *p = ecs_field(it, Position, 0);
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -837,8 +835,7 @@ void TOnLoad(ecs_iter_t *it) {
     }
 }
 
-static
-void TPostLoad(ecs_iter_t *it) {
+static void TPostLoad(ecs_iter_t *it) {
     Position *p = ecs_field(it, Position, 0);
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -847,8 +844,7 @@ void TPostLoad(ecs_iter_t *it) {
     }
 }
 
-static
-void TPreUpdate(ecs_iter_t *it) {
+static void TPreUpdate(ecs_iter_t *it) {
     Position *p = ecs_field(it, Position, 0);
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -857,8 +853,7 @@ void TPreUpdate(ecs_iter_t *it) {
     }
 }
 
-static
-void TOnUpdate(ecs_iter_t *it) {
+static void TOnUpdate(ecs_iter_t *it) {
     Position *p = ecs_field(it, Position, 0);
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -867,8 +862,7 @@ void TOnUpdate(ecs_iter_t *it) {
     }
 }
 
-static
-void TOnValidate(ecs_iter_t *it) {
+static void TOnValidate(ecs_iter_t *it) {
     Position *p = ecs_field(it, Position, 0);
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -877,8 +871,7 @@ void TOnValidate(ecs_iter_t *it) {
     }
 }
 
-static
-void TPostUpdate(ecs_iter_t *it) {
+static void TPostUpdate(ecs_iter_t *it) {
     Position *p = ecs_field(it, Position, 0);
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -887,8 +880,7 @@ void TPostUpdate(ecs_iter_t *it) {
     }
 }
 
-static
-void TPreStore(ecs_iter_t *it) {
+static void TPreStore(ecs_iter_t *it) {
     Position *p = ecs_field(it, Position, 0);
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -897,8 +889,7 @@ void TPreStore(ecs_iter_t *it) {
     }
 }
 
-static
-void TOnStore(ecs_iter_t *it) {
+static void TOnStore(ecs_iter_t *it) {
     Position *p = ecs_field(it, Position, 0);
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -907,8 +898,7 @@ void TOnStore(ecs_iter_t *it) {
     }
 }
 
-static
-void TManual(ecs_iter_t *it) {
+static void TManual(ecs_iter_t *it) {
     Position *p = ecs_field(it, Position, 0);
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -981,8 +971,7 @@ void World_phases_match_in_create(void) {
     ecs_fini(world);
 }
 
-static
-void TMergeOnLoad(ecs_iter_t *it) {
+static void TMergeOnLoad(ecs_iter_t *it) {
     Position *p = ecs_field(it, Position, 0);
     ecs_id_t ecs_id(Position) = ecs_field_id(it, 0);
 
@@ -993,8 +982,7 @@ void TMergeOnLoad(ecs_iter_t *it) {
     }
 }
 
-static
-void TMergePostLoad(ecs_iter_t *it) {
+static void TMergePostLoad(ecs_iter_t *it) {
     Position *p = ecs_field(it, Position, 0);
     ecs_id_t ecs_id(Position) = ecs_field_id(it, 0);
 
@@ -1005,8 +993,7 @@ void TMergePostLoad(ecs_iter_t *it) {
     }
 }
 
-static
-void TMergePreUpdate(ecs_iter_t *it) {
+static void TMergePreUpdate(ecs_iter_t *it) {
     Position *p = ecs_field(it, Position, 0);
     ecs_id_t ecs_id(Position) = ecs_field_id(it, 0);
 
@@ -1017,8 +1004,7 @@ void TMergePreUpdate(ecs_iter_t *it) {
     }
 }
 
-static
-void TMergeOnUpdate(ecs_iter_t *it) {
+static void TMergeOnUpdate(ecs_iter_t *it) {
     Position *p = ecs_field(it, Position, 0);
     ecs_id_t ecs_id(Position) = ecs_field_id(it, 0);
 
@@ -1029,8 +1015,7 @@ void TMergeOnUpdate(ecs_iter_t *it) {
     }
 }
 
-static
-void TMergeOnValidate(ecs_iter_t *it) {
+static void TMergeOnValidate(ecs_iter_t *it) {
     Position *p = ecs_field(it, Position, 0);
     ecs_id_t ecs_id(Position) = ecs_field_id(it, 0);
 
@@ -1041,8 +1026,7 @@ void TMergeOnValidate(ecs_iter_t *it) {
     }
 }
 
-static
-void TMergePostUpdate(ecs_iter_t *it) {
+static void TMergePostUpdate(ecs_iter_t *it) {
     Position *p = ecs_field(it, Position, 0);
     ecs_id_t ecs_id(Position) = ecs_field_id(it, 0);
 
@@ -1053,8 +1037,7 @@ void TMergePostUpdate(ecs_iter_t *it) {
     }
 }
 
-static
-void TMergePreStore(ecs_iter_t *it) {
+static void TMergePreStore(ecs_iter_t *it) {
     Position *p = ecs_field(it, Position, 0);
     ecs_id_t ecs_id(Position) = ecs_field_id(it, 0);
 
@@ -1065,8 +1048,7 @@ void TMergePreStore(ecs_iter_t *it) {
     }
 }
 
-static
-void TMergeOnStore(ecs_iter_t *it) {
+static void TMergeOnStore(ecs_iter_t *it) {
     Position *p = ecs_field(it, Position, 0);
     ecs_id_t ecs_id(Position) = ecs_field_id(it, 0);
 
@@ -1077,8 +1059,7 @@ void TMergeOnStore(ecs_iter_t *it) {
     }
 }
 
-static
-void TMergeManual(ecs_iter_t *it) {
+static void TMergeManual(ecs_iter_t *it) {
     Position *p = ecs_field(it, Position, 0);
     ecs_id_t ecs_id(Position) = ecs_field_id(it, 0);
 
@@ -1122,8 +1103,7 @@ void World_phases_w_merging(void) {
     ecs_fini(world);
 }
 
-static
-void TimeCheck(ecs_iter_t *it) {
+static void TimeCheck(ecs_iter_t *it) {
     test_assert(it->delta_time > 0);
 }
 
@@ -1188,8 +1168,7 @@ void World_control_fps(void) {
     ecs_fini(world);
 }
 
-static
-void busy_wait(float wait_time) {
+static void busy_wait(float wait_time) {
     ecs_time_t start, t;
     ecs_os_get_time(&start);
 
@@ -1198,8 +1177,7 @@ void busy_wait(float wait_time) {
     } while (ecs_time_measure(&t) < wait_time);
 }
 
-static
-void BusySystem(ecs_iter_t *it) {
+static void BusySystem(ecs_iter_t *it) {
     /* Spend 14msec doing something */
     busy_wait(0.014);
 }
@@ -1314,8 +1292,7 @@ void World_measure_delta_time_vs_actual(void) {
     ecs_fini(world);
 }
 
-static
-void RandomSystem(ecs_iter_t *it) {
+static void RandomSystem(ecs_iter_t *it) {
     /* wait at most 16msec */
     float rnd_time = ((float)rand() / (float)RAND_MAX) * 0.016;
     busy_wait(rnd_time);
@@ -2493,8 +2470,7 @@ typedef struct Test {
 
 static int at_fini_test_invoked = 0;
 
-static 
-void at_fini_test(
+static void at_fini_test(
     ecs_world_t* world,
     void* context) 
 {
@@ -2722,8 +2698,7 @@ void World_get_entities(void) {
 static
 int post_frame_action_invoked = 0;
 
-static
-void post_frame_action(
+static void post_frame_action(
     ecs_world_t *world, 
     void *ctx) 
 {
@@ -2839,8 +2814,7 @@ void World_exclusive_on_instantiate(void) {
     ecs_fini(world);
 }
 
-static
-void test_log(
+static void test_log(
     int32_t level,
     const char *file, 
     int32_t line,  

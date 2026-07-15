@@ -419,13 +419,11 @@ struct TVectorStringVector {
     std::vector<int> v2;
 };
 
-static
-int Int_serialize(const flecs::serializer *s, const Int *data) {
+static int Int_serialize(const flecs::serializer *s, const Int *data) {
     return s->value(data->v);
 }
 
-static
-int String_serialize(const flecs::serializer *s, const std::string *data) {
+static int String_serialize(const flecs::serializer *s, const std::string *data) {
     const char *str = data->c_str();
     return s->value(flecs::String, &str);
 }

@@ -8,8 +8,7 @@ ECS_TAG_DECLARE(Archer);
 ECS_TAG_DECLARE(Wizard);
 ECS_TAG_DECLARE(Warlock);
 
-static
-void populate_facts(ecs_world_t *world) {
+static void populate_facts(ecs_world_t *world) {
     ECS_TAG_DEFINE(world, Unit);
     ECS_ENTITY_DEFINE(world, MeleeUnit, (IsA, Unit));
     ECS_ENTITY_DEFINE(world, RangedUnit, (IsA, Unit));

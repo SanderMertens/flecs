@@ -3367,14 +3367,12 @@ static void String_assign(void *ptr, const char *value) {
     s->value = ecs_os_strdup(value);
 }
 
-static 
-size_t IntVec_count(const void *ptr) {
+static size_t IntVec_count(const void *ptr) {
     const IntVec *data = ptr;
     return data->count;
 }
 
-static 
-void* IntVec_ensure(void *ptr, size_t index) {
+static void* IntVec_ensure(void *ptr, size_t index) {
     IntVec *data = ptr;
     test_assert(data != NULL);
     if (data->count <= index) {
@@ -3384,8 +3382,7 @@ void* IntVec_ensure(void *ptr, size_t index) {
     return &data->array[index];
 }
 
-static 
-void IntVec_resize(void *ptr, size_t size) {
+static void IntVec_resize(void *ptr, size_t size) {
     IntVec *data = ptr;
     test_assert(data != NULL);
     if (data->count != size) {
@@ -3399,14 +3396,12 @@ void IntVec_resize(void *ptr, size_t size) {
     }
 }
 
-static 
-size_t StructVec_count(const void *ptr) {
+static size_t StructVec_count(const void *ptr) {
     const StructVec *data = ptr;
     return data->count;
 }
 
-static 
-void* StructVec_ensure(void *ptr, size_t index) {
+static void* StructVec_ensure(void *ptr, size_t index) {
     StructVec *data = ptr;
     test_assert(data != NULL);
     if (data->count <= index) {
@@ -3417,8 +3412,7 @@ void* StructVec_ensure(void *ptr, size_t index) {
     return &data->array[index];
 }
 
-static 
-void StructVec_resize(void *ptr, size_t size) {
+static void StructVec_resize(void *ptr, size_t size) {
     StructVec *data = ptr;
     test_assert(data != NULL);
     if (data->count != size) {
@@ -3432,15 +3426,13 @@ void StructVec_resize(void *ptr, size_t size) {
     }
 }
 
-static
-size_t StringVec_count(const void *ptr) {
+static size_t StringVec_count(const void *ptr) {
     const StringVec *data = ptr;
     test_assert(data != NULL);
     return data->count;
 }
 
-static 
-void* StringVec_ensure(void *ptr, size_t index) {
+static void* StringVec_ensure(void *ptr, size_t index) {
     StringVec *data = ptr;
     test_assert(data != NULL);
     if (data->count <= index) {
@@ -3451,8 +3443,7 @@ void* StringVec_ensure(void *ptr, size_t index) {
     return &data->array[index];
 }
 
-static 
-void StringVec_resize(void *ptr, size_t size) {
+static void StringVec_resize(void *ptr, size_t size) {
     StringVec *data = ptr;
     test_assert(data != NULL);
     if (data->count != size) {
@@ -3469,15 +3460,13 @@ void StringVec_resize(void *ptr, size_t size) {
     }
 }
 
-static
-size_t OpaqueStringVec_count(const void *ptr) {
+static size_t OpaqueStringVec_count(const void *ptr) {
     const OpaqueStringVec *data = ptr;
     test_assert(data != NULL);
     return data->count;
 }
 
-static 
-void* OpaqueStringVec_ensure(void *ptr, size_t index) {
+static void* OpaqueStringVec_ensure(void *ptr, size_t index) {
     OpaqueStringVec *data = ptr;
     test_assert(data != NULL);
     if (data->count <= index) {
@@ -3488,8 +3477,7 @@ void* OpaqueStringVec_ensure(void *ptr, size_t index) {
     return &data->array[index];
 }
 
-static 
-void OpaqueStringVec_resize(void *ptr, size_t size) {
+static void OpaqueStringVec_resize(void *ptr, size_t size) {
     OpaqueStringVec *data = ptr;
     test_assert(data != NULL);
     if (data->count != size) {

@@ -1,7 +1,6 @@
 #include <addons.h>
 
-static
-void Iter(ecs_iter_t *it) {
+static void Iter(ecs_iter_t *it) {
     Position *p = ecs_field(it, Position, 0);
 
     probe_iter(it);
@@ -76,8 +75,7 @@ void System_w_Empty_3_column_2_from_id(void) {
     ecs_fini(world); 
 }
 
-static
-void CheckColumnType(ecs_iter_t *it) {
+static void CheckColumnType(ecs_iter_t *it) {
     ecs_id_t ecs_id(Position) = ecs_field_id(it, 1);
 
     test_assert(ecs_id(Position) == ecs_field_id(it, 0));

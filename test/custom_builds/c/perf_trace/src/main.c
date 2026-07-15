@@ -4,16 +4,14 @@
 int push_invoked = 0;
 int pop_invoked = 0;
 
-static
-void trace_push(const char *file, size_t line, const char *name) {
+static void trace_push(const char *file, size_t line, const char *name) {
     (void)file;
     (void)line;
     (void)name;
     push_invoked ++;
 }
 
-static
-void trace_pop(const char *file, size_t line, const char *name) {
+static void trace_pop(const char *file, size_t line, const char *name) {
     (void)file;
     (void)line;
     (void)name;

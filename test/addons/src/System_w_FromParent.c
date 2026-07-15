@@ -4,8 +4,7 @@ void System_w_FromParent_setup(void) {
     ecs_log_set_level(-3);
 }
 
-static
-void Iter(ecs_iter_t *it) {
+static void Iter(ecs_iter_t *it) {
     Mass *m_ptr = ecs_field(it, Mass, 0);
     bool shared = false;
     
@@ -173,8 +172,7 @@ void System_w_FromParent_2_column_1_from_container(void) {
     ecs_fini(world);
 }
 
-static
-void Iter_2_shared(ecs_iter_t *it) {
+static void Iter_2_shared(ecs_iter_t *it) {
     Mass *m_ptr = ecs_field(it, Mass, 0);
 
     Rotation *r_ptr = NULL;
@@ -520,8 +518,7 @@ void System_w_FromParent_2_column_1_from_container_w_or(void) {
     ecs_fini(world);
 }
 
-static
-void Dummy(ecs_iter_t *it) {
+static void Dummy(ecs_iter_t *it) {
     Mass *m_ptr = ecs_field(it, Mass, 0);
     Position *p = ecs_field(it, Position, 1);
 
@@ -700,8 +697,7 @@ void System_w_FromParent_add_component_after_match_and_rematch_w_entity_type_exp
     ecs_fini(world);
 }
 
-static
-void SetMass(ecs_iter_t *it) {
+static void SetMass(ecs_iter_t *it) {
     ecs_id_t ecs_id(Mass) = ecs_field_id(it, 1);
 
     int i;
@@ -901,8 +897,7 @@ void System_w_FromParent_add_component_after_match_2_systems(void) {
     ecs_fini(world);
 }
 
-static
-void AddMass(ecs_iter_t *it) {
+static void AddMass(ecs_iter_t *it) {
     test_assert(it->ctx != NULL);
     ecs_entity_t ecs_id(Mass) = *(ecs_entity_t*)it->ctx;
 
