@@ -7027,9 +7027,6 @@ FLECS_API extern const ecs_entity_t EcsIsA;
 /** Used to express dependency relationships. */
 FLECS_API extern const ecs_entity_t EcsDependsOn;
 
-/** Used to express a slot (used with prefab inheritance). */
-FLECS_API extern const ecs_entity_t EcsSlotOf;
-
 /** Tag that, when added to a parent, ensures stable order of ecs_children() results. */
 FLECS_API extern const ecs_entity_t EcsOrderedChildren;
 
@@ -20734,9 +20731,6 @@ static const flecs::entity_t IsA = EcsIsA;
 static const flecs::entity_t ChildOf = EcsChildOf;
 /** DependsOn relationship. */
 static const flecs::entity_t DependsOn = EcsDependsOn;
-/** SlotOf relationship. */
-static const flecs::entity_t SlotOf = EcsSlotOf;
-
 /** OrderedChildren tag. */
 static const flecs::entity_t OrderedChildren = EcsOrderedChildren;
 
@@ -29871,24 +29865,6 @@ struct entity_builder : entity_view {
         return depends_on(target);
     }
 
-    /** Shortcut for `add(SlotOf, entity)`.
-     *
-     * @param second The second element of the pair.
-     */
-    const Self& slot_of(entity_t second) const  {
-        return this->add(flecs::SlotOf, second);
-    }
-
-    /** Shortcut for `add(SlotOf, target(ChildOf))`.
-     */
-    const Self& slot() const  {
-        ecs_check(ecs_get_target(world_, id_, flecs::ChildOf, 0), 
-            ECS_INVALID_PARAMETER, "add ChildOf pair before using slot()");
-        return this->slot_of(this->target(flecs::ChildOf));
-    error:
-        return to_base();
-    }
-
     /** Shortcut for `add(ChildOf, entity)`.
      *
      * @tparam T The type associated with the entity.
@@ -29905,15 +29881,6 @@ struct entity_builder : entity_view {
     template <typename T>
     const Self& depends_on() const  {
         return this->depends_on(_::type<T>::id(this->world_));
-    }
-
-    /** Shortcut for `add(SlotOf, entity)`.
-     *
-     * @tparam T The type associated with the entity.
-     */
-    template <typename T>
-    const Self& slot_of() const  {
-        return this->slot_of(_::type<T>::id(this->world_));
     }
 
     /** Remove a component from an entity.

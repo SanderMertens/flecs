@@ -312,7 +312,6 @@ void flecs_bootstrap_constraint_traits(
     /* Relationships */
     ecs_add_id(world, EcsChildOf, EcsRelationship);
     ecs_add_id(world, EcsIsA, EcsRelationship);
-    ecs_add_id(world, EcsSlotOf, EcsRelationship);
     ecs_add_id(world, EcsDependsOn, EcsRelationship);
     ecs_add_id(world, EcsWith, EcsRelationship);
     ecs_add_id(world, EcsOnDelete, EcsRelationship);

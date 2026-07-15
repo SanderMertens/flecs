@@ -1022,22 +1022,6 @@ void Error_unknown_identifier_for_int_field(void) {
     ecs_fini(world);
 }
 
-void Error_prefab_w_slot_no_parent(void) {
-    ecs_world_t *world = ecs_init();
-
-    const char *expr =
-    HEAD "slot Base {}";
-
-    ecs_log_set_level(-4);
-    ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
-    test_assert(result.error != NULL);
-    test_int(result.line, 1);
-    ecs_os_free(result.error);
-
-    ecs_fini(world);
-}
-
 void Error_tag_not_found(void) {
     ecs_world_t *world = ecs_init();
 

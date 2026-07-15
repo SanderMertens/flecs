@@ -270,20 +270,6 @@ prefab SpaceShip
 Prefab spaceship
 ```
 
-```cpp
-prefab SpaceShip {
-  slot CockPit
-}
-
-// is equivalent to
-
-prefab SpaceShip {
-  CockPit {
-    (SlotOf, SpaceShip)
-  }
-}
-```
-
 ### Inheritance
 Scripts can natively specify inheritance relationships between entities, which is useful in particular for prefabs. Example:
 

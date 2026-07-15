@@ -4549,15 +4549,6 @@ void flecs_register_trait_pair(ecs_iter_t *it) {
 }
 
 static
-void flecs_register_slot_of(ecs_iter_t *it) {
-    int i, count = it->count;
-    for (i = 0; i < count; i ++) {
-        ecs_add_id(it->world, it->entities[i], EcsDontFragment);
-        ecs_add_id(it->world, it->entities[i], EcsExclusive);
-    }
-}
-
-static
 void flecs_on_component(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
     EcsComponent *c = ecs_field(it, EcsComponent, 0);
@@ -5039,7 +5030,6 @@ void flecs_bootstrap(
     flecs_bootstrap_tag(world, EcsObserver);
 
     flecs_bootstrap_tag(world, EcsModule);
-    flecs_bootstrap_tag(world, EcsSlotOf);
     flecs_bootstrap_tag(world, EcsDisabled);
     flecs_bootstrap_tag(world, EcsNotQueryable);
     flecs_bootstrap_tag(world, EcsEmpty);
@@ -5235,18 +5225,6 @@ void flecs_bootstrap(
         .global_observer = true
     });
 
-    /* Entities used as slots are marked as exclusive to ensure a slot can always
-     * only point to a single entity. */
-    ecs_observer(world, {
-        .query.terms = {
-            { .id = ecs_pair(EcsSlotOf, EcsWildcard) }
-        },
-        .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
-        .events = {EcsOnAdd},
-        .callback = flecs_register_slot_of,
-        .global_observer = true
-    });
-
     /* Define observer to make sure that adding a module to a child entity also
      * adds it to the parent. */
     ecs_observer(world, {
@@ -5281,7 +5259,6 @@ void flecs_bootstrap(
     /* Tag relationships (relationships that should never have data) */
     ecs_add_id(world, EcsIsA, EcsPairIsTag);
     ecs_add_id(world, EcsChildOf, EcsPairIsTag);
-    ecs_add_id(world, EcsSlotOf, EcsPairIsTag);
     ecs_add_id(world, EcsDependsOn, EcsPairIsTag);
     ecs_add_id(world, EcsFlag, EcsPairIsTag);
     ecs_add_id(world, EcsWith, EcsPairIsTag);
@@ -5307,9 +5284,6 @@ void flecs_bootstrap(
     /* Transitive relationships */
     ecs_add_id(world, EcsIsA, EcsTransitive);
     ecs_add_id(world, EcsIsA, EcsReflexive);
-
-    /* Exclusive properties */
-    ecs_add_id(world, EcsSlotOf, EcsExclusive);
 
     /* Inherited components */
     ecs_add_pair(world, EcsIsA, EcsOnInstantiate, EcsInherit);
@@ -20981,7 +20955,6 @@ const ecs_entity_t EcsPrefab =                      FLECS_HI_COMPONENT_ID + 9;
 const ecs_entity_t EcsDisabled =                    FLECS_HI_COMPONENT_ID + 10;
 const ecs_entity_t EcsNotQueryable =                FLECS_HI_COMPONENT_ID + 11;
 
-const ecs_entity_t EcsSlotOf =                      FLECS_HI_COMPONENT_ID + 12;
 const ecs_entity_t EcsFlag =                        FLECS_HI_COMPONENT_ID + 13;
 
 /* Marker entities for query encoding */
@@ -46849,7 +46822,6 @@ void flecs_bootstrap_constraint_traits(
     /* Relationships */
     ecs_add_id(world, EcsChildOf, EcsRelationship);
     ecs_add_id(world, EcsIsA, EcsRelationship);
-    ecs_add_id(world, EcsSlotOf, EcsRelationship);
     ecs_add_id(world, EcsDependsOn, EcsRelationship);
     ecs_add_id(world, EcsWith, EcsRelationship);
     ecs_add_id(world, EcsOnDelete, EcsRelationship);
@@ -65844,92 +65816,6 @@ bool ecs_using_task_threads(
 #ifdef FLECS_PREFAB
 
 static
-void flecs_instantiate_slot(
-    ecs_world_t *world,
-    ecs_entity_t base,
-    ecs_entity_t instance,
-    ecs_entity_t slot_of,
-    ecs_entity_t slot,
-    ecs_entity_t child)
-{
-    if (base == slot_of) {
-        /* Instance inherits from slot_of, add slot to instance */
-        ecs_component_record_t *cr = flecs_components_ensure(
-            world, ecs_pair(slot, child));
-        ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
-
-        ecs_record_t *r = flecs_entities_get(world, instance);
-        ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
-
-        flecs_sparse_on_add_cr(world, 
-            r->table, ECS_RECORD_TO_ROW(r->row), cr, true, NULL);
-    } else {
-        /* Slot is registered for other prefab, travel hierarchy
-         * upwards to find instance that inherits from slot_of */
-        ecs_entity_t parent = instance;
-        int32_t depth = 0;
-        do {
-            if (ecs_has_pair(world, parent, EcsIsA, slot_of)) {
-                const char *name = ecs_get_name(world, slot);
-                if (name == NULL) {
-                    char *slot_of_str = ecs_get_path(world, slot_of);
-                    ecs_throw(ECS_INVALID_OPERATION, "prefab '%s' has unnamed "
-                        "slot (slots must be named)", slot_of_str);
-                    ecs_os_free(slot_of_str);
-                    return;
-                }
-
-                /* The 'slot' variable is currently pointing to a child (or 
-                 * grandchild) of the current base. Find the original slot by
-                 * looking it up under the prefab it was registered. */
-                if (depth == 0) {
-                    /* If the current instance is an instance of slot_of, just
-                     * lookup the slot by name, which is faster than having to
-                     * create a relative path. */
-                    slot = ecs_lookup_child(world, slot_of, name);
-                } else {
-                    /* If the slot is more than one level away from the slot_of
-                     * parent, use a relative path to find the slot */
-                    char *path = ecs_get_path_w_sep(world, parent, child, ".",
-                        NULL);
-                    slot = ecs_lookup_path_w_sep(world, slot_of, path, ".", 
-                        NULL, false);
-                    ecs_os_free(path);
-                }
-
-                if (slot == 0) {
-                    char *slot_of_str = ecs_get_path(world, slot_of);
-                    char *slot_str = ecs_get_path(world, slot);
-                    ecs_throw(ECS_INVALID_OPERATION,
-                        "'%s' is not in hierarchy for slot '%s'",
-                            slot_of_str, slot_str);
-                    ecs_os_free(slot_of_str);
-                    ecs_os_free(slot_str);
-                }
-
-                ecs_add_pair(world, parent, slot, child);
-                break;
-            }
-
-            depth ++;
-        } while ((parent = ecs_get_target(world, parent, EcsChildOf, 0)));
-        
-        if (parent == 0) {
-            char *slot_of_str = ecs_get_path(world, slot_of);
-            char *slot_str = ecs_get_path(world, slot);
-            ecs_throw(ECS_INVALID_OPERATION,
-                "'%s' is not in hierarchy for slot '%s'",
-                    slot_of_str, slot_str);
-            ecs_os_free(slot_of_str);
-            ecs_os_free(slot_str);
-        }
-    }
-
-error:
-    return;
-}
-
-static
 int32_t flecs_child_type_insert(
     ecs_type_t *type,
     void **component_data,
@@ -66071,7 +65957,6 @@ void flecs_instantiate_children(
     ecs_table_t *child_table = child_range.table;
     ecs_type_t type = child_table->type;
 
-    ecs_entity_t slot_of = 0;
     ecs_entity_t *ids = type.array;
     int32_t type_count = type.count;
 
@@ -66103,17 +65988,6 @@ void flecs_instantiate_children(
             ecs_table_record_t *tr = &child_table->_->records[i];
             ecs_component_record_t *cr = tr->hdr.cr;
             if (cr->flags & EcsIdOnInstantiateDontInherit) {
-                continue;
-            }
-        }
-
-        /* If child is a slot, keep track of which parent to add it to, but
-         * don't add slot relationship to child of instance. If this is a child
-         * of a prefab, keep the SlotOf relationship intact. */
-        if (!(table->flags & EcsTableIsPrefab)) {
-            if (ECS_IS_PAIR(id) && ECS_PAIR_FIRST(id) == EcsSlotOf) {
-                ecs_assert(slot_of == 0, ECS_INTERNAL_ERROR, NULL);
-                slot_of = ecs_pair_second(world, id);
                 continue;
             }
         }
@@ -66221,16 +66095,6 @@ void flecs_instantiate_children(
 
     flecs_instantiate_sparse(
         world, &child_range, children, i_table, i_children, child_row, false);
-
-    /* If children are slots, add slot relationships to parent */
-    if (slot_of) {
-        for (j = 0; j < child_range.count; j ++) {
-            ecs_entity_t child = children[j + child_range.offset];
-            ecs_entity_t i_child = i_children[j];
-            flecs_instantiate_slot(
-                world, base, instance, slot_of, child, i_child);
-        }
-    }
 
     /* If prefab child table has children itself, recursively instantiate */
     for (j = 0; j < child_range.count; j ++) {
@@ -74278,7 +74142,6 @@ int flecs_script_check_entity(
             flecs_script_eval_error(v, node, "prefabs are unsupported in this "
                 "flecs build, enable FLECS_PREFAB addon");
 #endif
-        } else if (!ecs_os_strcmp(node->kind, "slot")) {
         } else if (flecs_script_eval_id(v, node, &id)) {
             return -1;
         }
@@ -75537,7 +75400,6 @@ int flecs_script_eval_entity(
     ecs_script_eval_visitor_t *v,
     ecs_script_entity_t *node)
 {
-    bool is_slot = false;
     if (node->kind) {
         ecs_script_id_t id = {
             .first = node->kind,
@@ -75551,8 +75413,6 @@ int flecs_script_eval_entity(
             flecs_script_eval_error(v, node, "prefabs are unsupported in this "
                 "flecs build, enable FLECS_PREFAB addon");
 #endif
-        } else if (!ecs_os_strcmp(node->kind, "slot")) {
-            is_slot = true;
         } else if (flecs_script_eval_id(v, node, &id)) {
             return -1;
         }
@@ -75582,18 +75442,6 @@ int flecs_script_eval_entity(
     if (v->template_entity) {
         ecs_add_pair(
             v->world, node->eval, EcsScriptTemplate, v->template_entity);
-    }
-
-    if (is_slot) {
-        ecs_entity_t parent = ecs_get_target(
-            v->world, node->eval, EcsChildOf, 0);
-        if (!parent) {
-            flecs_script_eval_error(v, node, 
-                "slot entity must have a parent");
-            return -1;
-        }
-
-        ecs_add_pair(v->world, node->eval, EcsSlotOf, parent);
     }
 
     const EcsDefaultChildComponent *default_comp = NULL;

@@ -222,9 +222,6 @@ static const flecs::entity_t IsA = EcsIsA;
 static const flecs::entity_t ChildOf = EcsChildOf;
 /** DependsOn relationship. */
 static const flecs::entity_t DependsOn = EcsDependsOn;
-/** SlotOf relationship. */
-static const flecs::entity_t SlotOf = EcsSlotOf;
-
 /** OrderedChildren tag. */
 static const flecs::entity_t OrderedChildren = EcsOrderedChildren;
 

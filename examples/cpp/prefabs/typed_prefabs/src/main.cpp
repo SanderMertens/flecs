@@ -11,7 +11,7 @@
 //
 // While this functionality is not unique to prefabs (the same mechanism is
 // used to distribute component handles), prefabs are a good fit, especially
-// when combined with prefab slots (see slots example and code below).
+// when combined with prefab hierarchies.
 
 // Create types that mirror the prefab hierarchy.
 struct Turret {
@@ -28,19 +28,19 @@ int main() {
 
     // Associate types with prefabs
     ecs.prefab<Turret>();
-        ecs.prefab<Turret::Base>().slot_of<Turret>();
-        ecs.prefab<Turret::Head>().slot_of<Turret>();
+        ecs.prefab<Turret::Base>();
+        ecs.prefab<Turret::Head>();
 
     ecs.prefab<Railgun>().is_a<Turret>();
-        ecs.prefab<Railgun::Beam>().slot_of<Railgun>();
+        ecs.prefab<Railgun::Beam>();
 
     // Create prefab instance.
     flecs::entity inst = ecs.entity("my_railgun").is_a<Railgun>();
 
-    // Get entities for slots
-    flecs::entity inst_base = inst.target<Turret::Base>();
-    flecs::entity inst_head = inst.target<Turret::Head>();
-    flecs::entity inst_beam = inst.target<Railgun::Beam>();
+    // Get instantiated children by name
+    flecs::entity inst_base = inst.lookup("Base");
+    flecs::entity inst_head = inst.lookup("Head");
+    flecs::entity inst_beam = inst.lookup("Beam");
 
     std::cout << "instance base: " << inst_base.path() << "\n";
     std::cout << "instance head: " << inst_head.path() << "\n";

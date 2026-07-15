@@ -1153,7 +1153,6 @@ void OrderedChildren_get_ordered_children_from_prefab_instance_3_children_differ
 void OrderedChildren_get_ordered_children_from_prefab_instance_nested_children(void);
 void OrderedChildren_prefab_w_nested_ordered_children(void);
 void OrderedChildren_prefab_w_nested_ordered_children_2(void);
-void OrderedChildren_prefab_w_slots(void);
 void OrderedChildren_prefab_get_target_after_reorder(void);
 void OrderedChildren_recreate_named_child(void);
 void OrderedChildren_lookup_after_move_to_root(void);
@@ -2592,20 +2591,6 @@ void Prefab_override_dont_inherit(void);
 void Prefab_prefab_child_w_dont_inherit_component(void);
 void Prefab_prefab_child_override(void);
 void Prefab_prefab_child_override_w_exclusive_pair(void);
-void Prefab_prefab_1_slot(void);
-void Prefab_prefab_2_slots(void);
-void Prefab_prefab_w_nested_slot(void);
-void Prefab_prefab_w_mixed_slots(void);
-void Prefab_prefab_variant_w_slot(void);
-void Prefab_prefab_variant_w_base_slot(void);
-void Prefab_prefab_variant_w_mixed_slots(void);
-void Prefab_override_slot(void);
-void Prefab_2_instances_w_slots_same_table(void);
-void Prefab_slot_has_union(void);
-void Prefab_slot_override(void);
-void Prefab_base_slot_override(void);
-void Prefab_has_slot_after_delete(void);
-void Prefab_has_slot_after_clear(void);
 void Prefab_override_twice_w_add(void);
 void Prefab_override_twice_w_set(void);
 void Prefab_auto_override_copy_once(void);
@@ -2665,7 +2650,6 @@ void Prefab_defer_instantiate_and_set_inherit_and_override(void);
 void Prefab_defer_instantiate_and_set_inherit_and_new(void);
 void Prefab_instantiate_while_defer_suspended(void);
 void Prefab_instantiate_w_union_while_defer_suspended(void);
-void Prefab_instantiate_w_slot_while_defer_suspended(void);
 void Prefab_instantiate_w_sparse_component_while_defer_suspended(void);
 void Prefab_instantiate_w_sparse_tag_while_defer_suspended(void);
 void Prefab_instantiate_w_sparse_pair_while_defer_suspended(void);
@@ -7898,10 +7882,6 @@ bake_test_case OrderedChildren_testcases[] = {
     {
         "prefab_w_nested_ordered_children_2",
         OrderedChildren_prefab_w_nested_ordered_children_2
-    },
-    {
-        "prefab_w_slots",
-        OrderedChildren_prefab_w_slots
     },
     {
         "prefab_get_target_after_reorder",
@@ -13523,62 +13503,6 @@ bake_test_case Prefab_testcases[] = {
         Prefab_prefab_child_override_w_exclusive_pair
     },
     {
-        "prefab_1_slot",
-        Prefab_prefab_1_slot
-    },
-    {
-        "prefab_2_slots",
-        Prefab_prefab_2_slots
-    },
-    {
-        "prefab_w_nested_slot",
-        Prefab_prefab_w_nested_slot
-    },
-    {
-        "prefab_w_mixed_slots",
-        Prefab_prefab_w_mixed_slots
-    },
-    {
-        "prefab_variant_w_slot",
-        Prefab_prefab_variant_w_slot
-    },
-    {
-        "prefab_variant_w_base_slot",
-        Prefab_prefab_variant_w_base_slot
-    },
-    {
-        "prefab_variant_w_mixed_slots",
-        Prefab_prefab_variant_w_mixed_slots
-    },
-    {
-        "override_slot",
-        Prefab_override_slot
-    },
-    {
-        "2_instances_w_slots_same_table",
-        Prefab_2_instances_w_slots_same_table
-    },
-    {
-        "slot_has_union",
-        Prefab_slot_has_union
-    },
-    {
-        "slot_override",
-        Prefab_slot_override
-    },
-    {
-        "base_slot_override",
-        Prefab_base_slot_override
-    },
-    {
-        "has_slot_after_delete",
-        Prefab_has_slot_after_delete
-    },
-    {
-        "has_slot_after_clear",
-        Prefab_has_slot_after_clear
-    },
-    {
         "override_twice_w_add",
         Prefab_override_twice_w_add
     },
@@ -13813,10 +13737,6 @@ bake_test_case Prefab_testcases[] = {
     {
         "instantiate_w_union_while_defer_suspended",
         Prefab_instantiate_w_union_while_defer_suspended
-    },
-    {
-        "instantiate_w_slot_while_defer_suspended",
-        Prefab_instantiate_w_slot_while_defer_suspended
     },
     {
         "instantiate_w_sparse_component_while_defer_suspended",
@@ -16794,7 +16714,7 @@ static bake_test_suite suites[] = {
         "OrderedChildren",
         NULL,
         NULL,
-        49,
+        48,
         OrderedChildren_testcases
     },
     {
@@ -16941,7 +16861,7 @@ static bake_test_suite suites[] = {
         "Prefab",
         Prefab_setup,
         NULL,
-        205,
+        190,
         Prefab_testcases
     },
     {

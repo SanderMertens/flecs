@@ -1628,29 +1628,6 @@ void OrderedChildren_prefab_w_nested_ordered_children_2(void) {
     ecs_fini(world);
 }
 
-void OrderedChildren_prefab_w_slots(void) {
-    ecs_world_t *world = ecs_mini();
-
-    ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
-    ecs_add_id(world, p, EcsOrderedChildren);
-
-    ecs_entity_t pc1 = ecs_new_w_pair(world, EcsChildOf, p);
-    ecs_add_pair(world, pc1, EcsSlotOf, p);
-    ecs_entity_t pc2 = ecs_new_w_pair(world, EcsChildOf, p);
-    ecs_add_pair(world, pc2, EcsSlotOf, p);
-    ecs_entity_t pc3 = ecs_new_w_pair(world, EcsChildOf, p);
-    ecs_add_pair(world, pc3, EcsSlotOf, p);
-
-    ecs_entity_t i = ecs_new_w_pair(world, EcsIsA, p);
-    ecs_entities_t children = ecs_get_ordered_children(world, i);
-    test_int(children.count, 3);
-    test_assert(ecs_get_target(world, i, pc1, 0) == children.ids[0]);
-    test_assert(ecs_get_target(world, i, pc2, 0) == children.ids[1]);
-    test_assert(ecs_get_target(world, i, pc3, 0) == children.ids[2]);
-
-    ecs_fini(world);
-}
-
 void OrderedChildren_prefab_get_target_after_reorder(void) {
     install_test_abort();
     ecs_world_t *world = ecs_mini();
