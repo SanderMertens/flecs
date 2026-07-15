@@ -7707,6 +7707,8 @@ error:
 #ifndef FLECS_QUERY_DSL_H
 #define FLECS_QUERY_DSL_H
 
+#ifdef FLECS_QUERY_DSL
+
 int flecs_terms_parse(
     ecs_world_t *world,
     const char *name,
@@ -7727,6 +7729,8 @@ const char* flecs_id_parse(
     const char *name,
     const char *expr,
     ecs_id_t *id);
+
+#endif
 
 #endif
 
@@ -11004,6 +11008,12 @@ bool flecs_path_append(
 {
     flecs_poly_assert(world, ecs_world_t);
     ecs_assert(sep[0] != 0, ECS_INVALID_PARAMETER, NULL);
+#ifndef FLECS_PARSER
+    if (escape) {
+        ecs_abort(ECS_UNSUPPORTED,
+            "escaped paths require the FLECS_PARSER addon");
+    }
+#endif
 
     ecs_entity_t cur = 0;
     const char *name = NULL;
@@ -11055,8 +11065,11 @@ bool flecs_path_append(
             const char *name_ptr;
             char ch;
             for (name_ptr = name; (ch = name_ptr[0]); name_ptr ++) {
+#ifdef FLECS_PARSER
                 char esc[3];
+#endif
                 if (ch != sep[0]) {
+#ifdef FLECS_PARSER
                     if (escape) {
                         flecs_chresc(esc, ch, '\"');
                         ecs_strbuf_appendch(buf, esc[0]);
@@ -11066,11 +11079,16 @@ bool flecs_path_append(
                     } else {
                         ecs_strbuf_appendch(buf, ch);
                     }
+#else
+                    ecs_strbuf_appendch(buf, ch);
+#endif
                 } else {
                     if (!escape) {
                         ecs_strbuf_appendch(buf, '\\');
                         ecs_strbuf_appendch(buf, sep[0]);
-                    } else {
+                    }
+#ifdef FLECS_PARSER
+                    else {
                         ecs_strbuf_appendlit(buf, "\\\\");
                         flecs_chresc(esc, ch, '\"');
                         ecs_strbuf_appendch(buf, esc[0]);
@@ -11078,6 +11096,7 @@ bool flecs_path_append(
                             ecs_strbuf_appendch(buf, esc[1]);
                         }
                     }
+#endif
                 }
             }
         } else {
@@ -13786,231 +13805,6 @@ char* flecs_load_from_file(
     ecs_os_fclose(file);
 
     return content;
-}
-
-char* flecs_chresc(
-    char *out, 
-    char in, 
-    char delimiter) 
-{
-    char *bptr = out;
-    switch(in) {
-    case '\a':
-        *bptr++ = '\\';
-        *bptr = 'a';
-        break;
-    case '\b':
-        *bptr++ = '\\';
-        *bptr = 'b';
-        break;
-    case '\f':
-        *bptr++ = '\\';
-        *bptr = 'f';
-        break;
-    case '\n':
-        *bptr++ = '\\';
-        *bptr = 'n';
-        break;
-    case '\r':
-        *bptr++ = '\\';
-        *bptr = 'r';
-        break;
-    case '\t':
-        *bptr++ = '\\';
-        *bptr = 't';
-        break;
-    case '\v':
-        *bptr++ = '\\';
-        *bptr = 'v';
-        break;
-    case '\\':
-        *bptr++ = '\\';
-        *bptr = '\\';
-        break;
-    case '\033':
-        *bptr = '['; /* Used for terminal colors */
-        break;
-    default:
-        if (in == delimiter) {
-            *bptr++ = '\\';
-            *bptr = delimiter;
-        } else {
-            *bptr = in;
-        }
-        break;
-    }
-
-    *(++bptr) = '\0';
-
-    return bptr;
-}
-
-const char* flecs_chrparse(
-    const char *in, 
-    char *out) 
-{
-    const char *result = in + 1;
-    char ch;
-
-    if (in[0] == '\\') {
-        result ++;
-
-        switch(in[1]) {
-        case 'a':
-            ch = '\a';
-            break;
-        case 'b':
-            ch = '\b';
-            break;
-        case 'f':
-            ch = '\f';
-            break;
-        case 'n':
-            ch = '\n';
-            break;
-        case 'r':
-            ch = '\r';
-            break;
-        case 't':
-            ch = '\t';
-            break;
-        case 'v':
-            ch = '\v';
-            break;
-        case '\\':
-            ch = '\\';
-            break;
-        case '"':
-            ch = '"';
-            break;
-        case '0':
-            ch = '\0';
-            break;
-        case ' ':
-            ch = ' ';
-            break;
-        case '$':
-            ch = '$';
-            break;
-        default:
-            goto error;
-        }
-    } else {
-        ch = in[0];
-    }
-
-    if (out) {
-        *out = ch;
-    }
-
-    return result;
-error:
-    return NULL;
-}
-
-ecs_size_t flecs_stresc(
-    char *out, 
-    ecs_size_t n, 
-    char delimiter, 
-    const char *in) 
-{
-    const char *ptr = in;
-    char ch, *bptr = out, buff[3];
-    ecs_size_t written = 0;
-    while ((ch = *ptr++)) {
-        if ((written += (ecs_size_t)(flecs_chresc(
-            buff, ch, delimiter) - buff)) <= n) 
-        {
-            /* If size != 0, an out buffer must be provided. */
-            ecs_check(out != NULL, ECS_INVALID_PARAMETER, NULL);
-            *bptr++ = buff[0];
-            if ((ch = buff[1])) {
-                *bptr = ch;
-                bptr++;
-            }
-        }
-    }
-
-    if (bptr) {
-        while (written < n) {
-            *bptr = '\0';
-            bptr++;
-            written++;
-        }
-    }
-    return written;
-error:
-    return 0;
-}
-
-char* flecs_astresc(
-    char delimiter, 
-    const char *in)
-{
-    if (!in) {
-        return NULL;
-    }
-
-    ecs_size_t len = flecs_stresc(NULL, 0, delimiter, in);
-    char *out = ecs_os_malloc_n(char, len + 1);
-    flecs_stresc(out, len, delimiter, in);
-    out[len] = '\0';
-    return out;
-}
-
-static
-bool flecs_parse_is_e(
-    char e)
-{
-    return e == 'e' || e == 'E';
-}
-
-const char* flecs_parse_digit(
-    const char *ptr,
-    char *token,
-    int32_t token_size)
-{
-    char *tptr = token;
-    char ch = ptr[0];
-
-    if (!isdigit(ch) && ch != '-') {
-        ecs_parser_error(NULL, NULL, 0, "invalid start of number '%s'", ptr);
-        return NULL;
-    }
-
-    tptr[0] = ch;
-    tptr ++;
-    ptr ++;
-
-    for (; (ch = *ptr); ptr ++) {
-        if (!isdigit(ch) && (ch != '.') && !flecs_parse_is_e(ch)) {
-            if (ch != '-' || !flecs_parse_is_e(ptr[-1])) {
-                break;
-            }
-        }
-
-        if ((tptr - token) >= (token_size - 1)) {
-            ecs_parser_error(NULL, NULL, 0, "number too long");
-            return NULL;
-        }
-
-        tptr[0] = ch;
-        tptr ++;
-    }
-
-    tptr[0] = '\0';
-
-    return ptr;
-}
-
-const char* flecs_parse_ws_eol(
-    const char *ptr)
-{
-    while (isspace(*ptr)) {
-        ptr ++;
-    }
-
-    return ptr;
 }
 
 #define FLECS_ERRSTR_MAX (256)
@@ -27445,6 +27239,8 @@ void flecs_component_ids_set(
 
 #endif
 
+#ifdef FLECS_REST
+
 #ifndef FLECS_PIPELINE_PRIVATE_H
 #define FLECS_PIPELINE_PRIVATE_H
 
@@ -27830,8 +27626,6 @@ void flecs_json_assemble_output(
 #endif
 
 #endif /* FLECS_JSON_PRIVATE_H */
-
-#ifdef FLECS_REST
 
 /* Retain captured commands for one minute at 60 FPS */
 #define FLECS_REST_COMMAND_RETAIN_COUNT (60 * 60)
@@ -49647,6 +49441,8 @@ const char* ecs_world_from_json_file(
 #ifndef FLECS_PARSER_H
 #define FLECS_PARSER_H
 
+#ifdef FLECS_PARSER
+
 typedef struct ecs_script_impl_t ecs_script_impl_t;
 typedef struct ecs_script_scope_t ecs_script_scope_t;
 
@@ -49793,6 +49589,8 @@ const char* flecs_tokenizer_identifier(
 int64_t flecs_parser_errpos(
     const ecs_parser_t *parser,
     const char *pos);
+
+#endif
 
 #endif
 
@@ -63714,6 +63512,235 @@ void ecs_set_os_api_impl(void) {
 
 #ifdef FLECS_PARSER
 
+char* flecs_chresc(
+    char *out,
+    char in,
+    char delimiter)
+{
+    char *bptr = out;
+    switch(in) {
+    case '\a':
+        *bptr++ = '\\';
+        *bptr = 'a';
+        break;
+    case '\b':
+        *bptr++ = '\\';
+        *bptr = 'b';
+        break;
+    case '\f':
+        *bptr++ = '\\';
+        *bptr = 'f';
+        break;
+    case '\n':
+        *bptr++ = '\\';
+        *bptr = 'n';
+        break;
+    case '\r':
+        *bptr++ = '\\';
+        *bptr = 'r';
+        break;
+    case '\t':
+        *bptr++ = '\\';
+        *bptr = 't';
+        break;
+    case '\v':
+        *bptr++ = '\\';
+        *bptr = 'v';
+        break;
+    case '\\':
+        *bptr++ = '\\';
+        *bptr = '\\';
+        break;
+    case '\033':
+        *bptr = '['; /* Used for terminal colors */
+        break;
+    default:
+        if (in == delimiter) {
+            *bptr++ = '\\';
+            *bptr = delimiter;
+        } else {
+            *bptr = in;
+        }
+        break;
+    }
+
+    *(++bptr) = '\0';
+
+    return bptr;
+}
+
+const char* flecs_chrparse(
+    const char *in,
+    char *out)
+{
+    const char *result = in + 1;
+    char ch;
+
+    if (in[0] == '\\') {
+        result ++;
+
+        switch(in[1]) {
+        case 'a':
+            ch = '\a';
+            break;
+        case 'b':
+            ch = '\b';
+            break;
+        case 'f':
+            ch = '\f';
+            break;
+        case 'n':
+            ch = '\n';
+            break;
+        case 'r':
+            ch = '\r';
+            break;
+        case 't':
+            ch = '\t';
+            break;
+        case 'v':
+            ch = '\v';
+            break;
+        case '\\':
+            ch = '\\';
+            break;
+        case '"':
+            ch = '"';
+            break;
+        case '0':
+            ch = '\0';
+            break;
+        case ' ':
+            ch = ' ';
+            break;
+        case '$':
+            ch = '$';
+            break;
+        default:
+            goto error;
+        }
+    } else {
+        ch = in[0];
+    }
+
+    if (out) {
+        *out = ch;
+    }
+
+    return result;
+error:
+    return NULL;
+}
+
+ecs_size_t flecs_stresc(
+    char *out,
+    ecs_size_t n,
+    char delimiter,
+    const char *in)
+{
+    const char *ptr = in;
+    char ch, *bptr = out, buff[3];
+    ecs_size_t written = 0;
+    while ((ch = *ptr++)) {
+        if ((written += (ecs_size_t)(flecs_chresc(
+            buff, ch, delimiter) - buff)) <= n)
+        {
+            /* If size != 0, an out buffer must be provided. */
+            ecs_check(out != NULL, ECS_INVALID_PARAMETER, NULL);
+            *bptr++ = buff[0];
+            if ((ch = buff[1])) {
+                *bptr = ch;
+                bptr++;
+            }
+        }
+    }
+
+    if (bptr) {
+        while (written < n) {
+            *bptr = '\0';
+            bptr++;
+            written++;
+        }
+    }
+    return written;
+error:
+    return 0;
+}
+
+char* flecs_astresc(
+    char delimiter,
+    const char *in)
+{
+    if (!in) {
+        return NULL;
+    }
+
+    ecs_size_t len = flecs_stresc(NULL, 0, delimiter, in);
+    char *out = ecs_os_malloc_n(char, len + 1);
+    flecs_stresc(out, len, delimiter, in);
+    out[len] = '\0';
+    return out;
+}
+
+static
+bool flecs_parse_is_e(
+    char e)
+{
+    return e == 'e' || e == 'E';
+}
+
+const char* flecs_parse_digit(
+    const char *ptr,
+    char *token,
+    int32_t token_size)
+{
+    char *tptr = token;
+    char ch = ptr[0];
+
+    if (!isdigit(ch) && ch != '-') {
+        ecs_parser_error(NULL, NULL, 0, "invalid start of number '%s'", ptr);
+        return NULL;
+    }
+
+    tptr[0] = ch;
+    tptr ++;
+    ptr ++;
+
+    for (; (ch = *ptr); ptr ++) {
+        if (!isdigit(ch) && (ch != '.') && !flecs_parse_is_e(ch)) {
+            if (ch != '-' || !flecs_parse_is_e(ptr[-1])) {
+                break;
+            }
+        }
+
+        if ((tptr - token) >= (token_size - 1)) {
+            ecs_parser_error(NULL, NULL, 0, "number too long");
+            return NULL;
+        }
+
+        tptr[0] = ch;
+        tptr ++;
+    }
+
+    tptr[0] = '\0';
+
+    return ptr;
+}
+
+const char* flecs_parse_ws_eol(
+    const char *ptr)
+{
+    while (isspace(*ptr)) {
+        ptr ++;
+    }
+
+    return ptr;
+}
+
+#endif
+
+#ifdef FLECS_PARSER
+
 int64_t flecs_parser_errpos(
     const ecs_parser_t *parser,
     const char *pos)
@@ -67068,6 +67095,8 @@ void flecs_tree_spawner_assert_not_instantiated(
 
 #endif
 
+#ifdef FLECS_QUERY_DSL
+
 #ifndef FLECS_PARSER_GRAMMAR_H
 #define FLECS_PARSER_GRAMMAR_H
 
@@ -67350,8 +67379,6 @@ void flecs_tree_spawner_assert_not_instantiated(
 #define EndOfRule return pos
 
 #endif
-
-#ifdef FLECS_QUERY_DSL
 
 #define EcsTokTermIdentifier\
     EcsTokIdentifier:\
@@ -77935,6 +77962,8 @@ error:
 
 #endif
 
+#ifdef FLECS_STATS
+
 #ifndef FLECS_STATS_PRIVATE_H
 #define FLECS_STATS_PRIVATE_H
 
@@ -77984,8 +78013,6 @@ void flecs_stats_memory_register_reflection(
 
 #ifdef FLECS_REST
 #endif
-
-#ifdef FLECS_STATS
 
 ECS_COMPONENT_DECLARE(ecs_entities_memory_t);
 ECS_COMPONENT_DECLARE(ecs_component_index_memory_t);
@@ -84677,11 +84704,11 @@ bool flecs_query_needs_plan(
     return true;
 }
 
+#ifdef FLECS_QUERY_PLANS
 static
 void flecs_query_compile_trivial(
     ecs_query_impl_t *query)
 {
-#ifdef FLECS_QUERY_PLANS
     /* Initialize space for $this variable */
     query->pub.var_count = 1;
     query->var_count = 1;
@@ -84689,12 +84716,7 @@ void flecs_query_compile_trivial(
     query->vars = &flecs_this_array;
     query->pub.vars = &flecs_this_name_array;
     query->pub.flags |= EcsQueryHasTableThisVar;
-#else
-    (void)query;
-#endif
 }
-
-#ifdef FLECS_QUERY_PLANS
 
 static
 bool flecs_query_var_is_anonymous(
@@ -85887,12 +85909,9 @@ int flecs_query_compile(
     ecs_stage_t *stage,
     ecs_query_impl_t *query)
 {
-    (void)world;
-    (void)stage;
+    (void)world; (void)stage;
     ecs_check(!flecs_query_needs_plan(query), ECS_UNSUPPORTED,
         "query uses features that require the FLECS_QUERY_PLANS addon");
-
-    flecs_query_compile_trivial(query);
     return 0;
 error:
     return -1;

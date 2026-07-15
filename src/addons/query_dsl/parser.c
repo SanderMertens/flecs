@@ -4,10 +4,10 @@
  */
 
 #include "flecs.h"
-#include "../parser/grammar.h"
 
 #ifdef FLECS_QUERY_DSL
 
+#include "../parser/grammar.h"
 #include "query_dsl.h"
 
 #define EcsTokTermIdentifier\

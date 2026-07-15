@@ -8,6 +8,8 @@
 
 #include "../../private_api.h"
 
+#ifdef FLECS_QUERY_DSL
+
 int flecs_terms_parse(
     ecs_world_t *world,
     const char *name,
@@ -28,5 +30,7 @@ const char* flecs_id_parse(
     const char *name,
     const char *expr,
     ecs_id_t *id);
+
+#endif
 
 #endif

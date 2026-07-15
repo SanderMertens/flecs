@@ -3,12 +3,13 @@
  * @brief Stats addon.
  */
 
-#include "stats.h"
-
-#include "../system/system.h"
-#include "../pipeline/pipeline.h"
+#include "flecs.h"
 
 #ifdef FLECS_STATS
+
+#include "stats.h"
+#include "../system/system.h"
+#include "../pipeline/pipeline.h"
 
 #define ECS_GAUGE_RECORD(m, t, value)\
     flecs_gauge_record(m, t, (ecs_float_t)(value))

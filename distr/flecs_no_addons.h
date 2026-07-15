@@ -4948,9 +4948,6 @@ extern "C" {
  * cycle-detected error. */
 #define ECS_MAX_RECURSION (512)
 
-/** Maximum length of a parser token (used by parser-related addons). */
-#define ECS_MAX_TOKEN_SIZE (256)
-
 /** Convert a C module name into a path.
  * This operation converts a PascalCase name to a path, for example, MyFooModule
  * into my.foo.module.
@@ -5061,88 +5058,6 @@ FLECS_API
 char* flecs_asprintf(
     const char *fmt,
     ...);
-
-/** Write an escaped character.
- * Write a character to an output string, inserting an escape character if necessary.
- *
- * @param out The string to write the character to.
- * @param in The input character.
- * @param delimiter The delimiter used (for example, '"').
- * @return Pointer to the character after the last one written.
- */
-FLECS_API
-char* flecs_chresc(
-    char *out,
-    char in,
-    char delimiter);
-
-/** Parse an escaped character.
- * Parse a character with a potential escape sequence.
- *
- * @param in Pointer to a character in the input string.
- * @param out Output string.
- * @return Pointer to the character after the last one read.
- */
-const char* flecs_chrparse(
-    const char *in,
-    char *out);
-
-/** Write an escaped string.
- * Write an input string to an output string, escaping characters where necessary.
- * To determine the size of the output string, call the operation with a NULL
- * argument for 'out', and use the returned size to allocate a string that is
- * large enough.
- *
- * @param out Pointer to output string (may be NULL).
- * @param size Maximum number of characters written to output.
- * @param delimiter The delimiter used (for example, '"').
- * @param in The input string.
- * @return The number of characters that (would) have been written.
- */
-FLECS_API
-ecs_size_t flecs_stresc(
-    char *out,
-    ecs_size_t size,
-    char delimiter,
-    const char *in);
-
-/** Return an escaped string.
- * Same as flecs_stresc(), but returns an
- * allocated string of the right size.
- *
- * @param delimiter The delimiter used (for example, '"').
- * @param in The input string.
- * @return The escaped string.
- */
-FLECS_API
-char* flecs_astresc(
-    char delimiter,
-    const char *in);
-
-/** Skip whitespace and newline characters.
- * This function skips whitespace characters.
- *
- * @param ptr Pointer to (potential) whitespace to skip.
- * @return Pointer to the next non-whitespace character.
- */
-FLECS_API
-const char* flecs_parse_ws_eol(
-    const char *ptr);
-
-/** Parse a digit.
- * This function will parse until the first non-digit character is found. The
- * provided expression must contain at least one digit character.
- *
- * @param ptr The expression to parse.
- * @param token The output buffer.
- * @param token_size The size of the output buffer.
- * @return Pointer to the first non-digit character.
- */
-FLECS_API
-const char* flecs_parse_digit(
-    const char *ptr,
-    char *token,
-    int32_t token_size);
 
 /* Convert an identifier to snake case. */
 FLECS_API

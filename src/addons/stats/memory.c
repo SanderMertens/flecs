@@ -4,14 +4,15 @@
  */
 
 #include "flecs.h"
+
+#ifdef FLECS_STATS
+
 #include "stats.h"
 #include "../pipeline/pipeline.h"
 
 #ifdef FLECS_REST
 #include "../http/http.h"
 #endif
-
-#ifdef FLECS_STATS
 
 ECS_COMPONENT_DECLARE(ecs_entities_memory_t);
 ECS_COMPONENT_DECLARE(ecs_component_index_memory_t);

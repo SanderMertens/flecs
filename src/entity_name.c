@@ -19,6 +19,12 @@ bool flecs_path_append(
 {
     flecs_poly_assert(world, ecs_world_t);
     ecs_assert(sep[0] != 0, ECS_INVALID_PARAMETER, NULL);
+#ifndef FLECS_PARSER
+    if (escape) {
+        ecs_abort(ECS_UNSUPPORTED,
+            "escaped paths require the FLECS_PARSER addon");
+    }
+#endif
 
     ecs_entity_t cur = 0;
     const char *name = NULL;
@@ -70,8 +76,11 @@ bool flecs_path_append(
             const char *name_ptr;
             char ch;
             for (name_ptr = name; (ch = name_ptr[0]); name_ptr ++) {
+#ifdef FLECS_PARSER
                 char esc[3];
+#endif
                 if (ch != sep[0]) {
+#ifdef FLECS_PARSER
                     if (escape) {
                         flecs_chresc(esc, ch, '\"');
                         ecs_strbuf_appendch(buf, esc[0]);
@@ -81,11 +90,16 @@ bool flecs_path_append(
                     } else {
                         ecs_strbuf_appendch(buf, ch);
                     }
+#else
+                    ecs_strbuf_appendch(buf, ch);
+#endif
                 } else {
                     if (!escape) {
                         ecs_strbuf_appendch(buf, '\\');
                         ecs_strbuf_appendch(buf, sep[0]);
-                    } else {
+                    }
+#ifdef FLECS_PARSER
+                    else {
                         ecs_strbuf_appendlit(buf, "\\\\");
                         flecs_chresc(esc, ch, '\"');
                         ecs_strbuf_appendch(buf, esc[0]);
@@ -93,6 +107,7 @@ bool flecs_path_append(
                             ecs_strbuf_appendch(buf, esc[1]);
                         }
                     }
+#endif
                 }
             }
         } else {

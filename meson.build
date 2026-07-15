@@ -70,6 +70,7 @@ flecs_src = files(
     'src/addons/module.c',
     'src/addons/multi_world.c',
     'src/addons/os_api_impl/os_api_impl.c',
+    'src/addons/parser/strutils.c',
     'src/addons/parser/tokenizer.c',
     'src/addons/pipeline/pipeline.c',
     'src/addons/pipeline/worker.c',

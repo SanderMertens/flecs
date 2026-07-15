@@ -26,9 +26,6 @@ extern "C" {
  * cycle-detected error. */
 #define ECS_MAX_RECURSION (512)
 
-/** Maximum length of a parser token (used by parser-related addons). */
-#define ECS_MAX_TOKEN_SIZE (256)
-
 /** Convert a C module name into a path.
  * This operation converts a PascalCase name to a path, for example, MyFooModule
  * into my.foo.module.
@@ -140,6 +137,11 @@ char* flecs_asprintf(
     const char *fmt,
     ...);
 
+#ifdef FLECS_PARSER
+
+/** Maximum length of a parser token (used by parser-related addons). */
+#define ECS_MAX_TOKEN_SIZE (256)
+
 /** Write an escaped character.
  * Write a character to an output string, inserting an escape character if necessary.
  *
@@ -221,6 +223,8 @@ const char* flecs_parse_digit(
     const char *ptr,
     char *token,
     int32_t token_size);
+
+#endif
 
 /* Convert an identifier to snake case. */
 FLECS_API

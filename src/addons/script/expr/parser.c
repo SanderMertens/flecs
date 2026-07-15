@@ -6,6 +6,7 @@
 #include "flecs.h"
 
 #ifdef FLECS_SCRIPT
+
 #include "../script.h"
 #include "../../parser/grammar.h"
 

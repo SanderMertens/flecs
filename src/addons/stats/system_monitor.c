@@ -4,10 +4,11 @@
  */
 
 #include "flecs.h"
-#include "stats.h"
-#include "../pipeline/pipeline.h"
 
 #ifdef FLECS_STATS
+
+#include "stats.h"
+#include "../pipeline/pipeline.h"
 
 ECS_COMPONENT_DECLARE(EcsSystemStats);
 

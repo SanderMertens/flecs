@@ -184,6 +184,12 @@
 #endif
 #endif
 
+#ifdef FLECS_META
+#ifndef FLECS_PARSER
+#define FLECS_PARSER
+#endif
+#endif
+
 #ifdef FLECS_PIPELINE
 #ifndef FLECS_MODULE
 #define FLECS_MODULE

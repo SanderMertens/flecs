@@ -4,9 +4,10 @@
  */
 
 #include "flecs.h"
-#include "stats.h"
 
 #ifdef FLECS_STATS
+
+#include "stats.h"
 
 ECS_COMPONENT_DECLARE(FlecsStats);
 
