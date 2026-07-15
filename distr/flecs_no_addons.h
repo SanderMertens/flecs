@@ -93,11 +93,6 @@
  * Enables expensive checks that can detect issues early. Recommended for
  * running tests or when debugging issues. This will severely slow down code.
  */
-#ifdef FLECS_SANITIZE
-#ifndef FLECS_DEBUG
-#define FLECS_DEBUG /* If sanitized mode is enabled, so is debug mode */
-#endif
-#endif
 
 /** @def FLECS_DEBUG_INFO
  * Adds additional debug information to internal data structures. Necessary when
@@ -1428,10 +1423,6 @@ typedef struct ecs_vec_t {
     void *array;              /**< Pointer to the element array. */
     int32_t count;            /**< Number of elements in the vector. */
     int32_t size;             /**< Allocated capacity in number of elements. */
-#ifdef FLECS_SANITIZE
-    ecs_size_t elem_size;     /**< Size of each element in bytes (sanitize only). */
-    const char *type_name;    /**< Type name string for debugging (sanitize only). */
-#endif
 } ecs_vec_t;
 
 /** Initialize a vector.
@@ -2431,10 +2422,6 @@ typedef struct ecs_block_allocator_t {
     int32_t block_size; /**< Total size of each allocated block. */
     ecs_block_allocator_chunk_header_t *head; /**< Head of the free chunk list. */
     ecs_block_allocator_block_t *block_head; /**< Head of the allocated block list. */
-#ifdef FLECS_SANITIZE
-    int32_t alloc_count; /**< Number of outstanding allocations (sanitizer only). */
-    ecs_map_t *outstanding; /**< Map of outstanding allocations (sanitizer only). */
-#endif
 #endif
 } ecs_block_allocator_t;
 
@@ -12038,11 +12025,7 @@ void ecs_parser_warningv_(
 
 /** Sanitize assert.
  * Assert that is only valid in sanitized mode (ignores FLECS_KEEP_ASSERT). */
-#ifdef FLECS_SANITIZE
-#define ecs_san_assert(condition, error_code, ...) ecs_assert(condition, error_code, __VA_ARGS__)
-#else
 #define ecs_san_assert(condition, error_code, ...)
-#endif
 
 /** Silence dead code/unused label warnings when compiling without checks. */
 #define ecs_dummy_check\

@@ -40,7 +40,8 @@
                 "FLECS_SYSTEM",
                 "FLECS_STATS",
                 "FLECS_TIMER",
-                "FLECS_UNITS"
+                "FLECS_UNITS",
+                "FLECS_SANITIZE"
             ]
         }]
     },

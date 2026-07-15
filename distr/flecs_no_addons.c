@@ -724,28 +724,6 @@ void flecs_table_clear_edges_for_id(
 
 #endif
 
-#ifdef FLECS_SANITIZE
-#define ecs_vec_from_column(arg_column, table, arg_elem_size) {\
-    .array = (arg_column)->data,\
-    .count = table->data.count,\
-    .size = table->data.size,\
-    .elem_size = arg_elem_size\
-}
-
-#define ecs_vec_from_column_ext(arg_column, arg_count, arg_size, arg_elem_size) {\
-    .array = (arg_column)->data,\
-    .count = arg_count,\
-    .size = arg_size,\
-    .elem_size = arg_elem_size\
-}
-
-#define ecs_vec_from_entities(table) {\
-    .array = table->data.entities,\
-    .count = table->data.count,\
-    .size = table->data.size,\
-    .elem_size = ECS_SIZEOF(ecs_entity_t)\
-}
-#else
 #define ecs_vec_from_column(arg_column, table, arg_elem_size) {\
     .array = (arg_column)->data,\
     .count = table->data.count,\
@@ -763,7 +741,6 @@ void flecs_table_clear_edges_for_id(
     .count = table->data.count,\
     .size = table->data.size,\
 }
-#endif
 
 #define ecs_vec_from_column_t(arg_column, table, T)\
     ecs_vec_from_column(arg_column, table, ECS_SIZEOF(T))
@@ -14804,10 +14781,8 @@ ecs_observer_t* flecs_observer_init(
 
     if (desc->events[0] != EcsMonitor) {
         bool simple = false;
-#ifndef FLECS_SANITIZE
         simple = flecs_query_finalize_simple(
             world, &dummy_query, &query_desc);
-#endif
         if (!simple) {
             simple = flecs_observer_finalize_simple_special(
                 world, &dummy_query, &query_desc);
@@ -19236,9 +19211,6 @@ static const char *flecs_compiler_flags[] = {
 #ifdef FLECS_NDEBUG
     "FLECS_NDEBUG",
 #endif
-#ifdef FLECS_SANITIZE
-    "FLECS_SANITIZE",
-#endif
 #ifdef FLECS_CONFIG_HEADER
     "FLECS_CONFIG_HEADER",
 #endif
@@ -19320,9 +19292,6 @@ static const ecs_build_info_t flecs_build_info = {
     .flags = flecs_compiler_flags,
 #ifdef FLECS_DEBUG
     .debug = true,
-#endif
-#ifdef FLECS_SANITIZE
-    .sanitize = true,
 #endif
     .version = FLECS_VERSION,
     .version_major = FLECS_VERSION_MAJOR,
@@ -20662,14 +20631,6 @@ void flecs_ballocator_init(
     ecs_assert(size != 0, ECS_INTERNAL_ERROR, NULL);
     ba->data_size = size;
 #ifndef FLECS_USE_OS_ALLOC
-#ifdef FLECS_SANITIZE
-    ba->alloc_count = 0;
-    if (size != 24) { /* Prevent stack overflow as map uses block allocator */
-        ba->outstanding = ecs_os_malloc_t(ecs_map_t);
-        ecs_map_init(ba->outstanding, NULL);
-    }
-    size += ECS_SIZEOF(int64_t) * 2; /* 16 byte aligned */
-#endif
     ba->chunk_size = ECS_ALIGN(size, 16);
     ba->chunks_per_block = ECS_MAX(4096 / ba->chunk_size, 1);
     ba->block_size = ba->chunks_per_block * ba->chunk_size;
@@ -20693,29 +20654,6 @@ void flecs_ballocator_fini(
     (void)ba;
 
 #ifndef FLECS_USE_OS_ALLOC
-#ifdef FLECS_SANITIZE
-    if (ba->alloc_count != 0) {
-        ecs_err("Leak detected! (size %u, remaining = %d)",
-            (uint32_t)ba->data_size, ba->alloc_count);
-        if (ba->outstanding) {
-            ecs_map_iter_t it = ecs_map_iter(ba->outstanding);
-            while (ecs_map_next(&it)) {
-                uint64_t key = ecs_map_key(&it);
-                char *type_name = ecs_map_ptr(&it);
-                if (type_name) {
-                    printf(" - %p (%s)\n", (void*)key, type_name);
-                } else {
-                    printf(" - %p (unknown type)\n", (void*)key);
-                }
-            }
-        }
-        ecs_abort(ECS_LEAK_DETECTED, NULL);
-    }
-    if (ba->outstanding) {
-        ecs_map_fini(ba->outstanding);
-        ecs_os_free(ba->outstanding);
-    }
-#endif
 
     ecs_block_allocator_block_t *block;
     for (block = ba->block_head; block;) {
@@ -20767,16 +20705,6 @@ void* flecs_balloc_w_dbg_info(
     result = ba->head;
     ba->head = ba->head->next;
 
-#ifdef FLECS_SANITIZE
-    ecs_assert(ba->alloc_count >= 0, ECS_INTERNAL_ERROR, "corrupted allocator");
-    if (ba->outstanding) {
-        uint64_t *v = ecs_map_ensure(ba->outstanding, (uintptr_t)result);
-        *(const char**)v = type_name;
-    }
-    ba->alloc_count ++;
-    *(int64_t*)result = (uintptr_t)ba;
-    result = ECS_OFFSET(result, ECS_SIZEOF(int64_t) * 2);
-#endif
 #endif
 
 #ifdef FLECS_MEMSET_UNINITIALIZED
@@ -20842,31 +20770,6 @@ void flecs_bfree_w_dbg_info(
         ecs_os_free(memory);
         return;
     }
-
-#ifdef FLECS_SANITIZE
-    memory = ECS_OFFSET(memory, -ECS_SIZEOF(int64_t) * 2);
-    ecs_block_allocator_t *actual = *(ecs_block_allocator_t**)memory;
-    if (actual != ba) {
-        if (type_name) {
-            ecs_err("chunk %p returned to wrong allocator "
-                "(chunk = %ub, allocator = %ub, type = %s)",
-                    memory, actual->data_size, ba->data_size, type_name);
-        } else {
-            ecs_err("chunk %p returned to wrong allocator "
-                "(chunk = %ub, allocator = %ub)",
-                    memory, actual->data_size, ba->chunk_size);
-        }
-        ecs_abort(ECS_INTERNAL_ERROR, NULL);
-    }
-
-    if (ba->outstanding) {
-        ecs_map_remove(ba->outstanding, (uintptr_t)memory);
-    }
-
-    ba->alloc_count --;
-    ecs_assert(ba->alloc_count >= 0, ECS_INTERNAL_ERROR, 
-        "corrupted allocator (size = %d)", ba->chunk_size);
-#endif
 
     ecs_block_allocator_chunk_header_t *chunk = memory;
     chunk->next = ba->head;
@@ -22837,9 +22740,6 @@ void* flecs_stack_alloc(
 
 done:
     ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
-#ifdef FLECS_SANITIZE
-    ecs_os_memset(result, 0xAA, size);
-#endif
     return result;
 }
 
@@ -23402,11 +23302,6 @@ char* ecs_strbuf_get(
     ecs_strbuf_appendch(b, '\0');
     result = b->content;
 
-#ifdef FLECS_SANITIZE
-    ecs_assert(ecs_os_strlen(result) <= (b->length - 1), 
-        ECS_INTERNAL_ERROR, NULL);
-#endif
-
     if (result == b->small_string) {
         result = ecs_os_memdup_n(result, char, b->length);
     }
@@ -23614,10 +23509,6 @@ void ecs_vec_init_w_dbg_info(
     v->array = flecs_vec_alloc(allocator, size, elem_count, type_name);
     v->count = 0;
     v->size = elem_count;
-#ifdef FLECS_SANITIZE
-    v->elem_size = size;
-    v->type_name = type_name;
-#endif
 }
 
 void ecs_vec_init_if(
@@ -23628,14 +23519,6 @@ void ecs_vec_init_if(
         ECS_INVALID_PARAMETER, NULL);
     (void)vec;
     (void)size;
-#ifdef FLECS_SANITIZE
-    if (!vec->elem_size) {
-        ecs_assert(vec->count == 0, ECS_INTERNAL_ERROR, NULL);
-        ecs_assert(vec->size == 0, ECS_INTERNAL_ERROR, NULL);
-        ecs_assert(vec->array == NULL, ECS_INTERNAL_ERROR, NULL);
-        vec->elem_size = size;
-    }
-#endif
 }
 
 void ecs_vec_fini(
@@ -23692,9 +23575,6 @@ ecs_vec_t ecs_vec_copy(
         .count = v->count,
         .size = v->size,
         .array = array
-#ifdef FLECS_SANITIZE
-        , .elem_size = size
-#endif
     };
 }
 
@@ -23717,9 +23597,6 @@ ecs_vec_t ecs_vec_copy_shrink(
         .count = count,
         .size = count,
         .array = array
-#ifdef FLECS_SANITIZE
-        , .elem_size = size
-#endif
     };
 }
 
@@ -23771,14 +23648,8 @@ void ecs_vec_set_size(
         }
         if (elem_count != v->size) {
             if (allocator) {
-#ifdef FLECS_SANITIZE
-                v->array = flecs_realloc_w_dbg_info(
-                    allocator, size * elem_count, size * v->size, v->array,
-                    v->type_name);
-#else
                 v->array = flecs_realloc(
                     allocator, size * elem_count, size * v->size, v->array);
-#endif
             } else {
                 v->array = ecs_os_realloc(v->array, size * elem_count);
             }
@@ -23807,13 +23678,7 @@ void ecs_vec_set_min_size_w_type_info(
 {
     ecs_assert(size != 0, ECS_INVALID_PARAMETER, NULL);
     ecs_vec_init_if(vec, size);
-#ifdef FLECS_SANITIZE
-    if (!vec->type_name) {
-        vec->type_name = ti ? ti->name : NULL;
-    }
-#else
     (void)ti;
-#endif
 
     if (elem_count > vec->size) {
         ecs_vec_set_size(allocator, vec, size, elem_count);
@@ -23924,11 +23789,7 @@ void ecs_vec_set_count_w_type_info(
     ecs_size_t new_size = flecs_next_pow_of_2(elem_count);
 
     void *array = NULL;
-    #ifdef FLECS_SANITIZE
-    array = flecs_vec_alloc(allocator, size, new_size, v->type_name);
-    #else
     array = flecs_vec_alloc(allocator, size, new_size, NULL);
-    #endif
 
     int32_t move_count = elem_count;
     if (move_count > v->count) {
@@ -26343,13 +26204,7 @@ bool flecs_query_finalize_simple(
         q->ids[i] = id;
 
         ecs_component_record_t *cr = NULL;
-#ifndef FLECS_SANITIZE
         cr = flecs_components_get(world, id);
-#else
-        /* In sanitized mode, always compute the component flags on the spot
-         * instead of using the flags cached on the component record. This 
-         * ensures that both code paths get the same kind of test coverage. */
-#endif
 
         const ecs_type_info_t *type_info = NULL;
         ecs_flags32_t cr_flags = 0;
@@ -26583,11 +26438,9 @@ int flecs_query_finalize_query(
      * logic if it's not needed. When running in sanitized mode, always take the 
      * slow path. This in combination with the test suite ensures that the
      * result of the fast & slow code is the same. */
-    #ifndef FLECS_SANITIZE
     if (flecs_query_finalize_simple(world, q, desc)) {
         goto done;
     }
-    #endif
 
     /* Populate term array from desc terms & DSL expression */
     if (flecs_query_query_populate_terms(world, stage, q, desc)) {
@@ -26603,9 +26456,7 @@ int flecs_query_finalize_query(
      * token buffer which simplifies memory management & reduces allocations. */
     flecs_query_populate_tokens(flecs_query_impl(q));
 
-    #ifndef FLECS_SANITIZE
 done:
-    #endif
 
     flecs_query_copy_arrays(q);
 
@@ -29503,74 +29354,7 @@ const int16_t flecs_table_empty_component_map[FLECS_HI_COMPONENT_ID] = {0};
 
 /* Table sanity check to detect storage issues. Only enabled in SANITIZE mode as
  * this can severely slow down many ECS operations. */
-#ifdef FLECS_SANITIZE
-static
-void flecs_table_check_sanity(
-    ecs_table_t *table) 
-{
-    int32_t i, count = ecs_table_count(table);
-    int32_t size = ecs_table_size(table);
-    ecs_assert(count <= size, ECS_INTERNAL_ERROR, NULL);
-
-    int32_t bs_offset = table->_ ? table->_->bs_offset : 0;
-    int32_t bs_count = table->_ ? table->_->bs_count : 0;
-    int32_t type_count = table->type.count;
-    ecs_id_t *ids = table->type.array;
-
-    ecs_assert((bs_count + bs_offset) <= type_count, ECS_INTERNAL_ERROR, NULL);
-
-    if (size) {
-        ecs_assert(table->data.entities != NULL, ECS_INTERNAL_ERROR, NULL);
-    } else {
-        ecs_assert(table->data.entities == NULL, ECS_INTERNAL_ERROR, NULL);
-    }
-
-    if (table->column_count) {
-        int32_t column_count = table->column_count;
-        ecs_assert(type_count >= column_count, ECS_INTERNAL_ERROR, NULL);
-
-        int16_t *column_map = table->column_map;
-        ecs_assert(column_map != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_assert(table->data.columns != NULL, ECS_INTERNAL_ERROR, NULL);
-
-        for (i = 0; i < column_count; i ++) {
-            int32_t column_map_id = column_map[i + type_count];
-            ecs_assert(column_map_id >= 0, ECS_INTERNAL_ERROR, NULL);
-            ecs_assert(table->data.columns[i].ti != NULL,
-                ECS_INTERNAL_ERROR, NULL);
-            if (size) {
-                ecs_assert(table->data.columns[i].data != NULL, 
-                    ECS_INTERNAL_ERROR, NULL);
-            } else {
-                ecs_assert(table->data.columns[i].data == NULL, 
-                    ECS_INTERNAL_ERROR, NULL);
-            }
-        }
-    } else {
-        ecs_assert(table->column_map == NULL, ECS_INTERNAL_ERROR, NULL);
-    }
-
-    if (bs_count) {
-        ecs_assert(table->_->bs_columns != NULL, ECS_INTERNAL_ERROR, NULL);
-        int32_t bs_i = 0;
-        for (i = bs_offset; i < type_count; i ++) {
-            if (!ECS_HAS_ID_FLAG(ids[i], TOGGLE)) {
-                continue;
-            }
-            ecs_bitset_t *bs = &table->_->bs_columns[bs_i];
-            ecs_assert(flecs_bitset_count(bs) == count,
-                ECS_INTERNAL_ERROR, NULL);
-            bs_i ++;
-        }
-        ecs_assert(bs_i == bs_count, ECS_INTERNAL_ERROR, NULL);
-    }
-
-    ecs_assert((table->_->traversable_count == 0) || 
-        (table->flags & EcsTableHasTraversable), ECS_INTERNAL_ERROR, NULL);
-}
-#else
 #define flecs_table_check_sanity(table)
-#endif
 
 /* Set flags for type hooks so table operations can quickly check whether a
  * fast or complex operation that invokes hooks is required. */
@@ -33451,24 +33235,6 @@ ecs_table_t *flecs_table_new(
     ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
     result->_ = flecs_calloc_t(&world->allocator, ecs_table__t);
     ecs_assert(result->_ != NULL, ECS_INTERNAL_ERROR, NULL);
-
-#ifdef FLECS_SANITIZE
-    int32_t i, j, count = type->count;
-    for (i = 0; i < count - 1; i ++) {
-        if (type->array[i] >= type->array[i + 1]) {
-            for (j = 0; j < count; j ++) {
-                char *str = ecs_id_str(world, type->array[j]);
-                if (i == j) {
-                    ecs_err(" > %d: %s", j, str);
-                } else {
-                    ecs_err("   %d: %s", j, str);
-                }
-                ecs_os_free(str);
-            }
-            ecs_abort(ECS_CONSTRAINT_VIOLATED, "table type is not ordered");
-        }
-    }
-#endif
 
     result->id = flecs_sparse_last_id(&world->store.tables);
     result->type = *type;
