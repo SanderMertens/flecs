@@ -369,6 +369,7 @@ bool flecs_observer_query_has_range(
     ecs_id_t event_id,
     ecs_iter_t *it)
 {
+#ifdef FLECS_QUERY_PLANS
     bool first_var = (term->first.id & EcsIsVariable) && term->first.name;
     bool second_var = (term->second.id & EcsIsVariable) && term->second.name;
     if (!first_var && !second_var) {
@@ -391,6 +392,11 @@ bool flecs_observer_query_has_range(
     }
 
     return ecs_query_next(it);
+#else
+    (void)term;
+    (void)event_id;
+    return ecs_query_has_range(query, range, it);
+#endif
 }
 
 static
@@ -1136,7 +1142,11 @@ bool flecs_observer_finalize_simple_special(
 
     bool is_wildcard = ecs_id_is_wildcard(term.id);
     bool is_disabled = term.id == EcsDisabled;
+#ifdef FLECS_PREFAB
     bool is_prefab = term.id == EcsPrefab;
+#else
+    bool is_prefab = false;
+#endif
 
     if ((!is_wildcard && !is_disabled && !is_prefab) ||
         term.oper != EcsAnd ||
@@ -1278,7 +1288,9 @@ ecs_observer_t* flecs_observer_init(
     ecs_check(query->term_count > 0, ECS_INVALID_PARAMETER,
         "observer must have at least one term");
 
-    int i, var_count = 0;
+    int i;
+#ifdef FLECS_QUERY_PLANS
+    int var_count = 0;
     for (i = 0; i < query->term_count; i ++) {
         ecs_term_t *term = &query->terms[i];
         if (!ecs_term_match_this(term)) {
@@ -1292,6 +1304,7 @@ ecs_observer_t* flecs_observer_init(
     ecs_check(query->term_count > var_count, ECS_UNSUPPORTED,
         "observers with only non-$this variable sources are not yet supported");
     (void)var_count;
+#endif
 
     o->run = desc->run;
     o->callback = desc->callback;

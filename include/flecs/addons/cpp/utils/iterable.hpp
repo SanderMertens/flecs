@@ -129,6 +129,7 @@ struct iterable {
         return this->iter().set_var(var_id, value);
     }
 
+#ifdef FLECS_QUERY_PLANS
     /** Set query variable by name to an entity value. */
     iter_iterable<Components...> set_var(const char *name, flecs::entity_t value) const {
         return this->iter().set_var(name, value);
@@ -148,7 +149,9 @@ struct iterable {
     iter_iterable<Components...> set_var(const char *name, flecs::table_range value) const {
         return this->iter().set_var(name, value);
     }
+#endif
 
+#ifdef FLECS_CACHED_QUERIES
     /** Limit results to tables with the specified group ID (grouped queries only). */
     iter_iterable<Components...> set_group(uint64_t group_id) const {
         return this->iter().set_group(group_id);
@@ -159,6 +162,7 @@ struct iterable {
     iter_iterable<Components...> set_group() const {
         return this->iter().template set_group<Group>();
     }
+#endif
 
     /** Virtual destructor. */
     virtual ~iterable() { }
@@ -192,6 +196,7 @@ struct iter_iterable final : iterable<Components...> {
         return *this;
     }
 
+#ifdef FLECS_QUERY_PLANS
     /** Set query variable by name to an entity value. */
     iter_iterable<Components...>& set_var(const char *name, flecs::entity_t value) {
         int var_id = ecs_query_find_var(it_.query, name);
@@ -224,6 +229,7 @@ struct iter_iterable final : iterable<Components...> {
         range.count = value.count();
         return set_var(name, range);
     }
+#endif
 
 #   ifdef FLECS_JSON
 #   include "../mixins/json/iterable.inl"
@@ -257,6 +263,7 @@ struct iter_iterable final : iterable<Components...> {
         return result;
     }
 
+#ifdef FLECS_CACHED_QUERIES
     /** Limit results to tables with the specified group ID (grouped queries only). */
     iter_iterable<Components...>& set_group(uint64_t group_id) {
         ecs_iter_set_group(&it_, group_id);
@@ -269,6 +276,7 @@ struct iter_iterable final : iterable<Components...> {
         ecs_iter_set_group(&it_, _::type<Group>().id(it_.real_world));
         return *this;
     }
+#endif
 
 protected:
     ecs_iter_t get_iter(flecs::world_t *world) const override {

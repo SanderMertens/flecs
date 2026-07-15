@@ -64,7 +64,10 @@ void flecs_json_serialize_query_plan(
 
     const ecs_query_t *q = desc->query;
     flecs_poly_assert(q, ecs_query_t);
-    const ecs_query_t *cq = ecs_query_get_cache_query(q);
+    const ecs_query_t *cq = NULL;
+#ifdef FLECS_CACHED_QUERIES
+    cq = ecs_query_get_cache_query(q);
+#endif
     
     flecs_json_memberl(buf, "query_plan");
 

@@ -692,6 +692,9 @@ static const char *flecs_addons_info[] = {
 #ifdef FLECS_CACHED_QUERIES
     "FLECS_CACHED_QUERIES",
 #endif
+#ifdef FLECS_QUERY_PLANS
+    "FLECS_QUERY_PLANS",
+#endif
 #ifdef FLECS_OS_API_IMPL
     "FLECS_OS_API_IMPL",
 #endif
@@ -792,8 +795,10 @@ static const char *flecs_compiler_flags[] = {
 #ifdef FLECS_TERM_ARG_COUNT_MAX
     "FLECS_TERM_ARG_COUNT_MAX=" ECS_STRINGIFY(FLECS_TERM_ARG_COUNT_MAX),
 #endif
+#ifdef FLECS_QUERY_PLANS
 #ifdef FLECS_QUERY_VARIABLE_COUNT_MAX
     "FLECS_QUERY_VARIABLE_COUNT_MAX=" ECS_STRINGIFY(FLECS_QUERY_VARIABLE_COUNT_MAX),
+#endif
 #endif
 #ifdef FLECS_QUERY_SCOPE_NESTING_MAX
     "FLECS_QUERY_SCOPE_NESTING_MAX=" ECS_STRINGIFY(FLECS_QUERY_SCOPE_NESTING_MAX),
@@ -871,10 +876,13 @@ ecs_world_t *ecs_mini(void) {
 #endif
     ecs_os_init();
 
-    ecs_assert(ECS_ALIGNOF(ecs_query_triv_cache_match_t) == 
+#ifdef FLECS_CACHED_QUERIES
+    ecs_assert(ECS_ALIGNOF(ecs_query_triv_cache_match_t) ==
                ECS_ALIGNOF(ecs_query_cache_match_t), ECS_INTERNAL_ERROR, NULL);
-
+#endif
+#ifdef FLECS_QUERY_PLANS
     ecs_assert(EcsQueryNothing < 256, ECS_INTERNAL_ERROR, NULL);
+#endif
 
     ecs_trace("#[bold]bootstrapping world");
     ecs_log_push();
@@ -1581,9 +1589,11 @@ void ecs_shrink(
 
     ecs_vec_fini_t(&world->allocator, &cr_to_release, ecs_component_record_t*);
 
+#ifdef FLECS_CACHED_QUERIES
     FLECS_EACH_QUERY(query, {
         flecs_query_reclaim(query);
     })
+#endif
 
     ecs_map_reclaim(&world->id_index_hi);
     

@@ -309,6 +309,7 @@ void ecs_script_vars_from_iter(
         }
     }
 
+#ifdef FLECS_QUERY_PLANS
     /* Set variables for query variables */
     {
         if (it->query) {
@@ -346,6 +347,7 @@ void ecs_script_vars_from_iter(
             }
         }
     }
+#endif
 
 error:
     return;

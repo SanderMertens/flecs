@@ -5,6 +5,8 @@
 
 #include "../../private_api.h"
 
+#ifdef FLECS_QUERY_PLANS
+
 static
 bool flecs_query_sparse_init_sparse(
     ecs_query_sparse_ctx_t *op_ctx,
@@ -799,3 +801,5 @@ next:
 
     return true;
 }
+
+#endif // FLECS_QUERY_PLANS

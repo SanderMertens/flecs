@@ -5,6 +5,8 @@
 
 #include "../../private_api.h"
 
+#ifdef FLECS_QUERY_PLANS
+
 static
 bool flecs_query_member_cmp(
     const ecs_query_op_t *op,
@@ -137,3 +139,5 @@ bool flecs_query_member_neq(
 {
     return flecs_query_member_cmp(op, redo, ctx, true);
 }
+
+#endif // FLECS_QUERY_PLANS

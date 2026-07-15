@@ -5,6 +5,8 @@
 
 #include "../../private_api.h"
 
+#ifdef FLECS_QUERY_PLANS
+
 static
 void flecs_trav_entity_down_isa(
     ecs_world_t *world,
@@ -338,3 +340,5 @@ void flecs_query_down_cache_fini(
 {
     ecs_vec_fini_t(a, &cache->down.elems, ecs_trav_down_elem_t);
 }
+
+#endif // FLECS_QUERY_PLANS

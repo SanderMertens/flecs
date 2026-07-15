@@ -237,6 +237,7 @@
 // #define FLECS_PERF_TRACE  /**< Enable performance tracing. */
 #define FLECS_PIPELINE       /**< Pipeline support. */
 #define FLECS_PREFAB         /**< Prefabs */
+#define FLECS_QUERY_PLANS    /**< Query plan support. */
 #define FLECS_REST           /**< REST API for querying application data. */
 #define FLECS_PARSER         /**< Utilities for script and query DSL parsers. */
 #define FLECS_QUERY_DSL      /**< Flecs query DSL parser. */
@@ -258,6 +259,9 @@
 #endif
 #ifdef FLECS_NO_CACHED_QUERIES
 #undef FLECS_CACHED_QUERIES
+#endif
+#ifdef FLECS_NO_QUERY_PLANS
+#undef FLECS_QUERY_PLANS
 #endif
 #ifdef FLECS_NO_CONSTRAINT_TRAITS
 #undef FLECS_CONSTRAINT_TRAITS
@@ -435,6 +439,9 @@
 #ifndef FLECS_CACHED_QUERIES
 #define FLECS_CACHED_QUERIES
 #endif
+#ifndef FLECS_QUERY_PLANS
+#define FLECS_QUERY_PLANS
+#endif
 #if !defined(FLECS_OS_API_IMPL) && !defined(FLECS_NO_OS_API_IMPL)
 #define FLECS_OS_API_IMPL
 #endif
@@ -450,6 +457,9 @@
 #ifdef FLECS_QUERY_DSL
 #ifndef FLECS_PARSER
 #define FLECS_PARSER
+#endif
+#ifndef FLECS_QUERY_PLANS
+#define FLECS_QUERY_PLANS
 #endif
 #endif
 
@@ -543,10 +553,6 @@
 #define FLECS_EVENT_DESC_MAX 8
 #endif
 
-/** @def FLECS_VARIABLE_COUNT_MAX
- * Maximum number of query variables per query. */
-#define FLECS_VARIABLE_COUNT_MAX 64
-
 /** @def FLECS_TERM_COUNT_MAX 
  * Maximum number of terms in queries. Should not exceed 64. */
 #ifndef FLECS_TERM_COUNT_MAX
@@ -559,10 +565,12 @@
 #define FLECS_TERM_ARG_COUNT_MAX 16
 #endif
 
+#ifdef FLECS_QUERY_PLANS
 /** @def FLECS_QUERY_VARIABLE_COUNT_MAX
  * Maximum number of query variables per query. Should not exceed 128. */
 #ifndef FLECS_QUERY_VARIABLE_COUNT_MAX
 #define FLECS_QUERY_VARIABLE_COUNT_MAX 64
+#endif
 #endif
 
 /** @def FLECS_QUERY_SCOPE_NESTING_MAX
@@ -4740,7 +4748,9 @@ struct ecs_query_t {
 
     uint64_t bloom_filter;      /**< Bitmask used to quickly discard tables. */
     ecs_flags32_t flags;        /**< Query flags. */
+#ifdef FLECS_QUERY_PLANS
     int8_t var_count;           /**< Number of query variables. */
+#endif
     int8_t term_count;          /**< Number of query terms. */
     int8_t field_count;         /**< Number of fields returned by the query. */
 
@@ -4757,7 +4767,9 @@ struct ecs_query_t {
 
     ecs_query_cache_kind_t cache_kind;  /**< Caching policy of the query. */
 
+#ifdef FLECS_QUERY_PLANS
     char **vars;                /**< Array with variable names for the iterator. */
+#endif
 
     void *ctx;                  /**< User context to pass to callback. */
     void *binding_ctx;          /**< Context to be used for language bindings. */
@@ -4980,6 +4992,8 @@ typedef struct ecs_table_range_t {
     int32_t count;       
 } ecs_table_range_t;
 
+#ifdef FLECS_QUERY_PLANS
+
 /** Value of a query variable. */
 typedef struct ecs_var_t {
     ecs_table_range_t range; /* Set when variable stores a range of entities. */
@@ -4990,6 +5004,8 @@ typedef struct ecs_var_t {
      * a separate entity member is needed. Both range and entity may be set at
      * the same time, as long as they are consistent. */
 } ecs_var_t;
+
+#endif // FLECS_QUERY_PLANS
 
 /** Cached reference. */
 struct ecs_ref_t {
@@ -5048,25 +5064,39 @@ typedef struct ecs_query_op_profile_t {
     int32_t count[2]; /* 0 = enter, 1 = redo */
 } ecs_query_op_profile_t;
 
+/* Trivial query iterator context. */
+typedef struct ecs_query_trivial_ctx_t {
+    ecs_table_cache_iter_t it;
+    const ecs_table_record_t *tr;
+    int32_t start_from;
+    int32_t first_to_eval;
+} ecs_query_trivial_ctx_t;
+
 /** Query iterator. */
 typedef struct ecs_query_iter_t {
+#ifdef FLECS_QUERY_PLANS
     struct ecs_var_t *vars;                   /* Variable storage. */
     const struct ecs_query_var_t *query_vars; /* Query variable metadata. */
     const struct ecs_query_op_t *ops;         /* Query plan operations. */
     struct ecs_query_op_ctx_t *op_ctx;        /* Operation-specific state. */
     uint64_t *written;
+    ecs_query_op_profile_t *profile;
+    int16_t op;                               /* Currently iterated query plan operation (index into ops). */
+#else
+    ecs_entity_t entity;                      /* Constrained $this entity. */
+    bool constrained_this;                    /* Whether $this is constrained. */
+#endif
 
+#ifdef FLECS_CACHED_QUERIES
     /* Cached iteration. */
     ecs_query_cache_group_t *group;           /* Currently iterated group. */
     ecs_vec_t *tables;                        /* Currently iterated table vector (vec<ecs_query_cache_match_t>). */
     ecs_vec_t *all_tables;                    /* Different from .tables if iterating wildcard matches (vec<ecs_query_cache_match_t>). */
     ecs_query_cache_match_t *elem;            /* Current cache entry. */
     int32_t cur, all_cur;                     /* Indices into tables and all_tables. */
-
-    ecs_query_op_profile_t *profile;
-
-    int16_t op;                               /* Currently iterated query plan operation (index into ops). */
     bool iter_single_group;
+#endif
+    ecs_query_trivial_ctx_t trivial;           /* Uncached trivial iterator state. */
 } ecs_query_iter_t;
 
 /* Private iterator data. Used by iterator implementations to keep track of
@@ -5457,8 +5487,10 @@ void flecs_component_ids_set(
  * @return Whether the query has more results.
  */
 FLECS_API
+#ifdef FLECS_CACHED_QUERIES
 bool flecs_query_trivial_cached_next(
     ecs_iter_t *it);
+#endif
 
 #ifdef FLECS_EXCLUSIVE_ACCESS
 /** Check if the current thread has exclusive access to the world.
@@ -6355,7 +6387,9 @@ struct ecs_iter_t {
     ecs_table_t *other_table;     /**< Previous or next table when adding or removing. */
     ecs_id_t *ids;                /**< (Component) IDs. */
     ecs_entity_t *sources;        /**< Entity on which the ID was matched (0 if same as entities). */
+#ifdef FLECS_QUERY_PLANS
     ecs_flags64_t constrained_vars; /**< Bitset that marks constrained variables. */
+#endif
     ecs_termset_t set_fields;     /**< Fields that are set. */
     ecs_termset_t ref_fields;     /**< Bitset with fields that aren't component arrays. */
     ecs_termset_t row_fields;     /**< Fields that must be obtained with field_at. */
@@ -9793,6 +9827,8 @@ FLECS_API
 void ecs_query_fini(
     ecs_query_t *query);
 
+#ifdef FLECS_QUERY_PLANS
+
 /** Find a variable index.
  * This operation looks up the index of a variable in the query. This index can
  * be used in operations like ecs_iter_set_var() and ecs_iter_get_var().
@@ -9832,6 +9868,8 @@ FLECS_API
 bool ecs_query_var_is_entity(
     const ecs_query_t *query,
     int32_t var_id);  
+
+#endif // FLECS_QUERY_PLANS
 
 /** Create a query iterator.
  * Use an iterator to iterate through the entities that match a query. Queries
@@ -9997,6 +10035,8 @@ bool ecs_query_has_range(
     ecs_table_range_t *range,
     ecs_iter_t *it);
 
+#ifdef FLECS_CACHED_QUERIES
+
 /** Return how often a match event happened for a cached query.
  * This operation can be used to determine whether the query cache has been 
  * updated with new tables.
@@ -10007,6 +10047,10 @@ bool ecs_query_has_range(
 FLECS_API
 int32_t ecs_query_match_count(
     const ecs_query_t *query);
+
+#endif // FLECS_CACHED_QUERIES
+
+#ifdef FLECS_QUERY_PLANS
 
 /** Convert a query to a string.
  * This will convert the query program to a string, which can aid in debugging
@@ -10072,6 +10116,8 @@ const char* ecs_query_args_parse(
     ecs_iter_t *it,
     const char *expr);
 
+#endif // FLECS_QUERY_PLANS
+
 #ifdef FLECS_CACHED_QUERIES
 /** Return whether the query data changed since the last iteration.
  * The operation will return true after:
@@ -10128,6 +10174,8 @@ FLECS_API
 void ecs_iter_skip(
     ecs_iter_t *it);
 #endif
+
+#ifdef FLECS_CACHED_QUERIES
 
 /** Set the group to iterate for a query iterator.
  * This operation limits the results returned by the query to only the selected
@@ -10211,6 +10259,8 @@ const ecs_query_group_info_t* ecs_query_get_group_info(
     const ecs_query_t *query,
     uint64_t group_id);
 
+#endif // FLECS_CACHED_QUERIES
+
 /** Struct returned by ecs_query_count(). */
 typedef struct ecs_query_count_t {
     int32_t results;      /**< Number of results returned by the query. */
@@ -10239,6 +10289,8 @@ FLECS_API
 bool ecs_query_is_true(
     const ecs_query_t *query);
 
+#ifdef FLECS_CACHED_QUERIES
+
 /** Get the query used to populate the cache.
  * This operation returns the query that is used to populate the query cache.
  * For queries that can be entirely cached, the returned query will be
@@ -10250,6 +10302,8 @@ bool ecs_query_is_true(
 FLECS_API
 const ecs_query_t* ecs_query_get_cache_query(
     const ecs_query_t *query);
+
+#endif // FLECS_CACHED_QUERIES
 
 /** @} */
 
@@ -10441,18 +10495,14 @@ ecs_entity_t ecs_iter_first(
  * Example:
  *
  * @code
- * // Query that matches (Eats, *)
+ * // Query that matches Position
  * ecs_query_t *q = ecs_query(world, {
- *   .terms = {
- *     { .first.id = Eats, .second.name = "$food" }
- *   }
+ *   .terms = {{ ecs_id(Position) }}
  * });
  * 
- * int food_var = ecs_query_find_var(q, "food");
- * 
- * // Set Food to Apples, so we're only matching (Eats, Apples)
+ * // Constrain $this so the query only matches entity e
  * ecs_iter_t it = ecs_query_iter(world, q);
- * ecs_iter_set_var(&it, food_var, Apples);
+ * ecs_iter_set_var(&it, 0, e);
  * 
  * while (ecs_query_next(&it)) {
  *   for (int i = 0; i < it.count; i ++) {
@@ -10463,6 +10513,7 @@ ecs_entity_t ecs_iter_first(
  *
  * The variable must be initialized after creating the iterator and before the
  * first call to next().
+ * Without FLECS_QUERY_PLANS, only variable 0 ($this) can be set.
  *
  * @param it The iterator.
  * @param var_id The variable index.
@@ -10508,6 +10559,8 @@ void ecs_iter_set_var_as_range(
     ecs_iter_t *it,
     int32_t var_id,
     const ecs_table_range_t *range);
+
+#ifdef FLECS_QUERY_PLANS
 
 /** Get the value of an iterator variable as an entity.
  * A variable can be interpreted as an entity if it is set to an entity, or if it
@@ -10607,6 +10660,10 @@ bool ecs_iter_var_is_constrained(
     ecs_iter_t *it,
     int32_t var_id);
 
+#endif // FLECS_QUERY_PLANS
+
+#ifdef FLECS_CACHED_QUERIES
+
 /** Return the group ID for the currently iterated result.
  * This operation returns the group ID for queries that use group_by. If this
  * operation is called on an iterator that is not iterating a query that uses
@@ -10622,7 +10679,6 @@ FLECS_API
 uint64_t ecs_iter_get_group(
     const ecs_iter_t *it);
 
-#ifdef FLECS_CACHED_QUERIES
 /** Return whether the current iterator result has changed.
  * This operation must be used in combination with a query that supports change
  * detection (e.g., is cached). The operation returns whether the currently
@@ -27656,7 +27712,6 @@ public:
     void skip() {
         ecs_iter_skip(iter_);
     }
-#endif
 
     /** Return the group ID for the current table (grouped queries only).
      *
@@ -27665,7 +27720,9 @@ public:
     uint64_t group_id() const {
         return ecs_iter_get_group(iter_);
     }
+#endif
 
+#ifdef FLECS_QUERY_PLANS
     /** Get value of variable by ID.
      * Get value of a query variable for current result.
      *
@@ -27681,6 +27738,7 @@ public:
      * @return The variable value.
      */
     flecs::entity get_var(const char *name) const;
+#endif
 
     /** Progress iterator.
      * This operation should only be called from a context where the iterator is
@@ -34497,6 +34555,7 @@ struct iterable {
         return this->iter().set_var(var_id, value);
     }
 
+#ifdef FLECS_QUERY_PLANS
     /** Set query variable by name to an entity value. */
     iter_iterable<Components...> set_var(const char *name, flecs::entity_t value) const {
         return this->iter().set_var(name, value);
@@ -34516,7 +34575,9 @@ struct iterable {
     iter_iterable<Components...> set_var(const char *name, flecs::table_range value) const {
         return this->iter().set_var(name, value);
     }
+#endif
 
+#ifdef FLECS_CACHED_QUERIES
     /** Limit results to tables with the specified group ID (grouped queries only). */
     iter_iterable<Components...> set_group(uint64_t group_id) const {
         return this->iter().set_group(group_id);
@@ -34527,6 +34588,7 @@ struct iterable {
     iter_iterable<Components...> set_group() const {
         return this->iter().template set_group<Group>();
     }
+#endif
 
     /** Virtual destructor. */
     virtual ~iterable() { }
@@ -34560,6 +34622,7 @@ struct iter_iterable final : iterable<Components...> {
         return *this;
     }
 
+#ifdef FLECS_QUERY_PLANS
     /** Set query variable by name to an entity value. */
     iter_iterable<Components...>& set_var(const char *name, flecs::entity_t value) {
         int var_id = ecs_query_find_var(it_.query, name);
@@ -34592,6 +34655,7 @@ struct iter_iterable final : iterable<Components...> {
         range.count = value.count();
         return set_var(name, range);
     }
+#endif
 
 #   ifdef FLECS_JSON
 
@@ -34635,6 +34699,7 @@ flecs::string to_json(flecs::iter_to_json_desc_t *desc = nullptr) {
         return result;
     }
 
+#ifdef FLECS_CACHED_QUERIES
     /** Limit results to tables with the specified group ID (grouped queries only). */
     iter_iterable<Components...>& set_group(uint64_t group_id) {
         ecs_iter_set_group(&it_, group_id);
@@ -34647,6 +34712,7 @@ flecs::string to_json(flecs::iter_to_json_desc_t *desc = nullptr) {
         ecs_iter_set_group(&it_, _::type<Group>().id(it_.real_world));
         return *this;
     }
+#endif
 
 protected:
     ecs_iter_t get_iter(flecs::world_t *world) const override {
@@ -36473,7 +36539,6 @@ struct query_base {
     bool changed() const {
         return ecs_query_changed(query_);
     }
-#endif
 
     /** Get info for a group.
      *
@@ -36507,6 +36572,7 @@ struct query_base {
             return nullptr;
         }
     }
+#endif
 
     /** Iterate each term in the query, invoking a callback for each. */
     template <typename Func>
@@ -36533,10 +36599,21 @@ struct query_base {
         return query_->field_count;
     }
 
+#ifdef FLECS_QUERY_PLANS
     /** Find a variable by name. */
     int32_t find_var(const char *name) const {
         return ecs_query_find_var(query_, name);
     }
+
+    /** Return a string representing the query plan.
+     * This can be used to analyze the behavior and performance of the query.
+     * @see ecs_query_plan()
+     */
+    flecs::string plan() const {
+        char *result = ecs_query_plan(query_);
+        return flecs::string(result);
+    }
+#endif
 
     bool has(flecs::entity_t e) const {
         ecs_iter_t it;
@@ -36573,15 +36650,6 @@ struct query_base {
     /** Convert the query to a string expression. */
     flecs::string str() const {
         char *result = ecs_query_str(query_);
-        return flecs::string(result);
-    }
-
-    /** Return a string representing the query plan.
-     * This can be used to analyze the behavior and performance of the query.
-     * @see ecs_query_plan()
-     */
-    flecs::string plan() const {
-        char *result = ecs_query_plan(query_);
         return flecs::string(result);
     }
 
@@ -36639,11 +36707,13 @@ public:
         return *this;
     }
 
+#ifdef FLECS_CACHED_QUERIES
     /** Get the cache query, if any. */
     flecs::query<> cache_query() const {
         const flecs::query_t *q = ecs_query_get_cache_query(query_);
         return flecs::query<>(q);
     }
+#endif
 
 private:
     ecs_iter_t get_iter(flecs::world_t *world) const override {
@@ -39421,6 +39491,7 @@ inline flecs::field<A> iter::field(int8_t index) const {
     return get_field<A>(index);
 }
 
+#ifdef FLECS_QUERY_PLANS
 /** Get the value of a variable by ID. */
 inline flecs::entity iter::get_var(int var_id) const {
     ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, nullptr);
@@ -39437,6 +39508,7 @@ inline flecs::entity iter::get_var(const char *name) const {
     ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, "%s", name);
     return flecs::entity(iter_->world, ecs_iter_get_var(iter_, var_id));
 }
+#endif
 
 /** Iterate over targets for a field. */
 template <typename Func>

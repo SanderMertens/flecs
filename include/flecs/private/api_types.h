@@ -62,6 +62,8 @@ typedef struct ecs_table_range_t {
     int32_t count;       
 } ecs_table_range_t;
 
+#ifdef FLECS_QUERY_PLANS
+
 /** Value of a query variable. */
 typedef struct ecs_var_t {
     ecs_table_range_t range; /* Set when variable stores a range of entities. */
@@ -72,6 +74,8 @@ typedef struct ecs_var_t {
      * a separate entity member is needed. Both range and entity may be set at
      * the same time, as long as they are consistent. */
 } ecs_var_t;
+
+#endif // FLECS_QUERY_PLANS
 
 /** Cached reference. */
 struct ecs_ref_t {
@@ -130,25 +134,39 @@ typedef struct ecs_query_op_profile_t {
     int32_t count[2]; /* 0 = enter, 1 = redo */
 } ecs_query_op_profile_t;
 
+/* Trivial query iterator context. */
+typedef struct ecs_query_trivial_ctx_t {
+    ecs_table_cache_iter_t it;
+    const ecs_table_record_t *tr;
+    int32_t start_from;
+    int32_t first_to_eval;
+} ecs_query_trivial_ctx_t;
+
 /** Query iterator. */
 typedef struct ecs_query_iter_t {
+#ifdef FLECS_QUERY_PLANS
     struct ecs_var_t *vars;                   /* Variable storage. */
     const struct ecs_query_var_t *query_vars; /* Query variable metadata. */
     const struct ecs_query_op_t *ops;         /* Query plan operations. */
     struct ecs_query_op_ctx_t *op_ctx;        /* Operation-specific state. */
     uint64_t *written;
+    ecs_query_op_profile_t *profile;
+    int16_t op;                               /* Currently iterated query plan operation (index into ops). */
+#else
+    ecs_entity_t entity;                      /* Constrained $this entity. */
+    bool constrained_this;                    /* Whether $this is constrained. */
+#endif
 
+#ifdef FLECS_CACHED_QUERIES
     /* Cached iteration. */
     ecs_query_cache_group_t *group;           /* Currently iterated group. */
     ecs_vec_t *tables;                        /* Currently iterated table vector (vec<ecs_query_cache_match_t>). */
     ecs_vec_t *all_tables;                    /* Different from .tables if iterating wildcard matches (vec<ecs_query_cache_match_t>). */
     ecs_query_cache_match_t *elem;            /* Current cache entry. */
     int32_t cur, all_cur;                     /* Indices into tables and all_tables. */
-
-    ecs_query_op_profile_t *profile;
-
-    int16_t op;                               /* Currently iterated query plan operation (index into ops). */
     bool iter_single_group;
+#endif
+    ecs_query_trivial_ctx_t trivial;           /* Uncached trivial iterator state. */
 } ecs_query_iter_t;
 
 /* Private iterator data. Used by iterator implementations to keep track of

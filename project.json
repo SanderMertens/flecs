@@ -30,6 +30,7 @@
                 "FLECS_PERF_TRACE",
                 "FLECS_PIPELINE",
                 "FLECS_PREFAB",
+                "FLECS_QUERY_PLANS",
                 "FLECS_REST",
                 "FLECS_PARSER",
                 "FLECS_QUERY_DSL",

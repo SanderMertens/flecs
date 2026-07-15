@@ -7,11 +7,15 @@
 #define FLECS_QUERY_TYPES_H
 
 typedef struct ecs_query_impl_t ecs_query_impl_t;
+
+#define flecs_query_impl(query) (ECS_CONST_CAST(ecs_query_impl_t*, query))
+
+#ifdef FLECS_QUERY_PLANS
+
 typedef uint8_t ecs_var_id_t;
 typedef int16_t ecs_query_lbl_t;
 typedef ecs_flags64_t ecs_write_flags_t;
 
-#define flecs_query_impl(query) (ECS_CONST_CAST(ecs_query_impl_t*, query))
 #define EcsQueryMaxVarCount     (64)
 #define EcsVarNone              ((ecs_var_id_t)-1)
 #define EcsThisName             "this"
@@ -351,14 +355,6 @@ typedef struct {
     bool is_set;
 } ecs_query_ctrl_ctx_t;
 
-/* Trivial iterator context */
-typedef struct {
-    ecs_table_cache_iter_t it;
-    const ecs_table_record_t *tr;
-    int32_t start_from;
-    int32_t first_to_eval;
-} ecs_query_trivial_ctx_t;
-
 /* Trivial sparse iterator context */
 #define FLECS_QUERY_SPARSE_BATCH_SIZE (1024)
 
@@ -452,16 +448,20 @@ typedef struct {
     int32_t skipped; /* Term skipped during compilation */
 } ecs_query_compile_ctx_t;    
 
+#endif // FLECS_QUERY_PLANS
+
 /* Query run state */
 typedef struct {
+#ifdef FLECS_QUERY_PLANS
     uint64_t *written;                 /* Bitset to check which variables have been written */
     ecs_query_lbl_t op_index;          /* Currently evaluated operation */
     ecs_var_t *vars;                   /* Variable storage */
-    ecs_iter_t *it;                    /* Iterator */
     ecs_query_op_ctx_t *op_ctx;        /* Operation context (stack) */
+    const ecs_query_var_t *query_vars; /* Reference to query variable array */
+#endif
+    ecs_iter_t *it;                    /* Iterator */
     ecs_world_t *world;                /* Reference to world */
     const ecs_query_impl_t *query;     /* Reference to query */
-    const ecs_query_var_t *query_vars; /* Reference to query variable array */
     ecs_query_iter_t *qit;
 } ecs_query_run_ctx_t;
 
@@ -470,6 +470,7 @@ struct ecs_query_impl_t {
 
     ecs_stage_t *stage;           /* Stage used for allocations */
 
+#ifdef FLECS_QUERY_PLANS
     /* Variables */
     ecs_query_var_t *vars;        /* Variables */
     int32_t var_count;            /* Number of variables */
@@ -481,6 +482,7 @@ struct ecs_query_impl_t {
     /* Query plan */
     ecs_query_op_t *ops;          /* Operations */
     int32_t op_count;             /* Number of operations */
+#endif
 
     /* Misc */
     int32_t tokens_len;           /* Length of tokens buffer */

@@ -8,6 +8,8 @@
 
 #include "../types.h"
 
+typedef struct ecs_query_cache_t ecs_query_cache_t;
+
 #ifdef FLECS_CACHED_QUERIES
 /* Component monitor */
 typedef struct ecs_monitor_t {
@@ -43,7 +45,6 @@ void flecs_update_component_monitors(
     ecs_world_t *world,
     ecs_type_t *added,
     ecs_type_t *removed);
-#endif
 
 /** Table match data.
  * Each table matched by the query is represented by an ecs_query_cache_match_t
@@ -90,7 +91,7 @@ typedef struct ecs_query_cache_allocators_t {
 } ecs_query_cache_allocators_t;
 
 /** Query that is automatically matched against tables */
-typedef struct ecs_query_cache_t {
+struct ecs_query_cache_t {
     /* Uncached query used to populate the cache */
     ecs_query_t *query;
 
@@ -142,7 +143,7 @@ typedef struct ecs_query_cache_t {
 
     /* Query-level allocators */
     ecs_query_cache_allocators_t allocators;
-} ecs_query_cache_t;
+};
 
 ecs_query_cache_t* flecs_query_cache_init(
     ecs_query_impl_t *impl,
@@ -168,5 +169,7 @@ ecs_size_t flecs_query_cache_elem_size(
 #include "group.h"
 #include "match.h"
 #include "change_detection.h"
+
+#endif // FLECS_CACHED_QUERIES
 
 #endif

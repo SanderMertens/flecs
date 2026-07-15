@@ -5,6 +5,8 @@
 
 #include "../../private_api.h"
 
+#ifdef FLECS_QUERY_PLANS
+
 static
 const char* flecs_query_name_arg(
     const ecs_query_op_t *op,
@@ -340,3 +342,5 @@ bool flecs_query_pred_neq_name(
     ecs_table_range_t r = flecs_range_from_entity(ctx->world, e);
     return flecs_query_pred_neq_w_range(op, redo, ctx, r);
 }
+
+#endif // FLECS_QUERY_PLANS

@@ -5,6 +5,8 @@
 
 #include "../../private_api.h"
 
+#ifdef FLECS_QUERY_PLANS
+
 /* Find tables with requested component that have traversable entities. */
 static
 bool flecs_query_up_select_table(
@@ -482,3 +484,5 @@ bool flecs_query_self_up(
             FlecsQueryUpSelectSelfUp, FlecsQueryUpSelectDefault);
     }
 }
+
+#endif // FLECS_QUERY_PLANS

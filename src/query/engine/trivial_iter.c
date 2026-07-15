@@ -5,6 +5,19 @@
 
 #include "../../private_api.h"
 
+void flecs_query_trivial_set_ids(
+    ecs_query_run_ctx_t *ctx)
+{
+    const ecs_query_t *q = &ctx->query->pub;
+    ecs_iter_t *it = ctx->it;
+
+    int32_t i;
+    for (i = 0; i < q->term_count; i ++) {
+        const ecs_term_t *term = &q->terms[i];
+        it->ids[term->field_index] = term->id;
+    }
+}
+
 static
 bool flecs_query_trivial_search_init(
     const ecs_query_run_ctx_t *ctx,
@@ -67,70 +80,6 @@ bool flecs_query_trivial_search_init(
             }
         }
     }
-
-    return true;
-}
-
-bool flecs_query_trivial_search(
-    const ecs_query_run_ctx_t *ctx,
-    ecs_query_trivial_ctx_t *op_ctx,
-    bool redo,
-    ecs_flags64_t term_set)
-{
-    const ecs_query_impl_t *query = ctx->query;
-    const ecs_query_t *q = &query->pub;
-    ecs_iter_t *it = ctx->it;
-    int32_t t, term_count = query->pub.term_count;
-
-    if (!flecs_query_trivial_search_init(ctx, op_ctx, q, redo, term_set)) {
-        return false;
-    }
-
-    uint64_t q_filter = q->bloom_filter;
-    const ecs_term_t *terms = q->terms;
-
-    do {
-        const ecs_table_cache_elem_t *elem = flecs_table_cache_next(
-            &op_ctx->it);
-        if (!elem) {
-            return false;
-        }
-
-        ecs_table_t *table = elem->table;
-        if (!flecs_table_bloom_filter_test(table, q_filter)) {
-            continue;
-        }
-
-        int16_t *columns = ECS_CONST_CAST(int16_t*, it->columns);
-        for (t = op_ctx->first_to_eval; t < term_count; t ++) {
-            if (!(term_set & (1llu << t))) {
-                continue;
-            }
-
-            ecs_component_record_t *cr = query->cr_cache[t];
-            ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
-
-            const ecs_table_cache_elem_t *elem_with = flecs_table_cache_get_elem(
-                &cr->cache, table);
-            if (!elem_with) {
-                break;
-            }
-
-            const ecs_term_t *term = &terms[t];
-            it->trs[term->field_index] = elem_with->tr;
-            columns[term->field_index] = elem_with->column;
-        }
-
-        if (t == term_count) {
-            ctx->vars[0].range.table = table;
-            ctx->vars[0].range.count = 0;
-            ctx->vars[0].range.offset = 0;
-            const ecs_term_t *term = &terms[op_ctx->start_from];
-            it->trs[term->field_index] = elem->tr;
-            columns[term->field_index] = elem->column;
-            break;
-        }
-    } while (true);
 
     return true;
 }
@@ -206,7 +155,7 @@ bool flecs_query_trivial_test(
 
         ecs_table_t *table = it->table;
         ecs_assert(table != NULL, ECS_INVALID_OPERATION,
-            "the variable set on the iterator is missing a table");
+            "the iterator constraint is missing a table");
 
         if (!flecs_table_bloom_filter_test(table, q->bloom_filter)) {
             return false;
@@ -241,3 +190,96 @@ bool flecs_query_trivial_test(
         return true;
     }
 }
+
+#ifdef FLECS_QUERY_PLANS
+
+void flecs_query_trivial_set_iter_this(
+    ecs_iter_t *it,
+    const ecs_query_run_ctx_t *ctx)
+{
+    const ecs_var_t *var = &ctx->vars[0];
+    const ecs_table_range_t *range = &var->range;
+    ecs_table_t *table = range->table;
+    int32_t count = range->count;
+    if (table) {
+        if (!count) {
+            count = ecs_table_count(table);
+        }
+        it->table = table;
+        it->offset = range->offset;
+        it->count = count;
+        it->entities = ecs_table_entities(table);
+        if (it->entities) {
+            it->entities += it->offset;
+        }
+    } else if (count == 1) {
+        it->count = 1;
+        it->entities = &ctx->vars[0].entity;
+    }
+}
+
+bool flecs_query_trivial_search(
+    const ecs_query_run_ctx_t *ctx,
+    ecs_query_trivial_ctx_t *op_ctx,
+    bool redo,
+    ecs_flags64_t term_set)
+{
+    const ecs_query_impl_t *query = ctx->query;
+    const ecs_query_t *q = &query->pub;
+    ecs_iter_t *it = ctx->it;
+    int32_t t, term_count = query->pub.term_count;
+
+    if (!flecs_query_trivial_search_init(ctx, op_ctx, q, redo, term_set)) {
+        return false;
+    }
+
+    uint64_t q_filter = q->bloom_filter;
+    const ecs_term_t *terms = q->terms;
+
+    do {
+        const ecs_table_cache_elem_t *elem = flecs_table_cache_next(
+            &op_ctx->it);
+        if (!elem) {
+            return false;
+        }
+
+        ecs_table_t *table = elem->table;
+        if (!flecs_table_bloom_filter_test(table, q_filter)) {
+            continue;
+        }
+
+        int16_t *columns = ECS_CONST_CAST(int16_t*, it->columns);
+        for (t = op_ctx->first_to_eval; t < term_count; t ++) {
+            if (!(term_set & (1llu << t))) {
+                continue;
+            }
+
+            ecs_component_record_t *cr = query->cr_cache[t];
+            ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+            const ecs_table_cache_elem_t *elem_with = flecs_table_cache_get_elem(
+                &cr->cache, table);
+            if (!elem_with) {
+                break;
+            }
+
+            const ecs_term_t *term = &terms[t];
+            it->trs[term->field_index] = elem_with->tr;
+            columns[term->field_index] = elem_with->column;
+        }
+
+        if (t == term_count) {
+            ctx->vars[0].range.table = table;
+            ctx->vars[0].range.count = 0;
+            ctx->vars[0].range.offset = 0;
+            const ecs_term_t *term = &terms[op_ctx->start_from];
+            it->trs[term->field_index] = elem->tr;
+            columns[term->field_index] = elem->column;
+            break;
+        }
+    } while (true);
+
+    return true;
+}
+
+#endif // FLECS_QUERY_PLANS

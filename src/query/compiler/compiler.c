@@ -6,6 +6,49 @@
 #include "../../private_api.h"
 
 static
+bool flecs_query_needs_plan(
+    const ecs_query_impl_t *query)
+{
+    ecs_flags32_t flags = query->pub.flags;
+
+    if (query->cache) {
+        if (flags & EcsQueryIsCacheable) {
+            if (!(flags & EcsQueryCacheWithFilter)) {
+                return false;
+            }
+        }
+    } else {
+        ecs_flags32_t trivial_flags = EcsQueryIsTrivial|EcsQueryMatchOnlySelf;
+        if ((flags & trivial_flags) == trivial_flags) {
+            if (!(flags & EcsQueryMatchWildcards)) {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+static
+void flecs_query_compile_trivial(
+    ecs_query_impl_t *query)
+{
+#ifdef FLECS_QUERY_PLANS
+    /* Initialize space for $this variable */
+    query->pub.var_count = 1;
+    query->var_count = 1;
+    query->var_size = 1;
+    query->vars = &flecs_this_array;
+    query->pub.vars = &flecs_this_name_array;
+    query->pub.flags |= EcsQueryHasTableThisVar;
+#else
+    (void)query;
+#endif
+}
+
+#ifdef FLECS_QUERY_PLANS
+
+static
 bool flecs_query_var_is_anonymous(
     const ecs_query_impl_t *query,
     ecs_var_id_t var_id)
@@ -924,32 +967,8 @@ int flecs_query_compile(
 {
     /* Compile query to operations. Only necessary for non-trivial queries, as
      * trivial queries use trivial iterators that don't use query ops. */
-    bool needs_plan = true;
-    ecs_flags32_t flags = query->pub.flags;
-    
-    if (query->cache) {
-        if (flags & EcsQueryIsCacheable) {
-            if (!(flags & EcsQueryCacheWithFilter)) {
-                needs_plan = false;
-            }
-        }
-    } else {
-        ecs_flags32_t trivial_flags = EcsQueryIsTrivial|EcsQueryMatchOnlySelf;
-        if ((flags & trivial_flags) == trivial_flags) {
-            if (!(flags & EcsQueryMatchWildcards)) {
-                needs_plan = false;
-            }
-        }
-    }
-
-    if (!needs_plan) {
-        /* Initialize space for $this variable */
-        query->pub.var_count = 1;
-        query->var_count = 1;
-        query->var_size = 1;
-        query->vars = &flecs_this_array;
-        query->pub.vars = &flecs_this_name_array;
-        query->pub.flags |= EcsQueryHasTableThisVar;
+    if (!flecs_query_needs_plan(query)) {
+        flecs_query_compile_trivial(query);
         return 0;
     }
 
@@ -1212,3 +1231,23 @@ int flecs_query_compile(
 
     return 0;
 }
+
+#else
+
+int flecs_query_compile(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_query_impl_t *query)
+{
+    (void)world;
+    (void)stage;
+    ecs_check(!flecs_query_needs_plan(query), ECS_UNSUPPORTED,
+        "query uses features that require the FLECS_QUERY_PLANS addon");
+
+    flecs_query_compile_trivial(query);
+    return 0;
+error:
+    return -1;
+}
+
+#endif

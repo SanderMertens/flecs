@@ -1,0 +1,20 @@
+{
+    "id": "query_plans",
+    "type": "application",
+    "value": {
+        "public": false,
+        "use": [
+            "flecs"
+        ],
+        "standalone": true
+    },
+    "lang.c": {
+        "defines": [
+            "FLECS_CUSTOM_BUILD",
+            "FLECS_CACHED_QUERIES",
+            "FLECS_LOG",
+            "FLECS_OS_API_IMPL",
+            "FLECS_SOFT_ASSERT"
+        ]
+    }
+}

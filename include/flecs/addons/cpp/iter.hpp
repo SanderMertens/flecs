@@ -395,7 +395,6 @@ public:
     void skip() {
         ecs_iter_skip(iter_);
     }
-#endif
 
     /** Return the group ID for the current table (grouped queries only).
      *
@@ -404,7 +403,9 @@ public:
     uint64_t group_id() const {
         return ecs_iter_get_group(iter_);
     }
+#endif
 
+#ifdef FLECS_QUERY_PLANS
     /** Get value of variable by ID.
      * Get value of a query variable for current result.
      *
@@ -420,6 +421,7 @@ public:
      * @return The variable value.
      */
     flecs::entity get_var(const char *name) const;
+#endif
 
     /** Progress iterator.
      * This operation should only be called from a context where the iterator is

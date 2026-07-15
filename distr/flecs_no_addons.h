@@ -231,6 +231,9 @@
 #ifdef FLECS_NO_CACHED_QUERIES
 #undef FLECS_CACHED_QUERIES
 #endif
+#ifdef FLECS_NO_QUERY_PLANS
+#undef FLECS_QUERY_PLANS
+#endif
 #ifdef FLECS_NO_CONSTRAINT_TRAITS
 #undef FLECS_CONSTRAINT_TRAITS
 #endif
@@ -413,10 +416,6 @@
 #define FLECS_EVENT_DESC_MAX 8
 #endif
 
-/** @def FLECS_VARIABLE_COUNT_MAX
- * Maximum number of query variables per query. */
-#define FLECS_VARIABLE_COUNT_MAX 64
-
 /** @def FLECS_TERM_COUNT_MAX 
  * Maximum number of terms in queries. Should not exceed 64. */
 #ifndef FLECS_TERM_COUNT_MAX
@@ -427,12 +426,6 @@
  * Maximum number of arguments for a term. */
 #ifndef FLECS_TERM_ARG_COUNT_MAX
 #define FLECS_TERM_ARG_COUNT_MAX 16
-#endif
-
-/** @def FLECS_QUERY_VARIABLE_COUNT_MAX
- * Maximum number of query variables per query. Should not exceed 128. */
-#ifndef FLECS_QUERY_VARIABLE_COUNT_MAX
-#define FLECS_QUERY_VARIABLE_COUNT_MAX 64
 #endif
 
 /** @def FLECS_QUERY_SCOPE_NESTING_MAX
@@ -4602,7 +4595,6 @@ struct ecs_query_t {
 
     uint64_t bloom_filter;      /**< Bitmask used to quickly discard tables. */
     ecs_flags32_t flags;        /**< Query flags. */
-    int8_t var_count;           /**< Number of query variables. */
     int8_t term_count;          /**< Number of query terms. */
     int8_t field_count;         /**< Number of fields returned by the query. */
 
@@ -4618,8 +4610,6 @@ struct ecs_query_t {
     ecs_termset_t set_fields;   /**< Fields that will be set. */
 
     ecs_query_cache_kind_t cache_kind;  /**< Caching policy of the query. */
-
-    char **vars;                /**< Array with variable names for the iterator. */
 
     void *ctx;                  /**< User context to pass to callback. */
     void *binding_ctx;          /**< Context to be used for language bindings. */
@@ -4842,17 +4832,6 @@ typedef struct ecs_table_range_t {
     int32_t count;       
 } ecs_table_range_t;
 
-/** Value of a query variable. */
-typedef struct ecs_var_t {
-    ecs_table_range_t range; /* Set when variable stores a range of entities. */
-    ecs_entity_t entity;     /* Set when variable stores a single entity. */
-
-    /* Most entities can be stored as a range by setting range.count to 1, 
-     * however in order to also be able to store empty entities in variables, 
-     * a separate entity member is needed. Both range and entity may be set at
-     * the same time, as long as they are consistent. */
-} ecs_var_t;
-
 /** Cached reference. */
 struct ecs_ref_t {
     ecs_entity_t entity;         /* Entity. */
@@ -4910,25 +4889,20 @@ typedef struct ecs_query_op_profile_t {
     int32_t count[2]; /* 0 = enter, 1 = redo */
 } ecs_query_op_profile_t;
 
+/* Trivial query iterator context. */
+typedef struct ecs_query_trivial_ctx_t {
+    ecs_table_cache_iter_t it;
+    const ecs_table_record_t *tr;
+    int32_t start_from;
+    int32_t first_to_eval;
+} ecs_query_trivial_ctx_t;
+
 /** Query iterator. */
 typedef struct ecs_query_iter_t {
-    struct ecs_var_t *vars;                   /* Variable storage. */
-    const struct ecs_query_var_t *query_vars; /* Query variable metadata. */
-    const struct ecs_query_op_t *ops;         /* Query plan operations. */
-    struct ecs_query_op_ctx_t *op_ctx;        /* Operation-specific state. */
-    uint64_t *written;
+    ecs_entity_t entity;                      /* Constrained $this entity. */
+    bool constrained_this;                    /* Whether $this is constrained. */
 
-    /* Cached iteration. */
-    ecs_query_cache_group_t *group;           /* Currently iterated group. */
-    ecs_vec_t *tables;                        /* Currently iterated table vector (vec<ecs_query_cache_match_t>). */
-    ecs_vec_t *all_tables;                    /* Different from .tables if iterating wildcard matches (vec<ecs_query_cache_match_t>). */
-    ecs_query_cache_match_t *elem;            /* Current cache entry. */
-    int32_t cur, all_cur;                     /* Indices into tables and all_tables. */
-
-    ecs_query_op_profile_t *profile;
-
-    int16_t op;                               /* Currently iterated query plan operation (index into ops). */
-    bool iter_single_group;
+    ecs_query_trivial_ctx_t trivial;           /* Uncached trivial iterator state. */
 } ecs_query_iter_t;
 
 /* Private iterator data. Used by iterator implementations to keep track of
@@ -5270,8 +5244,6 @@ int32_t flecs_poly_refcount(
  * @return Whether the query has more results.
  */
 FLECS_API
-bool flecs_query_trivial_cached_next(
-    ecs_iter_t *it);
 
 #define flecs_check_exclusive_world_access_write(world)
 #define flecs_check_exclusive_world_access_read(world)
@@ -6126,7 +6098,6 @@ struct ecs_iter_t {
     ecs_table_t *other_table;     /**< Previous or next table when adding or removing. */
     ecs_id_t *ids;                /**< (Component) IDs. */
     ecs_entity_t *sources;        /**< Entity on which the ID was matched (0 if same as entities). */
-    ecs_flags64_t constrained_vars; /**< Bitset that marks constrained variables. */
     ecs_termset_t set_fields;     /**< Fields that are set. */
     ecs_termset_t ref_fields;     /**< Bitset with fields that aren't component arrays. */
     ecs_termset_t row_fields;     /**< Fields that must be obtained with field_at. */
@@ -9561,46 +9532,6 @@ FLECS_API
 void ecs_query_fini(
     ecs_query_t *query);
 
-/** Find a variable index.
- * This operation looks up the index of a variable in the query. This index can
- * be used in operations like ecs_iter_set_var() and ecs_iter_get_var().
- *
- * @param query The query.
- * @param name The variable name.
- * @return The variable index.
- */
-FLECS_API
-int32_t ecs_query_find_var(
-    const ecs_query_t *query,
-    const char *name);    
-
-/** Get the variable name.
- * This operation returns the variable name for an index.
- *
- * @param query The query.
- * @param var_id The variable index.
- * @return The variable name.
- */
-FLECS_API
-const char* ecs_query_var_name(
-    const ecs_query_t *query,
-    int32_t var_id);
-
-/** Test if a variable is an entity.
- * Internally, the query engine has entity variables and table variables. When
- * iterating through query variables (by using ecs_query_t::var_count) only
- * the values for entity variables are accessible. This operation enables an
- * application to check if a variable is an entity variable.
- *
- * @param query The query.
- * @param var_id The variable ID.
- * @return Whether the variable is an entity variable.
- */
-FLECS_API
-bool ecs_query_var_is_entity(
-    const ecs_query_t *query,
-    int32_t var_id);  
-
 /** Create a query iterator.
  * Use an iterator to iterate through the entities that match a query. Queries
  * can return multiple results, and have to be iterated by repeatedly calling
@@ -9765,81 +9696,6 @@ bool ecs_query_has_range(
     ecs_table_range_t *range,
     ecs_iter_t *it);
 
-/** Return how often a match event happened for a cached query.
- * This operation can be used to determine whether the query cache has been 
- * updated with new tables.
- * 
- * @param query The query.
- * @return The number of match events that happened.
- */
-FLECS_API
-int32_t ecs_query_match_count(
-    const ecs_query_t *query);
-
-/** Convert a query to a string.
- * This will convert the query program to a string, which can aid in debugging
- * the behavior of a query.
- *
- * The returned string must be freed with ecs_os_free().
- *
- * @param query The query.
- * @return The query plan.
- */
-FLECS_API
-char* ecs_query_plan(
-    const ecs_query_t *query);
-
-/** Convert a query to a string with a profile.
- * To use this, you must set the EcsIterProfile flag on an iterator before
- * starting iteration:
- *
- * @code
- *   it.flags |= EcsIterProfile;
- * @endcode
- * 
- * The returned string must be freed with ecs_os_free().
- *
- * @param query The query.
- * @param it The iterator with profile data.
- * @return The query plan with profile data.
- */
-FLECS_API
-char* ecs_query_plan_w_profile(
-    const ecs_query_t *query,
-    const ecs_iter_t *it);
-
-/** Same as ecs_query_plan(), but includes the plan for populating the cache (if any). 
- * 
- * @param query The query.
- * @return The query plan.
- */
-FLECS_API
-char* ecs_query_plans(
-    const ecs_query_t *query);
-
-/** Populate variables from a key-value string.
- * Convenience function to set query variables from a key-value string separated
- * by commas. The string must have the following format:
- *
- * @code
- *   var_a: value, var_b: value
- * @endcode
- *
- * The key-value list may optionally be enclosed in parentheses.
- * 
- * This function uses the script addon.
- *
- * @param query The query.
- * @param it The iterator for which to set the variables.
- * @param expr The key-value expression.
- * @return A pointer to the next character after the last parsed one.
- */
-FLECS_API
-const char* ecs_query_args_parse(
-    ecs_query_t *query,
-    ecs_iter_t *it,
-    const char *expr);
-
 /** Get the query object.
  * Return the query object. Can be used to access various information about
  * the query.
@@ -9852,88 +9708,6 @@ FLECS_API
 const ecs_query_t* ecs_query_get(
     const ecs_world_t *world,
     ecs_entity_t query);
-
-/** Set the group to iterate for a query iterator.
- * This operation limits the results returned by the query to only the selected
- * group ID. The query must have a group_by function, and the iterator must
- * be a query iterator.
- *
- * Groups are sets of tables that are stored together in the query cache based
- * on a group ID, which is calculated per table by the group_by function. To
- * iterate a group, an iterator only needs to know the first and last cache node
- * for that group, which can both be found in a fast O(1) operation.
- *
- * As a result, group iteration is one of the most efficient mechanisms to
- * filter out large numbers of entities, even if those entities are distributed
- * across many tables. This makes it a good fit for things like dividing up
- * a world into cells, and only iterating cells close to a player.
- *
- * The group to iterate must be set before the first call to ecs_query_next(). No
- * operations that can add or remove components should be invoked between calling
- * ecs_iter_set_group() and ecs_query_next().
- *
- * @param it The query iterator.
- * @param group_id The group to iterate.
- */
-FLECS_API
-void ecs_iter_set_group(
-    ecs_iter_t *it,
-    uint64_t group_id);
-
-/** Return the map with query groups.
- * This map can be used to iterate the active group identifiers of a query. The
- * payload of the map is opaque. The map can be used as follows:
- * 
- * @code
- * const ecs_map_t *keys = ecs_query_get_groups(q);
- * ecs_map_iter_t kit = ecs_map_iter(keys);
- * while (ecs_map_next(&kit)) {
- *   uint64_t group_id = ecs_map_key(&kit);
- * 
- *   // Iterate query for group
- *   ecs_iter_t it = ecs_query_iter(world, q);
- *   ecs_iter_set_group(&it, group_id);
- *   while (ecs_query_next(&it)) {
- *     // Iterate as usual
- *   }
- * }
- * @endcode
- * 
- * This operation is not valid for queries that do not use group_by. The 
- * returned map pointer will remain valid for as long as the query exists.
- *
- * @param query The query.
- * @return The map with query groups.
- */
-FLECS_API
-const ecs_map_t* ecs_query_get_groups(
-    const ecs_query_t *query);
-
-/** Get the context of a query group.
- * This operation returns the context of a query group as returned by the
- * on_group_create callback.
- *
- * @param query The query.
- * @param group_id The group for which to obtain the context.
- * @return The group context, NULL if the group doesn't exist.
- */
-FLECS_API
-void* ecs_query_get_group_ctx(
-    const ecs_query_t *query,
-    uint64_t group_id);
-
-/** Get information about a query group.
- * This operation returns information about a query group, including the group
- * context returned by the on_group_create callback.
- *
- * @param query The query.
- * @param group_id The group for which to obtain the group info.
- * @return The group info, NULL if the group doesn't exist.
- */
-FLECS_API
-const ecs_query_group_info_t* ecs_query_get_group_info(
-    const ecs_query_t *query,
-    uint64_t group_id);
 
 /** Struct returned by ecs_query_count(). */
 typedef struct ecs_query_count_t {
@@ -9961,18 +9735,6 @@ ecs_query_count_t ecs_query_count(
  */
 FLECS_API
 bool ecs_query_is_true(
-    const ecs_query_t *query);
-
-/** Get the query used to populate the cache.
- * This operation returns the query that is used to populate the query cache.
- * For queries that can be entirely cached, the returned query will be
- * equivalent to the query passed to ecs_query_init().
- *
- * @param query The query.
- * @return The query used to populate the cache, NULL if query is not cached.
- */
-FLECS_API
-const ecs_query_t* ecs_query_get_cache_query(
     const ecs_query_t *query);
 
 /** @} */
@@ -10165,18 +9927,14 @@ ecs_entity_t ecs_iter_first(
  * Example:
  *
  * @code
- * // Query that matches (Eats, *)
+ * // Query that matches Position
  * ecs_query_t *q = ecs_query(world, {
- *   .terms = {
- *     { .first.id = Eats, .second.name = "$food" }
- *   }
+ *   .terms = {{ ecs_id(Position) }}
  * });
  * 
- * int food_var = ecs_query_find_var(q, "food");
- * 
- * // Set Food to Apples, so we're only matching (Eats, Apples)
+ * // Constrain $this so the query only matches entity e
  * ecs_iter_t it = ecs_query_iter(world, q);
- * ecs_iter_set_var(&it, food_var, Apples);
+ * ecs_iter_set_var(&it, 0, e);
  * 
  * while (ecs_query_next(&it)) {
  *   for (int i = 0; i < it.count; i ++) {
@@ -10187,6 +9945,7 @@ ecs_entity_t ecs_iter_first(
  *
  * The variable must be initialized after creating the iterator and before the
  * first call to next().
+ * Without FLECS_QUERY_PLANS, only variable 0 ($this) can be set.
  *
  * @param it The iterator.
  * @param var_id The variable index.
@@ -10232,119 +9991,6 @@ void ecs_iter_set_var_as_range(
     ecs_iter_t *it,
     int32_t var_id,
     const ecs_table_range_t *range);
-
-/** Get the value of an iterator variable as an entity.
- * A variable can be interpreted as an entity if it is set to an entity, or if it
- * is set to a table range with count 1.
- *
- * This operation can only be invoked on valid iterators. The variable index
- * must be smaller than the total number of variables provided by the iterator
- * (as returned by ecs_iter_get_var_count()).
- *
- * @param it The iterator.
- * @param var_id The variable index.
- * @return The variable value.
- */
-FLECS_API
-ecs_entity_t ecs_iter_get_var(
-    ecs_iter_t *it,
-    int32_t var_id);
-
-/** Get the variable name.
- * 
- * @param it The iterator.
- * @param var_id The variable index.
- * @return The variable name.
- */
-FLECS_API
-const char* ecs_iter_get_var_name(
-    const ecs_iter_t *it,
-    int32_t var_id);
-
-/** Get the number of variables. 
- * 
- * @param it The iterator.
- * @return The number of variables.
- */
-FLECS_API
-int32_t ecs_iter_get_var_count(
-    const ecs_iter_t *it);
-
-/** Get the variable array.
- * 
- * @param it The iterator.
- * @return The variable array (if any).
- */
-FLECS_API
-ecs_var_t* ecs_iter_get_vars(
-    const ecs_iter_t *it);
-
-/** Get the value of an iterator variable as a table.
- * A variable can be interpreted as a table if it is set as a table range with
- * both offset and count set to 0, or if offset is 0 and count matches the
- * number of elements in the table.
- *
- * This operation can only be invoked on valid iterators. The variable index
- * must be smaller than the total number of variables provided by the iterator
- * (as returned by ecs_iter_get_var_count()).
- *
- * @param it The iterator.
- * @param var_id The variable index.
- * @return The variable value.
- */
-FLECS_API
-ecs_table_t* ecs_iter_get_var_as_table(
-    ecs_iter_t *it,
-    int32_t var_id);
-
-/** Get the value of an iterator variable as a table range.
- * A value can be interpreted as a table range if it is set as a table range, or if
- * it is set to an entity with a non-empty type (the entity must have at least
- * one component, tag, or relationship in its type).
- *
- * This operation can only be invoked on valid iterators. The variable index
- * must be smaller than the total number of variables provided by the iterator
- * (as returned by ecs_iter_get_var_count()).
- *
- * @param it The iterator.
- * @param var_id The variable index.
- * @return The variable value.
- */
-FLECS_API
-ecs_table_range_t ecs_iter_get_var_as_range(
-    ecs_iter_t *it,
-    int32_t var_id);
-
-/** Return whether a variable is constrained.
- * This operation returns true for variables set by one of the ecs_iter_set_var*
- * operations.
- *
- * A constrained variable is guaranteed not to change values while results are
- * being iterated.
- *
- * @param it The iterator.
- * @param var_id The variable index.
- * @return Whether the variable is constrained to a specified value.
- */
-FLECS_API
-bool ecs_iter_var_is_constrained(
-    ecs_iter_t *it,
-    int32_t var_id);
-
-/** Return the group ID for the currently iterated result.
- * This operation returns the group ID for queries that use group_by. If this
- * operation is called on an iterator that is not iterating a query that uses
- * group_by, it will fail.
- * 
- * For queries that use cascade, this operation will return the hierarchy depth
- * of the currently iterated result.
- * 
- * @param it The iterator.
- * @return The group ID of the currently iterated result.
- */
-FLECS_API
-uint64_t ecs_iter_get_group(
-    const ecs_iter_t *it);
 
 /** Create a paged iterator.
  * Paged iterators limit the results to those starting from 'offset', and will
