@@ -2189,7 +2189,11 @@ void Observer_add_in_on_add_yield_existing(void);
 void Observer_add_in_on_add_yield_existing_multi(void);
 void Observer_add_in_on_remove_yield_existing(void);
 void Observer_add_in_on_remove_yield_existing_multi(void);
+void Observer_prefab_observer_no_query(void);
+void Observer_disabled_observer_no_query(void);
 void Observer_disable_observer(void);
+void Observer_disable_observer_before_create(void);
+void Observer_disable_multi_observer_before_create(void);
 void Observer_disable_observer_module(void);
 void Observer_disable_observer_module_nested(void);
 void Observer_disable_observer_and_module(void);
@@ -11947,8 +11951,24 @@ bake_test_case Observer_testcases[] = {
         Observer_add_in_on_remove_yield_existing_multi
     },
     {
+        "prefab_observer_no_query",
+        Observer_prefab_observer_no_query
+    },
+    {
+        "disabled_observer_no_query",
+        Observer_disabled_observer_no_query
+    },
+    {
         "disable_observer",
         Observer_disable_observer
+    },
+    {
+        "disable_observer_before_create",
+        Observer_disable_observer_before_create
+    },
+    {
+        "disable_multi_observer_before_create",
+        Observer_disable_multi_observer_before_create
     },
     {
         "disable_observer_module",
@@ -16889,7 +16909,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        351,
+        355,
         Observer_testcases
     },
     {
