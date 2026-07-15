@@ -480,6 +480,10 @@ void Rest_get_cached_invalid(void);
 void Rest_try_query(void);
 void Rest_query(void);
 void Rest_named_query(void);
+void Rest_call(void);
+void Rest_call_string(void);
+void Rest_call_missing_argument(void);
+void Rest_call_not_found(void);
 void Rest_tables(void);
 void Rest_components(void);
 void Rest_type_info_non_existing_entity(void);
@@ -2350,6 +2354,22 @@ bake_test_case Rest_testcases[] = {
         Rest_named_query
     },
     {
+        "call",
+        Rest_call
+    },
+    {
+        "call_string",
+        Rest_call_string
+    },
+    {
+        "call_missing_argument",
+        Rest_call_missing_argument
+    },
+    {
+        "call_not_found",
+        Rest_call_not_found
+    },
+    {
         "tables",
         Rest_tables
     },
@@ -2928,7 +2948,7 @@ static bake_test_suite suites[] = {
         "Rest",
         NULL,
         NULL,
-        37,
+        41,
         Rest_testcases
     },
     {

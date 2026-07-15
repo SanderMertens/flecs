@@ -636,6 +636,160 @@ bool flecs_rest_script(
 #endif
 }
 
+#ifdef FLECS_SCRIPT
+static
+ecs_entity_t flecs_rest_call_lookup(
+    const ecs_world_t *world,
+    const char *name,
+    void *ctx)
+{
+    (void)world;
+    (void)name;
+    return *(ecs_entity_t*)ctx;
+}
+#endif
+
+static
+void flecs_rest_reply_set_captured_log(
+    ecs_http_reply_t *reply);
+
+static
+bool flecs_rest_call(
+    ecs_world_t *world,
+    const ecs_http_request_t* req,
+    ecs_http_reply_t *reply,
+    const char *path)
+{
+    (void)world;
+    (void)req;
+    (void)reply;
+    (void)path;
+#ifdef FLECS_SCRIPT
+    ecs_entity_t function = flecs_rest_entity_from_path(world, reply, path);
+    if (!function) {
+        return true;
+    }
+
+    const EcsScriptFunction *func = ecs_get(
+        world, function, EcsScriptFunction);
+    if (!func) {
+        flecs_reply_error(reply, "entity '%s' is not a script function", path);
+        reply->code = 400;
+        return true;
+    }
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+    ecs_strbuf_t expr = ECS_STRBUF_INIT;
+    ecs_strbuf_appendlit(&expr, "rest_call(");
+
+    int32_t i, param_count = ecs_vec_count(&func->params);
+    ecs_script_parameter_t *params = ecs_vec_first(&func->params);
+    for (i = 0; i < param_count; i ++) {
+        const char *value = ecs_http_get_param(req, params[i].name);
+        if (!value) {
+            flecs_reply_error(reply, "missing argument '%s'", params[i].name);
+            reply->code = 400;
+            goto done;
+        }
+
+        ecs_script_var_t *var = ecs_script_vars_define_id(
+            vars, params[i].name, params[i].type);
+        if (!var) {
+            flecs_reply_error(reply, "invalid type for argument '%s'",
+                params[i].name);
+            reply->code = 500;
+            goto done;
+        }
+
+        const EcsPrimitive *primitive = ecs_get(
+            world, params[i].type, EcsPrimitive);
+        if (primitive && primitive->kind == EcsString) {
+            *(ecs_string_t*)var->value.ptr = ecs_os_strdup(value);
+        } else if (primitive && primitive->kind == EcsChar) {
+            if (value[0] == '\0' || value[1] != '\0') {
+                flecs_reply_error(reply, "invalid value for argument '%s'",
+                    params[i].name);
+                reply->code = 400;
+                goto done;
+            }
+            *(char*)var->value.ptr = value[0];
+        } else {
+            bool prev_color = ecs_log_enable_colors(false);
+            ecs_os_api_log_t prev_log = ecs_os_api.log_;
+            flecs_rest_set_prev_log(prev_log, true);
+            ecs_os_api.log_ = flecs_rest_capture_log;
+
+            ecs_expr_eval_desc_t desc = { .type = params[i].type };
+            const char *ptr = ecs_expr_run(
+                world, value, &var->value, &desc);
+
+            ecs_os_api.log_ = prev_log;
+            ecs_log_enable_colors(prev_color);
+
+            char *err = flecs_rest_get_captured_log();
+            ecs_os_free(err);
+            if (!ptr || ptr[0] != '\0') {
+                flecs_reply_error(reply, "invalid value for argument '%s'",
+                    params[i].name);
+                reply->code = 400;
+                goto done;
+            }
+        }
+
+        if (i) {
+            ecs_strbuf_appendlit(&expr, ", ");
+        }
+        ecs_strbuf_append(&expr, "$%s", params[i].name);
+    }
+    ecs_strbuf_appendlit(&expr, ")");
+
+    char *expr_str = ecs_strbuf_get(&expr);
+    ecs_value_t result = { .type = func->return_type };
+    ecs_expr_eval_desc_t desc = {
+        .vars = vars,
+        .type = func->return_type,
+        .lookup_action = flecs_rest_call_lookup,
+        .lookup_ctx = &function
+    };
+
+    bool prev_color = ecs_log_enable_colors(false);
+    ecs_os_api_log_t prev_log = ecs_os_api.log_;
+    flecs_rest_set_prev_log(prev_log, true);
+    ecs_os_api.log_ = flecs_rest_capture_log;
+
+    const char *ptr = ecs_expr_run(world, expr_str, &result, &desc);
+
+    ecs_os_api.log_ = prev_log;
+    ecs_log_enable_colors(prev_color);
+    ecs_os_free(expr_str);
+
+    if (!ptr) {
+        flecs_rest_reply_set_captured_log(reply);
+    } else {
+        char *err = flecs_rest_get_captured_log();
+        ecs_os_free(err);
+        if (ecs_ptr_to_json_buf(
+            world, result.type, result.ptr, &reply->body))
+        {
+            flecs_reply_error(reply,
+                "failed to serialize result of function '%s'", path);
+            reply->code = 500;
+        }
+    }
+
+    if (result.ptr) {
+        ecs_ptr_free(world, result.type, result.ptr);
+    }
+
+done:
+    ecs_strbuf_reset(&expr);
+    ecs_script_vars_fini(vars);
+    return true;
+#else
+    return false;
+#endif
+}
+
 static
 void flecs_rest_shrink_memory(
     ecs_world_t *world,
@@ -2038,6 +2192,10 @@ bool flecs_rest_reply(
         /* Type info endpoint */
         } else if (!ecs_os_strncmp(req->path, "type_info/", 10)) {
             return flecs_rest_get_type_info(world, reply, &req->path[10]);
+
+        /* Call endpoint */
+        } else if (!ecs_os_strncmp(req->path, "call/", 5)) {
+            return flecs_rest_call(world, req, reply, &req->path[5]);
 
         /* Query endpoint */
         } else if (!ecs_os_strcmp(req->path, "query")) {
