@@ -268,15 +268,6 @@ public:
         return iter_->term_index;
     }
 
-    /** Convert current iterator result to string.
-     *
-     * @return String representation of the current iterator result.
-     */
-    flecs::string str() const {
-        char *s = ecs_iter_str(iter_);
-        return flecs::string(s);
-    }
-
     /** Get read-only access to field data.
      * If the specified field index does not match with the provided type, the
      * function will assert.
