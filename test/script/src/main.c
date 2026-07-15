@@ -288,8 +288,6 @@ void Eval_auto_override_pair_component(void);
 void Eval_lowercase_prefab_kind(void);
 void Eval_assign_component_to_const(void);
 void Eval_assign_component_member_to_const(void);
-void Eval_prefab_w_slot(void);
-void Eval_prefab_w_slot_variant(void);
 void Eval_const_w_component_expr(void);
 void Eval_const_w_component_expr_in_scope(void);
 void Eval_const_w_component_expr_in_module(void);
@@ -795,7 +793,6 @@ void Error_not_an_array_component(void);
 void Error_array_component_w_curly_brackets(void);
 void Error_unknown_identifier(void);
 void Error_unknown_identifier_for_int_field(void);
-void Error_prefab_w_slot_no_parent(void);
 void Error_tag_not_found(void);
 void Error_component_not_found(void);
 void Error_pair_first_not_found(void);
@@ -3057,14 +3054,6 @@ bake_test_case Eval_testcases[] = {
         Eval_assign_component_member_to_const
     },
     {
-        "prefab_w_slot",
-        Eval_prefab_w_slot
-    },
-    {
-        "prefab_w_slot_variant",
-        Eval_prefab_w_slot_variant
-    },
-    {
         "const_w_component_expr",
         Eval_const_w_component_expr
     },
@@ -5063,10 +5052,6 @@ bake_test_case Error_testcases[] = {
     {
         "unknown_identifier_for_int_field",
         Error_unknown_identifier_for_int_field
-    },
-    {
-        "prefab_w_slot_no_parent",
-        Error_prefab_w_slot_no_parent
     },
     {
         "tag_not_found",
@@ -9605,7 +9590,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        529,
+        527,
         Eval_testcases
     },
     {
@@ -9633,7 +9618,7 @@ static bake_test_suite suites[] = {
         "Error",
         NULL,
         NULL,
-        130,
+        129,
         Error_testcases
     },
     {
