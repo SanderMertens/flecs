@@ -104,10 +104,13 @@ extern "C" {
 #define ECS_ID_ON_DELETE_TARGET_FLAG(id) (1u << (3 + ((id) - EcsRemove)))
 
 /* Utilities for converting from flags to instantiate policies and vice versa. */
+#ifdef FLECS_PREFAB
 #define ECS_ID_ON_INSTANTIATE(flags) \
     ((ecs_entity_t[]){EcsOverride, EcsOverride, EcsInherit, 0, EcsDontInherit}\
         [(((flags) & EcsIdOnInstantiateMask) >> 6)])
-#define ECS_ID_ON_INSTANTIATE_FLAG(id) (1u << (6 + ((id) - EcsOverride)))
+#endif
+#define ECS_ID_ON_INSTANTIATE_FLAG(id) \
+    (1u << (8 - (EcsDontInherit - (id))))
 
 
 ////////////////////////////////////////////////////////////////////////////////

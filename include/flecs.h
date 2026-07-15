@@ -1805,6 +1805,7 @@ FLECS_API extern const ecs_entity_t EcsInheritable;
 /** Relationship that specifies component inheritance behavior. */
 FLECS_API extern const ecs_entity_t EcsOnInstantiate;
 
+#ifdef FLECS_PREFAB
 /** Override component on instantiate. 
  * This will copy the component from the base entity `(IsA target)` to the
  * instance. The base component will never be inherited from the prefab. */
@@ -1814,6 +1815,7 @@ FLECS_API extern const ecs_entity_t EcsOverride;
  * This will inherit (share) the component from the base entity `(IsA target)`.
  * The component can be manually overridden by adding it to the instance. */
 FLECS_API extern const ecs_entity_t EcsInherit;
+#endif
 
 /** Never inherit component on instantiate. 
  * This will not copy or share the component from the base entity `(IsA target)`.
@@ -4985,9 +4987,6 @@ const ecs_query_t* ecs_query_get(
 FLECS_API
 void ecs_iter_skip(
     ecs_iter_t *it);
-#endif
-
-#ifdef FLECS_CACHED_QUERIES
 
 /** Set the group to iterate for a query iterator.
  * This operation limits the results returned by the query to only the selected
@@ -6086,40 +6085,6 @@ void ecs_table_swap_rows(
     ecs_table_t* table,
     int32_t row_1,
     int32_t row_2);
-
-/** Commit (move) an entity to a table.
- * This operation moves an entity from its current table to the specified
- * table. This may cause the following actions:
- * - Ctor for each component in the target table.
- * - Move for each overlapping component.
- * - Dtor for each component in the source table.
- * - `OnAdd` observers for non-overlapping components in the target table.
- * - `OnRemove` observers for non-overlapping components in the source table.
- *
- * This operation is faster than adding or removing components individually.
- *
- * The application must explicitly provide the difference in components between
- * tables as the added and removed parameters. This can usually be derived directly
- * from the result of ecs_table_add_id() and ecs_table_remove_id(). These arrays are
- * required to properly execute `OnAdd` and `OnRemove` observers.
- *
- * @param world The world.
- * @param entity The entity to commit.
- * @param record The entity's record (optional, providing it saves a lookup).
- * @param table The table to commit the entity to.
- * @param added The components added to the entity.
- * @param removed The components removed from the entity.
- * @return True if the entity got moved, false otherwise.
- */
-FLECS_API
-bool ecs_commit(
-    ecs_world_t *world,
-    ecs_entity_t entity,
-    ecs_record_t *record,
-    ecs_table_t *table,
-    const ecs_type_t *added,
-    const ecs_type_t *removed);
-
 
 /** Search for a component in a table type.
  * This operation returns the index of the first occurrence of the component in the

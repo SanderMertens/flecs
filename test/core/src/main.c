@@ -206,9 +206,8 @@ void Entity_set_version_on_nonempty_entity(void);
 void Entity_set_version_while_deferred(void);
 void Entity_set_version_on_not_alive(void);
 void Entity_get_version_after_reuse(void);
-void Entity_commit_w_on_add(void);
-void Entity_commit_w_on_remove(void);
-void Entity_commit_w_cmd_in_observer(void);
+void Entity_add_ids_w_on_add(void);
+void Entity_add_ids_w_cmd_in_observer(void);
 void Entity_entity_init_existing_no_sep(void);
 void Entity_entity_init_w_set_1_comp(void);
 void Entity_entity_init_w_set_2_comp(void);
@@ -1450,16 +1449,6 @@ void Set_emplace_w_move(void);
 void Set_emplace_w_observer_w_add(void);
 void Set_emplace_existing_w_check(void);
 void Set_emplace_pair(void);
-
-// Testsuite 'ReadWrite'
-void ReadWrite_read(void);
-void ReadWrite_nested_read(void);
-void ReadWrite_write(void);
-void ReadWrite_nested_write(void);
-void ReadWrite_add_while_read(void);
-void ReadWrite_add_while_write(void);
-void ReadWrite_read_from_stage(void);
-void ReadWrite_write_from_stage(void);
 
 // Testsuite 'Lookup'
 void Lookup_setup(void);
@@ -4173,16 +4162,12 @@ bake_test_case Entity_testcases[] = {
         Entity_get_version_after_reuse
     },
     {
-        "commit_w_on_add",
-        Entity_commit_w_on_add
+        "add_ids_w_on_add",
+        Entity_add_ids_w_on_add
     },
     {
-        "commit_w_on_remove",
-        Entity_commit_w_on_remove
-    },
-    {
-        "commit_w_cmd_in_observer",
-        Entity_commit_w_cmd_in_observer
+        "add_ids_w_cmd_in_observer",
+        Entity_add_ids_w_cmd_in_observer
     },
     {
         "entity_init_existing_no_sep",
@@ -9023,41 +9008,6 @@ bake_test_case Set_testcases[] = {
     {
         "emplace_pair",
         Set_emplace_pair
-    }
-};
-
-bake_test_case ReadWrite_testcases[] = {
-    {
-        "read",
-        ReadWrite_read
-    },
-    {
-        "nested_read",
-        ReadWrite_nested_read
-    },
-    {
-        "write",
-        ReadWrite_write
-    },
-    {
-        "nested_write",
-        ReadWrite_nested_write
-    },
-    {
-        "add_while_read",
-        ReadWrite_add_while_read
-    },
-    {
-        "add_while_write",
-        ReadWrite_add_while_write
-    },
-    {
-        "read_from_stage",
-        ReadWrite_read_from_stage
-    },
-    {
-        "write_from_stage",
-        ReadWrite_write_from_stage
     }
 };
 
@@ -16621,7 +16571,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        152,
+        151,
         Entity_testcases
     },
     {
@@ -16765,13 +16715,6 @@ static bake_test_suite suites[] = {
         NULL,
         38,
         Set_testcases
-    },
-    {
-        "ReadWrite",
-        NULL,
-        NULL,
-        8,
-        ReadWrite_testcases
     },
     {
         "Lookup",
@@ -16951,5 +16894,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("core", argc, argv, suites, 48);
+    return bake_test_run("core", argc, argv, suites, 47);
 }

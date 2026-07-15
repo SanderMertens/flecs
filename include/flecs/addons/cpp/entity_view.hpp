@@ -545,18 +545,16 @@ struct entity_view : public id {
      * application to ensure access is protected.
      *
      * The component arguments must be references and can be either const or
-     * non-const. When all arguments are const, the function will read-lock the
-     * table (see ecs_read_begin()). If one or more arguments are non-const, the
-     * function will write-lock the table (see ecs_write_begin()).
+     * non-const. The table is locked for the duration of the callback.
      * 
      * Example:
      *
      * @code
-     * e.get([](Position& p, Velocity& v) { // write lock
+     * e.get([](Position& p, Velocity& v) {
      *   p.x += v.x;
      * });
      * 
-     * e.get([](const Position& p) {        // read lock
+     * e.get([](const Position& p) {
      *   std::cout << p.x << std::endl;
      * });
      * @endcode

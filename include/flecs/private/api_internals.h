@@ -79,76 +79,24 @@ FLECS_API
 ecs_entity_t ecs_record_get_entity(
     const ecs_record_t *record);
 
-/** Begin exclusive write access to an entity.
- * This operation provides safe exclusive access to the components of an entity
- * without the overhead of deferring operations.
- *
- * When this operation is called simultaneously for the same entity more than
- * once, it will throw an assert. Note that for this to happen, asserts must be
- * enabled. It is up to the application to ensure that access is exclusive, for
- * example, by using a read-write mutex.
- *
- * Exclusive access is enforced at the table level, so only one entity can be
- * exclusively accessed per table. The exclusive access check is thread-safe.
- *
- * This operation must be followed up with ecs_write_end().
+/** Add multiple IDs to an entity.
+ * This operation adds multiple IDs with at most one table move.
  *
  * @param world The world.
  * @param entity The entity.
- * @return A record to the entity.
+ * @param ids The IDs to add.
+ * @param count The number of IDs to add.
  */
 FLECS_API
-ecs_record_t* ecs_write_begin(
+void flecs_add_ids(
     ecs_world_t *world,
-    ecs_entity_t entity);
-
-/** End exclusive write access to an entity.
- * This operation ends exclusive access, and must be called after
- * ecs_write_begin().
- *
- * @param record Record to the entity.
- */
-FLECS_API
-void ecs_write_end(
-    ecs_record_t *record);
-
-/** Begin read access to an entity.
- * This operation provides safe read access to the components of an entity.
- * Multiple simultaneous reads are allowed per entity.
- *
- * This operation ensures that code attempting to mutate the entity's table will
- * throw an assert. Note that for this to happen, asserts must be enabled. It is
- * up to the application to ensure that this does not happen, for example, by
- * using a read-write mutex.
- *
- * This operation does *not* provide the same guarantees as a read-write mutex,
- * as it is possible to call ecs_read_begin() after calling ecs_write_begin(). It is
- * up to the application to ensure that this does not happen.
- *
- * This operation must be followed up with ecs_read_end().
- *
- * @param world The world.
- * @param entity The entity.
- * @return A record to the entity.
- */
-FLECS_API
-const ecs_record_t* ecs_read_begin(
-    ecs_world_t *world,
-    ecs_entity_t entity);
-
-/** End read access to an entity.
- * This operation ends read access, and must be called after ecs_read_begin().
- *
- * @param record Record to the entity.
- */
-FLECS_API
-void ecs_read_end(
-    const ecs_record_t *record);
+    ecs_entity_t entity,
+    const ecs_id_t *ids,
+    int32_t count);
 
 /** Get a component from an entity record.
  * This operation returns a pointer to a component for the entity
- * associated with the provided record. For safe access to the component, obtain
- * the record with ecs_read_begin() or ecs_write_begin().
+ * associated with the provided record.
  *
  * Obtaining a component from a record is faster than obtaining it from the
  * entity handle, as it reduces the number of lookups required.
@@ -167,7 +115,6 @@ const void* ecs_record_get_id(
     ecs_id_t id);
 
 /** Same as ecs_record_get_id(), but returns a mutable pointer.
- * For safe access to the component, obtain the record with ecs_write_begin().
  *
  * @param world The world.
  * @param record Record to the entity.

@@ -39,7 +39,8 @@ static bool flecs_query_trivial_search_init(
         ecs_assert(t != query->term_count, ECS_INTERNAL_ERROR, NULL);
         op_ctx->start_from = t;
 
-        ecs_component_record_t *cr = flecs_components_get(ctx->world, query->terms[t].id);
+        ecs_component_record_t *cr = flecs_components_get(
+            ctx->world, query->terms[t].id);
         if (!cr) {
             return false;
         }

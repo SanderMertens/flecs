@@ -63,6 +63,13 @@ static void flecs_on_add_prefab(ecs_iter_t *it) {
     }
 }
 
+static void flecs_register_on_instantiate(ecs_iter_t *it) {
+    ecs_id_t id = ecs_field_id(it, 0);
+    flecs_register_flag_for_trait(it, EcsOnInstantiate, 
+        ECS_ID_ON_INSTANTIATE_FLAG(ECS_PAIR_SECOND(id)),
+        0, 0);
+}
+
 ecs_entity_t flecs_get_prefab_instance_child(
     const ecs_world_t *world,
     ecs_entity_t entity,
@@ -131,6 +138,9 @@ void flecs_bootstrap_prefab(
     ecs_world_t *world)
 {
     flecs_bootstrap_tag(world, EcsPrefab);
+    flecs_bootstrap_tag(world, EcsOverride);
+    flecs_bootstrap_tag(world, EcsInherit);
+    flecs_bootstrap_trait(world, EcsOnInstantiate);
 
     ecs_add_pair(world, EcsPrefab, EcsOnInstantiate, EcsDontInherit);
 
@@ -141,9 +151,6 @@ void flecs_bootstrap_prefab(
         .dtor = ecs_dtor(EcsTreeSpawner)
     });
 
-    ecs_add_pair(world, ecs_id(EcsTreeSpawner), 
-        EcsOnInstantiate, EcsDontInherit);
-
     /* Observer that ensures children of a prefab are also prefabs */
     ecs_observer(world, {
         .query.terms = {
@@ -153,6 +160,36 @@ void flecs_bootstrap_prefab(
         .callback = flecs_on_add_prefab,
         .global_observer = true
     });
+
+    ecs_observer(world, {
+        .query.terms = {
+            { .id = ecs_pair(EcsOnInstantiate, EcsAny) }
+        },
+        .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
+        .events = {EcsOnAdd},
+        .callback = flecs_register_on_instantiate,
+        .global_observer = true
+    });
+
+    /* OnInstantiate */
+    ecs_add_id(world, EcsOnInstantiate, EcsExclusive);
+
+    /* DontInherit components */
+    ecs_add_pair(world, ecs_id(EcsComponent), EcsOnInstantiate, EcsDontInherit);
+    ecs_add_pair(world, EcsOnDelete, EcsOnInstantiate, EcsDontInherit);
+    ecs_add_pair(world, EcsExclusive, EcsOnInstantiate, EcsDontInherit);
+    ecs_add_pair(world, EcsDontFragment, EcsOnInstantiate, EcsDontInherit);
+    ecs_add_pair(world, EcsChildOf, EcsOnInstantiate, EcsDontInherit);
+    ecs_add_pair(world, ecs_id(EcsIdentifier), EcsOnInstantiate, EcsDontInherit);
+    ecs_add_pair(world, ecs_id(EcsTreeSpawner), EcsOnInstantiate, EcsDontInherit);
+
+    /* Inherited components */
+    ecs_add_pair(world, EcsIsA, EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, EcsDependsOn, EcsOnInstantiate, EcsInherit);
+
+    /* IsA */
+    ecs_add_id(world, EcsIsA, EcsTransitive);
+    ecs_add_id(world, EcsIsA, EcsReflexive);
 }
 
 #else

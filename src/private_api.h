@@ -6,10 +6,8 @@
 #ifndef FLECS_PRIVATE_H
 #define FLECS_PRIVATE_H
 
-#ifndef __MACH__
-#ifndef _POSIX_C_SOURCE
+#if !defined(__MACH__) && !defined(_POSIX_C_SOURCE)
 #define _POSIX_C_SOURCE 200809L
-#endif
 #endif
 
 #include <ctype.h>
@@ -18,6 +16,18 @@
 #include <stddef.h>
 
 #include "flecs.h"
+
+#ifdef ECS_TARGET_WINDOWS
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <winsock2.h>
+#include <windows.h>
+#endif
+
 #include "flecs/datastructures/bitset.h"
 #include "datastructures/name_index.h"
 #include "storage/entity_index.h"

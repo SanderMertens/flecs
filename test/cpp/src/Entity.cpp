@@ -3061,8 +3061,6 @@ void Entity_get_component_w_callback_nested(void) {
 }
 
 void Entity_ensure_component_w_callback_nested(void) {
-    install_test_abort();
-
     flecs::world ecs;
 
     auto e = ecs.entity()
@@ -3072,11 +3070,17 @@ void Entity_ensure_component_w_callback_nested(void) {
     test_bool(e.get([&](Position& p) {
         test_int(p.x, 10);
         test_int(p.y, 20);
+        p.x ++;
 
-        test_expect_abort();
         test_bool(e.get([](Velocity& v) {
-        }), false);
+            test_int(v.x, 1);
+            test_int(v.y, 2);
+            v.y ++;
+        }), true);
     }), true);
+
+    test_int(e.get<Position>().x, 11);
+    test_int(e.get<Velocity>().y, 3);
 }
 
 void Entity_set_1_component_w_callback(void) {

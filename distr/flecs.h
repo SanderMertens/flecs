@@ -702,10 +702,13 @@ extern "C" {
 #define ECS_ID_ON_DELETE_TARGET_FLAG(id) (1u << (3 + ((id) - EcsRemove)))
 
 /* Utilities for converting from flags to instantiate policies and vice versa. */
+#ifdef FLECS_PREFAB
 #define ECS_ID_ON_INSTANTIATE(flags) \
     ((ecs_entity_t[]){EcsOverride, EcsOverride, EcsInherit, 0, EcsDontInherit}\
         [(((flags) & EcsIdOnInstantiateMask) >> 6)])
-#define ECS_ID_ON_INSTANTIATE_FLAG(id) (1u << (6 + ((id) - EcsOverride)))
+#endif
+#define ECS_ID_ON_INSTANTIATE_FLAG(id) \
+    (1u << (8 - (EcsDontInherit - (id))))
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Bits set in world->non_trivial array
@@ -895,10 +898,8 @@ extern "C" {
 #define ECS_TARGET_MINGW
 #endif
 
-#if defined(_MSC_VER)
-#ifndef __clang__
+#if defined(_MSC_VER) && !defined(__clang__)
 #define ECS_TARGET_MSVC
-#endif
 #endif
 
 #if defined(__clang__)
@@ -5895,76 +5896,24 @@ FLECS_API
 ecs_entity_t ecs_record_get_entity(
     const ecs_record_t *record);
 
-/** Begin exclusive write access to an entity.
- * This operation provides safe exclusive access to the components of an entity
- * without the overhead of deferring operations.
- *
- * When this operation is called simultaneously for the same entity more than
- * once, it will throw an assert. Note that for this to happen, asserts must be
- * enabled. It is up to the application to ensure that access is exclusive, for
- * example, by using a read-write mutex.
- *
- * Exclusive access is enforced at the table level, so only one entity can be
- * exclusively accessed per table. The exclusive access check is thread-safe.
- *
- * This operation must be followed up with ecs_write_end().
+/** Add multiple IDs to an entity.
+ * This operation adds multiple IDs with at most one table move.
  *
  * @param world The world.
  * @param entity The entity.
- * @return A record to the entity.
+ * @param ids The IDs to add.
+ * @param count The number of IDs to add.
  */
 FLECS_API
-ecs_record_t* ecs_write_begin(
+void flecs_add_ids(
     ecs_world_t *world,
-    ecs_entity_t entity);
-
-/** End exclusive write access to an entity.
- * This operation ends exclusive access, and must be called after
- * ecs_write_begin().
- *
- * @param record Record to the entity.
- */
-FLECS_API
-void ecs_write_end(
-    ecs_record_t *record);
-
-/** Begin read access to an entity.
- * This operation provides safe read access to the components of an entity.
- * Multiple simultaneous reads are allowed per entity.
- *
- * This operation ensures that code attempting to mutate the entity's table will
- * throw an assert. Note that for this to happen, asserts must be enabled. It is
- * up to the application to ensure that this does not happen, for example, by
- * using a read-write mutex.
- *
- * This operation does *not* provide the same guarantees as a read-write mutex,
- * as it is possible to call ecs_read_begin() after calling ecs_write_begin(). It is
- * up to the application to ensure that this does not happen.
- *
- * This operation must be followed up with ecs_read_end().
- *
- * @param world The world.
- * @param entity The entity.
- * @return A record to the entity.
- */
-FLECS_API
-const ecs_record_t* ecs_read_begin(
-    ecs_world_t *world,
-    ecs_entity_t entity);
-
-/** End read access to an entity.
- * This operation ends read access, and must be called after ecs_read_begin().
- *
- * @param record Record to the entity.
- */
-FLECS_API
-void ecs_read_end(
-    const ecs_record_t *record);
+    ecs_entity_t entity,
+    const ecs_id_t *ids,
+    int32_t count);
 
 /** Get a component from an entity record.
  * This operation returns a pointer to a component for the entity
- * associated with the provided record. For safe access to the component, obtain
- * the record with ecs_read_begin() or ecs_write_begin().
+ * associated with the provided record.
  *
  * Obtaining a component from a record is faster than obtaining it from the
  * entity handle, as it reduces the number of lookups required.
@@ -5983,7 +5932,6 @@ const void* ecs_record_get_id(
     ecs_id_t id);
 
 /** Same as ecs_record_get_id(), but returns a mutable pointer.
- * For safe access to the component, obtain the record with ecs_write_begin().
  *
  * @param world The world.
  * @param record Record to the entity.
@@ -7004,6 +6952,7 @@ FLECS_API extern const ecs_entity_t EcsInheritable;
 /** Relationship that specifies component inheritance behavior. */
 FLECS_API extern const ecs_entity_t EcsOnInstantiate;
 
+#ifdef FLECS_PREFAB
 /** Override component on instantiate. 
  * This will copy the component from the base entity `(IsA target)` to the
  * instance. The base component will never be inherited from the prefab. */
@@ -7013,6 +6962,7 @@ FLECS_API extern const ecs_entity_t EcsOverride;
  * This will inherit (share) the component from the base entity `(IsA target)`.
  * The component can be manually overridden by adding it to the instance. */
 FLECS_API extern const ecs_entity_t EcsInherit;
+#endif
 
 /** Never inherit component on instantiate. 
  * This will not copy or share the component from the base entity `(IsA target)`.
@@ -10183,9 +10133,6 @@ const ecs_query_t* ecs_query_get(
 FLECS_API
 void ecs_iter_skip(
     ecs_iter_t *it);
-#endif
-
-#ifdef FLECS_CACHED_QUERIES
 
 /** Set the group to iterate for a query iterator.
  * This operation limits the results returned by the query to only the selected
@@ -11284,39 +11231,6 @@ void ecs_table_swap_rows(
     ecs_table_t* table,
     int32_t row_1,
     int32_t row_2);
-
-/** Commit (move) an entity to a table.
- * This operation moves an entity from its current table to the specified
- * table. This may cause the following actions:
- * - Ctor for each component in the target table.
- * - Move for each overlapping component.
- * - Dtor for each component in the source table.
- * - `OnAdd` observers for non-overlapping components in the target table.
- * - `OnRemove` observers for non-overlapping components in the source table.
- *
- * This operation is faster than adding or removing components individually.
- *
- * The application must explicitly provide the difference in components between
- * tables as the added and removed parameters. This can usually be derived directly
- * from the result of ecs_table_add_id() and ecs_table_remove_id(). These arrays are
- * required to properly execute `OnAdd` and `OnRemove` observers.
- *
- * @param world The world.
- * @param entity The entity to commit.
- * @param record The entity's record (optional, providing it saves a lookup).
- * @param table The table to commit the entity to.
- * @param added The components added to the entity.
- * @param removed The components removed from the entity.
- * @return True if the entity got moved, false otherwise.
- */
-FLECS_API
-bool ecs_commit(
-    ecs_world_t *world,
-    ecs_entity_t entity,
-    ecs_record_t *record,
-    ecs_table_t *table,
-    const ecs_type_t *added,
-    const ecs_type_t *removed);
 
 /** Search for a component in a table type.
  * This operation returns the index of the first occurrence of the component in the
@@ -20773,10 +20687,12 @@ static const flecs::entity_t CanToggle = EcsCanToggle;
 
 /** OnInstantiate trait. */
 static const flecs::entity_t OnInstantiate = EcsOnInstantiate;
+#ifdef FLECS_PREFAB
 /** Override trait. */
 static const flecs::entity_t Override = EcsOverride;
 /** Inherit trait. */
 static const flecs::entity_t Inherit = EcsInherit;
+#endif
 /** DontInherit trait. */
 static const flecs::entity_t DontInherit = EcsDontInherit;
 
@@ -28722,18 +28638,16 @@ struct entity_view : public id {
      * application to ensure access is protected.
      *
      * The component arguments must be references and can be either const or
-     * non-const. When all arguments are const, the function will read-lock the
-     * table (see ecs_read_begin()). If one or more arguments are non-const, the
-     * function will write-lock the table (see ecs_write_begin()).
+     * non-const. The table is locked for the duration of the callback.
      * 
      * Example:
      *
      * @code
-     * e.get([](Position& p, Velocity& v) { // write lock
+     * e.get([](Position& p, Velocity& v) {
      *   p.x += v.x;
      * });
      * 
-     * e.get([](const Position& p) {        // read lock
+     * e.get([](const Position& p) {
      *   std::cout << p.x << std::endl;
      * });
      * @endcode
@@ -32326,10 +32240,6 @@ struct entity_with_delegate_impl<arg_list<Args ...>> {
     using DummyArray = flecs::array<int, sizeof...(Args)>;
     using IdArray = flecs::array<id_t, sizeof...(Args)>;
 
-    static constexpr bool const_args() {
-        return (is_const_v<remove_reference_t<Args>> && ...);
-    }
-
     static 
     bool get_ptrs(world_t *world, flecs::entity_t e, const ecs_record_t *r, ecs_table_t *table,
         ArrayType& ptrs) 
@@ -32381,104 +32291,28 @@ struct entity_with_delegate_impl<arg_list<Args ...>> {
     }    
 
     template <typename Func>
-    static bool invoke_read(world_t *world, entity_t e, const Func& func) {
-        const ecs_record_t *r = ecs_read_begin(world, e);
-        if (!r) {
-            return false;
-        }
-
-        ecs_table_t *table = r->table;
-        if (!table) {
-            return false;
-        }
-
-        ArrayType ptrs;
-        bool has_components = get_ptrs(world, e, r, table, ptrs);
-        if (has_components) {
-            invoke_callback(func, 0, ptrs);
-        }
-
-        ecs_read_end(r);
-
-        return has_components;
-    }
-
-    template <typename Func>
-    static bool invoke_write(world_t *world, entity_t e, const Func& func) {
-        ecs_record_t *r = ecs_write_begin(world, e);
-        if (!r) {
-            return false;
-        }
-
-        ecs_table_t *table = r->table;
-        if (!table) {
-            return false;
-        }
-
-        ArrayType ptrs;
-        bool has_components = get_ptrs(world, e, r, table, ptrs);
-        if (has_components) {
-            invoke_callback(func, 0, ptrs);
-        }
-
-        ecs_write_end(r);
-
-        return has_components;
-    }
-
-    template <typename Func>
     static bool invoke_get(world_t *world, entity_t e, const Func& func) {
-        if constexpr (const_args()) {
-            return invoke_read(world, e, func);
-        } else {
-            return invoke_write(world, e, func);
-        }
-    }
-
-    // Utility for storing an ID in an array in pack expansion.
-    static size_t store_added(IdArray& added, size_t elem, ecs_table_t *prev, 
-        ecs_table_t *next, id_t id) 
-    {
-        // Array should only contain IDs for components that are actually added,
-        // so check if the prev and next tables are different.
-        if (prev != next) {
-            added[elem] = id;
-            elem ++;
-        }
-        return elem;
-    }
-
-    struct InvokeCtx {
-        InvokeCtx(flecs::table_t *table_arg) : table(table_arg) { }
-        flecs::table_t *table;
-        size_t component_count = 0;
-        IdArray added = {};
-    };
-
-    static int invoke_add(
-        flecs::world& w,
-        flecs::entity_t entity, 
-        flecs::id_t component_id,
-        InvokeCtx& ctx) 
-    {
-        ecs_table_diff_t diff;
-        flecs::table_t *next = flecs_table_traverse_add(
-            w, ctx.table, &component_id, &diff);
-        if (next != ctx.table) {
-            ctx.added[ctx.component_count] = component_id;
-            ctx.component_count ++;
-        } else {
-            if (diff.added_flags & EcsTableHasDontFragment) {
-                w.entity(entity).add(component_id);
-
-                ctx.added[ctx.component_count] = component_id;
-                ctx.component_count ++;
-            }
+        ecs_record_t *r = ecs_record_find(world, e);
+        if (!r) {
+            return false;
         }
 
-        ctx.table = next;
+        ecs_table_t *table = r->table;
+        if (!table) {
+            return false;
+        }
 
-        return 0;
+        ECS_TABLE_LOCK(world, table);
+
+        ArrayType ptrs;
+        bool has_components = get_ptrs(world, e, r, table, ptrs);
+        if (has_components) {
+            invoke_callback(func, 0, ptrs);
+        }
+
+        ECS_TABLE_UNLOCK(world, table);
+
+        return has_components;
     }
 
     template <typename Func>
@@ -32502,28 +32336,14 @@ struct entity_with_delegate_impl<arg_list<Args ...>> {
             // the world is in readonly mode.
             ecs_assert(!w.is_stage(), ECS_INVALID_PARAMETER, nullptr);
 
-            // Find the table for the entity.
+            // Find the record for the entity.
             ecs_record_t *r = ecs_record_find(world, id);
-            if (r) {
-                table = r->table;
-            }
+            ecs_assert(r != nullptr, ECS_INVALID_PARAMETER, nullptr);
 
-            // Iterate components, only store added component IDs in the added array.
-            InvokeCtx ctx(table);
-            DummyArray dummy_before ({ (
-                invoke_add(w, id, w.id<Args>(), ctx)
-            )... });
-
-            (void)dummy_before;
-
-            // If the table is different, move the entity straight to it.
-            if (table != ctx.table) {
-                ecs_type_t ids;
-                ids.array = ctx.added.ptr();
-                ids.count = static_cast<ecs_size_t>(ctx.component_count);
-                ecs_commit(world, id, r, ctx.table, &ids, nullptr);
-                table = ctx.table;
-            }
+            IdArray ids ({ w.id<Args>()... });
+            flecs_add_ids(world, id, ids.ptr(),
+                static_cast<int32_t>(sizeof...(Args)));
+            table = r->table;
 
             if (!get_ptrs(w, id, r, table, ptrs)) {
                 ecs_abort(ECS_INTERNAL_ERROR, nullptr);
@@ -32855,11 +32675,15 @@ struct type_impl {
         if constexpr (flecs::on_instantiate_trait<T>::declared) {
             constexpr flecs::on_instantiate policy =
                 flecs::on_instantiate_trait<T>::value;
+#ifdef FLECS_PREFAB
             if constexpr (policy == flecs::on_instantiate::override) {
                 ecs_add_pair(world, c, flecs::OnInstantiate, flecs::Override);
-            } else if constexpr (policy == flecs::on_instantiate::inherit) {
+            }
+            if constexpr (policy == flecs::on_instantiate::inherit) {
                 ecs_add_pair(world, c, flecs::OnInstantiate, flecs::Inherit);
-            } else {
+            }
+#endif
+            if constexpr (policy == flecs::on_instantiate::dont_inherit) {
                 ecs_add_pair(world, c, flecs::OnInstantiate,
                     flecs::DontInherit);
             }
@@ -33830,6 +33654,7 @@ private:
     }
 
     void assert_policies() const {
+#ifdef FLECS_PREFAB
         for (flecs::id_t id : ids_) {
             (void)id;
             ecs_assert(ecs_get_target(world_, id, flecs::OnInstantiate, 0) !=
@@ -33838,6 +33663,7 @@ private:
                 "which sparse queries cannot match; add the on_instantiate "
                 "trait at compile time instead");
         }
+#endif
     }
 
     flecs::world_t *world_;

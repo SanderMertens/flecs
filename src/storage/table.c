@@ -290,12 +290,15 @@ static void flecs_table_init_flags(
             }
         } else if (ECS_PAIR_FIRST(id) == EcsOnInstantiate) {
             ecs_entity_t inherit_kind = ECS_PAIR_SECOND(id);
+#ifdef FLECS_PREFAB
             if (inherit_kind == EcsInherit) {
                 table->trait_flags |= EcsIdOnInstantiateInherit;
-            } else if (inherit_kind == EcsDontInherit) {
-                table->trait_flags |= EcsIdOnInstantiateDontInherit;
             } else if (inherit_kind == EcsOverride) {
                 table->trait_flags |= EcsIdOnInstantiateOverride;
+            }
+#endif
+            if (inherit_kind == EcsDontInherit) {
+                table->trait_flags |= EcsIdOnInstantiateDontInherit;
             }
         } else if (id == EcsCanToggle) {
             table->trait_flags |= EcsIdCanToggle;
@@ -790,9 +793,11 @@ void flecs_table_init(
         /* Initialize column index (will be overwritten by init_data) */
         tr->column = -1;
 
+#ifdef FLECS_PREFAB
         if (ECS_ID_ON_INSTANTIATE(cr->flags) == EcsOverride) {
             table->flags |= EcsTableHasOverrides;
         }
+#endif
 
         if ((i < table->type.count) && (cr->type_info != NULL)) {
             if (!(cr->flags & EcsIdSparse)) {

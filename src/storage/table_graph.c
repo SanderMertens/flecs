@@ -934,10 +934,12 @@ static void flecs_add_overrides_for_base(
                     base_table->flags |= EcsTableOverrideDontFragment;
                 }
             } else {
+#ifdef FLECS_PREFAB
                 ecs_table_record_t *tr = &base_table->_->records[i];
                 if (ECS_ID_ON_INSTANTIATE(tr->hdr.cr->flags) == EcsOverride) {
                     to_add = id;
                 }
+#endif
             }
 
             if (to_add) {

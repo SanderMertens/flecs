@@ -117,13 +117,6 @@ void flecs_commit(
     ecs_id_t emplace_id,
     ecs_flags32_t evt_flags);
 
-/* Add multiple component ids to entity. */
-void flecs_add_ids(
-    ecs_world_t *world,
-    ecs_entity_t entity,
-    ecs_id_t *ids,
-    int32_t count);
-
 /* Like regular modified, but doesn't assert if entity doesn't have component. */
 void flecs_modified_id_if(
     ecs_world_t *world,

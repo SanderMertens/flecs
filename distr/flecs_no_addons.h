@@ -546,10 +546,8 @@ extern "C" {
 #define ECS_ID_ON_DELETE_TARGET_FLAG(id) (1u << (3 + ((id) - EcsRemove)))
 
 /* Utilities for converting from flags to instantiate policies and vice versa. */
-#define ECS_ID_ON_INSTANTIATE(flags) \
-    ((ecs_entity_t[]){EcsOverride, EcsOverride, EcsInherit, 0, EcsDontInherit}\
-        [(((flags) & EcsIdOnInstantiateMask) >> 6)])
-#define ECS_ID_ON_INSTANTIATE_FLAG(id) (1u << (6 + ((id) - EcsOverride)))
+#define ECS_ID_ON_INSTANTIATE_FLAG(id) \
+    (1u << (8 - (EcsDontInherit - (id))))
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Bits set in world->non_trivial array
@@ -739,10 +737,8 @@ extern "C" {
 #define ECS_TARGET_MINGW
 #endif
 
-#if defined(_MSC_VER)
-#ifndef __clang__
+#if defined(_MSC_VER) && !defined(__clang__)
 #define ECS_TARGET_MSVC
-#endif
 #endif
 
 #if defined(__clang__)
@@ -5498,76 +5494,24 @@ FLECS_API
 ecs_entity_t ecs_record_get_entity(
     const ecs_record_t *record);
 
-/** Begin exclusive write access to an entity.
- * This operation provides safe exclusive access to the components of an entity
- * without the overhead of deferring operations.
- *
- * When this operation is called simultaneously for the same entity more than
- * once, it will throw an assert. Note that for this to happen, asserts must be
- * enabled. It is up to the application to ensure that access is exclusive, for
- * example, by using a read-write mutex.
- *
- * Exclusive access is enforced at the table level, so only one entity can be
- * exclusively accessed per table. The exclusive access check is thread-safe.
- *
- * This operation must be followed up with ecs_write_end().
+/** Add multiple IDs to an entity.
+ * This operation adds multiple IDs with at most one table move.
  *
  * @param world The world.
  * @param entity The entity.
- * @return A record to the entity.
+ * @param ids The IDs to add.
+ * @param count The number of IDs to add.
  */
 FLECS_API
-ecs_record_t* ecs_write_begin(
+void flecs_add_ids(
     ecs_world_t *world,
-    ecs_entity_t entity);
-
-/** End exclusive write access to an entity.
- * This operation ends exclusive access, and must be called after
- * ecs_write_begin().
- *
- * @param record Record to the entity.
- */
-FLECS_API
-void ecs_write_end(
-    ecs_record_t *record);
-
-/** Begin read access to an entity.
- * This operation provides safe read access to the components of an entity.
- * Multiple simultaneous reads are allowed per entity.
- *
- * This operation ensures that code attempting to mutate the entity's table will
- * throw an assert. Note that for this to happen, asserts must be enabled. It is
- * up to the application to ensure that this does not happen, for example, by
- * using a read-write mutex.
- *
- * This operation does *not* provide the same guarantees as a read-write mutex,
- * as it is possible to call ecs_read_begin() after calling ecs_write_begin(). It is
- * up to the application to ensure that this does not happen.
- *
- * This operation must be followed up with ecs_read_end().
- *
- * @param world The world.
- * @param entity The entity.
- * @return A record to the entity.
- */
-FLECS_API
-const ecs_record_t* ecs_read_begin(
-    ecs_world_t *world,
-    ecs_entity_t entity);
-
-/** End read access to an entity.
- * This operation ends read access, and must be called after ecs_read_begin().
- *
- * @param record Record to the entity.
- */
-FLECS_API
-void ecs_read_end(
-    const ecs_record_t *record);
+    ecs_entity_t entity,
+    const ecs_id_t *ids,
+    int32_t count);
 
 /** Get a component from an entity record.
  * This operation returns a pointer to a component for the entity
- * associated with the provided record. For safe access to the component, obtain
- * the record with ecs_read_begin() or ecs_write_begin().
+ * associated with the provided record.
  *
  * Obtaining a component from a record is faster than obtaining it from the
  * entity handle, as it reduces the number of lookups required.
@@ -5586,7 +5530,6 @@ const void* ecs_record_get_id(
     ecs_id_t id);
 
 /** Same as ecs_record_get_id(), but returns a mutable pointer.
- * For safe access to the component, obtain the record with ecs_write_begin().
  *
  * @param world The world.
  * @param record Record to the entity.
@@ -6603,16 +6546,6 @@ FLECS_API extern const ecs_entity_t EcsInheritable;
 
 /** Relationship that specifies component inheritance behavior. */
 FLECS_API extern const ecs_entity_t EcsOnInstantiate;
-
-/** Override component on instantiate. 
- * This will copy the component from the base entity `(IsA target)` to the
- * instance. The base component will never be inherited from the prefab. */
-FLECS_API extern const ecs_entity_t EcsOverride;
-
-/** Inherit component on instantiate. 
- * This will inherit (share) the component from the base entity `(IsA target)`.
- * The component can be manually overridden by adding it to the instance. */
-FLECS_API extern const ecs_entity_t EcsInherit;
 
 /** Never inherit component on instantiate. 
  * This will not copy or share the component from the base entity `(IsA target)`.
@@ -10473,39 +10406,6 @@ void ecs_table_swap_rows(
     ecs_table_t* table,
     int32_t row_1,
     int32_t row_2);
-
-/** Commit (move) an entity to a table.
- * This operation moves an entity from its current table to the specified
- * table. This may cause the following actions:
- * - Ctor for each component in the target table.
- * - Move for each overlapping component.
- * - Dtor for each component in the source table.
- * - `OnAdd` observers for non-overlapping components in the target table.
- * - `OnRemove` observers for non-overlapping components in the source table.
- *
- * This operation is faster than adding or removing components individually.
- *
- * The application must explicitly provide the difference in components between
- * tables as the added and removed parameters. This can usually be derived directly
- * from the result of ecs_table_add_id() and ecs_table_remove_id(). These arrays are
- * required to properly execute `OnAdd` and `OnRemove` observers.
- *
- * @param world The world.
- * @param entity The entity to commit.
- * @param record The entity's record (optional, providing it saves a lookup).
- * @param table The table to commit the entity to.
- * @param added The components added to the entity.
- * @param removed The components removed from the entity.
- * @return True if the entity got moved, false otherwise.
- */
-FLECS_API
-bool ecs_commit(
-    ecs_world_t *world,
-    ecs_entity_t entity,
-    ecs_record_t *record,
-    ecs_table_t *table,
-    const ecs_type_t *added,
-    const ecs_type_t *removed);
 
 /** Search for a component in a table type.
  * This operation returns the index of the first occurrence of the component in the
