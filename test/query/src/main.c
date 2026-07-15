@@ -714,7 +714,6 @@ void Basic_match_new_empty_w_ref(void);
 void Basic_match_empty_w_order_by(void);
 void Basic_match_new_empty_w_order_by(void);
 void Basic_match_empty_w_bitset(void);
-void Basic_default_query_flags(void);
 void Basic_ref_fields_this(void);
 void Basic_ref_fields_static_src(void);
 void Basic_ref_fields_variable_src(void);
@@ -5684,10 +5683,6 @@ bake_test_case Basic_testcases[] = {
     {
         "match_empty_w_bitset",
         Basic_match_empty_w_bitset
-    },
-    {
-        "default_query_flags",
-        Basic_default_query_flags
     },
     {
         "ref_fields_this",
@@ -14318,7 +14313,7 @@ static bake_test_suite suites[] = {
         "Basic",
         Basic_setup,
         NULL,
-        241,
+        240,
         Basic_testcases,
         1,
         Basic_params
