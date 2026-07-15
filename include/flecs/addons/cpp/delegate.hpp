@@ -690,10 +690,6 @@ struct entity_with_delegate_impl<arg_list<Args ...>> {
     using DummyArray = flecs::array<int, sizeof...(Args)>;
     using IdArray = flecs::array<id_t, sizeof...(Args)>;
 
-    static constexpr bool const_args() {
-        return (is_const_v<remove_reference_t<Args>> && ...);
-    }
-
     static 
     bool get_ptrs(world_t *world, flecs::entity_t e, const ecs_record_t *r, ecs_table_t *table,
         ArrayType& ptrs) 
@@ -745,104 +741,28 @@ struct entity_with_delegate_impl<arg_list<Args ...>> {
     }    
 
     template <typename Func>
-    static bool invoke_read(world_t *world, entity_t e, const Func& func) {
-        const ecs_record_t *r = ecs_read_begin(world, e);
-        if (!r) {
-            return false;
-        }
-
-        ecs_table_t *table = r->table;
-        if (!table) {
-            return false;
-        }
-
-        ArrayType ptrs;
-        bool has_components = get_ptrs(world, e, r, table, ptrs);
-        if (has_components) {
-            invoke_callback(func, 0, ptrs);
-        }
-
-        ecs_read_end(r);
-
-        return has_components;
-    }
-
-    template <typename Func>
-    static bool invoke_write(world_t *world, entity_t e, const Func& func) {
-        ecs_record_t *r = ecs_write_begin(world, e);
-        if (!r) {
-            return false;
-        }
-
-        ecs_table_t *table = r->table;
-        if (!table) {
-            return false;
-        }
-
-        ArrayType ptrs;
-        bool has_components = get_ptrs(world, e, r, table, ptrs);
-        if (has_components) {
-            invoke_callback(func, 0, ptrs);
-        }
-
-        ecs_write_end(r);
-
-        return has_components;
-    }
-
-    template <typename Func>
     static bool invoke_get(world_t *world, entity_t e, const Func& func) {
-        if constexpr (const_args()) {
-            return invoke_read(world, e, func);
-        } else {
-            return invoke_write(world, e, func);
-        }
-    }
-
-    // Utility for storing an ID in an array in pack expansion.
-    static size_t store_added(IdArray& added, size_t elem, ecs_table_t *prev, 
-        ecs_table_t *next, id_t id) 
-    {
-        // Array should only contain IDs for components that are actually added,
-        // so check if the prev and next tables are different.
-        if (prev != next) {
-            added[elem] = id;
-            elem ++;
-        }
-        return elem;
-    }
-
-    struct InvokeCtx {
-        InvokeCtx(flecs::table_t *table_arg) : table(table_arg) { }
-        flecs::table_t *table;
-        size_t component_count = 0;
-        IdArray added = {};
-    };
-
-    static int invoke_add(
-        flecs::world& w,
-        flecs::entity_t entity, 
-        flecs::id_t component_id,
-        InvokeCtx& ctx) 
-    {
-        ecs_table_diff_t diff;
-        flecs::table_t *next = flecs_table_traverse_add(
-            w, ctx.table, &component_id, &diff);
-        if (next != ctx.table) {
-            ctx.added[ctx.component_count] = component_id;
-            ctx.component_count ++;
-        } else {
-            if (diff.added_flags & EcsTableHasDontFragment) {
-                w.entity(entity).add(component_id);
-
-                ctx.added[ctx.component_count] = component_id;
-                ctx.component_count ++;
-            }
+        ecs_record_t *r = ecs_record_find(world, e);
+        if (!r) {
+            return false;
         }
 
-        ctx.table = next;
+        ecs_table_t *table = r->table;
+        if (!table) {
+            return false;
+        }
 
-        return 0;
+        ECS_TABLE_LOCK(world, table);
+
+        ArrayType ptrs;
+        bool has_components = get_ptrs(world, e, r, table, ptrs);
+        if (has_components) {
+            invoke_callback(func, 0, ptrs);
+        }
+
+        ECS_TABLE_UNLOCK(world, table);
+
+        return has_components;
     }
 
     template <typename Func>
@@ -866,28 +786,14 @@ struct entity_with_delegate_impl<arg_list<Args ...>> {
             // the world is in readonly mode.
             ecs_assert(!w.is_stage(), ECS_INVALID_PARAMETER, nullptr);
 
-            // Find the table for the entity.
+            // Find the record for the entity.
             ecs_record_t *r = ecs_record_find(world, id);
-            if (r) {
-                table = r->table;
-            }
+            ecs_assert(r != nullptr, ECS_INVALID_PARAMETER, nullptr);
 
-            // Iterate components, only store added component IDs in the added array.
-            InvokeCtx ctx(table);
-            DummyArray dummy_before ({ (
-                invoke_add(w, id, w.id<Args>(), ctx)
-            )... });
-
-            (void)dummy_before;
-
-            // If the table is different, move the entity straight to it.
-            if (table != ctx.table) {
-                ecs_type_t ids;
-                ids.array = ctx.added.ptr();
-                ids.count = static_cast<ecs_size_t>(ctx.component_count);
-                ecs_commit(world, id, r, ctx.table, &ids, nullptr);
-                table = ctx.table;
-            }
+            IdArray ids ({ w.id<Args>()... });
+            flecs_add_ids(world, id, ids.ptr(),
+                static_cast<int32_t>(sizeof...(Args)));
+            table = r->table;
 
             if (!get_ptrs(w, id, r, table, ptrs)) {
                 ecs_abort(ECS_INTERNAL_ERROR, nullptr);

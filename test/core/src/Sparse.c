@@ -1688,20 +1688,18 @@ void Sparse_record_get(void) {
     ecs_add(world, e, Tag);
 
     {
-        const ecs_record_t *r = ecs_read_begin(world, e);
+        const ecs_record_t *r = ecs_record_find(world, e);
         test_assert(r != NULL);
         test_assert(NULL == ecs_record_get(world, r, Position));
-        ecs_read_end(r);
     }
 
     ecs_add(world, e, Position);
 
     {
-        const ecs_record_t *r = ecs_read_begin(world, e);
+        const ecs_record_t *r = ecs_record_find(world, e);
         test_assert(r != NULL);
         const Position *p = ecs_record_get(world, r, Position);
         test_assert(p != NULL);
-        ecs_read_end(r);
     }
 
     ecs_fini(world);

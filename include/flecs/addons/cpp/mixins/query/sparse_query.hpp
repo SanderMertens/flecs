@@ -112,6 +112,7 @@ private:
     }
 
     void assert_policies() const {
+#ifdef FLECS_PREFAB
         for (flecs::id_t id : ids_) {
             (void)id;
             ecs_assert(ecs_get_target(world_, id, flecs::OnInstantiate, 0) !=
@@ -120,6 +121,7 @@ private:
                 "which sparse queries cannot match; add the on_instantiate "
                 "trait at compile time instead");
         }
+#endif
     }
 
     flecs::world_t *world_;
