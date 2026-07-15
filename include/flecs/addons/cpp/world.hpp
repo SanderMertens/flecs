@@ -351,61 +351,10 @@ struct world {
         return world_;
     }
 
-    /** Signal application should quit.
-     * After calling this operation, the next call to progress() returns false.
-     */
-    void quit() const {
-        ecs_quit(world_);
-    }
-
     /** Register action to be executed when world is destroyed.
      */
     void atfini(ecs_fini_action_t action, void *ctx = nullptr) const {
         ecs_atfini(world_, action, ctx);
-    }
-
-    /** Test if quit() has been called.
-     */
-    bool should_quit() const {
-        return ecs_should_quit(world_);
-    }
-
-    /** Begin frame.
-     * When an application does not use progress() to control the main loop, it
-     * can still use Flecs features such as FPS limiting and time measurements.
-     * This operation needs to be invoked whenever a new frame is about to get
-     * processed.
-     *
-     * Calls to frame_begin() must always be followed by frame_end().
-     *
-     * The function accepts a delta_time parameter, which will get passed to
-     * systems. This value is also used to compute the amount of time the
-     * function needs to sleep to ensure it does not exceed the target_fps, when
-     * it is set. When 0 is provided for delta_time, the time will be measured.
-     *
-     * This function should only be run from the main thread.
-     *
-     * @param delta_time Time elapsed since the last frame.
-     * @return The provided delta_time, or measured time if 0 was provided.
-     *
-     * @see ecs_frame_begin()
-     * @see flecs::world::frame_end()
-     */
-    ecs_ftime_t frame_begin(float delta_time = 0) const {
-        return ecs_frame_begin(world_, delta_time);
-    }
-
-    /** End frame.
-     * This operation must be called at the end of the frame, and always after
-     * frame_begin().
-     *
-     * This function should only be run from the main thread.
-     *
-     * @see ecs_frame_end()
-     * @see flecs::world::frame_begin()
-     */
-    void frame_end() const {
-        ecs_frame_end(world_);
     }
 
     /** Begin readonly mode.
@@ -702,27 +651,6 @@ struct world {
      */
     void dim(int32_t entity_count) const {
         ecs_dim(world_, entity_count);
-    }
-
-    /** Create a new entity id range.
-     * @see ecs_entity_range_new()
-     */
-    const ecs_entity_range_t* range_new(uint32_t min, uint32_t max) const {
-        return ecs_entity_range_new(world_, min, max);
-    }
-
-    /** Set the active entity id range.
-     * @see ecs_entity_range_set()
-     */
-    void range_set(const ecs_entity_range_t *range) const {
-        ecs_entity_range_set(world_, range);
-    }
-
-    /** Get the currently active entity id range.
-     * @see ecs_entity_range_get()
-     */
-    const ecs_entity_range_t* range_get() const {
-        return ecs_entity_range_get(world_);
     }
 
     /** Set current scope.
@@ -1393,11 +1321,6 @@ struct world {
         return ecs_get_version(e);
     }
 
-    /** Run callback after completing the frame. */
-    void run_post_frame(ecs_fini_action_t action, void *ctx) const {
-        ecs_run_post_frame(world_, action, ctx);
-    }
-
     /** Get the world info.
      *
      * @see ecs_get_world_info()
@@ -1490,6 +1413,15 @@ struct world {
 #   include "mixins/query/mixin.inl"
 #   include "mixins/enum/mixin.inl"
 
+#   ifdef FLECS_PREFAB
+#   include "mixins/prefab/mixin.inl"
+#   endif
+#   ifdef FLECS_ENTITY_RANGES
+#   include "mixins/entity_ranges/mixin.inl"
+#   endif
+#   ifdef FLECS_FRAME
+#   include "mixins/frame/mixin.inl"
+#   endif
 #   ifdef FLECS_MODULE
 #   include "mixins/module/mixin.inl"
 #   endif

@@ -50,7 +50,9 @@ void flecs_stage_merge(
         }
     }
 
+#ifdef FLECS_CACHED_QUERIES
     flecs_eval_component_monitors(world);
+#endif
 
     if (measure_frame_time) {
         world->info.merge_time_total += (ecs_ftime_t)ecs_time_measure(&t_start);
@@ -105,7 +107,9 @@ ecs_stage_t* flecs_stage_new(
     flecs_ballocator_init_n(&stage->allocators.cmd_entry_chunk, ecs_cmd_entry_t,
         FLECS_SPARSE_PAGE_SIZE);
     flecs_ballocator_init_t(&stage->allocators.query_impl, ecs_query_impl_t);
+#ifdef FLECS_CACHED_QUERIES
     flecs_ballocator_init_t(&stage->allocators.query_cache, ecs_query_cache_t);
+#endif
 
     ecs_allocator_t *a = &stage->allocator;
     ecs_vec_init_t(a, &stage->post_frame_actions, ecs_action_elem_t, 0);
@@ -150,7 +154,9 @@ void flecs_stage_free(
     flecs_stack_fini(&stage->allocators.iter_stack);
     flecs_ballocator_fini(&stage->allocators.cmd_entry_chunk);
     flecs_ballocator_fini(&stage->allocators.query_impl);
+#ifdef FLECS_CACHED_QUERIES
     flecs_ballocator_fini(&stage->allocators.query_cache);
+#endif
     flecs_allocator_fini(&stage->allocator);
 
     ecs_os_free(stage);

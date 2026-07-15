@@ -1667,7 +1667,9 @@ void flecs_rest_append_query(
     switch(query->cache_kind) {
     case EcsQueryCacheDefault: ecs_strbuf_appendlit(reply, "\"Default\""); break;
     case EcsQueryCacheAuto: ecs_strbuf_appendlit(reply, "\"Auto\""); break;
+#ifdef FLECS_CACHED_QUERIES
     case EcsQueryCacheAll: ecs_strbuf_appendlit(reply, "\"All\""); break;
+#endif
     case EcsQueryCacheNone: ecs_strbuf_appendlit(reply, "\"None\""); break;
     default: ecs_strbuf_appendlit(reply, "\"!! Invalid !!\"");
     }

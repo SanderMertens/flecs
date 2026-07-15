@@ -15,10 +15,30 @@
             ECS_RECORD_TO_ROW(r->row));\
     }
 
+#define flecs_assert_entity_valid(world, entity, function) \
+    ecs_check(entity && ecs_is_alive(world, entity), ECS_INVALID_PARAMETER, \
+        "invalid entity '%s' passed to %s(): %s", \
+            flecs_errstr(ecs_id_str(world, entity)),\
+            function,\
+            flecs_entity_invalid_reason(world, entity));
+
+#define flecs_assert_component_valid(world, entity, component, function)\
+    ecs_check(ecs_id_is_valid(world, component), ECS_INVALID_PARAMETER, \
+        "invalid component '%s' passed to %s() for entity '%s': %s", \
+            flecs_errstr(ecs_id_str(world, component)), \
+            function,\
+            flecs_errstr_1(ecs_get_path(world, entity)), \
+            flecs_id_invalid_reason(world, component))
+
 typedef struct {
     const ecs_type_info_t *ti;
     void *ptr;
 } flecs_component_ptr_t;
+
+flecs_component_ptr_t flecs_table_get_component(
+    ecs_table_t *table,
+    int32_t column_index,
+    int32_t row);
 
 flecs_component_ptr_t flecs_ensure(
     ecs_world_t *world,
@@ -72,11 +92,6 @@ void flecs_add_flag(
 void flecs_record_add_flag(
     ecs_record_t *record,
     uint32_t flag);
-
-/* Get entity that should be used for OneOf constraint from relationship. */
-ecs_entity_t flecs_get_oneof(
-    const ecs_world_t *world,
-    ecs_entity_t e);
 
 /* Compute relationship depth for table. */
 int32_t flecs_relation_depth(

@@ -1099,6 +1099,7 @@ void flecs_cmd_batch_for_entity(
         add_diff.added = added;
         add_diff.added_flags = table_diff.added_flags;
 
+#ifdef FLECS_CACHED_QUERIES
         if (r->row & EcsEntityIsTraversable) {
             /* Update monitors since we didn't do this in flecs_commit. Do this
              * before calling flecs_actions_move_add() since this can trigger
@@ -1113,6 +1114,7 @@ void flecs_cmd_batch_for_entity(
                 flecs_update_component_monitors(world, &added, NULL);
             }
         }
+#endif
 
         bool update_parent_records = !table_diff.removed.count ||
             !(start_table->flags & EcsTableHasParent);

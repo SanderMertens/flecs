@@ -32,11 +32,10 @@
 #include "entity_name.h"
 #include "commands.h"
 #include "entity.h"
-#include "instantiate.h"
+#include "addons/prefab/prefab.h"
 #include "observable.h"
 #include "iter.h"
 #include "poly.h"
-#include "tree_spawner.h"
 #include "stage.h"
 #include "world.h"
 #include "addons/journal.h"
@@ -64,9 +63,11 @@ void flecs_bootstrap(
     ecs_add_pair(world, name, EcsChildOf, ecs_get_scope(world));\
     ecs_set_name(world, name, (const char*)&#name[ecs_os_strlen(world->info.name_prefix)]);
 
-#define flecs_bootstrap_trait(world, name)\
-    flecs_bootstrap_tag(world, name)\
-    ecs_add_id(world, name, EcsTrait)
+void flecs_bootstrap_make_alive(
+    ecs_world_t *world,
+    ecs_entity_t e);
+
+#include "addons/constraint_traits/constraint_traits.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////

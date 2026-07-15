@@ -203,8 +203,10 @@ typedef struct ecs_entity_index_page_t {
 typedef struct ecs_entity_index_t {
     ecs_vec_t dense;
     ecs_vec_t pages;
+#ifdef FLECS_ENTITY_RANGES
     ecs_vec_t ranges;                /* vec<ecs_entity_range_t*> - sorted by min */
-    ecs_entity_range_t *active_range;       /* Currently active range (NULL = off) */
+    ecs_entity_range_t *active_range; /* Currently active range (NULL = off) */
+#endif
     int32_t alive_count;
     uint32_t max_id;
     ecs_allocator_t *allocator;
@@ -313,11 +315,28 @@ ecs_entity_index_page_t* flecs_entity_index_ensure_page(
     ecs_entity_index_t *index,
     uint32_t id);
 
+#ifdef FLECS_ENTITY_RANGES
+/* Initialize entity range state. */
+void flecs_entity_ranges_init(
+    ecs_allocator_t *allocator,
+    ecs_entity_index_t *index);
+
+/* Deinitialize entity range state. */
+void flecs_entity_ranges_fini(
+    ecs_entity_index_t *index);
+
+/* Move a recycled entity to the range it belongs to. */
+void flecs_entity_ranges_on_delete(
+    ecs_entity_index_t *index,
+    uint64_t entity,
+    ecs_record_t *r);
+
 /* Set active entity range. Swaps not-alive entries between the entity index
  * and the previous/new range's recycled lists. */
 void flecs_entity_index_set_range(
     ecs_entity_index_t *index,
     ecs_entity_range_t *range);
+#endif
 
 /* Return ids of alive entities in index */
 const uint64_t* flecs_entity_index_ids(
@@ -1761,6 +1780,43 @@ ecs_var_id_t flecs_query_find_var_id(
 #ifndef FLECS_QUERY_CACHE_H
 #define FLECS_QUERY_CACHE_H
 
+#ifdef FLECS_CACHED_QUERIES
+/* Component monitor */
+typedef struct ecs_monitor_t {
+    ecs_vec_t queries;               /* vector<ecs_query_cache_t*> */
+    bool is_dirty;                   /* Should queries be rematched? */
+} ecs_monitor_t;
+
+/* Component monitors */
+typedef struct ecs_monitor_set_t {
+    ecs_map_t monitors;              /* map<id, ecs_monitor_t> */
+    bool is_dirty;                   /* Should monitors be evaluated? */
+} ecs_monitor_set_t;
+
+/* Check component monitors (triggers query cache revalidation, not related to
+ * EcsMonitor). */
+void flecs_eval_component_monitors(
+    ecs_world_t *world);
+
+/* Register component monitor. */
+void flecs_monitor_register(
+    ecs_world_t *world,
+    ecs_entity_t id,
+    ecs_query_t *query);
+
+/* Unregister component monitor. */
+void flecs_monitor_unregister(
+    ecs_world_t *world,
+    ecs_entity_t id,
+    ecs_query_t *query);
+
+/* Update component monitors for added/removed components. */
+void flecs_update_component_monitors(
+    ecs_world_t *world,
+    ecs_type_t *added,
+    ecs_type_t *removed);
+#endif
+
 /** Table match data.
  * Each table matched by the query is represented by an ecs_query_cache_match_t
  * instance. A table may match a query multiple times (due to wildcard queries)
@@ -1965,25 +2021,28 @@ bool flecs_query_cache_match_next(
 #ifndef FLECS_QUERY_CHANGE_DETECTION_H
 #define FLECS_QUERY_CHANGE_DETECTION_H
 
-void flecs_query_sync_match_monitor(
-    ecs_query_impl_t *impl,
-    ecs_query_cache_match_t *match);
+#ifdef FLECS_CACHED_QUERIES
 
 void flecs_query_mark_fields_dirty(
     ecs_query_impl_t *impl,
     ecs_iter_t *it);
 
+void flecs_query_sync_match_monitor(
+    ecs_query_impl_t *impl,
+    ecs_query_cache_match_t *match);
+
 bool flecs_query_check_table_monitor(
     ecs_query_impl_t *impl,
     ecs_query_cache_match_t *qm,
     int32_t term);
-
 void flecs_query_mark_fixed_fields_dirty(
     ecs_query_impl_t *impl,
     ecs_iter_t *it);
 
 bool flecs_query_update_fixed_monitor(
     ecs_query_impl_t *impl);
+
+#endif
 
 #endif
 
@@ -2940,10 +2999,30 @@ void flecs_enqueue(
             ECS_RECORD_TO_ROW(r->row));\
     }
 
+#define flecs_assert_entity_valid(world, entity, function) \
+    ecs_check(entity && ecs_is_alive(world, entity), ECS_INVALID_PARAMETER, \
+        "invalid entity '%s' passed to %s(): %s", \
+            flecs_errstr(ecs_id_str(world, entity)),\
+            function,\
+            flecs_entity_invalid_reason(world, entity));
+
+#define flecs_assert_component_valid(world, entity, component, function)\
+    ecs_check(ecs_id_is_valid(world, component), ECS_INVALID_PARAMETER, \
+        "invalid component '%s' passed to %s() for entity '%s': %s", \
+            flecs_errstr(ecs_id_str(world, component)), \
+            function,\
+            flecs_errstr_1(ecs_get_path(world, entity)), \
+            flecs_id_invalid_reason(world, component))
+
 typedef struct {
     const ecs_type_info_t *ti;
     void *ptr;
 } flecs_component_ptr_t;
+
+flecs_component_ptr_t flecs_table_get_component(
+    ecs_table_t *table,
+    int32_t column_index,
+    int32_t row);
 
 flecs_component_ptr_t flecs_ensure(
     ecs_world_t *world,
@@ -2997,11 +3076,6 @@ void flecs_add_flag(
 void flecs_record_add_flag(
     ecs_record_t *record,
     uint32_t flag);
-
-/* Get entity that should be used for OneOf constraint from relationship. */
-ecs_entity_t flecs_get_oneof(
-    const ecs_world_t *world,
-    ecs_entity_t e);
 
 /* Compute relationship depth for table. */
 int32_t flecs_relation_depth(
@@ -3115,6 +3189,36 @@ void flecs_instantiate(
     const ecs_instantiate_ctx_t *ctx,
     int32_t depth);
 
+ecs_entity_t flecs_get_prefab_instance_child(
+    const ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t prefab_child);
+
+#ifdef FLECS_DEBUG
+void flecs_tree_spawner_assert_not_instantiated(
+    ecs_world_t *world,
+    ecs_entity_t parent);
+#else
+#define flecs_tree_spawner_assert_not_instantiated(world, parent)
+#endif
+
+/* Called during bootstrap to register spawner entities with the world. */
+void flecs_bootstrap_prefab(
+    ecs_world_t *world);
+
+/* Called during world fini to delete all spawners in the world. */
+void flecs_fini_prefab(
+    ecs_world_t *world);
+
+#ifdef FLECS_PREFAB
+
+/* Enable or disable the ids of a prefab. Returns whether the entity was a
+ * prefab and the operation was handled. */
+bool flecs_enable_prefab(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    bool enabled);
+
 void flecs_instantiate_dont_fragment(
     ecs_world_t *world,
     ecs_entity_t base,
@@ -3134,6 +3238,22 @@ ecs_entity_t flecs_instantiate_alloc_child_id(
     ecs_entity_t prefab_child,
     ecs_entity_t root_prefab,
     ecs_entity_t root_instance);
+
+EcsTreeSpawner* flecs_prefab_spawner_build(
+    ecs_world_t *world,
+    ecs_entity_t base);
+
+void flecs_spawner_instantiate(
+    ecs_world_t *world,
+    EcsTreeSpawner *spawner,
+    ecs_entity_t base,
+    ecs_entity_t instance,
+    const ecs_instantiate_ctx_t *ctx);
+
+void EcsTreeSpawner_free(
+    EcsTreeSpawner *ptr);
+
+#endif
 
 #endif
 
@@ -3416,37 +3536,6 @@ flecs_poly_dtor_t* flecs_get_dtor(
 
 #endif
 
-#ifndef FLECS_TREE_SPAWNER_H
-#define FLECS_TREE_SPAWNER_H
-
-/* Called during bootstrap to register spawner entities with the world. */
-void flecs_bootstrap_spawner(
-    ecs_world_t *world);
-
-EcsTreeSpawner* flecs_prefab_spawner_build(
-    ecs_world_t *world,
-    ecs_entity_t base);
-
-#ifdef FLECS_DEBUG
-void flecs_tree_spawner_assert_not_instantiated(
-    ecs_world_t *world,
-    ecs_entity_t parent);
-#else
-#define flecs_tree_spawner_assert_not_instantiated(world, parent)
-#endif
-
-void flecs_spawner_instantiate(
-    ecs_world_t *world,
-    EcsTreeSpawner *spawner,
-    ecs_entity_t base,
-    ecs_entity_t instance,
-    const ecs_instantiate_ctx_t *ctx);
-
-void flecs_fini_tree_spawners(
-    ecs_world_t *world);
-
-#endif
-
 #ifndef FLECS_STAGE_H
 #define FLECS_STAGE_H
 
@@ -3455,7 +3544,9 @@ typedef struct ecs_stage_allocators_t {
     ecs_stack_t iter_stack;
     ecs_block_allocator_t cmd_entry_chunk;
     ecs_block_allocator_t query_impl;
+#ifdef FLECS_CACHED_QUERIES
     ecs_block_allocator_t query_cache;
+#endif
 } ecs_stage_allocators_t;
 
 /** A stage is a context that allows for safely using the API from multiple 
@@ -3562,18 +3653,6 @@ typedef struct ecs_world_allocators_t {
     ecs_vec_t tree_spawner;
 } ecs_world_allocators_t;
 
-/* Component monitor */
-typedef struct ecs_monitor_t {
-    ecs_vec_t queries;               /* vector<ecs_query_cache_t*> */
-    bool is_dirty;                   /* Should queries be rematched? */
-} ecs_monitor_t;
-
-/* Component monitors */
-typedef struct ecs_monitor_set_t {
-    ecs_map_t monitors;              /* map<id, ecs_monitor_t> */
-    bool is_dirty;                   /* Should monitors be evaluated? */
-} ecs_monitor_set_t;
-
 /* Data stored for id marked for deletion */
 typedef struct ecs_marked_id_t {
     ecs_component_record_t *cr;
@@ -3671,8 +3750,10 @@ struct ecs_world_t {
     /* --  Data storage -- */
     ecs_store_t store;
 
+#ifdef FLECS_CACHED_QUERIES
     /* Used to track when cache needs to be updated */
     ecs_monitor_set_t monitors;      /* map<id, ecs_monitor_t> */
+#endif
 
     /* -- Systems -- */
     ecs_entity_t pipeline;           /* Current pipeline */
@@ -3686,7 +3767,9 @@ struct ecs_world_t {
     int32_t stage_count;             /* Number of stages */
 
     /* -- Component ids -- */
+#ifdef FLECS_MULTI_WORLD
     ecs_vec_t component_ids;         /* World local component ids */
+#endif
 
     /* Index of prefab children in ordered children vector. Used by ecs_get_target. */
     ecs_map_t prefab_child_indices;
@@ -3727,8 +3810,10 @@ struct ecs_world_t {
     /* -- Default query flags -- */
     ecs_flags32_t default_query_flags;
 
+#ifdef FLECS_CACHED_QUERIES
     /* Count that increases when component monitors change */
     int32_t monitor_generation;
+#endif
 
     /* -- Allocators -- */
     ecs_world_allocators_t allocators; /* Static allocation sizes */
@@ -3772,29 +3857,6 @@ bool flecs_type_info_init_id(
 void flecs_type_info_free(
     ecs_world_t *world,
     ecs_entity_t component);
-
-/* Check component monitors (triggers query cache revalidation, not related to
- * EcsMonitor). */
-void flecs_eval_component_monitors(
-    ecs_world_t *world);
-
-/* Register component monitor. */
-void flecs_monitor_register(
-    ecs_world_t *world,
-    ecs_entity_t id,
-    ecs_query_t *query);
-
-/* Unregister component monitor. */
-void flecs_monitor_unregister(
-    ecs_world_t *world,
-    ecs_entity_t id,
-    ecs_query_t *query);
-
-/* Update component monitors for added/removed components. */
-void flecs_update_component_monitors(
-    ecs_world_t *world,
-    ecs_type_t *added,
-    ecs_type_t *removed);
 
 /* Notify tables with component of event (or all tables if id is 0). */
 void flecs_notify_tables(
@@ -3901,6 +3963,17 @@ bool flecs_component_is_delete_locked(
         }\
     }
 
+#ifdef FLECS_MULTI_WORLD
+void flecs_multi_world_init(
+    ecs_world_t *world);
+
+void flecs_multi_world_fini(
+    ecs_world_t *world);
+#else
+#define flecs_multi_world_init(world) (void)world
+#define flecs_multi_world_fini(world) (void)world
+#endif
+
 #endif
 
 #ifdef FLECS_JOURNAL
@@ -3991,9 +4064,63 @@ void flecs_bootstrap(
     ecs_add_pair(world, name, EcsChildOf, ecs_get_scope(world));\
     ecs_set_name(world, name, (const char*)&#name[ecs_os_strlen(world->info.name_prefix)]);
 
+void flecs_bootstrap_make_alive(
+    ecs_world_t *world,
+    ecs_entity_t e);
+
+#ifndef FLECS_CONSTRAINT_TRAITS_PRIVATE_H
+#define FLECS_CONSTRAINT_TRAITS_PRIVATE_H
+
+void flecs_assert_relation_unused(
+    ecs_world_t *world,
+    ecs_entity_t rel,
+    ecs_entity_t trait);
+
+void flecs_register_flag_for_trait(
+    ecs_iter_t *it,
+    ecs_entity_t trait,
+    ecs_flags32_t flag,
+    ecs_flags32_t not_flag,
+    ecs_flags32_t entity_flag);
+
+#ifdef FLECS_CONSTRAINT_TRAITS
+
+/* Get entity that should be used for OneOf constraint from relationship. */
+ecs_entity_t flecs_get_oneof(
+    const ecs_world_t *world,
+    ecs_entity_t e);
+
+void flecs_bootstrap_constraint_traits(
+    ecs_world_t *world);
+
+#ifdef FLECS_DEBUG
+int flecs_check_constraint_traits(
+    ecs_world_t *world,
+    ecs_component_record_t *cr,
+    ecs_entity_t rel,
+    ecs_entity_t tgt);
+#else
+#define flecs_check_constraint_traits(world, cr, rel, tgt) (0)
+#endif
+
+#else
+
+#define flecs_get_oneof(world, e) ((void)(world), (void)(e), 0)
+#define flecs_bootstrap_constraint_traits(world) (void)world
+#define flecs_check_constraint_traits(world, cr, rel, tgt) (0)
+
+#endif
+
+#ifdef FLECS_CONSTRAINT_TRAITS
 #define flecs_bootstrap_trait(world, name)\
     flecs_bootstrap_tag(world, name)\
     ecs_add_id(world, name, EcsTrait)
+#else
+#define flecs_bootstrap_trait(world, name)\
+    flecs_bootstrap_tag(world, name)
+#endif
+
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Safe(r) integer casting
@@ -4203,7 +4330,6 @@ static ECS_DTOR(EcsPoly, ptr, {
 
 /* -- Builtin observers -- */
 
-static
 void flecs_assert_relation_unused(
     ecs_world_t *world, 
     ecs_entity_t rel,
@@ -4304,7 +4430,6 @@ bool flecs_trait_can_add_after_query(
     return false;
 }
 
-static
 void flecs_register_flag_for_trait(
     ecs_iter_t *it,
     ecs_entity_t trait,
@@ -4366,29 +4491,6 @@ void flecs_register_flag_for_trait(
     }
 error:
     return;
-}
-
-static
-void flecs_register_final(ecs_iter_t *it) {
-    ecs_world_t *world = it->world;
-    
-    int i, count = it->count;
-    for (i = 0; i < count; i ++) {
-        ecs_entity_t e = it->entities[i];
-        if (flecs_components_get(world, ecs_pair(EcsIsA, e)) != NULL) {
-            ecs_throw(ECS_INVALID_OPERATION,
-                "cannot change trait 'Final' for '%s': already inherited from",
-                    flecs_errstr(ecs_get_path(world, e)));
-        }
-
-        ecs_check(!flecs_component_is_trait_locked(world, e), ECS_INVALID_OPERATION, "cannot change "
-            "trait 'Final' for '%s': already queried for (apply traits "
-            "before creating queries)", 
-                flecs_errstr(ecs_get_path(world, e)));
-
-        error:
-            continue;
-    }
 }
 
 static
@@ -4462,133 +4564,6 @@ void flecs_register_slot_of(ecs_iter_t *it) {
     for (i = 0; i < count; i ++) {
         ecs_add_id(it->world, it->entities[i], EcsDontFragment);
         ecs_add_id(it->world, it->entities[i], EcsExclusive);
-    }
-}
-
-static
-void flecs_on_symmetric_add_remove(ecs_iter_t *it) {
-    ecs_entity_t pair = ecs_field_id(it, 0);
-
-    if (!ECS_HAS_ID_FLAG(pair, PAIR)) {
-        /* If relationship was not added as a pair, there's nothing to do */
-        return;
-    }
-
-    ecs_world_t *world = it->world;
-    ecs_entity_t rel = ECS_PAIR_FIRST(pair);
-    ecs_entity_t tgt = ecs_pair_second(world, pair);
-    ecs_entity_t event = it->event;
-
-    if (tgt) {
-        int i, count = it->count;
-        for (i = 0; i < count; i ++) {
-            ecs_entity_t subj = it->entities[i];
-            if (event == EcsOnAdd) {
-                if (!ecs_has_id(it->real_world, tgt, ecs_pair(rel, subj))) {
-                    ecs_add_pair(it->world, tgt, rel, subj);   
-                }
-            } else {
-                if (ecs_has_id(it->real_world, tgt, ecs_pair(rel, subj))) {
-                    ecs_remove_pair(it->world, tgt, rel, subj);   
-                }
-            }
-        }
-    }
-}
-
-static
-void flecs_register_symmetric(ecs_iter_t *it) {
-    ecs_world_t *world = it->real_world;
-
-    int i, count = it->count;
-    for (i = 0; i < count; i ++) {
-        ecs_entity_t r = it->entities[i];
-        flecs_assert_relation_unused(world, r, EcsSymmetric);
-
-        /* Create observer that adds the reverse relationship when R(X, Y) is
-         * added, or removes the reverse relationship when R(X, Y) is removed. */
-        ecs_observer(world, {
-            .entity = ecs_entity(world, { .parent = r }),
-            .query.terms[0] = { .id = ecs_pair(r, EcsWildcard) },
-            .callback = flecs_on_symmetric_add_remove,
-            .events = {EcsOnAdd, EcsOnRemove}
-        });
-    } 
-}
-
-#ifdef FLECS_DEBUG
-static
-void flecs_on_singleton_add_remove(ecs_iter_t *it) {
-    ecs_entity_t component = ecs_field_id(it, 0);
-    ecs_world_t *world = it->real_world;
-
-    (void)world;
-
-    int i, count = it->count;
-    for (i = 0; i < count; i ++) {
-        ecs_entity_t e = it->entities[i];
-
-        if (ECS_IS_PAIR(component)) {
-            ecs_entity_t relationship = ECS_PAIR_FIRST(component);
-            e = (uint32_t)e;
-            ecs_check(relationship == e, ECS_CONSTRAINT_VIOLATED,
-                "cannot add singleton pair '%s' to entity '%s': singleton "
-                "component '%s' must be added to itself",
-                    flecs_errstr(ecs_id_str(world, component)),
-                    flecs_errstr_1(ecs_get_path(world, it->entities[i])),
-                    flecs_errstr_2(ecs_get_path(it->world, relationship)));
-            (void)relationship;
-        } else {
-            ecs_check(component == e, ECS_CONSTRAINT_VIOLATED,
-                "cannot add singleton component '%s' to entity '%s': singleton"
-                " component must be added to itself", 
-                    flecs_errstr(ecs_get_path(it->world, component)),
-                    flecs_errstr_1(ecs_get_path(it->world, it->entities[i])));
-        }
-
-    error:
-        continue;
-    }
-}
-#endif
-
-static
-void flecs_register_singleton(ecs_iter_t *it) {
-    ecs_world_t *world = it->real_world;
-
-    (void)world;
-
-    flecs_register_flag_for_trait(it, EcsSingleton, EcsIdSingleton, 0, 0);
-
-    int i, count = it->count;
-    for (i = 0; i < count; i ++) {
-        ecs_entity_t component = it->entities[i];
-        (void)component;
-
-        /* Create observer that enforces that singleton is only added to self */
-#ifdef FLECS_DEBUG
-        ecs_observer(world, {
-            .entity = ecs_entity(world, {
-                .name = "debug_only_SingletonInvariantCheck", .parent = component
-            }),
-            .query.terms[0] = {
-                .id = component, .src.id = EcsThis|EcsSelf
-            },
-            .callback = flecs_on_singleton_add_remove,
-            .events = {EcsOnAdd}
-        });
-
-        ecs_observer(world, {
-            .entity = ecs_entity(world, {
-                .name = "debug_only_SingletonPairInvariantCheck", .parent = component
-            }),
-            .query.terms[0] = {
-                .id = ecs_pair(component, EcsWildcard), .src.id = EcsThis|EcsSelf
-            },
-            .callback = flecs_on_singleton_add_remove,
-            .events = {EcsOnAdd}
-        });
-#endif
     }
 }
 
@@ -4711,28 +4686,6 @@ void flecs_disable_module(ecs_iter_t *it) {
     for (i = 0; i < it->count; i ++) {
         flecs_disable_module_observers(
             it->real_world, it->entities[i], it->event == EcsOnAdd);
-    }
-}
-
-static
-void flecs_on_add_prefab(ecs_iter_t *it) {
-    ecs_world_t *world = it->world;
-
-    for (int32_t i = 0; i < it->count; i ++) {
-        ecs_entity_t p = it->entities[i];
-
-        ecs_component_record_t *cr = flecs_components_get(
-            world, ecs_childof(p));
-        if (cr && (cr->flags & EcsIdOrderedChildren)) {
-            flecs_ordered_children_set_prefab(world, cr);
-        }
-
-        ecs_iter_t cit = ecs_children(world, p);
-        while (ecs_children_next(&cit)) {
-            for (int32_t j = 0; j < cit.count; j ++) {
-                ecs_add_id(world, cit.entities[j], EcsPrefab);
-            }
-        }
     }
 }
 
@@ -4904,7 +4857,6 @@ ecs_table_t* flecs_bootstrap_component_table(
 }
 
 /* Make entities alive before the root table is initialized */
-static
 void flecs_bootstrap_make_alive(
     ecs_world_t *world,
     ecs_entity_t e)
@@ -5007,7 +4959,6 @@ void flecs_bootstrap(
     flecs_bootstrap_make_alive(world, ecs_id(EcsParent));
     flecs_bootstrap_make_alive(world, ecs_id(EcsTreeSpawner));
     flecs_bootstrap_make_alive(world, ecs_id(EcsDefaultChildComponent));
-    flecs_bootstrap_make_alive(world, EcsFinal);
     flecs_bootstrap_make_alive(world, EcsName);
     flecs_bootstrap_make_alive(world, EcsSymbol);
     flecs_bootstrap_make_alive(world, EcsAlias);
@@ -5024,9 +4975,6 @@ void flecs_bootstrap(
     flecs_bootstrap_make_alive(world, EcsWildcard);
     flecs_bootstrap_make_alive(world, EcsAny);
     flecs_bootstrap_make_alive(world, EcsCanToggle);
-    flecs_bootstrap_make_alive(world, EcsTrait);
-    flecs_bootstrap_make_alive(world, EcsRelationship);
-    flecs_bootstrap_make_alive(world, EcsTarget);
     flecs_bootstrap_make_alive(world, EcsSparse);
     flecs_bootstrap_make_alive(world, EcsDontFragment);
     flecs_bootstrap_make_alive(world, EcsObserver);
@@ -5105,7 +5053,6 @@ void flecs_bootstrap(
     flecs_bootstrap_tag(world, EcsObserver);
 
     flecs_bootstrap_tag(world, EcsModule);
-    flecs_bootstrap_tag(world, EcsPrefab);
     flecs_bootstrap_tag(world, EcsSlotOf);
     flecs_bootstrap_tag(world, EcsDisabled);
     flecs_bootstrap_tag(world, EcsNotQueryable);
@@ -5138,20 +5085,12 @@ void flecs_bootstrap(
     /* Component/relationship properties */
     flecs_bootstrap_trait(world, EcsTransitive);
     flecs_bootstrap_trait(world, EcsReflexive);
-    flecs_bootstrap_trait(world, EcsSymmetric);
-    flecs_bootstrap_trait(world, EcsSingleton);
-    flecs_bootstrap_trait(world, EcsFinal);
     flecs_bootstrap_trait(world, EcsInheritable);
     flecs_bootstrap_trait(world, EcsPairIsTag);
     flecs_bootstrap_trait(world, EcsExclusive);
-    flecs_bootstrap_trait(world, EcsAcyclic);
     flecs_bootstrap_trait(world, EcsTraversable);
     flecs_bootstrap_trait(world, EcsWith);
-    flecs_bootstrap_trait(world, EcsOneOf);
     flecs_bootstrap_trait(world, EcsCanToggle);
-    flecs_bootstrap_trait(world, EcsTrait);
-    flecs_bootstrap_trait(world, EcsRelationship);
-    flecs_bootstrap_trait(world, EcsTarget);
     flecs_bootstrap_trait(world, EcsOnDelete);
     flecs_bootstrap_trait(world, EcsOnDeleteTarget);
     flecs_bootstrap_trait(world, EcsOnInstantiate);
@@ -5193,9 +5132,6 @@ void flecs_bootstrap(
 
     /* Sync properties of ChildOf and Identifier with bootstrapped flags */
     ecs_add_pair(world, EcsChildOf, EcsOnDeleteTarget, EcsDelete);
-    ecs_add_id(world, EcsChildOf, EcsTrait);
-    ecs_add_id(world, EcsIsA, EcsTrait);
-    ecs_add_id(world, EcsChildOf, EcsAcyclic);
     ecs_add_id(world, EcsChildOf, EcsTraversable);
     ecs_add_pair(world, EcsChildOf, EcsOnInstantiate, EcsDontInherit);
     ecs_add_pair(world, ecs_id(EcsIdentifier), EcsOnInstantiate, EcsDontInherit);
@@ -5203,14 +5139,6 @@ void flecs_bootstrap(
     /* Register observers for components/relationship properties. Most observers
      * set flags on a component record when a trait is added to a component, which
      * allows for quick trait testing in various operations. */
-    ecs_observer(world, {
-        .query.terms = {{ .id = EcsFinal }},
-        .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
-        .events = {EcsOnAdd},
-        .callback = flecs_register_final,
-        .global_observer = true
-    });
-
     static ecs_on_trait_ctx_t inheritable_trait = { EcsIdInheritable, 0 };
     ecs_observer(world, {
         .query.terms = {{ .id = EcsInheritable }},
@@ -5248,22 +5176,6 @@ void flecs_bootstrap(
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd},
         .callback = flecs_register_on_instantiate,
-        .global_observer = true
-    });
-
-    ecs_observer(world, {
-        .query.terms = {{ .id = EcsSymmetric }},
-        .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
-        .events = {EcsOnAdd},
-        .callback = flecs_register_symmetric,
-        .global_observer = true
-    });
-
-    ecs_observer(world, {
-        .query.terms = {{ .id = EcsSingleton }},
-        .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
-        .events = {EcsOnAdd},
-        .callback = flecs_register_singleton,
         .global_observer = true
     });
 
@@ -5381,16 +5293,6 @@ void flecs_bootstrap(
         .global_observer = true
     });
 
-    /* Observer that ensures children of a prefab are also prefabs */
-    ecs_observer(world, {
-        .query.terms = {
-            { .id = EcsPrefab },
-        },
-        .events = {EcsOnAdd},
-        .callback = flecs_on_add_prefab,
-        .global_observer = true
-    });
-
     /* Exclusive properties */
     ecs_add_id(world, EcsChildOf, EcsExclusive);
     ecs_add_id(world, EcsOnDelete, EcsExclusive);
@@ -5412,24 +5314,7 @@ void flecs_bootstrap(
     ecs_add_id(world, EcsFlag, EcsPairIsTag);
     ecs_add_id(world, EcsWith, EcsPairIsTag);
 
-    /* Relationships */
-    ecs_add_id(world, EcsChildOf, EcsRelationship);
-    ecs_add_id(world, EcsIsA, EcsRelationship);
-    ecs_add_id(world, EcsSlotOf, EcsRelationship);
-    ecs_add_id(world, EcsDependsOn, EcsRelationship);
-    ecs_add_id(world, EcsWith, EcsRelationship);
-    ecs_add_id(world, EcsOnDelete, EcsRelationship);
-    ecs_add_id(world, EcsOnDeleteTarget, EcsRelationship);
-    ecs_add_id(world, EcsOnInstantiate, EcsRelationship);
-    ecs_add_id(world, ecs_id(EcsIdentifier), EcsRelationship);
-
-    /* Targets */
-    ecs_add_id(world, EcsOverride, EcsTarget);
-    ecs_add_id(world, EcsInherit, EcsTarget);
-    ecs_add_id(world, EcsDontInherit, EcsTarget);
-
-    /* Traversable relationships are always acyclic */
-    ecs_add_pair(world, EcsTraversable, EcsWith, EcsAcyclic);
+    flecs_bootstrap_constraint_traits(world);
 
     /* Transitive relationships are always Traversable */
     ecs_add_pair(world, EcsTransitive, EcsWith, EcsTraversable);
@@ -5437,11 +5322,7 @@ void flecs_bootstrap(
     /* DontFragment components are always sparse */
     ecs_add_pair(world, EcsDontFragment, EcsWith, EcsSparse);
     
-    /* Modules are singletons */
-    ecs_add_pair(world, EcsModule, EcsWith, EcsSingleton);
-
     /* DontInherit components */
-    ecs_add_pair(world, EcsPrefab, EcsOnInstantiate, EcsDontInherit);
     ecs_add_pair(world, ecs_id(EcsComponent), EcsOnInstantiate, EcsDontInherit);
     ecs_add_pair(world, EcsOnDelete, EcsOnInstantiate, EcsDontInherit);
     ecs_add_pair(world, EcsExclusive, EcsOnInstantiate, EcsDontInherit);
@@ -5450,7 +5331,6 @@ void flecs_bootstrap(
     /* Acyclic/Traversable components */
     ecs_add_id(world, EcsIsA, EcsTraversable);
     ecs_add_id(world, EcsDependsOn, EcsTraversable);
-    ecs_add_id(world, EcsWith, EcsAcyclic);
 
     /* Transitive relationships */
     ecs_add_id(world, EcsIsA, EcsTransitive);
@@ -5458,7 +5338,6 @@ void flecs_bootstrap(
 
     /* Exclusive properties */
     ecs_add_id(world, EcsSlotOf, EcsExclusive);
-    ecs_add_id(world, EcsOneOf, EcsExclusive);
 
     /* Inherited components */
     ecs_add_pair(world, EcsIsA, EcsOnInstantiate, EcsInherit);
@@ -5467,7 +5346,7 @@ void flecs_bootstrap(
     /* Run bootstrap functions for other parts of the code */
     flecs_bootstrap_entity_name(world);
     flecs_bootstrap_parent_component(world);
-    flecs_bootstrap_spawner(world);
+    flecs_bootstrap_prefab(world);
 
     ecs_set_scope(world, 0);
     ecs_set_name_prefix(world, NULL);
@@ -6575,6 +6454,7 @@ void flecs_cmd_batch_for_entity(
         add_diff.added = added;
         add_diff.added_flags = table_diff.added_flags;
 
+#ifdef FLECS_CACHED_QUERIES
         if (r->row & EcsEntityIsTraversable) {
             /* Update monitors since we didn't do this in flecs_commit. Do this
              * before calling flecs_actions_move_add() since this can trigger
@@ -6589,6 +6469,7 @@ void flecs_cmd_batch_for_entity(
                 flecs_update_component_monitors(world, &added, NULL);
             }
         }
+#endif
 
         bool update_parent_records = !table_diff.removed.count ||
             !(start_table->flags & EcsTableHasParent);
@@ -7867,7 +7748,6 @@ const char* flecs_id_parse(
 
 #endif
 
-static
 flecs_component_ptr_t flecs_table_get_component(
     ecs_table_t *table,
     int32_t column_index,
@@ -7919,76 +7799,6 @@ void* flecs_get_component(
     return flecs_get_component_ptr(world, table, row, cr).ptr;
 }
 
-void* flecs_get_base_component(
-    const ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_id_t component,
-    ecs_component_record_t *cr,
-    int32_t recur_depth)
-{
-    ecs_check(recur_depth < ECS_MAX_RECURSION, ECS_INVALID_OPERATION,
-        "cycle detected in IsA relationship");
-
-    /* Table (and thus entity) does not have component, look for base */
-    if (!(table->flags & EcsTableHasIsA)) {
-        return NULL;
-    }
-
-    if (!(cr->flags & EcsIdOnInstantiateInherit)) {
-        return NULL;
-    }
-
-    /* Exclude Name */
-    if (component == ecs_pair(ecs_id(EcsIdentifier), EcsName)) {
-        return NULL;
-    }
-
-    /* Table should always be in the table index for (IsA, *), otherwise the
-     * HasBase flag should not have been set */
-    const ecs_table_record_t *tr_isa = flecs_component_get_table(
-        world->cr_isa_wildcard, table);
-    ecs_check(tr_isa != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_type_t type = table->type;
-    ecs_id_t *ids = type.array;
-    int32_t i = tr_isa->index, end = tr_isa->count + tr_isa->index;
-    void *ptr = NULL;
-
-    do {
-        ecs_id_t pair = ids[i ++];
-        ecs_entity_t base = ecs_pair_second(world, pair);
-
-        ecs_record_t *r = flecs_entities_get(world, base);
-        ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
-
-        table = r->table;
-        ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-
-        const ecs_table_record_t *tr = flecs_component_get_table(cr, table);
-        if (!tr) {
-            if (cr->flags & EcsIdDontFragment) {
-                ptr = flecs_component_sparse_get(world, cr, table, base);
-            }
-
-            if (!ptr) {
-                ptr = flecs_get_base_component(world, table, component, cr, 
-                    recur_depth + 1);
-            }
-        } else {
-            if (cr->flags & EcsIdSparse) {
-                return flecs_component_sparse_get(world, cr, table, base);
-            } else if (tr->column != -1) {
-                int32_t row = ECS_RECORD_TO_ROW(r->row);
-                return flecs_table_get_component(table, tr->column, row).ptr;
-            }
-        }
-    } while (!ptr && (i < end));
-
-    return ptr;
-error:
-    return NULL;
-}
-
 ecs_entity_t flecs_new_id(
     const ecs_world_t *world)
 {
@@ -8007,10 +7817,12 @@ ecs_entity_t flecs_new_id(
 
     ecs_entity_t entity = flecs_entities_new_id(unsafe_world);
 
+#ifdef FLECS_ENTITY_RANGES
     ecs_assert(!ecs_eis(unsafe_world)->active_range ||
         !ecs_eis(unsafe_world)->active_range->max ||
         ecs_entity_t_lo(entity) <= ecs_eis(unsafe_world)->active_range->max,
         ECS_OUT_OF_RANGE, NULL);
+#endif
 
     return entity;
 }
@@ -8135,6 +7947,7 @@ void flecs_commit(
 
     flecs_table_traversable_add(src_table, -is_trav);
 
+#ifdef FLECS_CACHED_QUERIES
     /* If the entity is traversable, it is being monitored for changes and
      * requires rematching queries when components are added or removed. This
      * ensures that queries that rely on components from traversable entities
@@ -8143,6 +7956,7 @@ void flecs_commit(
     if (is_trav) {
         flecs_update_component_monitors(world, &diff->added, &diff->removed);
     }
+#endif
 
     ecs_os_perf_trace_pop("flecs.commit");
 
@@ -8547,21 +8361,6 @@ const char* flecs_entity_invalid_reason(
 
     return NULL;
 }
-
-#define flecs_assert_entity_valid(world, entity, function) \
-    ecs_check(entity && ecs_is_alive(world, entity), ECS_INVALID_PARAMETER, \
-        "invalid entity '%s' passed to %s(): %s", \
-            flecs_errstr(ecs_id_str(world, entity)),\
-            function,\
-            flecs_entity_invalid_reason(world, entity));
-
-#define flecs_assert_component_valid(world, entity, component, function)\
-    ecs_check(ecs_id_is_valid(world, component), ECS_INVALID_PARAMETER, \
-        "invalid component '%s' passed to %s() for entity '%s': %s", \
-            flecs_errstr(ecs_id_str(world, component)), \
-            function,\
-            flecs_errstr_1(ecs_get_path(world, entity)), \
-            flecs_id_invalid_reason(world, component))
 
 /* -- Public functions -- */
 
@@ -10563,71 +10362,6 @@ error:
     return false;
 }
 
-static
-ecs_entity_t flecs_get_prefab_instance_child(
-    const ecs_world_t *world,
-    ecs_entity_t entity,
-    ecs_entity_t prefab_child)
-{
-    ecs_map_val_t *index_ptr = ecs_map_get(
-        &world->prefab_child_indices, prefab_child);
-    if (!index_ptr) {
-        return 0;
-    }
-
-    flecs_assert_entity_valid(world, prefab_child, "get_target");
-    ecs_check(ecs_owns_id(world, prefab_child, EcsPrefab), 
-        ECS_INVALID_OPERATION, 
-        "cannot get target for '%s': entity is not/no longer a prefab",
-        flecs_errstr(ecs_id_str(world, prefab_child)));
-
-#ifdef FLECS_DEBUG
-    ecs_entity_t prefab = ecs_get_parent(world, prefab_child);
-    ecs_check(prefab != 0, ECS_INVALID_OPERATION,
-        "cannot get target for '%s': entity has no parent",
-        flecs_errstr(ecs_id_str(world, prefab_child)));
-
-    ecs_check(ecs_owns_id(world, prefab, EcsPrefab), ECS_INVALID_OPERATION,
-        "cannot get target for '%s': parent is not/no longer a prefab",
-        flecs_errstr(ecs_id_str(world, prefab)),
-        flecs_errstr_1(ecs_id_str(world, prefab_child)));
-
-    ecs_check(ecs_has_pair(world, entity, EcsIsA, prefab),
-        ECS_INVALID_OPERATION,
-        "cannot get target for '%s': entity '%s' is not an instance of prefab '%s'",
-            flecs_errstr(ecs_id_str(world, prefab_child)),
-            flecs_errstr_1(ecs_id_str(world, entity)),
-            flecs_errstr_2(ecs_id_str(world, prefab)));
-#endif
-
-    ecs_component_record_t *childof_cr = flecs_components_get(
-        world, ecs_childof(entity));
-    ecs_check(childof_cr != NULL, ECS_INVALID_OPERATION, 
-        "cannot get target for '%s': children of '%s' have changed since "
-        "prefab instantiation",
-            flecs_errstr(ecs_id_str(world, prefab_child)),
-            flecs_errstr_1(ecs_id_str(world, entity)));
-
-    ecs_vec_t *v = &childof_cr->pair->ordered_children;
-    int32_t index = flecs_uto(int32_t, *index_ptr);
-    ecs_check(ecs_vec_count(v) > index, ECS_INVALID_OPERATION,
-        "cannot get target for '%s': children of '%s' have changed since "
-        "prefab instantiation",
-            flecs_errstr(ecs_id_str(world, prefab_child)),
-            flecs_errstr_1(ecs_id_str(world, entity)));
-
-    ecs_entity_t tgt = ecs_vec_get_t(v, ecs_entity_t, index)[0];
-    ecs_check(ecs_has_pair(world, tgt, EcsIsA, prefab_child), ECS_INVALID_OPERATION,
-        "cannot get target for '%s': children of '%s' have changed since "
-        "prefab instantiation",
-            flecs_errstr(ecs_id_str(world, prefab_child)),
-            flecs_errstr_1(ecs_id_str(world, entity)));
-
-    return tgt;
-error:
-    return 0;
-}
-
 ecs_entity_t ecs_get_target(
     const ecs_world_t *world,
     ecs_entity_t entity,
@@ -10896,10 +10630,12 @@ int32_t ecs_get_depth(
 {
     ecs_check(ecs_is_valid(world, rel), ECS_INVALID_PARAMETER, NULL);
     flecs_assert_entity_valid(world, entity, "get_depth");
-    ecs_check(ecs_has_id(world, rel, EcsAcyclic), ECS_INVALID_PARAMETER, 
+#ifdef FLECS_CONSTRAINT_TRAITS
+    ecs_check(ecs_has_id(world, rel, EcsAcyclic), ECS_INVALID_PARAMETER,
         "cannot determine depth for non-acyclic relationship '%s' "
             "(add Acyclic trait to relationship)",
                 flecs_errstr(ecs_get_path(world, rel)));
+#endif
 
     ecs_table_t *table = ecs_get_table(world, entity);
     if (table) {
@@ -11187,28 +10923,16 @@ void ecs_enable(
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     flecs_assert_entity_valid(world, entity, "enable");
 
-    if (ecs_has_id(world, entity, EcsPrefab)) {
-        /* If entity is a prefab, enable/disable all entities in the type */
-        const ecs_type_t *type = ecs_get_type(world, entity);
-        ecs_assert(type != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_id_t *ids = type->array;
-        int32_t i, count = type->count;
-        for (i = 0; i < count; i ++) {
-            ecs_id_t component = ids[i];
-            if (component & ECS_ID_FLAGS_MASK) {
-                continue;
-            }
-            ecs_flags32_t flags = ecs_id_get_flags(world, component);
-            if (!(flags & EcsIdOnInstantiateDontInherit)){
-                ecs_enable(world, component, enabled);
-            }
-        }
+#ifdef FLECS_PREFAB
+    if (flecs_enable_prefab(world, entity, enabled)) {
+        return;
+    }
+#endif
+
+    if (enabled) {
+        ecs_remove_id(world, entity, EcsDisabled);
     } else {
-        if (enabled) {
-            ecs_remove_id(world, entity, EcsDisabled);
-        } else {
-            ecs_add_id(world, entity, EcsDisabled);
-        }
+        ecs_add_id(world, entity, EcsDisabled);
     }
 error:
     return;
@@ -12827,570 +12551,6 @@ bool ecs_id_in_use(
     }
 
     return (flecs_table_cache_count(&cr->cache) != 0);
-}
-
-static
-void flecs_instantiate_slot(
-    ecs_world_t *world,
-    ecs_entity_t base,
-    ecs_entity_t instance,
-    ecs_entity_t slot_of,
-    ecs_entity_t slot,
-    ecs_entity_t child)
-{
-    if (base == slot_of) {
-        /* Instance inherits from slot_of, add slot to instance */
-        ecs_component_record_t *cr = flecs_components_ensure(
-            world, ecs_pair(slot, child));
-        ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
-
-        ecs_record_t *r = flecs_entities_get(world, instance);
-        ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
-
-        flecs_sparse_on_add_cr(world, 
-            r->table, ECS_RECORD_TO_ROW(r->row), cr, true, NULL);
-    } else {
-        /* Slot is registered for other prefab, travel hierarchy
-         * upwards to find instance that inherits from slot_of */
-        ecs_entity_t parent = instance;
-        int32_t depth = 0;
-        do {
-            if (ecs_has_pair(world, parent, EcsIsA, slot_of)) {
-                const char *name = ecs_get_name(world, slot);
-                if (name == NULL) {
-                    char *slot_of_str = ecs_get_path(world, slot_of);
-                    ecs_throw(ECS_INVALID_OPERATION, "prefab '%s' has unnamed "
-                        "slot (slots must be named)", slot_of_str);
-                    ecs_os_free(slot_of_str);
-                    return;
-                }
-
-                /* The 'slot' variable is currently pointing to a child (or 
-                 * grandchild) of the current base. Find the original slot by
-                 * looking it up under the prefab it was registered. */
-                if (depth == 0) {
-                    /* If the current instance is an instance of slot_of, just
-                     * lookup the slot by name, which is faster than having to
-                     * create a relative path. */
-                    slot = ecs_lookup_child(world, slot_of, name);
-                } else {
-                    /* If the slot is more than one level away from the slot_of
-                     * parent, use a relative path to find the slot */
-                    char *path = ecs_get_path_w_sep(world, parent, child, ".",
-                        NULL);
-                    slot = ecs_lookup_path_w_sep(world, slot_of, path, ".", 
-                        NULL, false);
-                    ecs_os_free(path);
-                }
-
-                if (slot == 0) {
-                    char *slot_of_str = ecs_get_path(world, slot_of);
-                    char *slot_str = ecs_get_path(world, slot);
-                    ecs_throw(ECS_INVALID_OPERATION,
-                        "'%s' is not in hierarchy for slot '%s'",
-                            slot_of_str, slot_str);
-                    ecs_os_free(slot_of_str);
-                    ecs_os_free(slot_str);
-                }
-
-                ecs_add_pair(world, parent, slot, child);
-                break;
-            }
-
-            depth ++;
-        } while ((parent = ecs_get_target(world, parent, EcsChildOf, 0)));
-        
-        if (parent == 0) {
-            char *slot_of_str = ecs_get_path(world, slot_of);
-            char *slot_str = ecs_get_path(world, slot);
-            ecs_throw(ECS_INVALID_OPERATION,
-                "'%s' is not in hierarchy for slot '%s'",
-                    slot_of_str, slot_str);
-            ecs_os_free(slot_of_str);
-            ecs_os_free(slot_str);
-        }
-    }
-
-error:
-    return;
-}
-
-static
-int32_t flecs_child_type_insert(
-    ecs_type_t *type,
-    void **component_data,
-    ecs_id_t id)
-{
-    int32_t i, count = type->count;
-    for (i = 0; i < count; i ++) {
-        ecs_id_t cur = type->array[i];
-        if (cur == id) {
-            /* Id is already part of type */
-            return -1;
-        }
-
-        if (cur > id) {
-            /* A larger id was found so id can't be part of the type. */
-            break;
-        }
-    }
-
-    /* Assumes that the array has enough memory to store the new element. */
-    int32_t to_move = type->count - i;
-    if (to_move) {
-        ecs_os_memmove(&type->array[i + 1],
-            &type->array[i], to_move * ECS_SIZEOF(ecs_id_t));
-        ecs_os_memmove(&component_data[i + 1],
-            &component_data[i], to_move * ECS_SIZEOF(void*));
-    }
-
-    component_data[i] = NULL;
-    type->array[i] = id;
-    type->count ++;
-
-    return i;
-}
-
-ecs_entity_t flecs_instantiate_alloc_child_id(
-    ecs_world_t *world,
-    ecs_entity_t prefab_child,
-    ecs_entity_t root_prefab,
-    ecs_entity_t root_instance)
-{
-    if ((uint32_t)prefab_child < (uint32_t)root_prefab) {
-        return flecs_new_id(world);
-    }
-
-    ecs_entity_t prefab_offset =
-        (uint32_t)prefab_child - (uint32_t)root_prefab;
-    ecs_assert(prefab_offset != 0, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_entity_t instance_child = (uint32_t)root_instance + prefab_offset;
-    ecs_entity_t alive_id = flecs_entities_get_alive(world, instance_child);
-    if (alive_id && flecs_entities_is_alive(world, alive_id)) {
-        return flecs_new_id(world);
-    }
-
-    instance_child = root_instance + prefab_offset;
-    flecs_entities_make_alive(world, instance_child);
-    flecs_entities_ensure(world, instance_child);
-    ecs_assert(ecs_is_alive(world, instance_child), ECS_INTERNAL_ERROR, NULL);
-
-    return instance_child;
-}
-
-void flecs_instantiate_sparse(
-    ecs_world_t *world,
-    const ecs_table_range_t *base_child_range,
-    const ecs_entity_t *base_children,
-    ecs_table_t *instance_table,
-    const ecs_entity_t *instance_children,
-    int32_t row_offset,
-    bool emit_non_sparse)
-{
-    ecs_table_t *base_child_table = base_child_range->table;
-    if (!emit_non_sparse && !(base_child_table->flags & EcsTableHasSparse)) {
-        return;
-    }
-
-    ecs_table_record_t *trs = base_child_table->_->records;
-    int32_t i, count = base_child_table->type.count;
-    for (i = 0; i < count; i ++) {
-        ecs_table_record_t *tr = &trs[i];
-        ecs_component_record_t *cr = tr->hdr.cr;
-
-        bool sparse = cr->flags & EcsIdSparse;
-        if (!sparse && !emit_non_sparse) {
-            continue;
-        }
-
-        const ecs_type_info_t *ti = cr->type_info;
-        if (!ti) {
-            continue;
-        }
-
-        if (cr->flags & EcsIdOnInstantiateDontInherit) {
-            continue;
-        }
-
-        ecs_id_t id = base_child_table->type.array[i];
-
-        for (int32_t j = 0; j < base_child_range->count; j ++) {
-            ecs_entity_t instance_child = instance_children[j];
-            void *dst_ptr = NULL;
-
-            /* Sparse component values live outside the instance table, so they
-             * are copied here. Non-sparse override values are already in place
-             * (copied when the instance entered its table). */
-            if (sparse) {
-                ecs_entity_t child = base_children[j + base_child_range->offset];
-
-                void *src_ptr = flecs_sparse_get(cr->sparse, ti->size, child);
-                ecs_assert(src_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
-
-                dst_ptr = flecs_sparse_get(
-                    cr->sparse, ti->size, instance_child);
-                ecs_assert(dst_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
-
-                flecs_type_info_copy(dst_ptr, src_ptr, 1, ti);
-            }
-
-            flecs_notify_on_set(
-                world, instance_table, row_offset + j, id, true, dst_ptr);
-        }
-    }
-}
-
-static
-void flecs_instantiate_children(
-    ecs_world_t *world,
-    ecs_entity_t base,
-    ecs_entity_t instance,
-    ecs_table_range_t child_range,
-    const ecs_instantiate_ctx_t *ctx,
-    int32_t depth)
-{
-    if (!child_range.count) {
-        return;
-    }
-
-    ecs_table_t *child_table = child_range.table;
-    ecs_type_t type = child_table->type;
-
-    ecs_entity_t slot_of = 0;
-    ecs_entity_t *ids = type.array;
-    int32_t type_count = type.count;
-
-    ecs_record_t *r = flecs_entities_get(world, instance);
-    ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_table_t *table = r->table;
-    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    /* Instantiate child table for each instance */
-
-    /* Create component array for creating the table */
-    ecs_table_diff_t diff = { .added = {0}};
-    diff.added.array = ecs_os_alloca_n(ecs_entity_t, type_count + 1);
-    void **component_data = ecs_os_alloca_n(void*, type_count + 1);
-
-    /* Copy in component identifiers. Find the base index in the component
-     * array, since we'll need this to replace the base with the instance id */
-    int j, i, childof_base_index = -1;
-    for (i = 0; i < type_count; i ++) {
-        ecs_id_t id = ids[i];
-
-        /* If id has DontInherit flag don't inherit it, except for the name
-         * and ChildOf pairs. The name is preserved so applications can lookup
-         * the instantiated children by name. The ChildOf pair is replaced later
-         * with the instance parent. */
-        if ((id != ecs_pair(ecs_id(EcsIdentifier), EcsName)) &&
-            ECS_PAIR_FIRST(id) != EcsChildOf) 
-        {
-            ecs_table_record_t *tr = &child_table->_->records[i];
-            ecs_component_record_t *cr = tr->hdr.cr;
-            if (cr->flags & EcsIdOnInstantiateDontInherit) {
-                continue;
-            }
-        }
-
-        /* If child is a slot, keep track of which parent to add it to, but
-         * don't add slot relationship to child of instance. If this is a child
-         * of a prefab, keep the SlotOf relationship intact. */
-        if (!(table->flags & EcsTableIsPrefab)) {
-            if (ECS_IS_PAIR(id) && ECS_PAIR_FIRST(id) == EcsSlotOf) {
-                ecs_assert(slot_of == 0, ECS_INTERNAL_ERROR, NULL);
-                slot_of = ecs_pair_second(world, id);
-                continue;
-            }
-        }
-
-        /* Keep track of the element that creates the ChildOf relationship with
-         * the prefab parent. We need to replace this element to make sure the
-         * created children point to the instance and not the prefab */ 
-        if (ECS_HAS_RELATION(id, EcsChildOf) && 
-           (ECS_PAIR_SECOND(id) == (uint32_t)base)) {
-            childof_base_index = diff.added.count;
-        }
-
-        /* If this is a pure override, make sure we have a concrete version of the
-         * component. This relies on the fact that overrides always come after
-         * concrete components in the table type so we can check the components
-         * that have already been added to the child table type. */
-        if (ECS_HAS_ID_FLAG(id, AUTO_OVERRIDE)) {
-            ecs_id_t concreteId = id & ~ECS_AUTO_OVERRIDE;
-            int32_t insert_index = flecs_child_type_insert(
-                &diff.added, component_data, concreteId);
-            if (childof_base_index != -1 && insert_index != -1 &&
-                insert_index <= childof_base_index)
-            {
-                childof_base_index ++;
-            }
-            continue;
-        }
-
-        int32_t column = ecs_table_type_to_column_index(child_table, i);
-        if (column != -1) {
-            component_data[diff.added.count] = ecs_table_get_column(
-                child_table, column, child_range.offset);
-        } else {
-            component_data[diff.added.count] = NULL;
-        }
-
-        diff.added.array[diff.added.count] = id;
-        diff.added.count ++;
-        diff.added_flags |= flecs_id_flags_get(world, id);
-    }
-
-    /* Table must contain children of base */
-    ecs_assert(childof_base_index != -1, ECS_INTERNAL_ERROR, NULL);
-
-    /* If children are added to a prefab, make sure they are prefabs too */
-    if (table->flags & EcsTableIsPrefab) {
-        if (flecs_child_type_insert(
-            &diff.added, component_data, EcsPrefab) != -1) 
-        {
-            childof_base_index ++;
-        }
-    }
-
-    /* Instantiate the prefab child table for each new instance */
-    ecs_entity_t *child_ids = flecs_walloc_n(
-        world, ecs_entity_t, child_range.count);
-    ecs_table_t *i_table = NULL;
-
-    /* Replace ChildOf element in the component array with instance id */
-    diff.added.array[childof_base_index] = ecs_pair(EcsChildOf, instance);
-
-    /* Find or create table */
-    i_table = flecs_table_find_or_create(world, &diff.added);
-
-    ecs_assert(i_table != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(i_table->type.count == diff.added.count,
-        ECS_INTERNAL_ERROR, NULL);
-
-    /* The instance is trying to instantiate from a base that is also
-     * its parent. This would cause the hierarchy to instantiate itself,
-     * which would cause infinite recursion. */
-    const ecs_entity_t *children = ecs_table_entities(child_table);
-
-#ifdef FLECS_DEBUG
-    for (j = 0; j < child_range.count; j ++) {
-        ecs_entity_t child = children[j + child_range.offset];        
-        ecs_check(child != instance, ECS_INVALID_PARAMETER, 
-            "cycle detected in IsA relationship");
-    }
-#else
-    /* Bit of boilerplate to ensure that we don't get warnings about the
-     * error label not being used. */
-    ecs_check(true, ECS_INVALID_OPERATION, NULL);
-#endif
-
-    /* Attempt to reserve ids for children that have the same offset from
-     * the instance as from the base prefab. This ensures stable ids for
-     * instance children, even across networked applications. */
-    ecs_instantiate_ctx_t ctx_cur = {base, instance};
-    if (ctx) {
-        ctx_cur = *ctx;
-    }
-
-    for (j = 0; j < child_range.count; j ++) {
-        ecs_entity_t prefab_child = children[j + child_range.offset];
-        child_ids[j] = flecs_instantiate_alloc_child_id(
-            world, prefab_child, ctx_cur.root_prefab, ctx_cur.root_instance);
-    }
-
-    /* Create children */
-    int32_t child_row;
-    diff.added_flags |= EcsTableEdgeReparent;
-    const ecs_entity_t *i_children = flecs_bulk_new(world, i_table, child_ids,
-        &diff.added, child_range.count, component_data, false, &child_row, &diff);
-
-    flecs_instantiate_sparse(
-        world, &child_range, children, i_table, i_children, child_row, false);
-
-    /* If children are slots, add slot relationships to parent */
-    if (slot_of) {
-        for (j = 0; j < child_range.count; j ++) {
-            ecs_entity_t child = children[j + child_range.offset];
-            ecs_entity_t i_child = i_children[j];
-            flecs_instantiate_slot(
-                world, base, instance, slot_of, child, i_child);
-        }
-    }
-
-    /* If prefab child table has children itself, recursively instantiate */
-    for (j = 0; j < child_range.count; j ++) {
-        ecs_entity_t child = children[j + child_range.offset];
-        flecs_instantiate(world, child, i_children[j], &ctx_cur, depth + 1);
-    }
-
-    flecs_wfree_n(world, ecs_entity_t, child_range.count, child_ids);
-error:
-    return;    
-}
-
-void flecs_instantiate_dont_fragment(
-    ecs_world_t *world,
-    ecs_entity_t base,
-    ecs_entity_t instance)
-{
-    ecs_component_record_t *cur = world->cr_non_fragmenting_head;
-
-    while (cur) {
-        ecs_assert(cur->flags & EcsIdSparse, ECS_INTERNAL_ERROR, NULL);
-        if (cur->sparse && !(cur->flags & EcsIdOnInstantiateInherit) && 
-            !ecs_id_is_wildcard(cur->id)) 
-        {
-            if (flecs_component_sparse_has(cur, base)) {
-                void *base_ptr = flecs_component_sparse_get(
-                    world, cur, NULL, base);
-                const ecs_type_info_t *ti = cur->type_info;
-
-                ecs_record_t *r = flecs_entities_get(world, instance);
-
-                void *ptr = NULL;
-                bool is_new = flecs_sparse_on_add_cr(world,
-                    r->table, ECS_RECORD_TO_ROW(r->row), cur, true, &ptr);
-
-                if (ti) {
-                    ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
-                    flecs_type_info_copy(ptr, base_ptr, 1, ti);
-                }
-
-                if (is_new) {
-                    ecs_type_t added = { .array = &cur->id, .count = 1 };
-                    flecs_emit(world, world, &(ecs_event_desc_t){
-                        .event = EcsOnAdd,
-                        .ids = &added,
-                        .table = r->table,
-                        .offset = ECS_RECORD_TO_ROW(r->row),
-                        .count = 1,
-                        .observable = world,
-                        .flags = EcsEventNoOnSet
-                    });
-                }
-
-                if (ti) {
-                    flecs_notify_on_set(
-                        world, r->table, ECS_RECORD_TO_ROW(r->row),
-                        cur->id, true, ptr);
-                }
-            }
-        }
-
-        cur = cur->non_fragmenting.next;
-    }
-}
-
-static
-void flecs_instantiate_override_dont_fragment(
-    ecs_world_t *world,
-    ecs_table_t *base_table,
-    ecs_entity_t instance)
-{
-    int32_t i, type_count = base_table->type.count;
-    for (i = 0; i < type_count; i ++) {
-        ecs_id_t id = base_table->type.array[i];
-        if (!(id & ECS_AUTO_OVERRIDE)) {
-            continue;
-        }
-
-        id &= ~ECS_AUTO_OVERRIDE;
-
-        ecs_flags32_t flags = flecs_component_get_flags(world, id);
-        if (!(flags & EcsIdDontFragment)) {
-            continue;
-        }
-
-        ecs_add_id(world, instance, id);
-    }
-}
-
-void flecs_instantiate(
-    ecs_world_t *world,
-    ecs_entity_t base,
-    ecs_entity_t instance,
-    const ecs_instantiate_ctx_t *ctx,
-    int32_t depth)
-{
-    ecs_record_t *record = flecs_entities_get_any(world, base);
-    ecs_table_t *base_table = record->table;
-    ecs_assert(base_table != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_check(depth < FLECS_DAG_DEPTH_MAX, ECS_CYCLE_DETECTED, 
-        "likely cycle detected during instantiation of base %s",
-        flecs_errstr(ecs_get_path(world, base)));
-
-    if (base_table->flags & EcsTableOverrideDontFragment) {
-        flecs_instantiate_override_dont_fragment(
-            world, base_table, instance);
-    }
-
-    /* If base has non-fragmenting components, add to instance */
-    if (record->row & EcsEntityHasDontFragment) {
-        flecs_instantiate_dont_fragment(world, base, instance);
-    }
-
-    if (!(base_table->flags & EcsTableIsPrefab)) {
-        /* Don't instantiate children from base entities that aren't prefabs */
-        return;
-    }
-
-    ecs_component_record_t *cr = flecs_components_get(world, ecs_childof(base));
-    if (cr) {
-        ecs_os_perf_trace_push("flecs.instantiate");
-
-        if (cr->flags & EcsIdOrderedChildren) {
-            if (flecs_component_has_non_fragmenting_childof(cr)) {
-                EcsTreeSpawner *ts = flecs_get_mut(
-                    world, base, ecs_id(EcsTreeSpawner), record,
-                    sizeof(EcsTreeSpawner)).ptr;
-                if (!ts) {
-                    ts = flecs_prefab_spawner_build(world, base);
-                }
-
-                if (ts) {
-                    flecs_spawner_instantiate(world, ts, base, instance, ctx);
-                }
-
-                ecs_os_perf_trace_pop("flecs.instantiate");
-                return;
-            }
-
-            ecs_vec_t *children_vec = &cr->pair->ordered_children;
-            int32_t i, count = ecs_vec_count(children_vec);
-            ecs_entity_t *children = ecs_vec_first(children_vec);
-            for (i = 0; i < count; i ++) {
-                ecs_entity_t child = children[i];
-                ecs_table_range_t range = flecs_range_from_entity(world, child);
-
-                if (!(range.table->flags & EcsTableHasChildOf)) {
-                    continue;
-                }
-
-                flecs_instantiate_children(
-                    world, base, instance, range, ctx, depth);
-            }
-        } else {
-            ecs_table_cache_iter_t it;
-            if (flecs_table_cache_iter((ecs_table_cache_t*)cr, &it, EcsTableEmpty|EcsTableNotEmpty)) {
-                const ecs_table_cache_elem_t *elem;
-                while ((elem = flecs_table_cache_next(&it))) {
-                    ecs_table_range_t range = {
-                        elem->table,
-                        0,
-                        ecs_table_count(elem->table)
-                    };
-
-                    flecs_instantiate_children(
-                        world, base, instance, range, ctx, depth);
-                }
-            }
-        }
-
-        ecs_os_perf_trace_pop("flecs.instantiate");
-    }
-error:
-    return;
 }
 
 /* Utility macros to enforce consistency when initializing iterator fields */
@@ -18564,6 +17724,7 @@ void flecs_component_mark_for_delete(
                 }
                 cur->flags |= EcsIdMarkedForDelete;
 
+#ifdef FLECS_CACHED_QUERIES
                 /* If relationship is traversable and is removed upon deletion
                  * of a target, we may have to rematch queries. If a query 
                  * matched for example (IsA, A) -> (IsA, B) -> Position, and 
@@ -18585,6 +17746,7 @@ void flecs_component_mark_for_delete(
                         }
                     }
                 }
+#endif
             }
         }
     }
@@ -18690,6 +17852,7 @@ void flecs_remove_from_table(
                 .removed_flags = removed_flags
             };
 
+#ifdef FLECS_CACHED_QUERIES
             if (table->flags & EcsTableHasTraversable) {
                 for (i = 0; i < remove_count; i ++) {
                     flecs_update_component_monitors(world, NULL, &(ecs_type_t){
@@ -18698,6 +17861,7 @@ void flecs_remove_from_table(
                     });
                 }
             }
+#endif
 
             flecs_actions_move_remove(world, table, dst_table, 0, table_count, &diff);
             ecs_log_pop_3();
@@ -20470,7 +19634,9 @@ void flecs_stage_merge(
         }
     }
 
+#ifdef FLECS_CACHED_QUERIES
     flecs_eval_component_monitors(world);
+#endif
 
     if (measure_frame_time) {
         world->info.merge_time_total += (ecs_ftime_t)ecs_time_measure(&t_start);
@@ -20525,7 +19691,9 @@ ecs_stage_t* flecs_stage_new(
     flecs_ballocator_init_n(&stage->allocators.cmd_entry_chunk, ecs_cmd_entry_t,
         FLECS_SPARSE_PAGE_SIZE);
     flecs_ballocator_init_t(&stage->allocators.query_impl, ecs_query_impl_t);
+#ifdef FLECS_CACHED_QUERIES
     flecs_ballocator_init_t(&stage->allocators.query_cache, ecs_query_cache_t);
+#endif
 
     ecs_allocator_t *a = &stage->allocator;
     ecs_vec_init_t(a, &stage->post_frame_actions, ecs_action_elem_t, 0);
@@ -20570,7 +19738,9 @@ void flecs_stage_free(
     flecs_stack_fini(&stage->allocators.iter_stack);
     flecs_ballocator_fini(&stage->allocators.cmd_entry_chunk);
     flecs_ballocator_fini(&stage->allocators.query_impl);
+#ifdef FLECS_CACHED_QUERIES
     flecs_ballocator_fini(&stage->allocators.query_cache);
+#endif
     flecs_allocator_fini(&stage->allocator);
 
     ecs_os_free(stage);
@@ -20903,414 +20073,6 @@ bool ecs_is_defer_suspended(
     return stage->defer < 0;
 error:
     return false;
-}
-
-static
-void flecs_tree_spawner_release_tables(
-    ecs_vec_t *v)
-{
-    int32_t i, count = ecs_vec_count(v);
-    ecs_tree_spawner_child_t *elems = ecs_vec_first(v);
-    for (i = 0; i < count; i ++) {
-        ecs_tree_spawner_child_t *elem = &elems[i];
-        flecs_table_release(elem->table);
-    }
-}
-
-static
-void EcsTreeSpawner_free(EcsTreeSpawner *ptr) {
-    int32_t i;
-    for (i = 0; i < FLECS_TREE_SPAWNER_DEPTH_CACHE_SIZE; i ++) {
-        flecs_tree_spawner_release_tables(&ptr->data[i].children);
-        ecs_vec_fini_t(NULL, &ptr->data[i].children, ecs_tree_spawner_child_t);
-    }
-}
-
-static ECS_COPY(EcsTreeSpawner, dst, src, {
-    (void)dst;
-    (void)src;
-    ecs_abort(ECS_INVALID_OPERATION, "TreeSpawner component cannot be copied");
-})
-
-static ECS_MOVE(EcsTreeSpawner, dst, src, {
-    EcsTreeSpawner_free(dst);
-    *dst = *src;
-    ecs_os_zeromem(src);
-})
-
-static ECS_DTOR(EcsTreeSpawner, ptr, {
-    EcsTreeSpawner_free(ptr);
-})
-
-static
-ecs_type_t flecs_prefab_spawner_build_type(
-    ecs_world_t *world,
-    ecs_entity_t child,
-    ecs_table_t *table,
-    int32_t depth)
-{
-    ecs_type_t dst = {0};
-    ecs_type_t *src = &table->type;
-
-    flecs_type_add(world, &dst, ecs_id(EcsParent));
-
-    int32_t i, count = src->count;
-    for (i = 0; i < count; i ++) {
-        ecs_id_t id = src->array[i];
-        ecs_table_record_t *tr = &table->_->records[i];
-        ecs_component_record_t *cr = tr->hdr.cr;
-
-        if (cr->flags & 
-            (EcsIdOnInstantiateDontInherit|EcsIdOnInstantiateInherit)) 
-        {
-            continue;
-        }
-
-        if (id & ECS_AUTO_OVERRIDE) {
-            /* If AUTO_OVERRIDE flag is set, add component to instances. This 
-             * allows instances to end up with an owned component, even if the
-             * component has the (OnInstantiate, Inherit) trait.
-             * Additionally, this also allows for adding components to instances
-             * that aren't copyable, since a prefab can have a component with
-             * AUTO_OVERRIDE flag, but not have the actual component (which then
-             * isn't copied). */
-            flecs_type_add(world, &dst, id & ~ECS_AUTO_OVERRIDE);
-            continue;
-        }
-
-        ecs_entity_t rel = ECS_PAIR_FIRST(id);
-        if (rel == EcsIsA) {
-            /* If prefab child has IsA relationships, they will be inherited 
-             * through the (IsA, prefab_child) relationship (added below). */
-            continue;
-        }
-
-        if (rel == EcsParentDepth) {
-            /* Replace depth value with the normalized depth for spawner. */
-            id = ecs_value_pair(EcsParentDepth, depth);
-        }
-
-        flecs_type_add(world, &dst, id);
-    }
-
-    flecs_type_add(world, &dst, ecs_isa(child));
-
-    return dst;
-}
-
-static
-void flecs_prefab_spawner_build_from_cr(
-    ecs_world_t *world,
-    ecs_component_record_t *cr,
-    ecs_vec_t *spawner,
-    int32_t parent_index,
-    int32_t depth)
-{
-    ecs_vec_t *children_vec = &cr->pair->ordered_children;
-    int32_t i, count = ecs_vec_count(children_vec);
-    ecs_entity_t *children = ecs_vec_first(children_vec);
-    for (i = 0; i < count; i ++) {
-        ecs_entity_t child = children[i];
-        ecs_record_t *r = flecs_entities_get(world, child);
-        ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_table_t *table = r->table;
-        ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-
-        if (!(table->flags & EcsTableHasParent)) {
-            continue;
-        }
-
-        ecs_tree_spawner_child_t *elem = ecs_vec_append_t(
-            NULL, spawner, ecs_tree_spawner_child_t);
-        elem->parent_index = parent_index;
-        elem->child_name = NULL;
-        elem->child = (uint32_t)child;
-
-        ecs_type_t type = flecs_prefab_spawner_build_type(
-            world, child, table, depth);
-        elem->table = flecs_table_find_or_create(world, &type);
-        ecs_assert(elem->table != NULL, ECS_INTERNAL_ERROR, NULL);
-        flecs_type_free(world, &type);
-
-        /* Make sure table doesn't get freed by shrink() */
-        flecs_table_keep(elem->table);
-
-        if (!(r->row & EcsEntityIsTraversable)) {
-            continue;
-        }
-
-        ecs_component_record_t *child_cr = flecs_components_get(
-            world, ecs_childof(child));
-        if (!child_cr) {
-            continue;
-        }
-
-        flecs_prefab_spawner_build_from_cr(
-            world, child_cr, spawner, ecs_vec_count(spawner), depth + 1);
-    }
-}
-
-static
-void flecs_spawner_transpose_depth(
-    ecs_world_t *world,
-    EcsTreeSpawner *spawner,
-    ecs_vec_t *dst,
-    int32_t depth)
-{
-    ecs_vec_t *src = &spawner->data[0].children;
-
-    int32_t i, count = ecs_vec_count(src);
-    ecs_vec_set_count_t(NULL, dst, ecs_tree_spawner_child_t, count);
-
-    for (i = 0; i < count; i ++) {
-        ecs_tree_spawner_child_t *src_elem = ecs_vec_get_t(
-            src, ecs_tree_spawner_child_t, i);
-        ecs_tree_spawner_child_t *dst_elem = ecs_vec_get_t(
-            dst, ecs_tree_spawner_child_t, i);
-
-        dst_elem->child_name = src_elem->child_name;
-        dst_elem->parent_index = src_elem->parent_index;
-        dst_elem->child = src_elem->child;
-        
-        /* Get depth for source element at depth 0 */
-        int32_t src_depth = flecs_relation_depth(
-            world, EcsChildOf, src_elem->table);
-
-        /* Get table for correct depth */
-        ecs_id_t depth_pair = ecs_value_pair(EcsParentDepth, src_depth + depth);
-        ecs_table_diff_t diff = ECS_TABLE_DIFF_INIT;
-
-        dst_elem->table = flecs_table_traverse_add(
-            world, src_elem->table, &depth_pair, &diff);
-        
-        flecs_table_keep(dst_elem->table);
-    }
-}
-
-#ifdef FLECS_DEBUG
-static
-bool flecs_tree_spawner_is_empty(
-    const EcsTreeSpawner *ts)
-{
-    int32_t i;
-    for (i = 0; i < FLECS_TREE_SPAWNER_DEPTH_CACHE_SIZE; i ++) {
-        if (ecs_vec_count(&ts->data[i].children)) {
-            return false;
-        }
-    }
-    return true;
-}
-
-void flecs_tree_spawner_assert_not_instantiated(
-    ecs_world_t *world,
-    ecs_entity_t parent)
-{
-    if (world->flags & EcsWorldFini) {
-        return;
-    }
-
-    ecs_record_t *r = flecs_entities_get(world, parent);
-    if (!r || !r->table || !(r->table->flags & EcsTableIsPrefab)) {
-        return;
-    }
-
-    ecs_entity_t cur = parent;
-    while (cur) {
-        r = flecs_entities_get(world, cur);
-        if (!r || !r->table) {
-            break;
-        }
-
-        const EcsTreeSpawner *ts = ecs_get(world, cur, EcsTreeSpawner);
-        if (ts != NULL && !flecs_tree_spawner_is_empty(ts)) {
-            char *path = ecs_get_path(world, cur);
-            ecs_abort(ECS_INVALID_OPERATION,
-                "cannot change children of prefab '%s' after it has been "
-                "instantiated", path);
-        }
-
-        cur = ecs_get_parent(world, cur);
-    }
-}
-#endif
-
-EcsTreeSpawner* flecs_prefab_spawner_build(
-    ecs_world_t *world,
-    ecs_entity_t base)
-{    
-    ecs_component_record_t *cr = flecs_components_get(world, ecs_childof(base));
-    if (!cr) {
-        return NULL;
-    }
-
-    ecs_vec_t spawner;
-    ecs_vec_init_t(NULL, &spawner, ecs_tree_spawner_child_t, 0);
-    flecs_prefab_spawner_build_from_cr(world, cr, &spawner, 0, 1);
-
-    base = flecs_entities_get_alive(world, base);
-    EcsTreeSpawner *ts = ecs_ensure(world, base, EcsTreeSpawner);
-    ts->data[0].children = spawner;
-
-    /* Initialize remaining vectors */
-    int32_t i;
-    for (i = 1; i < FLECS_TREE_SPAWNER_DEPTH_CACHE_SIZE; i ++) {
-        ecs_vec_init_t(
-            NULL, &ts->data[i].children, ecs_tree_spawner_child_t, 0);
-    }
-
-    return ts;
-}
-
-void flecs_spawner_instantiate(
-    ecs_world_t *world,
-    EcsTreeSpawner *spawner,
-    ecs_entity_t base,
-    ecs_entity_t instance,
-    const ecs_instantiate_ctx_t *ctx)
-{
-    ecs_record_t *r_instance = flecs_entities_get(world, instance);
-    int32_t depth = flecs_relation_depth(world, EcsChildOf, r_instance->table);
-    int32_t i, child_count = ecs_vec_count(&spawner->data[0].children);
-
-    bool is_prefab = r_instance->table->flags & EcsTableIsPrefab;
-
-    ecs_instantiate_ctx_t ctx_cur = {base, instance};
-    if (ctx) {
-        ctx_cur = *ctx;
-    }
-
-    /* Use cached spawner for depth if available. */
-    ecs_vec_t *vec, tmp_vec;
-    if (depth < FLECS_TREE_SPAWNER_DEPTH_CACHE_SIZE) {
-        vec = &spawner->data[depth].children;
-    } else {
-        vec = &tmp_vec;
-        ecs_vec_init_t(NULL, vec, ecs_tree_spawner_child_t, 0);
-    }
-
-    if (depth && ecs_vec_count(vec) != child_count) {
-        /* Vector for depth is not yet initialized, create it. */
-        flecs_spawner_transpose_depth(world, spawner, vec, depth);
-    }
-
-    ecs_tree_spawner_child_t *spawn_children = ecs_vec_first(vec);
-    ecs_vec_set_min_count_t(&world->allocator, &world->allocators.tree_spawner,
-        ecs_entity_t, child_count + 1);
-    ecs_entity_t *parents = ecs_vec_first(&world->allocators.tree_spawner);
-    parents[0] = instance;
-
-    ecs_component_record_t *cr = NULL;
-    ecs_entity_t old_parent = 0;
-
-    ecs_assert(ecs_vec_count(vec) == child_count, ECS_INTERNAL_ERROR, NULL);
-
-    for (i = 0; i < child_count; i ++) {
-        ecs_tree_spawner_child_t *spawn_child = &spawn_children[i];
-        ecs_entity_t entity = parents[i + 1] = flecs_instantiate_alloc_child_id(
-            world, spawn_child->child,
-            ctx_cur.root_prefab, ctx_cur.root_instance);
-        ecs_table_t *table = spawn_child->table;
-        ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-
-        const char *child_name = NULL;
-        if (is_prefab) {
-            ecs_table_diff_t diff = ECS_TABLE_DIFF_INIT;
-            ecs_id_t id = EcsPrefab;
-            table = flecs_table_traverse_add(world, table, &id, &diff);
-
-            child_name = ecs_get_name(world,
-                flecs_entities_get_alive(world, spawn_child->child));
-            if (child_name) {
-                id = ecs_pair_t(EcsIdentifier, EcsName);
-                table = flecs_table_traverse_add(world, table, &id, &diff);
-            }
-        }
-
-        ecs_record_t *r = flecs_entities_get(world, entity);
-        ecs_flags32_t flags = table->flags & EcsTableAddEdgeFlags;
-
-        ecs_table_diff_t table_diff = { 
-            .added = table->type,
-            .added_flags = flags
-        };
-
-        ecs_entity_t parent = parents[spawn_child->parent_index];
-        ecs_assert(parent != 0, ECS_INTERNAL_ERROR, NULL);
-        if (parent != old_parent) {
-            cr = flecs_components_ensure(world, ecs_childof(parent));
-            old_parent = parent;
-        }
-
-        ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
-
-        int32_t row = ecs_table_count(table);
-        r->table = table;
-        r->row = (uint32_t)row;
-        flecs_table_append(world, table, entity, true, true);
-
-        int32_t parent_column = table->component_map[ecs_id(EcsParent)];
-        ecs_assert(parent_column != 0, ECS_INTERNAL_ERROR, NULL);
-        EcsParent *parent_ptr = table->data.columns[parent_column - 1].data;
-        parent_ptr = &parent_ptr[row];
-        parent_ptr->value = parent;
-
-        flecs_actions_new(world, table, row, 1, &table_diff, EcsEventNoOnSet,
-            true, EcsWildcard);
-
-        if (is_prefab && child_name) {
-            ecs_set_name(world, entity, child_name);
-        }
-
-        flecs_add_non_fragmenting_child_w_records(world, parent, entity, cr, r);
-
-        ecs_entity_t base_child = spawn_child->child;
-        ecs_record_t *spawn_r = flecs_entities_get_any(
-            world, spawn_child->child);
-        ecs_assert(spawn_r != NULL, ECS_INTERNAL_ERROR, NULL);
-
-        ecs_table_range_t base_range = {
-            .table = spawn_r->table,
-            .offset = 0,
-            .count = 1 };
-        flecs_instantiate_sparse(world, &base_range, &base_child,
-            r->table, &entity, ECS_RECORD_TO_ROW(r->row), true);
-
-        if (spawn_r->row & EcsEntityHasDontFragment) {
-            flecs_instantiate_dont_fragment(
-                world, spawn_child->child, entity);
-        }
-    }
-
-    if (vec == &tmp_vec) {
-        ecs_vec_fini_t(NULL, vec, ecs_tree_spawner_child_t);
-    }
-}
-
-void flecs_fini_tree_spawners(
-    ecs_world_t *world)
-{
-    ecs_iter_t it = ecs_each(world, EcsTreeSpawner);
-    while (ecs_each_next(&it)) {
-        EcsTreeSpawner *t = ecs_field(&it, EcsTreeSpawner, 0);
-        int32_t i;
-        for (i = 0; i < it.count; i ++) {
-            EcsTreeSpawner_free(&t[i]);
-        }
-    }
-}
-
-void flecs_bootstrap_spawner(
-    ecs_world_t *world)
-{
-    flecs_type_info_init(world, EcsTreeSpawner, {
-        .ctor = flecs_default_ctor,
-        .copy = ecs_copy(EcsTreeSpawner),
-        .move = ecs_move(EcsTreeSpawner),
-        .dtor = ecs_dtor(EcsTreeSpawner)
-    });
-
-    ecs_add_pair(world, ecs_id(EcsTreeSpawner), 
-        EcsOnInstantiate, EcsDontInherit);
 }
 
 #ifdef FLECS_DEBUG
@@ -22241,7 +21003,9 @@ const ecs_entity_t EcsWorld =                       FLECS_HI_COMPONENT_ID + 3;
 const ecs_entity_t EcsFlecs =                       FLECS_HI_COMPONENT_ID + 4;
 const ecs_entity_t EcsFlecsCore =                   FLECS_HI_COMPONENT_ID + 5;
 const ecs_entity_t EcsModule =                      FLECS_HI_COMPONENT_ID + 7;
+#ifdef FLECS_PREFAB
 const ecs_entity_t EcsPrefab =                      FLECS_HI_COMPONENT_ID + 9;
+#endif
 const ecs_entity_t EcsDisabled =                    FLECS_HI_COMPONENT_ID + 10;
 const ecs_entity_t EcsNotQueryable =                FLECS_HI_COMPONENT_ID + 11;
 
@@ -22257,44 +21021,47 @@ const ecs_entity_t EcsVariable =                    FLECS_HI_COMPONENT_ID + 17;
 /* Traits */
 const ecs_entity_t EcsTransitive =                  FLECS_HI_COMPONENT_ID + 18;
 const ecs_entity_t EcsReflexive =                   FLECS_HI_COMPONENT_ID + 19;
-const ecs_entity_t EcsSymmetric =                   FLECS_HI_COMPONENT_ID + 20;
-const ecs_entity_t EcsFinal =                       FLECS_HI_COMPONENT_ID + 21;
-const ecs_entity_t EcsInheritable =                 FLECS_HI_COMPONENT_ID + 22;
-const ecs_entity_t EcsSingleton =                   FLECS_HI_COMPONENT_ID + 23;
-
-const ecs_entity_t EcsOnInstantiate =               FLECS_HI_COMPONENT_ID + 24;
-const ecs_entity_t EcsOverride =                    FLECS_HI_COMPONENT_ID + 25;
-const ecs_entity_t EcsInherit =                     FLECS_HI_COMPONENT_ID + 26;
-const ecs_entity_t EcsDontInherit =                 FLECS_HI_COMPONENT_ID + 27;
-const ecs_entity_t EcsPairIsTag =                   FLECS_HI_COMPONENT_ID + 28;
-const ecs_entity_t EcsExclusive =                   FLECS_HI_COMPONENT_ID + 29;
-const ecs_entity_t EcsAcyclic =                     FLECS_HI_COMPONENT_ID + 30;
-const ecs_entity_t EcsTraversable =                 FLECS_HI_COMPONENT_ID + 31;
-const ecs_entity_t EcsWith =                        FLECS_HI_COMPONENT_ID + 32;
-const ecs_entity_t EcsOneOf =                       FLECS_HI_COMPONENT_ID + 33;
-const ecs_entity_t EcsCanToggle =                   FLECS_HI_COMPONENT_ID + 34;
-const ecs_entity_t EcsTrait =                       FLECS_HI_COMPONENT_ID + 35;
-const ecs_entity_t EcsRelationship =                FLECS_HI_COMPONENT_ID + 36;
-const ecs_entity_t EcsTarget =                      FLECS_HI_COMPONENT_ID + 37;
+const ecs_entity_t EcsInheritable =                 FLECS_HI_COMPONENT_ID + 20;
+const ecs_entity_t EcsOnInstantiate =               FLECS_HI_COMPONENT_ID + 21;
+const ecs_entity_t EcsOverride =                    FLECS_HI_COMPONENT_ID + 22;
+const ecs_entity_t EcsInherit =                     FLECS_HI_COMPONENT_ID + 23;
+const ecs_entity_t EcsDontInherit =                 FLECS_HI_COMPONENT_ID + 24;
+const ecs_entity_t EcsPairIsTag =                   FLECS_HI_COMPONENT_ID + 25;
+const ecs_entity_t EcsExclusive =                   FLECS_HI_COMPONENT_ID + 26;
+const ecs_entity_t EcsTraversable =                 FLECS_HI_COMPONENT_ID + 27;
+const ecs_entity_t EcsWith =                        FLECS_HI_COMPONENT_ID + 28;
+const ecs_entity_t EcsCanToggle =                   FLECS_HI_COMPONENT_ID + 29;
 
 /* Builtin relationships */
-const ecs_entity_t EcsChildOf =                     FLECS_HI_COMPONENT_ID + 38;
-const ecs_entity_t EcsIsA =                         FLECS_HI_COMPONENT_ID + 39;
-const ecs_entity_t EcsDependsOn =                   FLECS_HI_COMPONENT_ID + 40;
+const ecs_entity_t EcsChildOf =                     FLECS_HI_COMPONENT_ID + 30;
+const ecs_entity_t EcsIsA =                         FLECS_HI_COMPONENT_ID + 31;
+const ecs_entity_t EcsDependsOn =                   FLECS_HI_COMPONENT_ID + 32;
 
 /* Identifier tags */
-const ecs_entity_t EcsName =                        FLECS_HI_COMPONENT_ID + 41;
-const ecs_entity_t EcsSymbol =                      FLECS_HI_COMPONENT_ID + 42;
-const ecs_entity_t EcsAlias =                       FLECS_HI_COMPONENT_ID + 43;
+const ecs_entity_t EcsName =                        FLECS_HI_COMPONENT_ID + 33;
+const ecs_entity_t EcsSymbol =                      FLECS_HI_COMPONENT_ID + 34;
+const ecs_entity_t EcsAlias =                       FLECS_HI_COMPONENT_ID + 35;
 
 /* Events */
-const ecs_entity_t EcsOnAdd =                       FLECS_HI_COMPONENT_ID + 44;
-const ecs_entity_t EcsOnRemove =                    FLECS_HI_COMPONENT_ID + 45;
-const ecs_entity_t EcsOnSet =                       FLECS_HI_COMPONENT_ID + 46;
-const ecs_entity_t EcsOnDelete =                    FLECS_HI_COMPONENT_ID + 47;
-const ecs_entity_t EcsOnDeleteTarget =              FLECS_HI_COMPONENT_ID + 48;
-const ecs_entity_t EcsOnTableCreate =               FLECS_HI_COMPONENT_ID + 49;
-const ecs_entity_t EcsOnTableDelete =               FLECS_HI_COMPONENT_ID + 50;
+const ecs_entity_t EcsOnAdd =                       FLECS_HI_COMPONENT_ID + 36;
+const ecs_entity_t EcsOnRemove =                    FLECS_HI_COMPONENT_ID + 37;
+const ecs_entity_t EcsOnSet =                       FLECS_HI_COMPONENT_ID + 38;
+const ecs_entity_t EcsOnDelete =                    FLECS_HI_COMPONENT_ID + 39;
+const ecs_entity_t EcsOnDeleteTarget =              FLECS_HI_COMPONENT_ID + 40;
+const ecs_entity_t EcsOnTableCreate =               FLECS_HI_COMPONENT_ID + 41;
+const ecs_entity_t EcsOnTableDelete =               FLECS_HI_COMPONENT_ID + 42;
+
+/* Constraint traits */
+#ifdef FLECS_CONSTRAINT_TRAITS
+const ecs_entity_t EcsAcyclic =                     FLECS_HI_COMPONENT_ID + 43;
+const ecs_entity_t EcsFinal =                       FLECS_HI_COMPONENT_ID + 44;
+const ecs_entity_t EcsOneOf =                       FLECS_HI_COMPONENT_ID + 45;
+const ecs_entity_t EcsRelationship =                FLECS_HI_COMPONENT_ID + 46;
+const ecs_entity_t EcsTarget =                      FLECS_HI_COMPONENT_ID + 47;
+const ecs_entity_t EcsTrait =                       FLECS_HI_COMPONENT_ID + 48;
+const ecs_entity_t EcsSingleton =                   FLECS_HI_COMPONENT_ID + 49;
+const ecs_entity_t EcsSymmetric =                   FLECS_HI_COMPONENT_ID + 50;
+#endif
 
 /* Timers */
 const ecs_entity_t ecs_id(EcsTickSource) =          FLECS_HI_COMPONENT_ID + 51;
@@ -22589,164 +21356,6 @@ ecs_stage_t* flecs_stage_from_world(
     return ECS_CONST_CAST(ecs_stage_t*, world);
 }
 
-/* Evaluate component monitor. If a monitored entity changed, it will have set a
- * flag in one of the world's component monitors. Queries can register
- * themselves with component monitors to determine whether they need to rematch
- * with tables. */
-static
-void flecs_eval_component_monitor(
-    ecs_world_t *world)
-{
-    flecs_poly_assert(world, ecs_world_t);
-
-    if (!world->monitors.is_dirty) {
-        return;
-    }
-
-    world->info.eval_comp_monitors_total ++;
-
-    ecs_os_perf_trace_push("flecs.component_monitor.eval");
-
-    world->monitors.is_dirty = false;
-
-    ecs_map_iter_t it = ecs_map_iter(&world->monitors.monitors);
-    while (ecs_map_next(&it)) {
-        ecs_monitor_t *m = ecs_map_ptr(&it);
-        if (!m->is_dirty) {
-            continue;
-        }
-
-        m->is_dirty = false;
-
-        int32_t i, count = ecs_vec_count(&m->queries);
-        ecs_query_t **elems = ecs_vec_first(&m->queries);
-        for (i = 0; i < count; i ++) {
-            ecs_query_t *q = elems[i];
-            flecs_poly_assert(q, ecs_query_t);
-            flecs_query_rematch(world, q);
-        }
-    }
-
-    ecs_os_perf_trace_pop("flecs.component_monitor.eval");
-}
-
-static
-void flecs_monitor_mark_dirty(
-    ecs_world_t *world,
-    ecs_entity_t id)
-{
-    ecs_map_t *monitors = &world->monitors.monitors;
-
-    /* Only flag if there are actually monitors registered, so that we
-     * don't waste cycles evaluating monitors if there's no interest */
-    if (ecs_map_is_init(monitors)) {
-        ecs_monitor_t *m = ecs_map_get_deref(monitors, ecs_monitor_t, id);
-        if (m) {
-            if (!world->monitors.is_dirty) {
-                world->monitor_generation ++;
-            }
-            m->is_dirty = true;
-            world->monitors.is_dirty = true;
-        }
-    }
-}
-
-void flecs_monitor_register(
-    ecs_world_t *world,
-    ecs_entity_t id,
-    ecs_query_t *query)
-{
-    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(id != 0, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(query != NULL, ECS_INTERNAL_ERROR, NULL);
-    flecs_poly_assert(query, ecs_query_t);
-
-    ecs_map_t *monitors = &world->monitors.monitors;
-    ecs_map_init_if(monitors, &world->allocator);
-    ecs_monitor_t *m = ecs_map_ensure_alloc_t(monitors, ecs_monitor_t, id);
-    ecs_vec_init_if_t(&m->queries, ecs_query_t*);
-    ecs_query_t **q = ecs_vec_append_t(
-        &world->allocator, &m->queries, ecs_query_t*);
-    *q = query;
-}
-
-void flecs_monitor_unregister(
-    ecs_world_t *world,
-    ecs_entity_t id,
-    ecs_query_t *query)
-{
-    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(id != 0, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(query != NULL, ECS_INTERNAL_ERROR, NULL);
-    flecs_poly_assert(query, ecs_query_t);
-
-    ecs_map_t *monitors = &world->monitors.monitors;
-    if (!ecs_map_is_init(monitors)) {
-        return;
-    }
-
-    ecs_monitor_t *m = ecs_map_get_deref(monitors, ecs_monitor_t, id);
-    if (!m) {
-        return;
-    }
-
-    int32_t i, count = ecs_vec_count(&m->queries);
-    ecs_query_t **queries = ecs_vec_first(&m->queries);
-    for (i = 0; i < count; i ++) {
-        if (queries[i] == query) {
-            ecs_vec_remove_t(&m->queries, ecs_query_t*, i);
-            count --;
-            break;
-        }
-    }
-
-    if (!count) {
-        ecs_vec_fini_t(&world->allocator, &m->queries, ecs_query_t*);
-        ecs_map_remove_free(monitors, id);
-    }
-
-    if (!ecs_map_count(monitors)) {
-        ecs_map_fini(monitors);
-    }
-}
-
-/* Updating component monitors is a relatively expensive operation that only
- * happens for entities that are monitored. The approach balances the amount of
- * processing between the operation on the entity vs the amount of work that
- * needs to be done to rematch queries, as a simple brute force approach does
- * not scale when there are many tables / queries. Therefore we need to do a bit
- * of bookkeeping that is more intelligent than simply flipping a flag */
-static
-void flecs_update_component_monitor_w_array(
-    ecs_world_t *world,
-    ecs_type_t *ids)
-{
-    if (!ids) {
-        return;
-    }
-
-    int i;
-    for (i = 0; i < ids->count; i ++) {
-        ecs_entity_t id = ids->array[i];
-
-        if (ECS_HAS_ID_FLAG(id, PAIR)) {
-            flecs_monitor_mark_dirty(world, 
-                ecs_pair(ECS_PAIR_FIRST(id), EcsWildcard));
-        }
-
-        flecs_monitor_mark_dirty(world, id);
-    }
-}
-
-void flecs_update_component_monitors(
-    ecs_world_t *world,
-    ecs_type_t *added,
-    ecs_type_t *removed)
-{
-    flecs_update_component_monitor_w_array(world, added);
-    flecs_update_component_monitor_w_array(world, removed);
-}
-
 static
 void flecs_init_store(
     ecs_world_t *world)
@@ -22997,8 +21606,20 @@ static const char *flecs_addons_info[] = {
 #ifdef FLECS_CPP
     "FLECS_CPP",
 #endif
+#ifdef FLECS_CONSTRAINT_TRAITS
+    "FLECS_CONSTRAINT_TRAITS",
+#endif
+#ifdef FLECS_ENTITY_RANGES
+    "FLECS_ENTITY_RANGES",
+#endif
 #ifdef FLECS_MODULE
     "FLECS_MODULE",
+#endif
+#ifdef FLECS_MULTI_WORLD
+    "FLECS_MULTI_WORLD",
+#endif
+#ifdef FLECS_FRAME
+    "FLECS_FRAME",
 #endif
 #ifdef FLECS_STATS
     "FLECS_STATS",
@@ -23014,6 +21635,9 @@ static const char *flecs_addons_info[] = {
 #endif
 #ifdef FLECS_PIPELINE
     "FLECS_PIPELINE",
+#endif
+#ifdef FLECS_PREFAB
+    "FLECS_PREFAB",
 #endif
 #ifdef FLECS_TIMER
     "FLECS_TIMER",
@@ -23038,6 +21662,9 @@ static const char *flecs_addons_info[] = {
 #endif
 #ifdef FLECS_APP
     "FLECS_APP",
+#endif
+#ifdef FLECS_CACHED_QUERIES
+    "FLECS_CACHED_QUERIES",
 #endif
 #ifdef FLECS_OS_API_IMPL
     "FLECS_OS_API_IMPL",
@@ -23270,9 +21897,9 @@ ecs_world_t *ecs_mini(void) {
     flecs_name_index_init(&world->aliases, a);
     flecs_name_index_init(&world->symbols, a);
     ecs_vec_init_t(a, &world->fini_actions, ecs_action_elem_t, 0);
-    ecs_vec_init_t(a, &world->component_ids, ecs_id_t, 0);
+    flecs_multi_world_init(world);
 
-    world->info.time_scale = 1.0;
+    world->info.time_scale = (ecs_ftime_t)1;
     if (ecs_os_has_time()) {
         ecs_os_get_time(&world->world_start_time);
     }
@@ -23364,26 +21991,6 @@ ecs_world_t* ecs_init_w_args(
     return world;
 }
 
-void ecs_quit(
-    ecs_world_t *world)
-{
-    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    flecs_stage_from_world(&world);
-    world->flags |= EcsWorldQuit;
-error:
-    return;
-}
-
-bool ecs_should_quit(
-    const ecs_world_t *world)
-{
-    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    world = ecs_get_world(world);
-    return ECS_BIT_IS_SET(world->flags, EcsWorldQuit);
-error:
-    return true;
-}
-
 void flecs_notify_tables(
     ecs_world_t *world,
     ecs_id_t id,
@@ -23435,28 +22042,6 @@ error:
     return;
 }
 
-void ecs_run_post_frame(
-    ecs_world_t *world,
-    ecs_fini_action_t action,
-    void *ctx)
-{
-    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(action != NULL, ECS_INVALID_PARAMETER, NULL);
-
-    ecs_stage_t *stage = flecs_stage_from_world(&world);
-    ecs_check((world->flags & EcsWorldFrameInProgress), ECS_INVALID_OPERATION, 
-        "cannot register post frame action while frame is not in progress");
-
-    ecs_action_elem_t *elem = ecs_vec_append_t(&stage->allocator,
-        &stage->post_frame_actions, ecs_action_elem_t);
-    ecs_assert(elem != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    elem->action = action;
-    elem->ctx = ctx;
-error:
-    return;
-}
-
 /* Unset data in tables */
 static
 void flecs_fini_unset_tables(
@@ -23485,21 +22070,6 @@ void flecs_fini_actions(
     ecs_vec_fini_t(NULL, &world->fini_actions, ecs_action_elem_t);
 }
 
-ecs_entity_t flecs_get_oneof(
-    const ecs_world_t *world,
-    ecs_entity_t e)
-{
-    if (ecs_is_alive(world, e)) {
-        if (ecs_has_id(world, e, EcsOneOf)) {
-            return e;
-        } else {
-            return ecs_get_target(world, e, EcsOneOf, 0);
-        }
-    } else {
-        return 0;
-    }
-}
-
 /* The destroyer of worlds */
 int ecs_fini(
     ecs_world_t *world)
@@ -23520,7 +22090,7 @@ int ecs_fini(
     /* Tree spawners can keep tables alive, which can conflict with entity
      * cleanup. Cleanup treespawners first before cleaning up other entities.
      * This means that prefab spawning does not work during world cleanup. */
-    flecs_fini_tree_spawners(world);
+    flecs_fini_prefab(world);
 
     /* yield_existing, OnRemove observers will fire for all matching results
      * when the observer is deleted, but there is no guarantee that components
@@ -23564,9 +22134,11 @@ int ecs_fini(
     flecs_defer_purge(world, world->stages[0]);
     ecs_log_pop_1();
 
+#ifdef FLECS_CACHED_QUERIES
     /* All queries are cleaned up, so monitors should've been cleaned up too */
     ecs_assert(!ecs_map_is_init(&world->monitors.monitors),
         ECS_INTERNAL_ERROR, NULL);
+#endif
 
     /* Cleanup world ctx and binding_ctx */
     if (world->ctx_free) {
@@ -23592,7 +22164,7 @@ int ecs_fini(
     flecs_name_index_fini(&world->symbols);
     ecs_set_stage_count(world, 0);
     ecs_map_fini(&world->prefab_child_indices);
-    ecs_vec_fini_t(&world->allocator, &world->component_ids, ecs_id_t);
+    flecs_multi_world_fini(world);
     ecs_log_pop_1();
 
     flecs_world_allocators_fini(world);
@@ -23621,51 +22193,6 @@ void ecs_dim(
 {
     flecs_poly_assert(world, ecs_world_t);
     flecs_entities_set_size(world, entity_count + FLECS_HI_COMPONENT_ID);
-}
-
-void flecs_eval_component_monitors(
-    ecs_world_t *world)
-{
-    flecs_poly_assert(world, ecs_world_t); 
-    flecs_eval_component_monitor(world);
-}
-
-void ecs_measure_frame_time(
-    ecs_world_t *world,
-    bool enable)
-{
-    flecs_poly_assert(world, ecs_world_t);
-    ecs_check(ecs_os_has_time(), ECS_MISSING_OS_API, NULL);
-
-    if (ECS_EQZERO(world->info.target_fps) || enable) {
-        ECS_BIT_COND(world->flags, EcsWorldMeasureFrameTime, enable);
-    }
-error:
-    return;
-}
-
-void ecs_measure_system_time(
-    ecs_world_t *world,
-    bool enable)
-{
-    flecs_poly_assert(world, ecs_world_t);
-    ecs_check(ecs_os_has_time(), ECS_MISSING_OS_API, NULL);
-    ECS_BIT_COND(world->flags, EcsWorldMeasureSystemTime, enable);
-error:
-    return;
-}
-
-void ecs_set_target_fps(
-    ecs_world_t *world,
-    ecs_ftime_t fps)
-{
-    flecs_poly_assert(world, ecs_world_t);
-    ecs_check(ecs_os_has_time(), ECS_MISSING_OS_API, NULL);
-
-    ecs_measure_frame_time(world, true);
-    world->info.target_fps = fps;
-error:
-    return;
 }
 
 void ecs_set_default_query_flags(
@@ -23716,129 +22243,6 @@ void ecs_set_binding_ctx(
     world->binding_ctx_free = ctx_free;
 }
 
-const ecs_entity_range_t* ecs_entity_range_new(
-    ecs_world_t *world,
-    uint32_t min,
-    uint32_t max)
-{
-    flecs_poly_assert(world, ecs_world_t);
-    ecs_check(min > 0, ECS_INVALID_PARAMETER, "min must be > 0");
-    ecs_check(!max || max >= min, ECS_INVALID_PARAMETER,
-        "max must be >= min or 0");
-
-    /* Validate no overlap with existing ranges */
-    ecs_entity_index_t *index = ecs_eis(world);
-    ecs_check(flecs_entity_index_not_alive_count(index) == 0,
-        ECS_INVALID_OPERATION,
-        "cannot create entity range after entities have been deleted");
-
-    bool first_range = ecs_vec_count(&index->ranges) == 0;
-
-    /* If this is the first range and it covers the default [1, ...] id space,
-     * it must be large enough to contain all currently alive entities. */
-    if (first_range && min == 1) {
-        ecs_check(!max || max >= index->max_id, ECS_INVALID_OPERATION,
-            "range [%u, %u] cannot be below last alive entity id %u",
-                min, max, (uint32_t)index->max_id);
-    }
-
-    /* If this is the first range to be created and it does not start at 1,
-     * create a default range for the [1, min) id space and activate it, so
-     * that the default id allocation behavior is preserved. */
-    if (first_range && min > 1) {
-        ecs_entity_range_t *default_range = ECS_CONST_CAST(ecs_entity_range_t*,
-            ecs_entity_range_new(world, 1, min - 1));
-        default_range->cur = index->max_id;
-        flecs_entity_index_set_range(index, default_range);
-    }
-
-    ecs_allocator_t *a = &world->allocator;
-
-    int32_t count = ecs_vec_count(&index->ranges);
-    if (count > 0) {
-        ecs_entity_range_t **ranges = ecs_vec_first_t(&index->ranges,
-            ecs_entity_range_t*);
-        int32_t i;
-        for (i = 0; i < count; i ++) {
-            ecs_entity_range_t *existing = ranges[i];
-            /* Two ranges overlap if one starts before the other ends */
-            bool overlap;
-            if (!existing->max && !max) {
-                overlap = true;
-            } else if (!existing->max) {
-                overlap = max >= existing->min;
-            } else if (!max) {
-                overlap = min <= existing->max;
-            } else {
-                overlap = min <= existing->max && max >= existing->min;
-            }
-            ecs_check(!overlap, ECS_INVALID_PARAMETER,
-                "range [%u, %u] overlaps with existing range [%u, %u]",
-                    min, max, existing->min, existing->max);
-            (void)overlap;
-        }
-    }
-
-    ecs_entity_range_t *range = flecs_walloc_t(world, ecs_entity_range_t);
-    range->min = min;
-    range->max = max;
-    range->cur = min - 1;
-    ecs_vec_init_t(a, &range->recycled, uint64_t, 0);
-
-    /* Insert into sorted ranges vec (sorted by min) */
-    ecs_vec_append_t(a, &index->ranges, ecs_entity_range_t*)[0] = range;
-
-    if (count > 0) {
-        ecs_entity_range_t **ranges = ecs_vec_first_t(&index->ranges,
-            ecs_entity_range_t*);
-
-        /* Find insertion point and shift elements */
-        int32_t i;
-        for (i = count; i > 0; i --) {
-            if (ranges[i - 1]->min <= min) {
-                break;
-            }
-            ranges[i] = ranges[i - 1];
-        }
-        ranges[i] = range;
-    }
-
-    /* If this is the first range and it covers the default [1, ...] id space,
-     * activate it so the default id allocation behavior is preserved. */
-    if (first_range && min == 1) {
-        range->cur = index->max_id;
-        flecs_entity_index_set_range(index, range);
-    }
-
-    return range;
-error:
-    return NULL;
-}
-
-void ecs_entity_range_set(
-    ecs_world_t *world,
-    const ecs_entity_range_t *range)
-{
-    flecs_poly_assert(world, ecs_world_t);
-    ecs_check(range != NULL, ECS_INVALID_PARAMETER, NULL);
-
-    flecs_entity_index_set_range(ecs_eis(world),
-        ECS_CONST_CAST(ecs_entity_range_t*, range));
-
-error:
-    return;
-}
-
-const ecs_entity_range_t* ecs_entity_range_get(
-    const ecs_world_t *world)
-{
-    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    world = ecs_get_world(world);
-    return ecs_eis(world)->active_range;
-error:
-    return NULL;
-}
-
 ecs_entity_t ecs_get_max_id(
     const ecs_world_t *world)
 {
@@ -23866,67 +22270,6 @@ uint32_t flecs_get_table_version_fast(
 {
     flecs_poly_assert(world, ecs_world_t);
     return world->table_version[table_id & ECS_TABLE_VERSION_ARRAY_BITMASK];
-}
-
-static int32_t flecs_component_ids_last_index = 0;
-
-int32_t flecs_component_ids_index_get(void) {
-    if (ecs_os_api.ainc_) {
-        return ecs_os_ainc(&flecs_component_ids_last_index);
-    } else {
-        return ++ flecs_component_ids_last_index;
-    }
-}
-
-ecs_entity_t flecs_component_ids_get(
-    const ecs_world_t *stage_world, 
-    int32_t index)
-{
-    ecs_world_t *world =
-        ECS_CONST_CAST(ecs_world_t*, ecs_get_world(stage_world));
-    flecs_poly_assert(world, ecs_world_t);
-
-    if (index >= ecs_vec_count(&world->component_ids)) {
-        return 0;
-    }
-
-    return ecs_vec_get_t(
-        &world->component_ids, ecs_entity_t, index)[0];
-}
-
-ecs_entity_t flecs_component_ids_get_alive(
-    const ecs_world_t *stage_world, 
-    int32_t index)
-{
-    ecs_world_t *world =
-        ECS_CONST_CAST(ecs_world_t*, ecs_get_world(stage_world));
-    flecs_poly_assert(world, ecs_world_t);
-
-    if (index >= ecs_vec_count(&world->component_ids)) {
-        return 0;
-    }
-
-    ecs_entity_t result = ecs_vec_get_t(
-        &world->component_ids, ecs_entity_t, index)[0];
-    if (!flecs_entities_is_alive(world, result)) {
-        return 0;
-    }
-
-    return result;
-}
-
-void flecs_component_ids_set(
-    ecs_world_t *stage_world, 
-    int32_t index,
-    ecs_entity_t component)
-{
-    ecs_world_t *world =
-        ECS_CONST_CAST(ecs_world_t*, ecs_get_world(stage_world));
-    flecs_poly_assert(world, ecs_world_t);
-
-    ecs_vec_set_min_count_zeromem_t(
-        &world->allocator, &world->component_ids, ecs_entity_t, index + 1);
-    ecs_vec_get_t(&world->component_ids, ecs_entity_t, index)[0] = component;
 }
 
 #ifdef FLECS_EXCLUSIVE_ACCESS
@@ -24027,9 +22370,11 @@ void ecs_run_aperiodic(
         flecs_process_empty_queries(world);
     }
 
+#ifdef FLECS_CACHED_QUERIES
     if (!flags || (flags & EcsAperiodicComponentMonitors)) {
         flecs_eval_component_monitors(world);
     }
+#endif
 }
 
 int32_t ecs_delete_empty_tables(
@@ -25527,6 +23872,319 @@ void FlecsDocImport(
 
 #endif
 
+#ifdef FLECS_ENTITY_RANGES
+
+void flecs_entity_ranges_init(
+    ecs_allocator_t *allocator,
+    ecs_entity_index_t *index)
+{
+    index->active_range = NULL;
+    ecs_vec_init_t(allocator, &index->ranges, ecs_entity_range_t*, 0);
+}
+
+void flecs_entity_ranges_fini(
+    ecs_entity_index_t *index)
+{
+    int32_t r, range_count = ecs_vec_count(&index->ranges);
+    ecs_entity_range_t **ranges = ecs_vec_first_t(
+        &index->ranges, ecs_entity_range_t*);
+    for (r = 0; r < range_count; r ++) {
+        ecs_vec_fini_t(index->allocator, &ranges[r]->recycled, uint64_t);
+        flecs_free_t(index->allocator, ecs_entity_range_t, ranges[r]);
+    }
+    ecs_vec_fini_t(index->allocator, &index->ranges, ecs_entity_range_t*);
+}
+
+static
+void flecs_entity_index_remove_not_alive(
+    ecs_entity_index_t *index,
+    ecs_record_t *r)
+{
+    int32_t not_alive = index->alive_count;
+    int32_t last = ecs_vec_count(&index->dense) - 1;
+    if (not_alive != last) {
+        uint64_t *ids = ecs_vec_first_t(&index->dense, uint64_t);
+        uint64_t e_last = ids[last];
+        ecs_record_t *r_last = flecs_entity_index_get_any(index, e_last);
+        r_last->dense = not_alive;
+        ids[not_alive] = e_last;
+    }
+    ecs_vec_set_count_t(index->allocator, &index->dense, uint64_t, last);
+    r->dense = 0;
+}
+
+static
+ecs_entity_range_t* flecs_entity_index_find_range(
+    ecs_entity_index_t *index,
+    uint32_t id)
+{
+    int32_t count = ecs_vec_count(&index->ranges);
+    if (!count) {
+        return NULL;
+    }
+
+    ecs_entity_range_t **ranges = ecs_vec_first_t(
+        &index->ranges, ecs_entity_range_t*);
+    int32_t lo = 0, hi = count - 1;
+    while (lo <= hi) {
+        int32_t mid = (lo + hi) / 2;
+        ecs_entity_range_t *r = ranges[mid];
+        if (id < r->min) {
+            hi = mid - 1;
+        } else if (r->max && id > r->max) {
+            lo = mid + 1;
+        } else {
+            return r;
+        }
+    }
+
+    return NULL;
+}
+
+void flecs_entity_ranges_on_delete(
+    ecs_entity_index_t *index,
+    uint64_t entity,
+    ecs_record_t *r)
+{
+    ecs_entity_range_t *active = index->active_range;
+    if (!active) {
+        /* If no entity range is active, we're done. */
+        return;
+    }
+
+    uint32_t id = (uint32_t)entity;
+    if (id >= active->min && (!active->max || id <= active->max)) {
+        /* Id falls within the active range, also nothing else to be done. */
+        return;
+    }
+
+    /* Entity falls outside of the active range. Remove the recycled id from
+     * the dense vector, and move it to the recycled id vector of the correct
+     * range. */
+    flecs_entity_index_remove_not_alive(index, r);
+
+    ecs_entity_range_t *range = flecs_entity_index_find_range(index, id);
+    if (range) {
+        ecs_vec_append_t(
+            index->allocator, &range->recycled, uint64_t)[0] =
+                ECS_GENERATION_INC(entity);
+    }
+}
+
+void flecs_entity_index_set_range(
+    ecs_entity_index_t *index,
+    ecs_entity_range_t *range)
+{
+#ifdef FLECS_DEBUG
+    /* Verify that the range was created by ecs_entity_range_new */
+    {
+        int32_t i, count = ecs_vec_count(&index->ranges);
+        ecs_entity_range_t **ranges = ecs_vec_first_t(
+            &index->ranges, ecs_entity_range_t*);
+        bool found = false;
+        for (i = 0; i < count; i ++) {
+            if (ranges[i] == range) {
+                found = true;
+                break;
+            }
+        }
+        ecs_assert(found, ECS_INVALID_PARAMETER,
+            "range was not created with ecs_entity_range_new");
+        (void)found;
+    }
+#endif
+
+    ecs_allocator_t *a = index->allocator;
+    ecs_entity_range_t *prev = index->active_range;
+    int32_t alive_count = index->alive_count;
+    int32_t dense_count = ecs_vec_count(&index->dense);
+    int32_t not_alive_count = dense_count - alive_count;
+    uint64_t *ids = ecs_vec_first_t(&index->dense, uint64_t);
+
+    /* Save current not-alive entries to previous range (if any) */
+    if (prev) {
+        if (not_alive_count > 0) {
+            ecs_vec_set_count_t(a, &prev->recycled, uint64_t, not_alive_count);
+            uint64_t *dst = ecs_vec_first_t(&prev->recycled, uint64_t);
+            ecs_os_memcpy_n(dst, &ids[alive_count], uint64_t, not_alive_count);
+        } else {
+            ecs_vec_set_count_t(a, &prev->recycled, uint64_t, 0);
+        }
+        prev->cur = index->max_id;
+    }
+
+    /* Clear not-alive entries from entity index */
+    {
+        int32_t i;
+        for (i = alive_count; i < dense_count; i ++) {
+            uint32_t id = (uint32_t)ids[i];
+            int32_t page_index = (int32_t)(id >> FLECS_ENTITY_PAGE_BITS);
+            if (page_index < ecs_vec_count(&index->pages)) {
+                ecs_entity_index_page_t *page = ecs_vec_get_t(
+                    &index->pages, ecs_entity_index_page_t*, page_index)[0];
+                if (page) {
+                    page->records[id & FLECS_ENTITY_PAGE_MASK].dense = 0;
+                }
+            }
+        }
+        ecs_vec_set_count_t(a, &index->dense, uint64_t, alive_count);
+    }
+
+    /* Load new range's recycled entries into entity index not-alive section */
+    {
+        int32_t recycled_count = ecs_vec_count(&range->recycled);
+        if (recycled_count > 0) {
+            int32_t new_dense_count = alive_count + recycled_count;
+            ecs_vec_set_count_t(a, &index->dense, uint64_t, new_dense_count);
+            ids = ecs_vec_first_t(&index->dense, uint64_t);
+
+            uint64_t *src = ecs_vec_first_t(&range->recycled, uint64_t);
+            ecs_os_memcpy_n(
+                &ids[alive_count], src, uint64_t, recycled_count);
+
+            int32_t i;
+            for (i = 0; i < recycled_count; i ++) {
+                uint32_t id = (uint32_t)src[i];
+                ecs_entity_index_page_t *page =
+                    flecs_entity_index_ensure_page(index, id);
+                ecs_record_t *r = &page->records[id & FLECS_ENTITY_PAGE_MASK];
+                r->dense = alive_count + i;
+                ecs_assert(r->table == NULL, ECS_INTERNAL_ERROR, NULL);
+            }
+
+            ecs_vec_set_count_t(a, &range->recycled, uint64_t, 0);
+        }
+    }
+
+    index->max_id = range->cur;
+    index->active_range = range;
+}
+
+const ecs_entity_range_t* ecs_entity_range_new(
+    ecs_world_t *world,
+    uint32_t min,
+    uint32_t max)
+{
+    flecs_poly_assert(world, ecs_world_t);
+    ecs_check(min > 0, ECS_INVALID_PARAMETER, "min must be > 0");
+    ecs_check(!max || max >= min, ECS_INVALID_PARAMETER,
+        "max must be >= min or 0");
+
+    /* Validate no overlap with existing ranges */
+    ecs_entity_index_t *index = ecs_eis(world);
+    ecs_check(flecs_entity_index_not_alive_count(index) == 0,
+        ECS_INVALID_OPERATION,
+        "cannot create entity range after entities have been deleted");
+
+    bool first_range = ecs_vec_count(&index->ranges) == 0;
+
+    /* If this is the first range and it covers the default [1, ...] id space,
+     * it must be large enough to contain all currently alive entities. */
+    if (first_range && min == 1) {
+        ecs_check(!max || max >= index->max_id, ECS_INVALID_OPERATION,
+            "range [%u, %u] cannot be below last alive entity id %u",
+                min, max, (uint32_t)index->max_id);
+    }
+
+    /* If this is the first range to be created and it does not start at 1,
+     * create a default range for the [1, min) id space and activate it, so
+     * that the default id allocation behavior is preserved. */
+    if (first_range && min > 1) {
+        ecs_entity_range_t *default_range = ECS_CONST_CAST(ecs_entity_range_t*,
+            ecs_entity_range_new(world, 1, min - 1));
+        default_range->cur = index->max_id;
+        flecs_entity_index_set_range(index, default_range);
+    }
+
+    ecs_allocator_t *a = &world->allocator;
+
+    int32_t count = ecs_vec_count(&index->ranges);
+    if (count > 0) {
+        ecs_entity_range_t **ranges = ecs_vec_first_t(
+            &index->ranges, ecs_entity_range_t*);
+        int32_t i;
+        for (i = 0; i < count; i ++) {
+            ecs_entity_range_t *existing = ranges[i];
+            /* Two ranges overlap if one starts before the other ends */
+            bool overlap;
+            if (!existing->max && !max) {
+                overlap = true;
+            } else if (!existing->max) {
+                overlap = max >= existing->min;
+            } else if (!max) {
+                overlap = min <= existing->max;
+            } else {
+                overlap = min <= existing->max && max >= existing->min;
+            }
+            ecs_check(!overlap, ECS_INVALID_PARAMETER,
+                "range [%u, %u] overlaps with existing range [%u, %u]",
+                    min, max, existing->min, existing->max);
+            (void)overlap;
+        }
+    }
+
+    ecs_entity_range_t *range = flecs_walloc_t(world, ecs_entity_range_t);
+    range->min = min;
+    range->max = max;
+    range->cur = min - 1;
+    ecs_vec_init_t(a, &range->recycled, uint64_t, 0);
+
+    /* Insert into sorted ranges vec (sorted by min) */
+    ecs_vec_append_t(a, &index->ranges, ecs_entity_range_t*)[0] = range;
+
+    if (count > 0) {
+        ecs_entity_range_t **ranges = ecs_vec_first_t(
+            &index->ranges, ecs_entity_range_t*);
+
+        /* Find insertion point and shift elements */
+        int32_t i;
+        for (i = count; i > 0; i --) {
+            if (ranges[i - 1]->min <= min) {
+                break;
+            }
+            ranges[i] = ranges[i - 1];
+        }
+        ranges[i] = range;
+    }
+
+    /* If this is the first range and it covers the default [1, ...] id space,
+     * activate it so the default id allocation behavior is preserved. */
+    if (first_range && min == 1) {
+        range->cur = index->max_id;
+        flecs_entity_index_set_range(index, range);
+    }
+
+    return range;
+error:
+    return NULL;
+}
+
+void ecs_entity_range_set(
+    ecs_world_t *world,
+    const ecs_entity_range_t *range)
+{
+    flecs_poly_assert(world, ecs_world_t);
+    ecs_check(range != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    flecs_entity_index_set_range(ecs_eis(world),
+        ECS_CONST_CAST(ecs_entity_range_t*, range));
+
+error:
+    return;
+}
+
+const ecs_entity_range_t* ecs_entity_range_get(
+    const ecs_world_t *world)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    world = ecs_get_world(world);
+    return ecs_eis(world)->active_range;
+error:
+    return NULL;
+}
+
+#endif
+
 /* Utilities for C++ API */
 
 #ifdef FLECS_CPP
@@ -25746,7 +24404,11 @@ ecs_entity_t ecs_cpp_component_register(
     const char *cpp_symbol = desc->cpp_symbol;
 
     bool existing = false;
+#ifdef FLECS_MULTI_WORLD
     ecs_entity_t c = flecs_component_ids_get(world, desc->ids_index);
+#else
+    ecs_entity_t c = *desc->id_storage;
+#endif
 
     if (!c || !ecs_is_alive(world, c)) {
     } else {
@@ -25964,8 +24626,12 @@ ecs_entity_t ecs_cpp_component_register(
     ecs_set_with(world, prev_with);
     ecs_set_scope(world, prev_scope);
 
-    /* Set world-local component id */
+    /* Set component id before invoking callbacks that can request it. */
+#ifdef FLECS_MULTI_WORLD
     flecs_component_ids_set(world, desc->ids_index, c);
+#else
+    *desc->id_storage = c;
+#endif
 
     if (desc->lifecycle_action && desc->size && !existing) {
         desc->lifecycle_action(world, c);
@@ -25996,7 +24662,9 @@ void ecs_cpp_enum_init(
 #else
     /* Make sure that enums still behave the same even without meta */
     ecs_add_id(world, id, EcsExclusive);
+#ifdef FLECS_CONSTRAINT_TRAITS
     ecs_add_id(world, id, EcsOneOf);
+#endif
 #endif
 }
 
@@ -26207,6 +24875,279 @@ ecs_entity_t ecs_cpp_new(
     desc.sep = sep;
     desc.root_sep = root_sep;
     return ecs_entity_init(world, &desc);
+}
+
+#endif
+
+#ifdef FLECS_FRAME
+
+static
+ecs_ftime_t flecs_insert_sleep(
+    ecs_world_t *world,
+    ecs_time_t *stop)
+{
+    flecs_poly_assert(world, ecs_world_t);
+
+    ecs_time_t start = *stop, now = start;
+    ecs_ftime_t delta_time = (ecs_ftime_t)ecs_time_measure(stop);
+
+    if (ECS_EQZERO(world->info.target_fps)) {
+        return delta_time;
+    }
+
+    ecs_os_perf_trace_push("flecs.insert_sleep");
+
+    ecs_ftime_t target_delta_time =
+        ((ecs_ftime_t)1.0 / (ecs_ftime_t)world->info.target_fps);
+
+    /* Calculate the time we need to sleep by taking the measured delta from the
+     * previous frame, and subtracting it from target_delta_time. */
+    ecs_ftime_t sleep = target_delta_time - delta_time;
+
+    /* Pick a sleep interval that is smaller than the time one frame should take,
+     * which increases the sleep precision. */
+    ecs_ftime_t sleep_time = sleep / (ecs_ftime_t)8.0;
+    if (sleep_time < 0) {
+        sleep_time = 0;
+        delta_time = (ecs_ftime_t)ecs_time_measure(&now);
+    } else {
+        do {
+            /* Only call sleep when sleep_time is not 0. On some platforms, even
+            * a sleep with a timeout of 0 can cause stutter. */
+            if (ECS_NEQZERO(sleep_time)) {
+                ecs_sleepf((double)sleep_time);
+            }
+
+            now = start;
+            delta_time = (ecs_ftime_t)ecs_time_measure(&now);
+        } while ((target_delta_time - delta_time) >
+            (sleep_time / (ecs_ftime_t)2.0));
+    }
+
+    ecs_os_perf_trace_pop("flecs.insert_sleep");
+
+    *stop = now;
+    return delta_time;
+}
+
+static
+ecs_ftime_t flecs_start_measure_frame(
+    ecs_world_t *world,
+    ecs_ftime_t user_delta_time)
+{
+    flecs_poly_assert(world, ecs_world_t);
+
+    ecs_ftime_t delta_time = 0;
+
+    if ((world->flags & EcsWorldMeasureFrameTime) ||
+        (ECS_EQZERO(user_delta_time)))
+    {
+        ecs_time_t t = world->frame_start_time;
+        do {
+            if (world->frame_start_time.nanosec || world->frame_start_time.sec){
+                delta_time = flecs_insert_sleep(world, &t);
+            } else {
+                ecs_time_measure(&t);
+                if (ECS_NEQZERO(world->info.target_fps)) {
+                    delta_time = (ecs_ftime_t)1.0 / world->info.target_fps;
+                } else {
+                    /* Best guess */
+                    delta_time = (ecs_ftime_t)1.0 / (ecs_ftime_t)60.0;
+
+                    if (ECS_EQZERO(delta_time)) {
+                        delta_time = user_delta_time;
+                        break;
+                    }
+                }
+            }
+
+        /* Keep trying while delta_time is zero */
+        } while (ECS_EQZERO(delta_time));
+
+        world->frame_start_time = t;
+
+        /* Keep track of total time passed in world */
+        world->info.world_time_total_raw += (double)delta_time;
+    }
+
+    return (ecs_ftime_t)delta_time;
+}
+
+static
+void flecs_stop_measure_frame(
+    ecs_world_t* world)
+{
+    flecs_poly_assert(world, ecs_world_t);
+
+    if (world->flags & EcsWorldMeasureFrameTime) {
+        ecs_time_t t = world->frame_start_time;
+        world->info.frame_time_total += (ecs_ftime_t)ecs_time_measure(&t);
+    }
+}
+
+ecs_ftime_t ecs_frame_begin(
+    ecs_world_t *world,
+    ecs_ftime_t user_delta_time)
+{
+    flecs_poly_assert(world, ecs_world_t);
+    ecs_check(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION,
+        "cannot begin frame while world is in readonly mode");
+    ecs_check(!(world->flags & EcsWorldFrameInProgress), ECS_INVALID_OPERATION,
+        "cannot begin frame while frame is already in progress");
+    ecs_check(ECS_NEQZERO(user_delta_time) || ecs_os_has_time(),
+        ECS_MISSING_OS_API, "get_time");
+
+    /* Start measuring total frame time */
+    ecs_ftime_t delta_time = flecs_start_measure_frame(world, user_delta_time);
+    if (ECS_EQZERO(user_delta_time)) {
+        user_delta_time = delta_time;
+    }
+
+    world->info.delta_time_raw = user_delta_time;
+    world->info.delta_time = user_delta_time * world->info.time_scale;
+
+    /* Keep track of total scaled time passed in world */
+    world->info.world_time_total += (double)world->info.delta_time;
+
+    /* Command buffer capturing */
+    world->on_commands_active = world->on_commands;
+    world->on_commands = NULL;
+
+    world->on_commands_ctx_active = world->on_commands_ctx;
+    world->on_commands_ctx = NULL;
+
+    ecs_run_aperiodic(world, 0);
+
+    world->flags |= EcsWorldFrameInProgress;
+
+    return world->info.delta_time;
+error:
+    return (ecs_ftime_t)0;
+}
+
+void ecs_frame_end(
+    ecs_world_t *world)
+{
+    flecs_poly_assert(world, ecs_world_t);
+    ecs_check(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION,
+        "cannot end frame while world is in readonly mode");
+    ecs_check((world->flags & EcsWorldFrameInProgress), ECS_INVALID_OPERATION,
+        "cannot end frame while frame is not in progress");
+
+    world->info.frame_count_total ++;
+
+    int32_t i, count = world->stage_count;
+    for (i = 0; i < count; i ++) {
+        flecs_stage_merge_post_frame(world, world->stages[i]);
+    }
+
+    flecs_stop_measure_frame(world);
+
+    /* Reset command handler each frame */
+    world->on_commands_active = NULL;
+    world->on_commands_ctx_active = NULL;
+
+    world->flags &= ~EcsWorldFrameInProgress;
+
+error:
+    return;
+}
+
+void ecs_run_post_frame(
+    ecs_world_t *world,
+    ecs_fini_action_t action,
+    void *ctx)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(action != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_stage_t *stage = flecs_stage_from_world(&world);
+    ecs_check((world->flags & EcsWorldFrameInProgress), ECS_INVALID_OPERATION,
+        "cannot register post frame action while frame is not in progress");
+
+    ecs_action_elem_t *elem = ecs_vec_append_t(&stage->allocator,
+        &stage->post_frame_actions, ecs_action_elem_t);
+    ecs_assert(elem != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    elem->action = action;
+    elem->ctx = ctx;
+error:
+    return;
+}
+
+void ecs_quit(
+    ecs_world_t *world)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    flecs_stage_from_world(&world);
+    world->flags |= EcsWorldQuit;
+error:
+    return;
+}
+
+bool ecs_should_quit(
+    const ecs_world_t *world)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    world = ecs_get_world(world);
+    return ECS_BIT_IS_SET(world->flags, EcsWorldQuit);
+error:
+    return true;
+}
+
+void ecs_measure_frame_time(
+    ecs_world_t *world,
+    bool enable)
+{
+    flecs_poly_assert(world, ecs_world_t);
+    ecs_check(ecs_os_has_time(), ECS_MISSING_OS_API, NULL);
+
+    if (ECS_EQZERO(world->info.target_fps) || enable) {
+        ECS_BIT_COND(world->flags, EcsWorldMeasureFrameTime, enable);
+    }
+error:
+    return;
+}
+
+void ecs_measure_system_time(
+    ecs_world_t *world,
+    bool enable)
+{
+    flecs_poly_assert(world, ecs_world_t);
+    ecs_check(ecs_os_has_time(), ECS_MISSING_OS_API, NULL);
+    ECS_BIT_COND(world->flags, EcsWorldMeasureSystemTime, enable);
+error:
+    return;
+}
+
+void ecs_set_target_fps(
+    ecs_world_t *world,
+    ecs_ftime_t fps)
+{
+    flecs_poly_assert(world, ecs_world_t);
+    ecs_check(ecs_os_has_time(), ECS_MISSING_OS_API, NULL);
+
+    ecs_measure_frame_time(world, true);
+    world->info.target_fps = fps;
+error:
+    return;
+}
+
+void ecs_set_time_scale(
+    ecs_world_t *world,
+    ecs_ftime_t scale)
+{
+    flecs_poly_assert(world, ecs_world_t);
+    ecs_assert(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION,
+        "cannot set time scale while world is in readonly mode");
+    world->info.time_scale = scale;
+}
+
+void ecs_reset_clock(
+    ecs_world_t *world)
+{
+    world->info.world_time_total = 0;
+    world->info.world_time_total_raw = 0;
 }
 
 #endif
@@ -28090,7 +27031,9 @@ void FlecsMetricsImport(ecs_world_t *world) {
         .move = ecs_move(EcsMetricCountTargets)
     });
 
+#ifdef FLECS_CONSTRAINT_TRAITS
     ecs_add_id(world, EcsMetric, EcsOneOf);
+#endif
 
 #ifdef FLECS_DOC
     ECS_OBSERVER(world, SetMetricDocName, EcsOnSet, 
@@ -28364,6 +27307,85 @@ ecs_entity_t ecs_module_init(
     return e;
 error:
     return 0;
+}
+
+#endif
+
+#ifdef FLECS_MULTI_WORLD
+
+static int32_t flecs_component_ids_last_index = 0;
+
+void flecs_multi_world_init(
+    ecs_world_t *world)
+{
+    ecs_vec_init_t(
+        &world->allocator, &world->component_ids, ecs_entity_t, 0);
+}
+
+void flecs_multi_world_fini(
+    ecs_world_t *world)
+{
+    ecs_vec_fini_t(
+        &world->allocator, &world->component_ids, ecs_entity_t);
+}
+
+int32_t flecs_component_ids_index_get(void) {
+    if (ecs_os_api.ainc_) {
+        return ecs_os_ainc(&flecs_component_ids_last_index);
+    } else {
+        return ++ flecs_component_ids_last_index;
+    }
+}
+
+ecs_entity_t flecs_component_ids_get(
+    const ecs_world_t *stage_world,
+    int32_t index)
+{
+    ecs_world_t *world =
+        ECS_CONST_CAST(ecs_world_t*, ecs_get_world(stage_world));
+    flecs_poly_assert(world, ecs_world_t);
+
+    if (index >= ecs_vec_count(&world->component_ids)) {
+        return 0;
+    }
+
+    return ecs_vec_get_t(
+        &world->component_ids, ecs_entity_t, index)[0];
+}
+
+ecs_entity_t flecs_component_ids_get_alive(
+    const ecs_world_t *stage_world,
+    int32_t index)
+{
+    ecs_world_t *world =
+        ECS_CONST_CAST(ecs_world_t*, ecs_get_world(stage_world));
+    flecs_poly_assert(world, ecs_world_t);
+
+    if (index >= ecs_vec_count(&world->component_ids)) {
+        return 0;
+    }
+
+    ecs_entity_t result = ecs_vec_get_t(
+        &world->component_ids, ecs_entity_t, index)[0];
+    if (!flecs_entities_is_alive(world, result)) {
+        return 0;
+    }
+
+    return result;
+}
+
+void flecs_component_ids_set(
+    ecs_world_t *stage_world,
+    int32_t index,
+    ecs_entity_t component)
+{
+    ecs_world_t *world =
+        ECS_CONST_CAST(ecs_world_t*, ecs_get_world(stage_world));
+    flecs_poly_assert(world, ecs_world_t);
+
+    ecs_vec_set_min_count_zeromem_t(
+        &world->allocator, &world->component_ids, ecs_entity_t, index + 1);
+    ecs_vec_get_t(&world->component_ids, ecs_entity_t, index)[0] = component;
 }
 
 #endif
@@ -30412,7 +29434,9 @@ void flecs_rest_append_query(
     switch(query->cache_kind) {
     case EcsQueryCacheDefault: ecs_strbuf_appendlit(reply, "\"Default\""); break;
     case EcsQueryCacheAuto: ecs_strbuf_appendlit(reply, "\"Auto\""); break;
+#ifdef FLECS_CACHED_QUERIES
     case EcsQueryCacheAll: ecs_strbuf_appendlit(reply, "\"All\""); break;
+#endif
     case EcsQueryCacheNone: ecs_strbuf_appendlit(reply, "\"None\""); break;
     default: ecs_strbuf_appendlit(reply, "\"!! Invalid !!\"");
     }
@@ -36334,6 +35358,10 @@ int flecs_query_set_caching_policy(
     const ecs_query_desc_t *desc)
 {
     ecs_query_cache_kind_t kind = desc->cache_kind;
+#ifndef FLECS_CACHED_QUERIES
+    /* Cached query policies are unavailable without the addon. */
+    kind = EcsQueryCacheNone;
+#endif
     bool require_caching = desc->group_by || desc->group_by_callback || 
             desc->order_by || desc->order_by_callback || 
             (desc->flags & EcsQueryDetectChanges);
@@ -36385,6 +35413,7 @@ int flecs_query_set_caching_policy(
         return 0;
     }
 
+#ifdef FLECS_CACHED_QUERIES
     /* Entire query must be cached */
     if (desc->cache_kind == EcsQueryCacheAll) {
         if (impl->pub.flags & EcsQueryIsCacheable) {
@@ -36435,6 +35464,7 @@ int flecs_query_set_caching_policy(
             }
         }
     }
+#endif
 
     return 0;
 }
@@ -36461,6 +35491,7 @@ int flecs_query_create_cache(
         desc->entity = q->entity;
     }
 
+#ifdef FLECS_CACHED_QUERIES
     if (q->cache_kind == EcsQueryCacheAll) {
         /* Create query cache for all terms */
         if (!flecs_query_cache_init(impl, desc)) {
@@ -36501,7 +35532,9 @@ int flecs_query_create_cache(
 
             ecs_os_memcpy_n(impl->cache->field_map, field_map, int8_t, dst_count);
         }
-    } else {
+    } else
+#endif
+    {
         /* Check if query has features that are unsupported for uncached */
         ecs_assert(q->cache_kind == EcsQueryCacheNone, ECS_INTERNAL_ERROR, NULL);
 
@@ -36596,10 +35629,12 @@ void flecs_query_fini(
         flecs_free(&impl->stage->allocator, impl->tokens_len, impl->tokens);
     }
 
+#ifdef FLECS_CACHED_QUERIES
     if (impl->cache) {
         flecs_free_n(a, int8_t, FLECS_TERM_COUNT_MAX, impl->cache->field_map);
         flecs_query_cache_fini(impl);
     }
+#endif
 
     flecs_query_free_arrays(q);
 
@@ -36848,7 +35883,9 @@ ecs_query_count_t ecs_query_count(
     while (ecs_query_next(&it)) {
         result.results ++;
         result.entities += it.count;
+#ifdef FLECS_CACHED_QUERIES
         ecs_iter_skip(&it);
+#endif
     }
 
     if ((q->flags & EcsQueryMatchOnlySelf) && 
@@ -36929,8 +35966,13 @@ void ecs_iter_set_group(
 
     static ecs_vec_t empty_table = {0};
 
-    ecs_query_cache_group_t *group = flecs_query_cache_get_group(
-        cache, group_id);
+    ecs_query_cache_group_t *group = NULL;
+#ifdef FLECS_CACHED_QUERIES
+    group = flecs_query_cache_get_group(cache, group_id);
+#else
+    (void)cache;
+    (void)group_id;
+#endif
     if (!group) {
         qit->tables = &empty_table; /* Dummy table to indicate empty result */
         qit->all_tables = &empty_table;
@@ -36955,6 +35997,7 @@ const ecs_query_group_info_t* ecs_query_get_group_info(
     uint64_t group_id)
 {
     flecs_poly_assert(query, ecs_query_t);
+#ifdef FLECS_CACHED_QUERIES
     ecs_query_cache_group_t *node = flecs_query_cache_get_group(
         flecs_query_impl(query)->cache, group_id);
     if (!node) {
@@ -36962,6 +36005,11 @@ const ecs_query_group_info_t* ecs_query_get_group_info(
     }
     
     return &node->info;
+#else
+    (void)query;
+    (void)group_id;
+    return NULL;
+#endif
 }
 
 void* ecs_query_get_group_ctx(
@@ -38372,6 +37420,7 @@ int flecs_term_verify(
 
     if (first_id) {
         if (ecs_term_ref_is_set(second)) {
+#ifdef FLECS_CONSTRAINT_TRAITS
             if (flecs_term_ref_same(src, second, false)
                 && ecs_has_id(world, first_id, EcsAcyclic)
                 && !(term->flags_ & EcsTermReflexive))
@@ -38380,6 +37429,7 @@ int flecs_term_verify(
                     "relationship cannot have the same source and target");
                 return -1;
             }
+#endif
         }
 
         if (second_id && !ecs_id_is_wildcard(second_id)) {
@@ -38610,9 +37660,11 @@ int flecs_term_finalize(
         bool first_can_isa = false;
         if (first_table) {
             first_can_isa = (first_table->flags & EcsTableHasIsA) != 0;
+#ifdef FLECS_CONSTRAINT_TRAITS
             if (first_can_isa) {
                 first_can_isa = !ecs_table_has_id(world, first_table, EcsFinal);
             }
+#endif
         }
 
         /* Only enable inheritance for ids which are inherited from at the time
@@ -38922,7 +37974,9 @@ int flecs_query_finalize_terms(
         ecs_term_t *term = &terms[i];
         bool prev_is_or = i && term[-1].oper == EcsOr;
         bool nodata_term = false;
+#ifdef FLECS_CONSTRAINT_TRAITS
         bool default_src = term->src.id == 0 && term->src.name == NULL;
+#endif
         ctx.term_index = i;
 
         if (flecs_term_finalize(world, term, &ctx)) {
@@ -38944,9 +37998,11 @@ int flecs_query_finalize_terms(
             is_sparse = true;
         }
 
+#ifdef FLECS_CONSTRAINT_TRAITS
         if ((cr_flags & EcsIdSingleton) && default_src) {
             term->src.id = term->first.id|EcsSelf|EcsIsEntity;
         }
+#endif
 
         if (prev_is_or && !flecs_term_ref_same(&term[-1].src, &term->src, true)) {
             flecs_query_validator_error(&ctx,
@@ -39033,9 +38089,12 @@ int flecs_query_finalize_terms(
             ECS_TERMSET_SET(q->static_id_fields, 1u << term->field_index);
         }
 
+#ifdef FLECS_PREFAB
         if (ECS_TERM_REF_ID(term) == EcsPrefab) {
             ECS_BIT_SET(q->flags, EcsQueryMatchPrefab);
         }
+#endif
+
         if (ECS_TERM_REF_ID(term) == EcsDisabled && (term->src.id & EcsSelf)) {
             ECS_BIT_SET(q->flags, EcsQueryMatchDisabled);
         }
@@ -39124,6 +38183,7 @@ int flecs_query_finalize_terms(
             }
         }
 
+#ifdef FLECS_CONSTRAINT_TRAITS
         if ((cr_flags & EcsIdSingleton) && default_src) {
             ECS_BIT_CLEAR16(term->flags_, EcsTermIsTrivial);
             if (term->flags_ & EcsTermIsCacheable) {
@@ -39131,6 +38191,7 @@ int flecs_query_finalize_terms(
                 ECS_BIT_CLEAR16(term->flags_, EcsTermIsCacheable);
             }
         }
+#endif
 
         /* If this is a static field, we need to assume that we might have
          * to do change detection. */
@@ -39488,7 +38549,12 @@ bool flecs_query_finalize_simple(
             return false;
         }
 
-        if (id == EcsPrefab || id == EcsDisabled) {
+#ifdef FLECS_PREFAB
+        if (id == EcsPrefab) {
+            return false;
+        }
+#endif
+        if (id == EcsDisabled) {
             return false;
         }
 
@@ -39541,7 +38607,9 @@ bool flecs_query_finalize_simple(
         }
 
         bool is_self = term->src.id == EcsSelf;
+#ifdef FLECS_CONSTRAINT_TRAITS
         bool default_src = term->src.id == 0;
+#endif
 
         term->field_index = i;
         term->first.id = first | EcsIsEntity | EcsSelf;
@@ -39598,6 +38666,7 @@ bool flecs_query_finalize_simple(
             q->row_fields |= flecs_uto(uint32_t, 1llu << i);
         }
 
+#ifdef FLECS_CONSTRAINT_TRAITS
         if (cr_flags & EcsIdSingleton) {
             if (default_src) {
                 term->src.id = term->first.id|EcsSelf|EcsIsEntity;
@@ -39607,6 +38676,9 @@ bool flecs_query_finalize_simple(
         } else {
             has_this = true;
         }
+#else
+        has_this = true;
+#endif
 
         if (ECS_IS_PAIR(id)) {
             if (first == EcsChildOf) {
@@ -40272,70 +39344,12 @@ void flecs_component_record_check_constraints(
             return;
         }
 
-        if (tgt) {
-            ecs_assert(tgt != 0, ECS_INTERNAL_ERROR, NULL);
-
-            /* Can't use relationship as target */
-            if (ecs_has_id(world, tgt, EcsRelationship)) {
-                if (!ecs_id_is_wildcard(rel) && 
-                    !ecs_has_id(world, rel, EcsTrait))
-                {
-                    ecs_throw(ECS_CONSTRAINT_VIOLATED, "cannot use '%s' as target"
-                        " in pair '%s': '%s' has the Relationship trait",
-                            flecs_errstr(ecs_get_path(world, tgt)),
-                            flecs_errstr_1(ecs_id_str(world, cr->id)),
-                            flecs_errstr_2(ecs_get_path(world, tgt)));
-                }
-            }
-        }
-
-        if (ecs_has_id(world, rel, EcsTarget)) {
-            ecs_throw(ECS_CONSTRAINT_VIOLATED, "cannot use '%s' as relationship "
-                "in pair '%s': '%s' has the Target trait",
-                    flecs_errstr(ecs_get_path(world, rel)),
-                    flecs_errstr_1(ecs_id_str(world, cr->id)),
-                    flecs_errstr_2(ecs_get_path(world, rel)));
+        if (flecs_check_constraint_traits(world, cr, rel, tgt)) {
+            goto error;
         }
 
         if (tgt && !ecs_id_is_wildcard(tgt)) {
-            /* Check if target of relationship satisfies OneOf property */
-            ecs_entity_t oneof = flecs_get_oneof(world, rel);
-            if (oneof) {
-                if (!ecs_has_pair(world, tgt, EcsChildOf, oneof)) {
-                    if (oneof == rel) {
-                        ecs_throw(ECS_CONSTRAINT_VIOLATED, 
-                            "cannot use '%s' as target in pair '%s': "
-                            "relationship '%s' has the OneOf trait and '%s' "
-                            "is not a child of '%s'",
-                                flecs_errstr(ecs_get_path(world, tgt)),
-                                flecs_errstr_1(ecs_id_str(world, cr->id)),
-                                flecs_errstr_2(ecs_get_path(world, rel)),
-                                flecs_errstr_3(ecs_get_path(world, tgt)),
-                                flecs_errstr_4(ecs_get_path(world, rel)));
-                        } else {
-                            ecs_throw(ECS_CONSTRAINT_VIOLATED, 
-                                "cannot use '%s' as target in pair '%s': "
-                                "relationship '%s' has (OneOf, %s) and '%s' "
-                                "is not a child of '%s'",
-                                    flecs_errstr(ecs_get_path(world, tgt)),
-                                    flecs_errstr_1(ecs_id_str(world, cr->id)),
-                                    flecs_errstr_2(ecs_get_path(world, rel)),
-                                    flecs_errstr_3(ecs_get_path(world, oneof)),
-                                    flecs_errstr_4(ecs_get_path(world, tgt)),
-                                    flecs_errstr_5(ecs_get_path(world, oneof)));
-                        }
-                }
-            }
-
-            /* Check if we're not trying to inherit from a final target */
             if (rel == EcsIsA) {
-                if (ecs_has_id(world, tgt, EcsFinal)) {
-                    ecs_throw(ECS_CONSTRAINT_VIOLATED, 
-                        "cannot add '(IsA, %s)': '%s' has the Final trait",
-                            flecs_errstr(ecs_get_path(world, tgt)),
-                            flecs_errstr_1(ecs_get_path(world, tgt)));
-                }
-
                 if (flecs_component_is_trait_locked(world, tgt)) {
                     if (!ecs_has_id(world, tgt, EcsInheritable) && !ecs_has_pair(world, tgt, EcsIsA, EcsWildcard)) {
                         ecs_throw(ECS_INVALID_OPERATION, 
@@ -40347,21 +39361,8 @@ void flecs_component_record_check_constraints(
             }
         }
     } else {
-        bool is_tgt = false;
-        if (ecs_has_id(world, rel, EcsRelationship) ||
-            (is_tgt = ecs_has_id(world, rel, EcsTarget)))
-        {
-            if (is_tgt) {
-                ecs_throw(ECS_CONSTRAINT_VIOLATED, 
-                    "cannot use '%s' by itself: it has the Target trait and "
-                    "must be used in pair with relationship",
-                        flecs_errstr(ecs_get_path(world, rel)));
-            } else {
-                ecs_throw(ECS_CONSTRAINT_VIOLATED, 
-                    "cannot use '%s' by itself: it has the Relationship trait "
-                    "and must be used in pair with target",
-                        flecs_errstr(ecs_get_path(world, rel)));
-            }
+        if (flecs_check_constraint_traits(world, cr, rel, tgt)) {
+            goto error;
         }
     }
 error:
@@ -41186,11 +40187,12 @@ void flecs_entity_index_init(
 {
     index->allocator = allocator;
     index->alive_count = 1;
-    index->active_range = NULL;
     ecs_vec_init_t(allocator, &index->dense, uint64_t, 1);
     ecs_vec_set_count_t(allocator, &index->dense, uint64_t, 1);
     ecs_vec_init_t(allocator, &index->pages, ecs_entity_index_page_t*, 0);
-    ecs_vec_init_t(allocator, &index->ranges, ecs_entity_range_t*, 0);
+#ifdef FLECS_ENTITY_RANGES
+    flecs_entity_ranges_init(allocator, index);
+#endif
 }
 
 void flecs_entity_index_fini(
@@ -41204,16 +40206,9 @@ void flecs_entity_index_fini(
     }
     ecs_vec_fini_t(index->allocator, &index->pages, ecs_entity_index_page_t*);
 
-    /* Free entity id ranges */
-    {
-        int32_t r, range_count = ecs_vec_count(&index->ranges);
-        ecs_entity_range_t **ranges = ecs_vec_first_t(&index->ranges, ecs_entity_range_t*);
-        for (r = 0; r < range_count; r ++) {
-            ecs_vec_fini_t(index->allocator, &ranges[r]->recycled, uint64_t);
-            flecs_free_t(index->allocator, ecs_entity_range_t, ranges[r]);
-        }
-        ecs_vec_fini_t(index->allocator, &index->ranges, ecs_entity_range_t*);
-    }
+#ifdef FLECS_ENTITY_RANGES
+    flecs_entity_ranges_fini(index);
+#endif
 }
 
 ecs_record_t* flecs_entity_index_get_any(
@@ -41328,52 +40323,6 @@ ecs_record_t* flecs_entity_index_ensure(
 }
 
 static
-void flecs_entity_index_remove_not_alive(
-    ecs_entity_index_t *index,
-    ecs_record_t *r)
-{
-    int32_t not_alive = index->alive_count;
-    int32_t last = ecs_vec_count(&index->dense) - 1;
-    if (not_alive != last) {
-        uint64_t *ids = ecs_vec_first_t(&index->dense, uint64_t);
-        uint64_t e_last = ids[last];
-        ecs_record_t *r_last = flecs_entity_index_get_any(index, e_last);
-        r_last->dense = not_alive;
-        ids[not_alive] = e_last;
-    }
-    ecs_vec_set_count_t(index->allocator, &index->dense, uint64_t, last);
-    r->dense = 0;
-}
-
-static
-ecs_entity_range_t* flecs_entity_index_find_range(
-    ecs_entity_index_t *index,
-    uint32_t id)
-{
-    int32_t count = ecs_vec_count(&index->ranges);
-    if (!count) {
-        return NULL;
-    }
-
-    ecs_entity_range_t **ranges = ecs_vec_first_t(&index->ranges,
-        ecs_entity_range_t*);
-    int32_t lo = 0, hi = count - 1;
-    while (lo <= hi) {
-        int32_t mid = (lo + hi) / 2;
-        ecs_entity_range_t *r = ranges[mid];
-        if (id < r->min) {
-            hi = mid - 1;
-        } else if (r->max && id > r->max) {
-            lo = mid + 1;
-        } else {
-            return r;
-        }
-    }
-
-    return NULL;
-}
-
-static
 ecs_record_t* flecs_entity_index_remove_intern(
     ecs_entity_index_t *index,
     uint64_t entity)
@@ -41413,117 +40362,9 @@ void flecs_entity_index_remove(
         return;
     }
 
-    ecs_entity_range_t *active = index->active_range;
-    if (!active) {
-        /* If no entity range is active, we're done. */
-        return;
-    }
-
-    uint32_t id = (uint32_t)entity;
-    if (id >= active->min && (!active->max || id <= active->max)) {
-        /* Id falls within the active range, also nothing else to be done. */
-        return;
-    }
-
-    /* Entity falls outside of the active range. We now need to remove the 
-     * recycled id from the dense vector, and move it to the recycled id vector
-     * of the correct range. */
-    flecs_entity_index_remove_not_alive(index, r);
-
-    ecs_entity_range_t *range = flecs_entity_index_find_range(index, id);
-    if (range) {
-        ecs_vec_append_t(
-            index->allocator, &range->recycled, uint64_t)[0] = 
-                ECS_GENERATION_INC(entity);
-    }
-}
-
-void flecs_entity_index_set_range(
-    ecs_entity_index_t *index,
-    ecs_entity_range_t *range)
-{
-#ifdef FLECS_DEBUG
-    /* Verify that the range was created by ecs_entity_range_new */
-    {
-        int32_t i, count = ecs_vec_count(&index->ranges);
-        ecs_entity_range_t **ranges = ecs_vec_first_t(&index->ranges,
-            ecs_entity_range_t*);
-        bool found = false;
-        for (i = 0; i < count; i ++) {
-            if (ranges[i] == range) {
-                found = true;
-                break;
-            }
-        }
-        ecs_assert(found, ECS_INVALID_PARAMETER,
-            "range was not created with ecs_entity_range_new");
-        (void)found;
-    }
+#ifdef FLECS_ENTITY_RANGES
+    flecs_entity_ranges_on_delete(index, entity, r);
 #endif
-
-    ecs_allocator_t *a = index->allocator;
-    ecs_entity_range_t *prev = index->active_range;
-    int32_t alive_count = index->alive_count;
-    int32_t dense_count = ecs_vec_count(&index->dense);
-    int32_t not_alive_count = dense_count - alive_count;
-    uint64_t *ids = ecs_vec_first_t(&index->dense, uint64_t);
-
-    /* Save current not-alive entries to previous range (if any) */
-    if (prev) {
-        if (not_alive_count > 0) {
-            ecs_vec_set_count_t(a, &prev->recycled, uint64_t, not_alive_count);
-            uint64_t *dst = ecs_vec_first_t(&prev->recycled, uint64_t);
-            ecs_os_memcpy_n(dst, &ids[alive_count], uint64_t, not_alive_count);
-        } else {
-            ecs_vec_set_count_t(a, &prev->recycled, uint64_t, 0);
-        }
-        prev->cur = index->max_id;
-    }
-
-    /* Clear not-alive entries from entity index */
-    {
-        int32_t i;
-        for (i = alive_count; i < dense_count; i ++) {
-            uint32_t id = (uint32_t)ids[i];
-            int32_t page_index = (int32_t)(id >> FLECS_ENTITY_PAGE_BITS);
-            if (page_index < ecs_vec_count(&index->pages)) {
-                ecs_entity_index_page_t *page = ecs_vec_get_t(&index->pages,
-                    ecs_entity_index_page_t*, page_index)[0];
-                if (page) {
-                    page->records[id & FLECS_ENTITY_PAGE_MASK].dense = 0;
-                }
-            }
-        }
-        ecs_vec_set_count_t(a, &index->dense, uint64_t, alive_count);
-    }
-
-    /* Load new range's recycled entries into entity index not-alive section */
-    {
-        int32_t recycled_count = ecs_vec_count(&range->recycled);
-        if (recycled_count > 0) {
-            int32_t new_dense_count = alive_count + recycled_count;
-            ecs_vec_set_count_t(a, &index->dense, uint64_t, new_dense_count);
-            ids = ecs_vec_first_t(&index->dense, uint64_t);
-
-            uint64_t *src = ecs_vec_first_t(&range->recycled, uint64_t);
-            ecs_os_memcpy_n(&ids[alive_count], src, uint64_t, recycled_count);
-
-            int32_t i;
-            for (i = 0; i < recycled_count; i ++) {
-                uint32_t id = (uint32_t)src[i];
-                ecs_entity_index_page_t *page =
-                    flecs_entity_index_ensure_page(index, id);
-                ecs_record_t *r = &page->records[id & FLECS_ENTITY_PAGE_MASK];
-                r->dense = alive_count + i;
-                ecs_assert(r->table == NULL, ECS_INTERNAL_ERROR, NULL);
-            }
-
-            ecs_vec_set_count_t(a, &range->recycled, uint64_t, 0);
-        }
-    }
-
-    index->max_id = range->cur;
-    index->active_range = range;
 }
 
 void flecs_entity_index_make_alive(
@@ -41594,10 +40435,12 @@ uint64_t flecs_entity_index_new_id(
             "(value is %" PRIu64 ", cannot exceed %u)", 
                 index->max_id, UINT32_MAX);
 
-    /* Make sure id hasn't been issued before */
+#ifdef FLECS_ENTITY_RANGES
+    /* Make sure id hasn't been issued before after switching ranges. */
     ecs_assert(!flecs_entity_index_exists(index, id), ECS_INVALID_OPERATION,
-        "new entity %u id already in use (likely due to overlapping ranges)", 
+        "new entity %u id already in use (likely due to overlapping ranges)",
             (uint32_t)id);
+#endif
 
     ecs_vec_append_t(index->allocator, &index->dense, uint64_t)[0] = id;
 
@@ -41636,10 +40479,12 @@ uint64_t* flecs_entity_index_new_ids(
             "(value is %" PRIu64 ", cannot exceed %u)", 
                 index->max_id, UINT32_MAX);
 
-        /* Make sure id hasn't been issued before */
+#ifdef FLECS_ENTITY_RANGES
+        /* Make sure id hasn't been issued before after switching ranges. */
         ecs_assert(!flecs_entity_index_exists(index, id), ECS_INVALID_OPERATION,
-            "new entity %u id already in use (likely due to overlapping ranges)", 
+            "new entity %u id already in use (likely due to overlapping ranges)",
                 (uint32_t)id);
+#endif
 
         int32_t dense = dense_count + i;
         ecs_vec_get_t(&index->dense, uint64_t, dense)[0] = id;
@@ -41843,10 +40688,12 @@ int flecs_add_non_fragmenting_child_w_records(
 
     flecs_tree_spawner_assert_not_instantiated(world, parent);
 
+#ifdef FLECS_PREFAB
     ecs_record_t *r_parent = flecs_entities_get(world, parent);
     if (r_parent->table->flags & EcsTableIsPrefab) {
         ecs_add_id(world, entity, EcsPrefab);
     }
+#endif
 
     return 0;
 error:
@@ -41995,9 +40842,6 @@ void flecs_on_replace_parent(ecs_iter_t *it) {
          * it can trigger a table move that reads the parent value. */
         old[i].value = new_parent;
 
-        ecs_record_t *r = flecs_entities_get(world, e);
-        ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
-
         int32_t depth = cr_parent->pair->depth;
 
         /* If the entity had a parent before, it has a ParentDepth pair that
@@ -42014,6 +40858,10 @@ void flecs_on_replace_parent(ecs_iter_t *it) {
             }
         }
 
+#ifdef FLECS_CACHED_QUERIES
+        ecs_record_t *r = flecs_entities_get(world, e);
+        ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+
         if (r->row & EcsEntityIsTraversable) {
             ecs_id_t added = ecs_childof(new_parent);
             ecs_id_t removed = ecs_childof(old_parent);
@@ -42022,6 +40870,7 @@ void flecs_on_replace_parent(ecs_iter_t *it) {
                 &(ecs_type_t){ .count = 1, .array = &added },
                 &(ecs_type_t) { .count = 1, .array = &removed });
         }
+#endif
 
         flecs_journal_end();
     }
@@ -42293,10 +41142,12 @@ void flecs_ordered_entities_append(
          * corresponding instance child. */
         ecs_map_ensure(&world->prefab_child_indices, e)[0] = 
             flecs_ito(uint64_t, ecs_vec_count(&pr->ordered_children) - 1);
+#ifdef FLECS_PREFAB
     } else {
         ecs_assert(
             !ecs_owns_id(world, ecs_pair_second(world, cr->id), EcsPrefab),
             ECS_INTERNAL_ERROR, NULL);
+#endif
     }
 }
 
@@ -43228,8 +42079,10 @@ void flecs_table_init_flags(
 
         if (id == EcsModule) {
             table->flags |= EcsTableHasModule;
+#ifdef FLECS_PREFAB
         } else if (id == EcsPrefab) {
             table->flags |= EcsTableIsPrefab;
+#endif
         } else if (id == EcsDisabled) {
             table->flags |= EcsTableIsDisabled;
         } else if (id == EcsNotQueryable) {
@@ -43270,9 +42123,13 @@ void flecs_table_init_flags(
             table->trait_flags |= EcsIdCanToggle;
         } else if (id == EcsInheritable) {
             table->trait_flags |= EcsIdInheritable;
-        } else if (id == EcsSingleton) {
+        }
+#ifdef FLECS_CONSTRAINT_TRAITS
+        else if (id == EcsSingleton) {
             table->trait_flags |= EcsIdSingleton;
-        } else if (id == EcsSparse) {
+        }
+#endif
+        else if (id == EcsSparse) {
             table->trait_flags |= EcsIdSparse;
         } else if (id == EcsDontFragment) {
             table->trait_flags |= EcsIdDontFragment;
@@ -45946,9 +44803,11 @@ int32_t ecs_table_get_depth(
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(table != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(ecs_id_is_valid(world, rel), ECS_INVALID_PARAMETER, NULL);
+#ifdef FLECS_CONSTRAINT_TRAITS
     ecs_check(ecs_has_id(world, rel, EcsAcyclic), ECS_INVALID_PARAMETER,
         "cannot safely determine depth for relationship that is not acyclic "
             "(add Acyclic property to relationship)");
+#endif
 
     world = ecs_get_world(world);
 
@@ -47390,11 +46249,13 @@ ecs_table_t* flecs_find_table_with(
     if (r == EcsIsA) {
         /* If adding a prefab, check if prefab has overrides */
         flecs_add_overrides_for_base(world, &dst_type, with);
+#ifdef FLECS_PREFAB
     } else if (r == EcsChildOf) {
         o = ecs_get_alive(world, o);
         if (ecs_has_id(world, o, EcsPrefab)) {
             flecs_type_add(world, &dst_type, EcsPrefab);
         }
+#endif
     }
 
     if (cr->flags & EcsIdWith) {
@@ -47874,6 +46735,341 @@ ecs_table_t* ecs_table_find(
     };
     return flecs_table_ensure(world, &type, false, NULL);
 }
+
+#ifdef FLECS_CONSTRAINT_TRAITS
+
+static
+void flecs_register_final(ecs_iter_t *it) {
+    ecs_world_t *world = it->world;
+
+    int i, count = it->count;
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t e = it->entities[i];
+        if (flecs_components_get(world, ecs_pair(EcsIsA, e)) != NULL) {
+            ecs_throw(ECS_INVALID_OPERATION,
+                "cannot change trait 'Final' for '%s': already inherited from",
+                    flecs_errstr(ecs_get_path(world, e)));
+        }
+
+        ecs_check(!flecs_component_is_trait_locked(world, e),
+            ECS_INVALID_OPERATION, "cannot change trait 'Final' for '%s': "
+            "already queried for (apply traits before creating queries)",
+                flecs_errstr(ecs_get_path(world, e)));
+
+    error:
+        continue;
+    }
+}
+
+static
+void flecs_on_symmetric_add_remove(ecs_iter_t *it) {
+    ecs_entity_t pair = ecs_field_id(it, 0);
+
+    if (!ECS_HAS_ID_FLAG(pair, PAIR)) {
+        /* If relationship was not added as a pair, there's nothing to do */
+        return;
+    }
+
+    ecs_world_t *world = it->world;
+    ecs_entity_t rel = ECS_PAIR_FIRST(pair);
+    ecs_entity_t tgt = ecs_pair_second(world, pair);
+    ecs_entity_t event = it->event;
+
+    if (tgt) {
+        int i, count = it->count;
+        for (i = 0; i < count; i ++) {
+            ecs_entity_t subj = it->entities[i];
+            if (event == EcsOnAdd) {
+                if (!ecs_has_id(it->real_world, tgt, ecs_pair(rel, subj))) {
+                    ecs_add_pair(it->world, tgt, rel, subj);
+                }
+            } else {
+                if (ecs_has_id(it->real_world, tgt, ecs_pair(rel, subj))) {
+                    ecs_remove_pair(it->world, tgt, rel, subj);
+                }
+            }
+        }
+    }
+}
+
+static
+void flecs_register_symmetric(ecs_iter_t *it) {
+    ecs_world_t *world = it->real_world;
+
+    int i, count = it->count;
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t r = it->entities[i];
+        flecs_assert_relation_unused(world, r, EcsSymmetric);
+
+        /* Create observer that adds the reverse relationship when R(X, Y) is
+         * added, or removes the reverse relationship when R(X, Y) is removed. */
+        ecs_observer(world, {
+            .entity = ecs_entity(world, { .parent = r }),
+            .query.terms[0] = { .id = ecs_pair(r, EcsWildcard) },
+            .callback = flecs_on_symmetric_add_remove,
+            .events = {EcsOnAdd, EcsOnRemove}
+        });
+    }
+}
+
+#ifdef FLECS_DEBUG
+static
+void flecs_on_singleton_add_remove(ecs_iter_t *it) {
+    ecs_entity_t component = ecs_field_id(it, 0);
+    ecs_world_t *world = it->real_world;
+
+    int i, count = it->count;
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t e = it->entities[i];
+
+        if (ECS_IS_PAIR(component)) {
+            ecs_entity_t relationship = ECS_PAIR_FIRST(component);
+            e = (uint32_t)e;
+            ecs_check(relationship == e, ECS_CONSTRAINT_VIOLATED,
+                "cannot add singleton pair '%s' to entity '%s': singleton "
+                "component '%s' must be added to itself",
+                    flecs_errstr(ecs_id_str(world, component)),
+                    flecs_errstr_1(ecs_get_path(world, it->entities[i])),
+                    flecs_errstr_2(ecs_get_path(it->world, relationship)));
+            (void)relationship;
+        } else {
+            ecs_check(component == e, ECS_CONSTRAINT_VIOLATED,
+                "cannot add singleton component '%s' to entity '%s': singleton"
+                " component must be added to itself",
+                    flecs_errstr(ecs_get_path(it->world, component)),
+                    flecs_errstr_1(ecs_get_path(it->world, it->entities[i])));
+        }
+
+    error:
+        continue;
+    }
+}
+#endif
+
+static
+void flecs_register_singleton(ecs_iter_t *it) {
+    flecs_register_flag_for_trait(
+        it, EcsSingleton, EcsIdSingleton, 0, 0);
+
+#ifdef FLECS_DEBUG
+    ecs_world_t *world = it->real_world;
+    int i, count = it->count;
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t component = it->entities[i];
+
+        /* Create observer that enforces that singleton is only added to self */
+        ecs_observer(world, {
+            .entity = ecs_entity(world, {
+                .name = "debug_only_SingletonInvariantCheck", .parent = component
+            }),
+            .query.terms[0] = {
+                .id = component, .src.id = EcsThis|EcsSelf
+            },
+            .callback = flecs_on_singleton_add_remove,
+            .events = {EcsOnAdd}
+        });
+
+        ecs_observer(world, {
+            .entity = ecs_entity(world, {
+                .name = "debug_only_SingletonPairInvariantCheck", .parent = component
+            }),
+            .query.terms[0] = {
+                .id = ecs_pair(component, EcsWildcard), .src.id = EcsThis|EcsSelf
+            },
+            .callback = flecs_on_singleton_add_remove,
+            .events = {EcsOnAdd}
+        });
+    }
+#endif
+}
+
+ecs_entity_t flecs_get_oneof(
+    const ecs_world_t *world,
+    ecs_entity_t e)
+{
+    if (ecs_is_alive(world, e)) {
+        if (ecs_has_id(world, e, EcsOneOf)) {
+            return e;
+        } else {
+            return ecs_get_target(world, e, EcsOneOf, 0);
+        }
+    } else {
+        return 0;
+    }
+}
+
+#ifdef FLECS_DEBUG
+int flecs_check_constraint_traits(
+    ecs_world_t *world,
+    ecs_component_record_t *cr,
+    ecs_entity_t rel,
+    ecs_entity_t tgt)
+{
+    if (ECS_IS_PAIR(cr->id)) {
+        if (tgt) {
+            /* Can't use relationship as target */
+            if (ecs_has_id(world, tgt, EcsRelationship)) {
+                if (!ecs_id_is_wildcard(rel) &&
+                    !ecs_has_id(world, rel, EcsTrait))
+                {
+                    ecs_throw(ECS_CONSTRAINT_VIOLATED, "cannot use '%s' as target"
+                        " in pair '%s': '%s' has the Relationship trait",
+                            flecs_errstr(ecs_get_path(world, tgt)),
+                            flecs_errstr_1(ecs_id_str(world, cr->id)),
+                            flecs_errstr_2(ecs_get_path(world, tgt)));
+                }
+            }
+        }
+
+        if (ecs_has_id(world, rel, EcsTarget)) {
+            ecs_throw(ECS_CONSTRAINT_VIOLATED, "cannot use '%s' as relationship "
+                "in pair '%s': '%s' has the Target trait",
+                    flecs_errstr(ecs_get_path(world, rel)),
+                    flecs_errstr_1(ecs_id_str(world, cr->id)),
+                    flecs_errstr_2(ecs_get_path(world, rel)));
+        }
+
+        if (tgt && !ecs_id_is_wildcard(tgt)) {
+            /* Check if target of relationship satisfies OneOf property */
+            ecs_entity_t oneof = flecs_get_oneof(world, rel);
+            if (oneof) {
+                if (!ecs_has_pair(world, tgt, EcsChildOf, oneof)) {
+                    if (oneof == rel) {
+                        ecs_throw(ECS_CONSTRAINT_VIOLATED,
+                            "cannot use '%s' as target in pair '%s': "
+                            "relationship '%s' has the OneOf trait and '%s' "
+                            "is not a child of '%s'",
+                                flecs_errstr(ecs_get_path(world, tgt)),
+                                flecs_errstr_1(ecs_id_str(world, cr->id)),
+                                flecs_errstr_2(ecs_get_path(world, rel)),
+                                flecs_errstr_3(ecs_get_path(world, tgt)),
+                                flecs_errstr_4(ecs_get_path(world, rel)));
+                    } else {
+                        ecs_throw(ECS_CONSTRAINT_VIOLATED,
+                            "cannot use '%s' as target in pair '%s': "
+                            "relationship '%s' has (OneOf, %s) and '%s' "
+                            "is not a child of '%s'",
+                                flecs_errstr(ecs_get_path(world, tgt)),
+                                flecs_errstr_1(ecs_id_str(world, cr->id)),
+                                flecs_errstr_2(ecs_get_path(world, rel)),
+                                flecs_errstr_3(ecs_get_path(world, oneof)),
+                                flecs_errstr_4(ecs_get_path(world, tgt)),
+                                flecs_errstr_5(ecs_get_path(world, oneof)));
+                    }
+                }
+            }
+
+            /* Check if we're not trying to inherit from a final target */
+            if (rel == EcsIsA && ecs_has_id(world, tgt, EcsFinal)) {
+                ecs_throw(ECS_CONSTRAINT_VIOLATED,
+                    "cannot add '(IsA, %s)': '%s' has the Final trait",
+                        flecs_errstr(ecs_get_path(world, tgt)),
+                        flecs_errstr_1(ecs_get_path(world, tgt)));
+            }
+        }
+    } else {
+        bool is_tgt = false;
+        if (ecs_has_id(world, rel, EcsRelationship) ||
+            (is_tgt = ecs_has_id(world, rel, EcsTarget)))
+        {
+            if (is_tgt) {
+                ecs_throw(ECS_CONSTRAINT_VIOLATED,
+                    "cannot use '%s' by itself: it has the Target trait and "
+                    "must be used in pair with relationship",
+                        flecs_errstr(ecs_get_path(world, rel)));
+            } else {
+                ecs_throw(ECS_CONSTRAINT_VIOLATED,
+                    "cannot use '%s' by itself: it has the Relationship trait "
+                    "and must be used in pair with target",
+                        flecs_errstr(ecs_get_path(world, rel)));
+            }
+        }
+    }
+
+    return 0;
+error:
+    return -1;
+}
+#endif
+
+void flecs_bootstrap_constraint_traits(
+    ecs_world_t *world)
+{
+    flecs_bootstrap_make_alive(world, EcsFinal);
+    flecs_bootstrap_make_alive(world, EcsTrait);
+    flecs_bootstrap_make_alive(world, EcsRelationship);
+    flecs_bootstrap_make_alive(world, EcsTarget);
+    
+    /* Traits */
+    flecs_bootstrap_trait(world, EcsSymmetric);
+    flecs_bootstrap_trait(world, EcsSingleton);
+    flecs_bootstrap_trait(world, EcsFinal);
+    flecs_bootstrap_trait(world, EcsAcyclic);
+    flecs_bootstrap_trait(world, EcsOneOf);
+    flecs_bootstrap_trait(world, EcsTrait);
+    flecs_bootstrap_trait(world, EcsRelationship);
+    flecs_bootstrap_trait(world, EcsTarget);
+
+    /* Observers */
+    ecs_observer(world, {
+        .query.terms = {{ .id = EcsFinal }},
+        .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
+        .events = {EcsOnAdd},
+        .callback = flecs_register_final,
+        .global_observer = true
+    });
+
+    ecs_observer(world, {
+        .query.terms = {{ .id = EcsSymmetric }},
+        .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
+        .events = {EcsOnAdd},
+        .callback = flecs_register_symmetric,
+        .global_observer = true
+    });
+
+    ecs_observer(world, {
+        .query.terms = {{ .id = EcsSingleton }},
+        .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
+        .events = {EcsOnAdd},
+        .callback = flecs_register_singleton,
+        .global_observer = true
+    });
+
+    /* Properties */
+    ecs_add_id(world, EcsChildOf, EcsTrait);
+    ecs_add_id(world, EcsIsA, EcsTrait);
+    ecs_add_id(world, EcsChildOf, EcsAcyclic);
+
+    /* Relationships */
+    ecs_add_id(world, EcsChildOf, EcsRelationship);
+    ecs_add_id(world, EcsIsA, EcsRelationship);
+    ecs_add_id(world, EcsSlotOf, EcsRelationship);
+    ecs_add_id(world, EcsDependsOn, EcsRelationship);
+    ecs_add_id(world, EcsWith, EcsRelationship);
+    ecs_add_id(world, EcsOnDelete, EcsRelationship);
+    ecs_add_id(world, EcsOnDeleteTarget, EcsRelationship);
+    ecs_add_id(world, EcsOnInstantiate, EcsRelationship);
+    ecs_add_id(world, ecs_id(EcsIdentifier), EcsRelationship);
+
+    /* Targets */
+    ecs_add_id(world, EcsOverride, EcsTarget);
+    ecs_add_id(world, EcsInherit, EcsTarget);
+    ecs_add_id(world, EcsDontInherit, EcsTarget);
+
+    /* Traversable relationships are always acyclic */
+    ecs_add_pair(world, EcsTraversable, EcsWith, EcsAcyclic);
+
+    /* Modules are singletons */
+    ecs_add_pair(world, EcsModule, EcsWith, EcsSingleton);
+
+    /* Acyclic relationships */
+    ecs_add_id(world, EcsWith, EcsAcyclic);
+
+    /* Exclusive properties */
+    ecs_add_id(world, EcsOneOf, EcsExclusive);
+}
+
+#endif
 
 #ifdef FLECS_HTTP
 
@@ -65540,182 +64736,6 @@ const char* flecs_token(
 
 #ifdef FLECS_PIPELINE
 
-static
-ecs_ftime_t flecs_insert_sleep(
-    ecs_world_t *world,
-    ecs_time_t *stop)
-{
-    flecs_poly_assert(world, ecs_world_t);  
-
-    ecs_time_t start = *stop, now = start;
-    ecs_ftime_t delta_time = (ecs_ftime_t)ecs_time_measure(stop);
-
-    if (ECS_EQZERO(world->info.target_fps)) {
-        return delta_time;
-    }
-
-    ecs_os_perf_trace_push("flecs.insert_sleep");
-
-    ecs_ftime_t target_delta_time =
-        ((ecs_ftime_t)1.0 / (ecs_ftime_t)world->info.target_fps);
-
-    /* Calculate the time we need to sleep by taking the measured delta from the
-     * previous frame, and subtracting it from target_delta_time. */
-    ecs_ftime_t sleep = target_delta_time - delta_time;
-
-    /* Pick a sleep interval that is smaller than the time one frame should take,
-     * which increases the sleep precision. */
-    ecs_ftime_t sleep_time = sleep / (ecs_ftime_t)8.0;
-    if (sleep_time < 0) {
-        sleep_time = 0;
-        delta_time = (ecs_ftime_t)ecs_time_measure(&now);
-    } else {
-        do {
-            /* Only call sleep when sleep_time is not 0. On some platforms, even
-            * a sleep with a timeout of 0 can cause stutter. */
-            if (ECS_NEQZERO(sleep_time)) {
-                ecs_sleepf((double)sleep_time);
-            }
-
-            now = start;
-            delta_time = (ecs_ftime_t)ecs_time_measure(&now);
-        } while ((target_delta_time - delta_time) >
-            (sleep_time / (ecs_ftime_t)2.0));
-    }
-
-    ecs_os_perf_trace_pop("flecs.insert_sleep");
-
-    *stop = now;
-    return delta_time;
-}
-
-static
-ecs_ftime_t flecs_start_measure_frame(
-    ecs_world_t *world,
-    ecs_ftime_t user_delta_time)
-{
-    flecs_poly_assert(world, ecs_world_t);  
-
-    ecs_ftime_t delta_time = 0;
-
-    if ((world->flags & EcsWorldMeasureFrameTime) ||
-        (ECS_EQZERO(user_delta_time)))
-    {
-        ecs_time_t t = world->frame_start_time;
-        do {
-            if (world->frame_start_time.nanosec || world->frame_start_time.sec){
-                delta_time = flecs_insert_sleep(world, &t);
-            } else {
-                ecs_time_measure(&t);
-                if (ECS_NEQZERO(world->info.target_fps)) {
-                    delta_time = (ecs_ftime_t)1.0 / world->info.target_fps;
-                } else {
-                    /* Best guess */
-                    delta_time = (ecs_ftime_t)1.0 / (ecs_ftime_t)60.0;
-
-                    if (ECS_EQZERO(delta_time)) {
-                        delta_time = user_delta_time;
-                        break;
-                    }
-                }
-            }
-
-        /* Keep trying while delta_time is zero */
-        } while (ECS_EQZERO(delta_time));
-
-        world->frame_start_time = t;
-
-        /* Keep track of total time passed in world */
-        world->info.world_time_total_raw += (double)delta_time;
-    }
-
-    return (ecs_ftime_t)delta_time;
-}
-
-static
-void flecs_stop_measure_frame(
-    ecs_world_t* world)
-{
-    flecs_poly_assert(world, ecs_world_t);  
-
-    if (world->flags & EcsWorldMeasureFrameTime) {
-        ecs_time_t t = world->frame_start_time;
-        world->info.frame_time_total += (ecs_ftime_t)ecs_time_measure(&t);
-    }
-}
-
-ecs_ftime_t ecs_frame_begin(
-    ecs_world_t *world,
-    ecs_ftime_t user_delta_time)
-{
-    flecs_poly_assert(world, ecs_world_t);
-    ecs_check(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION, 
-        "cannot begin frame while world is in readonly mode");
-    ecs_check(!(world->flags & EcsWorldFrameInProgress), ECS_INVALID_OPERATION, 
-        "cannot begin frame while frame is already in progress");
-    ecs_check(ECS_NEQZERO(user_delta_time) || ecs_os_has_time(), 
-        ECS_MISSING_OS_API, "get_time");
-
-    /* Start measuring total frame time */
-    ecs_ftime_t delta_time = flecs_start_measure_frame(world, user_delta_time);
-    if (ECS_EQZERO(user_delta_time)) {
-        user_delta_time = delta_time;
-    }
-
-    world->info.delta_time_raw = user_delta_time;
-    world->info.delta_time = user_delta_time * world->info.time_scale;
-
-    /* Keep track of total scaled time passed in world */
-    world->info.world_time_total += (double)world->info.delta_time;
-
-    /* Command buffer capturing */
-    world->on_commands_active = world->on_commands;
-    world->on_commands = NULL;
-
-    world->on_commands_ctx_active = world->on_commands_ctx;
-    world->on_commands_ctx = NULL;
-
-    ecs_run_aperiodic(world, 0);
-
-    world->flags |= EcsWorldFrameInProgress;
-
-    return world->info.delta_time;
-error:
-    return (ecs_ftime_t)0;
-}
-
-void ecs_frame_end(
-    ecs_world_t *world)
-{
-    flecs_poly_assert(world, ecs_world_t);
-    ecs_check(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION, 
-        "cannot end frame while world is in readonly mode");
-    ecs_check((world->flags & EcsWorldFrameInProgress), ECS_INVALID_OPERATION, 
-        "cannot end frame while frame is not in progress");
-
-    world->info.frame_count_total ++;
-    
-    int32_t i, count = world->stage_count;
-    for (i = 0; i < count; i ++) {
-        flecs_stage_merge_post_frame(world, world->stages[i]);
-    }
-
-    flecs_stop_measure_frame(world);
-
-    /* Reset command handler each frame */
-    world->on_commands_active = NULL;
-    world->on_commands_ctx_active = NULL;
-
-    world->flags &= ~EcsWorldFrameInProgress;
-    
-error:
-    return;
-}
-
-#endif
-
-#ifdef FLECS_PIPELINE
-
 /* Free state-owned resources without touching the query. Used when the
  * query is owned by something else (e.g. ecs_query_update has replaced it). */
 static void flecs_pipeline_state_free(
@@ -66488,23 +65508,6 @@ error:
     return false;
 }
 
-void ecs_set_time_scale(
-    ecs_world_t *world,
-    ecs_ftime_t scale)
-{
-    flecs_poly_assert(world, ecs_world_t);
-    ecs_assert(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION,
-        "cannot set time scale while world is in readonly mode");
-    world->info.time_scale = scale;
-}
-
-void ecs_reset_clock(
-    ecs_world_t *world)
-{
-    world->info.world_time_total = 0;
-    world->info.world_time_total_raw = 0;
-}
-
 void ecs_set_pipeline(
     ecs_world_t *world,
     ecs_entity_t pipeline)
@@ -67029,6 +66032,1261 @@ bool ecs_using_task_threads(
 {
     return world->workers_use_task_api;
 }
+
+#endif
+
+#ifdef FLECS_PREFAB
+
+static
+void flecs_instantiate_slot(
+    ecs_world_t *world,
+    ecs_entity_t base,
+    ecs_entity_t instance,
+    ecs_entity_t slot_of,
+    ecs_entity_t slot,
+    ecs_entity_t child)
+{
+    if (base == slot_of) {
+        /* Instance inherits from slot_of, add slot to instance */
+        ecs_component_record_t *cr = flecs_components_ensure(
+            world, ecs_pair(slot, child));
+        ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        ecs_record_t *r = flecs_entities_get(world, instance);
+        ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        flecs_sparse_on_add_cr(world, 
+            r->table, ECS_RECORD_TO_ROW(r->row), cr, true, NULL);
+    } else {
+        /* Slot is registered for other prefab, travel hierarchy
+         * upwards to find instance that inherits from slot_of */
+        ecs_entity_t parent = instance;
+        int32_t depth = 0;
+        do {
+            if (ecs_has_pair(world, parent, EcsIsA, slot_of)) {
+                const char *name = ecs_get_name(world, slot);
+                if (name == NULL) {
+                    char *slot_of_str = ecs_get_path(world, slot_of);
+                    ecs_throw(ECS_INVALID_OPERATION, "prefab '%s' has unnamed "
+                        "slot (slots must be named)", slot_of_str);
+                    ecs_os_free(slot_of_str);
+                    return;
+                }
+
+                /* The 'slot' variable is currently pointing to a child (or 
+                 * grandchild) of the current base. Find the original slot by
+                 * looking it up under the prefab it was registered. */
+                if (depth == 0) {
+                    /* If the current instance is an instance of slot_of, just
+                     * lookup the slot by name, which is faster than having to
+                     * create a relative path. */
+                    slot = ecs_lookup_child(world, slot_of, name);
+                } else {
+                    /* If the slot is more than one level away from the slot_of
+                     * parent, use a relative path to find the slot */
+                    char *path = ecs_get_path_w_sep(world, parent, child, ".",
+                        NULL);
+                    slot = ecs_lookup_path_w_sep(world, slot_of, path, ".", 
+                        NULL, false);
+                    ecs_os_free(path);
+                }
+
+                if (slot == 0) {
+                    char *slot_of_str = ecs_get_path(world, slot_of);
+                    char *slot_str = ecs_get_path(world, slot);
+                    ecs_throw(ECS_INVALID_OPERATION,
+                        "'%s' is not in hierarchy for slot '%s'",
+                            slot_of_str, slot_str);
+                    ecs_os_free(slot_of_str);
+                    ecs_os_free(slot_str);
+                }
+
+                ecs_add_pair(world, parent, slot, child);
+                break;
+            }
+
+            depth ++;
+        } while ((parent = ecs_get_target(world, parent, EcsChildOf, 0)));
+        
+        if (parent == 0) {
+            char *slot_of_str = ecs_get_path(world, slot_of);
+            char *slot_str = ecs_get_path(world, slot);
+            ecs_throw(ECS_INVALID_OPERATION,
+                "'%s' is not in hierarchy for slot '%s'",
+                    slot_of_str, slot_str);
+            ecs_os_free(slot_of_str);
+            ecs_os_free(slot_str);
+        }
+    }
+
+error:
+    return;
+}
+
+static
+int32_t flecs_child_type_insert(
+    ecs_type_t *type,
+    void **component_data,
+    ecs_id_t id)
+{
+    int32_t i, count = type->count;
+    for (i = 0; i < count; i ++) {
+        ecs_id_t cur = type->array[i];
+        if (cur == id) {
+            /* Id is already part of type */
+            return -1;
+        }
+
+        if (cur > id) {
+            /* A larger id was found so id can't be part of the type. */
+            break;
+        }
+    }
+
+    /* Assumes that the array has enough memory to store the new element. */
+    int32_t to_move = type->count - i;
+    if (to_move) {
+        ecs_os_memmove(&type->array[i + 1],
+            &type->array[i], to_move * ECS_SIZEOF(ecs_id_t));
+        ecs_os_memmove(&component_data[i + 1],
+            &component_data[i], to_move * ECS_SIZEOF(void*));
+    }
+
+    component_data[i] = NULL;
+    type->array[i] = id;
+    type->count ++;
+
+    return i;
+}
+
+ecs_entity_t flecs_instantiate_alloc_child_id(
+    ecs_world_t *world,
+    ecs_entity_t prefab_child,
+    ecs_entity_t root_prefab,
+    ecs_entity_t root_instance)
+{
+    if ((uint32_t)prefab_child < (uint32_t)root_prefab) {
+        return flecs_new_id(world);
+    }
+
+    ecs_entity_t prefab_offset =
+        (uint32_t)prefab_child - (uint32_t)root_prefab;
+    ecs_assert(prefab_offset != 0, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_entity_t instance_child = (uint32_t)root_instance + prefab_offset;
+    ecs_entity_t alive_id = flecs_entities_get_alive(world, instance_child);
+    if (alive_id && flecs_entities_is_alive(world, alive_id)) {
+        return flecs_new_id(world);
+    }
+
+    instance_child = root_instance + prefab_offset;
+    flecs_entities_make_alive(world, instance_child);
+    flecs_entities_ensure(world, instance_child);
+    ecs_assert(ecs_is_alive(world, instance_child), ECS_INTERNAL_ERROR, NULL);
+
+    return instance_child;
+}
+
+void flecs_instantiate_sparse(
+    ecs_world_t *world,
+    const ecs_table_range_t *base_child_range,
+    const ecs_entity_t *base_children,
+    ecs_table_t *instance_table,
+    const ecs_entity_t *instance_children,
+    int32_t row_offset,
+    bool emit_non_sparse)
+{
+    ecs_table_t *base_child_table = base_child_range->table;
+    if (!emit_non_sparse && !(base_child_table->flags & EcsTableHasSparse)) {
+        return;
+    }
+
+    ecs_table_record_t *trs = base_child_table->_->records;
+    int32_t i, count = base_child_table->type.count;
+    for (i = 0; i < count; i ++) {
+        ecs_table_record_t *tr = &trs[i];
+        ecs_component_record_t *cr = tr->hdr.cr;
+
+        bool sparse = cr->flags & EcsIdSparse;
+        if (!sparse && !emit_non_sparse) {
+            continue;
+        }
+
+        const ecs_type_info_t *ti = cr->type_info;
+        if (!ti) {
+            continue;
+        }
+
+        if (cr->flags & EcsIdOnInstantiateDontInherit) {
+            continue;
+        }
+
+        ecs_id_t id = base_child_table->type.array[i];
+
+        for (int32_t j = 0; j < base_child_range->count; j ++) {
+            ecs_entity_t instance_child = instance_children[j];
+            void *dst_ptr = NULL;
+
+            /* Sparse component values live outside the instance table, so they
+             * are copied here. Non-sparse override values are already in place
+             * (copied when the instance entered its table). */
+            if (sparse) {
+                ecs_entity_t child = base_children[j + base_child_range->offset];
+
+                void *src_ptr = flecs_sparse_get(cr->sparse, ti->size, child);
+                ecs_assert(src_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+                dst_ptr = flecs_sparse_get(
+                    cr->sparse, ti->size, instance_child);
+                ecs_assert(dst_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+                flecs_type_info_copy(dst_ptr, src_ptr, 1, ti);
+            }
+
+            flecs_notify_on_set(
+                world, instance_table, row_offset + j, id, true, dst_ptr);
+        }
+    }
+}
+
+static
+void flecs_instantiate_children(
+    ecs_world_t *world,
+    ecs_entity_t base,
+    ecs_entity_t instance,
+    ecs_table_range_t child_range,
+    const ecs_instantiate_ctx_t *ctx,
+    int32_t depth)
+{
+    if (!child_range.count) {
+        return;
+    }
+
+    ecs_table_t *child_table = child_range.table;
+    ecs_type_t type = child_table->type;
+
+    ecs_entity_t slot_of = 0;
+    ecs_entity_t *ids = type.array;
+    int32_t type_count = type.count;
+
+    ecs_record_t *r = flecs_entities_get(world, instance);
+    ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_table_t *table = r->table;
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    /* Instantiate child table for each instance */
+
+    /* Create component array for creating the table */
+    ecs_table_diff_t diff = { .added = {0}};
+    diff.added.array = ecs_os_alloca_n(ecs_entity_t, type_count + 1);
+    void **component_data = ecs_os_alloca_n(void*, type_count + 1);
+
+    /* Copy in component identifiers. Find the base index in the component
+     * array, since we'll need this to replace the base with the instance id */
+    int j, i, childof_base_index = -1;
+    for (i = 0; i < type_count; i ++) {
+        ecs_id_t id = ids[i];
+
+        /* If id has DontInherit flag don't inherit it, except for the name
+         * and ChildOf pairs. The name is preserved so applications can lookup
+         * the instantiated children by name. The ChildOf pair is replaced later
+         * with the instance parent. */
+        if ((id != ecs_pair(ecs_id(EcsIdentifier), EcsName)) &&
+            ECS_PAIR_FIRST(id) != EcsChildOf) 
+        {
+            ecs_table_record_t *tr = &child_table->_->records[i];
+            ecs_component_record_t *cr = tr->hdr.cr;
+            if (cr->flags & EcsIdOnInstantiateDontInherit) {
+                continue;
+            }
+        }
+
+        /* If child is a slot, keep track of which parent to add it to, but
+         * don't add slot relationship to child of instance. If this is a child
+         * of a prefab, keep the SlotOf relationship intact. */
+        if (!(table->flags & EcsTableIsPrefab)) {
+            if (ECS_IS_PAIR(id) && ECS_PAIR_FIRST(id) == EcsSlotOf) {
+                ecs_assert(slot_of == 0, ECS_INTERNAL_ERROR, NULL);
+                slot_of = ecs_pair_second(world, id);
+                continue;
+            }
+        }
+
+        /* Keep track of the element that creates the ChildOf relationship with
+         * the prefab parent. We need to replace this element to make sure the
+         * created children point to the instance and not the prefab */ 
+        if (ECS_HAS_RELATION(id, EcsChildOf) && 
+           (ECS_PAIR_SECOND(id) == (uint32_t)base)) {
+            childof_base_index = diff.added.count;
+        }
+
+        /* If this is a pure override, make sure we have a concrete version of the
+         * component. This relies on the fact that overrides always come after
+         * concrete components in the table type so we can check the components
+         * that have already been added to the child table type. */
+        if (ECS_HAS_ID_FLAG(id, AUTO_OVERRIDE)) {
+            ecs_id_t concreteId = id & ~ECS_AUTO_OVERRIDE;
+            int32_t insert_index = flecs_child_type_insert(
+                &diff.added, component_data, concreteId);
+            if (childof_base_index != -1 && insert_index != -1 &&
+                insert_index <= childof_base_index)
+            {
+                childof_base_index ++;
+            }
+            continue;
+        }
+
+        int32_t column = ecs_table_type_to_column_index(child_table, i);
+        if (column != -1) {
+            component_data[diff.added.count] = ecs_table_get_column(
+                child_table, column, child_range.offset);
+        } else {
+            component_data[diff.added.count] = NULL;
+        }
+
+        diff.added.array[diff.added.count] = id;
+        diff.added.count ++;
+        diff.added_flags |= flecs_id_flags_get(world, id);
+    }
+
+    /* Table must contain children of base */
+    ecs_assert(childof_base_index != -1, ECS_INTERNAL_ERROR, NULL);
+
+    /* If children are added to a prefab, make sure they are prefabs too */
+    if (table->flags & EcsTableIsPrefab) {
+        if (flecs_child_type_insert(
+            &diff.added, component_data, EcsPrefab) != -1) 
+        {
+            childof_base_index ++;
+        }
+    }
+
+    /* Instantiate the prefab child table for each new instance */
+    ecs_entity_t *child_ids = flecs_walloc_n(
+        world, ecs_entity_t, child_range.count);
+    ecs_table_t *i_table = NULL;
+
+    /* Replace ChildOf element in the component array with instance id */
+    diff.added.array[childof_base_index] = ecs_pair(EcsChildOf, instance);
+
+    /* Find or create table */
+    i_table = flecs_table_find_or_create(world, &diff.added);
+
+    ecs_assert(i_table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(i_table->type.count == diff.added.count,
+        ECS_INTERNAL_ERROR, NULL);
+
+    /* The instance is trying to instantiate from a base that is also
+     * its parent. This would cause the hierarchy to instantiate itself,
+     * which would cause infinite recursion. */
+    const ecs_entity_t *children = ecs_table_entities(child_table);
+
+#ifdef FLECS_DEBUG
+    for (j = 0; j < child_range.count; j ++) {
+        ecs_entity_t child = children[j + child_range.offset];        
+        ecs_check(child != instance, ECS_INVALID_PARAMETER, 
+            "cycle detected in IsA relationship");
+    }
+#else
+    /* Bit of boilerplate to ensure that we don't get warnings about the
+     * error label not being used. */
+    ecs_check(true, ECS_INVALID_OPERATION, NULL);
+#endif
+
+    /* Attempt to reserve ids for children that have the same offset from
+     * the instance as from the base prefab. This ensures stable ids for
+     * instance children, even across networked applications. */
+    ecs_instantiate_ctx_t ctx_cur = {base, instance};
+    if (ctx) {
+        ctx_cur = *ctx;
+    }
+
+    for (j = 0; j < child_range.count; j ++) {
+        ecs_entity_t prefab_child = children[j + child_range.offset];
+        child_ids[j] = flecs_instantiate_alloc_child_id(
+            world, prefab_child, ctx_cur.root_prefab, ctx_cur.root_instance);
+    }
+
+    /* Create children */
+    int32_t child_row;
+    diff.added_flags |= EcsTableEdgeReparent;
+    const ecs_entity_t *i_children = flecs_bulk_new(world, i_table, child_ids,
+        &diff.added, child_range.count, component_data, false, &child_row, &diff);
+
+    flecs_instantiate_sparse(
+        world, &child_range, children, i_table, i_children, child_row, false);
+
+    /* If children are slots, add slot relationships to parent */
+    if (slot_of) {
+        for (j = 0; j < child_range.count; j ++) {
+            ecs_entity_t child = children[j + child_range.offset];
+            ecs_entity_t i_child = i_children[j];
+            flecs_instantiate_slot(
+                world, base, instance, slot_of, child, i_child);
+        }
+    }
+
+    /* If prefab child table has children itself, recursively instantiate */
+    for (j = 0; j < child_range.count; j ++) {
+        ecs_entity_t child = children[j + child_range.offset];
+        flecs_instantiate(world, child, i_children[j], &ctx_cur, depth + 1);
+    }
+
+    flecs_wfree_n(world, ecs_entity_t, child_range.count, child_ids);
+error:
+    return;    
+}
+
+void flecs_instantiate_dont_fragment(
+    ecs_world_t *world,
+    ecs_entity_t base,
+    ecs_entity_t instance)
+{
+    ecs_component_record_t *cur = world->cr_non_fragmenting_head;
+
+    while (cur) {
+        ecs_assert(cur->flags & EcsIdSparse, ECS_INTERNAL_ERROR, NULL);
+        if (cur->sparse && !(cur->flags & EcsIdOnInstantiateInherit) && 
+            !ecs_id_is_wildcard(cur->id)) 
+        {
+            if (flecs_component_sparse_has(cur, base)) {
+                void *base_ptr = flecs_component_sparse_get(
+                    world, cur, NULL, base);
+                const ecs_type_info_t *ti = cur->type_info;
+
+                ecs_record_t *r = flecs_entities_get(world, instance);
+
+                void *ptr = NULL;
+                bool is_new = flecs_sparse_on_add_cr(world,
+                    r->table, ECS_RECORD_TO_ROW(r->row), cur, true, &ptr);
+
+                if (ti) {
+                    ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+                    flecs_type_info_copy(ptr, base_ptr, 1, ti);
+                }
+
+                if (is_new) {
+                    ecs_type_t added = { .array = &cur->id, .count = 1 };
+                    flecs_emit(world, world, &(ecs_event_desc_t){
+                        .event = EcsOnAdd,
+                        .ids = &added,
+                        .table = r->table,
+                        .offset = ECS_RECORD_TO_ROW(r->row),
+                        .count = 1,
+                        .observable = world,
+                        .flags = EcsEventNoOnSet
+                    });
+                }
+
+                if (ti) {
+                    flecs_notify_on_set(
+                        world, r->table, ECS_RECORD_TO_ROW(r->row),
+                        cur->id, true, ptr);
+                }
+            }
+        }
+
+        cur = cur->non_fragmenting.next;
+    }
+}
+
+static
+void flecs_instantiate_override_dont_fragment(
+    ecs_world_t *world,
+    ecs_table_t *base_table,
+    ecs_entity_t instance)
+{
+    int32_t i, type_count = base_table->type.count;
+    for (i = 0; i < type_count; i ++) {
+        ecs_id_t id = base_table->type.array[i];
+        if (!(id & ECS_AUTO_OVERRIDE)) {
+            continue;
+        }
+
+        id &= ~ECS_AUTO_OVERRIDE;
+
+        ecs_flags32_t flags = flecs_component_get_flags(world, id);
+        if (!(flags & EcsIdDontFragment)) {
+            continue;
+        }
+
+        ecs_add_id(world, instance, id);
+    }
+}
+
+void flecs_instantiate(
+    ecs_world_t *world,
+    ecs_entity_t base,
+    ecs_entity_t instance,
+    const ecs_instantiate_ctx_t *ctx,
+    int32_t depth)
+{
+    ecs_record_t *record = flecs_entities_get_any(world, base);
+    ecs_table_t *base_table = record->table;
+    ecs_assert(base_table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_check(depth < FLECS_DAG_DEPTH_MAX, ECS_CYCLE_DETECTED, 
+        "likely cycle detected during instantiation of base %s",
+        flecs_errstr(ecs_get_path(world, base)));
+
+    if (base_table->flags & EcsTableOverrideDontFragment) {
+        flecs_instantiate_override_dont_fragment(
+            world, base_table, instance);
+    }
+
+    /* If base has non-fragmenting components, add to instance */
+    if (record->row & EcsEntityHasDontFragment) {
+        flecs_instantiate_dont_fragment(world, base, instance);
+    }
+
+    if (!(base_table->flags & EcsTableIsPrefab)) {
+        /* Don't instantiate children from base entities that aren't prefabs */
+        return;
+    }
+
+    ecs_component_record_t *cr = flecs_components_get(world, ecs_childof(base));
+    if (cr) {
+        ecs_os_perf_trace_push("flecs.instantiate");
+
+        if (cr->flags & EcsIdOrderedChildren) {
+            if (flecs_component_has_non_fragmenting_childof(cr)) {
+                EcsTreeSpawner *ts = flecs_get_mut(
+                    world, base, ecs_id(EcsTreeSpawner), record,
+                    sizeof(EcsTreeSpawner)).ptr;
+                if (!ts) {
+                    ts = flecs_prefab_spawner_build(world, base);
+                }
+
+                if (ts) {
+                    flecs_spawner_instantiate(world, ts, base, instance, ctx);
+                }
+
+                ecs_os_perf_trace_pop("flecs.instantiate");
+                return;
+            }
+
+            ecs_vec_t *children_vec = &cr->pair->ordered_children;
+            int32_t i, count = ecs_vec_count(children_vec);
+            ecs_entity_t *children = ecs_vec_first(children_vec);
+            for (i = 0; i < count; i ++) {
+                ecs_entity_t child = children[i];
+                ecs_table_range_t range = flecs_range_from_entity(world, child);
+
+                if (!(range.table->flags & EcsTableHasChildOf)) {
+                    continue;
+                }
+
+                flecs_instantiate_children(
+                    world, base, instance, range, ctx, depth);
+            }
+        } else {
+            ecs_table_cache_iter_t it;
+            if (flecs_table_cache_iter((ecs_table_cache_t*)cr, &it, EcsTableEmpty|EcsTableNotEmpty)) {
+                const ecs_table_cache_elem_t *elem;
+                while ((elem = flecs_table_cache_next(&it))) {
+                    ecs_table_range_t range = {
+                        elem->table,
+                        0,
+                        ecs_table_count(elem->table)
+                    };
+
+                    flecs_instantiate_children(
+                        world, base, instance, range, ctx, depth);
+                }
+            }
+        }
+
+        ecs_os_perf_trace_pop("flecs.instantiate");
+    }
+error:
+    return;
+}
+
+void* flecs_get_base_component(
+    const ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_id_t component,
+    ecs_component_record_t *cr,
+    int32_t recur_depth)
+{
+    ecs_check(recur_depth < ECS_MAX_RECURSION, ECS_INVALID_OPERATION,
+        "cycle detected in IsA relationship");
+
+    /* Table (and thus entity) does not have component, look for base */
+    if (!(table->flags & EcsTableHasIsA)) {
+        return NULL;
+    }
+
+    if (!(cr->flags & EcsIdOnInstantiateInherit)) {
+        return NULL;
+    }
+
+    /* Exclude Name */
+    if (component == ecs_pair(ecs_id(EcsIdentifier), EcsName)) {
+        return NULL;
+    }
+
+    /* Table should always be in the table index for (IsA, *), otherwise the
+     * HasBase flag should not have been set */
+    const ecs_table_record_t *tr_isa = flecs_component_get_table(
+        world->cr_isa_wildcard, table);
+    ecs_check(tr_isa != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_type_t type = table->type;
+    ecs_id_t *ids = type.array;
+    int32_t i = tr_isa->index, end = tr_isa->count + tr_isa->index;
+    void *ptr = NULL;
+
+    do {
+        ecs_id_t pair = ids[i ++];
+        ecs_entity_t base = ecs_pair_second(world, pair);
+
+        ecs_record_t *r = flecs_entities_get(world, base);
+        ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        table = r->table;
+        ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        const ecs_table_record_t *tr = flecs_component_get_table(cr, table);
+        if (!tr) {
+            if (cr->flags & EcsIdDontFragment) {
+                ptr = flecs_component_sparse_get(world, cr, table, base);
+            }
+
+            if (!ptr) {
+                ptr = flecs_get_base_component(world, table, component, cr, 
+                    recur_depth + 1);
+            }
+        } else {
+            if (cr->flags & EcsIdSparse) {
+                return flecs_component_sparse_get(world, cr, table, base);
+            } else if (tr->column != -1) {
+                int32_t row = ECS_RECORD_TO_ROW(r->row);
+                return flecs_table_get_component(table, tr->column, row).ptr;
+            }
+        }
+    } while (!ptr && (i < end));
+
+    return ptr;
+error:
+    return NULL;
+}
+
+#else
+
+void* flecs_get_base_component(
+    const ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_id_t component,
+    ecs_component_record_t *cr,
+    int32_t recur_depth)
+{
+    (void)world;
+    (void)table;
+    (void)component;
+    (void)cr;
+    (void)recur_depth;
+    return NULL;
+}
+
+void flecs_instantiate(
+    ecs_world_t *world,
+    ecs_entity_t base,
+    ecs_entity_t instance,
+    const ecs_instantiate_ctx_t *ctx,
+    int32_t depth)
+{
+    (void)world;
+    (void)base;
+    (void)instance;
+    (void)ctx;
+    (void)depth;
+}
+
+#endif
+
+#ifdef FLECS_PREFAB
+
+static
+void flecs_tree_spawner_release_tables(
+    ecs_vec_t *v)
+{
+    int32_t i, count = ecs_vec_count(v);
+    ecs_tree_spawner_child_t *elems = ecs_vec_first(v);
+    for (i = 0; i < count; i ++) {
+        ecs_tree_spawner_child_t *elem = &elems[i];
+        flecs_table_release(elem->table);
+    }
+}
+
+void EcsTreeSpawner_free(EcsTreeSpawner *ptr) {
+    int32_t i;
+    for (i = 0; i < FLECS_TREE_SPAWNER_DEPTH_CACHE_SIZE; i ++) {
+        flecs_tree_spawner_release_tables(&ptr->data[i].children);
+        ecs_vec_fini_t(NULL, &ptr->data[i].children, ecs_tree_spawner_child_t);
+    }
+}
+
+static ECS_COPY(EcsTreeSpawner, dst, src, {
+    (void)dst;
+    (void)src;
+    ecs_abort(ECS_INVALID_OPERATION, "TreeSpawner component cannot be copied");
+})
+
+static ECS_MOVE(EcsTreeSpawner, dst, src, {
+    EcsTreeSpawner_free(dst);
+    *dst = *src;
+    ecs_os_zeromem(src);
+})
+
+static ECS_DTOR(EcsTreeSpawner, ptr, {
+    EcsTreeSpawner_free(ptr);
+})
+
+bool flecs_enable_prefab(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    bool enabled)
+{
+    if (!ecs_has_id(world, entity, EcsPrefab)) {
+        return false;
+    }
+
+    /* If entity is a prefab, enable/disable all entities in the type. */
+    const ecs_type_t *type = ecs_get_type(world, entity);
+    ecs_assert(type != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_id_t *ids = type->array;
+    int32_t i, count = type->count;
+    for (i = 0; i < count; i ++) {
+        ecs_id_t component = ids[i];
+        if (component & ECS_ID_FLAGS_MASK) {
+            continue;
+        }
+        ecs_flags32_t flags = ecs_id_get_flags(world, component);
+        if (!(flags & EcsIdOnInstantiateDontInherit)) {
+            ecs_enable(world, component, enabled);
+        }
+    }
+
+    return true;
+}
+
+static
+void flecs_on_add_prefab(ecs_iter_t *it) {
+    ecs_world_t *world = it->world;
+
+    for (int32_t i = 0; i < it->count; i ++) {
+        ecs_entity_t p = it->entities[i];
+
+        ecs_component_record_t *cr = flecs_components_get(
+            world, ecs_childof(p));
+        if (cr && (cr->flags & EcsIdOrderedChildren)) {
+            flecs_ordered_children_set_prefab(world, cr);
+        }
+
+        ecs_iter_t cit = ecs_children(world, p);
+        while (ecs_children_next(&cit)) {
+            for (int32_t j = 0; j < cit.count; j ++) {
+                ecs_add_id(world, cit.entities[j], EcsPrefab);
+            }
+        }
+    }
+}
+
+ecs_entity_t flecs_get_prefab_instance_child(
+    const ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t prefab_child)
+{
+    ecs_map_val_t *index_ptr = ecs_map_get(
+        &world->prefab_child_indices, prefab_child);
+    if (!index_ptr) {
+        return 0;
+    }
+
+    flecs_assert_entity_valid(world, prefab_child, "get_target");
+    ecs_check(ecs_owns_id(world, prefab_child, EcsPrefab), 
+        ECS_INVALID_OPERATION, 
+        "cannot get target for '%s': entity is not/no longer a prefab",
+        flecs_errstr(ecs_id_str(world, prefab_child)));
+
+#ifdef FLECS_DEBUG
+    ecs_entity_t prefab = ecs_get_parent(world, prefab_child);
+    ecs_check(prefab != 0, ECS_INVALID_OPERATION,
+        "cannot get target for '%s': entity has no parent",
+        flecs_errstr(ecs_id_str(world, prefab_child)));
+
+    ecs_check(ecs_owns_id(world, prefab, EcsPrefab), ECS_INVALID_OPERATION,
+        "cannot get target for '%s': parent is not/no longer a prefab",
+        flecs_errstr(ecs_id_str(world, prefab)),
+        flecs_errstr_1(ecs_id_str(world, prefab_child)));
+
+    ecs_check(ecs_has_pair(world, entity, EcsIsA, prefab),
+        ECS_INVALID_OPERATION,
+        "cannot get target for '%s': entity '%s' is not an instance of prefab '%s'",
+            flecs_errstr(ecs_id_str(world, prefab_child)),
+            flecs_errstr_1(ecs_id_str(world, entity)),
+            flecs_errstr_2(ecs_id_str(world, prefab)));
+#endif
+
+    ecs_component_record_t *childof_cr = flecs_components_get(
+        world, ecs_childof(entity));
+    ecs_check(childof_cr != NULL, ECS_INVALID_OPERATION, 
+        "cannot get target for '%s': children of '%s' have changed since "
+        "prefab instantiation",
+            flecs_errstr(ecs_id_str(world, prefab_child)),
+            flecs_errstr_1(ecs_id_str(world, entity)));
+
+    ecs_vec_t *v = &childof_cr->pair->ordered_children;
+    int32_t index = flecs_uto(int32_t, *index_ptr);
+    ecs_check(ecs_vec_count(v) > index, ECS_INVALID_OPERATION,
+        "cannot get target for '%s': children of '%s' have changed since "
+        "prefab instantiation",
+            flecs_errstr(ecs_id_str(world, prefab_child)),
+            flecs_errstr_1(ecs_id_str(world, entity)));
+
+    ecs_entity_t tgt = ecs_vec_get_t(v, ecs_entity_t, index)[0];
+    ecs_check(ecs_has_pair(world, tgt, EcsIsA, prefab_child), ECS_INVALID_OPERATION,
+        "cannot get target for '%s': children of '%s' have changed since "
+        "prefab instantiation",
+            flecs_errstr(ecs_id_str(world, prefab_child)),
+            flecs_errstr_1(ecs_id_str(world, entity)));
+
+    return tgt;
+error:
+    return 0;
+}
+
+void flecs_bootstrap_prefab(
+    ecs_world_t *world)
+{
+    flecs_bootstrap_tag(world, EcsPrefab);
+
+    ecs_add_pair(world, EcsPrefab, EcsOnInstantiate, EcsDontInherit);
+
+    flecs_type_info_init(world, EcsTreeSpawner, {
+        .ctor = flecs_default_ctor,
+        .copy = ecs_copy(EcsTreeSpawner),
+        .move = ecs_move(EcsTreeSpawner),
+        .dtor = ecs_dtor(EcsTreeSpawner)
+    });
+
+    ecs_add_pair(world, ecs_id(EcsTreeSpawner), 
+        EcsOnInstantiate, EcsDontInherit);
+
+    /* Observer that ensures children of a prefab are also prefabs */
+    ecs_observer(world, {
+        .query.terms = {
+            { .id = EcsPrefab },
+        },
+        .events = {EcsOnAdd},
+        .callback = flecs_on_add_prefab,
+        .global_observer = true
+    });
+}
+
+#else
+
+void flecs_bootstrap_prefab(
+    ecs_world_t *world)
+{
+    (void)world;
+#ifdef FLECS_REST
+    /* If the REST addon is enabled, just create an entity called Prefab. 
+     * Without this the explorer tree query (which checks if an entity is a
+     * Prefab) will fail to create. */
+    ecs_entity(world, { .name = "flecs.core.Prefab" });
+#endif
+}
+
+void flecs_fini_prefab(
+    ecs_world_t *world)
+{
+    (void)world;
+}
+
+ecs_entity_t flecs_get_prefab_instance_child(
+    const ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t prefab_child)
+{
+    (void)world;
+    (void)entity;
+    (void)prefab_child;
+    return 0;
+}
+
+#endif
+
+#ifdef FLECS_PREFAB
+
+static
+ecs_type_t flecs_prefab_spawner_build_type(
+    ecs_world_t *world,
+    ecs_entity_t child,
+    ecs_table_t *table,
+    int32_t depth)
+{
+    ecs_type_t dst = {0};
+    ecs_type_t *src = &table->type;
+
+    flecs_type_add(world, &dst, ecs_id(EcsParent));
+
+    int32_t i, count = src->count;
+    for (i = 0; i < count; i ++) {
+        ecs_id_t id = src->array[i];
+        ecs_table_record_t *tr = &table->_->records[i];
+        ecs_component_record_t *cr = tr->hdr.cr;
+
+        if (cr->flags & 
+            (EcsIdOnInstantiateDontInherit|EcsIdOnInstantiateInherit)) 
+        {
+            continue;
+        }
+
+        if (id & ECS_AUTO_OVERRIDE) {
+            /* If AUTO_OVERRIDE flag is set, add component to instances. This 
+             * allows instances to end up with an owned component, even if the
+             * component has the (OnInstantiate, Inherit) trait.
+             * Additionally, this also allows for adding components to instances
+             * that aren't copyable, since a prefab can have a component with
+             * AUTO_OVERRIDE flag, but not have the actual component (which then
+             * isn't copied). */
+            flecs_type_add(world, &dst, id & ~ECS_AUTO_OVERRIDE);
+            continue;
+        }
+
+        ecs_entity_t rel = ECS_PAIR_FIRST(id);
+        if (rel == EcsIsA) {
+            /* If prefab child has IsA relationships, they will be inherited 
+             * through the (IsA, prefab_child) relationship (added below). */
+            continue;
+        }
+
+        if (rel == EcsParentDepth) {
+            /* Replace depth value with the normalized depth for spawner. */
+            id = ecs_value_pair(EcsParentDepth, depth);
+        }
+
+        flecs_type_add(world, &dst, id);
+    }
+
+    flecs_type_add(world, &dst, ecs_isa(child));
+
+    return dst;
+}
+
+static
+void flecs_prefab_spawner_build_from_cr(
+    ecs_world_t *world,
+    ecs_component_record_t *cr,
+    ecs_vec_t *spawner,
+    int32_t parent_index,
+    int32_t depth)
+{
+    ecs_vec_t *children_vec = &cr->pair->ordered_children;
+    int32_t i, count = ecs_vec_count(children_vec);
+    ecs_entity_t *children = ecs_vec_first(children_vec);
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t child = children[i];
+        ecs_record_t *r = flecs_entities_get(world, child);
+        ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_table_t *table = r->table;
+        ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        if (!(table->flags & EcsTableHasParent)) {
+            continue;
+        }
+
+        ecs_tree_spawner_child_t *elem = ecs_vec_append_t(
+            NULL, spawner, ecs_tree_spawner_child_t);
+        elem->parent_index = parent_index;
+        elem->child_name = NULL;
+        elem->child = (uint32_t)child;
+
+        ecs_type_t type = flecs_prefab_spawner_build_type(
+            world, child, table, depth);
+        elem->table = flecs_table_find_or_create(world, &type);
+        ecs_assert(elem->table != NULL, ECS_INTERNAL_ERROR, NULL);
+        flecs_type_free(world, &type);
+
+        /* Make sure table doesn't get freed by shrink() */
+        flecs_table_keep(elem->table);
+
+        if (!(r->row & EcsEntityIsTraversable)) {
+            continue;
+        }
+
+        ecs_component_record_t *child_cr = flecs_components_get(
+            world, ecs_childof(child));
+        if (!child_cr) {
+            continue;
+        }
+
+        flecs_prefab_spawner_build_from_cr(
+            world, child_cr, spawner, ecs_vec_count(spawner), depth + 1);
+    }
+}
+
+static
+void flecs_spawner_transpose_depth(
+    ecs_world_t *world,
+    EcsTreeSpawner *spawner,
+    ecs_vec_t *dst,
+    int32_t depth)
+{
+    ecs_vec_t *src = &spawner->data[0].children;
+
+    int32_t i, count = ecs_vec_count(src);
+    ecs_vec_set_count_t(NULL, dst, ecs_tree_spawner_child_t, count);
+
+    for (i = 0; i < count; i ++) {
+        ecs_tree_spawner_child_t *src_elem = ecs_vec_get_t(
+            src, ecs_tree_spawner_child_t, i);
+        ecs_tree_spawner_child_t *dst_elem = ecs_vec_get_t(
+            dst, ecs_tree_spawner_child_t, i);
+
+        dst_elem->child_name = src_elem->child_name;
+        dst_elem->parent_index = src_elem->parent_index;
+        dst_elem->child = src_elem->child;
+        
+        /* Get depth for source element at depth 0 */
+        int32_t src_depth = flecs_relation_depth(
+            world, EcsChildOf, src_elem->table);
+
+        /* Get table for correct depth */
+        ecs_id_t depth_pair = ecs_value_pair(EcsParentDepth, src_depth + depth);
+        ecs_table_diff_t diff = ECS_TABLE_DIFF_INIT;
+
+        dst_elem->table = flecs_table_traverse_add(
+            world, src_elem->table, &depth_pair, &diff);
+        
+        flecs_table_keep(dst_elem->table);
+    }
+}
+
+#ifdef FLECS_DEBUG
+static
+bool flecs_tree_spawner_is_empty(
+    const EcsTreeSpawner *ts)
+{
+    int32_t i;
+    for (i = 0; i < FLECS_TREE_SPAWNER_DEPTH_CACHE_SIZE; i ++) {
+        if (ecs_vec_count(&ts->data[i].children)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+void flecs_tree_spawner_assert_not_instantiated(
+    ecs_world_t *world,
+    ecs_entity_t parent)
+{
+    if (world->flags & EcsWorldFini) {
+        return;
+    }
+
+    ecs_record_t *r = flecs_entities_get(world, parent);
+    if (!r || !r->table || !(r->table->flags & EcsTableIsPrefab)) {
+        return;
+    }
+
+    ecs_entity_t cur = parent;
+    while (cur) {
+        r = flecs_entities_get(world, cur);
+        if (!r || !r->table) {
+            break;
+        }
+
+        const EcsTreeSpawner *ts = ecs_get(world, cur, EcsTreeSpawner);
+        if (ts != NULL && !flecs_tree_spawner_is_empty(ts)) {
+            char *path = ecs_get_path(world, cur);
+            ecs_abort(ECS_INVALID_OPERATION,
+                "cannot change children of prefab '%s' after it has been "
+                "instantiated", path);
+        }
+
+        cur = ecs_get_parent(world, cur);
+    }
+}
+#endif
+
+EcsTreeSpawner* flecs_prefab_spawner_build(
+    ecs_world_t *world,
+    ecs_entity_t base)
+{    
+    ecs_component_record_t *cr = flecs_components_get(world, ecs_childof(base));
+    if (!cr) {
+        return NULL;
+    }
+
+    ecs_vec_t spawner;
+    ecs_vec_init_t(NULL, &spawner, ecs_tree_spawner_child_t, 0);
+    flecs_prefab_spawner_build_from_cr(world, cr, &spawner, 0, 1);
+
+    base = flecs_entities_get_alive(world, base);
+    EcsTreeSpawner *ts = ecs_ensure(world, base, EcsTreeSpawner);
+    ts->data[0].children = spawner;
+
+    /* Initialize remaining vectors */
+    int32_t i;
+    for (i = 1; i < FLECS_TREE_SPAWNER_DEPTH_CACHE_SIZE; i ++) {
+        ecs_vec_init_t(
+            NULL, &ts->data[i].children, ecs_tree_spawner_child_t, 0);
+    }
+
+    return ts;
+}
+
+void flecs_spawner_instantiate(
+    ecs_world_t *world,
+    EcsTreeSpawner *spawner,
+    ecs_entity_t base,
+    ecs_entity_t instance,
+    const ecs_instantiate_ctx_t *ctx)
+{
+    ecs_record_t *r_instance = flecs_entities_get(world, instance);
+    int32_t depth = flecs_relation_depth(world, EcsChildOf, r_instance->table);
+    int32_t i, child_count = ecs_vec_count(&spawner->data[0].children);
+
+    bool is_prefab = r_instance->table->flags & EcsTableIsPrefab;
+
+    ecs_instantiate_ctx_t ctx_cur = {base, instance};
+    if (ctx) {
+        ctx_cur = *ctx;
+    }
+
+    /* Use cached spawner for depth if available. */
+    ecs_vec_t *vec, tmp_vec;
+    if (depth < FLECS_TREE_SPAWNER_DEPTH_CACHE_SIZE) {
+        vec = &spawner->data[depth].children;
+    } else {
+        vec = &tmp_vec;
+        ecs_vec_init_t(NULL, vec, ecs_tree_spawner_child_t, 0);
+    }
+
+    if (depth && ecs_vec_count(vec) != child_count) {
+        /* Vector for depth is not yet initialized, create it. */
+        flecs_spawner_transpose_depth(world, spawner, vec, depth);
+    }
+
+    ecs_tree_spawner_child_t *spawn_children = ecs_vec_first(vec);
+    ecs_vec_set_min_count_t(&world->allocator, &world->allocators.tree_spawner,
+        ecs_entity_t, child_count + 1);
+    ecs_entity_t *parents = ecs_vec_first(&world->allocators.tree_spawner);
+    parents[0] = instance;
+
+    ecs_component_record_t *cr = NULL;
+    ecs_entity_t old_parent = 0;
+
+    ecs_assert(ecs_vec_count(vec) == child_count, ECS_INTERNAL_ERROR, NULL);
+
+    for (i = 0; i < child_count; i ++) {
+        ecs_tree_spawner_child_t *spawn_child = &spawn_children[i];
+        ecs_entity_t entity = parents[i + 1] = flecs_instantiate_alloc_child_id(
+            world, spawn_child->child,
+            ctx_cur.root_prefab, ctx_cur.root_instance);
+        ecs_table_t *table = spawn_child->table;
+        ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        const char *child_name = NULL;
+        if (is_prefab) {
+            ecs_table_diff_t diff = ECS_TABLE_DIFF_INIT;
+            ecs_id_t id = EcsPrefab;
+            table = flecs_table_traverse_add(world, table, &id, &diff);
+
+            child_name = ecs_get_name(world,
+                flecs_entities_get_alive(world, spawn_child->child));
+            if (child_name) {
+                id = ecs_pair_t(EcsIdentifier, EcsName);
+                table = flecs_table_traverse_add(world, table, &id, &diff);
+            }
+        }
+
+        ecs_record_t *r = flecs_entities_get(world, entity);
+        ecs_flags32_t flags = table->flags & EcsTableAddEdgeFlags;
+
+        ecs_table_diff_t table_diff = { 
+            .added = table->type,
+            .added_flags = flags
+        };
+
+        ecs_entity_t parent = parents[spawn_child->parent_index];
+        ecs_assert(parent != 0, ECS_INTERNAL_ERROR, NULL);
+        if (parent != old_parent) {
+            cr = flecs_components_ensure(world, ecs_childof(parent));
+            old_parent = parent;
+        }
+
+        ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        int32_t row = ecs_table_count(table);
+        r->table = table;
+        r->row = (uint32_t)row;
+        flecs_table_append(world, table, entity, true, true);
+
+        int32_t parent_column = table->component_map[ecs_id(EcsParent)];
+        ecs_assert(parent_column != 0, ECS_INTERNAL_ERROR, NULL);
+        EcsParent *parent_ptr = table->data.columns[parent_column - 1].data;
+        parent_ptr = &parent_ptr[row];
+        parent_ptr->value = parent;
+
+        flecs_actions_new(world, table, row, 1, &table_diff, EcsEventNoOnSet,
+            true, EcsWildcard);
+
+        if (is_prefab && child_name) {
+            ecs_set_name(world, entity, child_name);
+        }
+
+        flecs_add_non_fragmenting_child_w_records(world, parent, entity, cr, r);
+
+        ecs_entity_t base_child = spawn_child->child;
+        ecs_record_t *spawn_r = flecs_entities_get_any(
+            world, spawn_child->child);
+        ecs_assert(spawn_r != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        ecs_table_range_t base_range = {
+            .table = spawn_r->table,
+            .offset = 0,
+            .count = 1 };
+        flecs_instantiate_sparse(world, &base_range, &base_child,
+            r->table, &entity, ECS_RECORD_TO_ROW(r->row), true);
+
+        if (spawn_r->row & EcsEntityHasDontFragment) {
+            flecs_instantiate_dont_fragment(
+                world, spawn_child->child, entity);
+        }
+    }
+
+    if (vec == &tmp_vec) {
+        ecs_vec_fini_t(NULL, vec, ecs_tree_spawner_child_t);
+    }
+}
+
+void flecs_fini_prefab(
+    ecs_world_t *world)
+{
+    ecs_iter_t it = ecs_each(world, EcsTreeSpawner);
+    while (ecs_each_next(&it)) {
+        EcsTreeSpawner *t = ecs_field(&it, EcsTreeSpawner, 0);
+        int32_t i;
+        for (i = 0; i < it.count; i ++) {
+            EcsTreeSpawner_free(&t[i]);
+        }
+    }
+}
+
+#else
+
+#ifdef FLECS_DEBUG
+void flecs_tree_spawner_assert_not_instantiated(
+    ecs_world_t *world,
+    ecs_entity_t parent)
+{
+    (void)world;
+    (void)parent;
+}
+#endif
 
 #endif
 
@@ -74236,7 +74494,12 @@ int flecs_script_check_entity(
         };
 
         if (!ecs_os_strcmp(node->kind, "prefab")) {
+#ifdef FLECS_PREFAB
             id.eval = EcsPrefab;
+#else
+            flecs_script_eval_error(v, node, "prefabs are unsupported in this "
+                "flecs build, enable FLECS_PREFAB addon");
+#endif
         } else if (!ecs_os_strcmp(node->kind, "slot")) {
         } else if (flecs_script_eval_id(v, node, &id)) {
             return -1;
@@ -75504,7 +75767,12 @@ int flecs_script_eval_entity(
         };
 
         if (!ecs_os_strcmp(node->kind, "prefab")) {
+#ifdef FLECS_PREFAB
             id.eval = EcsPrefab;
+#else
+            flecs_script_eval_error(v, node, "prefabs are unsupported in this "
+                "flecs build, enable FLECS_PREFAB addon");
+#endif
         } else if (!ecs_os_strcmp(node->kind, "slot")) {
             is_slot = true;
         } else if (flecs_script_eval_id(v, node, &id)) {
@@ -78264,6 +78532,7 @@ void ecs_query_memory_get(
     }
     
     /* Query cache memory */
+#ifdef FLECS_CACHED_QUERIES
     if (impl->cache) {
         ecs_query_cache_t *cache = impl->cache;
 
@@ -78326,6 +78595,7 @@ void ecs_query_memory_get(
         ecs_query_memory_get(cache->query, result);
         result->count --; /* Don't double count query */
     }
+#endif
 }
 
 static
@@ -78741,6 +79011,7 @@ void flecs_pipeline_memory_get(
     }
 }
 
+#ifdef FLECS_CACHED_QUERIES
 static
 void flecs_rematch_monitor_memory_get(
     const ecs_world_t *world,
@@ -78754,6 +79025,7 @@ void flecs_rematch_monitor_memory_get(
             ECS_SIZEOF(void*);
     }
 }
+#endif
 
 #ifdef FLECS_META
 static
@@ -78978,7 +79250,9 @@ ecs_misc_memory_t ecs_misc_memory_get(
     result.bytes_observers = flecs_observer_index_memory_get(world);
     flecs_system_memory_get(world, &result);
     flecs_pipeline_memory_get(world, &result);
+#ifdef FLECS_CACHED_QUERIES
     flecs_rematch_monitor_memory_get(world, &result);
+#endif
 
     #ifdef FLECS_META
         flecs_reflection_memory_get(world, &result);
@@ -78992,8 +79266,10 @@ ecs_misc_memory_t ecs_misc_memory_get(
     result.bytes_prefab_child_indices = flecs_map_memory_get(
         &world->prefab_child_indices, 0);
 
+#ifdef FLECS_MULTI_WORLD
     result.bytes_component_ids += 
         ecs_vec_size(&world->component_ids) * ECS_SIZEOF(ecs_entity_t);
+#endif
     
     result.bytes_table_lookup += 
         flecs_hashmap_memory_get(&world->store.table_map);
@@ -79080,8 +79356,10 @@ ecs_allocator_memory_t ecs_allocator_memory_get(
             &stage->allocators.cmd_entry_chunk);
         result.bytes_query_impl += flecs_ballocator_memory_get(
             &stage->allocators.query_impl);
+#ifdef FLECS_CACHED_QUERIES
         result.bytes_query_cache += flecs_ballocator_memory_get(
             &stage->allocators.query_cache);
+#endif
         result.bytes_misc += ecs_vec_size(&stage->variables) * 
             ECS_SIZEOF(ecs_query_var_t);
         result.bytes_misc += ecs_vec_size(&stage->operations) * 
@@ -79668,7 +79946,7 @@ void flecs_stats_api_import(
                 .src.id = EcsWorld 
             }},
             .callback = ReduceStats,
-            .interval = 1.0,
+            .interval = (ecs_ftime_t)1,
             .ctx = ctx,
             .ctx_free = flecs_reduce_ctx_free
         });
@@ -81542,6 +81820,8 @@ void FlecsSystemImport(
 
 #endif
 
+#ifdef FLECS_CACHED_QUERIES
+
 /* Is cache trivial? */
 bool flecs_query_cache_is_trivial(
     const ecs_query_cache_t *cache)
@@ -82186,6 +82466,10 @@ error:
     return NULL;
 }
 
+#endif
+
+#ifdef FLECS_CACHED_QUERIES
+
 /* Initialize cached query iterator. */
 void flecs_query_cache_iter_init(
     ecs_iter_t *it,
@@ -82565,6 +82849,10 @@ bool flecs_query_is_trivial_cache_test(
     return false;
 }
 
+#endif
+
+#ifdef FLECS_CACHED_QUERIES
+
 typedef struct {
     ecs_table_t *table;
     int32_t column;
@@ -82713,7 +83001,7 @@ bool flecs_query_get_fixed_monitor(
     int32_t i, term_count = q->term_count;
 
     if (!impl->monitor) {
-        impl->monitor = flecs_alloc_n(&impl->stage->allocator, 
+        impl->monitor = flecs_alloc_n(&impl->stage->allocator,
             int32_t, q->field_count);
         check = false; /* If the monitor is new, initialize it with dirty state */
     }
@@ -83072,7 +83360,7 @@ void flecs_query_mark_fields_dirty(
             }
 
             if (q->shared_readonly_fields & flecs_ito(uint32_t, 1 << i)) {
-                /* Shared fields that aren't marked explicitly as out/inout 
+                /* Shared fields that aren't marked explicitly as out/inout
                  * default to readonly */
                 continue;
             }
@@ -83209,7 +83497,7 @@ bool ecs_query_changed(
     flecs_poly_assert(q, ecs_query_t);
     ecs_query_impl_t *impl = flecs_query_impl(q);
 
-    ecs_assert(q->cache_kind != EcsQueryCacheNone, ECS_INVALID_OPERATION, 
+    ecs_assert(q->cache_kind != EcsQueryCacheNone, ECS_INVALID_OPERATION,
         "change detection is only supported on cached queries");
 
     if (q->read_fields & q->fixed_fields) {
@@ -83219,7 +83507,7 @@ bool ecs_query_changed(
         }
     }
 
-    /* If query reads terms with fixed sources, check those first as that's 
+    /* If query reads terms with fixed sources, check those first as that's
      * cheaper than checking entries in the cache. */
     if (impl->monitor) {
         if (flecs_query_check_fixed_monitor(impl)) {
@@ -83228,7 +83516,7 @@ bool ecs_query_changed(
     }
 
     /* Check cache for changes. We can't detect changes for terms that are not
-     * cached/cacheable and don't have a fixed source, since that requires 
+     * cached/cacheable and don't have a fixed source, since that requires
      * storing state per result, which doesn't happen for uncached queries. */
     if (impl->cache) {
         if (!(impl->pub.flags & EcsQueryHasChangeDetection)) {
@@ -83248,7 +83536,7 @@ bool ecs_iter_changed(
 {
     ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(it->next == ecs_query_next, ECS_UNSUPPORTED, NULL);
-    ecs_check(ECS_BIT_IS_SET(it->flags, EcsIterIsValid), 
+    ecs_check(ECS_BIT_IS_SET(it->flags, EcsIterIsValid),
         ECS_INVALID_PARAMETER, NULL);
 
     ecs_query_impl_t *impl = flecs_query_impl(it->query);
@@ -83256,11 +83544,11 @@ bool ecs_iter_changed(
 
     /* First check for changes for terms with fixed sources, if query has any */
     if (q->read_fields & q->fixed_fields) {
-        /* Detecting changes for uncached terms is costly, so only do it once 
+        /* Detecting changes for uncached terms is costly, so only do it once
          * per iteration. */
         if (!(it->flags & EcsIterFixedInChangeComputed)) {
             it->flags |= EcsIterFixedInChangeComputed;
-            ECS_BIT_COND(it->flags, EcsIterFixedInChanged, 
+            ECS_BIT_COND(it->flags, EcsIterFixedInChanged,
                 flecs_query_check_fixed_monitor(impl));
         }
 
@@ -83286,10 +83574,183 @@ void ecs_iter_skip(
     ecs_iter_t *it)
 {
     ecs_assert(it->next == ecs_query_next, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(ECS_BIT_IS_SET(it->flags, EcsIterIsValid), 
+    ecs_assert(ECS_BIT_IS_SET(it->flags, EcsIterIsValid),
         ECS_INVALID_PARAMETER, NULL);
     it->flags |= EcsIterSkip;
 }
+
+#endif
+
+#ifdef FLECS_CACHED_QUERIES
+
+/* Evaluate component monitor. If a monitored entity changed, it will have set a
+ * flag in one of the world's component monitors. Queries can register
+ * themselves with component monitors to determine whether they need to rematch
+ * with tables. */
+static
+void flecs_eval_component_monitor(
+    ecs_world_t *world)
+{
+    flecs_poly_assert(world, ecs_world_t);
+
+    if (!world->monitors.is_dirty) {
+        return;
+    }
+
+    world->info.eval_comp_monitors_total ++;
+
+    ecs_os_perf_trace_push("flecs.component_monitor.eval");
+
+    world->monitors.is_dirty = false;
+
+    ecs_map_iter_t it = ecs_map_iter(&world->monitors.monitors);
+    while (ecs_map_next(&it)) {
+        ecs_monitor_t *m = ecs_map_ptr(&it);
+        if (!m->is_dirty) {
+            continue;
+        }
+
+        m->is_dirty = false;
+
+        int32_t i, count = ecs_vec_count(&m->queries);
+        ecs_query_t **elems = ecs_vec_first(&m->queries);
+        for (i = 0; i < count; i ++) {
+            ecs_query_t *q = elems[i];
+            flecs_poly_assert(q, ecs_query_t);
+            flecs_query_rematch(world, q);
+        }
+    }
+
+    ecs_os_perf_trace_pop("flecs.component_monitor.eval");
+}
+
+static
+void flecs_monitor_mark_dirty(
+    ecs_world_t *world,
+    ecs_entity_t id)
+{
+    ecs_map_t *monitors = &world->monitors.monitors;
+
+    /* Only flag if there are actually monitors registered, so that we
+     * don't waste cycles evaluating monitors if there's no interest */
+    if (ecs_map_is_init(monitors)) {
+        ecs_monitor_t *m = ecs_map_get_deref(monitors, ecs_monitor_t, id);
+        if (m) {
+            if (!world->monitors.is_dirty) {
+                world->monitor_generation ++;
+            }
+            m->is_dirty = true;
+            world->monitors.is_dirty = true;
+        }
+    }
+}
+
+void flecs_monitor_register(
+    ecs_world_t *world,
+    ecs_entity_t id,
+    ecs_query_t *query)
+{
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(id != 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(query != NULL, ECS_INTERNAL_ERROR, NULL);
+    flecs_poly_assert(query, ecs_query_t);
+
+    ecs_map_t *monitors = &world->monitors.monitors;
+    ecs_map_init_if(monitors, &world->allocator);
+    ecs_monitor_t *m = ecs_map_ensure_alloc_t(monitors, ecs_monitor_t, id);
+    ecs_vec_init_if_t(&m->queries, ecs_query_t*);
+    ecs_query_t **q = ecs_vec_append_t(
+        &world->allocator, &m->queries, ecs_query_t*);
+    *q = query;
+}
+
+void flecs_monitor_unregister(
+    ecs_world_t *world,
+    ecs_entity_t id,
+    ecs_query_t *query)
+{
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(id != 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(query != NULL, ECS_INTERNAL_ERROR, NULL);
+    flecs_poly_assert(query, ecs_query_t);
+
+    ecs_map_t *monitors = &world->monitors.monitors;
+    if (!ecs_map_is_init(monitors)) {
+        return;
+    }
+
+    ecs_monitor_t *m = ecs_map_get_deref(monitors, ecs_monitor_t, id);
+    if (!m) {
+        return;
+    }
+
+    int32_t i, count = ecs_vec_count(&m->queries);
+    ecs_query_t **queries = ecs_vec_first(&m->queries);
+    for (i = 0; i < count; i ++) {
+        if (queries[i] == query) {
+            ecs_vec_remove_t(&m->queries, ecs_query_t*, i);
+            count --;
+            break;
+        }
+    }
+
+    if (!count) {
+        ecs_vec_fini_t(&world->allocator, &m->queries, ecs_query_t*);
+        ecs_map_remove_free(monitors, id);
+    }
+
+    if (!ecs_map_count(monitors)) {
+        ecs_map_fini(monitors);
+    }
+}
+
+/* Updating component monitors is a relatively expensive operation that only
+ * happens for entities that are monitored. The approach balances the amount of
+ * processing between the operation on the entity vs the amount of work that
+ * needs to be done to rematch queries, as a simple brute force approach does
+ * not scale when there are many tables / queries. Therefore we need to do a bit
+ * of bookkeeping that is more intelligent than simply flipping a flag */
+static
+void flecs_update_component_monitor_w_array(
+    ecs_world_t *world,
+    ecs_type_t *ids)
+{
+    if (!ids) {
+        return;
+    }
+
+    int i;
+    for (i = 0; i < ids->count; i ++) {
+        ecs_entity_t id = ids->array[i];
+
+        if (ECS_HAS_ID_FLAG(id, PAIR)) {
+            flecs_monitor_mark_dirty(world,
+                ecs_pair(ECS_PAIR_FIRST(id), EcsWildcard));
+        }
+
+        flecs_monitor_mark_dirty(world, id);
+    }
+}
+
+void flecs_update_component_monitors(
+    ecs_world_t *world,
+    ecs_type_t *added,
+    ecs_type_t *removed)
+{
+    flecs_update_component_monitor_w_array(world, added);
+    flecs_update_component_monitor_w_array(world, removed);
+}
+
+void flecs_eval_component_monitors(
+    ecs_world_t *world)
+{
+    flecs_poly_assert(world, ecs_world_t);
+    flecs_eval_component_monitor(world);
+}
+
+#endif
+
+#ifdef FLECS_CACHED_QUERIES
 
 /* Check if group is currently linked in the cache group list. */
 static
@@ -83734,6 +84195,10 @@ void flecs_query_cache_remove_all_tables(
     ecs_assert(ecs_map_count(&cache->groups) == 0, ECS_INTERNAL_ERROR, NULL);
 }
 
+#endif
+
+#ifdef FLECS_CACHED_QUERIES
+
 /* Free cache entry element. */
 static
 void flecs_query_cache_match_elem_fini(
@@ -84087,6 +84552,10 @@ done:
     ecs_os_perf_trace_pop("flecs.query.rematch");
 }
 
+#endif
+
+#ifdef FLECS_CACHED_QUERIES
+
 ECS_SORT_TABLE_WITH_COMPARE(_, flecs_query_cache_sort_table_generic, order_by, static)
 
 static
@@ -84401,6 +84870,8 @@ void flecs_query_cache_sort_tables(
     }
 }
 
+#endif
+
 static
 bool flecs_query_var_is_anonymous(
     const ecs_query_impl_t *query,
@@ -84464,7 +84935,7 @@ ecs_var_id_t flecs_query_add_var(
         var = ecs_vec_append_t(NULL, vars, ecs_query_var_t);
         result = var->id = flecs_itovar(ecs_vec_count(vars));
     } else {
-        ecs_dbg_assert(query->var_count < query->var_size, 
+        ecs_dbg_assert(query->var_count < query->var_size,
             ECS_INTERNAL_ERROR, NULL);
         var = &query->vars[query->var_count];
         result = var->id = flecs_itovar(query->var_count);
@@ -85059,10 +85530,13 @@ void flecs_query_insert_cache_search(
     int32_t childof_term = -1;
     bool has_childof_trav = false;
 
+#ifdef FLECS_CACHED_QUERIES
     if (q->cache_kind == EcsQueryCacheAll) {
         /* If all terms are cacheable, make sure no other terms are compiled */
         *compiled = 0xFFFFFFFFFFFFFFFF;
-    } else if (q->cache_kind == EcsQueryCacheAuto) {
+    } else
+#endif
+    if (q->cache_kind == EcsQueryCacheAuto) {
         /* The query is partially cacheable */
         ecs_term_t *terms = q->terms;
         int32_t i, count = q->term_count;
@@ -85377,7 +85851,10 @@ int flecs_query_compile(
      * insert instruction that initializes ecs_iter_t::ids. This allows for the
      * insertion of simpler instructions later on. 
      * If the query is entirely cacheable, ids are populated by the cache. */
-    if (q->cache_kind != EcsQueryCacheAll) {
+#ifdef FLECS_CACHED_QUERIES
+    if (q->cache_kind != EcsQueryCacheAll)
+#endif
+    {
         for (i = 0; i < term_count; i ++) {
             ecs_term_t *term = &terms[i];
             if (flecs_term_is_fixed_id(q, term) || 
@@ -87726,6 +88203,7 @@ bool flecs_query_triv(
     }
 }
 
+#ifdef FLECS_CACHED_QUERIES
 static
 bool flecs_query_cache(
     const ecs_query_op_t *op,
@@ -87759,6 +88237,8 @@ bool flecs_query_is_cache(
         return flecs_query_is_cache_search(ctx, redo);
     }
 }
+
+#endif
 
 static
 int32_t flecs_query_next_inheritable_id(
@@ -88903,8 +89383,10 @@ bool flecs_query_dispatch(
     case EcsQueryAndAny: return flecs_query_and_any(op, redo, ctx);
     case EcsQueryAndWcTgt: return flecs_query_and_wctgt(op, redo, ctx);
     case EcsQueryTriv: return flecs_query_triv(op, redo, ctx);
+#ifdef FLECS_CACHED_QUERIES
     case EcsQueryCache: return flecs_query_cache(op, redo, ctx);
     case EcsQueryIsCache: return flecs_query_is_cache(op, redo, ctx);
+#endif
     case EcsQueryUp: return flecs_query_up(op, redo, ctx);
     case EcsQuerySelfUp: return flecs_query_self_up(op, redo, ctx);
     case EcsQueryWith: return flecs_query_with(op, redo, ctx);
@@ -89158,6 +89640,7 @@ void flecs_query_iter_constrain(
     }
 }
 
+#ifdef FLECS_CACHED_QUERIES
 static
 void flecs_query_change_detection(
     ecs_iter_t *it,
@@ -89190,6 +89673,8 @@ void flecs_query_self_change_detection(
 
     flecs_query_change_detection(it, qit, impl);
 }
+
+#endif
 
 #ifdef FLECS_DEBUG
 static
@@ -89233,6 +89718,7 @@ bool ecs_query_next(
     flecs_query_iter_run_ctx_init(it, &ctx);
 
     bool redo = it->flags & EcsIterIsValid;
+#ifdef FLECS_CACHED_QUERIES
     if (redo) {
         if (it->flags & EcsIterTrivialChangeDetection) {
             flecs_query_self_change_detection(it, qit, impl);
@@ -89240,6 +89726,7 @@ bool ecs_query_next(
             flecs_query_change_detection(it, qit, impl);
         }
     }
+#endif
 
     it->flags &= ~(EcsIterSkip);
     it->flags |= EcsIterIsValid;
@@ -89253,6 +89740,7 @@ bool ecs_query_next(
      * testing, where searching returns all matches for a query, whereas testing
      * tests a single table or table range against the query. */
 
+#ifdef FLECS_CACHED_QUERIES
     if (it->flags & EcsIterTrivialCached) {
         /* Trivial cache iterator. Only supported for search */
         ecs_assert(impl->ops == NULL, ECS_INTERNAL_ERROR, NULL);
@@ -89279,7 +89767,9 @@ bool ecs_query_next(
                 goto yield;
             }
         }
-    } else {
+    } else
+#endif
+    {
         /* Uncached iterator modes */
         if (it->flags & EcsIterTrivialSearch) {
             ecs_assert(impl->ops == NULL, ECS_INTERNAL_ERROR, NULL);
@@ -89321,11 +89811,13 @@ bool ecs_query_next(
     }
 
     /* Done iterating */
+#ifdef FLECS_CACHED_QUERIES
     flecs_query_mark_fixed_fields_dirty(impl, it);
     if (ctx.query->monitor) {
         flecs_query_update_fixed_monitor(
             ECS_CONST_CAST(ecs_query_impl_t*, ctx.query));
     }
+#endif
 
     it->flags |= EcsIterSkip; /* Prevent change detection on fini */
 
@@ -89333,10 +89825,12 @@ bool ecs_query_next(
     ecs_os_linc(&it->real_world->info.queries_ran_total);
     return false;
 
+#ifdef FLECS_CACHED_QUERIES
 trivial_search_yield:
     it->table = ctx.vars[0].range.table;
     it->count = ecs_table_count(it->table);
     it->entities = ecs_table_entities(it->table);
+#endif
 
 yield:
     return true;
@@ -89345,6 +89839,9 @@ yield:
 bool flecs_query_trivial_cached_next(
     ecs_iter_t *it)
 {
+#ifndef FLECS_CACHED_QUERIES
+    return ecs_query_next(it);
+#else
     ecs_assert(it != NULL, ECS_INVALID_PARAMETER, NULL);
 
     ecs_query_iter_t *qit = &it->priv_.iter.query;
@@ -89378,6 +89875,7 @@ bool flecs_query_trivial_cached_next(
     ecs_iter_fini(it);
     ecs_os_linc(&it->real_world->info.queries_ran_total);
     return false;
+#endif
 }
 
 void flecs_query_op_ctx_fini(
@@ -89452,9 +89950,11 @@ void flecs_query_iter_fini(
     int32_t op_count = flecs_query_impl(q)->op_count;
     int32_t var_count = flecs_query_impl(q)->var_count;
 
+#ifdef FLECS_CACHED_QUERIES
     if (it->flags & EcsIterIsValid) {
         flecs_query_change_detection(it, qit, flecs_query_impl(q));
     }
+#endif
 
 #ifdef FLECS_DEBUG
     if (it->flags & EcsIterProfile) {
@@ -89594,7 +90094,9 @@ ecs_iter_t flecs_query_iter(
         it.flags |= EcsIterMatchEmptyTables;
     }
 
+#ifdef FLECS_CACHED_QUERIES
     flecs_query_cache_iter_init(&it, qit, impl);
+#endif
 
     ecs_size_t vars_size = var_count * ECS_SIZEOF(ecs_var_t);
     ecs_size_t written_size = op_count * ECS_SIZEOF(ecs_write_flags_t);
@@ -89716,6 +90218,7 @@ ecs_iter_t ecs_query_iter(
     /* Ok, only for stats */
     ecs_os_linc(&ECS_CONST_CAST(ecs_query_t*, q)->eval_count);
 
+#ifdef FLECS_CACHED_QUERIES
     ecs_query_impl_t *impl = flecs_query_impl(q);
     ecs_query_cache_t *cache = impl->cache;
     if (cache) {
@@ -89727,6 +90230,7 @@ ecs_iter_t ecs_query_iter(
             flecs_eval_component_monitors(q->world);
         }
     }
+#endif
 
     return flecs_query_iter(world, q);
 }
@@ -94979,7 +95483,9 @@ void flecs_add_enum(ecs_iter_t *it) {
         }
 
         ecs_add_id(world, e, EcsExclusive);
+#ifdef FLECS_CONSTRAINT_TRAITS
         ecs_add_id(world, e, EcsOneOf);
+#endif
         ecs_add_id(world, e, EcsPairIsTag);
     }
 }

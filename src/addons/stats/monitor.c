@@ -302,7 +302,7 @@ void flecs_stats_api_import(
                 .src.id = EcsWorld 
             }},
             .callback = ReduceStats,
-            .interval = 1.0,
+            .interval = (ecs_ftime_t)1,
             .ctx = ctx,
             .ctx_free = flecs_reduce_ctx_free
         });

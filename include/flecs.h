@@ -222,10 +222,14 @@
 #ifndef FLECS_CUSTOM_BUILD
 #define FLECS_ALERTS         /**< Monitor conditions for errors. */
 #define FLECS_APP            /**< Application addon. */
+#define FLECS_CACHED_QUERIES /**< Cached query support. */
 // #define FLECS_C           /**< C API convenience macros, always enabled. */
 #define FLECS_CPP            /**< C++ API. */
+#define FLECS_CONSTRAINT_TRAITS /**< Component traits that enforce constraints. */
 #define FLECS_DOC            /**< Document entities and components. */
 // #define FLECS_EXCLUSIVE_ACCESS /**< Enable exclusive world access checks. */
+#define FLECS_ENTITY_RANGES  /**< Create entities in custom id ranges. */
+#define FLECS_FRAME          /**< Frame management utilities. */
 // #define FLECS_JOURNAL     /**< Journaling addon. */
 #define FLECS_JSON           /**< Parsing JSON to/from component values. */
 #define FLECS_HTTP           /**< Tiny HTTP server for connecting to remote UI. */
@@ -233,9 +237,11 @@
 #define FLECS_META           /**< Reflection support. */
 #define FLECS_METRICS        /**< Expose component data as statistics. */
 #define FLECS_MODULE         /**< Module support. */
+#define FLECS_MULTI_WORLD    /**< Support C++ component ids across multiple worlds. */
 #define FLECS_OS_API_IMPL    /**< Default implementation for OS API. */
 // #define FLECS_PERF_TRACE  /**< Enable performance tracing. */
 #define FLECS_PIPELINE       /**< Pipeline support. */
+#define FLECS_PREFAB         /**< Prefabs */
 #define FLECS_REST           /**< REST API for querying application data. */
 #define FLECS_PARSER         /**< Utilities for script and query DSL parsers. */
 #define FLECS_QUERY_DSL      /**< Flecs query DSL parser. */
@@ -247,6 +253,8 @@
 #define FLECS_TIMER          /**< Timer support. */
 #define FLECS_UNITS          /**< Built-in standard units. */
 #endif // ifndef FLECS_CUSTOM_BUILD
+
+#include "flecs/private/addon_defines.h"
 
 /** @def FLECS_LOW_FOOTPRINT
  * Set a number of constants to values that decrease memory footprint, at the
@@ -738,7 +746,9 @@ typedef enum ecs_oper_kind_t {
 typedef enum ecs_query_cache_kind_t {
     EcsQueryCacheDefault,   /**< Behavior determined by query creation context. */
     EcsQueryCacheAuto,      /**< Cache query terms that are cacheable. */
+#ifdef FLECS_CACHED_QUERIES
     EcsQueryCacheAll,       /**< Require that all query terms can be cached. */
+#endif
     EcsQueryCacheNone,      /**< No caching. */
 } ecs_query_cache_kind_t;
 
@@ -1589,16 +1599,6 @@ typedef struct ecs_query_group_info_t {
     void *ctx;            /**< Group context, returned by on_group_create. */
 } ecs_query_group_info_t;
 
-/** Type that stores an entity id range.
- * Returned by ecs_entity_range_new(), used with ecs_entity_range_set().
- */
-typedef struct ecs_entity_range_t {
-    uint32_t min;           /**< First id in range (inclusive). */
-    uint32_t max;           /**< Last id in range (inclusive, 0 = unlimited). */
-    uint32_t cur;           /**< Last issued id in range. */
-    ecs_vec_t recycled;     /**< Recycled entity ids (vec<entity_t>). */
-} ecs_entity_range_t;
-
 /** @} */
 
 /**
@@ -1790,18 +1790,6 @@ FLECS_API extern const ecs_entity_t EcsTransitive;
  */
 FLECS_API extern const ecs_entity_t EcsReflexive;
 
-/** Ensure that an entity or component cannot be used as a target in an `IsA` relationship.
- * Final can improve the performance of queries as they will not attempt to 
- * substitute a final component with its subsets.
- *
- * Behavior:
- *
- * @code
- *   if IsA(X, Y) and Final(Y) throw error
- * @endcode
- */
-FLECS_API extern const ecs_entity_t EcsFinal;
-
 /** Mark component as inheritable.
  * This is the opposite of Final. This trait can be used to enforce that queries
  * take into account component inheritance before inheritance (IsA) 
@@ -1828,15 +1816,6 @@ FLECS_API extern const ecs_entity_t EcsInherit;
  * from the base entity. */
 FLECS_API extern const ecs_entity_t EcsDontInherit;
 
-/** Mark relationship as commutative.
- * Behavior:
- *
- * @code
- *   if R(X, Y) then R(Y, X)
- * @endcode
- */
-FLECS_API extern const ecs_entity_t EcsSymmetric;
-
 /** Can be added to a relationship to indicate that the relationship can only occur
  * once on an entity. Adding a second instance will replace the first.
  *
@@ -1847,9 +1826,6 @@ FLECS_API extern const ecs_entity_t EcsSymmetric;
  * @endcode
  */
 FLECS_API extern const ecs_entity_t EcsExclusive;
-
-/** Mark a relationship as acyclic. Acyclic relationships may not form cycles. */
-FLECS_API extern const ecs_entity_t EcsAcyclic;
 
 /** Mark a relationship as traversable. Traversable relationships may be
  * traversed with "up" queries. Traversable relationships are acyclic. */
@@ -1866,46 +1842,8 @@ FLECS_API extern const ecs_entity_t EcsTraversable;
  */
 FLECS_API extern const ecs_entity_t EcsWith;
 
-/** Ensure that a relationship target is a child of the specified entity.
- *
- * Behavior:
- *
- * @code
- *   If OneOf(R, O) and R(X, Y), Y must be a child of O
- *   If OneOf(R) and R(X, Y), Y must be a child of R
- * @endcode
- */
-FLECS_API extern const ecs_entity_t EcsOneOf;
-
 /** Mark a component as toggleable with ecs_enable_id(). */
 FLECS_API extern const ecs_entity_t EcsCanToggle;
-
-/** Can be added to components to indicate it is a trait. Traits are components
- * and/or tags that are added to other components to modify their behavior.
- */
-FLECS_API extern const ecs_entity_t EcsTrait;
-
-/** Ensure that an entity is always used in a pair as a relationship.
- *
- * Behavior:
- *
- * @code
- *   e.add(R) panics
- *   e.add(X, R) panics, unless X has the "Trait" trait
- * @endcode
- */
-FLECS_API extern const ecs_entity_t EcsRelationship;
-
-/** Ensure that an entity is always used in a pair as a target.
- *
- * Behavior:
- *
- * @code
- *   e.add(T) panics
- *   e.add(T, X) panics
- * @endcode
- */
-FLECS_API extern const ecs_entity_t EcsTarget;
 
 /** Can be added to a relationship to indicate that it should never hold data,
  * even when it or the relationship target is a component. */
@@ -1940,7 +1878,9 @@ FLECS_API extern const ecs_entity_t EcsModule;
 
 /** Tag added to prefab entities. Any entity with this tag is automatically
  * ignored by queries, unless #EcsPrefab is explicitly queried for. */
+#ifdef FLECS_PREFAB
 FLECS_API extern const ecs_entity_t EcsPrefab;
+#endif
 
 /** When this tag is added to an entity, it is skipped by queries, unless
  * #EcsDisabled is explicitly queried for. */
@@ -1987,10 +1927,6 @@ FLECS_API extern const ecs_entity_t EcsDelete;
 /** Panic cleanup policy. Must be used as a target in a pair with #EcsOnDelete or
  * #EcsOnDeleteTarget. */
 FLECS_API extern const ecs_entity_t EcsPanic;
-
-/** Mark component as singleton. Singleton components may only be added to 
- * themselves. */
-FLECS_API extern const ecs_entity_t EcsSingleton;
 
 /** Mark component as sparse. */
 FLECS_API extern const ecs_entity_t EcsSparse;
@@ -2185,127 +2121,6 @@ ecs_flags32_t ecs_world_get_flags(
 
 /** @} */
 
-/**
- * @defgroup world_frame Frame functions
- * @{
- */
-
-/** Begin frame.
- * When an application does not use ecs_progress() to control the main loop, it
- * can still use Flecs features such as FPS limiting and time measurements. This
- * operation needs to be invoked whenever a new frame is about to get processed.
- *
- * Calls to ecs_frame_begin() must always be followed by ecs_frame_end().
- *
- * The function accepts a delta_time parameter, which will get passed to
- * systems. This value is also used to compute the amount of time the function
- * needs to sleep to ensure it does not exceed the target_fps, when it is set.
- * When 0 is provided for delta_time, the time will be measured.
- *
- * This function should only be run from the main thread.
- *
- * @param world The world.
- * @param delta_time Time elapsed since the last frame.
- * @return The provided delta_time, or measured time if 0 was provided.
- */
-FLECS_API
-ecs_ftime_t ecs_frame_begin(
-    ecs_world_t *world,
-    ecs_ftime_t delta_time);
-
-/** End frame.
- * This operation must be called at the end of the frame, and always after
- * ecs_frame_begin().
- *
- * @param world The world.
- */
-FLECS_API
-void ecs_frame_end(
-    ecs_world_t *world);
-
-/** Register an action to be executed once after the frame.
- * Post frame actions are typically used for calling operations that cannot be
- * invoked during iteration, such as changing the number of threads.
- *
- * @param world The world.
- * @param action The function to execute.
- * @param ctx Userdata to pass to the function.
- */
-FLECS_API
-void ecs_run_post_frame(
-    ecs_world_t *world,
-    ecs_fini_action_t action,
-    void *ctx);
-
-/** Signal exit.
- * This operation signals that the application should quit. It will cause
- * ecs_progress() to return false.
- *
- * @param world The world to quit.
- */
-FLECS_API
-void ecs_quit(
-    ecs_world_t *world);
-
-/** Return whether a quit has been requested.
- *
- * @param world The world.
- * @return Whether a quit has been requested.
- * @see ecs_quit()
- */
-FLECS_API
-bool ecs_should_quit(
-    const ecs_world_t *world);
-
-/** Measure frame time.
- * Frame time measurements measure the total time passed in a single frame, and
- * how much of that time was spent on systems and on merging.
- *
- * Frame time measurements add a small constant-time overhead to an application.
- * When an application sets a target FPS, frame time measurements are enabled by
- * default.
- *
- * @param world The world.
- * @param enable Whether to enable or disable frame time measuring.
- */
-FLECS_API void ecs_measure_frame_time(
-    ecs_world_t *world,
-    bool enable);
-
-/** Measure system time.
- * System time measurements measure the time spent in each system.
- *
- * System time measurements add overhead to every system invocation and
- * therefore have a small but measurable impact on application performance.
- * System time measurements must be enabled before obtaining system statistics.
- *
- * @param world The world.
- * @param enable Whether to enable or disable system time measuring.
- */
-FLECS_API void ecs_measure_system_time(
-    ecs_world_t *world,
-    bool enable);
-
-/** Set target frames per second (FPS) for an application.
- * Setting the target FPS ensures that ecs_progress() is not invoked faster than
- * the specified FPS. When enabled, ecs_progress() tracks the time passed since
- * the last invocation, and sleeps the remaining time of the frame (if any).
- *
- * This feature ensures systems are run at a consistent interval, as well as
- * conserving CPU time by not running systems more often than required.
- *
- * Note that ecs_progress() only sleeps if there is time left in the frame. Both
- * time spent in Flecs and time spent outside of Flecs are taken into
- * account.
- *
- * @param world The world.
- * @param fps The target FPS.
- */
-FLECS_API
-void ecs_set_target_fps(
-    ecs_world_t *world,
-    ecs_ftime_t fps);
-
 /** Set the default query flags.
  * Set a default value for the ecs_query_desc_t::flags field. Default flags
  * are applied in addition to the flags provided in the descriptor. For a
@@ -2323,8 +2138,6 @@ FLECS_API
 void ecs_set_default_query_flags(
     ecs_world_t *world,
     ecs_flags32_t flags);
-
-/** @} */
 
 /**
  * @defgroup commands Commands
@@ -2717,56 +2530,6 @@ void ecs_dim(
 FLECS_API
 void ecs_shrink(
     ecs_world_t *world);
-
-/** Create a new entity range.
- * This function creates a range that constrains new entity identifiers returned 
- * by the specified [min, max] interval. Each range maintains its own list of 
- * recycled entity ids, which ensures that recycled ids always respect the 
- * configured range. If `max` is set to 0, the range is unbounded.
- *
- * Entity ranges cannot be deleted once created. Use ecs_entity_range_set() to 
- * activate a range.
- *
- * @param world The world.
- * @param min The first entity id in the range (inclusive).
- * @param max The last entity id in the range (inclusive, 0 = unlimited).
- * @return A pointer to the new range. Does not need to be freed.
- */
-FLECS_API
-const ecs_entity_range_t* ecs_entity_range_new(
-    ecs_world_t *world,
-    uint32_t min,
-    uint32_t max);
-
-/** Set the active entity range.
- * This function activates a range created with ecs_entity_range_new().
- * When a range is activated, new entity identifiers will fall within the 
- * specified [min, max] interval, including recycled identifiers.
- *
- * When the active range is out of available ids, operations that create new
- * entity ids will assert.
- * 
- * The operation only accepts ranges that have been created by 
- * ecs_entity_range_new().
- *
- * @param world The world.
- * @param range The range to activate.
- */
-FLECS_API
-void ecs_entity_range_set(
-    ecs_world_t *world,
-    const ecs_entity_range_t *range);
-
-/** Get the currently active entity id range.
- * Returns the range set by ecs_entity_range_set(), or NULL if no range is
- * active.
- *
- * @param world The world.
- * @return The active range, or NULL.
- */
-FLECS_API
-const ecs_entity_range_t* ecs_entity_range_get(
-    const ecs_world_t *world);
 
 /** Get the largest issued entity ID (not counting generation).
  *
@@ -5171,6 +4934,7 @@ const char* ecs_query_args_parse(
     ecs_iter_t *it,
     const char *expr);
 
+#ifdef FLECS_CACHED_QUERIES
 /** Return whether the query data changed since the last iteration.
  * The operation will return true after:
  * - new entities have been matched
@@ -5196,6 +4960,7 @@ const char* ecs_query_args_parse(
 FLECS_API
 bool ecs_query_changed(
     ecs_query_t *query);
+#endif
 
 /** Get the query object.
  * Return the query object. Can be used to access various information about
@@ -5210,6 +4975,7 @@ const ecs_query_t* ecs_query_get(
     const ecs_world_t *world,
     ecs_entity_t query);
 
+#ifdef FLECS_CACHED_QUERIES
 /** Skip a table while iterating.
  * This operation lets the query iterator know that a table was skipped while
  * iterating. A skipped table will not reset its changed state, and the query
@@ -5223,6 +4989,7 @@ const ecs_query_t* ecs_query_get(
 FLECS_API
 void ecs_iter_skip(
     ecs_iter_t *it);
+#endif
 
 /** Set the group to iterate for a query iterator.
  * This operation limits the results returned by the query to only the selected
@@ -5717,6 +5484,7 @@ FLECS_API
 uint64_t ecs_iter_get_group(
     const ecs_iter_t *it);
 
+#ifdef FLECS_CACHED_QUERIES
 /** Return whether the current iterator result has changed.
  * This operation must be used in combination with a query that supports change
  * detection (e.g., is cached). The operation returns whether the currently
@@ -5731,6 +5499,7 @@ uint64_t ecs_iter_get_group(
 FLECS_API
 bool ecs_iter_changed(
     ecs_iter_t *it);
+#endif
 
 /** Convert an iterator to a string.
  * Prints the contents of an iterator to a string. Useful for debugging and/or

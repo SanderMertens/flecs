@@ -417,7 +417,12 @@ The following addons can be configured:
 Addon         | Description                                      | Define              |
 --------------|--------------------------------------------------|---------------------|
 [Cpp](/flecs/group__cpp.html)                              | C++17 API                                        | FLECS_CPP           |
+[Cached Queries](/flecs/md_docs_2Queries.html)             | Cached query support                             | FLECS_CACHED_QUERIES |
+[Constraint Traits](/flecs/group__c__addons__constraint__traits.html) | Constraint trait support              | FLECS_CONSTRAINT_TRAITS |
 [Module](/flecs/group__c__addons__module.html)             | Organize game logic into reusable modules        | FLECS_MODULE        |
+[Multi World](/flecs/group__c__addons.html)                | Support C++ component IDs across multiple worlds | FLECS_MULTI_WORLD   |
+[Entity Ranges](/flecs/group__c__addons__entity__ranges.html) | Entity id range management                    | FLECS_ENTITY_RANGES |
+[Frame](/flecs/group__c__addons__frame.html)               | Frame management                                 | FLECS_FRAME         |
 [System](/flecs/group__c__addons__system.html)             | Create & run systems                             | FLECS_SYSTEM        |
 [Pipeline](/flecs/group__c__addons__pipeline.html)         | Automatically schedule & multithread systems     | FLECS_PIPELINE      |
 [Timer](/flecs/group__c__addons__timer.html)               | Run systems at time intervals or at a rate       | FLECS_TIMER         |

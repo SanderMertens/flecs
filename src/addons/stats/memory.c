@@ -322,6 +322,7 @@ void ecs_query_memory_get(
     }
     
     /* Query cache memory */
+#ifdef FLECS_CACHED_QUERIES
     if (impl->cache) {
         ecs_query_cache_t *cache = impl->cache;
 
@@ -384,6 +385,7 @@ void ecs_query_memory_get(
         ecs_query_memory_get(cache->query, result);
         result->count --; /* Don't double count query */
     }
+#endif
 }
 
 static
@@ -799,6 +801,7 @@ void flecs_pipeline_memory_get(
     }
 }
 
+#ifdef FLECS_CACHED_QUERIES
 static
 void flecs_rematch_monitor_memory_get(
     const ecs_world_t *world,
@@ -812,6 +815,7 @@ void flecs_rematch_monitor_memory_get(
             ECS_SIZEOF(void*);
     }
 }
+#endif
 
 #ifdef FLECS_META
 static
@@ -1036,7 +1040,9 @@ ecs_misc_memory_t ecs_misc_memory_get(
     result.bytes_observers = flecs_observer_index_memory_get(world);
     flecs_system_memory_get(world, &result);
     flecs_pipeline_memory_get(world, &result);
+#ifdef FLECS_CACHED_QUERIES
     flecs_rematch_monitor_memory_get(world, &result);
+#endif
 
     #ifdef FLECS_META
         flecs_reflection_memory_get(world, &result);
@@ -1050,8 +1056,10 @@ ecs_misc_memory_t ecs_misc_memory_get(
     result.bytes_prefab_child_indices = flecs_map_memory_get(
         &world->prefab_child_indices, 0);
 
+#ifdef FLECS_MULTI_WORLD
     result.bytes_component_ids += 
         ecs_vec_size(&world->component_ids) * ECS_SIZEOF(ecs_entity_t);
+#endif
     
     result.bytes_table_lookup += 
         flecs_hashmap_memory_get(&world->store.table_map);
@@ -1138,8 +1146,10 @@ ecs_allocator_memory_t ecs_allocator_memory_get(
             &stage->allocators.cmd_entry_chunk);
         result.bytes_query_impl += flecs_ballocator_memory_get(
             &stage->allocators.query_impl);
+#ifdef FLECS_CACHED_QUERIES
         result.bytes_query_cache += flecs_ballocator_memory_get(
             &stage->allocators.query_cache);
+#endif
         result.bytes_misc += ecs_vec_size(&stage->variables) * 
             ECS_SIZEOF(ecs_query_var_t);
         result.bytes_misc += ecs_vec_size(&stage->operations) * 

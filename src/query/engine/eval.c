@@ -530,6 +530,7 @@ bool flecs_query_triv(
     }
 }
 
+#ifdef FLECS_CACHED_QUERIES
 static
 bool flecs_query_cache(
     const ecs_query_op_t *op,
@@ -563,6 +564,8 @@ bool flecs_query_is_cache(
         return flecs_query_is_cache_search(ctx, redo);
     }
 }
+
+#endif
 
 static
 int32_t flecs_query_next_inheritable_id(
@@ -1707,8 +1710,10 @@ bool flecs_query_dispatch(
     case EcsQueryAndAny: return flecs_query_and_any(op, redo, ctx);
     case EcsQueryAndWcTgt: return flecs_query_and_wctgt(op, redo, ctx);
     case EcsQueryTriv: return flecs_query_triv(op, redo, ctx);
+#ifdef FLECS_CACHED_QUERIES
     case EcsQueryCache: return flecs_query_cache(op, redo, ctx);
     case EcsQueryIsCache: return flecs_query_is_cache(op, redo, ctx);
+#endif
     case EcsQueryUp: return flecs_query_up(op, redo, ctx);
     case EcsQuerySelfUp: return flecs_query_self_up(op, redo, ctx);
     case EcsQueryWith: return flecs_query_with(op, redo, ctx);

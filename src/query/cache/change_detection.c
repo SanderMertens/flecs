@@ -5,6 +5,8 @@
 
 #include "../../private_api.h"
 
+#ifdef FLECS_CACHED_QUERIES
+
 typedef struct {
     ecs_table_t *table;
     int32_t column;
@@ -153,7 +155,7 @@ bool flecs_query_get_fixed_monitor(
     int32_t i, term_count = q->term_count;
 
     if (!impl->monitor) {
-        impl->monitor = flecs_alloc_n(&impl->stage->allocator, 
+        impl->monitor = flecs_alloc_n(&impl->stage->allocator,
             int32_t, q->field_count);
         check = false; /* If the monitor is new, initialize it with dirty state */
     }
@@ -512,7 +514,7 @@ void flecs_query_mark_fields_dirty(
             }
 
             if (q->shared_readonly_fields & flecs_ito(uint32_t, 1 << i)) {
-                /* Shared fields that aren't marked explicitly as out/inout 
+                /* Shared fields that aren't marked explicitly as out/inout
                  * default to readonly */
                 continue;
             }
@@ -649,7 +651,7 @@ bool ecs_query_changed(
     flecs_poly_assert(q, ecs_query_t);
     ecs_query_impl_t *impl = flecs_query_impl(q);
 
-    ecs_assert(q->cache_kind != EcsQueryCacheNone, ECS_INVALID_OPERATION, 
+    ecs_assert(q->cache_kind != EcsQueryCacheNone, ECS_INVALID_OPERATION,
         "change detection is only supported on cached queries");
 
     if (q->read_fields & q->fixed_fields) {
@@ -659,7 +661,7 @@ bool ecs_query_changed(
         }
     }
 
-    /* If query reads terms with fixed sources, check those first as that's 
+    /* If query reads terms with fixed sources, check those first as that's
      * cheaper than checking entries in the cache. */
     if (impl->monitor) {
         if (flecs_query_check_fixed_monitor(impl)) {
@@ -668,7 +670,7 @@ bool ecs_query_changed(
     }
 
     /* Check cache for changes. We can't detect changes for terms that are not
-     * cached/cacheable and don't have a fixed source, since that requires 
+     * cached/cacheable and don't have a fixed source, since that requires
      * storing state per result, which doesn't happen for uncached queries. */
     if (impl->cache) {
         if (!(impl->pub.flags & EcsQueryHasChangeDetection)) {
@@ -688,7 +690,7 @@ bool ecs_iter_changed(
 {
     ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(it->next == ecs_query_next, ECS_UNSUPPORTED, NULL);
-    ecs_check(ECS_BIT_IS_SET(it->flags, EcsIterIsValid), 
+    ecs_check(ECS_BIT_IS_SET(it->flags, EcsIterIsValid),
         ECS_INVALID_PARAMETER, NULL);
 
     ecs_query_impl_t *impl = flecs_query_impl(it->query);
@@ -696,11 +698,11 @@ bool ecs_iter_changed(
 
     /* First check for changes for terms with fixed sources, if query has any */
     if (q->read_fields & q->fixed_fields) {
-        /* Detecting changes for uncached terms is costly, so only do it once 
+        /* Detecting changes for uncached terms is costly, so only do it once
          * per iteration. */
         if (!(it->flags & EcsIterFixedInChangeComputed)) {
             it->flags |= EcsIterFixedInChangeComputed;
-            ECS_BIT_COND(it->flags, EcsIterFixedInChanged, 
+            ECS_BIT_COND(it->flags, EcsIterFixedInChanged,
                 flecs_query_check_fixed_monitor(impl));
         }
 
@@ -726,7 +728,9 @@ void ecs_iter_skip(
     ecs_iter_t *it)
 {
     ecs_assert(it->next == ecs_query_next, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(ECS_BIT_IS_SET(it->flags, EcsIterIsValid), 
+    ecs_assert(ECS_BIT_IS_SET(it->flags, EcsIterIsValid),
         ECS_INVALID_PARAMETER, NULL);
     it->flags |= EcsIterSkip;
 }
+
+#endif

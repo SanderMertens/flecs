@@ -224,7 +224,11 @@ ecs_entity_t ecs_cpp_component_register(
     const char *cpp_symbol = desc->cpp_symbol;
 
     bool existing = false;
+#ifdef FLECS_MULTI_WORLD
     ecs_entity_t c = flecs_component_ids_get(world, desc->ids_index);
+#else
+    ecs_entity_t c = *desc->id_storage;
+#endif
 
     if (!c || !ecs_is_alive(world, c)) {
     } else {
@@ -442,8 +446,12 @@ ecs_entity_t ecs_cpp_component_register(
     ecs_set_with(world, prev_with);
     ecs_set_scope(world, prev_scope);
 
-    /* Set world-local component id */
+    /* Set component id before invoking callbacks that can request it. */
+#ifdef FLECS_MULTI_WORLD
     flecs_component_ids_set(world, desc->ids_index, c);
+#else
+    *desc->id_storage = c;
+#endif
 
     if (desc->lifecycle_action && desc->size && !existing) {
         desc->lifecycle_action(world, c);
@@ -474,7 +482,9 @@ void ecs_cpp_enum_init(
 #else
     /* Make sure that enums still behave the same even without meta */
     ecs_add_id(world, id, EcsExclusive);
+#ifdef FLECS_CONSTRAINT_TRAITS
     ecs_add_id(world, id, EcsOneOf);
+#endif
 #endif
 }
 

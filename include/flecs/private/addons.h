@@ -8,91 +8,36 @@
 #ifndef FLECS_ADDONS_H
 #define FLECS_ADDONS_H
 
-/* Blacklist macros */
-#ifdef FLECS_NO_CPP
-#undef FLECS_CPP
-#endif
-#ifdef FLECS_NO_MODULE
-#undef FLECS_MODULE
-#endif
-#ifdef FLECS_NO_SCRIPT
-#undef FLECS_SCRIPT
-#endif
-#ifdef FLECS_NO_PARSER
-#undef FLECS_PARSER
-#endif
-#ifdef FLECS_NO_QUERY_DSL
-#undef FLECS_QUERY_DSL
-#endif
-#ifdef FLECS_NO_SCRIPT_MATH
-#undef FLECS_SCRIPT_MATH
-#endif
-#ifdef FLECS_NO_SCRIPT_PLATFORM
-#undef FLECS_SCRIPT_PLATFORM
-#endif
-#ifdef FLECS_NO_STATS
-#undef FLECS_STATS
-#endif
-#ifdef FLECS_NO_SYSTEM
-#undef FLECS_SYSTEM
-#endif
-#ifdef FLECS_NO_ALERTS
-#undef FLECS_ALERTS
-#endif
-#ifdef FLECS_NO_PIPELINE
-#undef FLECS_PIPELINE
-#endif
-#ifdef FLECS_NO_TIMER
-#undef FLECS_TIMER
-#endif
-#ifdef FLECS_NO_META
-#undef FLECS_META
-#endif
-#ifdef FLECS_NO_UNITS
-#undef FLECS_UNITS
-#endif
-#ifdef FLECS_NO_JSON
-#undef FLECS_JSON
-#endif
-#ifdef FLECS_NO_DOC
-#undef FLECS_DOC
-#endif
-#ifdef FLECS_NO_LOG
-#undef FLECS_LOG
-#endif
-#ifdef FLECS_NO_APP
-#undef FLECS_APP
-#endif
-#ifdef FLECS_NO_OS_API_IMPL
-#undef FLECS_OS_API_IMPL
-#endif
-#ifdef FLECS_NO_HTTP
-#undef FLECS_HTTP
-#endif
-#ifdef FLECS_NO_REST
-#undef FLECS_REST
-#endif
-#ifdef FLECS_NO_JOURNAL
-#undef FLECS_JOURNAL
-#endif
+#include "addon_defines.h"
 
 /* Always included; if disabled, functions are replaced with dummy macros. */
 #include "flecs/addons/log.h"
 
-/* Handle addon dependencies that need declarations to be visible in the header. */
-#ifdef FLECS_STATS
-#ifndef FLECS_PIPELINE
-#define FLECS_PIPELINE
-#endif
-#ifndef FLECS_TIMER
-#define FLECS_TIMER
+#ifdef FLECS_CACHED_QUERIES
+#ifdef FLECS_NO_CACHED_QUERIES
+#error "FLECS_NO_CACHED_QUERIES failed: CACHED_QUERIES is required by other addons"
 #endif
 #endif
 
-#ifdef FLECS_REST
-#ifndef FLECS_HTTP
-#define FLECS_HTTP
+#ifdef FLECS_CONSTRAINT_TRAITS
+#ifdef FLECS_NO_CONSTRAINT_TRAITS
+#error "FLECS_NO_CONSTRAINT_TRAITS failed: CONSTRAINT_TRAITS is required by other addons"
 #endif
+#include "../addons/constraint_traits.h"
+#endif
+
+#ifdef FLECS_ENTITY_RANGES
+#ifdef FLECS_NO_ENTITY_RANGES
+#error "FLECS_NO_ENTITY_RANGES failed: ENTITY_RANGES is required by other addons"
+#endif
+#include "../addons/entity_ranges.h"
+#endif
+
+#ifdef FLECS_FRAME
+#ifdef FLECS_NO_FRAME
+#error "FLECS_NO_FRAME failed: FRAME is required by other addons"
+#endif
+#include "../addons/frame.h"
 #endif
 
 #ifdef FLECS_APP
@@ -195,9 +140,6 @@
 #ifdef FLECS_QUERY_DSL
 #ifdef FLECS_NO_QUERY_DSL
 #error "FLECS_NO_QUERY_DSL failed: QUERY_DSL is required by other addons"
-#endif
-#ifndef FLECS_PARSER
-#define FLECS_PARSER
 #endif
 #endif
 

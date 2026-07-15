@@ -8,6 +8,43 @@
 
 #include "../types.h"
 
+#ifdef FLECS_CACHED_QUERIES
+/* Component monitor */
+typedef struct ecs_monitor_t {
+    ecs_vec_t queries;               /* vector<ecs_query_cache_t*> */
+    bool is_dirty;                   /* Should queries be rematched? */
+} ecs_monitor_t;
+
+/* Component monitors */
+typedef struct ecs_monitor_set_t {
+    ecs_map_t monitors;              /* map<id, ecs_monitor_t> */
+    bool is_dirty;                   /* Should monitors be evaluated? */
+} ecs_monitor_set_t;
+
+/* Check component monitors (triggers query cache revalidation, not related to
+ * EcsMonitor). */
+void flecs_eval_component_monitors(
+    ecs_world_t *world);
+
+/* Register component monitor. */
+void flecs_monitor_register(
+    ecs_world_t *world,
+    ecs_entity_t id,
+    ecs_query_t *query);
+
+/* Unregister component monitor. */
+void flecs_monitor_unregister(
+    ecs_world_t *world,
+    ecs_entity_t id,
+    ecs_query_t *query);
+
+/* Update component monitors for added/removed components. */
+void flecs_update_component_monitors(
+    ecs_world_t *world,
+    ecs_type_t *added,
+    ecs_type_t *removed);
+#endif
+
 /** Table match data.
  * Each table matched by the query is represented by an ecs_query_cache_match_t
  * instance. A table may match a query multiple times (due to wildcard queries)

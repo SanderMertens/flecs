@@ -446,8 +446,12 @@ template <typename E>
 inline flecs::entity enum_data<E>::entity(underlying_type_t<E> value) const {
     int index = index_by_value(value);
     if (index >= 0) {
+#ifdef FLECS_MULTI_WORLD
         int32_t constant_i = impl_.constants[index].index;
         flecs::entity_t entity = flecs_component_ids_get(world_, constant_i);
+#else
+        flecs::entity_t entity = impl_.constants[index].id;
+#endif
         return flecs::entity(world_, entity);
     }
 #ifdef FLECS_META
