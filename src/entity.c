@@ -3189,12 +3189,6 @@ void ecs_enable(
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     flecs_assert_entity_valid(world, entity, "enable");
 
-#ifdef FLECS_PREFAB
-    if (flecs_enable_prefab(world, entity, enabled)) {
-        return;
-    }
-#endif
-
     if (enabled) {
         ecs_remove_id(world, entity, EcsDisabled);
     } else {

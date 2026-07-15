@@ -2485,7 +2485,7 @@ void Monitor_yield_existing(void);
 
 // Testsuite 'Prefab'
 void Prefab_setup(void);
-void Prefab_enable_prefab_w_isa_variant(void);
+void Prefab_disable_prefab_w_isa_variant(void);
 void Prefab_new_w_prefab(void);
 void Prefab_new_w_count_prefab(void);
 void Prefab_new_w_type_w_prefab(void);
@@ -2619,8 +2619,8 @@ void Prefab_child_of_prefab_w_prefab_is_prefab_w_component(void);
 void Prefab_override_exclusive(void);
 void Prefab_override_exclusive_2_lvls(void);
 void Prefab_hierarchy_w_recycled_id(void);
-void Prefab_disable_ids(void);
-void Prefab_disable_nested_ids(void);
+void Prefab_disable_prefab(void);
+void Prefab_disable_nested_prefab(void);
 void Prefab_prefab_w_children_w_isa_auto_override(void);
 void Prefab_prefab_child_w_override(void);
 void Prefab_prefab_child_w_override_and_higher_component(void);
@@ -13097,8 +13097,8 @@ bake_test_case Monitor_testcases[] = {
 
 bake_test_case Prefab_testcases[] = {
     {
-        "enable_prefab_w_isa_variant",
-        Prefab_enable_prefab_w_isa_variant
+        "disable_prefab_w_isa_variant",
+        Prefab_disable_prefab_w_isa_variant
     },
     {
         "new_w_prefab",
@@ -13633,12 +13633,12 @@ bake_test_case Prefab_testcases[] = {
         Prefab_hierarchy_w_recycled_id
     },
     {
-        "disable_ids",
-        Prefab_disable_ids
+        "disable_prefab",
+        Prefab_disable_prefab
     },
     {
-        "disable_nested_ids",
-        Prefab_disable_nested_ids
+        "disable_nested_prefab",
+        Prefab_disable_nested_prefab
     },
     {
         "prefab_w_children_w_isa_auto_override",

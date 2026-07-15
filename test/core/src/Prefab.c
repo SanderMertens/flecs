@@ -4715,7 +4715,7 @@ void Prefab_hierarchy_w_recycled_id(void) {
     ecs_fini(ecs);
 }
 
-void Prefab_disable_ids(void) {
+void Prefab_disable_prefab(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, A, 0);
@@ -4724,24 +4724,27 @@ void Prefab_disable_ids(void) {
 
     test_assert(!ecs_has_id(world, A, EcsDisabled));
     test_assert(!ecs_has_id(world, B, EcsDisabled));
+    test_assert(!ecs_has_id(world, Prefab, EcsDisabled));
     test_assert(!ecs_has_id(world, EcsPrefab, EcsDisabled));
 
     ecs_enable(world, Prefab, false);
 
-    test_assert(ecs_has_id(world, A, EcsDisabled));
-    test_assert(ecs_has_id(world, B, EcsDisabled));
+    test_assert(!ecs_has_id(world, A, EcsDisabled));
+    test_assert(!ecs_has_id(world, B, EcsDisabled));
+    test_assert(ecs_has_id(world, Prefab, EcsDisabled));
     test_assert(!ecs_has_id(world, EcsPrefab, EcsDisabled));
 
     ecs_enable(world, Prefab, true);
 
     test_assert(!ecs_has_id(world, A, EcsDisabled));
     test_assert(!ecs_has_id(world, B, EcsDisabled));
+    test_assert(!ecs_has_id(world, Prefab, EcsDisabled));
     test_assert(!ecs_has_id(world, EcsPrefab, EcsDisabled));
 
     ecs_fini(world);
 }
 
-void Prefab_disable_nested_ids(void) {
+void Prefab_disable_nested_prefab(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, A, 0);
@@ -4752,13 +4755,15 @@ void Prefab_disable_nested_ids(void) {
     test_assert(!ecs_has_id(world, A, EcsDisabled));
     test_assert(!ecs_has_id(world, B, EcsDisabled));
     test_assert(!ecs_has_id(world, PrefabX, EcsDisabled));
+    test_assert(!ecs_has_id(world, PrefabY, EcsDisabled));
     test_assert(!ecs_has_id(world, EcsPrefab, EcsDisabled));
 
     ecs_enable(world, PrefabY, false);
 
-    test_assert(ecs_has_id(world, A, EcsDisabled));
-    test_assert(ecs_has_id(world, B, EcsDisabled));
+    test_assert(!ecs_has_id(world, A, EcsDisabled));
+    test_assert(!ecs_has_id(world, B, EcsDisabled));
     test_assert(!ecs_has_id(world, PrefabX, EcsDisabled));
+    test_assert(ecs_has_id(world, PrefabY, EcsDisabled));
     test_assert(!ecs_has_id(world, EcsPrefab, EcsDisabled));
 
     ecs_enable(world, PrefabY, true);
@@ -4766,6 +4771,7 @@ void Prefab_disable_nested_ids(void) {
     test_assert(!ecs_has_id(world, A, EcsDisabled));
     test_assert(!ecs_has_id(world, B, EcsDisabled));
     test_assert(!ecs_has_id(world, PrefabX, EcsDisabled));
+    test_assert(!ecs_has_id(world, PrefabY, EcsDisabled));
     test_assert(!ecs_has_id(world, EcsPrefab, EcsDisabled));
 
     ecs_fini(world);
@@ -6556,7 +6562,7 @@ void Prefab_reparent_to_prefab_is_prefab(void) {
     ecs_fini(world);
 }
 
-void Prefab_enable_prefab_w_isa_variant(void) {
+void Prefab_disable_prefab_w_isa_variant(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t Tag = ecs_new(world);
@@ -6566,12 +6572,15 @@ void Prefab_enable_prefab_w_isa_variant(void) {
     ecs_add_pair(world, variant, EcsIsA, base);
 
     test_assert(!ecs_has_id(world, Tag, EcsDisabled));
+    test_assert(!ecs_has_id(world, variant, EcsDisabled));
 
     ecs_enable(world, variant, false);
-    test_assert(ecs_has_id(world, Tag, EcsDisabled));
+    test_assert(!ecs_has_id(world, Tag, EcsDisabled));
+    test_assert(ecs_has_id(world, variant, EcsDisabled));
 
     ecs_enable(world, variant, true);
     test_assert(!ecs_has_id(world, Tag, EcsDisabled));
+    test_assert(!ecs_has_id(world, variant, EcsDisabled));
 
     ecs_fini(world);
 }
@@ -6593,4 +6602,3 @@ void Prefab_add_same_childof_to_prefab_parent_w_name(void) {
 
     ecs_fini(world);
 }
-

@@ -3212,13 +3212,6 @@ void flecs_fini_prefab(
 
 #ifdef FLECS_PREFAB
 
-/* Enable or disable the ids of a prefab. Returns whether the entity was a
- * prefab and the operation was handled. */
-bool flecs_enable_prefab(
-    ecs_world_t *world,
-    ecs_entity_t entity,
-    bool enabled);
-
 void flecs_instantiate_dont_fragment(
     ecs_world_t *world,
     ecs_entity_t base,
@@ -10901,12 +10894,6 @@ void ecs_enable(
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     flecs_assert_entity_valid(world, entity, "enable");
-
-#ifdef FLECS_PREFAB
-    if (flecs_enable_prefab(world, entity, enabled)) {
-        return;
-    }
-#endif
 
     if (enabled) {
         ecs_remove_id(world, entity, EcsDisabled);
@@ -66648,34 +66635,6 @@ static ECS_MOVE(EcsTreeSpawner, dst, src, {
 static ECS_DTOR(EcsTreeSpawner, ptr, {
     EcsTreeSpawner_free(ptr);
 })
-
-bool flecs_enable_prefab(
-    ecs_world_t *world,
-    ecs_entity_t entity,
-    bool enabled)
-{
-    if (!ecs_has_id(world, entity, EcsPrefab)) {
-        return false;
-    }
-
-    /* If entity is a prefab, enable/disable all entities in the type. */
-    const ecs_type_t *type = ecs_get_type(world, entity);
-    ecs_assert(type != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_id_t *ids = type->array;
-    int32_t i, count = type->count;
-    for (i = 0; i < count; i ++) {
-        ecs_id_t component = ids[i];
-        if (component & ECS_ID_FLAGS_MASK) {
-            continue;
-        }
-        ecs_flags32_t flags = ecs_id_get_flags(world, component);
-        if (!(flags & EcsIdOnInstantiateDontInherit)) {
-            ecs_enable(world, component, enabled);
-        }
-    }
-
-    return true;
-}
 
 static
 void flecs_on_add_prefab(ecs_iter_t *it) {
