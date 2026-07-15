@@ -6,8 +6,6 @@
 #ifndef FLECS_CONSTRAINT_TRAITS_PRIVATE_H
 #define FLECS_CONSTRAINT_TRAITS_PRIVATE_H
 
-#ifdef FLECS_CONSTRAINT_TRAITS
-
 void flecs_assert_relation_unused(
     ecs_world_t *world,
     ecs_entity_t rel,
@@ -19,6 +17,8 @@ void flecs_register_flag_for_trait(
     ecs_flags32_t flag,
     ecs_flags32_t not_flag,
     ecs_flags32_t entity_flag);
+
+#ifdef FLECS_CONSTRAINT_TRAITS
 
 /* Get entity that should be used for OneOf constraint from relationship. */
 ecs_entity_t flecs_get_oneof(

@@ -926,7 +926,7 @@ ecs_world_t *ecs_mini(void) {
     ecs_vec_init_t(a, &world->fini_actions, ecs_action_elem_t, 0);
     flecs_multi_world_init(world);
 
-    world->info.time_scale = 1.0;
+    world->info.time_scale = (ecs_ftime_t)1;
     if (ecs_os_has_time()) {
         ecs_os_get_time(&world->world_start_time);
     }

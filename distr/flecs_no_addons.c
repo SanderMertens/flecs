@@ -3842,6 +3842,18 @@ void flecs_bootstrap_make_alive(
 #ifndef FLECS_CONSTRAINT_TRAITS_PRIVATE_H
 #define FLECS_CONSTRAINT_TRAITS_PRIVATE_H
 
+void flecs_assert_relation_unused(
+    ecs_world_t *world,
+    ecs_entity_t rel,
+    ecs_entity_t trait);
+
+void flecs_register_flag_for_trait(
+    ecs_iter_t *it,
+    ecs_entity_t trait,
+    ecs_flags32_t flag,
+    ecs_flags32_t not_flag,
+    ecs_flags32_t entity_flag);
+
 #define flecs_get_oneof(world, e) ((void)(world), (void)(e), 0)
 #define flecs_bootstrap_constraint_traits(world) (void)world
 #define flecs_check_constraint_traits(world, cr, rel, tgt) (0)
@@ -21137,7 +21149,7 @@ ecs_world_t *ecs_mini(void) {
     ecs_vec_init_t(a, &world->fini_actions, ecs_action_elem_t, 0);
     flecs_multi_world_init(world);
 
-    world->info.time_scale = 1.0;
+    world->info.time_scale = (ecs_ftime_t)1;
     if (ecs_os_has_time()) {
         ecs_os_get_time(&world->world_start_time);
     }

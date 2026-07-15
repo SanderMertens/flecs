@@ -221,6 +221,125 @@
 // #define FLECS_SCRIPT_PLATFORM /**< Platform constants for Flecs script. */
 #endif // ifndef FLECS_CUSTOM_BUILD
 
+#ifndef FLECS_ADDON_DEFINES_H
+#define FLECS_ADDON_DEFINES_H
+
+/* Blacklist macros */
+#ifdef FLECS_NO_CPP
+#undef FLECS_CPP
+#endif
+#ifdef FLECS_NO_CACHED_QUERIES
+#undef FLECS_CACHED_QUERIES
+#endif
+#ifdef FLECS_NO_CONSTRAINT_TRAITS
+#undef FLECS_CONSTRAINT_TRAITS
+#endif
+#ifdef FLECS_NO_ENTITY_RANGES
+#undef FLECS_ENTITY_RANGES
+#endif
+#ifdef FLECS_NO_FRAME
+#undef FLECS_FRAME
+#endif
+#ifdef FLECS_NO_MODULE
+#undef FLECS_MODULE
+#endif
+#ifdef FLECS_NO_MULTI_WORLD
+#undef FLECS_MULTI_WORLD
+#endif
+#ifdef FLECS_NO_PREFAB
+#undef FLECS_PREFAB
+#endif
+#ifdef FLECS_NO_SCRIPT
+#undef FLECS_SCRIPT
+#endif
+#ifdef FLECS_NO_PARSER
+#undef FLECS_PARSER
+#endif
+#ifdef FLECS_NO_QUERY_DSL
+#undef FLECS_QUERY_DSL
+#endif
+#ifdef FLECS_NO_SCRIPT_MATH
+#undef FLECS_SCRIPT_MATH
+#endif
+#ifdef FLECS_NO_SCRIPT_PLATFORM
+#undef FLECS_SCRIPT_PLATFORM
+#endif
+#ifdef FLECS_NO_STATS
+#undef FLECS_STATS
+#endif
+#ifdef FLECS_NO_SYSTEM
+#undef FLECS_SYSTEM
+#endif
+#ifdef FLECS_NO_ALERTS
+#undef FLECS_ALERTS
+#endif
+#ifdef FLECS_NO_PIPELINE
+#undef FLECS_PIPELINE
+#endif
+#ifdef FLECS_NO_TIMER
+#undef FLECS_TIMER
+#endif
+#ifdef FLECS_NO_META
+#undef FLECS_META
+#endif
+#ifdef FLECS_NO_METRICS
+#undef FLECS_METRICS
+#endif
+#ifdef FLECS_NO_UNITS
+#undef FLECS_UNITS
+#endif
+#ifdef FLECS_NO_JSON
+#undef FLECS_JSON
+#endif
+#ifdef FLECS_NO_DOC
+#undef FLECS_DOC
+#endif
+#ifdef FLECS_NO_LOG
+#undef FLECS_LOG
+#endif
+#ifdef FLECS_NO_APP
+#undef FLECS_APP
+#endif
+#ifdef FLECS_NO_OS_API_IMPL
+#undef FLECS_OS_API_IMPL
+#endif
+#ifdef FLECS_NO_HTTP
+#undef FLECS_HTTP
+#endif
+#ifdef FLECS_NO_REST
+#undef FLECS_REST
+#endif
+#ifdef FLECS_NO_JOURNAL
+#undef FLECS_JOURNAL
+#endif
+
+/* Resolve addon dependencies before addon-dependent API declarations. The
+ * order of these blocks follows the addon dependency graph, from addons with
+ * the most dependencies to addons with the least dependencies. */
+#if defined(FLECS_SCRIPT_MATH) || defined(FLECS_SCRIPT_PLATFORM)
+#endif
+
+#if defined(FLECS_ALERTS) || defined(FLECS_APP) || defined(FLECS_TIMER)
+#endif
+
+#if defined(FLECS_DOC) || defined(FLECS_META) || defined(FLECS_SYSTEM) || \
+    defined(FLECS_TIMER)
+#endif
+
+#if defined(FLECS_ALERTS) || defined(FLECS_APP) || defined(FLECS_HTTP) || \
+    defined(FLECS_JSON) || defined(FLECS_METRICS) || defined(FLECS_PIPELINE) || \
+    defined(FLECS_REST) || defined(FLECS_STATS) || defined(FLECS_SYSTEM) || \
+    defined(FLECS_TIMER)
+#endif
+
+#if defined(FLECS_FRAME) || defined(FLECS_HTTP)
+#if !defined(FLECS_OS_API_IMPL) && !defined(FLECS_NO_OS_API_IMPL)
+#define FLECS_OS_API_IMPL
+#endif
+#endif
+
+#endif
+
 /** @def FLECS_LOW_FOOTPRINT
  * Set a number of constants to values that decrease memory footprint, at the
  * cost of decreased performance. */
@@ -11993,92 +12112,6 @@ void ecs_table_clear_entities(
 #ifndef FLECS_ADDONS_H
 #define FLECS_ADDONS_H
 
-/* Blacklist macros */
-#ifdef FLECS_NO_CPP
-#undef FLECS_CPP
-#endif
-#ifdef FLECS_NO_CACHED_QUERIES
-#undef FLECS_CACHED_QUERIES
-#endif
-#ifdef FLECS_NO_CONSTRAINT_TRAITS
-#undef FLECS_CONSTRAINT_TRAITS
-#endif
-#ifdef FLECS_NO_ENTITY_RANGES
-#undef FLECS_ENTITY_RANGES
-#endif
-#ifdef FLECS_NO_FRAME
-#undef FLECS_FRAME
-#endif
-#ifdef FLECS_NO_MODULE
-#undef FLECS_MODULE
-#endif
-#ifdef FLECS_NO_MULTI_WORLD
-#undef FLECS_MULTI_WORLD
-#endif
-#ifdef FLECS_NO_PREFAB
-#undef FLECS_PREFAB
-#endif
-#ifdef FLECS_NO_SCRIPT
-#undef FLECS_SCRIPT
-#endif
-#ifdef FLECS_NO_PARSER
-#undef FLECS_PARSER
-#endif
-#ifdef FLECS_NO_QUERY_DSL
-#undef FLECS_QUERY_DSL
-#endif
-#ifdef FLECS_NO_SCRIPT_MATH
-#undef FLECS_SCRIPT_MATH
-#endif
-#ifdef FLECS_NO_SCRIPT_PLATFORM
-#undef FLECS_SCRIPT_PLATFORM
-#endif
-#ifdef FLECS_NO_STATS
-#undef FLECS_STATS
-#endif
-#ifdef FLECS_NO_SYSTEM
-#undef FLECS_SYSTEM
-#endif
-#ifdef FLECS_NO_ALERTS
-#undef FLECS_ALERTS
-#endif
-#ifdef FLECS_NO_PIPELINE
-#undef FLECS_PIPELINE
-#endif
-#ifdef FLECS_NO_TIMER
-#undef FLECS_TIMER
-#endif
-#ifdef FLECS_NO_META
-#undef FLECS_META
-#endif
-#ifdef FLECS_NO_UNITS
-#undef FLECS_UNITS
-#endif
-#ifdef FLECS_NO_JSON
-#undef FLECS_JSON
-#endif
-#ifdef FLECS_NO_DOC
-#undef FLECS_DOC
-#endif
-#ifdef FLECS_NO_LOG
-#undef FLECS_LOG
-#endif
-#ifdef FLECS_NO_APP
-#undef FLECS_APP
-#endif
-#ifdef FLECS_NO_OS_API_IMPL
-#undef FLECS_OS_API_IMPL
-#endif
-#ifdef FLECS_NO_HTTP
-#undef FLECS_HTTP
-#endif
-#ifdef FLECS_NO_REST
-#undef FLECS_REST
-#endif
-#ifdef FLECS_NO_JOURNAL
-#undef FLECS_JOURNAL
-#endif
-
 /* Always included; if disabled, functions are replaced with dummy macros. */
 
 #ifndef FLECS_LOG_H
@@ -12748,14 +12781,6 @@ char* ecs_log_stop_capture(void);
 /** @} */
 
 #endif // FLECS_LOG_H
-
-/* Handle addon dependencies that need declarations to be visible in the header. */
-
-#if defined(FLECS_ALERTS) || defined(FLECS_APP) || defined(FLECS_HTTP) || \
-    defined(FLECS_JSON) || defined(FLECS_METRICS) || defined(FLECS_PIPELINE) || \
-    defined(FLECS_REST) || defined(FLECS_STATS) || defined(FLECS_SYSTEM) || \
-    defined(FLECS_TIMER)
-#endif
 
 #ifdef FLECS_OS_API_IMPL
 #ifdef FLECS_NO_OS_API_IMPL
