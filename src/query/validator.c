@@ -2068,7 +2068,7 @@ int flecs_query_finalize_query(
         goto error;
     }
 
-    q->flags |= desc->flags | world->default_query_flags;
+    q->flags |= desc->flags;
 
     ecs_term_t terms[FLECS_TERM_COUNT_MAX] = {0};
     ecs_size_t sizes[FLECS_TERM_COUNT_MAX] = {0};

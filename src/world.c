@@ -1222,14 +1222,6 @@ void ecs_dim(
     flecs_entities_set_size(world, entity_count + FLECS_HI_COMPONENT_ID);
 }
 
-void ecs_set_default_query_flags(
-    ecs_world_t *world,
-    ecs_flags32_t flags)
-{
-    flecs_poly_assert(world, ecs_world_t);
-    world->default_query_flags = flags;
-}
-
 void* ecs_get_ctx(
     const ecs_world_t *world)
 {

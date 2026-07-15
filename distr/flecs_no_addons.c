@@ -3660,9 +3660,6 @@ struct ecs_world_t {
     /* -- World flags -- */
     ecs_flags32_t flags;
 
-    /* -- Default query flags -- */
-    ecs_flags32_t default_query_flags;
-
     /* -- Allocators -- */
     ecs_world_allocators_t allocators; /* Static allocation sizes */
     ecs_allocator_t allocator;       /* Dynamic allocation sizes */
@@ -21496,14 +21493,6 @@ void ecs_dim(
     flecs_entities_set_size(world, entity_count + FLECS_HI_COMPONENT_ID);
 }
 
-void ecs_set_default_query_flags(
-    ecs_world_t *world,
-    ecs_flags32_t flags)
-{
-    flecs_poly_assert(world, ecs_world_t);
-    world->default_query_flags = flags;
-}
-
 void* ecs_get_ctx(
     const ecs_world_t *world)
 {
@@ -29336,7 +29325,7 @@ int flecs_query_finalize_query(
         goto error;
     }
 
-    q->flags |= desc->flags | world->default_query_flags;
+    q->flags |= desc->flags;
 
     ecs_term_t terms[FLECS_TERM_COUNT_MAX] = {0};
     ecs_size_t sizes[FLECS_TERM_COUNT_MAX] = {0};

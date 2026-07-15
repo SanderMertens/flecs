@@ -182,9 +182,6 @@ struct ecs_world_t {
     /* -- World flags -- */
     ecs_flags32_t flags;
 
-    /* -- Default query flags -- */
-    ecs_flags32_t default_query_flags;
-
 #ifdef FLECS_CACHED_QUERIES
     /* Count that increases when component monitors change */
     int32_t monitor_generation;
