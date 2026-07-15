@@ -11,43 +11,37 @@
 
 ECS_COMPONENT_DECLARE(EcsWorldStats);
 
-static
-ECS_CTOR(EcsWorldStats, ptr, {
+static ECS_CTOR(EcsWorldStats, ptr, {
     ecs_os_zeromem(ptr);
     ptr->stats = ecs_os_calloc_t(ecs_world_stats_t);
 })
 
-static
-ECS_COPY(EcsWorldStats, dst, src, {
+static ECS_COPY(EcsWorldStats, dst, src, {
     ecs_os_free(dst->stats);
     ecs_os_memcpy_t(dst, src, EcsWorldStats);
     dst->stats = ecs_os_calloc_t(ecs_world_stats_t);
     ecs_os_memcpy_t(dst->stats, src->stats, ecs_world_stats_t);
 })
 
-static
-ECS_MOVE(EcsWorldStats, dst, src, {
+static ECS_MOVE(EcsWorldStats, dst, src, {
     ecs_os_free(dst->stats);
     ecs_os_memcpy_t(dst, src, EcsWorldStats);
     src->stats = NULL;
 })
 
-static
-ECS_DTOR(EcsWorldStats, ptr, {
+static ECS_DTOR(EcsWorldStats, ptr, {
     ecs_os_free(ptr->stats);
     ptr->stats = NULL;
 })
 
-static
-void flecs_world_stats_get(
+static void flecs_world_stats_get(
     ecs_world_t *world, ecs_entity_t res, void *stats)
 {
     (void)res;
     ecs_world_stats_get(world, stats);
 }
 
-static 
-void flecs_world_stats_set_t(
+static void flecs_world_stats_set_t(
     void *stats, int32_t t)
 {
     ecs_assert(t >= 0, ECS_INTERNAL_ERROR, NULL);
@@ -55,24 +49,21 @@ void flecs_world_stats_set_t(
     ((ecs_world_stats_t*)stats)->t = t;
 }
 
-static
-void flecs_world_stats_copy_last(
+static void flecs_world_stats_copy_last(
     void *stats, 
     void *src) 
 {
     ecs_world_stats_copy_last(stats, src);
 }
 
-static
-void flecs_world_stats_reduce(
+static void flecs_world_stats_reduce(
     void *stats, 
     void *src) 
 {
     ecs_world_stats_reduce(stats, src);
 }
 
-static
-void flecs_world_stats_reduce_last(
+static void flecs_world_stats_reduce_last(
     void *stats, 
     void *last, 
     int32_t reduce_count) 
@@ -80,8 +71,7 @@ void flecs_world_stats_reduce_last(
     ecs_world_stats_reduce_last(stats, last, reduce_count);
 }
 
-static
-void flecs_world_stats_repeat_last(
+static void flecs_world_stats_repeat_last(
     void* stats) 
 {
     ecs_world_stats_repeat_last(stats);

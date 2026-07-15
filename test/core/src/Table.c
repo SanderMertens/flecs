@@ -784,8 +784,7 @@ void Table_clear_table_on_remove_hooks(void) {
     ecs_fini(world);
 }
 
-static
-void Observer(ecs_iter_t *it) {
+static void Observer(ecs_iter_t *it) {
     probe_system_w_ctx(it, it->ctx);
 }
 

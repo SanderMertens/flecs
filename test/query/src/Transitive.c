@@ -13,8 +13,7 @@ ECS_TAG_DECLARE(NoordHolland);
 ECS_TAG_DECLARE(Netherlands);
 ECS_TAG_DECLARE(Amsterdam);
 
-static
-void populate_facts(ecs_world_t *world) {
+static void populate_facts(ecs_world_t *world) {
     ECS_ENTITY_DEFINE(world, LocatedIn, Final, Transitive);
     ECS_TAG_DEFINE(world, Location);
     ECS_ENTITY_DEFINE(world, Earth, Location);

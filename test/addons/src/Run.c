@@ -4,8 +4,7 @@ void Run_setup(void) {
     ecs_log_set_level(-3);
 }
 
-static
-void Iter(ecs_iter_t *it) {
+static void Iter(ecs_iter_t *it) {
     Position *p = ecs_field(it, Position, 0);
     Velocity *v = NULL;
     Mass *m = NULL;
@@ -139,8 +138,7 @@ void Run_run_w_param(void) {
     ecs_fini(world);
 }
 
-static
-void Interrupt(ecs_iter_t *it) {
+static void Interrupt(ecs_iter_t *it) {
     int i;
     for (i = 0; i < it->count; i ++) {
         if (i == 2) {
@@ -174,8 +172,7 @@ void Run_run_w_interrupt(void) {
     ecs_fini(world);
 }
 
-static
-void AddVelocity(ecs_iter_t *it) {
+static void AddVelocity(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
 
     Position *p = ecs_field(it, Position, 0);

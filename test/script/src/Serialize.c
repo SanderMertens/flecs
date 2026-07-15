@@ -2100,8 +2100,7 @@ typedef struct StringVec {
     String *elems;
 } StringVec;
 
-static
-int Int32_serialize(const ecs_serializer_t *ser, const void *ptr) {
+static int Int32_serialize(const ecs_serializer_t *ser, const void *ptr) {
     test_assert(ser != NULL);
     test_assert(ptr != NULL);
     int result = ser->value(ser, ecs_id(ecs_i32_t), ptr);
@@ -2110,8 +2109,7 @@ int Int32_serialize(const ecs_serializer_t *ser, const void *ptr) {
     return result;
 }
 
-static
-int String_serialize(const ecs_serializer_t *ser, const void *ptr) {
+static int String_serialize(const ecs_serializer_t *ser, const void *ptr) {
     test_assert(ser != NULL);
     test_assert(ptr != NULL);
     int result = ser->value(ser, ecs_id(ecs_string_t), ptr);
@@ -2120,8 +2118,7 @@ int String_serialize(const ecs_serializer_t *ser, const void *ptr) {
     return result;
 }
 
-static
-int IntArray_serialize(const ecs_serializer_t *ser, const void *ptr) {
+static int IntArray_serialize(const ecs_serializer_t *ser, const void *ptr) {
     test_assert(ser != NULL);
     test_assert(ptr != NULL);
 
@@ -2135,8 +2132,7 @@ int IntArray_serialize(const ecs_serializer_t *ser, const void *ptr) {
     return 0;
 }
 
-static
-int IntVec_serialize(const ecs_serializer_t *ser, const void *ptr) {
+static int IntVec_serialize(const ecs_serializer_t *ser, const void *ptr) {
     test_assert(ser != NULL);
     test_assert(ptr != NULL);
 
@@ -2150,8 +2146,7 @@ int IntVec_serialize(const ecs_serializer_t *ser, const void *ptr) {
     return 0;
 }
 
-static
-int StringVec_serialize(const ecs_serializer_t *ser, const void *ptr) {
+static int StringVec_serialize(const ecs_serializer_t *ser, const void *ptr) {
     test_assert(ser != NULL);
     test_assert(ptr != NULL);
 
@@ -2169,8 +2164,7 @@ typedef struct Struct_3_member {
     int32_t x, y, z;
 } Struct_3_member;
 
-static
-int Struct_3_member_serialize(const ecs_serializer_t *ser, const void *ptr) {
+static int Struct_3_member_serialize(const ecs_serializer_t *ser, const void *ptr) {
     test_assert(ser != NULL);
     test_assert(ptr != NULL);
 

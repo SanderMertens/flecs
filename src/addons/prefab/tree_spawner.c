@@ -7,8 +7,7 @@
 
 #ifdef FLECS_PREFAB
 
-static
-ecs_type_t flecs_prefab_spawner_build_type(
+static ecs_type_t flecs_prefab_spawner_build_type(
     ecs_world_t *world,
     ecs_entity_t child,
     ecs_table_t *table,
@@ -63,8 +62,7 @@ ecs_type_t flecs_prefab_spawner_build_type(
     return dst;
 }
 
-static
-void flecs_prefab_spawner_build_from_cr(
+static void flecs_prefab_spawner_build_from_cr(
     ecs_world_t *world,
     ecs_component_record_t *cr,
     ecs_vec_t *spawner,
@@ -115,8 +113,7 @@ void flecs_prefab_spawner_build_from_cr(
     }
 }
 
-static
-void flecs_spawner_transpose_depth(
+static void flecs_spawner_transpose_depth(
     ecs_world_t *world,
     EcsTreeSpawner *spawner,
     ecs_vec_t *dst,
@@ -153,8 +150,7 @@ void flecs_spawner_transpose_depth(
 }
 
 #ifdef FLECS_DEBUG
-static
-bool flecs_tree_spawner_is_empty(
+static bool flecs_tree_spawner_is_empty(
     const EcsTreeSpawner *ts)
 {
     int32_t i;

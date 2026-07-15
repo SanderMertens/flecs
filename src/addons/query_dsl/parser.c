@@ -30,8 +30,7 @@
     case '\0'
 
 // $this ==
-static
-const char* flecs_term_parse_equality_pred(
+static const char* flecs_term_parse_equality_pred(
     ecs_parser_t *parser,
     const char *pos,
     ecs_entity_t pred) 
@@ -80,8 +79,7 @@ const char* flecs_term_parse_equality_pred(
     ParserEnd;
 }
 
-static
-ecs_entity_t flecs_query_parse_trav_flags(
+static ecs_entity_t flecs_query_parse_trav_flags(
     const char *tok)
 {
          if (!ecs_os_strcmp(tok, "self"))    return EcsSelf;
@@ -91,8 +89,7 @@ ecs_entity_t flecs_query_parse_trav_flags(
     else return 0;
 }
 
-static
-const char* flecs_term_parse_trav(
+static const char* flecs_term_parse_trav(
     ecs_parser_t *parser,
     ecs_term_ref_t *ref,
     const char *pos) 
@@ -132,8 +129,7 @@ const char* flecs_term_parse_trav(
 }
 
 // Position(
-static
-const char* flecs_term_parse_arg(
+static const char* flecs_term_parse_arg(
     ecs_parser_t *parser,
     const char *pos,
     int32_t arg)
@@ -254,8 +250,7 @@ const char* flecs_term_parse_arg(
 }
 
 // Position
-static
-const char* flecs_term_parse_id(
+static const char* flecs_term_parse_id(
     ecs_parser_t *parser,
     const char *pos) 
 {
@@ -353,8 +348,7 @@ static const char* flecs_term_parse_pair(
 }
 
 // AND
-static
-const char* flecs_term_parse_flags(
+static const char* flecs_term_parse_flags(
     ecs_parser_t *parser,
     const char *token_0,
     const char *pos) 
@@ -411,8 +405,7 @@ const char* flecs_term_parse_flags(
 }
 
 // !
-static
-const char* flecs_term_parse_unary(
+static const char* flecs_term_parse_unary(
     ecs_parser_t *parser,
     const char *pos)
 {
@@ -444,8 +437,7 @@ const char* flecs_term_parse_unary(
 }
 
 // [
-static
-const char* flecs_term_parse_inout(
+static const char* flecs_term_parse_inout(
     ecs_parser_t *parser,
     const char *pos)
 {
@@ -490,8 +482,7 @@ const char* flecs_term_parse_inout(
     ParserEnd;
 }
 
-static
-const char* flecs_query_term_parse(
+static const char* flecs_query_term_parse(
     ecs_parser_t *parser,
     const char *pos) 
 {
@@ -728,8 +719,7 @@ done:
     return ret;
 }
 
-static
-const char* flecs_query_arg_parse(
+static const char* flecs_query_arg_parse(
     ecs_parser_t *parser,
     ecs_query_t *q,
     ecs_iter_t *it,
@@ -756,8 +746,7 @@ const char* flecs_query_arg_parse(
     ParserEnd;
 }
 
-static
-const char* flecs_query_args_parse(
+static const char* flecs_query_args_parse(
     ecs_parser_t *parser,
     ecs_query_t *q,
     ecs_iter_t *it,

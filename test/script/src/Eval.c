@@ -10142,8 +10142,7 @@ void Eval_update_template_w_tag(void) {
     ecs_fini(world);
 }
 
-static
-void func_sqr(
+static void func_sqr(
     const ecs_function_ctx_t *ctx,
     int argc,
     const ecs_value_t *argv,
@@ -11293,8 +11292,7 @@ void Eval_variable_assign_self(void) {
     ecs_fini(world);
 }
 
-static
-void func_is_component(
+static void func_is_component(
     const ecs_function_ctx_t *ctx,
     int32_t argc,
     const ecs_value_t *argv,
@@ -14465,14 +14463,12 @@ typedef struct IntVec {
     int32_t *array;
 } IntVec;
 
-static 
-size_t IntVec_count(const void *ptr) {
+static size_t IntVec_count(const void *ptr) {
     const IntVec *data = ptr;
     return data->count;
 }
 
-static 
-void* IntVec_ensure(void *ptr, size_t index) {
+static void* IntVec_ensure(void *ptr, size_t index) {
     IntVec *data = ptr;
     test_assert(data != NULL);
     if (data->count <= index) {
@@ -14482,8 +14478,7 @@ void* IntVec_ensure(void *ptr, size_t index) {
     return &data->array[index];
 }
 
-static 
-void IntVec_resize(void *ptr, size_t size) {
+static void IntVec_resize(void *ptr, size_t size) {
     IntVec *data = ptr;
     test_assert(data != NULL);
     if (data->count != size) {
@@ -16066,8 +16061,7 @@ void Eval_component_expr_member(void) {
     ecs_fini(world);
 }
 
-static
-ecs_entity_t flecs_swizzle_register_vec3(
+static ecs_entity_t flecs_swizzle_register_vec3(
     ecs_world_t *world)
 {
     ecs_entity_t ecs_id(Vec3) = ecs_struct(world, {
@@ -16474,8 +16468,7 @@ void Eval_component_expr_swizzle_var_no_target_type(void) {
     ecs_fini(world);
 }
 
-static
-ecs_entity_t flecs_swizzle_register_rgba(
+static ecs_entity_t flecs_swizzle_register_rgba(
     ecs_world_t *world)
 {
     ecs_entity_t ecs_id(Rgba) = ecs_struct(world, {

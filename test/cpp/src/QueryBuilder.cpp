@@ -2438,8 +2438,7 @@ void QueryBuilder_group_by_template_ordered(void) {
     test_int(count, 3);
 }
 
-static
-uint64_t group_by_rel(flecs::world_t *world, flecs::table_t *table, flecs::entity_t id, void *ctx) {
+static uint64_t group_by_rel(flecs::world_t *world, flecs::table_t *table, flecs::entity_t id, void *ctx) {
     ecs_id_t match;
     if (ecs_search(world, table, ecs_pair(id, EcsWildcard), &match) != -1) {
         return ECS_PAIR_SECOND(match);
@@ -3569,8 +3568,7 @@ void QueryBuilder_builder_force_assign_operator(void) {
     });
 }
 
-static
-int query_arg(flecs::query<Self> f) {
+static int query_arg(flecs::query<Self> f) {
     int32_t count = 0;
 
     f.each([&](flecs::entity e, Self& s) {
@@ -3600,8 +3598,7 @@ void QueryBuilder_query_as_arg(void) {
     test_int(query_arg(f), 3);
 }
 
-static
-int query_move_arg(flecs::query<Self>&& f) {
+static int query_move_arg(flecs::query<Self>&& f) {
     int32_t count = 0;
 
     f.each([&](flecs::entity e, Self& s) {
@@ -3629,8 +3626,7 @@ void QueryBuilder_query_as_move_arg(void) {
     test_int(query_move_arg(ecs.query<Self>()), 3);
 }
 
-static
-flecs::query<Self> query_return(flecs::world& ecs) {
+static flecs::query<Self> query_return(flecs::world& ecs) {
     return ecs.query<Self>();
 }
 
@@ -5042,8 +5038,7 @@ void QueryBuilder_with_r_t_inout(void) {
     test_assert(f.term(0).inout() == flecs::InOutDefault);
 }
 
-static
-int filter_move_arg(flecs::query<Self>&& f) {
+static int filter_move_arg(flecs::query<Self>&& f) {
     int32_t count = 0;
 
     f.each([&](flecs::entity e, Self& s) {
@@ -5073,8 +5068,7 @@ void QueryBuilder_filter_as_move_arg(void) {
     test_int(filter_move_arg(ecs.query<Self>()), 3);
 }
 
-static
-flecs::query<Self> filter_return(flecs::world& ecs) {
+static flecs::query<Self> filter_return(flecs::world& ecs) {
     return ecs.query_builder<Self>()
         .cache_kind(cache_kind)
         .build();

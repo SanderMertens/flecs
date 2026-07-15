@@ -14,8 +14,7 @@
 #define test_rmdir(p) rmdir(p)
 #endif
 
-static
-void test_write_file(const char *path, const char *content) {
+static void test_write_file(const char *path, const char *content) {
     FILE *f = fopen(path, "w");
     test_assert(f != NULL);
     if (content) {
@@ -24,8 +23,7 @@ void test_write_file(const char *path, const char *content) {
     fclose(f);
 }
 
-static
-void test_unlink(const char *path) {
+static void test_unlink(const char *path) {
     remove(path);
 }
 
@@ -34,8 +32,7 @@ static const char *g_fopen_remap_to;
 
 static ecs_os_api_fopen_t s_default_fopen = NULL;
 
-static
-FILE* test_fopen_remap(const char *file, const char *mode) {
+static FILE* test_fopen_remap(const char *file, const char *mode) {
     const char *actual = file;
     if (g_fopen_remap_from && !strcmp(file, g_fopen_remap_from)) {
         actual = g_fopen_remap_to;
@@ -43,8 +40,7 @@ FILE* test_fopen_remap(const char *file, const char *mode) {
     return s_default_fopen(actual, mode);
 }
 
-static
-const char* test_tmp_dir(const char *name) {
+static const char* test_tmp_dir(const char *name) {
     static char buf[1024];
     snprintf(buf, sizeof(buf), "flecs_include_test_%s", name);
     test_rmdir(buf);
@@ -651,8 +647,7 @@ void Include_fopen_override_remaps_filename(void) {
 static int include_log_error_count = 0;
 static int include_log_error_level = 0;
 
-static
-void include_log_error_callback(
+static void include_log_error_callback(
     int32_t level,
     const char *file,
     int32_t line,
@@ -678,15 +673,13 @@ static test_mem_file_t g_mem_files[2];
 static ecs_os_api_fread_t s_default_fread = NULL;
 static ecs_os_api_fclose_t s_default_fclose = NULL;
 
-static
-test_mem_file_t* test_mem_file(FILE *file) {
+static test_mem_file_t* test_mem_file(FILE *file) {
     if (file == (FILE*)&g_mem_files[0]) return &g_mem_files[0];
     if (file == (FILE*)&g_mem_files[1]) return &g_mem_files[1];
     return NULL;
 }
 
-static
-FILE* test_fopen_mem(const char *file, const char *mode) {
+static FILE* test_fopen_mem(const char *file, const char *mode) {
     int32_t i;
     for (i = 0; i < 2; i ++) {
         if (g_mem_files[i].name && !strcmp(file, g_mem_files[i].name)) {
@@ -697,8 +690,7 @@ FILE* test_fopen_mem(const char *file, const char *mode) {
     return s_default_fopen(file, mode);
 }
 
-static
-size_t test_fread_mem(void *ptr, size_t size, size_t count, FILE *file) {
+static size_t test_fread_mem(void *ptr, size_t size, size_t count, FILE *file) {
     test_mem_file_t *mf = test_mem_file(file);
     if (!mf) {
         return s_default_fread(ptr, size, count, file);
@@ -715,15 +707,13 @@ size_t test_fread_mem(void *ptr, size_t size, size_t count, FILE *file) {
     return requested;
 }
 
-static
-void test_fclose_mem(FILE *file) {
+static void test_fclose_mem(FILE *file) {
     if (!test_mem_file(file)) {
         s_default_fclose(file);
     }
 }
 
-static
-void test_fopen_mem_install(ecs_os_api_log_t log) {
+static void test_fopen_mem_install(ecs_os_api_log_t log) {
     ecs_os_set_api_defaults();
     s_default_fopen = ecs_os_api.fopen_;
     s_default_fread = ecs_os_api.fread_;

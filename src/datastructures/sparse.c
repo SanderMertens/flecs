@@ -8,8 +8,7 @@
 /* Utility to get a pointer to the payload */
 #define DATA(array, size, offset) (ECS_OFFSET(array, size * offset))
 
-static
-ecs_sparse_page_t* flecs_sparse_page_new(
+static ecs_sparse_page_t* flecs_sparse_page_new(
     ecs_sparse_t *sparse,
     int32_t page_index)
 {
@@ -55,8 +54,7 @@ ecs_sparse_page_t* flecs_sparse_page_new(
     return result;
 }
 
-static
-void flecs_sparse_page_free(
+static void flecs_sparse_page_free(
     ecs_sparse_t *sparse,
     ecs_sparse_page_t *page)
 {
@@ -78,8 +76,7 @@ void flecs_sparse_page_free(
     page->data = NULL;
 }
 
-static
-ecs_sparse_page_t* flecs_sparse_get_page(
+static ecs_sparse_page_t* flecs_sparse_get_page(
     const ecs_sparse_t *sparse,
     int32_t page_index)
 {
@@ -90,8 +87,7 @@ ecs_sparse_page_t* flecs_sparse_get_page(
     return ecs_vec_get_t(&sparse->pages, ecs_sparse_page_t, page_index);
 }
 
-static
-ecs_sparse_page_t* flecs_sparse_get_or_create_page(
+static ecs_sparse_page_t* flecs_sparse_get_or_create_page(
     ecs_sparse_t *sparse,
     int32_t page_index)
 {
@@ -105,15 +101,13 @@ ecs_sparse_page_t* flecs_sparse_get_or_create_page(
     return flecs_sparse_page_new(sparse, page_index);
 }
 
-static
-void flecs_sparse_grow_dense(
+static void flecs_sparse_grow_dense(
     ecs_sparse_t *sparse)
 {
     ecs_vec_append_t(sparse->allocator, &sparse->dense, uint64_t);
 }
 
-static
-void flecs_sparse_assign_index(
+static void flecs_sparse_assign_index(
     ecs_sparse_page_t * page, 
     uint64_t * dense_array, 
     uint64_t id, 
@@ -125,8 +119,7 @@ void flecs_sparse_assign_index(
     dense_array[dense] = id;
 }
 
-static
-uint64_t flecs_sparse_inc_id(
+static uint64_t flecs_sparse_inc_id(
     ecs_sparse_t *sparse)
 {
     /* Generate a new id. The last issued id could be stored in an external
@@ -135,16 +128,14 @@ uint64_t flecs_sparse_inc_id(
     return ++ sparse->max_id;
 }
 
-static
-uint64_t flecs_sparse_get_id(
+static uint64_t flecs_sparse_get_id(
     const ecs_sparse_t *sparse)
 {
     ecs_assert(sparse != NULL, ECS_INTERNAL_ERROR, NULL);
     return sparse->max_id;
 }
 
-static
-void flecs_sparse_set_id(
+static void flecs_sparse_set_id(
     ecs_sparse_t *sparse,
     uint64_t value)
 {
@@ -155,8 +146,7 @@ void flecs_sparse_set_id(
 }
 
 /* Pair dense id with new sparse id */
-static
-uint64_t flecs_sparse_create_id(
+static uint64_t flecs_sparse_create_id(
     ecs_sparse_t *sparse,
     int32_t dense)
 {
@@ -175,8 +165,7 @@ uint64_t flecs_sparse_create_id(
 }
 
 /* Create new id */
-static
-uint64_t flecs_sparse_new_index(
+static uint64_t flecs_sparse_new_index(
     ecs_sparse_t *sparse)
 {
     int32_t dense_count = ecs_vec_count(&sparse->dense);
@@ -194,8 +183,7 @@ uint64_t flecs_sparse_new_index(
 
 /* Get value from sparse set when it is guaranteed that the value exists. This
  * function is used when values are obtained using a dense index */
-static
-void* flecs_sparse_get_sparse(
+static void* flecs_sparse_get_sparse(
     const ecs_sparse_t *sparse,
     int32_t dense,
     uint64_t id)
@@ -217,8 +205,7 @@ void* flecs_sparse_get_sparse(
 
 /* Swap dense elements. A swap occurs when an element is removed, or when a
  * removed element is recycled. */
-static
-void flecs_sparse_swap_dense(
+static void flecs_sparse_swap_dense(
     ecs_sparse_t * sparse,
     ecs_sparse_page_t * page_a,
     int32_t a,
@@ -472,8 +459,7 @@ bool flecs_sparse_remove(
     }
 }
 
-static
-uint64_t flecs_sparse_inc_gen(
+static uint64_t flecs_sparse_inc_gen(
     uint64_t index)
 {
     /* When an index is deleted, its generation is increased so that we can do

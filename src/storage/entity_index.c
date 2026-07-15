@@ -168,8 +168,7 @@ ecs_record_t* flecs_entity_index_ensure(
     return r;
 }
 
-static
-ecs_record_t* flecs_entity_index_remove_intern(
+static ecs_record_t* flecs_entity_index_remove_intern(
     ecs_entity_index_t *index,
     uint64_t entity)
 {

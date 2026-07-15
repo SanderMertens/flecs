@@ -77,8 +77,8 @@ const ecs_entity_t EcsOnDeleteTarget =              FLECS_HI_COMPONENT_ID + 40;
 const ecs_entity_t EcsOnTableCreate =               FLECS_HI_COMPONENT_ID + 41;
 const ecs_entity_t EcsOnTableDelete =               FLECS_HI_COMPONENT_ID + 42;
 
-/* Constraint traits */
 #ifdef FLECS_CONSTRAINT_TRAITS
+/* Constraint traits */
 const ecs_entity_t EcsAcyclic =                     FLECS_HI_COMPONENT_ID + 43;
 const ecs_entity_t EcsFinal =                       FLECS_HI_COMPONENT_ID + 44;
 const ecs_entity_t EcsOneOf =                       FLECS_HI_COMPONENT_ID + 45;
@@ -117,6 +117,8 @@ const ecs_entity_t EcsScopeClose =                  FLECS_HI_COMPONENT_ID + 65;
 /* Systems */
 const ecs_entity_t EcsMonitor =                     FLECS_HI_COMPONENT_ID + 66;
 const ecs_entity_t EcsEmpty =                       FLECS_HI_COMPONENT_ID + 67;
+
+#ifdef FLECS_PIPELINE
 const ecs_entity_t ecs_id(EcsPipeline) =            FLECS_HI_COMPONENT_ID + 68;
 const ecs_entity_t EcsOnStart =                     FLECS_HI_COMPONENT_ID + 69;
 const ecs_entity_t EcsPreFrame =                    FLECS_HI_COMPONENT_ID + 70;
@@ -130,9 +132,10 @@ const ecs_entity_t EcsPreStore =                    FLECS_HI_COMPONENT_ID + 77;
 const ecs_entity_t EcsOnStore =                     FLECS_HI_COMPONENT_ID + 78;
 const ecs_entity_t EcsPostFrame =                   FLECS_HI_COMPONENT_ID + 79;
 const ecs_entity_t EcsPhase =                       FLECS_HI_COMPONENT_ID + 80;
+#endif
 
-/* Meta primitive components (don't use low ids to save id space) */
 #ifdef FLECS_META
+/* Meta primitive components (don't use low ids to save id space) */
 const ecs_entity_t ecs_id(ecs_bool_t) =             FLECS_HI_COMPONENT_ID + 81;
 const ecs_entity_t ecs_id(ecs_char_t) =             FLECS_HI_COMPONENT_ID + 82;
 const ecs_entity_t ecs_id(ecs_byte_t) =             FLECS_HI_COMPONENT_ID + 83;
@@ -382,8 +385,7 @@ ecs_stage_t* flecs_stage_from_world(
     return ECS_CONST_CAST(ecs_stage_t*, world);
 }
 
-static
-void flecs_init_store(
+static void flecs_init_store(
     ecs_world_t *world)
 {
     ecs_os_memset(&world->store, 0, ECS_SIZEOF(ecs_store_t));
@@ -404,8 +406,7 @@ void flecs_init_store(
     flecs_table_hashmap_init(world, &world->store.table_map);
 }
 
-static
-void flecs_clean_tables(
+static void flecs_clean_tables(
     ecs_world_t *world)
 {
     int32_t i, count = flecs_sparse_count(&world->store.tables);
@@ -429,8 +430,7 @@ void flecs_clean_tables(
     }
 }
 
-static
-void flecs_fini_root_tables(
+static void flecs_fini_root_tables(
     ecs_world_t *world,
     ecs_component_record_t *cr,
     bool fini_targets)
@@ -504,8 +504,7 @@ void flecs_fini_root_tables(
     }
 }
 
-static
-void flecs_fini_non_this_on_remove_observers(
+static void flecs_fini_non_this_on_remove_observers(
     ecs_world_t *world)
 {
     ecs_defer_begin(world);
@@ -536,8 +535,7 @@ void flecs_fini_non_this_on_remove_observers(
     ecs_defer_end(world);
 }
 
-static
-void flecs_fini_roots(
+static void flecs_fini_roots(
     ecs_world_t *world)
 {
     ecs_component_record_t *cr = flecs_components_get(world, ecs_pair(EcsChildOf, 0));
@@ -555,8 +553,7 @@ void flecs_fini_roots(
     flecs_defer_end(world, world->stages[0]);
 }
 
-static
-void flecs_fini_store(ecs_world_t *world) {
+static void flecs_fini_store(ecs_world_t *world) {
     flecs_clean_tables(world);
     flecs_sparse_fini(&world->store.tables);
     flecs_table_fini(world, &world->store.root);
@@ -574,8 +571,7 @@ void flecs_fini_store(ecs_world_t *world) {
     ecs_vec_fini_t(a, &world->store.deleted_components, ecs_entity_t);
 }
 
-static 
-void flecs_world_allocators_init(
+static void flecs_world_allocators_init(
     ecs_world_t *world)
 {
     ecs_world_allocators_t *a = &world->allocators;
@@ -593,8 +589,7 @@ void flecs_world_allocators_init(
         &world->allocators.tree_spawner, ecs_entity_t, 0);
 }
 
-static
-void flecs_world_allocators_fini(
+static void flecs_world_allocators_fini(
     ecs_world_t *world)
 {
     ecs_world_allocators_t *a = &world->allocators;
@@ -828,8 +823,7 @@ static const ecs_build_info_t flecs_build_info = {
     .version_patch = FLECS_VERSION_PATCH
 };
 
-static
-void flecs_log_build_info(void) {
+static void flecs_log_build_info(void) {
     const ecs_build_info_t *bi = ecs_get_build_info();
     ecs_assert(bi != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -1077,8 +1071,7 @@ error:
 }
 
 /* Unset data in tables */
-static
-void flecs_fini_unset_tables(
+static void flecs_fini_unset_tables(
     ecs_world_t *world)
 {
     ecs_sparse_t *tables = &world->store.tables;
@@ -1091,8 +1084,7 @@ void flecs_fini_unset_tables(
 }
 
 /* Invoke fini actions */
-static
-void flecs_fini_actions(
+static void flecs_fini_actions(
     ecs_world_t *world)
 {
     int32_t i, count = ecs_vec_count(&world->fini_actions);
@@ -1367,8 +1359,7 @@ void flecs_check_exclusive_world_access_read(
 
 #endif
 
-static
-void flecs_process_empty_queries(
+static void flecs_process_empty_queries(
     ecs_world_t *world)
 {
     flecs_poly_assert(world, ecs_world_t); 
@@ -1525,8 +1516,7 @@ ecs_flags32_t ecs_world_get_flags(
     }
 }
 
-static
-bool flecs_component_record_in_use(
+static bool flecs_component_record_in_use(
     const ecs_component_record_t *cr)
 {
     if (cr->flags & EcsIdDontFragment) {
@@ -1682,8 +1672,7 @@ error:
 }
 
 #ifdef FLECS_DEBUG
-static
-void flecs_component_lock_inc(
+static void flecs_component_lock_inc(
     ecs_map_t *locked_map,
     ecs_id_t component)
 {
@@ -1699,8 +1688,7 @@ void flecs_component_lock_inc(
     }
 }
 
-static
-void flecs_component_lock_dec(
+static void flecs_component_lock_dec(
     ecs_world_t *world,
     ecs_map_t *locked_map,
     ecs_id_t component)

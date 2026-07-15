@@ -2384,8 +2384,7 @@ void Error_string_tag_with_gt_capture_error(void) {
 static int log_error_count = 0;
 static int log_error_level = 0;
 
-static
-void log_error_count_callback(
+static void log_error_count_callback(
     int32_t level,
     const char *file,
     int32_t line,

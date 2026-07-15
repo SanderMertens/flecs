@@ -1,7 +1,6 @@
 #include <query.h>
 
-static
-int order_by_entity(
+static int order_by_entity(
     ecs_entity_t e1,
     const void *ptr1,
     ecs_entity_t e2,
@@ -10,8 +9,7 @@ int order_by_entity(
     return (e1 > e2) - (e1 < e2);
 }
 
-static
-uint64_t group_by_first_id(
+static uint64_t group_by_first_id(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_id_t id,
@@ -26,8 +24,7 @@ uint64_t group_by_first_id(
     return first[0];
 }
 
-static
-uint64_t group_by_rel(ecs_world_t *world, ecs_table_t *table, ecs_id_t id, void *ctx) {
+static uint64_t group_by_rel(ecs_world_t *world, ecs_table_t *table, ecs_id_t id, void *ctx) {
     ecs_id_t match;
     if (ecs_search(world, table, ecs_pair(id, EcsWildcard), &match) != -1) {
         return ecs_pair_second(world, match);
@@ -79,8 +76,7 @@ void GroupBy_group_by(void) {
 
 static int ctx_value;
 static int ctx_value_free_invoked = 0;
-static
-void ctx_value_free(void *ctx) {
+static void ctx_value_free(void *ctx) {
     test_assert(ctx == &ctx_value);
     ctx_value_free_invoked ++;
 }
@@ -438,8 +434,7 @@ static int group_by_ctx;
 static int on_group_create_invoked;
 static int on_group_delete_invoked;
 
-static
-void* on_group_create(ecs_world_t *world, uint64_t group_id, void *group_by_arg) {
+static void* on_group_create(ecs_world_t *world, uint64_t group_id, void *group_by_arg) {
     test_assert(world != NULL);
     test_assert(group_by_arg != NULL);
     test_assert(group_by_arg == &group_by_ctx);
@@ -449,8 +444,7 @@ void* on_group_create(ecs_world_t *world, uint64_t group_id, void *group_by_arg)
     return group_ctx;
 }
 
-static
-void on_group_delete(ecs_world_t *world, uint64_t group_id, void *group_ctx, void *group_by_arg) {
+static void on_group_delete(ecs_world_t *world, uint64_t group_id, void *group_ctx, void *group_by_arg) {
     test_assert(world != NULL);
     test_assert(group_ctx != NULL);
     test_assert(group_by_arg != NULL);
@@ -990,8 +984,7 @@ void GroupBy_group_by_recreate_two_groups_after_rematch(void) {
     ecs_fini(world);
 }
 
-static
-uint64_t group_by_parent_tgt(ecs_world_t *world, ecs_table_t *table, ecs_id_t id, void *ctx) {
+static uint64_t group_by_parent_tgt(ecs_world_t *world, ecs_table_t *table, ecs_id_t id, void *ctx) {
     ecs_id_t match;
 
     if (ecs_search_relation(world, table, 0, ecs_pair(id, EcsWildcard), EcsChildOf, 

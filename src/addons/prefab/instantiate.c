@@ -7,8 +7,7 @@
 
 #ifdef FLECS_PREFAB
 
-static
-int32_t flecs_child_type_insert(
+static int32_t flecs_child_type_insert(
     ecs_type_t *type,
     void **component_data,
     ecs_id_t id)
@@ -133,8 +132,7 @@ void flecs_instantiate_sparse(
     }
 }
 
-static
-void flecs_instantiate_children(
+static void flecs_instantiate_children(
     ecs_world_t *world,
     ecs_entity_t base,
     ecs_entity_t instance,
@@ -352,8 +350,7 @@ void flecs_instantiate_dont_fragment(
     }
 }
 
-static
-void flecs_instantiate_override_dont_fragment(
+static void flecs_instantiate_override_dont_fragment(
     ecs_world_t *world,
     ecs_table_t *base_table,
     ecs_entity_t instance)

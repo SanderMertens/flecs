@@ -15,8 +15,7 @@
     case '\n':\
     case '\0'
 
-static
-void flecs_script_initializer_set_full(
+static void flecs_script_initializer_set_full(
     ecs_expr_node_t *node)
 {
     if (node->kind == EcsExprInitializer) {
@@ -25,8 +24,7 @@ void flecs_script_initializer_set_full(
 }
 
 /* Parse scope (statements inside {}) */
-static
-const char* flecs_script_scope(
+static const char* flecs_script_scope(
     ecs_parser_t *parser,
     ecs_script_scope_t *scope,
     const char *pos)
@@ -79,8 +77,7 @@ error:
 }
 
 /* Parse comma expression (expressions separated by ',') */
-static
-const char* flecs_script_comma_expr(
+static const char* flecs_script_comma_expr(
     ecs_parser_t *parser,
     const char *pos,
     bool is_base_list)
@@ -117,8 +114,7 @@ error:
 }
 
 /* Parse with expression (expression after 'with' keyword) */
-static
-const char* flecs_script_with_expr(
+static const char* flecs_script_with_expr(
     ecs_parser_t *parser,
     const char *pos)
 {
@@ -186,8 +182,7 @@ const char* flecs_script_with_expr(
 }
 
 /* Parse with expression list (expression list after 'with' keyword) */
-static
-const char* flecs_script_with(
+static const char* flecs_script_with(
     ecs_parser_t *parser,
     ecs_script_with_t *with,
     const char *pos)
@@ -223,8 +218,7 @@ const char* flecs_script_with(
 }
 
 /* Parenthesis expression */
-static
-const char* flecs_script_paren_expr(
+static const char* flecs_script_paren_expr(
     ecs_parser_t *parser,
     const char *kind,
     ecs_script_entity_t *entity,
@@ -264,8 +258,7 @@ const char* flecs_script_paren_expr(
 }
 
 /* Parse a single statement */
-static
-const char* flecs_script_if_stmt(
+static const char* flecs_script_if_stmt(
     ecs_parser_t *parser,
     const char *pos)
 {
@@ -333,8 +326,7 @@ const char* flecs_script_if_stmt(
     ParserEnd;
 }
 
-static
-const char* flecs_script_parse_var(
+static const char* flecs_script_parse_var(
     ecs_parser_t *parser,
     const char *pos,
     ecs_tokenizer_t *tokenizer,
@@ -412,8 +404,7 @@ error:
     return NULL;
 }
 
-static
-const char* flecs_script_parse_const(
+static const char* flecs_script_parse_const(
     ecs_parser_t *parser,
     const char *pos,
     ecs_tokenizer_t *tokenizer)
@@ -421,8 +412,7 @@ const char* flecs_script_parse_const(
     return flecs_script_parse_var(parser, pos, tokenizer, EcsAstConst);
 }
 
-static
-const char* flecs_script_parse_export_const(
+static const char* flecs_script_parse_export_const(
     ecs_parser_t *parser,
     const char *pos,
     ecs_tokenizer_t *tokenizer)
@@ -430,8 +420,7 @@ const char* flecs_script_parse_export_const(
     return flecs_script_parse_var(parser, pos, tokenizer, EcsAstExportConst);
 }
 
-static
-const char* flecs_script_parse_prop(
+static const char* flecs_script_parse_prop(
     ecs_parser_t *parser,
     const char *pos,
     ecs_tokenizer_t *tokenizer)
@@ -439,8 +428,7 @@ const char* flecs_script_parse_prop(
     return flecs_script_parse_var(parser, pos, tokenizer, EcsAstProp);
 }
 
-static
-const char* flecs_script_fn_params(
+static const char* flecs_script_fn_params(
     ecs_parser_t *parser,
     ecs_script_function_node_t *fn,
     const char *pos)
@@ -493,8 +481,7 @@ const char* flecs_script_fn_params(
     ParserEnd;
 }
 
-static
-const char* flecs_script_fn_body(
+static const char* flecs_script_fn_body(
     ecs_parser_t *parser,
     ecs_script_function_node_t *fn,
     const char *pos)

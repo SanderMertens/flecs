@@ -20,15 +20,13 @@ typedef struct TestInteropModule {
     int dummy;
 } TestInteropModule;
 
-static
-void TestInteropModuleImport(ecs_world_t *world) {
+static void TestInteropModuleImport(ecs_world_t *world) {
     ECS_MODULE(world, TestInteropModule);
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 }
 
-static
-void TestInteropModule2Import(ecs_world_t *world) {
+static void TestInteropModule2Import(ecs_world_t *world) {
     ECS_MODULE(world, TestInteropModule2);
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -2074,8 +2072,7 @@ void World_fini_copy_move_assign(void) {
     test_assert(finished_2 == true);  // '2' is now finished as well.
 }
 
-static
-void test_log(
+static void test_log(
     int32_t level,
     const char *file, 
     int32_t line,  

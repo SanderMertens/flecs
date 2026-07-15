@@ -7,8 +7,7 @@
 
 #ifdef FLECS_PREFAB
 
-static
-void flecs_tree_spawner_release_tables(
+static void flecs_tree_spawner_release_tables(
     ecs_vec_t *v)
 {
     int32_t i, count = ecs_vec_count(v);
@@ -43,8 +42,7 @@ static ECS_DTOR(EcsTreeSpawner, ptr, {
     EcsTreeSpawner_free(ptr);
 })
 
-static
-void flecs_on_add_prefab(ecs_iter_t *it) {
+static void flecs_on_add_prefab(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
 
     for (int32_t i = 0; i < it->count; i ++) {

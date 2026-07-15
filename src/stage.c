@@ -17,8 +17,7 @@
 
 #include "private_api.h"
 
-static
-void flecs_stage_merge(
+static void flecs_stage_merge(
     ecs_world_t *world)
 {
     bool is_stage = flecs_poly_is(world, ecs_stage_t);
@@ -91,8 +90,7 @@ ecs_entity_t flecs_stage_set_system(
     return old;
 }
 
-static
-ecs_stage_t* flecs_stage_new(
+static ecs_stage_t* flecs_stage_new(
     ecs_world_t *world)
 {
     flecs_poly_assert(world, ecs_world_t);
@@ -123,8 +121,7 @@ ecs_stage_t* flecs_stage_new(
     return stage;
 }
 
-static
-void flecs_stage_free(
+static void flecs_stage_free(
     ecs_world_t *world,
     ecs_stage_t *stage)
 {

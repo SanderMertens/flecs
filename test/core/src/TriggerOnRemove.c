@@ -23,8 +23,7 @@ void Deinit(ecs_iter_t *it) {
     }
 }
 
-static
-void Remove_from_current(ecs_iter_t *it) {
+static void Remove_from_current(ecs_iter_t *it) {
     IterData *ctx = ecs_get_ctx(it->world);
 
     int i;
@@ -143,8 +142,7 @@ void TriggerOnRemove_delete_no_match(void) {
 
 static Position old_position = {0};
 
-static
-void RemovePosition(ecs_iter_t *it) {
+static void RemovePosition(ecs_iter_t *it) {
     Position *p = ecs_field(it, Position, 0);
 
     test_assert(it->count == 1);
@@ -197,8 +195,7 @@ void TriggerOnRemove_delete_watched(void) {
 
 static bool dummy_called = false;
 
-static
-void Dummy(ecs_iter_t *it) {
+static void Dummy(ecs_iter_t *it) {
     dummy_called = true;
 }
 
@@ -239,8 +236,7 @@ typedef struct DummyComp {
     int value;
 } DummyComp;
 
-static
-void RemoveDummyComp(ecs_iter_t *it) { 
+static void RemoveDummyComp(ecs_iter_t *it) {
     int i;
     for (i = 0; i < it->count; i ++) {
         test_assert(ecs_is_valid(it->world, it->entities[i]));
@@ -346,8 +342,7 @@ typedef struct on_remove_has_tag_t {
     ecs_entity_t tag;
 } on_remove_has_tag_t;
 
-static
-void OnRemoveHasTag(ecs_iter_t *it) {
+static void OnRemoveHasTag(ecs_iter_t *it) {
     on_remove_has_tag_t *ctx = it->ctx;
     test_assert(ctx != NULL);
 

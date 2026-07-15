@@ -7,15 +7,13 @@
 
 #ifdef FLECS_META
 
-static
-int flecs_meta_serialize_type(
+static int flecs_meta_serialize_type(
     ecs_world_t *world,
     ecs_entity_t type,
     ecs_size_t offset,
     ecs_vec_t *ops);
 
-static
-ecs_meta_op_t* flecs_meta_ops_add(ecs_vec_t *ops, ecs_meta_op_kind_t kind) {
+static ecs_meta_op_t* flecs_meta_ops_add(ecs_vec_t *ops, ecs_meta_op_kind_t kind) {
     ecs_meta_op_t *op = ecs_vec_append_t(NULL, ops, ecs_meta_op_t);
     op->kind = kind;
     op->offset = 0;
@@ -28,15 +26,13 @@ ecs_meta_op_t* flecs_meta_ops_add(ecs_vec_t *ops, ecs_meta_op_kind_t kind) {
     return op;
 }
 
-static
-ecs_meta_op_t* flecs_meta_ops_get(ecs_vec_t *ops, int32_t index) {
+static ecs_meta_op_t* flecs_meta_ops_get(ecs_vec_t *ops, int32_t index) {
     ecs_meta_op_t* op = ecs_vec_get_t(ops, ecs_meta_op_t, index);
     ecs_assert(op != NULL, ECS_INTERNAL_ERROR, NULL);
     return op;
 }
 
-static
-int flecs_meta_serialize_primitive(
+static int flecs_meta_serialize_primitive(
     ecs_world_t *world,
     ecs_entity_t type,
     ecs_size_t offset,
@@ -59,8 +55,7 @@ int flecs_meta_serialize_primitive(
     return 0;
 }
 
-static
-int flecs_meta_serialize_enum(
+static int flecs_meta_serialize_enum(
     ecs_world_t *world,
     ecs_entity_t type,
     ecs_size_t offset,
@@ -133,8 +128,7 @@ int flecs_meta_serialize_enum(
     return 0;
 }
 
-static
-int flecs_meta_serialize_bitmask(
+static int flecs_meta_serialize_bitmask(
     ecs_world_t *world,
     ecs_entity_t type,
     ecs_size_t offset,
@@ -156,8 +150,7 @@ int flecs_meta_serialize_bitmask(
     return 0;
 }
 
-static
-int flecs_meta_serialize_array_inline(
+static int flecs_meta_serialize_array_inline(
     ecs_world_t *world,
     ecs_entity_t elem_type,
     int32_t count,
@@ -192,8 +185,7 @@ int flecs_meta_serialize_array_inline(
     return 0;
 }
 
-static
-int flecs_meta_serialize_array_type(
+static int flecs_meta_serialize_array_type(
     ecs_world_t *world,
     ecs_entity_t type,
     ecs_vec_t *ops)
@@ -207,8 +199,7 @@ int flecs_meta_serialize_array_type(
         world, ptr->type, ptr->count, 0, ops);
 }
 
-static
-int flecs_meta_serialize_vector_type(
+static int flecs_meta_serialize_vector_type(
     ecs_world_t *world,
     ecs_entity_t type,
     ecs_vec_t *ops)
@@ -247,8 +238,7 @@ int flecs_meta_serialize_vector_type(
     return 0;
 }
 
-static
-int flecs_meta_serialize_map_type(
+static int flecs_meta_serialize_map_type(
     ecs_world_t *world,
     ecs_entity_t type,
     ecs_vec_t *ops)
@@ -317,8 +307,7 @@ int flecs_meta_serialize_map_type(
     return 0;
 }
 
-static
-int flecs_meta_serialize_value_type(
+static int flecs_meta_serialize_value_type(
     ecs_world_t *world,
     ecs_entity_t type,
     ecs_vec_t *ops)
@@ -347,8 +336,7 @@ int flecs_meta_serialize_value_type(
     return 0;
 }
 
-static
-int flecs_meta_serialize_forward(
+static int flecs_meta_serialize_forward(
     ecs_world_t *world,
     ecs_entity_t type,
     ecs_size_t offset,
@@ -363,8 +351,7 @@ int flecs_meta_serialize_forward(
     return 0;
 }
 
-static
-int flecs_meta_serialize_opaque_type(
+static int flecs_meta_serialize_opaque_type(
     ecs_world_t *world,
     ecs_entity_t type,
     ecs_size_t offset,
@@ -395,8 +382,7 @@ int flecs_meta_serialize_opaque_type(
     return 0;
 }
 
-static
-int flecs_meta_serialize_struct(
+static int flecs_meta_serialize_struct(
     ecs_world_t *world,
     ecs_entity_t type,
     ecs_size_t offset,
@@ -465,8 +451,7 @@ int flecs_meta_serialize_struct(
     return 0;
 }
 
-static
-int flecs_meta_serialize_type(
+static int flecs_meta_serialize_type(
     ecs_world_t *world,
     ecs_entity_t type,
     ecs_size_t offset,

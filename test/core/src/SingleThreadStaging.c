@@ -6,8 +6,7 @@ void SingleThreadStaging_setup(void) {
     ecs_log_set_level(-3);
 }
 
-static
-void NewEmpty(ecs_iter_t *it) {
+static void NewEmpty(ecs_iter_t *it) {
     IterData *ctx = ecs_get_ctx(it->world);
 
     int i;
@@ -45,8 +44,7 @@ void SingleThreadStaging_new_empty(void) {
     ecs_fini(world);
 }
 
-static
-void New_w_component(ecs_iter_t *it) {
+static void New_w_component(ecs_iter_t *it) {
     IterData *ctx = ecs_get_ctx(it->world);
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -87,8 +85,7 @@ void SingleThreadStaging_new_w_component(void) {
     ecs_fini(world);
 }
 
-static
-void NewEmpty_w_count(ecs_iter_t *it) {
+static void NewEmpty_w_count(ecs_iter_t *it) {
     IterData *ctx = ecs_get_ctx(it->world);
 
     ctx->new_entities[ctx->entity_count] = ecs_bulk_new_w_id(it->world, 0, 1000)[0];
@@ -119,8 +116,7 @@ void SingleThreadStaging_new_empty_w_count(void) {
     ecs_fini(world);
 }
 
-static
-void New_w_component_w_count(ecs_iter_t *it) {
+static void New_w_component_w_count(ecs_iter_t *it) {
     IterData *ctx = ecs_get_ctx(it->world);
     const ecs_entity_t *ids = NULL;
     if (ctx->component) {
@@ -154,8 +150,7 @@ void SingleThreadStaging_new_component_w_count(void) {
     ecs_fini(world);
 }
 
-static
-void Add_to_new_empty(ecs_iter_t *it) {
+static void Add_to_new_empty(ecs_iter_t *it) {
     IterData *ctx = ecs_get_ctx(it->world);
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -229,8 +224,7 @@ void SingleThreadStaging_2_add_to_new_empty(void) {
     ecs_fini(world);
 }
 
-static
-void Add_remove_same_from_new(ecs_iter_t *it) {
+static void Add_remove_same_from_new(ecs_iter_t *it) {
     IterData *ctx = ecs_get_ctx(it->world);
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -310,8 +304,7 @@ void SingleThreadStaging_add_remove_2_same_to_new_empty(void) {
     ecs_fini(world);
 }
 
-static
-void Add_remove_same_from_new_w_component(ecs_iter_t *it) {
+static void Add_remove_same_from_new_w_component(ecs_iter_t *it) {
     IterData *ctx = ecs_get_ctx(it->world);
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -356,8 +349,7 @@ void SingleThreadStaging_add_remove_same_to_new_w_component(void) {
     ecs_fini(world);
 }
 
-static
-void Add_remove_different_from_new_empty(ecs_iter_t *it) {
+static void Add_remove_different_from_new_empty(ecs_iter_t *it) {
     IterData *ctx = ecs_get_ctx(it->world);
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -441,8 +433,7 @@ void SingleThreadStaging_2_add_1_remove_same_to_new_empty(void) {
     ecs_fini(world);
 }
 
-static
-void Clone_current(ecs_iter_t *it) {
+static void Clone_current(ecs_iter_t *it) {
     IterData *ctx = ecs_get_ctx(it->world);
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -486,8 +477,7 @@ void SingleThreadStaging_clone(void) {
     ecs_fini(world);
 }
 
-static
-void Clone_current_w_value(ecs_iter_t *it) {
+static void Clone_current_w_value(ecs_iter_t *it) {
     IterData *ctx = ecs_get_ctx(it->world);
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -550,8 +540,7 @@ void SingleThreadStaging_clone_w_value(void) {
     ecs_fini(world);
 }
 
-static
-void Add_to_current(ecs_iter_t *it) {
+static void Add_to_current(ecs_iter_t *it) {
     IterData *ctx = ecs_get_ctx(it->world);
 
     int i;
@@ -634,8 +623,7 @@ void SingleThreadStaging_2_add_to_current(void) {
     ecs_fini(world);    
 }
 
-static
-void Remove_from_current(ecs_iter_t *it) {
+static void Remove_from_current(ecs_iter_t *it) {
     IterData *ctx = ecs_get_ctx(it->world);
 
     int i;
@@ -740,8 +728,7 @@ void SingleThreadStaging_remove_2_from_current(void) {
     ecs_fini(world);
 }
 
-static
-void Add_remove_same_from_current(ecs_iter_t *it) {
+static void Add_remove_same_from_current(ecs_iter_t *it) {
     IterData *ctx = ecs_get_ctx(it->world);
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -840,8 +827,7 @@ void SingleThreadStaging_add_remove_same_existing_to_current(void) {
     ecs_fini(world);
 }
 
-static
-void Remove_add_same_from_current(ecs_iter_t *it) {
+static void Remove_add_same_from_current(ecs_iter_t *it) {
     IterData *ctx = ecs_get_ctx(it->world);
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -1070,8 +1056,7 @@ void SingleThreadStaging_remove_add_2_same_to_current(void) {
     ecs_fini(world);
 }
 
-static
-void AddRemoveAdd(ecs_iter_t *it) {
+static void AddRemoveAdd(ecs_iter_t *it) {
     ecs_id_t ecs_id(Velocity) = ecs_field_id(it, 1);
 
     int i;
@@ -1145,8 +1130,7 @@ void SingleThreadStaging_remove_add_2_same_existing_to_current(void) {
     ecs_fini(world);
 }
 
-static
-void Add_remove_different_from_current(ecs_iter_t *it) {
+static void Add_remove_different_from_current(ecs_iter_t *it) {
     IterData *ctx = ecs_get_ctx(it->world);
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -1254,8 +1238,7 @@ void SingleThreadStaging_2_add_1_remove_to_current(void) {
     ecs_fini(world);
 }
 
-static
-void Add_1_remove_2_different_from_current(ecs_iter_t *it) {
+static void Add_1_remove_2_different_from_current(ecs_iter_t *it) {
     IterData *ctx = ecs_get_ctx(it->world);
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -1318,8 +1301,7 @@ void SingleThreadStaging_1_add_2_remove_to_current(void) {
     ecs_fini(world);
 }
 
-static
-void Delete_current(ecs_iter_t *it) {
+static void Delete_current(ecs_iter_t *it) {
     IterData *ctx = ecs_get_ctx(it->world);
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -1353,8 +1335,7 @@ void SingleThreadStaging_delete_current(void) {
     ecs_fini(world);
 }
 
-static
-void Delete_even(ecs_iter_t *it) {
+static void Delete_even(ecs_iter_t *it) {
     IterData *ctx = ecs_get_ctx(it->world);
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -1432,8 +1413,7 @@ void SingleThreadStaging_delete_even(void) {
     ecs_fini(world);
 }
 
-static
-void Delete_new_empty(ecs_iter_t *it) {
+static void Delete_new_empty(ecs_iter_t *it) {
     IterData *ctx = ecs_get_ctx(it->world);
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -1471,8 +1451,7 @@ void SingleThreadStaging_delete_new_empty(void) {
     ecs_fini(world);
 }
 
-static
-void Delete_new_w_component(ecs_iter_t *it) {
+static void Delete_new_w_component(ecs_iter_t *it) {
     IterData *ctx = ecs_get_ctx(it->world);
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -1510,8 +1489,7 @@ void SingleThreadStaging_delete_new_w_component(void) {
     ecs_fini(world);
 }
 
-static
-void Set_current(ecs_iter_t *it) {
+static void Set_current(ecs_iter_t *it) {
     IterData *ctx = ecs_get_ctx(it->world);
         ecs_entity_t ecs_id(Rotation) = ctx->component;
 
@@ -1568,8 +1546,7 @@ void SingleThreadStaging_set_current(void) {
     ecs_fini(world);
 }
 
-static
-void Set_new_empty(ecs_iter_t *it) {
+static void Set_new_empty(ecs_iter_t *it) {
     IterData *ctx = ecs_get_ctx(it->world);
     ecs_entity_t ecs_id(Rotation) = ctx->component;
 
@@ -1621,8 +1598,7 @@ void SingleThreadStaging_set_new_empty(void) {
     ecs_fini(world);
 }
 
-static
-void Set_new_w_component(ecs_iter_t *it) {
+static void Set_new_w_component(ecs_iter_t *it) {
     IterData *ctx = ecs_get_ctx(it->world);
 
     ecs_entity_t ecs_id(Rotation) = ctx->component_2;
@@ -1676,8 +1652,7 @@ void SingleThreadStaging_set_new_w_component(void) {
     ecs_fini(world);
 }
 
-static
-void Set_existing_new_w_component(ecs_iter_t *it) {
+static void Set_existing_new_w_component(ecs_iter_t *it) {
     IterData *ctx = ecs_get_ctx(it->world);
     
     ecs_entity_t ecs_id(Position) = ctx->component;
@@ -1731,8 +1706,7 @@ void SingleThreadStaging_set_existing_new_w_component(void) {
     ecs_fini(world);
 }
 
-static
-void Set_new_after_add(ecs_iter_t *it) {
+static void Set_new_after_add(ecs_iter_t *it) {
     IterData *ctx = ecs_get_ctx(it->world);
     
     ecs_entity_t ecs_id(Position) = ctx->component;
@@ -1787,8 +1761,7 @@ void SingleThreadStaging_set_new_after_add(void) {
     ecs_fini(world);
 }
 
-static
-void Remove_after_set(ecs_iter_t *it) {
+static void Remove_after_set(ecs_iter_t *it) {
     IterData *ctx = ecs_get_ctx(it->world);
     
     ecs_entity_t ecs_id(Position) = ctx->component;
@@ -1843,8 +1816,7 @@ void SingleThreadStaging_remove_after_set(void) {
     ecs_fini(world);
 }
 
-static
-void Delete_after_set(ecs_iter_t *it) {
+static void Delete_after_set(ecs_iter_t *it) {
     IterData *ctx = ecs_get_ctx(it->world);
     
     ecs_entity_t ecs_id(Position) = ctx->component;
@@ -1980,8 +1952,7 @@ void SingleThreadStaging_remove_added_component_in_on_add(void) {
 
 static Probe pv_probe;
 
-static
-void On_PV(ecs_iter_t *it) {
+static void On_PV(ecs_iter_t *it) {
     Position *p = ecs_field(it, Position, 0);
     Velocity *v = ecs_field(it, Velocity, 1);
 
@@ -2030,16 +2001,14 @@ void SingleThreadStaging_match_table_created_in_progress(void) {
     ecs_fini(world);
 }
 
-static
-void Set_velocity_on_new(ecs_iter_t *it) {
+static void Set_velocity_on_new(ecs_iter_t *it) {
     int i;
     for (i = 0; i < it->count; i ++) {
         ecs_insert(it->world, ecs_value(Velocity, {10, 20}));
     }
 }
 
-static
-void On_V(ecs_iter_t *it) {
+static void On_V(ecs_iter_t *it) {
     Velocity *v = ecs_field(it, Velocity, 0);
 
     probe_iter(it);
@@ -2115,8 +2084,7 @@ void SingleThreadStaging_match_table_created_w_new_in_on_set(void) {
     ecs_fini(world);
 }
 
-static
-void Create_container(ecs_iter_t *it) {
+static void Create_container(ecs_iter_t *it) {
     probe_iter(it);
 
     int i;
@@ -2183,8 +2151,7 @@ void SingleThreadStaging_merge_table_w_container_added_on_set(void) {
 static ecs_entity_t g_child = 0;
 static ecs_entity_t g_parent = 0;
 
-static
-void Create_container_reverse(ecs_iter_t *it) {
+static void Create_container_reverse(ecs_iter_t *it) {
 
     probe_iter(it);
 
@@ -2237,8 +2204,7 @@ void SingleThreadStaging_merge_table_w_container_added_on_set_reverse(void) {
     ecs_fini(world);
 }
 
-static
-void Task(ecs_iter_t *it) {
+static void Task(ecs_iter_t *it) {
     ecs_id_t ecs_id(Position) = ecs_field_id(it, 0);
 
     ecs_entity_t *e = ecs_get_ctx(it->world);
@@ -2266,8 +2232,7 @@ void SingleThreadStaging_merge_after_tasks(void) {
 
 static int override_after_remove_invoked = 0;
 
-static
-void OverrideAfterRemove(ecs_iter_t *it) {
+static void OverrideAfterRemove(ecs_iter_t *it) {
     Position *p = ecs_field(it, Position, 0);
     ecs_id_t ecs_id(Position) = ecs_field_id(it, 0);
     
@@ -2308,8 +2273,7 @@ void SingleThreadStaging_override_after_remove_in_progress(void) {
     ecs_fini(world);
 }
 
-static
-void GetParentInProgress(ecs_iter_t *it) {
+static void GetParentInProgress(ecs_iter_t *it) {
     ecs_id_t ecs_id(Velocity) = ecs_field_id(it, 1);
     
     ecs_world_t *world = it->world;
@@ -2342,8 +2306,7 @@ void SingleThreadStaging_get_parent_in_progress(void) {
     ecs_fini(world);
 }
 
-static
-void AddInProgress(ecs_iter_t *it) {
+static void AddInProgress(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
 
     ecs_id_t ecs_id(Position) = ecs_field_id(it, 0);
@@ -2356,8 +2319,7 @@ void AddInProgress(ecs_iter_t *it) {
     }
 }
 
-static
-void Move(ecs_iter_t *it) {
+static void Move(ecs_iter_t *it) {
     Position *p = ecs_field(it, Position, 0);
     Velocity *v = ecs_field(it, Velocity, 1);
 
@@ -2403,8 +2365,7 @@ void SingleThreadStaging_merge_once(void) {
 }
 
 static int move_position = 0;
-static
-ECS_MOVE(Position, dst, src, {
+static ECS_MOVE(Position, dst, src, {
     move_position ++;
     dst->x = src->x;
     dst->y = src->y;
@@ -2614,8 +2575,7 @@ void SingleThreadStaging_ensureable_w_add(void) {
     ecs_fini(world);
 }
 
-static
-void OnAdd(ecs_iter_t *it) {
+static void OnAdd(ecs_iter_t *it) {
     Velocity *v = ecs_field(it, Velocity, 0);
 
     int i;
@@ -2625,8 +2585,7 @@ void OnAdd(ecs_iter_t *it) {
     }
 }
 
-static
-void AddInProgress2(ecs_iter_t *it) {
+static void AddInProgress2(ecs_iter_t *it) {
     ecs_id_t ecs_id(Velocity) = ecs_field_id(it, 1);
 
     int i;

@@ -7,8 +7,7 @@ void MultiThread_setup(void) {
     ecs_log_set_level(-3);
 }
 
-static
-void set_worker_kind(ecs_world_t *world, int32_t thread_count) {
+static void set_worker_kind(ecs_world_t *world, int32_t thread_count) {
     const char *worker_kind = test_param("worker_kind");
     if (!worker_kind || !strcmp(worker_kind, "thread")) {
         ecs_set_threads(world, thread_count);
@@ -26,8 +25,7 @@ void Progress(ecs_iter_t *it) {
     }
 }
 
-static
-ecs_world_t* init_world(void) {
+static ecs_world_t* init_world(void) {
     ecs_world_t *world = ecs_init();
     ECS_COMPONENT_DEFINE(world, Position);
 
@@ -717,8 +715,7 @@ typedef struct Param {
 
 static ECS_QUERY_DECLARE(qTestSubset);
 
-static
-void TestSubset(ecs_world_t *world, ecs_query_t *q, int32_t offset, int32_t count, Param *param) {
+static void TestSubset(ecs_world_t *world, ecs_query_t *q, int32_t offset, int32_t count, Param *param) {
     ecs_iter_t it = ecs_query_iter(world, q);
     ecs_iter_t pit = ecs_page_iter(&it, offset, count);
     while (ecs_page_next(&pit)) {
@@ -730,8 +727,7 @@ void TestSubset(ecs_world_t *world, ecs_query_t *q, int32_t offset, int32_t coun
     }
 }
 
-static
-void TestAll(ecs_iter_t *it) {
+static void TestAll(ecs_iter_t *it) {
     Position *p = ecs_field(it, Position, 0);
 
     int i;
@@ -742,8 +738,7 @@ void TestAll(ecs_iter_t *it) {
     }
 }
 
-static
-void test_combs_100_entity(int THREADS) {
+static void test_combs_100_entity(int THREADS) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT_DEFINE(world, Position);
@@ -834,8 +829,7 @@ void MultiThread_6_thread_test_combs_100_entity(void) {
     test_combs_100_entity(6);
 }
 
-static
-void test_combs_100_entity_2_types(int THREADS) {
+static void test_combs_100_entity_2_types(int THREADS) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT_DEFINE(world, Position);
@@ -951,8 +945,7 @@ void MultiThread_change_thread_count(void) {
     ecs_fini(world);
 }
 
-static
-void QuitSystem(ecs_iter_t *it) {
+static void QuitSystem(ecs_iter_t *it) {
     ecs_quit(it->world);
 }
 
@@ -978,8 +971,7 @@ void MultiThread_multithread_quit(void) {
 
 static bool has_ran = false;
 
-static
-void MtTask(ecs_iter_t *it) {
+static void MtTask(ecs_iter_t *it) {
     has_ran = true;
 }
 
@@ -1001,13 +993,11 @@ void MultiThread_schedule_w_tasks(void) {
     ecs_fini(world);
 }
 
-static
-void ReactiveDummySystem(ecs_iter_t * it) {
+static void ReactiveDummySystem(ecs_iter_t * it) {
     has_ran = true;
 }
 
-static
-void PeriodicDummySystem(ecs_iter_t * it) {
+static void PeriodicDummySystem(ecs_iter_t * it) {
     ecs_id_t ecs_id(Position) = ecs_field_id(it, 0);
     
     int i;
@@ -1050,8 +1040,7 @@ void MultiThread_fini_after_set_threads(void) {
     test_assert(true);
 }
 
-static
-void SingleThreadedSystem(ecs_iter_t * it) {
+static void SingleThreadedSystem(ecs_iter_t * it) {
     Position *p = ecs_field(it, Position, 0);
     
     int i;
@@ -1093,8 +1082,7 @@ void MultiThread_2_threads_single_threaded_system(void) {
 
 static int create_query_invoked = 0;
 
-static
-void CreateQuery(ecs_iter_t *it) {
+static void CreateQuery(ecs_iter_t *it) {
     ecs_query_t *q = ecs_query(it->world, { .expr = "0" });
     ecs_query_fini(q);
     create_query_invoked ++;
@@ -1135,29 +1123,25 @@ void MultiThread_multithread_w_monitor_addon(void) {
 
 static int system_ctx = 0;
 
-static
-void System_w_ctx(ecs_iter_t *it) {
+static void System_w_ctx(ecs_iter_t *it) {
     test_assert(it->ctx == &system_ctx);
     test_assert(it->system != 0);
     test_assert(it->delta_time != 0);
     system_ctx ++;
 }
 
-static
-void System_w_binding_ctx(ecs_iter_t *it) {
+static void System_w_binding_ctx(ecs_iter_t *it) {
     test_assert(it->callback_ctx == &system_ctx);
     test_assert(it->system != 0);
     test_assert(it->delta_time != 0);
     system_ctx ++;
 }
 
-static
-void System_run_w_ctx(ecs_iter_t *it) {
+static void System_run_w_ctx(ecs_iter_t *it) {
     System_w_ctx(it);
 }
 
-static
-void System_run_w_binding_ctx(ecs_iter_t *it) {
+static void System_run_w_binding_ctx(ecs_iter_t *it) {
     System_w_binding_ctx(it);
 }
 

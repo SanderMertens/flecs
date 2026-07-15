@@ -7,8 +7,7 @@
 
 #define ECS_NAME_BUFFER_LENGTH (64)
 
-static
-bool flecs_path_append(
+static bool flecs_path_append(
     const ecs_world_t *world, 
     ecs_entity_t parent, 
     ecs_entity_t child, 
@@ -157,8 +156,7 @@ ecs_entity_t flecs_name_to_id(
     return res;
 }
 
-static
-ecs_entity_t flecs_get_builtin(
+static ecs_entity_t flecs_get_builtin(
     const char *name)
 {
     if (name[0] == '.' && name[1] == '\0') {
@@ -174,8 +172,7 @@ ecs_entity_t flecs_get_builtin(
     return 0;
 }
 
-static
-const char* flecs_path_elem(
+static const char* flecs_path_elem(
     const char *path,
     const char *sep,
     char **buffer_out,
@@ -250,8 +247,7 @@ const char* flecs_path_elem(
     }
 }
 
-static
-const char* flecs_path_elem_n(
+static const char* flecs_path_elem_n(
     const char *path,
     const char *sep,
     ecs_size_t sep_len,
@@ -280,8 +276,7 @@ const char* flecs_path_elem_n(
     return NULL;
 }
 
-static
-ecs_entity_t flecs_lookup_child_n(
+static ecs_entity_t flecs_lookup_child_n(
     const ecs_world_t *world,
     ecs_entity_t parent,
     const char *name,
@@ -322,8 +317,7 @@ ecs_entity_t flecs_lookup_child_n(
     return 0;
 }
 
-static
-bool flecs_is_root_path(
+static bool flecs_is_root_path(
     const char *path,
     const char *prefix)
 {
@@ -334,8 +328,7 @@ bool flecs_is_root_path(
     }
 }
 
-static
-ecs_entity_t flecs_get_parent_from_path(
+static ecs_entity_t flecs_get_parent_from_path(
     const ecs_world_t *world,
     ecs_entity_t parent,
     const char **path_ptr,
@@ -386,8 +379,7 @@ ecs_entity_t flecs_get_parent_from_path(
     return parent;
 }
 
-static
-void flecs_on_set_symbol(
+static void flecs_on_set_symbol(
     ecs_iter_t *it) 
 {
     EcsIdentifier *n = ecs_field(it, EcsIdentifier, 0);
@@ -536,8 +528,7 @@ void ecs_on_set(EcsIdentifier)(
     }
 }
 
-static
-void flecs_reparent_name_index_intern(
+static void flecs_reparent_name_index_intern(
     const ecs_entity_t *entities,
     ecs_hashmap_t *src_index,
     ecs_hashmap_t *dst_index,
@@ -938,8 +929,7 @@ const char* ecs_set_name_prefix(
     return old_prefix;
 }
 
-static
-void flecs_add_path(
+static void flecs_add_path(
     ecs_world_t *world,
     bool defer_suspend,
     ecs_entity_t parent,
@@ -1090,8 +1080,7 @@ ecs_entity_t ecs_new_from_path_w_sep(
     return ecs_add_path_w_sep(world, 0, parent, path, sep, prefix);
 }
 
-static
-const char* flecs_get_identifier(
+static const char* flecs_get_identifier(
     const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t tag)

@@ -7,8 +7,7 @@
 
 #ifdef FLECS_QUERY_PLANS
 
-static
-bool flecs_query_member_cmp(
+static bool flecs_query_member_cmp(
     const ecs_query_op_t *op,
     bool redo,
     ecs_query_run_ctx_t *ctx,

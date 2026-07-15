@@ -129,8 +129,7 @@ void flecs_ordered_entities_remove(
     }
 }
 
-static
-void flecs_ordered_entities_unparent_internal(
+static void flecs_ordered_entities_unparent_internal(
     ecs_world_t *world,
     const ecs_table_t *entities_table,
     const ecs_table_t *table,

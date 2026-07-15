@@ -11,8 +11,7 @@
 
 ECS_COMPONENT_DECLARE(EcsWorldSummary);
 
-static 
-void flecs_copy_world_summary(
+static void flecs_copy_world_summary(
     ecs_world_t *world,
     EcsWorldSummary *dst)
 {
@@ -71,8 +70,7 @@ void flecs_copy_world_summary(
     dst->build_info = *ecs_get_build_info();
 }
 
-static
-void UpdateWorldSummary(ecs_iter_t *it) {
+static void UpdateWorldSummary(ecs_iter_t *it) {
     EcsWorldSummary *summary = ecs_field(it, EcsWorldSummary, 0);
 
     int32_t i, count = it->count;
@@ -81,8 +79,7 @@ void UpdateWorldSummary(ecs_iter_t *it) {
     }
 }
 
-static
-void OnSetWorldSummary(ecs_iter_t *it) {
+static void OnSetWorldSummary(ecs_iter_t *it) {
     EcsWorldSummary *summary = ecs_field(it, EcsWorldSummary, 0);
 
     int32_t i, count = it->count;

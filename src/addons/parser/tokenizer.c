@@ -19,15 +19,13 @@ int64_t flecs_parser_errpos(
     return pos - parser->code;
 }
 
-static
-bool flecs_is_comment(
+static bool flecs_is_comment(
     const char *pos)
 {
     return pos[0] == '/' && (pos[1] == '/' || pos[1] == '*');
 }
 
-static
-bool flecs_keyword_boundary(
+static bool flecs_keyword_boundary(
     const char *pos)
 {
     if (!pos[0]) {
@@ -45,8 +43,7 @@ bool flecs_keyword_boundary(
     return false;
 }
 
-static
-bool flecs_keyword_match(
+static bool flecs_keyword_match(
     const char *pos,
     const char *keyword)
 {
@@ -76,8 +73,7 @@ bool flecs_keyword_match(
         out->kind = _kind;\
         return pos + 1;
 
-static
-char* flecs_tokenizer_write(
+static char* flecs_tokenizer_write(
     ecs_parser_t *parser,
     char *dst,
     char ch)
@@ -260,8 +256,7 @@ const char* flecs_scan_whitespace(
     return pos;
 }
 
-static
-const char* flecs_scan_line_comment(
+static const char* flecs_scan_line_comment(
     const char *pos)
 {
     ecs_assert(pos[0] == '/' && pos[1] == '/', ECS_INTERNAL_ERROR, NULL);
@@ -270,8 +265,7 @@ const char* flecs_scan_line_comment(
     return pos;
 }
 
-static
-bool flecs_newline_followed_by_comment(
+static bool flecs_newline_followed_by_comment(
     ecs_parser_t *parser,
     const char *newline)
 {
@@ -280,8 +274,7 @@ bool flecs_newline_followed_by_comment(
     return flecs_is_comment(next);
 }
 
-static
-const char* flecs_scan_multiline_comment(
+static const char* flecs_scan_multiline_comment(
     ecs_parser_t *parser,
     const char *pos)
 {
@@ -299,8 +292,7 @@ const char* flecs_scan_multiline_comment(
     return NULL;
 }
 
-static
-const char* flecs_scan_significant_line_comment_newline_run(
+static const char* flecs_scan_significant_line_comment_newline_run(
     ecs_parser_t *parser,
     const char *comment_newline)
 {
@@ -356,8 +348,7 @@ const char* flecs_scan_significant_line_comment_newline_run(
     return collapse ? last_newline : comment_newline;
 }
 
-static
-const char* flecs_scan_whitespace_and_comment(
+static const char* flecs_scan_whitespace_and_comment(
     ecs_parser_t *parser,
     const char *pos) 
 {
@@ -404,8 +395,7 @@ repeat_skip_whitespace_comment:
     return pos;
 }
 
-static
-bool flecs_script_is_identifier(
+static bool flecs_script_is_identifier(
     char c)
 {
     return isalpha(c) || (c == '_') || (c == '$') || (c == '#');
@@ -532,15 +522,13 @@ done:
     return pos;
 }
 
-static
-bool flecs_script_is_number(
+static bool flecs_script_is_number(
     const char *c)
 {
     return isdigit(c[0]) || ((c[0] == '-') && isdigit(c[1]));
 }
 
-static
-const char* flecs_script_number(
+static const char* flecs_script_number(
     ecs_parser_t *parser,
     const char *pos,
     ecs_token_t *out) 
@@ -632,8 +620,7 @@ const char* flecs_script_number(
     return pos;
 }
 
-static
-const char* flecs_script_skip_string(
+static const char* flecs_script_skip_string(
     ecs_parser_t *parser,
     const char *pos, 
     char delim)
@@ -655,8 +642,7 @@ const char* flecs_script_skip_string(
     return pos;
 }
 
-static
-const char* flecs_script_char(
+static const char* flecs_script_char(
     ecs_parser_t *parser,
     const char *pos,
     ecs_token_t *out)
@@ -693,8 +679,7 @@ const char* flecs_script_char(
     return end + 2;
 }
 
-static
-const char* flecs_script_string(
+static const char* flecs_script_string(
     ecs_parser_t *parser,
     const char *pos,
     ecs_token_t *out) 
@@ -721,8 +706,7 @@ const char* flecs_script_string(
     return end + 2;
 }
 
-static
-const char* flecs_script_multiline_string(
+static const char* flecs_script_multiline_string(
     ecs_parser_t *parser,
     const char *pos,
     ecs_token_t *out) 

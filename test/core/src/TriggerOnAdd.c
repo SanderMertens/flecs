@@ -26,8 +26,7 @@ void Init(ecs_iter_t *it) {
     }
 }
 
-static
-void Add_to_current(ecs_iter_t *it) {
+static void Add_to_current(ecs_iter_t *it) {
     IterData *ctx = ecs_get_ctx(it->world);
 
     int i;
@@ -46,8 +45,7 @@ void Add_to_current(ecs_iter_t *it) {
     }
 }
 
-static
-void Remove_from_current(ecs_iter_t *it) {
+static void Remove_from_current(ecs_iter_t *it) {
     IterData *ctx = ecs_get_ctx(it->world);
 
     int i;
@@ -66,8 +64,7 @@ void Remove_from_current(ecs_iter_t *it) {
     }
 }
 
-static
-void Set_current(ecs_iter_t *it) {
+static void Set_current(ecs_iter_t *it) {
     IterData *ctx = ecs_get_ctx(it->world);
     
     ecs_entity_t ecs_id(Rotation) = ctx->component;
@@ -81,8 +78,7 @@ void Set_current(ecs_iter_t *it) {
 
 static bool dummy_called = false;
 
-static
-void Dummy(ecs_iter_t *it) {
+static void Dummy(ecs_iter_t *it) {
     dummy_called = true;
 }
 
@@ -471,8 +467,7 @@ void TriggerOnAdd_new_w_count_match_1_of_1(void) {
     ecs_fini(world);
 }
 
-static
-void AddVelocity(ecs_iter_t *it) {
+static void AddVelocity(ecs_iter_t *it) {
     Position *p = ecs_field(it, Position, 0);
 
     ecs_id_t v = 0;
@@ -540,8 +535,7 @@ void TriggerOnAdd_override_after_add_in_on_add(void) {
     ecs_fini(world);
 }
 
-static
-void OnSetPosition(ecs_iter_t *it) {
+static void OnSetPosition(ecs_iter_t *it) {
     Position *p = ecs_field(it, Position, 0);
 
     int i;
@@ -592,8 +586,7 @@ void TriggerOnAdd_set_after_add_in_on_add(void) {
     ecs_fini(world);
 }
 
-static
-void AddAgain(ecs_iter_t *it) {
+static void AddAgain(ecs_iter_t *it) {
     ecs_id_t ecs_id(Position) = ecs_field_id(it, 0);
 
     int i;
@@ -624,8 +617,7 @@ void TriggerOnAdd_add_again_in_progress(void) {
     ecs_fini(world);
 }
 
-static
-void AddMass(ecs_iter_t *it) {
+static void AddMass(ecs_iter_t *it) {
     Mass *m = ecs_field(it, Mass, 0);
 
     int i;
@@ -715,8 +707,7 @@ void TriggerOnAdd_2_systems_w_table_creation_in_progress(void) {
     ecs_fini(world);
 }
 
-static
-void TestContext(ecs_iter_t *it) {
+static void TestContext(ecs_iter_t *it) {
     void *world_ctx = ecs_get_ctx(it->world);
     test_assert(world_ctx == it->ctx);
     int32_t *param = it->ctx;

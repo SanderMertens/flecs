@@ -2563,8 +2563,7 @@ void Toggle_this_toggle_optional_shared_up(void) {
     ecs_fini(world);
 }
 
-static
-void test_disable_toggle_mod(int32_t total, int32_t mod) {
+static void test_disable_toggle_mod(int32_t total, int32_t mod) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -2625,8 +2624,7 @@ void test_disable_toggle_mod(int32_t total, int32_t mod) {
     ecs_fini(world);
 }
 
-static
-void test_enable_toggle_mod(int32_t total, int32_t mod) {
+static void test_enable_toggle_mod(int32_t total, int32_t mod) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -3720,8 +3718,7 @@ void Toggle_this_not(void) {
     ecs_fini(world);
 }
 
-static
-void this_written_not(int total, int mod) {
+static void this_written_not(int total, int mod) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -3824,8 +3821,7 @@ void Toggle_this_written_not_1024_mod_1024(void) {
     this_written_not(1024, 1024);
 }
 
-static
-void this_optional(int total, int mod) {
+static void this_optional(int total, int mod) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -3904,8 +3900,7 @@ void this_optional(int total, int mod) {
     ecs_fini(world);
 }
 
-static
-void this_written_optional(int total, int mod) {
+static void this_written_optional(int total, int mod) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -4036,8 +4031,7 @@ void Toggle_this_written_optional_1024_mod_1024(void) {
     this_written_optional(1024, 1024);
 }
 
-static
-int compare_position(ecs_entity_t e1, const void *ptr1, ecs_entity_t e2, const void *ptr2) {
+static int compare_position(ecs_entity_t e1, const void *ptr1, ecs_entity_t e2, const void *ptr2) {
     const Position *p1 = ptr1;
     const Position *p2 = ptr2;
     return (p1->x > p2->x) - (p1->x < p2->x);

@@ -8,8 +8,7 @@
 #ifdef FLECS_QUERY_PLANS
 
 /* Find tables with requested component that have traversable entities. */
-static
-bool flecs_query_up_select_table(
+static bool flecs_query_up_select_table(
     const ecs_query_op_t *op,
     bool redo,
     const ecs_query_run_ctx_t *ctx,
@@ -69,8 +68,7 @@ bool flecs_query_up_select_table(
 }
 
 /* Find next traversable entity in table. */
-static
-ecs_trav_down_t* flecs_query_up_find_next_traversable(
+static ecs_trav_down_t* flecs_query_up_find_next_traversable(
     const ecs_query_op_t *op,
     const ecs_query_run_ctx_t *ctx,
     ecs_query_up_select_trav_kind_t trav_kind)

@@ -1743,8 +1743,7 @@ void Query_shared_tag_w_each(void) {
     });
 }
 
-static
-int compare_position(
+static int compare_position(
     flecs::entity_t e1,
     const Position *p1,
     flecs::entity_t e2,

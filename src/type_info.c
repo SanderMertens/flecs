@@ -6,8 +6,7 @@
 #include "private_api.h"
 
 #ifdef FLECS_DEBUG
-static
-void flecs_type_info_mark_in_use(
+static void flecs_type_info_mark_in_use(
     const ecs_type_info_t *ti)
 {
     ecs_type_info_t *ti_mut = ECS_CONST_CAST(ecs_type_info_t*, ti);
@@ -185,8 +184,7 @@ bool flecs_type_info_equals(
     return equals(a_ptr, b_ptr, ti);
 }
 
-static
-void flecs_default_copy_ctor(void *dst_ptr, const void *src_ptr,
+static void flecs_default_copy_ctor(void *dst_ptr, const void *src_ptr,
     int32_t count, const ecs_type_info_t *ti)
 {
     const ecs_type_hooks_t *cl = &ti->hooks;
@@ -194,8 +192,7 @@ void flecs_default_copy_ctor(void *dst_ptr, const void *src_ptr,
     cl->copy(dst_ptr, src_ptr, count, ti);
 }
 
-static
-void flecs_default_move_ctor(void *dst_ptr, void *src_ptr,
+static void flecs_default_move_ctor(void *dst_ptr, void *src_ptr,
     int32_t count, const ecs_type_info_t *ti)
 {
     const ecs_type_hooks_t *cl = &ti->hooks;
@@ -203,8 +200,7 @@ void flecs_default_move_ctor(void *dst_ptr, void *src_ptr,
     cl->move(dst_ptr, src_ptr, count, ti);
 }
 
-static
-void flecs_default_ctor_w_move_w_dtor(void *dst_ptr, void *src_ptr,
+static void flecs_default_ctor_w_move_w_dtor(void *dst_ptr, void *src_ptr,
     int32_t count, const ecs_type_info_t *ti)
 {
     const ecs_type_hooks_t *cl = &ti->hooks;
@@ -213,8 +209,7 @@ void flecs_default_ctor_w_move_w_dtor(void *dst_ptr, void *src_ptr,
     cl->dtor(src_ptr, count, ti);
 }
 
-static
-void flecs_default_move_ctor_w_dtor(void *dst_ptr, void *src_ptr,
+static void flecs_default_move_ctor_w_dtor(void *dst_ptr, void *src_ptr,
     int32_t count, const ecs_type_info_t *ti)
 {
     const ecs_type_hooks_t *cl = &ti->hooks;
@@ -222,16 +217,14 @@ void flecs_default_move_ctor_w_dtor(void *dst_ptr, void *src_ptr,
     cl->dtor(src_ptr, count, ti);
 }
 
-static
-void flecs_default_move(void *dst_ptr, void *src_ptr,
+static void flecs_default_move(void *dst_ptr, void *src_ptr,
     int32_t count, const ecs_type_info_t *ti)
 {
     const ecs_type_hooks_t *cl = &ti->hooks;
     cl->move(dst_ptr, src_ptr, count, ti);
 }
 
-static
-void flecs_default_dtor(void *dst_ptr, void *src_ptr,
+static void flecs_default_dtor(void *dst_ptr, void *src_ptr,
     int32_t count, const ecs_type_info_t *ti)
 {
     /* When there is no move, destruct the destination component & memcpy the
@@ -242,8 +235,7 @@ void flecs_default_dtor(void *dst_ptr, void *src_ptr,
     ecs_os_memcpy(dst_ptr, src_ptr, flecs_uto(ecs_size_t, ti->size) * count);
 }
 
-static
-void flecs_default_move_w_dtor(void *dst_ptr, void *src_ptr,
+static void flecs_default_move_w_dtor(void *dst_ptr, void *src_ptr,
     int32_t count, const ecs_type_info_t *ti)
 {
     /* If a component has a move, the move will take care of memcpying the data
@@ -254,8 +246,7 @@ void flecs_default_move_w_dtor(void *dst_ptr, void *src_ptr,
     cl->dtor(src_ptr, count, ti);
 }
 
-static
-bool flecs_default_equals(const void *a_ptr, const void *b_ptr, const ecs_type_info_t* ti) {
+static bool flecs_default_equals(const void *a_ptr, const void *b_ptr, const ecs_type_info_t* ti) {
     return ti->hooks.cmp(a_ptr, b_ptr, ti) == 0;
 }
 
@@ -352,8 +343,7 @@ bool flecs_equals_illegal(
     ecs_abort(ECS_INVALID_OPERATION, "invalid equals hook for %s", ti->name);
 }
 
-static
-bool flecs_type_hooks_storage_equal(
+static bool flecs_type_hooks_storage_equal(
     const ecs_type_hooks_t *a,
     const ecs_type_hooks_t *b)
 {
@@ -666,8 +656,7 @@ error:
     return;
 }
 
-static
-void flecs_type_info_fini(
+static void flecs_type_info_fini(
     ecs_type_info_t *ti)
 {
     if (ti->hooks.ctx_free) {
@@ -701,8 +690,7 @@ void flecs_fini_type_info(
     ecs_map_fini(&world->type_info);
 }
 
-static
-const ecs_type_info_t* flecs_type_info_get(
+static const ecs_type_info_t* flecs_type_info_get(
     const ecs_world_t *world,
     ecs_entity_t component)
 {

@@ -16,21 +16,18 @@ typedef struct ecs_script_str_visitor_t {
     bool colors;
 } ecs_script_str_visitor_t;
 
-static
-int flecs_script_scope_to_str(
+static int flecs_script_scope_to_str(
     ecs_script_str_visitor_t *v,
     ecs_script_scope_t *scope);
 
-static
-void flecs_script_color_to_str(
+static void flecs_script_color_to_str(
     ecs_script_str_visitor_t *v,
     const char *color)
 {
     if (v->colors) ecs_strbuf_appendstr(v->buf, color);
 }
 
-static
-void flecs_scriptbuf_append(
+static void flecs_scriptbuf_append(
     ecs_script_str_visitor_t *v,
     const char *fmt,
     ...)
@@ -50,8 +47,7 @@ void flecs_scriptbuf_append(
     }
 }
 
-static
-void flecs_scriptbuf_appendstr(
+static void flecs_scriptbuf_appendstr(
     ecs_script_str_visitor_t *v,
     const char *str)
 {
@@ -67,8 +63,7 @@ void flecs_scriptbuf_appendstr(
     }
 }
 
-static
-void flecs_script_id_to_str(
+static void flecs_script_id_to_str(
     ecs_script_str_visitor_t *v,
     ecs_script_id_t *id)
 {
@@ -88,8 +83,7 @@ void flecs_script_id_to_str(
     }
 }
 
-static
-void flecs_expr_to_str(
+static void flecs_expr_to_str(
     ecs_script_str_visitor_t *v,
     const ecs_expr_node_t *expr)
 {
@@ -101,8 +95,7 @@ void flecs_expr_to_str(
     }
 }
 
-static
-const char* flecs_script_node_to_str(
+static const char* flecs_script_node_to_str(
     ecs_script_node_t *node)
 {
     switch(node->kind) {
@@ -132,8 +125,7 @@ const char* flecs_script_node_to_str(
     return "???";
 }
 
-static
-void flecs_scriptbuf_node(
+static void flecs_scriptbuf_node(
     ecs_script_str_visitor_t *v,
     ecs_script_node_t *node)
 {
@@ -142,8 +134,7 @@ void flecs_scriptbuf_node(
     flecs_script_color_to_str(v, ECS_NORMAL);
 }
 
-static
-void flecs_script_tag_to_str(
+static void flecs_script_tag_to_str(
     ecs_script_str_visitor_t *v,
     ecs_script_tag_t *node)
 {
@@ -152,8 +143,7 @@ void flecs_script_tag_to_str(
     flecs_scriptbuf_appendstr(v, "\n");
 }
 
-static
-void flecs_script_component_to_str(
+static void flecs_script_component_to_str(
     ecs_script_str_visitor_t *v,
     ecs_script_component_t *node)
 {
@@ -166,8 +156,7 @@ void flecs_script_component_to_str(
     flecs_scriptbuf_appendstr(v, "\n");
 }
 
-static
-void flecs_script_default_component_to_str(
+static void flecs_script_default_component_to_str(
     ecs_script_str_visitor_t *v,
     ecs_script_default_component_t *node)
 {
@@ -178,8 +167,7 @@ void flecs_script_default_component_to_str(
     flecs_scriptbuf_appendstr(v, "\n");
 }
 
-static
-void flecs_script_with_var_to_str(
+static void flecs_script_with_var_to_str(
     ecs_script_str_visitor_t *v,
     ecs_script_var_component_t *node)
 {
@@ -188,8 +176,7 @@ void flecs_script_with_var_to_str(
     flecs_scriptbuf_appendstr(v, "\n");
 }
 
-static
-void flecs_script_with_to_str(
+static void flecs_script_with_to_str(
     ecs_script_str_visitor_t *v,
     ecs_script_with_t *node)
 {
@@ -209,8 +196,7 @@ void flecs_script_with_to_str(
     flecs_scriptbuf_appendstr(v, "}\n");
 }
 
-static
-void flecs_script_using_to_str(
+static void flecs_script_using_to_str(
     ecs_script_str_visitor_t *v,
     ecs_script_using_t *node)
 {
@@ -218,8 +204,7 @@ void flecs_script_using_to_str(
     flecs_scriptbuf_append(v, "%s\n", node->name);
 }
 
-static
-void flecs_script_module_to_str(
+static void flecs_script_module_to_str(
     ecs_script_str_visitor_t *v,
     ecs_script_module_t *node)
 {
@@ -227,8 +212,7 @@ void flecs_script_module_to_str(
     flecs_scriptbuf_append(v, "%s\n", node->name);
 }
 
-static
-void flecs_script_annot_to_str(
+static void flecs_script_annot_to_str(
     ecs_script_str_visitor_t *v,
     ecs_script_annot_t *node)
 {
@@ -239,8 +223,7 @@ void flecs_script_annot_to_str(
     flecs_scriptbuf_appendstr(v, "\n");
 }
 
-static
-void flecs_script_template_to_str(
+static void flecs_script_template_to_str(
     ecs_script_str_visitor_t *v,
     ecs_script_template_node_t *node)
 {
@@ -249,8 +232,7 @@ void flecs_script_template_to_str(
     flecs_script_scope_to_str(v, node->scope);
 }
 
-static
-void flecs_script_var_node_to_str(
+static void flecs_script_var_node_to_str(
     ecs_script_str_visitor_t *v,
     ecs_script_var_node_t *node)
 {
@@ -267,8 +249,7 @@ void flecs_script_var_node_to_str(
     flecs_scriptbuf_appendstr(v, "\n");
 }
 
-static
-void flecs_script_entity_to_str(
+static void flecs_script_entity_to_str(
     ecs_script_str_visitor_t *v,
     ecs_script_entity_t *node)
 {
@@ -289,8 +270,7 @@ void flecs_script_entity_to_str(
     }
 }
 
-static
-void flecs_script_pair_scope_to_str(
+static void flecs_script_pair_scope_to_str(
     ecs_script_str_visitor_t *v,
     ecs_script_pair_scope_t *node)
 {
@@ -300,8 +280,7 @@ void flecs_script_pair_scope_to_str(
     flecs_script_scope_to_str(v, node->scope);
 }
 
-static
-void flecs_script_if_to_str(
+static void flecs_script_if_to_str(
     ecs_script_str_visitor_t *v,
     ecs_script_if_t *node)
 {
@@ -322,8 +301,7 @@ void flecs_script_if_to_str(
     flecs_scriptbuf_appendstr(v, "}\n");
 }
 
-static
-void flecs_script_include_to_str(
+static void flecs_script_include_to_str(
     ecs_script_str_visitor_t *v,
     ecs_script_include_t *node)
 {
@@ -331,8 +309,7 @@ void flecs_script_include_to_str(
     flecs_scriptbuf_append(v, "%s\n", node->filename);
 }
 
-static
-void flecs_script_for_range_to_str(
+static void flecs_script_for_range_to_str(
     ecs_script_str_visitor_t *v,
     ecs_script_for_range_t *node)
 {
@@ -352,8 +329,7 @@ void flecs_script_for_range_to_str(
     flecs_scriptbuf_appendstr(v, "}\n");
 }
 
-static
-int flecs_script_scope_to_str(
+static int flecs_script_scope_to_str(
     ecs_script_str_visitor_t *v,
     ecs_script_scope_t *scope)
 {
@@ -379,8 +355,7 @@ int flecs_script_scope_to_str(
     return 0;
 }
 
-static
-int flecs_script_stmt_to_str(
+static int flecs_script_stmt_to_str(
     ecs_script_visit_t *_v,
     ecs_script_node_t *node)
 {

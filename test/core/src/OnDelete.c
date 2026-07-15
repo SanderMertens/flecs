@@ -1459,8 +1459,7 @@ void OnDelete_stresstest_many_relations_on_delete(void) {
 static ecs_entity_t trigger_entity;
 static int trigger_count;
 
-static
-void dummy_on_remove(ecs_iter_t *it) {
+static void dummy_on_remove(ecs_iter_t *it) {
     test_int(it->count, 1);
     trigger_entity = it->entities[0];
 
@@ -1504,8 +1503,7 @@ typedef struct {
     ecs_entity_t other;
 } Entity;
 
-static 
-void delete_on_remove(ecs_iter_t *it) {
+static void delete_on_remove(ecs_iter_t *it) {
     test_int(it->count, 1);
     Entity *comp = ecs_field(it, Entity, 0);
     test_assert(comp != NULL);
@@ -1514,8 +1512,7 @@ void delete_on_remove(ecs_iter_t *it) {
     trigger_count ++;
 }
 
-static 
-void delete_self_on_remove(ecs_iter_t *it) {
+static void delete_self_on_remove(ecs_iter_t *it) {
     ecs_entity_t e = *(ecs_entity_t*)it->ctx;
     test_int(it->count, 1);
     ecs_delete(it->world, e);
@@ -2506,8 +2503,7 @@ void OnDelete_delete_with_w_relation(void) {
 
 static int delete_target_invoked = 0;
 
-static
-void DeleteTarget(ecs_iter_t *it) {
+static void DeleteTarget(ecs_iter_t *it) {
     ecs_id_t pair = ecs_field_id(it, 0);
     test_assert(ecs_id_is_pair(pair));
     ecs_delete(it->world, ECS_PAIR_SECOND(pair));
@@ -2541,8 +2537,7 @@ void OnDelete_delete_self_in_on_remove(void) {
     ecs_fini(world);
 }
 
-static
-void DeleteOther(ecs_iter_t *it) {
+static void DeleteOther(ecs_iter_t *it) {
     ecs_entity_t *ctx = it->ctx;
     test_assert(ctx != NULL);
 
@@ -2588,8 +2583,7 @@ void OnDelete_delete_nested_in_on_remove(void) {
     ecs_fini(world);
 }
 
-static
-void AddRemoved(ecs_iter_t *it) {
+static void AddRemoved(ecs_iter_t *it) {
     ecs_id_t id = ecs_field_id(it, 0);
     for (int i = 0; i < it->count; i ++) {
         ecs_new_w_id(it->world, id); /* create entity with removed id */

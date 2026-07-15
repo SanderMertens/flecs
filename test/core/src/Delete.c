@@ -228,15 +228,13 @@ void Delete_delete_3_of_3(void) {
     ecs_fini(world);
 }
 
-static
-void CreateEntity(ecs_iter_t *it) {
+static void CreateEntity(ecs_iter_t *it) {
     ecs_id_t ecs_id(Position) = ecs_field_id(it, 0);
     const ecs_entity_t *ids = ecs_bulk_new(it->world, Position, 10);
     test_assert(ids != NULL);
 }
 
-static
-void DeleteEntity(ecs_iter_t *it) {
+static void DeleteEntity(ecs_iter_t *it) {
     int i;
     for (i = 0; i < it->count; i ++) {
         ecs_delete(it->world, it->entities[i]);
@@ -245,8 +243,7 @@ void DeleteEntity(ecs_iter_t *it) {
 
 static int on_remove_system_invoked;
 
-static
-void OnRemoveSystem(ecs_iter_t *it) {
+static void OnRemoveSystem(ecs_iter_t *it) {
     int i;
     for (i = 0; i < it->count; i ++) {
         on_remove_system_invoked ++;

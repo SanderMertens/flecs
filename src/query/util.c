@@ -259,8 +259,7 @@ ecs_id_t flecs_query_iter_set_id(
     return id;
 }
 
-static
-int32_t flecs_query_op_ref_str(
+static int32_t flecs_query_op_ref_str(
     const ecs_query_impl_t *query,
     ecs_query_ref_t *ref,
     ecs_flags16_t flags,
@@ -306,8 +305,7 @@ int32_t flecs_query_op_ref_str(
     return color_chars;
 }
 
-static
-void flecs_query_str_append_bitset(
+static void flecs_query_str_append_bitset(
     ecs_strbuf_t *buf,
     ecs_flags64_t bitset)
 {
@@ -321,8 +319,7 @@ void flecs_query_str_append_bitset(
     ecs_strbuf_list_pop(buf, "}");
 }
 
-static
-void flecs_query_plan_w_profile(
+static void flecs_query_plan_w_profile(
     const ecs_query_t *q,
     const ecs_iter_t *it,
     ecs_strbuf_t *buf)
@@ -510,8 +507,7 @@ char* ecs_query_plans(
 
 #endif // FLECS_QUERY_PLANS
 
-static
-void flecs_query_str_add_id(
+static void flecs_query_str_add_id(
     const ecs_world_t *world,
     ecs_strbuf_t *buf,
     const ecs_term_t *term,

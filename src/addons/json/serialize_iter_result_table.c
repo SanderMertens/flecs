@@ -9,8 +9,7 @@
 
 #define FLECS_JSON_MAX_TABLE_COMPONENTS (256)
 
-static
-bool flecs_json_is_builtin(
+static bool flecs_json_is_builtin(
     ecs_id_t id)
 {
     return ECS_IS_PAIR(id) && (ECS_PAIR_FIRST(id) == EcsChildOf ||
@@ -21,8 +20,7 @@ bool flecs_json_is_builtin(
 #define FLECS_JSON_DF_PAIR_TAG  1
 #define FLECS_JSON_DF_COMPONENT 2
 
-static
-ecs_component_record_t* flecs_json_dont_fragment_first(
+static ecs_component_record_t* flecs_json_dont_fragment_first(
     const ecs_world_t *world,
     ecs_entity_t entity)
 {
@@ -34,8 +32,7 @@ ecs_component_record_t* flecs_json_dont_fragment_first(
     return world->cr_non_fragmenting_head;
 }
 
-static
-bool flecs_json_dont_fragment_match(
+static bool flecs_json_dont_fragment_match(
     const ecs_world_t *world,
     ecs_component_record_t *cr,
     ecs_entity_t entity,
@@ -68,8 +65,7 @@ bool flecs_json_dont_fragment_match(
     return true;
 }
 
-static
-void flecs_json_serialize_table_tags(
+static void flecs_json_serialize_table_tags(
     const ecs_world_t *world,
     const ecs_table_t *table,
     const ecs_table_t *src_table,
@@ -150,8 +146,7 @@ void flecs_json_serialize_table_tags(
     }
 }
 
-static
-void flecs_json_emit_pair_entry(
+static void flecs_json_emit_pair_entry(
     const ecs_world_t *world,
     ecs_strbuf_t *buf,
     const ecs_iter_to_json_desc_t *desc,
@@ -204,8 +199,7 @@ void flecs_json_emit_pair_entry(
     (*pair_count) ++;
 }
 
-static
-void flecs_json_serialize_table_pairs(
+static void flecs_json_serialize_table_pairs(
     const ecs_world_t *world,
     const ecs_table_t *table,
     const ecs_table_t *src_table,
@@ -290,8 +284,7 @@ void flecs_json_serialize_table_pairs(
     }
 }
 
-static
-int flecs_json_serialize_component_value(
+static int flecs_json_serialize_component_value(
     const ecs_world_t *world,
     ecs_id_t id,
     void *ptr,
@@ -350,8 +343,7 @@ int flecs_json_serialize_component_value(
     return 0;
 }
 
-static
-int flecs_json_serialize_table_components(
+static int flecs_json_serialize_table_components(
     const ecs_world_t *world,
     ecs_table_t *table,
     const ecs_table_t *src_table,
@@ -449,8 +441,7 @@ error:
     return -1;
 }
 
-static
-int flecs_json_serialize_table_inherited_type(
+static int flecs_json_serialize_table_inherited_type(
     const ecs_world_t *world,
     ecs_table_t *table,
     ecs_strbuf_t *buf,
@@ -507,8 +498,7 @@ int flecs_json_serialize_table_inherited_type(
     return 0;
 }
 
-static
-int flecs_json_serialize_table_inherited(
+static int flecs_json_serialize_table_inherited(
     const ecs_world_t *world,
     ecs_table_t *table,
     ecs_strbuf_t *buf,

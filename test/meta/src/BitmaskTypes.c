@@ -1,7 +1,6 @@
 #include <meta.h>
 
-static
-void meta_test_bitmask(
+static void meta_test_bitmask(
     ecs_world_t *world, 
     ecs_entity_t t,
     int32_t count) 
@@ -20,8 +19,7 @@ void meta_test_bitmask(
     test_int(ecs_map_count(bt->constants), count);
 }
 
-static
-void meta_test_constant(
+static void meta_test_constant(
     ecs_world_t *world, 
     ecs_entity_t t, 
     const char *name,

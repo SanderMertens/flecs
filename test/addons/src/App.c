@@ -33,8 +33,7 @@ void App_app_w_default_frame_action(void) {
     ecs_fini(world);
 }
 
-static
-void Dummy(ecs_iter_t *it) {
+static void Dummy(ecs_iter_t *it) {
     ecs_quit(it->world);
 }
 

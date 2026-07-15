@@ -8,8 +8,7 @@
 
 #ifdef FLECS_META
 
-static
-const ecs_type_info_t* flecs_value_type_info(
+static const ecs_type_info_t* flecs_value_type_info(
     const ecs_world_t *world,
     ecs_entity_t type)
 {
@@ -20,8 +19,7 @@ const ecs_type_info_t* flecs_value_type_info(
     return ti;
 }
 
-static
-void* flecs_value_alloc(
+static void* flecs_value_alloc(
     const ecs_type_info_t *ti)
 {
     void *result = ecs_os_calloc(ti->size);
@@ -257,8 +255,7 @@ bool ecs_value_equals(
     return flecs_type_info_equals(a->ptr, b->ptr, ti);
 }
 
-static
-ecs_world_t* flecs_value_world(
+static ecs_world_t* flecs_value_world(
     const ecs_type_info_t *ti)
 {
     ecs_world_t *world = ti->hooks.lifecycle_ctx;
@@ -266,8 +263,7 @@ ecs_world_t* flecs_value_world(
     return world;
 }
 
-static
-void flecs_value_dtor(
+static void flecs_value_dtor(
     void *ptr,
     int32_t count,
     const ecs_type_info_t *ti)
@@ -280,8 +276,7 @@ void flecs_value_dtor(
     }
 }
 
-static
-void flecs_value_move(
+static void flecs_value_move(
     void *dst_ptr,
     void *src_ptr,
     int32_t count,
@@ -296,8 +291,7 @@ void flecs_value_move(
     }
 }
 
-static
-void flecs_value_copy(
+static void flecs_value_copy(
     void *dst_ptr,
     const void *src_ptr,
     int32_t count,
@@ -312,8 +306,7 @@ void flecs_value_copy(
     }
 }
 
-static
-int flecs_value_cmp(
+static int flecs_value_cmp(
     const void *a_ptr,
     const void *b_ptr,
     const ecs_type_info_t *ti)
@@ -346,8 +339,7 @@ int flecs_value_cmp(
     return ecs_os_memcmp(a->ptr, b->ptr, value_ti->size);
 }
 
-static
-bool flecs_value_equals(
+static bool flecs_value_equals(
     const void *a_ptr,
     const void *b_ptr,
     const ecs_type_info_t *ti)
@@ -355,8 +347,7 @@ bool flecs_value_equals(
     return flecs_value_cmp(a_ptr, b_ptr, ti) == 0;
 }
 
-static
-void flecs_value_fini_lifecycle_ctx(
+static void flecs_value_fini_lifecycle_ctx(
     void *ctx)
 {
     (void)ctx;

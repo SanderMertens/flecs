@@ -50,12 +50,11 @@ static ECS_MOVE(EcsTypeSerializer, dst, src, {
     src->ops = (ecs_vec_t){0};
 })
 
-static ECS_DTOR(EcsTypeSerializer, ptr, { 
+static ECS_DTOR(EcsTypeSerializer, ptr, {
     flecs_type_serializer_dtor(ptr);
 })
 
-static
-const char* flecs_type_kind_str(
+static const char* flecs_type_kind_str(
     ecs_type_kind_t kind)
 {
     switch(kind) {
@@ -74,8 +73,7 @@ const char* flecs_type_kind_str(
 
 
 #ifdef FLECS_DEBUG
-static
-bool flecs_meta_detect_cycles_w_stack(
+static bool flecs_meta_detect_cycles_w_stack(
     ecs_world_t *world,
     ecs_entity_t type,
     ecs_entity_t target,

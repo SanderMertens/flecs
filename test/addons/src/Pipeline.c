@@ -837,8 +837,7 @@ void Pipeline_3_systems_3_types(void) {
     ecs_fini(world);
 }
 
-static
-void RandomWrite(ecs_iter_t *it) {
+static void RandomWrite(ecs_iter_t *it) {
     ecs_entity_t ecs_id(Position) = ecs_field_id(it, 1);
 
     int i;
@@ -847,8 +846,7 @@ void RandomWrite(ecs_iter_t *it) {
     }
 }
 
-static
-void RandomRead(ecs_iter_t *it) {
+static void RandomRead(ecs_iter_t *it) {
     ecs_entity_t ecs_id(Position) = ecs_lookup(it->world, "Position");
 
     int i;
@@ -860,8 +858,7 @@ void RandomRead(ecs_iter_t *it) {
     }
 }
 
-static
-void RandomReadWrite(ecs_iter_t *it) {
+static void RandomReadWrite(ecs_iter_t *it) {
     ecs_entity_t ecs_id(Position) = ecs_lookup(it->world, "Position");
 
     int i;
@@ -875,8 +872,7 @@ void RandomReadWrite(ecs_iter_t *it) {
     }
 }
 
-static
-void RandomReadAfterRW(ecs_iter_t *it) {
+static void RandomReadAfterRW(ecs_iter_t *it) {
     ecs_entity_t ecs_id(Position) = ecs_lookup(it->world, "Position");
 
     int i;
@@ -888,8 +884,7 @@ void RandomReadAfterRW(ecs_iter_t *it) {
     }
 }
 
-static
-void RandomRead_Not(ecs_iter_t *it) {
+static void RandomRead_Not(ecs_iter_t *it) {
     ecs_entity_t ecs_id(Position) = ecs_field_id(it, 1);
 
     int i;
@@ -1069,22 +1064,19 @@ void Pipeline_random_in_after_random_inout_after_random_out(void) {
     ecs_fini(world);
 }
 
-static
-void cb_first(ecs_iter_t *it) {
+static void cb_first(ecs_iter_t *it) {
     int32_t *count = it->ctx;
     test_int(count[0], 0);
     count[0] ++;
 }
 
-static
-void cb_second(ecs_iter_t *it) {
+static void cb_second(ecs_iter_t *it) {
     int32_t *count = it->ctx;
     test_int(count[0], 1);
     count[0] ++;
 }
 
-static
-void cb_third(ecs_iter_t *it) {
+static void cb_third(ecs_iter_t *it) {
     int32_t *count = it->ctx;
     test_int(count[0], 2);
     count[0] ++;
@@ -1187,8 +1179,7 @@ void Pipeline_stage_write_before_read(void) {
     ecs_fini(world);
 }
 
-static
-void Pipeline_mixed_multithreaded_internal(bool task_threads) {
+static void Pipeline_mixed_multithreaded_internal(bool task_threads) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
@@ -1403,8 +1394,7 @@ void Pipeline_mixed_staging(void) {
     ecs_fini(world);
 }
 
-static
-void WritePosition(ecs_iter_t *it) {
+static void WritePosition(ecs_iter_t *it) {
     if (*(bool*)it->ctx) {
         ecs_entity_t ecs_id(Position) = ecs_field_id(it, 1);
         for (int i = 0; i < it->count; i ++) {
@@ -1495,8 +1485,7 @@ void Pipeline_single_threaded_pipeline_change(void) {
     ecs_fini(world);
 }
 
-static
-void Pipeline_multi_threaded_pipeline_change_internal(bool task_threads) {
+static void Pipeline_multi_threaded_pipeline_change_internal(bool task_threads) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
@@ -1640,8 +1629,7 @@ void Pipeline_activate_after_add(void) {
 
 static ecs_query_t *q_result;
 
-static
-void CreateQuery(ecs_iter_t *it) {
+static void CreateQuery(ecs_iter_t *it) {
     test_assert(it->real_world == it->world);
     q_result = ecs_query(it->world, { .expr = "Position" });
     ecs_query_fini(q_result);
@@ -1854,8 +1842,7 @@ void Pipeline_stack_allocator_after_progress_w_pipeline_change(void) {
     ecs_fini(world);
 }
 
-static
-void Sys_w_MainWorldIter(ecs_iter_t *it) {
+static void Sys_w_MainWorldIter(ecs_iter_t *it) {
     ecs_id_t ecs_id(Position) = ecs_field_id(it, 0);
     ecs_query_t *f = ecs_query(it->real_world, {
         .terms = {{ ecs_id(Position) }}
@@ -1868,8 +1855,7 @@ void Sys_w_MainWorldIter(ecs_iter_t *it) {
     ecs_query_fini(f);
 }
 
-static
-void Pipeline_iter_from_world_in_singlethread_system_multitead_app_internal(bool task_threads) {
+static void Pipeline_iter_from_world_in_singlethread_system_multitead_app_internal(bool task_threads) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -2157,8 +2143,7 @@ void Pipeline_inactive_system_after_2_no_staging_system_no_defer_w_filter(void) 
     ecs_fini(world);
 }
 
-static
-void Pipeline_inactive_multithread_system_after_no_staging_system_no_defer_internal(bool task_threads) {
+static void Pipeline_inactive_multithread_system_after_no_staging_system_no_defer_internal(bool task_threads) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT_DEFINE(world, Position);
@@ -2213,8 +2198,7 @@ void Pipeline_inactive_multithread_tasks_system_after_no_staging_system_no_defer
     Pipeline_inactive_multithread_system_after_no_staging_system_no_defer_internal(true);
 }
 
-static
-void Pipeline_inactive_multithread_system_after_no_staging_system_no_defer_w_no_staging_at_end_internal(bool task_threads) {
+static void Pipeline_inactive_multithread_system_after_no_staging_system_no_defer_w_no_staging_at_end_internal(bool task_threads) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT_DEFINE(world, Position);
@@ -2296,8 +2280,7 @@ static void FooSystem(ecs_iter_t *it) {
     foo_system_invoked ++;
 }
 
-static
-void Pipeline_multi_threaded_pipeline_change_w_only_singlethreaded_internal(bool task_threads) {
+static void Pipeline_multi_threaded_pipeline_change_w_only_singlethreaded_internal(bool task_threads) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
@@ -2643,8 +2626,7 @@ static void NoReadonlyAddPosition(ecs_iter_t *it) {
     ecs_add(it->world, e, Position);
 }
 
-static
-void Pipeline_multi_threaded_no_staging_w_add_after_read_internal(bool task_threads) {
+static void Pipeline_multi_threaded_no_staging_w_add_after_read_internal(bool task_threads) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT_DEFINE(world, Position);
@@ -2971,8 +2953,7 @@ void Pipeline_inactive_middle_system_merge_count(void) {
     ecs_fini(world);
 }
 
-static
-void CreateEntity(ecs_iter_t *it) {
+static void CreateEntity(ecs_iter_t *it) {
     ecs_id_t tag = ecs_field_id(it, 0);
     ecs_new_w_id(it->world, tag);
 }
@@ -3375,8 +3356,7 @@ void Pipeline_run_w_0_src_query(void) {
     ecs_fini(world);
 }
 
-static
-void AddPosition(ecs_iter_t *it) {
+static void AddPosition(ecs_iter_t *it) {
     for (int i = 0; i < it->count; i ++) {
         ecs_add(it->world, it->entities[i], Position);
     }

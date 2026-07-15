@@ -2,13 +2,11 @@
 
 static int on_remove_count = 0;
 
-static
-void Trigger(ecs_iter_t *it) {
+static void Trigger(ecs_iter_t *it) {
     probe_system_w_ctx(it, it->ctx);
 }
 
-static
-void Trigger_w_value(ecs_iter_t *it) {
+static void Trigger_w_value(ecs_iter_t *it) {
     probe_system_w_ctx(it, it->ctx);
 
     test_int(it->count, 1);
@@ -20,8 +18,7 @@ void Trigger_w_value(ecs_iter_t *it) {
     test_int(p->y, 20);
 }
 
-static
-void Trigger_w_value_from_entity(ecs_iter_t *it) {
+static void Trigger_w_value_from_entity(ecs_iter_t *it) {
     probe_system_w_ctx(it, it->ctx);
 
     test_int(it->count, 0);
@@ -32,8 +29,7 @@ void Trigger_w_value_from_entity(ecs_iter_t *it) {
     test_int(p->y, 20);
 }
 
-static
-void Trigger_w_value_instanced(ecs_iter_t *it) {
+static void Trigger_w_value_instanced(ecs_iter_t *it) {
     probe_system_w_ctx(it, it->ctx);
 
     test_assert(it->count > 1);
@@ -43,8 +39,7 @@ void Trigger_w_value_instanced(ecs_iter_t *it) {
     test_int(p->y, 20);
 }
 
-static
-void Trigger_w_filter_term(ecs_iter_t *it) {
+static void Trigger_w_filter_term(ecs_iter_t *it) {
     probe_system_w_ctx(it, it->ctx);
 
     test_assert(it->entities != NULL);
@@ -53,8 +48,7 @@ void Trigger_w_filter_term(ecs_iter_t *it) {
     test_bool(it->flags & EcsIterNoData, true);
 }
 
-static
-void Trigger_n_w_values(ecs_iter_t *it) {
+static void Trigger_n_w_values(ecs_iter_t *it) {
     probe_system_w_ctx(it, it->ctx);
 
     Position *p = ecs_field(it, Position, 0);
@@ -69,8 +63,7 @@ void Trigger_n_w_values(ecs_iter_t *it) {
     }
 }
 
-static
-void TriggerAdd(ecs_iter_t *it) {
+static void TriggerAdd(ecs_iter_t *it) {
     ecs_id_t id = *(ecs_id_t*)it->ctx;
 
     int i;
@@ -79,8 +72,7 @@ void TriggerAdd(ecs_iter_t *it) {
     }
 }
 
-static
-void TriggerRemove(ecs_iter_t *it) {
+static void TriggerRemove(ecs_iter_t *it) {
     ecs_id_t id = *(ecs_id_t*)it->ctx;
 
     int i;
@@ -89,16 +81,14 @@ void TriggerRemove(ecs_iter_t *it) {
     }
 }
 
-static
-void TriggerClear(ecs_iter_t *it) {
+static void TriggerClear(ecs_iter_t *it) {
     int i;
     for (i = 0; i < it->count; i ++) {
         ecs_clear(it->world, it->entities[i]);
     }
 }
 
-static
-void TriggerDelete(ecs_iter_t *it) {
+static void TriggerDelete(ecs_iter_t *it) {
     int i;
     for (i = 0; i < it->count; i ++) {
         ecs_delete(it->world, it->entities[i]);
@@ -2506,15 +2496,13 @@ void Trigger_set_get_binding_context(void) {
 }
 
 static int ctx_value;
-static
-void ctx_free(void *ctx) {
+static void ctx_free(void *ctx) {
     test_assert(&ctx_value == ctx);
     ctx_value ++;
 }
 
 static int binding_ctx_value;
-static
-void binding_ctx_free(void *ctx) {
+static void binding_ctx_free(void *ctx) {
     test_assert(&binding_ctx_value == ctx);
     binding_ctx_value ++;
 }
@@ -3799,8 +3787,7 @@ void Trigger_create_stresstest(void) {
     ecs_fini(world);
 }
 
-static
-void Trigger_w_new_entity_value(ecs_iter_t *it) {
+static void Trigger_w_new_entity_value(ecs_iter_t *it) {
     probe_iter(it);
 }
 
@@ -4239,8 +4226,7 @@ void Trigger_create_triggers_in_trigger(void) {
     ecs_fini(world);
 }
 
-static
-void Trigger_w_nonzero_value(ecs_iter_t *it) {
+static void Trigger_w_nonzero_value(ecs_iter_t *it) {
     probe_system_w_ctx(it, it->ctx);
 
     test_int(it->count, 1);

@@ -8,8 +8,7 @@
 #ifdef FLECS_SCRIPT
 #include "script.h"
 
-static
-void flecs_meta_entity_name(
+static void flecs_meta_entity_name(
     const ecs_function_ctx_t *ctx,
     int32_t argc,
     const ecs_value_t *argv,
@@ -20,8 +19,7 @@ void flecs_meta_entity_name(
     *(char**)result->ptr = ecs_os_strdup(ecs_get_name(ctx->world, entity));
 }
 
-static
-void flecs_meta_entity_path(
+static void flecs_meta_entity_path(
     const ecs_function_ctx_t *ctx,
     int32_t argc,
     const ecs_value_t *argv,
@@ -32,8 +30,7 @@ void flecs_meta_entity_path(
     *(char**)result->ptr = ecs_get_path(ctx->world, entity);
 }
 
-static
-void flecs_meta_entity_parent(
+static void flecs_meta_entity_parent(
     const ecs_function_ctx_t *ctx,
     int32_t argc,
     const ecs_value_t *argv,
@@ -44,8 +41,7 @@ void flecs_meta_entity_parent(
     *(ecs_entity_t*)result->ptr = ecs_get_parent(ctx->world, entity);
 }
 
-static
-void flecs_meta_entity_has(
+static void flecs_meta_entity_has(
     const ecs_function_ctx_t *ctx,
     int32_t argc,
     const ecs_value_t *argv,
@@ -57,8 +53,7 @@ void flecs_meta_entity_has(
     *(ecs_bool_t*)result->ptr = ecs_has_id(ctx->world, entity, id);
 }
 
-static
-void flecs_meta_entity_lookup(
+static void flecs_meta_entity_lookup(
     const ecs_function_ctx_t *ctx,
     int32_t argc,
     const ecs_value_t *argv,
@@ -75,8 +70,7 @@ void flecs_meta_entity_lookup(
     }
 }
 
-static
-void flecs_meta_core_pair(
+static void flecs_meta_core_pair(
     const ecs_function_ctx_t *ctx,
     int32_t argc,
     const ecs_value_t *argv,
@@ -114,8 +108,7 @@ FLECS_DOC_FUNC(color)
 
 #undef FLECS_DOC_FUNC
 
-static
-void flecs_script_register_builtin_doc_functions(
+static void flecs_script_register_builtin_doc_functions(
     ecs_world_t *world)
 {
     ecs_method(world, {
@@ -163,8 +156,7 @@ void flecs_script_register_builtin_doc_functions(
 
 #else
 
-static
-void flecs_script_register_builtin_doc_functions(
+static void flecs_script_register_builtin_doc_functions(
     ecs_world_t *world)
 {
     (void)world;

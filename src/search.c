@@ -9,8 +9,7 @@
 
 #include "private_api.h"
 
-static
-int32_t flecs_table_search_relation(
+static int32_t flecs_table_search_relation(
     const ecs_world_t *world,
     const ecs_record_t *record,
     const ecs_table_t *table,
@@ -24,8 +23,7 @@ int32_t flecs_table_search_relation(
     ecs_id_t *id_out,
     ecs_table_record_t **tr_out);
 
-static
-int32_t flecs_table_search(
+static int32_t flecs_table_search(
     const ecs_table_t *table,
     ecs_component_record_t *cr,
     ecs_id_t *id_out,
@@ -44,8 +42,7 @@ int32_t flecs_table_search(
     return -1;
 }
 
-static
-int32_t flecs_table_offset_search(
+static int32_t flecs_table_offset_search(
     const ecs_table_t *table,
     int32_t offset,
     ecs_id_t id,
@@ -93,8 +90,7 @@ bool flecs_type_can_inherit_id(
     return true;
 }
 
-static
-int32_t flecs_table_search_relation_for_tgt(
+static int32_t flecs_table_search_relation_for_tgt(
     const ecs_world_t *world,
     ecs_entity_t tgt,
     ecs_id_t id,
@@ -136,8 +132,7 @@ found:
     return result;
 }
 
-static
-int32_t flecs_table_search_relation_pairs(
+static int32_t flecs_table_search_relation_pairs(
     const ecs_world_t *world,
     const ecs_table_t *table,
     int32_t offset,
@@ -179,8 +174,7 @@ int32_t flecs_table_search_relation_pairs(
     return -1;
 }
 
-static
-int32_t flecs_table_search_relation(
+static int32_t flecs_table_search_relation(
     const ecs_world_t *world,
     const ecs_record_t *record,
     const ecs_table_t *table,
@@ -357,8 +351,7 @@ int32_t ecs_search_offset(
     return flecs_table_offset_search(table, offset, id, id_out);
 }
 
-static
-int32_t flecs_relation_depth_walk(
+static int32_t flecs_relation_depth_walk(
     const ecs_world_t *world,
     const ecs_component_record_t *cr,
     const ecs_table_t *first,

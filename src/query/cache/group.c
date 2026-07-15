@@ -8,8 +8,7 @@
 #ifdef FLECS_CACHED_QUERIES
 
 /* Check if group is currently linked in the cache group list. */
-static
-bool flecs_query_cache_group_is_linked(
+static bool flecs_query_cache_group_is_linked(
     const ecs_query_cache_t *cache,
     const ecs_query_cache_group_t *group)
 {
@@ -25,8 +24,7 @@ bool flecs_query_cache_group_is_linked(
 }
 
 /* Get group id for table. */
-static
-uint64_t flecs_query_cache_get_group_id(
+static uint64_t flecs_query_cache_get_group_id(
     const ecs_query_cache_t *cache,
     ecs_table_t *table)
 {
@@ -52,8 +50,7 @@ ecs_query_cache_group_t* flecs_query_cache_get_group(
 }
 
 /* Insert group in list that's ordered by group id */
-static
-void flecs_query_cache_group_insert(
+static void flecs_query_cache_group_insert(
     ecs_query_cache_t *cache,
     ecs_query_cache_group_t *group)
 {
@@ -91,8 +88,7 @@ void flecs_query_cache_group_insert(
 }
 
 /* Make sure a group exists for the provided group id. */
-static
-ecs_query_cache_group_t* flecs_query_cache_ensure_group(
+static ecs_query_cache_group_t* flecs_query_cache_ensure_group(
     ecs_query_cache_t *cache,
     uint64_t group_id)
 {
@@ -148,8 +144,7 @@ ecs_query_cache_group_t* flecs_query_cache_ensure_group(
 }
 
 /* Free group resources. */
-static
-void flecs_query_cache_group_fini(
+static void flecs_query_cache_group_fini(
     ecs_query_cache_t *cache,
     ecs_query_cache_group_t *group)
 {
@@ -179,8 +174,7 @@ void flecs_query_cache_group_fini(
 }
 
 /* Remove group from cache. */
-static
-void flecs_query_cache_remove_group(
+static void flecs_query_cache_remove_group(
     ecs_query_cache_t *cache,
     ecs_query_cache_group_t *group)
 {
@@ -231,8 +225,7 @@ ecs_query_cache_match_t* flecs_query_cache_match_from_table(
 }
 
 /* Add table to query group. */
-static
-ecs_query_cache_match_t* flecs_query_cache_add_table_to_group(
+static ecs_query_cache_match_t* flecs_query_cache_add_table_to_group(
     ecs_query_cache_t *cache,
     ecs_query_cache_group_t *group,
     ecs_query_cache_table_t *qt,
@@ -257,8 +250,7 @@ ecs_query_cache_match_t* flecs_query_cache_add_table_to_group(
 }
 
 /* Remove table from query group. */
-static
-void flecs_query_cache_remove_table_from_group(
+static void flecs_query_cache_remove_table_from_group(
     ecs_query_cache_t *cache,
     ecs_query_cache_group_t *group,
     int32_t index)
@@ -321,8 +313,7 @@ ecs_query_cache_match_t* flecs_query_cache_add_table(
 
 /* Move table to a different group. This can happen if the value returned by 
  * group_by_callback changed for a table. Typically called during rematch. */
-static
-void flecs_query_cache_move_table_to_group(
+static void flecs_query_cache_move_table_to_group(
     ecs_query_cache_t *cache,
     ecs_query_cache_table_t *qt,
     ecs_query_cache_group_t *group)
@@ -405,8 +396,7 @@ void flecs_query_cache_remove_table(
 }
 
 /* Remove all groups from the cache. Typically called during query cleanup. */
-static
-void flecs_query_cache_remove_all_groups(
+static void flecs_query_cache_remove_all_groups(
     ecs_query_cache_t *cache)
 {
     ecs_query_cache_group_t *cur = cache->first_group, *next = cur;

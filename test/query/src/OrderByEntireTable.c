@@ -1,8 +1,7 @@
 #include <query.h>
 #include <stdlib.h>
 
-static
-int compare_entity(
+static int compare_entity(
     ecs_entity_t e1,
     const void *ptr1,
     ecs_entity_t e2,
@@ -634,8 +633,7 @@ void OrderByEntireTable_sort_after_set(void) {
     ecs_fini(world);
 }
 
-static
-void FlipP(ecs_iter_t *it) {
+static void FlipP(ecs_iter_t *it) {
     Position *p = ecs_field(it, Position, 0);
 
     int32_t i;
@@ -1664,8 +1662,7 @@ void OrderByEntireTable_sort_relation_marked(void) {
 
 static bool dummy_compare_invoked = false;
 
-static
-int dummy_compare(
+static int dummy_compare(
     ecs_entity_t e1,
     const void *ptr1,
     ecs_entity_t e2,

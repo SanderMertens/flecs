@@ -36,24 +36,21 @@ static int flecs_expr_precedence[] = {
     [EcsTokOr] = 12,
 };
 
-static
-const char* flecs_script_parse_lhs(
+static const char* flecs_script_parse_lhs(
     ecs_parser_t *parser,
     const char *pos,
     ecs_tokenizer_t *tokenizer,
     ecs_token_kind_t left_oper,
     ecs_expr_node_t **out);
 
-static
-void flecs_script_parser_expr_free(
+static void flecs_script_parser_expr_free(
     ecs_parser_t *parser,
     ecs_expr_node_t *node)
 {
     flecs_expr_visit_free(&parser->script->pub, node);
 }
 
-static
-bool flecs_has_precedence(
+static bool flecs_has_precedence(
     ecs_token_kind_t first,
     ecs_token_kind_t second)
 {
@@ -63,8 +60,7 @@ bool flecs_has_precedence(
     return flecs_expr_precedence[first] <= flecs_expr_precedence[second];
 }
 
-static
-ecs_entity_t flecs_script_default_lookup(
+static ecs_entity_t flecs_script_default_lookup(
     const ecs_world_t *world,
     const char *name,
     void *ctx)
@@ -73,8 +69,7 @@ ecs_entity_t flecs_script_default_lookup(
     return ecs_lookup(world, name);
 }
 
-static
-const char* flecs_script_parse_match_elems(
+static const char* flecs_script_parse_match_elems(
     ecs_parser_t *parser,
     const char *pos,
     ecs_expr_match_t *node)
@@ -239,8 +234,7 @@ const char* flecs_script_parse_initializer(
     ParserEnd;
 }
 
-static
-const char* flecs_script_parse_collection_initializer(
+static const char* flecs_script_parse_collection_initializer(
     ecs_parser_t *parser,
     const char *pos,
     ecs_expr_initializer_t **node_out)
@@ -316,8 +310,7 @@ const char* flecs_script_parse_collection_initializer(
     ParserEnd;
 }
 
-static
-const char* flecs_script_parse_function(
+static const char* flecs_script_parse_function(
     ecs_parser_t *parser,
     const char *pos,
     ecs_expr_node_t **out) 
@@ -348,8 +341,7 @@ error:
     return NULL;
 }
 
-static
-const char* flecs_script_parse_rhs(
+static const char* flecs_script_parse_rhs(
     ecs_parser_t *parser,
     const char *pos,
     ecs_tokenizer_t *tokenizer,
@@ -475,8 +467,7 @@ error:
     return NULL;
 }
 
-static
-const char* flecs_script_parse_lhs(
+static const char* flecs_script_parse_lhs(
     ecs_parser_t *parser,
     const char *pos,
     ecs_tokenizer_t *tokenizer,

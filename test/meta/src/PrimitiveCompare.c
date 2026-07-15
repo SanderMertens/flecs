@@ -3,30 +3,25 @@
 #include "flecs.h"
 
 
-static
-int cmp(const void *a, const void *b, const ecs_type_info_t* ti) {
+static int cmp(const void *a, const void *b, const ecs_type_info_t* ti) {
     return ti->hooks.cmp(a, b, ti);
 }
 
-static
-bool equals(const void *a, const void *b, const ecs_type_info_t* ti) {
+static bool equals(const void *a, const void *b, const ecs_type_info_t* ti) {
     return ti->hooks.equals(a, b, ti);
 }
 
 const ecs_type_info_t *sort_ti = NULL;
-static
-int compare_element(const void *a, const void *b) {
+static int compare_element(const void *a, const void *b) {
     return cmp(a, b, sort_ti);
 }
 
-static
-void sort_array(const ecs_type_info_t* ti, void *arr, ecs_size_t num_elements) {
+static void sort_array(const ecs_type_info_t* ti, void *arr, ecs_size_t num_elements) {
     sort_ti = ti;
     qsort(arr, num_elements, sort_ti->size, compare_element);
 }
 
-static
-bool str_equals(const char* a, const char* b) {
+static bool str_equals(const char* a, const char* b) {
     if(a == b) {
         return true;
     }

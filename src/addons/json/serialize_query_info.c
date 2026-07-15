@@ -7,8 +7,7 @@
 
 #ifdef FLECS_JSON
 
-static
-const char* flecs_json_inout_str(
+static const char* flecs_json_inout_str(
     int16_t kind)
 {
     switch(kind) {
@@ -22,8 +21,7 @@ const char* flecs_json_inout_str(
     }
 }
 
-static
-const char* flecs_json_oper_str(
+static const char* flecs_json_oper_str(
     int16_t kind)
 {
     switch(kind) {
@@ -38,8 +36,7 @@ const char* flecs_json_oper_str(
     }
 }
 
-static
-void flecs_json_serialize_term_entity(
+static void flecs_json_serialize_term_entity(
     const ecs_world_t *world,
     ecs_entity_t e,
     ecs_strbuf_t *buf)
@@ -61,8 +58,7 @@ void flecs_json_serialize_term_entity(
     }
 }
 
-static
-void flecs_json_serialize_term_ref(
+static void flecs_json_serialize_term_ref(
     const ecs_world_t *world,
     const ecs_term_ref_t *ref,
     ecs_strbuf_t *buf)
@@ -88,8 +84,7 @@ void flecs_json_serialize_term_ref(
     flecs_json_object_pop(buf);
 }
 
-static
-void flecs_json_serialize_term_trav(
+static void flecs_json_serialize_term_trav(
     const ecs_world_t *world,
     const ecs_term_t *term,
     ecs_strbuf_t *buf)
@@ -118,8 +113,7 @@ void flecs_json_serialize_term_trav(
     flecs_json_array_pop(buf);
 }
 
-static
-void flecs_json_serialize_term(
+static void flecs_json_serialize_term(
     const ecs_world_t *world,
     const ecs_query_t *q,
     int t,

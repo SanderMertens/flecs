@@ -1,8 +1,7 @@
 #include <script_platform.h>
 #include <stdio.h>
 
-static
-void check_bool(
+static void check_bool(
     ecs_world_t *world,
     const char *expr,
     bool expected)
@@ -13,8 +12,7 @@ void check_bool(
     (void)v;
 }
 
-static
-void check_string(
+static void check_string(
     ecs_world_t *world,
     const char *expr,
     const char *expected)

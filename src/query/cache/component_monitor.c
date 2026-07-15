@@ -11,8 +11,7 @@
  * flag in one of the world's component monitors. Queries can register
  * themselves with component monitors to determine whether they need to rematch
  * with tables. */
-static
-void flecs_eval_component_monitor(
+static void flecs_eval_component_monitor(
     ecs_world_t *world)
 {
     flecs_poly_assert(world, ecs_world_t);
@@ -48,8 +47,7 @@ void flecs_eval_component_monitor(
     ecs_os_perf_trace_pop("flecs.component_monitor.eval");
 }
 
-static
-void flecs_monitor_mark_dirty(
+static void flecs_monitor_mark_dirty(
     ecs_world_t *world,
     ecs_entity_t id)
 {
@@ -134,8 +132,7 @@ void flecs_monitor_unregister(
  * needs to be done to rematch queries, as a simple brute force approach does
  * not scale when there are many tables / queries. Therefore we need to do a bit
  * of bookkeeping that is more intelligent than simply flipping a flag */
-static
-void flecs_update_component_monitor_w_array(
+static void flecs_update_component_monitor_w_array(
     ecs_world_t *world,
     ecs_type_t *ids)
 {

@@ -7,8 +7,7 @@
 
 #ifdef FLECS_JSON
 
-static
-bool flecs_json_skip_variable(
+static bool flecs_json_skip_variable(
     const char *name)
 {
     return !name || name[0] == '_' || !ecs_os_strcmp(name, "this");
@@ -111,8 +110,7 @@ int flecs_json_serialize_matches(
     return 0;
 }
 
-static
-int flecs_json_serialize_refs_cr(
+static int flecs_json_serialize_refs_cr(
     const ecs_world_t *world,
     ecs_strbuf_t *buf,
     ecs_component_record_t *cr)
@@ -173,8 +171,7 @@ int flecs_json_serialize_refs(
 }
 
 #ifdef FLECS_ALERTS
-static
-int flecs_json_serialize_entity_alerts(
+static int flecs_json_serialize_entity_alerts(
     const ecs_world_t *world,
     ecs_strbuf_t *buf,
     ecs_entity_t entity,
@@ -220,8 +217,7 @@ int flecs_json_serialize_entity_alerts(
     return 0;
 }
 
-static
-int flecs_json_serialize_children_alerts(
+static int flecs_json_serialize_children_alerts(
     const ecs_world_t *world,
     ecs_strbuf_t *buf,
     ecs_entity_t entity)

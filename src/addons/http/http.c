@@ -52,8 +52,7 @@ int64_t ecs_http_send_ok_count = 0;
 int64_t ecs_http_send_error_count = 0;
 int64_t ecs_http_busy_count = 0;
 
-static
-ecs_size_t http_send(
+static ecs_size_t http_send(
     ecs_http_socket_t sock, 
     const void *buf, 
     ecs_size_t size, 
@@ -70,8 +69,7 @@ ecs_size_t http_send(
 #endif
 }
 
-static
-ecs_size_t http_recv(
+static ecs_size_t http_recv(
     ecs_http_socket_t sock,
     void *buf,
     ecs_size_t size,
@@ -94,8 +92,7 @@ ecs_size_t http_recv(
     return ret;
 }
 
-static
-void http_sock_set_timeout(
+static void http_sock_set_timeout(
     ecs_http_socket_t sock,
     int32_t timeout_ms)
 {
@@ -115,8 +112,7 @@ void http_sock_set_timeout(
     }
 }
 
-static
-void http_sock_keep_alive(
+static void http_sock_keep_alive(
     ecs_http_socket_t sock)
 {
     int v = 1;
@@ -126,8 +122,7 @@ void http_sock_keep_alive(
     }
 }
 
-static
-void http_sock_nonblock(ecs_http_socket_t sock, bool enable) {
+static void http_sock_nonblock(ecs_http_socket_t sock, bool enable) {
     (void)sock;
     (void)enable;
 #ifdef ECS_TARGET_POSIX
@@ -151,8 +146,7 @@ void http_sock_nonblock(ecs_http_socket_t sock, bool enable) {
 #endif
 }
 
-static
-int http_getnameinfo(
+static int http_getnameinfo(
     const struct sockaddr* addr,
     ecs_size_t addr_len,
     char *host,
@@ -175,8 +169,7 @@ int http_getnameinfo(
 #endif
 }
 
-static
-int http_bind(
+static int http_bind(
     ecs_http_socket_t sock,
     const struct sockaddr* addr,
     ecs_size_t addr_len)
@@ -189,8 +182,7 @@ int http_bind(
 #endif
 }
 
-static
-bool http_socket_is_valid(
+static bool http_socket_is_valid(
     ecs_http_socket_t sock)
 {
 #if defined(ECS_TARGET_WINDOWS)
@@ -206,8 +198,7 @@ bool http_socket_is_valid(
 #define HTTP_SOCKET_INVALID (-1)
 #endif
 
-static
-void http_close(
+static void http_close(
     ecs_http_socket_t *sock)
 {
     ecs_assert(sock != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -222,8 +213,7 @@ void http_close(
     *sock = HTTP_SOCKET_INVALID;
 }
 
-static
-ecs_http_socket_t http_accept(
+static ecs_http_socket_t http_accept(
     ecs_http_socket_t sock,
     struct sockaddr* addr,
     ecs_size_t *addr_len)
@@ -234,14 +224,12 @@ ecs_http_socket_t http_accept(
     return result;
 }
 
-static
-void http_reply_fini(ecs_http_reply_t* reply) {
+static void http_reply_fini(ecs_http_reply_t* reply) {
     ecs_assert(reply != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_os_free(reply->body.content);
 }
 
-static
-void http_request_fini(ecs_http_request_impl_t *req) {
+static void http_request_fini(ecs_http_request_impl_t *req) {
     ecs_assert(req != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(req->pub.conn != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(req->pub.conn->server != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -251,8 +239,7 @@ void http_request_fini(ecs_http_request_impl_t *req) {
         ecs_http_request_impl_t, req->pub.id);
 }
 
-static
-void http_connection_free(ecs_http_connection_impl_t *conn) {
+static void http_connection_free(ecs_http_connection_impl_t *conn) {
     ecs_assert(conn != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(conn->pub.id != 0, ECS_INTERNAL_ERROR, NULL);
     uint64_t conn_id = conn->pub.id;
@@ -266,8 +253,7 @@ void http_connection_free(ecs_http_connection_impl_t *conn) {
 }
 
 // https://stackoverflow.com/questions/10156409/convert-hex-string-char-to-int
-static
-char http_hex_2_int(char a, char b){
+static char http_hex_2_int(char a, char b){
     a = (a <= '9') ? (char)(a - '0') : (char)((a & 0x7) + 9);
     b = (b <= '9') ? (char)(b - '0') : (char)((b & 0x7) + 9);
     if (a < 0) {
@@ -276,8 +262,7 @@ char http_hex_2_int(char a, char b){
     return (char)((a << 4) + b);
 }
 
-static
-void http_decode_url_str(
+static void http_decode_url_str(
     char *str) 
 {
     char ch, *ptr, *dst = str;
@@ -294,8 +279,7 @@ void http_decode_url_str(
     dst[0] = '\0';
 }
 
-static
-void http_parse_method(
+static void http_parse_method(
     ecs_http_fragment_t *frag)
 {
     char *method = ecs_strbuf_get_small(&frag->buf);
@@ -311,23 +295,20 @@ void http_parse_method(
     ecs_strbuf_reset(&frag->buf);
 }
 
-static
-bool http_header_writable(
+static bool http_header_writable(
     ecs_http_fragment_t *frag)
 {
     return frag->header_count < ECS_HTTP_HEADER_COUNT_MAX;
 }
 
-static
-void http_header_buf_reset(
+static void http_header_buf_reset(
     ecs_http_fragment_t *frag)
 {
     frag->header_buf[0] = '\0';
     frag->header_buf_ptr = frag->header_buf;
 }
 
-static
-void http_header_buf_append(
+static void http_header_buf_append(
     ecs_http_fragment_t *frag,
     char ch)
 {
@@ -341,16 +322,14 @@ void http_header_buf_append(
     }
 }
 
-static
-uint64_t http_request_key_hash(const void *ptr) {
+static uint64_t http_request_key_hash(const void *ptr) {
     const ecs_http_request_key_t *key = ptr;
     const char *array = key->array;
     int32_t count = key->count;
     return flecs_hash(array, count * ECS_SIZEOF(char));
 }
 
-static
-int http_request_key_compare(const void *ptr_1, const void *ptr_2) {
+static int http_request_key_compare(const void *ptr_1, const void *ptr_2) {
     const ecs_http_request_key_t *type_1 = ptr_1;
     const ecs_http_request_key_t *type_2 = ptr_2;
 
@@ -364,8 +343,7 @@ int http_request_key_compare(const void *ptr_1, const void *ptr_2) {
     return ecs_os_memcmp(type_1->array, type_2->array, count_1);
 }
 
-static
-ecs_http_request_entry_t* http_find_request_entry(
+static ecs_http_request_entry_t* http_find_request_entry(
     ecs_http_server_t *srv,
     const char *array,
     int32_t count)
@@ -387,8 +365,7 @@ ecs_http_request_entry_t* http_find_request_entry(
     return NULL;
 }
 
-static
-void http_insert_request_entry(
+static void http_insert_request_entry(
     ecs_http_server_t *srv,
     ecs_http_request_impl_t *req,
     ecs_http_reply_t *reply)
@@ -422,8 +399,7 @@ void http_insert_request_entry(
             entry->content, entry->content_length);
 }
 
-static
-char* http_decode_request(
+static char* http_decode_request(
     ecs_http_request_impl_t *req,
     ecs_http_fragment_t *frag)
 {
@@ -466,8 +442,7 @@ char* http_decode_request(
     return res;
 }
 
-static
-ecs_http_request_entry_t* http_enqueue_request(
+static ecs_http_request_entry_t* http_enqueue_request(
     ecs_http_connection_impl_t *conn,
     uint64_t conn_id,
     ecs_http_fragment_t *frag)
@@ -511,8 +486,7 @@ ecs_http_request_entry_t* http_enqueue_request(
     return NULL;
 }
 
-static
-bool http_parse_request(
+static bool http_parse_request(
     ecs_http_fragment_t *frag,
     const char* req_frag, 
     ecs_size_t req_frag_len) 
@@ -678,8 +652,7 @@ bool http_parse_request(
     }
 }
 
-static
-ecs_http_send_request_t* http_send_queue_post(
+static ecs_http_send_request_t* http_send_queue_post(
     ecs_http_server_t *srv)
 {
     /* This function should only be called while the server is locked. Before 
@@ -701,8 +674,7 @@ ecs_http_send_request_t* http_send_queue_post(
     return result;
 }
 
-static
-ecs_http_send_request_t* http_send_queue_get(
+static ecs_http_send_request_t* http_send_queue_get(
     ecs_http_server_t *srv)
 {
     ecs_os_mutex_lock(srv->lock);
@@ -717,8 +689,7 @@ ecs_http_send_request_t* http_send_queue_get(
     return result;
 }
 
-static
-void* http_server_send_queue(void* arg) {
+static void* http_server_send_queue(void* arg) {
     ecs_http_server_t *srv = arg;
     int32_t wait_ms = srv->send_queue.wait_ms;
 
@@ -778,8 +749,7 @@ void* http_server_send_queue(void* arg) {
     return NULL;
 }
 
-static
-void http_append_send_headers(
+static void http_append_send_headers(
     ecs_strbuf_t *hdrs,
     int code, 
     const char* status, 
@@ -818,8 +788,7 @@ void http_append_send_headers(
     ecs_strbuf_appendlit(hdrs, "\r\n");
 }
 
-static
-void http_send_reply(
+static void http_send_reply(
     ecs_http_connection_impl_t* conn, 
     ecs_http_reply_t* reply,
     bool preflight) 
@@ -870,8 +839,7 @@ void http_send_reply(
     conn->sock = HTTP_SOCKET_INVALID;
 }
 
-static
-void http_recv_connection(
+static void http_recv_connection(
     ecs_http_server_t *srv,
     ecs_http_connection_impl_t *conn, 
     uint64_t conn_id,
@@ -960,8 +928,7 @@ typedef struct {
     uint64_t id;
 } http_conn_res_t;
 
-static
-http_conn_res_t http_init_connection(
+static http_conn_res_t http_init_connection(
     ecs_http_server_t *srv, 
     ecs_http_socket_t sock_conn,
     struct sockaddr_storage *remote_addr, 
@@ -999,8 +966,7 @@ http_conn_res_t http_init_connection(
     return (http_conn_res_t){ .conn = conn, .id = conn_id };
 }
 
-static
-int http_accept_connections(
+static int http_accept_connections(
     ecs_http_server_t* srv, 
     const struct sockaddr* addr, 
     ecs_size_t addr_len) 
@@ -1133,8 +1099,7 @@ done:
     return ret;
 }
 
-static
-void* http_server_thread(void* arg) {
+static void* http_server_thread(void* arg) {
     ecs_http_server_t *srv = arg;
     struct sockaddr_in addr;
     ecs_os_zeromem(&addr);
@@ -1165,8 +1130,7 @@ retry:
     return NULL;
 }
 
-static
-void http_do_request(
+static void http_do_request(
     ecs_http_server_t *srv,
     ecs_http_reply_t *reply,
     const ecs_http_request_impl_t *req)
@@ -1191,8 +1155,7 @@ error:
     return;
 }
 
-static
-void http_handle_request(
+static void http_handle_request(
     ecs_http_server_t *srv,
     ecs_http_request_impl_t *req)
 {
@@ -1228,8 +1191,7 @@ void http_handle_request(
     http_connection_free(conn);
 }
 
-static
-void http_purge_request_cache(
+static void http_purge_request_cache(
     ecs_http_server_t *srv,
     bool fini)
 {
@@ -1259,8 +1221,7 @@ void http_purge_request_cache(
     }
 }
 
-static
-int32_t http_dequeue_requests(
+static int32_t http_dequeue_requests(
     ecs_http_server_t *srv,
     double delta_time)
 {

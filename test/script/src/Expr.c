@@ -4635,8 +4635,7 @@ void Expr_var_chain_func(void) {
 static ecs_entity_t func_function = 0;
 static void *func_ctx = NULL;
 
-static
-void func_callback(
+static void func_callback(
     const ecs_function_ctx_t *ctx,
     int32_t argc,
     const ecs_value_t *argv,
@@ -4648,8 +4647,7 @@ void func_callback(
     func_ctx = ctx->ctx;
 }
 
-static
-void func_1_arg_callback(
+static void func_1_arg_callback(
     const ecs_function_ctx_t *ctx,
     int32_t argc,
     const ecs_value_t *argv,
@@ -4664,8 +4662,7 @@ void func_1_arg_callback(
     func_ctx = ctx->ctx;
 }
 
-static
-void func_2_args_callback(
+static void func_2_args_callback(
     const ecs_function_ctx_t *ctx,
     int32_t argc,
     const ecs_value_t *argv,
@@ -4683,8 +4680,7 @@ void func_2_args_callback(
     func_ctx = ctx->ctx;
 }
 
-static
-void i64_method_1_arg_callback(
+static void i64_method_1_arg_callback(
     const ecs_function_ctx_t *ctx,
     int32_t argc,
     const ecs_value_t *argv,
@@ -4701,8 +4697,7 @@ void i64_method_1_arg_callback(
     func_ctx = ctx->ctx;
 }
 
-static
-void func_1_position_arg_callback(
+static void func_1_position_arg_callback(
     const ecs_function_ctx_t *ctx,
     int32_t argc,
     const ecs_value_t *argv,
@@ -4719,8 +4714,7 @@ void func_1_position_arg_callback(
     func_ctx = ctx->ctx;
 }
 
-static
-void func_1_array_arg_callback(
+static void func_1_array_arg_callback(
     const ecs_function_ctx_t *ctx,
     int32_t argc,
     const ecs_value_t *argv,
@@ -5081,8 +5075,7 @@ void Expr_method_w_1_arg(void) {
     ecs_fini(world);
 }
 
-static
-void fn_sum_i32(
+static void fn_sum_i32(
     const ecs_function_ctx_t *ctx,
     int32_t argc,
     const ecs_value_t *argv,
@@ -5097,8 +5090,7 @@ void fn_sum_i32(
     }
 }
 
-static
-void fn_sum_i64(
+static void fn_sum_i64(
     const ecs_function_ctx_t *ctx,
     int32_t argc,
     const ecs_value_t *argv,
@@ -5113,8 +5105,7 @@ void fn_sum_i64(
     }
 }
 
-static
-void fn_sum_f32(
+static void fn_sum_f32(
     const ecs_function_ctx_t *ctx,
     int32_t argc,
     const ecs_value_t *argv,
@@ -5129,8 +5120,7 @@ void fn_sum_f32(
     }
 }
 
-static
-void fn_sum_f64(
+static void fn_sum_f64(
     const ecs_function_ctx_t *ctx,
     int32_t argc,
     const ecs_value_t *argv,
@@ -5522,8 +5512,7 @@ void Expr_vector_func_sum_w_vector(void) {
     ecs_fini(world);
 }
 
-static
-void fn_add_i32(
+static void fn_add_i32(
     const ecs_function_ctx_t *ctx,
     int32_t argc,
     const ecs_value_t *argv,
@@ -5539,8 +5528,7 @@ void fn_add_i32(
     }
 }
 
-static
-void fn_add_i64(
+static void fn_add_i64(
     const ecs_function_ctx_t *ctx,
     int32_t argc,
     const ecs_value_t *argv,
@@ -5556,8 +5544,7 @@ void fn_add_i64(
     }
 }
 
-static
-void fn_add_f32(
+static void fn_add_f32(
     const ecs_function_ctx_t *ctx,
     int32_t argc,
     const ecs_value_t *argv,
@@ -5573,8 +5560,7 @@ void fn_add_f32(
     }
 }
 
-static
-void fn_add_f64(
+static void fn_add_f64(
     const ecs_function_ctx_t *ctx,
     int32_t argc,
     const ecs_value_t *argv,

@@ -7,8 +7,7 @@
 
 #ifdef FLECS_QUERY_PLANS
 
-static
-void flecs_query_build_down_cache(
+static void flecs_query_build_down_cache(
     ecs_world_t *world,
     ecs_allocator_t *a,
     const ecs_query_run_ctx_t *ctx,
@@ -52,8 +51,7 @@ void flecs_query_build_down_cache(
     }
 }
 
-static
-void flecs_query_build_up_cache(
+static void flecs_query_build_up_cache(
     ecs_world_t *world,
     ecs_allocator_t *a,
     const ecs_query_run_ctx_t *ctx,

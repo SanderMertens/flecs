@@ -4,8 +4,7 @@ void Internals_setup(void) {
     ecs_log_set_level(-3);
 }
 
-static
-void Iter(ecs_iter_t *it) {
+static void Iter(ecs_iter_t *it) {
     Position *p = ecs_field(it, Position, 0);
     Velocity *v = ecs_field(it, Velocity, 1);
     Mass *m = ecs_field(it, Mass, 2);
@@ -138,8 +137,7 @@ void Internals_activate_deactivate_activate_other(void) {
 
 static int invoked = 0;
 
-static
-void CreateNewTable(ecs_iter_t *it) {
+static void CreateNewTable(ecs_iter_t *it) {
     ecs_id_t ecs_id(Velocity) = ecs_field_id(it, 1);
 
     int32_t i;
@@ -148,8 +146,7 @@ void CreateNewTable(ecs_iter_t *it) {
     }
 }
 
-static
-void ManualSystem(ecs_iter_t *it) {
+static void ManualSystem(ecs_iter_t *it) {
     invoked ++;
 }
 

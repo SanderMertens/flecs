@@ -17,21 +17,18 @@ typedef struct ecs_expr_str_visitor_t {
     bool colors;
 } ecs_expr_str_visitor_t;
 
-static
-int flecs_expr_node_to_str(
+static int flecs_expr_node_to_str(
     ecs_expr_str_visitor_t *v,
     const ecs_expr_node_t *node);
 
-static
-void flecs_expr_color_to_str(
+static void flecs_expr_color_to_str(
     ecs_expr_str_visitor_t *v,
     const char *color)
 {
     if (v->colors) ecs_strbuf_appendstr(v->buf, color);
 }
 
-static
-int flecs_expr_value_to_str(
+static int flecs_expr_value_to_str(
     ecs_expr_str_visitor_t *v,
     const ecs_expr_value_node_t *node)
 {
@@ -49,8 +46,7 @@ int flecs_expr_value_to_str(
     return ret;
 }
 
-static
-int flecs_expr_interpolated_string_to_str(
+static int flecs_expr_interpolated_string_to_str(
     ecs_expr_str_visitor_t *v,
     const ecs_expr_interpolated_string_t *node)
 {
@@ -86,8 +82,7 @@ int flecs_expr_interpolated_string_to_str(
     return 0;
 }
 
-static
-int flecs_expr_unary_to_str(
+static int flecs_expr_unary_to_str(
     ecs_expr_str_visitor_t *v,
     const ecs_expr_unary_t *node)
 {
@@ -102,8 +97,7 @@ error:
     return -1;
 }
 
-static
-int flecs_expr_initializer_to_str(
+static int flecs_expr_initializer_to_str(
     ecs_expr_str_visitor_t *v,
     const ecs_expr_initializer_t *node)
 {
@@ -141,8 +135,7 @@ error:
     return -1;
 }
 
-static
-int flecs_expr_binary_to_str(
+static int flecs_expr_binary_to_str(
     ecs_expr_str_visitor_t *v,
     const ecs_expr_binary_t *node)
 {
@@ -169,8 +162,7 @@ error:
     return -1;
 }
 
-static
-int flecs_expr_identifier_to_str(
+static int flecs_expr_identifier_to_str(
     ecs_expr_str_visitor_t *v,
     const ecs_expr_identifier_t *node)
 {
@@ -179,8 +171,7 @@ int flecs_expr_identifier_to_str(
     return 0;
 }
 
-static
-int flecs_expr_variable_to_str(
+static int flecs_expr_variable_to_str(
     ecs_expr_str_visitor_t *v,
     const ecs_expr_variable_t *node)
 {
@@ -191,8 +182,7 @@ int flecs_expr_variable_to_str(
     return 0;
 }
 
-static
-int flecs_expr_member_to_str(
+static int flecs_expr_member_to_str(
     ecs_expr_str_visitor_t *v,
     const ecs_expr_member_t *node)
 {
@@ -205,8 +195,7 @@ int flecs_expr_member_to_str(
     return 0;
 }
 
-static
-int flecs_expr_function_to_str(
+static int flecs_expr_function_to_str(
     ecs_expr_str_visitor_t *v,
     const ecs_expr_function_t *node)
 {
@@ -229,8 +218,7 @@ int flecs_expr_function_to_str(
     return 0;
 }
 
-static
-int flecs_expr_element_to_str(
+static int flecs_expr_element_to_str(
     ecs_expr_str_visitor_t *v,
     const ecs_expr_element_t *node)
 {
@@ -246,8 +234,7 @@ int flecs_expr_element_to_str(
     return 0;
 }
 
-static
-int flecs_expr_match_to_str(
+static int flecs_expr_match_to_str(
     ecs_expr_str_visitor_t *v,
     const ecs_expr_match_t *node)
 {
@@ -305,8 +292,7 @@ int flecs_expr_match_to_str(
     return 0;
 }
 
-static
-int flecs_expr_new_to_str(
+static int flecs_expr_new_to_str(
     ecs_expr_str_visitor_t *v,
     const ecs_expr_new_t *node)
 {
@@ -320,8 +306,7 @@ int flecs_expr_new_to_str(
         (ecs_script_node_t*)node->entity, v->buf, v->colors, v->depth + 1);
 }
 
-static
-int flecs_expr_cast_to_str(
+static int flecs_expr_cast_to_str(
     ecs_expr_str_visitor_t *v,
     const ecs_expr_cast_t *node)
 {
@@ -348,8 +333,7 @@ int flecs_expr_cast_to_str(
     return 0;
 }
 
-static
-int flecs_expr_node_to_str(
+static int flecs_expr_node_to_str(
     ecs_expr_str_visitor_t *v,
     const ecs_expr_node_t *node)
 {

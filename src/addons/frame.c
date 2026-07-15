@@ -7,8 +7,7 @@
 
 #ifdef FLECS_FRAME
 
-static
-ecs_ftime_t flecs_insert_sleep(
+static ecs_ftime_t flecs_insert_sleep(
     ecs_world_t *world,
     ecs_time_t *stop)
 {
@@ -56,8 +55,7 @@ ecs_ftime_t flecs_insert_sleep(
     return delta_time;
 }
 
-static
-ecs_ftime_t flecs_start_measure_frame(
+static ecs_ftime_t flecs_start_measure_frame(
     ecs_world_t *world,
     ecs_ftime_t user_delta_time)
 {
@@ -99,8 +97,7 @@ ecs_ftime_t flecs_start_measure_frame(
     return (ecs_ftime_t)delta_time;
 }
 
-static
-void flecs_stop_measure_frame(
+static void flecs_stop_measure_frame(
     ecs_world_t* world)
 {
     flecs_poly_assert(world, ecs_world_t);

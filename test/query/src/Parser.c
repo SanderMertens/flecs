@@ -1,19 +1,16 @@
 #include <query.h>
 
-static
-int term_count(ecs_query_t *q) {
+static int term_count(ecs_query_t *q) {
     test_assert(q != NULL);
     return q->term_count;
 }
 
-static
-ecs_term_t* query_terms(ecs_query_t *q) {
+static ecs_term_t* query_terms(ecs_query_t *q) {
     test_assert(q != NULL);
     return q->terms;
 }
 
-static
-void print_term_id_flags(ecs_id_t value) {
+static void print_term_id_flags(ecs_id_t value) {
     if (value & EcsIsEntity) {
         printf("|EcsIsEntity");
     }

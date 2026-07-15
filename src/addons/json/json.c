@@ -7,15 +7,13 @@
 
 #ifdef FLECS_JSON
 
-static
-const char* flecs_json_skip_scope(
+static const char* flecs_json_skip_scope(
     const char *json,
     char *token,
     const ecs_from_json_desc_t *desc,
     ecs_json_token_t close_kind);
 
-static
-const char* flecs_json_token_str(
+static const char* flecs_json_token_str(
     ecs_json_token_t token_kind)
 {
     switch(token_kind) {
@@ -308,8 +306,7 @@ const char* flecs_json_expect_member_name(
     return json;
 }
 
-static
-const char* flecs_json_skip_string(
+static const char* flecs_json_skip_string(
     const char *json)
 {
     if (json[0] != '"') {
@@ -333,8 +330,7 @@ const char* flecs_json_skip_string(
     return ch ? json : NULL;
 }
 
-static
-const char* flecs_json_skip_scope(
+static const char* flecs_json_skip_scope(
     const char *json,
     char *token,
     const ecs_from_json_desc_t *desc,
@@ -544,8 +540,7 @@ void flecs_json_path(
     ecs_strbuf_appendch(buf, '"');
 }
 
-static
-const char* flecs_json_entity_label(
+static const char* flecs_json_entity_label(
     const ecs_world_t *world,
     ecs_entity_t e)
 {
@@ -621,8 +616,7 @@ void flecs_json_id(
     ecs_strbuf_appendch(buf, ']');
 }
 
-static
-void flecs_json_id_member_fullpath(
+static void flecs_json_id_member_fullpath(
     ecs_strbuf_t *buf,
     const ecs_world_t *world,
     ecs_id_t id)

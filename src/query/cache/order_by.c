@@ -9,8 +9,7 @@
 
 ECS_SORT_TABLE_WITH_COMPARE(_, flecs_query_cache_sort_table_generic, order_by, static)
 
-static
-void flecs_query_cache_sort_table(
+static void flecs_query_cache_sort_table(
     ecs_world_t *world,
     ecs_table_t *table,
     int32_t column_index,
@@ -56,8 +55,7 @@ typedef struct sort_helper_t {
     bool shared;
 } sort_helper_t;
 
-static
-const void* ptr_from_helper(
+static const void* ptr_from_helper(
     sort_helper_t *helper)
 {
     ecs_assert(helper->row < helper->count, ECS_INTERNAL_ERROR, NULL);
@@ -70,8 +68,7 @@ const void* ptr_from_helper(
     }
 }
 
-static
-ecs_entity_t e_from_helper(
+static ecs_entity_t e_from_helper(
     sort_helper_t *helper)
 {
     if (helper->row < helper->count) {
@@ -81,8 +78,7 @@ ecs_entity_t e_from_helper(
     }
 }
 
-static
-void flecs_query_cache_build_sorted_table_range(
+static void flecs_query_cache_build_sorted_table_range(
     ecs_query_cache_t *cache,
     ecs_query_cache_group_t *group)
 {

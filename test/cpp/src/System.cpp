@@ -2431,8 +2431,7 @@ void System_lookup_and_update_ctx(void) {
     test_assert(sys.ctx() == &my_ctx);
 }
 
-static
-uint64_t system_group_by_rel(
+static uint64_t system_group_by_rel(
     flecs::world_t *world,
     flecs::table_t *table,
     flecs::entity_t id,

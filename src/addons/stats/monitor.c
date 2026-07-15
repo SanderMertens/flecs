@@ -34,8 +34,7 @@ typedef struct {
     int32_t interval;
 } ecs_aggregate_stats_ctx_t;
 
-static
-void MonitorStats(ecs_iter_t *it) {
+static void MonitorStats(ecs_iter_t *it) {
     ecs_world_t *world = it->real_world;
     ecs_monitor_stats_ctx_t *ctx = it->ctx;
 
@@ -128,8 +127,7 @@ void MonitorStats(ecs_iter_t *it) {
     }
 }
 
-static
-void ReduceStats(ecs_iter_t *it) {
+static void ReduceStats(ecs_iter_t *it) {
     ecs_reduce_stats_ctx_t *ctx = it->ctx;
 
     void *dst = ecs_field_w_size(it, ecs_field_size(it, 0), 0);
@@ -155,8 +153,7 @@ void ReduceStats(ecs_iter_t *it) {
     }
 }
 
-static
-void AggregateStats(ecs_iter_t *it) {
+static void AggregateStats(ecs_iter_t *it) {
     ecs_aggregate_stats_ctx_t *ctx = it->ctx;
     int32_t interval = ctx->interval;
 
@@ -228,8 +225,7 @@ void AggregateStats(ecs_iter_t *it) {
     }
 }
 
-static
-void flecs_monitor_ctx_free(
+static void flecs_monitor_ctx_free(
     void *ptr)
 {
     ecs_monitor_stats_ctx_t *ctx = ptr;
@@ -239,15 +235,13 @@ void flecs_monitor_ctx_free(
     ecs_os_free(ctx);
 }
 
-static
-void flecs_reduce_ctx_free(
+static void flecs_reduce_ctx_free(
     void *ptr)
 {
     ecs_os_free(ptr);
 }
 
-static
-void flecs_aggregate_ctx_free(
+static void flecs_aggregate_ctx_free(
     void *ptr)
 {
     ecs_os_free(ptr);

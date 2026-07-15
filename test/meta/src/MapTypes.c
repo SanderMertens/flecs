@@ -1,7 +1,6 @@
 #include <meta.h>
 
-static
-void meta_test_map(
+static void meta_test_map(
     ecs_world_t *world,
     ecs_entity_t t,
     ecs_entity_t key_type,

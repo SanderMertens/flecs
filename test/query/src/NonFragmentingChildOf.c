@@ -6495,8 +6495,7 @@ void NonFragmentingChildOf_this_src_childof_wildcard_w_component(void) {
     ecs_fini(world);
 }
 
-static
-bool query_skip_builtin(ecs_world_t *world, ecs_iter_t *it) {
+static bool query_skip_builtin(ecs_world_t *world, ecs_iter_t *it) {
     while (ecs_query_next(it)) {
         if (!ecs_table_has_flags(it->table, EcsTableHasBuiltins)) {
             if (!ecs_table_has_id(world, it->table, ecs_childof(EcsFlecs))) {

@@ -32,8 +32,7 @@ typedef struct cl_ctx {
 
 } cl_ctx;
 
-static
-void comp_ctor(
+static void comp_ctor(
     void *ptr,
     int32_t count,
     const ecs_type_info_t *info)
@@ -52,8 +51,7 @@ void comp_ctor(
     }
 }
 
-static
-void comp_dtor(
+static void comp_dtor(
     void *ptr,
     int32_t count,
     const ecs_type_info_t *info)
@@ -65,8 +63,7 @@ void comp_dtor(
     data->dtor.invoked ++;
 }
 
-static
-void comp_copy(
+static void comp_copy(
     void *dst_ptr,
     const void *src_ptr,
     int32_t count,
@@ -81,8 +78,7 @@ void comp_copy(
     memcpy(dst_ptr, src_ptr, info->size * count);
 }
 
-static
-void comp_move(
+static void comp_move(
     void *dst_ptr,
     void *src_ptr,
     int32_t count,
@@ -97,8 +93,7 @@ void comp_move(
     memcpy(dst_ptr, src_ptr, info->size * count);
 }
 
-static
-void comp_move_dtor(
+static void comp_move_dtor(
     void *dst_ptr,
     void *src_ptr,
     int32_t count,
@@ -113,8 +108,7 @@ void comp_move_dtor(
     memcpy(dst_ptr, src_ptr, info->size * count);
 }
 
-static
-void comp_pos_ctor_move_dtor(void *dst_ptr, void *src_ptr,
+static void comp_pos_ctor_move_dtor(void *dst_ptr, void *src_ptr,
     int32_t count, const ecs_type_info_t *info)
 {
     cl_ctx *data = info->hooks.ctx;
@@ -136,30 +130,26 @@ void comp_pos_ctor_move_dtor(void *dst_ptr, void *src_ptr,
 /* Position */
 
 static int ctor_position = 0;
-static
-ECS_CTOR(Position, ptr, {
+static ECS_CTOR(Position, ptr, {
     ptr->x = 0;
     ptr->y = 0;
     ctor_position ++;
 })
 
 static int dtor_position = 0;
-static
-ECS_DTOR(Position, ptr, {
+static ECS_DTOR(Position, ptr, {
     dtor_position ++;
 })
 
 static int copy_position = 0;
-static
-ECS_COPY(Position, dst, src, {
+static ECS_COPY(Position, dst, src, {
     copy_position ++;
     dst->x = src->x;
     dst->y = src->y;
 })
 
 static int move_position = 0;
-static
-ECS_MOVE(Position, dst, src, {
+static ECS_MOVE(Position, dst, src, {
     move_position ++;
     dst->x = src->x;
     dst->y = src->y;
@@ -186,78 +176,66 @@ static void on_add_position_count(ecs_iter_t *it) {
 /* Velocity */
 
 static int ctor_velocity = 0;
-static
-ECS_CTOR(Velocity, ptr, {
+static ECS_CTOR(Velocity, ptr, {
     ctor_velocity ++;
 })
 
 static int dtor_velocity = 0;
-static
-ECS_DTOR(Velocity, ptr, {
+static ECS_DTOR(Velocity, ptr, {
     dtor_velocity ++;
 })
 
 static int copy_velocity = 0;
-static
-ECS_COPY(Velocity, dst, src, {
+static ECS_COPY(Velocity, dst, src, {
     copy_velocity ++;
 })
 
 static int move_velocity = 0;
-static
-ECS_MOVE(Velocity, dst, src, {
+static ECS_MOVE(Velocity, dst, src, {
     move_velocity ++;
 })
 
 /* Mass */
 
 static int ctor_mass = 0;
-static
-ECS_CTOR(Mass, ptr, {
+static ECS_CTOR(Mass, ptr, {
     ctor_mass ++;
 })
 
 static int dtor_mass = 0;
-static
-ECS_DTOR(Mass, ptr, {
+static ECS_DTOR(Mass, ptr, {
     dtor_mass ++;
 })
 
 static int copy_mass = 0;
-static
-ECS_COPY(Mass, dst, src, {
+static ECS_COPY(Mass, dst, src, {
     copy_mass ++;
 })
 
 static int move_mass = 0;
-static
-ECS_MOVE(Mass, dst, src, {
+static ECS_MOVE(Mass, dst, src, {
     move_mass ++;
 })
 
 /* Rotation */
 
 static int ctor_rotation = 0;
-static
-ECS_CTOR(Rotation, ptr, {
+static ECS_CTOR(Rotation, ptr, {
     ctor_rotation ++;
 })
 
 static int dtor_rotation = 0;
-static
-ECS_DTOR(Rotation, ptr, {
+static ECS_DTOR(Rotation, ptr, {
     dtor_rotation ++;
 })
 
 static int copy_rotation = 0;
-static
-ECS_COPY(Rotation, dst, src, {
+static ECS_COPY(Rotation, dst, src, {
     copy_rotation ++;
 })
 
 static int move_rotation = 0;
-static
-ECS_MOVE(Rotation, dst, src, {
+static ECS_MOVE(Rotation, dst, src, {
     move_rotation ++;
 })
 
@@ -1130,8 +1108,7 @@ void ComponentLifecycle_allow_lifecycle_overwrite_equal_callbacks(void) {
     ecs_fini(world);
 }
 
-static
-void AddPosition(ecs_iter_t *it) { }
+static void AddPosition(ecs_iter_t *it) { }
 
 void ComponentLifecycle_set_lifecycle_after_trigger(void) {
     ecs_world_t *world = ecs_mini();
@@ -1158,8 +1135,7 @@ typedef struct Dummy {
     int value;
 } Dummy;
 
-static
-void dummy_dtor(
+static void dummy_dtor(
     void *ptr,
     int32_t count,
     const ecs_type_info_t *info)
@@ -1321,8 +1297,7 @@ void ComponentLifecycle_on_add_w_emplace_defer(void) {
 }
 
 static int move_ctor_position = 0;
-static
-void position_move_ctor(
+static void position_move_ctor(
     void *dst,
     void *src,
     int32_t count,
@@ -1333,8 +1308,7 @@ void position_move_ctor(
 }
 
 static int move_dtor_position = 0;
-static
-void position_move_dtor(
+static void position_move_dtor(
     void *dst,
     void *src,
     int32_t count,
@@ -2026,8 +2000,7 @@ void ComponentLifecycle_dtor_on_fini(void) {
     test_int(dummy_dtor_invoked, 1);
 }
 
-static
-void type_dtor(
+static void type_dtor(
     void *ptr,
     int32_t count,
     const ecs_type_info_t *info)
@@ -2064,8 +2037,7 @@ typedef struct {
 static int other_dtor_invoked;
 static int other_dtor_valid_entity;
 
-static
-void other_type_dtor(
+static void other_type_dtor(
     void *ptr,
     int32_t count,
     const ecs_type_info_t *info)
@@ -2102,8 +2074,7 @@ ECS_MOVE(Entity, dst, src, {
     src->other = 0;
 })
 
-static
-void other_delete_dtor(
+static void other_delete_dtor(
     void *ptr,
     int32_t count,
     const ecs_type_info_t *info)
@@ -2132,8 +2103,7 @@ void other_delete_dtor(
     other_dtor_invoked ++;
 }
 
-static
-void self_delete_dtor(
+static void self_delete_dtor(
     void *ptr,
     int32_t count,
     const ecs_type_info_t *info)
@@ -2157,8 +2127,7 @@ void self_delete_dtor(
     dummy_dtor_invoked ++;
 }
 
-static
-void string_dtor(
+static void string_dtor(
     void *ptr,
     int32_t count,
     const ecs_type_info_t *info)
@@ -2560,16 +2529,14 @@ void ComponentLifecycle_on_remove_after_delete(void) {
 
 static int on_remove_tag_set_position_invoked = 0;
 
-static
-void on_remove_tag_set_position(ecs_iter_t *it) {
+static void on_remove_tag_set_position(ecs_iter_t *it) {
     for (int i = 0; i < it->count; i ++) {
         ecs_set(it->world, it->entities[i], Position, {10, 20});
         on_remove_tag_set_position_invoked ++;
     }
 }
 
-static
-void on_remove_tag_set_position_pair(ecs_iter_t *it) {
+static void on_remove_tag_set_position_pair(ecs_iter_t *it) {
     for (int i = 0; i < it->count; i ++) {
         ecs_set_pair(it->world, it->entities[i], 
             Position, ecs_new(it->world), {10, 20});
@@ -2577,8 +2544,7 @@ void on_remove_tag_set_position_pair(ecs_iter_t *it) {
     }
 }
 
-static
-void on_remove_tag_set_position_obj_pair(ecs_iter_t *it) {
+static void on_remove_tag_set_position_obj_pair(ecs_iter_t *it) {
     for (int i = 0; i < it->count; i ++) {
         ecs_set_pair_second(it->world, it->entities[i], 
             ecs_new(it->world), Position, {10, 20});
@@ -3442,8 +3408,7 @@ static int hook_w_offset_invoked = 0;
 static int hook_w_offset_offset = 0;
 static Position hook_w_offset_position;
 
-static
-void hook_w_offset(ecs_iter_t *it) {
+static void hook_w_offset(ecs_iter_t *it) {
     Position *p = ecs_field(it, Position, 0);
     test_int(it->count, 1);
     hook_w_offset_offset = it->offset;
@@ -3542,8 +3507,7 @@ void ComponentLifecycle_on_set_hook_check_offset(void) {
 
 static int on_set_position_invoked = 0;
 
-static
-void on_set_position(ecs_iter_t *it) {
+static void on_set_position(ecs_iter_t *it) {
     Position *p = ecs_field(it, Position, 0);
     test_int(it->count, 1);
 
@@ -4397,8 +4361,7 @@ void ComponentLifecycle_equals_flags(void) {
 
 static int replace_Position_invoked = 0;
 
-static
-void replace_Position(ecs_iter_t *it) {
+static void replace_Position(ecs_iter_t *it) {
     Position *old = ecs_field(it, Position, 0);
     Position *new = ecs_field(it, Position, 1);
 
@@ -5156,8 +5119,7 @@ void ComponentLifecycle_add_on_set_hook_while_in_use(void) {
 static int value_move_ctor_move_invoked = 0;
 static int value_move_ctor_move_ctor_invoked = 0;
 
-static
-void value_move_hook(
+static void value_move_hook(
     void *dst_ptr,
     void *src_ptr,
     int32_t count,
@@ -5173,8 +5135,7 @@ void value_move_hook(
     value_move_ctor_move_invoked ++;
 }
 
-static
-void value_move_ctor_hook(
+static void value_move_ctor_hook(
     void *dst_ptr,
     void *src_ptr,
     int32_t count,
@@ -5218,8 +5179,7 @@ static ecs_entity_t on_validate_last_entity = 0;
 static Position on_validate_last_value = {0, 0};
 static int on_validate_observer_invoked = 0;
 
-static
-bool ValidatePosition(ecs_world_t *world, ecs_entity_t e, void *ptr) {
+static bool ValidatePosition(ecs_world_t *world, ecs_entity_t e, void *ptr) {
     test_assert(world != NULL);
     test_assert(e != 0);
     test_assert(ptr != NULL);
@@ -5232,13 +5192,11 @@ bool ValidatePosition(ecs_world_t *world, ecs_entity_t e, void *ptr) {
 
 static int on_validate_on_set_invoked = 0;
 
-static
-void OnSetHookAfterValidate(ecs_iter_t *it) {
+static void OnSetHookAfterValidate(ecs_iter_t *it) {
     on_validate_on_set_invoked += it->count;
 }
 
-static
-void OnSetObserverAfterValidate(ecs_iter_t *it) {
+static void OnSetObserverAfterValidate(ecs_iter_t *it) {
     on_validate_observer_invoked += it->count;
 }
 

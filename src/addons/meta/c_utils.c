@@ -47,8 +47,7 @@ typedef struct flecs_meta_utils_params_t {
     bool is_fixed_size;
 } flecs_meta_utils_params_t;
 
-static
-const char* skip_scope(const char *ptr, flecs_meta_utils_parse_ctx_t *ctx) {
+static const char* skip_scope(const char *ptr, flecs_meta_utils_parse_ctx_t *ctx) {
     /* Keep track of which characters were used to open the scope */
     char stack[256];
     int32_t sp = 0;
@@ -85,8 +84,7 @@ error:
     return NULL;
 }
 
-static
-const char* parse_c_digit(
+static const char* parse_c_digit(
     const char *ptr,
     int64_t *value_out)
 {
@@ -104,8 +102,7 @@ error:
     return NULL;
 }
 
-static
-const char* parse_c_identifier(
+static const char* parse_c_identifier(
     const char *ptr, 
     char *buff,
     char *params,
@@ -164,8 +161,7 @@ error:
     return NULL;
 }
 
-static
-const char * flecs_meta_utils_open_scope(
+static const char * flecs_meta_utils_open_scope(
     const char *ptr,
     flecs_meta_utils_parse_ctx_t *ctx)    
 {
@@ -205,8 +201,7 @@ error:
     return NULL;
 }
 
-static
-const char* flecs_meta_utils_parse_constant(
+static const char* flecs_meta_utils_parse_constant(
     const char *ptr,
     flecs_meta_utils_constant_t *token,
     flecs_meta_utils_parse_ctx_t *ctx)
@@ -252,8 +247,7 @@ error:
     return NULL;
 }
 
-static
-const char* flecs_meta_utils_parse_type(
+static const char* flecs_meta_utils_parse_type(
     const char *ptr,
     flecs_meta_utils_type_t *token,
     flecs_meta_utils_parse_ctx_t *ctx)
@@ -296,8 +290,7 @@ error:
     return NULL;
 }
 
-static
-const char* flecs_meta_utils_parse_member(
+static const char* flecs_meta_utils_parse_member(
     const char *ptr,
     flecs_meta_utils_member_t *token,
     flecs_meta_utils_parse_ctx_t *ctx)
@@ -375,8 +368,7 @@ error:
     return NULL;
 }
 
-static
-int flecs_meta_utils_parse_desc(
+static int flecs_meta_utils_parse_desc(
     const char *ptr,
     flecs_meta_utils_params_t *token,
     flecs_meta_utils_parse_ctx_t *ctx)
@@ -436,16 +428,14 @@ error:
     return -1;
 }
 
-static
-ecs_entity_t flecs_meta_utils_lookup(
+static ecs_entity_t flecs_meta_utils_lookup(
     ecs_world_t *world,
     flecs_meta_utils_type_t *token,
     const char *ptr,
     int64_t count,
     flecs_meta_utils_parse_ctx_t *ctx);
 
-static
-ecs_entity_t flecs_meta_utils_lookup_array(
+static ecs_entity_t flecs_meta_utils_lookup_array(
     ecs_world_t *world,
     ecs_entity_t e,
     const char *params_decl,
@@ -490,8 +480,7 @@ error:
     return 0;
 }
 
-static
-ecs_entity_t flecs_meta_utils_lookup_vector(
+static ecs_entity_t flecs_meta_utils_lookup_vector(
     ecs_world_t *world,
     ecs_entity_t e,
     const char *params_decl,
@@ -530,8 +519,7 @@ error:
     return 0;
 }
 
-static
-ecs_entity_t flecs_meta_utils_lookup_map(
+static ecs_entity_t flecs_meta_utils_lookup_map(
     ecs_world_t *world,
     ecs_entity_t e,
     const char *params_decl,
@@ -575,8 +563,7 @@ error:
     return 0;
 }
 
-static
-ecs_entity_t flecs_meta_utils_lookup_bitmask(
+static ecs_entity_t flecs_meta_utils_lookup_bitmask(
     ecs_world_t *world,
     ecs_entity_t e,
     const char *params_decl,
@@ -622,8 +609,7 @@ error:
     return 0;
 }
 
-static
-ecs_entity_t flecs_meta_utils_lookup(
+static ecs_entity_t flecs_meta_utils_lookup(
     ecs_world_t *world,
     flecs_meta_utils_type_t *token,
     const char *ptr,
@@ -732,8 +718,7 @@ error:
     return 0;
 }
 
-static
-int flecs_meta_utils_parse_struct(
+static int flecs_meta_utils_parse_struct(
     ecs_world_t *world,
     ecs_entity_t t,
     const char *desc)
@@ -792,8 +777,7 @@ error:
     return -1;
 }
 
-static
-int flecs_meta_utils_parse_constants(
+static int flecs_meta_utils_parse_constants(
     ecs_world_t *world,
     ecs_entity_t t,
     const char *desc,
@@ -863,8 +847,7 @@ error:
     return -1;
 }
 
-static
-int flecs_meta_utils_parse_enum(
+static int flecs_meta_utils_parse_enum(
     ecs_world_t *world,
     ecs_entity_t t,
     const char *desc)
@@ -873,8 +856,7 @@ int flecs_meta_utils_parse_enum(
     return flecs_meta_utils_parse_constants(world, t, desc, false);
 }
 
-static
-int flecs_meta_utils_parse_bitmask(
+static int flecs_meta_utils_parse_bitmask(
     ecs_world_t *world,
     ecs_entity_t t,
     const char *desc)

@@ -12,8 +12,7 @@ ecs_expr_value_t* flecs_expr_stack_alloc(
     ecs_expr_stack_t *stack,
     const ecs_type_info_t *ti);
 
-static
-void flecs_expr_value_alloc(
+static void flecs_expr_value_alloc(
     ecs_expr_stack_t *stack,
     ecs_expr_value_t *v,
     const ecs_type_info_t *ti)
@@ -28,8 +27,7 @@ void flecs_expr_value_alloc(
     flecs_type_info_ctor(v->value.ptr, 1, ti);
 }
 
-static
-void flecs_expr_value_free(
+static void flecs_expr_value_free(
     ecs_expr_value_t *v)
 {
     const ecs_type_info_t *ti = v->type_info;

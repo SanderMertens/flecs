@@ -1,15 +1,13 @@
 #include <meta.h>
 #include "flecs.h"
 
-static
-void* test_ecs_ensure(ecs_world_t *world, ecs_entity_t entity, ecs_id_t component) {
+static void* test_ecs_ensure(ecs_world_t *world, ecs_entity_t entity, ecs_id_t component) {
     const ecs_type_info_t *ti = ecs_get_type_info(world, component);
     test_assert(ti != NULL);
     return ecs_ensure_id(world, entity, component, ti->size);
 }
 
-static
-int cmp(const ecs_world_t *world, ecs_entity_t component, ecs_entity_t ea,
+static int cmp(const ecs_world_t *world, ecs_entity_t component, ecs_entity_t ea,
           ecs_entity_t eb) {
     const ecs_type_info_t *ti = ecs_get_type_info(world, component);
 
@@ -19,8 +17,7 @@ int cmp(const ecs_world_t *world, ecs_entity_t component, ecs_entity_t ea,
     return ti->hooks.cmp(a, b, ti);
 }
 
-static
-bool equals(const ecs_world_t *world, ecs_entity_t component, ecs_entity_t ea,
+static bool equals(const ecs_world_t *world, ecs_entity_t component, ecs_entity_t ea,
           ecs_entity_t eb) {
     const ecs_type_info_t *ti = ecs_get_type_info(world, component);
 

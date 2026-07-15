@@ -11,17 +11,15 @@
 #include "windows.h"
 #endif
 
-static
-ecs_os_thread_t stdcpp_thread_new(
-    ecs_os_thread_callback_t callback, 
+static ecs_os_thread_t stdcpp_thread_new(
+    ecs_os_thread_callback_t callback,
     void *arg)
 {
 	std::thread *thread = new std::thread{callback,arg};
     return reinterpret_cast<ecs_os_thread_t>(thread);
 }
 
-static
-void* stdcpp_thread_join(
+static void* stdcpp_thread_join(
     ecs_os_thread_t thread)
 {
     void *arg = nullptr;
@@ -31,8 +29,7 @@ void* stdcpp_thread_join(
     return arg;
 }
 
-static
-int32_t stdcpp_ainc(int32_t *count) {
+static int32_t stdcpp_ainc(int32_t *count) {
 #ifdef __GNUC__
     int value = __sync_add_and_fetch (count, 1);
     return value;
@@ -41,8 +38,7 @@ int32_t stdcpp_ainc(int32_t *count) {
 #endif
 }
 
-static
-int32_t stdcpp_adec(int32_t *count) {
+static int32_t stdcpp_adec(int32_t *count) {
 #ifdef __GNUC__
     int value = __sync_sub_and_fetch (count, 1);
     return value;
@@ -51,56 +47,47 @@ int32_t stdcpp_adec(int32_t *count) {
 #endif
 }
 
-static
-ecs_os_mutex_t stdcpp_mutex_new(void) {
+static ecs_os_mutex_t stdcpp_mutex_new(void) {
     std::mutex *mutex = new std::mutex;
     return reinterpret_cast<ecs_os_mutex_t>(mutex);
 }
 
-static
-void stdcpp_mutex_free(ecs_os_mutex_t m) {
+static void stdcpp_mutex_free(ecs_os_mutex_t m) {
     std::mutex*mutex = reinterpret_cast<std::mutex*>(m);
     delete mutex;
 }
 
-static
-void stdcpp_mutex_lock(ecs_os_mutex_t m) {
+static void stdcpp_mutex_lock(ecs_os_mutex_t m) {
     std::mutex*mutex = reinterpret_cast<std::mutex*>(m);
     mutex->lock();
 }
 
-static
-void stdcpp_mutex_unlock(ecs_os_mutex_t m) {
+static void stdcpp_mutex_unlock(ecs_os_mutex_t m) {
     std::mutex *mutex = reinterpret_cast<std::mutex*>(m);
     mutex->unlock();
 }
 
-static
-ecs_os_cond_t stdcpp_cond_new(void) {
+static ecs_os_cond_t stdcpp_cond_new(void) {
     std::condition_variable_any* cond = new std::condition_variable_any{};
    return reinterpret_cast<ecs_os_cond_t>(cond);
 }
 
-static 
-void stdcpp_cond_free(ecs_os_cond_t c) {
+static void stdcpp_cond_free(ecs_os_cond_t c) {
     std::condition_variable_any *cond = reinterpret_cast<std::condition_variable_any*>(c);
     delete cond;
 }
 
-static 
-void stdcpp_cond_signal(ecs_os_cond_t c) {
+static void stdcpp_cond_signal(ecs_os_cond_t c) {
     std::condition_variable_any *cond = reinterpret_cast<std::condition_variable_any*>(c);
     cond->notify_one();
 }
 
-static 
-void stdcpp_cond_broadcast(ecs_os_cond_t c) {
+static void stdcpp_cond_broadcast(ecs_os_cond_t c) {
     std::condition_variable_any*cond = reinterpret_cast<std::condition_variable_any*>(c);
     cond->notify_all();
 }
 
-static 
-void stdcpp_cond_wait(ecs_os_cond_t c, ecs_os_mutex_t m) {
+static void stdcpp_cond_wait(ecs_os_cond_t c, ecs_os_mutex_t m) {
     std::condition_variable_any* cond = reinterpret_cast<std::condition_variable_any*>(c);
     std::mutex* mutex = reinterpret_cast<std::mutex*>(m);
     cond->wait(*mutex);

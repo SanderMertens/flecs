@@ -10586,8 +10586,7 @@ void Basic_match_new_empty_w_ref(void) {
     ecs_fini(world);
 }
 
-static
-int compare_position(
+static int compare_position(
     ecs_entity_t e1,
     const void *ptr1,
     ecs_entity_t e2,

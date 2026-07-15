@@ -8,8 +8,7 @@
 #ifdef FLECS_CACHED_QUERIES
 
 /* Free cache entry element. */
-static
-void flecs_query_cache_match_elem_fini(
+static void flecs_query_cache_match_elem_fini(
     ecs_query_cache_t *cache,
     ecs_query_cache_match_t *qm)
 {
@@ -60,8 +59,7 @@ void flecs_query_cache_match_fini(
 }
 
 /* Initialize cache entry element. */
-static
-void flecs_query_cache_match_set(
+static void flecs_query_cache_match_set(
     ecs_query_cache_t *cache,
     ecs_query_cache_match_t *qm,
     ecs_iter_t *it)
@@ -188,8 +186,7 @@ bool flecs_query_cache_match_next(
 
 /* Same as flecs_query_cache_match_next, but for rematching. This function will
  * overwrite existing cache entries with new match data. */
-static
-bool flecs_query_cache_rematch_next(
+static bool flecs_query_cache_rematch_next(
     ecs_query_cache_t *cache,
     ecs_iter_t *it)
 {

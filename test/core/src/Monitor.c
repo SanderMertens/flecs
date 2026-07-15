@@ -1,7 +1,6 @@
 #include <core.h>
 
-static
-void OnPosition(ecs_iter_t *it) {
+static void OnPosition(ecs_iter_t *it) {
     probe_iter(it);
 }
 

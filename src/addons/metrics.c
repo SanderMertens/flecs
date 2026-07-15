@@ -441,8 +441,7 @@ static void UpdateCountIds(ecs_iter_t *it) {
 }
 
 /** Initialize member metric */
-static
-int flecs_member_metric_init(
+static int flecs_member_metric_init(
     ecs_world_t *world,
     ecs_entity_t metric,
     const ecs_metric_desc_t *desc)
@@ -589,8 +588,7 @@ error:
 }
 
 /** Initialize id metric */
-static
-int flecs_id_metric_init(
+static int flecs_id_metric_init(
     ecs_world_t *world,
     ecs_entity_t metric,
     const ecs_metric_desc_t *desc)
@@ -620,8 +618,7 @@ error:
 }
 
 /** Initialize oneof metric */
-static
-int flecs_oneof_metric_init(
+static int flecs_oneof_metric_init(
     ecs_world_t *world,
     ecs_entity_t metric,
     ecs_entity_t scope,
@@ -690,8 +687,7 @@ error:
     return -1;
 }
 
-static
-int flecs_count_id_targets_metric_init(
+static int flecs_count_id_targets_metric_init(
     ecs_world_t *world,
     ecs_entity_t metric,
     const ecs_metric_desc_t *desc)
@@ -712,8 +708,7 @@ error:
     return -1;
 }
 
-static
-int flecs_count_ids_metric_init(
+static int flecs_count_ids_metric_init(
     ecs_world_t *world,
     ecs_entity_t metric,
     const ecs_metric_desc_t *desc)

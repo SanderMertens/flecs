@@ -10,8 +10,7 @@
 #include "pipeline.h"
 
 /* Synchronize workers */
-static
-void flecs_sync_worker(
+static void flecs_sync_worker(
     ecs_world_t* world)
 {
     int32_t stage_count = ecs_get_stage_count(world);
@@ -32,8 +31,7 @@ void flecs_sync_worker(
 }
 
 /* Worker thread */
-static
-void* flecs_worker(void *arg) {
+static void* flecs_worker(void *arg) {
     ecs_stage_t *stage = arg;
     ecs_world_t *world = stage->world;
 
@@ -102,8 +100,7 @@ void flecs_create_worker_threads(
     }
 }
 
-static
-void flecs_start_workers(
+static void flecs_start_workers(
     ecs_world_t *world,
     int32_t threads)
 {
@@ -117,8 +114,7 @@ void flecs_start_workers(
 }
 
 /* Wait until all workers are running */
-static
-void flecs_wait_for_workers(
+static void flecs_wait_for_workers(
     ecs_world_t *world)
 {
     flecs_poly_assert(world, ecs_world_t);
@@ -243,8 +239,7 @@ void flecs_workers_progress(
     ecs_set_scope((ecs_world_t*)stage, old_scope);
 }
 
-static
-void flecs_set_threads_internal(
+static void flecs_set_threads_internal(
     ecs_world_t *world,
     int32_t threads,
     bool use_task_api)

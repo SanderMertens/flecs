@@ -1555,8 +1555,7 @@ void Hierarchies_add_child_after_delete_tree(void) {
 
 static int on_remove_count = 0;
 
-static
-void RemovePosition(ecs_iter_t *it) {
+static void RemovePosition(ecs_iter_t *it) {
     int i;
     for (i = 0; i < it->count; i ++) {
         on_remove_count ++;

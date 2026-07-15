@@ -5,8 +5,7 @@
 
 #include "private_api.h"
 
-static
-bool flecs_each_component_record(
+static bool flecs_each_component_record(
     ecs_iter_t *it,
     ecs_component_record_t *cr,
     ecs_id_t id)
@@ -92,8 +91,7 @@ bool ecs_each_next(
     }
 }
 
-static
-bool flecs_children_next_ordered(
+static bool flecs_children_next_ordered(
     ecs_iter_t *it)
 {
     return ecs_children_next(it);

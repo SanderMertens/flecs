@@ -5946,8 +5946,7 @@ void DeserializeFromJson_ser_deser_value_for_non_existing_strict(void) {
     ecs_fini(world);
 }
 
-static
-void ser_deser_cpp_name_test(
+static void ser_deser_cpp_name_test(
     const char *typename)
 {
     ecs_world_t *world = ecs_init();
@@ -6816,8 +6815,7 @@ void DeserializeFromJson_ser_deser_prefab_instance_w_named_children_parent_compo
     ecs_os_free(json);
 }
 
-static
-void register_color_prefab(
+static void register_color_prefab(
     ecs_world_t *world,
     bool low_id,
     ecs_entity_t *color_out,

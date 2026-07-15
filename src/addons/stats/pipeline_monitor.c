@@ -12,8 +12,7 @@
 
 ECS_COMPONENT_DECLARE(EcsPipelineStats);
 
-static
-void flecs_pipeline_monitor_dtor(EcsPipelineStats *ptr) {
+static void flecs_pipeline_monitor_dtor(EcsPipelineStats *ptr) {
     ecs_map_iter_t it = ecs_map_iter(&ptr->stats);
     while (ecs_map_next(&it)) {
         ecs_pipeline_stats_t *stats = ecs_map_ptr(&it);
@@ -44,8 +43,7 @@ static ECS_DTOR(EcsPipelineStats, ptr, {
     flecs_pipeline_monitor_dtor(ptr);
 })
 
-static 
-void flecs_pipeline_stats_set_t(
+static void flecs_pipeline_stats_set_t(
     void *stats, int32_t t)
 {
     ecs_assert(t >= 0, ECS_INTERNAL_ERROR, NULL);
@@ -54,16 +52,14 @@ void flecs_pipeline_stats_set_t(
 }
 
 
-static
-void flecs_pipeline_stats_copy_last(
+static void flecs_pipeline_stats_copy_last(
     void *stats, 
     void *src) 
 {
     ecs_pipeline_stats_copy_last(stats, src);
 }
 
-static
-void flecs_pipeline_stats_get(
+static void flecs_pipeline_stats_get(
     ecs_world_t *world, 
     ecs_entity_t res, 
     void *stats) 
@@ -71,16 +67,14 @@ void flecs_pipeline_stats_get(
     ecs_pipeline_stats_get(world, res, stats);
 }
 
-static
-void flecs_pipeline_stats_reduce(
+static void flecs_pipeline_stats_reduce(
     void *stats, 
     void *src) 
 {
     ecs_pipeline_stats_reduce(stats, src);
 }
 
-static
-void flecs_pipeline_stats_reduce_last(
+static void flecs_pipeline_stats_reduce_last(
     void *stats, 
     void *last, 
     int32_t reduce_count) 
@@ -88,15 +82,13 @@ void flecs_pipeline_stats_reduce_last(
     ecs_pipeline_stats_reduce_last(stats, last, reduce_count);
 }
 
-static
-void flecs_pipeline_stats_repeat_last(
+static void flecs_pipeline_stats_repeat_last(
     void* stats) 
 {
     ecs_pipeline_stats_repeat_last(stats);
 }
 
-static
-void flecs_pipeline_stats_fini(
+static void flecs_pipeline_stats_fini(
     void *stats) 
 {
     ecs_pipeline_stats_fini(stats);

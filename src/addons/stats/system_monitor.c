@@ -12,8 +12,7 @@
 
 ECS_COMPONENT_DECLARE(EcsSystemStats);
 
-static
-void flecs_system_monitor_dtor(EcsSystemStats *ptr) {
+static void flecs_system_monitor_dtor(EcsSystemStats *ptr) {
     ecs_map_iter_t it = ecs_map_iter(&ptr->stats);
     while (ecs_map_next(&it)) {
         ecs_system_stats_t *stats = ecs_map_ptr(&it);
@@ -43,8 +42,7 @@ static ECS_DTOR(EcsSystemStats, ptr, {
     flecs_system_monitor_dtor(ptr);
 })
 
-static 
-void flecs_system_stats_set_t(
+static void flecs_system_stats_set_t(
     void *stats, int32_t t)
 {
     ecs_assert(t >= 0, ECS_INTERNAL_ERROR, NULL);
@@ -52,16 +50,14 @@ void flecs_system_stats_set_t(
     ((ecs_system_stats_t*)stats)->query.t = t;
 }
 
-static
-void flecs_system_stats_copy_last(
+static void flecs_system_stats_copy_last(
     void *stats, 
     void *src) 
 {
     ecs_system_stats_copy_last(stats, src);
 }
 
-static
-void flecs_system_stats_get(
+static void flecs_system_stats_get(
     ecs_world_t *world, 
     ecs_entity_t res, 
     void *stats) 
@@ -69,16 +65,14 @@ void flecs_system_stats_get(
     ecs_system_stats_get(world, res, stats);
 }
 
-static
-void flecs_system_stats_reduce(
+static void flecs_system_stats_reduce(
     void *stats, 
     void *src) 
 {
     ecs_system_stats_reduce(stats, src);
 }
 
-static
-void flecs_system_stats_reduce_last(
+static void flecs_system_stats_reduce_last(
     void *stats, 
     void *last, 
     int32_t reduce_count) 
@@ -86,8 +80,7 @@ void flecs_system_stats_reduce_last(
     ecs_system_stats_reduce_last(stats, last, reduce_count);
 }
 
-static
-void flecs_system_stats_repeat_last(
+static void flecs_system_stats_repeat_last(
     void* stats) 
 {
     ecs_system_stats_repeat_last(stats);

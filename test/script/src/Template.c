@@ -3310,8 +3310,7 @@ void Template_template_w_anonymous_child_component_w_undefined_identifier(void) 
 
 static int on_foo_invoked = 0;
 
-static
-void on_foo(ecs_iter_t *it) {
+static void on_foo(ecs_iter_t *it) {
     on_foo_invoked ++;
 }
 
@@ -4348,8 +4347,7 @@ void Template_template_w_new_expr_in_const(void) {
 static Position on_position = {};
 static int on_position_count = 0;
 
-static
-void OnPosition(ecs_iter_t *it) {
+static void OnPosition(ecs_iter_t *it) {
     Position *p = ecs_field(it, Position, 0);
     test_int(it->count, 1);
     on_position = *p;

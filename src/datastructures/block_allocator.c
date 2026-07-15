@@ -25,8 +25,7 @@ int64_t ecs_block_allocator_free_count = 0;
  * allocation sizes, which are more likely to be reused. */
 #define FLECS_MIN_CHUNKS_PER_BLOCK 1
 
-static
-ecs_block_allocator_chunk_header_t* flecs_balloc_block(
+static ecs_block_allocator_chunk_header_t* flecs_balloc_block(
     ecs_block_allocator_t *allocator)
 {
     if (!allocator->chunk_size) {

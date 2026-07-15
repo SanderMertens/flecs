@@ -8,8 +8,7 @@
 #ifdef FLECS_SCRIPT
 #include "../script.h"
 
-static
-void flecs_visit_fold_replace(
+static void flecs_visit_fold_replace(
     ecs_script_t *script,
     ecs_expr_node_t **node_ptr,
     ecs_expr_node_t *with)
@@ -19,8 +18,7 @@ void flecs_visit_fold_replace(
     *node_ptr = with;
 }
 
-static
-int flecs_expr_unary_visit_fold(
+static int flecs_expr_unary_visit_fold(
     ecs_script_t *script,
     ecs_expr_node_t **node_ptr,
     const ecs_expr_eval_desc_t *desc)
@@ -69,8 +67,7 @@ error:
     return -1;
 }
 
-static
-int flecs_expr_binary_visit_fold(
+static int flecs_expr_binary_visit_fold(
     ecs_script_t *script,
     ecs_expr_node_t **node_ptr,
     const ecs_expr_eval_desc_t *desc)
@@ -120,8 +117,7 @@ error:
     return -1;
 }
 
-static
-int flecs_expr_cast_visit_fold(
+static int flecs_expr_cast_visit_fold(
     ecs_script_t *script,
     ecs_expr_node_t **node_ptr,
     const ecs_expr_eval_desc_t *desc)
@@ -175,8 +171,7 @@ error:
     return -1;  
 }
 
-static
-int flecs_expr_interpolated_string_visit_fold(
+static int flecs_expr_interpolated_string_visit_fold(
     ecs_script_t *script,
     ecs_expr_node_t **node_ptr,
     const ecs_expr_eval_desc_t *desc)
@@ -301,8 +296,7 @@ error:
     return -1;
 }
 
-static
-int flecs_expr_initializer_pre_fold(
+static int flecs_expr_initializer_pre_fold(
     ecs_script_t *script,
     ecs_expr_initializer_t *node,
     const ecs_expr_eval_desc_t *desc,
@@ -355,8 +349,7 @@ error:
     return -1;
 }
 
-static
-int flecs_expr_initializer_post_fold(
+static int flecs_expr_initializer_post_fold(
     ecs_script_t *script,
     ecs_expr_initializer_t *node,
     void *value,
@@ -406,8 +399,7 @@ error:
     return -1;
 }
 
-static
-int flecs_expr_initializer_visit_fold(
+static int flecs_expr_initializer_visit_fold(
     ecs_script_t *script,
     ecs_expr_node_t **node_ptr,
     const ecs_expr_eval_desc_t *desc)
@@ -455,8 +447,7 @@ error:
     return -1;
 }
 
-static
-int flecs_expr_identifier_visit_fold(
+static int flecs_expr_identifier_visit_fold(
     ecs_script_t *script,
     ecs_expr_node_t **node_ptr,
     const ecs_expr_eval_desc_t *desc)
@@ -485,8 +476,7 @@ error:
     return -1;
 }
 
-static
-int flecs_expr_variable_visit_fold(
+static int flecs_expr_variable_visit_fold(
     ecs_script_t *script,
     ecs_expr_node_t **node_ptr,
     const ecs_expr_eval_desc_t *desc)
@@ -514,8 +504,7 @@ int flecs_expr_variable_visit_fold(
     return 0;
 }
 
-static
-int flecs_expr_global_variable_visit_fold(
+static int flecs_expr_global_variable_visit_fold(
     ecs_script_t *script,
     ecs_expr_node_t **node_ptr,
     const ecs_expr_eval_desc_t *desc)
@@ -542,8 +531,7 @@ int flecs_expr_global_variable_visit_fold(
     return 0;
 }
 
-static
-int flecs_expr_arguments_visit_fold(
+static int flecs_expr_arguments_visit_fold(
     ecs_script_t *script,
     ecs_expr_initializer_t *node,
     const ecs_expr_eval_desc_t *desc)
@@ -563,8 +551,7 @@ error:
     return -1;
 }
 
-static
-int flecs_expr_function_visit_fold(
+static int flecs_expr_function_visit_fold(
     ecs_script_t *script,
     ecs_expr_node_t **node_ptr,
     const ecs_expr_eval_desc_t *desc)
@@ -586,8 +573,7 @@ error:
     return -1;
 }
 
-static
-int flecs_expr_member_visit_fold(
+static int flecs_expr_member_visit_fold(
     ecs_script_t *script,
     ecs_expr_node_t **node_ptr,
     const ecs_expr_eval_desc_t *desc)
@@ -603,8 +589,7 @@ error:
     return -1;
 }
 
-static
-int flecs_expr_element_visit_fold(
+static int flecs_expr_element_visit_fold(
     ecs_script_t *script,
     ecs_expr_node_t **node_ptr,
     const ecs_expr_eval_desc_t *desc)
@@ -624,8 +609,7 @@ error:
     return -1;
 }
 
-static
-int flecs_expr_match_visit_fold(
+static int flecs_expr_match_visit_fold(
     ecs_script_t *script,
     ecs_expr_node_t **node_ptr,
     const ecs_expr_eval_desc_t *desc)

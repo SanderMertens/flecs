@@ -22,8 +22,7 @@
 #define ECS_CLASS_LEN (-1 + (ecs_size_t)sizeof(ECS_CLASS_PREFIX))
 #define ECS_ENUM_LEN (-1 + (ecs_size_t)sizeof(ECS_ENUM_PREFIX))
 
-static
-ecs_size_t ecs_cpp_strip_prefix(
+static ecs_size_t ecs_cpp_strip_prefix(
     char *typeName,
     ecs_size_t len,
     const char *prefix,
@@ -37,8 +36,7 @@ ecs_size_t ecs_cpp_strip_prefix(
     return len;
 }
 
-static 
-void ecs_cpp_trim_type_name(
+static void ecs_cpp_trim_type_name(
     char *typeName) 
 {
     ecs_size_t len = ecs_os_strlen(typeName);
@@ -124,8 +122,7 @@ char* ecs_cpp_get_symbol_name(
     return symbol_name;
 }
 
-static
-const char* flecs_cpp_func_rchr(
+static const char* flecs_cpp_func_rchr(
     const char *func_name,
     ecs_size_t func_name_len,
     ecs_size_t func_back_len,
@@ -138,8 +135,7 @@ const char* flecs_cpp_func_rchr(
     return r;
 }
 
-static
-const char* flecs_cpp_func_max(
+static const char* flecs_cpp_func_max(
     const char *a,
     const char *b)
 {

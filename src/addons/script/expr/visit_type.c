@@ -9,8 +9,7 @@
 #include "../../meta/meta.h"
 #include "../script.h"
 
-static
-int flecs_expr_visit_type_priv(
+static int flecs_expr_visit_type_priv(
     ecs_script_t *script,
     ecs_expr_node_t *node,
     ecs_meta_cursor_t *cur,
@@ -44,8 +43,7 @@ bool flecs_expr_is_type_number(
 /* Returns how expressive a type is. This is used to determine whether an 
  * implicit cast is allowed, where only casts from less to more expressive types
  * are valid. */
-static
-int32_t flecs_expr_expressiveness_score(
+static int32_t flecs_expr_expressiveness_score(
     ecs_entity_t type)
 {
     if      (type == ecs_id(ecs_bool_t))   return 1;
@@ -75,8 +73,7 @@ int32_t flecs_expr_expressiveness_score(
  * used in combination with expressiveness to determine whether a type can be
  * implicitly cast. An implicit cast is only valid if the destination type is
  * both more expressive and has a larger value range. */
-static
-ecs_size_t flecs_expr_storage_score(
+static ecs_size_t flecs_expr_storage_score(
     ecs_entity_t type)
 {
     if      (type == ecs_id(ecs_bool_t))   return 1;
@@ -137,8 +134,7 @@ ecs_size_t flecs_expr_storage_size(
 /* This function returns true if a type can be cast without changing the
  * precision of the value. It is used to determine a type for operands in a 
  * binary expression in case they are of different types. */
-static
-bool flecs_expr_implicit_cast_allowed(
+static bool flecs_expr_implicit_cast_allowed(
     ecs_entity_t from,
     ecs_entity_t to)
 {
@@ -155,8 +151,7 @@ bool flecs_expr_implicit_cast_allowed(
     return false;
 }
 
-static
-ecs_entity_t flecs_expr_cast_to_lvalue(
+static ecs_entity_t flecs_expr_cast_to_lvalue(
     ecs_entity_t lvalue,
     ecs_entity_t operand)
 {
@@ -167,8 +162,7 @@ ecs_entity_t flecs_expr_cast_to_lvalue(
     return operand;
 }
 
-static
-ecs_entity_t flecs_expr_narrow_type(
+static ecs_entity_t flecs_expr_narrow_type(
     ecs_entity_t lvalue,
     ecs_expr_node_t *node)
 {
@@ -236,8 +230,7 @@ ecs_entity_t flecs_expr_narrow_type(
     }
 }
 
-static
-bool flecs_expr_oper_valid_for_type(
+static bool flecs_expr_oper_valid_for_type(
     ecs_world_t *world,
     ecs_entity_t type,
     ecs_token_kind_t op)
@@ -318,8 +311,7 @@ bool flecs_expr_oper_valid_for_type(
     }
 }
 
-static
-int32_t flecs_script_get_vector_type_data(
+static int32_t flecs_script_get_vector_type_data(
     ecs_world_t *world,
     ecs_entity_t type,
     ecs_entity_t *vector_type_out)
@@ -352,8 +344,7 @@ int32_t flecs_script_get_vector_type_data(
     return count;
 }
 
-static
-int flecs_expr_type_for_operator(
+static int flecs_expr_type_for_operator(
     ecs_script_t *script,
     ecs_expr_node_t *node, /* Only used for error reporting */
     ecs_entity_t node_type,
@@ -677,8 +668,7 @@ done:
     return 0;
 }
 
-static
-int flecs_expr_type_for_binary_expr(
+static int flecs_expr_type_for_binary_expr(
     ecs_script_t *script,
     ecs_expr_binary_t *node,
     ecs_entity_t *operand_type,
@@ -690,8 +680,7 @@ int flecs_expr_type_for_binary_expr(
         operand_type, result_type, vector_elem_count);
 }
 
-static
-int flecs_expr_interpolated_string_visit_type(
+static int flecs_expr_interpolated_string_visit_type(
     ecs_script_t *script,
     ecs_expr_interpolated_string_t *node,
     ecs_meta_cursor_t *cur,
@@ -901,8 +890,7 @@ error:
     return -1;
 }
 
-static
-int flecs_expr_initializer_collection_check(
+static int flecs_expr_initializer_collection_check(
     ecs_script_t *script,
     ecs_expr_initializer_t *node,
     ecs_meta_cursor_t *cur)
@@ -973,8 +961,7 @@ error:
 
 /* Dynamic initializers use the cursor API to assign values, and are used for 
  * any type where a simple list of offsets into fields doesn't work. */
-static
-bool flecs_expr_initializer_is_dynamic(
+static bool flecs_expr_initializer_is_dynamic(
     ecs_world_t *world,
     ecs_entity_t type)
 {
@@ -986,8 +973,7 @@ bool flecs_expr_initializer_is_dynamic(
     return false;
 }
 
-static
-int flecs_expr_empty_initializer_visit_type(
+static int flecs_expr_empty_initializer_visit_type(
     ecs_script_t *script,
     ecs_expr_initializer_t *node,
     ecs_meta_cursor_t *cur,
@@ -1022,8 +1008,7 @@ error:
     return -1;
 }
 
-static
-void flecs_expr_member_swizzle_expand_hint(
+static void flecs_expr_member_swizzle_expand_hint(
     ecs_meta_cursor_t *cur,
     ecs_expr_member_t *node)
 {
@@ -1066,8 +1051,7 @@ void flecs_expr_member_swizzle_expand_hint(
     node->swizzle_can_expand = true;
 }
 
-static
-int flecs_expr_initializer_visit_type(
+static int flecs_expr_initializer_visit_type(
     ecs_script_t *script,
     ecs_expr_initializer_t *node,
     ecs_meta_cursor_t *cur,
@@ -1251,8 +1235,7 @@ error:
     return -1;
 }
 
-static
-int flecs_expr_unary_visit_type(
+static int flecs_expr_unary_visit_type(
     ecs_script_t *script,
     ecs_expr_unary_t *node,
     ecs_meta_cursor_t *cur,
@@ -1278,8 +1261,7 @@ error:
     return -1;
 }
 
-static
-int flecs_expr_binary_visit_type(
+static int flecs_expr_binary_visit_type(
     ecs_script_t *script,
     ecs_expr_binary_t *node,
     ecs_meta_cursor_t *cur,
@@ -1380,8 +1362,7 @@ error:
     return -1;
 }
 
-static
-int flecs_expr_constant_identifier_visit_type(
+static int flecs_expr_constant_identifier_visit_type(
     ecs_script_t *script,
     ecs_expr_identifier_t *node)
 {
@@ -1403,8 +1384,7 @@ error:
     return -1;
 }
 
-static
-bool flecs_expr_is_entity_type(
+static bool flecs_expr_is_entity_type(
     ecs_world_t *world,
     ecs_entity_t type,
     bool *is_opaque)
@@ -1429,8 +1409,7 @@ bool flecs_expr_is_entity_type(
     return false;
 }
 
-static
-int flecs_expr_identifier_variable_member_visit_type(
+static int flecs_expr_identifier_variable_member_visit_type(
     ecs_script_t *script,
     ecs_expr_identifier_t *node,
     ecs_meta_cursor_t *cur,
@@ -1483,8 +1462,7 @@ error:
     return -1;
 }
 
-static
-int flecs_expr_identifier_visit_type(
+static int flecs_expr_identifier_visit_type(
     ecs_script_t *script,
     ecs_expr_identifier_t *node,
     ecs_meta_cursor_t *cur,
@@ -1627,8 +1605,7 @@ error:
     return -1;
 }
 
-static
-int flecs_expr_global_variable_resolve(
+static int flecs_expr_global_variable_resolve(
     ecs_script_t *script,
     ecs_expr_variable_t *node,
     const ecs_expr_eval_desc_t *desc)
@@ -1661,8 +1638,7 @@ error:
     return -1;
 }
 
-static
-int flecs_expr_variable_visit_type(
+static int flecs_expr_variable_visit_type(
     ecs_script_t *script,
     ecs_expr_variable_t *node,
     ecs_meta_cursor_t *cur,
@@ -1690,8 +1666,7 @@ error:
     return -1;
 }
 
-static
-int flecs_expr_global_variable_visit_type(
+static int flecs_expr_global_variable_visit_type(
     ecs_script_t *script,
     ecs_expr_variable_t *node,
     ecs_meta_cursor_t *cur,
@@ -1708,8 +1683,7 @@ error:
     return -1;
 }
 
-static
-int flecs_expr_arguments_visit_type(
+static int flecs_expr_arguments_visit_type(
     ecs_script_t *script,
     ecs_expr_initializer_t *node,
     const ecs_expr_eval_desc_t *desc,
@@ -1789,8 +1763,7 @@ error:
     return -1;
 }
 
-static
-int flecs_expr_populate_primitive_vector_calldata(
+static int flecs_expr_populate_primitive_vector_calldata(
     ecs_script_t *script,
     ecs_expr_function_t *node,
     const struct ecs_script_function_t *func_data,
@@ -1827,8 +1800,7 @@ error:
     return -1;
 }
 
-static
-int flecs_expr_populate_struct_vector_calldata(
+static int flecs_expr_populate_struct_vector_calldata(
     ecs_script_t *script,
     ecs_expr_function_t *node,
     const struct ecs_script_function_t *func_data,
@@ -1863,8 +1835,7 @@ error:
     return -1;
 }
 
-static
-int flecs_expr_populate_array_vector_calldata(
+static int flecs_expr_populate_array_vector_calldata(
     ecs_script_t *script,
     ecs_expr_function_t *node,
     const struct ecs_script_function_t *func_data,
@@ -1877,8 +1848,7 @@ int flecs_expr_populate_array_vector_calldata(
         script, node, func_data, vector_type, type->type, type->count);
 }
 
-static
-int flecs_expr_populate_vector_vector_calldata(
+static int flecs_expr_populate_vector_vector_calldata(
     ecs_script_t *script,
     ecs_expr_function_t *node,
     const struct ecs_script_function_t *func_data,
@@ -1891,8 +1861,7 @@ int flecs_expr_populate_vector_vector_calldata(
         script, node, func_data, vector_type, type->type, -1);
 }
 
-static
-int flecs_expr_populate_vector_calldata(
+static int flecs_expr_populate_vector_calldata(
     ecs_script_t *script,
     ecs_expr_function_t *node,
     const struct ecs_script_function_t *func_data,
@@ -1924,8 +1893,7 @@ int flecs_expr_populate_vector_calldata(
     return -1;
 }
 
-static
-int flecs_expr_function_visit_type(
+static int flecs_expr_function_visit_type(
     ecs_script_t *script,
     ecs_expr_function_t *node,
     ecs_meta_cursor_t *cur,
@@ -2080,8 +2048,7 @@ error:
     return -1;
 }
 
-static
-int flecs_expr_member_try_swizzle(
+static int flecs_expr_member_try_swizzle(
     ecs_script_t *script,
     ecs_expr_member_t *node,
     ecs_entity_t left_type,
@@ -2174,8 +2141,7 @@ int flecs_expr_member_try_swizzle(
     return 0;
 }
 
-static
-int flecs_expr_member_visit_type(
+static int flecs_expr_member_visit_type(
     ecs_script_t *script,
     ecs_expr_member_t *node,
     ecs_meta_cursor_t *cur,
@@ -2248,8 +2214,7 @@ error:
     return -1;
 }
 
-static
-int flecs_expr_element_visit_type(
+static int flecs_expr_element_visit_type(
     ecs_script_t *script,
     ecs_expr_element_t *node,
     ecs_meta_cursor_t *cur,
@@ -2382,8 +2347,7 @@ error:
     return -1;
 }
 
-static
-bool flecs_expr_identifier_is_any(
+static bool flecs_expr_identifier_is_any(
     ecs_expr_node_t *node)
 {
     if (node->kind == EcsExprIdentifier) {
@@ -2395,8 +2359,7 @@ bool flecs_expr_identifier_is_any(
     return false;
 }
 
-static
-int flecs_expr_match_visit_type(
+static int flecs_expr_match_visit_type(
     ecs_script_t *script,
     ecs_expr_match_t *node,
     ecs_meta_cursor_t *cur,
@@ -2539,8 +2502,7 @@ error:
     return -1;
 }
 
-static
-int flecs_expr_new_visit_type(
+static int flecs_expr_new_visit_type(
     ecs_script_t *script,
     ecs_expr_new_t *node,
     ecs_meta_cursor_t *cur,
@@ -2553,8 +2515,7 @@ int flecs_expr_new_visit_type(
     return 0;
 }
 
-static
-int flecs_expr_visit_type_priv(
+static int flecs_expr_visit_type_priv(
     ecs_script_t *script,
     ecs_expr_node_t *node,
     ecs_meta_cursor_t *cur,

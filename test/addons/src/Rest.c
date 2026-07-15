@@ -717,8 +717,7 @@ void Rest_import_rest_after_mini(void) {
     ecs_fini(world);
 }
 
-static
-void Move(ecs_iter_t *it) { }
+static void Move(ecs_iter_t *it) { }
 
 void Rest_get_pipeline_stats_after_delete_system(void) {
     ecs_world_t *world = ecs_init();

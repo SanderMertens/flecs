@@ -1,7 +1,6 @@
 #include <addons.h>
 
-static
-void Iter(ecs_iter_t *it) {
+static void Iter(ecs_iter_t *it) {
     Position *p = ecs_field(it, Position, 0);
     Position *p_parent = ecs_field(it, Position, 1);
 
@@ -234,8 +233,7 @@ void SystemCascade_cascade_depth_2_new_syntax(void) {
     ecs_fini(world);
 }
 
-static
-void AddParent(ecs_iter_t *it) {
+static void AddParent(ecs_iter_t *it) {
     Position *p = ecs_field(it, Position, 0);
     Position *p_parent = ecs_field(it, Position, 1);
 

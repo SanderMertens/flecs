@@ -7,21 +7,18 @@
 
 #ifdef FLECS_JSON
 
-static
-int flecs_json_typeinfo_ser_type(
+static int flecs_json_typeinfo_ser_type(
     const ecs_world_t *world,
     ecs_entity_t type,
     ecs_strbuf_t *buf);
 
-static
-int flecs_json_typeinfo_ser_type_slice(
+static int flecs_json_typeinfo_ser_type_slice(
     const ecs_world_t *world,
     const ecs_meta_op_t *ops,
     int32_t op_count,
     ecs_strbuf_t *str);
 
-static
-int flecs_json_typeinfo_ser_primitive(
+static int flecs_json_typeinfo_ser_primitive(
     ecs_primitive_kind_t kind,
     ecs_strbuf_t *str) 
 {
@@ -67,8 +64,7 @@ int flecs_json_typeinfo_ser_primitive(
     return 0;
 }
 
-static
-void flecs_json_typeinfo_ser_constants(
+static void flecs_json_typeinfo_ser_constants(
     const ecs_world_t *world,
     ecs_entity_t type,
     ecs_strbuf_t *str)
@@ -83,8 +79,7 @@ void flecs_json_typeinfo_ser_constants(
     }
 }
 
-static
-void flecs_json_typeinfo_ser_enum(
+static void flecs_json_typeinfo_ser_enum(
     const ecs_world_t *world,
     ecs_entity_t type,
     ecs_strbuf_t *str)
@@ -93,8 +88,7 @@ void flecs_json_typeinfo_ser_enum(
     flecs_json_typeinfo_ser_constants(world, type, str);
 }
 
-static
-void flecs_json_typeinfo_ser_bitmask(
+static void flecs_json_typeinfo_ser_bitmask(
     const ecs_world_t *world,
     ecs_entity_t type,
     ecs_strbuf_t *str)
@@ -104,8 +98,7 @@ void flecs_json_typeinfo_ser_bitmask(
 }
 
 /* Serialize unit information */
-static
-int flecs_json_typeinfo_ser_unit(
+static int flecs_json_typeinfo_ser_unit(
     const ecs_world_t *world,
     ecs_strbuf_t *str,
     ecs_entity_t unit) 
@@ -129,8 +122,7 @@ int flecs_json_typeinfo_ser_unit(
     return 0;
 }
 
-static
-void flecs_json_typeinfo_ser_range(
+static void flecs_json_typeinfo_ser_range(
     ecs_strbuf_t *str,
     const char *kind,
     ecs_member_value_range_t *range)
@@ -144,8 +136,7 @@ void flecs_json_typeinfo_ser_range(
     flecs_json_array_pop(str);
 }
 
-static
-int flecs_json_typeinfo_ser_scope(
+static int flecs_json_typeinfo_ser_scope(
     const ecs_world_t *world,
     const ecs_meta_op_t *op,
     ecs_strbuf_t *str)
@@ -169,8 +160,7 @@ int flecs_json_typeinfo_ser_scope(
     return 0;
 }
 
-static
-int flecs_json_typeinfo_ser_array(
+static int flecs_json_typeinfo_ser_array(
     const ecs_world_t *world,
     const ecs_meta_op_t *op,
     ecs_strbuf_t *str)
@@ -189,8 +179,7 @@ error:
     return -1;
 }
 
-static
-int flecs_json_typeinfo_ser_vector(
+static int flecs_json_typeinfo_ser_vector(
     const ecs_world_t *world,
     const ecs_meta_op_t *op,
     ecs_strbuf_t *str)
@@ -207,8 +196,7 @@ error:
     return -1;
 }
 
-static
-int flecs_json_typeinfo_ser_map(
+static int flecs_json_typeinfo_ser_map(
     const ecs_world_t *world,
     const ecs_meta_op_t *op,
     ecs_strbuf_t *str)
@@ -244,8 +232,7 @@ error:
 }
 
 /* Iterate over a slice of the type ops array */
-static
-int flecs_json_typeinfo_ser_type_slice(
+static int flecs_json_typeinfo_ser_type_slice(
     const ecs_world_t *world,
     const ecs_meta_op_t *ops,
     int32_t op_count,
@@ -402,8 +389,7 @@ error:
     return -1;
 }
 
-static
-int flecs_json_typeinfo_ser_type(
+static int flecs_json_typeinfo_ser_type(
     const ecs_world_t *world,
     ecs_entity_t type,
     ecs_strbuf_t *buf)

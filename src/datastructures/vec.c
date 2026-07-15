@@ -14,8 +14,7 @@ void ecs_vec_init(
     ecs_vec_init_w_dbg_info(allocator, v, size, elem_count, NULL);
 }
 
-static
-void* flecs_vec_alloc(
+static void* flecs_vec_alloc(
     struct ecs_allocator_t *allocator,
     ecs_size_t size,
     int32_t elem_count,
@@ -33,8 +32,7 @@ void* flecs_vec_alloc(
     return NULL;
 }
 
-static
-void flecs_vec_free(
+static void flecs_vec_free(
     struct ecs_allocator_t *allocator,
     ecs_size_t elem_size,
     int32_t size,

@@ -543,8 +543,7 @@ void Pairs_override_tag_pair(void) {
     ecs_fini(world);
 }
 
-static
-void PairTrigger(ecs_iter_t *it) {
+static void PairTrigger(ecs_iter_t *it) {
     probe_iter(it);
 }
 
@@ -748,13 +747,11 @@ void Pairs_on_remove_pair_on_delete(void) {
     ecs_fini(world);
 }
 
-static
-void PairTriggerPosition(ecs_iter_t *it) {
+static void PairTriggerPosition(ecs_iter_t *it) {
     PairTrigger(it);
 }
 
-static
-void PairTriggerVelocity(ecs_iter_t *it) {
+static void PairTriggerVelocity(ecs_iter_t *it) {
     PairTrigger(it);
 }
 

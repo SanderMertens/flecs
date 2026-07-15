@@ -116,8 +116,7 @@ error:
     return;
 }
 
-static
-bool flecs_set_id_flag(
+static bool flecs_set_id_flag(
     ecs_world_t *world,
     ecs_component_record_t *cr, 
     ecs_flags32_t flag,
@@ -145,8 +144,7 @@ bool flecs_set_id_flag(
     return false;
 }
 
-static
-bool flecs_unset_id_flag(
+static bool flecs_unset_id_flag(
     ecs_component_record_t *cr, 
     ecs_flags32_t flag)
 {
@@ -166,8 +164,7 @@ typedef struct ecs_on_trait_ctx_t {
     ecs_flags32_t flag, not_flag;
 } ecs_on_trait_ctx_t;
 
-static
-bool flecs_trait_can_add_after_query(
+static bool flecs_trait_can_add_after_query(
     ecs_entity_t trait)
 {
     if (trait == EcsWith) {
@@ -240,8 +237,7 @@ error:
     return;
 }
 
-static
-void flecs_register_tag(ecs_iter_t *it) {
+static void flecs_register_tag(ecs_iter_t *it) {
     flecs_register_flag_for_trait(it, EcsPairIsTag, EcsIdPairIsTag, EcsIdPairIsTag, 0);
 
     /* Ensure that all id records for tag have type info set to NULL */
@@ -265,8 +261,7 @@ void flecs_register_tag(ecs_iter_t *it) {
     }
 }
 
-static
-void flecs_register_on_delete(ecs_iter_t *it) {
+static void flecs_register_on_delete(ecs_iter_t *it) {
     ecs_id_t id = ecs_field_id(it, 0);
     flecs_register_flag_for_trait(it, EcsOnDelete, 
         ECS_ID_ON_DELETE_FLAG(ECS_PAIR_SECOND(id)),
@@ -274,8 +269,7 @@ void flecs_register_on_delete(ecs_iter_t *it) {
         EcsEntityIsId);
 }
 
-static
-void flecs_register_on_delete_object(ecs_iter_t *it) {
+static void flecs_register_on_delete_object(ecs_iter_t *it) {
     ecs_id_t id = ecs_field_id(it, 0);
     flecs_register_flag_for_trait(it, EcsOnDeleteTarget, 
         ECS_ID_ON_DELETE_TARGET_FLAG(ECS_PAIR_SECOND(id)),
@@ -283,30 +277,26 @@ void flecs_register_on_delete_object(ecs_iter_t *it) {
         EcsEntityIsId);  
 }
 
-static
-void flecs_register_on_instantiate(ecs_iter_t *it) {
+static void flecs_register_on_instantiate(ecs_iter_t *it) {
     ecs_id_t id = ecs_field_id(it, 0);
     flecs_register_flag_for_trait(it, EcsOnInstantiate, 
         ECS_ID_ON_INSTANTIATE_FLAG(ECS_PAIR_SECOND(id)),
         0, 0);
 }
 
-static
-void flecs_register_trait(ecs_iter_t *it) {
+static void flecs_register_trait(ecs_iter_t *it) {
     ecs_on_trait_ctx_t *ctx = it->ctx;
     flecs_register_flag_for_trait(
         it, it->ids[0], ctx->flag, ctx->not_flag, 0);
 }
 
-static
-void flecs_register_trait_pair(ecs_iter_t *it) {
+static void flecs_register_trait_pair(ecs_iter_t *it) {
     ecs_on_trait_ctx_t *ctx = it->ctx;
     flecs_register_flag_for_trait(
         it, ecs_pair_first(it->world, it->ids[0]), ctx->flag, ctx->not_flag, 0);
 }
 
-static
-void flecs_on_component(ecs_iter_t *it) {
+static void flecs_on_component(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
     EcsComponent *c = ecs_field(it, EcsComponent, 0);
 
@@ -357,8 +347,7 @@ void flecs_on_component(ecs_iter_t *it) {
     }
 }
 
-static
-void flecs_ensure_module_tag(ecs_iter_t *it) {
+static void flecs_ensure_module_tag(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
 
     int i, count = it->count;
@@ -371,8 +360,7 @@ void flecs_ensure_module_tag(ecs_iter_t *it) {
     }
 }
 
-static
-void flecs_disable_module_observers(
+static void flecs_disable_module_observers(
     ecs_world_t *world,
     ecs_entity_t module,
     bool should_disable)
@@ -404,8 +392,7 @@ void flecs_disable_module_observers(
     }
 }
 
-static
-void flecs_disable_observer(
+static void flecs_disable_observer(
     ecs_iter_t *it)
 {
     ecs_world_t *world = it->real_world;
@@ -423,8 +410,7 @@ void flecs_disable_observer(
     }
 }
 
-static
-void flecs_register_ordered_children(ecs_iter_t *it) {
+static void flecs_register_ordered_children(ecs_iter_t *it) {
     int32_t i;
     if (it->event == EcsOnAdd) {
         for (i = 0; i < it->count; i ++) {
@@ -458,8 +444,7 @@ void flecs_register_ordered_children(ecs_iter_t *it) {
     flecs_bootstrap_builtin(world, table, ecs_id(name), #name, sizeof(name),\
         ECS_ALIGNOF(name))
 
-static
-void flecs_bootstrap_builtin(
+static void flecs_bootstrap_builtin(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_entity_t entity,
@@ -515,8 +500,7 @@ void flecs_bootstrap_builtin(
  * The reason this table is constructed manually is because it requires the size
  * and alignment of the EcsComponent and EcsIdentifier components, which haven't
  * been created yet. */
-static
-ecs_table_t* flecs_bootstrap_component_table(
+static ecs_table_t* flecs_bootstrap_component_table(
     ecs_world_t *world)
 {
     /* Before creating table, manually set flags for ChildOf/Identifier, as this
@@ -616,8 +600,7 @@ void flecs_bootstrap_make_alive(
     }
 }
 
-static
-void flecs_bootstrap_entity(
+static void flecs_bootstrap_entity(
     ecs_world_t *world,
     ecs_entity_t id,
     const char *name,
@@ -635,8 +618,7 @@ void flecs_bootstrap_entity(
     }
 }
 
-static
-void flecs_bootstrap_sanity_check(
+static void flecs_bootstrap_sanity_check(
     ecs_world_t *world)
 {
     (void)world;

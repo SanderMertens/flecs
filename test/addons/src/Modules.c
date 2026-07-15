@@ -13,14 +13,11 @@ typedef struct NestedComponent {
     float value;
 } NestedComponent;
 
-static
-void Move(ecs_iter_t *it) { }
+static void Move(ecs_iter_t *it) { }
 
-static
-void SimpleFooSystem(ecs_iter_t *it) { }
+static void SimpleFooSystem(ecs_iter_t *it) { }
 
-static
-void SimpleFooTrigger(ecs_iter_t *it) { }
+static void SimpleFooTrigger(ecs_iter_t *it) { }
 
 static ECS_COMPONENT_DECLARE(NestedComponent);
 
@@ -93,8 +90,7 @@ void Modules_simple_module(void) {
     ecs_fini(world);
 }
 
-static
-void AddVtoP(ecs_iter_t *it) {
+static void AddVtoP(ecs_iter_t *it) {
     int i;
     for (i = 0; i < it->count; i ++) {
         ecs_add(it->world, it->entities[i], Velocity);
@@ -430,8 +426,7 @@ void Modules_component_parent_becomes_module(void) {
 
 static int singleton_test_imported = 0;
 
-static
-void SingletonTestImport(ecs_world_t *world) {
+static void SingletonTestImport(ecs_world_t *world) {
     ECS_MODULE(world, SingletonTest);
 
     test_assert(ecs_has_id(world, ecs_id(SingletonTest), EcsSingleton));
@@ -453,8 +448,7 @@ void Modules_module_has_singleton(void) {
     ecs_fini(world);
 }
 
-static
-void PhysicsPluginImport(ecs_world_t *world) {
+static void PhysicsPluginImport(ecs_world_t *world) {
     ECS_MODULE(world, PhysicsPlugin);
 }
 

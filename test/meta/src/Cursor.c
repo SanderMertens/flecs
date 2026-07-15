@@ -3620,8 +3620,7 @@ void Cursor_opaque_set_float(void) {
     ecs_fini(world);
 }
 
-static
-int const_string_t_serialize(const ecs_serializer_t *ser, const void *ptr) {
+static int const_string_t_serialize(const ecs_serializer_t *ser, const void *ptr) {
     char **data = ECS_CONST_CAST(char**, ptr);
     ser->value(ser, ecs_id(ecs_string_t), data);
     return 0;

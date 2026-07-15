@@ -8,8 +8,7 @@
 #ifdef FLECS_SCRIPT
 #include "script.h"
 
-static
-void flecs_script_scope_free(
+static void flecs_script_scope_free(
     ecs_script_visit_t *v,
     ecs_script_scope_t *node)
 {
@@ -19,8 +18,7 @@ void flecs_script_scope_free(
     flecs_free_t(&v->script->allocator, ecs_script_scope_t, node);
 }
 
-static
-void flecs_script_id_free(
+static void flecs_script_id_free(
     ecs_script_visit_t *v,
     ecs_script_id_t *id)
 {
@@ -32,8 +30,7 @@ void flecs_script_id_free(
     }
 }
 
-static
-void flecs_script_with_free(
+static void flecs_script_with_free(
     ecs_script_visit_t *v,
     ecs_script_with_t *node)
 {
@@ -41,16 +38,14 @@ void flecs_script_with_free(
     flecs_script_scope_free(v, node->scope);
 }
 
-static
-void flecs_script_template_free(
+static void flecs_script_template_free(
     ecs_script_visit_t *v,
     ecs_script_template_node_t *node)
 {
     flecs_script_scope_free(v, node->scope);
 }
 
-static
-void flecs_script_entity_free(
+static void flecs_script_entity_free(
     ecs_script_visit_t *v,
     ecs_script_entity_t *node)
 {
@@ -60,8 +55,7 @@ void flecs_script_entity_free(
     }
 }
 
-static
-void flecs_script_pair_scope_free(
+static void flecs_script_pair_scope_free(
     ecs_script_visit_t *v,
     ecs_script_pair_scope_t *node)
 {
@@ -69,8 +63,7 @@ void flecs_script_pair_scope_free(
     flecs_script_id_free(v, &node->id);
 }
 
-static
-void flecs_script_if_free(
+static void flecs_script_if_free(
     ecs_script_visit_t *v,
     ecs_script_if_t *node)
 {
@@ -79,8 +72,7 @@ void flecs_script_if_free(
     flecs_expr_visit_free(&v->script->pub, node->expr);
 }
 
-static
-void flecs_script_for_range_free(
+static void flecs_script_for_range_free(
     ecs_script_visit_t *v,
     ecs_script_for_range_t *node)
 {
@@ -89,16 +81,14 @@ void flecs_script_for_range_free(
     flecs_script_scope_free(v, node->scope);
 }
 
-static
-void flecs_script_tag_free(
+static void flecs_script_tag_free(
     ecs_script_visit_t *v,
     ecs_script_tag_t *node)
 {
     flecs_script_id_free(v, &node->id);
 }
 
-static
-void flecs_script_component_free(
+static void flecs_script_component_free(
     ecs_script_visit_t *v,
     ecs_script_component_t *node)
 {
@@ -106,24 +96,21 @@ void flecs_script_component_free(
     flecs_script_id_free(v, &node->id);
 }
 
-static
-void flecs_script_default_component_free(
+static void flecs_script_default_component_free(
     ecs_script_visit_t *v,
     ecs_script_default_component_t *node)
 {
     flecs_expr_visit_free(&v->script->pub, node->expr);
 }
 
-static
-void flecs_script_var_node_free(
+static void flecs_script_var_node_free(
     ecs_script_visit_t *v,
     ecs_script_var_node_t *node)
 {
     flecs_expr_visit_free(&v->script->pub, node->expr);
 }
 
-static
-int flecs_script_stmt_free(
+static int flecs_script_stmt_free(
     ecs_script_visit_t *v,
     ecs_script_node_t *node)
 {

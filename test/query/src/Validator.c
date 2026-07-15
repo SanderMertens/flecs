@@ -1,7 +1,6 @@
 #include <query.h>
 
-static
-void query_flags_to_str(uint64_t value) {
+static void query_flags_to_str(uint64_t value) {
     if (value & EcsQueryMatchPrefab) {
         printf("EcsQueryMatchPrefab|");
     }

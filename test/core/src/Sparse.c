@@ -645,8 +645,7 @@ void Sparse_remove_pair_wildcard_tgt_exclusive(void) {
     ecs_fini(world);
 }
 
-static
-void OnPair(ecs_iter_t *it) {
+static void OnPair(ecs_iter_t *it) {
     int *invoked = it->ctx;
     (*invoked) ++;
 }
@@ -2048,8 +2047,7 @@ void Sparse_delete_w_override_component(void) {
 
 static int on_remove_isa_invoked = 0;
 
-static
-void on_remove_isa(ecs_iter_t *it) {
+static void on_remove_isa(ecs_iter_t *it) {
     on_remove_isa_invoked ++;
 }
 
@@ -2837,22 +2835,19 @@ void Sparse_on_set_after_bulk_init(void) {
     ecs_fini(world);
 }
 
-static
-void Position_add_observer(ecs_iter_t *it) {
+static void Position_add_observer(ecs_iter_t *it) {
     probe_iter(it);
     test_int(it->count, 1);
     Position *p = ecs_field_at(it, Position, 0, 0);
     test_assert(p != NULL);
 }
 
-static
-void Foo_observer(ecs_iter_t *it) {
+static void Foo_observer(ecs_iter_t *it) {
     probe_iter(it);
     test_int(it->count, 1);
 }
 
-static
-void Position_set_observer(ecs_iter_t *it) {
+static void Position_set_observer(ecs_iter_t *it) {
     probe_iter(it);
     test_int(it->count, 1);
     Position *p = ecs_field_at(it, Position, 0, 0);
@@ -3233,8 +3228,7 @@ void Sparse_on_set_after_remove_override(void) {
     ecs_fini(world);
 }
 
-static
-void Position_Velocity_add_observer(ecs_iter_t *it) {
+static void Position_Velocity_add_observer(ecs_iter_t *it) {
     probe_iter(it);
     test_int(it->count, 1);
     Position *p = ecs_field_at(it, Position, 0, 0);
@@ -3243,8 +3237,7 @@ void Position_Velocity_add_observer(ecs_iter_t *it) {
     test_assert(v != NULL);
 }
 
-static
-void Position_Velocity_set_observer(ecs_iter_t *it) {
+static void Position_Velocity_set_observer(ecs_iter_t *it) {
     probe_iter(it);
     test_int(it->count, 1);
     Position *p = ecs_field_at(it, Position, 0, 0);

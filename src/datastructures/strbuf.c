@@ -41,8 +41,7 @@ static const double rounders[MAX_PRECISION + 1] =
 	0.00000000005		// 10
 };
 
-static
-char* flecs_strbuf_itoa(
+static char* flecs_strbuf_itoa(
     char *buf,
     int64_t v)
 {
@@ -83,8 +82,7 @@ char* flecs_strbuf_itoa(
     return ptr;
 }
 
-static
-void flecs_strbuf_ftoa(
+static void flecs_strbuf_ftoa(
     ecs_strbuf_t *out, 
     double f, 
     int precision,
@@ -231,8 +229,7 @@ void flecs_strbuf_ftoa(
 }
 
 /* Grow the buffer */
-static
-void flecs_strbuf_grow(
+static void flecs_strbuf_grow(
     ecs_strbuf_t *b)
 {
     if (!b->content) {
@@ -249,8 +246,7 @@ void flecs_strbuf_grow(
     }
 }
 
-static
-char* flecs_strbuf_ptr(
+static char* flecs_strbuf_ptr(
     ecs_strbuf_t *b)
 {
     ecs_assert(b->content != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -258,8 +254,7 @@ char* flecs_strbuf_ptr(
 }
 
 /* Append a format string to a buffer */
-static
-void flecs_strbuf_vappend(
+static void flecs_strbuf_vappend(
     ecs_strbuf_t *b,
     const char* str,
     va_list args)
@@ -303,8 +298,7 @@ void flecs_strbuf_vappend(
     va_end(arg_cpy);
 }
 
-static
-void flecs_strbuf_appendstr(
+static void flecs_strbuf_appendstr(
     ecs_strbuf_t *b,
     const char* str,
     int n)
@@ -319,8 +313,7 @@ void flecs_strbuf_appendstr(
     b->length += n;
 }
 
-static
-void flecs_strbuf_appendch(
+static void flecs_strbuf_appendch(
     ecs_strbuf_t *b,
     char ch)
 {

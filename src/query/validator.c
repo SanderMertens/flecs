@@ -9,8 +9,7 @@
 #include "../addons/query_dsl/query_dsl.h"
 #endif
 
-static
-void flecs_query_validator_error(
+static void flecs_query_validator_error(
     const ecs_query_validator_ctx_t *ctx,
     const char *fmt,
     ...)
@@ -65,8 +64,7 @@ void flecs_query_validator_error(
     va_end(args);
 }
 
-static
-int flecs_term_ref_finalize_flags(
+static int flecs_term_ref_finalize_flags(
     ecs_term_ref_t *ref,
     ecs_query_validator_ctx_t *ctx,
     const char* refname)
@@ -113,15 +111,13 @@ int flecs_term_ref_finalize_flags(
     return 0;
 }
 
-static
-bool flecs_identifier_is_0(
+static bool flecs_identifier_is_0(
     const char *id)
 {
     return id[0] == '#' && id[1] == '0' && !id[2];
 }
 
-static
-int flecs_term_ref_lookup(
+static int flecs_term_ref_lookup(
     const ecs_world_t *world,
     ecs_entity_t scope,
     ecs_term_ref_t *ref,
@@ -225,8 +221,7 @@ int flecs_term_ref_lookup(
     return 0;
 }
 
-static
-int flecs_term_refs_finalize(
+static int flecs_term_refs_finalize(
     const ecs_world_t *world,
     ecs_term_t *term,
     ecs_query_validator_ctx_t *ctx)
@@ -307,8 +302,7 @@ int flecs_term_refs_finalize(
     return 0;
 }
 
-static
-ecs_entity_t flecs_term_ref_get_entity(
+static ecs_entity_t flecs_term_ref_get_entity(
     const ecs_term_ref_t *ref)
 {
     if (ref->id & EcsIsEntity) {
@@ -327,8 +321,7 @@ ecs_entity_t flecs_term_ref_get_entity(
     }
 }
 
-static
-int flecs_term_populate_id(
+static int flecs_term_populate_id(
     ecs_term_t *term)
 {
     ecs_entity_t first = flecs_term_ref_get_entity(&term->first);
@@ -355,8 +348,7 @@ int flecs_term_populate_id(
     return 0;
 }
 
-static
-int flecs_term_populate_from_id(
+static int flecs_term_populate_from_id(
     const ecs_world_t *world,
     ecs_term_t *term,
     ecs_query_validator_ctx_t *ctx)
@@ -426,8 +418,7 @@ int flecs_term_populate_from_id(
     return 0;
 }
 
-static
-int flecs_term_verify_eq_pred(
+static int flecs_term_verify_eq_pred(
     const ecs_term_t *term,
     ecs_query_validator_ctx_t *ctx)
 {
@@ -491,8 +482,7 @@ error:
 #endif
 }
 
-static
-bool flecs_term_ref_same(
+static bool flecs_term_ref_same(
     const ecs_term_ref_t *a,
     const ecs_term_ref_t *b,
     bool match_this)
@@ -520,8 +510,7 @@ bool flecs_term_ref_same(
     return a->name && b->name && !ecs_os_strcmp(a->name, b->name);
 }
 
-static
-int flecs_term_verify(
+static int flecs_term_verify(
     const ecs_world_t *world,
     const ecs_term_t *term,
     ecs_query_validator_ctx_t *ctx)
@@ -1107,8 +1096,7 @@ bool ecs_term_match_0(
 }
 
 #ifdef FLECS_QUERY_PLANS
-static
-ecs_term_t* flecs_query_or_other_type(
+static ecs_term_t* flecs_query_or_other_type(
     ecs_query_t *q,
     int32_t t)
 {
@@ -1135,8 +1123,7 @@ ecs_term_t* flecs_query_or_other_type(
     }
 }
 
-static
-void flecs_normalize_term_name(
+static void flecs_normalize_term_name(
     ecs_term_ref_t *ref) 
 {
     if (ref->name && ref->name[0] == '$' && ref->name[1]) {
@@ -1152,8 +1139,7 @@ void flecs_normalize_term_name(
 }
 #endif
 
-static
-int flecs_query_finalize_terms(
+static int flecs_query_finalize_terms(
     ecs_world_t *world,
     ecs_query_t *q,
     const ecs_query_desc_t *desc)
@@ -1676,8 +1662,7 @@ int flecs_query_finalize_terms(
     return 0;
 }
 
-static
-int flecs_query_query_populate_terms(
+static int flecs_query_query_populate_terms(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_query_t *q,
@@ -1991,8 +1976,7 @@ bool flecs_query_finalize_simple(
     return true;
 }
 
-static
-char* flecs_query_append_token(
+static char* flecs_query_append_token(
     char *dst,
     const char *src)
 {
@@ -2001,8 +1985,7 @@ char* flecs_query_append_token(
     return dst + len + 1;
 }
 
-static
-void flecs_query_populate_tokens(
+static void flecs_query_populate_tokens(
     ecs_query_impl_t *impl)
 {
     ecs_query_t *q = &impl->pub;

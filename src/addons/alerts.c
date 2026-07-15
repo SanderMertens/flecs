@@ -32,22 +32,19 @@ typedef struct EcsAlertTimeout {
 
 ECS_COMPONENT_DECLARE(EcsAlertTimeout);
 
-static
-ECS_CTOR(EcsAlert, ptr, {
+static ECS_CTOR(EcsAlert, ptr, {
     ecs_os_zeromem(ptr);
     ecs_map_init(&ptr->instances, NULL);
     ecs_vec_init_t(NULL, &ptr->severity_filters, ecs_alert_severity_filter_t, 0);
 })
 
-static
-ECS_DTOR(EcsAlert, ptr, {
+static ECS_DTOR(EcsAlert, ptr, {
     ecs_os_free(ptr->message);
     ecs_map_fini(&ptr->instances);
     ecs_vec_fini_t(NULL, &ptr->severity_filters, ecs_alert_severity_filter_t);
 })
 
-static
-ECS_MOVE(EcsAlert, dst, src, {
+static ECS_MOVE(EcsAlert, dst, src, {
     ecs_os_free(dst->message);
     dst->message = src->message;
     src->message = NULL;
@@ -70,21 +67,18 @@ ECS_MOVE(EcsAlert, dst, src, {
     dst->var_id = src->var_id;
 })
 
-static
-ECS_CTOR(EcsAlertsActive, ptr, {
+static ECS_CTOR(EcsAlertsActive, ptr, {
     ecs_map_init(&ptr->alerts, NULL);
     ptr->info_count = 0;
     ptr->warning_count = 0;
     ptr->error_count = 0;
 })
 
-static
-ECS_DTOR(EcsAlertsActive, ptr, {
+static ECS_DTOR(EcsAlertsActive, ptr, {
     ecs_map_fini(&ptr->alerts);
 })
 
-static
-ECS_MOVE(EcsAlertsActive, dst, src, {
+static ECS_MOVE(EcsAlertsActive, dst, src, {
     ecs_map_fini(&dst->alerts);
     dst->alerts = src->alerts;
     dst->info_count = src->info_count;
@@ -93,26 +87,22 @@ ECS_MOVE(EcsAlertsActive, dst, src, {
     src->alerts = (ecs_map_t){0};
 })
 
-static
-ECS_DTOR(EcsAlertInstance, ptr, {
+static ECS_DTOR(EcsAlertInstance, ptr, {
     ecs_os_free(ptr->message);
 })
 
-static
-ECS_MOVE(EcsAlertInstance, dst, src, {
+static ECS_MOVE(EcsAlertInstance, dst, src, {
     ecs_os_free(dst->message);
     dst->message = src->message;
     src->message = NULL;
 })
 
-static
-ECS_COPY(EcsAlertInstance, dst, src, {
+static ECS_COPY(EcsAlertInstance, dst, src, {
     ecs_os_free(dst->message);
     dst->message = ecs_os_strdup(src->message);
 })
 
-static
-void flecs_alerts_add_alert_to_src(
+static void flecs_alerts_add_alert_to_src(
     ecs_world_t *world,
     ecs_entity_t source,
     ecs_entity_t alert,
@@ -137,8 +127,7 @@ void flecs_alerts_add_alert_to_src(
     ecs_modified(world, source, EcsAlertsActive);
 }
 
-static
-void flecs_alerts_remove_alert_from_src(
+static void flecs_alerts_remove_alert_from_src(
     ecs_world_t *world,
     ecs_entity_t source,
     ecs_entity_t alert)
@@ -164,8 +153,7 @@ void flecs_alerts_remove_alert_from_src(
     }
 }
 
-static
-ecs_entity_t flecs_alert_get_severity(
+static ecs_entity_t flecs_alert_get_severity(
     ecs_world_t *world,
     ecs_iter_t *it,
     EcsAlert *alert)
@@ -192,8 +180,7 @@ ecs_entity_t flecs_alert_get_severity(
     return 0;
 }
 
-static
-ecs_entity_t flecs_alert_out_of_range_kind(
+static ecs_entity_t flecs_alert_out_of_range_kind(
     EcsAlert *alert,
     const EcsMemberRanges *ranges,
     const void *value_ptr)
@@ -237,8 +224,7 @@ ecs_entity_t flecs_alert_out_of_range_kind(
     }
 }
 
-static
-void MonitorAlerts(ecs_iter_t *it) {
+static void MonitorAlerts(ecs_iter_t *it) {
     ecs_world_t *world = it->real_world;
     EcsAlert *alert = ecs_field(it, EcsAlert, 0);
     EcsPoly *poly = ecs_field(it, EcsPoly, 1);
@@ -347,8 +333,7 @@ void MonitorAlerts(ecs_iter_t *it) {
     }
 }
 
-static
-void MonitorAlertInstances(ecs_iter_t *it) {
+static void MonitorAlertInstances(ecs_iter_t *it) {
     ecs_world_t *world = it->real_world;
     EcsAlertInstance *alert_instance = ecs_field(it, EcsAlertInstance, 0);
     EcsMetricSource *source = ecs_field(it, EcsMetricSource, 1);

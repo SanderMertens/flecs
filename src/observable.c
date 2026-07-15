@@ -91,8 +91,7 @@ ecs_event_record_t* flecs_event_record_ensure(
     return er;
 }
 
-static
-const ecs_event_record_t* flecs_event_record_get_if(
+static const ecs_event_record_t* flecs_event_record_get_if(
     const ecs_observable_t *o,
     ecs_entity_t event)
 {
@@ -136,8 +135,7 @@ ecs_event_id_record_t* flecs_event_id_record_get(
     }
 }
 
-static
-ecs_event_id_record_t* flecs_event_id_record_get_if(
+static ecs_event_id_record_t* flecs_event_id_record_get_if(
     const ecs_event_record_t *er,
     ecs_id_t id)
 {
@@ -205,8 +203,7 @@ void flecs_event_id_record_remove(
     }
 }
 
-static
-int32_t flecs_event_observers_get(
+static int32_t flecs_event_observers_get(
     const ecs_event_record_t *er,
     ecs_id_t id,
     ecs_event_id_record_t **iders)
@@ -265,8 +262,7 @@ bool flecs_observers_exist(
     return flecs_event_id_record_get_if(er, id) != NULL;
 }
 
-static
-void flecs_emit_propagate(
+static void flecs_emit_propagate(
     ecs_world_t *world,
     ecs_iter_t *it,
     ecs_component_record_t *cr,
@@ -275,8 +271,7 @@ void flecs_emit_propagate(
     ecs_event_id_record_t **iders,
     int32_t ider_count);
 
-static
-void flecs_emit_propagate_id_for_range(
+static void flecs_emit_propagate_id_for_range(
     ecs_world_t *world,
     ecs_iter_t *it,
     ecs_component_record_t *cr,
@@ -332,8 +327,7 @@ void flecs_emit_propagate_id_for_range(
     }
 }
 
-static
-void flecs_emit_propagate_id(
+static void flecs_emit_propagate_id(
     ecs_world_t *world,
     ecs_iter_t *it,
     ecs_component_record_t *cr,
@@ -394,8 +388,7 @@ void flecs_emit_propagate_id(
     it->up_fields = 0;
 }
 
-static
-void flecs_emit_propagate(
+static void flecs_emit_propagate(
     ecs_world_t *world,
     ecs_iter_t *it,
     ecs_component_record_t *cr,
@@ -515,8 +508,7 @@ void flecs_emit_propagate_invalidate(
     }
 }
 
-static
-void flecs_propagate_entities(
+static void flecs_propagate_entities(
     ecs_world_t *world,
     ecs_iter_t *it,
     ecs_component_record_t *cr,
@@ -558,8 +550,7 @@ void flecs_propagate_entities(
     it->sources[0] = old_src;
 }
 
-static
-void flecs_emit_forward_up(
+static void flecs_emit_forward_up(
     ecs_world_t *world,
     const ecs_event_record_t *er,
     const ecs_event_record_t *er_onset,
@@ -571,8 +562,7 @@ void flecs_emit_forward_up(
     ecs_vec_t *reachable_ids,
     int32_t depth);
 
-static
-void flecs_emit_forward_id(
+static void flecs_emit_forward_id(
     ecs_world_t *world,
     const ecs_event_record_t *er,
     const ecs_event_record_t *er_onset,
@@ -658,8 +648,7 @@ void flecs_emit_forward_id(
     it->up_fields = 0;
 }
 
-static
-void flecs_emit_forward_and_cache_id(
+static void flecs_emit_forward_and_cache_id(
     ecs_world_t *world,
     const ecs_event_record_t *er,
     const ecs_event_record_t *er_onset,
@@ -691,8 +680,7 @@ void flecs_emit_forward_and_cache_id(
         tgt, tgt_table, column, trav);
 }
 
-static
-int32_t flecs_emit_stack_at(
+static int32_t flecs_emit_stack_at(
     ecs_vec_t *stack,
     ecs_component_record_t *cr)
 {
@@ -709,16 +697,14 @@ int32_t flecs_emit_stack_at(
     return sp;
 }
 
-static
-bool flecs_emit_stack_has(
+static bool flecs_emit_stack_has(
     ecs_vec_t *stack,
     ecs_component_record_t *cr)
 {
     return flecs_emit_stack_at(stack, cr) != ecs_vec_count(stack);
 }
 
-static
-void flecs_emit_forward_cached_ids(
+static void flecs_emit_forward_cached_ids(
     ecs_world_t *world,
     const ecs_event_record_t *er,
     const ecs_event_record_t *er_onset,
@@ -758,8 +744,7 @@ void flecs_emit_forward_cached_ids(
     }
 }
 
-static
-void flecs_emit_dump_cache(
+static void flecs_emit_dump_cache(
     ecs_world_t *world,
     const ecs_vec_t *vec)
 {
@@ -786,8 +771,7 @@ void flecs_emit_dump_cache(
     }
 }
 
-static
-void flecs_emit_forward_table_up(
+static void flecs_emit_forward_table_up(
     ecs_world_t *world,
     const ecs_event_record_t *er,
     const ecs_event_record_t *er_onset,
@@ -956,8 +940,7 @@ void flecs_emit_forward_table_up(
     ecs_log_pop_3();
 }
 
-static
-void flecs_emit_forward_up(
+static void flecs_emit_forward_up(
     ecs_world_t *world,
     const ecs_event_record_t *er,
     const ecs_event_record_t *er_onset,
@@ -993,8 +976,7 @@ void flecs_emit_forward_up(
         tgt, tgt_table, tgt_record, cr, stack, reachable_ids, depth + 1);
 }
 
-static
-void flecs_emit_forward(
+static void flecs_emit_forward(
     ecs_world_t *world,
     const ecs_event_record_t *er,
     const ecs_event_record_t *er_onset,
@@ -1125,8 +1107,7 @@ void flecs_emit_forward(
     }
 }
 
-static
-void flecs_emit_on_set_for_override_on_add(
+static void flecs_emit_on_set_for_override_on_add(
     ecs_world_t *world,
     const ecs_event_record_t *er_onset,
     int32_t evtx,
@@ -1187,8 +1168,7 @@ void flecs_emit_on_set_for_override_on_add(
     }
 }
 
-static
-void flecs_emit_on_set_for_override_on_remove(
+static void flecs_emit_on_set_for_override_on_remove(
     ecs_world_t *world,
     const ecs_event_record_t *er_onset,
     int32_t evtx,

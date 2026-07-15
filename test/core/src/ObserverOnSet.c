@@ -1,13 +1,11 @@
 #include <core.h>
 
-static
-void OnPosition(ecs_iter_t *it) {
+static void OnPosition(ecs_iter_t *it) {
     test_assert(ecs_field(it, Position, 0) != NULL);
     probe_iter(it);
 }
 
-static
-void Add_to_current(ecs_iter_t *it) {
+static void Add_to_current(ecs_iter_t *it) {
     IterData *ctx = ecs_get_ctx(it->world);
 
     int i;
@@ -26,8 +24,7 @@ void Add_to_current(ecs_iter_t *it) {
     }
 }
 
-static
-void Remove_from_current(ecs_iter_t *it) {
+static void Remove_from_current(ecs_iter_t *it) {
     IterData *ctx = ecs_get_ctx(it->world);
 
     int i;
@@ -48,8 +45,7 @@ void Remove_from_current(ecs_iter_t *it) {
 
 static Probe pv_probe;
 
-static
-void On_PV(ecs_iter_t *it) {
+static void On_PV(ecs_iter_t *it) {
     Position *p = ecs_field(it, Position, 0);
     Velocity *v = ecs_field(it, Velocity, 1);
 
@@ -584,8 +580,7 @@ void ObserverOnSet_on_set_w_override_after_delete_w_ecs_init(void) {
     ecs_fini(world);
 }
 
-static
-void OnSetPosVel(ecs_iter_t *it) {
+static void OnSetPosVel(ecs_iter_t *it) {
     probe_iter(it);
 
     Position *p = ecs_field(it, Position, 0);
@@ -949,8 +944,7 @@ void ObserverOnSet_set_from_nothing(void) {
     ecs_fini(world);
 }
 
-static
-void Add0(ecs_iter_t *it) {
+static void Add0(ecs_iter_t *it) {
     probe_iter(it);
 
     int i;
@@ -977,8 +971,7 @@ void ObserverOnSet_add_0_entity_in_on_set(void) {
 
 static int dummy_invoked = 0;
 
-static
-void Dummy(ecs_iter_t *it) {
+static void Dummy(ecs_iter_t *it) {
     dummy_invoked ++;
 }
 

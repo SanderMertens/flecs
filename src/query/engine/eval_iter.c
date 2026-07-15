@@ -5,8 +5,7 @@
 
 #include "../../private_api.h"
 
-static
-void flecs_query_iter_run_ctx_init(
+static void flecs_query_iter_run_ctx_init(
     ecs_iter_t *it,
     ecs_query_run_ctx_t *ctx)
 {
@@ -198,8 +197,7 @@ void flecs_query_iter_constrain(
 #endif // FLECS_QUERY_PLANS
 
 #ifdef FLECS_CACHED_QUERIES
-static
-void flecs_query_change_detection(
+static void flecs_query_change_detection(
     ecs_iter_t *it,
     ecs_query_iter_t *qit,
     ecs_query_impl_t *impl)
@@ -218,8 +216,7 @@ void flecs_query_change_detection(
     }
 }
 
-static
-void flecs_query_self_change_detection(
+static void flecs_query_self_change_detection(
     ecs_iter_t *it,
     ecs_query_iter_t *qit,
     ecs_query_impl_t *impl)
@@ -236,8 +233,7 @@ void flecs_query_self_change_detection(
 #ifdef FLECS_QUERY_PLANS
 
 #ifdef FLECS_DEBUG
-static
-void flecs_iter_assert_columns(
+static void flecs_iter_assert_columns(
     ecs_iter_t *it)
 {
     const int16_t *columns = it->columns;
@@ -301,8 +297,7 @@ void flecs_query_op_ctx_fini(
     }
 }
 
-static
-void flecs_query_iter_fini_ctx(
+static void flecs_query_iter_fini_ctx(
     ecs_iter_t *it,
     ecs_query_iter_t *qit)
 {
@@ -505,8 +500,7 @@ bool flecs_query_trivial_cached_next(
 
 #endif // FLECS_CACHED_QUERIES
 
-static
-void flecs_query_iter_fini(
+static void flecs_query_iter_fini(
     ecs_iter_t *it)
 {
 #if defined(FLECS_CACHED_QUERIES) || defined(FLECS_QUERY_PLANS)
@@ -559,8 +553,7 @@ void flecs_query_iter_fini(
 
 #ifdef FLECS_QUERY_PLANS
 
-static
-void flecs_query_validate_final_fields(
+static void flecs_query_validate_final_fields(
     const ecs_query_t *q)
 {
     (void)q;

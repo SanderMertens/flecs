@@ -19,8 +19,7 @@ typedef struct {
     const char *expr;
 } ecs_from_json_ctx_t;
 
-static
-void flecs_from_json_ctx_init(
+static void flecs_from_json_ctx_init(
     ecs_allocator_t *a,
     ecs_from_json_ctx_t *ctx)
 {
@@ -32,8 +31,7 @@ void flecs_from_json_ctx_init(
     ecs_map_init(&ctx->missing_reflection, a);
 }
 
-static
-void flecs_from_json_ctx_fini(
+static void flecs_from_json_ctx_fini(
     ecs_from_json_ctx_t *ctx)
 {
     ecs_vec_fini_t(ctx->a, &ctx->table_type, ecs_id_t);
@@ -43,8 +41,7 @@ void flecs_from_json_ctx_fini(
     ecs_map_fini(&ctx->missing_reflection);
 }
 
-static
-ecs_entity_t flecs_json_new_id(
+static ecs_entity_t flecs_json_new_id(
     ecs_world_t *world,
     ecs_entity_t ser_id)
 {
@@ -56,8 +53,7 @@ ecs_entity_t flecs_json_new_id(
     }
 }
 
-static
-void flecs_json_missing_reflection(
+static void flecs_json_missing_reflection(
     ecs_world_t *world,
     ecs_id_t id,
     const char *json,
@@ -77,8 +73,7 @@ void flecs_json_missing_reflection(
     ecs_os_free(id_str);
 }
 
-static
-ecs_entity_t flecs_json_lookup(
+static ecs_entity_t flecs_json_lookup(
     ecs_world_t *world,
     ecs_entity_t parent,
     const char *name,
@@ -97,8 +92,7 @@ ecs_entity_t flecs_json_lookup(
     return result;
 }
 
-static
-void flecs_json_mark_reserved(
+static void flecs_json_mark_reserved(
     ecs_map_t *anonymous_ids,
     ecs_entity_t e)
 {
@@ -107,8 +101,7 @@ void flecs_json_mark_reserved(
     reserved[0] = 0;
 }
 
-static
-ecs_entity_t flecs_json_ensure_entity(
+static ecs_entity_t flecs_json_ensure_entity(
     ecs_world_t *world,
     const char *name,
     void *ctx)
@@ -165,8 +158,7 @@ ecs_entity_t flecs_json_ensure_entity(
     return e;
 }
 
-static
-void flecs_json_track_id(
+static void flecs_json_track_id(
     ecs_world_t *world,
     ecs_from_json_ctx_t *ctx,
     ecs_id_t id)
@@ -185,8 +177,7 @@ void flecs_json_track_id(
     }
 }
 
-static
-const char* flecs_json_deser_tags(
+static const char* flecs_json_deser_tags(
     ecs_world_t *world,
     ecs_entity_t e,
     const char *json,
@@ -242,8 +233,7 @@ error:
     return NULL;
 }
 
-static
-const char* flecs_json_deser_pairs(
+static const char* flecs_json_deser_pairs(
     ecs_world_t *world,
     ecs_entity_t e,
     const char *json,
@@ -338,8 +328,7 @@ error:
     return NULL;
 }
 
-static
-const char* flecs_json_deser_components(
+static const char* flecs_json_deser_components(
     ecs_world_t *world,
     ecs_entity_t e,
     const char *json,
@@ -474,8 +463,7 @@ error:
     return NULL;
 }
 
-static
-const char* flecs_entity_from_json(
+static const char* flecs_entity_from_json(
     ecs_world_t *world,
     ecs_entity_t e,
     const char *json,

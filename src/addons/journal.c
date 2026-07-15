@@ -7,8 +7,7 @@
 
 #ifdef FLECS_JOURNAL
 
-static
-char* flecs_journal_entitystr(
+static char* flecs_journal_entitystr(
     ecs_world_t *world,
     ecs_entity_t entity)
 {
@@ -27,8 +26,7 @@ char* flecs_journal_entitystr(
     return path;
 }
 
-static
-char* flecs_journal_idstr(
+static char* flecs_journal_idstr(
     ecs_world_t *world,
     ecs_id_t id)
 {

@@ -46,8 +46,7 @@ ecs_mixins_t ecs_observer_t_mixins = {
     }
 };
 
-static
-void* assert_mixin(
+static void* assert_mixin(
     const ecs_poly_t *poly,
     ecs_mixin_kind_t kind)
 {
@@ -180,8 +179,7 @@ void flecs_poly_modified_(
     ecs_modified_pair(world, entity, ecs_id(EcsPoly), tag);
 }
 
-static
-const EcsPoly* flecs_poly_bind_get_(
+static const EcsPoly* flecs_poly_bind_get_(
     const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t tag)

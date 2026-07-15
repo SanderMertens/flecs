@@ -32,8 +32,7 @@ typedef struct flecs_log_capture_frame_t {
 
 static flecs_log_capture_frame_t *flecs_log_capture_frames = NULL;
 
-static
-void flecs_set_prev_log(
+static void flecs_set_prev_log(
     ecs_os_api_log_t prev_log,
     bool try)
 {
@@ -41,8 +40,7 @@ void flecs_set_prev_log(
     flecs_log_prev_fatal_log = prev_log;
 }
 
-static 
-void flecs_log_capture_log(
+static void flecs_log_capture_log(
     int32_t level, 
     const char *file,
     int32_t line, 
@@ -84,8 +82,7 @@ void flecs_log_capture_log(
     }
 }
 
-static
-char* flecs_log_get_captured_log(void) {
+static char* flecs_log_get_captured_log(void) {
     char *result = flecs_log_last_err;
     flecs_log_last_err = NULL;
     return result;
@@ -395,8 +392,7 @@ void ecs_log_pop_(
     }
 }
 
-static
-void flecs_parser_errorv(
+static void flecs_parser_errorv(
     const char *name,
     const char *expr, 
     int64_t column_arg,

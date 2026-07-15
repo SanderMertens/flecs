@@ -1,14 +1,12 @@
 #include <core.h>
 
-static
-void system_callback(ecs_iter_t *it) {
+static void system_callback(ecs_iter_t *it) {
     probe_iter(it);
 }
 
 static Position *system_param = NULL;
 
-static
-void system_w_param_callback(ecs_iter_t *it) {
+static void system_w_param_callback(ecs_iter_t *it) {
     Position *p = it->param;
     test_assert(p != NULL);
     test_int(p->x, 10);
@@ -184,8 +182,7 @@ void Event_table_2_ids_w_observer(void) {
 
 static int empty_table_callback_invoked = 0;
 
-static
-void empty_table_callback(ecs_iter_t *it) {
+static void empty_table_callback(ecs_iter_t *it) {
     test_assert(it->table == it->ctx);
     test_int(it->count, 0);
     empty_table_callback_invoked++;
@@ -1312,8 +1309,7 @@ void Event_enqueue_event_not_alive_w_data_copy(void) {
     ecs_fini(world);
 }
 
-static
-void system_delete_callback(ecs_iter_t *it) {
+static void system_delete_callback(ecs_iter_t *it) {
     ecs_defer_suspend(it->world);
     for (int i = 0; i < it->count; i ++) {
         ecs_delete(it->world, it->entities[i]);
@@ -1620,8 +1616,7 @@ typedef struct LargeType {
 
 static int on_position_invoked = 0;
 
-static
-void OnPosition(ecs_iter_t *it) {
+static void OnPosition(ecs_iter_t *it) {
     Position *p = it->param;
     test_int(p->x, 10);
     test_int(p->y, 20);

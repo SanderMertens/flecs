@@ -2339,14 +2339,12 @@ struct WithoutOperators {
     int16_t value;
 };
 
-static
-int compare(flecs::world& ecs, flecs::entity_t id, const void *a, const void *b) {
+static int compare(flecs::world& ecs, flecs::entity_t id, const void *a, const void *b) {
     const ecs_type_info_t* ti = ecs_get_type_info(ecs, id);
     return ti->hooks.cmp(a, b, ti);
 }
 
-static
-bool equals(flecs::world& ecs, flecs::entity_t id, const void *a, const void *b) {
+static bool equals(flecs::world& ecs, flecs::entity_t id, const void *a, const void *b) {
     const ecs_type_info_t* ti = ecs_get_type_info(ecs, id);
     return ti->hooks.equals(a, b, ti);
 }

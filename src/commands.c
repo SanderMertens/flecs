@@ -5,8 +5,7 @@
 
 #include "private_api.h"
 
-static
-ecs_table_t* flecs_find_table_remove(
+static ecs_table_t* flecs_find_table_remove(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_id_t id,
@@ -21,8 +20,7 @@ error:
     return NULL;
 }
 
-static
-ecs_cmd_t* flecs_cmd_new(
+static ecs_cmd_t* flecs_cmd_new(
     ecs_stage_t *stage)
 {
     ecs_cmd_t *cmd = ecs_vec_append_t(&stage->allocator, &stage->cmd->queue, 
@@ -35,8 +33,7 @@ ecs_cmd_t* flecs_cmd_new(
     return cmd;
 }
 
-static
-ecs_cmd_t* flecs_cmd_new_batched(
+static ecs_cmd_t* flecs_cmd_new_batched(
     ecs_stage_t *stage, 
     ecs_entity_t e)
 {
@@ -338,8 +335,7 @@ bool flecs_defer_remove(
 }
 
 /* Return existing component pointer & type info */
-static
-flecs_component_ptr_t flecs_defer_get_existing(
+static flecs_component_ptr_t flecs_defer_get_existing(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_record_t *r,
@@ -711,8 +707,7 @@ void flecs_enqueue(
     }
 }
 
-static
-void flecs_flush_bulk_new(
+static void flecs_flush_bulk_new(
     ecs_world_t *world,
     ecs_cmd_t *cmd)
 {
@@ -732,8 +727,7 @@ void flecs_flush_bulk_new(
     ecs_os_free(entities);
 }
 
-static
-void flecs_dtor_value(
+static void flecs_dtor_value(
     ecs_world_t *world,
     ecs_id_t id,
     void *value)
@@ -743,8 +737,7 @@ void flecs_dtor_value(
     flecs_type_info_dtor(value, 1, ti);
 }
 
-static
-void flecs_free_cmd_event(
+static void flecs_free_cmd_event(
     ecs_world_t *world,
     ecs_event_desc_t *desc)
 {
@@ -763,8 +756,7 @@ void flecs_free_cmd_event(
     }
 }
 
-static
-void flecs_discard_cmd(
+static void flecs_discard_cmd(
     ecs_world_t *world,
     ecs_cmd_t *cmd)
 {
@@ -782,8 +774,7 @@ void flecs_discard_cmd(
     }
 }
 
-static
-bool flecs_remove_invalid(
+static bool flecs_remove_invalid(
     ecs_world_t *world,
     ecs_id_t id,
     ecs_id_t *id_out)
@@ -834,8 +825,7 @@ bool flecs_remove_invalid(
     return true;
 }
 
-static
-void flecs_cmd_batch_for_entity(
+static void flecs_cmd_batch_for_entity(
     ecs_world_t *world,
     ecs_table_diff_builder_t *diff,
     ecs_entity_t entity,

@@ -28,8 +28,7 @@ void flecs_entity_ranges_fini(
     ecs_vec_fini_t(index->allocator, &index->ranges, ecs_entity_range_t*);
 }
 
-static
-void flecs_entity_index_remove_not_alive(
+static void flecs_entity_index_remove_not_alive(
     ecs_entity_index_t *index,
     ecs_record_t *r)
 {
@@ -46,8 +45,7 @@ void flecs_entity_index_remove_not_alive(
     r->dense = 0;
 }
 
-static
-ecs_entity_range_t* flecs_entity_index_find_range(
+static ecs_entity_range_t* flecs_entity_index_find_range(
     ecs_entity_index_t *index,
     uint32_t id)
 {
