@@ -308,6 +308,7 @@ bool flecs_expr_oper_valid_for_type(
     case EcsTokKeywordExport:
     case EcsTokKeywordTemplate:
     case EcsTokKeywordProp:
+    case EcsTokKeywordMut:
     case EcsTokKeywordConst:
     case EcsTokKeywordInclude:
     case EcsTokKeywordFn:
@@ -459,6 +460,7 @@ int flecs_expr_type_for_operator(
     case EcsTokKeywordExport:
     case EcsTokKeywordTemplate:
     case EcsTokKeywordProp:
+    case EcsTokKeywordMut:
     case EcsTokKeywordConst:
     case EcsTokKeywordInclude:
     case EcsTokKeywordFn:

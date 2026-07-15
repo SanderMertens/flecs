@@ -1182,7 +1182,7 @@ Templates are commonly used in combination with the kind syntax:
 Square my_entity
 ```
 
-Templates can be parameterized with properties. Properties are variables that are exposed as component members. To create a property, use the `prop` keyword. Example:
+Templates can be parameterized with properties. Properties are variables that are exposed as component members. When the component is updated with a new value, the template is reevaluated. To create a property, use the `prop` keyword. Example:
 
 ```cpp
 template Square {
@@ -1197,6 +1197,17 @@ Square my_entity(size: 20, color: {38, 25, 13})
 ```
 
 Just like `const` variables, `prop` variables can explicitly specify a type or implicitly derive their type from the assigned (default) value.
+
+In addition to property variables, templates can also contain mutables. Mutables that are exposed as component members on a `TemplateComponent::mut` component. To create a mutable, use the `mut` keyword. For example the `hover` mutable variable ends up on a `Button::mut` component:
+
+```cpp
+template Button {
+  prop text: "Howdy"
+  mut hover: false
+
+  // ...
+}
+```
 
 Template scripts can do anything a regular script can do, including creating child entities. The following example shows how to create an template that uses a nested template to create children:
 

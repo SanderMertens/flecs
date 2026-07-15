@@ -454,7 +454,7 @@ void Modules_module_tag_on_namespace_on_add_2_levels(void);
 void Modules_import_monitor_2_worlds(void);
 void Modules_import_monitor_after_mini(void);
 void Modules_import_2_worlds(void);
-void Modules_component_parent_becomes_module(void);
+void Modules_component_parent_does_not_become_module(void);
 void Modules_module_has_singleton(void);
 void Modules_import_w_uppercase_name(void);
 
@@ -2265,8 +2265,8 @@ bake_test_case Modules_testcases[] = {
         Modules_import_2_worlds
     },
     {
-        "component_parent_becomes_module",
-        Modules_component_parent_becomes_module
+        "component_parent_does_not_become_module",
+        Modules_component_parent_does_not_become_module
     },
     {
         "module_has_singleton",
@@ -2793,7 +2793,6 @@ const char* MultiThread_worker_kind_param[] = {"thread", "task"};
 bake_test_param MultiThread_params[] = {
     {"worker_kind", (char**)MultiThread_worker_kind_param, 2}
 };
-
 const char* MultiThreadStaging_worker_kind_param[] = {"thread", "task"};
 bake_test_param MultiThreadStaging_params[] = {
     {"worker_kind", (char**)MultiThreadStaging_worker_kind_param, 2}

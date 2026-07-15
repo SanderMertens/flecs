@@ -137,6 +137,7 @@ const char* flecs_token_kind_str(
     case EcsTokKeywordWith:
     case EcsTokKeywordUsing:
     case EcsTokKeywordProp:
+    case EcsTokKeywordMut:
     case EcsTokKeywordConst:
     case EcsTokKeywordIf:
     case EcsTokKeywordElse:
@@ -215,6 +216,7 @@ const char* flecs_token_str(
     case EcsTokKeywordWith: return "with";
     case EcsTokKeywordUsing: return "using";
     case EcsTokKeywordProp: return "prop";
+    case EcsTokKeywordMut: return "mut";
     case EcsTokKeywordConst: return "const";
     case EcsTokKeywordMatch: return "match";
     case EcsTokKeywordNew: return "new";
@@ -908,6 +910,7 @@ const char* flecs_token(
     Keyword           ("using",    EcsTokKeywordUsing)
     Keyword           ("template", EcsTokKeywordTemplate)
     Keyword           ("prop",     EcsTokKeywordProp)
+    Keyword           ("mut",      EcsTokKeywordMut)
     Keyword           ("const",    EcsTokKeywordConst)
     Keyword           ("if",       EcsTokKeywordIf)
     Keyword           ("else",     EcsTokKeywordElse)

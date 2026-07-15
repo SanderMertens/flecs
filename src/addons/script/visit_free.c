@@ -189,6 +189,7 @@ int flecs_script_stmt_free(
         flecs_free_t(a, ecs_script_annot_t, node);
         break;
     case EcsAstProp:
+    case EcsAstMut:
     case EcsAstConst:
     case EcsAstExportConst:
         flecs_script_var_node_free(v, (ecs_script_var_node_t*)node);

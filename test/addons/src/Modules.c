@@ -411,7 +411,7 @@ void Modules_import_monitor_after_mini(void) {
     ecs_fini(world);
 }
 
-void Modules_component_parent_becomes_module(void) {
+void Modules_component_parent_does_not_become_module(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t parent = ecs_new(world);
@@ -422,7 +422,7 @@ void Modules_component_parent_becomes_module(void) {
 
     ecs_set(world, comp, EcsComponent, {4, 4});
 
-    test_assert(ecs_has_id(world, parent, EcsModule));
+    test_assert(!ecs_has_id(world, parent, EcsModule));
     test_assert(ecs_has_id(world, comp, ecs_id(EcsComponent)));
 
     ecs_fini(world);
