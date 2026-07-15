@@ -7075,6 +7075,50 @@ void Observer_wildcard_propagate_w_other_table(void) {
     ecs_fini(world);
 }
 
+void Observer_prefab_observer_no_query(void) {
+    ecs_world_t *world = ecs_mini();
+
+    Probe ctx = {0};
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {{ EcsPrefab }},
+        .events = { EcsOnAdd },
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    test_assert(o != 0);
+    test_assert(ecs_observer_get(world, o)->query == NULL);
+
+    ecs_entity_t e = ecs_new_w_id(world, EcsPrefab);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], EcsPrefab);
+
+    ecs_fini(world);
+}
+
+void Observer_disabled_observer_no_query(void) {
+    ecs_world_t *world = ecs_mini();
+
+    Probe ctx = {0};
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {{ EcsDisabled }},
+        .events = { EcsOnAdd },
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    test_assert(o != 0);
+    test_assert(ecs_observer_get(world, o)->query == NULL);
+
+    ecs_entity_t e = ecs_new_w_id(world, EcsDisabled);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], EcsDisabled);
+
+    ecs_fini(world);
+}
+
 void Observer_disable_observer(void) {
     ecs_world_t *ecs = ecs_mini();
 
@@ -7105,6 +7149,66 @@ void Observer_disable_observer(void) {
     ecs_new_w(ecs, Position);
     test_int(ctx.invoked, 1);
     ecs_os_zeromem(&ctx);
+
+    ecs_fini(ecs);
+}
+
+void Observer_disable_observer_before_create(void) {
+    ecs_world_t *ecs = ecs_mini();
+
+    ECS_COMPONENT(ecs, Position);
+
+    ecs_entity_t o = ecs_new_w_id(ecs, EcsDisabled);
+
+    Probe ctx = {0};
+    ecs_observer(ecs, {
+        .entity = o,
+        .query.terms = {{ ecs_id(Position) }},
+        .events = { EcsOnAdd },
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    ecs_new_w(ecs, Position);
+    test_int(ctx.invoked, 0);
+
+    ecs_enable(ecs, o, true);
+
+    ecs_new_w(ecs, Position);
+    test_int(ctx.invoked, 1);
+
+    ecs_fini(ecs);
+}
+
+void Observer_disable_multi_observer_before_create(void) {
+    ecs_world_t *ecs = ecs_mini();
+
+    ECS_COMPONENT(ecs, Position);
+    ECS_COMPONENT(ecs, Velocity);
+
+    ecs_entity_t o = ecs_new_w_id(ecs, EcsDisabled);
+
+    Probe ctx = {0};
+    ecs_observer(ecs, {
+        .entity = o,
+        .query.terms = {
+            { ecs_id(Position) },
+            { ecs_id(Velocity) }
+        },
+        .events = { EcsOnAdd },
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t e = ecs_new_w(ecs, Position);
+    ecs_add(ecs, e, Velocity);
+    test_int(ctx.invoked, 0);
+
+    ecs_enable(ecs, o, true);
+
+    e = ecs_new_w(ecs, Position);
+    ecs_add(ecs, e, Velocity);
+    test_int(ctx.invoked, 1);
 
     ecs_fini(ecs);
 }
@@ -7571,12 +7675,14 @@ void Observer_on_add_pair_w_rel_any(void) {
 
     Probe ctx = {0};
 
-    ecs_observer(world, {
+    ecs_entity_t o = ecs_observer(world, {
         .query.terms = {{ ecs_pair(EcsAny, Tgt) }},
         .events = {EcsOnAdd},
         .callback = Observer,
         .ctx = &ctx
     });
+    test_assert(o != 0);
+    test_assert(ecs_observer_get(world, o)->query != NULL);
 
     test_int(ctx.invoked, 0);
 
@@ -7637,12 +7743,14 @@ void Observer_on_add_pair_w_tgt_any(void) {
 
     Probe ctx = {0};
 
-    ecs_observer(world, {
+    ecs_entity_t o = ecs_observer(world, {
         .query.terms = {{ ecs_pair(Rel, EcsAny) }},
         .events = {EcsOnAdd},
         .callback = Observer,
         .ctx = &ctx
     });
+    test_assert(o != 0);
+    test_assert(ecs_observer_get(world, o)->query == NULL);
 
     test_int(ctx.invoked, 0);
 
@@ -13995,4 +14103,3 @@ void Observer_propagate_on_set_2_lvls_2_terms(void) {
 
     ecs_fini(world);
 }
-
