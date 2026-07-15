@@ -784,7 +784,6 @@ int flecs_script_eval_entity(
         return -1;
     }
 
-    bool is_slot = false;
     if (node->kind) {
         ecs_script_id_t id = {
             .first = node->kind,
@@ -798,8 +797,6 @@ int flecs_script_eval_entity(
             flecs_script_eval_error(v, node, "prefabs are unsupported in this "
                 "flecs build, enable FLECS_PREFAB addon");
 #endif
-        } else if (!ecs_os_strcmp(node->kind, "slot")) {
-            is_slot = true;
         } else if (flecs_script_eval_id(v, node, &id)) {
             return -1;
         }
@@ -823,18 +820,6 @@ int flecs_script_eval_entity(
     if (v->template_entity) {
         ecs_add_pair(
             v->world, node->eval, EcsScriptTemplate, v->template_entity);
-    }
-
-    if (is_slot) {
-        ecs_entity_t parent = ecs_get_target(
-            v->world, node->eval, EcsChildOf, 0);
-        if (!parent) {
-            flecs_script_eval_error(v, node, 
-                "slot entity must have a parent");
-            return -1;
-        }
-
-        ecs_add_pair(v->world, node->eval, EcsSlotOf, parent);
     }
 
     ecs_script_entity_t *old_entity = v->entity;

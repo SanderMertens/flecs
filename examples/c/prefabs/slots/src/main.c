@@ -1,76 +1,39 @@
 #include <slots.h>
 #include <stdio.h>
 
-// Slots can be combined with prefab hierarchies to make it easier to access
-// the child entities created for an instance.
-//
-// To create a slot, the SlotOf relationship is added to the child of a prefab,
-// with as relationship target the prefab for which to register the slot. When
-// the prefab is instantiated, each slot will be added as a relationship pair
-// to the instance that looks like this:
-//   (PrefabChild, InstanceChild)
-//
-// For a SpaceShip prefab and an Engine child, that pair would look like this:
-//   (SpaceShip.Engine, Instance.Engine)
-//
-// To get the entity for a slot, an application can use the regular functions
-// to inspect relationships and relationship targets (see code).
-//
-// Slots can be added to any level of a prefab hierarchy, as long as it is above
-// (a parent of) the slot itself. When the prefab tree is instantiated, the 
-// slots are added to the entities that correspond with the prefab children.
-//
-// Without slots, an application would have to rely on manually looking up 
-// entities by name to get access to the instantiated children, like what the
-// hierarchy example does.
+// Prefab hierarchies that use the non-fragmenting Parent storage automatically
+// let applications resolve an instantiated child from its prefab child. This
+// provides slot-like lookup without adding a relationship to either entity.
 
 int main(int argc, char *argv[]) {
     ecs_world_t *ecs = ecs_init_w_args(argc, argv);
 
-    // Create the same prefab hierarchy as from the hierarchy example, but now
-    // with the SlotOf relationship.
+    // Create a prefab hierarchy with non-fragmenting Parent storage.
     ecs_entity_t SpaceShip = ecs_entity(ecs, { .name = "SpaceShip", .add = ecs_ids( EcsPrefab ) });
-        ecs_entity_t Engine = ecs_entity(ecs, { .name = "Engine", .add = ecs_ids( EcsPrefab ) });
-        ecs_add_pair(ecs, Engine, EcsChildOf, SpaceShip);
-        ecs_add_pair(ecs, Engine, EcsSlotOf, SpaceShip);
+        ecs_entity_t Engine = ecs_new_w_parent(ecs, SpaceShip, "Engine");
     
-        ecs_entity_t Cockpit = ecs_entity(ecs, { .name = "Cockpit", .add = ecs_ids( EcsPrefab ) });
-        ecs_add_pair(ecs, Cockpit, EcsChildOf, SpaceShip);
-        ecs_add_pair(ecs, Cockpit, EcsSlotOf, SpaceShip);
+        ecs_entity_t Cockpit = ecs_new_w_parent(ecs, SpaceShip, "Cockpit");
 
-        // Add an additional child to the Cockpit prefab to demonstrate how 
-        // slots can be different from the parent. This slot could have been
-        // added to the Cockpit prefab, but instead we register it on the top
-        // level SpaceShip prefab.
-        ecs_entity_t PilotSeat = ecs_entity(ecs, { .name = "PilotSeat", .add = ecs_ids( EcsPrefab ) });
-        ecs_add_pair(ecs, PilotSeat, EcsChildOf, Cockpit);
-        ecs_add_pair(ecs, PilotSeat, EcsSlotOf, SpaceShip);
+        ecs_entity_t PilotSeat = ecs_new_w_parent(ecs, Cockpit, "PilotSeat");
 
     // Create a prefab instance.
     ecs_entity_t inst = ecs_entity(ecs, { .name = "my_spaceship" });
     ecs_add_pair(ecs, inst, EcsIsA, SpaceShip);
 
-    // Get the instantiated entities for the prefab slots
+    // Get the instantiated children from their prefab children. A nested child
+    // is resolved from the corresponding instance parent.
     ecs_entity_t inst_engine = ecs_get_target(ecs, inst, Engine, 0);
     ecs_entity_t inst_cockpit = ecs_get_target(ecs, inst, Cockpit, 0);
-    ecs_entity_t inst_seat = ecs_get_target(ecs, inst, PilotSeat, 0);
+    ecs_entity_t inst_seat = ecs_get_target(ecs, inst_cockpit, PilotSeat, 0);
 
-    char *path = ecs_get_path(ecs, inst_engine);
-    printf("instance engine:  %s\n", path);
-    ecs_os_free(path);
-
-    path = ecs_get_path(ecs, inst_cockpit);
-    printf("instance cockpit: %s\n", path);
-    ecs_os_free(path);
-
-    path = ecs_get_path(ecs, inst_seat);
-    printf("instance seat:    %s\n", path);
-    ecs_os_free(path);
+    printf("instance engine found:  %s\n", inst_engine ? "true" : "false");
+    printf("instance cockpit found: %s\n", inst_cockpit ? "true" : "false");
+    printf("instance seat found:    %s\n", inst_seat ? "true" : "false");
 
     // Output:
-    //  instance engine:  my_spaceship.Engine
-    //  instance cockpit: my_spaceship.Cockpit
-    //  instance seat:    my_spaceship.Cockpit.PilotSeat
+    //  instance engine found:  true
+    //  instance cockpit found: true
+    //  instance seat found:    true
 
     return ecs_fini(ecs);
 }
