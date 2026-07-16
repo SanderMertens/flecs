@@ -603,6 +603,9 @@ void Function_call_in_for_body(void);
 void Function_call_in_with(void);
 void Function_call_in_const_rhs(void);
 void Function_call_via_expr_run(void);
+void Function_call(void);
+void Function_call_w_result(void);
+void Function_method_call(void);
 void Function_to_str_roundtrip(void);
 void Function_arrow_no_spaces(void);
 void Function_arrow_split_dash_gt(void);
@@ -4238,6 +4241,18 @@ bake_test_case Function_testcases[] = {
     {
         "call_via_expr_run",
         Function_call_via_expr_run
+    },
+    {
+        "call",
+        Function_call
+    },
+    {
+        "call_w_result",
+        Function_call_w_result
+    },
+    {
+        "method_call",
+        Function_method_call
     },
     {
         "to_str_roundtrip",
@@ -9257,7 +9272,7 @@ static bake_test_suite suites[] = {
         "Function",
         NULL,
         NULL,
-        66,
+        69,
         Function_testcases
     },
     {
