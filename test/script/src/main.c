@@ -607,8 +607,10 @@ void Function_call(void);
 void Function_call_w_using(void);
 void Function_call_w_using_nested(void);
 void Function_call_w_using_wildcard(void);
+void Function_call_from_stage(void);
 void Function_call_w_result(void);
 void Function_method_call(void);
+void Function_method_call_from_stage(void);
 void Function_to_str_roundtrip(void);
 void Function_arrow_no_spaces(void);
 void Function_arrow_split_dash_gt(void);
@@ -4262,12 +4264,20 @@ bake_test_case Function_testcases[] = {
         Function_call_w_using_wildcard
     },
     {
+        "call_from_stage",
+        Function_call_from_stage
+    },
+    {
         "call_w_result",
         Function_call_w_result
     },
     {
         "method_call",
         Function_method_call
+    },
+    {
+        "method_call_from_stage",
+        Function_method_call_from_stage
     },
     {
         "to_str_roundtrip",
@@ -9287,7 +9297,7 @@ static bake_test_suite suites[] = {
         "Function",
         NULL,
         NULL,
-        72,
+        74,
         Function_testcases
     },
     {
