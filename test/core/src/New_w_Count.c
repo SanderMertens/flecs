@@ -6,7 +6,9 @@ static ECS_COMPONENT_DECLARE(Velocity);
 void New_w_Count_empty(void) {
     ecs_world_t *world = ecs_mini();
 
-    const ecs_entity_t *ids = ecs_bulk_new_w_id(world, 0, 1000);
+    const ecs_entity_t *ids = ecs_bulk_init(world, &(ecs_bulk_desc_t){
+        .count = 1000
+    }, NULL);
     test_assert(ids != NULL);
 
     int i;
@@ -42,7 +44,10 @@ void New_w_Count_tag(void) {
 
     ECS_ENTITY(world, Tag, 0);
 
-    const ecs_entity_t *ids = ecs_bulk_new_w_id(world, Tag, 1000);
+    const ecs_entity_t *ids = ecs_bulk_init(world, &(ecs_bulk_desc_t){
+        .count = 1000,
+        .ids = {Tag}
+    }, NULL);
     test_assert(ids != NULL);
     test_int(ecs_count_id(world, Tag), 1000);
 
@@ -61,7 +66,7 @@ void New_w_Count_bulk_init_empty(void) {
 
     const ecs_entity_t *entities = ecs_bulk_init(world, &(ecs_bulk_desc_t){
         .count = 3
-    });
+    }, NULL);
 
     test_assert(entities != NULL);
 
@@ -93,7 +98,7 @@ void New_w_Count_bulk_init_empty_w_entities(void) {
     const ecs_entity_t *entities = ecs_bulk_init(world, &(ecs_bulk_desc_t){
         .entities = ents,
         .count = 3
-    });
+    }, NULL);
 
     test_assert(entities != NULL);
 
@@ -120,7 +125,7 @@ void New_w_Count_bulk_init_1_tag(void) {
     const ecs_entity_t *entities = ecs_bulk_init(world, &(ecs_bulk_desc_t){
         .count = 3,
         .ids = {Tag}
-    });
+    }, NULL);
 
     test_assert(entities != NULL);
 
@@ -155,7 +160,7 @@ void New_w_Count_bulk_init_1_tag_w_entities(void) {
         .entities = ents,
         .count = 3,
         .ids = {Tag}
-    });
+    }, NULL);
 
     test_assert(entities != NULL);
 
@@ -187,7 +192,7 @@ void New_w_Count_bulk_init_2_tags(void) {
     const ecs_entity_t *entities = ecs_bulk_init(world, &(ecs_bulk_desc_t){
         .count = 3,
         .ids = {TagA, TagB}
-    });
+    }, NULL);
 
     test_assert(entities != NULL);
 
@@ -223,7 +228,7 @@ void New_w_Count_bulk_init_1_component(void) {
     const ecs_entity_t *entities = ecs_bulk_init(world, &(ecs_bulk_desc_t){
         .count = 3,
         .ids = {ecs_id(Position)}
-    });
+    }, NULL);
 
     test_assert(entities != NULL);
 
@@ -260,7 +265,7 @@ void New_w_Count_bulk_init_2_components(void) {
     const ecs_entity_t *entities = ecs_bulk_init(world, &(ecs_bulk_desc_t){
         .count = 3,
         .ids = {ecs_id(Position), ecs_id(Velocity)}
-    });
+    }, NULL);
 
     test_assert(entities != NULL);
 
@@ -307,13 +312,17 @@ void New_w_Count_bulk_init_1_component_w_value(void) {
         {50, 60}
     };
 
-    void *data[] = {p};
+    void *data[1];
 
     const ecs_entity_t *entities = ecs_bulk_init(world, &(ecs_bulk_desc_t){
         .count = 3,
-        .ids = {ecs_id(Position)},
-        .data = data
-    });
+        .ids = {ecs_id(Position)}
+    }, data);
+    ecs_os_memcpy_n(data[0], p, Position, 3);
+    ecs_bulk_modified(world, &(ecs_bulk_desc_t){
+        .count = 3,
+        .ids = {ecs_id(Position)}
+    }, data);
 
     test_assert(entities != NULL);
 
@@ -372,13 +381,18 @@ void New_w_Count_bulk_init_2_components_w_value(void) {
         {5, 6}
     };
 
-    void *data[] = {p, v};
+    void *data[2];
 
     const ecs_entity_t *entities = ecs_bulk_init(world, &(ecs_bulk_desc_t){
         .count = 3,
-        .ids = {ecs_id(Position), ecs_id(Velocity)},
-        .data = data
-    });
+        .ids = {ecs_id(Position), ecs_id(Velocity)}
+    }, data);
+    ecs_os_memcpy_n(data[0], p, Position, 3);
+    ecs_os_memcpy_n(data[1], v, Velocity, 3);
+    ecs_bulk_modified(world, &(ecs_bulk_desc_t){
+        .count = 3,
+        .ids = {ecs_id(Position), ecs_id(Velocity)}
+    }, data);
 
     test_assert(entities != NULL);
 
@@ -462,13 +476,19 @@ void New_w_Count_bulk_init_2_components_tag_w_value(void) {
         {5, 6}
     };
 
-    void *data[] = {p, NULL, v};
+    void *data[3];
 
     const ecs_entity_t *entities = ecs_bulk_init(world, &(ecs_bulk_desc_t){
         .count = 3,
-        .ids = {ecs_id(Position), Tag, ecs_id(Velocity)},
-        .data = data
-    });
+        .ids = {ecs_id(Position), Tag, ecs_id(Velocity)}
+    }, data);
+    ecs_os_memcpy_n(data[0], p, Position, 3);
+    test_assert(data[1] == NULL);
+    ecs_os_memcpy_n(data[2], v, Velocity, 3);
+    ecs_bulk_modified(world, &(ecs_bulk_desc_t){
+        .count = 3,
+        .ids = {ecs_id(Position), Tag, ecs_id(Velocity)}
+    }, data);
 
     test_assert(entities != NULL);
 
@@ -536,12 +556,74 @@ void New_w_Count_bulk_init_2_components_tag_w_value(void) {
     ecs_fini(world);
 }
 
+static int bulk_ctor_count;
+static int bulk_on_set_count;
+
+static void bulk_ctor(
+    void *ptr,
+    int32_t count,
+    const ecs_type_info_t *ti)
+{
+    bulk_ctor_count += count;
+    ecs_os_memset(ptr, 0, ti->size * count);
+}
+
+static void bulk_on_set(ecs_iter_t *it) {
+    bulk_on_set_count += it->count;
+}
+
+void New_w_Count_bulk_init_emplace(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ecs_set_hooks(world, Position, {
+        .ctor = bulk_ctor,
+        .on_set = bulk_on_set
+    });
+
+    bulk_ctor_count = 0;
+    bulk_on_set_count = 0;
+
+    void *data[1];
+    const ecs_entity_t *entities = ecs_bulk_init(world, &(ecs_bulk_desc_t){
+        .count = 3,
+        .ids = {ecs_id(Position)},
+        .emplace = true
+    }, data);
+
+    test_assert(entities != NULL);
+    test_assert(data[0] != NULL);
+    test_int(bulk_ctor_count, 0);
+    test_int(bulk_on_set_count, 0);
+
+    Position *p = data[0];
+    p[0] = (Position){10, 20};
+    p[1] = (Position){30, 40};
+    p[2] = (Position){50, 60};
+
+    ecs_bulk_modified(world, &(ecs_bulk_desc_t){
+        .count = 3,
+        .ids = {ecs_id(Position)}
+    }, data);
+
+    test_int(bulk_ctor_count, 0);
+    test_int(bulk_on_set_count, 3);
+    test_int(ecs_get(world, entities[0], Position)->x, 10);
+    test_int(ecs_get(world, entities[1], Position)->x, 30);
+    test_int(ecs_get(world, entities[2], Position)->x, 50);
+
+    ecs_fini(world);
+}
+
 void New_w_Count_add_after_bulk(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Tag, 0);
 
-    const ecs_entity_t *ids = ecs_bulk_new_w_id(world, Tag, 10);
+    const ecs_entity_t *ids = ecs_bulk_init(world, &(ecs_bulk_desc_t){
+        .count = 10,
+        .ids = {Tag}
+    }, NULL);
     test_assert(ids != NULL);
     test_int(ecs_count_id(world, Tag), 10);
 
@@ -619,7 +701,10 @@ void New_w_Count_recycle_1_of_2(void) {
     ecs_entity_t e1 = ecs_new(world);
     ecs_delete(world, e1);
 
-    const ecs_entity_t *ids = ecs_bulk_new_w_id(world, tag, 2);
+    const ecs_entity_t *ids = ecs_bulk_init(world, &(ecs_bulk_desc_t){
+        .count = 2,
+        .ids = {tag}
+    }, NULL);
     test_assert(ids[0] != 0);
     test_assert(ids[1] != 0);
     test_assert(ids[0] != e1);
@@ -637,7 +722,10 @@ void New_w_Count_recycle_1_of_3(void) {
   ecs_entity_t e1 = ecs_new(world);
   ecs_delete(world, e1);
 
-  const ecs_entity_t *ids = ecs_bulk_new_w_id(world, tag, 3);
+  const ecs_entity_t *ids = ecs_bulk_init(world, &(ecs_bulk_desc_t){
+    .count = 3,
+    .ids = {tag}
+  }, NULL);
   test_assert(ids[0] != 0);
   test_assert(ids[1] != 0);
   test_assert(ids[2] != 0);
@@ -657,7 +745,10 @@ void New_w_Count_recycle_2_of_3(void) {
   ecs_delete(world, e1);
   ecs_delete(world, e0);
 
-  const ecs_entity_t *ids = ecs_bulk_new_w_id(world, tag, 3);
+  const ecs_entity_t *ids = ecs_bulk_init(world, &(ecs_bulk_desc_t){
+    .count = 3,
+    .ids = {tag}
+  }, NULL);
   test_assert(ids[0] != 0);
   test_assert(ids[1] != 0);
   test_assert(ids[2] != 0);
@@ -678,7 +769,7 @@ void New_w_Count_bulk_init_w_table(void) {
     ecs_bulk_desc_t desc = {0};
     desc.count = 3;
     desc.table = table;
-    const ecs_entity_t *entities = ecs_bulk_init(world, &desc);
+    const ecs_entity_t *entities = ecs_bulk_init(world, &desc, NULL);
 
     test_assert(entities != NULL);
     test_assert(ecs_has(world, entities[0], Tag));
@@ -703,9 +794,15 @@ void New_w_Count_bulk_ids_w_1_exceed_32_bits(void) {
 
     const ecs_entity_range_t *range = ecs_entity_range_new(world, UINT32_MAX, 0);
     ecs_entity_range_set(world, range);
-    ecs_bulk_new_w_id(world, Tag, 1);
+    ecs_bulk_init(world, &(ecs_bulk_desc_t){
+        .count = 1,
+        .ids = {Tag}
+    }, NULL);
     test_expect_abort();
-    ecs_bulk_new_w_id(world, Tag, 1);
+    ecs_bulk_init(world, &(ecs_bulk_desc_t){
+        .count = 1,
+        .ids = {Tag}
+    }, NULL);
 
     ecs_fini(world);
 }
@@ -719,7 +816,10 @@ void New_w_Count_bulk_ids_w_2_exceed_32_bits(void) {
     const ecs_entity_range_t *range = ecs_entity_range_new(world, UINT32_MAX, 0);
     ecs_entity_range_set(world, range);
     test_expect_abort();
-    ecs_bulk_new_w_id(world, Tag, 2);
+    ecs_bulk_init(world, &(ecs_bulk_desc_t){
+        .count = 2,
+        .ids = {Tag}
+    }, NULL);
 
     ecs_fini(world);
 }
@@ -736,7 +836,7 @@ void New_w_Count_bulk_init_w_alive_entity(void) {
     ecs_bulk_init(world, &(ecs_bulk_desc_t){
         .entities = ents,
         .count = 1
-    });
+    }, NULL);
 }
 
 static void hook_w_add(ecs_iter_t *it) {
@@ -758,7 +858,7 @@ void New_w_Count_bulk_init_w_cmd_in_on_add_hook(void) {
     const ecs_entity_t *entities = ecs_bulk_init(world, &(ecs_bulk_desc_t){
         .count = 3,
         .ids = {ecs_id(Position)}
-    });
+    }, NULL);
 
     for (int i = 0; i < 3; i ++) {
         const Velocity *v = ecs_get(world, entities[i], Velocity);
@@ -787,7 +887,7 @@ void New_w_Count_bulk_init_w_cmd_in_on_add_observer(void) {
     const ecs_entity_t *entities = ecs_bulk_init(world, &(ecs_bulk_desc_t){
         .count = 3,
         .ids = {ecs_id(Position)}
-    });
+    }, NULL);
 
     for (int i = 0; i < 3; i ++) {
         const Velocity *v = ecs_get(world, entities[i], Velocity);

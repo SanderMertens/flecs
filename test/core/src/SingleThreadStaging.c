@@ -88,7 +88,10 @@ void SingleThreadStaging_new_w_component(void) {
 static void NewEmpty_w_count(ecs_iter_t *it) {
     IterData *ctx = ecs_get_ctx(it->world);
 
-    ctx->new_entities[ctx->entity_count] = ecs_bulk_new_w_id(it->world, 0, 1000)[0];
+    const ecs_entity_t *ids = ecs_bulk_init(it->world, &(ecs_bulk_desc_t){
+        .count = 1000
+    }, NULL);
+    ctx->new_entities[ctx->entity_count] = ids[0];
     ctx->entity_count ++;
 }
 
@@ -120,7 +123,9 @@ static void New_w_component_w_count(ecs_iter_t *it) {
     IterData *ctx = ecs_get_ctx(it->world);
     const ecs_entity_t *ids = NULL;
     if (ctx->component) {
-        ids = ecs_bulk_new_w_id(it->world, ctx->component, 1000);
+        ecs_bulk_desc_t desc = {.count = 1000};
+        desc.ids[0] = ctx->component;
+        ids = ecs_bulk_init(it->world, &desc, NULL);
     }
     ctx->new_entities[ctx->entity_count] = ids[0];
     ctx->entity_count ++;

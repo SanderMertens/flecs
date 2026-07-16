@@ -2767,7 +2767,7 @@ void World_fini_queue_overflow(void) {
     ecs_bulk_init(world, &(ecs_bulk_desc_t) {
         .count = 17000000,
         .ids = { ecs_isa(prefab) }
-    });
+    }, NULL);
 
     /* on world fini, all entities must be destroyed in batches. */
     ecs_fini(world);

@@ -1129,18 +1129,13 @@ typedef struct ecs_bulk_desc_t {
 
     ecs_id_t ids[FLECS_ID_DESC_MAX]; /**< IDs to create the entities with. */
 
-    void **data;       /**< Array with component data to insert. Each element in
-                        * the array must correspond with an element in the ids
-                        * array. If an element in the ids array is a tag, the
-                        * data array must contain a NULL. An element may be
-                        * set to NULL for a component, in which case the
-                        * component will not be set by the operation. */
-
     ecs_table_t *table; /**< Table to insert the entities into. Should not be set
-                         * at the same time as ids. When 'table' is set at the
-                         * same time as 'data', the elements in the data array
-                         * must correspond with the ids in the table's type. */
+                         * at the same time as ids. When 'table' is set, the
+                         * array of output pointers should exactly match the
+                         * order in which components (and tags) appear in the
+                         * table. */
 
+    bool emplace;       /** If true, components will not be constructed. */
 } ecs_bulk_desc_t;
 
 /** Used with ecs_component_init().
@@ -2811,47 +2806,31 @@ ecs_entity_t ecs_entity_init(
  * This operation bulk inserts a list of new or predefined entities into a
  * single table.
  *
- * The operation does not take ownership of component arrays provided by the
- * application. Components that are non-trivially copyable will be moved into
- * the storage.
- *
- * The operation will emit OnAdd events for each added ID, and OnSet events for
- * each component that has been set.
- *
- * If no entity IDs are provided by the application, the returned array of IDs
- * points to an internal data structure, which changes when new entities are
- * created or deleted.
- *
- * If as a result of the operation, observers are invoked that delete
- * entities and no entity IDs were provided by the application, the returned
- * array of identifiers may be incorrect. To avoid this problem, an application
- * can first call ecs_bulk_init() to create empty entities, copy the array to one
- * that is owned by the application, and then use this array to populate the
- * entities.
+ * The application must provide an array that is large enough to contain a
+ * pointer for all components. The operation will populate the array with the
+ * component arrays (but will not allocate the array itself).
  *
  * @param world The world.
  * @param desc Bulk creation parameters.
+ * @param ptrs_out Out parameter with component arrays to initialize.
  * @return An array with the list of entity IDs created or populated.
  */
 FLECS_API
 const ecs_entity_t* ecs_bulk_init(
     ecs_world_t *world,
-    const ecs_bulk_desc_t *desc);
+    const ecs_bulk_desc_t *desc,
+    void **ptrs_out);
 
-/** Create N new entities.
- * This operation is the same as ecs_new_w_id(), but creates N entities
- * instead of one.
+/** Emit OnSet events for bulk-inserted components.
  *
  * @param world The world.
- * @param component The component to create the entities with.
- * @param count The number of entities to create.
- * @return An array with the entity IDs of the newly created entities.
+ * @param desc Bulk creation parameters.
  */
 FLECS_API
-const ecs_entity_t* ecs_bulk_new_w_id(
+void ecs_bulk_modified(
     ecs_world_t *world,
-    ecs_id_t component,
-    int32_t count);
+    const ecs_bulk_desc_t *desc,
+    void **ptrs);
 
 /** Clone an entity.
  * This operation clones the components of one entity into another entity. If

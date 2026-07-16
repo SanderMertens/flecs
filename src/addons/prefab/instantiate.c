@@ -280,8 +280,30 @@ static void flecs_instantiate_children(
     /* Create children */
     int32_t child_row;
     diff.added_flags |= EcsTableEdgeReparent;
+    flecs_defer_begin(world, world->stages[0]);
     const ecs_entity_t *i_children = flecs_bulk_new(world, i_table, child_ids,
-        &diff.added, child_range.count, component_data, false, &child_row, &diff);
+        child_range.count, true, EcsEventNoOnSet, &child_row, &diff);
+
+    for (i = 0; i < diff.added.count; i ++) {
+        void *src_ptr = component_data[i];
+        int32_t column_index = ecs_table_type_to_column_index(i_table, i);
+        if (!src_ptr || column_index == -1) {
+            continue;
+        }
+
+        ecs_column_t *column = &i_table->data.columns[column_index];
+        void *dst_ptr = ECS_ELEM(column->data, column->ti->size, child_row);
+        flecs_type_info_copy(
+            dst_ptr, src_ptr, child_range.count, column->ti);
+    }
+
+    for (i = 0; i < i_table->column_count; i ++) {
+        ecs_id_t component = flecs_column_id(i_table, i);
+        ecs_type_t set_type = { .array = &component, .count = 1 };
+        flecs_notify_on_set_ids(
+            world, i_table, child_row, child_range.count, &set_type, NULL);
+    }
+    flecs_defer_end(world, world->stages[0]);
 
     flecs_instantiate_sparse(
         world, &child_range, children, i_table, i_children, child_row, false);

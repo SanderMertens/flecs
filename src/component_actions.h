@@ -107,6 +107,7 @@ void flecs_notify_on_set_ids(
     ecs_table_t *table,
     int32_t row,
     int32_t count,
-    ecs_type_t *ids);
+    ecs_type_t *ids,
+    void **ptrs);
 
 #endif

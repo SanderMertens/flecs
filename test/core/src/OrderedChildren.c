@@ -1724,7 +1724,7 @@ void OrderedChildren_bulk_create_ordered_children(void) {
     ids = ecs_bulk_init(world, &(ecs_bulk_desc_t) {
         .count = 1,
         .ids = { Foo, ecs_childof(parent) }
-    });
+    }, NULL);
 
     test_assert(ids != NULL);
 
@@ -1733,7 +1733,7 @@ void OrderedChildren_bulk_create_ordered_children(void) {
     ids = ecs_bulk_init(world, &(ecs_bulk_desc_t) {
         .count = 1,
         .ids = { Bar, ecs_childof(parent) }
-    });
+    }, NULL);
 
     test_assert(ids != NULL);
 
@@ -1742,7 +1742,7 @@ void OrderedChildren_bulk_create_ordered_children(void) {
     ids = ecs_bulk_init(world, &(ecs_bulk_desc_t) {
         .count = 1,
         .ids = { Foo, ecs_childof(parent) }
-    });
+    }, NULL);
 
     test_assert(ids != NULL);
 

@@ -425,6 +425,7 @@ void New_w_Count_bulk_init_2_components(void);
 void New_w_Count_bulk_init_1_component_w_value(void);
 void New_w_Count_bulk_init_2_components_w_value(void);
 void New_w_Count_bulk_init_2_components_tag_w_value(void);
+void New_w_Count_bulk_init_emplace(void);
 void New_w_Count_add_after_bulk(void);
 void New_w_Count_add_after_bulk_w_component(void);
 void New_w_Count_add_after_bulk_w_ctor(void);
@@ -5002,6 +5003,10 @@ bake_test_case New_w_Count_testcases[] = {
     {
         "bulk_init_2_components_tag_w_value",
         New_w_Count_bulk_init_2_components_tag_w_value
+    },
+    {
+        "bulk_init_emplace",
+        New_w_Count_bulk_init_emplace
     },
     {
         "add_after_bulk",
@@ -16613,7 +16618,7 @@ static bake_test_suite suites[] = {
         "New_w_Count",
         NULL,
         NULL,
-        25,
+        26,
         New_w_Count_testcases
     },
     {

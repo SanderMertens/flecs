@@ -3039,13 +3039,19 @@ void Template_bulk_create_template(void) {
         {30, 40}
     };
 
-    void *data[] = {p};
+    void *data[1];
 
-    const ecs_entity_t *entities = ecs_bulk_init(world, &(ecs_bulk_desc_t) {
+    const ecs_entity_t *result = ecs_bulk_init(world, &(ecs_bulk_desc_t) {
         .count = 2,
-        .ids = {ecs_id(Position)},
-        .data = data
-    });
+        .ids = {ecs_id(Position)}
+    }, data);
+    ecs_entity_t entities[2] = {result[0], result[1]};
+    ecs_os_memcpy_n(data[0], p, Position, 2);
+    ecs_bulk_modified(world, &(ecs_bulk_desc_t) {
+        .entities = entities,
+        .count = 2,
+        .ids = {ecs_id(Position)}
+    }, data);
 
     test_assert(entities[0] != 0);
     test_assert(entities[1] != 0);

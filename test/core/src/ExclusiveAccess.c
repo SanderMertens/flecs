@@ -857,7 +857,7 @@ static void* thread_exclusive_access_other_bulk_init(void *arg) {
     test_expect_abort();
     ecs_bulk_init(world, &(ecs_bulk_desc_t) {
         .count = 3
-    });
+    }, NULL);
     return NULL;
 }
 

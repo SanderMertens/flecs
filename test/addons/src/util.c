@@ -79,7 +79,9 @@ const ecs_entity_t* bulk_new_w_type(
     while ((ecs_id_get_flags(world, ids[i]) & EcsIdOnInstantiateDontInherit)) {
         i ++;
     }
-    const ecs_entity_t *result = ecs_bulk_new_w_id(world, ids[i], count);
+    ecs_bulk_desc_t desc = {.count = count};
+    desc.ids[0] = ids[i];
+    const ecs_entity_t *result = ecs_bulk_init(world, &desc, NULL);
     for (; i < type->count; i ++) {
         for (int e = 0; e < count; e ++) {
             if (ecs_id_get_flags(world, ids[i]) & EcsIdOnInstantiateDontInherit) {

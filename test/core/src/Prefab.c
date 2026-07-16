@@ -135,7 +135,10 @@ void Prefab_new_w_count_prefab(void) {
 
     ecs_set(world, Prefab, Position, {10, 20});
 
-    const ecs_entity_t *ids = ecs_bulk_new_w_id(world, ecs_pair(EcsIsA, Prefab), 10);
+    const ecs_entity_t *ids = ecs_bulk_init(world, &(ecs_bulk_desc_t){
+        .count = 10,
+        .ids = {ecs_pair(EcsIsA, Prefab)}
+    }, NULL);
     test_assert(ids != NULL);
 
     ecs_entity_t i;
@@ -922,8 +925,10 @@ void Prefab_new_w_count_w_override(void) {
     ecs_set(world, Prefab, Position, {10, 20});
     ecs_set(world, Prefab, Velocity, {30, 40});
 
-    const ecs_entity_t *ids = ecs_bulk_new_w_id(
-        world, ecs_pair(EcsIsA, Prefab), 100);
+    const ecs_entity_t *ids = ecs_bulk_init(world, &(ecs_bulk_desc_t){
+        .count = 100,
+        .ids = {ecs_pair(EcsIsA, Prefab)}
+    }, NULL);
     test_assert(ids != NULL);
 
     const Position *prefab_p = ecs_get(world, Prefab, Position);
@@ -965,8 +970,10 @@ void Prefab_new_w_count_w_override_w_on_set_hook(void) {
 
     ecs_set(world, Prefab, Position, {10, 20});
 
-    const ecs_entity_t *ids = ecs_bulk_new_w_id(
-        world, ecs_pair(EcsIsA, Prefab), 100);
+    const ecs_entity_t *ids = ecs_bulk_init(world, &(ecs_bulk_desc_t){
+        .count = 100,
+        .ids = {ecs_pair(EcsIsA, Prefab)}
+    }, NULL);
     test_assert(ids != NULL);
 
     int i;
@@ -999,7 +1006,10 @@ void Prefab_override_2_components_different_size(void) {
     ecs_set(world, Prefab, Velocity, {30, 40});
     ecs_set(world, Prefab, Color, {1, 2, 3, 4});
 
-    const ecs_entity_t *ids = ecs_bulk_new_w_id(world, ecs_pair(EcsIsA, Prefab), 100);
+    const ecs_entity_t *ids = ecs_bulk_init(world, &(ecs_bulk_desc_t){
+        .count = 100,
+        .ids = {ecs_pair(EcsIsA, Prefab)}
+    }, NULL);
     test_assert(ids != NULL);
 
     const Position *prefab_p = ecs_get(world, Prefab, Position);
@@ -1498,7 +1508,10 @@ void Prefab_prefab_w_child_new_w_count(void) {
         ECS_ENTITY(world, Child, Prefab, (ChildOf, Parent), Position);
             ecs_set(world, Child, Position, {2, 3});
 
-    const ecs_entity_t *ids = ecs_bulk_new_w_id(world, ecs_pair(EcsIsA, Parent), 3);
+    const ecs_entity_t *ids = ecs_bulk_init(world, &(ecs_bulk_desc_t){
+        .count = 3,
+        .ids = {ecs_pair(EcsIsA, Parent)}
+    }, NULL);
     test_assert(ids != NULL);
 
     int i;
@@ -2063,7 +2076,9 @@ void NewPrefab_w_count(ecs_iter_t *it) {
     ecs_entity_t *ids = ecs_get_ctx(it->world);
     ecs_id_t Prefab = ecs_field_id(it, 0);
 
-    const ecs_entity_t *new_ids = ecs_bulk_new_w_id(it->world, ecs_pair(EcsIsA, Prefab), 3);
+    ecs_bulk_desc_t desc = {.count = 3};
+    desc.ids[0] = ecs_pair(EcsIsA, Prefab);
+    const ecs_entity_t *new_ids = ecs_bulk_init(it->world, &desc, NULL);
     test_assert(new_ids != NULL);
     memcpy(ids, new_ids, sizeof(ecs_entity_t) * 3);
 }

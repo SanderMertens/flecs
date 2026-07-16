@@ -518,7 +518,8 @@ void flecs_notify_on_set_ids(
     ecs_table_t *table,
     int32_t row,
     int32_t count,
-    ecs_type_t *ids)
+    ecs_type_t *ids,
+    void **ptrs)
 {
     ecs_assert(ids != NULL, ECS_INTERNAL_ERROR, NULL);
     const ecs_entity_t *entities = &ecs_table_entities(table)[row];
@@ -528,17 +529,26 @@ void flecs_notify_on_set_ids(
 
     bool dont_fragment = false;
     bool any_validate = false;
+    ecs_type_t emit_ids = {
+        .array = ecs_os_alloca_n(ecs_id_t, ids->count)
+    };
 
     int i;
     for (i = 0; i < ids->count; i ++) {
         ecs_id_t id = ids->array[i];
         ecs_component_record_t *cr = flecs_components_get(world, id);
-        dont_fragment |= (cr->flags & EcsIdDontFragment) != 0;
         ecs_assert(cr != NULL, ECS_INTERNAL_ERROR, NULL);
 
         const ecs_type_info_t *ti = cr->type_info;
+        if (!ti) {
+            continue;
+        }
+
+        emit_ids.array[emit_ids.count ++] = id;
+        dont_fragment |= (cr->flags & EcsIdDontFragment) != 0;
         ecs_iter_action_t on_set = ti->hooks.on_set;
         ecs_on_validate_t on_validate = ti->hooks.on_validate;
+        void *ptr = ptrs ? ptrs[i] : NULL;
 
         if (on_validate) {
             any_validate = true;
@@ -549,7 +559,7 @@ void flecs_notify_on_set_ids(
         }
 
         int16_t column = -1;
-        if (!(cr->flags & EcsIdSparse)) {
+        if (!(cr->flags & EcsIdSparse) && !ptr) {
             const ecs_table_cache_elem_t *elem = flecs_table_cache_get_elem(
                 &cr->cache, table);
             ecs_assert(elem != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -564,15 +574,17 @@ void flecs_notify_on_set_ids(
             int32_t j;
             for (j = 0; j < count; j ++) {
                 ecs_entity_t e = entities[j];
-                void *ptr = flecs_get_component(world, table, row + j, cr);
-                if (!on_validate(world, e, ptr)) {
+                void *elem_ptr = ptr
+                    ? ECS_ELEM(ptr, ti->size, j)
+                    : flecs_get_component(world, table, row + j, cr);
+                if (!on_validate(world, e, elem_ptr)) {
                     continue;
                 }
 
                 if (on_set) {
                     int32_t hook_row = (cr->flags & EcsIdSparse) ? row : row + j;
                     flecs_invoke_hook(world, table, cr, column, 1, hook_row,
-                        &entities[j], id, ti, EcsOnSet, on_set, ptr);
+                        &entities[j], id, ti, EcsOnSet, on_set, elem_ptr);
                 }
 
                 if (emit) {
@@ -584,7 +596,7 @@ void flecs_notify_on_set_ids(
                         .offset = row + j,
                         .count = 1,
                         .observable = world,
-                        .set_ptr = ptr
+                        .set_ptr = elem_ptr
                     });
                 }
             }
@@ -599,16 +611,18 @@ void flecs_notify_on_set_ids(
             }
         } else {
             flecs_invoke_hook(world, table, cr, column, count, row,
-                entities, id, ti, EcsOnSet, on_set, NULL);
+                entities, id, ti, EcsOnSet, on_set, ptr);
         }
     }
 
     /* Run OnSet notifications */
     if (!any_validate) {
-        if ((dont_fragment || table->flags & EcsTableHasOnSet) && ids->count) {
+        if ((dont_fragment || table->flags & EcsTableHasOnSet) &&
+            emit_ids.count)
+        {
             flecs_emit(world, world, &(ecs_event_desc_t) {
                 .event = EcsOnSet,
-                .ids = ids,
+                .ids = &emit_ids,
                 .table = table,
                 .offset = row,
                 .count = count,
@@ -619,7 +633,7 @@ void flecs_notify_on_set_ids(
         for (i = 0; i < ids->count; i ++) {
             ecs_id_t id = ids->array[i];
             ecs_component_record_t *cr = flecs_components_get(world, id);
-            if (cr->type_info->hooks.on_validate) {
+            if (!cr->type_info || cr->type_info->hooks.on_validate) {
                 continue;
             }
 

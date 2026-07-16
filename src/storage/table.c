@@ -1593,7 +1593,8 @@ static int32_t flecs_table_grow_data(
     ecs_table_t *table,
     int32_t to_add,
     int32_t size,
-    const ecs_entity_t *ids)
+    const ecs_entity_t *ids,
+    bool construct)
 {
     flecs_poly_assert(world, ecs_world_t);
 
@@ -1647,7 +1648,7 @@ static int32_t flecs_table_grow_data(
         ecs_column_t *column = &columns[i];
         const ecs_type_info_t *ti = column->ti;
         ecs_vec_t v_column = ecs_vec_from_column_ext(column, prev_count, prev_size, ti->size);
-        flecs_table_grow_column(world, table, i, &v_column, ti, to_add, size, true);
+        flecs_table_grow_column(world, table, i, &v_column, ti, to_add, size, construct);
         ecs_assert(v_column.size == size, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(v_column.size == v_entities.size, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(v_column.count == v_entities.count, ECS_INTERNAL_ERROR, NULL);
@@ -2091,7 +2092,8 @@ int32_t flecs_table_appendn(
     ecs_world_t *world,
     ecs_table_t *table,
     int32_t to_add,
-    const ecs_entity_t *ids)
+    const ecs_entity_t *ids,
+    bool construct)
 {
     ecs_assert(!table->_->lock, ECS_LOCKED_STORAGE, 
         FLECS_LOCKED_STORAGE_MSG("table bulk append"));
@@ -2107,7 +2109,7 @@ int32_t flecs_table_appendn(
     flecs_table_check_sanity(table);
     int32_t cur_count = ecs_table_count(table);
     int32_t result = flecs_table_grow_data(
-        world, table, to_add, cur_count + to_add, ids);
+        world, table, to_add, cur_count + to_add, ids, construct);
     flecs_table_check_sanity(table);
 
     return result;

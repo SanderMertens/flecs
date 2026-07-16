@@ -217,7 +217,8 @@ int32_t flecs_table_appendn(
     ecs_world_t *world,
     ecs_table_t *table,
     int32_t count,
-    const ecs_entity_t *ids);
+    const ecs_entity_t *ids,
+    bool construct);
 
 /* Shrink table to contents */
 bool flecs_table_shrink(

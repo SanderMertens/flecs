@@ -304,8 +304,9 @@
     ecs_new_w_id(world, ecs_pair(first, second))
 
 /** Bulk create entities with a component. */
-#define ecs_bulk_new(world, component, count)\
-    ecs_bulk_new_w_id(world, ecs_id(component), count)
+#define ecs_bulk_new(world, component, entity_count)\
+    ecs_bulk_init(world, &(ecs_bulk_desc_t){\
+        .count = entity_count, .ids = {ecs_id(component)}}, NULL)
 
 /** @} */
 

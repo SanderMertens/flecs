@@ -2217,13 +2217,20 @@ void Sparse_bulk_init(void) {
         {50, 60}
     };
 
-    void *data[] = {p};
+    void *data[1];
 
     const ecs_entity_t *entities = ecs_bulk_init(world, &(ecs_bulk_desc_t){
         .count = 3,
-        .ids = {ecs_id(Position)},
-        .data = data
-    });
+        .ids = {ecs_id(Position)}
+    }, data);
+    test_assert(data[0] == NULL);
+    for (int i = 0; i < 3; i ++) {
+        ecs_set_ptr(world, entities[i], Position, &p[i]);
+    }
+    ecs_bulk_modified(world, &(ecs_bulk_desc_t){
+        .count = 3,
+        .ids = {ecs_id(Position)}
+    }, data);
 
     test_assert(ecs_has(world, entities[0], Position));
     test_assert(ecs_has(world, entities[1], Position));
@@ -2267,13 +2274,21 @@ void Sparse_bulk_init_w_non_sparse(void) {
         {5, 6}
     };
 
-    void *data[] = {p, v};
+    void *data[2];
 
     const ecs_entity_t *entities = ecs_bulk_init(world, &(ecs_bulk_desc_t){
         .count = 3,
-        .ids = {ecs_id(Position), ecs_id(Velocity)},
-        .data = data
-    });
+        .ids = {ecs_id(Position), ecs_id(Velocity)}
+    }, data);
+    test_assert(data[0] == NULL);
+    for (int i = 0; i < 3; i ++) {
+        ecs_set_ptr(world, entities[i], Position, &p[i]);
+    }
+    ecs_os_memcpy_n(data[1], v, Velocity, 3);
+    ecs_bulk_modified(world, &(ecs_bulk_desc_t){
+        .count = 3,
+        .ids = {ecs_id(Position), ecs_id(Velocity)}
+    }, data);
 
     test_assert(ecs_has(world, entities[0], Position));
     test_assert(ecs_has(world, entities[1], Position));
@@ -2800,13 +2815,16 @@ void Sparse_on_set_after_bulk_init(void) {
         {50, 60}
     };
 
-    void *data[] = {p};
+    void *data[1];
 
     const ecs_entity_t *entities = ecs_bulk_init(world, &(ecs_bulk_desc_t){
         .count = 3,
-        .ids = {ecs_id(Position)},
-        .data = data
-    });
+        .ids = {ecs_id(Position)}
+    }, data);
+    test_assert(data[0] == NULL);
+    for (int i = 0; i < 3; i ++) {
+        ecs_set_ptr(world, entities[i], Position, &p[i]);
+    }
 
     test_assert(ecs_has(world, entities[0], Position));
     test_assert(ecs_has(world, entities[1], Position));

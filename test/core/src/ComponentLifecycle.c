@@ -5364,13 +5364,17 @@ void ComponentLifecycle_on_validate_per_entity_in_bulk(void) {
         {50, 60}
     };
 
-    void *data[] = {p};
+    void *data[1];
 
     const ecs_entity_t *entities = ecs_bulk_init(world, &(ecs_bulk_desc_t){
         .count = 3,
-        .ids = {ecs_id(Position)},
-        .data = data
-    });
+        .ids = {ecs_id(Position)}
+    }, data);
+    ecs_os_memcpy_n(data[0], p, Position, 3);
+    ecs_bulk_modified(world, &(ecs_bulk_desc_t){
+        .count = 3,
+        .ids = {ecs_id(Position)}
+    }, data);
 
     test_assert(entities != NULL);
 

@@ -70,10 +70,9 @@ const ecs_entity_t* flecs_bulk_new(
     ecs_world_t *world,
     ecs_table_t *table,
     const ecs_entity_t *entities,
-    ecs_type_t *component_ids,
     int32_t count,
-    void **c_info,
-    bool move,
+    bool construct,
+    ecs_flags32_t evt_flags,
     int32_t *row_out,
     ecs_table_diff_t *diff);
 

@@ -1227,7 +1227,7 @@ void sys_bulk_init(ecs_iter_t *it) {
     ecs_bulk_init(it->world, &(ecs_bulk_desc_t){
         .count = 10,
         .ids = {Tag}
-    });
+    }, NULL);
 }
 
 void MultiThread_bulk_new_in_no_readonly_w_multithread(void) {
@@ -1262,7 +1262,7 @@ void sys_bulk_init_2(ecs_iter_t *it) {
     ecs_bulk_init(it->world, &(ecs_bulk_desc_t){
         .count = 1,
         .ids = {ecs_id(Position)}
-    });
+    }, NULL);
 
     ecs_iter_t qit = ecs_query_iter(it->world, it->ctx);
     ecs_iter_fini(&qit);

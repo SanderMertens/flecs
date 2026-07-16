@@ -439,7 +439,10 @@ void TriggerOnSet_on_set_after_override_w_new_w_count(void) {
     Probe ctx = {0};
     ecs_set_ctx(world, &ctx, NULL);
 
-    const ecs_entity_t *ids = ecs_bulk_new_w_id(world, ecs_pair(EcsIsA, Prefab), 3);
+    const ecs_entity_t *ids = ecs_bulk_init(world, &(ecs_bulk_desc_t){
+        .count = 3,
+        .ids = {ecs_pair(EcsIsA, Prefab)}
+    }, NULL);
     test_assert(ids != NULL);
 
     test_int(ctx.count, 3);

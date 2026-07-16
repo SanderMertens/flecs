@@ -998,7 +998,7 @@ void Table_empty_flag_bulk_init(void) {
     const ecs_entity_t *entities = ecs_bulk_init(world, &(ecs_bulk_desc_t){
         .count = 3,
         .ids = { Foo }
-    });
+    }, NULL);
     test_assert(entities != NULL);
     test_assert(ecs_get_table(world, entities[0]) == table);
     test_assert(!ecs_table_has_flags(table, EcsTableEmpty));
