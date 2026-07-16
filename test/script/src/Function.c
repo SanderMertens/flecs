@@ -1538,6 +1538,144 @@ void Function_call(void) {
     ecs_fini(world);
 }
 
+void Function_call_w_using(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t logistics = ecs_entity(world, {
+        .name = "foo.logistics"
+    });
+    ecs_entity_t carrier = ecs_struct(world, {
+        .entity = ecs_entity(world, {
+            .name = "Carrier",
+            .parent = logistics
+        }),
+        .members = {
+            {"home", ecs_id(ecs_entity_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "using foo"
+    LINE "fn create(parent: entity) -> entity {"
+    LINE "    new { logistics.Carrier: { home: parent } }"
+    LINE "}";
+
+    test_int(ecs_script_run(world, NULL, expr, NULL), 0);
+
+    ecs_entity_t function = ecs_lookup(world, "create");
+    test_assert(function != 0);
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_value_t argv[] = {
+        { ecs_id(ecs_entity_t), &parent }
+    };
+    ecs_value_t result = {0};
+
+    test_int(ecs_function_call(world, function, 1, argv, &result), 0);
+    test_uint(result.type, ecs_id(ecs_entity_t));
+    test_assert(result.ptr != NULL);
+
+    ecs_entity_t spawned = *(ecs_entity_t*)result.ptr;
+    const ecs_entity_t *home = ecs_get_id(world, spawned, carrier);
+    test_assert(home != NULL);
+    test_uint(*home, parent);
+
+    ecs_value_fini(world, &result);
+    ecs_fini(world);
+}
+
+void Function_call_w_using_nested(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t logistics = ecs_entity(world, {
+        .name = "foo.logistics"
+    });
+    ecs_entity_t carrier = ecs_struct(world, {
+        .entity = ecs_entity(world, {
+            .name = "Carrier",
+            .parent = logistics
+        }),
+        .members = {
+            {"home", ecs_id(ecs_entity_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "using foo.logistics"
+    LINE "fn create(parent: entity) -> entity {"
+    LINE "    new { Carrier: { home: parent } }"
+    LINE "}";
+
+    test_int(ecs_script_run(world, NULL, expr, NULL), 0);
+
+    ecs_entity_t function = ecs_lookup(world, "create");
+    test_assert(function != 0);
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_value_t argv[] = {
+        { ecs_id(ecs_entity_t), &parent }
+    };
+    ecs_value_t result = {0};
+
+    test_int(ecs_function_call(world, function, 1, argv, &result), 0);
+    test_uint(result.type, ecs_id(ecs_entity_t));
+    test_assert(result.ptr != NULL);
+
+    ecs_entity_t spawned = *(ecs_entity_t*)result.ptr;
+    const ecs_entity_t *home = ecs_get_id(world, spawned, carrier);
+    test_assert(home != NULL);
+    test_uint(*home, parent);
+
+    ecs_value_fini(world, &result);
+    ecs_fini(world);
+}
+
+void Function_call_w_using_wildcard(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t logistics = ecs_entity(world, {
+        .name = "foo.logistics"
+    });
+    ecs_entity_t carrier = ecs_struct(world, {
+        .entity = ecs_entity(world, {
+            .name = "Carrier",
+            .parent = logistics
+        }),
+        .members = {
+            {"home", ecs_id(ecs_entity_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "using foo.*"
+    LINE "fn create(parent: entity) -> entity {"
+    LINE "    new { Carrier: { home: parent } }"
+    LINE "}";
+
+    test_int(ecs_script_run(world, NULL, expr, NULL), 0);
+
+    ecs_entity_t function = ecs_lookup(world, "create");
+    test_assert(function != 0);
+
+    ecs_entity_t parent = ecs_new(world);
+    ecs_value_t argv[] = {
+        { ecs_id(ecs_entity_t), &parent }
+    };
+    ecs_value_t result = {0};
+
+    test_int(ecs_function_call(world, function, 1, argv, &result), 0);
+    test_uint(result.type, ecs_id(ecs_entity_t));
+    test_assert(result.ptr != NULL);
+
+    ecs_entity_t spawned = *(ecs_entity_t*)result.ptr;
+    const ecs_entity_t *home = ecs_get_id(world, spawned, carrier);
+    test_assert(home != NULL);
+    test_uint(*home, parent);
+
+    ecs_value_fini(world, &result);
+    ecs_fini(world);
+}
+
 void Function_call_w_result(void) {
     ecs_world_t *world = ecs_init();
 

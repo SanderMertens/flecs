@@ -147,6 +147,7 @@ typedef struct ecs_script_user_function_t {
     ecs_script_t *script;
     ecs_script_function_node_t *node;
     ecs_vec_t refs;
+    ecs_vec_t using;
 } ecs_script_user_function_t;
 
 void flecs_script_user_function_callback(

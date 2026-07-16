@@ -396,6 +396,7 @@ int flecs_script_function_call(
     ecs_check(result != NULL, ECS_INVALID_PARAMETER, NULL);
 
     const ecs_script_parameter_t *params = ecs_vec_first(&f->params);
+    (void)params;
     int32_t i;
     for (i = 0; i < argc; i ++) {
         ecs_check(argv[i].type == params[i].type, ECS_INVALID_PARAMETER,

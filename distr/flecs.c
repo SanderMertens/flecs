@@ -51881,6 +51881,7 @@ typedef struct ecs_script_user_function_t {
     ecs_script_t *script;
     ecs_script_function_node_t *node;
     ecs_vec_t refs;
+    ecs_vec_t using;
 } ecs_script_user_function_t;
 
 void flecs_script_user_function_callback(
@@ -68995,6 +68996,7 @@ int flecs_script_function_call(
     ecs_check(result != NULL, ECS_INVALID_PARAMETER, NULL);
 
     const ecs_script_parameter_t *params = ecs_vec_first(&f->params);
+    (void)params;
     int32_t i;
     for (i = 0; i < argc; i ++) {
         ecs_check(argv[i].type == params[i].type, ECS_INVALID_PARAMETER,
@@ -76849,6 +76851,12 @@ void flecs_script_user_function_callback(
     flecs_script_eval_visit_init(impl, &v, &desc);
 
     ecs_allocator_t *a = &v.r->allocator;
+    int32_t using_count = ecs_vec_count(&uf->using);
+    ecs_entity_t *using = ecs_vec_first(&uf->using);
+    for (int32_t u = 0; u < using_count; u ++) {
+        ecs_vec_append_t(a, &v.r->using, ecs_entity_t)[0] = using[u];
+    }
+
     v.vars = flecs_script_vars_push(v.vars, &v.r->stack, a);
 
     int32_t i, param_count = ecs_vec_count(&node->params);
@@ -76905,6 +76913,7 @@ void flecs_script_user_function_ctx_free(
         ecs_script_free(uf->script);
     }
     ecs_vec_fini_t(NULL, &uf->refs, ecs_script_ref_t);
+    ecs_vec_fini_t(NULL, &uf->using, ecs_entity_t);
     ecs_os_free(uf);
 }
 
@@ -77116,6 +77125,7 @@ int flecs_script_eval_function(
     v->base.script->refcount ++;
     uf->node = node;
     uf->refs = fn_refs;
+    uf->using = ecs_vec_copy_t(NULL, &v->r->using, ecs_entity_t);
 
     EcsScriptFunction *fcomp = ecs_ensure(world, fn_entity, EcsScriptFunction);
     if (fcomp->binding_ctx && fcomp->binding_ctx_free) {
