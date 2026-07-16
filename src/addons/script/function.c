@@ -512,11 +512,12 @@ int ecs_function_call(
     const ecs_value_t *argv,
     ecs_value_t *result)
 {
-    flecs_poly_assert(world, ecs_world_t);
+    ecs_world_t *real_world = world;
+    flecs_stage_from_world(&real_world);
     ecs_check(function != 0, ECS_INVALID_PARAMETER, NULL);
 
     const EcsScriptFunction *f = ecs_get(
-        world, function, EcsScriptFunction);
+        real_world, function, EcsScriptFunction);
     return flecs_script_function_call(
         world, function, f, NULL, argc, argv, result);
 error:
@@ -531,11 +532,13 @@ int ecs_method_call(
     const ecs_value_t *argv,
     ecs_value_t *result)
 {
-    flecs_poly_assert(world, ecs_world_t);
+    ecs_world_t *real_world = world;
+    flecs_stage_from_world(&real_world);
     ecs_check(method != 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(instance != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    const EcsScriptMethod *f = ecs_get(world, method, EcsScriptMethod);
+    const EcsScriptMethod *f = ecs_get(
+        real_world, method, EcsScriptMethod);
     return flecs_script_function_call(
         world, method, f, instance, argc, argv, result);
 error:

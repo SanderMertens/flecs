@@ -2018,10 +2018,12 @@ void flecs_script_user_function_callback(
     ecs_value_t *result)
 {
     ecs_world_t *world = ctx->world;
+    ecs_world_t *real_world = world;
+    flecs_stage_from_world(&real_world);
     bool failed = false;
 
     const EcsScriptFunction *fcomp = ecs_get(
-        world, ctx->function, EcsScriptFunction);
+        real_world, ctx->function, EcsScriptFunction);
     if (!fcomp || !fcomp->binding_ctx) {
         ecs_err("script function entity is missing binding context");
         flecs_script_runtime_get(world)->error = true;
@@ -2043,7 +2045,8 @@ void flecs_script_user_function_callback(
     ecs_script_fn_param_t *params = ecs_vec_first(&node->params);
 
     for (i = 0; i < argc && i < param_count; i ++) {
-        const ecs_type_info_t *ti = ecs_get_type_info(world, argv[i].type);
+        const ecs_type_info_t *ti = ecs_get_type_info(
+            real_world, argv[i].type);
         ecs_script_var_t *var = ecs_script_vars_declare(
             v.vars, params[i].name);
         var->value.type = argv[i].type;
@@ -2055,7 +2058,7 @@ void flecs_script_user_function_callback(
                 &v.r->stack, ti->size, ti->alignment);
             flecs_type_info_ctor(var->value.ptr, 1, ti);
             ecs_ptr_copy_w_type_info(
-                world, ti, var->value.ptr, argv[i].ptr);
+                real_world, ti, var->value.ptr, argv[i].ptr);
         } else {
             var->value.ptr = argv[i].ptr;
         }
