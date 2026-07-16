@@ -24,6 +24,52 @@ typedef struct ecs_script_eval_visitor_t {
     ecs_script_vars_t *vars;
 } ecs_script_eval_visitor_t;
 
+typedef struct flecs_script_entity_state_t {
+    ecs_script_entity_t *entity;
+    ecs_entity_t template_entity;
+    bool is_with_scope;
+} flecs_script_entity_state_t;
+
+int flecs_script_eval_entity_enter(
+    ecs_script_eval_visitor_t *v,
+    ecs_script_entity_t *node,
+    flecs_script_entity_state_t *state);
+
+void flecs_script_eval_entity_leave(
+    ecs_script_eval_visitor_t *v,
+    ecs_script_entity_t *node,
+    const flecs_script_entity_state_t *state);
+
+typedef struct flecs_script_with_state_t {
+    ecs_stack_cursor_t *cursor;
+    int32_t with_count;
+    bool is_with_scope;
+} flecs_script_with_state_t;
+
+int flecs_script_eval_with_enter(
+    ecs_script_eval_visitor_t *v,
+    ecs_script_with_t *node,
+    flecs_script_with_state_t *state);
+
+void flecs_script_eval_with_leave(
+    ecs_script_eval_visitor_t *v,
+    const flecs_script_with_state_t *state);
+
+typedef struct flecs_script_pair_scope_state_t {
+    ecs_entity_t with_relationship;
+    ecs_entity_t second;
+    int32_t with_relationship_sp;
+} flecs_script_pair_scope_state_t;
+
+int flecs_script_eval_pair_scope_enter(
+    ecs_script_eval_visitor_t *v,
+    ecs_script_pair_scope_t *node,
+    flecs_script_pair_scope_state_t *state);
+
+void flecs_script_eval_pair_scope_leave(
+    ecs_script_eval_visitor_t *v,
+    const flecs_script_pair_scope_state_t *state);
+
 void flecs_script_eval_error_(
     ecs_script_eval_visitor_t *v,
     ecs_script_node_t *node,
@@ -60,6 +106,11 @@ int flecs_script_eval_expr(
     ecs_script_eval_visitor_t *v,
     ecs_expr_node_t **expr_ptr,
     ecs_value_t *value);
+
+int flecs_script_prepare_expr(
+    ecs_script_eval_visitor_t *v,
+    ecs_expr_node_t **expr_ptr,
+    ecs_entity_t type);
 
 void flecs_script_eval_visit_init(
     const ecs_script_impl_t *script,

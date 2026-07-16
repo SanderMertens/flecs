@@ -321,6 +321,20 @@ int flecs_expr_new_to_str(
 }
 
 static
+int flecs_expr_script_to_str(
+    ecs_expr_str_visitor_t *v,
+    const ecs_expr_script_t *node)
+{
+    flecs_expr_color_to_str(v, ECS_BLUE);
+    ecs_strbuf_appendlit(v->buf, "script ");
+    flecs_expr_color_to_str(v, ECS_NORMAL);
+    ecs_strbuf_appendlit(v->buf, "{");
+    ecs_strbuf_appendstr(v->buf, node->script->code);
+    ecs_strbuf_appendlit(v->buf, "}");
+    return 0;
+}
+
+static
 int flecs_expr_cast_to_str(
     ecs_expr_str_visitor_t *v,
     const ecs_expr_cast_t *node)
@@ -440,6 +454,13 @@ int flecs_expr_node_to_str(
     case EcsExprNew:
         if (flecs_expr_new_to_str(v, 
             (const ecs_expr_new_t*)node)) 
+        {
+            goto error;
+        }
+        break;
+    case EcsExprScript:
+        if (flecs_expr_script_to_str(v,
+            (const ecs_expr_script_t*)node))
         {
             goto error;
         }

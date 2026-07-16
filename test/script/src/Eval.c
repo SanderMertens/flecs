@@ -17672,3 +17672,223 @@ void Eval_var_w_value_name(void) {
 
     ecs_fini(world);
 }
+
+void Eval_script_expr(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "export const s: script { Foo {} }";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_lookup(world, "Foo") == 0);
+
+    ecs_entity_t s_var = ecs_lookup(world, "s");
+    test_assert(s_var != 0);
+    ecs_value_t value = ecs_const_var_get(world, s_var);
+    test_uint(value.type, ecs_id(ecs_entity_t));
+    test_assert(value.ptr != NULL);
+
+    ecs_entity_t s = *(ecs_entity_t*)value.ptr;
+    test_assert(s != 0);
+    test_assert(ecs_is_alive(world, s));
+    const EcsScript *script = ecs_get(world, s, EcsScript);
+    test_assert(script != NULL);
+    test_assert(script->script != NULL);
+    test_assert(script->code != NULL);
+
+    test_assert(ecs_script_eval(script->script, NULL, NULL) == 0);
+    test_assert(ecs_lookup(world, "Foo") != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_script_expr_empty(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "export const s: script {}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t s_var = ecs_lookup(world, "s");
+    test_assert(s_var != 0);
+    ecs_value_t value = ecs_const_var_get(world, s_var);
+    test_uint(value.type, ecs_id(ecs_entity_t));
+    test_assert(value.ptr != NULL);
+
+    ecs_entity_t s = *(ecs_entity_t*)value.ptr;
+    const EcsScript *script = ecs_get(world, s, EcsScript);
+    test_assert(script != NULL);
+    test_assert(script->script != NULL);
+    test_assert(ecs_script_eval(script->script, NULL, NULL) == 0);
+
+    ecs_fini(world);
+}
+
+void Eval_script_expr_multiline(void) {
+    typedef struct {
+        char *value;
+    } String;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(String) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "String" }),
+        .members = {
+            {"value", ecs_id(ecs_string_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "export const s: script {"
+    LINE "  Foo {"
+    LINE "    String: {value: `a } \\{ value`}"
+    LINE "  }"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_lookup(world, "Foo") == 0);
+
+    ecs_value_t value = ecs_const_var_get(world, ecs_lookup(world, "s"));
+    ecs_entity_t s = *(ecs_entity_t*)value.ptr;
+    const EcsScript *script = ecs_get(world, s, EcsScript);
+    test_assert(script != NULL);
+    test_assert(ecs_script_eval(script->script, NULL, NULL) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    test_assert(foo != 0);
+    const String *str = ecs_get(world, foo, String);
+    test_assert(str != NULL);
+    test_str(str->value, "a } { value");
+
+    ecs_fini(world);
+}
+
+void Eval_script_expr_nested(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "export const outer: script {"
+    LINE "  export const inner: script { Foo {} }"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_lookup(world, "inner") == 0);
+    test_assert(ecs_lookup(world, "Foo") == 0);
+
+    ecs_value_t outer_value = ecs_const_var_get(
+        world, ecs_lookup(world, "outer"));
+    ecs_entity_t outer = *(ecs_entity_t*)outer_value.ptr;
+    const EcsScript *outer_script = ecs_get(world, outer, EcsScript);
+    test_assert(outer_script != NULL);
+    test_assert(ecs_script_eval(outer_script->script, NULL, NULL) == 0);
+    test_assert(ecs_lookup(world, "Foo") == 0);
+
+    ecs_entity_t inner_var = ecs_lookup(world, "inner");
+    test_assert(inner_var != 0);
+    ecs_value_t inner_value = ecs_const_var_get(world, inner_var);
+    ecs_entity_t inner = *(ecs_entity_t*)inner_value.ptr;
+    const EcsScript *inner_script = ecs_get(world, inner, EcsScript);
+    test_assert(inner_script != NULL);
+    test_assert(ecs_script_eval(inner_script->script, NULL, NULL) == 0);
+    test_assert(ecs_lookup(world, "Foo") != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_script_expr_hoist_using(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ns = ecs_entity(world, { .name = "ns" });
+    ecs_set_scope(world, ns);
+    ECS_TAG(world, Tag);
+    ecs_set_scope(world, 0);
+
+    const char *expr =
+    HEAD "using ns"
+    LINE "export const s: script { e { Tag } }";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_lookup(world, "e") == 0);
+
+    ecs_value_t value = ecs_const_var_get(world, ecs_lookup(world, "s"));
+    ecs_entity_t s = *(ecs_entity_t*)value.ptr;
+    const EcsScript *script = ecs_get(world, s, EcsScript);
+    test_assert(script != NULL);
+    test_assert(ecs_script_eval(script->script, NULL, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    test_assert(ecs_has(world, e, Tag));
+
+    ecs_fini(world);
+}
+
+void Eval_script_expr_hoist_wildcard_using(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ns = ecs_entity(world, { .name = "ns" });
+    ecs_entity_t types = ecs_entity(world, { .name = "ns.types" });
+    ecs_set_scope(world, types);
+    ECS_TAG(world, Tag);
+    ecs_set_scope(world, 0);
+    test_assert(ecs_has_pair(world, types, EcsChildOf, ns));
+
+    const char *expr =
+    HEAD "using ns.*"
+    LINE "export const s: script { e { Tag } }";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_value_t value = ecs_const_var_get(world, ecs_lookup(world, "s"));
+    ecs_entity_t s = *(ecs_entity_t*)value.ptr;
+    const EcsScript *script = ecs_get(world, s, EcsScript);
+    test_assert(script != NULL);
+    test_assert(ecs_script_eval(script->script, NULL, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    test_assert(ecs_has(world, e, Tag));
+
+    ecs_fini(world);
+}
+
+void Eval_script_expr_followed_by_stmt(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "export const s: script { Foo {} }"
+    LINE "Bar {}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_lookup(world, "Foo") == 0);
+    test_assert(ecs_lookup(world, "Bar") != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_script_expr_invalid_body(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "export const s: script { Foo + }";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_lookup(world, "s") == 0);
+
+    ecs_fini(world);
+}
+
+void Eval_script_expr_unterminated(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "export const s: script { Foo {}";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_lookup(world, "s") == 0);
+
+    ecs_fini(world);
+}

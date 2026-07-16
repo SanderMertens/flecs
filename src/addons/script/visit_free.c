@@ -198,6 +198,12 @@ int flecs_script_stmt_free(
     case EcsAstInclude:
         flecs_free_t(a, ecs_script_include_t, node);
         break;
+    case EcsAstAwait: {
+        ecs_script_await_t *await = (ecs_script_await_t*)node;
+        flecs_expr_visit_free(&v->script->pub, await->expr);
+        flecs_free_t(a, ecs_script_await_t, node);
+        break;
+    }
     case EcsAstFunction: {
         ecs_script_function_node_t *fn = (ecs_script_function_node_t*)node;
         flecs_script_scope_free(v, fn->body);

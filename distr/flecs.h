@@ -16803,6 +16803,8 @@ typedef struct ecs_script_t {
 
 /** Runtime for executing scripts. */
 typedef struct ecs_script_runtime_t ecs_script_runtime_t;
+typedef struct ecs_script_future_t ecs_script_future_t;
+typedef struct ecs_script_task_t ecs_script_task_t;
 
 /** Script component. 
  * This component is added to the entities of managed scripts and templates.
@@ -16820,6 +16822,7 @@ typedef struct EcsScript {
 typedef struct ecs_function_ctx_t {
     ecs_world_t *world;       /**< The world. */
     ecs_entity_t function;    /**< The function entity. */
+    ecs_entity_t entity;
     void *ctx;                /**< User context. */
 } ecs_function_ctx_t;
 
@@ -16837,6 +16840,16 @@ typedef void(*ecs_vector_function_callback_t)(
     const ecs_value_t *argv,
     ecs_value_t *result,
     int32_t elem_count);
+
+typedef void(*ecs_async_function_callback_t)(
+    const ecs_function_ctx_t *ctx,
+    int32_t argc,
+    const ecs_value_t *argv,
+    ecs_script_future_t *future);
+
+typedef void(*ecs_async_function_cancel_t)(
+    const ecs_function_ctx_t *ctx,
+    ecs_script_future_t *future);
 
 /** Function argument type. */
 typedef struct ecs_script_parameter_t {
@@ -16856,6 +16869,8 @@ struct ecs_script_function_t {
     ecs_entity_t return_type;
     ecs_vec_t params; /* vec<ecs_script_parameter_t> */
     ecs_function_callback_t callback;
+    ecs_async_function_callback_t async_callback;
+    ecs_async_function_cancel_t async_cancel;
     ecs_vector_function_callback_t vector_callbacks[FLECS_SCRIPT_VECTOR_FUNCTION_COUNT];
     void *ctx;
     void *binding_ctx;
@@ -16888,6 +16903,82 @@ typedef struct ecs_script_eval_result_t {
     int32_t line;      /**< Line number (1-based) of first error, or 0 if not available. */
     int32_t column;    /**< Column number (1-based) of first error, or 0 if not available. */
 } ecs_script_eval_result_t;
+
+typedef enum ecs_script_task_status_t {
+    EcsScriptTaskPending,
+    EcsScriptTaskDone,
+    EcsScriptTaskError,
+    EcsScriptTaskCancelled
+} ecs_script_task_status_t;
+
+typedef enum ecs_script_task_loop_t {
+    EcsScriptTaskLoopOnce,
+    EcsScriptTaskLoopCount,
+    EcsScriptTaskLoopForever
+} ecs_script_task_loop_t;
+
+typedef struct ecs_script_task_desc_t {
+    ecs_entity_t entity;
+    const ecs_script_vars_t *vars;
+    void *ctx;
+    ecs_ctx_free_t ctx_free;
+    ecs_script_task_loop_t loop;
+    int32_t iterations;
+} ecs_script_task_desc_t;
+
+FLECS_API
+ecs_script_task_t* ecs_script_task_new(
+    const ecs_script_t *script,
+    const ecs_script_task_desc_t *desc);
+
+FLECS_API
+ecs_script_task_status_t ecs_script_task_resume(
+    ecs_script_task_t *task,
+    ecs_script_eval_result_t *result);
+
+FLECS_API
+bool ecs_script_task_is_ready(
+    const ecs_script_task_t *task);
+
+FLECS_API
+void ecs_script_task_cancel(
+    ecs_script_task_t *task);
+
+FLECS_API
+void ecs_script_task_free(
+    ecs_script_task_t *task);
+
+FLECS_API
+int ecs_script_future_resolve(
+    ecs_script_future_t *future,
+    const ecs_value_t *value);
+
+FLECS_API
+int ecs_script_future_reject(
+    ecs_script_future_t *future,
+    const char *error);
+
+FLECS_API
+bool ecs_script_future_is_cancelled(
+    const ecs_script_future_t *future);
+
+FLECS_API
+ecs_script_future_t* ecs_script_future_retain(
+    ecs_script_future_t *future);
+
+FLECS_API
+void ecs_script_future_release(
+    ecs_script_future_t *future);
+
+FLECS_API
+void ecs_script_future_set_ctx(
+    ecs_script_future_t *future,
+    void *ctx,
+    ecs_ctx_free_t ctx_free);
+
+FLECS_API
+void* ecs_script_future_get_ctx(
+    const ecs_script_future_t *future);
 
 /** Parse script.
  * This operation parses a script and returns a script object upon success. To
@@ -17533,6 +17624,24 @@ typedef struct ecs_function_desc_t {
     /** Context passed to function implementation. */
     void *ctx;
 } ecs_function_desc_t;
+
+typedef struct ecs_async_function_desc_t {
+    const char *name;
+    ecs_entity_t parent;
+    ecs_script_parameter_t params[FLECS_SCRIPT_FUNCTION_ARGS_MAX];
+    ecs_entity_t return_type;
+    ecs_async_function_callback_t callback;
+    ecs_async_function_cancel_t cancel;
+    void *ctx;
+} ecs_async_function_desc_t;
+
+FLECS_API
+ecs_entity_t ecs_async_function_init(
+    ecs_world_t *world,
+    const ecs_async_function_desc_t *desc);
+
+#define ecs_async_function(world, ...)\
+    ecs_async_function_init(world, &(ecs_async_function_desc_t)__VA_ARGS__)
 
 /** Create new function. 
  * This operation creates a new function that can be called from a script.

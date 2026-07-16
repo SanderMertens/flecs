@@ -129,6 +129,7 @@ const char* flecs_script_node_to_str(
     case EcsAstFor:                return "for";
     case EcsAstInclude:            return "include";
     case EcsAstFunction:           return "fn";
+    case EcsAstAwait:              return "await";
     }
     return "???";
 }
@@ -263,6 +264,9 @@ void flecs_script_var_node_to_str(
     } else {
         flecs_scriptbuf_append(v, "%s = ", 
             node->name);
+    }
+    if (node->is_await) {
+        flecs_scriptbuf_appendstr(v, "await ");
     }
     flecs_expr_to_str(v, node->expr);
     flecs_scriptbuf_appendstr(v, "\n");
@@ -445,6 +449,13 @@ int flecs_script_stmt_to_str(
     case EcsAstInclude:
         flecs_script_include_to_str(v, (ecs_script_include_t*)node);
         break;
+    case EcsAstAwait: {
+        ecs_script_await_t *await = (ecs_script_await_t*)node;
+        flecs_scriptbuf_node(v, node);
+        flecs_expr_to_str(v, await->expr);
+        flecs_scriptbuf_appendstr(v, "\n");
+        break;
+    }
     case EcsAstFunction: {
         ecs_script_function_node_t *fn = (ecs_script_function_node_t*)node;
         flecs_scriptbuf_node(v, &fn->node);

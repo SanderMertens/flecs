@@ -354,6 +354,17 @@ const char* flecs_script_parse_var(
         Parse(
             // const color =
             case '=': {
+                {
+                    LookAhead_1(EcsTokKeywordAwait,
+                        pos = lookahead;
+                        Expr('\n',
+                            var->is_await = true;
+                            var->expr = EXPR;
+                            EndOfRule;
+                        )
+                    )
+                }
+
                 // const color = Color :
                 LookAhead_2(EcsTokIdentifier, ':',
                     pos = lookahead;
@@ -400,6 +411,17 @@ const char* flecs_script_parse_var(
             }
 
             case ':': {
+                {
+                    LookAhead_1(EcsTokKeywordAwait,
+                        pos = lookahead;
+                        Expr('\n',
+                            var->is_await = true;
+                            var->expr = EXPR;
+                            EndOfRule;
+                        )
+                    )
+                }
+
                 // const PI: expr\n
                 Expr('\n',
                     var->expr = EXPR;
@@ -591,6 +613,7 @@ const char* flecs_script_stmt(
         case EcsTokKeywordFor:        goto for_stmt;
         case EcsTokKeywordInclude:    goto include_stmt;
         case EcsTokKeywordFn:         goto fn_stmt;
+        case EcsTokKeywordAwait:      goto await_stmt;
         EcsTokEndOfStatement:         EndOfRule;
     );
 
@@ -821,6 +844,14 @@ fn_stmt: {
 
             EndOfRule;
         })
+    })
+}
+
+await_stmt: {
+    Expr('\n', {
+        ecs_script_await_t *await = flecs_script_insert_await(parser);
+        await->expr = EXPR;
+        EndOfRule;
     })
 }
 
@@ -1273,22 +1304,15 @@ component_expr_value: {
     ParserEnd;
 }
 
-/* Parse script */
-ecs_script_t* ecs_script_parse(
+static
+ecs_script_t* flecs_script_parse_init(
     ecs_world_t *world,
     const char *name,
     const char *code,
-    const ecs_script_eval_desc_t *desc,
-    ecs_script_eval_result_t *result) 
+    ecs_parser_t *parser)
 {
-    (void)desc; /* Will be used in future to expand type checking features */
-
     if (!code) {
         code = "";
-    }
-
-    if (result) {
-        flecs_log_capture_push(true);
     }
 
     ecs_script_t *script = flecs_script_new(world);
@@ -1297,7 +1321,7 @@ ecs_script_t* ecs_script_parse(
 
     ecs_script_impl_t *impl = flecs_script_impl(script);
 
-    ecs_parser_t parser = {
+    *parser = (ecs_parser_t){
         .name = script->name,
         .code = script->code,
         .pos = script->code,
@@ -1315,8 +1339,77 @@ ecs_script_t* ecs_script_parse(
     impl->token_buffer_size = ecs_os_strlen(code) * 2 + 1;
     impl->token_buffer = flecs_alloc_w_dbg_info(
         &impl->allocator, impl->token_buffer_size, "token buffer");
-    parser.token_cur = impl->token_buffer;
-    parser.token_end = &impl->token_buffer[impl->token_buffer_size];
+    parser->token_cur = impl->token_buffer;
+    parser->token_end = &impl->token_buffer[impl->token_buffer_size];
+
+    return script;
+}
+
+ecs_script_t* flecs_script_parse_nested(
+    ecs_world_t *world,
+    const char *name,
+    const char *using_code,
+    const char *code,
+    const char **next)
+{
+    ecs_strbuf_t buf = ECS_STRBUF_INIT;
+    if (using_code) {
+        ecs_strbuf_appendstr(&buf, using_code);
+    }
+    int32_t open_offset = ecs_strbuf_written(&buf);
+    ecs_strbuf_appendch(&buf, '{');
+    ecs_strbuf_appendstr(&buf, code);
+    char *nested_code = ecs_strbuf_get(&buf);
+
+    ecs_parser_t parser;
+    ecs_script_t *script = flecs_script_parse_init(
+        world, name, nested_code, &parser);
+    ecs_os_free(nested_code);
+    ecs_script_impl_t *impl = flecs_script_impl(script);
+
+    const char *open = &script->code[open_offset];
+    const char *pos = script->code;
+    while (pos < open) {
+        pos = flecs_script_stmt(&parser, pos);
+        if (!pos) {
+            goto error;
+        }
+    }
+
+    ecs_assert(pos == open, ECS_INTERNAL_ERROR, NULL);
+    pos = flecs_script_scope(&parser, impl->root, open + 1);
+    if (!pos) {
+        goto error;
+    }
+
+    *next = code + (pos - (open + 1));
+    ECS_CONST_CAST(char*, open)[0] = '\n';
+    ECS_CONST_CAST(char*, pos)[-1] = '\0';
+    impl->token_remaining = parser.token_cur;
+    return script;
+
+error:
+    ecs_script_free(script);
+    return NULL;
+}
+
+ecs_script_t* ecs_script_parse(
+    ecs_world_t *world,
+    const char *name,
+    const char *code,
+    const ecs_script_eval_desc_t *desc,
+    ecs_script_eval_result_t *result)
+{
+    (void)desc;
+
+    if (result) {
+        flecs_log_capture_push(true);
+    }
+
+    ecs_parser_t parser;
+    ecs_script_t *script = flecs_script_parse_init(
+        world, name, code, &parser);
+    ecs_script_impl_t *impl = flecs_script_impl(script);
 
     /* Start parsing code */
     const char *pos = script->code;

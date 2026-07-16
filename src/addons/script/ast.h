@@ -29,7 +29,8 @@ typedef enum ecs_script_node_kind_t {
     EcsAstIf,
     EcsAstFor,
     EcsAstInclude,
-    EcsAstFunction
+    EcsAstFunction,
+    EcsAstAwait
 } ecs_script_node_kind_t;
 
 typedef struct ecs_script_node_t {
@@ -154,7 +155,13 @@ typedef struct ecs_script_var_node_t {
     const char *name;
     const char *type;
     ecs_expr_node_t *expr;
+    bool is_await;
 } ecs_script_var_node_t;
+
+typedef struct ecs_script_await_t {
+    ecs_script_node_t node;
+    ecs_expr_node_t *expr;
+} ecs_script_await_t;
 
 typedef struct ecs_script_if_t {
     ecs_script_node_t node;
@@ -229,6 +236,9 @@ ecs_script_annot_t* flecs_script_insert_annot(
 ecs_script_var_node_t* flecs_script_insert_var(
     ecs_parser_t *parser,
     const char *name);
+
+ecs_script_await_t* flecs_script_insert_await(
+    ecs_parser_t *parser);
 
 ecs_script_tag_t* flecs_script_insert_tag(
     ecs_parser_t *parser,

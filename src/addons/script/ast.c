@@ -37,6 +37,7 @@ ecs_script_scope_t* flecs_script_scope_new(
         parser, ecs_script_scope_t, EcsAstScope);
     flecs_ast_vec(parser, result->stmts, ecs_script_node_t);
     ecs_vec_init_t(NULL, &result->components, ecs_id_t, 0);
+    result->parent = parser->scope;
     return result;
 }
 
@@ -329,6 +330,18 @@ ecs_script_var_node_t* flecs_script_insert_var(
     result->name = name;
 
     flecs_ast_append(parser, scope->stmts, ecs_script_var_node_t, result);
+    return result;
+}
+
+ecs_script_await_t* flecs_script_insert_await(
+    ecs_parser_t *parser)
+{
+    ecs_script_scope_t *scope = parser->scope;
+    ecs_assert(scope != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_script_await_t *result = flecs_ast_new(
+        parser, ecs_script_await_t, EcsAstAwait);
+    flecs_ast_append(parser, scope->stmts, ecs_script_await_t, result);
     return result;
 }
 

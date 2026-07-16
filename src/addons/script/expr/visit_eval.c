@@ -806,6 +806,12 @@ int flecs_expr_function_visit_eval(
 
     ecs_assert(out->value.ptr != NULL, ECS_INTERNAL_ERROR, NULL);
 
+    if (calldata->async_callback) {
+        flecs_expr_visit_error(ctx->script, node,
+            "async function '%s' requires await", node->function_name);
+        goto error;
+    }
+
     ecs_value_t *argv = NULL;
     int32_t argc = ecs_vec_count(&node->args->elements);
     if (argc) {
@@ -865,6 +871,12 @@ int flecs_expr_method_visit_eval(
 
         ecs_assert(expr->value.ptr != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(out->value.ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        if (calldata->async_callback) {
+            flecs_expr_visit_error(ctx->script, node,
+                "async method '%s' requires await", node->function_name);
+            goto error;
+        }
 
         int32_t argc = ecs_vec_count(&node->args->elements);
         ecs_value_t *argv = ecs_os_alloca_n(ecs_value_t, argc + 1);
@@ -1161,6 +1173,31 @@ int flecs_expr_new_visit_eval(
 }
 
 static
+int flecs_expr_script_visit_eval(
+    ecs_script_eval_ctx_t *ctx,
+    ecs_expr_script_t *node,
+    ecs_expr_value_t *out)
+{
+    ecs_script_eval_visitor_t *v = ctx->desc ? ctx->desc->script_visitor : NULL;
+    if (v && v->template) {
+        *(ecs_entity_t*)out->value.ptr = 0;
+        out->value.type = ecs_id(ecs_entity_t);
+        return 0;
+    }
+
+    ecs_entity_t e = ecs_new(ctx->world);
+    EcsScript *script = ecs_ensure(ctx->world, e, EcsScript);
+    script->code = ecs_os_strdup(node->script->code);
+    script->script = node->script;
+    flecs_script_impl(node->script)->refcount ++;
+    ecs_modified(ctx->world, e, EcsScript);
+
+    *(ecs_entity_t*)out->value.ptr = e;
+    out->value.type = ecs_id(ecs_entity_t);
+    return 0;
+}
+
+static
 int flecs_expr_component_visit_eval(
     ecs_script_eval_ctx_t *ctx,
     ecs_expr_element_t *node,
@@ -1325,6 +1362,13 @@ int flecs_expr_visit_eval_priv(
     case EcsExprNew:
         if (flecs_expr_new_visit_eval(
             ctx, (ecs_expr_new_t*)node, out)) 
+        {
+            goto error;
+        }
+        break;
+    case EcsExprScript:
+        if (flecs_expr_script_visit_eval(
+            ctx, (ecs_expr_script_t*)node, out))
         {
             goto error;
         }

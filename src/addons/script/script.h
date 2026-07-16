@@ -54,6 +54,8 @@ typedef struct ecs_function_calldata_t {
         ecs_vector_function_callback_t vector_callback;
     } is;
     int32_t vector_elem_count;
+    ecs_async_function_callback_t async_callback;
+    ecs_async_function_cancel_t async_cancel;
     void *ctx;
 } ecs_function_calldata_t;
 
@@ -121,6 +123,13 @@ void flecs_function_import(
 const char* flecs_script_stmt(
     ecs_parser_t *parser,
     const char *pos);
+
+ecs_script_t* flecs_script_parse_nested(
+    ecs_world_t *world,
+    const char *name,
+    const char *using_code,
+    const char *code,
+    const char **next);
 
 int ecs_script_ast_node_to_buf(
     const ecs_script_t *script,

@@ -106,6 +106,8 @@ ECS_COPY(EcsScriptFunction, dst, src, {
     dst->binding_ctx_free = NULL;
     dst->return_type = src->return_type;
     dst->callback = src->callback;
+    dst->async_callback = src->async_callback;
+    dst->async_cancel = src->async_cancel;
     ecs_os_memcpy_n(dst->vector_callbacks, src->vector_callbacks,
         ecs_vector_function_callback_t, FLECS_SCRIPT_VECTOR_FUNCTION_COUNT);
     dst->ctx = src->ctx;
@@ -142,6 +144,8 @@ ECS_COPY(EcsScriptMethod, dst, src, {
     dst->binding_ctx_free = NULL;
     dst->return_type = src->return_type;
     dst->callback = src->callback;
+    dst->async_callback = src->async_callback;
+    dst->async_cancel = src->async_cancel;
     ecs_os_memcpy_n(dst->vector_callbacks, src->vector_callbacks,
         ecs_vector_function_callback_t, FLECS_SCRIPT_VECTOR_FUNCTION_COUNT);
     dst->ctx = src->ctx;
@@ -336,6 +340,51 @@ ecs_entity_t ecs_function_init(
 
     ecs_modified(world, result, EcsScriptFunction);
 
+    return result;
+error:
+    return 0;
+}
+
+static
+void flecs_async_function_placeholder(
+    const ecs_function_ctx_t *ctx,
+    int32_t argc,
+    const ecs_value_t *argv,
+    ecs_value_t *result)
+{
+    (void)ctx;
+    (void)argc;
+    (void)argv;
+    (void)result;
+}
+
+ecs_entity_t ecs_async_function_init(
+    ecs_world_t *world,
+    const ecs_async_function_desc_t *desc)
+{
+    ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc->callback != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_function_desc_t fn_desc = {
+        .name = desc->name,
+        .parent = desc->parent,
+        .return_type = desc->return_type,
+        .callback = flecs_async_function_placeholder,
+        .ctx = desc->ctx
+    };
+    ecs_os_memcpy_n(fn_desc.params, desc->params,
+        ecs_script_parameter_t, FLECS_SCRIPT_FUNCTION_ARGS_MAX);
+
+    ecs_entity_t result = ecs_function_init(world, &fn_desc);
+    if (!result) {
+        goto error;
+    }
+
+    EcsScriptFunction *f = ecs_ensure(world, result, EcsScriptFunction);
+    f->callback = NULL;
+    f->async_callback = desc->callback;
+    f->async_cancel = desc->cancel;
+    ecs_modified(world, result, EcsScriptFunction);
     return result;
 error:
     return 0;

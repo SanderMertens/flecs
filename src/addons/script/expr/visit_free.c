@@ -152,6 +152,15 @@ void flecs_expr_new_visit_free(
 }
 
 static
+void flecs_expr_script_visit_free(
+    ecs_expr_script_t *node)
+{
+    if (node->script) {
+        ecs_script_free(node->script);
+    }
+}
+
+static
 void flecs_expr_cast_visit_free(
     ecs_script_t *script,
     ecs_expr_cast_t *node)
@@ -231,6 +240,10 @@ void flecs_expr_visit_free(
         flecs_expr_new_visit_free(
             script, (ecs_expr_new_t*)node);
         flecs_free_t(a, ecs_expr_new_t, node);
+        break;
+    case EcsExprScript:
+        flecs_expr_script_visit_free((ecs_expr_script_t*)node);
+        flecs_free_t(a, ecs_expr_script_t, node);
         break;
     case EcsExprCast:
     case EcsExprCastNumber:

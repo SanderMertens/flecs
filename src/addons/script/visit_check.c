@@ -546,6 +546,8 @@ int flecs_script_check_node(
 {
     ecs_script_eval_visitor_t *v = (ecs_script_eval_visitor_t*)_v;
     switch(node->kind) {
+    case EcsAstAwait:
+        return 0;
     case EcsAstScope:
         return flecs_script_check_scope(
             v, (ecs_script_scope_t*)node);

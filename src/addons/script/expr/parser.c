@@ -63,6 +63,27 @@ bool flecs_has_precedence(
 }
 
 static
+void flecs_expr_script_append_using(
+    ecs_script_scope_t *scope,
+    ecs_strbuf_t *buf)
+{
+    if (scope->parent) {
+        flecs_expr_script_append_using(scope->parent, buf);
+    }
+
+    int32_t i, count = ecs_vec_count(&scope->stmts);
+    ecs_script_node_t **stmts = ecs_vec_first(&scope->stmts);
+    for (i = 0; i < count; i ++) {
+        if (stmts[i]->kind == EcsAstUsing) {
+            ecs_script_using_t *using_node = (ecs_script_using_t*)stmts[i];
+            ecs_strbuf_appendlit(buf, "using ");
+            ecs_strbuf_appendstr(buf, using_node->name);
+            ecs_strbuf_appendch(buf, '\n');
+        }
+    }
+}
+
+static
 ecs_entity_t flecs_script_default_lookup(
     const ecs_world_t *world,
     const char *name,
@@ -683,6 +704,28 @@ const char* flecs_script_parse_lhs(
 
             can_have_rhs = false;
 
+            break;
+        }
+
+        case EcsTokKeywordScript: {
+            ecs_expr_script_t *node = flecs_expr_script(parser);
+            *out = (ecs_expr_node_t*)node;
+
+            Parse_1('{', {
+                ecs_strbuf_t buf = ECS_STRBUF_INIT;
+                flecs_expr_script_append_using(parser->scope, &buf);
+                char *using_code = ecs_strbuf_get(&buf);
+                node->script = flecs_script_parse_nested(
+                    parser->script->pub.world, parser->name,
+                    using_code, pos, &pos);
+                ecs_os_free(using_code);
+                if (!node->script) {
+                    goto error;
+                }
+                break;
+            })
+
+            can_have_rhs = false;
             break;
         }
 
