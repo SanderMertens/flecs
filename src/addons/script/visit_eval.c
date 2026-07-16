@@ -719,6 +719,7 @@ void flecs_script_apply_non_fragmenting_childof_to_scope(
         case EcsAstAnnotation:
         case EcsAstTemplate:
         case EcsAstProp:
+        case EcsAstMut:
         case EcsAstConst:
         case EcsAstExportConst:
         case EcsAstInclude:
@@ -2282,6 +2283,13 @@ int flecs_script_eval_node(
             v, (ecs_script_template_node_t*)node);
     case EcsAstProp:
         return 0;
+    case EcsAstMut:
+        if (!v->template_entity) {
+            flecs_script_eval_error(v, node,
+                "mut variables are only allowed in templates");
+            return -1;
+        }
+        return 0;
     case EcsAstConst:
         return flecs_script_eval_const(
             v, (ecs_script_var_node_t*)node, false);
@@ -2385,7 +2393,8 @@ int ecs_script_eval(
         priv_desc.runtime = flecs_script_runtime_get(script->world);
     }
 
-    flecs_script_runtime_get(script->world)->error = false;
+    ecs_script_runtime_t *runtime = flecs_script_runtime_get(script->world);
+    runtime->error = false;
 
     if (result) {
         flecs_log_capture_push(true);
@@ -2394,6 +2403,11 @@ int ecs_script_eval(
     flecs_script_eval_visit_init(impl, &v, &priv_desc);
     int r = ecs_script_visit(impl, &v, flecs_script_eval_node);
     flecs_script_eval_visit_fini(&v, &priv_desc);
+
+    if (runtime->error) {
+        runtime->error = false;
+        r = -1;
+    }
 
     if (result) {
         result->error = flecs_log_capture_pop();

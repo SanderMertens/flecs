@@ -1323,8 +1323,8 @@ void Module_module_with_core_name(void);
 void Module_import_addons_two_worlds(void);
 void Module_lookup_module_after_reparent(void);
 void Module_reparent_module_in_ctor(void);
-void Module_implicitly_add_module_to_scopes_component(void);
-void Module_implicitly_add_module_to_scopes_entity(void);
+void Module_component_scopes_do_not_become_modules(void);
+void Module_entity_scopes_do_not_become_modules(void);
 void Module_rename_namespace_shorter(void);
 void Module_rename_namespace_longer(void);
 void Module_rename_namespace_nested(void);
@@ -6895,12 +6895,12 @@ bake_test_case Module_testcases[] = {
         Module_reparent_module_in_ctor
     },
     {
-        "implicitly_add_module_to_scopes_component",
-        Module_implicitly_add_module_to_scopes_component
+        "component_scopes_do_not_become_modules",
+        Module_component_scopes_do_not_become_modules
     },
     {
-        "implicitly_add_module_to_scopes_entity",
-        Module_implicitly_add_module_to_scopes_entity
+        "entity_scopes_do_not_become_modules",
+        Module_entity_scopes_do_not_become_modules
     },
     {
         "rename_namespace_shorter",

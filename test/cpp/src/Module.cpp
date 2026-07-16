@@ -397,7 +397,7 @@ namespace NamespaceLvl1 {
         };
     }
 }
-void Module_implicitly_add_module_to_scopes_component(void) {
+void Module_component_scopes_do_not_become_modules(void) {
     flecs::world ecs;
 
     using StructLvl2_1 = NamespaceLvl1::NamespaceLvl2::StructLvl1::StructLvl2_1;
@@ -410,24 +410,24 @@ void Module_implicitly_add_module_to_scopes_component(void) {
 
     current = current.parent();
     test_assert(current.id() != 0);
-    test_assert(current.has(flecs::Module));
+    test_assert(!current.has(flecs::Module));
     test_assert(current.path() == "::NamespaceLvl1::NamespaceLvl2::StructLvl1");
 
     current = current.parent();
     test_assert(current.id() != 0);
-    test_assert(current.has(flecs::Module));
+    test_assert(!current.has(flecs::Module));
     test_assert(current.path() == "::NamespaceLvl1::NamespaceLvl2");
 
     current = current.parent();
     test_assert(current.id() != 0);
-    test_assert(current.has(flecs::Module));
+    test_assert(!current.has(flecs::Module));
     test_assert(current.path() == "::NamespaceLvl1");
 
     current = current.parent();
     test_assert(current.id() == 0);
 }
 
-void Module_implicitly_add_module_to_scopes_entity(void) {
+void Module_entity_scopes_do_not_become_modules(void) {
     flecs::world ecs;
 
     using StructLvl2_2 = NamespaceLvl1::NamespaceLvl2::StructLvl1::StructLvl2_2;
@@ -440,17 +440,17 @@ void Module_implicitly_add_module_to_scopes_entity(void) {
 
     current = current.parent();
     test_assert(current.id() != 0);
-    test_assert(current.has(flecs::Module));
+    test_assert(!current.has(flecs::Module));
     test_assert(current.path() == "::NamespaceLvl1::NamespaceLvl2::StructLvl1");
 
     current = current.parent();
     test_assert(current.id() != 0);
-    test_assert(current.has(flecs::Module));
+    test_assert(!current.has(flecs::Module));
     test_assert(current.path() == "::NamespaceLvl1::NamespaceLvl2");
 
     current = current.parent();
     test_assert(current.id() != 0);
-    test_assert(current.has(flecs::Module));
+    test_assert(!current.has(flecs::Module));
     test_assert(current.path() == "::NamespaceLvl1");
 
     current = current.parent();

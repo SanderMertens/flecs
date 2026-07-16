@@ -348,6 +348,8 @@ const char* flecs_script_parse_var(
         var->node.kind = kind;
 
         bool is_prop = kind == EcsAstProp;
+        bool is_mut = kind == EcsAstMut;
+        const char *kind_str = is_prop ? "prop" : (is_mut ? "mut" : "const");
 
         Parse(
             // const color =
@@ -391,8 +393,7 @@ const char* flecs_script_parse_var(
                 Expr('\n',
                     Warning("'%s var = expr' syntax is deprecated"
                         ", use '%s var: expr' instead", 
-                            is_prop ? "prop" : "const",
-                            is_prop ? "prop" : "const");
+                            kind_str, kind_str);
                     var->expr = EXPR;
                     EndOfRule;
                 )
@@ -419,6 +420,15 @@ const char* flecs_script_parse_const(
     ecs_tokenizer_t *tokenizer)
 {
     return flecs_script_parse_var(parser, pos, tokenizer, EcsAstConst);
+}
+
+static
+const char* flecs_script_parse_mut(
+    ecs_parser_t *parser,
+    const char *pos,
+    ecs_tokenizer_t *tokenizer)
+{
+    return flecs_script_parse_var(parser, pos, tokenizer, EcsAstMut);
 }
 
 static
@@ -574,6 +584,7 @@ const char* flecs_script_stmt(
         case EcsTokKeywordUsing:      goto using_stmt;
         case EcsTokKeywordTemplate:   goto template_stmt;
         case EcsTokKeywordProp:       goto prop_var;
+        case EcsTokKeywordMut:        goto mut_var;
         case EcsTokKeywordConst:      goto const_var;
         case EcsTokKeywordExport:     goto export_var;
         case EcsTokKeywordIf:         goto if_stmt;
@@ -739,6 +750,11 @@ template_stmt: {
 prop_var: {
     // prop color = Color:
     return flecs_script_parse_prop(parser, pos, tokenizer);
+}
+
+// mut
+mut_var: {
+    return flecs_script_parse_mut(parser, pos, tokenizer);
 }
 
 // export

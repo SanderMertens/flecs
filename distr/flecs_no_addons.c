@@ -4541,20 +4541,6 @@ void flecs_on_component(ecs_iter_t *it) {
             "component id must be smaller than %u", ECS_MAX_COMPONENT_ID);
         (void)component_id;
 
-        if (it->event != EcsOnRemove) {
-            ecs_entity_t parent = ecs_get_parent(world, e);
-            if (parent) {
-                ecs_record_t *parent_record = flecs_entities_get(world, parent);
-                ecs_table_t *parent_table = parent_record->table;
-                if (!ecs_table_has_id(world, parent_table, EcsModule)) {
-                    if (!ecs_table_has_id(world, parent_table, ecs_id(EcsComponent))) {
-                        ecs_add_id(world, parent, EcsModule);
-                    }
-                }
-
-            }
-        }
-
         if (it->event == EcsOnSet) {
             if (flecs_type_info_init_id(
                 world, e, c[i].size, c[i].alignment, NULL))
@@ -38982,7 +38968,7 @@ void flecs_add_with_property(
             ecs_id_t id = ids[i];
             ecs_assert(ECS_PAIR_FIRST(id) == EcsWith, ECS_INTERNAL_ERROR, NULL);
             ecs_id_t ra = ECS_PAIR_SECOND(id);
-            ecs_id_t a = ra;
+            ecs_id_t a = ecs_get_alive(world, ra);
             if (o) {
                 a = ecs_pair(ra, o);
             }
@@ -39638,6 +39624,7 @@ typedef enum ecs_token_kind_t {
     EcsTokKeywordInclude = 138,
     EcsTokKeywordFn = 139,
     EcsTokArrow = 140,
+    EcsTokKeywordMut = 141,
     EcsTokAddAssign = 136,
     EcsTokMulAssign = 137,
 } ecs_token_kind_t;

@@ -354,6 +354,7 @@ int flecs_value_binary(
     case EcsTokKeywordNew:
     case EcsTokKeywordExport:
     case EcsTokKeywordProp:
+    case EcsTokKeywordMut:
     case EcsTokKeywordConst:
     case EcsTokKeywordInclude:
     case EcsTokKeywordFn:

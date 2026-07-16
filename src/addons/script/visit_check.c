@@ -584,6 +584,7 @@ int flecs_script_check_node(
     case EcsAstTemplate:
         return 0;
     case EcsAstProp:
+    case EcsAstMut:
         return 0;
     case EcsAstConst:
         return flecs_script_check_const(
