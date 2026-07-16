@@ -1512,6 +1512,100 @@ void Function_call_via_expr_run(void) {
     ecs_fini(world);
 }
 
+void Function_call(void) {
+    ecs_world_t *world = ecs_init();
+
+    test_int(ecs_script_run(world, NULL,
+        "fn add(a: i32, b: i32) -> i32 { a + b }", NULL), 0);
+
+    ecs_entity_t function = ecs_lookup(world, "add");
+    test_assert(function != 0);
+
+    int32_t a = 10;
+    int32_t b = 20;
+    ecs_value_t argv[] = {
+        { ecs_id(ecs_i32_t), &a },
+        { ecs_id(ecs_i32_t), &b }
+    };
+    ecs_value_t result = {0};
+
+    test_int(ecs_function_call(world, function, 2, argv, &result), 0);
+    test_uint(result.type, ecs_id(ecs_i32_t));
+    test_assert(result.ptr != NULL);
+    test_int(*(int32_t*)result.ptr, 30);
+
+    ecs_value_fini(world, &result);
+    ecs_fini(world);
+}
+
+void Function_call_w_result(void) {
+    ecs_world_t *world = ecs_init();
+
+    test_int(ecs_script_run(world, NULL,
+        "fn add(a: i32, b: i32) -> i32 { a + b }", NULL), 0);
+
+    ecs_entity_t function = ecs_lookup(world, "add");
+    test_assert(function != 0);
+
+    int32_t a = 10;
+    int32_t b = 20;
+    int32_t value = 0;
+    ecs_value_t argv[] = {
+        { ecs_id(ecs_i32_t), &a },
+        { ecs_id(ecs_i32_t), &b }
+    };
+    ecs_value_t result = { ecs_id(ecs_i32_t), &value };
+
+    test_int(ecs_function_call(world, function, 2, argv, &result), 0);
+    test_int(value, 30);
+
+    ecs_fini(world);
+}
+
+static
+void Function_method_add_callback(
+    const ecs_function_ctx_t *ctx,
+    int32_t argc,
+    const ecs_value_t *argv,
+    ecs_value_t *result)
+{
+    (void)ctx;
+    test_int(argc, 1);
+    *(int32_t*)result->ptr =
+        *(int32_t*)argv[0].ptr + *(int32_t*)argv[1].ptr;
+}
+
+void Function_method_call(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t method = ecs_method(world, {
+        .name = "add",
+        .parent = ecs_id(ecs_i32_t),
+        .return_type = ecs_id(ecs_i32_t),
+        .params = {
+            { "value", ecs_id(ecs_i32_t) }
+        },
+        .callback = Function_method_add_callback
+    });
+
+    int32_t instance_value = 10;
+    int32_t arg_value = 20;
+    ecs_value_t instance = { ecs_id(ecs_i32_t), &instance_value };
+    ecs_value_t argv[] = {
+        { ecs_id(ecs_i32_t), &arg_value }
+    };
+    ecs_value_t result = {0};
+
+    test_int(ecs_method_call(
+        world, method, &instance, 1, argv, &result), 0);
+    test_uint(result.type, ecs_id(ecs_i32_t));
+    test_assert(result.ptr != NULL);
+    test_int(*(int32_t*)result.ptr, 30);
+
+    ecs_value_fini(world, &result);
+    ecs_fini(world);
+}
+
 void Function_to_str_roundtrip(void) {
     ecs_world_t *world = ecs_init();
 

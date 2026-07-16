@@ -17549,6 +17549,14 @@ ecs_entity_t ecs_function_init(
 #define ecs_function(world, ...)\
     ecs_function_init(world, &(ecs_function_desc_t)__VA_ARGS__)
 
+FLECS_API
+int ecs_function_call(
+    ecs_world_t *world,
+    ecs_entity_t function,
+    int32_t argc,
+    const ecs_value_t *argv,
+    ecs_value_t *result);
+
 /** Create new method. 
  * This operation creates a new method that can be called from a script. A 
  * method is like a function, except that it can be called on every instance of
@@ -17568,6 +17576,15 @@ ecs_entity_t ecs_method_init(
 
 #define ecs_method(world, ...)\
     ecs_method_init(world, &(ecs_function_desc_t)__VA_ARGS__)
+
+FLECS_API
+int ecs_method_call(
+    ecs_world_t *world,
+    ecs_entity_t method,
+    const ecs_value_t *instance,
+    int32_t argc,
+    const ecs_value_t *argv,
+    ecs_value_t *result);
 
 /* Value serialization */
 

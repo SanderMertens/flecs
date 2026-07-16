@@ -375,6 +375,124 @@ error:
     return 0;
 }
 
+static
+int flecs_script_function_call(
+    ecs_world_t *world,
+    ecs_entity_t function,
+    const struct ecs_script_function_t *f,
+    const ecs_value_t *instance,
+    int32_t argc,
+    const ecs_value_t *argv,
+    ecs_value_t *result)
+{
+    ecs_check(f != NULL, ECS_INVALID_PARAMETER,
+        "entity is not a script function or method");
+    ecs_check(f->callback != NULL, ECS_UNSUPPORTED,
+        "vector functions cannot be called directly");
+    ecs_check(argc >= 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(argc == ecs_vec_count(&f->params), ECS_INVALID_PARAMETER,
+        "expected %d arguments, got %d", ecs_vec_count(&f->params), argc);
+    ecs_check(!argc || argv != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(result != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    const ecs_script_parameter_t *params = ecs_vec_first(&f->params);
+    (void)params;
+    int32_t i;
+    for (i = 0; i < argc; i ++) {
+        ecs_check(argv[i].type == params[i].type, ECS_INVALID_PARAMETER,
+            "type of argument %d does not match parameter type", i);
+        ecs_check(argv[i].ptr != NULL, ECS_INVALID_PARAMETER, NULL);
+    }
+
+    if (instance) {
+        ecs_check(instance->type == ecs_get_parent(world, function),
+            ECS_INVALID_PARAMETER,
+            "instance type does not match method type");
+        ecs_check(instance->ptr != NULL, ECS_INVALID_PARAMETER, NULL);
+    }
+
+    ecs_check(!result->type || result->type == f->return_type,
+        ECS_INVALID_PARAMETER, "result type does not match function return type");
+
+    bool result_allocated = false;
+    if (!result->ptr) {
+        *result = ecs_value_new(world, f->return_type);
+        ecs_check(result->ptr != NULL, ECS_INVALID_PARAMETER,
+            "function return type is not a valid value type");
+        result_allocated = true;
+    } else if (!result->type) {
+        result->type = f->return_type;
+    }
+
+    const ecs_value_t *call_argv = argv;
+    if (instance) {
+        ecs_value_t *method_argv = ecs_os_alloca_n(ecs_value_t, argc + 1);
+        method_argv[0] = *instance;
+        if (argc) {
+            ecs_os_memcpy_n(&method_argv[1], argv, ecs_value_t, argc);
+        }
+        call_argv = method_argv;
+    }
+
+    ecs_function_ctx_t ctx = {
+        .world = world,
+        .function = function,
+        .ctx = f->ctx
+    };
+
+    ecs_script_runtime_t *runtime = flecs_script_runtime_get(world);
+    runtime->error = false;
+    f->callback(&ctx, argc, call_argv, result);
+    if (runtime->error) {
+        runtime->error = false;
+        if (result_allocated) {
+            ecs_value_fini(world, result);
+        }
+        goto error;
+    }
+
+    return 0;
+error:
+    return -1;
+}
+
+int ecs_function_call(
+    ecs_world_t *world,
+    ecs_entity_t function,
+    int32_t argc,
+    const ecs_value_t *argv,
+    ecs_value_t *result)
+{
+    flecs_poly_assert(world, ecs_world_t);
+    ecs_check(function != 0, ECS_INVALID_PARAMETER, NULL);
+
+    const EcsScriptFunction *f = ecs_get(
+        world, function, EcsScriptFunction);
+    return flecs_script_function_call(
+        world, function, f, NULL, argc, argv, result);
+error:
+    return -1;
+}
+
+int ecs_method_call(
+    ecs_world_t *world,
+    ecs_entity_t method,
+    const ecs_value_t *instance,
+    int32_t argc,
+    const ecs_value_t *argv,
+    ecs_value_t *result)
+{
+    flecs_poly_assert(world, ecs_world_t);
+    ecs_check(method != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(instance != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    const EcsScriptMethod *f = ecs_get(world, method, EcsScriptMethod);
+    return flecs_script_function_call(
+        world, method, f, instance, argc, argv, result);
+error:
+    return -1;
+}
+
 void flecs_function_import(
     ecs_world_t *world)
 {
