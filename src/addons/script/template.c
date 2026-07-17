@@ -486,6 +486,9 @@ int flecs_script_template_instantiate(
     }
 
     if (result) {
+        if (!desc.runtime->error_name && script->script->name) {
+            desc.runtime->error_name = ecs_os_strdup(script->script->name);
+        }
         desc.runtime->error = true;
     }
 

@@ -110,7 +110,9 @@ int flecs_expr_binary_visit_fold(
         script, (ecs_expr_node_t*)node, node->node.type);
     ecs_value_t res = { .type = result->node.type, .ptr = result->ptr };
 
-    if (flecs_value_binary(script, &lop, &rop, &res, node->operator)) {
+    if (flecs_value_binary(
+        script, &node->node, &lop, &rop, &res, node->operator))
+    {
         goto error;
     }
 

@@ -245,17 +245,15 @@ int flecs_value_unary(
 
 int flecs_value_binary(
     const ecs_script_t *script,
+    const ecs_expr_node_t *node,
     const ecs_value_t *left,
     const ecs_value_t *right,
     ecs_value_t *out,
     ecs_token_kind_t operator)
 {
-    (void)script;
-
     if (operator == EcsTokDiv || operator == EcsTokMod) {
         if (flecs_value_is_0(right)) {
-            ecs_err("%s: division by zero", 
-                script->name ? script->name : "anonymous script");
+            flecs_expr_visit_error(script, node, "division by zero");
             return -1;
         }
     }

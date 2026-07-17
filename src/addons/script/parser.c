@@ -474,6 +474,7 @@ const char* flecs_script_fn_params(
                     ecs_script_fn_param_t *p = ecs_vec_append_t(
                         &parser->script->allocator, &fn->params,
                         ecs_script_fn_param_t);
+                    p->node = (ecs_script_node_t){ .pos = parser->pos };
                     p->name = Token(0);
                     p->type = Token(2);
                     parser->token_keep = parser->token_cur;
@@ -521,6 +522,7 @@ const char* flecs_script_fn_body(
                 Error("function body must end with an expression");
             }
             case EcsTokKeywordConst: {
+                parser->stmt_pos = pos;
                 pos = lookahead;
                 Scope(fn->body,
                     pos = flecs_script_parse_const(parser, pos, tokenizer);
@@ -811,15 +813,18 @@ fn_stmt: {
             goto error;
         }
 
-        Parse_3(EcsTokArrow, EcsTokIdentifier, '{', {
+        Parse_2(EcsTokArrow, EcsTokIdentifier, {
             fn->return_type = Token(4);
+            fn->return_type_node.pos = parser->pos;
 
-            pos = flecs_script_fn_body(parser, fn, pos);
-            if (!pos) {
-                goto error;
-            }
+            Parse_1('{', {
+                pos = flecs_script_fn_body(parser, fn, pos);
+                if (!pos) {
+                    goto error;
+                }
 
-            EndOfRule;
+                EndOfRule;
+            })
         })
     })
 }

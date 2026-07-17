@@ -394,6 +394,8 @@ int ecs_script_update(
     }
 
     ecs_script_eval_result_t eval_result = {0};
+    ecs_script_runtime_t *runtime = flecs_script_runtime_get(world);
+    flecs_script_runtime_error_reset(runtime);
 
     s->script = ecs_script_parse(world, name, code, NULL, &eval_result);
     if (s->script == NULL) {
@@ -419,7 +421,11 @@ int ecs_script_update(
     if (ecs_script_eval(parsed, NULL, &eval_result)) {
         s = ecs_ensure(world, e, EcsScript);
         s->error = eval_result.error;
-        ecs_log_(-3, NULL, 0, "%s: %s", name ? name : "script", s->error);
+        ecs_log_(-3, NULL, 0, "%s: %s",
+            runtime->error_name ? runtime->error_name :
+                (name ? name : "script"),
+            s->error);
+        flecs_script_runtime_error_reset(runtime);
         ecs_script_free(parsed);
         s->script = NULL;
         ecs_delete_with(world, ecs_pair_t(EcsScript, e));
@@ -525,7 +531,16 @@ void ecs_script_runtime_free(
     ecs_vec_fini_t(&r->allocator, &r->using, ecs_entity_t);
     flecs_allocator_fini(&r->allocator);
     flecs_stack_fini(&r->stack);
+    ecs_os_free(r->error_name);
     ecs_os_free(r);
+}
+
+void flecs_script_runtime_error_reset(
+    ecs_script_runtime_t *r)
+{
+    ecs_os_free(r->error_name);
+    r->error_name = NULL;
+    r->error = false;
 }
 
 void ecs_script_runtime_clear(
