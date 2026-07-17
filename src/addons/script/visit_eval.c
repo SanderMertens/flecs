@@ -2130,7 +2130,7 @@ int flecs_script_function_type_check(
     for (i = 0; i < param_count; i ++) {
         ecs_script_var_t *var = ecs_script_vars_declare(v.vars, params[i].name);
         if (!var) {
-            flecs_script_eval_error(outer_v, node,
+            flecs_script_eval_error(outer_v, &params[i].node,
                 "duplicate parameter '%s' in function '%s'",
                 params[i].name, node->name);
             goto error;
@@ -2254,7 +2254,7 @@ int flecs_script_eval_function(
     if (flecs_script_find_entity(v, 0, node->return_type, NULL, NULL,
         &return_type, NULL) || !return_type)
     {
-        flecs_script_eval_error(v, node,
+        flecs_script_eval_error(v, &node->return_type_node,
             "unresolved return type '%s' for function '%s'",
             node->return_type, node->name);
         return -1;
@@ -2273,7 +2273,7 @@ int flecs_script_eval_function(
         if (flecs_script_find_entity(v, 0, params[i].type, NULL, NULL,
             &ptype, NULL) || !ptype)
         {
-            flecs_script_eval_error(v, node,
+            flecs_script_eval_error(v, &params[i].node,
                 "unresolved type '%s' for parameter '%s' in function '%s'",
                 params[i].type, params[i].name, node->name);
             return -1;
@@ -2485,7 +2485,7 @@ int ecs_script_eval(
     }
 
     ecs_script_runtime_t *runtime = flecs_script_runtime_get(script->world);
-    runtime->error = false;
+    flecs_script_runtime_error_reset(runtime);
 
     if (result) {
         flecs_log_capture_push(true);

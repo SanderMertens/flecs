@@ -184,12 +184,14 @@ typedef struct ecs_script_include_t {
 } ecs_script_include_t;
 
 typedef struct ecs_script_fn_param_t {
+    ecs_script_node_t node;
     const char *name;
     const char *type;
 } ecs_script_fn_param_t;
 
 typedef struct ecs_script_function_node_t {
     ecs_script_node_t node;
+    ecs_script_node_t return_type_node;
     const char *name;
     const char *return_type;
     ecs_vec_t params;

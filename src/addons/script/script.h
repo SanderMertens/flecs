@@ -74,6 +74,7 @@ struct ecs_script_runtime_t {
     ecs_vec_t with_type_info;
     ecs_vec_t annot;
 
+    char *error_name;
     bool error;
 };
 
@@ -113,6 +114,9 @@ ecs_script_vars_t* flecs_script_vars_push(
 
 ecs_script_runtime_t* flecs_script_runtime_get(
     ecs_world_t *world);
+
+void flecs_script_runtime_error_reset(
+    ecs_script_runtime_t *r);
 
 void flecs_script_register_builtin_functions(
     ecs_world_t *world);

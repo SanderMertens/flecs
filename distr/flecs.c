@@ -50987,12 +50987,14 @@ typedef struct ecs_script_include_t {
 } ecs_script_include_t;
 
 typedef struct ecs_script_fn_param_t {
+    ecs_script_node_t node;
     const char *name;
     const char *type;
 } ecs_script_fn_param_t;
 
 typedef struct ecs_script_function_node_t {
     ecs_script_node_t node;
+    ecs_script_node_t return_type_node;
     const char *name;
     const char *return_type;
     ecs_vec_t params;
@@ -51465,6 +51467,7 @@ int flecs_value_move_to(
 
 int flecs_value_binary(
     const ecs_script_t *script,
+    const ecs_expr_node_t *node,
     const ecs_value_t *left,
     const ecs_value_t *right,
     ecs_value_t *out,
@@ -51879,6 +51882,7 @@ struct ecs_script_runtime_t {
     ecs_vec_t with_type_info;
     ecs_vec_t annot;
 
+    char *error_name;
     bool error;
 };
 
@@ -51918,6 +51922,9 @@ ecs_script_vars_t* flecs_script_vars_push(
 
 ecs_script_runtime_t* flecs_script_runtime_get(
     ecs_world_t *world);
+
+void flecs_script_runtime_error_reset(
+    ecs_script_runtime_t *r);
 
 void flecs_script_register_builtin_functions(
     ecs_world_t *world);
@@ -70199,7 +70206,7 @@ int flecs_script_function_call(
     };
 
     ecs_script_runtime_t *runtime = flecs_script_runtime_get(world);
-    runtime->error = false;
+    flecs_script_runtime_error_reset(runtime);
     f->callback(&ctx, argc, call_argv, result);
     if (runtime->error) {
         runtime->error = false;
@@ -71892,6 +71899,7 @@ const char* flecs_script_fn_params(
                     ecs_script_fn_param_t *p = ecs_vec_append_t(
                         &parser->script->allocator, &fn->params,
                         ecs_script_fn_param_t);
+                    p->node = (ecs_script_node_t){ .pos = parser->pos };
                     p->name = Token(0);
                     p->type = Token(2);
                     parser->token_keep = parser->token_cur;
@@ -71939,6 +71947,7 @@ const char* flecs_script_fn_body(
                 Error("function body must end with an expression");
             }
             case EcsTokKeywordConst: {
+                parser->stmt_pos = pos;
                 pos = lookahead;
                 Scope(fn->body,
                     pos = flecs_script_parse_const(parser, pos, tokenizer);
@@ -72230,15 +72239,18 @@ fn_stmt: {
             goto error;
         }
 
-        Parse_3(EcsTokArrow, EcsTokIdentifier, '{', {
+        Parse_2(EcsTokArrow, EcsTokIdentifier, {
             fn->return_type = Token(4);
+            fn->return_type_node.pos = parser->pos;
 
-            pos = flecs_script_fn_body(parser, fn, pos);
-            if (!pos) {
-                goto error;
-            }
+            Parse_1('{', {
+                pos = flecs_script_fn_body(parser, fn, pos);
+                if (!pos) {
+                    goto error;
+                }
 
-            EndOfRule;
+                EndOfRule;
+            })
         })
     })
 }
@@ -73353,6 +73365,8 @@ int ecs_script_update(
     }
 
     ecs_script_eval_result_t eval_result = {0};
+    ecs_script_runtime_t *runtime = flecs_script_runtime_get(world);
+    flecs_script_runtime_error_reset(runtime);
 
     s->script = ecs_script_parse(world, name, code, NULL, &eval_result);
     if (s->script == NULL) {
@@ -73378,7 +73392,11 @@ int ecs_script_update(
     if (ecs_script_eval(parsed, NULL, &eval_result)) {
         s = ecs_ensure(world, e, EcsScript);
         s->error = eval_result.error;
-        ecs_log_(-3, NULL, 0, "%s: %s", name ? name : "script", s->error);
+        ecs_log_(-3, NULL, 0, "%s: %s",
+            runtime->error_name ? runtime->error_name :
+                (name ? name : "script"),
+            s->error);
+        flecs_script_runtime_error_reset(runtime);
         ecs_script_free(parsed);
         s->script = NULL;
         ecs_delete_with(world, ecs_pair_t(EcsScript, e));
@@ -73484,7 +73502,16 @@ void ecs_script_runtime_free(
     ecs_vec_fini_t(&r->allocator, &r->using, ecs_entity_t);
     flecs_allocator_fini(&r->allocator);
     flecs_stack_fini(&r->stack);
+    ecs_os_free(r->error_name);
     ecs_os_free(r);
+}
+
+void flecs_script_runtime_error_reset(
+    ecs_script_runtime_t *r)
+{
+    ecs_os_free(r->error_name);
+    r->error_name = NULL;
+    r->error = false;
 }
 
 void ecs_script_runtime_clear(
@@ -74576,6 +74603,9 @@ int flecs_script_template_instantiate(
     }
 
     if (result) {
+        if (!desc.runtime->error_name && script->script->name) {
+            desc.runtime->error_name = ecs_os_strdup(script->script->name);
+        }
         desc.runtime->error = true;
     }
 
@@ -78464,7 +78494,7 @@ int flecs_script_function_type_check(
     for (i = 0; i < param_count; i ++) {
         ecs_script_var_t *var = ecs_script_vars_declare(v.vars, params[i].name);
         if (!var) {
-            flecs_script_eval_error(outer_v, node,
+            flecs_script_eval_error(outer_v, &params[i].node,
                 "duplicate parameter '%s' in function '%s'",
                 params[i].name, node->name);
             goto error;
@@ -78588,7 +78618,7 @@ int flecs_script_eval_function(
     if (flecs_script_find_entity(v, 0, node->return_type, NULL, NULL,
         &return_type, NULL) || !return_type)
     {
-        flecs_script_eval_error(v, node,
+        flecs_script_eval_error(v, &node->return_type_node,
             "unresolved return type '%s' for function '%s'",
             node->return_type, node->name);
         return -1;
@@ -78607,7 +78637,7 @@ int flecs_script_eval_function(
         if (flecs_script_find_entity(v, 0, params[i].type, NULL, NULL,
             &ptype, NULL) || !ptype)
         {
-            flecs_script_eval_error(v, node,
+            flecs_script_eval_error(v, &params[i].node,
                 "unresolved type '%s' for parameter '%s' in function '%s'",
                 params[i].type, params[i].name, node->name);
             return -1;
@@ -78819,7 +78849,7 @@ int ecs_script_eval(
     }
 
     ecs_script_runtime_t *runtime = flecs_script_runtime_get(script->world);
-    runtime->error = false;
+    flecs_script_runtime_error_reset(runtime);
 
     if (result) {
         flecs_log_capture_push(true);
@@ -100475,7 +100505,8 @@ int ecs_expr_eval(
         priv_desc.lookup_action = flecs_script_default_lookup;
     }
 
-    flecs_script_runtime_get(script->world)->error = false;
+    flecs_script_runtime_error_reset(
+        flecs_script_runtime_get(script->world));
 
     if (flecs_expr_visit_eval(script, impl->expr, &priv_desc, value)) {
         goto error;
@@ -100906,17 +100937,15 @@ int flecs_value_unary(
 
 int flecs_value_binary(
     const ecs_script_t *script,
+    const ecs_expr_node_t *node,
     const ecs_value_t *left,
     const ecs_value_t *right,
     ecs_value_t *out,
     ecs_token_kind_t operator)
 {
-    (void)script;
-
     if (operator == EcsTokDiv || operator == EcsTokMod) {
         if (flecs_value_is_0(right)) {
-            ecs_err("%s: division by zero", 
-                script->name ? script->name : "anonymous script");
+            flecs_expr_visit_error(script, node, "division by zero");
             return -1;
         }
     }
@@ -101393,7 +101422,8 @@ int flecs_expr_initializer_eval_static(
             };
 
             if (flecs_value_binary(
-                ctx->script, NULL, &expr->value, &dst, elem->operator))
+                ctx->script, &node->node, NULL, &expr->value, &dst,
+                elem->operator))
             {
                 goto error;
             }
@@ -101623,7 +101653,8 @@ int flecs_expr_binary_visit_eval(
     int32_t i, vector_count = node->vector_count;
     if (!vector_count) {
         if (flecs_value_binary(
-            ctx->script, &left->value, &right->value, &out->value, node->operator)) 
+            ctx->script, &node->node, &left->value, &right->value,
+            &out->value, node->operator))
         {
             goto error;
         }
@@ -101640,8 +101671,8 @@ int flecs_expr_binary_visit_eval(
         }
 
         for (i = 0; i < vector_count; i ++) {
-            if (flecs_value_binary(ctx->script, &left_value, &right_value, 
-                &out_value, node->operator)) 
+            if (flecs_value_binary(ctx->script, &node->node, &left_value,
+                &right_value, &out_value, node->operator))
             {
                 goto error;
             }
@@ -102239,7 +102270,8 @@ int flecs_expr_match_visit_eval(
         ecs_value_t result = { .type = ecs_id(ecs_bool_t), .ptr = &value };
 
         if (flecs_value_binary(
-            ctx->script, &expr->value, &compare->value, &result, EcsTokEq))
+            ctx->script, &node->node, &expr->value, &compare->value, &result,
+            EcsTokEq))
         {
             goto error;
         }
@@ -102743,7 +102775,9 @@ int flecs_expr_binary_visit_fold(
         script, (ecs_expr_node_t*)node, node->node.type);
     ecs_value_t res = { .type = result->node.type, .ptr = result->ptr };
 
-    if (flecs_value_binary(script, &lop, &rop, &res, node->operator)) {
+    if (flecs_value_binary(
+        script, &node->node, &lop, &rop, &res, node->operator))
+    {
         goto error;
     }
 

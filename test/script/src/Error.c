@@ -2681,6 +2681,191 @@ void Error_expr_error_line_column(void) {
     ecs_fini(world);
 }
 
+void Error_division_by_zero_error_line(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "template Tmpl {"
+    LINE "  prop value: 10"
+    LINE "  prop max: 1"
+    LINE "  const result = value / max"
+    LINE "}"
+    LINE "e { Tmpl: {max: 0} }";
+
+    ecs_log_set_level(-4);
+    ecs_entity_t script = ecs_script(world, {
+        .filename = "widgets.flecs",
+        .code = expr
+    });
+    test_assert(script != 0);
+
+    const EcsScript *script_data = ecs_get(world, script, EcsScript);
+    test_assert(script_data != NULL);
+    test_assert(script_data->error != NULL);
+    test_assert(strncmp(script_data->error, "4:", 2) == 0);
+
+    ecs_fini(world);
+}
+
+static char *division_by_zero_error_message = NULL;
+
+static
+void division_by_zero_error_callback(
+    int32_t level,
+    const char *file,
+    int32_t line,
+    const char *msg)
+{
+    (void)file;
+    (void)line;
+    if (level <= -3) {
+        ecs_os_free(division_by_zero_error_message);
+        division_by_zero_error_message = ecs_os_strdup(msg);
+    }
+}
+
+void Error_division_by_zero_error_in_template_from_other_script(void) {
+    ecs_os_set_api_defaults();
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.log_ = division_by_zero_error_callback;
+    ecs_os_set_api(&os_api);
+    ecs_log_set_level(-2);
+
+    ecs_world_t *world = ecs_init();
+
+    const char *widgets =
+    HEAD "template Gauge {"
+    LINE "  prop value: 0.5"
+    LINE "  prop max: 1.0"
+    LINE "  const result = value / max"
+    LINE "}";
+
+    ecs_entity_t widgets_script = ecs_script(world, {
+        .filename = "widgets.flecs",
+        .code = widgets
+    });
+    test_assert(widgets_script != 0);
+
+    const EcsScript *widgets_data = ecs_get(
+        world, widgets_script, EcsScript);
+    test_assert(widgets_data != NULL);
+    test_assert(widgets_data->error == NULL);
+
+    ecs_entity_t hud_script = ecs_script(world, {
+        .filename = "hud.flecs",
+        .code = "e { Gauge: {max: 0} }"
+    });
+    test_assert(hud_script != 0);
+
+    const EcsScript *hud_data = ecs_get(world, hud_script, EcsScript);
+    test_assert(hud_data != NULL);
+    test_assert(hud_data->error != NULL);
+    test_assert(division_by_zero_error_message != NULL);
+    test_assert(!strncmp(
+        division_by_zero_error_message,
+        "widgets.flecs:",
+        14));
+
+    ecs_os_free(division_by_zero_error_message);
+    division_by_zero_error_message = NULL;
+
+    ecs_fini(world);
+}
+
+void Error_const_redeclaration_error_line(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "fn f(a: i32) -> i32 {"
+    LINE "  const x = i32: 1"
+    LINE "  const x = i32: 2"
+    LINE "  a + x"
+    LINE "}";
+
+    ecs_log_set_level(-4);
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run(world, "function.flecs", expr, &result) != 0);
+    test_assert(result.error != NULL);
+    test_int(result.line, 3);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}
+
+void Error_function_unresolved_const_type_error_line(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "fn f(a: i32) -> i32 {"
+    LINE "  const x = NoSuchType: 1"
+    LINE "  a + x"
+    LINE "}";
+
+    ecs_log_set_level(-4);
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run(world, "function.flecs", expr, &result) != 0);
+    test_assert(result.error != NULL);
+    test_int(result.line, 2);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}
+
+void Error_function_duplicate_param_error_line(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "fn f("
+    LINE "  a: i32,"
+    LINE "  a: i32"
+    LINE ") -> i32 { a }";
+
+    ecs_log_set_level(-4);
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run(world, "function.flecs", expr, &result) != 0);
+    test_assert(result.error != NULL);
+    test_int(result.line, 3);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}
+
+void Error_function_unresolved_param_type_error_line(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "fn f("
+    LINE "  a: NoSuchType"
+    LINE ") -> i32 { 1 }";
+
+    ecs_log_set_level(-4);
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run(world, "function.flecs", expr, &result) != 0);
+    test_assert(result.error != NULL);
+    test_int(result.line, 2);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}
+
+void Error_function_unresolved_return_type_error_line(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "fn f("
+    LINE "  a: i32"
+    LINE ") -> NoSuchType { a }";
+
+    ecs_log_set_level(-4);
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run(world, "function.flecs", expr, &result) != 0);
+    test_assert(result.error != NULL);
+    test_int(result.line, 3);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}
+
 void Error_no_error_line_column(void) {
     ecs_world_t *world = ecs_init();
 

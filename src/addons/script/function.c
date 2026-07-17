@@ -490,7 +490,7 @@ int flecs_script_function_call(
     };
 
     ecs_script_runtime_t *runtime = flecs_script_runtime_get(world);
-    runtime->error = false;
+    flecs_script_runtime_error_reset(runtime);
     f->callback(&ctx, argc, call_argv, result);
     if (runtime->error) {
         runtime->error = false;

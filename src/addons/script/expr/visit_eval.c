@@ -245,7 +245,8 @@ int flecs_expr_initializer_eval_static(
             };
 
             if (flecs_value_binary(
-                ctx->script, NULL, &expr->value, &dst, elem->operator))
+                ctx->script, &node->node, NULL, &expr->value, &dst,
+                elem->operator))
             {
                 goto error;
             }
@@ -475,7 +476,8 @@ int flecs_expr_binary_visit_eval(
     int32_t i, vector_count = node->vector_count;
     if (!vector_count) {
         if (flecs_value_binary(
-            ctx->script, &left->value, &right->value, &out->value, node->operator)) 
+            ctx->script, &node->node, &left->value, &right->value,
+            &out->value, node->operator))
         {
             goto error;
         }
@@ -492,8 +494,8 @@ int flecs_expr_binary_visit_eval(
         }
 
         for (i = 0; i < vector_count; i ++) {
-            if (flecs_value_binary(ctx->script, &left_value, &right_value, 
-                &out_value, node->operator)) 
+            if (flecs_value_binary(ctx->script, &node->node, &left_value,
+                &right_value, &out_value, node->operator))
             {
                 goto error;
             }
@@ -1091,7 +1093,8 @@ int flecs_expr_match_visit_eval(
         ecs_value_t result = { .type = ecs_id(ecs_bool_t), .ptr = &value };
 
         if (flecs_value_binary(
-            ctx->script, &expr->value, &compare->value, &result, EcsTokEq))
+            ctx->script, &node->node, &expr->value, &compare->value, &result,
+            EcsTokEq))
         {
             goto error;
         }

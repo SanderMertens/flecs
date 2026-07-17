@@ -948,6 +948,13 @@
                 "interpolated_parse_error_line_column",
                 "template_eval_error_line_column",
                 "expr_error_line_column",
+                "division_by_zero_error_line",
+                "division_by_zero_error_in_template_from_other_script",
+                "const_redeclaration_error_line",
+                "function_unresolved_const_type_error_line",
+                "function_duplicate_param_error_line",
+                "function_unresolved_param_type_error_line",
+                "function_unresolved_return_type_error_line",
                 "no_error_line_column",
                 "script_parse_line_column",
                 "script_eval_line_column"
