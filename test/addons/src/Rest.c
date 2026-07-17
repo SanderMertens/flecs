@@ -202,6 +202,97 @@ void Rest_named_query(void) {
     ecs_fini(world);
 }
 
+void Rest_call(void) {
+    ecs_world_t *world = ecs_init();
+
+    test_int(ecs_script_run(world, NULL,
+        "fn add(arg_1: i32, arg_2: i32) -> i32 { arg_1 + arg_2 }",
+        NULL), 0);
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "GET",
+        "/call/add?arg_1=10&arg_2=20", NULL, &reply));
+    test_int(reply.code, 200);
+
+    char *reply_str = ecs_strbuf_get(&reply.body);
+    test_assert(reply_str != NULL);
+    test_str(reply_str, "30");
+    ecs_os_free(reply_str);
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_call_string(void) {
+    ecs_world_t *world = ecs_init();
+
+    test_int(ecs_script_run(world, NULL,
+        "fn echo(value: string) -> string { value }", NULL), 0);
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "GET",
+        "/call/echo?value=hello%20world", NULL, &reply));
+    test_int(reply.code, 200);
+
+    char *reply_str = ecs_strbuf_get(&reply.body);
+    test_assert(reply_str != NULL);
+    test_str(reply_str, "\"hello world\"");
+    ecs_os_free(reply_str);
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_call_missing_argument(void) {
+    ecs_world_t *world = ecs_init();
+
+    test_int(ecs_script_run(world, NULL,
+        "fn add(arg_1: i32, arg_2: i32) -> i32 { arg_1 + arg_2 }",
+        NULL), 0);
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "GET",
+        "/call/add?arg_1=10", NULL, &reply));
+    test_int(reply.code, 400);
+
+    char *reply_str = ecs_strbuf_get(&reply.body);
+    test_assert(reply_str != NULL);
+    test_str(reply_str, "{\"error\":\"missing argument 'arg_2'\"}");
+    ecs_os_free(reply_str);
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
+void Rest_call_not_found(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "GET",
+        "/call/missing", NULL, &reply));
+    test_int(reply.code, 404);
+
+    char *reply_str = ecs_strbuf_get(&reply.body);
+    test_assert(reply_str != NULL);
+    test_str(reply_str, "{\"error\":\"entity 'missing' not found\"}");
+    ecs_os_free(reply_str);
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
 void Rest_tables(void) {
     ecs_world_t *world = ecs_init();
 
@@ -613,6 +704,31 @@ void Rest_script_error(void) {
         test_int(-1, ecs_http_server_request(srv, "PUT",
             "/script/main.flecs?code=struct%20Position%20%7B%0A%20%20x%20%3A%0A%7D",
             NULL, &reply));
+        test_int(reply.code, 400);
+        char *reply_str = ecs_strbuf_get(&reply.body);
+        test_assert(reply_str != NULL);
+        ecs_os_free(reply_str);
+    }
+
+    ecs_rest_server_fini(srv);
+
+    ecs_fini(world);
+}
+
+void Rest_script_error_new_script_deferred(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    {
+        ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+        ecs_log_set_level(-4);
+        ecs_defer_begin(world);
+        test_int(-1, ecs_http_server_request(srv, "PUT",
+            "/script/main.flecs?code=foo%2B%7B",
+            NULL, &reply));
+        ecs_defer_end(world);
         test_int(reply.code, 400);
         char *reply_str = ecs_strbuf_get(&reply.body);
         test_assert(reply_str != NULL);

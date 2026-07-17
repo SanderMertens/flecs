@@ -28,11 +28,18 @@ int flecs_expr_ser_type_ops(
     bool is_expr);
 
 static
+int flecs_expr_ser_forward(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    const void *base,
+    ecs_strbuf_t *str,
+    bool is_expr);
+
+static
 ecs_primitive_kind_t flecs_expr_op_to_primitive_kind(ecs_meta_op_kind_t kind) {
     return kind - EcsOpPrimitive;
 }
 
-/* Serialize enumeration */
 static
 int flecs_expr_ser_enum(
     const ecs_world_t *world,
@@ -40,43 +47,10 @@ int flecs_expr_ser_enum(
     const void *base, 
     ecs_strbuf_t *str) 
 {
-    ecs_map_key_t value;
-    ecs_meta_op_kind_t kind = op->underlying_kind;
-
-    if (kind == EcsOpU8 || kind == EcsOpI8) {
-        value = *(const uint8_t*)base;
-    } else if (kind == EcsOpU16 || kind == EcsOpI16) {
-        value = *(const uint16_t*)base;
-    } else if (kind == EcsOpU32 || kind == EcsOpI32) {
-        value = *(const uint32_t*)base;
-    } else if (kind == EcsOpUPtr || kind == EcsOpIPtr) {
-        value = *(const uintptr_t*)base;
-    } else if (kind == EcsOpU64 || kind == EcsOpI64) {
-        value = *(const uint64_t*)base;
-    } else {
-        ecs_abort(ECS_INTERNAL_ERROR, "invalid underlying type");
-    }
-    
-    /* Enumeration constants are stored in a map that is keyed on the
-     * enumeration value. */
-    ecs_enum_constant_t *c = ecs_map_get_deref(op->is.constants, 
-        ecs_enum_constant_t, value);
-    if (!c) {
-        char *path = ecs_get_path(world, op->type);
-        ecs_err("value %" PRIu64 " is not valid for enum type '%s'", 
-            value, path);
-        ecs_os_free(path);
-        goto error;
-    }
-
-    ecs_strbuf_appendstr(str, ecs_get_name(world, c->constant));
-
-    return 0;
-error:
-    return -1;
+    return flecs_meta_ser_enum(
+        world, op->type, op->underlying_kind, op->is.constants, base, str);
 }
 
-/* Serialize bitmask */
 static
 int flecs_expr_ser_bitmask(
     const ecs_world_t *world,
@@ -84,43 +58,8 @@ int flecs_expr_ser_bitmask(
     const void *ptr, 
     ecs_strbuf_t *str) 
 {
-    uint32_t value = *(const uint32_t*)ptr;
-
-    ecs_strbuf_list_push(str, "", "|");
-
-    /* Multiple flags can be set at a given time. Iterate through all the flags
-     * and append the ones that are set. */
-    ecs_map_iter_t it = ecs_map_iter(op->is.constants);
-    int count = 0;
-    while (ecs_map_next(&it)) {
-        ecs_bitmask_constant_t *c = ecs_map_ptr(&it);
-        ecs_map_key_t key = ecs_map_key(&it);
-        if ((value & key) == key) {
-            ecs_strbuf_list_appendstr(str, ecs_get_name(world, c->constant));
-            count ++;
-            value -= (uint32_t)key;
-        }
-    }
-
-    if (value != 0) {
-        /* All bits must have been matched by a constant */
-        char *path = ecs_get_path(world, op->type);
-        ecs_err(
-            "value for bitmask %s contains bits (%u) that cannot be mapped to a constant",
-            path, value);
-        ecs_os_free(path);
-        goto error;
-    }
-
-    if (!count) {
-        ecs_strbuf_list_appendstr(str, "0");
-    }
-
-    ecs_strbuf_list_pop(str, "");
-
-    return 0;
-error:
-    return -1;
+    return flecs_meta_ser_bitmask(
+        world, op->type, op->is.constants, ptr, "", str);
 }
 
 static
@@ -164,6 +103,83 @@ int flecs_expr_ser_array(
     return 0;
 error:
     return -1;
+}
+
+static
+int flecs_expr_ser_map(
+    const ecs_world_t *world,
+    ecs_meta_op_t *ops,
+    const void *base,
+    ecs_strbuf_t *str,
+    bool is_expr)
+{
+    const ecs_map_t *map = base;
+
+    ecs_strbuf_list_push(str, "[", ", ");
+
+    ecs_map_iter_t it = ecs_map_iter(map);
+    while (ecs_map_next(&it)) {
+        ecs_strbuf_list_next(str);
+
+        if (flecs_meta_ser_map_key(
+            world, ops, ecs_map_key(&it), str))
+        {
+            goto error;
+        }
+
+        ecs_strbuf_appendlit(str, ": ");
+
+        const void *ptr;
+        if (ops->elem_size > ECS_SIZEOF(ecs_map_val_t)) {
+            ptr = ecs_map_ptr(&it);
+        } else {
+            ptr = &it.res[1];
+        }
+
+        if (flecs_expr_ser_scope(world, ops, ptr, str, is_expr)) {
+            goto error;
+        }
+    }
+
+    ecs_strbuf_list_pop(str, "]");
+
+    return 0;
+error:
+    return -1;
+}
+
+static
+int flecs_expr_ser_value(
+    const ecs_world_t *world,
+    const void *base,
+    ecs_strbuf_t *str,
+    bool is_expr)
+{
+    const ecs_value_t *value = base;
+
+    if (!value->type || !value->ptr) {
+        ecs_assert(false, ECS_INVALID_PARAMETER,
+            "cannot serialize value without value");
+        ecs_err("cannot serialize value without value");
+        return -1;
+    }
+
+    ecs_strbuf_list_push(str, "{", ", ");
+    ecs_strbuf_list_next(str);
+
+    if (flecs_meta_value_type_str(world, value->type, str)) {
+        return -1;
+    }
+
+    ecs_strbuf_appendlit(str, ": ");
+
+    if (flecs_expr_ser_forward(world, value->type, value->ptr, str, is_expr)) {
+        return -1;
+    }
+
+    ecs_strbuf_list_pop(str, "}");
+
+    return 0;
 }
 
 static
@@ -313,9 +329,21 @@ int flecs_expr_ser_type_ops(
         case EcsOpPushVector: {
             ecs_vec_t *vec = ECS_OFFSET(base, op->offset);
 
-            if (flecs_expr_ser_array(world, op, 
+            if (flecs_expr_ser_array(world, op,
                 vec->array, vec->count, str, is_expr))
             {
+                goto error;
+            }
+            break;
+        }
+        case EcsOpPushMap: {
+            if (flecs_expr_ser_map(world, op, ptr, str, is_expr)) {
+                goto error;
+            }
+            break;
+        }
+        case EcsOpPushValue: {
+            if (flecs_expr_ser_value(world, ptr, str, is_expr)) {
                 goto error;
             }
             break;
@@ -362,7 +390,7 @@ int flecs_expr_ser_type_ops(
         case EcsOpEntity:
         case EcsOpId:
         case EcsOpString:
-            if (flecs_expr_ser_primitive(world, 
+            if (flecs_meta_ser_primitive(world, 
                 flecs_expr_op_to_primitive_kind(op->kind), ptr, str, is_expr))
             {
                 /* Unknown operation */

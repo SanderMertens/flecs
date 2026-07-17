@@ -454,7 +454,7 @@ void Modules_module_tag_on_namespace_on_add_2_levels(void);
 void Modules_import_monitor_2_worlds(void);
 void Modules_import_monitor_after_mini(void);
 void Modules_import_2_worlds(void);
-void Modules_component_parent_becomes_module(void);
+void Modules_component_parent_does_not_become_module(void);
 void Modules_module_has_singleton(void);
 void Modules_import_w_uppercase_name(void);
 
@@ -480,6 +480,10 @@ void Rest_get_cached_invalid(void);
 void Rest_try_query(void);
 void Rest_query(void);
 void Rest_named_query(void);
+void Rest_call(void);
+void Rest_call_string(void);
+void Rest_call_missing_argument(void);
+void Rest_call_not_found(void);
 void Rest_tables(void);
 void Rest_components(void);
 void Rest_type_info_non_existing_entity(void);
@@ -492,6 +496,7 @@ void Rest_request_commands_no_frames(void);
 void Rest_request_commands_no_commands(void);
 void Rest_request_commands_garbage_collect(void);
 void Rest_script_error(void);
+void Rest_script_error_new_script_deferred(void);
 void Rest_script_update(void);
 void Rest_script_update_w_body(void);
 void Rest_import_rest_after_mini(void);
@@ -2260,8 +2265,8 @@ bake_test_case Modules_testcases[] = {
         Modules_import_2_worlds
     },
     {
-        "component_parent_becomes_module",
-        Modules_component_parent_becomes_module
+        "component_parent_does_not_become_module",
+        Modules_component_parent_does_not_become_module
     },
     {
         "module_has_singleton",
@@ -2349,6 +2354,22 @@ bake_test_case Rest_testcases[] = {
         Rest_named_query
     },
     {
+        "call",
+        Rest_call
+    },
+    {
+        "call_string",
+        Rest_call_string
+    },
+    {
+        "call_missing_argument",
+        Rest_call_missing_argument
+    },
+    {
+        "call_not_found",
+        Rest_call_not_found
+    },
+    {
         "tables",
         Rest_tables
     },
@@ -2395,6 +2416,10 @@ bake_test_case Rest_testcases[] = {
     {
         "script_error",
         Rest_script_error
+    },
+    {
+        "script_error_new_script_deferred",
+        Rest_script_error_new_script_deferred
     },
     {
         "script_update",
@@ -2922,7 +2947,7 @@ static bake_test_suite suites[] = {
         "Rest",
         NULL,
         NULL,
-        36,
+        41,
         Rest_testcases
     },
     {

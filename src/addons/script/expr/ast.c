@@ -124,7 +124,11 @@ ecs_expr_value_node_t* flecs_expr_uint(
         parser, ecs_expr_value_node_t, EcsExprValue);
     result->storage.u64 = value;
     result->ptr = &result->storage.u64;
-    result->node.type = ecs_id(ecs_i64_t);
+    if (value > INT64_MAX) {
+        result->node.type = ecs_id(ecs_u64_t);
+    } else {
+        result->node.type = ecs_id(ecs_i64_t);
+    }
     return result;
 }
 
@@ -172,6 +176,8 @@ ecs_expr_interpolated_string_t* flecs_expr_interpolated_string(
     ecs_vec_init_t(&parser->script->allocator, &result->fragments, char*, 0);
     ecs_vec_init_t(&parser->script->allocator, &result->expressions, 
         ecs_expr_node_t*, 0);
+    ecs_vec_init_t(&parser->script->allocator, &result->formats,
+        ecs_expr_format_t, 0);
 
     return result;
 }
@@ -270,6 +276,11 @@ bool flecs_expr_explicit_cast_allowed(
     ecs_entity_t to)
 {
     if (from == to) {
+        return true;
+    }
+
+    /* Any type can be cast to and from a value */
+    if (to == ecs_id(ecs_value_t) || from == ecs_id(ecs_value_t)) {
         return true;
     }
 

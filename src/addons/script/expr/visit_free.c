@@ -14,7 +14,7 @@ void flecs_expr_value_visit_free(
     ecs_expr_value_node_t *node)
 {
     if (node->ptr != &node->storage) {
-        ecs_value_free(script->world, node->node.type, node->ptr);
+        ecs_ptr_free(script->world, node->node.type, node->ptr);
     }
 }
 
@@ -29,10 +29,19 @@ void flecs_expr_interpolated_string_visit_free(
         flecs_expr_visit_free(script, expressions[i]);
     }
 
+    ecs_expr_format_t *formats = ecs_vec_first(&node->formats);
+    count = ecs_vec_count(&node->formats);
+    for (i = 0; i < count; i ++) {
+        flecs_expr_visit_free(script, formats[i].width);
+        flecs_expr_visit_free(script, formats[i].precision);
+    }
+
     ecs_vec_fini_t(&flecs_script_impl(script)->allocator, 
         &node->fragments, char*);
     ecs_vec_fini_t(&flecs_script_impl(script)->allocator, 
         &node->expressions, ecs_expr_node_t*);
+    ecs_vec_fini_t(&flecs_script_impl(script)->allocator,
+        &node->formats, ecs_expr_format_t);
     flecs_free_n(&flecs_script_impl(script)->allocator,
         char, node->buffer_size, node->buffer);
 }
@@ -46,6 +55,7 @@ void flecs_expr_initializer_visit_free(
     int32_t i, count = ecs_vec_count(&node->elements);
     for (i = 0; i < count; i ++) {
         ecs_expr_initializer_element_t *elem = &elems[i];
+        flecs_expr_visit_free(script, elem->key);
         flecs_expr_visit_free(script, elem->value);
     }
 

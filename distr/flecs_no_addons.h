@@ -3637,6 +3637,14 @@ typedef
 void (*ecs_os_api_fclose_t)(
     FILE *file);
 
+/** OS API fread function type. */
+typedef
+size_t (*ecs_os_api_fread_t)(
+    void *ptr,
+    size_t size,
+    size_t count,
+    FILE *file);
+
 /** OS API performance tracing function type.
  *
  * @param filename The source file name.
@@ -3727,6 +3735,7 @@ typedef struct ecs_os_api_t {
     /* File I/O */
     ecs_os_api_fopen_t fopen_;                     /**< fopen callback. */
     ecs_os_api_fclose_t fclose_;                   /**< fclose callback. */
+    ecs_os_api_fread_t fread_;                     /**< fread callback. */
 
     /* Performance tracing */
     ecs_os_api_perf_trace_t perf_trace_push_; /**< perf_trace_push callback. */
@@ -3883,6 +3892,7 @@ void ecs_os_set_api_defaults(void);
 /* Files */
 #define ecs_os_fopen(file, mode) ecs_os_api.fopen_(file, mode)
 #define ecs_os_fclose(file) ecs_os_api.fclose_(file)
+#define ecs_os_fread(ptr, size, count, file) ecs_os_api.fread_(ptr, size, count, file)
 
 /* Threads */
 #define ecs_os_thread_new(callback, param) ecs_os_api.thread_new_(callback, param)
@@ -5894,7 +5904,8 @@ FLECS_ALWAYS_INLINE ecs_table_t *flecs_table_traverse_add(
 
 #endif
 
-/** Utility to hold a value of a dynamic type. */
+/** Value of a dynamic type.
+ * See the meta addon for functions to create, assign and destruct values. */
 typedef struct ecs_value_t {
     ecs_entity_t type;      /**< Type of value. */
     void *ptr;              /**< Pointer to value. */
@@ -11381,190 +11392,6 @@ void ecs_table_clear_entities(
 
 /** @} */
 
-/**
- * @defgroup values Values
- * Construct, destruct, copy, and move dynamically created values.
- *
- * @{
- */
-
-/** Construct a value in existing storage.
- *
- * @param world The world.
- * @param type The type of the value to create.
- * @param ptr A pointer to a value of type 'type'.
- * @return Zero if successful, nonzero if failed.
- */
-FLECS_API
-int ecs_value_init(
-    const ecs_world_t *world,
-    ecs_entity_t type,
-    void *ptr);
-
-/** Construct a value in existing storage.
- *
- * @param world The world.
- * @param ti The type info of the type to create.
- * @param ptr A pointer to a value of type 'type'.
- * @return Zero if successful, nonzero if failed.
- */
-FLECS_API
-int ecs_value_init_w_type_info(
-    const ecs_world_t *world,
-    const ecs_type_info_t *ti,
-    void *ptr);
-
-/** Construct a value in new storage.
- *
- * @param world The world.
- * @param type The type of the value to create.
- * @return A pointer to the value if successful, NULL if failed.
- */
-FLECS_API
-void* ecs_value_new(
-    ecs_world_t *world,
-    ecs_entity_t type);
-
-/** Construct a value in new storage.
- *
- * @param world The world.
- * @param ti The type info of the type to create.
- * @return A pointer to the value if successful, NULL if failed.
- */
-void* ecs_value_new_w_type_info(
-    ecs_world_t *world,
-    const ecs_type_info_t *ti);
-
-/** Destruct a value.
- *
- * @param world The world.
- * @param ti The type info of the value to destruct.
- * @param ptr A pointer to a constructed value of type 'type'.
- * @return Zero if successful, nonzero if failed.
- */
-int ecs_value_fini_w_type_info(
-    const ecs_world_t *world,
-    const ecs_type_info_t *ti,
-    void *ptr);
-
-/** Destruct a value.
- *
- * @param world The world.
- * @param type The type of the value to destruct.
- * @param ptr A pointer to a constructed value of type 'type'.
- * @return Zero if successful, nonzero if failed.
- */
-FLECS_API
-int ecs_value_fini(
-    const ecs_world_t *world,
-    ecs_entity_t type,
-    void* ptr);
-
-/** Destruct a value and free storage.
- *
- * @param world The world.
- * @param type The type of the value to destruct.
- * @param ptr A pointer to the value.
- * @return Zero if successful, nonzero if failed.
- */
-FLECS_API
-int ecs_value_free(
-    ecs_world_t *world,
-    ecs_entity_t type,
-    void* ptr);
-
-/** Copy a value.
- *
- * @param world The world.
- * @param ti The type info of the value to copy.
- * @param dst A pointer to the storage to copy to.
- * @param src A pointer to the value to copy.
- * @return Zero if successful, nonzero if failed.
- */
-FLECS_API
-int ecs_value_copy_w_type_info(
-    const ecs_world_t *world,
-    const ecs_type_info_t *ti,
-    void* dst,
-    const void *src);
-
-/** Copy a value.
- *
- * @param world The world.
- * @param type The type of the value to copy.
- * @param dst A pointer to the storage to copy to.
- * @param src A pointer to the value to copy.
- * @return Zero if successful, nonzero if failed.
- */
-FLECS_API
-int ecs_value_copy(
-    const ecs_world_t *world,
-    ecs_entity_t type,
-    void* dst,
-    const void *src);
-
-/** Move a value.
- *
- * @param world The world.
- * @param ti The type info of the value to move.
- * @param dst A pointer to the storage to move to.
- * @param src A pointer to the value to move.
- * @return Zero if successful, nonzero if failed.
- */
-FLECS_API
-int ecs_value_move_w_type_info(
-    const ecs_world_t *world,
-    const ecs_type_info_t *ti,
-    void* dst,
-    void *src);
-
-/** Move a value.
- *
- * @param world The world.
- * @param type The type of the value to move.
- * @param dst A pointer to the storage to move to.
- * @param src A pointer to the value to move.
- * @return Zero if successful, nonzero if failed.
- */
-FLECS_API
-int ecs_value_move(
-    const ecs_world_t *world,
-    ecs_entity_t type,
-    void* dst,
-    void *src);
-
-/** Move-construct a value.
- *
- * @param world The world.
- * @param ti The type info of the value to move.
- * @param dst A pointer to the storage to move to.
- * @param src A pointer to the value to move.
- * @return Zero if successful, nonzero if failed.
- */
-FLECS_API
-int ecs_value_move_ctor_w_type_info(
-    const ecs_world_t *world,
-    const ecs_type_info_t *ti,
-    void* dst,
-    void *src);
-
-/** Move-construct a value.
- *
- * @param world The world.
- * @param type The type of the value to move.
- * @param dst A pointer to the storage to move to.
- * @param src A pointer to the value to move.
- * @return Zero if successful, nonzero if failed.
- */
-FLECS_API
-int ecs_value_move_ctor(
-    const ecs_world_t *world,
-    ecs_entity_t type,
-    void* dst,
-    void *src);
-
-/** @} */
-
 /** @} */
 
 /**
@@ -12350,7 +12177,7 @@ int ecs_value_move_ctor(
 #define ecs_pair_value_2nd(r, T, ...) ((ecs_value_t){ecs_pair(r, ecs_id(T)), &(T)__VA_ARGS__})
 
 /** Convenience macro for creating a heap-allocated value. */
-#define ecs_value_new_t(world, T) ecs_value_new(world, ecs_id(T))
+#define ecs_ptr_new_t(world, T) ecs_ptr_new(world, ecs_id(T))
 
 /** Convenience macro for creating a compound literal value literal. */
 #define ecs_value(T, ...) ((ecs_value_t){ecs_id(T), &(T)__VA_ARGS__})

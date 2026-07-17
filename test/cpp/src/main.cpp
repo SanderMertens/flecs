@@ -628,6 +628,7 @@ void System_test_auto_defer_each(void);
 void System_test_auto_defer_iter(void);
 void System_custom_pipeline(void);
 void System_custom_pipeline_w_kind(void);
+void System_custom_pipeline_w_name(void);
 void System_instanced_query_w_singleton_each(void);
 void System_instanced_query_w_base_each(void);
 void System_instanced_query_w_singleton_iter(void);
@@ -1326,8 +1327,8 @@ void Module_module_with_core_name(void);
 void Module_import_addons_two_worlds(void);
 void Module_lookup_module_after_reparent(void);
 void Module_reparent_module_in_ctor(void);
-void Module_implicitly_add_module_to_scopes_component(void);
-void Module_implicitly_add_module_to_scopes_entity(void);
+void Module_component_scopes_do_not_become_modules(void);
+void Module_entity_scopes_do_not_become_modules(void);
 void Module_rename_namespace_shorter(void);
 void Module_rename_namespace_longer(void);
 void Module_rename_namespace_nested(void);
@@ -4167,6 +4168,10 @@ bake_test_case System_testcases[] = {
         System_custom_pipeline_w_kind
     },
     {
+        "custom_pipeline_w_name",
+        System_custom_pipeline_w_name
+    },
+    {
         "instanced_query_w_singleton_each",
         System_instanced_query_w_singleton_each
     },
@@ -6910,12 +6915,12 @@ bake_test_case Module_testcases[] = {
         Module_reparent_module_in_ctor
     },
     {
-        "implicitly_add_module_to_scopes_component",
-        Module_implicitly_add_module_to_scopes_component
+        "component_scopes_do_not_become_modules",
+        Module_component_scopes_do_not_become_modules
     },
     {
-        "implicitly_add_module_to_scopes_entity",
-        Module_implicitly_add_module_to_scopes_entity
+        "entity_scopes_do_not_become_modules",
+        Module_entity_scopes_do_not_become_modules
     },
     {
         "rename_namespace_shorter",
@@ -8523,7 +8528,7 @@ static bake_test_suite suites[] = {
         "System",
         NULL,
         NULL,
-        78,
+        79,
         System_testcases
     },
     {

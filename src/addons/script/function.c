@@ -201,8 +201,8 @@ ecs_entity_t ecs_const_var_init(
     v->value.ptr = ecs_os_malloc(ti->size);
     v->value.type = desc->type;
     v->type_info = ti;
-    ecs_value_init(world, desc->type, v->value.ptr);
-    ecs_value_copy(world, desc->type, v->value.ptr, desc->value);
+    ecs_ptr_init(world, desc->type, v->value.ptr);
+    ecs_ptr_copy(world, desc->type, v->value.ptr, desc->value);
     ecs_modified(world, result, EcsScriptConstVar);
 
     return result;
@@ -223,6 +223,13 @@ ecs_value_t ecs_const_var_get(
     return v->value;
 error:
     return (ecs_value_t){0};
+}
+
+void ecs_const_var_modified(
+    ecs_world_t *world,
+    ecs_entity_t entity)
+{
+    ecs_modified(world, entity, EcsScriptConstVar);
 }
 
 #ifdef FLECS_DEBUG
@@ -375,6 +382,13 @@ void flecs_function_import(
     ECS_COMPONENT_DEFINE(world, EcsScriptConstVar);
     ECS_COMPONENT_DEFINE(world, EcsScriptFunction);
     ECS_COMPONENT_DEFINE(world, EcsScriptMethod);
+
+    ecs_struct(world, {
+        .entity = ecs_id(EcsScriptConstVar),
+        .members = {
+            { .name = "value", .type = ecs_id(ecs_value_t) }
+        }
+    });
 
     ecs_struct(world, {
         .entity = ecs_id(EcsScriptFunction),

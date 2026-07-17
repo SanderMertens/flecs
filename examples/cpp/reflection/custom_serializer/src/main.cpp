@@ -143,6 +143,8 @@ private:
             // the reflection framework and cannot be serialized by just taking
             // a pointer + an offset. See src/addons/script/serialize.c for an
             // example of how to handle opaque types.
+            case EcsOpPushMap:
+            case EcsOpPushValue:
             case EcsOpOpaqueStruct:
             case EcsOpOpaqueArray:
             case EcsOpOpaqueVector:

@@ -3312,6 +3312,46 @@ void ComponentLifecycle_with_component_on_add(void) {
     ecs_fini(world);
 }
 
+void ComponentLifecycle_with_recycled_target(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t old_id = ecs_component(world, {
+        .entity = ecs_new(world),
+        .type = {
+            .size = ECS_SIZEOF(Position),
+            .alignment = ECS_ALIGNOF(Position)
+        }
+    });
+    test_assert(old_id != 0);
+
+    ecs_delete(world, old_id);
+
+    ecs_entity_t component = ecs_new(world);
+    test_uint((uint32_t)component, (uint32_t)old_id);
+    test_assert(component != old_id);
+    test_assert(component >> 32);
+
+    test_uint(ecs_component(world, {
+        .entity = component,
+        .type = {
+            .size = ECS_SIZEOF(Position),
+            .alignment = ECS_ALIGNOF(Position)
+        }
+    }), component);
+
+    ecs_entity_t tag = ecs_new(world);
+    ecs_add_pair(world, tag, EcsWith, component);
+
+    ecs_entity_t e = ecs_new_w_id(world, tag);
+    test_assert(ecs_has_id(world, e, tag));
+    test_assert(ecs_has_id(world, e, component));
+
+    const Position *p = ecs_get_id(world, e, component);
+    test_assert(p != NULL);
+
+    ecs_fini(world);
+}
+
 void ComponentLifecycle_move_ctor_on_move(void) {
     ecs_world_t* world = ecs_mini();
 
@@ -5401,7 +5441,7 @@ void ComponentLifecycle_value_move_ctor_invokes_move_ctor(void) {
     Position src = {10, 20};
     Position dst;
 
-    test_int(0, ecs_value_move_ctor(world, ecs_id(Position), &dst, &src));
+    test_int(0, ecs_ptr_move_ctor(world, ecs_id(Position), &dst, &src));
 
     test_int(value_move_ctor_move_ctor_invoked, 1);
     test_int(value_move_ctor_move_invoked, 0);

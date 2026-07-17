@@ -333,14 +333,18 @@ bool flecs_query_up_with(
         if (impl->trav == EcsChildOf) {
             if (range.table->flags & EcsTableHasParent) {
                 if (q->flags & EcsQueryNested) {
-                    /* If this is a nested query (used to populate a cache), 
+                    /* If this is a nested query (used to populate a cache),
                      * don't store entries for individual entities in the cache.
-                     * Instead, match the entire table, and figure out from 
+                     * Instead, match the entire table, and figure out from
                      * which parent the entity gets the component in an uncached
                      * operation. */
 
-                    /* Signal that the uncached instruction needs to search. 
-                     * This helps distinguish between tables with a Parent 
+                    if (q->terms[op->term_index].oper == EcsNot) {
+                        return false;
+                    }
+
+                    /* Signal that the uncached instruction needs to search.
+                     * This helps distinguish between tables with a Parent
                      * component that own the component vs. those that don't. */
                     it->sources[op->field_index] = EcsWildcard;
                     ECS_CONST_CAST(int16_t*, it->columns)[op->field_index] = -1;

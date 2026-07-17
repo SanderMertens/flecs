@@ -16,7 +16,13 @@ int flecs_json_ser_type_slice(
     const void *base, 
     ecs_strbuf_t *str);
 
-/* Serialize enumeration */
+static
+int flecs_json_ser_forward(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    const void *base,
+    ecs_strbuf_t *str);
+
 static
 int flecs_json_ser_enum(
     const ecs_world_t *world,
@@ -24,54 +30,15 @@ int flecs_json_ser_enum(
     const void *base, 
     ecs_strbuf_t *str) 
 {
-    ecs_map_key_t value;
-    ecs_meta_op_kind_t kind = op->underlying_kind;
-
-    if (kind == EcsOpU8) {
-        value = *(const uint8_t*)base;
-    } else if (kind == EcsOpI8) {
-        value = (ecs_map_key_t)(int64_t)*(const int8_t*)base;
-    } else if (kind == EcsOpU16) {
-        value = *(const uint16_t*)base;
-    } else if (kind == EcsOpI16) {
-        value = (ecs_map_key_t)(int64_t)*(const int16_t*)base;
-    } else if (kind == EcsOpU32) {
-        value = *(const uint32_t*)base;
-    } else if (kind == EcsOpI32) {
-        value = (ecs_map_key_t)(int64_t)*(const int32_t*)base;
-    } else if (kind == EcsOpUPtr) {
-        value = *(const uintptr_t*)base;
-    } else if (kind == EcsOpIPtr) {
-        value = (ecs_map_key_t)(int64_t)*(const intptr_t*)base;
-    } else if (kind == EcsOpU64 || kind == EcsOpI64) {
-        value = *(const uint64_t*)base;
-    } else {
-        ecs_abort(ECS_INTERNAL_ERROR, "invalid underlying type");
-    }
-    
-    /* Enumeration constants are stored in a map that is keyed on the
-     * enumeration value. */
-    ecs_enum_constant_t *constant = ecs_map_get_deref(op->is.constants,
-        ecs_enum_constant_t, value);
-    if (!constant) {
-        /* If the value is not found, it is not a valid enumeration constant */
-        char *name = ecs_get_path(world, op->type);
-        ecs_err("enumeration value '%d' of type '%s' is not a valid constant", 
-            value, name);
-        ecs_os_free(name);
-        goto error;
-    }
-
     ecs_strbuf_appendch(str, '"');
-    ecs_strbuf_appendstr(str, ecs_get_name(world, constant->constant));
+    if (flecs_meta_ser_enum(
+        world, op->type, op->underlying_kind, op->is.constants, base, str)) {
+        return -1;
+    }
     ecs_strbuf_appendch(str, '"');
-
     return 0;
-error:
-    return -1;
 }
 
-/* Serialize bitmask */
 static
 int flecs_json_ser_bitmask(
     const ecs_world_t *world,
@@ -79,41 +46,12 @@ int flecs_json_ser_bitmask(
     const void *ptr, 
     ecs_strbuf_t *str) 
 {
-    uint32_t value = *(const uint32_t*)ptr;
-    if (!value) {
-        ecs_strbuf_appendch(str, '0');
-        return 0;
+    if (flecs_meta_ser_bitmask(
+        world, op->type, op->is.constants, ptr, "\"", str)) 
+    {
+        return -1;
     }
-
-    ecs_strbuf_list_push(str, "\"", "|");
-
-    /* Multiple flags can be set at a given time. Iterate through all the flags
-     * and append the ones that are set. */
-    ecs_map_iter_t it = ecs_map_iter(op->is.constants);
-    while (ecs_map_next(&it)) {
-        ecs_bitmask_constant_t *constant = ecs_map_ptr(&it);
-        ecs_map_key_t key = ecs_map_key(&it);
-        if ((value & key) == key) {
-            ecs_strbuf_list_appendstr(str, 
-                ecs_get_name(world, constant->constant));
-            value -= (uint32_t)key;
-        }
-    }
-
-    if (value != 0) {
-        /* All bits must have been matched by a constant */
-        char *name = ecs_get_path(world, op->type);
-        ecs_err("bitmask value '%u' of type '%s' contains invalid/unknown bits", 
-            value, name);
-        ecs_os_free(name);
-        goto error;
-    }
-
-    ecs_strbuf_list_pop(str, "\"");
-
     return 0;
-error:
-    return -1;
 }
 
 typedef struct json_serializer_ctx_t {
@@ -225,6 +163,84 @@ int flecs_json_ser_array(
 }
 
 static
+int flecs_json_ser_map(
+    const ecs_world_t *world,
+    ecs_meta_op_t *ops,
+    const void *base,
+    ecs_strbuf_t *str)
+{
+    const ecs_map_t *map = base;
+
+    flecs_json_object_push(str);
+
+    ecs_map_iter_t it = ecs_map_iter(map);
+    while (ecs_map_next(&it)) {
+        ecs_strbuf_t key_buf = ECS_STRBUF_INIT;
+        if (flecs_meta_ser_map_key(
+            world, ops, ecs_map_key(&it), &key_buf))
+        {
+            ecs_strbuf_reset(&key_buf);
+            return -1;
+        }
+
+        char *key_str = ecs_strbuf_get(&key_buf);
+        flecs_json_member(str, key_str);
+        ecs_os_free(key_str);
+
+        const void *ptr;
+        if (ops->elem_size > ECS_SIZEOF(ecs_map_val_t)) {
+            ptr = ecs_map_ptr(&it);
+        } else {
+            ptr = &it.res[1];
+        }
+
+        if (flecs_json_ser_scope(world, ops, ptr, str)) {
+            return -1;
+        }
+    }
+
+    flecs_json_object_pop(str);
+
+    return 0;
+}
+
+static
+int flecs_json_ser_value(
+    const ecs_world_t *world,
+    const void *base,
+    ecs_strbuf_t *str)
+{
+    const ecs_value_t *value = base;
+
+    if (!value->type || !value->ptr) {
+        ecs_assert(false, ECS_INVALID_PARAMETER, 
+            "cannot serialize value without value");
+        ecs_err("cannot serialize value without value");
+        return -1;
+    }
+
+    ecs_strbuf_t type_str = ECS_STRBUF_INIT;
+    if (flecs_meta_value_type_str(world, value->type, &type_str)) {
+        ecs_strbuf_reset(&type_str);
+        return -1;
+    }
+
+    flecs_json_object_push(str);
+
+    char *type_name = ecs_strbuf_get(&type_str);
+    flecs_json_member(str, type_name);
+    ecs_os_free(type_name);
+
+    if (flecs_json_ser_forward(world, value->type, value->ptr, str)) {
+        return -1;
+    }
+
+    flecs_json_object_pop(str);
+
+    return 0;
+}
+
+static
 int flecs_json_ser_forward(
     const ecs_world_t *world,
     ecs_entity_t type,
@@ -297,9 +313,25 @@ int flecs_json_ser_type_slice(
             break;
         }
         case EcsOpPushArray: {
-            if (flecs_json_ser_array(world, op, ptr, 
-                op->elem_size, ecs_meta_op_get_elem_count(op, ptr), str)) 
+            if (flecs_json_ser_array(world, op, ptr,
+                op->elem_size, ecs_meta_op_get_elem_count(op, ptr), str))
             {
+                goto error;
+            }
+
+            i += op->op_count - 1;
+            break;
+        }
+        case EcsOpPushMap: {
+            if (flecs_json_ser_map(world, op, ptr, str)) {
+                goto error;
+            }
+
+            i += op->op_count - 1;
+            break;
+        }
+        case EcsOpPushValue: {
+            if (flecs_json_ser_value(world, ptr, str)) {
                 goto error;
             }
 
@@ -370,7 +402,7 @@ int flecs_json_ser_type_slice(
         case EcsOpI32:
         case EcsOpUPtr:
         case EcsOpIPtr:
-            if (flecs_expr_ser_primitive(world,
+            if (flecs_meta_ser_primitive(world,
                 flecs_json_op_to_primitive_kind(op->kind), ptr, str, true))
             {
                 ecs_throw(ECS_INTERNAL_ERROR, NULL);

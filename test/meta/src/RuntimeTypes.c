@@ -3469,3 +3469,236 @@ void RuntimeTypes_vector_of_opaque(void) {
     free_resource_ids();
 }
 
+
+void RuntimeTypes_map_lifecycle(void) {
+    ecs_world_t *world = ecs_init();
+
+    int initial_resources = 10;
+    initialize_resource_ids(initial_resources);
+    test_int(10, resources_left());
+
+    define_resource_handle(world, true, true, true, true);
+
+    ecs_map_desc_t desc = {
+        .entity = 0, 
+        .key_type = ecs_id(ecs_i64_t), 
+        .type = resource_handle
+    };
+    ecs_entity_t map_of_resources = ecs_map_type_init(world, &desc);
+
+    const ecs_type_hooks_t *hooks =
+        &ecs_get_type_info(world, map_of_resources)->hooks;
+
+    /* a map type requires all 4 hooks: */
+    test_assert(hooks->ctor != NULL);
+    test_assert(hooks->dtor != NULL);
+    test_assert(hooks->move != NULL);
+    test_assert(hooks->copy != NULL);
+
+    /* Test the map type is working: */
+    ecs_entity_t prefab = ecs_new(world);
+    ecs_add_id(world, prefab, EcsPrefab);
+    ecs_map_t *m =
+        (ecs_map_t *) test_ecs_ensure(world, prefab, map_of_resources);
+    test_assert(m != NULL);
+    test_int(ecs_map_count(m), 0);
+    ecs_map_init_if(m, NULL);
+    test_int(initial_resources, resources_left());
+
+    /* manually add some items to the map. These must be constructed by 
+     * hand: */
+    for (int i = 0; i < 3; i++) {
+        ResourceHandle *r = (ResourceHandle*)ecs_map_ensure(m, i + 1);
+        ResourceHandle_ctor(r, 1, NULL);
+    }
+    test_int(initial_resources - 3, resources_left());
+
+    /* test map copy assign by instantiating the prefab */
+    ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, prefab);
+    test_int(initial_resources - 6, resources_left());
+
+    /* test map move assign by forcing a move via archetype change: */
+    ecs_add_id(world, e, ecs_new(world));
+    test_int(initial_resources - 6, resources_left());
+
+    ecs_delete(world, e);
+    test_int(initial_resources - 3, resources_left());
+
+    ecs_delete(world, prefab);
+    test_int(initial_resources, resources_left());
+
+    for (int i = 0; i < initial_resources; i++) {
+        test_assert(resource_id_available(i + 1));
+    }
+
+    ecs_fini(world);
+
+    free_resource_ids();
+}
+
+void RuntimeTypes_map_lifecycle_trivial_type(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_map_desc_t desc = {
+        .entity = 0, 
+        .key_type = ecs_id(ecs_i64_t), 
+        .type = ecs_id(ecs_i32_t)
+    };
+    ecs_entity_t map_of_ints = ecs_map_type_init(world, &desc);
+
+    const ecs_type_hooks_t *hooks =
+        &ecs_get_type_info(world, map_of_ints)->hooks;
+
+    /* a map type requires all 4 hooks, even for trivial types: */
+    test_assert(hooks->ctor != NULL);
+    test_assert(hooks->dtor != NULL);
+    test_assert(hooks->move != NULL);
+    test_assert(hooks->copy != NULL);
+
+    /* Test the map type is working: */
+    ecs_entity_t prefab = ecs_new(world);
+    ecs_add_id(world, prefab, EcsPrefab);
+    ecs_map_t *m = (ecs_map_t *) test_ecs_ensure(world, prefab, map_of_ints);
+    test_assert(m != NULL);
+    test_int(ecs_map_count(m), 0);
+    ecs_map_init_if(m, NULL);
+
+    for (int i = 0; i < 3; i++) {
+        *(int32_t*)ecs_map_ensure(m, i + 1) = 10 * (i + 1);
+    }
+
+    /* test map copy assign by instantiating the prefab */
+    ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, prefab);
+
+    /* verify we got a copy: */
+    const ecs_map_t *mcopy =
+        (const ecs_map_t *) ecs_get_id(world, e, map_of_ints);
+    test_assert(mcopy != m);
+    test_int(ecs_map_count(mcopy), 3);
+    for (int i = 0; i < 3; i++) {
+        ecs_map_val_t *v = ecs_map_get(mcopy, i + 1);
+        test_assert(v != NULL);
+        test_int(*(int32_t*)v, 10 * (i + 1));
+    }
+
+    /* test map move assign by forcing a move via archetype change: */
+    ecs_add_id(world, e, ecs_new(world));
+    const ecs_map_t *mcopy_moved =
+        (const ecs_map_t *) ecs_get_id(world, e, map_of_ints);
+    test_assert(mcopy != mcopy_moved);
+    test_int(ecs_map_count(mcopy_moved), 3);
+    for (int i = 0; i < 3; i++) {
+        ecs_map_val_t *v = ecs_map_get(mcopy_moved, i + 1);
+        test_assert(v != NULL);
+        test_int(*(int32_t*)v, 10 * (i + 1));
+    }
+
+    ecs_delete(world, e);
+    ecs_delete(world, prefab);
+
+    ecs_fini(world);
+}
+
+void RuntimeTypes_map_lifecycle_alloc_values(void) {
+    ecs_world_t *world = ecs_init();
+
+    /* Three members so the struct is larger than 64 bits on 32-bit
+     * platforms, which ensures values are stored in separate allocations. */
+    ecs_entity_t n = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "N"}),
+        .members = {
+            {"a", ecs_id(ecs_string_t)},
+            {"b", ecs_id(ecs_string_t)},
+            {"c", ecs_id(ecs_string_t)}
+        }
+    });
+
+    ecs_map_desc_t desc = {
+        .entity = 0, 
+        .key_type = ecs_id(ecs_i64_t), 
+        .type = n
+    };
+    ecs_entity_t map_of_structs = ecs_map_type_init(world, &desc);
+
+    typedef struct {
+        char *a;
+        char *b;
+        char *c;
+    } N;
+
+    ecs_entity_t prefab = ecs_new(world);
+    ecs_add_id(world, prefab, EcsPrefab);
+    ecs_map_t *m = (ecs_map_t *) test_ecs_ensure(world, prefab, map_of_structs);
+    test_assert(m != NULL);
+    ecs_map_init_if(m, NULL);
+
+    N *ptr = ecs_map_ensure_alloc_t(m, N, 10);
+    ptr->a = ecs_os_strdup("Hello");
+    ptr->b = ecs_os_strdup("World");
+    ptr->c = ecs_os_strdup("!");
+
+    /* test map copy assign by instantiating the prefab */
+    ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, prefab);
+
+    const ecs_map_t *mcopy =
+        (const ecs_map_t *) ecs_get_id(world, e, map_of_structs);
+    test_assert(mcopy != m);
+    test_int(ecs_map_count(mcopy), 1);
+    const N *copy_ptr = ecs_map_get_deref(mcopy, N, 10);
+    test_assert(copy_ptr != NULL);
+    test_assert(copy_ptr != ptr);
+    test_str(copy_ptr->a, "Hello");
+    test_str(copy_ptr->b, "World");
+    test_str(copy_ptr->c, "!");
+    test_assert(copy_ptr->a != ptr->a);
+    test_assert(copy_ptr->b != ptr->b);
+    test_assert(copy_ptr->c != ptr->c);
+
+    /* test map move assign by forcing a move via archetype change: */
+    ecs_add_id(world, e, ecs_new(world));
+    const ecs_map_t *mcopy_moved =
+        (const ecs_map_t *) ecs_get_id(world, e, map_of_structs);
+    test_assert(mcopy != mcopy_moved);
+    test_int(ecs_map_count(mcopy_moved), 1);
+    copy_ptr = ecs_map_get_deref(mcopy_moved, N, 10);
+    test_assert(copy_ptr != NULL);
+    test_str(copy_ptr->a, "Hello");
+    test_str(copy_ptr->b, "World");
+    test_str(copy_ptr->c, "!");
+
+    ecs_delete(world, e);
+    ecs_delete(world, prefab);
+
+    ecs_fini(world);
+}
+
+void RuntimeTypes_map_cmp_illegal(void) {
+    ecs_world_t *world = ecs_init();
+
+    /* Define NestedStruct: */
+    const ecs_type_info_t *nested_struct_ti = define_nested_struct(world);
+
+    ecs_type_hooks_t hooks = nested_struct_ti->hooks;
+    hooks.flags |= ECS_TYPE_HOOK_CMP_ILLEGAL; /* mark compare hook 
+        for "NestedStruct" as illegal */
+    hooks.cmp = NULL;
+
+    hooks.flags &= ECS_TYPE_HOOKS_ILLEGAL;
+    ecs_set_hooks_id(world, nested_struct, &hooks);
+
+    /* Define test_map, as a map with "NestedStruct" values.
+     * Its cmp hook should be set to illegal as well. */
+    ecs_map_desc_t desc = {
+        .entity = 0, 
+        .key_type = ecs_id(ecs_i64_t), 
+        .type = nested_struct
+    };
+    ecs_entity_t test_map = ecs_map_type_init(world, &desc);
+
+    const ecs_type_info_t* test_map_ti = ecs_get_type_info(world, test_map);
+
+    /* test_map should have an illegal cmp hook too: */
+    test_assert(test_map_ti->hooks.flags & ECS_TYPE_HOOK_CMP_ILLEGAL);
+
+    ecs_fini(world);
+}

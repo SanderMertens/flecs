@@ -727,7 +727,9 @@ void flecs_query_insert_cache_search(
                 continue;
             }
 
-            if (term->trav == EcsChildOf && (term->oper == EcsAnd || term->oper == EcsOptional)) {
+            if (term->trav == EcsChildOf && (term->oper == EcsAnd ||
+                term->oper == EcsOptional || term->oper == EcsNot))
+            {
                 ecs_oper_kind_t oper = q->terms[i].oper;
                 q->terms[i].oper = EcsAnd;
                 flecs_query_compile_term(

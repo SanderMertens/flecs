@@ -1290,6 +1290,38 @@ void System_custom_pipeline_w_kind(void) {
     test_int(count, 3);
 }
 
+void System_custom_pipeline_w_name(void) {
+    flecs::world world;
+
+    auto Tag = world.entity();
+
+    flecs::entity pip = world.pipeline("MyPipeline")
+        .with(flecs::System)
+        .with(Tag)
+        .build();
+
+    test_str(pip.name(), "MyPipeline");
+    test_assert(pip == world.lookup("MyPipeline"));
+
+    int count = 0;
+
+    world.system()
+        .kind(Tag)
+        .run([&](flecs::iter it) {
+            while (it.next()) {
+                count ++;
+            }
+        });
+
+    test_int(count, 0);
+
+    world.set_pipeline(pip);
+
+    world.progress();
+
+    test_int(count, 1);
+}
+
 void System_instanced_query_w_singleton_each(void) {
     flecs::world ecs;
 

@@ -498,7 +498,7 @@
                 "import_monitor_2_worlds",
                 "import_monitor_after_mini",
                 "import_2_worlds",
-                "component_parent_becomes_module",
+                "component_parent_does_not_become_module",
                 "module_has_singleton",
                 "import_w_uppercase_name"
             ]
@@ -530,6 +530,10 @@
                 "try_query",
                 "query",
                 "named_query",
+                "call",
+                "call_string",
+                "call_missing_argument",
+                "call_not_found",
                 "tables",
                 "components",
                 "type_info_non_existing_entity",
@@ -542,6 +546,7 @@
                 "request_commands_no_commands",
                 "request_commands_garbage_collect",
                 "script_error",
+                "script_error_new_script_deferred",
                 "script_update",
                 "script_update_w_body",
                 "import_rest_after_mini",

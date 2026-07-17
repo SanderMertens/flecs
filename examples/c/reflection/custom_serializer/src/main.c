@@ -134,7 +134,16 @@ void serializeOps(ecs_world_t *world, ecs_meta_op_t *ops, int32_t op_count,
             serializeVector(world, op, ptr);
             break;
 
-        // Opaque types have in-memory representations that are opaque to 
+        case EcsOpPushMap:
+            break;
+
+        // Value types hold a value of a type that is determined at runtime.
+        // Serializing a value requires looking up the reflection data for the
+        // stored type. For an example, see src/addons/script/serialize.c.
+        case EcsOpPushValue:
+            break;
+
+        // Opaque types have in-memory representations that are opaque to
         // the reflection framework and cannot be serialized by just taking
         // a pointer + an offset. See src/addons/script/serialize.c for an
         // example of how to handle opaque types.

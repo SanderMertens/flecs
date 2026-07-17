@@ -1957,6 +1957,32 @@ Currently supported actions:
 |----------------|-------------------------------------------------|
 | shrink_memory  | Calls `ecs_shrink` to reduce memory usage.      |
 
+### GET call
+Call a Flecs script function. Query parameter names must match the function's
+parameter names. String arguments are passed as URL-decoded strings; arguments
+of other types use Flecs expression syntax. The return value is serialized as
+JSON.
+
+```
+GET /call/<path>?<argument>=<value>
+```
+
+For a function declared as:
+
+```flecs
+fn my_func(arg_1: string, arg_2: string) -> string {
+    arg_1
+}
+```
+
+the function can be called with:
+
+```
+GET /call/my_func?arg_1=foo&arg_2=bar
+```
+
+This endpoint requires the Flecs script addon.
+
 ### PUT script
 Update code for Flecs script. If the `code` parameter is not provided, the request body is used as the script code.
 

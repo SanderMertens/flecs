@@ -463,6 +463,11 @@ void ecs_os_api_fclose(FILE *file) {
     fclose(file);
 }
 
+static
+size_t ecs_os_api_fread(void *ptr, size_t size, size_t count, FILE *file) {
+    return fread(ptr, size, count, file);
+}
+
 void ecs_os_strset(char **str, const char *value) {
     char *old = str[0];
     str[0] = ecs_os_strdup(value);
@@ -568,6 +573,7 @@ void ecs_os_set_api_defaults(void)
     /* File I/O */
     ecs_os_api.fopen_ = ecs_os_api_fopen;
     ecs_os_api.fclose_ = ecs_os_api_fclose;
+    ecs_os_api.fread_ = ecs_os_api_fread;
 
     /* Time */
     ecs_os_api.get_time_ = ecs_os_gettime;

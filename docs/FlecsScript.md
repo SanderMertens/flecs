@@ -612,6 +612,65 @@ To prevent evaluating expressions in an interpolated string, the `$` and `{` cha
 const x: "The value of variable \$x is $x"
 ```
 
+#### Formatting interpolated numbers
+Interpolated `f32` and `f64` values can include a format specifier after the
+expression, separated by a colon:
+
+```cpp
+const value: 12.3456
+const x: "{value:.2}" // 12.35
+```
+
+The complete syntax is:
+
+```text
+{expression:[[fill]align][+][0][width][.precision][e|E]}
+```
+
+| Part | Description |
+|------|-------------|
+| `fill` | Character used for padding. It must be immediately followed by an alignment character. The default is a space. |
+| `<` | Align the value to the left. |
+| `^` | Center the value. |
+| `>` | Align the value to the right. This is the default. |
+| `+` | Always include a sign, including for positive values. |
+| `0` | Pad numeric values with leading zeroes. The sign, when present, is placed before the zeroes. |
+| `width` | Minimum width of the formatted value. Values wider than this are not truncated. |
+| `.precision` | Number of digits after the decimal point. |
+| `e` | Use scientific notation with a lowercase exponent. |
+| `E` | Use scientific notation with an uppercase exponent. |
+
+For example:
+
+```cpp
+const value: 12.5
+const left:   "{value:*<13}" // 12.500000****
+const center: "{value:*^13}" // **12.500000**
+const right:  "{value:*>13}" // ****12.500000
+const zeroes: "{value:013}"  // 000012.500000
+const sign:   "{value:+}"    // +12.500000
+const exp:    "{value:.2e}"  // 1.25e+01
+```
+
+Width and precision can be integer literals, variables, or parenthesized
+expressions. Variable names can be written with or without `$`:
+
+```cpp
+const value: 12.3456
+const width: 10
+const precision: 2
+
+const a: "{value:width}"
+const b: "{value:$width}"
+const c: "{value:(width + 2)}"
+const d: "{value:.precision}"
+const e: "{value:.$precision}"
+const f: "{value:.(precision + 1)}"
+```
+
+Width and precision values must be between `0` and `1024`, inclusive. Values
+outside this range produce an error.
+
 ### Types
 The type of an expression is determined by the kind of expression, its operands and the context in which the expression is evaluated. The words "type" and "component" can be used interchangeably, as every type in Flecs is a component, and every component is a type. For component types to be used with scripts, they have to be described using the meta reflection addon.
 
@@ -1123,7 +1182,7 @@ Templates are commonly used in combination with the kind syntax:
 Square my_entity
 ```
 
-Templates can be parameterized with properties. Properties are variables that are exposed as component members. To create a property, use the `prop` keyword. Example:
+Templates can be parameterized with properties. Properties are variables that are exposed as component members. When the component is updated with a new value, the template is reevaluated. To create a property, use the `prop` keyword. Example:
 
 ```cpp
 template Square {
@@ -1138,6 +1197,17 @@ Square my_entity(size: 20, color: {38, 25, 13})
 ```
 
 Just like `const` variables, `prop` variables can explicitly specify a type or implicitly derive their type from the assigned (default) value.
+
+In addition to property variables, templates can also contain mutables. Mutables that are exposed as component members on a `TemplateComponent::mut` component. To create a mutable, use the `mut` keyword. For example the `hover` mutable variable ends up on a `Button::mut` component:
+
+```cpp
+template Button {
+  prop text: "Howdy"
+  mut hover: false
+
+  // ...
+}
+```
 
 Template scripts can do anything a regular script can do, including creating child entities. The following example shows how to create an template that uses a nested template to create children:
 

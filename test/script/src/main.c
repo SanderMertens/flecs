@@ -301,6 +301,7 @@ void Eval_path_tag_in_module(void);
 void Eval_path_tag_in_nested_scope(void);
 void Eval_path_tag_in_nested_module(void);
 void Eval_dont_inherit_script_pair(void);
+void Eval_update_script_w_prefab_child(void);
 void Eval_update_script_w_anonymous(void);
 void Eval_update_script_w_anonymous_paren(void);
 void Eval_clear_script(void);
@@ -507,6 +508,10 @@ void Eval_component_expr_swizzle_var_repeat(void);
 void Eval_component_expr_swizzle_var_subset(void);
 void Eval_component_expr_swizzle_var_rgb(void);
 void Eval_component_expr_swizzle_var_no_target_type(void);
+void Eval_component_expr_swizzle_initializer_r(void);
+void Eval_component_expr_swizzle_initializer_rg(void);
+void Eval_component_expr_swizzle_initializer_rgb(void);
+void Eval_component_expr_swizzle_initializer_rgba(void);
 void Eval_component_expr_member_no_var(void);
 void Eval_default_child_component_w_entity_in_if(void);
 void Eval_default_child_component_w_entity_in_for(void);
@@ -514,6 +519,27 @@ void Eval_default_child_component_w_entity_in_nested_if(void);
 void Eval_default_child_component_w_entity_in_nested_for(void);
 void Eval_default_child_component_w_entity_in_if_in_for(void);
 void Eval_default_child_component_w_entity_in_for_in_if(void);
+void Eval_map_i64_i32_component(void);
+void Eval_map_i64_string_component(void);
+void Eval_map_entity_struct_component(void);
+void Eval_map_component_empty(void);
+void Eval_map_component_object_literal(void);
+void Eval_map_enum_i32_component(void);
+void Eval_map_bitmask_i32_component(void);
+void Eval_map_bitmask_i32_component_w_expr_key(void);
+void Eval_map_i64_i32_component_w_expr_key(void);
+void Eval_map_i64_i32_component_w_var_key(void);
+void Eval_map_component_element(void);
+void Eval_map_export_var_element(void);
+void Eval_struct_export_var_member(void);
+void Eval_array_export_var_element(void);
+void Eval_vector_export_var_element(void);
+void Eval_struct_w_value_member(void);
+void Eval_struct_w_value_member_w_type(void);
+void Eval_struct_w_value_member_reassign(void);
+void Eval_value_component(void);
+void Eval_value_const_var(void);
+void Eval_var_w_value_name(void);
 
 // Testsuite 'Function'
 void Function_simple(void);
@@ -624,6 +650,7 @@ void Template_template_w_pair_w_this_kw(void);
 void Template_template_w_pair_scope_w_this_kw(void);
 void Template_template_w_this_kw_assigned_to_entity_field(void);
 void Template_template_w_this_kw_in_component_expr(void);
+void Template_template_w_const_w_this_kw_in_component_expr(void);
 void Template_template_w_pair_w_unresolved_var_first(void);
 void Template_template_w_pair_w_unresolved_var_second(void);
 void Template_template_w_pair_scope_w_unresolved_var_first(void);
@@ -680,6 +707,63 @@ void Template_default_component_w_prop_var_in_nested_if(void);
 void Template_default_component_w_prop_var_in_nested_for(void);
 void Template_template_w_new_expr_in_const(void);
 void Template_template_w_existing_observer(void);
+void Template_template_w_prop_w_value_name(void);
+void Template_template_w_var_w_value_name(void);
+
+// Testsuite 'Mut'
+void Mut_declaration(void);
+void Mut_two_members(void);
+void Mut_implicit_type(void);
+void Mut_instance_w_default(void);
+void Mut_instance_w_props_and_mut(void);
+void Mut_value_in_template_body(void);
+void Mut_value_w_prop_in_template_body(void);
+void Mut_modified_reinstantiates(void);
+void Mut_set_reinstantiates(void);
+void Mut_modified_reinstantiates_only_instance(void);
+void Mut_deferred_modified_reinstantiates(void);
+void Mut_bulk_create(void);
+void Mut_prop_update_preserves_mut(void);
+void Mut_mut_component_without_template(void);
+void Mut_string_default(void);
+void Mut_const_from_mut(void);
+void Mut_script_update_reinstantiates(void);
+void Mut_not_exposed_as_prop(void);
+void Mut_using(void);
+void Mut_type_without_using_meta(void);
+void Mut_composite(void);
+void Mut_with_mut(void);
+void Mut_entity_pair(void);
+void Mut_entity_pair_scope(void);
+void Mut_pair_component_entity_target(void);
+void Mut_anonymous_instance(void);
+void Mut_managed_script_twice(void);
+void Mut_module(void);
+void Mut_multiple_templates(void);
+void Mut_anonymous_children(void);
+void Mut_fold_const(void);
+void Mut_assign_add(void);
+void Mut_assign_mul(void);
+void Mut_script_component(void);
+void Mut_script_pair_component(void);
+void Mut_tree_parent(void);
+void Mut_child_name_from_string(void);
+void Mut_default_component(void);
+void Mut_default_component_nested_if(void);
+void Mut_default_component_nested_for(void);
+void Mut_value_name(void);
+void Mut_const_value_name(void);
+void Mut_hoist_var(void);
+void Mut_nested_template(void);
+void Mut_redeclare_mut_as_mut(void);
+void Mut_redeclare_mut_as_const(void);
+void Mut_managed_script_twice_after_low_id_exhaustion(void);
+void Mut_eval_error(void);
+void Mut_eval_error_w_runtime(void);
+void Mut_outside_template(void);
+void Mut_after_const(void);
+void Mut_redeclare_prop_as_mut(void);
+void Mut_redeclare_mut_as_prop(void);
 
 // Testsuite 'Error'
 void Error_multi_line_comment_after_newline_before_newline_scope_open(void);
@@ -800,6 +884,142 @@ void Error_no_error_line_column(void);
 void Error_script_parse_line_column(void);
 void Error_script_eval_line_column(void);
 
+// Testsuite 'Format'
+void Format_precision_f32_literal(void);
+void Format_precision_f32_variable(void);
+void Format_precision_f32_expression(void);
+void Format_precision_f64_literal(void);
+void Format_precision_f64_variable(void);
+void Format_precision_f64_expression(void);
+void Format_min_width_f32_literal(void);
+void Format_min_width_f32_variable(void);
+void Format_min_width_f32_expression(void);
+void Format_min_width_f64_literal(void);
+void Format_min_width_f64_variable(void);
+void Format_min_width_f64_expression(void);
+void Format_align_left_f32_literal(void);
+void Format_align_left_f32_variable(void);
+void Format_align_left_f32_expression(void);
+void Format_align_left_f64_literal(void);
+void Format_align_left_f64_variable(void);
+void Format_align_left_f64_expression(void);
+void Format_align_center_f32_literal(void);
+void Format_align_center_f32_variable(void);
+void Format_align_center_f32_expression(void);
+void Format_align_center_f64_literal(void);
+void Format_align_center_f64_variable(void);
+void Format_align_center_f64_expression(void);
+void Format_align_right_f32_literal(void);
+void Format_align_right_f32_variable(void);
+void Format_align_right_f32_expression(void);
+void Format_align_right_f64_literal(void);
+void Format_align_right_f64_variable(void);
+void Format_align_right_f64_expression(void);
+void Format_fill_left_f32_literal(void);
+void Format_fill_left_f32_variable(void);
+void Format_fill_left_f32_expression(void);
+void Format_fill_left_f64_literal(void);
+void Format_fill_left_f64_variable(void);
+void Format_fill_left_f64_expression(void);
+void Format_fill_center_f32_literal(void);
+void Format_fill_center_f32_variable(void);
+void Format_fill_center_f32_expression(void);
+void Format_fill_center_f64_literal(void);
+void Format_fill_center_f64_variable(void);
+void Format_fill_center_f64_expression(void);
+void Format_fill_right_f32_literal(void);
+void Format_fill_right_f32_variable(void);
+void Format_fill_right_f32_expression(void);
+void Format_fill_right_f64_literal(void);
+void Format_fill_right_f64_variable(void);
+void Format_fill_right_f64_expression(void);
+void Format_leading_zeros_f32_literal(void);
+void Format_leading_zeros_f32_variable(void);
+void Format_leading_zeros_f32_expression(void);
+void Format_leading_zeros_f64_literal(void);
+void Format_leading_zeros_f64_variable(void);
+void Format_leading_zeros_f64_expression(void);
+void Format_always_sign_f32_literal(void);
+void Format_always_sign_f32_variable(void);
+void Format_always_sign_f32_expression(void);
+void Format_always_sign_f64_literal(void);
+void Format_always_sign_f64_variable(void);
+void Format_always_sign_f64_expression(void);
+void Format_scientific_lower_f32_literal(void);
+void Format_scientific_lower_f32_variable(void);
+void Format_scientific_lower_f32_expression(void);
+void Format_scientific_lower_f64_literal(void);
+void Format_scientific_lower_f64_variable(void);
+void Format_scientific_lower_f64_expression(void);
+void Format_scientific_upper_f32_literal(void);
+void Format_scientific_upper_f32_variable(void);
+void Format_scientific_upper_f32_expression(void);
+void Format_scientific_upper_f64_literal(void);
+void Format_scientific_upper_f64_variable(void);
+void Format_scientific_upper_f64_expression(void);
+void Format_literal_value_precision(void);
+void Format_literal_value_min_width(void);
+void Format_literal_value_align_left(void);
+void Format_literal_value_align_center(void);
+void Format_literal_value_align_right(void);
+void Format_literal_value_fill_left(void);
+void Format_literal_value_fill_center(void);
+void Format_literal_value_fill_right(void);
+void Format_literal_value_leading_zeros(void);
+void Format_literal_value_always_sign(void);
+void Format_literal_value_scientific_lower(void);
+void Format_literal_value_scientific_upper(void);
+void Format_literal_value_combined_width_precision(void);
+void Format_fold_literal(void);
+void Format_fold_const_expression(void);
+void Format_dont_fold_dynamic_expression(void);
+void Format_reproducer_precision_variable_ending_in_e(void);
+void Format_reproducer_width_variable_named_e(void);
+void Format_boundary_precision_zero_f32_literal(void);
+void Format_boundary_precision_zero_f32_variable(void);
+void Format_boundary_precision_zero_f32_expression(void);
+void Format_boundary_precision_zero_f64_literal(void);
+void Format_boundary_precision_zero_f64_variable(void);
+void Format_boundary_precision_zero_f64_expression(void);
+void Format_boundary_precision_negative_f32_literal(void);
+void Format_boundary_precision_negative_f32_variable(void);
+void Format_boundary_precision_negative_f32_expression(void);
+void Format_boundary_precision_negative_f64_literal(void);
+void Format_boundary_precision_negative_f64_variable(void);
+void Format_boundary_precision_negative_f64_expression(void);
+void Format_boundary_precision_large_f32_literal(void);
+void Format_boundary_precision_large_f32_variable(void);
+void Format_boundary_precision_large_f32_expression(void);
+void Format_boundary_precision_large_f64_literal(void);
+void Format_boundary_precision_large_f64_variable(void);
+void Format_boundary_precision_large_f64_expression(void);
+void Format_boundary_width_zero_f32_literal(void);
+void Format_boundary_width_zero_f32_variable(void);
+void Format_boundary_width_zero_f32_expression(void);
+void Format_boundary_width_zero_f64_literal(void);
+void Format_boundary_width_zero_f64_variable(void);
+void Format_boundary_width_zero_f64_expression(void);
+void Format_boundary_width_negative_f32_literal(void);
+void Format_boundary_width_negative_f32_variable(void);
+void Format_boundary_width_negative_f32_expression(void);
+void Format_boundary_width_negative_f64_literal(void);
+void Format_boundary_width_negative_f64_variable(void);
+void Format_boundary_width_negative_f64_expression(void);
+void Format_boundary_width_large_f32_literal(void);
+void Format_boundary_width_large_f32_variable(void);
+void Format_boundary_width_large_f32_expression(void);
+void Format_boundary_width_large_f64_literal(void);
+void Format_boundary_width_large_f64_variable(void);
+void Format_boundary_width_large_f64_expression(void);
+void Format_boundary_precision_zero_literal_value(void);
+void Format_boundary_precision_negative_literal_value(void);
+void Format_boundary_precision_large_literal_value(void);
+void Format_boundary_width_zero_literal_value(void);
+void Format_boundary_width_negative_literal_value(void);
+void Format_boundary_width_large_literal_value(void);
+void Format_boundary_precision_max_literal_value(void);
+void Format_boundary_width_max_literal_value(void);
+
 // Testsuite 'Expr'
 void Expr_setup(void);
 void Expr_add_2_int_literals(void);
@@ -887,6 +1107,14 @@ void Expr_var_element_element(void);
 void Expr_var_member_element(void);
 void Expr_var_member_element_inline(void);
 void Expr_var_element_member(void);
+void Expr_var_element_map_i64_i32(void);
+void Expr_var_element_map_entity_i32(void);
+void Expr_var_element_map_enum_i32(void);
+void Expr_var_element_map_bitmask_i32(void);
+void Expr_var_element_map_expr_key(void);
+void Expr_var_element_map_struct(void);
+void Expr_var_element_map_struct_member(void);
+void Expr_var_element_map_missing_key(void);
 void Expr_bool_cond_and_bool(void);
 void Expr_bool_cond_or_bool(void);
 void Expr_int_cond_and_int(void);
@@ -1245,6 +1473,26 @@ void Serialize_opaque_struct(void);
 void Serialize_opaque_array(void);
 void Serialize_opaque_vector(void);
 void Serialize_opaque_string_vector(void);
+void Serialize_map_i64_i32_1(void);
+void Serialize_map_i64_i32_3(void);
+void Serialize_map_i64_string(void);
+void Serialize_map_entity_i32(void);
+void Serialize_map_i64_struct(void);
+void Serialize_map_empty(void);
+void Serialize_map_bool_i32(void);
+void Serialize_map_char_i32(void);
+void Serialize_map_i32_i32_negative_key(void);
+void Serialize_map_u64_i32(void);
+void Serialize_map_enum_i32(void);
+void Serialize_map_bitmask_i32(void);
+void Serialize_value_i64(void);
+void Serialize_value_u16(void);
+void Serialize_value_f64(void);
+void Serialize_value_string(void);
+void Serialize_value_entity(void);
+void Serialize_value_struct(void);
+void Serialize_struct_w_value(void);
+void Serialize_value_roundtrip(void);
 
 // Testsuite 'Deserialize'
 void Deserialize_setup(void);
@@ -1375,6 +1623,41 @@ void Deserialize_opaque_vector_struct_0(void);
 void Deserialize_opaque_vector_struct_2(void);
 void Deserialize_opaque_vector_struct_0_into_2(void);
 void Deserialize_opaque_vector_struct_1_into_2(void);
+void Deserialize_map_i64_i32_0(void);
+void Deserialize_map_i64_i32_2(void);
+void Deserialize_map_i64_i32_2_into_2(void);
+void Deserialize_map_i64_string_2(void);
+void Deserialize_map_entity_i32_2(void);
+void Deserialize_map_i64_struct_2(void);
+void Deserialize_struct_w_map_i64_i32(void);
+void Deserialize_map_bool_i32_2(void);
+void Deserialize_map_char_i32_2(void);
+void Deserialize_map_i64_i32_negative_key(void);
+void Deserialize_map_u64_i32_2(void);
+void Deserialize_map_enum_i32_2(void);
+void Deserialize_map_bitmask_i32_2(void);
+void Deserialize_map_bitmask_i32_multi_flag_key(void);
+void Deserialize_map_i64_i32_expr_key(void);
+void Deserialize_map_i64_i32_var_key(void);
+void Deserialize_vector_i32_w_key(void);
+void Deserialize_value_i64(void);
+void Deserialize_value_negative_i64(void);
+void Deserialize_value_f64(void);
+void Deserialize_value_bool(void);
+void Deserialize_value_string(void);
+void Deserialize_value_entity(void);
+void Deserialize_value_expr(void);
+void Deserialize_value_w_type_u16(void);
+void Deserialize_value_w_type_f32(void);
+void Deserialize_value_w_type_string(void);
+void Deserialize_value_w_type_struct(void);
+void Deserialize_value_w_type_vector(void);
+void Deserialize_value_assign_same_type(void);
+void Deserialize_value_assign_different_type(void);
+void Deserialize_struct_w_value(void);
+void Deserialize_struct_w_value_w_type(void);
+void Deserialize_struct_w_value_string(void);
+void Deserialize_value_unknown_type(void);
 
 // Testsuite 'Include'
 void Include_include_simple(void);
@@ -1401,6 +1684,8 @@ void Include_include_auto_appends_extension_subdir(void);
 void Include_include_keeps_explicit_extension(void);
 void Include_include_auto_appends_extension_managed(void);
 void Include_fopen_override_remaps_filename(void);
+void Include_include_managed_eval_error_logged(void);
+void Include_include_managed_eval_error_set_on_script(void);
 
 // Testsuite 'Fuzzing'
 void Fuzzing_1(void);
@@ -1566,6 +1851,7 @@ void Refs_global_const_var_in_if_expr(void);
 void Refs_global_const_var_in_for_expr(void);
 void Refs_global_const_var_non_managed_script_no_update(void);
 void Refs_global_const_var_set_after_managed_script_deleted(void);
+void Refs_global_const_var_modified(void);
 void Refs_ref_in_function(void);
 void Refs_global_const_var_in_function(void);
 void Refs_ref_in_new_expr(void);
@@ -1624,6 +1910,17 @@ void Refs_prop_ref_in_template_function_in_new_expr(void);
 void Refs_prop_ref_in_template_assigned_to_component(void);
 void Refs_template_prop_ref_observer_lifecycle(void);
 void Refs_template_prop_ref_retarget(void);
+void Refs_global_const_var_declared_in_same_script(void);
+void Refs_global_const_var_declared_in_same_script_w_fn(void);
+void Refs_global_const_var_declared_in_same_script_w_fn_other_script(void);
+void Refs_global_const_var_declared_in_same_script_w_fn_other_scripts(void);
+void Refs_global_const_var_in_scoped_function_other_script(void);
+void Refs_ref_declared_in_same_script(void);
+void Refs_ref_declared_in_same_script_w_fn(void);
+void Refs_ref_declared_in_same_script_w_fn_other_script(void);
+void Refs_ref_declared_in_same_script_w_fn_other_scripts(void);
+void Refs_global_const_var_declared_in_same_script_w_template(void);
+void Refs_reeval_instantiates_template_w_global_const_var_ref(void);
 
 bake_test_case Eval_testcases[] = {
     {
@@ -2795,6 +3092,10 @@ bake_test_case Eval_testcases[] = {
         Eval_dont_inherit_script_pair
     },
     {
+        "update_script_w_prefab_child",
+        Eval_update_script_w_prefab_child
+    },
+    {
         "update_script_w_anonymous",
         Eval_update_script_w_anonymous
     },
@@ -3619,6 +3920,22 @@ bake_test_case Eval_testcases[] = {
         Eval_component_expr_swizzle_var_no_target_type
     },
     {
+        "component_expr_swizzle_initializer_r",
+        Eval_component_expr_swizzle_initializer_r
+    },
+    {
+        "component_expr_swizzle_initializer_rg",
+        Eval_component_expr_swizzle_initializer_rg
+    },
+    {
+        "component_expr_swizzle_initializer_rgb",
+        Eval_component_expr_swizzle_initializer_rgb
+    },
+    {
+        "component_expr_swizzle_initializer_rgba",
+        Eval_component_expr_swizzle_initializer_rgba
+    },
+    {
         "component_expr_member_no_var",
         Eval_component_expr_member_no_var
     },
@@ -3645,6 +3962,90 @@ bake_test_case Eval_testcases[] = {
     {
         "default_child_component_w_entity_in_for_in_if",
         Eval_default_child_component_w_entity_in_for_in_if
+    },
+    {
+        "map_i64_i32_component",
+        Eval_map_i64_i32_component
+    },
+    {
+        "map_i64_string_component",
+        Eval_map_i64_string_component
+    },
+    {
+        "map_entity_struct_component",
+        Eval_map_entity_struct_component
+    },
+    {
+        "map_component_empty",
+        Eval_map_component_empty
+    },
+    {
+        "map_component_object_literal",
+        Eval_map_component_object_literal
+    },
+    {
+        "map_enum_i32_component",
+        Eval_map_enum_i32_component
+    },
+    {
+        "map_bitmask_i32_component",
+        Eval_map_bitmask_i32_component
+    },
+    {
+        "map_bitmask_i32_component_w_expr_key",
+        Eval_map_bitmask_i32_component_w_expr_key
+    },
+    {
+        "map_i64_i32_component_w_expr_key",
+        Eval_map_i64_i32_component_w_expr_key
+    },
+    {
+        "map_i64_i32_component_w_var_key",
+        Eval_map_i64_i32_component_w_var_key
+    },
+    {
+        "map_component_element",
+        Eval_map_component_element
+    },
+    {
+        "map_export_var_element",
+        Eval_map_export_var_element
+    },
+    {
+        "struct_export_var_member",
+        Eval_struct_export_var_member
+    },
+    {
+        "array_export_var_element",
+        Eval_array_export_var_element
+    },
+    {
+        "vector_export_var_element",
+        Eval_vector_export_var_element
+    },
+    {
+        "struct_w_value_member",
+        Eval_struct_w_value_member
+    },
+    {
+        "struct_w_value_member_w_type",
+        Eval_struct_w_value_member_w_type
+    },
+    {
+        "struct_w_value_member_reassign",
+        Eval_struct_w_value_member_reassign
+    },
+    {
+        "value_component",
+        Eval_value_component
+    },
+    {
+        "value_const_var",
+        Eval_value_const_var
+    },
+    {
+        "var_w_value_name",
+        Eval_var_w_value_name
     }
 };
 
@@ -4077,6 +4478,10 @@ bake_test_case Template_testcases[] = {
         Template_template_w_this_kw_in_component_expr
     },
     {
+        "template_w_const_w_this_kw_in_component_expr",
+        Template_template_w_const_w_this_kw_in_component_expr
+    },
+    {
         "template_w_pair_w_unresolved_var_first",
         Template_template_w_pair_w_unresolved_var_first
     },
@@ -4299,6 +4704,229 @@ bake_test_case Template_testcases[] = {
     {
         "template_w_existing_observer",
         Template_template_w_existing_observer
+    },
+    {
+        "template_w_prop_w_value_name",
+        Template_template_w_prop_w_value_name
+    },
+    {
+        "template_w_var_w_value_name",
+        Template_template_w_var_w_value_name
+    }
+};
+
+bake_test_case Mut_testcases[] = {
+    {
+        "declaration",
+        Mut_declaration
+    },
+    {
+        "two_members",
+        Mut_two_members
+    },
+    {
+        "implicit_type",
+        Mut_implicit_type
+    },
+    {
+        "instance_w_default",
+        Mut_instance_w_default
+    },
+    {
+        "instance_w_props_and_mut",
+        Mut_instance_w_props_and_mut
+    },
+    {
+        "value_in_template_body",
+        Mut_value_in_template_body
+    },
+    {
+        "value_w_prop_in_template_body",
+        Mut_value_w_prop_in_template_body
+    },
+    {
+        "modified_reinstantiates",
+        Mut_modified_reinstantiates
+    },
+    {
+        "set_reinstantiates",
+        Mut_set_reinstantiates
+    },
+    {
+        "modified_reinstantiates_only_instance",
+        Mut_modified_reinstantiates_only_instance
+    },
+    {
+        "deferred_modified_reinstantiates",
+        Mut_deferred_modified_reinstantiates
+    },
+    {
+        "bulk_create",
+        Mut_bulk_create
+    },
+    {
+        "prop_update_preserves_mut",
+        Mut_prop_update_preserves_mut
+    },
+    {
+        "mut_component_without_template",
+        Mut_mut_component_without_template
+    },
+    {
+        "string_default",
+        Mut_string_default
+    },
+    {
+        "const_from_mut",
+        Mut_const_from_mut
+    },
+    {
+        "script_update_reinstantiates",
+        Mut_script_update_reinstantiates
+    },
+    {
+        "not_exposed_as_prop",
+        Mut_not_exposed_as_prop
+    },
+    {
+        "using",
+        Mut_using
+    },
+    {
+        "type_without_using_meta",
+        Mut_type_without_using_meta
+    },
+    {
+        "composite",
+        Mut_composite
+    },
+    {
+        "with_mut",
+        Mut_with_mut
+    },
+    {
+        "entity_pair",
+        Mut_entity_pair
+    },
+    {
+        "entity_pair_scope",
+        Mut_entity_pair_scope
+    },
+    {
+        "pair_component_entity_target",
+        Mut_pair_component_entity_target
+    },
+    {
+        "anonymous_instance",
+        Mut_anonymous_instance
+    },
+    {
+        "managed_script_twice",
+        Mut_managed_script_twice
+    },
+    {
+        "module",
+        Mut_module
+    },
+    {
+        "multiple_templates",
+        Mut_multiple_templates
+    },
+    {
+        "anonymous_children",
+        Mut_anonymous_children
+    },
+    {
+        "fold_const",
+        Mut_fold_const
+    },
+    {
+        "assign_add",
+        Mut_assign_add
+    },
+    {
+        "assign_mul",
+        Mut_assign_mul
+    },
+    {
+        "script_component",
+        Mut_script_component
+    },
+    {
+        "script_pair_component",
+        Mut_script_pair_component
+    },
+    {
+        "tree_parent",
+        Mut_tree_parent
+    },
+    {
+        "child_name_from_string",
+        Mut_child_name_from_string
+    },
+    {
+        "default_component",
+        Mut_default_component
+    },
+    {
+        "default_component_nested_if",
+        Mut_default_component_nested_if
+    },
+    {
+        "default_component_nested_for",
+        Mut_default_component_nested_for
+    },
+    {
+        "value_name",
+        Mut_value_name
+    },
+    {
+        "const_value_name",
+        Mut_const_value_name
+    },
+    {
+        "hoist_var",
+        Mut_hoist_var
+    },
+    {
+        "nested_template",
+        Mut_nested_template
+    },
+    {
+        "redeclare_mut_as_mut",
+        Mut_redeclare_mut_as_mut
+    },
+    {
+        "redeclare_mut_as_const",
+        Mut_redeclare_mut_as_const
+    },
+    {
+        "managed_script_twice_after_low_id_exhaustion",
+        Mut_managed_script_twice_after_low_id_exhaustion
+    },
+    {
+        "eval_error",
+        Mut_eval_error
+    },
+    {
+        "eval_error_w_runtime",
+        Mut_eval_error_w_runtime
+    },
+    {
+        "outside_template",
+        Mut_outside_template
+    },
+    {
+        "after_const",
+        Mut_after_const
+    },
+    {
+        "redeclare_prop_as_mut",
+        Mut_redeclare_prop_as_mut
+    },
+    {
+        "redeclare_mut_as_prop",
+        Mut_redeclare_mut_as_prop
     }
 };
 
@@ -4773,6 +5401,545 @@ bake_test_case Error_testcases[] = {
     }
 };
 
+bake_test_case Format_testcases[] = {
+    {
+        "precision_f32_literal",
+        Format_precision_f32_literal
+    },
+    {
+        "precision_f32_variable",
+        Format_precision_f32_variable
+    },
+    {
+        "precision_f32_expression",
+        Format_precision_f32_expression
+    },
+    {
+        "precision_f64_literal",
+        Format_precision_f64_literal
+    },
+    {
+        "precision_f64_variable",
+        Format_precision_f64_variable
+    },
+    {
+        "precision_f64_expression",
+        Format_precision_f64_expression
+    },
+    {
+        "min_width_f32_literal",
+        Format_min_width_f32_literal
+    },
+    {
+        "min_width_f32_variable",
+        Format_min_width_f32_variable
+    },
+    {
+        "min_width_f32_expression",
+        Format_min_width_f32_expression
+    },
+    {
+        "min_width_f64_literal",
+        Format_min_width_f64_literal
+    },
+    {
+        "min_width_f64_variable",
+        Format_min_width_f64_variable
+    },
+    {
+        "min_width_f64_expression",
+        Format_min_width_f64_expression
+    },
+    {
+        "align_left_f32_literal",
+        Format_align_left_f32_literal
+    },
+    {
+        "align_left_f32_variable",
+        Format_align_left_f32_variable
+    },
+    {
+        "align_left_f32_expression",
+        Format_align_left_f32_expression
+    },
+    {
+        "align_left_f64_literal",
+        Format_align_left_f64_literal
+    },
+    {
+        "align_left_f64_variable",
+        Format_align_left_f64_variable
+    },
+    {
+        "align_left_f64_expression",
+        Format_align_left_f64_expression
+    },
+    {
+        "align_center_f32_literal",
+        Format_align_center_f32_literal
+    },
+    {
+        "align_center_f32_variable",
+        Format_align_center_f32_variable
+    },
+    {
+        "align_center_f32_expression",
+        Format_align_center_f32_expression
+    },
+    {
+        "align_center_f64_literal",
+        Format_align_center_f64_literal
+    },
+    {
+        "align_center_f64_variable",
+        Format_align_center_f64_variable
+    },
+    {
+        "align_center_f64_expression",
+        Format_align_center_f64_expression
+    },
+    {
+        "align_right_f32_literal",
+        Format_align_right_f32_literal
+    },
+    {
+        "align_right_f32_variable",
+        Format_align_right_f32_variable
+    },
+    {
+        "align_right_f32_expression",
+        Format_align_right_f32_expression
+    },
+    {
+        "align_right_f64_literal",
+        Format_align_right_f64_literal
+    },
+    {
+        "align_right_f64_variable",
+        Format_align_right_f64_variable
+    },
+    {
+        "align_right_f64_expression",
+        Format_align_right_f64_expression
+    },
+    {
+        "fill_left_f32_literal",
+        Format_fill_left_f32_literal
+    },
+    {
+        "fill_left_f32_variable",
+        Format_fill_left_f32_variable
+    },
+    {
+        "fill_left_f32_expression",
+        Format_fill_left_f32_expression
+    },
+    {
+        "fill_left_f64_literal",
+        Format_fill_left_f64_literal
+    },
+    {
+        "fill_left_f64_variable",
+        Format_fill_left_f64_variable
+    },
+    {
+        "fill_left_f64_expression",
+        Format_fill_left_f64_expression
+    },
+    {
+        "fill_center_f32_literal",
+        Format_fill_center_f32_literal
+    },
+    {
+        "fill_center_f32_variable",
+        Format_fill_center_f32_variable
+    },
+    {
+        "fill_center_f32_expression",
+        Format_fill_center_f32_expression
+    },
+    {
+        "fill_center_f64_literal",
+        Format_fill_center_f64_literal
+    },
+    {
+        "fill_center_f64_variable",
+        Format_fill_center_f64_variable
+    },
+    {
+        "fill_center_f64_expression",
+        Format_fill_center_f64_expression
+    },
+    {
+        "fill_right_f32_literal",
+        Format_fill_right_f32_literal
+    },
+    {
+        "fill_right_f32_variable",
+        Format_fill_right_f32_variable
+    },
+    {
+        "fill_right_f32_expression",
+        Format_fill_right_f32_expression
+    },
+    {
+        "fill_right_f64_literal",
+        Format_fill_right_f64_literal
+    },
+    {
+        "fill_right_f64_variable",
+        Format_fill_right_f64_variable
+    },
+    {
+        "fill_right_f64_expression",
+        Format_fill_right_f64_expression
+    },
+    {
+        "leading_zeros_f32_literal",
+        Format_leading_zeros_f32_literal
+    },
+    {
+        "leading_zeros_f32_variable",
+        Format_leading_zeros_f32_variable
+    },
+    {
+        "leading_zeros_f32_expression",
+        Format_leading_zeros_f32_expression
+    },
+    {
+        "leading_zeros_f64_literal",
+        Format_leading_zeros_f64_literal
+    },
+    {
+        "leading_zeros_f64_variable",
+        Format_leading_zeros_f64_variable
+    },
+    {
+        "leading_zeros_f64_expression",
+        Format_leading_zeros_f64_expression
+    },
+    {
+        "always_sign_f32_literal",
+        Format_always_sign_f32_literal
+    },
+    {
+        "always_sign_f32_variable",
+        Format_always_sign_f32_variable
+    },
+    {
+        "always_sign_f32_expression",
+        Format_always_sign_f32_expression
+    },
+    {
+        "always_sign_f64_literal",
+        Format_always_sign_f64_literal
+    },
+    {
+        "always_sign_f64_variable",
+        Format_always_sign_f64_variable
+    },
+    {
+        "always_sign_f64_expression",
+        Format_always_sign_f64_expression
+    },
+    {
+        "scientific_lower_f32_literal",
+        Format_scientific_lower_f32_literal
+    },
+    {
+        "scientific_lower_f32_variable",
+        Format_scientific_lower_f32_variable
+    },
+    {
+        "scientific_lower_f32_expression",
+        Format_scientific_lower_f32_expression
+    },
+    {
+        "scientific_lower_f64_literal",
+        Format_scientific_lower_f64_literal
+    },
+    {
+        "scientific_lower_f64_variable",
+        Format_scientific_lower_f64_variable
+    },
+    {
+        "scientific_lower_f64_expression",
+        Format_scientific_lower_f64_expression
+    },
+    {
+        "scientific_upper_f32_literal",
+        Format_scientific_upper_f32_literal
+    },
+    {
+        "scientific_upper_f32_variable",
+        Format_scientific_upper_f32_variable
+    },
+    {
+        "scientific_upper_f32_expression",
+        Format_scientific_upper_f32_expression
+    },
+    {
+        "scientific_upper_f64_literal",
+        Format_scientific_upper_f64_literal
+    },
+    {
+        "scientific_upper_f64_variable",
+        Format_scientific_upper_f64_variable
+    },
+    {
+        "scientific_upper_f64_expression",
+        Format_scientific_upper_f64_expression
+    },
+    {
+        "literal_value_precision",
+        Format_literal_value_precision
+    },
+    {
+        "literal_value_min_width",
+        Format_literal_value_min_width
+    },
+    {
+        "literal_value_align_left",
+        Format_literal_value_align_left
+    },
+    {
+        "literal_value_align_center",
+        Format_literal_value_align_center
+    },
+    {
+        "literal_value_align_right",
+        Format_literal_value_align_right
+    },
+    {
+        "literal_value_fill_left",
+        Format_literal_value_fill_left
+    },
+    {
+        "literal_value_fill_center",
+        Format_literal_value_fill_center
+    },
+    {
+        "literal_value_fill_right",
+        Format_literal_value_fill_right
+    },
+    {
+        "literal_value_leading_zeros",
+        Format_literal_value_leading_zeros
+    },
+    {
+        "literal_value_always_sign",
+        Format_literal_value_always_sign
+    },
+    {
+        "literal_value_scientific_lower",
+        Format_literal_value_scientific_lower
+    },
+    {
+        "literal_value_scientific_upper",
+        Format_literal_value_scientific_upper
+    },
+    {
+        "literal_value_combined_width_precision",
+        Format_literal_value_combined_width_precision
+    },
+    {
+        "fold_literal",
+        Format_fold_literal
+    },
+    {
+        "fold_const_expression",
+        Format_fold_const_expression
+    },
+    {
+        "dont_fold_dynamic_expression",
+        Format_dont_fold_dynamic_expression
+    },
+    {
+        "reproducer_precision_variable_ending_in_e",
+        Format_reproducer_precision_variable_ending_in_e
+    },
+    {
+        "reproducer_width_variable_named_e",
+        Format_reproducer_width_variable_named_e
+    },
+    {
+        "boundary_precision_zero_f32_literal",
+        Format_boundary_precision_zero_f32_literal
+    },
+    {
+        "boundary_precision_zero_f32_variable",
+        Format_boundary_precision_zero_f32_variable
+    },
+    {
+        "boundary_precision_zero_f32_expression",
+        Format_boundary_precision_zero_f32_expression
+    },
+    {
+        "boundary_precision_zero_f64_literal",
+        Format_boundary_precision_zero_f64_literal
+    },
+    {
+        "boundary_precision_zero_f64_variable",
+        Format_boundary_precision_zero_f64_variable
+    },
+    {
+        "boundary_precision_zero_f64_expression",
+        Format_boundary_precision_zero_f64_expression
+    },
+    {
+        "boundary_precision_negative_f32_literal",
+        Format_boundary_precision_negative_f32_literal
+    },
+    {
+        "boundary_precision_negative_f32_variable",
+        Format_boundary_precision_negative_f32_variable
+    },
+    {
+        "boundary_precision_negative_f32_expression",
+        Format_boundary_precision_negative_f32_expression
+    },
+    {
+        "boundary_precision_negative_f64_literal",
+        Format_boundary_precision_negative_f64_literal
+    },
+    {
+        "boundary_precision_negative_f64_variable",
+        Format_boundary_precision_negative_f64_variable
+    },
+    {
+        "boundary_precision_negative_f64_expression",
+        Format_boundary_precision_negative_f64_expression
+    },
+    {
+        "boundary_precision_large_f32_literal",
+        Format_boundary_precision_large_f32_literal
+    },
+    {
+        "boundary_precision_large_f32_variable",
+        Format_boundary_precision_large_f32_variable
+    },
+    {
+        "boundary_precision_large_f32_expression",
+        Format_boundary_precision_large_f32_expression
+    },
+    {
+        "boundary_precision_large_f64_literal",
+        Format_boundary_precision_large_f64_literal
+    },
+    {
+        "boundary_precision_large_f64_variable",
+        Format_boundary_precision_large_f64_variable
+    },
+    {
+        "boundary_precision_large_f64_expression",
+        Format_boundary_precision_large_f64_expression
+    },
+    {
+        "boundary_width_zero_f32_literal",
+        Format_boundary_width_zero_f32_literal
+    },
+    {
+        "boundary_width_zero_f32_variable",
+        Format_boundary_width_zero_f32_variable
+    },
+    {
+        "boundary_width_zero_f32_expression",
+        Format_boundary_width_zero_f32_expression
+    },
+    {
+        "boundary_width_zero_f64_literal",
+        Format_boundary_width_zero_f64_literal
+    },
+    {
+        "boundary_width_zero_f64_variable",
+        Format_boundary_width_zero_f64_variable
+    },
+    {
+        "boundary_width_zero_f64_expression",
+        Format_boundary_width_zero_f64_expression
+    },
+    {
+        "boundary_width_negative_f32_literal",
+        Format_boundary_width_negative_f32_literal
+    },
+    {
+        "boundary_width_negative_f32_variable",
+        Format_boundary_width_negative_f32_variable
+    },
+    {
+        "boundary_width_negative_f32_expression",
+        Format_boundary_width_negative_f32_expression
+    },
+    {
+        "boundary_width_negative_f64_literal",
+        Format_boundary_width_negative_f64_literal
+    },
+    {
+        "boundary_width_negative_f64_variable",
+        Format_boundary_width_negative_f64_variable
+    },
+    {
+        "boundary_width_negative_f64_expression",
+        Format_boundary_width_negative_f64_expression
+    },
+    {
+        "boundary_width_large_f32_literal",
+        Format_boundary_width_large_f32_literal
+    },
+    {
+        "boundary_width_large_f32_variable",
+        Format_boundary_width_large_f32_variable
+    },
+    {
+        "boundary_width_large_f32_expression",
+        Format_boundary_width_large_f32_expression
+    },
+    {
+        "boundary_width_large_f64_literal",
+        Format_boundary_width_large_f64_literal
+    },
+    {
+        "boundary_width_large_f64_variable",
+        Format_boundary_width_large_f64_variable
+    },
+    {
+        "boundary_width_large_f64_expression",
+        Format_boundary_width_large_f64_expression
+    },
+    {
+        "boundary_precision_zero_literal_value",
+        Format_boundary_precision_zero_literal_value
+    },
+    {
+        "boundary_precision_negative_literal_value",
+        Format_boundary_precision_negative_literal_value
+    },
+    {
+        "boundary_precision_large_literal_value",
+        Format_boundary_precision_large_literal_value
+    },
+    {
+        "boundary_width_zero_literal_value",
+        Format_boundary_width_zero_literal_value
+    },
+    {
+        "boundary_width_negative_literal_value",
+        Format_boundary_width_negative_literal_value
+    },
+    {
+        "boundary_width_large_literal_value",
+        Format_boundary_width_large_literal_value
+    },
+    {
+        "boundary_precision_max_literal_value",
+        Format_boundary_precision_max_literal_value
+    },
+    {
+        "boundary_width_max_literal_value",
+        Format_boundary_width_max_literal_value
+    }
+};
+
 bake_test_case Expr_testcases[] = {
     {
         "add_2_int_literals",
@@ -5113,6 +6280,38 @@ bake_test_case Expr_testcases[] = {
     {
         "var_element_member",
         Expr_var_element_member
+    },
+    {
+        "var_element_map_i64_i32",
+        Expr_var_element_map_i64_i32
+    },
+    {
+        "var_element_map_entity_i32",
+        Expr_var_element_map_entity_i32
+    },
+    {
+        "var_element_map_enum_i32",
+        Expr_var_element_map_enum_i32
+    },
+    {
+        "var_element_map_bitmask_i32",
+        Expr_var_element_map_bitmask_i32
+    },
+    {
+        "var_element_map_expr_key",
+        Expr_var_element_map_expr_key
+    },
+    {
+        "var_element_map_struct",
+        Expr_var_element_map_struct
+    },
+    {
+        "var_element_map_struct_member",
+        Expr_var_element_map_struct_member
+    },
+    {
+        "var_element_map_missing_key",
+        Expr_var_element_map_missing_key
     },
     {
         "bool_cond_and_bool",
@@ -6530,6 +7729,86 @@ bake_test_case Serialize_testcases[] = {
     {
         "opaque_string_vector",
         Serialize_opaque_string_vector
+    },
+    {
+        "map_i64_i32_1",
+        Serialize_map_i64_i32_1
+    },
+    {
+        "map_i64_i32_3",
+        Serialize_map_i64_i32_3
+    },
+    {
+        "map_i64_string",
+        Serialize_map_i64_string
+    },
+    {
+        "map_entity_i32",
+        Serialize_map_entity_i32
+    },
+    {
+        "map_i64_struct",
+        Serialize_map_i64_struct
+    },
+    {
+        "map_empty",
+        Serialize_map_empty
+    },
+    {
+        "map_bool_i32",
+        Serialize_map_bool_i32
+    },
+    {
+        "map_char_i32",
+        Serialize_map_char_i32
+    },
+    {
+        "map_i32_i32_negative_key",
+        Serialize_map_i32_i32_negative_key
+    },
+    {
+        "map_u64_i32",
+        Serialize_map_u64_i32
+    },
+    {
+        "map_enum_i32",
+        Serialize_map_enum_i32
+    },
+    {
+        "map_bitmask_i32",
+        Serialize_map_bitmask_i32
+    },
+    {
+        "value_i64",
+        Serialize_value_i64
+    },
+    {
+        "value_u16",
+        Serialize_value_u16
+    },
+    {
+        "value_f64",
+        Serialize_value_f64
+    },
+    {
+        "value_string",
+        Serialize_value_string
+    },
+    {
+        "value_entity",
+        Serialize_value_entity
+    },
+    {
+        "value_struct",
+        Serialize_value_struct
+    },
+    {
+        "struct_w_value",
+        Serialize_struct_w_value
+    },
+    {
+        "value_roundtrip",
+        Serialize_value_roundtrip
     }
 };
 
@@ -7041,6 +8320,146 @@ bake_test_case Deserialize_testcases[] = {
     {
         "opaque_vector_struct_1_into_2",
         Deserialize_opaque_vector_struct_1_into_2
+    },
+    {
+        "map_i64_i32_0",
+        Deserialize_map_i64_i32_0
+    },
+    {
+        "map_i64_i32_2",
+        Deserialize_map_i64_i32_2
+    },
+    {
+        "map_i64_i32_2_into_2",
+        Deserialize_map_i64_i32_2_into_2
+    },
+    {
+        "map_i64_string_2",
+        Deserialize_map_i64_string_2
+    },
+    {
+        "map_entity_i32_2",
+        Deserialize_map_entity_i32_2
+    },
+    {
+        "map_i64_struct_2",
+        Deserialize_map_i64_struct_2
+    },
+    {
+        "struct_w_map_i64_i32",
+        Deserialize_struct_w_map_i64_i32
+    },
+    {
+        "map_bool_i32_2",
+        Deserialize_map_bool_i32_2
+    },
+    {
+        "map_char_i32_2",
+        Deserialize_map_char_i32_2
+    },
+    {
+        "map_i64_i32_negative_key",
+        Deserialize_map_i64_i32_negative_key
+    },
+    {
+        "map_u64_i32_2",
+        Deserialize_map_u64_i32_2
+    },
+    {
+        "map_enum_i32_2",
+        Deserialize_map_enum_i32_2
+    },
+    {
+        "map_bitmask_i32_2",
+        Deserialize_map_bitmask_i32_2
+    },
+    {
+        "map_bitmask_i32_multi_flag_key",
+        Deserialize_map_bitmask_i32_multi_flag_key
+    },
+    {
+        "map_i64_i32_expr_key",
+        Deserialize_map_i64_i32_expr_key
+    },
+    {
+        "map_i64_i32_var_key",
+        Deserialize_map_i64_i32_var_key
+    },
+    {
+        "vector_i32_w_key",
+        Deserialize_vector_i32_w_key
+    },
+    {
+        "value_i64",
+        Deserialize_value_i64
+    },
+    {
+        "value_negative_i64",
+        Deserialize_value_negative_i64
+    },
+    {
+        "value_f64",
+        Deserialize_value_f64
+    },
+    {
+        "value_bool",
+        Deserialize_value_bool
+    },
+    {
+        "value_string",
+        Deserialize_value_string
+    },
+    {
+        "value_entity",
+        Deserialize_value_entity
+    },
+    {
+        "value_expr",
+        Deserialize_value_expr
+    },
+    {
+        "value_w_type_u16",
+        Deserialize_value_w_type_u16
+    },
+    {
+        "value_w_type_f32",
+        Deserialize_value_w_type_f32
+    },
+    {
+        "value_w_type_string",
+        Deserialize_value_w_type_string
+    },
+    {
+        "value_w_type_struct",
+        Deserialize_value_w_type_struct
+    },
+    {
+        "value_w_type_vector",
+        Deserialize_value_w_type_vector
+    },
+    {
+        "value_assign_same_type",
+        Deserialize_value_assign_same_type
+    },
+    {
+        "value_assign_different_type",
+        Deserialize_value_assign_different_type
+    },
+    {
+        "struct_w_value",
+        Deserialize_struct_w_value
+    },
+    {
+        "struct_w_value_w_type",
+        Deserialize_struct_w_value_w_type
+    },
+    {
+        "struct_w_value_string",
+        Deserialize_struct_w_value_string
+    },
+    {
+        "value_unknown_type",
+        Deserialize_value_unknown_type
     }
 };
 
@@ -7140,6 +8559,14 @@ bake_test_case Include_testcases[] = {
     {
         "fopen_override_remaps_filename",
         Include_fopen_override_remaps_filename
+    },
+    {
+        "include_managed_eval_error_logged",
+        Include_include_managed_eval_error_logged
+    },
+    {
+        "include_managed_eval_error_set_on_script",
+        Include_include_managed_eval_error_set_on_script
     }
 };
 
@@ -7792,6 +9219,10 @@ bake_test_case Refs_testcases[] = {
         Refs_global_const_var_set_after_managed_script_deleted
     },
     {
+        "global_const_var_modified",
+        Refs_global_const_var_modified
+    },
+    {
         "ref_in_function",
         Refs_ref_in_function
     },
@@ -8022,7 +9453,56 @@ bake_test_case Refs_testcases[] = {
     {
         "template_prop_ref_retarget",
         Refs_template_prop_ref_retarget
+    },
+    {
+        "global_const_var_declared_in_same_script",
+        Refs_global_const_var_declared_in_same_script
+    },
+    {
+        "global_const_var_declared_in_same_script_w_fn",
+        Refs_global_const_var_declared_in_same_script_w_fn
+    },
+    {
+        "global_const_var_declared_in_same_script_w_fn_other_script",
+        Refs_global_const_var_declared_in_same_script_w_fn_other_script
+    },
+    {
+        "global_const_var_declared_in_same_script_w_fn_other_scripts",
+        Refs_global_const_var_declared_in_same_script_w_fn_other_scripts
+    },
+    {
+        "global_const_var_in_scoped_function_other_script",
+        Refs_global_const_var_in_scoped_function_other_script
+    },
+    {
+        "ref_declared_in_same_script",
+        Refs_ref_declared_in_same_script
+    },
+    {
+        "ref_declared_in_same_script_w_fn",
+        Refs_ref_declared_in_same_script_w_fn
+    },
+    {
+        "ref_declared_in_same_script_w_fn_other_script",
+        Refs_ref_declared_in_same_script_w_fn_other_script
+    },
+    {
+        "ref_declared_in_same_script_w_fn_other_scripts",
+        Refs_ref_declared_in_same_script_w_fn_other_scripts
+    },
+    {
+        "global_const_var_declared_in_same_script_w_template",
+        Refs_global_const_var_declared_in_same_script_w_template
+    },
+    {
+        "reeval_instantiates_template_w_global_const_var_ref",
+        Refs_reeval_instantiates_template_w_global_const_var_ref
     }
+};
+
+const char* Format_folding_param[] = {"enabled", "disabled"};
+bake_test_param Format_params[] = {
+    {"folding", (char**)Format_folding_param, 2}
 };
 
 const char* Expr_folding_param[] = {"enabled", "disabled"};
@@ -8039,7 +9519,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        505,
+        531,
         Eval_testcases
     },
     {
@@ -8053,8 +9533,15 @@ static bake_test_suite suites[] = {
         "Template",
         NULL,
         NULL,
-        96,
+        99,
         Template_testcases
+    },
+    {
+        "Mut",
+        NULL,
+        NULL,
+        53,
+        Mut_testcases
     },
     {
         "Error",
@@ -8064,10 +9551,19 @@ static bake_test_suite suites[] = {
         Error_testcases
     },
     {
+        "Format",
+        NULL,
+        NULL,
+        134,
+        Format_testcases,
+        1,
+        Format_params
+    },
+    {
         "Expr",
         Expr_setup,
         NULL,
-        342,
+        350,
         Expr_testcases,
         1,
         Expr_params
@@ -8090,14 +9586,14 @@ static bake_test_suite suites[] = {
         "Serialize",
         NULL,
         NULL,
-        71,
+        91,
         Serialize_testcases
     },
     {
         "Deserialize",
         Deserialize_setup,
         NULL,
-        127,
+        162,
         Deserialize_testcases,
         1,
         Deserialize_params
@@ -8106,7 +9602,7 @@ static bake_test_suite suites[] = {
         "Include",
         NULL,
         NULL,
-        24,
+        26,
         Include_testcases
     },
     {
@@ -8120,11 +9616,11 @@ static bake_test_suite suites[] = {
         "Refs",
         NULL,
         NULL,
-        73,
+        85,
         Refs_testcases
     }
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("script", argc, argv, suites, 12);
+    return bake_test_run("script", argc, argv, suites, 14);
 }

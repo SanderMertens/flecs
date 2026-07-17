@@ -6712,6 +6712,7 @@ void DeserializeFromJson_ser_deser_alias(void) {
     test_assert(ecs_lookup(new_world, name));
     ecs_os_free(json);
 
+    ecs_fini(new_world);
     ecs_fini(world);
 }
 
@@ -7388,5 +7389,1062 @@ void DeserializeFromJson_f64_nan_roundtrip(void) {
     test_assert(isnan(out.d));
 
     ecs_os_free(json);
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_map_i64_i32(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type_init(world, &(ecs_map_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .key_type = ecs_id(ecs_i64_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    test_assert(t != 0);
+
+    ecs_map_t value = {0};
+
+    const char *ptr = ecs_ptr_from_json(world, t, &value, 
+        "{\"10\": 100, \"20\": 200}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(ecs_map_count(&value), 2);
+    ecs_map_val_t *v = ecs_map_get(&value, 10);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 100);
+    v = ecs_map_get(&value, 20);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 200);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_map_i64_string(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type_init(world, &(ecs_map_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .key_type = ecs_id(ecs_i64_t),
+        .type = ecs_id(ecs_string_t)
+    });
+
+    test_assert(t != 0);
+
+    ecs_map_t value = {0};
+
+    const char *ptr = ecs_ptr_from_json(world, t, &value, 
+        "{\"10\": \"Hello\", \"20\": \"World\"}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(ecs_map_count(&value), 2);
+    ecs_map_val_t *v = ecs_map_get(&value, 10);
+    test_assert(v != NULL);
+    test_str(*(char**)v, "Hello");
+    v = ecs_map_get(&value, 20);
+    test_assert(v != NULL);
+    test_str(*(char**)v, "World");
+
+    ecs_map_iter_t it = ecs_map_iter(&value);
+    while (ecs_map_next(&it)) {
+        ecs_os_free(*(char**)&it.res[1]);
+    }
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_map_entity_i32(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+
+    ecs_entity_t t = ecs_map_type_init(world, &(ecs_map_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .key_type = ecs_id(ecs_entity_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    test_assert(t != 0);
+
+    ecs_map_t value = {0};
+
+    const char *ptr = ecs_ptr_from_json(world, t, &value, 
+        "{\"e1\": 100, \"e2\": 200}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(ecs_map_count(&value), 2);
+    ecs_map_val_t *v = ecs_map_get(&value, e1);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 100);
+    v = ecs_map_get(&value, e2);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 200);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_map_i64_struct(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        int32_t x, y, z;
+    } N;
+
+    ecs_entity_t n = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "N"}),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)},
+            {"z", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t t = ecs_map_type_init(world, &(ecs_map_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .key_type = ecs_id(ecs_i64_t),
+        .type = n
+    });
+
+    test_assert(t != 0);
+
+    ecs_map_t value = {0};
+
+    const char *ptr = ecs_ptr_from_json(world, t, &value, 
+        "{\"10\": {\"x\": 1, \"y\": 2, \"z\": 3}}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(ecs_map_count(&value), 1);
+    N *nptr = ecs_map_get_deref(&value, N, 10);
+    test_assert(nptr != NULL);
+    test_int(nptr->x, 1);
+    test_int(nptr->y, 2);
+    test_int(nptr->z, 3);
+
+    ecs_map_iter_t it = ecs_map_iter(&value);
+    while (ecs_map_next(&it)) {
+        ecs_os_free(ecs_map_ptr(&it));
+    }
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_map_empty(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type_init(world, &(ecs_map_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .key_type = ecs_id(ecs_i64_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    test_assert(t != 0);
+
+    ecs_map_t value = {0};
+
+    const char *ptr = ecs_ptr_from_json(world, t, &value, "{}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(ecs_map_count(&value), 0);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_map_into_populated(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type_init(world, &(ecs_map_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .key_type = ecs_id(ecs_i64_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    test_assert(t != 0);
+
+    ecs_map_t value = {0};
+
+    const char *ptr = ecs_ptr_from_json(world, t, &value, 
+        "{\"10\": 100, \"20\": 200}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(ecs_map_count(&value), 2);
+
+    ptr = ecs_ptr_from_json(world, t, &value, "{\"30\": 300}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(ecs_map_count(&value), 1);
+    test_assert(ecs_map_get(&value, 10) == NULL);
+    test_assert(ecs_map_get(&value, 20) == NULL);
+    ecs_map_val_t *v = ecs_map_get(&value, 30);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 300);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_struct_w_map_i64_i32(void) {
+    typedef struct {
+        ecs_map_t m;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t mt = ecs_map_type_init(world, &(ecs_map_desc_t){
+        .key_type = ecs_id(ecs_i64_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"m", mt}
+        }
+    });
+
+    test_assert(t != 0);
+
+    T value = {{0}};
+
+    const char *ptr = ecs_ptr_from_json(world, t, &value, 
+        "{\"m\": {\"10\": 100}}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(ecs_map_count(&value.m), 1);
+    ecs_map_val_t *v = ecs_map_get(&value.m, 10);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 100);
+
+    ecs_map_fini(&value.m);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_map_bool_i32(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type_init(world, &(ecs_map_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .key_type = ecs_id(ecs_bool_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    test_assert(t != 0);
+
+    ecs_map_t value = {0};
+
+    const char *ptr = ecs_ptr_from_json(world, t, &value, 
+        "{\"true\": 10, \"false\": 20}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(ecs_map_count(&value), 2);
+    ecs_map_val_t *v = ecs_map_get(&value, true);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 10);
+    v = ecs_map_get(&value, false);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 20);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_map_char_i32(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type_init(world, &(ecs_map_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .key_type = ecs_id(ecs_char_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    test_assert(t != 0);
+
+    ecs_map_t value = {0};
+
+    const char *ptr = ecs_ptr_from_json(world, t, &value, 
+        "{\"a\": 10, \"b\": 20}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(ecs_map_count(&value), 2);
+    ecs_map_val_t *v = ecs_map_get(&value, 'a');
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 10);
+    v = ecs_map_get(&value, 'b');
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 20);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_map_u64_i32(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type_init(world, &(ecs_map_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .key_type = ecs_id(ecs_u64_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    test_assert(t != 0);
+
+    ecs_map_t value = {0};
+
+    const char *ptr = ecs_ptr_from_json(world, t, &value, 
+        "{\"18446744073709551615\": 10}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(ecs_map_count(&value), 1);
+    ecs_map_val_t *v = ecs_map_get(&value, UINT64_MAX);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 10);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_map_i32_i32_negative_key(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type_init(world, &(ecs_map_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .key_type = ecs_id(ecs_i32_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    test_assert(t != 0);
+
+    ecs_map_t value = {0};
+
+    const char *ptr = ecs_ptr_from_json(world, t, &value, 
+        "{\"-10\": 1, \"10\": 2}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(ecs_map_count(&value), 2);
+    ecs_map_val_t *v = ecs_map_get(&value, (uint32_t)-10);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 1);
+    v = ecs_map_get(&value, 10);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 2);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_map_i64_i32_negative_key(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type_init(world, &(ecs_map_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .key_type = ecs_id(ecs_i64_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    test_assert(t != 0);
+
+    ecs_map_t value = {0};
+
+    const char *ptr = ecs_ptr_from_json(world, t, &value,
+        "{\"-10\": 1, \"10\": 2}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(ecs_map_count(&value), 2);
+    ecs_map_val_t *v = ecs_map_get(&value, (ecs_map_key_t)-10);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 1);
+    v = ecs_map_get(&value, 10);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 2);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_map_enum_i32(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t c = ecs_enum_init(world, &(ecs_enum_desc_t){
+        .entity = ecs_entity(world, {.name = "Color"}),
+        .constants = {
+            {"Red"}, {"Green"}, {"Blue"}
+        }
+    });
+
+    ecs_entity_t t = ecs_map_type_init(world, &(ecs_map_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .key_type = c,
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    test_assert(t != 0);
+
+    ecs_map_t value = {0};
+
+    const char *ptr = ecs_ptr_from_json(world, t, &value, 
+        "{\"Red\": 10, \"Green\": 20, \"Blue\": 30}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(ecs_map_count(&value), 3);
+    ecs_map_val_t *v = ecs_map_get(&value, 0);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 10);
+    v = ecs_map_get(&value, 1);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 20);
+    v = ecs_map_get(&value, 2);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 30);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_map_bitmask_i32(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t b = ecs_bitmask_init(world, &(ecs_bitmask_desc_t){
+        .entity = ecs_entity(world, {.name = "Toppings"}),
+        .constants = {
+            {"Lettuce"}, {"Bacon"}, {"Tomato"}
+        }
+    });
+
+    ecs_entity_t t = ecs_map_type_init(world, &(ecs_map_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .key_type = b,
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    test_assert(t != 0);
+
+    ecs_map_t value = {0};
+
+    const char *ptr = ecs_ptr_from_json(world, t, &value, 
+        "{\"Lettuce|Bacon\": 10, \"Tomato\": 20, \"0\": 30}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(ecs_map_count(&value), 3);
+    ecs_map_val_t *v = ecs_map_get(&value, 3);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 10);
+    v = ecs_map_get(&value, 4);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 20);
+    v = ecs_map_get(&value, 0);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 30);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_map_bitmask_i32_multi_flag_key(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t b = ecs_bitmask_init(world, &(ecs_bitmask_desc_t){
+        .entity = ecs_entity(world, {.name = "Toppings"}),
+        .constants = {
+            {"Lettuce"}, {"Bacon"}, {"Tomato"}
+        }
+    });
+
+    ecs_entity_t t = ecs_map_type_init(world, &(ecs_map_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .key_type = b,
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    test_assert(t != 0);
+
+    ecs_map_t value = {0};
+
+    const char *ptr = ecs_ptr_from_json(world, t, &value,
+        "{\"Lettuce|Bacon\": 10, \"Tomato\": 20}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(ecs_map_count(&value), 2);
+    ecs_map_val_t *v = ecs_map_get(&value, 3);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 10);
+    v = ecs_map_get(&value, 4);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 20);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_map_id_pair_i32(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t rel = ecs_entity(world, { .name = "Rel" });
+    ecs_entity_t tgt = ecs_entity(world, { .name = "Tgt" });
+
+    ecs_entity_t t = ecs_map_type_init(world, &(ecs_map_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .key_type = ecs_id(ecs_id_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    test_assert(t != 0);
+
+    ecs_map_t value = {0};
+
+    const char *ptr = ecs_ptr_from_json(world, t, &value, 
+        "{\"(Rel,Tgt)\": 10}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(ecs_map_count(&value), 1);
+    ecs_map_val_t *v = ecs_map_get(&value, ecs_pair(rel, tgt));
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 10);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_map_i64_enum_underlying_i8(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t c = ecs_enum_init(world, &(ecs_enum_desc_t){
+        .entity = ecs_entity(world, {.name = "Color"}),
+        .underlying_type = ecs_id(ecs_i8_t),
+        .constants = {
+            {"Red"}, {"Green"}, {"Blue"}
+        }
+    });
+
+    ecs_entity_t t = ecs_map_type_init(world, &(ecs_map_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .key_type = ecs_id(ecs_i64_t),
+        .type = c
+    });
+
+    test_assert(t != 0);
+
+    ecs_map_t value = {0};
+
+    const char *ptr = ecs_ptr_from_json(world, t, &value, 
+        "{\"10\": \"Red\", \"20\": \"Green\", \"30\": \"Blue\"}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(ecs_map_count(&value), 3);
+    ecs_map_val_t *v = ecs_map_get(&value, 10);
+    test_assert(v != NULL);
+    test_int(*(int8_t*)v, 0);
+    v = ecs_map_get(&value, 20);
+    test_assert(v != NULL);
+    test_int(*(int8_t*)v, 1);
+    v = ecs_map_get(&value, 30);
+    test_assert(v != NULL);
+    test_int(*(int8_t*)v, 2);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_map_i64_enum_underlying_i16(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t c = ecs_enum_init(world, &(ecs_enum_desc_t){
+        .entity = ecs_entity(world, {.name = "Color"}),
+        .underlying_type = ecs_id(ecs_i16_t),
+        .constants = {
+            {"Red"}, {"Green"}, {"Blue"}
+        }
+    });
+
+    ecs_entity_t t = ecs_map_type_init(world, &(ecs_map_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .key_type = ecs_id(ecs_i64_t),
+        .type = c
+    });
+
+    test_assert(t != 0);
+
+    ecs_map_t value = {0};
+
+    const char *ptr = ecs_ptr_from_json(world, t, &value, 
+        "{\"10\": \"Red\", \"20\": \"Green\", \"30\": \"Blue\"}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(ecs_map_count(&value), 3);
+    ecs_map_val_t *v = ecs_map_get(&value, 10);
+    test_assert(v != NULL);
+    test_int(*(int16_t*)v, 0);
+    v = ecs_map_get(&value, 20);
+    test_assert(v != NULL);
+    test_int(*(int16_t*)v, 1);
+    v = ecs_map_get(&value, 30);
+    test_assert(v != NULL);
+    test_int(*(int16_t*)v, 2);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_map_i64_enum_underlying_i32(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t c = ecs_enum_init(world, &(ecs_enum_desc_t){
+        .entity = ecs_entity(world, {.name = "Color"}),
+        .underlying_type = ecs_id(ecs_i32_t),
+        .constants = {
+            {"Red"}, {"Green"}, {"Blue"}
+        }
+    });
+
+    ecs_entity_t t = ecs_map_type_init(world, &(ecs_map_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .key_type = ecs_id(ecs_i64_t),
+        .type = c
+    });
+
+    test_assert(t != 0);
+
+    ecs_map_t value = {0};
+
+    const char *ptr = ecs_ptr_from_json(world, t, &value, 
+        "{\"10\": \"Red\", \"20\": \"Green\", \"30\": \"Blue\"}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(ecs_map_count(&value), 3);
+    ecs_map_val_t *v = ecs_map_get(&value, 10);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 0);
+    v = ecs_map_get(&value, 20);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 1);
+    v = ecs_map_get(&value, 30);
+    test_assert(v != NULL);
+    test_int(*(int32_t*)v, 2);
+
+    ecs_map_fini(&value);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_value_bool(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_value_t v = {0};
+    const char *ptr = ecs_ptr_from_json(world, ecs_id(ecs_value_t), &v,
+        "{\"bool\": true}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_uint(v.type, ecs_id(ecs_bool_t));
+    test_assert(v.ptr != NULL);
+    test_bool(*(bool*)v.ptr, true);
+
+    ecs_value_fini(world, &v);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_value_u16(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_value_t v = {0};
+    const char *ptr = ecs_ptr_from_json(world, ecs_id(ecs_value_t), &v,
+        "{\"u16\": 10}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_uint(v.type, ecs_id(ecs_u16_t));
+    test_assert(v.ptr != NULL);
+    test_uint(*(uint16_t*)v.ptr, 10);
+
+    ecs_value_fini(world, &v);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_value_i64(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_value_t v = {0};
+    const char *ptr = ecs_ptr_from_json(world, ecs_id(ecs_value_t), &v,
+        "{\"i64\": 10}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_uint(v.type, ecs_id(ecs_i64_t));
+    test_assert(v.ptr != NULL);
+    test_int(*(int64_t*)v.ptr, 10);
+
+    ecs_value_fini(world, &v);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_value_f64(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_value_t v = {0};
+    const char *ptr = ecs_ptr_from_json(world, ecs_id(ecs_value_t), &v,
+        "{\"f64\": 10.5}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_uint(v.type, ecs_id(ecs_f64_t));
+    test_assert(v.ptr != NULL);
+    test_flt(*(double*)v.ptr, 10.5);
+
+    ecs_value_fini(world, &v);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_value_string(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_value_t v = {0};
+    const char *ptr = ecs_ptr_from_json(world, ecs_id(ecs_value_t), &v,
+        "{\"string\": \"Hello World\"}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_uint(v.type, ecs_id(ecs_string_t));
+    test_assert(v.ptr != NULL);
+    test_str(*(char**)v.ptr, "Hello World");
+
+    ecs_value_fini(world, &v);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_value_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_value_t v = {0};
+    const char *ptr = ecs_ptr_from_json(world, ecs_id(ecs_value_t), &v,
+        "{\"entity\": \"flecs.core\"}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_uint(v.type, ecs_id(ecs_entity_t));
+    test_assert(v.ptr != NULL);
+    test_uint(*(ecs_entity_t*)v.ptr, EcsFlecsCore);
+
+    ecs_value_fini(world, &v);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_value_enum(void) {
+    typedef enum {
+        Red, Green, Blue
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_enum(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .constants = {
+            { "Red" }, { "Green" }, { "Blue" }
+        }
+    });
+
+    ecs_value_t v = {0};
+    const char *ptr = ecs_ptr_from_json(world, ecs_id(ecs_value_t), &v,
+        "{\"T\": \"Green\"}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_uint(v.type, t);
+    test_assert(v.ptr != NULL);
+    test_int(*(int32_t*)v.ptr, Green);
+
+    ecs_value_fini(world, &v);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_value_bitmask(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_bitmask(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .constants = {
+            { "Bacon" }, { "Lettuce" }
+        }
+    });
+
+    ecs_value_t v = {0};
+    const char *ptr = ecs_ptr_from_json(world, ecs_id(ecs_value_t), &v,
+        "{\"T\": \"Bacon|Lettuce\"}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_uint(v.type, t);
+    test_assert(v.ptr != NULL);
+    test_uint(*(uint32_t*)v.ptr, 3);
+
+    ecs_value_fini(world, &v);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_value_struct(void) {
+    typedef struct {
+        int32_t x;
+        int32_t y;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .members = {
+            { "x", ecs_id(ecs_i32_t) },
+            { "y", ecs_id(ecs_i32_t) }
+        }
+    });
+
+    ecs_value_t v = {0};
+    const char *ptr = ecs_ptr_from_json(world, ecs_id(ecs_value_t), &v,
+        "{\"T\": {\"x\": 10, \"y\": 20}}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_uint(v.type, t);
+    test_assert(v.ptr != NULL);
+    T *value = v.ptr;
+    test_int(value->x, 10);
+    test_int(value->y, 20);
+
+    ecs_value_fini(world, &v);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_value_array(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_array(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .type = ecs_id(ecs_i32_t),
+        .count = 3
+    });
+
+    ecs_value_t v = {0};
+    const char *ptr = ecs_ptr_from_json(world, ecs_id(ecs_value_t), &v,
+        "{\"T\": [1, 2, 3]}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_uint(v.type, t);
+    test_assert(v.ptr != NULL);
+    int32_t *value = v.ptr;
+    test_int(value[0], 1);
+    test_int(value[1], 2);
+    test_int(value[2], 3);
+
+    ecs_value_fini(world, &v);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_value_vector(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_vector(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_value_t v = {0};
+    const char *ptr = ecs_ptr_from_json(world, ecs_id(ecs_value_t), &v,
+        "{\"T\": [1, 2, 3]}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_uint(v.type, t);
+    test_assert(v.ptr != NULL);
+    ecs_vec_t *vec = v.ptr;
+    test_int(vec->count, 3);
+    int32_t *value = vec->array;
+    test_int(value[0], 1);
+    test_int(value[1], 2);
+    test_int(value[2], 3);
+
+    ecs_value_fini(world, &v);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_value_map(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .key_type = ecs_id(ecs_i64_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_value_t v = {0};
+    const char *ptr = ecs_ptr_from_json(world, ecs_id(ecs_value_t), &v,
+        "{\"T\": {\"10\": 100}}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_uint(v.type, t);
+    test_assert(v.ptr != NULL);
+    ecs_map_t *map = v.ptr;
+    test_int(ecs_map_count(map), 1);
+    ecs_map_val_t *value = ecs_map_get(map, 10);
+    test_assert(value != NULL);
+    test_int(*(int32_t*)value, 100);
+
+    ecs_value_fini(world, &v);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_value_assign_same_type(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_value_t v = {0};
+    const char *ptr = ecs_ptr_from_json(world, ecs_id(ecs_value_t), &v,
+        "{\"i32\": 10}", NULL);
+    test_assert(ptr != NULL);
+    test_uint(v.type, ecs_id(ecs_i32_t));
+    test_int(*(int32_t*)v.ptr, 10);
+    void *value_ptr = v.ptr;
+
+    ptr = ecs_ptr_from_json(world, ecs_id(ecs_value_t), &v,
+        "{\"i32\": 20}", NULL);
+    test_assert(ptr != NULL);
+    test_uint(v.type, ecs_id(ecs_i32_t));
+    test_assert(v.ptr == value_ptr);
+    test_int(*(int32_t*)v.ptr, 20);
+
+    ecs_value_fini(world, &v);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_value_assign_different_type(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_value_t v = {0};
+    const char *ptr = ecs_ptr_from_json(world, ecs_id(ecs_value_t), &v,
+        "{\"string\": \"Hello\"}", NULL);
+    test_assert(ptr != NULL);
+    test_uint(v.type, ecs_id(ecs_string_t));
+    test_str(*(char**)v.ptr, "Hello");
+
+    ptr = ecs_ptr_from_json(world, ecs_id(ecs_value_t), &v,
+        "{\"i32\": 20}", NULL);
+    test_assert(ptr != NULL);
+    test_uint(v.type, ecs_id(ecs_i32_t));
+    test_int(*(int32_t*)v.ptr, 20);
+
+    ecs_value_fini(world, &v);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_struct_w_value(void) {
+    typedef struct {
+        ecs_value_t v;
+    } S;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(S) = ecs_struct(world, {
+        .members = {
+            { "v", ecs_id(ecs_value_t) }
+        }
+    });
+
+    S value = {{0}};
+    const char *ptr = ecs_ptr_from_json(world, ecs_id(S), &value,
+        "{\"v\": {\"i32\": 10}}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_uint(value.v.type, ecs_id(ecs_i32_t));
+    test_assert(value.v.ptr != NULL);
+    test_int(*(int32_t*)value.v.ptr, 10);
+
+    ecs_value_fini(world, &value.v);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_value_unknown_type(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_value_t v = {0};
+    ecs_log_set_level(-4);
+    const char *ptr = ecs_ptr_from_json(world, ecs_id(ecs_value_t), &v,
+        "{\"DoesNotExist\": 10}", NULL);
+    test_assert(ptr != NULL);
+
+    test_assert(v.type == 0);
+    test_assert(v.ptr == NULL);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_value_unknown_type_strict(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_from_json_desc_t desc = { .strict = true };
+    ecs_value_t v = {0};
+    ecs_log_set_level(-4);
+    const char *ptr = ecs_ptr_from_json(world, ecs_id(ecs_value_t), &v,
+        "{\"DoesNotExist\": 10}", &desc);
+    test_assert(ptr == NULL);
+
+    test_assert(v.type == 0);
+    test_assert(v.ptr == NULL);
+
     ecs_fini(world);
 }

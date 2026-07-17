@@ -2465,3 +2465,207 @@ void RttCompare_struct_with_array(void) {
 
     ecs_fini(world);
 }
+
+void RttCompare_map_of_ints(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t /* map<ecs_i64_t, ecs_i32_t> */ map_of_ints =
+        ecs_map_type(world, {
+            .key_type = ecs_id(ecs_i64_t), 
+            .type = ecs_id(ecs_i32_t)
+        });
+
+    /* Create five entities with map_of_ints component */
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_entity_t e4 = ecs_new(world);
+    ecs_entity_t e5 = ecs_new(world);
+
+    /* {1: 10, 2: 20} */
+    ecs_map_t *m1 = test_ecs_ensure(world, e1, map_of_ints);
+    ecs_map_init_if(m1, NULL);
+    *(int32_t*)ecs_map_ensure(m1, 1) = 10;
+    *(int32_t*)ecs_map_ensure(m1, 2) = 20;
+
+    /* {1: 10, 2: 25} */
+    ecs_map_t *m2 = test_ecs_ensure(world, e2, map_of_ints);
+    ecs_map_init_if(m2, NULL);
+    *(int32_t*)ecs_map_ensure(m2, 1) = 10;
+    *(int32_t*)ecs_map_ensure(m2, 2) = 25;
+
+    /* {1: 10, 2: 20} */
+    ecs_map_t *m3 = test_ecs_ensure(world, e3, map_of_ints);
+    ecs_map_init_if(m3, NULL);
+    *(int32_t*)ecs_map_ensure(m3, 1) = 10;
+    *(int32_t*)ecs_map_ensure(m3, 2) = 20;
+
+    /* {1: 10} */
+    ecs_map_t *m4 = test_ecs_ensure(world, e4, map_of_ints);
+    ecs_map_init_if(m4, NULL);
+    *(int32_t*)ecs_map_ensure(m4, 1) = 10;
+
+    /* {1: 10, 3: 20} */
+    ecs_map_t *m5 = test_ecs_ensure(world, e5, map_of_ints);
+    ecs_map_init_if(m5, NULL);
+    *(int32_t*)ecs_map_ensure(m5, 1) = 10;
+    *(int32_t*)ecs_map_ensure(m5, 3) = 20;
+
+    /* Test "less" */
+    /* {1: 10, 2: 20} < {1: 10, 2: 25} */
+    test_assert(cmp(world, map_of_ints, e1, e2) < 0);
+
+    /* {1: 10} < {1: 10, 2: 20} */
+    test_assert(cmp(world, map_of_ints, e4, e1) < 0);
+
+    /* {1: 10, 2: 20} < {1: 10, 3: 20} */
+    test_assert(cmp(world, map_of_ints, e1, e5) < 0);
+
+    /* Test "greater" */
+    /* {1: 10, 2: 25} > {1: 10, 2: 20} */
+    test_assert(cmp(world, map_of_ints, e2, e1) > 0);
+
+    /* {1: 10, 3: 20} > {1: 10, 2: 20} */
+    test_assert(cmp(world, map_of_ints, e5, e1) > 0);
+
+    /* Test "equal" */
+    /* {1: 10, 2: 20} == {1: 10, 2: 20} */
+    test_assert(cmp(world, map_of_ints, e1, e3) == 0);
+    test_assert(equals(world, map_of_ints, e1, e3) == true);
+    test_assert(cmp(world, map_of_ints, e1, e1) == 0);
+    test_assert(equals(world, map_of_ints, e1, e1) == true);
+
+    /* Test "not equal" */
+    test_assert(equals(world, map_of_ints, e1, e2) == false);
+    test_assert(equals(world, map_of_ints, e1, e4) == false);
+    test_assert(equals(world, map_of_ints, e1, e5) == false);
+
+    ecs_delete(world, e1);
+    ecs_delete(world, e2);
+    ecs_delete(world, e3);
+    ecs_delete(world, e4);
+    ecs_delete(world, e5);
+
+    ecs_fini(world);
+}
+
+void RttCompare_map_of_strings(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t /* map<ecs_i64_t, ecs_string_t> */ map_of_strings =
+        ecs_map_type(world, {
+            .key_type = ecs_id(ecs_i64_t), 
+            .type = ecs_id(ecs_string_t)
+        });
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_entity_t e3 = ecs_new(world);
+
+    /* {1: "AA", 2: "BB"} */
+    ecs_map_t *m1 = test_ecs_ensure(world, e1, map_of_strings);
+    ecs_map_init_if(m1, NULL);
+    *(char**)ecs_map_ensure(m1, 1) = ecs_os_strdup("AA");
+    *(char**)ecs_map_ensure(m1, 2) = ecs_os_strdup("BB");
+
+    /* {1: "AA", 2: "CC"} */
+    ecs_map_t *m2 = test_ecs_ensure(world, e2, map_of_strings);
+    ecs_map_init_if(m2, NULL);
+    *(char**)ecs_map_ensure(m2, 1) = ecs_os_strdup("AA");
+    *(char**)ecs_map_ensure(m2, 2) = ecs_os_strdup("CC");
+
+    /* {1: "AA", 2: "BB"} */
+    ecs_map_t *m3 = test_ecs_ensure(world, e3, map_of_strings);
+    ecs_map_init_if(m3, NULL);
+    *(char**)ecs_map_ensure(m3, 1) = ecs_os_strdup("AA");
+    *(char**)ecs_map_ensure(m3, 2) = ecs_os_strdup("BB");
+
+    /* {1: "AA", 2: "BB"} < {1: "AA", 2: "CC"} */
+    test_assert(cmp(world, map_of_strings, e1, e2) < 0);
+
+    /* {1: "AA", 2: "CC"} > {1: "AA", 2: "BB"} */
+    test_assert(cmp(world, map_of_strings, e2, e1) > 0);
+
+    /* {1: "AA", 2: "BB"} == {1: "AA", 2: "BB"} */
+    test_assert(cmp(world, map_of_strings, e1, e3) == 0);
+    test_assert(equals(world, map_of_strings, e1, e3) == true);
+    test_assert(equals(world, map_of_strings, e1, e2) == false);
+
+    ecs_delete(world, e1);
+    ecs_delete(world, e2);
+    ecs_delete(world, e3);
+
+    ecs_fini(world);
+}
+
+void RttCompare_map_of_struct_with_strings(void) {
+    ecs_world_t *world = ecs_init();
+
+    /* Three members so the struct is larger than 64 bits on 32-bit
+     * platforms, which ensures values are stored in separate allocations. */
+    ecs_entity_t struct_with_strings = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "StructWithStrings"}),
+        .members = {
+            {"a", ecs_id(ecs_string_t)},
+            {"b", ecs_id(ecs_string_t)},
+            {"c", ecs_id(ecs_string_t)}
+        }
+    });
+
+    typedef struct {
+        char *a;
+        char *b;
+        char *c;
+    } StructWithStrings;
+
+    ecs_entity_t /* map<ecs_i64_t, StructWithStrings> */ map_of_structs =
+        ecs_map_type(world, {
+            .key_type = ecs_id(ecs_i64_t), 
+            .type = struct_with_strings
+        });
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_entity_t e3 = ecs_new(world);
+
+    /* {1: {"AA", "BB", "CC"}} */
+    ecs_map_t *m1 = test_ecs_ensure(world, e1, map_of_structs);
+    ecs_map_init_if(m1, NULL);
+    StructWithStrings *s = ecs_map_ensure_alloc_t(m1, StructWithStrings, 1);
+    s->a = ecs_os_strdup("AA");
+    s->b = ecs_os_strdup("BB");
+    s->c = ecs_os_strdup("CC");
+
+    /* {1: {"AA", "CC", "CC"}} */
+    ecs_map_t *m2 = test_ecs_ensure(world, e2, map_of_structs);
+    ecs_map_init_if(m2, NULL);
+    s = ecs_map_ensure_alloc_t(m2, StructWithStrings, 1);
+    s->a = ecs_os_strdup("AA");
+    s->b = ecs_os_strdup("CC");
+    s->c = ecs_os_strdup("CC");
+
+    /* {1: {"AA", "BB", "CC"}} */
+    ecs_map_t *m3 = test_ecs_ensure(world, e3, map_of_structs);
+    ecs_map_init_if(m3, NULL);
+    s = ecs_map_ensure_alloc_t(m3, StructWithStrings, 1);
+    s->a = ecs_os_strdup("AA");
+    s->b = ecs_os_strdup("BB");
+    s->c = ecs_os_strdup("CC");
+
+    /* {1: {"AA", "BB", "CC"}} < {1: {"AA", "CC", "CC"}} */
+    test_assert(cmp(world, map_of_structs, e1, e2) < 0);
+
+    /* {1: {"AA", "CC", "CC"}} > {1: {"AA", "BB", "CC"}} */
+    test_assert(cmp(world, map_of_structs, e2, e1) > 0);
+
+    /* {1: {"AA", "BB", "CC"}} == {1: {"AA", "BB", "CC"}} */
+    test_assert(cmp(world, map_of_structs, e1, e3) == 0);
+    test_assert(equals(world, map_of_structs, e1, e3) == true);
+    test_assert(equals(world, map_of_structs, e1, e2) == false);
+
+    ecs_delete(world, e1);
+    ecs_delete(world, e2);
+    ecs_delete(world, e3);
+
+    ecs_fini(world);
+}

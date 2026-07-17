@@ -9,9 +9,19 @@
 extern ECS_COMPONENT_DECLARE(EcsScriptTemplateSetEvent);
 extern ECS_COMPONENT_DECLARE(EcsScriptTemplateRoot);
 
+typedef struct ecs_script_template_member_t {
+    int32_t index;
+    bool is_mut;
+} ecs_script_template_member_t;
+
+typedef struct {
+    ecs_entity_t type;
+    ecs_vec_t defaults;
+} ecs_script_template_vars_t;
+
 struct ecs_script_template_t {
-    /* Template handle */
-    ecs_entity_t entity;
+    ecs_script_template_vars_t props;
+    ecs_script_template_vars_t muts;
 
     /* Template AST node */
     ecs_script_template_node_t *node;
@@ -22,8 +32,8 @@ struct ecs_script_template_t {
     /* Hoisted variables */
     ecs_script_vars_t *vars;
 
-    /* Default values for props */
-    ecs_vec_t prop_defaults;
+    /* Prop and mut members in variable declaration order */
+    ecs_vec_t members;
 
     /* Type info for template component */
     const ecs_type_info_t *type_info;
@@ -54,6 +64,7 @@ typedef struct EcsScriptTemplateRoot {
 /* Event used for deferring template instantiation */
 typedef struct EcsScriptTemplateSetEvent {
     ecs_entity_t template_entity;
+    ecs_entity_t component;
     ecs_entity_t *entities;
     void *data;
     int32_t count;

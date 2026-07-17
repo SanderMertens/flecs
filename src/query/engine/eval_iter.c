@@ -376,6 +376,8 @@ void flecs_query_op_ctx_fini(
     case EcsQueryTreeSelfUpPre:
     case EcsQueryTreeUpPost:
     case EcsQueryTreeSelfUpPost:
+    case EcsQueryTreeUpNot:
+    case EcsQueryTreeSelfUpNot:
     case EcsQuerySparseUp:
     case EcsQuerySparseSelfUp: {
         ecs_allocator_t *a = flecs_query_get_allocator(it);

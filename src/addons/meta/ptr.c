@@ -1,11 +1,13 @@
 /**
- * @file value.c
+ * @file addons/meta/ptr.c
  * @brief Utility functions to work with non-trivial pointers of user types.
  */
 
-#include "private_api.h"
+#include "meta.h"
 
-int ecs_value_init_w_type_info(
+#ifdef FLECS_META
+
+int ecs_ptr_init_w_type_info(
     const ecs_world_t *world,
     const ecs_type_info_t *ti,
     void *ptr)
@@ -23,7 +25,7 @@ error:
     return -1;
 }
 
-int ecs_value_init(
+int ecs_ptr_init(
     const ecs_world_t *world,
     ecs_entity_t type,
     void *ptr)
@@ -32,12 +34,12 @@ int ecs_value_init(
     const ecs_type_info_t *ti = ecs_get_type_info(world, type);
     ecs_check(ti != NULL, ECS_INVALID_PARAMETER, "entity '%s' is not a type", 
         flecs_errstr(ecs_get_path(world, type)));
-    return ecs_value_init_w_type_info(world, ti, ptr);
+    return ecs_ptr_init_w_type_info(world, ti, ptr);
 error:
     return -1;
 }
 
-void* ecs_value_new_w_type_info(
+void* ecs_ptr_new_w_type_info(
     ecs_world_t *world,
     const ecs_type_info_t *ti)
 {
@@ -47,7 +49,7 @@ void* ecs_value_new_w_type_info(
 
     void *result = flecs_alloc_w_dbg_info(
         &world->allocator, ti->size, ti->name);
-    if (ecs_value_init_w_type_info(world, ti, result) != 0) {
+    if (ecs_ptr_init_w_type_info(world, ti, result) != 0) {
         flecs_free(&world->allocator, ti->size, result);
         goto error;
     }
@@ -57,7 +59,7 @@ error:
     return NULL;
 }
 
-void* ecs_value_new(
+void* ecs_ptr_new(
     ecs_world_t *world,
     ecs_entity_t type)
 {
@@ -65,12 +67,12 @@ void* ecs_value_new(
     const ecs_type_info_t *ti = ecs_get_type_info(world, type);
     ecs_check(ti != NULL, ECS_INVALID_PARAMETER, "entity is not a type");
 
-    return ecs_value_new_w_type_info(world, ti);
+    return ecs_ptr_new_w_type_info(world, ti);
 error:
     return NULL;
 }
 
-int ecs_value_fini_w_type_info(
+int ecs_ptr_fini_w_type_info(
     const ecs_world_t *world,
     const ecs_type_info_t *ti,
     void *ptr)
@@ -86,7 +88,7 @@ error:
     return -1;
 }
 
-int ecs_value_fini(
+int ecs_ptr_fini(
     const ecs_world_t *world,
     ecs_entity_t type,
     void* ptr)
@@ -95,12 +97,12 @@ int ecs_value_fini(
     (void)world;
     const ecs_type_info_t *ti = ecs_get_type_info(world, type);
     ecs_check(ti != NULL, ECS_INVALID_PARAMETER, "entity is not a type");
-    return ecs_value_fini_w_type_info(world, ti, ptr);
+    return ecs_ptr_fini_w_type_info(world, ti, ptr);
 error:
     return -1;
 }
 
-int ecs_value_free(
+int ecs_ptr_free(
     ecs_world_t *world,
     ecs_entity_t type,
     void* ptr)
@@ -108,7 +110,7 @@ int ecs_value_free(
     flecs_poly_assert(world, ecs_world_t);
     const ecs_type_info_t *ti = ecs_get_type_info(world, type);
     ecs_check(ti != NULL, ECS_INVALID_PARAMETER, "entity is not a type");
-    if (ecs_value_fini_w_type_info(world, ti, ptr) != 0) {
+    if (ecs_ptr_fini_w_type_info(world, ti, ptr) != 0) {
         goto error;
     }
 
@@ -119,7 +121,7 @@ error:
     return -1;
 }
 
-int ecs_value_copy_w_type_info(
+int ecs_ptr_copy_w_type_info(
     const ecs_world_t *world,
     const ecs_type_info_t *ti,
     void* dst,
@@ -136,7 +138,7 @@ error:
     return -1;
 }
 
-int ecs_value_copy(
+int ecs_ptr_copy(
     const ecs_world_t *world,
     ecs_entity_t type,
     void* dst,
@@ -145,12 +147,12 @@ int ecs_value_copy(
     flecs_poly_assert(world, ecs_world_t);
     const ecs_type_info_t *ti = ecs_get_type_info(world, type);
     ecs_check(ti != NULL, ECS_INVALID_PARAMETER, "entity is not a type");
-    return ecs_value_copy_w_type_info(world, ti, dst, src);
+    return ecs_ptr_copy_w_type_info(world, ti, dst, src);
 error:
     return -1;
 }
 
-int ecs_value_move_w_type_info(
+int ecs_ptr_move_w_type_info(
     const ecs_world_t *world,
     const ecs_type_info_t *ti,
     void* dst,
@@ -167,7 +169,7 @@ error:
     return -1;
 }
 
-int ecs_value_move(
+int ecs_ptr_move(
     const ecs_world_t *world,
     ecs_entity_t type,
     void* dst,
@@ -176,12 +178,12 @@ int ecs_value_move(
     flecs_poly_assert(world, ecs_world_t);
     const ecs_type_info_t *ti = ecs_get_type_info(world, type);
     ecs_check(ti != NULL, ECS_INVALID_PARAMETER, "entity is not a type");
-    return ecs_value_move_w_type_info(world, ti, dst, src);
+    return ecs_ptr_move_w_type_info(world, ti, dst, src);
 error:
     return -1;
 }
 
-int ecs_value_move_ctor_w_type_info(
+int ecs_ptr_move_ctor_w_type_info(
     const ecs_world_t *world,
     const ecs_type_info_t *ti,
     void* dst,
@@ -198,7 +200,7 @@ error:
     return -1;
 }
 
-int ecs_value_move_ctor(
+int ecs_ptr_move_ctor(
     const ecs_world_t *world,
     ecs_entity_t type,
     void* dst,
@@ -207,7 +209,9 @@ int ecs_value_move_ctor(
     flecs_poly_assert(world, ecs_world_t);
     const ecs_type_info_t *ti = ecs_get_type_info(world, type);
     ecs_check(ti != NULL, ECS_INVALID_PARAMETER, "entity is not a type");
-    return ecs_value_move_ctor_w_type_info(world, ti, dst, src);
+    return ecs_ptr_move_ctor_w_type_info(world, ti, dst, src);
 error:
     return -1;
 }
+
+#endif

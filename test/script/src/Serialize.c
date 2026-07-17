@@ -2341,3 +2341,491 @@ void Serialize_opaque_string_vector(void) {
 
     ecs_fini(world);
 }
+
+void Serialize_map_i64_i32_1(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type_init(world, &(ecs_map_desc_t){
+        .key_type = ecs_id(ecs_i64_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_map_t m;
+    ecs_map_init(&m, NULL);
+    *(int32_t*)ecs_map_ensure(&m, 10) = 100;
+
+    char *expr = ecs_ptr_to_expr(world, t, &m);
+    test_assert(expr != NULL);
+    test_str(expr, "[10: 100]");
+    ecs_os_free(expr);
+
+    ecs_map_fini(&m);
+
+    ecs_fini(world);
+}
+
+void Serialize_map_i64_i32_3(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type_init(world, &(ecs_map_desc_t){
+        .key_type = ecs_id(ecs_i64_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_map_t m;
+    ecs_map_init(&m, NULL);
+    *(int32_t*)ecs_map_ensure(&m, 10) = 100;
+    *(int32_t*)ecs_map_ensure(&m, 20) = 200;
+    *(int32_t*)ecs_map_ensure(&m, 30) = 300;
+
+    char *expr = ecs_ptr_to_expr(world, t, &m);
+    test_assert(expr != NULL);
+    test_str(expr, "[10: 100, 20: 200, 30: 300]");
+    ecs_os_free(expr);
+
+    ecs_map_fini(&m);
+
+    ecs_fini(world);
+}
+
+void Serialize_map_i64_string(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type_init(world, &(ecs_map_desc_t){
+        .key_type = ecs_id(ecs_i64_t),
+        .type = ecs_id(ecs_string_t)
+    });
+
+    ecs_map_t m;
+    ecs_map_init(&m, NULL);
+    *(char**)ecs_map_ensure(&m, 10) = ecs_os_strdup("Hello");
+
+    char *expr = ecs_ptr_to_expr(world, t, &m);
+    test_assert(expr != NULL);
+    test_str(expr, "[10: \"Hello\"]");
+    ecs_os_free(expr);
+
+    ecs_map_iter_t it = ecs_map_iter(&m);
+    while (ecs_map_next(&it)) {
+        ecs_os_free(*(char**)&it.res[1]);
+    }
+
+    ecs_map_fini(&m);
+
+    ecs_fini(world);
+}
+
+void Serialize_map_entity_i32(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+
+    ecs_entity_t t = ecs_map_type_init(world, &(ecs_map_desc_t){
+        .key_type = ecs_id(ecs_entity_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_map_t m;
+    ecs_map_init(&m, NULL);
+    *(int32_t*)ecs_map_ensure(&m, e1) = 100;
+
+    char *expr = ecs_ptr_to_expr(world, t, &m);
+    test_assert(expr != NULL);
+    test_str(expr, "[e1: 100]");
+    ecs_os_free(expr);
+
+    ecs_map_fini(&m);
+
+    ecs_fini(world);
+}
+
+void Serialize_map_i64_struct(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        int32_t x, y, z;
+    } N;
+
+    ecs_entity_t n = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "N"}),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)},
+            {"z", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t t = ecs_map_type_init(world, &(ecs_map_desc_t){
+        .key_type = ecs_id(ecs_i64_t),
+        .type = n
+    });
+
+    ecs_map_t m;
+    ecs_map_init(&m, NULL);
+    N *ptr = ecs_map_ensure_alloc_t(&m, N, 10);
+    ptr->x = 1;
+    ptr->y = 2;
+    ptr->z = 3;
+
+    char *expr = ecs_ptr_to_expr(world, t, &m);
+    test_assert(expr != NULL);
+    test_str(expr, "[10: {x: 1, y: 2, z: 3}]");
+    ecs_os_free(expr);
+
+    ecs_map_iter_t it = ecs_map_iter(&m);
+    while (ecs_map_next(&it)) {
+        ecs_os_free(ecs_map_ptr(&it));
+    }
+
+    ecs_map_fini(&m);
+
+    ecs_fini(world);
+}
+
+void Serialize_map_empty(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type_init(world, &(ecs_map_desc_t){
+        .key_type = ecs_id(ecs_i64_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_map_t m;
+    ecs_map_init(&m, NULL);
+
+    char *expr = ecs_ptr_to_expr(world, t, &m);
+    test_assert(expr != NULL);
+    test_str(expr, "[]");
+    ecs_os_free(expr);
+
+    ecs_map_fini(&m);
+
+    ecs_fini(world);
+}
+
+void Serialize_map_bool_i32(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type_init(world, &(ecs_map_desc_t){
+        .key_type = ecs_id(ecs_bool_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_map_t m;
+    ecs_map_init(&m, NULL);
+    *(int32_t*)ecs_map_ensure(&m, false) = 10;
+    *(int32_t*)ecs_map_ensure(&m, true) = 20;
+
+    char *expr = ecs_ptr_to_expr(world, t, &m);
+    test_assert(expr != NULL);
+    test_str(expr, "[false: 10, true: 20]");
+    ecs_os_free(expr);
+
+    ecs_map_fini(&m);
+
+    ecs_fini(world);
+}
+
+void Serialize_map_char_i32(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type_init(world, &(ecs_map_desc_t){
+        .key_type = ecs_id(ecs_char_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_map_t m;
+    ecs_map_init(&m, NULL);
+    *(int32_t*)ecs_map_ensure(&m, 'a') = 100;
+
+    char *expr = ecs_ptr_to_expr(world, t, &m);
+    test_assert(expr != NULL);
+    test_str(expr, "[a: 100]");
+    ecs_os_free(expr);
+
+    ecs_map_fini(&m);
+
+    ecs_fini(world);
+}
+
+void Serialize_map_i32_i32_negative_key(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type_init(world, &(ecs_map_desc_t){
+        .key_type = ecs_id(ecs_i32_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_map_t m;
+    ecs_map_init(&m, NULL);
+    *(int32_t*)ecs_map_ensure(&m, (uint32_t)-10) = 100;
+
+    char *expr = ecs_ptr_to_expr(world, t, &m);
+    test_assert(expr != NULL);
+    test_str(expr, "[-10: 100]");
+    ecs_os_free(expr);
+
+    ecs_map_fini(&m);
+
+    ecs_fini(world);
+}
+
+void Serialize_map_u64_i32(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_map_type_init(world, &(ecs_map_desc_t){
+        .key_type = ecs_id(ecs_u64_t),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_map_t m;
+    ecs_map_init(&m, NULL);
+    *(int32_t*)ecs_map_ensure(&m, UINT64_MAX) = 100;
+
+    char *expr = ecs_ptr_to_expr(world, t, &m);
+    test_assert(expr != NULL);
+    test_str(expr, "[18446744073709551615: 100]");
+    ecs_os_free(expr);
+
+    ecs_map_fini(&m);
+
+    ecs_fini(world);
+}
+
+void Serialize_map_enum_i32(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t c = ecs_enum_init(world, &(ecs_enum_desc_t){
+        .entity = ecs_entity(world, {.name = "Color"}),
+        .constants = {
+            {"Red"}, {"Green"}, {"Blue"}
+        }
+    });
+
+    ecs_entity_t t = ecs_map_type_init(world, &(ecs_map_desc_t){
+        .key_type = c,
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    ecs_map_t m;
+    ecs_map_init(&m, NULL);
+    *(int32_t*)ecs_map_ensure(&m, 1) = 100;
+
+    char *expr = ecs_ptr_to_expr(world, t, &m);
+    test_assert(expr != NULL);
+    test_str(expr, "[Green: 100]");
+    ecs_os_free(expr);
+
+    ecs_map_fini(&m);
+
+    ecs_fini(world);
+}
+
+void Serialize_map_bitmask_i32(void) {
+    ecs_world_t *world = ecs_init();
+
+    uint32_t Lettuce = 0x1;
+    uint32_t Bacon =   0x1 << 1;
+
+    ecs_entity_t b = ecs_bitmask_init(world, &(ecs_bitmask_desc_t){
+        .entity = ecs_entity(world, {.name = "Toppings"}),
+        .constants = {
+            {"Lettuce"}, {"Bacon"}, {"Tomato"}
+        }
+    });
+
+    ecs_entity_t t = ecs_map_type_init(world, &(ecs_map_desc_t){
+        .key_type = b,
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    {
+    ecs_map_t m;
+    ecs_map_init(&m, NULL);
+    *(int32_t*)ecs_map_ensure(&m, Lettuce | Bacon) = 100;
+
+    char *expr = ecs_ptr_to_expr(world, t, &m);
+    test_assert(expr != NULL);
+    test_str(expr, "[Bacon|Lettuce: 100]");
+    ecs_os_free(expr);
+
+    ecs_map_fini(&m);
+    }
+
+    {
+    ecs_map_t m;
+    ecs_map_init(&m, NULL);
+    *(int32_t*)ecs_map_ensure(&m, 0) = 100;
+
+    char *expr = ecs_ptr_to_expr(world, t, &m);
+    test_assert(expr != NULL);
+    test_str(expr, "[0: 100]");
+    ecs_os_free(expr);
+
+    ecs_map_fini(&m);
+    }
+
+    ecs_fini(world);
+}
+
+void Serialize_value_i64(void) {
+    ecs_world_t *world = ecs_init();
+
+    int64_t value = 10;
+    ecs_value_t v = ecs_value_init(world, ecs_id(ecs_i64_t), &value);
+
+    char *expr = ecs_ptr_to_expr(world, ecs_id(ecs_value_t), &v);
+    test_assert(expr != NULL);
+    test_str(expr, "{i64: 10}");
+    ecs_os_free(expr);
+
+    ecs_value_fini(world, &v);
+
+    ecs_fini(world);
+}
+
+void Serialize_value_u16(void) {
+    ecs_world_t *world = ecs_init();
+
+    uint16_t value = 10;
+    ecs_value_t v = ecs_value_init(world, ecs_id(ecs_u16_t), &value);
+
+    char *expr = ecs_ptr_to_expr(world, ecs_id(ecs_value_t), &v);
+    test_assert(expr != NULL);
+    test_str(expr, "{u16: 10}");
+    ecs_os_free(expr);
+
+    ecs_value_fini(world, &v);
+
+    ecs_fini(world);
+}
+
+void Serialize_value_f64(void) {
+    ecs_world_t *world = ecs_init();
+
+    double value = 10.5;
+    ecs_value_t v = ecs_value_init(world, ecs_id(ecs_f64_t), &value);
+
+    char *expr = ecs_ptr_to_expr(world, ecs_id(ecs_value_t), &v);
+    test_assert(expr != NULL);
+    test_str(expr, "{f64: 10.5}");
+    ecs_os_free(expr);
+
+    ecs_value_fini(world, &v);
+
+    ecs_fini(world);
+}
+
+void Serialize_value_string(void) {
+    ecs_world_t *world = ecs_init();
+
+    char *value = "Hello World";
+    ecs_value_t v = ecs_value_init(world, ecs_id(ecs_string_t), &value);
+
+    char *expr = ecs_ptr_to_expr(world, ecs_id(ecs_value_t), &v);
+    test_assert(expr != NULL);
+    test_str(expr, "{string: \"Hello World\"}");
+    ecs_os_free(expr);
+
+    ecs_value_fini(world, &v);
+
+    ecs_fini(world);
+}
+
+void Serialize_value_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t value = EcsFlecsCore;
+    ecs_value_t v = ecs_value_init(world, ecs_id(ecs_entity_t), &value);
+
+    char *expr = ecs_ptr_to_expr(world, ecs_id(ecs_value_t), &v);
+    test_assert(expr != NULL);
+    test_str(expr, "{entity: flecs.core}");
+    ecs_os_free(expr);
+
+    ecs_value_fini(world, &v);
+
+    ecs_fini(world);
+}
+
+void Serialize_value_struct(void) {
+    typedef struct {
+        int32_t x;
+        int32_t y;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "T" }),
+        .members = {
+            { "x", ecs_id(ecs_i32_t) },
+            { "y", ecs_id(ecs_i32_t) }
+        }
+    });
+
+    T value = {10, 20};
+    ecs_value_t v = ecs_value_init(world, t, &value);
+
+    char *expr = ecs_ptr_to_expr(world, ecs_id(ecs_value_t), &v);
+    test_assert(expr != NULL);
+    test_str(expr, "{T: {x: 10, y: 20}}");
+    ecs_os_free(expr);
+
+    ecs_value_fini(world, &v);
+
+    ecs_fini(world);
+}
+
+void Serialize_struct_w_value(void) {
+    typedef struct {
+        ecs_value_t v;
+    } S;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(S) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "S" }),
+        .members = {
+            { "v", ecs_id(ecs_value_t) }
+        }
+    });
+
+    int32_t i = 10;
+    S value = { .v = ecs_value_init(world, ecs_id(ecs_i32_t), &i) };
+
+    char *expr = ecs_ptr_to_expr(world, ecs_id(S), &value);
+    test_assert(expr != NULL);
+    test_str(expr, "{v: {i32: 10}}");
+    ecs_os_free(expr);
+
+    ecs_value_fini(world, &value.v);
+
+    ecs_fini(world);
+}
+
+void Serialize_value_roundtrip(void) {
+    ecs_world_t *world = ecs_init();
+
+    uint16_t value = 10;
+    ecs_value_t v = ecs_value_init(world, ecs_id(ecs_u16_t), &value);
+
+    char *expr = ecs_ptr_to_expr(world, ecs_id(ecs_value_t), &v);
+    test_assert(expr != NULL);
+
+    ecs_value_t v2 = {0};
+    const char *ptr = ecs_expr_run(world, expr,
+        &ecs_value_ptr(ecs_value_t, &v2), NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+    ecs_os_free(expr);
+
+    test_uint(v2.type, ecs_id(ecs_u16_t));
+    test_assert(v2.ptr != NULL);
+    test_uint(*(uint16_t*)v2.ptr, 10);
+
+    ecs_value_fini(world, &v);
+    ecs_value_fini(world, &v2);
+
+    ecs_fini(world);
+}

@@ -1026,7 +1026,7 @@ void flecs_add_with_property(
             ecs_id_t id = ids[i];
             ecs_assert(ECS_PAIR_FIRST(id) == EcsWith, ECS_INTERNAL_ERROR, NULL);
             ecs_id_t ra = ECS_PAIR_SECOND(id);
-            ecs_id_t a = ra;
+            ecs_id_t a = ecs_get_alive(world, ra);
             if (o) {
                 a = ecs_pair(ra, o);
             }

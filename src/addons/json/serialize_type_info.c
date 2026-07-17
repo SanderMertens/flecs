@@ -207,6 +207,42 @@ error:
     return -1;
 }
 
+static
+int flecs_json_typeinfo_ser_map(
+    const ecs_world_t *world,
+    const ecs_meta_op_t *op,
+    ecs_strbuf_t *str)
+{
+    ecs_strbuf_list_appendstr(str, "\"map\"");
+
+    flecs_json_next(str);
+    flecs_json_array_push(str);
+    if (op->underlying_kind == EcsOpEnum || op->underlying_kind == EcsOpBitmask) {
+        const EcsMap *map_type = ecs_get(world, op->type, EcsMap);
+        ecs_assert(map_type != NULL, ECS_INTERNAL_ERROR, NULL);
+        if (op->underlying_kind == EcsOpEnum) {
+            flecs_json_typeinfo_ser_enum(world, map_type->key_type, str);
+        } else {
+            flecs_json_typeinfo_ser_bitmask(world, map_type->key_type, str);
+        }
+    } else
+    if (flecs_json_typeinfo_ser_primitive(
+        flecs_json_op_to_primitive_kind(op->underlying_kind), str))
+    {
+        goto error;
+    }
+    flecs_json_array_pop(str);
+
+    flecs_json_next(str);
+    if (flecs_json_typeinfo_ser_scope(world, op, str)) {
+        goto error;
+    }
+
+    return 0;
+error:
+    return -1;
+}
+
 /* Iterate over a slice of the type ops array */
 static
 int flecs_json_typeinfo_ser_type_slice(
@@ -268,6 +304,16 @@ int flecs_json_typeinfo_ser_type_slice(
             if (flecs_json_typeinfo_ser_vector(world, op, str)) {
                 goto error;
             }
+            i += op->op_count - 1;
+            break;
+        case EcsOpPushMap:
+            if (flecs_json_typeinfo_ser_map(world, op, str)) {
+                goto error;
+            }
+            i += op->op_count - 1;
+            break;
+        case EcsOpPushValue:
+            ecs_strbuf_list_appendstr(str, "\"value\"");
             i += op->op_count - 1;
             break;
         case EcsOpEnum:

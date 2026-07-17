@@ -7,6 +7,7 @@
 
 #ifdef FLECS_SCRIPT
 #include "../script.h"
+#include "../../meta/meta.h"
 #include <inttypes.h>
 
 typedef struct ecs_script_eval_ctx_t {
@@ -50,13 +51,15 @@ int flecs_expr_interpolated_string_visit_eval(
 
     int32_t i, e = 0, count = ecs_vec_count(&node->fragments);
     char **fragments = ecs_vec_first(&node->fragments);
+    ecs_expr_format_t *formats = ecs_vec_first(&node->formats);
     for (i = 0; i < count; i ++) {
         char *fragment = fragments[i];
         if (fragment) {
             ecs_strbuf_appendstr(&buf, fragment);
         } else {
             ecs_expr_node_t *expr = ecs_vec_get_t(
-                &node->expressions, ecs_expr_node_t*, e ++)[0];
+                &node->expressions, ecs_expr_node_t*, e)[0];
+            ecs_expr_format_t *format = &formats[e ++];
             
             ecs_expr_value_t *val = flecs_expr_stack_result(ctx->stack, 
                 (ecs_expr_node_t*)node);
@@ -65,10 +68,41 @@ int flecs_expr_interpolated_string_visit_eval(
                 goto error;
             }
 
-            ecs_assert(val->value.type == ecs_id(ecs_string_t), 
-                ECS_INTERNAL_ERROR, NULL);
+            if (format->is_present) {
+                int32_t width = 0;
+                int32_t precision = -1;
+                ecs_expr_node_t *format_exprs[2] = {
+                    format->width, format->precision
+                };
+                int32_t *format_values[2] = { &width, &precision };
+                int32_t f;
+                for (f = 0; f < 2; f ++) {
+                    if (!format_exprs[f]) {
+                        continue;
+                    }
 
-            ecs_strbuf_appendstr(&buf, *(char**)val->value.ptr);
+                    ecs_expr_value_t *format_val = flecs_expr_stack_result(
+                        ctx->stack, format_exprs[f]);
+                    if (flecs_expr_visit_eval_priv(
+                        ctx, format_exprs[f], format_val))
+                    {
+                        goto error;
+                    }
+                    ecs_assert(format_val->value.type == ecs_id(ecs_i32_t),
+                        ECS_INTERNAL_ERROR, NULL);
+                    format_values[f][0] = *(int32_t*)format_val->value.ptr;
+                }
+
+                if (flecs_expr_format_value(ctx->script, expr, &val->value,
+                    format, width, precision, &buf))
+                {
+                    goto error;
+                }
+            } else {
+                ecs_assert(val->value.type == ecs_id(ecs_string_t),
+                    ECS_INTERNAL_ERROR, NULL);
+                ecs_strbuf_appendstr(&buf, *(char**)val->value.ptr);
+            }
         }
     }
 
@@ -78,6 +112,7 @@ int flecs_expr_interpolated_string_visit_eval(
     flecs_expr_stack_pop(ctx->stack);
     return 0;
 error:
+    ecs_strbuf_reset(&buf);
     flecs_expr_stack_pop(ctx->stack);
     return -1;
 }
@@ -147,6 +182,34 @@ int flecs_expr_initializer_eval_static(
             continue;
         }
 
+        ecs_expr_member_t *member = flecs_expr_expand_swizzle_get(elem->value);
+        if (member) {
+            ecs_expr_value_t *left = flecs_expr_stack_result(
+                ctx->stack, member->left);
+            if (flecs_expr_visit_eval_priv(ctx, member->left, left)) {
+                goto error;
+            }
+
+            ecs_size_t size = member->swizzle_size;
+            int32_t s;
+            for (s = 0; s < member->swizzle_count; s ++) {
+                uintptr_t offset = elem->offset + member->swizzle_dst[s];
+                if ((offset + flecs_uto(uintptr_t, size)) >
+                    flecs_uto(uintptr_t, value_size))
+                {
+                    flecs_expr_visit_error(ctx->script, node,
+                        "initializer of type '%s' writes past end of "
+                        "target value", flecs_errstr(ecs_get_path(
+                            ctx->world, member->node.type)));
+                    goto error;
+                }
+
+                ecs_os_memcpy(ECS_OFFSET(value, offset),
+                    ECS_OFFSET(left->value.ptr, member->swizzle[s]), size);
+            }
+            continue;
+        }
+
         ecs_expr_value_t *expr = flecs_expr_stack_result(ctx->stack, elem->value);
         if (flecs_expr_visit_eval_priv(ctx, elem->value, expr)) {
             goto error;
@@ -163,13 +226,13 @@ int flecs_expr_initializer_eval_static(
 
         if (!elem->operator) {
             if (expr->owned) {
-                if (ecs_value_move(ctx->world, type, 
+                if (ecs_ptr_move(ctx->world, type, 
                     ECS_OFFSET(value, elem->offset), expr->value.ptr))
                 {
                     goto error;
                 }
             } else {
-                if (ecs_value_copy(ctx->world, type, 
+                if (ecs_ptr_copy(ctx->world, type, 
                     ECS_OFFSET(value, elem->offset), expr->value.ptr))
                 {
                     goto error;
@@ -229,11 +292,55 @@ int flecs_expr_initializer_eval_dynamic(
             ecs_meta_next(cur);
         }
 
+        if (elem->key) {
+            ecs_expr_value_t *key = flecs_expr_stack_result(
+                ctx->stack, elem->key);
+            if (flecs_expr_visit_eval_priv(ctx, elem->key, key)) {
+                goto error;
+            }
+
+            if (ecs_meta_key(cur, &key->value)) {
+                goto error;
+            }
+        } else if (elem->member) {
+            if (ecs_meta_member(cur, elem->member)) {
+                goto error;
+            }
+        }
+
         if (elem->value->kind == EcsExprInitializer) {
-            if (flecs_expr_initializer_eval(ctx, 
-                (ecs_expr_initializer_t*)elem->value, value, cur, value_size)) 
+            if (flecs_expr_initializer_eval(ctx,
+                (ecs_expr_initializer_t*)elem->value, value, cur, value_size))
             {
                 goto error;
+            }
+            continue;
+        }
+
+        ecs_expr_member_t *member = flecs_expr_expand_swizzle_get(elem->value);
+        if (member) {
+            ecs_expr_value_t *left = flecs_expr_stack_result(
+                ctx->stack, member->left);
+            if (flecs_expr_visit_eval_priv(ctx, member->left, left)) {
+                goto error;
+            }
+
+            int32_t s;
+            for (s = 0; s < member->swizzle_count; s ++) {
+                if (s) {
+                    if (ecs_meta_next(cur)) {
+                        goto error;
+                    }
+                }
+
+                ecs_value_t v_swizzle_value = {
+                    .ptr = ECS_OFFSET(left->value.ptr, member->swizzle[s]),
+                    .type = member->node.type
+                };
+
+                if (ecs_meta_set_value(cur, &v_swizzle_value)) {
+                    goto error;
+                }
             }
             continue;
         }
@@ -241,10 +348,6 @@ int flecs_expr_initializer_eval_dynamic(
         ecs_expr_value_t *expr = flecs_expr_stack_result(ctx->stack, elem->value);
         if (flecs_expr_visit_eval_priv(ctx, elem->value, expr)) {
             goto error;
-        }
-
-        if (elem->member) {
-            ecs_meta_member(cur, elem->member);
         }
 
         ecs_value_t v_elem_value = {
@@ -816,6 +919,7 @@ int flecs_expr_member_visit_eval(
     }
 
     if (node->swizzle_count) {
+        ecs_assert(!node->swizzle_expand, ECS_INTERNAL_ERROR, NULL);
         ecs_size_t size = node->swizzle_size;
         int32_t i;
         for (i = 0; i < node->swizzle_count; i ++) {
@@ -838,6 +942,84 @@ error:
 }
 
 static
+int flecs_expr_map_element_visit_eval(
+    ecs_script_eval_ctx_t *ctx,
+    ecs_expr_element_t *node,
+    ecs_expr_value_t *out,
+    ecs_expr_value_t *expr,
+    ecs_expr_value_t *index)
+{
+    ecs_map_key_t key = 0;
+    if (flecs_value_blit_u64(ctx->world, &index->value, &key)) {
+        goto error;
+    }
+
+    const ecs_map_t *map = expr->value.ptr;
+    ecs_map_val_t *val = NULL;
+    if (ecs_map_is_init(map)) {
+        val = ecs_map_get(map, key);
+    }
+
+    if (!val) {
+        char *key_str = ecs_ptr_to_str(
+            ctx->world, index->value.type, index->value.ptr);
+        flecs_expr_visit_error(ctx->script, node,
+            "map does not contain key '%s'", key_str);
+        ecs_os_free(key_str);
+        goto error;
+    }
+
+    if (node->elem_size > ECS_SIZEOF(ecs_map_val_t)) {
+        out->value.ptr = (void*)(uintptr_t)val[0];
+    } else {
+        out->value.ptr = val;
+    }
+
+    out->value.type = node->node.type;
+    out->owned = false;
+
+    return 0;
+error:
+    return -1;
+}
+
+static
+int flecs_expr_array_element_visit_eval(
+    ecs_script_eval_ctx_t *ctx,
+    ecs_expr_element_t *node,
+    ecs_expr_value_t *out,
+    ecs_type_kind_t type_kind,
+    ecs_expr_value_t *expr,
+    ecs_expr_value_t *index)
+{
+    int64_t index_value = *(int64_t*)index->value.ptr;
+
+    void *data = expr->value.ptr;
+    int64_t elem_count = node->elem_count;
+    if (type_kind == EcsVectorType) {
+        data = ecs_vec_first(expr->value.ptr);
+        if (!elem_count) {
+            elem_count = ecs_vec_count(expr->value.ptr);
+        }
+    }
+
+    if (index_value < 0 || index_value >= elem_count) {
+        flecs_expr_visit_error(ctx->script, node,
+            "index %" PRId64 " is out of range for collection (count = %"
+                PRId64 ")", index_value, elem_count);
+        goto error;
+    }
+
+    out->value.ptr = ECS_OFFSET(data, node->elem_size * index_value);
+    out->value.type = node->node.type;
+    out->owned = false;
+
+    return 0;
+error:
+    return -1;
+}
+
+static
 int flecs_expr_element_visit_eval(
     ecs_script_eval_ctx_t *ctx,
     ecs_expr_element_t *node,
@@ -853,27 +1035,16 @@ int flecs_expr_element_visit_eval(
         goto error;
     }
 
-    int64_t index_value = *(int64_t*)index->value.ptr;
+    const EcsType *type = ecs_get(ctx->world, expr->value.type, EcsType);
+    ecs_assert(type != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    int64_t elem_count = node->elem_count;
-    if (!elem_count) {
-        if (ecs_get(ctx->world, expr->value.type, EcsVector) != NULL) {
-            elem_count = ecs_vec_count(expr->value.ptr);
-        }
+    if (type->kind == EcsMapType) {
+        return flecs_expr_map_element_visit_eval(ctx, node, out, expr, index);
+    } else {
+        return flecs_expr_array_element_visit_eval(
+            ctx, node, out, type->kind, expr, index);
     }
 
-    if (index_value < 0 || index_value >= elem_count) {
-        flecs_expr_visit_error(ctx->script, node,
-            "index %" PRId64 " is out of range for collection (count = %"
-                PRId64 ")", index_value, elem_count);
-        goto error;
-    }
-
-    out->value.ptr = ECS_OFFSET(expr->value.ptr, node->elem_size * index_value);
-    out->value.type = node->node.type;
-    out->owned = false;
-
-    return 0;
 error:
     return -1;
 }
@@ -995,6 +1166,15 @@ int flecs_expr_component_visit_eval(
     ecs_expr_element_t *node,
     ecs_expr_value_t *out)
 {
+    ecs_script_eval_visitor_t *v = ctx->desc ? ctx->desc->script_visitor : NULL;
+    if (v && v->template) {
+        ecs_assert(out->value.type == node->node.type,
+            ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(out->value.ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+        out->owned = true;
+        return 0;
+    }
+
     ecs_expr_value_t *left = flecs_expr_stack_result(ctx->stack, node->left);
     if (flecs_expr_visit_eval_priv(ctx, node->left, left)) {
         goto error;
@@ -1233,7 +1413,7 @@ int flecs_expr_visit_eval(
     }
 
     if (out->type && !out->ptr) {
-        out->ptr = ecs_value_new(ctx.world, out->type);
+        out->ptr = ecs_ptr_new(ctx.world, out->type);
     }
 
     if (val != &val_tmp || out->ptr != val->value.ptr) {

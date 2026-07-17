@@ -121,6 +121,7 @@ FLECS_API extern const ecs_entity_t ecs_id(EcsMemberRanges);    /**< ID for comp
 FLECS_API extern const ecs_entity_t ecs_id(EcsStruct);          /**< ID for component that stores reflection data for a struct type. */
 FLECS_API extern const ecs_entity_t ecs_id(EcsArray);           /**< ID for component that stores reflection data for an array type. */
 FLECS_API extern const ecs_entity_t ecs_id(EcsVector);          /**< ID for component that stores reflection data for a vector type. */
+FLECS_API extern const ecs_entity_t ecs_id(EcsMap);             /**< ID for component that stores reflection data for a map type. */
 FLECS_API extern const ecs_entity_t ecs_id(EcsOpaque);          /**< ID for component that stores reflection data for an opaque type. */
 FLECS_API extern const ecs_entity_t ecs_id(EcsUnit);            /**< ID for component that stores unit data. */
 FLECS_API extern const ecs_entity_t ecs_id(EcsUnitPrefix);      /**< ID for component that stores unit prefix data. */
@@ -146,6 +147,7 @@ FLECS_API extern const ecs_entity_t ecs_id(ecs_f64_t);          /**< Built-in 64
 FLECS_API extern const ecs_entity_t ecs_id(ecs_string_t);       /**< Built-in string type. */
 FLECS_API extern const ecs_entity_t ecs_id(ecs_entity_t);       /**< Built-in entity type. */
 FLECS_API extern const ecs_entity_t ecs_id(ecs_id_t);           /**< Built-in (component) ID type. */
+FLECS_API extern const ecs_entity_t ecs_id(ecs_value_t);      /**< Built-in value type. */
 
 /** Type kinds supported by meta addon. */
 typedef enum ecs_type_kind_t {
@@ -156,7 +158,9 @@ typedef enum ecs_type_kind_t {
     EcsArrayType,
     EcsVectorType,
     EcsOpaqueType,
-    EcsTypeKindLast = EcsOpaqueType
+    EcsMapType,
+    EcsValueType,
+    EcsTypeKindLast = EcsValueType
 } ecs_type_kind_t;
 
 /** Component that is automatically added to every type with the right kind. */
@@ -325,6 +329,12 @@ typedef struct EcsArray {
 typedef struct EcsVector {
     ecs_entity_t type; /**< Element type. */
 } EcsVector;
+
+/** Component added to map type entities. */
+typedef struct EcsMap {
+    ecs_entity_t key_type; /**< Key type. Must be a primitive (other than string, f32 or f64), enum or bitmask type. */
+    ecs_entity_t type;     /**< Value type. */
+} EcsMap;
 
 
 /* Opaque type support */
@@ -529,6 +539,8 @@ typedef enum ecs_meta_op_kind_t {
     EcsOpPushStruct,   /**< Push struct. */
     EcsOpPushArray,    /**< Push array. */
     EcsOpPushVector,   /**< Push vector. */
+    EcsOpPushMap,      /**< Push map. */
+    EcsOpPushValue,  /**< Push value. */
     EcsOpPop,          /**< Pop scope. */
 
     EcsOpOpaqueStruct, /**< Opaque struct. */
@@ -601,7 +613,7 @@ typedef struct EcsTypeSerializer {
 /** Type with information about the currently iterated scope. */
 typedef struct ecs_meta_scope_t {
     ecs_entity_t type;                             /**< The type being iterated. */
-    ecs_meta_op_t *ops;                       /**< The type operations (see ecs_meta_op_t). */
+    ecs_meta_op_t *ops;                            /**< The type operations (see ecs_meta_op_t). */
     int16_t ops_count;                             /**< Number of elements in ops. */
     int16_t ops_cur;                               /**< Current element in ops. */
     int16_t prev_depth;                            /**< Depth to restore, in case dotmember was used. */
@@ -609,6 +621,8 @@ typedef struct ecs_meta_scope_t {
     const EcsOpaque *opaque;                       /**< Opaque type interface. */
     ecs_hashmap_t *members;                        /**< string -> member index. */
     bool is_collection;                            /**< Whether the scope is iterating elements. */
+    bool is_map;                                   /**< Whether the scope is a map. */
+    bool is_value;                               /**< Whether the scope is a value. */
     bool is_empty_scope;                           /**< Whether the scope was populated (for vectors). */
     bool is_moved_scope;                           /**< Whether the scope was moved in (with ecs_meta_elem(), for vectors). */
     int32_t elem, elem_count;                      /**< Set for collections. */
@@ -697,6 +711,17 @@ int ecs_meta_member(
     ecs_meta_cursor_t *cursor,
     const char *name);
 
+/** Move cursor to key (for map scopes).
+ * 
+ * @param cursor The cursor.
+ * @param key The key value.
+ * @return Zero if success, non-zero if failed.
+ */
+FLECS_API
+int ecs_meta_key(
+    ecs_meta_cursor_t *cursor,
+    const ecs_value_t *key);
+
 /** Same as ecs_meta_member(), but doesn't throw an error.
  * 
  * @param cursor The cursor.
@@ -753,12 +778,24 @@ int ecs_meta_pop(
     ecs_meta_cursor_t *cursor);
 
 /** Is the current scope a collection?
- * 
+ *
  * @param cursor The cursor.
  * @return True if current scope is a collection, false if not.
  */
 FLECS_API
 bool ecs_meta_is_collection(
+    const ecs_meta_cursor_t *cursor);
+
+/** Is the current scope a map?
+ * When the current scope is a map, elements can be selected by moving the
+ * cursor to a key with ecs_meta_member(), where the member name is the string
+ * representation of the key.
+ *
+ * @param cursor The cursor.
+ * @return True if current scope is a map, false if not.
+ */
+FLECS_API
+bool ecs_meta_is_map(
     const ecs_meta_cursor_t *cursor);
 
 /** Get type of current field.
@@ -910,7 +947,9 @@ int ecs_meta_set_null(
     ecs_meta_cursor_t *cursor);
 
 /** Set field with dynamic value.
- * 
+ * If the current field is of a value type, the entire value is
+ * overwritten with the provided type and value.
+ *
  * @param cursor The cursor.
  * @param value The value to set.
  * @return Zero if success, non-zero if failed.
@@ -1009,9 +1048,10 @@ double ecs_meta_ptr_to_float(
     ecs_primitive_kind_t type_kind,
     const void *ptr);
 
-/** Get element count for array or vector operations.
- * The operation must either be EcsOpPushArray or EcsOpPushVector. If the 
- * operation is EcsOpPushArray, the provided pointer may be NULL.
+/** Get element count for array, vector or map operations.
+ * The operation must either be EcsOpPushArray, EcsOpPushVector or
+ * EcsOpPushMap. If the operation is EcsOpPushArray, the provided pointer may
+ * be NULL.
  * 
  * @param op The serializer operation.
  * @param ptr Pointer to the array or vector value.
@@ -1021,6 +1061,358 @@ FLECS_API
 ecs_size_t ecs_meta_op_get_elem_count(
     const ecs_meta_op_t *op,
     const void *ptr);
+
+/* Utility functions for working with pointers to dynamically created
+ * values. */
+
+/** Construct a value in existing storage.
+ *
+ * @param world The world.
+ * @param type The type of the value to create.
+ * @param ptr A pointer to a value of type 'type'.
+ * @return Zero if successful, nonzero if failed.
+ */
+FLECS_API
+int ecs_ptr_init(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    void *ptr);
+
+/** Construct a value in existing storage.
+ *
+ * @param world The world.
+ * @param ti The type info of the type to create.
+ * @param ptr A pointer to a value of type 'type'.
+ * @return Zero if successful, nonzero if failed.
+ */
+FLECS_API
+int ecs_ptr_init_w_type_info(
+    const ecs_world_t *world,
+    const ecs_type_info_t *ti,
+    void *ptr);
+
+/** Construct a value in new storage.
+ *
+ * @param world The world.
+ * @param type The type of the value to create.
+ * @return A pointer to the value if successful, NULL if failed.
+ */
+FLECS_API
+void* ecs_ptr_new(
+    ecs_world_t *world,
+    ecs_entity_t type);
+
+/** Construct a value in new storage.
+ *
+ * @param world The world.
+ * @param ti The type info of the type to create.
+ * @return A pointer to the value if successful, NULL if failed.
+ */
+void* ecs_ptr_new_w_type_info(
+    ecs_world_t *world,
+    const ecs_type_info_t *ti);
+
+/** Destruct a value.
+ *
+ * @param world The world.
+ * @param ti The type info of the value to destruct.
+ * @param ptr A pointer to a constructed value of type 'type'.
+ * @return Zero if successful, nonzero if failed.
+ */
+int ecs_ptr_fini_w_type_info(
+    const ecs_world_t *world,
+    const ecs_type_info_t *ti,
+    void *ptr);
+
+/** Destruct a value.
+ *
+ * @param world The world.
+ * @param type The type of the value to destruct.
+ * @param ptr A pointer to a constructed value of type 'type'.
+ * @return Zero if successful, nonzero if failed.
+ */
+FLECS_API
+int ecs_ptr_fini(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    void* ptr);
+
+/** Destruct a value and free storage.
+ *
+ * @param world The world.
+ * @param type The type of the value to destruct.
+ * @param ptr A pointer to the value.
+ * @return Zero if successful, nonzero if failed.
+ */
+FLECS_API
+int ecs_ptr_free(
+    ecs_world_t *world,
+    ecs_entity_t type,
+    void* ptr);
+
+/** Copy a value.
+ *
+ * @param world The world.
+ * @param ti The type info of the value to copy.
+ * @param dst A pointer to the storage to copy to.
+ * @param src A pointer to the value to copy.
+ * @return Zero if successful, nonzero if failed.
+ */
+FLECS_API
+int ecs_ptr_copy_w_type_info(
+    const ecs_world_t *world,
+    const ecs_type_info_t *ti,
+    void* dst,
+    const void *src);
+
+/** Copy a value.
+ *
+ * @param world The world.
+ * @param type The type of the value to copy.
+ * @param dst A pointer to the storage to copy to.
+ * @param src A pointer to the value to copy.
+ * @return Zero if successful, nonzero if failed.
+ */
+FLECS_API
+int ecs_ptr_copy(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    void* dst,
+    const void *src);
+
+/** Move a value.
+ *
+ * @param world The world.
+ * @param ti The type info of the value to move.
+ * @param dst A pointer to the storage to move to.
+ * @param src A pointer to the value to move.
+ * @return Zero if successful, nonzero if failed.
+ */
+FLECS_API
+int ecs_ptr_move_w_type_info(
+    const ecs_world_t *world,
+    const ecs_type_info_t *ti,
+    void* dst,
+    void *src);
+
+/** Move a value.
+ *
+ * @param world The world.
+ * @param type The type of the value to move.
+ * @param dst A pointer to the storage to move to.
+ * @param src A pointer to the value to move.
+ * @return Zero if successful, nonzero if failed.
+ */
+FLECS_API
+int ecs_ptr_move(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    void* dst,
+    void *src);
+
+/** Move-construct a value.
+ *
+ * @param world The world.
+ * @param ti The type info of the value to move.
+ * @param dst A pointer to the storage to move to.
+ * @param src A pointer to the value to move.
+ * @return Zero if successful, nonzero if failed.
+ */
+FLECS_API
+int ecs_ptr_move_ctor_w_type_info(
+    const ecs_world_t *world,
+    const ecs_type_info_t *ti,
+    void* dst,
+    void *src);
+
+/** Move-construct a value.
+ *
+ * @param world The world.
+ * @param type The type of the value to move.
+ * @param dst A pointer to the storage to move to.
+ * @param src A pointer to the value to move.
+ * @return Zero if successful, nonzero if failed.
+ */
+FLECS_API
+int ecs_ptr_move_ctor(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    void* dst,
+    void *src);
+
+
+/* Value utilities. A value is a value that holds a value of a dynamic
+ * type. Values own the value they point to, and will invoke the correct
+ * type hooks when a value is assigned, copied, moved or destructed. A value
+ * must always hold a valid type and value. */
+
+/** Assign value of specified type to value.
+ * If the value already holds a value of a different type, the existing
+ * value is destructed and storage for the new type is allocated. If the type
+ * is the same as the current value type, the value is copied into the
+ * existing storage.
+ *
+ * @param world The world.
+ * @param v The value to assign.
+ * @param type The type of the value.
+ * @param ptr Pointer to the value to assign.
+ */
+FLECS_API
+void ecs_value_set(
+    const ecs_world_t *world,
+    ecs_value_t *v,
+    ecs_entity_t type,
+    const void *ptr);
+
+/** Create new value with default constructed value of specified type.
+ *
+ * @param world The world.
+ * @param type The type of the value.
+ * @return A value holding a default constructed value of the type.
+ */
+FLECS_API
+ecs_value_t ecs_value_new(
+    const ecs_world_t *world,
+    ecs_entity_t type);
+
+/** Create new value initialized with the provided value.
+ *
+ * @param world The world.
+ * @param type The type of the value.
+ * @param ptr Pointer to the value to copy into the value.
+ * @return A value holding a copy of the provided value.
+ */
+FLECS_API
+ecs_value_t ecs_value_init(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    const void *ptr);
+
+/** Destruct value.
+ * Destructs and frees the value held by the value.
+ *
+ * @param world The world.
+ * @param v The value to destruct.
+ */
+FLECS_API
+void ecs_value_fini(
+    const ecs_world_t *world,
+    ecs_value_t *v);
+
+/** Copy value.
+ * Copies the value held by src to dst. The dst value must be initialized.
+ *
+ * @param world The world.
+ * @param dst The value to copy to.
+ * @param src The value to copy from.
+ */
+FLECS_API
+void ecs_value_copy(
+    const ecs_world_t *world,
+    ecs_value_t *dst,
+    const ecs_value_t *src);
+
+/** Copy construct value.
+ * Same as ecs_value_copy(), but dst is treated as uninitialized.
+ *
+ * @param world The world.
+ * @param dst The value to copy to.
+ * @param src The value to copy from.
+ */
+FLECS_API
+void ecs_value_copy_ctor(
+    const ecs_world_t *world,
+    ecs_value_t *dst,
+    const ecs_value_t *src);
+
+/** Move value.
+ * Moves the value held by src to dst. The dst value must be initialized.
+ * After this operation src no longer holds a value.
+ *
+ * @param world The world.
+ * @param dst The value to move to.
+ * @param src The value to move from.
+ */
+FLECS_API
+void ecs_value_move(
+    const ecs_world_t *world,
+    ecs_value_t *dst,
+    ecs_value_t *src);
+
+/** Move construct value.
+ * Same as ecs_value_move(), but dst is treated as uninitialized.
+ *
+ * @param world The world.
+ * @param dst The value to move to.
+ * @param src The value to move from.
+ */
+FLECS_API
+void ecs_value_move_ctor(
+    const ecs_world_t *world,
+    ecs_value_t *dst,
+    ecs_value_t *src);
+
+/** Compare two values.
+ *
+ * @param world The world.
+ * @param a The first value.
+ * @param b The second value.
+ * @return 0 if equal, <0 if a is less than b, >0 if a is greater than b.
+ */
+FLECS_API
+int ecs_value_compare(
+    const ecs_world_t *world,
+    const ecs_value_t *a,
+    const ecs_value_t *b);
+
+/** Test if two values are equal.
+ *
+ * @param world The world.
+ * @param a The first value.
+ * @param b The second value.
+ * @return true if the values are equal, false otherwise.
+ */
+FLECS_API
+bool ecs_value_equals(
+    const ecs_world_t *world,
+    const ecs_value_t *a,
+    const ecs_value_t *b);
+
+/** Generate a runtime compare hook for a type.
+ * This generates a compare hook for a type based on its reflection data. This
+ * can be used to add a compare hook to a compile-time type that does not have
+ * one.
+ *
+ * The operation is recursive: if the type has members, elements or values of a
+ * type that does not have a compare hook, a compare hook is generated for that
+ * type as well.
+ *
+ * @param world The world.
+ * @param type The type to generate a compare hook for.
+ * @return 0 if successful, -1 if the hook could not be generated.
+ */
+FLECS_API
+int ecs_set_rtt_compare(
+    ecs_world_t *world,
+    ecs_entity_t type);
+
+/** Generate a runtime equals hook for a type.
+ * This generates an equals hook for a type based on its reflection data. This
+ * can be used to add an equals hook to a compile-time type that does not have
+ * one.
+ *
+ * The operation is recursive: if the type has members, elements or values of a
+ * type that does not have an equals hook, an equals hook is generated for that
+ * type as well.
+ *
+ * @param world The world.
+ * @param type The type to generate an equals hook for.
+ * @return 0 if successful, -1 if the hook could not be generated.
+ */
+FLECS_API
+int ecs_set_rtt_equals(
+    ecs_world_t *world,
+    ecs_entity_t type);
 
 /* API functions for creating meta types */
 
@@ -1114,6 +1506,25 @@ FLECS_API
 ecs_entity_t ecs_vector_init(
     ecs_world_t *world,
     const ecs_vector_desc_t *desc);
+
+
+/** Used with ecs_map_type_init(). */
+typedef struct ecs_map_desc_t {
+    ecs_entity_t entity;   /**< Existing entity to use for type (optional). */
+    ecs_entity_t key_type; /**< Key type. Must be a primitive (other than string, f32 or f64), enum or bitmask type. */
+    ecs_entity_t type;     /**< Value type. */
+} ecs_map_desc_t;
+
+/** Create a new map type.
+ *
+ * @param world The world.
+ * @param desc The type descriptor.
+ * @return The new type, 0 if failed.
+ */
+FLECS_API
+ecs_entity_t ecs_map_type_init(
+    ecs_world_t *world,
+    const ecs_map_desc_t *desc);
 
 
 /** Used with ecs_struct_init(). */
@@ -1305,6 +1716,10 @@ ecs_entity_t ecs_quantity_init(
 /** Create a vector type. */
 #define ecs_vector(world, ...)\
     ecs_vector_init(world, &(ecs_vector_desc_t) __VA_ARGS__ )
+
+/** Create a map type. */
+#define ecs_map_type(world, ...)\
+    ecs_map_type_init(world, &(ecs_map_desc_t) __VA_ARGS__ )
 
 /** Create an opaque type. */
 #define ecs_opaque(world, ...)\

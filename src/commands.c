@@ -187,13 +187,15 @@ bool flecs_defer_clear(
 bool flecs_defer_on_delete_action(
     ecs_stage_t *stage,
     ecs_id_t id,
-    ecs_entity_t action)
+    ecs_entity_t action,
+    bool force_delete)
 {
     if (flecs_defer_cmd(stage)) {
         ecs_cmd_t *cmd = flecs_cmd_new(stage);
         cmd->kind = EcsCmdOnDeleteAction;
         cmd->id = id;
         cmd->entity = action;
+        cmd->is._1.force_delete = force_delete;
         return true;
     }
     return false;
@@ -1305,7 +1307,8 @@ bool flecs_defer_end(
                     break;
                 case EcsCmdOnDeleteAction:
                     ecs_defer_begin(world);
-                    flecs_on_delete(world, id, e, false, false);
+                    flecs_on_delete(world, id, e, false,
+                        cmd->is._1.force_delete);
                     ecs_defer_end(world);
                     world->info.cmd.other_count ++;
                     break;

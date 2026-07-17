@@ -1507,7 +1507,7 @@ void Function_call_via_expr_run(void) {
     test_assert(ecs_expr_run(world, "add(2, 3)", &v, &desc) != NULL);
     test_assert(v.ptr != NULL);
     test_int(*(int32_t*)v.ptr, 5);
-    ecs_value_free(world, v.type, v.ptr);
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }

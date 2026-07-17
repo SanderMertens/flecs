@@ -85,6 +85,8 @@ static const type_kind_t StructType = EcsStructType;
 static const type_kind_t ArrayType = EcsArrayType;
 static const type_kind_t VectorType = EcsVectorType;
 static const type_kind_t CustomType = EcsOpaqueType;
+static const type_kind_t MapType = EcsMapType;
+static const type_kind_t ValueType = EcsValueType;
 static const type_kind_t TypeKindLast = EcsTypeKindLast;
 
 /** Primitive type kinds supported by the reflection system. */

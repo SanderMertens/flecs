@@ -82,7 +82,7 @@ int flecs_script_check_expr(
      * a single observer per reference can trigger reevaluation of instances. */
     if (v->template) {
         if (flecs_expr_visit_refs(script, *expr_ptr, &v->template->refs,
-            &v->template->dynamic_refs))
+            &v->template->dynamic_refs, &impl->refs))
         {
             goto error;
         }
@@ -261,9 +261,11 @@ int flecs_script_check_component(
             case EcsEnumType:
             case EcsStructType:
             case EcsOpaqueType:
+            case EcsValueType:
                 break;
             case EcsArrayType:
             case EcsVectorType:
+            case EcsMapType:
                 is_collection = true;
                 break;
             }
@@ -582,6 +584,7 @@ int flecs_script_check_node(
     case EcsAstTemplate:
         return 0;
     case EcsAstProp:
+    case EcsAstMut:
         return 0;
     case EcsAstConst:
         return flecs_script_check_const(

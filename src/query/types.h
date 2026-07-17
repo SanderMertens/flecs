@@ -96,6 +96,8 @@ typedef enum {
     EcsQueryTreeSelfUpPre,  /* Up traversal for ChildOf that doesn't filter Parent component / returns entire tables */
     EcsQueryTreeUpPost,     /* Up traversal for ChildOf that filters cached tables w/Parent component. */
     EcsQueryTreeSelfUpPost, /* Up traversal for ChildOf that filters cached tables w/Parent component. */
+    EcsQueryTreeUpNot,      /* Up traversal for ChildOf Not terms that evaluates tables w/Parent component per entity. */
+    EcsQueryTreeSelfUpNot,  /* Up traversal for ChildOf Not terms that evaluates tables w/Parent component per entity. */
     EcsQueryChildren,       /* Return children for parent, if possible in order */
     EcsQueryChildrenWc,     /* Return children for parents, if possible in order */
     EcsQueryLookup,         /* Lookup relative to variable */

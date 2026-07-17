@@ -777,7 +777,7 @@
 #define ecs_pair_value_2nd(r, T, ...) ((ecs_value_t){ecs_pair(r, ecs_id(T)), &(T)__VA_ARGS__})
 
 /** Convenience macro for creating a heap-allocated value. */
-#define ecs_value_new_t(world, T) ecs_value_new(world, ecs_id(T))
+#define ecs_ptr_new_t(world, T) ecs_ptr_new(world, ecs_id(T))
 
 /** Convenience macro for creating a compound literal value literal. */
 #define ecs_value(T, ...) ((ecs_value_t){ecs_id(T), &(T)__VA_ARGS__})
