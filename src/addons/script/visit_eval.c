@@ -1944,9 +1944,12 @@ int flecs_script_eval_include(
 
         ecs_entity_t prev_with = ecs_set_with(v->world, 0);
         ecs_entity_t prev_scope = ecs_set_scope(v->world, 0);
+        ecs_script_runtime_t *runtime = flecs_script_runtime_get(v->world);
+        runtime->include_depth ++;
         ecs_entity_t e = ecs_script_init(v->world, &(ecs_script_desc_t){
             .filename = resolved
         });
+        runtime->include_depth --;
         ecs_set_scope(v->world, prev_scope);
         ecs_set_with(v->world, prev_with);
 
@@ -2503,6 +2506,11 @@ int ecs_script_eval(
     if (result) {
         result->error = flecs_log_capture_pop();
         flecs_log_get_captured_error_pos(&result->line, &result->column);
+        if (!r && result->error) {
+            ecs_err("%s", result->error);
+            ecs_os_free(result->error);
+            result->error = NULL;
+        }
     }
 
     if (r) {

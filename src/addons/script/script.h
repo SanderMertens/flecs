@@ -75,6 +75,7 @@ struct ecs_script_runtime_t {
     ecs_vec_t annot;
 
     char *error_name;
+    int32_t include_depth;
     bool error;
 };
 
