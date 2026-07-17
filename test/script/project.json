@@ -661,6 +661,7 @@
                 "call_via_expr_run",
                 "call",
                 "call_from_stage",
+                "call_w_new_w_different_args",
                 "call_w_result",
                 "method_call",
                 "method_call_from_stage",

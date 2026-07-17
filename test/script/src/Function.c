@@ -1565,6 +1565,47 @@ void Function_call_from_stage(void) {
     ecs_fini(world);
 }
 
+void Function_call_w_new_w_different_args(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct { ecs_entity_t value; } EntityRef;
+    ecs_entity_t ecs_id(EntityRef) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "EntityRef" }),
+        .members = {{"value", ecs_id(ecs_entity_t)}}
+    });
+
+    test_int(ecs_script_run(world, NULL,
+        "fn create(parent: entity) -> entity {\n"
+        "    new _ { EntityRef: {value: parent} }\n"
+        "}", NULL), 0);
+
+    ecs_entity_t function = ecs_lookup(world, "create");
+    test_assert(function != 0);
+
+    ecs_entity_t parent_a = ecs_new(world);
+    ecs_entity_t result_a = 0;
+    ecs_value_t arg_a = { ecs_id(ecs_entity_t), &parent_a };
+    ecs_value_t value_a = { ecs_id(ecs_entity_t), &result_a };
+    test_int(ecs_function_call(
+        world, function, 1, &arg_a, &value_a), 0);
+
+    ecs_entity_t parent_b = ecs_new(world);
+    ecs_entity_t result_b = 0;
+    ecs_value_t arg_b = { ecs_id(ecs_entity_t), &parent_b };
+    ecs_value_t value_b = { ecs_id(ecs_entity_t), &result_b };
+    test_int(ecs_function_call(
+        world, function, 1, &arg_b, &value_b), 0);
+
+    const EntityRef *ref_a = ecs_get(world, result_a, EntityRef);
+    const EntityRef *ref_b = ecs_get(world, result_b, EntityRef);
+    test_assert(ref_a != NULL);
+    test_assert(ref_b != NULL);
+    test_uint(ref_a->value, parent_a);
+    test_uint(ref_b->value, parent_b);
+
+    ecs_fini(world);
+}
+
 void Function_call_w_result(void) {
     ecs_world_t *world = ecs_init();
 

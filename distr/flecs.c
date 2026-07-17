@@ -78385,7 +78385,6 @@ void flecs_script_user_function_callback(
             v.vars, params[i].name);
         var->value.type = argv[i].type;
         var->type_info = ti;
-        var->is_const = true;
 
         if (ti) {
             var->value.ptr = flecs_stack_calloc(

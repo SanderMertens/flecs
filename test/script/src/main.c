@@ -653,6 +653,7 @@ void Function_call_in_const_rhs(void);
 void Function_call_via_expr_run(void);
 void Function_call(void);
 void Function_call_from_stage(void);
+void Function_call_w_new_w_different_args(void);
 void Function_call_w_result(void);
 void Function_method_call(void);
 void Function_method_call_from_stage(void);
@@ -4541,6 +4542,10 @@ bake_test_case Function_testcases[] = {
     {
         "call_from_stage",
         Function_call_from_stage
+    },
+    {
+        "call_w_new_w_different_args",
+        Function_call_w_new_w_different_args
     },
     {
         "call_w_result",
@@ -9794,7 +9799,7 @@ static bake_test_suite suites[] = {
         "Function",
         NULL,
         NULL,
-        71,
+        72,
         Function_testcases
     },
     {
@@ -9890,5 +9895,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("script", argc, argv, suites, 14);
+    return bake_test_run("script", argc, argv, suites, 15);
 }
