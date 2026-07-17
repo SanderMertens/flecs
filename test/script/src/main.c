@@ -608,6 +608,7 @@ void Function_call_w_using(void);
 void Function_call_w_using_nested(void);
 void Function_call_w_using_wildcard(void);
 void Function_call_from_stage(void);
+void Function_call_w_new_w_different_args(void);
 void Function_call_w_result(void);
 void Function_method_call(void);
 void Function_method_call_from_stage(void);
@@ -4266,6 +4267,10 @@ bake_test_case Function_testcases[] = {
     {
         "call_from_stage",
         Function_call_from_stage
+    },
+    {
+        "call_w_new_w_different_args",
+        Function_call_w_new_w_different_args
     },
     {
         "call_w_result",
@@ -9297,7 +9302,7 @@ static bake_test_suite suites[] = {
         "Function",
         NULL,
         NULL,
-        74,
+        75,
         Function_testcases
     },
     {

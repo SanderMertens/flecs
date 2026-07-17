@@ -614,6 +614,7 @@
                 "call_w_using_nested",
                 "call_w_using_wildcard",
                 "call_from_stage",
+                "call_w_new_w_different_args",
                 "call_w_result",
                 "method_call",
                 "method_call_from_stage",
