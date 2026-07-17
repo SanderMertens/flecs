@@ -1,5 +1,86 @@
 #include <script.h>
 
+static char *os_stub_log_message = NULL;
+
+static
+void os_stub_log_callback(
+    int32_t level,
+    const char *file,
+    int32_t line,
+    const char *msg)
+{
+    (void)file;
+    (void)line;
+    if (level <= -3) {
+        ecs_os_free(os_stub_log_message);
+        os_stub_log_message = ecs_os_strdup(msg);
+    }
+}
+
+typedef struct os_file_stub_t {
+    const char *name;
+    const char *content;
+    size_t pos;
+} os_file_stub_t;
+
+static os_file_stub_t os_file_stubs[3];
+static ecs_os_api_fopen_t division_by_zero_fopen;
+static ecs_os_api_fread_t division_by_zero_fread;
+static ecs_os_api_fclose_t division_by_zero_fclose;
+
+static
+os_file_stub_t* os_file_stub(FILE *file) {
+    int32_t i;
+    for (i = 0; i < 3; i ++) {
+        if (file == (FILE*)&os_file_stubs[i]) {
+            return &os_file_stubs[i];
+        }
+    }
+    return NULL;
+}
+
+static
+FILE* os_file_stub_open(const char *file, const char *mode) {
+    int32_t i;
+    for (i = 0; i < 3; i ++) {
+        if (!strcmp(file, os_file_stubs[i].name)) {
+            os_file_stubs[i].pos = 0;
+            return (FILE*)&os_file_stubs[i];
+        }
+    }
+    return division_by_zero_fopen(file, mode);
+}
+
+static
+size_t os_file_stub_read(
+    void *ptr,
+    size_t size,
+    size_t count,
+    FILE *file)
+{
+    os_file_stub_t *f = os_file_stub(file);
+    if (!f) {
+        return division_by_zero_fread(ptr, size, count, file);
+    }
+
+    size_t remaining = strlen(f->content) - f->pos;
+    size_t requested = size * count;
+    if (requested > remaining) {
+        requested = remaining;
+    }
+
+    memcpy(ptr, &f->content[f->pos], requested);
+    f->pos += requested;
+    return requested;
+}
+
+static
+void os_file_stub_close(FILE *file) {
+    if (!os_file_stub(file)) {
+        division_by_zero_fclose(file);
+    }
+}
+
 void Error_multi_line_comment_after_newline_before_newline_scope_open(void) {
     ecs_world_t *world = ecs_init();
 
@@ -2707,27 +2788,10 @@ void Error_division_by_zero_error_line(void) {
     ecs_fini(world);
 }
 
-static char *division_by_zero_error_message = NULL;
-
-static
-void division_by_zero_error_callback(
-    int32_t level,
-    const char *file,
-    int32_t line,
-    const char *msg)
-{
-    (void)file;
-    (void)line;
-    if (level <= -3) {
-        ecs_os_free(division_by_zero_error_message);
-        division_by_zero_error_message = ecs_os_strdup(msg);
-    }
-}
-
 void Error_division_by_zero_error_in_template_from_other_script(void) {
     ecs_os_set_api_defaults();
     ecs_os_api_t os_api = ecs_os_api;
-    os_api.log_ = division_by_zero_error_callback;
+    os_api.log_ = os_stub_log_callback;
     ecs_os_set_api(&os_api);
     ecs_log_set_level(-2);
 
@@ -2760,16 +2824,70 @@ void Error_division_by_zero_error_in_template_from_other_script(void) {
     const EcsScript *hud_data = ecs_get(world, hud_script, EcsScript);
     test_assert(hud_data != NULL);
     test_assert(hud_data->error != NULL);
-    test_assert(division_by_zero_error_message != NULL);
+    test_assert(os_stub_log_message != NULL);
     test_assert(!strncmp(
-        division_by_zero_error_message,
+        os_stub_log_message,
         "widgets.flecs:",
         14));
 
-    ecs_os_free(division_by_zero_error_message);
-    division_by_zero_error_message = NULL;
+    ecs_os_free(os_stub_log_message);
 
     ecs_fini(world);
+}
+
+void Error_division_by_zero_error_in_nested_include(void) {
+    ecs_os_set_api_defaults();
+    division_by_zero_fopen = ecs_os_api.fopen_;
+    division_by_zero_fread = ecs_os_api.fread_;
+    division_by_zero_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.log_ = os_stub_log_callback;
+    os_api.fopen_ = os_file_stub_open;
+    os_api.fread_ = os_file_stub_read;
+    os_api.fclose_ = os_file_stub_close;
+    ecs_os_set_api(&os_api);
+    ecs_log_set_level(-2);
+
+    os_file_stubs[0] = (os_file_stub_t){
+        "biome.flecs",
+        "include hud\n"
+    };
+    os_file_stubs[1] = (os_file_stub_t){
+        "hud.flecs",
+        "include widgets\n"
+        "e { Gauge: {max: 0} }\n"
+    };
+    os_file_stubs[2] = (os_file_stub_t){
+        "widgets.flecs",
+        "template Gauge {\n"
+        "  prop value: 0.5\n"
+        "  prop max: 1.0\n"
+        "  const result = value / max\n"
+        "}\n"
+    };
+
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScript);
+
+    ecs_entity_t script = ecs_script(world, {
+        .filename = "biome.flecs"
+    });
+    test_assert(script != 0);
+
+    const EcsScript *script_data = ecs_get(world, script, EcsScript);
+    test_assert(script_data != NULL);
+    test_assert(script_data->error != NULL);
+    test_assert(os_stub_log_message != NULL);
+
+    test_assert(!strncmp(
+        os_stub_log_message,
+        "biome.flecs: hud.flecs: widgets.flecs: 4:",
+        strlen("biome.flecs: hud.flecs: widgets.flecs:")));
+
+    ecs_fini(world);
+
+    ecs_os_free(os_stub_log_message);
 }
 
 void Error_const_redeclaration_error_line(void) {
@@ -2919,4 +3037,47 @@ void Error_script_eval_line_column(void) {
 
     ecs_script_free(script);
     ecs_fini(world);
+}
+
+static
+void error_on_set(
+    ecs_iter_t *it)
+{
+    (void)it;
+    ecs_err("error from on_set hook");
+}
+
+void Error_on_set_error_logged(void) {
+    ecs_os_set_api_defaults();
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.log_ = os_stub_log_callback;
+    ecs_os_set_api(&os_api);
+    ecs_log_set_level(-2);
+    os_stub_log_message = NULL;
+
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_set_hooks(world, Position, {
+        .on_set = error_on_set
+    });
+
+    ecs_entity_t script = ecs_script(world, {
+        .code = "e { Position: {10, 20} }"
+    });
+    test_assert(script != 0);
+    test_assert(os_stub_log_message != NULL);
+    test_str(os_stub_log_message, "error from on_set hook");
+
+    ecs_fini(world);
+    ecs_os_free(os_stub_log_message);
+    os_stub_log_message = NULL;
 }
