@@ -22,6 +22,7 @@ int flecs_value_move_to(
 
 int flecs_value_binary(
     const ecs_script_t *script,
+    const ecs_expr_node_t *node,
     const ecs_value_t *left,
     const ecs_value_t *right,
     ecs_value_t *out,

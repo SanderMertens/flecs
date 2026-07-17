@@ -889,6 +889,13 @@ void Error_interpolated_var_error_line_column(void);
 void Error_interpolated_parse_error_line_column(void);
 void Error_template_eval_error_line_column(void);
 void Error_expr_error_line_column(void);
+void Error_division_by_zero_error_line(void);
+void Error_division_by_zero_error_in_template_from_other_script(void);
+void Error_const_redeclaration_error_line(void);
+void Error_function_unresolved_const_type_error_line(void);
+void Error_function_duplicate_param_error_line(void);
+void Error_function_unresolved_param_type_error_line(void);
+void Error_function_unresolved_return_type_error_line(void);
 void Error_no_error_line_column(void);
 void Error_script_parse_line_column(void);
 void Error_script_eval_line_column(void);
@@ -5433,6 +5440,34 @@ bake_test_case Error_testcases[] = {
         Error_expr_error_line_column
     },
     {
+        "division_by_zero_error_line",
+        Error_division_by_zero_error_line
+    },
+    {
+        "division_by_zero_error_in_template_from_other_script",
+        Error_division_by_zero_error_in_template_from_other_script
+    },
+    {
+        "const_redeclaration_error_line",
+        Error_const_redeclaration_error_line
+    },
+    {
+        "function_unresolved_const_type_error_line",
+        Error_function_unresolved_const_type_error_line
+    },
+    {
+        "function_duplicate_param_error_line",
+        Error_function_duplicate_param_error_line
+    },
+    {
+        "function_unresolved_param_type_error_line",
+        Error_function_unresolved_param_type_error_line
+    },
+    {
+        "function_unresolved_return_type_error_line",
+        Error_function_unresolved_return_type_error_line
+    },
+    {
         "no_error_line_column",
         Error_no_error_line_column
     },
@@ -9593,7 +9628,7 @@ static bake_test_suite suites[] = {
         "Error",
         NULL,
         NULL,
-        117,
+        124,
         Error_testcases
     },
     {
