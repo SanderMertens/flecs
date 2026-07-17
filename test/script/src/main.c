@@ -878,6 +878,7 @@ void Error_annotation_to_unresolved_identifier_managed_parse_twice_2(void);
 void Error_annotation_to_tag(void);
 void Error_parse_error_logged(void);
 void Error_eval_error_logged(void);
+void Error_on_set_error_logged(void);
 void Error_template_unresolved_var_in_entity_name(void);
 void Error_parse_error_line_column(void);
 void Error_parse_error_first_line_column(void);
@@ -891,6 +892,7 @@ void Error_template_eval_error_line_column(void);
 void Error_expr_error_line_column(void);
 void Error_division_by_zero_error_line(void);
 void Error_division_by_zero_error_in_template_from_other_script(void);
+void Error_division_by_zero_error_in_nested_include(void);
 void Error_const_redeclaration_error_line(void);
 void Error_function_unresolved_const_type_error_line(void);
 void Error_function_duplicate_param_error_line(void);
@@ -5396,6 +5398,10 @@ bake_test_case Error_testcases[] = {
         Error_eval_error_logged
     },
     {
+        "on_set_error_logged",
+        Error_on_set_error_logged
+    },
+    {
         "template_unresolved_var_in_entity_name",
         Error_template_unresolved_var_in_entity_name
     },
@@ -5446,6 +5452,10 @@ bake_test_case Error_testcases[] = {
     {
         "division_by_zero_error_in_template_from_other_script",
         Error_division_by_zero_error_in_template_from_other_script
+    },
+    {
+        "division_by_zero_error_in_nested_include",
+        Error_division_by_zero_error_in_nested_include
     },
     {
         "const_redeclaration_error_line",
@@ -9628,7 +9638,7 @@ static bake_test_suite suites[] = {
         "Error",
         NULL,
         NULL,
-        124,
+        126,
         Error_testcases
     },
     {

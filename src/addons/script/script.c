@@ -421,10 +421,15 @@ int ecs_script_update(
     if (ecs_script_eval(parsed, NULL, &eval_result)) {
         s = ecs_ensure(world, e, EcsScript);
         s->error = eval_result.error;
-        ecs_log_(-3, NULL, 0, "%s: %s",
-            runtime->error_name ? runtime->error_name :
-                (name ? name : "script"),
-            s->error);
+        if (runtime->error_name && runtime->include_depth) {
+            ecs_log_(-3, NULL, 0, "%s: %s: %s",
+                name ? name : "script", runtime->error_name, s->error);
+        } else {
+            ecs_log_(-3, NULL, 0, "%s: %s",
+                runtime->error_name ? runtime->error_name :
+                    (name ? name : "script"),
+                s->error);
+        }
         flecs_script_runtime_error_reset(runtime);
         ecs_script_free(parsed);
         s->script = NULL;
