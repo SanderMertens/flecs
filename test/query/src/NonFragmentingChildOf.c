@@ -53,6 +53,45 @@ void NonFragmentingChildOf_0_src_childof_parent(void) {
     ecs_fini(world);
 }
 
+void NonFragmentingChildOf_self_up_never_populated_table(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tint);
+    ECS_TAG(world, ActualTint);
+    ECS_TAG(world, Foo);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Tint($this|self|up ChildOf), ?ActualTint($this), ActualTint()",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_entity_t parent = ecs_new_w(world, Tint);
+
+    ecs_table_t *table = ecs_table_add_id(
+        world, NULL, ecs_id(EcsParent));
+    table = ecs_table_add_id(world, table, Foo);
+    test_assert(table != NULL);
+    test_int(0, ecs_table_count(table));
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    it.flags |= EcsIterMatchEmptyTables;
+    int32_t count = 0;
+    while (ecs_query_next(&it)) {
+        int32_t i;
+        for (i = 0; i < it.count; i ++) {
+            test_uint(parent, it.entities[i]);
+            count ++;
+        }
+    }
+    test_int(1, count);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
 void NonFragmentingChildOf_0_src_childof_0(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -24217,4 +24256,3 @@ void NonFragmentingChildOf_this_src_childof_var_doesnt_match_root(void) {
 
 void NonFragmentingChildOf_src_var_w_trait_on_dont_fragment_tag(void) {
 }
-
