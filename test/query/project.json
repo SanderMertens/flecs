@@ -2502,6 +2502,7 @@
             },
             "testcases": [
                 "optional_up_set_var_2nd_child",
+                "self_up_never_populated_table",
                 "0_src_childof_parent",
                 "0_src_childof_0",
                 "fixed_src_childof_0",
