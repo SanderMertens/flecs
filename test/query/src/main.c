@@ -2414,6 +2414,7 @@ void DontFragment_src_var_w_trait_on_dont_fragment_tag_anonymous(void);
 // Testsuite 'NonFragmentingChildOf'
 void NonFragmentingChildOf_setup(void);
 void NonFragmentingChildOf_optional_up_set_var_2nd_child(void);
+void NonFragmentingChildOf_self_up_never_populated_table(void);
 void NonFragmentingChildOf_0_src_childof_parent(void);
 void NonFragmentingChildOf_0_src_childof_0(void);
 void NonFragmentingChildOf_fixed_src_childof_0(void);
@@ -12349,6 +12350,10 @@ bake_test_case NonFragmentingChildOf_testcases[] = {
         NonFragmentingChildOf_optional_up_set_var_2nd_child
     },
     {
+        "self_up_never_populated_table",
+        NonFragmentingChildOf_self_up_never_populated_table
+    },
+    {
         "0_src_childof_parent",
         NonFragmentingChildOf_0_src_childof_parent
     },
@@ -14451,7 +14456,7 @@ static bake_test_suite suites[] = {
         "NonFragmentingChildOf",
         NonFragmentingChildOf_setup,
         NULL,
-        322,
+        323,
         NonFragmentingChildOf_testcases,
         1,
         NonFragmentingChildOf_params

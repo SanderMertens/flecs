@@ -51870,6 +51870,10 @@ bool flecs_query_up_with(
                     return true;
                 }
 
+                if (!op_ctx->range.count) {
+                    return false;
+                }
+
                 /* Signals that we need to evaluate individual rows. */
                 op_ctx->cur = 0;
                 flecs_query_src_set_single(op, range.offset, ctx);
