@@ -6669,6 +6669,120 @@ void Entity_defer_on_replace_w_assign_batched_existing_twice(void) {
     test_assert(e.has<Velocity>());
 }
 
+struct replace_ctx_t { ecs_table_t *other_table; ecs_termset_t set_fields; int invoked; };
+
+static void replace_capture_cpp(ecs_iter_t *it) {
+    auto *c = static_cast<replace_ctx_t*>(it->ctx);
+    c->other_table = it->other_table;
+    c->set_fields  = it->set_fields;
+    c->invoked++;
+}
+
+void Entity_on_replace_other_table_set_new(void) {
+    flecs::world world;
+
+    replace_ctx_t ctx = {};
+    flecs::entity_t pos_id = world.component<Position>().id();
+
+    ecs_type_hooks_t hooks = {};
+    hooks.ctor = flecs_default_ctor;
+    hooks.on_replace = replace_capture_cpp;
+    hooks.ctx = &ctx;
+    ecs_set_hooks_id(world, pos_id, &hooks);
+
+    flecs::entity e = world.entity();
+    ecs_table_t *prev = ecs_get_table(world, e);
+    test_int(ctx.invoked, 0);
+
+    e.set(Position{10, 20});
+    test_int(ctx.invoked, 1);
+
+    /* prev captured before ensure: root table, no Position */
+    test_assert(ctx.other_table == prev);
+    test_assert(ctx.set_fields == 3);
+    test_assert(!ecs_table_has_id(world, ctx.other_table, pos_id));
+}
+
+void Entity_on_replace_other_table_set_existing(void) {
+    flecs::world world;
+
+    replace_ctx_t ctx = {};
+    flecs::entity_t pos_id = world.component<Position>().id();
+
+    ecs_type_hooks_t hooks = {};
+    hooks.ctor = flecs_default_ctor;
+    hooks.on_replace = replace_capture_cpp;
+    hooks.ctx = &ctx;
+    ecs_set_hooks_id(world, pos_id, &hooks);
+
+    flecs::entity e = world.entity().set(Position{10, 20});
+    test_int(ctx.invoked, 1);
+
+    ecs_table_t *table_with_pos = ecs_get_table(world, e);
+    ctx = {};
+
+    e.set(Position{11, 21});
+    test_int(ctx.invoked, 1);
+
+    /* Entity already had Position -> other_table == {Position} table */
+    test_assert(ctx.other_table == table_with_pos);
+    test_assert(ctx.set_fields == 3);
+    test_assert(ecs_table_has_id(world, ctx.other_table, pos_id));
+}
+
+void Entity_on_replace_other_table_assign_new(void) {
+    flecs::world world;
+
+    replace_ctx_t ctx = {};
+    flecs::entity_t pos_id = world.component<Position>().id();
+
+    ecs_type_hooks_t hooks = {};
+    hooks.ctor = flecs_default_ctor;
+    hooks.on_replace = replace_capture_cpp;
+    hooks.ctx = &ctx;
+    ecs_set_hooks_id(world, pos_id, &hooks);
+
+    flecs::entity e = world.entity().add<Position>();
+    test_int(ctx.invoked, 0);
+
+    ecs_table_t *table_with_pos = ecs_get_table(world, e);
+
+    e.assign(Position{10, 20});
+    test_int(ctx.invoked, 1);
+
+    /* assign requires component to already exist; other_table == {Position} */
+    test_assert(ctx.other_table == table_with_pos);
+    test_assert(ctx.set_fields == 3);
+    test_assert(ecs_table_has_id(world, ctx.other_table, pos_id));
+}
+
+void Entity_on_replace_other_table_assign_existing(void) {
+    flecs::world world;
+
+    replace_ctx_t ctx = {};
+    flecs::entity_t pos_id = world.component<Position>().id();
+
+    ecs_type_hooks_t hooks = {};
+    hooks.ctor = flecs_default_ctor;
+    hooks.on_replace = replace_capture_cpp;
+    hooks.ctx = &ctx;
+    ecs_set_hooks_id(world, pos_id, &hooks);
+
+    flecs::entity e = world.entity().add<Position>();
+    e.assign(Position{10, 20});
+    test_int(ctx.invoked, 1);
+    ecs_table_t *table_with_pos = ecs_get_table(world, e);
+    ctx = {};
+
+    e.assign(Position{11, 21});
+    test_int(ctx.invoked, 1);
+
+    /* Replacing existing via assign: other_table == {Position} */
+    test_assert(ctx.other_table == table_with_pos);
+    test_assert(ctx.set_fields == 3);
+    test_assert(ecs_table_has_id(world, ctx.other_table, pos_id));
+}
+
 void Entity_set_lvalue_to_mutable(void) {
     flecs::world world;
 

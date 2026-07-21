@@ -14215,66 +14215,54 @@ const char* Fuzzing_cache_kind_param[] = {"default", "auto"};
 bake_test_param Fuzzing_params[] = {
     {"cache_kind", (char**)Fuzzing_cache_kind_param, 2}
 };
-
 const char* Basic_cache_kind_param[] = {"default", "auto"};
 bake_test_param Basic_params[] = {
     {"cache_kind", (char**)Basic_cache_kind_param, 2}
 };
-
 const char* Combinations_cache_kind_param[] = {"default", "auto"};
 const char* Combinations_on_instantiate_param[] = {"override", "inherit", "dont_inherit"};
 bake_test_param Combinations_params[] = {
     {"cache_kind", (char**)Combinations_cache_kind_param, 2},
     {"on_instantiate", (char**)Combinations_on_instantiate_param, 3}
 };
-
 const char* Variables_cache_kind_param[] = {"default", "auto"};
 bake_test_param Variables_params[] = {
     {"cache_kind", (char**)Variables_cache_kind_param, 2}
 };
-
 const char* Operators_cache_kind_param[] = {"default", "auto"};
 bake_test_param Operators_params[] = {
     {"cache_kind", (char**)Operators_cache_kind_param, 2}
 };
-
 const char* BuiltinPredicates_cache_kind_param[] = {"default", "auto"};
 bake_test_param BuiltinPredicates_params[] = {
     {"cache_kind", (char**)BuiltinPredicates_cache_kind_param, 2}
 };
-
 const char* Scopes_cache_kind_param[] = {"default", "auto"};
 const char* Scopes_on_instantiate_param[] = {"override", "inherit"};
 bake_test_param Scopes_params[] = {
     {"cache_kind", (char**)Scopes_cache_kind_param, 2},
     {"on_instantiate", (char**)Scopes_on_instantiate_param, 2}
 };
-
 const char* Traversal_cache_kind_param[] = {"default", "auto"};
 bake_test_param Traversal_params[] = {
     {"cache_kind", (char**)Traversal_cache_kind_param, 2}
 };
-
 const char* MemberTarget_cache_kind_param[] = {"default", "auto"};
 bake_test_param MemberTarget_params[] = {
     {"cache_kind", (char**)MemberTarget_cache_kind_param, 2}
 };
-
 const char* Toggle_cache_kind_param[] = {"default", "auto"};
 bake_test_param Toggle_params[] = {
     {"cache_kind", (char**)Toggle_cache_kind_param, 2}
 };
-
 const char* Sparse_cache_kind_param[] = {"default", "auto"};
 bake_test_param Sparse_params[] = {
     {"cache_kind", (char**)Sparse_cache_kind_param, 2}
 };
-
 const char* DontFragment_cache_kind_param[] = {"default", "auto"};
 bake_test_param DontFragment_params[] = {
     {"cache_kind", (char**)DontFragment_cache_kind_param, 2}
 };
-
 const char* NonFragmentingChildOf_cache_kind_param[] = {"default", "auto"};
 bake_test_param NonFragmentingChildOf_params[] = {
     {"cache_kind", (char**)NonFragmentingChildOf_cache_kind_param, 2}

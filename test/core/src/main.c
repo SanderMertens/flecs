@@ -1722,6 +1722,12 @@ void ComponentLifecycle_on_replace_w_emplace(void);
 void ComponentLifecycle_on_replace_w_set(void);
 void ComponentLifecycle_on_replace_w_set_existing(void);
 void ComponentLifecycle_on_replace_set_2_entities(void);
+void ComponentLifecycle_on_replace_other_table_new_entity(void);
+void ComponentLifecycle_on_replace_other_table_existing_entity(void);
+void ComponentLifecycle_on_replace_other_table_set_existing(void);
+void ComponentLifecycle_on_replace_other_table_batched_new_entity(void);
+void ComponentLifecycle_on_replace_other_table_batched_existing(void);
+void ComponentLifecycle_on_replace_other_table_entity_init(void);
 void ComponentLifecycle_copy_ctor_w_override(void);
 void ComponentLifecycle_copy_ctor_w_override_w_emplace(void);
 void ComponentLifecycle_copy_ctor_w_override_w_ensure(void);
@@ -10099,6 +10105,30 @@ bake_test_case ComponentLifecycle_testcases[] = {
         ComponentLifecycle_on_replace_set_2_entities
     },
     {
+        "on_replace_other_table_new_entity",
+        ComponentLifecycle_on_replace_other_table_new_entity
+    },
+    {
+        "on_replace_other_table_existing_entity",
+        ComponentLifecycle_on_replace_other_table_existing_entity
+    },
+    {
+        "on_replace_other_table_set_existing",
+        ComponentLifecycle_on_replace_other_table_set_existing
+    },
+    {
+        "on_replace_other_table_batched_new_entity",
+        ComponentLifecycle_on_replace_other_table_batched_new_entity
+    },
+    {
+        "on_replace_other_table_batched_existing",
+        ComponentLifecycle_on_replace_other_table_batched_existing
+    },
+    {
+        "on_replace_other_table_entity_init",
+        ComponentLifecycle_on_replace_other_table_entity_init
+    },
+    {
         "copy_ctor_w_override",
         ComponentLifecycle_copy_ctor_w_override
     },
@@ -16893,7 +16923,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         ComponentLifecycle_setup,
         NULL,
-        166,
+        172,
         ComponentLifecycle_testcases
     },
     {
