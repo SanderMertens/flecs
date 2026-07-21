@@ -3769,6 +3769,14 @@ void flecs_type_info_free(
     ecs_world_t *world,
     ecs_entity_t component);
 
+/* Increase type info refcount. */
+void flecs_type_info_claim(
+    const ecs_type_info_t *ti);
+
+/* Decrease type info refcount, free when it reaches 0. */
+void flecs_type_info_release(
+    const ecs_type_info_t *ti);
+
 /* Check component monitors (triggers query cache revalidation, not related to
  * EcsMonitor). */
 void flecs_eval_component_monitors(
@@ -21906,8 +21914,9 @@ void flecs_fini_type_info(
     ecs_map_iter_t it = ecs_map_iter(&world->type_info);
     while (ecs_map_next(&it)) {
         ecs_type_info_t *ti = ecs_map_ptr(&it);
-        flecs_type_info_fini(ti);
-        ecs_os_free(ti);
+        ecs_assert(ti->refcount == 1, ECS_INTERNAL_ERROR,
+            "type info for component '%s' has outstanding claims", ti->name);
+        flecs_type_info_release(ti);
     }
     ecs_map_fini(&world->type_info);
 }
@@ -21939,6 +21948,7 @@ ecs_type_info_t* flecs_type_info_ensure(
             &world->type_info, ecs_type_info_t, component);
         ecs_assert(ti_mut != NULL, ECS_INTERNAL_ERROR, NULL);
         ti_mut->component = component;
+        ti_mut->refcount = 1;
     } else {
         ti_mut = ECS_CONST_CAST(ecs_type_info_t*, ti);
     }
@@ -22042,8 +22052,28 @@ void flecs_type_info_free(
     ecs_type_info_t *ti = ecs_map_get_deref(
         &world->type_info, ecs_type_info_t, component);
     if (ti) {
-        flecs_type_info_fini(ti);
-        ecs_map_remove_free(&world->type_info, component);
+        ecs_map_remove(&world->type_info, component);
+        flecs_type_info_release(ti);
+    }
+}
+
+void flecs_type_info_claim(
+    const ecs_type_info_t *ti)
+{
+    ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ti->refcount > 0, ECS_INTERNAL_ERROR, NULL);
+    ECS_CONST_CAST(ecs_type_info_t*, ti)->refcount ++;
+}
+
+void flecs_type_info_release(
+    const ecs_type_info_t *ti)
+{
+    ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ti->refcount > 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_type_info_t *ti_mut = ECS_CONST_CAST(ecs_type_info_t*, ti);
+    if (!(-- ti_mut->refcount)) {
+        flecs_type_info_fini(ti_mut);
+        ecs_os_free(ti_mut);
     }
 }
 

@@ -239,6 +239,14 @@ void flecs_type_info_free(
     ecs_world_t *world,
     ecs_entity_t component);
 
+/* Increase type info refcount. */
+void flecs_type_info_claim(
+    const ecs_type_info_t *ti);
+
+/* Decrease type info refcount, free when it reaches 0. */
+void flecs_type_info_release(
+    const ecs_type_info_t *ti);
+
 /* Check component monitors (triggers query cache revalidation, not related to
  * EcsMonitor). */
 void flecs_eval_component_monitors(

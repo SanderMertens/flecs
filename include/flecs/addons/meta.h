@@ -1140,6 +1140,19 @@ int ecs_ptr_fini(
 /** Destruct a value and free storage.
  *
  * @param world The world.
+ * @param ti The type info of the value to destruct.
+ * @param ptr A pointer to the value.
+ * @return Zero if successful, nonzero if failed.
+ */
+FLECS_API
+int ecs_ptr_free_w_type_info(
+    ecs_world_t *world,
+    const ecs_type_info_t *ti,
+    void* ptr);
+
+/** Destruct a value and free storage.
+ *
+ * @param world The world.
  * @param type The type of the value to destruct.
  * @param ptr A pointer to the value.
  * @return Zero if successful, nonzero if failed.

@@ -1574,6 +1574,7 @@ int flecs_expr_identifier_visit_type(
                     ecs_size_t size = flecs_type_size(script->world, type);
                     ecs_assert(size > 0, ECS_INTERNAL_ERROR, NULL);
                     result->ptr = flecs_walloc(script->world, size);
+                    flecs_type_info_claim(result->node.type_info);
 
                     ecs_meta_cursor_t expr_cur = ecs_meta_cursor(
                         script->world, type, result->ptr);

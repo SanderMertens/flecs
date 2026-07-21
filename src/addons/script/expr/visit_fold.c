@@ -163,10 +163,13 @@ int flecs_expr_cast_visit_fold(
     }
 
     if (expr->ptr != &expr->storage) {
-        ecs_ptr_free(script->world, expr->node.type, expr->ptr);
+        ecs_ptr_free_w_type_info(script->world, expr->node.type_info, expr->ptr);
+        flecs_type_info_release(expr->node.type_info);
     }
 
     expr->node.type = dst_type;
+    expr->node.type_info = ecs_get_type_info(script->world, dst_type);
+    flecs_type_info_claim(expr->node.type_info);
     expr->ptr = dst_ptr;
 
     node->expr = NULL; /* Prevent cleanup */
@@ -294,6 +297,7 @@ int flecs_expr_interpolated_string_visit_fold(
         ecs_expr_value_node_t *result = flecs_expr_value_from(
             script, (ecs_expr_node_t*)node, ecs_id(ecs_string_t));
         result->ptr = value;
+        flecs_type_info_claim(result->node.type_info);
 
         flecs_visit_fold_replace(script, node_ptr, (ecs_expr_node_t*)result);
     }
@@ -444,6 +448,7 @@ int flecs_expr_initializer_visit_fold(
         ecs_expr_value_node_t *result = flecs_expr_value_from(
             script, (ecs_expr_node_t*)node, node->node.type);
         result->ptr = value;
+        flecs_type_info_claim(result->node.type_info);
         value = NULL;
 
         flecs_visit_fold_replace(script, node_ptr, (ecs_expr_node_t*)result);
@@ -510,6 +515,7 @@ int flecs_expr_variable_visit_fold(
         void *value = ecs_ptr_new(script->world, type);
         ecs_ptr_copy(script->world, type, value, var->value.ptr);
         result->ptr = value;
+        flecs_type_info_claim(result->node.type_info);
         flecs_visit_fold_replace(script, node_ptr, (ecs_expr_node_t*)result);
     }
 
@@ -539,6 +545,7 @@ int flecs_expr_global_variable_visit_fold(
     void *value = ecs_ptr_new(script->world, type);
     ecs_ptr_copy(script->world, type, value, node->global_value.ptr);
     result->ptr = value;
+    flecs_type_info_claim(result->node.type_info);
     flecs_visit_fold_replace(script, node_ptr, (ecs_expr_node_t*)result);
 
     return 0;

@@ -540,6 +540,9 @@ void Eval_struct_w_value_member_reassign(void);
 void Eval_value_component(void);
 void Eval_value_const_var(void);
 void Eval_var_w_value_name(void);
+void Eval_component_expr_free_w_deleted_type(void);
+void Eval_component_expr_free_w_deleted_type_w_string(void);
+void Eval_component_expr_free_w_type_deleted_by_script_update(void);
 
 // Testsuite 'Function'
 void Function_simple(void);
@@ -4067,6 +4070,18 @@ bake_test_case Eval_testcases[] = {
     {
         "var_w_value_name",
         Eval_var_w_value_name
+    },
+    {
+        "component_expr_free_w_deleted_type",
+        Eval_component_expr_free_w_deleted_type
+    },
+    {
+        "component_expr_free_w_deleted_type_w_string",
+        Eval_component_expr_free_w_deleted_type_w_string
+    },
+    {
+        "component_expr_free_w_type_deleted_by_script_update",
+        Eval_component_expr_free_w_type_deleted_by_script_update
     }
 };
 
@@ -9625,7 +9640,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        531,
+        534,
         Eval_testcases
     },
     {

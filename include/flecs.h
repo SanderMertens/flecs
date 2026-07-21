@@ -1040,6 +1040,7 @@ struct ecs_type_info_t {
     ecs_type_hooks_t hooks;  /**< Type hooks. */
     ecs_entity_t component;  /**< Handle to component (do not set). */
     const char *name;        /**< Type name. */
+    int32_t refcount;        /**< Refcount (do not set). */
 };
 
 #include "flecs/private/api_types.h"        /* Supporting API types */
