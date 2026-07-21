@@ -1888,6 +1888,9 @@ void Refs_reeval_prefab_delete_with_inherited_component(void);
 void Refs_ref_in_template_not_instantiated(void);
 void Refs_template_ref_observer_lifecycle(void);
 void Refs_ref_in_template_component_initializer(void);
+void Refs_multiple_refs_in_template_initializer_dont_reeval_others(void);
+void Refs_multiple_refs_in_template_const_dont_reeval_others(void);
+void Refs_multiple_refs_in_template_const_dont_reeval_others_deferred(void);
 void Refs_ref_in_template_with_initializer(void);
 void Refs_ref_in_template_match_expr(void);
 void Refs_ref_in_template_if_expr(void);
@@ -9385,6 +9388,18 @@ bake_test_case Refs_testcases[] = {
         Refs_ref_in_template_component_initializer
     },
     {
+        "multiple_refs_in_template_initializer_dont_reeval_others",
+        Refs_multiple_refs_in_template_initializer_dont_reeval_others
+    },
+    {
+        "multiple_refs_in_template_const_dont_reeval_others",
+        Refs_multiple_refs_in_template_const_dont_reeval_others
+    },
+    {
+        "multiple_refs_in_template_const_dont_reeval_others_deferred",
+        Refs_multiple_refs_in_template_const_dont_reeval_others_deferred
+    },
+    {
         "ref_in_template_with_initializer",
         Refs_ref_in_template_with_initializer
     },
@@ -9707,7 +9722,7 @@ static bake_test_suite suites[] = {
         "Refs",
         NULL,
         NULL,
-        85,
+        88,
         Refs_testcases
     }
 };
