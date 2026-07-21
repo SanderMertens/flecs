@@ -843,8 +843,10 @@ int flecs_script_template_eval(
     ecs_script_visit_t *v,
     ecs_script_node_t *node)
 {
+    ecs_script_eval_visitor_t *eval_v = (ecs_script_eval_visitor_t*)v;
+
     if (node->kind == EcsAstTemplate) {
-        flecs_script_eval_error((ecs_script_eval_visitor_t*)v, node, 
+        flecs_script_eval_error(eval_v, node,
             "nested templates are not allowed");
         return -1;
     } else if (node->kind == EcsAstProp) {
@@ -853,6 +855,15 @@ int flecs_script_template_eval(
     } else if (node->kind == EcsAstMut) {
         return flecs_script_template_eval_var(
             v, (ecs_script_var_node_t*)node, true);
+    } else if (node->kind == EcsAstConst) {
+        ecs_entity_t script_entity = eval_v->script_entity;
+        ecs_script_template_t *instance_template = eval_v->instance_template;
+        eval_v->script_entity = 0;
+        eval_v->instance_template = eval_v->template;
+        int result = flecs_script_check_node(v, node);
+        eval_v->script_entity = script_entity;
+        eval_v->instance_template = instance_template;
+        return result;
     }
 
     return flecs_script_check_node(v, node);

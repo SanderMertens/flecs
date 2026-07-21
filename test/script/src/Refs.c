@@ -1557,6 +1557,232 @@ void Refs_ref_in_template_component_initializer(void) {
     ecs_fini(world);
 }
 
+void Refs_multiple_refs_in_template_const_dont_reeval_others(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Mass) = define_mass(world);
+    ecs_entity_t ecs_id(Position) = define_position(world);
+
+    ecs_set(world, ecs_id(Mass), Mass, {10});
+
+    ecs_entity_t hud = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "hud_script" }),
+        .code =
+            HEAD "template Reactive {"
+            LINE "  const first = Mass[Mass].value"
+            LINE "  const second = Mass[Mass].value"
+            LINE "  reactive {"
+            LINE "    Position: {$first, $second}"
+            LINE "  }"
+            LINE "}"
+            LINE "template Other {"
+            LINE "  other {"
+            LINE "    Position: {100, 0}"
+            LINE "  }"
+            LINE "}"
+            LINE "hud {"
+            LINE "  Reactive()"
+            LINE "  Other()"
+            LINE "}"
+    });
+    test_assert(hud != 0);
+
+    ecs_entity_t reactive_template = ecs_lookup(world, "Reactive");
+    test_assert(reactive_template != 0);
+    ecs_iter_t it = ecs_each_id(world, reactive_template);
+    test_bool(true, ecs_each_next(&it));
+    test_int(it.count, 1);
+    ecs_entity_t reactive = ecs_lookup_child(world, it.entities[0], "reactive");
+    test_assert(reactive != 0);
+    test_bool(false, ecs_each_next(&it));
+
+    ecs_entity_t other_template = ecs_lookup(world, "Other");
+    test_assert(other_template != 0);
+    it = ecs_each_id(world, other_template);
+    test_bool(true, ecs_each_next(&it));
+    test_int(it.count, 1);
+    ecs_entity_t other_instance = it.entities[0];
+    ecs_entity_t other = ecs_lookup_child(world, other_instance, "other");
+    test_assert(other != 0);
+    test_bool(false, ecs_each_next(&it));
+
+    ecs_set(world, other, Position, {999, 0});
+
+    Mass *mass = ecs_get_mut(world, ecs_id(Mass), Mass);
+    test_assert(mass != NULL);
+    mass->value = 20;
+    ecs_modified(world, ecs_id(Mass), Mass);
+
+    test_assert(ecs_is_alive(world, other_instance));
+    test_assert(ecs_is_alive(world, other));
+    const Position *other_position = ecs_get(world, other, Position);
+    test_assert(other_position != NULL);
+    test_int(other_position->x, 999);
+
+    it = ecs_each_id(world, reactive_template);
+    test_bool(true, ecs_each_next(&it));
+    test_int(it.count, 1);
+    reactive = ecs_lookup_child(world, it.entities[0], "reactive");
+    test_assert(reactive != 0);
+    const Position *reactive_position = ecs_get(world, reactive, Position);
+    test_assert(reactive_position != NULL);
+    test_int(reactive_position->x, 20);
+    test_bool(false, ecs_each_next(&it));
+
+    ecs_fini(world);
+}
+
+void Refs_multiple_refs_in_template_initializer_dont_reeval_others(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Mass) = define_mass(world);
+    ecs_entity_t ecs_id(Position) = define_position(world);
+
+    ecs_set(world, ecs_id(Mass), Mass, {10});
+
+    ecs_entity_t hud = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "hud_script" }),
+        .code =
+            HEAD "template Reactive {"
+            LINE "  reactive {"
+            LINE "    Position: {Mass[Mass].value, Mass[Mass].value}"
+            LINE "  }"
+            LINE "}"
+            LINE "template Other {"
+            LINE "  other {"
+            LINE "    Position: {100, 0}"
+            LINE "  }"
+            LINE "}"
+            LINE "hud {"
+            LINE "  Reactive()"
+            LINE "  Other()"
+            LINE "}"
+    });
+    test_assert(hud != 0);
+
+    ecs_entity_t reactive_template = ecs_lookup(world, "Reactive");
+    test_assert(reactive_template != 0);
+    ecs_iter_t it = ecs_each_id(world, reactive_template);
+    test_bool(true, ecs_each_next(&it));
+    test_int(it.count, 1);
+    ecs_entity_t reactive = ecs_lookup_child(world, it.entities[0], "reactive");
+    test_assert(reactive != 0);
+    test_bool(false, ecs_each_next(&it));
+
+    ecs_entity_t other_template = ecs_lookup(world, "Other");
+    test_assert(other_template != 0);
+    it = ecs_each_id(world, other_template);
+    test_bool(true, ecs_each_next(&it));
+    test_int(it.count, 1);
+    ecs_entity_t other_instance = it.entities[0];
+    ecs_entity_t other = ecs_lookup_child(world, other_instance, "other");
+    test_assert(other != 0);
+    test_bool(false, ecs_each_next(&it));
+
+    ecs_set(world, other, Position, {999, 0});
+
+    Mass *mass = ecs_get_mut(world, ecs_id(Mass), Mass);
+    test_assert(mass != NULL);
+    mass->value = 20;
+    ecs_modified(world, ecs_id(Mass), Mass);
+
+    test_assert(ecs_is_alive(world, other_instance));
+    test_assert(ecs_is_alive(world, other));
+    const Position *other_position = ecs_get(world, other, Position);
+    test_assert(other_position != NULL);
+    test_int(other_position->x, 999);
+
+    it = ecs_each_id(world, reactive_template);
+    test_bool(true, ecs_each_next(&it));
+    test_int(it.count, 1);
+    reactive = ecs_lookup_child(world, it.entities[0], "reactive");
+    test_assert(reactive != 0);
+    const Position *reactive_position = ecs_get(world, reactive, Position);
+    test_assert(reactive_position != NULL);
+    test_int(reactive_position->x, 20);
+    test_int(reactive_position->y, 20);
+    test_bool(false, ecs_each_next(&it));
+
+    ecs_fini(world);
+}
+
+void Refs_multiple_refs_in_template_const_dont_reeval_others_deferred(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Mass) = define_mass(world);
+    ecs_entity_t ecs_id(Position) = define_position(world);
+
+    ecs_set(world, ecs_id(Mass), Mass, {10});
+
+    ecs_entity_t hud = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "hud_script" }),
+        .code =
+            HEAD "template Reactive {"
+            LINE "  const first = Mass[Mass].value"
+            LINE "  const second = Mass[Mass].value"
+            LINE "  reactive {"
+            LINE "    Position: {$first, $second}"
+            LINE "  }"
+            LINE "}"
+            LINE "template Other {"
+            LINE "  other {"
+            LINE "    Position: {100, 0}"
+            LINE "  }"
+            LINE "}"
+            LINE "hud {"
+            LINE "  Reactive()"
+            LINE "  Other()"
+            LINE "}"
+    });
+    test_assert(hud != 0);
+
+    ecs_entity_t reactive_template = ecs_lookup(world, "Reactive");
+    test_assert(reactive_template != 0);
+    ecs_iter_t it = ecs_each_id(world, reactive_template);
+    test_bool(true, ecs_each_next(&it));
+    test_int(it.count, 1);
+    ecs_entity_t reactive = ecs_lookup_child(world, it.entities[0], "reactive");
+    test_assert(reactive != 0);
+    test_bool(false, ecs_each_next(&it));
+
+    ecs_entity_t other_template = ecs_lookup(world, "Other");
+    test_assert(other_template != 0);
+    it = ecs_each_id(world, other_template);
+    test_bool(true, ecs_each_next(&it));
+    test_int(it.count, 1);
+    ecs_entity_t other_instance = it.entities[0];
+    ecs_entity_t other = ecs_lookup_child(world, other_instance, "other");
+    test_assert(other != 0);
+    test_bool(false, ecs_each_next(&it));
+
+    ecs_set(world, other, Position, {999, 0});
+
+    ecs_defer_begin(world);
+    Mass *mass = ecs_get_mut(world, ecs_id(Mass), Mass);
+    test_assert(mass != NULL);
+    mass->value = 20;
+    ecs_modified(world, ecs_id(Mass), Mass);
+    ecs_defer_end(world);
+
+    test_assert(ecs_is_alive(world, other_instance));
+    test_assert(ecs_is_alive(world, other));
+    const Position *other_position = ecs_get(world, other, Position);
+    test_assert(other_position != NULL);
+    test_int(other_position->x, 999);
+
+    it = ecs_each_id(world, reactive_template);
+    test_bool(true, ecs_each_next(&it));
+    test_int(it.count, 1);
+    reactive = ecs_lookup_child(world, it.entities[0], "reactive");
+    test_assert(reactive != 0);
+    const Position *reactive_position = ecs_get(world, reactive, Position);
+    test_assert(reactive_position != NULL);
+    test_int(reactive_position->x, 20);
+    test_bool(false, ecs_each_next(&it));
+
+    ecs_fini(world);
+}
+
 void Refs_global_const_var_in_template_component_initializer(void) {
     ecs_world_t *world = ecs_init();
 
