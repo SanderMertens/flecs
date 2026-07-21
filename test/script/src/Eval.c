@@ -17672,3 +17672,88 @@ void Eval_var_w_value_name(void) {
 
     ecs_fini(world);
 }
+
+void Eval_component_expr_free_w_deleted_type(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Vec {"
+    LINE "  x = f32"
+    LINE "  y = f32"
+    LINE "}"
+    LINE ""
+    LINE "e {"
+    LINE "  Vec: {10, 20}"
+    LINE "}";
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = expr
+    });
+    test_assert(s != 0);
+
+    ecs_entity_t vec = ecs_lookup(world, "Vec");
+    test_assert(vec != 0);
+    ecs_delete(world, vec);
+
+    ecs_fini(world);
+
+    test_assert(true);
+}
+
+void Eval_component_expr_free_w_type_deleted_by_script_update(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s_a = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "script_a" }),
+        .code =
+            HEAD "struct Vec {"
+            LINE "  x = f32"
+            LINE "  y = f32"
+            LINE "}"
+    });
+    test_assert(s_a != 0);
+
+    ecs_entity_t s_b = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "script_b" }),
+        .code =
+            HEAD "e {"
+            LINE "  Vec: {10, 20}"
+            LINE "}"
+    });
+    test_assert(s_b != 0);
+
+    test_assert(ecs_script_update(world, s_a, 0, "x {}") == 0);
+
+    ecs_fini(world);
+
+    test_assert(true);
+}
+
+void Eval_component_expr_free_w_deleted_type_w_string(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "struct Named {"
+    LINE "  name = string"
+    LINE "  value = i32"
+    LINE "}"
+    LINE ""
+    LINE "e {"
+    LINE "  Named: {\"hello world\", 10}"
+    LINE "}";
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = expr
+    });
+    test_assert(s != 0);
+
+    ecs_entity_t named = ecs_lookup(world, "Named");
+    test_assert(named != 0);
+    ecs_delete(world, named);
+
+    ecs_fini(world);
+
+    test_assert(true);
+}

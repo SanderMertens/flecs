@@ -3773,6 +3773,14 @@ void flecs_type_info_free(
     ecs_world_t *world,
     ecs_entity_t component);
 
+/* Increase type info refcount. */
+void flecs_type_info_claim(
+    const ecs_type_info_t *ti);
+
+/* Decrease type info refcount, free when it reaches 0. */
+void flecs_type_info_release(
+    const ecs_type_info_t *ti);
+
 /* Check component monitors (triggers query cache revalidation, not related to
  * EcsMonitor). */
 void flecs_eval_component_monitors(
@@ -22064,8 +22072,9 @@ void flecs_fini_type_info(
     ecs_map_iter_t it = ecs_map_iter(&world->type_info);
     while (ecs_map_next(&it)) {
         ecs_type_info_t *ti = ecs_map_ptr(&it);
-        flecs_type_info_fini(ti);
-        ecs_os_free(ti);
+        ecs_assert(ti->refcount == 1, ECS_INTERNAL_ERROR,
+            "type info for component '%s' has outstanding claims", ti->name);
+        flecs_type_info_release(ti);
     }
     ecs_map_fini(&world->type_info);
 }
@@ -22097,6 +22106,7 @@ ecs_type_info_t* flecs_type_info_ensure(
             &world->type_info, ecs_type_info_t, component);
         ecs_assert(ti_mut != NULL, ECS_INTERNAL_ERROR, NULL);
         ti_mut->component = component;
+        ti_mut->refcount = 1;
     } else {
         ti_mut = ECS_CONST_CAST(ecs_type_info_t*, ti);
     }
@@ -22200,8 +22210,28 @@ void flecs_type_info_free(
     ecs_type_info_t *ti = ecs_map_get_deref(
         &world->type_info, ecs_type_info_t, component);
     if (ti) {
-        flecs_type_info_fini(ti);
-        ecs_map_remove_free(&world->type_info, component);
+        ecs_map_remove(&world->type_info, component);
+        flecs_type_info_release(ti);
+    }
+}
+
+void flecs_type_info_claim(
+    const ecs_type_info_t *ti)
+{
+    ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ti->refcount > 0, ECS_INTERNAL_ERROR, NULL);
+    ECS_CONST_CAST(ecs_type_info_t*, ti)->refcount ++;
+}
+
+void flecs_type_info_release(
+    const ecs_type_info_t *ti)
+{
+    ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ti->refcount > 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_type_info_t *ti_mut = ECS_CONST_CAST(ecs_type_info_t*, ti);
+    if (!(-- ti_mut->refcount)) {
+        flecs_type_info_fini(ti_mut);
+        ecs_os_free(ti_mut);
     }
 }
 
@@ -61320,6 +61350,24 @@ error:
     return -1;
 }
 
+int ecs_ptr_free_w_type_info(
+    ecs_world_t *world,
+    const ecs_type_info_t *ti,
+    void* ptr)
+{
+    flecs_poly_assert(world, ecs_world_t);
+    ecs_check(ti != NULL, ECS_INVALID_PARAMETER, NULL);
+    if (ecs_ptr_fini_w_type_info(world, ti, ptr) != 0) {
+        goto error;
+    }
+
+    flecs_free(&world->allocator, ti->size, ptr);
+
+    return 0;
+error:
+    return -1;
+}
+
 int ecs_ptr_free(
     ecs_world_t *world,
     ecs_entity_t type,
@@ -61328,13 +61376,7 @@ int ecs_ptr_free(
     flecs_poly_assert(world, ecs_world_t);
     const ecs_type_info_t *ti = ecs_get_type_info(world, type);
     ecs_check(ti != NULL, ECS_INVALID_PARAMETER, "entity is not a type");
-    if (ecs_ptr_fini_w_type_info(world, ti, ptr) != 0) {
-        goto error;
-    }
-
-    flecs_free(&world->allocator, ti->size, ptr);
-
-    return 0;
+    return ecs_ptr_free_w_type_info(world, ti, ptr);
 error:
     return -1;
 }
@@ -101412,10 +101454,13 @@ int flecs_expr_cast_visit_fold(
     }
 
     if (expr->ptr != &expr->storage) {
-        ecs_ptr_free(script->world, expr->node.type, expr->ptr);
+        ecs_ptr_free_w_type_info(script->world, expr->node.type_info, expr->ptr);
+        flecs_type_info_release(expr->node.type_info);
     }
 
     expr->node.type = dst_type;
+    expr->node.type_info = ecs_get_type_info(script->world, dst_type);
+    flecs_type_info_claim(expr->node.type_info);
     expr->ptr = dst_ptr;
 
     node->expr = NULL; /* Prevent cleanup */
@@ -101543,6 +101588,7 @@ int flecs_expr_interpolated_string_visit_fold(
         ecs_expr_value_node_t *result = flecs_expr_value_from(
             script, (ecs_expr_node_t*)node, ecs_id(ecs_string_t));
         result->ptr = value;
+        flecs_type_info_claim(result->node.type_info);
 
         flecs_visit_fold_replace(script, node_ptr, (ecs_expr_node_t*)result);
     }
@@ -101693,6 +101739,7 @@ int flecs_expr_initializer_visit_fold(
         ecs_expr_value_node_t *result = flecs_expr_value_from(
             script, (ecs_expr_node_t*)node, node->node.type);
         result->ptr = value;
+        flecs_type_info_claim(result->node.type_info);
         value = NULL;
 
         flecs_visit_fold_replace(script, node_ptr, (ecs_expr_node_t*)result);
@@ -101759,6 +101806,7 @@ int flecs_expr_variable_visit_fold(
         void *value = ecs_ptr_new(script->world, type);
         ecs_ptr_copy(script->world, type, value, var->value.ptr);
         result->ptr = value;
+        flecs_type_info_claim(result->node.type_info);
         flecs_visit_fold_replace(script, node_ptr, (ecs_expr_node_t*)result);
     }
 
@@ -101788,6 +101836,7 @@ int flecs_expr_global_variable_visit_fold(
     void *value = ecs_ptr_new(script->world, type);
     ecs_ptr_copy(script->world, type, value, node->global_value.ptr);
     result->ptr = value;
+    flecs_type_info_claim(result->node.type_info);
     flecs_visit_fold_replace(script, node_ptr, (ecs_expr_node_t*)result);
 
     return 0;
@@ -102000,7 +102049,8 @@ void flecs_expr_value_visit_free(
     ecs_expr_value_node_t *node)
 {
     if (node->ptr != &node->storage) {
-        ecs_ptr_free(script->world, node->node.type, node->ptr);
+        ecs_ptr_free_w_type_info(script->world, node->node.type_info, node->ptr);
+        flecs_type_info_release(node->node.type_info);
     }
 }
 
@@ -104544,6 +104594,7 @@ int flecs_expr_identifier_visit_type(
                     ecs_size_t size = flecs_type_size(script->world, type);
                     ecs_assert(size > 0, ECS_INTERNAL_ERROR, NULL);
                     result->ptr = flecs_walloc(script->world, size);
+                    flecs_type_info_claim(result->node.type_info);
 
                     ecs_meta_cursor_t expr_cur = ecs_meta_cursor(
                         script->world, type, result->ptr);

@@ -4696,6 +4696,7 @@ struct ecs_type_info_t {
     ecs_type_hooks_t hooks;  /**< Type hooks. */
     ecs_entity_t component;  /**< Handle to component (do not set). */
     const char *name;        /**< Type name. */
+    int32_t refcount;        /**< Refcount (do not set). */
 };
 
 #ifndef FLECS_API_TYPES_H
@@ -19050,6 +19051,19 @@ FLECS_API
 int ecs_ptr_fini(
     const ecs_world_t *world,
     ecs_entity_t type,
+    void* ptr);
+
+/** Destruct a value and free storage.
+ *
+ * @param world The world.
+ * @param ti The type info of the value to destruct.
+ * @param ptr A pointer to the value.
+ * @return Zero if successful, nonzero if failed.
+ */
+FLECS_API
+int ecs_ptr_free_w_type_info(
+    ecs_world_t *world,
+    const ecs_type_info_t *ti,
     void* ptr);
 
 /** Destruct a value and free storage.
