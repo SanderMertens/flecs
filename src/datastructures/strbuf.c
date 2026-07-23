@@ -26,6 +26,7 @@
 #define EXP_THRESHOLD   (3)
 #define INT64_MAX_F ((double)INT64_MAX)
 
+
 static const double rounders[MAX_PRECISION + 1] =
 {
 	0.5,				// 0
@@ -41,8 +42,12 @@ static const double rounders[MAX_PRECISION + 1] =
 	0.00000000005		// 10
 };
 
-static
-char* flecs_strbuf_itoa(
+static const double pow10s[MAX_PRECISION + 1] =
+{
+	1.0, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9, 1e10
+};
+
+char* flecs_itoa(
     char *buf,
     int64_t v)
 {
@@ -83,45 +88,45 @@ char* flecs_strbuf_itoa(
     return ptr;
 }
 
-static
-void flecs_strbuf_ftoa(
-    ecs_strbuf_t *out, 
-    double f, 
+char* flecs_ftoa(
+    char *buf,
+    double f,
     int precision,
     char nan_delim)
 {
-    char buf[64];
-	char * ptr = buf;
+    char *ptr;
 	char c;
 	int64_t intPart;
     int64_t exp = 0;
 
     if (ecs_os_isnan(f)) {
+        ptr = buf;
         if (nan_delim) {
-            ecs_strbuf_appendch(out, nan_delim);
-            ecs_strbuf_appendlit(out, "NaN");
-            ecs_strbuf_appendch(out, nan_delim);
-            return;
-        } else {
-            ecs_strbuf_appendlit(out, "NaN");
-            return;
+            *ptr++ = nan_delim;
         }
+        *ptr++ = 'N'; *ptr++ = 'a'; *ptr++ = 'N';
+        if (nan_delim) {
+            *ptr++ = nan_delim;
+        }
+        return ptr;
     }
     if (ecs_os_isinf(f)) {
+        ptr = buf;
         if (nan_delim) {
-            ecs_strbuf_appendch(out, nan_delim);
-            ecs_strbuf_appendlit(out, "Inf");
-            ecs_strbuf_appendch(out, nan_delim);
-            return;
-        } else {
-            ecs_strbuf_appendlit(out, "Inf");
-            return;
+            *ptr++ = nan_delim;
         }
+        *ptr++ = 'I'; *ptr++ = 'n'; *ptr++ = 'f';
+        if (nan_delim) {
+            *ptr++ = nan_delim;
+        }
+        return ptr;
     }
 
 	if (precision > MAX_PRECISION) {
 		precision = MAX_PRECISION;
     }
+
+    ptr = buf;
 
 	if (f < 0) {
 		f = -f;
@@ -151,28 +156,33 @@ void flecs_strbuf_ftoa(
 	intPart = (int64_t)f;
 	f -= (double)intPart;
 
-    ptr = flecs_strbuf_itoa(ptr, intPart);
+    ptr = flecs_itoa(ptr, intPart);
 
 	if (precision) {
-		*ptr++ = '.';
-		while (precision--) {
-			f *= 10.0;
-			c = (char)f;
-			*ptr++ = (char)('0' + c);
-			f -= c;
+		uint64_t frac = (uint64_t)(f * pow10s[precision]);
+		int32_t digits = precision;
+		if (!frac) {
+			digits = 0;
+		}
+		while (digits >= 4 && !(frac % 10000)) {
+			frac /= 10000;
+			digits -= 4;
+		}
+		while (digits && !(frac % 10)) {
+			frac /= 10;
+			digits --;
+		}
+		if (digits) {
+			*ptr++ = '.';
+			int32_t i;
+			for (i = digits - 1; i >= 0; i --) {
+				ptr[i] = (char)('0' + (char)(frac % 10));
+				frac /= 10;
+			}
+			ptr += digits;
 		}
 	}
 	*ptr = 0;
-
-    /* Remove trailing 0s */
-    while ((&ptr[-1] != buf) && (ptr[-1] == '0')) {
-        ptr[-1] = '\0';
-        ptr --;
-    }
-    if (ptr != buf && ptr[-1] == '.') {
-        ptr[-1] = '\0';
-        ptr --;
-    }
 
     /* If trailing zeros exceed the threshold, convert to exponent notation to
      * save space without losing precision. */
@@ -217,7 +227,7 @@ void flecs_strbuf_ftoa(
         }
 
         ptr[0] = 'e';
-        ptr = flecs_strbuf_itoa(ptr + 1, exp);
+        ptr = flecs_itoa(ptr + 1, exp);
 
         if (nan_delim) {
             ptr[0] = nan_delim;
@@ -226,8 +236,20 @@ void flecs_strbuf_ftoa(
 
         ptr[0] = '\0';
     }
-    
-    ecs_strbuf_appendstrn(out, buf, (int32_t)(ptr - buf));
+
+    return ptr;
+}
+
+static
+void flecs_strbuf_ftoa(
+    ecs_strbuf_t *out,
+    double f,
+    int precision,
+    char nan_delim)
+{
+    char *buf = flecs_strbuf_reserve(out, 64);
+    char *ptr = flecs_ftoa(buf, f, precision, nan_delim);
+    out->length += (int32_t)(ptr - buf);
 }
 
 /* Grow the buffer */
@@ -254,6 +276,19 @@ char* flecs_strbuf_ptr(
     ecs_strbuf_t *b)
 {
     ecs_assert(b->content != NULL, ECS_INTERNAL_ERROR, NULL);
+    return &b->content[b->length];
+}
+
+char* flecs_strbuf_reserve(
+    ecs_strbuf_t *b,
+    int32_t n)
+{
+    int32_t mem_left = b->size - b->length;
+    while (n >= mem_left) {
+        flecs_strbuf_grow(b);
+        mem_left = b->size - b->length;
+    }
+
     return &b->content[b->length];
 }
 
@@ -315,7 +350,15 @@ void flecs_strbuf_appendstr(
         mem_left = b->size - b->length;
     }
 
-    ecs_os_memcpy(flecs_strbuf_ptr(b), str, n);
+    char *dst = flecs_strbuf_ptr(b);
+    if (n < 16) {
+        int32_t i;
+        for (i = 0; i < n; i ++) {
+            dst[i] = str[i];
+        }
+    } else {
+        ecs_os_memcpy(dst, str, n);
+    }
     b->length += n;
 }
 
@@ -378,10 +421,10 @@ void ecs_strbuf_appendint(
     ecs_strbuf_t *b,
     int64_t v)
 {
-    ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL); 
-    char numbuf[32];
-    char *ptr = flecs_strbuf_itoa(numbuf, v);
-    ecs_strbuf_appendstrn(b, numbuf, flecs_ito(int32_t, ptr - numbuf));
+    ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
+    char *numbuf = flecs_strbuf_reserve(b, 32);
+    char *ptr = flecs_itoa(numbuf, v);
+    b->length += flecs_ito(int32_t, ptr - numbuf);
 }
 
 void ecs_strbuf_appendflt(
@@ -490,6 +533,8 @@ void ecs_strbuf_list_push(
 
     b->list_stack[b->list_sp].count = 0;
     b->list_stack[b->list_sp].separator = separator;
+    b->list_stack[b->list_sp].separator_len =
+        separator ? ecs_os_strlen(separator) : 0;
 
     if (list_open) {
         char ch = list_open[0];
@@ -527,16 +572,16 @@ void ecs_strbuf_list_next(
 {
     ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    int32_t list_sp = b->list_sp;
-    if (b->list_stack[list_sp].count != 0) {
-        const char *sep = b->list_stack[list_sp].separator;
-        if (sep && !sep[1]) {
-            ecs_strbuf_appendch(b, sep[0]);
-        } else {
-            ecs_strbuf_appendstr(b, sep);
+    ecs_strbuf_list_elem *elem = &b->list_stack[b->list_sp];
+    if (elem->count != 0) {
+        int32_t sep_len = elem->separator_len;
+        if (sep_len == 1) {
+            flecs_strbuf_appendch(b, elem->separator[0]);
+        } else if (sep_len != 0) {
+            flecs_strbuf_appendstr(b, elem->separator, sep_len);
         }
     }
-    b->list_stack[list_sp].count ++;
+    elem->count ++;
 }
 
 void ecs_strbuf_list_appendch(

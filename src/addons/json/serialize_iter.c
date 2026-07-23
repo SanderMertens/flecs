@@ -206,7 +206,7 @@ void flecs_iter_free_ser_ctx(
 {
     int32_t f, field_count = it->field_count;
     for (f = 0; f < field_count; f ++) {
-        ecs_os_free(ser_ctx->value_ctx[f].id_label);
+        flecs_json_value_ser_ctx_fini(&ser_ctx->value_ctx[f]);
     }
 }
 

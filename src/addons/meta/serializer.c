@@ -22,6 +22,7 @@ ecs_meta_op_t* flecs_meta_ops_add(ecs_vec_t *ops, ecs_meta_op_kind_t kind) {
     op->op_count = 1;
     op->type_info = NULL;
     op->name = NULL;
+    op->name_len = 0;
     op->is.members = NULL;
     op->type = 0;
     op->member_index = 0;
@@ -450,6 +451,7 @@ int flecs_meta_serialize_struct(
 
         const char *member_name = member->name;
         op->name = member_name;
+        op->name_len = ecs_os_strlen(member_name);
         op->member_index = flecs_ito(int16_t, i);
 
         flecs_name_index_ensure(

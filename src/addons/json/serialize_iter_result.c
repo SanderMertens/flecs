@@ -291,6 +291,159 @@ int flecs_json_serialize_alerts(
     return 0;
 }
 
+/* Check if type is a struct that only contains primitive members that don't
+ * require special serialization logic. Serialization of such types can skip
+ * the serializer instruction walk and directly emit precomputed member
+ * prefixes and values. */
+static
+void flecs_json_init_flat_struct(
+    ecs_json_value_ser_ctx_t *ctx)
+{
+    const ecs_vec_t *v_ops = &ctx->ser->ops;
+    ecs_meta_op_t *ops = ecs_vec_first_t(v_ops, ecs_meta_op_t);
+    int32_t i, count = ecs_vec_count(v_ops);
+
+    if (count < 3) {
+        return;
+    }
+    if (ops[0].kind != EcsOpPushStruct || ops[0].op_count != count) {
+        return;
+    }
+    if (ops[count - 1].kind != EcsOpPop) {
+        return;
+    }
+
+    int32_t member_count = count - 2;
+    for (i = 1; i <= member_count; i ++) {
+        ecs_meta_op_t *op = &ops[i];
+        if (!op->name || op->op_count != 1) {
+            return;
+        }
+        switch(op->kind) {
+        case EcsOpBool:
+        case EcsOpByte:
+        case EcsOpU8:
+        case EcsOpU16:
+        case EcsOpU32:
+        case EcsOpI8:
+        case EcsOpI16:
+        case EcsOpI32:
+        case EcsOpF32:
+        case EcsOpF64:
+            break;
+        default:
+            return;
+        }
+        if (op->name_len > 18) {
+            return;
+        }
+    }
+
+    ecs_json_flat_member_t *members = ecs_os_malloc_n(
+        ecs_json_flat_member_t, member_count);
+
+    for (i = 0; i < member_count; i ++) {
+        ecs_meta_op_t *op = &ops[i + 1];
+        ecs_json_flat_member_t *m = &members[i];
+        m->kind = op->kind;
+        m->offset = op->offset;
+
+        char *prefix = m->prefix;
+        if (!i) {
+            *prefix++ = '{';
+        } else {
+            *prefix++ = ',';
+            *prefix++ = ' ';
+        }
+        *prefix++ = '"';
+        ecs_os_memcpy(prefix, op->name, op->name_len);
+        prefix += op->name_len;
+        *prefix++ = '"';
+        *prefix++ = ':';
+        m->prefix_len = flecs_ito(int32_t, prefix - m->prefix);
+    }
+
+    ctx->flat_members = members;
+    ctx->flat_count = member_count;
+}
+
+int flecs_json_ser_value_ctx(
+    const ecs_world_t *world,
+    const ecs_json_value_ser_ctx_t *ctx,
+    const void *ptr,
+    ecs_strbuf_t *buf)
+{
+    int32_t i, j, count = ctx->flat_count;
+    if (!count) {
+        return flecs_json_ser_type(world, &ctx->ser->ops, ptr, buf);
+    }
+
+    char *dst = flecs_strbuf_reserve(buf, count * 88 + 1);
+    char *p = dst;
+
+    const ecs_json_flat_member_t *members = ctx->flat_members;
+    for (i = 0; i < count; i ++) {
+        const ecs_json_flat_member_t *m = &members[i];
+        for (j = 0; j < m->prefix_len; j ++) {
+            p[j] = m->prefix[j];
+        }
+        p += m->prefix_len;
+
+        const void *mptr = ECS_OFFSET(ptr, m->offset);
+        switch(m->kind) {
+        case EcsOpBool:
+            if (*(const bool*)mptr) {
+                p[0] = 't'; p[1] = 'r'; p[2] = 'u'; p[3] = 'e';
+                p += 4;
+            } else {
+                p[0] = 'f'; p[1] = 'a'; p[2] = 'l'; p[3] = 's'; p[4] = 'e';
+                p += 5;
+            }
+            break;
+        case EcsOpByte:
+        case EcsOpU8:
+            p = flecs_itoa(p, flecs_uto(int64_t, *(const uint8_t*)mptr));
+            break;
+        case EcsOpU16:
+            p = flecs_itoa(p, flecs_uto(int64_t, *(const uint16_t*)mptr));
+            break;
+        case EcsOpU32:
+            p = flecs_itoa(p, flecs_uto(int64_t, *(const uint32_t*)mptr));
+            break;
+        case EcsOpI8:
+            p = flecs_itoa(p, flecs_ito(int64_t, *(const int8_t*)mptr));
+            break;
+        case EcsOpI16:
+            p = flecs_itoa(p, flecs_ito(int64_t, *(const int16_t*)mptr));
+            break;
+        case EcsOpI32:
+            p = flecs_itoa(p, flecs_ito(int64_t, *(const int32_t*)mptr));
+            break;
+        case EcsOpF32:
+            p = flecs_ftoa(p, (ecs_f64_t)*(const ecs_f32_t*)mptr, 10, '"');
+            break;
+        case EcsOpF64:
+            p = flecs_ftoa(p, *(const ecs_f64_t*)mptr, 10, '"');
+            break;
+        default:
+            ecs_throw(ECS_INTERNAL_ERROR, "invalid flat member kind");
+        }
+    }
+
+    *p++ = '}';
+    buf->length += flecs_ito(int32_t, p - dst);
+    return 0;
+error:
+    return -1;
+}
+
+void flecs_json_value_ser_ctx_fini(
+    ecs_json_value_ser_ctx_t *ctx)
+{
+    ecs_os_free(ctx->id_label);
+    ecs_os_free(ctx->flat_members);
+}
+
 bool flecs_json_serialize_get_value_ctx(
     const ecs_world_t *world,
     ecs_id_t id,
@@ -305,7 +458,7 @@ bool flecs_json_serialize_get_value_ctx(
         ctx->initialized = true;
 
         ecs_strbuf_t idlbl = ECS_STRBUF_INIT;
-        flecs_json_id_member(&idlbl, world, id, 
+        flecs_json_id_member(&idlbl, world, id,
             desc ? desc->serialize_full_paths : true);
         ctx->id_label = ecs_strbuf_get(&idlbl);
 
@@ -319,6 +472,8 @@ bool flecs_json_serialize_get_value_ctx(
         if (!ctx->ser) {
             return false;
         }
+
+        flecs_json_init_flat_struct(ctx);
 
         return true;
     } else {

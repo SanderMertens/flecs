@@ -30,6 +30,7 @@ extern "C" {
 typedef struct ecs_strbuf_list_elem {
     int32_t count;            /**< Number of elements appended to the list. */
     const char *separator;    /**< Separator string inserted between elements. */
+    int32_t separator_len;    /**< Length of separator string. */
 } ecs_strbuf_list_elem;
 
 /** A string buffer for efficient string construction. */

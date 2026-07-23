@@ -3155,6 +3155,7 @@ extern "C" {
 typedef struct ecs_strbuf_list_elem {
     int32_t count;            /**< Number of elements appended to the list. */
     const char *separator;    /**< Separator string inserted between elements. */
+    int32_t separator_len;    /**< Length of separator string. */
 } ecs_strbuf_list_elem;
 
 /** A string buffer for efficient string construction. */
@@ -5013,6 +5014,23 @@ ecs_size_t flecs_stresc(
     ecs_size_t size,
     char delimiter,
     const char *in);
+
+FLECS_API
+char* flecs_strbuf_reserve(
+    ecs_strbuf_t *b,
+    int32_t n);
+
+FLECS_API
+char* flecs_itoa(
+    char *buf,
+    int64_t v);
+
+FLECS_API
+char* flecs_ftoa(
+    char *buf,
+    double f,
+    int precision,
+    char nan_delim);
 
 /** Return an escaped string.
  * Same as flecs_stresc(), but returns an
