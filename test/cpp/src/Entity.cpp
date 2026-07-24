@@ -4717,6 +4717,340 @@ void Entity_each_in_stage(void) {
     world.readonly_end();
 }
 
+struct EachDontFragment {
+    static constexpr bool dont_fragment = true;
+    float x, y;
+};
+
+struct OtherDontFragment {
+    static constexpr bool dont_fragment = true;
+    float x, y;
+};
+
+void Entity_each_w_dont_fragment_component(void) {
+    flecs::world world;
+
+    auto tag = world.entity();
+
+    auto e = world.entity()
+        .add(tag)
+        .set<EachDontFragment>({10, 20});
+
+    /* DontFragment component on another entity should not be matched. */
+    world.entity().set<OtherDontFragment>({1, 2});
+
+    int32_t count = 0;
+    bool tag_found = false, df_found = false;
+
+    e.each([&](flecs::id id) {
+        test_assert(id != world.id<OtherDontFragment>());
+        if (id == tag) {
+            tag_found = true;
+        } else if (id == world.id<EachDontFragment>()) {
+            df_found = true;
+        }
+        count ++;
+    });
+
+    test_int(count, 2);
+    test_bool(tag_found, true);
+    test_bool(df_found, true);
+}
+
+void Entity_each_w_dont_fragment_tag(void) {
+    flecs::world world;
+
+    auto df_tag = world.entity().add(flecs::DontFragment);
+    auto df_tag_other = world.entity().add(flecs::DontFragment);
+    auto tag = world.entity();
+
+    auto e = world.entity()
+        .add(tag)
+        .add(df_tag);
+
+    /* DontFragment tag on another entity should not be matched. */
+    world.entity().add(df_tag_other);
+
+    int32_t count = 0;
+    bool tag_found = false, df_found = false;
+
+    e.each([&](flecs::id id) {
+        test_assert(id != df_tag_other);
+        if (id == tag) {
+            tag_found = true;
+        } else if (id == df_tag) {
+            df_found = true;
+        }
+        count ++;
+    });
+
+    test_int(count, 2);
+    test_bool(tag_found, true);
+    test_bool(df_found, true);
+}
+
+void Entity_each_w_dont_fragment_pair(void) {
+    flecs::world world;
+
+    auto rel = world.entity().add(flecs::DontFragment);
+    auto tgt = world.entity();
+    auto tgt_other = world.entity();
+    auto tag = world.entity();
+
+    auto e = world.entity()
+        .add(tag)
+        .add(rel, tgt);
+
+    /* Pair with same relationship on another entity should not be matched. */
+    world.entity().add(rel, tgt_other);
+
+    int32_t count = 0;
+    bool tag_found = false, pair_found = false;
+
+    e.each([&](flecs::id id) {
+        test_assert(id != world.pair(rel, tgt_other));
+        if (id == tag) {
+            tag_found = true;
+        } else if (id == world.pair(rel, tgt)) {
+            pair_found = true;
+        }
+        count ++;
+    });
+
+    test_int(count, 2);
+    test_bool(tag_found, true);
+    test_bool(pair_found, true);
+}
+
+void Entity_each_w_only_dont_fragment(void) {
+    flecs::world world;
+
+    auto e = world.entity()
+        .set<EachDontFragment>({10, 20});
+
+    /* DontFragment component on another entity should not be matched. */
+    world.entity().set<OtherDontFragment>({1, 2});
+
+    int32_t count = 0;
+
+    e.each([&](flecs::id id) {
+        test_assert(id == world.id<EachDontFragment>());
+        count ++;
+    });
+
+    test_int(count, 1);
+}
+
+void Entity_each_w_only_dont_fragment_tag(void) {
+    flecs::world world;
+
+    auto df_tag = world.entity().add(flecs::DontFragment);
+    auto df_tag_other = world.entity().add(flecs::DontFragment);
+
+    auto e = world.entity()
+        .add(df_tag);
+
+    /* DontFragment tag on another entity should not be matched. */
+    world.entity().add(df_tag_other);
+
+    int32_t count = 0;
+
+    e.each([&](flecs::id id) {
+        test_assert(id == df_tag);
+        count ++;
+    });
+
+    test_int(count, 1);
+}
+
+void Entity_each_w_only_dont_fragment_pair(void) {
+    flecs::world world;
+
+    auto rel = world.entity().add(flecs::DontFragment);
+    auto tgt = world.entity();
+    auto tgt_other = world.entity();
+
+    auto e = world.entity()
+        .add(rel, tgt);
+
+    /* Pair with same relationship on another entity should not be matched. */
+    world.entity().add(rel, tgt_other);
+
+    int32_t count = 0;
+
+    e.each([&](flecs::id id) {
+        test_assert(id == world.pair(rel, tgt));
+        count ++;
+    });
+
+    test_int(count, 1);
+}
+
+void Entity_each_pair_w_dont_fragment(void) {
+    flecs::world world;
+
+    auto rel = world.entity().add(flecs::DontFragment);
+    auto tgt_1 = world.entity();
+    auto tgt_2 = world.entity();
+    auto tgt_other = world.entity();
+
+    auto e = world.entity()
+        .add(rel, tgt_1)
+        .add(rel, tgt_2);
+
+    /* Pair with same relationship on another entity should not be matched. */
+    world.entity().add(rel, tgt_other);
+
+    int32_t count = 0;
+    bool tgt_1_found = false, tgt_2_found = false;
+
+    e.each(rel, flecs::Wildcard, [&](flecs::id id) {
+        test_assert(id.first() == rel);
+        test_assert(id.second() != tgt_other);
+        if (id.second() == tgt_1) {
+            tgt_1_found = true;
+        } else if (id.second() == tgt_2) {
+            tgt_2_found = true;
+        }
+        count ++;
+    });
+
+    test_int(count, 2);
+    test_bool(tgt_1_found, true);
+    test_bool(tgt_2_found, true);
+}
+
+void Entity_each_rel_w_dont_fragment(void) {
+    flecs::world world;
+
+    auto rel = world.entity().add(flecs::DontFragment);
+    auto tgt_1 = world.entity();
+    auto tgt_2 = world.entity();
+    auto tgt_other = world.entity();
+
+    auto e = world.entity()
+        .add(rel, tgt_1)
+        .add(rel, tgt_2);
+
+    /* Pair with same relationship on another entity should not be matched. */
+    world.entity().add(rel, tgt_other);
+
+    int32_t count = 0;
+    bool tgt_1_found = false, tgt_2_found = false;
+
+    e.each(rel, [&](flecs::entity tgt) {
+        test_assert(tgt != tgt_other);
+        if (tgt == tgt_1) {
+            tgt_1_found = true;
+        } else if (tgt == tgt_2) {
+            tgt_2_found = true;
+        }
+        count ++;
+    });
+
+    test_int(count, 2);
+    test_bool(tgt_1_found, true);
+    test_bool(tgt_2_found, true);
+}
+
+void Entity_each_pair_w_dont_fragment_mixed(void) {
+    flecs::world world;
+
+    auto rel = world.entity().add(flecs::DontFragment);
+    auto frag_rel = world.entity();
+    auto tag = world.entity();
+    auto tgt_1 = world.entity();
+    auto tgt_2 = world.entity();
+    auto tgt_other = world.entity();
+
+    auto e = world.entity()
+        .add(tag)
+        .add(frag_rel, tgt_1)
+        .add(rel, tgt_1)
+        .add(rel, tgt_2);
+
+    /* Pair with same relationship on another entity should not be matched. */
+    world.entity().add(rel, tgt_other);
+
+    int32_t count = 0;
+    bool tgt_1_found = false, tgt_2_found = false;
+
+    e.each(rel, flecs::Wildcard, [&](flecs::id id) {
+        test_assert(id.first() == rel);
+        test_assert(id.second() != tgt_other);
+        if (id.second() == tgt_1) {
+            tgt_1_found = true;
+        } else if (id.second() == tgt_2) {
+            tgt_2_found = true;
+        }
+        count ++;
+    });
+
+    test_int(count, 2);
+    test_bool(tgt_1_found, true);
+    test_bool(tgt_2_found, true);
+
+    /* Fragmenting pairs should still be matched when the entity also has
+     * DontFragment pairs. */
+    count = 0;
+
+    e.each(frag_rel, flecs::Wildcard, [&](flecs::id id) {
+        test_assert(id.first() == frag_rel);
+        test_assert(id.second() == tgt_1);
+        count ++;
+    });
+
+    test_int(count, 1);
+}
+
+void Entity_each_rel_w_dont_fragment_mixed(void) {
+    flecs::world world;
+
+    auto rel = world.entity().add(flecs::DontFragment);
+    auto frag_rel = world.entity();
+    auto tag = world.entity();
+    auto tgt_1 = world.entity();
+    auto tgt_2 = world.entity();
+    auto tgt_other = world.entity();
+
+    auto e = world.entity()
+        .add(tag)
+        .add(frag_rel, tgt_1)
+        .add(rel, tgt_1)
+        .add(rel, tgt_2);
+
+    /* Pair with same relationship on another entity should not be matched. */
+    world.entity().add(rel, tgt_other);
+
+    int32_t count = 0;
+    bool tgt_1_found = false, tgt_2_found = false;
+
+    e.each(rel, [&](flecs::entity tgt) {
+        test_assert(tgt != tgt_other);
+        if (tgt == tgt_1) {
+            tgt_1_found = true;
+        } else if (tgt == tgt_2) {
+            tgt_2_found = true;
+        }
+        count ++;
+    });
+
+    test_int(count, 2);
+    test_bool(tgt_1_found, true);
+    test_bool(tgt_2_found, true);
+
+    /* Fragmenting pairs should still be matched when the entity also has
+     * DontFragment pairs. */
+    count = 0;
+
+    e.each(frag_rel, [&](flecs::entity tgt) {
+        test_assert(tgt == tgt_1);
+        count ++;
+    });
+
+    test_int(count, 1);
+}
+
 void Entity_iter_recycled_parent(void) {
     flecs::world ecs;
     
