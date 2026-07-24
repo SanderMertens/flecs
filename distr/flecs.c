@@ -48372,6 +48372,9 @@ void http_decode_url_str(
             dst[0] = http_hex_2_int(ptr[1], ptr[2]);
             dst ++;
             ptr += 2;
+        } else if (ch == '+') {
+            dst[0] = ' ';
+            dst ++;
         } else {
             dst[0] = ptr[0];
             dst ++;
