@@ -96595,6 +96595,7 @@ void flecs_set_struct_member(
     member->count = m->count;
     member->unit = unit;
     member->offset = m->offset;
+    member->use_offset = m->use_offset;
 
     ecs_os_strset(ECS_CONST_CAST(char**, &member->name), m->name);
 
