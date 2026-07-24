@@ -278,6 +278,12 @@ void Entity_slot(void);
 void Entity_id_get_entity(void);
 void Entity_id_get_invalid_entity(void);
 void Entity_each_in_stage(void);
+void Entity_each_w_dont_fragment_component(void);
+void Entity_each_w_dont_fragment_tag(void);
+void Entity_each_w_dont_fragment_pair(void);
+void Entity_each_w_only_dont_fragment(void);
+void Entity_each_pair_w_dont_fragment(void);
+void Entity_each_rel_w_dont_fragment(void);
 void Entity_iter_recycled_parent(void);
 void Entity_get_lambda_from_stage(void);
 void Entity_default_ctor(void);
@@ -2792,6 +2798,30 @@ bake_test_case Entity_testcases[] = {
     {
         "each_in_stage",
         Entity_each_in_stage
+    },
+    {
+        "each_w_dont_fragment_component",
+        Entity_each_w_dont_fragment_component
+    },
+    {
+        "each_w_dont_fragment_tag",
+        Entity_each_w_dont_fragment_tag
+    },
+    {
+        "each_w_dont_fragment_pair",
+        Entity_each_w_dont_fragment_pair
+    },
+    {
+        "each_w_only_dont_fragment",
+        Entity_each_w_only_dont_fragment
+    },
+    {
+        "each_pair_w_dont_fragment",
+        Entity_each_pair_w_dont_fragment
+    },
+    {
+        "each_rel_w_dont_fragment",
+        Entity_each_rel_w_dont_fragment
     },
     {
         "iter_recycled_parent",
@@ -8466,7 +8496,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        399,
+        405,
         Entity_testcases
     },
     {

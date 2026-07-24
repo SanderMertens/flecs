@@ -4717,6 +4717,165 @@ void Entity_each_in_stage(void) {
     world.readonly_end();
 }
 
+struct EachDontFragment {
+    static constexpr bool dont_fragment = true;
+    float x, y;
+};
+
+void Entity_each_w_dont_fragment_component(void) {
+    flecs::world world;
+
+    auto tag = world.entity();
+
+    auto e = world.entity()
+        .add(tag)
+        .set<EachDontFragment>({10, 20});
+
+    int32_t count = 0;
+    bool tag_found = false, df_found = false;
+
+    e.each([&](flecs::id id) {
+        if (id == tag) {
+            tag_found = true;
+        } else if (id == world.id<EachDontFragment>()) {
+            df_found = true;
+        }
+        count ++;
+    });
+
+    test_int(count, 2);
+    test_bool(tag_found, true);
+    test_bool(df_found, true);
+}
+
+void Entity_each_w_dont_fragment_tag(void) {
+    flecs::world world;
+
+    auto df_tag = world.entity().add(flecs::DontFragment);
+    auto tag = world.entity();
+
+    auto e = world.entity()
+        .add(tag)
+        .add(df_tag);
+
+    int32_t count = 0;
+    bool tag_found = false, df_found = false;
+
+    e.each([&](flecs::id id) {
+        if (id == tag) {
+            tag_found = true;
+        } else if (id == df_tag) {
+            df_found = true;
+        }
+        count ++;
+    });
+
+    test_int(count, 2);
+    test_bool(tag_found, true);
+    test_bool(df_found, true);
+}
+
+void Entity_each_w_dont_fragment_pair(void) {
+    flecs::world world;
+
+    auto rel = world.entity().add(flecs::DontFragment);
+    auto tgt = world.entity();
+    auto tag = world.entity();
+
+    auto e = world.entity()
+        .add(tag)
+        .add(rel, tgt);
+
+    int32_t count = 0;
+    bool tag_found = false, pair_found = false;
+
+    e.each([&](flecs::id id) {
+        if (id == tag) {
+            tag_found = true;
+        } else if (id == world.pair(rel, tgt)) {
+            pair_found = true;
+        }
+        count ++;
+    });
+
+    test_int(count, 2);
+    test_bool(tag_found, true);
+    test_bool(pair_found, true);
+}
+
+void Entity_each_w_only_dont_fragment(void) {
+    flecs::world world;
+
+    auto e = world.entity()
+        .set<EachDontFragment>({10, 20});
+
+    int32_t count = 0;
+
+    e.each([&](flecs::id id) {
+        test_assert(id == world.id<EachDontFragment>());
+        count ++;
+    });
+
+    test_int(count, 1);
+}
+
+void Entity_each_pair_w_dont_fragment(void) {
+    flecs::world world;
+
+    auto rel = world.entity().add(flecs::DontFragment);
+    auto tgt_1 = world.entity();
+    auto tgt_2 = world.entity();
+
+    auto e = world.entity()
+        .add(rel, tgt_1)
+        .add(rel, tgt_2);
+
+    int32_t count = 0;
+    bool tgt_1_found = false, tgt_2_found = false;
+
+    e.each(rel, flecs::Wildcard, [&](flecs::id id) {
+        test_assert(id.first() == rel);
+        if (id.second() == tgt_1) {
+            tgt_1_found = true;
+        } else if (id.second() == tgt_2) {
+            tgt_2_found = true;
+        }
+        count ++;
+    });
+
+    test_int(count, 2);
+    test_bool(tgt_1_found, true);
+    test_bool(tgt_2_found, true);
+}
+
+void Entity_each_rel_w_dont_fragment(void) {
+    flecs::world world;
+
+    auto rel = world.entity().add(flecs::DontFragment);
+    auto tgt_1 = world.entity();
+    auto tgt_2 = world.entity();
+
+    auto e = world.entity()
+        .add(rel, tgt_1)
+        .add(rel, tgt_2);
+
+    int32_t count = 0;
+    bool tgt_1_found = false, tgt_2_found = false;
+
+    e.each(rel, [&](flecs::entity tgt) {
+        if (tgt == tgt_1) {
+            tgt_1_found = true;
+        } else if (tgt == tgt_2) {
+            tgt_2_found = true;
+        }
+        count ++;
+    });
+
+    test_int(count, 2);
+    test_bool(tgt_1_found, true);
+    test_bool(tgt_2_found, true);
+}
+
 void Entity_iter_recycled_parent(void) {
     flecs::world ecs;
     

@@ -5746,10 +5746,36 @@ FLECS_API
 ecs_sparse_t* flecs_component_get_sparse(
     const ecs_component_record_t *cr);
 
+/** Get the first component record with the DontFragment trait.
+ * Together with flecs_component_dont_fragment_next() this operation can be
+ * used to iterate all component records for components with the DontFragment
+ * trait. Note that the list can contain wildcard component records.
+ *
+ * To find out whether an entity could have components with the DontFragment
+ * trait, applications can test whether the entity record's row has the
+ * EcsEntityHasDontFragment flag set.
+ *
+ * @param world The world.
+ * @return The first DontFragment component record, or NULL if there are none.
+ */
+FLECS_API
+ecs_component_record_t* flecs_component_dont_fragment_first(
+    const ecs_world_t *world);
+
+/** Get the next component record with the DontFragment trait.
+ * See flecs_component_dont_fragment_first().
+ *
+ * @param cr The current DontFragment component record.
+ * @return The next DontFragment component record, or NULL if at the end.
+ */
+FLECS_API
+ecs_component_record_t* flecs_component_dont_fragment_next(
+    const ecs_component_record_t *cr);
+
 /** Find the table record for a component record.
  * This operation returns the table record for the table and component record if it
  * exists. If the record exists, it means the table has the component.
- * 
+ *
  * @param cr The component record.
  * @param table The table.
  * @return The table record if the table has the component, or NULL if not.
