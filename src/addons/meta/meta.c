@@ -16,6 +16,7 @@ void flecs_type_serializer_dtor(
     
     for (i = 0; i < count; i ++) {
         ecs_meta_op_t *op = &ops[i];
+        ecs_os_free(ECS_CONST_CAST(char*, op->name));
         if (op->kind == EcsOpPushStruct) {
             if (op->is.members) {
                 flecs_name_index_free(op->is.members);
@@ -36,9 +37,31 @@ static ECS_COPY(EcsTypeSerializer, dst, src, {
     
     for (o = 0; o < count; o ++) {
         ecs_meta_op_t *op = &ops[o];
+        if (op->name) {
+            op->name = ecs_os_strdup(op->name);
+        }
+    }
+
+    for (o = 0; o < count; o ++) {
+        ecs_meta_op_t *op = &ops[o];
         if (op->kind == EcsOpPushStruct) {
             if (op->is.members) {
                 op->is.members = flecs_name_index_copy(op->is.members);
+
+                /* Repoint the name index keys to the copied name strings, as
+                 * the index doesn't own its keys. The index maps member names
+                 * to the offset of the member op relative to the op after the
+                 * push op. */
+                flecs_hashmap_iter_t it = flecs_hashmap_iter(op->is.members);
+                ecs_hashed_string_t *key;
+                uint64_t *op_index;
+                while ((op_index = flecs_hashmap_next_w_key(
+                    &it, ecs_hashed_string_t, &key, uint64_t)))
+                {
+                    ecs_meta_op_t *mbr_op = &ops[o + 1 + flecs_uto(
+                        int32_t, *op_index)];
+                    key->value = ECS_CONST_CAST(char*, mbr_op->name);
+                }
             }
         }
     }

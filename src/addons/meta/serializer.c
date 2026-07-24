@@ -448,13 +448,15 @@ int flecs_meta_serialize_struct(
             op->op_count = flecs_ito(int16_t, ecs_vec_count(ops) - cur);
         }
 
-        const char *member_name = member->name;
-        op->name = member_name;
+        /* Serializer must own the member name, as the name strings in the
+         * EcsStruct component can be freed while the serializer is in use
+         * (for example when deserializing reflection data). */
+        op->name = ecs_os_strdup(member->name);
         op->member_index = flecs_ito(int16_t, i);
 
         flecs_name_index_ensure(
-            member_index, flecs_ito(uint64_t, cur - first - 1), 
-                member_name, 0, 0);
+            member_index, flecs_ito(uint64_t, cur - first - 1),
+                op->name, 0, 0);
     }
 
     ecs_meta_op_t *pop = flecs_meta_ops_add(ops, EcsOpPop);
