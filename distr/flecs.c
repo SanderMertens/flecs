@@ -29042,7 +29042,21 @@ bool flecs_rest_get_entity(
         world, 0, path, "/", NULL, false);
     if (!e) {
         ecs_dbg_2("rest: entity '%s' not found", path);
-        flecs_reply_error(reply, "entity '%s' not found", path);
+        if (strchr(path, '.') && ecs_lookup_path_w_sep(
+            world, 0, path, ".", NULL, false))
+        {
+            char *suggestion = ecs_os_strdup(path);
+            char *sep;
+            for (sep = suggestion; (sep = strchr(sep, '.')); sep ++) {
+                *sep = '/';
+            }
+            flecs_reply_error(reply,
+                "entity '%s' not found, did you mean '/entity/%s'?",
+                path, suggestion);
+            ecs_os_free(suggestion);
+        } else {
+            flecs_reply_error(reply, "entity '%s' not found", path);
+        }
         reply->code = 404;
         return true;
     }

@@ -293,6 +293,30 @@ void Rest_call_not_found(void) {
     ecs_fini(world);
 }
 
+void Rest_entity_not_found_w_dot_sep(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "foo" });
+    ecs_entity(world, { .name = "bar", .parent = parent });
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "GET",
+        "/entity/foo.bar", NULL, &reply));
+    test_int(reply.code, 404);
+
+    char *reply_str = ecs_strbuf_get(&reply.body);
+    test_assert(reply_str != NULL);
+    test_str(reply_str, "{\"error\":\"entity 'foo.bar' not found, "
+        "did you mean '/entity/foo/bar'?\"}");
+    ecs_os_free(reply_str);
+
+    ecs_rest_server_fini(srv);
+    ecs_fini(world);
+}
+
 void Rest_tables(void) {
     ecs_world_t *world = ecs_init();
 

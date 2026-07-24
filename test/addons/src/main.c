@@ -485,6 +485,7 @@ void Rest_call(void);
 void Rest_call_string(void);
 void Rest_call_missing_argument(void);
 void Rest_call_not_found(void);
+void Rest_entity_not_found_w_dot_sep(void);
 void Rest_tables(void);
 void Rest_components(void);
 void Rest_type_info_non_existing_entity(void);
@@ -2377,6 +2378,10 @@ bake_test_case Rest_testcases[] = {
         Rest_call_not_found
     },
     {
+        "entity_not_found_w_dot_sep",
+        Rest_entity_not_found_w_dot_sep
+    },
+    {
         "tables",
         Rest_tables
     },
@@ -2963,7 +2968,7 @@ static bake_test_suite suites[] = {
         "Rest",
         NULL,
         NULL,
-        43,
+        44,
         Rest_testcases
     },
     {
