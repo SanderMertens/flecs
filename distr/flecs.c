@@ -31002,6 +31002,16 @@ bool flecs_rest_get_commands_request(
 }
 
 static
+bool flecs_rest_get_root(
+    ecs_http_reply_t *reply)
+{
+    reply->content_type = "text/plain";
+    ecs_strbuf_appendlit(&reply->body,
+        "You've reached the REST API for Flecs " FLECS_VERSION "!\n");
+    return true;
+}
+
+static
 bool flecs_rest_reply(
     const ecs_http_request_t* req,
     ecs_http_reply_t *reply,
@@ -31018,8 +31028,12 @@ bool flecs_rest_reply(
     }
 
     if (req->method == EcsHttpGet) {
+        /* Root endpoint */
+        if (!req->path[0]) {
+            return flecs_rest_get_root(reply);
+
         /* Entity endpoint */
-        if (!ecs_os_strncmp(req->path, "entity/", 7)) {
+        } else if (!ecs_os_strncmp(req->path, "entity/", 7)) {
             return flecs_rest_get_entity(world, req, reply);
 
         /* Component GET endpoint */
