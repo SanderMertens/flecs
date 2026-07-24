@@ -518,7 +518,8 @@
                 "teardown",
                 "teardown_started",
                 "teardown_stopped",
-                "stop_start"
+                "stop_start",
+                "decode_plus"
             ]
         }, {
             "id": "Rest",
@@ -553,6 +554,8 @@
                 "get_pipeline_stats_after_delete_system",
                 "request_world_summary_before_monitor_sys_run",
                 "escape_backslash",
+                "entity_name_w_spaces",
+                "query_w_spaces",
                 "request_small_buffer_plus_one",
                 "request_ending_in_pct",
                 "request_ending_in_2_pct",

@@ -471,6 +471,7 @@ void Http_teardown(void);
 void Http_teardown_started(void);
 void Http_teardown_stopped(void);
 void Http_stop_start(void);
+void Http_decode_plus(void);
 
 // Testsuite 'Rest'
 void Rest_teardown(void);
@@ -503,6 +504,8 @@ void Rest_import_rest_after_mini(void);
 void Rest_get_pipeline_stats_after_delete_system(void);
 void Rest_request_world_summary_before_monitor_sys_run(void);
 void Rest_escape_backslash(void);
+void Rest_entity_name_w_spaces(void);
+void Rest_query_w_spaces(void);
 void Rest_request_small_buffer_plus_one(void);
 void Rest_request_ending_in_pct(void);
 void Rest_request_ending_in_2_pct(void);
@@ -2321,6 +2324,10 @@ bake_test_case Http_testcases[] = {
     {
         "stop_start",
         Http_stop_start
+    },
+    {
+        "decode_plus",
+        Http_decode_plus
     }
 };
 
@@ -2444,6 +2451,14 @@ bake_test_case Rest_testcases[] = {
     {
         "escape_backslash",
         Rest_escape_backslash
+    },
+    {
+        "entity_name_w_spaces",
+        Rest_entity_name_w_spaces
+    },
+    {
+        "query_w_spaces",
+        Rest_query_w_spaces
     },
     {
         "request_small_buffer_plus_one",
@@ -2941,14 +2956,14 @@ static bake_test_suite suites[] = {
         "Http",
         NULL,
         NULL,
-        4,
+        5,
         Http_testcases
     },
     {
         "Rest",
         NULL,
         NULL,
-        41,
+        43,
         Rest_testcases
     },
     {

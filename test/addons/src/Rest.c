@@ -891,6 +891,58 @@ void Rest_escape_backslash(void) {
     ecs_fini(world);
 }
 
+void Rest_entity_name_w_spaces(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_entity(world, { .name = "foo bar" });
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "GET",
+        "/entity/foo+bar", NULL, &reply));
+    test_int(reply.code, 200);
+
+    char *reply_str = ecs_strbuf_get(&reply.body);
+    test_assert(reply_str != NULL);
+    test_str(reply_str, "{\"name\":\"foo bar\"}");
+    ecs_os_free(reply_str);
+
+    ecs_rest_server_fini(srv);
+
+    ecs_fini(world);
+}
+
+void Rest_query_w_spaces(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, Position, {10, 20});
+    ecs_set(world, e, Velocity, {1, 2});
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "GET",
+        "/query?expr=Position,+Velocity", NULL, &reply));
+    test_int(reply.code, 200);
+
+    char *reply_str = ecs_strbuf_get(&reply.body);
+    test_assert(reply_str != NULL);
+    test_str(reply_str,
+        "{\"results\":[{\"name\":\"e\", \"fields\":{\"values\":[0, 0]}}]}");
+    ecs_os_free(reply_str);
+
+    ecs_rest_server_fini(srv);
+
+    ecs_fini(world);
+}
+
 void Rest_request_small_buffer_plus_one(void) {
     ecs_world_t *world = ecs_init();
 
