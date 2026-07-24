@@ -6,7 +6,6 @@
 #include "flecs.h"
 #include "system/system.h"
 #include "../private_api.h"
-
 #ifdef FLECS_TIMER
 
 static
@@ -18,33 +17,44 @@ void ProgressTimers(ecs_iter_t *it) {
 
     int i;
     for (i = 0; i < it->count; i ++) {
-        tick_source[i].tick = false;
+        tick_source[i].ticks = 0;
 
         if (!timer[i].active) {
             continue;
         }
-
         const ecs_world_info_t *info = ecs_get_world_info(it->world);
-        ecs_ftime_t time_elapsed = timer[i].time + info->delta_time_raw;
-        ecs_ftime_t timeout = timer[i].timeout;
-        
-        if (time_elapsed >= timeout) {
-            ecs_ftime_t t = time_elapsed - timeout;
-            if (t > timeout) {
-                t = 0;
-            }
-
-            timer[i].time = t; /* Initialize with remainder */
-            tick_source[i].tick = true;
-            tick_source[i].time_elapsed = time_elapsed - timer[i].overshoot;
-            timer[i].overshoot = t;
-
-            if (timer[i].single_shot) {
-                timer[i].active = false;
+        if (timer[i].fixed_interval) {
+            timer[i].time += info->delta_time_raw;
+            tick_source[i].time_elapsed = timer[i].timeout;
+            while (timer[i].time >= timer[i].timeout && timer[i].active) {
+                timer[i].time -= timer[i].timeout;
+                tick_source[i].ticks++;
+                if (timer[i].single_shot) {
+                    timer[i].active = false;
+                }
             }
         } else {
-            timer[i].time = time_elapsed;
-        }  
+            ecs_ftime_t time_elapsed = timer[i].time + info->delta_time_raw;
+            ecs_ftime_t timeout = timer[i].timeout;
+            
+            if (time_elapsed >= timeout) {
+                ecs_ftime_t t = time_elapsed - timeout;
+                if (t > timeout) {
+                    t = 0;
+                }
+
+                timer[i].time = t; /* Initialize with remainder */
+                tick_source[i].ticks = 1;
+                tick_source[i].time_elapsed = time_elapsed - timer[i].overshoot;
+                timer[i].overshoot = t;
+
+                if (timer[i].single_shot) {
+                    timer[i].active = false;
+                }
+            } else {
+                timer[i].time = time_elapsed;
+            }  
+        }
     }
 }
 
@@ -64,7 +74,7 @@ void ProgressRateFilters(ecs_iter_t *it) {
             const EcsTickSource *tick_src = ecs_get(
                 it->world, src, EcsTickSource);
             if (tick_src) {
-                inc = tick_src->tick;
+                inc = tick_src->ticks > 0;
             } else {
                 inc = true;
             }
@@ -75,14 +85,14 @@ void ProgressRateFilters(ecs_iter_t *it) {
         if (inc) {
             filter[i].tick_count ++;
             bool triggered = !(filter[i].tick_count % filter[i].rate);
-            tick_dst[i].tick = triggered;
+            tick_dst[i].ticks = triggered ? 1 : 0;
             tick_dst[i].time_elapsed = filter[i].time_elapsed;
 
             if (triggered) {
                 filter[i].time_elapsed = 0;
             }            
         } else {
-            tick_dst[i].tick = false;
+            tick_dst[i].ticks = 0;
         }
     }
 }
@@ -94,7 +104,7 @@ void ProgressTickSource(ecs_iter_t *it) {
     /* If tick source has no filters, tick unconditionally */
     int i;
     for (i = 0; i < it->count; i ++) {
-        tick_src[i].tick = true;
+        tick_src[i].ticks = 1;
         tick_src[i].time_elapsed = it->delta_time;
     }
 }
@@ -140,6 +150,34 @@ error:
     return 0;
 }
 
+FLECS_API
+ecs_entity_t ecs_set_fixed_timeout(
+    ecs_world_t *world,
+    ecs_entity_t timer,
+    ecs_ftime_t timeout) {
+
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    if (!timer) {
+        timer = ecs_entity(world, {0});
+    }
+
+    ecs_set(world, timer, EcsTimer, {
+        .timeout = timeout,
+        .single_shot = true,
+        .fixed_interval = true,
+        .active = true
+    });
+
+    ecs_system_t *system_data = flecs_poly_get(world, timer, ecs_system_t);
+    if (system_data) {
+        system_data->tick_source = timer;
+    }
+
+error:
+    return timer;
+}
+
 ecs_entity_t ecs_set_interval(
     ecs_world_t *world,
     ecs_entity_t timer,
@@ -165,6 +203,32 @@ error:
     return timer;  
 }
 
+ecs_entity_t ecs_set_fixed_interval(
+    ecs_world_t *world,
+    ecs_entity_t timer,
+    ecs_ftime_t interval)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    if (!timer) {
+        timer = ecs_new_w(world, EcsTimer);
+    }
+
+    EcsTimer *t = ecs_ensure(world, timer, EcsTimer);
+    ecs_check(t != NULL, ECS_INTERNAL_ERROR, NULL);
+    t->timeout = interval;
+    t->active = true;
+    t->fixed_interval = true;
+    ecs_modified(world, timer, EcsTimer);
+
+    ecs_system_t *system_data = flecs_poly_get(world, timer, ecs_system_t);
+    if (system_data) {
+        system_data->tick_source = timer;
+    }
+error:
+    return timer;  
+}
+
 ecs_ftime_t ecs_get_interval(
     const ecs_world_t *world,
     ecs_entity_t timer)
@@ -178,6 +242,36 @@ ecs_ftime_t ecs_get_interval(
     const EcsTimer *value = ecs_get(world, timer, EcsTimer);
     if (value) {
         return value->timeout;
+    }
+error:
+    return 0;
+}
+
+void ecs_set_is_fixed_timer(
+    ecs_world_t *world,
+    ecs_entity_t timer,
+    bool is_fixed)
+{
+    EcsTimer *ptr = ecs_ensure(world, timer, EcsTimer);
+    ecs_check(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+    ptr->fixed_interval = is_fixed;
+error:
+    return;
+}
+
+bool ecs_is_fixed_timer(
+    ecs_world_t *world,
+    ecs_entity_t timer) {
+    
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    if (!timer) {
+        return 0;
+    }
+
+    const EcsTimer *value = ecs_get(world, timer, EcsTimer);
+    if (value) {
+        return value->fixed_interval;
     }
 error:
     return 0;
