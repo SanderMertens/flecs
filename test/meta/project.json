@@ -957,7 +957,10 @@
                 "value_vector",
                 "value_map",
                 "struct_w_value",
-                "value_roundtrip"
+                "value_roundtrip",
+                "ecs_struct_1_member",
+                "ecs_struct_2_members",
+                "ecs_struct_3_members"
             ]
         }, {
             "id": "SerializeEntityToJson",

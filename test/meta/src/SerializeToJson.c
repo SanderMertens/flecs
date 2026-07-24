@@ -2715,3 +2715,69 @@ void SerializeToJson_value_roundtrip(void) {
 
     ecs_fini(world);
 }
+
+void SerializeToJson_ecs_struct_1_member(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    const EcsStruct *ptr = ecs_get(world, t, EcsStruct);
+    test_assert(ptr != NULL);
+
+    char *expr = ecs_ptr_to_json(world, ecs_id(EcsStruct), ptr);
+    test_assert(expr != NULL);
+    test_str(expr, "{\"members\":[{\"name\":\"x\", \"type\":\"flecs.meta.i32\", \"count\":0, \"offset\":0, \"unit\":\"#0\", \"use_offset\":false, \"range\":{\"min\":0, \"max\":0}, \"error_range\":{\"min\":0, \"max\":0}, \"warning_range\":{\"min\":0, \"max\":0}, \"size\":4, \"member\":\"#0\"}]}");
+    ecs_os_free(expr);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_ecs_struct_2_members(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const EcsStruct *ptr = ecs_get(world, t, EcsStruct);
+    test_assert(ptr != NULL);
+
+    char *expr = ecs_ptr_to_json(world, ecs_id(EcsStruct), ptr);
+    test_assert(expr != NULL);
+    test_str(expr, "{\"members\":[{\"name\":\"x\", \"type\":\"flecs.meta.i32\", \"count\":0, \"offset\":0, \"unit\":\"#0\", \"use_offset\":false, \"range\":{\"min\":0, \"max\":0}, \"error_range\":{\"min\":0, \"max\":0}, \"warning_range\":{\"min\":0, \"max\":0}, \"size\":4, \"member\":\"#0\"}, {\"name\":\"y\", \"type\":\"flecs.meta.f32\", \"count\":0, \"offset\":4, \"unit\":\"#0\", \"use_offset\":false, \"range\":{\"min\":0, \"max\":0}, \"error_range\":{\"min\":0, \"max\":0}, \"warning_range\":{\"min\":0, \"max\":0}, \"size\":4, \"member\":\"#0\"}]}");
+    ecs_os_free(expr);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_ecs_struct_3_members(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_f32_t)},
+            {"z", ecs_id(ecs_string_t)}
+        }
+    });
+
+    const EcsStruct *ptr = ecs_get(world, t, EcsStruct);
+    test_assert(ptr != NULL);
+
+    char *expr = ecs_ptr_to_json(world, ecs_id(EcsStruct), ptr);
+    test_assert(expr != NULL);
+    test_str(expr, "{\"members\":[{\"name\":\"x\", \"type\":\"flecs.meta.i32\", \"count\":0, \"offset\":0, \"unit\":\"#0\", \"use_offset\":false, \"range\":{\"min\":0, \"max\":0}, \"error_range\":{\"min\":0, \"max\":0}, \"warning_range\":{\"min\":0, \"max\":0}, \"size\":4, \"member\":\"#0\"}, {\"name\":\"y\", \"type\":\"flecs.meta.f32\", \"count\":0, \"offset\":4, \"unit\":\"#0\", \"use_offset\":false, \"range\":{\"min\":0, \"max\":0}, \"error_range\":{\"min\":0, \"max\":0}, \"warning_range\":{\"min\":0, \"max\":0}, \"size\":4, \"member\":\"#0\"}, {\"name\":\"z\", \"type\":\"flecs.meta.string\", \"count\":0, \"offset\":8, \"unit\":\"#0\", \"use_offset\":false, \"range\":{\"min\":0, \"max\":0}, \"error_range\":{\"min\":0, \"max\":0}, \"warning_range\":{\"min\":0, \"max\":0}, \"size\":8, \"member\":\"#0\"}]}");
+    ecs_os_free(expr);
+
+    ecs_fini(world);
+}

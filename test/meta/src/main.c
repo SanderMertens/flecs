@@ -927,6 +927,9 @@ void SerializeToJson_value_vector(void);
 void SerializeToJson_value_map(void);
 void SerializeToJson_struct_w_value(void);
 void SerializeToJson_value_roundtrip(void);
+void SerializeToJson_ecs_struct_1_member(void);
+void SerializeToJson_ecs_struct_2_members(void);
+void SerializeToJson_ecs_struct_3_members(void);
 
 // Testsuite 'SerializeEntityToJson'
 void SerializeEntityToJson_serialize_empty(void);
@@ -5041,6 +5044,18 @@ bake_test_case SerializeToJson_testcases[] = {
     {
         "value_roundtrip",
         SerializeToJson_value_roundtrip
+    },
+    {
+        "ecs_struct_1_member",
+        SerializeToJson_ecs_struct_1_member
+    },
+    {
+        "ecs_struct_2_members",
+        SerializeToJson_ecs_struct_2_members
+    },
+    {
+        "ecs_struct_3_members",
+        SerializeToJson_ecs_struct_3_members
     }
 };
 
@@ -7109,7 +7124,7 @@ static bake_test_suite suites[] = {
         "SerializeToJson",
         NULL,
         NULL,
-        91,
+        94,
         SerializeToJson_testcases
     },
     {

@@ -60264,6 +60264,35 @@ void flecs_meta_import_meta_definitions(
         }
     });
 
+    ecs_entity_t member_t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, { .name = "member_t" }),
+        .members = {
+            { .name = "name", .type = ecs_id(ecs_string_t) },
+            { .name = "type", .type = ecs_id(ecs_entity_t) },
+            { .name = "count", .type = ecs_id(ecs_i32_t) },
+            { .name = "offset", .type = ecs_id(ecs_i32_t) },
+            { .name = "unit", .type = ecs_id(ecs_entity_t) },
+            { .name = "use_offset", .type = ecs_id(ecs_bool_t) },
+            { .name = "range", .type = vr },
+            { .name = "error_range", .type = vr },
+            { .name = "warning_range", .type = vr },
+            { .name = "size", .type = ecs_id(ecs_i32_t) },
+            { .name = "member", .type = ecs_id(ecs_entity_t) }
+        }
+    });
+
+    ecs_entity_t member_vec = ecs_vector(world, {
+        .entity = ecs_entity(world, { .name = "member_vec_t" }),
+        .type = member_t
+    });
+
+    ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_id(EcsStruct),
+        .members = {
+            { .name = "members", .type = member_vec }
+        }
+    });
+
     ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity = ecs_id(EcsEnum),
         .members = {
