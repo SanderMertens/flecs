@@ -16823,7 +16823,7 @@ bool flecs_observer_query_has_range(
             ECS_IS_PAIR(event_id) ? ECS_PAIR_FIRST(event_id) : event_id);
     }
     if (second_var) {
-        if (!ECS_IS_PAIR(event_id)) {
+        if (!ECS_IS_PAIR(event_id) || ECS_IS_VALUE_PAIR(event_id)) {
             ecs_iter_fini(it);
             return false;
         }
