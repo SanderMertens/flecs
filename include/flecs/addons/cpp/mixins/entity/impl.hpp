@@ -111,17 +111,36 @@ inline flecs::table_range entity_view::range() const {
 template <typename Func>
 inline void entity_view::each(const Func& func) const {
     const ecs_type_t *type = ecs_get_type(world_, id_);
-    if (!type) {
-        return;
+    if (type) {
+        const ecs_id_t *ids = type->array;
+        int32_t count = type->count;
+
+        for (int i = 0; i < count; i ++) {
+            ecs_id_t id = ids[i];
+            flecs::id ent(world_, id);
+            func(ent);
+        }
     }
 
-    const ecs_id_t *ids = type->array;
-    int32_t count = type->count;
+    /* Iterate components with the DontFragment trait, which are not stored in
+     * the entity's table. */
+    const flecs::world_t *real_world = ecs_get_world(world_);
+    const ecs_record_t *r = ecs_record_find(real_world, id_);
+    if (r && (r->row & EcsEntityHasDontFragment)) {
+        ecs_component_record_t *cur = flecs_component_dont_fragment_first(
+            real_world);
+        for (; cur; cur = flecs_component_dont_fragment_next(cur)) {
+            ecs_id_t id = flecs_component_get_id(cur);
+            if (ecs_id_is_wildcard(id)) {
+                continue;
+            }
 
-    for (int i = 0; i < count; i ++) {
-        ecs_id_t id = ids[i];
-        flecs::id ent(world_, id);
-        func(ent); 
+            ecs_sparse_t *sparse = flecs_component_get_sparse(cur);
+            if (sparse && flecs_sparse_has(sparse, id_)) {
+                flecs::id ent(world_, id);
+                func(ent);
+            }
+        }
     }
 }
 
@@ -130,29 +149,43 @@ inline void entity_view::each(flecs::id_t pred, flecs::id_t obj, const Func& fun
     flecs::world_t *real_world = const_cast<flecs::world_t*>(
         ecs_get_world(world_));
 
-    const ecs_table_t *table = ecs_get_table(world_, id_);
-    if (!table) {
-        return;
-    }
-
-    const ecs_type_t *type = ecs_table_get_type(table);
-    if (!type) {
-        return;
-    }
-
     flecs::id_t pattern = pred;
     if (obj) {
         pattern = ecs_pair(pred, obj);
     }
 
-    int32_t cur = 0;
-    id_t *ids = type->array;
-    
-    while (-1 != (cur = ecs_search_offset(real_world, table, cur, pattern, nullptr)))
-    {
-        flecs::id ent(world_, ids[cur]);
-        func(ent);
-        cur ++;
+    const ecs_table_t *table = ecs_get_table(world_, id_);
+    const ecs_type_t *type = table ? ecs_table_get_type(table) : nullptr;
+    if (type) {
+        int32_t cur = 0;
+        id_t *ids = type->array;
+
+        while (-1 != (cur = ecs_search_offset(real_world, table, cur, pattern, nullptr)))
+        {
+            flecs::id ent(world_, ids[cur]);
+            func(ent);
+            cur ++;
+        }
+    }
+
+    /* Iterate components with the DontFragment trait, which are not stored in
+     * the entity's table. */
+    const ecs_record_t *r = ecs_record_find(real_world, id_);
+    if (r && (r->row & EcsEntityHasDontFragment)) {
+        ecs_component_record_t *cr = flecs_component_dont_fragment_first(
+            real_world);
+        for (; cr; cr = flecs_component_dont_fragment_next(cr)) {
+            ecs_id_t id = flecs_component_get_id(cr);
+            if (ecs_id_is_wildcard(id) || !ecs_id_match(id, pattern)) {
+                continue;
+            }
+
+            ecs_sparse_t *sparse = flecs_component_get_sparse(cr);
+            if (sparse && flecs_sparse_has(sparse, id_)) {
+                flecs::id ent(world_, id);
+                func(ent);
+            }
+        }
     }
 }
 

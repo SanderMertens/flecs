@@ -213,6 +213,7 @@ int32_t flecs_sparse_count(
  * @param id The ID to look for.
  * @return True if the sparse set contains the ID.
  */
+FLECS_API
 bool flecs_sparse_has(
     const ecs_sparse_t *sparse,
     uint64_t id);

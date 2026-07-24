@@ -906,6 +906,20 @@ ecs_sparse_t* flecs_component_get_sparse(
     return cr->sparse;
 }
 
+ecs_component_record_t* flecs_component_dont_fragment_first(
+    const ecs_world_t *world)
+{
+    world = ecs_get_world(world);
+    return world->cr_non_fragmenting_head;
+}
+
+ecs_component_record_t* flecs_component_dont_fragment_next(
+    const ecs_component_record_t *cr)
+{
+    ecs_assert(cr != NULL, ECS_INVALID_PARAMETER, NULL);
+    return cr->non_fragmenting.next;
+}
+
 ecs_hashmap_t* flecs_component_name_index_ensure(
     ecs_world_t *world,
     ecs_component_record_t *cr)
