@@ -1479,6 +1479,18 @@ void Lookup_lookup_by_id(void);
 void Lookup_lookup_path_anonymous_parent(void);
 void Lookup_lookup_path_0_parent(void);
 void Lookup_lookup_path_0_parent_w_scope(void);
+void Lookup_lookup_path_name_id(void);
+void Lookup_lookup_path_name_id_not_in_parent(void);
+void Lookup_lookup_path_name_name_id(void);
+void Lookup_lookup_path_name_name_id_not_in_parent(void);
+void Lookup_lookup_path_name_id_name(void);
+void Lookup_lookup_path_name_id_name_not_in_parent(void);
+void Lookup_lookup_path_id_name_name(void);
+void Lookup_lookup_path_id_name_name_not_alive(void);
+void Lookup_lookup_path_name_id_recycled(void);
+void Lookup_lookup_path_name_name_id_recycled(void);
+void Lookup_lookup_path_name_id_name_recycled(void);
+void Lookup_lookup_path_id_name_name_recycled(void);
 void Lookup_lookup_recycled_by_id(void);
 void Lookup_lookup_symbol_by_id(void);
 void Lookup_lookup_name_w_digit(void);
@@ -9144,6 +9156,54 @@ bake_test_case Lookup_testcases[] = {
     {
         "lookup_path_0_parent_w_scope",
         Lookup_lookup_path_0_parent_w_scope
+    },
+    {
+        "lookup_path_name_id",
+        Lookup_lookup_path_name_id
+    },
+    {
+        "lookup_path_name_id_not_in_parent",
+        Lookup_lookup_path_name_id_not_in_parent
+    },
+    {
+        "lookup_path_name_name_id",
+        Lookup_lookup_path_name_name_id
+    },
+    {
+        "lookup_path_name_name_id_not_in_parent",
+        Lookup_lookup_path_name_name_id_not_in_parent
+    },
+    {
+        "lookup_path_name_id_name",
+        Lookup_lookup_path_name_id_name
+    },
+    {
+        "lookup_path_name_id_name_not_in_parent",
+        Lookup_lookup_path_name_id_name_not_in_parent
+    },
+    {
+        "lookup_path_id_name_name",
+        Lookup_lookup_path_id_name_name
+    },
+    {
+        "lookup_path_id_name_name_not_alive",
+        Lookup_lookup_path_id_name_name_not_alive
+    },
+    {
+        "lookup_path_name_id_recycled",
+        Lookup_lookup_path_name_id_recycled
+    },
+    {
+        "lookup_path_name_name_id_recycled",
+        Lookup_lookup_path_name_name_id_recycled
+    },
+    {
+        "lookup_path_name_id_name_recycled",
+        Lookup_lookup_path_name_id_name_recycled
+    },
+    {
+        "lookup_path_id_name_name_recycled",
+        Lookup_lookup_path_id_name_name_recycled
     },
     {
         "lookup_recycled_by_id",
@@ -16872,7 +16932,7 @@ static bake_test_suite suites[] = {
         "Lookup",
         Lookup_setup,
         NULL,
-        75,
+        87,
         Lookup_testcases
     },
     {

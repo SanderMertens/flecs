@@ -11537,13 +11537,15 @@ ecs_entity_t flecs_lookup_child_n(
             }
         }
 
-        if (i == length && value && value < UINT32_MAX &&
-            ecs_is_alive(world, value))
-        {
-            if (parent && !ecs_has_pair(world, value, EcsChildOf, parent)) {
-                return 0;
+        if (i == length && value && value < UINT32_MAX) {
+            /* Resolve current generation for recycled ids */
+            ecs_entity_t e = flecs_entities_get_alive(world, value);
+            if (e) {
+                if (parent && !ecs_has_pair(world, e, EcsChildOf, parent)) {
+                    return 0;
+                }
+                return e;
             }
-            return value;
         }
     }
 
