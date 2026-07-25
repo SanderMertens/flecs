@@ -19951,6 +19951,16 @@ int ecs_log_last_error(void)
     return result;
 }
 
+#ifndef FLECS_QUERY_DSL_H
+#define FLECS_QUERY_DSL_H
+
+#endif
+
+#ifndef FLECS_JSON_PRIVATE_H
+#define FLECS_JSON_PRIVATE_H
+
+#endif /* FLECS_JSON_PRIVATE_H */
+
 #ifndef FLECS_SYSTEM_PRIVATE_H
 #define FLECS_SYSTEM_PRIVATE_H
 
@@ -26523,10 +26533,6 @@ static void flecs_component_record_check_constraints(
             return;
         }
 
-        if (flecs_check_constraint_traits(world, cr, rel, tgt)) {
-            goto error;
-        }
-
         if (tgt && !ecs_id_is_wildcard(tgt)) {
             if (rel == EcsIsA) {
                 if (flecs_component_is_trait_locked(world, tgt)) {
@@ -26538,10 +26544,6 @@ static void flecs_component_record_check_constraints(
                     }
                 }
             }
-        }
-    } else {
-        if (flecs_check_constraint_traits(world, cr, rel, tgt)) {
-            goto error;
         }
     }
 error:
@@ -33665,16 +33667,6 @@ ecs_table_t* ecs_table_find(
     return flecs_table_ensure(world, &type, false, NULL);
 }
 
-#ifndef FLECS_JSON_PRIVATE_H
-#define FLECS_JSON_PRIVATE_H
-
-#endif /* FLECS_JSON_PRIVATE_H */
-
-#ifndef FLECS_QUERY_DSL_H
-#define FLECS_QUERY_DSL_H
-
-#endif
-
 #ifndef FLECS_SCRIPT_PRIVATE_H
 #define FLECS_SCRIPT_PRIVATE_H
 
@@ -34401,6 +34393,8 @@ int flecs_query_compile(
     ecs_query_impl_t *query)
 {
     (void)world; (void)stage;
+    (void)query;
+    (void)flecs_query_needs_plan;
     ecs_check(!flecs_query_needs_plan(query), ECS_UNSUPPORTED,
         "query uses features that require the FLECS_QUERY_PLANS addon");
     return 0;
@@ -34429,6 +34423,7 @@ void flecs_query_iter_constrain(
     const ecs_query_impl_t *query = ctx.query;
     const ecs_query_t *q = &query->pub;
     ecs_flags32_t flags = q->flags;
+    (void)flags;
     bool constrained = ctx.qit->constrained_this;
 
     it->flags &= ~(EcsIterTrivialTest|EcsIterTrivialCached|
@@ -34453,6 +34448,7 @@ bool ecs_query_next(
 
     ecs_query_iter_t *qit = &it->priv_.iter.query;
     ecs_query_impl_t *impl = ECS_CONST_CAST(ecs_query_impl_t*, it->query);
+    (void)impl;
     ecs_assert(impl != NULL, ECS_INVALID_OPERATION,
         "cannot call ecs_query_next on invalid iterator");
 
@@ -34511,6 +34507,7 @@ static void flecs_query_iter_fini(
     ecs_query_iter_t *qit = &it->priv_.iter.query;
 #endif
     const ecs_query_t *q = it->query;
+    (void)q;
     ecs_assert(q != NULL, ECS_INTERNAL_ERROR, NULL);
     flecs_poly_assert(q, ecs_query_t);
 

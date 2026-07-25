@@ -1,6 +1,12 @@
 # Component Traits
 Component traits are tags and pairs that can be added to components to modify their behavior. This manual contains an overview of all component traits supported by Flecs.
 
+The `Acyclic`, `Final`, `OneOf`, `Relationship`, `Singleton`, `Symmetric`,
+`Target`, and `Trait` traits require the `FLECS_CONSTRAINT_TRAITS` addon. The
+addon is enabled in the default build and must be selected explicitly in a
+custom build. Other traits documented in this manual are part of the core or
+their respective addons.
+
 ## Acyclic trait
 A relationship can be marked with the `Acyclic` trait to indicate that it cannot contain cycles. Both the builtin `ChildOf` and `IsA` relationships are marked acyclic. Knowing whether a relationship is acyclic allows the storage to detect and throw errors when a cyclic relationship is introduced by accident.
 

@@ -25,7 +25,7 @@ static uint32_t flecs_perlin_xs32(
     return x;
 }
 
-void flecs_perlin_seed(
+static void flecs_perlin_seed(
     uint32_t seed) 
 {
     uint8_t p[256];

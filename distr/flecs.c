@@ -4079,6 +4079,84 @@ void flecs_journal_end(void);
 
 #endif // FLECS_JOURNAL
 
+#ifdef FLECS_PIPELINE
+
+#ifndef FLECS_PIPELINE_PRIVATE_H
+#define FLECS_PIPELINE_PRIVATE_H
+
+/** Instruction data for pipeline.
+ * This type is the element type in the "ops" vector of a pipeline. */
+typedef struct ecs_pipeline_op_t {
+    int32_t offset;             /* Offset in systems vector */
+    int32_t count;              /* Number of systems to run before next op */
+    double time_spent;          /* Time spent merging commands for sync point */
+    int64_t commands_enqueued;  /* Number of commands enqueued for sync point */
+    bool multi_threaded;        /* Whether systems can be run multi-threaded */
+    bool immediate;           /* Whether systems run in immediate mode */
+} ecs_pipeline_op_t;
+
+struct ecs_pipeline_state_t {
+    ecs_query_t *query;         /* Pipeline query */
+    ecs_vec_t ops;              /* Pipeline schedule */
+    ecs_vec_t systems;          /* Vector with system ids */
+
+    ecs_entity_t last_system;   /* Last system run by pipeline */
+    int32_t match_count;        /* Used to track if rebuild is necessary */
+    int32_t rebuild_count;      /* Number of pipeline rebuilds */
+
+    /* Members for continuing pipeline iteration after pipeline rebuild */
+    ecs_pipeline_op_t *cur_op;  /* Current pipeline op */
+    int32_t cur_i;              /* Index in current result */
+    int32_t ran_since_merge;    /* Index in current op */
+    bool immediate;           /* Is pipeline in immediate mode */
+};
+
+typedef struct EcsPipeline {
+    /* Stable ptr so threads can safely access while entities/components move */
+    ecs_pipeline_state_t *state;
+} EcsPipeline;
+
+////////////////////////////////////////////////////////////////////////////////
+//// Pipeline API
+////////////////////////////////////////////////////////////////////////////////
+
+void flecs_run_pipeline(
+    ecs_world_t *world,
+    ecs_pipeline_state_t *pq,
+    ecs_ftime_t delta_time);
+
+int32_t flecs_run_pipeline_ops(
+    ecs_world_t* world,
+    ecs_stage_t* stage,
+    int32_t stage_index,
+    int32_t stage_count,
+    ecs_ftime_t delta_time);
+
+////////////////////////////////////////////////////////////////////////////////
+//// Worker API
+////////////////////////////////////////////////////////////////////////////////
+
+void flecs_workers_progress(
+    ecs_world_t *world,
+    ecs_pipeline_state_t *pq,
+    ecs_ftime_t delta_time);
+
+void flecs_create_worker_threads(
+    ecs_world_t *world);
+
+void flecs_join_worker_threads(
+    ecs_world_t *world);
+
+void flecs_signal_workers(
+    ecs_world_t *world);
+
+void flecs_wait_for_sync(
+    ecs_world_t *world);
+
+#endif
+
+#endif
+
 /* Used in id records to keep track of entities used with id flags */
 extern const ecs_entity_t EcsFlag;
 
@@ -26966,82 +27044,6 @@ void flecs_component_ids_set(
 
 #endif
 
-#ifdef FLECS_REST
-
-#ifndef FLECS_PIPELINE_PRIVATE_H
-#define FLECS_PIPELINE_PRIVATE_H
-
-/** Instruction data for pipeline.
- * This type is the element type in the "ops" vector of a pipeline. */
-typedef struct ecs_pipeline_op_t {
-    int32_t offset;             /* Offset in systems vector */
-    int32_t count;              /* Number of systems to run before next op */
-    double time_spent;          /* Time spent merging commands for sync point */
-    int64_t commands_enqueued;  /* Number of commands enqueued for sync point */
-    bool multi_threaded;        /* Whether systems can be run multi-threaded */
-    bool immediate;           /* Whether systems run in immediate mode */
-} ecs_pipeline_op_t;
-
-struct ecs_pipeline_state_t {
-    ecs_query_t *query;         /* Pipeline query */
-    ecs_vec_t ops;              /* Pipeline schedule */
-    ecs_vec_t systems;          /* Vector with system ids */
-
-    ecs_entity_t last_system;   /* Last system run by pipeline */
-    int32_t match_count;        /* Used to track if rebuild is necessary */
-    int32_t rebuild_count;      /* Number of pipeline rebuilds */
-
-    /* Members for continuing pipeline iteration after pipeline rebuild */
-    ecs_pipeline_op_t *cur_op;  /* Current pipeline op */
-    int32_t cur_i;              /* Index in current result */
-    int32_t ran_since_merge;    /* Index in current op */
-    bool immediate;           /* Is pipeline in immediate mode */
-};
-
-typedef struct EcsPipeline {
-    /* Stable ptr so threads can safely access while entities/components move */
-    ecs_pipeline_state_t *state;
-} EcsPipeline;
-
-////////////////////////////////////////////////////////////////////////////////
-//// Pipeline API
-////////////////////////////////////////////////////////////////////////////////
-
-void flecs_run_pipeline(
-    ecs_world_t *world,
-    ecs_pipeline_state_t *pq,
-    ecs_ftime_t delta_time);
-
-int32_t flecs_run_pipeline_ops(
-    ecs_world_t* world,
-    ecs_stage_t* stage,
-    int32_t stage_index,
-    int32_t stage_count,
-    ecs_ftime_t delta_time);
-
-////////////////////////////////////////////////////////////////////////////////
-//// Worker API
-////////////////////////////////////////////////////////////////////////////////
-
-void flecs_workers_progress(
-    ecs_world_t *world,
-    ecs_pipeline_state_t *pq,
-    ecs_ftime_t delta_time);
-
-void flecs_create_worker_threads(
-    ecs_world_t *world);
-
-void flecs_join_worker_threads(
-    ecs_world_t *world);
-
-void flecs_signal_workers(
-    ecs_world_t *world);
-
-void flecs_wait_for_sync(
-    ecs_world_t *world);
-
-#endif
-
 #ifndef FLECS_JSON_PRIVATE_H
 #define FLECS_JSON_PRIVATE_H
 
@@ -27353,6 +27355,8 @@ void flecs_json_assemble_output(
 #endif
 
 #endif /* FLECS_JSON_PRIVATE_H */
+
+#ifdef FLECS_REST
 
 /* Retain captured commands for one minute at 60 FPS */
 #define FLECS_REST_COMMAND_RETAIN_COUNT (60 * 60)
@@ -38829,9 +38833,11 @@ static void flecs_component_record_check_constraints(
             return;
         }
 
+#ifdef FLECS_CONSTRAINT_TRAITS
         if (flecs_check_constraint_traits(world, cr, rel, tgt)) {
             goto error;
         }
+#endif
 
         if (tgt && !ecs_id_is_wildcard(tgt)) {
             if (rel == EcsIsA) {
@@ -38845,10 +38851,10 @@ static void flecs_component_record_check_constraints(
                 }
             }
         }
-    } else {
-        if (flecs_check_constraint_traits(world, cr, rel, tgt)) {
-            goto error;
-        }
+#ifdef FLECS_CONSTRAINT_TRAITS
+    } else if (flecs_check_constraint_traits(world, cr, rel, tgt)) {
+        goto error;
+#endif
     }
 error:
     return;
@@ -46451,14 +46457,9 @@ void flecs_bootstrap_constraint_traits(
     ecs_add_id(world, EcsWith, EcsRelationship);
     ecs_add_id(world, EcsOnDelete, EcsRelationship);
     ecs_add_id(world, EcsOnDeleteTarget, EcsRelationship);
-    ecs_add_id(world, EcsOnInstantiate, EcsRelationship);
     ecs_add_id(world, ecs_id(EcsIdentifier), EcsRelationship);
 
     /* Targets */
-#ifdef FLECS_PREFAB
-    ecs_add_id(world, EcsOverride, EcsTarget);
-    ecs_add_id(world, EcsInherit, EcsTarget);
-#endif
     ecs_add_id(world, EcsDontInherit, EcsTarget);
 
     /* Traversable relationships are always acyclic */
@@ -63029,6 +63030,289 @@ void ecs_set_os_api_impl(void) {
 
 #ifdef FLECS_PARSER
 
+#ifndef FLECS_PARSER_GRAMMAR_H
+#define FLECS_PARSER_GRAMMAR_H
+
+#if defined(ECS_TARGET_CLANG)
+/* Ignore unused enum constants in switch as it would blow up the parser code */
+#pragma clang diagnostic ignored "-Wswitch-enum"
+/* To allow for nested Parse statements */
+#pragma clang diagnostic ignored "-Wshadow"
+#elif defined(__GNUC__)
+#pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
+#pragma GCC diagnostic ignored "-Wswitch-enum"
+#pragma GCC diagnostic ignored "-Wshadow"
+#elif defined(ECS_TARGET_MSVC)
+/* Allow for variable shadowing */
+#pragma warning(disable : 4456)
+#endif
+
+/* Create script & parser structs with static token buffer */
+#define EcsParserFixedBuffer(w, script_name, expr, tokens, tokens_len)\
+    ecs_script_impl_t script = {\
+        .pub.world = ECS_CONST_CAST(ecs_world_t*, w),\
+        .pub.name = script_name,\
+        .pub.code = expr\
+    };\
+    ecs_parser_t parser = {\
+        .script = flecs_script_impl(&script),\
+        .name = script_name,\
+        .code = expr,\
+        .pos = expr,\
+        .token_cur = tokens,\
+        .token_end = &(tokens)[tokens_len]\
+    }
+
+/* Definitions for parser functions */
+#define ParserBegin\
+    ecs_tokenizer_t _tokenizer;\
+    ecs_os_zeromem(&_tokenizer);\
+    _tokenizer.tokens = _tokenizer.stack.tokens;\
+    ecs_tokenizer_t *tokenizer = &_tokenizer;
+
+#define ParserEnd\
+        Error("unexpected end of rule (parser error)");\
+    error:\
+        return NULL
+
+/* Get token */
+#define Token(n) (tokenizer->tokens[n].value)
+
+/* Push/pop token frame (allows token stack reuse in recursive functions) */
+#define TokenFramePush() \
+    tokenizer->tokens = &tokenizer->stack.tokens[tokenizer->stack.count];
+
+#define TokenFramePop() \
+    tokenizer->tokens = tokenizer->stack.tokens;
+
+/* Error */
+#define Error(...)\
+    ecs_parser_error(parser->name, parser->code,\
+        flecs_parser_errpos(parser, pos - 1), __VA_ARGS__);\
+    goto error
+
+/* Warning */
+#define Warning(...)\
+    ecs_parser_warning(parser->name, parser->code,\
+        flecs_parser_errpos(parser, pos - 1), __VA_ARGS__);\
+
+/* Parse expression */
+#define Expr(until, ...)\
+    {\
+        ecs_expr_node_t *EXPR = NULL;\
+        if (until == '}' || until == ']') {\
+            pos --;\
+            if (until == '}') {\
+                ecs_assert(pos[0] == '{', ECS_INTERNAL_ERROR, NULL);\
+            } else if (until == ']') {\
+                ecs_assert(pos[0] == '[', ECS_INTERNAL_ERROR, NULL);\
+            }\
+        }\
+        parser->significant_newline = false;\
+        if (!(pos = flecs_script_parse_expr(parser, pos, 0, &EXPR))) {\
+            goto error;\
+        }\
+        parser->significant_newline = true;\
+        __VA_ARGS__\
+    }
+
+/* Parse initializer */
+#define Initializer(until, ...)\
+    {\
+        ecs_expr_node_t *INITIALIZER = NULL;\
+        ecs_expr_initializer_t *_initializer = NULL;\
+        if (until != '\n') {\
+            parser->significant_newline = false;\
+        }\
+        if (!(pos = flecs_script_parse_initializer(\
+            parser, pos, until, &_initializer))) \
+        {\
+            flecs_expr_visit_free(\
+                &parser->script->pub, (ecs_expr_node_t*)_initializer);\
+            goto error;\
+        }\
+        parser->significant_newline = true;\
+        if (pos[0] != until) {\
+            if (until != '\n' || pos[0] != '\0') {\
+                Error("expected '%c'", until);\
+            }\
+            if (pos[0] == '\0') {\
+                pos --;\
+            }\
+        }\
+        INITIALIZER = (ecs_expr_node_t*)_initializer;\
+        pos ++;\
+        __VA_ARGS__\
+    }
+
+/* Parse token until character */
+#define Until(until, ...)\
+    {\
+        ecs_assert(tokenizer->stack.count < 256, ECS_INTERNAL_ERROR, NULL);\
+        ecs_token_t *t = &tokenizer->stack.tokens[tokenizer->stack.count ++];\
+        if (!(pos = flecs_tokenizer_until(parser, pos, t, until))) {\
+            goto error;\
+        }\
+    }\
+    Parse_1(until, __VA_ARGS__)
+
+/* Parse next token */
+#define Parse(...)\
+    {\
+        ecs_assert(tokenizer->stack.count < 256, ECS_INTERNAL_ERROR, NULL);\
+        ecs_token_t *t = &tokenizer->stack.tokens[tokenizer->stack.count ++];\
+        if (!(pos = flecs_token(parser, pos, t, false))) {\
+            goto error;\
+        }\
+        switch(t->kind) {\
+            __VA_ARGS__\
+        default:\
+            if (t->value) {\
+                Error("unexpected %s'%s'", \
+                    flecs_token_kind_str(t->kind), t->value);\
+            } else {\
+                Error("unexpected %s", \
+                    flecs_token_kind_str(t->kind));\
+            }\
+        }\
+    }
+
+/* Parse N consecutive tokens */
+#define Parse_1(tok, ...)\
+    Parse(\
+        case tok: {\
+            __VA_ARGS__\
+        }\
+    )
+
+#define Parse_2(tok1, tok2, ...)\
+    Parse_1(tok1, \
+        Parse(\
+            case tok2: {\
+                __VA_ARGS__\
+            }\
+        )\
+    )
+
+#define Parse_3(tok1, tok2, tok3, ...)\
+    Parse_2(tok1, tok2, \
+        Parse(\
+            case tok3: {\
+                __VA_ARGS__\
+            }\
+        )\
+    )
+
+#define Parse_4(tok1, tok2, tok3, tok4, ...)\
+    Parse_3(tok1, tok2, tok3, \
+        Parse(\
+            case tok4: {\
+                __VA_ARGS__\
+            }\
+        )\
+    )
+
+#define Parse_5(tok1, tok2, tok3, tok4, tok5, ...)\
+    Parse_4(tok1, tok2, tok3, tok4, \
+        Parse(\
+            case tok5: {\
+                __VA_ARGS__\
+            }\
+        )\
+    )
+
+#define LookAhead_Keep() \
+    pos = lookahead;\
+    parser->token_keep = parser->token_cur
+
+/* Same as Parse, but doesn't error out if token is not in handled cases */
+#define LookAhead(...)\
+    const char *lookahead;\
+    ecs_token_t lookahead_token;\
+    const char *old_lh_token_cur = parser->token_cur;\
+    if ((lookahead = flecs_token(parser, pos, &lookahead_token, true))) {\
+        tokenizer->stack.tokens[tokenizer->stack.count ++] = lookahead_token;\
+        switch(lookahead_token.kind) {\
+            __VA_ARGS__\
+        default:\
+            tokenizer->stack.count --;\
+            break;\
+        }\
+        if (old_lh_token_cur > parser->token_keep) {\
+            parser->token_cur = ECS_CONST_CAST(char*, old_lh_token_cur);\
+        } else {\
+            parser->token_cur = parser->token_keep;\
+        }\
+    } else {\
+        if (flecs_token(parser, pos, &lookahead_token, false)) {\
+            if (lookahead_token.value) {\
+                Error("unexpected %s'%s'", \
+                    flecs_token_kind_str(lookahead_token.kind), \
+                    lookahead_token.value);\
+            } else {\
+                Error("unexpected %s", \
+                    flecs_token_kind_str(lookahead_token.kind));\
+            }\
+        }\
+        goto error;\
+    }
+
+/* Lookahead N consecutive tokens */
+#define LookAhead_1(tok, ...)\
+    LookAhead(\
+        case tok: {\
+            __VA_ARGS__\
+        }\
+    )
+
+#define LookAhead_2(tok1, tok2, ...)\
+    LookAhead_1(tok1, \
+        const char *old_ptr = pos;\
+        pos = lookahead;\
+        LookAhead(\
+            case tok2: {\
+                __VA_ARGS__\
+            }\
+        )\
+        if (pos != lookahead) {\
+            pos = old_ptr;\
+        }\
+    )
+
+#define LookAhead_3(tok1, tok2, tok3, ...)\
+    LookAhead_2(tok1, tok2, \
+        const char *old_ptr = pos;\
+        pos = lookahead;\
+        LookAhead(\
+            case tok3: {\
+                __VA_ARGS__\
+            }\
+        )\
+        if (pos != lookahead) {\
+            pos = old_ptr;\
+        }\
+    )
+
+/* Open scope */
+#define Scope(s, ...) {\
+        ecs_script_scope_t *old_scope = parser->scope;\
+        parser->scope = s;\
+        __VA_ARGS__\
+        parser->scope = old_scope;\
+    }
+
+/* Parser loop */
+#define Loop(...)\
+    int32_t token_stack_count = tokenizer->stack.count;\
+    do {\
+        tokenizer->stack.count = token_stack_count;\
+        __VA_ARGS__\
+    } while (true);
+
+#define EndOfRule return pos
+
+#endif
+
 char* flecs_chresc(
     char *out,
     char in,
@@ -64875,7 +65159,7 @@ static void flecs_run_startup_systems(
             .terms = {
                 { .id = EcsSystem },
                 { .id = EcsPhase, .src.id = EcsCascade, .trav = EcsDependsOn },
-                { .id = ecs_dependson(EcsOnStart), .trav = EcsDependsOn },
+                { .id = ecs_dependson(EcsOnStart), .src.id = EcsSelf|EcsUp, .trav = EcsDependsOn },
                 { .id = EcsDisabled, .src.id = EcsUp, .trav = EcsDependsOn, .oper = EcsNot },
                 { .id = EcsDisabled, .src.id = EcsUp, .trav = EcsChildOf, .oper = EcsNot }
             },
@@ -65147,7 +65431,7 @@ void FlecsPipelineImport(
             .terms = {
                 { .id = EcsSystem },
                 { .id = EcsPhase, .src.id = EcsCascade, .trav = EcsDependsOn },
-                { .id = ecs_dependson(EcsOnStart), .trav = EcsDependsOn, .oper = EcsNot },
+                { .id = ecs_dependson(EcsOnStart), .src.id = EcsSelf|EcsUp, .trav = EcsDependsOn, .oper = EcsNot },
                 { .id = EcsDisabled, .src.id = EcsUp, .trav = EcsDependsOn, .oper = EcsNot },
                 { .id = EcsDisabled, .src.id = EcsUp, .trav = EcsChildOf, .oper = EcsNot }
             },
@@ -66153,6 +66437,11 @@ void flecs_bootstrap_prefab(
     flecs_bootstrap_tag(world, EcsOverride);
     flecs_bootstrap_tag(world, EcsInherit);
     flecs_bootstrap_trait(world, EcsOnInstantiate);
+#ifdef FLECS_CONSTRAINT_TRAITS
+    ecs_add_id(world, EcsOnInstantiate, EcsRelationship);
+    ecs_add_id(world, EcsOverride, EcsTarget);
+    ecs_add_id(world, EcsInherit, EcsTarget);
+#endif
 
     ecs_add_pair(world, EcsPrefab, EcsOnInstantiate, EcsDontInherit);
 
@@ -66607,289 +66896,6 @@ void flecs_tree_spawner_assert_not_instantiated(
 #endif
 
 #ifdef FLECS_QUERY_DSL
-
-#ifndef FLECS_PARSER_GRAMMAR_H
-#define FLECS_PARSER_GRAMMAR_H
-
-#if defined(ECS_TARGET_CLANG)
-/* Ignore unused enum constants in switch as it would blow up the parser code */
-#pragma clang diagnostic ignored "-Wswitch-enum"
-/* To allow for nested Parse statements */
-#pragma clang diagnostic ignored "-Wshadow"
-#elif defined(__GNUC__)
-#pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
-#pragma GCC diagnostic ignored "-Wswitch-enum"
-#pragma GCC diagnostic ignored "-Wshadow"
-#elif defined(ECS_TARGET_MSVC)
-/* Allow for variable shadowing */
-#pragma warning(disable : 4456)
-#endif
-
-/* Create script & parser structs with static token buffer */
-#define EcsParserFixedBuffer(w, script_name, expr, tokens, tokens_len)\
-    ecs_script_impl_t script = {\
-        .pub.world = ECS_CONST_CAST(ecs_world_t*, w),\
-        .pub.name = script_name,\
-        .pub.code = expr\
-    };\
-    ecs_parser_t parser = {\
-        .script = flecs_script_impl(&script),\
-        .name = script_name,\
-        .code = expr,\
-        .pos = expr,\
-        .token_cur = tokens,\
-        .token_end = &(tokens)[tokens_len]\
-    }
-
-/* Definitions for parser functions */
-#define ParserBegin\
-    ecs_tokenizer_t _tokenizer;\
-    ecs_os_zeromem(&_tokenizer);\
-    _tokenizer.tokens = _tokenizer.stack.tokens;\
-    ecs_tokenizer_t *tokenizer = &_tokenizer;
-
-#define ParserEnd\
-        Error("unexpected end of rule (parser error)");\
-    error:\
-        return NULL
-
-/* Get token */
-#define Token(n) (tokenizer->tokens[n].value)
-
-/* Push/pop token frame (allows token stack reuse in recursive functions) */
-#define TokenFramePush() \
-    tokenizer->tokens = &tokenizer->stack.tokens[tokenizer->stack.count];
-
-#define TokenFramePop() \
-    tokenizer->tokens = tokenizer->stack.tokens;
-
-/* Error */
-#define Error(...)\
-    ecs_parser_error(parser->name, parser->code,\
-        flecs_parser_errpos(parser, pos - 1), __VA_ARGS__);\
-    goto error
-
-/* Warning */
-#define Warning(...)\
-    ecs_parser_warning(parser->name, parser->code,\
-        flecs_parser_errpos(parser, pos - 1), __VA_ARGS__);\
-
-/* Parse expression */
-#define Expr(until, ...)\
-    {\
-        ecs_expr_node_t *EXPR = NULL;\
-        if (until == '}' || until == ']') {\
-            pos --;\
-            if (until == '}') {\
-                ecs_assert(pos[0] == '{', ECS_INTERNAL_ERROR, NULL);\
-            } else if (until == ']') {\
-                ecs_assert(pos[0] == '[', ECS_INTERNAL_ERROR, NULL);\
-            }\
-        }\
-        parser->significant_newline = false;\
-        if (!(pos = flecs_script_parse_expr(parser, pos, 0, &EXPR))) {\
-            goto error;\
-        }\
-        parser->significant_newline = true;\
-        __VA_ARGS__\
-    }
-
-/* Parse initializer */
-#define Initializer(until, ...)\
-    {\
-        ecs_expr_node_t *INITIALIZER = NULL;\
-        ecs_expr_initializer_t *_initializer = NULL;\
-        if (until != '\n') {\
-            parser->significant_newline = false;\
-        }\
-        if (!(pos = flecs_script_parse_initializer(\
-            parser, pos, until, &_initializer))) \
-        {\
-            flecs_expr_visit_free(\
-                &parser->script->pub, (ecs_expr_node_t*)_initializer);\
-            goto error;\
-        }\
-        parser->significant_newline = true;\
-        if (pos[0] != until) {\
-            if (until != '\n' || pos[0] != '\0') {\
-                Error("expected '%c'", until);\
-            }\
-            if (pos[0] == '\0') {\
-                pos --;\
-            }\
-        }\
-        INITIALIZER = (ecs_expr_node_t*)_initializer;\
-        pos ++;\
-        __VA_ARGS__\
-    }
-
-/* Parse token until character */
-#define Until(until, ...)\
-    {\
-        ecs_assert(tokenizer->stack.count < 256, ECS_INTERNAL_ERROR, NULL);\
-        ecs_token_t *t = &tokenizer->stack.tokens[tokenizer->stack.count ++];\
-        if (!(pos = flecs_tokenizer_until(parser, pos, t, until))) {\
-            goto error;\
-        }\
-    }\
-    Parse_1(until, __VA_ARGS__)
-
-/* Parse next token */
-#define Parse(...)\
-    {\
-        ecs_assert(tokenizer->stack.count < 256, ECS_INTERNAL_ERROR, NULL);\
-        ecs_token_t *t = &tokenizer->stack.tokens[tokenizer->stack.count ++];\
-        if (!(pos = flecs_token(parser, pos, t, false))) {\
-            goto error;\
-        }\
-        switch(t->kind) {\
-            __VA_ARGS__\
-        default:\
-            if (t->value) {\
-                Error("unexpected %s'%s'", \
-                    flecs_token_kind_str(t->kind), t->value);\
-            } else {\
-                Error("unexpected %s", \
-                    flecs_token_kind_str(t->kind));\
-            }\
-        }\
-    }
-
-/* Parse N consecutive tokens */
-#define Parse_1(tok, ...)\
-    Parse(\
-        case tok: {\
-            __VA_ARGS__\
-        }\
-    )
-
-#define Parse_2(tok1, tok2, ...)\
-    Parse_1(tok1, \
-        Parse(\
-            case tok2: {\
-                __VA_ARGS__\
-            }\
-        )\
-    )
-
-#define Parse_3(tok1, tok2, tok3, ...)\
-    Parse_2(tok1, tok2, \
-        Parse(\
-            case tok3: {\
-                __VA_ARGS__\
-            }\
-        )\
-    )
-
-#define Parse_4(tok1, tok2, tok3, tok4, ...)\
-    Parse_3(tok1, tok2, tok3, \
-        Parse(\
-            case tok4: {\
-                __VA_ARGS__\
-            }\
-        )\
-    )
-
-#define Parse_5(tok1, tok2, tok3, tok4, tok5, ...)\
-    Parse_4(tok1, tok2, tok3, tok4, \
-        Parse(\
-            case tok5: {\
-                __VA_ARGS__\
-            }\
-        )\
-    )
-
-#define LookAhead_Keep() \
-    pos = lookahead;\
-    parser->token_keep = parser->token_cur
-
-/* Same as Parse, but doesn't error out if token is not in handled cases */
-#define LookAhead(...)\
-    const char *lookahead;\
-    ecs_token_t lookahead_token;\
-    const char *old_lh_token_cur = parser->token_cur;\
-    if ((lookahead = flecs_token(parser, pos, &lookahead_token, true))) {\
-        tokenizer->stack.tokens[tokenizer->stack.count ++] = lookahead_token;\
-        switch(lookahead_token.kind) {\
-            __VA_ARGS__\
-        default:\
-            tokenizer->stack.count --;\
-            break;\
-        }\
-        if (old_lh_token_cur > parser->token_keep) {\
-            parser->token_cur = ECS_CONST_CAST(char*, old_lh_token_cur);\
-        } else {\
-            parser->token_cur = parser->token_keep;\
-        }\
-    } else {\
-        if (flecs_token(parser, pos, &lookahead_token, false)) {\
-            if (lookahead_token.value) {\
-                Error("unexpected %s'%s'", \
-                    flecs_token_kind_str(lookahead_token.kind), \
-                    lookahead_token.value);\
-            } else {\
-                Error("unexpected %s", \
-                    flecs_token_kind_str(lookahead_token.kind));\
-            }\
-        }\
-        goto error;\
-    }
-
-/* Lookahead N consecutive tokens */
-#define LookAhead_1(tok, ...)\
-    LookAhead(\
-        case tok: {\
-            __VA_ARGS__\
-        }\
-    )
-
-#define LookAhead_2(tok1, tok2, ...)\
-    LookAhead_1(tok1, \
-        const char *old_ptr = pos;\
-        pos = lookahead;\
-        LookAhead(\
-            case tok2: {\
-                __VA_ARGS__\
-            }\
-        )\
-        if (pos != lookahead) {\
-            pos = old_ptr;\
-        }\
-    )
-
-#define LookAhead_3(tok1, tok2, tok3, ...)\
-    LookAhead_2(tok1, tok2, \
-        const char *old_ptr = pos;\
-        pos = lookahead;\
-        LookAhead(\
-            case tok3: {\
-                __VA_ARGS__\
-            }\
-        )\
-        if (pos != lookahead) {\
-            pos = old_ptr;\
-        }\
-    )
-
-/* Open scope */
-#define Scope(s, ...) {\
-        ecs_script_scope_t *old_scope = parser->scope;\
-        parser->scope = s;\
-        __VA_ARGS__\
-        parser->scope = old_scope;\
-    }
-
-/* Parser loop */
-#define Loop(...)\
-    int32_t token_stack_count = tokenizer->stack.count;\
-    do {\
-        tokenizer->stack.count = token_stack_count;\
-        __VA_ARGS__\
-    } while (true);
-
-#define EndOfRule return pos
-
-#endif
 
 #define EcsTokTermIdentifier\
     EcsTokIdentifier:\
@@ -69064,7 +69070,7 @@ static ECS_DTOR(EcsScriptRng, ptr, {
     flecs_script_rng_free(ptr->impl);
 })
 
-void flecs_script_rng_get_float(
+static void flecs_script_rng_get_float(
     const ecs_function_ctx_t *ctx,
     int32_t argc,
     const ecs_value_t *argv,
@@ -69090,7 +69096,7 @@ void flecs_script_rng_get_float(
     }
 }
 
-void flecs_script_rng_get_uint(
+static void flecs_script_rng_get_uint(
     const ecs_function_ctx_t *ctx,
     int32_t argc,
     const ecs_value_t *argv,
@@ -69123,7 +69129,7 @@ double flecs_lerp(
     return a + t * (b - a);
 }
 
-void flecs_script_min(
+static void flecs_script_min(
     const ecs_function_ctx_t *ctx,
     int32_t argc,
     const ecs_value_t *argv,
@@ -69136,7 +69142,7 @@ void flecs_script_min(
     *(double*)result->ptr = (a < b) ? a : b;
 }
 
-void flecs_script_max(
+static void flecs_script_max(
     const ecs_function_ctx_t *ctx,
     int32_t argc,
     const ecs_value_t *argv,
@@ -69171,7 +69177,7 @@ FLECS_SCRIPT_LERP(float)
 FLECS_SCRIPT_LERP(double)
 
 #define FLECS_SCRIPT_SMOOTHSTEP(type)\
-    void flecs_script_smoothstep_##type(\
+    static void flecs_script_smoothstep_##type(\
         const ecs_function_ctx_t *ctx,\
         int32_t argc,\
         const ecs_value_t *argv,\
@@ -69737,7 +69743,7 @@ static uint32_t flecs_perlin_xs32(
     return x;
 }
 
-void flecs_perlin_seed(
+static void flecs_perlin_seed(
     uint32_t seed) 
 {
     uint8_t p[256];
@@ -80865,9 +80871,11 @@ ecs_entity_t flecs_run_system(
     qit.callback_ctx = system_data->callback_ctx;
     qit.run_ctx = system_data->run_ctx;
 
+#ifdef FLECS_CACHED_QUERIES
     if (system_data->group_id_set) {
         ecs_iter_set_group(&qit, system_data->group_id);
     }
+#endif
 
     if (stage_count > 1 && system_data->multi_threaded) {
         wit = ecs_worker_iter(it, stage_index, stage_count);
@@ -80888,19 +80896,24 @@ ecs_entity_t flecs_run_system(
             run(it);
             ecs_iter_fini(&qit);
         } else {
+#ifdef FLECS_CACHED_QUERIES
             if (it == &qit && (qit.flags & EcsIterTrivialCached)) {
                 it->next = flecs_query_trivial_cached_next;
             }
+#endif
             run(it);
         }
     } else {
         if (system_data->query->term_count) {
             if (it == &qit) {
+#ifdef FLECS_CACHED_QUERIES
                 if (qit.flags & EcsIterTrivialCached) {
                     while (flecs_query_trivial_cached_next(&qit)) {
                         action(&qit);
                     }
-                } else {
+                } else
+#endif
+                {
                     while (ecs_query_next(&qit)) {
                         action(&qit);
                     }
@@ -85503,6 +85516,8 @@ int flecs_query_compile(
     ecs_query_impl_t *query)
 {
     (void)world; (void)stage;
+    (void)query;
+    (void)flecs_query_needs_plan;
     ecs_check(!flecs_query_needs_plan(query), ECS_UNSUPPORTED,
         "query uses features that require the FLECS_QUERY_PLANS addon");
     return 0;
@@ -89026,6 +89041,7 @@ void flecs_query_iter_constrain(
     const ecs_query_impl_t *query = ctx.query;
     const ecs_query_t *q = &query->pub;
     ecs_flags32_t flags = q->flags;
+    (void)flags;
     bool constrained = ctx.qit->constrained_this;
 
     it->flags &= ~(EcsIterTrivialTest|EcsIterTrivialCached|
@@ -89205,6 +89221,7 @@ bool ecs_query_next(
 
     ecs_query_iter_t *qit = &it->priv_.iter.query;
     ecs_query_impl_t *impl = ECS_CONST_CAST(ecs_query_impl_t*, it->query);
+    (void)impl;
     ecs_assert(impl != NULL, ECS_INVALID_OPERATION,
         "cannot call ecs_query_next on invalid iterator");
 
@@ -89382,6 +89399,7 @@ static void flecs_query_iter_fini(
     ecs_query_iter_t *qit = &it->priv_.iter.query;
 #endif
     const ecs_query_t *q = it->query;
+    (void)q;
     ecs_assert(q != NULL, ECS_INTERNAL_ERROR, NULL);
     flecs_poly_assert(q, ecs_query_t);
 

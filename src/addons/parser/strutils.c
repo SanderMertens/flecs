@@ -8,6 +8,7 @@
 #ifdef FLECS_PARSER
 
 #include "parser.h"
+#include "grammar.h"
 
 char* flecs_chresc(
     char *out,

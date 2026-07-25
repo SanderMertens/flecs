@@ -1221,6 +1221,8 @@ int flecs_query_compile(
     ecs_query_impl_t *query)
 {
     (void)world; (void)stage;
+    (void)query;
+    (void)flecs_query_needs_plan;
     ecs_check(!flecs_query_needs_plan(query), ECS_UNSUPPORTED,
         "query uses features that require the FLECS_QUERY_PLANS addon");
     return 0;

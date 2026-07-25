@@ -88,7 +88,7 @@ int main(int argc, char *argv[]) {
 
     ecs_query_t *uncached = ecs_query(world, {
         .cache_kind = EcsQueryCacheNone,
-        .terms = {{ ecs_id(Position) }}
+        .terms = {{ .id = ecs_id(Position) }}
     });
     if (!uncached || count_query(world, uncached) != 1 ||
         !query_has(uncached, e) || !query_set_this(world, uncached, e))
@@ -98,7 +98,7 @@ int main(int argc, char *argv[]) {
 
     ecs_query_t *cached = ecs_query(world, {
         .cache_kind = EcsQueryCacheAll,
-        .terms = {{ ecs_id(Position) }}
+        .terms = {{ .id = ecs_id(Position) }}
     });
     if (!cached || count_query(world, cached) != 1 ||
         !query_has(cached, e) || !query_set_this(world, cached, e))
@@ -110,7 +110,7 @@ int main(int argc, char *argv[]) {
     ecs_query_t *needs_plan = ecs_query(world, {
         .cache_kind = EcsQueryCacheNone,
         .terms = {
-            { ecs_id(Position) },
+            { .id = ecs_id(Position) },
             { Tag, .oper = EcsNot }
         }
     });

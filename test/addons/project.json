@@ -232,8 +232,6 @@
                 "on_period_long_delta",
                 "disabled",
                 "2_disabled",
-                "disabled_feature",
-                "disabled_nested_feature",
                 "two_refs",
                 "filter_disabled",
                 "match_disabled",
