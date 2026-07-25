@@ -385,9 +385,11 @@ static void flecs_component_record_check_constraints(
             return;
         }
 
+#ifdef FLECS_CONSTRAINT_TRAITS
         if (flecs_check_constraint_traits(world, cr, rel, tgt)) {
             goto error;
         }
+#endif
 
         if (tgt && !ecs_id_is_wildcard(tgt)) {
             if (rel == EcsIsA) {
@@ -401,10 +403,10 @@ static void flecs_component_record_check_constraints(
                 }
             }
         }
-    } else {
-        if (flecs_check_constraint_traits(world, cr, rel, tgt)) {
-            goto error;
-        }
+#ifdef FLECS_CONSTRAINT_TRAITS
+    } else if (flecs_check_constraint_traits(world, cr, rel, tgt)) {
+        goto error;
+#endif
     }
 error:
     return;

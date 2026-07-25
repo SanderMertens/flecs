@@ -704,7 +704,7 @@ static void flecs_run_startup_systems(
             .terms = {
                 { .id = EcsSystem },
                 { .id = EcsPhase, .src.id = EcsCascade, .trav = EcsDependsOn },
-                { .id = ecs_dependson(EcsOnStart), .trav = EcsDependsOn },
+                { .id = ecs_dependson(EcsOnStart), .src.id = EcsSelf|EcsUp, .trav = EcsDependsOn },
                 { .id = EcsDisabled, .src.id = EcsUp, .trav = EcsDependsOn, .oper = EcsNot },
                 { .id = EcsDisabled, .src.id = EcsUp, .trav = EcsChildOf, .oper = EcsNot }
             },
@@ -976,7 +976,7 @@ void FlecsPipelineImport(
             .terms = {
                 { .id = EcsSystem },
                 { .id = EcsPhase, .src.id = EcsCascade, .trav = EcsDependsOn },
-                { .id = ecs_dependson(EcsOnStart), .trav = EcsDependsOn, .oper = EcsNot },
+                { .id = ecs_dependson(EcsOnStart), .src.id = EcsSelf|EcsUp, .trav = EcsDependsOn, .oper = EcsNot },
                 { .id = EcsDisabled, .src.id = EcsUp, .trav = EcsDependsOn, .oper = EcsNot },
                 { .id = EcsDisabled, .src.id = EcsUp, .trav = EcsChildOf, .oper = EcsNot }
             },

@@ -141,6 +141,11 @@ void flecs_bootstrap_prefab(
     flecs_bootstrap_tag(world, EcsOverride);
     flecs_bootstrap_tag(world, EcsInherit);
     flecs_bootstrap_trait(world, EcsOnInstantiate);
+#ifdef FLECS_CONSTRAINT_TRAITS
+    ecs_add_id(world, EcsOnInstantiate, EcsRelationship);
+    ecs_add_id(world, EcsOverride, EcsTarget);
+    ecs_add_id(world, EcsInherit, EcsTarget);
+#endif
 
     ecs_add_pair(world, EcsPrefab, EcsOnInstantiate, EcsDontInherit);
 

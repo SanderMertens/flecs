@@ -4,12 +4,10 @@
  */
 
 #include "../private_api.h"
+#include "query_dsl/query_dsl.h"
+#include "json/json.h"
 
 #ifdef FLECS_REST
-
-#include "query_dsl/query_dsl.h"
-#include "pipeline/pipeline.h"
-#include "json/json.h"
 
 /* Retain captured commands for one minute at 60 FPS */
 #define FLECS_REST_COMMAND_RETAIN_COUNT (60 * 60)

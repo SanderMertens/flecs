@@ -1,7 +1,7 @@
 #include <host.h>
 #include <stdio.h>
 
-char* module_from_dl(const char *module) {
+static char* module_from_dl(const char *module) {
     (void)module;
 #if defined(ECS_TARGET_DARWIN)
     return ecs_os_strdup("libphysics_plugin.dylib");

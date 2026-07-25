@@ -49,6 +49,9 @@
 #include "stage.h"
 #include "world.h"
 #include "addons/journal.h"
+#ifdef FLECS_PIPELINE
+#include "addons/pipeline/pipeline.h"
+#endif
 
 /* Used in id records to keep track of entities used with id flags */
 extern const ecs_entity_t EcsFlag;

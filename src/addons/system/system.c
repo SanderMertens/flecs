@@ -93,9 +93,11 @@ ecs_entity_t flecs_run_system(
     qit.callback_ctx = system_data->callback_ctx;
     qit.run_ctx = system_data->run_ctx;
 
+#ifdef FLECS_CACHED_QUERIES
     if (system_data->group_id_set) {
         ecs_iter_set_group(&qit, system_data->group_id);
     }
+#endif
 
     if (stage_count > 1 && system_data->multi_threaded) {
         wit = ecs_worker_iter(it, stage_index, stage_count);
@@ -116,19 +118,24 @@ ecs_entity_t flecs_run_system(
             run(it);
             ecs_iter_fini(&qit);
         } else {
+#ifdef FLECS_CACHED_QUERIES
             if (it == &qit && (qit.flags & EcsIterTrivialCached)) {
                 it->next = flecs_query_trivial_cached_next;
             }
+#endif
             run(it);
         }
     } else {
         if (system_data->query->term_count) {
             if (it == &qit) {
+#ifdef FLECS_CACHED_QUERIES
                 if (qit.flags & EcsIterTrivialCached) {
                     while (flecs_query_trivial_cached_next(&qit)) {
                         action(&qit);
                     }
-                } else {
+                } else
+#endif
+                {
                     while (ecs_query_next(&qit)) {
                         action(&qit);
                     }

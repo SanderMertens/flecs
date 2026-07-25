@@ -3,12 +3,15 @@
 ## Introduction
 Prefabs are entities that can be used as templates for other entities. They can provide a convenient API for creating assets natively in the ECS. Prefabs have the following features:
 
+Prefab support requires the `FLECS_PREFAB` addon. The addon is enabled in the
+default build and must be selected explicitly in a custom build.
+
 - Prefab components can be shared across instances
 - Inherited components can be overridden on a per-instance basis
 - Inherited components can be auto-overridden on a per-prefab basis
 - Prefab inheritance makes creating variations easy
 - Prefabs can have children that are instantiated for instances
-- Prefab children can be easily identified with prefab slots
+- Instantiated prefab children can be resolved from their prefab children
 - Prefabs are runtime accessible and modifiable
 - Prefabs can be mapped to types for easy access in the C++ API
 - Natively supported by Flecs Script & the JSON serializer

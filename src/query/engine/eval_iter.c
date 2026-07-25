@@ -155,6 +155,7 @@ void flecs_query_iter_constrain(
     const ecs_query_impl_t *query = ctx.query;
     const ecs_query_t *q = &query->pub;
     ecs_flags32_t flags = q->flags;
+    (void)flags;
     bool constrained = ctx.qit->constrained_this;
 
     it->flags &= ~(EcsIterTrivialTest|EcsIterTrivialCached|
@@ -334,6 +335,7 @@ bool ecs_query_next(
 
     ecs_query_iter_t *qit = &it->priv_.iter.query;
     ecs_query_impl_t *impl = ECS_CONST_CAST(ecs_query_impl_t*, it->query);
+    (void)impl;
     ecs_assert(impl != NULL, ECS_INVALID_OPERATION,
         "cannot call ecs_query_next on invalid iterator");
 
@@ -511,6 +513,7 @@ static void flecs_query_iter_fini(
     ecs_query_iter_t *qit = &it->priv_.iter.query;
 #endif
     const ecs_query_t *q = it->query;
+    (void)q;
     ecs_assert(q != NULL, ECS_INTERNAL_ERROR, NULL);
     flecs_poly_assert(q, ecs_query_t);
 

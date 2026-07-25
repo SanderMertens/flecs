@@ -311,14 +311,9 @@ void flecs_bootstrap_constraint_traits(
     ecs_add_id(world, EcsWith, EcsRelationship);
     ecs_add_id(world, EcsOnDelete, EcsRelationship);
     ecs_add_id(world, EcsOnDeleteTarget, EcsRelationship);
-    ecs_add_id(world, EcsOnInstantiate, EcsRelationship);
     ecs_add_id(world, ecs_id(EcsIdentifier), EcsRelationship);
 
     /* Targets */
-#ifdef FLECS_PREFAB
-    ecs_add_id(world, EcsOverride, EcsTarget);
-    ecs_add_id(world, EcsInherit, EcsTarget);
-#endif
     ecs_add_id(world, EcsDontInherit, EcsTarget);
 
     /* Traversable relationships are always acyclic */

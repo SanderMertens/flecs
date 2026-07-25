@@ -20639,10 +20639,12 @@ static const flecs::entity_t Empty = EcsEmpty;
 static const flecs::entity_t Monitor = EcsMonitor;
 /** Built-in System tag. */
 static const flecs::entity_t System = EcsSystem;
+#ifdef FLECS_PIPELINE
 /** Built-in Pipeline tag. */
 static const flecs::entity_t Pipeline = ecs_id(EcsPipeline);
 /** Built-in Phase tag. */
 static const flecs::entity_t Phase = EcsPhase;
+#endif
 /** Built-in Constant tag. */
 static const flecs::entity_t Constant = EcsConstant;
 /** Built-in ParentDepth tag. */

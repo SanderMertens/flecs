@@ -78,7 +78,7 @@ static ECS_DTOR(EcsScriptRng, ptr, {
     flecs_script_rng_free(ptr->impl);
 })
 
-void flecs_script_rng_get_float(
+static void flecs_script_rng_get_float(
     const ecs_function_ctx_t *ctx,
     int32_t argc,
     const ecs_value_t *argv,
@@ -104,7 +104,7 @@ void flecs_script_rng_get_float(
     }
 }
 
-void flecs_script_rng_get_uint(
+static void flecs_script_rng_get_uint(
     const ecs_function_ctx_t *ctx,
     int32_t argc,
     const ecs_value_t *argv,
@@ -137,7 +137,7 @@ double flecs_lerp(
     return a + t * (b - a);
 }
 
-void flecs_script_min(
+static void flecs_script_min(
     const ecs_function_ctx_t *ctx,
     int32_t argc,
     const ecs_value_t *argv,
@@ -150,7 +150,7 @@ void flecs_script_min(
     *(double*)result->ptr = (a < b) ? a : b;
 }
 
-void flecs_script_max(
+static void flecs_script_max(
     const ecs_function_ctx_t *ctx,
     int32_t argc,
     const ecs_value_t *argv,
@@ -185,7 +185,7 @@ FLECS_SCRIPT_LERP(float)
 FLECS_SCRIPT_LERP(double)
 
 #define FLECS_SCRIPT_SMOOTHSTEP(type)\
-    void flecs_script_smoothstep_##type(\
+    static void flecs_script_smoothstep_##type(\
         const ecs_function_ctx_t *ctx,\
         int32_t argc,\
         const ecs_value_t *argv,\

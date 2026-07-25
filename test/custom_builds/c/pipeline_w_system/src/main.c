@@ -4,7 +4,7 @@ typedef struct {
     int32_t x, y;
 } Position, Velocity;
 
-void Move(ecs_iter_t *it) {
+static void Move(ecs_iter_t *it) {
     Position *p = ecs_field(it, Position, 0);
     Velocity *v = ecs_field(it, Velocity, 1);
 
