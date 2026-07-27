@@ -29262,7 +29262,35 @@ static bool flecs_rest_get_root(
 {
     reply->content_type = "text/plain";
     ecs_strbuf_appendlit(&reply->body,
-        "You've reached the REST API for Flecs " FLECS_VERSION "!\n");
+        "You've reached the REST API for Flecs " FLECS_VERSION "!\n\n"
+        "# API examples:\n"
+        "Examples are shown without encoding special characters for readability.\n\n"
+        "## Get entity flecs.core.World with component values:\n"
+        "GET /entity/flecs/core/World&values=true\n\n"
+        "## Get entity with id 1234 with component values:\n"
+        "GET /entity/#1234&values=true\n\n"
+        "## Get entities in root\n"
+        "GET /query?expr=!(flecs.core.ChildOf,*)\n\n"
+        "## Get entities for parent flecs.core\n"
+        "GET /query?expr=(flecs.core.ChildOf,flecs.core)\n\n"
+        "## Get all components added to an entity\n"
+        "GET /query?expr=*(_)\n\n"
+        "## Get all relationships added to an entity\n"
+        "GET /query?expr=*(_, _)\n\n"
+        "## Find all instantiated prefabs in the world\n"
+        "GET /query?expr=IsA(_, *)\n\n"
+        "## Get entities for example components transform.Position, movement.Velocity\n"
+        "GET /query?expr=transform.Position,movement.Velocity\n\n"
+        "## Create entity Sun.Earth\n"
+        "PUT /entity/Sun/Earth\n\n"
+        "## Delete entity Sun.Earth\n"
+        "DELETE /entity/Sun/Earth\n\n"
+        "## Get component planets.Mass from entity Sun.Earth\n"
+        "GET /component/Sun/Earth?component=planets.Mass\n\n"
+        "## Set component Position to value {\"x\":10} for entity Sun.Earth\n"
+        "PUT /component/Sun/Earth?component=Position&value={\"x\":10}\n\n"
+        "## Change code of script my_script.flecs (code in request body)\n"
+        "PUT /script/my_script.flecs\n");
     return true;
 }
 
