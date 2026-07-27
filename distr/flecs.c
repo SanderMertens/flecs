@@ -5398,6 +5398,8 @@ void flecs_bootstrap(
     ecs_add_id(world, EcsOnDeleteTarget, EcsRelationship);
     ecs_add_id(world, EcsOnInstantiate, EcsRelationship);
     ecs_add_id(world, ecs_id(EcsIdentifier), EcsRelationship);
+    ecs_add_id(world, EcsParentDepth, EcsRelationship);
+    ecs_add_id(world, ecs_id(EcsPoly), EcsRelationship);
 
     /* Targets */
     ecs_add_id(world, EcsOverride, EcsTarget);
@@ -25617,6 +25619,7 @@ void FlecsDocImport(
 #endif
 
     ecs_add_pair(world, ecs_id(EcsDocDescription), EcsOnInstantiate, EcsDontInherit);
+    ecs_add_id(world, ecs_id(EcsDocDescription), EcsRelationship);
 }
 
 #endif
@@ -74129,6 +74132,7 @@ void flecs_script_template_import(
     ECS_TAG_DEFINE(world, EcsScriptTemplate);
 
     ecs_add_id(world, EcsScriptTemplate, EcsPairIsTag);
+    ecs_add_id(world, EcsScriptTemplate, EcsRelationship);
 
     ecs_set_hooks(world, EcsScriptTemplateSetEvent, {
         .ctor = flecs_default_ctor,

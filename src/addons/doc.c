@@ -196,6 +196,7 @@ void FlecsDocImport(
 #endif
 
     ecs_add_pair(world, ecs_id(EcsDocDescription), EcsOnInstantiate, EcsDontInherit);
+    ecs_add_id(world, ecs_id(EcsDocDescription), EcsRelationship);
 }
 
 #endif

@@ -5333,6 +5333,8 @@ void flecs_bootstrap(
     ecs_add_id(world, EcsOnDeleteTarget, EcsRelationship);
     ecs_add_id(world, EcsOnInstantiate, EcsRelationship);
     ecs_add_id(world, ecs_id(EcsIdentifier), EcsRelationship);
+    ecs_add_id(world, EcsParentDepth, EcsRelationship);
+    ecs_add_id(world, ecs_id(EcsPoly), EcsRelationship);
 
     /* Targets */
     ecs_add_id(world, EcsOverride, EcsTarget);

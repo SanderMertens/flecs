@@ -1112,6 +1112,7 @@ void flecs_script_template_import(
     ECS_TAG_DEFINE(world, EcsScriptTemplate);
 
     ecs_add_id(world, EcsScriptTemplate, EcsPairIsTag);
+    ecs_add_id(world, EcsScriptTemplate, EcsRelationship);
 
     ecs_set_hooks(world, EcsScriptTemplateSetEvent, {
         .ctor = flecs_default_ctor,
