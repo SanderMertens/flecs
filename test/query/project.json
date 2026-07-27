@@ -176,6 +176,8 @@
                 "validator_2_terms_1_var_src_match_this",
                 "validator_1_tag_term_this_src_match_this",
                 "exceed_max_var_count",
+                "query_for_relationship_trait_as_component",
+                "query_for_relationship_trait_as_component_2_terms",
                 "from_op_w_pair"
             ]
         }, {
