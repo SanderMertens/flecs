@@ -6,6 +6,31 @@
 #ifndef FLECS_ENTITY_H
 #define FLECS_ENTITY_H
 
+#ifdef FLECS_MUT_ALIAS_LOCKS
+    #define FLECS_LOCK_TARGET_INIT(cr_, table_, col_) \
+     .lock_target = (ecs_lock_target_t){ .cr = (cr_), .table = (table_), .column_index = (int16_t)(col_) },
+    
+    /* Construct ecs_get_ptr_t with lock target info */
+    #define ECS_GET_PTR(ptr_, cr_, table_, col_) \
+        (ecs_get_ptr_t){ \
+            .ptr = (ptr_), \
+            .lock_target = (ecs_lock_target_t){ .cr = (cr_), .table = (table_), .column_index = (int16_t)(col_) } \
+        }
+    
+    /* Construct null ecs_get_ptr_t */
+    #define ECS_GET_PTR_NULL (ecs_get_ptr_t){0}
+    
+    /* Extract the pointer from ecs_get_ptr_t */
+    #define ECS_GET_PTR_PTR(get_ptr_) ((get_ptr_).ptr)
+#else
+    #define FLECS_LOCK_TARGET_INIT(cr_, table_, col_) /* nothing */
+    
+    /* When FLECS_MUT_ALIAS_LOCKS is not defined, ecs_get_ptr_t is just void* */
+    #define ECS_GET_PTR(ptr_, cr_, table_, col_) ((ecs_get_ptr_t)(ptr_))
+    #define ECS_GET_PTR_NULL ((ecs_get_ptr_t)NULL)
+    #define ECS_GET_PTR_PTR(get_ptr_) (get_ptr_)
+#endif
+
 #define ecs_get_low_id(table, r, id)\
     ecs_assert(table->component_map != NULL, ECS_INTERNAL_ERROR, NULL);\
     int16_t column_index = table->component_map[id];\
@@ -15,9 +40,34 @@
             ECS_RECORD_TO_ROW(r->row));\
     }
 
+#ifdef FLECS_MUT_ALIAS_LOCKS
+#define ecs_record_get_low_id(tbl, r, id)\
+    ecs_assert(tbl->component_map != NULL, ECS_INTERNAL_ERROR, NULL);\
+    int16_t column_index = tbl->component_map[id];\
+    if (column_index > 0) {\
+        ecs_column_t *column = &tbl->data.columns[--column_index];\
+        return (ecs_get_ptr_t){\
+            .ptr = ECS_ELEM(column->data, column->ti->size, ECS_RECORD_TO_ROW(r->row)),\
+            .lock_target = (ecs_lock_target_t){ .cr = NULL, .table = (tbl), .column_index = column_index }\
+        };\
+    }
+#else
+#define ecs_record_get_low_id(tbl, r, id)\
+    ecs_assert(tbl->component_map != NULL, ECS_INTERNAL_ERROR, NULL);\
+    int16_t column_index = tbl->component_map[id];\
+    if (column_index > 0) {\
+        ecs_column_t *column = &tbl->data.columns[column_index - 1];\
+        return (ecs_get_ptr_t)ECS_ELEM(column->data, column->ti->size, \
+            ECS_RECORD_TO_ROW(r->row));\
+    }
+#endif
+
 typedef struct {
     const ecs_type_info_t *ti;
     void *ptr;
+#ifdef FLECS_MUT_ALIAS_LOCKS
+    ecs_lock_target_t lock_target;
+#endif
 } flecs_component_ptr_t;
 
 flecs_component_ptr_t flecs_ensure(
@@ -84,8 +134,8 @@ int32_t flecs_relation_depth(
     ecs_entity_t r,
     const ecs_table_t *table);
 
-/* Get component from base entity (follows IsA relationship). */
-void* flecs_get_base_component(
+/* Get component from base entity (follows IsA relationship) */
+ecs_get_ptr_t flecs_get_base_component(
     const ecs_world_t *world,
     ecs_table_t *table,
     ecs_id_t id,
