@@ -4225,6 +4225,36 @@ void Validator_exceed_max_var_count(void) {
     ecs_fini(world);
 }
 
+void Validator_query_for_relationship_trait_as_component(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, rel, EcsRelationship);
+
+    ecs_log_set_level(-4);
+    test_assert(NULL == ecs_query_init(world, &(ecs_query_desc_t){
+        .terms = {{ rel }}
+    }));
+
+    ecs_fini(world);
+}
+
+void Validator_query_for_relationship_trait_as_component_2_terms(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, rel, EcsRelationship);
+
+    ecs_log_set_level(-4);
+    test_assert(NULL == ecs_query_init(world, &(ecs_query_desc_t){
+        .terms = {{ Foo }, { rel }}
+    }));
+
+    ecs_fini(world);
+}
+
 void Validator_from_op_w_pair(void) {
     ecs_world_t *world = ecs_mini();
 

@@ -623,9 +623,20 @@ int flecs_term_verify(
         }
         if ((first->id & EcsIsVariable) && !ecs_id_is_wildcard(component)) {
             char *id_str = ecs_id_str(world, id);
-            flecs_query_validator_error(ctx, 
+            flecs_query_validator_error(ctx,
                 "expected wildcard for variable term.first (got %s)", id_str);
             ecs_os_free(id_str);
+            return -1;
+        }
+
+        if (!ecs_id_is_wildcard(component) &&
+            ecs_has_id(world, component, EcsRelationship))
+        {
+            char *component_str = ecs_get_path(world, component);
+            flecs_query_validator_error(ctx,
+                "cannot query for relationship '%s' as component",
+                    component_str);
+            ecs_os_free(component_str);
             return -1;
         }
     }
@@ -1750,6 +1761,14 @@ bool flecs_query_finalize_simple(
 
         if (id == EcsPrefab || id == EcsDisabled) {
             return false;
+        }
+
+        ecs_entity_t component = id & ECS_COMPONENT_MASK;
+        if (component && !ECS_IS_PAIR(id) &&
+            ecs_is_alive(world, component) &&
+            ecs_has_id(world, component, EcsRelationship))
+        {
+            return false; /* Slow path reports the error */
         }
 
         ecs_term_t cmp_term = { 
