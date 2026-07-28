@@ -107,14 +107,6 @@ void flecs_script_component_free(
 }
 
 static
-void flecs_script_default_component_free(
-    ecs_script_visit_t *v,
-    ecs_script_default_component_t *node)
-{
-    flecs_expr_visit_free(&v->script->pub, node->expr);
-}
-
-static
 void flecs_script_var_node_free(
     ecs_script_visit_t *v,
     ecs_script_var_node_t *node)
@@ -164,11 +156,6 @@ int flecs_script_stmt_free(
     case EcsAstWithComponent:
         flecs_script_component_free(v, (ecs_script_component_t*)node);
         flecs_free_t(a, ecs_script_component_t, node);
-        break;
-    case EcsAstDefaultComponent:
-        flecs_script_default_component_free(v, 
-            (ecs_script_default_component_t*)node);
-        flecs_free_t(a, ecs_script_default_component_t, node);
         break;
     case EcsAstVarComponent:
         flecs_free_t(a, ecs_script_var_component_t, node);

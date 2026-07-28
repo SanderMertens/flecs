@@ -5,16 +5,12 @@
 
 // Flecs script component values can be populated with strings. To see how this works,
 // we first need to create a component type (see reflection example).
-using flecs.meta
 
 // Create tags
 Vertex { }
 Fragment { }
 
-struct Shader {
-  filename = string
-  code = string
-}
+struct Shader(filename: string, code: string)
 
 // Create component values with strings
 my_pipeline {

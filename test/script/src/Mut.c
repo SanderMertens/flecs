@@ -1223,10 +1223,7 @@ void Mut_script_component(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    HEAD "struct Position {"
-    LINE "  x = f32"
-    LINE "  y = f32"
-    LINE "}"
+    HEAD "struct Position(x: f32, y: f32)"
     LINE "template Foo {"
     LINE "  mut x: f32 = 10"
     LINE "  mut y: f32 = 20"
@@ -1251,10 +1248,7 @@ void Mut_script_pair_component(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    HEAD "struct Position {"
-    LINE "  x = f32"
-    LINE "  y = f32"
-    LINE "}"
+    HEAD "struct Position(x: f32, y: f32)"
     LINE "Target {}"
     LINE "template Foo {"
     LINE "  mut x: f32 = 10"
@@ -1356,123 +1350,6 @@ void Mut_child_name_from_string(void) {
 
     test_assert(ecs_lookup(world, "e.child_a") == 0);
     test_assert(ecs_lookup(world, "e.child_hello") != 0);
-
-    ecs_fini(world);
-}
-
-void Mut_default_component(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ecs_struct(world, {
-        .entity = ecs_id(Position),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    const char *expr =
-    HEAD "DefaultChildComponent Holder(Position)"
-    LINE "template Foo {"
-    LINE "  mut value: flecs.meta.f32 = 5"
-    LINE "  Holder holder {"
-    LINE "    child = $value, 20"
-    LINE "  }"
-    LINE "}"
-    LINE "Foo e()";
-
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
-
-    ecs_entity_t child = ecs_lookup(world, "e.holder.child");
-    test_assert(child != 0);
-    const Position *p = ecs_get(world, child, Position);
-    test_assert(p != NULL);
-    test_int(p->x, 5);
-    test_int(p->y, 20);
-
-    ecs_fini(world);
-}
-
-void Mut_default_component_nested_if(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ecs_struct(world, {
-        .entity = ecs_id(Position),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    const char *expr =
-    HEAD "DefaultChildComponent Holder(Position)"
-    LINE "template Foo {"
-    LINE "  mut value: flecs.meta.f32 = 5"
-    LINE "  Holder holder {"
-    LINE "    if true {"
-    LINE "      if true {"
-    LINE "        child = $value, 20"
-    LINE "      }"
-    LINE "    }"
-    LINE "  }"
-    LINE "}"
-    LINE "Foo e()";
-
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
-
-    ecs_entity_t child = ecs_lookup(world, "e.holder.child");
-    test_assert(child != 0);
-    const Position *p = ecs_get(world, child, Position);
-    test_assert(p != NULL);
-    test_int(p->x, 5);
-    test_int(p->y, 20);
-
-    ecs_fini(world);
-}
-
-void Mut_default_component_nested_for(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ecs_struct(world, {
-        .entity = ecs_id(Position),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    const char *expr =
-    HEAD "DefaultChildComponent Holder(Position)"
-    LINE "template Foo {"
-    LINE "  mut value: flecs.meta.f32 = 5"
-    LINE "  Holder holder {"
-    LINE "    for i in 0..2 {"
-    LINE "      for j in 0..2 {"
-    LINE "        \"child_{$i}_{$j}\" = $value, 20"
-    LINE "      }"
-    LINE "    }"
-    LINE "  }"
-    LINE "}"
-    LINE "Foo e()";
-
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
-
-    int32_t i, j;
-    for (i = 0; i < 2; i ++) {
-        for (j = 0; j < 2; j ++) {
-            char name[64];
-            ecs_os_snprintf(name, 64, "e.holder.child_%d_%d", i, j);
-            ecs_entity_t child = ecs_lookup(world, name);
-            test_assert(child != 0);
-            const Position *p = ecs_get(world, child, Position);
-            test_assert(p != NULL);
-            test_int(p->x, 5);
-            test_int(p->y, 20);
-        }
-    }
 
     ecs_fini(world);
 }

@@ -14,16 +14,9 @@ Some of the features of Flecs Script are:
 ## Example
 
 ```cpp
-using flecs.meta
+struct MaxSpeed(value: f32)
 
-struct MaxSpeed {
-  value = f32
-}
-
-struct Position {
-  x = f32
-  y = f32
-}
+struct Position(x: f32, y: f32)
 
 prefab SpaceShip {
   MaxSpeed: {value: 100}
@@ -156,15 +149,10 @@ my_entity {
 }
 ```
 
-Components can be defined in a script:
+Components can be defined in a script (see [Type definitions](#type-definitions)):
 
 ```cpp
-using flecs.meta
-
-struct Position {
-  x = f32
-  y = f32
-}
+struct Position(x: f32, y: f32)
 
 my_entity {
   Position: {x: 10, y: 20}
@@ -1261,10 +1249,7 @@ The `module` statement puts all contents of a script in a module. Example:
 module components.transform
 
 // Creates components.transform.Position
-struct Position {
-  x = f32
-  y = f32
-}
+struct Position(x: f32, y: f32)
 ```
 
 The `components.transform` entity will be created with the `Module` tag.
@@ -1290,18 +1275,16 @@ The `using` keyword imports a namespace into the current namespace. Example:
 
 ```cpp
 // Without using
-flecs.meta.struct Position {
-  x = flecs.meta.f32
-  y = flecs.meta.f32
+my_engine {
+  game.engines.FtlEngine: {active: true}
 }
 ```
 ```cpp
 // With using
-using flecs.meta
+using game.engines
 
-struct Position {
-  x = f32
-  y = f32
+my_engine {
+  FtlEngine: {active: true}
 }
 ```
 
@@ -1325,11 +1308,10 @@ my_spaceship {
 A `using` statement may end with a wildcard (`*`). This will import all namespaces matching the path. Example:
 
 ```cpp
-using flecs.*
+using game.*
 
-struct Position {
-  x = f32
-  y = f32
+my_engine {
+  FtlEngine: {active: true}
 }
 ```
 
@@ -1625,77 +1607,94 @@ for i in 0..10 {
 }
 ```
 
-## Default components
-A scope can have a default component, which means entities in that scope can assign values of that component without having to specify the component name. 
+## Type definitions
+Scripts can define component types by using the type entities from the `flecs.meta` module (`struct`, `enum`, `bitmask`) as entity kind, followed by an initializer list that describes the type.
 
-There are different ways to specify a default component. One way is to use a `with` statement. Default component values are assigned with the `=` operator, and don't need a `{}` surrounding the value. Example:
-
-```cpp
-with Position {
-  ent_a = 10, 20
-  ent_b = 20, 30
-}
-```
-
-Another way a default components are derived is from the entity kind. If an entity is specified with a kind, a `DefaultChildComponent` component will be looked up on the kind to find the default component for the scope, if any. For example:
+### Structs
+A struct is defined by specifying the struct members in the initializer list, where each member is specified as `name: type`:
 
 ```cpp
-// Create a PositionList tag with a DefaultChildComponent
-PositionList {
-  DefaultChildComponent: {Position}
-}
-
-// Derive default component for scope from PositionList
-PositionList plist {
-  ent_a = 10, 20
-  ent_b = 10, 20
-  ent_c = 10, 20
-}
+struct Position(x: f32, y: f32)
 ```
 
-A common use of default components is when creating structs. `struct` is a component with `member` as default child component. Example:
+The member type can be any registered type, including other types defined in a script. This makes it possible to create nested structs:
+
+```cpp
+struct Point(x: f32, y: f32)
+struct Line(start: Point, stop: Point)
+```
+
+Members are created as child entities of the struct with the `flecs.meta.Member` component. The `name: type` notation is a shorthand that only sets the member type. To specify additional fields of the `Member` component, assign an initializer to the member instead of a type:
+
+```cpp
+// Member with a type and array size
+struct Points(values: {f32, count: 3})
+```
+
+The initializer is assigned to the `Member` component of the member entity, which means all fields of `flecs.meta.Member` can be set, either by position or by name:
+
+```cpp
+// Same as {f32, count: 3}
+struct Points(values: {type: f32, count: 3})
+
+// Member with a unit (requires the units module)
+struct Car(speed: {f32, unit: flecs.units.Speed.KiloMetersPerHour})
+```
+
+Since members are regular entities, a struct can also be defined by explicitly creating the member entities in the struct scope. The following example is equivalent to `struct Position(x: f32, y: f32)`:
 
 ```cpp
 struct Position {
-  x = f32
-  y = f32
-}
-
-// is equivalent to
-
-struct Position {
-  member x(f32)
-  member y(f32)
+  x { member: {type: f32} }
+  y { member: {type: f32} }
 }
 ```
 
-Note how `member` is also used as kind for the children. This means that children of `x` and `y` derive their default child component from `member`, which is set to `member`. This makes it easy to create nested members:
+### Enums
+An enum is defined by listing its constants in the initializer list:
 
 ```cpp
-struct Line {
-  start {
-    x = f32
-    y = f32
-  }
-  stop {
-    x = f32
-    y = f32
-  }
-}
-
-// is equivalent to
-
-struct Line {
-  member start {
-    member x(f32)
-    member y(f32)
-  }
-  member stop {
-    member x(f32)
-    member y(f32)
-  }
-}
+enum Color(Red, Green, Blue)
 ```
+
+Constants are assigned with incrementing values, starting at zero. In the above example `Red` has value 0, `Green` has value 1 and `Blue` has value 2.
+
+Constants can also be assigned explicitly with the `name: value` notation:
+
+```cpp
+enum Prio(Low: 1, Medium: 5, High: 10)
+```
+
+Implicit and explicit values can be mixed. A constant without a value continues counting from the last assigned value:
+
+```cpp
+// A = 0, B = 10, C = 11
+enum Mix(A, B: 10, C)
+```
+
+By default enum constants are stored as `i32`. A different underlying type can be specified by adding a configuration scope to the initializer list with the `underlying_type` key:
+
+```cpp
+enum Color(Red, Green, Blue, {underlying_type: u64})
+```
+
+Constant values must fit in the range of the underlying type.
+
+### Bitmasks
+A bitmask is defined the same way as an enum:
+
+```cpp
+// Bacon = 1, Lettuce = 2, Tomato = 4
+bitmask Toppings(Bacon, Lettuce, Tomato)
+```
+
+Constants without a value are assigned with incrementing powers of two. Explicit values can be assigned with the `name: value` notation:
+
+```cpp
+bitmask Flags(A: 1, B: 2, Both: 3)
+```
+
+Bitmask constants are stored as `u32`, which cannot be overridden.
 
 ## Semicolon operator
 Multiple statements can be combined on a single line when using the semicolon operator. Example:
@@ -1722,24 +1721,6 @@ my_spaceship {
   pilot_a {}
   pilot_b {}
   pilot_c {}
-}
-```
-
-This allows for a more natural way to describe things like enum types:
-
-```cpp
-enum Color {
-  Red,
-  Green,
-  Blue
-}
-
-// is equivalent to
-
-enum Color {
-  constant Red
-  constant Green
-  constant Blue
 }
 ```
 

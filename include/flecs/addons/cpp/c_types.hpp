@@ -79,8 +79,6 @@ using Component = EcsComponent;
 using Identifier = EcsIdentifier;
 /** Built-in EcsPoly type. */
 using Poly = EcsPoly;
-/** Built-in EcsDefaultChildComponent type. */
-using DefaultChildComponent = EcsDefaultChildComponent;
 /** Built-in EcsParent type. */
 using Parent = EcsParent;
 

@@ -4996,7 +4996,6 @@ void flecs_bootstrap(
     flecs_bootstrap_make_alive(world, ecs_id(EcsPoly));
     flecs_bootstrap_make_alive(world, ecs_id(EcsParent));
     flecs_bootstrap_make_alive(world, ecs_id(EcsTreeSpawner));
-    flecs_bootstrap_make_alive(world, ecs_id(EcsDefaultChildComponent));
     flecs_bootstrap_make_alive(world, EcsFinal);
     flecs_bootstrap_make_alive(world, EcsName);
     flecs_bootstrap_make_alive(world, EcsSymbol);
@@ -5045,12 +5044,8 @@ void flecs_bootstrap(
         .dtor = ecs_dtor(EcsPoly)
     });
 
-    flecs_type_info_init(world, EcsParent, { 
+    flecs_type_info_init(world, EcsParent, {
         .ctor = flecs_default_ctor
-    });
-
-    flecs_type_info_init(world, EcsDefaultChildComponent, { 
-        .ctor = flecs_default_ctor,
     });
 
     /* Create and cache often used id records on world */
@@ -5068,7 +5063,6 @@ void flecs_bootstrap(
     flecs_bootstrap_builtin_t(world, table, EcsPoly);
     flecs_bootstrap_builtin_t(world, table, EcsParent);
     flecs_bootstrap_builtin_t(world, table, EcsTreeSpawner);
-    flecs_bootstrap_builtin_t(world, table, EcsDefaultChildComponent);
 
     /* Initialize default entity id range */
     world->info.last_component_id = EcsFirstUserComponentId;
@@ -22476,7 +22470,6 @@ const ecs_entity_t EcsSparse =                      FLECS_HI_COMPONENT_ID + 57;
 const ecs_entity_t EcsDontFragment =                FLECS_HI_COMPONENT_ID + 58;
 
 /* Misc */
-const ecs_entity_t ecs_id(EcsDefaultChildComponent) = FLECS_HI_COMPONENT_ID + 59;
 const ecs_entity_t EcsOrderedChildren =               FLECS_HI_COMPONENT_ID + 60;
 
 /* Builtin predicate ids (used by query engine) */
@@ -50946,6 +50939,34 @@ typedef struct EcsScriptUpdateEvent {
 
 extern ECS_COMPONENT_DECLARE(EcsScriptUpdateEvent);
 
+/* Context passed to script visitor callbacks. */
+typedef struct ecs_script_visitor_ctx_t {
+    ecs_world_t *world;
+    ecs_entity_t entity;                         /* Entity being defined */
+    ecs_entity_t kind;                           /* Kind with the visitor */
+    struct ecs_expr_initializer_t *initializer;  /* Initializer AST */
+    struct ecs_script_eval_visitor_t *eval;      /* Script evaluation context */
+    void *ctx;                                   /* User context */
+} ecs_script_visitor_ctx_t;
+
+/* Script visitor callback. */
+typedef int(*ecs_script_visitor_action_t)(
+    const ecs_script_visitor_ctx_t *ctx);
+
+/* Component that customizes how initializer syntax is interpreted. When an
+ * entity kind has this component, the initializer AST of a "Kind entity(...)"
+ * statement is passed to the visitor callback instead of being assigned as a
+ * component value. This is used to implement the type definition syntax
+ * ("struct Position(x: f32, y: f32)", "enum Color(Red, Green, Blue)").
+ * Private for now; can become a public customization point once the
+ * expression AST types are public. */
+typedef struct EcsScriptVisitor {
+    ecs_script_visitor_action_t visit;
+    void *ctx;
+} EcsScriptVisitor;
+
+FLECS_API extern ECS_COMPONENT_DECLARE(EcsScriptVisitor);
+
 struct ecs_script_impl_t {
     ecs_script_t pub;
     ecs_allocator_t allocator;
@@ -50977,7 +50998,6 @@ typedef enum ecs_script_node_kind_t {
     EcsAstScope,
     EcsAstTag,
     EcsAstComponent,
-    EcsAstDefaultComponent,
     EcsAstVarComponent,
     EcsAstWithVar,
     EcsAstWithTag,
@@ -51008,7 +51028,6 @@ struct ecs_script_scope_t {
     ecs_script_node_t node;
     ecs_vec_t stmts;
     ecs_script_scope_t *parent;
-    ecs_id_t default_component_eval;
 
     /* Array with component ids that are added in scope. Used to limit
      * archetype moves. */
@@ -51048,12 +51067,6 @@ typedef struct ecs_script_component_t {
     ecs_value_t eval;
     bool is_collection;
 } ecs_script_component_t;
-
-typedef struct ecs_script_default_component_t {
-    ecs_script_node_t node;
-    ecs_expr_node_t *expr;
-    ecs_value_t eval;
-} ecs_script_default_component_t;
 
 typedef struct ecs_script_var_component_t {
     ecs_script_node_t node;
@@ -51216,9 +51229,6 @@ ecs_script_component_t* flecs_script_insert_pair_component(
     ecs_parser_t *parser,
     const char *first,
     const char *second);
-
-ecs_script_default_component_t* flecs_script_insert_default_component(
-    ecs_parser_t *parser);
 
 ecs_script_var_component_t* flecs_script_insert_var_component(
     ecs_parser_t *parser,
@@ -52045,6 +52055,17 @@ int flecs_script_apply_annot(
     ecs_script_eval_visitor_t *v,
     ecs_script_entity_t *node,
     ecs_script_annot_t *annot);
+
+/* Type visitors (implement struct/enum/bitmask initializer syntax) */
+
+int flecs_script_struct_visit(
+    const ecs_script_visitor_ctx_t *ctx);
+
+int flecs_script_enum_visit(
+    const ecs_script_visitor_ctx_t *ctx);
+
+int flecs_script_bitmask_visit(
+    const ecs_script_visitor_ctx_t *ctx);
 
 /* Script functions */
 double flecs_lerp(
@@ -60230,13 +60251,6 @@ void flecs_meta_import_core_definitions(
         .entity = ecs_id(EcsParent),
         .members = {
             { .name = "value", .type = ecs_id(ecs_entity_t) }
-        }
-    });
-
-    ecs_struct(world, {
-        .entity = ecs_id(EcsDefaultChildComponent),
-        .members = {
-            { .name = "component", .type = ecs_id(ecs_entity_t) }
         }
     });
 
@@ -68656,21 +68670,6 @@ ecs_script_component_t* flecs_script_insert_component(
     return flecs_script_insert_pair_component(parser, name, NULL);
 }
 
-ecs_script_default_component_t* flecs_script_insert_default_component(
-    ecs_parser_t *parser)
-{
-    ecs_script_scope_t *scope = parser->scope;
-    ecs_assert(scope != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_script_default_component_t *result = flecs_ast_new(
-            parser, ecs_script_default_component_t, EcsAstDefaultComponent);
-
-    flecs_ast_append(parser, scope->stmts, 
-        ecs_script_default_component_t, result);
-
-    return result;
-}
-
 ecs_script_var_component_t* flecs_script_insert_var_component(
     ecs_parser_t *parser,
     const char *var_name)
@@ -68846,6 +68845,176 @@ ecs_script_function_node_t* flecs_script_insert_function(
 
     flecs_ast_append(parser, scope->stmts, ecs_script_function_node_t, result);
     return result;
+}
+
+#endif
+
+#ifdef FLECS_SCRIPT
+
+static
+int flecs_script_constants_visit(
+    const ecs_script_visitor_ctx_t *ctx,
+    bool is_bitmask)
+{
+    ecs_world_t *world = ctx->world;
+    ecs_script_eval_visitor_t *v = ctx->eval;
+    ecs_script_t *script = &v->base.script->pub;
+    ecs_expr_initializer_t *node = ctx->initializer;
+    const char *kind_str = is_bitmask ? "bitmask" : "enum";
+
+    if (!node || node->node.kind == EcsExprEmptyInitializer ||
+        !ecs_vec_count(&node->elements))
+    {
+        flecs_script_eval_error(v, NULL,
+            "%s '%s' must have at least one constant",
+                kind_str, ecs_get_name(world, ctx->entity));
+        return -1;
+    }
+
+    ecs_expr_initializer_element_t *elems = ecs_vec_first(&node->elements);
+    int32_t i, count = ecs_vec_count(&node->elements);
+
+    ecs_entity_t underlying = is_bitmask ? ecs_id(ecs_u32_t) : 0;
+
+    for (i = 0; i < count; i ++) {
+        ecs_expr_initializer_element_t *elem = &elems[i];
+        if (elem->member || !elem->value) {
+            continue;
+        }
+
+        if (elem->value->kind != EcsExprInitializer &&
+            elem->value->kind != EcsExprEmptyInitializer)
+        {
+            continue;
+        }
+
+        ecs_expr_initializer_t *cfg = (ecs_expr_initializer_t*)elem->value;
+        ecs_expr_initializer_element_t *cfg_elems = ecs_vec_first(
+            &cfg->elements);
+        int32_t c, cfg_count = ecs_vec_count(&cfg->elements);
+        for (c = 0; c < cfg_count; c ++) {
+            ecs_expr_initializer_element_t *cfg_elem = &cfg_elems[c];
+            if (!cfg_elem->member || ecs_os_strcmp(
+                cfg_elem->member, "underlying_type"))
+            {
+                flecs_expr_visit_error(script, elem->value,
+                    "invalid element in %s configuration (expected "
+                    "'{underlying_type: type}')", kind_str);
+                return -1;
+            }
+
+            if (is_bitmask) {
+                flecs_expr_visit_error(script, elem->value,
+                    "bitmask does not support underlying_type");
+                return -1;
+            }
+
+            if (underlying) {
+                flecs_expr_visit_error(script, elem->value,
+                    "underlying_type specified more than once");
+                return -1;
+            }
+
+            ecs_value_t value = {
+                .ptr = &underlying,
+                .type = ecs_id(ecs_entity_t)
+            };
+
+            if (flecs_script_eval_expr(v, &cfg_elem->value, &value)) {
+                return -1;
+            }
+
+            if (!underlying) {
+                flecs_expr_visit_error(script, elem->value,
+                    "invalid underlying_type for enum '%s'",
+                        ecs_get_name(world, ctx->entity));
+                return -1;
+            }
+
+            EcsEnum *ptr = ecs_ensure(world, ctx->entity, EcsEnum);
+            ptr->underlying_type = underlying;
+            ecs_modified(world, ctx->entity, EcsEnum);
+        }
+    }
+
+    if (!underlying) {
+        underlying = ecs_id(ecs_i32_t);
+    }
+
+    for (i = 0; i < count; i ++) {
+        ecs_expr_initializer_element_t *elem = &elems[i];
+
+        if (!elem->member && elem->value &&
+            (elem->value->kind == EcsExprInitializer ||
+             elem->value->kind == EcsExprEmptyInitializer))
+        {
+            continue;
+        }
+
+        if (elem->member) {
+            if (elem->operator) {
+                flecs_expr_visit_error(script, elem->value,
+                    "invalid operator for constant '%s'", elem->member);
+                return -1;
+            }
+
+            ecs_entity_t c = flecs_script_create_entity(v, elem->member);
+            if (!c) {
+                return -1;
+            }
+
+            const ecs_type_info_t *ti = ecs_get_type_info(world, underlying);
+            if (!ti) {
+                flecs_expr_visit_error(script, elem->value,
+                    "underlying type is not a type");
+                return -1;
+            }
+
+            ecs_value_t value = {
+                .ptr = ecs_ensure_id(world, c, ecs_pair(EcsConstant, underlying),
+                    flecs_ito(size_t, ti->size)),
+                .type = underlying
+            };
+
+            ecs_os_memset(value.ptr, 0, ti->size);
+
+            if (flecs_script_eval_expr(v, &elem->value, &value)) {
+                return -1;
+            }
+
+            ecs_modified_id(world, c, ecs_pair(EcsConstant, underlying));
+        } else {
+            if (!elem->value || elem->value->kind != EcsExprIdentifier) {
+                flecs_expr_visit_error(script, elem->value,
+                    "invalid constant for %s '%s' (expected identifier or "
+                    "'name: value')", kind_str,
+                        ecs_get_name(world, ctx->entity));
+                return -1;
+            }
+
+            const char *name = ((ecs_expr_identifier_t*)elem->value)->value;
+            ecs_entity_t c = flecs_script_create_entity(v, name);
+            if (!c) {
+                return -1;
+            }
+
+            ecs_add_id(world, c, EcsConstant);
+        }
+    }
+
+    return 0;
+}
+
+int flecs_script_enum_visit(
+    const ecs_script_visitor_ctx_t *ctx)
+{
+    return flecs_script_constants_visit(ctx, false);
+}
+
+int flecs_script_bitmask_visit(
+    const ecs_script_visitor_ctx_t *ctx)
+{
+    return flecs_script_constants_visit(ctx, true);
 }
 
 #endif
@@ -71143,11 +71312,6 @@ identifier: {
             goto identifier_colon;
         }
 
-        // x =
-        case '=': {
-            goto identifier_assign;
-        }
-
         // SpaceShip(
         case '(': {
             goto identifier_paren;
@@ -71563,32 +71727,6 @@ identifier_colon: {
     })
 }
 
-// x =
-identifier_assign: {
-    ecs_script_entity_t *entity = flecs_script_insert_entity(
-        parser, Token(0));
-
-    {
-        // x = Position:
-        LookAhead_2(EcsTokIdentifier, ':',
-            Error("'%s = %s: ...' is invalid, did you mean "
-                "'%s { %s: ... }' instead?",
-                Token(0), Token(2), Token(0), Token(2));
-        )
-    }
-
-    // x = f32\n
-    Initializer('\n',
-        Scope(entity->scope, 
-            ecs_script_default_component_t *comp = 
-                flecs_script_insert_default_component(parser);
-            comp->expr = INITIALIZER;
-        )
-        
-        EndOfRule;
-    )
-}
-
 // Spaceship enterprise
 identifier_string:
 identifier_identifier: {
@@ -71932,6 +72070,7 @@ void FlecsScriptPlatformImport(
 
 ECS_COMPONENT_DECLARE(EcsScript);
 ECS_COMPONENT_DECLARE(EcsScriptUpdateEvent);
+ECS_COMPONENT_DECLARE(EcsScriptVisitor);
 ECS_COMPONENT_DECLARE(EcsScriptConstVar);
 ECS_COMPONENT_DECLARE(EcsScriptFunction);
 ECS_COMPONENT_DECLARE(EcsScriptMethod);
@@ -72537,7 +72676,23 @@ void FlecsScriptImport(
     ecs_set_name_prefix(world, "Ecs");
     ECS_COMPONENT_DEFINE(world, EcsScript);
     ECS_COMPONENT_DEFINE(world, EcsScriptUpdateEvent);
+    ECS_COMPONENT_DEFINE(world, EcsScriptVisitor);
     ECS_TAG_DEFINE(world, EcsScriptVectorType);
+
+    ecs_add_pair(world, ecs_id(EcsScriptVisitor), EcsOnInstantiate,
+        EcsDontInherit);
+
+    ecs_set(world, ecs_id(EcsStruct), EcsScriptVisitor, {
+        .visit = flecs_script_struct_visit
+    });
+
+    ecs_set(world, ecs_id(EcsEnum), EcsScriptVisitor, {
+        .visit = flecs_script_enum_visit
+    });
+
+    ecs_set(world, ecs_id(EcsBitmask), EcsScriptVisitor, {
+        .visit = flecs_script_bitmask_visit
+    });
 
     ecs_set_hooks(world, EcsScript, {
         .ctor = flecs_default_ctor,
@@ -73075,6 +73230,101 @@ char* ecs_ptr_to_str(
     }
 
     return ecs_strbuf_get(&str);
+}
+
+#endif
+
+#ifdef FLECS_SCRIPT
+
+int flecs_script_struct_visit(
+    const ecs_script_visitor_ctx_t *ctx)
+{
+    ecs_world_t *world = ctx->world;
+    ecs_script_eval_visitor_t *v = ctx->eval;
+    ecs_script_t *script = &v->base.script->pub;
+    ecs_expr_initializer_t *node = ctx->initializer;
+
+    if (!node || node->node.kind == EcsExprEmptyInitializer ||
+        !ecs_vec_count(&node->elements))
+    {
+        flecs_script_eval_error(v, NULL,
+            "struct '%s' must have at least one member "
+            "('struct %s(name: type)')",
+                ecs_get_name(world, ctx->entity),
+                ecs_get_name(world, ctx->entity));
+        return -1;
+    }
+
+    const ecs_type_info_t *ti = ecs_get_type_info(world, ecs_id(EcsMember));
+    ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_expr_initializer_element_t *elems = ecs_vec_first(&node->elements);
+    int32_t i, count = ecs_vec_count(&node->elements);
+
+    for (i = 0; i < count; i ++) {
+        ecs_expr_initializer_element_t *elem = &elems[i];
+
+        if (!elem->member) {
+            flecs_expr_visit_error(script, elem->value,
+                "missing name for struct member (expected 'name: type')");
+            return -1;
+        }
+
+        if (elem->operator) {
+            flecs_expr_visit_error(script, elem->value,
+                "invalid operator for struct member '%s'", elem->member);
+            return -1;
+        }
+
+        if (!elem->value) {
+            flecs_expr_visit_error(script, NULL,
+                "missing type for struct member '%s'", elem->member);
+            return -1;
+        }
+
+        ecs_entity_t m = flecs_script_create_entity(v, elem->member);
+        if (!m) {
+            return -1;
+        }
+
+        if (elem->value->kind == EcsExprInitializer ||
+            elem->value->kind == EcsExprEmptyInitializer)
+        {
+            ecs_value_t value = {
+                .ptr = ecs_ensure_id(world, m, ecs_id(EcsMember),
+                    flecs_ito(size_t, ti->size)),
+                .type = ecs_id(EcsMember)
+            };
+
+            ecs_os_memset(value.ptr, 0, ti->size);
+
+            if (flecs_script_eval_expr(v, &elem->value, &value)) {
+                return -1;
+            }
+
+            ecs_modified(world, m, EcsMember);
+        } else {
+            ecs_entity_t type = 0;
+            ecs_value_t value = {
+                .ptr = &type,
+                .type = ecs_id(ecs_entity_t)
+            };
+
+            if (flecs_script_eval_expr(v, &elem->value, &value)) {
+                return -1;
+            }
+
+            if (!type) {
+                flecs_expr_visit_error(script, elem->value,
+                    "invalid type for struct member '%s'", elem->member);
+                return -1;
+            }
+
+            ecs_set(world, m, EcsMember, { .type = type });
+        }
+    }
+
+    return 0;
 }
 
 #endif
@@ -74867,20 +75117,6 @@ int flecs_script_check_entity(
         }
 
         node->eval_kind = id.eval;
-    } else {
-        /* Inherit kind from parent kind's DefaultChildComponent, if it exists */
-        ecs_script_scope_t *scope = ecs_script_current_scope(v);
-        if (scope && scope->default_component_eval) {
-            node->eval_kind = scope->default_component_eval;
-        }
-    }
-
-    if (node->eval_kind) {
-        const EcsDefaultChildComponent *default_comp = ecs_get(
-            v->world, node->eval_kind, EcsDefaultChildComponent);
-        if (default_comp && default_comp->component) {
-            node->scope->default_component_eval = default_comp->component;
-        }
     }
 
     if (node->name_expr && !node->name_expr->type_info) {
@@ -74956,8 +75192,16 @@ int flecs_script_check_component(
     }
 
     if (v->is_with_scope) {
-        flecs_script_eval_error(v, node, "invalid component in with scope"); 
+        flecs_script_eval_error(v, node, "invalid component in with scope");
         return -1;
+    }
+
+    /* If the id has a script visitor the initializer AST is passed to the
+     * visitor as-is during evaluation, don't type check it. */
+    if (!node->id.second && node->id.eval &&
+        ecs_has(v->world, node->id.eval, EcsScriptVisitor))
+    {
+        return 0;
     }
 
     if (node->expr) {
@@ -75027,45 +75271,6 @@ int flecs_script_check_var_component(
     }
 
     node->sp = var->sp;
-
-    return 0;
-}
-
-static
-int flecs_script_check_default_component(
-    ecs_script_eval_visitor_t *v,
-    ecs_script_default_component_t *node)
-{
-    if (!v->entity) {
-        flecs_script_eval_error(v, node,
-            "missing entity for default component");
-        return -1;
-    }
-
-    ecs_script_scope_t *scope = ecs_script_current_scope(v);
-    ecs_assert(scope != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(scope->node.kind == EcsAstScope, ECS_INTERNAL_ERROR, NULL);
-    scope = scope->parent;
-    if (!scope) {
-        return 0;
-    }
-
-    ecs_id_t default_type = scope->default_component_eval;
-    if (!default_type) {
-        return 0;
-    }
-
-    const ecs_type_info_t *ti = ecs_get_type_info(v->world, default_type);
-    if (!ti) {
-        return 0;
-    }
-
-    if (node->expr && !node->expr->type_info) {
-        ecs_entity_t type = ti->component;
-        if (flecs_script_check_expr(v, &node->expr, &type)) {
-            return -1;
-        }
-    }
 
     return 0;
 }
@@ -75277,9 +75482,6 @@ int flecs_script_check_node(
     case EcsAstVarComponent:
         return flecs_script_check_var_component(
             v, (ecs_script_var_component_t*)node);
-    case EcsAstDefaultComponent:
-        return flecs_script_check_default_component(
-            v, (ecs_script_default_component_t*)node);
     case EcsAstWithVar:
         return flecs_script_check_with_var(
             v, (ecs_script_var_component_t*)node);
@@ -75437,17 +75639,6 @@ void flecs_script_with_set_count(
     }
 
     ecs_vec_set_count_t(a, &v->r->with_type_info, ecs_type_info_t*, count);
-}
-
-static
-ecs_value_t* flecs_script_with_last(
-    ecs_script_eval_visitor_t *v)
-{
-    int32_t count = ecs_vec_count(&v->r->with);
-    if (count) {
-        return ecs_vec_get_t(&v->r->with, ecs_value_t, count - 2);
-    }
-    return NULL;
 }
 
 static
@@ -75955,15 +76146,6 @@ int flecs_script_eval_scope(
         }
     }
 
-    if (v->base.depth > 0) {
-        ecs_script_node_t *prev = v->base.nodes[v->base.depth - 1];
-        if ((prev->kind == EcsAstIf || prev->kind == EcsAstFor) &&
-            node->parent)
-        {
-            node->default_component_eval = node->parent->default_component_eval;
-        }
-    }
-
     ecs_allocator_t *a = &v->r->allocator;
     v->vars = flecs_script_vars_push(v->vars, &v->r->stack, a);
 
@@ -76043,7 +76225,6 @@ void flecs_script_apply_non_fragmenting_childof_to_scope(
             break;
         case EcsAstTag:
         case EcsAstComponent:
-        case EcsAstDefaultComponent:
         case EcsAstVarComponent:        
         case EcsAstUsing:
         case EcsAstModule:
@@ -76122,6 +76303,20 @@ int flecs_script_eval_entity(
     ecs_script_eval_visitor_t *v,
     ecs_script_entity_t *node)
 {
+    if (v->entity && v->entity->eval_kind && !node->kind &&
+        !ecs_vec_count(&node->scope->stmts) && ecs_has(
+            v->world, v->entity->eval_kind, EcsScriptVisitor))
+    {
+        const char *parent_kind = v->entity->kind;
+        flecs_script_eval_error(v, node,
+            "invalid declaration for '%s', did you mean '%s %s(%s ...)'?",
+                node->name ? node->name : "",
+                parent_kind ? parent_kind : "struct",
+                v->entity->name,
+                node->name ? node->name : "");
+        return -1;
+    }
+
     bool is_slot = false;
     if (node->kind) {
         ecs_script_id_t id = {
@@ -76138,12 +76333,6 @@ int flecs_script_eval_entity(
         }
 
         node->eval_kind = id.eval;
-    } else {
-        /* Inherit kind from parent kind's DefaultChildComponent, if it exists */
-        ecs_script_scope_t *scope = ecs_script_current_scope(v);
-        if (scope && scope->default_component_eval) {
-            node->eval_kind = scope->default_component_eval;
-        }
     }
 
     ecs_expr_node_t *name_expr = node->name_expr;
@@ -76176,25 +76365,11 @@ int flecs_script_eval_entity(
         ecs_add_pair(v->world, node->eval, EcsSlotOf, parent);
     }
 
-    const EcsDefaultChildComponent *default_comp = NULL;
     ecs_script_entity_t *old_entity = v->entity;
     v->entity = node;
 
     if (node->eval_kind) {
         ecs_add_id(v->world, node->eval, node->eval_kind);
-
-        default_comp = 
-            ecs_get(v->world, node->eval_kind, EcsDefaultChildComponent);
-        if (default_comp) {
-            if (!default_comp->component) {
-                flecs_script_eval_error(v, node, "entity '%s' has kind '%s' "
-                    "with uninitialized DefaultChildComponent",
-                        node->name, node->kind);
-                return -1;
-            }
-
-            node->scope->default_component_eval = default_comp->component;
-        }
     }
 
     int32_t i, count = ecs_vec_count(&v->r->annot);
@@ -76364,8 +76539,42 @@ int flecs_script_eval_component(
     }
 
     if (v->is_with_scope) {
-        flecs_script_eval_error(v, node, "invalid component in with scope"); 
+        flecs_script_eval_error(v, node, "invalid component in with scope");
         return -1;
+    }
+
+    if (!node->id.second) {
+        const EcsScriptVisitor *visitor = ecs_get(
+            v->world, node->id.eval, EcsScriptVisitor);
+        if (visitor) {
+            if (v->entity->eval == EcsVariable) {
+                flecs_script_eval_error(v, node,
+                    "cannot use '%s' in singleton scope", node->id.first);
+                return -1;
+            }
+
+            if (node->expr && node->expr->kind != EcsExprInitializer &&
+                node->expr->kind != EcsExprEmptyInitializer)
+            {
+                flecs_script_eval_error(v, node,
+                    "expected initializer for '%s'", node->id.first);
+                return -1;
+            }
+
+            ecs_script_visitor_ctx_t ctx = {
+                .world = v->world,
+                .entity = v->entity->eval,
+                .kind = node->id.eval,
+                .initializer = (ecs_expr_initializer_t*)node->expr,
+                .eval = v,
+                .ctx = visitor->ctx
+            };
+
+            ecs_assert(visitor->visit != NULL, ECS_INVALID_OPERATION,
+                "EcsScriptVisitor component without visit callback");
+
+            return visitor->visit(&ctx);
+        }
     }
 
     ecs_entity_t src = flecs_script_get_src(v, v->entity->eval, node->id.eval);
@@ -76507,83 +76716,6 @@ int flecs_script_eval_var_component(
 }
 
 static
-int flecs_script_eval_default_component(
-    ecs_script_eval_visitor_t *v,
-    ecs_script_default_component_t *node)
-{
-    if (!v->entity) {
-        flecs_script_eval_error(v, node, 
-            "missing entity for default component");
-        return -1;
-    }
-
-    ecs_script_scope_t *scope = ecs_script_current_scope(v);
-    ecs_assert(scope != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(scope->node.kind == EcsAstScope, ECS_INTERNAL_ERROR, NULL);
-    scope = scope->parent;
-
-    if (!scope) {
-        flecs_script_eval_error(v, node,
-            "entity '%s' is in root scope which cannot have a default type",
-                v->entity->name); 
-        return -1;
-    }
-
-    ecs_id_t default_type = scope->default_component_eval;
-    if (!default_type) {
-        flecs_script_eval_error(v, node,
-            "scope for entity '%s' does not have a default type",
-                v->entity->name);
-        return -1;
-    }
-
-    const ecs_type_info_t *ti = ecs_get_type_info(v->world, default_type);
-    if (ti == NULL) {
-        char *id_str = ecs_id_str(v->world, default_type);
-        flecs_script_eval_error(v, node,
-            "cannot use tag '%s' as default type in assignment",
-                id_str);
-        ecs_os_free(id_str);
-        return -1;
-    }
-
-    bool partial = false;
-    if (node->expr->kind == EcsExprInitializer) {
-        partial = ((ecs_expr_initializer_t*)node->expr)->is_partial;
-    }
-
-    const void *existing = NULL;
-    if (partial) {
-        existing = ecs_get_id(v->world, v->entity->eval, default_type);
-    }
-
-    ecs_value_t value = {
-        .ptr = ecs_ensure_id(v->world, v->entity->eval, default_type,
-            flecs_ito(size_t, ti->size)),
-        .type = default_type
-    };
-
-    if (!existing) {
-        if (!ti->hooks.ctor) {
-            ecs_os_memset(value.ptr, 0, ti->size);
-        } else {
-            if (ti->hooks.dtor) {
-                flecs_type_info_dtor(value.ptr, 1, ti);
-            }
-            flecs_type_info_ctor(value.ptr, 1, ti);
-        }
-    }
-
-    if (flecs_script_eval_expr(v, &node->expr, &value)) {
-        return -1;
-    }
-
-    ecs_modified_id(v->world, v->entity->eval, default_type);
-
-    return 0;
-}
-
-static
 int flecs_script_eval_with_var(
     ecs_script_eval_visitor_t *v,
     ecs_script_var_component_t *node)
@@ -76670,13 +76802,6 @@ int flecs_script_eval_with(
     if (ecs_script_visit_scope(v, node->expressions)) {
         result = -1;
         goto error;
-    }
-
-    ecs_value_t *value = flecs_script_with_last(v);
-    if (!value->ptr) {
-        if (ecs_is_valid(v->world, value->type)) {
-            node->scope->default_component_eval = value->type;
-        }
     }
 
     bool old_is_with_scope = v->is_with_scope;
@@ -77597,9 +77722,6 @@ int flecs_script_eval_node(
     case EcsAstVarComponent:
         return flecs_script_eval_var_component(
             v, (ecs_script_var_component_t*)node);
-    case EcsAstDefaultComponent:
-        return flecs_script_eval_default_component(
-            v, (ecs_script_default_component_t*)node);
     case EcsAstWithVar:
         return flecs_script_eval_with_var(
             v, (ecs_script_var_component_t*)node);
@@ -77872,14 +77994,6 @@ void flecs_script_component_free(
 }
 
 static
-void flecs_script_default_component_free(
-    ecs_script_visit_t *v,
-    ecs_script_default_component_t *node)
-{
-    flecs_expr_visit_free(&v->script->pub, node->expr);
-}
-
-static
 void flecs_script_var_node_free(
     ecs_script_visit_t *v,
     ecs_script_var_node_t *node)
@@ -77929,11 +78043,6 @@ int flecs_script_stmt_free(
     case EcsAstWithComponent:
         flecs_script_component_free(v, (ecs_script_component_t*)node);
         flecs_free_t(a, ecs_script_component_t, node);
-        break;
-    case EcsAstDefaultComponent:
-        flecs_script_default_component_free(v, 
-            (ecs_script_default_component_t*)node);
-        flecs_free_t(a, ecs_script_default_component_t, node);
         break;
     case EcsAstVarComponent:
         flecs_free_t(a, ecs_script_var_component_t, node);
@@ -78134,7 +78243,6 @@ const char* flecs_script_node_to_str(
     case EcsAstComponent:          return "component";
     case EcsAstWithVar:
     case EcsAstVarComponent:       return "var";
-    case EcsAstDefaultComponent:   return "default_component";
     case EcsAstWith:               return "with";
     case EcsAstUsing:              return "using";
     case EcsAstModule:             return "module";
@@ -78183,18 +78291,6 @@ void flecs_script_component_to_str(
     flecs_script_id_to_str(v, &node->id);
     if (node->expr) {
         flecs_scriptbuf_appendstr(v, ": ");
-        flecs_expr_to_str(v, node->expr);
-    }
-    flecs_scriptbuf_appendstr(v, "\n");
-}
-
-static
-void flecs_script_default_component_to_str(
-    ecs_script_str_visitor_t *v,
-    ecs_script_default_component_t *node)
-{
-    flecs_scriptbuf_node(v, &node->node);
-    if (node->expr) {
         flecs_expr_to_str(v, node->expr);
     }
     flecs_scriptbuf_appendstr(v, "\n");
@@ -78425,10 +78521,6 @@ int flecs_script_stmt_to_str(
     case EcsAstWithVar:
         flecs_script_with_var_to_str(v, 
             (ecs_script_var_component_t*)node);
-        break;
-    case EcsAstDefaultComponent:
-        flecs_script_default_component_to_str(v, 
-            (ecs_script_default_component_t*)node);
         break;
     case EcsAstWith:
         flecs_script_with_to_str(v, (ecs_script_with_t*)node);
@@ -95916,8 +96008,6 @@ void flecs_meta_enum_init(
         .global_observer = true
     });
 
-    ecs_set(world, ecs_id(EcsEnum),    EcsDefaultChildComponent, {EcsConstant});
-    ecs_set(world, ecs_id(EcsBitmask), EcsDefaultChildComponent, {EcsConstant});
 }
 
 #endif
@@ -97402,9 +97492,7 @@ void flecs_meta_struct_init(
         .global_observer = true
     });
 
-    ecs_set(world, ecs_id(EcsStruct),  EcsDefaultChildComponent, {ecs_id(EcsMember)});
     ecs_add_pair(world, ecs_id(EcsStruct), EcsWith, ecs_id(EcsComponent));
-    ecs_set(world, ecs_id(EcsMember),  EcsDefaultChildComponent, {ecs_id(EcsMember)});
 }
 
 #endif

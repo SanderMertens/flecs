@@ -68,13 +68,6 @@ void flecs_meta_import_core_definitions(
         }
     });
 
-    ecs_struct(world, {
-        .entity = ecs_id(EcsDefaultChildComponent),
-        .members = {
-            { .name = "component", .type = ecs_id(ecs_entity_t) }
-        }
-    });
-
     /* Define const string as an opaque type that maps to string.
        This enables reflection for strings that are in .rodata
        (read-only), so that the meta addon does not try to free them.
