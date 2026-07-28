@@ -13,7 +13,7 @@ void Function_simple(void) {
 
     const char *expr =
     HEAD "fn add(a: i32, b: i32) -> i32 { a + b }"
-    LINE "Foo = Position: {add(2, 3), add(10, 20)}";
+    LINE "Foo { Position: {add(2, 3), add(10, 20)} }";
 
     test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
@@ -40,7 +40,7 @@ void Function_no_args(void) {
 
     const char *expr =
     HEAD "fn five() -> i32 { 5 }"
-    LINE "Foo = Position: {five(), five()}";
+    LINE "Foo { Position: {five(), five()} }";
 
     test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
@@ -67,11 +67,11 @@ void Function_with_locals(void) {
 
     const char *expr =
     HEAD "fn poly(x: i32) -> i32 {"
-    LINE "    const x2 = i32: x * x"
-    LINE "    const x3 = i32: x2 * x"
+    LINE "    const x2: i32 = x * x"
+    LINE "    const x3: i32 = x2 * x"
     LINE "    x3 + x2"
     LINE "}"
-    LINE "Foo = Position: {poly(3), poly(2)}";
+    LINE "Foo { Position: {poly(3), poly(2)} }";
 
     test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
@@ -98,7 +98,7 @@ void Function_called_multiple_times(void) {
 
     const char *expr =
     HEAD "fn dbl(a: i32) -> i32 { a + a }"
-    LINE "Foo = Position: {dbl(3), dbl(7)}";
+    LINE "Foo { Position: {dbl(3), dbl(7)} }";
 
     test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
@@ -116,7 +116,7 @@ void Function_missing_return_expr(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    HEAD "fn bad(a: i32) -> i32 { const x = i32: a }";
+    HEAD "fn bad(a: i32) -> i32 { const x: i32 = a }";
 
     ecs_log_set_level(-4);
     test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
@@ -138,7 +138,7 @@ void Function_nested(void) {
     const char *expr =
     HEAD "fn add(a: i32, b: i32) -> i32 { a + b }"
     LINE "fn add3(a: i32, b: i32, c: i32) -> i32 { add(add(a, b), c) }"
-    LINE "Foo = Position: {add3(1, 2, 3), add3(10, 20, 30)}";
+    LINE "Foo { Position: {add3(1, 2, 3), add3(10, 20, 30)} }";
 
     test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
@@ -171,7 +171,7 @@ void Function_string_arg(void) {
     LINE "        \"abc\": 3"
     LINE "    }"
     LINE "}"
-    LINE "Foo = Position: {len(\"a\"), len(\"abc\")}";
+    LINE "Foo { Position: {len(\"a\"), len(\"abc\")} }";
 
     test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
@@ -243,7 +243,7 @@ void Function_string_return(void) {
     LINE "        1: \"one\""
     LINE "    }"
     LINE "}"
-    LINE "Foo = FnStrings: {pick(0), pick(1)}";
+    LINE "Foo { FnStrings: {pick(0), pick(1)} }";
 
     test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
@@ -279,7 +279,7 @@ void Function_string_arg_and_return(void) {
 
     const char *expr =
     HEAD "fn echo(s: string) -> string { s }"
-    LINE "Foo = FnStrings: {echo(\"hello\"), echo(\"world\")}";
+    LINE "Foo { FnStrings: {echo(\"hello\"), echo(\"world\")} }";
 
     test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
@@ -306,8 +306,8 @@ void Function_struct_arg(void) {
 
     const char *expr =
     HEAD "fn sum(p: Position) -> f32 { p.x + p.y }"
-    LINE "const a = Position: {3, 4}"
-    LINE "Foo = Position: {sum($a), sum($a) * 2}";
+    LINE "const a: Position = {3, 4}"
+    LINE "Foo { Position: {sum($a), sum($a) * 2} }";
 
     test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
@@ -334,8 +334,8 @@ void Function_struct_return(void) {
 
     const char *expr =
     HEAD "fn make(x: f32, y: f32) -> Position { {x, y} }"
-    LINE "const r: make(10, 20)"
-    LINE "Foo = Position: {$r.x, $r.y}";
+    LINE "const r = make(10, 20)"
+    LINE "Foo { Position: {$r.x, $r.y} }";
 
     test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
@@ -364,10 +364,10 @@ void Function_struct_arg_and_return(void) {
     HEAD "fn add_pos(a: Position, b: Position) -> Position {"
     LINE "    {a.x + b.x, a.y + b.y}"
     LINE "}"
-    LINE "const a = Position: {1, 2}"
-    LINE "const b = Position: {10, 20}"
-    LINE "const r: add_pos($a, $b)"
-    LINE "Foo = Position: {$r.x, $r.y}";
+    LINE "const a: Position = {1, 2}"
+    LINE "const b: Position = {10, 20}"
+    LINE "const r = add_pos($a, $b)"
+    LINE "Foo { Position: {$r.x, $r.y} }";
 
     test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
@@ -399,7 +399,7 @@ void Function_recursion(void) {
     LINE "        _: factorial(n - 1) * n"
     LINE "    }"
     LINE "}"
-    LINE "Foo = Position: {factorial(5), factorial(6)}";
+    LINE "Foo { Position: {factorial(5), factorial(6)} }";
 
     test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
@@ -434,7 +434,7 @@ void Function_runtime_error_propagation(void) {
     LINE "        1: 10"
     LINE "    }"
     LINE "}"
-    LINE "const r: pick(2)";
+    LINE "const r = pick(2)";
 
     ecs_log_set_level(-4);
     test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
@@ -461,7 +461,7 @@ void Function_match_expr(void) {
     LINE "        2: 300"
     LINE "    }"
     LINE "}"
-    LINE "Foo = Position: {classify(0), classify(2)}";
+    LINE "Foo { Position: {classify(0), classify(2)} }";
 
     test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
@@ -536,7 +536,7 @@ void Function_trailing_comma_in_params(void) {
 
     const char *expr =
     HEAD "fn add(a: i32, b: i32,) -> i32 { a + b }"
-    LINE "Foo = Position: {add(1, 2), add(3, 4)}";
+    LINE "Foo { Position: {add(1, 2), add(3, 4)} }";
 
     test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
@@ -620,9 +620,9 @@ void Function_fn_in_entity_scope(void) {
     const char *expr =
     HEAD "Foo {"
     LINE "    fn add(a: i32, b: i32) -> i32 { a + b }"
-    LINE "    InScope = Position: {add(1, 2), add(3, 4)}"
+    LINE "    InScope { Position: {add(1, 2), add(3, 4)} }"
     LINE "}"
-    LINE "OutScope = Position: {Foo.add(5, 6), Foo.add(7, 8)}";
+    LINE "OutScope { Position: {Foo.add(5, 6), Foo.add(7, 8)} }";
 
     test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
@@ -698,7 +698,7 @@ void Function_const_missing_initializer(void) {
 
     const char *expr =
     HEAD "fn f(a: i32) -> i32 {"
-    LINE "    const x: "
+    LINE "    const x = "
     LINE "    a"
     LINE "}";
 
@@ -713,7 +713,7 @@ void Function_const_unresolved_type(void) {
 
     const char *expr =
     HEAD "fn f(a: i32) -> i32 {"
-    LINE "    const x = NoSuchType: 1"
+    LINE "    const x: NoSuchType = 1"
     LINE "    a + x"
     LINE "}";
 
@@ -728,8 +728,8 @@ void Function_const_redeclared(void) {
 
     const char *expr =
     HEAD "fn f(a: i32) -> i32 {"
-    LINE "    const x = i32: 1"
-    LINE "    const x = i32: 2"
+    LINE "    const x: i32 = 1"
+    LINE "    const x: i32 = 2"
     LINE "    a + x"
     LINE "}";
 
@@ -762,7 +762,7 @@ void Function_too_few_args(void) {
 
     const char *expr =
     HEAD "fn add(a: i32, b: i32) -> i32 { a + b }"
-    LINE "const r: add(1)";
+    LINE "const r = add(1)";
 
     ecs_log_set_level(-4);
     test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
@@ -775,7 +775,7 @@ void Function_too_many_args(void) {
 
     const char *expr =
     HEAD "fn add(a: i32, b: i32) -> i32 { a + b }"
-    LINE "const r: add(1, 2, 3)";
+    LINE "const r = add(1, 2, 3)";
 
     ecs_log_set_level(-4);
     test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
@@ -788,7 +788,7 @@ void Function_wrong_arg_type(void) {
 
     const char *expr =
     HEAD "fn echo(s: string) -> string { s }"
-    LINE "const r: echo(Foo)";
+    LINE "const r = echo(Foo)";
 
     ecs_log_set_level(-4);
     test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
@@ -800,7 +800,7 @@ void Function_undefined_fn(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    HEAD "const r: nofn(1, 2)";
+    HEAD "const r = nofn(1, 2)";
 
     ecs_log_set_level(-4);
     test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
@@ -812,7 +812,7 @@ void Function_forward_reference(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    HEAD "const r: g(1)"
+    HEAD "const r = g(1)"
     LINE "fn g(a: i32) -> i32 { a + 1 }";
 
     ecs_log_set_level(-4);
@@ -864,7 +864,7 @@ void Function_fn_in_module_qualified_call(void) {
     test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
     const char *call =
-    HEAD "Foo = Position: {M.add(1, 2), M.add(10, 20)}";
+    HEAD "Foo { Position: {M.add(1, 2), M.add(10, 20)} }";
 
     test_assert(ecs_script_run(world, NULL, call, NULL) == 0);
 
@@ -897,7 +897,7 @@ void Function_fn_in_module_w_using(void) {
 
     const char *call =
     HEAD "using M"
-    LINE "Foo = Position: {add(1, 2), add(10, 20)}";
+    LINE "Foo { Position: {add(1, 2), add(10, 20)} }";
 
     test_assert(ecs_script_run(world, NULL, call, NULL) == 0);
 
@@ -931,7 +931,7 @@ void Function_fn_in_namespace_called_from_fn_w_using(void) {
     const char *call =
     HEAD "using foo"
     LINE "fn test(a: i32, b: i32) -> i32 { sum(a, b) }"
-    LINE "Foo = Position: {test(1, 2), test(10, 20)}";
+    LINE "Foo { Position: {test(1, 2), test(10, 20)} }";
 
     test_assert(ecs_script_run(world, NULL, call, NULL) == 0);
 
@@ -965,7 +965,7 @@ void Function_fn_in_nested_namespace_called_from_fn_w_using(void) {
     const char *call =
     HEAD "using foo"
     LINE "fn test(a: i32, b: i32) -> i32 { bar.sum(a, b) }"
-    LINE "Foo = Position: {test(1, 2), test(10, 20)}";
+    LINE "Foo { Position: {test(1, 2), test(10, 20)} }";
 
     test_assert(ecs_script_run(world, NULL, call, NULL) == 0);
 
@@ -992,7 +992,7 @@ void Function_f32_arg_and_return(void) {
 
     const char *expr =
     HEAD "fn half(a: f32) -> f32 { a / 2 }"
-    LINE "Foo = Position: {half(10), half(3)}";
+    LINE "Foo { Position: {half(10), half(3)} }";
 
     test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
@@ -1020,7 +1020,7 @@ void Function_f64_arg_and_return(void) {
 
     const char *expr =
     HEAD "fn dbl(a: f64) -> f64 { a + a }"
-    LINE "Foo = PositionD: {dbl(1.5), dbl(2.25)}";
+    LINE "Foo { PositionD: {dbl(1.5), dbl(2.25)} }";
 
     test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
@@ -1048,7 +1048,7 @@ void Function_bool_arg_and_return(void) {
 
     const char *expr =
     HEAD "fn is_zero(i: i32) -> bool { i == 0 }"
-    LINE "Foo = BoolPair: {is_zero(0), is_zero(1)}";
+    LINE "Foo { BoolPair: {is_zero(0), is_zero(1)} }";
 
     test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
@@ -1078,7 +1078,7 @@ void Function_entity_arg_and_return(void) {
     HEAD "Alpha {}"
     LINE "Beta {}"
     LINE "fn identity(e: entity) -> entity { e }"
-    LINE "Foo = EntPair: {identity(Alpha), identity(Beta)}";
+    LINE "Foo { EntPair: {identity(Alpha), identity(Beta)} }";
 
     test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
@@ -1124,7 +1124,7 @@ void Function_enum_arg_and_return(void) {
     LINE "        Blue: 300"
     LINE "    }"
     LINE "}"
-    LINE "Foo = Position: {to_int(Red), to_int(Blue)}";
+    LINE "Foo { Position: {to_int(Red), to_int(Blue)} }";
 
     test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
@@ -1158,7 +1158,7 @@ void Function_bitmask_arg_and_return(void) {
 
     const char *expr =
     HEAD "fn to_int(t: Toppings) -> i32 { t + 0 }"
-    LINE "Foo = Position: {to_int(Lettuce|Bacon), to_int(Tomato)}";
+    LINE "Foo { Position: {to_int(Lettuce|Bacon), to_int(Tomato)} }";
 
     test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
@@ -1185,7 +1185,7 @@ void Function_mixed_int_arg_float_return(void) {
 
     const char *expr =
     HEAD "fn to_f32(a: i32) -> f32 { a + 0.5 }"
-    LINE "Foo = Position: {to_f32(1), to_f32(4)}";
+    LINE "Foo { Position: {to_f32(1), to_f32(4)} }";
 
     test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
@@ -1220,9 +1220,9 @@ void Function_nested_struct_arg(void) {
 
     const char *expr =
     HEAD "fn pass(l: Line) -> Line { l }"
-    LINE "const v = Line: {start: {1, 2}, stop: {3, 4}}"
-    LINE "const r: pass($v)"
-    LINE "Foo = Line: {start: {$r.start.x, $r.start.y}, stop: {$r.stop.x, $r.stop.y}}";
+    LINE "const v: Line = {start: {1, 2}, stop: {3, 4}}"
+    LINE "const r = pass($v)"
+    LINE "Foo { Line: {start: {$r.start.x, $r.start.y}, stop: {$r.stop.x, $r.stop.y}} }";
 
     test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
@@ -1250,8 +1250,8 @@ void Function_array_arg(void) {
 
     const char *expr =
     HEAD "fn ident(a: Vec3F) -> Vec3F { a }"
-    LINE "const v = Vec3F: [10, 20, 30]"
-    LINE "const r: ident($v)"
+    LINE "const v: Vec3F = [10, 20, 30]"
+    LINE "const r = ident($v)"
     LINE "Foo { Vec3F: $r }";
 
     test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
@@ -1289,8 +1289,8 @@ void Function_struct_with_string_return(void) {
 
     const char *expr =
     HEAD "fn make() -> FnStrings { {a: \"hello\", b: \"world\"} }"
-    LINE "const r: make()"
-    LINE "Foo = FnStrings: {$r.a, $r.b}";
+    LINE "const r = make()"
+    LINE "Foo { FnStrings: {$r.a, $r.b} }";
 
     test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
@@ -1317,7 +1317,7 @@ void Function_call_in_arithmetic(void) {
 
     const char *expr =
     HEAD "fn five() -> i32 { 5 }"
-    LINE "Foo = Position: {five() + 1, five() * 2}";
+    LINE "Foo { Position: {five() + 1, five() * 2} }";
 
     test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
@@ -1350,7 +1350,7 @@ void Function_call_in_match_value(void) {
     LINE "        _: ten() * 2"
     LINE "    }"
     LINE "}"
-    LINE "Foo = Position: {pick(0), pick(1)}";
+    LINE "Foo { Position: {pick(0), pick(1)} }";
 
     test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
@@ -1378,7 +1378,7 @@ void Function_call_in_if_condition(void) {
     const char *expr =
     HEAD "fn truthy() -> bool { true }"
     LINE "if truthy() {"
-    LINE "    Foo = Position: {1, 2}"
+    LINE "    Foo { Position: {1, 2} }"
     LINE "}";
 
     test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
@@ -1440,7 +1440,7 @@ void Function_call_in_with(void) {
 
     const char *expr =
     HEAD "fn make_pos() -> Position { {10, 20} }"
-    LINE "const p: make_pos()"
+    LINE "const p = make_pos()"
     LINE "with $p {"
     LINE "    Foo {}"
     LINE "    Bar {}"
@@ -1478,9 +1478,9 @@ void Function_call_in_const_rhs(void) {
 
     const char *expr =
     HEAD "fn add(a: i32, b: i32) -> i32 { a + b }"
-    LINE "const x: add(1, 2)"
-    LINE "const y: add(10, 20)"
-    LINE "Foo = Position: {$x, $y}";
+    LINE "const x = add(1, 2)"
+    LINE "const y = add(10, 20)"
+    LINE "Foo { Position: {$x, $y} }";
 
     test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
@@ -1879,7 +1879,7 @@ void Function_arrow_no_spaces(void) {
 
     const char *expr =
     HEAD "fn add(a: i32, b: i32)->i32 { a + b }"
-    LINE "Foo = Position: {add(1, 2), add(3, 4)}";
+    LINE "Foo { Position: {add(1, 2), add(3, 4)} }";
 
     test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
@@ -1915,7 +1915,7 @@ void Function_nested_runtime_error(void) {
     LINE "    }"
     LINE "}"
     LINE "fn outer(i: i32) -> i32 { inner(i) + 1 }"
-    LINE "const r: outer(2)";
+    LINE "const r = outer(2)";
 
     ecs_log_set_level(-4);
     test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
@@ -1933,10 +1933,10 @@ void Function_const_runtime_error(void) {
     LINE "    }"
     LINE "}"
     LINE "fn caller(i: i32) -> i32 {"
-    LINE "    const x = i32: fail(i)"
+    LINE "    const x: i32 = fail(i)"
     LINE "    x + 1"
     LINE "}"
-    LINE "const r: caller(2)";
+    LINE "const r = caller(2)";
 
     ecs_log_set_level(-4);
     test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);

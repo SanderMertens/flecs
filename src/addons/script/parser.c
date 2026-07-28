@@ -354,57 +354,62 @@ const char* flecs_script_parse_var(
         Parse(
             // const color =
             case '=': {
-                // const color = Color :
-                LookAhead_2(EcsTokIdentifier, ':',
-                    pos = lookahead;
-
-                    var->type = Token(3 + token_offset);
-
-                    {
-                        // Position: {
-                        LookAhead_1('{',
-                            pos = lookahead;
-                            Expr('}', {
-                                var->expr = EXPR;
-                                EndOfRule; 
-                            })
-                        )                        
-                    }
-
-                    {
-                        // Position: [
-                        LookAhead_1('[',
-                            pos = lookahead;
-                            Expr(']', {
-                                var->expr = EXPR;
-                                EndOfRule; 
-                            })
-                        )                        
-                    }
-
-                    // const color = Color: expr\n
-                    Initializer('\n',
-                        var->expr = INITIALIZER;
-                        EndOfRule;
+                {
+                    // const color = Color :
+                    LookAhead_2(EcsTokIdentifier, ':',
+                        Error("'%s %s = %s: ...' is invalid, did you mean "
+                            "'%s %s: %s = ...' instead?",
+                            kind_str, var->name, Token(3 + token_offset),
+                            kind_str, var->name, Token(3 + token_offset));
                     )
-                )
+                }
 
                 // const PI = expr\n
                 Expr('\n',
-                    Warning("'%s var = expr' syntax is deprecated"
-                        ", use '%s var: expr' instead", 
-                            kind_str, kind_str);
                     var->expr = EXPR;
                     EndOfRule;
                 )
             }
 
             case ':': {
-                // const PI: expr\n
-                Expr('\n',
-                    var->expr = EXPR;
-                    EndOfRule;
+                // const color : Color =
+                LookAhead_2(EcsTokIdentifier, '=',
+                    pos = lookahead;
+
+                    var->type = Token(3 + token_offset);
+
+                    {
+                        // const color : Color = {
+                        LookAhead_1('{',
+                            pos = lookahead;
+                            Expr('}', {
+                                var->expr = EXPR;
+                                EndOfRule;
+                            })
+                        )
+                    }
+
+                    {
+                        // const color : Color = [
+                        LookAhead_1('[',
+                            pos = lookahead;
+                            Expr(']', {
+                                var->expr = EXPR;
+                                EndOfRule;
+                            })
+                        )
+                    }
+
+                    // const color : Color = expr\n
+                    Initializer('\n',
+                        var->expr = INITIALIZER;
+                        EndOfRule;
+                    )
                 )
+
+                Error("expected type name followed by '=', did you mean "
+                    "'%s %s = ...' or '%s %s: type = ...' instead?",
+                    kind_str, var->name, kind_str, var->name);
             }
         )
     )
@@ -1081,54 +1086,14 @@ identifier_assign: {
     ecs_script_entity_t *entity = flecs_script_insert_entity(
         parser, Token(0));
 
-    // x = Position:
-    LookAhead_2(EcsTokIdentifier, ':',
-        pos = lookahead;
-
-        // Use lookahead so that expression parser starts at "match"
-        LookAhead_1(EcsTokKeywordMatch, {
-            // x = Position: match expr
-            Expr('\n', {
-                Scope(entity->scope,
-                    ecs_script_component_t *comp =
-                        flecs_script_insert_component(parser, Token(2));
-                    comp->expr = EXPR;
-                )
-                EndOfRule;
-            })
-        })
-
-        {
-            // x = Position: {
-            LookAhead_1('{', {
-                pos = lookahead;
-                // x = Position: {expr}
-                Expr('}',
-                    Scope(entity->scope,
-                        ecs_script_component_t *comp =
-                            flecs_script_insert_component(parser, Token(2));
-                        comp->expr = EXPR;
-                    )
-
-                    // x = Position: {expr}\n
-                    Parse(
-                        EcsTokEndOfStatement:
-                            EndOfRule;
-                    )
-                )
-            })
-        }
-
-        // x = Position: expr
-        Expr('\n', {
-            Scope(entity->scope,
-                ecs_script_component_t *comp =
-                    flecs_script_insert_component(parser, Token(2));
-                comp->expr = EXPR;
-            )
-            EndOfRule;
-        })
-    )
+    {
+        // x = Position:
+        LookAhead_2(EcsTokIdentifier, ':',
+            Error("'%s = %s: ...' is invalid, did you mean "
+                "'%s { %s: ... }' instead?",
+                Token(0), Token(2), Token(0), Token(2));
+        )
+    }
 
     // x = f32\n
     Initializer('\n',

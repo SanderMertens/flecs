@@ -2225,7 +2225,7 @@ void Misc_get_const_var(void) {
     flecs::world world;
 
     world.script()
-        .code("export const x: 10")
+        .code("export const x = 10")
         .run();
 
     double v = world.get_const_var<double>("x");
@@ -2240,7 +2240,7 @@ void Misc_get_const_var_struct(void) {
         .member(&Position::y, "y");
 
     world.script()
-        .code("export const x = Position: {10, 20}")
+        .code("export const x: Position = {10, 20}")
         .run();
 
     Position v = world.get_const_var<Position>("x");
@@ -2252,7 +2252,7 @@ void Misc_get_const_var_as_f32(void) {
     flecs::world world;
 
     world.script()
-        .code("export const x: 10")
+        .code("export const x = 10")
         .run();
 
     float v = world.get_const_var<float>("x");
@@ -2263,7 +2263,7 @@ void Misc_get_const_var_as_i32(void) {
     flecs::world world;
 
     world.script()
-        .code("export const x: 10")
+        .code("export const x = 10")
         .run();
 
     int32_t v = world.get_const_var<int32_t>("x");
@@ -2274,7 +2274,7 @@ void Misc_get_const_var_as_u32(void) {
     flecs::world world;
 
     world.script()
-        .code("export const x: 10")
+        .code("export const x = 10")
         .run();
 
     uint32_t v = world.get_const_var<uint32_t>("x");
@@ -2285,7 +2285,7 @@ void Misc_get_const_var_w_out(void) {
     flecs::world world;
 
     world.script()
-        .code("export const x: 10")
+        .code("export const x = 10")
         .run();
 
     double v;
@@ -2297,7 +2297,7 @@ void Misc_get_const_var_as_f32_w_out(void) {
     flecs::world world;
 
     world.script()
-        .code("export const x: 10")
+        .code("export const x = 10")
         .run();
 
     float v;
@@ -2309,7 +2309,7 @@ void Misc_get_const_var_as_i32_w_out(void) {
     flecs::world world;
 
     world.script()
-        .code("export const x: 10")
+        .code("export const x = 10")
         .run();
 
     int32_t v;
@@ -2321,7 +2321,7 @@ void Misc_get_const_var_as_u32_w_out(void) {
     flecs::world world;
 
     world.script()
-        .code("export const x: 10")
+        .code("export const x = 10")
         .run();
 
     uint32_t v;
@@ -2337,7 +2337,7 @@ void Misc_get_const_var_struct_w_out(void) {
         .member(&Position::y, "y");
 
     world.script()
-        .code("export const x = Position: {10, 20}")
+        .code("export const x: Position = {10, 20}")
         .run();
 
     Position v;
@@ -2385,7 +2385,7 @@ void Misc_get_scoped_const_var(void) {
     flecs::world world;
 
     world.script()
-        .code("parent { export const x: 10 }")
+        .code("parent { export const x = 10 }")
         .run();
 
     double v = world.get_const_var<double>("parent::x");
@@ -2397,7 +2397,7 @@ struct test_module {
 
     test_module(flecs::world& world) {
         world.script()
-            .code("export const ScriptVariable: 10\n")
+            .code("export const ScriptVariable = 10\n")
             .run();
 
         world.get_const_var("ScriptVariable", ScriptVariable, 20.0);
@@ -2422,7 +2422,7 @@ struct script_module {
     script_module(flecs::world& world) {
         world.script()
             .code("module script_module\n"
-                  "export const ScriptVariable: 10\n")
+                  "export const ScriptVariable = 10\n")
             .run();
 
         world.get_const_var("ScriptVariable", ScriptVariable, 20.0);
@@ -2449,7 +2449,7 @@ struct script_module {
     script_module(flecs::world& world) {
         world.script()
             .code("module nested.script_module\n"
-                  "export const ScriptVariable: 10\n")
+                  "export const ScriptVariable = 10\n")
             .run();
 
         world.get_const_var("ScriptVariable", ScriptVariable, 20.0);
@@ -2477,7 +2477,7 @@ struct test_module {
 
     test_module(flecs::world& world) {
         world.script()
-            .code("export const ScriptVariable: 10\n")
+            .code("export const ScriptVariable = 10\n")
             .run();
 
         world.get_const_var("ScriptVariable", ScriptVariable, 20.0);
