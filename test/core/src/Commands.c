@@ -725,6 +725,225 @@ void Commands_defer_ensure(void) {
     ecs_fini(world);
 }
 
+void Commands_defer_ensure_twice(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_defer_begin(world);
+    {
+        Position *p1 = ecs_ensure(world, e, Position);
+        test_assert(p1 != NULL);
+        p1->x = 10;
+        p1->y = 20;
+
+        Position *p2 = ecs_ensure(world, e, Position);
+        test_assert(p2 == p1);
+        test_int(p2->x, 10);
+        test_int(p2->y, 20);
+        p2->x = 30;
+    }
+    ecs_defer_end(world);
+
+    {
+        const Position *p = ecs_get(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 30);
+        test_int(p->y, 20);
+    }
+
+    ecs_fini(world);
+}
+
+void Commands_defer_ensure_twice_w_remove(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_defer_begin(world);
+    {
+        Position *p1 = ecs_ensure(world, e, Position);
+        test_assert(p1 != NULL);
+        p1->x = 10;
+        p1->y = 20;
+
+        ecs_remove(world, e, Position);
+
+        Position *p2 = ecs_ensure(world, e, Position);
+        test_assert(p2 != NULL);
+        test_assert(p2 != p1);
+        p2->x = 30;
+        p2->y = 40;
+    }
+    ecs_defer_end(world);
+
+    {
+        const Position *p = ecs_get(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 30);
+        test_int(p->y, 40);
+    }
+
+    ecs_fini(world);
+}
+
+void Commands_defer_ensure_after_set(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_defer_begin(world);
+    {
+        ecs_set(world, e, Position, {10, 20});
+
+        Position *p = ecs_ensure(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+        p->x = 30;
+    }
+    ecs_defer_end(world);
+
+    {
+        const Position *p = ecs_get(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 30);
+        test_int(p->y, 20);
+    }
+
+    ecs_fini(world);
+}
+
+typedef struct VectorComponent {
+    ecs_vec_t values;
+} VectorComponent;
+
+static
+ECS_CTOR(VectorComponent, ptr, {
+    ecs_vec_init_t(NULL, &ptr->values, int32_t, 0);
+})
+
+static
+ECS_DTOR(VectorComponent, ptr, {
+    ecs_vec_fini_t(NULL, &ptr->values, int32_t);
+})
+
+static
+ECS_MOVE(VectorComponent, dst, src, {
+    ecs_vec_fini_t(NULL, &dst->values, int32_t);
+    dst->values = src->values;
+    ecs_vec_init_t(NULL, &src->values, int32_t, 0);
+})
+
+static
+ECS_COPY(VectorComponent, dst, src, {
+    int32_t i, count = ecs_vec_count(&src->values);
+    ecs_vec_set_count_t(NULL, &dst->values, int32_t, count);
+    for (i = 0; i < count; i ++) {
+        *ecs_vec_get_t(&dst->values, int32_t, i) =
+            *ecs_vec_get_t(&src->values, int32_t, i);
+    }
+})
+
+void Commands_defer_ensure_3x_vector_append(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, VectorComponent);
+
+    ecs_set_hooks(world, VectorComponent, {
+        .ctor = ecs_ctor(VectorComponent),
+        .dtor = ecs_dtor(VectorComponent),
+        .move = ecs_move(VectorComponent),
+        .copy = ecs_copy(VectorComponent)
+    });
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_defer_begin(world);
+    {
+        VectorComponent *v = ecs_ensure(world, e, VectorComponent);
+        test_assert(v != NULL);
+        test_int(ecs_vec_count(&v->values), 0);
+        *ecs_vec_append_t(NULL, &v->values, int32_t) = 10;
+
+        v = ecs_ensure(world, e, VectorComponent);
+        test_assert(v != NULL);
+        test_int(ecs_vec_count(&v->values), 1);
+        *ecs_vec_append_t(NULL, &v->values, int32_t) = 20;
+
+        v = ecs_ensure(world, e, VectorComponent);
+        test_assert(v != NULL);
+        test_int(ecs_vec_count(&v->values), 2);
+        *ecs_vec_append_t(NULL, &v->values, int32_t) = 30;
+    }
+    test_assert(!ecs_has(world, e, VectorComponent));
+    ecs_defer_end(world);
+
+    test_assert(ecs_has(world, e, VectorComponent));
+    {
+        const VectorComponent *v = ecs_get(world, e, VectorComponent);
+        test_assert(v != NULL);
+        test_int(ecs_vec_count(&v->values), 3);
+        test_int(*ecs_vec_get_t(&v->values, int32_t, 0), 10);
+        test_int(*ecs_vec_get_t(&v->values, int32_t, 1), 20);
+        test_int(*ecs_vec_get_t(&v->values, int32_t, 2), 30);
+    }
+
+    ecs_fini(world);
+}
+
+void Commands_defer_ensure_3x_vector_append_existing(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, VectorComponent);
+
+    ecs_set_hooks(world, VectorComponent, {
+        .ctor = ecs_ctor(VectorComponent),
+        .dtor = ecs_dtor(VectorComponent),
+        .move = ecs_move(VectorComponent),
+        .copy = ecs_copy(VectorComponent)
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, VectorComponent);
+
+    ecs_defer_begin(world);
+    {
+        VectorComponent *v = ecs_ensure(world, e, VectorComponent);
+        test_assert(v != NULL);
+        test_int(ecs_vec_count(&v->values), 0);
+        *ecs_vec_append_t(NULL, &v->values, int32_t) = 10;
+
+        v = ecs_ensure(world, e, VectorComponent);
+        test_assert(v != NULL);
+        test_int(ecs_vec_count(&v->values), 1);
+        *ecs_vec_append_t(NULL, &v->values, int32_t) = 20;
+
+        v = ecs_ensure(world, e, VectorComponent);
+        test_assert(v != NULL);
+        test_int(ecs_vec_count(&v->values), 2);
+        *ecs_vec_append_t(NULL, &v->values, int32_t) = 30;
+    }
+    ecs_defer_end(world);
+
+    {
+        const VectorComponent *v = ecs_get(world, e, VectorComponent);
+        test_assert(v != NULL);
+        test_int(ecs_vec_count(&v->values), 3);
+        test_int(*ecs_vec_get_t(&v->values, int32_t, 0), 10);
+        test_int(*ecs_vec_get_t(&v->values, int32_t, 1), 20);
+        test_int(*ecs_vec_get_t(&v->values, int32_t, 2), 30);
+    }
+
+    ecs_fini(world);
+}
+
 static bool on_set_invoked = 0;
 
 static

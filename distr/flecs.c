@@ -5871,6 +5871,68 @@ error:
     return NULL;
 }
 
+static
+void* flecs_defer_find_cmd_value(
+    ecs_stage_t *stage,
+    ecs_entity_t entity,
+    ecs_id_t id)
+{
+    ecs_cmd_entry_t *entry = flecs_sparse_get_t(
+        &stage->cmd->entries, ecs_cmd_entry_t, entity);
+    if (!entry || entry->first == -1) {
+        return NULL;
+    }
+
+    ecs_cmd_t *cmds = ecs_vec_first_t(&stage->cmd->queue, ecs_cmd_t);
+    if (cmds[entry->last].entity != entity) {
+        return NULL;
+    }
+
+    void *result = NULL;
+    int32_t cur = entry->first;
+    do {
+        ecs_cmd_t *cmd = &cmds[cur];
+        switch(cmd->kind) {
+        case EcsCmdSet:
+        case EcsCmdSetDontFragment:
+        case EcsCmdEmplace:
+        case EcsCmdEnsure:
+        case EcsCmdEnsureDontFragment:
+            if (cmd->id == id) {
+                result = cmd->is._1.value;
+            }
+            break;
+        case EcsCmdRemove:
+            if (cmd->id == id) {
+                result = NULL;
+            }
+            break;
+        case EcsCmdClone:
+        case EcsCmdClear:
+        case EcsCmdDelete:
+            result = NULL;
+            break;
+        case EcsCmdBulkNew:
+        case EcsCmdAdd:
+        case EcsCmdModified:
+        case EcsCmdModifiedNoHook:
+        case EcsCmdAddModified:
+        case EcsCmdPath:
+        case EcsCmdOnDeleteAction:
+        case EcsCmdEnable:
+        case EcsCmdDisable:
+        case EcsCmdEvent:
+        case EcsCmdSkip:
+            break;
+        }
+
+        int32_t next = cmd->next_for_entity;
+        cur = next < 0 ? -next : next;
+    } while (cur);
+
+    return result;
+}
+
 void* flecs_defer_ensure(
     ecs_world_t *world,
     ecs_stage_t *stage,
@@ -5880,19 +5942,26 @@ void* flecs_defer_ensure(
 {
     ecs_assert(size != 0, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_cmd_t *cmd = flecs_cmd_new_batched(stage, entity);
-    cmd->entity = entity;
-    cmd->id = id;
-
     ecs_record_t *r = flecs_entities_get(world, entity);
     flecs_component_ptr_t ptr = flecs_defer_get_existing(
         world, entity, r, id, size);
 
     const ecs_type_info_t *ti = ptr.ti;
-    ecs_check(ti != NULL, ECS_INVALID_PARAMETER, 
+    ecs_check(ti != NULL, ECS_INVALID_PARAMETER,
         "provided component is not a type");
     ecs_assert(size == ti->size, ECS_INVALID_PARAMETER,
         "bad size for component in ensure");
+
+    if (!ptr.ptr) {
+        void *existing = flecs_defer_find_cmd_value(stage, entity, id);
+        if (existing) {
+            return existing;
+        }
+    }
+
+    ecs_cmd_t *cmd = flecs_cmd_new_batched(stage, entity);
+    cmd->entity = entity;
+    cmd->id = id;
 
     ecs_table_t *table = r->table;
     if (!ptr.ptr) {
@@ -38488,9 +38557,20 @@ int flecs_term_verify(
         }
         if ((first->id & EcsIsVariable) && !ecs_id_is_wildcard(component)) {
             char *id_str = ecs_id_str(world, id);
-            flecs_query_validator_error(ctx, 
+            flecs_query_validator_error(ctx,
                 "expected wildcard for variable term.first (got %s)", id_str);
             ecs_os_free(id_str);
+            return -1;
+        }
+
+        if (!ecs_id_is_wildcard(component) &&
+            ecs_has_id(world, component, EcsRelationship))
+        {
+            char *component_str = ecs_get_path(world, component);
+            flecs_query_validator_error(ctx,
+                "cannot query for relationship '%s' as component",
+                    component_str);
+            ecs_os_free(component_str);
             return -1;
         }
     }
@@ -39615,6 +39695,14 @@ bool flecs_query_finalize_simple(
 
         if (id == EcsPrefab || id == EcsDisabled) {
             return false;
+        }
+
+        ecs_entity_t component = id & ECS_COMPONENT_MASK;
+        if (component && !ECS_IS_PAIR(id) &&
+            ecs_is_alive(world, component) &&
+            ecs_has_id(world, component, EcsRelationship))
+        {
+            return false; /* Slow path reports the error */
         }
 
         ecs_term_t cmp_term = { 

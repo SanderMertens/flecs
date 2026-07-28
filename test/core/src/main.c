@@ -3057,6 +3057,11 @@ void Commands_defer_twice_in_progress(void);
 void Commands_run_w_defer(void);
 void Commands_system_in_progress_w_defer(void);
 void Commands_defer_ensure(void);
+void Commands_defer_ensure_twice(void);
+void Commands_defer_ensure_twice_w_remove(void);
+void Commands_defer_ensure_after_set(void);
+void Commands_defer_ensure_3x_vector_append(void);
+void Commands_defer_ensure_3x_vector_append_existing(void);
 void Commands_defer_ensure_no_modify(void);
 void Commands_defer_ensure_w_modify(void);
 void Commands_defer_modify(void);
@@ -15365,6 +15370,26 @@ bake_test_case Commands_testcases[] = {
         Commands_defer_ensure
     },
     {
+        "defer_ensure_twice",
+        Commands_defer_ensure_twice
+    },
+    {
+        "defer_ensure_twice_w_remove",
+        Commands_defer_ensure_twice_w_remove
+    },
+    {
+        "defer_ensure_after_set",
+        Commands_defer_ensure_after_set
+    },
+    {
+        "defer_ensure_3x_vector_append",
+        Commands_defer_ensure_3x_vector_append
+    },
+    {
+        "defer_ensure_3x_vector_append_existing",
+        Commands_defer_ensure_3x_vector_append_existing
+    },
+    {
         "defer_ensure_no_modify",
         Commands_defer_ensure_no_modify
     },
@@ -17051,7 +17076,7 @@ static bake_test_suite suites[] = {
         "Commands",
         NULL,
         NULL,
-        180,
+        185,
         Commands_testcases
     },
     {
