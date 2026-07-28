@@ -323,13 +323,13 @@ By default entity hierarchies are created with the `ChildOf` relationship. Other
 Scripts can contain expressions, which allow for computing values from inputs such as component values, template properties and variables. Here are some examples of valid Flecs script expressions:
 
 ```cpp
-const x: 10 + 20 * 30
-const x: 10 * (20 + 30)
-const x: $var * 10
-const x: pow($var, 2)
-const x: e.parent().name()
-const x: Position: {10, 20}
-const x: Position: {x: 10, y: 20}
+const x = 10 + 20 * 30
+const x = 10 * (20 + 30)
+const x = $var * 10
+const x = pow($var, 2)
+const x = e.parent().name()
+const x: Position = {10, 20}
+const x: Position = {x: 10, y: 20}
 ```
 
 The following sections describe the different features of expressions.
@@ -389,14 +389,14 @@ Initializers are values that are used to initialize composite and collection mem
 Initializers must always be assigned to an lvalue of a well defined type. This can either be a typed variable, component assignment, function parameter or in the case of nested initializers, an element of another initializer. For example, this is a valid usage of an initializer:
 
 ```cpp
-const x = Position: {10, 20}
+const x: Position = {10, 20}
 ```
 
 while this is an invalid usage of an initializer:
 
 ```cpp
 // Invalid, unknown type for initializer
-const x: {10, 20}
+const x = {10, 20}
 ```
 
 When assigning variables to elements in a composite initializer, applications can use the following shorthand notation if the variable names are the same as the member name of the element:
@@ -425,7 +425,7 @@ This can be especially useful when used in combination with templates (see below
 
 ```cpp
 template Tree {
-  prop height = f32: 4
+  prop height: f32 = 4
 
   // Make sure tree doesn't sink through the ground
   Position: {y += height} 
@@ -443,10 +443,10 @@ e {
 Match expressions can be used to conditionally assign a value. An example:
 
 ```cpp
-const x: = 1
+const x = 1
 
 // y will be assigned with value 10
-const y: match x {
+const y = match x {
   1: 10
   2: 20
   3: 30
@@ -456,10 +456,10 @@ const y: match x {
 The input to a match expression must be matched by one of its cases. If the input is not matched, script execution will fail. Match expressions can include an "any" case, which is selected when none of the other cases match:
 
 ```cpp
-const x: 4
+const x = 4
 
 // y will be assigned with value 100
-const y: match x {
+const y = match x {
   1: 10
   2: 20
   3: 30
@@ -486,15 +486,15 @@ A new expression is the `new` keyword followed by an entity statement. New expre
 
 ```cpp
 // Create a new anonymous entity, assign to variable x
-const x: new {}
+const x = new {}
 
 // Create a new anonymous entity with Position component, assign to variable x
-const x: new {
+const x = new {
   Position: {10, 20}
 }
 
 // Create a new entity with name Foo and Position component, assign to variable x
-const x: new Foo {
+const x = new Foo {
   Position: {10, 20}
 }
 ```
@@ -519,19 +519,19 @@ The behavior of new expressions is exactly the same as entity statements in that
 some_parent {
   // Create new anonymous child of some_parent with Position component, assign 
   // to variable x
-  const x: new { Position: {10, 20} }
+  const x = new { Position: {10, 20} }
 }
 
 with Position(10, 20) {
   // Create new anonymous entity with Position: {10, 20}
-  const x: new { }
+  const x = new { }
 }
 ```
 
 All features that are supported by entity statements are also available for new expressions, such as the ability to have children:
 
 ```cpp
-const x: new {
+const x = new {
   Positiion: {10, 20}
 
   // Child of anonymous entity created by new expression
@@ -569,15 +569,15 @@ Without new expressions the only workaround is to use named entities, but this i
 
 ```cpp
 // Create anonymous entities, store in variables
-const red: new {
+const red = new {
   Color: {255, 0, 0}
 }
 
-const orange: new {
+const orange = new {
   Color: {255, 128, 0}
 }
 
-const green: new {
+const green = new {
   Color: {0, 255, 0}
 }
 
@@ -597,19 +597,19 @@ A new expression may only create a single entity, so comma operators are not sup
 Flecs script supports interpolated strings, which are strings that can contain expressions. String interpolation supports two forms, where one allows for easy embedding of variables, whereas the other allows for embedding any kind of expression. The following example shows an embedded variable:
 
 ```cpp
-const x: "The value of PI is $PI"
+const x = "The value of PI is $PI"
 ```
 
 The following example shows how to use an expression:
 
 ```cpp
-const x: "The circumference of the circle is {2 * $PI * $r}"
+const x = "The circumference of the circle is {2 * $PI * $r}"
 ```
 
 To prevent evaluating expressions in an interpolated string, the `$` and `{` characters can be escaped:
 
 ```cpp
-const x: "The value of variable \$x is $x"
+const x = "The value of variable \$x is $x"
 ```
 
 #### Formatting interpolated numbers
@@ -617,8 +617,8 @@ Interpolated `f32` and `f64` values can include a format specifier after the
 expression, separated by a colon:
 
 ```cpp
-const value: 12.3456
-const x: "{value:.2}" // 12.35
+const value = 12.3456
+const x = "{value:.2}" // 12.35
 ```
 
 The complete syntax is:
@@ -643,29 +643,29 @@ The complete syntax is:
 For example:
 
 ```cpp
-const value: 12.5
-const left:   "{value:*<13}" // 12.500000****
-const center: "{value:*^13}" // **12.500000**
-const right:  "{value:*>13}" // ****12.500000
-const zeroes: "{value:013}"  // 000012.500000
-const sign:   "{value:+}"    // +12.500000
-const exp:    "{value:.2e}"  // 1.25e+01
+const value = 12.5
+const left = "{value:*<13}" // 12.500000****
+const center = "{value:*^13}" // **12.500000**
+const right = "{value:*>13}" // ****12.500000
+const zeroes = "{value:013}"  // 000012.500000
+const sign = "{value:+}"    // +12.500000
+const exp = "{value:.2e}"  // 1.25e+01
 ```
 
 Width and precision can be integer literals, variables, or parenthesized
 expressions. Variable names can be written with or without `$`:
 
 ```cpp
-const value: 12.3456
-const width: 10
-const precision: 2
+const value = 12.3456
+const width = 10
+const precision = 2
 
-const a: "{value:width}"
-const b: "{value:$width}"
-const c: "{value:(width + 2)}"
-const d: "{value:.precision}"
-const e: "{value:.$precision}"
-const f: "{value:.(precision + 1)}"
+const a = "{value:width}"
+const b = "{value:$width}"
+const c = "{value:(width + 2)}"
+const d = "{value:.precision}"
+const e = "{value:.$precision}"
+const f = "{value:.(precision + 1)}"
 ```
 
 Width and precision values must be between `0` and `1024`, inclusive. Values
@@ -812,7 +812,7 @@ struct Rgba {
 An example of a vector operation:
 
 ```cpp
-const p0 = Position: {10, 20, 30}
+const p0: Position = {10, 20, 30}
 const p1 = p0 + 1 // {11, 21, 31}
 ```
 
@@ -824,7 +824,7 @@ The members of a swizzle may appear in any order, and may be repeated. For a typ
 For example:
 
 ```cpp
-const p = Position: {10, 20, 30}
+const p: Position = {10, 20, 30}
 e {
   // Swizzle desugars to {p.z, p.y, p.x}
   Velocity: p.zyx // {30, 20, 10}
@@ -839,19 +839,19 @@ Lvalues are the left side of assignments. There are two kinds of assignments pos
 The type of an expression can be influenced by the type of the lvalue it is assigned to. For example, if the lvalue is a variable of type `Position`, the assigned initializer will also be of type `Position`:
 
 ```cpp
-const p = Position: {10, 20}
+const p: Position = {10, 20}
 ```
 
 Similarly, when an initializer is used inside of an initializer, it obtains the type of the initializer element. In the following example the outer initializer is of type `Line`, while the inner initializers are of type `Point`:
 
 ```cpp
-const l = Line: {{10, 20}, {30, 40}}
+const l: Line = {{10, 20}, {30, 40}}
 ```
 
 Another notable example where this matters is for enum and bitmask constants. Consider the following example:
 
 ```cpp
-const c = Color: Red
+const c: Color = Red
 ```
 
 Here, `Red` is a resolvable identifier, even though the fully qualified identifier is `Color.Red`. However, because the type of the lvalue is of enum type `Color`, the expression `Red` will be resolved in the scope of `Color`.
@@ -860,9 +860,9 @@ Here, `Red` is a resolvable identifier, even though the fully qualified identifi
 Expressions can call functions. Functions in Flecs script can have arguments of any type, and must return a value. The following snippet shows examples of function calls:
 
 ```cpp
-const x: sqrt(100)
-const x: pow(100, 2)
-const x: add({10, 20}, {30, 40})
+const x = sqrt(100)
+const x = pow(100, 2)
+const x = add({10, 20}, {30, 40})
 ```
 
 Functions can be defined in scripts or by using the C/C++ API. Flecs also comes with a set of builtin functions for common math utilities and functions that provide access to ECS features. Math functions are defined by the script math addon, which must be explicitly enabled by defining `FLECS_SCRIPT_MATH`.
@@ -903,7 +903,7 @@ fn add(a: i32, b: i32) -> i32 {
     a + b // last expression is return value
 }
 
-Foo = Position: {add(1, 2), add(10, 20)}
+Foo { Position: {add(1, 2), add(10, 20)} }
 ```
 
 Script functions are created and called in the same way as functions created with the API.
@@ -912,8 +912,8 @@ Function bodies may only contain expressions and const variables, for example:
 
 ```rust
 fn poly(x: i32) -> i32 {
-    const x2 = i32: x * x
-    const x3 = i32: x2 * x
+    const x2: i32 = x * x
+    const x3: i32 = x2 * x
     x3 + x2
 }
 ```
@@ -933,8 +933,8 @@ fn factorial(n: i32) -> i32 {
 Methods are functions that are called on instances of the method's type. The first argument of a method is the instance on which the method is called. The following snippet shows examples of method calls:
 
 ```cpp
-const x: v.length()
-const x: v1.add(v2)
+const x = v.length()
+const x = v1.add(v2)
 ```
 
 Just like functions, methods can currently only be defined outside of scripts by using the Flecs Script API.
@@ -959,17 +959,17 @@ Vector functions are functions that accept arguments of a builtin `ScriptVectorT
 Here is a usage example of a vector function:
 
 ```cpp
-const red = Rgb: {255, 0, 0}
-const blue = Rgb: {0, 0, 255}
-const purple: lerp(red, blue, 0.5)
+const red: Rgb = {255, 0, 0}
+const blue: Rgb = {0, 0, 255}
+const purple = lerp(red, blue, 0.5)
 ```
 
 When a vector function is called, all of the arguments provided to parameters of `ScriptVectorType` must be of the same type. The following code is therefore not valid:
 
 ```cpp
-const red = Rgb: {255, 0, 0}
-const p = Position: {10, 20, 30}
-const red_p: lerp(red, p, 0.5) // Illegal: red and p are of different types
+const red: Rgb = {255, 0, 0}
+const p: Position = {10, 20, 30}
+const red_p = lerp(red, p, 0.5) // Illegal: red and p are of different types
 ```
 
 Vector functions are registered like normal functions, but instead of specifying a `callback`, the application sets `vector_callbacks`. An example:
@@ -1099,8 +1099,8 @@ The following table lists methods of the `flecs.script.math.Rng` type:
 The random number generator can be used like this:
 
 ```cpp
-const rng = flecs.script.math.Rng: {}
-const x: $rng.f(1.0)
+const rng: flecs.script.math.Rng = {}
+const x = $rng.f(1.0)
 ```
 
 To use the math functions, make sure to use a Flecs build compiled with the `FLECS_SCRIPT_MATH` addon (disabled by default) and that the module is imported:
@@ -1138,7 +1138,7 @@ The platform constants can be used like this:
 ```cpp
 using flecs.script
 
-const platform_name: platform.os
+const platform_name = platform.os
 
 if platform.WINDOWS {
   // ...
@@ -1186,8 +1186,8 @@ Templates can be parameterized with properties. Properties are variables that ar
 
 ```cpp
 template Square {
-  prop size: 10
-  prop color = Color: {255, 0, 0}
+  prop size = 10
+  prop color: Color = {255, 0, 0}
 
   Color: $color
   Rectangle: {width: size, height: size}
@@ -1202,8 +1202,8 @@ In addition to property variables, templates can also contain mutables. Mutables
 
 ```cpp
 template Button {
-  prop text: "Howdy"
-  mut hover: false
+  prop text = "Howdy"
+  mut hover = false
 
   // ...
 }
@@ -1213,14 +1213,14 @@ Template scripts can do anything a regular script can do, including creating chi
 
 ```cpp
 template Tree {
-  prop height: 10
+  prop height = 10
 
-  const wood_color = Color: {38, 25, 13}
-  const leaves_color = Color: {51, 76, 38}
+  const wood_color: Color = {38, 25, 13}
+  const leaves_color: Color = {51, 76, 38}
 
-  const canopy_height: 2
-  const trunk_height: $height - $canopy_height
-  const trunk_width: 2
+  const canopy_height = 2
+  const trunk_height = $height - $canopy_height
+  const trunk_width = 2
 
   Trunk {
     Position: {0, ($height / 2), 0}
@@ -1229,7 +1229,7 @@ template Tree {
   }
 
   Canopy {
-    const canopy_y: $trunk_height + ($canopy_height / 2)
+    const canopy_y = $trunk_height + ($canopy_height / 2)
 
     Position3: {0, $canopy_y, 0}
     Box: {$canopy_width, $canopy_height}
@@ -1390,7 +1390,7 @@ with Color(38, 25, 13) {
 Scripts can contain variables, which are useful for often repeated values. Variables are created with the `const` keyword. Example:
 
 ```cpp
-const pi: 3.1415926
+const pi = 3.1415926
 
 my_entity {
   Rotation: {angle: pi}
@@ -1400,8 +1400,8 @@ my_entity {
 Variables can be combined with expressions:
 
 ```cpp
-const pi: 3.1415926
-const pi_2: $pi * 2
+const pi = 3.1415926
+const pi_2 = $pi * 2
 
 my_entity {
   Rotation: {angle: pi / 2}
@@ -1411,14 +1411,14 @@ my_entity {
 In the above examples, the type of the variable is inferred. Variables can also be provided with an explicit type:
 
 ```cpp
-const wood = Color: {38, 25, 13}
+const wood: Color = {38, 25, 13}
 ```
 
 When the name of a variable clashes with an entity, it can be disambiguated by prefixing the variable name with a `$`:
 
 ```cpp
-const pi: 3.1415926
-const pi_2: $pi * 2
+const pi = 3.1415926
+const pi_2 = $pi * 2
 
 pi {
   Rotation: {angle: $pi / 2}
@@ -1428,7 +1428,7 @@ pi {
 Variables can be used in component values as shown in the previous examples. To assign a variable to a component, use the variable as the component expression. The variable name must be prefixed with a `$`. Example:
 
 ```cpp
-const wood = Color: {38, 25, 13}
+const wood: Color = {38, 25, 13}
 
 my_entity {
   Color: $wood
@@ -1444,7 +1444,7 @@ my_entity {
 Additionally, variables can also be used in combination with `with` statements. When used like this the variable name must also be prefixed with a `$`:
 
 ```cpp
-const wood = Color: {38, 25, 13}
+const wood: Color = {38, 25, 13}
 
 with $color {
   pillar_1 {}
@@ -1458,21 +1458,21 @@ Variables can be exported by prefixing a variable declaration with the `export` 
 
 ```cpp
 // Script 1
-export const pi: 3.1415926
+export const pi = 3.1415926
 ```
 
 This variable can now be accessed from another script:
 
 ```cpp
 // Script 2
-const pi_2: pi * 2
+const pi_2 = pi * 2
 ```
 
 Exported variables are created as children of the scope in which they are defined:
 
 ```cpp
 math {
-  export const pi: 3.1415926
+  export const pi = 3.1415926
 }
 ```
 
@@ -1537,7 +1537,7 @@ grid {
 To reduce the number of component lookups in a script, the component value can be stored in a variable:
 
 ```cpp
-const level: Game[Level]
+const level = Game[Level]
 
 tiles {
   Grid: { width: $level.width, $level.depth, prefab: Tile }
@@ -1550,7 +1550,7 @@ The requested component is stored by value, not by reference. Adding or removing
 Parts of a script can be conditionally executed with an if statement. Example:
 
 ```cpp
-const daytime = bool: false
+const daytime: bool = false
 
 lantern {
   Color: {210, 255, 200}
@@ -1566,7 +1566,7 @@ lantern {
 If statements can be chained with `else if`:
 
 ```cpp
-const state: 0
+const state = 0
 
 traffic_light {
   if $state == 0 {

@@ -52,7 +52,7 @@ flecs::string to_expr(const T* value) {
  * An exported variable can be created in a script like this:
  * 
  * @code
- * export const x = f64: 10
+ * export const x: f64 = 10
  * @endcode
  * 
  * See the Flecs script manual for more details.
@@ -72,7 +72,7 @@ T get_const_var(const char *name, const T& default_value = {}) const;
  * An exported variable can be created in a script like this:
  * 
  * @code
- * export const x = f64: 10
+ * export const x: f64 = 10
  * @endcode
  * 
  * See the Flecs script manual for more details.

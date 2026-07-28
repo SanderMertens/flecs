@@ -727,7 +727,7 @@ ecs_entity_t ecs_const_var_init(
 
 /** Return the value for a const variable.
  * This returns the value for a const variable that is created either with
- * ecs_const_var_init(), or in a script with "export const v: ...".
+ * ecs_const_var_init(), or in a script with "export const v = ...".
  *
  * @param world The world.
  * @param var The const variable.
@@ -788,15 +788,15 @@ typedef struct ecs_function_desc_t {
      * 
      * This allows for statements like:
      * @code
-     * const a = Rgb: {100, 150, 250}
-     * const b = Rgb: {10, 10, 10}
+     * const a: Rgb = {100, 150, 250}
+     * const b: Rgb = {10, 10, 10}
      * const r = lerp(a, b, 0.1)
      * @endcode
      * 
      * which would otherwise have to be written out as:
      * 
      * @code
-     * const r = Rgb: {
+     * const r: Rgb = {
      *   lerp(a.r, b.r, 0.1),
      *   lerp(a.g, b.g, 0.1),
      *   lerp(a.b, b.b, 0.1)

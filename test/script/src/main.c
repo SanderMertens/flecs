@@ -865,6 +865,9 @@ void Error_invalid_hex_number_prefix(void);
 void Error_invalid_binary_number_prefix(void);
 void Error_unterminated_multiline_string_capture_error(void);
 void Error_invalid_char_literal_two_chars(void);
+void Error_const_w_old_typed_syntax(void);
+void Error_const_w_old_untyped_syntax(void);
+void Error_assign_component_to_entity_syntax(void);
 void Error_match_operator_without_equals_capture_error(void);
 void Error_eval_root_var_component_capture_error(void);
 void Error_string_tag_with_gt_capture_error(void);
@@ -5352,6 +5355,18 @@ bake_test_case Error_testcases[] = {
         Error_invalid_char_literal_two_chars
     },
     {
+        "const_w_old_typed_syntax",
+        Error_const_w_old_typed_syntax
+    },
+    {
+        "const_w_old_untyped_syntax",
+        Error_const_w_old_untyped_syntax
+    },
+    {
+        "assign_component_to_entity_syntax",
+        Error_assign_component_to_entity_syntax
+    },
+    {
         "match_operator_without_equals_capture_error",
         Error_match_operator_without_equals_capture_error
     },
@@ -9668,7 +9683,7 @@ static bake_test_suite suites[] = {
         "Error",
         NULL,
         NULL,
-        126,
+        129,
         Error_testcases
     },
     {

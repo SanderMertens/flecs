@@ -95,7 +95,7 @@ void Refs_ref_in_const_var(void) {
     ecs_entity_t s = ecs_script(world, {
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
-            HEAD "const m: e[Mass]"
+            HEAD "const m = e[Mass]"
             LINE "foo {"
             LINE "  Position: {$m.value, 0}"
             LINE "}"
@@ -3146,7 +3146,7 @@ void Refs_this_ref_in_template_assigned_to_component(void) {
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
-            LINE "  foo = Position: $this[Position]"
+            LINE "  foo { Position: $this[Position] }"
             LINE "}"
             LINE "inst1 { Position: {10, 20} Bar: {} }"
             LINE "inst2 { Position: {30, 40} Bar: {} }"
@@ -3189,7 +3189,7 @@ void Refs_prop_ref_in_template_component_initializer(void) {
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
-            LINE "  prop target = flecs.meta.entity: flecs"
+            LINE "  prop target: flecs.meta.entity = flecs"
             LINE "  Position: {$target[Mass].value, 0}"
             LINE "}"
             LINE "inst1 { Bar: {target: e1} }"
@@ -3245,7 +3245,7 @@ void Refs_prop_ref_in_template_with_initializer(void) {
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
-            LINE "  prop target = flecs.meta.entity: flecs"
+            LINE "  prop target: flecs.meta.entity = flecs"
             LINE "  with Position($target[Mass].value, 0) {"
             LINE "    foo {}"
             LINE "  }"
@@ -3289,7 +3289,7 @@ void Refs_prop_ref_in_template_match_expr(void) {
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
-            LINE "  prop target = flecs.meta.entity: flecs"
+            LINE "  prop target: flecs.meta.entity = flecs"
             LINE "  Position: match $target[PositionI].x {"
             LINE "    1: {100, 0}"
             LINE "    2: {200, 0}"
@@ -3339,7 +3339,7 @@ void Refs_prop_ref_in_template_if_expr(void) {
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
-            LINE "  prop target = flecs.meta.entity: flecs"
+            LINE "  prop target: flecs.meta.entity = flecs"
             LINE "  if $target[PositionI].x > 0 {"
             LINE "    foo {}"
             LINE "  } else {"
@@ -3380,7 +3380,7 @@ void Refs_prop_ref_in_template_for_expr(void) {
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
-            LINE "  prop target = flecs.meta.entity: flecs"
+            LINE "  prop target: flecs.meta.entity = flecs"
             LINE "  for i in 0..$target[PositionI].x {"
             LINE "    \"e_{$i}\" {}"
             LINE "  }"
@@ -3427,7 +3427,7 @@ void Refs_prop_ref_in_template_function(void) {
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
-            LINE "  prop target = flecs.meta.entity: flecs"
+            LINE "  prop target: flecs.meta.entity = flecs"
             LINE "  Position: {times_two($target[Mass].value), 0}"
             LINE "}"
             LINE "inst1 { Bar: {target: e1} }"
@@ -3474,7 +3474,7 @@ void Refs_prop_ref_in_template_new_expr(void) {
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
-            LINE "  prop target = flecs.meta.entity: flecs"
+            LINE "  prop target: flecs.meta.entity = flecs"
             LINE "  entity: { new { Position: {$target[Mass].value, 0} } }"
             LINE "}"
             LINE "inst1 { Bar: {target: e1} }"
@@ -3534,7 +3534,7 @@ void Refs_prop_ref_in_template_function_in_new_expr(void) {
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
-            LINE "  prop target = flecs.meta.entity: flecs"
+            LINE "  prop target: flecs.meta.entity = flecs"
             LINE "  entity: { new { Position: {times_two($target[Mass].value), 0} } }"
             LINE "}"
             LINE "inst1 { Bar: {target: e1} }"
@@ -3586,8 +3586,8 @@ void Refs_prop_ref_in_template_assigned_to_component(void) {
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
-            LINE "  prop target = flecs.meta.entity: flecs"
-            LINE "  foo = Position: $target[Position]"
+            LINE "  prop target: flecs.meta.entity = flecs"
+            LINE "  foo { Position: $target[Position] }"
             LINE "}"
             LINE "inst1 { Bar: {target: e1} }"
             LINE "inst2 { Bar: {target: e2} }"
@@ -3630,7 +3630,7 @@ void Refs_template_prop_ref_observer_lifecycle(void) {
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
-            LINE "  prop target = flecs.meta.entity: flecs"
+            LINE "  prop target: flecs.meta.entity = flecs"
             LINE "  Position: {$target[Mass].value, 0}"
             LINE "}"
             LINE "inst1 { Bar: {target: e1} }"
@@ -3728,7 +3728,7 @@ void Refs_template_prop_ref_retarget(void) {
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
-            LINE "  prop target = flecs.meta.entity: flecs"
+            LINE "  prop target: flecs.meta.entity = flecs"
             LINE "  Position: {$target[Mass].value, 0}"
             LINE "}"
             LINE "inst1 { Bar: {target: e1} }"
@@ -3866,7 +3866,7 @@ void Refs_global_const_var_declared_in_same_script(void) {
     ecs_entity_t s = ecs_script(world, {
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
-            HEAD "export const v = f32: 10"
+            HEAD "export const v: f32 = 10"
             LINE "foo {"
             LINE "  Position: {$v, 0}"
             LINE "}"
@@ -3907,7 +3907,7 @@ void Refs_global_const_var_declared_in_same_script_w_fn(void) {
     ecs_entity_t s = ecs_script(world, {
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
-            HEAD "export const v = f32: 10"
+            HEAD "export const v: f32 = 10"
             LINE "fn get_v() -> f32 { $v }"
             LINE "foo {"
             LINE "  Position: {get_v(), 0}"
@@ -3949,7 +3949,7 @@ void Refs_global_const_var_declared_in_same_script_w_fn_other_script(void) {
     ecs_entity_t f = ecs_script(world, {
         .entity = ecs_entity(world, { .name = "func" }),
         .code =
-            HEAD "export const v = f32: 10"
+            HEAD "export const v: f32 = 10"
             LINE "fn get_v() -> f32 { $v }"
             LINE "A {}"
     });
@@ -4003,7 +4003,7 @@ void Refs_global_const_var_declared_in_same_script_w_fn_other_scripts(void) {
     ecs_entity_t var = ecs_script(world, {
         .entity = ecs_entity(world, { .name = "var" }),
         .code =
-            HEAD "export const v = f32: 10"
+            HEAD "export const v: f32 = 10"
             LINE "A {}"
     });
     test_assert(var != 0);
@@ -4067,7 +4067,7 @@ void Refs_global_const_var_in_scoped_function_other_script(void) {
         .entity = ecs_entity(world, { .name = "player_script" }),
         .code =
             HEAD "player {"
-            LINE "  export const BuildingsPlaced = u64: 0"
+            LINE "  export const BuildingsPlaced: u64 = 0"
             LINE "  fn isBuildingPlaced(bit: i32) -> bool {"
             LINE "    BuildingsPlaced & (1 << bit)"
             LINE "  }"
@@ -4326,7 +4326,7 @@ void Refs_global_const_var_declared_in_same_script_w_template(void) {
     ecs_entity_t s = ecs_script(world, {
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
-            HEAD "export const v = f32: 10"
+            HEAD "export const v: f32 = 10"
             LINE "template Bar {"
             LINE "  Position: {$v, 0}"
             LINE "}"
