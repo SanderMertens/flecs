@@ -293,25 +293,6 @@ void Error_empty_assignment_before_end_of_scope(void) {
     ecs_fini(world);
 }
 
-void Error_default_type_with_tag(void) {
-    ecs_world_t *world = ecs_init();
-
-    const char *expr =
-    HEAD "with Foo {"
-    LINE "  e1 = 10, 20"
-    LINE "  e2 = 30, 40"
-    LINE "}";
-
-    ecs_log_set_level(-4);
-    ecs_script_eval_result_t result = {0};
-    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
-    test_assert(result.error != NULL);
-    test_int(result.line, 1);
-    ecs_os_free(result.error);
-
-    ecs_fini(world);
-}
-
 void Error_invalid_oneof(void) {
     ecs_log_set_level(-4);
     
@@ -718,10 +699,7 @@ void Error_component_in_with_scope_3(void) {
     });
 
     const char *expr =
-    LINE "struct Position {"
-    LINE "  x = f32"
-    LINE "  y = f32"
-    LINE "}"
+    LINE "struct Position(x: f32, y: f32)"
     LINE ""
     LINE "e {"
     LINE "  with Position {"
@@ -734,7 +712,7 @@ void Error_component_in_with_scope_3(void) {
     ecs_script_eval_result_t result = {0};
     test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
     test_assert(result.error != NULL);
-    test_int(result.line, 9);
+    test_int(result.line, 6);
     ecs_os_free(result.error);
 
     ecs_fini(world);
@@ -754,10 +732,7 @@ void Error_component_in_with_scope_4(void) {
     });
 
     const char *expr =
-    LINE "struct Position {"
-    LINE "  x = f32"
-    LINE "  y = f32"
-    LINE "}"
+    LINE "struct Position(x: f32, y: f32)"
     LINE ""
     LINE "Foo {}"
     LINE ""
@@ -772,7 +747,7 @@ void Error_component_in_with_scope_4(void) {
     ecs_script_eval_result_t result = {0};
     test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
     test_assert(result.error != NULL);
-    test_int(result.line, 11);
+    test_int(result.line, 8);
     ecs_os_free(result.error);
 
     ecs_fini(world);
@@ -792,10 +767,7 @@ void Error_component_in_with_scope_5(void) {
     });
 
     const char *expr =
-    LINE "struct Position {"
-    LINE "  x = f32"
-    LINE "  y = f32"
-    LINE "}"
+    LINE "struct Position(x: f32, y: f32)"
     LINE ""
     LINE "Foo {}"
     LINE ""
@@ -811,7 +783,7 @@ void Error_component_in_with_scope_5(void) {
     ecs_script_eval_result_t result = {0};
     test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
     test_assert(result.error != NULL);
-    test_int(result.line, 12);
+    test_int(result.line, 9);
     ecs_os_free(result.error);
 
     ecs_fini(world);
@@ -831,10 +803,7 @@ void Error_component_in_with_in_template(void) {
     });
 
     const char *expr =
-    HEAD "struct Position {"
-    LINE "  x = f32"
-    LINE "  y = f32"
-    LINE "}"
+    HEAD "struct Position(x: f32, y: f32)"
     LINE ""
     LINE "template Foo {"
     LINE "  with Position {"
@@ -851,7 +820,7 @@ void Error_component_in_with_in_template(void) {
     ecs_script_eval_result_t result = {0};
     test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
     test_assert(result.error != NULL);
-    test_int(result.line, 8);
+    test_int(result.line, 5);
     ecs_os_free(result.error);
 
     ecs_fini(world);
@@ -1065,9 +1034,7 @@ void Error_unknown_identifier(void) {
     const char *expr =
     HEAD "using flecs.meta"
     LINE
-    LINE "struct Comp {"
-    LINE "  value = entity"
-    LINE "}"
+    LINE "struct Comp(value: entity)"
     LINE
     LINE "Foo { Comp: {A} }";
 
@@ -1075,7 +1042,7 @@ void Error_unknown_identifier(void) {
     ecs_script_eval_result_t result = {0};
     test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
     test_assert(result.error != NULL);
-    test_int(result.line, 7);
+    test_int(result.line, 5);
     ecs_os_free(result.error);
 
     ecs_fini(world);
@@ -1087,9 +1054,7 @@ void Error_unknown_identifier_for_int_field(void) {
     const char *expr =
     HEAD "using flecs.meta"
     LINE
-    LINE "struct Comp {"
-    LINE "  value = i32"
-    LINE "}"
+    LINE "struct Comp(value: i32)"
     LINE
     LINE "Foo { Comp: {A} }";
 
@@ -1097,7 +1062,7 @@ void Error_unknown_identifier_for_int_field(void) {
     ecs_script_eval_result_t result = {0};
     test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
     test_assert(result.error != NULL);
-    test_int(result.line, 7);
+    test_int(result.line, 5);
     ecs_os_free(result.error);
 
     ecs_fini(world);
@@ -1478,9 +1443,7 @@ void Error_template_unresolved_component(void) {
     const char *expr =
     HEAD "using flecs.meta"
     LINE "template Tree {"
-    LINE "  struct Position {"
-    LINE "    x = f32"
-    LINE "  }"
+    LINE "  struct Position(x: f32)"
     LINE ""
     LINE "  Position: {10, 20}"
     LINE "}";
@@ -1489,7 +1452,7 @@ void Error_template_unresolved_component(void) {
     ecs_script_eval_result_t result = {0};
     test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
     test_assert(result.error != NULL);
-    test_int(result.line, 7);
+    test_int(result.line, 5);
     ecs_os_free(result.error);
 
     ecs_fini(world);
@@ -1561,9 +1524,7 @@ void Error_template_unresolved_with_component(void) {
     const char *expr =
     HEAD "using flecs.meta"
     LINE "template Tree {"
-    LINE "  struct Position {"
-    LINE "    x = f32"
-    LINE "  }"
+    LINE "  struct Position(x: f32)"
     LINE ""
     LINE "  with Position(10, 20) {"
     LINE "  }"
@@ -1573,7 +1534,7 @@ void Error_template_unresolved_with_component(void) {
     ecs_script_eval_result_t result = {0};
     test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
     test_assert(result.error != NULL);
-    test_int(result.line, 7);
+    test_int(result.line, 5);
     ecs_os_free(result.error);
 
     ecs_fini(world);
@@ -1907,10 +1868,7 @@ void Error_reload_script_w_component_w_error(void) {
 
     ecs_entity_t s = ecs_script(world, {
         .code =
-            "struct Position {\n"
-            "  x = f32\n"
-            "  y = f32\n"
-            "}\n"
+            "struct Position(x: f32, y: f32)\n"
             "\n"
             "e {\n"
             "  Position: {10, 20}\n"
@@ -1922,10 +1880,7 @@ void Error_reload_script_w_component_w_error(void) {
     ecs_log_set_level(-4);
 
     test_assert(0 != ecs_script_update(world, s, 0, 
-        "struct Position {\n"
-        "  x = f32\n"
-        "  y = f32\n"
-        "}\n"
+        "struct Position(x: f32, y: f32)\n"
         "\n"
         "e {\n"
         "  Position: {10, 20}\n"
@@ -1942,10 +1897,7 @@ void Error_reload_script_w_component_w_error_again(void) {
 
     ecs_entity_t s = ecs_script(world, {
         .code =
-            "struct Position {\n"
-            "  x = f32\n"
-            "  y = f32\n"
-            "}\n"
+            "struct Position(x: f32, y: f32)\n"
             "\n"
             "e {\n"
             "  Position: {10, 20}\n"
@@ -1957,10 +1909,7 @@ void Error_reload_script_w_component_w_error_again(void) {
     ecs_log_set_level(-4);
 
     test_assert(0 != ecs_script_update(world, s, 0, 
-        "struct Position {\n"
-        "  x = f32\n"
-        "  y = f32\n"
-        "}\n"
+        "struct Position(x: f32, y: f32)\n"
         "\n"
         "e {\n"
         "  Position: {10, 20}\n"
@@ -1972,10 +1921,7 @@ void Error_reload_script_w_component_w_error_again(void) {
     ecs_log_set_level(-1);
 
     test_assert(0 == ecs_script_update(world, s, 0, 
-        "struct Position {\n"
-        "  x = f32\n"
-        "  y = f32\n"
-        "}\n"
+        "struct Position(x: f32, y: f32)\n"
         "\n"
         "e {\n"
         "  Position: {10, 20}\n"
@@ -2470,8 +2416,6 @@ void Error_assign_component_to_entity_syntax(void) {
     ecs_script_eval_result_t result = {0};
     test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
     test_assert(result.error != NULL);
-    test_assert(strstr(result.error,
-        "did you mean 'e { Position: ... }' instead") != NULL);
     ecs_os_free(result.error);
 
     ecs_fini(world);
@@ -3152,4 +3096,56 @@ void Error_on_set_error_logged(void) {
     ecs_fini(world);
     ecs_os_free(os_stub_log_message);
     os_stub_log_message = NULL;
+}
+
+
+void Error_struct_wo_members(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE "struct Position()";
+
+    ecs_log_set_level(-4);
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(result.error != NULL);
+    test_assert(strstr(result.error, "at least one member") != NULL);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}
+
+void Error_struct_member_wo_name(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE "struct Position(f32, f32)";
+
+    ecs_log_set_level(-4);
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(result.error != NULL);
+    test_assert(strstr(result.error, "missing name for struct member") != NULL);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}
+
+void Error_enum_constant_w_invalid_expr(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE "enum Color(10)";
+
+    ecs_log_set_level(-4);
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(result.error != NULL);
+    test_assert(strstr(result.error, "invalid constant") != NULL);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
 }

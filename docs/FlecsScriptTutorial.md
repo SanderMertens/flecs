@@ -475,24 +475,6 @@ Let's take the existing `width`, `height` and `color` variables, and change them
 
 ```js
 template Fence {
-  prop width: flecs.meta.f32 = 20
-  prop height: flecs.meta.f32 = 10
-  prop color: Rgb = {0.15, 0.1, 0.05}
-
-  // fence code
-}
-```
-
-We can get rid of the `flecs.meta.` prefix by adding this to the top of our script:
-
-```js
-using flecs.meta
-```
-
-The code can now be changed to this:
-
-```js
-template Fence {
   prop width: f32 = 20
   prop height: f32 = 10
   prop color: Rgb = {0.15, 0.1, 0.05}

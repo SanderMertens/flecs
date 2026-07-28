@@ -113,7 +113,6 @@ const char* flecs_script_node_to_str(
     case EcsAstComponent:          return "component";
     case EcsAstWithVar:
     case EcsAstVarComponent:       return "var";
-    case EcsAstDefaultComponent:   return "default_component";
     case EcsAstWith:               return "with";
     case EcsAstUsing:              return "using";
     case EcsAstModule:             return "module";
@@ -162,18 +161,6 @@ void flecs_script_component_to_str(
     flecs_script_id_to_str(v, &node->id);
     if (node->expr) {
         flecs_scriptbuf_appendstr(v, ": ");
-        flecs_expr_to_str(v, node->expr);
-    }
-    flecs_scriptbuf_appendstr(v, "\n");
-}
-
-static
-void flecs_script_default_component_to_str(
-    ecs_script_str_visitor_t *v,
-    ecs_script_default_component_t *node)
-{
-    flecs_scriptbuf_node(v, &node->node);
-    if (node->expr) {
         flecs_expr_to_str(v, node->expr);
     }
     flecs_scriptbuf_appendstr(v, "\n");
@@ -404,10 +391,6 @@ int flecs_script_stmt_to_str(
     case EcsAstWithVar:
         flecs_script_with_var_to_str(v, 
             (ecs_script_var_component_t*)node);
-        break;
-    case EcsAstDefaultComponent:
-        flecs_script_default_component_to_str(v, 
-            (ecs_script_default_component_t*)node);
         break;
     case EcsAstWith:
         flecs_script_with_to_str(v, (ecs_script_with_t*)node);

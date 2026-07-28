@@ -100,7 +100,6 @@ const ecs_entity_t EcsSparse =                      FLECS_HI_COMPONENT_ID + 57;
 const ecs_entity_t EcsDontFragment =                FLECS_HI_COMPONENT_ID + 58;
 
 /* Misc */
-const ecs_entity_t ecs_id(EcsDefaultChildComponent) = FLECS_HI_COMPONENT_ID + 59;
 const ecs_entity_t EcsOrderedChildren =               FLECS_HI_COMPONENT_ID + 60;
 
 /* Builtin predicate ids (used by query engine) */

@@ -10,6 +10,7 @@
 
 ECS_COMPONENT_DECLARE(EcsScript);
 ECS_COMPONENT_DECLARE(EcsScriptUpdateEvent);
+ECS_COMPONENT_DECLARE(EcsScriptVisitor);
 ECS_COMPONENT_DECLARE(EcsScriptConstVar);
 ECS_COMPONENT_DECLARE(EcsScriptFunction);
 ECS_COMPONENT_DECLARE(EcsScriptMethod);
@@ -615,7 +616,23 @@ void FlecsScriptImport(
     ecs_set_name_prefix(world, "Ecs");
     ECS_COMPONENT_DEFINE(world, EcsScript);
     ECS_COMPONENT_DEFINE(world, EcsScriptUpdateEvent);
+    ECS_COMPONENT_DEFINE(world, EcsScriptVisitor);
     ECS_TAG_DEFINE(world, EcsScriptVectorType);
+
+    ecs_add_pair(world, ecs_id(EcsScriptVisitor), EcsOnInstantiate,
+        EcsDontInherit);
+
+    ecs_set(world, ecs_id(EcsStruct), EcsScriptVisitor, {
+        .visit = flecs_script_struct_visit
+    });
+
+    ecs_set(world, ecs_id(EcsEnum), EcsScriptVisitor, {
+        .visit = flecs_script_enum_visit
+    });
+
+    ecs_set(world, ecs_id(EcsBitmask), EcsScriptVisitor, {
+        .visit = flecs_script_bitmask_visit
+    });
 
     ecs_set_hooks(world, EcsScript, {
         .ctor = flecs_default_ctor,

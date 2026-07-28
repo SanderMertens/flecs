@@ -7,39 +7,23 @@
 // component is described with reflection data. Since we don't have a component
 // yet, we'll first have to create one.
 
-// Flecs script does not have dedicated syntax for describing types, but since the
-// reflection addon (flecs.meta) uses regular entities and components to store
-// reflection data, we can use existing Flecs script syntax to create a type.
+// Types are described with the reflection addon (flecs.meta), which uses
+// regular entities and components to store reflection data.
 
-// First we'll add flecs.meta to the list of namespaces to search. This is not
-// strictly necessary, but lets us write Struct instead of flecs.meta.Struct
-using flecs.meta
+// We can create a struct by listing its members in the type initializer.
+// Each member is specified as "name: type".
+struct Position(x: f32, y: f32)
 
-// We can now create a struct like this. "Struct Position" is the shorthand
-// declaration syntax for "Position :- Struct", and has as benefit that we can
-// open a scope after the statement
-struct Position {
-  // Add two child entities with the Member component
-  x { member: {type: f32} }
-  y { member: {type: f32} }
-}
-
-// Flecs script has a feature which makes it possible to specify a default type for a
-// scope. The Struct component has Member as default type. This means we can
-// also create a type like this, which is a bit shorter:
+// Under the hood this creates child entities with the Member component, which
+// means the same type can also be created like this:
 struct Mass {
-  // 'type' can be omitted since it's the first member
-  value = f32
+  value { member: {type: f32} }
 }
 
-// Similarly we can also define an enumeration type. The default scope type for
-// Enum is Constant, which ensures amongst others that the child entities will
-// be assigned with an incrementing constant value automatically.
-enum Color {
-  Red,
-  Green,
-  Blue
-}
+// Similarly we can also define an enumeration type. The constants of the enum
+// are listed in the type initializer, and will be assigned with an
+// incrementing constant value automatically.
+enum Color(Red, Green, Blue)
 
 // We can now create an entity that uses the types
 my_entity {

@@ -654,8 +654,6 @@ void flecs_meta_enum_init(
         .global_observer = true
     });
 
-    ecs_set(world, ecs_id(EcsEnum),    EcsDefaultChildComponent, {EcsConstant});
-    ecs_set(world, ecs_id(EcsBitmask), EcsDefaultChildComponent, {EcsConstant});
 }
 
 #endif

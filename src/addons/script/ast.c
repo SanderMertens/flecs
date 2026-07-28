@@ -202,21 +202,6 @@ ecs_script_component_t* flecs_script_insert_component(
     return flecs_script_insert_pair_component(parser, name, NULL);
 }
 
-ecs_script_default_component_t* flecs_script_insert_default_component(
-    ecs_parser_t *parser)
-{
-    ecs_script_scope_t *scope = parser->scope;
-    ecs_assert(scope != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_script_default_component_t *result = flecs_ast_new(
-            parser, ecs_script_default_component_t, EcsAstDefaultComponent);
-
-    flecs_ast_append(parser, scope->stmts, 
-        ecs_script_default_component_t, result);
-
-    return result;
-}
-
 ecs_script_var_component_t* flecs_script_insert_var_component(
     ecs_parser_t *parser,
     const char *var_name)

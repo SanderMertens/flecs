@@ -661,11 +661,6 @@ identifier: {
             goto identifier_colon;
         }
 
-        // x =
-        case '=': {
-            goto identifier_assign;
-        }
-
         // SpaceShip(
         case '(': {
             goto identifier_paren;
@@ -1079,32 +1074,6 @@ identifier_colon: {
                 return flecs_script_scope(parser, entity->scope, pos);
         )
     })
-}
-
-// x =
-identifier_assign: {
-    ecs_script_entity_t *entity = flecs_script_insert_entity(
-        parser, Token(0));
-
-    {
-        // x = Position:
-        LookAhead_2(EcsTokIdentifier, ':',
-            Error("'%s = %s: ...' is invalid, did you mean "
-                "'%s { %s: ... }' instead?",
-                Token(0), Token(2), Token(0), Token(2));
-        )
-    }
-
-    // x = f32\n
-    Initializer('\n',
-        Scope(entity->scope, 
-            ecs_script_default_component_t *comp = 
-                flecs_script_insert_default_component(parser);
-            comp->expr = INITIALIZER;
-        )
-        
-        EndOfRule;
-    )
 }
 
 // Spaceship enterprise

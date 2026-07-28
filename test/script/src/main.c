@@ -142,16 +142,17 @@ void Eval_assign_tag_to_parent(void);
 void Eval_assign_component_to_parent(void);
 void Eval_assign_to_parent_pair_w_new_entities_in_scope(void);
 void Eval_assign_to_parent_pair_w_existing_entities_in_scope(void);
-void Eval_default_child_component(void);
-void Eval_default_child_component_w_assign(void);
 void Eval_struct_type_w_default_child_component(void);
+void Eval_struct_w_member_initializer(void);
+void Eval_enum_w_constant_values(void);
+void Eval_enum_w_underlying_type_and_values(void);
+void Eval_enum_w_underlying_type_first(void);
+void Eval_enum_w_underlying_type_in_middle(void);
+void Eval_bitmask_w_initializer(void);
+void Eval_custom_script_visitor(void);
 void Eval_struct_type_w_default_child_component_nested_member(void);
 void Eval_enum_type_w_default_child_component(void);
 void Eval_enum_type_w_underlying_type(void);
-void Eval_default_type_from_with(void);
-void Eval_default_type_from_nested_with(void);
-void Eval_default_type_from_with_in_entity_scope_w_default_type(void);
-void Eval_default_type_from_entity_scope_in_with(void);
 void Eval_scope_w_1_subj_and_2_pairs(void);
 void Eval_inherit_from_multiple(void);
 void Eval_assign_pair_component(void);
@@ -513,12 +514,6 @@ void Eval_component_expr_swizzle_initializer_rg(void);
 void Eval_component_expr_swizzle_initializer_rgb(void);
 void Eval_component_expr_swizzle_initializer_rgba(void);
 void Eval_component_expr_member_no_var(void);
-void Eval_default_child_component_w_entity_in_if(void);
-void Eval_default_child_component_w_entity_in_for(void);
-void Eval_default_child_component_w_entity_in_nested_if(void);
-void Eval_default_child_component_w_entity_in_nested_for(void);
-void Eval_default_child_component_w_entity_in_if_in_for(void);
-void Eval_default_child_component_w_entity_in_for_in_if(void);
 void Eval_map_i64_i32_component(void);
 void Eval_map_i64_string_component(void);
 void Eval_map_entity_struct_component(void);
@@ -714,9 +709,6 @@ void Template_template_w_nested_template_w_with(void);
 void Template_template_w_nested_template_w_with_kind_value(void);
 void Template_pair_component_w_entity_prop_target(void);
 void Template_child_name_from_string_prop(void);
-void Template_default_component_w_prop_var(void);
-void Template_default_component_w_prop_var_in_nested_if(void);
-void Template_default_component_w_prop_var_in_nested_for(void);
 void Template_template_w_new_expr_in_const(void);
 void Template_template_w_existing_observer(void);
 void Template_template_w_prop_w_value_name(void);
@@ -760,9 +752,6 @@ void Mut_script_component(void);
 void Mut_script_pair_component(void);
 void Mut_tree_parent(void);
 void Mut_child_name_from_string(void);
-void Mut_default_component(void);
-void Mut_default_component_nested_if(void);
-void Mut_default_component_nested_for(void);
 void Mut_value_name(void);
 void Mut_const_value_name(void);
 void Mut_hoist_var(void);
@@ -789,9 +778,7 @@ void Error_invalid_nested_assignment(void);
 void Error_invalid_partial_pair_assignment(void);
 void Error_empty_assignment(void);
 void Error_empty_assignment_before_end_of_scope(void);
-void Error_default_type_with_tag(void);
 void Error_invalid_oneof(void);
-void Error_default_type_with_tag(void);
 void Error_unterminated_multiline_string(void);
 void Error_unterminated_string_ending_with_backslash(void);
 void Error_invalid_assign_multiline_string(void);
@@ -866,6 +853,9 @@ void Error_invalid_binary_number_prefix(void);
 void Error_unterminated_multiline_string_capture_error(void);
 void Error_invalid_char_literal_two_chars(void);
 void Error_const_w_old_typed_syntax(void);
+void Error_struct_wo_members(void);
+void Error_struct_member_wo_name(void);
+void Error_enum_constant_w_invalid_expr(void);
 void Error_const_w_old_untyped_syntax(void);
 void Error_assign_component_to_entity_syntax(void);
 void Error_match_operator_without_equals_capture_error(void);
@@ -2483,16 +2473,36 @@ bake_test_case Eval_testcases[] = {
         Eval_assign_to_parent_pair_w_existing_entities_in_scope
     },
     {
-        "default_child_component",
-        Eval_default_child_component
-    },
-    {
-        "default_child_component_w_assign",
-        Eval_default_child_component_w_assign
-    },
-    {
         "struct_type_w_default_child_component",
         Eval_struct_type_w_default_child_component
+    },
+    {
+        "struct_w_member_initializer",
+        Eval_struct_w_member_initializer
+    },
+    {
+        "enum_w_constant_values",
+        Eval_enum_w_constant_values
+    },
+    {
+        "enum_w_underlying_type_and_values",
+        Eval_enum_w_underlying_type_and_values
+    },
+    {
+        "enum_w_underlying_type_first",
+        Eval_enum_w_underlying_type_first
+    },
+    {
+        "enum_w_underlying_type_in_middle",
+        Eval_enum_w_underlying_type_in_middle
+    },
+    {
+        "bitmask_w_initializer",
+        Eval_bitmask_w_initializer
+    },
+    {
+        "custom_script_visitor",
+        Eval_custom_script_visitor
     },
     {
         "struct_type_w_default_child_component_nested_member",
@@ -2505,22 +2515,6 @@ bake_test_case Eval_testcases[] = {
     {
         "enum_type_w_underlying_type",
         Eval_enum_type_w_underlying_type
-    },
-    {
-        "default_type_from_with",
-        Eval_default_type_from_with
-    },
-    {
-        "default_type_from_nested_with",
-        Eval_default_type_from_nested_with
-    },
-    {
-        "default_type_from_with_in_entity_scope_w_default_type",
-        Eval_default_type_from_with_in_entity_scope_w_default_type
-    },
-    {
-        "default_type_from_entity_scope_in_with",
-        Eval_default_type_from_entity_scope_in_with
     },
     {
         "scope_w_1_subj_and_2_pairs",
@@ -3967,30 +3961,6 @@ bake_test_case Eval_testcases[] = {
         Eval_component_expr_member_no_var
     },
     {
-        "default_child_component_w_entity_in_if",
-        Eval_default_child_component_w_entity_in_if
-    },
-    {
-        "default_child_component_w_entity_in_for",
-        Eval_default_child_component_w_entity_in_for
-    },
-    {
-        "default_child_component_w_entity_in_nested_if",
-        Eval_default_child_component_w_entity_in_nested_if
-    },
-    {
-        "default_child_component_w_entity_in_nested_for",
-        Eval_default_child_component_w_entity_in_nested_for
-    },
-    {
-        "default_child_component_w_entity_in_if_in_for",
-        Eval_default_child_component_w_entity_in_if_in_for
-    },
-    {
-        "default_child_component_w_entity_in_for_in_if",
-        Eval_default_child_component_w_entity_in_for_in_if
-    },
-    {
         "map_i64_i32_component",
         Eval_map_i64_i32_component
     },
@@ -4761,18 +4731,6 @@ bake_test_case Template_testcases[] = {
         Template_child_name_from_string_prop
     },
     {
-        "default_component_w_prop_var",
-        Template_default_component_w_prop_var
-    },
-    {
-        "default_component_w_prop_var_in_nested_if",
-        Template_default_component_w_prop_var_in_nested_if
-    },
-    {
-        "default_component_w_prop_var_in_nested_for",
-        Template_default_component_w_prop_var_in_nested_for
-    },
-    {
         "template_w_new_expr_in_const",
         Template_template_w_new_expr_in_const
     },
@@ -4940,18 +4898,6 @@ bake_test_case Mut_testcases[] = {
         Mut_child_name_from_string
     },
     {
-        "default_component",
-        Mut_default_component
-    },
-    {
-        "default_component_nested_if",
-        Mut_default_component_nested_if
-    },
-    {
-        "default_component_nested_for",
-        Mut_default_component_nested_for
-    },
-    {
         "value_name",
         Mut_value_name
     },
@@ -5051,16 +4997,8 @@ bake_test_case Error_testcases[] = {
         Error_empty_assignment_before_end_of_scope
     },
     {
-        "default_type_with_tag",
-        Error_default_type_with_tag
-    },
-    {
         "invalid_oneof",
         Error_invalid_oneof
-    },
-    {
-        "default_type_with_tag",
-        Error_default_type_with_tag
     },
     {
         "unterminated_multiline_string",
@@ -5357,6 +5295,18 @@ bake_test_case Error_testcases[] = {
     {
         "const_w_old_typed_syntax",
         Error_const_w_old_typed_syntax
+    },
+    {
+        "struct_wo_members",
+        Error_struct_wo_members
+    },
+    {
+        "struct_member_wo_name",
+        Error_struct_member_wo_name
+    },
+    {
+        "enum_constant_w_invalid_expr",
+        Error_enum_constant_w_invalid_expr
     },
     {
         "const_w_old_untyped_syntax",
@@ -9655,7 +9605,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        534,
+        529,
         Eval_testcases
     },
     {
@@ -9669,21 +9619,21 @@ static bake_test_suite suites[] = {
         "Template",
         NULL,
         NULL,
-        99,
+        96,
         Template_testcases
     },
     {
         "Mut",
         NULL,
         NULL,
-        53,
+        50,
         Mut_testcases
     },
     {
         "Error",
         NULL,
         NULL,
-        129,
+        130,
         Error_testcases
     },
     {

@@ -3,16 +3,10 @@
 //
 // To load this file yourself, call ecs_script_run_file("prefabs.flecs");
 
-// Create a component types (see reflection.flecs example)
-using flecs.meta
+// Create component types (see reflection.flecs example)
+struct Attack(value: f32)
 
-struct Attack {
-  value = f32
-}
-
-struct Defense {
-  value = f32
-}
+struct Defense(value: f32)
 
 // To create a prefab, you can create an entity with the Prefab tag:
 SpaceShip {

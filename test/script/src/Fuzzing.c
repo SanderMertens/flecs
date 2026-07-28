@@ -118,9 +118,7 @@ void Fuzzing_8(void) {
 }
 
 void Fuzzing_9(void) {
-    install_test_abort();
 
-    test_expect_abort();
 
     const char *expr =
     HEAD "coc,a,#44464RN,X"
@@ -488,8 +486,6 @@ void Fuzzing_17(void) {
     LINE ""
         ;
 
-    install_test_abort();
-    test_expect_abort();
     fuzz(expr);
 }
 
@@ -612,21 +608,9 @@ void Fuzzing_20(void) {
     HEAD "using flecs.meta"
     LINE "using flecs.script.math"
     LINE ""
-    LINE "struct Vec3 {"
-    LINE "  x = f64"
-    LINE " xed = Vec3"
-    LINE "z = f64"
-    LINE "}"
+    LINE "struct Vec3(x: f64, xed: Vec3, z: f64)"
     LINE ""
-    LINE "struct MathSample {"
-    LINE "  trig = f64"
-    LINE "  power = f64"
-    LINE "  root = f64"
-    LINE "  dot_value = f64"
-    LINE "  len_value = f64"
-    LINE "  mixed = Vec3"
-    LINE "  unit = Vec3"
-    LINE "}"
+    LINE "struct MathSample(trig: f64, power: f64, root: f64, dot_value: f64, len_value: f64, mixed: Vec3, unit: Vec3)"
     LINE ""
     LINE "const a: Vec3 = {1.0e1, -2.5e1, 3.1}"
     LINE "const b: Vec3 = {2.0, 4.0, -6.0}"
@@ -2106,18 +2090,7 @@ void Fuzzing_47(void) {
     HEAD "using flecs.meta"
     LINE "using flecs.script.math"
     LINE ""
-    LINE "struct Vec3 {"
-    LINE "  x = f64"
-    LINE "  y = f64"
-    LINE ""
-    LINE "  trig = f64"
-    LINE "  power = f64"
-    LINE "  root = f64"
-    LINE "  dot_value = f64"
-    LINE "  len_value = f64"
-    LINE "  mixed = Vec3"
-    LINE "  unit = Vec3"
-    LINE "}"
+    LINE "struct Vec3(x: f64, y: f64, trig: f64, power: f64, root: f64, dot_value: f64, len_value: f64, mixed: Vec3, unit: Vec3)"
     LINE ""
     LINE "const a: Vec3 = {1.0e1, -2.5e1, 3.1}"
     LINE "const b: Vec3 = {2.0, 4.0, -6.0}"
@@ -7798,8 +7771,6 @@ void Fuzzing_128(void) {
     LINE ""
         ;
 
-    install_test_abort();
-    test_expect_abort();
     fuzz(expr);
 }
 
@@ -8477,14 +8448,9 @@ void Fuzzing_144(void) {
     LINE "Rel {}"
     LINE "Tgt {}"
     LINE ""
-    LINE "struct Nameplate {"
-    LINE "  valuE = string"
-    LINE "}"
+    LINE "struct Nameplate(valuE: string)"
     LINE ""
-    LINE "struct Orbit {"
-    LINE "  radius = f64"
-    LINE "  phase = f64"
-    LINE "}"
+    LINE "struct Orbit(radius: f64, phase: f64)"
     LINE ""
     LINE "template Outpost {"
     LINE "  prop phase: flecs.meta.f64 = 0.25"
@@ -8494,9 +8460,7 @@ void Fuzzing_144(void) {
     LINE "  }"
     LINE "}"
     LINE ""
-    LINE "struct Nameplate {"
-    LINE "  value = string"
-    LINE "}"
+    LINE "struct Nameplate(value: string)"
     LINE ""
         ;
 
@@ -8676,9 +8640,7 @@ void Fuzzing_146(void) {
     LINE ""
         ;
 
-    install_test_abort();
 
-    test_expect_abort();
 
     fuzz(expr);
 }
@@ -8690,25 +8652,9 @@ void Fuzzing_147(void) {
     HEAD "using flecs.meta"
     LINE "using flecs.script.math"
     LINE ""
-    LINE "struct Vec4 {"
-    LINE "  x = f64"
-    LINE " "
-    LINE "  y = 2"
-    LINE "  add = Vec4"
-    LINE "   y = f64"
-    LINE "  z = f64"
-    LINE "  w = f64"
-    LINE "}"
+    LINE "struct Vec4(x: f64, y: 2, add: Vec4, y: f64, z: f64, w: f64)"
     LINE ""
-    LINE "struct VectorBundle {"
-    LINE "  base = Vec4"
-    LINE "  add = Vec4"
-    LINE " @sub = Vec4"
-    LINE "  scaled = Vec4"
-    LINE "  mixed = Vec4"
-    LINE "  norm = Vec4"
-    LINE "  dotlen_value = f64"
-    LINE "}"
+    LINE "struct VectorBundle(base: Vec4, add: Vec4, sub: Vec4, scaled: Vec4, mixed: Vec4, norm: Vec4, dotlen_value: f64)"
     LINE ""
     LINE "source_a {"
     LINE "  Vec4: {1, 2, 3, E}"
@@ -8752,9 +8698,7 @@ void Fuzzing_149(void) {
     LINE "e {"
     LINE "  \013@t\202ee COfusing flecs.meta"
     LINE ""
-    LINE "struct Attack {"
-    LINE "  value = f32"
-    LINE "}"
+    LINE "struct Attack(value: f32)"
     LINE ""
     LINE "struct Defense {"
     LINE "///PosDefense:ck: {20}"
@@ -8804,9 +8748,7 @@ void Fuzzing_150(void) {
     LINE "e {"
     LINE "  \013@tree COfusing flecs.meta"
     LINE ""
-    LINE "struct Attack {"
-    LINE "  value = f32"
-    LINE "}"
+    LINE "struct Attack(value: f32)"
     LINE ""
     LINE "struct Defense {"
     LINE "  value = f32"

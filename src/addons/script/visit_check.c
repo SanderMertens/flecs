@@ -148,20 +148,6 @@ int flecs_script_check_entity(
         }
 
         node->eval_kind = id.eval;
-    } else {
-        /* Inherit kind from parent kind's DefaultChildComponent, if it exists */
-        ecs_script_scope_t *scope = ecs_script_current_scope(v);
-        if (scope && scope->default_component_eval) {
-            node->eval_kind = scope->default_component_eval;
-        }
-    }
-
-    if (node->eval_kind) {
-        const EcsDefaultChildComponent *default_comp = ecs_get(
-            v->world, node->eval_kind, EcsDefaultChildComponent);
-        if (default_comp && default_comp->component) {
-            node->scope->default_component_eval = default_comp->component;
-        }
     }
 
     if (node->name_expr && !node->name_expr->type_info) {
@@ -237,8 +223,16 @@ int flecs_script_check_component(
     }
 
     if (v->is_with_scope) {
-        flecs_script_eval_error(v, node, "invalid component in with scope"); 
+        flecs_script_eval_error(v, node, "invalid component in with scope");
         return -1;
+    }
+
+    /* If the id has a script visitor the initializer AST is passed to the
+     * visitor as-is during evaluation, don't type check it. */
+    if (!node->id.second && node->id.eval &&
+        ecs_has(v->world, node->id.eval, EcsScriptVisitor))
+    {
+        return 0;
     }
 
     if (node->expr) {
@@ -308,45 +302,6 @@ int flecs_script_check_var_component(
     }
 
     node->sp = var->sp;
-
-    return 0;
-}
-
-static
-int flecs_script_check_default_component(
-    ecs_script_eval_visitor_t *v,
-    ecs_script_default_component_t *node)
-{
-    if (!v->entity) {
-        flecs_script_eval_error(v, node,
-            "missing entity for default component");
-        return -1;
-    }
-
-    ecs_script_scope_t *scope = ecs_script_current_scope(v);
-    ecs_assert(scope != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(scope->node.kind == EcsAstScope, ECS_INTERNAL_ERROR, NULL);
-    scope = scope->parent;
-    if (!scope) {
-        return 0;
-    }
-
-    ecs_id_t default_type = scope->default_component_eval;
-    if (!default_type) {
-        return 0;
-    }
-
-    const ecs_type_info_t *ti = ecs_get_type_info(v->world, default_type);
-    if (!ti) {
-        return 0;
-    }
-
-    if (node->expr && !node->expr->type_info) {
-        ecs_entity_t type = ti->component;
-        if (flecs_script_check_expr(v, &node->expr, &type)) {
-            return -1;
-        }
-    }
 
     return 0;
 }
@@ -558,9 +513,6 @@ int flecs_script_check_node(
     case EcsAstVarComponent:
         return flecs_script_check_var_component(
             v, (ecs_script_var_component_t*)node);
-    case EcsAstDefaultComponent:
-        return flecs_script_check_default_component(
-            v, (ecs_script_default_component_t*)node);
     case EcsAstWithVar:
         return flecs_script_check_with_var(
             v, (ecs_script_var_component_t*)node);

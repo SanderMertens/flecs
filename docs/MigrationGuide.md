@@ -521,7 +521,6 @@ The following addons have been removed/merged with other addons:
 ## Misc
 
 - The `EcsTag` trait has been renamed to `EcsPairIsTag`.
-- `DefaultChildComponent` is now a component (was a tag in v3).
 - The `ecs_set_automerge` functionality has been removed from v4.
 - The `ecs_async_stage_new` function has been renamed to `ecs_stage_new`.
 - `ecs_set` no longer returns a new entity if 0 is passed (use `ecs_insert` instead).

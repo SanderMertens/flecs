@@ -6576,15 +6576,6 @@ typedef struct EcsPoly {
     ecs_poly_t *poly;          /**< Pointer to poly object. */
 } EcsPoly;
 
-/** When added to an entity, this informs serialization formats which component
- * to use when a value is assigned to an entity without specifying the 
- * component. This is intended as a hint; serialization formats are not required 
- * to use it. Adding this component does not change the behavior of core ECS 
- * operations. */
-typedef struct EcsDefaultChildComponent {
-    ecs_id_t component;  /**< Default component ID. */
-} EcsDefaultChildComponent;
-
 /** Non-fragmenting ChildOf relationship. */
 typedef struct EcsParent {
     ecs_entity_t value;     /**< Parent entity. */
@@ -6688,9 +6679,6 @@ FLECS_API extern const ecs_entity_t ecs_id(EcsParent);
 
 /** Component with data to instantiate a tree. */
 FLECS_API extern const ecs_entity_t ecs_id(EcsTreeSpawner);
-
-/** DefaultChildComponent component ID. */
-FLECS_API extern const ecs_entity_t ecs_id(EcsDefaultChildComponent);
 
 /** Relationship storing the entity's depth in a non-fragmenting hierarchy. */
 FLECS_API extern const ecs_entity_t EcsParentDepth;
@@ -20418,8 +20406,6 @@ using Component = EcsComponent;
 using Identifier = EcsIdentifier;
 /** Built-in EcsPoly type. */
 using Poly = EcsPoly;
-/** Built-in EcsDefaultChildComponent type. */
-using DefaultChildComponent = EcsDefaultChildComponent;
 /** Built-in EcsParent type. */
 using Parent = EcsParent;
 

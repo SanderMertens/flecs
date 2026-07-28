@@ -10,7 +10,6 @@ typedef enum ecs_script_node_kind_t {
     EcsAstScope,
     EcsAstTag,
     EcsAstComponent,
-    EcsAstDefaultComponent,
     EcsAstVarComponent,
     EcsAstWithVar,
     EcsAstWithTag,
@@ -41,7 +40,6 @@ struct ecs_script_scope_t {
     ecs_script_node_t node;
     ecs_vec_t stmts;
     ecs_script_scope_t *parent;
-    ecs_id_t default_component_eval;
 
     /* Array with component ids that are added in scope. Used to limit
      * archetype moves. */
@@ -81,12 +79,6 @@ typedef struct ecs_script_component_t {
     ecs_value_t eval;
     bool is_collection;
 } ecs_script_component_t;
-
-typedef struct ecs_script_default_component_t {
-    ecs_script_node_t node;
-    ecs_expr_node_t *expr;
-    ecs_value_t eval;
-} ecs_script_default_component_t;
 
 typedef struct ecs_script_var_component_t {
     ecs_script_node_t node;
@@ -249,9 +241,6 @@ ecs_script_component_t* flecs_script_insert_pair_component(
     ecs_parser_t *parser,
     const char *first,
     const char *second);
-
-ecs_script_default_component_t* flecs_script_insert_default_component(
-    ecs_parser_t *parser);
 
 ecs_script_var_component_t* flecs_script_insert_var_component(
     ecs_parser_t *parser,

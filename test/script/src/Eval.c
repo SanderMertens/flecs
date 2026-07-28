@@ -1,4 +1,5 @@
 #include <script.h>
+#include "../../../src/addons/script/script.h"
 
 void Eval_null(void) {
     ecs_world_t *world = ecs_init();
@@ -3581,103 +3582,13 @@ void Eval_assign_to_parent_pair_w_existing_entities_in_scope(void) {
     ecs_fini(world);
 }
 
-void Eval_default_child_component(void) {
-    ecs_world_t *world = ecs_init();
-
-    const char *expr =
-    HEAD "Bar {}"
-    LINE "DefaultChildComponent Foo(Bar)"
-    LINE "Foo Parent {"
-    LINE "  ChildA,"
-    LINE "  ChildB"
-    LINE "}";
-
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
-
-    ecs_entity_t foo = ecs_lookup(world, "Foo");
-    ecs_entity_t bar = ecs_lookup(world, "Bar");
-    
-    ecs_entity_t parent = ecs_lookup(world, "Parent");
-    ecs_entity_t child_a = ecs_lookup(world, "Parent.ChildA");
-    ecs_entity_t child_b = ecs_lookup(world, "Parent.ChildB");
-
-    test_assert(foo != 0);
-    test_assert(bar != 0);
-    test_assert(parent != 0);
-    test_assert(child_a != 0);
-    test_assert(child_b != 0);
-
-    const EcsDefaultChildComponent *dcc = 
-        ecs_get(world, foo, EcsDefaultChildComponent);
-    test_assert(dcc != NULL);
-    test_uint(dcc->component, bar);
-
-    test_assert( ecs_has_id(world, parent, foo));
-    test_assert( ecs_has_pair(world, child_a, EcsChildOf, parent));
-    test_assert( ecs_has_pair(world, child_b, EcsChildOf, parent));
-    
-    test_assert(ecs_has_id(world, child_a, bar));
-    test_assert(ecs_has_id(world, child_b, bar));
-
-    ecs_fini(world);
-}
-
-void Eval_default_child_component_w_assign(void) {
-    ecs_world_t *world = ecs_init();
-
-    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
-        .entity = ecs_entity(world, { .name = "Position" }),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    const char *expr =
-    HEAD "DefaultChildComponent Foo(Position)"
-    LINE "Foo Parent {"
-    LINE "  ChildA = 10, 20"
-    LINE "  ChildB = 10, 20"
-    LINE "}";
-
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
-
-    ecs_entity_t foo = ecs_lookup(world, "Foo");
-    
-    ecs_entity_t parent = ecs_lookup(world, "Parent");
-    ecs_entity_t child_a = ecs_lookup(world, "Parent.ChildA");
-    ecs_entity_t child_b = ecs_lookup(world, "Parent.ChildB");
-
-    test_assert(foo != 0);
-    test_assert(parent != 0);
-    test_assert(child_a != 0);
-    test_assert(child_b != 0);
-    
-    const EcsDefaultChildComponent *dcc = 
-        ecs_get(world, foo, EcsDefaultChildComponent);
-    test_assert(dcc != NULL);
-    test_uint(dcc->component, ecs_id(Position));
-
-    test_assert( ecs_has_id(world, parent, foo));
-    test_assert( ecs_has_pair(world, child_a, EcsChildOf, parent));
-    test_assert( ecs_has_pair(world, child_b, EcsChildOf, parent));
-    
-    test_assert(ecs_has(world, child_a, Position));
-    test_assert(ecs_has(world, child_b, Position));
-
-    ecs_fini(world);
-}
-
 void Eval_struct_type_w_default_child_component(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
     HEAD "using flecs.meta"
     LINE
-    LINE "struct Position {"
-    LINE "  x = f32"
-    LINE "  y = f32"
-    LINE "}"
+    LINE "struct Position(x: f32, y: f32)"
     LINE "Foo { Position: {x: 10, y: 20} }";
 
     test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
@@ -3727,13 +3638,13 @@ void Eval_struct_type_w_default_child_component_nested_member(void) {
     HEAD "using flecs.meta"
     LINE
     LINE "struct Line {"
-    LINE "  start {"
-    LINE "    x = f32"
-    LINE "    y = f32"
+    LINE "  member start {"
+    LINE "    x { member: {f32} }"
+    LINE "    y { member: {f32} }"
     LINE "  }"
-    LINE "  stop {"
-    LINE "    x = f32"
-    LINE "    y = f32"
+    LINE "  member stop {"
+    LINE "    x { member: {f32} }"
+    LINE "    y { member: {f32} }"
     LINE "  }"
     LINE "}"
     LINE
@@ -3769,9 +3680,7 @@ void Eval_enum_type_w_default_child_component(void) {
     const char *expr =
     HEAD "using flecs.meta"
     LINE
-    LINE "enum Color {"
-    LINE "  Red, Green, Blue"
-    LINE "}"
+    LINE "enum Color(Red, Green, Blue)"
     LINE
     LINE "Foo { Color: {Green} }";
 
@@ -3802,9 +3711,7 @@ void Eval_enum_type_w_underlying_type(void) {
     const char *expr =
     HEAD "using flecs.meta"
     LINE
-    LINE "enum Color(underlying_type: u32) {"
-    LINE "  Red, Green, Blue"
-    LINE "}"
+    LINE "enum Color(Red, Green, Blue, {underlying_type: u32})"
     LINE
     LINE "Foo { Color: {Green} }";
 
@@ -3824,236 +3731,6 @@ void Eval_enum_type_w_underlying_type(void) {
     const Color *ptr = ecs_get(world, foo, Color);
     test_assert(ptr != NULL);
     test_int(*ptr, Green);
-
-    ecs_fini(world);
-}
-
-void Eval_default_type_from_with(void) {
-    ecs_world_t *world = ecs_init();
-
-    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
-        .entity = ecs_entity(world, { .name = "Position" }),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    const char *expr =
-    HEAD "with Position {"
-    LINE "  e1 = 10, 20"
-    LINE "  e2 = 30, 40"
-    LINE "}";
-
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
-
-    ecs_entity_t e1 = ecs_lookup(world, "e1");
-    ecs_entity_t e2 = ecs_lookup(world, "e2");
-
-    test_assert(e1 != 0);
-    test_assert(e2 != 0);
-
-    const Position *p = ecs_get(world, e1, Position);
-    test_assert(p != NULL);
-    test_int(p->x, 10);
-    test_int(p->y, 20);
-
-    p = ecs_get(world, e2, Position);
-    test_assert(p != NULL);
-    test_int(p->x, 30);
-    test_int(p->y, 40);
-
-    ecs_fini(world);
-}
-
-void Eval_default_type_from_nested_with(void) {
-    ecs_world_t *world = ecs_init();
-
-    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
-        .entity = ecs_entity(world, { .name = "Position" }),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    ecs_entity_t ecs_id(Velocity) = ecs_struct(world, {
-        .entity = ecs_entity(world, {.name = "Velocity"}),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    const char *expr =
-    HEAD "with Velocity {"
-    LINE "  e1 = 1, 2"
-    LINE "  with Position {"
-    LINE "    e2 = 10, 20"
-    LINE "    e3 = 30, 40"
-    LINE "  }"
-    LINE "  e4 = 3, 4"
-    LINE "}";
-
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
-
-    ecs_entity_t e1 = ecs_lookup(world, "e1");
-    ecs_entity_t e2 = ecs_lookup(world, "e2");
-    ecs_entity_t e3 = ecs_lookup(world, "e3");
-    ecs_entity_t e4 = ecs_lookup(world, "e4");
-
-    test_assert(e1 != 0);
-    test_assert(e2 != 0);
-    test_assert(e3 != 0);
-    test_assert(e4 != 0);
-
-    const Position *p = ecs_get(world, e2, Position);
-    test_assert(p != NULL);
-    test_int(p->x, 10);
-    test_int(p->y, 20);
-
-    p = ecs_get(world, e3, Position);
-    test_assert(p != NULL);
-    test_int(p->x, 30);
-    test_int(p->y, 40);
-
-    const Velocity *v = ecs_get(world, e1, Velocity);
-    test_assert(v != NULL);
-    test_int(v->x, 1);
-    test_int(v->y, 2);
-
-    v = ecs_get(world, e4, Velocity);
-    test_assert(v != NULL);
-    test_int(v->x, 3);
-    test_int(v->y, 4);
-
-    ecs_fini(world);
-}
-
-void Eval_default_type_from_with_in_entity_scope_w_default_type(void) {
-    ecs_world_t *world = ecs_init();
-
-    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
-        .entity = ecs_entity(world, { .name = "Position" }),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    ecs_entity_t ecs_id(Velocity) = ecs_struct(world, {
-        .entity = ecs_entity(world, {.name = "Velocity"}),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    const char *expr =
-    HEAD "Foo { DefaultChildComponent: {Velocity} }"
-    LINE "Foo Bar {"
-    LINE "  e3 = 1, 2"
-    LINE "  with Position {"
-    LINE "    e1 = 10, 20"
-    LINE "    e2 = 30, 40"
-    LINE "  }"
-    LINE "  e4 = 2, 3"
-    LINE "}";
-
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
-
-    ecs_entity_t e1 = ecs_lookup(world, "Bar.e1");
-    ecs_entity_t e2 = ecs_lookup(world, "Bar.e2");
-    ecs_entity_t e3 = ecs_lookup(world, "Bar.e3");
-    ecs_entity_t e4 = ecs_lookup(world, "Bar.e4");
-
-    test_assert(ecs_has(world, e1, Position));
-    test_assert(ecs_has(world, e2, Position));
-    test_assert(!ecs_has(world, e3, Position));
-    test_assert(!ecs_has(world, e4, Position));
-
-    test_assert(!ecs_has(world, e1, Velocity));
-    test_assert(!ecs_has(world, e2, Velocity));
-    test_assert(ecs_has(world, e3, Velocity));
-    test_assert(ecs_has(world, e4, Velocity));
-
-    test_assert(e1 != 0);
-    test_assert(e2 != 0);
-    test_assert(e3 != 0);
-    test_assert(e4 != 0);
-
-    const Position *p = ecs_get(world, e1, Position);
-    test_assert(p != NULL);
-    test_int(p->x, 10);
-    test_int(p->y, 20);
-
-    p = ecs_get(world, e2, Position);
-    test_assert(p != NULL);
-    test_int(p->x, 30);
-    test_int(p->y, 40);
-
-    const Velocity *v = ecs_get(world, e3, Velocity);
-    test_assert(v != NULL);
-    test_int(v->x, 1);
-    test_int(v->y, 2);
-
-    v = ecs_get(world, e4, Velocity);
-    test_assert(v != NULL);
-    test_int(v->x, 2);
-    test_int(v->y, 3);
-
-    ecs_fini(world);
-}
-
-void Eval_default_type_from_entity_scope_in_with(void) {
-    ecs_world_t *world = ecs_init();
-
-    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
-        .entity = ecs_entity(world, { .name = "Position" }),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    const char *expr =
-    HEAD "using flecs.meta"
-    LINE "with Position {"
-    LINE "  e1 = 10, 20"
-    LINE "  struct Velocity {"
-    LINE "    x = f32"
-    LINE "    y = f32"
-    LINE "  }"
-    LINE "  e2 = 30, 40"
-    LINE "}"
-    LINE "e3 { Velocity: {1, 2} }";
-
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
-
-    ecs_entity_t e1 = ecs_lookup(world, "e1");
-    ecs_entity_t e2 = ecs_lookup(world, "e2");
-    ecs_entity_t e3 = ecs_lookup(world, "e3");
-    ecs_entity_t ecs_id(Velocity) = ecs_lookup(world, "Velocity");
-
-    test_assert(e1 != 0);
-    test_assert(e2 != 0);
-    test_assert(e3 != 0);
-    test_assert(ecs_id(Velocity) != 0);
-
-    const Position *p = ecs_get(world, e1, Position);
-    test_assert(p != NULL);
-    test_int(p->x, 10);
-    test_int(p->y, 20);
-
-    p = ecs_get(world, e2, Position);
-    test_assert(p != NULL);
-    test_int(p->x, 30);
-    test_int(p->y, 40);
-
-    const Velocity *v = ecs_get(world, e3, Velocity);
-    test_assert(v != NULL);
-    test_int(v->x, 1);
-    test_int(v->y, 2);
 
     ecs_fini(world);
 }
@@ -4126,10 +3803,7 @@ void Eval_assign_pair_component(void) {
     const char *expr =
     HEAD "using flecs.meta"
     LINE
-    LINE "struct Position {"
-    LINE "  x = f32"
-    LINE "  y = f32"
-    LINE "}"
+    LINE "struct Position(x: f32, y: f32)"
     LINE
     LINE "Foo { (Position, Bar): {x: 10, y: 20} }";
 
@@ -4162,10 +3836,7 @@ void Eval_assign_pair_component_in_scope(void) {
     const char *expr =
     HEAD "using flecs.meta"
     LINE
-    LINE "struct Position {"
-    LINE "  x = f32"
-    LINE "  y = f32"
-    LINE "}"
+    LINE "struct Position(x: f32, y: f32)"
     LINE
     LINE "Parent {"
     LINE "  (Position, Foo): {x: 10, y: 20}"
@@ -4209,10 +3880,7 @@ void Eval_assign_pair_component_in_script(void) {
     const char *expr =
     HEAD "using flecs.meta"
     LINE
-    LINE "struct Position {"
-    LINE "  x = f32"
-    LINE "  y = f32"
-    LINE "}"
+    LINE "struct Position(x: f32, y: f32)"
     LINE
     LINE "Foo { (Position, Bar): {x: 10, y: 20} }";
 
@@ -4248,10 +3916,7 @@ void Eval_assign_pair_component_in_script_update(void) {
     const char *expr =
     HEAD "using flecs.meta"
     LINE
-    LINE "struct Position {"
-    LINE "  x = f32"
-    LINE "  y = f32"
-    LINE "}"
+    LINE "struct Position(x: f32, y: f32)"
     LINE
     LINE "Foo { (Position, Bar): {x: 10, y: 20} }";
 
@@ -4290,10 +3955,7 @@ void Eval_assign_pair_component_w_newline(void) {
     const char *expr =
     HEAD "using flecs.meta"
     LINE
-    LINE "struct Position {"
-    LINE "  x = f32"
-    LINE "  y = f32"
-    LINE "}"
+    LINE "struct Position(x: f32, y: f32)"
     LINE
     LINE "Parent {"
     LINE "  (Position, Foo): {\nx: 10,\n y: 20\n}"
@@ -4338,10 +4000,7 @@ void Eval_assign_pair_component_w_newline_and_spaces(void) {
     const char *expr =
     HEAD "using flecs.meta"
     LINE
-    LINE "struct Position {"
-    LINE "  x = f32"
-    LINE "  y = f32"
-    LINE "}"
+    LINE "struct Position(x: f32, y: f32)"
     LINE
     LINE "Parent {"
     LINE "  (Position, Foo): {\nx: 10,  \n y: 20\n  }"
@@ -4386,10 +4045,7 @@ void Eval_assign_pair_component_w_empty(void) {
     const char *expr =
     HEAD "using flecs.meta"
     LINE
-    LINE "struct Position {"
-    LINE "  x = f32"
-    LINE "  y = f32"
-    LINE "}"
+    LINE "struct Position(x: f32, y: f32)"
     LINE
     LINE "Parent {"
     LINE "  (Position, Foo): {}"
@@ -4434,10 +4090,7 @@ void Eval_assign_pair_component_w_newline_empty(void) {
     const char *expr =
     HEAD "using flecs.meta"
     LINE
-    LINE "struct Position {"
-    LINE "  x = f32"
-    LINE "  y = f32"
-    LINE "}"
+    LINE "struct Position(x: f32, y: f32)"
     LINE
     LINE "Parent {"
     LINE "  (Position, Foo): {\n}"
@@ -4482,10 +4135,7 @@ void Eval_assign_pair_component_w_newline_and_spaces_empty(void) {
     const char *expr =
     HEAD "using flecs.meta"
     LINE
-    LINE "struct Position {"
-    LINE "  x = f32"
-    LINE "  y = f32"
-    LINE "}"
+    LINE "struct Position(x: f32, y: f32)"
     LINE
     LINE "Parent {"
     LINE "  (Position, Foo): { \n}"
@@ -4528,10 +4178,7 @@ void Eval_assign_pair_component_after_component(void) {
     ECS_TAG(world, Bar);
 
     const char *expr =
-    HEAD "struct Position {"
-    LINE "  x = f32"
-    LINE "  y = f32"
-    LINE "}"
+    HEAD "struct Position(x: f32, y: f32)"
     LINE
     LINE "Parent {"
     LINE "  Position: {10, 20}"
@@ -4574,10 +4221,7 @@ void Eval_assign_pair_component_after_int_component(void) {
     ECS_TAG(world, Bar);
 
     const char *expr =
-    HEAD "struct Position {"
-    LINE "  x = f32"
-    LINE "  y = f32"
-    LINE "}"
+    HEAD "struct Position(x: f32, y: f32)"
     LINE
     LINE "Parent {"
     LINE "  i32: {10}"
@@ -4622,10 +4266,7 @@ void Eval_assign_pair_component_after_entity_component(void) {
     ECS_TAG(world, Bar);
 
     const char *expr =
-    HEAD "struct Position {"
-    LINE "  x = f32"
-    LINE "  y = f32"
-    LINE "}"
+    HEAD "struct Position(x: f32, y: f32)"
     LINE
     LINE "Parent {"
     LINE "  entity: {flecs.core}"
@@ -15431,9 +15072,7 @@ void Eval_assign_eq_enum_to_component(void) {
     });
 
     const char *expr =
-    HEAD "enum Color {"
-    LINE "  Red, Green, Blue"
-    LINE "}"
+    HEAD "enum Color(Red, Green, Blue)"
     LINE ""
     LINE "const c: Color = Red"
     LINE ""
@@ -15482,9 +15121,7 @@ void Eval_assign_eq_enum_to_const(void) {
     });
 
     const char *expr =
-    HEAD "enum Color {"
-    LINE "  Red, Green, Blue"
-    LINE "}"
+    HEAD "enum Color(Red, Green, Blue)"
     LINE ""
     LINE "const c: Color = Red"
     LINE "const r1 = c == Red"
@@ -16713,250 +16350,6 @@ void Eval_component_expr_member_no_var(void) {
 
 
 
-void Eval_default_child_component_w_entity_in_if(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_struct(world, {
-        .entity = ecs_id(Position),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    const char *expr =
-    HEAD "DefaultChildComponent Foo(Position)"
-    LINE "const cond = true"
-    LINE "Foo parent {"
-    LINE "  if $cond {"
-    LINE "    child = 10, 20"
-    LINE "  }"
-    LINE "}";
-
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
-
-    ecs_entity_t child = ecs_lookup(world, "parent.child");
-    test_assert(child != 0);
-
-    const Position *p = ecs_get(world, child, Position);
-    test_assert(p != NULL);
-    test_int(p->x, 10);
-    test_int(p->y, 20);
-
-    ecs_fini(world);
-}
-
-void Eval_default_child_component_w_entity_in_for(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_struct(world, {
-        .entity = ecs_id(Position),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    const char *expr =
-    HEAD "DefaultChildComponent Foo(Position)"
-    LINE "Foo parent {"
-    LINE "  for i in 0..2 {"
-    LINE "    \"child_$i\" = 10, 20"
-    LINE "  }"
-    LINE "}";
-
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
-
-    ecs_entity_t child_0 = ecs_lookup(world, "parent.child_0");
-    ecs_entity_t child_1 = ecs_lookup(world, "parent.child_1");
-    test_assert(child_0 != 0);
-    test_assert(child_1 != 0);
-
-    const Position *p = ecs_get(world, child_0, Position);
-    test_assert(p != NULL);
-    test_int(p->x, 10);
-    test_int(p->y, 20);
-
-    p = ecs_get(world, child_1, Position);
-    test_assert(p != NULL);
-    test_int(p->x, 10);
-    test_int(p->y, 20);
-
-    ecs_fini(world);
-}
-
-void Eval_default_child_component_w_entity_in_nested_if(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_struct(world, {
-        .entity = ecs_id(Position),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    const char *expr =
-    HEAD "DefaultChildComponent Foo(Position)"
-    LINE "const cond = true"
-    LINE "Foo parent {"
-    LINE "  if $cond {"
-    LINE "    if $cond {"
-    LINE "      child = 10, 20"
-    LINE "    }"
-    LINE "  }"
-    LINE "}";
-
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
-
-    ecs_entity_t child = ecs_lookup(world, "parent.child");
-    test_assert(child != 0);
-
-    const Position *p = ecs_get(world, child, Position);
-    test_assert(p != NULL);
-    test_int(p->x, 10);
-    test_int(p->y, 20);
-
-    ecs_fini(world);
-}
-
-void Eval_default_child_component_w_entity_in_nested_for(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_struct(world, {
-        .entity = ecs_id(Position),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    const char *expr =
-    HEAD "DefaultChildComponent Foo(Position)"
-    LINE "Foo parent {"
-    LINE "  for i in 0..2 {"
-    LINE "    for j in 0..2 {"
-    LINE "      \"child_{$i}_{$j}\" = 10, 20"
-    LINE "    }"
-    LINE "  }"
-    LINE "}";
-
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
-
-    int i, j;
-    for (i = 0; i < 2; i ++) {
-        for (j = 0; j < 2; j ++) {
-            char name[64];
-            ecs_os_snprintf(name, 64, "parent.child_%d_%d", i, j);
-            ecs_entity_t child = ecs_lookup(world, name);
-            test_assert(child != 0);
-
-            const Position *p = ecs_get(world, child, Position);
-            test_assert(p != NULL);
-            test_int(p->x, 10);
-            test_int(p->y, 20);
-        }
-    }
-
-    ecs_fini(world);
-}
-
-void Eval_default_child_component_w_entity_in_if_in_for(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_struct(world, {
-        .entity = ecs_id(Position),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    const char *expr =
-    HEAD "DefaultChildComponent Foo(Position)"
-    LINE "const cond = true"
-    LINE "Foo parent {"
-    LINE "  for i in 0..2 {"
-    LINE "    if $cond {"
-    LINE "      \"child_$i\" = 10, 20"
-    LINE "    }"
-    LINE "  }"
-    LINE "}";
-
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
-
-    ecs_entity_t child_0 = ecs_lookup(world, "parent.child_0");
-    ecs_entity_t child_1 = ecs_lookup(world, "parent.child_1");
-    test_assert(child_0 != 0);
-    test_assert(child_1 != 0);
-
-    const Position *p = ecs_get(world, child_0, Position);
-    test_assert(p != NULL);
-    test_int(p->x, 10);
-    test_int(p->y, 20);
-
-    p = ecs_get(world, child_1, Position);
-    test_assert(p != NULL);
-    test_int(p->x, 10);
-    test_int(p->y, 20);
-
-    ecs_fini(world);
-}
-
-void Eval_default_child_component_w_entity_in_for_in_if(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_struct(world, {
-        .entity = ecs_id(Position),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    const char *expr =
-    HEAD "DefaultChildComponent Foo(Position)"
-    LINE "const cond = true"
-    LINE "Foo parent {"
-    LINE "  if $cond {"
-    LINE "    for i in 0..2 {"
-    LINE "      \"child_$i\" = 10, 20"
-    LINE "    }"
-    LINE "  }"
-    LINE "}";
-
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
-
-    ecs_entity_t child_0 = ecs_lookup(world, "parent.child_0");
-    ecs_entity_t child_1 = ecs_lookup(world, "parent.child_1");
-    test_assert(child_0 != 0);
-    test_assert(child_1 != 0);
-
-    const Position *p = ecs_get(world, child_0, Position);
-    test_assert(p != NULL);
-    test_int(p->x, 10);
-    test_int(p->y, 20);
-
-    p = ecs_get(world, child_1, Position);
-    test_assert(p != NULL);
-    test_int(p->x, 10);
-    test_int(p->y, 20);
-
-    ecs_fini(world);
-}
-
 void Eval_map_i64_i32_component(void) {
     ecs_world_t *world = ecs_init();
 
@@ -17677,10 +17070,7 @@ void Eval_component_expr_free_w_deleted_type(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    HEAD "struct Vec {"
-    LINE "  x = f32"
-    LINE "  y = f32"
-    LINE "}"
+    HEAD "struct Vec(x: f32, y: f32)"
     LINE ""
     LINE "e {"
     LINE "  Vec: {10, 20}"
@@ -17707,10 +17097,7 @@ void Eval_component_expr_free_w_type_deleted_by_script_update(void) {
     ecs_entity_t s_a = ecs_script(world, {
         .entity = ecs_entity(world, { .name = "script_a" }),
         .code =
-            HEAD "struct Vec {"
-            LINE "  x = f32"
-            LINE "  y = f32"
-            LINE "}"
+            HEAD "struct Vec(x: f32, y: f32)"
     });
     test_assert(s_a != 0);
 
@@ -17734,10 +17121,7 @@ void Eval_component_expr_free_w_deleted_type_w_string(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    HEAD "struct Named {"
-    LINE "  name = string"
-    LINE "  value = i32"
-    LINE "}"
+    HEAD "struct Named(name: string, value: i32)"
     LINE ""
     LINE "e {"
     LINE "  Named: {\"hello world\", 10}"
@@ -17756,4 +17140,213 @@ void Eval_component_expr_free_w_deleted_type_w_string(void) {
     ecs_fini(world);
 
     test_assert(true);
+}
+
+void Eval_struct_w_member_initializer(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE "struct Arr(values: {type: f32, count: 3})";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t arr = ecs_lookup(world, "Arr");
+    ecs_entity_t values = ecs_lookup(world, "Arr.values");
+    test_assert(arr != 0);
+    test_assert(values != 0);
+
+    const EcsMember *m = ecs_get(world, values, EcsMember);
+    test_assert(m != NULL);
+    test_uint(m->type, ecs_id(ecs_f32_t));
+    test_int(m->count, 3);
+
+    const EcsComponent *c = ecs_get(world, arr, EcsComponent);
+    test_assert(c != NULL);
+    test_int(c->size, 12);
+
+    ecs_fini(world);
+}
+
+void Eval_enum_w_constant_values(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE "enum Prio(Low: 10, High: 20)"
+    LINE "e { Prio: {High} }";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t prio = ecs_lookup(world, "Prio");
+    ecs_entity_t low = ecs_lookup(world, "Prio.Low");
+    ecs_entity_t high = ecs_lookup(world, "Prio.High");
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(prio != 0);
+    test_assert(low != 0);
+    test_assert(high != 0);
+    test_assert(e != 0);
+
+    const int32_t *lv = ecs_get_id(world, low,
+        ecs_pair(EcsConstant, ecs_id(ecs_i32_t)));
+    test_assert(lv != NULL);
+    test_int(*lv, 10);
+
+    const int32_t *hv = ecs_get_id(world, high,
+        ecs_pair(EcsConstant, ecs_id(ecs_i32_t)));
+    test_assert(hv != NULL);
+    test_int(*hv, 20);
+
+    const int32_t *v = ecs_get_id(world, e, prio);
+    test_assert(v != NULL);
+    test_int(*v, 20);
+
+    ecs_fini(world);
+}
+
+void Eval_enum_w_underlying_type_and_values(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE "enum Big(A: 1, B: 2, {underlying_type: u64})"
+    LINE "e { Big: {B} }";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t big = ecs_lookup(world, "Big");
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(big != 0);
+    test_assert(e != 0);
+
+    const EcsEnum *ep = ecs_get(world, big, EcsEnum);
+    test_assert(ep != NULL);
+    test_uint(ep->underlying_type, ecs_id(ecs_u64_t));
+
+    const uint64_t *v = ecs_get_id(world, e, big);
+    test_assert(v != NULL);
+    test_uint(*v, 2);
+
+    ecs_fini(world);
+}
+
+void Eval_bitmask_w_initializer(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE "bitmask Toppings(Bacon, Lettuce, Tomato)"
+    LINE "s { Toppings: {Bacon | Tomato} }";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t toppings = ecs_lookup(world, "Toppings");
+    ecs_entity_t bacon = ecs_lookup(world, "Toppings.Bacon");
+    ecs_entity_t s = ecs_lookup(world, "s");
+    test_assert(toppings != 0);
+    test_assert(bacon != 0);
+    test_assert(s != 0);
+
+    test_assert(ecs_has_id(world, bacon, EcsConstant));
+
+    const uint32_t *v = ecs_get_id(world, s, toppings);
+    test_assert(v != NULL);
+    test_uint(*v, 5);
+
+    ecs_fini(world);
+}
+
+static int custom_visitor_invoked = 0;
+
+static int Eval_custom_visitor_callback(const ecs_script_visitor_ctx_t *ctx) {
+    custom_visitor_invoked ++;
+    test_assert(ctx->world != NULL);
+    test_assert(ctx->entity != 0);
+    test_assert(ctx->kind != 0);
+    test_assert(ctx->initializer != NULL);
+    test_assert(ctx->ctx == (void*)&custom_visitor_invoked);
+
+    ecs_entity_t child = ecs_entity(ctx->world, {
+        .name = "visited",
+        .parent = ctx->entity
+    });
+    test_assert(child != 0);
+    return 0;
+}
+
+void Eval_custom_script_visitor(void) {
+    ecs_world_t *world = ecs_init();
+
+    custom_visitor_invoked = 0;
+
+    ecs_entity_t kind = ecs_entity(world, { .name = "Widget" });
+    ecs_set(world, kind, EcsScriptVisitor, {
+        .visit = Eval_custom_visitor_callback,
+        .ctx = &custom_visitor_invoked
+    });
+
+    const char *expr =
+    HEAD "Widget my_widget(label: \"hello\")";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_int(custom_visitor_invoked, 1);
+
+    ecs_entity_t w = ecs_lookup(world, "my_widget");
+    test_assert(w != 0);
+    test_assert(ecs_has_id(world, w, kind));
+    test_assert(ecs_lookup(world, "my_widget.visited") != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_enum_w_underlying_type_first(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE "enum Big({underlying_type: u64}, A: 1, B: 2)"
+    LINE "e { Big: {B} }";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t big = ecs_lookup(world, "Big");
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(big != 0);
+    test_assert(e != 0);
+
+    const EcsEnum *ep = ecs_get(world, big, EcsEnum);
+    test_assert(ep != NULL);
+    test_uint(ep->underlying_type, ecs_id(ecs_u64_t));
+
+    const uint64_t *v = ecs_get_id(world, e, big);
+    test_assert(v != NULL);
+    test_uint(*v, 2);
+
+    ecs_fini(world);
+}
+
+void Eval_enum_w_underlying_type_in_middle(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE "enum Big(A: 1, {underlying_type: u64}, B: 2)"
+    LINE "e { Big: {B} }";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t big = ecs_lookup(world, "Big");
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(big != 0);
+    test_assert(e != 0);
+
+    const EcsEnum *ep = ecs_get(world, big, EcsEnum);
+    test_assert(ep != NULL);
+    test_uint(ep->underlying_type, ecs_id(ecs_u64_t));
+
+    const uint64_t *v = ecs_get_id(world, e, big);
+    test_assert(v != NULL);
+    test_uint(*v, 2);
+
+    ecs_fini(world);
 }
