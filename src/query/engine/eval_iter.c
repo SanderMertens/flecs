@@ -616,8 +616,10 @@ ecs_iter_t flecs_query_iter(
     const ecs_query_t *q)
 {
     ecs_iter_t it = {0};
-#if defined(FLECS_CACHED_QUERIES) || defined(FLECS_QUERY_PLANS)
     ecs_query_iter_t *qit = &it.priv_.iter.query;
+#ifndef FLECS_QUERY_PLANS
+    qit->entity = 0;
+    qit->constrained_this = false;
 #endif
     ecs_check(q != NULL, ECS_INVALID_PARAMETER, NULL);
 

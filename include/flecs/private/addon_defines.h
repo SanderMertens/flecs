@@ -121,6 +121,27 @@
 #endif
 #endif
 
+#ifdef FLECS_ALERTS
+#ifndef FLECS_METRICS
+#define FLECS_METRICS
+#endif
+#ifndef FLECS_TIMER
+#define FLECS_TIMER
+#endif
+#ifndef FLECS_SCRIPT
+#define FLECS_SCRIPT
+#endif
+#ifndef FLECS_QUERY_DSL
+#define FLECS_QUERY_DSL
+#endif
+#endif
+
+#ifdef FLECS_JOURNAL
+#ifndef FLECS_LOG
+#define FLECS_LOG
+#endif
+#endif
+
 #if defined(FLECS_ALERTS) || defined(FLECS_APP) || defined(FLECS_TIMER)
 #ifndef FLECS_PIPELINE
 #define FLECS_PIPELINE
@@ -148,6 +169,9 @@
 #endif
 #ifndef FLECS_PIPELINE
 #define FLECS_PIPELINE
+#endif
+#ifndef FLECS_QUERY_DSL
+#define FLECS_QUERY_DSL
 #endif
 #endif
 

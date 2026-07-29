@@ -623,6 +623,7 @@ static int flecs_term_verify(
             return -1;
         }
 
+#ifdef FLECS_CONSTRAINT_TRAITS
         if (!ecs_id_is_wildcard(component) &&
             ecs_has_id(world, component, EcsRelationship))
         {
@@ -633,6 +634,7 @@ static int flecs_term_verify(
             ecs_os_free(component_str);
             return -1;
         }
+#endif
     }
 
     if (first_id) {
@@ -1781,6 +1783,7 @@ bool flecs_query_finalize_simple(
             return false;
         }
 
+#ifdef FLECS_CONSTRAINT_TRAITS
         ecs_entity_t component = id & ECS_COMPONENT_MASK;
         if (component && !ECS_IS_PAIR(id) &&
             ecs_is_alive(world, component) &&
@@ -1788,24 +1791,25 @@ bool flecs_query_finalize_simple(
         {
             return false; /* Slow path reports the error */
         }
+#endif
 
-        ecs_term_t cmp_term = { 
-            .id = id, 
-            .flags_ = term->flags_, 
-            .field_index = term->field_index
-        };
-
-        if (term->src.id == (EcsThis|EcsSelf|EcsIsVariable)) {
-            cmp_term.src.id = EcsThis|EcsSelf|EcsIsVariable;
-        } else if (term->src.id == EcsSelf) {
-            cmp_term.src.id = EcsSelf;
+        if (term->src.id != 0 && term->src.id != EcsSelf &&
+            term->src.id != (EcsThis|EcsSelf|EcsIsVariable))
+        {
+            return false;
         }
 
-        if (term->first.id == (term->id|EcsSelf|EcsIsEntity)) {
-            cmp_term.first.id = term->id|EcsSelf|EcsIsEntity;
+        if (term->first.id != 0 &&
+            term->first.id != (term->id|EcsSelf|EcsIsEntity))
+        {
+            return false;
         }
 
-        if (ecs_os_memcmp_t(&cmp_term, term, ecs_term_t)) {
+        if (term->second.id || term->trav || term->inout || term->oper) {
+            return false;
+        }
+
+        if (term->src.name || term->first.name || term->second.name) {
             return false;
         }
     }

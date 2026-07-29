@@ -1085,7 +1085,9 @@ void flecs_script_template_import(
     ECS_TAG_DEFINE(world, EcsScriptTemplate);
 
     ecs_add_id(world, EcsScriptTemplate, EcsPairIsTag);
+#ifdef FLECS_CONSTRAINT_TRAITS
     ecs_add_id(world, EcsScriptTemplate, EcsRelationship);
+#endif
 
     ecs_set_hooks(world, EcsScriptTemplateSetEvent, {
         .ctor = flecs_default_ctor,

@@ -1,13 +1,9 @@
 # Component Traits
 Component traits are tags and pairs that can be added to components to modify their behavior. This manual contains an overview of all component traits supported by Flecs.
 
-The `Acyclic`, `Final`, `OneOf`, `Relationship`, `Singleton`, `Symmetric`,
-`Target`, and `Trait` traits require the `FLECS_CONSTRAINT_TRAITS` addon. The
-addon is enabled in the default build and must be selected explicitly in a
-custom build. Other traits documented in this manual are part of the core or
-their respective addons.
-
 ## Acyclic trait
+This trait requires the `FLECS_CONSTRAINT_TRAITS` addon.
+
 A relationship can be marked with the `Acyclic` trait to indicate that it cannot contain cycles. Both the builtin `ChildOf` and `IsA` relationships are marked acyclic. Knowing whether a relationship is acyclic allows the storage to detect and throw errors when a cyclic relationship is introduced by accident.
 
 Note that because cycle detection requires expensive algorithms, adding `Acyclic` to a relationship does not guarantee that an error will be thrown when a cycle is accidentally introduced. While detection may improve over time, an application that runs without errors is no guarantee that it does not contain acyclic relationships with cycles.
@@ -773,6 +769,8 @@ let married_to = world.entity().add_trait::<flecs::Exclusive>();
 </div>
 
 ## Final trait
+This trait requires the `FLECS_CONSTRAINT_TRAITS` addon.
+
 Entities can be annotated with the `Final` trait, which prevents using them with `IsA` relationship. This is similar to the concept of a final class as something that cannot be extended. The following example shows how use `Final`:
 
 <div class="flecs-snippet-tabs">
@@ -907,6 +905,8 @@ Queries must be aware of (potential) inheritance relationships when they are cre
 If a query was not aware of inheritance relationships at creation time and one or more of the components in the query were inherited from, query iteration will fail in debug mode.
 
 ## OneOf trait
+This trait requires the `FLECS_CONSTRAINT_TRAITS` addon.
+
 The `OneOf` trait enforces that the target of the relationship is a child of a specified entity. `OneOf` can be used to indicate that the target needs to be either a child of the relationship (common for enum relationships), or of another entity.
 
 The following example shows how to constrain the relationship target to a child of the relationship:
@@ -1507,6 +1507,8 @@ ref readonly Position p = ref e.GetSecond<Serializable, Position>();
 The `Tag` trait is only interpreted when it is added to the relationship part of a pair.
 
 ## Relationship trait
+This trait requires the `FLECS_CONSTRAINT_TRAITS` addon.
+
 The relationship trait enforces that an entity can only be used as relationship. Consider the following example:
 
 <div class="flecs-snippet-tabs">
@@ -1683,6 +1685,8 @@ LocatedIn(SanFrancisco, SanFrancisco)
 In these examples, `IsA` is a reflexive relationship, whereas `LocatedIn` is not.
 
 ## Singleton trait
+This trait requires the `FLECS_CONSTRAINT_TRAITS` addon.
+
 The `Singleton` trait enforces that a component can only be instantiated once in the world. A singleton component can only be added to the entity that is associated with the component. This happens automatically when using the singleton APIs:
 
 <div class="flecs-snippet-tabs">
@@ -1868,6 +1872,8 @@ world.component::<Position>().add_trait::<flecs::Sparse>();
 </div>
 
 ## Symmetric trait
+This trait requires the `FLECS_CONSTRAINT_TRAITS` addon.
+
 The `Symmetric` trait enforces that when a relationship `(R, Y)` is added to entity `X`, the relationship `(R, X)` will be added to entity `Y`. The reverse is also true, if relationship `(R, Y)` is removed from `X`, relationship `(R, X)` will be removed from `Y`.
 
 The symmetric trait is useful for relationships that do not make sense unless they are bidirectional. Examples of such relationships are `AlliesWith`, `MarriedTo`, `TradingWith` and so on. An example:
@@ -1918,6 +1924,8 @@ bob.add_id((married_to, alice)); // Also adds (MarriedTo, Bob) to Alice
 </div>
 
 ## Target trait
+This trait requires the `FLECS_CONSTRAINT_TRAITS` addon.
+
 The target trait enforces that an entity can only be used as relationship target. Consider the following example:
 
 <div class="flecs-snippet-tabs">
@@ -1990,6 +1998,8 @@ let e = world
 </div>
 
 ## Trait trait
+This trait requires the `FLECS_CONSTRAINT_TRAITS` addon.
+
 The trait trait marks an entity as a trait, which is any tag that is added to another tag/component/relationship to modify its behavior. All traits in this manual are marked as trait. It is not required to mark a trait as a trait before adding it to another tag/component/relationship. The main reason for the trait trait is to ease some of the constraints on relationships (see the Relationship trait).
 
 <div class="flecs-snippet-tabs">

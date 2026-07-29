@@ -11,7 +11,6 @@ default build and must be selected explicitly in a custom build.
 - Inherited components can be auto-overridden on a per-prefab basis
 - Prefab inheritance makes creating variations easy
 - Prefabs can have children that are instantiated for instances
-- Instantiated prefab children can be resolved from their prefab children
 - Prefabs are runtime accessible and modifiable
 - Prefabs can be mapped to types for easy access in the C++ API
 - Natively supported by Flecs Script & the JSON serializer
@@ -970,13 +969,7 @@ let inst_cockpit = inst.lookup("Cockpit");
 </div>
 
 ## Prefab Child Slots
-Prefab hierarchies that use the non-fragmenting `Parent` storage automatically
-provide slot-like access to instantiated children. Passing a prefab child as the
-relationship argument to `ecs_get_target` returns the corresponding child of
-the prefab instance. This lookup does not add a relationship to the instance and
-therefore does not fragment its archetype.
-
-The following example shows how to create and access prefab children this way:
+Prefab hierarchies that use the `Parent` component make it possible to easily find an instance child from the prefab child with `ecs_get_target`:
 
 <div class="flecs-snippet-tabs">
 <ul>
@@ -1016,10 +1009,6 @@ flecs::entity inst_cockpit = inst.target(Cockpit);
 </li>
 </ul>
 </div>
-
-For nested hierarchies, resolve each child from its corresponding instance
-parent. The lookup depends on the stable child ordering maintained by the
-`Parent` hierarchy storage.
 
 ## Prefab Types (C++, C#)
 Like entities and components, prefabs can be associated with a C++ type. This makes it easier to instantiate prefabs as it is not necessary to pass prefab handles around in the application. The following example shows how to associate types with prefabs:

@@ -834,9 +834,10 @@ static void flecs_log_build_info(void) {
     ecs_log_push();
 
     const char **addon = bi->addons;
-    do {
+    while (addon[0]) {
         ecs_trace("%s", addon[0]);
-    } while ((++ addon)[0]);
+        addon ++;
+    }
     ecs_log_pop();
 
     if (bi->sanitize) {

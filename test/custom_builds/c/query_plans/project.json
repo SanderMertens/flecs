@@ -9,12 +9,6 @@
         "standalone": true
     },
     "lang.c": {
-        "defines": [
-            "FLECS_CUSTOM_BUILD",
-            "FLECS_CACHED_QUERIES",
-            "FLECS_LOG",
-            "FLECS_OS_API_IMPL",
-            "FLECS_SOFT_ASSERT"
-        ]
+        "defines": ["FLECS_CUSTOM_BUILD", "FLECS_QUERY_PLANS"]
     }
 }

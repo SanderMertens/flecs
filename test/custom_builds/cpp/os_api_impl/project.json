@@ -1,0 +1,15 @@
+{
+    "id": "os_api_impl",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "public": false,
+        "standalone": true,
+        "language": "c++"
+    },
+    "lang.cpp": {
+        "defines": ["FLECS_CUSTOM_BUILD", "FLECS_CPP", "FLECS_OS_API_IMPL"]
+    }
+}
