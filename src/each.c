@@ -47,6 +47,10 @@ ecs_iter_t ecs_each_id(
         .next = ecs_each_next
     };
 
+    ecs_table_cache_iter_t *cache_it = &it.priv_.iter.each.it;
+    cache_it->elems = NULL;
+    cache_it->remaining = 0;
+
     ecs_component_record_t *cr = flecs_components_get(world, id);
     if (!cr) {
         return it;

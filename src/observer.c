@@ -1109,7 +1109,6 @@ static bool flecs_observer_finalize_simple_special(
     ecs_query_validator_ctx_t ctx = {
         .world = world,
         .desc = desc,
-        .query = q,
         .term = &term
     };
 
@@ -1118,6 +1117,7 @@ static bool flecs_observer_finalize_simple_special(
     }
 
     bool is_wildcard = ecs_id_is_wildcard(term.id);
+    bool is_any = term.id == EcsAny;
     bool is_disabled = term.id == EcsDisabled;
 #ifdef FLECS_PREFAB
     bool is_prefab = term.id == EcsPrefab;
@@ -1128,7 +1128,7 @@ static bool flecs_observer_finalize_simple_special(
     if ((!is_wildcard && !is_disabled && !is_prefab) ||
         term.oper != EcsAnd ||
         !ecs_term_match_this(&term) ||
-        (is_wildcard && !(term.flags_ & EcsTermIsCacheable)) ||
+        (is_wildcard && !is_any && !(term.flags_ & EcsTermIsCacheable)) ||
         ((term.src.id & EcsTraverseFlags) != EcsSelf) || term.trav ||
         (term.flags_ & (EcsTermIsToggle|EcsTermDontFragment|
             EcsTermIsSparse|EcsTermTransitive|EcsTermReflexive|
@@ -1228,7 +1228,8 @@ ecs_observer_t* flecs_observer_init(
             bool trivial_observer = (dummy_query.term_count == 1) &&
                 ((dummy_query.flags & EcsQueryIsTrivial) ||
                     ((dummy_query.flags & EcsQueryMatchWildcards) &&
-                     (dummy_query.terms[0].flags_ & EcsTermIsCacheable) &&
+                     ((dummy_query.terms[0].flags_ & EcsTermIsCacheable) ||
+                        (dummy_query.terms[0].id == EcsAny)) &&
                      (dummy_query.terms[0].oper == EcsAnd))) &&
                 (dummy_query.flags & EcsQueryMatchOnlySelf) &&
                 !dummy_query.row_fields;

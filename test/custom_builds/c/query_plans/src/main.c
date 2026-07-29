@@ -1,125 +1,61 @@
 #include <query_plans.h>
 
-#ifdef FLECS_QUERY_PLANS
-#error "FLECS_QUERY_PLANS should not be enabled"
-#endif
-
-typedef struct Position {
-    int x;
+typedef struct {
+    int32_t x, y;
 } Position;
-
-static int count_query(
-    ecs_world_t *world,
-    ecs_query_t *q)
-{
-    int result = 0;
-    ecs_iter_t it = ecs_query_iter(world, q);
-    while (ecs_query_next(&it)) {
-        result += it.count;
-    }
-    return result;
-}
-
-static bool query_has(
-    ecs_query_t *q,
-    ecs_entity_t e)
-{
-    ecs_table_t *table = ecs_get_table(q->world, e);
-    ecs_table_range_t range = { .table = table };
-    ecs_iter_t it;
-
-    if (!ecs_query_has(q, e, &it)) {
-        return false;
-    }
-    ecs_iter_fini(&it);
-
-    if (!ecs_query_has_table(q, table, &it)) {
-        return false;
-    }
-    ecs_iter_fini(&it);
-
-    if (!ecs_query_has_range(q, &range, &it)) {
-        return false;
-    }
-    ecs_iter_fini(&it);
-
-    return true;
-}
-
-static bool query_set_this(
-    ecs_world_t *world,
-    ecs_query_t *q,
-    ecs_entity_t e)
-{
-    ecs_table_t *table = ecs_get_table(world, e);
-    ecs_table_range_t range = { .table = table };
-
-    ecs_iter_t it = ecs_query_iter(world, q);
-    ecs_iter_set_var(&it, 0, e);
-    if (!ecs_query_next(&it) || it.count != 1 || it.entities[0] != e ||
-        ecs_query_next(&it))
-    {
-        return false;
-    }
-
-    it = ecs_query_iter(world, q);
-    ecs_iter_set_var_as_table(&it, 0, table);
-    if (!ecs_query_next(&it) || ecs_query_next(&it)) {
-        return false;
-    }
-
-    it = ecs_query_iter(world, q);
-    ecs_iter_set_var_as_range(&it, 0, &range);
-    if (!ecs_query_next(&it) || ecs_query_next(&it)) {
-        return false;
-    }
-
-    return true;
-}
 
 int main(int argc, char *argv[]) {
     ecs_world_t *world = ecs_init_w_args(argc, argv);
 
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Tag);
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
 
-    ecs_entity_t e = ecs_new(world);
-    ecs_set(world, e, Position, {10});
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_set(world, e1, Position, {10, 20});
 
-    ecs_query_t *uncached = ecs_query(world, {
-        .cache_kind = EcsQueryCacheNone,
-        .terms = {{ .id = ecs_id(Position) }}
-    });
-    if (!uncached || count_query(world, uncached) != 1 ||
-        !query_has(uncached, e) || !query_set_this(world, uncached, e))
-    {
-        return -1;
-    }
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_set(world, e2, Position, {30, 40});
+    ecs_add(world, e2, Tag);
 
-    ecs_query_t *cached = ecs_query(world, {
-        .cache_kind = EcsQueryCacheAll,
-        .terms = {{ .id = ecs_id(Position) }}
-    });
-    if (!cached || count_query(world, cached) != 1 ||
-        !query_has(cached, e) || !query_set_this(world, cached, e))
-    {
-        return -1;
-    }
-
-    ecs_log_set_level(-5);
-    ecs_query_t *needs_plan = ecs_query(world, {
+    ecs_query_t *q = ecs_query(world, {
         .cache_kind = EcsQueryCacheNone,
         .terms = {
             { .id = ecs_id(Position) },
-            { Tag, .oper = EcsNot }
+            { .id = Tag, .oper = EcsNot }
         }
     });
-    if (needs_plan || ecs_log_last_error() != ECS_UNSUPPORTED) {
-        return -1;
-    }
+    assert(q != NULL);
 
-    ecs_query_fini(cached);
-    ecs_query_fini(uncached);
+    int32_t count = 0;
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        for (int i = 0; i < it.count; i ++) {
+            assert(it.entities[i] == e1);
+            count ++;
+        }
+    }
+    assert(count == 1);
+    ecs_query_fini(q);
+
+    ecs_add_pair(world, e1, Rel, TgtA);
+    ecs_add_pair(world, e2, Rel, TgtB);
+
+    ecs_query_t *qw = ecs_query(world, {
+        .cache_kind = EcsQueryCacheNone,
+        .terms = {{ .id = ecs_pair(Rel, EcsWildcard) }}
+    });
+    assert(qw != NULL);
+
+    count = 0;
+    it = ecs_query_iter(world, qw);
+    while (ecs_query_next(&it)) {
+        count += it.count;
+    }
+    assert(count == 2);
+    ecs_query_fini(qw);
 
     return ecs_fini(world);
 }

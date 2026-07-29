@@ -5,23 +5,6 @@ Queries enable games to quickly find entities that match a list of conditions, a
 
 Flecs queries can do anything from returning entities that match a simple list of components, to matching complex patterns against entity graphs.
 
-The default build includes both `FLECS_CACHED_QUERIES` and
-`FLECS_QUERY_PLANS`. Custom builds must select these addons explicitly when
-they use the corresponding features:
-
-- `FLECS_CACHED_QUERIES` provides fully cached queries, query grouping, change
-  detection, cache inspection, and the APIs used to restrict an iterator to a
-  group.
-- `FLECS_QUERY_PLANS` provides the query compiler used by nontrivial query
-  expressions, named variables, variable inspection, query plan strings and
-  profiles, and query argument parsing.
-
-Without `FLECS_QUERY_PLANS`, only trivial uncached queries and cached queries
-that do not require a filter plan are supported. Query creation fails with
-`ECS_UNSUPPORTED` when an expression needs the query compiler. Variable index
-`0` (`$this`) can still be constrained with `ecs_iter_set_var` and its table and
-range variants.
-
 This manual contains a full overview of the query features available in Flecs. Some of the features of Flecs queries are:
 
 - Queries can be cached, uncached or a mix of both, which lets games pick the ideal balance between iteration performance, query creation performance and administration overhead.
@@ -37,6 +20,10 @@ This manual contains a full overview of the query features available in Flecs. S
 - Queries can be created with the Flecs APIs or by using the Flecs Query Language, which enables query creation in [tools like the explorer](https://www.flecs.dev/explorer/).
 
 - The Flecs REST API has a query endpoint which can be used to build remote game servers.
+
+Query features are configurable with two addons that are enabled by default:
+ - `FLECS_CACHED_QUERIES`: aforementioned cached query support
+ - `FLECS_QUERY_PLANS`: advanced query features such as operators, relationships, variables
 
 ## Definitions
 

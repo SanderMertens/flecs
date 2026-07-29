@@ -371,6 +371,26 @@ jobs:
           bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_FRAME
           bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_FRAME
 
+      - name: FLECS_CONSTRAINT_TRAITS
+        run: |
+          bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_CONSTRAINT_TRAITS
+          bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_CONSTRAINT_TRAITS
+
+      - name: FLECS_MULTI_WORLD
+        run: |
+          bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_MULTI_WORLD
+          bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_MULTI_WORLD
+
+      - name: FLECS_QUERY_PLANS
+        run: |
+          bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_QUERY_PLANS
+          bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_QUERY_PLANS
+
+      - name: FLECS_CACHED_QUERIES
+        run: |
+          bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_CACHED_QUERIES
+          bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_CACHED_QUERIES
+
       - name: FLECS_SYSTEM
         run: |
           bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_SYSTEM

@@ -450,33 +450,7 @@ Parser                                                     | Parser utilities us
 [App](/flecs/group__c__addons__app.html)                   | Flecs application framework                      | FLECS_APP           |
 [OS API Impl](/flecs/group__c__addons__os__api__impl.html) | Default OS API implementation for Posix/Win32    | FLECS_OS_API_IMPL   |
 
-Addons automatically enable their dependencies. A blacklist define causes a
-build error when another enabled addon requires the blacklisted addon. Important
-dependency relationships include:
-
-- Pipeline enables Module, System, Cached Queries, Query Plans, Frame and the
-  default OS API implementation.
-- Query DSL enables Parser and Query Plans.
-- Meta enables Parser and Module.
-- JSON enables Meta, Doc, Query DSL and Frame.
-- Script enables Meta, Doc and Parser.
-- Stats enables Module, Pipeline and Timer.
-- Metrics enables Meta, Units, Pipeline and Frame.
-- Alerts, App and Timer enable Pipeline and Frame.
-- REST enables HTTP, JSON and Pipeline.
-- System enables Module and Frame.
-- Units enables Module and Meta.
-- Frame and HTTP enable the default OS API implementation unless it is
-  explicitly blacklisted.
-
-`FLECS_MULTI_WORLD` is only relevant to the C++ API. When enabled, component
-and enum ids are stored per world. When disabled, each C++ type stores a single
-global id and cannot safely be used with multiple worlds that are alive at the
-same time.
-
-Escaped path generation requires `FLECS_PARSER`. Calling a path API with
-escaping enabled in a build without the parser addon reports
-`ECS_UNSUPPORTED`.
+Addons automatically enable their dependencies. A blacklist define causes a build error when another enabled addon requires the blacklisted addon.
 
 The following example shows how to build Flecs without any addons using bake. Run the command from the repository root:
 

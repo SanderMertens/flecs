@@ -909,37 +909,37 @@ void FlecsMetricsImport(ecs_world_t *world) {
     ECS_SYSTEM(world, UpdateGaugeMemberInstance, EcsPreStore, 
         [out]  Value, 
         [in]   MemberInstance,
-        [none] (Metric, Gauge));
+        [none] (Metric, Metric.Gauge));
 
     ECS_SYSTEM(world, UpdateCounterMemberInstance, EcsPreStore, 
         [out]  Value, 
         [in]   MemberInstance,
-        [none] (Metric, Counter));
+        [none] (Metric, Metric.Counter));
 
     ECS_SYSTEM(world, UpdateCounterIncrementMemberInstance, EcsPreStore, 
         [out]  Value, 
         [in]   MemberInstance,
-        [none] (Metric, CounterIncrement));
+        [none] (Metric, Metric.CounterIncrement));
 
     ECS_SYSTEM(world, UpdateGaugeIdInstance, EcsPreStore, 
         [out]  Value, 
         [in]   IdInstance,
-        [none] (Metric, Gauge));
+        [none] (Metric, Metric.Gauge));
 
     ECS_SYSTEM(world, UpdateCounterIdInstance, EcsPreStore, 
         [inout] Value, 
         [in]    IdInstance,
-        [none]  (Metric, Counter));
+        [none]  (Metric, Metric.Counter));
 
     ECS_SYSTEM(world, UpdateGaugeOneOfInstance, EcsPreStore, 
         [none] (_, Value), 
         [in]   OneOfInstance,
-        [none] (Metric, Gauge));
+        [none] (Metric, Metric.Gauge));
 
     ECS_SYSTEM(world, UpdateCounterOneOfInstance, EcsPreStore, 
         [none] (_, Value), 
         [in]   OneOfInstance,
-        [none] (Metric, Counter));
+        [none] (Metric, Metric.Counter));
 
     ECS_SYSTEM(world, UpdateCountIds, EcsPreStore, 
         [inout] CountIds, Value);

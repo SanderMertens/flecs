@@ -653,7 +653,6 @@ void flecs_bootstrap(
     flecs_bootstrap_make_alive(world, ecs_id(EcsPoly));
     flecs_bootstrap_make_alive(world, ecs_id(EcsParent));
     flecs_bootstrap_make_alive(world, ecs_id(EcsTreeSpawner));
-    flecs_bootstrap_make_alive(world, EcsFinal);
     flecs_bootstrap_make_alive(world, EcsName);
     flecs_bootstrap_make_alive(world, EcsSymbol);
     flecs_bootstrap_make_alive(world, EcsAlias);
@@ -951,23 +950,6 @@ void flecs_bootstrap(
     ecs_add_id(world, EcsDependsOn, EcsPairIsTag);
     ecs_add_id(world, EcsFlag, EcsPairIsTag);
     ecs_add_id(world, EcsWith, EcsPairIsTag);
-
-    /* Relationships */
-    ecs_add_id(world, EcsChildOf, EcsRelationship);
-    ecs_add_id(world, EcsIsA, EcsRelationship);
-    ecs_add_id(world, EcsDependsOn, EcsRelationship);
-    ecs_add_id(world, EcsWith, EcsRelationship);
-    ecs_add_id(world, EcsOnDelete, EcsRelationship);
-    ecs_add_id(world, EcsOnDeleteTarget, EcsRelationship);
-    ecs_add_id(world, EcsOnInstantiate, EcsRelationship);
-    ecs_add_id(world, ecs_id(EcsIdentifier), EcsRelationship);
-    ecs_add_id(world, EcsParentDepth, EcsRelationship);
-    ecs_add_id(world, ecs_id(EcsPoly), EcsRelationship);
-
-    /* Targets */
-    ecs_add_id(world, EcsOverride, EcsTarget);
-    ecs_add_id(world, EcsInherit, EcsTarget);
-    ecs_add_id(world, EcsDontInherit, EcsTarget);
 
     flecs_bootstrap_constraint_traits(world);
 
