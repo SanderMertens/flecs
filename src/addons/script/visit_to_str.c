@@ -303,18 +303,36 @@ static void flecs_script_include_to_str(
     flecs_scriptbuf_append(v, "%s\n", node->filename);
 }
 
-static void flecs_script_for_range_to_str(
+static void flecs_script_for_to_str(
     ecs_script_str_visitor_t *v,
-    ecs_script_for_range_t *node)
+    ecs_script_for_t *node)
 {
     flecs_scriptbuf_node(v, &node->node);
-    flecs_scriptbuf_appendstr(v, node->loop_var);
+
+    int32_t i;
+    if (node->loop_var_count > 1) {
+        flecs_scriptbuf_appendstr(v, "(");
+    }
+    for (i = 0; i < node->loop_var_count; i ++) {
+        if (i) {
+            flecs_scriptbuf_appendstr(v, ", ");
+        }
+        flecs_scriptbuf_appendstr(v, node->loop_vars[i]);
+    }
+    if (node->loop_var_count > 1) {
+        flecs_scriptbuf_appendstr(v, ")");
+    }
+
     flecs_script_color_to_str(v, ECS_BLUE);
     flecs_scriptbuf_appendstr(v, " in ");
     flecs_script_color_to_str(v, ECS_NORMAL);
-    flecs_expr_to_str(v, node->from);
-    flecs_scriptbuf_appendstr(v, " .. ");
-    flecs_expr_to_str(v, node->to);
+    if (node->expr) {
+        flecs_expr_to_str(v, node->expr);
+    } else {
+        flecs_expr_to_str(v, node->from);
+        flecs_scriptbuf_appendstr(v, " .. ");
+        flecs_expr_to_str(v, node->to);
+    }
 
     flecs_scriptbuf_appendstr(v, " {\n");
     v->depth ++;
@@ -404,7 +422,7 @@ static int flecs_script_stmt_to_str(
         flecs_script_if_to_str(v, (ecs_script_if_t*)node);
         break;
     case EcsAstFor:
-        flecs_script_for_range_to_str(v, (ecs_script_for_range_t*)node);
+        flecs_script_for_to_str(v, (ecs_script_for_t*)node);
         break;
     case EcsAstInclude:
         flecs_script_include_to_str(v, (ecs_script_include_t*)node);

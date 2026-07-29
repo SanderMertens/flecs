@@ -437,38 +437,72 @@ static int flecs_script_check_if(
     return 0;
 }
 
-static int flecs_script_check_for_range(
+static int flecs_script_check_for(
     ecs_script_eval_visitor_t *v,
-    ecs_script_for_range_t *node)
+    ecs_script_for_t *node)
 {
-    ecs_entity_t type = ecs_id(ecs_i32_t);
-    if (flecs_script_check_expr(v, &node->from, &type)) {
-        return -1;
+    flecs_script_for_kind_t kind = FlecsScriptForRange;
+    ecs_entity_t key_type = 0;
+    ecs_entity_t elem_type = ecs_id(ecs_i32_t);
+
+    if (!node->expr) {
+        ecs_entity_t type = ecs_id(ecs_i32_t);
+        if (flecs_script_check_expr(v, &node->from, &type)) {
+            return -1;
+        }
+
+        type = ecs_id(ecs_i32_t);
+        if (flecs_script_check_expr(v, &node->to, &type)) {
+            return -1;
+        }
+    } else {
+        ecs_entity_t type = 0;
+        if (flecs_script_check_expr(v, &node->expr, &type)) {
+            return -1;
+        }
+
+        if (flecs_script_for_collection_kind(
+            v, node, type, &kind, &key_type, &elem_type))
+        {
+            return -1;
+        }
     }
 
-    type = ecs_id(ecs_i32_t);
-    if (flecs_script_check_expr(v, &node->to, &type)) {
+    if (flecs_script_for_check_var_count(v, node, kind)) {
         return -1;
     }
 
     v->vars = flecs_script_vars_push(v->vars, &v->r->stack, &v->r->allocator);
 
-    ecs_script_var_t *var = ecs_script_vars_declare(v->vars, node->loop_var);
-    const ecs_type_info_t *ti = ecs_get_type_info(v->world, ecs_id(ecs_i32_t));
-    int32_t dummy = 0;
-    var->value.ptr = &dummy;
-    var->value.type = ecs_id(ecs_i32_t);
-    var->type_info = ti;
+    int result = -1;
+    int32_t var_i = 0;
 
-    if (flecs_script_eval_scope(v, node->scope)) {
-        return -1;
+    if (kind == FlecsScriptForMap && node->loop_var_count >= 2) {
+        if (!flecs_script_for_declare_var(
+            v, node, node->loop_vars[var_i ++], key_type, true))
+        {
+            goto done;
+        }
     }
 
-    var->value.ptr = NULL;
+    if (flecs_script_for_has_index_var(kind, node->loop_var_count)) {
+        if (!flecs_script_for_declare_var(
+            v, node, node->loop_vars[var_i ++], ecs_id(ecs_i32_t), true))
+        {
+            goto done;
+        }
+    }
 
+    if (!flecs_script_for_declare_var(
+        v, node, node->loop_vars[var_i], elem_type, true))
+    {
+        goto done;
+    }
+
+    result = flecs_script_eval_scope(v, node->scope);
+done:
     v->vars = ecs_script_vars_pop(v->vars);
-
-    return 0;
+    return result;
 }
 
 static int flecs_script_check_annot(
@@ -551,8 +585,8 @@ int flecs_script_check_node(
         return flecs_script_check_if(
             v, (ecs_script_if_t*)node);
     case EcsAstFor:
-        return flecs_script_check_for_range(
-            v, (ecs_script_for_range_t*)node);
+        return flecs_script_check_for(
+            v, (ecs_script_for_t*)node);
     case EcsAstInclude:
         flecs_script_eval_error(v, node,
             "include is not allowed in template");
