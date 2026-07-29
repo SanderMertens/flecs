@@ -1,5 +1,5 @@
 /**
- * @file addons/script/template.h
+ * @file addons/script/reactivity/template.h
  * @brief Script template implementation.
  */
 

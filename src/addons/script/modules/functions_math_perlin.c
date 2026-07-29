@@ -1,5 +1,5 @@
 /**
- * @file addons/script/functions_math_perlin.c
+ * @file addons/script/modules/functions_math_perlin.c
  * @brief Perlin noise functions for flecs script.
  * 
  * - flecs_perlin2(x, y): returns noise in ~[-1, 1]
@@ -9,7 +9,7 @@
 #include "flecs.h"
 
 #ifdef FLECS_SCRIPT_MATH
-#include "script.h"
+#include "../script.h"
 #include <math.h>
 
 static uint8_t flecs_perlin_perm[512];

@@ -1,5 +1,5 @@
 /**
- * @file addons/script/enum_visitor.c
+ * @file addons/script/eval/visit_enum.c
  * @brief Visitor that implements the enum Color(Red, Green, Blue) and
  *        bitmask Toppings(Bacon, Lettuce) syntax.
  */
@@ -7,10 +7,9 @@
 #include "flecs.h"
 
 #ifdef FLECS_SCRIPT
-#include "script.h"
+#include "../script.h"
 
-static
-int flecs_script_constants_visit(
+static int flecs_script_constants_visit(
     const ecs_script_visitor_ctx_t *ctx,
     bool is_bitmask)
 {

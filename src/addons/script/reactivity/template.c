@@ -1,12 +1,12 @@
 /**
- * @file addons/script/template.c
+ * @file addons/script/reactivity/template.c
  * @brief Script template implementation.
  */
 
 #include "flecs.h"
 
 #ifdef FLECS_SCRIPT
-#include "script.h"
+#include "../script.h"
 
 ECS_COMPONENT_DECLARE(EcsScriptTemplateSetEvent);
 ECS_COMPONENT_DECLARE(EcsScriptTemplateRoot);

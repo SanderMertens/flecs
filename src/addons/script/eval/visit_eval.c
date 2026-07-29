@@ -1,12 +1,12 @@
 /**
- * @file addons/script/visit_eval.c
+ * @file addons/script/eval/visit_eval.c
  * @brief Script evaluation visitor.
  */
 
 #include "flecs.h"
 
 #ifdef FLECS_SCRIPT
-#include "script.h"
+#include "../script.h"
 
 static bool flecs_script_valid_lookup_path(
     const char *path)
