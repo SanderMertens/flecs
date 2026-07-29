@@ -1,5 +1,5 @@
 /**
- * @file addons/script/async.c
+ * @file addons/script/eval/async.c
  * @brief Async/await support for Flecs script.
  *
  * This file implements futures and tasks. A task runs a script through the
@@ -12,7 +12,7 @@
 #include "flecs.h"
 
 #ifdef FLECS_SCRIPT_ASYNC
-#include "script.h"
+#include "../script.h"
 
 ECS_COMPONENT_DECLARE(EcsScriptTask);
 

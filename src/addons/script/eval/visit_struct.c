@@ -1,12 +1,12 @@
 /**
- * @file addons/script/struct_visitor.c
+ * @file addons/script/eval/visit_struct.c
  * @brief Visitor that implements the struct Position(x: f32, y: f32) syntax.
  */
 
 #include "flecs.h"
 
 #ifdef FLECS_SCRIPT
-#include "script.h"
+#include "../script.h"
 
 int flecs_script_struct_visit(
     const ecs_script_visitor_ctx_t *ctx)

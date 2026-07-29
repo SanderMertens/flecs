@@ -1,5 +1,5 @@
 /**
- * @file addons/script/async.h
+ * @file addons/script/eval/async.h
  * @brief Async/await support for Flecs script.
  */
 

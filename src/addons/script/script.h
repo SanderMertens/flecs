@@ -15,24 +15,6 @@ typedef struct ecs_script_entity_t ecs_script_entity_t;
 
 #define flecs_script_impl(script) ((ecs_script_impl_t*)script)
 
-typedef struct ecs_script_ref_t {
-    ecs_entity_t entity;
-    const char *name;
-    ecs_id_t component;
-    ecs_entity_t observer;
-} ecs_script_ref_t;
-
-typedef struct ecs_script_ref_ctx_t {
-    ecs_entity_t script;
-    ecs_entity_t instance;
-} ecs_script_ref_ctx_t;
-
-typedef struct EcsScriptUpdateEvent {
-    ecs_entity_t script;
-} EcsScriptUpdateEvent;
-
-extern ECS_COMPONENT_DECLARE(EcsScriptUpdateEvent);
-
 /* Context passed to script visitor callbacks. */
 typedef struct ecs_script_visitor_ctx_t {
     ecs_world_t *world;
@@ -93,47 +75,12 @@ typedef struct ecs_function_calldata_t {
 #include "ast.h"
 #include "expr/expr.h"
 #include "visit.h"
-#include "visit_eval.h"
-#include "async.h"
-#include "template.h"
-
-struct ecs_script_runtime_t {
-    ecs_allocator_t allocator;
-    ecs_expr_stack_t expr_stack;
-    ecs_stack_t stack;
-    ecs_vec_t using;
-    ecs_vec_t with;
-    ecs_vec_t with_type_info;
-    ecs_vec_t annot;
-
-    /* Tag added to entities created by the currently evaluating managed
-     * script. Carried on the world runtime so evaluation triggered from hooks
-     * (such as template instantiation) inherits it. */
-    ecs_id_t current_tag;
-
-    char *error_name;
-    int32_t include_depth;
-    bool error;
-};
+#include "eval/eval.h"
+#include "reactivity/refs.h"
+#include "reactivity/template.h"
 
 ecs_script_t* flecs_script_new(
     ecs_world_t *world);
-
-ecs_entity_t flecs_script_create_ref_observer(
-    ecs_world_t *world,
-    ecs_entity_t script,
-    ecs_entity_t instance,
-    ecs_entity_t entity,
-    ecs_id_t component,
-    ecs_iter_action_t callback);
-
-void flecs_script_update_ref_observers(
-    ecs_world_t *world,
-    ecs_entity_t script,
-    ecs_entity_t instance,
-    ecs_vec_t *refs,
-    ecs_vec_t *observers,
-    ecs_iter_action_t callback);
 
 ecs_script_scope_t* flecs_script_scope_new(
     ecs_parser_t *parser);
@@ -149,12 +96,6 @@ ecs_script_vars_t* flecs_script_vars_push(
     ecs_script_vars_t *parent,
     ecs_stack_t *stack,
     ecs_allocator_t *allocator);
-
-ecs_script_runtime_t* flecs_script_runtime_get(
-    ecs_world_t *world);
-
-void flecs_script_runtime_error_reset(
-    ecs_script_runtime_t *r);
 
 void flecs_script_register_builtin_functions(
     ecs_world_t *world);
@@ -180,51 +121,11 @@ int ecs_script_ast_node_to_buf(
     bool colors,
     int32_t depth);
 
-void ecs_script_runtime_clear(
-    ecs_script_runtime_t *r);
-
-int flecs_script_apply_annot(
-    ecs_script_eval_visitor_t *v,
-    ecs_script_entity_t *node,
-    ecs_entity_t entity,
-    ecs_script_annot_t *annot);
-
-/* Type visitors (implement struct/enum/bitmask initializer syntax) */
-
-int flecs_script_struct_visit(
-    const ecs_script_visitor_ctx_t *ctx);
-
-int flecs_script_enum_visit(
-    const ecs_script_visitor_ctx_t *ctx);
-
-int flecs_script_bitmask_visit(
-    const ecs_script_visitor_ctx_t *ctx);
-
 /* Script functions */
 double flecs_lerp(
     double a,
     double b,
     double t);
-
-typedef struct ecs_script_user_function_t {
-    ecs_script_t *script;
-    ecs_script_function_node_t *node;
-    ecs_vec_t refs;
-    ecs_vec_t using;
-} ecs_script_user_function_t;
-
-void flecs_script_user_function_callback(
-    const ecs_function_ctx_t *ctx,
-    int32_t argc,
-    const ecs_value_t *argv,
-    ecs_value_t *result);
-
-void flecs_script_user_function_ctx_free(
-    void *ctx);
-
-int flecs_script_eval_function(
-    ecs_script_eval_visitor_t *v,
-    ecs_script_function_node_t *node);
 
 void FlecsScriptMathPerlinImport(
     ecs_world_t *world);

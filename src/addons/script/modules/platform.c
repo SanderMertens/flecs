@@ -1,12 +1,12 @@
 /**
- * @file addons/script/platform.c
+ * @file addons/script/modules/platform.c
  * @brief Platform constants for flecs script.
  */
 
 #include "flecs.h"
 
 #ifdef FLECS_SCRIPT_PLATFORM
-#include "script.h"
+#include "../script.h"
 
 #if defined(ECS_TARGET_WINDOWS)
 #define FLECS_SCRIPT_PLATFORM_OS "windows"

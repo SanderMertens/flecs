@@ -1,12 +1,12 @@
 /**
- * @file addons/script/functions_math.c
+ * @file addons/script/modules/functions_math.c
  * @brief Math functions for flecs script.
  */
 
 #include "flecs.h"
 
 #ifdef FLECS_SCRIPT_MATH
-#include "script.h"
+#include "../script.h"
 #include <math.h>
 
 typedef struct ecs_script_rng_t {

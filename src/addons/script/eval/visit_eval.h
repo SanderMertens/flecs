@@ -1,5 +1,5 @@
 /**
- * @file addons/script/visit_eval.h
+ * @file addons/script/eval/visit_eval.h
  * @brief Script evaluation visitor.
  */
 
