@@ -784,6 +784,14 @@ static int flecs_expr_function_visit_eval(
 
     ecs_assert(out->value.ptr != NULL, ECS_INTERNAL_ERROR, NULL);
 
+#ifdef FLECS_SCRIPT_ASYNC
+    if (calldata->async_callback) {
+        flecs_expr_visit_error(ctx->script, node,
+            "async function '%s' requires await", node->function_name);
+        goto error;
+    }
+#endif
+
     ecs_value_t *argv = NULL;
     int32_t argc = ecs_vec_count(&node->args->elements);
     if (argc) {
@@ -842,6 +850,14 @@ static int flecs_expr_method_visit_eval(
 
         ecs_assert(expr->value.ptr != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(out->value.ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+#ifdef FLECS_SCRIPT_ASYNC
+        if (calldata->async_callback) {
+            flecs_expr_visit_error(ctx->script, node,
+                "async method '%s' requires await", node->function_name);
+            goto error;
+        }
+#endif
 
         int32_t argc = ecs_vec_count(&node->args->elements);
         ecs_value_t *argv = ecs_os_alloca_n(ecs_value_t, argc + 1);
@@ -1095,8 +1111,6 @@ static int flecs_expr_new_visit_eval(
     ecs_expr_value_t *out)
 {
     ecs_script_eval_visitor_t *v = ctx->desc ? ctx->desc->script_visitor : NULL;
-    ecs_script_eval_visitor_t temp_v = {0};
-    ecs_script_eval_desc_t desc = {0};
 
     if (v && v->template) {
         *(ecs_entity_t*)out->value.ptr = 0;
@@ -1104,31 +1118,40 @@ static int flecs_expr_new_visit_eval(
         return 0;
     }
 
-    if (!v) {
-        /* Safe const cast, script won't modify variables since it only contains 
-         * an entity statement. */
-        desc.vars = ctx->desc ? 
-            ECS_CONST_CAST(ecs_script_vars_t*, ctx->desc->vars) : NULL;
-        flecs_script_eval_visit_init(
-            (const ecs_script_impl_t*)ctx->script, &temp_v, &desc);
-        v = &temp_v;
-    }
-
-    ecs_script_visit_push(v, (ecs_script_node_t*)node->entity);
-
-    if (flecs_script_eval_node(&v->base, (ecs_script_node_t*)node->entity)) {
+    ecs_entity_t result = 0;
+    if (flecs_script_eval_entity(v, ctx->script,
+        ctx->desc ? ctx->desc->vars : NULL, node->entity, &result))
+    {
         return -1;
     }
 
-    ecs_script_visit_pop(v, (ecs_script_node_t*)node->entity);
-
-    *(ecs_entity_t*)out->value.ptr = node->entity->eval;
+    *(ecs_entity_t*)out->value.ptr = result;
     out->value.type = ecs_id(ecs_entity_t);
 
-    if (v == &temp_v) {
-        flecs_script_eval_visit_fini(v, &desc);
+    return 0;
+}
+
+static int flecs_expr_script_visit_eval(
+    ecs_script_eval_ctx_t *ctx,
+    ecs_expr_script_t *node,
+    ecs_expr_value_t *out)
+{
+    ecs_script_eval_visitor_t *v = ctx->desc ? ctx->desc->script_visitor : NULL;
+    if (v && v->template) {
+        *(ecs_entity_t*)out->value.ptr = 0;
+        out->value.type = ecs_id(ecs_entity_t);
+        return 0;
     }
 
+    ecs_entity_t e = ecs_new(ctx->world);
+    EcsScript *script = ecs_ensure(ctx->world, e, EcsScript);
+    script->code = ecs_os_strdup(node->script->code);
+    script->script = node->script;
+    flecs_script_impl(node->script)->refcount ++;
+    ecs_modified(ctx->world, e, EcsScript);
+
+    *(ecs_entity_t*)out->value.ptr = e;
+    out->value.type = ecs_id(ecs_entity_t);
     return 0;
 }
 
@@ -1295,6 +1318,13 @@ static int flecs_expr_visit_eval_priv(
     case EcsExprNew:
         if (flecs_expr_new_visit_eval(
             ctx, (ecs_expr_new_t*)node, out)) 
+        {
+            goto error;
+        }
+        break;
+    case EcsExprScript:
+        if (flecs_expr_script_visit_eval(
+            ctx, (ecs_expr_script_t*)node, out))
         {
             goto error;
         }

@@ -259,6 +259,9 @@
 #ifdef FLECS_NO_SCRIPT_MATH
 #undef FLECS_SCRIPT_MATH
 #endif
+#ifdef FLECS_NO_SCRIPT_ASYNC
+#undef FLECS_SCRIPT_ASYNC
+#endif
 #ifdef FLECS_NO_SCRIPT_PLATFORM
 #undef FLECS_SCRIPT_PLATFORM
 #endif
@@ -314,7 +317,8 @@
 /* Resolve addon dependencies before addon-dependent API declarations. The
  * order of these blocks follows the addon dependency graph, from addons with
  * the most dependencies to addons with the least dependencies. */
-#if defined(FLECS_SCRIPT_MATH) || defined(FLECS_SCRIPT_PLATFORM)
+#if defined(FLECS_SCRIPT_ASYNC) || defined(FLECS_SCRIPT_MATH) || \
+    defined(FLECS_SCRIPT_PLATFORM)
 #endif
 
 #if defined(FLECS_ALERTS) || defined(FLECS_APP) || defined(FLECS_TIMER)

@@ -35,6 +35,7 @@
                 "FLECS_PARSER",
                 "FLECS_QUERY_DSL",
                 "FLECS_SCRIPT",
+                "FLECS_SCRIPT_ASYNC",
                 "FLECS_SCRIPT_MATH",
                 "FLECS_SCRIPT_PLATFORM",
                 "FLECS_SYSTEM",
@@ -60,6 +61,14 @@
     "lang.c": {
         "${os linux}": {
             "lib": ["rt", "pthread", "m", "dl"],
+            "${cfg debug}": {
+                "export-symbols": true
+            },
+            "${cfg sanitize}": {
+                "export-symbols": true
+            }
+        },
+        "${os darwin}": {
             "${cfg debug}": {
                 "export-symbols": true
             },

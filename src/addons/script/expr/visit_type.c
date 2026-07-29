@@ -305,6 +305,7 @@ static bool flecs_expr_oper_valid_for_type(
     case EcsTokKeywordConst:
     case EcsTokKeywordInclude:
     case EcsTokKeywordFn:
+    case EcsTokKeywordAwait:
     case EcsTokArrow:
     case EcsTokEnd:
     default:
@@ -455,6 +456,7 @@ static int flecs_expr_type_for_operator(
     case EcsTokKeywordConst:
     case EcsTokKeywordInclude:
     case EcsTokKeywordFn:
+    case EcsTokKeywordAwait:
     case EcsTokArrow:
     case EcsTokEnd:
     default:
@@ -1993,6 +1995,10 @@ static int flecs_expr_function_visit_type(
         node->node.type = func_data->return_type;
         node->calldata.function = func;
         node->calldata.is.callback = func_data->callback;
+#ifdef FLECS_SCRIPT_ASYNC
+        node->calldata.async_callback = func_data->async_callback;
+        node->calldata.async_cancel = func_data->async_cancel;
+#endif
         node->calldata.ctx = func_data->ctx;
         params = &func_data->params;
     }
@@ -2020,6 +2026,10 @@ try_function:
         node->node.type = func_data->return_type;
         node->calldata.function = func;
         node->calldata.is.callback = func_data->callback;
+#ifdef FLECS_SCRIPT_ASYNC
+        node->calldata.async_callback = func_data->async_callback;
+        node->calldata.async_cancel = func_data->async_cancel;
+#endif
         node->calldata.ctx = func_data->ctx;
         node->calldata.vector_elem_count = 0;
         params = &func_data->params;
@@ -2553,6 +2563,13 @@ static int flecs_expr_new_visit_type(
     return 0;
 }
 
+static int flecs_expr_script_visit_type(
+    ecs_expr_script_t *node)
+{
+    node->node.type = ecs_id(ecs_entity_t);
+    return 0;
+}
+
 static int flecs_expr_visit_type_priv(
     ecs_script_t *script,
     ecs_expr_node_t *node,
@@ -2652,6 +2669,11 @@ static int flecs_expr_visit_type_priv(
         if (flecs_expr_new_visit_type(
             script, (ecs_expr_new_t*)node, cur, desc)) 
         {
+            goto error;
+        }
+        break;
+    case EcsExprScript:
+        if (flecs_expr_script_visit_type((ecs_expr_script_t*)node)) {
             goto error;
         }
         break;

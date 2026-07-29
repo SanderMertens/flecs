@@ -64,20 +64,6 @@ int ecs_script_visit_scope_(
 #define ecs_script_visit_scope(visitor, node) \
     ecs_script_visit_scope_((ecs_script_visit_t*)visitor, node)
 
-void ecs_script_visit_push_(
-    ecs_script_visit_t *v,
-    ecs_script_node_t *node);
-
-#define ecs_script_visit_push(visitor, node) \
-    ecs_script_visit_push_((ecs_script_visit_t*)visitor, node)
-
-void ecs_script_visit_pop_(
-    ecs_script_visit_t *v,
-    ecs_script_node_t *node);
-
-#define ecs_script_visit_pop(visitor, node) \
-    ecs_script_visit_pop_((ecs_script_visit_t*)visitor, node)
-
 ecs_script_node_t* ecs_script_parent_node_(
     ecs_script_visit_t *v);
 

@@ -109,6 +109,7 @@ typedef struct EcsScript {
 typedef struct ecs_function_ctx_t {
     ecs_world_t *world;       /**< The world. */
     ecs_entity_t function;    /**< The function entity. */
+    ecs_entity_t entity;      /**< "this" entity (for methods and async functions). */
     void *ctx;                /**< User context. */
 } ecs_function_ctx_t;
 
@@ -133,6 +134,23 @@ typedef struct ecs_script_parameter_t {
     ecs_entity_t type;      /**< Parameter type. */
 } ecs_script_parameter_t;
 
+/** Used with ecs_script_parse() and ecs_script_eval(). */
+typedef struct ecs_script_eval_desc_t {
+    ecs_script_vars_t *vars;       /**< Variables used by script. */
+    ecs_script_runtime_t *runtime; /**< Reusable runtime (optional). */
+} ecs_script_eval_desc_t;
+
+/** Used to capture error output from script evaluation. */
+typedef struct ecs_script_eval_result_t {
+    char *error;       /**< Error message, or NULL if no error. Must be freed by the application. */
+    int32_t line;      /**< Line number (1-based) of first error, or 0 if not available. */
+    int32_t column;    /**< Column number (1-based) of first error, or 0 if not available. */
+} ecs_script_eval_result_t;
+
+#ifdef FLECS_SCRIPT_ASYNC
+#include "script_async.h"
+#endif
+
 /** Const component.
  * This component describes a const variable that can be used from scripts.
  */
@@ -145,6 +163,10 @@ struct ecs_script_function_t {
     ecs_entity_t return_type;
     ecs_vec_t params; /* vec<ecs_script_parameter_t> */
     ecs_function_callback_t callback;
+#ifdef FLECS_SCRIPT_ASYNC
+    ecs_async_function_callback_t async_callback;
+    ecs_async_function_cancel_t async_cancel;
+#endif
     ecs_vector_function_callback_t vector_callbacks[FLECS_SCRIPT_VECTOR_FUNCTION_COUNT];
     void *ctx;
     void *binding_ctx;
@@ -164,19 +186,6 @@ typedef struct ecs_script_function_t EcsScriptFunction;
 typedef struct ecs_script_function_t EcsScriptMethod;
 
 /* Parsing and running scripts */
-
-/** Used with ecs_script_parse() and ecs_script_eval(). */
-typedef struct ecs_script_eval_desc_t {
-    ecs_script_vars_t *vars;       /**< Variables used by script. */
-    ecs_script_runtime_t *runtime; /**< Reusable runtime (optional). */
-} ecs_script_eval_desc_t;
-
-/** Used to capture error output from script evaluation. */
-typedef struct ecs_script_eval_result_t {
-    char *error;       /**< Error message, or NULL if no error. Must be freed by the application. */
-    int32_t line;      /**< Line number (1-based) of first error, or 0 if not available. */
-    int32_t column;    /**< Column number (1-based) of first error, or 0 if not available. */
-} ecs_script_eval_result_t;
 
 /** Parse script.
  * This operation parses a script and returns a script object upon success. To
@@ -874,7 +883,7 @@ typedef struct ecs_function_desc_t {
     void *ctx;
 } ecs_function_desc_t;
 
-/** Create new function. 
+/** Create new function.
  * This operation creates a new function that can be called from a script.
  * 
  * @param world The world.

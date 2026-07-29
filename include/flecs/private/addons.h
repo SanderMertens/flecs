@@ -143,6 +143,12 @@
 #endif
 #endif
 
+#ifdef FLECS_SCRIPT_ASYNC
+#ifdef FLECS_NO_SCRIPT_ASYNC
+#error "FLECS_NO_SCRIPT_ASYNC failed: SCRIPT_ASYNC is required by other addons"
+#endif
+#endif
+
 #ifdef FLECS_SCRIPT
 #ifdef FLECS_NO_SCRIPT
 #error "FLECS_NO_SCRIPT failed: SCRIPT is required by other addons"

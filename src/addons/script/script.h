@@ -63,6 +63,7 @@ FLECS_API extern ECS_COMPONENT_DECLARE(EcsScriptVisitor);
 
 struct ecs_script_impl_t {
     ecs_script_t pub;
+    ecs_entity_t entity; /* Set if script is managed (has EcsScript) */
     ecs_allocator_t allocator;
     ecs_script_scope_t *root;
     ecs_expr_node_t *expr; /* Only set if script is just an expression */
@@ -82,6 +83,10 @@ typedef struct ecs_function_calldata_t {
         ecs_vector_function_callback_t vector_callback;
     } is;
     int32_t vector_elem_count;
+#ifdef FLECS_SCRIPT_ASYNC
+    ecs_async_function_callback_t async_callback;
+    ecs_async_function_cancel_t async_cancel;
+#endif
     void *ctx;
 } ecs_function_calldata_t;
 
@@ -89,6 +94,7 @@ typedef struct ecs_function_calldata_t {
 #include "expr/expr.h"
 #include "visit.h"
 #include "visit_eval.h"
+#include "async.h"
 #include "template.h"
 
 struct ecs_script_runtime_t {
@@ -160,6 +166,13 @@ const char* flecs_script_stmt(
     ecs_parser_t *parser,
     const char *pos);
 
+ecs_script_t* flecs_script_parse_nested(
+    ecs_world_t *world,
+    const char *name,
+    const char *using_code,
+    const char *code,
+    const char **next);
+
 int ecs_script_ast_node_to_buf(
     const ecs_script_t *script,
     ecs_script_node_t *node,
@@ -173,6 +186,7 @@ void ecs_script_runtime_clear(
 int flecs_script_apply_annot(
     ecs_script_eval_visitor_t *v,
     ecs_script_entity_t *node,
+    ecs_entity_t entity,
     ecs_script_annot_t *annot);
 
 /* Type visitors (implement struct/enum/bitmask initializer syntax) */

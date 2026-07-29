@@ -247,6 +247,7 @@
 #define FLECS_PARSER         /**< Utilities for script and query DSL parsers. */
 #define FLECS_QUERY_DSL      /**< Flecs query DSL parser. */
 #define FLECS_SCRIPT         /**< Flecs entity notation language. */
+#define FLECS_SCRIPT_ASYNC   /**< Async/await support for Flecs script. */
 // #define FLECS_SCRIPT_MATH /**< Math functions for Flecs script (may require linking with libm). */
 // #define FLECS_SCRIPT_PLATFORM /**< Platform constants for Flecs script. */
 #define FLECS_SYSTEM         /**< System support. */

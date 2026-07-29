@@ -173,6 +173,24 @@ static int flecs_script_stmt_free(
     case EcsAstInclude:
         flecs_free_t(a, ecs_script_include_t, node);
         break;
+    case EcsAstAwait: {
+        ecs_script_await_t *await = (ecs_script_await_t*)node;
+        flecs_expr_visit_free(&v->script->pub, await->expr);
+        flecs_free_t(a, ecs_script_await_t, node);
+        break;
+    }
+    case EcsAstTry: {
+        ecs_script_try_t *try_stmt = (ecs_script_try_t*)node;
+        flecs_script_scope_free(v, try_stmt->try_scope);
+        int32_t i, count = ecs_vec_count(&try_stmt->catches);
+        ecs_script_catch_t *catches = ecs_vec_first(&try_stmt->catches);
+        for (i = 0; i < count; i ++) {
+            flecs_script_scope_free(v, catches[i].scope);
+        }
+        ecs_vec_fini_t(a, &try_stmt->catches, ecs_script_catch_t);
+        flecs_free_t(a, ecs_script_try_t, node);
+        break;
+    }
     case EcsAstFunction: {
         ecs_script_function_node_t *fn = (ecs_script_function_node_t*)node;
         flecs_script_scope_free(v, fn->body);

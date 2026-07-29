@@ -121,6 +121,8 @@ static const char* flecs_script_node_to_str(
     case EcsAstFor:                return "for";
     case EcsAstInclude:            return "include";
     case EcsAstFunction:           return "fn";
+    case EcsAstAwait:              return "await";
+    case EcsAstTry:                return "try";
     }
     return "???";
 }
@@ -233,6 +235,9 @@ static void flecs_script_var_node_to_str(
     } else {
         flecs_scriptbuf_append(v, "%s = ", 
             node->name);
+    }
+    if (node->is_await) {
+        flecs_scriptbuf_appendstr(v, "await ");
     }
     flecs_expr_to_str(v, node->expr);
     flecs_scriptbuf_appendstr(v, "\n");
@@ -404,6 +409,35 @@ static int flecs_script_stmt_to_str(
     case EcsAstInclude:
         flecs_script_include_to_str(v, (ecs_script_include_t*)node);
         break;
+    case EcsAstAwait: {
+        ecs_script_await_t *await = (ecs_script_await_t*)node;
+        flecs_scriptbuf_node(v, node);
+        flecs_expr_to_str(v, await->expr);
+        flecs_scriptbuf_appendstr(v, "\n");
+        break;
+    }
+    case EcsAstTry: {
+        ecs_script_try_t *try_stmt = (ecs_script_try_t*)node;
+        flecs_scriptbuf_node(v, node);
+        flecs_scriptbuf_appendstr(v, "{\n");
+        v->depth ++;
+        flecs_script_scope_to_str(v, try_stmt->try_scope);
+        int32_t i, count = ecs_vec_count(&try_stmt->catches);
+        ecs_script_catch_t *catches = ecs_vec_first(&try_stmt->catches);
+        for (i = 0; i < count; i ++) {
+            flecs_script_color_to_str(v, ECS_CYAN);
+            if (catches[i].error) {
+                flecs_scriptbuf_append(v, "catch(%s): ", catches[i].error);
+            } else {
+                flecs_scriptbuf_appendstr(v, "catch: ");
+            }
+            flecs_script_color_to_str(v, ECS_NORMAL);
+            flecs_script_scope_to_str(v, catches[i].scope);
+        }
+        v->depth --;
+        flecs_scriptbuf_appendstr(v, "}\n");
+        break;
+    }
     case EcsAstFunction: {
         ecs_script_function_node_t *fn = (ecs_script_function_node_t*)node;
         flecs_scriptbuf_node(v, &fn->node);

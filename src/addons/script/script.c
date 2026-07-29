@@ -391,7 +391,9 @@ int ecs_script_update(
     flecs_script_runtime_error_reset(runtime);
 
     s->script = ecs_script_parse(world, name, code, NULL, &eval_result);
-    if (s->script == NULL) {
+    if (s->script != NULL) {
+        flecs_script_impl(s->script)->entity = e;
+    } else {
         s->error = eval_result.error;
         ecs_log_(-3, NULL, 0, "%s: %s", name ? name : "script", s->error);
         result = -1;
@@ -660,6 +662,9 @@ void FlecsScriptImport(
 
     flecs_script_template_import(world);
     flecs_function_import(world);
+#ifdef FLECS_SCRIPT_ASYNC
+    flecs_script_async_import(world);
+#endif
 }
 
 #endif

@@ -28,7 +28,9 @@ typedef enum ecs_script_node_kind_t {
     EcsAstIf,
     EcsAstFor,
     EcsAstInclude,
-    EcsAstFunction
+    EcsAstFunction,
+    EcsAstAwait,
+    EcsAstTry
 } ecs_script_node_kind_t;
 
 typedef struct ecs_script_node_t {
@@ -76,7 +78,6 @@ typedef struct ecs_script_component_t {
     ecs_script_node_t node;
     ecs_script_id_t id;
     ecs_expr_node_t *expr;
-    ecs_value_t eval;
     bool is_collection;
 } ecs_script_component_t;
 
@@ -95,11 +96,6 @@ struct ecs_script_entity_t {
     bool non_fragmenting_parent;
     ecs_script_scope_t *scope;
     ecs_expr_node_t *name_expr;
-
-    /* Populated during eval */
-    ecs_script_entity_t *parent;
-    ecs_entity_t eval;
-    ecs_entity_t eval_kind;
 };
 
 typedef struct ecs_script_with_t {
@@ -146,7 +142,24 @@ typedef struct ecs_script_var_node_t {
     const char *name;
     const char *type;
     ecs_expr_node_t *expr;
+    bool is_await;
 } ecs_script_var_node_t;
+
+typedef struct ecs_script_await_t {
+    ecs_script_node_t node;
+    ecs_expr_node_t *expr;
+} ecs_script_await_t;
+
+typedef struct ecs_script_catch_t {
+    const char *error; /* Error entity to catch. NULL for catch-all clause. */
+    ecs_script_scope_t *scope;
+} ecs_script_catch_t;
+
+typedef struct ecs_script_try_t {
+    ecs_script_node_t node;
+    ecs_script_scope_t *try_scope;
+    ecs_vec_t catches; /* vec<ecs_script_catch_t> */
+} ecs_script_try_t;
 
 typedef struct ecs_script_if_t {
     ecs_script_node_t node;
@@ -182,7 +195,6 @@ typedef struct ecs_script_function_node_t {
     ecs_vec_t params;
     ecs_script_scope_t *body;
     ecs_expr_node_t *return_expr;
-    ecs_entity_t eval;
 } ecs_script_function_node_t;
 
 #define ecs_script_node(kind, node)\
@@ -223,6 +235,16 @@ ecs_script_annot_t* flecs_script_insert_annot(
 ecs_script_var_node_t* flecs_script_insert_var(
     ecs_parser_t *parser,
     const char *name);
+
+ecs_script_await_t* flecs_script_insert_await(
+    ecs_parser_t *parser);
+
+ecs_script_try_t* flecs_script_insert_try(
+    ecs_parser_t *parser);
+
+ecs_script_catch_t* flecs_script_try_add_catch(
+    ecs_parser_t *parser,
+    ecs_script_try_t *stmt);
 
 ecs_script_tag_t* flecs_script_insert_tag(
     ecs_parser_t *parser,
