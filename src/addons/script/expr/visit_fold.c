@@ -717,6 +717,16 @@ int flecs_expr_visit_fold(
             goto error;
         }
         break;
+    case EcsExprRange: {
+        ecs_expr_range_t *range = (ecs_expr_range_t*)node;
+        if (flecs_expr_visit_fold(script, &range->from, desc)) {
+            goto error;
+        }
+        if (flecs_expr_visit_fold(script, &range->to, desc)) {
+            goto error;
+        }
+        break;
+    }
     case EcsExprNew:
     case EcsExprScript:
         break;

@@ -234,6 +234,26 @@ static int flecs_expr_element_to_str(
     return 0;
 }
 
+static int flecs_expr_range_to_str(
+    ecs_expr_str_visitor_t *v,
+    const ecs_expr_range_t *node)
+{
+    ecs_strbuf_appendlit(v->buf, "[");
+
+    if (flecs_expr_node_to_str(v, node->from)) {
+        return -1;
+    }
+
+    ecs_strbuf_appendlit(v->buf, " .. ");
+
+    if (flecs_expr_node_to_str(v, node->to)) {
+        return -1;
+    }
+
+    ecs_strbuf_appendlit(v->buf, "]");
+    return 0;
+}
+
 static int flecs_expr_match_to_str(
     ecs_expr_str_visitor_t *v,
     const ecs_expr_match_t *node)
@@ -428,8 +448,15 @@ static int flecs_expr_node_to_str(
         }
         break;
     case EcsExprMatch:
-        if (flecs_expr_match_to_str(v, 
-            (const ecs_expr_match_t*)node)) 
+        if (flecs_expr_match_to_str(v,
+            (const ecs_expr_match_t*)node))
+        {
+            goto error;
+        }
+        break;
+    case EcsExprRange:
+        if (flecs_expr_range_to_str(v,
+            (const ecs_expr_range_t*)node))
         {
             goto error;
         }

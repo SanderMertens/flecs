@@ -1966,3 +1966,855 @@ void Collection_missing_in_keyword(void) {
 
     ecs_fini(world);
 }
+
+static ecs_value_t collection_get_var(
+    ecs_world_t *world,
+    const char *name,
+    const char *type_name,
+    ecs_entity_t elem_type,
+    int32_t count)
+{
+    ecs_entity_t var = ecs_lookup(world, name);
+    test_assert(var != 0);
+
+    ecs_value_t value = ecs_const_var_get(world, var);
+    test_assert(value.type != 0);
+    test_assert(value.ptr != NULL);
+
+    if (type_name) {
+        test_str(ecs_get_name(world, value.type), type_name);
+        ecs_entity_t typecache = ecs_lookup(world, "flecs.script.typecache");
+        test_assert(typecache != 0);
+        test_assert(ecs_get_parent(world, value.type) == typecache);
+    }
+
+    const EcsVector *vt = ecs_get(world, value.type, EcsVector);
+    test_assert(vt != NULL);
+    test_assert(vt->type == elem_type);
+
+    test_int(ecs_vec_count((ecs_vec_t*)value.ptr), count);
+
+    return value;
+}
+
+void Collection_vector_literal_bool(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "export const v = [true, false]";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_value_t value = collection_get_var(
+        world, "v", "vector<bool>", ecs_id(ecs_bool_t), 2);
+
+    bool *elems = ecs_vec_first(value.ptr);
+    test_bool(elems[0], true);
+    test_bool(elems[1], false);
+
+    ecs_fini(world);
+}
+
+void Collection_vector_literal_char(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "export const v = ['a', 'b']";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_value_t value = collection_get_var(
+        world, "v", "vector<char>", ecs_id(ecs_char_t), 2);
+
+    char *elems = ecs_vec_first(value.ptr);
+    test_int(elems[0], 'a');
+    test_int(elems[1], 'b');
+
+    ecs_fini(world);
+}
+
+void Collection_vector_literal_u8(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const a: u8 = 10"
+    LINE "const b: u8 = 20"
+    LINE "export const v = [a, b]";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_value_t value = collection_get_var(
+        world, "v", "vector<u8>", ecs_id(ecs_u8_t), 2);
+
+    uint8_t *elems = ecs_vec_first(value.ptr);
+    test_int(elems[0], 10);
+    test_int(elems[1], 20);
+
+    ecs_fini(world);
+}
+
+void Collection_vector_literal_u16(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const a: u16 = 10"
+    LINE "const b: u16 = 20"
+    LINE "export const v = [a, b]";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_value_t value = collection_get_var(
+        world, "v", "vector<u16>", ecs_id(ecs_u16_t), 2);
+
+    uint16_t *elems = ecs_vec_first(value.ptr);
+    test_int(elems[0], 10);
+    test_int(elems[1], 20);
+
+    ecs_fini(world);
+}
+
+void Collection_vector_literal_u32(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const a: u32 = 10"
+    LINE "const b: u32 = 20"
+    LINE "export const v = [a, b]";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_value_t value = collection_get_var(
+        world, "v", "vector<u32>", ecs_id(ecs_u32_t), 2);
+
+    uint32_t *elems = ecs_vec_first(value.ptr);
+    test_int(elems[0], 10);
+    test_int(elems[1], 20);
+
+    ecs_fini(world);
+}
+
+void Collection_vector_literal_u64(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const a: u64 = 10"
+    LINE "const b: u64 = 20"
+    LINE "export const v = [a, b]";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_value_t value = collection_get_var(
+        world, "v", "vector<u64>", ecs_id(ecs_u64_t), 2);
+
+    uint64_t *elems = ecs_vec_first(value.ptr);
+    test_uint(elems[0], 10);
+    test_uint(elems[1], 20);
+
+    ecs_fini(world);
+}
+
+void Collection_vector_literal_uptr(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const a: uptr = 10"
+    LINE "const b: uptr = 20"
+    LINE "export const v = [a, b]";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_value_t value = collection_get_var(
+        world, "v", "vector<uptr>", ecs_id(ecs_uptr_t), 2);
+
+    uintptr_t *elems = ecs_vec_first(value.ptr);
+    test_uint(elems[0], 10);
+    test_uint(elems[1], 20);
+
+    ecs_fini(world);
+}
+
+void Collection_vector_literal_i8(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const a: i8 = 10"
+    LINE "const b: i8 = 20"
+    LINE "export const v = [a, b]";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_value_t value = collection_get_var(
+        world, "v", "vector<i8>", ecs_id(ecs_i8_t), 2);
+
+    int8_t *elems = ecs_vec_first(value.ptr);
+    test_int(elems[0], 10);
+    test_int(elems[1], 20);
+
+    ecs_fini(world);
+}
+
+void Collection_vector_literal_i16(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const a: i16 = 10"
+    LINE "const b: i16 = 20"
+    LINE "export const v = [a, b]";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_value_t value = collection_get_var(
+        world, "v", "vector<i16>", ecs_id(ecs_i16_t), 2);
+
+    int16_t *elems = ecs_vec_first(value.ptr);
+    test_int(elems[0], 10);
+    test_int(elems[1], 20);
+
+    ecs_fini(world);
+}
+
+void Collection_vector_literal_i32(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const a: i32 = 10"
+    LINE "const b: i32 = 20"
+    LINE "export const v = [a, b]";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_value_t value = collection_get_var(
+        world, "v", "vector<i32>", ecs_id(ecs_i32_t), 2);
+
+    int32_t *elems = ecs_vec_first(value.ptr);
+    test_int(elems[0], 10);
+    test_int(elems[1], 20);
+
+    ecs_fini(world);
+}
+
+void Collection_vector_literal_i64(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const a: i64 = 10"
+    LINE "const b: i64 = 20"
+    LINE "export const v = [a, b]";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_value_t value = collection_get_var(
+        world, "v", "vector<i64>", ecs_id(ecs_i64_t), 2);
+
+    int64_t *elems = ecs_vec_first(value.ptr);
+    test_int(elems[0], 10);
+    test_int(elems[1], 20);
+
+    ecs_fini(world);
+}
+
+void Collection_vector_literal_iptr(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const a: iptr = 10"
+    LINE "const b: iptr = 20"
+    LINE "export const v = [a, b]";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_value_t value = collection_get_var(
+        world, "v", "vector<iptr>", ecs_id(ecs_iptr_t), 2);
+
+    intptr_t *elems = ecs_vec_first(value.ptr);
+    test_int(elems[0], 10);
+    test_int(elems[1], 20);
+
+    ecs_fini(world);
+}
+
+void Collection_vector_literal_f32(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const a: f32 = 10.5"
+    LINE "const b: f32 = 20.5"
+    LINE "export const v = [a, b]";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_value_t value = collection_get_var(
+        world, "v", "vector<f32>", ecs_id(ecs_f32_t), 2);
+
+    float *elems = ecs_vec_first(value.ptr);
+    test_flt(elems[0], 10.5);
+    test_flt(elems[1], 20.5);
+
+    ecs_fini(world);
+}
+
+void Collection_vector_literal_f64(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "export const v = [10.5, 20.5]";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_value_t value = collection_get_var(
+        world, "v", "vector<f64>", ecs_id(ecs_f64_t), 2);
+
+    double *elems = ecs_vec_first(value.ptr);
+    test_flt(elems[0], 10.5);
+    test_flt(elems[1], 20.5);
+
+    ecs_fini(world);
+}
+
+void Collection_vector_literal_int(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "export const v = [10, 20, 30]";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_value_t value = collection_get_var(
+        world, "v", "vector<i64>", ecs_id(ecs_i64_t), 3);
+
+    int64_t *elems = ecs_vec_first(value.ptr);
+    test_int(elems[0], 10);
+    test_int(elems[1], 20);
+    test_int(elems[2], 30);
+
+    ecs_fini(world);
+}
+
+void Collection_vector_literal_string(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "export const v = [\"foo\", \"bar\"]";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_value_t value = collection_get_var(
+        world, "v", "vector<string>", ecs_id(ecs_string_t), 2);
+
+    char **elems = ecs_vec_first(value.ptr);
+    test_str(elems[0], "foo");
+    test_str(elems[1], "bar");
+
+    ecs_fini(world);
+}
+
+void Collection_vector_literal_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "e1 {}"
+    LINE "e2 {}"
+    LINE "export const v = [e1, e2]";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_value_t value = collection_get_var(
+        world, "v", "vector<entity>", ecs_id(ecs_entity_t), 2);
+
+    ecs_entity_t *elems = ecs_vec_first(value.ptr);
+    test_uint(elems[0], ecs_lookup(world, "e1"));
+    test_uint(elems[1], ecs_lookup(world, "e2"));
+
+    ecs_fini(world);
+}
+
+void Collection_vector_literal_int_float(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "export const v = [10, 10.5, 20]";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_value_t value = collection_get_var(
+        world, "v", "vector<f64>", ecs_id(ecs_f64_t), 3);
+
+    double *elems = ecs_vec_first(value.ptr);
+    test_flt(elems[0], 10);
+    test_flt(elems[1], 10.5);
+    test_flt(elems[2], 20);
+
+    ecs_fini(world);
+}
+
+void Collection_vector_literal_float_int(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "export const v = [10.5, 20]";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_value_t value = collection_get_var(
+        world, "v", "vector<f64>", ecs_id(ecs_f64_t), 2);
+
+    double *elems = ecs_vec_first(value.ptr);
+    test_flt(elems[0], 10.5);
+    test_flt(elems[1], 20);
+
+    ecs_fini(world);
+}
+
+void Collection_vector_literal_mixed_int(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const a: i8 = 10"
+    LINE "const b: i64 = 20"
+    LINE "export const v = [a, b]";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_value_t value = collection_get_var(
+        world, "v", "vector<i64>", ecs_id(ecs_i64_t), 2);
+
+    int64_t *elems = ecs_vec_first(value.ptr);
+    test_int(elems[0], 10);
+    test_int(elems[1], 20);
+
+    ecs_fini(world);
+}
+
+void Collection_vector_literal_int_string(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "export const v = [10, \"foo\"]";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Collection_vector_literal_string_int(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "export const v = [\"foo\", 10]";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Collection_vector_literal_float_string(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "export const v = [10.5, \"foo\"]";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Collection_vector_literal_string_float(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "export const v = [\"foo\", 10.5]";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Collection_vector_literal_entity_string(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "e1 {}"
+    LINE "export const v = [e1, \"foo\"]";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Collection_vector_literal_string_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "e1 {}"
+    LINE "export const v = [\"foo\", e1]";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Collection_vector_literal_bool_int(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "export const v = [true, 10]";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Collection_vector_literal_nested(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "export const v = [[1, 2], [3, 4]]";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t var = ecs_lookup(world, "v");
+    test_assert(var != 0);
+
+    ecs_value_t value = ecs_const_var_get(world, var);
+    test_assert(value.type != 0);
+    test_assert(value.ptr != NULL);
+    test_str(ecs_get_name(world, value.type), "vector<vector<i64>>");
+
+    const EcsVector *vt = ecs_get(world, value.type, EcsVector);
+    test_assert(vt != NULL);
+    test_str(ecs_get_name(world, vt->type), "vector<i64>");
+
+    ecs_vec_t *vec = value.ptr;
+    test_int(ecs_vec_count(vec), 2);
+
+    ecs_vec_t *elems = ecs_vec_first(vec);
+    test_int(ecs_vec_count(&elems[0]), 2);
+    test_int(ecs_vec_count(&elems[1]), 2);
+
+    int64_t *e0 = ecs_vec_first(&elems[0]);
+    int64_t *e1 = ecs_vec_first(&elems[1]);
+    test_int(e0[0], 1);
+    test_int(e0[1], 2);
+    test_int(e1[0], 3);
+    test_int(e1[1], 4);
+
+    ecs_fini(world);
+}
+
+void Collection_vector_literal_iterate(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const v = [10, 20, 30]"
+    LINE "for elem in v {"
+    LINE "  \"e_{elem}\" {}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    test_assert(ecs_lookup(world, "e_10") != 0);
+    test_assert(ecs_lookup(world, "e_20") != 0);
+    test_assert(ecs_lookup(world, "e_30") != 0);
+
+    ecs_fini(world);
+}
+
+void Collection_vector_literal_typecache_name(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "export const v = [10, 20]";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t var = ecs_lookup(world, "v");
+    test_assert(var != 0);
+
+    ecs_value_t value = ecs_const_var_get(world, var);
+    test_assert(value.type != 0);
+
+    ecs_entity_t typecache = ecs_lookup(world, "flecs.script.typecache");
+    test_assert(typecache != 0);
+    test_assert(ecs_has_id(world, typecache, EcsModule));
+
+    ecs_entity_t vector_type = ecs_lookup(
+        world, "flecs.script.typecache.vector<i64>");
+    test_assert(vector_type != 0);
+    test_assert(vector_type == value.type);
+    test_assert(ecs_get_parent(world, vector_type) == typecache);
+
+    ecs_fini(world);
+}
+
+void Collection_vector_literal_typecache_reuse(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "export const a = [10, 20]"
+    LINE "export const b = [30, 40, 50]";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_value_t a = ecs_const_var_get(world, ecs_lookup(world, "a"));
+    ecs_value_t b = ecs_const_var_get(world, ecs_lookup(world, "b"));
+
+    test_assert(a.type != 0);
+    test_assert(a.type == b.type);
+
+    ecs_fini(world);
+}
+
+void Collection_range_literal(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "export const v = [1 .. 10]";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_value_t value = collection_get_var(
+        world, "v", "vector<i32>", ecs_id(ecs_i32_t), 9);
+
+    int32_t i, *elems = ecs_vec_first(value.ptr);
+    for (i = 0; i < 9; i ++) {
+        test_int(elems[i], i + 1);
+    }
+
+    ecs_fini(world);
+}
+
+void Collection_range_literal_no_spaces(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "export const v = [1..4]";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_value_t value = collection_get_var(
+        world, "v", "vector<i32>", ecs_id(ecs_i32_t), 3);
+
+    int32_t *elems = ecs_vec_first(value.ptr);
+    test_int(elems[0], 1);
+    test_int(elems[1], 2);
+    test_int(elems[2], 3);
+
+    ecs_fini(world);
+}
+
+void Collection_range_literal_empty(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "export const v = [5 .. 5]";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    collection_get_var(world, "v", "vector<i32>", ecs_id(ecs_i32_t), 0);
+
+    ecs_fini(world);
+}
+
+void Collection_range_literal_reverse_empty(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "export const v = [5 .. 1]";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    collection_get_var(world, "v", "vector<i32>", ecs_id(ecs_i32_t), 0);
+
+    ecs_fini(world);
+}
+
+void Collection_range_literal_negative(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "export const v = [-2 .. 2]";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_value_t value = collection_get_var(
+        world, "v", "vector<i32>", ecs_id(ecs_i32_t), 4);
+
+    int32_t *elems = ecs_vec_first(value.ptr);
+    test_int(elems[0], -2);
+    test_int(elems[1], -1);
+    test_int(elems[2], 0);
+    test_int(elems[3], 1);
+
+    ecs_fini(world);
+}
+
+void Collection_range_literal_w_vars(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const from = 1"
+    LINE "const to = 4"
+    LINE "export const v = [from .. to]";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_value_t value = collection_get_var(
+        world, "v", "vector<i32>", ecs_id(ecs_i32_t), 3);
+
+    int32_t *elems = ecs_vec_first(value.ptr);
+    test_int(elems[0], 1);
+    test_int(elems[1], 2);
+    test_int(elems[2], 3);
+
+    ecs_fini(world);
+}
+
+void Collection_range_literal_w_exprs(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "export const v = [1 + 1 .. 2 * 3]";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_value_t value = collection_get_var(
+        world, "v", "vector<i32>", ecs_id(ecs_i32_t), 4);
+
+    int32_t *elems = ecs_vec_first(value.ptr);
+    test_int(elems[0], 2);
+    test_int(elems[1], 3);
+    test_int(elems[2], 4);
+    test_int(elems[3], 5);
+
+    ecs_fini(world);
+}
+
+void Collection_range_literal_iterate(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(PositionI) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "PositionI" }),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "const r = [1 .. 4]"
+    LINE "for (i, v) in r {"
+    LINE "  \"e_{i}\" {"
+    LINE "    PositionI: {i, v}"
+    LINE "  }"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e_0 = ecs_lookup(world, "e_0");
+    ecs_entity_t e_1 = ecs_lookup(world, "e_1");
+    ecs_entity_t e_2 = ecs_lookup(world, "e_2");
+
+    test_assert(e_0 != 0);
+    test_assert(e_1 != 0);
+    test_assert(e_2 != 0);
+    test_assert(ecs_lookup(world, "e_3") == 0);
+
+    {
+        const PositionI *p = ecs_get(world, e_0, PositionI);
+        test_assert(p != NULL);
+        test_int(p->x, 0);
+        test_int(p->y, 1);
+    }
+
+    {
+        const PositionI *p = ecs_get(world, e_2, PositionI);
+        test_assert(p != NULL);
+        test_int(p->x, 2);
+        test_int(p->y, 3);
+    }
+
+    ecs_fini(world);
+}
+
+void Collection_range_literal_typed_vector(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t vec = ecs_vector(world, {
+        .entity = ecs_entity(world, { .name = "Vec" }),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    test_assert(vec != 0);
+
+    const char *expr =
+    HEAD "export const v: Vec = [1 .. 4]";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t var = ecs_lookup(world, "v");
+    test_assert(var != 0);
+
+    ecs_value_t value = ecs_const_var_get(world, var);
+    test_assert(value.type == vec);
+
+    ecs_vec_t *v = value.ptr;
+    test_int(ecs_vec_count(v), 3);
+
+    int32_t *elems = ecs_vec_first(v);
+    test_int(elems[0], 1);
+    test_int(elems[1], 2);
+    test_int(elems[2], 3);
+
+    ecs_fini(world);
+}
+
+void Collection_range_literal_typed_float_vector(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t vec = ecs_vector(world, {
+        .entity = ecs_entity(world, { .name = "Vec" }),
+        .type = ecs_id(ecs_f32_t)
+    });
+
+    test_assert(vec != 0);
+
+    const char *expr =
+    HEAD "export const v: Vec = [1 .. 4]";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t var = ecs_lookup(world, "v");
+    test_assert(var != 0);
+
+    ecs_value_t value = ecs_const_var_get(world, var);
+    test_assert(value.type == vec);
+
+    ecs_vec_t *v = value.ptr;
+    test_int(ecs_vec_count(v), 3);
+
+    float *elems = ecs_vec_first(v);
+    test_flt(elems[0], 1);
+    test_flt(elems[1], 2);
+    test_flt(elems[2], 3);
+
+    ecs_fini(world);
+}
+
+void Collection_range_literal_non_vector_type(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "export const v: i32 = [1 .. 4]";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+
+    ecs_fini(world);
+}

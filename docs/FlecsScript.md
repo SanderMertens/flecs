@@ -360,7 +360,7 @@ Initializers are values that are used to initialize composite and collection mem
 {x += 10, y *= 2}
 ```
 
-Initializers must always be assigned to an lvalue of a well defined type. This can either be a typed variable, component assignment, function parameter or in the case of nested initializers, an element of another initializer. For example, this is a valid usage of an initializer:
+Composite initializers must always be assigned to an lvalue of a well defined type. This can either be a typed variable, component assignment, function parameter or in the case of nested initializers, an element of another initializer. For example, this is a valid usage of an initializer:
 
 ```cpp
 const x: Position = {10, 20}
@@ -371,6 +371,25 @@ while this is an invalid usage of an initializer:
 ```cpp
 // Invalid, unknown type for initializer
 const x = {10, 20}
+```
+
+Collection initializers do not require a well defined type (see vector literals).
+
+### Vector literals
+When a collection initializer is not assigned to an lvalue of a well defined type, it evaluates to a vector. The element type of the vector is derived from the initializer elements, where the most expressive element type determines the vector type:
+
+```cpp
+const a = [10, 20, 30]        // vector<i64>
+const b = [10, 10.5, 20]      // vector<f64>
+const c = ["foo", "bar"]      // vector<string>
+```
+
+Element types that cannot be implicitly converted to each other, such as numbers and strings, cannot be mixed in the same vector literal.
+
+Ranges can also be assigned, in which case they materialize into a vector with the values in the range (the end of the range is exclusive):
+
+```cpp
+const v = [1 .. 5]            // vector<i32> [1, 2, 3, 4]
 ```
 
 When assigning variables to elements in a composite initializer, applications can use the following shorthand notation if the variable names are the same as the member name of the element:
