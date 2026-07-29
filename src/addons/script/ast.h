@@ -168,13 +168,15 @@ typedef struct ecs_script_if_t {
     ecs_expr_node_t *expr;
 } ecs_script_if_t;
 
-typedef struct ecs_script_for_range_t {
+typedef struct ecs_script_for_t {
     ecs_script_node_t node;
-    const char *loop_var;
+    const char *loop_vars[3];
+    int32_t loop_var_count;
     ecs_expr_node_t *from;
     ecs_expr_node_t *to;
+    ecs_expr_node_t *expr;
     ecs_script_scope_t *scope;
-} ecs_script_for_range_t;
+} ecs_script_for_t;
 
 typedef struct ecs_script_include_t {
     ecs_script_node_t node;
@@ -271,7 +273,7 @@ ecs_script_var_component_t* flecs_script_insert_var_component(
 ecs_script_if_t* flecs_script_insert_if(
     ecs_parser_t *parser);
 
-ecs_script_for_range_t* flecs_script_insert_for_range(
+ecs_script_for_t* flecs_script_insert_for(
     ecs_parser_t *parser);
 
 ecs_script_include_t* flecs_script_insert_include(
