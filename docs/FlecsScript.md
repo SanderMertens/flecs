@@ -1593,6 +1593,63 @@ for i in 0..10 {
 }
 ```
 
+Ranges can also be enclosed in brackets:
+
+```cpp
+for i in [0..10] {
+  // ...
+}
+```
+
+A range loop can be given a second loop variable, in which case the first
+variable is the zero-based iteration index and the second variable is the range
+value:
+
+```cpp
+for (index, value) in [5..10] {
+  // (0, 5), (1, 6), ... (4, 9)
+}
+```
+
+### Collection iteration
+For loops can also iterate the elements of arrays, vectors and maps:
+
+```cpp
+for elem in arrayExpr {
+  _ { Position: {elem, elem * 2} }
+}
+```
+
+Arrays and vectors can be iterated with an additional index variable, which
+contains the zero-based index of the current element:
+
+```cpp
+for (index, elem) in arrayExpr {
+  "e_{index}" { Position: {elem, elem * 2} }
+}
+```
+
+Maps can be iterated with up to three loop variables. With a single variable
+the loop iterates the map values. When two variables are specified, the first
+variable contains the key of the current element. A third variable can be added
+in the middle, which contains the zero-based iteration index:
+
+```cpp
+for elem in mapExpr {
+  _ { Position: {elem, elem * 2} }
+}
+
+for (key, elem) in mapExpr {
+  "e_{key}" { Position: {elem, elem * 2} }
+}
+
+for (key, index, elem) in mapExpr {
+  "e_{key}" { Position: {index, elem * 2} }
+}
+```
+
+Note that the iteration order of maps is undefined.
+
 ## Type definitions
 Scripts can define component types by using the type entities from the `flecs.meta` module (`struct`, `enum`, `bitmask`) as entity kind, followed by an initializer list that describes the type.
 

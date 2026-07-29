@@ -341,6 +341,65 @@ static const char* flecs_script_if_stmt(
     ParserEnd;
 }
 
+static const char* flecs_script_for_in(
+    ecs_parser_t *parser,
+    const char *pos,
+    ecs_script_for_t *stmt)
+{
+    ParserBegin;
+
+    LookAhead_1('[', {
+        pos = lookahead;
+
+        Expr('\0', {
+            stmt->from = EXPR;
+
+            Parse_1(EcsTokRange, {
+                Expr('\0', {
+                    stmt->to = EXPR;
+
+                    Parse_1(']', {
+                        pos = flecs_script_skip_newlines(parser, pos);
+
+                        Parse_1('{', {
+                            return flecs_script_scope(
+                                parser, stmt->scope, pos);
+                        })
+                    })
+                })
+            })
+        })
+    })
+
+    Expr('\0', {
+        stmt->from = EXPR;
+
+        pos = flecs_script_skip_newlines(parser, pos);
+
+        Parse(
+            case EcsTokRange: {
+                Expr('\0', {
+                    stmt->to = EXPR;
+
+                    pos = flecs_script_skip_newlines(parser, pos);
+
+                    Parse_1('{', {
+                        return flecs_script_scope(parser, stmt->scope, pos);
+                    })
+                })
+            }
+
+            case '{': {
+                stmt->expr = stmt->from;
+                stmt->from = NULL;
+                return flecs_script_scope(parser, stmt->scope, pos);
+            }
+        )
+    })
+
+    ParserEnd;
+}
+
 static const char* flecs_script_parse_var(
     ecs_parser_t *parser,
     const char *pos,
@@ -802,29 +861,50 @@ if_stmt: {
 
 // for
 for_stmt: {
-    // for i
-    Parse_2(EcsTokIdentifier, EcsTokKeywordIn, {
-        Expr(0, {
-            ecs_expr_node_t *from = EXPR;
-            Parse_1(EcsTokRange, {
-                Expr(0, {
-                    ecs_expr_node_t *to = EXPR;
-                    ecs_script_for_range_t *stmt = 
-                        flecs_script_insert_for_range(parser);
-                    stmt->loop_var = Token(1);
-                    stmt->from = from;
-                    stmt->to = to;
+    ecs_script_for_t *stmt = flecs_script_insert_for(parser);
 
-                    pos = flecs_script_skip_newlines(parser, pos);
+    Parse(
+        case EcsTokIdentifier: {
+            stmt->loop_vars[0] = Token(1);
+            stmt->loop_var_count = 1;
 
-                    Parse_1('{', {
-                        return flecs_script_scope(parser, stmt->scope, pos);
-                    });
-                });
-            });
-        });
+            Parse_1(EcsTokKeywordIn, {
+                return flecs_script_for_in(parser, pos, stmt);
+            })
+        }
 
-    });
+        case '(': {
+            Parse_2(EcsTokIdentifier, ',', {
+                stmt->loop_vars[0] = Token(2);
+                stmt->loop_var_count = 1;
+
+                Parse_1(EcsTokIdentifier, {
+                    stmt->loop_vars[1] = Token(4);
+                    stmt->loop_var_count = 2;
+
+                    Parse(
+                        case ')': {
+                            Parse_1(EcsTokKeywordIn, {
+                                return flecs_script_for_in(parser, pos, stmt);
+                            })
+                        }
+
+                        case ',': {
+                            Parse_2(EcsTokIdentifier, ')', {
+                                stmt->loop_vars[2] = Token(6);
+                                stmt->loop_var_count = 3;
+
+                                Parse_1(EcsTokKeywordIn, {
+                                    return flecs_script_for_in(
+                                        parser, pos, stmt);
+                                })
+                            })
+                        }
+                    )
+                })
+            })
+        }
+    )
 }
 
 fn_stmt: {

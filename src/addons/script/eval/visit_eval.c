@@ -717,7 +717,7 @@ static void flecs_script_apply_non_fragmenting_childof_to_scope(
             break;
         case EcsAstFor:
             flecs_script_apply_non_fragmenting_childof_to_scope(
-                world, ((ecs_script_for_range_t*)stmt)->scope, enabled);
+                world, ((ecs_script_for_t*)stmt)->scope, enabled);
             break;
         case EcsAstTry: {
             ecs_script_try_t *try_stmt = (ecs_script_try_t*)stmt;
@@ -2402,68 +2402,6 @@ static int flecs_script_step_if(
     return 0;
 }
 
-static void flecs_script_eval_for_leave(
-    ecs_script_eval_visitor_t *v)
-{
-    v->vars = ecs_script_vars_pop(v->vars);
-}
-
-static int flecs_script_step_for(
-    ecs_script_runner_t *r,
-    flecs_script_frame_t *frame)
-{
-    ecs_script_eval_visitor_t *v = &r->v;
-    ecs_script_for_range_t *node = (ecs_script_for_range_t*)frame->node;
-    if (frame->pc == 0) {
-        int32_t from, to;
-        ecs_value_t from_val = { .type = ecs_id(ecs_i32_t), .ptr = &from };
-        ecs_value_t to_val = { .type = ecs_id(ecs_i32_t), .ptr = &to };
-
-        if (flecs_script_eval_expr(v, &node->from, &from_val)) {
-            return -1;
-        }
-        if (flecs_script_eval_expr(v, &node->to, &to_val)) {
-            return -1;
-        }
-
-        v->vars = flecs_script_vars_push(
-            v->vars, &v->r->stack, &v->r->allocator);
-
-        ecs_script_var_t *var = ecs_script_vars_declare(
-            v->vars, node->loop_var);
-        var->value.ptr = flecs_stack_calloc(&v->r->stack, 4, 4);
-        var->value.type = ecs_id(ecs_i32_t);
-        var->type_info = ecs_get_type_info(v->world, ecs_id(ecs_i32_t));
-
-        frame->state.for_.var = var;
-        frame->state.for_.current = from;
-        frame->state.for_.to = to;
-        frame->pc = 1;
-
-        if (from >= to) {
-            flecs_script_eval_for_leave(v);
-            flecs_script_frame_pop(r);
-            return 0;
-        }
-
-        *(int32_t*)var->value.ptr = from;
-        flecs_script_scope_push(r, node->scope);
-        return 0;
-    }
-
-    frame->state.for_.current ++;
-    if (frame->state.for_.current < frame->state.for_.to) {
-        *(int32_t*)frame->state.for_.var->value.ptr =
-            frame->state.for_.current;
-        flecs_script_scope_push(r, node->scope);
-        return 0;
-    }
-
-    flecs_script_eval_for_leave(v);
-    flecs_script_frame_pop(r);
-    return 0;
-}
-
 static int flecs_script_step_with(
     ecs_script_runner_t *r,
     flecs_script_frame_t *frame)
@@ -2532,7 +2470,7 @@ static void flecs_script_frame_leave(
         break;
     case EcsAstFor:
         if (frame->pc >= 1) {
-            flecs_script_eval_for_leave(v);
+            flecs_script_eval_for_leave(v, &frame->state.for_);
         }
         break;
     case EcsAstIf:

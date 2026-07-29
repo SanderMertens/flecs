@@ -99,17 +99,35 @@ void flecs_script_eval_pair_scope_leave(
     ecs_script_eval_visitor_t *v,
     const flecs_script_pair_scope_state_t *state);
 
+typedef enum flecs_script_for_kind_t {
+    FlecsScriptForRange,
+    FlecsScriptForArray,
+    FlecsScriptForVector,
+    FlecsScriptForMap
+} flecs_script_for_kind_t;
+
+typedef struct flecs_script_for_state_t {
+    flecs_script_for_kind_t kind;
+    ecs_script_var_t *elem_var;
+    ecs_script_var_t *key_var;
+    ecs_script_var_t *index_var;
+    int32_t index;
+    int32_t from;
+    int32_t count;
+    ecs_size_t elem_size;
+    ecs_size_t key_size;
+    void *elems;
+    ecs_value_t collection;
+    ecs_map_iter_t map_it;
+} flecs_script_for_state_t;
+
 typedef struct flecs_script_frame_t {
     ecs_script_node_t *node;
     int32_t pc;
     union {
         flecs_script_scope_state_t scope;
         flecs_script_entity_state_t entity;
-        struct {
-            ecs_script_var_t *var;
-            int32_t current;
-            int32_t to;
-        } for_;
+        flecs_script_for_state_t for_;
         flecs_script_with_state_t with;
         flecs_script_pair_scope_state_t pair_scope;
         struct {
@@ -239,6 +257,40 @@ int flecs_script_check_node(
 int flecs_script_check_scope(
     ecs_script_eval_visitor_t *v,
     ecs_script_scope_t *node);
+
+/* For statement (see visit_for.c) */
+
+int flecs_script_step_for(
+    ecs_script_runner_t *r,
+    flecs_script_frame_t *frame);
+
+void flecs_script_eval_for_leave(
+    ecs_script_eval_visitor_t *v,
+    flecs_script_for_state_t *state);
+
+int flecs_script_for_collection_kind(
+    ecs_script_eval_visitor_t *v,
+    ecs_script_for_t *node,
+    ecs_entity_t type,
+    flecs_script_for_kind_t *kind,
+    ecs_entity_t *key_type,
+    ecs_entity_t *elem_type);
+
+int flecs_script_for_check_var_count(
+    ecs_script_eval_visitor_t *v,
+    ecs_script_for_t *node,
+    flecs_script_for_kind_t kind);
+
+bool flecs_script_for_has_index_var(
+    flecs_script_for_kind_t kind,
+    int32_t loop_var_count);
+
+ecs_script_var_t* flecs_script_for_declare_var(
+    ecs_script_eval_visitor_t *v,
+    ecs_script_for_t *node,
+    const char *name,
+    ecs_entity_t type,
+    bool alloc);
 
 /* Functions shared between check and eval visitor */
 
