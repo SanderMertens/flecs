@@ -3027,11 +3027,22 @@ void Deserialize_discover_type_unknown(void) {
 
     ecs_log_set_level(-4);
     ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
-    test_assert(ecs_expr_run(world, 
+    test_assert(ecs_expr_run(world,
         "{10}", &v, &desc) == NULL);
 
-    test_assert(ecs_expr_run(world, 
-        "[10]", &v, &desc) == NULL);
+    const char *r = ecs_expr_run(world,
+        "[10]", &v, &desc);
+    test_assert(r != NULL);
+    test_assert(r[0] == '\0');
+
+    test_uint(v.type, ecs_lookup(world, "flecs.script.typecache.vector<i64>"));
+    test_assert(v.ptr != NULL);
+
+    ecs_vec_t *vec = v.ptr;
+    test_int(ecs_vec_count(vec), 1);
+    test_int(((int64_t*)ecs_vec_first(vec))[0], 10);
+
+    ecs_ptr_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }

@@ -260,6 +260,14 @@ ecs_expr_match_t* flecs_expr_match(
     return result;
 }
 
+ecs_expr_range_t* flecs_expr_range(
+    ecs_parser_t *parser)
+{
+    ecs_expr_range_t *result = flecs_expr_ast_new(
+        parser, ecs_expr_range_t, EcsExprRange);
+    return result;
+}
+
 ecs_expr_new_t* flecs_expr_new(
     ecs_parser_t *parser)
 {

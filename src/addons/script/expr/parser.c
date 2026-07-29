@@ -257,11 +257,12 @@ const char* flecs_script_parse_initializer(
 static const char* flecs_script_parse_collection_initializer(
     ecs_parser_t *parser,
     const char *pos,
-    ecs_expr_initializer_t **node_out)
+    ecs_expr_node_t **node_out)
 {
     bool first = true;
-    
-    ecs_expr_initializer_t *node = *node_out = flecs_expr_initializer(parser);
+
+    ecs_expr_initializer_t *node = flecs_expr_initializer(parser);
+    *node_out = (ecs_expr_node_t*)node;
     ecs_allocator_t *a = &parser->script->allocator;
 
     do {
@@ -269,7 +270,7 @@ static const char* flecs_script_parse_collection_initializer(
 
         /* End of initializer */
         LookAhead_1(']', {
-            if (first) {                
+            if (first) {
                 node->node.kind = EcsExprEmptyInitializer;
             }
             pos = lookahead - 1;
@@ -304,6 +305,33 @@ static const char* flecs_script_parse_collection_initializer(
                 if (!pos) {
                     goto error;
                 }
+            }
+        }
+
+        if (!elem->key && ecs_vec_count(&node->elements) == 1) {
+            bool is_range = false;
+
+            LookAhead_1(EcsTokRange, {
+                pos = lookahead;
+                is_range = true;
+                break;
+            })
+
+            /* [expr .. expr] is a range expression */
+            if (is_range) {
+                ecs_expr_range_t *range = flecs_expr_range(parser);
+                range->from = elem->value;
+                elem->value = NULL;
+                ecs_vec_remove_last(&node->elements);
+                flecs_script_parser_expr_free(parser, (ecs_expr_node_t*)node);
+                *node_out = (ecs_expr_node_t*)range;
+
+                pos = flecs_script_parse_expr(parser, pos, 0, &range->to);
+                if (!pos) {
+                    goto error;
+                }
+
+                EndOfRule;
             }
         }
 
@@ -752,15 +780,20 @@ static const char* flecs_script_parse_lhs(
         }
 
         case '[': {
-            ecs_expr_initializer_t *node = NULL;
+            ecs_expr_node_t *node = NULL;
             pos = flecs_script_parse_collection_initializer(parser, pos, &node);
             if (!pos) {
-                flecs_script_parser_expr_free(parser, (ecs_expr_node_t*)node);
+                flecs_script_parser_expr_free(parser, node);
                 goto error;
             }
 
-            node->is_collection = true;
-            *out = (ecs_expr_node_t*)node;
+            if (node->kind == EcsExprInitializer ||
+                node->kind == EcsExprEmptyInitializer)
+            {
+                ((ecs_expr_initializer_t*)node)->is_collection = true;
+            }
+
+            *out = node;
 
             Parse_1(']', {
                 break;
