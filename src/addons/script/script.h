@@ -103,6 +103,10 @@ void flecs_script_register_builtin_functions(
 void flecs_function_import(
     ecs_world_t *world);
 
+ecs_entity_t flecs_script_vector_type(
+    ecs_world_t *world,
+    ecs_entity_t elem_type);
+
 const char* flecs_script_stmt(
     ecs_parser_t *parser,
     const char *pos);

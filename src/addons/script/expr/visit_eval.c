@@ -1038,6 +1038,62 @@ error:
     return -1;
 }
 
+static int flecs_expr_range_visit_eval(
+    ecs_script_eval_ctx_t *ctx,
+    ecs_expr_range_t *node,
+    ecs_expr_value_t *out)
+{
+    flecs_expr_stack_push(ctx->stack);
+
+    ecs_expr_value_t *from = flecs_expr_stack_result(ctx->stack, node->from);
+    if (flecs_expr_visit_eval_priv(ctx, node->from, from)) {
+        goto error;
+    }
+
+    ecs_expr_value_t *to = flecs_expr_stack_result(ctx->stack, node->to);
+    if (flecs_expr_visit_eval_priv(ctx, node->to, to)) {
+        goto error;
+    }
+
+    int32_t from_value = *(int32_t*)from->value.ptr;
+    int32_t to_value = *(int32_t*)to->value.ptr;
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(
+        ctx->world, node->node.type, out->value.ptr);
+    if (ecs_meta_push(&cur)) {
+        goto error;
+    }
+
+    int32_t i, count = to_value - from_value;
+    if (count < 0) {
+        count = 0;
+    }
+
+    for (i = 0; i < count; i ++) {
+        if (i) {
+            if (ecs_meta_next(&cur)) {
+                goto error;
+            }
+        }
+
+        if (ecs_meta_set_int(&cur, from_value + i)) {
+            goto error;
+        }
+    }
+
+    if (ecs_meta_pop(&cur)) {
+        goto error;
+    }
+
+    out->owned = true;
+
+    flecs_expr_stack_pop(ctx->stack);
+    return 0;
+error:
+    flecs_expr_stack_pop(ctx->stack);
+    return -1;
+}
+
 static int flecs_expr_match_visit_eval(
     ecs_script_eval_ctx_t *ctx,
     ecs_expr_match_t *node,
@@ -1310,7 +1366,14 @@ static int flecs_expr_visit_eval_priv(
         break;
     case EcsExprMatch:
         if (flecs_expr_match_visit_eval(
-            ctx, (ecs_expr_match_t*)node, out)) 
+            ctx, (ecs_expr_match_t*)node, out))
+        {
+            goto error;
+        }
+        break;
+    case EcsExprRange:
+        if (flecs_expr_range_visit_eval(
+            ctx, (ecs_expr_range_t*)node, out))
         {
             goto error;
         }

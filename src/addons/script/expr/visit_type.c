@@ -1055,6 +1055,109 @@ static void flecs_expr_member_swizzle_expand_hint(
     node->swizzle_can_expand = true;
 }
 
+/* Infer the type of a collection literal without a target type. The most
+ * expressive element type determines the vector type. */
+static int flecs_expr_anonymous_collection_visit_type(
+    ecs_script_t *script,
+    ecs_expr_initializer_t *node,
+    const ecs_expr_eval_desc_t *desc)
+{
+    ecs_expr_initializer_element_t *elems = ecs_vec_first(&node->elements);
+    int32_t i, count = ecs_vec_count(&node->elements);
+    ecs_assert(count > 0, ECS_INTERNAL_ERROR, NULL);
+
+    node->node.type = 0;
+
+    for (i = 0; i < count; i ++) {
+        ecs_expr_initializer_element_t *elem = &elems[i];
+
+        if (elem->key) {
+            flecs_expr_visit_error(script, node,
+                "missing type for map literal");
+            goto error;
+        }
+
+        if (!elem->value) {
+            flecs_expr_visit_error(script, node,
+                "missing value for initializer element");
+            goto error;
+        }
+
+        ecs_meta_cursor_t elem_cur;
+        ecs_os_zeromem(&elem_cur);
+        if (flecs_expr_visit_type_priv(script, elem->value, &elem_cur, desc)) {
+            goto error;
+        }
+
+        if (!i) {
+            node->node.type = elem->value->type;
+            continue;
+        }
+
+        if (elem->value->type == node->node.type) {
+            continue;
+        }
+
+        if (flecs_expr_is_type_number(node->node.type)) {
+            ecs_entity_t result_type = 0, operand_type = 0;
+            if (flecs_expr_type_for_operator(script, (ecs_expr_node_t*)node, 0,
+                (ecs_expr_node_t*)node, elem->value,
+                EcsTokAdd, /* Use operator that doesn't change types */
+                &operand_type, &result_type, NULL))
+            {
+                goto error;
+            }
+
+            /* "Accumulate" most expressive type in result node */
+            node->node.type = result_type;
+        } else {
+            char *got = ecs_get_path(script->world, elem->value->type);
+            char *expect = ecs_get_path(script->world, node->node.type);
+            flecs_expr_visit_error(script, node,
+                "invalid type for element %d in collection literal "
+                "(got %s, expected %s)", i + 1, got, expect);
+            ecs_os_free(got);
+            ecs_os_free(expect);
+            goto error;
+        }
+    }
+
+    ecs_entity_t elem_type = node->node.type;
+    node->node.type = 0;
+
+    if (!elem_type) {
+        flecs_expr_visit_error(script, node,
+            "cannot infer element type for collection literal");
+        goto error;
+    }
+
+    for (i = 0; i < count; i ++) {
+        ecs_expr_initializer_element_t *elem = &elems[i];
+        if (elem->value->type != elem_type) {
+            elem->value = (ecs_expr_node_t*)flecs_expr_cast(
+                script, elem->value, elem_type);
+            if (!elem->value) {
+                goto error;
+            }
+        }
+    }
+
+    ecs_entity_t vector_type = flecs_script_vector_type(
+        script->world, elem_type);
+    if (!vector_type) {
+        flecs_expr_visit_error(script, node,
+            "failed to create vector type for collection literal");
+        goto error;
+    }
+
+    node->node.type = vector_type;
+    node->is_dynamic = true;
+
+    return 0;
+error:
+    return -1;
+}
+
 static int flecs_expr_initializer_visit_type(
     ecs_script_t *script,
     ecs_expr_initializer_t *node,
@@ -1062,6 +1165,11 @@ static int flecs_expr_initializer_visit_type(
     const ecs_expr_eval_desc_t *desc)
 {
     if (!cur || !cur->valid) {
+        if (node->is_collection) {
+            return flecs_expr_anonymous_collection_visit_type(
+                script, node, desc);
+        }
+
         flecs_expr_visit_error(script, node, "missing type for initializer");
         goto error;
     }
@@ -2550,6 +2658,70 @@ error:
     return -1;
 }
 
+static int flecs_expr_range_visit_type(
+    ecs_script_t *script,
+    ecs_expr_range_t *node,
+    ecs_meta_cursor_t *cur,
+    const ecs_expr_eval_desc_t *desc)
+{
+    ecs_meta_cursor_t from_cur = ecs_meta_cursor(
+        script->world, ecs_id(ecs_i32_t), NULL);
+    if (flecs_expr_visit_type_priv(script, node->from, &from_cur, desc)) {
+        goto error;
+    }
+
+    ecs_meta_cursor_t to_cur = ecs_meta_cursor(
+        script->world, ecs_id(ecs_i32_t), NULL);
+    if (flecs_expr_visit_type_priv(script, node->to, &to_cur, desc)) {
+        goto error;
+    }
+
+    if (node->from->type != ecs_id(ecs_i32_t)) {
+        node->from = (ecs_expr_node_t*)flecs_expr_cast(
+            script, node->from, ecs_id(ecs_i32_t));
+        if (!node->from) {
+            goto error;
+        }
+    }
+
+    if (node->to->type != ecs_id(ecs_i32_t)) {
+        node->to = (ecs_expr_node_t*)flecs_expr_cast(
+            script, node->to, ecs_id(ecs_i32_t));
+        if (!node->to) {
+            goto error;
+        }
+    }
+
+    ecs_entity_t type = 0;
+    if (cur && cur->valid) {
+        type = ecs_meta_get_type(cur);
+    }
+
+    if (type && type != ecs_id(ecs_value_t)) {
+        const EcsType *ptr = ecs_get(script->world, type, EcsType);
+        if (!ptr || ptr->kind != EcsVectorType) {
+            char *type_str = ecs_get_path(script->world, type);
+            flecs_expr_visit_error(script, node,
+                "cannot assign range to non-vector type '%s'", type_str);
+            ecs_os_free(type_str);
+            goto error;
+        }
+        node->node.type = type;
+    } else {
+        node->node.type = flecs_script_vector_type(
+            script->world, ecs_id(ecs_i32_t));
+        if (!node->node.type) {
+            flecs_expr_visit_error(script, node,
+                "failed to create vector type for range");
+            goto error;
+        }
+    }
+
+    return 0;
+error:
+    return -1;
+}
+
 static int flecs_expr_new_visit_type(
     ecs_script_t *script,
     ecs_expr_new_t *node,
@@ -2660,7 +2832,14 @@ static int flecs_expr_visit_type_priv(
         break;
     case EcsExprMatch:
         if (flecs_expr_match_visit_type(
-            script, (ecs_expr_match_t*)node, cur, desc)) 
+            script, (ecs_expr_match_t*)node, cur, desc))
+        {
+            goto error;
+        }
+        break;
+    case EcsExprRange:
+        if (flecs_expr_range_visit_type(
+            script, (ecs_expr_range_t*)node, cur, desc))
         {
             goto error;
         }

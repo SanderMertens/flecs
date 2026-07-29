@@ -132,6 +132,14 @@ static void flecs_expr_match_visit_free(
         &node->elements, ecs_expr_match_element_t);
 }
 
+static void flecs_expr_range_visit_free(
+    ecs_script_t *script,
+    ecs_expr_range_t *node)
+{
+    flecs_expr_visit_free(script, node->from);
+    flecs_expr_visit_free(script, node->to);
+}
+
 static void flecs_expr_new_visit_free(
     ecs_script_t *script,
     ecs_expr_new_t *node)
@@ -223,6 +231,11 @@ void flecs_expr_visit_free(
         flecs_expr_match_visit_free(
             script, (ecs_expr_match_t*)node);
         flecs_free_t(a, ecs_expr_match_t, node);
+        break;
+    case EcsExprRange:
+        flecs_expr_range_visit_free(
+            script, (ecs_expr_range_t*)node);
+        flecs_free_t(a, ecs_expr_range_t, node);
         break;
     case EcsExprNew:
         flecs_expr_new_visit_free(

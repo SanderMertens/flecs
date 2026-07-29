@@ -254,6 +254,16 @@ int flecs_expr_visit_refs(
         }
         break;
     }
+    case EcsExprRange: {
+        ecs_expr_range_t *n = (ecs_expr_range_t*)node;
+        if (flecs_expr_visit_refs(script, n->from, refs, dynamic_refs, fn_refs)) {
+            goto error;
+        }
+        if (flecs_expr_visit_refs(script, n->to, refs, dynamic_refs, fn_refs)) {
+            goto error;
+        }
+        break;
+    }
     case EcsExprCast:
     case EcsExprCastNumber:
         if (flecs_expr_visit_refs(script,
