@@ -98,7 +98,7 @@ int flecs_script_check_scope(
     ecs_script_eval_visitor_t *v,
     ecs_script_scope_t *node)
 {
-    int ret =  flecs_script_eval_scope(v, node);
+    int ret = flecs_script_eval_scope(v, node);
     if (ret) {
         return -1;
     }
@@ -131,6 +131,8 @@ static int flecs_script_check_entity(
     ecs_script_eval_visitor_t *v,
     ecs_script_entity_t *node)
 {
+    ecs_entity_t eval_kind = 0;
+
     if (node->kind) {
         ecs_script_id_t id = {
             .first = node->kind
@@ -147,7 +149,7 @@ static int flecs_script_check_entity(
             return -1;
         }
 
-        node->eval_kind = id.eval;
+        eval_kind = id.eval;
     }
 
     if (node->name_expr && !node->name_expr->type_info) {
@@ -157,13 +159,20 @@ static int flecs_script_check_entity(
         }
     }
 
-    ecs_script_entity_t *old_entity = v->entity;
-    v->entity = node;
+    flecs_script_entity_state_t state = {
+        .node = node,
+        .eval_kind = eval_kind
+    };
+
+    flecs_script_entity_state_t *old_entity = v->entity;
+    v->entity = &state;
 
     bool old_is_with_scope = v->is_with_scope;
     v->is_with_scope = false;
 
-    if (ecs_script_visit_node(v, node->scope)) {
+    int ret = flecs_script_check_scope(v, node->scope);
+    if (ret) {
+        v->entity = old_entity;
         return -1;
     }
 
@@ -488,9 +497,11 @@ int flecs_script_check_node(
 {
     ecs_script_eval_visitor_t *v = (ecs_script_eval_visitor_t*)_v;
     switch(node->kind) {
+    case EcsAstAwait:
+    case EcsAstTry:
+        return 0;
     case EcsAstScope:
-        return flecs_script_check_scope(
-            v, (ecs_script_scope_t*)node);
+        return flecs_script_check_scope(v, (ecs_script_scope_t*)node);
     case EcsAstTag:
         return flecs_script_check_tag(
             v, (ecs_script_tag_t*)node);

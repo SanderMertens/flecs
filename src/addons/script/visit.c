@@ -45,22 +45,6 @@ ecs_script_scope_t* ecs_script_current_scope_(
     return NULL;
 }
 
-void ecs_script_visit_push_(
-    ecs_script_visit_t *v,
-    ecs_script_node_t *node)
-{
-    v->nodes[v->depth ++] = node;
-}
-
-void ecs_script_visit_pop_(
-    ecs_script_visit_t *v,
-    ecs_script_node_t *node)
-{
-    v->depth --;
-    ecs_assert(v->nodes[v->depth] == node, ECS_INTERNAL_ERROR, NULL);
-    (void)node;
-}
-
 int ecs_script_visit_scope_(
     ecs_script_visit_t *v,
     ecs_script_scope_t *scope)
@@ -99,7 +83,8 @@ int ecs_script_visit_scope_(
             return -1;
         }
 
-        ecs_script_visit_pop(v, nodes[i]);
+        v->depth --;
+        ecs_assert(v->nodes[v->depth] == nodes[i], ECS_INTERNAL_ERROR, NULL);
     }
 
     v->depth = depth;

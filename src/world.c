@@ -703,6 +703,9 @@ static const char *flecs_addons_info[] = {
 #ifdef FLECS_SCRIPT
     "FLECS_SCRIPT",
 #endif
+#ifdef FLECS_SCRIPT_ASYNC
+    "FLECS_SCRIPT_ASYNC",
+#endif
 #ifdef FLECS_HTTP
     "FLECS_HTTP",
 #endif

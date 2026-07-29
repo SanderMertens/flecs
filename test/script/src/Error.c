@@ -2,8 +2,7 @@
 
 static char *os_stub_log_message = NULL;
 
-static
-void os_stub_log_callback(
+static void os_stub_log_callback(
     int32_t level,
     const char *file,
     int32_t line,
@@ -28,8 +27,7 @@ static ecs_os_api_fopen_t division_by_zero_fopen;
 static ecs_os_api_fread_t division_by_zero_fread;
 static ecs_os_api_fclose_t division_by_zero_fclose;
 
-static
-os_file_stub_t* os_file_stub(FILE *file) {
+static os_file_stub_t* os_file_stub(FILE *file) {
     int32_t i;
     for (i = 0; i < 3; i ++) {
         if (file == (FILE*)&os_file_stubs[i]) {
@@ -39,8 +37,7 @@ os_file_stub_t* os_file_stub(FILE *file) {
     return NULL;
 }
 
-static
-FILE* os_file_stub_open(const char *file, const char *mode) {
+static FILE* os_file_stub_open(const char *file, const char *mode) {
     int32_t i;
     for (i = 0; i < 3; i ++) {
         if (!strcmp(file, os_file_stubs[i].name)) {
@@ -51,8 +48,7 @@ FILE* os_file_stub_open(const char *file, const char *mode) {
     return division_by_zero_fopen(file, mode);
 }
 
-static
-size_t os_file_stub_read(
+static size_t os_file_stub_read(
     void *ptr,
     size_t size,
     size_t count,
@@ -74,8 +70,7 @@ size_t os_file_stub_read(
     return requested;
 }
 
-static
-void os_file_stub_close(FILE *file) {
+static void os_file_stub_close(FILE *file) {
     if (!os_file_stub(file)) {
         division_by_zero_fclose(file);
     }
@@ -2404,6 +2399,23 @@ void Error_assign_component_to_entity_syntax(void) {
     ecs_fini(world);
 }
 
+void Error_typed_const_w_await(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const x: f32 = await foo()";
+
+    ecs_log_set_level(-4);
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(result.error != NULL);
+    test_assert(strstr(result.error,
+        "use 'const x = await ...' instead") != NULL);
+    ecs_os_free(result.error);
+
+    ecs_fini(world);
+}
+
 void Error_match_operator_without_equals_capture_error(void) {
     ecs_world_t *world = ecs_init();
 
@@ -3037,8 +3049,7 @@ void Error_script_eval_line_column(void) {
     ecs_fini(world);
 }
 
-static
-void error_on_set(
+static void error_on_set(
     ecs_iter_t *it)
 {
     (void)it;
