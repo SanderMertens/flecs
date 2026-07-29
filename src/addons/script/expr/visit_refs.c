@@ -263,6 +263,7 @@ int flecs_expr_visit_refs(
         }
         break;
     case EcsExprNew:
+    case EcsExprScript:
         break;
     }
 

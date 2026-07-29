@@ -718,6 +718,7 @@ int flecs_expr_visit_fold(
         }
         break;
     case EcsExprNew:
+    case EcsExprScript:
         break;
     case EcsExprCast:
     case EcsExprCastNumber:
