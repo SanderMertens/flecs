@@ -5620,15 +5620,6 @@ typedef struct ecs_entity_desc_t {
     bool use_low_id;      /**< When set to true, a low id (typically reserved for
                            * components) will be used to create the entity, if
                            * no ID is specified. */
-
-    /** 0-terminated array of IDs to add to the entity. */
-    const ecs_id_t *add;
-
-    /** 0-terminated array of values to set on the entity. */
-    const ecs_value_t *set;
-
-    /** String expression with components to add. */
-    const char *add_expr;
 } ecs_entity_desc_t;
 
 /** Used with ecs_bulk_init().
@@ -7308,6 +7299,21 @@ FLECS_API
 ecs_entity_t ecs_entity_init(
     ecs_world_t *world,
     const ecs_entity_desc_t *desc);
+
+/** Create a new entity with a list of component values.
+ * Values for zero-sized (tag) components are added without setting a value.
+ *
+ * This operation is equivalent to creating an entity with ecs_new() followed
+ * by ecs_set_id() for each provided value.
+ *
+ * @param world The world.
+ * @param values Null-terminated array of component values to set.
+ * @return A handle to the new entity, or 0 if failed.
+ */
+FLECS_API
+ecs_entity_t ecs_insert_w_values(
+    ecs_world_t *world,
+    const ecs_value_t *values);
 
 /** Bulk create or populate new entities.
  * This operation bulk inserts a list of new or predefined entities into a
@@ -10377,43 +10383,6 @@ void ecs_table_clear_entities(
 #define ECS_DECLARE(id)\
     ecs_entity_t id, ecs_id(id)
 
-/** Forward declare an entity. */
-#define ECS_ENTITY_DECLARE ECS_DECLARE
-
-/** Define a forward-declared entity.
- *
- * Example:
- *
- * @code
- * ECS_ENTITY_DEFINE(world, MyEntity, Position, Velocity);
- * @endcode
- */
-#define ECS_ENTITY_DEFINE(world, id_, ...) \
-    { \
-        ecs_entity_desc_t desc = {0}; \
-        desc.id = id_; \
-        desc.name = #id_; \
-        desc.add_expr = #__VA_ARGS__; \
-        id_ = ecs_entity_init(world, &desc); \
-        ecs_id(id_) = id_; \
-        ecs_assert(id_ != 0, ECS_INVALID_PARAMETER, "failed to create entity %s", #id_); \
-    } \
-    (void)id_; \
-    (void)ecs_id(id_)
-
-/** Declare and define an entity.
- *
- * Example:
- *
- * @code
- * ECS_ENTITY(world, MyEntity, Position, Velocity);
- * @endcode
- */
-#define ECS_ENTITY(world, id, ...) \
-    ecs_entity_t ecs_id(id); \
-    ecs_entity_t id = 0; \
-    ECS_ENTITY_DEFINE(world, id, __VA_ARGS__)
-
 /** Forward declare a tag. */
 #define ECS_TAG_DECLARE ECS_DECLARE
 
@@ -10425,7 +10394,17 @@ void ecs_table_clear_entities(
  * ECS_TAG_DEFINE(world, MyTag);
  * @endcode
  */
-#define ECS_TAG_DEFINE(world, id) ECS_ENTITY_DEFINE(world, id, 0)
+#define ECS_TAG_DEFINE(world, id_) \
+    { \
+        ecs_entity_desc_t desc = {0}; \
+        desc.id = id_; \
+        desc.name = #id_; \
+        id_ = ecs_entity_init(world, &desc); \
+        ecs_id(id_) = id_; \
+        ecs_assert(id_ != 0, ECS_INVALID_PARAMETER, "failed to create tag %s", #id_); \
+    } \
+    (void)id_; \
+    (void)ecs_id(id_)
 
 /** Declare and define a tag.
  *
@@ -10435,30 +10414,10 @@ void ecs_table_clear_entities(
  * ECS_TAG(world, MyTag);
  * @endcode
  */
-#define ECS_TAG(world, id) ECS_ENTITY(world, id, 0)
-
-/** Forward declare a prefab. */
-#define ECS_PREFAB_DECLARE ECS_DECLARE
-
-/** Define a forward-declared prefab.
- *
- * Example:
- *
- * @code
- * ECS_PREFAB_DEFINE(world, MyPrefab, Position, Velocity);
- * @endcode
- */
-#define ECS_PREFAB_DEFINE(world, id, ...) ECS_ENTITY_DEFINE(world, id, Prefab, __VA_ARGS__)
-
-/** Declare and define a prefab.
- *
- * Example:
- *
- * @code
- * ECS_PREFAB(world, MyPrefab, Position, Velocity);
- * @endcode
- */
-#define ECS_PREFAB(world, id, ...) ECS_ENTITY(world, id, Prefab, __VA_ARGS__)
+#define ECS_TAG(world, id) \
+    ecs_entity_t ecs_id(id); \
+    ecs_entity_t id = 0; \
+    ECS_TAG_DEFINE(world, id)
 
 /** Forward declare a component. */
 #define ECS_COMPONENT_DECLARE(id)         ecs_entity_t ecs_id(id)
@@ -10699,7 +10658,7 @@ void ecs_table_clear_entities(
 
 /** Insert a new entity with a list of component values. */
 #define ecs_insert(world, ...)\
-    ecs_entity(world, { .set = ecs_values(__VA_ARGS__)})
+    ecs_insert_w_values(world, ecs_values(__VA_ARGS__))
 
 /** Set a component using a pointer. */
 #define ecs_set_ptr(world, entity, component, ptr)\

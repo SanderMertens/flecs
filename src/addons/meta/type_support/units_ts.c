@@ -310,39 +310,36 @@ ecs_entity_t ecs_quantity_init(
 void flecs_meta_units_init(
     ecs_world_t *world)
 {
+    ecs_entity_t unit = ecs_entity(world, { .id = ecs_id(EcsUnit),
+        .name = "unit", .symbol = "EcsUnit" });
 #ifdef FLECS_PREFAB
-#define FLECS_META_INHERIT \
-    .add = ecs_ids(ecs_pair(EcsOnInstantiate, EcsInherit))
-#else
-#define FLECS_META_INHERIT
+    ecs_add_pair(world, unit, EcsOnInstantiate, EcsInherit);
 #endif
-
     ecs_component(world, {
-        .entity = ecs_entity(world, { .id = ecs_id(EcsUnit),
-            .name = "unit", .symbol = "EcsUnit",
-            FLECS_META_INHERIT
-        }),
+        .entity = unit,
         .type.size = sizeof(EcsUnit),
         .type.alignment = ECS_ALIGNOF(EcsUnit)
     });
 
+    ecs_entity_t unit_prefix = ecs_entity(world, { .id = ecs_id(EcsUnitPrefix),
+        .name = "unit_prefix", .symbol = "EcsUnitPrefix" });
+#ifdef FLECS_PREFAB
+    ecs_add_pair(world, unit_prefix, EcsOnInstantiate, EcsInherit);
+#endif
     ecs_component(world, {
-        .entity = ecs_entity(world, { .id = ecs_id(EcsUnitPrefix),
-            .name = "unit_prefix", .symbol = "EcsUnitPrefix",
-            FLECS_META_INHERIT
-        }),
+        .entity = unit_prefix,
         .type.size = sizeof(EcsUnitPrefix),
         .type.alignment = ECS_ALIGNOF(EcsUnitPrefix)
     });
 
+    ecs_entity_t quantity = ecs_entity(world, { .id = EcsQuantity,
+        .name = "quantity", .symbol = "EcsQuantity" });
+#ifdef FLECS_PREFAB
+    ecs_add_pair(world, quantity, EcsOnInstantiate, EcsInherit);
+#endif
     ecs_component(world, {
-        .entity = ecs_entity(world, { .id = EcsQuantity,
-            .name = "quantity", .symbol = "EcsQuantity",
-            FLECS_META_INHERIT
-        })
+        .entity = quantity
     });
-
-#undef FLECS_META_INHERIT
 
     ecs_set_hooks(world, EcsUnit, { 
         .ctor = flecs_default_ctor,

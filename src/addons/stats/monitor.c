@@ -270,7 +270,8 @@ void flecs_stats_api_import(
         ctx->query = q;
 
         ecs_system(world, {
-            .entity = ecs_entity(world, { .name = "Monitor1s", .add = ecs_ids(ecs_dependson(EcsPreFrame)) }),
+            .entity = ecs_entity(world, { .name = "Monitor1s" }),
+            .phase = EcsPreFrame,
             .query.terms = {{
                 .id = ecs_pair(kind, EcsPeriod1s),
                 .src.id = EcsWorld 
@@ -288,7 +289,8 @@ void flecs_stats_api_import(
         ctx->api = *api;
 
         mw1m = ecs_system(world, {
-            .entity = ecs_entity(world, { .name = "Monitor1m", .add = ecs_ids(ecs_dependson(EcsPreFrame)) }),
+            .entity = ecs_entity(world, { .name = "Monitor1m" }),
+            .phase = EcsPreFrame,
             .query.terms = {{
                 .id = ecs_pair(kind, EcsPeriod1m),
                 .src.id = EcsWorld 
@@ -309,7 +311,8 @@ void flecs_stats_api_import(
         ctx->api = *api;
 
         ecs_system(world, {
-            .entity = ecs_entity(world, { .name = "Monitor1h", .add = ecs_ids(ecs_dependson(EcsPreFrame)) }),
+            .entity = ecs_entity(world, { .name = "Monitor1h" }),
+            .phase = EcsPreFrame,
             .query.terms = {{
                 .id = ecs_pair(kind, EcsPeriod1h),
                 .src.id = EcsWorld 
@@ -332,7 +335,8 @@ void flecs_stats_api_import(
         ctx->interval = FlecsDayIntervalCount;
 
         ecs_system(world, {
-            .entity = ecs_entity(world, { .name = "Monitor1d", .add = ecs_ids(ecs_dependson(EcsPreFrame)) }),
+            .entity = ecs_entity(world, { .name = "Monitor1d" }),
+            .phase = EcsPreFrame,
             .query.terms = {{
                 .id = ecs_pair(kind, EcsPeriod1d),
                 .src.id = EcsWorld 
@@ -355,7 +359,8 @@ void flecs_stats_api_import(
         ctx->interval = FlecsWeekIntervalCount;
 
         ecs_system(world, {
-            .entity = ecs_entity(world, { .name = "Monitor1w", .add = ecs_ids(ecs_dependson(EcsPreFrame)) }),
+            .entity = ecs_entity(world, { .name = "Monitor1w" }),
+            .phase = EcsPreFrame,
             .query.terms = {{
                 .id = ecs_pair(kind, EcsPeriod1w),
                 .src.id = EcsWorld 

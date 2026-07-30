@@ -2529,7 +2529,8 @@ void ChangeDetection_mark_dirty_w_cached_w_up_search(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
-    ECS_ENTITY(world, Rel, Traversable);
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsTraversable);
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {
@@ -2582,7 +2583,8 @@ void ChangeDetection_mark_dirty_w_cached_w_up_test(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
-    ECS_ENTITY(world, Rel, Traversable);
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsTraversable);
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {

@@ -226,7 +226,8 @@ void DontFragment_1_fixed_sparse_up(void) {
 void DontFragment_1_fixed_sparse_any(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Movement, DontFragment);
+    ecs_entity_t Movement = ecs_entity(world, { .name = "Movement" });
+    ecs_add_id(world, Movement, EcsDontFragment);
     ECS_TAG(world, Walking);
     ECS_TAG(world, Running);
     ECS_TAG(world, Sitting);
@@ -257,7 +258,9 @@ void DontFragment_1_fixed_sparse_any(void) {
 void DontFragment_1_fixed_sparse_exclusive_any(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Movement, DontFragment, Exclusive);
+    ecs_entity_t Movement = ecs_entity(world, { .name = "Movement" });
+    ecs_add_id(world, Movement, EcsDontFragment);
+    ecs_add_id(world, Movement, EcsExclusive);
     ECS_TAG(world, Walking);
     ECS_TAG(world, Running);
     ECS_TAG(world, Sitting);
@@ -288,7 +291,8 @@ void DontFragment_1_fixed_sparse_exclusive_any(void) {
 void DontFragment_1_fixed_sparse_tgt_var(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Movement, DontFragment);
+    ecs_entity_t Movement = ecs_entity(world, { .name = "Movement" });
+    ecs_add_id(world, Movement, EcsDontFragment);
     ECS_TAG(world, Walking);
     ECS_TAG(world, Running);
     ECS_TAG(world, Sitting);
@@ -342,7 +346,9 @@ void DontFragment_1_fixed_sparse_tgt_var(void) {
 void DontFragment_1_fixed_sparse_exclusive_tgt_var(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Movement, DontFragment, Exclusive);
+    ecs_entity_t Movement = ecs_entity(world, { .name = "Movement" });
+    ecs_add_id(world, Movement, EcsDontFragment);
+    ecs_add_id(world, Movement, EcsExclusive);
     ECS_TAG(world, Walking);
     ECS_TAG(world, Running);
     ECS_TAG(world, Sitting);
@@ -390,7 +396,8 @@ void DontFragment_1_fixed_sparse_exclusive_tgt_var(void) {
 void DontFragment_1_fixed_sparse_tgt_var_written(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Movement, DontFragment);
+    ecs_entity_t Movement = ecs_entity(world, { .name = "Movement" });
+    ecs_add_id(world, Movement, EcsDontFragment);
     ECS_TAG(world, Walking);
     ECS_TAG(world, Running);
     ECS_TAG(world, Sitting);
@@ -438,7 +445,9 @@ void DontFragment_1_fixed_sparse_tgt_var_written(void) {
 void DontFragment_1_fixed_sparse_exclusive_tgt_var_written(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Movement, DontFragment, Exclusive);
+    ecs_entity_t Movement = ecs_entity(world, { .name = "Movement" });
+    ecs_add_id(world, Movement, EcsDontFragment);
+    ecs_add_id(world, Movement, EcsExclusive);
     ECS_TAG(world, Walking);
     ECS_TAG(world, Running);
     ECS_TAG(world, Sitting);
@@ -739,7 +748,8 @@ void DontFragment_1_this_sparse_written_none(void) {
 void DontFragment_1_this_sparse_any(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Movement, DontFragment);
+    ecs_entity_t Movement = ecs_entity(world, { .name = "Movement" });
+    ecs_add_id(world, Movement, EcsDontFragment);
     ECS_TAG(world, Walking);
     ECS_TAG(world, Running);
     ECS_TAG(world, Sitting);
@@ -806,7 +816,9 @@ void DontFragment_1_this_sparse_any(void) {
 void DontFragment_1_this_sparse_exclusive_any(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Movement, DontFragment, Exclusive);
+    ecs_entity_t Movement = ecs_entity(world, { .name = "Movement" });
+    ecs_add_id(world, Movement, EcsDontFragment);
+    ecs_add_id(world, Movement, EcsExclusive);
     ECS_TAG(world, Walking);
     ECS_TAG(world, Running);
     ECS_TAG(world, Sitting);
@@ -873,7 +885,8 @@ void DontFragment_1_this_sparse_exclusive_any(void) {
 void DontFragment_1_this_sparse_tgt_var(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Movement, DontFragment);
+    ecs_entity_t Movement = ecs_entity(world, { .name = "Movement" });
+    ecs_add_id(world, Movement, EcsDontFragment);
     ECS_TAG(world, Walking);
     ECS_TAG(world, Running);
     ECS_TAG(world, Sitting);
@@ -947,7 +960,9 @@ void DontFragment_1_this_sparse_tgt_var(void) {
 void DontFragment_1_this_sparse_exclusive_tgt_var(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Movement, DontFragment, Exclusive);
+    ecs_entity_t Movement = ecs_entity(world, { .name = "Movement" });
+    ecs_add_id(world, Movement, EcsDontFragment);
+    ecs_add_id(world, Movement, EcsExclusive);
     ECS_TAG(world, Walking);
     ECS_TAG(world, Running);
     ECS_TAG(world, Sitting);
@@ -1021,7 +1036,8 @@ void DontFragment_1_this_sparse_exclusive_tgt_var(void) {
 void DontFragment_1_this_sparse_tgt_var_written(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Movement, DontFragment);
+    ecs_entity_t Movement = ecs_entity(world, { .name = "Movement" });
+    ecs_add_id(world, Movement, EcsDontFragment);
     ECS_TAG(world, Walking);
     ECS_TAG(world, Running);
     ECS_TAG(world, Sitting);
@@ -1082,7 +1098,9 @@ void DontFragment_1_this_sparse_tgt_var_written(void) {
 void DontFragment_1_this_sparse_exclusive_tgt_var_written(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Movement, DontFragment, Exclusive);
+    ecs_entity_t Movement = ecs_entity(world, { .name = "Movement" });
+    ecs_add_id(world, Movement, EcsDontFragment);
+    ecs_add_id(world, Movement, EcsExclusive);
     ECS_TAG(world, Walking);
     ECS_TAG(world, Running);
     ECS_TAG(world, Sitting);
@@ -1345,7 +1363,8 @@ void DontFragment_1_var_sparse_written_none(void) {
 void DontFragment_1_var_sparse_any(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Movement, DontFragment);
+    ecs_entity_t Movement = ecs_entity(world, { .name = "Movement" });
+    ecs_add_id(world, Movement, EcsDontFragment);
     ECS_TAG(world, Walking);
     ECS_TAG(world, Running);
     ECS_TAG(world, Sitting);
@@ -1429,7 +1448,9 @@ void DontFragment_1_var_sparse_any(void) {
 void DontFragment_1_var_sparse_exclusive_any(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Movement, DontFragment, Exclusive);
+    ecs_entity_t Movement = ecs_entity(world, { .name = "Movement" });
+    ecs_add_id(world, Movement, EcsDontFragment);
+    ecs_add_id(world, Movement, EcsExclusive);
     ECS_TAG(world, Walking);
     ECS_TAG(world, Running);
     ECS_TAG(world, Sitting);
@@ -2314,7 +2335,8 @@ void DontFragment_1_var_sparse_written_not(void) {
 void DontFragment_1_fixed_sparse_pair_not(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Movement, DontFragment);
+    ecs_entity_t Movement = ecs_entity(world, { .name = "Movement" });
+    ecs_add_id(world, Movement, EcsDontFragment);
     ECS_TAG(world, Walking);
     ECS_TAG(world, Running);
     ECS_TAG(world, Sitting);
@@ -2353,7 +2375,9 @@ void DontFragment_1_fixed_sparse_pair_not(void) {
 void DontFragment_1_fixed_sparse_pair_exclusive_not(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Movement, DontFragment, Exclusive);
+    ecs_entity_t Movement = ecs_entity(world, { .name = "Movement" });
+    ecs_add_id(world, Movement, EcsDontFragment);
+    ecs_add_id(world, Movement, EcsExclusive);
     ECS_TAG(world, Walking);
     ECS_TAG(world, Running);
     ECS_TAG(world, Sitting);
@@ -2392,7 +2416,8 @@ void DontFragment_1_fixed_sparse_pair_exclusive_not(void) {
 void DontFragment_1_fixed_sparse_pair_wildcard_not(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Movement, DontFragment);
+    ecs_entity_t Movement = ecs_entity(world, { .name = "Movement" });
+    ecs_add_id(world, Movement, EcsDontFragment);
     ECS_TAG(world, Walking);
     ECS_TAG(world, Running);
     ECS_TAG(world, Sitting);
@@ -2431,7 +2456,9 @@ void DontFragment_1_fixed_sparse_pair_wildcard_not(void) {
 void DontFragment_1_fixed_sparse_pair_exclusive_wildcard_not(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Movement, DontFragment, Exclusive);
+    ecs_entity_t Movement = ecs_entity(world, { .name = "Movement" });
+    ecs_add_id(world, Movement, EcsDontFragment);
+    ecs_add_id(world, Movement, EcsExclusive);
     ECS_TAG(world, Walking);
     ECS_TAG(world, Running);
     ECS_TAG(world, Sitting);
@@ -2470,7 +2497,9 @@ void DontFragment_1_fixed_sparse_pair_exclusive_wildcard_not(void) {
 void DontFragment_1_fixed_sparse_pair_any_not(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Movement, DontFragment, Exclusive);
+    ecs_entity_t Movement = ecs_entity(world, { .name = "Movement" });
+    ecs_add_id(world, Movement, EcsDontFragment);
+    ecs_add_id(world, Movement, EcsExclusive);
     ECS_TAG(world, Walking);
     ECS_TAG(world, Running);
     ECS_TAG(world, Sitting);
@@ -2509,7 +2538,9 @@ void DontFragment_1_fixed_sparse_pair_any_not(void) {
 void DontFragment_1_fixed_sparse_pair_exclusive_any_not(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Movement, DontFragment, Exclusive);
+    ecs_entity_t Movement = ecs_entity(world, { .name = "Movement" });
+    ecs_add_id(world, Movement, EcsDontFragment);
+    ecs_add_id(world, Movement, EcsExclusive);
     ECS_TAG(world, Walking);
     ECS_TAG(world, Running);
     ECS_TAG(world, Sitting);
@@ -2548,7 +2579,8 @@ void DontFragment_1_fixed_sparse_pair_exclusive_any_not(void) {
 void DontFragment_1_this_sparse_pair_not(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Movement, DontFragment);
+    ecs_entity_t Movement = ecs_entity(world, { .name = "Movement" });
+    ecs_add_id(world, Movement, EcsDontFragment);
     ECS_TAG(world, Walking);
     ECS_TAG(world, Running);
     ECS_TAG(world, Sitting);
@@ -2629,7 +2661,8 @@ void DontFragment_1_this_sparse_pair_not(void) {
 void DontFragment_1_this_sparse_pair_wildcard_not(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Movement, DontFragment);
+    ecs_entity_t Movement = ecs_entity(world, { .name = "Movement" });
+    ecs_add_id(world, Movement, EcsDontFragment);
     ECS_TAG(world, Walking);
     ECS_TAG(world, Running);
     ECS_TAG(world, Sitting);
@@ -2692,7 +2725,9 @@ void DontFragment_1_this_sparse_pair_wildcard_not(void) {
 void DontFragment_1_this_sparse_pair_exclusive_not(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Movement, DontFragment, Exclusive);
+    ecs_entity_t Movement = ecs_entity(world, { .name = "Movement" });
+    ecs_add_id(world, Movement, EcsDontFragment);
+    ecs_add_id(world, Movement, EcsExclusive);
     ECS_TAG(world, Walking);
     ECS_TAG(world, Running);
     ECS_TAG(world, Sitting);
@@ -2773,7 +2808,9 @@ void DontFragment_1_this_sparse_pair_exclusive_not(void) {
 void DontFragment_1_this_sparse_pair_exclusive_wildcard_not(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Movement, DontFragment, Exclusive);
+    ecs_entity_t Movement = ecs_entity(world, { .name = "Movement" });
+    ecs_add_id(world, Movement, EcsDontFragment);
+    ecs_add_id(world, Movement, EcsExclusive);
     ECS_TAG(world, Walking);
     ECS_TAG(world, Running);
     ECS_TAG(world, Sitting);
@@ -2836,7 +2873,8 @@ void DontFragment_1_this_sparse_pair_exclusive_wildcard_not(void) {
 void DontFragment_1_this_sparse_pair_any_not(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Movement, DontFragment);
+    ecs_entity_t Movement = ecs_entity(world, { .name = "Movement" });
+    ecs_add_id(world, Movement, EcsDontFragment);
     ECS_TAG(world, Walking);
     ECS_TAG(world, Running);
     ECS_TAG(world, Sitting);
@@ -2899,7 +2937,9 @@ void DontFragment_1_this_sparse_pair_any_not(void) {
 void DontFragment_1_this_sparse_pair_exclusive_any_not(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Movement, DontFragment, Exclusive);
+    ecs_entity_t Movement = ecs_entity(world, { .name = "Movement" });
+    ecs_add_id(world, Movement, EcsDontFragment);
+    ecs_add_id(world, Movement, EcsExclusive);
     ECS_TAG(world, Walking);
     ECS_TAG(world, Running);
     ECS_TAG(world, Sitting);
@@ -2962,7 +3002,8 @@ void DontFragment_1_this_sparse_pair_exclusive_any_not(void) {
 void DontFragment_1_var_sparse_pair_not(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Movement, DontFragment);
+    ecs_entity_t Movement = ecs_entity(world, { .name = "Movement" });
+    ecs_add_id(world, Movement, EcsDontFragment);
     ECS_TAG(world, Walking);
     ECS_TAG(world, Running);
     ECS_TAG(world, Sitting);
@@ -3065,7 +3106,8 @@ void DontFragment_1_var_sparse_pair_not(void) {
 void DontFragment_1_var_sparse_pair_exclusive_not(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Movement, DontFragment);
+    ecs_entity_t Movement = ecs_entity(world, { .name = "Movement" });
+    ecs_add_id(world, Movement, EcsDontFragment);
     ECS_TAG(world, Walking);
     ECS_TAG(world, Running);
     ECS_TAG(world, Sitting);
@@ -3168,7 +3210,8 @@ void DontFragment_1_var_sparse_pair_exclusive_not(void) {
 void DontFragment_1_var_sparse_pair_wildcard_not(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Movement, DontFragment);
+    ecs_entity_t Movement = ecs_entity(world, { .name = "Movement" });
+    ecs_add_id(world, Movement, EcsDontFragment);
     ECS_TAG(world, Walking);
     ECS_TAG(world, Running);
     ECS_TAG(world, Sitting);
@@ -3235,7 +3278,9 @@ void DontFragment_1_var_sparse_pair_wildcard_not(void) {
 void DontFragment_1_var_sparse_pair_exclusive_wildcard_not(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Movement, DontFragment, Exclusive);
+    ecs_entity_t Movement = ecs_entity(world, { .name = "Movement" });
+    ecs_add_id(world, Movement, EcsDontFragment);
+    ecs_add_id(world, Movement, EcsExclusive);
     ECS_TAG(world, Walking);
     ECS_TAG(world, Running);
     ECS_TAG(world, Sitting);
@@ -3302,7 +3347,8 @@ void DontFragment_1_var_sparse_pair_exclusive_wildcard_not(void) {
 void DontFragment_1_var_sparse_pair_any_not(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Movement, DontFragment);
+    ecs_entity_t Movement = ecs_entity(world, { .name = "Movement" });
+    ecs_add_id(world, Movement, EcsDontFragment);
     ECS_TAG(world, Walking);
     ECS_TAG(world, Running);
     ECS_TAG(world, Sitting);
@@ -3369,7 +3415,9 @@ void DontFragment_1_var_sparse_pair_any_not(void) {
 void DontFragment_1_var_sparse_pair_exclusive_any_not(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Movement, DontFragment, Exclusive);
+    ecs_entity_t Movement = ecs_entity(world, { .name = "Movement" });
+    ecs_add_id(world, Movement, EcsDontFragment);
+    ecs_add_id(world, Movement, EcsExclusive);
     ECS_TAG(world, Walking);
     ECS_TAG(world, Running);
     ECS_TAG(world, Sitting);
@@ -3667,7 +3715,8 @@ void DontFragment_2_this_written_sparse_pair_unused(void) {
 void DontFragment_this_written_sparse_any(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Movement, DontFragment);
+    ecs_entity_t Movement = ecs_entity(world, { .name = "Movement" });
+    ecs_add_id(world, Movement, EcsDontFragment);
     ECS_TAG(world, Walking);
     ECS_TAG(world, Running);
     ECS_TAG(world, Sitting);
@@ -3748,7 +3797,9 @@ void DontFragment_this_written_sparse_any(void) {
 void DontFragment_this_written_sparse_exclusive_any(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Movement, DontFragment, Exclusive);
+    ecs_entity_t Movement = ecs_entity(world, { .name = "Movement" });
+    ecs_add_id(world, Movement, EcsDontFragment);
+    ecs_add_id(world, Movement, EcsExclusive);
     ECS_TAG(world, Walking);
     ECS_TAG(world, Running);
     ECS_TAG(world, Sitting);
@@ -6424,7 +6475,9 @@ void DontFragment_add_to_self_while_iterate(void) {
 void DontFragment_this_sparse_recycled(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Foo, DontFragment);
+    ecs_entity_t Foo = ecs_entity(world, { .name = "Foo" });
+    ecs_entity_t ecs_id(Foo) = Foo;
+    ecs_add_id(world, Foo, EcsDontFragment);
 
     ecs_entity_t e = ecs_new(world);
     ecs_add(world, e, Foo);
@@ -6460,7 +6513,8 @@ void DontFragment_this_sparse_recycled(void) {
 void DontFragment_this_sparse_pair_recycled(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Rel, DontFragment);
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsDontFragment);
 
     ecs_entity_t e = ecs_new(world);
     ecs_add_pair(world, e, Rel, e);
@@ -6496,7 +6550,8 @@ void DontFragment_this_sparse_pair_recycled(void) {
 void DontFragment_this_sparse_wildcard_pair_recycled(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Rel, DontFragment);
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsDontFragment);
 
     ecs_entity_t e = ecs_new(world);
     ecs_add_pair(world, e, Rel, e);
@@ -6532,7 +6587,8 @@ void DontFragment_this_sparse_wildcard_pair_recycled(void) {
 void DontFragment_this_sparse_any_pair_recycled(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Rel, DontFragment);
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsDontFragment);
 
     ecs_entity_t e = ecs_new(world);
     ecs_add_pair(world, e, Rel, e);
@@ -6568,7 +6624,9 @@ void DontFragment_this_sparse_any_pair_recycled(void) {
 void DontFragment_this_written_sparse_recycled(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Foo, DontFragment);
+    ecs_entity_t Foo = ecs_entity(world, { .name = "Foo" });
+    ecs_entity_t ecs_id(Foo) = Foo;
+    ecs_add_id(world, Foo, EcsDontFragment);
     ECS_TAG(world, Bar);
 
     ecs_entity_t e = ecs_new_w(world, Bar);
@@ -6607,7 +6665,8 @@ void DontFragment_this_written_sparse_recycled(void) {
 void DontFragment_this_written_sparse_pair_recycled(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Rel, DontFragment);
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsDontFragment);
     ECS_TAG(world, Bar);
 
     ecs_entity_t e = ecs_new_w(world, Bar);
@@ -6646,7 +6705,8 @@ void DontFragment_this_written_sparse_pair_recycled(void) {
 void DontFragment_this_written_sparse_wildcard_pair_recycled(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Rel, DontFragment);
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsDontFragment);
     ECS_TAG(world, Bar);
 
     ecs_entity_t e = ecs_new_w(world, Bar);
@@ -6685,7 +6745,8 @@ void DontFragment_this_written_sparse_wildcard_pair_recycled(void) {
 void DontFragment_this_written_sparse_any_pair_recycled(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Rel, DontFragment);
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsDontFragment);
     ECS_TAG(world, Bar);
 
     ecs_entity_t e = ecs_new_w(world, Bar);

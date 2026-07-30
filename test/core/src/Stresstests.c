@@ -93,7 +93,10 @@ static void create_delete_entity_random_components_staged(
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Rotation);
-    ECS_PREFAB(world, Type, Position, Velocity);
+    ecs_entity_t Type = ecs_entity(world, { .name = "Type" });
+    ecs_add_id(world, Type, EcsPrefab);
+    ecs_add(world, Type, Position);
+    ecs_add(world, Type, Velocity);
 
     ECS_SYSTEM(world, Add_random, EcsOnUpdate, Position);
     ECS_SYSTEM(world, Delete_above_1000, EcsPostUpdate, Position);
@@ -137,7 +140,10 @@ static void set_entity_random_components(
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Rotation);
-    ECS_PREFAB(world, Type, Position, Velocity);
+    ecs_entity_t Type = ecs_entity(world, { .name = "Type" });
+    ecs_add_id(world, Type, EcsPrefab);
+    ecs_add(world, Type, Position);
+    ecs_add(world, Type, Velocity);
 
     ECS_SYSTEM(world, Set_random, EcsOnUpdate, Position);
     ECS_SYSTEM(world, Set_velocity_callback, EcsOnSet, Velocity);

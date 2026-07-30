@@ -25,43 +25,6 @@
 #define ECS_DECLARE(id)\
     ecs_entity_t id, ecs_id(id)
 
-/** Forward declare an entity. */
-#define ECS_ENTITY_DECLARE ECS_DECLARE
-
-/** Define a forward-declared entity.
- *
- * Example:
- *
- * @code
- * ECS_ENTITY_DEFINE(world, MyEntity, Position, Velocity);
- * @endcode
- */
-#define ECS_ENTITY_DEFINE(world, id_, ...) \
-    { \
-        ecs_entity_desc_t desc = {0}; \
-        desc.id = id_; \
-        desc.name = #id_; \
-        desc.add_expr = #__VA_ARGS__; \
-        id_ = ecs_entity_init(world, &desc); \
-        ecs_id(id_) = id_; \
-        ecs_assert(id_ != 0, ECS_INVALID_PARAMETER, "failed to create entity %s", #id_); \
-    } \
-    (void)id_; \
-    (void)ecs_id(id_)
-
-/** Declare and define an entity.
- *
- * Example:
- *
- * @code
- * ECS_ENTITY(world, MyEntity, Position, Velocity);
- * @endcode
- */
-#define ECS_ENTITY(world, id, ...) \
-    ecs_entity_t ecs_id(id); \
-    ecs_entity_t id = 0; \
-    ECS_ENTITY_DEFINE(world, id, __VA_ARGS__)
-
 /** Forward declare a tag. */
 #define ECS_TAG_DECLARE ECS_DECLARE
 
@@ -73,7 +36,17 @@
  * ECS_TAG_DEFINE(world, MyTag);
  * @endcode
  */
-#define ECS_TAG_DEFINE(world, id) ECS_ENTITY_DEFINE(world, id, 0)
+#define ECS_TAG_DEFINE(world, id_) \
+    { \
+        ecs_entity_desc_t desc = {0}; \
+        desc.id = id_; \
+        desc.name = #id_; \
+        id_ = ecs_entity_init(world, &desc); \
+        ecs_id(id_) = id_; \
+        ecs_assert(id_ != 0, ECS_INVALID_PARAMETER, "failed to create tag %s", #id_); \
+    } \
+    (void)id_; \
+    (void)ecs_id(id_)
 
 /** Declare and define a tag.
  *
@@ -83,30 +56,10 @@
  * ECS_TAG(world, MyTag);
  * @endcode
  */
-#define ECS_TAG(world, id) ECS_ENTITY(world, id, 0)
-
-/** Forward declare a prefab. */
-#define ECS_PREFAB_DECLARE ECS_DECLARE
-
-/** Define a forward-declared prefab.
- *
- * Example:
- *
- * @code
- * ECS_PREFAB_DEFINE(world, MyPrefab, Position, Velocity);
- * @endcode
- */
-#define ECS_PREFAB_DEFINE(world, id, ...) ECS_ENTITY_DEFINE(world, id, Prefab, __VA_ARGS__)
-
-/** Declare and define a prefab.
- *
- * Example:
- *
- * @code
- * ECS_PREFAB(world, MyPrefab, Position, Velocity);
- * @endcode
- */
-#define ECS_PREFAB(world, id, ...) ECS_ENTITY(world, id, Prefab, __VA_ARGS__)
+#define ECS_TAG(world, id) \
+    ecs_entity_t ecs_id(id); \
+    ecs_entity_t id = 0; \
+    ECS_TAG_DEFINE(world, id)
 
 /** Forward declare a component. */
 #define ECS_COMPONENT_DECLARE(id)         ecs_entity_t ecs_id(id)
@@ -347,7 +300,7 @@
 
 /** Insert a new entity with a list of component values. */
 #define ecs_insert(world, ...)\
-    ecs_entity(world, { .set = ecs_values(__VA_ARGS__)})
+    ecs_insert_w_values(world, ecs_values(__VA_ARGS__))
 
 /** Set a component using a pointer. */
 #define ecs_set_ptr(world, entity, component, ptr)\

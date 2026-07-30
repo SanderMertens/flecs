@@ -149,7 +149,9 @@ void Add_component_to_nonempty_overlap(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_ENTITY(world, e, Position, Velocity);
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_add(world, e, Position);
+    ecs_add(world, e, Velocity);
     test_assert(e != 0);
     test_assert(ecs_has(world, e, Position));
     test_assert(ecs_has(world, e, Velocity));
@@ -165,7 +167,7 @@ void Add_component_to_nonempty_overlap(void) {
 void Add_tag(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Tag, 0);
+    ecs_entity_t Tag = ecs_entity(world, { .name = "Tag" });
 
     ecs_entity_t e = ecs_new(world);
     test_assert(e != 0);

@@ -1196,7 +1196,7 @@ void Refs_reeval_hierarchy(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Mass) = define_mass(world);
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    define_position(world);
 
     ECS_TAG(world, TagP1);
     ECS_TAG(world, TagP2);
@@ -1228,9 +1228,7 @@ void Refs_reeval_hierarchy(void) {
     test_assert(ecs_lookup(world, "gp.p2.c2") != 0);
 
     ecs_system(world, {
-        .entity = ecs_entity(world, {
-            .add = ecs_ids( ecs_dependson(EcsOnUpdate) )
-        }),
+        .phase = EcsOnUpdate,
         .callback = SetMass
     });
 
@@ -1333,9 +1331,7 @@ void Refs_progress_reeval_prefab_w_isa_observer(void) {
     test_assert(s != 0);
 
     ecs_system(world, {
-        .entity = ecs_entity(world, {
-            .add = ecs_ids( ecs_dependson(EcsOnUpdate) )
-        }),
+        .phase = EcsOnUpdate,
         .callback = SetMass
     });
 

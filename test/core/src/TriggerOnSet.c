@@ -320,7 +320,9 @@ void TriggerOnSet_on_set_after_override(void) {
     ECS_COMPONENT(world, Position);
     ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
-    ECS_PREFAB(world, Prefab, Position);
+    ecs_entity_t Prefab = ecs_entity(world, { .name = "Prefab" });
+    ecs_add_id(world, Prefab, EcsPrefab);
+    ecs_add(world, Prefab, Position);
     ecs_set(world, Prefab, Position, {1, 3});
 
     ECS_OBSERVER(world, OnSetShared, EcsOnSet, Position);
@@ -394,7 +396,10 @@ void TriggerOnSet_on_set_after_override_w_new(void) {
     ECS_COMPONENT(world, Position);
     ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
-    ECS_PREFAB(world, Prefab, Position, auto_override | Position);
+    ecs_entity_t Prefab = ecs_entity(world, { .name = "Prefab" });
+    ecs_add_id(world, Prefab, EcsPrefab);
+    ecs_add(world, Prefab, Position);
+    ecs_add_id(world, Prefab, ECS_AUTO_OVERRIDE | ecs_id(Position));
     ecs_set(world, Prefab, Position, {1, 3});
 
     Probe ctx = {0};
@@ -431,7 +436,10 @@ void TriggerOnSet_on_set_after_override_w_new_w_count(void) {
     ECS_COMPONENT(world, Position);
     ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
-    ECS_PREFAB(world, Prefab, Position, auto_override | Position);
+    ecs_entity_t Prefab = ecs_entity(world, { .name = "Prefab" });
+    ecs_add_id(world, Prefab, EcsPrefab);
+    ecs_add(world, Prefab, Position);
+    ecs_add_id(world, Prefab, ECS_AUTO_OVERRIDE | ecs_id(Position));
     ecs_set(world, Prefab, Position, {1, 3});
 
     ECS_OBSERVER(world, OnSet, EcsOnSet, Position);
@@ -469,7 +477,10 @@ void TriggerOnSet_on_set_after_override_1_of_2_overridden(void) {
     ECS_COMPONENT(world, Position);
     ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
-    ECS_PREFAB(world, Prefab, Position, auto_override | Position);
+    ecs_entity_t Prefab = ecs_entity(world, { .name = "Prefab" });
+    ecs_add_id(world, Prefab, EcsPrefab);
+    ecs_add(world, Prefab, Position);
+    ecs_add_id(world, Prefab, ECS_AUTO_OVERRIDE | ecs_id(Position));
     ecs_set(world, Prefab, Position, {1, 3});
 
     ECS_OBSERVER(world, OnSet, EcsOnSet, Position);
@@ -602,7 +613,8 @@ void TriggerOnSet_on_set_after_remove_override(void) {
     ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
     ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
 
-    ECS_ENTITY(world, Base, Position);
+    ecs_entity_t Base = ecs_entity(world, { .name = "Base" });
+    ecs_add(world, Base, Position);
     ECS_OBSERVER(world, Trigger, EcsOnSet, Position);
 
     Probe ctx = { 0 };

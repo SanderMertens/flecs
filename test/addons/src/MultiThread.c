@@ -599,7 +599,7 @@ void MultiThread_2_thread_1_entity_instanced(void) {
     ECS_COMPONENT_DEFINE(world, Position);
 
     ecs_entity_t s = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, {.add = ecs_ids(ecs_dependson(EcsOnUpdate))}),
+        .phase = EcsOnUpdate,
         .callback = Progress,
         .query = {
             .expr = "Position",
@@ -637,7 +637,7 @@ void MultiThread_2_thread_5_entity_instanced(void) {
     ECS_COMPONENT_DEFINE(world, Position);
 
     ecs_entity_t s = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, {.add = ecs_ids(ecs_dependson(EcsOnUpdate))}),
+        .phase = EcsOnUpdate,
         .callback = Progress,
         .query = {
             .expr = "Position",
@@ -675,7 +675,7 @@ void MultiThread_2_thread_10_entity_instanced(void) {
     ECS_COMPONENT_DEFINE(world, Position);
 
     ecs_entity_t s = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, {.add = ecs_ids(ecs_dependson(EcsOnUpdate))}),
+        .phase = EcsOnUpdate,
         .callback = Progress,
         .query = {
             .expr = "Position",
@@ -834,7 +834,10 @@ static void test_combs_100_entity_2_types(int THREADS) {
 
     ECS_COMPONENT_DEFINE(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_PREFAB(world, Type, Position, Velocity);
+    ecs_entity_t Type = ecs_entity(world, { .name = "Type" });
+    ecs_add_id(world, Type, EcsPrefab);
+    ecs_add(world, Type, Position);
+    ecs_add(world, Type, Velocity);
 
     ECS_QUERY_DEFINE(world, qTestSubset, Position);
     ECS_SYSTEM(world, TestAll, EcsOnUpdate, Position);
@@ -895,7 +898,10 @@ void MultiThread_change_thread_count(void) {
 
     ECS_COMPONENT_DEFINE(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_PREFAB(world, Type, Position, Velocity);
+    ecs_entity_t Type = ecs_entity(world, { .name = "Type" });
+    ecs_add_id(world, Type, EcsPrefab);
+    ecs_add(world, Type, Position);
+    ecs_add(world, Type, Velocity);
 
     ECS_QUERY_DEFINE(world, qTestSubset, Position);
     ECS_SYSTEM(world, TestAll, EcsOnUpdate, Position);
@@ -1097,7 +1103,7 @@ void MultiThread_no_staging_w_multithread(void) {
         ecs_system_init(world, &(ecs_system_desc_t){
             .callback = CreateQuery,
             .immediate = true,
-            .entity = ecs_entity(world, {.add = ecs_ids(ecs_dependson(EcsOnUpdate))})
+            .phase = EcsOnUpdate
         });
 
         create_query_invoked = 0;
@@ -1151,7 +1157,7 @@ void MultiThread_get_ctx(void) {
     set_worker_kind(world, 2);
 
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .add = ecs_ids( ecs_dependson(EcsOnUpdate) ) }),
+        .phase = EcsOnUpdate,
         .callback = System_w_ctx,
         .multi_threaded = true,
         .ctx = &system_ctx
@@ -1170,7 +1176,7 @@ void MultiThread_get_binding_ctx(void) {
     set_worker_kind(world, 2);
 
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .add = ecs_ids( ecs_dependson(EcsOnUpdate) ) }),
+        .phase = EcsOnUpdate,
         .callback = System_w_binding_ctx,
         .multi_threaded = true,
         .callback_ctx = &system_ctx
@@ -1189,7 +1195,7 @@ void MultiThread_get_ctx_w_run(void) {
     set_worker_kind(world, 2);
 
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .add = ecs_ids( ecs_dependson(EcsOnUpdate) ) }),
+        .phase = EcsOnUpdate,
         .run = System_run_w_ctx,
         .multi_threaded = true,
         .ctx = &system_ctx
@@ -1208,7 +1214,7 @@ void MultiThread_get_binding_ctx_w_run(void) {
     set_worker_kind(world, 2);
 
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .add = ecs_ids( ecs_dependson(EcsOnUpdate)) }),
+        .phase = EcsOnUpdate,
         .run = System_run_w_binding_ctx,
         .multi_threaded = true,
         .callback_ctx = &system_ctx
@@ -1236,13 +1242,13 @@ void MultiThread_bulk_new_in_no_readonly_w_multithread(void) {
     ECS_TAG_DEFINE(world, Tag);
 
     ecs_system(world, {
-        .entity = ecs_entity(world, { .add = ecs_ids( ecs_dependson(EcsOnUpdate) )}),
+        .phase = EcsOnUpdate,
         .immediate = true,
         .callback = sys_bulk_init
     });
 
     ecs_system(world, {
-        .entity = ecs_entity(world, { .add = ecs_ids( ecs_dependson(EcsOnUpdate) )}),
+        .phase = EcsOnUpdate,
         .multi_threaded = true,
         .callback = sys
     });
@@ -1276,9 +1282,7 @@ void MultiThread_bulk_new_in_no_readonly_w_multithread_2(void) {
     set_worker_kind(world, 64);
 
     ecs_system(world, {
-        .entity = ecs_entity(world, {
-            .add = ecs_ids( ecs_dependson(EcsOnUpdate) )
-        }),
+        .phase = EcsOnUpdate,
         .query.terms = {{ ecs_id(Position) }},
         .callback = sys
     });
@@ -1288,18 +1292,14 @@ void MultiThread_bulk_new_in_no_readonly_w_multithread_2(void) {
     });
 
     ecs_system(world, {
-        .entity = ecs_entity(world, {
-            .add = ecs_ids( ecs_dependson(EcsOnUpdate) )
-        }),
+        .phase = EcsOnUpdate,
         .callback = sys_bulk_init_2,
         .immediate = true,
         .ctx = q
     });
 
     ecs_system(world, {
-        .entity = ecs_entity(world, {
-            .add = ecs_ids( ecs_dependson(EcsOnUpdate) )
-        }),
+        .phase = EcsOnUpdate,
         .callback = sys
     });
 
@@ -1333,7 +1333,7 @@ void MultiThread_run_first_worker_on_main(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_system(world, {
-        .entity = ecs_entity(world, { .add = ecs_ids( ecs_dependson(EcsOnUpdate) )}),
+        .phase = EcsOnUpdate,
         .multi_threaded = true,
         .callback = dummy
     });
@@ -1354,7 +1354,7 @@ void MultiThread_run_single_thread_on_main(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_system(world, {
-        .entity = ecs_entity(world, { .add = ecs_ids( ecs_dependson(EcsOnUpdate) )}),
+        .phase = EcsOnUpdate,
         .multi_threaded = false,
         .callback = dummy
     });

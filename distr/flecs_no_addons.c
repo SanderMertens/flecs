@@ -6811,39 +6811,6 @@ static void flecs_copy_id(
         world, table, ECS_RECORD_TO_ROW(r->row), component, true, dst_ptr);
 }
 
-/* Traverse table graph by adding identifiers parsed from the
- * passed in expression. */
-static int flecs_traverse_from_expr(
-    ecs_world_t *world,
-    const char *name,
-    const char *expr,
-    ecs_vec_t *ids)
-{
-    (void)world;
-    (void)name;
-    (void)expr;
-    (void)ids;
-    ecs_err("cannot parse component expression: script addon required");
-    goto error;
-error:
-    return -1;
-}
-
-/* Add components based on the parsed expression. This operation is
- * slower than flecs_traverse_from_expr, but safe to use from a deferred context. */
-static void flecs_defer_from_expr(
-    ecs_world_t *world,
-    ecs_entity_t entity,
-    const char *name,
-    const char *expr)
-{
-    (void)world;
-    (void)entity;
-    (void)name;
-    (void)expr;
-    ecs_err("cannot parse component expression: script addon required");
-}
-
 /* If operation is not deferred, add components by finding the target
  * table and moving the entity towards it. */
 static int flecs_traverse_add(
@@ -6860,16 +6827,6 @@ static int flecs_traverse_add(
     const char *root_sep = desc->root_sep;
     ecs_table_diff_builder_t diff = ECS_TABLE_DIFF_INIT;
     flecs_table_diff_builder_init(world, &diff);
-    ecs_vec_t ids;
-
-    /* Add components from the 'add_expr' expression. Look up before naming 
-     * entity, so that expression can't resolve to self. */
-    ecs_vec_init_t(&world->allocator, &ids, ecs_id_t, 0);
-    if (desc->add_expr && ecs_os_strcmp(desc->add_expr, "0")) {
-        if (flecs_traverse_from_expr(world, name, desc->add_expr, &ids)) {
-            goto error;
-        }
-    }
 
     /* Set symbol */
     if (desc->symbol && desc->symbol[0]) {
@@ -6900,35 +6857,6 @@ static int flecs_traverse_add(
     ecs_record_t *r = flecs_entities_get(world, result);
     table = r->table;
 
-    /* Add components from the 'add' array */
-    if (desc->add) {
-        int32_t i = 0;
-        ecs_id_t component;
-
-        while ((component = desc->add[i ++])) {
-            table = flecs_find_table_add(world, table, component, &diff);
-        }
-    }
-
-    /* Add components from the 'set' array */
-    if (desc->set) {
-        int32_t i = 0;
-        ecs_id_t component;
-
-        while ((component = desc->set[i ++].type)) {
-            table = flecs_find_table_add(world, table, component, &diff);
-        }
-    }
-
-    /* Add ids from .expr */
-    {
-        int32_t i, count = ecs_vec_count(&ids);
-        ecs_id_t *expr_ids = ecs_vec_first(&ids);
-        for (i = 0; i < count; i ++) {
-            table = flecs_find_table_add(world, table, expr_ids[i], &diff);
-        }
-    }
-
     /* Find destination table */
     /* If this is a new entity without a name, add the scope. If a name is
      * provided, the scope will be added by the add_path_w_sep function */
@@ -6952,43 +6880,10 @@ static int flecs_traverse_add(
         flecs_defer_end(world, world->stages[0]);
     }
 
-    /* Set component values */
-    if (desc->set) {
-        table = r->table;
-        ecs_assert(r->table != NULL, ECS_INTERNAL_ERROR, NULL);
-        int32_t i = 0, row = ECS_RECORD_TO_ROW(r->row);
-        const ecs_value_t *v;
-        
-        flecs_defer_begin(world, world->stages[0]);
-
-        while ((void)(v = &desc->set[i ++]), v->type) {
-            if (!v->ptr) {
-                continue;
-            }
-            ecs_assert(ECS_RECORD_TO_ROW(r->row) == row, ECS_INTERNAL_ERROR, NULL);
-            ecs_component_record_t *cr = flecs_components_get(world, v->type);
-            flecs_component_ptr_t ptr = flecs_get_component_ptr(
-                world, table, row, cr);
-            ecs_check(ptr.ptr != NULL, ECS_INVALID_OPERATION, 
-                "component '%s' added to entity '%s' was removed during the "
-                "operation, make sure not to remove the component in hooks/observers",
-                    flecs_errstr(ecs_id_str(world, v->type)),
-                    flecs_errstr_2(ecs_get_path(world, result)));
-            
-            const ecs_type_info_t *ti = cr->type_info;
-            flecs_copy_id(world, result, r, v->type, 
-                flecs_itosize(ti->size), ptr.ptr, v->ptr, ti);
-        }
-
-        flecs_defer_end(world, world->stages[0]);
-    }
-
     flecs_table_diff_builder_fini(world, &diff);
-    ecs_vec_fini_t(&world->allocator, &ids, ecs_id_t);
     return 0;
 error:
     flecs_table_diff_builder_fini(world, &diff);
-    ecs_vec_fini_t(&world->allocator, &ids, ecs_id_t);
     return -1;
 }
 
@@ -7019,55 +6914,6 @@ static void flecs_deferred_add_remove(
         }
     }
 
-    /* Add components from the 'add' id array */
-    if (desc->add) {
-        int32_t i = 0;
-        ecs_id_t component;
-
-        while ((component = desc->add[i ++])) {
-            bool defer = true;
-            if (ECS_HAS_ID_FLAG(component, PAIR) && 
-                ECS_PAIR_FIRST(component) == EcsChildOf) 
-            {
-                scope = ECS_PAIR_SECOND(component);
-                if (name && (!desc->id || !name_assigned)) {
-                    /* New named entities are created by temporarily going out of
-                     * readonly mode to ensure no duplicates are created. */
-                    defer = false;
-                }
-            }
-            if (defer) {
-                ecs_add_id(world, entity, component);
-            }
-        }
-    }
-
-    /* Set component values */
-    if (desc->set) {
-        int32_t i = 0;
-        const ecs_value_t *v;
-        while ((void)(v = &desc->set[i ++]), v->type) {
-            if (v->ptr) {
-                ecs_check(v->type != 0, ECS_INVALID_PARAMETER,
-                    "0 passed for component to ecs_entity_desc_t::set[%d]", i);
-                const ecs_type_info_t *ti = ecs_get_type_info(world, v->type);
-                ecs_check(ti != NULL, ECS_INVALID_PARAMETER, 
-                    "component '%s' passed to ecs_entity_desc_t::set[%d] is a "
-                    "tag/zero sized",
-                        flecs_errstr(ecs_id_str(world, v->type)), i);
-                ecs_set_id(world, entity, v->type, 
-                    flecs_ito(size_t, ti->size), v->ptr);
-            } else {
-                ecs_add_id(world, entity, v->type);
-            }
-        }
-    }
-
-    /* Add components from the 'add_expr' expression */
-    if (desc->add_expr) {
-        flecs_defer_from_expr(world, entity, name, desc->add_expr);
-    }
-
     int32_t thread_count = ecs_get_stage_count(world);
 
     /* Set symbol */
@@ -7089,8 +6935,6 @@ static void flecs_deferred_add_remove(
     if (name && !name_assigned) {
         ecs_add_path_w_sep(world, entity, scope, name, sep, root_sep);
     }
-error:
-    return;
 }
 
 ecs_entity_t ecs_entity_init(
@@ -7106,27 +6950,6 @@ ecs_entity_t ecs_entity_init(
     ecs_entity_t scope = stage->scope;
     ecs_id_t with = ecs_get_with(world);
     ecs_entity_t result = desc->id;
-
-#ifdef FLECS_DEBUG
-    if (desc->add) {
-        ecs_id_t component;
-        int32_t i = 0;
-        while ((component = desc->add[i ++])) {
-            if (ECS_HAS_ID_FLAG(component, PAIR) && 
-                (ECS_PAIR_FIRST(component) == EcsChildOf))
-            {
-                if (desc->name) {
-                    ecs_check(false, ECS_INVALID_PARAMETER, "%s: cannot set parent in "
-                        "ecs_entity_desc_t::add, use ecs_entity_desc_t::parent",
-                            desc->name);
-                } else {
-                    ecs_check(false, ECS_INVALID_PARAMETER, "cannot set parent in "
-                        "ecs_entity_desc_t::add, use ecs_entity_desc_t::parent");
-                }
-            }
-        }
-    }
-#endif
 
     const char *name = desc->name;
     const char *sep = desc->sep;
@@ -7265,6 +7088,37 @@ ecs_entity_t ecs_entity_init(
             scope, with, new_entity, name_assigned)) 
         {
             return 0;
+        }
+    }
+
+    return result;
+error:
+    return 0;
+}
+
+ecs_entity_t ecs_insert_w_values(
+    ecs_world_t *world,
+    const ecs_value_t *values)
+{
+    ecs_entity_t result = ecs_entity_init(world, &(ecs_entity_desc_t){0});
+    if (!result) {
+        goto error;
+    }
+
+    if (values) {
+        int32_t i;
+        for (i = 0; values[i].type; i ++) {
+            if (values[i].ptr) {
+                const ecs_type_info_t *ti = ecs_get_type_info(
+                    world, values[i].type);
+                ecs_check(ti != NULL, ECS_INVALID_PARAMETER,
+                    "component '%s' passed to ecs_insert is a tag/zero sized",
+                        flecs_errstr(ecs_id_str(world, values[i].type)));
+                ecs_set_id(world, result, values[i].type,
+                    flecs_ito(size_t, ti->size), values[i].ptr);
+            } else {
+                ecs_add_id(world, result, values[i].type);
+            }
         }
     }
 

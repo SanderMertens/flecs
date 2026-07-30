@@ -37,7 +37,7 @@ void SystemMisc_invalid_entity_without_id(void) {
 
     ecs_world_t *world = ecs_init();
 
-    ECS_ENTITY(world, Foo, 0);
+    ecs_entity(world, { .name = "Foo" });
 
     test_expect_abort();
 
@@ -151,7 +151,7 @@ void SystemMisc_invalid_0_w_from_entity(void) {
 
     ecs_world_t *world = ecs_init();
     
-    ECS_ENTITY(world, Foo, 0);
+    ecs_entity(world, { .name = "Foo" });
 
     test_expect_abort();
 
@@ -190,7 +190,8 @@ void SystemMisc_invalid_null_string(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .name = "Dummy", .add = ecs_ids(ecs_dependson(EcsOnUpdate))}),
+        .entity = ecs_entity(world, { .name = "Dummy" }),
+        .phase = EcsOnUpdate,
         .callback = Dummy
     });
 
@@ -205,7 +206,8 @@ void SystemMisc_invalid_empty_string(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .name = "Dummy", .add = ecs_ids(ecs_dependson(EcsOnUpdate))}),
+        .entity = ecs_entity(world, { .name = "Dummy" }),
+        .phase = EcsOnUpdate,
         .query.expr = "",
         .callback = Dummy
     });
@@ -221,7 +223,8 @@ void SystemMisc_invalid_empty_string_w_space(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .name = "Dummy", .add = ecs_ids(ecs_dependson(EcsOnUpdate))}),
+        .entity = ecs_entity(world, { .name = "Dummy" }),
+        .phase = EcsOnUpdate,
         .query.expr = "  ",
         .callback = Dummy
     });
@@ -294,7 +297,9 @@ void SystemMisc_system_w_or_prefab(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_PREFAB(world, Prefab, Position);
+    ecs_entity_t Prefab = ecs_entity(world, { .name = "Prefab" });
+    ecs_add_id(world, Prefab, EcsPrefab);
+    ecs_add(world, Prefab, Position);
 
     ECS_SYSTEM(world, IsInvoked, EcsOnUpdate, Position, flecs.core.Prefab || Disabled);
 
@@ -311,7 +316,9 @@ void SystemMisc_system_w_or_disabled(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_ENTITY(world, Entity, Position, Disabled);
+    ecs_entity_t Entity = ecs_entity(world, { .name = "Entity" });
+    ecs_add(world, Entity, Position);
+    ecs_add_id(world, Entity, EcsDisabled);
 
     ECS_SYSTEM(world, IsInvoked, EcsOnUpdate, Position, Prefab || Disabled);
 
@@ -328,8 +335,12 @@ void SystemMisc_system_w_or_disabled_and_prefab(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_PREFAB(world, Prefab, Position);
-    ECS_ENTITY(world, Entity, Position, Disabled);
+    ecs_entity_t Prefab = ecs_entity(world, { .name = "Prefab" });
+    ecs_add_id(world, Prefab, EcsPrefab);
+    ecs_add(world, Prefab, Position);
+    ecs_entity_t Entity = ecs_entity(world, { .name = "Entity" });
+    ecs_add(world, Entity, Position);
+    ecs_add_id(world, Entity, EcsDisabled);
 
     ECS_SYSTEM(world, IsInvoked, EcsOnUpdate, Position, flecs.core.Prefab || Disabled);
 
@@ -401,9 +412,12 @@ void SystemMisc_dont_enable_after_rematch(void) {
 
     /* Create an entity that is watched. Whenever components are added/removed
      * to and/or from watched entities, a rematch is triggered. */
-    ECS_PREFAB(world, Prefab, Position);
+    ecs_entity_t Prefab = ecs_entity(world, { .name = "Prefab" });
+    ecs_add_id(world, Prefab, EcsPrefab);
+    ecs_add(world, Prefab, Position);
 
-    ECS_ENTITY(world, Entity, (IsA, Prefab));
+    ecs_entity_t Entity = ecs_entity(world, { .name = "Entity" });
+    ecs_add_pair(world, Entity, EcsIsA, Prefab);
 
     Probe ctx = {0};
     ecs_set_ctx(world, &ctx, NULL);
@@ -459,7 +473,8 @@ void SystemMisc_ensure_single_merge(void) {
     ECS_SYSTEM(world, SysA, EcsOnLoad, Position, [out] !Velocity);
     ECS_SYSTEM(world, SysB, EcsPostLoad, Velocity);
 
-    ECS_ENTITY(world, MyEntity, Position);
+    ecs_entity_t MyEntity = ecs_entity(world, { .name = "MyEntity" });
+    ecs_add(world, MyEntity, Position);
 
     ecs_progress(world, 0);
 
@@ -533,7 +548,8 @@ void SystemMisc_change_system_action(void) {
     ECS_COMPONENT(world, Position);
     
     ecs_entity_t sys = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .name = "Sys", .add = ecs_ids(ecs_dependson(EcsOnUpdate))}),
+        .entity = ecs_entity(world, { .name = "Sys" }),
+        .phase = EcsOnUpdate,
         .query.expr = "Position",
         .callback = ActionA
     });
@@ -665,7 +681,8 @@ void SystemMisc_redefine_null_signature(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .name = "System", .add = ecs_ids(ecs_dependson(EcsOnUpdate))}),
+        .entity = ecs_entity(world, { .name = "System" }),
+        .phase = EcsOnUpdate,
         .query.expr = NULL,
         .callback = Action
     });
@@ -673,7 +690,8 @@ void SystemMisc_redefine_null_signature(void) {
     test_expect_abort();
 
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .name = "System", .add = ecs_ids(ecs_dependson(EcsOnUpdate))}),
+        .entity = ecs_entity(world, { .name = "System" }),
+        .phase = EcsOnUpdate,
         .query.expr = NULL,
         .callback = Action
     });
@@ -685,7 +703,8 @@ void SystemMisc_redefine_0_signature(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .name = "System", .add = ecs_ids(ecs_dependson(EcsOnUpdate))}),
+        .entity = ecs_entity(world, { .name = "System" }),
+        .phase = EcsOnUpdate,
         .query.expr = "0",
         .callback = Action
     });
@@ -693,7 +712,8 @@ void SystemMisc_redefine_0_signature(void) {
     test_expect_abort();
 
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .name = "System", .add = ecs_ids(ecs_dependson(EcsOnUpdate))}),
+        .entity = ecs_entity(world, { .name = "System" }),
+        .phase = EcsOnUpdate,
         .query.expr = "0",
         .callback = Action
     });
@@ -708,7 +728,8 @@ void SystemMisc_redeclare_system_explicit_id(void) {
     ECS_COMPONENT(world, Velocity);
 
     ecs_entity_t s1 = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, {.name = "Move", .add = ecs_ids(ecs_dependson(EcsOnUpdate))}),
+        .entity = ecs_entity(world, { .name = "Move" }),
+        .phase = EcsOnUpdate,
         .query.expr = "Position, Velocity",
         .callback = Dummy
     });
@@ -716,7 +737,8 @@ void SystemMisc_redeclare_system_explicit_id(void) {
     test_expect_abort();
 
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, {.id = s1, .name = "Move", .add = ecs_ids(ecs_dependson(EcsOnUpdate))}),
+        .entity = ecs_entity(world, { .id = s1, .name = "Move" }),
+        .phase = EcsOnUpdate,
         .query.expr = "Position, Velocity",
         .callback = Dummy
     });
@@ -731,7 +753,8 @@ void SystemMisc_redeclare_system_explicit_id_null_expr(void) {
     ECS_COMPONENT(world, Velocity);
 
     ecs_entity_t s1 = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, {.name = "Move", .add = ecs_ids(ecs_dependson(EcsOnUpdate))}),
+        .entity = ecs_entity(world, { .name = "Move" }),
+        .phase = EcsOnUpdate,
         .query.expr = NULL,
         .callback = Dummy
     });
@@ -739,7 +762,8 @@ void SystemMisc_redeclare_system_explicit_id_null_expr(void) {
     test_expect_abort();
 
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, {.id = s1, .name = "Move", .add = ecs_ids(ecs_dependson(EcsOnUpdate))}),
+        .entity = ecs_entity(world, { .id = s1, .name = "Move" }),
+        .phase = EcsOnUpdate,
         .query.expr = NULL,
         .callback = Dummy
     });
@@ -754,7 +778,8 @@ void SystemMisc_redeclare_system_explicit_id_no_name(void) {
     ECS_COMPONENT(world, Velocity);
 
     ecs_entity_t s1 = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, {.name = "Move", .add = ecs_ids(ecs_dependson(EcsOnUpdate))}),
+        .entity = ecs_entity(world, { .name = "Move" }),
+        .phase = EcsOnUpdate,
         .query.expr = "Position, Velocity",
         .callback = Dummy
     });
@@ -762,7 +787,8 @@ void SystemMisc_redeclare_system_explicit_id_no_name(void) {
     test_expect_abort();
 
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, {.id = s1, .add = ecs_ids(ecs_dependson(EcsOnUpdate))}),
+        .entity = ecs_entity(world, { .id = s1 }),
+        .phase = EcsOnUpdate,
         .query.expr = "Position, Velocity",
         .callback = Dummy
     });
@@ -772,7 +798,8 @@ void SystemMisc_update_null_signature(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t s = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .name = "System", .add = ecs_ids(ecs_dependson(EcsOnUpdate))}),
+        .entity = ecs_entity(world, { .name = "System" }),
+        .phase = EcsOnUpdate,
         .query.expr = NULL,
         .callback = Action
     });
@@ -791,7 +818,8 @@ void SystemMisc_update_0_signature(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t s = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .name = "System", .add = ecs_ids(ecs_dependson(EcsOnUpdate))}),
+        .entity = ecs_entity(world, { .name = "System" }),
+        .phase = EcsOnUpdate,
         .query.expr = "0",
         .callback = Action
     });
@@ -813,7 +841,8 @@ void SystemMisc_update_system_explicit_id(void) {
     ECS_COMPONENT(world, Velocity);
 
     ecs_entity_t s = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, {.name = "Move", .add = ecs_ids(ecs_dependson(EcsOnUpdate))}),
+        .entity = ecs_entity(world, { .name = "Move" }),
+        .phase = EcsOnUpdate,
         .query.expr = "Position, Velocity",
         .callback = Dummy
     });
@@ -836,7 +865,8 @@ void SystemMisc_update_system_explicit_id_null_expr(void) {
     ECS_COMPONENT(world, Velocity);
 
     ecs_entity_t s = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, {.name = "Move", .add = ecs_ids(ecs_dependson(EcsOnUpdate))}),
+        .entity = ecs_entity(world, { .name = "Move" }),
+        .phase = EcsOnUpdate,
         .query.expr = NULL,
         .callback = Dummy
     });
@@ -859,7 +889,8 @@ void SystemMisc_update_system_explicit_id_no_name(void) {
     ECS_COMPONENT(world, Velocity);
 
     ecs_entity_t s = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, {.name = "Move", .add = ecs_ids(ecs_dependson(EcsOnUpdate))}),
+        .entity = ecs_entity(world, { .name = "Move" }),
+        .phase = EcsOnUpdate,
         .query.expr = "Position, Velocity",
         .callback = Dummy
     });
@@ -882,14 +913,16 @@ void SystemMisc_declare_different_id_same_name(void) {
     ecs_entity_t e2 = ecs_new(world);
 
     ecs_entity_t s_1 = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, {.id = e1, .name = "Move", .add = ecs_ids(ecs_dependson(EcsOnUpdate))}),
+        .entity = ecs_entity(world, { .id = e1, .name = "Move" }),
+        .phase = EcsOnUpdate,
         .query.expr = "0",
         .callback = Dummy
     });
     test_assert(e1 == s_1);
 
     ecs_entity_t s_2 = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, {.id = e2, .name = "Move", .add = ecs_ids(ecs_dependson(EcsOnUpdate))}),
+        .entity = ecs_entity(world, { .id = e2, .name = "Move" }),
+        .phase = EcsOnUpdate,
         .query.expr = "0",
         .callback = Dummy
     });
@@ -912,14 +945,16 @@ void SystemMisc_declare_different_id_same_name_w_scope(void) {
     ecs_entity_t e2 = ecs_new(world);
 
     ecs_entity_t s_1 = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, {.id = e1, .name = "Move", .add = ecs_ids(ecs_dependson(EcsOnUpdate))}),
+        .entity = ecs_entity(world, { .id = e1, .name = "Move" }),
+        .phase = EcsOnUpdate,
         .query.expr = "0",
         .callback = Dummy
     });
     test_assert(e1 == s_1);
 
     ecs_entity_t s_2 = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, {.id = e2, .name = "Move", .add = ecs_ids(ecs_dependson(EcsOnUpdate))}),
+        .entity = ecs_entity(world, { .id = e2, .name = "Move" }),
+        .phase = EcsOnUpdate,
         .query.expr = "0",
         .callback = Dummy
     });
@@ -1006,7 +1041,8 @@ void SystemMisc_rw_in_implicit_from_entity(void) {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_ENTITY(world, f, Velocity);
+    ecs_entity_t f = ecs_entity(world, { .name = "f" });
+    ecs_add(world, f, Velocity);
 
     ecs_query_t *q = ecs_query(world, { .expr = "Position, Velocity(f)" });
 
@@ -1100,7 +1136,8 @@ void SystemMisc_rw_out_explicit_from_entity(void) {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_ENTITY(world, f, Velocity);
+    ecs_entity_t f = ecs_entity(world, { .name = "f" });
+    ecs_add(world, f, Velocity);
 
     ecs_query_t *q = ecs_query(world, { .expr = "Position, [out] Velocity(f)" });
 
@@ -1130,7 +1167,9 @@ void SystemMisc_activate_system_for_table_w_n_pairs(void) {
     Probe ctx = {0};
     ecs_set_ctx(world, &ctx, NULL);    
 
-    ECS_ENTITY(world, e, (Pair, TagA), (Pair, TagB));
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_add_pair(world, e, Pair, TagA);
+    ecs_add_pair(world, e, Pair, TagB);
     test_assert(e != 0);
 
     ecs_progress(world, 0);
@@ -1298,13 +1337,13 @@ void SystemMisc_delete_pipeline_system(void) {
 
     // Create system before
     test_assert(ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, {.add = ecs_ids(ecs_dependson(EcsOnUpdate))}),
+        .phase = EcsOnUpdate,
         .query.terms = {{.id = Tag}},
         .callback = Dummy
     }) != 0);
 
     ecs_entity_t system = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, {.add = ecs_ids(ecs_dependson(EcsOnUpdate))}),
+        .phase = EcsOnUpdate,
         .query.terms = {{.id = Tag}},
         .callback = Dummy
     });
@@ -1312,7 +1351,7 @@ void SystemMisc_delete_pipeline_system(void) {
 
     // Create system after
     test_assert(ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, {.add = ecs_ids(ecs_dependson(EcsOnUpdate))}),
+        .phase = EcsOnUpdate,
         .query.terms = {{.id = Tag}},
         .callback = Dummy
     }) != 0);
@@ -1551,7 +1590,7 @@ void SystemMisc_pipeline_custom_run_action(void) {
 
     Probe ctx = {0};
     ecs_entity_t system = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, {.add = ecs_ids(ecs_dependson(EcsOnUpdate))}),
+        .phase = EcsOnUpdate,
         .query.terms = {{ .id = TagA }},
         .run = Run,
         .callback = Dummy,
@@ -1624,7 +1663,7 @@ void SystemMisc_custom_run_action_call_next(void) {
         .run = Run_call_callback,
         .callback = Dummy,
         .ctx = &ctx,
-        .entity = ecs_entity(world, {.add = ecs_ids(ecs_dependson(EcsOnUpdate))})
+        .phase = EcsOnUpdate
     });
     test_assert(system != 0);
 
@@ -1657,7 +1696,7 @@ void SystemMisc_system_w_short_notation(void) {
         .query.terms = {{ .id = Tag }},
         .callback = Dummy,
         .ctx = &ctx,
-        .entity = ecs_entity(world, {.add = ecs_ids(ecs_dependson(EcsOnUpdate))})
+        .phase = EcsOnUpdate
     });
     test_assert(system != 0);
 
@@ -1717,7 +1756,7 @@ void SystemMisc_system_w_interval_rate_stop_timer(void) {
     ecs_log_set_level(-4);
 
     ecs_entity_t system = ecs_system(world, {
-        .entity = ecs_entity(world, { .add = ecs_ids(ecs_dependson(EcsOnUpdate)) }),
+        .phase = EcsOnUpdate,
         .interval = 1.0,
         .rate = 3.0,
         .callback = Dummy
@@ -1732,7 +1771,7 @@ void SystemMisc_system_w_rate_filter_self(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_system(world, {
-        .entity = ecs_entity(world, { .add = ecs_ids(ecs_dependson(EcsOnUpdate)) }),
+        .phase = EcsOnUpdate,
         .rate = 2.0,
         .callback = Dummy
     });
@@ -1777,19 +1816,19 @@ void SystemMisc_system_same_interval_same_tick(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_system(world, {
-        .entity = ecs_entity(world, { .add = ecs_ids(ecs_dependson(EcsOnUpdate)) }),
+        .phase = EcsOnUpdate,
         .interval = 1.0,
         .callback = SA
     });
 
     ecs_system(world, {
-        .entity = ecs_entity(world, { .add = ecs_ids(ecs_dependson(EcsOnUpdate)) }),
+        .phase = EcsOnUpdate,
         .interval = 1.0,
         .callback = SB
     });
 
     ecs_system(world, {
-        .entity = ecs_entity(world, { .add = ecs_ids(ecs_dependson(EcsOnUpdate)) }),
+        .phase = EcsOnUpdate,
         .interval = 1.0,
         .callback = SC
     });

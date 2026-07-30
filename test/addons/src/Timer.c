@@ -357,7 +357,8 @@ void Timer_rate_filter_w_timer_src(void) {
 
     ECS_COMPONENT(world, Position);
     ECS_SYSTEM(world, SystemC, EcsOnUpdate, Position);
-    ECS_ENTITY(world, E1, Position);
+    ecs_entity_t E1 = ecs_entity(world, { .name = "E1" });
+    ecs_add(world, E1, Position);
 
     ecs_entity_t timer = ecs_set_interval(world, 0, 2.0);
     test_assert(timer != 0);

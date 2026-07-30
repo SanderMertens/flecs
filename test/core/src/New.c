@@ -30,7 +30,7 @@ void New_component(void) {
 void New_tag(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Tag, 0);
+    ecs_entity_t Tag = ecs_entity(world, { .name = "Tag" });
 
     ecs_entity_t e = ecs_new_w_id(world, Tag);
     test_assert(e != 0);
@@ -245,8 +245,10 @@ void New_create_w_explicit_id_2_worlds(void) {
     ecs_set_scope(world_1, p1);
     ecs_set_scope(world_2, p2);
 
-    ECS_ENTITY_DEFINE(world_1, Foo, 0);
-    ECS_ENTITY_DEFINE(world_2, Foo, 0);
+    Foo = ecs_entity(world_1, { .id = Foo, .name = "Foo" });
+    ecs_id(Foo) = Foo;
+    Foo = ecs_entity(world_2, { .id = Foo, .name = "Foo" });
+    ecs_id(Foo) = Foo;
 
     char *path = ecs_get_path(world_1, Foo);
     test_str(path, "Parent.Foo");

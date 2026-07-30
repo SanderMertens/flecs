@@ -288,11 +288,11 @@ void FlecsMetaImport(
 
     flecs_bootstrap_component(world, EcsTypeSerializer);
 
+    ecs_entity_t type_component = ecs_entity(world, { .id = ecs_id(EcsType),
+        .name = "type", .symbol = "EcsType" });
+    ecs_add_pair(world, type_component, EcsOnInstantiate, EcsDontInherit);
     ecs_component(world, {
-        .entity = ecs_entity(world, { .id = ecs_id(EcsType),
-            .name = "type", .symbol = "EcsType",
-            .add = ecs_ids(ecs_pair(EcsOnInstantiate, EcsDontInherit))
-        }),
+        .entity = type_component,
         .type.size = sizeof(EcsType),
         .type.alignment = ECS_ALIGNOF(EcsType),
     });

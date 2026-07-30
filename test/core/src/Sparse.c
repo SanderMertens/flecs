@@ -249,7 +249,9 @@ void Sparse_add_remove(void) {
 void Sparse_add_remove_tag(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Foo, Sparse);
+    ecs_entity_t Foo = ecs_entity(world, { .name = "Foo" });
+    ecs_entity_t ecs_id(Foo) = Foo;
+    ecs_add_id(world, Foo, EcsSparse);
     if (!fragment) ecs_add_id(world, Foo, EcsDontFragment);
 
     ecs_entity_t e = ecs_new(world);
@@ -297,7 +299,8 @@ void Sparse_add_remove_pair(void) {
 void Sparse_add_remove_pair_tag(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Foo, Sparse);
+    ecs_entity_t Foo = ecs_entity(world, { .name = "Foo" });
+    ecs_add_id(world, Foo, EcsSparse);
     ECS_TAG(world, TgtA);
     ECS_TAG(world, TgtB);
 
@@ -5635,12 +5638,24 @@ void Sparse_defer_change_exclusive(void) {
     ECS_TAG(world, Running);
     ECS_TAG(world, Jumping);
 
-    ECS_ENTITY(world, e0, Position, (Movement, Jumping));
-    ECS_ENTITY(world, e1, Position, (Movement, Walking));
-    ECS_ENTITY(world, e2, Position, (Movement, Running));
-    ECS_ENTITY(world, e3, Position, (Movement, Walking));
-    ECS_ENTITY(world, e4, Position, (Movement, Running));
-    ECS_ENTITY(world, e5, Position, (Movement, Jumping));
+    ecs_entity_t e0 = ecs_entity(world, { .name = "e0" });
+    ecs_add(world, e0, Position);
+    ecs_add_pair(world, e0, Movement, Jumping);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add(world, e1, Position);
+    ecs_add_pair(world, e1, Movement, Walking);
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_add(world, e2, Position);
+    ecs_add_pair(world, e2, Movement, Running);
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
+    ecs_add(world, e3, Position);
+    ecs_add_pair(world, e3, Movement, Walking);
+    ecs_entity_t e4 = ecs_entity(world, { .name = "e4" });
+    ecs_add(world, e4, Position);
+    ecs_add_pair(world, e4, Movement, Running);
+    ecs_entity_t e5 = ecs_entity(world, { .name = "e5" });
+    ecs_add(world, e5, Position);
+    ecs_add_pair(world, e5, Movement, Jumping);
 
     ecs_defer_begin(world);
     ecs_add_pair(world, e1, Movement, Jumping);
@@ -7214,8 +7229,10 @@ void Sparse_child_of_component_w_sparse(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
-    ECS_ENTITY(world, Rel, Component);
-    ECS_ENTITY(world, Tgt, Component);
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add(world, Rel, EcsComponent);
+    ecs_entity_t Tgt = ecs_entity(world, { .name = "Tgt" });
+    ecs_add(world, Tgt, EcsComponent);
 
     ecs_add_id(world, Rel, EcsSparse);
     if (!fragment) ecs_add_id(world, Rel, EcsDontFragment);
@@ -7234,8 +7251,10 @@ void Sparse_child_of_component_w_sparse_exclusive(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
-    ECS_ENTITY(world, Rel, Component);
-    ECS_ENTITY(world, Tgt, Component);
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add(world, Rel, EcsComponent);
+    ecs_entity_t Tgt = ecs_entity(world, { .name = "Tgt" });
+    ecs_add(world, Tgt, EcsComponent);
 
     ecs_add_id(world, Rel, EcsSparse);
     ecs_add_id(world, Rel, EcsExclusive);

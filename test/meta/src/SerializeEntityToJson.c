@@ -88,15 +88,17 @@ void SerializeEntityToJson_serialize_w_name_1_pair(void) {
 void SerializeEntityToJson_serialize_w_base(void) {
     ecs_world_t *world = ecs_init();
 
-    ECS_ENTITY(world, TagA, (OnInstantiate, Inherit));
-    ECS_ENTITY(world, TagB, (OnInstantiate, Inherit));
+    ecs_entity_t TagA = ecs_entity(world, { .name = "TagA" });
+    ecs_add_pair(world, TagA, EcsOnInstantiate, EcsInherit);
+    ecs_entity_t TagB = ecs_entity(world, { .name = "TagB" });
+    ecs_add_pair(world, TagB, EcsOnInstantiate, EcsInherit);
 
     ecs_entity_t base = ecs_entity(world, { .name = "Base" });
-    ecs_add(world, base, TagA);
+    ecs_add_id(world, base, TagA);
 
     ecs_entity_t e = ecs_entity(world, { .name = "Foo" });
     ecs_add_pair(world, e, EcsIsA, base);
-    ecs_add(world, e, TagB);
+    ecs_add_id(world, e, TagB);
 
     ecs_entity_to_json_desc_t desc = {
         .serialize_inherited = true
@@ -159,12 +161,14 @@ void SerializeEntityToJson_serialize_w_base_w_type_info(void) {
 void SerializeEntityToJson_serialize_w_base_dont_inherit_tag(void) {
     ecs_world_t *world = ecs_init();
 
-    ECS_ENTITY(world, TagA, (OnInstantiate, Inherit));
-    ECS_ENTITY(world, TagB, (OnInstantiate, DontInherit));
+    ecs_entity_t TagA = ecs_entity(world, { .name = "TagA" });
+    ecs_add_pair(world, TagA, EcsOnInstantiate, EcsInherit);
+    ecs_entity_t TagB = ecs_entity(world, { .name = "TagB" });
+    ecs_add_pair(world, TagB, EcsOnInstantiate, EcsDontInherit);
 
     ecs_entity_t base = ecs_entity(world, { .name = "Base" });
-    ecs_add(world, base, TagA);
-    ecs_add(world, base, TagB);
+    ecs_add_id(world, base, TagA);
+    ecs_add_id(world, base, TagB);
 
     ecs_entity_t e = ecs_entity(world, { .name = "Foo" });
     ecs_add_pair(world, e, EcsIsA, base);
@@ -212,8 +216,10 @@ void SerializeEntityToJson_serialize_w_base_dont_inherit_component(void) {
 void SerializeEntityToJson_serialize_w_base_dont_inherit_pair(void) {
     ecs_world_t *world = ecs_init();
 
-    ECS_ENTITY(world, RelA, (OnInstantiate, Inherit));
-    ECS_ENTITY(world, RelB, (OnInstantiate, DontInherit));
+    ecs_entity_t RelA = ecs_entity(world, { .name = "RelA" });
+    ecs_add_pair(world, RelA, EcsOnInstantiate, EcsInherit);
+    ecs_entity_t RelB = ecs_entity(world, { .name = "RelB" });
+    ecs_add_pair(world, RelB, EcsOnInstantiate, EcsDontInherit);
     ECS_TAG(world, Tgt);
 
     ecs_entity_t base = ecs_entity(world, { .name = "Base" });
@@ -454,38 +460,51 @@ void SerializeEntityToJson_serialize_component_w_base_w_owned_no_reflection_data
 void SerializeEntityToJson_serialize_component_tag_pair_w_all_inherit_kinds(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity(world, { .name = "t_override", .add_expr = "(OnInstantiate, Override)" });
-    ecs_entity(world, { .name = "t_inherit", .add_expr = "(OnInstantiate, Inherit)" });
-    ecs_entity(world, { .name = "t_dont_inherit", .add_expr = "(OnInstantiate, DontInherit)" });
+    ecs_entity_t t_override = ecs_entity(world, { .name = "t_override" });
+    ecs_add_pair(world, t_override, EcsOnInstantiate, EcsOverride);
+    ecs_entity_t t_inherit = ecs_entity(world, { .name = "t_inherit" });
+    ecs_add_pair(world, t_inherit, EcsOnInstantiate, EcsInherit);
+    ecs_entity_t t_dont_inherit = ecs_entity(world, { .name = "t_dont_inherit" });
+    ecs_add_pair(world, t_dont_inherit, EcsOnInstantiate, EcsDontInherit);
 
-    ecs_component(world, { 
-        .entity = ecs_entity(world, { .name = "c_override", .add_expr = "(OnInstantiate, Override)" }),
-        .type.size = 4, .type.alignment = 4 
+    ecs_entity_t c_override = ecs_entity(world, { .name = "c_override" });
+    ecs_add_pair(world, c_override, EcsOnInstantiate, EcsOverride);
+    ecs_component(world, {
+        .entity = c_override,
+        .type.size = 4, .type.alignment = 4
     });
-    ecs_component(world, { 
-        .entity = ecs_entity(world, { .name = "c_inherit", .add_expr = "(OnInstantiate, Inherit)" }),
-        .type.size = 4, .type.alignment = 4 
+    ecs_entity_t c_inherit = ecs_entity(world, { .name = "c_inherit" });
+    ecs_add_pair(world, c_inherit, EcsOnInstantiate, EcsInherit);
+    ecs_component(world, {
+        .entity = c_inherit,
+        .type.size = 4, .type.alignment = 4
     });
-    ecs_component(world, { 
-        .entity = ecs_entity(world, { .name = "c_dont_inherit", .add_expr = "(OnInstantiate, DontInherit)" }),
-        .type.size = 4, .type.alignment = 4 
+    ecs_entity_t c_dont_inherit = ecs_entity(world, { .name = "c_dont_inherit" });
+    ecs_add_pair(world, c_dont_inherit, EcsOnInstantiate, EcsDontInherit);
+    ecs_component(world, {
+        .entity = c_dont_inherit,
+        .type.size = 4, .type.alignment = 4
     });
 
-    ecs_entity(world, { .name = "tgt" });
+    ecs_entity_t tgt = ecs_entity(world, { .name = "tgt" });
 
-    ecs_entity_t base = ecs_entity(world, { 
-        .name = "base",
-        .add_expr = "t_override, t_inherit, t_dont_inherit, "\
-                    "c_override, c_inherit, c_dont_inherit, "\
-                    "(t_override, tgt), (t_inherit, tgt), (t_dont_inherit, tgt), "
-                    "(c_override, tgt), (c_inherit, tgt), (c_dont_inherit, tgt)"
-    });
+    ecs_entity_t base = ecs_entity(world, { .name = "base" });
+    ecs_add_id(world, base, t_override);
+    ecs_add_id(world, base, t_inherit);
+    ecs_add_id(world, base, t_dont_inherit);
+    ecs_add_id(world, base, c_override);
+    ecs_add_id(world, base, c_inherit);
+    ecs_add_id(world, base, c_dont_inherit);
+    ecs_add_pair(world, base, t_override, tgt);
+    ecs_add_pair(world, base, t_inherit, tgt);
+    ecs_add_pair(world, base, t_dont_inherit, tgt);
+    ecs_add_pair(world, base, c_override, tgt);
+    ecs_add_pair(world, base, c_inherit, tgt);
+    ecs_add_pair(world, base, c_dont_inherit, tgt);
     test_assert(base != 0);
 
-    ecs_entity_t e = ecs_entity(world, {
-        .name = "e",
-        .add_expr = "(IsA, base)"
-    });
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_add_pair(world, e, EcsIsA, base);
     test_assert(e != 0);
 
     ecs_entity_to_json_desc_t desc = {
@@ -504,33 +523,43 @@ void SerializeEntityToJson_serialize_component_tag_pair_w_all_inherit_kinds(void
 void SerializeEntityToJson_serialize_component_tag_pair_w_manual_override(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity(world, { .name = "t_inherit", .add_expr = "(OnInstantiate, Inherit)" });
-    ecs_entity(world, { .name = "t_dont_inherit", .add_expr = "(OnInstantiate, DontInherit)" });
+    ecs_entity_t t_inherit = ecs_entity(world, { .name = "t_inherit" });
+    ecs_add_pair(world, t_inherit, EcsOnInstantiate, EcsInherit);
+    ecs_entity_t t_dont_inherit = ecs_entity(world, { .name = "t_dont_inherit" });
+    ecs_add_pair(world, t_dont_inherit, EcsOnInstantiate, EcsDontInherit);
 
-    ecs_component(world, { 
-        .entity = ecs_entity(world, { .name = "c_inherit", .add_expr = "(OnInstantiate, Inherit)" }),
-        .type.size = 4, .type.alignment = 4 
+    ecs_entity_t c_inherit = ecs_entity(world, { .name = "c_inherit" });
+    ecs_add_pair(world, c_inherit, EcsOnInstantiate, EcsInherit);
+    ecs_component(world, {
+        .entity = c_inherit,
+        .type.size = 4, .type.alignment = 4
     });
-    ecs_component(world, { 
-        .entity = ecs_entity(world, { .name = "c_dont_inherit", .add_expr = "(OnInstantiate, DontInherit)" }),
-        .type.size = 4, .type.alignment = 4 
+    ecs_entity_t c_dont_inherit = ecs_entity(world, { .name = "c_dont_inherit" });
+    ecs_add_pair(world, c_dont_inherit, EcsOnInstantiate, EcsDontInherit);
+    ecs_component(world, {
+        .entity = c_dont_inherit,
+        .type.size = 4, .type.alignment = 4
     });
 
-    ecs_entity(world, { .name = "tgt" });
+    ecs_entity_t tgt = ecs_entity(world, { .name = "tgt" });
 
-    ecs_entity_t base = ecs_entity(world, { 
-        .name = "base",
-        .add_expr = "t_inherit, t_dont_inherit, "\
-                    "c_inherit, c_dont_inherit, "\
-                    "(t_inherit, tgt), (t_dont_inherit, tgt), "
-                    "(c_inherit, tgt), (c_dont_inherit, tgt)"
-    });
+    ecs_entity_t base = ecs_entity(world, { .name = "base" });
+    ecs_add_id(world, base, t_inherit);
+    ecs_add_id(world, base, t_dont_inherit);
+    ecs_add_id(world, base, c_inherit);
+    ecs_add_id(world, base, c_dont_inherit);
+    ecs_add_pair(world, base, t_inherit, tgt);
+    ecs_add_pair(world, base, t_dont_inherit, tgt);
+    ecs_add_pair(world, base, c_inherit, tgt);
+    ecs_add_pair(world, base, c_dont_inherit, tgt);
     test_assert(base != 0);
 
-    ecs_entity_t e = ecs_entity(world, {
-        .name = "e",
-        .add_expr = "(IsA, base), t_inherit, c_inherit, (t_inherit, tgt), (c_inherit, tgt)"
-    });
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_add_pair(world, e, EcsIsA, base);
+    ecs_add_id(world, e, t_inherit);
+    ecs_add_id(world, e, c_inherit);
+    ecs_add_pair(world, e, t_inherit, tgt);
+    ecs_add_pair(world, e, c_inherit, tgt);
     test_assert(e != 0);
 
     ecs_entity_to_json_desc_t desc = {
@@ -1656,7 +1685,9 @@ void SerializeEntityToJson_serialize_union_target(void) {
 
     ecs_world_t *world = ecs_init();
 
-    ECS_ENTITY(world, Rel, DontFragment, Exclusive);
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsDontFragment);
+    ecs_add_id(world, Rel, EcsExclusive);
     ECS_TAG(world, TgtA);
     ECS_TAG(world, TgtB);
     ECS_TAG(world, TgtC);
@@ -1695,7 +1726,9 @@ void SerializeEntityToJson_serialize_union_target_recycled(void) {
 
     ecs_world_t *world = ecs_init();
 
-    ECS_ENTITY(world, Rel, DontFragment, Exclusive);
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsDontFragment);
+    ecs_add_id(world, Rel, EcsExclusive);
 
     ecs_entity_t e = ecs_new(world);
     ecs_delete(world, e);
@@ -2050,7 +2083,9 @@ void SerializeEntityToJson_serialize_dont_fragment_tag(void) {
 void SerializeEntityToJson_serialize_dont_fragment_pair(void) {
     ecs_world_t *world = ecs_init();
 
-    ECS_ENTITY(world, Rel, DontFragment, Exclusive);
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsDontFragment);
+    ecs_add_id(world, Rel, EcsExclusive);
     ECS_TAG(world, TgtA);
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
@@ -2096,7 +2131,8 @@ void SerializeEntityToJson_serialize_dont_fragment_component(void) {
 void SerializeEntityToJson_serialize_dont_fragment_pair_multi_target(void) {
     ecs_world_t *world = ecs_init();
 
-    ECS_ENTITY(world, Rel, DontFragment);
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsDontFragment);
     ECS_TAG(world, TgtA);
     ECS_TAG(world, TgtB);
 
@@ -2115,8 +2151,10 @@ void SerializeEntityToJson_serialize_dont_fragment_pair_multi_target(void) {
 void SerializeEntityToJson_serialize_dont_fragment_pair_multi_rel(void) {
     ecs_world_t *world = ecs_init();
 
-    ECS_ENTITY(world, RelA, DontFragment);
-    ECS_ENTITY(world, RelB, DontFragment);
+    ecs_entity_t RelA = ecs_entity(world, { .name = "RelA" });
+    ecs_add_id(world, RelA, EcsDontFragment);
+    ecs_entity_t RelB = ecs_entity(world, { .name = "RelB" });
+    ecs_add_id(world, RelB, EcsDontFragment);
     ECS_TAG(world, TgtA);
     ECS_TAG(world, TgtB);
 
@@ -2230,10 +2268,11 @@ void SerializeEntityToJson_serialize_dont_fragment_component_w_type_info(void) {
 void SerializeEntityToJson_serialize_sparse_tag(void) {
     ecs_world_t *world = ecs_init();
 
-    ECS_ENTITY(world, SparseTag, Sparse);
+    ecs_entity_t SparseTag = ecs_entity(world, { .name = "SparseTag" });
+    ecs_add_id(world, SparseTag, EcsSparse);
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
-    ecs_add(world, e, SparseTag);
+    ecs_add_id(world, e, SparseTag);
 
     ecs_entity_to_json_desc_t desc = {
         .serialize_values = true,
@@ -2250,10 +2289,11 @@ void SerializeEntityToJson_serialize_sparse_tag(void) {
 void SerializeEntityToJson_serialize_sparse_tag_simple(void) {
     ecs_world_t *world = ecs_init();
 
-    ECS_ENTITY(world, SparseTag, Sparse);
+    ecs_entity_t SparseTag = ecs_entity(world, { .name = "SparseTag" });
+    ecs_add_id(world, SparseTag, EcsSparse);
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
-    ecs_add(world, e, SparseTag);
+    ecs_add_id(world, e, SparseTag);
 
     char *json = ecs_entity_to_json(world, e, NULL);
     test_assert(json != NULL);
@@ -2266,7 +2306,8 @@ void SerializeEntityToJson_serialize_sparse_tag_simple(void) {
 void SerializeEntityToJson_serialize_sparse_pair_tag(void) {
     ecs_world_t *world = ecs_init();
 
-    ECS_ENTITY(world, Rel, Sparse);
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsSparse);
     ECS_TAG(world, Tgt);
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
@@ -2283,10 +2324,11 @@ void SerializeEntityToJson_serialize_sparse_pair_tag(void) {
 void SerializeEntityToJson_serialize_dont_fragment_tag_w_type_info(void) {
     ecs_world_t *world = ecs_init();
 
-    ECS_ENTITY(world, DfTag, DontFragment);
+    ecs_entity_t DfTag = ecs_entity(world, { .name = "DfTag" });
+    ecs_add_id(world, DfTag, EcsDontFragment);
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
-    ecs_add(world, e, DfTag);
+    ecs_add_id(world, e, DfTag);
 
     ecs_entity_to_json_desc_t desc = {
         .serialize_values = true,
@@ -2303,7 +2345,9 @@ void SerializeEntityToJson_serialize_dont_fragment_tag_w_type_info(void) {
 void SerializeEntityToJson_serialize_dont_fragment_pair_tag_w_type_info(void) {
     ecs_world_t *world = ecs_init();
 
-    ECS_ENTITY(world, Rel, DontFragment, Exclusive);
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsDontFragment);
+    ecs_add_id(world, Rel, EcsExclusive);
     ECS_TAG(world, Tgt);
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });

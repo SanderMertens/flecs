@@ -1765,7 +1765,8 @@ void Template_template_w_pair_w_const_var(void) {
 void Template_template_w_pair_scope_w_this_var(void) {
     ecs_world_t *world = ecs_init();
 
-    ECS_ENTITY(world, Rel, PairIsTag);
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsPairIsTag);
 
     const char *expr =
     LINE "template Foo {\n"
@@ -1964,7 +1965,8 @@ void Template_template_w_pair_w_this_kw(void) {
 void Template_template_w_pair_scope_w_this_kw(void) {
     ecs_world_t *world = ecs_init();
 
-    ECS_ENTITY(world, Rel, PairIsTag);
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsPairIsTag);
 
     const char *expr =
     LINE "template Foo {\n"

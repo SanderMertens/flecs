@@ -323,7 +323,8 @@ void QueryStr_one_term_w_singleton(void) {
 void QueryStr_one_term_w_final_pair(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Foo, Final);
+    ecs_entity_t Foo = ecs_entity(world, { .name = "Foo" });
+    ecs_add_id(world, Foo, EcsFinal);
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {{ .first.id = Foo }}
@@ -342,7 +343,9 @@ void QueryStr_one_term_w_final_pair(void) {
 void QueryStr_one_term_w_final_dont_inherit(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Foo, Final, (OnInstantiate, DontInherit));
+    ecs_entity_t Foo = ecs_entity(world, { .name = "Foo" });
+    ecs_add_id(world, Foo, EcsFinal);
+    ecs_add_pair(world, Foo, EcsOnInstantiate, EcsDontInherit);
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {{ .first.id = Foo }}
@@ -361,7 +364,9 @@ void QueryStr_one_term_w_final_dont_inherit(void) {
 void QueryStr_one_term_w_final_inherit(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Foo, Final, (OnInstantiate, Inherit));
+    ecs_entity_t Foo = ecs_entity(world, { .name = "Foo" });
+    ecs_add_id(world, Foo, EcsFinal);
+    ecs_add_pair(world, Foo, EcsOnInstantiate, EcsInherit);
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {{ .first.id = Foo }}
@@ -380,7 +385,9 @@ void QueryStr_one_term_w_final_inherit(void) {
 void QueryStr_one_term_w_final_override(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Foo, Final, (OnInstantiate, Override));
+    ecs_entity_t Foo = ecs_entity(world, { .name = "Foo" });
+    ecs_add_id(world, Foo, EcsFinal);
+    ecs_add_pair(world, Foo, EcsOnInstantiate, EcsOverride);
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {{ .first.id = Foo }}

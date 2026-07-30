@@ -1,6 +1,6 @@
 #include <query.h>
 
-ECS_ENTITY_DECLARE(LocatedIn);
+ECS_DECLARE(LocatedIn);
 ECS_TAG_DECLARE(Earth);
 ECS_TAG_DECLARE(Location);
 ECS_TAG_DECLARE(UnitedStates);
@@ -14,18 +14,50 @@ ECS_TAG_DECLARE(Netherlands);
 ECS_TAG_DECLARE(Amsterdam);
 
 static void populate_facts(ecs_world_t *world) {
-    ECS_ENTITY_DEFINE(world, LocatedIn, Final, Transitive);
+    LocatedIn = ecs_entity(world, { .id = LocatedIn, .name = "LocatedIn" });
+    ecs_id(LocatedIn) = LocatedIn;
+    ecs_add_id(world, LocatedIn, EcsFinal);
+    ecs_add_id(world, LocatedIn, EcsTransitive);
     ECS_TAG_DEFINE(world, Location);
-    ECS_ENTITY_DEFINE(world, Earth, Location);
-    ECS_ENTITY_DEFINE(world, UnitedStates, Location, (LocatedIn, Earth));
-    ECS_ENTITY_DEFINE(world, California, Location, (LocatedIn, UnitedStates));
-    ECS_ENTITY_DEFINE(world, Washington, Location, (LocatedIn, UnitedStates));
-    ECS_ENTITY_DEFINE(world, SanFrancisco, Location, (LocatedIn, California));
-    ECS_ENTITY_DEFINE(world, LosAngeles, Location, (LocatedIn, California));
-    ECS_ENTITY_DEFINE(world, Seattle, Location, (LocatedIn, Washington));
-    ECS_ENTITY_DEFINE(world, Netherlands, Location, (LocatedIn, Earth));
-    ECS_ENTITY_DEFINE(world, NoordHolland, Location, (LocatedIn, Netherlands));
-    ECS_ENTITY_DEFINE(world, Amsterdam, Location, (LocatedIn, NoordHolland));
+    Earth = ecs_entity(world, { .id = Earth, .name = "Earth" });
+    ecs_id(Earth) = Earth;
+    ecs_add_id(world, Earth, Location);
+    UnitedStates = ecs_entity(world, { .id = UnitedStates, .name = "UnitedStates" });
+    ecs_id(UnitedStates) = UnitedStates;
+    ecs_add_id(world, UnitedStates, Location);
+    ecs_add_pair(world, UnitedStates, LocatedIn, Earth);
+    California = ecs_entity(world, { .id = California, .name = "California" });
+    ecs_id(California) = California;
+    ecs_add_id(world, California, Location);
+    ecs_add_pair(world, California, LocatedIn, UnitedStates);
+    Washington = ecs_entity(world, { .id = Washington, .name = "Washington" });
+    ecs_id(Washington) = Washington;
+    ecs_add_id(world, Washington, Location);
+    ecs_add_pair(world, Washington, LocatedIn, UnitedStates);
+    SanFrancisco = ecs_entity(world, { .id = SanFrancisco, .name = "SanFrancisco" });
+    ecs_id(SanFrancisco) = SanFrancisco;
+    ecs_add_id(world, SanFrancisco, Location);
+    ecs_add_pair(world, SanFrancisco, LocatedIn, California);
+    LosAngeles = ecs_entity(world, { .id = LosAngeles, .name = "LosAngeles" });
+    ecs_id(LosAngeles) = LosAngeles;
+    ecs_add_id(world, LosAngeles, Location);
+    ecs_add_pair(world, LosAngeles, LocatedIn, California);
+    Seattle = ecs_entity(world, { .id = Seattle, .name = "Seattle" });
+    ecs_id(Seattle) = Seattle;
+    ecs_add_id(world, Seattle, Location);
+    ecs_add_pair(world, Seattle, LocatedIn, Washington);
+    Netherlands = ecs_entity(world, { .id = Netherlands, .name = "Netherlands" });
+    ecs_id(Netherlands) = Netherlands;
+    ecs_add_id(world, Netherlands, Location);
+    ecs_add_pair(world, Netherlands, LocatedIn, Earth);
+    NoordHolland = ecs_entity(world, { .id = NoordHolland, .name = "NoordHolland" });
+    ecs_id(NoordHolland) = NoordHolland;
+    ecs_add_id(world, NoordHolland, Location);
+    ecs_add_pair(world, NoordHolland, LocatedIn, Netherlands);
+    Amsterdam = ecs_entity(world, { .id = Amsterdam, .name = "Amsterdam" });
+    ecs_id(Amsterdam) = Amsterdam;
+    ecs_add_id(world, Amsterdam, Location);
+    ecs_add_pair(world, Amsterdam, LocatedIn, NoordHolland);
 }
 
 void Transitive_1_fact_0_lvl_true(void) {
@@ -271,10 +303,12 @@ void Transitive_1_fact_reflexive(void) {
 void Transitive_1_isa(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, BaseA, 0);
-    ECS_ENTITY(world, BaseB, 0);
-    ECS_ENTITY(world, e1, (IsA, BaseB));
-    ECS_ENTITY(world, e2, (IsA, BaseA));
+    ecs_entity_t BaseA = ecs_entity(world, { .name = "BaseA" });
+    ecs_entity_t BaseB = ecs_entity(world, { .name = "BaseB" });
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add_pair(world, e1, EcsIsA, BaseB);
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_add_pair(world, e2, EcsIsA, BaseA);
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "(IsA, BaseA)"
@@ -302,10 +336,12 @@ void Transitive_1_isa(void) {
 void Transitive_1_childof(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, BaseA, 0);
-    ECS_ENTITY(world, BaseB, 0);
-    ECS_ENTITY(world, e1, (ChildOf, BaseB));
-    ECS_ENTITY(world, e2, (ChildOf, BaseA));
+    ecs_entity_t BaseA = ecs_entity(world, { .name = "BaseA" });
+    ecs_entity_t BaseB = ecs_entity(world, { .name = "BaseB" });
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add_pair(world, e1, EcsChildOf, BaseB);
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_add_pair(world, e2, EcsChildOf, BaseA);
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "(ChildOf, BaseA)"
