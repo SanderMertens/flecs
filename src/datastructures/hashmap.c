@@ -171,18 +171,6 @@ flecs_hashmap_result_t flecs_hashmap_ensure_(
     };
 }
 
-void flecs_hashmap_set_(
-    ecs_hashmap_t *map,
-    ecs_size_t key_size,
-    void *key,
-    ecs_size_t value_size,
-    const void *value)
-{
-    void *value_ptr = flecs_hashmap_ensure_(map, key_size, key, value_size).value;
-    ecs_assert(value_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_os_memcpy(value_ptr, value, value_size);
-}
-
 ecs_hm_bucket_t* flecs_hashmap_get_bucket(
     const ecs_hashmap_t *map,
     uint64_t hash)
@@ -233,19 +221,6 @@ void flecs_hashmap_remove_w_hash_(
     }
 
     flecs_hm_bucket_remove(map, bucket, hash, index);
-}
-
-void flecs_hashmap_remove_(
-    ecs_hashmap_t *map,
-    ecs_size_t key_size,
-    const void *key,
-    ecs_size_t value_size)
-{
-    ecs_assert(map->key_size == key_size, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(map->value_size == value_size, ECS_INVALID_PARAMETER, NULL);
-
-    uint64_t hash = map->hash(key);
-    flecs_hashmap_remove_w_hash_(map, key_size, key, value_size, hash);
 }
 
 flecs_hashmap_iter_t flecs_hashmap_iter(

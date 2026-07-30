@@ -1814,28 +1814,6 @@ ecs_vec_t ecs_vec_copy(
 #define ecs_vec_copy_t(allocator, vec, T) \
     ecs_vec_copy(allocator, vec, ECS_SIZEOF(T))
 
-/** Copy a vector and shrink to fit.
- *
- * @param allocator Allocator used for memory management.
- * @param vec The source vector to copy.
- * @param size Size of each element in bytes.
- * @return A new vector with capacity shrunk to its count.
- */
-FLECS_API
-ecs_vec_t ecs_vec_copy_shrink(
-    struct ecs_allocator_t *allocator,
-    const ecs_vec_t *vec,
-    ecs_size_t size);
-
-/** Type-safe vector copy and shrink.
- *
- * @param allocator Allocator used for memory management.
- * @param vec The source vector to copy.
- * @param T The element type.
- */
-#define ecs_vec_copy_shrink_t(allocator, vec, T) \
-    ecs_vec_copy_shrink(allocator, vec, ECS_SIZEOF(T))
-
 /** Reclaim unused memory. Shrinks the vector's allocation to fit its count.
  *
  * @param allocator Allocator used for memory management.
@@ -1904,22 +1882,6 @@ void ecs_vec_set_min_size(
  */
 #define ecs_vec_set_min_size_t(allocator, vec, T, elem_count) \
     ecs_vec_set_min_size(allocator, vec, ECS_SIZEOF(T), elem_count)
-
-/** Set the minimum capacity using type info for lifecycle management.
- *
- * @param allocator Allocator used for memory management.
- * @param vec The vector to resize.
- * @param size Size of each element in bytes.
- * @param elem_count Minimum capacity in number of elements.
- * @param ti Type info for lifecycle callbacks.
- */
-FLECS_API
-void ecs_vec_set_min_size_w_type_info(
-    struct ecs_allocator_t *allocator,
-    ecs_vec_t *vec,
-    ecs_size_t size,
-    int32_t elem_count,
-    const ecs_type_info_t *ti);
 
 /** Set the minimum count. Increases count if smaller than elem_count.
  *
@@ -2381,29 +2343,6 @@ FLECS_ALWAYS_INLINE void* flecs_sparse_get_w_check(
 #define flecs_sparse_get_t(sparse, T, index)\
     ECS_CAST(T*, flecs_sparse_get(sparse, ECS_SIZEOF(T), index))
 
-/** Create an element by (sparse) ID.
- *
- * @param sparse The sparse set to insert into.
- * @param elem_size Size of each element in bytes.
- * @param id The sparse ID for the new element.
- * @return Pointer to the newly created element.
- */
-FLECS_DBG_API
-void* flecs_sparse_insert(
-    ecs_sparse_t *sparse,
-    ecs_size_t elem_size,
-    uint64_t id);
-
-/** Typed insert by sparse ID.
- *
- * @param sparse The sparse set to insert into.
- * @param T The element type.
- * @param index The sparse ID for the new element.
- * @return Typed pointer to the newly created element.
- */
-#define flecs_sparse_insert_t(sparse, T, index)\
-    ECS_CAST(T*, flecs_sparse_insert(sparse, ECS_SIZEOF(T), index))
-
 /** Get or create an element by (sparse) ID.
  *
  * @param sparse The sparse set.
@@ -2470,112 +2409,6 @@ FLECS_DBG_API
 void flecs_sparse_shrink(
     ecs_sparse_t *sparse);
 
-/** Exposed but unstable APIs.
- * These APIs are visible in the header but not part of the stable public API,
- * and as a result may change without notice. */
-
-/** Initialize a public sparse set.
- *
- * @param sparse The sparse set to initialize.
- * @param elem_size Size of each element in bytes.
- */
-FLECS_API
-void ecs_sparse_init(
-    ecs_sparse_t *sparse,
-    ecs_size_t elem_size);
-
-/** Typed public sparse set initialization.
- *
- * @param sparse The sparse set to initialize.
- * @param T The element type.
- */
-#define ecs_sparse_init_t(sparse, T)\
-    ecs_sparse_init(sparse, ECS_SIZEOF(T))
-
-/** Add an element to a public sparse set.
- *
- * @param sparse The sparse set to add to.
- * @param elem_size Size of each element in bytes.
- * @return Pointer to the newly added element.
- */
-FLECS_API
-void* ecs_sparse_add(
-    ecs_sparse_t *sparse,
-    ecs_size_t elem_size);
-
-/** Typed public sparse set add.
- *
- * @param sparse The sparse set to add to.
- * @param T The element type.
- * @return Typed pointer to the newly added element.
- */
-#define ecs_sparse_add_t(sparse, T)\
-    ECS_CAST(T*, ecs_sparse_add(sparse, ECS_SIZEOF(T)))
-
-/** Get the last issued ID from a public sparse set.
- *
- * @param sparse The sparse set.
- * @return The last issued ID.
- */
-FLECS_API
-uint64_t ecs_sparse_last_id(
-    const ecs_sparse_t *sparse);
-
-/** Get the number of alive elements in a public sparse set.
- *
- * @param sparse The sparse set.
- * @return The number of alive elements.
- */
-FLECS_API
-int32_t ecs_sparse_count(
-    const ecs_sparse_t *sparse);
-
-/** Get a value from a public sparse set by dense index.
- *
- * @param sparse The sparse set.
- * @param elem_size Size of each element in bytes.
- * @param index Dense index of the element.
- * @return Pointer to the element.
- */
-FLECS_API
-void* ecs_sparse_get_dense(
-    const ecs_sparse_t *sparse,
-    ecs_size_t elem_size,
-    int32_t index);
-
-/** Typed public get by dense index.
- *
- * @param sparse The sparse set.
- * @param T The element type.
- * @param index Dense index of the element.
- * @return Typed pointer to the element.
- */
-#define ecs_sparse_get_dense_t(sparse, T, index)\
-    ECS_CAST(T*, ecs_sparse_get_dense(sparse, ECS_SIZEOF(T), index))
-
-/** Get a value from a public sparse set by sparse ID.
- *
- * @param sparse The sparse set.
- * @param elem_size Size of each element in bytes.
- * @param id The sparse ID of the element.
- * @return Pointer to the element.
- */
-FLECS_API
-void* ecs_sparse_get(
-    const ecs_sparse_t *sparse,
-    ecs_size_t elem_size,
-    uint64_t id);
-
-/** Typed public get by sparse ID.
- *
- * @param sparse The sparse set.
- * @param T The element type.
- * @param index The sparse ID of the element.
- * @return Typed pointer to the element.
- */
-#define ecs_sparse_get_t(sparse, T, index)\
-    ECS_CAST(T*, ecs_sparse_get(sparse, ECS_SIZEOF(T), index))
-
 #ifdef __cplusplus
 }
 #endif
@@ -2633,37 +2466,12 @@ void flecs_ballocator_init(
 #define flecs_ballocator_init_n(ba, T, count)\
     flecs_ballocator_init(ba, ECS_SIZEOF(T) * count)
 
-/** Create a new block allocator on the heap.
- *
- * @param size The size of each allocation.
- * @return The new block allocator.
- */
-FLECS_API
-ecs_block_allocator_t* flecs_ballocator_new(
-    ecs_size_t size);
-
-/** Create a new block allocator for type T. */
-#define flecs_ballocator_new_t(T)\
-    flecs_ballocator_new(ECS_SIZEOF(T))
-
-/** Create a new block allocator for count elements of type T. */
-#define flecs_ballocator_new_n(T, count)\
-    flecs_ballocator_new(ECS_SIZEOF(T) * count)
-
 /** Deinitialize a block allocator.
  *
  * @param ba The block allocator to deinitialize.
  */
 FLECS_API
 void flecs_ballocator_fini(
-    ecs_block_allocator_t *ba);
-
-/** Free a block allocator created with flecs_ballocator_new().
- *
- * @param ba The block allocator to free.
- */
-FLECS_API
-void flecs_ballocator_free(
     ecs_block_allocator_t *ba);
 
 /** Allocate a block of memory.
@@ -2755,17 +2563,6 @@ void* flecs_brealloc_w_dbg_info(
     ecs_block_allocator_t *src,
     void *memory,
     const char *type_name);
-
-/** Duplicate a block of memory.
- *
- * @param ba The block allocator.
- * @param memory The memory to duplicate.
- * @return Pointer to the duplicated memory.
- */
-FLECS_API
-void* flecs_bdup(
-    ecs_block_allocator_t *ba,
-    void *memory);
 
 #endif
 
@@ -5718,44 +5515,6 @@ flecs_hashmap_result_t flecs_hashmap_ensure_(
 /** Type-safe hashmap ensure. */
 #define flecs_hashmap_ensure(map, key, V)\
     flecs_hashmap_ensure_(map, ECS_SIZEOF(*key), key, ECS_SIZEOF(V))
-
-/** Set a key-value pair in the hashmap.
- *
- * @param map The hashmap.
- * @param key_size The size of the key type.
- * @param key The key.
- * @param value_size The size of the value type.
- * @param value The value to set.
- */
-FLECS_DBG_API
-void flecs_hashmap_set_(
-    ecs_hashmap_t *map,
-    ecs_size_t key_size,
-    void *key,
-    ecs_size_t value_size,
-    const void *value);
-
-/** Type-safe hashmap set. */
-#define flecs_hashmap_set(map, key, value)\
-    flecs_hashmap_set_(map, ECS_SIZEOF(*key), key, ECS_SIZEOF(*value), value)
-
-/** Remove a key from the hashmap.
- *
- * @param map The hashmap.
- * @param key_size The size of the key type.
- * @param key The key to remove.
- * @param value_size The size of the value type.
- */
-FLECS_DBG_API
-void flecs_hashmap_remove_(
-    ecs_hashmap_t *map,
-    ecs_size_t key_size,
-    const void *key,
-    ecs_size_t value_size);
-
-/** Type-safe hashmap remove. */
-#define flecs_hashmap_remove(map, key, V)\
-    flecs_hashmap_remove_(map, ECS_SIZEOF(*key), key, ECS_SIZEOF(V))
 
 /** Remove a key from the hashmap using a precomputed hash.
  *

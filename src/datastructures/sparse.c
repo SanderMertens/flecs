@@ -307,19 +307,6 @@ uint64_t flecs_sparse_last_id(
     return dense_array[sparse->count - 1];
 }
 
-void* flecs_sparse_insert(
-    ecs_sparse_t *sparse,
-    ecs_size_t size,
-    uint64_t id)
-{
-    bool is_new = true;
-    void *result = flecs_sparse_ensure(sparse, size, id, &is_new);
-    if (!is_new) {
-        result = NULL;
-    }
-    return result;
-}
-
 void* flecs_sparse_ensure(
     ecs_sparse_t *sparse,
     ecs_size_t size,
@@ -671,46 +658,4 @@ void flecs_sparse_shrink(
     ecs_vec_set_count_t(
         sparse->allocator, &sparse->dense, uint64_t, sparse->count);
     ecs_vec_reclaim_t(sparse->allocator, &sparse->dense, uint64_t);
-}
-
-void ecs_sparse_init(
-    ecs_sparse_t *sparse,
-    ecs_size_t elem_size)
-{
-    flecs_sparse_init(sparse, NULL, NULL, elem_size);
-}
-
-void* ecs_sparse_add(
-    ecs_sparse_t *sparse,
-    ecs_size_t elem_size)
-{
-    return flecs_sparse_add(sparse, elem_size);
-}
-
-uint64_t ecs_sparse_last_id(
-    const ecs_sparse_t *sparse)
-{
-    return flecs_sparse_last_id(sparse);
-}
-
-int32_t ecs_sparse_count(
-    const ecs_sparse_t *sparse)
-{
-    return flecs_sparse_count(sparse);
-}
-
-void* ecs_sparse_get_dense(
-    const ecs_sparse_t *sparse,
-    ecs_size_t elem_size,
-    int32_t index)
-{
-    return flecs_sparse_get_dense(sparse, elem_size, index);
-}
-
-void* ecs_sparse_get(
-    const ecs_sparse_t *sparse,
-    ecs_size_t elem_size,
-    uint64_t id)
-{
-    return flecs_sparse_get(sparse, elem_size, id);
 }

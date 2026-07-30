@@ -362,7 +362,7 @@ void Sparse_count_of_null(void) {
 void Sparse_try_low_after_ensure_high(void) {
     ecs_sparse_t *sp = flecs_sparse_new(NULL, NULL, int);
 
-    int *ptr_1 = flecs_sparse_insert_t(sp, int, 5000);
+    int *ptr_1 = flecs_sparse_ensure_t(sp, int, 5000, NULL);
     test_assert(ptr_1 != NULL);
 
     int *ptr_2 = flecs_sparse_get_t(sp, int, 100);
@@ -374,7 +374,7 @@ void Sparse_try_low_after_ensure_high(void) {
 void Sparse_is_alive_low_after_ensure_high(void) {
     ecs_sparse_t *sp = flecs_sparse_new(NULL, NULL, int);
 
-    int *ptr_1 = flecs_sparse_insert_t(sp, int, 5000);
+    int *ptr_1 = flecs_sparse_ensure_t(sp, int, 5000, NULL);
     test_assert(ptr_1 != NULL);
 
     bool v = flecs_sparse_is_alive(sp, 100);
@@ -386,7 +386,7 @@ void Sparse_is_alive_low_after_ensure_high(void) {
 void Sparse_remove_low_after_ensure_high(void) {
     ecs_sparse_t *sp = flecs_sparse_new(NULL, NULL, int);
 
-    int *ptr_1 = flecs_sparse_insert_t(sp, int, 5000);
+    int *ptr_1 = flecs_sparse_ensure_t(sp, int, 5000, NULL);
     test_assert(ptr_1 != NULL);
 
     flecs_sparse_remove_t(sp, int, 100);
@@ -437,15 +437,4 @@ void Sparse_bitset_negative_index(void) {
     flecs_bitset_get(&bs, -1);
 
     flecs_bitset_fini(&bs);
-}
-
-void Sparse_vec_set_min_size_w_type_info(void) {
-    ecs_vec_t vec = {0};
-
-    ecs_vec_set_min_size_w_type_info(NULL, &vec, ECS_SIZEOF(int32_t), 8, NULL);
-
-    test_assert(vec.array != NULL);
-    test_assert(vec.size >= 8);
-
-    ecs_vec_fini(NULL, &vec, ECS_SIZEOF(int32_t));
 }

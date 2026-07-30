@@ -511,7 +511,8 @@ void Map_hashmap_iter_terminates(void) {
         hashmap_key_hash, hashmap_key_compare, NULL);
 
     uint64_t key = 1, value = 10;
-    flecs_hashmap_set(&hm, &key, &value);
+    flecs_hashmap_result_t hmr = flecs_hashmap_ensure(&hm, &key, uint64_t);
+    *(uint64_t*)hmr.value = value;
 
     flecs_hashmap_iter_t it = flecs_hashmap_iter(&hm);
 
