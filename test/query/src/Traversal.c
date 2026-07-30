@@ -212,32 +212,41 @@ void Traversal_this_written_self_up_childof(void) {
     ecs_entity_t Tag = ecs_entity(world, { .name = "Tag" });
     ecs_add_pair(world, Tag, EcsOnInstantiate, EcsInherit);
 
-    ecs_set_with(world, Tag);
     ecs_entity_t p0 = ecs_entity(world, {0});
+    ecs_add_id(world, p0, Tag);
     ecs_entity_t p1 = ecs_entity(world, {0});
+    ecs_add_id(world, p1, Tag);
     ecs_add_id(world, p1, Foo);
     ecs_entity_t p2 = ecs_entity(world, {0});
+    ecs_add_id(world, p2, Tag);
     ecs_add_id(world, p2, Foo);
     ecs_entity_t p3 = ecs_entity(world, {0});
+    ecs_add_id(world, p3, Tag);
     ecs_add_id(world, p3, Foo);
     ecs_add_id(world, p3, Bar);
 
     ecs_entity_t e1 = ecs_entity(world, { .parent = p1 });
+    ecs_add_id(world, e1, Tag);
     ecs_entity_t e2 = ecs_entity(world, { .parent = p1 });
+    ecs_add_id(world, e2, Tag);
     ecs_add_id(world, e2, Bar);
 
     ecs_entity_t e3 = ecs_entity(world, { .parent = p2 });
+    ecs_add_id(world, e3, Tag);
     ecs_entity_t e4 = ecs_entity(world, { .parent = p2 });
+    ecs_add_id(world, e4, Tag);
     ecs_add_id(world, e4, Bar);
 
     ecs_entity_t e5 = ecs_entity(world, { .parent = e2 });
+    ecs_add_id(world, e5, Tag);
     ecs_entity_t e6 = ecs_entity(world, { .parent = e2 });
+    ecs_add_id(world, e6, Tag);
     ecs_add_id(world, e6, Bar);
 
     ecs_entity_t e7 = ecs_entity(world, { .parent = p3 });
+    ecs_add_id(world, e7, Tag);
 
-    ecs_entity(world, { .parent = p0 });
-    ecs_set_with(world, 0);
+    ecs_add_id(world, ecs_entity(world, { .parent = p0 }), Tag);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Tag(self), Foo(self|up)",
@@ -337,32 +346,41 @@ void Traversal_this_written_up_childof(void) {
     ecs_entity_t Tag = ecs_entity(world, { .name = "Tag" });
     ecs_add_pair(world, Tag, EcsOnInstantiate, EcsInherit);
 
-    ecs_set_with(world, Tag);
     ecs_entity_t p0 = ecs_entity(world, {0});
+    ecs_add_id(world, p0, Tag);
     ecs_entity_t p1 = ecs_entity(world, {0});
+    ecs_add_id(world, p1, Tag);
     ecs_add_id(world, p1, Foo);
     ecs_entity_t p2 = ecs_entity(world, {0});
+    ecs_add_id(world, p2, Tag);
     ecs_add_id(world, p2, Foo);
     ecs_entity_t p3 = ecs_entity(world, {0});
+    ecs_add_id(world, p3, Tag);
     ecs_add_id(world, p3, Foo);
     ecs_add_id(world, p3, Bar);
 
     ecs_entity_t e1 = ecs_entity(world, { .parent = p1 });
+    ecs_add_id(world, e1, Tag);
     ecs_entity_t e2 = ecs_entity(world, { .parent = p1 });
+    ecs_add_id(world, e2, Tag);
     ecs_add_id(world, e2, Bar);
 
     ecs_entity_t e3 = ecs_entity(world, { .parent = p2 });
+    ecs_add_id(world, e3, Tag);
     ecs_entity_t e4 = ecs_entity(world, { .parent = p2 });
+    ecs_add_id(world, e4, Tag);
     ecs_add_id(world, e4, Bar);
 
     ecs_entity_t e5 = ecs_entity(world, { .parent = e2 });
+    ecs_add_id(world, e5, Tag);
     ecs_entity_t e6 = ecs_entity(world, { .parent = e2 });
+    ecs_add_id(world, e6, Tag);
     ecs_add_id(world, e6, Bar);
 
     ecs_entity_t e7 = ecs_entity(world, { .parent = p3 });
+    ecs_add_id(world, e7, Tag);
 
-    ecs_entity(world, { .parent = p0 });
-    ecs_set_with(world, 0);
+    ecs_add_id(world, ecs_entity(world, { .parent = p0 }), Tag);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Tag(self), Foo(up)",
@@ -643,32 +661,41 @@ void Traversal_var_written_self_up_childof(void) {
     ecs_entity_t Tag = ecs_entity(world, { .name = "Tag" });
     ecs_add_pair(world, Tag, EcsOnInstantiate, EcsInherit);
 
-    ecs_set_with(world, Tag);
     ecs_entity_t p0 = ecs_entity(world, {0});
+    ecs_add_id(world, p0, Tag);
     ecs_entity_t p1 = ecs_entity(world, {0});
+    ecs_add_id(world, p1, Tag);
     ecs_add_id(world, p1, Foo);
     ecs_entity_t p2 = ecs_entity(world, {0});
+    ecs_add_id(world, p2, Tag);
     ecs_add_id(world, p2, Foo);
     ecs_entity_t p3 = ecs_entity(world, {0});
+    ecs_add_id(world, p3, Tag);
     ecs_add_id(world, p3, Foo);
     ecs_add_id(world, p3, Bar);
 
     ecs_entity_t e1 = ecs_entity(world, { .parent = p1 });
+    ecs_add_id(world, e1, Tag);
     ecs_entity_t e2 = ecs_entity(world, { .parent = p1 });
+    ecs_add_id(world, e2, Tag);
     ecs_add_id(world, e2, Bar);
 
     ecs_entity_t e3 = ecs_entity(world, { .parent = p2 });
+    ecs_add_id(world, e3, Tag);
     ecs_entity_t e4 = ecs_entity(world, { .parent = p2 });
+    ecs_add_id(world, e4, Tag);
     ecs_add_id(world, e4, Bar);
 
     ecs_entity_t e5 = ecs_entity(world, { .parent = e2 });
+    ecs_add_id(world, e5, Tag);
     ecs_entity_t e6 = ecs_entity(world, { .parent = e2 });
+    ecs_add_id(world, e6, Tag);
     ecs_add_id(world, e6, Bar);
 
     ecs_entity_t e7 = ecs_entity(world, { .parent = p3 });
+    ecs_add_id(world, e7, Tag);
 
-    ecs_entity(world, { .parent = p0 });
-    ecs_set_with(world, 0);
+    ecs_add_id(world, ecs_entity(world, { .parent = p0 }), Tag);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Tag($x|self), Foo($x|self|up)",
@@ -778,32 +805,41 @@ void Traversal_var_written_up_childof(void) {
     ecs_entity_t Tag = ecs_entity(world, { .name = "Tag" });
     ecs_add_pair(world, Tag, EcsOnInstantiate, EcsInherit);
 
-    ecs_set_with(world, Tag);
     ecs_entity_t p0 = ecs_entity(world, {0});
+    ecs_add_id(world, p0, Tag);
     ecs_entity_t p1 = ecs_entity(world, {0});
+    ecs_add_id(world, p1, Tag);
     ecs_add_id(world, p1, Foo);
     ecs_entity_t p2 = ecs_entity(world, {0});
+    ecs_add_id(world, p2, Tag);
     ecs_add_id(world, p2, Foo);
     ecs_entity_t p3 = ecs_entity(world, {0});
+    ecs_add_id(world, p3, Tag);
     ecs_add_id(world, p3, Foo);
     ecs_add_id(world, p3, Bar);
 
     ecs_entity_t e1 = ecs_entity(world, { .parent = p1 });
+    ecs_add_id(world, e1, Tag);
     ecs_entity_t e2 = ecs_entity(world, { .parent = p1 });
+    ecs_add_id(world, e2, Tag);
     ecs_add_id(world, e2, Bar);
 
     ecs_entity_t e3 = ecs_entity(world, { .parent = p2 });
+    ecs_add_id(world, e3, Tag);
     ecs_entity_t e4 = ecs_entity(world, { .parent = p2 });
+    ecs_add_id(world, e4, Tag);
     ecs_add_id(world, e4, Bar);
 
     ecs_entity_t e5 = ecs_entity(world, { .parent = e2 });
+    ecs_add_id(world, e5, Tag);
     ecs_entity_t e6 = ecs_entity(world, { .parent = e2 });
+    ecs_add_id(world, e6, Tag);
     ecs_add_id(world, e6, Bar);
 
     ecs_entity_t e7 = ecs_entity(world, { .parent = p3 });
+    ecs_add_id(world, e7, Tag);
 
-    ecs_entity(world, { .parent = p0 });
-    ecs_set_with(world, 0);
+    ecs_add_id(world, ecs_entity(world, { .parent = p0 }), Tag);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Tag($x|self), Foo($x|up)",
@@ -1091,32 +1127,41 @@ void Traversal_set_var_written_self_up_childof(void) {
     ecs_entity_t Tag = ecs_entity(world, { .name = "Tag" });
     ecs_add_pair(world, Tag, EcsOnInstantiate, EcsInherit);
 
-    ecs_set_with(world, Tag);
     ecs_entity_t p0 = ecs_entity(world, {0});
+    ecs_add_id(world, p0, Tag);
     ecs_entity_t p1 = ecs_entity(world, {0});
+    ecs_add_id(world, p1, Tag);
     ecs_add_id(world, p1, Foo);
     ecs_entity_t p2 = ecs_entity(world, {0});
+    ecs_add_id(world, p2, Tag);
     ecs_add_id(world, p2, Foo);
     ecs_entity_t p3 = ecs_entity(world, {0});
+    ecs_add_id(world, p3, Tag);
     ecs_add_id(world, p3, Foo);
     ecs_add_id(world, p3, Bar);
 
     ecs_entity_t e1 = ecs_entity(world, { .parent = p1 });
+    ecs_add_id(world, e1, Tag);
     ecs_entity_t e2 = ecs_entity(world, { .parent = p1 });
+    ecs_add_id(world, e2, Tag);
     ecs_add_id(world, e2, Bar);
 
     ecs_entity_t e3 = ecs_entity(world, { .parent = p2 });
+    ecs_add_id(world, e3, Tag);
     ecs_entity_t e4 = ecs_entity(world, { .parent = p2 });
+    ecs_add_id(world, e4, Tag);
     ecs_add_id(world, e4, Bar);
 
     ecs_entity_t e5 = ecs_entity(world, { .parent = e2 });
+    ecs_add_id(world, e5, Tag);
     ecs_entity_t e6 = ecs_entity(world, { .parent = e2 });
+    ecs_add_id(world, e6, Tag);
     ecs_add_id(world, e6, Bar);
 
-    ecs_entity(world, { .parent = p3 });
+    ecs_add_id(world, ecs_entity(world, { .parent = p3 }), Tag);
 
     ecs_entity_t e8 = ecs_entity(world, { .parent = p0 });
-    ecs_set_with(world, 0);
+    ecs_add_id(world, e8, Tag);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Tag($x|self), Foo($x|self|up)",
@@ -1220,32 +1265,41 @@ void Traversal_set_var_written_up_childof(void) {
     int x_var = ecs_query_find_var(r, "x");
     test_assert(x_var != -1);
 
-    ecs_set_with(world, Tag);
     ecs_entity_t p0 = ecs_entity(world, {0});
+    ecs_add_id(world, p0, Tag);
     ecs_entity_t p1 = ecs_entity(world, {0});
+    ecs_add_id(world, p1, Tag);
     ecs_add_id(world, p1, Foo);
     ecs_entity_t p2 = ecs_entity(world, {0});
+    ecs_add_id(world, p2, Tag);
     ecs_add_id(world, p2, Foo);
     ecs_entity_t p3 = ecs_entity(world, {0});
+    ecs_add_id(world, p3, Tag);
     ecs_add_id(world, p3, Foo);
     ecs_add_id(world, p3, Bar);
 
     ecs_entity_t e1 = ecs_entity(world, { .parent = p1 });
+    ecs_add_id(world, e1, Tag);
     ecs_entity_t e2 = ecs_entity(world, { .parent = p1 });
+    ecs_add_id(world, e2, Tag);
     ecs_add_id(world, e2, Bar);
 
     ecs_entity_t e3 = ecs_entity(world, { .parent = p2 });
+    ecs_add_id(world, e3, Tag);
     ecs_entity_t e4 = ecs_entity(world, { .parent = p2 });
+    ecs_add_id(world, e4, Tag);
     ecs_add_id(world, e4, Bar);
 
     ecs_entity_t e5 = ecs_entity(world, { .parent = e2 });
+    ecs_add_id(world, e5, Tag);
     ecs_entity_t e6 = ecs_entity(world, { .parent = e2 });
+    ecs_add_id(world, e6, Tag);
     ecs_add_id(world, e6, Bar);
 
-    ecs_entity(world, { .parent = p3 });
+    ecs_add_id(world, ecs_entity(world, { .parent = p3 }), Tag);
 
     ecs_entity_t e8 = ecs_entity(world, { .parent = p0 });
-    ecs_set_with(world, 0);
+    ecs_add_id(world, e8, Tag);
 
     {
         ecs_iter_t it = ecs_query_iter(world, r);
@@ -2166,22 +2220,27 @@ void Traversal_written_self_up_2_targets(void) {
 
     test_assert(r != NULL);
     
-    ecs_set_with(world, Tag);
     ecs_entity_t parent_a = ecs_new(world);
     ecs_entity_t parent_b = ecs_entity(world, {0});
+    ecs_add_id(world, parent_b, Tag);
     ecs_add_id(world, parent_b, Foo);
     ecs_entity_t parent_c = ecs_entity(world, {0});
+    ecs_add_id(world, parent_c, Tag);
     ecs_add_id(world, parent_c, Foo);
     ecs_entity_t e_1 = ecs_entity(world, {0});
+    ecs_add_id(world, e_1, Tag);
     ecs_add_id(world, e_1, ecs_isa(parent_a));
     ecs_add_pair(world, e_1, EcsIsA, parent_b);
     ecs_entity_t e_2 = ecs_entity(world, {0});
+    ecs_add_id(world, e_2, Tag);
     ecs_add_id(world, e_2, ecs_isa(parent_b));
-    ecs_add_id(world, ecs_entity(world, {0}), ecs_isa(parent_a));
+    ecs_entity_t e_w1 = ecs_entity(world, {0});
+    ecs_add_id(world, e_w1, Tag);
+    ecs_add_id(world, e_w1, ecs_isa(parent_a));
     ecs_entity_t e_4 = ecs_entity(world, {0});
+    ecs_add_id(world, e_4, Tag);
     ecs_add_id(world, e_4, ecs_isa(parent_b));
     ecs_add_pair(world, e_4, EcsIsA, parent_c);
-    ecs_set_with(world, 0);
 
     ecs_iter_t it = ecs_query_iter(world, r);
     test_bool(true, ecs_query_next(&it));
@@ -2238,22 +2297,27 @@ void Traversal_written_up_2_targets(void) {
 
     test_assert(r != NULL);
     
-    ecs_set_with(world, Tag);
     ecs_entity_t parent_a = ecs_new(world);
     ecs_entity_t parent_b = ecs_entity(world, {0});
+    ecs_add_id(world, parent_b, Tag);
     ecs_add_id(world, parent_b, Foo);
     ecs_entity_t parent_c = ecs_entity(world, {0});
+    ecs_add_id(world, parent_c, Tag);
     ecs_add_id(world, parent_c, Foo);
     ecs_entity_t e_1 = ecs_entity(world, {0});
+    ecs_add_id(world, e_1, Tag);
     ecs_add_id(world, e_1, ecs_isa(parent_a));
     ecs_add_pair(world, e_1, EcsIsA, parent_b);
     ecs_entity_t e_2 = ecs_entity(world, {0});
+    ecs_add_id(world, e_2, Tag);
     ecs_add_id(world, e_2, ecs_isa(parent_b));
-    ecs_add_id(world, ecs_entity(world, {0}), ecs_isa(parent_a));
+    ecs_entity_t e_w2 = ecs_entity(world, {0});
+    ecs_add_id(world, e_w2, Tag);
+    ecs_add_id(world, e_w2, ecs_isa(parent_a));
     ecs_entity_t e_4 = ecs_entity(world, {0});
+    ecs_add_id(world, e_4, Tag);
     ecs_add_id(world, e_4, ecs_isa(parent_b));
     ecs_add_pair(world, e_4, EcsIsA, parent_c);
-    ecs_set_with(world, 0);
 
     ecs_iter_t it = ecs_query_iter(world, r);
     test_bool(true, ecs_query_next(&it));
@@ -2302,24 +2366,29 @@ void Traversal_written_self_up_2_targets_diamond(void) {
 
     test_assert(r != NULL);
 
-    ecs_set_with(world, Tag);
     ecs_entity_t parent_root = ecs_entity(world, {0});
+    ecs_add_id(world, parent_root, Tag);
     ecs_add_id(world, parent_root, Foo);
     ecs_entity_t parent_a = ecs_entity(world, {0});
+    ecs_add_id(world, parent_a, Tag);
     ecs_add_id(world, parent_a, ecs_isa(parent_root));
     ecs_entity_t parent_b = ecs_entity(world, {0});
+    ecs_add_id(world, parent_b, Tag);
     ecs_add_id(world, parent_b, ecs_isa(parent_root));
     ecs_entity_t parent_c = ecs_entity(world, {0});
+    ecs_add_id(world, parent_c, Tag);
     ecs_add_id(world, parent_c, ecs_isa(parent_a));
     ecs_add_pair(world, parent_c, EcsIsA, parent_b);
 
     ecs_entity_t e_1 = ecs_entity(world, {0});
+    ecs_add_id(world, e_1, Tag);
     ecs_add_id(world, e_1, ecs_isa(parent_a));
     ecs_entity_t e_2 = ecs_entity(world, {0});
+    ecs_add_id(world, e_2, Tag);
     ecs_add_id(world, e_2, ecs_isa(parent_b));
     ecs_entity_t e_3 = ecs_entity(world, {0});
+    ecs_add_id(world, e_3, Tag);
     ecs_add_id(world, e_3, ecs_isa(parent_c));
-    ecs_set_with(world, 0);
 
     ecs_iter_t it = ecs_query_iter(world, r);
     test_bool(true, ecs_query_next(&it));
@@ -2393,24 +2462,29 @@ void Traversal_written_up_2_targets_diamond(void) {
 
     test_assert(r != NULL);
 
-    ecs_set_with(world, Tag);
     ecs_entity_t parent_root = ecs_entity(world, {0});
+    ecs_add_id(world, parent_root, Tag);
     ecs_add_id(world, parent_root, Foo);
     ecs_entity_t parent_a = ecs_entity(world, {0});
+    ecs_add_id(world, parent_a, Tag);
     ecs_add_id(world, parent_a, ecs_isa(parent_root));
     ecs_entity_t parent_b = ecs_entity(world, {0});
+    ecs_add_id(world, parent_b, Tag);
     ecs_add_id(world, parent_b, ecs_isa(parent_root));
     ecs_entity_t parent_c = ecs_entity(world, {0});
+    ecs_add_id(world, parent_c, Tag);
     ecs_add_id(world, parent_c, ecs_isa(parent_a));
     ecs_add_pair(world, parent_c, EcsIsA, parent_b);
 
     ecs_entity_t e_1 = ecs_entity(world, {0});
+    ecs_add_id(world, e_1, Tag);
     ecs_add_id(world, e_1, ecs_isa(parent_a));
     ecs_entity_t e_2 = ecs_entity(world, {0});
+    ecs_add_id(world, e_2, Tag);
     ecs_add_id(world, e_2, ecs_isa(parent_b));
     ecs_entity_t e_3 = ecs_entity(world, {0});
+    ecs_add_id(world, e_3, Tag);
     ecs_add_id(world, e_3, ecs_isa(parent_c));
-    ecs_set_with(world, 0);
 
     ecs_iter_t it = ecs_query_iter(world, r);
     test_bool(true, ecs_query_next(&it));
@@ -2469,16 +2543,19 @@ void Traversal_2_self_up_terms(void) {
     ecs_entity_t Tag = ecs_entity(world, { .name = "Tag" });
     ecs_add_pair(world, Tag, EcsOnInstantiate, EcsInherit);
 
-    ecs_set_with(world, Tag);
     ecs_entity_t parent_a = ecs_new(world);
     ecs_entity_t parent_b = ecs_entity(world, {0});
+    ecs_add_id(world, parent_b, Tag);
     ecs_add_id(world, parent_b, Foo);
-    ecs_add_id(world, ecs_entity(world, {0}), ecs_isa(parent_a));
+    ecs_entity_t e_w3 = ecs_entity(world, {0});
+    ecs_add_id(world, e_w3, Tag);
+    ecs_add_id(world, e_w3, ecs_isa(parent_a));
     ecs_entity_t e_2 = ecs_entity(world, {0});
+    ecs_add_id(world, e_2, Tag);
     ecs_add_id(world, e_2, ecs_isa(parent_b));
     ecs_entity_t e_3 = ecs_entity(world, {0});
+    ecs_add_id(world, e_3, Tag);
     ecs_add_id(world, e_3, ecs_isa(e_2));
-    ecs_set_with(world, 0);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Tag, Foo(self|up IsA)",
@@ -2527,22 +2604,27 @@ void Traversal_2_self_up_terms_2_targets(void) {
     ecs_entity_t Tag = ecs_entity(world, { .name = "Tag" });
     ecs_add_pair(world, Tag, EcsOnInstantiate, EcsInherit);
 
-    ecs_set_with(world, Tag);
     ecs_entity_t parent_a = ecs_new(world);
     ecs_entity_t parent_b = ecs_entity(world, {0});
+    ecs_add_id(world, parent_b, Tag);
     ecs_add_id(world, parent_b, Foo);
     ecs_entity_t parent_c = ecs_entity(world, {0});
+    ecs_add_id(world, parent_c, Tag);
     ecs_add_id(world, parent_c, Foo);
     ecs_entity_t e_1 = ecs_entity(world, {0});
+    ecs_add_id(world, e_1, Tag);
     ecs_add_id(world, e_1, ecs_isa(parent_a));
     ecs_add_pair(world, e_1, EcsIsA, parent_b);
     ecs_entity_t e_2 = ecs_entity(world, {0});
+    ecs_add_id(world, e_2, Tag);
     ecs_add_id(world, e_2, ecs_isa(parent_b));
-    ecs_add_id(world, ecs_entity(world, {0}), ecs_isa(parent_a));
+    ecs_entity_t e_w4 = ecs_entity(world, {0});
+    ecs_add_id(world, e_w4, Tag);
+    ecs_add_id(world, e_w4, ecs_isa(parent_a));
     ecs_entity_t e_4 = ecs_entity(world, {0});
+    ecs_add_id(world, e_4, Tag);
     ecs_add_id(world, e_4, ecs_isa(parent_b));
     ecs_add_pair(world, e_4, EcsIsA, parent_c);
-    ecs_set_with(world, 0);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Tag, Foo(self|up IsA)",
@@ -2738,23 +2820,28 @@ void Traversal_self_up_all_owned(void) {
 
     test_assert(r != NULL);
 
-    ecs_set_with(world, Tag);
     ecs_entity_t parent_root = ecs_entity(world, {0});
+    ecs_add_id(world, parent_root, Tag);
     ecs_entity_t parent_a = ecs_entity(world, {0});
+    ecs_add_id(world, parent_a, Tag);
     ecs_add_id(world, parent_a, ecs_isa(parent_root));
     ecs_entity_t parent_b = ecs_entity(world, {0});
+    ecs_add_id(world, parent_b, Tag);
     ecs_add_id(world, parent_b, ecs_isa(parent_root));
     ecs_entity_t parent_c = ecs_entity(world, {0});
+    ecs_add_id(world, parent_c, Tag);
     ecs_add_id(world, parent_c, ecs_isa(parent_a));
     ecs_add_pair(world, parent_c, EcsIsA, parent_b);
 
     ecs_entity_t e_1 = ecs_entity(world, {0});
+    ecs_add_id(world, e_1, Tag);
     ecs_add_id(world, e_1, ecs_isa(parent_a));
     ecs_entity_t e_2 = ecs_entity(world, {0});
+    ecs_add_id(world, e_2, Tag);
     ecs_add_id(world, e_2, ecs_isa(parent_b));
     ecs_entity_t e_3 = ecs_entity(world, {0});
+    ecs_add_id(world, e_3, Tag);
     ecs_add_id(world, e_3, ecs_isa(parent_c));
-    ecs_set_with(world, 0);
 
     ecs_iter_t it = ecs_query_iter(world, r);
     test_bool(true, ecs_query_next(&it));
@@ -2814,23 +2901,28 @@ void Traversal_up_all_owned(void) {
 
     test_assert(r != NULL);
 
-    ecs_set_with(world, Tag);
     ecs_entity_t parent_root = ecs_entity(world, {0});
+    ecs_add_id(world, parent_root, Tag);
     ecs_entity_t parent_a = ecs_entity(world, {0});
+    ecs_add_id(world, parent_a, Tag);
     ecs_add_id(world, parent_a, ecs_isa(parent_root));
     ecs_entity_t parent_b = ecs_entity(world, {0});
+    ecs_add_id(world, parent_b, Tag);
     ecs_add_id(world, parent_b, ecs_isa(parent_root));
     ecs_entity_t parent_c = ecs_entity(world, {0});
+    ecs_add_id(world, parent_c, Tag);
     ecs_add_id(world, parent_c, ecs_isa(parent_a));
     ecs_add_pair(world, parent_c, EcsIsA, parent_b);
 
     ecs_entity_t e_1 = ecs_entity(world, {0});
+    ecs_add_id(world, e_1, Tag);
     ecs_add_id(world, e_1, ecs_isa(parent_a));
     ecs_entity_t e_2 = ecs_entity(world, {0});
+    ecs_add_id(world, e_2, Tag);
     ecs_add_id(world, e_2, ecs_isa(parent_b));
     ecs_entity_t e_3 = ecs_entity(world, {0});
+    ecs_add_id(world, e_3, Tag);
     ecs_add_id(world, e_3, ecs_isa(parent_c));
-    ecs_set_with(world, 0);
 
     ecs_iter_t it = ecs_query_iter(world, r);
     test_bool(true, ecs_query_next(&it));
@@ -3030,13 +3122,14 @@ void Traversal_this_written_self_up_childof_inherited(void) {
 
     test_assert(r != NULL);
 
-    ecs_set_with(world, Tag);
     ecs_entity_t base = ecs_entity(world, {0});
+    ecs_add_id(world, base, Tag);
     ecs_add_id(world, base, Foo);
     ecs_entity_t parent = ecs_entity(world, {0});
+    ecs_add_id(world, parent, Tag);
     ecs_add_id(world, parent, ecs_isa(base));
     ecs_entity_t child = ecs_entity(world, { .parent = parent });
-    ecs_set_with(world, 0);
+    ecs_add_id(world, child, Tag);
     
     ecs_iter_t it = ecs_query_iter(world, r);
     test_bool(true, ecs_query_next(&it));
@@ -3077,13 +3170,14 @@ void Traversal_this_written_up_childof_inherited(void) {
 
     test_assert(r != NULL);
 
-    ecs_set_with(world, Tag);
     ecs_entity_t base = ecs_entity(world, {0});
+    ecs_add_id(world, base, Tag);
     ecs_add_id(world, base, Foo);
     ecs_entity_t parent = ecs_entity(world, {0});
+    ecs_add_id(world, parent, Tag);
     ecs_add_id(world, parent, ecs_isa(base));
     ecs_entity_t child = ecs_entity(world, { .parent = parent });
-    ecs_set_with(world, 0);
+    ecs_add_id(world, child, Tag);
     
     ecs_iter_t it = ecs_query_iter(world, r);
     test_bool(true, ecs_query_next(&it));
@@ -3116,14 +3210,15 @@ void Traversal_this_written_self_up_childof_inherited_override(void) {
 
     test_assert(r != NULL);
 
-    ecs_set_with(world, Tag);
     ecs_entity_t base = ecs_entity(world, {0});
+    ecs_add_id(world, base, Tag);
     ecs_add_id(world, base, Foo);
     ecs_entity_t parent = ecs_entity(world, {0});
+    ecs_add_id(world, parent, Tag);
     ecs_add_id(world, parent, ecs_isa(base));
     ecs_add_id(world, parent, Foo);
     ecs_entity_t child = ecs_entity(world, { .parent = parent });
-    ecs_set_with(world, 0);
+    ecs_add_id(world, child, Tag);
     
     ecs_iter_t it = ecs_query_iter(world, r);
     test_bool(true, ecs_query_next(&it));
@@ -3172,14 +3267,15 @@ void Traversal_this_written_up_childof_inherited_override(void) {
 
     test_assert(r != NULL);
 
-    ecs_set_with(world, Tag);
     ecs_entity_t base = ecs_entity(world, {0});
+    ecs_add_id(world, base, Tag);
     ecs_add_id(world, base, Foo);
     ecs_entity_t parent = ecs_entity(world, {0});
+    ecs_add_id(world, parent, Tag);
     ecs_add_id(world, parent, ecs_isa(base));
     ecs_add_id(world, parent, Foo);
     ecs_entity_t child = ecs_entity(world, { .parent = parent });
-    ecs_set_with(world, 0);
+    ecs_add_id(world, child, Tag);
     
     ecs_iter_t it = ecs_query_iter(world, r);
     test_bool(true, ecs_query_next(&it));
@@ -3289,13 +3385,14 @@ void Traversal_var_written_self_up_childof_inherited(void) {
     int x_var = ecs_query_find_var(r, "x");
     test_assert(x_var != -1);
 
-    ecs_set_with(world, Tag);
     ecs_entity_t base = ecs_entity(world, {0});
+    ecs_add_id(world, base, Tag);
     ecs_add_id(world, base, Foo);
     ecs_entity_t parent = ecs_entity(world, {0});
+    ecs_add_id(world, parent, Tag);
     ecs_add_id(world, parent, ecs_isa(base));
     ecs_entity_t child = ecs_entity(world, { .parent = parent });
-    ecs_set_with(world, 0);
+    ecs_add_id(world, child, Tag);
     
     ecs_iter_t it = ecs_query_iter(world, r);
     test_bool(true, ecs_query_next(&it));
@@ -3339,13 +3436,14 @@ void Traversal_var_written_up_childof_inherited(void) {
     int x_var = ecs_query_find_var(r, "x");
     test_assert(x_var != -1);
 
-    ecs_set_with(world, Tag);
     ecs_entity_t base = ecs_entity(world, {0});
+    ecs_add_id(world, base, Tag);
     ecs_add_id(world, base, Foo);
     ecs_entity_t parent = ecs_entity(world, {0});
+    ecs_add_id(world, parent, Tag);
     ecs_add_id(world, parent, ecs_isa(base));
     ecs_entity_t child = ecs_entity(world, { .parent = parent });
-    ecs_set_with(world, 0);
+    ecs_add_id(world, child, Tag);
     
     ecs_iter_t it = ecs_query_iter(world, r);
     test_bool(true, ecs_query_next(&it));
@@ -3459,15 +3557,16 @@ void Traversal_ent_written_self_up_childof_inherited(void) {
     ecs_entity_t Tag = ecs_entity(world, { .name = "Tag" });
     ecs_add_pair(world, Tag, EcsOnInstantiate, EcsInherit);
 
-    ecs_set_with(world, Tag);
     ecs_entity_t base = ecs_entity(world, {0});
+    ecs_add_id(world, base, Tag);
     ecs_add_id(world, base, Foo);
     ecs_entity_t parent = ecs_entity(world, {0});
+    ecs_add_id(world, parent, Tag);
     ecs_add_id(world, parent, ecs_isa(base));
     ecs_entity_t child = ecs_entity(world, { .parent = parent });
+    ecs_add_id(world, child, Tag);
     ecs_set_name(world, parent, "parent");
     ecs_set_name(world, child, "child");
-    ecs_set_with(world, 0);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Foo(parent.child|self|up)",
@@ -3509,15 +3608,16 @@ void Traversal_ent_written_up_childof_inherited(void) {
     ecs_entity_t Tag = ecs_entity(world, { .name = "Tag" });
     ecs_add_pair(world, Tag, EcsOnInstantiate, EcsInherit);
 
-    ecs_set_with(world, Tag);
     ecs_entity_t base = ecs_entity(world, {0});
+    ecs_add_id(world, base, Tag);
     ecs_add_id(world, base, Foo);
     ecs_entity_t parent = ecs_entity(world, {0});
+    ecs_add_id(world, parent, Tag);
     ecs_add_id(world, parent, ecs_isa(base));
     ecs_entity_t child = ecs_entity(world, { .parent = parent });
+    ecs_add_id(world, child, Tag);
     ecs_set_name(world, parent, "parent");
     ecs_set_name(world, child, "child");
-    ecs_set_with(world, 0);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Foo(parent.child|up)",
@@ -3853,29 +3953,35 @@ void Traversal_this_written_self_up_childof_component(void) {
 
     test_assert(r != NULL);
 
-    ecs_set_with(world, Tag);
     ecs_entity_t p0 = ecs_entity(world, {0});
+    ecs_add_id(world, p0, Tag);
     ecs_entity_t p1 = ecs_insert(world, {Tag}, ecs_value(Position, {10, 20}));
     ecs_entity_t p2 = ecs_insert(world, {Tag}, ecs_value(Position, {20, 30}));
     ecs_entity_t p3 = ecs_insert(world, {Tag}, ecs_value(Position, {30, 40}));
     ecs_add_id(world, p3, Bar);
 
     ecs_entity_t e1 = ecs_entity(world, { .parent = p1 });
+    ecs_add_id(world, e1, Tag);
     ecs_entity_t e2 = ecs_entity(world, { .parent = p1 });
+    ecs_add_id(world, e2, Tag);
     ecs_add_id(world, e2, Bar);
 
     ecs_entity_t e3 = ecs_entity(world, { .parent = p2 });
+    ecs_add_id(world, e3, Tag);
     ecs_entity_t e4 = ecs_entity(world, { .parent = p2 });
+    ecs_add_id(world, e4, Tag);
     ecs_add_id(world, e4, Bar);
 
     ecs_entity_t e5 = ecs_entity(world, { .parent = e2 });
+    ecs_add_id(world, e5, Tag);
     ecs_entity_t e6 = ecs_entity(world, { .parent = e2 });
+    ecs_add_id(world, e6, Tag);
     ecs_add_id(world, e6, Bar);
 
     ecs_entity_t e7 = ecs_entity(world, { .parent = p3 });
+    ecs_add_id(world, e7, Tag);
 
-    ecs_entity(world, { .parent = p0 });
-    ecs_set_with(world, 0);
+    ecs_add_id(world, ecs_entity(world, { .parent = p0 }), Tag);
 
     ecs_iter_t it = ecs_query_iter(world, r);
 
@@ -4032,29 +4138,35 @@ void Traversal_this_written_up_childof_component(void) {
 
     test_assert(r != NULL);
 
-    ecs_set_with(world, Tag);
     ecs_entity_t p0 = ecs_entity(world, {0});
+    ecs_add_id(world, p0, Tag);
     ecs_entity_t p1 = ecs_insert(world, {Tag}, ecs_value(Position, {10, 20}));
     ecs_entity_t p2 = ecs_insert(world, {Tag}, ecs_value(Position, {20, 30}));
     ecs_entity_t p3 = ecs_insert(world, {Tag}, ecs_value(Position, {30, 40}));
     ecs_add_id(world, p3, Bar);
 
     ecs_entity_t e1 = ecs_entity(world, { .parent = p1 });
+    ecs_add_id(world, e1, Tag);
     ecs_entity_t e2 = ecs_entity(world, { .parent = p1 });
+    ecs_add_id(world, e2, Tag);
     ecs_add_id(world, e2, Bar);
 
     ecs_entity_t e3 = ecs_entity(world, { .parent = p2 });
+    ecs_add_id(world, e3, Tag);
     ecs_entity_t e4 = ecs_entity(world, { .parent = p2 });
+    ecs_add_id(world, e4, Tag);
     ecs_add_id(world, e4, Bar);
 
     ecs_entity_t e5 = ecs_entity(world, { .parent = e2 });
+    ecs_add_id(world, e5, Tag);
     ecs_entity_t e6 = ecs_entity(world, { .parent = e2 });
+    ecs_add_id(world, e6, Tag);
     ecs_add_id(world, e6, Bar);
 
     ecs_entity_t e7 = ecs_entity(world, { .parent = p3 });
+    ecs_add_id(world, e7, Tag);
 
-    ecs_entity(world, { .parent = p0 });
-    ecs_set_with(world, 0);
+    ecs_add_id(world, ecs_entity(world, { .parent = p0 }), Tag);
 
     ecs_iter_t it = ecs_query_iter(world, r);
 
@@ -4481,29 +4593,35 @@ void Traversal_var_written_self_up_childof_component(void) {
     int x_var = ecs_query_find_var(r, "x");
     test_assert(x_var != -1);
 
-    ecs_set_with(world, Tag);
     ecs_entity_t p0 = ecs_entity(world, {0});
+    ecs_add_id(world, p0, Tag);
     ecs_entity_t p1 = ecs_insert(world, {Tag}, ecs_value(Position, {10, 20}));
     ecs_entity_t p2 = ecs_insert(world, {Tag}, ecs_value(Position, {20, 30}));
     ecs_entity_t p3 = ecs_insert(world, {Tag}, ecs_value(Position, {30, 40}));
     ecs_add_id(world, p3, Bar);
 
     ecs_entity_t e1 = ecs_entity(world, { .parent = p1 });
+    ecs_add_id(world, e1, Tag);
     ecs_entity_t e2 = ecs_entity(world, { .parent = p1 });
+    ecs_add_id(world, e2, Tag);
     ecs_add_id(world, e2, Bar);
 
     ecs_entity_t e3 = ecs_entity(world, { .parent = p2 });
+    ecs_add_id(world, e3, Tag);
     ecs_entity_t e4 = ecs_entity(world, { .parent = p2 });
+    ecs_add_id(world, e4, Tag);
     ecs_add_id(world, e4, Bar);
 
     ecs_entity_t e5 = ecs_entity(world, { .parent = e2 });
+    ecs_add_id(world, e5, Tag);
     ecs_entity_t e6 = ecs_entity(world, { .parent = e2 });
+    ecs_add_id(world, e6, Tag);
     ecs_add_id(world, e6, Bar);
 
     ecs_entity_t e7 = ecs_entity(world, { .parent = p3 });
+    ecs_add_id(world, e7, Tag);
 
-    ecs_entity(world, { .parent = p0 });
-    ecs_set_with(world, 0);
+    ecs_add_id(world, ecs_entity(world, { .parent = p0 }), Tag);
 
     ecs_iter_t it = ecs_query_iter(world, r);
     test_bool(true, ecs_query_next(&it));
@@ -4673,29 +4791,35 @@ void Traversal_var_written_up_childof_component(void) {
     int x_var = ecs_query_find_var(r, "x");
     test_assert(x_var != -1);
 
-    ecs_set_with(world, Tag);
     ecs_entity_t p0 = ecs_entity(world, {0});
+    ecs_add_id(world, p0, Tag);
     ecs_entity_t p1 = ecs_insert(world, {Tag}, ecs_value(Position, {10, 20}));
     ecs_entity_t p2 = ecs_insert(world, {Tag}, ecs_value(Position, {20, 30}));
     ecs_entity_t p3 = ecs_insert(world, {Tag}, ecs_value(Position, {30, 40}));
     ecs_add_id(world, p3, Bar);
 
     ecs_entity_t e1 = ecs_entity(world, { .parent = p1 });
+    ecs_add_id(world, e1, Tag);
     ecs_entity_t e2 = ecs_entity(world, { .parent = p1 });
+    ecs_add_id(world, e2, Tag);
     ecs_add_id(world, e2, Bar);
 
     ecs_entity_t e3 = ecs_entity(world, { .parent = p2 });
+    ecs_add_id(world, e3, Tag);
     ecs_entity_t e4 = ecs_entity(world, { .parent = p2 });
+    ecs_add_id(world, e4, Tag);
     ecs_add_id(world, e4, Bar);
 
     ecs_entity_t e5 = ecs_entity(world, { .parent = e2 });
+    ecs_add_id(world, e5, Tag);
     ecs_entity_t e6 = ecs_entity(world, { .parent = e2 });
+    ecs_add_id(world, e6, Tag);
     ecs_add_id(world, e6, Bar);
 
     ecs_entity_t e7 = ecs_entity(world, { .parent = p3 });
+    ecs_add_id(world, e7, Tag);
 
-    ecs_entity(world, { .parent = p0 });
-    ecs_set_with(world, 0);
+    ecs_add_id(world, ecs_entity(world, { .parent = p0 }), Tag);
 
     ecs_iter_t it = ecs_query_iter(world, r);
     test_bool(true, ecs_query_next(&it));
@@ -5025,17 +5149,20 @@ void Traversal_this_written_self_up_childof_recycled_parent(void) {
 
     test_assert(r != NULL);
 
-    ecs_set_with(world, Tag);
     ecs_delete(world, ecs_new(world));
     ecs_entity_t p0 = ecs_entity(world, {0});
+    ecs_add_id(world, p0, Tag);
     ecs_delete(world, ecs_new(world));
     ecs_entity_t p1 = ecs_entity(world, {0});
+    ecs_add_id(world, p1, Tag);
     ecs_add_id(world, p1, Foo);
     ecs_delete(world, ecs_new(world));
     ecs_entity_t p2 = ecs_entity(world, {0});
+    ecs_add_id(world, p2, Tag);
     ecs_add_id(world, p2, Foo);
     ecs_delete(world, ecs_new(world));
     ecs_entity_t p3 = ecs_entity(world, {0});
+    ecs_add_id(world, p3, Tag);
     ecs_add_id(world, p3, Foo);
     ecs_add_id(world, p3, Bar);
 
@@ -5045,21 +5172,27 @@ void Traversal_this_written_self_up_childof_recycled_parent(void) {
     test_assert((uint32_t)p3 != p3);
 
     ecs_entity_t e1 = ecs_entity(world, { .parent = p1 });
+    ecs_add_id(world, e1, Tag);
     ecs_entity_t e2 = ecs_entity(world, { .parent = p1 });
+    ecs_add_id(world, e2, Tag);
     ecs_add_id(world, e2, Bar);
 
     ecs_entity_t e3 = ecs_entity(world, { .parent = p2 });
+    ecs_add_id(world, e3, Tag);
     ecs_entity_t e4 = ecs_entity(world, { .parent = p2 });
+    ecs_add_id(world, e4, Tag);
     ecs_add_id(world, e4, Bar);
 
     ecs_entity_t e5 = ecs_entity(world, { .parent = e2 });
+    ecs_add_id(world, e5, Tag);
     ecs_entity_t e6 = ecs_entity(world, { .parent = e2 });
+    ecs_add_id(world, e6, Tag);
     ecs_add_id(world, e6, Bar);
 
     ecs_entity_t e7 = ecs_entity(world, { .parent = p3 });
+    ecs_add_id(world, e7, Tag);
 
-    ecs_entity(world, { .parent = p0 });
-    ecs_set_with(world, 0);
+    ecs_add_id(world, ecs_entity(world, { .parent = p0 }), Tag);
 
     ecs_iter_t it = ecs_query_iter(world, r);
     test_bool(true, ecs_query_next(&it));
@@ -5159,17 +5292,20 @@ void Traversal_this_written_up_childof_recycled_parent(void) {
 
     test_assert(r != NULL);
 
-    ecs_set_with(world, Tag);
     ecs_delete(world, ecs_new(world));
     ecs_entity_t p0 = ecs_entity(world, {0});
+    ecs_add_id(world, p0, Tag);
     ecs_delete(world, ecs_new(world));
     ecs_entity_t p1 = ecs_entity(world, {0});
+    ecs_add_id(world, p1, Tag);
     ecs_add_id(world, p1, Foo);
     ecs_delete(world, ecs_new(world));
     ecs_entity_t p2 = ecs_entity(world, {0});
+    ecs_add_id(world, p2, Tag);
     ecs_add_id(world, p2, Foo);
     ecs_delete(world, ecs_new(world));
     ecs_entity_t p3 = ecs_entity(world, {0});
+    ecs_add_id(world, p3, Tag);
     ecs_add_id(world, p3, Foo);
     ecs_add_id(world, p3, Bar);
 
@@ -5179,21 +5315,27 @@ void Traversal_this_written_up_childof_recycled_parent(void) {
     test_assert((uint32_t)p3 != p3);
 
     ecs_entity_t e1 = ecs_entity(world, { .parent = p1 });
+    ecs_add_id(world, e1, Tag);
     ecs_entity_t e2 = ecs_entity(world, { .parent = p1 });
+    ecs_add_id(world, e2, Tag);
     ecs_add_id(world, e2, Bar);
 
     ecs_entity_t e3 = ecs_entity(world, { .parent = p2 });
+    ecs_add_id(world, e3, Tag);
     ecs_entity_t e4 = ecs_entity(world, { .parent = p2 });
+    ecs_add_id(world, e4, Tag);
     ecs_add_id(world, e4, Bar);
 
     ecs_entity_t e5 = ecs_entity(world, { .parent = e2 });
+    ecs_add_id(world, e5, Tag);
     ecs_entity_t e6 = ecs_entity(world, { .parent = e2 });
+    ecs_add_id(world, e6, Tag);
     ecs_add_id(world, e6, Bar);
 
     ecs_entity_t e7 = ecs_entity(world, { .parent = p3 });
+    ecs_add_id(world, e7, Tag);
 
-    ecs_entity(world, { .parent = p0 });
-    ecs_set_with(world, 0);
+    ecs_add_id(world, ecs_entity(world, { .parent = p0 }), Tag);
 
     ecs_iter_t it = ecs_query_iter(world, r);
     test_bool(true, ecs_query_next(&it));
@@ -5579,9 +5721,9 @@ void Traversal_this_written_self_up_childof_recycled_parent_component(void) {
 
     test_assert(r != NULL);
 
-    ecs_set_with(world, Tag);
     ecs_delete(world, ecs_new(world));
     ecs_entity_t p0 = ecs_entity(world, {0});
+    ecs_add_id(world, p0, Tag);
     ecs_delete(world, ecs_new(world));
     ecs_entity_t p1 = ecs_insert(world, {Tag}, ecs_value(Position, {10, 20}));
     ecs_delete(world, ecs_new(world));
@@ -5596,21 +5738,27 @@ void Traversal_this_written_self_up_childof_recycled_parent_component(void) {
     test_assert((uint32_t)p3 != p3);
 
     ecs_entity_t e1 = ecs_entity(world, { .parent = p1 });
+    ecs_add_id(world, e1, Tag);
     ecs_entity_t e2 = ecs_entity(world, { .parent = p1 });
+    ecs_add_id(world, e2, Tag);
     ecs_add_id(world, e2, Bar);
 
     ecs_entity_t e3 = ecs_entity(world, { .parent = p2 });
+    ecs_add_id(world, e3, Tag);
     ecs_entity_t e4 = ecs_entity(world, { .parent = p2 });
+    ecs_add_id(world, e4, Tag);
     ecs_add_id(world, e4, Bar);
 
     ecs_entity_t e5 = ecs_entity(world, { .parent = e2 });
+    ecs_add_id(world, e5, Tag);
     ecs_entity_t e6 = ecs_entity(world, { .parent = e2 });
+    ecs_add_id(world, e6, Tag);
     ecs_add_id(world, e6, Bar);
 
     ecs_entity_t e7 = ecs_entity(world, { .parent = p3 });
+    ecs_add_id(world, e7, Tag);
 
-    ecs_entity(world, { .parent = p0 });
-    ecs_set_with(world, 0);
+    ecs_add_id(world, ecs_entity(world, { .parent = p0 }), Tag);
 
     ecs_iter_t it = ecs_query_iter(world, r);
 
@@ -5767,9 +5915,9 @@ void Traversal_this_written_up_childof_recycled_parent_component(void) {
 
     test_assert(r != NULL);
 
-    ecs_set_with(world, Tag);
     ecs_delete(world, ecs_new(world));
     ecs_entity_t p0 = ecs_entity(world, {0});
+    ecs_add_id(world, p0, Tag);
     ecs_delete(world, ecs_new(world));
     ecs_entity_t p1 = ecs_insert(world, {Tag}, ecs_value(Position, {10, 20}));
     ecs_delete(world, ecs_new(world));
@@ -5784,21 +5932,27 @@ void Traversal_this_written_up_childof_recycled_parent_component(void) {
     test_assert((uint32_t)p3 != p3);
 
     ecs_entity_t e1 = ecs_entity(world, { .parent = p1 });
+    ecs_add_id(world, e1, Tag);
     ecs_entity_t e2 = ecs_entity(world, { .parent = p1 });
+    ecs_add_id(world, e2, Tag);
     ecs_add_id(world, e2, Bar);
 
     ecs_entity_t e3 = ecs_entity(world, { .parent = p2 });
+    ecs_add_id(world, e3, Tag);
     ecs_entity_t e4 = ecs_entity(world, { .parent = p2 });
+    ecs_add_id(world, e4, Tag);
     ecs_add_id(world, e4, Bar);
 
     ecs_entity_t e5 = ecs_entity(world, { .parent = e2 });
+    ecs_add_id(world, e5, Tag);
     ecs_entity_t e6 = ecs_entity(world, { .parent = e2 });
+    ecs_add_id(world, e6, Tag);
     ecs_add_id(world, e6, Bar);
 
     ecs_entity_t e7 = ecs_entity(world, { .parent = p3 });
+    ecs_add_id(world, e7, Tag);
 
-    ecs_entity(world, { .parent = p0 });
-    ecs_set_with(world, 0);
+    ecs_add_id(world, ecs_entity(world, { .parent = p0 }), Tag);
 
     ecs_iter_t it = ecs_query_iter(world, r);
 
@@ -6117,32 +6271,41 @@ void Traversal_this_written_self_up_childof_pair(void) {
 
     test_assert(r != NULL);
 
-    ecs_set_with(world, Tag);
     ecs_entity_t p0 = ecs_entity(world, {0});
+    ecs_add_id(world, p0, Tag);
     ecs_entity_t p1 = ecs_entity(world, {0});
+    ecs_add_id(world, p1, Tag);
     ecs_add_id(world, p1, ecs_pair(Rel, Tgt));
     ecs_entity_t p2 = ecs_entity(world, {0});
+    ecs_add_id(world, p2, Tag);
     ecs_add_id(world, p2, ecs_pair(Rel, Tgt));
     ecs_entity_t p3 = ecs_entity(world, {0});
+    ecs_add_id(world, p3, Tag);
     ecs_add_id(world, p3, ecs_pair(Rel, Tgt));
     ecs_add_id(world, p3, Bar);
 
     ecs_entity_t e1 = ecs_entity(world, { .parent = p1 });
+    ecs_add_id(world, e1, Tag);
     ecs_entity_t e2 = ecs_entity(world, { .parent = p1 });
+    ecs_add_id(world, e2, Tag);
     ecs_add_id(world, e2, Bar);
 
     ecs_entity_t e3 = ecs_entity(world, { .parent = p2 });
+    ecs_add_id(world, e3, Tag);
     ecs_entity_t e4 = ecs_entity(world, { .parent = p2 });
+    ecs_add_id(world, e4, Tag);
     ecs_add_id(world, e4, Bar);
 
     ecs_entity_t e5 = ecs_entity(world, { .parent = e2 });
+    ecs_add_id(world, e5, Tag);
     ecs_entity_t e6 = ecs_entity(world, { .parent = e2 });
+    ecs_add_id(world, e6, Tag);
     ecs_add_id(world, e6, Bar);
 
     ecs_entity_t e7 = ecs_entity(world, { .parent = p3 });
+    ecs_add_id(world, e7, Tag);
 
-    ecs_entity(world, { .parent = p0 });
-    ecs_set_with(world, 0);
+    ecs_add_id(world, ecs_entity(world, { .parent = p0 }), Tag);
 
     ecs_iter_t it = ecs_query_iter(world, r);
     test_bool(true, ecs_query_next(&it));
@@ -6244,32 +6407,41 @@ void Traversal_this_written_up_childof_pair(void) {
 
     test_assert(r != NULL);
 
-    ecs_set_with(world, Tag);
     ecs_entity_t p0 = ecs_entity(world, {0});
+    ecs_add_id(world, p0, Tag);
     ecs_entity_t p1 = ecs_entity(world, {0});
+    ecs_add_id(world, p1, Tag);
     ecs_add_id(world, p1, ecs_pair(Rel, Tgt));
     ecs_entity_t p2 = ecs_entity(world, {0});
+    ecs_add_id(world, p2, Tag);
     ecs_add_id(world, p2, ecs_pair(Rel, Tgt));
     ecs_entity_t p3 = ecs_entity(world, {0});
+    ecs_add_id(world, p3, Tag);
     ecs_add_id(world, p3, ecs_pair(Rel, Tgt));
     ecs_add_id(world, p3, Bar);
 
     ecs_entity_t e1 = ecs_entity(world, { .parent = p1 });
+    ecs_add_id(world, e1, Tag);
     ecs_entity_t e2 = ecs_entity(world, { .parent = p1 });
+    ecs_add_id(world, e2, Tag);
     ecs_add_id(world, e2, Bar);
 
     ecs_entity_t e3 = ecs_entity(world, { .parent = p2 });
+    ecs_add_id(world, e3, Tag);
     ecs_entity_t e4 = ecs_entity(world, { .parent = p2 });
+    ecs_add_id(world, e4, Tag);
     ecs_add_id(world, e4, Bar);
 
     ecs_entity_t e5 = ecs_entity(world, { .parent = e2 });
+    ecs_add_id(world, e5, Tag);
     ecs_entity_t e6 = ecs_entity(world, { .parent = e2 });
+    ecs_add_id(world, e6, Tag);
     ecs_add_id(world, e6, Bar);
 
     ecs_entity_t e7 = ecs_entity(world, { .parent = p3 });
+    ecs_add_id(world, e7, Tag);
 
-    ecs_entity(world, { .parent = p0 });
-    ecs_set_with(world, 0);
+    ecs_add_id(world, ecs_entity(world, { .parent = p0 }), Tag);
 
     ecs_iter_t it = ecs_query_iter(world, r);
     test_bool(true, ecs_query_next(&it));
@@ -6570,33 +6742,42 @@ void Traversal_this_written_self_up_childof_pair_wildcard(void) {
 
     test_assert(r != NULL);
 
-    ecs_set_with(world, Tag);
     ecs_entity_t p0 = ecs_entity(world, {0});
+    ecs_add_id(world, p0, Tag);
     ecs_entity_t p1 = ecs_entity(world, {0});
+    ecs_add_id(world, p1, Tag);
     ecs_add_id(world, p1, ecs_pair(Rel, TgtA));
     ecs_entity_t p2 = ecs_entity(world, {0});
+    ecs_add_id(world, p2, Tag);
     ecs_add_id(world, p2, ecs_pair(Rel, TgtB));
     ecs_entity_t p3 = ecs_entity(world, {0});
+    ecs_add_id(world, p3, Tag);
     ecs_add_id(world, p3, ecs_pair(Rel, TgtC));
     ecs_add_id(world, p3, Bar);
     ecs_add_pair(world, p3, EcsChildOf, p2);
 
     ecs_entity_t e1 = ecs_entity(world, { .parent = p1 });
+    ecs_add_id(world, e1, Tag);
     ecs_entity_t e2 = ecs_entity(world, { .parent = p1 });
+    ecs_add_id(world, e2, Tag);
     ecs_add_id(world, e2, Bar);
 
     ecs_entity_t e3 = ecs_entity(world, { .parent = p2 });
+    ecs_add_id(world, e3, Tag);
     ecs_entity_t e4 = ecs_entity(world, { .parent = p2 });
+    ecs_add_id(world, e4, Tag);
     ecs_add_id(world, e4, Bar);
 
     ecs_entity_t e5 = ecs_entity(world, { .parent = e2 });
+    ecs_add_id(world, e5, Tag);
     ecs_entity_t e6 = ecs_entity(world, { .parent = e2 });
+    ecs_add_id(world, e6, Tag);
     ecs_add_id(world, e6, Bar);
 
     ecs_entity_t e7 = ecs_entity(world, { .parent = p3 });
+    ecs_add_id(world, e7, Tag);
 
-    ecs_entity(world, { .parent = p0 });
-    ecs_set_with(world, 0);
+    ecs_add_id(world, ecs_entity(world, { .parent = p0 }), Tag);
 
     ecs_iter_t it = ecs_query_iter(world, r);
     test_bool(true, ecs_query_next(&it));
@@ -6709,33 +6890,42 @@ void Traversal_this_written_up_childof_pair_wildcard(void) {
 
     test_assert(r != NULL);
 
-    ecs_set_with(world, Tag);
     ecs_entity_t p0 = ecs_entity(world, {0});
+    ecs_add_id(world, p0, Tag);
     ecs_entity_t p1 = ecs_entity(world, {0});
+    ecs_add_id(world, p1, Tag);
     ecs_add_id(world, p1, ecs_pair(Rel, TgtA));
     ecs_entity_t p2 = ecs_entity(world, {0});
+    ecs_add_id(world, p2, Tag);
     ecs_add_id(world, p2, ecs_pair(Rel, TgtB));
     ecs_entity_t p3 = ecs_entity(world, {0});
+    ecs_add_id(world, p3, Tag);
     ecs_add_id(world, p3, ecs_pair(Rel, TgtC));
     ecs_add_id(world, p3, Bar);
     ecs_add_pair(world, p3, EcsChildOf, p2);
 
     ecs_entity_t e1 = ecs_entity(world, { .parent = p1 });
+    ecs_add_id(world, e1, Tag);
     ecs_entity_t e2 = ecs_entity(world, { .parent = p1 });
+    ecs_add_id(world, e2, Tag);
     ecs_add_id(world, e2, Bar);
 
     ecs_entity_t e3 = ecs_entity(world, { .parent = p2 });
+    ecs_add_id(world, e3, Tag);
     ecs_entity_t e4 = ecs_entity(world, { .parent = p2 });
+    ecs_add_id(world, e4, Tag);
     ecs_add_id(world, e4, Bar);
 
     ecs_entity_t e5 = ecs_entity(world, { .parent = e2 });
+    ecs_add_id(world, e5, Tag);
     ecs_entity_t e6 = ecs_entity(world, { .parent = e2 });
+    ecs_add_id(world, e6, Tag);
     ecs_add_id(world, e6, Bar);
 
     ecs_entity_t e7 = ecs_entity(world, { .parent = p3 });
+    ecs_add_id(world, e7, Tag);
 
-    ecs_entity(world, { .parent = p0 });
-    ecs_set_with(world, 0);
+    ecs_add_id(world, ecs_entity(world, { .parent = p0 }), Tag);
 
     ecs_iter_t it = ecs_query_iter(world, r);
     test_bool(true, ecs_query_next(&it));
@@ -6960,33 +7150,42 @@ void Traversal_this_written_self_up_childof_pair_tgt_var(void) {
     int x_var = ecs_query_find_var(r, "x");
     test_assert(x_var != -1);
 
-    ecs_set_with(world, Tag);
     ecs_entity_t p0 = ecs_entity(world, {0});
+    ecs_add_id(world, p0, Tag);
     ecs_entity_t p1 = ecs_entity(world, {0});
+    ecs_add_id(world, p1, Tag);
     ecs_add_id(world, p1, ecs_pair(Rel, TgtA));
     ecs_entity_t p2 = ecs_entity(world, {0});
+    ecs_add_id(world, p2, Tag);
     ecs_add_id(world, p2, ecs_pair(Rel, TgtB));
     ecs_entity_t p3 = ecs_entity(world, {0});
+    ecs_add_id(world, p3, Tag);
     ecs_add_id(world, p3, ecs_pair(Rel, TgtC));
     ecs_add_id(world, p3, Bar);
     ecs_add_pair(world, p3, EcsChildOf, p2);
 
     ecs_entity_t e1 = ecs_entity(world, { .parent = p1 });
+    ecs_add_id(world, e1, Tag);
     ecs_entity_t e2 = ecs_entity(world, { .parent = p1 });
+    ecs_add_id(world, e2, Tag);
     ecs_add_id(world, e2, Bar);
 
     ecs_entity_t e3 = ecs_entity(world, { .parent = p2 });
+    ecs_add_id(world, e3, Tag);
     ecs_entity_t e4 = ecs_entity(world, { .parent = p2 });
+    ecs_add_id(world, e4, Tag);
     ecs_add_id(world, e4, Bar);
 
     ecs_entity_t e5 = ecs_entity(world, { .parent = e2 });
+    ecs_add_id(world, e5, Tag);
     ecs_entity_t e6 = ecs_entity(world, { .parent = e2 });
+    ecs_add_id(world, e6, Tag);
     ecs_add_id(world, e6, Bar);
 
     ecs_entity_t e7 = ecs_entity(world, { .parent = p3 });
+    ecs_add_id(world, e7, Tag);
 
-    ecs_entity(world, { .parent = p0 });
-    ecs_set_with(world, 0);
+    ecs_add_id(world, ecs_entity(world, { .parent = p0 }), Tag);
 
     ecs_iter_t it = ecs_query_iter(world, r);
     test_bool(true, ecs_query_next(&it));
@@ -7237,33 +7436,42 @@ void Traversal_this_written_self_up_childof_pair_rel_var(void) {
     int x_var = ecs_query_find_var(r, "x");
     test_assert(x_var != -1);
 
-    ecs_set_with(world, Tag);
     ecs_entity_t p0 = ecs_entity(world, {0});
+    ecs_add_id(world, p0, Tag);
     ecs_entity_t p1 = ecs_entity(world, {0});
+    ecs_add_id(world, p1, Tag);
     ecs_add_id(world, p1, ecs_pair(RelA, Tgt));
     ecs_entity_t p2 = ecs_entity(world, {0});
+    ecs_add_id(world, p2, Tag);
     ecs_add_id(world, p2, ecs_pair(RelB, Tgt));
     ecs_entity_t p3 = ecs_entity(world, {0});
+    ecs_add_id(world, p3, Tag);
     ecs_add_id(world, p3, ecs_pair(RelC, Tgt));
     ecs_add_id(world, p3, Bar);
     ecs_add_pair(world, p3, EcsChildOf, p2);
 
     ecs_entity_t e1 = ecs_entity(world, { .parent = p1 });
+    ecs_add_id(world, e1, Tag);
     ecs_entity_t e2 = ecs_entity(world, { .parent = p1 });
+    ecs_add_id(world, e2, Tag);
     ecs_add_id(world, e2, Bar);
 
     ecs_entity_t e3 = ecs_entity(world, { .parent = p2 });
+    ecs_add_id(world, e3, Tag);
     ecs_entity_t e4 = ecs_entity(world, { .parent = p2 });
+    ecs_add_id(world, e4, Tag);
     ecs_add_id(world, e4, Bar);
 
     ecs_entity_t e5 = ecs_entity(world, { .parent = e2 });
+    ecs_add_id(world, e5, Tag);
     ecs_entity_t e6 = ecs_entity(world, { .parent = e2 });
+    ecs_add_id(world, e6, Tag);
     ecs_add_id(world, e6, Bar);
 
     ecs_entity_t e7 = ecs_entity(world, { .parent = p3 });
+    ecs_add_id(world, e7, Tag);
 
-    ecs_entity(world, { .parent = p0 });
-    ecs_set_with(world, 0);
+    ecs_add_id(world, ecs_entity(world, { .parent = p0 }), Tag);
 
     ecs_iter_t it = ecs_query_iter(world, r);
     test_bool(true, ecs_query_next(&it));

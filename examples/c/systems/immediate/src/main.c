@@ -79,10 +79,8 @@ int main(int argc, char *argv[]) {
 
     // Find all plates without a Waiter
     ecs_system(ecs, {
-        .entity = ecs_entity(ecs, {
-            .name = "AssignPlate",
-            .add = ecs_ids( ecs_dependson(EcsOnUpdate) )
-        }),
+        .entity = ecs_entity(ecs, { .name = "AssignPlate" }),
+        .phase = EcsOnUpdate,
         .query.terms = {
             { .id = Plate },
             { .id = ecs_pair(Waiter, EcsWildcard), .oper = EcsNot }
@@ -93,31 +91,20 @@ int main(int argc, char *argv[]) {
     });
 
     // Create a few plates and waiters
-    ecs_entity_t waiter_1 = ecs_entity(ecs, {
-        .name = "waiter_1",
-        .add = ecs_ids( Waiter )
-    });
-    /* ecs_entity_t waiter_2 = */ ecs_entity(ecs, { // silence unused warning
-        .name = "waiter_2",
-        .add = ecs_ids( Waiter )
-    });
-    /* ecs_entity_t waiter_3 = */ ecs_entity(ecs, {
-        .name = "waiter_3",
-        .add = ecs_ids( Waiter )
-    });
+    ecs_entity_t waiter_1 = ecs_entity(ecs, { .name = "waiter_1" });
+    ecs_add_id(ecs, waiter_1, Waiter);
+    ecs_entity_t waiter_2 = ecs_entity(ecs, { .name = "waiter_2" });
+    ecs_add_id(ecs, waiter_2, Waiter);
+    ecs_entity_t waiter_3 = ecs_entity(ecs, { .name = "waiter_3" });
+    ecs_add_id(ecs, waiter_3, Waiter);
 
-    /* ecs_entity_t plate_1 = */ ecs_entity(ecs, {
-        .name = "plate_1",
-        .add = ecs_ids( Plate )
-    });
-    ecs_entity_t plate_2 = ecs_entity(ecs, {
-        .name = "plate_2",
-        .add = ecs_ids( Plate, ecs_pair(Waiter, waiter_1) ) // already assigned
-    });
-    /* ecs_entity_t plate_3 = */ ecs_entity(ecs, {
-        .name = "plate_3",
-        .add = ecs_ids( Plate )
-    });
+    ecs_entity_t plate_1 = ecs_entity(ecs, { .name = "plate_1" });
+    ecs_add_id(ecs, plate_1, Plate);
+    ecs_entity_t plate_2 = ecs_entity(ecs, { .name = "plate_2" });
+    ecs_add_id(ecs, plate_2, Plate);
+    ecs_add_pair(ecs, plate_2, Waiter, waiter_1); // already assigned
+    ecs_entity_t plate_3 = ecs_entity(ecs, { .name = "plate_3" });
+    ecs_add_id(ecs, plate_3, Plate);
 
     // Also assign plate_2 to waiter_1
     ecs_add_pair(ecs, waiter_1, Plate, plate_2);

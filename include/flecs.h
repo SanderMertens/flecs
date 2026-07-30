@@ -2709,8 +2709,7 @@ void ecs_exclusive_access_end(
 
 /** Create new entity ID.
  * This operation returns an unused entity ID. This operation is guaranteed to
- * return an empty entity as it does not use values set by ecs_set_scope() or
- * ecs_set_with().
+ * return an empty entity as it does not use values set by ecs_set_scope().
  *
  * @param world The world.
  * @return The new entity ID.
@@ -2729,7 +2728,7 @@ ecs_entity_t ecs_new(
  * can take advantage of these optimizations.
  *
  * This operation is guaranteed to return an empty entity as it does not use
- * values set by ecs_set_scope() or ecs_set_with().
+ * values set by ecs_set_scope().
  *
  * This operation does not recycle IDs.
  *
@@ -3049,38 +3048,6 @@ FLECS_API
 void ecs_remove_all(
     ecs_world_t *world,
     ecs_id_t component);
-
-/** Create new entities with a specified component.
- * This operation configures a component that is automatically added to entities
- * created with ecs_entity_init(). This does not apply to entities created with
- * ecs_new().
- * 
- * Only one component can be specified at a time. If this operation is called 
- * while a component is already configured, the new component will override the
- * old component.
- *
- * @param world The world.
- * @param component The component.
- * @return The previously set component.
- * @see ecs_entity_init()
- * @see ecs_get_with()
- */
-FLECS_API
-ecs_entity_t ecs_set_with(
-    ecs_world_t *world,
-    ecs_id_t component);
-
-/** Get the component set with ecs_set_with().
- * This operation returns the component that was previously provided to
- * ecs_set_with().
- *
- * @param world The world.
- * @return The last component provided to ecs_set_with().
- * @see ecs_set_with()
- */
-FLECS_API
-ecs_id_t ecs_get_with(
-    const ecs_world_t *world);
 
 /** @} */
 

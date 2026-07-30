@@ -334,16 +334,15 @@ ecs_entity_t flecs_script_create_entity(
 
     if (v->entity && v->entity->non_fragmenting_parent) {
         desc.id = ecs_new_w_parent(v->world, v->parent, name);
-        ecs_id_t world_with = ecs_get_with(v->world);
-        if (world_with) {
-            ecs_add_id(v->world, desc.id, world_with);
-        }
     } else {
         desc.parent = v->parent;
         desc.name = name;
     }
 
     ecs_entity_t result = ecs_entity_init(v->world, &desc);
+    if (result && v->script_tag) {
+        ecs_add_id(v->world, result, v->script_tag);
+    }
     if (result && with) {
         int32_t i;
         for (i = 0; with[i].type; i ++) {
@@ -1482,6 +1481,10 @@ int flecs_script_eval_const(
                     node->name);
             return -1;
         }
+
+        if (v->script_tag) {
+            ecs_add_id(v->world, const_var, v->script_tag);
+        }
     }
 
     return 0;
@@ -1710,15 +1713,8 @@ static int flecs_script_eval_include(
         return -1;
     }
 
-    ecs_id_t with = ecs_get_with(v->world);
-    bool is_managed = false;
-    ecs_entity_t parent_script_entity = 0;
-    if (with && ECS_HAS_ID_FLAG(with, PAIR)) {
-        if (ECS_PAIR_FIRST(with) == ecs_id(EcsScript)) {
-            is_managed = true;
-            parent_script_entity = ecs_pair_second(v->world, with);
-        }
-    }
+    bool is_managed = v->script_entity != 0;
+    ecs_entity_t parent_script_entity = v->script_entity;
 
     const char *script_name = NULL;
     if (parent_script_entity) {
@@ -1757,7 +1753,6 @@ static int flecs_script_eval_include(
             goto done;
         }
 
-        ecs_entity_t prev_with = ecs_set_with(v->world, 0);
         ecs_entity_t prev_scope = ecs_set_scope(v->world, 0);
         ecs_script_runtime_t *runtime = flecs_script_runtime_get(v->world);
         runtime->include_depth ++;
@@ -1766,7 +1761,6 @@ static int flecs_script_eval_include(
         });
         runtime->include_depth --;
         ecs_set_scope(v->world, prev_scope);
-        ecs_set_with(v->world, prev_with);
 
         if (!e) {
             flecs_script_eval_error(v, node,
@@ -2245,10 +2239,13 @@ void flecs_script_eval_visit_init(
         v->r = ecs_script_runtime_new();
     }
 
-    ecs_id_t with = ecs_get_with(v->world);
-    if (with && ECS_HAS_ID_FLAG(with, PAIR)) {
-        if (ECS_PAIR_FIRST(with) == ecs_id(EcsScript)) {
-            v->script_entity = ecs_pair_second(v->world, with);
+    ecs_id_t tag = flecs_script_runtime_get(v->world)->current_tag;
+    if (tag) {
+        v->script_tag = tag;
+        if (ECS_HAS_ID_FLAG(tag, PAIR)) {
+            if (ECS_PAIR_FIRST(tag) == ecs_id(EcsScript)) {
+                v->script_entity = ecs_pair_second(v->world, tag);
+            }
         }
     }
 
@@ -2282,9 +2279,10 @@ void flecs_script_eval_visit_fini(
     }
 }
 
-int ecs_script_eval(
+int flecs_script_eval(
     const ecs_script_t *script,
     const ecs_script_eval_desc_t *desc,
+    ecs_id_t tag,
     ecs_script_eval_result_t *result)
 {
     ecs_script_eval_visitor_t v;
@@ -2308,9 +2306,14 @@ int ecs_script_eval(
         flecs_log_capture_push(true);
     }
 
+    ecs_id_t prev_tag = runtime->current_tag;
+    runtime->current_tag = tag;
+
     flecs_script_eval_visit_init(impl, &v, &priv_desc);
     int r = ecs_script_visit(impl, &v, flecs_script_eval_node);
     flecs_script_eval_visit_fini(&v, &priv_desc);
+
+    runtime->current_tag = prev_tag;
 
     if (runtime->error) {
         runtime->error = false;
@@ -2332,6 +2335,14 @@ int ecs_script_eval(
     }
 
     return r;
+}
+
+int ecs_script_eval(
+    const ecs_script_t *script,
+    const ecs_script_eval_desc_t *desc,
+    ecs_script_eval_result_t *result)
+{
+    return flecs_script_eval(script, desc, 0, result);
 }
 
 #endif

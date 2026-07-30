@@ -3799,16 +3799,20 @@ void Cached_2_self_up_terms_new_tables(void) {
 
     test_assert(r != NULL);
 
-    ecs_set_with(world, Tag);
     ecs_entity_t parent_a = ecs_entity(world, {0});
+    ecs_add_id(world, parent_a, Tag);
     ecs_entity_t parent_b = ecs_entity(world, {0});
+    ecs_add_id(world, parent_b, Tag);
     ecs_add_id(world, parent_b, Foo);
-    ecs_add_pair(world, ecs_entity(world, {0}), EcsIsA, parent_a);
+    ecs_entity_t e_1 = ecs_entity(world, {0});
+    ecs_add_id(world, e_1, Tag);
+    ecs_add_pair(world, e_1, EcsIsA, parent_a);
     ecs_entity_t e_2 = ecs_entity(world, {0});
+    ecs_add_id(world, e_2, Tag);
     ecs_add_pair(world, e_2, EcsIsA, parent_b);
     ecs_entity_t e_3 = ecs_entity(world, {0});
+    ecs_add_id(world, e_3, Tag);
     ecs_add_pair(world, e_3, EcsIsA, e_2);
-    ecs_set_with(world, 0);
 
     ecs_iter_t it = ecs_query_iter(world, r);
     test_bool(true, ecs_query_next(&it));

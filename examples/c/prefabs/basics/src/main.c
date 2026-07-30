@@ -33,7 +33,8 @@ int main(int argc, char *argv[]) {
     ecs_add_pair(ecs, ecs_id(Defense), EcsOnInstantiate, EcsInherit);
 
     // Create a SpaceShip prefab with a Defense component.
-    ecs_entity_t SpaceShip = ecs_entity(ecs, { .name = "SpaceShip", .add = ecs_ids( EcsPrefab ) });
+    ecs_entity_t SpaceShip = ecs_entity(ecs, { .name = "SpaceShip" });
+    ecs_add_id(ecs, SpaceShip, EcsPrefab);
     ecs_set(ecs, SpaceShip, Defense, {50});
 
     // Create a prefab instance

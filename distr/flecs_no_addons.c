@@ -2177,7 +2177,7 @@ typedef struct ecs_stage_allocators_t {
  * 
  *  - A command queue for deferred ECS operations and events
  *  - Thread-specific allocators
- *  - Thread-specific world state (like current scope, with, current system)
+ *  - Thread-specific world state (like current scope, current system)
  *  - Thread-specific buffers for preventing allocations
  */
 struct ecs_stage_t {
@@ -2204,7 +2204,6 @@ struct ecs_stage_t {
 
     /* Namespacing */
     ecs_entity_t scope;              /* Entity of current scope */
-    ecs_entity_t with;               /* Id to add by default to new entities */
     ecs_entity_t base;               /* Currently instantiated top-level base */
     const ecs_entity_t *lookup_path; /* Search path used by lookup operations */
 
@@ -6819,7 +6818,6 @@ static int flecs_traverse_add(
     const char *name,
     const ecs_entity_desc_t *desc,
     ecs_entity_t scope,
-    ecs_id_t with,
     bool new_entity,
     bool name_assigned)
 {
@@ -6865,9 +6863,6 @@ static int flecs_traverse_add(
             table = flecs_find_table_add(
                 world, table, ecs_pair(EcsChildOf, scope), &diff);
         }
-        if (with) {
-            table = flecs_find_table_add(world, table, with, &diff);
-        }
     }
 
     /* Commit entity to destination table */
@@ -6895,7 +6890,6 @@ static void flecs_deferred_add_remove(
     const char *name,
     const ecs_entity_desc_t *desc,
     ecs_entity_t scope,
-    ecs_id_t with,
     bool new_entity,
     bool name_assigned)
 {
@@ -6907,10 +6901,6 @@ static void flecs_deferred_add_remove(
     if (new_entity) {
         if (new_entity && scope && !name && !name_assigned) {
             ecs_add_id(world, entity, ecs_pair(EcsChildOf, scope));
-        }
-
-        if (with) {
-            ecs_add_id(world, entity, with);
         }
     }
 
@@ -6948,7 +6938,6 @@ ecs_entity_t ecs_entity_init(
 
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     ecs_entity_t scope = stage->scope;
-    ecs_id_t with = ecs_get_with(world);
     ecs_entity_t result = desc->id;
 
     const char *name = desc->name;
@@ -7081,11 +7070,11 @@ ecs_entity_t ecs_entity_init(
             ECS_INTERNAL_ERROR, NULL);
 
     if (ecs_is_deferred(world)) {
-        flecs_deferred_add_remove((ecs_world_t*)stage, result, name, desc, 
-            scope, with, new_entity, name_assigned);
+        flecs_deferred_add_remove((ecs_world_t*)stage, result, name, desc,
+            scope, new_entity, name_assigned);
     } else {
         if (flecs_traverse_add(world, result, name, desc,
-            scope, with, new_entity, name_assigned)) 
+            scope, new_entity, name_assigned))
         {
             return 0;
         }
@@ -17322,7 +17311,6 @@ ecs_world_t* flecs_suspend_readonly(
     stage->cmd = &stage->cmd_stack[0];
 
     state->scope = stage->scope;
-    state->with = stage->with;
     stage->defer = 0;
 
     return world;
@@ -17354,7 +17342,6 @@ void flecs_resume_readonly(
         stage->cmd = state->cmd;
         
         stage->scope = state->scope;
-        stage->with = state->with;
     }
 }
 
@@ -19512,29 +19499,6 @@ void ecs_exclusive_access_end(
         world->exclusive_access = UINT64_MAX;
         world->exclusive_thread_name = "locked world";
     }
-}
-
-ecs_entity_t ecs_set_with(
-    ecs_world_t *world,
-    ecs_id_t id)
-{
-    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_stage_t *stage = flecs_stage_from_world(&world);
-    ecs_id_t prev = stage->with;
-    stage->with = id;
-    return prev;
-error:
-    return 0;
-}
-
-ecs_id_t ecs_get_with(
-    const ecs_world_t *world)
-{
-    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    const ecs_stage_t *stage = flecs_stage_from_readonly_world(world);
-    return stage->with;
-error:
-    return 0;
 }
 
 #ifdef FLECS_DEBUG

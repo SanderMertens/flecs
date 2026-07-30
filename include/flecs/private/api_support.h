@@ -251,7 +251,6 @@ typedef struct ecs_suspend_readonly_state_t {
     bool cmd_flushing;
     int32_t defer_count;
     ecs_entity_t scope;
-    ecs_entity_t with;
     ecs_commands_t cmd_stack[2];
     ecs_commands_t *cmd;
     ecs_stage_t *stage;

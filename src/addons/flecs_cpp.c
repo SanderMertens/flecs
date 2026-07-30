@@ -373,10 +373,8 @@ ecs_entity_t ecs_cpp_component_register(
     }
 
     /* When a component is implicitly registered, ensure that it is not
-     * registered in the current scope of the application and that "with"
-     * components do not get added to the component entity. */
+     * registered in the current scope of the application. */
     prev_scope = ecs_set_scope(world, module);
-    ecs_entity_t prev_with = ecs_set_with(world, 0);
     char *existing_name = NULL;
 
     /* If an explicit id is provided, it is possible that the symbol and
@@ -439,7 +437,6 @@ ecs_entity_t ecs_cpp_component_register(
     ecs_assert(c != 0, ECS_INTERNAL_ERROR, NULL);
     ecs_os_free(existing_name);
 
-    ecs_set_with(world, prev_with);
     ecs_set_scope(world, prev_scope);
 
     /* Set component id before invoking callbacks that can request it. */
@@ -678,7 +675,7 @@ ecs_entity_t ecs_cpp_new(
     ecs_stage_t *stage = flecs_stage_from_world(&world);
 
     if (!parent && !name) {
-        if (!stage->scope && !stage->with) {
+        if (!stage->scope) {
             ecs_entity_t result = flecs_new_id(world);
             flecs_add_to_root_table(world, result);
             return result;

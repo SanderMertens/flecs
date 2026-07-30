@@ -2898,20 +2898,3 @@ void SingleThreadStaging_lookup_w_scope_after_stage_count_change(void) {
 
     ecs_fini(world);
 }
-
-void SingleThreadStaging_with_after_stage_count_change(void) {
-    ecs_world_t *world = ecs_mini();
-
-    ecs_entity_t tag = ecs_new(world);
-    ecs_set_with(world, tag);
-
-    ecs_entity_t e1 = ecs_entity(world, { 0 });
-    test_assert(ecs_has_id(world, e1, tag));
-
-    ecs_set_stage_count(world, 2);
-
-    ecs_entity_t e2 = ecs_entity(world, { 0 });
-    test_assert(ecs_has_id(world, e2, tag));
-
-    ecs_fini(world);
-}

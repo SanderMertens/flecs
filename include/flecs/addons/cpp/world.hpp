@@ -1110,43 +1110,6 @@ struct world {
             _::type<Second>::id(world_));
     }
 
-    /** All entities created in the function are created with the ID.
-     */
-    template <typename Func>
-    void with(id_t with_id, const Func& func) const {
-        ecs_id_t prev = ecs_set_with(world_, with_id);
-        func();
-        ecs_set_with(world_, prev);
-    }
-
-    /** All entities created in the function are created with the type.
-     */
-    template <typename T, typename Func>
-    void with(const Func& func) const {
-        with(this->id<T>(), func);
-    }
-
-    /** All entities created in the function are created with the pair.
-     */
-    template <typename First, typename Second, typename Func>
-    void with(const Func& func) const {
-        with(ecs_pair(this->id<First>(), this->id<Second>()), func);
-    }
-
-    /** All entities created in the function are created with the pair.
-     */
-    template <typename First, typename Func>
-    void with(id_t second, const Func& func) const {
-        with(ecs_pair(this->id<First>(), second), func);
-    }
-
-    /** All entities created in the function are created with the pair.
-     */
-    template <typename Func>
-    void with(id_t first, id_t second, const Func& func) const {
-        with(ecs_pair(first, second), func);
-    }
-
     /** All entities created in the function are created in the scope. All operations
      * called in the function (such as lookup()) are relative to the scope.
      */

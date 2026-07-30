@@ -202,7 +202,6 @@ ecs_entity_t flecs_script_create_ref_observer(
     ecs_iter_action_t callback)
 {
     ecs_entity_t prev_scope = ecs_set_scope(world, script);
-    ecs_entity_t prev_with = ecs_set_with(world, 0);
 
     ecs_observer_desc_t desc = {
         .query.terms = {{ .id = component, .src.id = entity }},
@@ -218,7 +217,6 @@ ecs_entity_t flecs_script_create_ref_observer(
 
     ecs_entity_t observer = ecs_observer_init(world, &desc);
 
-    ecs_set_with(world, prev_with);
     ecs_set_scope(world, prev_scope);
 
     return observer;
@@ -409,11 +407,11 @@ int ecs_script_update(
     }
 #endif
 
-    ecs_entity_t prev = ecs_set_with(world, flecs_script_tag(e, instance));
-
     ecs_script_t *parsed = s->script;
     flecs_script_impl(parsed)->evaluating = true;
-    if (ecs_script_eval(parsed, NULL, &eval_result)) {
+    if (flecs_script_eval(parsed, NULL, flecs_script_tag(e, instance),
+        &eval_result))
+    {
         s = ecs_ensure(world, e, EcsScript);
         s->error = eval_result.error;
         if (runtime->error_name && runtime->include_depth) {
@@ -449,8 +447,6 @@ int ecs_script_update(
             ecs_vec_clear(script_refs);
         }
     }
-
-    ecs_set_with(world, prev);
 
 done:
     if (is_defer) {

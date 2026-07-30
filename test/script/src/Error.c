@@ -139,7 +139,6 @@ void Error_missing_end_of_scope(void) {
     ecs_os_free(result.error);
 
     test_assert(ecs_get_scope(world) == 0);
-    test_assert(ecs_get_with(world) == 0);
 
     ecs_fini(world);
 }

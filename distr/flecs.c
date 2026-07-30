@@ -3589,7 +3589,7 @@ typedef struct ecs_stage_allocators_t {
  * 
  *  - A command queue for deferred ECS operations and events
  *  - Thread-specific allocators
- *  - Thread-specific world state (like current scope, with, current system)
+ *  - Thread-specific world state (like current scope, current system)
  *  - Thread-specific buffers for preventing allocations
  */
 struct ecs_stage_t {
@@ -3616,7 +3616,6 @@ struct ecs_stage_t {
 
     /* Namespacing */
     ecs_entity_t scope;              /* Entity of current scope */
-    ecs_entity_t with;               /* Id to add by default to new entities */
     ecs_entity_t base;               /* Currently instantiated top-level base */
     const ecs_entity_t *lookup_path; /* Search path used by lookup operations */
 
@@ -8552,7 +8551,6 @@ static int flecs_traverse_add(
     const char *name,
     const ecs_entity_desc_t *desc,
     ecs_entity_t scope,
-    ecs_id_t with,
     bool new_entity,
     bool name_assigned)
 {
@@ -8598,9 +8596,6 @@ static int flecs_traverse_add(
             table = flecs_find_table_add(
                 world, table, ecs_pair(EcsChildOf, scope), &diff);
         }
-        if (with) {
-            table = flecs_find_table_add(world, table, with, &diff);
-        }
     }
 
     /* Commit entity to destination table */
@@ -8628,7 +8623,6 @@ static void flecs_deferred_add_remove(
     const char *name,
     const ecs_entity_desc_t *desc,
     ecs_entity_t scope,
-    ecs_id_t with,
     bool new_entity,
     bool name_assigned)
 {
@@ -8640,10 +8634,6 @@ static void flecs_deferred_add_remove(
     if (new_entity) {
         if (new_entity && scope && !name && !name_assigned) {
             ecs_add_id(world, entity, ecs_pair(EcsChildOf, scope));
-        }
-
-        if (with) {
-            ecs_add_id(world, entity, with);
         }
     }
 
@@ -8681,7 +8671,6 @@ ecs_entity_t ecs_entity_init(
 
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     ecs_entity_t scope = stage->scope;
-    ecs_id_t with = ecs_get_with(world);
     ecs_entity_t result = desc->id;
 
     const char *name = desc->name;
@@ -8814,11 +8803,11 @@ ecs_entity_t ecs_entity_init(
             ECS_INTERNAL_ERROR, NULL);
 
     if (ecs_is_deferred(world)) {
-        flecs_deferred_add_remove((ecs_world_t*)stage, result, name, desc, 
-            scope, with, new_entity, name_assigned);
+        flecs_deferred_add_remove((ecs_world_t*)stage, result, name, desc,
+            scope, new_entity, name_assigned);
     } else {
         if (flecs_traverse_add(world, result, name, desc,
-            scope, with, new_entity, name_assigned)) 
+            scope, new_entity, name_assigned))
         {
             return 0;
         }
@@ -19467,7 +19456,6 @@ ecs_world_t* flecs_suspend_readonly(
     stage->cmd = &stage->cmd_stack[0];
 
     state->scope = stage->scope;
-    state->with = stage->with;
     stage->defer = 0;
 
     return world;
@@ -19499,7 +19487,6 @@ void flecs_resume_readonly(
         stage->cmd = state->cmd;
         
         stage->scope = state->scope;
-        stage->with = state->with;
     }
 }
 
@@ -22125,29 +22112,6 @@ void ecs_exclusive_access_end(
     }
 }
 
-ecs_entity_t ecs_set_with(
-    ecs_world_t *world,
-    ecs_id_t id)
-{
-    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_stage_t *stage = flecs_stage_from_world(&world);
-    ecs_id_t prev = stage->with;
-    stage->with = id;
-    return prev;
-error:
-    return 0;
-}
-
-ecs_id_t ecs_get_with(
-    const ecs_world_t *world)
-{
-    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    const ecs_stage_t *stage = flecs_stage_from_readonly_world(world);
-    return stage->with;
-error:
-    return 0;
-}
-
 #ifdef FLECS_DEBUG
 static void flecs_component_lock_inc(
     ecs_map_t *locked_map,
@@ -24029,10 +23993,8 @@ ecs_entity_t ecs_cpp_component_register(
     }
 
     /* When a component is implicitly registered, ensure that it is not
-     * registered in the current scope of the application and that "with"
-     * components do not get added to the component entity. */
+     * registered in the current scope of the application. */
     prev_scope = ecs_set_scope(world, module);
-    ecs_entity_t prev_with = ecs_set_with(world, 0);
     char *existing_name = NULL;
 
     /* If an explicit id is provided, it is possible that the symbol and
@@ -24095,7 +24057,6 @@ ecs_entity_t ecs_cpp_component_register(
     ecs_assert(c != 0, ECS_INTERNAL_ERROR, NULL);
     ecs_os_free(existing_name);
 
-    ecs_set_with(world, prev_with);
     ecs_set_scope(world, prev_scope);
 
     /* Set component id before invoking callbacks that can request it. */
@@ -24334,7 +24295,7 @@ ecs_entity_t ecs_cpp_new(
     ecs_stage_t *stage = flecs_stage_from_world(&world);
 
     if (!parent && !name) {
-        if (!stage->scope && !stage->with) {
+        if (!stage->scope) {
             ecs_entity_t result = flecs_new_id(world);
             flecs_add_to_root_table(world, result);
             return result;
@@ -49785,6 +49746,7 @@ typedef struct ecs_script_eval_visitor_t {
     ecs_script_template_t *instance_template;
     ecs_entity_t template_entity; /* Set when creating template instance */
     ecs_entity_t script_entity;
+    ecs_id_t script_tag; /* Added to entities created by managed scripts */
     ecs_entity_t module;
     ecs_entity_t parent;
     ecs_script_entity_t *entity;
@@ -49794,6 +49756,12 @@ typedef struct ecs_script_eval_visitor_t {
     bool dynamic_variable_binding;
     ecs_script_vars_t *vars;
 } ecs_script_eval_visitor_t;
+
+int flecs_script_eval(
+    const ecs_script_t *script,
+    const ecs_script_eval_desc_t *desc,
+    ecs_id_t tag,
+    ecs_script_eval_result_t *result);
 
 void flecs_script_eval_error_(
     ecs_script_eval_visitor_t *v,
@@ -49969,6 +49937,11 @@ struct ecs_script_runtime_t {
     ecs_vec_t with;
     ecs_vec_t with_type_info;
     ecs_vec_t annot;
+
+    /* Tag added to entities created by the currently evaluating managed
+     * script. Carried on the world runtime so evaluation triggered from hooks
+     * (such as template instantiation) inherits it. */
+    ecs_id_t current_tag;
 
     char *error_name;
     int32_t include_depth;
@@ -71105,7 +71078,6 @@ ecs_entity_t flecs_script_create_ref_observer(
     ecs_iter_action_t callback)
 {
     ecs_entity_t prev_scope = ecs_set_scope(world, script);
-    ecs_entity_t prev_with = ecs_set_with(world, 0);
 
     ecs_observer_desc_t desc = {
         .query.terms = {{ .id = component, .src.id = entity }},
@@ -71121,7 +71093,6 @@ ecs_entity_t flecs_script_create_ref_observer(
 
     ecs_entity_t observer = ecs_observer_init(world, &desc);
 
-    ecs_set_with(world, prev_with);
     ecs_set_scope(world, prev_scope);
 
     return observer;
@@ -71312,11 +71283,11 @@ int ecs_script_update(
     }
 #endif
 
-    ecs_entity_t prev = ecs_set_with(world, flecs_script_tag(e, instance));
-
     ecs_script_t *parsed = s->script;
     flecs_script_impl(parsed)->evaluating = true;
-    if (ecs_script_eval(parsed, NULL, &eval_result)) {
+    if (flecs_script_eval(parsed, NULL, flecs_script_tag(e, instance),
+        &eval_result))
+    {
         s = ecs_ensure(world, e, EcsScript);
         s->error = eval_result.error;
         if (runtime->error_name && runtime->include_depth) {
@@ -71352,8 +71323,6 @@ int ecs_script_update(
             ecs_vec_clear(script_refs);
         }
     }
-
-    ecs_set_with(world, prev);
 
 done:
     if (is_defer) {
@@ -74649,16 +74618,15 @@ ecs_entity_t flecs_script_create_entity(
 
     if (v->entity && v->entity->non_fragmenting_parent) {
         desc.id = ecs_new_w_parent(v->world, v->parent, name);
-        ecs_id_t world_with = ecs_get_with(v->world);
-        if (world_with) {
-            ecs_add_id(v->world, desc.id, world_with);
-        }
     } else {
         desc.parent = v->parent;
         desc.name = name;
     }
 
     ecs_entity_t result = ecs_entity_init(v->world, &desc);
+    if (result && v->script_tag) {
+        ecs_add_id(v->world, result, v->script_tag);
+    }
     if (result && with) {
         int32_t i;
         for (i = 0; with[i].type; i ++) {
@@ -75796,6 +75764,10 @@ int flecs_script_eval_const(
                     node->name);
             return -1;
         }
+
+        if (v->script_tag) {
+            ecs_add_id(v->world, const_var, v->script_tag);
+        }
     }
 
     return 0;
@@ -76024,15 +75996,8 @@ static int flecs_script_eval_include(
         return -1;
     }
 
-    ecs_id_t with = ecs_get_with(v->world);
-    bool is_managed = false;
-    ecs_entity_t parent_script_entity = 0;
-    if (with && ECS_HAS_ID_FLAG(with, PAIR)) {
-        if (ECS_PAIR_FIRST(with) == ecs_id(EcsScript)) {
-            is_managed = true;
-            parent_script_entity = ecs_pair_second(v->world, with);
-        }
-    }
+    bool is_managed = v->script_entity != 0;
+    ecs_entity_t parent_script_entity = v->script_entity;
 
     const char *script_name = NULL;
     if (parent_script_entity) {
@@ -76071,7 +76036,6 @@ static int flecs_script_eval_include(
             goto done;
         }
 
-        ecs_entity_t prev_with = ecs_set_with(v->world, 0);
         ecs_entity_t prev_scope = ecs_set_scope(v->world, 0);
         ecs_script_runtime_t *runtime = flecs_script_runtime_get(v->world);
         runtime->include_depth ++;
@@ -76080,7 +76044,6 @@ static int flecs_script_eval_include(
         });
         runtime->include_depth --;
         ecs_set_scope(v->world, prev_scope);
-        ecs_set_with(v->world, prev_with);
 
         if (!e) {
             flecs_script_eval_error(v, node,
@@ -76559,10 +76522,13 @@ void flecs_script_eval_visit_init(
         v->r = ecs_script_runtime_new();
     }
 
-    ecs_id_t with = ecs_get_with(v->world);
-    if (with && ECS_HAS_ID_FLAG(with, PAIR)) {
-        if (ECS_PAIR_FIRST(with) == ecs_id(EcsScript)) {
-            v->script_entity = ecs_pair_second(v->world, with);
+    ecs_id_t tag = flecs_script_runtime_get(v->world)->current_tag;
+    if (tag) {
+        v->script_tag = tag;
+        if (ECS_HAS_ID_FLAG(tag, PAIR)) {
+            if (ECS_PAIR_FIRST(tag) == ecs_id(EcsScript)) {
+                v->script_entity = ecs_pair_second(v->world, tag);
+            }
         }
     }
 
@@ -76596,9 +76562,10 @@ void flecs_script_eval_visit_fini(
     }
 }
 
-int ecs_script_eval(
+int flecs_script_eval(
     const ecs_script_t *script,
     const ecs_script_eval_desc_t *desc,
+    ecs_id_t tag,
     ecs_script_eval_result_t *result)
 {
     ecs_script_eval_visitor_t v;
@@ -76622,9 +76589,14 @@ int ecs_script_eval(
         flecs_log_capture_push(true);
     }
 
+    ecs_id_t prev_tag = runtime->current_tag;
+    runtime->current_tag = tag;
+
     flecs_script_eval_visit_init(impl, &v, &priv_desc);
     int r = ecs_script_visit(impl, &v, flecs_script_eval_node);
     flecs_script_eval_visit_fini(&v, &priv_desc);
+
+    runtime->current_tag = prev_tag;
 
     if (runtime->error) {
         runtime->error = false;
@@ -76646,6 +76618,14 @@ int ecs_script_eval(
     }
 
     return r;
+}
+
+int ecs_script_eval(
+    const ecs_script_t *script,
+    const ecs_script_eval_desc_t *desc,
+    ecs_script_eval_result_t *result)
+{
+    return flecs_script_eval(script, desc, 0, result);
 }
 
 #endif

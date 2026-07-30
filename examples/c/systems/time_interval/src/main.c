@@ -12,19 +12,15 @@ int main(int argc, char *argv[]) {
 
     // Create two systems that are running at different time intervals
     ecs_system(ecs, {
-        .entity = ecs_entity(ecs, { 
-            .name = "Tick",
-            .add = ecs_ids( ecs_dependson(EcsOnUpdate) ) // run in OnUpdate phase
-        }),
+        .entity = ecs_entity(ecs, { .name = "Tick" }),
+        .phase = EcsOnUpdate,
         .callback = Tick,
         .interval = 1.0  // time in seconds
     });
 
     ecs_system(ecs, {
-        .entity = ecs_entity(ecs, { 
-            .name = "FastTick",
-            .add = ecs_ids( ecs_dependson(EcsOnUpdate) )
-        }),
+        .entity = ecs_entity(ecs, { .name = "FastTick" }),
+        .phase = EcsOnUpdate,
         .callback = Tick,
         .interval = 0.5
     });

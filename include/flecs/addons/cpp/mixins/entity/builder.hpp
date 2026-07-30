@@ -1095,46 +1095,6 @@ struct entity_builder : entity_view {
         return to_base();
     }
 
-    /** Entities created in the function will have the current entity.
-     * This operation is thread-safe.
-     *
-     * @param func The function to call.
-     */
-    template <typename Func>
-    const Self& with(const Func& func) const  {
-        ecs_id_t prev = ecs_set_with(this->world_, this->id_);
-        func();
-        ecs_set_with(this->world_, prev);
-        return to_base();
-    }
-
-    /** Entities created in the function will have `(First, this)`.
-     * This operation is thread-safe.
-     *
-     * @tparam First The first element of the pair.
-     * @param func The function to call.
-     */
-    template <typename First, typename Func>
-    const Self& with(const Func& func) const  {
-        with(_::type<First>::id(this->world_), func);
-        return to_base();
-    }
-
-    /** Entities created in the function will have `(first, this)`.
-     * This operation is thread-safe.
-     *
-     * @param first The first element of the pair.
-     * @param func The function to call.
-     */
-    template <typename Func>
-    const Self& with(entity_t first, const Func& func) const  {
-        ecs_id_t prev = ecs_set_with(this->world_, 
-            ecs_pair(first, this->id_));
-        func();
-        ecs_set_with(this->world_, prev);
-        return to_base();
-    }
-
     /** The function will be run with the scope set to the current entity. */
     template <typename Func>
     const Self& scope(const Func& func) const  {

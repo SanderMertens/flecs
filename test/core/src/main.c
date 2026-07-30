@@ -116,10 +116,6 @@ void Entity_find_id_path_mismatch(void);
 void Entity_find_id_path_mismatch_w_scope(void);
 void Entity_init_w_scope_name(void);
 void Entity_init_w_core_name(void);
-void Entity_init_w_with(void);
-void Entity_init_w_with_w_name(void);
-void Entity_init_w_with_w_scope(void);
-void Entity_init_w_with_w_name_scope(void);
 void Entity_is_valid(void);
 void Entity_is_recycled_valid(void);
 void Entity_is_0_valid(void);
@@ -362,15 +358,6 @@ void New_new_component_id_skip_used(void);
 void New_new_component_id_skip_to_hi_id(void);
 void New_new_w_entity_0(void);
 void New_create_w_explicit_id_2_worlds(void);
-void New_new_w_id_0_w_with(void);
-void New_new_w_id_w_with(void);
-void New_new_w_type_w_with(void);
-void New_new_w_id_w_with_w_scope(void);
-void New_new_w_type_w_with_w_scope(void);
-void New_new_w_id_w_with_defer(void);
-void New_new_w_id_w_with_defer_w_scope(void);
-void New_new_w_type_w_with_defer(void);
-void New_new_w_type_w_with_defer_w_scope(void);
 void New_new_w_table(void);
 void New_new_w_null_table(void);
 void New_new_w_table_component(void);
@@ -3223,7 +3210,6 @@ void SingleThreadStaging_add_to_world_while_readonly(void);
 void SingleThreadStaging_add_to_world_and_stage_while_readonly(void);
 void SingleThreadStaging_lookup_after_stage_count_change(void);
 void SingleThreadStaging_lookup_w_scope_after_stage_count_change(void);
-void SingleThreadStaging_with_after_stage_count_change(void);
 
 // Testsuite 'Stresstests'
 void Stresstests_setup(void);
@@ -3781,22 +3767,6 @@ bake_test_case Entity_testcases[] = {
     {
         "init_w_core_name",
         Entity_init_w_core_name
-    },
-    {
-        "init_w_with",
-        Entity_init_w_with
-    },
-    {
-        "init_w_with_w_name",
-        Entity_init_w_with_w_name
-    },
-    {
-        "init_w_with_w_scope",
-        Entity_init_w_with_w_scope
-    },
-    {
-        "init_w_with_w_name_scope",
-        Entity_init_w_with_w_name_scope
     },
     {
         "is_valid",
@@ -4736,42 +4706,6 @@ bake_test_case New_testcases[] = {
     {
         "create_w_explicit_id_2_worlds",
         New_create_w_explicit_id_2_worlds
-    },
-    {
-        "new_w_id_0_w_with",
-        New_new_w_id_0_w_with
-    },
-    {
-        "new_w_id_w_with",
-        New_new_w_id_w_with
-    },
-    {
-        "new_w_type_w_with",
-        New_new_w_type_w_with
-    },
-    {
-        "new_w_id_w_with_w_scope",
-        New_new_w_id_w_with_w_scope
-    },
-    {
-        "new_w_type_w_with_w_scope",
-        New_new_w_type_w_with_w_scope
-    },
-    {
-        "new_w_id_w_with_defer",
-        New_new_w_id_w_with_defer
-    },
-    {
-        "new_w_id_w_with_defer_w_scope",
-        New_new_w_id_w_with_defer_w_scope
-    },
-    {
-        "new_w_type_w_with_defer",
-        New_new_w_type_w_with_defer
-    },
-    {
-        "new_w_type_w_with_defer_w_scope",
-        New_new_w_type_w_with_defer_w_scope
     },
     {
         "new_w_table",
@@ -15962,10 +15896,6 @@ bake_test_case SingleThreadStaging_testcases[] = {
     {
         "lookup_w_scope_after_stage_count_change",
         SingleThreadStaging_lookup_w_scope_after_stage_count_change
-    },
-    {
-        "with_after_stage_count_change",
-        SingleThreadStaging_with_after_stage_count_change
     }
 };
 
@@ -16476,7 +16406,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        119,
+        115,
         Entity_testcases
     },
     {
@@ -16511,7 +16441,7 @@ static bake_test_suite suites[] = {
         "New",
         New_setup,
         NULL,
-        29,
+        20,
         New_testcases
     },
     {
@@ -16751,7 +16681,7 @@ static bake_test_suite suites[] = {
         "SingleThreadStaging",
         SingleThreadStaging_setup,
         NULL,
-        67,
+        66,
         SingleThreadStaging_testcases
     },
     {
