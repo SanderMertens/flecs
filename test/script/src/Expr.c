@@ -2300,6 +2300,101 @@ void Expr_int_cond_or_bool(void) {
     ecs_fini(world);
 }
 
+void Expr_cond_and_short_circuit(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_expr_run(world, "false && 10 / (1 - 1) > 1", &v, &desc) != NULL);
+    test_assert(v.type == ecs_id(ecs_bool_t));
+    test_assert(v.ptr != NULL);
+    test_bool(*(bool*)v.ptr, false);
+
+    test_assert(ecs_expr_run(world, "0 && 10 / (1 - 1) > 1", &v, &desc) != NULL);
+    test_assert(v.type == ecs_id(ecs_bool_t));
+    test_assert(v.ptr != NULL);
+    test_bool(*(bool*)v.ptr, false);
+
+    test_assert(ecs_expr_run(world, "1 > 2 && 10 / (1 - 1) > 1", &v, &desc) != NULL);
+    test_assert(v.type == ecs_id(ecs_bool_t));
+    test_assert(v.ptr != NULL);
+    test_bool(*(bool*)v.ptr, false);
+    ecs_ptr_free(world, v.type, v.ptr);
+
+    ecs_fini(world);
+}
+
+void Expr_cond_or_short_circuit(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_expr_run(world, "true || 10 / (1 - 1) > 1", &v, &desc) != NULL);
+    test_assert(v.type == ecs_id(ecs_bool_t));
+    test_assert(v.ptr != NULL);
+    test_bool(*(bool*)v.ptr, true);
+
+    test_assert(ecs_expr_run(world, "10 || 10 / (1 - 1) > 1", &v, &desc) != NULL);
+    test_assert(v.type == ecs_id(ecs_bool_t));
+    test_assert(v.ptr != NULL);
+    test_bool(*(bool*)v.ptr, true);
+
+    test_assert(ecs_expr_run(world, "2 > 1 || 10 / (1 - 1) > 1", &v, &desc) != NULL);
+    test_assert(v.type == ecs_id(ecs_bool_t));
+    test_assert(v.ptr != NULL);
+    test_bool(*(bool*)v.ptr, true);
+    ecs_ptr_free(world, v.type, v.ptr);
+
+    ecs_fini(world);
+}
+
+void Expr_cond_chained_short_circuit(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_expr_run(
+        world, "false && 10 / (1 - 1) > 1 && 20 / (1 - 1) > 1", &v, &desc) != NULL);
+    test_assert(v.type == ecs_id(ecs_bool_t));
+    test_assert(v.ptr != NULL);
+    test_bool(*(bool*)v.ptr, false);
+
+    test_assert(ecs_expr_run(
+        world, "true || 10 / (1 - 1) > 1 || 20 / (1 - 1) > 1", &v, &desc) != NULL);
+    test_assert(v.type == ecs_id(ecs_bool_t));
+    test_assert(v.ptr != NULL);
+    test_bool(*(bool*)v.ptr, true);
+
+    test_assert(ecs_expr_run(
+        world, "true || 10 / (1 - 1) > 1 && 20 / (1 - 1) > 1", &v, &desc) != NULL);
+    test_assert(v.type == ecs_id(ecs_bool_t));
+    test_assert(v.ptr != NULL);
+    test_bool(*(bool*)v.ptr, true);
+
+    test_assert(ecs_expr_run(
+        world, "(false && 10 / (1 - 1) > 1) || (false && 20 / (1 - 1) > 1)",
+        &v, &desc) != NULL);
+    test_assert(v.type == ecs_id(ecs_bool_t));
+    test_assert(v.ptr != NULL);
+    test_bool(*(bool*)v.ptr, false);
+    ecs_ptr_free(world, v.type, v.ptr);
+
+    ecs_fini(world);
+}
+
+void Expr_cond_no_short_circuit_error(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_expr_run(world, "true && 10 / (1 - 1) > 1", &v, &desc) == NULL);
+    test_assert(ecs_expr_run(world, "false || 10 / (1 - 1) > 1", &v, &desc) == NULL);
+
+    ecs_fini(world);
+}
+
 void Expr_cond_eq_bool(void) {
     ecs_world_t *world = ecs_init();
 

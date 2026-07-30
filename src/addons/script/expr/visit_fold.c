@@ -78,6 +78,26 @@ static int flecs_expr_binary_visit_fold(
         goto error;
     }
 
+    if (!node->vector_count &&
+        (node->operator == EcsTokAnd || node->operator == EcsTokOr))
+    {
+        if (node->left->kind == EcsExprValue &&
+            node->left->type == ecs_id(ecs_bool_t))
+        {
+            ecs_expr_value_node_t *lnode =
+                (ecs_expr_value_node_t*)node->left;
+            bool lval = *(bool*)lnode->ptr;
+            if ((node->operator == EcsTokAnd) != lval) {
+                ecs_expr_value_node_t *result = flecs_expr_value_from(
+                    script, (ecs_expr_node_t*)node, node->node.type);
+                *(bool*)result->ptr = lval;
+                flecs_visit_fold_replace(
+                    script, node_ptr, (ecs_expr_node_t*)result);
+                return 0;
+            }
+        }
+    }
+
     if (flecs_expr_visit_fold(script, &node->right, desc)) {
         goto error;
     }

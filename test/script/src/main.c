@@ -186,6 +186,8 @@ void Eval_anonymous_declaration(void);
 void Eval_const_var_int(void);
 void Eval_const_var_float(void);
 void Eval_const_var_bool(void);
+void Eval_const_bool_w_entity_true(void);
+void Eval_const_bool_w_entity_false(void);
 void Eval_const_var_string(void);
 void Eval_const_var_struct(void);
 void Eval_const_var_scoped(void);
@@ -254,6 +256,23 @@ void Eval_if_true_var(void);
 void Eval_if_false_var(void);
 void Eval_if_10(void);
 void Eval_if_0(void);
+void Eval_if_entity_var_true(void);
+void Eval_if_entity_var_false(void);
+void Eval_if_entity_var_and_has_true(void);
+void Eval_if_entity_var_and_has_false(void);
+void Eval_if_entity_var_and_has_short_circuit(void);
+void Eval_if_entity_var_or_has_short_circuit(void);
+void Eval_if_and_short_circuit_div_by_zero(void);
+void Eval_if_or_short_circuit_div_by_zero(void);
+void Eval_if_and_rhs_evaluated(void);
+void Eval_if_or_rhs_evaluated(void);
+void Eval_if_chained_and_short_circuit(void);
+void Eval_if_chained_or_short_circuit(void);
+void Eval_if_and_or_precedence_short_circuit(void);
+void Eval_if_parens_and_short_circuit(void);
+void Eval_if_not_and_short_circuit(void);
+void Eval_const_bool_and_short_circuit(void);
+void Eval_const_bool_or_short_circuit(void);
 void Eval_if_true_in_scope(void);
 void Eval_if_false_in_scope(void);
 void Eval_if_lt(void);
@@ -264,6 +283,10 @@ void Eval_if_enum_eq_and_member(void);
 void Eval_if_tab_after_keyword(void);
 void Eval_if_else_if(void);
 void Eval_if_else_if_else(void);
+void Eval_if_else_if_and_short_circuit(void);
+void Eval_if_else_if_or_short_circuit(void);
+void Eval_if_else_if_div_by_zero_short_circuit(void);
+void Eval_if_else_if_chain_short_circuit(void);
 void Eval_if_else_if_else_if(void);
 void Eval_if_else_newline_if(void);
 void Eval_if_else_space_newline_if(void);
@@ -1347,6 +1370,10 @@ void Expr_bool_cond_and_int(void);
 void Expr_int_cond_and_bool(void);
 void Expr_bool_cond_or_int(void);
 void Expr_int_cond_or_bool(void);
+void Expr_cond_and_short_circuit(void);
+void Expr_cond_or_short_circuit(void);
+void Expr_cond_chained_short_circuit(void);
+void Expr_cond_no_short_circuit_error(void);
 void Expr_cond_eq_bool(void);
 void Expr_cond_eq_int(void);
 void Expr_cond_eq_enum(void);
@@ -2900,6 +2927,14 @@ bake_test_case Eval_testcases[] = {
         Eval_const_var_bool
     },
     {
+        "const_bool_w_entity_true",
+        Eval_const_bool_w_entity_true
+    },
+    {
+        "const_bool_w_entity_false",
+        Eval_const_bool_w_entity_false
+    },
+    {
         "const_var_string",
         Eval_const_var_string
     },
@@ -3172,6 +3207,74 @@ bake_test_case Eval_testcases[] = {
         Eval_if_0
     },
     {
+        "if_entity_var_true",
+        Eval_if_entity_var_true
+    },
+    {
+        "if_entity_var_false",
+        Eval_if_entity_var_false
+    },
+    {
+        "if_entity_var_and_has_true",
+        Eval_if_entity_var_and_has_true
+    },
+    {
+        "if_entity_var_and_has_false",
+        Eval_if_entity_var_and_has_false
+    },
+    {
+        "if_entity_var_and_has_short_circuit",
+        Eval_if_entity_var_and_has_short_circuit
+    },
+    {
+        "if_entity_var_or_has_short_circuit",
+        Eval_if_entity_var_or_has_short_circuit
+    },
+    {
+        "if_and_short_circuit_div_by_zero",
+        Eval_if_and_short_circuit_div_by_zero
+    },
+    {
+        "if_or_short_circuit_div_by_zero",
+        Eval_if_or_short_circuit_div_by_zero
+    },
+    {
+        "if_and_rhs_evaluated",
+        Eval_if_and_rhs_evaluated
+    },
+    {
+        "if_or_rhs_evaluated",
+        Eval_if_or_rhs_evaluated
+    },
+    {
+        "if_chained_and_short_circuit",
+        Eval_if_chained_and_short_circuit
+    },
+    {
+        "if_chained_or_short_circuit",
+        Eval_if_chained_or_short_circuit
+    },
+    {
+        "if_and_or_precedence_short_circuit",
+        Eval_if_and_or_precedence_short_circuit
+    },
+    {
+        "if_parens_and_short_circuit",
+        Eval_if_parens_and_short_circuit
+    },
+    {
+        "if_not_and_short_circuit",
+        Eval_if_not_and_short_circuit
+    },
+    {
+        "const_bool_and_short_circuit",
+        Eval_const_bool_and_short_circuit
+    },
+    {
+        "const_bool_or_short_circuit",
+        Eval_const_bool_or_short_circuit
+    },
+    {
         "if_true_in_scope",
         Eval_if_true_in_scope
     },
@@ -3210,6 +3313,22 @@ bake_test_case Eval_testcases[] = {
     {
         "if_else_if_else",
         Eval_if_else_if_else
+    },
+    {
+        "if_else_if_and_short_circuit",
+        Eval_if_else_if_and_short_circuit
+    },
+    {
+        "if_else_if_or_short_circuit",
+        Eval_if_else_if_or_short_circuit
+    },
+    {
+        "if_else_if_div_by_zero_short_circuit",
+        Eval_if_else_if_div_by_zero_short_circuit
+    },
+    {
+        "if_else_if_chain_short_circuit",
+        Eval_if_else_if_chain_short_circuit
     },
     {
         "if_else_if_else_if",
@@ -7495,6 +7614,22 @@ bake_test_case Expr_testcases[] = {
         Expr_int_cond_or_bool
     },
     {
+        "cond_and_short_circuit",
+        Expr_cond_and_short_circuit
+    },
+    {
+        "cond_or_short_circuit",
+        Expr_cond_or_short_circuit
+    },
+    {
+        "cond_chained_short_circuit",
+        Expr_cond_chained_short_circuit
+    },
+    {
+        "cond_no_short_circuit_error",
+        Expr_cond_no_short_circuit_error
+    },
+    {
         "cond_eq_bool",
         Expr_cond_eq_bool
     },
@@ -10840,7 +10975,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        549,
+        572,
         Eval_testcases
     },
     {
@@ -10905,7 +11040,7 @@ static bake_test_suite suites[] = {
         "Expr",
         Expr_setup,
         NULL,
-        354,
+        358,
         Expr_testcases,
         1,
         Expr_params

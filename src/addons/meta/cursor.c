@@ -2109,6 +2109,9 @@ int ecs_meta_set_entity(
     case EcsOpId:
         flecs_meta_set_t(ecs_id_t, ptr, value); /* entities are valid ids */
         break;
+    case EcsOpBool:
+        flecs_meta_set_t(ecs_bool_t, ptr, value != 0);
+        break;
     case EcsOpString: {
         char *result = ecs_get_path(cursor->world, value);
         ecs_os_free(*(ecs_string_t*)ptr);
@@ -2138,7 +2141,6 @@ int ecs_meta_set_entity(
     case EcsOpEnum:
     case EcsOpBitmask:
     case EcsOpPrimitive:
-    case EcsOpBool:
     case EcsOpChar:
     case EcsOpByte:
     case EcsOpU8:
