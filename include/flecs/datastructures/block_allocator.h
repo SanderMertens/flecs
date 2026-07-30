@@ -56,37 +56,12 @@ void flecs_ballocator_init(
 #define flecs_ballocator_init_n(ba, T, count)\
     flecs_ballocator_init(ba, ECS_SIZEOF(T) * count)
 
-/** Create a new block allocator on the heap.
- *
- * @param size The size of each allocation.
- * @return The new block allocator.
- */
-FLECS_API
-ecs_block_allocator_t* flecs_ballocator_new(
-    ecs_size_t size);
-
-/** Create a new block allocator for type T. */
-#define flecs_ballocator_new_t(T)\
-    flecs_ballocator_new(ECS_SIZEOF(T))
-
-/** Create a new block allocator for count elements of type T. */
-#define flecs_ballocator_new_n(T, count)\
-    flecs_ballocator_new(ECS_SIZEOF(T) * count)
-
 /** Deinitialize a block allocator.
  *
  * @param ba The block allocator to deinitialize.
  */
 FLECS_API
 void flecs_ballocator_fini(
-    ecs_block_allocator_t *ba);
-
-/** Free a block allocator created with flecs_ballocator_new().
- *
- * @param ba The block allocator to free.
- */
-FLECS_API
-void flecs_ballocator_free(
     ecs_block_allocator_t *ba);
 
 /** Allocate a block of memory.
@@ -178,16 +153,5 @@ void* flecs_brealloc_w_dbg_info(
     ecs_block_allocator_t *src,
     void *memory,
     const char *type_name);
-
-/** Duplicate a block of memory.
- *
- * @param ba The block allocator.
- * @param memory The memory to duplicate.
- * @return Pointer to the duplicated memory.
- */
-FLECS_API
-void* flecs_bdup(
-    ecs_block_allocator_t *ba,
-    void *memory);
 
 #endif

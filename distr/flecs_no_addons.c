@@ -20306,14 +20306,6 @@ void flecs_ballocator_init(
 #endif
 }
 
-ecs_block_allocator_t* flecs_ballocator_new(
-    ecs_size_t size)
-{
-    ecs_block_allocator_t *result = ecs_os_calloc_t(ecs_block_allocator_t);
-    flecs_ballocator_init(result, size);
-    return result;
-}
-
 void flecs_ballocator_fini(
     ecs_block_allocator_t *ba)
 {
@@ -20332,13 +20324,6 @@ void flecs_ballocator_fini(
 
     ba->block_head = NULL;
 #endif
-}
-
-void flecs_ballocator_free(
-    ecs_block_allocator_t *ba)
-{
-    flecs_ballocator_fini(ba);
-    ecs_os_free(ba);
 }
 
 void* flecs_balloc(
@@ -20489,25 +20474,6 @@ void* flecs_brealloc_w_dbg_info(
 #endif
 
     return result;
-}
-
-void* flecs_bdup(
-    ecs_block_allocator_t *ba,
-    void *memory)
-{
-#ifdef FLECS_USE_OS_ALLOC
-    if (memory && ba->data_size) {
-        return ecs_os_memdup(memory, ba->data_size);
-    } else {
-        return NULL;
-    }
-#else
-    void *result = flecs_balloc(ba);
-    if (result) {
-        ecs_os_memcpy(result, memory, ba->data_size);
-    }
-    return result;
-#endif
 }
 
 // This is free and unencumbered software released into the public domain under The Unlicense (http://unlicense.org/)
@@ -20823,18 +20789,6 @@ flecs_hashmap_result_t flecs_hashmap_ensure_(
     };
 }
 
-void flecs_hashmap_set_(
-    ecs_hashmap_t *map,
-    ecs_size_t key_size,
-    void *key,
-    ecs_size_t value_size,
-    const void *value)
-{
-    void *value_ptr = flecs_hashmap_ensure_(map, key_size, key, value_size).value;
-    ecs_assert(value_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_os_memcpy(value_ptr, value, value_size);
-}
-
 ecs_hm_bucket_t* flecs_hashmap_get_bucket(
     const ecs_hashmap_t *map,
     uint64_t hash)
@@ -20885,19 +20839,6 @@ void flecs_hashmap_remove_w_hash_(
     }
 
     flecs_hm_bucket_remove(map, bucket, hash, index);
-}
-
-void flecs_hashmap_remove_(
-    ecs_hashmap_t *map,
-    ecs_size_t key_size,
-    const void *key,
-    ecs_size_t value_size)
-{
-    ecs_assert(map->key_size == key_size, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(map->value_size == value_size, ECS_INVALID_PARAMETER, NULL);
-
-    uint64_t hash = map->hash(key);
-    flecs_hashmap_remove_w_hash_(map, key_size, key, value_size, hash);
 }
 
 flecs_hashmap_iter_t flecs_hashmap_iter(
@@ -21913,19 +21854,6 @@ uint64_t flecs_sparse_last_id(
     return dense_array[sparse->count - 1];
 }
 
-void* flecs_sparse_insert(
-    ecs_sparse_t *sparse,
-    ecs_size_t size,
-    uint64_t id)
-{
-    bool is_new = true;
-    void *result = flecs_sparse_ensure(sparse, size, id, &is_new);
-    if (!is_new) {
-        result = NULL;
-    }
-    return result;
-}
-
 void* flecs_sparse_ensure(
     ecs_sparse_t *sparse,
     ecs_size_t size,
@@ -22277,48 +22205,6 @@ void flecs_sparse_shrink(
     ecs_vec_set_count_t(
         sparse->allocator, &sparse->dense, uint64_t, sparse->count);
     ecs_vec_reclaim_t(sparse->allocator, &sparse->dense, uint64_t);
-}
-
-void ecs_sparse_init(
-    ecs_sparse_t *sparse,
-    ecs_size_t elem_size)
-{
-    flecs_sparse_init(sparse, NULL, NULL, elem_size);
-}
-
-void* ecs_sparse_add(
-    ecs_sparse_t *sparse,
-    ecs_size_t elem_size)
-{
-    return flecs_sparse_add(sparse, elem_size);
-}
-
-uint64_t ecs_sparse_last_id(
-    const ecs_sparse_t *sparse)
-{
-    return flecs_sparse_last_id(sparse);
-}
-
-int32_t ecs_sparse_count(
-    const ecs_sparse_t *sparse)
-{
-    return flecs_sparse_count(sparse);
-}
-
-void* ecs_sparse_get_dense(
-    const ecs_sparse_t *sparse,
-    ecs_size_t elem_size,
-    int32_t index)
-{
-    return flecs_sparse_get_dense(sparse, elem_size, index);
-}
-
-void* ecs_sparse_get(
-    const ecs_sparse_t *sparse,
-    ecs_size_t elem_size,
-    uint64_t id)
-{
-    return flecs_sparse_get(sparse, elem_size, id);
 }
 
 int64_t ecs_stack_allocator_alloc_count = 0;
@@ -23205,28 +23091,6 @@ ecs_vec_t ecs_vec_copy(
     };
 }
 
-ecs_vec_t ecs_vec_copy_shrink(
-    ecs_allocator_t *allocator,
-    const ecs_vec_t *v,
-    ecs_size_t size)
-{
-    ecs_san_assert(size == v->elem_size, ECS_INVALID_PARAMETER, NULL);
-    int32_t count = v->count;
-    void *array = NULL;
-    if (count) {
-        if (allocator) {
-            array = flecs_dup(allocator, size * count, v->array);
-        } else {
-            array = ecs_os_memdup(v->array, size * count);
-        }
-    }
-    return (ecs_vec_t) {
-        .count = count,
-        .size = count,
-        .array = array
-    };
-}
-
 void ecs_vec_reclaim(
     ecs_allocator_t *allocator,
     ecs_vec_t *v,
@@ -23291,22 +23155,6 @@ void ecs_vec_set_min_size(
     ecs_size_t size,
     int32_t elem_count)
 {
-    if (elem_count > vec->size) {
-        ecs_vec_set_size(allocator, vec, size, elem_count);
-    }
-}
-
-void ecs_vec_set_min_size_w_type_info(
-    struct ecs_allocator_t *allocator,
-    ecs_vec_t *vec,
-    ecs_size_t size,
-    int32_t elem_count,
-    const ecs_type_info_t *ti)
-{
-    ecs_assert(size != 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_vec_init_if(vec, size);
-    (void)ti;
-
     if (elem_count > vec->size) {
         ecs_vec_set_size(allocator, vec, size, elem_count);
     }

@@ -109,44 +109,6 @@ flecs_hashmap_result_t flecs_hashmap_ensure_(
 #define flecs_hashmap_ensure(map, key, V)\
     flecs_hashmap_ensure_(map, ECS_SIZEOF(*key), key, ECS_SIZEOF(V))
 
-/** Set a key-value pair in the hashmap.
- *
- * @param map The hashmap.
- * @param key_size The size of the key type.
- * @param key The key.
- * @param value_size The size of the value type.
- * @param value The value to set.
- */
-FLECS_DBG_API
-void flecs_hashmap_set_(
-    ecs_hashmap_t *map,
-    ecs_size_t key_size,
-    void *key,
-    ecs_size_t value_size,
-    const void *value);
-
-/** Type-safe hashmap set. */
-#define flecs_hashmap_set(map, key, value)\
-    flecs_hashmap_set_(map, ECS_SIZEOF(*key), key, ECS_SIZEOF(*value), value)
-
-/** Remove a key from the hashmap.
- *
- * @param map The hashmap.
- * @param key_size The size of the key type.
- * @param key The key to remove.
- * @param value_size The size of the value type.
- */
-FLECS_DBG_API
-void flecs_hashmap_remove_(
-    ecs_hashmap_t *map,
-    ecs_size_t key_size,
-    const void *key,
-    ecs_size_t value_size);
-
-/** Type-safe hashmap remove. */
-#define flecs_hashmap_remove(map, key, V)\
-    flecs_hashmap_remove_(map, ECS_SIZEOF(*key), key, ECS_SIZEOF(V))
-
 /** Remove a key from the hashmap using a precomputed hash.
  *
  * @param map The hashmap.

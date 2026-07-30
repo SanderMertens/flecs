@@ -227,28 +227,6 @@ ecs_vec_t ecs_vec_copy(
 #define ecs_vec_copy_t(allocator, vec, T) \
     ecs_vec_copy(allocator, vec, ECS_SIZEOF(T))
 
-/** Copy a vector and shrink to fit.
- *
- * @param allocator Allocator used for memory management.
- * @param vec The source vector to copy.
- * @param size Size of each element in bytes.
- * @return A new vector with capacity shrunk to its count.
- */
-FLECS_API
-ecs_vec_t ecs_vec_copy_shrink(
-    struct ecs_allocator_t *allocator,
-    const ecs_vec_t *vec,
-    ecs_size_t size);
-
-/** Type-safe vector copy and shrink.
- *
- * @param allocator Allocator used for memory management.
- * @param vec The source vector to copy.
- * @param T The element type.
- */
-#define ecs_vec_copy_shrink_t(allocator, vec, T) \
-    ecs_vec_copy_shrink(allocator, vec, ECS_SIZEOF(T))
-
 /** Reclaim unused memory. Shrinks the vector's allocation to fit its count.
  *
  * @param allocator Allocator used for memory management.
@@ -317,22 +295,6 @@ void ecs_vec_set_min_size(
  */
 #define ecs_vec_set_min_size_t(allocator, vec, T, elem_count) \
     ecs_vec_set_min_size(allocator, vec, ECS_SIZEOF(T), elem_count)
-
-/** Set the minimum capacity using type info for lifecycle management.
- *
- * @param allocator Allocator used for memory management.
- * @param vec The vector to resize.
- * @param size Size of each element in bytes.
- * @param elem_count Minimum capacity in number of elements.
- * @param ti Type info for lifecycle callbacks.
- */
-FLECS_API
-void ecs_vec_set_min_size_w_type_info(
-    struct ecs_allocator_t *allocator,
-    ecs_vec_t *vec,
-    ecs_size_t size,
-    int32_t elem_count,
-    const ecs_type_info_t *ti);
 
 /** Set the minimum count. Increases count if smaller than elem_count.
  *
