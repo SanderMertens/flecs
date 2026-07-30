@@ -5197,7 +5197,6 @@ typedef struct ecs_suspend_readonly_state_t {
     bool cmd_flushing;
     int32_t defer_count;
     ecs_entity_t scope;
-    ecs_entity_t with;
     ecs_commands_t cmd_stack[2];
     ecs_commands_t *cmd;
     ecs_stage_t *stage;
@@ -7666,8 +7665,7 @@ void ecs_exclusive_access_end(
 
 /** Create new entity ID.
  * This operation returns an unused entity ID. This operation is guaranteed to
- * return an empty entity as it does not use values set by ecs_set_scope() or
- * ecs_set_with().
+ * return an empty entity as it does not use values set by ecs_set_scope().
  *
  * @param world The world.
  * @return The new entity ID.
@@ -7686,7 +7684,7 @@ ecs_entity_t ecs_new(
  * can take advantage of these optimizations.
  *
  * This operation is guaranteed to return an empty entity as it does not use
- * values set by ecs_set_scope() or ecs_set_with().
+ * values set by ecs_set_scope().
  *
  * This operation does not recycle IDs.
  *
@@ -8006,38 +8004,6 @@ FLECS_API
 void ecs_remove_all(
     ecs_world_t *world,
     ecs_id_t component);
-
-/** Create new entities with a specified component.
- * This operation configures a component that is automatically added to entities
- * created with ecs_entity_init(). This does not apply to entities created with
- * ecs_new().
- * 
- * Only one component can be specified at a time. If this operation is called 
- * while a component is already configured, the new component will override the
- * old component.
- *
- * @param world The world.
- * @param component The component.
- * @return The previously set component.
- * @see ecs_entity_init()
- * @see ecs_get_with()
- */
-FLECS_API
-ecs_entity_t ecs_set_with(
-    ecs_world_t *world,
-    ecs_id_t component);
-
-/** Get the component set with ecs_set_with().
- * This operation returns the component that was previously provided to
- * ecs_set_with().
- *
- * @param world The world.
- * @return The last component provided to ecs_set_with().
- * @see ecs_set_with()
- */
-FLECS_API
-ecs_id_t ecs_get_with(
-    const ecs_world_t *world);
 
 /** @} */
 
@@ -25844,43 +25810,6 @@ struct world {
             _::type<Second>::id(world_));
     }
 
-    /** All entities created in the function are created with the ID.
-     */
-    template <typename Func>
-    void with(id_t with_id, const Func& func) const {
-        ecs_id_t prev = ecs_set_with(world_, with_id);
-        func();
-        ecs_set_with(world_, prev);
-    }
-
-    /** All entities created in the function are created with the type.
-     */
-    template <typename T, typename Func>
-    void with(const Func& func) const {
-        with(this->id<T>(), func);
-    }
-
-    /** All entities created in the function are created with the pair.
-     */
-    template <typename First, typename Second, typename Func>
-    void with(const Func& func) const {
-        with(ecs_pair(this->id<First>(), this->id<Second>()), func);
-    }
-
-    /** All entities created in the function are created with the pair.
-     */
-    template <typename First, typename Func>
-    void with(id_t second, const Func& func) const {
-        with(ecs_pair(this->id<First>(), second), func);
-    }
-
-    /** All entities created in the function are created with the pair.
-     */
-    template <typename Func>
-    void with(id_t first, id_t second, const Func& func) const {
-        with(ecs_pair(first, second), func);
-    }
-
     /** All entities created in the function are created in the scope. All operations
      * called in the function (such as lookup()) are relative to the scope.
      */
@@ -30473,46 +30402,6 @@ struct entity_builder : entity_view {
         flecs::emplace<Second>(this->world_, this->id_, 
             ecs_pair(first, second),
             FLECS_FWD(args)...);
-        return to_base();
-    }
-
-    /** Entities created in the function will have the current entity.
-     * This operation is thread-safe.
-     *
-     * @param func The function to call.
-     */
-    template <typename Func>
-    const Self& with(const Func& func) const  {
-        ecs_id_t prev = ecs_set_with(this->world_, this->id_);
-        func();
-        ecs_set_with(this->world_, prev);
-        return to_base();
-    }
-
-    /** Entities created in the function will have `(First, this)`.
-     * This operation is thread-safe.
-     *
-     * @tparam First The first element of the pair.
-     * @param func The function to call.
-     */
-    template <typename First, typename Func>
-    const Self& with(const Func& func) const  {
-        with(_::type<First>::id(this->world_), func);
-        return to_base();
-    }
-
-    /** Entities created in the function will have `(first, this)`.
-     * This operation is thread-safe.
-     *
-     * @param first The first element of the pair.
-     * @param func The function to call.
-     */
-    template <typename Func>
-    const Self& with(entity_t first, const Func& func) const  {
-        ecs_id_t prev = ecs_set_with(this->world_, 
-            ecs_pair(first, this->id_));
-        func();
-        ecs_set_with(this->world_, prev);
         return to_base();
     }
 

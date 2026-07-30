@@ -198,9 +198,6 @@ void Eval_component_after_const_add_expr(void);
 void Eval_component_after_const_sub_expr(void);
 void Eval_component_after_const_mul_expr(void);
 void Eval_component_after_const_div_expr(void);
-void Eval_parse_with(void);
-void Eval_parse_with_w_with(void);
-void Eval_parse_with_w_tag(void);
 void Eval_parse_with_value(void);
 void Eval_parse_with_2_values(void);
 void Eval_parse_with_2_nested_values(void);
@@ -2692,18 +2689,6 @@ bake_test_case Eval_testcases[] = {
     {
         "component_after_const_div_expr",
         Eval_component_after_const_div_expr
-    },
-    {
-        "parse_with",
-        Eval_parse_with
-    },
-    {
-        "parse_with_w_with",
-        Eval_parse_with_w_with
-    },
-    {
-        "parse_with_w_tag",
-        Eval_parse_with_w_tag
     },
     {
         "parse_with_value",
@@ -9590,7 +9575,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        527,
+        524,
         Eval_testcases
     },
     {

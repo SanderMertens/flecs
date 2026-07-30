@@ -388,7 +388,6 @@ ecs_world_t* flecs_suspend_readonly(
     stage->cmd = &stage->cmd_stack[0];
 
     state->scope = stage->scope;
-    state->with = stage->with;
     stage->defer = 0;
 
     return world;
@@ -420,7 +419,6 @@ void flecs_resume_readonly(
         stage->cmd = state->cmd;
         
         stage->scope = state->scope;
-        stage->with = state->with;
     }
 }
 

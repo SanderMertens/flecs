@@ -16,14 +16,22 @@ int main(int argc, char *argv[]) {
 
     // Unit datamodel - see component_inheritance example
     ECS_TAG(ecs, Unit);
-    ECS_ENTITY(ecs, CombatUnit, (IsA, Unit));
-    ECS_ENTITY(ecs, MeleeUnit,  (IsA, CombatUnit));
-    ECS_ENTITY(ecs, RangedUnit, (IsA, CombatUnit));
+    ecs_entity_t CombatUnit = ecs_entity(ecs, { .name = "CombatUnit" });
+    ecs_add_pair(ecs, CombatUnit, EcsIsA, Unit);
+    ecs_entity_t MeleeUnit = ecs_entity(ecs, { .name = "MeleeUnit" });
+    ecs_add_pair(ecs, MeleeUnit, EcsIsA, CombatUnit);
+    ecs_entity_t RangedUnit = ecs_entity(ecs, { .name = "RangedUnit" });
+    ecs_add_pair(ecs, RangedUnit, EcsIsA, CombatUnit);
 
-    ECS_ENTITY(ecs, Warrior,    (IsA, MeleeUnit));
-    ECS_ENTITY(ecs, Wizard,     (IsA, RangedUnit));
-    ECS_ENTITY(ecs, Marksman,   (IsA, RangedUnit));
-    ECS_ENTITY(ecs, Builder,    (IsA, Unit));
+    ecs_entity_t Warrior = ecs_entity(ecs, { .name = "Warrior" });
+
+    ecs_add_pair(ecs, Warrior, EcsIsA, MeleeUnit);
+    ecs_entity_t Wizard = ecs_entity(ecs, { .name = "Wizard" });
+    ecs_add_pair(ecs, Wizard, EcsIsA, RangedUnit);
+    ecs_entity_t Marksman = ecs_entity(ecs, { .name = "Marksman" });
+    ecs_add_pair(ecs, Marksman, EcsIsA, RangedUnit);
+    ecs_entity_t Builder = ecs_entity(ecs, { .name = "Builder" });
+    ecs_add_pair(ecs, Builder, EcsIsA, Unit);
 
     // Player/Platoon tags
     ECS_TAG(ecs, Player);
@@ -50,13 +58,13 @@ int main(int argc, char *argv[]) {
             ecs_add(ecs, platoon, Platoon);
 
             // Add warriors, wizards and marksmen to the platoon
-            ecs_entity_t warrior = ecs_new_w(ecs, Warrior);
+            ecs_entity_t warrior = ecs_new_w_id(ecs, Warrior);
             ecs_add_pair(ecs, warrior, Platoon, platoon);
 
-            ecs_entity_t marksman = ecs_new_w(ecs, Marksman);
+            ecs_entity_t marksman = ecs_new_w_id(ecs, Marksman);
             ecs_add_pair(ecs, marksman, Platoon, platoon);
 
-            ecs_entity_t wizard = ecs_new_w(ecs, Wizard);
+            ecs_entity_t wizard = ecs_new_w_id(ecs, Wizard);
             ecs_add_pair(ecs, wizard, Platoon, platoon);
         }
     }

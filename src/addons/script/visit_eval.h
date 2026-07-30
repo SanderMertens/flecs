@@ -14,6 +14,7 @@ typedef struct ecs_script_eval_visitor_t {
     ecs_script_template_t *instance_template;
     ecs_entity_t template_entity; /* Set when creating template instance */
     ecs_entity_t script_entity;
+    ecs_id_t script_tag; /* Added to entities created by managed scripts */
     ecs_entity_t module;
     ecs_entity_t parent;
     ecs_script_entity_t *entity;
@@ -23,6 +24,12 @@ typedef struct ecs_script_eval_visitor_t {
     bool dynamic_variable_binding;
     ecs_script_vars_t *vars;
 } ecs_script_eval_visitor_t;
+
+int flecs_script_eval(
+    const ecs_script_t *script,
+    const ecs_script_eval_desc_t *desc,
+    ecs_id_t tag,
+    ecs_script_eval_result_t *result);
 
 void flecs_script_eval_error_(
     ecs_script_eval_visitor_t *v,

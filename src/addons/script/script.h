@@ -100,6 +100,11 @@ struct ecs_script_runtime_t {
     ecs_vec_t with_type_info;
     ecs_vec_t annot;
 
+    /* Tag added to entities created by the currently evaluating managed
+     * script. Carried on the world runtime so evaluation triggered from hooks
+     * (such as template instantiation) inherits it. */
+    ecs_id_t current_tag;
+
     char *error_name;
     int32_t include_depth;
     bool error;

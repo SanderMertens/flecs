@@ -123,10 +123,6 @@
                 "find_id_path_mismatch_w_scope",
                 "init_w_scope_name",
                 "init_w_core_name",
-                "init_w_with",
-                "init_w_with_w_name",
-                "init_w_with_w_scope",
-                "init_w_with_w_name_scope",
                 "is_valid",
                 "is_recycled_valid",
                 "is_0_valid",
@@ -379,15 +375,6 @@
                 "new_component_id_skip_to_hi_id",
                 "new_w_entity_0",
                 "create_w_explicit_id_2_worlds",
-                "new_w_id_0_w_with",
-                "new_w_id_w_with",
-                "new_w_type_w_with",
-                "new_w_id_w_with_w_scope",
-                "new_w_type_w_with_w_scope",
-                "new_w_id_w_with_defer",
-                "new_w_id_w_with_defer_w_scope",
-                "new_w_type_w_with_defer",
-                "new_w_type_w_with_defer_w_scope",
                 "new_w_table",
                 "new_w_null_table",
                 "new_w_table_component",
@@ -3311,8 +3298,7 @@
                 "add_to_world_while_readonly",
                 "add_to_world_and_stage_while_readonly",
                 "lookup_after_stage_count_change",
-                "lookup_w_scope_after_stage_count_change",
-                "with_after_stage_count_change"
+                "lookup_w_scope_after_stage_count_change"
             ]
         }, {
             "id": "Stresstests",

@@ -769,7 +769,6 @@ static int flecs_traverse_add(
     const char *name,
     const ecs_entity_desc_t *desc,
     ecs_entity_t scope,
-    ecs_id_t with,
     bool new_entity,
     bool name_assigned)
 {
@@ -815,9 +814,6 @@ static int flecs_traverse_add(
             table = flecs_find_table_add(
                 world, table, ecs_pair(EcsChildOf, scope), &diff);
         }
-        if (with) {
-            table = flecs_find_table_add(world, table, with, &diff);
-        }
     }
 
     /* Commit entity to destination table */
@@ -845,7 +841,6 @@ static void flecs_deferred_add_remove(
     const char *name,
     const ecs_entity_desc_t *desc,
     ecs_entity_t scope,
-    ecs_id_t with,
     bool new_entity,
     bool name_assigned)
 {
@@ -857,10 +852,6 @@ static void flecs_deferred_add_remove(
     if (new_entity) {
         if (new_entity && scope && !name && !name_assigned) {
             ecs_add_id(world, entity, ecs_pair(EcsChildOf, scope));
-        }
-
-        if (with) {
-            ecs_add_id(world, entity, with);
         }
     }
 
@@ -898,7 +889,6 @@ ecs_entity_t ecs_entity_init(
 
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     ecs_entity_t scope = stage->scope;
-    ecs_id_t with = ecs_get_with(world);
     ecs_entity_t result = desc->id;
 
     const char *name = desc->name;
@@ -1031,11 +1021,11 @@ ecs_entity_t ecs_entity_init(
             ECS_INTERNAL_ERROR, NULL);
 
     if (ecs_is_deferred(world)) {
-        flecs_deferred_add_remove((ecs_world_t*)stage, result, name, desc, 
-            scope, with, new_entity, name_assigned);
+        flecs_deferred_add_remove((ecs_world_t*)stage, result, name, desc,
+            scope, new_entity, name_assigned);
     } else {
         if (flecs_traverse_add(world, result, name, desc,
-            scope, with, new_entity, name_assigned)) 
+            scope, new_entity, name_assigned))
         {
             return 0;
         }

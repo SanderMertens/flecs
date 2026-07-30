@@ -9,7 +9,8 @@ int main(int argc, char *argv[]) {
     ecs_world_t *ecs = ecs_init_w_args(argc, argv);
 
     // Create a prefab hierarchy with non-fragmenting Parent storage.
-    ecs_entity_t SpaceShip = ecs_entity(ecs, { .name = "SpaceShip", .add = ecs_ids( EcsPrefab ) });
+    ecs_entity_t SpaceShip = ecs_entity(ecs, { .name = "SpaceShip" });
+    ecs_add_id(ecs, SpaceShip, EcsPrefab);
         ecs_entity_t Engine = ecs_new_w_parent(ecs, SpaceShip, "Engine");
     
         ecs_entity_t Cockpit = ecs_new_w_parent(ecs, SpaceShip, "Cockpit");

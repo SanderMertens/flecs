@@ -301,18 +301,17 @@ int main(int, char *[]) {
         .set_auto_override<Health>({ 20 });
 
     // Create a loot box with items
-    flecs::entity loot_box = ecs.entity("Chest").add<Container>().with<ContainedBy>([&]{
-        ecs.entity().is_a<IronSword>();
-        ecs.entity().is_a<WoodenArmor>();
-        ecs.entity().add<Coin>().set<Amount>({ 30 });
-    });
+    flecs::entity loot_box = ecs.entity("Chest").add<Container>();
+    ecs.entity().is_a<IronSword>().add<ContainedBy>(loot_box);
+    ecs.entity().is_a<WoodenArmor>().add<ContainedBy>(loot_box);
+    ecs.entity().add<Coin>().set<Amount>({ 30 }).add<ContainedBy>(loot_box);
 
     // Create a player entity with an inventory
-    flecs::entity player = ecs.entity("Player").set<Health>({10}).add<Inventory>(
-        ecs.entity().add<Container>().with<ContainedBy>([&]{
-            ecs.entity().add<Coin>().set<Amount>({ 20 });
-        })
-    );
+    flecs::entity player_inventory = ecs.entity().add<Container>();
+    ecs.entity().add<Coin>().set<Amount>({ 20 })
+        .add<ContainedBy>(player_inventory);
+    flecs::entity player = ecs.entity("Player").set<Health>({10})
+        .add<Inventory>(player_inventory);
 
     // Print items in loot box
     print_items(loot_box);

@@ -111,9 +111,9 @@ int main(int argc, char *argv[]) {
     //          }
     //      },
     //      .entity = {
-    //          .name = "SetVelocity",
-    //          .add = ecs_ids(ecs_dependson(EcsOnUpdate))
+    //          .name = "SetVelocity"
     //      },
+    //      .phase = EcsOnUpdate,
     //      .callback = SetVelocity
     //  });
 
