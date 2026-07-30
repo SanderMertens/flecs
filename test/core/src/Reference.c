@@ -460,7 +460,6 @@ void Reference_get_ref_after_realloc_w_lifecycle(void) {
     });
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
-    ecs_add(world, e, Position);
     ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
     ecs_add(world, e2, Position);
     ecs_set(world, e, Position, {10, 20});

@@ -322,7 +322,6 @@ void TriggerOnSet_on_set_after_override(void) {
 
     ecs_entity_t Prefab = ecs_entity(world, { .name = "Prefab" });
     ecs_add_id(world, Prefab, EcsPrefab);
-    ecs_add(world, Prefab, Position);
     ecs_set(world, Prefab, Position, {1, 3});
 
     ECS_OBSERVER(world, OnSetShared, EcsOnSet, Position);
@@ -398,7 +397,6 @@ void TriggerOnSet_on_set_after_override_w_new(void) {
 
     ecs_entity_t Prefab = ecs_entity(world, { .name = "Prefab" });
     ecs_add_id(world, Prefab, EcsPrefab);
-    ecs_add(world, Prefab, Position);
     ecs_add_id(world, Prefab, ECS_AUTO_OVERRIDE | ecs_id(Position));
     ecs_set(world, Prefab, Position, {1, 3});
 
@@ -438,7 +436,6 @@ void TriggerOnSet_on_set_after_override_w_new_w_count(void) {
 
     ecs_entity_t Prefab = ecs_entity(world, { .name = "Prefab" });
     ecs_add_id(world, Prefab, EcsPrefab);
-    ecs_add(world, Prefab, Position);
     ecs_add_id(world, Prefab, ECS_AUTO_OVERRIDE | ecs_id(Position));
     ecs_set(world, Prefab, Position, {1, 3});
 
@@ -479,7 +476,6 @@ void TriggerOnSet_on_set_after_override_1_of_2_overridden(void) {
 
     ecs_entity_t Prefab = ecs_entity(world, { .name = "Prefab" });
     ecs_add_id(world, Prefab, EcsPrefab);
-    ecs_add(world, Prefab, Position);
     ecs_add_id(world, Prefab, ECS_AUTO_OVERRIDE | ecs_id(Position));
     ecs_set(world, Prefab, Position, {1, 3});
 

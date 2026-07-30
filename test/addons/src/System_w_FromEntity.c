@@ -42,7 +42,6 @@ void System_w_FromEntity_2_column_1_from_entity(void) {
     ECS_COMPONENT(world, Mass);
 
     ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
-    ecs_add(world, e1, Mass);
     ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
     ecs_add(world, e2, Position);
 

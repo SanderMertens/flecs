@@ -769,13 +769,10 @@ void ObserverOnSet_remove_from_current_in_on_set(void) {
 
     /* Create entities from scratch so they don't have the EcsName component */
     ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
-    ecs_add(world, e1, Position);
     ecs_add(world, e1, Velocity);
     ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
-    ecs_add(world, e2, Position);
     ecs_add(world, e2, Velocity);
     ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
-    ecs_add(world, e3, Position);
     ecs_add(world, e3, Velocity);
 
     ecs_set(world, e1, Position, {10, 20});
@@ -817,13 +814,10 @@ void ObserverOnSet_remove_set_component_in_on_set(void) {
 
     /* Create entities from scratch so they don't have the EcsName component */
     ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
-    ecs_add(world, e1, Position);
     ecs_add(world, e1, Velocity);
     ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
-    ecs_add(world, e2, Position);
     ecs_add(world, e2, Velocity);
     ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
-    ecs_add(world, e3, Position);
     ecs_add(world, e3, Velocity);
 
     ecs_set(world, e1, Position, {10, 20});

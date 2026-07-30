@@ -504,7 +504,6 @@ void TriggerOnAdd_override_after_add_in_on_add(void) {
 
     ecs_entity_t Prefab = ecs_entity(world, { .name = "Prefab" });
     ecs_add_id(world, Prefab, EcsPrefab);
-    ecs_add(world, Prefab, Position);
     ecs_set(world, Prefab, Position, {1, 2});
 
     ECS_OBSERVER(world, AddVelocity, EcsOnAdd, Position(self));

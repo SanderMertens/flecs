@@ -389,7 +389,6 @@ void Clone_1_tag_1_component(void) {
     ecs_entity_t Tag = ecs_entity(world, { .name = "Tag" });
     ECS_COMPONENT(world, Position);
     ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
-    ecs_add(world, e1, Position);
     ecs_add_id(world, e1, Tag);
 
     ecs_set(world, e1, Position, {10, 20});

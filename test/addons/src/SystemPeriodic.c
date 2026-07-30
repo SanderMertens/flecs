@@ -619,10 +619,8 @@ void SystemPeriodic_4_type_1_and_1_or(void) {
     ecs_add(world, e2, Velocity);
     ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
     ecs_add(world, e3, Position);
-    ecs_add(world, e3, Position_1);
     ecs_add(world, e3, Velocity);
     ecs_entity_t e4 = ecs_entity(world, { .name = "e4" });
-    ecs_add(world, e4, Velocity);
 
     ecs_set(world, e3, Position_1, {0, 0});
     ecs_set(world, e4, Velocity, {0, 0});
@@ -679,7 +677,6 @@ void SystemPeriodic_4_type_1_and_1_or_of_3(void) {
     ecs_add(world, e3, Position_2);
     ecs_add(world, e3, Velocity);
     ecs_entity_t e4 = ecs_entity(world, { .name = "e4" });
-    ecs_add(world, e4, Velocity);
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position || Position_1 || Position_2, Velocity);
 

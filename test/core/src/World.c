@@ -26,8 +26,6 @@ void World_progress_w_0(void) {
     ECS_COMPONENT(world, Velocity);
 
     ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
-    ecs_add(world, e1, Position);
-    ecs_add(world, e1, Velocity);
 
     ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Velocity);
 
@@ -66,8 +64,6 @@ void World_progress_w_t(void) {
     ECS_COMPONENT(world, Velocity);
 
     ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
-    ecs_add(world, e1, Position);
-    ecs_add(world, e1, Velocity);
 
     ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Velocity);
 

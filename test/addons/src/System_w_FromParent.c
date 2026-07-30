@@ -451,7 +451,6 @@ void System_w_FromParent_2_column_1_from_container_w_not_prefab(void) {
     ecs_add(world, Prefab, Rotation);
 
     ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
-    ecs_add(world, e1, Position);
     ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
     ecs_add(world, e2, Position);
 
@@ -1159,11 +1158,8 @@ void System_w_FromParent_select_same_from_container(void) {
     ECS_COMPONENT(world, Mass);
 
     ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
-    ecs_add(world, e1, Position);
     ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
-    ecs_add(world, e2, Position);
     ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
-    ecs_add(world, e3, Position);
     ecs_entity_t e4 = ecs_entity(world, { .name = "e4" });
     ecs_add(world, e4, Position);
 

@@ -3252,8 +3252,6 @@ void Observer_unset_move_to_nonempty_table(void) {
     test_int(ctx.invoked, 0);
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
-    ecs_add(world, e, Position);
-    ecs_add(world, e, Velocity);
     ecs_set(world, e, Position, {10, 20});
     ecs_set(world, e, Velocity, {20, 10});
     test_int(ctx.invoked, 0);
