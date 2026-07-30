@@ -57705,6 +57705,9 @@ int ecs_meta_set_entity(
     case EcsOpId:
         flecs_meta_set_t(ecs_id_t, ptr, value); /* entities are valid ids */
         break;
+    case EcsOpBool:
+        flecs_meta_set_t(ecs_bool_t, ptr, value != 0);
+        break;
     case EcsOpString: {
         char *result = ecs_get_path(cursor->world, value);
         ecs_os_free(*(ecs_string_t*)ptr);
@@ -57734,7 +57737,6 @@ int ecs_meta_set_entity(
     case EcsOpEnum:
     case EcsOpBitmask:
     case EcsOpPrimitive:
-    case EcsOpBool:
     case EcsOpChar:
     case EcsOpByte:
     case EcsOpU8:
@@ -99763,6 +99765,17 @@ static int flecs_expr_binary_visit_eval(
         goto error;
     }
 
+    if (!node->vector_count && left->value.type == ecs_id(ecs_bool_t)) {
+        if (node->operator == EcsTokAnd || node->operator == EcsTokOr) {
+            bool lval = *(bool*)left->value.ptr;
+            if ((node->operator == EcsTokAnd) != lval) {
+                *(bool*)out->value.ptr = lval;
+                flecs_expr_stack_pop(ctx->stack);
+                return 0;
+            }
+        }
+    }
+
     ecs_expr_value_t *right = flecs_expr_stack_result(ctx->stack, node->right);
     if (flecs_expr_visit_eval_priv(ctx, node->right, right)) {
         goto error;
@@ -100886,6 +100899,26 @@ static int flecs_expr_binary_visit_fold(
 
     if (flecs_expr_visit_fold(script, &node->left, desc)) {
         goto error;
+    }
+
+    if (!node->vector_count &&
+        (node->operator == EcsTokAnd || node->operator == EcsTokOr))
+    {
+        if (node->left->kind == EcsExprValue &&
+            node->left->type == ecs_id(ecs_bool_t))
+        {
+            ecs_expr_value_node_t *lnode =
+                (ecs_expr_value_node_t*)node->left;
+            bool lval = *(bool*)lnode->ptr;
+            if ((node->operator == EcsTokAnd) != lval) {
+                ecs_expr_value_node_t *result = flecs_expr_value_from(
+                    script, (ecs_expr_node_t*)node, node->node.type);
+                *(bool*)result->ptr = lval;
+                flecs_visit_fold_replace(
+                    script, node_ptr, (ecs_expr_node_t*)result);
+                return 0;
+            }
+        }
     }
 
     if (flecs_expr_visit_fold(script, &node->right, desc)) {

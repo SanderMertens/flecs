@@ -457,6 +457,17 @@ static int flecs_expr_binary_visit_eval(
         goto error;
     }
 
+    if (!node->vector_count && left->value.type == ecs_id(ecs_bool_t)) {
+        if (node->operator == EcsTokAnd || node->operator == EcsTokOr) {
+            bool lval = *(bool*)left->value.ptr;
+            if ((node->operator == EcsTokAnd) != lval) {
+                *(bool*)out->value.ptr = lval;
+                flecs_expr_stack_pop(ctx->stack);
+                return 0;
+            }
+        }
+    }
+
     ecs_expr_value_t *right = flecs_expr_stack_result(ctx->stack, node->right);
     if (flecs_expr_visit_eval_priv(ctx, node->right, right)) {
         goto error;
