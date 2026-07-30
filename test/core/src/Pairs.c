@@ -1038,20 +1038,20 @@ void Pairs_dsl_pair(void) {
 
     test_assert(q != NULL);
 
-    ecs_entity_t e1 = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = ecs_ids(ecs_pair(Rel, Obj)) });
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add_pair(world, e1, Rel, Obj);
     test_assert(e1 != 0);
 
-    ecs_entity_t e2 = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = ecs_ids(ecs_pair(Rel, Obj_2)) });
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add_pair(world, e2, Rel, Obj_2);
     test_assert(e2 != 0);
 
-    ecs_entity_t e3 = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = ecs_ids(ecs_pair(Rel_2, Obj)) });
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_add_pair(world, e3, Rel_2, Obj);
     test_assert(e3 != 0);
 
-    ecs_entity_t e4 = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = ecs_ids(ecs_pair(Rel_2, Obj_2)) });
+    ecs_entity_t e4 = ecs_new(world);
+    ecs_add_pair(world, e4, Rel_2, Obj_2);
     test_assert(e4 != 0);
 
     ecs_iter_t it = ecs_query_iter(world, q);
@@ -1082,20 +1082,20 @@ void Pairs_dsl_pair_w_pred_wildcard(void) {
 
     test_assert(q != NULL);
 
-    ecs_entity_t e1 = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = ecs_ids(ecs_pair(Rel, Obj)) });
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add_pair(world, e1, Rel, Obj);
     test_assert(e1 != 0);
 
-    ecs_entity_t e2 = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = ecs_ids(ecs_pair(Rel, Obj_2)) });
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add_pair(world, e2, Rel, Obj_2);
     test_assert(e2 != 0);
 
-    ecs_entity_t e3 = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = ecs_ids(ecs_pair(Rel_2, Obj)) });
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_add_pair(world, e3, Rel_2, Obj);
     test_assert(e3 != 0);
 
-    ecs_entity_t e4 = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = ecs_ids(ecs_pair(Rel_2, Obj_2)) });
+    ecs_entity_t e4 = ecs_new(world);
+    ecs_add_pair(world, e4, Rel_2, Obj_2);
     test_assert(e4 != 0);    
 
     ecs_iter_t it = ecs_query_iter(world, q);
@@ -1131,20 +1131,20 @@ void Pairs_dsl_pair_w_obj_wildcard(void) {
 
     test_assert(q != NULL);
 
-    ecs_entity_t e1 = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = ecs_ids(ecs_pair(Rel, Obj)) });
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add_pair(world, e1, Rel, Obj);
     test_assert(e1 != 0);
 
-    ecs_entity_t e2 = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = ecs_ids(ecs_pair(Rel, Obj_2)) });
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add_pair(world, e2, Rel, Obj_2);
     test_assert(e2 != 0);
 
-    ecs_entity_t e3 = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = ecs_ids(ecs_pair(Rel_2, Obj)) });
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_add_pair(world, e3, Rel_2, Obj);
     test_assert(e3 != 0);
 
-    ecs_entity_t e4 = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = ecs_ids(ecs_pair(Rel_2, Obj_2)) });
+    ecs_entity_t e4 = ecs_new(world);
+    ecs_add_pair(world, e4, Rel_2, Obj_2);
     test_assert(e4 != 0);    
 
     ecs_iter_t it = ecs_query_iter(world, q);
@@ -1182,20 +1182,24 @@ void Pairs_dsl_pair_w_both_wildcard(void) {
 
     test_assert(q != NULL);
 
-    ecs_entity_t e1 = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = ecs_ids(ecs_pair(Rel, Obj), Tag) });
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add_pair(world, e1, Rel, Obj);
+    ecs_add_id(world, e1, Tag);
     test_assert(e1 != 0);
 
-    ecs_entity_t e2 = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = ecs_ids(ecs_pair(Rel, Obj_2), Tag) });
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add_pair(world, e2, Rel, Obj_2);
+    ecs_add_id(world, e2, Tag);
     test_assert(e2 != 0);
 
-    ecs_entity_t e3 = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = ecs_ids(ecs_pair(Rel_2, Obj), Tag) });
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_add_pair(world, e3, Rel_2, Obj);
+    ecs_add_id(world, e3, Tag);
     test_assert(e3 != 0);
 
-    ecs_entity_t e4 = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = ecs_ids(ecs_pair(Rel_2, Obj_2), Tag) });
+    ecs_entity_t e4 = ecs_new(world);
+    ecs_add_pair(world, e4, Rel_2, Obj_2);
+    ecs_add_id(world, e4, Tag);
     test_assert(e4 != 0);    
 
     ecs_iter_t it = ecs_query_iter(world, q);
@@ -1242,20 +1246,20 @@ void Pairs_dsl_pair_w_explicit_subj_this(void) {
 
     test_assert(q != NULL);
 
-    ecs_entity_t e1 = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = ecs_ids(ecs_pair(Rel, Obj)) });
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add_pair(world, e1, Rel, Obj);
     test_assert(e1 != 0);
 
-    ecs_entity_t e2 = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = ecs_ids(ecs_pair(Rel, Obj_2)) });
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add_pair(world, e2, Rel, Obj_2);
     test_assert(e2 != 0);
 
-    ecs_entity_t e3 = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = ecs_ids(ecs_pair(Rel_2, Obj)) });
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_add_pair(world, e3, Rel_2, Obj);
     test_assert(e3 != 0);
 
-    ecs_entity_t e4 = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = ecs_ids(ecs_pair(Rel_2, Obj_2)) });
+    ecs_entity_t e4 = ecs_new(world);
+    ecs_add_pair(world, e4, Rel_2, Obj_2);
     test_assert(e4 != 0);
 
     ecs_iter_t it = ecs_query_iter(world, q);
@@ -1282,8 +1286,8 @@ void Pairs_dsl_pair_w_explicit_subj(void) {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t Subj = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .name = "Subj", .add = ecs_ids(ecs_pair(Rel, Obj)) });
+    ecs_entity_t Subj = ecs_entity(world, { .name = "Subj" });
+    ecs_add_pair(world, Subj, Rel, Obj);
     test_assert(Subj != 0);
 
     ecs_query_t *q = ecs_query(world, {
@@ -1292,20 +1296,21 @@ void Pairs_dsl_pair_w_explicit_subj(void) {
 
     test_assert(q != NULL);
 
-    ecs_entity_t e1 = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = ecs_ids(ecs_pair(Rel, Obj)) });
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add_pair(world, e1, Rel, Obj);
     test_assert(e1 != 0);
 
-    ecs_entity_t e2 = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = ecs_ids(ecs_pair(Rel, Obj_2)) });
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add_pair(world, e2, Rel, Obj_2);
     test_assert(e2 != 0);
 
-    ecs_entity_t e3 = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = ecs_ids(ecs_pair(Rel_2, Obj)) });
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_add_pair(world, e3, Rel_2, Obj);
     test_assert(e3 != 0);
 
-    ecs_entity_t e4 = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = ecs_ids(ecs_pair(Rel_2, Obj_2), Tag) });
+    ecs_entity_t e4 = ecs_new(world);
+    ecs_add_pair(world, e4, Rel_2, Obj_2);
+    ecs_add_id(world, e4, Tag);
     test_assert(e4 != 0);
 
     ecs_iter_t it = ecs_query_iter(world, q);
@@ -1337,20 +1342,20 @@ void Pairs_api_pair(void) {
 
     test_assert(q != NULL);
 
-    ecs_entity_t e1 = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = ecs_ids(ecs_pair(Rel, Obj)) });
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add_pair(world, e1, Rel, Obj);
     test_assert(e1 != 0);
 
-    ecs_entity_t e2 = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = ecs_ids(ecs_pair(Rel, Obj_2)) });
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add_pair(world, e2, Rel, Obj_2);
     test_assert(e2 != 0);
 
-    ecs_entity_t e3 = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = ecs_ids(ecs_pair(Rel_2, Obj)) });
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_add_pair(world, e3, Rel_2, Obj);
     test_assert(e3 != 0);
 
-    ecs_entity_t e4 = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = ecs_ids(ecs_pair(Rel_2, Obj_2)) });
+    ecs_entity_t e4 = ecs_new(world);
+    ecs_add_pair(world, e4, Rel_2, Obj_2);
     test_assert(e4 != 0);
 
     ecs_iter_t it = ecs_query_iter(world, q);
@@ -1381,20 +1386,20 @@ void Pairs_api_pair_w_pred_wildcard(void) {
 
     test_assert(q != NULL);
 
-    ecs_entity_t e1 = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = ecs_ids(ecs_pair(Rel, Obj)) });
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add_pair(world, e1, Rel, Obj);
     test_assert(e1 != 0);
 
-    ecs_entity_t e2 = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = ecs_ids(ecs_pair(Rel, Obj_2)) });
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add_pair(world, e2, Rel, Obj_2);
     test_assert(e2 != 0);
 
-    ecs_entity_t e3 = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = ecs_ids(ecs_pair(Rel_2, Obj)) });
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_add_pair(world, e3, Rel_2, Obj);
     test_assert(e3 != 0);
 
-    ecs_entity_t e4 = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = ecs_ids(ecs_pair(Rel_2, Obj_2)) });
+    ecs_entity_t e4 = ecs_new(world);
+    ecs_add_pair(world, e4, Rel_2, Obj_2);
     test_assert(e4 != 0);    
 
     ecs_iter_t it = ecs_query_iter(world, q);
@@ -1430,20 +1435,20 @@ void Pairs_api_pair_w_obj_wildcard(void) {
 
     test_assert(q != NULL);
 
-    ecs_entity_t e1 = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = ecs_ids(ecs_pair(Rel, Obj)) });
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add_pair(world, e1, Rel, Obj);
     test_assert(e1 != 0);
 
-    ecs_entity_t e2 = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = ecs_ids(ecs_pair(Rel, Obj_2)) });
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add_pair(world, e2, Rel, Obj_2);
     test_assert(e2 != 0);
 
-    ecs_entity_t e3 = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = ecs_ids(ecs_pair(Rel_2, Obj)) });
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_add_pair(world, e3, Rel_2, Obj);
     test_assert(e3 != 0);
 
-    ecs_entity_t e4 = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = ecs_ids(ecs_pair(Rel_2, Obj_2)) });
+    ecs_entity_t e4 = ecs_new(world);
+    ecs_add_pair(world, e4, Rel_2, Obj_2);
     test_assert(e4 != 0);    
 
     ecs_iter_t it = ecs_query_iter(world, q);
@@ -1482,20 +1487,24 @@ void Pairs_api_pair_w_both_wildcard(void) {
 
     test_assert(q != NULL);
 
-    ecs_entity_t e1 = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = ecs_ids(ecs_pair(Rel, Obj), Tag) });
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add_pair(world, e1, Rel, Obj);
+    ecs_add_id(world, e1, Tag);
     test_assert(e1 != 0);
 
-    ecs_entity_t e2 = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = ecs_ids(ecs_pair(Rel, Obj_2), Tag) });
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add_pair(world, e2, Rel, Obj_2);
+    ecs_add_id(world, e2, Tag);
     test_assert(e2 != 0);
 
-    ecs_entity_t e3 = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = ecs_ids(ecs_pair(Rel_2, Obj), Tag) });
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_add_pair(world, e3, Rel_2, Obj);
+    ecs_add_id(world, e3, Tag);
     test_assert(e3 != 0);
 
-    ecs_entity_t e4 = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = ecs_ids(ecs_pair(Rel_2, Obj_2), Tag) });
+    ecs_entity_t e4 = ecs_new(world);
+    ecs_add_pair(world, e4, Rel_2, Obj_2);
+    ecs_add_id(world, e4, Tag);
     test_assert(e4 != 0);    
 
     ecs_iter_t it = ecs_query_iter(world, q);
@@ -1543,20 +1552,20 @@ void Pairs_api_pair_w_explicit_subj_this(void) {
 
     test_assert(q != NULL);
 
-    ecs_entity_t e1 = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = ecs_ids(ecs_pair(Rel, Obj)) });
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add_pair(world, e1, Rel, Obj);
     test_assert(e1 != 0);
 
-    ecs_entity_t e2 = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = ecs_ids(ecs_pair(Rel, Obj_2)) });
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add_pair(world, e2, Rel, Obj_2);
     test_assert(e2 != 0);
 
-    ecs_entity_t e3 = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = ecs_ids(ecs_pair(Rel_2, Obj)) });
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_add_pair(world, e3, Rel_2, Obj);
     test_assert(e3 != 0);
 
-    ecs_entity_t e4 = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = ecs_ids(ecs_pair(Rel_2, Obj_2)) });
+    ecs_entity_t e4 = ecs_new(world);
+    ecs_add_pair(world, e4, Rel_2, Obj_2);
     test_assert(e4 != 0);
 
     ecs_iter_t it = ecs_query_iter(world, q);
@@ -1583,8 +1592,8 @@ void Pairs_api_pair_w_explicit_subj(void) {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t Subj = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .name = "Subj", .add = ecs_ids(ecs_pair(Rel, Obj)) });
+    ecs_entity_t Subj = ecs_entity(world, { .name = "Subj" });
+    ecs_add_pair(world, Subj, Rel, Obj);
     test_assert(Subj != 0);
 
     ecs_query_t *q = ecs_query(world, {
@@ -1593,20 +1602,21 @@ void Pairs_api_pair_w_explicit_subj(void) {
 
     test_assert(q != NULL);
 
-    ecs_entity_t e1 = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = ecs_ids(ecs_pair(Rel, Obj)) });
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add_pair(world, e1, Rel, Obj);
     test_assert(e1 != 0);
 
-    ecs_entity_t e2 = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = ecs_ids(ecs_pair(Rel, Obj_2)) });
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add_pair(world, e2, Rel, Obj_2);
     test_assert(e2 != 0);
 
-    ecs_entity_t e3 = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = ecs_ids(ecs_pair(Rel_2, Obj)) });
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_add_pair(world, e3, Rel_2, Obj);
     test_assert(e3 != 0);
 
-    ecs_entity_t e4 = ecs_entity_init(world, &(ecs_entity_desc_t){
-        .add = ecs_ids(ecs_pair(Rel_2, Obj_2), Tag) });
+    ecs_entity_t e4 = ecs_new(world);
+    ecs_add_pair(world, e4, Rel_2, Obj_2);
+    ecs_add_id(world, e4, Tag);
     test_assert(e4 != 0);
 
     ecs_iter_t it = ecs_query_iter(world, q);
@@ -2096,7 +2106,8 @@ void Pairs_get_childof_target_from_base(void) {
 void Pairs_get_dontinherit_target_from_base(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Rel, (OnInstantiate, DontInherit));
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_pair(world, Rel, EcsOnInstantiate, EcsDontInherit);
 
     ecs_entity_t parent = ecs_new(world);
     ecs_entity_t base = ecs_new_w_pair(world, Rel, parent);
@@ -2369,7 +2380,8 @@ void Pairs_get_target_for_id_no_id(void) {
 void Pairs_add_exclusive_relation_twice(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Rel, Exclusive);
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsExclusive);
     ECS_TAG(world, ObjA);
     ECS_TAG(world, ObjB);
 
@@ -2388,7 +2400,8 @@ void Pairs_add_exclusive_relation_twice(void) {
 void Pairs_add_same_exclusive_relation_twice(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Rel, Exclusive);
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsExclusive);
     ECS_TAG(world, ObjA);
 
     ecs_entity_t e = ecs_new(world);
@@ -2439,7 +2452,8 @@ void Pairs_add_exclusive_non_empty_table(void) {
     ECS_TAG(world, TagC);
     ECS_TAG(world, TagD);
 
-    ECS_ENTITY(world, Rel, Exclusive);
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsExclusive);
     ECS_TAG(world, ObjA);
     ECS_TAG(world, ObjB);
 
@@ -2464,7 +2478,8 @@ void Pairs_add_exclusive_non_empty_table_w_pairs(void) {
 
     ECS_TAG(world, RelA);
 
-    ECS_ENTITY(world, Rel, Exclusive);
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsExclusive);
     ECS_TAG(world, ObjA);
     ECS_TAG(world, ObjB);
 
@@ -2706,7 +2721,9 @@ void Pairs_with(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
-    ECS_ENTITY(world, TagB, (With, TagA));
+    ecs_entity_t TagB = ecs_entity(world, { .name = "TagB" });
+    ecs_entity_t ecs_id(TagB) = TagB;
+    ecs_add_pair(world, TagB, EcsWith, TagA);
 
     ecs_entity_t e = ecs_new(world);
     ecs_add(world, e, TagB);
@@ -2721,7 +2738,10 @@ void Pairs_2_with(void) {
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
-    ECS_ENTITY(world, TagC, (With, TagA), (With, TagB));
+    ecs_entity_t TagC = ecs_entity(world, { .name = "TagC" });
+    ecs_entity_t ecs_id(TagC) = TagC;
+    ecs_add_pair(world, TagC, EcsWith, TagA);
+    ecs_add_pair(world, TagC, EcsWith, TagB);
 
     ecs_entity_t e = ecs_new(world);
     ecs_add(world, e, TagC);
@@ -2736,8 +2756,12 @@ void Pairs_nested_with(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
-    ECS_ENTITY(world, TagB, (With, TagA));
-    ECS_ENTITY(world, TagC, (With, TagB));
+    ecs_entity_t TagB = ecs_entity(world, { .name = "TagB" });
+    ecs_entity_t ecs_id(TagB) = TagB;
+    ecs_add_pair(world, TagB, EcsWith, TagA);
+    ecs_entity_t TagC = ecs_entity(world, { .name = "TagC" });
+    ecs_entity_t ecs_id(TagC) = TagC;
+    ecs_add_pair(world, TagC, EcsWith, TagB);
 
     ecs_entity_t e = ecs_new(world);
     ecs_add(world, e, TagC);
@@ -2753,7 +2777,8 @@ void Pairs_with_relation(void) {
 
     ECS_TAG(world, Obj);
     ECS_TAG(world, RelA);
-    ECS_ENTITY(world, RelB, (With, RelA));
+    ecs_entity_t RelB = ecs_entity(world, { .name = "RelB" });
+    ecs_add_pair(world, RelB, EcsWith, RelA);
 
     ecs_entity_t e = ecs_new_w_pair(world, RelB, Obj);
     test_assert( ecs_has_pair(world, e, RelA, Obj));
@@ -2768,7 +2793,9 @@ void Pairs_2_with_relation(void) {
     ECS_TAG(world, Obj);
     ECS_TAG(world, RelA);
     ECS_TAG(world, RelB);
-    ECS_ENTITY(world, RelC, (With, RelA), (With, RelB));
+    ecs_entity_t RelC = ecs_entity(world, { .name = "RelC" });
+    ecs_add_pair(world, RelC, EcsWith, RelA);
+    ecs_add_pair(world, RelC, EcsWith, RelB);
 
     ecs_entity_t e = ecs_new_w_pair(world, RelC, Obj);
     test_assert( ecs_has_pair(world, e, RelA, Obj));
@@ -2782,8 +2809,10 @@ void Pairs_nested_with_relation(void) {
 
     ECS_TAG(world, Obj);
     ECS_TAG(world, RelA);
-    ECS_ENTITY(world, RelB, (With, RelA));
-    ECS_ENTITY(world, RelC, (With, RelB));
+    ecs_entity_t RelB = ecs_entity(world, { .name = "RelB" });
+    ecs_add_pair(world, RelB, EcsWith, RelA);
+    ecs_entity_t RelC = ecs_entity(world, { .name = "RelC" });
+    ecs_add_pair(world, RelC, EcsWith, RelB);
 
     ecs_entity_t e = ecs_new_w_pair(world, RelC, Obj);
     test_assert( ecs_has_pair(world, e, RelA, Obj));
@@ -2923,7 +2952,8 @@ void Pairs_remove_wildcard_all(void) {
 void Pairs_inherit_exclusive(void) {    
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Rel, Exclusive);
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsExclusive);
     ECS_TAG(world, ObjA);
     ECS_TAG(world, ObjB);
 
@@ -2998,9 +3028,12 @@ void Pairs_has_pair_wildcard_w_tag(void) {
 void Pairs_oneof_self(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Rel, OneOf);
-    ECS_ENTITY(world, ObjA, (ChildOf, Rel));
-    ECS_ENTITY(world, ObjB, (ChildOf, Rel));
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsOneOf);
+    ecs_entity_t ObjA = ecs_entity(world, { .name = "ObjA" });
+    ecs_add_pair(world, ObjA, EcsChildOf, Rel);
+    ecs_entity_t ObjB = ecs_entity(world, { .name = "ObjB" });
+    ecs_add_pair(world, ObjB, EcsChildOf, Rel);
 
     ecs_entity_t e = ecs_new(world);
     ecs_add_pair(world, e, Rel, ObjA);
@@ -3016,9 +3049,12 @@ void Pairs_oneof_other(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Parent);
-    ECS_ENTITY(world, Rel, (OneOf, Parent));
-    ECS_ENTITY(world, ObjA, (ChildOf, Parent));
-    ECS_ENTITY(world, ObjB, (ChildOf, Parent));
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_pair(world, Rel, EcsOneOf, Parent);
+    ecs_entity_t ObjA = ecs_entity(world, { .name = "ObjA" });
+    ecs_add_pair(world, ObjA, EcsChildOf, Parent);
+    ecs_entity_t ObjB = ecs_entity(world, { .name = "ObjB" });
+    ecs_add_pair(world, ObjB, EcsChildOf, Parent);
 
     ecs_entity_t e = ecs_new(world);
     ecs_add_pair(world, e, Rel, ObjA);
@@ -3035,9 +3071,12 @@ void Pairs_oneof_self_constraint_violated(void) {
 
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Rel, OneOf);
-    ECS_ENTITY(world, ObjA, (ChildOf, Rel));
-    ECS_ENTITY(world, ObjB, (ChildOf, Rel));
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsOneOf);
+    ecs_entity_t ObjA = ecs_entity(world, { .name = "ObjA" });
+    ecs_add_pair(world, ObjA, EcsChildOf, Rel);
+    ecs_entity_t ObjB = ecs_entity(world, { .name = "ObjB" });
+    ecs_add_pair(world, ObjB, EcsChildOf, Rel);
     ECS_TAG(world, ObjC);
 
     ecs_entity_t e = ecs_new(world);
@@ -3052,9 +3091,12 @@ void Pairs_oneof_other_constraint_violated(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Parent);
-    ECS_ENTITY(world, Rel, (OneOf, Parent));
-    ECS_ENTITY(world, ObjA, (ChildOf, Parent));
-    ECS_ENTITY(world, ObjB, (ChildOf, Parent));
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_pair(world, Rel, EcsOneOf, Parent);
+    ecs_entity_t ObjA = ecs_entity(world, { .name = "ObjA" });
+    ecs_add_pair(world, ObjA, EcsChildOf, Parent);
+    ecs_entity_t ObjB = ecs_entity(world, { .name = "ObjB" });
+    ecs_add_pair(world, ObjB, EcsChildOf, Parent);
     ECS_TAG(world, ObjC);
 
     ecs_entity_t e = ecs_new(world);
@@ -3069,10 +3111,14 @@ void Pairs_oneof_other_rel_parent_constraint_violated(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Parent);
-    ECS_ENTITY(world, Rel, (OneOf, Parent));
-    ECS_ENTITY(world, ObjA, (ChildOf, Parent));
-    ECS_ENTITY(world, ObjB, (ChildOf, Parent));
-    ECS_ENTITY(world, ObjC, (ChildOf, Rel));
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_pair(world, Rel, EcsOneOf, Parent);
+    ecs_entity_t ObjA = ecs_entity(world, { .name = "ObjA" });
+    ecs_add_pair(world, ObjA, EcsChildOf, Parent);
+    ecs_entity_t ObjB = ecs_entity(world, { .name = "ObjB" });
+    ecs_add_pair(world, ObjB, EcsChildOf, Parent);
+    ecs_entity_t ObjC = ecs_entity(world, { .name = "ObjC" });
+    ecs_add_pair(world, ObjC, EcsChildOf, Rel);
 
     ecs_entity_t e = ecs_new(world);
 
@@ -3139,7 +3185,9 @@ void Pairs_force_relationship_on_component(void) {
 
     ecs_world_t *world = ecs_init();
 
-    ECS_ENTITY(world, Rel, Relationship);
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_entity_t ecs_id(Rel) = Rel;
+    ecs_add_id(world, Rel, EcsRelationship);
 
     test_expect_abort();
     ecs_new_w(world, Rel);
@@ -3151,7 +3199,8 @@ void Pairs_force_relationship_on_target(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, RelA);
-    ECS_ENTITY(world, Rel, Relationship);
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsRelationship);
 
     test_expect_abort();
     ecs_new_w_pair(world, RelA, Rel);
@@ -3160,8 +3209,10 @@ void Pairs_force_relationship_on_target(void) {
 void Pairs_force_relationship_on_target_trait(void) {
     ecs_world_t *world = ecs_init();
 
-    ECS_ENTITY(world, Trait, Trait);
-    ECS_ENTITY(world, Rel, Relationship);
+    ecs_entity_t Trait = ecs_entity(world, { .name = "Trait" });
+    ecs_add_id(world, Trait, EcsTrait);
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsRelationship);
 
     ecs_entity_t e = ecs_new_w_pair(world, Trait, Rel);
     test_assert(ecs_has_pair(world, e, Trait, Rel));
@@ -3172,7 +3223,8 @@ void Pairs_force_relationship_on_target_trait(void) {
 void Pairs_force_relationship_on_relationship(void) {
     ecs_world_t *world = ecs_init();
 
-    ECS_ENTITY(world, Rel, Relationship);
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsRelationship);
     ECS_TAG(world, Tgt);
 
     ecs_entity_t e = ecs_new_w_pair(world, Rel, Tgt);
@@ -3186,7 +3238,9 @@ void Pairs_force_target_on_component(void) {
 
     ecs_world_t *world = ecs_init();
 
-    ECS_ENTITY(world, Tgt, Target);
+    ecs_entity_t Tgt = ecs_entity(world, { .name = "Tgt" });
+    ecs_entity_t ecs_id(Tgt) = Tgt;
+    ecs_add_id(world, Tgt, EcsTarget);
 
     test_expect_abort();
     ecs_new_w(world, Tgt);
@@ -3198,7 +3252,8 @@ void Pairs_force_target_on_relationship(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, RelA);
-    ECS_ENTITY(world, Tgt, Target);
+    ecs_entity_t Tgt = ecs_entity(world, { .name = "Tgt" });
+    ecs_add_id(world, Tgt, EcsTarget);
 
     test_expect_abort();
     ecs_new_w_pair(world, Tgt, RelA);
@@ -3208,7 +3263,8 @@ void Pairs_force_target_on_target(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, RelA);
-    ECS_ENTITY(world, Tgt, Target);
+    ecs_entity_t Tgt = ecs_entity(world, { .name = "Tgt" });
+    ecs_add_id(world, Tgt, EcsTarget);
 
     ecs_entity_t e = ecs_new_w_pair(world, RelA, Tgt);
     test_assert(ecs_has_pair(world, e, RelA, Tgt));
@@ -3316,7 +3372,8 @@ void Pairs_add_value_pairs(void) {
 void Pairs_add_exclusive_value_pairs(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Number, Exclusive);
+    ecs_entity_t Number = ecs_entity(world, { .name = "Number" });
+    ecs_add_id(world, Number, EcsExclusive);
 
     ecs_entity_t e = ecs_new(world);
 

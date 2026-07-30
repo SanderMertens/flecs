@@ -343,8 +343,23 @@ ecs_entity_t flecs_script_create_entity(
         desc.name = name;
     }
 
-    desc.set = with;
-    return ecs_entity_init(v->world, &desc);
+    ecs_entity_t result = ecs_entity_init(v->world, &desc);
+    if (result && with) {
+        int32_t i;
+        for (i = 0; with[i].type; i ++) {
+            if (with[i].ptr) {
+                const ecs_type_info_t *ti = ecs_get_type_info(
+                    v->world, with[i].type);
+                ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
+                ecs_set_id(v->world, result, with[i].type,
+                    flecs_ito(size_t, ti->size), with[i].ptr);
+            } else {
+                ecs_add_id(v->world, result, with[i].type);
+            }
+        }
+    }
+
+    return result;
 }
 
 ecs_entity_t flecs_script_find_entity_action(

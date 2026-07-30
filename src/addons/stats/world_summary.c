@@ -144,10 +144,8 @@ void FlecsWorldSummaryImport(
     const ecs_world_info_t *info = ecs_get_world_info(world);
 
     ecs_system(world, {
-        .entity = ecs_entity(world, { 
-            .name = "UpdateWorldSummary",
-            .add = ecs_ids(ecs_pair(EcsDependsOn, EcsPreFrame))
-        }),
+        .entity = ecs_entity(world, { .name = "UpdateWorldSummary" }),
+        .phase = EcsPreFrame,
         .query.terms = {{ .id = ecs_id(EcsWorldSummary) }},
         .callback = UpdateWorldSummary
     });

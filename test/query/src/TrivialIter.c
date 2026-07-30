@@ -98,7 +98,8 @@ void TrivialIter_cached_trivial_search_w_up(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Foo);
-    ECS_ENTITY(world, Rel, Traversable);
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsTraversable);
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {{ Foo, .src.id = EcsUp, .trav = Rel }},
@@ -122,7 +123,8 @@ void TrivialIter_cached_trivial_test_w_up(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Foo);
-    ECS_ENTITY(world, Rel, Traversable);
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsTraversable);
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {{ Foo, .src.id = EcsUp, .trav = Rel }},

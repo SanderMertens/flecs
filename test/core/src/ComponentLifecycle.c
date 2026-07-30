@@ -533,7 +533,10 @@ void ComponentLifecycle_merge_to_different_table(void) {
         .move = ecs_move(Rotation)
     });
 
-    ECS_ENTITY(world, e, Position, Velocity, Rotation);
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_add(world, e, Position);
+    ecs_add(world, e, Velocity);
+    ecs_add(world, e, Rotation);
 
     ctor_position = 0;
     dtor_position = 0;
@@ -676,7 +679,10 @@ void ComponentLifecycle_delete_in_stage(void) {
         .move = ecs_move(Mass)
     });
 
-    ECS_ENTITY(world, e, Position, Velocity, Mass);
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_add(world, e, Position);
+    ecs_add(world, e, Velocity);
+    ecs_add(world, e, Mass);
 
     ctor_position = 0;
     dtor_position = 0;

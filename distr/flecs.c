@@ -8544,79 +8544,6 @@ static void flecs_copy_id(
         world, table, ECS_RECORD_TO_ROW(r->row), component, true, dst_ptr);
 }
 
-/* Traverse table graph by adding identifiers parsed from the
- * passed in expression. */
-static int flecs_traverse_from_expr(
-    ecs_world_t *world,
-    const char *name,
-    const char *expr,
-    ecs_vec_t *ids)
-{
-#ifdef FLECS_QUERY_DSL
-    const char *ptr = expr;
-    if (ptr) {
-        ecs_id_t component = 0;
-        while (ptr[0] && (ptr = flecs_id_parse(world, name, ptr, &component))) {
-            if (!component) {
-                break;
-            }
-
-            if (!ecs_id_is_valid(world, component)) {
-                char *idstr = ecs_id_str(world, component);
-                ecs_parser_error(name, expr, (ptr - expr), 
-                    "'%s' is invalid for ecs_entity_desc_t::add_expr", idstr);
-                ecs_os_free(idstr);
-                goto error;
-            }
-
-            ecs_vec_append_t(&world->allocator, ids, ecs_id_t)[0] = component;
-        }
-
-        if (!ptr) {
-            goto error;
-        }
-    }
-    return 0;
-#else
-    (void)world;
-    (void)name;
-    (void)expr;
-    (void)ids;
-    ecs_err("cannot parse component expression: script addon required");
-    goto error;
-#endif
-error:
-    return -1;
-}
-
-/* Add components based on the parsed expression. This operation is
- * slower than flecs_traverse_from_expr, but safe to use from a deferred context. */
-static void flecs_defer_from_expr(
-    ecs_world_t *world,
-    ecs_entity_t entity,
-    const char *name,
-    const char *expr)
-{
-#ifdef FLECS_QUERY_DSL
-    const char *ptr = expr;
-    if (ptr) {
-        ecs_id_t component = 0;
-        while (ptr[0] && (ptr = flecs_id_parse(world, name, ptr, &component))) {
-            if (!component) {
-                break;
-            }
-            ecs_add_id(world, entity, component);
-        }
-    }
-#else
-    (void)world;
-    (void)entity;
-    (void)name;
-    (void)expr;
-    ecs_err("cannot parse component expression: script addon required");
-#endif
-}
-
 /* If operation is not deferred, add components by finding the target
  * table and moving the entity towards it. */
 static int flecs_traverse_add(
@@ -8633,16 +8560,6 @@ static int flecs_traverse_add(
     const char *root_sep = desc->root_sep;
     ecs_table_diff_builder_t diff = ECS_TABLE_DIFF_INIT;
     flecs_table_diff_builder_init(world, &diff);
-    ecs_vec_t ids;
-
-    /* Add components from the 'add_expr' expression. Look up before naming 
-     * entity, so that expression can't resolve to self. */
-    ecs_vec_init_t(&world->allocator, &ids, ecs_id_t, 0);
-    if (desc->add_expr && ecs_os_strcmp(desc->add_expr, "0")) {
-        if (flecs_traverse_from_expr(world, name, desc->add_expr, &ids)) {
-            goto error;
-        }
-    }
 
     /* Set symbol */
     if (desc->symbol && desc->symbol[0]) {
@@ -8673,35 +8590,6 @@ static int flecs_traverse_add(
     ecs_record_t *r = flecs_entities_get(world, result);
     table = r->table;
 
-    /* Add components from the 'add' array */
-    if (desc->add) {
-        int32_t i = 0;
-        ecs_id_t component;
-
-        while ((component = desc->add[i ++])) {
-            table = flecs_find_table_add(world, table, component, &diff);
-        }
-    }
-
-    /* Add components from the 'set' array */
-    if (desc->set) {
-        int32_t i = 0;
-        ecs_id_t component;
-
-        while ((component = desc->set[i ++].type)) {
-            table = flecs_find_table_add(world, table, component, &diff);
-        }
-    }
-
-    /* Add ids from .expr */
-    {
-        int32_t i, count = ecs_vec_count(&ids);
-        ecs_id_t *expr_ids = ecs_vec_first(&ids);
-        for (i = 0; i < count; i ++) {
-            table = flecs_find_table_add(world, table, expr_ids[i], &diff);
-        }
-    }
-
     /* Find destination table */
     /* If this is a new entity without a name, add the scope. If a name is
      * provided, the scope will be added by the add_path_w_sep function */
@@ -8725,43 +8613,10 @@ static int flecs_traverse_add(
         flecs_defer_end(world, world->stages[0]);
     }
 
-    /* Set component values */
-    if (desc->set) {
-        table = r->table;
-        ecs_assert(r->table != NULL, ECS_INTERNAL_ERROR, NULL);
-        int32_t i = 0, row = ECS_RECORD_TO_ROW(r->row);
-        const ecs_value_t *v;
-        
-        flecs_defer_begin(world, world->stages[0]);
-
-        while ((void)(v = &desc->set[i ++]), v->type) {
-            if (!v->ptr) {
-                continue;
-            }
-            ecs_assert(ECS_RECORD_TO_ROW(r->row) == row, ECS_INTERNAL_ERROR, NULL);
-            ecs_component_record_t *cr = flecs_components_get(world, v->type);
-            flecs_component_ptr_t ptr = flecs_get_component_ptr(
-                world, table, row, cr);
-            ecs_check(ptr.ptr != NULL, ECS_INVALID_OPERATION, 
-                "component '%s' added to entity '%s' was removed during the "
-                "operation, make sure not to remove the component in hooks/observers",
-                    flecs_errstr(ecs_id_str(world, v->type)),
-                    flecs_errstr_2(ecs_get_path(world, result)));
-            
-            const ecs_type_info_t *ti = cr->type_info;
-            flecs_copy_id(world, result, r, v->type, 
-                flecs_itosize(ti->size), ptr.ptr, v->ptr, ti);
-        }
-
-        flecs_defer_end(world, world->stages[0]);
-    }
-
     flecs_table_diff_builder_fini(world, &diff);
-    ecs_vec_fini_t(&world->allocator, &ids, ecs_id_t);
     return 0;
 error:
     flecs_table_diff_builder_fini(world, &diff);
-    ecs_vec_fini_t(&world->allocator, &ids, ecs_id_t);
     return -1;
 }
 
@@ -8792,55 +8647,6 @@ static void flecs_deferred_add_remove(
         }
     }
 
-    /* Add components from the 'add' id array */
-    if (desc->add) {
-        int32_t i = 0;
-        ecs_id_t component;
-
-        while ((component = desc->add[i ++])) {
-            bool defer = true;
-            if (ECS_HAS_ID_FLAG(component, PAIR) && 
-                ECS_PAIR_FIRST(component) == EcsChildOf) 
-            {
-                scope = ECS_PAIR_SECOND(component);
-                if (name && (!desc->id || !name_assigned)) {
-                    /* New named entities are created by temporarily going out of
-                     * readonly mode to ensure no duplicates are created. */
-                    defer = false;
-                }
-            }
-            if (defer) {
-                ecs_add_id(world, entity, component);
-            }
-        }
-    }
-
-    /* Set component values */
-    if (desc->set) {
-        int32_t i = 0;
-        const ecs_value_t *v;
-        while ((void)(v = &desc->set[i ++]), v->type) {
-            if (v->ptr) {
-                ecs_check(v->type != 0, ECS_INVALID_PARAMETER,
-                    "0 passed for component to ecs_entity_desc_t::set[%d]", i);
-                const ecs_type_info_t *ti = ecs_get_type_info(world, v->type);
-                ecs_check(ti != NULL, ECS_INVALID_PARAMETER, 
-                    "component '%s' passed to ecs_entity_desc_t::set[%d] is a "
-                    "tag/zero sized",
-                        flecs_errstr(ecs_id_str(world, v->type)), i);
-                ecs_set_id(world, entity, v->type, 
-                    flecs_ito(size_t, ti->size), v->ptr);
-            } else {
-                ecs_add_id(world, entity, v->type);
-            }
-        }
-    }
-
-    /* Add components from the 'add_expr' expression */
-    if (desc->add_expr) {
-        flecs_defer_from_expr(world, entity, name, desc->add_expr);
-    }
-
     int32_t thread_count = ecs_get_stage_count(world);
 
     /* Set symbol */
@@ -8862,8 +8668,6 @@ static void flecs_deferred_add_remove(
     if (name && !name_assigned) {
         ecs_add_path_w_sep(world, entity, scope, name, sep, root_sep);
     }
-error:
-    return;
 }
 
 ecs_entity_t ecs_entity_init(
@@ -8879,27 +8683,6 @@ ecs_entity_t ecs_entity_init(
     ecs_entity_t scope = stage->scope;
     ecs_id_t with = ecs_get_with(world);
     ecs_entity_t result = desc->id;
-
-#ifdef FLECS_DEBUG
-    if (desc->add) {
-        ecs_id_t component;
-        int32_t i = 0;
-        while ((component = desc->add[i ++])) {
-            if (ECS_HAS_ID_FLAG(component, PAIR) && 
-                (ECS_PAIR_FIRST(component) == EcsChildOf))
-            {
-                if (desc->name) {
-                    ecs_check(false, ECS_INVALID_PARAMETER, "%s: cannot set parent in "
-                        "ecs_entity_desc_t::add, use ecs_entity_desc_t::parent",
-                            desc->name);
-                } else {
-                    ecs_check(false, ECS_INVALID_PARAMETER, "cannot set parent in "
-                        "ecs_entity_desc_t::add, use ecs_entity_desc_t::parent");
-                }
-            }
-        }
-    }
-#endif
 
     const char *name = desc->name;
     const char *sep = desc->sep;
@@ -9038,6 +8821,37 @@ ecs_entity_t ecs_entity_init(
             scope, with, new_entity, name_assigned)) 
         {
             return 0;
+        }
+    }
+
+    return result;
+error:
+    return 0;
+}
+
+ecs_entity_t ecs_insert_w_values(
+    ecs_world_t *world,
+    const ecs_value_t *values)
+{
+    ecs_entity_t result = ecs_entity_init(world, &(ecs_entity_desc_t){0});
+    if (!result) {
+        goto error;
+    }
+
+    if (values) {
+        int32_t i;
+        for (i = 0; values[i].type; i ++) {
+            if (values[i].ptr) {
+                const ecs_type_info_t *ti = ecs_get_type_info(
+                    world, values[i].type);
+                ecs_check(ti != NULL, ECS_INVALID_PARAMETER,
+                    "component '%s' passed to ecs_insert is a tag/zero sized",
+                        flecs_errstr(ecs_id_str(world, values[i].type)));
+                ecs_set_id(world, result, values[i].type,
+                    flecs_ito(size_t, ti->size), values[i].ptr);
+            } else {
+                ecs_add_id(world, result, values[i].type);
+            }
         }
     }
 
@@ -29711,7 +29525,8 @@ void FlecsRestImport(
     });
 
     ecs_system(world, {
-        .entity = ecs_entity(world, { .name = "DequeueRest", .add = ecs_ids( ecs_dependson(EcsPostFrame)) }),
+        .entity = ecs_entity(world, { .name = "DequeueRest" }),
+        .phase = EcsPostFrame,
         .query.terms = {
             { .id = ecs_id(EcsRest) },
         },
@@ -30057,7 +29872,8 @@ void FlecsTimerImport(
 
     /* Timer handling */
     ecs_system(world, {
-        .entity = ecs_entity(world, {.name = "ProgressTimers", .add = ecs_ids( ecs_dependson(EcsPreFrame))}),
+        .entity = ecs_entity(world, {.name = "ProgressTimers"}),
+        .phase = EcsPreFrame,
         .query.terms = {
             { .id = ecs_id(EcsTimer) },
             { .id = ecs_id(EcsTickSource) }
@@ -30067,7 +29883,8 @@ void FlecsTimerImport(
 
     /* Rate filter handling */
     ecs_system(world, {
-        .entity = ecs_entity(world, {.name = "ProgressRateFilters", .add = ecs_ids( ecs_dependson(EcsPreFrame))}),
+        .entity = ecs_entity(world, {.name = "ProgressRateFilters"}),
+        .phase = EcsPreFrame,
         .query.terms = {
             { .id = ecs_id(EcsRateFilter), .inout = EcsIn },
             { .id = ecs_id(EcsTickSource), .inout = EcsOut }
@@ -30077,7 +29894,8 @@ void FlecsTimerImport(
 
     /* TickSource without a timer or rate filter just increases each frame */
     ecs_system(world, {
-        .entity = ecs_entity(world, { .name = "ProgressTickSource", .add = ecs_ids( ecs_dependson(EcsPreFrame))}),
+        .entity = ecs_entity(world, { .name = "ProgressTickSource" }),
+        .phase = EcsPreFrame,
         .query.terms = {
             { .id = ecs_id(EcsTickSource), .inout = EcsOut },
             { .id = ecs_id(EcsRateFilter), .oper = EcsNot },
@@ -30100,9 +29918,9 @@ void FlecsUnitsImport(
     ecs_set_name_prefix(world, "Ecs");
 
     EcsUnitPrefixes = ecs_entity(world, {
-        .name = "prefixes",
-        .add = ecs_ids( EcsModule )
+        .name = "prefixes"
     });
+    ecs_add_id(world, EcsUnitPrefixes, EcsModule);
 
     /* Initialize unit prefixes */
 
@@ -58857,11 +58675,11 @@ void FlecsMetaImport(
 
     flecs_bootstrap_component(world, EcsTypeSerializer);
 
+    ecs_entity_t type_component = ecs_entity(world, { .id = ecs_id(EcsType),
+        .name = "type", .symbol = "EcsType" });
+    ecs_add_pair(world, type_component, EcsOnInstantiate, EcsDontInherit);
     ecs_component(world, {
-        .entity = ecs_entity(world, { .id = ecs_id(EcsType),
-            .name = "type", .symbol = "EcsType",
-            .add = ecs_ids(ecs_pair(EcsOnInstantiate, EcsDontInherit))
-        }),
+        .entity = type_component,
         .type.size = sizeof(EcsType),
         .type.alignment = ECS_ALIGNOF(EcsType),
     });
@@ -65233,14 +65051,23 @@ void FlecsPipelineImport(
      * direct DependsOn relationship on EcsPreUpdate, which ensures that when
      * the EcsPreUpdate phase is disabled, EcsOnUpdate still runs. */
     ecs_entity_t phase_0 = ecs_entity(world, {0});
-    ecs_entity_t phase_1 = ecs_entity(world, { .add = ecs_ids(ecs_dependson(phase_0)) });
-    ecs_entity_t phase_2 = ecs_entity(world, { .add = ecs_ids(ecs_dependson(phase_1)) });
-    ecs_entity_t phase_3 = ecs_entity(world, { .add = ecs_ids(ecs_dependson(phase_2)) });
-    ecs_entity_t phase_4 = ecs_entity(world, { .add = ecs_ids(ecs_dependson(phase_3)) });
-    ecs_entity_t phase_5 = ecs_entity(world, { .add = ecs_ids(ecs_dependson(phase_4)) });
-    ecs_entity_t phase_6 = ecs_entity(world, { .add = ecs_ids(ecs_dependson(phase_5)) });
-    ecs_entity_t phase_7 = ecs_entity(world, { .add = ecs_ids(ecs_dependson(phase_6)) });
-    ecs_entity_t phase_8 = ecs_entity(world, { .add = ecs_ids(ecs_dependson(phase_7)) });
+    ecs_entity_t phase_1 = ecs_entity(world, {0});
+    ecs_entity_t phase_2 = ecs_entity(world, {0});
+    ecs_entity_t phase_3 = ecs_entity(world, {0});
+    ecs_entity_t phase_4 = ecs_entity(world, {0});
+    ecs_entity_t phase_5 = ecs_entity(world, {0});
+    ecs_entity_t phase_6 = ecs_entity(world, {0});
+    ecs_entity_t phase_7 = ecs_entity(world, {0});
+    ecs_entity_t phase_8 = ecs_entity(world, {0});
+
+    ecs_add_pair(world, phase_1, EcsDependsOn, phase_0);
+    ecs_add_pair(world, phase_2, EcsDependsOn, phase_1);
+    ecs_add_pair(world, phase_3, EcsDependsOn, phase_2);
+    ecs_add_pair(world, phase_4, EcsDependsOn, phase_3);
+    ecs_add_pair(world, phase_5, EcsDependsOn, phase_4);
+    ecs_add_pair(world, phase_6, EcsDependsOn, phase_5);
+    ecs_add_pair(world, phase_7, EcsDependsOn, phase_6);
+    ecs_add_pair(world, phase_8, EcsDependsOn, phase_7);
 
     flecs_bootstrap_phase(world, EcsOnStart,    0);
     flecs_bootstrap_phase(world, EcsPreFrame,   0);
@@ -74831,8 +74658,23 @@ ecs_entity_t flecs_script_create_entity(
         desc.name = name;
     }
 
-    desc.set = with;
-    return ecs_entity_init(v->world, &desc);
+    ecs_entity_t result = ecs_entity_init(v->world, &desc);
+    if (result && with) {
+        int32_t i;
+        for (i = 0; with[i].type; i ++) {
+            if (with[i].ptr) {
+                const ecs_type_info_t *ti = ecs_get_type_info(
+                    v->world, with[i].type);
+                ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
+                ecs_set_id(v->world, result, with[i].type,
+                    flecs_ito(size_t, ti->size), with[i].ptr);
+            } else {
+                ecs_add_id(v->world, result, with[i].type);
+            }
+        }
+    }
+
+    return result;
 }
 
 ecs_entity_t flecs_script_find_entity_action(
@@ -79248,7 +79090,8 @@ void flecs_stats_api_import(
         ctx->query = q;
 
         ecs_system(world, {
-            .entity = ecs_entity(world, { .name = "Monitor1s", .add = ecs_ids(ecs_dependson(EcsPreFrame)) }),
+            .entity = ecs_entity(world, { .name = "Monitor1s" }),
+            .phase = EcsPreFrame,
             .query.terms = {{
                 .id = ecs_pair(kind, EcsPeriod1s),
                 .src.id = EcsWorld 
@@ -79266,7 +79109,8 @@ void flecs_stats_api_import(
         ctx->api = *api;
 
         mw1m = ecs_system(world, {
-            .entity = ecs_entity(world, { .name = "Monitor1m", .add = ecs_ids(ecs_dependson(EcsPreFrame)) }),
+            .entity = ecs_entity(world, { .name = "Monitor1m" }),
+            .phase = EcsPreFrame,
             .query.terms = {{
                 .id = ecs_pair(kind, EcsPeriod1m),
                 .src.id = EcsWorld 
@@ -79287,7 +79131,8 @@ void flecs_stats_api_import(
         ctx->api = *api;
 
         ecs_system(world, {
-            .entity = ecs_entity(world, { .name = "Monitor1h", .add = ecs_ids(ecs_dependson(EcsPreFrame)) }),
+            .entity = ecs_entity(world, { .name = "Monitor1h" }),
+            .phase = EcsPreFrame,
             .query.terms = {{
                 .id = ecs_pair(kind, EcsPeriod1h),
                 .src.id = EcsWorld 
@@ -79310,7 +79155,8 @@ void flecs_stats_api_import(
         ctx->interval = FlecsDayIntervalCount;
 
         ecs_system(world, {
-            .entity = ecs_entity(world, { .name = "Monitor1d", .add = ecs_ids(ecs_dependson(EcsPreFrame)) }),
+            .entity = ecs_entity(world, { .name = "Monitor1d" }),
+            .phase = EcsPreFrame,
             .query.terms = {{
                 .id = ecs_pair(kind, EcsPeriod1d),
                 .src.id = EcsWorld 
@@ -79333,7 +79179,8 @@ void flecs_stats_api_import(
         ctx->interval = FlecsWeekIntervalCount;
 
         ecs_system(world, {
-            .entity = ecs_entity(world, { .name = "Monitor1w", .add = ecs_ids(ecs_dependson(EcsPreFrame)) }),
+            .entity = ecs_entity(world, { .name = "Monitor1w" }),
+            .phase = EcsPreFrame,
             .query.terms = {{
                 .id = ecs_pair(kind, EcsPeriod1w),
                 .src.id = EcsWorld 
@@ -80596,10 +80443,8 @@ void FlecsWorldSummaryImport(
     const ecs_world_info_t *info = ecs_get_world_info(world);
 
     ecs_system(world, {
-        .entity = ecs_entity(world, { 
-            .name = "UpdateWorldSummary",
-            .add = ecs_ids(ecs_pair(EcsDependsOn, EcsPreFrame))
-        }),
+        .entity = ecs_entity(world, { .name = "UpdateWorldSummary" }),
+        .phase = EcsPreFrame,
         .query.terms = {{ .id = ecs_id(EcsWorldSummary) }},
         .callback = UpdateWorldSummary
     });
@@ -94424,20 +94269,20 @@ ecs_entity_t ecs_vector_init(
 void flecs_meta_array_init(
     ecs_world_t *world)
 {
+    ecs_entity_t array = ecs_entity(world, { .id = ecs_id(EcsArray),
+        .name = "array", .symbol = "EcsArray" });
+    ecs_add_pair(world, array, EcsOnInstantiate, EcsDontInherit);
     ecs_component(world, {
-        .entity = ecs_entity(world, { .id = ecs_id(EcsArray),
-            .name = "array", .symbol = "EcsArray",
-            .add = ecs_ids(ecs_pair(EcsOnInstantiate, EcsDontInherit))
-        }),
+        .entity = array,
         .type.size = sizeof(EcsArray),
         .type.alignment = ECS_ALIGNOF(EcsArray)
     });
 
+    ecs_entity_t vector = ecs_entity(world, { .id = ecs_id(EcsVector),
+        .name = "vector", .symbol = "EcsVector" });
+    ecs_add_pair(world, vector, EcsOnInstantiate, EcsDontInherit);
     ecs_component(world, {
-        .entity = ecs_entity(world, { .id = ecs_id(EcsVector),
-            .name = "vector", .symbol = "EcsVector",
-            .add = ecs_ids(ecs_pair(EcsOnInstantiate, EcsDontInherit))
-        }),
+        .entity = vector,
         .type.size = sizeof(EcsVector),
         .type.alignment = ECS_ALIGNOF(EcsVector)
     });
@@ -95032,29 +94877,29 @@ ecs_entity_t ecs_bitmask_init(
 void flecs_meta_enum_init(
     ecs_world_t *world)
 {
+    ecs_entity_t enum_component = ecs_entity(world, { .id = ecs_id(EcsEnum),
+        .name = "enum", .symbol = "EcsEnum" });
+    ecs_add_pair(world, enum_component, EcsOnInstantiate, EcsDontInherit);
     ecs_component(world, {
-        .entity = ecs_entity(world, { .id = ecs_id(EcsEnum),
-            .name = "enum", .symbol = "EcsEnum",
-            .add = ecs_ids(ecs_pair(EcsOnInstantiate, EcsDontInherit))
-        }),
+        .entity = enum_component,
         .type.size = sizeof(EcsEnum),
         .type.alignment = ECS_ALIGNOF(EcsEnum)
     });
 
+    ecs_entity_t bitmask = ecs_entity(world, { .id = ecs_id(EcsBitmask),
+        .name = "bitmask", .symbol = "EcsBitmask" });
+    ecs_add_pair(world, bitmask, EcsOnInstantiate, EcsDontInherit);
     ecs_component(world, {
-        .entity = ecs_entity(world, { .id = ecs_id(EcsBitmask),
-            .name = "bitmask", .symbol = "EcsBitmask",
-            .add = ecs_ids(ecs_pair(EcsOnInstantiate, EcsDontInherit))
-        }),
+        .entity = bitmask,
         .type.size = sizeof(EcsBitmask),
         .type.alignment = ECS_ALIGNOF(EcsBitmask)
     });
 
+    ecs_entity_t constants = ecs_entity(world, { .id = ecs_id(EcsConstants),
+        .name = "constants", .symbol = "EcsConstants" });
+    ecs_add_pair(world, constants, EcsOnInstantiate, EcsDontInherit);
     ecs_component(world, {
-        .entity = ecs_entity(world, { .id = ecs_id(EcsConstants),
-            .name = "constants", .symbol = "EcsConstants",
-            .add = ecs_ids(ecs_pair(EcsOnInstantiate, EcsDontInherit))
-        }),
+        .entity = constants,
         .type.size = sizeof(EcsConstants),
         .type.alignment = ECS_ALIGNOF(EcsConstants)
     });
@@ -95225,11 +95070,11 @@ ecs_entity_t ecs_map_type_init(
 void flecs_meta_map_init(
     ecs_world_t *world)
 {
+    ecs_entity_t map_component = ecs_entity(world, { .id = ecs_id(EcsMap),
+        .name = "map", .symbol = "EcsMap" });
+    ecs_add_pair(world, map_component, EcsOnInstantiate, EcsDontInherit);
     ecs_component(world, {
-        .entity = ecs_entity(world, { .id = ecs_id(EcsMap),
-            .name = "map", .symbol = "EcsMap",
-            .add = ecs_ids(ecs_pair(EcsOnInstantiate, EcsDontInherit))
-        }),
+        .entity = map_component,
         .type.size = sizeof(EcsMap),
         .type.alignment = ECS_ALIGNOF(EcsMap)
     });
@@ -95307,11 +95152,11 @@ ecs_entity_t ecs_opaque_init(
 void flecs_meta_opaque_init(
     ecs_world_t *world)
 {
+    ecs_entity_t opaque = ecs_entity(world, { .id = ecs_id(EcsOpaque),
+        .name = "opaque", .symbol = "EcsOpaque" });
+    ecs_add_pair(world, opaque, EcsOnInstantiate, EcsDontInherit);
     ecs_component(world, {
-        .entity = ecs_entity(world, { .id = ecs_id(EcsOpaque),
-            .name = "opaque", .symbol = "EcsOpaque",
-            .add = ecs_ids(ecs_pair(EcsOnInstantiate, EcsDontInherit))
-        }),
+        .entity = opaque,
         .type.size = sizeof(EcsOpaque),
         .type.alignment = ECS_ALIGNOF(EcsOpaque)
     });
@@ -95783,11 +95628,11 @@ ecs_entity_t ecs_primitive_init(
 void flecs_meta_primitives_init(
     ecs_world_t *world)
 {
+    ecs_entity_t primitive = ecs_entity(world, { .id = ecs_id(EcsPrimitive),
+        .name = "primitive", .symbol = "EcsPrimitive" });
+    ecs_add_pair(world, primitive, EcsOnInstantiate, EcsDontInherit);
     ecs_component(world, {
-        .entity = ecs_entity(world, { .id = ecs_id(EcsPrimitive),
-            .name = "primitive", .symbol = "EcsPrimitive",
-            .add = ecs_ids(ecs_pair(EcsOnInstantiate, EcsDontInherit))
-        }),
+        .entity = primitive,
         .type.size = sizeof(EcsPrimitive),
         .type.alignment = ECS_ALIGNOF(EcsPrimitive)
     });
@@ -96486,29 +96331,30 @@ ecs_member_t* ecs_struct_get_nth_member(
 void flecs_meta_struct_init(
     ecs_world_t *world)
 {
+    ecs_entity_t member = ecs_entity(world, { .id = ecs_id(EcsMember),
+        .name = "member", .symbol = "EcsMember" });
+    ecs_add_pair(world, member, EcsOnInstantiate, EcsDontInherit);
     ecs_component(world, {
-        .entity = ecs_entity(world, { .id = ecs_id(EcsMember),
-            .name = "member", .symbol = "EcsMember",
-            .add = ecs_ids(ecs_pair(EcsOnInstantiate, EcsDontInherit))
-        }),
+        .entity = member,
         .type.size = sizeof(EcsMember),
         .type.alignment = ECS_ALIGNOF(EcsMember)
     });
 
+    ecs_entity_t member_ranges = ecs_entity(world, {
+        .id = ecs_id(EcsMemberRanges),
+        .name = "member_ranges", .symbol = "EcsMemberRanges" });
+    ecs_add_pair(world, member_ranges, EcsOnInstantiate, EcsDontInherit);
     ecs_component(world, {
-        .entity = ecs_entity(world, { .id = ecs_id(EcsMemberRanges),
-            .name = "member_ranges", .symbol = "EcsMemberRanges",
-            .add = ecs_ids(ecs_pair(EcsOnInstantiate, EcsDontInherit))
-        }),
+        .entity = member_ranges,
         .type.size = sizeof(EcsMemberRanges),
         .type.alignment = ECS_ALIGNOF(EcsMemberRanges)
     });
 
+    ecs_entity_t struct_component = ecs_entity(world, { .id = ecs_id(EcsStruct),
+        .name = "struct", .symbol = "EcsStruct" });
+    ecs_add_pair(world, struct_component, EcsOnInstantiate, EcsDontInherit);
     ecs_component(world, {
-        .entity = ecs_entity(world, { .id = ecs_id(EcsStruct),
-            .name = "struct", .symbol = "EcsStruct",
-            .add = ecs_ids(ecs_pair(EcsOnInstantiate, EcsDontInherit))
-        }),
+        .entity = struct_component,
         .type.size = sizeof(EcsStruct),
         .type.alignment = ECS_ALIGNOF(EcsStruct)
     });
@@ -96851,39 +96697,36 @@ ecs_entity_t ecs_quantity_init(
 void flecs_meta_units_init(
     ecs_world_t *world)
 {
+    ecs_entity_t unit = ecs_entity(world, { .id = ecs_id(EcsUnit),
+        .name = "unit", .symbol = "EcsUnit" });
 #ifdef FLECS_PREFAB
-#define FLECS_META_INHERIT \
-    .add = ecs_ids(ecs_pair(EcsOnInstantiate, EcsInherit))
-#else
-#define FLECS_META_INHERIT
+    ecs_add_pair(world, unit, EcsOnInstantiate, EcsInherit);
 #endif
-
     ecs_component(world, {
-        .entity = ecs_entity(world, { .id = ecs_id(EcsUnit),
-            .name = "unit", .symbol = "EcsUnit",
-            FLECS_META_INHERIT
-        }),
+        .entity = unit,
         .type.size = sizeof(EcsUnit),
         .type.alignment = ECS_ALIGNOF(EcsUnit)
     });
 
+    ecs_entity_t unit_prefix = ecs_entity(world, { .id = ecs_id(EcsUnitPrefix),
+        .name = "unit_prefix", .symbol = "EcsUnitPrefix" });
+#ifdef FLECS_PREFAB
+    ecs_add_pair(world, unit_prefix, EcsOnInstantiate, EcsInherit);
+#endif
     ecs_component(world, {
-        .entity = ecs_entity(world, { .id = ecs_id(EcsUnitPrefix),
-            .name = "unit_prefix", .symbol = "EcsUnitPrefix",
-            FLECS_META_INHERIT
-        }),
+        .entity = unit_prefix,
         .type.size = sizeof(EcsUnitPrefix),
         .type.alignment = ECS_ALIGNOF(EcsUnitPrefix)
     });
 
+    ecs_entity_t quantity = ecs_entity(world, { .id = EcsQuantity,
+        .name = "quantity", .symbol = "EcsQuantity" });
+#ifdef FLECS_PREFAB
+    ecs_add_pair(world, quantity, EcsOnInstantiate, EcsInherit);
+#endif
     ecs_component(world, {
-        .entity = ecs_entity(world, { .id = EcsQuantity,
-            .name = "quantity", .symbol = "EcsQuantity",
-            FLECS_META_INHERIT
-        })
+        .entity = quantity
     });
-
-#undef FLECS_META_INHERIT
 
     ecs_set_hooks(world, EcsUnit, { 
         .ctor = flecs_default_ctor,

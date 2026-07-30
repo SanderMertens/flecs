@@ -3241,13 +3241,19 @@ void Observer_unset_move_to_nonempty_table(void) {
     Probe ctx = { 0 };
     ecs_set_ctx(world, &ctx, NULL);  
 
-    ECS_ENTITY(world, DummyA, Position, Velocity);
+    ecs_entity_t DummyA = ecs_entity(world, { .name = "DummyA" });
+    ecs_add(world, DummyA, Position);
+    ecs_add(world, DummyA, Velocity);
     test_int(ctx.invoked, 0);
 
-    ECS_ENTITY(world, DummyB, Position, Velocity);
+    ecs_entity_t DummyB = ecs_entity(world, { .name = "DummyB" });
+    ecs_add(world, DummyB, Position);
+    ecs_add(world, DummyB, Velocity);
     test_int(ctx.invoked, 0);
 
-    ECS_ENTITY(world, e, Position, Velocity);
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_add(world, e, Position);
+    ecs_add(world, e, Velocity);
     ecs_set(world, e, Position, {10, 20});
     ecs_set(world, e, Velocity, {20, 10});
     test_int(ctx.invoked, 0);
@@ -3457,7 +3463,10 @@ void Observer_and_from(void) {
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
-    ECS_PREFAB(world, Type, TagA, TagB);
+    ecs_entity_t Type = ecs_entity(world, { .name = "Type" });
+    ecs_add_id(world, Type, EcsPrefab);
+    ecs_add_id(world, Type, TagA);
+    ecs_add_id(world, Type, TagB);
 
     Probe ctx = {0};
     ecs_observer_init(world, &(ecs_observer_desc_t){
@@ -3492,7 +3501,10 @@ void Observer_or_from(void) {
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
-    ECS_PREFAB(world, Type, TagA, TagB);
+    ecs_entity_t Type = ecs_entity(world, { .name = "Type" });
+    ecs_add_id(world, Type, EcsPrefab);
+    ecs_add_id(world, Type, TagA);
+    ecs_add_id(world, Type, TagB);
 
     Probe ctx = {0};
     ecs_observer_init(world, &(ecs_observer_desc_t){
@@ -5582,7 +5594,8 @@ void Observer_propagate_after_on_delete_clear_action(void) {
 void Observer_on_add_after_batch_w_exclusive_adds(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Rel, Exclusive);
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsExclusive);
     ECS_TAG(world, TgtA);
     ECS_TAG(world, TgtB);
 
@@ -10282,8 +10295,10 @@ static void add_bar(ecs_iter_t *it) {
 void Observer_2_up_terms_w_batched_add(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, RelA, Traversable);
-    ECS_ENTITY(world, RelB, Traversable);
+    ecs_entity_t RelA = ecs_entity(world, { .name = "RelA" });
+    ecs_add_id(world, RelA, EcsTraversable);
+    ecs_entity_t RelB = ecs_entity(world, { .name = "RelB" });
+    ecs_add_id(world, RelB, EcsTraversable);
     ECS_TAG(world, Foo);
     ECS_TAG_DEFINE(world, Bar);
 
@@ -13934,13 +13949,13 @@ void Observer_propagate_isa_two_bases_dirty_reachable_cache(void) {
     ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
     ecs_add_pair(world, ecs_id(Mass), EcsOnInstantiate, EcsInherit);
 
-    ecs_entity_t base1 = ecs_entity(world, { .add = ecs_ids(EcsPrefab) });
+    ecs_entity_t base1 = ecs_new_w_id(world, EcsPrefab);
     ecs_set(world, base1, Position, {1, 2});
 
-    ecs_entity_t base2 = ecs_entity(world, { .add = ecs_ids(EcsPrefab) });
+    ecs_entity_t base2 = ecs_new_w_id(world, EcsPrefab);
     ecs_set(world, base2, Velocity, {3, 4});
 
-    ecs_entity_t mid = ecs_entity(world, { .add = ecs_ids(EcsPrefab) });
+    ecs_entity_t mid = ecs_new_w_id(world, EcsPrefab);
     ecs_add_pair(world, mid, EcsIsA, base1);
     ecs_add_pair(world, mid, EcsIsA, base2);
 

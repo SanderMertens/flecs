@@ -99,7 +99,9 @@ void GlobalComponentIds_declare_entity(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT_DEFINE(world, Position);
-    ECS_ENTITY_DEFINE(world, MyEntity, Position);
+    MyEntity = ecs_entity(world, { .id = MyEntity, .name = "MyEntity" });
+    ecs_id(MyEntity) = MyEntity;
+    ecs_add(world, MyEntity, Position);
 
     ecs_entity_t e = return_entity();
     test_assert(e != 0);

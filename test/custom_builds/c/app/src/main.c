@@ -11,9 +11,7 @@ int main(int argc, char *argv[]) {
     ecs_world_t *world = ecs_init_w_args(argc, argv);
 
     ecs_system(world, {
-        .entity = ecs_entity(world, {
-            .add = ecs_ids(ecs_dependson(EcsOnUpdate))
-        }),
+        .phase = EcsOnUpdate,
         .callback = CountFrames
     });
 

@@ -2385,7 +2385,9 @@ void OnDelete_deep_clean_256(void) {
 void OnDelete_id_w_disabled(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Tag, CanToggle);
+    ecs_entity_t Tag = ecs_entity(world, { .name = "Tag" });
+    ecs_entity_t ecs_id(Tag) = Tag;
+    ecs_add_id(world, Tag, EcsCanToggle);
 
 
     ecs_entity_t e1 = ecs_new_w(world, Tag);
@@ -2612,7 +2614,8 @@ void OnDelete_delete_tree_w_query(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
-    ECS_ENTITY(world, Rel, Traversable);
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsTraversable);
     ECS_TAG(world, Foo);
 
     ecs_query_t *q = ecs_query(world, { .expr = "Tag(up Rel)" });

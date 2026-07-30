@@ -2102,7 +2102,9 @@ void NonFragmentingChildOf_target_for_self_parent(void) {
 void NonFragmentingChildOf_target_for_inherited(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
+    ecs_entity_t Foo = ecs_entity(world, { .name = "Foo" });
+    ecs_entity_t ecs_id(Foo) = Foo;
+    ecs_add_pair(world, Foo, EcsOnInstantiate, EcsInherit);
 
     ecs_entity_t base = ecs_new_w(world, Foo);
     ecs_entity_t parent = ecs_new_w_pair(world, EcsIsA, base);
@@ -2118,7 +2120,9 @@ void NonFragmentingChildOf_target_for_inherited(void) {
 void NonFragmentingChildOf_target_for_2_lvls_parent_inherited(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
+    ecs_entity_t Foo = ecs_entity(world, { .name = "Foo" });
+    ecs_entity_t ecs_id(Foo) = Foo;
+    ecs_add_pair(world, Foo, EcsOnInstantiate, EcsInherit);
 
     ecs_entity_t base = ecs_new_w(world, Foo);
     ecs_entity_t parent_a = ecs_new_w_pair(world, EcsIsA, base);
@@ -2135,7 +2139,9 @@ void NonFragmentingChildOf_target_for_2_lvls_parent_inherited(void) {
 void NonFragmentingChildOf_target_for_2_lvls_childof_inherited(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
+    ecs_entity_t Foo = ecs_entity(world, { .name = "Foo" });
+    ecs_entity_t ecs_id(Foo) = Foo;
+    ecs_add_pair(world, Foo, EcsOnInstantiate, EcsInherit);
 
     ecs_entity_t base = ecs_new_w(world, Foo);
     ecs_entity_t parent_a = ecs_new_w_pair(world, EcsIsA, base);
@@ -2152,7 +2158,9 @@ void NonFragmentingChildOf_target_for_2_lvls_childof_inherited(void) {
 void NonFragmentingChildOf_target_for_3_lvls_childof_childof_inherited(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
+    ecs_entity_t Foo = ecs_entity(world, { .name = "Foo" });
+    ecs_entity_t ecs_id(Foo) = Foo;
+    ecs_add_pair(world, Foo, EcsOnInstantiate, EcsInherit);
 
     ecs_entity_t base = ecs_new_w(world, Foo);
     ecs_entity_t parent_a = ecs_new_w_pair(world, EcsIsA, base);
@@ -2170,7 +2178,9 @@ void NonFragmentingChildOf_target_for_3_lvls_childof_childof_inherited(void) {
 void NonFragmentingChildOf_target_for_3_lvls_childof_parent_inherited(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
+    ecs_entity_t Foo = ecs_entity(world, { .name = "Foo" });
+    ecs_entity_t ecs_id(Foo) = Foo;
+    ecs_add_pair(world, Foo, EcsOnInstantiate, EcsInherit);
 
     ecs_entity_t base = ecs_new_w(world, Foo);
     ecs_entity_t parent_a = ecs_new_w_pair(world, EcsIsA, base);
@@ -2188,7 +2198,9 @@ void NonFragmentingChildOf_target_for_3_lvls_childof_parent_inherited(void) {
 void NonFragmentingChildOf_target_for_3_lvls_parent_childof_inherited(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
+    ecs_entity_t Foo = ecs_entity(world, { .name = "Foo" });
+    ecs_entity_t ecs_id(Foo) = Foo;
+    ecs_add_pair(world, Foo, EcsOnInstantiate, EcsInherit);
 
     ecs_entity_t base = ecs_new_w(world, Foo);
     ecs_entity_t parent_a = ecs_new_w_pair(world, EcsIsA, base);
@@ -2206,7 +2218,9 @@ void NonFragmentingChildOf_target_for_3_lvls_parent_childof_inherited(void) {
 void NonFragmentingChildOf_target_for_3_lvls_parent_parent_inherited(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
+    ecs_entity_t Foo = ecs_entity(world, { .name = "Foo" });
+    ecs_entity_t ecs_id(Foo) = Foo;
+    ecs_add_pair(world, Foo, EcsOnInstantiate, EcsInherit);
 
     ecs_entity_t base = ecs_new_w(world, Foo);
     ecs_entity_t parent_a = ecs_new_w_pair(world, EcsIsA, base);
@@ -2526,15 +2540,15 @@ void NonFragmentingChildOf_named_children_same_table_w_same_name(void) {
     ecs_entity_t parent_a = ecs_entity(world, { .name = "parent_a" });
     ecs_entity_t parent_b = ecs_entity(world, { .name = "parent_b" });
 
-    ecs_entity_t child_a = ecs_entity(world, { 
-        .name = "child", 
-        .set = ecs_values( ecs_value(EcsParent, { parent_a }) )
+    ecs_entity_t child_a = ecs_entity(world, {
+        .name = "child"
     });
+    ecs_set(world, child_a, EcsParent, { parent_a });
 
-    ecs_entity_t child_b = ecs_entity(world, { 
-        .name = "child", 
-        .set = ecs_values( ecs_value(EcsParent, { parent_b }) )
+    ecs_entity_t child_b = ecs_entity(world, {
+        .name = "child"
     });
+    ecs_set(world, child_b, EcsParent, { parent_b });
 
     test_assert(child_a != child_b);
 
@@ -2830,10 +2844,10 @@ void NonFragmentingChildOf_lookup(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
-    ecs_entity_t child = ecs_entity(world, { 
-        .name = "child", 
-        .set = ecs_values( ecs_value(EcsParent, { parent }) )
+    ecs_entity_t child = ecs_entity(world, {
+        .name = "child"
     });
+    ecs_set(world, child, EcsParent, { parent });
 
     test_assert(ecs_lookup(world, "parent") == parent);
     test_assert(ecs_lookup(world, "parent.child") == child);
@@ -2845,14 +2859,14 @@ void NonFragmentingChildOf_lookup_2_lvls(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
-    ecs_entity_t child = ecs_entity(world, { 
-        .name = "child", 
-        .set = ecs_values( ecs_value(EcsParent, { parent }) )
+    ecs_entity_t child = ecs_entity(world, {
+        .name = "child"
     });
-    ecs_entity_t grandchild = ecs_entity(world, { 
-        .name = "grandchild", 
-        .set = ecs_values( ecs_value(EcsParent, { child }) )
+    ecs_set(world, child, EcsParent, { parent });
+    ecs_entity_t grandchild = ecs_entity(world, {
+        .name = "grandchild"
     });
+    ecs_set(world, grandchild, EcsParent, { child });
 
     test_assert(ecs_lookup(world, "parent") == parent);
     test_assert(ecs_lookup(world, "parent.child") == child);
@@ -2865,10 +2879,10 @@ void NonFragmentingChildOf_lookup_from(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
-    ecs_entity_t child = ecs_entity(world, { 
-        .name = "child", 
-        .set = ecs_values( ecs_value(EcsParent, { parent }) )
+    ecs_entity_t child = ecs_entity(world, {
+        .name = "child"
     });
+    ecs_set(world, child, EcsParent, { parent });
 
     test_assert(ecs_lookup(world, "parent") == parent);
     test_assert(ecs_lookup_from(world, parent, "child") == child);
@@ -2880,14 +2894,14 @@ void NonFragmentingChildOf_lookup_from_2_lvls(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
-    ecs_entity_t child = ecs_entity(world, { 
-        .name = "child", 
-        .set = ecs_values( ecs_value(EcsParent, { parent }) )
+    ecs_entity_t child = ecs_entity(world, {
+        .name = "child"
     });
-    ecs_entity_t grandchild = ecs_entity(world, { 
-        .name = "grandchild", 
-        .set = ecs_values( ecs_value(EcsParent, { child }) )
+    ecs_set(world, child, EcsParent, { parent });
+    ecs_entity_t grandchild = ecs_entity(world, {
+        .name = "grandchild"
     });
+    ecs_set(world, grandchild, EcsParent, { child });
 
     test_assert(ecs_lookup(world, "parent") == parent);
     test_assert(ecs_lookup_from(world, parent, "child") == child);
@@ -2901,10 +2915,10 @@ void NonFragmentingChildOf_lookup_after_reparent(void) {
 
     ecs_entity_t parent_a = ecs_entity(world, { .name = "parent_a" });
     ecs_entity_t parent_b = ecs_entity(world, { .name = "parent_b" });
-    ecs_entity_t child = ecs_entity(world, { 
-        .name = "child", 
-        .set = ecs_values( ecs_value(EcsParent, { parent_a }) )
+    ecs_entity_t child = ecs_entity(world, {
+        .name = "child"
     });
+    ecs_set(world, child, EcsParent, { parent_a });
 
     test_assert(ecs_lookup(world, "parent_a") == parent_a);
     test_assert(ecs_lookup(world, "parent_a.child") == child);
@@ -2922,10 +2936,10 @@ void NonFragmentingChildOf_lookup_after_remove_parent(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
-    ecs_entity_t child = ecs_entity(world, { 
-        .name = "child", 
-        .set = ecs_values( ecs_value(EcsParent, { parent }) )
+    ecs_entity_t child = ecs_entity(world, {
+        .name = "child"
     });
+    ecs_set(world, child, EcsParent, { parent });
 
     test_assert(ecs_lookup(world, "parent") == parent);
     test_assert(ecs_lookup(world, "parent.child") == child);
@@ -2941,10 +2955,10 @@ void NonFragmentingChildOf_lookup_after_clear(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
-    ecs_entity_t child = ecs_entity(world, { 
-        .name = "child", 
-        .set = ecs_values( ecs_value(EcsParent, { parent }) )
+    ecs_entity_t child = ecs_entity(world, {
+        .name = "child"
     });
+    ecs_set(world, child, EcsParent, { parent });
 
     test_assert(ecs_lookup(world, "parent") == parent);
     test_assert(ecs_lookup(world, "parent.child") == child);
@@ -2960,10 +2974,10 @@ void NonFragmentingChildOf_lookup_after_delete(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
-    ecs_entity_t child = ecs_entity(world, { 
-        .name = "child", 
-        .set = ecs_values( ecs_value(EcsParent, { parent }) )
+    ecs_entity_t child = ecs_entity(world, {
+        .name = "child"
     });
+    ecs_set(world, child, EcsParent, { parent });
 
     test_assert(ecs_lookup(world, "parent") == parent);
     test_assert(ecs_lookup(world, "parent.child") == child);

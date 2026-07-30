@@ -414,9 +414,15 @@ void Search_search_relation_at_offset(void) {
 void Search_search_relation_inherit_from_parent(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, TagA, (OnInstantiate, Inherit));
-    ECS_ENTITY(world, TagB, (OnInstantiate, Inherit));
-    ECS_ENTITY(world, TagC, (OnInstantiate, Inherit));
+    ecs_entity_t TagA = ecs_entity(world, { .name = "TagA" });
+    ecs_entity_t ecs_id(TagA) = TagA;
+    ecs_add_pair(world, TagA, EcsOnInstantiate, EcsInherit);
+    ecs_entity_t TagB = ecs_entity(world, { .name = "TagB" });
+    ecs_entity_t ecs_id(TagB) = TagB;
+    ecs_add_pair(world, TagB, EcsOnInstantiate, EcsInherit);
+    ecs_entity_t TagC = ecs_entity(world, { .name = "TagC" });
+    ecs_entity_t ecs_id(TagC) = TagC;
+    ecs_add_pair(world, TagC, EcsOnInstantiate, EcsInherit);
 
     ecs_entity_t b = ecs_new(world);
     ecs_add(world, b, TagA);
@@ -456,9 +462,15 @@ void Search_search_relation_inherit_from_parent(void) {
 void Search_search_relation_dont_inherit(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, TagA, (OnInstantiate, Inherit));
-    ECS_ENTITY(world, TagB, (OnInstantiate, DontInherit));
-    ECS_ENTITY(world, TagC, (OnInstantiate, Inherit));
+    ecs_entity_t TagA = ecs_entity(world, { .name = "TagA" });
+    ecs_entity_t ecs_id(TagA) = TagA;
+    ecs_add_pair(world, TagA, EcsOnInstantiate, EcsInherit);
+    ecs_entity_t TagB = ecs_entity(world, { .name = "TagB" });
+    ecs_entity_t ecs_id(TagB) = TagB;
+    ecs_add_pair(world, TagB, EcsOnInstantiate, EcsDontInherit);
+    ecs_entity_t TagC = ecs_entity(world, { .name = "TagC" });
+    ecs_entity_t ecs_id(TagC) = TagC;
+    ecs_add_pair(world, TagC, EcsOnInstantiate, EcsInherit);
 
     ecs_entity_t b = ecs_new(world);
     ecs_add(world, b, TagA);
@@ -504,9 +516,15 @@ void Search_search_relation_dont_inherit(void) {
 void Search_search_relation_dont_inherit_from_parent(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, TagA, (OnInstantiate, Inherit));
-    ECS_ENTITY(world, TagB, (OnInstantiate, DontInherit));
-    ECS_ENTITY(world, TagC, (OnInstantiate, Inherit));
+    ecs_entity_t TagA = ecs_entity(world, { .name = "TagA" });
+    ecs_entity_t ecs_id(TagA) = TagA;
+    ecs_add_pair(world, TagA, EcsOnInstantiate, EcsInherit);
+    ecs_entity_t TagB = ecs_entity(world, { .name = "TagB" });
+    ecs_entity_t ecs_id(TagB) = TagB;
+    ecs_add_pair(world, TagB, EcsOnInstantiate, EcsDontInherit);
+    ecs_entity_t TagC = ecs_entity(world, { .name = "TagC" });
+    ecs_entity_t ecs_id(TagC) = TagC;
+    ecs_add_pair(world, TagC, EcsOnInstantiate, EcsInherit);
 
     ecs_entity_t b = ecs_new(world);
     ecs_add(world, b, TagA);
@@ -554,9 +572,13 @@ void Search_search_relation_dont_inherit_from_parent(void) {
 void Search_search_relation_exclusive(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, TagA, (OnInstantiate, Inherit));
-    ECS_ENTITY(world, TagB, (OnInstantiate, Inherit));
-    ECS_ENTITY(world, Rel, Exclusive, (OnInstantiate, Inherit));
+    ecs_entity_t TagA = ecs_entity(world, { .name = "TagA" });
+    ecs_add_pair(world, TagA, EcsOnInstantiate, EcsInherit);
+    ecs_entity_t TagB = ecs_entity(world, { .name = "TagB" });
+    ecs_add_pair(world, TagB, EcsOnInstantiate, EcsInherit);
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_id(world, Rel, EcsExclusive);
+    ecs_add_pair(world, Rel, EcsOnInstantiate, EcsInherit);
 
     ecs_entity_t b = ecs_new(world);
     ecs_add_pair(world, b, Rel, TagA);

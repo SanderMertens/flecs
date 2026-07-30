@@ -121,11 +121,11 @@ ecs_entity_t ecs_map_type_init(
 void flecs_meta_map_init(
     ecs_world_t *world)
 {
+    ecs_entity_t map_component = ecs_entity(world, { .id = ecs_id(EcsMap),
+        .name = "map", .symbol = "EcsMap" });
+    ecs_add_pair(world, map_component, EcsOnInstantiate, EcsDontInherit);
     ecs_component(world, {
-        .entity = ecs_entity(world, { .id = ecs_id(EcsMap),
-            .name = "map", .symbol = "EcsMap",
-            .add = ecs_ids(ecs_pair(EcsOnInstantiate, EcsDontInherit))
-        }),
+        .entity = map_component,
         .type.size = sizeof(EcsMap),
         .type.alignment = ECS_ALIGNOF(EcsMap)
     });

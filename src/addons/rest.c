@@ -2372,7 +2372,8 @@ void FlecsRestImport(
     });
 
     ecs_system(world, {
-        .entity = ecs_entity(world, { .name = "DequeueRest", .add = ecs_ids( ecs_dependson(EcsPostFrame)) }),
+        .entity = ecs_entity(world, { .name = "DequeueRest" }),
+        .phase = EcsPostFrame,
         .query.terms = {
             { .id = ecs_id(EcsRest) },
         },

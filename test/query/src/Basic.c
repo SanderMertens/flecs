@@ -7595,9 +7595,12 @@ void Basic_oneof_wildcard(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Parent);
-    ECS_ENTITY(world, Rel, (OneOf, Parent));
-    ECS_ENTITY(world, ObjA, (ChildOf, Parent));
-    ECS_ENTITY(world, ObjB, (ChildOf, Parent));
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_pair(world, Rel, EcsOneOf, Parent);
+    ecs_entity_t ObjA = ecs_entity(world, { .name = "ObjA" });
+    ecs_add_pair(world, ObjA, EcsChildOf, Parent);
+    ecs_entity_t ObjB = ecs_entity(world, { .name = "ObjB" });
+    ecs_add_pair(world, ObjB, EcsChildOf, Parent);
 
     ecs_entity_t e1 = ecs_new_w_pair(world, Rel, ObjA);
     test_assert( ecs_has_pair(world, e1, Rel, ObjA));
@@ -7635,9 +7638,12 @@ void Basic_oneof_any(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Parent);
-    ECS_ENTITY(world, Rel, (OneOf, Parent));
-    ECS_ENTITY(world, ObjA, (ChildOf, Parent));
-    ECS_ENTITY(world, ObjB, (ChildOf, Parent));
+    ecs_entity_t Rel = ecs_entity(world, { .name = "Rel" });
+    ecs_add_pair(world, Rel, EcsOneOf, Parent);
+    ecs_entity_t ObjA = ecs_entity(world, { .name = "ObjA" });
+    ecs_add_pair(world, ObjA, EcsChildOf, Parent);
+    ecs_entity_t ObjB = ecs_entity(world, { .name = "ObjB" });
+    ecs_add_pair(world, ObjB, EcsChildOf, Parent);
 
     ecs_entity_t e1 = ecs_new_w_pair(world, Rel, ObjA);
     test_assert( ecs_has_pair(world, e1, Rel, ObjA));

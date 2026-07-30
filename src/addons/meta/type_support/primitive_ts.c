@@ -461,11 +461,11 @@ ecs_entity_t ecs_primitive_init(
 void flecs_meta_primitives_init(
     ecs_world_t *world)
 {
+    ecs_entity_t primitive = ecs_entity(world, { .id = ecs_id(EcsPrimitive),
+        .name = "primitive", .symbol = "EcsPrimitive" });
+    ecs_add_pair(world, primitive, EcsOnInstantiate, EcsDontInherit);
     ecs_component(world, {
-        .entity = ecs_entity(world, { .id = ecs_id(EcsPrimitive),
-            .name = "primitive", .symbol = "EcsPrimitive",
-            .add = ecs_ids(ecs_pair(EcsOnInstantiate, EcsDontInherit))
-        }),
+        .entity = primitive,
         .type.size = sizeof(EcsPrimitive),
         .type.alignment = ECS_ALIGNOF(EcsPrimitive)
     });

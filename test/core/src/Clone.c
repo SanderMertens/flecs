@@ -81,7 +81,9 @@ void Clone_2_component(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_ENTITY(world, e1, Position, Velocity);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add(world, e1, Position);
+    ecs_add(world, e1, Velocity);
     test_assert(e1 != 0);
 
     ecs_entity_t e2 = ecs_clone(world, 0, e1, false);
@@ -108,7 +110,10 @@ void Clone_3_component(void) {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
 
-    ECS_ENTITY(world, e1, Position, Velocity, Mass);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add(world, e1, Position);
+    ecs_add(world, e1, Velocity);
+    ecs_add(world, e1, Mass);
     test_assert(e1 != 0);
 
     ecs_entity_t e2 = ecs_clone(world, 0, e1, false);
@@ -345,7 +350,7 @@ void Clone_1_component_w_lifecycle(void) {
 void Clone_tag(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Tag, 0);
+    ecs_entity_t Tag = ecs_entity(world, { .name = "Tag" });
 
     ecs_entity_t e1 = ecs_new_w_id(world, Tag);
     test_assert(e1 != 0);
@@ -363,7 +368,7 @@ void Clone_tag(void) {
 void Clone_tag_w_value(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Tag, 0);
+    ecs_entity_t Tag = ecs_entity(world, { .name = "Tag" });
 
     ecs_entity_t e1 = ecs_new_w_id(world, Tag);
     test_assert(e1 != 0);
@@ -381,9 +386,11 @@ void Clone_tag_w_value(void) {
 void Clone_1_tag_1_component(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Tag, 0);
+    ecs_entity_t Tag = ecs_entity(world, { .name = "Tag" });
     ECS_COMPONENT(world, Position);
-    ECS_ENTITY(world, e1, Position, Tag);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add(world, e1, Position);
+    ecs_add_id(world, e1, Tag);
 
     ecs_set(world, e1, Position, {10, 20});
 
@@ -403,7 +410,8 @@ void Clone_1_tag_1_component(void) {
 void Clone_1_tag_1_component_w_value(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Tag, 0);
+    ecs_entity_t Tag = ecs_entity(world, { .name = "Tag" });
+    ecs_entity_t ecs_id(Tag) = Tag;
     ECS_COMPONENT(world, Position);
 
     ecs_entity_t e1 = ecs_new(world);

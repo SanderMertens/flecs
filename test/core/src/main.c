@@ -95,18 +95,11 @@ void Entity_init_id(void);
 void Entity_init_id_exceed_32_bits(void);
 void Entity_init_id_name(void);
 void Entity_init_id_path(void);
-void Entity_init_id_add_1_comp(void);
-void Entity_init_id_add_2_comp(void);
 void Entity_init_id_w_scope(void);
 void Entity_init_id_name_w_scope(void);
 void Entity_init_id_path_w_scope(void);
 void Entity_init_id_fullpath_w_scope(void);
 void Entity_init_id_fullpath_w_scope_existing(void);
-void Entity_init_id_name_1_comp(void);
-void Entity_init_id_name_2_comp(void);
-void Entity_init_id_name_2_comp_w_scope(void);
-void Entity_id_add_1_comp(void);
-void Entity_id_add_2_comp(void);
 void Entity_init_id_path_w_sep(void);
 void Entity_find_id_name(void);
 void Entity_find_w_existing_id_name(void);
@@ -121,8 +114,6 @@ void Entity_find_id_name_mismatch(void);
 void Entity_find_id_name_mismatch_w_scope(void);
 void Entity_find_id_path_mismatch(void);
 void Entity_find_id_path_mismatch_w_scope(void);
-void Entity_find_id_add_1_comp(void);
-void Entity_find_id_add_2_comp(void);
 void Entity_init_w_scope_name(void);
 void Entity_init_w_core_name(void);
 void Entity_init_w_with(void);
@@ -209,34 +200,11 @@ void Entity_get_version_after_reuse(void);
 void Entity_add_ids_w_on_add(void);
 void Entity_add_ids_w_cmd_in_observer(void);
 void Entity_entity_init_existing_no_sep(void);
-void Entity_entity_init_w_set_1_comp(void);
-void Entity_entity_init_w_set_2_comp(void);
-void Entity_entity_init_w_set_1_comp_1_tag(void);
-void Entity_entity_init_w_set_2_comp_2_tag(void);
-void Entity_entity_init_w_set_1_comp_w_name(void);
-void Entity_entity_init_w_set_1_comp_existing(void);
-void Entity_entity_init_w_set_1_comp_existing_empty(void);
-void Entity_entity_init_w_set_1_comp_1_tag_w_set(void);
-void Entity_entity_init_w_set_w_hook(void);
-void Entity_entity_init_w_set_w_observer(void);
-void Entity_entity_init_w_set_1_comp_defer(void);
-void Entity_entity_init_w_set_2_comp_defer(void);
-void Entity_entity_init_w_set_1_comp_1_tag_defer(void);
-void Entity_entity_init_w_set_2_comp_2_tag_defer(void);
-void Entity_entity_init_w_set_1_comp_w_name_defer(void);
-void Entity_entity_init_w_set_1_comp_existing_defer(void);
-void Entity_entity_init_w_set_1_comp_existing_empty_defer(void);
-void Entity_entity_init_w_set_1_comp_1_tag_w_set_defer(void);
-void Entity_entity_init_w_set_1_comp_suspend_defer(void);
 void Entity_insert_1_comp(void);
 void Entity_insert_2_comp(void);
 void Entity_insert_1_comp_1_tag(void);
 void Entity_entity_w_parent(void);
 void Entity_entity_w_parent_w_name(void);
-void Entity_entity_w_parent_w_add(void);
-void Entity_entity_w_parent_w_add_w_parent(void);
-void Entity_entity_w_parent_w_set(void);
-void Entity_entity_w_parent_w_set_w_parent(void);
 void Entity_entity_w_new_id_and_double_dot(void);
 void Entity_entity_w_existing_id_and_double_dot(void);
 void Entity_entity_w_large_id_name(void);
@@ -2422,7 +2390,6 @@ void TriggerOnAdd_2_systems_w_table_creation(void);
 void TriggerOnAdd_2_systems_w_table_creation_in_progress(void);
 void TriggerOnAdd_sys_context(void);
 void TriggerOnAdd_get_sys_context_from_param(void);
-void TriggerOnAdd_remove_added_component_in_on_add_w_set(void);
 void TriggerOnAdd_on_add_in_on_add(void);
 void TriggerOnAdd_on_remove_in_on_add(void);
 void TriggerOnAdd_on_set_in_on_add(void);
@@ -2984,8 +2951,6 @@ void Type_setup(void);
 void Type_type_of_1_tostr(void);
 void Type_type_of_2_tostr(void);
 void Type_type_of_2_tostr_no_id(void);
-void Type_invalid_entity_type_expression(void);
-void Type_invalid_system_type_expression(void);
 void Type_get_type(void);
 void Type_get_type_from_empty(void);
 void Type_get_type_from_0(void);
@@ -3002,8 +2967,6 @@ void Type_entity_str_small_buffer(void);
 void Type_role_pair_str(void);
 void Type_role_owned_str(void);
 void Type_role_disabled_str(void);
-void Type_large_type_expr(void);
-void Type_large_type_expr_limit(void);
 
 // Testsuite 'Commands'
 void Commands_defer_ensure_dont_fragment_w_set(void);
@@ -3736,14 +3699,6 @@ bake_test_case Entity_testcases[] = {
         Entity_init_id_path
     },
     {
-        "init_id_add_1_comp",
-        Entity_init_id_add_1_comp
-    },
-    {
-        "init_id_add_2_comp",
-        Entity_init_id_add_2_comp
-    },
-    {
         "init_id_w_scope",
         Entity_init_id_w_scope
     },
@@ -3762,26 +3717,6 @@ bake_test_case Entity_testcases[] = {
     {
         "init_id_fullpath_w_scope_existing",
         Entity_init_id_fullpath_w_scope_existing
-    },
-    {
-        "init_id_name_1_comp",
-        Entity_init_id_name_1_comp
-    },
-    {
-        "init_id_name_2_comp",
-        Entity_init_id_name_2_comp
-    },
-    {
-        "init_id_name_2_comp_w_scope",
-        Entity_init_id_name_2_comp_w_scope
-    },
-    {
-        "id_add_1_comp",
-        Entity_id_add_1_comp
-    },
-    {
-        "id_add_2_comp",
-        Entity_id_add_2_comp
     },
     {
         "init_id_path_w_sep",
@@ -3838,14 +3773,6 @@ bake_test_case Entity_testcases[] = {
     {
         "find_id_path_mismatch_w_scope",
         Entity_find_id_path_mismatch_w_scope
-    },
-    {
-        "find_id_add_1_comp",
-        Entity_find_id_add_1_comp
-    },
-    {
-        "find_id_add_2_comp",
-        Entity_find_id_add_2_comp
     },
     {
         "init_w_scope_name",
@@ -4192,82 +4119,6 @@ bake_test_case Entity_testcases[] = {
         Entity_entity_init_existing_no_sep
     },
     {
-        "entity_init_w_set_1_comp",
-        Entity_entity_init_w_set_1_comp
-    },
-    {
-        "entity_init_w_set_2_comp",
-        Entity_entity_init_w_set_2_comp
-    },
-    {
-        "entity_init_w_set_1_comp_1_tag",
-        Entity_entity_init_w_set_1_comp_1_tag
-    },
-    {
-        "entity_init_w_set_2_comp_2_tag",
-        Entity_entity_init_w_set_2_comp_2_tag
-    },
-    {
-        "entity_init_w_set_1_comp_w_name",
-        Entity_entity_init_w_set_1_comp_w_name
-    },
-    {
-        "entity_init_w_set_1_comp_existing",
-        Entity_entity_init_w_set_1_comp_existing
-    },
-    {
-        "entity_init_w_set_1_comp_existing_empty",
-        Entity_entity_init_w_set_1_comp_existing_empty
-    },
-    {
-        "entity_init_w_set_1_comp_1_tag_w_set",
-        Entity_entity_init_w_set_1_comp_1_tag_w_set
-    },
-    {
-        "entity_init_w_set_w_hook",
-        Entity_entity_init_w_set_w_hook
-    },
-    {
-        "entity_init_w_set_w_observer",
-        Entity_entity_init_w_set_w_observer
-    },
-    {
-        "entity_init_w_set_1_comp_defer",
-        Entity_entity_init_w_set_1_comp_defer
-    },
-    {
-        "entity_init_w_set_2_comp_defer",
-        Entity_entity_init_w_set_2_comp_defer
-    },
-    {
-        "entity_init_w_set_1_comp_1_tag_defer",
-        Entity_entity_init_w_set_1_comp_1_tag_defer
-    },
-    {
-        "entity_init_w_set_2_comp_2_tag_defer",
-        Entity_entity_init_w_set_2_comp_2_tag_defer
-    },
-    {
-        "entity_init_w_set_1_comp_w_name_defer",
-        Entity_entity_init_w_set_1_comp_w_name_defer
-    },
-    {
-        "entity_init_w_set_1_comp_existing_defer",
-        Entity_entity_init_w_set_1_comp_existing_defer
-    },
-    {
-        "entity_init_w_set_1_comp_existing_empty_defer",
-        Entity_entity_init_w_set_1_comp_existing_empty_defer
-    },
-    {
-        "entity_init_w_set_1_comp_1_tag_w_set_defer",
-        Entity_entity_init_w_set_1_comp_1_tag_w_set_defer
-    },
-    {
-        "entity_init_w_set_1_comp_suspend_defer",
-        Entity_entity_init_w_set_1_comp_suspend_defer
-    },
-    {
         "insert_1_comp",
         Entity_insert_1_comp
     },
@@ -4286,22 +4137,6 @@ bake_test_case Entity_testcases[] = {
     {
         "entity_w_parent_w_name",
         Entity_entity_w_parent_w_name
-    },
-    {
-        "entity_w_parent_w_add",
-        Entity_entity_w_parent_w_add
-    },
-    {
-        "entity_w_parent_w_add_w_parent",
-        Entity_entity_w_parent_w_add_w_parent
-    },
-    {
-        "entity_w_parent_w_set",
-        Entity_entity_w_parent_w_set
-    },
-    {
-        "entity_w_parent_w_set_w_parent",
-        Entity_entity_w_parent_w_set_w_parent
     },
     {
         "entity_w_new_id_and_double_dot",
@@ -12863,10 +12698,6 @@ bake_test_case TriggerOnAdd_testcases[] = {
         TriggerOnAdd_get_sys_context_from_param
     },
     {
-        "remove_added_component_in_on_add_w_set",
-        TriggerOnAdd_remove_added_component_in_on_add_w_set
-    },
-    {
         "on_add_in_on_add",
         TriggerOnAdd_on_add_in_on_add
     },
@@ -15059,14 +14890,6 @@ bake_test_case Type_testcases[] = {
         Type_type_of_2_tostr_no_id
     },
     {
-        "invalid_entity_type_expression",
-        Type_invalid_entity_type_expression
-    },
-    {
-        "invalid_system_type_expression",
-        Type_invalid_system_type_expression
-    },
-    {
         "get_type",
         Type_get_type
     },
@@ -15129,14 +14952,6 @@ bake_test_case Type_testcases[] = {
     {
         "role_disabled_str",
         Type_role_disabled_str
-    },
-    {
-        "large_type_expr",
-        Type_large_type_expr
-    },
-    {
-        "large_type_expr_limit",
-        Type_large_type_expr_limit
     }
 };
 
@@ -16661,7 +16476,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        151,
+        119,
         Entity_testcases
     },
     {
@@ -16866,7 +16681,7 @@ static bake_test_suite suites[] = {
         "TriggerOnAdd",
         TriggerOnAdd_setup,
         NULL,
-        30,
+        29,
         TriggerOnAdd_testcases
     },
     {
@@ -16922,7 +16737,7 @@ static bake_test_suite suites[] = {
         "Type",
         Type_setup,
         NULL,
-        23,
+        19,
         Type_testcases
     },
     {

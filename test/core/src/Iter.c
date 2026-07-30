@@ -1156,7 +1156,9 @@ void Iter_worker_iter_w_task_query(void) {
 void Iter_worker_iter_w_singleton(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Singleton, Singleton);
+    ecs_entity_t Singleton = ecs_entity(world, { .name = "Singleton" });
+    ecs_entity_t ecs_id(Singleton) = Singleton;
+    ecs_add_id(world, Singleton, EcsSingleton);
     ECS_COMPONENT(world, Position);
 
     ecs_singleton_add(world, Singleton);
@@ -1204,7 +1206,9 @@ void Iter_worker_iter_w_singleton(void) {
 void Iter_worker_iter_w_singleton_instanced(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Singleton, Singleton);
+    ecs_entity_t Singleton = ecs_entity(world, { .name = "Singleton" });
+    ecs_entity_t ecs_id(Singleton) = Singleton;
+    ecs_add_id(world, Singleton, EcsSingleton);
     ECS_COMPONENT(world, Position);
 
     ecs_singleton_add(world, Singleton);
@@ -1311,7 +1315,9 @@ void Iter_worker_iter_w_singleton_component_instanced(void) {
 void Iter_paged_iter_w_singleton(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Singleton, Singleton);
+    ecs_entity_t Singleton = ecs_entity(world, { .name = "Singleton" });
+    ecs_entity_t ecs_id(Singleton) = Singleton;
+    ecs_add_id(world, Singleton, EcsSingleton);
     ECS_COMPONENT(world, Position);
 
     ecs_singleton_add(world, Singleton);
@@ -1358,7 +1364,9 @@ void Iter_paged_iter_w_singleton(void) {
 void Iter_paged_iter_w_singleton_instanced(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Singleton, Singleton);
+    ecs_entity_t Singleton = ecs_entity(world, { .name = "Singleton" });
+    ecs_entity_t ecs_id(Singleton) = Singleton;
+    ecs_add_id(world, Singleton, EcsSingleton);
     ECS_COMPONENT(world, Position);
 
     ecs_singleton_add(world, Singleton);
@@ -1512,13 +1520,29 @@ void Iter_page_iter_w_offset_skip_1_archetype(void) {
     ECS_COMPONENT(world, Mass);
     ECS_COMPONENT(world, Rotation);
 
-    ECS_ENTITY(world, e1, Position, Velocity);
-    ECS_ENTITY(world, e2, Position, Velocity);
-    ECS_ENTITY(world, e3, Position, Velocity);
-    ECS_ENTITY(world, e4, Position, Velocity, Mass);
-    ECS_ENTITY(world, e5, Position, Velocity, Mass);
-    ECS_ENTITY(world, e6, Position, Velocity, Rotation);
-    ECS_ENTITY(world, e7, Position);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add(world, e1, Position);
+    ecs_add(world, e1, Velocity);
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_add(world, e2, Position);
+    ecs_add(world, e2, Velocity);
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
+    ecs_add(world, e3, Position);
+    ecs_add(world, e3, Velocity);
+    ecs_entity_t e4 = ecs_entity(world, { .name = "e4" });
+    ecs_add(world, e4, Position);
+    ecs_add(world, e4, Velocity);
+    ecs_add(world, e4, Mass);
+    ecs_entity_t e5 = ecs_entity(world, { .name = "e5" });
+    ecs_add(world, e5, Position);
+    ecs_add(world, e5, Velocity);
+    ecs_add(world, e5, Mass);
+    ecs_entity_t e6 = ecs_entity(world, { .name = "e6" });
+    ecs_add(world, e6, Position);
+    ecs_add(world, e6, Velocity);
+    ecs_add(world, e6, Rotation);
+    ecs_entity_t e7 = ecs_entity(world, { .name = "e7" });
+    ecs_add(world, e7, Position);
 
     ECS_QUERY(world, q, Position, Velocity);
 
@@ -1563,13 +1587,29 @@ void Iter_page_iter_w_offset_skip_1_archetype_plus_one(void) {
     ECS_COMPONENT(world, Mass);
     ECS_COMPONENT(world, Rotation);
 
-    ECS_ENTITY(world, e1, Position, Velocity);
-    ECS_ENTITY(world, e2, Position, Velocity);
-    ECS_ENTITY(world, e3, Position, Velocity);
-    ECS_ENTITY(world, e4, Position, Velocity, Mass);
-    ECS_ENTITY(world, e5, Position, Velocity, Mass);
-    ECS_ENTITY(world, e6, Position, Velocity, Rotation);
-    ECS_ENTITY(world, e7, Position);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add(world, e1, Position);
+    ecs_add(world, e1, Velocity);
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_add(world, e2, Position);
+    ecs_add(world, e2, Velocity);
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
+    ecs_add(world, e3, Position);
+    ecs_add(world, e3, Velocity);
+    ecs_entity_t e4 = ecs_entity(world, { .name = "e4" });
+    ecs_add(world, e4, Position);
+    ecs_add(world, e4, Velocity);
+    ecs_add(world, e4, Mass);
+    ecs_entity_t e5 = ecs_entity(world, { .name = "e5" });
+    ecs_add(world, e5, Position);
+    ecs_add(world, e5, Velocity);
+    ecs_add(world, e5, Mass);
+    ecs_entity_t e6 = ecs_entity(world, { .name = "e6" });
+    ecs_add(world, e6, Position);
+    ecs_add(world, e6, Velocity);
+    ecs_add(world, e6, Rotation);
+    ecs_entity_t e7 = ecs_entity(world, { .name = "e7" });
+    ecs_add(world, e7, Position);
 
     ECS_QUERY(world, q, Position, Velocity);
 
@@ -1613,13 +1653,29 @@ void Iter_page_iter_w_offset_skip_2_archetypes(void) {
     ECS_COMPONENT(world, Mass);
     ECS_COMPONENT(world, Rotation);
 
-    ECS_ENTITY(world, e1, Position, Velocity);
-    ECS_ENTITY(world, e2, Position, Velocity);
-    ECS_ENTITY(world, e3, Position, Velocity);
-    ECS_ENTITY(world, e4, Position, Velocity, Mass);
-    ECS_ENTITY(world, e5, Position, Velocity, Mass);
-    ECS_ENTITY(world, e6, Position, Velocity, Rotation);
-    ECS_ENTITY(world, e7, Position);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add(world, e1, Position);
+    ecs_add(world, e1, Velocity);
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_add(world, e2, Position);
+    ecs_add(world, e2, Velocity);
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
+    ecs_add(world, e3, Position);
+    ecs_add(world, e3, Velocity);
+    ecs_entity_t e4 = ecs_entity(world, { .name = "e4" });
+    ecs_add(world, e4, Position);
+    ecs_add(world, e4, Velocity);
+    ecs_add(world, e4, Mass);
+    ecs_entity_t e5 = ecs_entity(world, { .name = "e5" });
+    ecs_add(world, e5, Position);
+    ecs_add(world, e5, Velocity);
+    ecs_add(world, e5, Mass);
+    ecs_entity_t e6 = ecs_entity(world, { .name = "e6" });
+    ecs_add(world, e6, Position);
+    ecs_add(world, e6, Velocity);
+    ecs_add(world, e6, Rotation);
+    ecs_entity_t e7 = ecs_entity(world, { .name = "e7" });
+    ecs_add(world, e7, Position);
 
     ECS_QUERY(world, q, Position, Velocity);
 
@@ -1657,13 +1713,29 @@ void Iter_page_iter_w_limit_skip_1_archetype(void) {
     ECS_COMPONENT(world, Mass);
     ECS_COMPONENT(world, Rotation);
 
-    ECS_ENTITY(world, e1, Position, Velocity);
-    ECS_ENTITY(world, e2, Position, Velocity);
-    ECS_ENTITY(world, e3, Position, Velocity);
-    ECS_ENTITY(world, e4, Position, Velocity, Mass);
-    ECS_ENTITY(world, e5, Position, Velocity, Mass);
-    ECS_ENTITY(world, e6, Position, Velocity, Rotation);
-    ECS_ENTITY(world, e7, Position);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add(world, e1, Position);
+    ecs_add(world, e1, Velocity);
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_add(world, e2, Position);
+    ecs_add(world, e2, Velocity);
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
+    ecs_add(world, e3, Position);
+    ecs_add(world, e3, Velocity);
+    ecs_entity_t e4 = ecs_entity(world, { .name = "e4" });
+    ecs_add(world, e4, Position);
+    ecs_add(world, e4, Velocity);
+    ecs_add(world, e4, Mass);
+    ecs_entity_t e5 = ecs_entity(world, { .name = "e5" });
+    ecs_add(world, e5, Position);
+    ecs_add(world, e5, Velocity);
+    ecs_add(world, e5, Mass);
+    ecs_entity_t e6 = ecs_entity(world, { .name = "e6" });
+    ecs_add(world, e6, Position);
+    ecs_add(world, e6, Velocity);
+    ecs_add(world, e6, Rotation);
+    ecs_entity_t e7 = ecs_entity(world, { .name = "e7" });
+    ecs_add(world, e7, Position);
 
     ECS_QUERY(world, q, Position, Velocity);
 
@@ -1710,13 +1782,29 @@ void Iter_page_iter_w_limit_skip_1_archetype_minus_one(void) {
     ECS_COMPONENT(world, Mass);
     ECS_COMPONENT(world, Rotation);
 
-    ECS_ENTITY(world, e1, Position, Velocity);
-    ECS_ENTITY(world, e2, Position, Velocity);
-    ECS_ENTITY(world, e3, Position, Velocity);
-    ECS_ENTITY(world, e4, Position, Velocity, Mass);
-    ECS_ENTITY(world, e5, Position, Velocity, Mass);
-    ECS_ENTITY(world, e6, Position, Velocity, Rotation);
-    ECS_ENTITY(world, e7, Position);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add(world, e1, Position);
+    ecs_add(world, e1, Velocity);
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_add(world, e2, Position);
+    ecs_add(world, e2, Velocity);
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
+    ecs_add(world, e3, Position);
+    ecs_add(world, e3, Velocity);
+    ecs_entity_t e4 = ecs_entity(world, { .name = "e4" });
+    ecs_add(world, e4, Position);
+    ecs_add(world, e4, Velocity);
+    ecs_add(world, e4, Mass);
+    ecs_entity_t e5 = ecs_entity(world, { .name = "e5" });
+    ecs_add(world, e5, Position);
+    ecs_add(world, e5, Velocity);
+    ecs_add(world, e5, Mass);
+    ecs_entity_t e6 = ecs_entity(world, { .name = "e6" });
+    ecs_add(world, e6, Position);
+    ecs_add(world, e6, Velocity);
+    ecs_add(world, e6, Rotation);
+    ecs_entity_t e7 = ecs_entity(world, { .name = "e7" });
+    ecs_add(world, e7, Position);
 
     ECS_QUERY(world, q, Position, Velocity);
 
@@ -1762,13 +1850,29 @@ void Iter_page_iter_w_limit_skip_2_archetypes(void) {
     ECS_COMPONENT(world, Mass);
     ECS_COMPONENT(world, Rotation);
 
-    ECS_ENTITY(world, e1, Position, Velocity);
-    ECS_ENTITY(world, e2, Position, Velocity);
-    ECS_ENTITY(world, e3, Position, Velocity);
-    ECS_ENTITY(world, e4, Position, Velocity, Mass);
-    ECS_ENTITY(world, e5, Position, Velocity, Mass);
-    ECS_ENTITY(world, e6, Position, Velocity, Rotation);
-    ECS_ENTITY(world, e7, Position);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add(world, e1, Position);
+    ecs_add(world, e1, Velocity);
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_add(world, e2, Position);
+    ecs_add(world, e2, Velocity);
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
+    ecs_add(world, e3, Position);
+    ecs_add(world, e3, Velocity);
+    ecs_entity_t e4 = ecs_entity(world, { .name = "e4" });
+    ecs_add(world, e4, Position);
+    ecs_add(world, e4, Velocity);
+    ecs_add(world, e4, Mass);
+    ecs_entity_t e5 = ecs_entity(world, { .name = "e5" });
+    ecs_add(world, e5, Position);
+    ecs_add(world, e5, Velocity);
+    ecs_add(world, e5, Mass);
+    ecs_entity_t e6 = ecs_entity(world, { .name = "e6" });
+    ecs_add(world, e6, Position);
+    ecs_add(world, e6, Velocity);
+    ecs_add(world, e6, Rotation);
+    ecs_entity_t e7 = ecs_entity(world, { .name = "e7" });
+    ecs_add(world, e7, Position);
 
     ECS_QUERY(world, q, Position, Velocity);
 
@@ -1813,13 +1917,29 @@ void Iter_page_iter_w_offset_1_limit_max(void) {
     ECS_COMPONENT(world, Mass);
     ECS_COMPONENT(world, Rotation);
 
-    ECS_ENTITY(world, e1, Position, Velocity);
-    ECS_ENTITY(world, e2, Position, Velocity);
-    ECS_ENTITY(world, e3, Position, Velocity);
-    ECS_ENTITY(world, e4, Position, Velocity, Mass);
-    ECS_ENTITY(world, e5, Position, Velocity, Mass);
-    ECS_ENTITY(world, e6, Position, Velocity, Rotation);
-    ECS_ENTITY(world, e7, Position);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add(world, e1, Position);
+    ecs_add(world, e1, Velocity);
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_add(world, e2, Position);
+    ecs_add(world, e2, Velocity);
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
+    ecs_add(world, e3, Position);
+    ecs_add(world, e3, Velocity);
+    ecs_entity_t e4 = ecs_entity(world, { .name = "e4" });
+    ecs_add(world, e4, Position);
+    ecs_add(world, e4, Velocity);
+    ecs_add(world, e4, Mass);
+    ecs_entity_t e5 = ecs_entity(world, { .name = "e5" });
+    ecs_add(world, e5, Position);
+    ecs_add(world, e5, Velocity);
+    ecs_add(world, e5, Mass);
+    ecs_entity_t e6 = ecs_entity(world, { .name = "e6" });
+    ecs_add(world, e6, Position);
+    ecs_add(world, e6, Velocity);
+    ecs_add(world, e6, Rotation);
+    ecs_entity_t e7 = ecs_entity(world, { .name = "e7" });
+    ecs_add(world, e7, Position);
 
     ECS_QUERY(world, q, Position, Velocity);
 
@@ -1866,13 +1986,29 @@ void Iter_page_iter_w_offset_1_limit_minus_1(void) {
     ECS_COMPONENT(world, Mass);
     ECS_COMPONENT(world, Rotation);
 
-    ECS_ENTITY(world, e1, Position, Velocity);
-    ECS_ENTITY(world, e2, Position, Velocity);
-    ECS_ENTITY(world, e3, Position, Velocity);
-    ECS_ENTITY(world, e4, Position, Velocity, Mass);
-    ECS_ENTITY(world, e5, Position, Velocity, Mass);
-    ECS_ENTITY(world, e6, Position, Velocity, Rotation);
-    ECS_ENTITY(world, e7, Position);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add(world, e1, Position);
+    ecs_add(world, e1, Velocity);
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_add(world, e2, Position);
+    ecs_add(world, e2, Velocity);
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
+    ecs_add(world, e3, Position);
+    ecs_add(world, e3, Velocity);
+    ecs_entity_t e4 = ecs_entity(world, { .name = "e4" });
+    ecs_add(world, e4, Position);
+    ecs_add(world, e4, Velocity);
+    ecs_add(world, e4, Mass);
+    ecs_entity_t e5 = ecs_entity(world, { .name = "e5" });
+    ecs_add(world, e5, Position);
+    ecs_add(world, e5, Velocity);
+    ecs_add(world, e5, Mass);
+    ecs_entity_t e6 = ecs_entity(world, { .name = "e6" });
+    ecs_add(world, e6, Position);
+    ecs_add(world, e6, Velocity);
+    ecs_add(world, e6, Rotation);
+    ecs_entity_t e7 = ecs_entity(world, { .name = "e7" });
+    ecs_add(world, e7, Position);
 
     ECS_QUERY(world, q, Position, Velocity);
 
@@ -1918,13 +2054,29 @@ void Iter_page_iter_w_offset_2_type_limit_max(void) {
     ECS_COMPONENT(world, Mass);
     ECS_COMPONENT(world, Rotation);
 
-    ECS_ENTITY(world, e1, Position, Velocity);
-    ECS_ENTITY(world, e2, Position, Velocity);
-    ECS_ENTITY(world, e3, Position, Velocity);
-    ECS_ENTITY(world, e4, Position, Velocity, Mass);
-    ECS_ENTITY(world, e5, Position, Velocity, Mass);
-    ECS_ENTITY(world, e6, Position, Velocity, Rotation);
-    ECS_ENTITY(world, e7, Position);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add(world, e1, Position);
+    ecs_add(world, e1, Velocity);
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_add(world, e2, Position);
+    ecs_add(world, e2, Velocity);
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
+    ecs_add(world, e3, Position);
+    ecs_add(world, e3, Velocity);
+    ecs_entity_t e4 = ecs_entity(world, { .name = "e4" });
+    ecs_add(world, e4, Position);
+    ecs_add(world, e4, Velocity);
+    ecs_add(world, e4, Mass);
+    ecs_entity_t e5 = ecs_entity(world, { .name = "e5" });
+    ecs_add(world, e5, Position);
+    ecs_add(world, e5, Velocity);
+    ecs_add(world, e5, Mass);
+    ecs_entity_t e6 = ecs_entity(world, { .name = "e6" });
+    ecs_add(world, e6, Position);
+    ecs_add(world, e6, Velocity);
+    ecs_add(world, e6, Rotation);
+    ecs_entity_t e7 = ecs_entity(world, { .name = "e7" });
+    ecs_add(world, e7, Position);
 
     ECS_QUERY(world, q, Position, Velocity);
 
@@ -1969,13 +2121,29 @@ void Iter_page_iter_w_offset_2_type_limit_minus_1(void) {
     ECS_COMPONENT(world, Mass);
     ECS_COMPONENT(world, Rotation);
 
-    ECS_ENTITY(world, e1, Position, Velocity);
-    ECS_ENTITY(world, e2, Position, Velocity);
-    ECS_ENTITY(world, e3, Position, Velocity);
-    ECS_ENTITY(world, e4, Position, Velocity, Mass);
-    ECS_ENTITY(world, e5, Position, Velocity, Mass);
-    ECS_ENTITY(world, e6, Position, Velocity, Rotation);
-    ECS_ENTITY(world, e7, Position);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add(world, e1, Position);
+    ecs_add(world, e1, Velocity);
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_add(world, e2, Position);
+    ecs_add(world, e2, Velocity);
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
+    ecs_add(world, e3, Position);
+    ecs_add(world, e3, Velocity);
+    ecs_entity_t e4 = ecs_entity(world, { .name = "e4" });
+    ecs_add(world, e4, Position);
+    ecs_add(world, e4, Velocity);
+    ecs_add(world, e4, Mass);
+    ecs_entity_t e5 = ecs_entity(world, { .name = "e5" });
+    ecs_add(world, e5, Position);
+    ecs_add(world, e5, Velocity);
+    ecs_add(world, e5, Mass);
+    ecs_entity_t e6 = ecs_entity(world, { .name = "e6" });
+    ecs_add(world, e6, Position);
+    ecs_add(world, e6, Velocity);
+    ecs_add(world, e6, Rotation);
+    ecs_entity_t e7 = ecs_entity(world, { .name = "e7" });
+    ecs_add(world, e7, Position);
 
     ECS_QUERY(world, q, Position, Velocity);
 
@@ -2019,13 +2187,29 @@ void Iter_page_iter_w_limit_1_all_offsets(void) {
     ECS_COMPONENT(world, Mass);
     ECS_COMPONENT(world, Rotation);
 
-    ECS_ENTITY(world, e1, Position, Velocity);
-    ECS_ENTITY(world, e2, Position, Velocity);
-    ECS_ENTITY(world, e3, Position, Velocity);
-    ECS_ENTITY(world, e4, Position, Velocity, Mass);
-    ECS_ENTITY(world, e5, Position, Velocity, Mass);
-    ECS_ENTITY(world, e6, Position, Velocity, Rotation);
-    ECS_ENTITY(world, e7, Position);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add(world, e1, Position);
+    ecs_add(world, e1, Velocity);
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_add(world, e2, Position);
+    ecs_add(world, e2, Velocity);
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
+    ecs_add(world, e3, Position);
+    ecs_add(world, e3, Velocity);
+    ecs_entity_t e4 = ecs_entity(world, { .name = "e4" });
+    ecs_add(world, e4, Position);
+    ecs_add(world, e4, Velocity);
+    ecs_add(world, e4, Mass);
+    ecs_entity_t e5 = ecs_entity(world, { .name = "e5" });
+    ecs_add(world, e5, Position);
+    ecs_add(world, e5, Velocity);
+    ecs_add(world, e5, Mass);
+    ecs_entity_t e6 = ecs_entity(world, { .name = "e6" });
+    ecs_add(world, e6, Position);
+    ecs_add(world, e6, Velocity);
+    ecs_add(world, e6, Rotation);
+    ecs_entity_t e7 = ecs_entity(world, { .name = "e7" });
+    ecs_add(world, e7, Position);
 
     ECS_QUERY(world, q, Position, Velocity);
 
@@ -2078,13 +2262,29 @@ void Iter_page_iter_w_offset_out_of_bounds(void) {
     ECS_COMPONENT(world, Mass);
     ECS_COMPONENT(world, Rotation);
 
-    ECS_ENTITY(world, e1, Position, Velocity);
-    ECS_ENTITY(world, e2, Position, Velocity);
-    ECS_ENTITY(world, e3, Position, Velocity);
-    ECS_ENTITY(world, e4, Position, Velocity, Mass);
-    ECS_ENTITY(world, e5, Position, Velocity, Mass);
-    ECS_ENTITY(world, e6, Position, Velocity, Rotation);
-    ECS_ENTITY(world, e7, Position);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add(world, e1, Position);
+    ecs_add(world, e1, Velocity);
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_add(world, e2, Position);
+    ecs_add(world, e2, Velocity);
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
+    ecs_add(world, e3, Position);
+    ecs_add(world, e3, Velocity);
+    ecs_entity_t e4 = ecs_entity(world, { .name = "e4" });
+    ecs_add(world, e4, Position);
+    ecs_add(world, e4, Velocity);
+    ecs_add(world, e4, Mass);
+    ecs_entity_t e5 = ecs_entity(world, { .name = "e5" });
+    ecs_add(world, e5, Position);
+    ecs_add(world, e5, Velocity);
+    ecs_add(world, e5, Mass);
+    ecs_entity_t e6 = ecs_entity(world, { .name = "e6" });
+    ecs_add(world, e6, Position);
+    ecs_add(world, e6, Velocity);
+    ecs_add(world, e6, Rotation);
+    ecs_entity_t e7 = ecs_entity(world, { .name = "e7" });
+    ecs_add(world, e7, Position);
 
     ECS_QUERY(world, q, Position, Velocity);
 
@@ -2106,13 +2306,29 @@ void Iter_page_iter_w_limit_out_of_bounds(void) {
     ECS_COMPONENT(world, Mass);
     ECS_COMPONENT(world, Rotation);
 
-    ECS_ENTITY(world, e1, Position, Velocity);
-    ECS_ENTITY(world, e2, Position, Velocity);
-    ECS_ENTITY(world, e3, Position, Velocity);
-    ECS_ENTITY(world, e4, Position, Velocity, Mass);
-    ECS_ENTITY(world, e5, Position, Velocity, Mass);
-    ECS_ENTITY(world, e6, Position, Velocity, Rotation);
-    ECS_ENTITY(world, e7, Position);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add(world, e1, Position);
+    ecs_add(world, e1, Velocity);
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_add(world, e2, Position);
+    ecs_add(world, e2, Velocity);
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
+    ecs_add(world, e3, Position);
+    ecs_add(world, e3, Velocity);
+    ecs_entity_t e4 = ecs_entity(world, { .name = "e4" });
+    ecs_add(world, e4, Position);
+    ecs_add(world, e4, Velocity);
+    ecs_add(world, e4, Mass);
+    ecs_entity_t e5 = ecs_entity(world, { .name = "e5" });
+    ecs_add(world, e5, Position);
+    ecs_add(world, e5, Velocity);
+    ecs_add(world, e5, Mass);
+    ecs_entity_t e6 = ecs_entity(world, { .name = "e6" });
+    ecs_add(world, e6, Position);
+    ecs_add(world, e6, Velocity);
+    ecs_add(world, e6, Rotation);
+    ecs_entity_t e7 = ecs_entity(world, { .name = "e7" });
+    ecs_add(world, e7, Position);
 
     ECS_QUERY(world, q, Position, Velocity);
 
@@ -2153,7 +2369,8 @@ void Iter_page_iter_no_match(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_ENTITY(world, e1, Position);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add(world, e1, Position);
 
     ECS_QUERY(world, q, Position, Velocity);
 

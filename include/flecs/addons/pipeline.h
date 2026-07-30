@@ -47,7 +47,7 @@ extern "C" {
 /** Convenience macro to create a forward-declared pipeline.
  * Usage:
  * @code
- * ECS_ENTITY_DECLARE(MyPipeline);
+ * ECS_DECLARE(MyPipeline);
  * ECS_PIPELINE_DEFINE(world, MyPipeline, Update || Physics || Render)
  * @endcode
  */

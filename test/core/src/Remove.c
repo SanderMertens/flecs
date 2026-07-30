@@ -48,7 +48,9 @@ void Remove_1_of_2(void) {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_ENTITY(world, e, Position, Velocity);
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_add(world, e, Position);
+    ecs_add(world, e, Velocity);
     test_assert(e != 0);
 
     ecs_remove(world, e, Position);
@@ -64,7 +66,9 @@ void Remove_2_of_2(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_ENTITY(world, e, Position, Velocity);
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_add(world, e, Position);
+    ecs_add(world, e, Velocity);
     test_assert(e != 0);
 
     ecs_remove(world, e, Position);
@@ -85,7 +89,10 @@ void Remove_2_of_3(void) {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
 
-    ECS_ENTITY(world, e, Position, Velocity, Mass);
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_add(world, e, Position);
+    ecs_add(world, e, Velocity);
+    ecs_add(world, e, Mass);
     test_assert(e != 0);
 
     ecs_remove(world, e, Position);
@@ -107,7 +114,9 @@ void Remove_2_again(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_ENTITY(world, e, Position, Velocity);
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_add(world, e, Position);
+    ecs_add(world, e, Velocity);
     test_assert(e != 0);
 
     ecs_remove(world, e, Position);
@@ -130,7 +139,10 @@ void Remove_2_overlap(void) {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
 
-    ECS_ENTITY(world, e, Position, Velocity, Mass);
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_add(world, e, Position);
+    ecs_add(world, e, Velocity);
+    ecs_add(world, e, Mass);
     test_assert(e != 0);
 
     ecs_remove(world, e, Position);

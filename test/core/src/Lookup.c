@@ -8,7 +8,7 @@ void Lookup_setup(void) {
 void Lookup_lookup(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, MyEntity, 0);
+    ecs_entity_t MyEntity = ecs_entity(world, { .name = "MyEntity" });
 
     ecs_entity_t lookup = ecs_lookup(world, "MyEntity");
     test_assert(lookup != 0);
@@ -20,7 +20,7 @@ void Lookup_lookup(void) {
 void Lookup_lookup_w_null_name(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, MyEntity, 0);
+    ecs_entity_t MyEntity = ecs_entity(world, { .name = "MyEntity" });
 
     /* Ensure this doesn't crash the lookup function */
     ecs_set_name(world, 0, NULL);
@@ -73,8 +73,8 @@ void Lookup_lookup_not_found(void) {
 void Lookup_lookup_child(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Parent1, 0);
-    ECS_ENTITY(world, Parent2, 0);
+    ecs_entity_t Parent1 = ecs_entity(world, { .name = "Parent1" });
+    ecs_entity_t Parent2 = ecs_entity(world, { .name = "Parent2" });
 
     ecs_entity_t e1 = ecs_new_w_pair(world, EcsChildOf, Parent1);
     ecs_set_name(world, e1, "Child");

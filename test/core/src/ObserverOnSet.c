@@ -238,7 +238,8 @@ void ObserverOnSet_set_1_of_2_1_from_base(void) {
     ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
     ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
 
-    ECS_ENTITY(world, Base, Position);
+    ecs_entity_t Base = ecs_entity(world, { .name = "Base" });
+    ecs_add(world, Base, Position);
     ECS_OBSERVER(world, OnPosition, EcsOnSet, Position(self|up IsA), Velocity);
 
     Probe ctx = { 0 };
@@ -277,7 +278,8 @@ void ObserverOnSet_set_1_of_3_1_from_base(void) {
     ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
     ecs_add_pair(world, ecs_id(Mass), EcsOnInstantiate, EcsInherit);
 
-    ECS_ENTITY(world, Base, Position);
+    ecs_entity_t Base = ecs_entity(world, { .name = "Base" });
+    ecs_add(world, Base, Position);
     ECS_OBSERVER(world, OnPosition, EcsOnSet, Position(self|up IsA), Velocity, Mass);
 
     Probe ctx = { 0 };
@@ -336,7 +338,8 @@ void ObserverOnSet_add_base(void) {
     ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
     ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
 
-    ECS_ENTITY(world, Base, Position);
+    ecs_entity_t Base = ecs_entity(world, { .name = "Base" });
+    ecs_add(world, Base, Position);
     ECS_OBSERVER(world, OnPosition, EcsOnSet, Position(self|up IsA), Velocity);
 
     Probe ctx = { 0 };
@@ -367,7 +370,8 @@ void ObserverOnSet_add_base_to_1_overridden(void) {
     ECS_COMPONENT(world, Position);
     ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
-    ECS_ENTITY(world, Base, Position);
+    ecs_entity_t Base = ecs_entity(world, { .name = "Base" });
+    ecs_add(world, Base, Position);
     ECS_OBSERVER(world, OnPosition, EcsOnSet, Position(self|up IsA));
 
     Probe ctx = { 0 };
@@ -391,7 +395,9 @@ void ObserverOnSet_add_base_to_2_overridden(void) {
     ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
     ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
 
-    ECS_ENTITY(world, Base, Position, Velocity);
+    ecs_entity_t Base = ecs_entity(world, { .name = "Base" });
+    ecs_add(world, Base, Position);
+    ecs_add(world, Base, Velocity);
     ECS_OBSERVER(world, OnPosition, EcsOnSet, Position(self|up IsA), Velocity(self|up IsA));
 
     Probe ctx = { 0 };
@@ -416,7 +422,9 @@ void ObserverOnSet_add_base_to_1_of_2_overridden(void) {
     ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
     ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
 
-    ECS_ENTITY(world, Base, Position, Velocity);
+    ecs_entity_t Base = ecs_entity(world, { .name = "Base" });
+    ecs_add(world, Base, Position);
+    ecs_add(world, Base, Velocity);
     ECS_OBSERVER(world, OnPosition, EcsOnSet, Position(self|up IsA));
 
     Probe ctx = { 0 };
@@ -454,7 +462,8 @@ void ObserverOnSet_on_set_after_remove_override(void) {
 
     ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
-    ECS_ENTITY(world, Base, Position);
+    ecs_entity_t Base = ecs_entity(world, { .name = "Base" });
+    ecs_add(world, Base, Position);
     ECS_OBSERVER(world, OnPosition, EcsOnSet, Position);
 
     Probe ctx = { 0 };
@@ -487,7 +496,8 @@ void ObserverOnSet_on_set_after_remove_override_isa_before_add(void) {
 
     ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
-    ECS_ENTITY(world, Base, Position);
+    ecs_entity_t Base = ecs_entity(world, { .name = "Base" });
+    ecs_add(world, Base, Position);
 
     Probe ctx = { 0 };
     ecs_set_ctx(world, &ctx, NULL);
@@ -518,7 +528,8 @@ void ObserverOnSet_on_set_w_override_after_delete(void) {
 
     ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
-    ECS_ENTITY(world, Base, Position);
+    ecs_entity_t Base = ecs_entity(world, { .name = "Base" });
+    ecs_add(world, Base, Position);
 
     Probe ctx = { 0 };
     ecs_set_ctx(world, &ctx, NULL);
@@ -541,7 +552,8 @@ void ObserverOnSet_on_set_w_override_after_clear(void) {
 
     ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
-    ECS_ENTITY(world, Base, Position);
+    ecs_entity_t Base = ecs_entity(world, { .name = "Base" });
+    ecs_add(world, Base, Position);
 
     Probe ctx = { 0 };
     ecs_set_ctx(world, &ctx, NULL);
@@ -564,7 +576,8 @@ void ObserverOnSet_on_set_w_override_after_delete_w_ecs_init(void) {
 
     ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
-    ECS_ENTITY(world, Base, Position);
+    ecs_entity_t Base = ecs_entity(world, { .name = "Base" });
+    ecs_add(world, Base, Position);
 
     Probe ctx = { 0 };
     ecs_set_ctx(world, &ctx, NULL);
@@ -643,7 +656,8 @@ void ObserverOnSet_no_set_after_remove_base(void) {
     ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
     ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
 
-    ECS_ENTITY(world, Base, Position);
+    ecs_entity_t Base = ecs_entity(world, { .name = "Base" });
+    ecs_add(world, Base, Position);
     ECS_OBSERVER(world, OnPosition, EcsOnSet, Position(self|up IsA));
 
     Probe ctx = { 0 };
@@ -686,7 +700,8 @@ void ObserverOnSet_un_set_after_remove_base(void) {
 
     ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
-    ECS_ENTITY(world, Base, Position);
+    ecs_entity_t Base = ecs_entity(world, { .name = "Base" });
+    ecs_add(world, Base, Position);
     ECS_OBSERVER(world, OnPosition, EcsOnRemove, Position(self|up IsA));
 
     Probe ctx = { 0 };
@@ -753,9 +768,15 @@ void ObserverOnSet_remove_from_current_in_on_set(void) {
     ecs_set_ctx(world, &ctx, NULL);
 
     /* Create entities from scratch so they don't have the EcsName component */
-    ECS_ENTITY(world, e1, Position, Velocity);
-    ECS_ENTITY(world, e2, Position, Velocity);
-    ECS_ENTITY(world, e3, Position, Velocity);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add(world, e1, Position);
+    ecs_add(world, e1, Velocity);
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_add(world, e2, Position);
+    ecs_add(world, e2, Velocity);
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
+    ecs_add(world, e3, Position);
+    ecs_add(world, e3, Velocity);
 
     ecs_set(world, e1, Position, {10, 20});
     ecs_set(world, e2, Position, {11, 21});
@@ -795,9 +816,15 @@ void ObserverOnSet_remove_set_component_in_on_set(void) {
     ecs_set_ctx(world, &ctx, NULL);
 
     /* Create entities from scratch so they don't have the EcsName component */
-    ECS_ENTITY(world, e1, Position, Velocity);
-    ECS_ENTITY(world, e2, Position, Velocity);
-    ECS_ENTITY(world, e3, Position, Velocity);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add(world, e1, Position);
+    ecs_add(world, e1, Velocity);
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_add(world, e2, Position);
+    ecs_add(world, e2, Velocity);
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
+    ecs_add(world, e3, Position);
+    ecs_add(world, e3, Velocity);
 
     ecs_set(world, e1, Position, {10, 20});
     ecs_set(world, e2, Position, {11, 21});
@@ -981,7 +1008,8 @@ void ObserverOnSet_on_set_prefab(void) {
     ECS_COMPONENT(world, Position);
     ECS_OBSERVER(world, Dummy, EcsOnSet, Position);
 
-    ECS_PREFAB(world, Prefab, #0);
+    ecs_entity_t Prefab = ecs_entity(world, { .name = "Prefab" });
+    ecs_add_id(world, Prefab, EcsPrefab);
     test_assert(ecs_has_id(world, Prefab, EcsPrefab));
     ecs_set(world, Prefab, Position, {10, 20});
 

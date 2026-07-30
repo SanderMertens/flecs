@@ -41,8 +41,10 @@ void System_w_FromEntity_2_column_1_from_entity(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Mass);
 
-    ECS_ENTITY(world, e1, Mass);
-    ECS_ENTITY(world, e2, Position);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add(world, e1, Mass);
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_add(world, e2, Position);
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Mass(e1), Position);
 
@@ -94,7 +96,8 @@ void System_w_FromEntity_task_from_entity(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_ENTITY(world, e1, Position);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add(world, e1, Position);
 
     ECS_SYSTEM(world, Dummy, EcsOnUpdate, Position(e1));
 
@@ -118,7 +121,8 @@ void System_w_FromEntity_task_not_from_entity(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_ENTITY(world, e1, Position);
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_add(world, e1, Position);
 
     ECS_SYSTEM(world, Dummy, EcsOnUpdate, !Position(e1));
 

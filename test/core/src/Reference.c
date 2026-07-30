@@ -459,8 +459,10 @@ void Reference_get_ref_after_realloc_w_lifecycle(void) {
         .move = ecs_move(Position)
     });
 
-    ECS_ENTITY(world, e, Position);
-    ECS_ENTITY(world, e2, Position);
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_add(world, e, Position);
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_add(world, e2, Position);
     ecs_set(world, e, Position, {10, 20});
     
     ecs_ref_t ref = ecs_ref_init(world, e, Position);
@@ -470,7 +472,8 @@ void Reference_get_ref_after_realloc_w_lifecycle(void) {
     test_int(p->y, 20);
 
     for (int i = 0; i < 1000; i ++) {
-        ECS_ENTITY(world, e, Position);
+        ecs_entity_t e = ecs_entity(world, { .name = "e" });
+        ecs_add(world, e, Position);
     }
 
     p = ecs_ref_get(world, &ref, Position);

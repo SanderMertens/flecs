@@ -134,20 +134,20 @@ ecs_entity_t ecs_vector_init(
 void flecs_meta_array_init(
     ecs_world_t *world)
 {
+    ecs_entity_t array = ecs_entity(world, { .id = ecs_id(EcsArray),
+        .name = "array", .symbol = "EcsArray" });
+    ecs_add_pair(world, array, EcsOnInstantiate, EcsDontInherit);
     ecs_component(world, {
-        .entity = ecs_entity(world, { .id = ecs_id(EcsArray),
-            .name = "array", .symbol = "EcsArray",
-            .add = ecs_ids(ecs_pair(EcsOnInstantiate, EcsDontInherit))
-        }),
+        .entity = array,
         .type.size = sizeof(EcsArray),
         .type.alignment = ECS_ALIGNOF(EcsArray)
     });
 
+    ecs_entity_t vector = ecs_entity(world, { .id = ecs_id(EcsVector),
+        .name = "vector", .symbol = "EcsVector" });
+    ecs_add_pair(world, vector, EcsOnInstantiate, EcsDontInherit);
     ecs_component(world, {
-        .entity = ecs_entity(world, { .id = ecs_id(EcsVector),
-            .name = "vector", .symbol = "EcsVector",
-            .add = ecs_ids(ecs_pair(EcsOnInstantiate, EcsDontInherit))
-        }),
+        .entity = vector,
         .type.size = sizeof(EcsVector),
         .type.alignment = ECS_ALIGNOF(EcsVector)
     });

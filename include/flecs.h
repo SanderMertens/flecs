@@ -1103,15 +1103,6 @@ typedef struct ecs_entity_desc_t {
     bool use_low_id;      /**< When set to true, a low id (typically reserved for
                            * components) will be used to create the entity, if
                            * no ID is specified. */
-
-    /** 0-terminated array of IDs to add to the entity. */
-    const ecs_id_t *add;
-
-    /** 0-terminated array of values to set on the entity. */
-    const ecs_value_t *set;
-
-    /** String expression with components to add. */
-    const char *add_expr;
 } ecs_entity_desc_t;
 
 /** Used with ecs_bulk_init().
@@ -2795,6 +2786,21 @@ FLECS_API
 ecs_entity_t ecs_entity_init(
     ecs_world_t *world,
     const ecs_entity_desc_t *desc);
+
+/** Create a new entity with a list of component values.
+ * Values for zero-sized (tag) components are added without setting a value.
+ *
+ * This operation is equivalent to creating an entity with ecs_new() followed
+ * by ecs_set_id() for each provided value.
+ *
+ * @param world The world.
+ * @param values Null-terminated array of component values to set.
+ * @return A handle to the new entity, or 0 if failed.
+ */
+FLECS_API
+ecs_entity_t ecs_insert_w_values(
+    ecs_world_t *world,
+    const ecs_value_t *values);
 
 /** Bulk create or populate new entities.
  * This operation bulk inserts a list of new or predefined entities into a

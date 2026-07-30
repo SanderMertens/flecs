@@ -158,8 +158,14 @@ void Misc_c_macros(void) {
     ECS_TAG(world, TagA);
     ECS_TAG_DEFINE(world, TagB);
 
-    ECS_ENTITY(world, E1, 0);
-    ECS_ENTITY_DEFINE(world, E2, 0);
+    ecs_entity_desc_t e1_desc = {};
+    e1_desc.name = "E1";
+    ecs_entity_t E1 = ecs_entity_init(world, &e1_desc);
+    ecs_entity_desc_t e2_desc = {};
+    e2_desc.id = E2;
+    e2_desc.name = "E2";
+    E2 = ecs_entity_init(world, &e2_desc);
+    ecs_id(E2) = E2;
 
     ECS_MODULE(world, MyModule);
     ECS_SYSTEM(world, Sys, EcsOnUpdate, Position, Velocity);

@@ -27,7 +27,10 @@ void MultiThreadStaging_2_threads_add_to_current(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Rotation);
-    ECS_PREFAB(world, Type, Position, Velocity);
+    ecs_entity_t Type = ecs_entity(world, { .name = "Type" });
+    ecs_add_id(world, Type, EcsPrefab);
+    ecs_add(world, Type, Position);
+    ecs_add(world, Type, Velocity);
 
     ECS_SYSTEM(world, Add_to_current, EcsOnUpdate, Position);
 
@@ -70,7 +73,10 @@ void MultiThreadStaging_3_threads_add_to_current(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Rotation);
-    ECS_PREFAB(world, Type, Position, Velocity);
+    ecs_entity_t Type = ecs_entity(world, { .name = "Type" });
+    ecs_add_id(world, Type, EcsPrefab);
+    ecs_add(world, Type, Position);
+    ecs_add(world, Type, Velocity);
 
     ECS_SYSTEM(world, Add_to_current, EcsOnUpdate, Position);
 
@@ -113,7 +119,10 @@ void MultiThreadStaging_4_threads_add_to_current(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Rotation);
-    ECS_PREFAB(world, Type, Position, Velocity);
+    ecs_entity_t Type = ecs_entity(world, { .name = "Type" });
+    ecs_add_id(world, Type, EcsPrefab);
+    ecs_add(world, Type, Position);
+    ecs_add(world, Type, Velocity);
 
     ECS_SYSTEM(world, Add_to_current, EcsOnUpdate, Position);
 
@@ -156,7 +165,10 @@ void MultiThreadStaging_5_threads_add_to_current(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Rotation);
-    ECS_PREFAB(world, Type, Position, Velocity);
+    ecs_entity_t Type = ecs_entity(world, { .name = "Type" });
+    ecs_add_id(world, Type, EcsPrefab);
+    ecs_add(world, Type, Position);
+    ecs_add(world, Type, Velocity);
 
     ECS_SYSTEM(world, Add_to_current, EcsOnUpdate, Position);
 
@@ -199,7 +211,10 @@ void MultiThreadStaging_6_threads_add_to_current(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Rotation);
-    ECS_PREFAB(world, Type, Position, Velocity);
+    ecs_entity_t Type = ecs_entity(world, { .name = "Type" });
+    ecs_add_id(world, Type, EcsPrefab);
+    ecs_add(world, Type, Position);
+    ecs_add(world, Type, Velocity);
 
     ECS_SYSTEM(world, Add_to_current, EcsOnUpdate, Position);
 

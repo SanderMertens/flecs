@@ -60,15 +60,19 @@ void SimpleModuleImport(
     ECS_COMPONENT_DEFINE(world, SimpleFooComponent);
 
     ECS_TAG_DEFINE(world, Tag);
-    ECS_ENTITY_DEFINE(world, Entity, #0);
-    
+    Entity = ecs_entity(world, { .id = Entity, .name = "Entity" });
+    ecs_id(Entity) = Entity;
+
     ECS_SYSTEM_DEFINE(world, Move, EcsOnUpdate, Position, Velocity);
     ECS_SYSTEM_DEFINE(world, SimpleFooSystem, EcsOnUpdate, Position);
     ECS_OBSERVER_DEFINE(world, SimpleFooTrigger, EcsOnAdd, Position);
 
     ECS_TAG_DEFINE(world, SimpleFooTag);
-    ECS_ENTITY_DEFINE(world, SimpleFooEntity, #0);
-    ECS_PREFAB_DEFINE(world, SimpleFooPrefab, #0);
+    SimpleFooEntity = ecs_entity(world, { .id = SimpleFooEntity, .name = "SimpleFooEntity" });
+    ecs_id(SimpleFooEntity) = SimpleFooEntity;
+    SimpleFooPrefab = ecs_entity(world, { .id = SimpleFooPrefab, .name = "SimpleFooPrefab" });
+    ecs_id(SimpleFooPrefab) = SimpleFooPrefab;
+    ecs_add_id(world, SimpleFooPrefab, EcsPrefab);
     ECS_PIPELINE_DEFINE(world, SimpleFooPipeline, flecs.system.System, Tag);
     ECS_TAG_DEFINE(world, Simple_underscore);
 }

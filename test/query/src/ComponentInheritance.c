@@ -10,12 +10,25 @@ ECS_TAG_DECLARE(Warlock);
 
 static void populate_facts(ecs_world_t *world) {
     ECS_TAG_DEFINE(world, Unit);
-    ECS_ENTITY_DEFINE(world, MeleeUnit, (IsA, Unit));
-    ECS_ENTITY_DEFINE(world, RangedUnit, (IsA, Unit));
-    ECS_ENTITY_DEFINE(world, Warrior, (IsA, MeleeUnit));
-    ECS_ENTITY_DEFINE(world, Archer, (IsA, RangedUnit));
-    ECS_ENTITY_DEFINE(world, Wizard, (IsA, RangedUnit));
-    ECS_ENTITY_DEFINE(world, Warlock, (IsA, Wizard), (IsA, Warrior));
+    MeleeUnit = ecs_entity(world, { .id = MeleeUnit, .name = "MeleeUnit" });
+    ecs_id(MeleeUnit) = MeleeUnit;
+    ecs_add_pair(world, MeleeUnit, EcsIsA, Unit);
+    RangedUnit = ecs_entity(world, { .id = RangedUnit, .name = "RangedUnit" });
+    ecs_id(RangedUnit) = RangedUnit;
+    ecs_add_pair(world, RangedUnit, EcsIsA, Unit);
+    Warrior = ecs_entity(world, { .id = Warrior, .name = "Warrior" });
+    ecs_id(Warrior) = Warrior;
+    ecs_add_pair(world, Warrior, EcsIsA, MeleeUnit);
+    Archer = ecs_entity(world, { .id = Archer, .name = "Archer" });
+    ecs_id(Archer) = Archer;
+    ecs_add_pair(world, Archer, EcsIsA, RangedUnit);
+    Wizard = ecs_entity(world, { .id = Wizard, .name = "Wizard" });
+    ecs_id(Wizard) = Wizard;
+    ecs_add_pair(world, Wizard, EcsIsA, RangedUnit);
+    Warlock = ecs_entity(world, { .id = Warlock, .name = "Warlock" });
+    ecs_id(Warlock) = Warlock;
+    ecs_add_pair(world, Warlock, EcsIsA, Wizard);
+    ecs_add_pair(world, Warlock, EcsIsA, Warrior);
 }
 
 void ComponentInheritance_1_ent_0_lvl(void) {
@@ -3351,7 +3364,9 @@ void ComponentInheritance_first_self(void) {
 void ComponentInheritance_inheritable_trait(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Unit, Inheritable);
+    ecs_entity_t Unit = ecs_entity(world, { .name = "Unit" });
+    ecs_entity_t ecs_id(Unit) = Unit;
+    ecs_add_id(world, Unit, EcsInheritable);
     test_assert(ecs_has_id(world, Unit, EcsInheritable));
 
     ecs_query_t *q = ecs_query(world, {
@@ -3360,8 +3375,12 @@ void ComponentInheritance_inheritable_trait(void) {
 
     test_assert(q != NULL);
 
-    ECS_ENTITY(world, Warrior, (IsA, Unit));
-    ECS_ENTITY(world, Wizard, (IsA, Unit));
+    ecs_entity_t Warrior = ecs_entity(world, { .name = "Warrior" });
+    ecs_entity_t ecs_id(Warrior) = Warrior;
+    ecs_add_pair(world, Warrior, EcsIsA, Unit);
+    ecs_entity_t Wizard = ecs_entity(world, { .name = "Wizard" });
+    ecs_entity_t ecs_id(Wizard) = Wizard;
+    ecs_add_pair(world, Wizard, EcsIsA, Unit);
 
     ecs_entity_t e1 = ecs_new_w(world, Unit);
     ecs_entity_t e2 = ecs_new_w(world, Warrior);
@@ -3411,7 +3430,8 @@ void ComponentInheritance_query_before_isa_relationship_1st_term(void) {
 
     test_expect_abort();
 
-    ECS_ENTITY(world, Warrior, (IsA, Unit));
+    ecs_entity_t Warrior = ecs_entity(world, { .name = "Warrior" });
+    ecs_add_pair(world, Warrior, EcsIsA, Unit);
 }
 
 void ComponentInheritance_query_before_isa_relationship_2nd_term(void) {
@@ -3430,14 +3450,17 @@ void ComponentInheritance_query_before_isa_relationship_2nd_term(void) {
 
     test_expect_abort();
 
-    ECS_ENTITY(world, Warrior, (IsA, Unit));
+    ecs_entity_t Warrior = ecs_entity(world, { .name = "Warrior" });
+    ecs_add_pair(world, Warrior, EcsIsA, Unit);
 }
 
 void ComponentInheritance_query_before_isa_relationship_subtype(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Unit);
-    ECS_ENTITY(world, MeleeUnit, (IsA, Unit));
+    ecs_entity_t MeleeUnit = ecs_entity(world, { .name = "MeleeUnit" });
+    ecs_entity_t ecs_id(MeleeUnit) = MeleeUnit;
+    ecs_add_pair(world, MeleeUnit, EcsIsA, Unit);
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "MeleeUnit"
@@ -3445,7 +3468,9 @@ void ComponentInheritance_query_before_isa_relationship_subtype(void) {
 
     test_assert(q != NULL);
 
-    ECS_ENTITY(world, Warrior, (IsA, MeleeUnit));
+    ecs_entity_t Warrior = ecs_entity(world, { .name = "Warrior" });
+    ecs_entity_t ecs_id(Warrior) = Warrior;
+    ecs_add_pair(world, Warrior, EcsIsA, MeleeUnit);
 
     ecs_new_w(world, Unit);
     ecs_entity_t e2 = ecs_new_w(world, MeleeUnit);
@@ -3485,7 +3510,8 @@ void ComponentInheritance_query_before_isa_relationship_0_src(void) {
 
     test_assert(q != NULL);
 
-    ECS_ENTITY(world, Warrior, (IsA, Unit));
+    ecs_entity_t Warrior = ecs_entity(world, { .name = "Warrior" });
+    ecs_add_pair(world, Warrior, EcsIsA, Unit);
 
     ecs_entity_t e1 = ecs_new_w(world, Foo);
 

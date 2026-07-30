@@ -68,11 +68,11 @@ ecs_entity_t ecs_opaque_init(
 void flecs_meta_opaque_init(
     ecs_world_t *world)
 {
+    ecs_entity_t opaque = ecs_entity(world, { .id = ecs_id(EcsOpaque),
+        .name = "opaque", .symbol = "EcsOpaque" });
+    ecs_add_pair(world, opaque, EcsOnInstantiate, EcsDontInherit);
     ecs_component(world, {
-        .entity = ecs_entity(world, { .id = ecs_id(EcsOpaque),
-            .name = "opaque", .symbol = "EcsOpaque",
-            .add = ecs_ids(ecs_pair(EcsOnInstantiate, EcsDontInherit))
-        }),
+        .entity = opaque,
         .type.size = sizeof(EcsOpaque),
         .type.alignment = ECS_ALIGNOF(EcsOpaque)
     });

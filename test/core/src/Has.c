@@ -44,7 +44,9 @@ void Has_1_of_2(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_ENTITY(world, e, Position, Velocity);
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_add(world, e, Position);
+    ecs_add(world, e, Velocity);
     test_assert(e != 0);
 
     test_assert(ecs_has(world, e, Position));
