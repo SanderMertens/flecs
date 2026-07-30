@@ -4888,6 +4888,45 @@ void Eval_const_var_bool(void) {
     ecs_fini(world);
 }
 
+void Eval_const_bool_w_entity_true(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "foo {}"
+    LINE "const e: entity = foo"
+    LINE "const v: bool = $e"
+    LINE "if $v {"
+    LINE "  a{}"
+    LINE "} else {"
+    LINE "  b{}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_lookup(world, "a") != 0);
+    test_assert(ecs_lookup(world, "b") == 0);
+
+    ecs_fini(world);
+}
+
+void Eval_const_bool_w_entity_false(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const e: entity = 0"
+    LINE "const v: bool = $e"
+    LINE "if $v {"
+    LINE "  a{}"
+    LINE "} else {"
+    LINE "  b{}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_lookup(world, "a") == 0);
+    test_assert(ecs_lookup(world, "b") != 0);
+
+    ecs_fini(world);
+}
+
 void Eval_const_var_string(void) {
     ecs_world_t *world = ecs_init();
 
@@ -7185,6 +7224,340 @@ void Eval_if_0(void) {
     ecs_fini(world);
 }
 
+void Eval_if_entity_var_true(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "foo {}"
+    LINE "const v: entity = foo"
+    LINE "if $v {"
+    LINE "  a{}"
+    LINE "} else {"
+    LINE "  b{}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_lookup(world, "a") != 0);
+    test_assert(ecs_lookup(world, "b") == 0);
+
+    ecs_fini(world);
+}
+
+void Eval_if_entity_var_false(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const v: entity = 0"
+    LINE "if $v {"
+    LINE "  a{}"
+    LINE "} else {"
+    LINE "  b{}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_lookup(world, "a") == 0);
+    test_assert(ecs_lookup(world, "b") != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_if_entity_var_and_has_true(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Foo {}"
+    LINE "foo { Foo }"
+    LINE "const v: entity = foo"
+    LINE "if $v && $v.has(Foo) {"
+    LINE "  a{}"
+    LINE "} else {"
+    LINE "  b{}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_lookup(world, "a") != 0);
+    test_assert(ecs_lookup(world, "b") == 0);
+
+    ecs_fini(world);
+}
+
+void Eval_if_entity_var_and_has_false(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Foo {}"
+    LINE "foo {}"
+    LINE "const v: entity = foo"
+    LINE "if $v && $v.has(Foo) {"
+    LINE "  a{}"
+    LINE "} else {"
+    LINE "  b{}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_lookup(world, "a") == 0);
+    test_assert(ecs_lookup(world, "b") != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_if_entity_var_and_has_short_circuit(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Foo {}"
+    LINE "const v: entity = 0"
+    LINE "if $v && $v.has(Foo) {"
+    LINE "  a{}"
+    LINE "} else {"
+    LINE "  b{}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_lookup(world, "a") == 0);
+    test_assert(ecs_lookup(world, "b") != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_if_entity_var_or_has_short_circuit(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Foo {}"
+    LINE "foo {}"
+    LINE "const v: entity = foo"
+    LINE "const u: entity = 0"
+    LINE "if $v || $u.has(Foo) {"
+    LINE "  a{}"
+    LINE "} else {"
+    LINE "  b{}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_lookup(world, "a") != 0);
+    test_assert(ecs_lookup(world, "b") == 0);
+
+    ecs_fini(world);
+}
+
+void Eval_if_and_short_circuit_div_by_zero(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const i = 0"
+    LINE "if $i != 0 && 10 / $i > 2 {"
+    LINE "  a{}"
+    LINE "} else {"
+    LINE "  b{}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_lookup(world, "a") == 0);
+    test_assert(ecs_lookup(world, "b") != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_if_or_short_circuit_div_by_zero(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const i = 0"
+    LINE "if $i == 0 || 10 / $i > 2 {"
+    LINE "  a{}"
+    LINE "} else {"
+    LINE "  b{}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_lookup(world, "a") != 0);
+    test_assert(ecs_lookup(world, "b") == 0);
+
+    ecs_fini(world);
+}
+
+void Eval_if_and_rhs_evaluated(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const i = 5"
+    LINE "if $i != 0 && 10 / $i > 1 {"
+    LINE "  a{}"
+    LINE "} else {"
+    LINE "  b{}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_lookup(world, "a") != 0);
+    test_assert(ecs_lookup(world, "b") == 0);
+
+    ecs_fini(world);
+}
+
+void Eval_if_or_rhs_evaluated(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const i = 5"
+    LINE "if $i == 0 || 10 / $i > 100 {"
+    LINE "  a{}"
+    LINE "} else {"
+    LINE "  b{}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_lookup(world, "a") == 0);
+    test_assert(ecs_lookup(world, "b") != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_if_chained_and_short_circuit(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Foo {}"
+    LINE "Bar {}"
+    LINE "const v: entity = 0"
+    LINE "if $v && $v.has(Foo) && $v.has(Bar) {"
+    LINE "  a{}"
+    LINE "} else {"
+    LINE "  b{}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_lookup(world, "a") == 0);
+    test_assert(ecs_lookup(world, "b") != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_if_chained_or_short_circuit(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Foo {}"
+    LINE "Bar {}"
+    LINE "foo {}"
+    LINE "const v: entity = foo"
+    LINE "const u: entity = 0"
+    LINE "if $v || $u.has(Foo) || $u.has(Bar) {"
+    LINE "  a{}"
+    LINE "} else {"
+    LINE "  b{}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_lookup(world, "a") != 0);
+    test_assert(ecs_lookup(world, "b") == 0);
+
+    ecs_fini(world);
+}
+
+void Eval_if_and_or_precedence_short_circuit(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Foo {}"
+    LINE "Bar {}"
+    LINE "foo {}"
+    LINE "const v: entity = foo"
+    LINE "const u: entity = 0"
+    LINE "if $v || $u.has(Foo) && $u.has(Bar) {"
+    LINE "  a{}"
+    LINE "} else {"
+    LINE "  b{}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_lookup(world, "a") != 0);
+    test_assert(ecs_lookup(world, "b") == 0);
+
+    ecs_fini(world);
+}
+
+void Eval_if_parens_and_short_circuit(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Foo {}"
+    LINE "Bar {}"
+    LINE "const v: entity = 0"
+    LINE "if ($v && $v.has(Foo)) || ($v && $v.has(Bar)) {"
+    LINE "  a{}"
+    LINE "} else {"
+    LINE "  b{}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_lookup(world, "a") == 0);
+    test_assert(ecs_lookup(world, "b") != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_if_not_and_short_circuit(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Foo {}"
+    LINE "const v: entity = 0"
+    LINE "if !($v && $v.has(Foo)) {"
+    LINE "  a{}"
+    LINE "} else {"
+    LINE "  b{}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_lookup(world, "a") != 0);
+    test_assert(ecs_lookup(world, "b") == 0);
+
+    ecs_fini(world);
+}
+
+void Eval_const_bool_and_short_circuit(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Foo {}"
+    LINE "const v: entity = 0"
+    LINE "const cond: bool = $v && $v.has(Foo)"
+    LINE "if $cond {"
+    LINE "  a{}"
+    LINE "} else {"
+    LINE "  b{}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_lookup(world, "a") == 0);
+    test_assert(ecs_lookup(world, "b") != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_const_bool_or_short_circuit(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Foo {}"
+    LINE "foo {}"
+    LINE "const v: entity = foo"
+    LINE "const u: entity = 0"
+    LINE "const cond: bool = $v || $u.has(Foo)"
+    LINE "if $cond {"
+    LINE "  a{}"
+    LINE "} else {"
+    LINE "  b{}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_lookup(world, "a") != 0);
+    test_assert(ecs_lookup(world, "b") == 0);
+
+    ecs_fini(world);
+}
+
 void Eval_if_true_var(void) {
     ecs_world_t *world = ecs_init();
 
@@ -7449,6 +7822,101 @@ void Eval_if_else_if_else(void) {
     test_assert(ecs_lookup(world, "a") != 0);
     test_assert(ecs_lookup(world, "b") == 0);
     test_assert(ecs_lookup(world, "c") == 0);
+
+    ecs_fini(world);
+}
+
+void Eval_if_else_if_and_short_circuit(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Foo {}"
+    LINE "const v: entity = 0"
+    LINE "const i = 1"
+    LINE "if $i == 0 {"
+    LINE "  a{}"
+    LINE "} else if $v && $v.has(Foo) {"
+    LINE "  b{}"
+    LINE "} else {"
+    LINE "  c{}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_lookup(world, "a") == 0);
+    test_assert(ecs_lookup(world, "b") == 0);
+    test_assert(ecs_lookup(world, "c") != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_if_else_if_or_short_circuit(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Foo {}"
+    LINE "foo {}"
+    LINE "const v: entity = foo"
+    LINE "const u: entity = 0"
+    LINE "const i = 1"
+    LINE "if $i == 0 {"
+    LINE "  a{}"
+    LINE "} else if $v || $u.has(Foo) {"
+    LINE "  b{}"
+    LINE "} else {"
+    LINE "  c{}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_lookup(world, "a") == 0);
+    test_assert(ecs_lookup(world, "b") != 0);
+    test_assert(ecs_lookup(world, "c") == 0);
+
+    ecs_fini(world);
+}
+
+void Eval_if_else_if_div_by_zero_short_circuit(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const i = 0"
+    LINE "if $i == 1 {"
+    LINE "  a{}"
+    LINE "} else if $i != 0 && 10 / $i > 1 {"
+    LINE "  b{}"
+    LINE "} else {"
+    LINE "  c{}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_lookup(world, "a") == 0);
+    test_assert(ecs_lookup(world, "b") == 0);
+    test_assert(ecs_lookup(world, "c") != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_if_else_if_chain_short_circuit(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Foo {}"
+    LINE "const v: entity = 0"
+    LINE "const i = 0"
+    LINE "if $v && $v.has(Foo) {"
+    LINE "  a{}"
+    LINE "} else if $i != 0 && 10 / $i > 1 {"
+    LINE "  b{}"
+    LINE "} else if $i == 0 || 10 / $i > 1 {"
+    LINE "  c{}"
+    LINE "} else {"
+    LINE "  d{}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_lookup(world, "a") == 0);
+    test_assert(ecs_lookup(world, "b") == 0);
+    test_assert(ecs_lookup(world, "c") != 0);
+    test_assert(ecs_lookup(world, "d") == 0);
 
     ecs_fini(world);
 }
