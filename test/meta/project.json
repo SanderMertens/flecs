@@ -199,6 +199,8 @@
                 "overlapping_value_warning_range",
                 "struct_w_16_alignment",
                 "struct_w_use_offset",
+                "struct_w_use_offset_w_member_entities",
+                "struct_w_use_offset_zero_w_member_entities",
                 "direct_cycle",
                 "indirect_cycle",
                 "use_before_registering_reflection",
