@@ -17,11 +17,6 @@ static void flecs_query_cache_sort_table(
     ecs_sort_table_action_t sort)
 {
     int32_t count = ecs_table_count(table);
-    if (!count) {
-        /* Nothing to sort */
-        return;
-    }
-    
     if (count < 2) {
         return;
     }

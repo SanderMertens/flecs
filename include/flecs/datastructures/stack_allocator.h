@@ -95,10 +95,6 @@ void* flecs_stack_calloc(
 #define flecs_stack_calloc_t(stack, T)\
     flecs_stack_calloc(stack, ECS_SIZEOF(T), ECS_ALIGNOF(T))
 
-/** Allocate zeroed memory for count elements of type T from the stack. */
-#define flecs_stack_calloc_n(stack, T, count)\
-    flecs_stack_calloc(stack, ECS_SIZEOF(T) * count, ECS_ALIGNOF(T))
-
 /** Free memory allocated from the stack.
  *
  * @param ptr The pointer to free.

@@ -24,22 +24,6 @@
 #pragma warning(disable : 4456)
 #endif
 
-/* Create script & parser structs with static token buffer */
-#define EcsParserFixedBuffer(w, script_name, expr, tokens, tokens_len)\
-    ecs_script_impl_t script = {\
-        .pub.world = ECS_CONST_CAST(ecs_world_t*, w),\
-        .pub.name = script_name,\
-        .pub.code = expr\
-    };\
-    ecs_parser_t parser = {\
-        .script = flecs_script_impl(&script),\
-        .name = script_name,\
-        .code = expr,\
-        .pos = expr,\
-        .token_cur = tokens,\
-        .token_end = &(tokens)[tokens_len]\
-    }
-
 /* Definitions for parser functions */
 #define ParserBegin\
     ecs_tokenizer_t _tokenizer;\
@@ -189,15 +173,6 @@
         )\
     )
 
-#define Parse_5(tok1, tok2, tok3, tok4, tok5, ...)\
-    Parse_4(tok1, tok2, tok3, tok4, \
-        Parse(\
-            case tok5: {\
-                __VA_ARGS__\
-            }\
-        )\
-    )
-
 #define LookAhead_Keep() \
     pos = lookahead;\
     parser->token_keep = parser->token_cur
@@ -248,20 +223,6 @@
         pos = lookahead;\
         LookAhead(\
             case tok2: {\
-                __VA_ARGS__\
-            }\
-        )\
-        if (pos != lookahead) {\
-            pos = old_ptr;\
-        }\
-    )
-
-#define LookAhead_3(tok1, tok2, tok3, ...)\
-    LookAhead_2(tok1, tok2, \
-        const char *old_ptr = pos;\
-        pos = lookahead;\
-        LookAhead(\
-            case tok3: {\
                 __VA_ARGS__\
             }\
         )\

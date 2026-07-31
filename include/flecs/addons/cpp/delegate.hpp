@@ -266,16 +266,6 @@ struct each_delegate : public delegate {
         }
     }
 
-    // Create instance of delegate.
-    static each_delegate* make(const Func& func) {
-        return FLECS_NEW(each_delegate)(func);
-    }
-
-    // Function that can be used as callback to free delegate.
-    static void destruct(void *obj) {
-        _::free_obj<each_delegate>(obj);
-    }
-
     // Static function to call for component on_add hook.
     static void run_add(ecs_iter_t *iter) {
         component_binding_ctx *ctx = reinterpret_cast<component_binding_ctx*>(
@@ -881,14 +871,5 @@ struct each_callback_args<arg_list<First, Second, Args...>,
 };
 
 } // namespace _
-
-/** Delegate type for each callbacks.
- * Experimental: allows using the each delegate for use cases outside of Flecs.
- *
- * @tparam Func The callback function type.
- * @tparam Args The component argument types.
- */
-template <typename Func, typename ... Args>
-using delegate = _::each_delegate<typename std::decay<Func>::type, Args...>;
 
 } // namespace flecs

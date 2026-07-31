@@ -537,7 +537,6 @@ bool flecs_sparse_is_alive(
         return false;
     }
 
-    ecs_assert(dense == page->sparse[offset], ECS_INTERNAL_ERROR, NULL);
     return true;
 }
 

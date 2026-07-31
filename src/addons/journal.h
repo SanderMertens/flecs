@@ -44,8 +44,7 @@ typedef enum ecs_journal_kind_t {
     EcsJournalDelete,
     EcsJournalSetParent,
     EcsJournalDeleteWith,
-    EcsJournalRemoveAll,
-    EcsJournalTableEvents
+    EcsJournalRemoveAll
 } ecs_journal_kind_t;
 
 FLECS_DBG_API

@@ -515,12 +515,13 @@ void Map_hashmap_iter_terminates(void) {
     *(uint64_t*)hmr.value = value;
 
     flecs_hashmap_iter_t it = flecs_hashmap_iter(&hm);
+    uint64_t it_key;
 
     /* First element */
-    test_assert(flecs_hashmap_next(&it, uint64_t) != NULL);
+    test_assert(flecs_hashmap_next_w_key(&it, uint64_t, &it_key, uint64_t) != NULL);
 
     /* Iterator must terminate after the last element */
-    test_assert(flecs_hashmap_next(&it, uint64_t) == NULL);
+    test_assert(flecs_hashmap_next_w_key(&it, uint64_t, &it_key, uint64_t) == NULL);
 
     flecs_hashmap_fini(&hm);
 }

@@ -138,7 +138,6 @@ uint64_t flecs_ito_(
 
 #define flecs_itosize(value) flecs_ito(size_t, (value))
 #define flecs_utosize(value) flecs_uto(ecs_size_t, (value))
-#define flecs_itoi16(value) flecs_ito(int16_t, (value))
 #define flecs_itoi32(value) flecs_ito(int32_t, (value))
 
 

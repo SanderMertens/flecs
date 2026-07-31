@@ -8,10 +8,9 @@
 
 #include <limits>
 
-// 126, so that FLECS_ENUM_MAX_COUNT is 127, which is the largest value
+// 126, so that the max enum constant count is 127, which is the largest value
 // representable by an int8_t.
 #define FLECS_ENUM_MAX(T) _::to_constant<T, 126>::value
-#define FLECS_ENUM_MAX_COUNT (FLECS_ENUM_MAX(int) + 1)
 
 // Flag to turn off enum reflection.
 #ifdef FLECS_CPP_NO_ENUM_REFLECTION
@@ -200,12 +199,6 @@ template <typename E, underlying_type_t<E> C>
 constexpr bool enum_constant_is_valid_wrap() {
     return enum_constant_is_valid<E, flecs_enum_cast(E, C)>();
 }
-
-/** @private Check if an enum constant is valid (value trait). */
-template <typename E, E C>
-struct enum_is_valid {
-    static constexpr bool value = enum_constant_is_valid<E, C>();
-};
 
 /** @private Extract the name of a constant from the compiler string. */
 template <typename E, E C>
@@ -437,17 +430,6 @@ public:
         static _::enum_type<E> instance;
         return instance;
     }
-
-#ifndef FLECS_MULTI_WORLD
-    /** Get entity for a given enum value. */
-    flecs::entity_t entity(E value) const {
-        int index = index_by_value(value);
-        if (index >= 0) {
-            return constants[index].id;
-        }
-        return 0;
-    }
-#endif
 
     /** Register enum constants for a world. */
     void register_for_world(flecs::world_t *world, flecs::entity_t id) {

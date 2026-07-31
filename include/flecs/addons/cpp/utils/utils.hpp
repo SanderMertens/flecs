@@ -17,13 +17,6 @@
 
 #define FLECS_PLACEMENT_NEW(_ptr, _type)  ::new(flecs::_::placement_new_tag, _ptr) _type
 #define FLECS_NEW(_type)                  FLECS_PLACEMENT_NEW(ecs_os_malloc(sizeof(_type)), _type)
-#define FLECS_DELETE(_ptr)          \
-  do {                              \
-    if (_ptr) {                     \
-      flecs::_::destruct_obj(_ptr); \
-      ecs_os_free(_ptr);            \
-    }                               \
-  } while (false)
 
 /* Faster (compile-time) alternatives to std::move / std::forward. From:
  *   https://www.foonathan.net/2020/09/move-forward/
@@ -69,21 +62,6 @@ inline void  operator delete(void*, flecs::_::placement_new_tag_t, void*)      n
 
 namespace flecs
 {
-
-/** Compile-time conditional type selector (faster alternative to std::conditional). */
-template <bool> struct condition;
-
-/** Specialization of condition for false. */
-template <> struct condition<false> {
-    /** Select the second type. */
-    template <typename T, typename F> using type = F;
-};
-
-/** Specialization of condition for true. */
-template <> struct condition<true> {
-    /** Select the first type. */
-    template <typename T, typename F> using type = T;
-};
 
 using std::conditional_t;
 using std::decay_t;
@@ -231,7 +209,6 @@ struct always_false {
 #include "array.hpp"
 #include "string.hpp"
 #include "enum.hpp"
-#include "stringstream.hpp"
 #include "function_traits.hpp"
 
 namespace flecs {

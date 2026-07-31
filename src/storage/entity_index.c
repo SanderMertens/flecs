@@ -413,8 +413,6 @@ void flecs_entity_index_shrink(
                     ECS_INTERNAL_ERROR, NULL);
 
                 if (flecs_entity_index_is_alive(index, entity)) {
-                    ecs_assert(flecs_entity_index_is_alive(index, entity),
-                        ECS_INTERNAL_ERROR, NULL);
                     has_alive = true;
                     break;
                 }

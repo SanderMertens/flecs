@@ -38,8 +38,6 @@ ecs_query_op_ctx_t* flecs_op_ctx_(
     return &ctx->op_ctx[ctx->op_index];
 }
 
-#define flecs_op_ctx(ctx, op_kind) (&flecs_op_ctx_(ctx)->is.op_kind)
-
 void flecs_reset_source_set_flag(
     ecs_iter_t *it,
     int32_t field_index)

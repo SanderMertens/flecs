@@ -563,9 +563,7 @@ extern "C" {
 
 #define EcsIterIsValid                 (1u << 0u)  /* Does the iterator contain a valid result. */
 #define EcsIterNoData                  (1u << 1u)  /* Does the iterator provide (component) data. */
-#define EcsIterNoResults               (1u << 2u)  /* Iterator has no results. */
 #define EcsIterMatchEmptyTables        (1u << 3u)  /* Match empty tables. */
-#define EcsIterIgnoreThis              (1u << 4u)  /* Only evaluate non-this terms. */
 #define EcsIterTrivialChangeDetection  (1u << 5u)
 #define EcsIterHasCondSet              (1u << 6u)  /* Does the iterator have conditionally set fields. */
 #define EcsIterProfile                 (1u << 7u)  /* Profile iterator performance. */
@@ -641,8 +639,6 @@ extern "C" {
 //// Observer flags (used by ecs_observer_t::flags)
 ////////////////////////////////////////////////////////////////////////////////
 
-#define EcsObserverMatchPrefab         (1u << 1u)  /* Same as query. */
-#define EcsObserverMatchDisabled       (1u << 2u)  /* Same as query. */
 #define EcsObserverIsMulti             (1u << 3u)  /* Does the observer have multiple terms. */
 #define EcsObserverIsMonitor           (1u << 4u)  /* Is the observer a monitor. */
 #define EcsObserverIsDisabled          (1u << 5u)  /* Is the observer entity disabled. */
@@ -650,7 +646,6 @@ extern "C" {
 #define EcsObserverBypassQuery         (1u << 7u)  /* Don't evaluate query for multi-component observer. */
 #define EcsObserverYieldOnCreate       (1u << 8u)  /* Yield matching entities when creating observer. */
 #define EcsObserverYieldOnDelete       (1u << 9u)  /* Yield matching entities when deleting observer. */
-#define EcsObserverKeepAlive           (1u << 11u) /* Observer keeps component alive (same value as EcsTermKeepAlive). */
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Table flags (used by ecs_table_t::flags)
@@ -693,9 +688,6 @@ extern "C" {
 /* Composite table flags */
 #define EcsTableHasLifecycle     (EcsTableHasCtors | EcsTableHasDtors)
 #define EcsTableIsComplex        (EcsTableHasLifecycle | EcsTableHasToggle | EcsTableHasSparse)
-#define EcsTableHasAddActions    (EcsTableHasIsA | EcsTableHasCtors | EcsTableHasOnAdd | EcsTableHasOnSet)
-#define EcsTableHasRemoveActions (EcsTableHasIsA | EcsTableHasDtors | EcsTableHasOnRemove)
-#define EcsTableEdgeFlags        (EcsTableHasOnAdd | EcsTableHasOnRemove | EcsTableHasSparse)
 #define EcsTableAddEdgeFlags     (EcsTableHasOnAdd | EcsTableHasSparse)
 #define EcsTableRemoveEdgeFlags  (EcsTableHasOnRemove | EcsTableHasSparse | EcsTableHasOrderedChildren)
 
@@ -1136,7 +1128,6 @@ typedef struct ecs_allocator_t ecs_allocator_t;
 #define ecs_pair_t(rel, tgt) (ECS_PAIR | ecs_entity_t_comb(tgt, ecs_id(rel)))
 #define ecs_pair_first(world, pair) ecs_get_alive(world, ECS_PAIR_FIRST(pair))
 #define ecs_pair_second(world, pair) ecs_get_alive(world, ECS_PAIR_SECOND(pair))
-#define ecs_pair_relation ecs_pair_first
 #define ecs_pair_target ecs_pair_second
 
 #define ecs_value_pair(rel, val) (ECS_VALUE_PAIR | ecs_entity_t_comb(val, rel))
@@ -2465,10 +2456,6 @@ void* flecs_stack_calloc(
 #define flecs_stack_calloc_t(stack, T)\
     flecs_stack_calloc(stack, ECS_SIZEOF(T), ECS_ALIGNOF(T))
 
-/** Allocate zeroed memory for count elements of type T from the stack. */
-#define flecs_stack_calloc_n(stack, T, count)\
-    flecs_stack_calloc(stack, ECS_SIZEOF(T) * count, ECS_ALIGNOF(T))
-
 /** Free memory allocated from the stack.
  *
  * @param ptr The pointer to free.
@@ -2754,9 +2741,6 @@ void ecs_map_copy(
     ecs_map_t *dst,
     const ecs_map_t *src);
 
-/** Get value as a typed reference (T**). */
-#define ecs_map_get_ref(m, T, k) ECS_CAST(T**, ecs_map_get(m, k))
-
 /** Get value as a typed dereferenced pointer (T*). */
 #define ecs_map_get_deref(m, T, k) ECS_CAST(T*, ecs_map_get_deref_(m, k))
 
@@ -2876,9 +2860,6 @@ void* flecs_dup(
     const void *src);
 
 #ifndef FLECS_USE_OS_ALLOC
-
-/** Get the dynamic allocator from an object. */
-#define flecs_allocator(obj) (&obj->allocators.dyn)
 
 /** Allocate memory of a given size. */
 #define flecs_alloc(a, size) flecs_balloc(flecs_allocator_get(a, size))
@@ -3327,7 +3308,6 @@ typedef uintptr_t ecs_os_thread_t;                 /**< OS thread. */
 typedef uintptr_t ecs_os_cond_t;                   /**< OS cond. */
 typedef uintptr_t ecs_os_mutex_t;                  /**< OS mutex. */
 typedef uintptr_t ecs_os_dl_t;                     /**< OS dynamic library. */
-typedef uintptr_t ecs_os_sock_t;                   /**< OS socket. */
 
 /** 64-bit thread ID. */
 typedef uint64_t ecs_os_thread_id_t;
@@ -4975,10 +4955,6 @@ bool flecs_defer_end(
 
 #define ECS_BIT_IS_SET(flags, bit) ((flags) & (bit))
 
-#define ECS_BIT_SETN(flags, n) ECS_BIT_SET(flags, 1llu << n)
-#define ECS_BIT_CLEARN(flags, n) ECS_BIT_CLEAR(flags, 1llu << n)
-#define ECS_BIT_CONDN(flags, n, cond) ECS_BIT_COND(flags, 1llu << n, cond)
-
 #ifdef __cplusplus
 }
 #endif
@@ -5167,10 +5143,6 @@ void* flecs_hashmap_next_(
     ecs_size_t key_size,
     void *key_out,
     ecs_size_t value_size);
-
-/** Type-safe hashmap next (value only). */
-#define flecs_hashmap_next(map, V)\
-    (V*)flecs_hashmap_next_(map, 0, NULL, ECS_SIZEOF(V))
 
 /** Type-safe hashmap next with key output. */
 #define flecs_hashmap_next_w_key(map, K, key, V)\
@@ -5529,14 +5501,6 @@ ecs_table_records_t flecs_table_records(
 FLECS_API
 ecs_component_record_t* flecs_table_record_get_component(
     const ecs_table_record_t *tr);
-
-/** Get the sparse storage for a row field.
- * Returns the sparse set that stores values for a field returned per-row (see
- * ecs_field_at()), or NULL when the field has a non-$this source. */
-FLECS_API
-ecs_sparse_t* flecs_field_sparse(
-    const ecs_iter_t *it,
-    int8_t index);
 
 /** Get the table ID.
  * This operation returns a unique numerical identifier for a table.
@@ -6166,28 +6130,6 @@ typedef struct EcsTreeSpawner {
 
 /** @} */
 /** @} */
-
-/* Only include deprecated definitions if deprecated addon is required */
-#ifdef FLECS_DEPRECATED
-
-#ifdef FLECS_DEPRECATED
-
-#ifndef FLECS_DEPRECATED_H
-#define FLECS_DEPRECATED_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif
-
-#endif
-
-#endif
 
 /**
  * @defgroup api_constants API Constants
@@ -9655,10 +9597,7 @@ bool ecs_worker_next(
  * component from a parent, or another entity. The ecs_field_is_self() operation
  * can be used to test dynamically if a field is owned.
  * 
- * When a field contains a sparse component, use the ecs_field_at() function. When
- * a field is guaranteed to be set and owned, the ecs_field_self() function can be
- * used. ecs_field_self() has slightly better performance, and provides stricter 
- * validity checking.
+ * When a field contains a sparse component, use the ecs_field_at() function.
  *
  * The provided size must be either 0 or must match the size of the type
  * of the returned array. If the size does not match, the operation may assert.
@@ -10687,10 +10626,6 @@ void ecs_table_clear_entities(
     (ECS_CAST(Second*, ecs_get_mut_id(world, subject,\
         ecs_pair(first, ecs_id(Second)))))
 
-/** Get a mutable pointer to a component. */
-#define ecs_get_mut(world, entity, T)\
-    (ECS_CAST(T*, ecs_get_mut_id(world, entity, ecs_id(T))))
-
 /** Ensure entity has a component, return mutable pointer. */
 #define ecs_ensure(world, entity, T)\
     (ECS_CAST(T*, ecs_ensure_id(world, entity, ecs_id(T), sizeof(T))))
@@ -10818,19 +10753,6 @@ void ecs_table_clear_entities(
 /** Test if an entity owns a component. */
 #define ecs_owns(world, entity, T)\
     ecs_owns_id(world, entity, ecs_id(T))
-
-/** Test if an entity shares a component. */
-#define ecs_shares_id(world, entity, id)\
-    (ecs_search_relation(world, ecs_get_table(world, entity), 0, ecs_id(id), \
-        EcsIsA, 1, 0, 0, 0, 0) != -1)
-
-/** Test if an entity shares a pair. */
-#define ecs_shares_pair(world, entity, first, second)\
-    (ecs_shares_id(world, entity, ecs_pair(first, second)))
-
-/** Test if an entity shares a component. */
-#define ecs_shares(world, entity, T)\
-    (ecs_shares_id(world, entity, ecs_id(T)))
 
 /** Get the target for a relationship. */
 #define ecs_get_target_for(world, entity, rel, T)\
@@ -11003,10 +10925,6 @@ void ecs_table_clear_entities(
 /** Get field data for a component. */
 #define ecs_field(it, T, index)\
     (ECS_CAST(T*, ecs_field_w_size(it, sizeof(T), index)))
-
-/** Get field data for a self-owned component. */
-#define ecs_field_self(it, T, index)\
-    (ECS_CAST(T*, ecs_field_self_w_size(it, sizeof(T), index)))
 
 /** Get field data at a specific row. */
 #define ecs_field_at(it, T, index, row)\

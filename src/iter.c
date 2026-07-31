@@ -186,27 +186,6 @@ static ecs_component_record_t* flecs_field_cr(
     return cr;
 }
 
-ecs_sparse_t* flecs_field_sparse(
-    const ecs_iter_t *it,
-    int8_t index)
-{
-    ecs_check(it->flags & EcsIterIsValid, ECS_INVALID_PARAMETER,
-        "operation invalid before calling next()");
-    ecs_check(index >= 0, ECS_INVALID_PARAMETER,
-        "invalid field index %d", index);
-    ecs_check(index < it->field_count, ECS_INVALID_PARAMETER,
-        "field index %d out of bounds", index);
-    ecs_check((it->row_fields & (1llu << index)), ECS_INVALID_PARAMETER,
-        "field %d is not a row field", index);
-
-    if (it->sources[index]) {
-        return NULL;
-    }
-
-    return flecs_field_cr(it, index)->sparse;
-error:
-    return NULL;
-}
 
 void* ecs_field_at_w_size(
     const ecs_iter_t *it,

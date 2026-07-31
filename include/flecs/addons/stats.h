@@ -168,7 +168,7 @@ typedef struct ecs_world_stats_t {
     int32_t t;
 } ecs_world_stats_t;
 
-/** Statistics for a single query (use ecs_query_cache_stats_get()). */
+/** Statistics for a single query (use ecs_query_stats_get()). */
 typedef struct ecs_query_stats_t {
     int64_t first_;                         /**< Used for field iteration. Do not set. */
     ecs_metric_t result_count;              /**< Number of query results. */

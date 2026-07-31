@@ -86,9 +86,6 @@ void* flecs_dup(
 
 #ifndef FLECS_USE_OS_ALLOC
 
-/** Get the dynamic allocator from an object. */
-#define flecs_allocator(obj) (&obj->allocators.dyn)
-
 /** Allocate memory of a given size. */
 #define flecs_alloc(a, size) flecs_balloc(flecs_allocator_get(a, size))
 

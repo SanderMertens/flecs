@@ -6,9 +6,8 @@
 #pragma once
 
 #include "../../utils/signature.hpp"
-#include <stdio.h>
 
-namespace flecs 
+namespace flecs
 {
 
 /** Term identifier builder.

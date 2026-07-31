@@ -50,9 +50,6 @@ struct ecs_script_template_t {
     ecs_vec_t dynamic_refs;
 
     int32_t refcount;
-
-    /* Use non-fragmenting hierarchy */
-    bool non_fragmenting_parent;
 };
 
 #define ECS_TEMPLATE_SMALL_SIZE (36)

@@ -99,10 +99,6 @@ struct is_pair {
     static constexpr bool value = is_base_of_v<_::pair_base, raw_type_t<T>>;
 };
 
-/** Convenience variable template to check if a type is a pair. */
-template <typename T>
-inline constexpr bool is_pair_v = is_pair<T>::value;
-
 /** Get pair::first from a pair while preserving cv qualifiers. */
 template <typename P>
 using pair_first_t = transcribe_cv_t<remove_reference_t<P>, typename raw_type_t<P>::first>;
@@ -150,20 +146,11 @@ struct base_arg_type {
     using type = remove_pointer_t< remove_reference_t< actual_type_t<T> > >;
 };
 
-/** Convenience alias for base_arg_type. */
-template <typename T>
-using base_arg_type_t = typename base_arg_type<T>::type;
-
-
 /** Test if a type is the same as its actual type. */
 template <typename T>
 struct is_actual {
     static constexpr bool value = is_same_v<T, actual_type_t<T>>;
 };
-
-/** Convenience variable template to check if a type is its own actual type. */
-template <typename T>
-inline constexpr bool is_actual_v = is_actual<T>::value;
 
 namespace _ {
 

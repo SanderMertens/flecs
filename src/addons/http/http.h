@@ -33,9 +33,6 @@ typedef int ecs_http_socket_t;
 
 #endif
 
-/* Max length of request method */
-#define ECS_HTTP_METHOD_LEN_MAX (8) 
-
 /* Timeout (s) before connection purge */
 #define ECS_HTTP_CONNECTION_PURGE_TIMEOUT (1.0)
 
@@ -53,9 +50,6 @@ typedef int ecs_http_socket_t;
 
 /* Receive buffer size */
 #define ECS_HTTP_SEND_RECV_BUFFER_SIZE (64 * 1024)
-
-/* Max length of request (path + query + headers + body) */
-#define ECS_HTTP_REQUEST_LEN_MAX (10 * 1024 * 1024)
 
 /* Total number of outstanding send requests */
 #define ECS_HTTP_SEND_QUEUE_MAX (256)
@@ -116,10 +110,8 @@ struct ecs_http_server_t {
     double stats_timeout; /* used for periodic reporting of statistics */
 
     double request_time; /* time spent on requests in last stats interval */
-    double request_time_total; /* total time spent on requests */
     int32_t requests_processed; /* requests processed in last stats interval */
-    int32_t requests_processed_total; /* total requests processed */
-    int32_t dequeue_count; /* number of dequeues in last stats interval */ 
+    int32_t dequeue_count; /* number of dequeues in last stats interval */
     ecs_http_send_queue_t send_queue;
 
     ecs_hashmap_t request_cache;
@@ -148,7 +140,6 @@ typedef struct {
     ecs_strbuf_t buf;
     ecs_http_method_t method;
     int32_t body_offset;
-    int32_t query_offset;
     int32_t header_offsets[ECS_HTTP_HEADER_COUNT_MAX];
     int32_t header_value_offsets[ECS_HTTP_HEADER_COUNT_MAX];
     int32_t header_count;

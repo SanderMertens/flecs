@@ -36,9 +36,6 @@ extern ecs_mixins_t ecs_stage_t_mixins;
 extern ecs_mixins_t ecs_query_t_mixins;
 extern ecs_mixins_t ecs_observer_t_mixins;
 
-/* Types that have no mixins */
-#define ecs_table_t_mixins (&(ecs_mixins_t){ NULL })
-
 /* Initialize poly */
 void* flecs_poly_init_(
     ecs_poly_t *object,

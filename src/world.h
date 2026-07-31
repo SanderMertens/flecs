@@ -290,22 +290,14 @@ bool flecs_component_is_delete_locked(
     flecs_alloc_t(&world->allocator, T)
 #define flecs_walloc_n(world, T, count)\
     flecs_alloc_n(&world->allocator, T, count)
-#define flecs_wcalloc(world, size)\
-    flecs_calloc(&world->allocator, size)
 #define flecs_wfree_t(world, T, ptr)\
     flecs_free_t(&world->allocator, T, ptr)
 #define flecs_wcalloc_n(world, T, count)\
     flecs_calloc_n(&world->allocator, T, count)
-#define flecs_wfree(world, size, ptr)\
-    flecs_free(&world->allocator, size, ptr)
 #define flecs_wfree_n(world, T, count, ptr)\
     flecs_free_n(&world->allocator, T, count, ptr)
-#define flecs_wrealloc(world, size_dst, size_src, ptr)\
-    flecs_realloc(&world->allocator, size_dst, size_src, ptr)
 #define flecs_wrealloc_n(world, T, count_dst, count_src, ptr)\
     flecs_realloc_n(&world->allocator, T, count_dst, count_src, ptr)
-#define flecs_wdup(world, size, ptr)\
-    flecs_dup(&world->allocator, size, ptr)
 #define flecs_wdup_n(world, T, count, ptr)\
     flecs_dup_n(&world->allocator, T, count, ptr)
 

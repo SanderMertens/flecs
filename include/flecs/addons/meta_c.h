@@ -126,9 +126,6 @@ int ecs_meta_from_desc(
 
 
 /* ECS_BITMASK implementation */
-#define ECS_BITMASK_TYPE(name, ...)\
-    typedef enum name __VA_ARGS__ name
-
 #define ECS_BITMASK_ECS_META_IMPL ECS_BITMASK_IMPL
 
 #define ECS_BITMASK_IMPL(name, type_desc)\

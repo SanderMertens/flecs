@@ -607,7 +607,6 @@ static void flecs_query_insert_trivial_search(
     }
 
     /* Find trivial terms, which can be handled in single instruction */
-    int32_t trivial_wildcard_terms = 0;
     int32_t trivial_terms = 0;
 
     for (i = 0; i < term_count; i ++) {
@@ -665,9 +664,7 @@ static void flecs_query_insert_trivial_search(
 
         /* If there's more than 1 trivial term, batch them in trivial search */
         ecs_query_op_t trivial = {0};
-        if (!trivial_wildcard_terms) {
-            trivial.kind = EcsQueryTriv;
-        }
+        trivial.kind = EcsQueryTriv;
 
         /* Store the bitset with trivial terms on the instruction */
         trivial.src.entity = trivial_set;

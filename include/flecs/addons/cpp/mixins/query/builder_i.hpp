@@ -349,7 +349,7 @@ struct query_builder_i : term_builder_i<Base> {
     }
 
     /** Group and sort matched tables.
-     * Similar to ecs_query_order_by(), but instead of sorting individual entities, this
+     * Similar to order_by(), but instead of sorting individual entities, this
      * operation only sorts matched tables. This can be useful if a query needs to
      * enforce a certain iteration order upon the tables it is iterating, for 
      * example by giving a certain component or tag a higher priority.

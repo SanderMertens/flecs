@@ -509,7 +509,6 @@ static bool flecs_query_children_select(
            op_ctx->entities = ecs_vec_first_t(v_children, ecs_entity_t);
            op_ctx->cur = -1;
            op_ctx->range.count = ecs_vec_count(v_children);
-           op_ctx->cr = cr;
         }
     } else {
         if (!op_ctx->state) {

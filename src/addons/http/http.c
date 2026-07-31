@@ -1448,10 +1448,8 @@ void ecs_http_server_dequeue(
         ecs_time_measure(&t);
         int32_t request_count = http_dequeue_requests(srv, elapsed);
         srv->requests_processed += request_count;
-        srv->requests_processed_total += request_count;
         double time_spent = ecs_time_measure(&t);
         srv->request_time += time_spent;
-        srv->request_time_total += time_spent;
         srv->dequeue_count ++;
     }
 

@@ -30,18 +30,6 @@ struct system_runner_fluent {
         , stage_current_(stage_current)
         , stage_count_(stage_count) { }
 
-    /** Set the offset for the system runner. */
-    system_runner_fluent& offset(int32_t offset) {
-        offset_ = offset;
-        return *this;
-    }
-
-    /** Set the limit for the system runner. */
-    system_runner_fluent& limit(int32_t limit) {
-        limit_ = limit;
-        return *this;
-    }
-
     /** Set the stage for the system runner. */
     system_runner_fluent& stage(flecs::world& stage) {
         stage_ = stage.c_ptr();
@@ -64,8 +52,6 @@ private:
     entity_t id_;
     ecs_ftime_t delta_time_;
     void *param_;
-    int32_t offset_;
-    int32_t limit_;
     int32_t stage_current_;
     int32_t stage_count_;
 };

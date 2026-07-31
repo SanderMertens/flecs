@@ -35,7 +35,6 @@ const char* flecs_query_op_str(
     case EcsQueryIdsLeft:        return "idsl        ";
     case EcsQueryIdsAll:         return "idsa        ";
     case EcsQueryEach:           return "each        ";
-    case EcsQueryStore:          return "store       ";
     case EcsQueryReset:          return "reset       ";
     case EcsQueryOr:             return "or          ";
     case EcsQueryOptional:       return "option      ";
@@ -68,8 +67,6 @@ const char* flecs_query_op_str(
     case EcsQueryTreeSelfUpPost: return "treesup_post";
     case EcsQueryTreeUpNot:      return "treeup_not  ";
     case EcsQueryTreeSelfUpNot:  return "treesup_not ";
-    case EcsQueryTreeUp:         return "tree_up     ";
-    case EcsQueryTreeSelfUp:     return "tree_selfup ";
     case EcsQueryTreeWith:       return "tree_w      ";
     case EcsQueryChildren:       return "children    ";
     case EcsQueryChildrenWc:     return "children_wc ";

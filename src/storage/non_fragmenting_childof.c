@@ -445,8 +445,6 @@ void flecs_non_fragmenting_childof_unparent(
             world, ecs_childof(e));
         if (!cr || (cr->flags & EcsIdMarkedForDelete)) {
             continue;
-        } else {
-            /* Entity is a parent */
         }
 
         /* Update depth to 1 if parent is removed */

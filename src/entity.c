@@ -802,27 +802,24 @@ static int flecs_traverse_add(
     }
 
     /* Find existing table */
-    ecs_table_t *src_table = NULL, *table = NULL;
+    ecs_table_t *table = NULL;
     ecs_record_t *r = flecs_entities_get(world, result);
     table = r->table;
 
     /* Find destination table */
     /* If this is a new entity without a name, add the scope. If a name is
      * provided, the scope will be added by the add_path_w_sep function */
-    if (new_entity) {
-        if (new_entity && scope && !name && !name_assigned) {
-            table = flecs_find_table_add(
-                world, table, ecs_pair(EcsChildOf, scope), &diff);
-        }
+    if (new_entity && scope && !name && !name_assigned) {
+        table = flecs_find_table_add(
+            world, table, ecs_pair(EcsChildOf, scope), &diff);
     }
 
     /* Commit entity to destination table */
-    if (src_table != table) {
+    if (table) {
         flecs_defer_begin(world, world->stages[0]);
         ecs_table_diff_t table_diff;
         flecs_table_diff_build_noalloc(&diff, &table_diff);
         flecs_commit(world, result, r, table, &table_diff, 0, 0);
-        flecs_table_diff_builder_fini(world, &diff);
         flecs_defer_end(world, world->stages[0]);
     }
 
@@ -849,10 +846,8 @@ static void flecs_deferred_add_remove(
 
     /* If this is a new entity without a name, add the scope. If a name is
      * provided, the scope will be added by the add_path_w_sep function */
-    if (new_entity) {
-        if (new_entity && scope && !name && !name_assigned) {
-            ecs_add_id(world, entity, ecs_pair(EcsChildOf, scope));
-        }
+    if (new_entity && scope && !name && !name_assigned) {
+        ecs_add_id(world, entity, ecs_pair(EcsChildOf, scope));
     }
 
     int32_t thread_count = ecs_get_stage_count(world);
@@ -1192,12 +1187,10 @@ static void flecs_check_component(
     if (ptr->size != size) {
         char *path = ecs_get_path(world, result);
         ecs_abort(ECS_INVALID_COMPONENT_SIZE, "%s", path);
-        ecs_os_free(path);
     }
     if (ptr->alignment != alignment) {
         char *path = ecs_get_path(world, result);
         ecs_abort(ECS_INVALID_COMPONENT_ALIGNMENT, "%s", path);
-        ecs_os_free(path);
     }
 }
 

@@ -17,7 +17,6 @@ namespace flecs
 {
 
 struct world;
-struct world_async_stage;
 struct iter;
 struct entity_view;
 struct entity;

@@ -35,9 +35,6 @@ void* flecs_iter_calloc(
 #define flecs_iter_calloc_n(it, T, count)\
     flecs_iter_calloc(it, ECS_SIZEOF(T) * count, ECS_ALIGNOF(T))
 
-#define flecs_iter_free_t(ptr, T)\
-    flecs_iter_free(ptr, ECS_SIZEOF(T))
-
 #define flecs_iter_free_n(ptr, T, count)\
     flecs_iter_free(ptr, ECS_SIZEOF(T) * count)
 

@@ -60,7 +60,6 @@ typedef uintptr_t ecs_os_thread_t;                 /**< OS thread. */
 typedef uintptr_t ecs_os_cond_t;                   /**< OS cond. */
 typedef uintptr_t ecs_os_mutex_t;                  /**< OS mutex. */
 typedef uintptr_t ecs_os_dl_t;                     /**< OS dynamic library. */
-typedef uintptr_t ecs_os_sock_t;                   /**< OS socket. */
 
 /** 64-bit thread ID. */
 typedef uint64_t ecs_os_thread_id_t;

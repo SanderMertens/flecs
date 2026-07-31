@@ -1657,11 +1657,6 @@ typedef struct EcsTreeSpawner {
 /** @} */
 /** @} */
 
-/* Only include deprecated definitions if deprecated addon is required */
-#ifdef FLECS_DEPRECATED
-#include "flecs/addons/deprecated.h"
-#endif
-
 /**
  * @defgroup api_constants API Constants
  * Public API constants.
@@ -5549,10 +5544,7 @@ bool ecs_worker_next(
  * component from a parent, or another entity. The ecs_field_is_self() operation
  * can be used to test dynamically if a field is owned.
  * 
- * When a field contains a sparse component, use the ecs_field_at() function. When
- * a field is guaranteed to be set and owned, the ecs_field_self() function can be
- * used. ecs_field_self() has slightly better performance, and provides stricter 
- * validity checking.
+ * When a field contains a sparse component, use the ecs_field_at() function.
  *
  * The provided size must be either 0 or must match the size of the type
  * of the returned array. If the size does not match, the operation may assert.

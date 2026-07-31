@@ -24,7 +24,6 @@ struct ecs_pipeline_state_t {
     ecs_vec_t ops;              /* Pipeline schedule */
     ecs_vec_t systems;          /* Vector with system ids */
 
-    ecs_entity_t last_system;   /* Last system run by pipeline */
     int32_t match_count;        /* Used to track if rebuild is necessary */
     int32_t rebuild_count;      /* Number of pipeline rebuilds */
 

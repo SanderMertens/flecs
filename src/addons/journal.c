@@ -148,8 +148,4 @@ void flecs_journal_end(void) {
     ecs_log_pop();
 }
 
-int flecs_journal_get_counter(void) {
-    return flecs_journal_counter;
-}
-
 #endif

@@ -2040,9 +2040,6 @@ void* flecs_iter_calloc(
 #define flecs_iter_calloc_n(it, T, count)\
     flecs_iter_calloc(it, ECS_SIZEOF(T) * count, ECS_ALIGNOF(T))
 
-#define flecs_iter_free_t(ptr, T)\
-    flecs_iter_free(ptr, ECS_SIZEOF(T))
-
 #define flecs_iter_free_n(ptr, T, count)\
     flecs_iter_free(ptr, ECS_SIZEOF(T) * count)
 
@@ -2080,9 +2077,6 @@ extern ecs_mixins_t ecs_world_t_mixins;
 extern ecs_mixins_t ecs_stage_t_mixins;
 extern ecs_mixins_t ecs_query_t_mixins;
 extern ecs_mixins_t ecs_observer_t_mixins;
-
-/* Types that have no mixins */
-#define ecs_table_t_mixins (&(ecs_mixins_t){ NULL })
 
 /* Initialize poly */
 void* flecs_poly_init_(
@@ -2518,22 +2512,14 @@ bool flecs_component_is_delete_locked(
     flecs_alloc_t(&world->allocator, T)
 #define flecs_walloc_n(world, T, count)\
     flecs_alloc_n(&world->allocator, T, count)
-#define flecs_wcalloc(world, size)\
-    flecs_calloc(&world->allocator, size)
 #define flecs_wfree_t(world, T, ptr)\
     flecs_free_t(&world->allocator, T, ptr)
 #define flecs_wcalloc_n(world, T, count)\
     flecs_calloc_n(&world->allocator, T, count)
-#define flecs_wfree(world, size, ptr)\
-    flecs_free(&world->allocator, size, ptr)
 #define flecs_wfree_n(world, T, count, ptr)\
     flecs_free_n(&world->allocator, T, count, ptr)
-#define flecs_wrealloc(world, size_dst, size_src, ptr)\
-    flecs_realloc(&world->allocator, size_dst, size_src, ptr)
 #define flecs_wrealloc_n(world, T, count_dst, count_src, ptr)\
     flecs_realloc_n(&world->allocator, T, count_dst, count_src, ptr)
-#define flecs_wdup(world, size, ptr)\
-    flecs_dup(&world->allocator, size, ptr)
 #define flecs_wdup_n(world, T, count, ptr)\
     flecs_dup_n(&world->allocator, T, count, ptr)
 
@@ -2686,7 +2672,6 @@ uint64_t flecs_ito_(
 
 #define flecs_itosize(value) flecs_ito(size_t, (value))
 #define flecs_utosize(value) flecs_uto(ecs_size_t, (value))
-#define flecs_itoi16(value) flecs_ito(int16_t, (value))
 #define flecs_itoi32(value) flecs_ito(int32_t, (value))
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -6851,27 +6836,24 @@ static int flecs_traverse_add(
     }
 
     /* Find existing table */
-    ecs_table_t *src_table = NULL, *table = NULL;
+    ecs_table_t *table = NULL;
     ecs_record_t *r = flecs_entities_get(world, result);
     table = r->table;
 
     /* Find destination table */
     /* If this is a new entity without a name, add the scope. If a name is
      * provided, the scope will be added by the add_path_w_sep function */
-    if (new_entity) {
-        if (new_entity && scope && !name && !name_assigned) {
-            table = flecs_find_table_add(
-                world, table, ecs_pair(EcsChildOf, scope), &diff);
-        }
+    if (new_entity && scope && !name && !name_assigned) {
+        table = flecs_find_table_add(
+            world, table, ecs_pair(EcsChildOf, scope), &diff);
     }
 
     /* Commit entity to destination table */
-    if (src_table != table) {
+    if (table) {
         flecs_defer_begin(world, world->stages[0]);
         ecs_table_diff_t table_diff;
         flecs_table_diff_build_noalloc(&diff, &table_diff);
         flecs_commit(world, result, r, table, &table_diff, 0, 0);
-        flecs_table_diff_builder_fini(world, &diff);
         flecs_defer_end(world, world->stages[0]);
     }
 
@@ -6898,10 +6880,8 @@ static void flecs_deferred_add_remove(
 
     /* If this is a new entity without a name, add the scope. If a name is
      * provided, the scope will be added by the add_path_w_sep function */
-    if (new_entity) {
-        if (new_entity && scope && !name && !name_assigned) {
-            ecs_add_id(world, entity, ecs_pair(EcsChildOf, scope));
-        }
+    if (new_entity && scope && !name && !name_assigned) {
+        ecs_add_id(world, entity, ecs_pair(EcsChildOf, scope));
     }
 
     int32_t thread_count = ecs_get_stage_count(world);
@@ -7241,12 +7221,10 @@ static void flecs_check_component(
     if (ptr->size != size) {
         char *path = ecs_get_path(world, result);
         ecs_abort(ECS_INVALID_COMPONENT_SIZE, "%s", path);
-        ecs_os_free(path);
     }
     if (ptr->alignment != alignment) {
         char *path = ecs_get_path(world, result);
         ecs_abort(ECS_INVALID_COMPONENT_ALIGNMENT, "%s", path);
-        ecs_os_free(path);
     }
 }
 
@@ -10663,28 +10641,6 @@ static ecs_component_record_t* flecs_field_cr(
         cr = tr->hdr.cr;
     }
     return cr;
-}
-
-ecs_sparse_t* flecs_field_sparse(
-    const ecs_iter_t *it,
-    int8_t index)
-{
-    ecs_check(it->flags & EcsIterIsValid, ECS_INVALID_PARAMETER,
-        "operation invalid before calling next()");
-    ecs_check(index >= 0, ECS_INVALID_PARAMETER,
-        "invalid field index %d", index);
-    ecs_check(index < it->field_count, ECS_INVALID_PARAMETER,
-        "field index %d out of bounds", index);
-    ecs_check((it->row_fields & (1llu << index)), ECS_INVALID_PARAMETER,
-        "field %d is not a row field", index);
-
-    if (it->sources[index]) {
-        return NULL;
-    }
-
-    return flecs_field_cr(it, index)->sparse;
-error:
-    return NULL;
 }
 
 void* ecs_field_at_w_size(
@@ -21902,7 +21858,6 @@ bool flecs_sparse_is_alive(
         return false;
     }
 
-    ecs_assert(dense == page->sparse[offset], ECS_INTERNAL_ERROR, NULL);
     return true;
 }
 
@@ -27370,8 +27325,6 @@ void flecs_entity_index_shrink(
                     ECS_INTERNAL_ERROR, NULL);
 
                 if (flecs_entity_index_is_alive(index, entity)) {
-                    ecs_assert(flecs_entity_index_is_alive(index, entity),
-                        ECS_INTERNAL_ERROR, NULL);
                     has_alive = true;
                     break;
                 }
@@ -27817,8 +27770,6 @@ void flecs_non_fragmenting_childof_unparent(
             world, ecs_childof(e));
         if (!cr || (cr->flags & EcsIdMarkedForDelete)) {
             continue;
-        } else {
-            /* Entity is a parent */
         }
 
         /* Update depth to 1 if parent is removed */
@@ -28008,7 +27959,6 @@ void flecs_ordered_children_unparent(
     int32_t row,
     int32_t count)
 {
-    (void)world;
     flecs_ordered_entities_unparent_internal(world, src, src, row, count);
 }
 
@@ -28018,8 +27968,6 @@ void flecs_ordered_children_reorder(
     const ecs_entity_t *children,
     int32_t child_count)
 {
-    (void)world;
-
     ecs_component_record_t *cr = flecs_components_get(
         world, ecs_childof(parent));
 

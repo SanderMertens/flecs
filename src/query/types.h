@@ -66,7 +66,6 @@ typedef enum {
     EcsQueryIdsLeft,        /* Find ids in use that match (*, T) wildcard */
     EcsQueryIdsAll,         /* Find all non-pair ids in use that match (*) */
     EcsQueryEach,           /* Iterate entities in table, populate entity variable */
-    EcsQueryStore,          /* Store table or entity in variable */
     EcsQueryReset,          /* Reset value of variable to wildcard (*) */
     EcsQueryOr,             /* Or operator */
     EcsQueryOptional,       /* Optional operator */
@@ -92,8 +91,6 @@ typedef enum {
     EcsQueryTree,
     EcsQueryTreeWildcard,
     EcsQueryTreeWith,       /* Evaluate (ChildOf, tgt) against fixed or variable source */
-    EcsQueryTreeUp,         /* Return union of up(ChildOf) and tables with Parent */
-    EcsQueryTreeSelfUp,
     EcsQueryTreePre,        /* Tree instruction that doesn't filter Parent component / returns entire tables. */
     EcsQueryTreePost,       /* Tree instruction that applies filter to Parent component. */
     EcsQueryTreeUpPre,      /* Up traversal for ChildOf that doesn't filter Parent component / returns entire tables */
@@ -204,7 +201,6 @@ typedef enum ecs_query_tree_iter_state_t {
 
 typedef struct {
     ecs_query_table_iter_ctx_t and_; /* For mixed results */
-    ecs_component_record_t *cr;
     ecs_entity_t tgt;
     ecs_entity_t *entities;
     const EcsParent *parents;
@@ -230,7 +226,6 @@ typedef struct {
 
 typedef struct {
     ecs_vec_t elems;      /* vector<ecs_trav_down_elem_t> */
-    bool ready;
 } ecs_trav_down_t;
 
 typedef struct {
@@ -264,13 +259,6 @@ typedef struct {
     ecs_component_record_t *cr_with;
     ecs_component_record_t *cr_trav;
 
-    /* If the queried-for component is a ChildOf pair that uses the non-fragmenting
-     * ChildOf storage, iterate the ordered children vector instead of tables with
-     * ChildOf pairs as roots for the down cache. */
-    ecs_entity_t *entities;
-    int32_t entities_cur;
-    int32_t entities_count;
-
     ecs_trav_down_t *down;
     int32_t cache_elem;
     ecs_trav_up_cache_t cache;
@@ -286,7 +274,6 @@ typedef struct {
     ecs_query_up_impl_t *impl;
 
     /* Data for returning tables with non-fragmenting ChildOf */
-    const EcsParent *parents;
     ecs_table_range_t range;
     int32_t cur;
 } ecs_query_up_ctx_t;
@@ -351,7 +338,6 @@ typedef struct {
 /* Control flow context */
 typedef struct {
     ecs_query_lbl_t op_index;
-    ecs_id_t field_id;
     bool is_set;
 } ecs_query_ctrl_ctx_t;
 

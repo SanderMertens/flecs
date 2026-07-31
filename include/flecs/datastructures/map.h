@@ -244,9 +244,6 @@ void ecs_map_copy(
     ecs_map_t *dst,
     const ecs_map_t *src);
 
-/** Get value as a typed reference (T**). */
-#define ecs_map_get_ref(m, T, k) ECS_CAST(T**, ecs_map_get(m, k))
-
 /** Get value as a typed dereferenced pointer (T*). */
 #define ecs_map_get_deref(m, T, k) ECS_CAST(T*, ecs_map_get_deref_(m, k))
 

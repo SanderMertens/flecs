@@ -128,9 +128,7 @@ extern "C" {
 
 #define EcsIterIsValid                 (1u << 0u)  /* Does the iterator contain a valid result. */
 #define EcsIterNoData                  (1u << 1u)  /* Does the iterator provide (component) data. */
-#define EcsIterNoResults               (1u << 2u)  /* Iterator has no results. */
 #define EcsIterMatchEmptyTables        (1u << 3u)  /* Match empty tables. */
-#define EcsIterIgnoreThis              (1u << 4u)  /* Only evaluate non-this terms. */
 #define EcsIterTrivialChangeDetection  (1u << 5u)
 #define EcsIterHasCondSet              (1u << 6u)  /* Does the iterator have conditionally set fields. */
 #define EcsIterProfile                 (1u << 7u)  /* Profile iterator performance. */
@@ -210,8 +208,6 @@ extern "C" {
 //// Observer flags (used by ecs_observer_t::flags)
 ////////////////////////////////////////////////////////////////////////////////
 
-#define EcsObserverMatchPrefab         (1u << 1u)  /* Same as query. */
-#define EcsObserverMatchDisabled       (1u << 2u)  /* Same as query. */
 #define EcsObserverIsMulti             (1u << 3u)  /* Does the observer have multiple terms. */
 #define EcsObserverIsMonitor           (1u << 4u)  /* Is the observer a monitor. */
 #define EcsObserverIsDisabled          (1u << 5u)  /* Is the observer entity disabled. */
@@ -219,7 +215,6 @@ extern "C" {
 #define EcsObserverBypassQuery         (1u << 7u)  /* Don't evaluate query for multi-component observer. */
 #define EcsObserverYieldOnCreate       (1u << 8u)  /* Yield matching entities when creating observer. */
 #define EcsObserverYieldOnDelete       (1u << 9u)  /* Yield matching entities when deleting observer. */
-#define EcsObserverKeepAlive           (1u << 11u) /* Observer keeps component alive (same value as EcsTermKeepAlive). */
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Table flags (used by ecs_table_t::flags)
@@ -262,9 +257,6 @@ extern "C" {
 /* Composite table flags */
 #define EcsTableHasLifecycle     (EcsTableHasCtors | EcsTableHasDtors)
 #define EcsTableIsComplex        (EcsTableHasLifecycle | EcsTableHasToggle | EcsTableHasSparse)
-#define EcsTableHasAddActions    (EcsTableHasIsA | EcsTableHasCtors | EcsTableHasOnAdd | EcsTableHasOnSet)
-#define EcsTableHasRemoveActions (EcsTableHasIsA | EcsTableHasDtors | EcsTableHasOnRemove)
-#define EcsTableEdgeFlags        (EcsTableHasOnAdd | EcsTableHasOnRemove | EcsTableHasSparse)
 #define EcsTableAddEdgeFlags     (EcsTableHasOnAdd | EcsTableHasSparse)
 #define EcsTableRemoveEdgeFlags  (EcsTableHasOnRemove | EcsTableHasSparse | EcsTableHasOrderedChildren)
 

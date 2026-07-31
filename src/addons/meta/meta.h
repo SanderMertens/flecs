@@ -89,10 +89,6 @@ void flecs_meta_map_clear(
     ecs_map_t *map,
     const ecs_type_info_t *value_ti);
 
-int flecs_meta_map_set_key(
-    ecs_meta_cursor_t *cursor,
-    const ecs_value_t *key_value);
-
 void flecs_rtt_init_default_hooks(
     ecs_iter_t *it);
 

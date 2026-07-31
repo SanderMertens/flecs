@@ -188,10 +188,6 @@ void* flecs_hashmap_next_(
     void *key_out,
     ecs_size_t value_size);
 
-/** Type-safe hashmap next (value only). */
-#define flecs_hashmap_next(map, V)\
-    (V*)flecs_hashmap_next_(map, 0, NULL, ECS_SIZEOF(V))
-
 /** Type-safe hashmap next with key output. */
 #define flecs_hashmap_next_w_key(map, K, key, V)\
     (V*)flecs_hashmap_next_(map, ECS_SIZEOF(K), key, ECS_SIZEOF(V))

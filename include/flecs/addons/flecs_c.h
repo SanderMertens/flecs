@@ -363,10 +363,6 @@
     (ECS_CAST(Second*, ecs_get_mut_id(world, subject,\
         ecs_pair(first, ecs_id(Second)))))
 
-/** Get a mutable pointer to a component. */
-#define ecs_get_mut(world, entity, T)\
-    (ECS_CAST(T*, ecs_get_mut_id(world, entity, ecs_id(T))))
-
 /** Ensure entity has a component, return mutable pointer. */
 #define ecs_ensure(world, entity, T)\
     (ECS_CAST(T*, ecs_ensure_id(world, entity, ecs_id(T), sizeof(T))))
@@ -494,19 +490,6 @@
 /** Test if an entity owns a component. */
 #define ecs_owns(world, entity, T)\
     ecs_owns_id(world, entity, ecs_id(T))
-
-/** Test if an entity shares a component. */
-#define ecs_shares_id(world, entity, id)\
-    (ecs_search_relation(world, ecs_get_table(world, entity), 0, ecs_id(id), \
-        EcsIsA, 1, 0, 0, 0, 0) != -1)
-
-/** Test if an entity shares a pair. */
-#define ecs_shares_pair(world, entity, first, second)\
-    (ecs_shares_id(world, entity, ecs_pair(first, second)))
-
-/** Test if an entity shares a component. */
-#define ecs_shares(world, entity, T)\
-    (ecs_shares_id(world, entity, ecs_id(T)))
 
 /** Get the target for a relationship. */
 #define ecs_get_target_for(world, entity, rel, T)\
@@ -679,10 +662,6 @@
 /** Get field data for a component. */
 #define ecs_field(it, T, index)\
     (ECS_CAST(T*, ecs_field_w_size(it, sizeof(T), index)))
-
-/** Get field data for a self-owned component. */
-#define ecs_field_self(it, T, index)\
-    (ECS_CAST(T*, ecs_field_self_w_size(it, sizeof(T), index)))
 
 /** Get field data at a specific row. */
 #define ecs_field_at(it, T, index, row)\

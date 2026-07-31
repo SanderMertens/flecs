@@ -417,19 +417,6 @@ bool flecs_defer_end(
     ecs_world_t *world,
     ecs_stage_t *stage);
 
-#ifdef FLECS_JOURNAL
-/** Get the current value of the operation counter.
- * The journaling addon keeps track of an operation counter, which is incremented
- * for each operation. Applications can use this counter to run up to the point
- * where an error occurs for easier debugging.
- * This value is not thread-safe.
- * 
- * @return The operation counter.
- */
-FLECS_API
-int flecs_journal_get_counter(void);
-#endif
-
 /** Calculate an offset from an address. */
 #ifdef __cplusplus
 #define ECS_OFFSET(o, offset) reinterpret_cast<void*>((reinterpret_cast<uintptr_t>(o)) + (static_cast<uintptr_t>(offset)))
@@ -454,10 +441,6 @@ int flecs_journal_get_counter(void);
     : (ECS_BIT_CLEAR16(flags, bit)))
 
 #define ECS_BIT_IS_SET(flags, bit) ((flags) & (bit))
-
-#define ECS_BIT_SETN(flags, n) ECS_BIT_SET(flags, 1llu << n)
-#define ECS_BIT_CLEARN(flags, n) ECS_BIT_CLEAR(flags, 1llu << n)
-#define ECS_BIT_CONDN(flags, n, cond) ECS_BIT_COND(flags, 1llu << n, cond)
 
 #ifdef __cplusplus
 }

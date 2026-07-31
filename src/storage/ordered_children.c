@@ -173,7 +173,6 @@ void flecs_ordered_children_unparent(
     int32_t row,
     int32_t count)
 {
-    (void)world;
     flecs_ordered_entities_unparent_internal(world, src, src, row, count);
 }
 
@@ -183,8 +182,6 @@ void flecs_ordered_children_reorder(
     const ecs_entity_t *children,
     int32_t child_count)
 {
-    (void)world;
-
     ecs_component_record_t *cr = flecs_components_get(
         world, ecs_childof(parent));
 

@@ -751,12 +751,6 @@ void ecs_const_var_modified(
 
 /* Functions */
 
-/** Vector function callbacks for different element types. */
-typedef struct ecs_vector_fn_callbacks_t {
-    ecs_vector_function_callback_t i8;   /**< Callback for i8 element type. */
-    ecs_vector_function_callback_t i32;  /**< Callback for i32 element type. */
-} ecs_vector_fn_callbacks_t;
-
 /** Used with ecs_function_init() and ecs_method_init(). */
 typedef struct ecs_function_desc_t {
     /** Function name. */

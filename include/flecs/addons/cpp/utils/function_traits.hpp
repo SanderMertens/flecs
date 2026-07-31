@@ -20,7 +20,6 @@ struct function_traits_defs
 {
     static constexpr bool is_callable = true;
     static constexpr size_t arity = sizeof...(Args);
-    using return_type = ReturnType;
     using args = arg_list<Args ...>;
 };
 
@@ -119,10 +118,6 @@ template <typename T>
 struct arity {
     static constexpr int value = _::function_traits<T>::arity;
 };
-
-/** Get the return type of a callable. */
-template <typename T>
-using return_type_t = typename _::function_traits<T>::return_type;
 
 /** Get the argument list type of a callable. */
 template <typename T>

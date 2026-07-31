@@ -264,9 +264,6 @@ protected:
  */
 template<typename ... Components>
 struct query : query_base, iterable<Components...> {
-private:
-    using Fields = typename _::field_ptrs<Components...>::array;
-
 public:
     using query_base::query_base;
 
