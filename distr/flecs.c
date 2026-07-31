@@ -55411,7 +55411,10 @@ static void* flecs_meta_cursor_get_ptr(
             return NULL;
         }
 
-        ecs_assert(scope->ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+        if (!scope->ptr) {
+            return NULL;
+        }
+
         return opaque->ensure_member(scope->ptr, op->name);
     } else {
         ecs_err("invalid operation for opaque type");
@@ -56299,6 +56302,10 @@ int ecs_meta_push(
         next_scope->is_empty_scope = true;
         next_scope->is_moved_scope = false;
         scope->elem = 0;
+    }
+
+    if (next_scope->opaque && !cursor->scope[0].ptr) {
+        ptr = NULL;
     }
 
     if (op->kind == EcsOpPushValue) {
