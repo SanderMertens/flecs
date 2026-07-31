@@ -186,6 +186,8 @@ void StructTypes_overlapping_value_error_range(void);
 void StructTypes_overlapping_value_warning_range(void);
 void StructTypes_struct_w_16_alignment(void);
 void StructTypes_struct_w_use_offset(void);
+void StructTypes_struct_w_use_offset_w_member_entities(void);
+void StructTypes_struct_w_use_offset_zero_w_member_entities(void);
 void StructTypes_direct_cycle(void);
 void StructTypes_indirect_cycle(void);
 void StructTypes_use_before_registering_reflection(void);
@@ -2125,6 +2127,14 @@ bake_test_case StructTypes_testcases[] = {
     {
         "struct_w_use_offset",
         StructTypes_struct_w_use_offset
+    },
+    {
+        "struct_w_use_offset_w_member_entities",
+        StructTypes_struct_w_use_offset_w_member_entities
+    },
+    {
+        "struct_w_use_offset_zero_w_member_entities",
+        StructTypes_struct_w_use_offset_zero_w_member_entities
     },
     {
         "direct_cycle",
@@ -7061,7 +7071,7 @@ static bake_test_suite suites[] = {
         "StructTypes",
         NULL,
         NULL,
-        36,
+        38,
         StructTypes_testcases
     },
     {

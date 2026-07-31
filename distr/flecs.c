@@ -95979,6 +95979,7 @@ static void flecs_set_member_from_component(
         .type = member->type,
         .count = member->count,
         .offset = member->offset,
+        .use_offset = member->use_offset,
         .unit = member->unit
     };
 
@@ -96162,6 +96163,7 @@ static void flecs_struct_create_member_entity(
         .type = member->type,
         .count = member->count,
         .offset = member->offset,
+        .use_offset = member->use_offset,
         .unit = member->unit
     });
 
