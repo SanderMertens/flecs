@@ -17150,3 +17150,269 @@ void Eval_enum_w_underlying_type_in_middle(void) {
 
     ecs_fini(world);
 }
+
+typedef struct IntVecHolder {
+    int32_t number;
+    IntVec elems;
+} IntVecHolder;
+
+void Eval_opaque_vector_member_at_offset(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, IntVec);
+    ECS_COMPONENT(world, IntVecHolder);
+
+    ecs_opaque(world, {
+        .entity = ecs_id(IntVec),
+        .type.as_type = ecs_vector(world, { .type = ecs_id(ecs_i32_t) }),
+        .type.ensure_element = IntVec_ensure,
+        .type.count = IntVec_count,
+        .type.resize = IntVec_resize
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(IntVecHolder),
+        .members = {
+            {"number", ecs_id(ecs_i32_t)},
+            {"elems", ecs_id(IntVec)}
+        }
+    });
+
+    const char *expr =
+    HEAD "e {"
+    LINE " IntVecHolder: {elems: [10, 20, 30], number: 1}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const IntVecHolder *ptr = ecs_get(world, e, IntVecHolder);
+    test_assert(ptr != NULL);
+    test_int(ptr->number, 1);
+    test_int(ptr->elems.count, 3);
+    test_int(ptr->elems.array[0], 10);
+    test_int(ptr->elems.array[1], 20);
+    test_int(ptr->elems.array[2], 30);
+
+    ecs_os_free(ptr->elems.array);
+
+    ecs_fini(world);
+}
+
+typedef struct VecElem {
+    ecs_entity_t target;
+    int32_t value;
+} VecElem;
+
+typedef struct VecElemVec {
+    bool _dummy;
+    size_t count;
+    VecElem *array;
+} VecElemVec;
+
+typedef struct VecElemHolder {
+    int32_t number;
+    VecElemVec elems;
+} VecElemHolder;
+
+static size_t VecElemVec_count(const void *ptr) {
+    const VecElemVec *data = ptr;
+    return data->count;
+}
+
+static void* VecElemVec_ensure(void *ptr, size_t index) {
+    VecElemVec *data = ptr;
+    test_assert(data != NULL);
+    if (data->count <= index) {
+        data->count = index + 1;
+        data->array = ecs_os_realloc_n(data->array, VecElem, data->count);
+    }
+    return &data->array[index];
+}
+
+static void VecElemVec_resize(void *ptr, size_t size) {
+    VecElemVec *data = ptr;
+    test_assert(data != NULL);
+    if (data->count != size) {
+        data->count = size;
+        if (!data->count) {
+            ecs_os_free(data->array);
+            data->array = NULL;
+        } else {
+            data->array = ecs_os_realloc_n(data->array, VecElem, size);
+        }
+    }
+}
+
+void Eval_opaque_vector_of_structs_member_at_offset(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, VecElem);
+    ECS_COMPONENT(world, VecElemVec);
+    ECS_COMPONENT(world, VecElemHolder);
+
+    ecs_struct(world, {
+        .entity = ecs_id(VecElem),
+        .members = {
+            {"target", ecs_id(ecs_entity_t)},
+            {"value", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_opaque(world, {
+        .entity = ecs_id(VecElemVec),
+        .type.as_type = ecs_vector(world, { .type = ecs_id(VecElem) }),
+        .type.ensure_element = VecElemVec_ensure,
+        .type.count = VecElemVec_count,
+        .type.resize = VecElemVec_resize
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(VecElemHolder),
+        .members = {
+            {"number", ecs_id(ecs_i32_t)},
+            {"elems", ecs_id(VecElemVec)}
+        }
+    });
+
+    const char *expr =
+    HEAD "Foo {}"
+    LINE "e {"
+    LINE " VecElemHolder: {elems: [{target: Foo, value: 10}, {target: Foo, value: 20}], number: 1}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    test_assert(foo != 0);
+
+    const VecElemHolder *ptr = ecs_get(world, e, VecElemHolder);
+    test_assert(ptr != NULL);
+    test_int(ptr->number, 1);
+    test_int(ptr->elems.count, 2);
+    test_uint(ptr->elems.array[0].target, foo);
+    test_int(ptr->elems.array[0].value, 10);
+    test_uint(ptr->elems.array[1].target, foo);
+    test_int(ptr->elems.array[1].value, 20);
+
+    ecs_os_free(ptr->elems.array);
+
+    ecs_fini(world);
+}
+
+void Eval_opaque_vector_of_structs_member_at_offset_zero(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, VecElem);
+    ECS_COMPONENT(world, VecElemVec);
+
+    ecs_struct(world, {
+        .entity = ecs_id(VecElem),
+        .members = {
+            {"target", ecs_id(ecs_entity_t)},
+            {"value", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_opaque(world, {
+        .entity = ecs_id(VecElemVec),
+        .type.as_type = ecs_vector(world, { .type = ecs_id(VecElem) }),
+        .type.ensure_element = VecElemVec_ensure,
+        .type.count = VecElemVec_count,
+        .type.resize = VecElemVec_resize
+    });
+
+    ecs_entity_t holder = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "VecHolderZero" }),
+        .members = {
+            {"elems", ecs_id(VecElemVec)},
+            {"number", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "Foo {}"
+    LINE "e {"
+    LINE " VecHolderZero: {number: 1, elems: [{target: Foo, value: 10}, {target: Foo, value: 20}]}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    test_assert(foo != 0);
+
+    const void *ptr = ecs_get_id(world, e, holder);
+    test_assert(ptr != NULL);
+
+    const VecElemVec *elems = ptr;
+    test_int(elems->count, 2);
+    test_uint(elems->array[0].target, foo);
+    test_int(elems->array[0].value, 10);
+    test_uint(elems->array[1].target, foo);
+    test_int(elems->array[1].value, 20);
+    test_int(*(const int32_t*)ECS_OFFSET(ptr, sizeof(VecElemVec)), 1);
+
+    ecs_os_free(elems->array);
+
+    ecs_fini(world);
+}
+
+typedef struct OpaqueStructHolder {
+    int32_t number;
+    OpaqueStruct value;
+} OpaqueStructHolder;
+
+void Eval_opaque_struct_member_at_offset(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, OpaqueStruct);
+    ECS_COMPONENT(world, OpaqueStructHolder);
+
+    ecs_entity_t s = ecs_struct(world, {
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)},
+        }
+    });
+
+    ecs_opaque(world, {
+        .entity = ecs_id(OpaqueStruct),
+        .type.as_type = s,
+        .type.ensure_member = OpaqueStruct_member
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(OpaqueStructHolder),
+        .members = {
+            {"number", ecs_id(ecs_i32_t)},
+            {"value", ecs_id(OpaqueStruct)}
+        }
+    });
+
+    const char *expr =
+    HEAD "e {"
+    LINE "  OpaqueStructHolder: {value: {x: 10, y: 20}, number: 1}"
+    LINE "}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const OpaqueStructHolder *p = ecs_get(world, e, OpaqueStructHolder);
+    test_assert(p != NULL);
+    test_int(p->number, 1);
+    test_int(p->value.x, 10);
+    test_int(p->value.y, 20);
+
+    ecs_fini(world);
+}

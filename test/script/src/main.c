@@ -533,6 +533,10 @@ void Eval_var_w_value_name(void);
 void Eval_component_expr_free_w_deleted_type(void);
 void Eval_component_expr_free_w_deleted_type_w_string(void);
 void Eval_component_expr_free_w_type_deleted_by_script_update(void);
+void Eval_opaque_vector_member_at_offset(void);
+void Eval_opaque_vector_of_structs_member_at_offset(void);
+void Eval_opaque_vector_of_structs_member_at_offset_zero(void);
+void Eval_opaque_struct_member_at_offset(void);
 
 // Testsuite 'Function'
 void Function_simple(void);
@@ -4029,6 +4033,22 @@ bake_test_case Eval_testcases[] = {
     {
         "component_expr_free_w_type_deleted_by_script_update",
         Eval_component_expr_free_w_type_deleted_by_script_update
+    },
+    {
+        "opaque_vector_member_at_offset",
+        Eval_opaque_vector_member_at_offset
+    },
+    {
+        "opaque_vector_of_structs_member_at_offset",
+        Eval_opaque_vector_of_structs_member_at_offset
+    },
+    {
+        "opaque_vector_of_structs_member_at_offset_zero",
+        Eval_opaque_vector_of_structs_member_at_offset_zero
+    },
+    {
+        "opaque_struct_member_at_offset",
+        Eval_opaque_struct_member_at_offset
     }
 };
 
@@ -9575,7 +9595,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        524,
+        528,
         Eval_testcases
     },
     {
