@@ -355,6 +355,28 @@ void Sparse_create_delete_2(void) {
     flecs_sparse_free(sp);
 }
 
+void Sparse_generation_validation(void) {
+    ecs_sparse_t *sp = flecs_sparse_new(NULL, NULL, int);
+    uint64_t id = 42;
+    uint64_t recycled_id = ECS_GENERATION_INC(id);
+
+    int *ptr = flecs_sparse_ensure_t(sp, int, id, NULL);
+    *ptr = 10;
+    test_assert(flecs_sparse_remove_t(sp, int, id));
+
+    ptr = flecs_sparse_ensure_t(sp, int, recycled_id, NULL);
+    *ptr = 20;
+
+    test_assert(!flecs_sparse_is_alive(sp, id));
+    test_assert(!flecs_sparse_has(sp, id));
+    test_assert(flecs_sparse_get_t(sp, int, id) == NULL);
+    test_assert(!flecs_sparse_remove_t(sp, int, id));
+    test_assert(flecs_sparse_is_alive(sp, recycled_id));
+    test_int(*flecs_sparse_get_t(sp, int, recycled_id), 20);
+
+    flecs_sparse_free(sp);
+}
+
 void Sparse_count_of_null(void) {
     test_int(flecs_sparse_count(NULL), 0);
 }

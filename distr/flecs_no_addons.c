@@ -21788,6 +21788,11 @@ bool flecs_sparse_remove(
     int32_t dense = page->sparse[offset];
 
     if (dense) {
+        uint64_t *dense_array = ecs_vec_first_t(&sparse->dense, uint64_t);
+        if ((dense >= sparse->count) || (dense_array[dense] != id)) {
+            return false;
+        }
+
         int32_t count = sparse->count;
         if (dense == (count - 1)) {
             /* If dense is the last used element, simply decrease count */
@@ -21839,9 +21844,12 @@ bool flecs_sparse_remove_w_gen(
     int32_t dense = page->sparse[offset];
 
     if (dense) {
-        /* Increase generation */
         uint64_t *dense_array = ecs_vec_first_t(&sparse->dense, uint64_t);
-        ecs_assert(dense_array[dense] == id, ECS_INVALID_PARAMETER, NULL);
+        if ((dense >= sparse->count) || (dense_array[dense] != id)) {
+            return false;
+        }
+
+        /* Increase generation */
         dense_array[dense] = flecs_sparse_inc_gen(id);
 
         int32_t count = sparse->count;
@@ -21902,8 +21910,8 @@ bool flecs_sparse_is_alive(
         return false;
     }
 
-    ecs_assert(dense == page->sparse[offset], ECS_INTERNAL_ERROR, NULL);
-    return true;
+    uint64_t *dense_array = ecs_vec_first_t(&sparse->dense, uint64_t);
+    return dense_array[dense] == id;
 }
 
 void* flecs_sparse_get_w_check(
@@ -21930,6 +21938,11 @@ void* flecs_sparse_get_w_check(
 
         int32_t dense = page->sparse[offset];
         if (!dense || (dense >= sparse->count)) {
+            return NULL;
+        }
+
+        uint64_t *dense_array = ecs_vec_first_t(&sparse->dense, uint64_t);
+        if (dense_array[dense] != id) {
             return NULL;
         }
     }
@@ -21960,7 +21973,12 @@ bool flecs_sparse_has(
 
     int32_t offset = FLECS_SPARSE_OFFSET(id);
     int32_t dense = page->sparse[offset];
-    return dense && (dense < sparse->count);
+    if (!dense || (dense >= sparse->count)) {
+        return false;
+    }
+
+    uint64_t *dense_array = ecs_vec_first_t(&sparse->dense, uint64_t);
+    return dense_array[dense] == id;
 }
 
 int32_t flecs_sparse_count(

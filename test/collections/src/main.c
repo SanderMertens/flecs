@@ -60,6 +60,7 @@ void Sparse_clear_n_chunks(void);
 void Sparse_add_after_clear(void);
 void Sparse_create_delete(void);
 void Sparse_create_delete_2(void);
+void Sparse_generation_validation(void);
 void Sparse_count_of_null(void);
 void Sparse_try_low_after_ensure_high(void);
 void Sparse_is_alive_low_after_ensure_high(void);
@@ -306,6 +307,10 @@ bake_test_case Sparse_testcases[] = {
         Sparse_create_delete_2
     },
     {
+        "generation_validation",
+        Sparse_generation_validation
+    },
+    {
         "count_of_null",
         Sparse_count_of_null
     },
@@ -497,6 +502,7 @@ bake_test_case Allocator_testcases[] = {
     }
 };
 
+
 static bake_test_suite suites[] = {
     {
         "Map",
@@ -509,7 +515,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         Sparse_setup,
         NULL,
-        24,
+        25,
         Sparse_testcases
     },
     {
