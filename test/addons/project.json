@@ -516,7 +516,8 @@
                 "teardown_started",
                 "teardown_stopped",
                 "stop_start",
-                "decode_plus"
+                "decode_plus",
+                "query_params_max"
             ]
         }, {
             "id": "Rest",
