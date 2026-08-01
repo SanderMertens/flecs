@@ -13573,6 +13573,15 @@ static void flecs_uni_observer_invoke(
         return;
     }
 
+    ecs_query_t *query = o->query;
+    if (query) {
+        ecs_term_t *term = &query->terms[0];
+        ecs_assert(trav == 0 || it->sources[0] != 0, ECS_INTERNAL_ERROR, NULL);
+        if (trav && term->trav != trav) {
+            return;
+        }
+    }
+
     if (ecs_should_log_3()) {
         char *path = ecs_get_path(world, it->system);
         ecs_dbg_3("observer: invoke %s", path);
@@ -13595,7 +13604,6 @@ static void flecs_uni_observer_invoke(
     ecs_flags32_t set_fields_cur = it->set_fields;
     it->set_fields = 1;
 
-    ecs_query_t *query = o->query;
     it->query = query;
 
     if (!query) {
@@ -13604,10 +13612,6 @@ static void flecs_uni_observer_invoke(
         flecs_observer_invoke(o, it);
     } else {
         ecs_term_t *term = &query->terms[0];
-        ecs_assert(trav == 0 || it->sources[0] != 0, ECS_INTERNAL_ERROR, NULL);
-        if (trav && term->trav != trav) {
-            return;
-        }
 
         bool is_filter = term->inout == EcsInOutNone;
         ECS_BIT_COND(it->flags, EcsIterNoData, is_filter);

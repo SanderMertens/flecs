@@ -1,4 +1,5 @@
 #include <core.h>
+#include "../../../src/private_api.h"
 
 static ECS_COMPONENT_DECLARE(Position);
 static ECS_COMPONENT_DECLARE(Velocity);
@@ -10332,6 +10333,8 @@ void Observer_2_up_terms_w_batched_add(void) {
     test_int(ctx.invoked, 0);
 
     ecs_defer_end(world);
+
+    test_int(world->stages[0]->system, 0);
 
     /* Observer fires twice: once for the Bar propagation through RelA, once
      * for the Bar propagation through RelB. Both are separate events (separate
