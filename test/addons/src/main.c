@@ -469,6 +469,7 @@ void Http_teardown_started(void);
 void Http_teardown_stopped(void);
 void Http_stop_start(void);
 void Http_decode_plus(void);
+void Http_query_params_max(void);
 
 // Testsuite 'Rest'
 void Rest_teardown(void);
@@ -2314,6 +2315,10 @@ bake_test_case Http_testcases[] = {
     {
         "decode_plus",
         Http_decode_plus
+    },
+    {
+        "query_params_max",
+        Http_query_params_max
     }
 };
 
@@ -2946,7 +2951,7 @@ static bake_test_suite suites[] = {
         "Http",
         NULL,
         NULL,
-        5,
+        6,
         Http_testcases
     },
     {

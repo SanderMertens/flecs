@@ -46536,6 +46536,12 @@ static bool http_header_writable(
     return frag->header_count < ECS_HTTP_HEADER_COUNT_MAX;
 }
 
+static bool http_param_writable(
+    ecs_http_fragment_t *frag)
+{
+    return frag->param_count < ECS_HTTP_QUERY_PARAM_COUNT_MAX;
+}
+
 static void http_header_buf_reset(
     ecs_http_fragment_t *frag)
 {
@@ -46752,13 +46758,17 @@ static bool http_parse_request(
                 ecs_strbuf_appendch(&frag->buf, '\0');
             } else {
                 if (c == '?' || c == '=' || c == '&') {
-                    ecs_strbuf_appendch(&frag->buf, '\0');
-                    int32_t offset = ecs_strbuf_written(&frag->buf);
-                    if (c == '?' || c == '&') {
-                        frag->param_offsets[frag->param_count] = offset;
-                    } else {
-                        frag->param_value_offsets[frag->param_count] = offset;
-                        frag->param_count ++;
+                    if (http_param_writable(frag)) {
+                        ecs_strbuf_appendch(&frag->buf, '\0');
+                        int32_t offset = ecs_strbuf_written(&frag->buf);
+                        if (c == '?' || c == '&') {
+                            frag->param_offsets[frag->param_count] = offset;
+                        } else {
+                            frag->param_value_offsets[frag->param_count] = offset;
+                            frag->param_count ++;
+                        }
+                    } else if (c == '&') {
+                        ecs_strbuf_appendch(&frag->buf, '\0');
                     }
                 } else {
                     ecs_strbuf_appendch(&frag->buf, c);
