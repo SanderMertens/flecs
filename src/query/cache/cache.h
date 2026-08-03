@@ -11,40 +11,13 @@
 typedef struct ecs_query_cache_t ecs_query_cache_t;
 
 #ifdef FLECS_CACHED_QUERIES
-/* Component monitor */
-typedef struct ecs_monitor_t {
-    ecs_vec_t queries;               /* vector<ecs_query_cache_t*> */
-    bool is_dirty;                   /* Should queries be rematched? */
-} ecs_monitor_t;
-
-/* Component monitors */
-typedef struct ecs_monitor_set_t {
-    ecs_map_t monitors;              /* map<id, ecs_monitor_t> */
-    bool is_dirty;                   /* Should monitors be evaluated? */
-} ecs_monitor_set_t;
-
-/* Check component monitors (triggers query cache revalidation, not related to
- * EcsMonitor). */
-void flecs_eval_component_monitors(
+void flecs_query_cache_bootstrap(
     ecs_world_t *world);
 
-/* Register component monitor. */
-void flecs_monitor_register(
+void flecs_query_revalidate_table(
     ecs_world_t *world,
-    ecs_entity_t id,
-    ecs_query_t *query);
-
-/* Unregister component monitor. */
-void flecs_monitor_unregister(
-    ecs_world_t *world,
-    ecs_entity_t id,
-    ecs_query_t *query);
-
-/* Update component monitors for added/removed components. */
-void flecs_update_component_monitors(
-    ecs_world_t *world,
-    ecs_type_t *added,
-    ecs_type_t *removed);
+    ecs_query_impl_t *impl,
+    uint64_t table_id);
 
 /** Table match data.
  * Each table matched by the query is represented by an ecs_query_cache_match_t
@@ -65,7 +38,6 @@ struct ecs_query_cache_match_t {
     ecs_entity_t *_sources;           /* Sources of ids. */
     ecs_termset_t _up_fields;         /* Fields that are matched through traversal. */
     int32_t *_monitor;                /* Used to monitor table for changes. */
-    int32_t rematch_count;            /* Track whether table was rematched. */
     ecs_vec_t *wildcard_matches;      /* Additional matches for table for wildcard queries. */
 };
 
@@ -98,6 +70,9 @@ struct ecs_query_cache_t {
     /* Observer to keep the cache in sync */
     ecs_observer_t *observer;
 
+    ecs_observer_t *rematch_observer;
+    ecs_observer_t *ancestry_observer;
+
     /* Tables matched with query */
     ecs_map_t tables;
 
@@ -125,13 +100,9 @@ struct ecs_query_cache_t {
     void *group_by_ctx;
     ecs_ctx_free_t group_by_ctx_free;
 
-    /* Monitor generation */
-    int32_t monitor_generation;
-
     int32_t cascade_by;              /* Identify cascade term */
     int32_t match_count;             /* How often have tables been (un)matched */
     int32_t prev_match_count;        /* Track if sorting is needed */
-    int32_t rematch_count;           /* Track which tables were added during rematch */
     
     ecs_entity_t entity;             /* Entity associated with query */
 

@@ -700,7 +700,7 @@ extern "C" {
 #define EcsIdInheritable               (1u << 15)
 
 #define EcsIdHasOnAdd                  (1u << 16) /* Same values as table flags. */
-#define EcsIdHasOnRemove               (1u << 17) 
+#define EcsIdHasOnRemove               (1u << 17)
 #define EcsIdHasOnSet                  (1u << 18)
 #define EcsIdHasOnTableCreate          (1u << 19)
 #define EcsIdHasOnTableDelete          (1u << 20)
@@ -709,10 +709,11 @@ extern "C" {
 #define EcsIdMatchDontFragment         (1u << 23) /* For (*, T) wildcards. */
 #define EcsIdOrderedChildren           (1u << 24)
 #define EcsIdSingleton                 (1u << 25)
+#define EcsIdHasUpNotify               (1u << 31)
 #define EcsIdEventMask\
     (EcsIdHasOnAdd|EcsIdHasOnRemove|EcsIdHasOnSet|\
         EcsIdHasOnTableCreate|EcsIdHasOnTableDelete|EcsIdSparse|\
-        EcsIdOrderedChildren)
+        EcsIdOrderedChildren|EcsIdHasUpNotify)
 #define EcsIdPrefabChildren            (1u << 26)
 
 #define EcsIdMarkedForDelete           (1u << 30)
@@ -836,6 +837,7 @@ extern "C" {
 #define EcsObserverYieldOnCreate       (1u << 8u)  /* Yield matching entities when creating observer. */
 #define EcsObserverYieldOnDelete       (1u << 9u)  /* Yield matching entities when deleting observer. */
 #define EcsObserverKeepAlive           (1u << 11u) /* Observer keeps component alive (same value as EcsTermKeepAlive). */
+#define EcsObserverIsUpNotify          (1u << 12u)
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Table flags (used by ecs_table_t::flags)
@@ -874,15 +876,16 @@ extern "C" {
 #define EcsTableEdgeReparent           (1u << 28u)
 #define EcsTableMarkedForDelete        (1u << 29u)
 #define EcsTableNotEmpty               (1u << 30u) /* Does the table have entities. */
+#define EcsTableHasUpNotify            (1u << 31u)
 
 /* Composite table flags */
 #define EcsTableHasLifecycle     (EcsTableHasCtors | EcsTableHasDtors)
 #define EcsTableIsComplex        (EcsTableHasLifecycle | EcsTableHasToggle | EcsTableHasSparse)
 #define EcsTableHasAddActions    (EcsTableHasIsA | EcsTableHasCtors | EcsTableHasOnAdd | EcsTableHasOnSet)
 #define EcsTableHasRemoveActions (EcsTableHasIsA | EcsTableHasDtors | EcsTableHasOnRemove)
-#define EcsTableEdgeFlags        (EcsTableHasOnAdd | EcsTableHasOnRemove | EcsTableHasSparse)
-#define EcsTableAddEdgeFlags     (EcsTableHasOnAdd | EcsTableHasSparse)
-#define EcsTableRemoveEdgeFlags  (EcsTableHasOnRemove | EcsTableHasSparse | EcsTableHasOrderedChildren)
+#define EcsTableEdgeFlags        (EcsTableHasOnAdd | EcsTableHasOnRemove | EcsTableHasSparse | EcsTableHasUpNotify)
+#define EcsTableAddEdgeFlags     (EcsTableHasOnAdd | EcsTableHasSparse | EcsTableHasUpNotify)
+#define EcsTableRemoveEdgeFlags  (EcsTableHasOnRemove | EcsTableHasSparse | EcsTableHasOrderedChildren | EcsTableHasUpNotify)
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Aperiodic action flags (used by ecs_run_aperiodic())
@@ -9778,6 +9781,19 @@ bool ecs_query_has_range(
 FLECS_API
 int32_t ecs_query_match_count(
     const ecs_query_t *query);
+
+/** Event emitted when a table needs to be revalidated for a query cache.
+ * The event is enqueued when an observer detects that the components that are
+ * matched through relationship traversal changed for a table, and is handled
+ * when the command queue is flushed. The event payload is of type
+ * ecs_query_cache_revalidate_t. */
+FLECS_API extern const ecs_entity_t EcsOnQueryCacheRevalidate;
+
+/** Payload for EcsOnQueryCacheRevalidate event. */
+typedef struct ecs_query_cache_revalidate_t {
+    ecs_entity_t query;              /**< Query for which to revalidate table. */
+    uint64_t table_id;               /**< Id of table to revalidate. */
+} ecs_query_cache_revalidate_t;
 
 #endif // FLECS_CACHED_QUERIES
 

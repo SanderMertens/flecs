@@ -812,19 +812,5 @@ ecs_iter_t ecs_query_iter(
     /* Ok, only for stats */
     ecs_os_linc(&ECS_CONST_CAST(ecs_query_t*, q)->eval_count);
 
-#ifdef FLECS_CACHED_QUERIES
-    ecs_query_impl_t *impl = flecs_query_impl(q);
-    ecs_query_cache_t *cache = impl->cache;
-    if (cache) {
-        /* If monitors changed, do query rematching */
-        ecs_flags32_t flags = q->flags;
-        if (!(ecs_world_get_flags(world) & EcsWorldReadonly) &&
-             (flags & EcsQueryHasRefs))
-        {
-            flecs_eval_component_monitors(q->world);
-        }
-    }
-#endif
-
     return flecs_query_iter(world, q);
 }

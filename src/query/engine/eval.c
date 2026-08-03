@@ -67,6 +67,8 @@ repeat:
         table = op_ctx->it.cur->table;
         op_ctx->column = flecs_query_next_column(table, cr->id, op_ctx->column);
         op_ctx->remaining --;
+
+        flecs_query_var_set_range(op, op->src.var, table, 0, 0, ctx);
     }
 
     if (flecs_query_table_filter(table, op->other, filter_mask)) {

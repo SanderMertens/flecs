@@ -133,6 +133,8 @@
 
 #ifdef FLECS_CACHED_QUERIES
 
+const ecs_entity_t EcsOnQueryCacheRevalidate =      FLECS_HI_COMPONENT_ID + 59;
+
 /* Is cache trivial? */
 bool flecs_query_cache_is_trivial(
     const ecs_query_cache_t *cache)
@@ -252,38 +254,173 @@ static bool flecs_query_cache_match_table(
     return true;
 }
 
-/* Iterate component monitors for cache. Each field that could potentially cause
- * up traversal will create a monitor. Component monitors are registered with 
- * the world and are used to determine whether a rematch is necessary. */
-static void flecs_query_cache_for_each_component_monitor(
+static void flecs_query_cache_on_rematch_event(
+    ecs_iter_t *it)
+{
+    ecs_observer_t *o = it->ctx;
+    ecs_query_impl_t *impl = o->ctx;
+    flecs_poly_assert(impl, ecs_query_t);
+    ecs_assert(impl->cache != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_world_t *world = it->real_world;
+    ecs_assert(ecs_is_deferred(world), ECS_INTERNAL_ERROR, NULL);
+
+    ecs_enqueue(world, &(ecs_event_desc_t){
+        .event = EcsOnQueryCacheRevalidate,
+        .entity = impl->cache->entity,
+        .ids = &(ecs_type_t){
+            .array = (ecs_id_t[]){ ecs_pair(ecs_id(EcsPoly), EcsQuery) },
+            .count = 1
+        },
+        .const_param = &(ecs_query_cache_revalidate_t){
+            .query = impl->cache->entity,
+            .table_id = it->table->id
+        },
+        .observable = world
+    });
+}
+
+static void flecs_query_cache_on_revalidate_event(
+    ecs_iter_t *it)
+{
+    const ecs_query_cache_revalidate_t *ev = it->param;
+    ecs_assert(ev != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_world_t *world = it->real_world;
+
+    ecs_query_t *q = flecs_poly_get(world, ev->query, ecs_query_t);
+    if (!q) {
+        return;
+    }
+
+    ecs_query_impl_t *impl = flecs_query_impl(q);
+    if (!impl->cache) {
+        return;
+    }
+
+    flecs_query_revalidate_table(world, impl, ev->table_id);
+}
+
+void flecs_query_cache_bootstrap(
+    ecs_world_t *world)
+{
+    ecs_component_init(world, &(ecs_component_desc_t){
+        .entity = ecs_entity(world, {
+            .id = EcsOnQueryCacheRevalidate,
+            .parent = EcsFlecsCore,
+            .name = "OnQueryCacheRevalidate"
+        }),
+        .type.size = ECS_SIZEOF(ecs_query_cache_revalidate_t),
+        .type.alignment = ECS_ALIGNOF(ecs_query_cache_revalidate_t)
+    });
+
+    ecs_observer_init(world, &(ecs_observer_desc_t){
+        .global_observer = true,
+        .events[0] = EcsOnQueryCacheRevalidate,
+        .query.terms[0] = { .id = ecs_pair(ecs_id(EcsPoly), EcsQuery) },
+        .query.flags = EcsQueryNested|EcsQueryMatchPrefab|
+            EcsQueryMatchDisabled,
+        .flags_ = EcsObserverBypassQuery,
+        .run = flecs_query_cache_on_revalidate_event
+    });
+}
+
+static int flecs_query_cache_rematch_observers_init(
     ecs_world_t *world,
     ecs_query_impl_t *impl,
-    ecs_query_cache_t *cache,
-    void(*callback)(
-        ecs_world_t* world,
-        ecs_id_t id,
-        ecs_query_t *q))
+    ecs_query_cache_t *cache)
 {
-    ecs_query_t *q = &impl->pub;
+    ecs_entity_t entity = cache->entity;
     ecs_term_t *terms = cache->query->terms;
     int32_t i, count = cache->query->term_count;
 
-    for (i = 0; i < count; i++) {
+    ecs_observer_desc_t desc = {0};
+    int32_t term_count = 0;
+
+    ecs_observer_desc_t ancestry_desc = {0};
+    int32_t ancestry_term_count = 0;
+
+    for (i = 0; i < count; i ++) {
         ecs_term_t *term = &terms[i];
         ecs_term_ref_t *src = &term->src;
 
-        if (src->id & EcsUp) {
-            callback(world, ecs_pair(term->trav, EcsWildcard), q);
-            if (term->trav != EcsIsA) {
-                callback(world, ecs_pair(EcsIsA, EcsWildcard), q);
-            }
-            callback(world, term->id, q);
+        if (!(src->id & EcsUp)) {
+            continue;
+        }
 
-        } else if (src->id & EcsSelf && !ecs_term_match_this(term)) {
-            ecs_assert(!(src->id & EcsSelf) || ecs_term_match_this(term),   
+        ecs_assert(term_count < FLECS_TERM_COUNT_MAX,
+            ECS_INTERNAL_ERROR, NULL);
+
+        ecs_assert(ecs_term_match_this(term), ECS_INTERNAL_ERROR, NULL);
+
+        ecs_term_t *ot = &desc.query.terms[term_count ++];
+        *ot = *term;
+        ot->oper = EcsAnd;
+        ot->inout = EcsInOutNone;
+        ot->src.id = EcsThis|EcsIsVariable|EcsUp;
+
+        ecs_id_t ancestry_ids[2] = {
+            ecs_pair(term->trav, EcsWildcard),
+            ecs_pair(EcsIsA, EcsWildcard)
+        };
+
+        int32_t a, a_count = (term->trav != EcsIsA) ? 2 : 1;
+        for (a = 0; a < a_count; a ++) {
+            int32_t t;
+            for (t = 0; t < ancestry_term_count; t ++) {
+                ecs_term_t *at = &ancestry_desc.query.terms[t];
+                if (at->id == ancestry_ids[a] && at->trav == term->trav) {
+                    break;
+                }
+            }
+
+            if (t != ancestry_term_count) {
+                continue;
+            }
+
+            ecs_assert(ancestry_term_count < FLECS_TERM_COUNT_MAX,
                 ECS_INTERNAL_ERROR, NULL);
+
+            ecs_term_t *at = &ancestry_desc.query.terms[
+                ancestry_term_count ++];
+            at->id = ancestry_ids[a];
+            at->src.id = EcsThis|EcsIsVariable|EcsUp;
+            at->trav = term->trav;
+            at->inout = EcsInOutNone;
         }
     }
+
+    if (!term_count) {
+        return 0;
+    }
+
+    desc.run = flecs_query_cache_on_rematch_event;
+    desc.ctx = impl;
+    desc.events[0] = EcsOnAdd;
+    desc.events[1] = EcsOnRemove;
+    desc.flags_ = EcsObserverBypassQuery|EcsObserverIsUpNotify;
+    desc.query.flags = EcsQueryNested|EcsQueryMatchPrefab|
+        EcsQueryMatchDisabled;
+
+    cache->rematch_observer = flecs_observer_init(world, entity, &desc);
+    if (!cache->rematch_observer) {
+        return -1;
+    }
+
+    ancestry_desc.run = flecs_query_cache_on_rematch_event;
+    ancestry_desc.ctx = impl;
+    ancestry_desc.events[0] = EcsOnAdd;
+    ancestry_desc.events[1] = EcsOnRemove;
+    ancestry_desc.flags_ = EcsObserverBypassQuery|EcsObserverIsUpNotify;
+    ancestry_desc.query.flags = EcsQueryNested|EcsQueryMatchPrefab|
+        EcsQueryMatchDisabled;
+
+    cache->ancestry_observer = flecs_observer_init(
+        world, entity, &ancestry_desc);
+    if (!cache->ancestry_observer) {
+        return -1;
+    }
+
+    return 0;
 }
 
 /* Iterate over terms in query to initialize necessary bookkeeping. */
@@ -314,11 +451,7 @@ static int flecs_query_cache_process_query(
         }
     }
 
-    /* Register component monitor for each ref field. */
-    flecs_query_cache_for_each_component_monitor(
-        world, impl, cache, flecs_monitor_register);
-
-    return 0;
+    return flecs_query_cache_rematch_observers_init(world, impl, cache);
 }
 
 /* -- Private API -- */
@@ -527,8 +660,13 @@ void flecs_query_cache_fini(
         }
     }
 
-    flecs_query_cache_for_each_component_monitor(world, impl, cache,
-        flecs_monitor_unregister);
+    if (cache->rematch_observer) {
+        flecs_observer_fini(cache->rematch_observer);
+    }
+
+    if (cache->ancestry_observer) {
+        flecs_observer_fini(cache->ancestry_observer);
+    }
 
     flecs_query_cache_remove_all_tables(cache);
 
@@ -662,7 +800,7 @@ ecs_query_cache_t* flecs_query_cache_init(
     }
 
     ecs_size_t elem_size = flecs_query_cache_elem_size(result);
-    ecs_vec_init(&world->allocator, &result->default_group.tables, 
+    ecs_vec_init(&world->allocator, &result->default_group.tables,
         elem_size, 0);
     result->first_group = &result->default_group;
 

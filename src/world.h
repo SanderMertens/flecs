@@ -125,11 +125,6 @@ struct ecs_world_t {
     /* --  Data storage -- */
     ecs_store_t store;
 
-#ifdef FLECS_CACHED_QUERIES
-    /* Used to track when cache needs to be updated */
-    ecs_monitor_set_t monitors;      /* map<id, ecs_monitor_t> */
-#endif
-
     /* -- Systems -- */
     ecs_entity_t pipeline;           /* Current pipeline */
 
@@ -181,11 +176,6 @@ struct ecs_world_t {
 
     /* -- World flags -- */
     ecs_flags32_t flags;
-
-#ifdef FLECS_CACHED_QUERIES
-    /* Count that increases when component monitors change */
-    int32_t monitor_generation;
-#endif
 
     /* -- Allocators -- */
     ecs_world_allocators_t allocators; /* Static allocation sizes */

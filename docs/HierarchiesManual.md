@@ -448,7 +448,6 @@ When an application has both many different parents _and_ a need to access child
 - Each table consumes memory, which scales linearly with the number of components in the table.
 - Cached queries store matching tables. If an application has many tables, the memory footprint of queries will grow as well.
 - Dynamic hierarchies cause table creation & deletion which is expensive relative to the cost of creating & deleting entities. In addition, tables may have to get matched/unmatched with queries, which further increases the cost of dynamic hierarchies.
-- Relationship traversal (a query feature) under certain conditions requires rematching, which rebuilds the cache. If a query matches many tables, rematching can be costly and responsible for frame time spikes.
 
 These downsides are most noticeable when an application has many parents where each parent only has a small number of children. In the degenerate case, an application ends up with a single child per table, which can happen if each child of a parent has a different set of components.
 

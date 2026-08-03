@@ -261,20 +261,6 @@ static void flecs_on_replace_parent(ecs_iter_t *it) {
             }
         }
 
-#ifdef FLECS_CACHED_QUERIES
-        ecs_record_t *r = flecs_entities_get(world, e);
-        ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
-
-        if (r->row & EcsEntityIsTraversable) {
-            ecs_id_t added = ecs_childof(new_parent);
-            ecs_id_t removed = ecs_childof(old_parent);
-
-            flecs_update_component_monitors(world, 
-                &(ecs_type_t){ .count = 1, .array = &added },
-                &(ecs_type_t) { .count = 1, .array = &removed });
-        }
-#endif
-
         flecs_journal_end();
     }
 }

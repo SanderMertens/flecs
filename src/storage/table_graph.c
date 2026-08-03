@@ -1347,7 +1347,7 @@ void flecs_table_edges_add_flags(
     ecs_graph_edge_hdr_t *node_refs = &table_node->refs;
 
     /* Add flags to incoming matching add edges */
-    if (flags == EcsTableHasOnAdd) {
+    if ((flags == EcsTableHasOnAdd) || (flags == EcsTableHasUpNotify)) {
         ecs_graph_edge_hdr_t *next, *cur = node_refs->next;
         if (cur) {
             do {
@@ -1359,7 +1359,7 @@ void flecs_table_edges_add_flags(
                         edge->diff->added.count = 1;
                         edge->diff->added.array[0] = edge->id;
                     }
-                    edge->diff->added_flags |= EcsTableHasOnAdd;
+                    edge->diff->added_flags |= flags;
                 }
                 next = cur->next;
             } while ((cur = next));
@@ -1367,7 +1367,7 @@ void flecs_table_edges_add_flags(
     }
 
     /* Add flags to outgoing matching remove edges */
-    if (flags == EcsTableHasOnRemove) {
+    if ((flags == EcsTableHasOnRemove) || (flags == EcsTableHasUpNotify)) {
         ecs_map_iter_t it = ecs_map_iter(table->node.remove.hi);
         while (ecs_map_next(&it)) {
             ecs_id_t edge_id = ecs_map_key(&it);
@@ -1379,7 +1379,7 @@ void flecs_table_edges_add_flags(
                     edge->diff->removed.count = 1;
                     edge->diff->removed.array[0] = edge->id;
                 }
-                edge->diff->removed_flags |= EcsTableHasOnRemove;
+                edge->diff->removed_flags |= flags;
             }
         }
     }

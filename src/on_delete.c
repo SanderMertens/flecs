@@ -401,30 +401,6 @@ static void flecs_component_mark_for_delete(
                     continue;
                 }
                 cur->flags |= EcsIdMarkedForDelete;
-
-#ifdef FLECS_CACHED_QUERIES
-                /* If relationship is traversable and is removed upon deletion
-                 * of a target, we may have to rematch queries. If a query 
-                 * matched for example (IsA, A) -> (IsA, B) -> Position, and 
-                 * B is deleted, Position would no longer be reachable from 
-                 * tables that have (IsA, B). */
-                if (cur->flags & EcsIdTraversable) {
-                    /* If tables with (R, target) are deleted anyway we don't
-                     * need to rematch. Since this will happen recursively it is
-                     * guaranteed that queries cannot have tables that reached a
-                     * component through the deleted entity. */
-                    if (!(cur->flags & EcsIdOnDeleteTargetDelete)) {
-                        /* Only bother if tables have the relationship. */
-                        if (flecs_table_cache_count(&cur->cache)) {
-                            flecs_update_component_monitors(world, NULL, 
-                                &(ecs_type_t){
-                                    .array = (ecs_id_t[]){cur->id},
-                                    .count = 1
-                                });
-                        }
-                    }
-                }
-#endif
             }
         }
     }
@@ -527,17 +503,6 @@ static void flecs_remove_from_table(
                 .removed = { .array = removed, .count = remove_count },
                 .removed_flags = removed_flags
             };
-
-#ifdef FLECS_CACHED_QUERIES
-            if (table->flags & EcsTableHasTraversable) {
-                for (i = 0; i < remove_count; i ++) {
-                    flecs_update_component_monitors(world, NULL, &(ecs_type_t){
-                        .array = (ecs_id_t[]){removed[i]},
-                        .count = 1
-                    });
-                }
-            }
-#endif
 
             flecs_actions_move_remove(world, table, dst_table, 0, table_count, &diff);
             ecs_log_pop_3();

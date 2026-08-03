@@ -758,6 +758,7 @@ void flecs_table_clear_edges_for_id(
 typedef enum ecs_table_eventkind_t {
     EcsTableTriggersForId,
     EcsTableNoTriggersForId,
+    EcsTableUpNotifyForId,
 } ecs_table_eventkind_t;
 
 typedef struct ecs_table_event_t {
@@ -1893,6 +1894,8 @@ typedef struct ecs_event_id_record_t {
 
     /* Number of active observers for (component) id */
     int32_t observer_count;
+
+    int32_t up_notify_count;
 } ecs_event_id_record_t;
 
 typedef struct ecs_observer_impl_t {
@@ -1959,6 +1962,11 @@ bool flecs_observers_exist(
     ecs_id_t id,
     ecs_entity_t event);
 
+bool flecs_up_notify_observers_exist(
+    const ecs_observable_t *observable,
+    ecs_id_t id,
+    ecs_entity_t event);
+
 /* Initialize observer. */
 ecs_observer_t* flecs_observer_init(
     ecs_world_t *world,
@@ -1981,6 +1989,13 @@ bool flecs_default_next_callback(
 
 /* Invoke observers. */
 void flecs_observers_invoke(
+    ecs_world_t *world,
+    ecs_map_t *observers,
+    ecs_iter_t *it,
+    ecs_table_t *table,
+    ecs_entity_t trav);
+
+void flecs_observers_invoke_up_notify(
     ecs_world_t *world,
     ecs_map_t *observers,
     ecs_iter_t *it,
@@ -4825,7 +4840,7 @@ static void flecs_cmd_batch_for_entity(
             case EcsCmdEnable:
             case EcsCmdDisable:
             case EcsCmdEvent:
-            case EcsCmdSkip:
+                case EcsCmdSkip:
                 break;
             }
         } while ((cur = next_for_entity));
@@ -5490,6 +5505,19 @@ void flecs_entity_remove_non_fragmenting(
     r->row &= ~EcsEntityHasDontFragment;
 }
 
+static bool flecs_actions_emit_for_diff(
+    const ecs_table_t *table,
+    ecs_flags32_t diff_flags,
+    ecs_flags32_t event_flag)
+{
+    if (diff_flags & event_flag) {
+        return true;
+    }
+
+    return (diff_flags & EcsTableHasUpNotify) &&
+        (table->flags & EcsTableHasTraversable);
+}
+
 static void flecs_actions_on_add_intern(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -5520,7 +5548,7 @@ static void flecs_actions_on_add_intern(
         }
     }
 
-    if (diff_flags & EcsTableHasOnAdd) {
+    if (flecs_actions_emit_for_diff(table, diff_flags, EcsTableHasOnAdd)) {
         flecs_emit(world, world, &(ecs_event_desc_t){
             .event = EcsOnAdd,
             .ids = added,
@@ -5549,13 +5577,13 @@ static void flecs_actions_on_remove_intern(
 
     if (diff_flags & EcsTableHasDontFragment) {
         if (flecs_dont_fragment_on_remove(
-            world, table, row, count, removed)) 
+            world, table, row, count, removed))
         {
             diff_flags |= EcsTableHasOnRemove;
         }
     }
 
-    if (diff_flags & EcsTableHasOnRemove) {
+    if (flecs_actions_emit_for_diff(table, diff_flags, EcsTableHasOnRemove)) {
         flecs_emit(world, world, &(ecs_event_desc_t) {
             .event = EcsOnRemove,
             .ids = removed,
@@ -6727,7 +6755,7 @@ ecs_entity_t ecs_new_w_table(
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(table != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    flecs_stage_from_world(&world);    
+    ecs_stage_t *stage = flecs_stage_from_world(&world);
     ecs_entity_t entity = flecs_new_id(world);
     ecs_record_t *r = flecs_entities_get(world, entity);
     ecs_flags32_t flags = table->flags & EcsTableAddEdgeFlags;
@@ -6735,12 +6763,16 @@ ecs_entity_t ecs_new_w_table(
         flags |= EcsTableHasOnAdd;
     }
 
-    ecs_table_diff_t table_diff = { 
+    ecs_table_diff_t table_diff = {
         .added = table->type,
         .added_flags = flags
     };
 
+    flecs_defer_begin(world, stage);
+
     flecs_new_entity(world, entity, r, table, &table_diff, true, 0);
+
+    flecs_defer_end(world, stage);
 
     return entity;
 error:
@@ -8542,7 +8574,11 @@ ecs_entity_t ecs_new_w_parent(
     parent_ptr = &parent_ptr[row];
     parent_ptr->value = parent;
 
+    flecs_defer_begin(world, stage);
+
     flecs_actions_new(world, table, row, 1, &table_diff, 0, true, EcsWildcard);
+
+    flecs_defer_end(world, stage);
 
     if (name) {
         bool is_deferred = ecs_is_deferred(world);
@@ -11783,17 +11819,45 @@ static int32_t flecs_event_observers_get(
     return count;
 }
 
-bool flecs_observers_exist(
+static ecs_event_id_record_t* flecs_event_id_record_get_for(
     const ecs_observable_t *observable,
     ecs_id_t id,
     ecs_entity_t event)
 {
     const ecs_event_record_t *er = flecs_event_record_get_if(observable, event);
     if (!er) {
+        return NULL;
+    }
+
+    return flecs_event_id_record_get(er, id);
+}
+
+bool flecs_observers_exist(
+    const ecs_observable_t *observable,
+    ecs_id_t id,
+    ecs_entity_t event)
+{
+    ecs_event_id_record_t *ider = flecs_event_id_record_get_for(
+        observable, id, event);
+    if (!ider) {
         return false;
     }
 
-    return flecs_event_id_record_get_if(er, id) != NULL;
+    return (ider->observer_count - ider->up_notify_count) > 0;
+}
+
+bool flecs_up_notify_observers_exist(
+    const ecs_observable_t *observable,
+    ecs_id_t id,
+    ecs_entity_t event)
+{
+    ecs_event_id_record_t *ider = flecs_event_id_record_get_for(
+        observable, id, event);
+    if (!ider) {
+        return false;
+    }
+
+    return ider->up_notify_count > 0;
 }
 
 static void flecs_emit_propagate(
@@ -11836,11 +11900,20 @@ static void flecs_emit_propagate_id_for_range(
     int32_t ider_i;
     for (ider_i = 0; ider_i < ider_count; ider_i ++) {
         ecs_event_id_record_t *ider = iders[ider_i];
-        flecs_observers_invoke(world, &ider->up, it, table, trav);
+        if (count) {
+            flecs_observers_invoke(world, &ider->up, it, table, trav);
 
-        if (!owned) {
-            /* Owned takes precedence */
-            flecs_observers_invoke(world, &ider->self_up, it, table, trav);
+            if (!owned) {
+                /* Owned takes precedence */
+                flecs_observers_invoke(world, &ider->self_up, it, table, trav);
+            }
+        } else {
+            flecs_observers_invoke_up_notify(world, &ider->up, it, table, trav);
+
+            if (!owned) {
+                flecs_observers_invoke_up_notify(
+                    world, &ider->self_up, it, table, trav);
+            }
         }
     }
 
@@ -11907,11 +11980,16 @@ static void flecs_emit_propagate_id(
         const ecs_table_record_t *tr = elem->tr;
         ecs_table_t *table = tr->hdr.table;
         if (!ecs_table_count(table)) {
+            flecs_emit_propagate_id_for_range(
+                world, it, cr, trav, iders, ider_count,
+                    &(ecs_table_range_t){
+                        .table = table
+                    });
             continue;
         }
 
         flecs_emit_propagate_id_for_range(
-            world, it, cr, trav, iders, ider_count, 
+            world, it, cr, trav, iders, ider_count,
                 &(ecs_table_range_t){
                     .table = table,
                     .count = ecs_table_count(table),
@@ -13235,55 +13313,84 @@ static void flecs_inc_observer_count(
     ecs_entity_t event,
     ecs_event_record_t *evt,
     ecs_id_t id,
-    int32_t value)
+    int32_t value,
+    bool up_notify)
 {
     ecs_event_id_record_t *idt = flecs_event_id_record_ensure(world, evt, id);
     ecs_assert(idt != NULL, ECS_INTERNAL_ERROR, NULL);
-    
+
     int32_t result = idt->observer_count += value;
-    if (result == 1) {
+    int32_t category_result;
+    if (up_notify) {
+        category_result = idt->up_notify_count += value;
+    } else {
+        category_result = result - idt->up_notify_count;
+    }
+
+    if (category_result == value && value > 0) {
         /* Notify framework that there are observers for the event/id. This 
          * allows parts of the code to skip event evaluation early */
-        flecs_notify_tables(world, id, &(ecs_table_event_t){
-            .kind = EcsTableTriggersForId,
-            .event = event
-        });
+        if (up_notify) {
+            flecs_notify_tables(world, id, &(ecs_table_event_t){
+                .kind = EcsTableUpNotifyForId,
+                .event = event
+            });
 
-        ecs_flags32_t flags = flecs_id_flag_for_event(event);
-        if (flags) {
             ecs_component_record_t *cr = flecs_components_get(world, id);
             if (cr) {
-                cr->flags |= flags;
+                cr->flags |= EcsIdHasUpNotify;
             }
+        } else {
+            flecs_notify_tables(world, id, &(ecs_table_event_t){
+                .kind = EcsTableTriggersForId,
+                .event = event
+            });
 
-            /* Track that we've created an OnSet observer so we know not to take
-             * fast code path when doing a set operation. */
-            if (event == EcsOnSet || event == EcsWildcard) {
-                if (id < FLECS_HI_COMPONENT_ID) {
-                    world->non_trivial_set[id] = true;
+            ecs_flags32_t flags = flecs_id_flag_for_event(event);
+            if (flags) {
+                ecs_component_record_t *cr = flecs_components_get(world, id);
+                if (cr) {
+                    cr->flags |= flags;
                 }
-                
-                if (id == EcsWildcard || id == EcsAny) {
-                    ecs_os_memset_n(world->non_trivial_set, true, bool, 
-                        FLECS_HI_COMPONENT_ID);
+
+                /* Track that we've created an OnSet observer so we know not to
+                 * take fast code path when doing a set operation. */
+                if (event == EcsOnSet || event == EcsWildcard) {
+                    if (id < FLECS_HI_COMPONENT_ID) {
+                        world->non_trivial_set[id] = true;
+                    }
+
+                    if (id == EcsWildcard || id == EcsAny) {
+                        ecs_os_memset_n(world->non_trivial_set, true, bool,
+                            FLECS_HI_COMPONENT_ID);
+                    }
                 }
             }
         }
-    } else if (result == 0) {
+    } else if (category_result == 0 && value < 0) {
         /* Ditto, but the reverse */
-        flecs_notify_tables(world, id, &(ecs_table_event_t){
-            .kind = EcsTableNoTriggersForId,
-            .event = event
-        });
-
-        ecs_flags32_t flags = flecs_id_flag_for_event(event);
-        if (flags) {
+        if (up_notify) {
             ecs_component_record_t *cr = flecs_components_get(world, id);
             if (cr) {
-                cr->flags &= ~flags;
+                cr->flags &= ~EcsIdHasUpNotify;
+            }
+        } else {
+            flecs_notify_tables(world, id, &(ecs_table_event_t){
+                .kind = EcsTableNoTriggersForId,
+                .event = event
+            });
+
+            ecs_flags32_t flags = flecs_id_flag_for_event(event);
+            if (flags) {
+                ecs_component_record_t *cr = flecs_components_get(world, id);
+                if (cr) {
+                    cr->flags &= ~flags;
+                }
             }
         }
+    }
 
+    if (result == 0) {
         flecs_event_id_record_remove(evt, id);
         ecs_os_free(idt);
     }
@@ -13291,13 +13398,13 @@ static void flecs_inc_observer_count(
     if (ECS_PAIR_FIRST(id) == EcsChildOf) {
         ecs_observable_t *observable = &world->observable;
         if (event == EcsOnAdd) {
-            ecs_event_record_t *er_onset = 
+            ecs_event_record_t *er_onset =
                 flecs_event_record_ensure(observable, EcsOnSet);
             flecs_inc_observer_count(
-                world, EcsOnSet, er_onset, ecs_id(EcsParent), value);
+                world, EcsOnSet, er_onset, ecs_id(EcsParent), value, false);
         } else {
             flecs_inc_observer_count(
-                world, event, evt, ecs_id(EcsParent), value);
+                world, event, evt, ecs_id(EcsParent), value, up_notify);
         }
     }
 }
@@ -13342,10 +13449,11 @@ static void flecs_register_observer_for_event_and_id(
     ecs_map_init_if(observers, &world->allocator);
     ecs_map_insert_ptr(observers, impl->id, o);
 
-    flecs_inc_observer_count(world, event, er, term_id, 1);
+    bool up_notify = (impl->flags & EcsObserverIsUpNotify) != 0;
+    flecs_inc_observer_count(world, event, er, term_id, 1, up_notify);
     if (trav && (term_id != ecs_id(EcsParent))) {
-        flecs_inc_observer_count(world, event, er, 
-            ecs_pair(trav, EcsWildcard), 1);
+        flecs_inc_observer_count(world, event, er,
+            ecs_pair(trav, EcsWildcard), 1, up_notify);
     }
 }
 
@@ -13452,10 +13560,11 @@ static void flecs_unregister_observer_for_id(
             ecs_map_fini(id_observers);
         }
 
-        flecs_inc_observer_count(world, event, er, term_id, -1);
+        bool up_notify = (impl->flags & EcsObserverIsUpNotify) != 0;
+        flecs_inc_observer_count(world, event, er, term_id, -1, up_notify);
         if (trav && (term_id != ecs_id(EcsParent))) {
-            flecs_inc_observer_count(world, event, er, 
-                ecs_pair(trav, EcsWildcard), -1);
+            flecs_inc_observer_count(world, event, er,
+                ecs_pair(trav, EcsWildcard), -1, up_notify);
         }
     }
 }
@@ -13683,12 +13792,13 @@ static void flecs_uni_observer_invoke(
     world->info.observers_ran_total ++;
 }
 
-void flecs_observers_invoke(
+static void flecs_observers_invoke_intern(
     ecs_world_t *world,
     ecs_map_t *observers,
     ecs_iter_t *it,
     ecs_table_t *table,
-    ecs_entity_t trav)
+    ecs_entity_t trav,
+    bool up_notify_only)
 {
     if (ecs_map_is_init(observers)) {
         ECS_TABLE_LOCK(it->world, table);
@@ -13696,6 +13806,12 @@ void flecs_observers_invoke(
         ecs_map_iter_t oit = ecs_map_iter(observers);
         while (ecs_map_next(&oit)) {
             ecs_observer_t *o = ecs_map_ptr(&oit);
+            if (up_notify_only &&
+                !(flecs_observer_impl(o)->flags & EcsObserverIsUpNotify))
+            {
+                continue;
+            }
+
             ecs_assert(it->table == table, ECS_INTERNAL_ERROR, NULL);
             flecs_uni_observer_invoke(world, o, it, table, trav);
 
@@ -13706,6 +13822,26 @@ void flecs_observers_invoke(
 
         ECS_TABLE_UNLOCK(it->world, table);
     }
+}
+
+void flecs_observers_invoke(
+    ecs_world_t *world,
+    ecs_map_t *observers,
+    ecs_iter_t *it,
+    ecs_table_t *table,
+    ecs_entity_t trav)
+{
+    flecs_observers_invoke_intern(world, observers, it, table, trav, false);
+}
+
+void flecs_observers_invoke_up_notify(
+    ecs_world_t *world,
+    ecs_map_t *observers,
+    ecs_iter_t *it,
+    ecs_table_t *table,
+    ecs_entity_t trav)
+{
+    flecs_observers_invoke_intern(world, observers, it, table, trav, true);
 }
 
 static void flecs_multi_observer_invoke(
@@ -15152,7 +15288,6 @@ static void flecs_component_mark_for_delete(
                     continue;
                 }
                 cur->flags |= EcsIdMarkedForDelete;
-
             }
         }
     }
@@ -18965,6 +19100,10 @@ void flecs_notify_tables(
 {
     flecs_poly_assert(world, ecs_world_t);
 
+    if (world->flags & EcsWorldFini) {
+        return;
+    }
+
     /* If no id is specified, broadcast to all tables */
     if (!id || id == EcsAny) {
         ecs_sparse_t *tables = &world->store.tables;
@@ -19250,7 +19389,6 @@ void ecs_run_aperiodic(
     if ((flags & EcsAperiodicEmptyQueries)) {
         flecs_process_empty_queries(world);
     }
-
 }
 
 int32_t ecs_delete_empty_tables(
@@ -26058,6 +26196,10 @@ static ecs_flags32_t flecs_component_event_flags(
         |EcsIdHasOnTableCreate
         |EcsIdHasOnTableDelete);
 
+    bool up_notify = flecs_up_notify_observers_exist(o, id, EcsOnAdd);
+    up_notify |= flecs_up_notify_observers_exist(o, id, EcsOnRemove);
+    result |= up_notify * EcsIdHasUpNotify;
+
     return result;
 }
 
@@ -30999,6 +31141,12 @@ void flecs_table_notify(
     case EcsTableTriggersForId:
         flecs_table_add_trigger_flags(world, table, id, event->event);
         break;
+    case EcsTableUpNotifyForId:
+        table->flags |= EcsTableHasUpNotify;
+        if (id) {
+            flecs_table_edges_add_flags(world, table, id, EcsTableHasUpNotify);
+        }
+        break;
     case EcsTableNoTriggersForId:
         break; /* TODO */
     }
@@ -33104,7 +33252,7 @@ void flecs_table_edges_add_flags(
     ecs_graph_edge_hdr_t *node_refs = &table_node->refs;
 
     /* Add flags to incoming matching add edges */
-    if (flags == EcsTableHasOnAdd) {
+    if ((flags == EcsTableHasOnAdd) || (flags == EcsTableHasUpNotify)) {
         ecs_graph_edge_hdr_t *next, *cur = node_refs->next;
         if (cur) {
             do {
@@ -33116,7 +33264,7 @@ void flecs_table_edges_add_flags(
                         edge->diff->added.count = 1;
                         edge->diff->added.array[0] = edge->id;
                     }
-                    edge->diff->added_flags |= EcsTableHasOnAdd;
+                    edge->diff->added_flags |= flags;
                 }
                 next = cur->next;
             } while ((cur = next));
@@ -33124,7 +33272,7 @@ void flecs_table_edges_add_flags(
     }
 
     /* Add flags to outgoing matching remove edges */
-    if (flags == EcsTableHasOnRemove) {
+    if ((flags == EcsTableHasOnRemove) || (flags == EcsTableHasUpNotify)) {
         ecs_map_iter_t it = ecs_map_iter(table->node.remove.hi);
         while (ecs_map_next(&it)) {
             ecs_id_t edge_id = ecs_map_key(&it);
@@ -33136,7 +33284,7 @@ void flecs_table_edges_add_flags(
                     edge->diff->removed.count = 1;
                     edge->diff->removed.array[0] = edge->id;
                 }
-                edge->diff->removed_flags |= EcsTableHasOnRemove;
+                edge->diff->removed_flags |= flags;
             }
         }
     }

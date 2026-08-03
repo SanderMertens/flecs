@@ -1146,7 +1146,7 @@ static void flecs_cmd_batch_for_entity(
             case EcsCmdEnable:
             case EcsCmdDisable:
             case EcsCmdEvent:
-            case EcsCmdSkip:
+                case EcsCmdSkip:
                 break;
             }
         } while ((cur = next_for_entity));
@@ -1158,23 +1158,6 @@ static void flecs_cmd_batch_for_entity(
         ecs_table_diff_t add_diff = ECS_TABLE_DIFF_INIT;
         add_diff.added = added;
         add_diff.added_flags = table_diff.added_flags;
-
-#ifdef FLECS_CACHED_QUERIES
-        if (r->row & EcsEntityIsTraversable) {
-            /* Update monitors since we didn't do this in flecs_commit. Do this
-             * before calling flecs_actions_move_add() since this can trigger
-             * prefab instantiation logic. When that happens, prefab children
-             * can be created for this instance which would mean that the table
-             * count of cr would always be >0.
-             * Since those tables are new, we don't have to invoke component
-             * monitors since queries will have correctly matched them. */
-            ecs_component_record_t *cr = flecs_components_get(
-                world, ecs_pair(EcsWildcard, entity));
-            if (cr && flecs_table_cache_count(&cr->cache)) {
-                flecs_update_component_monitors(world, &added, NULL);
-            }
-        }
-#endif
 
         bool update_parent_records = !table_diff.removed.count ||
             !(start_table->flags & EcsTableHasParent);

@@ -1028,6 +1028,10 @@ void flecs_notify_tables(
 {
     flecs_poly_assert(world, ecs_world_t);
 
+    if (world->flags & EcsWorldFini) {
+        return;
+    }
+
     /* If no id is specified, broadcast to all tables */
     if (!id || id == EcsAny) {
         ecs_sparse_t *tables = &world->store.tables;
@@ -1161,12 +1165,6 @@ int ecs_fini(
      * makes sure that any resources in the queue are freed */
     flecs_defer_purge(world, world->stages[0]);
     ecs_log_pop_1();
-
-#ifdef FLECS_CACHED_QUERIES
-    /* All queries are cleaned up, so monitors should've been cleaned up too */
-    ecs_assert(!ecs_map_is_init(&world->monitors.monitors),
-        ECS_INTERNAL_ERROR, NULL);
-#endif
 
     /* Cleanup world ctx and binding_ctx */
     if (world->ctx_free) {
@@ -1388,12 +1386,6 @@ void ecs_run_aperiodic(
     if ((flags & EcsAperiodicEmptyQueries)) {
         flecs_process_empty_queries(world);
     }
-
-#ifdef FLECS_CACHED_QUERIES
-    if (!flags || (flags & EcsAperiodicComponentMonitors)) {
-        flecs_eval_component_monitors(world);
-    }
-#endif
 }
 
 int32_t ecs_delete_empty_tables(

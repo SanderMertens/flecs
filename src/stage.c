@@ -49,10 +49,6 @@ static void flecs_stage_merge(
         }
     }
 
-#ifdef FLECS_CACHED_QUERIES
-    flecs_eval_component_monitors(world);
-#endif
-
     if (measure_frame_time) {
         world->info.merge_time_total += (ecs_ftime_t)ecs_time_measure(&t_start);
     }

@@ -63,6 +63,7 @@ static bool flecs_query_up_select_table(
     impl->row = range.offset;
     impl->end = range.offset + range.count;
     impl->matched = it->ids[op->field_index];
+    impl->start_down_walk = true;
 
     return true;
 }
@@ -185,6 +186,8 @@ bool flecs_query_up_select(
 
         impl->down = NULL;
         impl->cache_elem = 0;
+        impl->last_down_table = NULL;
+        impl->start_down_walk = false;
     }
 
     /* Get last used entry from down traversal cache. Cache entries in the down
@@ -236,6 +239,17 @@ next_down_entry:
         } else {
             /* Evaluate next entity in table */
             impl->row ++;
+        }
+
+        if (impl->start_down_walk) {
+            impl->start_down_walk = false;
+
+            if (table == impl->last_down_table) {
+                impl->table = NULL;
+                continue;
+            }
+
+            impl->last_down_table = table;
         }
 
         /* Get down cache entry for next traversable entity in table */

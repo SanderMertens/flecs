@@ -274,6 +274,10 @@ static ecs_flags32_t flecs_component_event_flags(
         |EcsIdHasOnTableCreate
         |EcsIdHasOnTableDelete);
 
+    bool up_notify = flecs_up_notify_observers_exist(o, id, EcsOnAdd);
+    up_notify |= flecs_up_notify_observers_exist(o, id, EcsOnRemove);
+    result |= up_notify * EcsIdHasUpNotify;
+
     return result;
 }
 
