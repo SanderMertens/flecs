@@ -135,17 +135,6 @@ Queries with the None kind will not use any caching.
 
 ### Performance tips & tricks
 
-#### Rematching
-Queries that use traversal (either `up` or `cascade`) can trigger query "rematching". This is a process that ensures that a query cache that matches components on an entity reached through traversal stays up to date.
-
-A typical example of this is a query that matched a `Transform` component on a parent entity. If the `Transform` component is removed from the parent it invalidates the cache, and rematching will happen.
-
-Rematching can be an expensive process, especially in games with lots of archetypes. To learn if an application is slowed down by rematching, connect the explorer to it with the `flecs::stats` module imported (see the REST API manual), and inspect the world statistics page.
-
-If rematching is taking up a significant amount of time, consider changing cached queries with traversal to uncached. This will increase query evaluation time, but should get rid of the query rematching cost.
-
-Rematching is a temporary solution to a complex problem that will eventually be solved with a much cheaper mechanism. For now however, rematching is something that needs to be monitored for queries that use query traversal features.
-
 #### Empty archetype optimization
 Cached queries have an optimization where they store empty archetypes in a separate list from non-empty archetypes. This generally improves query iteration speed, as games can have large numbers of empty archetypes that could waste time when iterated by queries.
 

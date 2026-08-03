@@ -784,21 +784,6 @@ static void flecs_pipeline_memory_get(
     }
 }
 
-#ifdef FLECS_CACHED_QUERIES
-static void flecs_rematch_monitor_memory_get(
-    const ecs_world_t *world,
-    ecs_misc_memory_t *result)
-{
-    ecs_map_iter_t it = ecs_map_iter(&world->monitors.monitors);
-    while (ecs_map_next(&it)) {
-        ecs_monitor_t *m = ecs_map_ptr(&it);
-        result->bytes_rematch_monitor += ECS_SIZEOF(ecs_monitor_t);
-        result->bytes_rematch_monitor += ecs_vec_size(&m->queries) *
-            ECS_SIZEOF(void*);
-    }
-}
-#endif
-
 #ifdef FLECS_META
 static void flecs_reflection_memory_get(
     const ecs_world_t *world,
@@ -1015,9 +1000,6 @@ ecs_misc_memory_t ecs_misc_memory_get(
     result.bytes_observers = flecs_observer_index_memory_get(world);
     flecs_system_memory_get(world, &result);
     flecs_pipeline_memory_get(world, &result);
-#ifdef FLECS_CACHED_QUERIES
-    flecs_rematch_monitor_memory_get(world, &result);
-#endif
 
     #ifdef FLECS_META
         flecs_reflection_memory_get(world, &result);

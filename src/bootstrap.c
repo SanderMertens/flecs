@@ -967,6 +967,9 @@ void flecs_bootstrap(
     flecs_bootstrap_entity_name(world);
     flecs_bootstrap_parent_component(world);
     flecs_bootstrap_prefab(world);
+#ifdef FLECS_CACHED_QUERIES
+    flecs_query_cache_bootstrap(world);
+#endif
 
     ecs_set_scope(world, 0);
     ecs_set_name_prefix(world, NULL);

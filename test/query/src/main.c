@@ -1723,10 +1723,13 @@ void Cascade_parent_component_n_parents_for_depth_after_query(void);
 void Cascade_cascade_optional_change_detection_after_remove(void);
 void Cascade_two_cascade_terms(void);
 void Cascade_cascade_in_or_chain(void);
+void Cascade_rematch_after_depth_only_change(void);
+void Cascade_rematch_after_depth_only_change_2_lvls(void);
+void Cascade_rematch_after_depth_only_change_custom_rel(void);
 
 // Testsuite 'Cached'
 void Cached_fixed_src_wildcard_before_cache(void);
-void Cached_rematch_fewer_wildcard_matches(void);
+void Cached_rematch_inherited_wildcard_pair(void);
 void Cached_simple_query_existing_table(void);
 void Cached_simple_query_2_existing_tables(void);
 void Cached_simple_query_new_table(void);
@@ -1880,6 +1883,12 @@ void Cached_this_self_up_w_3_levels_ppp_after_query(void);
 void Cached_rematch_after_reparent_parent(void);
 void Cached_no_rematch_after_reparent_child(void);
 void Cached_filter_term_not_term_table_recycle(void);
+void Cached_unmatch_after_reparent_to_empty_parent(void);
+void Cached_unmatch_after_set_parent_to_empty_parent(void);
+void Cached_match_after_defer_add_to_parent(void);
+void Cached_unmatch_after_defer_remove_from_parent(void);
+void Cached_unmatch_after_delete_traversable_target(void);
+void Cached_unmatch_after_delete_traversable_target_parent(void);
 
 // Testsuite 'ChangeDetection'
 void ChangeDetection_query_changed_after_new(void);
@@ -9645,6 +9654,18 @@ bake_test_case Cascade_testcases[] = {
     {
         "cascade_in_or_chain",
         Cascade_cascade_in_or_chain
+    },
+    {
+        "rematch_after_depth_only_change",
+        Cascade_rematch_after_depth_only_change
+    },
+    {
+        "rematch_after_depth_only_change_2_lvls",
+        Cascade_rematch_after_depth_only_change_2_lvls
+    },
+    {
+        "rematch_after_depth_only_change_custom_rel",
+        Cascade_rematch_after_depth_only_change_custom_rel
     }
 };
 
@@ -9654,8 +9675,8 @@ bake_test_case Cached_testcases[] = {
         Cached_fixed_src_wildcard_before_cache
     },
     {
-        "rematch_fewer_wildcard_matches",
-        Cached_rematch_fewer_wildcard_matches
+        "rematch_inherited_wildcard_pair",
+        Cached_rematch_inherited_wildcard_pair
     },
     {
         "simple_query_existing_table",
@@ -10268,6 +10289,30 @@ bake_test_case Cached_testcases[] = {
     {
         "filter_term_not_term_table_recycle",
         Cached_filter_term_not_term_table_recycle
+    },
+    {
+        "unmatch_after_reparent_to_empty_parent",
+        Cached_unmatch_after_reparent_to_empty_parent
+    },
+    {
+        "unmatch_after_set_parent_to_empty_parent",
+        Cached_unmatch_after_set_parent_to_empty_parent
+    },
+    {
+        "match_after_defer_add_to_parent",
+        Cached_match_after_defer_add_to_parent
+    },
+    {
+        "unmatch_after_defer_remove_from_parent",
+        Cached_unmatch_after_defer_remove_from_parent
+    },
+    {
+        "unmatch_after_delete_traversable_target",
+        Cached_unmatch_after_delete_traversable_target
+    },
+    {
+        "unmatch_after_delete_traversable_target_parent",
+        Cached_unmatch_after_delete_traversable_target_parent
     }
 };
 
@@ -14397,14 +14442,14 @@ static bake_test_suite suites[] = {
         "Cascade",
         NULL,
         NULL,
-        37,
+        40,
         Cascade_testcases
     },
     {
         "Cached",
         NULL,
         NULL,
-        155,
+        161,
         Cached_testcases
     },
     {

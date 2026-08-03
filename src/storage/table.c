@@ -2510,6 +2510,12 @@ void flecs_table_notify(
     case EcsTableTriggersForId:
         flecs_table_add_trigger_flags(world, table, id, event->event);
         break;
+    case EcsTableUpNotifyForId:
+        table->flags |= EcsTableHasUpNotify;
+        if (id) {
+            flecs_table_edges_add_flags(world, table, id, EcsTableHasUpNotify);
+        }
+        break;
     case EcsTableNoTriggersForId:
         break; /* TODO */
     }

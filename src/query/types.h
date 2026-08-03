@@ -274,6 +274,9 @@ typedef struct {
     ecs_trav_down_t *down;
     int32_t cache_elem;
     ecs_trav_up_cache_t cache;
+
+    ecs_table_t *last_down_table;
+    bool start_down_walk;
 } ecs_query_up_impl_t;
 
 typedef struct {

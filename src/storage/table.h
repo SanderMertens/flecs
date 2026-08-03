@@ -56,6 +56,7 @@
 typedef enum ecs_table_eventkind_t {
     EcsTableTriggersForId,
     EcsTableNoTriggersForId,
+    EcsTableUpNotifyForId,
 } ecs_table_eventkind_t;
 
 typedef struct ecs_table_event_t {

@@ -209,17 +209,6 @@ void flecs_commit(
 
     flecs_table_traversable_add(src_table, -is_trav);
 
-#ifdef FLECS_CACHED_QUERIES
-    /* If the entity is traversable, it is being monitored for changes and
-     * requires rematching queries when components are added or removed. This
-     * ensures that queries that rely on components from traversable entities
-     * update the matched tables when the application adds or removes a
-     * component from, for example, a parent. */
-    if (is_trav) {
-        flecs_update_component_monitors(world, &diff->added, &diff->removed);
-    }
-#endif
-
     ecs_os_perf_trace_pop("flecs.commit");
 
     flecs_journal_end();
@@ -678,7 +667,7 @@ ecs_entity_t ecs_new_w_table(
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(table != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    flecs_stage_from_world(&world);    
+    ecs_stage_t *stage = flecs_stage_from_world(&world);
     ecs_entity_t entity = flecs_new_id(world);
     ecs_record_t *r = flecs_entities_get(world, entity);
     ecs_flags32_t flags = table->flags & EcsTableAddEdgeFlags;
@@ -686,12 +675,16 @@ ecs_entity_t ecs_new_w_table(
         flags |= EcsTableHasOnAdd;
     }
 
-    ecs_table_diff_t table_diff = { 
+    ecs_table_diff_t table_diff = {
         .added = table->type,
         .added_flags = flags
     };
 
+    flecs_defer_begin(world, stage);
+
     flecs_new_entity(world, entity, r, table, &table_diff, true, 0);
+
+    flecs_defer_end(world, stage);
 
     return entity;
 error:
@@ -2502,7 +2495,11 @@ ecs_entity_t ecs_new_w_parent(
     parent_ptr = &parent_ptr[row];
     parent_ptr->value = parent;
 
+    flecs_defer_begin(world, stage);
+
     flecs_actions_new(world, table, row, 1, &table_diff, 0, true, EcsWildcard);
+
+    flecs_defer_end(world, stage);
 
     if (name) {
         bool is_deferred = ecs_is_deferred(world);

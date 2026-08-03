@@ -4824,6 +4824,19 @@ FLECS_API
 int32_t ecs_query_match_count(
     const ecs_query_t *query);
 
+/** Event emitted when a table needs to be revalidated for a query cache.
+ * The event is enqueued when an observer detects that the components that are
+ * matched through relationship traversal changed for a table, and is handled
+ * when the command queue is flushed. The event payload is of type
+ * ecs_query_cache_revalidate_t. */
+FLECS_API extern const ecs_entity_t EcsOnQueryCacheRevalidate;
+
+/** Payload for EcsOnQueryCacheRevalidate event. */
+typedef struct ecs_query_cache_revalidate_t {
+    ecs_entity_t query;              /**< Query for which to revalidate table. */
+    uint64_t table_id;               /**< Id of table to revalidate. */
+} ecs_query_cache_revalidate_t;
+
 #endif // FLECS_CACHED_QUERIES
 
 #ifdef FLECS_QUERY_PLANS

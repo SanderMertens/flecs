@@ -15,6 +15,8 @@ typedef struct ecs_event_id_record_t {
 
     /* Number of active observers for (component) id */
     int32_t observer_count;
+
+    int32_t up_notify_count;
 } ecs_event_id_record_t;
 
 typedef struct ecs_observer_impl_t {
@@ -81,6 +83,11 @@ bool flecs_observers_exist(
     ecs_id_t id,
     ecs_entity_t event);
 
+bool flecs_up_notify_observers_exist(
+    const ecs_observable_t *observable,
+    ecs_id_t id,
+    ecs_entity_t event);
+
 /* Initialize observer. */
 ecs_observer_t* flecs_observer_init(
     ecs_world_t *world,
@@ -103,6 +110,13 @@ bool flecs_default_next_callback(
 
 /* Invoke observers. */
 void flecs_observers_invoke(
+    ecs_world_t *world,
+    ecs_map_t *observers,
+    ecs_iter_t *it,
+    ecs_table_t *table,
+    ecs_entity_t trav);
+
+void flecs_observers_invoke_up_notify(
     ecs_world_t *world,
     ecs_map_t *observers,
     ecs_iter_t *it,

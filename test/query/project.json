@@ -1779,13 +1779,16 @@
                 "parent_component_n_parents_for_depth_after_query",
                 "cascade_optional_change_detection_after_remove",
                 "two_cascade_terms",
-                "cascade_in_or_chain"
+                "cascade_in_or_chain",
+                "rematch_after_depth_only_change",
+                "rematch_after_depth_only_change_2_lvls",
+                "rematch_after_depth_only_change_custom_rel"
             ]
         }, {
             "id": "Cached",
             "testcases": [
                 "fixed_src_wildcard_before_cache",
-                "rematch_fewer_wildcard_matches",
+                "rematch_inherited_wildcard_pair",
                 "simple_query_existing_table",
                 "simple_query_2_existing_tables",
                 "simple_query_new_table",
@@ -1938,7 +1941,13 @@
                 "this_self_up_w_3_levels_ppp_after_query",
                 "rematch_after_reparent_parent",
                 "no_rematch_after_reparent_child",
-                "filter_term_not_term_table_recycle"
+                "filter_term_not_term_table_recycle",
+                "unmatch_after_reparent_to_empty_parent",
+                "unmatch_after_set_parent_to_empty_parent",
+                "match_after_defer_add_to_parent",
+                "unmatch_after_defer_remove_from_parent",
+                "unmatch_after_delete_traversable_target",
+                "unmatch_after_delete_traversable_target_parent"
             ]
         }, {
             "id": "ChangeDetection",

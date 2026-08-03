@@ -2323,6 +2323,36 @@ void Observer_multi_term_on_set_w_base_and_3_instances_in_different_tables(void)
 void Observer_propagate_isa_two_bases_dirty_reachable_cache(void);
 void Observer_propagate_on_set_2_lvls(void);
 void Observer_propagate_on_set_2_lvls_2_terms(void);
+void Observer_propagate_masked_add_to_grandparent(void);
+void Observer_propagate_masked_remove_from_grandparent(void);
+void Observer_propagate_add_to_grandparent_invoked_for_parent(void);
+void Observer_propagate_up_add_to_parent_w_child_owned(void);
+void Observer_propagate_self_up_add_to_parent_w_child_owned(void);
+void Observer_propagate_up_remove_from_parent_w_child_owned(void);
+void Observer_propagate_self_up_remove_from_parent_w_child_owned(void);
+void Observer_propagate_remove_from_parent_w_grandparent_owned(void);
+void Observer_propagate_add_to_parent_w_grandparent_owned(void);
+void Observer_propagate_add_to_grandparent(void);
+void Observer_propagate_remove_from_grandparent(void);
+void Observer_propagate_add_to_parent_w_subtree(void);
+void Observer_propagate_add_stops_at_owned_table(void);
+void Observer_propagate_reparent_w_both_parents_owned(void);
+void Observer_propagate_reparent_from_owned_to_empty_parent(void);
+void Observer_propagate_reparent_from_empty_to_owned_parent(void);
+void Observer_propagate_reparent_parent_w_subtree(void);
+void Observer_propagate_unparent_w_parent_owned(void);
+void Observer_propagate_remove_first_wildcard_pair(void);
+void Observer_propagate_add_second_wildcard_pair(void);
+void Observer_propagate_isa_add_to_base(void);
+void Observer_propagate_isa_remove_from_base(void);
+void Observer_propagate_isa_remove_from_base_w_second_base(void);
+void Observer_propagate_isa_add_to_second_base(void);
+void Observer_propagate_isa_masked_add_to_base_of_base(void);
+void Observer_propagate_isa_add_to_base_of_base(void);
+void Observer_propagate_custom_rel_add_to_target(void);
+void Observer_propagate_custom_rel_remove_from_target(void);
+void Observer_propagate_custom_rel_masked_add(void);
+void Observer_propagate_add_to_grandparent_w_parent_inherited(void);
 
 // Testsuite 'ObserverOnSet'
 void ObserverOnSet_set_1_of_1(void);
@@ -12428,6 +12458,126 @@ bake_test_case Observer_testcases[] = {
     {
         "propagate_on_set_2_lvls_2_terms",
         Observer_propagate_on_set_2_lvls_2_terms
+    },
+    {
+        "propagate_masked_add_to_grandparent",
+        Observer_propagate_masked_add_to_grandparent
+    },
+    {
+        "propagate_masked_remove_from_grandparent",
+        Observer_propagate_masked_remove_from_grandparent
+    },
+    {
+        "propagate_add_to_grandparent_invoked_for_parent",
+        Observer_propagate_add_to_grandparent_invoked_for_parent
+    },
+    {
+        "propagate_up_add_to_parent_w_child_owned",
+        Observer_propagate_up_add_to_parent_w_child_owned
+    },
+    {
+        "propagate_self_up_add_to_parent_w_child_owned",
+        Observer_propagate_self_up_add_to_parent_w_child_owned
+    },
+    {
+        "propagate_up_remove_from_parent_w_child_owned",
+        Observer_propagate_up_remove_from_parent_w_child_owned
+    },
+    {
+        "propagate_self_up_remove_from_parent_w_child_owned",
+        Observer_propagate_self_up_remove_from_parent_w_child_owned
+    },
+    {
+        "propagate_remove_from_parent_w_grandparent_owned",
+        Observer_propagate_remove_from_parent_w_grandparent_owned
+    },
+    {
+        "propagate_add_to_parent_w_grandparent_owned",
+        Observer_propagate_add_to_parent_w_grandparent_owned
+    },
+    {
+        "propagate_add_to_grandparent",
+        Observer_propagate_add_to_grandparent
+    },
+    {
+        "propagate_remove_from_grandparent",
+        Observer_propagate_remove_from_grandparent
+    },
+    {
+        "propagate_add_to_parent_w_subtree",
+        Observer_propagate_add_to_parent_w_subtree
+    },
+    {
+        "propagate_add_stops_at_owned_table",
+        Observer_propagate_add_stops_at_owned_table
+    },
+    {
+        "propagate_reparent_w_both_parents_owned",
+        Observer_propagate_reparent_w_both_parents_owned
+    },
+    {
+        "propagate_reparent_from_owned_to_empty_parent",
+        Observer_propagate_reparent_from_owned_to_empty_parent
+    },
+    {
+        "propagate_reparent_from_empty_to_owned_parent",
+        Observer_propagate_reparent_from_empty_to_owned_parent
+    },
+    {
+        "propagate_reparent_parent_w_subtree",
+        Observer_propagate_reparent_parent_w_subtree
+    },
+    {
+        "propagate_unparent_w_parent_owned",
+        Observer_propagate_unparent_w_parent_owned
+    },
+    {
+        "propagate_remove_first_wildcard_pair",
+        Observer_propagate_remove_first_wildcard_pair
+    },
+    {
+        "propagate_add_second_wildcard_pair",
+        Observer_propagate_add_second_wildcard_pair
+    },
+    {
+        "propagate_isa_add_to_base",
+        Observer_propagate_isa_add_to_base
+    },
+    {
+        "propagate_isa_remove_from_base",
+        Observer_propagate_isa_remove_from_base
+    },
+    {
+        "propagate_isa_remove_from_base_w_second_base",
+        Observer_propagate_isa_remove_from_base_w_second_base
+    },
+    {
+        "propagate_isa_add_to_second_base",
+        Observer_propagate_isa_add_to_second_base
+    },
+    {
+        "propagate_isa_masked_add_to_base_of_base",
+        Observer_propagate_isa_masked_add_to_base_of_base
+    },
+    {
+        "propagate_isa_add_to_base_of_base",
+        Observer_propagate_isa_add_to_base_of_base
+    },
+    {
+        "propagate_custom_rel_add_to_target",
+        Observer_propagate_custom_rel_add_to_target
+    },
+    {
+        "propagate_custom_rel_remove_from_target",
+        Observer_propagate_custom_rel_remove_from_target
+    },
+    {
+        "propagate_custom_rel_masked_add",
+        Observer_propagate_custom_rel_masked_add
+    },
+    {
+        "propagate_add_to_grandparent_w_parent_inherited",
+        Observer_propagate_add_to_grandparent_w_parent_inherited
     }
 };
 
@@ -16597,7 +16747,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        355,
+        385,
         Observer_testcases
     },
     {
