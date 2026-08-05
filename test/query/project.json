@@ -1128,7 +1128,8 @@
                 "set_var_id_31",
                 "invalid_var_name_in_pair",
                 "invalid_var_name_w_toggle_cascade",
-                "invalid_var_name_w_neq"
+                "invalid_var_name_w_neq",
+                "first_var_w_fixed_tgt_id_matching_var_id"
             ]
         }, {
             "id": "Operators",

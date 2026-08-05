@@ -82620,7 +82620,9 @@ int flecs_query_compile_term(
 
     /* Handle self references between first and second variables */
     if (!ecs_id_is_wildcard(first_id)) {
-        if (first_is_var && !first_written && (op.first.var == op.second.var)) {
+        if (first_is_var && second_is_var && !first_written &&
+            (op.first.var == op.second.var))
+        {
             flecs_query_insert_pair_eq(term->field_index, ctx);
         }
     }

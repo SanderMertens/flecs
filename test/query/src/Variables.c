@@ -13608,3 +13608,43 @@ void Variables_invalid_var_name_w_neq(void) {
 
     ecs_fini(world);
 }
+
+void Variables_first_var_w_fixed_tgt_id_matching_var_id(void) {
+    int32_t i;
+
+    for (i = 0; i < 256; i ++) {
+        ecs_world_t *world = ecs_mini();
+
+        ECS_TAG(world, Rel);
+
+        ecs_entity_t tgt = 0x10000 + (ecs_entity_t)i;
+        ecs_make_alive(world, tgt);
+        ecs_set_name(world, tgt, "Tgt");
+
+        ecs_entity_t e = ecs_new(world);
+        ecs_add_pair(world, e, Rel, tgt);
+
+        ecs_query_t *q = ecs_query(world, {
+            .expr = "($rel, Tgt)",
+            .cache_kind = cache_kind
+        });
+
+        test_assert(q != NULL);
+
+        int32_t rel_var = ecs_query_find_var(q, "rel");
+        test_assert(rel_var != -1);
+
+        int32_t count = 0;
+        ecs_iter_t it = ecs_query_iter(world, q);
+        while (ecs_query_next(&it)) {
+            test_uint(ecs_field_id(&it, 0), ecs_pair(Rel, tgt));
+            test_uint(ecs_iter_get_var(&it, rel_var), Rel);
+            count += it.count;
+        }
+
+        test_int(count, 1);
+
+        ecs_query_fini(q);
+        ecs_fini(world);
+    }
+}
