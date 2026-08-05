@@ -1099,6 +1099,7 @@ void Variables_set_var_id_31(void);
 void Variables_invalid_var_name_in_pair(void);
 void Variables_invalid_var_name_w_toggle_cascade(void);
 void Variables_invalid_var_name_w_neq(void);
+void Variables_first_var_w_fixed_tgt_id_matching_var_id(void);
 
 // Testsuite 'Operators'
 void Operators_setup(void);
@@ -7209,6 +7210,10 @@ bake_test_case Variables_testcases[] = {
     {
         "invalid_var_name_w_neq",
         Variables_invalid_var_name_w_neq
+    },
+    {
+        "first_var_w_fixed_tgt_id_matching_var_id",
+        Variables_first_var_w_fixed_tgt_id_matching_var_id
     }
 };
 
@@ -14383,7 +14388,7 @@ static bake_test_suite suites[] = {
         "Variables",
         Variables_setup,
         NULL,
-        227,
+        228,
         Variables_testcases,
         1,
         Variables_params
