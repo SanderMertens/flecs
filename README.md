@@ -145,6 +145,9 @@ If you have a project you'd like to share, let me know on [Discord](https://disc
 ### ECS survivors
 [![image](docs/img/projects/ecs_survivors.png)](https://laurent-voisard.itch.io/ecs-survivors/)
 
+### 8402
+[![image](docs/img/projects/8402.png)](https://voidlucky.itch.io/8402)
+
 ### Tome Tumble Tournament
 [![image](docs/img/projects/tome_tumble.png)](https://terzalo.itch.io/tome-tumble-tournament)
 
