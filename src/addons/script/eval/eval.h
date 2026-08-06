@@ -16,6 +16,16 @@ int flecs_script_apply_annot(
     ecs_entity_t entity,
     ecs_script_annot_t *annot);
 
+/* Include visitor (runs before script evaluation, see visit_include.c) */
+
+int flecs_script_visit_include(
+    ecs_script_eval_visitor_t *v,
+    ecs_script_scope_t *scope);
+
+int flecs_script_eval_include(
+    ecs_script_eval_visitor_t *v,
+    ecs_script_include_t *node);
+
 /* Type visitors (implement struct/enum/bitmask initializer syntax) */
 
 int flecs_script_struct_visit(
