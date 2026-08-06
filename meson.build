@@ -94,6 +94,7 @@ flecs_src = files(
     'src/addons/script/eval/runtime.c',
     'src/addons/script/eval/visit_enum.c',
     'src/addons/script/eval/visit_eval.c',
+    'src/addons/script/eval/visit_include.c',
     'src/addons/script/eval/visit_struct.c',
     'src/addons/script/modules/functions_math.c',
     'src/addons/script/modules/functions_math_perlin.c',
