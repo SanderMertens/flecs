@@ -74641,6 +74641,13 @@ error:
     return -1;
 }
 
+static bool flecs_script_is_builtin(
+    const ecs_world_t *world,
+    ecs_entity_t e)
+{
+    return ecs_has_pair(world, e, EcsChildOf, EcsFlecsCore);
+}
+
 ecs_entity_t flecs_script_create_entity(
     ecs_script_eval_visitor_t *v,
     const char *name)
@@ -74660,7 +74667,7 @@ ecs_entity_t flecs_script_create_entity(
     }
 
     ecs_entity_t result = ecs_entity_init(v->world, &desc);
-    if (result && v->script_tag) {
+    if (result && v->script_tag && !flecs_script_is_builtin(v->world, result)) {
         ecs_add_id(v->world, result, v->script_tag);
     }
     if (result && with) {

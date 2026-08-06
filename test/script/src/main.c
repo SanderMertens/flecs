@@ -227,6 +227,7 @@ void Eval_assign_singleton_tag_w_scope(void);
 void Eval_assign_singleton_2_tags_w_scope(void);
 void Eval_assign_singleton_component_w_scope(void);
 void Eval_assign_singleton_2_components_w_scope(void);
+void Eval_assign_singleton_component_w_scope_in_managed_script(void);
 void Eval_with_pair_in_scope(void);
 void Eval_with_pair_component_in_scope(void);
 void Eval_pair_w_rel_var(void);
@@ -2809,6 +2810,10 @@ bake_test_case Eval_testcases[] = {
     {
         "assign_singleton_2_components_w_scope",
         Eval_assign_singleton_2_components_w_scope
+    },
+    {
+        "assign_singleton_component_w_scope_in_managed_script",
+        Eval_assign_singleton_component_w_scope_in_managed_script
     },
     {
         "with_pair_in_scope",
@@ -9595,7 +9600,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        528,
+        529,
         Eval_testcases
     },
     {
