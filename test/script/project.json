@@ -231,6 +231,7 @@
                 "assign_singleton_2_tags_w_scope",
                 "assign_singleton_component_w_scope",
                 "assign_singleton_2_components_w_scope",
+                "assign_singleton_component_w_scope_in_managed_script",
                 "with_pair_in_scope",
                 "with_pair_component_in_scope",
                 "pair_w_rel_var",

@@ -6515,6 +6515,44 @@ void Eval_assign_singleton_2_components_w_scope(void) {
     ecs_fini(world);
 }
 
+void Eval_assign_singleton_component_w_scope_in_managed_script(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    LINE "$ {\n"
+    LINE "  Position: {10, 20}\n"
+    LINE "}\n";
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = expr
+    });
+    test_assert(s != 0);
+
+    const Position *p = ecs_get(world, ecs_id(Position), Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    test_assert(!ecs_has_pair(world, EcsVariable, ecs_id(EcsScript), s));
+
+    ecs_delete(world, s);
+
+    test_assert(ecs_is_alive(world, EcsVariable));
+
+    ecs_fini(world);
+}
+
 void Eval_with_pair_in_scope(void) {
     ecs_world_t *world = ecs_init();
 
