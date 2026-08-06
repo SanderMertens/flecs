@@ -18,21 +18,6 @@
  * @{
  */
 
-/* Used for the HTTP server */
-#ifndef FLECS_HTTP
-#define FLECS_HTTP
-#endif
-
-/* Used for building the JSON replies */
-#ifndef FLECS_JSON
-#define FLECS_JSON
-#endif
-
-/* For the REST system */
-#ifndef FLECS_PIPELINE
-#define FLECS_PIPELINE
-#endif
-
 #ifndef FLECS_REST_H
 #define FLECS_REST_H
 

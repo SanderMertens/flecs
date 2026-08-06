@@ -23,18 +23,6 @@
  * @{
  */
 
-#ifndef FLECS_MODULE
-#define FLECS_MODULE
-#endif
-
-#ifndef FLECS_SYSTEM
-#define FLECS_SYSTEM
-#endif
-
-#if !defined(FLECS_OS_API_IMPL) && !defined(FLECS_NO_OS_API_IMPL)
-#define FLECS_OS_API_IMPL
-#endif
-
 #ifndef FLECS_PIPELINE_H
 #define FLECS_PIPELINE_H
 

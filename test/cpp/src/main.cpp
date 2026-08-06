@@ -752,6 +752,7 @@ void Query_query_type_w_template(void);
 void Query_compare_term_id(void);
 void Query_test_no_defer_each(void);
 void Query_test_no_defer_iter(void);
+void Query_field_arrow_w_multiple_elements(void);
 void Query_inspect_terms(void);
 void Query_inspect_terms_w_each(void);
 void Query_inspect_terms_w_expr(void);
@@ -4636,6 +4637,10 @@ bake_test_case Query_testcases[] = {
         Query_test_no_defer_iter
     },
     {
+        "field_arrow_w_multiple_elements",
+        Query_field_arrow_w_multiple_elements
+    },
+    {
         "inspect_terms",
         Query_inspect_terms
     },
@@ -8484,7 +8489,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        165,
+        166,
         Query_testcases
     },
     {

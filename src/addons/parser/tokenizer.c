@@ -644,6 +644,27 @@ static const char* flecs_script_skip_string(
     return pos;
 }
 
+static const char* flecs_tokenizer_emit(
+    ecs_parser_t *parser,
+    const char *pos,
+    const char *end,
+    ecs_token_kind_t kind,
+    ecs_token_t *out)
+{
+    int32_t len = flecs_ito(int32_t, end - pos);
+    char *outpos = parser->token_cur;
+    int32_t i;
+    for (i = 0; i < len; i ++) {
+        outpos = flecs_tokenizer_write(parser, outpos, pos[i + 1]);
+    }
+    outpos = flecs_tokenizer_write(parser, outpos, '\0');
+
+    out->kind = kind;
+    out->value = parser->token_cur;
+    parser->token_cur = outpos;
+    return end + 2;
+}
+
 static const char* flecs_script_char(
     ecs_parser_t *parser,
     const char *pos,
@@ -668,17 +689,7 @@ static const char* flecs_script_char(
         return NULL;
     }
 
-    char *outpos = parser->token_cur;
-    int32_t i;
-    for (i = 0; i < len; i ++) {
-        outpos = flecs_tokenizer_write(parser, outpos, pos[i + 1]);
-    }
-    outpos = flecs_tokenizer_write(parser, outpos, '\0');
-
-    out->kind = EcsTokChar;
-    out->value = parser->token_cur;
-    parser->token_cur = outpos;
-    return end + 2;
+    return flecs_tokenizer_emit(parser, pos, end, EcsTokChar, out);
 }
 
 static const char* flecs_script_string(
@@ -694,18 +705,7 @@ static const char* flecs_script_string(
     ecs_assert(end[0] == '"', ECS_INTERNAL_ERROR, NULL);
     end --;
 
-    int32_t len = flecs_ito(int32_t, end - pos);
-    char *outpos = parser->token_cur;
-    int32_t i;
-    for (i = 0; i < len; i ++) {
-        outpos = flecs_tokenizer_write(parser, outpos, pos[i + 1]);
-    }
-    outpos = flecs_tokenizer_write(parser, outpos, '\0');
-
-    out->kind = EcsTokString;
-    out->value = parser->token_cur;
-    parser->token_cur = outpos;
-    return end + 2;
+    return flecs_tokenizer_emit(parser, pos, end, EcsTokString, out);
 }
 
 static const char* flecs_script_multiline_string(
@@ -730,18 +730,7 @@ static const char* flecs_script_multiline_string(
 
     end --;
 
-    int32_t len = flecs_ito(int32_t, end - pos);
-    char *outpos = parser->token_cur;
-    int32_t i;
-    for (i = 0; i < len; i ++) {
-        outpos = flecs_tokenizer_write(parser, outpos, pos[i + 1]);
-    }
-    outpos = flecs_tokenizer_write(parser, outpos, '\0');
-
-    out->kind = EcsTokString;
-    out->value = parser->token_cur;
-    parser->token_cur = outpos;
-    return end + 2;
+    return flecs_tokenizer_emit(parser, pos, end, EcsTokString, out);
 }
 
 const char* flecs_tokenizer_until(

@@ -25,10 +25,6 @@ bool flecs_query_trivial_test(
 
 #ifdef FLECS_QUERY_PLANS
 
-void flecs_query_trivial_set_iter_this(
-    ecs_iter_t *it,
-    const ecs_query_run_ctx_t *ctx);
-
 /* Iterator for query plan operations with trivial terms. */
 bool flecs_query_trivial_search(
     const ecs_query_run_ctx_t *ctx,

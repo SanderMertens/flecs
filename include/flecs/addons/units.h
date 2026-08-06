@@ -32,14 +32,6 @@
  * @{
  */
 
-#ifndef FLECS_MODULE
-#define FLECS_MODULE
-#endif
-
-#ifndef FLECS_META
-#define FLECS_META
-#endif
-
 #ifndef FLECS_UNITS_H
 #define FLECS_UNITS_H
 

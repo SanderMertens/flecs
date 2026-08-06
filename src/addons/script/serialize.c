@@ -410,11 +410,12 @@ static int flecs_expr_ser_type(
     return flecs_expr_ser_type_ops(world, ops, count, base, str, is_expr);
 }
 
-int ecs_ptr_to_expr_buf(
+static int flecs_ptr_to_buf(
     const ecs_world_t *world,
     ecs_entity_t type,
     const void *ptr,
-    ecs_strbuf_t *buf_out)
+    ecs_strbuf_t *buf_out,
+    bool is_expr)
 {
     const EcsTypeSerializer *ser = ecs_get(
         world, type, EcsTypeSerializer);
@@ -425,13 +426,22 @@ int ecs_ptr_to_expr_buf(
         goto error;
     }
 
-    if (flecs_expr_ser_type(world, &ser->ops, ptr, buf_out, true)) {
+    if (flecs_expr_ser_type(world, &ser->ops, ptr, buf_out, is_expr)) {
         goto error;
     }
 
     return 0;
 error:
     return -1;
+}
+
+int ecs_ptr_to_expr_buf(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    const void *ptr,
+    ecs_strbuf_t *buf_out)
+{
+    return flecs_ptr_to_buf(world, type, ptr, buf_out, true);
 }
 
 char* ecs_ptr_to_expr(
@@ -455,22 +465,7 @@ int ecs_ptr_to_str_buf(
     const void *ptr,
     ecs_strbuf_t *buf_out)
 {
-    const EcsTypeSerializer *ser = ecs_get(
-        world, type, EcsTypeSerializer);
-    if (ser == NULL) {
-        char *path = ecs_get_path(world, type);
-        ecs_err("cannot serialize value for type '%s'", path);
-        ecs_os_free(path);
-        goto error;
-    }
-
-    if (flecs_expr_ser_type(world, &ser->ops, ptr, buf_out, false)) {
-        goto error;
-    }
-
-    return 0;
-error:
-    return -1;
+    return flecs_ptr_to_buf(world, type, ptr, buf_out, false);
 }
 
 char* ecs_ptr_to_str(

@@ -303,22 +303,6 @@ static int flecs_script_check_var_component(
     return 0;
 }
 
-static int flecs_script_check_with_var(
-    ecs_script_eval_visitor_t *v,
-    ecs_script_var_component_t *node)
-{
-    ecs_script_var_t *var = ecs_script_vars_lookup(v->vars, node->name);
-    if (!var) {
-        flecs_script_eval_error(v, node, 
-            "unresolved variable '%s'", node->name);
-        return -1;
-    }
-
-    node->sp = var->sp;
-
-    return 0;
-}
-
 static int flecs_script_check_with_tag(
     ecs_script_eval_visitor_t *v,
     ecs_script_tag_t *node)
@@ -501,7 +485,7 @@ int flecs_script_check_node(
         return flecs_script_check_var_component(
             v, (ecs_script_var_component_t*)node);
     case EcsAstWithVar:
-        return flecs_script_check_with_var(
+        return flecs_script_check_var_component(
             v, (ecs_script_var_component_t*)node);
     case EcsAstWithTag:
         return flecs_script_check_with_tag(

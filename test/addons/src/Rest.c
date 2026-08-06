@@ -357,6 +357,52 @@ void Rest_components(void) {
     ecs_fini(world);
 }
 
+void Rest_get_component_missing_param(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_entity(world, { .name = "foo" });
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "GET",
+        "/component/foo", NULL, &reply));
+    test_int(reply.code, 400);
+
+    char *reply_str = ecs_strbuf_get(&reply.body);
+    test_assert(reply_str != NULL);
+    test_str(reply_str, "{\"error\":\"missing component for get endpoint\"}");
+    ecs_os_free(reply_str);
+
+    ecs_rest_server_fini(srv);
+
+    ecs_fini(world);
+}
+
+void Rest_put_component_missing_param(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_entity(world, { .name = "foo" });
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(-1, ecs_http_server_request(srv, "PUT",
+        "/component/foo", NULL, &reply));
+    test_int(reply.code, 400);
+
+    char *reply_str = ecs_strbuf_get(&reply.body);
+    test_assert(reply_str != NULL);
+    test_str(reply_str, "{\"error\":\"missing component for put endpoint\"}");
+    ecs_os_free(reply_str);
+
+    ecs_rest_server_fini(srv);
+
+    ecs_fini(world);
+}
+
 void Rest_type_info_non_existing_entity(void) {
     ecs_world_t *world = ecs_init();
 

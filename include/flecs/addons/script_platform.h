@@ -5,10 +5,6 @@
 
 #ifdef FLECS_SCRIPT_PLATFORM
 
-#ifndef FLECS_SCRIPT
-#define FLECS_SCRIPT
-#endif
-
 /**
  * @defgroup c_addons_script_platform Script Platform
  * @ingroup c_addons

@@ -25,14 +25,6 @@
 #ifndef FLECS_STATS_H
 #define FLECS_STATS_H
 
-#ifndef FLECS_MODULE
-#define FLECS_MODULE
-#endif
-
-#ifndef FLECS_PIPELINE
-#define FLECS_PIPELINE
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif

@@ -4113,8 +4113,8 @@ void QueryBuilder_iter_column_w_const_as_ptr(void) {
         while (it.next()) {
             const auto p = it.field<Position>(0);
             for (size_t i = 0; i < it.count(); i ++) {
-                test_int(p->x, 10);
-                test_int(p->y, 20);
+                test_int(p[i].x, 10);
+                test_int(p[i].y, 20);
                 count ++;
             }
         }

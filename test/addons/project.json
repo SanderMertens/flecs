@@ -535,6 +535,8 @@
                 "entity_not_found_w_dot_sep",
                 "tables",
                 "components",
+                "get_component_missing_param",
+                "put_component_missing_param",
                 "type_info_non_existing_entity",
                 "type_info_not_component",
                 "type_info_component_without_reflection",

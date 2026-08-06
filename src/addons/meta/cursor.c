@@ -2623,37 +2623,6 @@ const char* ecs_meta_get_string(
         /* Not a compatible opaque type, so fall through */
     }
     /* fall through */
-    case EcsOpPushStruct:
-    case EcsOpPushArray:
-    case EcsOpPushVector:
-    case EcsOpPushMap:
-    case EcsOpPushValue:
-    case EcsOpOpaqueStruct:
-    case EcsOpOpaqueArray:
-    case EcsOpOpaqueVector:
-    case EcsOpPop:
-    case EcsOpForward:
-    case EcsOpScope:
-    case EcsOpEnum:
-    case EcsOpBitmask:
-    case EcsOpPrimitive:
-    case EcsOpChar:
-    case EcsOpBool:
-    case EcsOpByte:
-    case EcsOpU8:
-    case EcsOpU16:
-    case EcsOpU32:
-    case EcsOpU64:
-    case EcsOpI8:
-    case EcsOpI16:
-    case EcsOpI32:
-    case EcsOpI64:
-    case EcsOpF32:
-    case EcsOpF64:
-    case EcsOpUPtr:
-    case EcsOpIPtr:
-    case EcsOpEntity:
-    case EcsOpId:
     default:
         ecs_throw(ECS_INVALID_PARAMETER, "invalid element for string");
         break;

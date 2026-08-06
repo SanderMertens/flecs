@@ -193,31 +193,6 @@ bool flecs_query_trivial_test(
 
 #ifdef FLECS_QUERY_PLANS
 
-void flecs_query_trivial_set_iter_this(
-    ecs_iter_t *it,
-    const ecs_query_run_ctx_t *ctx)
-{
-    const ecs_var_t *var = &ctx->vars[0];
-    const ecs_table_range_t *range = &var->range;
-    ecs_table_t *table = range->table;
-    int32_t count = range->count;
-    if (table) {
-        if (!count) {
-            count = ecs_table_count(table);
-        }
-        it->table = table;
-        it->offset = range->offset;
-        it->count = count;
-        it->entities = ecs_table_entities(table);
-        if (it->entities) {
-            it->entities += it->offset;
-        }
-    } else if (count == 1) {
-        it->count = 1;
-        it->entities = &ctx->vars[0].entity;
-    }
-}
-
 bool flecs_query_trivial_search(
     const ecs_query_run_ctx_t *ctx,
     ecs_query_trivial_ctx_t *op_ctx,

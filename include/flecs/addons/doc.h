@@ -13,10 +13,6 @@
 #ifndef FLECS_DOC_H
 #define FLECS_DOC_H
 
-#ifndef FLECS_MODULE
-#define FLECS_MODULE
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif

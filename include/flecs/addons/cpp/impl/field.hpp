@@ -60,7 +60,7 @@ T* field<T>::operator->() const {
     ecs_assert(data_ != nullptr, ECS_INVALID_OPERATION,
         "invalid nullptr dereference of component type %s",
             _::type_name<T>());
-    ecs_assert(data_ != nullptr, ECS_INVALID_OPERATION,
+    ecs_assert(count_ <= 1 || is_shared_, ECS_INVALID_OPERATION,
         "-> operator invalid for an array with >1 element of "
         "component type %s, use [row] instead",
             _::type_name<T>());

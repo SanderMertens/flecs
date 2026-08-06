@@ -19,18 +19,6 @@
 #ifndef FLECS_METRICS_H
 #define FLECS_METRICS_H
 
-#ifndef FLECS_META
-#define FLECS_META
-#endif
-
-#ifndef FLECS_UNITS
-#define FLECS_UNITS
-#endif
-
-#ifndef FLECS_PIPELINE
-#define FLECS_PIPELINE
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif

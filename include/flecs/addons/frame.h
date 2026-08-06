@@ -5,10 +5,6 @@
 
 #ifdef FLECS_FRAME
 
-#if !defined(FLECS_OS_API_IMPL) && !defined(FLECS_NO_OS_API_IMPL)
-#define FLECS_OS_API_IMPL
-#endif
-
 #ifndef FLECS_FRAME_H
 #define FLECS_FRAME_H
 

@@ -401,41 +401,36 @@ static const char* flecs_json_deser_components(
                     goto error;
                 }
             } else {
-                void *ptr = ecs_ensure_id(world, e, id, 
+                void *ptr = ecs_ensure_id(world, e, id,
                     flecs_ito(size_t, ti->size));
 
-                lah = flecs_json_parse(json, &token_kind, token);
-                if (token_kind != JsonNull) {
-                    if (!skip) {
-                        ecs_entity_t type = ti->component;
-                        const char *next = ecs_ptr_from_json(
-                            world, type, ptr, json, desc);
-                        if (!next) {
-                            flecs_json_missing_reflection(
-                                world, id, json, ctx, desc);
-                            if (desc->strict) {
-                                goto error;
-                            }
-
-                            json = flecs_parse_ws_eol(json);
-
-                            json = flecs_json_skip_object(json + 1, token, desc);
-                            if (!json) {
-                                goto error;
-                            }
-                        } else {
-                            json = next;
-                            ecs_modified_id(world, e, id);
+                if (!skip) {
+                    ecs_entity_t type = ti->component;
+                    const char *next = ecs_ptr_from_json(
+                        world, type, ptr, json, desc);
+                    if (!next) {
+                        flecs_json_missing_reflection(
+                            world, id, json, ctx, desc);
+                        if (desc->strict) {
+                            goto error;
                         }
-                    } else {
+
                         json = flecs_parse_ws_eol(json);
+
                         json = flecs_json_skip_object(json + 1, token, desc);
                         if (!json) {
                             goto error;
                         }
+                    } else {
+                        json = next;
+                        ecs_modified_id(world, e, id);
                     }
                 } else {
-                    json = lah;
+                    json = flecs_parse_ws_eol(json);
+                    json = flecs_json_skip_object(json + 1, token, desc);
+                    if (!json) {
+                        goto error;
+                    }
                 }
             }
         } else {

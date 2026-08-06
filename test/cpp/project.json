@@ -781,6 +781,7 @@
                 "compare_term_id",
                 "test_no_defer_each",
                 "test_no_defer_iter",
+                "field_arrow_w_multiple_elements",
                 "inspect_terms",
                 "inspect_terms_w_each",
                 "inspect_terms_w_expr",

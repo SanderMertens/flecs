@@ -472,9 +472,6 @@
 #ifndef FLECS_QUERY_PLANS
 #define FLECS_QUERY_PLANS
 #endif
-#if !defined(FLECS_OS_API_IMPL) && !defined(FLECS_NO_OS_API_IMPL)
-#define FLECS_OS_API_IMPL
-#endif
 #endif
 
 #if defined(FLECS_DOC) || defined(FLECS_META) || defined(FLECS_SYSTEM) || \
@@ -12386,21 +12383,6 @@ void ecs_parser_warningv_(
 #define ecs_should_log_2() false
 #define ecs_should_log_3() false
 
-#else /* No tracing enabled */
-#undef ecs_trace
-#define ecs_trace(...)
-#define ecs_dbg_1(...)
-#define ecs_dbg_2(...)
-#define ecs_dbg_3(...)
-
-#define ecs_log_push_1()
-#define ecs_log_push_2()
-#define ecs_log_push_3()
-
-#define ecs_log_pop_1()
-#define ecs_log_pop_2()
-#define ecs_log_pop_3()
-
 #endif // defined(FLECS_LOG_3)
 
 /** Default debug tracing is at level 1. */
@@ -12926,10 +12908,6 @@ const ecs_entity_range_t* ecs_entity_range_get(
 
 #ifdef FLECS_FRAME
 
-#if !defined(FLECS_OS_API_IMPL) && !defined(FLECS_NO_OS_API_IMPL)
-#define FLECS_OS_API_IMPL
-#endif
-
 #ifndef FLECS_FRAME_H
 #define FLECS_FRAME_H
 
@@ -13101,10 +13079,6 @@ void ecs_reset_clock(
 
 #ifdef FLECS_APP
 
-#ifndef FLECS_PIPELINE
-#define FLECS_PIPELINE
-#endif
-
 #ifndef FLECS_APP_H
 #define FLECS_APP_H
 
@@ -13226,10 +13200,6 @@ int ecs_app_set_frame_action(
  *
  * @{
  */
-
-#if !defined(FLECS_OS_API_IMPL) && !defined(FLECS_NO_OS_API_IMPL)
-#define FLECS_OS_API_IMPL
-#endif
 
 #ifndef FLECS_HTTP_H
 #define FLECS_HTTP_H
@@ -13474,21 +13444,6 @@ const char* ecs_http_get_param(
  * @{
  */
 
-/* Used for the HTTP server */
-#ifndef FLECS_HTTP
-#define FLECS_HTTP
-#endif
-
-/* Used for building the JSON replies */
-#ifndef FLECS_JSON
-#define FLECS_JSON
-#endif
-
-/* For the REST system */
-#ifndef FLECS_PIPELINE
-#define FLECS_PIPELINE
-#endif
-
 #ifndef FLECS_REST_H
 #define FLECS_REST_H
 
@@ -13578,14 +13533,6 @@ void FlecsRestImport(
  *
  * @{
  */
-
-#ifndef FLECS_MODULE
-#define FLECS_MODULE
-#endif
-
-#ifndef FLECS_PIPELINE
-#define FLECS_PIPELINE
-#endif
 
 #ifndef FLECS_TIMER_H
 #define FLECS_TIMER_H
@@ -13839,18 +13786,6 @@ void FlecsTimerImport(
  *
  * @{
  */
-
-#ifndef FLECS_MODULE
-#define FLECS_MODULE
-#endif
-
-#ifndef FLECS_SYSTEM
-#define FLECS_SYSTEM
-#endif
-
-#if !defined(FLECS_OS_API_IMPL) && !defined(FLECS_NO_OS_API_IMPL)
-#define FLECS_OS_API_IMPL
-#endif
 
 #ifndef FLECS_PIPELINE_H
 #define FLECS_PIPELINE_H
@@ -14119,10 +14054,6 @@ void FlecsPipelineImport(
  *
  * @{
  */
-
-#ifndef FLECS_MODULE
-#define FLECS_MODULE
-#endif
 
 #ifndef FLECS_SYSTEM_H
 #define FLECS_SYSTEM_H
@@ -14484,14 +14415,6 @@ void FlecsSystemImport(
 
 #ifndef FLECS_STATS_H
 #define FLECS_STATS_H
-
-#ifndef FLECS_MODULE
-#define FLECS_MODULE
-#endif
-
-#ifndef FLECS_PIPELINE
-#define FLECS_PIPELINE
-#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -15241,18 +15164,6 @@ void FlecsStatsImport(
 #ifndef FLECS_METRICS_H
 #define FLECS_METRICS_H
 
-#ifndef FLECS_META
-#define FLECS_META
-#endif
-
-#ifndef FLECS_UNITS
-#define FLECS_UNITS
-#endif
-
-#ifndef FLECS_PIPELINE
-#define FLECS_PIPELINE
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -15426,10 +15337,6 @@ void FlecsMetricsImport(
 
 #ifndef FLECS_ALERTS_H
 #define FLECS_ALERTS_H
-
-#ifndef FLECS_PIPELINE
-#define FLECS_PIPELINE
-#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -15638,18 +15545,6 @@ void FlecsAlertsImport(
 #endif
 
 #ifdef FLECS_JSON
-
-#ifndef FLECS_META
-#define FLECS_META
-#endif
-
-#ifndef FLECS_DOC
-#define FLECS_DOC
-#endif
-
-#ifndef FLECS_QUERY_DSL
-#define FLECS_QUERY_DSL /* For parsing component ID expressions */
-#endif
 
 #ifndef FLECS_JSON_H
 #define FLECS_JSON_H
@@ -16099,14 +15994,6 @@ int ecs_world_to_json_buf(
  * @{
  */
 
-#ifndef FLECS_MODULE
-#define FLECS_MODULE
-#endif
-
-#ifndef FLECS_META
-#define FLECS_META
-#endif
-
 #ifndef FLECS_UNITS_H
 #define FLECS_UNITS_H
 
@@ -16430,10 +16317,6 @@ void FlecsUnitsImport(
 
 #ifdef FLECS_SCRIPT_MATH
 
-#ifndef FLECS_SCRIPT
-#define FLECS_SCRIPT
-#endif
-
 /**
  * @defgroup c_addons_script_math Script Math
  * @ingroup c_addons
@@ -16487,10 +16370,6 @@ void FlecsScriptMathImport(
 #endif
 
 #ifdef FLECS_SCRIPT_PLATFORM
-
-#ifndef FLECS_SCRIPT
-#define FLECS_SCRIPT
-#endif
 
 /**
  * @defgroup c_addons_script_platform Script Platform
@@ -16556,18 +16435,6 @@ void FlecsScriptPlatformImport(
  *
  * @{
  */
-
-#ifndef FLECS_META
-#define FLECS_META
-#endif
-
-#ifndef FLECS_DOC
-#define FLECS_DOC
-#endif
-
-#ifndef FLECS_PARSER
-#define FLECS_PARSER
-#endif
 
 #ifndef FLECS_SCRIPT_H
 #define FLECS_SCRIPT_H
@@ -17513,10 +17380,6 @@ void FlecsScriptImport(
 #ifndef FLECS_DOC_H
 #define FLECS_DOC_H
 
-#ifndef FLECS_MODULE
-#define FLECS_MODULE
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -17809,10 +17672,6 @@ void FlecsDocImport(
  *
  * @{
  */
-
-#ifndef FLECS_MODULE
-#define FLECS_MODULE
-#endif
 
 #ifndef FLECS_META_H
 #define FLECS_META_H
@@ -38666,7 +38525,7 @@ T* field<T>::operator->() const {
     ecs_assert(data_ != nullptr, ECS_INVALID_OPERATION,
         "invalid nullptr dereference of component type %s",
             _::type_name<T>());
-    ecs_assert(data_ != nullptr, ECS_INVALID_OPERATION,
+    ecs_assert(count_ <= 1 || is_shared_, ECS_INVALID_OPERATION,
         "-> operator invalid for an array with >1 element of "
         "component type %s, use [row] instead",
             _::type_name<T>());

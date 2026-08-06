@@ -10,10 +10,6 @@
 
 #ifdef FLECS_APP
 
-#ifndef FLECS_PIPELINE
-#define FLECS_PIPELINE
-#endif
-
 #ifndef FLECS_APP_H
 #define FLECS_APP_H
 

@@ -17,10 +17,6 @@
  * @{
  */
 
-#ifndef FLECS_MODULE
-#define FLECS_MODULE
-#endif
-
 #ifndef FLECS_SYSTEM_H
 #define FLECS_SYSTEM_H
 

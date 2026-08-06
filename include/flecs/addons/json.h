@@ -10,18 +10,6 @@
 
 #ifdef FLECS_JSON
 
-#ifndef FLECS_META
-#define FLECS_META
-#endif
-
-#ifndef FLECS_DOC
-#define FLECS_DOC
-#endif
-
-#ifndef FLECS_QUERY_DSL
-#define FLECS_QUERY_DSL /* For parsing component ID expressions */
-#endif
-
 #ifndef FLECS_JSON_H
 #define FLECS_JSON_H
 

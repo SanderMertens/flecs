@@ -316,47 +316,6 @@ int flecs_value_binary(
     case EcsTokMulAssign:
         ECS_BINARY_ASSIGN_OP(left, right, out, *=);
         break;
-    case EcsTokEnd:
-    case EcsTokUnknown:
-    case EcsTokScopeOpen:
-    case EcsTokScopeClose:
-    case EcsTokParenOpen:
-    case EcsTokParenClose:
-    case EcsTokBracketOpen:
-    case EcsTokBracketClose:
-    case EcsTokMember:
-    case EcsTokComma:
-    case EcsTokSemiColon:
-    case EcsTokColon:
-    case EcsTokAssign:
-    case EcsTokNot:
-    case EcsTokOptional:
-    case EcsTokAnnotation:
-    case EcsTokNewline:
-    case EcsTokMatch:
-    case EcsTokRange:
-    case EcsTokIdentifier:
-    case EcsTokFunction:
-    case EcsTokString:
-    case EcsTokChar:
-    case EcsTokNumber:
-    case EcsTokKeywordModule:
-    case EcsTokKeywordUsing:
-    case EcsTokKeywordWith:
-    case EcsTokKeywordIf:
-    case EcsTokKeywordElse:
-    case EcsTokKeywordFor:
-    case EcsTokKeywordIn:
-    case EcsTokKeywordTemplate:
-    case EcsTokKeywordMatch:
-    case EcsTokKeywordNew:
-    case EcsTokKeywordExport:
-    case EcsTokKeywordProp:
-    case EcsTokKeywordMut:
-    case EcsTokKeywordConst:
-    case EcsTokKeywordInclude:
-    case EcsTokKeywordFn:
-    case EcsTokArrow:
     default:
         ecs_abort(ECS_INTERNAL_ERROR, "invalid operator for binary expression");
     }

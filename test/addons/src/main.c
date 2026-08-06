@@ -485,6 +485,8 @@ void Rest_call_not_found(void);
 void Rest_entity_not_found_w_dot_sep(void);
 void Rest_tables(void);
 void Rest_components(void);
+void Rest_get_component_missing_param(void);
+void Rest_put_component_missing_param(void);
 void Rest_type_info_non_existing_entity(void);
 void Rest_type_info_not_component(void);
 void Rest_type_info_component_without_reflection(void);
@@ -2375,6 +2377,14 @@ bake_test_case Rest_testcases[] = {
         Rest_components
     },
     {
+        "get_component_missing_param",
+        Rest_get_component_missing_param
+    },
+    {
+        "put_component_missing_param",
+        Rest_put_component_missing_param
+    },
+    {
         "type_info_non_existing_entity",
         Rest_type_info_non_existing_entity
     },
@@ -2953,7 +2963,7 @@ static bake_test_suite suites[] = {
         "Rest",
         NULL,
         NULL,
-        44,
+        46,
         Rest_testcases
     },
     {

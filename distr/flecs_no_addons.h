@@ -11479,21 +11479,6 @@ void ecs_parser_warningv_(
 #define ecs_should_log_2() false
 #define ecs_should_log_3() false
 
-#else /* No tracing enabled */
-#undef ecs_trace
-#define ecs_trace(...)
-#define ecs_dbg_1(...)
-#define ecs_dbg_2(...)
-#define ecs_dbg_3(...)
-
-#define ecs_log_push_1()
-#define ecs_log_push_2()
-#define ecs_log_push_3()
-
-#define ecs_log_pop_1()
-#define ecs_log_pop_2()
-#define ecs_log_pop_3()
-
 #endif // defined(FLECS_LOG_3)
 
 /** Default debug tracing is at level 1. */

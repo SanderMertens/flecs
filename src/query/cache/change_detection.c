@@ -83,8 +83,7 @@ static bool flecs_query_get_match_monitor(
 
     ecs_query_cache_t *cache = impl->cache;
     ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
-    bool is_trivial = flecs_query_cache_is_trivial(cache);
-    ecs_assert(!is_trivial, ECS_INVALID_OPERATION, 
+    ecs_assert(!flecs_query_cache_is_trivial(cache), ECS_INVALID_OPERATION,
         "query was not created with change detection enabled");
 
     if (match->_monitor) {
@@ -118,10 +117,8 @@ static bool flecs_query_get_match_monitor(
         }
 
         /* Don't track fields that aren't set */
-        if (!is_trivial) {
-            if (!(match->base.set_fields & (1llu << field))) {
-                continue;
-            }
+        if (!(match->base.set_fields & (1llu << field))) {
+            continue;
         }
 
         flecs_query_get_column_for_field(q, match, field, &tc);
@@ -359,22 +356,15 @@ static bool flecs_query_check_match_monitor(
     const ecs_query_t *query = cache->query;
     ecs_world_t *world = query->world;
     int32_t i, field_count = query->field_count;
-    bool trivial_cache = flecs_query_cache_is_trivial(cache);
 
-    ecs_entity_t *sources = NULL;
     ecs_flags64_t set_fields = 0;
-
     if (it) {
         set_fields = it->set_fields;
-    } else if (!trivial_cache) {
-        set_fields = match->base.set_fields;
     } else {
-        set_fields = (1llu << field_count) - 1;
+        set_fields = match->base.set_fields;
     }
 
-    if (!trivial_cache) {
-        sources = match->_sources;
-    }
+    ecs_entity_t *sources = match->_sources;
 
     for (i = 0; i < field_count; i ++) {
         int32_t mon = monitor[i + 1];
@@ -408,8 +398,6 @@ static bool flecs_query_check_match_monitor(
                 continue; /* owned but not a component */
             }
         }
-
-        ecs_assert(!trivial_cache, ECS_INTERNAL_ERROR, NULL);
 
         /* Component from non-this source */
         ecs_assert(match->_sources != NULL, ECS_INTERNAL_ERROR, NULL);

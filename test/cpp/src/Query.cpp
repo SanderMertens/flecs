@@ -1945,6 +1945,28 @@ void Query_test_no_defer_iter(void) {
     test_assert(false); // Should never get here
 }
 
+void Query_field_arrow_w_multiple_elements(void) {
+    install_test_abort();
+
+    flecs::world world;
+
+    world.entity().set<Position>({10, 20});
+    world.entity().set<Position>({30, 40});
+
+    auto q = world.query<Position>();
+
+    q.run([](flecs::iter& it) {
+        while (it.next()) {
+            auto p = it.field<Position>(0);
+            test_assert(it.count() == 2);
+            test_expect_abort();
+            p->x = 0;
+        }
+    });
+
+    test_assert(false); // Should never get here
+}
+
 void Query_inspect_terms(void) {
     flecs::world world;
 

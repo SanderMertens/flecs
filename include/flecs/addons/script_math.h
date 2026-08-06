@@ -5,10 +5,6 @@
 
 #ifdef FLECS_SCRIPT_MATH
 
-#ifndef FLECS_SCRIPT
-#define FLECS_SCRIPT
-#endif
-
 /**
  * @defgroup c_addons_script_math Script Math
  * @ingroup c_addons

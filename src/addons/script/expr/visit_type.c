@@ -266,47 +266,6 @@ static bool flecs_expr_oper_valid_for_type(
             (type == ecs_id(ecs_bool_t)) ||
             (type == ecs_id(ecs_char_t)) ||
             (type == ecs_id(ecs_entity_t));
-    case EcsTokUnknown:
-    case EcsTokScopeOpen:
-    case EcsTokScopeClose:
-    case EcsTokParenOpen:
-    case EcsTokParenClose:
-    case EcsTokBracketOpen:
-    case EcsTokBracketClose:
-    case EcsTokMember:
-    case EcsTokComma:
-    case EcsTokSemiColon:
-    case EcsTokColon:
-    case EcsTokAssign:
-    case EcsTokNot:
-    case EcsTokOptional:
-    case EcsTokAnnotation:
-    case EcsTokNewline:
-    case EcsTokMatch:
-    case EcsTokRange:
-    case EcsTokIdentifier:
-    case EcsTokFunction:
-    case EcsTokChar:
-    case EcsTokString:
-    case EcsTokNumber:
-    case EcsTokKeywordModule:
-    case EcsTokKeywordUsing:
-    case EcsTokKeywordWith:
-    case EcsTokKeywordIf:
-    case EcsTokKeywordElse:
-    case EcsTokKeywordFor:
-    case EcsTokKeywordIn:
-    case EcsTokKeywordMatch:
-    case EcsTokKeywordNew:
-    case EcsTokKeywordExport:
-    case EcsTokKeywordTemplate:
-    case EcsTokKeywordProp:
-    case EcsTokKeywordMut:
-    case EcsTokKeywordConst:
-    case EcsTokKeywordInclude:
-    case EcsTokKeywordFn:
-    case EcsTokArrow:
-    case EcsTokEnd:
     default:
         ecs_abort(ECS_INTERNAL_ERROR, NULL);
     }
@@ -414,49 +373,6 @@ static int flecs_expr_type_for_operator(
     case EcsTokSub:
     case EcsTokMul:
         break;
-    case EcsTokAddAssign:
-    case EcsTokMulAssign:
-    case EcsTokUnknown:
-    case EcsTokScopeOpen:
-    case EcsTokScopeClose:
-    case EcsTokParenOpen:
-    case EcsTokParenClose:
-    case EcsTokBracketOpen:
-    case EcsTokBracketClose:
-    case EcsTokMember:
-    case EcsTokComma:
-    case EcsTokSemiColon:
-    case EcsTokColon:
-    case EcsTokAssign:
-    case EcsTokNot:
-    case EcsTokOptional:
-    case EcsTokAnnotation:
-    case EcsTokNewline:
-    case EcsTokMatch:
-    case EcsTokRange:
-    case EcsTokIdentifier:
-    case EcsTokFunction:
-    case EcsTokChar:
-    case EcsTokString:
-    case EcsTokNumber:
-    case EcsTokKeywordModule:
-    case EcsTokKeywordUsing:
-    case EcsTokKeywordWith:
-    case EcsTokKeywordIf:
-    case EcsTokKeywordElse:
-    case EcsTokKeywordFor:
-    case EcsTokKeywordIn:
-    case EcsTokKeywordMatch:
-    case EcsTokKeywordNew:
-    case EcsTokKeywordExport:
-    case EcsTokKeywordTemplate:
-    case EcsTokKeywordProp:
-    case EcsTokKeywordMut:
-    case EcsTokKeywordConst:
-    case EcsTokKeywordInclude:
-    case EcsTokKeywordFn:
-    case EcsTokArrow:
-    case EcsTokEnd:
     default:
         ecs_throw(ECS_INTERNAL_ERROR, "invalid operator");
     }

@@ -75,7 +75,7 @@ void flecs_query_iter_constrain(
         /* When we're testing against an entity or table, set the $this
          * variable in advance since it won't change later on. This
          * initializes it.count, it.entities and it.table. */
-        flecs_query_trivial_set_iter_this(it, &ctx);
+        flecs_query_set_iter_this(it, &ctx);
 
         if (!query->cache) {
             if ((flags & (trivial_flags)) == trivial_flags) {

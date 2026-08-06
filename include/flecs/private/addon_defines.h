@@ -227,9 +227,6 @@
 #ifndef FLECS_QUERY_PLANS
 #define FLECS_QUERY_PLANS
 #endif
-#if !defined(FLECS_OS_API_IMPL) && !defined(FLECS_NO_OS_API_IMPL)
-#define FLECS_OS_API_IMPL
-#endif
 #endif
 
 #if defined(FLECS_DOC) || defined(FLECS_META) || defined(FLECS_SYSTEM) || \

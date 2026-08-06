@@ -20,10 +20,6 @@
 #ifndef FLECS_ALERTS_H
 #define FLECS_ALERTS_H
 
-#ifndef FLECS_PIPELINE
-#define FLECS_PIPELINE
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif
