@@ -11,40 +11,22 @@ static void times_two(
     *(ecs_f32_t*)result->ptr = *(ecs_f32_t*)argv[0].ptr * 2;
 }
 
-static ecs_entity_t define_mass(ecs_world_t *world) {
-    return ecs_struct(world, {
+void Refs_ref_in_component_initializer(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Mass) = ecs_struct(world, {
         .entity = ecs_entity(world, { .name = "Mass" }),
         .members = {
             {"value", ecs_id(ecs_f32_t)}
         }
     });
-}
-
-static ecs_entity_t define_position(ecs_world_t *world) {
-    return ecs_struct(world, {
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
         .entity = ecs_entity(world, { .name = "Position" }),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
             {"y", ecs_id(ecs_f32_t)}
         }
     });
-}
-
-static ecs_entity_t define_position_i(ecs_world_t *world) {
-    return ecs_struct(world, {
-        .entity = ecs_entity(world, { .name = "PositionI" }),
-        .members = {
-            {"x", ecs_id(ecs_i32_t)},
-            {"y", ecs_id(ecs_i32_t)}
-        }
-    });
-}
-
-void Refs_ref_in_component_initializer(void) {
-    ecs_world_t *world = ecs_init();
-
-    ecs_entity_t ecs_id(Mass) = define_mass(world);
-    ecs_entity_t ecs_id(Position) = define_position(world);
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_set(world, e, Mass, {10});
@@ -82,8 +64,19 @@ void Refs_ref_in_component_initializer(void) {
 void Refs_ref_in_const_var(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Mass) = define_mass(world);
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Mass) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_set(world, e, Mass, {10});
@@ -122,8 +115,19 @@ void Refs_ref_in_const_var(void) {
 void Refs_ref_in_with_initializer(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Mass) = define_mass(world);
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Mass) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_set(world, e, Mass, {10});
@@ -161,8 +165,20 @@ void Refs_ref_in_with_initializer(void) {
 void Refs_ref_in_match_expr(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(PositionI) = define_position_i(world);
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(PositionI) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "PositionI" }),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_set(world, e, PositionI, {1, 0});
@@ -204,7 +220,13 @@ void Refs_ref_in_match_expr(void) {
 void Refs_ref_in_if_expr(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(PositionI) = define_position_i(world);
+    ecs_entity_t ecs_id(PositionI) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "PositionI" }),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_set(world, e, PositionI, {1, 0});
@@ -234,8 +256,19 @@ void Refs_ref_in_if_expr(void) {
 void Refs_non_managed_script_no_update(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Mass) = define_mass(world);
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Mass) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_set(world, e, Mass, {10});
@@ -271,8 +304,19 @@ void Refs_non_managed_script_no_update(void) {
 void Refs_set_after_managed_script_deleted(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Mass) = define_mass(world);
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Mass) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_set(world, e, Mass, {10});
@@ -321,8 +365,20 @@ void Refs_set_after_managed_script_deleted(void) {
 void Refs_ref_in_for_expr(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(PositionI) = define_position_i(world);
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(PositionI) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "PositionI" }),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_set(world, e, PositionI, {2, 0});
@@ -355,7 +411,13 @@ void Refs_ref_in_for_expr(void) {
 void Refs_global_const_var_in_component_initializer(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_entity_t v = ecs_const_var(world, {
         .name = "v",
@@ -399,7 +461,13 @@ void Refs_global_const_var_in_component_initializer(void) {
 void Refs_global_const_var_in_with_initializer(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_entity_t v = ecs_const_var(world, {
         .name = "v",
@@ -443,7 +511,13 @@ void Refs_global_const_var_in_with_initializer(void) {
 void Refs_global_const_var_in_match_expr(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_entity_t v = ecs_const_var(world, {
         .name = "v",
@@ -525,7 +599,13 @@ void Refs_global_const_var_in_if_expr(void) {
 void Refs_global_const_var_in_for_expr(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_entity_t v = ecs_const_var(world, {
         .name = "v",
@@ -564,7 +644,13 @@ void Refs_global_const_var_in_for_expr(void) {
 void Refs_global_const_var_non_managed_script_no_update(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_entity_t v = ecs_const_var(world, {
         .name = "v",
@@ -606,7 +692,13 @@ void Refs_global_const_var_non_managed_script_no_update(void) {
 void Refs_global_const_var_set_after_managed_script_deleted(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_entity_t v = ecs_const_var(world, {
         .name = "v",
@@ -663,7 +755,13 @@ void Refs_global_const_var_set_after_managed_script_deleted(void) {
 void Refs_global_const_var_modified(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_entity_t v = ecs_const_var(world, {
         .name = "v",
@@ -708,8 +806,19 @@ void Refs_global_const_var_modified(void) {
 void Refs_ref_in_function(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Mass) = define_mass(world);
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Mass) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_function(world, {
         .name = "times_two",
@@ -754,7 +863,13 @@ void Refs_ref_in_function(void) {
 void Refs_global_const_var_in_function(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_function(world, {
         .name = "times_two",
@@ -805,8 +920,19 @@ void Refs_global_const_var_in_function(void) {
 void Refs_ref_in_new_expr(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Mass) = define_mass(world);
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Mass) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_set(world, e, Mass, {10});
@@ -852,7 +978,13 @@ void Refs_ref_in_new_expr(void) {
 void Refs_global_const_var_in_new_expr(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_entity_t v = ecs_const_var(world, {
         .name = "v",
@@ -904,8 +1036,19 @@ void Refs_global_const_var_in_new_expr(void) {
 void Refs_ref_in_function_in_new_expr(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Mass) = define_mass(world);
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Mass) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_function(world, {
         .name = "times_two",
@@ -958,7 +1101,13 @@ void Refs_ref_in_function_in_new_expr(void) {
 void Refs_global_const_var_in_function_in_new_expr(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_function(world, {
         .name = "times_two",
@@ -1017,8 +1166,19 @@ void Refs_global_const_var_in_function_in_new_expr(void) {
 void Refs_ref_in_script_function_body(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Mass) = define_mass(world);
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Mass) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_set(world, e, Mass, {10});
@@ -1057,7 +1217,13 @@ void Refs_ref_in_script_function_body(void) {
 void Refs_global_const_var_in_script_function_body(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_entity_t v = ecs_const_var(world, {
         .name = "v",
@@ -1102,7 +1268,13 @@ void Refs_global_const_var_in_script_function_body(void) {
 void Refs_ref_assigned_to_component(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_set(world, e, Position, {10, 20});
@@ -1142,7 +1314,13 @@ void Refs_ref_assigned_to_component(void) {
 void Refs_global_const_var_assigned_to_component(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_entity_t v = ecs_const_var(world, {
         .name = "v",
@@ -1195,8 +1373,19 @@ static void SetMass(ecs_iter_t *it) {
 void Refs_reeval_hierarchy(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Mass) = define_mass(world);
-    define_position(world);
+    ecs_entity_t ecs_id(Mass) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ECS_TAG(world, TagP1);
     ECS_TAG(world, TagP2);
@@ -1244,8 +1433,19 @@ void Refs_reeval_hierarchy(void) {
 void Refs_reeval_prefab_in_branch(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Mass) = define_mass(world);
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Mass) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
     ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
     ecs_entity_t assets = ecs_script(world, {
@@ -1290,8 +1490,19 @@ static void RefDummyObserver(ecs_iter_t *it);
 void Refs_progress_reeval_prefab_w_isa_observer(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Mass) = define_mass(world);
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Mass) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
     ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
     ecs_observer(world, {
@@ -1350,8 +1561,19 @@ static void RefDummyObserver(ecs_iter_t *it) {
 void Refs_reeval_prefab_w_isa_observer(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Mass) = define_mass(world);
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Mass) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
     ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
     ecs_observer(world, {
@@ -1399,8 +1621,19 @@ void Refs_reeval_prefab_w_isa_observer(void) {
 void Refs_reeval_prefab_delete_with_inherited_component(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Mass) = define_mass(world);
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Mass) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
     ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
     ecs_observer(world, {
@@ -1450,8 +1683,19 @@ void Refs_reeval_prefab_delete_with_inherited_component(void) {
 void Refs_ref_in_template_not_instantiated(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Mass) = define_mass(world);
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Mass) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_set(world, e, Mass, {10});
@@ -1492,8 +1736,19 @@ void Refs_ref_in_template_not_instantiated(void) {
 void Refs_ref_in_template_component_initializer(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Mass) = define_mass(world);
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Mass) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_set(world, e, Mass, {10});
@@ -1549,8 +1804,19 @@ void Refs_ref_in_template_component_initializer(void) {
 void Refs_multiple_refs_in_template_const_dont_reeval_others(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Mass) = define_mass(world);
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Mass) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_set(world, ecs_id(Mass), Mass, {10});
 
@@ -1624,8 +1890,19 @@ void Refs_multiple_refs_in_template_const_dont_reeval_others(void) {
 void Refs_multiple_refs_in_template_initializer_dont_reeval_others(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Mass) = define_mass(world);
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Mass) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_set(world, ecs_id(Mass), Mass, {10});
 
@@ -1698,8 +1975,19 @@ void Refs_multiple_refs_in_template_initializer_dont_reeval_others(void) {
 void Refs_multiple_refs_in_template_const_dont_reeval_others_deferred(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Mass) = define_mass(world);
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Mass) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_set(world, ecs_id(Mass), Mass, {10});
 
@@ -1775,7 +2063,13 @@ void Refs_multiple_refs_in_template_const_dont_reeval_others_deferred(void) {
 void Refs_global_const_var_in_template_component_initializer(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_entity_t v = ecs_const_var(world, {
         .name = "v",
@@ -1837,8 +2131,19 @@ void Refs_global_const_var_in_template_component_initializer(void) {
 void Refs_ref_in_template_with_initializer(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Mass) = define_mass(world);
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Mass) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_set(world, e, Mass, {10});
@@ -1881,8 +2186,20 @@ void Refs_ref_in_template_with_initializer(void) {
 void Refs_ref_in_template_match_expr(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(PositionI) = define_position_i(world);
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(PositionI) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "PositionI" }),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_set(world, e, PositionI, {1, 0});
@@ -1927,7 +2244,13 @@ void Refs_ref_in_template_match_expr(void) {
 void Refs_ref_in_template_if_expr(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(PositionI) = define_position_i(world);
+    ecs_entity_t ecs_id(PositionI) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "PositionI" }),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_set(world, e, PositionI, {1, 0});
@@ -1970,7 +2293,13 @@ void Refs_ref_in_template_if_expr(void) {
 void Refs_ref_in_template_for_expr(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(PositionI) = define_position_i(world);
+    ecs_entity_t ecs_id(PositionI) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "PositionI" }),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_set(world, e, PositionI, {2, 0});
@@ -2008,8 +2337,19 @@ void Refs_ref_in_template_for_expr(void) {
 void Refs_ref_in_template_function(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Mass) = define_mass(world);
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Mass) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_function(world, {
         .name = "times_two",
@@ -2057,8 +2397,19 @@ void Refs_ref_in_template_function(void) {
 void Refs_ref_in_template_new_expr(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Mass) = define_mass(world);
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Mass) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_set(world, e, Mass, {10});
@@ -2107,8 +2458,19 @@ void Refs_ref_in_template_new_expr(void) {
 void Refs_ref_in_template_function_in_new_expr(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Mass) = define_mass(world);
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Mass) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_function(world, {
         .name = "times_two",
@@ -2164,8 +2526,19 @@ void Refs_ref_in_template_function_in_new_expr(void) {
 void Refs_ref_in_template_script_function_body(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Mass) = define_mass(world);
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Mass) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_set(world, e, Mass, {10});
@@ -2207,7 +2580,13 @@ void Refs_ref_in_template_script_function_body(void) {
 void Refs_ref_in_template_assigned_to_component(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_set(world, e, Position, {10, 20});
@@ -2248,7 +2627,13 @@ void Refs_ref_in_template_assigned_to_component(void) {
 void Refs_global_const_var_in_template_with_initializer(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_entity_t v = ecs_const_var(world, {
         .name = "v",
@@ -2297,7 +2682,13 @@ void Refs_global_const_var_in_template_with_initializer(void) {
 void Refs_global_const_var_in_template_match_expr(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_entity_t v = ecs_const_var(world, {
         .name = "v",
@@ -2434,7 +2825,13 @@ void Refs_global_const_var_in_template_for_expr(void) {
 void Refs_global_const_var_in_template_function(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_function(world, {
         .name = "times_two",
@@ -2488,7 +2885,13 @@ void Refs_global_const_var_in_template_function(void) {
 void Refs_global_const_var_in_template_new_expr(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_entity_t v = ecs_const_var(world, {
         .name = "v",
@@ -2543,7 +2946,13 @@ void Refs_global_const_var_in_template_new_expr(void) {
 void Refs_global_const_var_in_template_function_in_new_expr(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_function(world, {
         .name = "times_two",
@@ -2605,7 +3014,13 @@ void Refs_global_const_var_in_template_function_in_new_expr(void) {
 void Refs_global_const_var_in_template_script_function_body(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_entity_t v = ecs_const_var(world, {
         .name = "v",
@@ -2653,7 +3068,13 @@ void Refs_global_const_var_in_template_script_function_body(void) {
 void Refs_global_const_var_in_template_assigned_to_component(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_entity_t v = ecs_const_var(world, {
         .name = "v",
@@ -2701,8 +3122,19 @@ void Refs_global_const_var_in_template_assigned_to_component(void) {
 void Refs_template_ref_observer_lifecycle(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Mass) = define_mass(world);
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Mass) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_set(world, e, Mass, {10});
@@ -2783,8 +3215,19 @@ void Refs_template_ref_observer_lifecycle(void) {
 void Refs_this_ref_in_template_component_initializer(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Mass) = define_mass(world);
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Mass) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_entity_t s = ecs_script(world, {
         .entity = ecs_entity(world, { .name = "main" }),
@@ -2829,8 +3272,19 @@ void Refs_this_ref_in_template_component_initializer(void) {
 void Refs_this_ref_in_template_with_initializer(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Mass) = define_mass(world);
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Mass) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_entity_t s = ecs_script(world, {
         .entity = ecs_entity(world, { .name = "main" }),
@@ -2867,8 +3321,20 @@ void Refs_this_ref_in_template_with_initializer(void) {
 void Refs_this_ref_in_template_match_expr(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(PositionI) = define_position_i(world);
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(PositionI) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "PositionI" }),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_entity_t s = ecs_script(world, {
         .entity = ecs_entity(world, { .name = "main" }),
@@ -2912,7 +3378,13 @@ void Refs_this_ref_in_template_match_expr(void) {
 void Refs_this_ref_in_template_if_expr(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(PositionI) = define_position_i(world);
+    ecs_entity_t ecs_id(PositionI) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "PositionI" }),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
 
     ecs_entity_t s = ecs_script(world, {
         .entity = ecs_entity(world, { .name = "main" }),
@@ -2947,7 +3419,13 @@ void Refs_this_ref_in_template_if_expr(void) {
 void Refs_this_ref_in_template_for_expr(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(PositionI) = define_position_i(world);
+    ecs_entity_t ecs_id(PositionI) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "PositionI" }),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
 
     ecs_entity_t s = ecs_script(world, {
         .entity = ecs_entity(world, { .name = "main" }),
@@ -2980,8 +3458,19 @@ void Refs_this_ref_in_template_for_expr(void) {
 void Refs_this_ref_in_template_function(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Mass) = define_mass(world);
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Mass) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_function(world, {
         .name = "times_two",
@@ -3028,8 +3517,19 @@ void Refs_this_ref_in_template_function(void) {
 void Refs_this_ref_in_template_new_expr(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Mass) = define_mass(world);
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Mass) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_entity_t s = ecs_script(world, {
         .entity = ecs_entity(world, { .name = "main" }),
@@ -3075,8 +3575,19 @@ void Refs_this_ref_in_template_new_expr(void) {
 void Refs_this_ref_in_template_function_in_new_expr(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Mass) = define_mass(world);
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Mass) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_function(world, {
         .name = "times_two",
@@ -3129,7 +3640,13 @@ void Refs_this_ref_in_template_function_in_new_expr(void) {
 void Refs_this_ref_in_template_assigned_to_component(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_entity_t s = ecs_script(world, {
         .entity = ecs_entity(world, { .name = "main" }),
@@ -3166,8 +3683,19 @@ void Refs_this_ref_in_template_assigned_to_component(void) {
 void Refs_prop_ref_in_template_component_initializer(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Mass) = define_mass(world);
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Mass) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
     ecs_set(world, e1, Mass, {10});
@@ -3222,8 +3750,19 @@ void Refs_prop_ref_in_template_component_initializer(void) {
 void Refs_prop_ref_in_template_with_initializer(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Mass) = define_mass(world);
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Mass) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
     ecs_set(world, e1, Mass, {10});
@@ -3266,8 +3805,20 @@ void Refs_prop_ref_in_template_with_initializer(void) {
 void Refs_prop_ref_in_template_match_expr(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(PositionI) = define_position_i(world);
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(PositionI) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "PositionI" }),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
     ecs_set(world, e1, PositionI, {1, 0});
@@ -3317,7 +3868,13 @@ void Refs_prop_ref_in_template_match_expr(void) {
 void Refs_prop_ref_in_template_if_expr(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(PositionI) = define_position_i(world);
+    ecs_entity_t ecs_id(PositionI) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "PositionI" }),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
 
     ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
     ecs_set(world, e1, PositionI, {1, 0});
@@ -3358,7 +3915,13 @@ void Refs_prop_ref_in_template_if_expr(void) {
 void Refs_prop_ref_in_template_for_expr(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(PositionI) = define_position_i(world);
+    ecs_entity_t ecs_id(PositionI) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "PositionI" }),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
 
     ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
     ecs_set(world, e1, PositionI, {2, 0});
@@ -3397,8 +3960,19 @@ void Refs_prop_ref_in_template_for_expr(void) {
 void Refs_prop_ref_in_template_function(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Mass) = define_mass(world);
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Mass) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_function(world, {
         .name = "times_two",
@@ -3451,8 +4025,19 @@ void Refs_prop_ref_in_template_function(void) {
 void Refs_prop_ref_in_template_new_expr(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Mass) = define_mass(world);
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Mass) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
     ecs_set(world, e1, Mass, {10});
@@ -3504,8 +4089,19 @@ void Refs_prop_ref_in_template_new_expr(void) {
 void Refs_prop_ref_in_template_function_in_new_expr(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Mass) = define_mass(world);
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Mass) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_function(world, {
         .name = "times_two",
@@ -3564,7 +4160,13 @@ void Refs_prop_ref_in_template_function_in_new_expr(void) {
 void Refs_prop_ref_in_template_assigned_to_component(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
     ecs_set(world, e1, Position, {10, 20});
@@ -3607,8 +4209,19 @@ void Refs_prop_ref_in_template_assigned_to_component(void) {
 void Refs_template_prop_ref_observer_lifecycle(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Mass) = define_mass(world);
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Mass) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
     ecs_set(world, e1, Mass, {10});
@@ -3705,8 +4318,19 @@ void Refs_template_prop_ref_observer_lifecycle(void) {
 void Refs_template_prop_ref_retarget(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Mass) = define_mass(world);
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Mass) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
     ecs_set(world, e1, Mass, {10});
@@ -3758,8 +4382,19 @@ void Refs_template_prop_ref_retarget(void) {
 void Refs_template_this_ref_observer_lifecycle(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Mass) = define_mass(world);
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Mass) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_entity_t s = ecs_script(world, {
         .entity = ecs_entity(world, { .name = "main" }),
@@ -3850,7 +4485,13 @@ void Refs_template_this_ref_observer_lifecycle(void) {
 void Refs_global_const_var_declared_in_same_script(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_entity_t s = ecs_script(world, {
         .entity = ecs_entity(world, { .name = "main" }),
@@ -3891,7 +4532,13 @@ void Refs_global_const_var_declared_in_same_script(void) {
 void Refs_global_const_var_declared_in_same_script_w_fn(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_entity_t s = ecs_script(world, {
         .entity = ecs_entity(world, { .name = "main" }),
@@ -3933,7 +4580,13 @@ void Refs_global_const_var_declared_in_same_script_w_fn(void) {
 void Refs_global_const_var_declared_in_same_script_w_fn_other_script(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_entity_t f = ecs_script(world, {
         .entity = ecs_entity(world, { .name = "func" }),
@@ -3987,7 +4640,13 @@ void Refs_global_const_var_declared_in_same_script_w_fn_other_script(void) {
 void Refs_global_const_var_declared_in_same_script_w_fn_other_scripts(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_entity_t var = ecs_script(world, {
         .entity = ecs_entity(world, { .name = "var" }),
@@ -4098,8 +4757,19 @@ void Refs_global_const_var_in_scoped_function_other_script(void) {
 void Refs_ref_declared_in_same_script(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Mass) = define_mass(world);
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Mass) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_entity_t s = ecs_script(world, {
         .entity = ecs_entity(world, { .name = "main" }),
@@ -4142,8 +4812,19 @@ void Refs_ref_declared_in_same_script(void) {
 void Refs_ref_declared_in_same_script_w_fn(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Mass) = define_mass(world);
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Mass) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_entity_t s = ecs_script(world, {
         .entity = ecs_entity(world, { .name = "main" }),
@@ -4187,8 +4868,19 @@ void Refs_ref_declared_in_same_script_w_fn(void) {
 void Refs_ref_declared_in_same_script_w_fn_other_script(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Mass) = define_mass(world);
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Mass) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_entity_t f = ecs_script(world, {
         .entity = ecs_entity(world, { .name = "func" }),
@@ -4243,8 +4935,19 @@ void Refs_ref_declared_in_same_script_w_fn_other_script(void) {
 void Refs_ref_declared_in_same_script_w_fn_other_scripts(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Mass) = define_mass(world);
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Mass) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_entity_t ent = ecs_script(world, {
         .entity = ecs_entity(world, { .name = "ent" }),
@@ -4310,7 +5013,13 @@ void Refs_ref_declared_in_same_script_w_fn_other_scripts(void) {
 void Refs_global_const_var_declared_in_same_script_w_template(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_entity_t s = ecs_script(world, {
         .entity = ecs_entity(world, { .name = "main" }),
@@ -4377,7 +5086,13 @@ void Refs_global_const_var_declared_in_same_script_w_template(void) {
 void Refs_reeval_instantiates_template_w_global_const_var_ref(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_entity_t size = ecs_const_var(world, {
         .name = "size",
@@ -4440,8 +5155,19 @@ void Refs_reeval_instantiates_template_w_global_const_var_ref(void) {
 void Refs_reeval_during_script_preserves_using(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Mass) = define_mass(world);
-    ecs_entity_t ecs_id(Position) = define_position(world);
+    ecs_entity_t ecs_id(Mass) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Mass" }),
+        .members = {
+            {"value", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_set(world, e, Mass, {10});
