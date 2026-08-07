@@ -86,7 +86,7 @@ void Refs_ref_in_const_var(void) {
         .code =
             HEAD "const m = e[Mass]"
             LINE "foo {"
-            LINE "  Position: {$m.value, 0}"
+            LINE "  Position: {m.value, 0}"
             LINE "}"
     });
     test_assert(s != 0);
@@ -387,8 +387,8 @@ void Refs_ref_in_for_expr(void) {
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "for i in 0..e[PositionI].x {"
-            LINE "  \"e_{$i}\" {"
-            LINE "    Position: {$i, 0}"
+            LINE "  \"e_{i}\" {"
+            LINE "    Position: {i, 0}"
             LINE "  }"
             LINE "}"
     });
@@ -430,7 +430,7 @@ void Refs_global_const_var_in_component_initializer(void) {
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "foo {"
-            LINE "  Position: {$v, 0}"
+            LINE "  Position: {v, 0}"
             LINE "}"
     });
     test_assert(s != 0);
@@ -479,7 +479,7 @@ void Refs_global_const_var_in_with_initializer(void) {
     ecs_entity_t s = ecs_script(world, {
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
-            HEAD "with Position($v, 0) {"
+            HEAD "with Position(v, 0) {"
             LINE "  foo {}"
             LINE "}"
     });
@@ -530,7 +530,7 @@ void Refs_global_const_var_in_match_expr(void) {
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "foo {"
-            LINE "  Position: match $v {"
+            LINE "  Position: match v {"
             LINE "    1: {100, 0}"
             LINE "    2: {200, 0}"
             LINE "    _: {0, 0}"
@@ -575,7 +575,7 @@ void Refs_global_const_var_in_if_expr(void) {
     ecs_entity_t s = ecs_script(world, {
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
-            HEAD "if $v > 0 {"
+            HEAD "if v > 0 {"
             LINE "  foo {}"
             LINE "} else {"
             LINE "  bar {}"
@@ -617,9 +617,9 @@ void Refs_global_const_var_in_for_expr(void) {
     ecs_entity_t s = ecs_script(world, {
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
-            HEAD "for i in 0..$v {"
-            LINE "  \"e_{$i}\" {"
-            LINE "    Position: {$i, 0}"
+            HEAD "for i in 0..v {"
+            LINE "  \"e_{i}\" {"
+            LINE "    Position: {i, 0}"
             LINE "  }"
             LINE "}"
     });
@@ -661,7 +661,7 @@ void Refs_global_const_var_non_managed_script_no_update(void) {
 
     const char *expr =
         HEAD "foo {"
-        LINE "  Position: {$v, 0}"
+        LINE "  Position: {v, 0}"
         LINE "}";
 
     test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
@@ -711,7 +711,7 @@ void Refs_global_const_var_set_after_managed_script_deleted(void) {
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "foo {"
-            LINE "  Position: {$v, 0}"
+            LINE "  Position: {v, 0}"
             LINE "}"
     });
     test_assert(s != 0);
@@ -774,7 +774,7 @@ void Refs_global_const_var_modified(void) {
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "foo {"
-            LINE "  Position: {$v, 0}"
+            LINE "  Position: {v, 0}"
             LINE "}"
     });
     test_assert(s != 0);
@@ -889,7 +889,7 @@ void Refs_global_const_var_in_function(void) {
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "foo {"
-            LINE "  Position: {times_two($v), 0}"
+            LINE "  Position: {times_two(v), 0}"
             LINE "}"
     });
     test_assert(s != 0);
@@ -997,7 +997,7 @@ void Refs_global_const_var_in_new_expr(void) {
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "foo {"
-            LINE "  entity: { new { Position: {$v, 0} } }"
+            LINE "  entity: { new { Position: {v, 0} } }"
             LINE "}"
     });
     test_assert(s != 0);
@@ -1127,7 +1127,7 @@ void Refs_global_const_var_in_function_in_new_expr(void) {
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "foo {"
-            LINE "  entity: { new { Position: {times_two($v), 0} } }"
+            LINE "  entity: { new { Position: {times_two(v), 0} } }"
             LINE "}"
     });
     test_assert(s != 0);
@@ -1235,7 +1235,7 @@ void Refs_global_const_var_in_script_function_body(void) {
     ecs_entity_t s = ecs_script(world, {
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
-            HEAD "fn get_v() -> f32 { $v }"
+            HEAD "fn get_v() -> f32 { v }"
             LINE "foo {"
             LINE "  Position: {get_v(), 0}"
             LINE "}"
@@ -1333,7 +1333,7 @@ void Refs_global_const_var_assigned_to_component(void) {
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "foo {"
-            LINE "  Position: $v"
+            LINE "  Position: v"
             LINE "}"
     });
     test_assert(s != 0);
@@ -1827,7 +1827,7 @@ void Refs_multiple_refs_in_template_const_dont_reeval_others(void) {
             LINE "  const first = Mass[Mass].value"
             LINE "  const second = Mass[Mass].value"
             LINE "  reactive {"
-            LINE "    Position: {$first, $second}"
+            LINE "    Position: {first, second}"
             LINE "  }"
             LINE "}"
             LINE "template Other {"
@@ -1998,7 +1998,7 @@ void Refs_multiple_refs_in_template_const_dont_reeval_others_deferred(void) {
             LINE "  const first = Mass[Mass].value"
             LINE "  const second = Mass[Mass].value"
             LINE "  reactive {"
-            LINE "    Position: {$first, $second}"
+            LINE "    Position: {first, second}"
             LINE "  }"
             LINE "}"
             LINE "template Other {"
@@ -2082,7 +2082,7 @@ void Refs_global_const_var_in_template_component_initializer(void) {
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
-            LINE "  Position: {$v, 0}"
+            LINE "  Position: {v, 0}"
             LINE "}"
             LINE "Bar inst1()"
             LINE "Bar inst2()"
@@ -2309,7 +2309,7 @@ void Refs_ref_in_template_for_expr(void) {
         .code =
             HEAD "template Bar {"
             LINE "  for i in 0..e[PositionI].x {"
-            LINE "    \"e_{$i}\" {}"
+            LINE "    \"e_{i}\" {}"
             LINE "  }"
             LINE "}"
             LINE "Bar inst1()"
@@ -2646,7 +2646,7 @@ void Refs_global_const_var_in_template_with_initializer(void) {
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
-            LINE "  with Position($v, 0) {"
+            LINE "  with Position(v, 0) {"
             LINE "    foo {}"
             LINE "  }"
             LINE "}"
@@ -2701,7 +2701,7 @@ void Refs_global_const_var_in_template_match_expr(void) {
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
-            LINE "  Position: match $v {"
+            LINE "  Position: match v {"
             LINE "    1: {100, 0}"
             LINE "    2: {200, 0}"
             LINE "    _: {0, 0}"
@@ -2750,7 +2750,7 @@ void Refs_global_const_var_in_template_if_expr(void) {
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
-            LINE "  if $v > 0 {"
+            LINE "  if v > 0 {"
             LINE "    foo {}"
             LINE "  } else {"
             LINE "    bar {}"
@@ -2795,8 +2795,8 @@ void Refs_global_const_var_in_template_for_expr(void) {
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
-            LINE "  for i in 0..$v {"
-            LINE "    \"e_{$i}\" {}"
+            LINE "  for i in 0..v {"
+            LINE "    \"e_{i}\" {}"
             LINE "  }"
             LINE "}"
             LINE "Bar inst1()"
@@ -2851,7 +2851,7 @@ void Refs_global_const_var_in_template_function(void) {
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
-            LINE "  Position: {times_two($v), 0}"
+            LINE "  Position: {times_two(v), 0}"
             LINE "}"
             LINE "Bar inst1()"
             LINE "Bar inst2()"
@@ -2904,7 +2904,7 @@ void Refs_global_const_var_in_template_new_expr(void) {
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
-            LINE "  entity: { new { Position: {$v, 0} } }"
+            LINE "  entity: { new { Position: {v, 0} } }"
             LINE "}"
             LINE "Bar inst1()"
             LINE "Bar inst2()"
@@ -2972,7 +2972,7 @@ void Refs_global_const_var_in_template_function_in_new_expr(void) {
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
-            LINE "  entity: { new { Position: {times_two($v), 0} } }"
+            LINE "  entity: { new { Position: {times_two(v), 0} } }"
             LINE "}"
             LINE "Bar inst1()"
             LINE "Bar inst2()"
@@ -3032,7 +3032,7 @@ void Refs_global_const_var_in_template_script_function_body(void) {
     ecs_entity_t s = ecs_script(world, {
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
-            HEAD "fn get_v() -> f32 { $v }"
+            HEAD "fn get_v() -> f32 { v }"
             LINE "template Bar {"
             LINE "  Position: {get_v(), 0}"
             LINE "}"
@@ -3087,7 +3087,7 @@ void Refs_global_const_var_in_template_assigned_to_component(void) {
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
-            LINE "  Position: $v"
+            LINE "  Position: v"
             LINE "}"
             LINE "Bar inst1()"
             LINE "Bar inst2()"
@@ -3233,7 +3233,7 @@ void Refs_this_ref_in_template_component_initializer(void) {
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
-            LINE "  Position: {$this[Mass].value, 0}"
+            LINE "  Position: {this[Mass].value, 0}"
             LINE "}"
             LINE "inst1 { Mass: {10} Bar: {} }"
             LINE "inst2 { Mass: {20} Bar: {} }"
@@ -3290,7 +3290,7 @@ void Refs_this_ref_in_template_with_initializer(void) {
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
-            LINE "  with Position($this[Mass].value, 0) {"
+            LINE "  with Position(this[Mass].value, 0) {"
             LINE "    foo {}"
             LINE "  }"
             LINE "}"
@@ -3340,7 +3340,7 @@ void Refs_this_ref_in_template_match_expr(void) {
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
-            LINE "  Position: match $this[PositionI].x {"
+            LINE "  Position: match this[PositionI].x {"
             LINE "    1: {100, 0}"
             LINE "    2: {200, 0}"
             LINE "    _: {0, 0}"
@@ -3390,7 +3390,7 @@ void Refs_this_ref_in_template_if_expr(void) {
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
-            LINE "  if $this[PositionI].x > 0 {"
+            LINE "  if this[PositionI].x > 0 {"
             LINE "    foo {}"
             LINE "  } else {"
             LINE "    bar {}"
@@ -3431,8 +3431,8 @@ void Refs_this_ref_in_template_for_expr(void) {
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
-            LINE "  for i in 0..$this[PositionI].x {"
-            LINE "    \"e_{$i}\" {}"
+            LINE "  for i in 0..this[PositionI].x {"
+            LINE "    \"e_{i}\" {}"
             LINE "  }"
             LINE "}"
             LINE "inst1 { PositionI: {2, 0} Bar: {} }"
@@ -3483,7 +3483,7 @@ void Refs_this_ref_in_template_function(void) {
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
-            LINE "  Position: {times_two($this[Mass].value), 0}"
+            LINE "  Position: {times_two(this[Mass].value), 0}"
             LINE "}"
             LINE "inst1 { Mass: {10} Bar: {} }"
             LINE "inst2 { Mass: {20} Bar: {} }"
@@ -3535,7 +3535,7 @@ void Refs_this_ref_in_template_new_expr(void) {
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
-            LINE "  entity: { new { Position: {$this[Mass].value, 0} } }"
+            LINE "  entity: { new { Position: {this[Mass].value, 0} } }"
             LINE "}"
             LINE "inst1 { Mass: {10} Bar: {} }"
             LINE "inst2 { Mass: {20} Bar: {} }"
@@ -3600,7 +3600,7 @@ void Refs_this_ref_in_template_function_in_new_expr(void) {
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
-            LINE "  entity: { new { Position: {times_two($this[Mass].value), 0} } }"
+            LINE "  entity: { new { Position: {times_two(this[Mass].value), 0} } }"
             LINE "}"
             LINE "inst1 { Mass: {10} Bar: {} }"
             LINE "inst2 { Mass: {20} Bar: {} }"
@@ -3652,7 +3652,7 @@ void Refs_this_ref_in_template_assigned_to_component(void) {
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
-            LINE "  foo { Position: $this[Position] }"
+            LINE "  foo { Position: this[Position] }"
             LINE "}"
             LINE "inst1 { Position: {10, 20} Bar: {} }"
             LINE "inst2 { Position: {30, 40} Bar: {} }"
@@ -3706,8 +3706,8 @@ void Refs_prop_ref_in_template_component_initializer(void) {
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
-            LINE "  prop target: flecs.meta.entity = flecs"
-            LINE "  Position: {$target[Mass].value, 0}"
+            LINE "  prop target: entity = flecs"
+            LINE "  Position: {target[Mass].value, 0}"
             LINE "}"
             LINE "inst1 { Bar: {target: e1} }"
             LINE "inst2 { Bar: {target: e2} }"
@@ -3773,8 +3773,8 @@ void Refs_prop_ref_in_template_with_initializer(void) {
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
-            LINE "  prop target: flecs.meta.entity = flecs"
-            LINE "  with Position($target[Mass].value, 0) {"
+            LINE "  prop target: entity = flecs"
+            LINE "  with Position(target[Mass].value, 0) {"
             LINE "    foo {}"
             LINE "  }"
             LINE "}"
@@ -3829,8 +3829,8 @@ void Refs_prop_ref_in_template_match_expr(void) {
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
-            LINE "  prop target: flecs.meta.entity = flecs"
-            LINE "  Position: match $target[PositionI].x {"
+            LINE "  prop target: entity = flecs"
+            LINE "  Position: match target[PositionI].x {"
             LINE "    1: {100, 0}"
             LINE "    2: {200, 0}"
             LINE "    _: {0, 0}"
@@ -3885,8 +3885,8 @@ void Refs_prop_ref_in_template_if_expr(void) {
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
-            LINE "  prop target: flecs.meta.entity = flecs"
-            LINE "  if $target[PositionI].x > 0 {"
+            LINE "  prop target: entity = flecs"
+            LINE "  if target[PositionI].x > 0 {"
             LINE "    foo {}"
             LINE "  } else {"
             LINE "    bar {}"
@@ -3932,9 +3932,9 @@ void Refs_prop_ref_in_template_for_expr(void) {
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
-            LINE "  prop target: flecs.meta.entity = flecs"
-            LINE "  for i in 0..$target[PositionI].x {"
-            LINE "    \"e_{$i}\" {}"
+            LINE "  prop target: entity = flecs"
+            LINE "  for i in 0..target[PositionI].x {"
+            LINE "    \"e_{i}\" {}"
             LINE "  }"
             LINE "}"
             LINE "inst1 { Bar: {target: e1} }"
@@ -3990,8 +3990,8 @@ void Refs_prop_ref_in_template_function(void) {
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
-            LINE "  prop target: flecs.meta.entity = flecs"
-            LINE "  Position: {times_two($target[Mass].value), 0}"
+            LINE "  prop target: entity = flecs"
+            LINE "  Position: {times_two(target[Mass].value), 0}"
             LINE "}"
             LINE "inst1 { Bar: {target: e1} }"
             LINE "inst2 { Bar: {target: e2} }"
@@ -4048,7 +4048,7 @@ void Refs_prop_ref_in_template_new_expr(void) {
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
-            LINE "  prop target: flecs.meta.entity = flecs"
+            LINE "  prop target: entity = flecs"
             LINE "  entity: { new { Position: {$target[Mass].value, 0} } }"
             LINE "}"
             LINE "inst1 { Bar: {target: e1} }"
@@ -4119,7 +4119,7 @@ void Refs_prop_ref_in_template_function_in_new_expr(void) {
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
-            LINE "  prop target: flecs.meta.entity = flecs"
+            LINE "  prop target: entity = flecs"
             LINE "  entity: { new { Position: {times_two($target[Mass].value), 0} } }"
             LINE "}"
             LINE "inst1 { Bar: {target: e1} }"
@@ -4177,8 +4177,8 @@ void Refs_prop_ref_in_template_assigned_to_component(void) {
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
-            LINE "  prop target: flecs.meta.entity = flecs"
-            LINE "  foo { Position: $target[Position] }"
+            LINE "  prop target: entity = flecs"
+            LINE "  foo { Position: target[Position] }"
             LINE "}"
             LINE "inst1 { Bar: {target: e1} }"
             LINE "inst2 { Bar: {target: e2} }"
@@ -4232,8 +4232,8 @@ void Refs_template_prop_ref_observer_lifecycle(void) {
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
-            LINE "  prop target: flecs.meta.entity = flecs"
-            LINE "  Position: {$target[Mass].value, 0}"
+            LINE "  prop target: entity = flecs"
+            LINE "  Position: {target[Mass].value, 0}"
             LINE "}"
             LINE "inst1 { Bar: {target: e1} }"
     });
@@ -4341,8 +4341,8 @@ void Refs_template_prop_ref_retarget(void) {
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
-            LINE "  prop target: flecs.meta.entity = flecs"
-            LINE "  Position: {$target[Mass].value, 0}"
+            LINE "  prop target: entity = flecs"
+            LINE "  Position: {target[Mass].value, 0}"
             LINE "}"
             LINE "inst1 { Bar: {target: e1} }"
     });
@@ -4400,7 +4400,7 @@ void Refs_template_this_ref_observer_lifecycle(void) {
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "template Bar {"
-            LINE "  Position: {$this[Mass].value, 0}"
+            LINE "  Position: {this[Mass].value, 0}"
             LINE "}"
             LINE "inst1 { Mass: {10} Bar: {} }"
     });
@@ -4498,7 +4498,7 @@ void Refs_global_const_var_declared_in_same_script(void) {
         .code =
             HEAD "export const v: f32 = 10"
             LINE "foo {"
-            LINE "  Position: {$v, 0}"
+            LINE "  Position: {v, 0}"
             LINE "}"
     });
     test_assert(s != 0);
@@ -4544,7 +4544,7 @@ void Refs_global_const_var_declared_in_same_script_w_fn(void) {
         .entity = ecs_entity(world, { .name = "main" }),
         .code =
             HEAD "export const v: f32 = 10"
-            LINE "fn get_v() -> f32 { $v }"
+            LINE "fn get_v() -> f32 { v }"
             LINE "foo {"
             LINE "  Position: {get_v(), 0}"
             LINE "}"
@@ -5026,7 +5026,7 @@ void Refs_global_const_var_declared_in_same_script_w_template(void) {
         .code =
             HEAD "export const v: f32 = 10"
             LINE "template Bar {"
-            LINE "  Position: {$v, 0}"
+            LINE "  Position: {v, 0}"
             LINE "}"
             LINE "Bar inst1()"
             LINE "Bar inst2()"
@@ -5113,10 +5113,10 @@ void Refs_reeval_instantiates_template_w_global_const_var_ref(void) {
         .code =
             HEAD "template Bar {"
             LINE "  child {"
-            LINE "    Position: {$size, 0}"
+            LINE "    Position: {size, 0}"
             LINE "  }"
             LINE "}"
-            LINE "if $v > 0 {"
+            LINE "if v > 0 {"
             LINE "  Bar inst()"
             LINE "}"
     });
