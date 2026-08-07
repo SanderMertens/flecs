@@ -135,13 +135,9 @@ int ecs_script_run(
         goto error;
     }
 
-    ecs_entity_t prev_scope = ecs_set_scope(world, 0);
-
     if (ecs_script_eval(script, NULL, result)) {
         goto error_free;
     }
-
-    ecs_set_scope(world, prev_scope);
 
     ecs_script_free(script);
     return 0;
@@ -186,11 +182,12 @@ error:
     return;
 }
 
-int ecs_script_update(
+int flecs_script_update(
     ecs_world_t *world,
     ecs_entity_t e,
     ecs_entity_t instance,
-    const char *code)
+    const char *code,
+    ecs_script_runtime_t *eval_runtime)
 {
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(code != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -257,8 +254,9 @@ int ecs_script_update(
 
     ecs_script_t *parsed = s->script;
     flecs_script_impl(parsed)->evaluating = true;
-    if (flecs_script_eval(parsed, NULL, flecs_script_tag(e, instance),
-        &eval_result))
+    ecs_script_eval_desc_t eval_desc = { .runtime = eval_runtime };
+    if (flecs_script_eval(parsed, &eval_desc,
+        flecs_script_tag(e, instance), &eval_result))
     {
         s = ecs_ensure(world, e, EcsScript);
         s->error = eval_result.error;
@@ -302,6 +300,15 @@ done:
     }
 
     return result;
+}
+
+int ecs_script_update(
+    ecs_world_t *world,
+    ecs_entity_t e,
+    ecs_entity_t instance,
+    const char *code)
+{
+    return flecs_script_update(world, e, instance, code, NULL);
 }
 
 ecs_entity_t ecs_script_init(

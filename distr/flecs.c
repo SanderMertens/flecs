@@ -49887,7 +49887,6 @@ int flecs_script_eval(
 
 typedef struct flecs_script_scope_state_t {
     ecs_entity_t parent;
-    int32_t using_count;
 } flecs_script_scope_state_t;
 
 void flecs_script_eval_scope_enter(
@@ -50379,6 +50378,13 @@ void flecs_script_template_import(
 
 ecs_script_t* flecs_script_new(
     ecs_world_t *world);
+
+int flecs_script_update(
+    ecs_world_t *world,
+    ecs_entity_t e,
+    ecs_entity_t instance,
+    const char *code,
+    ecs_script_runtime_t *eval_runtime);
 
 ecs_script_scope_t* flecs_script_scope_new(
     ecs_parser_t *parser);
@@ -58757,6 +58763,8 @@ void flecs_meta_import_definitions(
 
 #ifdef FLECS_META
 
+ecs_entity_t FlecsMeta = 0;
+
 void flecs_type_serializer_dtor(
     EcsTypeSerializer *ptr) 
 {
@@ -59031,6 +59039,8 @@ void FlecsMetaImport(
     ecs_world_t *world)
 {
     ECS_MODULE(world, FlecsMeta);
+
+    FlecsMeta = ecs_id(FlecsMeta);
 
     ecs_set_name_prefix(world, "Ecs");
 
@@ -69647,6 +69657,17 @@ static const char* flecs_script_fn_body(
     ParserEnd;
 }
 
+static
+int32_t flecs_script_last_stmt_kind(
+    ecs_script_scope_t *scope)
+{
+    int32_t count = ecs_vec_count(&scope->stmts);
+    if (!count) {
+        return -1;
+    }
+    return ecs_vec_last_t(&scope->stmts, ecs_script_node_t*)[0]->kind;
+}
+
 /* Parse a single statement */
 const char* flecs_script_stmt(
     ecs_parser_t *parser,
@@ -69789,6 +69810,19 @@ with_stmt: {
 
 // using
 using_stmt: {
+    if (parser->scope != parser->script->root) {
+        Error("'using' must be declared in the root scope of a script");
+    }
+
+    {
+        int32_t last = flecs_script_last_stmt_kind(parser->scope);
+        if (last != -1 && last != EcsAstModule && last != EcsAstInclude &&
+            last != EcsAstUsing)
+        {
+            Error("'using' must be declared before other statements");
+        }
+    }
+
     // using flecs.meta\n
     Parse_1(EcsTokIdentifier,
         flecs_script_insert_using(parser, Token(1));
@@ -69802,6 +69836,14 @@ using_stmt: {
 
 // module
 module_stmt: {
+    if (parser->scope != parser->script->root) {
+        Error("'module' must be declared in the root scope of a script");
+    }
+
+    if (ecs_vec_count(&parser->scope->stmts)) {
+        Error("'module' must be the first statement of a script");
+    }
+
     // module flecs.meta\n
     Parse_2(EcsTokIdentifier, '\n',
         flecs_script_insert_module(parser, Token(1));
@@ -70018,6 +70060,19 @@ try_stmt: {
 
 // include foo.flecs
 include_stmt: {
+    if (parser->scope != parser->script->root) {
+        Error("'include' must be declared in the root scope of a script");
+    }
+
+    {
+        int32_t last = flecs_script_last_stmt_kind(parser->scope);
+        if (last != -1 && last != EcsAstModule && last != EcsAstInclude) {
+            Error(
+                "'include' must be declared before statements other than "
+                "'module'");
+        }
+    }
+
     Until('\n',
         char *filename = ECS_CONST_CAST(char*, Token(1));
         if (filename) {
@@ -70669,13 +70724,9 @@ int ecs_script_run(
         goto error;
     }
 
-    ecs_entity_t prev_scope = ecs_set_scope(world, 0);
-
     if (ecs_script_eval(script, NULL, result)) {
         goto error_free;
     }
-
-    ecs_set_scope(world, prev_scope);
 
     ecs_script_free(script);
     return 0;
@@ -70720,11 +70771,12 @@ error:
     return;
 }
 
-int ecs_script_update(
+int flecs_script_update(
     ecs_world_t *world,
     ecs_entity_t e,
     ecs_entity_t instance,
-    const char *code)
+    const char *code,
+    ecs_script_runtime_t *eval_runtime)
 {
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(code != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -70791,8 +70843,9 @@ int ecs_script_update(
 
     ecs_script_t *parsed = s->script;
     flecs_script_impl(parsed)->evaluating = true;
-    if (flecs_script_eval(parsed, NULL, flecs_script_tag(e, instance),
-        &eval_result))
+    ecs_script_eval_desc_t eval_desc = { .runtime = eval_runtime };
+    if (flecs_script_eval(parsed, &eval_desc,
+        flecs_script_tag(e, instance), &eval_result))
     {
         s = ecs_ensure(world, e, EcsScript);
         s->error = eval_result.error;
@@ -70836,6 +70889,15 @@ done:
     }
 
     return result;
+}
+
+int ecs_script_update(
+    ecs_world_t *world,
+    ecs_entity_t e,
+    ecs_entity_t instance,
+    const char *code)
+{
+    return flecs_script_update(world, e, instance, code, NULL);
 }
 
 ecs_entity_t ecs_script_init(
@@ -94064,20 +94126,25 @@ int flecs_script_find_entity(
         } else if (from && valid_path) {
             result = ecs_lookup_path_w_sep(
                 v->world, from, path, NULL, NULL, false);
-        } else {
-            int32_t i, using_count = ecs_vec_count(&v->r->using);
-            if (using_count && valid_path) {
-                ecs_entity_t *using = ecs_vec_first(&v->r->using);
-                for (i = using_count - 1; i >= 0; i --) {
-                    ecs_entity_t e = ecs_lookup_path_w_sep(
-                        v->world, using[i], path, NULL, NULL, false);
-                    if (e) {
-                        result = e;
+        } else if (valid_path) {
+            result = ecs_lookup_path_w_sep(
+                v->world, FlecsMeta, path, NULL, NULL, false);
+
+            if (!result) {
+                int32_t i, using_count = ecs_vec_count(&v->r->using);
+                if (using_count) {
+                    ecs_entity_t *using = ecs_vec_first(&v->r->using);
+                    for (i = using_count - 1; i >= 0; i --) {
+                        ecs_entity_t e = ecs_lookup_path_w_sep(
+                            v->world, using[i], path, NULL, NULL, false);
+                        if (e) {
+                            result = e;
+                        }
                     }
                 }
             }
 
-            if (!result && valid_path) {
+            if (!result) {
                 result = ecs_lookup_path_w_sep(
                     v->world, v->parent, path, NULL, NULL, true);
             }
@@ -94461,7 +94528,6 @@ void flecs_script_eval_scope_enter(
     flecs_script_scope_state_t *state)
 {
     state->parent = v->parent;
-    state->using_count = ecs_vec_count(&v->r->using);
 
     for (int32_t i = v->base.depth - 2; i >= 0; i --) {
         if (v->base.nodes[i]->kind == EcsAstScope) {
@@ -94477,8 +94543,6 @@ void flecs_script_eval_scope_leave(
     ecs_script_eval_visitor_t *v,
     const flecs_script_scope_state_t *state)
 {
-    ecs_vec_set_count_t(&v->r->allocator, &v->r->using,
-        ecs_entity_t, state->using_count);
     v->vars = ecs_script_vars_pop(v->vars);
     v->parent = state->parent;
 }
@@ -95176,14 +95240,9 @@ static int flecs_script_eval_using(
         ecs_entity_t from = ecs_lookup_path_w_sep(
             v->world, 0, node->name, NULL, NULL, false);
         if (!from) {
-            from = ecs_entity(v->world, {
-                .name = node->name,
-                .root_sep = ""
-            });
-
-            if (!from) {
-                return -1;
-            }
+            flecs_script_eval_error(v, node,
+                "unresolved path '%s' in using statement", node->name);
+            return -1;
         }
 
         ecs_vec_append_t(a, &v->r->using, ecs_entity_t)[0] = from;
@@ -96371,10 +96430,6 @@ void flecs_script_eval_visit_init(
          * variables may not be the same across evaluations. */
         v->dynamic_variable_binding = true;
     }
-
-    /* Always include flecs.meta */
-    ecs_vec_append_t(&v->r->allocator, &v->r->using, ecs_entity_t)[0] = 
-        ecs_lookup(v->world, "flecs.meta");
 }
 
 void flecs_script_eval_visit_fini(
@@ -96448,9 +96503,7 @@ int flecs_script_eval(
         }
     }
 
-    if (r) {
-        ecs_script_runtime_clear(priv_desc.runtime);
-    }
+    ecs_script_runtime_clear(priv_desc.runtime);
 
     return r;
 }
@@ -96460,7 +96513,10 @@ int ecs_script_eval(
     const ecs_script_eval_desc_t *desc,
     ecs_script_eval_result_t *result)
 {
-    return flecs_script_eval(script, desc, 0, result);
+    ecs_entity_t prev_scope = ecs_set_scope(script->world, 0);
+    int r = flecs_script_eval(script, desc, 0, result);
+    ecs_set_scope(script->world, prev_scope);
+    return r;
 }
 
 #endif
@@ -96910,10 +96966,24 @@ static int flecs_script_include_node(
             goto done;
         }
 
-        if (ecs_script_run(v->world, resolved, code, NULL)) {
+        ecs_script_t *included = ecs_script_parse(
+            v->world, resolved, code, NULL, NULL);
+        ecs_os_free(code);
+        if (!included) {
+            result = -1;
+            goto done;
+        }
+
+        ecs_script_eval_desc_t desc = { 
+            .runtime = ecs_script_runtime_new() 
+        };
+
+        if (ecs_script_eval(included, &desc, NULL)) {
             result = -1;
         }
-        ecs_os_free(code);
+
+        ecs_script_runtime_free(desc.runtime);
+        ecs_script_free(included);
     }
 
 done:
@@ -106644,7 +106714,9 @@ void flecs_script_ref_on_set(
     }
 
     char *code = ecs_os_strdup(s->code);
-    ecs_script_update(world, script, 0, code);
+    ecs_script_runtime_t *runtime = ecs_script_runtime_new();
+    flecs_script_update(world, script, 0, code, runtime);
+    ecs_script_runtime_free(runtime);
     ecs_os_free(code);
 }
 
@@ -106671,7 +106743,9 @@ static void flecs_script_on_update_event(
     }
 
     char *code = ecs_os_strdup(s->code);
-    ecs_script_update(world, evt->script, 0, code);
+    ecs_script_runtime_t *runtime = ecs_script_runtime_new();
+    flecs_script_update(world, evt->script, 0, code, runtime);
+    ecs_script_runtime_free(runtime);
     ecs_os_free(code);
 }
 

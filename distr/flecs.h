@@ -18427,6 +18427,9 @@ typedef float ecs_f32_t;                                        /**< Built-in f3
 typedef double ecs_f64_t;                                       /**< Built-in f64 type. */
 typedef char* ecs_string_t;                                     /**< Built-in string type. */
 
+/* Meta module */
+FLECS_API extern ecs_entity_t FlecsMeta;                        /**< Flecs meta module. */
+
 /* Meta module component IDs */
 FLECS_API extern const ecs_entity_t ecs_id(EcsType);            /**< ID for component added to all types with reflection data. */
 FLECS_API extern const ecs_entity_t ecs_id(EcsTypeSerializer);  /**< ID for component that stores a type-specific serializer. */

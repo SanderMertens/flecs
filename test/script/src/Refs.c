@@ -4436,3 +4436,44 @@ void Refs_reeval_instantiates_template_w_global_const_var_ref(void) {
 
     ecs_fini(world);
 }
+
+void Refs_reeval_during_script_preserves_using(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Mass) = define_mass(world);
+    ecs_entity_t ecs_id(Position) = define_position(world);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, Mass, {10});
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code =
+            HEAD "foo {"
+            LINE "  Position: {e[Mass].value, 0}"
+            LINE "}"
+    });
+    test_assert(s != 0);
+
+    ecs_entity_t ns = ecs_entity(world, { .name = "Ns" });
+    ecs_entity_t bar = ecs_entity(world, { .name = "Bar", .parent = ns });
+
+    const char *expr =
+    HEAD "using Ns"
+    LINE "e { Mass: {30} }"
+    LINE "e1 { Bar }";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e1 = ecs_lookup(world, "e1");
+    test_assert(e1 != 0);
+    test_assert(ecs_has_id(world, e1, bar));
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+    const Position *p = ecs_get(world, foo, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 30);
+
+    ecs_fini(world);
+}

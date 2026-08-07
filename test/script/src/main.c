@@ -581,6 +581,7 @@ void Eval_script_expr_hoist_wildcard_using(void);
 void Eval_script_expr_followed_by_stmt(void);
 void Eval_script_expr_invalid_body(void);
 void Eval_script_expr_unterminated(void);
+void Eval_using_cleared_after_script(void);
 
 // Testsuite 'Collection'
 void Collection_range_bracketed(void);
@@ -1126,6 +1127,16 @@ void Error_function_unresolved_return_type_error_line(void);
 void Error_no_error_line_column(void);
 void Error_script_parse_line_column(void);
 void Error_script_eval_line_column(void);
+void Error_using_in_scope(void);
+void Error_using_after_other_stmt(void);
+void Error_using_script_defined_entity(void);
+void Error_using_wildcard_script_defined_entity(void);
+void Error_module_after_other_stmt(void);
+void Error_module_in_scope(void);
+void Error_module_after_using(void);
+void Error_include_after_using(void);
+void Error_include_after_other_stmt(void);
+void Error_using_unresolved_path(void);
 
 // Testsuite 'Format'
 void Format_precision_f32_literal(void);
@@ -1937,6 +1948,10 @@ void Include_include_auto_appends_extension_managed(void);
 void Include_fopen_override_remaps_filename(void);
 void Include_include_managed_eval_error_logged(void);
 void Include_include_managed_eval_error_set_on_script(void);
+void Include_include_using_not_visible_in_parent(void);
+void Include_include_managed_using_not_visible_in_parent(void);
+void Include_include_managed_keeps_implicit_meta_in_parent(void);
+void Include_include_keeps_implicit_meta_in_parent(void);
 
 // Testsuite 'Fuzzing'
 void Fuzzing_1(void);
@@ -2175,6 +2190,7 @@ void Refs_ref_declared_in_same_script_w_fn_other_script(void);
 void Refs_ref_declared_in_same_script_w_fn_other_scripts(void);
 void Refs_global_const_var_declared_in_same_script_w_template(void);
 void Refs_reeval_instantiates_template_w_global_const_var_ref(void);
+void Refs_reeval_during_script_preserves_using(void);
 
 // Testsuite 'ConstVar'
 void ConstVar_get_bool(void);
@@ -4505,6 +4521,10 @@ bake_test_case Eval_testcases[] = {
     {
         "script_expr_unterminated",
         Eval_script_expr_unterminated
+    },
+    {
+        "using_cleared_after_script",
+        Eval_using_cleared_after_script
     }
 };
 
@@ -6650,6 +6670,46 @@ bake_test_case Error_testcases[] = {
     {
         "script_eval_line_column",
         Error_script_eval_line_column
+    },
+    {
+        "using_in_scope",
+        Error_using_in_scope
+    },
+    {
+        "using_after_other_stmt",
+        Error_using_after_other_stmt
+    },
+    {
+        "using_script_defined_entity",
+        Error_using_script_defined_entity
+    },
+    {
+        "using_wildcard_script_defined_entity",
+        Error_using_wildcard_script_defined_entity
+    },
+    {
+        "module_after_other_stmt",
+        Error_module_after_other_stmt
+    },
+    {
+        "module_in_scope",
+        Error_module_in_scope
+    },
+    {
+        "module_after_using",
+        Error_module_after_using
+    },
+    {
+        "include_after_using",
+        Error_include_after_using
+    },
+    {
+        "include_after_other_stmt",
+        Error_include_after_other_stmt
+    },
+    {
+        "using_unresolved_path",
+        Error_using_unresolved_path
     }
 };
 
@@ -9851,6 +9911,22 @@ bake_test_case Include_testcases[] = {
     {
         "include_managed_eval_error_set_on_script",
         Include_include_managed_eval_error_set_on_script
+    },
+    {
+        "include_using_not_visible_in_parent",
+        Include_include_using_not_visible_in_parent
+    },
+    {
+        "include_managed_using_not_visible_in_parent",
+        Include_include_managed_using_not_visible_in_parent
+    },
+    {
+        "include_managed_keeps_implicit_meta_in_parent",
+        Include_include_managed_keeps_implicit_meta_in_parent
+    },
+    {
+        "include_keeps_implicit_meta_in_parent",
+        Include_include_keeps_implicit_meta_in_parent
     }
 };
 
@@ -10793,6 +10869,10 @@ bake_test_case Refs_testcases[] = {
     {
         "reeval_instantiates_template_w_global_const_var_ref",
         Refs_reeval_instantiates_template_w_global_const_var_ref
+    },
+    {
+        "reeval_during_script_preserves_using",
+        Refs_reeval_during_script_preserves_using
     }
 };
 
@@ -10975,7 +11055,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        572,
+        573,
         Eval_testcases
     },
     {
@@ -11024,7 +11104,7 @@ static bake_test_suite suites[] = {
         "Error",
         NULL,
         NULL,
-        130,
+        140,
         Error_testcases
     },
     {
@@ -11079,7 +11159,7 @@ static bake_test_suite suites[] = {
         "Include",
         NULL,
         NULL,
-        26,
+        30,
         Include_testcases
     },
     {
@@ -11093,7 +11173,7 @@ static bake_test_suite suites[] = {
         "Refs",
         NULL,
         NULL,
-        88,
+        89,
         Refs_testcases
     },
     {

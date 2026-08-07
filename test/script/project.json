@@ -584,7 +584,8 @@
                 "script_expr_hoist_wildcard_using",
                 "script_expr_followed_by_stmt",
                 "script_expr_invalid_body",
-                "script_expr_unterminated"
+                "script_expr_unterminated",
+                "using_cleared_after_script"
             ]
         }, {
             "id": "Collection",
@@ -1143,7 +1144,17 @@
                 "function_unresolved_return_type_error_line",
                 "no_error_line_column",
                 "script_parse_line_column",
-                "script_eval_line_column"
+                "script_eval_line_column",
+                "using_in_scope",
+                "using_after_other_stmt",
+                "using_script_defined_entity",
+                "using_wildcard_script_defined_entity",
+                "module_after_other_stmt",
+                "module_in_scope",
+                "module_after_using",
+                "include_after_using",
+                "include_after_other_stmt",
+                "using_unresolved_path"
             ]
         }, {
             "id": "Format",
@@ -1977,7 +1988,11 @@
                 "include_auto_appends_extension_managed",
                 "fopen_override_remaps_filename",
                 "include_managed_eval_error_logged",
-                "include_managed_eval_error_set_on_script"
+                "include_managed_eval_error_set_on_script",
+                "include_using_not_visible_in_parent",
+                "include_managed_using_not_visible_in_parent",
+                "include_managed_keeps_implicit_meta_in_parent",
+                "include_keeps_implicit_meta_in_parent"
             ]
         }, {
             "id": "Fuzzing",
@@ -2219,7 +2234,8 @@
                 "ref_declared_in_same_script_w_fn_other_script",
                 "ref_declared_in_same_script_w_fn_other_scripts",
                 "global_const_var_declared_in_same_script_w_template",
-                "reeval_instantiates_template_w_global_const_var_ref"
+                "reeval_instantiates_template_w_global_const_var_ref",
+                "reeval_during_script_preserves_using"
             ]
         }, {
             "id": "ConstVar",
