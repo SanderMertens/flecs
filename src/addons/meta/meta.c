@@ -8,6 +8,8 @@
 
 #ifdef FLECS_META
 
+ecs_entity_t FlecsMeta = 0;
+
 void flecs_type_serializer_dtor(
     EcsTypeSerializer *ptr) 
 {
@@ -283,6 +285,8 @@ void FlecsMetaImport(
     ecs_world_t *world)
 {
     ECS_MODULE(world, FlecsMeta);
+
+    FlecsMeta = ecs_id(FlecsMeta);
 
     ecs_set_name_prefix(world, "Ecs");
 

@@ -41,7 +41,9 @@ void flecs_script_ref_on_set(
     }
 
     char *code = ecs_os_strdup(s->code);
-    ecs_script_update(world, script, 0, code);
+    ecs_script_runtime_t *runtime = ecs_script_runtime_new();
+    flecs_script_update(world, script, 0, code, runtime);
+    ecs_script_runtime_free(runtime);
     ecs_os_free(code);
 }
 
@@ -68,7 +70,9 @@ static void flecs_script_on_update_event(
     }
 
     char *code = ecs_os_strdup(s->code);
-    ecs_script_update(world, evt->script, 0, code);
+    ecs_script_runtime_t *runtime = ecs_script_runtime_new();
+    flecs_script_update(world, evt->script, 0, code, runtime);
+    ecs_script_runtime_free(runtime);
     ecs_os_free(code);
 }
 

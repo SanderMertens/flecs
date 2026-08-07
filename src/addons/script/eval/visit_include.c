@@ -154,10 +154,24 @@ static int flecs_script_include_node(
             goto done;
         }
 
-        if (ecs_script_run(v->world, resolved, code, NULL)) {
+        ecs_script_t *included = ecs_script_parse(
+            v->world, resolved, code, NULL, NULL);
+        ecs_os_free(code);
+        if (!included) {
+            result = -1;
+            goto done;
+        }
+
+        ecs_script_eval_desc_t desc = { 
+            .runtime = ecs_script_runtime_new() 
+        };
+
+        if (ecs_script_eval(included, &desc, NULL)) {
             result = -1;
         }
-        ecs_os_free(code);
+
+        ecs_script_runtime_free(desc.runtime);
+        ecs_script_free(included);
     }
 
 done:

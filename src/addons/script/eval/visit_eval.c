@@ -252,20 +252,25 @@ int flecs_script_find_entity(
         } else if (from && valid_path) {
             result = ecs_lookup_path_w_sep(
                 v->world, from, path, NULL, NULL, false);
-        } else {
-            int32_t i, using_count = ecs_vec_count(&v->r->using);
-            if (using_count && valid_path) {
-                ecs_entity_t *using = ecs_vec_first(&v->r->using);
-                for (i = using_count - 1; i >= 0; i --) {
-                    ecs_entity_t e = ecs_lookup_path_w_sep(
-                        v->world, using[i], path, NULL, NULL, false);
-                    if (e) {
-                        result = e;
+        } else if (valid_path) {
+            result = ecs_lookup_path_w_sep(
+                v->world, FlecsMeta, path, NULL, NULL, false);
+
+            if (!result) {
+                int32_t i, using_count = ecs_vec_count(&v->r->using);
+                if (using_count) {
+                    ecs_entity_t *using = ecs_vec_first(&v->r->using);
+                    for (i = using_count - 1; i >= 0; i --) {
+                        ecs_entity_t e = ecs_lookup_path_w_sep(
+                            v->world, using[i], path, NULL, NULL, false);
+                        if (e) {
+                            result = e;
+                        }
                     }
                 }
             }
 
-            if (!result && valid_path) {
+            if (!result) {
                 result = ecs_lookup_path_w_sep(
                     v->world, v->parent, path, NULL, NULL, true);
             }
@@ -649,7 +654,6 @@ void flecs_script_eval_scope_enter(
     flecs_script_scope_state_t *state)
 {
     state->parent = v->parent;
-    state->using_count = ecs_vec_count(&v->r->using);
 
     for (int32_t i = v->base.depth - 2; i >= 0; i --) {
         if (v->base.nodes[i]->kind == EcsAstScope) {
@@ -665,8 +669,6 @@ void flecs_script_eval_scope_leave(
     ecs_script_eval_visitor_t *v,
     const flecs_script_scope_state_t *state)
 {
-    ecs_vec_set_count_t(&v->r->allocator, &v->r->using,
-        ecs_entity_t, state->using_count);
     v->vars = ecs_script_vars_pop(v->vars);
     v->parent = state->parent;
 }
@@ -1364,14 +1366,9 @@ static int flecs_script_eval_using(
         ecs_entity_t from = ecs_lookup_path_w_sep(
             v->world, 0, node->name, NULL, NULL, false);
         if (!from) {
-            from = ecs_entity(v->world, {
-                .name = node->name,
-                .root_sep = ""
-            });
-
-            if (!from) {
-                return -1;
-            }
+            flecs_script_eval_error(v, node,
+                "unresolved path '%s' in using statement", node->name);
+            return -1;
         }
 
         ecs_vec_append_t(a, &v->r->using, ecs_entity_t)[0] = from;
@@ -2560,10 +2557,6 @@ void flecs_script_eval_visit_init(
          * variables may not be the same across evaluations. */
         v->dynamic_variable_binding = true;
     }
-
-    /* Always include flecs.meta */
-    ecs_vec_append_t(&v->r->allocator, &v->r->using, ecs_entity_t)[0] = 
-        ecs_lookup(v->world, "flecs.meta");
 }
 
 void flecs_script_eval_visit_fini(
@@ -2637,9 +2630,7 @@ int flecs_script_eval(
         }
     }
 
-    if (r) {
-        ecs_script_runtime_clear(priv_desc.runtime);
-    }
+    ecs_script_runtime_clear(priv_desc.runtime);
 
     return r;
 }
@@ -2649,7 +2640,10 @@ int ecs_script_eval(
     const ecs_script_eval_desc_t *desc,
     ecs_script_eval_result_t *result)
 {
-    return flecs_script_eval(script, desc, 0, result);
+    ecs_entity_t prev_scope = ecs_set_scope(script->world, 0);
+    int r = flecs_script_eval(script, desc, 0, result);
+    ecs_set_scope(script->world, prev_scope);
+    return r;
 }
 
 #endif

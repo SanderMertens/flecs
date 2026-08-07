@@ -2732,24 +2732,20 @@ void Eval_create_subject_in_scope_w_resolvable_id_using(void) {
 
     ECS_TAG(world, Hello);
 
+    ecs_entity_t foo = ecs_entity(world, { .name = "Foo" });
+    ecs_entity_t bar = ecs_entity(world, { .name = "Bar", .parent = foo });
+
     const char *expr =
-    HEAD "Foo {"
-    LINE "  Bar {}"
-    LINE "}"
-    LINE
-    LINE "using Foo"
+    HEAD "using Foo"
     LINE
     LINE "Hello Bar {}";
 
     test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
-    ecs_entity_t foo = ecs_lookup(world, "Foo");
-    ecs_entity_t bar = ecs_lookup(world, "Foo.Bar");
     ecs_entity_t root_bar = ecs_lookup(world, "Bar");
     ecs_entity_t hello = ecs_lookup(world, "Hello");
 
-    test_assert(foo != 0);
-    test_assert(bar != 0);
     test_assert(root_bar != 0);
+    test_assert(root_bar != bar);
     test_assert(hello != 0);
 
     test_assert(ecs_has_pair(world, bar, EcsChildOf, foo));
@@ -2763,24 +2759,19 @@ void Eval_create_subject_in_scope_w_resolvable_id_using(void) {
 void Eval_using_scope(void) {
     ecs_world_t *world = ecs_init();
 
+    ecs_entity_t foo = ecs_entity(world, { .name = "Foo" });
+    ecs_entity_t bar = ecs_entity(world, { .name = "Bar", .parent = foo });
+
     const char *expr =
-    HEAD "Foo {"
-    LINE "  Bar {}"
-    LINE "}"
-    LINE ""
-    LINE "using Foo"
+    HEAD "using Foo"
     LINE "Bar Hello {}"
     LINE "Foo.Bar World {}";
 
     test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
-    ecs_entity_t foo = ecs_lookup(world, "Foo");
-    ecs_entity_t bar = ecs_lookup(world, "Foo.Bar");
     ecs_entity_t not_bar = ecs_lookup(world, "Bar");
     ecs_entity_t hello = ecs_lookup(world, "Hello");
     ecs_entity_t _world = ecs_lookup_child(world, 0, "World");
 
-    test_assert(foo != 0);
-    test_assert(bar != 0);
     test_assert(hello != 0);
     test_assert(_world != 0);
     test_assert(not_bar == 0);
@@ -2823,29 +2814,21 @@ void Eval_using_tab_after_keyword(void) {
 void Eval_using_nested_scope(void) {
     ecs_world_t *world = ecs_init();
 
+    ecs_entity_t foo = ecs_entity(world, { .name = "Foo" });
+    ecs_entity_t bar = ecs_entity(world, { .name = "Bar", .parent = foo });
+    ecs_entity_t zoo = ecs_entity(world, { .name = "Zoo", .parent = bar });
+
     const char *expr =
-    HEAD "Foo {"
-    LINE "  Bar {"
-    LINE "    Zoo {}"
-    LINE "  }"
-    LINE "}"
-    LINE ""
-    LINE "using Foo.Bar"
+    HEAD "using Foo.Bar"
     LINE "Zoo Hello {}"
     LINE "Foo.Bar.Zoo World {}";
 
     test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
-    ecs_entity_t foo = ecs_lookup(world, "Foo");
-    ecs_entity_t bar = ecs_lookup(world, "Foo.Bar");
-    ecs_entity_t zoo = ecs_lookup(world, "Foo.Bar.Zoo");
     ecs_entity_t not_bar = ecs_lookup(world, "Bar");
     ecs_entity_t not_zoo = ecs_lookup(world, "Zoo");
     ecs_entity_t hello = ecs_lookup(world, "Hello");
     ecs_entity_t _world = ecs_lookup_child(world, 0, "World");
 
-    test_assert(foo != 0);
-    test_assert(bar != 0);
-    test_assert(zoo != 0);
     test_assert(hello != 0);
     test_assert(_world != 0);
     test_assert(not_bar == 0);
@@ -2862,46 +2845,20 @@ void Eval_using_nested_scope(void) {
 void Eval_using_nested_in_scope(void) {
     ecs_world_t *world = ecs_init();
 
-    ECS_TAG(world, Zoo);
-    ECS_TAG(world, Tag);
+    ecs_entity_t foo = ecs_entity(world, { .name = "Foo" });
+    ecs_entity_t bar = ecs_entity(world, { .name = "Bar", .parent = foo });
+    ecs_entity(world, { .name = "Zoo", .parent = bar });
+
+    ecs_log_set_level(-4);
 
     const char *expr =
-    HEAD "Foo {"
-    LINE "  Bar {"
-    LINE "    Zoo {}"
-    LINE "  }"
-    LINE "}"
-    LINE "{"
+    HEAD "{"
     LINE "  using Foo.Bar"
-    LINE "  Zoo Hello { Tag }"
-    LINE "}"
-    LINE "Zoo World {}";
+    LINE "  Zoo Hello {}"
+    LINE "}";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
-    ecs_entity_t foo = ecs_lookup(world, "Foo");
-    ecs_entity_t bar = ecs_lookup(world, "Foo.Bar");
-    ecs_entity_t zoo = ecs_lookup(world, "Foo.Bar.Zoo");
-    ecs_entity_t not_bar = ecs_lookup(world, "Bar");
-    ecs_entity_t zoo_root = ecs_lookup(world, "Zoo");
-    ecs_entity_t hello = ecs_lookup(world, "Hello");
-    ecs_entity_t _world = ecs_lookup_child(world, 0, "World");
-
-    test_assert(foo != 0);
-    test_assert(bar != 0);
-    test_assert(zoo != 0);
-    test_assert(hello == 0);
-    test_assert(_world != 0);
-    test_assert(not_bar == 0);
-    test_assert(zoo_root != 0);
-
-    ecs_iter_t it = ecs_each(world, Tag);
-    hello = ecs_iter_first(&it);
-    test_assert(hello != 0);
-
-    test_assert(_world != EcsWorld); /* sanity check, verified by other tests */
-
-    test_assert(ecs_has_id(world, hello, zoo));
-    test_assert(ecs_has_id(world, _world, zoo_root));
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_lookup(world, "Hello") == 0);
 
     ecs_fini(world);
 }
@@ -3029,34 +2986,24 @@ void Eval_script_w_only_using(void) {
 void Eval_2_using_scope(void) {
     ecs_world_t *world = ecs_init();
 
+    ecs_entity_t foo = ecs_entity(world, { .name = "Foo" });
+    ecs_entity_t hello = ecs_entity(world, { .name = "Hello", .parent = foo });
+    ecs_entity_t bar = ecs_entity(world, { .name = "Bar" });
+    ecs_entity_t _world = ecs_entity(world, {
+        .name = "TheWorld", .parent = bar });
+
     const char *expr =
     HEAD "using Foo"
     LINE "using Bar"
-    LINE
-    LINE "Foo {"
-    LINE "  Hello {}"
-    LINE "}"
-    LINE
-    LINE "Bar {"
-    LINE "  TheWorld {}"
-    LINE "}"
     LINE
     LINE "Hello E1 {}"
     LINE "TheWorld E2 {}";
 
     test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
-    ecs_entity_t foo = ecs_lookup(world, "Foo");
-    ecs_entity_t hello = ecs_lookup(world, "Foo.Hello");
-    ecs_entity_t bar = ecs_lookup(world, "Bar");
-    ecs_entity_t _world = ecs_lookup(world, "Bar.TheWorld");
 
     ecs_entity_t e1 = ecs_lookup(world, "E1");
     ecs_entity_t e2 = ecs_lookup(world, "E2");
 
-    test_assert(foo != 0);
-    test_assert(bar != 0);
-    test_assert(hello != 0);
-    test_assert(_world != 0);
     test_assert(e1 != 0);
     test_assert(e2 != 0);
 
@@ -3074,78 +3021,30 @@ void Eval_2_using_scope(void) {
 void Eval_2_using_in_different_scope(void) {
     ecs_world_t *world = ecs_init();
 
-    ECS_TAG(world, TheWorld);
-    ECS_TAG(world, Hello);
+    ecs_entity_t foo = ecs_entity(world, { .name = "Foo" });
+    ecs_entity(world, { .name = "Hello", .parent = foo });
+    ecs_entity_t bar = ecs_entity(world, { .name = "Bar" });
+    ecs_entity(world, { .name = "TheWorld", .parent = bar });
+
+    ecs_log_set_level(-4);
 
     const char *expr =
-    LINE "Foo {"
-    LINE "  Hello {}"
-    LINE "}"
-    LINE
-    LINE "Bar {"
-    LINE "  TheWorld {}"
-    LINE "}"
-    LINE
     LINE "E1 {"
     LINE "  using Foo"
     LINE
     LINE "  Hello Child {}"
-    LINE "  TheWorld Child {}"
     LINE "}"
     LINE
     LINE "E2 {"
     LINE "  using Bar"
     LINE
-    LINE "  Hello Child {}"
     LINE "  TheWorld Child {}"
     LINE "}"
-    LINE
-    LINE "Hello RootChild {}"
-    LINE "TheWorld RootChild {}"
     LINE;
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
-    ecs_entity_t foo = ecs_lookup(world, "Foo");
-    ecs_entity_t hello = ecs_lookup(world, "Foo.Hello");
-    ecs_entity_t bar = ecs_lookup(world, "Bar");
-    ecs_entity_t _world = ecs_lookup(world, "Bar.TheWorld");
-
-    ecs_entity_t e1 = ecs_lookup(world, "E1");
-    ecs_entity_t e1_child = ecs_lookup(world, "E1.Child");
-    ecs_entity_t e2 = ecs_lookup(world, "E2");
-    ecs_entity_t e2_child = ecs_lookup(world, "E2.Child");
-
-    ecs_entity_t root_hello = ecs_lookup(world, "Hello");
-    ecs_entity_t root_world = ecs_lookup(world, "TheWorld");
-
-    ecs_entity_t root_child = ecs_lookup(world, "RootChild");
-
-    test_assert(foo != 0);
-    test_assert(bar != 0);
-    test_assert(hello != 0);
-    test_assert(_world != 0);
-    test_assert(e1 != 0);
-    test_assert(e2 != 0);
-    test_assert(e1_child != 0);
-    test_assert(e2_child != 0);
-    test_assert(root_hello != 0);
-    test_assert(root_world != 0);
-    test_assert(root_world != 0);
-
-    test_assert(ecs_has_pair(world, hello, EcsChildOf, foo));
-    test_assert(ecs_has_pair(world, _world, EcsChildOf, bar));
-
-    test_assert(ecs_has_pair(world, e1_child, EcsChildOf, e1));
-    test_assert(ecs_has_pair(world, e2_child, EcsChildOf, e2));
-
-    test_assert(ecs_has_id(world, e1_child, hello));
-    test_assert(ecs_has_id(world, e1_child, root_world));
-
-    test_assert(ecs_has_id(world, e2_child, root_hello));
-    test_assert(ecs_has_id(world, e2_child, _world));
-
-    test_assert(ecs_has_id(world, root_child, root_hello));
-    test_assert(ecs_has_id(world, root_child, root_world));
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_lookup(world, "E1") == 0);
+    test_assert(ecs_lookup(world, "E2") == 0);
 
     ecs_fini(world);
 }
@@ -18358,5 +18257,34 @@ void Eval_eval_twice_w_failed_method_call(void) {
     ecs_os_free(result_2.error);
 
     ecs_script_free(script);
+    ecs_fini(world);
+}
+
+void Eval_using_cleared_after_script(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t foo = ecs_entity(world, { .name = "Foo" });
+    ecs_entity_t bar = ecs_entity(world, { .name = "Bar", .parent = foo });
+
+    const char *expr_1 =
+    HEAD "using Foo"
+    LINE "e1 { Bar }";
+
+    test_assert(ecs_script_run(world, NULL, expr_1, NULL) == 0);
+
+    ecs_entity_t e1 = ecs_lookup(world, "e1");
+    test_assert(e1 != 0);
+    test_assert(ecs_has_id(world, e1, bar));
+
+    ecs_log_set_level(-4);
+
+    const char *expr_2 =
+    HEAD "e2 { Bar }";
+
+    test_assert(ecs_script_run(world, NULL, expr_2, NULL) != 0);
+
+    ecs_entity_t e2 = ecs_lookup(world, "e2");
+    test_assert(e2 == 0 || !ecs_has_id(world, e2, bar));
+
     ecs_fini(world);
 }

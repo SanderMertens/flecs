@@ -1259,6 +1259,8 @@ struct Position(x: f32, y: f32)
 
 The `components.transform` entity will be created with the `Module` tag.
 
+The `module` statement must be the first statement of a script.
+
 ## Include statement
 The `include` statement loads another script file. Example:
 
@@ -1273,7 +1275,7 @@ If the included path does not end in `.flecs`, the extension is appended automat
 
 When `include` is used from a managed script (see [Managed script](#managed-script)), the included script is also loaded as a managed script. If a managed script at that path already exists, it is not loaded again. When used from a non-managed script, the included script is executed in place and no script entity is created.
 
-The `include` statement is only allowed at the root scope of a script, and cannot appear inside a template.
+The `include` statement is only allowed at the root scope of a script, and cannot appear inside a template. It must appear before any statement other than `module` and other `include` statements.
 
 ## Using statement
 The `using` keyword imports a namespace into the current namespace. Example:
@@ -1293,16 +1295,18 @@ my_engine {
 }
 ```
 
-The `using` keyword only applies to the scope in which it is specified. Example:
+A `using` statement must appear at the top of a script, after any `module` and `include` statements, and before any other statement. It is not allowed inside scopes or templates. Example:
 
 ```cpp
-// Scope without using
-my_engine {
-  game.engines.FtlEngine: {active: true}
+// OK
+using game.engines
+
+my_spaceship {
+  FtlEngine: {active: true}
 }
 ```
 ```cpp
-// Scope with using
+// Not OK: using may not appear inside a scope
 my_spaceship {
   using game.engines
 
