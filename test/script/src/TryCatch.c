@@ -1087,9 +1087,9 @@ void TryCatch_vars_preserved_across_catch(void) {
         "  const b = 10\n"
         "  await fail()\n"
         "} catch {\n"
-        "  Handled { Position: {$a, 1} }\n"
+        "  Handled { Position: {a, 1} }\n"
         "}\n"
-        "After { Position: {$a, 2} }", NULL, NULL);
+        "After { Position: {a, 2} }", NULL, NULL);
     test_assert(script != NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(script, NULL);

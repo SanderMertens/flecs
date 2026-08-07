@@ -274,7 +274,7 @@ void Expr_add_no_space_var(void) {
     ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
 
     ecs_value_t v = {0};
-    test_assert(ecs_expr_run(world, "10+$foo", &v, &desc) != NULL);
+    test_assert(ecs_expr_run(world, "10+foo", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(int64_t*)v.ptr, 10 + 20);
@@ -296,7 +296,7 @@ void Expr_sub_no_space_var(void) {
     ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
 
     ecs_value_t v = {0};
-    test_assert(ecs_expr_run(world, "20-$foo", &v, &desc) != NULL);
+    test_assert(ecs_expr_run(world, "20-foo", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(int64_t*)v.ptr, 20 - 10);
@@ -318,7 +318,7 @@ void Expr_div_no_space_var(void) {
     ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
 
     ecs_value_t v = {0};
-    test_assert(ecs_expr_run(world, "20/$foo", &v, &desc) != NULL);
+    test_assert(ecs_expr_run(world, "20/foo", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_f64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(double*)v.ptr, 20 / 2);
@@ -340,7 +340,7 @@ void Expr_mul_no_space_var(void) {
     ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
 
     ecs_value_t v = {0};
-    test_assert(ecs_expr_run(world, "10*$foo", &v, &desc) != NULL);
+    test_assert(ecs_expr_run(world, "10*foo", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(int64_t*)v.ptr, 10 * 2);
@@ -362,7 +362,7 @@ void Expr_add_no_space_var_reverse(void) {
     ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
 
     ecs_value_t v = {0};
-    test_assert(ecs_expr_run(world, "$foo+10", &v, &desc) != NULL);
+    test_assert(ecs_expr_run(world, "foo+10", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(int64_t*)v.ptr, 10 + 20);
@@ -384,7 +384,7 @@ void Expr_sub_no_space_var_reverse(void) {
     ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
 
     ecs_value_t v = {0};
-    test_assert(ecs_expr_run(world, "$foo-10", &v, &desc) != NULL);
+    test_assert(ecs_expr_run(world, "foo-10", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(int64_t*)v.ptr, 20 - 10);
@@ -406,7 +406,7 @@ void Expr_div_no_space_var_reverse(void) {
     ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
 
     ecs_value_t v = {0};
-    test_assert(ecs_expr_run(world, "$foo/2", &v, &desc) != NULL);
+    test_assert(ecs_expr_run(world, "foo/2", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_f64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(double*)v.ptr, 20 / 2);
@@ -428,7 +428,7 @@ void Expr_mul_no_space_var_reverse(void) {
     ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
 
     ecs_value_t v = {0};
-    test_assert(ecs_expr_run(world, "$foo*2", &v, &desc) != NULL);
+    test_assert(ecs_expr_run(world, "foo*2", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(int64_t*)v.ptr, 10 * 2);
@@ -461,7 +461,7 @@ void Expr_div_by_0_var(void) {
 
     ecs_value_t v = {0};
     ecs_log_set_level(-4);
-    test_assert(ecs_expr_run(world, "10 / $foo", &v, &desc) == NULL);
+    test_assert(ecs_expr_run(world, "10 / foo", &v, &desc) == NULL);
 
     ecs_script_vars_fini(vars);
 
@@ -490,7 +490,7 @@ void Expr_mod_by_0_var(void) {
 
     ecs_value_t v = {0};
     ecs_log_set_level(-4);
-    test_assert(ecs_expr_run(world, "10 % $foo", &v, &desc) == NULL);
+    test_assert(ecs_expr_run(world, "10 % foo", &v, &desc) == NULL);
 
     ecs_script_vars_fini(vars);
 
@@ -1422,7 +1422,7 @@ void Expr_add_to_var(void) {
 
     ecs_value_t v = {0};
     ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
-    const char *ptr = ecs_expr_run(world, "$foo + 20", &v, &desc);
+    const char *ptr = ecs_expr_run(world, "foo + 20", &v, &desc);
     test_assert(ptr != NULL);
     test_assert(!ptr[0]);
     test_int(*(int32_t*)v.ptr, 10 + 20);
@@ -1443,7 +1443,7 @@ void Expr_add_var_to(void) {
 
     ecs_value_t v = {0};
     ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
-    const char *ptr = ecs_expr_run(world, "20 + $foo", &v, &desc);
+    const char *ptr = ecs_expr_run(world, "20 + foo", &v, &desc);
     test_assert(ptr != NULL);
     test_assert(!ptr[0]);
     test_int(*(int32_t*)v.ptr, 20 + 10);
@@ -1475,7 +1475,7 @@ void Expr_var_member(void) {
     ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
     {
         ecs_value_t v = {0};
-        const char *ptr = ecs_expr_run(world, "$foo.x", &v, &desc);
+        const char *ptr = ecs_expr_run(world, "foo.x", &v, &desc);
         test_assert(ptr != NULL);
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
@@ -1484,7 +1484,7 @@ void Expr_var_member(void) {
     }
     {
         ecs_value_t v = {0};
-        const char *ptr = ecs_expr_run(world, "$foo.y", &v, &desc);
+        const char *ptr = ecs_expr_run(world, "foo.y", &v, &desc);
         test_assert(ptr != NULL);
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
@@ -1532,7 +1532,7 @@ void Expr_var_member_member(void) {
     ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
     {
         ecs_value_t v = {0};
-        const char *ptr = ecs_expr_run(world, "$foo.start.x", &v, &desc);
+        const char *ptr = ecs_expr_run(world, "foo.start.x", &v, &desc);
         test_assert(ptr != NULL);
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
@@ -1541,7 +1541,7 @@ void Expr_var_member_member(void) {
     }
     {
         ecs_value_t v = {0};
-        const char *ptr = ecs_expr_run(world, "$foo.start.y", &v, &desc);
+        const char *ptr = ecs_expr_run(world, "foo.start.y", &v, &desc);
         test_assert(ptr != NULL);
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
@@ -1550,7 +1550,7 @@ void Expr_var_member_member(void) {
     }
     {
         ecs_value_t v = {0};
-        const char *ptr = ecs_expr_run(world, "$foo.stop.x", &v, &desc);
+        const char *ptr = ecs_expr_run(world, "foo.stop.x", &v, &desc);
         test_assert(ptr != NULL);
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
@@ -1559,7 +1559,7 @@ void Expr_var_member_member(void) {
     }
     {
         ecs_value_t v = {0};
-        const char *ptr = ecs_expr_run(world, "$foo.stop.y", &v, &desc);
+        const char *ptr = ecs_expr_run(world, "foo.stop.y", &v, &desc);
         test_assert(ptr != NULL);
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
@@ -1590,7 +1590,7 @@ void Expr_var_element(void) {
     ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
     {
         ecs_value_t v = {0};
-        const char *ptr = ecs_expr_run(world, "$foo[0]", &v, &desc);
+        const char *ptr = ecs_expr_run(world, "foo[0]", &v, &desc);
         test_assert(ptr != NULL);
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
@@ -1599,7 +1599,7 @@ void Expr_var_element(void) {
     }
     {
         ecs_value_t v = {0};
-        const char *ptr = ecs_expr_run(world, "$foo[1]", &v, &desc);
+        const char *ptr = ecs_expr_run(world, "foo[1]", &v, &desc);
         test_assert(ptr != NULL);
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
@@ -1632,11 +1632,11 @@ void Expr_var_element_out_of_range(void) {
     ecs_log_set_level(-4);
     {
         ecs_value_t v = {0};
-        test_assert(ecs_expr_run(world, "$foo[2]", &v, &desc) == NULL);
+        test_assert(ecs_expr_run(world, "foo[2]", &v, &desc) == NULL);
     }
     {
         ecs_value_t v = {0};
-        test_assert(ecs_expr_run(world, "$foo[1000000]", &v, &desc) == NULL);
+        test_assert(ecs_expr_run(world, "foo[1000000]", &v, &desc) == NULL);
     }
 
     ecs_script_vars_fini(vars);
@@ -1829,7 +1829,7 @@ void Expr_var_element_element(void) {
     ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
     {
         ecs_value_t v = {0};
-        const char *ptr = ecs_expr_run(world, "$foo[0][0]", &v, &desc);
+        const char *ptr = ecs_expr_run(world, "foo[0][0]", &v, &desc);
         test_assert(ptr != NULL);
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
@@ -1838,7 +1838,7 @@ void Expr_var_element_element(void) {
     }
     {
         ecs_value_t v = {0};
-        const char *ptr = ecs_expr_run(world, "$foo[0][1]", &v, &desc);
+        const char *ptr = ecs_expr_run(world, "foo[0][1]", &v, &desc);
         test_assert(ptr != NULL);
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
@@ -1847,7 +1847,7 @@ void Expr_var_element_element(void) {
     }
     {
         ecs_value_t v = {0};
-        const char *ptr = ecs_expr_run(world, "$foo[1][0]", &v, &desc);
+        const char *ptr = ecs_expr_run(world, "foo[1][0]", &v, &desc);
         test_assert(ptr != NULL);
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
@@ -1856,7 +1856,7 @@ void Expr_var_element_element(void) {
     }
     {
         ecs_value_t v = {0};
-        const char *ptr = ecs_expr_run(world, "$foo[1][1]", &v, &desc);
+        const char *ptr = ecs_expr_run(world, "foo[1][1]", &v, &desc);
         test_assert(ptr != NULL);
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
@@ -1897,7 +1897,7 @@ void Expr_var_member_element(void) {
     ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
     {
         ecs_value_t v = {0};
-        const char *ptr = ecs_expr_run(world, "$foo.x[0]", &v, &desc);
+        const char *ptr = ecs_expr_run(world, "foo.x[0]", &v, &desc);
         test_assert(ptr != NULL);
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
@@ -1906,7 +1906,7 @@ void Expr_var_member_element(void) {
     }
     {
         ecs_value_t v = {0};
-        const char *ptr = ecs_expr_run(world, "$foo.x[1]", &v, &desc);
+        const char *ptr = ecs_expr_run(world, "foo.x[1]", &v, &desc);
         test_assert(ptr != NULL);
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
@@ -1915,7 +1915,7 @@ void Expr_var_member_element(void) {
     }
     {
         ecs_value_t v = {0};
-        const char *ptr = ecs_expr_run(world, "$foo.y[0]", &v, &desc);
+        const char *ptr = ecs_expr_run(world, "foo.y[0]", &v, &desc);
         test_assert(ptr != NULL);
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
@@ -1924,7 +1924,7 @@ void Expr_var_member_element(void) {
     }
     {
         ecs_value_t v = {0};
-        const char *ptr = ecs_expr_run(world, "$foo.y[1]", &v, &desc);
+        const char *ptr = ecs_expr_run(world, "foo.y[1]", &v, &desc);
         test_assert(ptr != NULL);
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
@@ -1960,7 +1960,7 @@ void Expr_var_member_element_inline(void) {
     ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
     {
         ecs_value_t v = {0};
-        const char *ptr = ecs_expr_run(world, "$foo.x[0]", &v, &desc);
+        const char *ptr = ecs_expr_run(world, "foo.x[0]", &v, &desc);
         test_assert(ptr != NULL);
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
@@ -1969,7 +1969,7 @@ void Expr_var_member_element_inline(void) {
     }
     {
         ecs_value_t v = {0};
-        const char *ptr = ecs_expr_run(world, "$foo.x[1]", &v, &desc);
+        const char *ptr = ecs_expr_run(world, "foo.x[1]", &v, &desc);
         test_assert(ptr != NULL);
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
@@ -1978,7 +1978,7 @@ void Expr_var_member_element_inline(void) {
     }
     {
         ecs_value_t v = {0};
-        const char *ptr = ecs_expr_run(world, "$foo.y[0]", &v, &desc);
+        const char *ptr = ecs_expr_run(world, "foo.y[0]", &v, &desc);
         test_assert(ptr != NULL);
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
@@ -1987,7 +1987,7 @@ void Expr_var_member_element_inline(void) {
     }
     {
         ecs_value_t v = {0};
-        const char *ptr = ecs_expr_run(world, "$foo.y[1]", &v, &desc);
+        const char *ptr = ecs_expr_run(world, "foo.y[1]", &v, &desc);
         test_assert(ptr != NULL);
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
@@ -2029,7 +2029,7 @@ void Expr_var_element_member(void) {
     ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
     {
         ecs_value_t v = {0};
-        const char *ptr = ecs_expr_run(world, "$foo[0].x", &v, &desc);
+        const char *ptr = ecs_expr_run(world, "foo[0].x", &v, &desc);
         test_assert(ptr != NULL);
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
@@ -2038,7 +2038,7 @@ void Expr_var_element_member(void) {
     }
     {
         ecs_value_t v = {0};
-        const char *ptr = ecs_expr_run(world, "$foo[0].y", &v, &desc);
+        const char *ptr = ecs_expr_run(world, "foo[0].y", &v, &desc);
         test_assert(ptr != NULL);
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
@@ -2047,7 +2047,7 @@ void Expr_var_element_member(void) {
     }
     {
         ecs_value_t v = {0};
-        const char *ptr = ecs_expr_run(world, "$foo[1].x", &v, &desc);
+        const char *ptr = ecs_expr_run(world, "foo[1].x", &v, &desc);
         test_assert(ptr != NULL);
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
@@ -2056,7 +2056,7 @@ void Expr_var_element_member(void) {
     }
     {
         ecs_value_t v = {0};
-        const char *ptr = ecs_expr_run(world, "$foo[1].y", &v, &desc);
+        const char *ptr = ecs_expr_run(world, "foo[1].y", &v, &desc);
         test_assert(ptr != NULL);
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
@@ -2614,13 +2614,13 @@ void Expr_cond_eq_enum_literal(void) {
     ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
 
     *(Color*)x_var->value.ptr = Green;
-    test_assert(ecs_expr_run(world, "$x == Green", &v, &desc) != NULL);
+    test_assert(ecs_expr_run(world, "x == Green", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
 
     *(Color*)x_var->value.ptr = Blue;
-    test_assert(ecs_expr_run(world, "$x == Green", &v, &desc) != NULL);
+    test_assert(ecs_expr_run(world, "x == Green", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
@@ -2892,13 +2892,13 @@ void Expr_cond_neq_enum_literal(void) {
     ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
 
     *(Color*)x_var->value.ptr = Blue;
-    test_assert(ecs_expr_run(world, "$x != Green", &v, &desc) != NULL);
+    test_assert(ecs_expr_run(world, "x != Green", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
 
     *(Color*)x_var->value.ptr = Green;
-    test_assert(ecs_expr_run(world, "$x != Green", &v, &desc) != NULL);
+    test_assert(ecs_expr_run(world, "x != Green", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
@@ -3233,13 +3233,13 @@ void Expr_cond_gt_enum_literal(void) {
     ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
 
     *(Color*)x_var->value.ptr = Blue;
-    test_assert(ecs_expr_run(world, "$x > Green", &v, &desc) != NULL);
+    test_assert(ecs_expr_run(world, "x > Green", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
 
     *(Color*)x_var->value.ptr = Red;
-    test_assert(ecs_expr_run(world, "$x > Green", &v, &desc) != NULL);
+    test_assert(ecs_expr_run(world, "x > Green", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
@@ -3403,13 +3403,13 @@ void Expr_cond_gteq_enum_literal(void) {
     ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
 
     *(Color*)x_var->value.ptr = Green;
-    test_assert(ecs_expr_run(world, "$x >= Green", &v, &desc) != NULL);
+    test_assert(ecs_expr_run(world, "x >= Green", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
 
     *(Color*)x_var->value.ptr = Red;
-    test_assert(ecs_expr_run(world, "$x >= Green", &v, &desc) != NULL);
+    test_assert(ecs_expr_run(world, "x >= Green", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
@@ -3573,13 +3573,13 @@ void Expr_cond_lt_enum_literal(void) {
     ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
 
     *(Color*)x_var->value.ptr = Red;
-    test_assert(ecs_expr_run(world, "$x < Green", &v, &desc) != NULL);
+    test_assert(ecs_expr_run(world, "x < Green", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
 
     *(Color*)x_var->value.ptr = Blue;
-    test_assert(ecs_expr_run(world, "$x < Green", &v, &desc) != NULL);
+    test_assert(ecs_expr_run(world, "x < Green", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
@@ -3743,13 +3743,13 @@ void Expr_cond_lteq_enum_literal(void) {
     ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
 
     *(Color*)x_var->value.ptr = Green;
-    test_assert(ecs_expr_run(world, "$x <= Green", &v, &desc) != NULL);
+    test_assert(ecs_expr_run(world, "x <= Green", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
 
     *(Color*)x_var->value.ptr = Blue;
-    test_assert(ecs_expr_run(world, "$x <= Green", &v, &desc) != NULL);
+    test_assert(ecs_expr_run(world, "x <= Green", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
@@ -3827,7 +3827,7 @@ void Expr_min_var(void) {
 
     ecs_value_t v = {0};
     ecs_expr_eval_desc_t desc = { .vars = vars };
-    test_assert(ecs_expr_run(world, "-$foo", &v, &desc) != NULL);
+    test_assert(ecs_expr_run(world, "-foo", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_int(*(ecs_i64_t*)v.ptr, -10);
@@ -3877,7 +3877,7 @@ void Expr_min_var_add(void) {
 
     int64_t v = 0;
     ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
-    const char *ptr = ecs_expr_run(world, "-$foo + 5", &(ecs_value_t){
+    const char *ptr = ecs_expr_run(world, "-foo + 5", &(ecs_value_t){
         .type = ecs_id(ecs_i64_t), .ptr = &v
     }, &desc);
     test_assert(ptr != NULL);
@@ -3900,7 +3900,7 @@ void Expr_min_var_sub(void) {
 
     int64_t v = 0;
     ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
-    const char *ptr = ecs_expr_run(world, "-$foo - 5", &(ecs_value_t){
+    const char *ptr = ecs_expr_run(world, "-foo - 5", &(ecs_value_t){
         .type = ecs_id(ecs_i64_t), .ptr = &v
     }, &desc);
     test_assert(ptr != NULL);
@@ -3923,7 +3923,7 @@ void Expr_min_var_mul(void) {
 
     int64_t v = 0;
     ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
-    const char *ptr = ecs_expr_run(world, "-$foo * 5", &(ecs_value_t){
+    const char *ptr = ecs_expr_run(world, "-foo * 5", &(ecs_value_t){
         .type = ecs_id(ecs_i64_t), .ptr = &v
     }, &desc);
     test_assert(ptr != NULL);
@@ -3946,7 +3946,7 @@ void Expr_min_var_div(void) {
 
     int64_t v = 0;
     ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
-    const char *ptr = ecs_expr_run(world, "-$foo / 5", &(ecs_value_t){
+    const char *ptr = ecs_expr_run(world, "-foo / 5", &(ecs_value_t){
         .type = ecs_id(ecs_i64_t), .ptr = &v
     }, &desc);
     test_assert(ptr != NULL);
@@ -3979,7 +3979,7 @@ void Expr_struct_w_min_var(void) {
 
     Mass v = {0};
     ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
-    const char *ptr = ecs_expr_run(world, "{-$foo}", &(ecs_value_t){
+    const char *ptr = ecs_expr_run(world, "{-foo}", &(ecs_value_t){
         .type = t, .ptr = &v
     }, &desc);
     test_assert(ptr != NULL);
@@ -4038,7 +4038,7 @@ void Expr_struct_w_min_lparen_var_rparen(void) {
 
     Mass v = {0};
     ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
-    const char *ptr = ecs_expr_run(world, "{-($foo)}", &(ecs_value_t){
+    const char *ptr = ecs_expr_run(world, "{-(foo)}", &(ecs_value_t){
         .type = t, .ptr = &v
     }, &desc);
     test_assert(ptr != NULL);
@@ -4150,7 +4150,7 @@ void Expr_not_var(void) {
 
     ecs_value_t v = {0};
     ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
-    test_assert(ecs_expr_run(world, "!$foo", &v, &desc) != NULL);
+    test_assert(ecs_expr_run(world, "!foo", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_uint(*(bool*)v.ptr, false);
@@ -4159,7 +4159,7 @@ void Expr_not_var(void) {
     ecs_os_zeromem(&v);
 
     *(int32_t*)var->value.ptr = 0;
-    test_assert(ecs_expr_run(world, "!$foo", &v, &desc) != NULL);
+    test_assert(ecs_expr_run(world, "!foo", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_uint(*(bool*)v.ptr, true);
@@ -4789,7 +4789,7 @@ void Expr_var_parent_func(void) {
 
     ecs_value_t v = {0};
     ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
-    test_assert(ecs_expr_run(world, "$foo.parent()", &v, &desc) != NULL);
+    test_assert(ecs_expr_run(world, "foo.parent()", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_entity_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_entity_t*)v.ptr, parent);
@@ -4818,7 +4818,7 @@ void Expr_var_name_func(void) {
 
     ecs_value_t v = {0};
     ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
-    test_assert(ecs_expr_run(world, "$foo.name()", &v, &desc) != NULL);
+    test_assert(ecs_expr_run(world, "foo.name()", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_string_t));
     test_assert(v.ptr != NULL);
     test_str(*(char**)v.ptr, "child");
@@ -4848,7 +4848,7 @@ void Expr_var_doc_name_func(void) {
 
     ecs_value_t v = {0};
     ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
-    test_assert(ecs_expr_run(world, "$foo.doc_name()", &v, &desc) != NULL);
+    test_assert(ecs_expr_run(world, "foo.doc_name()", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_string_t));
     test_assert(v.ptr != NULL);
     test_str(*(char**)v.ptr, "ChildDoc");
@@ -4877,7 +4877,7 @@ void Expr_var_chain_func(void) {
 
     ecs_value_t v = {0};
     ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
-    test_assert(ecs_expr_run(world, "$foo.parent().name()", &v, &desc) != NULL);
+    test_assert(ecs_expr_run(world, "foo.parent().name()", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_string_t));
     test_assert(v.ptr != NULL);
     test_str(*(char**)v.ptr, "parent");
@@ -7078,7 +7078,7 @@ void Expr_interpolate_in_expr_w_curly_brackets_w_var(void) {
     ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
 
     char *v = NULL;
-    test_assert(NULL != ecs_expr_run(world, "\"{$foo * 2}\"", 
+    test_assert(NULL != ecs_expr_run(world, "\"{foo * 2}\"", 
         &ecs_value_ptr(ecs_string_t, &v), &desc));
     test_str(v, "20");
     ecs_os_free(v);
@@ -7845,7 +7845,7 @@ void Expr_var_expr(void) {
     int32_t v = 0;
     ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
     const char *ptr = ecs_expr_run(
-        world, "$foo", &ecs_value_ptr(ecs_i32_t, &v), &desc);
+        world, "foo", &ecs_value_ptr(ecs_i32_t, &v), &desc);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == 0);
     test_int(v, 10);
@@ -7876,7 +7876,7 @@ void Expr_var_member_expr(void) {
 
     {
         const char *ptr = ecs_expr_run(
-            world, "$foo.x", &ecs_value_ptr(ecs_i32_t, &v), &desc);
+            world, "foo.x", &ecs_value_ptr(ecs_i32_t, &v), &desc);
         test_assert(ptr != NULL);
         test_assert(ptr[0] == 0);
         test_int(v, 10);
@@ -7884,7 +7884,7 @@ void Expr_var_member_expr(void) {
 
     {
         const char *ptr = ecs_expr_run(
-            world, "$foo.y", &ecs_value_ptr(ecs_i32_t, &v), &desc);
+            world, "foo.y", &ecs_value_ptr(ecs_i32_t, &v), &desc);
         test_assert(ptr != NULL);
         test_assert(ptr[0] == 0);
         test_int(v, 20);
@@ -7918,7 +7918,7 @@ void Expr_var_elem_expr(void) {
 
     {
         const char *ptr = ecs_expr_run(
-            world, "$foo[0]", &ecs_value_ptr(ecs_i32_t, &v), &desc);
+            world, "foo[0]", &ecs_value_ptr(ecs_i32_t, &v), &desc);
         test_assert(ptr != NULL);
         test_assert(ptr[0] == 0);
         test_int(v, 10);
@@ -7926,7 +7926,7 @@ void Expr_var_elem_expr(void) {
 
     {
         const char *ptr = ecs_expr_run(
-            world, "$foo[1]", &ecs_value_ptr(ecs_i32_t, &v), &desc);
+            world, "foo[1]", &ecs_value_ptr(ecs_i32_t, &v), &desc);
         test_assert(ptr != NULL);
         test_assert(ptr[0] == 0);
         test_int(v, 20);
@@ -7948,7 +7948,7 @@ void Expr_var_expr_string(void) {
     char* v = NULL;
     ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
     const char *ptr = ecs_expr_run(
-        world, "$foo", &ecs_value_ptr(ecs_string_t, &v), &desc);
+        world, "foo", &ecs_value_ptr(ecs_string_t, &v), &desc);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == 0);
     test_str(v, "Hello World");
@@ -7989,7 +7989,7 @@ void Expr_var_member_expr_string(void) {
 
     {
         const char *ptr = ecs_expr_run(
-            world, "$foo.x", &ecs_value_ptr(ecs_string_t, &v), &desc);
+            world, "foo.x", &ecs_value_ptr(ecs_string_t, &v), &desc);
         test_assert(ptr != NULL);
         test_assert(ptr[0] == 0);
         test_str(v, "Hello");
@@ -8000,7 +8000,7 @@ void Expr_var_member_expr_string(void) {
 
     {
         const char *ptr = ecs_expr_run(
-            world, "$foo.y", &ecs_value_ptr(ecs_string_t, &v), &desc);
+            world, "foo.y", &ecs_value_ptr(ecs_string_t, &v), &desc);
         test_assert(ptr != NULL);
         test_assert(ptr[0] == 0);
         test_str(v, "World");
@@ -8040,7 +8040,7 @@ void Expr_var_elem_expr_string(void) {
 
     {
         const char *ptr = ecs_expr_run(
-            world, "$foo[0]", &ecs_value_ptr(ecs_string_t, &v), &desc);
+            world, "foo[0]", &ecs_value_ptr(ecs_string_t, &v), &desc);
         test_assert(ptr != NULL);
         test_assert(ptr[0] == 0);
         test_str(v, "Hello");
@@ -8051,7 +8051,7 @@ void Expr_var_elem_expr_string(void) {
 
     {
         const char *ptr = ecs_expr_run(
-            world, "$foo[1]", &ecs_value_ptr(ecs_string_t, &v), &desc);
+            world, "foo[1]", &ecs_value_ptr(ecs_string_t, &v), &desc);
         test_assert(ptr != NULL);
         test_assert(ptr[0] == 0);
         test_str(v, "World");
@@ -8094,7 +8094,7 @@ void Expr_var_inline_elem_expr_string(void) {
 
     {
         const char *ptr = ecs_expr_run(
-            world, "$foo.value[0]", &ecs_value_ptr(ecs_string_t, &v), &desc);
+            world, "foo.value[0]", &ecs_value_ptr(ecs_string_t, &v), &desc);
         test_assert(ptr != NULL);
         test_assert(ptr[0] == 0);
         test_str(v, "Hello");
@@ -8105,7 +8105,7 @@ void Expr_var_inline_elem_expr_string(void) {
 
     {
         const char *ptr = ecs_expr_run(
-            world, "$foo.value[1]", &ecs_value_ptr(ecs_string_t, &v), &desc);
+            world, "foo.value[1]", &ecs_value_ptr(ecs_string_t, &v), &desc);
         test_assert(ptr != NULL);
         test_assert(ptr[0] == 0);
         test_str(v, "World");
@@ -8160,7 +8160,7 @@ void Expr_parse_eval(void) {
     int32_t v = 0;
     ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
 
-    ecs_script_t *s = ecs_expr_parse(world, "$foo + 20", &desc);
+    ecs_script_t *s = ecs_expr_parse(world, "foo + 20", &desc);
     test_assert(s != NULL);
 
     test_int(0, ecs_expr_eval(s, 
@@ -8184,7 +8184,7 @@ void Expr_parse_eval_multiple_times(void) {
     int32_t v = 0;
     ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
 
-    ecs_script_t *s = ecs_expr_parse(world, "$foo + 20", &desc);
+    ecs_script_t *s = ecs_expr_parse(world, "foo + 20", &desc);
     test_assert(s != NULL);
 
     test_int(0, ecs_expr_eval(s, 
@@ -8497,7 +8497,7 @@ void Expr_global_const_var(void) {
     }));
 
     ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
-    const char *ptr = ecs_expr_run(world, "$FOO + 20",
+    const char *ptr = ecs_expr_run(world, "FOO + 20",
         &ecs_value_ptr(ecs_i32_t, &v), &desc);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == 0);
@@ -8555,7 +8555,7 @@ void Expr_match_i32_1_i_case(void) {
         .vars = vars, .disable_folding = disable_folding };
 
     const char *expr = 
-    HEAD "match $i {"
+    HEAD "match i {"
     LINE "  1: 10"
     LINE "}";
 
@@ -8594,7 +8594,7 @@ void Expr_match_i32_2_i_cases(void) {
         .vars = vars, .disable_folding = disable_folding };
 
     const char *expr = 
-    HEAD "match $i {"
+    HEAD "match i {"
     LINE "  1: 10"
     LINE "  2: 20"
     LINE "}";
@@ -8643,7 +8643,7 @@ void Expr_match_i32_2_i_f_cases(void) {
         .vars = vars, .disable_folding = disable_folding };
 
     const char *expr = 
-    HEAD "match $i {"
+    HEAD "match i {"
     LINE "  1: 10"
     LINE "  2: 20.5"
     LINE "}";
@@ -8692,7 +8692,7 @@ void Expr_match_i32_2_f_i_cases(void) {
         .vars = vars, .disable_folding = disable_folding };
 
     const char *expr = 
-    HEAD "match $i {"
+    HEAD "match i {"
     LINE "  1: 10.5"
     LINE "  2: 20"
     LINE "}";
@@ -8741,7 +8741,7 @@ void Expr_match_i32_3_i_cases(void) {
         .vars = vars, .disable_folding = disable_folding };
 
     const char *expr = 
-    HEAD "match $i {"
+    HEAD "match i {"
     LINE "  1: 10"
     LINE "  2: 20"
     LINE "  3: 30"
@@ -8800,7 +8800,7 @@ void Expr_match_i32_3_i_i_f_cases(void) {
         .vars = vars, .disable_folding = disable_folding };
 
     const char *expr = 
-    HEAD "match $i {"
+    HEAD "match i {"
     LINE "  1: 10"
     LINE "  2: 20"
     LINE "  3: 30.5"
@@ -8859,7 +8859,7 @@ void Expr_match_i32_3_i_f_i_cases(void) {
         .vars = vars, .disable_folding = disable_folding };
 
     const char *expr = 
-    HEAD "match $i {"
+    HEAD "match i {"
     LINE "  1: 10"
     LINE "  2: 20.5"
     LINE "  3: 30"
@@ -8918,7 +8918,7 @@ void Expr_match_i32_3_f_i_i_cases(void) {
         .vars = vars, .disable_folding = disable_folding };
 
     const char *expr = 
-    HEAD "match $i {"
+    HEAD "match i {"
     LINE "  1: 10.5"
     LINE "  2: 20"
     LINE "  3: 30"
@@ -8991,7 +8991,7 @@ void Expr_match_i32_1_struct_case(void) {
         .type = ecs_id(Position) };
 
     const char *expr = 
-    HEAD "match $i {"
+    HEAD "match i {"
     LINE "  1: {10, 20}"
     LINE "}";
 
@@ -9046,7 +9046,7 @@ void Expr_match_i32_2_struct_cases(void) {
         .type = ecs_id(Position) };
 
     const char *expr = 
-    HEAD "match $i {"
+    HEAD "match i {"
     LINE "  1: {10, 20}"
     LINE "  2: {30, 40}"
     LINE "}";
@@ -9112,7 +9112,7 @@ void Expr_match_i32_3_struct_cases(void) {
         .type = ecs_id(Position) };
 
     const char *expr = 
-    HEAD "match $i {"
+    HEAD "match i {"
     LINE "  1: {10, 20}"
     LINE "  2: {30, 40}"
     LINE "  3: {50, 60}"
@@ -9189,7 +9189,7 @@ void Expr_match_i32_empty_struct_cases(void) {
         .type = ecs_id(Position) };
 
     const char *expr = 
-    HEAD "match $i {"
+    HEAD "match i {"
     LINE "  1: {10, 20}"
     LINE "  2: {30, 40}"
     LINE "  3: {}"
@@ -9252,7 +9252,7 @@ void Expr_match_i32_struct_cases_unknown_type(void) {
         .vars = vars, .disable_folding = disable_folding };
 
     const char *expr = 
-    HEAD "match $i {"
+    HEAD "match i {"
     LINE "  1: {10, 20}"
     LINE "  2: {30, 40}"
     LINE "}";
@@ -9283,7 +9283,7 @@ void Expr_match_i32_1_collection_case(void) {
         .type = ecs_id(Ints) };
 
     const char *expr = 
-    HEAD "match $i {"
+    HEAD "match i {"
     LINE "  1: [10, 20]"
     LINE "}";
 
@@ -9332,7 +9332,7 @@ void Expr_match_i32_1_collection_case_crlf(void) {
         .type = ecs_id(Ints) };
 
     const char *expr =
-        "match $i {\r\n"
+        "match i {\r\n"
         "  1: [10, 20]\r\n"
         "}\r\n";
 
@@ -9381,7 +9381,7 @@ void Expr_match_i32_2_collection_cases(void) {
         .type = ecs_id(Ints) };
 
     const char *expr = 
-    HEAD "match $i {"
+    HEAD "match i {"
     LINE "  1: [10, 20]"
     LINE "  2: [20, 30]"
     LINE "}";
@@ -9441,7 +9441,7 @@ void Expr_match_i32_3_collection_cases(void) {
         .type = ecs_id(Ints) };
 
     const char *expr = 
-    HEAD "match $i {"
+    HEAD "match i {"
     LINE "  1: [10, 20]"
     LINE "  2: [20, 30]"
     LINE "  3: [30, 40]"
@@ -9513,7 +9513,7 @@ void Expr_match_i32_empty_collection_case(void) {
         .type = ecs_id(Ints) };
 
     const char *expr = 
-    HEAD "match $i {"
+    HEAD "match i {"
     LINE "  1: [10, 20]"
     LINE "  2: [20, 30]"
     LINE "  3: []"
@@ -9576,7 +9576,7 @@ void Expr_match_i32_collection_case_unknown_type(void) {
         .vars = vars, .disable_folding = disable_folding };
 
     const char *expr =
-    HEAD "match $i {"
+    HEAD "match i {"
     LINE "  1: [10, 20]"
     LINE "  2: [30, 40]"
     LINE "}";
@@ -9644,7 +9644,7 @@ void Expr_match_i32_struct_invalid_case_type(void) {
         .type = ecs_id(Position) };
 
     const char *expr = 
-    HEAD "match $i {"
+    HEAD "match i {"
     LINE "  1: 10"
     LINE "}";
 
@@ -9671,7 +9671,7 @@ void Expr_match_i32_collection_invalid_case_type(void) {
         .type = ecs_id(Ints) };
 
     const char *expr = 
-    HEAD "match $i {"
+    HEAD "match i {"
     LINE "  1: 10"
     LINE "}";
 
@@ -9693,7 +9693,7 @@ void Expr_match_i32_string(void) {
         .vars = vars, .disable_folding = disable_folding };
 
     const char *expr = 
-    HEAD "match $i {"
+    HEAD "match i {"
     LINE "  1: \"100\""
     LINE "  2: \"200\""
     LINE "  3: \"300\""
@@ -9765,7 +9765,7 @@ void Expr_match_enum_string(void) {
         .vars = vars, .disable_folding = disable_folding };
 
     const char *expr = 
-    HEAD "match $i {"
+    HEAD "match i {"
     LINE "  Red:   \"Red\""
     LINE "  Green: \"Green\""
     LINE "  Blue:  \"Blue\""
@@ -9824,7 +9824,7 @@ void Expr_match_string_i(void) {
         .vars = vars, .disable_folding = disable_folding };
 
     const char *expr = 
-    HEAD "match $i {"
+    HEAD "match i {"
     LINE "  \"100\": 1"
     LINE "  \"200\": 2"
     LINE "  \"300\": 3"
@@ -9893,7 +9893,7 @@ void Expr_match_w_any(void) {
         .vars = vars, .disable_folding = disable_folding };
 
     const char *expr = 
-    HEAD "match $i {"
+    HEAD "match i {"
     LINE "  1: 10"
     LINE "  2: 20"
     LINE "  3: 30"
@@ -9963,7 +9963,7 @@ void Expr_match_w_any_not_last(void) {
         .vars = vars, .disable_folding = disable_folding };
 
     const char *expr = 
-    HEAD "match $i {"
+    HEAD "match i {"
     LINE "  1: 10"
     LINE "  2: 20"
     LINE "  _: 40"
@@ -9988,7 +9988,7 @@ void Expr_match_w_any_first(void) {
         .vars = vars, .disable_folding = disable_folding };
 
     const char *expr = 
-    HEAD "match $i {"
+    HEAD "match i {"
     LINE "  _: 40"
     LINE "  1: 10"
     LINE "  2: 20"
@@ -10013,7 +10013,7 @@ void Expr_match_w_any_mismatching_type(void) {
         .vars = vars, .disable_folding = disable_folding };
 
     const char *expr = 
-    HEAD "match $i {"
+    HEAD "match i {"
     LINE "  1: 10"
     LINE "  2: 20"
     LINE "  3: 30"
@@ -10038,7 +10038,7 @@ void Expr_match_i_w_any_f(void) {
         .vars = vars, .disable_folding = disable_folding };
 
     const char *expr = 
-    HEAD "match $i {"
+    HEAD "match i {"
     LINE "  1: 10"
     LINE "  2: 20"
     LINE "  _: 30.5"
@@ -10514,7 +10514,7 @@ void Expr_new_entity_w_component_w_vars(void) {
 
     ecs_entity_t e = 0;
     ecs_value_t v = { .type = ecs_id(ecs_entity_t), .ptr = &e };
-    test_assert(ecs_expr_run(world, "new { Position: {$x, $y} }", &v, &desc) != NULL);
+    test_assert(ecs_expr_run(world, "new { Position: {x, y} }", &v, &desc) != NULL);
     test_assert(e != 0);
     test_assert(ecs_is_alive(world, e));
     test_int(ecs_get_type(world, e)->count, 1);
@@ -10725,7 +10725,7 @@ void Expr_var_element_map_i64_i32(void) {
     ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
     {
         ecs_value_t v = {0};
-        const char *ptr = ecs_expr_run(world, "$foo[10]", &v, &desc);
+        const char *ptr = ecs_expr_run(world, "foo[10]", &v, &desc);
         test_assert(ptr != NULL);
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
@@ -10734,7 +10734,7 @@ void Expr_var_element_map_i64_i32(void) {
     }
     {
         ecs_value_t v = {0};
-        const char *ptr = ecs_expr_run(world, "$foo[20]", &v, &desc);
+        const char *ptr = ecs_expr_run(world, "foo[20]", &v, &desc);
         test_assert(ptr != NULL);
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
@@ -10769,7 +10769,7 @@ void Expr_var_element_map_entity_i32(void) {
     ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
     {
         ecs_value_t v = {0};
-        const char *ptr = ecs_expr_run(world, "$foo[e1]", &v, &desc);
+        const char *ptr = ecs_expr_run(world, "foo[e1]", &v, &desc);
         test_assert(ptr != NULL);
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
@@ -10778,7 +10778,7 @@ void Expr_var_element_map_entity_i32(void) {
     }
     {
         ecs_value_t v = {0};
-        const char *ptr = ecs_expr_run(world, "$foo[e2]", &v, &desc);
+        const char *ptr = ecs_expr_run(world, "foo[e2]", &v, &desc);
         test_assert(ptr != NULL);
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
@@ -10817,7 +10817,7 @@ void Expr_var_element_map_enum_i32(void) {
     ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
     {
         ecs_value_t v = {0};
-        const char *ptr = ecs_expr_run(world, "$foo[Red]", &v, &desc);
+        const char *ptr = ecs_expr_run(world, "foo[Red]", &v, &desc);
         test_assert(ptr != NULL);
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
@@ -10826,7 +10826,7 @@ void Expr_var_element_map_enum_i32(void) {
     }
     {
         ecs_value_t v = {0};
-        const char *ptr = ecs_expr_run(world, "$foo[Green]", &v, &desc);
+        const char *ptr = ecs_expr_run(world, "foo[Green]", &v, &desc);
         test_assert(ptr != NULL);
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
@@ -10865,7 +10865,7 @@ void Expr_var_element_map_bitmask_i32(void) {
     ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
     {
         ecs_value_t v = {0};
-        const char *ptr = ecs_expr_run(world, "$foo[Lettuce]", &v, &desc);
+        const char *ptr = ecs_expr_run(world, "foo[Lettuce]", &v, &desc);
         test_assert(ptr != NULL);
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
@@ -10874,7 +10874,7 @@ void Expr_var_element_map_bitmask_i32(void) {
     }
     {
         ecs_value_t v = {0};
-        const char *ptr = ecs_expr_run(world, "$foo[Lettuce|Bacon]", &v, &desc);
+        const char *ptr = ecs_expr_run(world, "foo[Lettuce|Bacon]", &v, &desc);
         test_assert(ptr != NULL);
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
@@ -10905,7 +10905,7 @@ void Expr_var_element_map_expr_key(void) {
     ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
     {
         ecs_value_t v = {0};
-        const char *ptr = ecs_expr_run(world, "$foo[10 + 20]", &v, &desc);
+        const char *ptr = ecs_expr_run(world, "foo[10 + 20]", &v, &desc);
         test_assert(ptr != NULL);
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
@@ -10952,7 +10952,7 @@ void Expr_var_element_map_struct(void) {
     ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
     {
         ecs_value_t v = {0};
-        const char *ptr = ecs_expr_run(world, "$foo[10]", &v, &desc);
+        const char *ptr = ecs_expr_run(world, "foo[10]", &v, &desc);
         test_assert(ptr != NULL);
         test_assert(!ptr[0]);
         test_uint(v.type, n);
@@ -11001,7 +11001,7 @@ void Expr_var_element_map_struct_member(void) {
     ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
     {
         ecs_value_t v = {0};
-        const char *ptr = ecs_expr_run(world, "$foo[10].x", &v, &desc);
+        const char *ptr = ecs_expr_run(world, "foo[10].x", &v, &desc);
         test_assert(ptr != NULL);
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
@@ -11010,7 +11010,7 @@ void Expr_var_element_map_struct_member(void) {
     }
     {
         ecs_value_t v = {0};
-        const char *ptr = ecs_expr_run(world, "$foo[10].z", &v, &desc);
+        const char *ptr = ecs_expr_run(world, "foo[10].z", &v, &desc);
         test_assert(ptr != NULL);
         test_assert(!ptr[0]);
         test_uint(v.type, ecs_id(ecs_i32_t));
@@ -11043,7 +11043,7 @@ void Expr_var_element_map_missing_key(void) {
     ecs_log_set_level(-4);
     {
         ecs_value_t v = {0};
-        test_assert(ecs_expr_run(world, "$foo[30]", &v, &desc) == NULL);
+        test_assert(ecs_expr_run(world, "foo[30]", &v, &desc) == NULL);
     }
 
     ecs_script_vars_fini(vars);
