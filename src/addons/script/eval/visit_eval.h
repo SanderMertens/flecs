@@ -39,7 +39,6 @@ int flecs_script_eval(
 
 typedef struct flecs_script_scope_state_t {
     ecs_entity_t parent;
-    int32_t using_count;
 } flecs_script_scope_state_t;
 
 void flecs_script_eval_scope_enter(

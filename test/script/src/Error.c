@@ -3142,3 +3142,166 @@ void Error_enum_constant_w_invalid_expr(void) {
 
     ecs_fini(world);
 }
+
+void Error_using_in_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t foo = ecs_entity(world, { .name = "Foo" });
+    ecs_entity(world, { .name = "Bar", .parent = foo });
+
+    const char *expr =
+    HEAD "MyParent {"
+    LINE "  using Foo"
+    LINE "  Bar Child {}"
+    LINE "}";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_lookup(world, "MyParent") == 0);
+
+    ecs_fini(world);
+}
+
+void Error_using_after_other_stmt(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t foo = ecs_entity(world, { .name = "Foo" });
+    ecs_entity(world, { .name = "Bar", .parent = foo });
+
+    const char *expr =
+    HEAD "Hello {}"
+    LINE "using Foo"
+    LINE "Bar Child {}";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_lookup(world, "Hello") == 0);
+
+    ecs_fini(world);
+}
+
+void Error_using_script_defined_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "using Foo"
+    LINE
+    LINE "Foo {"
+    LINE "  Bar {}"
+    LINE "}"
+    LINE
+    LINE "Bar Child {}";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_lookup(world, "Foo") == 0);
+
+    ecs_fini(world);
+}
+
+void Error_using_wildcard_script_defined_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "using Foo.*"
+    LINE
+    LINE "Foo {"
+    LINE "  Bar {}"
+    LINE "}";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_lookup(world, "Foo") == 0);
+
+    ecs_fini(world);
+}
+
+void Error_module_after_other_stmt(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Foo {}"
+    LINE "module hello";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_lookup(world, "Foo") == 0);
+
+    ecs_fini(world);
+}
+
+void Error_module_in_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Foo {"
+    LINE "  module hello"
+    LINE "}";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_lookup(world, "Foo") == 0);
+
+    ecs_fini(world);
+}
+
+void Error_module_after_using(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE "module hello";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_lookup(world, "hello") == 0);
+
+    ecs_fini(world);
+}
+
+void Error_include_after_using(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE "include foo.flecs";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Error_include_after_other_stmt(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Foo {}"
+    LINE "include foo.flecs";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_lookup(world, "Foo") == 0);
+
+    ecs_fini(world);
+}
+
+void Error_using_unresolved_path(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "using Foo"
+    LINE
+    LINE "Hello {}";
+
+    ecs_log_set_level(-4);
+    ecs_script_eval_result_t result = {0};
+    test_assert(ecs_script_run(world, NULL, expr, &result) != 0);
+    test_assert(result.error != NULL);
+    ecs_os_free(result.error);
+
+    test_assert(ecs_lookup(world, "Foo") == 0);
+    test_assert(ecs_lookup(world, "Hello") == 0);
+
+    ecs_fini(world);
+}

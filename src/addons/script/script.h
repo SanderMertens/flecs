@@ -82,6 +82,13 @@ typedef struct ecs_function_calldata_t {
 ecs_script_t* flecs_script_new(
     ecs_world_t *world);
 
+int flecs_script_update(
+    ecs_world_t *world,
+    ecs_entity_t e,
+    ecs_entity_t instance,
+    const char *code,
+    ecs_script_runtime_t *eval_runtime);
+
 ecs_script_scope_t* flecs_script_scope_new(
     ecs_parser_t *parser);
 

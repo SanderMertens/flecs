@@ -778,3 +778,149 @@ void Include_include_managed_eval_error_set_on_script(void) {
 
     ecs_fini(world);
 }
+
+void Include_include_using_not_visible_in_parent(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t foo = ecs_entity(world, { .name = "Foo" });
+    ecs_entity_t bar = ecs_entity(world, { .name = "Bar", .parent = foo });
+
+    const char *dir = test_tmp_dir("using_not_visible");
+    char parent_path[256], child_path[256];
+    snprintf(parent_path, sizeof(parent_path), "%s/parent.flecs", dir);
+    snprintf(child_path, sizeof(child_path), "%s/child.flecs", dir);
+
+    test_write_file(child_path,
+        "using Foo\n"
+        "child_e { Bar }\n");
+    test_write_file(parent_path,
+        "include child.flecs\n"
+        "parent_e { Bar }\n");
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run_file(world, parent_path) != 0);
+
+    ecs_entity_t child_e = ecs_lookup(world, "child_e");
+    test_assert(child_e != 0);
+    test_assert(ecs_has_id(world, child_e, bar));
+
+    ecs_entity_t parent_e = ecs_lookup(world, "parent_e");
+    test_assert(parent_e == 0 || !ecs_has_id(world, parent_e, bar));
+
+    test_unlink(child_path);
+    test_unlink(parent_path);
+    test_rmdir(dir);
+
+    ecs_fini(world);
+}
+
+void Include_include_managed_using_not_visible_in_parent(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScript);
+
+    ecs_entity_t foo = ecs_entity(world, { .name = "Foo" });
+    ecs_entity_t bar = ecs_entity(world, { .name = "Bar", .parent = foo });
+
+    const char *dir = test_tmp_dir("managed_using");
+    char parent_path[256], child_path[256];
+    snprintf(parent_path, sizeof(parent_path), "%s/parent.flecs", dir);
+    snprintf(child_path, sizeof(child_path), "%s/child.flecs", dir);
+
+    test_write_file(child_path,
+        "using Foo\n"
+        "child_e { Bar }\n");
+    test_write_file(parent_path,
+        "include child.flecs\n"
+        "parent_e { Bar }\n");
+
+    ecs_log_set_level(-4);
+    ecs_entity_t script = ecs_script(world, {
+        .filename = parent_path
+    });
+    test_assert(script != 0);
+
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error != NULL);
+
+    ecs_entity_t child_e = ecs_lookup(world, "child_e");
+    test_assert(child_e != 0);
+    test_assert(ecs_has_id(world, child_e, bar));
+
+    ecs_entity_t parent_e = ecs_lookup(world, "parent_e");
+    test_assert(parent_e == 0 || !ecs_has_id(world, parent_e, bar));
+
+    test_unlink(child_path);
+    test_unlink(parent_path);
+    test_rmdir(dir);
+
+    ecs_fini(world);
+}
+
+void Include_include_managed_keeps_implicit_meta_in_parent(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScript);
+
+    const char *dir = test_tmp_dir("managed_keeps_meta");
+    char parent_path[256], child_path[256];
+    snprintf(parent_path, sizeof(parent_path), "%s/parent.flecs", dir);
+    snprintf(child_path, sizeof(child_path), "%s/child.flecs", dir);
+
+    test_write_file(child_path, "Child{}\n");
+    test_write_file(parent_path,
+        "include child.flecs\n"
+        "struct Position(x: f32)\n"
+        "e { Position: {10} }\n");
+
+    ecs_entity_t script = ecs_script(world, {
+        .filename = parent_path
+    });
+    test_assert(script != 0);
+
+    const EcsScript *s = ecs_get(world, script, EcsScript);
+    test_assert(s != NULL);
+    test_assert(s->error == NULL);
+
+    ecs_entity_t pos = ecs_lookup(world, "Position");
+    test_assert(pos != 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    test_assert(ecs_has_id(world, e, pos));
+
+    test_unlink(child_path);
+    test_unlink(parent_path);
+    test_rmdir(dir);
+
+    ecs_fini(world);
+}
+
+void Include_include_keeps_implicit_meta_in_parent(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *dir = test_tmp_dir("keeps_meta");
+    char parent_path[256], child_path[256];
+    snprintf(parent_path, sizeof(parent_path), "%s/parent.flecs", dir);
+    snprintf(child_path, sizeof(child_path), "%s/child.flecs", dir);
+
+    test_write_file(child_path, "Child{}\n");
+    test_write_file(parent_path,
+        "include child.flecs\n"
+        "struct Position(x: f32)\n"
+        "e { Position: {10} }\n");
+
+    test_assert(ecs_script_run_file(world, parent_path) == 0);
+
+    ecs_entity_t pos = ecs_lookup(world, "Position");
+    test_assert(pos != 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    test_assert(ecs_has_id(world, e, pos));
+
+    test_unlink(child_path);
+    test_unlink(parent_path);
+    test_rmdir(dir);
+
+    ecs_fini(world);
+}

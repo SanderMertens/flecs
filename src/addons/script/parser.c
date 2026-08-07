@@ -651,6 +651,17 @@ static const char* flecs_script_fn_body(
     ParserEnd;
 }
 
+static
+int32_t flecs_script_last_stmt_kind(
+    ecs_script_scope_t *scope)
+{
+    int32_t count = ecs_vec_count(&scope->stmts);
+    if (!count) {
+        return -1;
+    }
+    return ecs_vec_last_t(&scope->stmts, ecs_script_node_t*)[0]->kind;
+}
+
 /* Parse a single statement */
 const char* flecs_script_stmt(
     ecs_parser_t *parser,
@@ -793,6 +804,19 @@ with_stmt: {
 
 // using
 using_stmt: {
+    if (parser->scope != parser->script->root) {
+        Error("'using' must be declared in the root scope of a script");
+    }
+
+    {
+        int32_t last = flecs_script_last_stmt_kind(parser->scope);
+        if (last != -1 && last != EcsAstModule && last != EcsAstInclude &&
+            last != EcsAstUsing)
+        {
+            Error("'using' must be declared before other statements");
+        }
+    }
+
     // using flecs.meta\n
     Parse_1(EcsTokIdentifier,
         flecs_script_insert_using(parser, Token(1));
@@ -806,6 +830,14 @@ using_stmt: {
 
 // module
 module_stmt: {
+    if (parser->scope != parser->script->root) {
+        Error("'module' must be declared in the root scope of a script");
+    }
+
+    if (ecs_vec_count(&parser->scope->stmts)) {
+        Error("'module' must be the first statement of a script");
+    }
+
     // module flecs.meta\n
     Parse_2(EcsTokIdentifier, '\n',
         flecs_script_insert_module(parser, Token(1));
@@ -1022,6 +1054,19 @@ try_stmt: {
 
 // include foo.flecs
 include_stmt: {
+    if (parser->scope != parser->script->root) {
+        Error("'include' must be declared in the root scope of a script");
+    }
+
+    {
+        int32_t last = flecs_script_last_stmt_kind(parser->scope);
+        if (last != -1 && last != EcsAstModule && last != EcsAstInclude) {
+            Error(
+                "'include' must be declared before statements other than "
+                "'module'");
+        }
+    }
+
     Until('\n',
         char *filename = ECS_CONST_CAST(char*, Token(1));
         if (filename) {
