@@ -1,237 +1,226 @@
 #include <script.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/stat.h>
 
-#ifdef _WIN32
-#include <direct.h>
-#define test_mkdir(p) _mkdir(p)
-#define test_rmdir(p) _rmdir(p)
-#else
-#include <unistd.h>
-#define test_mkdir(p) mkdir(p, 0755)
-#define test_rmdir(p) rmdir(p)
-#endif
+typedef struct test_file_t {
+    const char *name;
+    const char *content;
+    size_t pos;
+} test_file_t;
 
-static void test_write_file(const char *path, const char *content) {
-    FILE *f = fopen(path, "w");
-    test_assert(f != NULL);
-    if (content) {
-        fwrite(content, 1, strlen(content), f);
+#define TEST_FILE_MAX (4)
+
+static test_file_t test_files[TEST_FILE_MAX];
+
+static const char *test_fopen_remap_from;
+static const char *test_fopen_remap_to;
+
+static ecs_os_api_fopen_t test_default_fopen = NULL;
+static ecs_os_api_fread_t test_default_fread = NULL;
+static ecs_os_api_fclose_t test_default_fclose = NULL;
+
+static test_file_t* test_file_get(FILE *file) {
+    int32_t i;
+    for (i = 0; i < TEST_FILE_MAX; i ++) {
+        if (file == (FILE*)&test_files[i]) {
+            return &test_files[i];
+        }
     }
-    fclose(f);
+    return NULL;
 }
 
-static void test_unlink(const char *path) {
-    remove(path);
-}
-
-static const char *g_fopen_remap_from;
-static const char *g_fopen_remap_to;
-
-static ecs_os_api_fopen_t s_default_fopen = NULL;
-
-static FILE* test_fopen_remap(const char *file, const char *mode) {
-    const char *actual = file;
-    if (g_fopen_remap_from && !strcmp(file, g_fopen_remap_from)) {
-        actual = g_fopen_remap_to;
+static FILE* test_fopen(const char *file, const char *mode) {
+    int32_t i;
+    if (test_fopen_remap_from && !strcmp(file, test_fopen_remap_from)) {
+        file = test_fopen_remap_to;
     }
-    return s_default_fopen(actual, mode);
+    for (i = 0; i < TEST_FILE_MAX; i ++) {
+        if (test_files[i].name && !strcmp(file, test_files[i].name)) {
+            test_files[i].pos = 0;
+            return (FILE*)&test_files[i];
+        }
+    }
+    return test_default_fopen(file, mode);
 }
 
-static const char* test_tmp_dir(const char *name) {
-    static char buf[1024];
-    snprintf(buf, sizeof(buf), "flecs_include_test_%s", name);
-    test_rmdir(buf);
-    test_mkdir(buf);
-    return buf;
+static size_t test_fread(void *ptr, size_t size, size_t count, FILE *file) {
+    test_file_t *f = test_file_get(file);
+    size_t remaining, requested;
+    if (!f) {
+        return test_default_fread(ptr, size, count, file);
+    }
+
+    remaining = strlen(f->content) - f->pos;
+    requested = size * count;
+    if (requested > remaining) {
+        requested = remaining;
+    }
+
+    memcpy(ptr, &f->content[f->pos], requested);
+    f->pos += requested;
+    return requested;
+}
+
+static void test_fclose(FILE *file) {
+    if (!test_file_get(file)) {
+        test_default_fclose(file);
+    }
+}
+
+static void test_files_install_ex(bool with_abort, ecs_os_api_log_t log) {
+    memset(test_files, 0, sizeof(test_files));
+    test_fopen_remap_from = NULL;
+    test_fopen_remap_to = NULL;
+
+    ecs_os_set_api_defaults();
+    test_default_fopen = ecs_os_api.fopen_;
+    test_default_fread = ecs_os_api.fread_;
+    test_default_fclose = ecs_os_api.fclose_;
+
+    ecs_os_api_t os_api = ecs_os_api;
+    os_api.fopen_ = test_fopen;
+    os_api.fread_ = test_fread;
+    os_api.fclose_ = test_fclose;
+    if (with_abort) {
+        os_api.abort_ = test_abort;
+    }
+    if (log) {
+        os_api.log_ = log;
+    }
+    ecs_os_set_api(&os_api);
+
+    if (with_abort) {
+        ecs_log_set_level(-5);
+    }
+}
+
+static void test_files_install(void) {
+    test_files_install_ex(false, NULL);
+}
+
+static void test_file_add(const char *name, const char *content) {
+    int32_t i;
+    for (i = 0; i < TEST_FILE_MAX; i ++) {
+        if (!test_files[i].name) {
+            test_files[i].name = name;
+            test_files[i].content = content;
+            test_files[i].pos = 0;
+            return;
+        }
+    }
+    test_assert(false);
 }
 
 void Include_include_simple(void) {
+    test_files_install();
+    test_file_add("child.flecs", "Foo{}\n");
+    test_file_add("parent.flecs", "include child.flecs\n");
+
     ecs_world_t *world = ecs_init();
 
-    const char *dir = test_tmp_dir("simple");
-    char parent_path[256], child_path[256];
-    snprintf(parent_path, sizeof(parent_path), "%s/parent.flecs", dir);
-    snprintf(child_path, sizeof(child_path), "%s/child.flecs", dir);
-
-    test_write_file(child_path, "Foo{}\n");
-    test_write_file(parent_path, "include child.flecs\n");
-
-    test_assert(ecs_script_run_file(world, parent_path) == 0);
+    test_assert(ecs_script_run_file(world, "parent.flecs") == 0);
 
     test_assert(ecs_lookup(world, "Foo") != 0);
-
-    test_unlink(child_path);
-    test_unlink(parent_path);
-    test_rmdir(dir);
 
     ecs_fini(world);
 }
 
 void Include_include_subdir(void) {
+    test_files_install();
+    test_file_add("sub/child.flecs", "Bar{}\n");
+    test_file_add("parent.flecs", "include sub/child.flecs\n");
+
     ecs_world_t *world = ecs_init();
 
-    const char *dir = test_tmp_dir("subdir");
-    char sub[256], parent_path[256], child_path[256];
-    snprintf(sub, sizeof(sub), "%s/sub", dir);
-    test_mkdir(sub);
-    snprintf(parent_path, sizeof(parent_path), "%s/parent.flecs", dir);
-    snprintf(child_path, sizeof(child_path), "%s/child.flecs", sub);
-
-    test_write_file(child_path, "Bar{}\n");
-    test_write_file(parent_path, "include sub/child.flecs\n");
-
-    test_assert(ecs_script_run_file(world, parent_path) == 0);
+    test_assert(ecs_script_run_file(world, "parent.flecs") == 0);
     test_assert(ecs_lookup(world, "Bar") != 0);
-
-    test_unlink(child_path);
-    test_unlink(parent_path);
-    test_rmdir(sub);
-    test_rmdir(dir);
 
     ecs_fini(world);
 }
 
 void Include_include_missing_file(void) {
-    install_test_abort();
+    test_files_install_ex(true, NULL);
+    test_file_add("parent.flecs", "include does_not_exist.flecs\n");
 
     ecs_world_t *world = ecs_init();
 
-    const char *dir = test_tmp_dir("missing");
-    char parent_path[256];
-    snprintf(parent_path, sizeof(parent_path), "%s/parent.flecs", dir);
-
-    test_write_file(parent_path, "include does_not_exist.flecs\n");
-
-    test_assert(ecs_script_run_file(world, parent_path) != 0);
-
-    test_unlink(parent_path);
-    test_rmdir(dir);
+    test_assert(ecs_script_run_file(world, "parent.flecs") != 0);
 
     ecs_fini(world);
 }
 
 void Include_include_parent_dir_not_allowed(void) {
-    install_test_abort();
+    test_files_install_ex(true, NULL);
+    test_file_add("parent.flecs", "include ../other.flecs\n");
 
     ecs_world_t *world = ecs_init();
 
-    const char *dir = test_tmp_dir("parent_dir");
-    char parent_path[256];
-    snprintf(parent_path, sizeof(parent_path), "%s/parent.flecs", dir);
-
-    test_write_file(parent_path, "include ../other.flecs\n");
-
-    test_assert(ecs_script_run_file(world, parent_path) != 0);
-
-    test_unlink(parent_path);
-    test_rmdir(dir);
+    test_assert(ecs_script_run_file(world, "parent.flecs") != 0);
 
     ecs_fini(world);
 }
 
 void Include_include_relative_to_current_script(void) {
+    test_files_install();
+    test_file_add("sub/b.flecs", "B_entity{}\n");
+    test_file_add("sub/a.flecs", "include b.flecs\n");
+    test_file_add("parent.flecs", "include sub/a.flecs\n");
+
     ecs_world_t *world = ecs_init();
 
-    const char *dir = test_tmp_dir("relative");
-    char sub[256], parent_path[256], a_path[256], b_path[256];
-    snprintf(sub, sizeof(sub), "%s/sub", dir);
-    test_mkdir(sub);
-    snprintf(parent_path, sizeof(parent_path), "%s/parent.flecs", dir);
-    snprintf(a_path, sizeof(a_path), "%s/a.flecs", sub);
-    snprintf(b_path, sizeof(b_path), "%s/b.flecs", sub);
-
-    test_write_file(b_path, "B_entity{}\n");
-    test_write_file(a_path, "include b.flecs\n");
-    test_write_file(parent_path, "include sub/a.flecs\n");
-
-    test_assert(ecs_script_run_file(world, parent_path) == 0);
+    test_assert(ecs_script_run_file(world, "parent.flecs") == 0);
     test_assert(ecs_lookup(world, "B_entity") != 0);
-
-    test_unlink(a_path);
-    test_unlink(b_path);
-    test_unlink(parent_path);
-    test_rmdir(sub);
-    test_rmdir(dir);
 
     ecs_fini(world);
 }
 
 void Include_include_nested(void) {
+    test_files_install();
+    test_file_add("c.flecs", "C_entity{}\n");
+    test_file_add("b.flecs", "include c.flecs\nB_entity{}\n");
+    test_file_add("a.flecs", "include b.flecs\nA_entity{}\n");
+
     ecs_world_t *world = ecs_init();
 
-    const char *dir = test_tmp_dir("nested");
-    char a_path[256], b_path[256], c_path[256];
-    snprintf(a_path, sizeof(a_path), "%s/a.flecs", dir);
-    snprintf(b_path, sizeof(b_path), "%s/b.flecs", dir);
-    snprintf(c_path, sizeof(c_path), "%s/c.flecs", dir);
-
-    test_write_file(c_path, "C_entity{}\n");
-    test_write_file(b_path, "include c.flecs\nB_entity{}\n");
-    test_write_file(a_path, "include b.flecs\nA_entity{}\n");
-
-    test_assert(ecs_script_run_file(world, a_path) == 0);
+    test_assert(ecs_script_run_file(world, "a.flecs") == 0);
     test_assert(ecs_lookup(world, "A_entity") != 0);
     test_assert(ecs_lookup(world, "B_entity") != 0);
     test_assert(ecs_lookup(world, "C_entity") != 0);
-
-    test_unlink(a_path);
-    test_unlink(b_path);
-    test_unlink(c_path);
-    test_rmdir(dir);
 
     ecs_fini(world);
 }
 
 void Include_include_managed_creates_script_entity(void) {
+    test_files_install();
+    test_file_add("child.flecs", "ChildEntity{}\n");
+    test_file_add("parent.flecs", "include child.flecs\n");
+
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsScript);
 
-    const char *dir = test_tmp_dir("managed_creates");
-    char parent_path[256], child_path[256];
-    snprintf(parent_path, sizeof(parent_path), "%s/parent.flecs", dir);
-    snprintf(child_path, sizeof(child_path), "%s/child.flecs", dir);
-
-    test_write_file(child_path, "ChildEntity{}\n");
-    test_write_file(parent_path, "include child.flecs\n");
-
     ecs_entity_t script = ecs_script(world, {
-        .filename = parent_path
+        .filename = "parent.flecs"
     });
     test_assert(script != 0);
 
     test_assert(ecs_lookup(world, "ChildEntity") != 0);
 
-    char child_lookup[256];
-    snprintf(child_lookup, sizeof(child_lookup), "%s/child.flecs", dir);
     ecs_entity_t child_script = ecs_lookup_path_w_sep(
-        world, 0, child_lookup, "/", NULL, false);
+        world, 0, "child.flecs", "/", NULL, false);
     test_assert(child_script != 0);
     test_assert(ecs_has(world, child_script, EcsScript));
-
-    test_unlink(child_path);
-    test_unlink(parent_path);
-    test_rmdir(dir);
 
     ecs_fini(world);
 }
 
 void Include_include_managed_skips_existing(void) {
+    test_files_install();
+    test_file_add("child.flecs", "ChildEntity{}\n");
+    test_file_add("parent.flecs", "include child.flecs\n");
+
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsScript);
 
-    const char *dir = test_tmp_dir("managed_skips");
-    char parent_path[256], child_path[256];
-    snprintf(parent_path, sizeof(parent_path), "%s/parent.flecs", dir);
-    snprintf(child_path, sizeof(child_path), "%s/child.flecs", dir);
-
-    test_write_file(child_path, "ChildEntity{}\n");
-    test_write_file(parent_path, "include child.flecs\n");
-
     ecs_entity_t script = ecs_script(world, {
-        .filename = parent_path
+        .filename = "parent.flecs"
     });
     test_assert(script != 0);
 
@@ -244,402 +233,248 @@ void Include_include_managed_skips_existing(void) {
     test_assert(child_entity2 != 0);
     test_assert(child_entity1 == child_entity2);
 
-    test_unlink(child_path);
-    test_unlink(parent_path);
-    test_rmdir(dir);
-
     ecs_fini(world);
 }
 
 void Include_include_managed_nested(void) {
+    test_files_install();
+    test_file_add("b.flecs", "BEntity{}\n");
+    test_file_add("a.flecs", "include b.flecs\n");
+
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsScript);
 
-    const char *dir = test_tmp_dir("managed_nested");
-    char a_path[256], b_path[256];
-    snprintf(a_path, sizeof(a_path), "%s/a.flecs", dir);
-    snprintf(b_path, sizeof(b_path), "%s/b.flecs", dir);
-
-    test_write_file(b_path, "BEntity{}\n");
-    test_write_file(a_path, "include b.flecs\n");
-
     ecs_entity_t script = ecs_script(world, {
-        .filename = a_path
+        .filename = "a.flecs"
     });
     test_assert(script != 0);
 
     ecs_entity_t b_script = ecs_lookup_path_w_sep(
-        world, 0, b_path, "/", NULL, false);
+        world, 0, "b.flecs", "/", NULL, false);
     test_assert(b_script != 0);
     test_assert(ecs_has(world, b_script, EcsScript));
-
-    test_unlink(a_path);
-    test_unlink(b_path);
-    test_rmdir(dir);
 
     ecs_fini(world);
 }
 
 void Include_include_inline_does_not_create_script_entity(void) {
+    test_files_install();
+    test_file_add("child.flecs", "ChildInline{}\n");
+    test_file_add("parent.flecs", "include child.flecs\n");
+
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsScript);
 
-    const char *dir = test_tmp_dir("inline");
-    char parent_path[256], child_path[256];
-    snprintf(parent_path, sizeof(parent_path), "%s/parent.flecs", dir);
-    snprintf(child_path, sizeof(child_path), "%s/child.flecs", dir);
-
-    test_write_file(child_path, "ChildInline{}\n");
-    test_write_file(parent_path, "include child.flecs\n");
-
-    test_assert(ecs_script_run_file(world, parent_path) == 0);
+    test_assert(ecs_script_run_file(world, "parent.flecs") == 0);
 
     test_assert(ecs_lookup(world, "ChildInline") != 0);
 
     ecs_entity_t child_script = ecs_lookup_path_w_sep(
-        world, 0, child_path, "/", NULL, false);
+        world, 0, "child.flecs", "/", NULL, false);
     if (child_script) {
         test_assert(!ecs_has(world, child_script, EcsScript));
     }
-
-    test_unlink(child_path);
-    test_unlink(parent_path);
-    test_rmdir(dir);
 
     ecs_fini(world);
 }
 
 void Include_include_rejects_absolute_unix_path(void) {
-    install_test_abort();
+    test_files_install_ex(true, NULL);
+    test_file_add("parent.flecs", "include /etc/passwd\n");
 
     ecs_world_t *world = ecs_init();
 
-    const char *dir = test_tmp_dir("abs_unix");
-    char parent_path[256];
-    snprintf(parent_path, sizeof(parent_path), "%s/parent.flecs", dir);
-
-    test_write_file(parent_path, "include /etc/passwd\n");
-
-    test_assert(ecs_script_run_file(world, parent_path) != 0);
-
-    test_unlink(parent_path);
-    test_rmdir(dir);
+    test_assert(ecs_script_run_file(world, "parent.flecs") != 0);
 
     ecs_fini(world);
 }
 
 void Include_include_rejects_windows_drive_letter(void) {
-    install_test_abort();
+    test_files_install_ex(true, NULL);
+    test_file_add("parent.flecs", "include C:/foo.flecs\n");
 
     ecs_world_t *world = ecs_init();
 
-    const char *dir = test_tmp_dir("abs_win");
-    char parent_path[256];
-    snprintf(parent_path, sizeof(parent_path), "%s/parent.flecs", dir);
-
-    test_write_file(parent_path, "include C:/foo.flecs\n");
-
-    test_assert(ecs_script_run_file(world, parent_path) != 0);
-
-    test_unlink(parent_path);
-    test_rmdir(dir);
+    test_assert(ecs_script_run_file(world, "parent.flecs") != 0);
 
     ecs_fini(world);
 }
 
 void Include_include_with_line_comment(void) {
+    test_files_install();
+    test_file_add("child.flecs", "LineCommentEntity{}\n");
+    test_file_add("parent.flecs", "include child.flecs // load the child\n");
+
     ecs_world_t *world = ecs_init();
 
-    const char *dir = test_tmp_dir("line_comment");
-    char parent_path[256], child_path[256];
-    snprintf(parent_path, sizeof(parent_path), "%s/parent.flecs", dir);
-    snprintf(child_path, sizeof(child_path), "%s/child.flecs", dir);
-
-    test_write_file(child_path, "LineCommentEntity{}\n");
-    test_write_file(parent_path, "include child.flecs // load the child\n");
-
-    test_assert(ecs_script_run_file(world, parent_path) == 0);
+    test_assert(ecs_script_run_file(world, "parent.flecs") == 0);
     test_assert(ecs_lookup(world, "LineCommentEntity") != 0);
-
-    test_unlink(child_path);
-    test_unlink(parent_path);
-    test_rmdir(dir);
 
     ecs_fini(world);
 }
 
 void Include_include_with_block_comment(void) {
+    test_files_install();
+    test_file_add("child.flecs", "BlockCommentEntity{}\n");
+    test_file_add("parent.flecs", "include child.flecs /* load child */\n");
+
     ecs_world_t *world = ecs_init();
 
-    const char *dir = test_tmp_dir("block_comment");
-    char parent_path[256], child_path[256];
-    snprintf(parent_path, sizeof(parent_path), "%s/parent.flecs", dir);
-    snprintf(child_path, sizeof(child_path), "%s/child.flecs", dir);
-
-    test_write_file(child_path, "BlockCommentEntity{}\n");
-    test_write_file(parent_path, "include child.flecs /* load child */\n");
-
-    test_assert(ecs_script_run_file(world, parent_path) == 0);
+    test_assert(ecs_script_run_file(world, "parent.flecs") == 0);
     test_assert(ecs_lookup(world, "BlockCommentEntity") != 0);
-
-    test_unlink(child_path);
-    test_unlink(parent_path);
-    test_rmdir(dir);
 
     ecs_fini(world);
 }
 
 void Include_include_not_allowed_in_template(void) {
-    install_test_abort();
-
-    ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScript);
-
-    const char *dir = test_tmp_dir("in_template");
-    char parent_path[256], child_path[256];
-    snprintf(parent_path, sizeof(parent_path), "%s/parent.flecs", dir);
-    snprintf(child_path, sizeof(child_path), "%s/child.flecs", dir);
-
-    test_write_file(child_path, "TemplateChild{}\n");
-    test_write_file(parent_path,
+    test_files_install_ex(true, NULL);
+    test_file_add("child.flecs", "TemplateChild{}\n");
+    test_file_add("parent.flecs",
         "template MyTemplate {\n"
         "  include child.flecs\n"
         "}\n");
 
-    test_assert(ecs_script_run_file(world, parent_path) != 0);
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScript);
 
-    test_unlink(child_path);
-    test_unlink(parent_path);
-    test_rmdir(dir);
+    test_assert(ecs_script_run_file(world, "parent.flecs") != 0);
 
     ecs_fini(world);
 }
 
 void Include_include_not_allowed_in_entity_scope(void) {
-    install_test_abort();
-
-    ecs_world_t *world = ecs_init();
-
-    const char *dir = test_tmp_dir("in_entity");
-    char parent_path[256], child_path[256];
-    snprintf(parent_path, sizeof(parent_path), "%s/parent.flecs", dir);
-    snprintf(child_path, sizeof(child_path), "%s/child.flecs", dir);
-
-    test_write_file(child_path, "Child{}\n");
-    test_write_file(parent_path,
+    test_files_install_ex(true, NULL);
+    test_file_add("child.flecs", "Child{}\n");
+    test_file_add("parent.flecs",
         "Parent {\n"
         "  include child.flecs\n"
         "}\n");
 
-    test_assert(ecs_script_run_file(world, parent_path) != 0);
+    ecs_world_t *world = ecs_init();
 
-    test_unlink(child_path);
-    test_unlink(parent_path);
-    test_rmdir(dir);
+    test_assert(ecs_script_run_file(world, "parent.flecs") != 0);
 
     ecs_fini(world);
 }
 
 void Include_include_not_allowed_in_with_scope(void) {
-    install_test_abort();
-
-    ecs_world_t *world = ecs_init();
-
-    const char *dir = test_tmp_dir("in_with");
-    char parent_path[256], child_path[256];
-    snprintf(parent_path, sizeof(parent_path), "%s/parent.flecs", dir);
-    snprintf(child_path, sizeof(child_path), "%s/child.flecs", dir);
-
-    test_write_file(child_path, "Child{}\n");
-    test_write_file(parent_path,
+    test_files_install_ex(true, NULL);
+    test_file_add("child.flecs", "Child{}\n");
+    test_file_add("parent.flecs",
         "Tag {}\n"
         "with Tag {\n"
         "  include child.flecs\n"
         "}\n");
 
-    test_assert(ecs_script_run_file(world, parent_path) != 0);
+    ecs_world_t *world = ecs_init();
 
-    test_unlink(child_path);
-    test_unlink(parent_path);
-    test_rmdir(dir);
+    test_assert(ecs_script_run_file(world, "parent.flecs") != 0);
 
     ecs_fini(world);
 }
 
 void Include_include_not_allowed_in_if_scope(void) {
-    install_test_abort();
-
-    ecs_world_t *world = ecs_init();
-
-    const char *dir = test_tmp_dir("in_if");
-    char parent_path[256], child_path[256];
-    snprintf(parent_path, sizeof(parent_path), "%s/parent.flecs", dir);
-    snprintf(child_path, sizeof(child_path), "%s/child.flecs", dir);
-
-    test_write_file(child_path, "Child{}\n");
-    test_write_file(parent_path,
+    test_files_install_ex(true, NULL);
+    test_file_add("child.flecs", "Child{}\n");
+    test_file_add("parent.flecs",
         "if true {\n"
         "  include child.flecs\n"
         "}\n");
 
-    test_assert(ecs_script_run_file(world, parent_path) != 0);
+    ecs_world_t *world = ecs_init();
 
-    test_unlink(child_path);
-    test_unlink(parent_path);
-    test_rmdir(dir);
+    test_assert(ecs_script_run_file(world, "parent.flecs") != 0);
 
     ecs_fini(world);
 }
 
 void Include_include_not_allowed_in_for_scope(void) {
-    install_test_abort();
-
-    ecs_world_t *world = ecs_init();
-
-    const char *dir = test_tmp_dir("in_for");
-    char parent_path[256], child_path[256];
-    snprintf(parent_path, sizeof(parent_path), "%s/parent.flecs", dir);
-    snprintf(child_path, sizeof(child_path), "%s/child.flecs", dir);
-
-    test_write_file(child_path, "Child{}\n");
-    test_write_file(parent_path,
+    test_files_install_ex(true, NULL);
+    test_file_add("child.flecs", "Child{}\n");
+    test_file_add("parent.flecs",
         "for i in 0 .. 1 {\n"
         "  include child.flecs\n"
         "}\n");
 
-    test_assert(ecs_script_run_file(world, parent_path) != 0);
+    ecs_world_t *world = ecs_init();
 
-    test_unlink(child_path);
-    test_unlink(parent_path);
-    test_rmdir(dir);
+    test_assert(ecs_script_run_file(world, "parent.flecs") != 0);
 
     ecs_fini(world);
 }
 
 void Include_include_auto_appends_extension(void) {
+    test_files_install();
+    test_file_add("child.flecs", "AutoExtEntity{}\n");
+    test_file_add("parent.flecs", "include child\n");
+
     ecs_world_t *world = ecs_init();
 
-    const char *dir = test_tmp_dir("auto_ext");
-    char parent_path[256], child_path[256];
-    snprintf(parent_path, sizeof(parent_path), "%s/parent.flecs", dir);
-    snprintf(child_path, sizeof(child_path), "%s/child.flecs", dir);
-
-    test_write_file(child_path, "AutoExtEntity{}\n");
-    test_write_file(parent_path, "include child\n");
-
-    test_assert(ecs_script_run_file(world, parent_path) == 0);
+    test_assert(ecs_script_run_file(world, "parent.flecs") == 0);
     test_assert(ecs_lookup(world, "AutoExtEntity") != 0);
-
-    test_unlink(child_path);
-    test_unlink(parent_path);
-    test_rmdir(dir);
 
     ecs_fini(world);
 }
 
 void Include_include_auto_appends_extension_subdir(void) {
+    test_files_install();
+    test_file_add("sub/child.flecs", "SubAutoExt{}\n");
+    test_file_add("parent.flecs", "include sub/child\n");
+
     ecs_world_t *world = ecs_init();
 
-    const char *dir = test_tmp_dir("auto_ext_subdir");
-    char sub[256], parent_path[256], child_path[256];
-    snprintf(sub, sizeof(sub), "%s/sub", dir);
-    test_mkdir(sub);
-    snprintf(parent_path, sizeof(parent_path), "%s/parent.flecs", dir);
-    snprintf(child_path, sizeof(child_path), "%s/child.flecs", sub);
-
-    test_write_file(child_path, "SubAutoExt{}\n");
-    test_write_file(parent_path, "include sub/child\n");
-
-    test_assert(ecs_script_run_file(world, parent_path) == 0);
+    test_assert(ecs_script_run_file(world, "parent.flecs") == 0);
     test_assert(ecs_lookup(world, "SubAutoExt") != 0);
-
-    test_unlink(child_path);
-    test_unlink(parent_path);
-    test_rmdir(sub);
-    test_rmdir(dir);
 
     ecs_fini(world);
 }
 
 void Include_include_keeps_explicit_extension(void) {
+    test_files_install();
+    test_file_add("child.flecs", "ExplicitExtEntity{}\n");
+    test_file_add("parent.flecs", "include child.flecs\n");
+
     ecs_world_t *world = ecs_init();
 
-    const char *dir = test_tmp_dir("explicit_ext");
-    char parent_path[256], child_path[256];
-    snprintf(parent_path, sizeof(parent_path), "%s/parent.flecs", dir);
-    snprintf(child_path, sizeof(child_path), "%s/child.flecs", dir);
-
-    test_write_file(child_path, "ExplicitExtEntity{}\n");
-    test_write_file(parent_path, "include child.flecs\n");
-
-    test_assert(ecs_script_run_file(world, parent_path) == 0);
+    test_assert(ecs_script_run_file(world, "parent.flecs") == 0);
     test_assert(ecs_lookup(world, "ExplicitExtEntity") != 0);
-
-    test_unlink(child_path);
-    test_unlink(parent_path);
-    test_rmdir(dir);
 
     ecs_fini(world);
 }
 
 void Include_include_auto_appends_extension_managed(void) {
+    test_files_install();
+    test_file_add("child.flecs", "ManagedAutoExt{}\n");
+    test_file_add("parent.flecs", "include child\n");
+
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsScript);
 
-    const char *dir = test_tmp_dir("auto_ext_managed");
-    char parent_path[256], child_path[256];
-    snprintf(parent_path, sizeof(parent_path), "%s/parent.flecs", dir);
-    snprintf(child_path, sizeof(child_path), "%s/child.flecs", dir);
-
-    test_write_file(child_path, "ManagedAutoExt{}\n");
-    test_write_file(parent_path, "include child\n");
-
     ecs_entity_t script = ecs_script(world, {
-        .filename = parent_path
+        .filename = "parent.flecs"
     });
     test_assert(script != 0);
 
     test_assert(ecs_lookup(world, "ManagedAutoExt") != 0);
 
     ecs_entity_t child_script = ecs_lookup_path_w_sep(
-        world, 0, child_path, "/", NULL, false);
+        world, 0, "child.flecs", "/", NULL, false);
     test_assert(child_script != 0);
     test_assert(ecs_has(world, child_script, EcsScript));
-
-    test_unlink(child_path);
-    test_unlink(parent_path);
-    test_rmdir(dir);
 
     ecs_fini(world);
 }
 
 void Include_fopen_override_remaps_filename(void) {
-    ecs_os_set_api_defaults();
-    s_default_fopen = ecs_os_api.fopen_;
-    ecs_os_api_t api = ecs_os_api;
-    api.fopen_ = test_fopen_remap;
-    ecs_os_set_api(&api);
+    test_files_install();
+    test_file_add("actual.flecs", "RemappedEntity{}\n");
+    test_fopen_remap_from = "requested.flecs";
+    test_fopen_remap_to = "actual.flecs";
 
     ecs_world_t *world = ecs_init();
 
-    const char *dir = test_tmp_dir("fopen_remap");
-    char requested[256], actual[256];
-    snprintf(requested, sizeof(requested), "%s/requested.flecs", dir);
-    snprintf(actual, sizeof(actual), "%s/actual.flecs", dir);
-
-    test_write_file(actual, "RemappedEntity{}\n");
-
-    g_fopen_remap_from = requested;
-    g_fopen_remap_to = actual;
-
-    test_assert(ecs_script_run_file(world, requested) == 0);
+    test_assert(ecs_script_run_file(world, "requested.flecs") == 0);
     test_assert(ecs_lookup(world, "RemappedEntity") != 0);
-
-    g_fopen_remap_from = NULL;
-    g_fopen_remap_to = NULL;
-
-    test_unlink(actual);
-    test_rmdir(dir);
 
     ecs_fini(world);
 }
@@ -662,80 +497,11 @@ static void include_log_error_callback(
     }
 }
 
-typedef struct test_mem_file_t {
-    const char *name;
-    const char *content;
-    size_t pos;
-} test_mem_file_t;
-
-static test_mem_file_t g_mem_files[2];
-
-static ecs_os_api_fread_t s_default_fread = NULL;
-static ecs_os_api_fclose_t s_default_fclose = NULL;
-
-static test_mem_file_t* test_mem_file(FILE *file) {
-    if (file == (FILE*)&g_mem_files[0]) return &g_mem_files[0];
-    if (file == (FILE*)&g_mem_files[1]) return &g_mem_files[1];
-    return NULL;
-}
-
-static FILE* test_fopen_mem(const char *file, const char *mode) {
-    int32_t i;
-    for (i = 0; i < 2; i ++) {
-        if (g_mem_files[i].name && !strcmp(file, g_mem_files[i].name)) {
-            g_mem_files[i].pos = 0;
-            return (FILE*)&g_mem_files[i];
-        }
-    }
-    return s_default_fopen(file, mode);
-}
-
-static size_t test_fread_mem(void *ptr, size_t size, size_t count, FILE *file) {
-    test_mem_file_t *mf = test_mem_file(file);
-    if (!mf) {
-        return s_default_fread(ptr, size, count, file);
-    }
-
-    size_t remaining = strlen(mf->content) - mf->pos;
-    size_t requested = size * count;
-    if (requested > remaining) {
-        requested = remaining;
-    }
-
-    memcpy(ptr, &mf->content[mf->pos], requested);
-    mf->pos += requested;
-    return requested;
-}
-
-static void test_fclose_mem(FILE *file) {
-    if (!test_mem_file(file)) {
-        s_default_fclose(file);
-    }
-}
-
-static void test_fopen_mem_install(ecs_os_api_log_t log) {
-    ecs_os_set_api_defaults();
-    s_default_fopen = ecs_os_api.fopen_;
-    s_default_fread = ecs_os_api.fread_;
-    s_default_fclose = ecs_os_api.fclose_;
-
-    ecs_os_api_t os_api = ecs_os_api;
-    os_api.fopen_ = test_fopen_mem;
-    os_api.fread_ = test_fread_mem;
-    os_api.fclose_ = test_fclose_mem;
-    if (log) {
-        os_api.log_ = log;
-    }
-    ecs_os_set_api(&os_api);
-
-    g_mem_files[0].name = "parent.flecs";
-    g_mem_files[0].content = "include child.flecs\n";
-    g_mem_files[1].name = "child.flecs";
-    g_mem_files[1].content = "e {\n Foo: {}\n}\n";
-}
-
 void Include_include_managed_eval_error_logged(void) {
-    test_fopen_mem_install(include_log_error_callback);
+    test_files_install_ex(false, include_log_error_callback);
+    test_file_add("child.flecs", "e {\n Foo: {}\n}\n");
+    test_file_add("parent.flecs", "include child.flecs\n");
+
     ecs_log_set_level(-2);
 
     include_log_error_count = 0;
@@ -756,7 +522,10 @@ void Include_include_managed_eval_error_logged(void) {
 }
 
 void Include_include_managed_eval_error_set_on_script(void) {
-    test_fopen_mem_install(NULL);
+    test_files_install();
+    test_file_add("child.flecs", "e {\n Foo: {}\n}\n");
+    test_file_add("parent.flecs", "include child.flecs\n");
+
     ecs_log_set_level(-4);
 
     ecs_world_t *world = ecs_init();
@@ -780,25 +549,21 @@ void Include_include_managed_eval_error_set_on_script(void) {
 }
 
 void Include_include_using_not_visible_in_parent(void) {
+    test_files_install();
+    test_file_add("child.flecs",
+        "using Foo\n"
+        "child_e { Bar }\n");
+    test_file_add("parent.flecs",
+        "include child.flecs\n"
+        "parent_e { Bar }\n");
+
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t foo = ecs_entity(world, { .name = "Foo" });
     ecs_entity_t bar = ecs_entity(world, { .name = "Bar", .parent = foo });
 
-    const char *dir = test_tmp_dir("using_not_visible");
-    char parent_path[256], child_path[256];
-    snprintf(parent_path, sizeof(parent_path), "%s/parent.flecs", dir);
-    snprintf(child_path, sizeof(child_path), "%s/child.flecs", dir);
-
-    test_write_file(child_path,
-        "using Foo\n"
-        "child_e { Bar }\n");
-    test_write_file(parent_path,
-        "include child.flecs\n"
-        "parent_e { Bar }\n");
-
     ecs_log_set_level(-4);
-    test_assert(ecs_script_run_file(world, parent_path) != 0);
+    test_assert(ecs_script_run_file(world, "parent.flecs") != 0);
 
     ecs_entity_t child_e = ecs_lookup(world, "child_e");
     test_assert(child_e != 0);
@@ -807,35 +572,27 @@ void Include_include_using_not_visible_in_parent(void) {
     ecs_entity_t parent_e = ecs_lookup(world, "parent_e");
     test_assert(parent_e == 0 || !ecs_has_id(world, parent_e, bar));
 
-    test_unlink(child_path);
-    test_unlink(parent_path);
-    test_rmdir(dir);
-
     ecs_fini(world);
 }
 
 void Include_include_managed_using_not_visible_in_parent(void) {
+    test_files_install();
+    test_file_add("child.flecs",
+        "using Foo\n"
+        "child_e { Bar }\n");
+    test_file_add("parent.flecs",
+        "include child.flecs\n"
+        "parent_e { Bar }\n");
+
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsScript);
 
     ecs_entity_t foo = ecs_entity(world, { .name = "Foo" });
     ecs_entity_t bar = ecs_entity(world, { .name = "Bar", .parent = foo });
 
-    const char *dir = test_tmp_dir("managed_using");
-    char parent_path[256], child_path[256];
-    snprintf(parent_path, sizeof(parent_path), "%s/parent.flecs", dir);
-    snprintf(child_path, sizeof(child_path), "%s/child.flecs", dir);
-
-    test_write_file(child_path,
-        "using Foo\n"
-        "child_e { Bar }\n");
-    test_write_file(parent_path,
-        "include child.flecs\n"
-        "parent_e { Bar }\n");
-
     ecs_log_set_level(-4);
     ecs_entity_t script = ecs_script(world, {
-        .filename = parent_path
+        .filename = "parent.flecs"
     });
     test_assert(script != 0);
 
@@ -850,30 +607,22 @@ void Include_include_managed_using_not_visible_in_parent(void) {
     ecs_entity_t parent_e = ecs_lookup(world, "parent_e");
     test_assert(parent_e == 0 || !ecs_has_id(world, parent_e, bar));
 
-    test_unlink(child_path);
-    test_unlink(parent_path);
-    test_rmdir(dir);
-
     ecs_fini(world);
 }
 
 void Include_include_managed_keeps_implicit_meta_in_parent(void) {
-    ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsScript);
-
-    const char *dir = test_tmp_dir("managed_keeps_meta");
-    char parent_path[256], child_path[256];
-    snprintf(parent_path, sizeof(parent_path), "%s/parent.flecs", dir);
-    snprintf(child_path, sizeof(child_path), "%s/child.flecs", dir);
-
-    test_write_file(child_path, "Child{}\n");
-    test_write_file(parent_path,
+    test_files_install();
+    test_file_add("child.flecs", "Child{}\n");
+    test_file_add("parent.flecs",
         "include child.flecs\n"
         "struct Position(x: f32)\n"
         "e { Position: {10} }\n");
 
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsScript);
+
     ecs_entity_t script = ecs_script(world, {
-        .filename = parent_path
+        .filename = "parent.flecs"
     });
     test_assert(script != 0);
 
@@ -888,28 +637,20 @@ void Include_include_managed_keeps_implicit_meta_in_parent(void) {
     test_assert(e != 0);
     test_assert(ecs_has_id(world, e, pos));
 
-    test_unlink(child_path);
-    test_unlink(parent_path);
-    test_rmdir(dir);
-
     ecs_fini(world);
 }
 
 void Include_include_keeps_implicit_meta_in_parent(void) {
-    ecs_world_t *world = ecs_init();
-
-    const char *dir = test_tmp_dir("keeps_meta");
-    char parent_path[256], child_path[256];
-    snprintf(parent_path, sizeof(parent_path), "%s/parent.flecs", dir);
-    snprintf(child_path, sizeof(child_path), "%s/child.flecs", dir);
-
-    test_write_file(child_path, "Child{}\n");
-    test_write_file(parent_path,
+    test_files_install();
+    test_file_add("child.flecs", "Child{}\n");
+    test_file_add("parent.flecs",
         "include child.flecs\n"
         "struct Position(x: f32)\n"
         "e { Position: {10} }\n");
 
-    test_assert(ecs_script_run_file(world, parent_path) == 0);
+    ecs_world_t *world = ecs_init();
+
+    test_assert(ecs_script_run_file(world, "parent.flecs") == 0);
 
     ecs_entity_t pos = ecs_lookup(world, "Position");
     test_assert(pos != 0);
@@ -917,10 +658,6 @@ void Include_include_keeps_implicit_meta_in_parent(void) {
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
     test_assert(ecs_has_id(world, e, pos));
-
-    test_unlink(child_path);
-    test_unlink(parent_path);
-    test_rmdir(dir);
 
     ecs_fini(world);
 }
