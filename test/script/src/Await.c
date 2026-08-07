@@ -270,7 +270,7 @@ void Await_await_const_suspend_resume(void) {
 
     ecs_script_t *script = ecs_script_parse(world, NULL,
         "const value = await fetch()\n"
-        "Foo { Position: {$value, 20} }", NULL, NULL);
+        "Foo { Position: {value, 20} }", NULL, NULL);
     test_assert(script != NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(
@@ -438,7 +438,7 @@ void Await_preserve_const_and_using(void) {
         "const value = 10\n"
         "await step()\n"
         "Foo { Tag }\n"
-        "await use($value)", NULL, NULL);
+        "await use(value)", NULL, NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(
         script, NULL);
@@ -519,7 +519,7 @@ void Await_await_in_for(void) {
     });
 
     ecs_script_t *script = ecs_script_parse(world, NULL,
-        "for i in 0..3 { await use($i) }", NULL, NULL);
+        "for i in 0..3 { await use(i) }", NULL, NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(
         script, NULL);
@@ -683,7 +683,7 @@ void Await_preserve_string_const(void) {
     ecs_script_t *script = ecs_script_parse(world, NULL,
         "const value = \"hello\"\n"
         "await step()\n"
-        "await use($value)", NULL, NULL);
+        "await use(value)", NULL, NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(
         script, NULL);
@@ -1367,7 +1367,7 @@ void Await_loop_count_resets_state(void) {
     ecs_script_t *script = ecs_script_parse(world, NULL,
         "using ns\n"
         "const value = \"hello\"\n"
-        "await use($value)", NULL, NULL);
+        "await use(value)", NULL, NULL);
 
     ecs_script_task_t *task = ecs_script_task_new(script, &(
         ecs_script_task_desc_t){
@@ -1780,7 +1780,7 @@ void Await_interleaved_tasks_dynamic_entity(void) {
 
     ecs_script_eval_desc_t parse_desc = { .vars = vars[0] };
     ecs_script_t *script = ecs_script_parse(world, NULL,
-        "\"{$name}\" {\n"
+        "\"{name}\" {\n"
         "  await step()\n"
         "  Tag\n"
         "}", &parse_desc, NULL);

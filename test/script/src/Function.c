@@ -393,7 +393,7 @@ void Function_struct_arg(void) {
     const char *expr =
     HEAD "fn sum(p: Position) -> f32 { p.x + p.y }"
     LINE "const a: Position = {3, 4}"
-    LINE "Foo { Position: {sum($a), sum($a) * 2} }";
+    LINE "Foo { Position: {sum(a), sum(a) * 2} }";
 
     test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
@@ -421,7 +421,7 @@ void Function_struct_return(void) {
     const char *expr =
     HEAD "fn make(x: f32, y: f32) -> Position { {x, y} }"
     LINE "const r = make(10, 20)"
-    LINE "Foo { Position: {$r.x, $r.y} }";
+    LINE "Foo { Position: {r.x, r.y} }";
 
     test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
@@ -452,8 +452,8 @@ void Function_struct_arg_and_return(void) {
     LINE "}"
     LINE "const a: Position = {1, 2}"
     LINE "const b: Position = {10, 20}"
-    LINE "const r = add_pos($a, $b)"
-    LINE "Foo { Position: {$r.x, $r.y} }";
+    LINE "const r = add_pos(a, b)"
+    LINE "Foo { Position: {r.x, r.y} }";
 
     test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
@@ -1307,8 +1307,8 @@ void Function_nested_struct_arg(void) {
     const char *expr =
     HEAD "fn pass(l: Line) -> Line { l }"
     LINE "const v: Line = {start: {1, 2}, stop: {3, 4}}"
-    LINE "const r = pass($v)"
-    LINE "Foo { Line: {start: {$r.start.x, $r.start.y}, stop: {$r.stop.x, $r.stop.y}} }";
+    LINE "const r = pass(v)"
+    LINE "Foo { Line: {start: {r.start.x, r.start.y}, stop: {r.stop.x, r.stop.y}} }";
 
     test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
@@ -1337,8 +1337,8 @@ void Function_array_arg(void) {
     const char *expr =
     HEAD "fn ident(a: Vec3F) -> Vec3F { a }"
     LINE "const v: Vec3F = [10, 20, 30]"
-    LINE "const r = ident($v)"
-    LINE "Foo { Vec3F: $r }";
+    LINE "const r = ident(v)"
+    LINE "Foo { Vec3F: r }";
 
     test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
@@ -1376,7 +1376,7 @@ void Function_struct_with_string_return(void) {
     const char *expr =
     HEAD "fn make() -> FnStrings { {a: \"hello\", b: \"world\"} }"
     LINE "const r = make()"
-    LINE "Foo { FnStrings: {$r.a, $r.b} }";
+    LINE "Foo { FnStrings: {r.a, r.b} }";
 
     test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 
@@ -1493,7 +1493,7 @@ void Function_call_in_for_body(void) {
     const char *expr =
     HEAD "fn val(i: i32) -> i32 { i * 10 }"
     LINE "for i in 0..3 {"
-    LINE "    \"e_{$i}\" { Position: {val(i), val(i) + 1} }"
+    LINE "    \"e_{i}\" { Position: {val(i), val(i) + 1} }"
     LINE "}";
 
     test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
@@ -1566,7 +1566,7 @@ void Function_call_in_const_rhs(void) {
     HEAD "fn add(a: i32, b: i32) -> i32 { a + b }"
     LINE "const x = add(1, 2)"
     LINE "const y = add(10, 20)"
-    LINE "Foo { Position: {$x, $y} }";
+    LINE "Foo { Position: {x, y} }";
 
     test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
 

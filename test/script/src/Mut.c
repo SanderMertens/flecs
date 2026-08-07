@@ -5,7 +5,7 @@ void Mut_declaration(void) {
 
     const char *expr =
     LINE "template Foo {"
-    LINE "  mut value: flecs.meta.i32 = 10"
+    LINE "  mut value: i32 = 10"
     LINE "}";
 
     test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
@@ -34,8 +34,8 @@ void Mut_two_members(void) {
 
     const char *expr =
     LINE "template Foo {"
-    LINE "  mut x: flecs.meta.i32 = 10"
-    LINE "  mut y: flecs.meta.f32 = 20"
+    LINE "  mut x: i32 = 10"
+    LINE "  mut y: f32 = 20"
     LINE "}";
 
     test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
@@ -93,8 +93,8 @@ void Mut_instance_w_default(void) {
 
     const char *expr =
     LINE "template Foo {"
-    LINE "  mut x: flecs.meta.i32 = 10"
-    LINE "  mut y: flecs.meta.i32 = 20"
+    LINE "  mut x: i32 = 10"
+    LINE "  mut y: i32 = 20"
     LINE "}"
     LINE "Foo e()";
 
@@ -122,10 +122,10 @@ void Mut_instance_w_props_and_mut(void) {
 
     const char *expr =
     LINE "template Foo {"
-    LINE "  prop width: flecs.meta.i32 = 10"
-    LINE "  mut selected: flecs.meta.bool = true"
-    LINE "  prop height: flecs.meta.i32 = 20"
-    LINE "  mut count: flecs.meta.i32 = 30"
+    LINE "  prop width: i32 = 10"
+    LINE "  mut selected: bool = true"
+    LINE "  prop height: i32 = 20"
+    LINE "  mut count: i32 = 30"
     LINE "}"
     LINE "Foo e(40, 50)";
 
@@ -180,8 +180,8 @@ void Mut_value_in_template_body(void) {
 
     const char *expr =
     LINE "template Foo {"
-    LINE "  mut value: flecs.meta.f32 = 10"
-    LINE "  Position: {$value, $value * 2}"
+    LINE "  mut value: f32 = 10"
+    LINE "  Position: {value, value * 2}"
     LINE "}"
     LINE "Foo e()";
 
@@ -211,10 +211,10 @@ void Mut_value_w_prop_in_template_body(void) {
 
     const char *expr =
     LINE "template Foo {"
-    LINE "  mut x: flecs.meta.f32 = 10"
-    LINE "  prop scale: flecs.meta.f32 = 2"
-    LINE "  mut y: flecs.meta.f32 = 20"
-    LINE "  Position: {$x * $scale, $y * $scale}"
+    LINE "  mut x: f32 = 10"
+    LINE "  prop scale: f32 = 2"
+    LINE "  mut y: f32 = 20"
+    LINE "  Position: {x * scale, y * scale}"
     LINE "}"
     LINE "Foo e(3)";
 
@@ -244,8 +244,8 @@ void Mut_modified_reinstantiates(void) {
 
     const char *expr =
     LINE "template Foo {"
-    LINE "  mut value: flecs.meta.f32 = 10"
-    LINE "  Position: {$value, $value * 2}"
+    LINE "  mut value: f32 = 10"
+    LINE "  Position: {value, value * 2}"
     LINE "}"
     LINE "Foo e()";
 
@@ -285,8 +285,8 @@ void Mut_set_reinstantiates(void) {
 
     const char *expr =
     LINE "template Foo {"
-    LINE "  mut value: flecs.meta.f32 = 10"
-    LINE "  Position: {$value, $value * 2}"
+    LINE "  mut value: f32 = 10"
+    LINE "  Position: {value, value * 2}"
     LINE "}"
     LINE "Foo e()";
 
@@ -324,8 +324,8 @@ void Mut_modified_reinstantiates_only_instance(void) {
 
     const char *expr =
     LINE "template Foo {"
-    LINE "  mut value: flecs.meta.f32 = 10"
-    LINE "  Position: {$value, 0}"
+    LINE "  mut value: f32 = 10"
+    LINE "  Position: {value, 0}"
     LINE "}"
     LINE "Foo e1()"
     LINE "Foo e2()";
@@ -370,8 +370,8 @@ void Mut_deferred_modified_reinstantiates(void) {
 
     const char *expr =
     LINE "template Foo {"
-    LINE "  mut value: flecs.meta.f32 = 10"
-    LINE "  Position: {$value, $value * 2}"
+    LINE "  mut value: f32 = 10"
+    LINE "  Position: {value, value * 2}"
     LINE "}"
     LINE "Foo e()";
 
@@ -404,7 +404,7 @@ void Mut_bulk_create(void) {
 
     const char *expr =
     LINE "template Foo {"
-    LINE "  mut value: flecs.meta.i32 = 10"
+    LINE "  mut value: i32 = 10"
     LINE "}";
 
     test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
@@ -445,9 +445,9 @@ void Mut_prop_update_preserves_mut(void) {
 
     const char *expr =
     LINE "template Foo {"
-    LINE "  prop scale: flecs.meta.f32 = 2"
-    LINE "  mut value: flecs.meta.f32 = 10"
-    LINE "  Position: {$value * $scale, 0}"
+    LINE "  prop scale: f32 = 2"
+    LINE "  mut value: f32 = 10"
+    LINE "  Position: {value * scale, 0}"
     LINE "}"
     LINE "Foo e()";
 
@@ -492,8 +492,8 @@ void Mut_mut_component_without_template(void) {
 
     const char *expr =
     LINE "template Foo {"
-    LINE "  mut value: flecs.meta.f32 = 10"
-    LINE "  Position: {$value, 0}"
+    LINE "  mut value: f32 = 10"
+    LINE "  Position: {value, 0}"
     LINE "}";
 
     test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
@@ -518,7 +518,7 @@ void Mut_string_default(void) {
 
     const char *expr =
     LINE "template Foo {"
-    LINE "  mut text: flecs.meta.string = \"hello\""
+    LINE "  mut text: string = \"hello\""
     LINE "}"
     LINE "Foo e()";
 
@@ -545,7 +545,7 @@ void Mut_const_from_mut(void) {
     LINE "template Foo {"
     LINE "  mut value = 10"
     LINE "  const result = value * 2"
-    LINE "  flecs.meta.i64: {$result}"
+    LINE "  i64: {result}"
     LINE "}"
     LINE "Foo e()";
 
@@ -574,8 +574,8 @@ void Mut_script_update_reinstantiates(void) {
 
     const char *expr =
     LINE "template Foo {"
-    LINE "  mut value: flecs.meta.f32 = 10"
-    LINE "  Position: {$value, 0}"
+    LINE "  mut value: f32 = 10"
+    LINE "  Position: {value, 0}"
     LINE "}"
     LINE "Foo e()"
     LINE "e { Foo.mut: {20} }";
@@ -610,7 +610,7 @@ void Mut_outside_template(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    LINE "mut value: flecs.meta.i32 = 10";
+    LINE "mut value: i32 = 10";
 
     ecs_log_set_level(-4);
     test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
@@ -738,7 +738,7 @@ void Mut_composite(void) {
     const char *expr =
     LINE "template Foo {"
     LINE "  mut pos: Position = {10, 20}"
-    LINE "  child { Position: $pos }"
+    LINE "  child { Position: pos }"
     LINE "}"
     LINE "Foo e()";
 
@@ -814,7 +814,7 @@ void Mut_entity_pair(void) {
 
     const char *expr =
     LINE "template Foo {"
-    LINE "  mut target: flecs.meta.entity = flecs.core"
+    LINE "  mut target: entity = flecs.core"
     LINE "  (Rel, $target)"
     LINE "}"
     LINE "Foo e()";
@@ -846,7 +846,7 @@ void Mut_entity_pair_scope(void) {
 
     const char *expr =
     LINE "template Foo {"
-    LINE "  mut target: flecs.meta.entity = flecs.core"
+    LINE "  mut target: entity = flecs.core"
     LINE "  (Rel, $target) {"
     LINE "    child {}"
     LINE "  }"
@@ -876,7 +876,7 @@ void Mut_pair_component_entity_target(void) {
 
     const char *expr =
     LINE "template Foo {"
-    LINE "  mut target: flecs.meta.entity = flecs.core"
+    LINE "  mut target: entity = flecs.core"
     LINE "  (Position, $target): {5, 6}"
     LINE "}"
     LINE "Foo e()";
@@ -908,7 +908,7 @@ void Mut_anonymous_instance(void) {
     const char *expr =
     HEAD "template Foo {"
     LINE "  mut value: f32 = 10"
-    LINE "  Position: {$value, $value * 2}"
+    LINE "  Position: {value, value * 2}"
     LINE "}"
     LINE "Foo()";
 
@@ -945,8 +945,8 @@ void Mut_managed_script_twice(void) {
 
     const char *expr =
     LINE "template Foo {"
-    LINE "  mut value: flecs.meta.f32 = 10"
-    LINE "  child { Position: {$value, $value * 2} }"
+    LINE "  mut value: f32 = 10"
+    LINE "  child { Position: {value, value * 2} }"
     LINE "}"
     LINE "Foo e()";
 
@@ -987,7 +987,7 @@ void Mut_module(void) {
     const char *expr =
     LINE "module hello.world"
     LINE "template Foo {"
-    LINE "  mut value: flecs.meta.i32 = 10"
+    LINE "  mut value: i32 = 10"
     LINE "}";
 
     test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
@@ -1012,13 +1012,13 @@ void Mut_multiple_templates(void) {
 
     const char *expr =
     LINE "template Foo {"
-    LINE "  mut value: flecs.meta.i32 = 10"
+    LINE "  mut value: i32 = 10"
     LINE "}"
     LINE "template Bar {"
-    LINE "  mut value: flecs.meta.i32 = 20"
+    LINE "  mut value: i32 = 20"
     LINE "}"
     LINE "template Baz {"
-    LINE "  mut value: flecs.meta.i32 = 30"
+    LINE "  mut value: i32 = 30"
     LINE "}"
     LINE "Foo a()"
     LINE "Bar b()"
@@ -1069,9 +1069,9 @@ void Mut_anonymous_children(void) {
 
     const char *expr =
     LINE "template Foo {"
-    LINE "  mut value: flecs.meta.i32 = 10"
-    LINE "  _ { Position: {$value, 0} }"
-    LINE "  _ { Position: {$value, 0} }"
+    LINE "  mut value: i32 = 10"
+    LINE "  _ { Position: {value, 0} }"
+    LINE "  _ { Position: {value, 0} }"
     LINE "}"
     LINE "Foo e()";
 
@@ -1125,9 +1125,9 @@ void Mut_fold_const(void) {
     const char *expr =
     HEAD "template Foo {"
     LINE "  mut size: i32 = 10"
-    LINE "  const half = $size / 2"
-    LINE "  const adjusted = $half + 2"
-    LINE "  Position: {$half, $adjusted}"
+    LINE "  const half = size / 2"
+    LINE "  const adjusted = half + 2"
+    LINE "  Position: {half, adjusted}"
     LINE "}"
     LINE "Foo e()";
 
@@ -1167,7 +1167,7 @@ void Mut_assign_add(void) {
     const char *expr =
     HEAD "template Foo {"
     LINE "  mut value: f32 = 6"
-    LINE "  Position: {y += $value / 2}"
+    LINE "  Position: {y += value / 2}"
     LINE "}"
     HEAD "e {"
     LINE "  Position: {10, 20}"
@@ -1200,7 +1200,7 @@ void Mut_assign_mul(void) {
     const char *expr =
     HEAD "template Foo {"
     LINE "  mut value: f32 = 6"
-    LINE "  Position: {y *= $value / 2}"
+    LINE "  Position: {y *= value / 2}"
     LINE "}"
     HEAD "e {"
     LINE "  Position: {10, 20}"
@@ -1227,7 +1227,7 @@ void Mut_script_component(void) {
     LINE "template Foo {"
     LINE "  mut x: f32 = 10"
     LINE "  mut y: f32 = 20"
-    LINE "  Position: {$x, $y}"
+    LINE "  Position: {x, y}"
     LINE "}"
     LINE "Foo e()";
 
@@ -1253,7 +1253,7 @@ void Mut_script_pair_component(void) {
     LINE "template Foo {"
     LINE "  mut x: f32 = 10"
     LINE "  mut y: f32 = 20"
-    LINE "  (Position, Target): {$x, $y}"
+    LINE "  (Position, Target): {x, y}"
     LINE "}"
     LINE "Foo e()";
 
@@ -1289,7 +1289,7 @@ void Mut_tree_parent(void) {
     HEAD "@tree Parent"
     LINE "template Foo {"
     LINE "  mut value: i32 = 10"
-    LINE "  child { Position: {$value, $value * 2} }"
+    LINE "  child { Position: {value, value * 2} }"
     LINE "}"
     LINE "Foo e()";
 
@@ -1327,7 +1327,7 @@ void Mut_child_name_from_string(void) {
 
     const char *expr =
     LINE "template Foo {"
-    LINE "  mut suffix: flecs.meta.string = \"a\""
+    LINE "  mut suffix: string = \"a\""
     LINE "  \"child_$suffix\" {}"
     LINE "}"
     LINE "Foo e()";
@@ -1434,7 +1434,7 @@ void Mut_hoist_var(void) {
     LINE "const global = 10"
     LINE "template Foo {"
     LINE "  mut value: f32 = 20"
-    LINE "  Position: {$global, $value}"
+    LINE "  Position: {global, value}"
     LINE "}"
     LINE "Foo e()";
 
@@ -1464,8 +1464,8 @@ void Mut_nested_template(void) {
 
     const char *expr =
     LINE "template Inner {"
-    LINE "  mut value: flecs.meta.f32 = 10"
-    LINE "  child { Position: {$value, $value * 2} }"
+    LINE "  mut value: f32 = 10"
+    LINE "  child { Position: {value, value * 2} }"
     LINE "}"
     LINE "template Outer {"
     LINE "  Inner inner()"

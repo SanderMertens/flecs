@@ -77,7 +77,7 @@ void Template_template_prop(void) {
 
     const char *expr =
     LINE "template Tree {"
-    LINE "  prop height: flecs.meta.f32 = 0"
+    LINE "  prop height: f32 = 0"
     LINE "}";
 
     test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
@@ -109,7 +109,7 @@ void Template_template_prop_space_colon(void) {
 
     const char *expr =
     LINE "template Tree {"
-    LINE "  prop height: flecs.meta.f32 = 0"
+    LINE "  prop height: f32 = 0"
     LINE "}";
 
     test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
@@ -141,8 +141,8 @@ void Template_template_2_props(void) {
 
     const char *expr =
     LINE "template Tree {"
-    LINE "  prop width: flecs.meta.i32 = 0"
-    LINE "  prop height: flecs.meta.f32 = 0"
+    LINE "  prop width: i32 = 0"
+    LINE "  prop height: f32 = 0"
     LINE "}";
 
     test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
@@ -231,8 +231,8 @@ void Template_template_instance_w_default_values(void) {
 
     const char *expr =
     LINE "template Tree {"
-    LINE "  prop width: flecs.meta.f32 = 10"
-    LINE "  prop height: flecs.meta.f32 = 20"
+    LINE "  prop width: f32 = 10"
+    LINE "  prop height: f32 = 20"
     LINE "}"
     LINE ""
     LINE "e { Tree }"
@@ -280,8 +280,8 @@ void Template_template_instance_w_assign_default_values(void) {
 
     const char *expr =
     LINE "template Tree {"
-    LINE "  prop width: flecs.meta.f32 = 10"
-    LINE "  prop height: flecs.meta.f32 = 20"
+    LINE "  prop width: f32 = 10"
+    LINE "  prop height: f32 = 20"
     LINE "}"
     LINE ""
     LINE "e { Tree: {} }"
@@ -329,8 +329,8 @@ void Template_template_instance_w_overridden_values(void) {
 
     const char *expr =
     LINE "template Tree {"
-    LINE "  prop width: flecs.meta.f32 = 10"
-    LINE "  prop height: flecs.meta.f32 = 20"
+    LINE "  prop width: f32 = 10"
+    LINE "  prop height: f32 = 20"
     LINE "}"
     LINE ""
     LINE "e { Tree: {width: 30, height: 40} }"
@@ -427,9 +427,9 @@ void Template_template_w_child(void) {
 
     const char *expr =
     LINE "template Tree {"
-    LINE "  prop width: flecs.meta.f32 = 0"
-    LINE "  prop height: flecs.meta.f32 = 0"
-    LINE "  child { Position: {$width * 10 + 1, $height * 20 + 2} }"
+    LINE "  prop width: f32 = 0"
+    LINE "  prop height: f32 = 0"
+    LINE "  child { Position: {width * 10 + 1, height * 20 + 2} }"
     LINE "}"
     LINE ""
     LINE "e { Tree: {width: 1, height: 2} }"
@@ -488,9 +488,9 @@ void Template_template_w_child_parse_script(void) {
 
     const char *expr =
     LINE "template Tree {"
-    LINE "  prop width: flecs.meta.f32 = 0"
-    LINE "  prop height: flecs.meta.f32 = 0"
-    LINE "  child { Position: {$width * 10 + 1, $height * 20 + 2} }"
+    LINE "  prop width: f32 = 0"
+    LINE "  prop height: f32 = 0"
+    LINE "  child { Position: {width * 10 + 1, height * 20 + 2} }"
     LINE "}"
     LINE ""
     LINE "e { Tree: {width: 1, height: 2} }"
@@ -549,9 +549,9 @@ void Template_template_w_child_parse_script_twice(void) {
 
     const char *expr =
     LINE "template Tree {"
-    LINE "  prop width: flecs.meta.f32 = 0"
-    LINE "  prop height: flecs.meta.f32 = 0"
-    LINE "  child { Position: {$width * 10 + 1, $height * 20 + 2} }"
+    LINE "  prop width: f32 = 0"
+    LINE "  prop height: f32 = 0"
+    LINE "  child { Position: {width * 10 + 1, height * 20 + 2} }"
     LINE "}"
     LINE ""
     LINE "e { Tree: {width: 1, height: 2} }"
@@ -615,9 +615,9 @@ void Template_template_w_child_update_after_parse(void) {
 
     const char *expr =
     LINE "template Tree {"
-    LINE "  prop width: flecs.meta.f32 = 0"
-    LINE "  prop height: flecs.meta.f32 = 0"
-    LINE "  child { Position: {$width * 10 + 1, $height * 20 + 2} }"
+    LINE "  prop width: f32 = 0"
+    LINE "  prop height: f32 = 0"
+    LINE "  child { Position: {width * 10 + 1, height * 20 + 2} }"
     LINE "}"
     LINE ""
     LINE "e { Tree: {width: 1, height: 2} }"
@@ -695,11 +695,11 @@ void Template_template_w_nested_child(void) {
 
     const char *expr =
     LINE "template Tree {"
-    LINE "  prop width: flecs.meta.f32 = 0"
-    LINE "  prop height: flecs.meta.f32 = 0"
+    LINE "  prop width: f32 = 0"
+    LINE "  prop height: f32 = 0"
     LINE "  child {"
-    LINE "    Position: {$width, $height}"
-    LINE "    grand_child { Position: {$height, $width} }"
+    LINE "    Position: {width, height}"
+    LINE "    grand_child { Position: {height, width} }"
     LINE "  }"
     LINE "}"
     LINE ""
@@ -777,13 +777,13 @@ void Template_template_w_prefab(void) {
 
     const char *expr =
     LINE "template Tree {"
-    LINE "  prop width: flecs.meta.f32 = 0"
-    LINE "  prop height: flecs.meta.f32 = 0"
+    LINE "  prop width: f32 = 0"
+    LINE "  prop height: f32 = 0"
     LINE "  Prefab base {"
-    LINE "    Velocity: {$width * 2, $height * 3}"
+    LINE "    Velocity: {width * 2, height * 3}"
     LINE "  }"
     LINE "  child : base {"
-    LINE "    Position: {$width, $height}"
+    LINE "    Position: {width, height}"
     LINE "  }"
     LINE "}"
     LINE ""
@@ -870,16 +870,16 @@ void Template_template_w_prefab_tree(void) {
 
     const char *expr =
     LINE "template Tree {"
-    LINE "  prop width: flecs.meta.f32 = 0"
-    LINE "  prop height: flecs.meta.f32 = 0"
+    LINE "  prop width: f32 = 0"
+    LINE "  prop height: f32 = 0"
     LINE "  Prefab base {"
-    LINE "    Velocity: {$width * 2, $height * 3}"
+    LINE "    Velocity: {width * 2, height * 3}"
     LINE "    Prefab child {"
-    LINE "      Velocity: {$height * 3, $width * 2}"
+    LINE "      Velocity: {height * 3, width * 2}"
     LINE "    }"
     LINE "  }"
     LINE "  child : base {"
-    LINE "    Position: {$width, $height}"
+    LINE "    Position: {width, height}"
     LINE "  }"
     LINE "}"
     LINE ""
@@ -968,18 +968,18 @@ void Template_template_w_nested_template(void) {
 
     const char *expr =
     LINE "template Tree {"
-    LINE "  prop width: flecs.meta.f32 = 0"
-    LINE "  prop height: flecs.meta.f32 = 0"
+    LINE "  prop width: f32 = 0"
+    LINE "  prop height: f32 = 0"
     LINE "  child {"
-    LINE "    Position: {$width, $height}"
+    LINE "    Position: {width, height}"
     LINE "  }"
     LINE "}"
     LINE ""
     LINE "template Forest {"
-    LINE "  prop width: flecs.meta.f32 = 0"
-    LINE "  prop height: flecs.meta.f32 = 0"
-    LINE "  tree_1 { Tree: {-$width, -$height} }"
-    LINE "  tree_2 { Tree: {$width + 1, $height + 1} }"
+    LINE "  prop width: f32 = 0"
+    LINE "  prop height: f32 = 0"
+    LINE "  tree_1 { Tree: {-width, -height} }"
+    LINE "  tree_2 { Tree: {width + 1, height + 1} }"
     LINE "}"
     LINE "";
 
@@ -1086,9 +1086,9 @@ void Template_instantiate_prefab_w_template(void) {
 
     const char *expr =
     LINE "template Tree {"
-    LINE "  prop width: flecs.meta.f32 = 0"
-    LINE "  prop height: flecs.meta.f32 = 0"
-    LINE "  child { Position: {$width, $height} }"
+    LINE "  prop width: f32 = 0"
+    LINE "  prop height: f32 = 0"
+    LINE "  child { Position: {width, height} }"
     LINE "}"
     LINE ""
     LINE "Prefab p { Tree: {width: 10, height: 20} }"
@@ -1148,14 +1148,14 @@ void Template_template_w_prefab_w_template(void) {
 
     const char *expr =
     LINE "template Tree {"
-    LINE "  prop count: flecs.meta.f32 = 0"
+    LINE "  prop count: f32 = 0"
     LINE "}"
     LINE ""
     LINE "template Forest {"
-    LINE "  prop count: flecs.meta.f32 = 0"
+    LINE "  prop count: f32 = 0"
     LINE ""
     LINE "  Prefab TreePrefab {"
-    LINE "    Tree: {count: $count}"
+    LINE "    Tree: {count: count}"
     LINE "  }"
     LINE ""
     LINE "  child : TreePrefab {}"
@@ -1206,15 +1206,15 @@ void Template_3_templates(void) {
 
     const char *expr =
     LINE "template Tree {"
-    LINE "  prop t: flecs.meta.f32 = 10"
+    LINE "  prop t: f32 = 10"
     LINE "}"
     LINE ""
     LINE "template Forest {"
-    LINE "  prop f: flecs.meta.f32 = 20"
+    LINE "  prop f: f32 = 20"
     LINE "}"
     LINE ""
     LINE "template Park {"
-    LINE "  prop p: flecs.meta.f32 = 30"
+    LINE "  prop p: f32 = 30"
     LINE "}"
     LINE ""
     LINE "Tree a()"
@@ -1300,12 +1300,12 @@ void Template_template_nested_w_default_var(void) {
 
     const char *expr =
     LINE "template Tree {"
-    LINE "  prop count: flecs.meta.f32 = 0"
-    LINE "  trunk { Position: {$count, $count * 2} }"
+    LINE "  prop count: f32 = 0"
+    LINE "  trunk { Position: {count, count * 2} }"
     LINE "}"
     LINE ""
     LINE "template Forest {"
-    LINE "  prop count: flecs.meta.f32 = 0"
+    LINE "  prop count: f32 = 0"
     LINE "  child { Tree: {count:$} }"
     LINE "}"
     LINE "f { Forest: {10} }";
@@ -1380,9 +1380,9 @@ void Template_template_w_anonymous(void) {
 
     const char *expr =
     LINE "template Tree {"
-    LINE "  prop count: flecs.meta.i32 = 0"
-    LINE "  _ { Position: {$count, $count * 2} }"
-    LINE "  _ { Position: {$count, $count * 2} }"
+    LINE "  prop count: i32 = 0"
+    LINE "  _ { Position: {count, count * 2} }"
+    LINE "  _ { Position: {count, count * 2} }"
     LINE "}"
     LINE ""
     LINE "t { Tree: {10} }";
@@ -1425,9 +1425,9 @@ void Template_template_w_anonymous_parse_again(void) {
 
     const char *expr =
     LINE "template Tree {"
-    LINE "  prop count: flecs.meta.i32 = 0"
-    LINE "  _ { Position: {$count, $count * 2} }"
-    LINE "  _ { Position: {$count, $count * 2} }"
+    LINE "  prop count: i32 = 0"
+    LINE "  _ { Position: {count, count * 2} }"
+    LINE "  _ { Position: {count, count * 2} }"
     LINE "}"
     LINE ""
     LINE "t { Tree: {10} }";
@@ -1508,7 +1508,7 @@ void Template_template_w_composite_prop(void) {
     const char *expr =
     LINE "template Tree {"
     LINE "  prop pos: Position = {10, 20}"
-    LINE "  child { Position: $pos }"
+    LINE "  child { Position: pos }"
     LINE "}"
     LINE "t { Tree: {pos: {20, 30}} }"
     LINE "";
@@ -1555,9 +1555,9 @@ void Template_template_with_with(void) {
     const char *expr =
     HEAD "Foo {}"
     LINE "template Tree {"
-    LINE "  prop count: flecs.meta.i32 = 0"
+    LINE "  prop count: i32 = 0"
     LINE "  with Foo {"
-    LINE "    child { Position: {$count, $count * 2} }"
+    LINE "    child { Position: {count, count * 2} }"
     LINE "  }"
     LINE "}"
     LINE "t { Tree: {count: 10} }"
@@ -1607,8 +1607,8 @@ void Template_module_w_template(void) {
     const char *expr =
     LINE "module hello.world\n"
     LINE "template Tree {\n"
-    LINE "  prop count: flecs.meta.i32 = 0\n"
-    LINE "  child { Position: {$count, $count * 2} }\n"
+    LINE "  prop count: i32 = 0\n"
+    LINE "  child { Position: {count, count * 2} }\n"
     LINE "}\n"
     LINE "";
     test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
@@ -1660,11 +1660,11 @@ void Template_module_w_nested_template(void) {
     const char *expr =
     LINE "module hello.world"
     LINE "template Tree {"
-    LINE "  prop count: flecs.meta.i32 = 0"
-    LINE "  child { Position: {$count, $count * 2} }"
+    LINE "  prop count: i32 = 0"
+    LINE "  child { Position: {count, count * 2} }"
     LINE "}"
     LINE "template Forest {"
-    LINE "  prop count: flecs.meta.i32 = 0"
+    LINE "  prop count: i32 = 0"
     LINE "  t { Tree: {count:$} }"
     LINE "}"
     LINE "";
@@ -1719,7 +1719,7 @@ void Template_template_w_pair_w_this_var(void) {
 
     const char *expr =
     LINE "template Foo {\n"
-    LINE "  (Rel, $this)\n"
+    LINE "  (Rel, this)\n"
     LINE "}\n"
     LINE "ent { Foo: {} }\n"
     LINE "\n";
@@ -1742,7 +1742,7 @@ void Template_template_w_pair_w_prop_var(void) {
 
     const char *expr =
     LINE "template Foo {\n"
-    LINE "  prop x: flecs.meta.entity = flecs\n"
+    LINE "  prop x: entity = flecs\n"
     LINE "  (Rel, $x)\n"
     LINE "}\n"
     LINE "ent { Foo: {flecs.core} }\n"
@@ -1766,7 +1766,7 @@ void Template_template_w_pair_w_const_var(void) {
 
     const char *expr =
     LINE "template Foo {\n"
-    LINE "  const x: flecs.meta.entity = flecs\n"
+    LINE "  const x: entity = flecs\n"
     LINE "  (Rel, $x)\n"
     LINE "}\n"
     LINE "ent { Foo: {} }\n"
@@ -1791,7 +1791,7 @@ void Template_template_w_pair_scope_w_this_var(void) {
 
     const char *expr =
     LINE "template Foo {\n"
-    LINE "  (Rel, $this) {\n"
+    LINE "  (Rel, this) {\n"
     LINE "    child {}"
     LINE "  }"
     LINE "}\n"
@@ -1821,7 +1821,7 @@ void Template_template_w_pair_scope_w_prop_var(void) {
 
     const char *expr =
     LINE "template Foo {\n"
-    LINE "  prop x: flecs.meta.entity = flecs\n"
+    LINE "  prop x: entity = flecs\n"
     LINE "  (Rel, $x) {\n"
     LINE "    child {}"
     LINE "  }"
@@ -1852,7 +1852,7 @@ void Template_template_w_pair_scope_w_const_var(void) {
 
     const char *expr =
     LINE "template Foo {\n"
-    LINE "  prop x: flecs.meta.entity = flecs\n"
+    LINE "  prop x: entity = flecs\n"
     LINE "  (Rel, $x) {\n"
     LINE "    child {}"
     LINE "  }"
@@ -1892,7 +1892,7 @@ void Template_template_w_this_var_assigned_to_entity_field(void) {
 
     const char *expr =
     HEAD "template Foo {"
-    LINE "  Ref: {$this}"
+    LINE "  Ref: {this}"
     LINE "}"
     LINE "Foo ent()";
 
@@ -1936,7 +1936,7 @@ void Template_template_w_this_var_in_component_expr(void) {
 
     const char *expr =
     HEAD "template Foo {"
-    LINE "  Velocity: {$this[Position].x + 1, $this[Position].y + 2}"
+    LINE "  Velocity: {this[Position].x + 1, this[Position].y + 2}"
     LINE "}"
     LINE "ent {"
     LINE "  Position: {10, 20}"
@@ -2267,7 +2267,7 @@ void Template_hoist_var(void) {
     LINE "const v = 10"
     LINE "template Tree {"
     LINE "  prop height: f32 = 0"
-    LINE "  Position: {$v, $height}"
+    LINE "  Position: {v, height}"
     LINE "}"
     LINE "Tree foo(height: 20)";
 
@@ -2305,7 +2305,7 @@ void Template_hoist_vars_nested(void) {
     LINE "parent {"
     LINE "  const y = 20"
     LINE "  template Tree {"
-    LINE "    Position: {$x, $y}"
+    LINE "    Position: {x, y}"
     LINE "  }"
     LINE "}"
     LINE "parent.Tree foo()";
@@ -2345,7 +2345,7 @@ void Template_hoist_vars_nested_w_masked(void) {
     HEAD "  const x = 30"
     LINE "  const y = 20"
     LINE "  template Tree {"
-    LINE "    Position: {$x, $y}"
+    LINE "    Position: {x, y}"
     LINE "  }"
     LINE "}"
     LINE "parent.Tree foo()";
@@ -2458,7 +2458,7 @@ void Template_anonymous_template_instance_w_prop(void) {
     const char *expr =
     HEAD "template Tree {"
     LINE "  prop height: f32 = 10"
-    LINE "  Position: {$height, $height * 2}"
+    LINE "  Position: {height, height * 2}"
     LINE "}"
     LINE "Tree() {}";
 
@@ -2497,7 +2497,7 @@ void Template_anonymous_template_instance_w_prop_no_scope(void) {
     const char *expr =
     HEAD "template Tree {"
     LINE "  prop height: f32 = 10"
-    LINE "  Position: {$height, $height * 2}"
+    LINE "  Position: {height, height * 2}"
     LINE "}"
     LINE "Tree()";
 
@@ -2890,7 +2890,7 @@ void Template_template_w_child_w_var(void) {
     HEAD "template Foo {"
     LINE "  const pos: Position = {10, 20}"
     LINE "  child {"
-    LINE "    Position: $pos"
+    LINE "    Position: pos"
     LINE "  }"
     LINE "}"
     LINE ""
@@ -2934,7 +2934,7 @@ void Template_template_w_child_w_prop(void) {
     HEAD "template Foo {"
     LINE "  prop pos: Position = {0, 0}"
     LINE "  child {"
-    LINE "    Position: $pos"
+    LINE "    Position: pos"
     LINE "  }"
     LINE "}"
     LINE ""
@@ -2977,9 +2977,9 @@ void Template_fold_const(void) {
     const char *expr =
     HEAD "template Foo {"
     LINE "  prop size: i32 = 10"
-    LINE "  const size_h = $size / 2"
-    LINE "  const size_h_2 = $size_h + 2"
-    LINE "  Position: {$size_h, $size_h_2}"
+    LINE "  const size_h = size / 2"
+    LINE "  const size_h_2 = size_h + 2"
+    LINE "  Position: {size_h, size_h_2}"
     LINE "}"
     LINE ""
     LINE "Foo e1(6)"
@@ -3052,7 +3052,7 @@ void Template_bulk_create_template(void) {
     HEAD "template Position {"
     LINE "  prop x: f32 = 0"
     LINE "  prop y: f32 = 0"
-    LINE "  Velocity: {$x + 5, $y + 5}"
+    LINE "  Velocity: {x + 5, y + 5}"
     LINE "}";
 
     test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
@@ -3207,8 +3207,8 @@ void Template_template_w_for(void) {
     const char *expr =
     HEAD "template Foo {"
     LINE "  for i in 0..2 {"
-    LINE"     const t = $i"
-    LINE "    \"child_$i\" { Position: {$t, $t + 2} }"
+    LINE"     const t = i"
+    LINE "    \"child_$i\" { Position: {t, t + 2} }"
     LINE "  }"
     LINE "}"
     LINE "Foo e()";
@@ -4146,7 +4146,7 @@ void Template_pair_component_w_entity_prop_target(void) {
 
     const char *expr =
     LINE "template Foo {\n"
-    LINE "  prop tgt: flecs.meta.entity = flecs\n"
+    LINE "  prop tgt: entity = flecs\n"
     LINE "  (Position, $tgt): {5, 6}\n"
     LINE "}\n"
     LINE "ent { Foo: {flecs.core} }\n"
@@ -4176,7 +4176,7 @@ void Template_child_name_from_string_prop(void) {
 
     const char *expr =
     LINE "template Foo {"
-    LINE "  prop suffix: flecs.meta.string = \"a\""
+    LINE "  prop suffix: string = \"a\""
     LINE "  \"child_$suffix\" {}"
     LINE "}"
     LINE "ent { Foo: {suffix: \"hello\"} }"

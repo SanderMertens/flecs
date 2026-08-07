@@ -190,8 +190,8 @@ void Error_struct_w_member_w_assignment_to_nothing(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    HEAD "flecs.meta.struct Position {"
-    LINE "  x { flecs.meta.Member: }"
+    HEAD "struct Position {"
+    LINE "  x { Member: }"
     LINE "}";
 
     ecs_log_set_level(-4);
@@ -208,8 +208,8 @@ void Error_struct_w_member_w_assignment_to_empty_scope(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    HEAD "flecs.meta.struct Position {"
-    LINE "  x { flecs.meta.member: { }"
+    HEAD "struct Position {"
+    LINE "  x { member: { }"
     LINE "}";
 
     ecs_log_set_level(-4);
@@ -293,7 +293,7 @@ void Error_invalid_oneof(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    HEAD "flecs.meta.enum Color {"
+    HEAD "enum Color {"
     LINE "  flecs.core.constant Red"
     LINE "  flecs.core.constant Green"
     LINE "  flecs.core.constant Blue"
@@ -1645,9 +1645,9 @@ void Error_template_redeclare_prop_as_const(void) {
 
     const char *expr =
     LINE "template Foo {\n"
-    LINE "  prop x: flecs.meta.f32 = 10\n"
-    LINE "  prop y: flecs.meta.f32 = 10\n"
-    LINE "  const y: flecs.meta.f32 = 20\n"
+    LINE "  prop x: f32 = 10\n"
+    LINE "  prop y: f32 = 10\n"
+    LINE "  const y: f32 = 20\n"
     LINE "}"
     LINE "ent { Foo: {} }\n"
     LINE "\n";
@@ -1667,9 +1667,9 @@ void Error_template_redeclare_prop_as_prop(void) {
 
     const char *expr =
     LINE "template Foo {\n"
-    LINE "  prop x: flecs.meta.f32 = 10\n"
-    LINE "  prop y: flecs.meta.f32 = 10\n"
-    LINE "  prop y: flecs.meta.f32 = 20\n"
+    LINE "  prop x: f32 = 10\n"
+    LINE "  prop y: f32 = 10\n"
+    LINE "  prop y: f32 = 20\n"
     LINE "}"
     LINE "ent { Foo: {} }\n"
     LINE "\n";
@@ -1689,9 +1689,9 @@ void Error_template_redeclare_const_as_const(void) {
 
     const char *expr =
     LINE "template Foo {\n"
-    LINE "  prop x: flecs.meta.f32 = 10\n"
-    LINE "  const y: flecs.meta.f32 = 10\n"
-    LINE "  const y: flecs.meta.f32 = 20\n"
+    LINE "  prop x: f32 = 10\n"
+    LINE "  const y: f32 = 10\n"
+    LINE "  const y: f32 = 20\n"
     LINE "}"
     LINE "ent { Foo: {} }\n"
     LINE "\n";
