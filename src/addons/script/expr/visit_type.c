@@ -1547,7 +1547,9 @@ static int flecs_expr_identifier_variable_member_visit_type(
 
         ecs_entity_t global = desc->lookup_action(
             script->world, node->value, desc->lookup_ctx);
-        if (global && ecs_get(script->world, global, EcsScriptConstVar)) {
+        if (global && flecs_script_global_var_get(
+            script->world, global, NULL).ptr)
+        {
             break;
         }
 
@@ -1640,11 +1642,11 @@ static int flecs_expr_identifier_visit_type(
         ecs_entity_t e = desc->lookup_action(
             script->world, node->value, desc->lookup_ctx);
         if (e || !ecs_os_strcmp(node->value, "#0")) {
-            const EcsScriptConstVar *global = NULL;
+            ecs_value_t global = {0};
             if (e) {
-                global = ecs_get(script->world, e, EcsScriptConstVar);
+                global = flecs_script_global_var_get(script->world, e, NULL);
             }
-            if (!global) {
+            if (!global.ptr) {
                 bool is_opaque = false;
                 if (!type || type == ecs_id(ecs_value_t)) {
                     type = ecs_id(ecs_entity_t);
@@ -1683,7 +1685,7 @@ static int flecs_expr_identifier_visit_type(
                 ecs_expr_variable_t *var_node = flecs_expr_variable_from(
                     script, (ecs_expr_node_t*)node, node->value);
                 node->expr = (ecs_expr_node_t*)var_node;
-                node->node.type = global->value.type;
+                node->node.type = global.type;
 
                 if (flecs_expr_visit_type_priv(
                     script, (ecs_expr_node_t*)var_node, cur, desc))
@@ -1737,19 +1739,21 @@ static int flecs_expr_global_variable_resolve(
         goto error;
     }
 
-    const EcsScriptConstVar *v = ecs_get(world, global, EcsScriptConstVar);
-    if (!v) {
+    ecs_id_t component = 0;
+    ecs_value_t value = flecs_script_global_var_get(world, global, &component);
+    if (!value.ptr) {
         char *str = ecs_get_path(world, global);
-        flecs_expr_visit_error(script, node, 
+        flecs_expr_visit_error(script, node,
             "entity '%s' is not a variable", node->name);
         ecs_os_free(str);
         goto error;
     }
 
     node->node.kind = EcsExprGlobalVariable;
-    node->node.type = v->value.type;
-    node->global_value = v->value;
+    node->node.type = value.type;
+    node->global_value = value;
     node->global = global;
+    node->global_component = component;
 
     return 0;
 error:

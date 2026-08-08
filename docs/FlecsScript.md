@@ -1516,6 +1516,53 @@ world.import<math>();
 double pi_2 = math::pi * 2;
 ```
 
+#### Mutable exported variables
+An exported variable declared with `const` is a compile time constant. Its value
+is folded into every expression that uses it, which means that changing the value
+afterwards does not affect scripts that already ran.
+
+When a value has to change after a script ran, declare it with `mut` instead of
+`const`. The value of a `mut` variable is never folded, and scripts that use it
+are reevaluated when it changes:
+
+```cpp
+// Script 1
+export mut difficulty: f32 = 1.0
+```
+
+```cpp
+// Script 2
+enemy {
+  Health: {100 * difficulty}
+}
+```
+
+The `ecs_mut_var_init` function is used to create mutable exported variables from
+C code:
+
+```cpp
+float difficulty_value = 1.0;
+
+ecs_entity_t difficulty = ecs_mut_var(world, {
+  .name = "difficulty",
+  .type = ecs_id(ecs_f32_t),
+  .value = &difficulty_value
+});
+```
+
+To change the value of a mut variable, obtain a pointer to it with
+`ecs_mut_var_get`, and signal the change with `ecs_mut_var_modified`. Scripts
+that use the variable are reevaluated:
+
+```cpp
+ecs_value_t v = ecs_mut_var_get(world, difficulty);
+*(float*)v.ptr = 2.0;
+ecs_mut_var_modified(world, difficulty);
+```
+
+Note that a script is not reevaluated by a change to a mut variable that the
+script declares itself.
+
 ## Component values
 A script can use the value of a component that is looked up on a specific entity. The following example fetches the `width` and `depth` members from the `Level` component, that is fetched from the `Game` entity:
 

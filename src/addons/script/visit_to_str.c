@@ -115,6 +115,7 @@ static const char* flecs_script_node_to_str(
     case EcsAstMut:                return "mut";
     case EcsAstConst:              return "const";
     case EcsAstExportConst:        return "export const";
+    case EcsAstExportMut:          return "export mut";
     case EcsAstEntity:             return "entity";
     case EcsAstPairScope:          return "pair_scope";
     case EcsAstIf:                 return "if";
@@ -408,6 +409,7 @@ static int flecs_script_stmt_to_str(
         break;
     case EcsAstConst:
     case EcsAstExportConst:
+    case EcsAstExportMut:
     case EcsAstProp:
     case EcsAstMut:
         flecs_script_var_node_to_str(v, (ecs_script_var_node_t*)node);

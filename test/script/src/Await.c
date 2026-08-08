@@ -2208,3 +2208,43 @@ void Await_task_component_deferred_w_existing_task(void) {
     ecs_script_free(script);
     ecs_fini(world);
 }
+
+void Await_await_export_mut(void) {
+    ecs_world_t *world = ecs_init();
+
+    Await_reset();
+
+    ecs_async_function(world, {
+        .name = "fetch",
+        .return_type = ecs_id(ecs_i32_t),
+        .callback = Await_store_callback
+    });
+
+    ecs_script_t *script = ecs_script_parse(world, NULL,
+        "export mut value = await fetch()", NULL, NULL);
+    test_assert(script != NULL);
+
+    ecs_script_task_t *task = ecs_script_task_new(script, NULL);
+    test_assert(task != NULL);
+
+    test_int(ecs_script_task_resume(task, NULL),
+        EcsScriptTaskPending);
+    test_int(await_future_count, 1);
+
+    ecs_value_t result = ecs_value(ecs_i32_t, {42});
+    test_int(ecs_script_future_resolve(await_futures[0], &result), 0);
+    ecs_script_future_release(await_futures[0]);
+
+    test_int(ecs_script_task_resume(task, NULL),
+        EcsScriptTaskDone);
+
+    ecs_entity_t value = ecs_lookup(world, "value");
+    test_assert(value != 0);
+    ecs_value_t exported = ecs_mut_var_get(world, value);
+    test_uint(exported.type, ecs_id(ecs_i32_t));
+    test_int(*(int32_t*)exported.ptr, 42);
+
+    ecs_script_task_free(task);
+    ecs_script_free(script);
+    ecs_fini(world);
+}

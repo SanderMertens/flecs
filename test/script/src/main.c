@@ -454,16 +454,32 @@ void Eval_implicit_var_as_tag(void);
 void Eval_implicit_var_as_relationship(void);
 void Eval_implicit_var_as_target(void);
 void Eval_export_const_var(void);
+void Eval_export_mut_var(void);
 void Eval_export_const_var_w_type(void);
+void Eval_export_mut_var_w_type(void);
 void Eval_export_const_var_w_struct(void);
+void Eval_export_mut_var_w_struct(void);
 void Eval_export_const_var_redeclared(void);
+void Eval_export_mut_var_redeclared(void);
+void Eval_export_const_var_redeclared_w_export_mut_var(void);
+void Eval_export_mut_var_redeclared_w_export_const_var(void);
 void Eval_export_const_var_redeclared_w_local_var(void);
+void Eval_export_mut_var_redeclared_w_local_var(void);
 void Eval_local_const_var_redeclared_w_export_var(void);
+void Eval_local_const_var_redeclared_w_export_mut_var(void);
 void Eval_export_const_var_used_by_other_script(void);
+void Eval_export_mut_var_used_by_other_script(void);
 void Eval_export_const_var_as_component(void);
+void Eval_export_mut_var_as_component(void);
 void Eval_export_scoped_const_var_as_component(void);
+void Eval_export_scoped_mut_var_as_component(void);
 void Eval_export_const_var_in_scope(void);
+void Eval_export_mut_var_in_scope(void);
+void Eval_export_mut_var_modified_from_c(void);
+void Eval_export_const_var_is_not_mut_var(void);
+void Eval_export_mut_var_is_not_const_var(void);
 void Eval_export_scoped_const_var_used_by_other_script(void);
+void Eval_export_scoped_mut_var_used_by_other_script(void);
 void Eval_run_script_w_module_from_scope(void);
 void Eval_run_script_w_nested_module_from_scope(void);
 void Eval_run_script_w_nested_module_from_named_scope(void);
@@ -510,6 +526,7 @@ void Eval_template_stmt_w_comment(void);
 void Eval_const_var_expr_w_comment(void);
 void Eval_const_var_initializer_w_comment(void);
 void Eval_export_const_var_w_comment(void);
+void Eval_export_mut_var_w_comment(void);
 void Eval_auto_override_tag_w_comment(void);
 void Eval_pair_tag_w_comment(void);
 void Eval_negative_hex_and_binary_literals(void);
@@ -716,6 +733,7 @@ void Await_reject_nested_frames(void);
 void Await_cancel_is_terminal(void);
 void Await_immediate_resolve(void);
 void Await_await_export_const(void);
+void Await_await_export_mut(void);
 void Await_interleaved_tasks_dynamic_entity(void);
 void Await_await_method_receiver(void);
 void Await_task_component_added_on_task_new(void);
@@ -1583,7 +1601,9 @@ void Expr_space_at_start(void);
 void Expr_newline_at_start(void);
 void Expr_crlf_at_start(void);
 void Expr_global_const_var(void);
+void Expr_global_mut_var(void);
 void Expr_scoped_global_const_var(void);
+void Expr_scoped_global_mut_var(void);
 void Expr_escape_newline(void);
 void Expr_match_i32_1_i_case(void);
 void Expr_match_i32_2_i_cases(void);
@@ -1619,6 +1639,7 @@ void Expr_member_w_identifier_as_var(void);
 void Expr_member_w_identifier_as_var_and_entity(void);
 void Expr_nested_member_w_identifier_as_var_and_entity(void);
 void Expr_identifier_as_const_var(void);
+void Expr_identifier_as_mut_var(void);
 void Expr_expr_w_identifier_as_var(void);
 void Expr_initializer_w_identifier_as_var(void);
 void Expr_new_entity(void);
@@ -2111,23 +2132,36 @@ void Refs_ref_in_for_expr(void);
 void Refs_non_managed_script_no_update(void);
 void Refs_set_after_managed_script_deleted(void);
 void Refs_global_const_var_in_component_initializer(void);
+void Refs_global_mut_var_in_component_initializer(void);
 void Refs_global_const_var_in_with_initializer(void);
+void Refs_global_mut_var_in_with_initializer(void);
 void Refs_global_const_var_in_match_expr(void);
+void Refs_global_mut_var_in_match_expr(void);
 void Refs_global_const_var_in_if_expr(void);
+void Refs_global_mut_var_in_if_expr(void);
 void Refs_global_const_var_in_for_expr(void);
+void Refs_global_mut_var_in_for_expr(void);
 void Refs_global_const_var_non_managed_script_no_update(void);
+void Refs_global_mut_var_non_managed_script_no_update(void);
 void Refs_global_const_var_set_after_managed_script_deleted(void);
+void Refs_global_mut_var_set_after_managed_script_deleted(void);
 void Refs_global_const_var_modified(void);
+void Refs_global_mut_var_modified(void);
 void Refs_ref_in_function(void);
 void Refs_global_const_var_in_function(void);
+void Refs_global_mut_var_in_function(void);
 void Refs_ref_in_new_expr(void);
 void Refs_global_const_var_in_new_expr(void);
+void Refs_global_mut_var_in_new_expr(void);
 void Refs_ref_in_function_in_new_expr(void);
 void Refs_global_const_var_in_function_in_new_expr(void);
+void Refs_global_mut_var_in_function_in_new_expr(void);
 void Refs_ref_in_script_function_body(void);
 void Refs_global_const_var_in_script_function_body(void);
+void Refs_global_mut_var_in_script_function_body(void);
 void Refs_ref_assigned_to_component(void);
 void Refs_global_const_var_assigned_to_component(void);
+void Refs_global_mut_var_assigned_to_component(void);
 void Refs_reeval_hierarchy(void);
 void Refs_reeval_prefab_in_branch(void);
 void Refs_progress_reeval_prefab_w_isa_observer(void);
@@ -2149,15 +2183,25 @@ void Refs_ref_in_template_function_in_new_expr(void);
 void Refs_ref_in_template_script_function_body(void);
 void Refs_ref_in_template_assigned_to_component(void);
 void Refs_global_const_var_in_template_component_initializer(void);
+void Refs_global_mut_var_in_template_component_initializer(void);
 void Refs_global_const_var_in_template_with_initializer(void);
+void Refs_global_mut_var_in_template_with_initializer(void);
 void Refs_global_const_var_in_template_match_expr(void);
+void Refs_global_mut_var_in_template_match_expr(void);
 void Refs_global_const_var_in_template_if_expr(void);
+void Refs_global_mut_var_in_template_if_expr(void);
 void Refs_global_const_var_in_template_for_expr(void);
+void Refs_global_mut_var_in_template_for_expr(void);
 void Refs_global_const_var_in_template_function(void);
+void Refs_global_mut_var_in_template_function(void);
 void Refs_global_const_var_in_template_new_expr(void);
+void Refs_global_mut_var_in_template_new_expr(void);
 void Refs_global_const_var_in_template_function_in_new_expr(void);
+void Refs_global_mut_var_in_template_function_in_new_expr(void);
 void Refs_global_const_var_in_template_script_function_body(void);
+void Refs_global_mut_var_in_template_script_function_body(void);
 void Refs_global_const_var_in_template_assigned_to_component(void);
+void Refs_global_mut_var_in_template_assigned_to_component(void);
 void Refs_this_ref_in_template_component_initializer(void);
 void Refs_this_ref_in_template_with_initializer(void);
 void Refs_this_ref_in_template_match_expr(void);
@@ -2180,16 +2224,28 @@ void Refs_prop_ref_in_template_assigned_to_component(void);
 void Refs_template_prop_ref_observer_lifecycle(void);
 void Refs_template_prop_ref_retarget(void);
 void Refs_global_const_var_declared_in_same_script(void);
+void Refs_global_mut_var_declared_in_same_script(void);
 void Refs_global_const_var_declared_in_same_script_w_fn(void);
+void Refs_global_mut_var_declared_in_same_script_w_fn(void);
 void Refs_global_const_var_declared_in_same_script_w_fn_other_script(void);
+void Refs_global_mut_var_declared_in_same_script_w_fn_other_script(void);
+void Refs_global_mut_var_declared_in_same_script_w_fn_other_script_w_implicit_var(void);
 void Refs_global_const_var_declared_in_same_script_w_fn_other_scripts(void);
+void Refs_global_mut_var_declared_in_same_script_w_fn_other_scripts(void);
+void Refs_global_mut_var_declared_in_same_script_w_fn_other_scripts_w_implicit_var(void);
 void Refs_global_const_var_in_scoped_function_other_script(void);
+void Refs_global_mut_var_in_scoped_function_other_script(void);
 void Refs_ref_declared_in_same_script(void);
 void Refs_ref_declared_in_same_script_w_fn(void);
 void Refs_ref_declared_in_same_script_w_fn_other_script(void);
 void Refs_ref_declared_in_same_script_w_fn_other_scripts(void);
 void Refs_global_const_var_declared_in_same_script_w_template(void);
+void Refs_global_mut_var_declared_in_same_script_w_template(void);
 void Refs_reeval_instantiates_template_w_global_const_var_ref(void);
+void Refs_reeval_instantiates_template_w_global_mut_var_ref(void);
+void Refs_global_mut_var_modified_twice(void);
+void Refs_global_const_var_and_mut_var_in_same_expr(void);
+void Refs_global_mut_var_declared_in_same_script_modified(void);
 void Refs_reeval_during_script_preserves_using(void);
 
 // Testsuite 'ConstVar'
@@ -4015,44 +4071,108 @@ bake_test_case Eval_testcases[] = {
         Eval_export_const_var
     },
     {
+        "export_mut_var",
+        Eval_export_mut_var
+    },
+    {
         "export_const_var_w_type",
         Eval_export_const_var_w_type
+    },
+    {
+        "export_mut_var_w_type",
+        Eval_export_mut_var_w_type
     },
     {
         "export_const_var_w_struct",
         Eval_export_const_var_w_struct
     },
     {
+        "export_mut_var_w_struct",
+        Eval_export_mut_var_w_struct
+    },
+    {
         "export_const_var_redeclared",
         Eval_export_const_var_redeclared
+    },
+    {
+        "export_mut_var_redeclared",
+        Eval_export_mut_var_redeclared
+    },
+    {
+        "export_const_var_redeclared_w_export_mut_var",
+        Eval_export_const_var_redeclared_w_export_mut_var
+    },
+    {
+        "export_mut_var_redeclared_w_export_const_var",
+        Eval_export_mut_var_redeclared_w_export_const_var
     },
     {
         "export_const_var_redeclared_w_local_var",
         Eval_export_const_var_redeclared_w_local_var
     },
     {
+        "export_mut_var_redeclared_w_local_var",
+        Eval_export_mut_var_redeclared_w_local_var
+    },
+    {
         "local_const_var_redeclared_w_export_var",
         Eval_local_const_var_redeclared_w_export_var
+    },
+    {
+        "local_const_var_redeclared_w_export_mut_var",
+        Eval_local_const_var_redeclared_w_export_mut_var
     },
     {
         "export_const_var_used_by_other_script",
         Eval_export_const_var_used_by_other_script
     },
     {
+        "export_mut_var_used_by_other_script",
+        Eval_export_mut_var_used_by_other_script
+    },
+    {
         "export_const_var_as_component",
         Eval_export_const_var_as_component
+    },
+    {
+        "export_mut_var_as_component",
+        Eval_export_mut_var_as_component
     },
     {
         "export_scoped_const_var_as_component",
         Eval_export_scoped_const_var_as_component
     },
     {
+        "export_scoped_mut_var_as_component",
+        Eval_export_scoped_mut_var_as_component
+    },
+    {
         "export_const_var_in_scope",
         Eval_export_const_var_in_scope
     },
     {
+        "export_mut_var_in_scope",
+        Eval_export_mut_var_in_scope
+    },
+    {
+        "export_mut_var_modified_from_c",
+        Eval_export_mut_var_modified_from_c
+    },
+    {
+        "export_const_var_is_not_mut_var",
+        Eval_export_const_var_is_not_mut_var
+    },
+    {
+        "export_mut_var_is_not_const_var",
+        Eval_export_mut_var_is_not_const_var
+    },
+    {
         "export_scoped_const_var_used_by_other_script",
         Eval_export_scoped_const_var_used_by_other_script
+    },
+    {
+        "export_scoped_mut_var_used_by_other_script",
+        Eval_export_scoped_mut_var_used_by_other_script
     },
     {
         "run_script_w_module_from_scope",
@@ -4237,6 +4357,10 @@ bake_test_case Eval_testcases[] = {
     {
         "export_const_var_w_comment",
         Eval_export_const_var_w_comment
+    },
+    {
+        "export_mut_var_w_comment",
+        Eval_export_mut_var_w_comment
     },
     {
         "auto_override_tag_w_comment",
@@ -5051,6 +5175,10 @@ bake_test_case Await_testcases[] = {
     {
         "await_export_const",
         Await_await_export_const
+    },
+    {
+        "await_export_mut",
+        Await_await_export_mut
     },
     {
         "interleaved_tasks_dynamic_entity",
@@ -8482,8 +8610,16 @@ bake_test_case Expr_testcases[] = {
         Expr_global_const_var
     },
     {
+        "global_mut_var",
+        Expr_global_mut_var
+    },
+    {
         "scoped_global_const_var",
         Expr_scoped_global_const_var
+    },
+    {
+        "scoped_global_mut_var",
+        Expr_scoped_global_mut_var
     },
     {
         "escape_newline",
@@ -8624,6 +8760,10 @@ bake_test_case Expr_testcases[] = {
     {
         "identifier_as_const_var",
         Expr_identifier_as_const_var
+    },
+    {
+        "identifier_as_mut_var",
+        Expr_identifier_as_mut_var
     },
     {
         "expr_w_identifier_as_var",
@@ -10555,32 +10695,64 @@ bake_test_case Refs_testcases[] = {
         Refs_global_const_var_in_component_initializer
     },
     {
+        "global_mut_var_in_component_initializer",
+        Refs_global_mut_var_in_component_initializer
+    },
+    {
         "global_const_var_in_with_initializer",
         Refs_global_const_var_in_with_initializer
+    },
+    {
+        "global_mut_var_in_with_initializer",
+        Refs_global_mut_var_in_with_initializer
     },
     {
         "global_const_var_in_match_expr",
         Refs_global_const_var_in_match_expr
     },
     {
+        "global_mut_var_in_match_expr",
+        Refs_global_mut_var_in_match_expr
+    },
+    {
         "global_const_var_in_if_expr",
         Refs_global_const_var_in_if_expr
+    },
+    {
+        "global_mut_var_in_if_expr",
+        Refs_global_mut_var_in_if_expr
     },
     {
         "global_const_var_in_for_expr",
         Refs_global_const_var_in_for_expr
     },
     {
+        "global_mut_var_in_for_expr",
+        Refs_global_mut_var_in_for_expr
+    },
+    {
         "global_const_var_non_managed_script_no_update",
         Refs_global_const_var_non_managed_script_no_update
+    },
+    {
+        "global_mut_var_non_managed_script_no_update",
+        Refs_global_mut_var_non_managed_script_no_update
     },
     {
         "global_const_var_set_after_managed_script_deleted",
         Refs_global_const_var_set_after_managed_script_deleted
     },
     {
+        "global_mut_var_set_after_managed_script_deleted",
+        Refs_global_mut_var_set_after_managed_script_deleted
+    },
+    {
         "global_const_var_modified",
         Refs_global_const_var_modified
+    },
+    {
+        "global_mut_var_modified",
+        Refs_global_mut_var_modified
     },
     {
         "ref_in_function",
@@ -10591,12 +10763,20 @@ bake_test_case Refs_testcases[] = {
         Refs_global_const_var_in_function
     },
     {
+        "global_mut_var_in_function",
+        Refs_global_mut_var_in_function
+    },
+    {
         "ref_in_new_expr",
         Refs_ref_in_new_expr
     },
     {
         "global_const_var_in_new_expr",
         Refs_global_const_var_in_new_expr
+    },
+    {
+        "global_mut_var_in_new_expr",
+        Refs_global_mut_var_in_new_expr
     },
     {
         "ref_in_function_in_new_expr",
@@ -10607,6 +10787,10 @@ bake_test_case Refs_testcases[] = {
         Refs_global_const_var_in_function_in_new_expr
     },
     {
+        "global_mut_var_in_function_in_new_expr",
+        Refs_global_mut_var_in_function_in_new_expr
+    },
+    {
         "ref_in_script_function_body",
         Refs_ref_in_script_function_body
     },
@@ -10615,12 +10799,20 @@ bake_test_case Refs_testcases[] = {
         Refs_global_const_var_in_script_function_body
     },
     {
+        "global_mut_var_in_script_function_body",
+        Refs_global_mut_var_in_script_function_body
+    },
+    {
         "ref_assigned_to_component",
         Refs_ref_assigned_to_component
     },
     {
         "global_const_var_assigned_to_component",
         Refs_global_const_var_assigned_to_component
+    },
+    {
+        "global_mut_var_assigned_to_component",
+        Refs_global_mut_var_assigned_to_component
     },
     {
         "reeval_hierarchy",
@@ -10707,40 +10899,80 @@ bake_test_case Refs_testcases[] = {
         Refs_global_const_var_in_template_component_initializer
     },
     {
+        "global_mut_var_in_template_component_initializer",
+        Refs_global_mut_var_in_template_component_initializer
+    },
+    {
         "global_const_var_in_template_with_initializer",
         Refs_global_const_var_in_template_with_initializer
+    },
+    {
+        "global_mut_var_in_template_with_initializer",
+        Refs_global_mut_var_in_template_with_initializer
     },
     {
         "global_const_var_in_template_match_expr",
         Refs_global_const_var_in_template_match_expr
     },
     {
+        "global_mut_var_in_template_match_expr",
+        Refs_global_mut_var_in_template_match_expr
+    },
+    {
         "global_const_var_in_template_if_expr",
         Refs_global_const_var_in_template_if_expr
+    },
+    {
+        "global_mut_var_in_template_if_expr",
+        Refs_global_mut_var_in_template_if_expr
     },
     {
         "global_const_var_in_template_for_expr",
         Refs_global_const_var_in_template_for_expr
     },
     {
+        "global_mut_var_in_template_for_expr",
+        Refs_global_mut_var_in_template_for_expr
+    },
+    {
         "global_const_var_in_template_function",
         Refs_global_const_var_in_template_function
+    },
+    {
+        "global_mut_var_in_template_function",
+        Refs_global_mut_var_in_template_function
     },
     {
         "global_const_var_in_template_new_expr",
         Refs_global_const_var_in_template_new_expr
     },
     {
+        "global_mut_var_in_template_new_expr",
+        Refs_global_mut_var_in_template_new_expr
+    },
+    {
         "global_const_var_in_template_function_in_new_expr",
         Refs_global_const_var_in_template_function_in_new_expr
+    },
+    {
+        "global_mut_var_in_template_function_in_new_expr",
+        Refs_global_mut_var_in_template_function_in_new_expr
     },
     {
         "global_const_var_in_template_script_function_body",
         Refs_global_const_var_in_template_script_function_body
     },
     {
+        "global_mut_var_in_template_script_function_body",
+        Refs_global_mut_var_in_template_script_function_body
+    },
+    {
         "global_const_var_in_template_assigned_to_component",
         Refs_global_const_var_in_template_assigned_to_component
+    },
+    {
+        "global_mut_var_in_template_assigned_to_component",
+        Refs_global_mut_var_in_template_assigned_to_component
     },
     {
         "this_ref_in_template_component_initializer",
@@ -10831,20 +11063,48 @@ bake_test_case Refs_testcases[] = {
         Refs_global_const_var_declared_in_same_script
     },
     {
+        "global_mut_var_declared_in_same_script",
+        Refs_global_mut_var_declared_in_same_script
+    },
+    {
         "global_const_var_declared_in_same_script_w_fn",
         Refs_global_const_var_declared_in_same_script_w_fn
+    },
+    {
+        "global_mut_var_declared_in_same_script_w_fn",
+        Refs_global_mut_var_declared_in_same_script_w_fn
     },
     {
         "global_const_var_declared_in_same_script_w_fn_other_script",
         Refs_global_const_var_declared_in_same_script_w_fn_other_script
     },
     {
+        "global_mut_var_declared_in_same_script_w_fn_other_script",
+        Refs_global_mut_var_declared_in_same_script_w_fn_other_script
+    },
+    {
+        "global_mut_var_declared_in_same_script_w_fn_other_script_w_implicit_var",
+        Refs_global_mut_var_declared_in_same_script_w_fn_other_script_w_implicit_var
+    },
+    {
         "global_const_var_declared_in_same_script_w_fn_other_scripts",
         Refs_global_const_var_declared_in_same_script_w_fn_other_scripts
     },
     {
+        "global_mut_var_declared_in_same_script_w_fn_other_scripts",
+        Refs_global_mut_var_declared_in_same_script_w_fn_other_scripts
+    },
+    {
+        "global_mut_var_declared_in_same_script_w_fn_other_scripts_w_implicit_var",
+        Refs_global_mut_var_declared_in_same_script_w_fn_other_scripts_w_implicit_var
+    },
+    {
         "global_const_var_in_scoped_function_other_script",
         Refs_global_const_var_in_scoped_function_other_script
+    },
+    {
+        "global_mut_var_in_scoped_function_other_script",
+        Refs_global_mut_var_in_scoped_function_other_script
     },
     {
         "ref_declared_in_same_script",
@@ -10867,8 +11127,28 @@ bake_test_case Refs_testcases[] = {
         Refs_global_const_var_declared_in_same_script_w_template
     },
     {
+        "global_mut_var_declared_in_same_script_w_template",
+        Refs_global_mut_var_declared_in_same_script_w_template
+    },
+    {
         "reeval_instantiates_template_w_global_const_var_ref",
         Refs_reeval_instantiates_template_w_global_const_var_ref
+    },
+    {
+        "reeval_instantiates_template_w_global_mut_var_ref",
+        Refs_reeval_instantiates_template_w_global_mut_var_ref
+    },
+    {
+        "global_mut_var_modified_twice",
+        Refs_global_mut_var_modified_twice
+    },
+    {
+        "global_const_var_and_mut_var_in_same_expr",
+        Refs_global_const_var_and_mut_var_in_same_expr
+    },
+    {
+        "global_mut_var_declared_in_same_script_modified",
+        Refs_global_mut_var_declared_in_same_script_modified
     },
     {
         "reeval_during_script_preserves_using",
@@ -11055,7 +11335,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        573,
+        590,
         Eval_testcases
     },
     {
@@ -11069,7 +11349,7 @@ static bake_test_suite suites[] = {
         "Await",
         NULL,
         NULL,
-        44,
+        45,
         Await_testcases
     },
     {
@@ -11120,7 +11400,7 @@ static bake_test_suite suites[] = {
         "Expr",
         Expr_setup,
         NULL,
-        358,
+        361,
         Expr_testcases,
         1,
         Expr_params
@@ -11173,7 +11453,7 @@ static bake_test_suite suites[] = {
         "Refs",
         NULL,
         NULL,
-        89,
+        124,
         Refs_testcases
     },
     {

@@ -49,6 +49,9 @@ FLECS_API
 extern ECS_COMPONENT_DECLARE(EcsScriptConstVar);
 
 FLECS_API
+extern ECS_COMPONENT_DECLARE(EcsScriptMutVar);
+
+FLECS_API
 extern ECS_COMPONENT_DECLARE(EcsScriptFunction);
 
 FLECS_API
@@ -152,12 +155,23 @@ typedef struct ecs_script_eval_result_t {
 #endif
 
 /** Const component.
- * This component describes a const variable that can be used from scripts.
+ * This component describes a const variable that can be used from scripts. The
+ * value of a const variable is folded into expressions that use it.
  */
 typedef struct EcsScriptConstVar {
     ecs_value_t value;
     const ecs_type_info_t *type_info;
 } EcsScriptConstVar;
+
+/** Mut component.
+ * This component describes a mutable global variable that can be used from
+ * scripts. Unlike a const variable, the value of a mut variable is never folded
+ * into expressions, and scripts that use it are reevaluated when it changes.
+ */
+typedef struct EcsScriptMutVar {
+    ecs_value_t value;
+    const ecs_type_info_t *type_info;
+} EcsScriptMutVar;
 
 struct ecs_script_function_t {
     ecs_entity_t return_type;
@@ -793,14 +807,63 @@ void* ecs_const_var_get_w_type(
     (*ECS_CAST(T*, ecs_const_var_get_w_type(\
         world, name, ecs_id(T), ECS_SIZEOF(T), &(T){0})))
 
-/** Mark const var as modified.
+/* Global mut variables */
+
+/** Used with ecs_mut_var_init(). */
+typedef struct ecs_mut_var_desc_t {
+    /** Variable name. */
+    const char *name;
+
+    /** Variable parent (namespace). */
+    ecs_entity_t parent;
+
+    /** Variable type. */
+    ecs_entity_t type;
+
+    /** Pointer to value of variable. The value will be copied to an internal
+     * storage and does not need to be kept alive. */
+    void *value;
+} ecs_mut_var_desc_t;
+
+/** Create a mut variable that can be accessed by scripts.
+ * Unlike a const variable the value of a mut variable is never folded into
+ * expressions, which means scripts that use it are reevaluated when the value
+ * changes.
+ *
+ * @param world The world.
+ * @param desc Mut var parameters.
+ * @return The mut var, or 0 if failed.
+ */
+FLECS_API
+ecs_entity_t ecs_mut_var_init(
+    ecs_world_t *world,
+    ecs_mut_var_desc_t *desc);
+
+#define ecs_mut_var(world, ...)\
+    ecs_mut_var_init(world, &(ecs_mut_var_desc_t)__VA_ARGS__)
+
+
+/** Return the value for a mut variable.
+ * This returns the value for a mut variable that is created either with
+ * ecs_mut_var_init(), or in a script with "export mut v = ...".
+ *
+ * @param world The world.
+ * @param var The mut variable.
+ * @return The value of the mut variable.
+ */
+FLECS_API
+ecs_value_t ecs_mut_var_get(
+    const ecs_world_t *world,
+    ecs_entity_t var);
+
+/** Mark mut var as modified.
  * This will notify OnSet observers.
  *
  * @param world The world.
- * @param var The const variable.
+ * @param var The mut variable.
  */
 FLECS_API
-void ecs_const_var_modified(
+void ecs_mut_var_modified(
     ecs_world_t *world,
     ecs_entity_t var);
 
