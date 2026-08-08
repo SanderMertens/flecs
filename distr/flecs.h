@@ -16713,6 +16713,9 @@ FLECS_API
 extern ECS_COMPONENT_DECLARE(EcsScriptConstVar);
 
 FLECS_API
+extern ECS_COMPONENT_DECLARE(EcsScriptMutVar);
+
+FLECS_API
 extern ECS_COMPONENT_DECLARE(EcsScriptFunction);
 
 FLECS_API
@@ -17205,12 +17208,23 @@ ecs_entity_t ecs_async_function_init(
 #endif
 
 /** Const component.
- * This component describes a const variable that can be used from scripts.
+ * This component describes a const variable that can be used from scripts. The
+ * value of a const variable is folded into expressions that use it.
  */
 typedef struct EcsScriptConstVar {
     ecs_value_t value;
     const ecs_type_info_t *type_info;
 } EcsScriptConstVar;
+
+/** Mut component.
+ * This component describes a mutable global variable that can be used from
+ * scripts. Unlike a const variable, the value of a mut variable is never folded
+ * into expressions, and scripts that use it are reevaluated when it changes.
+ */
+typedef struct EcsScriptMutVar {
+    ecs_value_t value;
+    const ecs_type_info_t *type_info;
+} EcsScriptMutVar;
 
 struct ecs_script_function_t {
     ecs_entity_t return_type;
@@ -17841,14 +17855,62 @@ void* ecs_const_var_get_w_type(
     (*ECS_CAST(T*, ecs_const_var_get_w_type(\
         world, name, ecs_id(T), ECS_SIZEOF(T), &(T){0})))
 
-/** Mark const var as modified.
+/* Global mut variables */
+
+/** Used with ecs_mut_var_init(). */
+typedef struct ecs_mut_var_desc_t {
+    /** Variable name. */
+    const char *name;
+
+    /** Variable parent (namespace). */
+    ecs_entity_t parent;
+
+    /** Variable type. */
+    ecs_entity_t type;
+
+    /** Pointer to value of variable. The value will be copied to an internal
+     * storage and does not need to be kept alive. */
+    void *value;
+} ecs_mut_var_desc_t;
+
+/** Create a mut variable that can be accessed by scripts.
+ * Unlike a const variable the value of a mut variable is never folded into
+ * expressions, which means scripts that use it are reevaluated when the value
+ * changes.
+ *
+ * @param world The world.
+ * @param desc Mut var parameters.
+ * @return The mut var, or 0 if failed.
+ */
+FLECS_API
+ecs_entity_t ecs_mut_var_init(
+    ecs_world_t *world,
+    ecs_mut_var_desc_t *desc);
+
+#define ecs_mut_var(world, ...)\
+    ecs_mut_var_init(world, &(ecs_mut_var_desc_t)__VA_ARGS__)
+
+/** Return the value for a mut variable.
+ * This returns the value for a mut variable that is created either with
+ * ecs_mut_var_init(), or in a script with "export mut v = ...".
+ *
+ * @param world The world.
+ * @param var The mut variable.
+ * @return The value of the mut variable.
+ */
+FLECS_API
+ecs_value_t ecs_mut_var_get(
+    const ecs_world_t *world,
+    ecs_entity_t var);
+
+/** Mark mut var as modified.
  * This will notify OnSet observers.
  *
  * @param world The world.
- * @param var The const variable.
+ * @param var The mut variable.
  */
 FLECS_API
-void ecs_const_var_modified(
+void ecs_mut_var_modified(
     ecs_world_t *world,
     ecs_entity_t var);
 
@@ -27174,6 +27236,46 @@ T get_const_var(const char *name, const T& default_value = {}) const;
  */
 template <typename T>
 void get_const_var(const char *name, T& out, const T& default_value = {}) const;
+
+/** Get the value of an exported script mut variable.
+ * Unlike a const variable, the value of a mut variable is never folded into
+ * expressions that use it.
+ *
+ * An exported mut variable can be created in a script like this:
+ *
+ * @code
+ * export mut x: f64 = 10
+ * @endcode
+ *
+ * See the Flecs script manual for more details.
+ *
+ * @tparam T The type of the value to obtain.
+ * @param name The name of the exported variable.
+ * @param default_value Optional default value. Returned when mut var lookup failed.
+ * @return The value of the variable.
+ */
+template <typename T>
+T get_mut_var(const char *name, const T& default_value = {}) const;
+
+/** Get the value of an exported script mut variable.
+ * Unlike a const variable, the value of a mut variable is never folded into
+ * expressions that use it.
+ *
+ * An exported mut variable can be created in a script like this:
+ *
+ * @code
+ * export mut x: f64 = 10
+ * @endcode
+ *
+ * See the Flecs script manual for more details.
+ *
+ * @tparam T The type of the value to obtain.
+ * @param name The name of the exported variable.
+ * @param out Optional pointer to out variable. Can be used to automatically deduce T.
+ * @param default_value Optional default value. Returned when mut var lookup failed.
+ */
+template <typename T>
+void get_mut_var(const char *name, T& out, const T& default_value = {}) const;
 
 /** @} */
 
@@ -39202,6 +39304,24 @@ namespace _ {
         return value;
     }
 
+    inline ecs_value_t get_mut_var(const flecs::world_t *world, const char *name) {
+        flecs::entity_t v = ecs_lookup_path_w_sep(
+            world, 0, name, "::", "::", false);
+        if (!v) {
+            ecs_warn("unresolved mut variable '%s', returning default", name);
+            return {};
+        }
+
+        ecs_value_t value = ecs_mut_var_get(world, v);
+        if (value.ptr == nullptr) {
+            ecs_warn("entity '%s' is not a mut variable, returning default",
+                name);
+            return {};
+        }
+
+        return value;
+    }
+
     template <typename T>
     inline T get_const_value(
         flecs::world_t *world, const char *name, ecs_value_t value, ecs_entity_t type, const T& default_value) 
@@ -39341,6 +39461,47 @@ void world::get_const_var(
     const T& default_value) const 
 {
     ecs_value_t value = flecs::_::get_const_var(world_, name);
+    if (!value.ptr) {
+        out = default_value;
+        return;
+    }
+
+    flecs::id_t type = flecs::_::type<T>::id(world_);
+    if (type == value.type) {
+        out = *(static_cast<T*>(value.ptr));
+        return;
+    }
+
+    out = flecs::_::get_const_value<T>(
+        world_, name, value, type, default_value);
+}
+
+template <typename T>
+inline T world::get_mut_var(
+    const char *name,
+    const T& default_value) const
+{
+    ecs_value_t value = flecs::_::get_mut_var(world_, name);
+    if (!value.ptr) {
+        return default_value;
+    }
+
+    flecs::id_t type = flecs::_::type<T>::id(world_);
+    if (type == value.type) {
+        return *(static_cast<T*>(value.ptr));
+    }
+
+    return flecs::_::get_const_value<T>(
+        world_, name, value, type, default_value);
+}
+
+template <typename T>
+void world::get_mut_var(
+    const char *name,
+    T& out,
+    const T& default_value) const
+{
+    ecs_value_t value = flecs::_::get_mut_var(world_, name);
     if (!value.ptr) {
         out = default_value;
         return;

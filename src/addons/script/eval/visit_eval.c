@@ -755,6 +755,7 @@ static void flecs_script_apply_non_fragmenting_childof_to_scope(
         case EcsAstMut:
         case EcsAstConst:
         case EcsAstExportConst:
+        case EcsAstExportMut:
         case EcsAstInclude:
         case EcsAstFunction:
         case EcsAstAwait:
@@ -1185,7 +1186,8 @@ static int flecs_script_eval_var_component(
         }
 
         if (var_entity) {
-            var_value = ecs_const_var_get(v->world, var_entity);
+            var_value = flecs_script_global_var_get(
+                v->world, var_entity, NULL);
         }
 
         if (!var_value.ptr) {
@@ -1406,6 +1408,9 @@ int flecs_script_eval_const(
     ecs_script_var_node_t *node,
     bool export)
 {
+    const char *kind_str =
+        node->node.kind == EcsAstExportMut ? "mut" : "const";
+
     /* Declare variable. If this variable is declared while instantiating a
      * template, the variable sp has already been resolved in all expressions
      * that used it, so we don't need to create the variable with a name. */
@@ -1413,7 +1418,8 @@ int flecs_script_eval_const(
     if (!export) {
         ecs_entity_t e = ecs_lookup_child(v->world, v->parent, node->name);
         if (e) {
-            ecs_value_t existing = ecs_const_var_get(v->world, e);
+            ecs_value_t existing = flecs_script_global_var_get(
+                v->world, e, NULL);
             if (existing.ptr != NULL) {
                 flecs_script_eval_error(v, node, 
                     "local variable '%s' shadows an exported variable", 
@@ -1449,16 +1455,16 @@ int flecs_script_eval_const(
     if (!type && node->type) {
         if (flecs_script_find_entity(v, 0, node->type, NULL, NULL, &type, NULL) || !type) {
             flecs_script_eval_error(v, node,
-                "unresolved type '%s' for const variable '%s'", 
-                    node->type, node->name);
+                "unresolved type '%s' for %s variable '%s'",
+                    node->type, kind_str, node->name);
             return -1;
         }
 
         ti = flecs_script_get_type_info(v, node, type);
         if (!ti) {
             flecs_script_eval_error(v, node,
-                "failed to retrieve type info for '%s' for const variable '%s'", 
-                    node->type, node->name);
+                "failed to retrieve type info for '%s' for %s variable '%s'",
+                    node->type, kind_str, node->name);
             return -1;
         }
     }
@@ -1477,8 +1483,8 @@ int flecs_script_eval_const(
 
         if (flecs_script_eval_expr(v, &node->expr, &result)) {
             flecs_script_eval_error(v, node,
-                "failed to evaluate expression for const variable '%s'", 
-                    node->name);
+                "failed to evaluate expression for %s variable '%s'",
+                    kind_str, node->name);
             return -1;
         }
     } else {
@@ -1487,8 +1493,8 @@ int flecs_script_eval_const(
         ecs_value_t value = {0};
         if (flecs_script_eval_expr(v, &node->expr, &value)) {
             flecs_script_eval_error(v, node,
-                "failed to evaluate expression for const variable '%s'", 
-                    node->name);
+                "failed to evaluate expression for %s variable '%s'",
+                    kind_str, node->name);
             return -1;
         }
 
@@ -1516,12 +1522,22 @@ int flecs_script_eval_const(
         var->type_info = ti;
         var->value = result;
     } else {
-        ecs_entity_t const_var = ecs_const_var(v->world, {
-            .parent = v->parent,
-            .name = node->name,
-            .type = result.type,
-            .value = result.ptr
-        });
+        ecs_entity_t const_var;
+        if (node->node.kind == EcsAstExportMut) {
+            const_var = ecs_mut_var(v->world, {
+                .parent = v->parent,
+                .name = node->name,
+                .type = result.type,
+                .value = result.ptr
+            });
+        } else {
+            const_var = ecs_const_var(v->world, {
+                .parent = v->parent,
+                .name = node->name,
+                .type = result.type,
+                .value = result.ptr
+            });
+        }
 
         /* Clean up value since it'll have been copied into the const var. */
         if (ti->hooks.dtor) {
@@ -1532,8 +1548,8 @@ int flecs_script_eval_const(
 
         if (!const_var) {
             flecs_script_eval_error(v, node,
-                "failed to create exported const variable '%s'",
-                    node->name);
+                "failed to create exported %s variable '%s'",
+                    kind_str, node->name);
             return -1;
         }
 
@@ -2018,6 +2034,7 @@ int flecs_script_eval_node(
         return flecs_script_eval_const(
             v, (ecs_script_var_node_t*)node, false);
     case EcsAstExportConst:
+    case EcsAstExportMut:
         return flecs_script_eval_const(
             v, (ecs_script_var_node_t*)node, true);
     case EcsAstInclude:
@@ -2118,7 +2135,8 @@ static int flecs_script_step_scope(
         v->base.next = (frame->pc + 1) < count ? nodes[frame->pc + 1] : NULL;
 
         if (stmt->kind == EcsAstAwait ||
-            ((stmt->kind == EcsAstConst || stmt->kind == EcsAstExportConst) &&
+            ((stmt->kind == EcsAstConst || stmt->kind == EcsAstExportConst ||
+              stmt->kind == EcsAstExportMut) &&
                 ((ecs_script_var_node_t*)stmt)->is_await))
         {
             ecs_assert(v->base.depth < ECS_SCRIPT_VISIT_MAX_DEPTH,

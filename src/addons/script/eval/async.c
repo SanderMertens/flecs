@@ -373,16 +373,27 @@ static int flecs_script_await_assign_const(
             return -1;
         }
 
-        ecs_entity_t const_var = ecs_const_var(v->world, {
-            .parent = v->parent,
-            .name = node->name,
-            .type = value->type,
-            .value = value->ptr
-        });
-        if (!const_var) {
+        bool is_mut = node->node.kind == EcsAstExportMut;
+        ecs_entity_t global_var;
+        if (is_mut) {
+            global_var = ecs_mut_var(v->world, {
+                .parent = v->parent,
+                .name = node->name,
+                .type = value->type,
+                .value = value->ptr
+            });
+        } else {
+            global_var = ecs_const_var(v->world, {
+                .parent = v->parent,
+                .name = node->name,
+                .type = value->type,
+                .value = value->ptr
+            });
+        }
+        if (!global_var) {
             flecs_script_eval_error(v, node,
-                "failed to create exported const variable '%s'",
-                node->name);
+                "failed to create exported %s variable '%s'",
+                is_mut ? "mut" : "const", node->name);
             return -1;
         }
         return 0;
@@ -448,7 +459,8 @@ int flecs_script_step_await(
     } else {
         var = (ecs_script_var_node_t*)stmt;
         expr = &var->expr;
-        export = stmt->kind == EcsAstExportConst;
+        export = stmt->kind == EcsAstExportConst ||
+            stmt->kind == EcsAstExportMut;
     }
 
     if (!r->can_suspend) {

@@ -88,6 +88,8 @@ typedef struct ecs_expr_variable_t {
     const char *name;
     ecs_value_t global_value; /* Only set for global variables */
     ecs_entity_t global; /* Entity of the global variable, if any */
+    ecs_id_t global_component; /* Component that stores the global value. Is
+                                * EcsScriptConstVar or EcsScriptMutVar. */
     int32_t sp; /* For fast variable lookups */
 } ecs_expr_variable_t;
 

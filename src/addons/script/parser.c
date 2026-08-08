@@ -406,7 +406,8 @@ static const char* flecs_script_parse_var(
     ecs_tokenizer_t *tokenizer,
     ecs_script_node_kind_t kind)
 {
-    int token_offset = kind != EcsAstExportConst ? 0 : 1;
+    bool is_export = kind == EcsAstExportConst || kind == EcsAstExportMut;
+    int token_offset = !is_export ? 0 : 1;
 
     Parse_1(EcsTokIdentifier,
         ecs_script_var_node_t *var = flecs_script_insert_var(
@@ -414,7 +415,7 @@ static const char* flecs_script_parse_var(
         var->node.kind = kind;
 
         bool is_prop = kind == EcsAstProp;
-        bool is_mut = kind == EcsAstMut;
+        bool is_mut = kind == EcsAstMut || kind == EcsAstExportMut;
         const char *kind_str = is_prop ? "prop" : (is_mut ? "mut" : "const");
 
         Parse(
@@ -528,6 +529,14 @@ static const char* flecs_script_parse_export_const(
     ecs_tokenizer_t *tokenizer)
 {
     return flecs_script_parse_var(parser, pos, tokenizer, EcsAstExportConst);
+}
+
+static const char* flecs_script_parse_export_mut(
+    ecs_parser_t *parser,
+    const char *pos,
+    ecs_tokenizer_t *tokenizer)
+{
+    return flecs_script_parse_var(parser, pos, tokenizer, EcsAstExportMut);
 }
 
 static const char* flecs_script_parse_prop(
@@ -874,9 +883,13 @@ mut_var: {
 
 // export
 export_var: {
-    // export const
-    Parse_1(EcsTokKeywordConst,
-        return flecs_script_parse_export_const(parser, pos, tokenizer);
+    Parse(
+        // export const
+        case EcsTokKeywordConst:
+            return flecs_script_parse_export_const(parser, pos, tokenizer);
+        // export mut
+        case EcsTokKeywordMut:
+            return flecs_script_parse_export_mut(parser, pos, tokenizer);
     )
 }
 

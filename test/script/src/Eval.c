@@ -18288,3 +18288,417 @@ void Eval_using_cleared_after_script(void) {
 
     ecs_fini(world);
 }
+
+
+void Eval_export_mut_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "export mut v = 10"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t v = ecs_lookup(world, "v");
+    test_assert(v != 0);
+
+    ecs_value_t value = ecs_mut_var_get(world, v);
+    test_assert(value.type != 0);
+    test_assert(value.ptr != NULL);
+
+    test_uint(value.type, ecs_id(ecs_i64_t));
+    test_int(*(int64_t*)value.ptr, 10);
+
+    ecs_fini(world);
+}
+
+void Eval_export_mut_var_w_type(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "export mut v: i32 = 10"
+    LINE ""
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t v = ecs_lookup(world, "v");
+    test_assert(v != 0);
+
+    ecs_value_t value = ecs_mut_var_get(world, v);
+    test_assert(value.type != 0);
+    test_assert(value.ptr != NULL);
+
+    test_uint(value.type, ecs_id(ecs_i32_t));
+    test_int(*(ecs_i32_t*)value.ptr, 10);
+
+    ecs_fini(world);
+}
+
+void Eval_export_mut_var_w_struct(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "export mut v: Position = {10, 20}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t v = ecs_lookup(world, "v");
+    test_assert(v != 0);
+
+    ecs_value_t value = ecs_mut_var_get(world, v);
+    test_assert(value.type != 0);
+    test_assert(value.ptr != NULL);
+
+    test_uint(value.type, ecs_id(Position));
+    Position *p = value.ptr;
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Eval_export_mut_var_redeclared(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "export mut v = 10"
+    LINE "export mut v = 20"
+    ;
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_export_mut_var_redeclared_w_local_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const v = 10"
+    LINE "export mut v = 20"
+    ;
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_local_const_var_redeclared_w_export_mut_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "export mut v = 10"
+    LINE "const v = 20"
+    ;
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_export_mut_var_used_by_other_script(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr_1 =
+    HEAD "export mut x = 10"
+    LINE "export mut y = 20"
+    ;
+
+    const char *expr_2 =
+    HEAD "export mut v: Position = {x, y}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr_1, NULL) == 0);
+    test_assert(ecs_script_run(world, NULL, expr_2, NULL) == 0);
+
+    ecs_entity_t v = ecs_lookup(world, "v");
+    test_assert(v != 0);
+
+    ecs_value_t value = ecs_mut_var_get(world, v);
+    test_assert(value.type != 0);
+    test_assert(value.ptr != NULL);
+
+    test_uint(value.type, ecs_id(Position));
+    Position *p = value.ptr;
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Eval_export_mut_var_as_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "export mut v: Position = {10, 20}"
+    LINE ""
+    LINE "e {"
+    LINE "  Position: v"
+    LINE "}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Eval_export_scoped_mut_var_as_component(void) {
+    test_quarantine("22 Jul 2025");
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "parent {"
+    LINE "  export mut v: Position = {10, 20}"
+    LINE "}"
+    LINE ""
+    LINE "e {"
+    LINE "  parent.$v"
+    LINE "}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Eval_export_mut_var_in_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "parent {"
+    LINE "  export mut v: i32 = 10"
+    LINE "}"
+    LINE ""
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t v = ecs_lookup(world, "parent.v");
+    test_assert(v != 0);
+
+    ecs_value_t value = ecs_mut_var_get(world, v);
+    test_assert(value.type != 0);
+    test_assert(value.ptr != NULL);
+
+    test_uint(value.type, ecs_id(ecs_i32_t));
+    test_int(*(ecs_i32_t*)value.ptr, 10);
+
+    ecs_fini(world);
+}
+
+void Eval_export_scoped_mut_var_used_by_other_script(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr_1 =
+    HEAD "parent {"
+    LINE "  export mut x = 10"
+    LINE "  export mut y = 20"
+    LINE "}"
+    ;
+
+    const char *expr_2 =
+    HEAD "export mut v: Position = {parent.x, parent.y}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr_1, NULL) == 0);
+    test_assert(ecs_script_run(world, NULL, expr_2, NULL) == 0);
+
+    ecs_entity_t v = ecs_lookup(world, "v");
+    test_assert(v != 0);
+
+    ecs_value_t value = ecs_mut_var_get(world, v);
+    test_assert(value.type != 0);
+    test_assert(value.ptr != NULL);
+
+    test_uint(value.type, ecs_id(Position));
+    Position *p = value.ptr;
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Eval_export_mut_var_w_comment(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "export mut x = 10 // exported x"
+    LINE "const y = 20"
+    LINE "e { Position: {x, y} }";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    test_assert(ecs_has(world, e, Position));
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Eval_export_mut_var_modified_from_c(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "export mut v: i32 = 10"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t v = ecs_lookup(world, "v");
+    test_assert(v != 0);
+
+    ecs_value_t value = ecs_mut_var_get(world, v);
+    test_assert(value.ptr != NULL);
+    test_uint(value.type, ecs_id(ecs_i32_t));
+    test_int(*(ecs_i32_t*)value.ptr, 10);
+
+    *(ecs_i32_t*)value.ptr = 20;
+    ecs_mut_var_modified(world, v);
+
+    value = ecs_mut_var_get(world, v);
+    test_assert(value.ptr != NULL);
+    test_int(*(ecs_i32_t*)value.ptr, 20);
+
+    ecs_fini(world);
+}
+
+void Eval_export_const_var_redeclared_w_export_mut_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "export const v = 10"
+    LINE "export mut v = 20"
+    ;
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_export_mut_var_redeclared_w_export_const_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "export mut v = 10"
+    LINE "export const v = 20"
+    ;
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_export_const_var_is_not_mut_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "export const v: i32 = 10"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t v = ecs_lookup(world, "v");
+    test_assert(v != 0);
+
+    test_assert(ecs_const_var_get(world, v).ptr != NULL);
+    test_assert(ecs_mut_var_get(world, v).ptr == NULL);
+
+    ecs_fini(world);
+}
+
+void Eval_export_mut_var_is_not_const_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "export mut v: i32 = 10"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t v = ecs_lookup(world, "v");
+    test_assert(v != 0);
+
+    test_assert(ecs_mut_var_get(world, v).ptr != NULL);
+    test_assert(ecs_const_var_get(world, v).ptr == NULL);
+
+    ecs_fini(world);
+}

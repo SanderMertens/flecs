@@ -2503,3 +2503,163 @@ void Misc_get_module_const_var_from_nested_module_no_script_module(void) {
 
     test_int(nested::test_module::ScriptVariable, 10);
 }
+
+void Misc_get_mut_var(void) {
+    flecs::world world;
+
+    world.script()
+        .code("export mut x = 10")
+        .run();
+
+    double v = world.get_mut_var<double>("x");
+    test_int(v, 10);
+}
+
+void Misc_get_mut_var_struct(void) {
+    flecs::world world;
+
+    world.component<Position>()
+        .member(&Position::x, "x")
+        .member(&Position::y, "y");
+
+    world.script()
+        .code("export mut x: Position = {10, 20}")
+        .run();
+
+    Position v = world.get_mut_var<Position>("x");
+    test_int(v.x, 10);
+    test_int(v.y, 20);
+}
+
+void Misc_get_mut_var_as_f32(void) {
+    flecs::world world;
+
+    world.script()
+        .code("export mut x = 10")
+        .run();
+
+    float v = world.get_mut_var<float>("x");
+    test_int(v, 10);
+}
+
+void Misc_get_mut_var_as_i32(void) {
+    flecs::world world;
+
+    world.script()
+        .code("export mut x = 10")
+        .run();
+
+    int32_t v = world.get_mut_var<int32_t>("x");
+    test_int(v, 10);
+}
+
+void Misc_get_mut_var_as_u32(void) {
+    flecs::world world;
+
+    world.script()
+        .code("export mut x = 10")
+        .run();
+
+    uint32_t v = world.get_mut_var<uint32_t>("x");
+    test_uint(v, 10);
+}
+
+void Misc_get_mut_var_w_out(void) {
+    flecs::world world;
+
+    world.script()
+        .code("export mut x = 10")
+        .run();
+
+    double v;
+    world.get_mut_var("x", v);
+    test_int(v, 10);
+}
+
+void Misc_get_mut_var_struct_w_out(void) {
+    flecs::world world;
+
+    world.component<Position>()
+        .member(&Position::x, "x")
+        .member(&Position::y, "y");
+
+    world.script()
+        .code("export mut x: Position = {10, 20}")
+        .run();
+
+    Position v;
+    world.get_mut_var<Position>("x", v, {30, 40});
+    test_int(v.x, 10);
+    test_int(v.y, 20);
+}
+
+void Misc_get_mut_var_struct_w_out_not_found(void) {
+    flecs::world world;
+
+    world.component<Position>()
+        .member(&Position::x, "x")
+        .member(&Position::y, "y");
+
+    Position v;
+    flecs::log::set_level(-4);
+    world.get_mut_var<Position>("x", v, {30, 40});
+    test_int(v.x, 30);
+    test_int(v.y, 40);
+}
+
+void Misc_get_mut_var_as_f32_w_out(void) {
+    flecs::world world;
+
+    world.script()
+        .code("export mut x = 10")
+        .run();
+
+    float v;
+    world.get_mut_var("x", v);
+    test_int(v, 10);
+}
+
+void Misc_get_mut_var_as_i32_w_out(void) {
+    flecs::world world;
+
+    world.script()
+        .code("export mut x = 10")
+        .run();
+
+    int32_t v;
+    world.get_mut_var("x", v);
+    test_int(v, 10);
+}
+
+void Misc_get_mut_var_as_u32_w_out(void) {
+    flecs::world world;
+
+    world.script()
+        .code("export mut x = 10")
+        .run();
+
+    uint32_t v;
+    world.get_mut_var("x", v);
+    test_int(v, 10);
+}
+
+void Misc_get_mut_var_not_found(void) {
+    flecs::world world;
+
+    double v;
+    flecs::log::set_level(-4);
+    world.get_mut_var<double>("x", v, 20);
+    test_int(v, 20);
+}
+
+void Misc_get_mut_var_not_a_var(void) {
+    flecs::world world;
+
+    world.entity("x");
+
+    double v;
+
+    flecs::log::set_level(-4);
+    world.get_mut_var<double>("x", v, 20);
+    test_int(v, 20);
+}

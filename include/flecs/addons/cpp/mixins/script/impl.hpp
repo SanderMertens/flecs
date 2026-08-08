@@ -35,6 +35,24 @@ namespace _ {
         return value;
     }
 
+    inline ecs_value_t get_mut_var(const flecs::world_t *world, const char *name) {
+        flecs::entity_t v = ecs_lookup_path_w_sep(
+            world, 0, name, "::", "::", false);
+        if (!v) {
+            ecs_warn("unresolved mut variable '%s', returning default", name);
+            return {};
+        }
+
+        ecs_value_t value = ecs_mut_var_get(world, v);
+        if (value.ptr == nullptr) {
+            ecs_warn("entity '%s' is not a mut variable, returning default",
+                name);
+            return {};
+        }
+
+        return value;
+    }
+
     template <typename T>
     inline T get_const_value(
         flecs::world_t *world, const char *name, ecs_value_t value, ecs_entity_t type, const T& default_value) 
@@ -174,6 +192,47 @@ void world::get_const_var(
     const T& default_value) const 
 {
     ecs_value_t value = flecs::_::get_const_var(world_, name);
+    if (!value.ptr) {
+        out = default_value;
+        return;
+    }
+
+    flecs::id_t type = flecs::_::type<T>::id(world_);
+    if (type == value.type) {
+        out = *(static_cast<T*>(value.ptr));
+        return;
+    }
+
+    out = flecs::_::get_const_value<T>(
+        world_, name, value, type, default_value);
+}
+
+template <typename T>
+inline T world::get_mut_var(
+    const char *name,
+    const T& default_value) const
+{
+    ecs_value_t value = flecs::_::get_mut_var(world_, name);
+    if (!value.ptr) {
+        return default_value;
+    }
+
+    flecs::id_t type = flecs::_::type<T>::id(world_);
+    if (type == value.type) {
+        return *(static_cast<T*>(value.ptr));
+    }
+
+    return flecs::_::get_const_value<T>(
+        world_, name, value, type, default_value);
+}
+
+template <typename T>
+void world::get_mut_var(
+    const char *name,
+    T& out,
+    const T& default_value) const
+{
+    ecs_value_t value = flecs::_::get_mut_var(world_, name);
     if (!value.ptr) {
         out = default_value;
         return;

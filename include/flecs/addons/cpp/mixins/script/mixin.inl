@@ -85,5 +85,45 @@ T get_const_var(const char *name, const T& default_value = {}) const;
 template <typename T>
 void get_const_var(const char *name, T& out, const T& default_value = {}) const;
 
+/** Get the value of an exported script mut variable.
+ * Unlike a const variable, the value of a mut variable is never folded into
+ * expressions that use it.
+ *
+ * An exported mut variable can be created in a script like this:
+ *
+ * @code
+ * export mut x: f64 = 10
+ * @endcode
+ *
+ * See the Flecs script manual for more details.
+ *
+ * @tparam T The type of the value to obtain.
+ * @param name The name of the exported variable.
+ * @param default_value Optional default value. Returned when mut var lookup failed.
+ * @return The value of the variable.
+ */
+template <typename T>
+T get_mut_var(const char *name, const T& default_value = {}) const;
+
+/** Get the value of an exported script mut variable.
+ * Unlike a const variable, the value of a mut variable is never folded into
+ * expressions that use it.
+ *
+ * An exported mut variable can be created in a script like this:
+ *
+ * @code
+ * export mut x: f64 = 10
+ * @endcode
+ *
+ * See the Flecs script manual for more details.
+ *
+ * @tparam T The type of the value to obtain.
+ * @param name The name of the exported variable.
+ * @param out Optional pointer to out variable. Can be used to automatically deduce T.
+ * @param default_value Optional default value. Returned when mut var lookup failed.
+ */
+template <typename T>
+void get_mut_var(const char *name, T& out, const T& default_value = {}) const;
+
 
 /** @} */

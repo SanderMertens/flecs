@@ -63,18 +63,31 @@ void Misc_alert_for_member_range(void);
 void Misc_alert_w_member_range_from_var(void);
 void Misc_map_api(void);
 void Misc_get_const_var(void);
+void Misc_get_mut_var(void);
 void Misc_get_const_var_struct(void);
+void Misc_get_mut_var_struct(void);
 void Misc_get_const_var_as_f32(void);
+void Misc_get_mut_var_as_f32(void);
 void Misc_get_const_var_as_i32(void);
+void Misc_get_mut_var_as_i32(void);
 void Misc_get_const_var_as_u32(void);
+void Misc_get_mut_var_as_u32(void);
 void Misc_get_const_var_w_out(void);
+void Misc_get_mut_var_w_out(void);
 void Misc_get_const_var_struct_w_out(void);
+void Misc_get_mut_var_struct_w_out(void);
 void Misc_get_const_var_struct_w_out_not_found(void);
+void Misc_get_mut_var_struct_w_out_not_found(void);
 void Misc_get_const_var_as_f32_w_out(void);
+void Misc_get_mut_var_as_f32_w_out(void);
 void Misc_get_const_var_as_i32_w_out(void);
+void Misc_get_mut_var_as_i32_w_out(void);
 void Misc_get_const_var_as_u32_w_out(void);
+void Misc_get_mut_var_as_u32_w_out(void);
 void Misc_get_const_var_not_found(void);
+void Misc_get_mut_var_not_found(void);
 void Misc_get_const_var_not_a_var(void);
+void Misc_get_mut_var_not_a_var(void);
 void Misc_get_scoped_const_var(void);
 void Misc_get_module_const_var(void);
 void Misc_get_module_const_var_from_script_module(void);
@@ -303,52 +316,104 @@ bake_test_case Misc_testcases[] = {
         Misc_get_const_var
     },
     {
+        "get_mut_var",
+        Misc_get_mut_var
+    },
+    {
         "get_const_var_struct",
         Misc_get_const_var_struct
+    },
+    {
+        "get_mut_var_struct",
+        Misc_get_mut_var_struct
     },
     {
         "get_const_var_as_f32",
         Misc_get_const_var_as_f32
     },
     {
+        "get_mut_var_as_f32",
+        Misc_get_mut_var_as_f32
+    },
+    {
         "get_const_var_as_i32",
         Misc_get_const_var_as_i32
+    },
+    {
+        "get_mut_var_as_i32",
+        Misc_get_mut_var_as_i32
     },
     {
         "get_const_var_as_u32",
         Misc_get_const_var_as_u32
     },
     {
+        "get_mut_var_as_u32",
+        Misc_get_mut_var_as_u32
+    },
+    {
         "get_const_var_w_out",
         Misc_get_const_var_w_out
+    },
+    {
+        "get_mut_var_w_out",
+        Misc_get_mut_var_w_out
     },
     {
         "get_const_var_struct_w_out",
         Misc_get_const_var_struct_w_out
     },
     {
+        "get_mut_var_struct_w_out",
+        Misc_get_mut_var_struct_w_out
+    },
+    {
         "get_const_var_struct_w_out_not_found",
         Misc_get_const_var_struct_w_out_not_found
+    },
+    {
+        "get_mut_var_struct_w_out_not_found",
+        Misc_get_mut_var_struct_w_out_not_found
     },
     {
         "get_const_var_as_f32_w_out",
         Misc_get_const_var_as_f32_w_out
     },
     {
+        "get_mut_var_as_f32_w_out",
+        Misc_get_mut_var_as_f32_w_out
+    },
+    {
         "get_const_var_as_i32_w_out",
         Misc_get_const_var_as_i32_w_out
+    },
+    {
+        "get_mut_var_as_i32_w_out",
+        Misc_get_mut_var_as_i32_w_out
     },
     {
         "get_const_var_as_u32_w_out",
         Misc_get_const_var_as_u32_w_out
     },
     {
+        "get_mut_var_as_u32_w_out",
+        Misc_get_mut_var_as_u32_w_out
+    },
+    {
         "get_const_var_not_found",
         Misc_get_const_var_not_found
     },
     {
+        "get_mut_var_not_found",
+        Misc_get_mut_var_not_found
+    },
+    {
         "get_const_var_not_a_var",
         Misc_get_const_var_not_a_var
+    },
+    {
+        "get_mut_var_not_a_var",
+        Misc_get_mut_var_not_a_var
     },
     {
         "get_scoped_const_var",
@@ -404,7 +469,7 @@ static bake_test_suite suites[] = {
         "Misc",
         Misc_setup,
         NULL,
-        70,
+        83,
         Misc_testcases
     },
     {
