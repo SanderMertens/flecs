@@ -86,9 +86,12 @@ int flecs_expr_visit_refs(
     case EcsExprVariable:
         break;
     case EcsExprGlobalVariable: {
-        ecs_entity_t global = ((ecs_expr_variable_t*)node)->global;
-        if (global) {
-            flecs_expr_add_ref(refs, global, NULL, ecs_id(EcsScriptConstVar));
+        ecs_expr_variable_t *n = (ecs_expr_variable_t*)node;
+        /* Const variables are folded into the expression, so only mut variables
+         * can change the outcome of a reevaluation. */
+        if (refs && n->global && n->global_component == ecs_id(EcsScriptMutVar))
+        {
+            flecs_expr_add_ref(refs, n->global, NULL, n->global_component);
         }
         break;
     }

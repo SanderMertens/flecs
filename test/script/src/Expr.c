@@ -11049,3 +11049,72 @@ void Expr_var_element_map_missing_key(void) {
     ecs_script_vars_fini(vars);
     ecs_fini(world);
 }
+
+void Expr_global_mut_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    int32_t v = 10;
+
+    test_assert(0 != ecs_mut_var(world, {
+        .name = "FOO",
+        .type = ecs_id(ecs_i32_t),
+        .value = &v
+    }));
+
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world, "FOO + 20",
+        &ecs_value_ptr(ecs_i32_t, &v), &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == 0);
+    test_int(v, 30);
+
+    ecs_fini(world);
+}
+
+void Expr_scoped_global_mut_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    int32_t v = 10;
+
+    ecs_entity_t parent = ecs_entity(world, {
+        .name = "parent"
+    });
+
+    test_assert(0 != ecs_mut_var(world, {
+        .name = "FOO",
+        .parent = parent,
+        .type = ecs_id(ecs_i32_t),
+        .value = &v
+    }));
+
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world, 
+        "parent.$FOO + 20",
+        &ecs_value_ptr(ecs_i32_t, &v), &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == 0);
+    test_int(v, 30);
+
+    ecs_fini(world);
+}
+
+void Expr_identifier_as_mut_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    int32_t value = 10;
+
+    test_assert(0 != ecs_mut_var(world, {
+        .name = "FOO",
+        .type = ecs_id(ecs_i32_t),
+        .value = &value
+    }));
+
+    ecs_value_t v = {0};
+    test_assert(ecs_expr_run(world, "FOO", &v, NULL) != NULL);
+    test_assert(v.type == ecs_id(ecs_i32_t));
+    test_assert(v.ptr != NULL);
+    test_uint(*(int32_t*)v.ptr, 10);
+    ecs_ptr_free(world, v.type, v.ptr);
+
+    ecs_fini(world);
+}

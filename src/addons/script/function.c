@@ -90,6 +90,33 @@ static ECS_DTOR(EcsScriptConstVar, ptr, {
     ecs_script_const_var_fini(ptr);
 })
 
+static ECS_COPY(EcsScriptMutVar, dst, src, {
+    ecs_script_const_var_fini((EcsScriptConstVar*)dst);
+    dst->value.type = src->value.type;
+    dst->type_info = src->type_info;
+
+    if (src->value.ptr) {
+        ecs_assert(src->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
+        dst->value.ptr = ecs_os_malloc(src->type_info->size);
+        flecs_type_info_copy(
+            dst->value.ptr, src->value.ptr, 1, src->type_info);
+    }
+})
+
+static ECS_MOVE(EcsScriptMutVar, dst, src, {
+    ecs_script_const_var_fini((EcsScriptConstVar*)dst);
+
+    *dst = *src;
+
+    src->value.ptr = NULL;
+    src->value.type = 0;
+    src->type_info = NULL;
+})
+
+static ECS_DTOR(EcsScriptMutVar, ptr, {
+    ecs_script_const_var_fini((EcsScriptConstVar*)ptr);
+})
+
 static ECS_COPY(EcsScriptFunction, dst, src, {
     ecs_script_params_free(&dst->params);
     if (dst->binding_ctx && dst->binding_ctx_free) {
@@ -269,11 +296,96 @@ error:
     return out;
 }
 
-void ecs_const_var_modified(
+ecs_value_t flecs_script_global_var_get(
+    const ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t *component)
+{
+    const EcsScriptConstVar *cv = ecs_get(world, entity, EcsScriptConstVar);
+    if (cv) {
+        if (component) {
+            component[0] = ecs_id(EcsScriptConstVar);
+        }
+        return cv->value;
+    }
+
+    const EcsScriptMutVar *mv = ecs_get(world, entity, EcsScriptMutVar);
+    if (mv) {
+        if (component) {
+            component[0] = ecs_id(EcsScriptMutVar);
+        }
+        return mv->value;
+    }
+
+    if (component) {
+        component[0] = 0;
+    }
+
+    return (ecs_value_t){0};
+}
+
+ecs_entity_t ecs_mut_var_init(
+    ecs_world_t *world,
+    ecs_mut_var_desc_t *desc)
+{
+    flecs_poly_assert(world, ecs_world_t);
+    ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc->name != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc->type != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc->value != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    if (ecs_lookup_child(world, desc->parent, desc->name) != 0) {
+        ecs_err("cannot redeclare mut variable entity '%s' in parent '%s'",
+            desc->name, flecs_errstr(ecs_get_path(world, desc->parent)));
+        return 0;
+    }
+
+    const ecs_type_info_t *ti = ecs_get_type_info(world, desc->type);
+    ecs_check(ti != NULL, ECS_INVALID_PARAMETER,
+        "ecs_mut_var_desc_t::type is not a valid type");
+
+    ecs_entity_t result = ecs_entity(world, {
+        .name = desc->name,
+        .parent = desc->parent
+    });
+
+    if (!result) {
+        goto error;
+    }
+
+    EcsScriptMutVar *v = ecs_ensure(world, result, EcsScriptMutVar);
+    v->value.ptr = ecs_os_malloc(ti->size);
+    v->value.type = desc->type;
+    v->type_info = ti;
+    ecs_ptr_init(world, desc->type, v->value.ptr);
+    ecs_ptr_copy(world, desc->type, v->value.ptr, desc->value);
+    ecs_modified(world, result, EcsScriptMutVar);
+
+    return result;
+error:
+    return 0;
+}
+
+ecs_value_t ecs_mut_var_get(
+    const ecs_world_t *world,
+    ecs_entity_t entity)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    const EcsScriptMutVar *v = ecs_get(world, entity, EcsScriptMutVar);
+    if (!v) {
+        goto error;
+    }
+
+    return v->value;
+error:
+    return (ecs_value_t){0};
+}
+
+void ecs_mut_var_modified(
     ecs_world_t *world,
     ecs_entity_t entity)
 {
-    ecs_modified(world, entity, EcsScriptConstVar);
+    ecs_modified(world, entity, EcsScriptMutVar);
 }
 
 #ifdef FLECS_DEBUG
@@ -587,11 +699,19 @@ void flecs_function_import(
 {
     ecs_set_name_prefix(world, "EcsScript");
     ECS_COMPONENT_DEFINE(world, EcsScriptConstVar);
+    ECS_COMPONENT_DEFINE(world, EcsScriptMutVar);
     ECS_COMPONENT_DEFINE(world, EcsScriptFunction);
     ECS_COMPONENT_DEFINE(world, EcsScriptMethod);
 
     ecs_struct(world, {
         .entity = ecs_id(EcsScriptConstVar),
+        .members = {
+            { .name = "value", .type = ecs_id(ecs_value_t) }
+        }
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(EcsScriptMutVar),
         .members = {
             { .name = "value", .type = ecs_id(ecs_value_t) }
         }
@@ -616,6 +736,13 @@ void flecs_function_import(
         .dtor = ecs_dtor(EcsScriptConstVar),
         .copy = ecs_copy(EcsScriptConstVar),
         .move = ecs_move(EcsScriptConstVar),
+    });
+
+    ecs_set_hooks(world, EcsScriptMutVar, {
+        .ctor = flecs_default_ctor,
+        .dtor = ecs_dtor(EcsScriptMutVar),
+        .copy = ecs_copy(EcsScriptMutVar),
+        .move = ecs_move(EcsScriptMutVar),
     });
 
     ecs_set_hooks(world, EcsScriptFunction, {

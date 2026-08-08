@@ -574,6 +574,7 @@ int flecs_script_check_node(
         return flecs_script_check_const(
             v, (ecs_script_var_node_t*)node);
     case EcsAstExportConst:
+    case EcsAstExportMut:
         return 0;
     case EcsAstEntity:
         return flecs_script_check_entity(

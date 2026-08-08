@@ -168,6 +168,7 @@ static int flecs_script_stmt_free(
     case EcsAstMut:
     case EcsAstConst:
     case EcsAstExportConst:
+    case EcsAstExportMut:
         flecs_script_var_node_free(v, (ecs_script_var_node_t*)node);
         flecs_free_t(a, ecs_script_var_node_t, node);
         break;

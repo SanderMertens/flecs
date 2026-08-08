@@ -110,6 +110,14 @@ void flecs_script_register_builtin_functions(
 void flecs_function_import(
     ecs_world_t *world);
 
+/* Returns the value of a global variable, which is either a const or a mut
+ * variable. When component is provided it is set to the component that stores
+ * the value, which tells const and mut variables apart. */
+ecs_value_t flecs_script_global_var_get(
+    const ecs_world_t *world,
+    ecs_entity_t var,
+    ecs_id_t *component);
+
 ecs_entity_t flecs_script_vector_type(
     ecs_world_t *world,
     ecs_entity_t elem_type);

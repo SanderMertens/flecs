@@ -42,8 +42,8 @@ static bool flecs_expr_format_identifier_exists(
         ecs_script_t *script = &parser->script->pub;
         ecs_entity_t entity = desc->lookup_action(
             script->world, start, desc->lookup_ctx);
-        result = entity && ecs_get(
-            script->world, entity, EcsScriptConstVar) != NULL;
+        result = entity && flecs_script_global_var_get(
+            script->world, entity, NULL).ptr != NULL;
     }
 
     end[0] = ch;
