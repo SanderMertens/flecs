@@ -2711,9 +2711,23 @@ void World_quit(void);
 void World_get_delta_time(void);
 void World_get_delta_time_auto(void);
 void World_progress_w_stalled_clock(void);
+void World_progress_w_stalled_clock_w_target_fps(void);
+void World_progress_w_stalled_clock_w_noop_sleep(void);
 void World_progress_w_stalled_clock_at_zero(void);
 void World_progress_w_stalled_clock_warns_once(void);
 void World_progress_w_coarse_clock(void);
+void World_progress_w_coarse_clock_w_target_fps(void);
+void World_progress_w_sleep_driven_clock(void);
+void World_progress_w_sleep_driven_clock_w_work(void);
+void World_progress_w_sleep_driven_clock_w_slow_frame(void);
+void World_progress_w_clock_above_keeping_up(void);
+void World_progress_w_clock_below_keeping_up(void);
+void World_progress_w_dither_clock(void);
+void World_progress_w_dither_clock_only(void);
+void World_progress_w_stepped_clock(void);
+void World_sleepf_w_unrepresentable_duration(void);
+void World_set_target_fps_w_negative(void);
+void World_set_target_fps_w_subnormal(void);
 void World_recreate_world(void);
 void World_recreate_world_w_component(void);
 void World_no_threading(void);
@@ -13969,6 +13983,14 @@ bake_test_case World_testcases[] = {
         World_progress_w_stalled_clock
     },
     {
+        "progress_w_stalled_clock_w_target_fps",
+        World_progress_w_stalled_clock_w_target_fps
+    },
+    {
+        "progress_w_stalled_clock_w_noop_sleep",
+        World_progress_w_stalled_clock_w_noop_sleep
+    },
+    {
         "progress_w_stalled_clock_at_zero",
         World_progress_w_stalled_clock_at_zero
     },
@@ -13979,6 +14001,54 @@ bake_test_case World_testcases[] = {
     {
         "progress_w_coarse_clock",
         World_progress_w_coarse_clock
+    },
+    {
+        "progress_w_coarse_clock_w_target_fps",
+        World_progress_w_coarse_clock_w_target_fps
+    },
+    {
+        "progress_w_sleep_driven_clock",
+        World_progress_w_sleep_driven_clock
+    },
+    {
+        "progress_w_sleep_driven_clock_w_work",
+        World_progress_w_sleep_driven_clock_w_work
+    },
+    {
+        "progress_w_sleep_driven_clock_w_slow_frame",
+        World_progress_w_sleep_driven_clock_w_slow_frame
+    },
+    {
+        "progress_w_clock_above_keeping_up",
+        World_progress_w_clock_above_keeping_up
+    },
+    {
+        "progress_w_clock_below_keeping_up",
+        World_progress_w_clock_below_keeping_up
+    },
+    {
+        "progress_w_dither_clock",
+        World_progress_w_dither_clock
+    },
+    {
+        "progress_w_dither_clock_only",
+        World_progress_w_dither_clock_only
+    },
+    {
+        "progress_w_stepped_clock",
+        World_progress_w_stepped_clock
+    },
+    {
+        "sleepf_w_unrepresentable_duration",
+        World_sleepf_w_unrepresentable_duration
+    },
+    {
+        "set_target_fps_w_negative",
+        World_set_target_fps_w_negative
+    },
+    {
+        "set_target_fps_w_subnormal",
+        World_set_target_fps_w_subnormal
     },
     {
         "recreate_world",
@@ -16816,7 +16886,7 @@ static bake_test_suite suites[] = {
         "World",
         World_setup,
         NULL,
-        180,
+        194,
         World_testcases
     },
     {

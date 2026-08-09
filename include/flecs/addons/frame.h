@@ -140,6 +140,23 @@ void ecs_measure_system_time(
  * Note that ecs_progress() only sleeps if there is time left in the frame. Both
  * time spent in Flecs and time spent outside of Flecs are taken into account.
  *
+ * Frame rate limiting requires the OS API get_time and sleep functions to agree
+ * about the passage of time, to within roughly a factor of four. Both may run
+ * on a virtualized timeline of any speed, but an application that replaces one
+ * of them must replace the other consistently. A clock that observes at least
+ * a quarter of each interval slept reaches the target frame time to within a
+ * sixteenth of it, blocking for as long as the disagreement costs, which stays
+ * under five frame periods. If
+ * the two disagree by more than that (for example a clock that is only stepped
+ * by a host in between frames, while sleeping does take time) frame rate
+ * limiting requests about one frame period worth of sleep and is then skipped
+ * for the remainder of that frame. If the clock is too coarse to observe an
+ * individual sleep, sleep intervals are enlarged until it can, which makes
+ * pacing coarser but keeps it working. A frame sleeps at most 128 times
+ * whatever the clock does, so it never waits for one indefinitely. An
+ * application that computes its target from untrusted input should range check
+ * it before passing it in.
+ *
  * @param world The world.
  * @param fps The target FPS.
  */

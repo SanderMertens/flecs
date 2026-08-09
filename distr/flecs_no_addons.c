@@ -2605,6 +2605,11 @@ extern const ecs_entity_t EcsFlag;
  * to an integer or fixed point type. */
 #define ECS_FRAME_MIN_DELTA_TIME ((ecs_ftime_t)1e-9)
 
+/* Ceiling on the number of times frame rate limiting sleeps within one frame.
+ * Reaching the target takes a few tens of intervals on any clock that keeps up,
+ * and a clock that does not exhausts the stall budget sooner. */
+#define ECS_FRAME_MAX_SLEEP_ITERATIONS (128)
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Bootstrap API
 ////////////////////////////////////////////////////////////////////////////////
@@ -11380,7 +11385,10 @@ ecs_time_t ecs_time_sub(
 void ecs_sleepf(
     double t)
 {
-    if (t > 0) {
+    /* Refuse durations that cannot be converted to int seconds, as an
+     * out-of-range conversion is undefined behavior. The comparison also
+     * rejects NaN. */
+    if (t > 0 && t <= (double)INT32_MAX) {
         int sec = (int)t;
         int nsec = (int)((t - sec) * 1000000000);
         ecs_os_sleep(sec, nsec);

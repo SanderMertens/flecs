@@ -63,6 +63,11 @@ extern const ecs_entity_t EcsFlag;
  * to an integer or fixed point type. */
 #define ECS_FRAME_MIN_DELTA_TIME ((ecs_ftime_t)1e-9)
 
+/* Ceiling on the number of times frame rate limiting sleeps within one frame.
+ * Reaching the target takes a few tens of intervals on any clock that keeps up,
+ * and a clock that does not exhausts the stall budget sooner. */
+#define ECS_FRAME_MAX_SLEEP_ITERATIONS (128)
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Bootstrap API
 ////////////////////////////////////////////////////////////////////////////////

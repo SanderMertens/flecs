@@ -1,5 +1,6 @@
 #include <core.h>
 #include <stdlib.h>
+#include <math.h>
 
 void World_setup(void) {
     ecs_log_set_level(-3);
@@ -1442,8 +1443,41 @@ static void coarse_get_time(ecs_time_t *time_out) {
     time_out->nanosec = (uint32_t)(coarse_clock_now % 1000000000);
 }
 
+/* Clock advanced by sleeping: the sleep function below adds exactly the
+ * interval requested, so pacing doesn't depend on how the host sleeps. */
+static uint64_t sim_clock_now = 0;
+static uint64_t sim_clock_reads = 0;
+
+static void sim_get_time(ecs_time_t *time_out) {
+    sim_clock_reads ++;
+
+    time_out->sec = (uint32_t)(sim_clock_now / 1000000000);
+    time_out->nanosec = (uint32_t)(sim_clock_now % 1000000000);
+}
+
 static uint64_t fake_sleep_calls = 0;
 static uint64_t fake_sleep_requested = 0; /* nanoseconds */
+
+static void sim_sleep(int32_t sec, int32_t nanosec) {
+    uint64_t requested = ((uint64_t)sec * 1000000000) + (uint64_t)nanosec;
+
+    fake_sleep_calls ++;
+    fake_sleep_requested += requested;
+    sim_clock_now += requested;
+}
+
+/* Sleep that advances the clock by a fraction of the interval it was asked
+ * for, in sixty-fourths. Puts the clock either side of the fraction at which
+ * frame rate limiting decides the clock is keeping up with it. */
+static uint64_t quarter_sleep_frac64 = 0;
+
+static void quarter_sleep(int32_t sec, int32_t nanosec) {
+    uint64_t requested = ((uint64_t)sec * 1000000000) + (uint64_t)nanosec;
+
+    fake_sleep_calls ++;
+    fake_sleep_requested += requested;
+    sim_clock_now += (requested * quarter_sleep_frac64) / 64;
+}
 
 /* Sleep that returns without sleeping, like a host that steps time itself.
  * Counts what it was asked for, so that a test can bound it. */
@@ -1513,6 +1547,66 @@ void World_progress_w_stalled_clock(void) {
     ecs_fini(world);
 
     ecs_os_api = prev_os_api;
+}
+
+void World_progress_w_stalled_clock_w_target_fps(void) {
+    ecs_os_api_t prev_os_api = install_fake_clock(stalled_get_time, NULL);
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_set_target_fps(world, 60);
+
+    const ecs_world_info_t *stats = ecs_get_world_info(world);
+
+    int32_t i;
+    for (i = 0; i < 4; i ++) {
+        ecs_progress(world, 0);
+
+        test_assert(stats->delta_time > 0);
+
+        if (i) {
+            test_assert(stats->delta_time < (ecs_ftime_t)0.00000001);
+        }
+    }
+
+    ecs_fini(world);
+
+    ecs_os_api = prev_os_api;
+}
+
+void World_progress_w_stalled_clock_w_noop_sleep(void) {
+    /* A host that steps the clock itself typically replaces sleep too. Frame
+     * rate limiting must terminate when neither of them makes progress. */
+    ecs_os_api_t prev_os_api = install_fake_clock(stalled_get_time, noop_sleep);
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_set_target_fps(world, 60);
+
+    const ecs_world_info_t *stats = ecs_get_world_info(world);
+
+    int32_t i;
+    for (i = 0; i < 4; i ++) {
+        ecs_progress(world, 0);
+
+        test_assert(stats->delta_time > 0);
+
+        if (i) {
+            test_assert(stats->delta_time < (ecs_ftime_t)0.00000001);
+        }
+    }
+
+    ecs_fini(world);
+
+    ecs_os_api = prev_os_api;
+
+    /* At most one frame's worth of sleep may be requested for each of the three
+     * frames whose clock did not advance. Bounding this turns a pacing loop
+     * that runs away into a failure instead of a hang. */
+    test_assert(fake_sleep_calls > 0);
+    test_assert(fake_sleep_calls <= 30);
+    test_assert(fake_sleep_requested <=
+        (uint64_t)(3 * 1.1 * (1000000000.0 / 60.0)));
 }
 
 void World_progress_w_stalled_clock_at_zero(void) {
@@ -1585,7 +1679,7 @@ void World_progress_w_stalled_clock_warns_once(void) {
 
 /* Runs frames against the coarse clock and tests that no time is lost: the
  * measured deltas must add up to how far the clock actually moved. */
-void World_progress_w_coarse_clock(void) {
+static void progress_w_coarse_clock(bool set_target_fps) {
     coarse_clock_now = 0;
     coarse_clock_reads = 0;
 
@@ -1593,9 +1687,13 @@ void World_progress_w_coarse_clock(void) {
 
     ecs_world_t *world = ecs_init();
 
-    /* This is what routes frames through the measured path, rather than
-     * relying on an addon to enable it. */
-    ecs_measure_frame_time(world, true);
+    if (set_target_fps) {
+        ecs_set_target_fps(world, 60);
+    } else {
+        /* Without a target FPS this is what routes frames through the measured
+         * path, rather than relying on an addon to enable it. */
+        ecs_measure_frame_time(world, true);
+    }
 
     const ecs_world_info_t *stats = ecs_get_world_info(world);
 
@@ -1624,9 +1722,15 @@ void World_progress_w_coarse_clock(void) {
     test_assert(reads > 1000);
     test_assert(clock_elapsed > 0.05);
 
-    /* Reading the clock far less often than once per frame means measurement
-     * gives up as soon as the clock doesn't answer. */
-    test_assert(reads < 8000);
+    /* Clock reads are the signature of the pacing loop: far more means it
+     * spins instead of escalating its sleeps, far fewer means it gives up as
+     * soon as the clock doesn't answer. */
+    if (set_target_fps) {
+        test_assert(reads > 5000);
+        test_assert(reads < 12000);
+    } else {
+        test_assert(reads < 8000);
+    }
 
     /* The clock can tick in between the last measurement and the last read, so
      * allow a quantum on the low side. Losing the frame start time loses all of
@@ -1634,6 +1738,280 @@ void World_progress_w_coarse_clock(void) {
     test_assert(total_delta_time > (clock_elapsed - 0.0001 -
         ((double)COARSE_CLOCK_QUANTUM / 1000000000.0)));
     test_assert(total_delta_time < (clock_elapsed + 0.0001));
+}
+
+void World_progress_w_coarse_clock(void) {
+    progress_w_coarse_clock(false);
+}
+
+void World_progress_w_coarse_clock_w_target_fps(void) {
+    progress_w_coarse_clock(true);
+}
+
+/* Frames against a clock that sits just either side of the fraction of a sleep
+ * that counts as keeping up. */
+static void progress_w_quarter_clock(
+    uint64_t sleep_frac64,
+    bool reaches_target,
+    uint64_t min_calls,
+    uint64_t max_calls)
+{
+    sim_clock_now = 0;
+    sim_clock_reads = 0;
+    quarter_sleep_frac64 = sleep_frac64;
+
+    ecs_os_api_t prev_os_api = install_fake_clock(sim_get_time, quarter_sleep);
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_set_target_fps(world, 60);
+
+    /* First frame only anchors the frame start time. */
+    ecs_progress(world, 0);
+
+    int32_t i;
+    for (i = 0; i < 3; i ++) {
+        fake_sleep_calls = 0;
+        fake_sleep_requested = 0;
+        uint64_t clock_start = sim_clock_now;
+
+        ecs_progress(world, 0);
+
+        uint64_t advanced = sim_clock_now - clock_start;
+
+        if (reaches_target) {
+            /* The frame runs until the clock reaches the target, and covering
+             * a frame period of it at this fraction costs the reciprocal of
+             * the fraction in sleep. */
+            test_assert(advanced > (uint64_t)(0.9 * (1000000000.0 / 60.0)));
+            test_assert(fake_sleep_requested >
+                (uint64_t)(3.0 * (1000000000.0 / 60.0)));
+            test_assert(fake_sleep_requested <
+                (uint64_t)(4.0 * (1000000000.0 / 60.0)));
+        } else {
+            /* The budget for intervals the clock does not keep up with ends
+             * the frame, short of the target. The budget is spent in full, and
+             * the intervals that did keep up add to it. */
+            test_assert(advanced < (uint64_t)(0.75 * (1000000000.0 / 60.0)));
+            test_assert(fake_sleep_requested >
+                (uint64_t)(2.2 * (1000000000.0 / 60.0)));
+            test_assert(fake_sleep_requested <
+                (uint64_t)(3.0 * (1000000000.0 / 60.0)));
+        }
+
+        /* How the sleeping is divided up is what the fraction decides, and
+         * both counts stay well inside the ceiling on sleeps per frame. */
+        test_assert(fake_sleep_calls >= min_calls);
+        test_assert(fake_sleep_calls <= max_calls);
+        test_assert(fake_sleep_calls <= 128);
+    }
+
+    ecs_fini(world);
+
+    ecs_os_api = prev_os_api;
+}
+
+void World_progress_w_clock_above_keeping_up(void) {
+    /* Just over: every interval counts as kept up with, so the interval never
+     * escalates and the frame is spent in sleeps of the initial size. */
+    progress_w_quarter_clock(17, true, 24, 34);
+}
+
+void World_progress_w_clock_below_keeping_up(void) {
+    /* Just under: intervals are classified as stalled and escalate, until the
+     * advance accumulated since the last one that kept up crosses the fraction
+     * (the largest measured delta only moves on those). The frame is therefore
+     * spent in fewer, larger sleeps, which is what the count below pins. */
+    progress_w_quarter_clock(15, false, 11, 19);
+}
+
+/* Clock that a host steps in between frames, and that also advances a little on
+ * every read. The step is the frame delta that makes the sleep interval
+ * escalate into a very small final clamp, where a dither this size is enough to
+ * look like the clock kept up. */
+#define DITHER_CLOCK_STEP (7777700) /* nanoseconds */
+
+static uint64_t dither_clock_now = 0;
+static uint64_t dither_clock_per_read = 0;
+
+static void dither_get_time(ecs_time_t *time_out) {
+    time_out->sec = (uint32_t)(dither_clock_now / 1000000000);
+    time_out->nanosec = (uint32_t)(dither_clock_now % 1000000000);
+
+    dither_clock_now += dither_clock_per_read;
+}
+
+/* Frame rate limiting may not sleep unboundedly for a single frame, whatever
+ * the clock does in between reads. */
+static void progress_w_dither_clock(
+    uint64_t step,
+    uint64_t per_read,
+    double max_frame_periods)
+{
+    dither_clock_now = 0;
+    dither_clock_per_read = per_read;
+
+    ecs_os_api_t prev_os_api = install_fake_clock(dither_get_time, noop_sleep);
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_set_target_fps(world, 60);
+
+    /* First frame only anchors the frame start time. */
+    ecs_progress(world, 0);
+
+    int32_t i;
+    for (i = 0; i < 5; i ++) {
+        /* Host advances its clock in between frames. */
+        dither_clock_now += step;
+
+        fake_sleep_calls = 0;
+        fake_sleep_requested = 0;
+
+        ecs_progress(world, 0);
+
+        test_assert(fake_sleep_calls <= 128);
+        test_assert(fake_sleep_requested <
+            (uint64_t)(max_frame_periods * (1000000000.0 / 60.0)));
+    }
+
+    ecs_fini(world);
+
+    ecs_os_api = prev_os_api;
+}
+
+void World_progress_w_dither_clock(void) {
+    /* A stall budget that is not spent again within the same frame keeps this
+     * near one period. The tight bound is what pins the budget: refilling it
+     * replays the escalation for as long as the frame lasts. */
+    progress_w_dither_clock(DITHER_CLOCK_STEP, 100, 1.5);
+}
+
+void World_progress_w_dither_clock_only(void) {
+    progress_w_dither_clock(0, 1, 2.2);
+}
+
+void World_progress_w_stepped_clock(void) {
+    progress_w_dither_clock(DITHER_CLOCK_STEP, 0, 2.2);
+}
+
+/* Runs frames that take work_time to simulate, and tests that frame rate
+ * limiting brings each frame up to (but not past) the target frame time. */
+static void progress_w_sleep_driven_clock(
+    double work_time,
+    double expect_frame_time)
+{
+    sim_clock_now = 0;
+    sim_clock_reads = 0;
+
+    ecs_os_api_t prev_os_api = install_fake_clock(sim_get_time, sim_sleep);
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_set_target_fps(world, 60);
+
+    ecs_progress(world, 0);
+    uint64_t clock_start = sim_clock_now;
+
+    int32_t i, count = 100;
+    for (i = 0; i < count; i ++) {
+        /* Time the application spends outside of Flecs. Frame rate limiting
+         * has to subtract this from the time it sleeps. */
+        sim_clock_now += (uint64_t)(work_time * 1000000000.0);
+
+        ecs_progress(world, 0);
+    }
+
+    double frame_time =
+        ((double)(sim_clock_now - clock_start) / 1000000000.0) / count;
+
+    ecs_fini(world);
+
+    ecs_os_api = prev_os_api;
+
+    test_assert(frame_time > (expect_frame_time - 0.00001));
+    test_assert(frame_time < (expect_frame_time + 0.00001));
+}
+
+void World_progress_w_sleep_driven_clock(void) {
+    /* Nothing else takes time, so the frame is all sleep. */
+    progress_w_sleep_driven_clock(0.0, 1.0 / 60.0);
+}
+
+void World_progress_w_sleep_driven_clock_w_work(void) {
+    /* Half the frame is spent working. Sleeping the target regardless of the
+     * work paces at 24.7 msec here, and no pacing at all at 8 msec. */
+    progress_w_sleep_driven_clock(0.008, 1.0 / 60.0);
+}
+
+void World_progress_w_sleep_driven_clock_w_slow_frame(void) {
+    /* Frames that take longer than the target are not slowed down further. */
+    progress_w_sleep_driven_clock(0.02, 0.02);
+}
+
+void World_sleepf_w_unrepresentable_duration(void) {
+    ecs_os_set_api_defaults();
+
+    ecs_os_api_t prev_os_api = ecs_os_api;
+    ecs_os_api_t os_api = prev_os_api;
+    os_api.sleep_ = noop_sleep;
+    ecs_os_set_api(&os_api);
+    ecs_os_api.sleep_ = noop_sleep;
+    test_assert(ecs_os_api.sleep_ == noop_sleep);
+
+    fake_sleep_calls = 0;
+    fake_sleep_requested = 0;
+
+    ecs_time_t t = {0};
+    ecs_os_get_time(&t);
+
+    ecs_sleepf((double)NAN);
+    ecs_sleepf(-1.0);
+    ecs_sleepf((double)INFINITY);
+    ecs_sleepf(3000000000.0);
+
+    double elapsed = ecs_time_measure(&t);
+
+    ecs_os_api = prev_os_api;
+
+    /* A duration that can't be converted to the seconds and nanoseconds the OS
+     * API sleep takes must be refused, not forwarded: the conversion is
+     * undefined, and what it produces is a duration that means nothing. What a
+     * platform does when handed one is not the contract, so test that it was
+     * never handed one. */
+    test_int(fake_sleep_calls, 0);
+    test_int(fake_sleep_requested, 0);
+    test_assert(elapsed < 1.0);
+}
+
+void World_set_target_fps_w_subnormal(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_init();
+
+    /* Smallest positive value of whatever type ecs_ftime_t is. The volatile
+     * stores force each step to round to the type, where evaluation could
+     * otherwise use a wider register. */
+    volatile ecs_ftime_t v = (ecs_ftime_t)1.0;
+    volatile ecs_ftime_t half = v / (ecs_ftime_t)2.0;
+    while (half > 0) {
+        v = half;
+        half = v / (ecs_ftime_t)2.0;
+    }
+
+    test_assert(v > 0);
+
+    test_expect_abort();
+    ecs_set_target_fps(world, v);
+}
+
+void World_set_target_fps_w_negative(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_init();
+
+    test_expect_abort();
+    ecs_set_target_fps(world, -1);
 }
 
 void World_recreate_world(void) {
