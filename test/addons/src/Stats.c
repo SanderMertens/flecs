@@ -267,3 +267,69 @@ void Stats_progress_stats_systems(void) {
 
     ecs_fini(world);
 }
+
+/* Clock that never advances, like a host-stepped clock that is only updated in
+ * between frames. */
+static void stats_stalled_get_time(ecs_time_t *time_out) {
+    time_out->sec = 1000;
+    time_out->nanosec = 0;
+}
+
+void Stats_world_summary_fps_w_stalled_clock(void) {
+    ecs_os_set_api_defaults();
+
+    ecs_os_api_t prev_os_api = ecs_os_api;
+    test_assert(prev_os_api.get_time_ != stats_stalled_get_time);
+
+    ecs_os_api_t os_api = prev_os_api;
+    os_api.get_time_ = stats_stalled_get_time;
+
+    /* Marks the OS API as initialized, so that a later ecs_init doesn't
+     * reinstall the defaults. Is a no-op if it already was initialized, hence
+     * the assignment below. */
+    ecs_os_set_api(&os_api);
+    ecs_os_api.get_time_ = stats_stalled_get_time;
+    test_assert(ecs_os_api.get_time_ == stats_stalled_get_time);
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_IMPORT(world, FlecsStats);
+
+    const EcsWorldSummary *summary = ecs_get(world, EcsWorld, EcsWorldSummary);
+    test_assert(summary != NULL);
+    test_int(summary->fps, 0);
+
+    /* The first frame reports a best-guess delta rather than a measured one,
+     * so start the gauge window after it. */
+    ecs_progress(world, 0);
+
+    ecs_world_stats_t stats = {0};
+    ecs_world_stats_get(world, &stats);
+
+    int32_t i;
+    for (i = 0; i < 4; i ++) {
+        ecs_progress(world, 0);
+
+        summary = ecs_get(world, EcsWorld, EcsWorldSummary);
+        test_assert(summary != NULL);
+
+        /* The clock does not advance, so frames report the minimum delta
+         * time. That is not a frame rate of a billion. */
+        test_assert(summary->fps >= 0);
+        test_assert(summary->fps < 1000000.0);
+
+        if (i) {
+            test_int(summary->fps, 0);
+        }
+    }
+
+    /* The windowed fps gauge over the same frames has the same contract. */
+    ecs_world_stats_get(world, &stats);
+    test_assert(stats.performance.fps.gauge.avg[stats.t] >= 0);
+    test_assert(stats.performance.fps.gauge.avg[stats.t] < 1000000.0);
+    test_int(stats.performance.fps.gauge.avg[stats.t], 0);
+
+    ecs_fini(world);
+
+    ecs_os_api = prev_os_api;
+}

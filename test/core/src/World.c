@@ -1411,6 +1411,231 @@ void World_get_delta_time_auto(void) {
     ecs_fini(world);
 }
 
+/* Clock that never advances, like a host-stepped clock that is only updated in
+ * between frames. */
+static void stalled_get_time(ecs_time_t *time_out) {
+    time_out->sec = 1000;
+    time_out->nanosec = 0;
+}
+
+/* Same, but for a simulated clock that starts at 0. */
+static void stalled_at_zero_get_time(ecs_time_t *time_out) {
+    time_out->sec = 0;
+    time_out->nanosec = 0;
+}
+
+/* Clock that is live, but too coarse to measure a single frame: it advances a
+ * quantum every N reads. Reads drive it, so that the test is deterministic. */
+#define COARSE_CLOCK_QUANTUM (1000000) /* 1 msec, in nanoseconds */
+#define COARSE_CLOCK_READS_PER_QUANTUM (10)
+
+static uint64_t coarse_clock_now = 0;
+static uint64_t coarse_clock_reads = 0;
+
+static void coarse_get_time(ecs_time_t *time_out) {
+    coarse_clock_reads ++;
+    if (!(coarse_clock_reads % COARSE_CLOCK_READS_PER_QUANTUM)) {
+        coarse_clock_now += COARSE_CLOCK_QUANTUM;
+    }
+
+    time_out->sec = (uint32_t)(coarse_clock_now / 1000000000);
+    time_out->nanosec = (uint32_t)(coarse_clock_now % 1000000000);
+}
+
+static uint64_t fake_sleep_calls = 0;
+static uint64_t fake_sleep_requested = 0; /* nanoseconds */
+
+/* Sleep that returns without sleeping, like a host that steps time itself.
+ * Counts what it was asked for, so that a test can bound it. */
+static void noop_sleep(int32_t sec, int32_t nanosec) {
+    fake_sleep_calls ++;
+    fake_sleep_requested += ((uint64_t)sec * 1000000000) + (uint64_t)nanosec;
+}
+
+static ecs_os_api_get_time_t real_get_time = NULL;
+
+static ecs_os_api_t install_fake_clock(
+    ecs_os_api_get_time_t get_time,
+    ecs_os_api_sleep_t sleep)
+{
+    ecs_os_set_api_defaults();
+
+    fake_sleep_calls = 0;
+    fake_sleep_requested = 0;
+
+    ecs_os_api_t prev_os_api = ecs_os_api;
+    real_get_time = prev_os_api.get_time_;
+
+    /* A previous test's fake clock would be measured instead of this one. */
+    test_assert(real_get_time != get_time);
+
+    ecs_os_api_t os_api = prev_os_api;
+    os_api.get_time_ = get_time;
+    if (sleep) {
+        os_api.sleep_ = sleep;
+    }
+
+    /* Marks the OS API as initialized, so that a later ecs_init doesn't
+     * reinstall the defaults. Is a no-op if it already was initialized, hence
+     * the assignments below. */
+    ecs_os_set_api(&os_api);
+    ecs_os_api.get_time_ = get_time;
+    if (sleep) {
+        ecs_os_api.sleep_ = sleep;
+    }
+
+    test_assert(ecs_os_api.get_time_ == get_time);
+    test_assert(ecs_os_has_time());
+
+    return prev_os_api;
+}
+
+void World_progress_w_stalled_clock(void) {
+    ecs_os_api_t prev_os_api = install_fake_clock(stalled_get_time, NULL);
+
+    ecs_world_t *world = ecs_init();
+
+    const ecs_world_info_t *stats = ecs_get_world_info(world);
+
+    /* First frame only anchors the frame start time. */
+    int32_t i;
+    for (i = 0; i < 4; i ++) {
+        ecs_progress(world, 0);
+
+        test_assert(stats->delta_time > 0);
+
+        if (i) {
+            /* Clock did not advance, so the smallest nonzero delta is used */
+            test_assert(stats->delta_time < (ecs_ftime_t)0.00000001);
+        }
+    }
+
+    ecs_fini(world);
+
+    ecs_os_api = prev_os_api;
+}
+
+void World_progress_w_stalled_clock_at_zero(void) {
+    ecs_os_api_t prev_os_api = install_fake_clock(
+        stalled_at_zero_get_time, NULL);
+
+    ecs_world_t *world = ecs_init();
+
+    const ecs_world_info_t *stats = ecs_get_world_info(world);
+
+    int32_t i;
+    for (i = 0; i < 4; i ++) {
+        ecs_progress(world, 0);
+
+        test_assert(stats->delta_time > 0);
+
+        if (i) {
+            /* A clock that reads 0 still counts as a measured frame start
+             * time, so these frames take the measuring path. */
+            test_assert(stats->delta_time < (ecs_ftime_t)0.00000001);
+        }
+    }
+
+    ecs_fini(world);
+
+    ecs_os_api = prev_os_api;
+}
+
+static int32_t log_warn_count = 0;
+static ecs_os_api_log_t real_log = NULL;
+
+static void warn_counting_log(
+    int32_t level, const char *file, int32_t line, const char *msg)
+{
+    if (level == -2) {
+        log_warn_count ++;
+    }
+    if (real_log) {
+        real_log(level, file, line, msg);
+    }
+}
+
+void World_progress_w_stalled_clock_warns_once(void) {
+    ecs_os_api_t prev_os_api = install_fake_clock(stalled_get_time, NULL);
+
+    real_log = ecs_os_api.log_;
+    ecs_os_api.log_ = warn_counting_log;
+    int prev_level = ecs_log_set_level(-2);
+
+    ecs_world_t *world = ecs_init();
+
+    /* Only count warnings from the frames themselves. */
+    log_warn_count = 0;
+
+    int32_t i;
+    for (i = 0; i < 4; i ++) {
+        ecs_progress(world, 0);
+    }
+
+    /* Three frames measure a clock that did not advance (the first only
+     * anchors), which warns once, not per frame. */
+    test_int(log_warn_count, 1);
+
+    ecs_fini(world);
+
+    ecs_log_set_level(prev_level);
+    ecs_os_api.log_ = real_log;
+    ecs_os_api = prev_os_api;
+}
+
+/* Runs frames against the coarse clock and tests that no time is lost: the
+ * measured deltas must add up to how far the clock actually moved. */
+void World_progress_w_coarse_clock(void) {
+    coarse_clock_now = 0;
+    coarse_clock_reads = 0;
+
+    ecs_os_api_t prev_os_api = install_fake_clock(coarse_get_time, noop_sleep);
+
+    ecs_world_t *world = ecs_init();
+
+    /* This is what routes frames through the measured path, rather than
+     * relying on an addon to enable it. */
+    ecs_measure_frame_time(world, true);
+
+    const ecs_world_info_t *stats = ecs_get_world_info(world);
+
+    ecs_progress(world, 0);
+    double clock_start = (double)coarse_clock_now / 1000000000.0;
+    uint64_t reads_start = coarse_clock_reads;
+
+    double total_delta_time = 0;
+
+    int32_t i;
+    for (i = 0; i < 1000; i ++) {
+        ecs_progress(world, 0);
+        test_assert(stats->delta_time > 0);
+        total_delta_time += (double)stats->delta_time;
+    }
+
+    double clock_elapsed =
+        ((double)coarse_clock_now / 1000000000.0) - clock_start;
+    uint64_t reads = coarse_clock_reads - reads_start;
+
+    ecs_fini(world);
+
+    ecs_os_api = prev_os_api;
+
+    /* A broken fake clock can't pass by measuring nothing. */
+    test_assert(reads > 1000);
+    test_assert(clock_elapsed > 0.05);
+
+    /* Reading the clock far less often than once per frame means measurement
+     * gives up as soon as the clock doesn't answer. */
+    test_assert(reads < 8000);
+
+    /* The clock can tick in between the last measurement and the last read, so
+     * allow a quantum on the low side. Losing the frame start time loses all of
+     * the time, which is orders of magnitude more than this. */
+    test_assert(total_delta_time > (clock_elapsed - 0.0001 -
+        ((double)COARSE_CLOCK_QUANTUM / 1000000000.0)));
+    test_assert(total_delta_time < (clock_elapsed + 0.0001));
+}
+
 void World_recreate_world(void) {
     ecs_world_t *world = ecs_init();
 

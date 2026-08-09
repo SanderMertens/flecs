@@ -20,7 +20,12 @@ static void flecs_copy_world_summary(
 
     dst->target_fps = (double)info->target_fps;
     dst->time_scale = (double)info->time_scale;
-    dst->fps = 1.0 / (double)info->delta_time_raw;
+    /* A delta at or below the reported minimum means no frame has run yet,
+     * the clock did not advance, or the application passed a degenerate
+     * delta. None of those is a meaningful rate, so report zero. */
+    dst->fps = (info->delta_time_raw > ECS_FRAME_MIN_DELTA_TIME)
+        ? 1.0 / (double)info->delta_time_raw
+        : 0.0;
 
     dst->frame_time_frame = (double)info->frame_time_total - dst->frame_time_total;
     dst->system_time_frame = (double)info->system_time_total - dst->system_time_total;

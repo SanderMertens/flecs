@@ -4133,6 +4133,13 @@ void flecs_wait_for_sync(
 /* Used in id records to keep track of entities used with id flags */
 extern const ecs_entity_t EcsFlag;
 
+/* Smallest delta time reported for a frame. Reported instead of zero when the
+ * clock did not advance in between two measurements; consumers that derive a
+ * rate from the frame delta test against it to tell a stalled frame apart from
+ * a very short one. Rounds to zero (disabling both) if ecs_ftime_t is redefined
+ * to an integer or fixed point type. */
+#define ECS_FRAME_MIN_DELTA_TIME ((ecs_ftime_t)1e-9)
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Bootstrap API
 ////////////////////////////////////////////////////////////////////////////////
@@ -24397,28 +24404,41 @@ static ecs_ftime_t flecs_start_measure_frame(
         (ECS_EQZERO(user_delta_time)))
     {
         ecs_time_t t = world->frame_start_time;
-        do {
-            if (world->frame_start_time.nanosec || world->frame_start_time.sec){
-                delta_time = flecs_insert_sleep(world, &t);
+
+        /* A simulated clock can legitimately start at 0, so the frame start
+         * time itself can't tell whether a previous frame measured one. */
+        if (world->flags & EcsWorldFrameStartTimeSet) {
+            delta_time = flecs_insert_sleep(world, &t);
+        } else {
+            ecs_time_measure(&t);
+            if (ECS_NEQZERO(world->info.target_fps)) {
+                delta_time = (ecs_ftime_t)1.0 / world->info.target_fps;
             } else {
-                ecs_time_measure(&t);
-                if (ECS_NEQZERO(world->info.target_fps)) {
-                    delta_time = (ecs_ftime_t)1.0 / world->info.target_fps;
-                } else {
-                    /* Best guess */
-                    delta_time = (ecs_ftime_t)1.0 / (ecs_ftime_t)60.0;
-
-                    if (ECS_EQZERO(delta_time)) {
-                        delta_time = user_delta_time;
-                        break;
-                    }
-                }
+                /* Best guess */
+                delta_time = (ecs_ftime_t)1.0 / (ecs_ftime_t)60.0;
             }
+        }
 
-        /* Keep trying while delta_time is zero */
-        } while (ECS_EQZERO(delta_time));
+        if (delta_time < ECS_FRAME_MIN_DELTA_TIME) {
+            /* A coarse or host-stepped clock can legitimately return the same
+             * instant twice. Report the smallest nonzero delta rather than
+             * measure again until the clock moves, which never returns on a
+             * host-stepped clock. The frame start time is unchanged, so the
+             * elapsed time is credited in full to the frame in which the
+             * clock next advances. */
+            delta_time = ECS_FRAME_MIN_DELTA_TIME;
+
+            /* Once per world, so a rate computed by dividing by the minimum
+             * can be traced to this rather than debugged as a spike. */
+            if (!(world->flags & EcsWorldFrameMinDeltaWarned)) {
+                world->flags |= EcsWorldFrameMinDeltaWarned;
+                ecs_warn("clock did not advance between frames, "
+                    "reporting minimal delta time");
+            }
+        }
 
         world->frame_start_time = t;
+        world->flags |= EcsWorldFrameStartTimeSet;
 
         /* Keep track of total time passed in world */
         world->info.world_time_total_raw += (double)delta_time;
@@ -79607,8 +79627,15 @@ void ecs_world_stats_get(
     ECS_COUNTER_RECORD(&s->performance.merge_time, t, world->info.merge_time_total);
     ECS_COUNTER_RECORD(&s->performance.rematch_time, t, world->info.rematch_time_total);
     ECS_GAUGE_RECORD(&s->performance.delta_time, t, delta_world_time);
-    if (ECS_NEQZERO(delta_world_time) && ECS_NEQZERO(delta_frame_count)) {
-        ECS_GAUGE_RECORD(&s->performance.fps, t, (double)1 / (delta_world_time / (double)delta_frame_count));
+    double avg_frame_time = 0;
+    if (ECS_NEQZERO(delta_frame_count)) {
+        avg_frame_time = delta_world_time / delta_frame_count;
+    }
+
+    /* Frames whose clock did not advance report the minimum delta, which is
+     * not a measurable frame rate. Report 0, like the world summary. */
+    if (avg_frame_time > (double)ECS_FRAME_MIN_DELTA_TIME) {
+        ECS_GAUGE_RECORD(&s->performance.fps, t, (double)1 / avg_frame_time);
     } else {
         ECS_GAUGE_RECORD(&s->performance.fps, t, 0);
     }
@@ -80324,7 +80351,12 @@ static void flecs_copy_world_summary(
 
     dst->target_fps = (double)info->target_fps;
     dst->time_scale = (double)info->time_scale;
-    dst->fps = 1.0 / (double)info->delta_time_raw;
+    /* A delta at or below the reported minimum means no frame has run yet,
+     * the clock did not advance, or the application passed a degenerate
+     * delta. None of those is a meaningful rate, so report zero. */
+    dst->fps = (info->delta_time_raw > ECS_FRAME_MIN_DELTA_TIME)
+        ? 1.0 / (double)info->delta_time_raw
+        : 0.0;
 
     dst->frame_time_frame = (double)info->frame_time_total - dst->frame_time_total;
     dst->system_time_frame = (double)info->system_time_total - dst->system_time_total;

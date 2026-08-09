@@ -468,6 +468,8 @@ extern "C" {
 #define EcsWorldMeasureSystemTime     (1u << 6)
 #define EcsWorldMultiThreaded         (1u << 7)
 #define EcsWorldFrameInProgress       (1u << 8)
+#define EcsWorldFrameStartTimeSet     (1u << 9)
+#define EcsWorldFrameMinDeltaWarned   (1u << 10)
 
 ////////////////////////////////////////////////////////////////////////////////
 //// OS API flags

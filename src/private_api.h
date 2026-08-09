@@ -56,6 +56,13 @@
 /* Used in id records to keep track of entities used with id flags */
 extern const ecs_entity_t EcsFlag;
 
+/* Smallest delta time reported for a frame. Reported instead of zero when the
+ * clock did not advance in between two measurements; consumers that derive a
+ * rate from the frame delta test against it to tell a stalled frame apart from
+ * a very short one. Rounds to zero (disabling both) if ecs_ftime_t is redefined
+ * to an integer or fixed point type. */
+#define ECS_FRAME_MIN_DELTA_TIME ((ecs_ftime_t)1e-9)
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Bootstrap API
 ////////////////////////////////////////////////////////////////////////////////

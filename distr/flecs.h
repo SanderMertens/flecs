@@ -648,6 +648,8 @@ extern "C" {
 #define EcsWorldMeasureSystemTime     (1u << 6)
 #define EcsWorldMultiThreaded         (1u << 7)
 #define EcsWorldFrameInProgress       (1u << 8)
+#define EcsWorldFrameStartTimeSet     (1u << 9)
+#define EcsWorldFrameMinDeltaWarned   (1u << 10)
 
 ////////////////////////////////////////////////////////////////////////////////
 //// OS API flags
@@ -13069,6 +13071,13 @@ extern "C" {
  * When 0 is provided for delta_time, the time will be measured.
  *
  * This function should only be run from the main thread.
+ *
+ * When the clock does not advance in between two measurements, a minimal
+ * nonzero delta time is returned instead of blocking until it does. The time
+ * that was not reported is credited to the frame in which the clock next
+ * advances. The first such frame logs a warning. Code that derives a rate by
+ * dividing by the delta time should treat a delta at or below 1e-9 as a frame
+ * in which no time could be measured, rather than as a rate.
  *
  * @param world The world.
  * @param delta_time Time elapsed since the last frame.
