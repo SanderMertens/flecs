@@ -695,6 +695,7 @@ int flecs_expr_visit_fold(
 
     switch(node->kind) {
     case EcsExprValue:
+    case EcsExprInternalEntity:
         break;
     case EcsExprInterpolatedString:
         if (flecs_expr_interpolated_string_visit_fold(script, node_ptr, desc)) {

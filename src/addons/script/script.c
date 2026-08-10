@@ -16,6 +16,11 @@ ECS_COMPONENT_DECLARE(EcsScriptFunction);
 ECS_COMPONENT_DECLARE(EcsScriptMethod);
 ECS_DECLARE(EcsScriptVectorType);
 
+static ECS_CTOR(EcsScript, ptr, {
+    ecs_os_zeromem(ptr);
+    ecs_vec_init_t(NULL, &ptr->entities, ecs_entity_t, 0);
+})
+
 static ECS_MOVE(EcsScript, dst, src, {
     if (dst->script && (dst->script != src->script)) {
         if (dst->template_ && (dst->template_ != src->template_)) {
@@ -32,12 +37,16 @@ static ECS_MOVE(EcsScript, dst, src, {
     dst->template_ = src->template_;
     dst->observers = src->observers;
 
+    ecs_vec_fini_t(NULL, &dst->entities, ecs_entity_t);
+    dst->entities = src->entities;
+
     src->filename = NULL;
     src->code = NULL;
     src->error = NULL;
     src->script = NULL;
     src->template_ = NULL;
     ecs_os_zeromem(&src->observers);
+    ecs_vec_init_t(NULL, &src->entities, ecs_entity_t, 0);
 })
 
 static ECS_DTOR(EcsScript, ptr, {
@@ -51,6 +60,7 @@ static ECS_DTOR(EcsScript, ptr, {
     }
 
     ecs_vec_fini_t(NULL, &ptr->observers, ecs_script_ref_t);
+    ecs_vec_fini_t(NULL, &ptr->entities, ecs_entity_t);
 
     ecs_os_free(ptr->filename);
     ecs_os_free(ptr->code);
@@ -403,11 +413,13 @@ void FlecsScriptImport(
         EcsDontInherit);
 
     ecs_set(world, ecs_id(EcsStruct), EcsScriptVisitor, {
-        .visit = flecs_script_struct_visit
+        .visit = flecs_script_struct_visit,
+        .type_pass = true
     });
 
     ecs_set(world, ecs_id(EcsEnum), EcsScriptVisitor, {
-        .visit = flecs_script_enum_visit
+        .visit = flecs_script_enum_visit,
+        .type_pass = true
     });
 
     ecs_set(world, ecs_id(EcsBitmask), EcsScriptVisitor, {
@@ -415,7 +427,7 @@ void FlecsScriptImport(
     });
 
     ecs_set_hooks(world, EcsScript, {
-        .ctor = flecs_default_ctor,
+        .ctor = ecs_ctor(EcsScript),
         .move = ecs_move(EcsScript),
         .dtor = ecs_dtor(EcsScript),
         .flags = ECS_TYPE_HOOK_COPY_ILLEGAL

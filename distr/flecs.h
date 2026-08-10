@@ -16770,6 +16770,7 @@ typedef struct EcsScript {
     ecs_script_t *script;               /**< Parsed script object. */
     ecs_script_template_t *template_;   /**< Only set for template scripts. */
     ecs_vec_t observers;                /**< Observers for referenced components. */
+    ecs_vec_t entities;                 /**< Entities created by script, indexed by entity slot. vec<ecs_entity_t> */
 } EcsScript;
 
 /** Script function context. */
@@ -16803,7 +16804,6 @@ typedef struct ecs_script_parameter_t {
 
 /** Used with ecs_script_parse() and ecs_script_eval(). */
 typedef struct ecs_script_eval_desc_t {
-    ecs_script_vars_t *vars;       /**< Variables used by script. */
     ecs_script_runtime_t *runtime; /**< Reusable runtime (optional). */
 } ecs_script_eval_desc_t;
 
@@ -16920,7 +16920,6 @@ typedef struct ecs_script_task_desc_t {
                                     *   is bound to the entity, and the entity
                                     *   gets an EcsScriptTask component that
                                     *   can be used to inspect task state. */
-    const ecs_script_vars_t *vars; /**< Variables used by script. */
     void *ctx;                     /**< User context. */
     ecs_ctx_free_t ctx_free;       /**< Callback to free ctx. */
     ecs_script_task_loop_t loop;   /**< Loop mode. */
@@ -17258,10 +17257,6 @@ typedef struct ecs_script_function_t EcsScriptMethod;
  * This operation parses a script and returns a script object upon success. To
  * run the script, call ecs_script_eval().
  * 
- * If the script uses outside variables, an ecs_script_vars_t object must be
- * provided in the vars member of the desc object that defines all variables 
- * with the correct types.
- * 
  * When the result parameter is not NULL, the script will capture errors and 
  * return them in the output struct. If result.error is set, it must be freed
  * by the application.
@@ -17283,10 +17278,6 @@ ecs_script_t* ecs_script_parse(
 
 /** Evaluate script.
  * This operation evaluates (runs) a parsed script.
- * 
- * If variables were provided to ecs_script_parse(), an application may pass
- * a different ecs_script_vars_t object to ecs_script_eval(), as long as the
- * object has all referenced variables and they are of the same type.
  * 
  * When the result parameter is not NULL, the script will capture errors and 
  * return them in the output struct. If result.error is set, it must be freed

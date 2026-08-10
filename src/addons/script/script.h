@@ -39,6 +39,7 @@ typedef int(*ecs_script_visitor_action_t)(
 typedef struct EcsScriptVisitor {
     ecs_script_visitor_action_t visit;
     void *ctx;
+    bool type_pass;
 } EcsScriptVisitor;
 
 FLECS_API extern ECS_COMPONENT_DECLARE(EcsScriptVisitor);
@@ -48,6 +49,11 @@ struct ecs_script_impl_t {
     ecs_entity_t entity; /* Set if script is managed (has EcsScript) */
     ecs_allocator_t allocator;
     ecs_script_scope_t *root;
+
+    /* Set while the script is being evaluated. Used by the type visitor to
+     * resolve identifiers to the symbols defined by the script. */
+    struct ecs_script_type_visitor_t *type_visitor;
+
     ecs_expr_node_t *expr; /* Only set if script is just an expression */
     char *token_buffer;
     char *token_remaining; /* Remaining space in token buffer */

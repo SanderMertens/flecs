@@ -99,4 +99,7 @@ int flecs_expr_initializer_validate_assign(
 ecs_expr_swizzle_t* flecs_expr_expand_swizzle_get(
     ecs_expr_node_t *node);
 
+bool flecs_expr_identifier_is_any(
+    const ecs_expr_node_t *node);
+
 #endif

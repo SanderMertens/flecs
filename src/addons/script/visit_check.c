@@ -195,18 +195,6 @@ static int flecs_script_check_tag(
         return -1;
     }
 
-    if (!v->entity) {
-        if (node->id.second) {
-            flecs_script_eval_error(
-                v, node, "missing entity for pair (%s, %s)",
-                node->id.first, node->id.second);
-        } else {
-            flecs_script_eval_error(v, node, "missing entity for tag %s",
-                node->id.first);
-        }
-        return -1;
-    }
-
     return 0;
 }
 
@@ -215,17 +203,6 @@ static int flecs_script_check_component(
     ecs_script_component_t *node)
 {
     if (flecs_script_eval_id(v, node, &node->id)) {
-        return -1;
-    }
-
-    if (!v->entity) {
-        if (node->id.second) {
-            flecs_script_eval_error(v, node, "missing entity for pair (%s, %s)",
-                node->id.first, node->id.second);
-        } else {
-            flecs_script_eval_error(v, node, "missing entity for component %s", 
-                node->id.first);
-        }
         return -1;
     }
 

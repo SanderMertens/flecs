@@ -171,6 +171,16 @@ static int flecs_expr_identifier_to_str(
     return 0;
 }
 
+static int flecs_expr_internal_entity_to_str(
+    ecs_expr_str_visitor_t *v,
+    const ecs_expr_internal_entity_t *node)
+{
+    ecs_strbuf_appendlit(v->buf, "@[");
+    ecs_strbuf_appendint(v->buf, node->slot);
+    ecs_strbuf_appendlit(v->buf, "]");
+    return 0;
+}
+
 static int flecs_expr_variable_to_str(
     ecs_expr_str_visitor_t *v,
     const ecs_expr_variable_t *node)
@@ -429,10 +439,17 @@ static int flecs_expr_node_to_str(
             goto error;
         }
         break;
+    case EcsExprInternalEntity:
+        if (flecs_expr_internal_entity_to_str(v,
+            (const ecs_expr_internal_entity_t*)node))
+        {
+            goto error;
+        }
+        break;
     case EcsExprVariable:
     case EcsExprGlobalVariable:
-        if (flecs_expr_variable_to_str(v, 
-            (const ecs_expr_variable_t*)node)) 
+        if (flecs_expr_variable_to_str(v,
+            (const ecs_expr_variable_t*)node))
         {
             goto error;
         }

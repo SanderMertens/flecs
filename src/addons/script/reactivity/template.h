@@ -29,9 +29,6 @@ struct ecs_script_template_t {
     /* Hoisted using statements */
     ecs_vec_t using_;
 
-    /* Hoisted variables */
-    ecs_script_vars_t *vars;
-
     /* Prop and mut members in variable declaration order */
     ecs_vec_t members;
 
@@ -59,6 +56,10 @@ struct ecs_script_template_t {
 
 typedef struct EcsScriptTemplateRoot {
     ecs_vec_t observers;
+
+    /* Entities created for the template instance, indexed by entity slot.
+     * vec<ecs_entity_t> */
+    ecs_vec_t entities;
 } EcsScriptTemplateRoot;
 
 /* Event used for deferring template instantiation */

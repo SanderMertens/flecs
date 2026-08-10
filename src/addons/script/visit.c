@@ -8,6 +8,34 @@
 #ifdef FLECS_SCRIPT
 #include "script.h"
 
+void flecs_script_visit_error_(
+    ecs_script_visit_t *v,
+    ecs_script_node_t *node,
+    const char *fmt,
+    ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    char *msg = flecs_vasprintf(fmt, args);
+    va_end(args);
+
+    if (!node && v->depth > 0) {
+        node = v->nodes[v->depth - 1];
+    }
+
+    const char *name = v->script->pub.name;
+    const char *code = v->script->pub.code;
+    const char *pos = node ? node->pos : NULL;
+
+    if (code && pos && (pos >= code) && (pos <= &code[ecs_os_strlen(code)])) {
+        ecs_parser_error(name, code, pos - code, "%s", msg);
+    } else {
+        ecs_parser_error(name, NULL, 0, "%s", msg);
+    }
+
+    ecs_os_free(msg);
+}
+
 static int flecs_script_visit_push_checked(
     ecs_script_visit_t *v,
     ecs_script_node_t *node)

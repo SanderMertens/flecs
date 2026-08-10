@@ -1417,7 +1417,7 @@ void Mut_const_value_name(void) {
     ecs_fini(world);
 }
 
-void Mut_hoist_var(void) {
+void Mut_var_from_outer_scope_not_visible(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1438,14 +1438,8 @@ void Mut_hoist_var(void) {
     LINE "}"
     LINE "Foo e()";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
-
-    ecs_entity_t e = ecs_lookup(world, "e");
-    test_assert(e != 0);
-    const Position *p = ecs_get(world, e, Position);
-    test_assert(p != NULL);
-    test_int(p->x, 10);
-    test_int(p->y, 20);
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
 
     ecs_fini(world);
 }

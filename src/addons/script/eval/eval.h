@@ -8,6 +8,7 @@
 
 #include "runtime.h"
 #include "visit_eval.h"
+#include "visit_type.h"
 #include "async.h"
 
 int flecs_script_apply_annot(

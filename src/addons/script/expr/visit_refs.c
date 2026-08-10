@@ -84,6 +84,7 @@ int flecs_expr_visit_refs(
     switch(node->kind) {
     case EcsExprValue:
     case EcsExprVariable:
+    case EcsExprInternalEntity:
         break;
     case EcsExprGlobalVariable: {
         ecs_expr_variable_t *n = (ecs_expr_variable_t*)node;

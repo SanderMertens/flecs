@@ -1754,7 +1754,7 @@ void Await_await_export_const(void) {
     ecs_fini(world);
 }
 
-void Await_interleaved_tasks_dynamic_entity(void) {
+void Await_interleaved_tasks(void) {
     ecs_world_t *world = ecs_init();
 
     Await_reset();
@@ -1767,30 +1767,24 @@ void Await_interleaved_tasks_dynamic_entity(void) {
         .callback = Await_store_callback
     });
 
-    ecs_script_vars_t *vars[2] = {
-        ecs_script_vars_init(world),
-        ecs_script_vars_init(world)
+    ecs_script_t *scripts[2] = {
+        ecs_script_parse(world, NULL,
+            "EntityA {\n"
+            "  await step()\n"
+            "  Tag\n"
+            "}", NULL, NULL),
+        ecs_script_parse(world, NULL,
+            "EntityB {\n"
+            "  await step()\n"
+            "  Tag\n"
+            "}", NULL, NULL)
     };
-    ecs_script_var_t *names[2] = {
-        ecs_script_vars_define(vars[0], "name", ecs_string_t),
-        ecs_script_vars_define(vars[1], "name", ecs_string_t)
-    };
-    *(char**)names[0]->value.ptr = ecs_os_strdup("EntityA");
-    *(char**)names[1]->value.ptr = ecs_os_strdup("EntityB");
-
-    ecs_script_eval_desc_t parse_desc = { .vars = vars[0] };
-    ecs_script_t *script = ecs_script_parse(world, NULL,
-        "\"{name}\" {\n"
-        "  await step()\n"
-        "  Tag\n"
-        "}", &parse_desc, NULL);
-    test_assert(script != NULL);
+    test_assert(scripts[0] != NULL);
+    test_assert(scripts[1] != NULL);
 
     ecs_script_task_t *tasks[2] = {
-        ecs_script_task_new(script, &(
-            ecs_script_task_desc_t){ .vars = vars[0] }),
-        ecs_script_task_new(script, &(
-            ecs_script_task_desc_t){ .vars = vars[1] })
+        ecs_script_task_new(scripts[0], NULL),
+        ecs_script_task_new(scripts[1], NULL)
     };
 
     test_int(ecs_script_task_resume(tasks[0], NULL),
@@ -1819,9 +1813,8 @@ void Await_interleaved_tasks_dynamic_entity(void) {
 
     ecs_script_task_free(tasks[0]);
     ecs_script_task_free(tasks[1]);
-    ecs_script_free(script);
-    ecs_script_vars_fini(vars[0]);
-    ecs_script_vars_fini(vars[1]);
+    ecs_script_free(scripts[0]);
+    ecs_script_free(scripts[1]);
     ecs_fini(world);
 }
 

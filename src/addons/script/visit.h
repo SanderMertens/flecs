@@ -25,6 +25,16 @@ struct ecs_script_visit_t {
     int32_t depth;
 };
 
+void flecs_script_visit_error_(
+    ecs_script_visit_t *v,
+    ecs_script_node_t *node,
+    const char *fmt,
+    ...);
+
+#define flecs_script_visit_error(v, node, ...)\
+    flecs_script_visit_error_((ecs_script_visit_t*)v,\
+        (ecs_script_node_t*)node, __VA_ARGS__)
+
 int ecs_script_visit_(
     ecs_script_visit_t *visitor,
     ecs_visit_action_t visit,

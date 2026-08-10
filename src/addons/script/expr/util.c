@@ -490,4 +490,16 @@ ecs_expr_swizzle_t* flecs_expr_expand_swizzle_get(
     return swizzle;
 }
 
+bool flecs_expr_identifier_is_any(
+    const ecs_expr_node_t *node)
+{
+    if (node && node->kind == EcsExprIdentifier) {
+        const ecs_expr_identifier_t *id = (const ecs_expr_identifier_t*)node;
+        if (id->value && !ecs_os_strcmp(id->value, "_")) {
+            return true;
+        }
+    }
+    return false;
+}
+
 #endif

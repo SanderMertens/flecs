@@ -95,8 +95,14 @@ struct ecs_script_entity_t {
     bool name_is_var;
     bool kind_w_expr;
     bool non_fragmenting_parent;
+    bool type_pass;
     ecs_script_scope_t *scope;
     ecs_expr_node_t *name_expr;
+
+    /* Slot in the entity reference table of the script or template body that
+     * contains the statement. Assigned by the type visitor. -1 if the node was
+     * not visited by the type visitor. */
+    int32_t entity_slot;
 };
 
 typedef struct ecs_script_with_t {

@@ -206,6 +206,9 @@ void flecs_expr_visit_free(
             script, (ecs_expr_identifier_t*)node);
         flecs_free_t(a, ecs_expr_identifier_t, node);
         break;
+    case EcsExprInternalEntity:
+        flecs_free_t(a, ecs_expr_internal_entity_t, node);
+        break;
     case EcsExprVariable:
     case EcsExprGlobalVariable:
         flecs_free_t(a, ecs_expr_variable_t, node);

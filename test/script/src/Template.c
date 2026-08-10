@@ -2249,7 +2249,7 @@ void Template_prop_without_using_meta(void) {
     ecs_fini(world);
 }
 
-void Template_hoist_var(void) {
+void Template_var_from_outer_scope_not_visible(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -2271,23 +2271,13 @@ void Template_hoist_var(void) {
     LINE "}"
     LINE "Tree foo(height: 20)";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
-
-    ecs_entity_t tree = ecs_lookup(world, "Tree");
-    test_assert(tree != 0);
-
-    ecs_entity_t foo = ecs_lookup(world, "foo");
-    test_assert(foo != 0);
-
-    const Position *p = ecs_get(world, foo, Position);
-    test_assert(p != NULL);
-    test_int(p->x, 10);
-    test_int(p->y, 20);
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
 
     ecs_fini(world);
 }
 
-void Template_hoist_vars_nested(void) {
+void Template_var_from_outer_scopes_not_visible(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -2310,23 +2300,13 @@ void Template_hoist_vars_nested(void) {
     LINE "}"
     LINE "parent.Tree foo()";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
-
-    ecs_entity_t tree = ecs_lookup(world, "parent.Tree");
-    test_assert(tree != 0);
-
-    ecs_entity_t foo = ecs_lookup(world, "foo");
-    test_assert(foo != 0);
-
-    const Position *p = ecs_get(world, foo, Position);
-    test_assert(p != NULL);
-    test_int(p->x, 10);
-    test_int(p->y, 20);
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
 
     ecs_fini(world);
 }
 
-void Template_hoist_vars_nested_w_masked(void) {
+void Template_masked_var_from_outer_scope_not_visible(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -2350,18 +2330,8 @@ void Template_hoist_vars_nested_w_masked(void) {
     LINE "}"
     LINE "parent.Tree foo()";
 
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
-
-    ecs_entity_t tree = ecs_lookup(world, "parent.Tree");
-    test_assert(tree != 0);
-
-    ecs_entity_t foo = ecs_lookup(world, "foo");
-    test_assert(foo != 0);
-
-    const Position *p = ecs_get(world, foo, Position);
-    test_assert(p != NULL);
-    test_int(p->x, 30);
-    test_int(p->y, 20);
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
 
     ecs_fini(world);
 }

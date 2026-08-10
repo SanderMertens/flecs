@@ -10488,47 +10488,6 @@ void Expr_new_entity_w_kind(void) {
     ecs_fini(world);
 }
 
-void Expr_new_entity_w_component_w_vars(void) {
-    ecs_world_t *world = ecs_init();
-
-    typedef struct {
-        int32_t x;
-        int32_t y;
-    } Position;
-
-    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
-        .entity = ecs_entity(world, { .name = "Position" }),
-        .members = {
-            {"x", ecs_id(ecs_i32_t)},
-            {"y", ecs_id(ecs_i32_t)}
-        }
-    });
-
-    ecs_script_vars_t *vars = ecs_script_vars_init(world);
-    ecs_script_var_t *x_var = ecs_script_vars_define(vars, "x", ecs_i32_t);
-    *(int32_t*)x_var->value.ptr = 10;
-    ecs_script_var_t *y_var = ecs_script_vars_define(vars, "y", ecs_i32_t);
-    *(int32_t*)y_var->value.ptr = 20;
-
-    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding, .vars = vars };
-
-    ecs_entity_t e = 0;
-    ecs_value_t v = { .type = ecs_id(ecs_entity_t), .ptr = &e };
-    test_assert(ecs_expr_run(world, "new { Position: {x, y} }", &v, &desc) != NULL);
-    test_assert(e != 0);
-    test_assert(ecs_is_alive(world, e));
-    test_int(ecs_get_type(world, e)->count, 1);
-
-    const Position *p = ecs_get(world, e, Position);
-    test_assert(p != NULL);
-    test_int(p->x, 10);
-    test_int(p->y, 20);
-
-    ecs_script_vars_fini(vars);
-
-    ecs_fini(world);
-}
-
 void Expr_new_named_entity(void) {
     ecs_world_t *world = ecs_init();
 

@@ -111,6 +111,7 @@ ecs_script_entity_t* flecs_script_insert_entity(
     }
 
     result->name = name;
+    result->entity_slot = -1;
 
     if (flecs_script_name_to_expr(parser, name, &result->name_expr)) {
         goto error;

@@ -1530,6 +1530,36 @@ static bool flecs_expr_is_entity_type(
     return false;
 }
 
+/* Entity references that were resolved by the type visitor no longer go
+ * through the identifier code path, so check here that the entity can be
+ * assigned to the type that's expected by the lvalue. */
+static int flecs_expr_entity_ref_visit_type(
+    ecs_script_t *script,
+    ecs_expr_node_t *node,
+    ecs_meta_cursor_t *cur)
+{
+    if (node->type != ecs_id(ecs_entity_t) || !cur->valid) {
+        return 0;
+    }
+
+    ecs_entity_t type = ecs_meta_get_type(cur);
+    if (!type || type == ecs_id(ecs_value_t)) {
+        return 0;
+    }
+
+    bool is_opaque = false;
+    if (flecs_expr_is_entity_type(script->world, type, &is_opaque)) {
+        return 0;
+    }
+
+    char *type_str = ecs_get_path(script->world, type);
+    flecs_expr_visit_error(script, node,
+        "cannot cast entity to %s", type_str);
+    ecs_os_free(type_str);
+
+    return -1;
+}
+
 static int flecs_expr_identifier_variable_member_visit_type(
     ecs_script_t *script,
     ecs_expr_identifier_t *node,
@@ -1587,14 +1617,108 @@ error:
     return -1;
 }
 
+static void flecs_expr_replace(
+    ecs_script_t *script,
+    ecs_expr_node_t **node_ptr,
+    ecs_expr_node_t *with)
+{
+    ecs_assert(*node_ptr != with, ECS_INTERNAL_ERROR, NULL);
+    with->pos = node_ptr[0]->pos;
+    flecs_expr_visit_free(script, *node_ptr);
+    *node_ptr = with;
+}
+
+static ecs_expr_internal_entity_t* flecs_expr_internal_entity_from(
+    ecs_script_t *script,
+    int32_t slot)
+{
+    ecs_expr_internal_entity_t *result = flecs_calloc_t(
+        &flecs_script_impl(script)->allocator, ecs_expr_internal_entity_t);
+    result->node.kind = EcsExprInternalEntity;
+    result->node.type = ecs_id(ecs_entity_t);
+    result->node.type_info = ecs_get_type_info(
+        script->world, ecs_id(ecs_entity_t));
+    result->slot = slot;
+    return result;
+}
+
+/* Resolve an identifier to a symbol that's defined by the script, or to an
+ * entity in the world. Returns 1 if the identifier could not be resolved, in
+ * which case the identifier is resolved by the code paths that follow. */
+static int flecs_expr_identifier_visit_symbol(
+    ecs_script_t *script,
+    ecs_expr_node_t **node_ptr,
+    ecs_meta_cursor_t *cur,
+    const ecs_expr_eval_desc_t *desc)
+{
+    ecs_script_type_visitor_t *v = flecs_script_impl(script)->type_visitor;
+    if (!v) {
+        return 1;
+    }
+
+    ecs_expr_identifier_t *node = (ecs_expr_identifier_t*)*node_ptr;
+    ecs_script_symbol_t symbol = flecs_script_lookup_symbol(v, node->value);
+
+    switch(symbol.kind) {
+    case EcsScriptSymbolUnresolved:
+        return 1;
+    case EcsScriptSymbolConst:
+    case EcsScriptSymbolProp:
+    case EcsScriptSymbolMut:
+    case EcsScriptSymbolArgument: {
+        ecs_expr_variable_t *result = flecs_expr_variable_from(
+            script, (ecs_expr_node_t*)node, node->value);
+        result->sp = symbol.is.variable;
+        flecs_expr_replace(script, node_ptr, (ecs_expr_node_t*)result);
+        break;
+    }
+    case EcsScriptSymbolGlobalConst:
+    case EcsScriptSymbolGlobalMut: {
+        ecs_expr_variable_t *result = flecs_expr_variable_from(
+            script, (ecs_expr_node_t*)node, node->value);
+        result->node.kind = EcsExprGlobalVariable;
+        flecs_expr_replace(script, node_ptr, (ecs_expr_node_t*)result);
+        break;
+    }
+    case EcsScriptSymbolEntity:
+        if (!symbol.external) {
+            ecs_expr_internal_entity_t *result =
+                flecs_expr_internal_entity_from(script, symbol.is.entity);
+            flecs_expr_replace(script, node_ptr, (ecs_expr_node_t*)result);
+        } else {
+            ecs_entity_t e = symbol.is.external;
+
+            /* Entities that store a global variable value are resolved as
+             * global variables, not as entity references. */
+            if (flecs_script_global_var_get(script->world, e, NULL).ptr) {
+                ecs_expr_variable_t *result = flecs_expr_variable_from(
+                    script, (ecs_expr_node_t*)node, node->value);
+                result->node.kind = EcsExprGlobalVariable;
+                flecs_expr_replace(
+                    script, node_ptr, (ecs_expr_node_t*)result);
+                break;
+            }
+
+            ecs_expr_value_node_t *result = flecs_expr_value_from(
+                script, (ecs_expr_node_t*)node, ecs_id(ecs_entity_t));
+            result->storage.entity = e;
+            result->ptr = &result->storage.entity;
+            flecs_expr_replace(script, node_ptr, (ecs_expr_node_t*)result);
+        }
+        break;
+    }
+
+    return flecs_expr_visit_type_priv(script, node_ptr, cur, desc);
+}
+
 static int flecs_expr_identifier_visit_type(
     ecs_script_t *script,
-    ecs_expr_identifier_t *node,
+    ecs_expr_node_t **node_ptr,
     ecs_meta_cursor_t *cur,
     const ecs_expr_eval_desc_t *desc,
     bool swizzle_expand_allowed)
 {
-    (void)desc;
+    ecs_expr_identifier_t *node = (ecs_expr_identifier_t*)*node_ptr;
 
     if (node->expr) {
         flecs_expr_visit_free(script, node->expr);
@@ -1626,6 +1750,14 @@ static int flecs_expr_identifier_visit_type(
 
         return 0;
     } else {
+        /* Resolve the identifier to a symbol that's defined by the script, or
+         * to an entity in the world. */
+        int symbol_result = flecs_expr_identifier_visit_symbol(
+            script, node_ptr, cur, desc);
+        if (symbol_result != 1) {
+            return symbol_result;
+        }
+
         /* Variables take precedence over entities */
         int32_t var_sp = -1;
         ecs_script_var_t *var = flecs_script_find_var(
@@ -1767,12 +1899,53 @@ error:
     return -1;
 }
 
+/* Resolve a variable reference to a symbol that's defined by the script. */
+static void flecs_expr_variable_visit_symbol(
+    ecs_script_t *script,
+    ecs_expr_variable_t *node)
+{
+    ecs_script_type_visitor_t *v = flecs_script_impl(script)->type_visitor;
+    if (!v || node->sp != -1) {
+        return;
+    }
+
+    ecs_script_symbol_t symbol = flecs_script_lookup_symbol(v, node->name);
+
+    switch(symbol.kind) {
+    case EcsScriptSymbolConst:
+    case EcsScriptSymbolProp:
+    case EcsScriptSymbolMut:
+    case EcsScriptSymbolArgument:
+        node->sp = symbol.is.variable;
+        break;
+    case EcsScriptSymbolGlobalConst:
+    case EcsScriptSymbolGlobalMut:
+        node->node.kind = EcsExprGlobalVariable;
+        break;
+    case EcsScriptSymbolEntity:
+    case EcsScriptSymbolUnresolved:
+        break;
+    }
+}
+
+static int flecs_expr_global_variable_visit_type(
+    ecs_script_t *script,
+    ecs_expr_variable_t *node,
+    ecs_meta_cursor_t *cur,
+    const ecs_expr_eval_desc_t *desc);
+
 static int flecs_expr_variable_visit_type(
     ecs_script_t *script,
     ecs_expr_variable_t *node,
     ecs_meta_cursor_t *cur,
     const ecs_expr_eval_desc_t *desc)
 {
+    flecs_expr_variable_visit_symbol(script, node);
+
+    if (node->node.kind == EcsExprGlobalVariable) {
+        return flecs_expr_global_variable_visit_type(script, node, cur, desc);
+    }
+
     ecs_script_var_t *var = flecs_script_find_var(
         desc->vars, node->name, &node->sp);
     if (var) {
@@ -1801,11 +1974,11 @@ static int flecs_expr_global_variable_visit_type(
     ecs_meta_cursor_t *cur,
     const ecs_expr_eval_desc_t *desc)
 {
-    (void)cur;
-
     if (flecs_expr_global_variable_resolve(script, node, desc)) {
         goto error;
     }
+
+    *cur = ecs_meta_cursor(script->world, node->node.type, NULL);
 
     return 0;
 error:
@@ -2431,6 +2604,11 @@ static int flecs_expr_element_visit_type(
         }
 
         if (is_entity_type) {
+            /* The identifier is replaced with a more specific node by the type
+             * visitor, so keep the name around for error reporting. */
+            const char *index_name =
+                ((ecs_expr_identifier_t*)node->index)->value;
+
             ecs_meta_cursor_t index_cur = {0};
             if (flecs_expr_visit_type_priv(
                 script, &node->index, &index_cur, desc))
@@ -2438,13 +2616,12 @@ static int flecs_expr_element_visit_type(
                 goto error;
             }
 
-            ecs_expr_identifier_t *ident = (ecs_expr_identifier_t*)node->index;
             node->node.type = desc->lookup_action(
-                script->world, ident->value, desc->lookup_ctx);
+                script->world, index_name, desc->lookup_ctx);
             if (!node->node.type) {
-                flecs_expr_visit_error(script, node, 
+                flecs_expr_visit_error(script, node,
                     "unresolved component identifier '%s'",
-                        ident->value);
+                        index_name);
                 goto error;
             }
 
@@ -2532,18 +2709,6 @@ not_a_collection: {
 }
 error:
     return -1;
-}
-
-static bool flecs_expr_identifier_is_any(
-    ecs_expr_node_t *node)
-{
-    if (node->kind == EcsExprIdentifier) {
-        ecs_expr_identifier_t *id = (ecs_expr_identifier_t*)node;
-        if (id->value && !ecs_os_strcmp(id->value, "_")) {
-            return true;
-        }
-    }
-    return false;
 }
 
 static int flecs_expr_match_visit_type(
@@ -2787,6 +2952,10 @@ static int flecs_expr_visit_type_ex(
 
     switch(node->kind) {
     case EcsExprValue:
+    case EcsExprInternalEntity:
+        if (flecs_expr_entity_ref_visit_type(script, node, cur)) {
+            goto error;
+        }
         break;
     case EcsExprInterpolatedString:
         if (flecs_expr_interpolated_string_visit_type(
@@ -2825,8 +2994,7 @@ static int flecs_expr_visit_type_ex(
         break;
     case EcsExprIdentifier:
         if (flecs_expr_identifier_visit_type(
-            script, (ecs_expr_identifier_t*)node, cur, desc,
-            swizzle_expand_allowed))
+            script, node_ptr, cur, desc, swizzle_expand_allowed))
         {
             goto error;
         }

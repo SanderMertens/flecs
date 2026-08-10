@@ -23,9 +23,17 @@ typedef struct ecs_script_eval_visitor_t {
     ecs_entity_t with_relationship;
     int32_t with_relationship_sp;
     bool is_with_scope;
-    bool dynamic_variable_binding;
     ecs_script_vars_t *vars;
+
+    /* When set, entities created by entity statements are stored in this vector
+     * at the slot assigned by the type visitor. vec<ecs_entity_t> */
+    ecs_vec_t *entity_slots;
 } ecs_script_eval_visitor_t;
+
+void flecs_script_set_entity_slot(
+    ecs_vec_t *entity_slots,
+    int32_t slot,
+    ecs_entity_t entity);
 
 int flecs_script_eval(
     const ecs_script_t *script,
@@ -177,7 +185,6 @@ flecs_script_run_status_t flecs_script_runner_run_scope(
 int flecs_script_eval_entity(
     ecs_script_eval_visitor_t *v,
     const ecs_script_t *script,
-    const ecs_script_vars_t *vars,
     ecs_script_entity_t *node,
     ecs_entity_t *out);
 
@@ -194,14 +201,8 @@ void flecs_script_scope_push(
 void flecs_script_frame_pop(
     ecs_script_runner_t *r);
 
-void flecs_script_eval_error_(
-    ecs_script_eval_visitor_t *v,
-    ecs_script_node_t *node,
-    const char *fmt,
-    ...);
-
 #define flecs_script_eval_error(v, node, ...)\
-    flecs_script_eval_error_(v, (ecs_script_node_t*)node, __VA_ARGS__)
+    flecs_script_visit_error(v, node, __VA_ARGS__)
 
 int flecs_script_find_entity(
     ecs_script_eval_visitor_t *v,
@@ -306,6 +307,10 @@ int flecs_script_eval_const(
     ecs_script_eval_visitor_t *v,
     ecs_script_var_node_t *node,
     bool export);
+
+int flecs_script_eval_module(
+    ecs_script_eval_visitor_t *v,
+    ecs_script_module_t *node);
 
 ecs_entity_t flecs_script_find_entity_action(
     const ecs_world_t *world,

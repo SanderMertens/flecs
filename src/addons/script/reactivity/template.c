@@ -14,16 +14,22 @@ ECS_DECLARE(EcsScriptTemplate);
 
 static ECS_CTOR(EcsScriptTemplateRoot, ptr, {
     ecs_vec_init_t(NULL, &ptr->observers, ecs_script_ref_t, 0);
+    ecs_vec_init_t(NULL, &ptr->entities, ecs_entity_t, 0);
 })
 
 static ECS_MOVE(EcsScriptTemplateRoot, dst, src, {
     ecs_vec_fini_t(NULL, &dst->observers, ecs_script_ref_t);
     dst->observers = src->observers;
     ecs_vec_init_t(NULL, &src->observers, ecs_script_ref_t, 0);
+
+    ecs_vec_fini_t(NULL, &dst->entities, ecs_entity_t);
+    dst->entities = src->entities;
+    ecs_vec_init_t(NULL, &src->entities, ecs_entity_t, 0);
 })
 
 static ECS_DTOR(EcsScriptTemplateRoot, ptr, {
     ecs_vec_fini_t(NULL, &ptr->observers, ecs_script_ref_t);
+    ecs_vec_fini_t(NULL, &ptr->entities, ecs_entity_t);
 })
 
 static void flecs_script_template_root_on_remove(
@@ -363,6 +369,10 @@ static int flecs_script_template_instantiate(
 
     v->entity = &instance_state;
 
+    ecs_vec_t entity_slots;
+    ecs_vec_init_t(NULL, &entity_slots, ecs_entity_t, 0);
+    v->entity_slots = &entity_slots;
+
     int result = 0;
     int32_t i, a;
     for (i = 0; i < count; i ++) {
@@ -405,8 +415,6 @@ static int flecs_script_template_instantiate(
         /* Create variables to hold template properties and mutable state */
         ecs_script_vars_t *vars = flecs_script_vars_push(
             NULL, &v->r->stack, &v->r->allocator);
-        vars->parent = template->vars; /* Include hoisted variables */
-        vars->sp = ecs_vec_count(&template->vars->vars);
 
         /* Allocate enough space for variables */
         ecs_script_vars_set_size(vars,
@@ -436,6 +444,8 @@ static int flecs_script_template_instantiate(
 
         v->vars = vars;
 
+        ecs_vec_clear(&entity_slots);
+
         /* Run template code */
         if (flecs_script_runner_run_scope(&runner, scope) !=
             FlecsScriptRunDone)
@@ -450,6 +460,15 @@ static int flecs_script_template_instantiate(
                 world, template, template_entity, instance, vars);
         }
 
+        if (ecs_vec_count(&entity_slots)) {
+            EcsScriptTemplateRoot *root = ecs_ensure_pair(
+                world, instance, EcsScriptTemplateRoot, template_entity);
+            ecs_assert(root != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_vec_fini_t(NULL, &root->entities, ecs_entity_t);
+            root->entities = entity_slots;
+            ecs_vec_init_t(NULL, &entity_slots, ecs_entity_t, 0);
+        }
+
         /* Pop variable scope */
         ecs_script_vars_pop(vars);
 
@@ -459,7 +478,10 @@ static int flecs_script_template_instantiate(
         }
     }
 
-    ecs_vec_fini_t(&desc.runtime->allocator, 
+    v->entity_slots = NULL;
+    ecs_vec_fini_t(NULL, &entity_slots, ecs_entity_t);
+
+    ecs_vec_fini_t(&desc.runtime->allocator,
         &desc.runtime->with, ecs_value_t);
     ecs_vec_fini_t(&desc.runtime->allocator, 
         &desc.runtime->with_type_info, ecs_type_info_t*);
@@ -873,11 +895,18 @@ static int flecs_script_template_preprocess(
     v->entity = &instance_state;
 
     v->base.visit = flecs_script_template_eval;
-    v->vars = flecs_script_vars_push(v->vars, &v->r->stack, &v->r->allocator);
+
+    /* Variables from the scope the template is defined in are not visible in
+     * the template body. Check the body with the same variable stack that
+     * instances are evaluated with, which only holds $this and the props and
+     * muts of the template. */
+    ecs_script_vars_t *prev_vars = v->vars;
+    v->vars = flecs_script_vars_push(NULL, &v->r->stack, &v->r->allocator);
     ecs_script_var_t *var = ecs_script_vars_declare(v->vars, "this");
     var->value.type = ecs_id(ecs_entity_t);
     int result = flecs_script_check_scope(v, template->node->scope);
-    v->vars = ecs_script_vars_pop(v->vars);
+    ecs_script_vars_pop(v->vars);
+    v->vars = prev_vars;
     v->base.visit = prev_visit;
     v->template = NULL;
     v->entity = NULL;
@@ -903,33 +932,6 @@ static int flecs_script_template_hoist_using(
     return 0;
 }
 
-static int flecs_script_template_hoist_vars(
-    ecs_script_eval_visitor_t *v,
-    ecs_script_template_t *template,
-    ecs_script_vars_t *vars)
-{
-    int32_t i, count = ecs_vec_count(&vars->vars);
-    ecs_script_var_t *src_vars = ecs_vec_first(&vars->vars);
-    for (i = 0; i < count; i ++) {
-        ecs_script_var_t *src = &src_vars[i];
-        if (ecs_script_vars_lookup(template->vars, src->name)) {
-            /* If variable is masked, don't declare it twice */
-            continue;
-        }
-        ecs_script_var_t *dst = ecs_script_vars_define_id(
-            template->vars, src->name, src->value.type);
-        ecs_assert(dst != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_ptr_copy(v->world,
-            src->value.type, dst->value.ptr, src->value.ptr);
-    }
-
-    if (vars->parent) {
-        flecs_script_template_hoist_vars(v, template, vars->parent);
-    }
-
-    return 0;
-}
-
 static ecs_script_template_t* flecs_script_template_init(
     ecs_script_impl_t *script)
 {
@@ -947,8 +949,6 @@ static ecs_script_template_t* flecs_script_template_init(
     ecs_vec_init_t(NULL, &result->observers, ecs_script_ref_t, 0);
     ecs_vec_init_t(NULL, &result->dynamic_refs, ecs_script_ref_t, 0);
     result->refcount = 0;
-
-    result->vars = ecs_script_vars_init(script->pub.world);
     return result;
 }
 
@@ -985,7 +985,6 @@ void flecs_script_template_fini(
     ecs_vec_fini_t(NULL, &template->refs, ecs_script_ref_t);
     ecs_vec_fini_t(NULL, &template->observers, ecs_script_ref_t);
     ecs_vec_fini_t(NULL, &template->dynamic_refs, ecs_script_ref_t);
-    ecs_script_vars_fini(template->vars);
     flecs_free_t(a, ecs_script_template_t, template);
 }
 
@@ -1003,11 +1002,6 @@ int flecs_script_eval_template(
     template->props.type = template_entity;
     template->node = node;
 
-    /* Variables are always presented to a template in a well-defined order, so
-     * we don't need dynamic variable binding. */
-    bool old_dynamic_variable_binding = v->dynamic_variable_binding;
-    v->dynamic_variable_binding = false;
-
     if (flecs_script_template_preprocess(v, template)) {
         goto error;
     }
@@ -1015,12 +1009,6 @@ int flecs_script_eval_template(
     if (flecs_script_template_hoist_using(v, template)) {
         goto error;
     }
-
-    if (flecs_script_template_hoist_vars(v, template, v->vars)) {
-        goto error;
-    }
-
-    v->dynamic_variable_binding = old_dynamic_variable_binding;
 
     /* If template has no props, give template dummy size so we can register
      * hooks for it. */

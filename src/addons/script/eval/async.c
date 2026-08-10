@@ -626,8 +626,6 @@ ecs_script_task_t* ecs_script_task_new(
         result->ctx_free = desc->ctx_free;
         result->loop = desc->loop;
         result->iterations = desc->iterations;
-        result->eval_desc.vars = ECS_CONST_CAST(
-            ecs_script_vars_t*, desc->vars);
     }
     flecs_script_runner_init(&result->runner,
         flecs_script_impl(result->script), &result->eval_desc);

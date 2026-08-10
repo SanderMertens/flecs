@@ -541,6 +541,34 @@ error:
     return -1;
 }
 
+static int flecs_expr_internal_entity_visit_eval(
+    ecs_script_eval_ctx_t *ctx,
+    ecs_expr_internal_entity_t *node,
+    ecs_expr_value_t *out)
+{
+    ecs_script_eval_visitor_t *v = ctx->desc ? ctx->desc->script_visitor : NULL;
+    ecs_vec_t *slots = v ? v->entity_slots : NULL;
+
+    if (!slots || node->slot >= ecs_vec_count(slots)) {
+        flecs_expr_visit_error(ctx->script, node,
+            "entity reference is not initialized");
+        return -1;
+    }
+
+    ecs_entity_t e = ecs_vec_get_t(slots, ecs_entity_t, node->slot)[0];
+    if (!e) {
+        flecs_expr_visit_error(ctx->script, node,
+            "entity reference is not initialized");
+        return -1;
+    }
+
+    ecs_assert(out->value.type == ecs_id(ecs_entity_t),
+        ECS_INTERNAL_ERROR, NULL);
+    *(ecs_entity_t*)out->value.ptr = e;
+
+    return 0;
+}
+
 static int flecs_expr_variable_visit_eval(
     ecs_script_eval_ctx_t *ctx,
     ecs_expr_variable_t *node,
@@ -1205,9 +1233,7 @@ static int flecs_expr_new_visit_eval(
     }
 
     ecs_entity_t result = 0;
-    if (flecs_script_eval_entity(v, ctx->script,
-        ctx->desc ? ctx->desc->vars : NULL, node->entity, &result))
-    {
+    if (flecs_script_eval_entity(v, ctx->script, node->entity, &result)) {
         return -1;
     }
 
@@ -1352,9 +1378,16 @@ static int flecs_expr_visit_eval_priv(
             goto error;
         }
         break;
+    case EcsExprInternalEntity:
+        if (flecs_expr_internal_entity_visit_eval(
+            ctx, (ecs_expr_internal_entity_t*)node, out))
+        {
+            goto error;
+        }
+        break;
     case EcsExprVariable:
         if (flecs_expr_variable_visit_eval(
-            ctx, (ecs_expr_variable_t*)node, out)) 
+            ctx, (ecs_expr_variable_t*)node, out))
         {
             goto error;
         }

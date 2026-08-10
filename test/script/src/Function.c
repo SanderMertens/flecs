@@ -897,12 +897,28 @@ void Function_undefined_fn(void) {
 void Function_forward_reference(void) {
     ecs_world_t *world = ecs_init();
 
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Position" }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
     const char *expr =
     HEAD "const r = g(1)"
-    LINE "fn g(a: i32) -> i32 { a + 1 }";
+    LINE "fn g(a: i32) -> i32 { a + 1 }"
+    LINE "e { Position: {r, g(2)} }";
 
-    ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 2);
+    test_int(p->y, 3);
 
     ecs_fini(world);
 }
