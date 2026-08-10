@@ -96,7 +96,7 @@ int flecs_expr_initializer_validate_assign(
     ecs_entity_t type,
     ecs_size_t value_size);
 
-ecs_expr_member_t* flecs_expr_expand_swizzle_get(
+ecs_expr_swizzle_t* flecs_expr_expand_swizzle_get(
     ecs_expr_node_t *node);
 
 #endif
