@@ -221,6 +221,10 @@ void flecs_expr_visit_free(
             script, (ecs_expr_member_t*)node);
         flecs_free_t(a, ecs_expr_member_t, node);
         break;
+    case EcsExprSwizzle:
+        flecs_expr_visit_free(script, ((ecs_expr_swizzle_t*)node)->left);
+        flecs_free_t(a, ecs_expr_swizzle_t, node);
+        break;
     case EcsExprElement:
     case EcsExprComponent:
         flecs_expr_element_visit_free(

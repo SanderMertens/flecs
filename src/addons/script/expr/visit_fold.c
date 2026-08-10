@@ -619,6 +619,22 @@ error:
     return -1;
 }
 
+static int flecs_expr_swizzle_visit_fold(
+    ecs_script_t *script,
+    ecs_expr_node_t **node_ptr,
+    const ecs_expr_eval_desc_t *desc)
+{
+    ecs_expr_swizzle_t *node = (ecs_expr_swizzle_t*)*node_ptr;
+
+    if (flecs_expr_visit_fold(script, &node->left, desc)) {
+        goto error;
+    }
+
+    return 0;
+error:
+    return -1;
+}
+
 static int flecs_expr_element_visit_fold(
     ecs_script_t *script,
     ecs_expr_node_t **node_ptr,
@@ -724,6 +740,11 @@ int flecs_expr_visit_fold(
         break;
     case EcsExprMember:
         if (flecs_expr_member_visit_fold(script, node_ptr, desc)) {
+            goto error;
+        }
+        break;
+    case EcsExprSwizzle:
+        if (flecs_expr_swizzle_visit_fold(script, node_ptr, desc)) {
             goto error;
         }
         break;

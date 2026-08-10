@@ -203,6 +203,13 @@ int flecs_expr_visit_refs(
             goto error;
         }
         break;
+    case EcsExprSwizzle:
+        if (flecs_expr_visit_refs(script,
+            ((ecs_expr_swizzle_t*)node)->left, refs, dynamic_refs, fn_refs))
+        {
+            goto error;
+        }
+        break;
     case EcsExprElement: {
         ecs_expr_element_t *n = (ecs_expr_element_t*)node;
         if (flecs_expr_visit_refs(script, n->left, refs, dynamic_refs, fn_refs)) {

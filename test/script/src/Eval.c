@@ -16712,6 +16712,80 @@ void Eval_component_expr_swizzle_initializer_rgba(void) {
     ecs_fini(world);
 }
 
+void Eval_component_expr_swizzle_initializer_add_assign(void) {
+    typedef struct { float r; float g; float b; float a; } Rgba;
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Rgba) = flecs_swizzle_register_rgba(world);
+    test_assert(ecs_id(Rgba) != 0);
+
+    const char *init =
+    HEAD "e {"
+    LINE "  Rgba: {100, 100, 100, 100}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, init, NULL) == 0);
+
+    ecs_log_set_level(-4);
+
+    const char *expr =
+    HEAD "const color: Rgba = {1, 2, 3, 4}"
+    LINE "e {"
+    LINE "  Rgba: {r += color.rgb}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const Rgba *ptr = ecs_get(world, e, Rgba);
+    test_assert(ptr != NULL);
+    test_int(ptr->r, 100);
+    test_int(ptr->g, 100);
+    test_int(ptr->b, 100);
+    test_int(ptr->a, 100);
+
+    ecs_fini(world);
+}
+
+void Eval_component_expr_swizzle_initializer_mul_assign(void) {
+    typedef struct { float r; float g; float b; float a; } Rgba;
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Rgba) = flecs_swizzle_register_rgba(world);
+    test_assert(ecs_id(Rgba) != 0);
+
+    const char *init =
+    HEAD "e {"
+    LINE "  Rgba: {10, 10, 10, 10}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, init, NULL) == 0);
+
+    ecs_log_set_level(-4);
+
+    const char *expr =
+    HEAD "const color: Rgba = {2, 3, 4, 5}"
+    LINE "e {"
+    LINE "  Rgba: {r *= color.rgb}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    const Rgba *ptr = ecs_get(world, e, Rgba);
+    test_assert(ptr != NULL);
+    test_int(ptr->r, 10);
+    test_int(ptr->g, 10);
+    test_int(ptr->b, 10);
+    test_int(ptr->a, 10);
+
+    ecs_fini(world);
+}
+
 void Eval_component_expr_member_no_var(void) {
     ecs_world_t *world = ecs_init();
 

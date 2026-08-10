@@ -468,7 +468,7 @@ bool flecs_value_is_0(
     }
 }
 
-ecs_expr_member_t* flecs_expr_expand_swizzle_get(
+ecs_expr_swizzle_t* flecs_expr_expand_swizzle_get(
     ecs_expr_node_t *node)
 {
     if (node->kind == EcsExprIdentifier) {
@@ -478,16 +478,16 @@ ecs_expr_member_t* flecs_expr_expand_swizzle_get(
         }
     }
 
-    if (node->kind != EcsExprMember) {
+    if (node->kind != EcsExprSwizzle) {
         return NULL;
     }
 
-    ecs_expr_member_t *member = (ecs_expr_member_t*)node;
-    if (!member->swizzle_expand) {
+    ecs_expr_swizzle_t *swizzle = (ecs_expr_swizzle_t*)node;
+    if (!swizzle->expand) {
         return NULL;
     }
 
-    return member;
+    return swizzle;
 }
 
 #endif
