@@ -68,6 +68,21 @@ ecs_expr_member_t* flecs_expr_member_from(
     return result;
 }
 
+ecs_expr_swizzle_t* flecs_expr_swizzle_from(
+    ecs_script_t *script,
+    ecs_expr_node_t *node,
+    ecs_expr_node_t *left,
+    const char *name)
+{
+    ecs_expr_swizzle_t *result = flecs_calloc_t(
+        &flecs_script_impl(script)->allocator, ecs_expr_swizzle_t);
+    result->node.kind = EcsExprSwizzle;
+    result->node.pos = node->pos;
+    result->left = left;
+    result->name = name;
+    return result;
+}
+
 ecs_expr_value_node_t* flecs_expr_bool(
     ecs_parser_t *parser,
     bool value)

@@ -67,7 +67,7 @@ static int flecs_script_check_expr(
 
     ecs_assert(expr->type_info == NULL, ECS_INTERNAL_ERROR, NULL);
 
-    if (flecs_expr_visit_type(script, expr, &desc)) {
+    if (flecs_expr_visit_type(script, expr_ptr, &desc)) {
         goto error;
     }
 

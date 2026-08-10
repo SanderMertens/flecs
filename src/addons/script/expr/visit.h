@@ -17,7 +17,7 @@ void flecs_expr_visit_error_(
 
 int flecs_expr_visit_type(
     ecs_script_t *script,
-    ecs_expr_node_t *node,
+    ecs_expr_node_t **node,
     const ecs_expr_eval_desc_t *desc);
 
 int flecs_expr_visit_fold(

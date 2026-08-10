@@ -189,7 +189,7 @@ static ecs_entity_t flecs_script_eval_name_expr(
     ecs_expr_node_t *expr = *expr_ptr;
 
     if (!expr->type_info) {
-        if (flecs_expr_visit_type(script, expr, &desc)) {
+        if (flecs_expr_visit_type(script, expr_ptr, &desc)) {
             return 0;
         }
 
@@ -594,9 +594,11 @@ int flecs_script_prepare_expr(
     };
 
     if (expr->type_info == NULL) {
-        if (flecs_expr_visit_type(script, expr, &desc)) {
+        if (flecs_expr_visit_type(script, expr_ptr, &desc)) {
             goto error;
         }
+
+        expr = *expr_ptr;
 
         ecs_vec_t *refs = NULL, *dynamic_refs = NULL;
         if (v->script_entity) {
@@ -1842,7 +1844,7 @@ static int flecs_script_function_type_check(
             .script_visitor = &v
         };
 
-        if (flecs_expr_visit_type(script, cnode->expr, &edesc)) {
+        if (flecs_expr_visit_type(script, &cnode->expr, &edesc)) {
             goto error;
         }
         if (flecs_expr_visit_refs(script, cnode->expr, fn_refs, NULL, fn_refs)) {
@@ -1877,7 +1879,7 @@ static int flecs_script_function_type_check(
             .script_visitor = &v
         };
 
-        if (flecs_expr_visit_type(script, node->return_expr, &edesc)) {
+        if (flecs_expr_visit_type(script, &node->return_expr, &edesc)) {
             goto error;
         }
         if (flecs_expr_visit_refs(

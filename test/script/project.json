@@ -564,6 +564,8 @@
                 "component_expr_swizzle_initializer_rg",
                 "component_expr_swizzle_initializer_rgb",
                 "component_expr_swizzle_initializer_rgba",
+                "component_expr_swizzle_initializer_add_assign",
+                "component_expr_swizzle_initializer_mul_assign",
                 "component_expr_member_no_var",
                 "map_i64_i32_component",
                 "map_i64_string_component",

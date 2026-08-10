@@ -21,6 +21,7 @@ typedef enum ecs_expr_node_kind_t {
     EcsExprFunction,
     EcsExprMethod,
     EcsExprMember,
+    EcsExprSwizzle,
     EcsExprElement,
     EcsExprComponent,
     EcsExprCast,
@@ -97,7 +98,6 @@ typedef struct ecs_expr_identifier_t {
     ecs_expr_node_t node;
     const char *value;
     ecs_expr_node_t *expr;
-    bool swizzle_expand_allowed;
 } ecs_expr_identifier_t;
 
 typedef struct ecs_expr_unary_t {
@@ -122,14 +122,18 @@ typedef struct ecs_expr_member_t {
     ecs_expr_node_t *left;
     const char *member_name;
     uintptr_t offset;
-    int32_t swizzle_count;
-    ecs_size_t swizzle_size;
-    uint16_t swizzle[FLECS_EXPR_SWIZZLE_MAX];
-    uint16_t swizzle_dst[FLECS_EXPR_SWIZZLE_MAX];
-    bool swizzle_expand_allowed;
-    bool swizzle_can_expand;
-    bool swizzle_expand;
 } ecs_expr_member_t;
+
+typedef struct ecs_expr_swizzle_t {
+    ecs_expr_node_t node;
+    ecs_expr_node_t *left;
+    const char *name;
+    int32_t count;
+    ecs_size_t elem_size;
+    uint16_t src[FLECS_EXPR_SWIZZLE_MAX];
+    uint16_t dst[FLECS_EXPR_SWIZZLE_MAX];
+    bool expand;
+} ecs_expr_swizzle_t;
 
 typedef struct ecs_expr_function_t {
     ecs_expr_node_t node;
@@ -199,6 +203,12 @@ ecs_expr_variable_t* flecs_expr_variable_from(
 ecs_expr_member_t* flecs_expr_member_from(
     ecs_script_t *script,
     ecs_expr_node_t *node,
+    const char *name);
+
+ecs_expr_swizzle_t* flecs_expr_swizzle_from(
+    ecs_script_t *script,
+    ecs_expr_node_t *node,
+    ecs_expr_node_t *left,
     const char *name);
 
 ecs_expr_value_node_t* flecs_expr_bool(

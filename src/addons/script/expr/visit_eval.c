@@ -177,30 +177,30 @@ static int flecs_expr_initializer_eval_static(
             continue;
         }
 
-        ecs_expr_member_t *member = flecs_expr_expand_swizzle_get(elem->value);
-        if (member) {
+        ecs_expr_swizzle_t *swizzle = flecs_expr_expand_swizzle_get(elem->value);
+        if (swizzle) {
             ecs_expr_value_t *left = flecs_expr_stack_result(
-                ctx->stack, member->left);
-            if (flecs_expr_visit_eval_priv(ctx, member->left, left)) {
+                ctx->stack, swizzle->left);
+            if (flecs_expr_visit_eval_priv(ctx, swizzle->left, left)) {
                 goto error;
             }
 
-            ecs_size_t size = member->swizzle_size;
+            ecs_size_t size = swizzle->elem_size;
             int32_t s;
-            for (s = 0; s < member->swizzle_count; s ++) {
-                uintptr_t offset = elem->offset + member->swizzle_dst[s];
+            for (s = 0; s < swizzle->count; s ++) {
+                uintptr_t offset = elem->offset + swizzle->dst[s];
                 if ((offset + flecs_uto(uintptr_t, size)) >
                     flecs_uto(uintptr_t, value_size))
                 {
                     flecs_expr_visit_error(ctx->script, node,
                         "initializer of type '%s' writes past end of "
                         "target value", flecs_errstr(ecs_get_path(
-                            ctx->world, member->node.type)));
+                            ctx->world, swizzle->node.type)));
                     goto error;
                 }
 
                 ecs_os_memcpy(ECS_OFFSET(value, offset),
-                    ECS_OFFSET(left->value.ptr, member->swizzle[s]), size);
+                    ECS_OFFSET(left->value.ptr, swizzle->src[s]), size);
             }
             continue;
         }
@@ -312,16 +312,16 @@ static int flecs_expr_initializer_eval_dynamic(
             continue;
         }
 
-        ecs_expr_member_t *member = flecs_expr_expand_swizzle_get(elem->value);
-        if (member) {
+        ecs_expr_swizzle_t *swizzle = flecs_expr_expand_swizzle_get(elem->value);
+        if (swizzle) {
             ecs_expr_value_t *left = flecs_expr_stack_result(
-                ctx->stack, member->left);
-            if (flecs_expr_visit_eval_priv(ctx, member->left, left)) {
+                ctx->stack, swizzle->left);
+            if (flecs_expr_visit_eval_priv(ctx, swizzle->left, left)) {
                 goto error;
             }
 
             int32_t s;
-            for (s = 0; s < member->swizzle_count; s ++) {
+            for (s = 0; s < swizzle->count; s ++) {
                 if (s) {
                     if (ecs_meta_next(cur)) {
                         goto error;
@@ -329,8 +329,8 @@ static int flecs_expr_initializer_eval_dynamic(
                 }
 
                 ecs_value_t v_swizzle_value = {
-                    .ptr = ECS_OFFSET(left->value.ptr, member->swizzle[s]),
-                    .type = member->node.type
+                    .ptr = ECS_OFFSET(left->value.ptr, swizzle->src[s]),
+                    .type = swizzle->node.type
                 };
 
                 if (ecs_meta_set_value(cur, &v_swizzle_value)) {
@@ -921,21 +921,40 @@ static int flecs_expr_member_visit_eval(
         goto error;
     }
 
-    if (node->swizzle_count) {
-        ecs_assert(!node->swizzle_expand, ECS_INTERNAL_ERROR, NULL);
-        ecs_size_t size = node->swizzle_size;
-        int32_t i;
-        for (i = 0; i < node->swizzle_count; i ++) {
-            ecs_os_memcpy(ECS_OFFSET(out->value.ptr, i * size),
-                ECS_OFFSET(expr->value.ptr, node->swizzle[i]), size);
-        }
-        out->value.type = node->node.type;
-        out->owned = false;
-    } else {
-        out->value.ptr = ECS_OFFSET(expr->value.ptr, node->offset);
-        out->value.type = node->node.type;
-        out->owned = false;
+    out->value.ptr = ECS_OFFSET(expr->value.ptr, node->offset);
+    out->value.type = node->node.type;
+    out->owned = false;
+
+    flecs_expr_stack_pop(ctx->stack);
+    return 0;
+error:
+    flecs_expr_stack_pop(ctx->stack);
+    return -1;
+}
+
+static int flecs_expr_swizzle_visit_eval(
+    ecs_script_eval_ctx_t *ctx,
+    ecs_expr_swizzle_t *node,
+    ecs_expr_value_t *out)
+{
+    ecs_assert(!node->expand, ECS_INTERNAL_ERROR, NULL);
+
+    flecs_expr_stack_push(ctx->stack);
+
+    ecs_expr_value_t *expr = flecs_expr_stack_result(ctx->stack, node->left);
+    if (flecs_expr_visit_eval_priv(ctx, node->left, expr)) {
+        goto error;
     }
+
+    ecs_size_t size = node->elem_size;
+    int32_t i;
+    for (i = 0; i < node->count; i ++) {
+        ecs_os_memcpy(ECS_OFFSET(out->value.ptr, i * size),
+            ECS_OFFSET(expr->value.ptr, node->src[i]), size);
+    }
+
+    out->value.type = node->node.type;
+    out->owned = false;
 
     flecs_expr_stack_pop(ctx->stack);
     return 0;
@@ -1363,7 +1382,14 @@ static int flecs_expr_visit_eval_priv(
         break;
     case EcsExprMember:
         if (flecs_expr_member_visit_eval(
-            ctx, (ecs_expr_member_t*)node, out)) 
+            ctx, (ecs_expr_member_t*)node, out))
+        {
+            goto error;
+        }
+        break;
+    case EcsExprSwizzle:
+        if (flecs_expr_swizzle_visit_eval(
+            ctx, (ecs_expr_swizzle_t*)node, out))
         {
             goto error;
         }

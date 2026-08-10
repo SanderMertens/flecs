@@ -898,7 +898,7 @@ ecs_script_t* ecs_expr_parse(
     impl->next_token = &expr[ptr - script->code];
     impl->token_remaining = parser.token_cur;
 
-    if (flecs_expr_visit_type(script, impl->expr, &priv_desc)) {
+    if (flecs_expr_visit_type(script, &impl->expr, &priv_desc)) {
         goto error;
     }
 

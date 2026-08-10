@@ -195,6 +195,19 @@ static int flecs_expr_member_to_str(
     return 0;
 }
 
+static int flecs_expr_swizzle_to_str(
+    ecs_expr_str_visitor_t *v,
+    const ecs_expr_swizzle_t *node)
+{
+    if (flecs_expr_node_to_str(v, node->left)) {
+        return -1;
+    }
+
+    ecs_strbuf_appendlit(v->buf, ".");
+    ecs_strbuf_appendstr(v->buf, node->name);
+    return 0;
+}
+
 static int flecs_expr_function_to_str(
     ecs_expr_str_visitor_t *v,
     const ecs_expr_function_t *node)
@@ -433,8 +446,15 @@ static int flecs_expr_node_to_str(
         }
         break;
     case EcsExprMember:
-        if (flecs_expr_member_to_str(v, 
-            (const ecs_expr_member_t*)node)) 
+        if (flecs_expr_member_to_str(v,
+            (const ecs_expr_member_t*)node))
+        {
+            goto error;
+        }
+        break;
+    case EcsExprSwizzle:
+        if (flecs_expr_swizzle_to_str(v,
+            (const ecs_expr_swizzle_t*)node))
         {
             goto error;
         }
