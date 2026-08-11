@@ -3305,3 +3305,143 @@ void Error_using_unresolved_path(void) {
 
     ecs_fini(world);
 }
+
+void Error_entity_path_w_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Hello.World {}";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_lookup(world, "Hello") == 0);
+    test_assert(ecs_lookup(world, "Hello.World") == 0);
+
+    ecs_fini(world);
+}
+
+void Error_entity_path_w_kind_w_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity(world, { .name = "Foo" });
+
+    const char *expr =
+    HEAD "Foo Hello.World {}";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_lookup(world, "Hello") == 0);
+    test_assert(ecs_lookup(world, "Hello.World") == 0);
+
+    ecs_fini(world);
+}
+
+void Error_entity_path_w_scope_on_newline(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Hello.World"
+    LINE "{}";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_lookup(world, "Hello") == 0);
+    test_assert(ecs_lookup(world, "Hello.World") == 0);
+
+    ecs_fini(world);
+}
+
+void Error_entity_path_w_inherit_w_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity(world, { .name = "Foo" });
+
+    const char *expr =
+    HEAD "Hello.World : Foo {}";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_lookup(world, "Hello") == 0);
+    test_assert(ecs_lookup(world, "Hello.World") == 0);
+
+    ecs_fini(world);
+}
+
+void Error_entity_path_w_kind(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity(world, { .name = "Foo" });
+
+    const char *expr =
+    HEAD "Foo Hello.World";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_lookup(world, "Hello") == 0);
+    test_assert(ecs_lookup(world, "Hello.World") == 0);
+
+    ecs_fini(world);
+}
+
+void Error_entity_path_w_inherit(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity(world, { .name = "Foo" });
+    ecs_entity(world, { .name = "Bar" });
+
+    const char *expr =
+    HEAD "Hello.World : Foo, Bar";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_lookup(world, "Hello") == 0);
+    test_assert(ecs_lookup(world, "Hello.World") == 0);
+
+    ecs_fini(world);
+}
+
+void Error_entity_path_w_comma(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Hello.World, Foo";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_lookup(world, "Foo") == 0);
+    test_assert(ecs_lookup(world, "Hello") == 0);
+    test_assert(ecs_lookup(world, "Hello.World") == 0);
+
+    ecs_fini(world);
+}
+
+void Error_entity_path_after_comma(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Foo, Hello.World";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_lookup(world, "Foo") == 0);
+    test_assert(ecs_lookup(world, "Hello") == 0);
+    test_assert(ecs_lookup(world, "Hello.World") == 0);
+
+    ecs_fini(world);
+}
+
+void Error_entity_path_w_string_name(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity(world, { .name = "Foo" });
+
+    const char *expr =
+    HEAD "Foo \"Hello.World\"";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_lookup(world, "Hello") == 0);
+    test_assert(ecs_lookup(world, "Hello.World") == 0);
+
+    ecs_fini(world);
+}

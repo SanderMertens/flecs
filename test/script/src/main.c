@@ -1157,6 +1157,15 @@ void Error_module_after_using(void);
 void Error_include_after_using(void);
 void Error_include_after_other_stmt(void);
 void Error_using_unresolved_path(void);
+void Error_entity_path_w_scope(void);
+void Error_entity_path_w_kind_w_scope(void);
+void Error_entity_path_w_scope_on_newline(void);
+void Error_entity_path_w_inherit_w_scope(void);
+void Error_entity_path_w_kind(void);
+void Error_entity_path_w_inherit(void);
+void Error_entity_path_w_comma(void);
+void Error_entity_path_after_comma(void);
+void Error_entity_path_w_string_name(void);
 
 // Testsuite 'Format'
 void Format_precision_f32_literal(void);
@@ -6848,6 +6857,42 @@ bake_test_case Error_testcases[] = {
     {
         "using_unresolved_path",
         Error_using_unresolved_path
+    },
+    {
+        "entity_path_w_scope",
+        Error_entity_path_w_scope
+    },
+    {
+        "entity_path_w_kind_w_scope",
+        Error_entity_path_w_kind_w_scope
+    },
+    {
+        "entity_path_w_scope_on_newline",
+        Error_entity_path_w_scope_on_newline
+    },
+    {
+        "entity_path_w_inherit_w_scope",
+        Error_entity_path_w_inherit_w_scope
+    },
+    {
+        "entity_path_w_kind",
+        Error_entity_path_w_kind
+    },
+    {
+        "entity_path_w_inherit",
+        Error_entity_path_w_inherit
+    },
+    {
+        "entity_path_w_comma",
+        Error_entity_path_w_comma
+    },
+    {
+        "entity_path_after_comma",
+        Error_entity_path_after_comma
+    },
+    {
+        "entity_path_w_string_name",
+        Error_entity_path_w_string_name
     }
 };
 
@@ -11394,7 +11439,7 @@ static bake_test_suite suites[] = {
         "Error",
         NULL,
         NULL,
-        140,
+        149,
         Error_testcases
     },
     {
