@@ -1514,7 +1514,7 @@ void Await_entity_enter_error_restores_state(void) {
     test_int(flecs_script_eval_node(&visitor.base, annot), 0);
 
     ecs_script_entity_t previous = {0};
-    visitor.entity = &previous;
+    visitor.entity = (flecs_script_entity_state_t*)&previous;
 
     int32_t log_level = ecs_log_get_level();
 
@@ -1523,7 +1523,7 @@ void Await_entity_enter_error_restores_state(void) {
     test_int(flecs_script_eval_entity_enter(&visitor, node, &state), -1);
     ecs_log_set_level(log_level);
 
-    test_assert(visitor.entity == &previous);
+    test_assert(visitor.entity == (flecs_script_entity_state_t*)&previous);
 
     flecs_script_eval_visit_fini(&visitor, &desc);
     ecs_script_runtime_free(runtime);
