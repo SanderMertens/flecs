@@ -2035,6 +2035,8 @@ void Error_unresolved_component_error_w_script_init(void) {
     LINE " Foo: {}"
     LINE "}";
 
+    ecs_log_set_level(-4);
+
     ecs_entity_t s = ecs_script(world, {
         .code = expr
     });
@@ -2044,6 +2046,8 @@ void Error_unresolved_component_error_w_script_init(void) {
     const EcsScript *script = ecs_get(world, s, EcsScript);
     test_assert(script != NULL);
     test_assert(script->error != NULL);
+
+    ecs_log_set_level(-1);
 
     ecs_fini(world);
 }
@@ -2055,6 +2059,8 @@ void Error_unresolved_component_error_w_script_init_existing(void) {
     HEAD "e {"
     LINE " Foo: {}"
     LINE "}";
+
+    ecs_log_set_level(-4);
 
     ecs_entity_t s = ecs_script(world, {
         .code = ""
@@ -2074,6 +2080,8 @@ void Error_unresolved_component_error_w_script_init_existing(void) {
     test_assert(script != NULL);
     test_assert(script->script == NULL);
     test_assert(script->error != NULL);
+
+    ecs_log_set_level(-1);
 
     ecs_fini(world);
 }
