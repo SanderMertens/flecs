@@ -1174,7 +1174,16 @@
                 "module_after_using",
                 "include_after_using",
                 "include_after_other_stmt",
-                "using_unresolved_path"
+                "using_unresolved_path",
+                "entity_path_w_scope",
+                "entity_path_w_kind_w_scope",
+                "entity_path_w_scope_on_newline",
+                "entity_path_w_inherit_w_scope",
+                "entity_path_w_kind",
+                "entity_path_w_inherit",
+                "entity_path_w_comma",
+                "entity_path_after_comma",
+                "entity_path_w_string_name"
             ]
         }, {
             "id": "Format",

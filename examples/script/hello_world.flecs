@@ -44,7 +44,10 @@ my_spaceship {
   }
 }
 
-// The dot notation can be used to refer to nested entities
-my_spaceship.engine {
-  FasterThanLight
+// A scope can be reopened to add more to an existing entity. Note that scopes
+// can only be opened for a single entity name, not for a path (a.b).
+my_spaceship {
+  engine {
+    FasterThanLight
+  }
 }

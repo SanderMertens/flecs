@@ -9005,9 +9005,11 @@ void Eval_path_tag_in_nested_scope(void) {
     test_assert(tag != 0);
 
     const char *expr =
-    HEAD "Hello.parent {"
-    LINE "  foo {"
-    LINE "    Hello.World"
+    HEAD "Hello {"
+    LINE "  parent {"
+    LINE "    foo {"
+    LINE "      Hello.World"
+    LINE "    }"
     LINE "  }"
     LINE "}";
 
