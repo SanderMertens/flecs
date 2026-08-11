@@ -67838,12 +67838,38 @@ static int flecs_script_name_to_expr(
     return 0;
 }
 
+/* Entity names cannot be paths (a.b) */
+static bool flecs_script_name_is_path(
+    const char *name)
+{
+    if (!name) {
+        return false;
+    }
+
+    const char *ptr = strchr(name, '.');
+    while (ptr) {
+        if (ptr == name || ptr[-1] != '\\') {
+            return true;
+        }
+        ptr = strchr(ptr + 1, '.');
+    }
+
+    return false;
+}
+
 ecs_script_entity_t* flecs_script_insert_entity(
     ecs_parser_t *parser,
     const char *name)
 {
     ecs_script_scope_t *scope = parser->scope;
     ecs_assert(scope != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    if (flecs_script_name_is_path(name)) {
+        ecs_parser_error(parser->name, parser->code,
+            flecs_parser_errpos(parser, parser->pos),
+            "invalid path '%s' in entity name", name);
+        goto error;
+    }
 
     ecs_script_entity_t *result = flecs_ast_new(
         parser, ecs_script_entity_t, EcsAstEntity);
@@ -69255,6 +69281,19 @@ error:
     return NULL;
 }
 
+/* Parse scope of entity */
+static const char* flecs_script_entity_scope(
+    ecs_parser_t *parser,
+    ecs_script_entity_t *entity,
+    const char *pos)
+{
+    if (!entity) {
+        return NULL;
+    }
+
+    return flecs_script_scope(parser, entity->scope, pos);
+}
+
 /* Parse comma expression (expressions separated by ',') */
 static const char* flecs_script_comma_expr(
     ecs_parser_t *parser,
@@ -69275,7 +69314,9 @@ static const char* flecs_script_comma_expr(
                 if (is_base_list) {
                     flecs_script_insert_pair_tag(parser, "IsA", Token(0));
                 } else {
-                    flecs_script_insert_entity(parser, Token(0));
+                    if (!flecs_script_insert_entity(parser, Token(0))) {
+                        goto error;
+                    }
                 }
 
                 LookAhead_1(',',
@@ -69428,7 +69469,7 @@ static const char* flecs_script_paren_expr(
 
             // Position spaceship (expr) {
             case '{': {
-                return flecs_script_scope(parser, entity->scope, pos);
+                return flecs_script_entity_scope(parser, entity, pos);
             }
         )
     )
@@ -69860,8 +69901,8 @@ const char* flecs_script_stmt(
     );
 
 anonymous_entity: {
-    return flecs_script_scope(parser, 
-        flecs_script_insert_entity(parser, "_")->scope, pos);
+    return flecs_script_entity_scope(parser,
+        flecs_script_insert_entity(parser, "_"), pos);
 }
 
 string_name:
@@ -69882,8 +69923,8 @@ identifier: {
     Parse(
         // enterprise {
         case '{': {
-            return flecs_script_scope(parser, 
-                flecs_script_insert_entity(parser, Token(0))->scope, pos);
+            return flecs_script_entity_scope(parser,
+                flecs_script_insert_entity(parser, Token(0)), pos);
         }
 
         // Red,
@@ -69892,7 +69933,10 @@ identifier: {
                 Error("expression not allowed as entity name here");
             }
 
-            flecs_script_insert_entity(parser, Token(0));
+            if (!flecs_script_insert_entity(parser, Token(0))) {
+                goto error;
+            }
+
             pos = flecs_script_comma_expr(parser, pos, false);
             EndOfRule;
         }
@@ -69902,8 +69946,8 @@ identifier: {
             // Npc\n{
             LookAhead_1('{',
                 pos = lookahead;
-                return flecs_script_scope(parser, 
-                    flecs_script_insert_entity(parser, Token(0))->scope, pos);
+                return flecs_script_entity_scope(parser,
+                    flecs_script_insert_entity(parser, Token(0)), pos);
             )
 
             goto insert_tag;
@@ -70461,8 +70505,11 @@ identifier_colon: {
     Parse_1(EcsTokIdentifier, {
         ecs_script_entity_t *entity = flecs_script_insert_entity(
             parser, Token(0));
+        if (!entity) {
+            goto error;
+        }
 
-        Scope(entity->scope, 
+        Scope(entity->scope,
             flecs_script_insert_pair_tag(parser, "IsA", Token(2));
 
             LookAhead_1(',', {
@@ -70474,7 +70521,7 @@ identifier_colon: {
         Parse(
             // enterprise : SpaceShip {
             case '{':
-                return flecs_script_scope(parser, entity->scope, pos);
+                return flecs_script_entity_scope(parser, entity, pos);
         )
     })
 }
@@ -70484,6 +70531,10 @@ identifier_string:
 identifier_identifier: {
     ecs_script_entity_t *entity = flecs_script_insert_entity(
         parser, Token(1));
+    if (!entity) {
+        goto error;
+    }
+
     entity->kind = Token(0);
 
     // Spaceship enterprise :
@@ -70513,7 +70564,7 @@ identifier_identifier_x:
 
         // Spaceship enterprise {
         case '{': {
-            return flecs_script_scope(parser, entity->scope, pos);
+            return flecs_script_entity_scope(parser, entity, pos);
         }
 
         // Spaceship enterprise(
@@ -70560,7 +70611,7 @@ identifier_paren: {
                     flecs_script_initializer_set_full(comp->expr);
                 )
 
-                return flecs_script_scope(parser, entity->scope, pos);
+                return flecs_script_entity_scope(parser, entity, pos);
             }
         )
     )

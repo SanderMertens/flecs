@@ -70,12 +70,38 @@ static int flecs_script_name_to_expr(
     return 0;
 }
 
+/* Entity names cannot be paths (a.b) */
+static bool flecs_script_name_is_path(
+    const char *name)
+{
+    if (!name) {
+        return false;
+    }
+
+    const char *ptr = strchr(name, '.');
+    while (ptr) {
+        if (ptr == name || ptr[-1] != '\\') {
+            return true;
+        }
+        ptr = strchr(ptr + 1, '.');
+    }
+
+    return false;
+}
+
 ecs_script_entity_t* flecs_script_insert_entity(
     ecs_parser_t *parser,
     const char *name)
 {
     ecs_script_scope_t *scope = parser->scope;
     ecs_assert(scope != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    if (flecs_script_name_is_path(name)) {
+        ecs_parser_error(parser->name, parser->code,
+            flecs_parser_errpos(parser, parser->pos),
+            "invalid path '%s' in entity name", name);
+        goto error;
+    }
 
     ecs_script_entity_t *result = flecs_ast_new(
         parser, ecs_script_entity_t, EcsAstEntity);

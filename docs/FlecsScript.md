@@ -172,6 +172,17 @@ my_entity {
 When referring to child entities or components, identifiers need to include the parent path as well as the entity name. Paths are provided as lists of identifiers separated by a dot (`.`):
 
 ```cpp
+Sun {
+  Earth {
+    solarsystem.Planet
+  }
+}
+```
+
+Paths can only be used to refer to existing entities. The name of an entity that's created by a script cannot be a path:
+
+```cpp
+// Invalid, entity names cannot be paths
 Sun.Earth {
   solarsystem.Planet
 }
