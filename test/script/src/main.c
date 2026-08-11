@@ -63,8 +63,6 @@ void Eval_multi_line_comment_multiple_lines(void);
 void Eval_hierarchy_1_child(void);
 void Eval_hierarchy_2_children(void);
 void Eval_hierarchy_1_child_same_line(void);
-void Eval_hierarchy_2_children_same_line(void);
-void Eval_hierarchy_2_children_same_line_no_trailing_comma(void);
 void Eval_entity_after_hierarchy(void);
 void Eval_newline_before_scope_open(void);
 void Eval_newline_w_whitespace_before_scope_open(void);
@@ -83,8 +81,6 @@ void Eval_entity_after_hierarchy_custom_relation_2_levels(void);
 void Eval_with_tag(void);
 void Eval_with_tag_2_entities(void);
 void Eval_with_tag_same_line(void);
-void Eval_with_tag_2_entities_same_line(void);
-void Eval_with_tag_2_entities_same_line_no_trailing_comma(void);
 void Eval_with_tag_2_levels(void);
 void Eval_with_tag_2_levels_2_subtrees(void);
 void Eval_with_n_tags(void);
@@ -1166,6 +1162,9 @@ void Error_entity_path_w_inherit(void);
 void Error_entity_path_w_comma(void);
 void Error_entity_path_after_comma(void);
 void Error_entity_path_w_string_name(void);
+void Error_entity_comma_list(void);
+void Error_entity_comma_list_in_scope(void);
+void Error_entity_comma_list_w_trailing_comma(void);
 
 // Testsuite 'Format'
 void Format_precision_f32_literal(void);
@@ -2518,14 +2517,6 @@ bake_test_case Eval_testcases[] = {
         Eval_hierarchy_1_child_same_line
     },
     {
-        "hierarchy_2_children_same_line",
-        Eval_hierarchy_2_children_same_line
-    },
-    {
-        "hierarchy_2_children_same_line_no_trailing_comma",
-        Eval_hierarchy_2_children_same_line_no_trailing_comma
-    },
-    {
         "entity_after_hierarchy",
         Eval_entity_after_hierarchy
     },
@@ -2596,14 +2587,6 @@ bake_test_case Eval_testcases[] = {
     {
         "with_tag_same_line",
         Eval_with_tag_same_line
-    },
-    {
-        "with_tag_2_entities_same_line",
-        Eval_with_tag_2_entities_same_line
-    },
-    {
-        "with_tag_2_entities_same_line_no_trailing_comma",
-        Eval_with_tag_2_entities_same_line_no_trailing_comma
     },
     {
         "with_tag_2_levels",
@@ -6893,6 +6876,18 @@ bake_test_case Error_testcases[] = {
     {
         "entity_path_w_string_name",
         Error_entity_path_w_string_name
+    },
+    {
+        "entity_comma_list",
+        Error_entity_comma_list
+    },
+    {
+        "entity_comma_list_in_scope",
+        Error_entity_comma_list_in_scope
+    },
+    {
+        "entity_comma_list_w_trailing_comma",
+        Error_entity_comma_list_w_trailing_comma
     }
 };
 
@@ -11390,7 +11385,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        592,
+        588,
         Eval_testcases
     },
     {
@@ -11439,7 +11434,7 @@ static bake_test_suite suites[] = {
         "Error",
         NULL,
         NULL,
-        149,
+        152,
         Error_testcases
     },
     {

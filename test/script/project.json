@@ -67,8 +67,6 @@
                 "hierarchy_1_child",
                 "hierarchy_2_children",
                 "hierarchy_1_child_same_line",
-                "hierarchy_2_children_same_line",
-                "hierarchy_2_children_same_line_no_trailing_comma",
                 "entity_after_hierarchy",
                 "newline_before_scope_open",
                 "newline_w_whitespace_before_scope_open",
@@ -87,8 +85,6 @@
                 "with_tag",
                 "with_tag_2_entities",
                 "with_tag_same_line",
-                "with_tag_2_entities_same_line",
-                "with_tag_2_entities_same_line_no_trailing_comma",
                 "with_tag_2_levels",
                 "with_tag_2_levels_2_subtrees",
                 "with_n_tags",
@@ -1183,7 +1179,10 @@
                 "entity_path_w_inherit",
                 "entity_path_w_comma",
                 "entity_path_after_comma",
-                "entity_path_w_string_name"
+                "entity_path_w_string_name",
+                "entity_comma_list",
+                "entity_comma_list_in_scope",
+                "entity_comma_list_w_trailing_comma"
             ]
         }, {
             "id": "Format",

@@ -892,56 +892,6 @@ void Eval_hierarchy_1_child_same_line(void) {
     ecs_fini(world);
 }
 
-void Eval_hierarchy_2_children_same_line(void) {
-    ecs_world_t *world = ecs_init();
-
-    const char *expr =
-    HEAD "Parent { ChildA, ChildB, }";
-
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
-
-    test_assert(ecs_lookup(world, "ChildA") == 0);
-    test_assert(ecs_lookup(world, "ChildB") == 0);
-
-    ecs_entity_t parent = ecs_lookup(world, "Parent");
-    ecs_entity_t child_a = ecs_lookup(world, "Parent.ChildA");
-    ecs_entity_t child_b = ecs_lookup(world, "Parent.ChildB");
-
-    test_assert(parent != 0);
-    test_assert(child_a != 0);
-    test_assert(child_b != 0);
-
-    test_assert(ecs_has_pair(world, child_a, EcsChildOf, parent));
-    test_assert(ecs_has_pair(world, child_b, EcsChildOf, parent));
-
-    ecs_fini(world);
-}
-
-void Eval_hierarchy_2_children_same_line_no_trailing_comma(void) {
-    ecs_world_t *world = ecs_init();
-
-    const char *expr =
-    HEAD "Parent { ChildA, ChildB }";
-
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
-
-    test_assert(ecs_lookup(world, "ChildA") == 0);
-    test_assert(ecs_lookup(world, "ChildB") == 0);
-
-    ecs_entity_t parent = ecs_lookup(world, "Parent");
-    ecs_entity_t child_a = ecs_lookup(world, "Parent.ChildA");
-    ecs_entity_t child_b = ecs_lookup(world, "Parent.ChildB");
-
-    test_assert(parent != 0);
-    test_assert(child_a != 0);
-    test_assert(child_b != 0);
-
-    test_assert(ecs_has_pair(world, child_a, EcsChildOf, parent));
-    test_assert(ecs_has_pair(world, child_b, EcsChildOf, parent));
-
-    ecs_fini(world);
-}
-
 void Eval_entity_after_hierarchy(void) {
     ecs_world_t *world = ecs_init();
 
@@ -1516,54 +1466,6 @@ void Eval_with_tag_same_line(void) {
     test_assert(tag != 0);
 
     test_assert(ecs_has_id(world, foo, tag));
-
-    ecs_fini(world);
-}
-
-void Eval_with_tag_2_entities_same_line(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_TAG(world, Tag);
-
-    const char *expr =
-    HEAD "with Tag { Foo, Bar, }";
-
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
-
-    ecs_entity_t foo = ecs_lookup(world, "Foo");
-    ecs_entity_t bar = ecs_lookup(world, "Bar");
-    ecs_entity_t tag = ecs_lookup(world, "Tag");
-
-    test_assert(foo != 0);
-    test_assert(bar != 0);
-    test_assert(tag != 0);
-
-    test_assert(ecs_has_id(world, foo, tag));
-    test_assert(ecs_has_id(world, bar, tag));
-
-    ecs_fini(world);
-}
-
-void Eval_with_tag_2_entities_same_line_no_trailing_comma(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_TAG(world, Tag);
-
-    const char *expr =
-    HEAD "with Tag { Foo, Bar }";
-
-    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
-
-    ecs_entity_t foo = ecs_lookup(world, "Foo");
-    ecs_entity_t bar = ecs_lookup(world, "Bar");
-    ecs_entity_t tag = ecs_lookup(world, "Tag");
-
-    test_assert(foo != 0);
-    test_assert(bar != 0);
-    test_assert(tag != 0);
-
-    test_assert(ecs_has_id(world, foo, tag));
-    test_assert(ecs_has_id(world, bar, tag));
 
     ecs_fini(world);
 }
@@ -3459,7 +3361,8 @@ void Eval_assign_to_parent_pair_w_existing_entities_in_scope(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    HEAD "Rel, Obj"
+    HEAD "Rel {}"
+    LINE "Obj {}"
     LINE "Foo {"
     LINE "  (Rel, Obj)"
     LINE "}";
