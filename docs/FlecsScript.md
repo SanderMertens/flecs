@@ -595,7 +595,7 @@ e {
 }
 ```
 
-A new expression may only create a single entity, so comma operators are not supported.
+A new expression may only create a single entity.
 
 ### String interpolation
 Flecs script supports interpolated strings, which are strings that can contain expressions. String interpolation supports two forms, where one allows for easy embedding of variables, whereas the other allows for embedding any kind of expression. The following example shows an embedded variable:
@@ -1826,25 +1826,6 @@ Multiple statements can be combined on a single line when using the semicolon op
 ```cpp
 my_spaceship {
   SpaceShip; HasFtl
-}
-```
-
-## Comma operator
-The comma operator can be used as a shortcut to create multiple entities in a scope. Example:
-
-```cpp
-my_spaceship {
-  pilot_a,
-  pilot_b,
-  pilot_c
-}
-
-// is equivalent to
-
-my_spaceship {
-  pilot_a {}
-  pilot_b {}
-  pilot_c {}
 }
 ```
 

@@ -3445,3 +3445,49 @@ void Error_entity_path_w_string_name(void) {
 
     ecs_fini(world);
 }
+
+void Error_entity_comma_list(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Foo, Bar, Zoo";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_lookup(world, "Foo") == 0);
+    test_assert(ecs_lookup(world, "Bar") == 0);
+    test_assert(ecs_lookup(world, "Zoo") == 0);
+
+    ecs_fini(world);
+}
+
+void Error_entity_comma_list_in_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Zoo {"
+    LINE "  Foo, Bar"
+    LINE "}";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_lookup(world, "Zoo") == 0);
+    test_assert(ecs_lookup(world, "Zoo.Foo") == 0);
+    test_assert(ecs_lookup(world, "Zoo.Bar") == 0);
+
+    ecs_fini(world);
+}
+
+void Error_entity_comma_list_w_trailing_comma(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Foo, Bar,";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr, NULL) != 0);
+    test_assert(ecs_lookup(world, "Foo") == 0);
+    test_assert(ecs_lookup(world, "Bar") == 0);
+
+    ecs_fini(world);
+}

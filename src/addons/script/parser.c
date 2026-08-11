@@ -114,11 +114,10 @@ static const char* flecs_script_entity_scope(
     return flecs_script_scope(parser, entity->scope, pos);
 }
 
-/* Parse comma expression (expressions separated by ',') */
-static const char* flecs_script_comma_expr(
+/* Parse base list (bases separated by ',') */
+static const char* flecs_script_base_list(
     ecs_parser_t *parser,
-    const char *pos,
-    bool is_base_list)
+    const char *pos)
 {
     ParserBegin;
 
@@ -131,13 +130,7 @@ static const char* flecs_script_comma_expr(
             case EcsTokIdentifier:
                 LookAhead_Keep();
 
-                if (is_base_list) {
-                    flecs_script_insert_pair_tag(parser, "IsA", Token(0));
-                } else {
-                    if (!flecs_script_insert_entity(parser, Token(0))) {
-                        goto error;
-                    }
-                }
+                flecs_script_insert_pair_tag(parser, "IsA", Token(0));
 
                 LookAhead_1(',',
                     pos = lookahead;
@@ -695,8 +688,6 @@ const char* flecs_script_stmt(
 
     parser->stmt_pos = NULL;
 
-    bool name_is_expr_0 = false;
-
     Parse(
         case EcsTokIdentifier:        goto identifier;
         case EcsTokString:            goto string_name;
@@ -727,12 +718,9 @@ anonymous_entity: {
 
 string_name:
     /* If this is an interpolated string, we need to evaluate it as expression
-     * at evaluation time. Otherwise we can just use the string as name. The 
+     * at evaluation time. Otherwise we can just use the string as name. The
      * latter is useful if an entity name contains special characters that are
      * not allowed in identifier tokens. */
-    if (flecs_string_is_interpolated(Token(0))) {
-        name_is_expr_0 = true;
-    }
 
 identifier: {
     // enterprise } (end of scope)
@@ -745,20 +733,6 @@ identifier: {
         case '{': {
             return flecs_script_entity_scope(parser,
                 flecs_script_insert_entity(parser, Token(0)), pos);
-        }
-
-        // Red,
-        case ',': {
-            if (name_is_expr_0) {
-                Error("expression not allowed as entity name here");
-            }
-
-            if (!flecs_script_insert_entity(parser, Token(0))) {
-                goto error;
-            }
-
-            pos = flecs_script_comma_expr(parser, pos, false);
-            EndOfRule;
         }
 
         // Npc\n
@@ -1334,7 +1308,7 @@ identifier_colon: {
 
             LookAhead_1(',', {
                 pos = lookahead;
-                pos = flecs_script_comma_expr(parser, pos, true);
+                pos = flecs_script_base_list(parser, pos);
             })
         )
 
@@ -1367,7 +1341,7 @@ identifier_identifier: {
 
                 LookAhead_1(',', {
                     pos = lookahead;
-                    pos = flecs_script_comma_expr(parser, pos, true);
+                    pos = flecs_script_base_list(parser, pos);
                 })
             )
 
