@@ -7335,6 +7335,66 @@ void Eval_if_lt_const(void) {
     ecs_fini(world);
 }
 
+void Eval_if_enum_eq_and_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "enum Color(Red, Green, Blue)"
+    LINE "const c: Color = Green"
+    LINE "const flag = true"
+    LINE "if c == Green && flag {"
+    LINE "  a{}"
+    LINE "} else {"
+    LINE "  b{}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_lookup(world, "a") != 0);
+    test_assert(ecs_lookup(world, "b") == 0);
+
+    ecs_fini(world);
+}
+
+void Eval_if_enum_eq_or_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "enum Color(Red, Green, Blue)"
+    LINE "const c: Color = Green"
+    LINE "const flag = false"
+    LINE "if c == Green || flag {"
+    LINE "  a{}"
+    LINE "} else {"
+    LINE "  b{}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_lookup(world, "a") != 0);
+    test_assert(ecs_lookup(world, "b") == 0);
+
+    ecs_fini(world);
+}
+
+void Eval_if_enum_eq_and_member(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "enum Color(Red, Green, Blue)"
+    LINE "struct Foo(color: Color, value: i32)"
+    LINE "const foo: Foo = {color: Green, value: 5}"
+    LINE "if foo.color == Green && foo.value < 10 {"
+    LINE "  a{}"
+    LINE "} else {"
+    LINE "  b{}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr, NULL) == 0);
+    test_assert(ecs_lookup(world, "a") != 0);
+    test_assert(ecs_lookup(world, "b") == 0);
+
+    ecs_fini(world);
+}
+
 void Eval_if_else_if(void) {
     ecs_world_t *world = ecs_init();
 
