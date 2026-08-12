@@ -243,6 +243,12 @@ void Eval_on_set_w_single_assign_scoped_no_value(void);
 void Eval_on_replace_w_single_assign_scoped_w_value(void);
 void Eval_if_true(void);
 void Eval_if_true_no_else(void);
+void Eval_if_newline_before_scope(void);
+void Eval_if_multiline_cond_newline_before_scope(void);
+void Eval_if_newline_before_else(void);
+void Eval_if_newline_before_else_if(void);
+void Eval_if_newline_before_else_and_scope(void);
+void Eval_if_multiple_newlines_before_else_scope(void);
 void Eval_if_false(void);
 void Eval_if_true_var(void);
 void Eval_if_false_var(void);
@@ -354,6 +360,7 @@ void Eval_for_range_vars(void);
 void Eval_for_range_vars_no_dollar(void);
 void Eval_for_range_1_4(void);
 void Eval_for_range_min_1_2(void);
+void Eval_for_range_newline_before_scope(void);
 void Eval_variable_assign_self(void);
 void Eval_func_w_entity_arg(void);
 void Eval_func_w_entity_arg_w_using(void);
@@ -541,6 +548,9 @@ void Eval_opaque_struct_member_at_offset(void);
 
 // Testsuite 'Function'
 void Function_simple(void);
+void Function_newline_before_scope(void);
+void Function_newline_before_return_type_operator(void);
+void Function_newline_after_return_type_operator(void);
 void Function_no_args(void);
 void Function_with_locals(void);
 void Function_called_multiple_times(void);
@@ -619,6 +629,7 @@ void Function_const_runtime_error(void);
 // Testsuite 'Template'
 void Template_template_no_scope(void);
 void Template_template_no_props(void);
+void Template_template_newline_before_scope(void);
 void Template_template_prop(void);
 void Template_template_prop_space_colon(void);
 void Template_template_2_props(void);
@@ -2876,6 +2887,30 @@ bake_test_case Eval_testcases[] = {
         Eval_if_true_no_else
     },
     {
+        "if_newline_before_scope",
+        Eval_if_newline_before_scope
+    },
+    {
+        "if_multiline_cond_newline_before_scope",
+        Eval_if_multiline_cond_newline_before_scope
+    },
+    {
+        "if_newline_before_else",
+        Eval_if_newline_before_else
+    },
+    {
+        "if_newline_before_else_if",
+        Eval_if_newline_before_else_if
+    },
+    {
+        "if_newline_before_else_and_scope",
+        Eval_if_newline_before_else_and_scope
+    },
+    {
+        "if_multiple_newlines_before_else_scope",
+        Eval_if_multiple_newlines_before_else_scope
+    },
+    {
         "if_false",
         Eval_if_false
     },
@@ -3318,6 +3353,10 @@ bake_test_case Eval_testcases[] = {
     {
         "for_range_min_1_2",
         Eval_for_range_min_1_2
+    },
+    {
+        "for_range_newline_before_scope",
+        Eval_for_range_newline_before_scope
     },
     {
         "variable_assign_self",
@@ -4063,6 +4102,18 @@ bake_test_case Function_testcases[] = {
         Function_simple
     },
     {
+        "newline_before_scope",
+        Function_newline_before_scope
+    },
+    {
+        "newline_before_return_type_operator",
+        Function_newline_before_return_type_operator
+    },
+    {
+        "newline_after_return_type_operator",
+        Function_newline_after_return_type_operator
+    },
+    {
         "no_args",
         Function_no_args
     },
@@ -4368,6 +4419,10 @@ bake_test_case Template_testcases[] = {
     {
         "template_no_props",
         Template_template_no_props
+    },
+    {
+        "template_newline_before_scope",
+        Template_template_newline_before_scope
     },
     {
         "template_prop",
@@ -9600,21 +9655,21 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        529,
+        536,
         Eval_testcases
     },
     {
         "Function",
         NULL,
         NULL,
-        75,
+        78,
         Function_testcases
     },
     {
         "Template",
         NULL,
         NULL,
-        96,
+        97,
         Template_testcases
     },
     {
