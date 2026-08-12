@@ -1991,6 +1991,49 @@
                 "global_const_var_declared_in_same_script_w_template",
                 "reeval_instantiates_template_w_global_const_var_ref"
             ]
+        }, {
+            "id": "ConstVar",
+            "testcases": [
+                "get_bool",
+                "get_char",
+                "get_byte",
+                "get_u8",
+                "get_u16",
+                "get_u32",
+                "get_u64",
+                "get_i8",
+                "get_i16",
+                "get_i32",
+                "get_i64",
+                "get_f32",
+                "get_f64",
+                "get_uptr",
+                "get_iptr",
+                "get_string",
+                "get_string_is_owned",
+                "get_struct_w_string_is_owned",
+                "get_entity",
+                "get_id",
+                "get_struct",
+                "get_nested_struct",
+                "get_in_parent",
+                "get_from_script",
+                "get_not_found",
+                "get_not_a_const_var",
+                "get_w_invalid_size",
+                "get_w_invalid_type",
+                "get_i32_as_i64",
+                "get_i32_as_f64",
+                "get_f64_as_i32",
+                "get_u32_as_u64",
+                "get_u8_as_i32",
+                "get_bool_as_i32",
+                "get_i32_as_string",
+                "get_string_as_i32",
+                "get_struct_as_i32",
+                "get_i32_as_struct",
+                "get_struct_as_other_struct"
+            ]
         }]
     }
 }
